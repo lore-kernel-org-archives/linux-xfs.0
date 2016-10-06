@@ -1,321 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53188 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751779AbcJFMUK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Oct 2016 08:20:10 -0400
-Date: Thu, 6 Oct 2016 08:20:08 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 37/63] xfs: implement CoW for directio writes
-Message-ID: <20161006122007.GA16893@bfoster.bfoster>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520498004.29434.11046105793006225587.stgit@birch.djwong.org>
- <20161005182709.GC4042@bfoster.bfoster>
- <20161005205542.GA3992@birch.djwong.org>
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:39877 "EHLO
+        mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752739AbcJFMU0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Oct 2016 08:20:26 -0400
+Date: Thu, 6 Oct 2016 08:20:17 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <119370333.805584.1475756417736.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20161005200522.GE19539@ZenIV.linux.org.uk>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <1812816839.401734.1475602751170.JavaMail.zimbra@redhat.com> <20161004214219.GN4205@htj.duckdns.org> <1238277728.610186.1475676579513.JavaMail.zimbra@redhat.com> <20161005153014.GC26977@htj.duckdns.org> <270577901.647921.1475682888765.JavaMail.zimbra@redhat.com> <874538236.682217.1475693824077.JavaMail.zimbra@redhat.com> <20161005200522.GE19539@ZenIV.linux.org.uk>
+Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT]
+ splice_read reworked)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161005205542.GA3992@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: tj <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
 
-On Wed, Oct 05, 2016 at 01:55:42PM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 05, 2016 at 02:27:10PM -0400, Brian Foster wrote:
-> > On Thu, Sep 29, 2016 at 08:09:40PM -0700, Darrick J. Wong wrote:
-> > > For O_DIRECT writes to shared blocks, we have to CoW them just like
-> > > we would with buffered writes.  For writes that are not block-aligned,
-> > > just bounce them to the page cache.
-> > > 
-> > > For block-aligned writes, however, we can do better than that.  Use
-> > > the same mechanisms that we employ for buffered CoW to set up a
-> > > delalloc reservation, allocate all the blocks at once, issue the
-> > > writes against the new blocks and use the same ioend functions to
-> > > remap the blocks after the write.  This should be fairly performant.
-> > > 
-> > > Christoph discovered that xfs_reflink_allocate_cow_range may stumble
-> > > over invalid entries in the extent array given that it drops the ilock
-> > > but still expects the index to be stable.  Simple fixing it to a new
-> > > lookup for every iteration still isn't correct given that
-> > > xfs_bmapi_allocate will trigger a BUG_ON() if hitting a hole, and
-> > > there is nothing preventing a xfs_bunmapi_cow call removing extents
-> > > once we dropped the ilock either.
-> > > 
-> > > This patch duplicates the inner loop of xfs_bmapi_allocate into a
-> > > helper for xfs_reflink_allocate_cow_range so that it can be done under
-> > > the same ilock critical section as our CoW fork delayed allocation.
-> > > The directio CoW warts will be revisited in a later patch.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > > v2: Turns out that there's no way for xfs_end_io_direct_write to know
-> > > if the write completed successfully.  Therefore, do /not/ use the
-> > > ioend for dio cow post-processing; instead, move it to xfs_vm_do_dio
-> > > where we *can* tell if the write succeeded or not.
-> > > 
-> > > v3: Update the file size if we do a directio CoW across EOF.  This
-> > > can happen if the last block is shared, the cowextsize hint is set,
-> > > and we do a dio write past the end of the file.
-> > > 
-> > > v4: Christoph rewrote the allocate code to fix some concurrency
-> > > problems as part of migrating the code to support iomap.
-> > > ---
-> > >  fs/xfs/xfs_aops.c    |   91 +++++++++++++++++++++++++++++++++++++++----
-> > >  fs/xfs/xfs_file.c    |   20 ++++++++-
-> > >  fs/xfs/xfs_reflink.c |  107 +++++++++++++++++++++++++++++++++++++++++++++++++-
-> > >  fs/xfs/xfs_reflink.h |    2 +
-> > >  fs/xfs/xfs_trace.h   |    1 
-> > >  5 files changed, 208 insertions(+), 13 deletions(-)
-> > > 
-> > > 
-...
-> > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > > index f99d7fa..025d52f 100644
-> > > --- a/fs/xfs/xfs_file.c
-> > > +++ b/fs/xfs/xfs_file.c
-> > > @@ -38,6 +38,7 @@
-> > >  #include "xfs_icache.h"
-> > >  #include "xfs_pnfs.h"
-> > >  #include "xfs_iomap.h"
-> > > +#include "xfs_reflink.h"
-> > >  
-> > >  #include <linux/dcache.h>
-> > >  #include <linux/falloc.h>
-> > > @@ -672,6 +673,13 @@ xfs_file_dio_aio_write(
-> > >  
-> > >  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
-> > >  
-> > > +	/* If this is a block-aligned directio CoW, remap immediately. */
-> > > +	if (xfs_is_reflink_inode(ip) && !unaligned_io) {
-> > > +		ret = xfs_reflink_allocate_cow_range(ip, iocb->ki_pos, count);
-> > > +		if (ret)
-> > > +			goto out;
-> > > +	}
-> > 
-> > Is the fact that we do this allocation up front rather than via
-> > get_blocks() (like traditional direct write) one of the "warts" that
-> > needs cleaning, or for some other reason?
-> 
-> "Yes". :)
-> 
-> We do the allocation here because we know the exact size of the IO that
-> userspace is asking for, so we might as well do all the allocations
-> at once instead of repeatedly calling back into the allocator for each
-> shared segment that gets fed into get_blocks.  Sort of warty.
-> 
-> I think this could get moved to get_blocks, though TBH I've been
-> wondering if all this will just get replaced with iomap as part of
-> killing buffer heads.
-> 
 
-Ok, kind of nasty with all of the various paths through get_blocks(),
-but hopefully that dies off with buffer heads.
 
-> > > +
-> > >  	data = *from;
-> > >  	ret = __blockdev_direct_IO(iocb, inode, target->bt_bdev, &data,
-> > >  			xfs_get_blocks_direct, xfs_end_io_direct_write,
-...
-> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > > index d913ad1..c95cdc3 100644
-> > > --- a/fs/xfs/xfs_reflink.c
-> > > +++ b/fs/xfs/xfs_reflink.c
-...
-> > > @@ -347,6 +352,102 @@ xfs_reflink_reserve_cow_range(
-> > >  	return error;
-> > >  }
-> > >  
-> > > +/* Allocate all CoW reservations covering a range of blocks in a file. */
-> > > +static int
-> > > +__xfs_reflink_allocate_cow(
-> > > +	struct xfs_inode	*ip,
-> > > +	xfs_fileoff_t		*offset_fsb,
-> > > +	xfs_fileoff_t		end_fsb)
-> > > +{
-> > > +	struct xfs_mount	*mp = ip->i_mount;
-> > > +	struct xfs_bmbt_irec	imap;
-> > > +	struct xfs_defer_ops	dfops;
-> > > +	struct xfs_trans	*tp;
-> > > +	xfs_fsblock_t		first_block;
-> > > +	xfs_fileoff_t		next_fsb;
-> > > +	int			nimaps = 1, error;
-> > > +	bool			skipped = false;
-> > > +
-> > > +	xfs_defer_init(&dfops, &first_block);
-> > > +
-> > > +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0,
-> > > +			XFS_TRANS_RESERVE, &tp);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > > +
-> > > +	next_fsb = *offset_fsb;
-> > > +	error = __xfs_reflink_reserve_cow(ip, &next_fsb, end_fsb, &skipped);
-> > > +	if (error)
-> > > +		goto out_trans_cancel;
-> > 
-> > Do we really need to do the delayed allocation that results from this?
-> > Couldn't we factor out the shared extent walking that allows us to just
-> > perform the real allocations below?
+----- Original Message -----
+> From: "Al Viro" <viro@ZenIV.linux.org.uk>
+> To: "CAI Qian" <caiqian@redhat.com>
+> Cc: "tj" <tj@kernel.org>, "Linus Torvalds" <torvalds@linux-foundation.org>, "Dave Chinner" <david@fromorbit.com>,
+> "linux-xfs" <linux-xfs@vger.kernel.org>, "Jens Axboe" <axboe@kernel.dk>, "Nick Piggin" <npiggin@gmail.com>,
+> linux-fsdevel@vger.kernel.org
+> Sent: Wednesday, October 5, 2016 4:05:22 PM
+> Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT] splice_read reworked)
 > 
-> The delayed reservation -> allocation two-step is necessary to create
-> replacement that are aligned to the CoW extent size hint.  This is
-> important for aligning extents in the same way as the regular extent
-> size hint, and critical for detecting random writes and landing them all
-> in as close to a contiguous physical extent as possible.  This helps us
-> to reduce cow-related fragmentation to manageable levels, which is
-> necessary to avoid ENOMEM problems with the current incore extent tree.
+> On Wed, Oct 05, 2016 at 02:57:04PM -0400, CAI Qian wrote:
 > 
+> > Not sure if this related, and there is always a lockdep regards procfs
+> > happened
+> > below unless masking by other lockdep issues before the cgroup hang. Also,
+> > this
+> > hang is always reproducible.
+> 
+> Sigh...  Let's get the /proc/*/auxv out of the way - this should deal with
+> it:
+So I applied both this and the sanity patch, and both original sanity and the
+proc warnings went away. However, the cgroup hang can still be reproduced as
+well as this new xfs internal error below,
 
-The cow extent size hint thing makes sense, but I don't see why we need
-to do delayed allocation to incorporate it. Can we not accomodate a cow
-extent size hint for a real allocation in the cow fork the same way a
-direct write accomodates a traditional extent size hint in the data
-fork? In fact, we've had logic for a while now that explicitly avoids
-delayed allocation when a traditional extent size hint is set.
+[16921.141233] XFS (dm-0): Internal error XFS_WANT_CORRUPTED_RETURN at line 5619 of file fs/xfs/libxfs/xfs_bmap.c.  Caller xfs_bmap_shift_extents+0x1cc/0x3a0 [xfs]
+[16921.157694] CPU: 9 PID: 52920 Comm: trinity-c108 Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
+[16921.167012] Hardware name: Intel Corporation S2600WTT/S2600WTT, BIOS GRNDSDP1.86B.0044.R00.1501191641 01/19/2015
+[16921.178368]  0000000000000286 00000000c3833246 ffff8803d0a83b60 ffffffff813d2ecc
+[16921.186658]  ffff88042a898000 0000000000000001 ffff8803d0a83b78 ffffffffa02f36eb
+[16921.194946]  ffffffffa02b544c ffff8803d0a83c30 ffffffffa02a8e52 ffff88042a898040
+[16921.203238] Call Trace:
+[16921.205972]  [<ffffffff813d2ecc>] dump_stack+0x85/0xc9
+[16921.211742]  [<ffffffffa02f36eb>] xfs_error_report+0x3b/0x40 [xfs]
+[16921.218660]  [<ffffffffa02b544c>] ? xfs_bmap_shift_extents+0x1cc/0x3a0 [xfs]
+[16921.226543]  [<ffffffffa02a8e52>] xfs_bmse_shift_one.constprop.20+0x332/0x370 [xfs]
+[16921.235090]  [<ffffffff817cb73a>] ? kmemleak_alloc+0x4a/0xa0
+[16921.241426]  [<ffffffffa02b544c>] xfs_bmap_shift_extents+0x1cc/0x3a0 [xfs]
+[16921.249122]  [<ffffffffa03142aa>] ? xfs_trans_add_item+0x2a/0x60 [xfs]
+[16921.256430]  [<ffffffffa02eb361>] xfs_shift_file_space+0x231/0x2f0 [xfs]
+[16921.263931]  [<ffffffffa02ebe8c>] xfs_collapse_file_space+0x5c/0x180 [xfs]
+[16921.271622]  [<ffffffffa02f69b8>] xfs_file_fallocate+0x158/0x360 [xfs]
+[16921.278907]  [<ffffffff810f8eae>] ? update_fast_ctr+0x4e/0x70
+[16921.285320]  [<ffffffff810f8f57>] ? percpu_down_read+0x57/0x90
+[16921.291828]  [<ffffffff81284be1>] ? __sb_start_write+0xd1/0xf0
+[16921.298337]  [<ffffffff81284be1>] ? __sb_start_write+0xd1/0xf0
+[16921.304847]  [<ffffffff8127e000>] vfs_fallocate+0x140/0x230
+[16921.311067]  [<ffffffff8127eee4>] SyS_fallocate+0x44/0x70
+[16921.317091]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[16921.323212]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
 
-> Reducing fragmentation also helps us avoid problems seen on some other
-> filesystem where reflinking of a 64G root image takes minutes after a
-> couple of weeks of normal operations because the average extent size is
-> now 2 blocks.
-> 
-> (By contrast we're still averaging ~800 blocks per extent.)
-> 
-> > It looks like speculative preallocation for dio is at least one strange
-> > side effect that can result from this...
-> 
-> Christoph separated the delalloc reservation into separate functions for
-> the data fork and the CoW fork.  xfs_file_iomap_begin_delay() is for the
-> data fork (and does speculative prealloc), whereas
-> __xfs_reflink_reserve_cow() is for the CoW fork and doesn't know about
-> speculative prealloc.
-> 
-
-Ah, right. Then there's a bit of boilerplate code in
-__xfs_reflink_reserve_cow() associated with 'orig_end_fsb' that can be
-removed.
-
-> > > +
-> > > +	if (skipped) {
-> > > +		*offset_fsb = next_fsb;
-> > > +		goto out_trans_cancel;
-> > > +	}
-> > > +
-> > > +	xfs_trans_ijoin(tp, ip, 0);
-> > > +	error = xfs_bmapi_write(tp, ip, *offset_fsb, next_fsb - *offset_fsb,
-> > > +			XFS_BMAPI_COWFORK, &first_block,
-> > > +			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK),
-> > > +			&imap, &nimaps, &dfops);
-> > > +	if (error)
-> > > +		goto out_trans_cancel;
-> > 
-> > Should we be using unwritten extents (BMAPI_PREALLOC) to avoid stale
-> > data exposure similar to traditional direct write (or is the cow fork
-> > extent never accessible until it is remapped)?
-> 
-> Correct.  CoW fork extents are not accessible until after remapping.
-> 
-
-Got it, thanks.
-
-Brian
-
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > > +
-> > > +	/* We might not have been able to map the whole delalloc extent */
-> > > +	*offset_fsb = min(*offset_fsb + imap.br_blockcount, next_fsb);
-> > > +
-> > > +	error = xfs_defer_finish(&tp, &dfops, NULL);
-> > > +	if (error)
-> > > +		goto out_trans_cancel;
-> > > +
-> > > +	error = xfs_trans_commit(tp);
-> > > +
-> > > +out_unlock:
-> > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > +	return error;
-> > > +out_trans_cancel:
-> > > +	xfs_defer_cancel(&dfops);
-> > > +	xfs_trans_cancel(tp);
-> > > +	goto out_unlock;
-> > > +}
-> > > +
-> > > +/* Allocate all CoW reservations covering a part of a file. */
-> > > +int
-> > > +xfs_reflink_allocate_cow_range(
-> > > +	struct xfs_inode	*ip,
-> > > +	xfs_off_t		offset,
-> > > +	xfs_off_t		count)
-> > > +{
-> > > +	struct xfs_mount	*mp = ip->i_mount;
-> > > +	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> > > +	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
-> > > +	int			error;
-> > > +
-> > > +	ASSERT(xfs_is_reflink_inode(ip));
-> > > +
-> > > +	trace_xfs_reflink_allocate_cow_range(ip, offset, count);
-> > > +
-> > > +	/*
-> > > +	 * Make sure that the dquots are there.
-> > > +	 */
-> > > +	error = xfs_qm_dqattach(ip, 0);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	while (offset_fsb < end_fsb) {
-> > > +		error = __xfs_reflink_allocate_cow(ip, &offset_fsb, end_fsb);
-> > > +		if (error) {
-> > > +			trace_xfs_reflink_allocate_cow_range_error(ip, error,
-> > > +					_RET_IP_);
-> > > +			break;
-> > > +		}
-> > > +	}
-> > > +
-> > > +	return error;
-> > > +}
-> > > +
-> > >  /*
-> > >   * Find the CoW reservation (and whether or not it needs block allocation)
-> > >   * for a given byte offset of a file.
-> > > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > > index bffa4be..c0c989a 100644
-> > > --- a/fs/xfs/xfs_reflink.h
-> > > +++ b/fs/xfs/xfs_reflink.h
-> > > @@ -28,6 +28,8 @@ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
-> > >  
-> > >  extern int xfs_reflink_reserve_cow_range(struct xfs_inode *ip,
-> > >  		xfs_off_t offset, xfs_off_t count);
-> > > +extern int xfs_reflink_allocate_cow_range(struct xfs_inode *ip,
-> > > +		xfs_off_t offset, xfs_off_t count);
-> > >  extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
-> > >  		struct xfs_bmbt_irec *imap, bool *need_alloc);
-> > >  extern int xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
-> > > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > > index 7612096..8e89223 100644
-> > > --- a/fs/xfs/xfs_trace.h
-> > > +++ b/fs/xfs/xfs_trace.h
-> > > @@ -3332,7 +3332,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_enospc);
-> > >  
-> > >  DEFINE_RW_EVENT(xfs_reflink_reserve_cow_range);
-> > >  DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
-> > > -DEFINE_INODE_IREC_EVENT(xfs_reflink_allocate_cow_extent);
-> > >  
-> > >  DEFINE_INODE_IREC_EVENT(xfs_reflink_bounce_dio_write);
-> > >  DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    CAI Qian
