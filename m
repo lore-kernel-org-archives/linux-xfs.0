@@ -1,134 +1,242 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:48045 "EHLO
-        mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S942253AbcJFQLe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Oct 2016 12:11:34 -0400
-Date: Thu, 6 Oct 2016 12:11:26 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <1149670394.870034.1475770286233.JavaMail.zimbra@redhat.com>
-In-Reply-To: <1860793605.807021.1475756759147.JavaMail.zimbra@redhat.com>
-References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <1238277728.610186.1475676579513.JavaMail.zimbra@redhat.com> <20161005153014.GC26977@htj.duckdns.org> <270577901.647921.1475682888765.JavaMail.zimbra@redhat.com> <874538236.682217.1475693824077.JavaMail.zimbra@redhat.com> <20161005200522.GE19539@ZenIV.linux.org.uk> <119370333.805584.1475756417736.JavaMail.zimbra@redhat.com> <1860793605.807021.1475756759147.JavaMail.zimbra@redhat.com>
-Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT]
- splice_read reworked)
+Received: from aserp1040.oracle.com ([141.146.126.69]:37655 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S942128AbcJFPwI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Oct 2016 11:52:08 -0400
+Date: Thu, 6 Oct 2016 08:52:03 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [ANNOUNCE] xfs: for-next branch updated to 1f08af52e7c9
+Message-ID: <20161006155202.GA5619@birch.djwong.org>
+References: <20161006111713.GD9806@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161006111713.GD9806@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: tj <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-> > > On Wed, Oct 05, 2016 at 02:57:04PM -0400, CAI Qian wrote:
-> > > 
-> > > > Not sure if this related, and there is always a lockdep regards procfs
-> > > > happened
-> > > > below unless masking by other lockdep issues before the cgroup hang.
-> > > > Also,
-> > > > this
-> > > > hang is always reproducible.
-> > > 
-> > > Sigh...  Let's get the /proc/*/auxv out of the way - this should deal
-> > > with
-> > > it:
-> > So I applied both this and the sanity patch, and both original sanity and
-> > the
-> > proc warnings went away. However, the cgroup hang can still be reproduced
-> > as
-> > well as this new xfs internal error below,
+On Thu, Oct 06, 2016 at 10:17:13PM +1100, Dave Chinner wrote:
+> Hi folks,
 > 
-> Wait. There is also a lockep happened before the xfs internal error as well.
-Some other lockdep this time,
+> The for-next branch of the xfs kernel repository at
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+> 
+> has just been updated. This update contains the shiny new reflink
+> functionality written by Darrick. If you are not using reflink
+> enabled filesystems, then you should see no new problems or
+> regressions as a result ofthe merge. If you do, please let us know
+> immediately.
+> 
+> For those of you that want to test the new reflink functionality,
+> you'll need to grab Darrick's latest xfsprogs branch. You probably
 
-[ 4872.310639] =================================
-[ 4872.315499] [ INFO: inconsistent lock state ]
-[ 4872.320359] 4.8.0-rc8-splice-fixw-proc+ #4 Not tainted
-[ 4872.326091] ---------------------------------
-[ 4872.330950] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-W} usage.
-[ 4872.338235] kswapd1/437 [HC0[0]:SC0[0]:HE1:SE1] takes:
-[ 4872.343965]  (&xfs_nondir_ilock_class){++++?.}, at: [<ffffffffa029968e>] xfs_ilock+0x18e/0x260 [xfs]
-[ 4872.354236] {RECLAIM_FS-ON-W} state was registered at:
-[ 4872.359969]   [<ffffffff810fcbd6>] mark_held_locks+0x66/0x90
-[ 4872.366297]   [<ffffffff810fffd5>] lockdep_trace_alloc+0xc5/0x110
-[ 4872.373107]   [<ffffffff81253ad3>] kmem_cache_alloc+0x33/0x2e0
-[ 4872.379628]   [<ffffffffa02a8386>] kmem_zone_alloc+0x96/0x120 [xfs]
-[ 4872.386654]   [<ffffffffa024967b>] xfs_bmbt_init_cursor+0x3b/0x160 [xfs]
-[ 4872.394147]   [<ffffffffa0247f8f>] xfs_bunmapi+0x80f/0xb00 [xfs]
-[ 4872.400202] kmemleak: Cannot allocate a kmemleak_object structure
-[ 4872.400205] kmemleak: Kernel memory leak detector disabled
-[ 4872.400337] kmemleak: Automatic memory scanning thread ended
-[ 4872.400869] kmemleak: Kmemleak disabled without freeing internal data. Reclaim the memory with "echo clear > /sys/kernel/debug/kmemleak".
-[ 4872.433878]   [<ffffffffa027ddc3>] xfs_bmap_punch_delalloc_range+0xe3/0x180 [xfs]
-[ 4872.442253]   [<ffffffffa0294b39>] xfs_file_iomap_end+0x89/0xd0 [xfs]
-[ 4872.449468]   [<ffffffff812f3da0>] iomap_apply+0xe0/0x130
-[ 4872.455505]   [<ffffffff812f3e58>] iomap_file_buffered_write+0x68/0xa0
-[ 4872.462798]   [<ffffffffa028a87f>] xfs_file_buffered_aio_write+0x14f/0x350 [xfs]
-[ 4872.471079]   [<ffffffffa028ab6d>] xfs_file_write_iter+0xed/0x130 [xfs]
-[ 4872.478485]   [<ffffffff81280eee>] do_iter_readv_writev+0xae/0x130
-[ 4872.485393]   [<ffffffff81281992>] do_readv_writev+0x1a2/0x230
-[ 4872.491911]   [<ffffffff81281c6c>] vfs_writev+0x3c/0x50
-[ 4872.497752]   [<ffffffff81281ce4>] do_writev+0x64/0x100
-[ 4872.503589]   [<ffffffff81282ea0>] SyS_writev+0x10/0x20
-[ 4872.509428]   [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-[ 4872.515656]   [<ffffffff817d4a3f>] return_from_SYSCALL_64+0x0/0x7a
-[ 4872.522563] irq event stamp: 427
-[ 4872.526160] hardirqs last  enabled at (427): [<ffffffff817cf21d>] mutex_trylock+0xdd/0x200
-[ 4872.535393] hardirqs last disabled at (426): [<ffffffff817cf191>] mutex_trylock+0x51/0x200
-[ 4872.544627] softirqs last  enabled at (424): [<ffffffff817d7b37>] __do_softirq+0x1f7/0x4b7
-[ 4872.553862] softirqs last disabled at (417): [<ffffffff810a4a98>] irq_exit+0xc8/0xe0
-[ 4872.562513] 
-[ 4872.562513] other info that might help us debug this:
-[ 4872.569797]  Possible unsafe locking scenario:
-[ 4872.569797] 
-[ 4872.576401]        CPU0
-[ 4872.579127]        ----
-[ 4872.581854]   lock(&xfs_nondir_ilock_class);
-[ 4872.586637]   <Interrupt>
-[ 4872.589558]     lock(&xfs_nondir_ilock_class);
-[ 4872.594533] 
-[ 4872.594533]  *** DEADLOCK ***
-[ 4872.594533] 
-[ 4872.601140] 3 locks held by kswapd1/437:
-[ 4872.605515]  #0:  (shrinker_rwsem){++++..}, at: [<ffffffff811f78ad>] shrink_slab+0x9d/0x620
-[ 4872.614889]  #1:  (&type->s_umount_key#48){++++++}, at: [<ffffffff8128550b>] trylock_super+0x1b/0x50
-[ 4872.625145]  #2:  (&pag->pag_ici_reclaim_lock){+.+...}, at: [<ffffffffa028e7a7>] xfs_reclaim_inodes_ag+0xc7/0x4f0 [xfs]
-[ 4872.637247] 
-[ 4872.637247] stack backtrace:
-[ 4872.642109] CPU: 49 PID: 437 Comm: kswapd1 Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-[ 4872.650846] Hardware name: Intel Corporation S2600WTT/S2600WTT, BIOS GRNDSDP1.86B.0044.R00.1501191641 01/19/2015
-[ 4872.662202]  0000000000000086 00000000eda15d18 ffff880462bd7798 ffffffff813d2ecc
-[ 4872.670498]  ffff880462e56000 ffffffff82a66870 ffff880462bd77e8 ffffffff811dd9e1
-[ 4872.678793]  0000000000000000 ffff880400000001 ffff880400000001 000000000000000a
-[ 4872.687086] Call Trace:
-[ 4872.689817]  [<ffffffff813d2ecc>] dump_stack+0x85/0xc9
-[ 4872.695543]  [<ffffffff811dd9e1>] print_usage_bug+0x1eb/0x1fc
-[ 4872.701954]  [<ffffffff810fc0b0>] ? check_usage_backwards+0x150/0x150
-[ 4872.709141]  [<ffffffff810fcae4>] mark_lock+0x264/0x2f0
-[ 4872.714968]  [<ffffffff810fd491>] __lock_acquire+0x311/0x1990
-[ 4872.721379]  [<ffffffff810499db>] ? save_stack_trace+0x2b/0x50
-[ 4872.727892]  [<ffffffff810fd5f2>] ? __lock_acquire+0x472/0x1990
-[ 4872.734497]  [<ffffffff810ff174>] lock_acquire+0xd4/0x240
-[ 4872.740535]  [<ffffffffa029968e>] ? xfs_ilock+0x18e/0x260 [xfs]
-[ 4872.747155]  [<ffffffffa028dd93>] ? xfs_reclaim_inode+0x113/0x380 [xfs]
-[ 4872.754538]  [<ffffffff810f8bfa>] down_write_nested+0x4a/0x80
-[ 4872.760962]  [<ffffffffa029968e>] ? xfs_ilock+0x18e/0x260 [xfs]
-[ 4872.767579]  [<ffffffffa029968e>] xfs_ilock+0x18e/0x260 [xfs]
-[ 4872.774004]  [<ffffffffa028dd93>] xfs_reclaim_inode+0x113/0x380 [xfs]
-[ 4872.781203]  [<ffffffffa028e9ab>] xfs_reclaim_inodes_ag+0x2cb/0x4f0 [xfs]
-[ 4872.788780]  [<ffffffffa028e7d2>] ? xfs_reclaim_inodes_ag+0xf2/0x4f0 [xfs]
-[ 4872.796453]  [<ffffffff817d40aa>] ? _raw_spin_unlock_irqrestore+0x6a/0x80
-[ 4872.804026]  [<ffffffff817d408a>] ? _raw_spin_unlock_irqrestore+0x4a/0x80
-[ 4872.811602]  [<ffffffff810d1a58>] ? try_to_wake_up+0x58/0x510
-[ 4872.818014]  [<ffffffff810d1f25>] ? wake_up_process+0x15/0x20
-[ 4872.824438]  [<ffffffffa0290523>] xfs_reclaim_inodes_nr+0x33/0x40 [xfs]
-[ 4872.831835]  [<ffffffffa02a26d9>] xfs_fs_free_cached_objects+0x19/0x20 [xfs]
-[ 4872.839702]  [<ffffffff812856c1>] super_cache_scan+0x181/0x190
-[ 4872.846210]  [<ffffffff811f7a79>] shrink_slab+0x269/0x620
-[ 4872.852233]  [<ffffffff811fcc88>] shrink_node+0x108/0x310
-[ 4872.858256]  [<ffffffff811fe360>] kswapd+0x3d0/0x960
-[ 4872.863796]  [<ffffffff811fdf90>] ? mem_cgroup_shrink_node+0x370/0x370
-[ 4872.871081]  [<ffffffff810c3f5e>] kthread+0xfe/0x120
-[ 4872.876618]  [<ffffffff817d40ec>] ? _raw_spin_unlock_irq+0x2c/0x60
-[ 4872.883514]  [<ffffffff817d4baf>] ret_from_fork+0x1f/0x40
-[ 4872.889539]  [<ffffffff810c3e60>] ? kthread_create_on_node+0x230/0x230
+https://github.com/djwong/xfsprogs/tree/for-dave-for-4.9-10
+
+> also want to grab his latest xfstests branch, too, so you don't get
+
+https://github.com/djwong/xfstests/tree/djwong-devel
+
+> failures from the tests that were obviously broken by recent
+> updates.
+
+I'll send out a proper xfsprogs patchset after xfsprogs 4.9-rc1 is
+tagged, with appropriate mods for whatever else gets queued up.
+
+As for xfstests... I'll email them out by the end of the week.
+
+> The xfsprogs reflink merge will occur after the kernel merge has
+> occurred, similar to the way rmap supprot was handled in the last
+> cycle. The xfstests runs with this series are not completely clean
+> yet - I see 5-6 new test failures across different machines, but
+> none of them are serious (e.g. unexpected ENOSPC errors causes
+> generic/204 failure because reflink consumes more space) and will be
+> fixed up over the next few weeks.
+> 
+> Darrick - for updates and fixes that need to be added to the 4.9
+> tree, let's revert to the normal "send patch to mailing list"
+> method for getting changes into the tree so everyone can pick them
+> up and review them as soon as they are sent...
+
+Ok.  All the changes made since the last patchbomb have been reviewer
+suggestions and integrating the last patches Christoph posted on the
+topic.
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> 
+> The new head of the for-next branch is commit:
+> 
+> 1f08af52e7c9 xfs: implement swapext for rmap filesystems
+> 
+> New Commits:
+> 
+> Darrick J. Wong (63):
+>       [0a6eab8bd4e0] vfs: support FS_XFLAG_COWEXTSIZE and get/set of CoW extent size hint
+>       [71be6b4942dd] vfs: add a FALLOC_FL_UNSHARE mode to fallocate to unshare a range of blocks
+>       [9cdafd8a769b] xfs: return an error when an inline directory is too small
+>       [c75c752d0374] xfs: define tracepoints for refcount btree activities
+>       [46eeb521b952] xfs: introduce refcount btree definitions
+>       [af30dfa14411] xfs: refcount btree add more reserved blocks
+>       [1946b91cee4f] xfs: define the on-disk refcount btree format
+>       [ac4fef69386a] xfs: add refcount btree support to growfs
+>       [f310bd2ecd37] xfs: account for the refcount btree in the alloc/free log reservation
+>       [bdf28630b721] xfs: add refcount btree operations
+>       [baf4bcacb715] xfs: create refcount update intent log items
+>       [f997ee213717] xfs: log refcount intent items
+>       [3172725814f9] xfs: adjust refcount of an extent of blocks in refcount btree
+>       [33ba61292084] xfs: connect refcount adjust functions to upper layers
+>       [62aab20f0875] xfs: adjust refcount when unmapping file blocks
+>       [a90c00f05554] xfs: add refcount btree block detection to log recovery
+>       [d0e853f3600c] xfs: reserve AG space for the refcount btree root
+>       [350a27a6a65c] xfs: introduce reflink utility functions
+>       [6413a01420c2] xfs: create bmbt update intent log items
+>       [77d61fe45e72] xfs: log bmap intent items
+>       [f65306ea5246] xfs: map an inode's offset to an exact physical block
+>       [4847acf868bb] xfs: pass bmapi flags through to bmap_del_extent
+>       [9f3afb57d5f1] xfs: implement deferred bmbt map/unmap operations
+>       [17c12bcd3030] xfs: when replaying bmap operations, don't let unlinked inodes get reaped
+>       [4453593be6c5] xfs: return work remaining at the end of a bunmapi operation
+>       [53aa1c34f4eb] xfs: define tracepoints for reflink activities
+>       [f0ec1b8ef11d] xfs: add reflink feature flag to geometry
+>       [11715a21bc30] xfs: don't allow reflinked dir/dev/fifo/socket/pipe files
+>       [3993baeb3c52] xfs: introduce the CoW fork
+>       [be51f8119c2f] xfs: support bmapping delalloc extents in the CoW fork
+>       [2a06705cd595] xfs: create delalloc extents in CoW fork
+>       [60b4984fc392] xfs: support allocating delayed extents in CoW fork
+>       [ef4736678fc3] xfs: allocate delayed extents in CoW fork
+>       [4862cfe825c0] xfs: support removing extents from CoW fork
+>       [43caeb187deb] xfs: move mappings from cow fork to data fork after copy-write
+>       [db1327b16c2b] xfs: report shared extent mappings to userspace correctly
+>       [0613f16cd201] xfs: implement CoW for directio writes
+>       [aa8968f227a8] xfs: cancel CoW reservations and clear inode reflink flag when freeing blocks
+>       [5e7e605c4d1b] xfs: cancel pending CoW reservations when destroying inodes
+>       [174edb0e46e5] xfs: store in-progress CoW allocations in the refcount btree
+>       [862bb360ef56] xfs: reflink extents from one file to another
+>       [9fe26045e98f] xfs: add clone file and clone range vfs functions
+>       [cc714660bb8b] xfs: add dedupe range vfs function
+>       [f86f403794b1] xfs: teach get_bmapx about shared extents and the CoW fork
+>       [f0bc4d134b46] xfs: swap inode reflink flags when swapping inode extents
+>       [98cc2db5b8b2] xfs: unshare a range of blocks via fallocate
+>       [f7ca35227253] xfs: create a separate cow extent size hint for the allocator
+>       [84d6961910ea] xfs: preallocate blocks for worst-case btree expansion
+>       [6fa164b865e4] xfs: don't allow reflink when the AG is low on space
+>       [90e2056d76ad] xfs: try other AGs to allocate a BMBT block
+>       [83104d449e8c] xfs: garbage collect old cowextsz reservations
+>       [80de462e090c] xfs: increase log reservations for reflink
+>       [0e07c039bac5] xfs: add shared rmap map/unmap/convert log item types
+>       [ceeb9c832eec] xfs: use interval query for rmap alloc operations on shared files
+>       [3f165b334e51] xfs: convert unwritten status of reverse mappings for shared files
+>       [e153aa7990a0] xfs: set a default CoW extent size of 32 blocks
+>       [c8e156ac336d] xfs: check for invalid inode reflink flags
+>       [4f435ebe7d04] xfs: don't mix reflink and DAX mode for now
+>       [a35eb41519ab] xfs: simulate per-AG reservations being critically low
+>       [e54b5bf9d7ae] xfs: recognize the reflink feature bit
+>       [e06259aa08fb] xfs: various swapext cleanups
+>       [39aff5fdb91e] xfs: refactor swapext code
+>       [1f08af52e7c9] xfs: implement swapext for rmap filesystems
+> 
+> 
+> Code Diffstat:
+> 
+>  fs/open.c                          |    5 +
+>  fs/xfs/Makefile                    |    7 +
+>  fs/xfs/libxfs/xfs_ag_resv.c        |   15 +-
+>  fs/xfs/libxfs/xfs_alloc.c          |   23 +
+>  fs/xfs/libxfs/xfs_bmap.c           |  575 ++++++++++++-
+>  fs/xfs/libxfs/xfs_bmap.h           |   67 +-
+>  fs/xfs/libxfs/xfs_bmap_btree.c     |   18 +
+>  fs/xfs/libxfs/xfs_btree.c          |    8 +-
+>  fs/xfs/libxfs/xfs_btree.h          |   16 +
+>  fs/xfs/libxfs/xfs_defer.h          |    2 +
+>  fs/xfs/libxfs/xfs_format.h         |   97 ++-
+>  fs/xfs/libxfs/xfs_fs.h             |   10 +-
+>  fs/xfs/libxfs/xfs_inode_buf.c      |   24 +-
+>  fs/xfs/libxfs/xfs_inode_buf.h      |    1 +
+>  fs/xfs/libxfs/xfs_inode_fork.c     |   70 +-
+>  fs/xfs/libxfs/xfs_inode_fork.h     |   28 +-
+>  fs/xfs/libxfs/xfs_log_format.h     |  118 ++-
+>  fs/xfs/libxfs/xfs_refcount.c       | 1700 ++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_refcount.h       |   70 ++
+>  fs/xfs/libxfs/xfs_refcount_btree.c |  451 +++++++++++
+>  fs/xfs/libxfs/xfs_refcount_btree.h |   74 ++
+>  fs/xfs/libxfs/xfs_rmap.c           | 1120 +++++++++++++++++++++++---
+>  fs/xfs/libxfs/xfs_rmap.h           |    7 +
+>  fs/xfs/libxfs/xfs_rmap_btree.c     |   82 +-
+>  fs/xfs/libxfs/xfs_rmap_btree.h     |    7 +
+>  fs/xfs/libxfs/xfs_sb.c             |    9 +
+>  fs/xfs/libxfs/xfs_shared.h         |    2 +
+>  fs/xfs/libxfs/xfs_trans_resv.c     |   23 +-
+>  fs/xfs/libxfs/xfs_trans_resv.h     |    3 +
+>  fs/xfs/libxfs/xfs_trans_space.h    |    9 +
+>  fs/xfs/libxfs/xfs_types.h          |    3 +-
+>  fs/xfs/xfs_aops.c                  |  222 ++++-
+>  fs/xfs/xfs_aops.h                  |    4 +-
+>  fs/xfs/xfs_bmap_item.c             |  508 ++++++++++++
+>  fs/xfs/xfs_bmap_item.h             |   98 +++
+>  fs/xfs/xfs_bmap_util.c             |  589 ++++++++++----
+>  fs/xfs/xfs_dir2_readdir.c          |    3 +-
+>  fs/xfs/xfs_error.h                 |   10 +-
+>  fs/xfs/xfs_file.c                  |  221 ++++-
+>  fs/xfs/xfs_fsops.c                 |  107 ++-
+>  fs/xfs/xfs_fsops.h                 |    3 +
+>  fs/xfs/xfs_globals.c               |    5 +-
+>  fs/xfs/xfs_icache.c                |  243 +++++-
+>  fs/xfs/xfs_icache.h                |    7 +
+>  fs/xfs/xfs_inode.c                 |   51 ++
+>  fs/xfs/xfs_inode.h                 |   19 +
+>  fs/xfs/xfs_inode_item.c            |    2 +-
+>  fs/xfs/xfs_ioctl.c                 |   75 +-
+>  fs/xfs/xfs_iomap.c                 |   35 +-
+>  fs/xfs/xfs_iomap.h                 |    3 +-
+>  fs/xfs/xfs_iops.c                  |    1 +
+>  fs/xfs/xfs_itable.c                |    8 +-
+>  fs/xfs/xfs_linux.h                 |    1 +
+>  fs/xfs/xfs_log_recover.c           |  357 ++++++++
+>  fs/xfs/xfs_mount.c                 |   32 +
+>  fs/xfs/xfs_mount.h                 |    8 +
+>  fs/xfs/xfs_ondisk.h                |    3 +
+>  fs/xfs/xfs_pnfs.c                  |    7 +
+>  fs/xfs/xfs_refcount_item.c         |  539 +++++++++++++
+>  fs/xfs/xfs_refcount_item.h         |  101 +++
+>  fs/xfs/xfs_reflink.c               | 1702 +++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_reflink.h               |   58 ++
+>  fs/xfs/xfs_rmap_item.c             |   12 +
+>  fs/xfs/xfs_stats.c                 |    1 +
+>  fs/xfs/xfs_stats.h                 |   18 +-
+>  fs/xfs/xfs_super.c                 |   85 ++
+>  fs/xfs/xfs_sysctl.c                |    9 +
+>  fs/xfs/xfs_sysctl.h                |    1 +
+>  fs/xfs/xfs_trace.h                 |  742 ++++++++++++++++-
+>  fs/xfs/xfs_trans.h                 |   29 +
+>  fs/xfs/xfs_trans_bmap.c            |  249 ++++++
+>  fs/xfs/xfs_trans_refcount.c        |  264 ++++++
+>  fs/xfs/xfs_trans_rmap.c            |    9 +
+>  include/linux/falloc.h             |    3 +-
+>  include/uapi/linux/falloc.h        |   18 +
+>  include/uapi/linux/fs.h            |    4 +-
+>  76 files changed, 10697 insertions(+), 413 deletions(-)
+>  create mode 100644 fs/xfs/libxfs/xfs_refcount.c
+>  create mode 100644 fs/xfs/libxfs/xfs_refcount.h
+>  create mode 100644 fs/xfs/libxfs/xfs_refcount_btree.c
+>  create mode 100644 fs/xfs/libxfs/xfs_refcount_btree.h
+>  create mode 100644 fs/xfs/xfs_bmap_item.c
+>  create mode 100644 fs/xfs/xfs_bmap_item.h
+>  create mode 100644 fs/xfs/xfs_refcount_item.c
+>  create mode 100644 fs/xfs/xfs_refcount_item.h
+>  create mode 100644 fs/xfs/xfs_reflink.c
+>  create mode 100644 fs/xfs/xfs_reflink.h
+>  create mode 100644 fs/xfs/xfs_trans_bmap.c
+>  create mode 100644 fs/xfs/xfs_trans_refcount.c
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+
+
