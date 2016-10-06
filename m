@@ -1,77 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:25157 "EHLO mga07.intel.com"
+Received: from mga05.intel.com ([192.55.52.43]:51504 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756653AbcJGVJR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Oct 2016 17:09:17 -0400
+        id S933642AbcJFVe1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Oct 2016 17:34:27 -0400
+Date: Thu, 6 Oct 2016 15:34:24 -0600
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v5 03/17] dax: remove buffer_size_valid()
-Date: Fri,  7 Oct 2016 15:08:50 -0600
-Message-Id: <1475874544-24842-4-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v4 10/12] dax: add struct iomap based DAX PMD support
+Message-ID: <20161006213424.GA4569@linux.intel.com>
+References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
+ <1475189370-31634-11-git-send-email-ross.zwisler@linux.intel.com>
+ <20161003105949.GP6457@quack2.suse.cz>
+ <20161003210557.GA28177@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161003210557.GA28177@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Now that ext4 properly sets bh.b_size when we call get_block() for a hole,
-rely on that value and remove the buffer_size_valid() sanity check.
+On Mon, Oct 03, 2016 at 03:05:57PM -0600, Ross Zwisler wrote:
+> On Mon, Oct 03, 2016 at 12:59:49PM +0200, Jan Kara wrote:
+> > On Thu 29-09-16 16:49:28, Ross Zwisler wrote:
+<>
+> > > +int dax_iomap_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+> > > +		pmd_t *pmd, unsigned int flags, struct iomap_ops *ops)
+> > > +{
+> > > +	struct address_space *mapping = vma->vm_file->f_mapping;
+> > > +	unsigned long pmd_addr = address & PMD_MASK;
+> > > +	bool write = flags & FAULT_FLAG_WRITE;
+> > > +	struct inode *inode = mapping->host;
+> > > +	struct iomap iomap = { 0 };
+> > > +	int error, result = 0;
+> > > +	pgoff_t size, pgoff;
+> > > +	struct vm_fault vmf;
+> > > +	void *entry;
+> > > +	loff_t pos;
+> > > +
+> > > +	/* Fall back to PTEs if we're going to COW */
+> > > +	if (write && !(vma->vm_flags & VM_SHARED)) {
+> > > +		split_huge_pmd(vma, pmd, address);
+> > > +		return VM_FAULT_FALLBACK;
+> > > +	}
+> > > +
+> > > +	/* If the PMD would extend outside the VMA */
+> > > +	if (pmd_addr < vma->vm_start)
+> > > +		return VM_FAULT_FALLBACK;
+> > > +	if ((pmd_addr + PMD_SIZE) > vma->vm_end)
+> > > +		return VM_FAULT_FALLBACK;
+> > > +
+> > > +	/*
+> > > +	 * Check whether offset isn't beyond end of file now. Caller is
+> > > +	 * supposed to hold locks serializing us with truncate / punch hole so
+> > > +	 * this is a reliable test.
+> > > +	 */
+> > > +	pgoff = linear_page_index(vma, pmd_addr);
+> > > +	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
+> > > +
+> > > +	if (pgoff >= size)
+> > > +		return VM_FAULT_SIGBUS;
+> > > +
+> > > +	/* If the PMD would extend beyond the file size */
+> > > +	if ((pgoff | PG_PMD_COLOUR) >= size)
+> > > +		return VM_FAULT_FALLBACK;
+> > > +
+> > > +	/*
+> > > +	 * grab_mapping_entry() will make sure we get a 2M empty entry, a DAX
+> > > +	 * PMD or a HZP entry.  If it can't (because a 4k page is already in
+> > > +	 * the tree, for instance), it will return -EEXIST and we just fall
+> > > +	 * back to 4k entries.
+> > > +	 */
+> > > +	entry = grab_mapping_entry(mapping, pgoff, RADIX_DAX_PMD);
+> > > +	if (IS_ERR(entry))
+> > > +		return VM_FAULT_FALLBACK;
+> > > +
+> > > +	/*
+> > > +	 * Note that we don't use iomap_apply here.  We aren't doing I/O, only
+> > > +	 * setting up a mapping, so really we're using iomap_begin() as a way
+> > > +	 * to look up our filesystem block.
+> > > +	 */
+> > > +	pos = (loff_t)pgoff << PAGE_SHIFT;
+> > > +	error = ops->iomap_begin(inode, pos, PMD_SIZE, write ? IOMAP_WRITE : 0,
+> > > +			&iomap);
+> > 
+> > I'm not quite sure if it is OK to call ->iomap_begin() without ever calling
+> > ->iomap_end. Specifically the comment before iomap_apply() says:
+> > 
+> > "It is assumed that the filesystems will lock whatever resources they
+> > require in the iomap_begin call, and release them in the iomap_end call."
+> > 
+> > so what you do could result in unbalanced allocations / locks / whatever.
+> > Christoph?
+> 
+> I'll add the iomap_end() calls to both the PTE and PMD iomap fault handlers.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/dax.c | 22 +---------------------
- 1 file changed, 1 insertion(+), 21 deletions(-)
+Interesting - adding iomap_end() calls to the DAX PTE fault handler causes an
+AA deadlock because we try and retake ei->dax_sem.  We take dax_sem in
+ext2_dax_fault() before calling into the DAX code, then if we end up going
+through the error path in ext2_iomap_end(), we call 
+  ext2_write_failed()
+    ext2_truncate_blocks()
+      dax_sem_down_write()
 
-diff --git a/fs/dax.c b/fs/dax.c
-index cc025f8..9b9be8a 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -123,19 +123,6 @@ static bool buffer_written(struct buffer_head *bh)
- 	return buffer_mapped(bh) && !buffer_unwritten(bh);
- }
- 
--/*
-- * When ext4 encounters a hole, it returns without modifying the buffer_head
-- * which means that we can't trust b_size.  To cope with this, we set b_state
-- * to 0 before calling get_block and, if any bit is set, we know we can trust
-- * b_size.  Unfortunate, really, since ext4 knows precisely how long a hole is
-- * and would save us time calling get_block repeatedly.
-- */
--static bool buffer_size_valid(struct buffer_head *bh)
--{
--	return bh->b_state != 0;
--}
--
--
- static sector_t to_sector(const struct buffer_head *bh,
- 		const struct inode *inode)
- {
-@@ -177,8 +164,6 @@ static ssize_t dax_io(struct inode *inode, struct iov_iter *iter,
- 				rc = get_block(inode, block, bh, rw == WRITE);
- 				if (rc)
- 					break;
--				if (!buffer_size_valid(bh))
--					bh->b_size = 1 << blkbits;
- 				bh_max = pos - first + bh->b_size;
- 				bdev = bh->b_bdev;
- 				/*
-@@ -1012,12 +997,7 @@ int dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
- 
- 	bdev = bh.b_bdev;
- 
--	/*
--	 * If the filesystem isn't willing to tell us the length of a hole,
--	 * just fall back to PTEs.  Calling get_block 512 times in a loop
--	 * would be silly.
--	 */
--	if (!buffer_size_valid(&bh) || bh.b_size < PMD_SIZE) {
-+	if (bh.b_size < PMD_SIZE) {
- 		dax_pmd_dbg(&bh, address, "allocated block too small");
- 		return VM_FAULT_FALLBACK;
- 	}
--- 
-2.7.4
+Where we try and take dax_sem again.  This error path is really only valid for
+I/O operations, but we happen to call it for page faults because 'written' in
+ext2_iomap_end() is just 0.
 
+So...how should we handle this?  A few ideas:
+
+1) Just continue to omit the calls to iomap_end() in the DAX page fault
+handlers for now, and add them when there is useful work to be done in one of
+the filesystems.
+
+2) Add an IOMAP_FAULT flag to the flags passed into iomap_begin() and
+iomap_end() so make it explicit that we are calling as part of a fault handler
+and not an I/O operation, and use this to adjust the error handling in
+ext2_iomap_end().
+
+3) Just work around the existing error handling in ext2_iomap_end() by either
+unsetting IOMAP_WRITE or by setting 'written' to the size of the fault.
+
+For #2 or #3, probably add a comment explaining the deadlock and why we need
+to never call ext2_write_failed() while handling a page fault.
+
+Thoughts?
