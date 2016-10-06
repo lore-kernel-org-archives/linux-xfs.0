@@ -1,202 +1,273 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:39792 "EHLO
-        mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752952AbcJFM0G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Oct 2016 08:26:06 -0400
-Date: Thu, 6 Oct 2016 08:25:59 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <1860793605.807021.1475756759147.JavaMail.zimbra@redhat.com>
-In-Reply-To: <119370333.805584.1475756417736.JavaMail.zimbra@redhat.com>
-References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <20161004214219.GN4205@htj.duckdns.org> <1238277728.610186.1475676579513.JavaMail.zimbra@redhat.com> <20161005153014.GC26977@htj.duckdns.org> <270577901.647921.1475682888765.JavaMail.zimbra@redhat.com> <874538236.682217.1475693824077.JavaMail.zimbra@redhat.com> <20161005200522.GE19539@ZenIV.linux.org.uk> <119370333.805584.1475756417736.JavaMail.zimbra@redhat.com>
-Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT]
- splice_read reworked)
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:13550 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755669AbcJFLRV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Oct 2016 07:17:21 -0400
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1bs6fp-0006pU-TV
+        for linux-xfs@vger.kernel.org; Thu, 06 Oct 2016 22:17:13 +1100
+Date: Thu, 6 Oct 2016 22:17:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs: for-next branch updated to 1f08af52e7c9
+Message-ID: <20161006111713.GD9806@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="QKdGvSO+nmPlgiQ/"
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: tj <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
 
+--QKdGvSO+nmPlgiQ/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
------ Original Message -----
-> From: "CAI Qian" <caiqian@redhat.com>
-> To: "Al Viro" <viro@ZenIV.linux.org.uk>
-> Cc: "tj" <tj@kernel.org>, "Linus Torvalds" <torvalds@linux-foundation.org>, "Dave Chinner" <david@fromorbit.com>,
-> "linux-xfs" <linux-xfs@vger.kernel.org>, "Jens Axboe" <axboe@kernel.dk>, "Nick Piggin" <npiggin@gmail.com>,
-> linux-fsdevel@vger.kernel.org
-> Sent: Thursday, October 6, 2016 8:20:17 AM
-> Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT] splice_read reworked)
-> 
-> 
-> 
-> ----- Original Message -----
-> > From: "Al Viro" <viro@ZenIV.linux.org.uk>
-> > To: "CAI Qian" <caiqian@redhat.com>
-> > Cc: "tj" <tj@kernel.org>, "Linus Torvalds" <torvalds@linux-foundation.org>,
-> > "Dave Chinner" <david@fromorbit.com>,
-> > "linux-xfs" <linux-xfs@vger.kernel.org>, "Jens Axboe" <axboe@kernel.dk>,
-> > "Nick Piggin" <npiggin@gmail.com>,
-> > linux-fsdevel@vger.kernel.org
-> > Sent: Wednesday, October 5, 2016 4:05:22 PM
-> > Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT]
-> > splice_read reworked)
-> > 
-> > On Wed, Oct 05, 2016 at 02:57:04PM -0400, CAI Qian wrote:
-> > 
-> > > Not sure if this related, and there is always a lockdep regards procfs
-> > > happened
-> > > below unless masking by other lockdep issues before the cgroup hang.
-> > > Also,
-> > > this
-> > > hang is always reproducible.
-> > 
-> > Sigh...  Let's get the /proc/*/auxv out of the way - this should deal with
-> > it:
-> So I applied both this and the sanity patch, and both original sanity and the
-> proc warnings went away. However, the cgroup hang can still be reproduced as
-> well as this new xfs internal error below,
+Hi folks,
 
-Wait. There is also a lockep happened before the xfs internal error as well.
+The for-next branch of the xfs kernel repository at
 
-[ 5839.452325] ======================================================
-[ 5839.459221] [ INFO: possible circular locking dependency detected ]
-[ 5839.466215] 4.8.0-rc8-splice-fixw-proc+ #4 Not tainted
-[ 5839.471945] -------------------------------------------------------
-[ 5839.478937] trinity-c220/69531 is trying to acquire lock:
-[ 5839.484961]  (&p->lock){+.+.+.}, at: [<ffffffff812ac69c>] seq_read+0x4c/0x3e0
-[ 5839.492967] 
-but task is already holding lock:
-[ 5839.499476]  (sb_writers#8){.+.+.+}, at: [<ffffffff81284be1>] __sb_start_write+0xd1/0xf0
-[ 5839.508560] 
-which lock already depends on the new lock.
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
-[ 5839.517686] 
-the existing dependency chain (in reverse order) is:
-[ 5839.526036] 
--> #3 (sb_writers#8){.+.+.+}:
-[ 5839.530751]        [<ffffffff810ff174>] lock_acquire+0xd4/0x240
-[ 5839.537368]        [<ffffffff810f8f4a>] percpu_down_read+0x4a/0x90
-[ 5839.544275]        [<ffffffff81284be1>] __sb_start_write+0xd1/0xf0
-[ 5839.551181]        [<ffffffff812a8544>] mnt_want_write+0x24/0x50
-[ 5839.557892]        [<ffffffffa04a398f>] ovl_want_write+0x1f/0x30 [overlay]
-[ 5839.565577]        [<ffffffffa04a6036>] ovl_do_remove+0x46/0x480 [overlay]
-[ 5839.573259]        [<ffffffffa04a64a3>] ovl_unlink+0x13/0x20 [overlay]
-[ 5839.580555]        [<ffffffff812918ea>] vfs_unlink+0xda/0x190
-[ 5839.586979]        [<ffffffff81293698>] do_unlinkat+0x268/0x2b0
-[ 5839.593599]        [<ffffffff8129419b>] SyS_unlinkat+0x1b/0x30
-[ 5839.600120]        [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-[ 5839.606836]        [<ffffffff817d4a3f>] return_from_SYSCALL_64+0x0/0x7a
-[ 5839.614231] 
--> #2 (&sb->s_type->i_mutex_key#17){++++++}:
-[ 5839.620399]        [<ffffffff810ff174>] lock_acquire+0xd4/0x240
-[ 5839.627015]        [<ffffffff817d1b77>] down_read+0x47/0x70
-[ 5839.633242]        [<ffffffff8128cfd2>] lookup_slow+0xc2/0x1f0
-[ 5839.639762]        [<ffffffff8128f6f2>] walk_component+0x172/0x220
-[ 5839.646668]        [<ffffffff81290fd6>] link_path_walk+0x1a6/0x620
-[ 5839.653574]        [<ffffffff81291a81>] path_openat+0xe1/0xdb0
-[ 5839.660092]        [<ffffffff812939e1>] do_filp_open+0x91/0x100
-[ 5839.666707]        [<ffffffff81288e06>] do_open_execat+0x76/0x180
-[ 5839.673517]        [<ffffffff81288f3b>] open_exec+0x2b/0x50
-[ 5839.679743]        [<ffffffff812eccf3>] load_elf_binary+0x2a3/0x10a0
-[ 5839.686844]        [<ffffffff81288917>] search_binary_handler+0x97/0x1d0
-[ 5839.694331]        [<ffffffff81289ed8>] do_execveat_common.isra.35+0x678/0x9a0
-[ 5839.702400]        [<ffffffff8128a4da>] SyS_execve+0x3a/0x50
-[ 5839.708726]        [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-[ 5839.715441]        [<ffffffff817d4a3f>] return_from_SYSCALL_64+0x0/0x7a
-[ 5839.722833] 
--> #1 (&sig->cred_guard_mutex){+.+.+.}:
-[ 5839.728510]        [<ffffffff810ff174>] lock_acquire+0xd4/0x240
-[ 5839.735126]        [<ffffffff817cfc66>] mutex_lock_killable_nested+0x86/0x540
-[ 5839.743097]        [<ffffffff81301e84>] lock_trace+0x24/0x60
-[ 5839.749421]        [<ffffffff8130224d>] proc_pid_syscall+0x2d/0x110
-[ 5839.756423]        [<ffffffff81302af0>] proc_single_show+0x50/0x90
-[ 5839.763330]        [<ffffffff812ab867>] traverse+0xf7/0x210
-[ 5839.769557]        [<ffffffff812ac9eb>] seq_read+0x39b/0x3e0
-[ 5839.775884]        [<ffffffff81280573>] do_loop_readv_writev+0x83/0xc0
-[ 5839.783179]        [<ffffffff81281a03>] do_readv_writev+0x213/0x230
-[ 5839.790181]        [<ffffffff81281a59>] vfs_readv+0x39/0x50
-[ 5839.796406]        [<ffffffff81281c12>] do_preadv+0xa2/0xc0
-[ 5839.802634]        [<ffffffff81282ec1>] SyS_preadv+0x11/0x20
-[ 5839.808963]        [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-[ 5839.815681]        [<ffffffff817d4a3f>] return_from_SYSCALL_64+0x0/0x7a
-[ 5839.823075] 
--> #0 (&p->lock){+.+.+.}:
-[ 5839.827395]        [<ffffffff810fe69c>] __lock_acquire+0x151c/0x1990
-[ 5839.834500]        [<ffffffff810ff174>] lock_acquire+0xd4/0x240
-[ 5839.841115]        [<ffffffff817cf3b6>] mutex_lock_nested+0x76/0x450
-[ 5839.848219]        [<ffffffff812ac69c>] seq_read+0x4c/0x3e0
-[ 5839.854448]        [<ffffffff8131566b>] kernfs_fop_read+0x12b/0x1b0
-[ 5839.861451]        [<ffffffff81280573>] do_loop_readv_writev+0x83/0xc0
-[ 5839.868742]        [<ffffffff81281a03>] do_readv_writev+0x213/0x230
-[ 5839.875744]        [<ffffffff81281a59>] vfs_readv+0x39/0x50
-[ 5839.881971]        [<ffffffff812bc55a>] default_file_splice_read+0x1aa/0x2c0
-[ 5839.889847]        [<ffffffff812bb913>] do_splice_to+0x73/0x90
-[ 5839.896365]        [<ffffffff812bba1b>] splice_direct_to_actor+0xeb/0x220
-[ 5839.903950]        [<ffffffff812bbbd9>] do_splice_direct+0x89/0xd0
-[ 5839.910857]        [<ffffffff8128261e>] do_sendfile+0x1ce/0x3b0
-[ 5839.917470]        [<ffffffff812831df>] SyS_sendfile64+0x6f/0xd0
-[ 5839.924184]        [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-[ 5839.930898]        [<ffffffff817d4a3f>] return_from_SYSCALL_64+0x0/0x7a
-[ 5839.938286] 
-other info that might help us debug this:
+has just been updated. This update contains the shiny new reflink
+functionality written by Darrick. If you are not using reflink
+enabled filesystems, then you should see no new problems or
+regressions as a result ofthe merge. If you do, please let us know
+immediately.
 
-[ 5839.947217] Chain exists of:
-  &p->lock --> &sb->s_type->i_mutex_key#17 --> sb_writers#8
+For those of you that want to test the new reflink functionality,
+you'll need to grab Darrick's latest xfsprogs branch. You probably
+also want to grab his latest xfstests branch, too, so you don't get
+failures from the tests that were obviously broken by recent
+updates.
 
-[ 5839.956615]  Possible unsafe locking scenario:
+The xfsprogs reflink merge will occur after the kernel merge has
+occurred, similar to the way rmap supprot was handled in the last
+cycle. The xfstests runs with this series are not completely clean
+yet - I see 5-6 new test failures across different machines, but
+none of them are serious (e.g. unexpected ENOSPC errors causes
+generic/204 failure because reflink consumes more space) and will be
+fixed up over the next few weeks.
 
-[ 5839.963218]        CPU0                    CPU1
-[ 5839.968269]        ----                    ----
-[ 5839.973321]   lock(sb_writers#8);
-[ 5839.977046]                                lock(&sb->s_type->i_mutex_key#17);
-[ 5839.985037]                                lock(sb_writers#8);
-[ 5839.991573]   lock(&p->lock);
-[ 5839.994900] 
- *** DEADLOCK ***
+Darrick - for updates and fixes that need to be added to the 4.9
+tree, let's revert to the normal "send patch to mailing list"
+method for getting changes into the tree so everyone can pick them
+up and review them as soon as they are sent...
 
-[ 5840.001503] 1 lock held by trinity-c220/69531:
-[ 5840.006457]  #0:  (sb_writers#8){.+.+.+}, at: [<ffffffff81284be1>] __sb_start_write+0xd1/0xf0
-[ 5840.016031] 
-stack backtrace:
-[ 5840.020891] CPU: 12 PID: 69531 Comm: trinity-c220 Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-[ 5840.030306] Hardware name: Intel Corporation S2600WTT/S2600WTT, BIOS GRNDSDP1.86B.0044.R00.1501191641 01/19/2015
-[ 5840.041660]  0000000000000086 00000000a1ef62f8 ffff8803ca52f7c0 ffffffff813d2ecc
-[ 5840.049952]  ffffffff82a41160 ffffffff82a913e0 ffff8803ca52f800 ffffffff811dd630
-[ 5840.058245]  ffff8803ca52f840 ffff880392c4ecc8 ffff880392c4e000 0000000000000001
-[ 5840.066537] Call Trace:
-[ 5840.069266]  [<ffffffff813d2ecc>] dump_stack+0x85/0xc9
-[ 5840.075000]  [<ffffffff811dd630>] print_circular_bug+0x1f9/0x207
-[ 5840.081701]  [<ffffffff810fe69c>] __lock_acquire+0x151c/0x1990
-[ 5840.088208]  [<ffffffff810ff174>] lock_acquire+0xd4/0x240
-[ 5840.094232]  [<ffffffff812ac69c>] ? seq_read+0x4c/0x3e0
-[ 5840.100061]  [<ffffffff812ac69c>] ? seq_read+0x4c/0x3e0
-[ 5840.105891]  [<ffffffff817cf3b6>] mutex_lock_nested+0x76/0x450
-[ 5840.112397]  [<ffffffff812ac69c>] ? seq_read+0x4c/0x3e0
-[ 5840.118228]  [<ffffffff810fb3e9>] ? __lock_is_held+0x49/0x70
-[ 5840.124540]  [<ffffffff812ac69c>] seq_read+0x4c/0x3e0
-[ 5840.130175]  [<ffffffff81315540>] ? kernfs_vma_page_mkwrite+0x90/0x90
-[ 5840.137360]  [<ffffffff8131566b>] kernfs_fop_read+0x12b/0x1b0
-[ 5840.143770]  [<ffffffff81315540>] ? kernfs_vma_page_mkwrite+0x90/0x90
-[ 5840.150956]  [<ffffffff81280573>] do_loop_readv_writev+0x83/0xc0
-[ 5840.157657]  [<ffffffff81315540>] ? kernfs_vma_page_mkwrite+0x90/0x90
-[ 5840.164843]  [<ffffffff81281a03>] do_readv_writev+0x213/0x230
-[ 5840.171255]  [<ffffffff81418cf9>] ? __pipe_get_pages+0x24/0x9b
-[ 5840.177762]  [<ffffffff813e6f0f>] ? iov_iter_get_pages_alloc+0x19f/0x360
-[ 5840.185240]  [<ffffffff810fd5f2>] ? __lock_acquire+0x472/0x1990
-[ 5840.191843]  [<ffffffff81281a59>] vfs_readv+0x39/0x50
-[ 5840.197478]  [<ffffffff812bc55a>] default_file_splice_read+0x1aa/0x2c0
-[ 5840.204763]  [<ffffffff810cba89>] ? __might_sleep+0x49/0x80
-[ 5840.210980]  [<ffffffff81349c93>] ? security_file_permission+0xa3/0xc0
-[ 5840.218264]  [<ffffffff812bb913>] do_splice_to+0x73/0x90
-[ 5840.224190]  [<ffffffff812bba1b>] splice_direct_to_actor+0xeb/0x220
-[ 5840.231182]  [<ffffffff812baee0>] ? generic_pipe_buf_nosteal+0x10/0x10
-[ 5840.238465]  [<ffffffff812bbbd9>] do_splice_direct+0x89/0xd0
-[ 5840.244778]  [<ffffffff8128261e>] do_sendfile+0x1ce/0x3b0
-[ 5840.250802]  [<ffffffff812831df>] SyS_sendfile64+0x6f/0xd0
-[ 5840.256922]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-[ 5840.263042]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+Cheers,
 
-   CAI Qian
+Dave.
+
+The new head of the for-next branch is commit:
+
+1f08af52e7c9 xfs: implement swapext for rmap filesystems
+
+New Commits:
+
+Darrick J. Wong (63):
+      [0a6eab8bd4e0] vfs: support FS_XFLAG_COWEXTSIZE and get/set of CoW ex=
+tent size hint
+      [71be6b4942dd] vfs: add a FALLOC_FL_UNSHARE mode to fallocate to unsh=
+are a range of blocks
+      [9cdafd8a769b] xfs: return an error when an inline directory is too s=
+mall
+      [c75c752d0374] xfs: define tracepoints for refcount btree activities
+      [46eeb521b952] xfs: introduce refcount btree definitions
+      [af30dfa14411] xfs: refcount btree add more reserved blocks
+      [1946b91cee4f] xfs: define the on-disk refcount btree format
+      [ac4fef69386a] xfs: add refcount btree support to growfs
+      [f310bd2ecd37] xfs: account for the refcount btree in the alloc/free =
+log reservation
+      [bdf28630b721] xfs: add refcount btree operations
+      [baf4bcacb715] xfs: create refcount update intent log items
+      [f997ee213717] xfs: log refcount intent items
+      [3172725814f9] xfs: adjust refcount of an extent of blocks in refcoun=
+t btree
+      [33ba61292084] xfs: connect refcount adjust functions to upper layers
+      [62aab20f0875] xfs: adjust refcount when unmapping file blocks
+      [a90c00f05554] xfs: add refcount btree block detection to log recovery
+      [d0e853f3600c] xfs: reserve AG space for the refcount btree root
+      [350a27a6a65c] xfs: introduce reflink utility functions
+      [6413a01420c2] xfs: create bmbt update intent log items
+      [77d61fe45e72] xfs: log bmap intent items
+      [f65306ea5246] xfs: map an inode's offset to an exact physical block
+      [4847acf868bb] xfs: pass bmapi flags through to bmap_del_extent
+      [9f3afb57d5f1] xfs: implement deferred bmbt map/unmap operations
+      [17c12bcd3030] xfs: when replaying bmap operations, don't let unlinke=
+d inodes get reaped
+      [4453593be6c5] xfs: return work remaining at the end of a bunmapi ope=
+ration
+      [53aa1c34f4eb] xfs: define tracepoints for reflink activities
+      [f0ec1b8ef11d] xfs: add reflink feature flag to geometry
+      [11715a21bc30] xfs: don't allow reflinked dir/dev/fifo/socket/pipe fi=
+les
+      [3993baeb3c52] xfs: introduce the CoW fork
+      [be51f8119c2f] xfs: support bmapping delalloc extents in the CoW fork
+      [2a06705cd595] xfs: create delalloc extents in CoW fork
+      [60b4984fc392] xfs: support allocating delayed extents in CoW fork
+      [ef4736678fc3] xfs: allocate delayed extents in CoW fork
+      [4862cfe825c0] xfs: support removing extents from CoW fork
+      [43caeb187deb] xfs: move mappings from cow fork to data fork after co=
+py-write
+      [db1327b16c2b] xfs: report shared extent mappings to userspace correc=
+tly
+      [0613f16cd201] xfs: implement CoW for directio writes
+      [aa8968f227a8] xfs: cancel CoW reservations and clear inode reflink f=
+lag when freeing blocks
+      [5e7e605c4d1b] xfs: cancel pending CoW reservations when destroying i=
+nodes
+      [174edb0e46e5] xfs: store in-progress CoW allocations in the refcount=
+ btree
+      [862bb360ef56] xfs: reflink extents from one file to another
+      [9fe26045e98f] xfs: add clone file and clone range vfs functions
+      [cc714660bb8b] xfs: add dedupe range vfs function
+      [f86f403794b1] xfs: teach get_bmapx about shared extents and the CoW =
+fork
+      [f0bc4d134b46] xfs: swap inode reflink flags when swapping inode exte=
+nts
+      [98cc2db5b8b2] xfs: unshare a range of blocks via fallocate
+      [f7ca35227253] xfs: create a separate cow extent size hint for the al=
+locator
+      [84d6961910ea] xfs: preallocate blocks for worst-case btree expansion
+      [6fa164b865e4] xfs: don't allow reflink when the AG is low on space
+      [90e2056d76ad] xfs: try other AGs to allocate a BMBT block
+      [83104d449e8c] xfs: garbage collect old cowextsz reservations
+      [80de462e090c] xfs: increase log reservations for reflink
+      [0e07c039bac5] xfs: add shared rmap map/unmap/convert log item types
+      [ceeb9c832eec] xfs: use interval query for rmap alloc operations on s=
+hared files
+      [3f165b334e51] xfs: convert unwritten status of reverse mappings for =
+shared files
+      [e153aa7990a0] xfs: set a default CoW extent size of 32 blocks
+      [c8e156ac336d] xfs: check for invalid inode reflink flags
+      [4f435ebe7d04] xfs: don't mix reflink and DAX mode for now
+      [a35eb41519ab] xfs: simulate per-AG reservations being critically low
+      [e54b5bf9d7ae] xfs: recognize the reflink feature bit
+      [e06259aa08fb] xfs: various swapext cleanups
+      [39aff5fdb91e] xfs: refactor swapext code
+      [1f08af52e7c9] xfs: implement swapext for rmap filesystems
+
+
+Code Diffstat:
+
+ fs/open.c                          |    5 +
+ fs/xfs/Makefile                    |    7 +
+ fs/xfs/libxfs/xfs_ag_resv.c        |   15 +-
+ fs/xfs/libxfs/xfs_alloc.c          |   23 +
+ fs/xfs/libxfs/xfs_bmap.c           |  575 ++++++++++++-
+ fs/xfs/libxfs/xfs_bmap.h           |   67 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c     |   18 +
+ fs/xfs/libxfs/xfs_btree.c          |    8 +-
+ fs/xfs/libxfs/xfs_btree.h          |   16 +
+ fs/xfs/libxfs/xfs_defer.h          |    2 +
+ fs/xfs/libxfs/xfs_format.h         |   97 ++-
+ fs/xfs/libxfs/xfs_fs.h             |   10 +-
+ fs/xfs/libxfs/xfs_inode_buf.c      |   24 +-
+ fs/xfs/libxfs/xfs_inode_buf.h      |    1 +
+ fs/xfs/libxfs/xfs_inode_fork.c     |   70 +-
+ fs/xfs/libxfs/xfs_inode_fork.h     |   28 +-
+ fs/xfs/libxfs/xfs_log_format.h     |  118 ++-
+ fs/xfs/libxfs/xfs_refcount.c       | 1700 ++++++++++++++++++++++++++++++++=
+++++++
+ fs/xfs/libxfs/xfs_refcount.h       |   70 ++
+ fs/xfs/libxfs/xfs_refcount_btree.c |  451 +++++++++++
+ fs/xfs/libxfs/xfs_refcount_btree.h |   74 ++
+ fs/xfs/libxfs/xfs_rmap.c           | 1120 +++++++++++++++++++++++---
+ fs/xfs/libxfs/xfs_rmap.h           |    7 +
+ fs/xfs/libxfs/xfs_rmap_btree.c     |   82 +-
+ fs/xfs/libxfs/xfs_rmap_btree.h     |    7 +
+ fs/xfs/libxfs/xfs_sb.c             |    9 +
+ fs/xfs/libxfs/xfs_shared.h         |    2 +
+ fs/xfs/libxfs/xfs_trans_resv.c     |   23 +-
+ fs/xfs/libxfs/xfs_trans_resv.h     |    3 +
+ fs/xfs/libxfs/xfs_trans_space.h    |    9 +
+ fs/xfs/libxfs/xfs_types.h          |    3 +-
+ fs/xfs/xfs_aops.c                  |  222 ++++-
+ fs/xfs/xfs_aops.h                  |    4 +-
+ fs/xfs/xfs_bmap_item.c             |  508 ++++++++++++
+ fs/xfs/xfs_bmap_item.h             |   98 +++
+ fs/xfs/xfs_bmap_util.c             |  589 ++++++++++----
+ fs/xfs/xfs_dir2_readdir.c          |    3 +-
+ fs/xfs/xfs_error.h                 |   10 +-
+ fs/xfs/xfs_file.c                  |  221 ++++-
+ fs/xfs/xfs_fsops.c                 |  107 ++-
+ fs/xfs/xfs_fsops.h                 |    3 +
+ fs/xfs/xfs_globals.c               |    5 +-
+ fs/xfs/xfs_icache.c                |  243 +++++-
+ fs/xfs/xfs_icache.h                |    7 +
+ fs/xfs/xfs_inode.c                 |   51 ++
+ fs/xfs/xfs_inode.h                 |   19 +
+ fs/xfs/xfs_inode_item.c            |    2 +-
+ fs/xfs/xfs_ioctl.c                 |   75 +-
+ fs/xfs/xfs_iomap.c                 |   35 +-
+ fs/xfs/xfs_iomap.h                 |    3 +-
+ fs/xfs/xfs_iops.c                  |    1 +
+ fs/xfs/xfs_itable.c                |    8 +-
+ fs/xfs/xfs_linux.h                 |    1 +
+ fs/xfs/xfs_log_recover.c           |  357 ++++++++
+ fs/xfs/xfs_mount.c                 |   32 +
+ fs/xfs/xfs_mount.h                 |    8 +
+ fs/xfs/xfs_ondisk.h                |    3 +
+ fs/xfs/xfs_pnfs.c                  |    7 +
+ fs/xfs/xfs_refcount_item.c         |  539 +++++++++++++
+ fs/xfs/xfs_refcount_item.h         |  101 +++
+ fs/xfs/xfs_reflink.c               | 1702 ++++++++++++++++++++++++++++++++=
++++++++
+ fs/xfs/xfs_reflink.h               |   58 ++
+ fs/xfs/xfs_rmap_item.c             |   12 +
+ fs/xfs/xfs_stats.c                 |    1 +
+ fs/xfs/xfs_stats.h                 |   18 +-
+ fs/xfs/xfs_super.c                 |   85 ++
+ fs/xfs/xfs_sysctl.c                |    9 +
+ fs/xfs/xfs_sysctl.h                |    1 +
+ fs/xfs/xfs_trace.h                 |  742 ++++++++++++++++-
+ fs/xfs/xfs_trans.h                 |   29 +
+ fs/xfs/xfs_trans_bmap.c            |  249 ++++++
+ fs/xfs/xfs_trans_refcount.c        |  264 ++++++
+ fs/xfs/xfs_trans_rmap.c            |    9 +
+ include/linux/falloc.h             |    3 +-
+ include/uapi/linux/falloc.h        |   18 +
+ include/uapi/linux/fs.h            |    4 +-
+ 76 files changed, 10697 insertions(+), 413 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_refcount.c
+ create mode 100644 fs/xfs/libxfs/xfs_refcount.h
+ create mode 100644 fs/xfs/libxfs/xfs_refcount_btree.c
+ create mode 100644 fs/xfs/libxfs/xfs_refcount_btree.h
+ create mode 100644 fs/xfs/xfs_bmap_item.c
+ create mode 100644 fs/xfs/xfs_bmap_item.h
+ create mode 100644 fs/xfs/xfs_refcount_item.c
+ create mode 100644 fs/xfs/xfs_refcount_item.h
+ create mode 100644 fs/xfs/xfs_reflink.c
+ create mode 100644 fs/xfs/xfs_reflink.h
+ create mode 100644 fs/xfs/xfs_trans_bmap.c
+ create mode 100644 fs/xfs/xfs_trans_refcount.c
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--QKdGvSO+nmPlgiQ/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJX9jK5AAoJEK3oKUf0dfodxTIP/2bw4yoQeVRQnCNS/JPTPUj5
+VfGw5ME0dlWcfjJzVjZj1TOtkdapoRknI9OSoleK/JDx5U+f11OQDWe63h+hOXzJ
+8GdkTqIgI/04en0kOQxbs9xZLkBtGJbPyJfQKymruJJEV/MCX5Yx3bLq+KZoVjUR
+KGlTpYSNag9/zzdr8wwWDSGzIApcygtJ6IGULUSAun8KgioEEXybeaGOupZAwpcg
+daAs563DvVX28+9/dNeuE02+df4EqZX2lxsjOxJrE7/t4O/1FniImojxYD5VloZk
+v5XD9oTQdCefnkLW3nEhDxuaYn9CozHegCrNBwujLyQ6vLNLX5RZso+aw8l/MFqQ
+Pmy88Pk00NnF7jZKK2u3zE9CcMW38MOVzyEc0qVyupmOQ4YHJndcOT2fMGjnoTuG
+3ZQvtfw7tdK4OfUpUvXTTZ0isEDSKilWiLk3RpBmL7qkDm1YOweTXeQvqPrQgG2P
+kp0Bh9Yo/dhgRPJM8LUFSZ84J/Iv5P/in3YH6nIRn/sCPWq6gkpfGZpr1mRJGPmy
+4PQYfjaUwMpCxgzYdDh6hXSkjP8JGL1g/gztMf48U6RwIv6DfBhRb7IYDs/7gFjm
+RFznA3glUlIdCBQ2EJxcySkTOFvtt9BIx8m1bUqyWa4E6NDL4vOEEPtJy471qtbg
+1DdzH6qAPNjF+DhYhEIV
+=GTBd
+-----END PGP SIGNATURE-----
+
+--QKdGvSO+nmPlgiQ/--
