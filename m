@@ -1,51 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx6-phx2.redhat.com ([209.132.183.39]:39911 "EHLO
-        mx6-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755872AbcJMU7M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2016 16:59:12 -0400
-Date: Thu, 13 Oct 2016 16:56:35 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <276304423.810977.1476392195227.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20161013204917.GQ23194@dastard>
-References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <20161009215454.GM9806@dastard> <988281682.41395.1476108629872.JavaMail.zimbra@redhat.com> <20161010215714.GF23194@dastard> <885869771.578073.1476301836438.JavaMail.zimbra@redhat.com> <20161012205901.GF27872@dastard> <895314622.769515.1476375930648.JavaMail.zimbra@redhat.com> <20161013204917.GQ23194@dastard>
-Subject: Re: [bisected] Re: local DoS - systemd hang or timeout (WAS: Re:
- [RFC][CFT] splice_read reworked)
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:42159 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752243AbcJGJ5x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 05:57:53 -0400
+Date: Fri, 7 Oct 2016 20:57:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT]
+ splice_read reworked)
+Message-ID: <20161007095749.GI9806@dastard>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
+ <1238277728.610186.1475676579513.JavaMail.zimbra@redhat.com>
+ <20161005153014.GC26977@htj.duckdns.org>
+ <270577901.647921.1475682888765.JavaMail.zimbra@redhat.com>
+ <874538236.682217.1475693824077.JavaMail.zimbra@redhat.com>
+ <20161005200522.GE19539@ZenIV.linux.org.uk>
+ <119370333.805584.1475756417736.JavaMail.zimbra@redhat.com>
+ <1860793605.807021.1475756759147.JavaMail.zimbra@redhat.com>
+ <1149670394.870034.1475770286233.JavaMail.zimbra@redhat.com>
+ <CA+55aFz28kQUAYoSFzvEpq5MkYHNcKx2KWP-kpruuyWe7AEY2Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+55aFz28kQUAYoSFzvEpq5MkYHNcKx2KWP-kpruuyWe7AEY2Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Sage Weil <sage@redhat.com>, Brian Foster <bfoster@redhat.com>, Jan Kara <jack@suse.cz>, Miklos Szeredi <miklos@szeredi.hu>, tj <tj@kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org, Dave Jones <davej@codemonkey.org.uk>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: CAI Qian <caiqian@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, tj <tj@kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-
-
------ Original Message -----
-> From: "Dave Chinner" <david@fromorbit.com>
-> Sent: Thursday, October 13, 2016 4:49:17 PM
-> Subject: Re: [bisected] Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT] splice_read reworked)
->
-> Why? This isn't a security issue - CVEs cost time and effort for
-> everyone to track and follow and raising them for issues like this
-> does not help anyone fix the actual problem.  It doesn't help us
-> track it, analyse it, communicate with the bug reporter, test it or
-> get the fix committed.  It's meaningless to the developers fixing
-> the code, it's meaningless to users, and it's meaningless to most
-> distros that are supporting XFS because the distro maintainers don't
-> watch the CVE lists for XFS bugs they need to backport and fix.
+On Thu, Oct 06, 2016 at 10:00:08AM -0700, Linus Torvalds wrote:
+> On Thu, Oct 6, 2016 at 9:11 AM, CAI Qian <caiqian@redhat.com> wrote:
+> >
+> >>
+> >> Wait. There is also a lockep happened before the xfs internal error as well.
+> > Some other lockdep this time,
 > 
-> All this does is artificially inflate the supposed importance of the
-> bug. CVEs are for security or severe issues. This is neither serious
-> or a security issue - please have the common courtesy to ask the
-> people with the knowledge to make such a determination (i.e. the
-> maintainers) before you waste the time of a /large number/ of people
-> by raising a useless CVE...
+> This one looks just bogus.
 > 
-> Yes, you found a bug. No, it's not a security bug. No, you should
-> not abusing of the CVE process to apply pressure to get it fixed.
-> Please don't do this again.
-As far as I can tell, this is a medium-severity security issue that a
-non-privileged user can exploit it to cause a system hang/deadlock.
-Hence, a local DoS for other users use the system.
-   CAI Qian
+> > [ 4872.569797]  Possible unsafe locking scenario:
+> > [ 4872.569797]
+> > [ 4872.576401]        CPU0
+> > [ 4872.579127]        ----
+> > [ 4872.581854]   lock(&xfs_nondir_ilock_class);
+> > [ 4872.586637]   <Interrupt>
+> > [ 4872.589558]     lock(&xfs_nondir_ilock_class);
+> 
+> I'm not seeing that .lock taken in interrupt context.
+
+It's a memory allocation vs reclaim context warning, not a lock
+warning. That overloads the lock vs interrupt lockdep mechanism, so
+if lockdep sees a context violation it is reported as an "interrupt
+context" lock problem.
+
+The allocation context in question is in a function that can be
+called from both inside and outside a transaction context. When
+outside a transaction, it's a GFP_KERNEL allocation, when inside
+it's a GFP_NOFS context.  However, both allocation contexts hold the
+inode ilock over the allocation.
+
+the inode shrinker (reclaim context) also happens to take the inode
+ilock, and that's what lockdep is complaining about. i.e. it thinks
+that this path ilock -> alloc(GFP_KERNEL) -> reclaim -> ilock can
+deadlock. But it can't - the ilock held at the upper side is a
+referenced inode and can't be seen by reclaim, and the ilocks taken
+by reclaim are inodes that can't be seen or referenced by the VFS.
+
+i.e. There's no depedencies between the ilocks on either side of
+memory allocation, but there's no way of telling lockdep that short
+of giving the inodes in reclaim a different lock class. We used to
+do that, but that was a nasty hack and prevented lockdep from
+verifying locking orders used on inodes and objects in reclaim
+matched the locking orders of referenced inodes...
+
+We've historically shut these false positives up by simply making
+all the allocations in these dual context paths GFP_NOFS. However, I
+recently got told not to do that by someone on the mm side because
+it exacerbated deficiencies in memory reclaim when too many
+allocations use GFP_NOFS.
+
+So it's not "fixed" and instead I'm ignoring it.  If you spend any
+amount of time running lockdep on XFS you'll get as sick and tired
+of playing this whack-a-lockdep-false-positive game as I am.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
