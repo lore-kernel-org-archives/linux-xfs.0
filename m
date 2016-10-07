@@ -1,84 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42268 "EHLO mx1.redhat.com"
+Received: from mga07.intel.com ([134.134.136.100]:58506 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S942255AbcJFQol (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Oct 2016 12:44:41 -0400
-Date: Thu, 6 Oct 2016 12:44:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 39/63] xfs: cancel pending CoW reservations when
- destroying inodes
-Message-ID: <20161006164438.GD16893@bfoster.bfoster>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520499278.29434.8445614313262327612.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <147520499278.29434.8445614313262327612.stgit@birch.djwong.org>
+        id S1756667AbcJGVJR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Oct 2016 17:09:17 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v5 04/17] ext2: remove support for DAX PMD faults
+Date: Fri,  7 Oct 2016 15:08:51 -0600
+Message-Id: <1475874544-24842-5-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Thu, Sep 29, 2016 at 08:09:52PM -0700, Darrick J. Wong wrote:
-> When destroying the inode, cancel all pending reservations in the CoW
-> fork so that all the reserved blocks go back to the free pile.  In
-> theory this sort of cleanup is only needed to clean up after write
-> errors.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_super.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 204b794..26b45b3 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -49,6 +49,7 @@
->  #include "xfs_rmap_item.h"
->  #include "xfs_refcount_item.h"
->  #include "xfs_bmap_item.h"
-> +#include "xfs_reflink.h"
->  
->  #include <linux/namei.h>
->  #include <linux/init.h>
-> @@ -938,6 +939,7 @@ xfs_fs_destroy_inode(
->  	struct inode		*inode)
->  {
->  	struct xfs_inode	*ip = XFS_I(inode);
-> +	int			error;
->  
->  	trace_xfs_destroy_inode(ip);
->  
-> @@ -945,6 +947,12 @@ xfs_fs_destroy_inode(
->  	XFS_STATS_INC(ip->i_mount, vn_rele);
->  	XFS_STATS_INC(ip->i_mount, vn_remove);
->  
-> +	error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
-> +	if (error && !XFS_FORCED_SHUTDOWN(ip->i_mount))
-> +		xfs_warn(ip->i_mount, "Error %d while evicting CoW blocks "
-> +				"for inode %llu.",
-> +				error, ip->i_ino);
-> +
+DAX PMD support was added via the following commit:
 
-We don't actually check the inode reflink flag until down in
-xfs_reflink_cancel_cow_blocks(), after we've allocated a transaction.
-That seems potentially heavy weight for reclaim, as if there's a
-performance impact (which I haven't tested) it would affect all
-filesystems afaict (i.e., regardless of whether reflink is supported).
+commit e7b1ea2ad658 ("ext2: huge page fault support")
 
-Further, if this isn't a reflink inode, it looks like we actually commit
-the transaction rather than cancel it as well.
+I believe this path to be untested as ext2 doesn't reliably provide block
+allocations that are aligned to 2MiB.  In my testing I've been unable to
+get ext2 to actually fault in a PMD.  It always fails with a "pfn
+unaligned" message because the sector returned by ext2_get_block() isn't
+aligned.
 
-Brian
+I've tried various settings for the "stride" and "stripe_width" extended
+options to mkfs.ext2, without any luck.
 
->  	xfs_inactive(ip);
->  
->  	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Since we can't reliably get PMDs, remove support so that we don't have an
+untested code path that we may someday traverse when we happen to get an
+aligned block allocation.  This should also make 4k DAX faults in ext2 a
+bit faster since they will no longer have to call the PMD fault handler
+only to get a response of VM_FAULT_FALLBACK.
+
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/ext2/file.c | 29 ++++++-----------------------
+ 1 file changed, 6 insertions(+), 23 deletions(-)
+
+diff --git a/fs/ext2/file.c b/fs/ext2/file.c
+index 0ca363d..0f257f8 100644
+--- a/fs/ext2/file.c
++++ b/fs/ext2/file.c
+@@ -107,27 +107,6 @@ static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ 	return ret;
+ }
+ 
+-static int ext2_dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
+-						pmd_t *pmd, unsigned int flags)
+-{
+-	struct inode *inode = file_inode(vma->vm_file);
+-	struct ext2_inode_info *ei = EXT2_I(inode);
+-	int ret;
+-
+-	if (flags & FAULT_FLAG_WRITE) {
+-		sb_start_pagefault(inode->i_sb);
+-		file_update_time(vma->vm_file);
+-	}
+-	down_read(&ei->dax_sem);
+-
+-	ret = dax_pmd_fault(vma, addr, pmd, flags, ext2_get_block);
+-
+-	up_read(&ei->dax_sem);
+-	if (flags & FAULT_FLAG_WRITE)
+-		sb_end_pagefault(inode->i_sb);
+-	return ret;
+-}
+-
+ static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
+ 		struct vm_fault *vmf)
+ {
+@@ -154,7 +133,11 @@ static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
+ 
+ static const struct vm_operations_struct ext2_dax_vm_ops = {
+ 	.fault		= ext2_dax_fault,
+-	.pmd_fault	= ext2_dax_pmd_fault,
++	/*
++	 * .pmd_fault is not supported for DAX because allocation in ext2
++	 * cannot be reliably aligned to huge page sizes and so pmd faults
++	 * will always fail and fail back to regular faults.
++	 */
+ 	.page_mkwrite	= ext2_dax_fault,
+ 	.pfn_mkwrite	= ext2_dax_pfn_mkwrite,
+ };
+@@ -166,7 +149,7 @@ static int ext2_file_mmap(struct file *file, struct vm_area_struct *vma)
+ 
+ 	file_accessed(file);
+ 	vma->vm_ops = &ext2_dax_vm_ops;
+-	vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
++	vma->vm_flags |= VM_MIXEDMAP;
+ 	return 0;
+ }
+ #else
+-- 
+2.7.4
+
