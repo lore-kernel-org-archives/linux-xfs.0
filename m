@@ -1,91 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17956 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:18224 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751749AbcJGAkw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Oct 2016 20:40:52 -0400
-Date: Thu, 6 Oct 2016 17:40:44 -0700
+        with ESMTP id S1751749AbcJGAmM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Oct 2016 20:42:12 -0400
+Date: Thu, 6 Oct 2016 17:42:05 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 38/63] xfs: cancel CoW reservations and clear inode
- reflink flag when freeing blocks
-Message-ID: <20161007004044.GA11241@birch.djwong.org>
+Subject: Re: [PATCH 39/63] xfs: cancel pending CoW reservations when
+ destroying inodes
+Message-ID: <20161007004205.GB11241@birch.djwong.org>
 References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520498644.29434.5014643991183828847.stgit@birch.djwong.org>
- <20161006164432.GC16893@bfoster.bfoster>
+ <147520499278.29434.8445614313262327612.stgit@birch.djwong.org>
+ <20161006164438.GD16893@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161006164432.GC16893@bfoster.bfoster>
+In-Reply-To: <20161006164438.GD16893@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Thu, Oct 06, 2016 at 12:44:33PM -0400, Brian Foster wrote:
-> On Thu, Sep 29, 2016 at 08:09:46PM -0700, Darrick J. Wong wrote:
-> > When we're freeing blocks (truncate, punch, etc.), clear all CoW
-> > reservations in the range being freed.  If the file block count
-> > drops to zero, also clear the inode reflink flag.
+On Thu, Oct 06, 2016 at 12:44:39PM -0400, Brian Foster wrote:
+> On Thu, Sep 29, 2016 at 08:09:52PM -0700, Darrick J. Wong wrote:
+> > When destroying the inode, cancel all pending reservations in the CoW
+> > fork so that all the reserved blocks go back to the free pile.  In
+> > theory this sort of cleanup is only needed to clean up after write
+> > errors.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  fs/xfs/xfs_inode.c |   13 +++++++++++++
-> >  1 file changed, 13 insertions(+)
+> >  fs/xfs/xfs_super.c |    8 ++++++++
+> >  1 file changed, 8 insertions(+)
 > > 
 > > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 0c25a76..8c971fd 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index 204b794..26b45b3 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
 > > @@ -49,6 +49,7 @@
-> >  #include "xfs_trans_priv.h"
-> >  #include "xfs_log.h"
-> >  #include "xfs_bmap_btree.h"
+> >  #include "xfs_rmap_item.h"
+> >  #include "xfs_refcount_item.h"
+> >  #include "xfs_bmap_item.h"
 > > +#include "xfs_reflink.h"
 > >  
-> >  kmem_zone_t *xfs_inode_zone;
+> >  #include <linux/namei.h>
+> >  #include <linux/init.h>
+> > @@ -938,6 +939,7 @@ xfs_fs_destroy_inode(
+> >  	struct inode		*inode)
+> >  {
+> >  	struct xfs_inode	*ip = XFS_I(inode);
+> > +	int			error;
 > >  
-> > @@ -1586,6 +1587,18 @@ xfs_itruncate_extents(
-> >  			goto out;
-> >  	}
+> >  	trace_xfs_destroy_inode(ip);
 > >  
-> > +	/* Remove all pending CoW reservations. */
-> > +	error = xfs_reflink_cancel_cow_blocks(ip, &tp, first_unmap_block,
-> > +			last_block);
-> > +	if (error)
-> > +		goto out;
-> > +
-> > +	/*
-> > +	 * Clear the reflink flag if we truncated everything.
-> > +	 */
-> > +	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip))
-> > +		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+> > @@ -945,6 +947,12 @@ xfs_fs_destroy_inode(
+> >  	XFS_STATS_INC(ip->i_mount, vn_rele);
+> >  	XFS_STATS_INC(ip->i_mount, vn_remove);
+> >  
+> > +	error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
+> > +	if (error && !XFS_FORCED_SHUTDOWN(ip->i_mount))
+> > +		xfs_warn(ip->i_mount, "Error %d while evicting CoW blocks "
+> > +				"for inode %llu.",
+> > +				error, ip->i_ino);
 > > +
 > 
-> So this implies the reflink flag is more of an optimization than an
-> accurate assessment of reflink state (e.g., we can have DIFLAG2_REFLINK
-> w/o shared extents, but we should never have shared extents w/o the
-> flag) because this wouldn't clear the flag on a partial truncate that
-> happened to unmap all of the shared extents from the file.
+> We don't actually check the inode reflink flag until down in
+> xfs_reflink_cancel_cow_blocks(), after we've allocated a transaction.
+> That seems potentially heavy weight for reclaim, as if there's a
+> performance impact (which I haven't tested) it would affect all
+> filesystems afaict (i.e., regardless of whether reflink is supported).
+> 
+> Further, if this isn't a reflink inode, it looks like we actually commit
+> the transaction rather than cancel it as well.
 
-Yes, not to mention that (bugs notwithstanding) all the CoW stuff
-shuts off if the inode flag isn't set.
-
-> That seems fine, I'll just note there's one small potential conflict
-> ahead where we (dis)allow setting the realtime state based on the
-> reflink flag.
-
-Hmm.  You're right, if we're able to set the rt flag (i.e. data size is zero)
-then we ought to just clear the reflink flag.
+Eeek.  xfs_reflink_cancel_cow_range (or something) should jump out if
+it's not a reflink inode.
 
 --D
 
 > 
 > Brian
 > 
-> >  	/*
-> >  	 * Always re-log the inode so that our permanent transaction can keep
-> >  	 * on rolling it forward in the log.
+> >  	xfs_inactive(ip);
+> >  
+> >  	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
 > > 
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
