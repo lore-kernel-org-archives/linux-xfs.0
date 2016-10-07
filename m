@@ -1,61 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:6972 "EHLO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:52510 "EHLO
         ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756621AbcJMTqb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2016 15:46:31 -0400
-Date: Fri, 14 Oct 2016 06:46:13 +1100
+        by vger.kernel.org with ESMTP id S1752300AbcJGJ10 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 05:27:26 -0400
+Date: Fri, 7 Oct 2016 20:27:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [LTP] [PATCH] m4/ltp-xfs_quota.m4: fix xfs quota check
-Message-ID: <20161013194613.GP23194@dastard>
-References: <1476150729-2128-1-git-send-email-yangx.jy@cn.fujitsu.com>
- <20161013141145.GA12204@rei.lan>
+Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT]
+ splice_read reworked)
+Message-ID: <20161007092704.GH9806@dastard>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
+ <1812816839.401734.1475602751170.JavaMail.zimbra@redhat.com>
+ <20161004214219.GN4205@htj.duckdns.org>
+ <1238277728.610186.1475676579513.JavaMail.zimbra@redhat.com>
+ <20161005153014.GC26977@htj.duckdns.org>
+ <270577901.647921.1475682888765.JavaMail.zimbra@redhat.com>
+ <874538236.682217.1475693824077.JavaMail.zimbra@redhat.com>
+ <20161005200522.GE19539@ZenIV.linux.org.uk>
+ <119370333.805584.1475756417736.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161013141145.GA12204@rei.lan>
+In-Reply-To: <119370333.805584.1475756417736.JavaMail.zimbra@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Cyril Hrubis <chrubis@suse.cz>
-Cc: Xiao Yang <yangx.jy@cn.fujitsu.com>, ltp@lists.linux.it, linux-xfs@vger.kernel.org
+To: CAI Qian <caiqian@redhat.com>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>, tj <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org
 
-On Thu, Oct 13, 2016 at 04:11:45PM +0200, Cyril Hrubis wrote:
-> Hi!
-> > Current check doesn't work since xfsprogs v4.5.0.
-> > Undefined off64_t type leads to this issue, so we
-> > need to define _GNU_SOURCE to make off64_t defined.
-> > 
-> > This has been broken by upstream xfsporgs-dev commmit
-> > 
-> > commit cb898f157f8410a03cf5f3400baa1df9e5eecd33
-> > Author: Felix Janda <felix.janda@posteo.de>
-> > Date: Fri Feb 5 08:34:06 2016 +1100
-> > 
-> >   linux.h: Use off64_t instead of loff_t
+On Thu, Oct 06, 2016 at 08:20:17AM -0400, CAI Qian wrote:
 > 
-> That kind of looks like a bug in xfs-progs, since off64_t is not exposed
-> from glibc unless we enable either largefile support or define
-> _GNU_SOURCE. As a matter of fact the _GNU_SOURCE enables
-> _LARGEFILE64_SOURCE which then enables the typedef that exposes the
-> off64_t typedef.
+> 
+> ----- Original Message -----
+> > From: "Al Viro" <viro@ZenIV.linux.org.uk>
+> > To: "CAI Qian" <caiqian@redhat.com>
+> > Cc: "tj" <tj@kernel.org>, "Linus Torvalds" <torvalds@linux-foundation.org>, "Dave Chinner" <david@fromorbit.com>,
+> > "linux-xfs" <linux-xfs@vger.kernel.org>, "Jens Axboe" <axboe@kernel.dk>, "Nick Piggin" <npiggin@gmail.com>,
+> > linux-fsdevel@vger.kernel.org
+> > Sent: Wednesday, October 5, 2016 4:05:22 PM
+> > Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT] splice_read reworked)
+> > 
+> > On Wed, Oct 05, 2016 at 02:57:04PM -0400, CAI Qian wrote:
+> > 
+> > > Not sure if this related, and there is always a lockdep regards procfs
+> > > happened
+> > > below unless masking by other lockdep issues before the cgroup hang. Also,
+> > > this
+> > > hang is always reproducible.
+> > 
+> > Sigh...  Let's get the /proc/*/auxv out of the way - this should deal with
+> > it:
+> So I applied both this and the sanity patch, and both original sanity and the
+> proc warnings went away. However, the cgroup hang can still be reproduced as
+> well as this new xfs internal error below,
+> 
+> [16921.141233] XFS (dm-0): Internal error XFS_WANT_CORRUPTED_RETURN at line 5619 of file fs/xfs/libxfs/xfs_bmap.c.  Caller xfs_bmap_shift_extents+0x1cc/0x3a0 [xfs]
+> [16921.157694] CPU: 9 PID: 52920 Comm: trinity-c108 Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
 
-Which is a bug in the application build - if you are doing anything
-with XFS, you need to define _LARGEFILE64_SOURCE. No ifs, buts or
-maybes - it's a 64 bit filesystem with 64 bit interfaces (e.g.
-ioctls) and so applications that include XFS headers to poke at XFS
-filesystems need to fully support 64 bit file offsets....
-
-> So they are depending on a type that is not defined by default but since
-> the code has been part of at least three releases already we have to
-> apply the workaround for it anyway.
-
-We're only going to get stricter on this - next cycle we're removing
-off64_t and replacing it with off_t, and then we'll be /explicitly/
-breaking the build of any application that hasn't set up it's build
-environment to define off_t as a 64 bit variable.  i.e.  specifying
-_LARGEFILE64_SOURCE before the inclusion of XFS headers will be a
-mandatory requirement - that's far better than ending up with clean
-builds and subtly broken applications...
+iIt found a delayed allocation extent in the extent map after
+flushing all the dirty data in the file. Something else has gone
+wrong, this corruption detection is just the messenger. Maybe
+memory corruption?
 
 Cheers,
 
