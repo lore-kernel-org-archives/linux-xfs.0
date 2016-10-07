@@ -1,484 +1,619 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43906 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752265AbcJEVWl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Oct 2016 17:22:41 -0400
-Date: Wed, 5 Oct 2016 14:22:23 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 35/63] xfs: move mappings from cow fork to data fork
- after copy-write
-Message-ID: <20161005212223.GB3992@birch.djwong.org>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520496726.29434.17171766557131973673.stgit@birch.djwong.org>
- <20161005182648.GB4042@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161005182648.GB4042@bfoster.bfoster>
+Received: from mga07.intel.com ([134.134.136.100]:20123 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757225AbcJGVJY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Oct 2016 17:09:24 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v5 15/17] dax: add struct iomap based DAX PMD support
+Date: Fri,  7 Oct 2016 15:09:02 -0600
+Message-Id: <1475874544-24842-16-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Wed, Oct 05, 2016 at 02:26:48PM -0400, Brian Foster wrote:
-> On Thu, Sep 29, 2016 at 08:09:27PM -0700, Darrick J. Wong wrote:
-> > After the write component of a copy-write operation finishes, clean up
-> > the bookkeeping left behind.  On error, we simply free the new blocks
-> > and pass the error up.  If we succeed, however, then we must remove
-> > the old data fork mapping and move the cow fork mapping to the data
-> > fork.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > [hch: Call the CoW failure function during xfs_cancel_ioend]
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> > v2: If CoW fails, we need to remove the CoW fork mapping and free the
-> > blocks.  Furthermore, if xfs_cancel_ioend happens, we also need to
-> > clean out all the CoW record keeping.
-> > 
-> > v3: When we're removing CoW extents, only free one extent per
-> > transaction to avoid running out of reservation.  Also,
-> > xfs_cancel_ioend mustn't clean out the CoW fork because it is called
-> > when async writeback can't get an inode lock and will try again.
-> > 
-> > v4: Use bmapi_read to iterate the CoW fork instead of calling the
-> > iext functions directly, and make the CoW remapping atomic by
-> > using the deferred ops mechanism which takes care of logging redo
-> > items for us.
-> > 
-> > v5: Unlock the inode if cancelling the CoW reservation fails.
-> > ---
-> >  fs/xfs/xfs_aops.c    |   22 ++++
-> >  fs/xfs/xfs_reflink.c |  271 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_reflink.h |    8 +
-> >  3 files changed, 299 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index 7b1e9de..aa23993 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -288,6 +288,23 @@ xfs_end_io(
-> >  		error = -EIO;
-> >  
-> >  	/*
-> > +	 * For a CoW extent, we need to move the mapping from the CoW fork
-> > +	 * to the data fork.  If instead an error happened, just dump the
-> > +	 * new blocks.
-> > +	 */
-> > +	if (ioend->io_type == XFS_IO_COW) {
-> > +		if (ioend->io_bio->bi_error) {
-> > +			error = xfs_reflink_cancel_cow_range(ip,
-> > +					ioend->io_offset, ioend->io_size);
-> > +			goto done;
-> > +		}
-> 
-> I'm a little confused why we'd clear out delalloc blocks here but not if
-> the write happens to fail in the first place (but I take it the
-> explanation for my previous comment still applies..).
+DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
+locking.  This patch allows DAX PMDs to participate in the DAX radix tree
+based locking scheme so that they can be re-enabled using the new struct
+iomap based fault handlers.
 
-Originally I thought that it would be a good idea to get rid of blocks
-if the actual write IO fails.  Maybe we should just leave it, in case
-a subsequent retry does not also fail.
+There are currently three types of DAX 4k entries: 4k zero pages, 4k DAX
+mappings that have an associated block allocation, and 4k DAX empty
+entries.  The empty entries exist to provide locking for the duration of a
+given page fault.
 
-> > +		error = xfs_reflink_end_cow(ip, ioend->io_offset,
-> > +				ioend->io_size);
-> > +		if (error)
-> > +			goto done;
-> 
-> This hunk clobbers error if set by the previous check (not shown in the
-> diff) due to fs shutdown.
+This patch adds three equivalent 2MiB DAX entries: Huge Zero Page (HZP)
+entries, PMD DAX entries that have associated block allocations, and 2 MiB
+DAX empty entries.
 
-D'oh.  Well, if the FS is shutdown there's little point in updating
-metadata, so I guess we can just jump out.
+Unlike the 4k case where we insert a struct page* into the radix tree for
+4k zero pages, for HZP we insert a DAX exceptional entry with the new
+RADIX_DAX_HZP flag set.  This is because we use a single 2 MiB zero page in
+every 2MiB hole mapping, and it doesn't make sense to have that same struct
+page* with multiple entries in multiple trees.  This would cause contention
+on the single page lock for the one Huge Zero Page, and it would break the
+page->index and page->mapping associations that are assumed to be valid in
+many other places in the kernel.
 
-> > +	}
-> > +
-> > +	/*
-> >  	 * For unwritten extents we need to issue transactions to convert a
-> >  	 * range to normal written extens after the data I/O has finished.
-> >  	 * Detecting and handling completion IO errors is done individually
-> > @@ -302,7 +319,8 @@ xfs_end_io(
-> >  	} else if (ioend->io_append_trans) {
-> >  		error = xfs_setfilesize_ioend(ioend, error);
-> >  	} else {
-> > -		ASSERT(!xfs_ioend_is_append(ioend));
-> > +		ASSERT(!xfs_ioend_is_append(ioend) ||
-> > +		       ioend->io_type == XFS_IO_COW);
-> >  	}
-> >  
-> >  done:
-> > @@ -316,7 +334,7 @@ xfs_end_bio(
-> >  	struct xfs_ioend	*ioend = bio->bi_private;
-> >  	struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
-> >  
-> > -	if (ioend->io_type == XFS_IO_UNWRITTEN)
-> > +	if (ioend->io_type == XFS_IO_UNWRITTEN || ioend->io_type == XFS_IO_COW)
-> >  		queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
-> >  	else if (ioend->io_append_trans)
-> >  		queue_work(mp->m_data_workqueue, &ioend->io_work);
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index e8c7c85..d913ad1 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -52,6 +52,7 @@
-> >  #include "xfs_bmap_btree.h"
-> >  #include "xfs_reflink.h"
-> >  #include "xfs_iomap.h"
-> > +#include "xfs_rmap_btree.h"
-> >  
-> >  /*
-> >   * Copy on Write of Shared Blocks
-> > @@ -114,6 +115,37 @@
-> >   * ioend, the better.
-> >   */
-> >  
-> > +/* Trim extent to fit a logical block range. */
-> > +static void
-> > +xfs_trim_extent(
-> > +	struct xfs_bmbt_irec	*irec,
-> > +	xfs_fileoff_t		bno,
-> > +	xfs_filblks_t		len)
-> > +{
-> > +	xfs_fileoff_t		distance;
-> > +	xfs_fileoff_t		end = bno + len;
-> > +
-> > +	if (irec->br_startoff + irec->br_blockcount <= bno ||
-> > +	    irec->br_startoff >= end) {
-> 
-> Hmm, this seems like slightly strange behavior. Why reset blockcount on
-> an extent for a request to trim it to something beyond the extent? Is
-> this primarily an error/sanity check or is this an expected case?
-> 
-> As it is, it looks like bno should point to the end of irec in most
-> cases unless the unmap happens to remove less from the data fork than
-> what has been allocated in the cow fork (which seems sane). I wonder if
-> we just want to ASSERT() that the extent and trim range are sane here?
+One difficult use case is when one thread is trying to use 4k entries in
+radix tree for a given offset, and another thread is using 2 MiB entries
+for that same offset.  The current code handles this by making the 2 MiB
+user fall back to 4k entries for most cases.  This was done because it is
+the simplest solution, and because the use of 2MiB pages is already
+opportunistic.
 
-There are only two callers of this function, both of which can be
-replaced by:
+If we were to try to upgrade from 4k pages to 2MiB pages for a given range,
+we run into the problem of how we lock out 4k page faults for the entire
+2MiB range while we clean out the radix tree so we can insert the 2MiB
+entry.  We can solve this problem if we need to, but I think that the cases
+where both 2MiB entries and 4K entries are being used for the same range
+will be rare enough and the gain small enough that it probably won't be
+worth the complexity.
 
-	uirec.br_startblock = irec->br_startblock + rlen;
-	uirec.br_startoff = irec->br_startoff + rlen;
-	uirec.br_blockcount = irec->br_blockcount - rlen;
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ fs/dax.c            | 325 ++++++++++++++++++++++++++++++++++++++++++++++------
+ include/linux/dax.h |  57 +++++++--
+ mm/filemap.c        |   4 +-
+ 3 files changed, 339 insertions(+), 47 deletions(-)
 
-so I'll just purge this function entirely.
+diff --git a/fs/dax.c b/fs/dax.c
+index ac3cd05..e51d51f 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -281,7 +281,7 @@ static wait_queue_head_t *dax_entry_waitqueue(struct address_space *mapping,
+ 	 * queue to the start of that PMD.  This ensures that all offsets in
+ 	 * the range covered by the PMD map to the same bit lock.
+ 	 */
+-	if (RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD)
++	if ((unsigned long)entry & RADIX_DAX_PMD)
+ 		index &= ~((1UL << (PMD_SHIFT - PAGE_SHIFT)) - 1);
+ 
+ 	key->mapping = mapping;
+@@ -388,35 +388,103 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
+  * radix tree entry locked. If the radix tree doesn't contain given index,
+  * create empty exceptional entry for the index and return with it locked.
+  *
++ * When requesting an entry with size RADIX_DAX_PMD, grab_mapping_entry() will
++ * either return that locked entry or will return an error.  This error will
++ * happen if there are any 4k entries (either zero pages or DAX entries)
++ * within the 2MiB range that we are requesting.
++ *
++ * We always favor 4k entries over 2MiB entries. There isn't a flow where we
++ * evict 4k entries in order to 'upgrade' them to a 2MiB entry.  A 2MiB
++ * insertion will fail if it finds any 4k entries already in the tree, and a
++ * 4k insertion will cause an existing 2MiB entry to be unmapped and
++ * downgraded to 4k entries.  This happens for both 2MiB huge zero pages as
++ * well as 2MiB empty entries.
++ *
++ * The exception to this downgrade path is for 2MiB DAX PMD entries that have
++ * real storage backing them.  We will leave these real 2MiB DAX entries in
++ * the tree, and PTE writes will simply dirty the entire 2MiB DAX entry.
++ *
+  * Note: Unlike filemap_fault() we don't honor FAULT_FLAG_RETRY flags. For
+  * persistent memory the benefit is doubtful. We can add that later if we can
+  * show it helps.
+  */
+-static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index)
++static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
++		unsigned long size_flag)
+ {
++	bool pmd_downgrade = false; /* splitting 2MiB entry into 4k entries? */
+ 	void *entry, **slot;
+ 
+ restart:
+ 	spin_lock_irq(&mapping->tree_lock);
+ 	entry = get_unlocked_mapping_entry(mapping, index, &slot);
++
++	if (entry) {
++		if (size_flag & RADIX_DAX_PMD) {
++			if (!radix_tree_exceptional_entry(entry) ||
++			    !((unsigned long)entry & RADIX_DAX_PMD)) {
++				entry = ERR_PTR(-EEXIST);
++				goto out_unlock;
++			}
++		} else { /* trying to grab a PTE entry */
++			if (radix_tree_exceptional_entry(entry) &&
++			    ((unsigned long)entry & RADIX_DAX_PMD) &&
++			    ((unsigned long)entry &
++			     (RADIX_DAX_HZP|RADIX_DAX_EMPTY))) {
++				pmd_downgrade = true;
++			}
++		}
++	}
++
+ 	/* No entry for given index? Make sure radix tree is big enough. */
+-	if (!entry) {
++	if (!entry || pmd_downgrade) {
+ 		int err;
+ 
++		if (pmd_downgrade) {
++			/*
++			 * Make sure 'entry' remains valid while we drop
++			 * mapping->tree_lock.
++			 */
++			entry = lock_slot(mapping, slot);
++		}
++
+ 		spin_unlock_irq(&mapping->tree_lock);
+ 		err = radix_tree_preload(
+ 				mapping_gfp_mask(mapping) & ~__GFP_HIGHMEM);
+ 		if (err)
+ 			return ERR_PTR(err);
+-		entry = (void *)(RADIX_TREE_EXCEPTIONAL_ENTRY |
+-			       RADIX_DAX_ENTRY_LOCK);
++
++		/*
++		 * Besides huge zero pages the only other thing that gets
++		 * downgraded are empty entries which don't need to be
++		 * unmapped.
++		 */
++		if (pmd_downgrade && ((unsigned long)entry & RADIX_DAX_HZP))
++			unmap_mapping_range(mapping,
++				(index << PAGE_SHIFT) & PMD_MASK, PMD_SIZE, 0);
++
+ 		spin_lock_irq(&mapping->tree_lock);
+-		err = radix_tree_insert(&mapping->page_tree, index, entry);
++
++		if (pmd_downgrade) {
++			radix_tree_delete(&mapping->page_tree, index);
++			mapping->nrexceptional--;
++			dax_wake_mapping_entry_waiter(mapping, index, entry,
++					false);
++		}
++
++		entry = dax_radix_entry(0, size_flag | RADIX_DAX_EMPTY);
++
++		err = __radix_tree_insert(&mapping->page_tree, index,
++				dax_radix_order(entry), entry);
+ 		radix_tree_preload_end();
+ 		if (err) {
+ 			spin_unlock_irq(&mapping->tree_lock);
+-			/* Someone already created the entry? */
+-			if (err == -EEXIST)
++			/*
++			 * Someone already created the entry?  This is a
++			 * normal failure when inserting PMDs in a range
++			 * that already contains PTEs.  In that case we want
++			 * to return -EEXIST immediately.
++			 */
++			if (err == -EEXIST && !(size_flag & RADIX_DAX_PMD))
+ 				goto restart;
+ 			return ERR_PTR(err);
+ 		}
+@@ -441,6 +509,7 @@ restart:
+ 		return page;
+ 	}
+ 	entry = lock_slot(mapping, slot);
++ out_unlock:
+ 	spin_unlock_irq(&mapping->tree_lock);
+ 	return entry;
+ }
+@@ -581,11 +650,17 @@ static int copy_user_dax(struct block_device *bdev, sector_t sector, size_t size
+ 	return 0;
+ }
+ 
+-#define DAX_PMD_INDEX(page_index) (page_index & (PMD_MASK >> PAGE_SHIFT))
+-
++/*
++ * By this point grab_mapping_entry() has ensured that we have a locked entry
++ * of the appropriate size so we don't have to worry about downgrading PMDs to
++ * PTEs.  If we happen to be trying to insert a PTE and there is a PMD
++ * already in the tree, we will skip the insertion and just dirty the PMD as
++ * appropriate.
++ */
+ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 				      struct vm_fault *vmf,
+-				      void *entry, sector_t sector)
++				      void *entry, sector_t sector,
++				      unsigned long flags)
+ {
+ 	struct radix_tree_root *page_tree = &mapping->page_tree;
+ 	int error = 0;
+@@ -608,22 +683,28 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 		error = radix_tree_preload(vmf->gfp_mask & ~__GFP_HIGHMEM);
+ 		if (error)
+ 			return ERR_PTR(error);
++	} else if (((unsigned long)entry & RADIX_DAX_HZP) &&
++			!(flags & RADIX_DAX_HZP)) {
++		/* replacing huge zero page with PMD block mapping */
++		unmap_mapping_range(mapping,
++			(vmf->pgoff << PAGE_SHIFT) & PMD_MASK, PMD_SIZE, 0);
+ 	}
+ 
+ 	spin_lock_irq(&mapping->tree_lock);
+-	new_entry = (void *)((unsigned long)RADIX_DAX_ENTRY(sector, false) |
+-		       RADIX_DAX_ENTRY_LOCK);
++	new_entry = dax_radix_entry(sector, flags);
++
+ 	if (hole_fill) {
+ 		__delete_from_page_cache(entry, NULL);
+ 		/* Drop pagecache reference */
+ 		put_page(entry);
+-		error = radix_tree_insert(page_tree, index, new_entry);
++		error = __radix_tree_insert(page_tree, index,
++				dax_radix_order(new_entry), new_entry);
+ 		if (error) {
+ 			new_entry = ERR_PTR(error);
+ 			goto unlock;
+ 		}
+ 		mapping->nrexceptional++;
+-	} else {
++	} else if ((unsigned long)entry & (RADIX_DAX_HZP|RADIX_DAX_EMPTY)) {
+ 		void **slot;
+ 		void *ret;
+ 
+@@ -653,7 +734,6 @@ static int dax_writeback_one(struct block_device *bdev,
+ 		struct address_space *mapping, pgoff_t index, void *entry)
+ {
+ 	struct radix_tree_root *page_tree = &mapping->page_tree;
+-	int type = RADIX_DAX_TYPE(entry);
+ 	struct radix_tree_node *node;
+ 	struct blk_dax_ctl dax;
+ 	void **slot;
+@@ -674,13 +754,20 @@ static int dax_writeback_one(struct block_device *bdev,
+ 	if (!radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE))
+ 		goto unlock;
+ 
+-	if (WARN_ON_ONCE(type != RADIX_DAX_PTE && type != RADIX_DAX_PMD)) {
++	if (WARN_ON_ONCE((unsigned long)entry & RADIX_DAX_EMPTY)) {
+ 		ret = -EIO;
+ 		goto unlock;
+ 	}
+ 
+-	dax.sector = RADIX_DAX_SECTOR(entry);
+-	dax.size = (type == RADIX_DAX_PMD ? PMD_SIZE : PAGE_SIZE);
++	/*
++	 * Even if dax_writeback_mapping_range() was given a wbc->range_start
++	 * in the middle of a PMD, the 'index' we are given will be aligned to
++	 * the start index of the PMD, as will the sector we pull from
++	 * 'entry'.  This allows us to flush for PMD_SIZE and not have to
++	 * worry about partial PMD writebacks.
++	 */
++	dax.sector = dax_radix_sector(entry);
++	dax.size = PAGE_SIZE << dax_radix_order(entry);
+ 	spin_unlock_irq(&mapping->tree_lock);
+ 
+ 	/*
+@@ -719,12 +806,11 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ 		struct block_device *bdev, struct writeback_control *wbc)
+ {
+ 	struct inode *inode = mapping->host;
+-	pgoff_t start_index, end_index, pmd_index;
++	pgoff_t start_index, end_index;
+ 	pgoff_t indices[PAGEVEC_SIZE];
+ 	struct pagevec pvec;
+ 	bool done = false;
+ 	int i, ret = 0;
+-	void *entry;
+ 
+ 	if (WARN_ON_ONCE(inode->i_blkbits != PAGE_SHIFT))
+ 		return -EIO;
+@@ -734,15 +820,6 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ 
+ 	start_index = wbc->range_start >> PAGE_SHIFT;
+ 	end_index = wbc->range_end >> PAGE_SHIFT;
+-	pmd_index = DAX_PMD_INDEX(start_index);
+-
+-	rcu_read_lock();
+-	entry = radix_tree_lookup(&mapping->page_tree, pmd_index);
+-	rcu_read_unlock();
+-
+-	/* see if the start of our range is covered by a PMD entry */
+-	if (entry && RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD)
+-		start_index = pmd_index;
+ 
+ 	tag_pages_for_writeback(mapping, start_index, end_index);
+ 
+@@ -787,7 +864,7 @@ static int dax_insert_mapping(struct address_space *mapping,
+ 		return PTR_ERR(dax.addr);
+ 	dax_unmap_atomic(bdev, &dax);
+ 
+-	ret = dax_insert_mapping_entry(mapping, vmf, entry, dax.sector);
++	ret = dax_insert_mapping_entry(mapping, vmf, entry, dax.sector, 0);
+ 	if (IS_ERR(ret))
+ 		return PTR_ERR(ret);
+ 	*entryp = ret;
+@@ -834,7 +911,7 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	bh.b_bdev = inode->i_sb->s_bdev;
+ 	bh.b_size = PAGE_SIZE;
+ 
+-	entry = grab_mapping_entry(mapping, vmf->pgoff);
++	entry = grab_mapping_entry(mapping, vmf->pgoff, 0);
+ 	if (IS_ERR(entry)) {
+ 		error = PTR_ERR(entry);
+ 		goto out;
+@@ -1154,7 +1231,7 @@ int dax_iomap_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	if (pos >= i_size_read(inode))
+ 		return VM_FAULT_SIGBUS;
+ 
+-	entry = grab_mapping_entry(mapping, vmf->pgoff);
++	entry = grab_mapping_entry(mapping, vmf->pgoff, 0);
+ 	if (IS_ERR(entry)) {
+ 		error = PTR_ERR(entry);
+ 		goto out;
+@@ -1261,4 +1338,186 @@ int dax_iomap_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	return VM_FAULT_NOPAGE | major;
+ }
+ EXPORT_SYMBOL_GPL(dax_iomap_fault);
++
++#ifdef CONFIG_FS_DAX_PMD
++/*
++ * The 'colour' (ie low bits) within a PMD of a page offset.  This comes up
++ * more often than one might expect in the below functions.
++ */
++#define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
++
++static int dax_pmd_insert_mapping(struct vm_area_struct *vma, pmd_t *pmd,
++		struct vm_fault *vmf, unsigned long address,
++		struct iomap *iomap, loff_t pos, bool write, void **entryp)
++{
++	struct address_space *mapping = vma->vm_file->f_mapping;
++	struct block_device *bdev = iomap->bdev;
++	struct blk_dax_ctl dax = {
++		.sector = dax_iomap_sector(iomap, pos),
++		.size = PMD_SIZE,
++	};
++	long length = dax_map_atomic(bdev, &dax);
++	void *ret;
++
++	if (length < 0) /* dax_map_atomic() failed */
++		return VM_FAULT_FALLBACK;
++	if (length < PMD_SIZE)
++		goto unmap_fallback;
++	if (pfn_t_to_pfn(dax.pfn) & PG_PMD_COLOUR)
++		goto unmap_fallback;
++	if (!pfn_t_devmap(dax.pfn))
++		goto unmap_fallback;
++
++	dax_unmap_atomic(bdev, &dax);
++
++	ret = dax_insert_mapping_entry(mapping, vmf, *entryp, dax.sector,
++			RADIX_DAX_PMD);
++	if (IS_ERR(ret))
++		return VM_FAULT_FALLBACK;
++	*entryp = ret;
++
++	return vmf_insert_pfn_pmd(vma, address, pmd, dax.pfn, write);
++
++ unmap_fallback:
++	dax_unmap_atomic(bdev, &dax);
++	return VM_FAULT_FALLBACK;
++}
++
++static int dax_pmd_load_hole(struct vm_area_struct *vma, pmd_t *pmd,
++		struct vm_fault *vmf, unsigned long address,
++		struct iomap *iomap, void **entryp)
++{
++	struct address_space *mapping = vma->vm_file->f_mapping;
++	unsigned long pmd_addr = address & PMD_MASK;
++	struct page *zero_page;
++	spinlock_t *ptl;
++	pmd_t pmd_entry;
++	void *ret;
++
++	zero_page = get_huge_zero_page();
++
++	if (unlikely(!zero_page))
++		return VM_FAULT_FALLBACK;
++
++	ret = dax_insert_mapping_entry(mapping, vmf, *entryp, 0,
++			RADIX_DAX_PMD | RADIX_DAX_HZP);
++	if (IS_ERR(ret))
++		return VM_FAULT_FALLBACK;
++	*entryp = ret;
++
++	ptl = pmd_lock(vma->vm_mm, pmd);
++	if (!pmd_none(*pmd)) {
++		spin_unlock(ptl);
++		return VM_FAULT_FALLBACK;
++	}
++
++	pmd_entry = mk_pmd(zero_page, vma->vm_page_prot);
++	pmd_entry = pmd_mkhuge(pmd_entry);
++	set_pmd_at(vma->vm_mm, pmd_addr, pmd, pmd_entry);
++	spin_unlock(ptl);
++	return VM_FAULT_NOPAGE;
++}
++
++int dax_iomap_pmd_fault(struct vm_area_struct *vma, unsigned long address,
++		pmd_t *pmd, unsigned int flags, struct iomap_ops *ops)
++{
++	struct address_space *mapping = vma->vm_file->f_mapping;
++	unsigned long pmd_addr = address & PMD_MASK;
++	bool write = flags & FAULT_FLAG_WRITE;
++	unsigned int iomap_flags = write ? IOMAP_WRITE : 0;
++	struct inode *inode = mapping->host;
++	int result = VM_FAULT_FALLBACK;
++	struct iomap iomap = { 0 };
++	pgoff_t size, pgoff;
++	struct vm_fault vmf;
++	void *entry;
++	loff_t pos;
++	int error;
++
++	/* Fall back to PTEs if we're going to COW */
++	if (write && !(vma->vm_flags & VM_SHARED)) {
++		split_huge_pmd(vma, pmd, address);
++		goto fallback;
++	}
++
++	/* If the PMD would extend outside the VMA */
++	if (pmd_addr < vma->vm_start)
++		goto fallback;
++	if ((pmd_addr + PMD_SIZE) > vma->vm_end)
++		goto fallback;
++
++	/*
++	 * Check whether offset isn't beyond end of file now. Caller is
++	 * supposed to hold locks serializing us with truncate / punch hole so
++	 * this is a reliable test.
++	 */
++	pgoff = linear_page_index(vma, pmd_addr);
++	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
++
++	if (pgoff >= size)
++		return VM_FAULT_SIGBUS;
++
++	/* If the PMD would extend beyond the file size */
++	if ((pgoff | PG_PMD_COLOUR) >= size)
++		goto fallback;
++
++	/*
++	 * grab_mapping_entry() will make sure we get a 2M empty entry, a DAX
++	 * PMD or a HZP entry.  If it can't (because a 4k page is already in
++	 * the tree, for instance), it will return -EEXIST and we just fall
++	 * back to 4k entries.
++	 */
++	entry = grab_mapping_entry(mapping, pgoff, RADIX_DAX_PMD);
++	if (IS_ERR(entry))
++		goto fallback;
++
++	/*
++	 * Note that we don't use iomap_apply here.  We aren't doing I/O, only
++	 * setting up a mapping, so really we're using iomap_begin() as a way
++	 * to look up our filesystem block.
++	 */
++	pos = (loff_t)pgoff << PAGE_SHIFT;
++	error = ops->iomap_begin(inode, pos, PMD_SIZE, iomap_flags, &iomap);
++	if (error)
++		goto unlock_entry;
++	if (iomap.offset + iomap.length < pos + PMD_SIZE)
++		goto finish_iomap;
++
++	vmf.pgoff = pgoff;
++	vmf.flags = flags;
++	vmf.gfp_mask = mapping_gfp_mask(mapping) | __GFP_IO;
++
++	switch (iomap.type) {
++	case IOMAP_MAPPED:
++		result = dax_pmd_insert_mapping(vma, pmd, &vmf, address,
++				&iomap, pos, write, &entry);
++		break;
++	case IOMAP_UNWRITTEN:
++	case IOMAP_HOLE:
++		if (WARN_ON_ONCE(write))
++			goto finish_iomap;
++		result = dax_pmd_load_hole(vma, pmd, &vmf, address, &iomap,
++				&entry);
++		break;
++	default:
++		WARN_ON_ONCE(1);
++		break;
++	}
++
++ finish_iomap:
++	if (ops->iomap_end) {
++		error = ops->iomap_end(inode, pos, PMD_SIZE, PMD_SIZE,
++				iomap_flags, &iomap);
++		if (error)
++			result = VM_FAULT_FALLBACK;
++	}
++ unlock_entry:
++	put_locked_mapping_entry(mapping, pgoff, entry);
++ fallback:
++	if (result == VM_FAULT_FALLBACK)
++		count_vm_event(THP_FAULT_FALLBACK);
++	return result;
++}
++EXPORT_SYMBOL_GPL(dax_iomap_pmd_fault);
++#endif /* CONFIG_FS_DAX_PMD */
+ #endif /* CONFIG_FS_IOMAP */
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index e9ea78c..5d70367 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -9,19 +9,33 @@
+ struct iomap_ops;
+ 
+ /*
+- * We use lowest available bit in exceptional entry for locking, other two
+- * bits to determine entry type. In total 3 special bits.
++ * We use lowest available bit in exceptional entry for locking, one bit for
++ * the entry size (PMD) and two more to tell us if the entry is a huge zero
++ * page (HZP) or an empty entry that is just used for locking.  In total four
++ * special bits.
++ *
++ * If the PMD bit isn't set the entry has size PAGE_SIZE, and if the HZP and
++ * EMPTY bits aren't set the entry is a normal DAX entry with a filesystem
++ * block allocation.
+  */
+-#define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 3)
++#define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 4)
+ #define RADIX_DAX_ENTRY_LOCK (1 << RADIX_TREE_EXCEPTIONAL_SHIFT)
+-#define RADIX_DAX_PTE (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
+-#define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
+-#define RADIX_DAX_TYPE_MASK (RADIX_DAX_PTE | RADIX_DAX_PMD)
+-#define RADIX_DAX_TYPE(entry) ((unsigned long)entry & RADIX_DAX_TYPE_MASK)
+-#define RADIX_DAX_SECTOR(entry) (((unsigned long)entry >> RADIX_DAX_SHIFT))
+-#define RADIX_DAX_ENTRY(sector, pmd) ((void *)((unsigned long)sector << \
+-		RADIX_DAX_SHIFT | (pmd ? RADIX_DAX_PMD : RADIX_DAX_PTE) | \
+-		RADIX_TREE_EXCEPTIONAL_ENTRY))
++#define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
++#define RADIX_DAX_HZP (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
++#define RADIX_DAX_EMPTY (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 3))
++
++static inline unsigned long dax_radix_sector(void *entry)
++{
++	return (unsigned long)entry >> RADIX_DAX_SHIFT;
++}
++
++/* entries begin locked */
++static inline void *dax_radix_entry(sector_t sector, unsigned long flags)
++{
++	return (void *)(RADIX_TREE_EXCEPTIONAL_ENTRY | flags |
++			((unsigned long)sector << RADIX_DAX_SHIFT) |
++			RADIX_DAX_ENTRY_LOCK);
++}
+ 
+ 
+ ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
+@@ -67,6 +81,27 @@ static inline int dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
+ 	return VM_FAULT_FALLBACK;
+ }
+ 
++#ifdef CONFIG_FS_DAX_PMD
++static inline unsigned int dax_radix_order(void *entry)
++{
++	if ((unsigned long)entry & RADIX_DAX_PMD)
++		return PMD_SHIFT - PAGE_SHIFT;
++	return 0;
++}
++int dax_iomap_pmd_fault(struct vm_area_struct *vma, unsigned long address,
++		pmd_t *pmd, unsigned int flags, struct iomap_ops *ops);
++#else
++static inline unsigned int dax_radix_order(void *entry)
++{
++	return 0;
++}
++static inline int dax_iomap_pmd_fault(struct vm_area_struct *vma,
++		unsigned long address, pmd_t *pmd, unsigned int flags,
++		struct iomap_ops *ops)
++{
++	return VM_FAULT_FALLBACK;
++}
++#endif
+ int dax_pfn_mkwrite(struct vm_area_struct *, struct vm_fault *);
+ #define dax_mkwrite(vma, vmf, gb)	dax_fault(vma, vmf, gb)
+ 
+diff --git a/mm/filemap.c b/mm/filemap.c
+index a596462..4ed2df5 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -610,9 +610,7 @@ static int page_cache_tree_insert(struct address_space *mapping,
+ 				workingset_node_shadows_dec(node);
+ 		} else {
+ 			/* DAX can replace empty locked entry with a hole */
+-			WARN_ON_ONCE(p !=
+-				(void *)(RADIX_TREE_EXCEPTIONAL_ENTRY |
+-					 RADIX_DAX_ENTRY_LOCK));
++			WARN_ON_ONCE(p != dax_radix_entry(0, RADIX_DAX_EMPTY));
+ 			/* DAX accounts exceptional entries as normal pages */
+ 			if (node)
+ 				workingset_node_pages_dec(node);
+-- 
+2.7.4
 
-> > +		irec->br_blockcount = 0;
-> > +		return;
-> > +	}
-> > +
-> > +	if (irec->br_startoff < bno) {
-> > +		distance = bno - irec->br_startoff;
-> > +		if (irec->br_startblock != DELAYSTARTBLOCK &&
-> > +		    irec->br_startblock != HOLESTARTBLOCK)
-> > +			irec->br_startblock += distance;
-> > +		irec->br_startoff += distance;
-> > +		irec->br_blockcount -= distance;
-> > +	}
-> > +
-> > +	if (end < irec->br_startoff + irec->br_blockcount) {
-> > +		distance = irec->br_startoff + irec->br_blockcount - end;
-> > +		irec->br_blockcount -= distance;
-> > +	}
-> > +}
-> > +
-> >  /*
-> >   * Given an AG extent, find the lowest-numbered run of shared blocks within
-> >   * that range and return the range in fbno/flen.
-> > @@ -400,3 +432,242 @@ xfs_reflink_trim_irec_to_next_cow(
-> >  
-> >  	return 0;
-> >  }
-> > +
-> > +/*
-> > + * Cancel all pending CoW reservations for some block range of an inode.
-> > + */
-> > +int
-> > +xfs_reflink_cancel_cow_blocks(
-> > +	struct xfs_inode		*ip,
-> > +	struct xfs_trans		**tpp,
-> > +	xfs_fileoff_t			offset_fsb,
-> > +	xfs_fileoff_t			end_fsb)
-> > +{
-> > +	struct xfs_bmbt_irec		irec;
-> > +	xfs_filblks_t			count_fsb;
-> > +	xfs_fsblock_t			firstfsb;
-> > +	struct xfs_defer_ops		dfops;
-> > +	int				error = 0;
-> > +	int				nimaps;
-> > +
-> > +	if (!xfs_is_reflink_inode(ip))
-> > +		return 0;
-> > +
-> > +	/* Go find the old extent in the CoW fork. */
-> > +	count_fsb = (xfs_filblks_t)(end_fsb - offset_fsb);
-> > +	while (count_fsb) {
-> > +		nimaps = 1;
-> > +		error = xfs_bmapi_read(ip, offset_fsb, count_fsb, &irec,
-> > +				&nimaps, XFS_BMAPI_COWFORK);
-> > +		if (error)
-> > +			break;
-> > +		ASSERT(nimaps == 1);
-> > +
-> > +		trace_xfs_reflink_cancel_cow(ip, &irec);
-> > +
-> > +		if (irec.br_startblock == DELAYSTARTBLOCK) {
-> > +			/* Free a delayed allocation. */
-> > +			xfs_mod_fdblocks(ip->i_mount, irec.br_blockcount,
-> > +					false);
-> > +			ip->i_delayed_blks -= irec.br_blockcount;
-> > +
-> > +			/* Remove the mapping from the CoW fork. */
-> > +			error = xfs_bunmapi_cow(ip, &irec);
-> > +			if (error)
-> > +				break;
-> > +		} else if (irec.br_startblock == HOLESTARTBLOCK) {
-> > +			/* empty */
-> > +		} else {
-> > +			xfs_trans_ijoin(*tpp, ip, 0);
-> > +			xfs_defer_init(&dfops, &firstfsb);
-> > +
-> > +			xfs_bmap_add_free(ip->i_mount, &dfops,
-> > +					irec.br_startblock, irec.br_blockcount,
-> > +					NULL);
-> > +
-> > +			/* Update quota accounting */
-> > +			xfs_trans_mod_dquot_byino(*tpp, ip, XFS_TRANS_DQ_BCOUNT,
-> > +					-(long)irec.br_blockcount);
-> > +
-> > +			/* Roll the transaction */
-> > +			error = xfs_defer_finish(tpp, &dfops, ip);
-> > +			if (error) {
-> > +				xfs_defer_cancel(&dfops);
-> > +				break;
-> > +			}
-> > +
-> > +			/* Remove the mapping from the CoW fork. */
-> > +			error = xfs_bunmapi_cow(ip, &irec);
-> > +			if (error)
-> > +				break;
-> > +		}
-> > +
-> > +		/* Roll on... */
-> > +		count_fsb -= irec.br_startoff + irec.br_blockcount - offset_fsb;
-> 
-> Might be wise to safeguard against the extent being larger than the
-> range (or just use offset_fsb and kill count_fsb)...
-
-I think it's fine, since bmapi_read trims irec to fit the offset/count
-you feed it, but OTOH it /does/ remove a few lines.
-
-> > +		offset_fsb = irec.br_startoff + irec.br_blockcount;
-> > +	}
-> > +
-> > +	return error;
-> > +}
-> > +
-> > +/*
-> > + * Cancel all pending CoW reservations for some byte range of an inode.
-> > + */
-> > +int
-> > +xfs_reflink_cancel_cow_range(
-> > +	struct xfs_inode	*ip,
-> > +	xfs_off_t		offset,
-> > +	xfs_off_t		count)
-> > +{
-> > +	struct xfs_trans	*tp;
-> > +	xfs_fileoff_t		offset_fsb;
-> > +	xfs_fileoff_t		end_fsb;
-> > +	int			error;
-> > +
-> > +	trace_xfs_reflink_cancel_cow_range(ip, offset, count);
-> > +
-> > +	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
-> > +	if (count == NULLFILEOFF)
-> > +		end_fsb = NULLFILEOFF;
-> > +	else
-> > +		end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
-> > +
-> > +	/* Start a rolling transaction to remove the mappings */
-> > +	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
-> > +			0, 0, 0, &tp);
-> > +	if (error)
-> > +		goto out;
-> > +
-> > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > +	xfs_trans_ijoin(tp, ip, 0);
-> > +
-> > +	/* Scrape out the old CoW reservations */
-> > +	error = xfs_reflink_cancel_cow_blocks(ip, &tp, offset_fsb, end_fsb);
-> > +	if (error)
-> > +		goto out_defer;
-> > +
-> > +	error = xfs_trans_commit(tp);
-> > +
-> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > +	return error;
-> > +
-> > +out_defer:
-> 
-> out_cancel ?
-
-Yeah.
-
-> > +	xfs_trans_cancel(tp);
-> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > +out:
-> > +	trace_xfs_reflink_cancel_cow_range_error(ip, error, _RET_IP_);
-> > +	return error;
-> > +}
-> > +
-> > +/*
-> > + * Remap parts of a file's data fork after a successful CoW.
-> > + */
-> > +int
-> > +xfs_reflink_end_cow(
-> > +	struct xfs_inode		*ip,
-> > +	xfs_off_t			offset,
-> > +	xfs_off_t			count)
-> > +{
-> > +	struct xfs_bmbt_irec		irec;
-> > +	struct xfs_bmbt_irec		uirec;
-> > +	struct xfs_trans		*tp;
-> > +	xfs_fileoff_t			offset_fsb;
-> > +	xfs_fileoff_t			end_fsb;
-> > +	xfs_filblks_t			count_fsb;
-> > +	xfs_fsblock_t			firstfsb;
-> > +	struct xfs_defer_ops		dfops;
-> > +	int				error;
-> > +	unsigned int			resblks;
-> > +	xfs_filblks_t			ilen;
-> > +	xfs_filblks_t			rlen;
-> > +	int				nimaps;
-> > +
-> > +	trace_xfs_reflink_end_cow(ip, offset, count);
-> > +
-> > +	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
-> > +	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
-> > +	count_fsb = (xfs_filblks_t)(end_fsb - offset_fsb);
-> > +
-> > +	/* Start a rolling transaction to switch the mappings */
-> > +	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
-> > +	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
-> > +			resblks, 0, 0, &tp);
-> > +	if (error)
-> > +		goto out;
-> 
-> I forget the exact reason why we preallocate append transactions for I/O
-> completion, but it would be nice if Dave or somebody could chime in on
-> that to make sure we don't need to do something similar here (and for
-> the cancel case).
-> 
-> > +
-> > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > +	xfs_trans_ijoin(tp, ip, 0);
-> > +
-> > +	/* Go find the old extent in the CoW fork. */
-> > +	while (count_fsb) {
-> > +		/* Read extent from the source file */
-> > +		nimaps = 1;
-> > +		error = xfs_bmapi_read(ip, offset_fsb, count_fsb, &irec,
-> > +				&nimaps, XFS_BMAPI_COWFORK);
-> > +		if (error)
-> > +			goto out_cancel;
-> > +		ASSERT(nimaps == 1);
-> > +
-> > +		ASSERT(irec.br_startblock != DELAYSTARTBLOCK);
-> > +		trace_xfs_reflink_cow_remap(ip, &irec);
-> > +
-> > +		/*
-> > +		 * We can have a hole in the CoW fork if part of a directio
-> > +		 * write is CoW but part of it isn't.
-> > +		 */
-> > +		rlen = ilen = irec.br_blockcount;
-> > +		if (irec.br_startblock == HOLESTARTBLOCK)
-> > +			goto next_extent;
-> > +
-> > +		/* Unmap the old blocks in the data fork. */
-> > +		while (rlen) {
-> > +			xfs_defer_init(&dfops, &firstfsb);
-> > +			error = __xfs_bunmapi(tp, ip, irec.br_startoff,
-> > +					&rlen, 0, 1, &firstfsb, &dfops);
-> > +			if (error)
-> > +				goto out_defer;
-> > +
-> > +			/* Trim the extent to whatever got unmapped. */
-> > +			uirec = irec;
-> > +			xfs_trim_extent(&uirec, irec.br_startoff + rlen,
-> > +					irec.br_blockcount - rlen);
-> 
-> We assign uirec = irec, then pass calculated values based on irec and
-> rlen. How about xfs_trim_extent(&uirec, rlen)?
-> 
-> Also, it took me a while to grok that we "trim" the beginning of the
-> extent because bunmapi works backwards. A comment would be appreciated
-> here.  ;)
-
-Ok.
-
-> Brian
-> 
-> > +			irec.br_blockcount = rlen;
-> > +			trace_xfs_reflink_cow_remap_piece(ip, &uirec);
-> > +
-> > +			/* Map the new blocks into the data fork. */
-> > +			error = xfs_bmap_map_extent(tp->t_mountp, &dfops,
-> > +					ip, XFS_DATA_FORK, &uirec);
-> > +			if (error)
-> > +				goto out_defer;
-> > +
-> > +			/* Remove the mapping from the CoW fork. */
-> > +			error = xfs_bunmapi_cow(ip, &uirec);
-> > +			if (error)
-> > +				goto out_defer;
-> > +
-> > +			error = xfs_defer_finish(&tp, &dfops, ip);
-> > +			if (error)
-> > +				goto out_defer;
-> > +		}
-> > +
-> > +next_extent:
-> > +		/* Roll on... */
-> > +		count_fsb -= irec.br_startoff + ilen - offset_fsb;
-> > +		offset_fsb = irec.br_startoff + ilen;
-> > +	}
-> > +
-> > +	error = xfs_trans_commit(tp);
-> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > +	if (error)
-> > +		goto out;
-> > +	return 0;
-> > +
-> > +out_defer:
-> > +	xfs_defer_cancel(&dfops);
-> > +out_cancel:
-> > +	xfs_trans_cancel(tp);
-> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > +out:
-> > +	trace_xfs_reflink_end_cow_error(ip, error, _RET_IP_);
-> > +	return error;
-> > +}
-> > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > index 11408c0..bffa4be 100644
-> > --- a/fs/xfs/xfs_reflink.h
-> > +++ b/fs/xfs/xfs_reflink.h
-> > @@ -33,4 +33,12 @@ extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
-> >  extern int xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
-> >  		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
-> >  
-> > +extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
-> > +		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
-> > +		xfs_fileoff_t end_fsb);
-> > +extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
-> > +		xfs_off_t count);
-> > +extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
-> > +		xfs_off_t count);
-> > +
-> >  #endif /* __XFS_REFLINK_H */
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
