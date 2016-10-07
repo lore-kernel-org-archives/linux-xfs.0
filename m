@@ -1,256 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:33866 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754597AbcJGTSl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 15:18:41 -0400
-Date: Fri, 7 Oct 2016 12:18:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 40/63] xfs: store in-progress CoW allocations in the
- refcount btree
-Message-ID: <20161007191835.GD11241@birch.djwong.org>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520499918.29434.2773482874093907740.stgit@birch.djwong.org>
- <20161007180404.GC58659@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161007180404.GC58659@bfoster.bfoster>
+Received: from mga07.intel.com ([134.134.136.100]:62336 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757227AbcJGVJ0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Oct 2016 17:09:26 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v5 16/17] xfs: use struct iomap based DAX PMD fault path
+Date: Fri,  7 Oct 2016 15:09:03 -0600
+Message-Id: <1475874544-24842-17-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Fri, Oct 07, 2016 at 02:04:05PM -0400, Brian Foster wrote:
-> On Thu, Sep 29, 2016 at 08:09:59PM -0700, Darrick J. Wong wrote:
-> > Due to the way the CoW algorithm in XFS works, there's an interval
-> > during which blocks allocated to handle a CoW can be lost -- if the FS
-> > goes down after the blocks are allocated but before the block
-> > remapping takes place.  This is exacerbated by the cowextsz hint --
-> > allocated reservations can sit around for a while, waiting to get
-> > used.
-> > 
-> > Since the refcount btree doesn't normally store records with refcount
-> > of 1, we can use it to record these in-progress extents.  In-progress
-> > blocks cannot be shared because they're not user-visible, so there
-> > shouldn't be any conflicts with other programs.  This is a better
-> > solution than holding EFIs during writeback because (a) EFIs can't be
-> > relogged currently, (b) even if they could, EFIs are bound by
-> > available log space, which puts an unnecessary upper bound on how much
-> > CoW we can have in flight, and (c) we already have a mechanism to
-> > track blocks.
-> > 
-> > At mount time, read the refcount records and free anything we find
-> > with a refcount of 1 because those were in-progress when the FS went
-> > down.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> > v2: Use the deferred operations system to avoid deadlocks and blowing
-> > out the transaction reservation.  This allows us to unmap a CoW
-> > extent from the refcountbt and into a file atomically.
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c     |   11 +
-> >  fs/xfs/libxfs/xfs_format.h   |    3 
-> >  fs/xfs/libxfs/xfs_refcount.c |  336 +++++++++++++++++++++++++++++++++++++++++-
-> >  fs/xfs/libxfs/xfs_refcount.h |   10 +
-> >  fs/xfs/xfs_mount.c           |   12 ++
-> >  fs/xfs/xfs_refcount_item.c   |   12 ++
-> >  fs/xfs/xfs_reflink.c         |  150 +++++++++++++++++++
-> >  fs/xfs/xfs_reflink.h         |    1 
-> >  fs/xfs/xfs_super.c           |    9 +
-> >  fs/xfs/xfs_trace.h           |    4 +
-> >  10 files changed, 537 insertions(+), 11 deletions(-)
-> > 
-> > 
-> ...
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index c95cdc3..673ecc1 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> ...
-> > @@ -772,3 +787,138 @@ xfs_reflink_end_cow(
-> >  	trace_xfs_reflink_end_cow_error(ip, error, _RET_IP_);
-> >  	return error;
-> >  }
-> ...
-> > +STATIC int
-> > +xfs_reflink_recover_cow_ag(
-> > +	struct xfs_mount		*mp,
-> > +	xfs_agnumber_t			agno)
-> > +{
-> > +	struct xfs_trans		*tp;
-> > +	struct xfs_btree_cur		*cur;
-> > +	struct xfs_buf			*agbp;
-> > +	struct xfs_reflink_recovery	*rr, *n;
-> > +	struct list_head		debris;
-> > +	union xfs_btree_irec		low;
-> > +	union xfs_btree_irec		high;
-> > +	struct xfs_defer_ops		dfops;
-> > +	xfs_fsblock_t			fsb;
-> > +	int				error;
-> > +
-> > +	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-> > +	if (error)
-> > +		return error;
-> > +	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
-> > +
-> > +	/* Find all the leftover CoW staging extents. */
-> > +	INIT_LIST_HEAD(&debris);
-> > +	memset(&low, 0, sizeof(low));
-> > +	memset(&high, 0, sizeof(high));
-> > +	low.rc.rc_startblock = 0;
-> > +	high.rc.rc_startblock = -1U;
-> > +	error = xfs_btree_query_range(cur, &low, &high,
-> > +			xfs_reflink_recover_extent, &debris);
-> > +	if (error)
-> > +		goto out_error;
-> 
-> Potential memory leak of debris list entries on error.
+Switch xfs_filemap_pmd_fault() from using dax_pmd_fault() to the new and
+improved dax_iomap_pmd_fault().  Also, now that it has no more users,
+remove xfs_get_blocks_dax_fault().
 
-Ugh, the error handling in this whole function needs reworking.
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+---
+ fs/xfs/xfs_aops.c | 26 +++++---------------------
+ fs/xfs/xfs_aops.h |  3 ---
+ fs/xfs/xfs_file.c |  2 +-
+ 3 files changed, 6 insertions(+), 25 deletions(-)
 
-> > +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-> > +	xfs_buf_relse(agbp);
-> > +
-> > +	/* Now iterate the list to free the leftovers */
-> > +	list_for_each_entry(rr, &debris, rr_list) {
-> > +		/* Set up transaction. */
-> > +		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
-> > +		if (error)
-> > +			goto out_free;
-> > +
-> > +		trace_xfs_reflink_recover_extent(mp, agno, &rr->rr_rrec);
-> > +
-> > +		/* Free the orphan record */
-> > +		xfs_defer_init(&dfops, &fsb);
-> > +		fsb = XFS_AGB_TO_FSB(mp, agno, rr->rr_rrec.rc_startblock);
-> > +		error = xfs_refcount_free_cow_extent(mp, &dfops, fsb,
-> > +				rr->rr_rrec.rc_blockcount);
-> > +		if (error)
-> > +			goto out_defer;
-> > +
-> > +		/* Free the block. */
-> > +		xfs_bmap_add_free(mp, &dfops, fsb,
-> > +				rr->rr_rrec.rc_blockcount, NULL);
-> > +
-> > +		error = xfs_defer_finish(&tp, &dfops, NULL);
-> > +		if (error)
-> > +			goto out_defer;
-> > +
-> > +		error = xfs_trans_commit(tp);
-> > +		if (error)
-> > +			goto out_cancel;
-> > +	}
-> > +	goto out_free;
-> 
-> return 0 ?
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 0e2a931..1c73d0a 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1298,8 +1298,7 @@ __xfs_get_blocks(
+ 	sector_t		iblock,
+ 	struct buffer_head	*bh_result,
+ 	int			create,
+-	bool			direct,
+-	bool			dax_fault)
++	bool			direct)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -1420,13 +1419,8 @@ __xfs_get_blocks(
+ 		if (ISUNWRITTEN(&imap))
+ 			set_buffer_unwritten(bh_result);
+ 		/* direct IO needs special help */
+-		if (create) {
+-			if (dax_fault)
+-				ASSERT(!ISUNWRITTEN(&imap));
+-			else
+-				xfs_map_direct(inode, bh_result, &imap, offset,
+-						is_cow);
+-		}
++		if (create)
++			xfs_map_direct(inode, bh_result, &imap, offset, is_cow);
+ 	}
+ 
+ 	/*
+@@ -1466,7 +1460,7 @@ xfs_get_blocks(
+ 	struct buffer_head	*bh_result,
+ 	int			create)
+ {
+-	return __xfs_get_blocks(inode, iblock, bh_result, create, false, false);
++	return __xfs_get_blocks(inode, iblock, bh_result, create, false);
+ }
+ 
+ int
+@@ -1476,17 +1470,7 @@ xfs_get_blocks_direct(
+ 	struct buffer_head	*bh_result,
+ 	int			create)
+ {
+-	return __xfs_get_blocks(inode, iblock, bh_result, create, true, false);
+-}
+-
+-int
+-xfs_get_blocks_dax_fault(
+-	struct inode		*inode,
+-	sector_t		iblock,
+-	struct buffer_head	*bh_result,
+-	int			create)
+-{
+-	return __xfs_get_blocks(inode, iblock, bh_result, create, true, true);
++	return __xfs_get_blocks(inode, iblock, bh_result, create, true);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index b3c6634..34dc00d 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -59,9 +59,6 @@ int	xfs_get_blocks(struct inode *inode, sector_t offset,
+ 		       struct buffer_head *map_bh, int create);
+ int	xfs_get_blocks_direct(struct inode *inode, sector_t offset,
+ 			      struct buffer_head *map_bh, int create);
+-int	xfs_get_blocks_dax_fault(struct inode *inode, sector_t offset,
+-			         struct buffer_head *map_bh, int create);
+-
+ int	xfs_end_io_direct_write(struct kiocb *iocb, loff_t offset,
+ 		ssize_t size, void *private);
+ int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 8f12152..7b13dda 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1750,7 +1750,7 @@ xfs_filemap_pmd_fault(
+ 	}
+ 
+ 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+-	ret = dax_pmd_fault(vma, addr, pmd, flags, xfs_get_blocks_dax_fault);
++	ret = dax_iomap_pmd_fault(vma, addr, pmd, flags, &xfs_iomap_ops);
+ 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 
+ 	if (flags & FAULT_FLAG_WRITE)
+-- 
+2.7.4
 
-Yep.  Good catch.
-
---D
-
-> 
-> Brian
-> 
-> > +
-> > +out_defer:
-> > +	xfs_defer_cancel(&dfops);
-> > +out_cancel:
-> > +	xfs_trans_cancel(tp);
-> > +
-> > +out_free:
-> > +	/* Free the leftover list */
-> > +	list_for_each_entry_safe(rr, n, &debris, rr_list) {
-> > +		list_del(&rr->rr_list);
-> > +		kmem_free(rr);
-> > +	}
-> > +
-> > +	return error;
-> > +
-> > +out_error:
-> > +	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-> > +	xfs_buf_relse(agbp);
-> > +	return error;
-> > +}
-> > +
-> > +/*
-> > + * Free leftover CoW reservations that didn't get cleaned out.
-> > + */
-> > +int
-> > +xfs_reflink_recover_cow(
-> > +	struct xfs_mount	*mp)
-> > +{
-> > +	xfs_agnumber_t		agno;
-> > +	int			error = 0;
-> > +
-> > +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-> > +		return 0;
-> > +
-> > +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-> > +		error = xfs_reflink_recover_cow_ag(mp, agno);
-> > +		if (error)
-> > +			break;
-> > +	}
-> > +
-> > +	return error;
-> > +}
-> > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > index c0c989a..1d2f180 100644
-> > --- a/fs/xfs/xfs_reflink.h
-> > +++ b/fs/xfs/xfs_reflink.h
-> > @@ -42,5 +42,6 @@ extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
-> >  		xfs_off_t count);
-> >  extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
-> >  		xfs_off_t count);
-> > +extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
-> >  
-> >  #endif /* __XFS_REFLINK_H */
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 26b45b3..e6aaa91 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1306,6 +1306,15 @@ xfs_fs_remount(
-> >  		xfs_restore_resvblks(mp);
-> >  		xfs_log_work_queue(mp);
-> >  		xfs_queue_eofblocks(mp);
-> > +
-> > +		/* Recover any CoW blocks that never got remapped. */
-> > +		error = xfs_reflink_recover_cow(mp);
-> > +		if (error) {
-> > +			xfs_err(mp,
-> > +	"Error %d recovering leftover CoW allocations.", error);
-> > +			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > +			return error;
-> > +		}
-> >  	}
-> >  
-> >  	/* rw -> ro */
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 8e89223..ca0930b 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -2916,14 +2916,18 @@ DEFINE_AG_ERROR_EVENT(xfs_refcount_update_error);
-> >  /* refcount adjustment tracepoints */
-> >  DEFINE_AG_EXTENT_EVENT(xfs_refcount_increase);
-> >  DEFINE_AG_EXTENT_EVENT(xfs_refcount_decrease);
-> > +DEFINE_AG_EXTENT_EVENT(xfs_refcount_cow_increase);
-> > +DEFINE_AG_EXTENT_EVENT(xfs_refcount_cow_decrease);
-> >  DEFINE_REFCOUNT_TRIPLE_EXTENT_EVENT(xfs_refcount_merge_center_extents);
-> >  DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_modify_extent);
-> > +DEFINE_REFCOUNT_EXTENT_EVENT(xfs_reflink_recover_extent);
-> >  DEFINE_REFCOUNT_EXTENT_AT_EVENT(xfs_refcount_split_extent);
-> >  DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_merge_left_extent);
-> >  DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_merge_right_extent);
-> >  DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(xfs_refcount_find_left_extent);
-> >  DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(xfs_refcount_find_right_extent);
-> >  DEFINE_AG_ERROR_EVENT(xfs_refcount_adjust_error);
-> > +DEFINE_AG_ERROR_EVENT(xfs_refcount_adjust_cow_error);
-> >  DEFINE_AG_ERROR_EVENT(xfs_refcount_merge_center_extents_error);
-> >  DEFINE_AG_ERROR_EVENT(xfs_refcount_modify_extent_error);
-> >  DEFINE_AG_ERROR_EVENT(xfs_refcount_split_extent_error);
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
