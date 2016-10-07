@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx5-phx2.redhat.com ([209.132.183.37]:54247 "EHLO
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:60089 "EHLO
         mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756713AbcJGP2N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 11:28:13 -0400
-Date: Fri, 7 Oct 2016 11:27:55 -0400 (EDT)
+        with ESMTP id S1755265AbcJGS4g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 14:56:36 -0400
+Date: Fri, 7 Oct 2016 14:56:22 -0400 (EDT)
 From: CAI Qian <caiqian@redhat.com>
-Message-ID: <1267347639.1072505.1475854075552.JavaMail.zimbra@redhat.com>
-In-Reply-To: <1720038662.1062048.1475851398433.JavaMail.zimbra@redhat.com>
-References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <270577901.647921.1475682888765.JavaMail.zimbra@redhat.com> <874538236.682217.1475693824077.JavaMail.zimbra@redhat.com> <20161005200522.GE19539@ZenIV.linux.org.uk> <119370333.805584.1475756417736.JavaMail.zimbra@redhat.com> <1860793605.807021.1475756759147.JavaMail.zimbra@redhat.com> <20161007070838.GA16260@quack2.suse.cz> <1720038662.1062048.1475851398433.JavaMail.zimbra@redhat.com>
+Message-ID: <1337864351.1107846.1475866582573.JavaMail.zimbra@redhat.com>
+In-Reply-To: <1267347639.1072505.1475854075552.JavaMail.zimbra@redhat.com>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <874538236.682217.1475693824077.JavaMail.zimbra@redhat.com> <20161005200522.GE19539@ZenIV.linux.org.uk> <119370333.805584.1475756417736.JavaMail.zimbra@redhat.com> <1860793605.807021.1475756759147.JavaMail.zimbra@redhat.com> <20161007070838.GA16260@quack2.suse.cz> <1720038662.1062048.1475851398433.JavaMail.zimbra@redhat.com> <1267347639.1072505.1475854075552.JavaMail.zimbra@redhat.com>
 Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT]
  splice_read reworked)
 MIME-Version: 1.0
@@ -21,327 +21,264 @@ Cc: linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Pi
 
 
 
-> Hmm, this round of trinity triggered a different hang.
-This hang is reproducible so far with the command below on a overlayfs/xfs,
-
-$ trinity -g vfs --arch 64 --disable-fds=sockets --disable-fds=perf --disable-fds=epoll
-  --disable-fds=eventfd --disable-fds=pseudo --disable-fds=timerfd --disable-fds=memfd
-  --disable-fds=drm
+----- Original Message -----
+> From: "CAI Qian" <caiqian@redhat.com>
+> To: "Jan Kara" <jack@suse.cz>, "Miklos Szeredi" <miklos@szeredi.hu>, "tj" <tj@kernel.org>, "Al Viro"
+> <viro@ZenIV.linux.org.uk>, "Linus Torvalds" <torvalds@linux-foundation.org>, "Dave Chinner" <david@fromorbit.com>
+> Cc: "linux-xfs" <linux-xfs@vger.kernel.org>, "Jens Axboe" <axboe@kernel.dk>, "Nick Piggin" <npiggin@gmail.com>,
+> linux-fsdevel@vger.kernel.org, "Dave Jones" <davej@codemonkey.org.uk>
+> Sent: Friday, October 7, 2016 11:27:55 AM
+> Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT] splice_read reworked)
 > 
-> [ 2094.403119] INFO: task trinity-c0:3126 blocked for more than 120 seconds.
-> [ 2094.410705]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-> [ 2094.417027] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-> this message.
-> [ 2094.425770] trinity-c0      D ffff88044efc3d10 13472  3126   3124
-> 0x00000084
-> [ 2094.433659]  ffff88044efc3d10 ffffffff00000000 ffff880400000000
-> ffff880822b5e000
-> [ 2094.441965]  ffff88044c8b8000 ffff88044efc4000 ffff880443755670
-> ffff880443755658
-> [ 2094.450272]  ffffffff00000000 ffff88044c8b8000 ffff88044efc3d28
-> ffffffff817cdaaf
-> [ 2094.458572] Call Trace:
-> [ 2094.461312]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
-> [ 2094.466858]  [<ffffffff817d2782>] rwsem_down_write_failed+0x242/0x4b0
-> [ 2094.474049]  [<ffffffff817d25ac>] ? rwsem_down_write_failed+0x6c/0x4b0
-> [ 2094.481352]  [<ffffffff810fd5f2>] ? __lock_acquire+0x472/0x1990
-> [ 2094.487964]  [<ffffffff813e27b7>] call_rwsem_down_write_failed+0x17/0x30
-> [ 2094.495450]  [<ffffffff817d1bff>] down_write+0x5f/0x80
-> [ 2094.501190]  [<ffffffff8127e301>] ? chown_common.isra.12+0x131/0x1e0
-> [ 2094.508284]  [<ffffffff8127e301>] chown_common.isra.12+0x131/0x1e0
-> [ 2094.515177]  [<ffffffff81284be1>] ? __sb_start_write+0xd1/0xf0
-> [ 2094.521692]  [<ffffffff810cc367>] ? preempt_count_add+0x47/0xc0
-> [ 2094.528304]  [<ffffffff812a665f>] ? mnt_clone_write+0x3f/0x70
-> [ 2094.534723]  [<ffffffff8127faef>] SyS_fchown+0x8f/0xa0
-> [ 2094.540463]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-> [ 2094.546588]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
-> [ 2094.553784] 2 locks held by trinity-c0/3126:
-> [ 2094.558552]  #0:  (sb_writers#14){.+.+.+}, at: [<ffffffff81284be1>]
-> __sb_start_write+0xd1/0xf0
-> [ 2094.568240]  #1:  (&sb->s_type->i_mutex_key#17){++++++}, at:
-> [<ffffffff8127e301>] chown_common.isra.12+0x131/0x1e0
-> [ 2094.579864] INFO: task trinity-c1:3127 blocked for more than 120 seconds.
-> [ 2094.587442]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-> [ 2094.593761] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-> this message.
-> [ 2094.602503] trinity-c1      D ffff88045a1bbd10 13312  3127   3124
-> 0x00000084
-> [ 2094.610402]  ffff88045a1bbd10 ffff880443769fe8 ffff880400000000
-> ffff88046cefe000
-> [ 2094.618710]  ffff88044c8ba000 ffff88045a1bc000 ffff880443769fd0
-> ffff88045a1bbd40
-> [ 2094.627015]  ffff880443769fe8 ffff88044376a158 ffff88045a1bbd28
-> ffffffff817cdaaf
-> [ 2094.635321] Call Trace:
-> [ 2094.638053]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
-> [ 2094.643597]  [<ffffffff817d24b7>] rwsem_down_read_failed+0x107/0x190
-> [ 2094.650726]  [<ffffffffa0322cca>] ? xfs_file_fsync+0xea/0x2e0 [xfs]
-> [ 2094.657727]  [<ffffffff813e2788>] call_rwsem_down_read_failed+0x18/0x30
-> [ 2094.665119]  [<ffffffff810f8b0b>] down_read_nested+0x5b/0x80
-> [ 2094.671457]  [<ffffffffa03335fa>] ? xfs_ilock+0xfa/0x260 [xfs]
-> [ 2094.677987]  [<ffffffffa03335fa>] xfs_ilock+0xfa/0x260 [xfs]
-> [ 2094.684324]  [<ffffffffa0322cca>] xfs_file_fsync+0xea/0x2e0 [xfs]
-> [ 2094.691133]  [<ffffffff812bdbbd>] vfs_fsync_range+0x3d/0xb0
-> [ 2094.697354]  [<ffffffff812bdc8d>] do_fsync+0x3d/0x70
-> [ 2094.702896]  [<ffffffff812bdf40>] SyS_fsync+0x10/0x20
-> [ 2094.708528]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-> [ 2094.714652]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
-> [ 2094.721844] 1 lock held by trinity-c1/3127:
-> [ 2094.726515]  #0:  (&xfs_nondir_ilock_class){++++..}, at:
-> [<ffffffffa03335fa>] xfs_ilock+0xfa/0x260 [xfs]
-> [ 2094.737181] INFO: task trinity-c2:3128 blocked for more than 120 seconds.
-> [ 2094.744751]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-> [ 2094.751068] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-> this message.
-> [ 2094.759810] trinity-c2      D ffff8804574f3df8 13472  3128   3124
-> 0x00000084
-> [ 2094.767692]  ffff8804574f3df8 0000000000000006 0000000000000000
-> ffff8804569a4000
-> [ 2094.776002]  ffff88044c8bc000 ffff8804574f4000 ffff8804622eb338
-> ffff88044c8bc000
-> [ 2094.784307]  0000000000000246 00000000ffffffff ffff8804574f3e10
-> ffffffff817cdaaf
-> [ 2094.792605] Call Trace:
-> [ 2094.795340]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
-> [ 2094.800886]  [<ffffffff817cdf18>] schedule_preempt_disabled+0x18/0x30
-> [ 2094.808078]  [<ffffffff817cf4df>] mutex_lock_nested+0x19f/0x450
-> [ 2094.814688]  [<ffffffff812a5313>] ? __fdget_pos+0x43/0x50
-> [ 2094.820715]  [<ffffffff812a5313>] __fdget_pos+0x43/0x50
-> [ 2094.826544]  [<ffffffff81297f53>] SyS_getdents+0x83/0x140
-> [ 2094.832573]  [<ffffffff81297cd0>] ? fillonedir+0x100/0x100
-> [ 2094.838699]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-> [ 2094.844822]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
-> [ 2094.852013] 1 lock held by trinity-c2/3128:
-> [ 2094.856682]  #0:  (&f->f_pos_lock){+.+.+.}, at: [<ffffffff812a5313>]
-> __fdget_pos+0x43/0x50
-> [ 2094.865969] INFO: task trinity-c3:3129 blocked for more than 120 seconds.
-> [ 2094.873547]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-> [ 2094.879864] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-> this message.
-> [ 2094.888606] trinity-c3      D ffff880455ce3e08 13440  3129   3124
-> 0x00000084
-> [ 2094.896495]  ffff880455ce3e08 0000000000000006 0000000000000000
-> ffff88045144e000
-> [ 2094.904803]  ffff88044c8be000 ffff880455ce4000 ffff8804622eb338
-> ffff88044c8be000
-> [ 2094.913111]  0000000000000246 00000000ffffffff ffff880455ce3e20
-> ffffffff817cdaaf
-> [ 2094.921418] Call Trace:
-> [ 2094.924152]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
-> [ 2094.929695]  [<ffffffff817cdf18>] schedule_preempt_disabled+0x18/0x30
-> [ 2094.936885]  [<ffffffff817cf4df>] mutex_lock_nested+0x19f/0x450
-> [ 2094.943496]  [<ffffffff812a5313>] ? __fdget_pos+0x43/0x50
-> [ 2094.949526]  [<ffffffff8117729f>] ? __audit_syscall_entry+0xaf/0x100
-> [ 2094.956620]  [<ffffffff812a5313>] __fdget_pos+0x43/0x50
-> [ 2094.962454]  [<ffffffff81298091>] SyS_getdents64+0x81/0x130
-> [ 2094.968675]  [<ffffffff81297a80>] ? iterate_dir+0x190/0x190
-> [ 2094.974895]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-> [ 2094.981019]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
-> [ 2094.988204] 1 lock held by trinity-c3/3129:
-> [ 2094.992872]  #0:  (&f->f_pos_lock){+.+.+.}, at: [<ffffffff812a5313>]
-> __fdget_pos+0x43/0x50
-> [ 2095.002158] INFO: task trinity-c4:3130 blocked for more than 120 seconds.
-> [ 2095.009734]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-> [ 2095.016052] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-> this message.
-> [ 2095.024793] trinity-c4      D ffff880458997e28 13392  3130   3124
-> 0x00000084
-> [ 2095.032690]  ffff880458997e28 0000000000000006 0000000000000000
-> ffff88046ca18000
-> [ 2095.040995]  ffff880458998000 ffff880458998000 ffff8804622eb338
-> ffff880458998000
-> [ 2095.049342]  0000000000000246 00000000ffffffff ffff880458997e40
-> ffffffff817cdaaf
-> [ 2095.057650] Call Trace:
-> [ 2095.060382]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
-> [ 2095.065926]  [<ffffffff817cdf18>] schedule_preempt_disabled+0x18/0x30
-> [ 2095.073118]  [<ffffffff817cf4df>] mutex_lock_nested+0x19f/0x450
-> [ 2095.079728]  [<ffffffff812a5313>] ? __fdget_pos+0x43/0x50
-> [ 2095.085757]  [<ffffffff812a5313>] __fdget_pos+0x43/0x50
-> [ 2095.091589]  [<ffffffff812811dd>] SyS_lseek+0x1d/0xb0
-> [ 2095.097229]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-> [ 2095.103355]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
-> [ 2095.110547] 1 lock held by trinity-c4/3130:
-> [ 2095.115216]  #0:  (&f->f_pos_lock){+.+.+.}, at: [<ffffffff812a5313>]
-> __fdget_pos+0x43/0x50
-> [ 2095.124507] INFO: task trinity-c5:3131 blocked for more than 120 seconds.
-> [ 2095.132083]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-> [ 2095.138402] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-> this message.
-> [ 2095.147135] trinity-c5      D ffff88045a12bae0 13472  3131   3124
-> 0x00000084
-> [ 2095.155034]  ffff88045a12bae0 ffff880443769fe8 ffff880400000000
-> ffff88046ca1a000
-> [ 2095.163339]  ffff88045899a000 ffff88045a12c000 ffff880443769fd0
-> ffff88045a12bb10
-> [ 2095.171645]  ffff880443769fe8 0000000000000000 ffff88045a12baf8
-> ffffffff817cdaaf
-> [ 2095.179952] Call Trace:
-> [ 2095.182684]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
-> [ 2095.188230]  [<ffffffff817d24b7>] rwsem_down_read_failed+0x107/0x190
-> [ 2095.195341]  [<ffffffffa03337d4>] ? xfs_ilock_attr_map_shared+0x34/0x40
-> [xfs]
-> [ 2095.203310]  [<ffffffff813e2788>] call_rwsem_down_read_failed+0x18/0x30
-> [ 2095.210696]  [<ffffffff810f8b0b>] down_read_nested+0x5b/0x80
-> [ 2095.217029]  [<ffffffffa03335fa>] ? xfs_ilock+0xfa/0x260 [xfs]
-> [ 2095.223558]  [<ffffffffa03335fa>] xfs_ilock+0xfa/0x260 [xfs]
-> [ 2095.229894]  [<ffffffffa03337d4>] xfs_ilock_attr_map_shared+0x34/0x40
-> [xfs]
-> [ 2095.237682]  [<ffffffffa02ccfaf>] xfs_attr_get+0xdf/0x1b0 [xfs]
-> [ 2095.244312]  [<ffffffffa0341bfc>] xfs_xattr_get+0x4c/0x70 [xfs]
-> [ 2095.250924]  [<ffffffff812ad269>] generic_getxattr+0x59/0x70
-> [ 2095.257244]  [<ffffffff812acf9b>] vfs_getxattr+0x8b/0xb0
-> [ 2095.263177]  [<ffffffffa0435bd6>] ovl_xattr_get+0x46/0x60 [overlay]
-> [ 2095.270176]  [<ffffffffa04331aa>] ovl_other_xattr_get+0x1a/0x20 [overlay]
-> [ 2095.277756]  [<ffffffff812ad269>] generic_getxattr+0x59/0x70
-> [ 2095.284079]  [<ffffffff81345e9e>] cap_inode_need_killpriv+0x2e/0x40
-> [ 2095.291078]  [<ffffffff81349a33>] security_inode_need_killpriv+0x33/0x50
-> [ 2095.298560]  [<ffffffff812a2fb0>] dentry_needs_remove_privs+0x30/0x50
-> [ 2095.305743]  [<ffffffff8127ea21>] do_truncate+0x51/0xc0
-> [ 2095.311581]  [<ffffffff81284be1>] ? __sb_start_write+0xd1/0xf0
-> [ 2095.318094]  [<ffffffff81284be1>] ? __sb_start_write+0xd1/0xf0
-> [ 2095.324609]  [<ffffffff8127edde>] do_sys_ftruncate.constprop.15+0xfe/0x160
-> [ 2095.332286]  [<ffffffff8127ee7e>] SyS_ftruncate+0xe/0x10
-> [ 2095.338225]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-> [ 2095.344339]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
-> [ 2095.351531] 2 locks held by trinity-c5/3131:
-> [ 2095.356297]  #0:  (sb_writers#14){.+.+.+}, at: [<ffffffff81284be1>]
-> __sb_start_write+0xd1/0xf0
-> [ 2095.365983]  #1:  (&xfs_nondir_ilock_class){++++..}, at:
-> [<ffffffffa03335fa>] xfs_ilock+0xfa/0x260 [xfs]
-> [ 2095.376647] INFO: task trinity-c6:3132 blocked for more than 120 seconds.
-> [ 2095.384216]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-> [ 2095.390535] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-> this message.
-> [ 2095.399275] trinity-c6      D ffff88044da5fd30 13312  3132   3124
-> 0x00000084
-> [ 2095.407177]  ffff88044da5fd30 ffffffff00000000 ffff880400000000
-> ffff880459858000
-> [ 2095.415485]  ffff88045899c000 ffff88044da60000 ffff880443755670
-> ffff880443755658
-> [ 2095.423789]  ffffffff00000000 ffff88045899c000 ffff88044da5fd48
-> ffffffff817cdaaf
-> [ 2095.432094] Call Trace:
-> [ 2095.434825]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
-> [ 2095.440372]  [<ffffffff817d2782>] rwsem_down_write_failed+0x242/0x4b0
-> [ 2095.447565]  [<ffffffff817d25ac>] ? rwsem_down_write_failed+0x6c/0x4b0
-> [ 2095.454854]  [<ffffffff813e27b7>] call_rwsem_down_write_failed+0x17/0x30
-> [ 2095.462337]  [<ffffffff817d1bff>] down_write+0x5f/0x80
-> [ 2095.468077]  [<ffffffff8127e413>] ? chmod_common+0x63/0x150
-> [ 2095.474300]  [<ffffffff8127e413>] chmod_common+0x63/0x150
-> [ 2095.480327]  [<ffffffff8117729f>] ? __audit_syscall_entry+0xaf/0x100
-> [ 2095.487421]  [<ffffffff810035cc>] ? syscall_trace_enter+0x1dc/0x390
-> [ 2095.494418]  [<ffffffff8127f5f2>] SyS_fchmod+0x52/0x80
-> [ 2095.500155]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-> [ 2095.506270]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
-> [ 2095.513452] 2 locks held by trinity-c6/3132:
-> [ 2095.518217]  #0:  (sb_writers#14){.+.+.+}, at: [<ffffffff81284be1>]
-> __sb_start_write+0xd1/0xf0
-> [ 2095.527895]  #1:  (&sb->s_type->i_mutex_key#17){++++++}, at:
-> [<ffffffff8127e413>] chmod_common+0x63/0x150
-> [ 2095.538648] INFO: task trinity-c7:3133 blocked for more than 120 seconds.
-> [ 2095.546227]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-> [ 2095.552544] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-> this message.
-> [ 2095.561288] trinity-c7      D ffff88044d393d10 13472  3133   3124
-> 0x00000084
-> [ 2095.569188]  ffff88044d393d10 ffff880443769fe8 ffff880400000000
-> ffff88086ce68000
-> [ 2095.577491]  ffff88045899e000 ffff88044d394000 ffff880443769fd0
-> ffff88044d393d40
-> [ 2095.585796]  ffff880443769fe8 ffff88044376a158 ffff88044d393d28
-> ffffffff817cdaaf
-> [ 2095.594103] Call Trace:
-> [ 2095.596836]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
-> [ 2095.602379]  [<ffffffff817d24b7>] rwsem_down_read_failed+0x107/0x190
-> [ 2095.609491]  [<ffffffffa0322cca>] ? xfs_file_fsync+0xea/0x2e0 [xfs]
-> [ 2095.616490]  [<ffffffff813e2788>] call_rwsem_down_read_failed+0x18/0x30
-> [ 2095.623877]  [<ffffffff810f8b0b>] down_read_nested+0x5b/0x80
-> [ 2095.630212]  [<ffffffffa03335fa>] ? xfs_ilock+0xfa/0x260 [xfs]
-> [ 2095.636740]  [<ffffffffa03335fa>] xfs_ilock+0xfa/0x260 [xfs]
-> [ 2095.643076]  [<ffffffffa0322cca>] xfs_file_fsync+0xea/0x2e0 [xfs]
-> [ 2095.649889]  [<ffffffff812bdbbd>] vfs_fsync_range+0x3d/0xb0
-> [ 2095.656109]  [<ffffffff812bdc8d>] do_fsync+0x3d/0x70
-> [ 2095.661653]  [<ffffffff812bdf40>] SyS_fsync+0x10/0x20
-> [ 2095.667291]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-> [ 2095.673417]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
-> [ 2095.680610] 1 lock held by trinity-c7/3133:
-> [ 2095.685281]  #0:  (&xfs_nondir_ilock_class){++++..}, at:
-> [<ffffffffa03335fa>] xfs_ilock+0xfa/0x260 [xfs]
-> [ 2095.695947] INFO: task trinity-c8:3135 blocked for more than 120 seconds.
-> [ 2095.703530]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-> [ 2095.709848] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-> this message.
-> [ 2095.718590] trinity-c8      D ffff88044d3b3d10 12912  3135   3124
-> 0x00000084
-> [ 2095.726470]  ffff88044d3b3d10 ffff880443769fe8 ffff880400000000
-> ffff88046ca30000
-> [ 2095.734775]  ffff88044d3a8000 ffff88044d3b4000 ffff880443769fd0
-> ffff88044d3b3d40
-> [ 2095.743083]  ffff880443769fe8 ffff88044376a158 ffff88044d3b3d28
-> ffffffff817cdaaf
-> [ 2095.751387] Call Trace:
-> [ 2095.754119]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
-> [ 2095.759662]  [<ffffffff817d24b7>] rwsem_down_read_failed+0x107/0x190
-> [ 2095.766772]  [<ffffffffa0322cca>] ? xfs_file_fsync+0xea/0x2e0 [xfs]
-> [ 2095.773763]  [<ffffffff813e2788>] call_rwsem_down_read_failed+0x18/0x30
-> [ 2095.781148]  [<ffffffff810f8b0b>] down_read_nested+0x5b/0x80
-> [ 2095.787482]  [<ffffffffa03335fa>] ? xfs_ilock+0xfa/0x260 [xfs]
-> [ 2095.794013]  [<ffffffffa03335fa>] xfs_ilock+0xfa/0x260 [xfs]
-> [ 2095.800347]  [<ffffffffa0322cca>] xfs_file_fsync+0xea/0x2e0 [xfs]
-> [ 2095.807155]  [<ffffffff812bdbbd>] vfs_fsync_range+0x3d/0xb0
-> [ 2095.813377]  [<ffffffff812bdc8d>] do_fsync+0x3d/0x70
-> [ 2095.818921]  [<ffffffff812bdf63>] SyS_fdatasync+0x13/0x20
-> [ 2095.824949]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-> [ 2095.831074]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
-> [ 2095.838261] 1 lock held by trinity-c8/3135:
-> [ 2095.842930]  #0:  (&xfs_nondir_ilock_class){++++..}, at:
-> [<ffffffffa03335fa>] xfs_ilock+0xfa/0x260 [xfs]
-> [ 2095.853588] INFO: task trinity-c9:3136 blocked for more than 120 seconds.
-> [ 2095.861167]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
-> [ 2095.867485] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
-> this message.
-> [ 2095.876228] trinity-c9      D ffff88045b3679e0 13328  3136   3124
-> 0x00000084
-> [ 2095.884111]  ffff88045b3679e0 ffff880443769fe8 ffff880400000000
-> ffff88086ce56000
-> [ 2095.892417]  ffff88044d3aa000 ffff88045b368000 ffff880443769fd0
-> ffff88045b367a10
-> [ 2095.900721]  ffff880443769fe8 ffff88044376a1e8 ffff88045b3679f8
-> ffffffff817cdaaf
-> [ 2095.909024] Call Trace:
-> [ 2095.911761]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
-> [ 2095.917305]  [<ffffffff817d24b7>] rwsem_down_read_failed+0x107/0x190
-> [ 2095.924414]  [<ffffffffa0333790>] ? xfs_ilock_data_map_shared+0x30/0x40
-> [xfs]
-> [ 2095.932383]  [<ffffffff813e2788>] call_rwsem_down_read_failed+0x18/0x30
-> [ 2095.939768]  [<ffffffff810f8b0b>] down_read_nested+0x5b/0x80
-> [ 2095.946104]  [<ffffffffa03335fa>] ? xfs_ilock+0xfa/0x260 [xfs]
-> [ 2095.952632]  [<ffffffffa03335fa>] xfs_ilock+0xfa/0x260 [xfs]
-> [ 2095.958968]  [<ffffffffa0333790>] xfs_ilock_data_map_shared+0x30/0x40
-> [xfs]
-> [ 2095.966752]  [<ffffffffa03128c6>] __xfs_get_blocks+0x96/0x9d0 [xfs]
-> [ 2095.973753]  [<ffffffff8126462e>] ?
-> mem_cgroup_event_ratelimit.isra.39+0x3e/0xb0
-> [ 2095.982012]  [<ffffffff8126e8e5>] ? mem_cgroup_commit_charge+0x95/0x110
-> [ 2095.989413]  [<ffffffffa0313214>] xfs_get_blocks+0x14/0x20 [xfs]
-> [ 2095.996122]  [<ffffffff812cca44>] do_mpage_readpage+0x474/0x800
-> [ 2096.002745]  [<ffffffffa0313200>] ? __xfs_get_blocks+0x9d0/0x9d0 [xfs]
-> [ 2096.010037]  [<ffffffff81402fd7>] ? debug_smp_processor_id+0x17/0x20
-> [ 2096.017136]  [<ffffffff811f3565>] ? __lru_cache_add+0x75/0xb0
-> [ 2096.023551]  [<ffffffff811f45fe>] ? lru_cache_add+0xe/0x10
-> [ 2096.029678]  [<ffffffff812ccf0d>] mpage_readpages+0x13d/0x1b0
-> [ 2096.036109]  [<ffffffffa0313200>] ? __xfs_get_blocks+0x9d0/0x9d0 [xfs]
-> [ 2096.043420]  [<ffffffffa0313200>] ? __xfs_get_blocks+0x9d0/0x9d0 [xfs]
-> [ 2096.050724]  [<ffffffffa0311f14>] xfs_vm_readpages+0x54/0x170 [xfs]
-> [ 2096.057724]  [<ffffffff811f1a1d>] __do_page_cache_readahead+0x2ad/0x370
-> [ 2096.065113]  [<ffffffff811f18ec>] ? __do_page_cache_readahead+0x17c/0x370
-> [ 2096.072693]  [<ffffffff8117729f>] ? __audit_syscall_entry+0xaf/0x100
-> [ 2096.079787]  [<ffffffff811f2014>] force_page_cache_readahead+0x94/0xf0
-> [ 2096.087077]  [<ffffffff811f2168>] SyS_readahead+0xa8/0xc0
-> [ 2096.093106]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
-> [ 2096.099234]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
-> [ 2096.106427] 1 lock held by trinity-c9/3136:
-> [ 2096.111097]  #0:  (&xfs_nondir_ilock_class){++++..}, at:
-> [<ffffffffa03335fa>] xfs_ilock+0xfa/0x260 [xfs]
->
+> 
+> 
+> > Hmm, this round of trinity triggered a different hang.
+> This hang is reproducible so far with the command below on a overlayfs/xfs,
+Another data point is that this hang can also be reproduced using device-mapper thinp
+as the docker backend.
+    CAI Qian
+
+[12047.714409] INFO: task trinity-c0:3716 blocked for more than 120 seconds.
+[12047.722033]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
+[12047.728354] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[12047.737107] trinity-c0      D ffff8804507dbd10 13552  3716   3713 0x00000084
+[12047.744997]  ffff8804507dbd10 ffff8804240e9368 ffff880400000000 ffffffff81c0d540
+[12047.753300]  ffff88044c430000 ffff8804507dc000 ffff8804240e9350 ffff8804507dbd40
+[12047.761598]  ffff8804240e9368 ffff8804240e94d8 ffff8804507dbd28 ffffffff817cdaaf
+[12047.769898] Call Trace:
+[12047.772631]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
+[12047.778174]  [<ffffffff817d24b7>] rwsem_down_read_failed+0x107/0x190
+[12047.785303]  [<ffffffffa028ccca>] ? xfs_file_fsync+0xea/0x2e0 [xfs]
+[12047.792309]  [<ffffffff813e2788>] call_rwsem_down_read_failed+0x18/0x30
+[12047.799695]  [<ffffffff810f8b0b>] down_read_nested+0x5b/0x80
+[12047.806029]  [<ffffffffa029d5fa>] ? xfs_ilock+0xfa/0x260 [xfs]
+[12047.812554]  [<ffffffffa029d5fa>] xfs_ilock+0xfa/0x260 [xfs]
+[12047.818887]  [<ffffffffa028ccca>] xfs_file_fsync+0xea/0x2e0 [xfs]
+[12047.825693]  [<ffffffff812bdbbd>] vfs_fsync_range+0x3d/0xb0
+[12047.831915]  [<ffffffff812bdc8d>] do_fsync+0x3d/0x70
+[12047.837455]  [<ffffffff812bdf63>] SyS_fdatasync+0x13/0x20
+[12047.843485]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[12047.849609]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[12047.856801] 1 lock held by trinity-c0/3716:
+[12047.861470]  #0:  (&xfs_nondir_ilock_class){++++..}, at: [<ffffffffa029d5fa>] xfs_ilock+0xfa/0x260 [xfs]
+[12047.872125] INFO: task trinity-c1:3717 blocked for more than 120 seconds.
+[12047.879703]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
+[12047.886011] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[12047.894749] trinity-c1      D ffff8804507ffd10 13568  3717   3713 0x00000084
+[12047.902645]  ffff8804507ffd10 ffff8804240e9368 ffff880400000000 ffff88046c9da000
+[12047.910941]  ffff88044c434000 ffff880450800000 ffff8804240e9350 ffff8804507ffd40
+[12047.919240]  ffff8804240e9368 ffff8804240e94d8 ffff8804507ffd28 ffffffff817cdaaf
+[12047.927542] Call Trace:
+[12047.930284]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
+[12047.935826]  [<ffffffff817d24b7>] rwsem_down_read_failed+0x107/0x190
+[12047.942933]  [<ffffffffa028ccca>] ? xfs_file_fsync+0xea/0x2e0 [xfs]
+[12047.949930]  [<ffffffff813e2788>] call_rwsem_down_read_failed+0x18/0x30
+[12047.957315]  [<ffffffff810f8b0b>] down_read_nested+0x5b/0x80
+[12047.963647]  [<ffffffffa029d5fa>] ? xfs_ilock+0xfa/0x260 [xfs]
+[12047.970171]  [<ffffffffa029d5fa>] xfs_ilock+0xfa/0x260 [xfs]
+[12047.976506]  [<ffffffffa028ccca>] xfs_file_fsync+0xea/0x2e0 [xfs]
+[12047.983310]  [<ffffffff812bdbbd>] vfs_fsync_range+0x3d/0xb0
+[12047.989529]  [<ffffffff812bdc8d>] do_fsync+0x3d/0x70
+[12047.995070]  [<ffffffff812bdf63>] SyS_fdatasync+0x13/0x20
+[12048.001096]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[12048.007217]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[12048.014407] 1 lock held by trinity-c1/3717:
+[12048.019085]  #0:  (&xfs_nondir_ilock_class){++++..}, at: [<ffffffffa029d5fa>] xfs_ilock+0xfa/0x260 [xfs]
+[12048.029742] INFO: task trinity-c2:3718 blocked for more than 120 seconds.
+[12048.037310]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
+[12048.043626] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[12048.052365] trinity-c2      D ffff8804586c7df8 13504  3718   3713 0x00000084
+[12048.060261]  ffff8804586c7df8 0000000000000006 0000000000000000 ffff88046c9dc000
+[12048.068565]  ffff88044c436000 ffff8804586c8000 ffff88044ec7e6f8 ffff88044c436000
+[12048.076862]  0000000000000246 00000000ffffffff ffff8804586c7e10 ffffffff817cdaaf
+[12048.085163] Call Trace:
+[12048.087893]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
+[12048.093434]  [<ffffffff817cdf18>] schedule_preempt_disabled+0x18/0x30
+[12048.100627]  [<ffffffff817cf4df>] mutex_lock_nested+0x19f/0x450
+[12048.107237]  [<ffffffff812a5313>] ? __fdget_pos+0x43/0x50
+[12048.113262]  [<ffffffff812a5313>] __fdget_pos+0x43/0x50
+[12048.119094]  [<ffffffff81297f53>] SyS_getdents+0x83/0x140
+[12048.125120]  [<ffffffff81297cd0>] ? fillonedir+0x100/0x100
+[12048.131243]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[12048.137357]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[12048.144546] 1 lock held by trinity-c2/3718:
+[12048.149214]  #0:  (&f->f_pos_lock){+.+.+.}, at: [<ffffffff812a5313>] __fdget_pos+0x43/0x50
+[12048.158495] INFO: task trinity-c3:3719 blocked for more than 120 seconds.
+[12048.166071]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
+[12048.172388] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[12048.181120] trinity-c3      D ffff880450707c60 13552  3719   3713 0x00000084
+[12048.189013]  ffff880450707c60 ffffffff00000000 ffff880400000000 ffff88046ca10000
+[12048.197313]  ffff88044c432000 ffff880450708000 ffff8804240e9658 ffff8804240e9640
+[12048.205612]  ffffffff00000000 ffff88044c432000 ffff880450707c78 ffffffff817cdaaf
+[12048.213912] Call Trace:
+[12048.216643]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
+[12048.222183]  [<ffffffff817d2782>] rwsem_down_write_failed+0x242/0x4b0
+[12048.229374]  [<ffffffff817d25ac>] ? rwsem_down_write_failed+0x6c/0x4b0
+[12048.236662]  [<ffffffff813e27b7>] call_rwsem_down_write_failed+0x17/0x30
+[12048.244144]  [<ffffffff817d1bff>] down_write+0x5f/0x80
+[12048.249881]  [<ffffffff812ad021>] ? vfs_removexattr+0x61/0x120
+[12048.256391]  [<ffffffff812ad021>] vfs_removexattr+0x61/0x120
+[12048.262709]  [<ffffffff812ad135>] removexattr+0x55/0x80
+[12048.268533]  [<ffffffff81402ff3>] ? __this_cpu_preempt_check+0x13/0x20
+[12048.275811]  [<ffffffff810f8eae>] ? update_fast_ctr+0x4e/0x70
+[12048.282225]  [<ffffffff810f8f57>] ? percpu_down_read+0x57/0x90
+[12048.288728]  [<ffffffff81284be1>] ? __sb_start_write+0xd1/0xf0
+[12048.295230]  [<ffffffff810cc367>] ? preempt_count_add+0x47/0xc0
+[12048.301829]  [<ffffffff812a665f>] ? mnt_clone_write+0x3f/0x70
+[12048.308242]  [<ffffffff812a8588>] ? __mnt_want_write_file+0x18/0x30
+[12048.315238]  [<ffffffff812a85d0>] ? mnt_want_write_file+0x30/0x60
+[12048.322039]  [<ffffffff812ae303>] SyS_fremovexattr+0x83/0xb0
+[12048.328356]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[12048.334478]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[12048.341679] 2 locks held by trinity-c3/3719:
+[12048.346454]  #0:  (sb_writers#8){.+.+.+}, at: [<ffffffff81284be1>] __sb_start_write+0xd1/0xf0
+[12048.356042]  #1:  (&sb->s_type->i_mutex_key#14){+.+.+.}, at: [<ffffffff812ad021>] vfs_removexattr+0x61/0x120
+[12048.367079] INFO: task trinity-c4:3720 blocked for more than 120 seconds.
+[12048.374655]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
+[12048.380972] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[12048.389712] trinity-c4      D ffff88045072be08 13536  3720   3713 0x00000084
+[12048.397606]  ffff88045072be08 0000000000000006 0000000000000000 ffff88046c9fe000
+[12048.405902]  ffff880450720000 ffff88045072c000 ffff88044ec7e6f8 ffff880450720000
+[12048.414205]  0000000000000246 00000000ffffffff ffff88045072be20 ffffffff817cdaaf
+[12048.422505] Call Trace:
+[12048.425235]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
+[12048.430767]  [<ffffffff817cdf18>] schedule_preempt_disabled+0x18/0x30
+[12048.437957]  [<ffffffff817cf4df>] mutex_lock_nested+0x19f/0x450
+[12048.444565]  [<ffffffff812a5313>] ? __fdget_pos+0x43/0x50
+[12048.450591]  [<ffffffff8117729f>] ? __audit_syscall_entry+0xaf/0x100
+[12048.457675]  [<ffffffff812a5313>] __fdget_pos+0x43/0x50
+[12048.463508]  [<ffffffff81298091>] SyS_getdents64+0x81/0x130
+[12048.469720]  [<ffffffff81297a80>] ? iterate_dir+0x190/0x190
+[12048.475939]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[12048.482063]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[12048.489243] 1 lock held by trinity-c4/3720:
+[12048.493913]  #0:  (&f->f_pos_lock){+.+.+.}, at: [<ffffffff812a5313>] __fdget_pos+0x43/0x50
+[12048.503182] INFO: task trinity-c5:3721 blocked for more than 120 seconds.
+[12048.510757]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
+[12048.517071] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[12048.525812] trinity-c5      D ffff8804510a7e08 13552  3721   3713 0x00000084
+[12048.533706]  ffff8804510a7e08 0000000000000006 0000000000000000 ffff88046c9fa000
+[12048.542007]  ffff880450722000 ffff8804510a8000 ffff88044ec7e6f8 ffff880450722000
+[12048.550310]  0000000000000246 00000000ffffffff ffff8804510a7e20 ffffffff817cdaaf
+[12048.558610] Call Trace:
+[12048.561339]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
+[12048.566879]  [<ffffffff817cdf18>] schedule_preempt_disabled+0x18/0x30
+[12048.574070]  [<ffffffff817cf4df>] mutex_lock_nested+0x19f/0x450
+[12048.580677]  [<ffffffff812a5313>] ? __fdget_pos+0x43/0x50
+[12048.586703]  [<ffffffff8117729f>] ? __audit_syscall_entry+0xaf/0x100
+[12048.593796]  [<ffffffff812a5313>] __fdget_pos+0x43/0x50
+[12048.599629]  [<ffffffff81298091>] SyS_getdents64+0x81/0x130
+[12048.605849]  [<ffffffff81297a80>] ? iterate_dir+0x190/0x190
+[12048.612069]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[12048.618191]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[12048.625382] 1 lock held by trinity-c5/3721:
+[12048.630049]  #0:  (&f->f_pos_lock){+.+.+.}, at: [<ffffffff812a5313>] __fdget_pos+0x43/0x50
+[12048.639329] INFO: task trinity-c6:3722 blocked for more than 120 seconds.
+[12048.646903]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
+[12048.653219] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[12048.661958] trinity-c6      D ffff88044f0ebc50 12224  3722   3713 0x00000084
+[12048.669849]  ffff88044f0ebc50 ffff8804240e9368 ffff880400000000 ffff88046c9fc000
+[12048.678149]  ffff880450724000 ffff88044f0ec000 ffff8804240e9350 ffff88044f0ebc80
+[12048.686448]  ffff8804240e9368 ffff8804240e92c0 ffff88044f0ebc68 ffffffff817cdaaf
+[12048.694750] Call Trace:
+[12048.697478]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
+[12048.703018]  [<ffffffff817d24b7>] rwsem_down_read_failed+0x107/0x190
+[12048.710126]  [<ffffffffa029d7d4>] ? xfs_ilock_attr_map_shared+0x34/0x40 [xfs]
+[12048.718095]  [<ffffffff813e2788>] call_rwsem_down_read_failed+0x18/0x30
+[12048.725479]  [<ffffffff810f8b0b>] down_read_nested+0x5b/0x80
+[12048.731800]  [<ffffffffa029d5fa>] ? xfs_ilock+0xfa/0x260 [xfs]
+[12048.738337]  [<ffffffffa029d5fa>] xfs_ilock+0xfa/0x260 [xfs]
+[12048.744669]  [<ffffffffa029d7d4>] xfs_ilock_attr_map_shared+0x34/0x40 [xfs]
+[12048.752457]  [<ffffffffa0280801>] xfs_attr_list_int+0x71/0x690 [xfs]
+[12048.759555]  [<ffffffff810cba89>] ? __might_sleep+0x49/0x80
+[12048.765792]  [<ffffffffa02abf2a>] xfs_vn_listxattr+0x7a/0xb0 [xfs]
+[12048.772707]  [<ffffffffa02abcc0>] ? __xfs_xattr_put_listent+0xa0/0xa0 [xfs]
+[12048.780480]  [<ffffffff812ad582>] vfs_listxattr+0x42/0x70
+[12048.786517]  [<ffffffff812ad68e>] listxattr+0xde/0xf0
+[12048.792156]  [<ffffffff812ae1f6>] SyS_flistxattr+0x56/0xa0
+[12048.798271]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[12048.804404]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[12048.811595] 1 lock held by trinity-c6/3722:
+[12048.816263]  #0:  (&xfs_nondir_ilock_class){++++..}, at: [<ffffffffa029d5fa>] xfs_ilock+0xfa/0x260 [xfs]
+[12048.826935] INFO: task trinity-c7:3723 blocked for more than 120 seconds.
+[12048.834516]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
+[12048.840832] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[12048.849572] trinity-c7      D ffff88044fc23c50 13552  3723   3713 0x00000084
+[12048.857469]  ffff88044fc23c50 ffff8804240e9368 ffff880400000000 ffff88046c9f8000
+[12048.865768]  ffff880450726000 ffff88044fc24000 ffff8804240e9350 ffff88044fc23c80
+[12048.874067]  ffff8804240e9368 ffff8804240e92c0 ffff88044fc23c68 ffffffff817cdaaf
+[12048.882370] Call Trace:
+[12048.885100]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
+[12048.890634]  [<ffffffff817d24b7>] rwsem_down_read_failed+0x107/0x190
+[12048.897741]  [<ffffffffa029d7d4>] ? xfs_ilock_attr_map_shared+0x34/0x40 [xfs]
+[12048.905707]  [<ffffffff813e2788>] call_rwsem_down_read_failed+0x18/0x30
+[12048.913081]  [<ffffffff810f8b0b>] down_read_nested+0x5b/0x80
+[12048.919412]  [<ffffffffa029d5fa>] ? xfs_ilock+0xfa/0x260 [xfs]
+[12048.925937]  [<ffffffffa029d5fa>] xfs_ilock+0xfa/0x260 [xfs]
+[12048.932267]  [<ffffffffa029d7d4>] xfs_ilock_attr_map_shared+0x34/0x40 [xfs]
+[12048.940053]  [<ffffffffa0280801>] xfs_attr_list_int+0x71/0x690 [xfs]
+[12048.947146]  [<ffffffff810cba89>] ? __might_sleep+0x49/0x80
+[12048.953374]  [<ffffffffa02abf2a>] xfs_vn_listxattr+0x7a/0xb0 [xfs]
+[12048.960288]  [<ffffffffa02abcc0>] ? __xfs_xattr_put_listent+0xa0/0xa0 [xfs]
+[12048.968060]  [<ffffffff812ad582>] vfs_listxattr+0x42/0x70
+[12048.974088]  [<ffffffff812ad602>] listxattr+0x52/0xf0
+[12048.979726]  [<ffffffff812ae1f6>] SyS_flistxattr+0x56/0xa0
+[12048.985849]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[12048.991973]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[12048.999162] 1 lock held by trinity-c7/3723:
+[12049.003831]  #0:  (&xfs_nondir_ilock_class){++++..}, at: [<ffffffffa029d5fa>] xfs_ilock+0xfa/0x260 [xfs]
+[12049.014481] INFO: task trinity-c8:3724 blocked for more than 120 seconds.
+[12049.022072]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
+[12049.028389] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[12049.037130] trinity-c8      D ffff88044fc3fc60 13504  3724   3713 0x00000084
+[12049.045023]  ffff88044fc3fc60 ffffffff00000000 ffff880400000000 ffff88046ca14000
+[12049.053324]  ffff88044e540000 ffff88044fc40000 ffff8804240e9368 ffff8804240e9350
+[12049.061623]  ffffffff00000000 ffff88044e540000 ffff88044fc3fc78 ffffffff817cdaaf
+[12049.069924] Call Trace:
+[12049.072654]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
+[12049.078208]  [<ffffffff817d2782>] rwsem_down_write_failed+0x242/0x4b0
+[12049.085408]  [<ffffffff817d25ac>] ? rwsem_down_write_failed+0x6c/0x4b0
+[12049.092734]  [<ffffffffa028d7cc>] ? xfs_update_prealloc_flags+0x6c/0x100 [xfs]
+[12049.100798]  [<ffffffff813e27b7>] call_rwsem_down_write_failed+0x17/0x30
+[12049.108290]  [<ffffffff810f8c15>] down_write_nested+0x65/0x80
+[12049.114742]  [<ffffffffa029d68e>] ? xfs_ilock+0x18e/0x260 [xfs]
+[12049.121377]  [<ffffffffa029d68e>] xfs_ilock+0x18e/0x260 [xfs]
+[12049.127819]  [<ffffffffa028d7cc>] xfs_update_prealloc_flags+0x6c/0x100 [xfs]
+[12049.135714]  [<ffffffffa028da8e>] xfs_file_fallocate+0x22e/0x360 [xfs]
+[12049.143004]  [<ffffffff810f8eae>] ? update_fast_ctr+0x4e/0x70
+[12049.149435]  [<ffffffff810f8f57>] ? percpu_down_read+0x57/0x90
+[12049.155958]  [<ffffffff81284be1>] ? __sb_start_write+0xd1/0xf0
+[12049.162492]  [<ffffffff81284be1>] ? __sb_start_write+0xd1/0xf0
+[12049.169016]  [<ffffffff8127e000>] vfs_fallocate+0x140/0x230
+[12049.175249]  [<ffffffff8127eee4>] SyS_fallocate+0x44/0x70
+[12049.181288]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[12049.187423]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[12049.194667] 5 locks held by trinity-c8/3724:
+[12049.199429]  #0:  (sb_writers#8){.+.+.+}, at: [<ffffffff81284be1>] __sb_start_write+0xd1/0xf0
+[12049.209024]  #1:  (&(&ip->i_iolock)->mr_lock){++++++}, at: [<ffffffffa029d654>] xfs_ilock+0x154/0x260 [xfs]
+[12049.219990]  #2:  (&(&ip->i_mmaplock)->mr_lock){+++++.}, at: [<ffffffffa029d674>] xfs_ilock+0x174/0x260 [xfs]
+[12049.231128]  #3:  (sb_internal){.+.+.+}, at: [<ffffffff81284b8b>] __sb_start_write+0x7b/0xf0
+[12049.240620]  #4:  (&xfs_nondir_ilock_class){++++..}, at: [<ffffffffa029d68e>] xfs_ilock+0x18e/0x260 [xfs]
+[12049.251383] INFO: task trinity-c9:3725 blocked for more than 120 seconds.
+[12049.258959]       Not tainted 4.8.0-rc8-splice-fixw-proc+ #4
+[12049.265287] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[12049.274027] trinity-c9      D ffff88044f043d30 13552  3725   3713 0x00000084
+[12049.281922]  ffff88044f043d30 ffffffff00000000 ffff880400000000 ffff88046ca14000
+[12049.290238]  ffff88044e542000 ffff88044f044000 ffff8804240e9658 ffff8804240e9640
+[12049.298539]  ffffffff00000000 ffff88044e542000 ffff88044f043d48 ffffffff817cdaaf
+[12049.306840] Call Trace:
+[12049.309569]  [<ffffffff817cdaaf>] schedule+0x3f/0xa0
+[12049.315122]  [<ffffffff817d2782>] rwsem_down_write_failed+0x242/0x4b0
+[12049.322327]  [<ffffffff817d25ac>] ? rwsem_down_write_failed+0x6c/0x4b0
+[12049.329625]  [<ffffffff813e27b7>] call_rwsem_down_write_failed+0x17/0x30
+[12049.337118]  [<ffffffff817d1bff>] down_write+0x5f/0x80
+[12049.342864]  [<ffffffff8127e413>] ? chmod_common+0x63/0x150
+[12049.349096]  [<ffffffff8127e413>] chmod_common+0x63/0x150
+[12049.355131]  [<ffffffff8117729f>] ? __audit_syscall_entry+0xaf/0x100
+[12049.362236]  [<ffffffff810035cc>] ? syscall_trace_enter+0x1dc/0x390
+[12049.369243]  [<ffffffff8127f5f2>] SyS_fchmod+0x52/0x80
+[12049.374988]  [<ffffffff81003c9c>] do_syscall_64+0x6c/0x1e0
+[12049.381124]  [<ffffffff817d4a3f>] entry_SYSCALL64_slow_path+0x25/0x25
+[12049.388324] 2 locks held by trinity-c9/3725:
+[12049.393100]  #0:  (sb_writers#8){.+.+.+}, at: [<ffffffff81284be1>] __sb_start_write+0xd1/0xf0
+[12049.402705]  #1:  (&sb->s_type->i_mutex_key#14){+.+.+.}, at: [<ffffffff8127e413>] chmod_common+0x63/0x150
