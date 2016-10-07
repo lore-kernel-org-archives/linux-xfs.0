@@ -1,205 +1,255 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:25157 "EHLO mga07.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49114 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757089AbcJGVJT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Oct 2016 17:09:19 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v5 09/17] dax: coordinate locking for offsets in PMD range
-Date: Fri,  7 Oct 2016 15:08:56 -0600
-Message-Id: <1475874544-24842-10-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+        id S1755263AbcJGSFJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Oct 2016 14:05:09 -0400
+Date: Fri, 7 Oct 2016 14:05:07 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 46/63] xfs: unshare a range of blocks via fallocate
+Message-ID: <20161007180506.GF58659@bfoster.bfoster>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520503973.29434.3740768854227922973.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <147520503973.29434.3740768854227922973.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-DAX radix tree locking currently locks entries based on the unique
-combination of the 'mapping' pointer and the pgoff_t 'index' for the entry.
-This works for PTEs, but as we move to PMDs we will need to have all the
-offsets within the range covered by the PMD to map to the same bit lock.
-To accomplish this, for ranges covered by a PMD entry we will instead lock
-based on the page offset of the beginning of the PMD entry.  The 'mapping'
-pointer is still used in the same way.
+On Thu, Sep 29, 2016 at 08:10:39PM -0700, Darrick J. Wong wrote:
+> Unshare all shared extents if the user calls fallocate with the new
+> unshare mode flag set, so that we can guarantee that a subsequent
+> write will not ENOSPC.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> [hch: pass inode instead of file to xfs_reflink_dirty_range,
+>       use iomap infrastructure for copy up]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_file.c    |   10 ++
+>  fs/xfs/xfs_reflink.c |  237 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_reflink.h |    2 
+>  3 files changed, 247 insertions(+), 2 deletions(-)
+> 
+> 
+...
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 77ac810..065e836 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1472,3 +1472,240 @@ xfs_reflink_remap_range(
+>  		trace_xfs_reflink_remap_range_error(dest, error, _RET_IP_);
+>  	return error;
+>  }
+...
+> +/* Iterate the extents; if there are no reflinked blocks, clear the flag. */
+> +STATIC int
+> +xfs_reflink_try_clear_inode_flag(
+> +	struct xfs_inode	*ip,
+> +	xfs_off_t		old_isize)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_trans	*tp;
+> +	xfs_fileoff_t		fbno;
+> +	xfs_filblks_t		end;
+> +	xfs_agnumber_t		agno;
+> +	xfs_agblock_t		agbno;
+> +	xfs_extlen_t		aglen;
+> +	xfs_agblock_t		rbno;
+> +	xfs_extlen_t		rlen;
+> +	struct xfs_bmbt_irec	map[2];
+> +	int			nmaps;
+> +	int			error = 0;
+> +
+> +	/* Start a rolling transaction to remove the mappings */
+> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
+> +	if (error)
+> +		return error;
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	xfs_trans_ijoin(tp, ip, 0);
+> +
+> +	if (old_isize != i_size_read(VFS_I(ip)))
+> +		goto cancel;
+> +	if (!(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK))
+> +		goto cancel;
+> +
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- fs/dax.c            | 58 +++++++++++++++++++++++++++++++----------------------
- include/linux/dax.h |  2 +-
- mm/filemap.c        |  2 +-
- 3 files changed, 36 insertions(+), 26 deletions(-)
+The code that has been merged is now different from this code :/, but
+just a heads up that the code in the tree looks like it has another one
+of those potentially blind transaction commit sequences between
+xfs_reflink_try_clear_inode_flag() and xfs_reflink_clear_inode_flag().
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 152a6e1..608cee9 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -64,14 +64,6 @@ static int __init init_dax_wait_table(void)
- }
- fs_initcall(init_dax_wait_table);
- 
--static wait_queue_head_t *dax_entry_waitqueue(struct address_space *mapping,
--					      pgoff_t index)
--{
--	unsigned long hash = hash_long((unsigned long)mapping ^ index,
--				       DAX_WAIT_TABLE_BITS);
--	return wait_table + hash;
--}
--
- static long dax_map_atomic(struct block_device *bdev, struct blk_dax_ctl *dax)
- {
- 	struct request_queue *q = bdev->bd_queue;
-@@ -285,7 +277,7 @@ EXPORT_SYMBOL_GPL(dax_do_io);
-  */
- struct exceptional_entry_key {
- 	struct address_space *mapping;
--	unsigned long index;
-+	pgoff_t entry_start;
- };
- 
- struct wait_exceptional_entry_queue {
-@@ -293,6 +285,26 @@ struct wait_exceptional_entry_queue {
- 	struct exceptional_entry_key key;
- };
- 
-+static wait_queue_head_t *dax_entry_waitqueue(struct address_space *mapping,
-+		pgoff_t index, void *entry, struct exceptional_entry_key *key)
-+{
-+	unsigned long hash;
-+
-+	/*
-+	 * If 'entry' is a PMD, align the 'index' that we use for the wait
-+	 * queue to the start of that PMD.  This ensures that all offsets in
-+	 * the range covered by the PMD map to the same bit lock.
-+	 */
-+	if (RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD)
-+		index &= ~((1UL << (PMD_SHIFT - PAGE_SHIFT)) - 1);
-+
-+	key->mapping = mapping;
-+	key->entry_start = index;
-+
-+	hash = hash_long((unsigned long)mapping ^ index, DAX_WAIT_TABLE_BITS);
-+	return wait_table + hash;
-+}
-+
- static int wake_exceptional_entry_func(wait_queue_t *wait, unsigned int mode,
- 				       int sync, void *keyp)
- {
-@@ -301,7 +313,7 @@ static int wake_exceptional_entry_func(wait_queue_t *wait, unsigned int mode,
- 		container_of(wait, struct wait_exceptional_entry_queue, wait);
- 
- 	if (key->mapping != ewait->key.mapping ||
--	    key->index != ewait->key.index)
-+	    key->entry_start != ewait->key.entry_start)
- 		return 0;
- 	return autoremove_wake_function(wait, mode, sync, NULL);
- }
-@@ -359,12 +371,10 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
- {
- 	void *entry, **slot;
- 	struct wait_exceptional_entry_queue ewait;
--	wait_queue_head_t *wq = dax_entry_waitqueue(mapping, index);
-+	wait_queue_head_t *wq;
- 
- 	init_wait(&ewait.wait);
- 	ewait.wait.func = wake_exceptional_entry_func;
--	ewait.key.mapping = mapping;
--	ewait.key.index = index;
- 
- 	for (;;) {
- 		entry = __radix_tree_lookup(&mapping->page_tree, index, NULL,
-@@ -375,6 +385,8 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
- 				*slotp = slot;
- 			return entry;
- 		}
-+
-+		wq = dax_entry_waitqueue(mapping, index, entry, &ewait.key);
- 		prepare_to_wait_exclusive(wq, &ewait.wait,
- 					  TASK_UNINTERRUPTIBLE);
- 		spin_unlock_irq(&mapping->tree_lock);
-@@ -448,9 +460,12 @@ restart:
- }
- 
- void dax_wake_mapping_entry_waiter(struct address_space *mapping,
--				   pgoff_t index, bool wake_all)
-+		pgoff_t index, void *entry, bool wake_all)
- {
--	wait_queue_head_t *wq = dax_entry_waitqueue(mapping, index);
-+	struct exceptional_entry_key key;
-+	wait_queue_head_t *wq;
-+
-+	wq = dax_entry_waitqueue(mapping, index, entry, &key);
- 
- 	/*
- 	 * Checking for locked entry and prepare_to_wait_exclusive() happens
-@@ -458,13 +473,8 @@ void dax_wake_mapping_entry_waiter(struct address_space *mapping,
- 	 * So at this point all tasks that could have seen our entry locked
- 	 * must be in the waitqueue and the following check will see them.
- 	 */
--	if (waitqueue_active(wq)) {
--		struct exceptional_entry_key key;
--
--		key.mapping = mapping;
--		key.index = index;
-+	if (waitqueue_active(wq))
- 		__wake_up(wq, TASK_NORMAL, wake_all ? 0 : 1, &key);
--	}
- }
- 
- void dax_unlock_mapping_entry(struct address_space *mapping, pgoff_t index)
-@@ -480,7 +490,7 @@ void dax_unlock_mapping_entry(struct address_space *mapping, pgoff_t index)
- 	}
- 	unlock_slot(mapping, slot);
- 	spin_unlock_irq(&mapping->tree_lock);
--	dax_wake_mapping_entry_waiter(mapping, index, false);
-+	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
- }
- 
- static void put_locked_mapping_entry(struct address_space *mapping,
-@@ -505,7 +515,7 @@ static void put_unlocked_mapping_entry(struct address_space *mapping,
- 		return;
- 
- 	/* We have to wake up next waiter for the radix tree entry lock */
--	dax_wake_mapping_entry_waiter(mapping, index, false);
-+	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
- }
- 
- /*
-@@ -532,7 +542,7 @@ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index)
- 	radix_tree_delete(&mapping->page_tree, index);
- 	mapping->nrexceptional--;
- 	spin_unlock_irq(&mapping->tree_lock);
--	dax_wake_mapping_entry_waiter(mapping, index, true);
-+	dax_wake_mapping_entry_waiter(mapping, index, entry, true);
- 
- 	return 1;
- }
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index add6c4b..a41a747 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -22,7 +22,7 @@ int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- void dax_wake_mapping_entry_waiter(struct address_space *mapping,
--				   pgoff_t index, bool wake_all);
-+		pgoff_t index, void *entry, bool wake_all);
- 
- #ifdef CONFIG_FS_DAX
- struct page *read_dax_sector(struct block_device *bdev, sector_t n);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 2f1175e..a596462 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -617,7 +617,7 @@ static int page_cache_tree_insert(struct address_space *mapping,
- 			if (node)
- 				workingset_node_pages_dec(node);
- 			/* Wakeup waiters for exceptional entry lock */
--			dax_wake_mapping_entry_waiter(mapping, page->index,
-+			dax_wake_mapping_entry_waiter(mapping, page->index, p,
- 						      false);
- 		}
- 	}
--- 
-2.7.4
+It doesn't appear to be a problem in how it is actually used in this
+patch, but for reference, I think it's better practice for lower level
+functions like xfs_reflink_clear_inode_flag() to assert that the flag is
+set and make it the responsibility of the caller to check for it and do
+the right thing. Just my .02 though.
 
+> +	fbno = 0;
+> +	end = XFS_B_TO_FSB(mp, old_isize);
+> +	while (end - fbno > 0) {
+> +		nmaps = 1;
+> +		/*
+> +		 * Look for extents in the file.  Skip holes, delalloc, or
+> +		 * unwritten extents; they can't be reflinked.
+> +		 */
+> +		error = xfs_bmapi_read(ip, fbno, end - fbno, map, &nmaps, 0);
+> +		if (error)
+> +			goto cancel;
+> +		if (nmaps == 0)
+> +			break;
+> +		if (map[0].br_startblock == HOLESTARTBLOCK ||
+> +		    map[0].br_startblock == DELAYSTARTBLOCK ||
+> +		    ISUNWRITTEN(&map[0]))
+> +			goto next;
+> +
+> +		map[1] = map[0];
+> +		while (map[1].br_blockcount) {
+> +			agno = XFS_FSB_TO_AGNO(mp, map[1].br_startblock);
+> +			agbno = XFS_FSB_TO_AGBNO(mp, map[1].br_startblock);
+> +			aglen = map[1].br_blockcount;
+> +
+> +			error = xfs_reflink_find_shared(mp, agno, agbno, aglen,
+> +					&rbno, &rlen, false);
+> +			if (error)
+> +				goto cancel;
+> +			/* Is there still a shared block here? */
+> +			if (rlen > 0) {
+> +				error = 0;
+> +				goto cancel;
+> +			}
+> +
+> +			map[1].br_blockcount -= aglen;
+> +			map[1].br_startoff += aglen;
+> +			map[1].br_startblock += aglen;
+
+This is basically doing:
+
+	map[1] = map[0];
+	while (map[1].br_blockcount) {
+		aglen = map[1].br_blockcount;
+		...
+		map[1].br_blockcount -= aglen;
+	}
+
+So the loop appears to be completely superfluous.
+
+> +		}
+> +
+> +next:
+> +		fbno = map[0].br_startoff + map[0].br_blockcount;
+> +	}
+> +
+> +	/*
+> +	 * We didn't find any shared blocks so turn off the reflink flag.
+> +	 * First, get rid of any leftover CoW mappings.
+> +	 */
+> +	error = xfs_reflink_cancel_cow_blocks(ip, &tp, 0, NULLFILEOFF);
+> +	if (error)
+> +		goto cancel;
+> +
+> +	/* Clear the inode flag. */
+> +	trace_xfs_reflink_unset_inode_flag(ip);
+> +	ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+> +	xfs_trans_ijoin(tp, ip, 0);
+> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> +
+> +	error = xfs_trans_commit(tp);
+> +	if (error)
+> +		goto out;
+> +
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	return 0;
+> +cancel:
+> +	xfs_trans_cancel(tp);
+> +out:
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	return error;
+> +}
+> +
+> +/*
+> + * Pre-COW all shared blocks within a given byte range of a file and turn off
+> + * the reflink flag if we unshare all of the file's blocks.
+> + */
+> +int
+> +xfs_reflink_unshare(
+> +	struct xfs_inode	*ip,
+> +	xfs_off_t		offset,
+> +	xfs_off_t		len)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	xfs_fileoff_t		fbno;
+> +	xfs_filblks_t		end;
+> +	xfs_off_t		old_isize, isize;
+> +	int			error;
+> +
+> +	if (!xfs_is_reflink_inode(ip))
+> +		return 0;
+> +
+> +	trace_xfs_reflink_unshare(ip, offset, len);
+> +
+> +	inode_dio_wait(VFS_I(ip));
+> +
+> +	/* Try to CoW the selected ranges */
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	fbno = XFS_B_TO_FSB(mp, offset);
+
+XFS_B_TO_FSBT() ?
+
+> +	old_isize = isize = i_size_read(VFS_I(ip));
+> +	end = XFS_B_TO_FSB(mp, offset + len);
+> +	error = xfs_reflink_dirty_extents(ip, fbno, end, isize);
+> +	if (error)
+> +		goto out_unlock;
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +
+> +	/* Wait for the IO to finish */
+> +	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
+> +	if (error)
+> +		goto out;
+> +
+> +	/* Turn off the reflink flag if we unshared the whole file */
+> +	if (offset == 0 && len == isize) {
+
+Isn't this valid if len is larger than isize (similar check in
+xfs_reflink_try_clear_inode_flag() might defeat this as well)?
+
+FWIW, this has a similar issue as the earlier truncate code in that we
+might just unshare the shared regions and thus retain the flag.
+
+Brian
+
+> +		error = xfs_reflink_try_clear_inode_flag(ip, old_isize);
+> +		if (error)
+> +			goto out;
+> +	}
+> +
+> +	return 0;
+> +
+> +out_unlock:
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +out:
+> +	trace_xfs_reflink_unshare_error(ip, error, _RET_IP_);
+> +	return error;
+> +}
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index df82b20..ad4fc61 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -48,5 +48,7 @@ extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
+>  extern int xfs_reflink_remap_range(struct xfs_inode *src, xfs_off_t srcoff,
+>  		struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len,
+>  		unsigned int flags);
+> +extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
+> +		xfs_off_t len);
+>  
+>  #endif /* __XFS_REFLINK_H */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
