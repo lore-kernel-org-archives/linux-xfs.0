@@ -1,127 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:51504 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933642AbcJFVe1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Oct 2016 17:34:27 -0400
-Date: Thu, 6 Oct 2016 15:34:24 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v4 10/12] dax: add struct iomap based DAX PMD support
-Message-ID: <20161006213424.GA4569@linux.intel.com>
-References: <1475189370-31634-1-git-send-email-ross.zwisler@linux.intel.com>
- <1475189370-31634-11-git-send-email-ross.zwisler@linux.intel.com>
- <20161003105949.GP6457@quack2.suse.cz>
- <20161003210557.GA28177@linux.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:17956 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751749AbcJGAkw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Oct 2016 20:40:52 -0400
+Date: Thu, 6 Oct 2016 17:40:44 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 38/63] xfs: cancel CoW reservations and clear inode
+ reflink flag when freeing blocks
+Message-ID: <20161007004044.GA11241@birch.djwong.org>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520498644.29434.5014643991183828847.stgit@birch.djwong.org>
+ <20161006164432.GC16893@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161003210557.GA28177@linux.intel.com>
+In-Reply-To: <20161006164432.GC16893@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Mon, Oct 03, 2016 at 03:05:57PM -0600, Ross Zwisler wrote:
-> On Mon, Oct 03, 2016 at 12:59:49PM +0200, Jan Kara wrote:
-> > On Thu 29-09-16 16:49:28, Ross Zwisler wrote:
-<>
-> > > +int dax_iomap_pmd_fault(struct vm_area_struct *vma, unsigned long address,
-> > > +		pmd_t *pmd, unsigned int flags, struct iomap_ops *ops)
-> > > +{
-> > > +	struct address_space *mapping = vma->vm_file->f_mapping;
-> > > +	unsigned long pmd_addr = address & PMD_MASK;
-> > > +	bool write = flags & FAULT_FLAG_WRITE;
-> > > +	struct inode *inode = mapping->host;
-> > > +	struct iomap iomap = { 0 };
-> > > +	int error, result = 0;
-> > > +	pgoff_t size, pgoff;
-> > > +	struct vm_fault vmf;
-> > > +	void *entry;
-> > > +	loff_t pos;
-> > > +
-> > > +	/* Fall back to PTEs if we're going to COW */
-> > > +	if (write && !(vma->vm_flags & VM_SHARED)) {
-> > > +		split_huge_pmd(vma, pmd, address);
-> > > +		return VM_FAULT_FALLBACK;
-> > > +	}
-> > > +
-> > > +	/* If the PMD would extend outside the VMA */
-> > > +	if (pmd_addr < vma->vm_start)
-> > > +		return VM_FAULT_FALLBACK;
-> > > +	if ((pmd_addr + PMD_SIZE) > vma->vm_end)
-> > > +		return VM_FAULT_FALLBACK;
-> > > +
-> > > +	/*
-> > > +	 * Check whether offset isn't beyond end of file now. Caller is
-> > > +	 * supposed to hold locks serializing us with truncate / punch hole so
-> > > +	 * this is a reliable test.
-> > > +	 */
-> > > +	pgoff = linear_page_index(vma, pmd_addr);
-> > > +	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
-> > > +
-> > > +	if (pgoff >= size)
-> > > +		return VM_FAULT_SIGBUS;
-> > > +
-> > > +	/* If the PMD would extend beyond the file size */
-> > > +	if ((pgoff | PG_PMD_COLOUR) >= size)
-> > > +		return VM_FAULT_FALLBACK;
-> > > +
-> > > +	/*
-> > > +	 * grab_mapping_entry() will make sure we get a 2M empty entry, a DAX
-> > > +	 * PMD or a HZP entry.  If it can't (because a 4k page is already in
-> > > +	 * the tree, for instance), it will return -EEXIST and we just fall
-> > > +	 * back to 4k entries.
-> > > +	 */
-> > > +	entry = grab_mapping_entry(mapping, pgoff, RADIX_DAX_PMD);
-> > > +	if (IS_ERR(entry))
-> > > +		return VM_FAULT_FALLBACK;
-> > > +
-> > > +	/*
-> > > +	 * Note that we don't use iomap_apply here.  We aren't doing I/O, only
-> > > +	 * setting up a mapping, so really we're using iomap_begin() as a way
-> > > +	 * to look up our filesystem block.
-> > > +	 */
-> > > +	pos = (loff_t)pgoff << PAGE_SHIFT;
-> > > +	error = ops->iomap_begin(inode, pos, PMD_SIZE, write ? IOMAP_WRITE : 0,
-> > > +			&iomap);
+On Thu, Oct 06, 2016 at 12:44:33PM -0400, Brian Foster wrote:
+> On Thu, Sep 29, 2016 at 08:09:46PM -0700, Darrick J. Wong wrote:
+> > When we're freeing blocks (truncate, punch, etc.), clear all CoW
+> > reservations in the range being freed.  If the file block count
+> > drops to zero, also clear the inode reflink flag.
 > > 
-> > I'm not quite sure if it is OK to call ->iomap_begin() without ever calling
-> > ->iomap_end. Specifically the comment before iomap_apply() says:
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_inode.c |   13 +++++++++++++
+> >  1 file changed, 13 insertions(+)
 > > 
-> > "It is assumed that the filesystems will lock whatever resources they
-> > require in the iomap_begin call, and release them in the iomap_end call."
 > > 
-> > so what you do could result in unbalanced allocations / locks / whatever.
-> > Christoph?
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 0c25a76..8c971fd 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -49,6 +49,7 @@
+> >  #include "xfs_trans_priv.h"
+> >  #include "xfs_log.h"
+> >  #include "xfs_bmap_btree.h"
+> > +#include "xfs_reflink.h"
+> >  
+> >  kmem_zone_t *xfs_inode_zone;
+> >  
+> > @@ -1586,6 +1587,18 @@ xfs_itruncate_extents(
+> >  			goto out;
+> >  	}
+> >  
+> > +	/* Remove all pending CoW reservations. */
+> > +	error = xfs_reflink_cancel_cow_blocks(ip, &tp, first_unmap_block,
+> > +			last_block);
+> > +	if (error)
+> > +		goto out;
+> > +
+> > +	/*
+> > +	 * Clear the reflink flag if we truncated everything.
+> > +	 */
+> > +	if (ip->i_d.di_nblocks == 0 && xfs_is_reflink_inode(ip))
+> > +		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+> > +
 > 
-> I'll add the iomap_end() calls to both the PTE and PMD iomap fault handlers.
+> So this implies the reflink flag is more of an optimization than an
+> accurate assessment of reflink state (e.g., we can have DIFLAG2_REFLINK
+> w/o shared extents, but we should never have shared extents w/o the
+> flag) because this wouldn't clear the flag on a partial truncate that
+> happened to unmap all of the shared extents from the file.
 
-Interesting - adding iomap_end() calls to the DAX PTE fault handler causes an
-AA deadlock because we try and retake ei->dax_sem.  We take dax_sem in
-ext2_dax_fault() before calling into the DAX code, then if we end up going
-through the error path in ext2_iomap_end(), we call 
-  ext2_write_failed()
-    ext2_truncate_blocks()
-      dax_sem_down_write()
+Yes, not to mention that (bugs notwithstanding) all the CoW stuff
+shuts off if the inode flag isn't set.
 
-Where we try and take dax_sem again.  This error path is really only valid for
-I/O operations, but we happen to call it for page faults because 'written' in
-ext2_iomap_end() is just 0.
+> That seems fine, I'll just note there's one small potential conflict
+> ahead where we (dis)allow setting the realtime state based on the
+> reflink flag.
 
-So...how should we handle this?  A few ideas:
+Hmm.  You're right, if we're able to set the rt flag (i.e. data size is zero)
+then we ought to just clear the reflink flag.
 
-1) Just continue to omit the calls to iomap_end() in the DAX page fault
-handlers for now, and add them when there is useful work to be done in one of
-the filesystems.
+--D
 
-2) Add an IOMAP_FAULT flag to the flags passed into iomap_begin() and
-iomap_end() so make it explicit that we are calling as part of a fault handler
-and not an I/O operation, and use this to adjust the error handling in
-ext2_iomap_end().
-
-3) Just work around the existing error handling in ext2_iomap_end() by either
-unsetting IOMAP_WRITE or by setting 'written' to the size of the fault.
-
-For #2 or #3, probably add a comment explaining the deadlock and why we need
-to never call ext2_write_failed() while handling a page fault.
-
-Thoughts?
+> 
+> Brian
+> 
+> >  	/*
+> >  	 * Always re-log the inode so that our permanent transaction can keep
+> >  	 * on rolling it forward in the log.
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
