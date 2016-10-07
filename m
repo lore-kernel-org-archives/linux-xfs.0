@@ -1,273 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:13550 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755669AbcJFLRV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Oct 2016 07:17:21 -0400
-Received: from dave by dastard with local (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1bs6fp-0006pU-TV
-        for linux-xfs@vger.kernel.org; Thu, 06 Oct 2016 22:17:13 +1100
-Date: Thu, 6 Oct 2016 22:17:13 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to 1f08af52e7c9
-Message-ID: <20161006111713.GD9806@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:49038 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752666AbcJGSEz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Oct 2016 14:04:55 -0400
+Date: Fri, 7 Oct 2016 14:04:30 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 42/63] xfs: add clone file and clone range vfs functions
+Message-ID: <20161007180430.GE58659@bfoster.bfoster>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520501393.29434.5617758777691039165.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="QKdGvSO+nmPlgiQ/"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <147520501393.29434.5617758777691039165.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
+On Thu, Sep 29, 2016 at 08:10:14PM -0700, Darrick J. Wong wrote:
+> Define two VFS functions which allow userspace to reflink a range of
+> blocks between two files or to reflink one file's contents to another.
+> These functions fit the new VFS ioctls that standardize the checking
+> for the btrfs CLONE and CLONE RANGE ioctls.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: Plug into the VFS function pointers instead of handling ioctls
+> directly.
+> ---
+>  fs/xfs/xfs_file.c |  142 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 142 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 025d52f..3db3f34 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -974,6 +974,146 @@ xfs_file_fallocate(
+...
+> +/* Hook up to the VFS reflink function */
+> +STATIC int
+> +xfs_file_share_range(
+> +	struct file	*file_in,
+> +	loff_t		pos_in,
+> +	struct file	*file_out,
+> +	loff_t		pos_out,
+> +	u64		len)
+> +{
+...
+> +	/* Wait for the completion of any pending IOs on srcfile */
+> +	ret = xfs_file_wait_for_io(inode_in, pos_in, len);
+> +	if (ret)
+> +		goto out_unlock;
+> +	ret = xfs_file_wait_for_io(inode_out, pos_out, len);
+> +	if (ret)
+> +		goto out_unlock;
+> +
+> +	ret = xfs_reflink_remap_range(XFS_I(inode_in), pos_in, XFS_I(inode_out),
+> +			pos_out, len);
+> +	if (ret < 0)
+> +		goto out_unlock;
+> +
+> +out_unlock:
 
---QKdGvSO+nmPlgiQ/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Nit: 'out:'
 
-Hi folks,
+Brian
 
-The for-next branch of the xfs kernel repository at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-has just been updated. This update contains the shiny new reflink
-functionality written by Darrick. If you are not using reflink
-enabled filesystems, then you should see no new problems or
-regressions as a result ofthe merge. If you do, please let us know
-immediately.
-
-For those of you that want to test the new reflink functionality,
-you'll need to grab Darrick's latest xfsprogs branch. You probably
-also want to grab his latest xfstests branch, too, so you don't get
-failures from the tests that were obviously broken by recent
-updates.
-
-The xfsprogs reflink merge will occur after the kernel merge has
-occurred, similar to the way rmap supprot was handled in the last
-cycle. The xfstests runs with this series are not completely clean
-yet - I see 5-6 new test failures across different machines, but
-none of them are serious (e.g. unexpected ENOSPC errors causes
-generic/204 failure because reflink consumes more space) and will be
-fixed up over the next few weeks.
-
-Darrick - for updates and fixes that need to be added to the 4.9
-tree, let's revert to the normal "send patch to mailing list"
-method for getting changes into the tree so everyone can pick them
-up and review them as soon as they are sent...
-
-Cheers,
-
-Dave.
-
-The new head of the for-next branch is commit:
-
-1f08af52e7c9 xfs: implement swapext for rmap filesystems
-
-New Commits:
-
-Darrick J. Wong (63):
-      [0a6eab8bd4e0] vfs: support FS_XFLAG_COWEXTSIZE and get/set of CoW ex=
-tent size hint
-      [71be6b4942dd] vfs: add a FALLOC_FL_UNSHARE mode to fallocate to unsh=
-are a range of blocks
-      [9cdafd8a769b] xfs: return an error when an inline directory is too s=
-mall
-      [c75c752d0374] xfs: define tracepoints for refcount btree activities
-      [46eeb521b952] xfs: introduce refcount btree definitions
-      [af30dfa14411] xfs: refcount btree add more reserved blocks
-      [1946b91cee4f] xfs: define the on-disk refcount btree format
-      [ac4fef69386a] xfs: add refcount btree support to growfs
-      [f310bd2ecd37] xfs: account for the refcount btree in the alloc/free =
-log reservation
-      [bdf28630b721] xfs: add refcount btree operations
-      [baf4bcacb715] xfs: create refcount update intent log items
-      [f997ee213717] xfs: log refcount intent items
-      [3172725814f9] xfs: adjust refcount of an extent of blocks in refcoun=
-t btree
-      [33ba61292084] xfs: connect refcount adjust functions to upper layers
-      [62aab20f0875] xfs: adjust refcount when unmapping file blocks
-      [a90c00f05554] xfs: add refcount btree block detection to log recovery
-      [d0e853f3600c] xfs: reserve AG space for the refcount btree root
-      [350a27a6a65c] xfs: introduce reflink utility functions
-      [6413a01420c2] xfs: create bmbt update intent log items
-      [77d61fe45e72] xfs: log bmap intent items
-      [f65306ea5246] xfs: map an inode's offset to an exact physical block
-      [4847acf868bb] xfs: pass bmapi flags through to bmap_del_extent
-      [9f3afb57d5f1] xfs: implement deferred bmbt map/unmap operations
-      [17c12bcd3030] xfs: when replaying bmap operations, don't let unlinke=
-d inodes get reaped
-      [4453593be6c5] xfs: return work remaining at the end of a bunmapi ope=
-ration
-      [53aa1c34f4eb] xfs: define tracepoints for reflink activities
-      [f0ec1b8ef11d] xfs: add reflink feature flag to geometry
-      [11715a21bc30] xfs: don't allow reflinked dir/dev/fifo/socket/pipe fi=
-les
-      [3993baeb3c52] xfs: introduce the CoW fork
-      [be51f8119c2f] xfs: support bmapping delalloc extents in the CoW fork
-      [2a06705cd595] xfs: create delalloc extents in CoW fork
-      [60b4984fc392] xfs: support allocating delayed extents in CoW fork
-      [ef4736678fc3] xfs: allocate delayed extents in CoW fork
-      [4862cfe825c0] xfs: support removing extents from CoW fork
-      [43caeb187deb] xfs: move mappings from cow fork to data fork after co=
-py-write
-      [db1327b16c2b] xfs: report shared extent mappings to userspace correc=
-tly
-      [0613f16cd201] xfs: implement CoW for directio writes
-      [aa8968f227a8] xfs: cancel CoW reservations and clear inode reflink f=
-lag when freeing blocks
-      [5e7e605c4d1b] xfs: cancel pending CoW reservations when destroying i=
-nodes
-      [174edb0e46e5] xfs: store in-progress CoW allocations in the refcount=
- btree
-      [862bb360ef56] xfs: reflink extents from one file to another
-      [9fe26045e98f] xfs: add clone file and clone range vfs functions
-      [cc714660bb8b] xfs: add dedupe range vfs function
-      [f86f403794b1] xfs: teach get_bmapx about shared extents and the CoW =
-fork
-      [f0bc4d134b46] xfs: swap inode reflink flags when swapping inode exte=
-nts
-      [98cc2db5b8b2] xfs: unshare a range of blocks via fallocate
-      [f7ca35227253] xfs: create a separate cow extent size hint for the al=
-locator
-      [84d6961910ea] xfs: preallocate blocks for worst-case btree expansion
-      [6fa164b865e4] xfs: don't allow reflink when the AG is low on space
-      [90e2056d76ad] xfs: try other AGs to allocate a BMBT block
-      [83104d449e8c] xfs: garbage collect old cowextsz reservations
-      [80de462e090c] xfs: increase log reservations for reflink
-      [0e07c039bac5] xfs: add shared rmap map/unmap/convert log item types
-      [ceeb9c832eec] xfs: use interval query for rmap alloc operations on s=
-hared files
-      [3f165b334e51] xfs: convert unwritten status of reverse mappings for =
-shared files
-      [e153aa7990a0] xfs: set a default CoW extent size of 32 blocks
-      [c8e156ac336d] xfs: check for invalid inode reflink flags
-      [4f435ebe7d04] xfs: don't mix reflink and DAX mode for now
-      [a35eb41519ab] xfs: simulate per-AG reservations being critically low
-      [e54b5bf9d7ae] xfs: recognize the reflink feature bit
-      [e06259aa08fb] xfs: various swapext cleanups
-      [39aff5fdb91e] xfs: refactor swapext code
-      [1f08af52e7c9] xfs: implement swapext for rmap filesystems
-
-
-Code Diffstat:
-
- fs/open.c                          |    5 +
- fs/xfs/Makefile                    |    7 +
- fs/xfs/libxfs/xfs_ag_resv.c        |   15 +-
- fs/xfs/libxfs/xfs_alloc.c          |   23 +
- fs/xfs/libxfs/xfs_bmap.c           |  575 ++++++++++++-
- fs/xfs/libxfs/xfs_bmap.h           |   67 +-
- fs/xfs/libxfs/xfs_bmap_btree.c     |   18 +
- fs/xfs/libxfs/xfs_btree.c          |    8 +-
- fs/xfs/libxfs/xfs_btree.h          |   16 +
- fs/xfs/libxfs/xfs_defer.h          |    2 +
- fs/xfs/libxfs/xfs_format.h         |   97 ++-
- fs/xfs/libxfs/xfs_fs.h             |   10 +-
- fs/xfs/libxfs/xfs_inode_buf.c      |   24 +-
- fs/xfs/libxfs/xfs_inode_buf.h      |    1 +
- fs/xfs/libxfs/xfs_inode_fork.c     |   70 +-
- fs/xfs/libxfs/xfs_inode_fork.h     |   28 +-
- fs/xfs/libxfs/xfs_log_format.h     |  118 ++-
- fs/xfs/libxfs/xfs_refcount.c       | 1700 ++++++++++++++++++++++++++++++++=
-++++++
- fs/xfs/libxfs/xfs_refcount.h       |   70 ++
- fs/xfs/libxfs/xfs_refcount_btree.c |  451 +++++++++++
- fs/xfs/libxfs/xfs_refcount_btree.h |   74 ++
- fs/xfs/libxfs/xfs_rmap.c           | 1120 +++++++++++++++++++++++---
- fs/xfs/libxfs/xfs_rmap.h           |    7 +
- fs/xfs/libxfs/xfs_rmap_btree.c     |   82 +-
- fs/xfs/libxfs/xfs_rmap_btree.h     |    7 +
- fs/xfs/libxfs/xfs_sb.c             |    9 +
- fs/xfs/libxfs/xfs_shared.h         |    2 +
- fs/xfs/libxfs/xfs_trans_resv.c     |   23 +-
- fs/xfs/libxfs/xfs_trans_resv.h     |    3 +
- fs/xfs/libxfs/xfs_trans_space.h    |    9 +
- fs/xfs/libxfs/xfs_types.h          |    3 +-
- fs/xfs/xfs_aops.c                  |  222 ++++-
- fs/xfs/xfs_aops.h                  |    4 +-
- fs/xfs/xfs_bmap_item.c             |  508 ++++++++++++
- fs/xfs/xfs_bmap_item.h             |   98 +++
- fs/xfs/xfs_bmap_util.c             |  589 ++++++++++----
- fs/xfs/xfs_dir2_readdir.c          |    3 +-
- fs/xfs/xfs_error.h                 |   10 +-
- fs/xfs/xfs_file.c                  |  221 ++++-
- fs/xfs/xfs_fsops.c                 |  107 ++-
- fs/xfs/xfs_fsops.h                 |    3 +
- fs/xfs/xfs_globals.c               |    5 +-
- fs/xfs/xfs_icache.c                |  243 +++++-
- fs/xfs/xfs_icache.h                |    7 +
- fs/xfs/xfs_inode.c                 |   51 ++
- fs/xfs/xfs_inode.h                 |   19 +
- fs/xfs/xfs_inode_item.c            |    2 +-
- fs/xfs/xfs_ioctl.c                 |   75 +-
- fs/xfs/xfs_iomap.c                 |   35 +-
- fs/xfs/xfs_iomap.h                 |    3 +-
- fs/xfs/xfs_iops.c                  |    1 +
- fs/xfs/xfs_itable.c                |    8 +-
- fs/xfs/xfs_linux.h                 |    1 +
- fs/xfs/xfs_log_recover.c           |  357 ++++++++
- fs/xfs/xfs_mount.c                 |   32 +
- fs/xfs/xfs_mount.h                 |    8 +
- fs/xfs/xfs_ondisk.h                |    3 +
- fs/xfs/xfs_pnfs.c                  |    7 +
- fs/xfs/xfs_refcount_item.c         |  539 +++++++++++++
- fs/xfs/xfs_refcount_item.h         |  101 +++
- fs/xfs/xfs_reflink.c               | 1702 ++++++++++++++++++++++++++++++++=
-+++++++
- fs/xfs/xfs_reflink.h               |   58 ++
- fs/xfs/xfs_rmap_item.c             |   12 +
- fs/xfs/xfs_stats.c                 |    1 +
- fs/xfs/xfs_stats.h                 |   18 +-
- fs/xfs/xfs_super.c                 |   85 ++
- fs/xfs/xfs_sysctl.c                |    9 +
- fs/xfs/xfs_sysctl.h                |    1 +
- fs/xfs/xfs_trace.h                 |  742 ++++++++++++++++-
- fs/xfs/xfs_trans.h                 |   29 +
- fs/xfs/xfs_trans_bmap.c            |  249 ++++++
- fs/xfs/xfs_trans_refcount.c        |  264 ++++++
- fs/xfs/xfs_trans_rmap.c            |    9 +
- include/linux/falloc.h             |    3 +-
- include/uapi/linux/falloc.h        |   18 +
- include/uapi/linux/fs.h            |    4 +-
- 76 files changed, 10697 insertions(+), 413 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_refcount.c
- create mode 100644 fs/xfs/libxfs/xfs_refcount.h
- create mode 100644 fs/xfs/libxfs/xfs_refcount_btree.c
- create mode 100644 fs/xfs/libxfs/xfs_refcount_btree.h
- create mode 100644 fs/xfs/xfs_bmap_item.c
- create mode 100644 fs/xfs/xfs_bmap_item.h
- create mode 100644 fs/xfs/xfs_refcount_item.c
- create mode 100644 fs/xfs/xfs_refcount_item.h
- create mode 100644 fs/xfs/xfs_reflink.c
- create mode 100644 fs/xfs/xfs_reflink.h
- create mode 100644 fs/xfs/xfs_trans_bmap.c
- create mode 100644 fs/xfs/xfs_trans_refcount.c
---=20
-Dave Chinner
-david@fromorbit.com
-
---QKdGvSO+nmPlgiQ/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJX9jK5AAoJEK3oKUf0dfodxTIP/2bw4yoQeVRQnCNS/JPTPUj5
-VfGw5ME0dlWcfjJzVjZj1TOtkdapoRknI9OSoleK/JDx5U+f11OQDWe63h+hOXzJ
-8GdkTqIgI/04en0kOQxbs9xZLkBtGJbPyJfQKymruJJEV/MCX5Yx3bLq+KZoVjUR
-KGlTpYSNag9/zzdr8wwWDSGzIApcygtJ6IGULUSAun8KgioEEXybeaGOupZAwpcg
-daAs563DvVX28+9/dNeuE02+df4EqZX2lxsjOxJrE7/t4O/1FniImojxYD5VloZk
-v5XD9oTQdCefnkLW3nEhDxuaYn9CozHegCrNBwujLyQ6vLNLX5RZso+aw8l/MFqQ
-Pmy88Pk00NnF7jZKK2u3zE9CcMW38MOVzyEc0qVyupmOQ4YHJndcOT2fMGjnoTuG
-3ZQvtfw7tdK4OfUpUvXTTZ0isEDSKilWiLk3RpBmL7qkDm1YOweTXeQvqPrQgG2P
-kp0Bh9Yo/dhgRPJM8LUFSZ84J/Iv5P/in3YH6nIRn/sCPWq6gkpfGZpr1mRJGPmy
-4PQYfjaUwMpCxgzYdDh6hXSkjP8JGL1g/gztMf48U6RwIv6DfBhRb7IYDs/7gFjm
-RFznA3glUlIdCBQ2EJxcySkTOFvtt9BIx8m1bUqyWa4E6NDL4vOEEPtJy471qtbg
-1DdzH6qAPNjF+DhYhEIV
-=GTBd
------END PGP SIGNATURE-----
-
---QKdGvSO+nmPlgiQ/--
+> +	return ret;
+> +}
+> +
+> +STATIC ssize_t
+> +xfs_file_copy_range(
+> +	struct file	*file_in,
+> +	loff_t		pos_in,
+> +	struct file	*file_out,
+> +	loff_t		pos_out,
+> +	size_t		len,
+> +	unsigned int	flags)
+> +{
+> +	int		error;
+> +
+> +	error = xfs_file_share_range(file_in, pos_in, file_out, pos_out,
+> +				     len);
+> +	if (error)
+> +		return error;
+> +	return len;
+> +}
+> +
+> +STATIC int
+> +xfs_file_clone_range(
+> +	struct file	*file_in,
+> +	loff_t		pos_in,
+> +	struct file	*file_out,
+> +	loff_t		pos_out,
+> +	u64		len)
+> +{
+> +	return xfs_file_share_range(file_in, pos_in, file_out, pos_out,
+> +				     len);
+> +}
+>  
+>  STATIC int
+>  xfs_file_open(
+> @@ -1634,6 +1774,8 @@ const struct file_operations xfs_file_operations = {
+>  	.release	= xfs_file_release,
+>  	.fsync		= xfs_file_fsync,
+>  	.fallocate	= xfs_file_fallocate,
+> +	.copy_file_range = xfs_file_copy_range,
+> +	.clone_file_range = xfs_file_clone_range,
+>  };
+>  
+>  const struct file_operations xfs_dir_file_operations = {
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
