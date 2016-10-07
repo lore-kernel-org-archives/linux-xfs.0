@@ -1,199 +1,285 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:48379 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750700AbcJEV32 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Oct 2016 17:29:28 -0400
-Date: Thu, 6 Oct 2016 08:29:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: updates for 4.9-rc1
-Message-ID: <20161005212909.GR27872@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:28928 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751640AbcJGU0u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 16:26:50 -0400
+Date: Fri, 7 Oct 2016 13:26:39 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 46/63] xfs: unshare a range of blocks via fallocate
+Message-ID: <20161007202639.GG11241@birch.djwong.org>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520503973.29434.3740768854227922973.stgit@birch.djwong.org>
+ <20161007180506.GF58659@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20161007180506.GF58659@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Hi Linus,
+On Fri, Oct 07, 2016 at 02:05:07PM -0400, Brian Foster wrote:
+> On Thu, Sep 29, 2016 at 08:10:39PM -0700, Darrick J. Wong wrote:
+> > Unshare all shared extents if the user calls fallocate with the new
+> > unshare mode flag set, so that we can guarantee that a subsequent
+> > write will not ENOSPC.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > [hch: pass inode instead of file to xfs_reflink_dirty_range,
+> >       use iomap infrastructure for copy up]
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_file.c    |   10 ++
+> >  fs/xfs/xfs_reflink.c |  237 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_reflink.h |    2 
+> >  3 files changed, 247 insertions(+), 2 deletions(-)
+> > 
+> > 
+> ...
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 77ac810..065e836 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -1472,3 +1472,240 @@ xfs_reflink_remap_range(
+> >  		trace_xfs_reflink_remap_range_error(dest, error, _RET_IP_);
+> >  	return error;
+> >  }
+> ...
+> > +/* Iterate the extents; if there are no reflinked blocks, clear the flag. */
+> > +STATIC int
+> > +xfs_reflink_try_clear_inode_flag(
+> > +	struct xfs_inode	*ip,
+> > +	xfs_off_t		old_isize)
+> > +{
+> > +	struct xfs_mount	*mp = ip->i_mount;
+> > +	struct xfs_trans	*tp;
+> > +	xfs_fileoff_t		fbno;
+> > +	xfs_filblks_t		end;
+> > +	xfs_agnumber_t		agno;
+> > +	xfs_agblock_t		agbno;
+> > +	xfs_extlen_t		aglen;
+> > +	xfs_agblock_t		rbno;
+> > +	xfs_extlen_t		rlen;
+> > +	struct xfs_bmbt_irec	map[2];
+> > +	int			nmaps;
+> > +	int			error = 0;
+> > +
+> > +	/* Start a rolling transaction to remove the mappings */
+> > +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > +	xfs_trans_ijoin(tp, ip, 0);
+> > +
+> > +	if (old_isize != i_size_read(VFS_I(ip)))
+> > +		goto cancel;
+> > +	if (!(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK))
+> > +		goto cancel;
+> > +
+> 
+> The code that has been merged is now different from this code :/, but
+> just a heads up that the code in the tree looks like it has another one
+> of those potentially blind transaction commit sequences between
+> xfs_reflink_try_clear_inode_flag() and xfs_reflink_clear_inode_flag().
 
-Can you please pull the XFS and iomap updates from the tag listed
-below? The main things in this update are the iomap-based DAX
-infrastructure, an XFS delalloc rework, and a chunk of fixes to how
-log recovery schedules writeback to prevent spurious corruption
-detections when recovery of certain items was not required.
+_reflink_unshare jumps out if it's not a reflink inode before
+calling _reflink_try_clear_inode_flag -> _reflink_clear_inode_flag.
+We do not call _reflink_clear_inode_flag with a non-reflink inode.
+As for blindly committing a transaction with no dirty data, that's
+fine, _trans_commit checks for that case and simply frees everything
+attached to the transaction.
 
-The other main chunk of code is some preparation for the upcoming
-reflink functionality. Most of it is generic and cleanups that stand
-alone, but they were ready and reviewed so are in this pull request.
+> It doesn't appear to be a problem in how it is actually used in this
+> patch, but for reference, I think it's better practice for lower level
+> functions like xfs_reflink_clear_inode_flag() to assert that the flag is
+> set and make it the responsibility of the caller to check for it and do
+> the right thing. Just my .02 though.
 
-Speaking of reflink, I'm currently planning to send you another pull
-request next week containing all the new reflink functionality.  I'm
-working through a similar process to the last cycle, where I sent
-the reverse mapping code in a separate request because of how large
-it was. The reflink code merge is even bigger than reverse mapping,
-so I'll be doing the same thing again....
+Ok, I'll add an assert.
 
-Thanks,
+> > +	fbno = 0;
+> > +	end = XFS_B_TO_FSB(mp, old_isize);
+> > +	while (end - fbno > 0) {
+> > +		nmaps = 1;
+> > +		/*
+> > +		 * Look for extents in the file.  Skip holes, delalloc, or
+> > +		 * unwritten extents; they can't be reflinked.
+> > +		 */
+> > +		error = xfs_bmapi_read(ip, fbno, end - fbno, map, &nmaps, 0);
+> > +		if (error)
+> > +			goto cancel;
+> > +		if (nmaps == 0)
+> > +			break;
+> > +		if (map[0].br_startblock == HOLESTARTBLOCK ||
+> > +		    map[0].br_startblock == DELAYSTARTBLOCK ||
+> > +		    ISUNWRITTEN(&map[0]))
+> > +			goto next;
+> > +
+> > +		map[1] = map[0];
+> > +		while (map[1].br_blockcount) {
+> > +			agno = XFS_FSB_TO_AGNO(mp, map[1].br_startblock);
+> > +			agbno = XFS_FSB_TO_AGBNO(mp, map[1].br_startblock);
+> > +			aglen = map[1].br_blockcount;
+> > +
+> > +			error = xfs_reflink_find_shared(mp, agno, agbno, aglen,
+> > +					&rbno, &rlen, false);
+> > +			if (error)
+> > +				goto cancel;
+> > +			/* Is there still a shared block here? */
+> > +			if (rlen > 0) {
+> > +				error = 0;
+> > +				goto cancel;
+> > +			}
+> > +
+> > +			map[1].br_blockcount -= aglen;
+> > +			map[1].br_startoff += aglen;
+> > +			map[1].br_startblock += aglen;
+> 
+> This is basically doing:
+> 
+> 	map[1] = map[0];
+> 	while (map[1].br_blockcount) {
+> 		aglen = map[1].br_blockcount;
+> 		...
+> 		map[1].br_blockcount -= aglen;
+> 	}
+> 
+> So the loop appears to be completely superfluous.
 
--Dave.
+<nod>
 
-The following changes since commit 32438cf9d54bd53b531f6d98814e84dd278360c1:
+> 
+> > +		}
+> > +
+> > +next:
+> > +		fbno = map[0].br_startoff + map[0].br_blockcount;
+> > +	}
+> > +
+> > +	/*
+> > +	 * We didn't find any shared blocks so turn off the reflink flag.
+> > +	 * First, get rid of any leftover CoW mappings.
+> > +	 */
+> > +	error = xfs_reflink_cancel_cow_blocks(ip, &tp, 0, NULLFILEOFF);
+> > +	if (error)
+> > +		goto cancel;
+> > +
+> > +	/* Clear the inode flag. */
+> > +	trace_xfs_reflink_unset_inode_flag(ip);
+> > +	ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+> > +	xfs_trans_ijoin(tp, ip, 0);
+> > +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> > +
+> > +	error = xfs_trans_commit(tp);
+> > +	if (error)
+> > +		goto out;
+> > +
+> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > +	return 0;
+> > +cancel:
+> > +	xfs_trans_cancel(tp);
+> > +out:
+> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > +	return error;
+> > +}
+> > +
+> > +/*
+> > + * Pre-COW all shared blocks within a given byte range of a file and turn off
+> > + * the reflink flag if we unshare all of the file's blocks.
+> > + */
+> > +int
+> > +xfs_reflink_unshare(
+> > +	struct xfs_inode	*ip,
+> > +	xfs_off_t		offset,
+> > +	xfs_off_t		len)
+> > +{
+> > +	struct xfs_mount	*mp = ip->i_mount;
+> > +	xfs_fileoff_t		fbno;
+> > +	xfs_filblks_t		end;
+> > +	xfs_off_t		old_isize, isize;
+> > +	int			error;
+> > +
+> > +	if (!xfs_is_reflink_inode(ip))
+> > +		return 0;
+> > +
+> > +	trace_xfs_reflink_unshare(ip, offset, len);
+> > +
+> > +	inode_dio_wait(VFS_I(ip));
+> > +
+> > +	/* Try to CoW the selected ranges */
+> > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > +	fbno = XFS_B_TO_FSB(mp, offset);
+> 
+> XFS_B_TO_FSBT() ?
+> 
+> > +	old_isize = isize = i_size_read(VFS_I(ip));
+> > +	end = XFS_B_TO_FSB(mp, offset + len);
+> > +	error = xfs_reflink_dirty_extents(ip, fbno, end, isize);
+> > +	if (error)
+> > +		goto out_unlock;
+> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > +
+> > +	/* Wait for the IO to finish */
+> > +	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
+> > +	if (error)
+> > +		goto out;
+> > +
+> > +	/* Turn off the reflink flag if we unshared the whole file */
+> > +	if (offset == 0 && len == isize) {
+> 
+> Isn't this valid if len is larger than isize (similar check in
+> xfs_reflink_try_clear_inode_flag() might defeat this as well)?
+> 
+> FWIW, this has a similar issue as the earlier truncate code in that we
+> might just unshare the shared regions and thus retain the flag.
 
-  Merge branch 'iomap-fixes-4.8-rc3' into for-next (2016-08-17 11:13:37 +1000)
+Yes, it is suboptimal for the flag to be set when there are no shared
+extents.  I'm not sure when is a good opportunity to try to turn off the
+flag -- certainly we don't want to do that after every CoW operation.
+Doing it as part of a fallocate operation seems reasonable enough.
+Prior to the removal of the UNSHARE flag it would try to clear the flag
+any time the user asked for an unshare, but when I removed the flag from
+the interface I decided we should only do that if the user fallocated
+the entire file.
 
-are available in the git repository at:
+Now that UNSHARE has been re-added to the interface, I'll just take out
+these weird checks.  Note that the upcoming online repair patchset will
+try to unset the flag.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-for-linus-4.9-rc1
+--D
 
-for you to fetch changes up to 155cd433b516506df065866f3d974661f6473572:
-
-  Merge branch 'xfs-4.9-log-recovery-fixes' into for-next (2016-10-03 09:56:28 +1100)
-
-----------------------------------------------------------------
-xfs: updates for 4.9-rc1
-
-Included in this update:
-- change of XFS mailing list to linux-xfs@vger.kernel.org
-- iomap-based DAX infrastructure w/ XFS and ext2 support
-- small iomap fixes and additions
-- more efficient XFS delayed allocation infrastructure based on iomap
-- a rework of log recovery writeback scheduling to ensure we don't
-  fail recovery when trying to replay items that are already on disk
-- some preparation patches for upcoming reflink support
-- configurable error handling fixes and documentation
-- aio access time update race fixes for XFS and generic_file_read_iter
-
-----------------------------------------------------------------
-Artem Savkov (1):
-      Make __xfs_xattr_put_listen preperly report errors.
-
-Brian Foster (6):
-      xfs: prevent dropping ioend completions during buftarg wait
-      xfs: rework log recovery to submit buffers on LSN boundaries
-      xfs: pass current lsn to log recovery buffer validation
-      xfs: don't warn on buffers not being recovered due to LSN
-      xfs: update metadata LSN in buffers during log recovery
-      xfs: log recovery tracepoints to track current lsn and buffer submission
-
-Carlos Maiolino (1):
-      xfs: Document error handlers behavior
-
-Christoph Hellwig (21):
-      iomap: don't set FIEMAP_EXTENT_MERGED for extent based filesystems
-      fs: add iomap_file_dirty
-      xfs: move xfs_bmbt_to_iomap up
-      xfs: factor our a helper to calculate the EOF alignment
-      xfs: make xfs_inode_set_eofblocks_tag cheaper for the common case
-      xfs: rewrite and optimize the delalloc write path
-      iomap: add IOMAP_F_NEW flag
-      iomap: expose iomap_apply outside iomap.c
-      dax: don't pass buffer_head to dax_insert_mapping
-      dax: don't pass buffer_head to copy_user_dax
-      dax: provide an iomap based dax read/write path
-      dax: provide an iomap based fault handler
-      xfs: fix locking for DAX writes
-      xfs: take the ilock shared if possible in xfs_file_iomap_begin
-      xfs: refactor xfs_setfilesize
-      xfs: use iomap to implement DAX
-      ext2: stop passing buffer_head to ext2_get_blocks
-      ext2: use iomap to implement DAX
-      ext2: fix possible integer truncation in ext2_iomap_begin
-      xfs: update atime before I/O in xfs_file_dio_aio_read
-      fs: update atime before I/O in generic_file_read_iter
-
-Darrick J. Wong (13):
-      xfs: don't perform lookups on zero-height btrees
-      xfs: disallow mounting of realtime + rmap filesystems
-      xfs: don't log the entire end of the AGF
-      xfs: fix some key handling problems in _btree_simple_query_range
-      xfs: simple btree query range should look right if LE lookup fails
-      xfs: track log done items directly in the deferred pending work item
-      iomap: add a flag to report shared extents
-      xfs: convert RUI log formats to use variable length arrays
-      xfs: remove xfs_btree_bigkey
-      xfs: create a standard btree size calculator code
-      xfs: count the blocks in a btree
-      xfs: defer should allow ->finish_item to request a new transaction
-      xfs: set up per-AG free space reservations
-
-Dave Chinner (9):
-      xfs: fix superblock inprogress check
-      xfs: change mailing list address
-      xfs: remote attribute blocks aren't really userdata
-      xfs: quiesce the filesystem after recovery on readonly mount
-      Merge branch 'iomap-4.9-misc-fixes-1' into for-next
-      Merge branch 'xfs-4.9-reflink-prep' into for-next
-      Merge branch 'xfs-4.9-delalloc-rework' into for-next
-      Merge branch 'iomap-4.9-dax' into for-next
-      Merge branch 'xfs-4.9-log-recovery-fixes' into for-next
-
-Eric Sandeen (1):
-      xfs: normalize "infinite" retries in error configs
-
-Eryu Guan (1):
-      xfs: undo block reservation correctly in xfs_trans_reserve()
-
-Xie XiuQi (1):
-      xfs: fix signed integer overflow
-
- Documentation/filesystems/xfs.txt | 123 ++++++++++
- MAINTAINERS                       |   7 +-
- fs/dax.c                          | 252 ++++++++++++++++++-
- fs/ext2/Kconfig                   |   1 +
- fs/ext2/ext2.h                    |   1 +
- fs/ext2/file.c                    |  76 +++++-
- fs/ext2/inode.c                   | 100 ++++++--
- fs/internal.h                     |  11 +
- fs/iomap.c                        |  94 +++++++-
- fs/xfs/Makefile                   |   1 +
- fs/xfs/libxfs/xfs_ag_resv.c       | 325 +++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_ag_resv.h       |  35 +++
- fs/xfs/libxfs/xfs_alloc.c         | 137 +++++++----
- fs/xfs/libxfs/xfs_alloc.h         |  25 +-
- fs/xfs/libxfs/xfs_bmap.c          | 136 +++--------
- fs/xfs/libxfs/xfs_bmap.h          |  12 +-
- fs/xfs/libxfs/xfs_btree.c         |  73 +++++-
- fs/xfs/libxfs/xfs_btree.h         |  28 +--
- fs/xfs/libxfs/xfs_defer.c         |  96 ++++++--
- fs/xfs/libxfs/xfs_defer.h         |   2 +-
- fs/xfs/libxfs/xfs_format.h        |   6 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c  |   2 +-
- fs/xfs/libxfs/xfs_log_format.h    |  10 +-
- fs/xfs/libxfs/xfs_sb.c            |   3 +-
- fs/xfs/xfs_aops.c                 |  31 ++-
- fs/xfs/xfs_aops.h                 |   1 +
- fs/xfs/xfs_bmap_util.c            |   2 +-
- fs/xfs/xfs_buf.c                  |   2 +-
- fs/xfs/xfs_buf_item.c             |   9 +-
- fs/xfs/xfs_extent_busy.c          |   2 +-
- fs/xfs/xfs_file.c                 |  82 ++-----
- fs/xfs/xfs_filestream.c           |  13 +-
- fs/xfs/xfs_fsops.c                |   2 +-
- fs/xfs/xfs_icache.c               |  14 ++
- fs/xfs/xfs_inode.h                |   1 +
- fs/xfs/xfs_iomap.c                | 494 ++++++++++++++++++--------------------
- fs/xfs/xfs_iomap.h                |   2 -
- fs/xfs/xfs_log_priv.h             |   3 +-
- fs/xfs/xfs_log_recover.c          | 191 ++++++++++-----
- fs/xfs/xfs_mount.c                |  14 ++
- fs/xfs/xfs_mount.h                |  44 +++-
- fs/xfs/xfs_rmap_item.c            |  36 +--
- fs/xfs/xfs_rmap_item.h            |   8 +
- fs/xfs/xfs_super.c                |  16 +-
- fs/xfs/xfs_super.h                |   1 +
- fs/xfs/xfs_sysfs.c                |  47 +++-
- fs/xfs/xfs_trace.h                | 116 +++++++--
- fs/xfs/xfs_trans.c                |   3 +-
- fs/xfs/xfs_trans_extfree.c        |   3 +-
- fs/xfs/xfs_xattr.c                |   1 +
- include/linux/dax.h               |   6 +
- include/linux/iomap.h             |  12 +-
- mm/filemap.c                      |  14 +-
- 53 files changed, 1989 insertions(+), 737 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_ag_resv.c
- create mode 100644 fs/xfs/libxfs/xfs_ag_resv.h
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Brian
+> 
+> > +		error = xfs_reflink_try_clear_inode_flag(ip, old_isize);
+> > +		if (error)
+> > +			goto out;
+> > +	}
+> > +
+> > +	return 0;
+> > +
+> > +out_unlock:
+> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > +out:
+> > +	trace_xfs_reflink_unshare_error(ip, error, _RET_IP_);
+> > +	return error;
+> > +}
+> > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> > index df82b20..ad4fc61 100644
+> > --- a/fs/xfs/xfs_reflink.h
+> > +++ b/fs/xfs/xfs_reflink.h
+> > @@ -48,5 +48,7 @@ extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
+> >  extern int xfs_reflink_remap_range(struct xfs_inode *src, xfs_off_t srcoff,
+> >  		struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len,
+> >  		unsigned int flags);
+> > +extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
+> > +		xfs_off_t len);
+> >  
+> >  #endif /* __XFS_REFLINK_H */
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
