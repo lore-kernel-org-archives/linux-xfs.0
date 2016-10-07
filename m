@@ -1,246 +1,256 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48592 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53468 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754427AbcJGSEI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Oct 2016 14:04:08 -0400
-Date: Fri, 7 Oct 2016 14:04:05 -0400
+        id S1753988AbcJGU6l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Oct 2016 16:58:41 -0400
+Date: Fri, 7 Oct 2016 16:58:38 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 40/63] xfs: store in-progress CoW allocations in the
- refcount btree
-Message-ID: <20161007180404.GC58659@bfoster.bfoster>
+Subject: Re: [PATCH 46/63] xfs: unshare a range of blocks via fallocate
+Message-ID: <20161007205838.GH58659@bfoster.bfoster>
 References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520499918.29434.2773482874093907740.stgit@birch.djwong.org>
+ <147520503973.29434.3740768854227922973.stgit@birch.djwong.org>
+ <20161007180506.GF58659@bfoster.bfoster>
+ <20161007202639.GG11241@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <147520499918.29434.2773482874093907740.stgit@birch.djwong.org>
+In-Reply-To: <20161007202639.GG11241@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Thu, Sep 29, 2016 at 08:09:59PM -0700, Darrick J. Wong wrote:
-> Due to the way the CoW algorithm in XFS works, there's an interval
-> during which blocks allocated to handle a CoW can be lost -- if the FS
-> goes down after the blocks are allocated but before the block
-> remapping takes place.  This is exacerbated by the cowextsz hint --
-> allocated reservations can sit around for a while, waiting to get
-> used.
+On Fri, Oct 07, 2016 at 01:26:39PM -0700, Darrick J. Wong wrote:
+> On Fri, Oct 07, 2016 at 02:05:07PM -0400, Brian Foster wrote:
+> > On Thu, Sep 29, 2016 at 08:10:39PM -0700, Darrick J. Wong wrote:
+> > > Unshare all shared extents if the user calls fallocate with the new
+> > > unshare mode flag set, so that we can guarantee that a subsequent
+> > > write will not ENOSPC.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > [hch: pass inode instead of file to xfs_reflink_dirty_range,
+> > >       use iomap infrastructure for copy up]
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >  fs/xfs/xfs_file.c    |   10 ++
+> > >  fs/xfs/xfs_reflink.c |  237 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/xfs_reflink.h |    2 
+> > >  3 files changed, 247 insertions(+), 2 deletions(-)
+> > > 
+> > > 
+> > ...
+> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > > index 77ac810..065e836 100644
+> > > --- a/fs/xfs/xfs_reflink.c
+> > > +++ b/fs/xfs/xfs_reflink.c
+> > > @@ -1472,3 +1472,240 @@ xfs_reflink_remap_range(
+> > >  		trace_xfs_reflink_remap_range_error(dest, error, _RET_IP_);
+> > >  	return error;
+> > >  }
+> > ...
+> > > +/* Iterate the extents; if there are no reflinked blocks, clear the flag. */
+> > > +STATIC int
+> > > +xfs_reflink_try_clear_inode_flag(
+> > > +	struct xfs_inode	*ip,
+> > > +	xfs_off_t		old_isize)
+> > > +{
+> > > +	struct xfs_mount	*mp = ip->i_mount;
+> > > +	struct xfs_trans	*tp;
+> > > +	xfs_fileoff_t		fbno;
+> > > +	xfs_filblks_t		end;
+> > > +	xfs_agnumber_t		agno;
+> > > +	xfs_agblock_t		agbno;
+> > > +	xfs_extlen_t		aglen;
+> > > +	xfs_agblock_t		rbno;
+> > > +	xfs_extlen_t		rlen;
+> > > +	struct xfs_bmbt_irec	map[2];
+> > > +	int			nmaps;
+> > > +	int			error = 0;
+> > > +
+> > > +	/* Start a rolling transaction to remove the mappings */
+> > > +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > +	xfs_trans_ijoin(tp, ip, 0);
+> > > +
+> > > +	if (old_isize != i_size_read(VFS_I(ip)))
+> > > +		goto cancel;
+> > > +	if (!(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK))
+> > > +		goto cancel;
+> > > +
+> > 
+> > The code that has been merged is now different from this code :/, but
+> > just a heads up that the code in the tree looks like it has another one
+> > of those potentially blind transaction commit sequences between
+> > xfs_reflink_try_clear_inode_flag() and xfs_reflink_clear_inode_flag().
 > 
-> Since the refcount btree doesn't normally store records with refcount
-> of 1, we can use it to record these in-progress extents.  In-progress
-> blocks cannot be shared because they're not user-visible, so there
-> shouldn't be any conflicts with other programs.  This is a better
-> solution than holding EFIs during writeback because (a) EFIs can't be
-> relogged currently, (b) even if they could, EFIs are bound by
-> available log space, which puts an unnecessary upper bound on how much
-> CoW we can have in flight, and (c) we already have a mechanism to
-> track blocks.
+> _reflink_unshare jumps out if it's not a reflink inode before
+> calling _reflink_try_clear_inode_flag -> _reflink_clear_inode_flag.
+> We do not call _reflink_clear_inode_flag with a non-reflink inode.
+> As for blindly committing a transaction with no dirty data, that's
+> fine, _trans_commit checks for that case and simply frees everything
+> attached to the transaction.
 > 
-> At mount time, read the refcount records and free anything we find
-> with a refcount of 1 because those were in-progress when the FS went
-> down.
+
+Yeah, I saw that. That's what I was alluding to below wrt to the usage
+being fine in the patch. It's just the pattern that's used that stands
+out.
+
+With regard to the transaction.. sure, that situation may not be broken,
+but it's still not ideal if it's a log reservation we didn't have to
+make in the first place.
+
+> > It doesn't appear to be a problem in how it is actually used in this
+> > patch, but for reference, I think it's better practice for lower level
+> > functions like xfs_reflink_clear_inode_flag() to assert that the flag is
+> > set and make it the responsibility of the caller to check for it and do
+> > the right thing. Just my .02 though.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: Use the deferred operations system to avoid deadlocks and blowing
-> out the transaction reservation.  This allows us to unmap a CoW
-> extent from the refcountbt and into a file atomically.
-> ---
->  fs/xfs/libxfs/xfs_bmap.c     |   11 +
->  fs/xfs/libxfs/xfs_format.h   |    3 
->  fs/xfs/libxfs/xfs_refcount.c |  336 +++++++++++++++++++++++++++++++++++++++++-
->  fs/xfs/libxfs/xfs_refcount.h |   10 +
->  fs/xfs/xfs_mount.c           |   12 ++
->  fs/xfs/xfs_refcount_item.c   |   12 ++
->  fs/xfs/xfs_reflink.c         |  150 +++++++++++++++++++
->  fs/xfs/xfs_reflink.h         |    1 
->  fs/xfs/xfs_super.c           |    9 +
->  fs/xfs/xfs_trace.h           |    4 +
->  10 files changed, 537 insertions(+), 11 deletions(-)
-> 
+> Ok, I'll add an assert.
 > 
 ...
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index c95cdc3..673ecc1 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-...
-> @@ -772,3 +787,138 @@ xfs_reflink_end_cow(
->  	trace_xfs_reflink_end_cow_error(ip, error, _RET_IP_);
->  	return error;
->  }
-...
-> +STATIC int
-> +xfs_reflink_recover_cow_ag(
-> +	struct xfs_mount		*mp,
-> +	xfs_agnumber_t			agno)
-> +{
-> +	struct xfs_trans		*tp;
-> +	struct xfs_btree_cur		*cur;
-> +	struct xfs_buf			*agbp;
-> +	struct xfs_reflink_recovery	*rr, *n;
-> +	struct list_head		debris;
-> +	union xfs_btree_irec		low;
-> +	union xfs_btree_irec		high;
-> +	struct xfs_defer_ops		dfops;
-> +	xfs_fsblock_t			fsb;
-> +	int				error;
-> +
-> +	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-> +	if (error)
-> +		return error;
-> +	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
-> +
-> +	/* Find all the leftover CoW staging extents. */
-> +	INIT_LIST_HEAD(&debris);
-> +	memset(&low, 0, sizeof(low));
-> +	memset(&high, 0, sizeof(high));
-> +	low.rc.rc_startblock = 0;
-> +	high.rc.rc_startblock = -1U;
-> +	error = xfs_btree_query_range(cur, &low, &high,
-> +			xfs_reflink_recover_extent, &debris);
-> +	if (error)
-> +		goto out_error;
+> > > +		}
+> > > +
+> > > +next:
+> > > +		fbno = map[0].br_startoff + map[0].br_blockcount;
+> > > +	}
+> > > +
+> > > +	/*
+> > > +	 * We didn't find any shared blocks so turn off the reflink flag.
+> > > +	 * First, get rid of any leftover CoW mappings.
+> > > +	 */
+> > > +	error = xfs_reflink_cancel_cow_blocks(ip, &tp, 0, NULLFILEOFF);
+> > > +	if (error)
+> > > +		goto cancel;
+> > > +
+> > > +	/* Clear the inode flag. */
+> > > +	trace_xfs_reflink_unset_inode_flag(ip);
+> > > +	ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+> > > +	xfs_trans_ijoin(tp, ip, 0);
+> > > +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> > > +
+> > > +	error = xfs_trans_commit(tp);
+> > > +	if (error)
+> > > +		goto out;
+> > > +
+> > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > +	return 0;
+> > > +cancel:
+> > > +	xfs_trans_cancel(tp);
+> > > +out:
+> > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > +	return error;
+> > > +}
+> > > +
+> > > +/*
+> > > + * Pre-COW all shared blocks within a given byte range of a file and turn off
+> > > + * the reflink flag if we unshare all of the file's blocks.
+> > > + */
+> > > +int
+> > > +xfs_reflink_unshare(
+> > > +	struct xfs_inode	*ip,
+> > > +	xfs_off_t		offset,
+> > > +	xfs_off_t		len)
+> > > +{
+> > > +	struct xfs_mount	*mp = ip->i_mount;
+> > > +	xfs_fileoff_t		fbno;
+> > > +	xfs_filblks_t		end;
+> > > +	xfs_off_t		old_isize, isize;
+> > > +	int			error;
+> > > +
+> > > +	if (!xfs_is_reflink_inode(ip))
+> > > +		return 0;
+> > > +
+> > > +	trace_xfs_reflink_unshare(ip, offset, len);
+> > > +
+> > > +	inode_dio_wait(VFS_I(ip));
+> > > +
+> > > +	/* Try to CoW the selected ranges */
+> > > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > +	fbno = XFS_B_TO_FSB(mp, offset);
+> > 
+> > XFS_B_TO_FSBT() ?
+> > 
+> > > +	old_isize = isize = i_size_read(VFS_I(ip));
+> > > +	end = XFS_B_TO_FSB(mp, offset + len);
+> > > +	error = xfs_reflink_dirty_extents(ip, fbno, end, isize);
+> > > +	if (error)
+> > > +		goto out_unlock;
+> > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > +
+> > > +	/* Wait for the IO to finish */
+> > > +	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
+> > > +	if (error)
+> > > +		goto out;
+> > > +
+> > > +	/* Turn off the reflink flag if we unshared the whole file */
+> > > +	if (offset == 0 && len == isize) {
+> > 
+> > Isn't this valid if len is larger than isize (similar check in
+> > xfs_reflink_try_clear_inode_flag() might defeat this as well)?
+> > 
+> > FWIW, this has a similar issue as the earlier truncate code in that we
+> > might just unshare the shared regions and thus retain the flag.
+> 
+> Yes, it is suboptimal for the flag to be set when there are no shared
+> extents.  I'm not sure when is a good opportunity to try to turn off the
+> flag -- certainly we don't want to do that after every CoW operation.
 
-Potential memory leak of debris list entries on error.
+Indeed..
 
-> +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-> +	xfs_buf_relse(agbp);
-> +
-> +	/* Now iterate the list to free the leftovers */
-> +	list_for_each_entry(rr, &debris, rr_list) {
-> +		/* Set up transaction. */
-> +		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
-> +		if (error)
-> +			goto out_free;
-> +
-> +		trace_xfs_reflink_recover_extent(mp, agno, &rr->rr_rrec);
-> +
-> +		/* Free the orphan record */
-> +		xfs_defer_init(&dfops, &fsb);
-> +		fsb = XFS_AGB_TO_FSB(mp, agno, rr->rr_rrec.rc_startblock);
-> +		error = xfs_refcount_free_cow_extent(mp, &dfops, fsb,
-> +				rr->rr_rrec.rc_blockcount);
-> +		if (error)
-> +			goto out_defer;
-> +
-> +		/* Free the block. */
-> +		xfs_bmap_add_free(mp, &dfops, fsb,
-> +				rr->rr_rrec.rc_blockcount, NULL);
-> +
-> +		error = xfs_defer_finish(&tp, &dfops, NULL);
-> +		if (error)
-> +			goto out_defer;
-> +
-> +		error = xfs_trans_commit(tp);
-> +		if (error)
-> +			goto out_cancel;
-> +	}
-> +	goto out_free;
+> Doing it as part of a fallocate operation seems reasonable enough.
+> Prior to the removal of the UNSHARE flag it would try to clear the flag
+> any time the user asked for an unshare, but when I removed the flag from
+> the interface I decided we should only do that if the user fallocated
+> the entire file.
+> 
+> Now that UNSHARE has been re-added to the interface, I'll just take out
+> these weird checks.  Note that the upcoming online repair patchset will
+> try to unset the flag.
+> 
 
-return 0 ?
+Ok, it sounds reasonable to me to try the removal on fallocate.
 
 Brian
 
-> +
-> +out_defer:
-> +	xfs_defer_cancel(&dfops);
-> +out_cancel:
-> +	xfs_trans_cancel(tp);
-> +
-> +out_free:
-> +	/* Free the leftover list */
-> +	list_for_each_entry_safe(rr, n, &debris, rr_list) {
-> +		list_del(&rr->rr_list);
-> +		kmem_free(rr);
-> +	}
-> +
-> +	return error;
-> +
-> +out_error:
-> +	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-> +	xfs_buf_relse(agbp);
-> +	return error;
-> +}
-> +
-> +/*
-> + * Free leftover CoW reservations that didn't get cleaned out.
-> + */
-> +int
-> +xfs_reflink_recover_cow(
-> +	struct xfs_mount	*mp)
-> +{
-> +	xfs_agnumber_t		agno;
-> +	int			error = 0;
-> +
-> +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-> +		return 0;
-> +
-> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-> +		error = xfs_reflink_recover_cow_ag(mp, agno);
-> +		if (error)
-> +			break;
-> +	}
-> +
-> +	return error;
-> +}
-> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> index c0c989a..1d2f180 100644
-> --- a/fs/xfs/xfs_reflink.h
-> +++ b/fs/xfs/xfs_reflink.h
-> @@ -42,5 +42,6 @@ extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
->  		xfs_off_t count);
->  extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
->  		xfs_off_t count);
-> +extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
->  
->  #endif /* __XFS_REFLINK_H */
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 26b45b3..e6aaa91 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1306,6 +1306,15 @@ xfs_fs_remount(
->  		xfs_restore_resvblks(mp);
->  		xfs_log_work_queue(mp);
->  		xfs_queue_eofblocks(mp);
-> +
-> +		/* Recover any CoW blocks that never got remapped. */
-> +		error = xfs_reflink_recover_cow(mp);
-> +		if (error) {
-> +			xfs_err(mp,
-> +	"Error %d recovering leftover CoW allocations.", error);
-> +			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> +			return error;
-> +		}
->  	}
->  
->  	/* rw -> ro */
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 8e89223..ca0930b 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -2916,14 +2916,18 @@ DEFINE_AG_ERROR_EVENT(xfs_refcount_update_error);
->  /* refcount adjustment tracepoints */
->  DEFINE_AG_EXTENT_EVENT(xfs_refcount_increase);
->  DEFINE_AG_EXTENT_EVENT(xfs_refcount_decrease);
-> +DEFINE_AG_EXTENT_EVENT(xfs_refcount_cow_increase);
-> +DEFINE_AG_EXTENT_EVENT(xfs_refcount_cow_decrease);
->  DEFINE_REFCOUNT_TRIPLE_EXTENT_EVENT(xfs_refcount_merge_center_extents);
->  DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_modify_extent);
-> +DEFINE_REFCOUNT_EXTENT_EVENT(xfs_reflink_recover_extent);
->  DEFINE_REFCOUNT_EXTENT_AT_EVENT(xfs_refcount_split_extent);
->  DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_merge_left_extent);
->  DEFINE_REFCOUNT_DOUBLE_EXTENT_EVENT(xfs_refcount_merge_right_extent);
->  DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(xfs_refcount_find_left_extent);
->  DEFINE_REFCOUNT_DOUBLE_EXTENT_AT_EVENT(xfs_refcount_find_right_extent);
->  DEFINE_AG_ERROR_EVENT(xfs_refcount_adjust_error);
-> +DEFINE_AG_ERROR_EVENT(xfs_refcount_adjust_cow_error);
->  DEFINE_AG_ERROR_EVENT(xfs_refcount_merge_center_extents_error);
->  DEFINE_AG_ERROR_EVENT(xfs_refcount_modify_extent_error);
->  DEFINE_AG_ERROR_EVENT(xfs_refcount_split_extent_error);
+> --D
 > 
+> > 
+> > Brian
+> > 
+> > > +		error = xfs_reflink_try_clear_inode_flag(ip, old_isize);
+> > > +		if (error)
+> > > +			goto out;
+> > > +	}
+> > > +
+> > > +	return 0;
+> > > +
+> > > +out_unlock:
+> > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > +out:
+> > > +	trace_xfs_reflink_unshare_error(ip, error, _RET_IP_);
+> > > +	return error;
+> > > +}
+> > > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> > > index df82b20..ad4fc61 100644
+> > > --- a/fs/xfs/xfs_reflink.h
+> > > +++ b/fs/xfs/xfs_reflink.h
+> > > @@ -48,5 +48,7 @@ extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
+> > >  extern int xfs_reflink_remap_range(struct xfs_inode *src, xfs_off_t srcoff,
+> > >  		struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len,
+> > >  		unsigned int flags);
+> > > +extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
+> > > +		xfs_off_t len);
+> > >  
+> > >  #endif /* __XFS_REFLINK_H */
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
