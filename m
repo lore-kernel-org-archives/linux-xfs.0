@@ -1,28 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43759 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751968AbcJGXHX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 19:07:23 -0400
-Subject: [PATCH 0/7] xfs: reflink fixes
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 07 Oct 2016 16:07:14 -0700
-Message-ID: <147588163396.12127.8356851783027062457.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mga07.intel.com ([134.134.136.100]:25157 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756935AbcJGVJS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Oct 2016 17:09:18 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v5 06/17] dax: make 'wait_table' global variable static
+Date: Fri,  7 Oct 2016 15:08:53 -0600
+Message-Id: <1475874544-24842-7-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Hi all,
+The global 'wait_table' variable is only used within fs/dax.c, and
+generates the following sparse warning:
 
-Here's all the fixes[1] for reflink I've collected against the latest
-for-next kernel branches.  They're all minor bug fixes that came up
-in review or on irc.  They've survived a quick go-round with the
-clone tests.
+fs/dax.c:39:19: warning: symbol 'wait_table' was not declared. Should it be static?
 
---D
+Make it static so it has scope local to fs/dax.c, and to make sparse happy.
 
-[1] https://github.com/djwong/linux/tree/for-dave-for-4.9-14
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/dax.c b/fs/dax.c
+index 9b9be8a..ac28cdf 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -52,7 +52,7 @@
+ #define DAX_WAIT_TABLE_BITS 12
+ #define DAX_WAIT_TABLE_ENTRIES (1 << DAX_WAIT_TABLE_BITS)
+ 
+-wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
++static wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
+ 
+ static int __init init_dax_wait_table(void)
+ {
+-- 
+2.7.4
+
