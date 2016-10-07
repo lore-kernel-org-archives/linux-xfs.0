@@ -1,257 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53468 "EHLO mx1.redhat.com"
+Received: from mga07.intel.com ([134.134.136.100]:25157 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753988AbcJGU6l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Oct 2016 16:58:41 -0400
-Date: Fri, 7 Oct 2016 16:58:38 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 46/63] xfs: unshare a range of blocks via fallocate
-Message-ID: <20161007205838.GH58659@bfoster.bfoster>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520503973.29434.3740768854227922973.stgit@birch.djwong.org>
- <20161007180506.GF58659@bfoster.bfoster>
- <20161007202639.GG11241@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161007202639.GG11241@birch.djwong.org>
+        id S1756535AbcJGVJP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Oct 2016 17:09:15 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v5 01/17] ext4: allow DAX writeback for hole punch
+Date: Fri,  7 Oct 2016 15:08:48 -0600
+Message-Id: <1475874544-24842-2-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
 
-On Fri, Oct 07, 2016 at 01:26:39PM -0700, Darrick J. Wong wrote:
-> On Fri, Oct 07, 2016 at 02:05:07PM -0400, Brian Foster wrote:
-> > On Thu, Sep 29, 2016 at 08:10:39PM -0700, Darrick J. Wong wrote:
-> > > Unshare all shared extents if the user calls fallocate with the new
-> > > unshare mode flag set, so that we can guarantee that a subsequent
-> > > write will not ENOSPC.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > [hch: pass inode instead of file to xfs_reflink_dirty_range,
-> > >       use iomap infrastructure for copy up]
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  fs/xfs/xfs_file.c    |   10 ++
-> > >  fs/xfs/xfs_reflink.c |  237 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/xfs_reflink.h |    2 
-> > >  3 files changed, 247 insertions(+), 2 deletions(-)
-> > > 
-> > > 
-> > ...
-> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > > index 77ac810..065e836 100644
-> > > --- a/fs/xfs/xfs_reflink.c
-> > > +++ b/fs/xfs/xfs_reflink.c
-> > > @@ -1472,3 +1472,240 @@ xfs_reflink_remap_range(
-> > >  		trace_xfs_reflink_remap_range_error(dest, error, _RET_IP_);
-> > >  	return error;
-> > >  }
-> > ...
-> > > +/* Iterate the extents; if there are no reflinked blocks, clear the flag. */
-> > > +STATIC int
-> > > +xfs_reflink_try_clear_inode_flag(
-> > > +	struct xfs_inode	*ip,
-> > > +	xfs_off_t		old_isize)
-> > > +{
-> > > +	struct xfs_mount	*mp = ip->i_mount;
-> > > +	struct xfs_trans	*tp;
-> > > +	xfs_fileoff_t		fbno;
-> > > +	xfs_filblks_t		end;
-> > > +	xfs_agnumber_t		agno;
-> > > +	xfs_agblock_t		agbno;
-> > > +	xfs_extlen_t		aglen;
-> > > +	xfs_agblock_t		rbno;
-> > > +	xfs_extlen_t		rlen;
-> > > +	struct xfs_bmbt_irec	map[2];
-> > > +	int			nmaps;
-> > > +	int			error = 0;
-> > > +
-> > > +	/* Start a rolling transaction to remove the mappings */
-> > > +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > > +	xfs_trans_ijoin(tp, ip, 0);
-> > > +
-> > > +	if (old_isize != i_size_read(VFS_I(ip)))
-> > > +		goto cancel;
-> > > +	if (!(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK))
-> > > +		goto cancel;
-> > > +
-> > 
-> > The code that has been merged is now different from this code :/, but
-> > just a heads up that the code in the tree looks like it has another one
-> > of those potentially blind transaction commit sequences between
-> > xfs_reflink_try_clear_inode_flag() and xfs_reflink_clear_inode_flag().
-> 
-> _reflink_unshare jumps out if it's not a reflink inode before
-> calling _reflink_try_clear_inode_flag -> _reflink_clear_inode_flag.
-> We do not call _reflink_clear_inode_flag with a non-reflink inode.
-> As for blindly committing a transaction with no dirty data, that's
-> fine, _trans_commit checks for that case and simply frees everything
-> attached to the transaction.
-> 
+Currently when doing a DAX hole punch with ext4 we fail to do a writeback.
+This is because the logic around filemap_write_and_wait_range() in
+ext4_punch_hole() only looks for dirty page cache pages in the radix tree,
+not for dirty DAX exceptional entries.
 
-Yeah, I saw that. That's what I was alluding to below wrt to the usage
-being fine in the patch. It's just the pattern that's used that stands
-out.
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Cc: <stable@vger.kernel.org>
+---
+ fs/ext4/inode.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-With regard to the transaction.. sure, that situation may not be broken,
-but it's still not ideal if it's a log reservation we didn't have to
-make in the first place.
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 3131747..0900cb4 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3890,7 +3890,7 @@ int ext4_update_disksize_before_punch(struct inode *inode, loff_t offset,
+ }
+ 
+ /*
+- * ext4_punch_hole: punches a hole in a file by releaseing the blocks
++ * ext4_punch_hole: punches a hole in a file by releasing the blocks
+  * associated with the given offset and length
+  *
+  * @inode:  File inode
+@@ -3919,7 +3919,7 @@ int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length)
+ 	 * Write out all dirty pages to avoid race conditions
+ 	 * Then release them.
+ 	 */
+-	if (mapping->nrpages && mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
++	if (mapping_tagged(mapping, PAGECACHE_TAG_DIRTY)) {
+ 		ret = filemap_write_and_wait_range(mapping, offset,
+ 						   offset + length - 1);
+ 		if (ret)
+-- 
+2.7.4
 
-> > It doesn't appear to be a problem in how it is actually used in this
-> > patch, but for reference, I think it's better practice for lower level
-> > functions like xfs_reflink_clear_inode_flag() to assert that the flag is
-> > set and make it the responsibility of the caller to check for it and do
-> > the right thing. Just my .02 though.
-> 
-> Ok, I'll add an assert.
-> 
-...
-> > > +		}
-> > > +
-> > > +next:
-> > > +		fbno = map[0].br_startoff + map[0].br_blockcount;
-> > > +	}
-> > > +
-> > > +	/*
-> > > +	 * We didn't find any shared blocks so turn off the reflink flag.
-> > > +	 * First, get rid of any leftover CoW mappings.
-> > > +	 */
-> > > +	error = xfs_reflink_cancel_cow_blocks(ip, &tp, 0, NULLFILEOFF);
-> > > +	if (error)
-> > > +		goto cancel;
-> > > +
-> > > +	/* Clear the inode flag. */
-> > > +	trace_xfs_reflink_unset_inode_flag(ip);
-> > > +	ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
-> > > +	xfs_trans_ijoin(tp, ip, 0);
-> > > +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> > > +
-> > > +	error = xfs_trans_commit(tp);
-> > > +	if (error)
-> > > +		goto out;
-> > > +
-> > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > +	return 0;
-> > > +cancel:
-> > > +	xfs_trans_cancel(tp);
-> > > +out:
-> > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > +	return error;
-> > > +}
-> > > +
-> > > +/*
-> > > + * Pre-COW all shared blocks within a given byte range of a file and turn off
-> > > + * the reflink flag if we unshare all of the file's blocks.
-> > > + */
-> > > +int
-> > > +xfs_reflink_unshare(
-> > > +	struct xfs_inode	*ip,
-> > > +	xfs_off_t		offset,
-> > > +	xfs_off_t		len)
-> > > +{
-> > > +	struct xfs_mount	*mp = ip->i_mount;
-> > > +	xfs_fileoff_t		fbno;
-> > > +	xfs_filblks_t		end;
-> > > +	xfs_off_t		old_isize, isize;
-> > > +	int			error;
-> > > +
-> > > +	if (!xfs_is_reflink_inode(ip))
-> > > +		return 0;
-> > > +
-> > > +	trace_xfs_reflink_unshare(ip, offset, len);
-> > > +
-> > > +	inode_dio_wait(VFS_I(ip));
-> > > +
-> > > +	/* Try to CoW the selected ranges */
-> > > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > > +	fbno = XFS_B_TO_FSB(mp, offset);
-> > 
-> > XFS_B_TO_FSBT() ?
-> > 
-> > > +	old_isize = isize = i_size_read(VFS_I(ip));
-> > > +	end = XFS_B_TO_FSB(mp, offset + len);
-> > > +	error = xfs_reflink_dirty_extents(ip, fbno, end, isize);
-> > > +	if (error)
-> > > +		goto out_unlock;
-> > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > +
-> > > +	/* Wait for the IO to finish */
-> > > +	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
-> > > +	if (error)
-> > > +		goto out;
-> > > +
-> > > +	/* Turn off the reflink flag if we unshared the whole file */
-> > > +	if (offset == 0 && len == isize) {
-> > 
-> > Isn't this valid if len is larger than isize (similar check in
-> > xfs_reflink_try_clear_inode_flag() might defeat this as well)?
-> > 
-> > FWIW, this has a similar issue as the earlier truncate code in that we
-> > might just unshare the shared regions and thus retain the flag.
-> 
-> Yes, it is suboptimal for the flag to be set when there are no shared
-> extents.  I'm not sure when is a good opportunity to try to turn off the
-> flag -- certainly we don't want to do that after every CoW operation.
-
-Indeed..
-
-> Doing it as part of a fallocate operation seems reasonable enough.
-> Prior to the removal of the UNSHARE flag it would try to clear the flag
-> any time the user asked for an unshare, but when I removed the flag from
-> the interface I decided we should only do that if the user fallocated
-> the entire file.
-> 
-> Now that UNSHARE has been re-added to the interface, I'll just take out
-> these weird checks.  Note that the upcoming online repair patchset will
-> try to unset the flag.
-> 
-
-Ok, it sounds reasonable to me to try the removal on fallocate.
-
-Brian
-
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > > +		error = xfs_reflink_try_clear_inode_flag(ip, old_isize);
-> > > +		if (error)
-> > > +			goto out;
-> > > +	}
-> > > +
-> > > +	return 0;
-> > > +
-> > > +out_unlock:
-> > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > +out:
-> > > +	trace_xfs_reflink_unshare_error(ip, error, _RET_IP_);
-> > > +	return error;
-> > > +}
-> > > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > > index df82b20..ad4fc61 100644
-> > > --- a/fs/xfs/xfs_reflink.h
-> > > +++ b/fs/xfs/xfs_reflink.h
-> > > @@ -48,5 +48,7 @@ extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
-> > >  extern int xfs_reflink_remap_range(struct xfs_inode *src, xfs_off_t srcoff,
-> > >  		struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len,
-> > >  		unsigned int flags);
-> > > +extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
-> > > +		xfs_off_t len);
-> > >  
-> > >  #endif /* __XFS_REFLINK_H */
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
