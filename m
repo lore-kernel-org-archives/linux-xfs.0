@@ -1,47 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60574 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756805AbcJGVDM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Oct 2016 17:03:12 -0400
-Subject: Re: [PATCH] xfs: Remove unused xfs_evict_inode tracepoint
-References: <1475788713-3415-1-git-send-email-agruenba@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5e43fb1f-0c9f-5ad2-fa60-611cdfae126a@sandeen.net>
-Date: Fri, 7 Oct 2016 16:03:10 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:43912 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753440AbcJGXHw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 19:07:52 -0400
+Subject: [PATCH 4/7] xfs: remove isize check from unshare operation
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 07 Oct 2016 16:07:44 -0700
+Message-ID: <147588166426.12127.5691066835186430199.stgit@birch.djwong.org>
+In-Reply-To: <147588163396.12127.8356851783027062457.stgit@birch.djwong.org>
+References: <147588163396.12127.8356851783027062457.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <1475788713-3415-1-git-send-email-agruenba@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On 10/6/16 4:18 PM, Andreas Gruenbacher wrote:
-> Commit 8179c036 removed the ->evict_inode super operation but left the
-> xfs_evict_inode tracepoint in place, with the effect that that
-> tracepoint is now unused.  Remove the tracepoint as well now.
-> 
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Now that fallocate has an explicit unshare flag again, let's try
+to remove the inode reflink flag whenever the user unshares any
+part of a file since checking is cheap compared to the CoW.
 
-I can review this one ;)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reported-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_reflink.c |   18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-> ---
->  fs/xfs/xfs_trace.h | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index d303a66..fdd9d53 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -677,7 +677,6 @@ DEFINE_INODE_EVENT(xfs_ioctl_setattr);
->  DEFINE_INODE_EVENT(xfs_dir_fsync);
->  DEFINE_INODE_EVENT(xfs_file_fsync);
->  DEFINE_INODE_EVENT(xfs_destroy_inode);
-> -DEFINE_INODE_EVENT(xfs_evict_inode);
->  DEFINE_INODE_EVENT(xfs_update_time);
->  
->  DEFINE_INODE_EVENT(xfs_dquot_dqalloc);
-> 
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index c4e35dc..220d263 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1570,8 +1570,7 @@ xfs_reflink_clear_inode_flag(
+  */
+ STATIC int
+ xfs_reflink_try_clear_inode_flag(
+-	struct xfs_inode	*ip,
+-	xfs_off_t		old_isize)
++	struct xfs_inode	*ip)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_trans	*tp;
+@@ -1585,9 +1584,6 @@ xfs_reflink_try_clear_inode_flag(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+-	if (old_isize != i_size_read(VFS_I(ip)))
+-		goto cancel;
+-
+ 	error = xfs_reflink_clear_inode_flag(ip, &tp);
+ 	if (error)
+ 		goto cancel;
+@@ -1630,7 +1626,7 @@ xfs_reflink_unshare(
+ 
+ 	/* Try to CoW the selected ranges */
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	fbno = XFS_B_TO_FSB(mp, offset);
++	fbno = XFS_B_TO_FSBT(mp, offset);
+ 	isize = i_size_read(VFS_I(ip));
+ 	end = XFS_B_TO_FSB(mp, offset + len);
+ 	error = xfs_reflink_dirty_extents(ip, fbno, end, isize);
+@@ -1643,12 +1639,10 @@ xfs_reflink_unshare(
+ 	if (error)
+ 		goto out;
+ 
+-	/* Turn off the reflink flag if we unshared the whole file */
+-	if (offset == 0 && len == isize) {
+-		error = xfs_reflink_try_clear_inode_flag(ip, isize);
+-		if (error)
+-			goto out;
+-	}
++	/* Turn off the reflink flag if possible. */
++	error = xfs_reflink_try_clear_inode_flag(ip);
++	if (error)
++		goto out;
+ 
+ 	return 0;
+ 
+
