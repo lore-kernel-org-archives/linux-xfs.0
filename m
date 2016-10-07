@@ -1,304 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45747 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932611AbcJGTok (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 15:44:40 -0400
-Date: Fri, 7 Oct 2016 12:44:30 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 41/63] xfs: reflink extents from one file to another
-Message-ID: <20161007194430.GE11241@birch.djwong.org>
-References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
- <147520500568.29434.12086636072867873080.stgit@birch.djwong.org>
- <20161007180415.GD58659@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161007180415.GD58659@bfoster.bfoster>
+Received: from mga07.intel.com ([134.134.136.100]:25157 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753215AbcJGVJO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Oct 2016 17:09:14 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v5 00/17] re-enable DAX PMD support
+Date: Fri,  7 Oct 2016 15:08:47 -0600
+Message-Id: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Fri, Oct 07, 2016 at 02:04:15PM -0400, Brian Foster wrote:
-> On Thu, Sep 29, 2016 at 08:10:05PM -0700, Darrick J. Wong wrote:
-> > Reflink extents from one file to another; that is to say, iteratively
-> > remove the mappings from the destination file, copy the mappings from
-> > the source file to the destination file, and increment the reference
-> > count of all the blocks that got remapped.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> > v2: Call xfs_defer_cancel before cancelling the transaction if the
-> > remap operation fails.  Use the deferred operations system to avoid
-> > deadlocks or blowing out the transaction reservation, and make the
-> > entire reflink operation atomic for each extent being remapped.  The
-> > destination file's i_size will be updated if necessary to avoid
-> > violating the assumption that there are no shared blocks past the EOF
-> > block.
-> > ---
-> >  fs/xfs/xfs_reflink.c |  425 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_reflink.h |    2 
-> >  2 files changed, 427 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 673ecc1..94c19fff 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -922,3 +922,428 @@ xfs_reflink_recover_cow(
-> >  
-> >  	return error;
-> >  }
-> ...
-> > +/*
-> > + * Unmap a range of blocks from a file, then map other blocks into the hole.
-> > + * The range to unmap is (destoff : destoff + srcioff + irec->br_blockcount).
-> > + * The extent irec is mapped into dest at irec->br_startoff.
-> > + */
-> > +STATIC int
-> > +xfs_reflink_remap_extent(
-> > +	struct xfs_inode	*ip,
-> > +	struct xfs_bmbt_irec	*irec,
-> > +	xfs_fileoff_t		destoff,
-> > +	xfs_off_t		new_isize)
-> > +{
-> > +	struct xfs_mount	*mp = ip->i_mount;
-> > +	struct xfs_trans	*tp;
-> > +	xfs_fsblock_t		firstfsb;
-> > +	unsigned int		resblks;
-> > +	struct xfs_defer_ops	dfops;
-> > +	struct xfs_bmbt_irec	uirec;
-> > +	bool			real_extent;
-> > +	xfs_filblks_t		rlen;
-> > +	xfs_filblks_t		unmap_len;
-> > +	xfs_off_t		newlen;
-> > +	int			error;
-> > +
-> > +	unmap_len = irec->br_startoff + irec->br_blockcount - destoff;
-> > +	trace_xfs_reflink_punch_range(ip, destoff, unmap_len);
-> > +
-> > +	/* Only remap normal extents. */
-> > +	real_extent =  (irec->br_startblock != HOLESTARTBLOCK &&
-> > +			irec->br_startblock != DELAYSTARTBLOCK &&
-> > +			!ISUNWRITTEN(irec));
-> > +
-> > +	/* Start a rolling transaction to switch the mappings */
-> > +	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
-> > +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
-> > +	if (error)
-> > +		goto out;
-> > +
-> > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > +	xfs_trans_ijoin(tp, ip, 0);
-> > +
-> > +	/* If we're not just clearing space, then do we have enough quota? */
-> > +	if (real_extent) {
-> > +		error = xfs_trans_reserve_quota_nblks(tp, ip,
-> > +				irec->br_blockcount, 0, XFS_QMOPT_RES_REGBLKS);
-> > +		if (error)
-> > +			goto out_cancel;
-> > +	}
-> > +
-> > +	trace_xfs_reflink_remap(ip, irec->br_startoff,
-> > +				irec->br_blockcount, irec->br_startblock);
-> > +
-> > +	/* Unmap the old blocks in the data fork. */
-> > +	rlen = unmap_len;
-> > +	while (rlen) {
-> > +		xfs_defer_init(&dfops, &firstfsb);
-> > +		error = __xfs_bunmapi(tp, ip, destoff, &rlen, 0, 1,
-> > +				&firstfsb, &dfops);
-> > +		if (error)
-> > +			goto out_defer;
-> > +
-> > +		/* Trim the extent to whatever got unmapped. */
-> > +		uirec = *irec;
-> > +		xfs_trim_extent(&uirec, destoff + rlen, unmap_len - rlen);
-> > +		unmap_len = rlen;
-> > +
-> > +		/* If this isn't a real mapping, we're done. */
-> > +		if (!real_extent || uirec.br_blockcount == 0)
-> > +			goto next_extent;
-> > +
-> 
-> Any reason we couldn't reuse existing mechanisms for this? E.g., hole
-> punch the dest file range before we remap the source file extents. That
-> might change behavior in the event of a partial/failed reflink, but it's
-> not clear to me that matters.
+DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
+locking.  This series allows DAX PMDs to participate in the DAX radix tree
+based locking scheme so that they can be re-enabled.
 
-It matters a lot for the dedupe operation -- the unmap and remap
-operations must be atomic with each other so that if the dedupe
-operation fails, the user will still see the same file contents after
-reboot/recovery.  We don't want users to find their files suddenly full
-of zeroes.
+Dave, can you please take this through the XFS tree as we discussed during
+the v4 review?
 
-For reflink I suspect that you're right, but we already guarantee that
-the user sees either the old contents or the new contents, so yay. :)
+Changes since v4:
+ - Reworked the DAX flags handling to simplify things and get rid of
+   RADIX_DAX_PTE. (Jan & Christoph)
+ - Moved RADIX_DAX_* macros to be inline functions in include/linux/dax.h.
+   (Christoph)
+ - Got rid of unneeded macros RADIX_DAX_HZP_ENTRY() and
+   RADIX_DAX_EMPTY_ENTRY(), and instead just pass arbitrary flags to
+   radix_dax_entry().
+ - Re-ordered the arguments to dax_wake_mapping_entry_waiter() to be more
+   consistent with the rest of the code. (Jan)
+ - Moved radix_dax_order() inside of the #ifdef CONFIG_FS_DAX_PMD block.
+   This was causing a build error on various systems that don't define
+   PMD_SHIFT.
+ - Patch 5 fixes what I believe is a missing error return in
+   ext2_iomap_end().
+ - Fixed the page_start calculation for PMDs that was previously found in
+   dax_entry_start().  (Jan)  This code is now included directly in
+   dax_entry_waitqueue().  (Christoph)
+ - dax_entry_waitqueue() now sets up the struct exceptional_entry_key() of
+   the caller as a service to reduce code duplication. (Christoph)
+ - In grab_mapping_entry() we now hold the radix tree entry lock for PMD
+   downgrades while we release the tree_lock and do an
+   unmap_mapping_range().  (Jan)
+ - Removed our last BUG_ON() in dax.c, replacing it with a WARN_ON_ONCE()
+   and an error return.
+ - The dax_iomap_fault() and dax_iomap_pmd_fault() handlers both now call
+   ops->iomap_end() to ensure that we properly balance the
+   ops->iomap_begin() calls with respect to locking, allocations, etc.
+   (Jan)
+ - Removed __GFP_FS from the vmf.gfp_mask used in dax_iomap_pmd_fault().
+   (Jan)
 
-> 
-> > +		trace_xfs_reflink_remap(ip, uirec.br_startoff,
-> > +				uirec.br_blockcount, uirec.br_startblock);
-> > +
-> ...
-> > +}
-> > +
-> > +/*
-> > + * Iteratively remap one file's extents (and holes) to another's.
-> > + */
-> > +STATIC int
-> > +xfs_reflink_remap_blocks(
-> > +	struct xfs_inode	*src,
-> > +	xfs_fileoff_t		srcoff,
-> > +	struct xfs_inode	*dest,
-> > +	xfs_fileoff_t		destoff,
-> > +	xfs_filblks_t		len,
-> > +	xfs_off_t		new_isize)
-> > +{
-> > +	struct xfs_bmbt_irec	imap;
-> > +	int			nimaps;
-> > +	int			error = 0;
-> > +	xfs_filblks_t		range_len;
-> > +
-> > +	/* drange = (destoff, destoff + len); srange = (srcoff, srcoff + len) */
-> > +	while (len) {
-> > +		trace_xfs_reflink_remap_blocks_loop(src, srcoff, len,
-> > +				dest, destoff);
-> > +		/* Read extent from the source file */
-> > +		nimaps = 1;
-> > +		xfs_ilock(src, XFS_ILOCK_EXCL);
-> > +		error = xfs_bmapi_read(src, srcoff, len, &imap, &nimaps, 0);
-> > +		xfs_iunlock(src, XFS_ILOCK_EXCL);
-> > +		if (error)
-> > +			goto err;
-> > +		ASSERT(nimaps == 1);
-> > +
-> > +		trace_xfs_reflink_remap_imap(src, srcoff, len, XFS_IO_OVERWRITE,
-> > +				&imap);
-> > +
-> > +		/* Translate imap into the destination file. */
-> > +		range_len = imap.br_startoff + imap.br_blockcount - srcoff;
-> > +		imap.br_startoff += destoff - srcoff;
-> > +
-> 
-> Just FYI... these are all unsigned vars...
+Thank you again to Jan, Christoph and Dave for their review feedback.
 
-Yeah.  It should handle that correctly.  See generic/30[34].
+Here are some related things that are not included in this patch set, but
+which I plan on doing in the near future:
+ - Add tracepoint support for the PTE and PMD based DAX fault handlers.
+   (Dave)
+ - Move the DAX 4k zero page handling to use a single 4k zero page instead
+   of allocating pages on demand.  This will mirror the way that things are
+   done for the 2 MiB case, and will reduce the amount of memory we use
+   when reading 4k holes in DAX.
+ - Change the API to the PMD fault hanlder so it takes a vmf, and at a
+   layer above DAX make sure that the vmf.gfp_mask given to DAX for both
+   PMD and PTE faults doesn't include __GFP_FS. (Jan)
 
---D
+These work items will happen after review & integration with Jan's patch
+set for DAX radix tree cleaning.
 
-> 
-> Brian
-> 
-> > +		/* Clear dest from destoff to the end of imap and map it in. */
-> > +		error = xfs_reflink_remap_extent(dest, &imap, destoff,
-> > +				new_isize);
-> > +		if (error)
-> > +			goto err;
-> > +
-> > +		if (fatal_signal_pending(current)) {
-> > +			error = -EINTR;
-> > +			goto err;
-> > +		}
-> > +
-> > +		/* Advance drange/srange */
-> > +		srcoff += range_len;
-> > +		destoff += range_len;
-> > +		len -= range_len;
-> > +	}
-> > +
-> > +	return 0;
-> > +
-> > +err:
-> > +	trace_xfs_reflink_remap_blocks_error(dest, error, _RET_IP_);
-> > +	return error;
-> > +}
-> > +
-> > +/*
-> > + * Link a range of blocks from one file to another.
-> > + */
-> > +int
-> > +xfs_reflink_remap_range(
-> > +	struct xfs_inode	*src,
-> > +	xfs_off_t		srcoff,
-> > +	struct xfs_inode	*dest,
-> > +	xfs_off_t		destoff,
-> > +	xfs_off_t		len)
-> > +{
-> > +	struct xfs_mount	*mp = src->i_mount;
-> > +	xfs_fileoff_t		sfsbno, dfsbno;
-> > +	xfs_filblks_t		fsblen;
-> > +	int			error;
-> > +
-> > +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-> > +		return -EOPNOTSUPP;
-> > +
-> > +	if (XFS_FORCED_SHUTDOWN(mp))
-> > +		return -EIO;
-> > +
-> > +	/* Don't reflink realtime inodes */
-> > +	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
-> > +		return -EINVAL;
-> > +
-> > +	trace_xfs_reflink_remap_range(src, srcoff, len, dest, destoff);
-> > +
-> > +	/* Lock both files against IO */
-> > +	if (src->i_ino == dest->i_ino) {
-> > +		xfs_ilock(src, XFS_IOLOCK_EXCL);
-> > +		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
-> > +	} else {
-> > +		xfs_lock_two_inodes(src, dest, XFS_IOLOCK_EXCL);
-> > +		xfs_lock_two_inodes(src, dest, XFS_MMAPLOCK_EXCL);
-> > +	}
-> > +
-> > +	error = xfs_reflink_set_inode_flag(src, dest);
-> > +	if (error)
-> > +		goto out_error;
-> > +
-> > +	/*
-> > +	 * Invalidate the page cache so that we can clear any CoW mappings
-> > +	 * in the destination file.
-> > +	 */
-> > +	truncate_inode_pages_range(&VFS_I(dest)->i_data, destoff,
-> > +				   PAGE_ALIGN(destoff + len) - 1);
-> > +
-> > +	dfsbno = XFS_B_TO_FSBT(mp, destoff);
-> > +	sfsbno = XFS_B_TO_FSBT(mp, srcoff);
-> > +	fsblen = XFS_B_TO_FSB(mp, len);
-> > +	error = xfs_reflink_remap_blocks(src, sfsbno, dest, dfsbno, fsblen,
-> > +			destoff + len);
-> > +	if (error)
-> > +		goto out_error;
-> > +
-> > +	error = xfs_reflink_update_dest(dest, destoff + len);
-> > +	if (error)
-> > +		goto out_error;
-> > +
-> > +out_error:
-> > +	xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
-> > +	xfs_iunlock(src, XFS_IOLOCK_EXCL);
-> > +	if (src->i_ino != dest->i_ino) {
-> > +		xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
-> > +		xfs_iunlock(dest, XFS_IOLOCK_EXCL);
-> > +	}
-> > +	if (error)
-> > +		trace_xfs_reflink_remap_range_error(dest, error, _RET_IP_);
-> > +	return error;
-> > +}
-> > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > index 1d2f180..c35ce29 100644
-> > --- a/fs/xfs/xfs_reflink.h
-> > +++ b/fs/xfs/xfs_reflink.h
-> > @@ -43,5 +43,7 @@ extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
-> >  extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
-> >  		xfs_off_t count);
-> >  extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
-> > +extern int xfs_reflink_remap_range(struct xfs_inode *src, xfs_off_t srcoff,
-> > +		struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len);
-> >  
-> >  #endif /* __XFS_REFLINK_H */
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This series was built upon xfs/xfs-4.9-reflink with PMD performance fixes
+from Toshi Kani and Dan Williams.  Dan's patch has already been merged for
+v4.8, and Toshi's patches are currently queued in Andrew Morton's mm tree
+for v4.9 inclusion.  These patches are not needed for correct operation,
+only for good performance.
+
+Here is a tree containing my changes:
+https://git.kernel.org/cgit/linux/kernel/git/zwisler/linux.git/log/?h=dax_pmd_v5
+
+This tree has passed xfstests for ext2, ext4 and XFS both with and without
+DAX, and has passed targeted testing where I inserted, removed and flushed
+DAX PTEs and PMDs in every combination I could think of.
+
+Previously reported performance numbers:
+
+In some simple mmap I/O testing with FIO the use of PMD faults more than
+doubles I/O performance as compared with PTE faults.  Here is the FIO
+script I used for my testing:
+
+  [global]
+  bs=4k
+  size=2G
+  directory=/mnt/pmem0
+  ioengine=mmap
+  [randrw]
+  rw=randrw
+
+Here are the performance results with XFS using only pte faults:
+   READ: io=1022.7MB, aggrb=557610KB/s, minb=557610KB/s, maxb=557610KB/s, mint=1878msec, maxt=1878msec
+  WRITE: io=1025.4MB, aggrb=559084KB/s, minb=559084KB/s, maxb=559084KB/s, mint=1878msec, maxt=1878msec
+
+Here are performance numbers for that same test using PMD faults:
+   READ: io=1022.7MB, aggrb=1406.7MB/s, minb=1406.7MB/s, maxb=1406.7MB/s, mint=727msec, maxt=727msec
+  WRITE: io=1025.4MB, aggrb=1410.4MB/s, minb=1410.4MB/s, maxb=1410.4MB/s, mint=727msec, maxt=727msec
+
+This was done on a random lab machine with a PMEM device made from memmap'd
+RAM.  To get XFS to use PMD faults, I did the following:
+
+  mkfs.xfs -f -d su=2m,sw=1 /dev/pmem0
+  mount -o dax /dev/pmem0 /mnt/pmem0
+  xfs_io -c "extsize 2m" /mnt/pmem0
+
+Ross Zwisler (17):
+  ext4: allow DAX writeback for hole punch
+  ext4: tell DAX the size of allocation holes
+  dax: remove buffer_size_valid()
+  ext2: remove support for DAX PMD faults
+  ext2: return -EIO on ext2_iomap_end() failure
+  dax: make 'wait_table' global variable static
+  dax: remove the last BUG_ON() from fs/dax.c
+  dax: consistent variable naming for DAX entries
+  dax: coordinate locking for offsets in PMD range
+  dax: remove dax_pmd_fault()
+  dax: correct dax iomap code namespace
+  dax: add dax_iomap_sector() helper function
+  dax: dax_iomap_fault() needs to call iomap_end()
+  dax: move RADIX_DAX_* defines to dax.h
+  dax: add struct iomap based DAX PMD support
+  xfs: use struct iomap based DAX PMD fault path
+  dax: remove "depends on BROKEN" from FS_DAX_PMD
+
+ fs/Kconfig          |   1 -
+ fs/dax.c            | 718 ++++++++++++++++++++++++++++------------------------
+ fs/ext2/file.c      |  35 +--
+ fs/ext2/inode.c     |   4 +-
+ fs/ext4/inode.c     |   7 +-
+ fs/xfs/xfs_aops.c   |  26 +-
+ fs/xfs/xfs_aops.h   |   3 -
+ fs/xfs/xfs_file.c   |  10 +-
+ include/linux/dax.h |  60 ++++-
+ mm/filemap.c        |   6 +-
+ 10 files changed, 466 insertions(+), 404 deletions(-)
+
+-- 
+2.7.4
+
