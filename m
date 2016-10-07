@@ -1,78 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45465 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753440AbcJGXHi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 19:07:38 -0400
-Subject: [PATCH 1/7] xfs: rework refcount cow recovery error handling
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 07 Oct 2016 16:07:25 -0700
-Message-ID: <147588164562.12127.10503063159516084342.stgit@birch.djwong.org>
-In-Reply-To: <147588163396.12127.8356851783027062457.stgit@birch.djwong.org>
-References: <147588163396.12127.8356851783027062457.stgit@birch.djwong.org>
+Received: from verein.lst.de ([213.95.11.211]:44330 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751608AbcJGGRd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Oct 2016 02:17:33 -0400
+Date: Fri, 7 Oct 2016 08:17:29 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 37/63] xfs: implement CoW for directio writes
+Message-ID: <20161007061729.GA29194@lst.de>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org> <147520498004.29434.11046105793006225587.stgit@birch.djwong.org> <20161005182709.GC4042@bfoster.bfoster> <20161005205542.GA3992@birch.djwong.org> <20161006122007.GA16893@bfoster.bfoster> <20161007010225.GC11241@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161007010225.GC11241@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-The error handling in xfs_refcount_recover_cow_leftovers is confused
-and can potentially leak memory, so rework it to release resources
-correctly on error.
+On Thu, Oct 06, 2016 at 06:02:25PM -0700, Darrick J. Wong wrote:
+> > Ok, kind of nasty with all of the various paths through get_blocks(),
+> > but hopefully that dies off with buffer heads.
+> 
+> It's possible Christoph might have further cleanup patches for reflink
+> that fix this?  <shrug>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reported-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_refcount.c |   18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
+I do.  It's stuck on not getting one of the corner cases right at the
+moment, and I had to take a break from it yesterday to go insane, but
+I hope I'll be able to post it soon.
 
+> Yes, that would have been another way to implement it.  I think I
+> finally see your point about using the delalloc mechanism -- since we've
+> converted the buffered write path to iomap and therefore know exactly
+> how much userspace wants to write in both buffered and directio cases,
+> we could just allocate the cow extent right then and there, skipping the
+> overhead of writing a delalloc reservation and then changing it.
+> 
+> For buffered writes, though, it's nice to be able to use the DA
+> mechanism so that we can ask the allocator for as big of an extent as we
+> have contiguous dirty pages.  Hm.  I guess for directio then we could
+> just fill in the holes directly and convert any delalloc reservations
+> that happened already to be there, which requires only a single loop.
+> 
+> Will ponder this some more, thx for the pushback. :)
 
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 56bfef1..87f00df 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1643,7 +1643,7 @@ xfs_refcount_recover_cow_leftovers(
- 	error = xfs_btree_query_range(cur, &low, &high,
- 			xfs_refcount_recover_extent, &debris);
- 	if (error)
--		goto out_error;
-+		goto out_cursor;
- 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
- 	xfs_buf_relse(agbp);
- 
-@@ -1675,26 +1675,22 @@ xfs_refcount_recover_cow_leftovers(
- 
- 		error = xfs_trans_commit(tp);
- 		if (error)
--			goto out_cancel;
-+			goto out_free;
- 	}
--	goto out_free;
-+	return 0;
- 
- out_defer:
- 	xfs_defer_cancel(&dfops);
--out_cancel:
- 	xfs_trans_cancel(tp);
--
-+	goto out_free;
-+out_cursor:
-+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+	xfs_buf_relse(agbp);
- out_free:
- 	/* Free the leftover list */
- 	list_for_each_entry_safe(rr, n, &debris, rr_list) {
- 		list_del(&rr->rr_list);
- 		kmem_free(rr);
- 	}
--
--	return error;
--
--out_error:
--	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
--	xfs_buf_relse(agbp);
- 	return error;
- }
+Having spent a lot of the time with the COW and non-COW I/O path
+lately here is my 2 cents:  delalloc for the buffered write path
+inherently make sense and mirrors what we do for non-COW I/O.  I
+have patches to rewrite parts of how we do it, but I see no
+reason to change that we are doing delayed allocations.
 
+For the direct I/O path there is absolutely no point in doing delayed
+allocation and I plan to get rid of them for the next merge window.
