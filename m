@@ -1,86 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:42159 "EHLO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:11072 "EHLO
         ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752243AbcJGJ5x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 05:57:53 -0400
-Date: Fri, 7 Oct 2016 20:57:49 +1100
+        by vger.kernel.org with ESMTP id S1754122AbcJGKb2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 06:31:28 -0400
+Date: Fri, 7 Oct 2016 21:30:39 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT]
- splice_read reworked)
-Message-ID: <20161007095749.GI9806@dastard>
-References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
- <1238277728.610186.1475676579513.JavaMail.zimbra@redhat.com>
- <20161005153014.GC26977@htj.duckdns.org>
- <270577901.647921.1475682888765.JavaMail.zimbra@redhat.com>
- <874538236.682217.1475693824077.JavaMail.zimbra@redhat.com>
- <20161005200522.GE19539@ZenIV.linux.org.uk>
- <119370333.805584.1475756417736.JavaMail.zimbra@redhat.com>
- <1860793605.807021.1475756759147.JavaMail.zimbra@redhat.com>
- <1149670394.870034.1475770286233.JavaMail.zimbra@redhat.com>
- <CA+55aFz28kQUAYoSFzvEpq5MkYHNcKx2KWP-kpruuyWe7AEY2Q@mail.gmail.com>
+Subject: Re: lockdep splat due to reclaim recursion detected
+Message-ID: <20161007103039.GJ9806@dastard>
+References: <20161007080739.GD18439@dhcp22.suse.cz>
+ <20161007081340.GF18439@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CA+55aFz28kQUAYoSFzvEpq5MkYHNcKx2KWP-kpruuyWe7AEY2Q@mail.gmail.com>
+In-Reply-To: <20161007081340.GF18439@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: CAI Qian <caiqian@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, tj <tj@kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
 
-On Thu, Oct 06, 2016 at 10:00:08AM -0700, Linus Torvalds wrote:
-> On Thu, Oct 6, 2016 at 9:11 AM, CAI Qian <caiqian@redhat.com> wrote:
-> >
-> >>
-> >> Wait. There is also a lockep happened before the xfs internal error as well.
-> > Some other lockdep this time,
+On Fri, Oct 07, 2016 at 10:13:40AM +0200, Michal Hocko wrote:
+> Fix up xfs ML address
 > 
-> This one looks just bogus.
-> 
-> > [ 4872.569797]  Possible unsafe locking scenario:
-> > [ 4872.569797]
-> > [ 4872.576401]        CPU0
-> > [ 4872.579127]        ----
-> > [ 4872.581854]   lock(&xfs_nondir_ilock_class);
-> > [ 4872.586637]   <Interrupt>
-> > [ 4872.589558]     lock(&xfs_nondir_ilock_class);
-> 
-> I'm not seeing that .lock taken in interrupt context.
+> On Fri 07-10-16 10:07:39, Michal Hocko wrote:
+> > Hi Dave,
+> > while playing with the test case you have suggested [1], I have hit the
+> > following lockdep splat. This is with mmotm git tree [2] but I didn't
+> > get to retest with the current linux-next (or any other tree of your
+> > preference) so there is a chance that something is broken in my tree so
+> > take this as a heads up. As soon as I am done with testing of the patch
+> > in the above email thread I will retest with linux-next.
+....
+> > [   61.878792] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Debian-1.8.2-1 04/01/2014
+> > [   61.878792]  0000000000000000 ffff88001c8b3718 ffffffff81312f78 ffffffff825d99d0
+> > [   61.878792]  ffff88001cd04880 ffff88001c8b3750 ffffffff811260d1 000000000000000a
+> > [   61.878792]  ffff88001cd05178 ffff88001cd04880 ffffffff81095395 ffff88001cd04880
+> > [   61.878792] Call Trace:
+> > [   61.878792]  [<ffffffff81312f78>] dump_stack+0x68/0x92
+> > [   61.878792]  [<ffffffff811260d1>] print_usage_bug.part.26+0x25b/0x26a
+> > [   61.878792]  [<ffffffff81095395>] ? print_shortest_lock_dependencies+0x17f/0x17f
+> > [   61.878792]  [<ffffffff81096074>] mark_lock+0x381/0x56d
+> > [   61.878792]  [<ffffffff810962be>] mark_held_locks+0x5e/0x74
+> > [   61.878792]  [<ffffffff8109875c>] lockdep_trace_alloc+0xaf/0xb2
+> > [   61.878792]  [<ffffffff8117d0f7>] kmem_cache_alloc_trace+0x3a/0x270
+> > [   61.878792]  [<ffffffff81169454>] ? vm_map_ram+0x2d2/0x4a6
+> > [   61.878792]  [<ffffffff8116924b>] ? vm_map_ram+0xc9/0x4a6
+> > [   61.878792]  [<ffffffff81169454>] vm_map_ram+0x2d2/0x4a6
+> > [   61.878792]  [<ffffffffa0051069>] _xfs_buf_map_pages+0xae/0x10b [xfs]
+> > [   61.878792]  [<ffffffffa0052cd0>] xfs_buf_get_map+0xaa/0x24f [xfs]
+> > [   61.878792]  [<ffffffffa0081d10>] xfs_trans_get_buf_map+0x144/0x2ef [xfs]
 
-It's a memory allocation vs reclaim context warning, not a lock
-warning. That overloads the lock vs interrupt lockdep mechanism, so
-if lockdep sees a context violation it is reported as an "interrupt
-context" lock problem.
+Aw, come on! I explained this lockdep annotation bug a couple of
+days ago.
 
-The allocation context in question is in a function that can be
-called from both inside and outside a transaction context. When
-outside a transaction, it's a GFP_KERNEL allocation, when inside
-it's a GFP_NOFS context.  However, both allocation contexts hold the
-inode ilock over the allocation.
+https://www.spinics.net/lists/linux-fsdevel/msg102588.html
 
-the inode shrinker (reclaim context) also happens to take the inode
-ilock, and that's what lockdep is complaining about. i.e. it thinks
-that this path ilock -> alloc(GFP_KERNEL) -> reclaim -> ilock can
-deadlock. But it can't - the ilock held at the upper side is a
-referenced inode and can't be seen by reclaim, and the ilocks taken
-by reclaim are inodes that can't be seen or referenced by the VFS.
-
-i.e. There's no depedencies between the ilocks on either side of
-memory allocation, but there's no way of telling lockdep that short
-of giving the inodes in reclaim a different lock class. We used to
-do that, but that was a nasty hack and prevented lockdep from
-verifying locking orders used on inodes and objects in reclaim
-matched the locking orders of referenced inodes...
-
-We've historically shut these false positives up by simply making
-all the allocations in these dual context paths GFP_NOFS. However, I
-recently got told not to do that by someone on the mm side because
-it exacerbated deficiencies in memory reclaim when too many
-allocations use GFP_NOFS.
-
-So it's not "fixed" and instead I'm ignoring it.  If you spend any
-amount of time running lockdep on XFS you'll get as sick and tired
-of playing this whack-a-lockdep-false-positive game as I am.
+And this isn't the first time I've explained this either. ISTR this
+same issue triggered a long whole discussion about how to move
+memory allocation to task based context flags or to push more
+context specific information into the shrinkers so they could decide
+if the needed to avoid deadlocks or not. That was about 6 months
+ago, IIRC, and there's been no followup from the mm side of
+things...
 
 Cheers,
 
