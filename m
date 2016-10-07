@@ -1,42 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:58506 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753215AbcJGVJS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Oct 2016 17:09:18 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v5 07/17] dax: remove the last BUG_ON() from fs/dax.c
-Date: Fri,  7 Oct 2016 15:08:54 -0600
-Message-Id: <1475874544-24842-8-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:45465 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753440AbcJGXHi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2016 19:07:38 -0400
+Subject: [PATCH 1/7] xfs: rework refcount cow recovery error handling
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 07 Oct 2016 16:07:25 -0700
+Message-ID: <147588164562.12127.10503063159516084342.stgit@birch.djwong.org>
+In-Reply-To: <147588163396.12127.8356851783027062457.stgit@birch.djwong.org>
+References: <147588163396.12127.8356851783027062457.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-Don't take down the kernel if we get an invalid 'from' and 'length'
-argument pair.  Just warn once and return an error.
+The error handling in xfs_refcount_recover_cow_leftovers is confused
+and can potentially leak memory, so rework it to release resources
+correctly on error.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reported-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/dax.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_refcount.c |   18 +++++++-----------
+ 1 file changed, 7 insertions(+), 11 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index ac28cdf..98189ac 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1194,7 +1194,8 @@ int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
- 	/* Block boundary? Nothing to do */
- 	if (!length)
- 		return 0;
--	BUG_ON((offset + length) > PAGE_SIZE);
-+	if (WARN_ON_ONCE((offset + length) > PAGE_SIZE))
-+		return -EINVAL;
+
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 56bfef1..87f00df 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1643,7 +1643,7 @@ xfs_refcount_recover_cow_leftovers(
+ 	error = xfs_btree_query_range(cur, &low, &high,
+ 			xfs_refcount_recover_extent, &debris);
+ 	if (error)
+-		goto out_error;
++		goto out_cursor;
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+ 	xfs_buf_relse(agbp);
  
- 	memset(&bh, 0, sizeof(bh));
- 	bh.b_bdev = inode->i_sb->s_bdev;
--- 
-2.7.4
+@@ -1675,26 +1675,22 @@ xfs_refcount_recover_cow_leftovers(
+ 
+ 		error = xfs_trans_commit(tp);
+ 		if (error)
+-			goto out_cancel;
++			goto out_free;
+ 	}
+-	goto out_free;
++	return 0;
+ 
+ out_defer:
+ 	xfs_defer_cancel(&dfops);
+-out_cancel:
+ 	xfs_trans_cancel(tp);
+-
++	goto out_free;
++out_cursor:
++	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	xfs_buf_relse(agbp);
+ out_free:
+ 	/* Free the leftover list */
+ 	list_for_each_entry_safe(rr, n, &debris, rr_list) {
+ 		list_del(&rr->rr_list);
+ 		kmem_free(rr);
+ 	}
+-
+-	return error;
+-
+-out_error:
+-	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+-	xfs_buf_relse(agbp);
+ 	return error;
+ }
 
