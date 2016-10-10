@@ -1,57 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42817 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753535AbcJKSnj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Oct 2016 14:43:39 -0400
-Date: Tue, 11 Oct 2016 09:21:47 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v5 13/17] dax: dax_iomap_fault() needs to call iomap_end()
-Message-ID: <20161011072147.GE6952@quack2.suse.cz>
-References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
- <1475874544-24842-14-git-send-email-ross.zwisler@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1475874544-24842-14-git-send-email-ross.zwisler@linux.intel.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:37384 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752047AbcJJNiQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 09:38:16 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/9] xfs: add xfs_trim_extent
+Date: Mon, 10 Oct 2016 15:37:58 +0200
+Message-Id: <1476106685-29048-3-git-send-email-hch@lst.de>
+In-Reply-To: <1476106685-29048-1-git-send-email-hch@lst.de>
+References: <1476106685-29048-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-On Fri 07-10-16 15:09:00, Ross Zwisler wrote:
-> Currently iomap_end() doesn't do anything for DAX page faults for both ext2
-> and XFS.  ext2_iomap_end() just checks for a write underrun, and
-> xfs_file_iomap_end() checks to see if it needs to finish a delayed
-> allocation.  However, in the future iomap_end() calls might be needed to
-> make sure we have balanced allocations, locks, etc.  So, add calls to
-> iomap_end() with appropriate error handling to dax_iomap_fault().
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Suggested-by: Jan Kara <jack@suse.cz>
-...
-> @@ -1239,6 +1253,17 @@ int dax_iomap_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
->  		break;
->  	}
->  
-> + finish_iomap:
-> +	if (ops->iomap_end) {
-> +		if (error) {
-> +			/* keep previous error */
-> +			ops->iomap_end(inode, pos, PAGE_SIZE, PAGE_SIZE, flags,
-> +					&iomap);
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-I think for the error case we should set number of 'written' bytes to 0 to
-tell fs to cancel what it has prepared. This is mostly cosmetic since the
-only case where I can imagine this would matter is shared write fault and
-in that case we have currently no error path but still it could bite us in
-the future.
+This helpers allows to trim an extent to a subset of it's original range
+while making sure the block numbers in it remain valid,
 
-Other than that the patch looks good so you can add:
+In the future xfs_trim_extent and xfs_bmapi_trim_map should probably be
+merged in some form.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[hch: split from a previous patch from Darrick, moved around and added
+ support for "raw" delayed extents"]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 33 +++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_bmap.h |  2 ++
+ 2 files changed, 35 insertions(+)
 
-								Honza
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index c27344c..016dacc 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3999,6 +3999,39 @@ xfs_bmap_alloc(
+ 	return xfs_bmap_btalloc(ap);
+ }
+ 
++/* Trim extent to fit a logical block range. */
++void
++xfs_trim_extent(
++	struct xfs_bmbt_irec	*irec,
++	xfs_fileoff_t		bno,
++	xfs_filblks_t		len)
++{
++	xfs_fileoff_t		distance;
++	xfs_fileoff_t		end = bno + len;
++
++	if (irec->br_startoff + irec->br_blockcount <= bno ||
++	    irec->br_startoff >= end) {
++		irec->br_blockcount = 0;
++		return;
++	}
++
++	if (irec->br_startoff < bno) {
++		distance = bno - irec->br_startoff;
++		if (isnullstartblock(irec->br_startblock))
++			irec->br_startblock = DELAYSTARTBLOCK;
++		if (irec->br_startblock != DELAYSTARTBLOCK &&
++		    irec->br_startblock != HOLESTARTBLOCK)
++			irec->br_startblock += distance;
++		irec->br_startoff += distance;
++		irec->br_blockcount -= distance;
++	}
++
++	if (end < irec->br_startoff + irec->br_blockcount) {
++		distance = irec->br_startoff + irec->br_blockcount - end;
++		irec->br_blockcount -= distance;
++	}
++}
++
+ /*
+  * Trim the returned map to the required bounds
+  */
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index f97db71..eb86af0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -190,6 +190,8 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
+ #define	XFS_BMAP_TRACE_EXLIST(ip,c,w)
+ #endif
+ 
++void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
++		xfs_filblks_t len);
+ int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+ void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+ void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.10.1.382.ga23ca1b
+
