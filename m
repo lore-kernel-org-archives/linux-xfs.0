@@ -1,47 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:59057 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752286AbcJJP7U (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Oct 2016 11:59:20 -0400
-Date: Mon, 10 Oct 2016 17:59:17 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v5 15/17] dax: add struct iomap based DAX PMD support
-Message-ID: <20161010155917.GA19978@lst.de>
-References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com> <1475874544-24842-16-git-send-email-ross.zwisler@linux.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:40279 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752060AbcJJSWa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 14:22:30 -0400
+Date: Mon, 10 Oct 2016 11:21:52 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 1/7] xfs: rework refcount cow recovery error handling
+Message-ID: <20161010182152.GC22379@birch.djwong.org>
+References: <147588163396.12127.8356851783027062457.stgit@birch.djwong.org>
+ <147588164562.12127.10503063159516084342.stgit@birch.djwong.org>
+ <20161010061122.GC5619@birch.djwong.org>
+ <20161010102113.GC18359@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1475874544-24842-16-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <20161010102113.GC18359@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Fri, Oct 07, 2016 at 03:09:02PM -0600, Ross Zwisler wrote:
-> -	if (RADIX_DAX_TYPE(entry) == RADIX_DAX_PMD)
-> +	if ((unsigned long)entry & RADIX_DAX_PMD)
+On Mon, Oct 10, 2016 at 03:21:13AM -0700, Christoph Hellwig wrote:
+> On Sun, Oct 09, 2016 at 11:11:22PM -0700, Darrick J. Wong wrote:
+> > The error handling in xfs_refcount_recover_cow_leftovers is confused
+> > and can potentially leak memory, so rework it to release resources
+> > correctly on error.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Reported-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_refcount.c |   16 ++++++----------
+> >  1 file changed, 6 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+> > index 56bfef1..955b1d9 100644
+> > --- a/fs/xfs/libxfs/xfs_refcount.c
+> > +++ b/fs/xfs/libxfs/xfs_refcount.c
+> > @@ -1643,7 +1643,7 @@ xfs_refcount_recover_cow_leftovers(
+> >  	error = xfs_btree_query_range(cur, &low, &high,
+> >  			xfs_refcount_recover_extent, &debris);
+> >  	if (error)
+> > -		goto out_error;
+> > +		goto out_cursor;
+> >  	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+> >  	xfs_buf_relse(agbp);
+> >  
+> > @@ -1675,26 +1675,22 @@ xfs_refcount_recover_cow_leftovers(
+> >  
+> >  		error = xfs_trans_commit(tp);
+> >  		if (error)
+> > +			goto out_free;
+> >  	}
+> >  	goto out_free;
+> 
+> don't we need to also delete the cursor after a successful exit?
 
-Please introduce a proper inline helper that mask all the possible type
-bits out of the radix tree entry, and use them wherever you do the
-open cast.
+Gah.  Yeah.  Serves me right for trying to code patches on Sunday night.
 
->  restart:
->  	spin_lock_irq(&mapping->tree_lock);
->  	entry = get_unlocked_mapping_entry(mapping, index, &slot);
-> +
-> +	if (entry) {
-> +		if (size_flag & RADIX_DAX_PMD) {
-> +			if (!radix_tree_exceptional_entry(entry) ||
-> +			    !((unsigned long)entry & RADIX_DAX_PMD)) {
-> +				entry = ERR_PTR(-EEXIST);
-> +				goto out_unlock;
-> +			}
-> +		} else { /* trying to grab a PTE entry */
-> +			if (radix_tree_exceptional_entry(entry) &&
-> +			    ((unsigned long)entry & RADIX_DAX_PMD) &&
-> +			    ((unsigned long)entry &
-> +			     (RADIX_DAX_HZP|RADIX_DAX_EMPTY))) {
+I think Dave already made a separate fix, though, so I'll wait for the
+next for-next update and see what needs to be fixed.
 
-And when we do these cases N times next to each other we should
-have a local variable the valid flag bits of entry.
+--D
