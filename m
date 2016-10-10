@@ -1,47 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:43203 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752159AbcJJM7n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 08:59:43 -0400
-Date: Mon, 10 Oct 2016 23:59:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 7/7] xfs: clear reflink flag if setting realtime flag
-Message-ID: <20161010125938.GC23194@dastard>
-References: <147588163396.12127.8356851783027062457.stgit@birch.djwong.org>
- <147588168294.12127.1609759616316145097.stgit@birch.djwong.org>
- <20161010102418.GG18359@infradead.org>
- <20161010122507.GA23194@dastard>
- <20161010124500.GA29158@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161010124500.GA29158@infradead.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:55392 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752139AbcJJNGh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 09:06:37 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: convert COW blocks to real blocks before unwritten extent conversion
+Date: Mon, 10 Oct 2016 15:06:34 +0200
+Message-Id: <1476104794-28175-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-On Mon, Oct 10, 2016 at 05:45:00AM -0700, Christoph Hellwig wrote:
-> On Mon, Oct 10, 2016 at 11:25:08PM +1100, Dave Chinner wrote:
-> > On Mon, Oct 10, 2016 at 03:24:18AM -0700, Christoph Hellwig wrote:
-> > > On Fri, Oct 07, 2016 at 04:08:03PM -0700, Darrick J. Wong wrote:
-> > > > Since we can only turn on the rt flag if there are no data extents,
-> > > > we can safely turn off the reflink flag if the rt flag is being
-> > > > turned on.
-> > > 
-> > > Why would the reflink flag ever be turned on if we have no data extents?
-> > 
-> > After a truncate?
-> 
-> Any why don't we simply clear the flag when we know there can't be
-> any shared extents left?
+We need to splice COW blocks we've completed in xfs_end_io_direct_write
+into the data fork before converting unwritten extents.  Otherwise
+xfs_bmapi_write might first allocate blocks for any holes in the data
+fork, which isn't only not needed but also harmful as it might cause
+reserved block underruns in the transaction.
 
-Sure, go ahead. I'll queue it up for the next cycle....
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 0e2a931..3e57a56 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1547,13 +1547,13 @@ xfs_end_io_direct_write(
+ 		i_size_write(inode, offset + size);
+ 	spin_unlock(&ip->i_flags_lock);
+ 
++	if (flags & XFS_DIO_FLAG_COW)
++		error = xfs_reflink_end_cow(ip, offset, size);
+ 	if (flags & XFS_DIO_FLAG_UNWRITTEN) {
+ 		trace_xfs_end_io_direct_write_unwritten(ip, offset, size);
+ 
+ 		error = xfs_iomap_write_unwritten(ip, offset, size);
+ 	}
+-	if (flags & XFS_DIO_FLAG_COW)
+-		error = xfs_reflink_end_cow(ip, offset, size);
+ 	if (flags & XFS_DIO_FLAG_APPEND) {
+ 		trace_xfs_end_io_direct_write_append(ip, offset, size);
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.10.1.382.ga23ca1b
+
