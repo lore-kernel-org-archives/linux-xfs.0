@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:37384 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:37414 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752047AbcJJNiQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 09:38:16 -0400
+        with ESMTP id S1752464AbcJJNiT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 09:38:19 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/9] xfs: add xfs_trim_extent
-Date: Mon, 10 Oct 2016 15:37:58 +0200
-Message-Id: <1476106685-29048-3-git-send-email-hch@lst.de>
+Subject: [PATCH 3/9] xfs: handle "raw" delayed extents xfs_reflink_trim_around_shared
+Date: Mon, 10 Oct 2016 15:37:59 +0200
+Message-Id: <1476106685-29048-4-git-send-email-hch@lst.de>
 In-Reply-To: <1476106685-29048-1-git-send-email-hch@lst.de>
 References: <1476106685-29048-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,80 +15,30 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: darrick.wong@oracle.com
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Delalloc extents in the extent list contain the number of reserved
+indirect blocks in their startblock value and don't use the magic
+DELAYSTARTBLOCK constant.  Ensure that xfs_reflink_trim_around_shared
+handles them properly by checking for isnullstartblock().
 
-This helpers allows to trim an extent to a subset of it's original range
-while making sure the block numbers in it remain valid,
-
-In the future xfs_trim_extent and xfs_bmapi_trim_map should probably be
-merged in some form.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-[hch: split from a previous patch from Darrick, moved around and added
- support for "raw" delayed extents"]
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 33 +++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_bmap.h |  2 ++
- 2 files changed, 35 insertions(+)
+ fs/xfs/xfs_reflink.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index c27344c..016dacc 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3999,6 +3999,39 @@ xfs_bmap_alloc(
- 	return xfs_bmap_btalloc(ap);
- }
- 
-+/* Trim extent to fit a logical block range. */
-+void
-+xfs_trim_extent(
-+	struct xfs_bmbt_irec	*irec,
-+	xfs_fileoff_t		bno,
-+	xfs_filblks_t		len)
-+{
-+	xfs_fileoff_t		distance;
-+	xfs_fileoff_t		end = bno + len;
-+
-+	if (irec->br_startoff + irec->br_blockcount <= bno ||
-+	    irec->br_startoff >= end) {
-+		irec->br_blockcount = 0;
-+		return;
-+	}
-+
-+	if (irec->br_startoff < bno) {
-+		distance = bno - irec->br_startoff;
-+		if (isnullstartblock(irec->br_startblock))
-+			irec->br_startblock = DELAYSTARTBLOCK;
-+		if (irec->br_startblock != DELAYSTARTBLOCK &&
-+		    irec->br_startblock != HOLESTARTBLOCK)
-+			irec->br_startblock += distance;
-+		irec->br_startoff += distance;
-+		irec->br_blockcount -= distance;
-+	}
-+
-+	if (end < irec->br_startoff + irec->br_blockcount) {
-+		distance = irec->br_startoff + irec->br_blockcount - end;
-+		irec->br_blockcount -= distance;
-+	}
-+}
-+
- /*
-  * Trim the returned map to the required bounds
-  */
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index f97db71..eb86af0 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -190,6 +190,8 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
- #define	XFS_BMAP_TRACE_EXLIST(ip,c,w)
- #endif
- 
-+void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
-+		xfs_filblks_t len);
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
- void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
- void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 5965e94..46c824c 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -182,7 +182,8 @@ xfs_reflink_trim_around_shared(
+ 	if (!xfs_is_reflink_inode(ip) ||
+ 	    ISUNWRITTEN(irec) ||
+ 	    irec->br_startblock == HOLESTARTBLOCK ||
+-	    irec->br_startblock == DELAYSTARTBLOCK) {
++	    irec->br_startblock == DELAYSTARTBLOCK ||
++	    isnullstartblock(irec->br_startblock)) {
+ 		*shared = false;
+ 		return 0;
+ 	}
 -- 
 2.10.1.382.ga23ca1b
 
