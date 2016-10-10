@@ -1,51 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from xavier.telenet-ops.be ([195.130.132.52]:36221 "EHLO
-        xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934171AbcJQKQo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 06:16:44 -0400
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] xfs: Fix uninitialized variable in xfs_reflink_reserve_cow_range()
-Date: Mon, 17 Oct 2016 12:16:44 +0200
-Message-Id: <1476699404-5977-1-git-send-email-geert@linux-m68k.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Received: from bombadil.infradead.org ([198.137.202.9]:37360 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752047AbcJJNiN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 09:38:13 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/9] iomap: add IOMAP_REPORT
+Date: Mon, 10 Oct 2016 15:37:57 +0200
+Message-Id: <1476106685-29048-2-git-send-email-hch@lst.de>
+In-Reply-To: <1476106685-29048-1-git-send-email-hch@lst.de>
+References: <1476106685-29048-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-with gcc 4.1.2:
+This allows the file system to tell a FIEMAP from a read operation, and thus
+avoids the need to report flags that aren't actually used in the read path.
 
-    fs/xfs/xfs_reflink.c: In function ‘xfs_reflink_reserve_cow_range’:
-    fs/xfs/xfs_reflink.c:327: warning: ‘error’ may be used uninitialized in this function
-
-Indeed, if "count" is zero, the function will return an uninitialized
-error value.
-
-While "count" is unlikely to be zero, this function is called through
-the public iomap API. Hence fix this by preinitializing error to zero.
-
-Fixes: 2a06705cd5954030 ("xfs: create delalloc extents in CoW fork")
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_reflink.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/iomap.c            |  2 +-
+ include/linux/iomap.h | 17 +++++++++++------
+ 2 files changed, 12 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 5965e9455d91e036..d48a7cc2fe007f66 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -324,7 +324,7 @@
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		offset_fsb, end_fsb;
- 	bool			skipped = false;
--	int			error;
-+	int			error = 0;
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 013d1d3..a922040 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -561,7 +561,7 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+ 	}
  
- 	trace_xfs_reflink_reserve_cow_range(ip, offset, count);
+ 	while (len > 0) {
+-		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
++		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
+ 				iomap_fiemap_actor);
+ 		/* inode with no (attribute) mapping will give ENOENT */
+ 		if (ret == -ENOENT)
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index e63e288..7892f55 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -19,11 +19,15 @@ struct vm_fault;
+ #define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
  
+ /*
+- * Flags for iomap mappings:
++ * Flags for all iomap mappings:
+  */
+-#define IOMAP_F_MERGED	0x01	/* contains multiple blocks/extents */
+-#define IOMAP_F_SHARED	0x02	/* block shared with another file */
+-#define IOMAP_F_NEW	0x04	/* blocks have been newly allocated */
++#define IOMAP_F_NEW	0x01	/* blocks have been newly allocated */
++
++/*
++ * Flags that only need to be reported for IOMAP_REPORT requests:
++ */
++#define IOMAP_F_MERGED	0x10	/* contains multiple blocks/extents */
++#define IOMAP_F_SHARED	0x20	/* block shared with another file */
+ 
+ /*
+  * Magic value for blkno:
+@@ -42,8 +46,9 @@ struct iomap {
+ /*
+  * Flags for iomap_begin / iomap_end.  No flag implies a read.
+  */
+-#define IOMAP_WRITE		(1 << 0)
+-#define IOMAP_ZERO		(1 << 1)
++#define IOMAP_WRITE		(1 << 0) /* writing, must allocate blocks */
++#define IOMAP_ZERO		(1 << 1) /* zeroing operation, may skip holes */
++#define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
+ 
+ struct iomap_ops {
+ 	/*
 -- 
-1.9.1
+2.10.1.382.ga23ca1b
 
