@@ -1,76 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38179 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751401AbcJJGL1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 02:11:27 -0400
-Date: Sun, 9 Oct 2016 23:11:22 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 1/7] xfs: rework refcount cow recovery error handling
-Message-ID: <20161010061122.GC5619@birch.djwong.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:58619 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752020AbcJJKRB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 06:17:01 -0400
+Date: Mon, 10 Oct 2016 03:17:00 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/7] xfs: reduce stack usage of _reflink_clear_inode_flag
+Message-ID: <20161010101700.GA18359@infradead.org>
 References: <147588163396.12127.8356851783027062457.stgit@birch.djwong.org>
- <147588164562.12127.10503063159516084342.stgit@birch.djwong.org>
+ <147588165809.12127.6624984020251009472.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <147588164562.12127.10503063159516084342.stgit@birch.djwong.org>
+In-Reply-To: <147588165809.12127.6624984020251009472.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-The error handling in xfs_refcount_recover_cow_leftovers is confused
-and can potentially leak memory, so rework it to release resources
-correctly on error.
+On Fri, Oct 07, 2016 at 04:07:38PM -0700, Darrick J. Wong wrote:
+> The loop in _reflink_clear_inode_flag isn't necessary since we
+> jump out if any part of any extent is shared.  Remove the loop
+> and we no longer need two maps, so we can save some stack use.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reported-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_refcount.c |   16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+I have a patch that gets rid of the xfs_bmapi_read calls entirely
+and instead does an initial xfs_bmap_search_extents and then iterates
+over the extent index.
 
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 56bfef1..955b1d9 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1643,7 +1643,7 @@ xfs_refcount_recover_cow_leftovers(
- 	error = xfs_btree_query_range(cur, &low, &high,
- 			xfs_refcount_recover_extent, &debris);
- 	if (error)
--		goto out_error;
-+		goto out_cursor;
- 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
- 	xfs_buf_relse(agbp);
- 
-@@ -1675,26 +1675,22 @@ xfs_refcount_recover_cow_leftovers(
- 
- 		error = xfs_trans_commit(tp);
- 		if (error)
--			goto out_cancel;
-+			goto out_free;
- 	}
- 	goto out_free;
- 
- out_defer:
- 	xfs_defer_cancel(&dfops);
--out_cancel:
- 	xfs_trans_cancel(tp);
--
-+	goto out_free;
-+out_cursor:
-+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+	xfs_buf_relse(agbp);
- out_free:
- 	/* Free the leftover list */
- 	list_for_each_entry_safe(rr, n, &debris, rr_list) {
- 		list_del(&rr->rr_list);
- 		kmem_free(rr);
- 	}
--
--	return error;
--
--out_error:
--	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
--	xfs_buf_relse(agbp);
- 	return error;
- }
+It also uses xfs_reflink_trim_around_shared instead of opencoding
+it.
+
+It didn't plan to submit it now as it seemed to superficial for 4.9,
+I can't dust it off if you want.
