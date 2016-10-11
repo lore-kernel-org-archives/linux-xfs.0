@@ -1,44 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:37414 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752464AbcJJNiT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 09:38:19 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/9] xfs: handle "raw" delayed extents xfs_reflink_trim_around_shared
-Date: Mon, 10 Oct 2016 15:37:59 +0200
-Message-Id: <1476106685-29048-4-git-send-email-hch@lst.de>
-In-Reply-To: <1476106685-29048-1-git-send-email-hch@lst.de>
-References: <1476106685-29048-1-git-send-email-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:43853 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753645AbcJKSyq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Oct 2016 14:54:46 -0400
+Date: Tue, 11 Oct 2016 08:48:01 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v5 05/17] ext2: return -EIO on ext2_iomap_end() failure
+Message-ID: <20161011064801.GA6952@quack2.suse.cz>
+References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+ <1475874544-24842-6-git-send-email-ross.zwisler@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1475874544-24842-6-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Delalloc extents in the extent list contain the number of reserved
-indirect blocks in their startblock value and don't use the magic
-DELAYSTARTBLOCK constant.  Ensure that xfs_reflink_trim_around_shared
-handles them properly by checking for isnullstartblock().
+On Fri 07-10-16 15:08:52, Ross Zwisler wrote:
+> Right now we just return 0 for success, but we really want to let callers
+> know about this failure.
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> ---
+>  fs/ext2/inode.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+> index c7dbb46..368913c 100644
+> --- a/fs/ext2/inode.c
+> +++ b/fs/ext2/inode.c
+> @@ -830,8 +830,10 @@ ext2_iomap_end(struct inode *inode, loff_t offset, loff_t length,
+>  {
+>  	if (iomap->type == IOMAP_MAPPED &&
+>  	    written < length &&
+> -	    (flags & IOMAP_WRITE))
+> +	    (flags & IOMAP_WRITE)) {
+>  		ext2_write_failed(inode->i_mapping, offset + length);
+> +		return -EIO;
+> +	}
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_reflink.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+So this is wrong. This (written < length) happens when we fail to copy data
+to / from userspace buffer into pagecache pages / DAX blocks. It may be
+because the passed buffer pointer is just wrong, or just because the page
+got swapped out and we have to swap it back in. It is a role of upper
+layers to decide what went wrong and proceed accordingly but from filesystem
+point of view we just have to cancel the operation we have prepared and
+return to upper layers. So returning 0 in this case is correct.
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 5965e94..46c824c 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -182,7 +182,8 @@ xfs_reflink_trim_around_shared(
- 	if (!xfs_is_reflink_inode(ip) ||
- 	    ISUNWRITTEN(irec) ||
- 	    irec->br_startblock == HOLESTARTBLOCK ||
--	    irec->br_startblock == DELAYSTARTBLOCK) {
-+	    irec->br_startblock == DELAYSTARTBLOCK ||
-+	    isnullstartblock(irec->br_startblock)) {
- 		*shared = false;
- 		return 0;
- 	}
+								Honza
 -- 
-2.10.1.382.ga23ca1b
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
