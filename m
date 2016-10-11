@@ -1,51 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60056 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:42810 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933578AbcJaQZx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 31 Oct 2016 12:25:53 -0400
-Date: Mon, 31 Oct 2016 12:25:51 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: don't BUG() on mixed direct and mapped I/O
-Message-ID: <20161031162551.GB57171@bfoster.bfoster>
-References: <1477923268-59559-1-git-send-email-bfoster@redhat.com>
- <20161031154642.GA28355@infradead.org>
+        id S1753560AbcJKSnj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Oct 2016 14:43:39 -0400
+Date: Tue, 11 Oct 2016 09:04:09 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v5 09/17] dax: coordinate locking for offsets in PMD range
+Message-ID: <20161011070409.GC6952@quack2.suse.cz>
+References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+ <1475874544-24842-10-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161031154642.GA28355@infradead.org>
+In-Reply-To: <1475874544-24842-10-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Mon, Oct 31, 2016 at 08:46:42AM -0700, Christoph Hellwig wrote:
-> On Mon, Oct 31, 2016 at 10:14:28AM -0400, Brian Foster wrote:
-> > We've had reports of generic/095 causing XFS to BUG() in
-> > __xfs_get_blocks() due to the existence of delalloc blocks on a direct
-> > I/O read. generic/095 issues a mix of various types of I/O, including
-> > direct and memory mapped I/O to a single file.
+On Fri 07-10-16 15:08:56, Ross Zwisler wrote:
+> DAX radix tree locking currently locks entries based on the unique
+> combination of the 'mapping' pointer and the pgoff_t 'index' for the entry.
+> This works for PTEs, but as we move to PMDs we will need to have all the
+> offsets within the range covered by the PMD to map to the same bit lock.
+> To accomplish this, for ranges covered by a PMD entry we will instead lock
+> based on the page offset of the beginning of the PMD entry.  The 'mapping'
+> pointer is still used in the same way.
 > 
-> Can you explain the scenario in which case this happens in a little
-> more detail?  The patch looks fine to me, but I'd really like to
-> understand how this happens.
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Sure... the case I reproduced is a race between a direct I/O read and a
-mapped write to a hole in a file. The direct read gets through
-xfs_file_dio_aio_read() and down to __xfs_get_blocks() while the region
-is still a hole. Before the xfs_bmapi_read() call from
-__xfs_get_blocks(), a mapped write occurs and allocates delalloc blocks
-in the associated file range. xfs_bmapi_read() then returns a delalloc
-mapping for a dio read and falls through to the BUG_ON().
+The patch looks good to me. You can add:
 
-FWIW, the specific reproducer was a tweaked variant of generic/095 to up
-the iodepth (1024), iodepth_batch (60), and numjobs (20) fio params. It
-was also on a ppc64 box with a 64k page size, so that might have also
-improved the chances of a race. This can be manufactured on demand with a
-hack to delay the dio read in __xfs_get_blocks(), however. E.g., stick a
-'if (!create && direct) ssleep(N);' right before xfs_bmapi_read(), run a
-single block dio read to a hole in the file, and then a single block
-mapped write to the same offset as the read while it is delayed.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-Brian
+Just one thing which IMO deserves a comment below:
 
+> @@ -448,9 +460,12 @@ restart:
+>  }
+>  
+>  void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+> -				   pgoff_t index, bool wake_all)
+> +		pgoff_t index, void *entry, bool wake_all)
+>  {
+> -	wait_queue_head_t *wq = dax_entry_waitqueue(mapping, index);
+> +	struct exceptional_entry_key key;
+> +	wait_queue_head_t *wq;
+> +
+> +	wq = dax_entry_waitqueue(mapping, index, entry, &key);
+
+So I believe we should comment above this function that the 'entry' it gets
+may be invalid by the time it gets it (we call it without tree_lock held so
+the passed entry may be changed in the radix tree as we work) but we use it
+only to find appropriate waitqueue where tasks sleep waiting for that old
+entry to unlock so we indeed wake up all tasks we need.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
