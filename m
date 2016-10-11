@@ -1,50 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:60088 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752408AbcJJWFw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Oct 2016 18:05:52 -0400
-Date: Mon, 10 Oct 2016 16:05:50 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v5 13/17] dax: dax_iomap_fault() needs to call iomap_end()
-Message-ID: <20161010220550.GA22793@linux.intel.com>
-References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
- <1475874544-24842-14-git-send-email-ross.zwisler@linux.intel.com>
- <20161010155004.GD19343@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161010155004.GD19343@lst.de>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33835 "EHLO
+        mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752190AbcJKRxe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Oct 2016 13:53:34 -0400
+Received: by mail-pa0-f54.google.com with SMTP id rz1so18603003pab.1
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Oct 2016 10:52:53 -0700 (PDT)
+From: Eric Biggers <ebiggers@google.com>
+Subject: [PATCH] xfs: add some 'static' annotations
+Date: Tue, 11 Oct 2016 10:52:10 -0700
+Message-Id: <1476208330-29943-1-git-send-email-ebiggers@google.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, Eric Biggers <ebiggers@google.com>
 
-On Mon, Oct 10, 2016 at 05:50:04PM +0200, Christoph Hellwig wrote:
-> On Fri, Oct 07, 2016 at 03:09:00PM -0600, Ross Zwisler wrote:
-> > Currently iomap_end() doesn't do anything for DAX page faults for both ext2
-> > and XFS.  ext2_iomap_end() just checks for a write underrun, and
-> > xfs_file_iomap_end() checks to see if it needs to finish a delayed
-> > allocation.  However, in the future iomap_end() calls might be needed to
-> > make sure we have balanced allocations, locks, etc.  So, add calls to
-> > iomap_end() with appropriate error handling to dax_iomap_fault().
-> 
-> Is there a way to just have a single call to iomap_end at the end of
-> the function, after which we just return a previosuly setup return
-> value?
-> 
-> e.g.
-> 
-> out:
-> 	if (ops->iomap_end) {
-> 		error = ops->iomap_end(inode, pos, PAGE_SIZE,
-> 				PAGE_SIZE, flags, &iomap);
-> 	}
-> 
-> 	if (error == -ENOMEM)
-> 		return VM_FAULT_OOM | major;
-> 	if (error < 0 && error != -EBUSY)
-> 		return VM_FAULT_SIGBUS | major;
-> 	return ret;
+sparse reported that several variables and a function were not
+forward-declared anywhere and therefore should be 'static'.
 
-Sure, will do.
+Found with sparse by running 'make C=2 CF=-D__CHECK_ENDIAN__ fs/xfs/'
+
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ fs/xfs/libxfs/xfs_btree.c | 2 +-
+ fs/xfs/xfs_sysfs.c        | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index aa1752f..b2190ca 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4822,7 +4822,7 @@ xfs_btree_calc_size(
+ 	return rval;
+ }
+ 
+-int
++static int
+ xfs_btree_count_blocks_helper(
+ 	struct xfs_btree_cur	*cur,
+ 	int			level,
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 5f8d55d..276d302 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -512,13 +512,13 @@ static struct attribute *xfs_error_attrs[] = {
+ };
+ 
+ 
+-struct kobj_type xfs_error_cfg_ktype = {
++static struct kobj_type xfs_error_cfg_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+ 	.default_attrs = xfs_error_attrs,
+ };
+ 
+-struct kobj_type xfs_error_ktype = {
++static struct kobj_type xfs_error_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+ };
+-- 
+2.8.0.rc3.226.g39d4020
+
