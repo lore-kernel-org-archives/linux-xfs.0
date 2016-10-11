@@ -1,58 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29376 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750745AbcJHRpV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Oct 2016 13:45:21 -0400
-Date: Sat, 8 Oct 2016 10:45:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs/122: remove dead code
-Message-ID: <20161008174514.GB5619@birch.djwong.org>
-References: <1475916836-30439-1-git-send-email-eguan@redhat.com>
+Received: from verein.lst.de ([213.95.11.211]:32859 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751297AbcJKE6v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Oct 2016 00:58:51 -0400
+Date: Tue, 11 Oct 2016 06:58:48 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/9] iomap: add IOMAP_REPORT
+Message-ID: <20161011045848.GA719@lst.de>
+References: <1476106685-29048-1-git-send-email-hch@lst.de> <1476106685-29048-2-git-send-email-hch@lst.de> <20161011014546.GF22379@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1475916836-30439-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <20161011014546.GF22379@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Sat, Oct 08, 2016 at 04:53:56PM +0800, Eryu Guan wrote:
-> Seems this hunk of dead code is used for debug purpose to inspect
-> what the output looks like after _attribute_filter. Just remove it.
-
-Heh.  Barf.  Ooops. :)
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+On Mon, Oct 10, 2016 at 06:45:46PM -0700, Darrick J. Wong wrote:
+> On Mon, Oct 10, 2016 at 03:37:57PM +0200, Christoph Hellwig wrote:
+> > This allows the file system to tell a FIEMAP from a read operation, and thus
+> > avoids the need to report flags that aren't actually used in the read path.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/iomap.c            |  2 +-
+> >  include/linux/iomap.h | 17 +++++++++++------
+> >  2 files changed, 12 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/fs/iomap.c b/fs/iomap.c
+> > index 013d1d3..a922040 100644
+> > --- a/fs/iomap.c
+> > +++ b/fs/iomap.c
+> > @@ -561,7 +561,7 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+> >  	}
+> >  
+> >  	while (len > 0) {
+> > -		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
+> > +		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
 > 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
->  tests/xfs/122 | 4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/tests/xfs/122 b/tests/xfs/122
-> index 330d3ac..f39ceba 100755
-> --- a/tests/xfs/122
-> +++ b/tests/xfs/122
-> @@ -196,10 +196,6 @@ echo 'int main(int argc, char *argv[]) {' >>$cprog
->  #
->  cat /usr/include/xfs/xfs*.h | indent |\
->  _attribute_filter |\
-> -egrep '(} *xfs_.*_t|^struct xfs_[a-z0-9_]*$)' > /tmp/barf
-> -
-> -cat /usr/include/xfs/xfs*.h | indent |\
-> -_attribute_filter |\
->  egrep '(} *xfs_.*_t|^struct xfs_[a-z0-9_]*$)' |\
->  egrep -v -f $tmp.ignore |\
->  sed -e 's/^.*}[[:space:]]*//g' -e 's/;.*$//g' -e 's/_t, /_t\n/g' |\
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Hmm.  /me notices that generic/352, generic/353, and generic/372 fail after
+> this patchset is applied.  Will have a look at this tomorrow, unless this rings
+> a bell?
+
+I don't see any of those failures.
