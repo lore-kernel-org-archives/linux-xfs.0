@@ -1,54 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:59099 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751532AbcJJKYI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 06:24:08 -0400
-Date: Mon, 10 Oct 2016 03:23:53 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/7] xfs: fix error initialization
-Message-ID: <20161010102353.GF18359@infradead.org>
-References: <147588163396.12127.8356851783027062457.stgit@birch.djwong.org>
- <147588167673.12127.8923121358064293920.stgit@birch.djwong.org>
- <05debeab-15ec-2b6b-1704-e6d396242cfe@sandeen.net>
+Received: from mx2.suse.de ([195.135.220.15]:42817 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753535AbcJKSnj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Oct 2016 14:43:39 -0400
+Date: Tue, 11 Oct 2016 09:21:47 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v5 13/17] dax: dax_iomap_fault() needs to call iomap_end()
+Message-ID: <20161011072147.GE6952@quack2.suse.cz>
+References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+ <1475874544-24842-14-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <05debeab-15ec-2b6b-1704-e6d396242cfe@sandeen.net>
+In-Reply-To: <1475874544-24842-14-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, david@fromorbit.com, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Sat, Oct 08, 2016 at 10:55:58AM -0500, Eric Sandeen wrote:
-> On 10/7/16 6:07 PM, Darrick J. Wong wrote:
-> > Eric Sandeen reported a gcc complaint about uninitialized error
-> > variables, so fix that.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Reported-by: Eric Sandeen <sandeen@redhat.com>
-> > ---
-> >  fs/xfs/xfs_reflink.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 220d263..5965e94 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -1437,7 +1437,7 @@ xfs_reflink_dirty_extents(
-> >  	xfs_off_t		flen;
-> >  	struct xfs_bmbt_irec	map[2];
-> >  	int			nmaps;
-> > -	int			error;
-> > +	int			error = 0;
-> >  
-> >  	while (end - fbno > 0) {
+On Fri 07-10-16 15:09:00, Ross Zwisler wrote:
+> Currently iomap_end() doesn't do anything for DAX page faults for both ext2
+> and XFS.  ext2_iomap_end() just checks for a write underrun, and
+> xfs_file_iomap_end() checks to see if it needs to finish a delayed
+> allocation.  However, in the future iomap_end() calls might be needed to
+> make sure we have balanced allocations, locks, etc.  So, add calls to
+> iomap_end() with appropriate error handling to dax_iomap_fault().
 > 
-> If we should never get here w/ end <= fbno, then maybe an ASSERT is
-> in order.
-> 
-> And if we ever do get here w/ that case, perhaps default error to a relevant
-> error so we don't return success and carry on in that case?
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Suggested-by: Jan Kara <jack@suse.cz>
+...
+> @@ -1239,6 +1253,17 @@ int dax_iomap_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+>  		break;
+>  	}
+>  
+> + finish_iomap:
+> +	if (ops->iomap_end) {
+> +		if (error) {
+> +			/* keep previous error */
+> +			ops->iomap_end(inode, pos, PAGE_SIZE, PAGE_SIZE, flags,
+> +					&iomap);
 
-Initializing it to -EINVAL plus an assert for debug builds sounds fine.
+I think for the error case we should set number of 'written' bytes to 0 to
+tell fs to cancel what it has prepared. This is mostly cosmetic since the
+only case where I can imagine this would matter is shared write fault and
+in that case we have currently no error path but still it could bite us in
+the future.
+
+Other than that the patch looks good so you can add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
