@@ -1,73 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:37558 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752354AbcJJNii (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2016 09:38:38 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 9/9] xfs: remove xfs_bunmapi_cow
-Date: Mon, 10 Oct 2016 15:38:05 +0200
-Message-Id: <1476106685-29048-10-git-send-email-hch@lst.de>
-In-Reply-To: <1476106685-29048-1-git-send-email-hch@lst.de>
-References: <1476106685-29048-1-git-send-email-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:43850 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753671AbcJKSyq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Oct 2016 14:54:46 -0400
+Date: Tue, 11 Oct 2016 08:50:01 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v5 07/17] dax: remove the last BUG_ON() from fs/dax.c
+Message-ID: <20161011065001.GB6952@quack2.suse.cz>
+References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+ <1475874544-24842-8-git-send-email-ross.zwisler@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1475874544-24842-8-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Since no one uses it anymore.
+On Fri 07-10-16 15:08:54, Ross Zwisler wrote:
+> Don't take down the kernel if we get an invalid 'from' and 'length'
+> argument pair.  Just warn once and return an error.
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 22 ----------------------
- fs/xfs/libxfs/xfs_bmap.h |  1 -
- 2 files changed, 23 deletions(-)
+Looks good. You can add:
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 814980d..680fa9d 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5417,28 +5417,6 @@ done:
- 	return error;
- }
- 
--/* Remove an extent from the CoW fork.  Similar to xfs_bmap_del_extent. */
--int
--xfs_bunmapi_cow(
--	struct xfs_inode		*ip,
--	struct xfs_bmbt_irec		*del)
--{
--	struct xfs_bmbt_rec_host	*ep;
--	struct xfs_bmbt_irec		got;
--	struct xfs_bmbt_irec		new;
--	int				eof;
--	xfs_extnum_t			eidx;
--
--	ep = xfs_bmap_search_extents(ip, del->br_startoff, XFS_COW_FORK, &eof,
--				&eidx, &got, &new);
--	ASSERT(ep);
--	if (isnullstartblock(got.br_startblock))
--		xfs_bmap_del_extent_delay(ip, XFS_COW_FORK, &eidx, &got, del);
--	else
--		xfs_bmap_del_extent_cow(ip, &eidx, &got, del);
--	return 0;
--}
--
- /*
-  * Unmap (remove) blocks from a file.
-  * If nexts is nonzero then the number of extents to remove is limited to
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 5f18248..7cae6ec 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -223,7 +223,6 @@ int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t bno, xfs_filblks_t len, int flags,
- 		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
- 		struct xfs_defer_ops *dfops, int *done);
--int	xfs_bunmapi_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *del);
- int	xfs_bmap_del_extent_delay(struct xfs_inode *ip, int whichfork,
- 		xfs_extnum_t *idx, struct xfs_bmbt_irec *got,
- 		struct xfs_bmbt_irec *del);
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+> ---
+>  fs/dax.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/dax.c b/fs/dax.c
+> index ac28cdf..98189ac 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -1194,7 +1194,8 @@ int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
+>  	/* Block boundary? Nothing to do */
+>  	if (!length)
+>  		return 0;
+> -	BUG_ON((offset + length) > PAGE_SIZE);
+> +	if (WARN_ON_ONCE((offset + length) > PAGE_SIZE))
+> +		return -EINVAL;
+>  
+>  	memset(&bh, 0, sizeof(bh));
+>  	bh.b_bdev = inode->i_sb->s_bdev;
+> -- 
+> 2.7.4
+> 
+> 
 -- 
-2.10.1.382.ga23ca1b
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
