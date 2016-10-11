@@ -1,64 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:33835 "EHLO
-        mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752190AbcJKRxe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Oct 2016 13:53:34 -0400
-Received: by mail-pa0-f54.google.com with SMTP id rz1so18603003pab.1
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Oct 2016 10:52:53 -0700 (PDT)
-From: Eric Biggers <ebiggers@google.com>
-Subject: [PATCH] xfs: add some 'static' annotations
-Date: Tue, 11 Oct 2016 10:52:10 -0700
-Message-Id: <1476208330-29943-1-git-send-email-ebiggers@google.com>
+Received: from mx2.suse.de ([195.135.220.15]:42813 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753320AbcJKSnj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Oct 2016 14:43:39 -0400
+Date: Tue, 11 Oct 2016 10:34:05 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v5 16/17] xfs: use struct iomap based DAX PMD fault path
+Message-ID: <20161011083405.GH6952@quack2.suse.cz>
+References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
+ <1475874544-24842-17-git-send-email-ross.zwisler@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1475874544-24842-17-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com, Eric Biggers <ebiggers@google.com>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-sparse reported that several variables and a function were not
-forward-declared anywhere and therefore should be 'static'.
+On Fri 07-10-16 15:09:03, Ross Zwisler wrote:
+> Switch xfs_filemap_pmd_fault() from using dax_pmd_fault() to the new and
+> improved dax_iomap_pmd_fault().  Also, now that it has no more users,
+> remove xfs_get_blocks_dax_fault().
+> 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Found with sparse by running 'make C=2 CF=-D__CHECK_ENDIAN__ fs/xfs/'
+The patch looks good to me. You can add:
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- fs/xfs/libxfs/xfs_btree.c | 2 +-
- fs/xfs/xfs_sysfs.c        | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index aa1752f..b2190ca 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4822,7 +4822,7 @@ xfs_btree_calc_size(
- 	return rval;
- }
- 
--int
-+static int
- xfs_btree_count_blocks_helper(
- 	struct xfs_btree_cur	*cur,
- 	int			level,
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 5f8d55d..276d302 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -512,13 +512,13 @@ static struct attribute *xfs_error_attrs[] = {
- };
- 
- 
--struct kobj_type xfs_error_cfg_ktype = {
-+static struct kobj_type xfs_error_cfg_ktype = {
- 	.release = xfs_sysfs_release,
- 	.sysfs_ops = &xfs_sysfs_ops,
- 	.default_attrs = xfs_error_attrs,
- };
- 
--struct kobj_type xfs_error_ktype = {
-+static struct kobj_type xfs_error_ktype = {
- 	.release = xfs_sysfs_release,
- 	.sysfs_ops = &xfs_sysfs_ops,
- };
+								Honza
+> ---
+>  fs/xfs/xfs_aops.c | 26 +++++---------------------
+>  fs/xfs/xfs_aops.h |  3 ---
+>  fs/xfs/xfs_file.c |  2 +-
+>  3 files changed, 6 insertions(+), 25 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 0e2a931..1c73d0a 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1298,8 +1298,7 @@ __xfs_get_blocks(
+>  	sector_t		iblock,
+>  	struct buffer_head	*bh_result,
+>  	int			create,
+> -	bool			direct,
+> -	bool			dax_fault)
+> +	bool			direct)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> @@ -1420,13 +1419,8 @@ __xfs_get_blocks(
+>  		if (ISUNWRITTEN(&imap))
+>  			set_buffer_unwritten(bh_result);
+>  		/* direct IO needs special help */
+> -		if (create) {
+> -			if (dax_fault)
+> -				ASSERT(!ISUNWRITTEN(&imap));
+> -			else
+> -				xfs_map_direct(inode, bh_result, &imap, offset,
+> -						is_cow);
+> -		}
+> +		if (create)
+> +			xfs_map_direct(inode, bh_result, &imap, offset, is_cow);
+>  	}
+>  
+>  	/*
+> @@ -1466,7 +1460,7 @@ xfs_get_blocks(
+>  	struct buffer_head	*bh_result,
+>  	int			create)
+>  {
+> -	return __xfs_get_blocks(inode, iblock, bh_result, create, false, false);
+> +	return __xfs_get_blocks(inode, iblock, bh_result, create, false);
+>  }
+>  
+>  int
+> @@ -1476,17 +1470,7 @@ xfs_get_blocks_direct(
+>  	struct buffer_head	*bh_result,
+>  	int			create)
+>  {
+> -	return __xfs_get_blocks(inode, iblock, bh_result, create, true, false);
+> -}
+> -
+> -int
+> -xfs_get_blocks_dax_fault(
+> -	struct inode		*inode,
+> -	sector_t		iblock,
+> -	struct buffer_head	*bh_result,
+> -	int			create)
+> -{
+> -	return __xfs_get_blocks(inode, iblock, bh_result, create, true, true);
+> +	return __xfs_get_blocks(inode, iblock, bh_result, create, true);
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+> index b3c6634..34dc00d 100644
+> --- a/fs/xfs/xfs_aops.h
+> +++ b/fs/xfs/xfs_aops.h
+> @@ -59,9 +59,6 @@ int	xfs_get_blocks(struct inode *inode, sector_t offset,
+>  		       struct buffer_head *map_bh, int create);
+>  int	xfs_get_blocks_direct(struct inode *inode, sector_t offset,
+>  			      struct buffer_head *map_bh, int create);
+> -int	xfs_get_blocks_dax_fault(struct inode *inode, sector_t offset,
+> -			         struct buffer_head *map_bh, int create);
+> -
+>  int	xfs_end_io_direct_write(struct kiocb *iocb, loff_t offset,
+>  		ssize_t size, void *private);
+>  int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 8f12152..7b13dda 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1750,7 +1750,7 @@ xfs_filemap_pmd_fault(
+>  	}
+>  
+>  	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	ret = dax_pmd_fault(vma, addr, pmd, flags, xfs_get_blocks_dax_fault);
+> +	ret = dax_iomap_pmd_fault(vma, addr, pmd, flags, &xfs_iomap_ops);
+>  	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+>  
+>  	if (flags & FAULT_FLAG_WRITE)
+> -- 
+> 2.7.4
+> 
+> 
 -- 
-2.8.0.rc3.226.g39d4020
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
