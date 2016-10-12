@@ -1,23 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58983 "EHLO newverein.lst.de"
+Received: from mga07.intel.com ([134.134.136.100]:51988 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753115AbcJJPqx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Oct 2016 11:46:53 -0400
-Date: Mon, 10 Oct 2016 17:46:51 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v5 12/17] dax: add dax_iomap_sector() helper function
-Message-ID: <20161010154649.GC19343@lst.de>
-References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com> <1475874544-24842-13-git-send-email-ross.zwisler@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1475874544-24842-13-git-send-email-ross.zwisler@linux.intel.com>
+        id S933226AbcJLWuc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Oct 2016 18:50:32 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v6 04/17] ext2: remove support for DAX PMD faults
+Date: Wed, 12 Oct 2016 16:50:09 -0600
+Message-Id: <20161012225022.15507-5-ross.zwisler@linux.intel.com>
+In-Reply-To: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
+References: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Looks fine,
+DAX PMD support was added via the following commit:
 
+commit e7b1ea2ad658 ("ext2: huge page fault support")
+
+I believe this path to be untested as ext2 doesn't reliably provide block
+allocations that are aligned to 2MiB.  In my testing I've been unable to
+get ext2 to actually fault in a PMD.  It always fails with a "pfn
+unaligned" message because the sector returned by ext2_get_block() isn't
+aligned.
+
+I've tried various settings for the "stride" and "stripe_width" extended
+options to mkfs.ext2, without any luck.
+
+Since we can't reliably get PMDs, remove support so that we don't have an
+untested code path that we may someday traverse when we happen to get an
+aligned block allocation.  This should also make 4k DAX faults in ext2 a
+bit faster since they will no longer have to call the PMD fault handler
+only to get a response of VM_FAULT_FALLBACK.
+
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/ext2/file.c | 29 ++++++-----------------------
+ 1 file changed, 6 insertions(+), 23 deletions(-)
+
+diff --git a/fs/ext2/file.c b/fs/ext2/file.c
+index 0ca363d..0f257f8 100644
+--- a/fs/ext2/file.c
++++ b/fs/ext2/file.c
+@@ -107,27 +107,6 @@ static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ 	return ret;
+ }
+ 
+-static int ext2_dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
+-						pmd_t *pmd, unsigned int flags)
+-{
+-	struct inode *inode = file_inode(vma->vm_file);
+-	struct ext2_inode_info *ei = EXT2_I(inode);
+-	int ret;
+-
+-	if (flags & FAULT_FLAG_WRITE) {
+-		sb_start_pagefault(inode->i_sb);
+-		file_update_time(vma->vm_file);
+-	}
+-	down_read(&ei->dax_sem);
+-
+-	ret = dax_pmd_fault(vma, addr, pmd, flags, ext2_get_block);
+-
+-	up_read(&ei->dax_sem);
+-	if (flags & FAULT_FLAG_WRITE)
+-		sb_end_pagefault(inode->i_sb);
+-	return ret;
+-}
+-
+ static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
+ 		struct vm_fault *vmf)
+ {
+@@ -154,7 +133,11 @@ static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
+ 
+ static const struct vm_operations_struct ext2_dax_vm_ops = {
+ 	.fault		= ext2_dax_fault,
+-	.pmd_fault	= ext2_dax_pmd_fault,
++	/*
++	 * .pmd_fault is not supported for DAX because allocation in ext2
++	 * cannot be reliably aligned to huge page sizes and so pmd faults
++	 * will always fail and fail back to regular faults.
++	 */
+ 	.page_mkwrite	= ext2_dax_fault,
+ 	.pfn_mkwrite	= ext2_dax_pfn_mkwrite,
+ };
+@@ -166,7 +149,7 @@ static int ext2_file_mmap(struct file *file, struct vm_area_struct *vma)
+ 
+ 	file_accessed(file);
+ 	vma->vm_ops = &ext2_dax_vm_ops;
+-	vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
++	vma->vm_flags |= VM_MIXEDMAP;
+ 	return 0;
+ }
+ #else
+-- 
+2.9.0
+
