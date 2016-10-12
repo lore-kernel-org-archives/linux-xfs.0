@@ -1,73 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49896 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753121AbcJOIxf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 15 Oct 2016 04:53:35 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 9/9] xfs: remove xfs_bunmapi_cow
-Date: Sat, 15 Oct 2016 10:52:34 +0200
-Message-Id: <1476521554-1894-10-git-send-email-hch@lst.de>
-In-Reply-To: <1476521554-1894-1-git-send-email-hch@lst.de>
-References: <1476521554-1894-1-git-send-email-hch@lst.de>
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:53590 "EHLO
+        mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755920AbcJLTv1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Oct 2016 15:51:27 -0400
+Date: Wed, 12 Oct 2016 15:50:36 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <885869771.578073.1476301836438.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20161010215714.GF23194@dastard>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com> <20161007070838.GA16260@quack2.suse.cz> <1720038662.1062048.1475851398433.JavaMail.zimbra@redhat.com> <1267347639.1072505.1475854075552.JavaMail.zimbra@redhat.com> <1337864351.1107846.1475866582573.JavaMail.zimbra@redhat.com> <20161009215454.GM9806@dastard> <988281682.41395.1476108629872.JavaMail.zimbra@redhat.com> <20161010215714.GF23194@dastard>
+Subject: [bisected] Re: local DoS - systemd hang or timeout (WAS: Re:
+ [RFC][CFT] splice_read reworked)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, bfoster@redhat.com
+To: Dave Chinner <david@fromorbit.com>, Sage Weil <sage@redhat.com>, Brian Foster <bfoster@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, Miklos Szeredi <miklos@szeredi.hu>, tj <tj@kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org, Dave Jones <davej@codemonkey.org.uk>
 
-Since no one uses it anymore.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 22 ----------------------
- fs/xfs/libxfs/xfs_bmap.h |  1 -
- 2 files changed, 23 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 64f82c8..cc193e6 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5417,28 +5417,6 @@ xfs_bmap_del_extent(
- 	return error;
- }
- 
--/* Remove an extent from the CoW fork.  Similar to xfs_bmap_del_extent. */
--int
--xfs_bunmapi_cow(
--	struct xfs_inode		*ip,
--	struct xfs_bmbt_irec		*del)
--{
--	struct xfs_bmbt_rec_host	*ep;
--	struct xfs_bmbt_irec		got;
--	struct xfs_bmbt_irec		new;
--	int				eof;
--	xfs_extnum_t			eidx;
--
--	ep = xfs_bmap_search_extents(ip, del->br_startoff, XFS_COW_FORK, &eof,
--				&eidx, &got, &new);
--	ASSERT(ep);
--	if (isnullstartblock(got.br_startblock))
--		xfs_bmap_del_extent_delay(ip, XFS_COW_FORK, &eidx, &got, del);
--	else
--		xfs_bmap_del_extent_cow(ip, &eidx, &got, del);
--	return 0;
--}
--
- /*
-  * Unmap (remove) blocks from a file.
-  * If nexts is nonzero then the number of extents to remove is limited to
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 5f18248..7cae6ec 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -223,7 +223,6 @@ int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t bno, xfs_filblks_t len, int flags,
- 		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
- 		struct xfs_defer_ops *dfops, int *done);
--int	xfs_bunmapi_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *del);
- int	xfs_bmap_del_extent_delay(struct xfs_inode *ip, int whichfork,
- 		xfs_extnum_t *idx, struct xfs_bmbt_irec *got,
- 		struct xfs_bmbt_irec *del);
--- 
-2.1.4
+----- Original Message -----
+> From: "Dave Chinner" <david@fromorbit.com>
+> Sent: Monday, October 10, 2016 5:57:14 PM
+> 
+> > http://people.redhat.com/qcai/tmp/dmesg
+> 
+> It's a page lock order bug in the XFS seek hole/data implementation.
+So reverted this commit against the latest mainline allows trinity run
+hours. Otherwise, it always hang at fdatasync() within 30 minutes.
 
+fc0561cefc04e7803c0f6501ca4f310a502f65b8
+xfs: optimise away log forces on timestamp updates for fdatasync
+
+PS: tested against the vfs tree's #work.splice_read with this commit
+reverted is now hanging at sync() instead which won't be  reproduced
+against the mainline so far.
+http://people.redhat.com/qcai/tmp/dmesg-sync
+
+   CAI Qian
