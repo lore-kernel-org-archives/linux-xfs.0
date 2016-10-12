@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:14117 "EHLO mga07.intel.com"
+Received: from mga07.intel.com ([134.134.136.100]:33829 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933296AbcJLWud (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Oct 2016 18:50:33 -0400
+        id S933477AbcJLWut (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Oct 2016 18:50:49 -0400
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v6 06/17] dax: remove the last BUG_ON() from fs/dax.c
-Date: Wed, 12 Oct 2016 16:50:11 -0600
-Message-Id: <20161012225022.15507-7-ross.zwisler@linux.intel.com>
+Subject: [PATCH v6 14/17] dax: move put_(un)locked_mapping_entry() in dax.c
+Date: Wed, 12 Oct 2016 16:50:19 -0600
+Message-Id: <20161012225022.15507-15-ross.zwisler@linux.intel.com>
 In-Reply-To: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
 References: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,30 +15,85 @@ List-Id: xfs
 To: linux-kernel@vger.kernel.org
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Don't take down the kernel if we get an invalid 'from' and 'length'
-argument pair.  Just warn once and return an error.
+No functional change.
+
+The static functions put_locked_mapping_entry() and
+put_unlocked_mapping_entry() will soon be used in error cases in
+grab_mapping_entry(), so move their definitions above this function.
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- fs/dax.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/dax.c | 50 +++++++++++++++++++++++++-------------------------
+ 1 file changed, 25 insertions(+), 25 deletions(-)
 
 diff --git a/fs/dax.c b/fs/dax.c
-index ac28cdf..98189ac 100644
+index c45cc4d..0582c7c 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -1194,7 +1194,8 @@ int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
- 	/* Block boundary? Nothing to do */
- 	if (!length)
- 		return 0;
--	BUG_ON((offset + length) > PAGE_SIZE);
-+	if (WARN_ON_ONCE((offset + length) > PAGE_SIZE))
-+		return -EINVAL;
+@@ -382,6 +382,31 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
+ 	}
+ }
  
- 	memset(&bh, 0, sizeof(bh));
- 	bh.b_bdev = inode->i_sb->s_bdev;
++static void put_locked_mapping_entry(struct address_space *mapping,
++				     pgoff_t index, void *entry)
++{
++	if (!radix_tree_exceptional_entry(entry)) {
++		unlock_page(entry);
++		put_page(entry);
++	} else {
++		dax_unlock_mapping_entry(mapping, index);
++	}
++}
++
++/*
++ * Called when we are done with radix tree entry we looked up via
++ * get_unlocked_mapping_entry() and which we didn't lock in the end.
++ */
++static void put_unlocked_mapping_entry(struct address_space *mapping,
++				       pgoff_t index, void *entry)
++{
++	if (!radix_tree_exceptional_entry(entry))
++		return;
++
++	/* We have to wake up next waiter for the radix tree entry lock */
++	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
++}
++
+ /*
+  * Find radix tree entry at given index. If it points to a page, return with
+  * the page locked. If it points to the exceptional entry, return with the
+@@ -486,31 +511,6 @@ void dax_unlock_mapping_entry(struct address_space *mapping, pgoff_t index)
+ 	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
+ }
+ 
+-static void put_locked_mapping_entry(struct address_space *mapping,
+-				     pgoff_t index, void *entry)
+-{
+-	if (!radix_tree_exceptional_entry(entry)) {
+-		unlock_page(entry);
+-		put_page(entry);
+-	} else {
+-		dax_unlock_mapping_entry(mapping, index);
+-	}
+-}
+-
+-/*
+- * Called when we are done with radix tree entry we looked up via
+- * get_unlocked_mapping_entry() and which we didn't lock in the end.
+- */
+-static void put_unlocked_mapping_entry(struct address_space *mapping,
+-				       pgoff_t index, void *entry)
+-{
+-	if (!radix_tree_exceptional_entry(entry))
+-		return;
+-
+-	/* We have to wake up next waiter for the radix tree entry lock */
+-	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
+-}
+-
+ /*
+  * Delete exceptional DAX entry at @index from @mapping. Wait for radix tree
+  * entry to get unlocked before deleting it.
 -- 
 2.9.0
 
