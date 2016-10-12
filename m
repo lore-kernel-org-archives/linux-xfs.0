@@ -1,211 +1,491 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49892 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752977AbcJOIxf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 15 Oct 2016 04:53:35 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 8/9] xfs: optimize xfs_reflink_end_cow
-Date: Sat, 15 Oct 2016 10:52:33 +0200
-Message-Id: <1476521554-1894-9-git-send-email-hch@lst.de>
-In-Reply-To: <1476521554-1894-1-git-send-email-hch@lst.de>
-References: <1476521554-1894-1-git-send-email-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:37984 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934144AbcJLUxT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Oct 2016 16:53:19 -0400
+Date: Wed, 12 Oct 2016 13:52:57 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 48/63] xfs: preallocate blocks for worst-case btree
+ expansion
+Message-ID: <20161012205257.GJ22379@birch.djwong.org>
+References: <147520472904.29434.15518629624221621056.stgit@birch.djwong.org>
+ <147520505244.29434.3772387185608259922.stgit@birch.djwong.org>
+ <20161012184450.GE56019@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161012184450.GE56019@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, bfoster@redhat.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Instead of doing a full extent list search for each extent that is to be
-deleted using xfs_bmapi_read and then doing another one inside of
-xfs_bunmapi_cow use the same scheme that xfs_bumapi uses:  look up the
-last extent to be deleted and then use the extent index to walk downward
-until we are outside the range to be deleted.
+On Wed, Oct 12, 2016 at 02:44:51PM -0400, Brian Foster wrote:
+> On Thu, Sep 29, 2016 at 08:10:52PM -0700, Darrick J. Wong wrote:
+> > To gracefully handle the situation where a CoW operation turns a
+> > single refcount extent into a lot of tiny ones and then run out of
+> > space when a tree split has to happen, use the per-AG reserved block
+> > pool to pre-allocate all the space we'll ever need for a maximal
+> > btree.  For a 4K block size, this only costs an overhead of 0.3% of
+> > available disk space.
+> > 
+> > When reflink is enabled, we have an unfortunate problem with rmap --
+> > since we can share a block billions of times, this means that the
+> > reverse mapping btree can expand basically infinitely.  When an AG is
+> > so full that there are no free blocks with which to expand the rmapbt,
+> > the filesystem will shut down hard.
+> > 
+> > This is rather annoying to the user, so use the AG reservation code to
+> > reserve a "reasonable" amount of space for rmap.  We'll prevent
+> > reflinks and CoW operations if we think we're getting close to
+> > exhausting an AG's free space rather than shutting down, but this
+> > permanent reservation should be enough for "most" users.  Hopefully.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > [hch@lst.de: ensure that we invalidate the freed btree buffer]
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> > v2: Simplify the return value from xfs_perag_pool_free_block to a bool
+> > so that we can easily call xfs_trans_binval for both the per-AG pool
+> > and the real freeing case.  Without this we fail to invalidate the
+> > btree buffer and will trip over the write verifier on a shrinking
+> > refcount btree.
+> > 
+> > v3: Convert to the new per-AG reservation code.
+> > 
+> > v4: Combine this patch with the one that adds the rmapbt reservation,
+> > since the rmapbt reservation is only needed for reflink filesystems.
+> > 
+> > v5: If we detect errors while counting the refcount or rmap btrees,
+> > shut down the filesystem to avoid the scenario where the fs shuts down
+> > mid-transaction due to btree corruption, repair refuses to run until
+> > the log is clean, and the log cannot be cleaned because replay hits
+> > btree corruption and shuts down.
+> > ---
+> >  fs/xfs/libxfs/xfs_ag_resv.c        |   11 ++++++
+> >  fs/xfs/libxfs/xfs_refcount_btree.c |   45 ++++++++++++++++++++++++-
+> >  fs/xfs/libxfs/xfs_refcount_btree.h |    3 ++
+> >  fs/xfs/libxfs/xfs_rmap_btree.c     |   60 ++++++++++++++++++++++++++++++++++
+> >  fs/xfs/libxfs/xfs_rmap_btree.h     |    7 ++++
+> >  fs/xfs/xfs_fsops.c                 |   64 ++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_fsops.h                 |    3 ++
+> >  fs/xfs/xfs_mount.c                 |    8 +++++
+> >  fs/xfs/xfs_super.c                 |   12 +++++++
+> >  9 files changed, 210 insertions(+), 3 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+> > index e3ae0f2..adf770f 100644
+> > --- a/fs/xfs/libxfs/xfs_ag_resv.c
+> > +++ b/fs/xfs/libxfs/xfs_ag_resv.c
+> > @@ -38,6 +38,7 @@
+> >  #include "xfs_trans_space.h"
+> >  #include "xfs_rmap_btree.h"
+> >  #include "xfs_btree.h"
+> > +#include "xfs_refcount_btree.h"
+> >  
+> >  /*
+> >   * Per-AG Block Reservations
+> > @@ -228,6 +229,11 @@ xfs_ag_resv_init(
+> >  	if (pag->pag_meta_resv.ar_asked == 0) {
+> >  		ask = used = 0;
+> >  
+> > +		error = xfs_refcountbt_calc_reserves(pag->pag_mount,
+> > +				pag->pag_agno, &ask, &used);
+> > +		if (error)
+> > +			goto out;
+> > +
+> >  		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_METADATA,
+> >  				ask, used);
+> 
+> Now that I get here, I see we have these per-ag reservation structures
+> and whatnot, but __xfs_ag_resv_init() (from a previous patch) calls
+> xfs_mod_fdblocks() for the reservation. AFAICT, that reserves from the
+> "global pool." Based on the commit log, isn't the intent here to reserve
+> blocks within each AG? What am I missing?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_reflink.c | 119 ++++++++++++++++++++++++---------------------------
- fs/xfs/xfs_trace.h   |   1 -
- 2 files changed, 56 insertions(+), 64 deletions(-)
+The AG reservation code "reserves" blocks in each AG by hiding them from
+the allocator.  They're all still there in the bnobt, but we underreport
+the length of the longest free extent and the free block count in that
+AG to make it look like there's less free space than there is.  Since
+those blocks are no longer generally available, we have to decrease the
+in-core free block count so we can't create delalloc reservations that
+the allocator won't (or can't) satisfy.
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 7979d46..93a863e 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -634,25 +634,26 @@ xfs_reflink_end_cow(
- 	xfs_off_t			offset,
- 	xfs_off_t			count)
- {
--	struct xfs_bmbt_irec		irec;
--	struct xfs_bmbt_irec		uirec;
-+	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-+	struct xfs_bmbt_irec		got, prev, del;
- 	struct xfs_trans		*tp;
- 	xfs_fileoff_t			offset_fsb;
- 	xfs_fileoff_t			end_fsb;
--	xfs_filblks_t			count_fsb;
- 	xfs_fsblock_t			firstfsb;
- 	struct xfs_defer_ops		dfops;
--	int				error;
-+	int				error, eof = 0;
- 	unsigned int			resblks;
--	xfs_filblks_t			ilen;
- 	xfs_filblks_t			rlen;
--	int				nimaps;
-+	xfs_extnum_t			idx;
- 
- 	trace_xfs_reflink_end_cow(ip, offset, count);
- 
-+	/* No COW extents?  That's easy! */
-+	if (ifp->if_bytes == 0)
-+		return 0;
-+
- 	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
- 	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
--	count_fsb = (xfs_filblks_t)(end_fsb - offset_fsb);
- 
- 	/* Start a rolling transaction to switch the mappings */
- 	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
-@@ -664,72 +665,65 @@ xfs_reflink_end_cow(
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, 0);
- 
--	/* Go find the old extent in the CoW fork. */
--	while (offset_fsb < end_fsb) {
--		/* Read extent from the source file */
--		nimaps = 1;
--		count_fsb = (xfs_filblks_t)(end_fsb - offset_fsb);
--		error = xfs_bmapi_read(ip, offset_fsb, count_fsb, &irec,
--				&nimaps, XFS_BMAPI_COWFORK);
--		if (error)
--			goto out_cancel;
--		ASSERT(nimaps == 1);
-+	xfs_bmap_search_extents(ip, end_fsb - 1, XFS_COW_FORK, &eof, &idx,
-+			&got, &prev);
- 
--		ASSERT(irec.br_startblock != DELAYSTARTBLOCK);
--		trace_xfs_reflink_cow_remap(ip, &irec);
-+	/* If there is a hole at end_fsb - 1 go to the previous extent */
-+	if (eof || got.br_startoff > end_fsb) {
-+		ASSERT(idx > 0);
-+		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, --idx), &got);
-+	}
- 
--		/*
--		 * We can have a hole in the CoW fork if part of a directio
--		 * write is CoW but part of it isn't.
--		 */
--		rlen = ilen = irec.br_blockcount;
--		if (irec.br_startblock == HOLESTARTBLOCK)
-+	/* Walk backwards until we're out of the I/O range... */
-+	while (got.br_startoff + got.br_blockcount > offset_fsb) {
-+		del = got;
-+		xfs_trim_extent(&del, offset_fsb, end_fsb - offset_fsb);
-+
-+		/* Extent delete may have bumped idx forward */
-+		if (!del.br_blockcount) {
-+			idx--;
- 			goto next_extent;
-+		}
-+
-+		ASSERT(!isnullstartblock(got.br_startblock));
- 
- 		/* Unmap the old blocks in the data fork. */
--		while (rlen) {
--			xfs_defer_init(&dfops, &firstfsb);
--			error = __xfs_bunmapi(tp, ip, irec.br_startoff,
--					&rlen, 0, 1, &firstfsb, &dfops);
--			if (error)
--				goto out_defer;
--
--			/*
--			 * Trim the extent to whatever got unmapped.
--			 * Remember, bunmapi works backwards.
--			 */
--			uirec.br_startblock = irec.br_startblock + rlen;
--			uirec.br_startoff = irec.br_startoff + rlen;
--			uirec.br_blockcount = irec.br_blockcount - rlen;
--			irec.br_blockcount = rlen;
--			trace_xfs_reflink_cow_remap_piece(ip, &uirec);
-+		xfs_defer_init(&dfops, &firstfsb);
-+		rlen = del.br_blockcount;
-+		error = __xfs_bunmapi(tp, ip, del.br_startoff, &rlen, 0, 1,
-+				&firstfsb, &dfops);
-+		if (error)
-+			goto out_defer;
- 
--			/* Free the CoW orphan record. */
--			error = xfs_refcount_free_cow_extent(tp->t_mountp,
--					&dfops, uirec.br_startblock,
--					uirec.br_blockcount);
--			if (error)
--				goto out_defer;
-+		/* Trim the extent to whatever got unmapped. */
-+		if (rlen) {
-+			xfs_trim_extent(&del, del.br_startoff + rlen,
-+				del.br_blockcount - rlen);
-+		}
-+		trace_xfs_reflink_cow_remap(ip, &del);
- 
--			/* Map the new blocks into the data fork. */
--			error = xfs_bmap_map_extent(tp->t_mountp, &dfops,
--					ip, &uirec);
--			if (error)
--				goto out_defer;
-+		/* Free the CoW orphan record. */
-+		error = xfs_refcount_free_cow_extent(tp->t_mountp, &dfops,
-+				del.br_startblock, del.br_blockcount);
-+		if (error)
-+			goto out_defer;
- 
--			/* Remove the mapping from the CoW fork. */
--			error = xfs_bunmapi_cow(ip, &uirec);
--			if (error)
--				goto out_defer;
-+		/* Map the new blocks into the data fork. */
-+		error = xfs_bmap_map_extent(tp->t_mountp, &dfops, ip, &del);
-+		if (error)
-+			goto out_defer;
- 
--			error = xfs_defer_finish(&tp, &dfops, ip);
--			if (error)
--				goto out_defer;
--		}
-+		/* Remove the mapping from the CoW fork. */
-+		xfs_bmap_del_extent_cow(ip, &idx, &got, &del);
-+
-+		error = xfs_defer_finish(&tp, &dfops, ip);
-+		if (error)
-+			goto out_defer;
- 
- next_extent:
--		/* Roll on... */
--		offset_fsb = irec.br_startoff + ilen;
-+		if (idx < 0)
-+			break;
-+		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), &got);
- 	}
- 
- 	error = xfs_trans_commit(tp);
-@@ -740,7 +734,6 @@ xfs_reflink_end_cow(
- 
- out_defer:
- 	xfs_defer_cancel(&dfops);
--out_cancel:
- 	xfs_trans_cancel(tp);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- out:
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 72f9f6b..0907752 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3356,7 +3356,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap);
--DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap_piece);
- 
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_allocate_cow_range_error);
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_cancel_cow_range_error);
--- 
-2.1.4
+Maybe a more concrete way to put that is: say we have 4 AGs with 4 agresv
+blocks each, and no other free space left anywhere.  The in-core fdblocks count
+should be 0 so that starting a write into a hole returns ENOSPC even if the
+write could be done without any btree shape changes.   Otherwise, writepages
+tries to allocate the delalloc reservation, fails to find any space because
+we've hidden it, and kaboom.
 
+--D
+
+> 
+> Brian
+> 
+> >  		if (error)
+> > @@ -238,6 +244,11 @@ xfs_ag_resv_init(
+> >  	if (pag->pag_agfl_resv.ar_asked == 0) {
+> >  		ask = used = 0;
+> >  
+> > +		error = xfs_rmapbt_calc_reserves(pag->pag_mount, pag->pag_agno,
+> > +				&ask, &used);
+> > +		if (error)
+> > +			goto out;
+> > +
+> >  		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_AGFL, ask, used);
+> >  		if (error)
+> >  			goto out;
+> > diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+> > index 6b5e82b9..453bb27 100644
+> > --- a/fs/xfs/libxfs/xfs_refcount_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+> > @@ -79,6 +79,8 @@ xfs_refcountbt_alloc_block(
+> >  	struct xfs_alloc_arg	args;		/* block allocation args */
+> >  	int			error;		/* error return value */
+> >  
+> > +	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> > +
+> >  	memset(&args, 0, sizeof(args));
+> >  	args.tp = cur->bc_tp;
+> >  	args.mp = cur->bc_mp;
+> > @@ -88,6 +90,7 @@ xfs_refcountbt_alloc_block(
+> >  	args.firstblock = args.fsbno;
+> >  	xfs_rmap_ag_owner(&args.oinfo, XFS_RMAP_OWN_REFC);
+> >  	args.minlen = args.maxlen = args.prod = 1;
+> > +	args.resv = XFS_AG_RESV_METADATA;
+> >  
+> >  	error = xfs_alloc_vextent(&args);
+> >  	if (error)
+> > @@ -125,16 +128,19 @@ xfs_refcountbt_free_block(
+> >  	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
+> >  	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
+> >  	struct xfs_owner_info	oinfo;
+> > +	int			error;
+> >  
+> >  	trace_xfs_refcountbt_free_block(cur->bc_mp, cur->bc_private.a.agno,
+> >  			XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno), 1);
+> >  	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_REFC);
+> >  	be32_add_cpu(&agf->agf_refcount_blocks, -1);
+> >  	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_REFCOUNT_BLOCKS);
+> > -	xfs_bmap_add_free(mp, cur->bc_private.a.dfops, fsbno, 1,
+> > -			&oinfo);
+> > +	error = xfs_free_extent(cur->bc_tp, fsbno, 1, &oinfo,
+> > +			XFS_AG_RESV_METADATA);
+> > +	if (error)
+> > +		return error;
+> >  
+> > -	return 0;
+> > +	return error;
+> >  }
+> >  
+> >  STATIC int
+> > @@ -410,3 +416,36 @@ xfs_refcountbt_max_size(
+> >  
+> >  	return xfs_refcountbt_calc_size(mp, mp->m_sb.sb_agblocks);
+> >  }
+> > +
+> > +/*
+> > + * Figure out how many blocks to reserve and how many are used by this btree.
+> > + */
+> > +int
+> > +xfs_refcountbt_calc_reserves(
+> > +	struct xfs_mount	*mp,
+> > +	xfs_agnumber_t		agno,
+> > +	xfs_extlen_t		*ask,
+> > +	xfs_extlen_t		*used)
+> > +{
+> > +	struct xfs_buf		*agbp;
+> > +	struct xfs_agf		*agf;
+> > +	xfs_extlen_t		tree_len;
+> > +	int			error;
+> > +
+> > +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+> > +		return 0;
+> > +
+> > +	*ask += xfs_refcountbt_max_size(mp);
+> > +
+> > +	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	agf = XFS_BUF_TO_AGF(agbp);
+> > +	tree_len = be32_to_cpu(agf->agf_refcount_blocks);
+> > +	xfs_buf_relse(agbp);
+> > +
+> > +	*used += tree_len;
+> > +
+> > +	return error;
+> > +}
+> > diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
+> > index 780b02f..3be7768 100644
+> > --- a/fs/xfs/libxfs/xfs_refcount_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_refcount_btree.h
+> > @@ -68,4 +68,7 @@ extern xfs_extlen_t xfs_refcountbt_calc_size(struct xfs_mount *mp,
+> >  		unsigned long long len);
+> >  extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp);
+> >  
+> > +extern int xfs_refcountbt_calc_reserves(struct xfs_mount *mp,
+> > +		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
+> > +
+> >  #endif	/* __XFS_REFCOUNT_BTREE_H__ */
+> > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+> > index 9c0585e..83e672f 100644
+> > --- a/fs/xfs/libxfs/xfs_rmap_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+> > @@ -35,6 +35,7 @@
+> >  #include "xfs_cksum.h"
+> >  #include "xfs_error.h"
+> >  #include "xfs_extent_busy.h"
+> > +#include "xfs_ag_resv.h"
+> >  
+> >  /*
+> >   * Reverse map btree.
+> > @@ -533,3 +534,62 @@ xfs_rmapbt_compute_maxlevels(
+> >  		mp->m_rmap_maxlevels = xfs_btree_compute_maxlevels(mp,
+> >  				mp->m_rmap_mnr, mp->m_sb.sb_agblocks);
+> >  }
+> > +
+> > +/* Calculate the refcount btree size for some records. */
+> > +xfs_extlen_t
+> > +xfs_rmapbt_calc_size(
+> > +	struct xfs_mount	*mp,
+> > +	unsigned long long	len)
+> > +{
+> > +	return xfs_btree_calc_size(mp, mp->m_rmap_mnr, len);
+> > +}
+> > +
+> > +/*
+> > + * Calculate the maximum refcount btree size.
+> > + */
+> > +xfs_extlen_t
+> > +xfs_rmapbt_max_size(
+> > +	struct xfs_mount	*mp)
+> > +{
+> > +	/* Bail out if we're uninitialized, which can happen in mkfs. */
+> > +	if (mp->m_rmap_mxr[0] == 0)
+> > +		return 0;
+> > +
+> > +	return xfs_rmapbt_calc_size(mp, mp->m_sb.sb_agblocks);
+> > +}
+> > +
+> > +/*
+> > + * Figure out how many blocks to reserve and how many are used by this btree.
+> > + */
+> > +int
+> > +xfs_rmapbt_calc_reserves(
+> > +	struct xfs_mount	*mp,
+> > +	xfs_agnumber_t		agno,
+> > +	xfs_extlen_t		*ask,
+> > +	xfs_extlen_t		*used)
+> > +{
+> > +	struct xfs_buf		*agbp;
+> > +	struct xfs_agf		*agf;
+> > +	xfs_extlen_t		pool_len;
+> > +	xfs_extlen_t		tree_len;
+> > +	int			error;
+> > +
+> > +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> > +		return 0;
+> > +
+> > +	/* Reserve 1% of the AG or enough for 1 block per record. */
+> > +	pool_len = max(mp->m_sb.sb_agblocks / 100, xfs_rmapbt_max_size(mp));
+> > +	*ask += pool_len;
+> > +
+> > +	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	agf = XFS_BUF_TO_AGF(agbp);
+> > +	tree_len = be32_to_cpu(agf->agf_rmap_blocks);
+> > +	xfs_buf_relse(agbp);
+> > +
+> > +	*used += tree_len;
+> > +
+> > +	return error;
+> > +}
+> > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+> > index e73a553..2a9ac47 100644
+> > --- a/fs/xfs/libxfs/xfs_rmap_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+> > @@ -58,4 +58,11 @@ struct xfs_btree_cur *xfs_rmapbt_init_cursor(struct xfs_mount *mp,
+> >  int xfs_rmapbt_maxrecs(struct xfs_mount *mp, int blocklen, int leaf);
+> >  extern void xfs_rmapbt_compute_maxlevels(struct xfs_mount *mp);
+> >  
+> > +extern xfs_extlen_t xfs_rmapbt_calc_size(struct xfs_mount *mp,
+> > +		unsigned long long len);
+> > +extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp);
+> > +
+> > +extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp,
+> > +		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
+> > +
+> >  #endif	/* __XFS_RMAP_BTREE_H__ */
+> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > index 3acbf4e0..93d12fa 100644
+> > --- a/fs/xfs/xfs_fsops.c
+> > +++ b/fs/xfs/xfs_fsops.c
+> > @@ -43,6 +43,7 @@
+> >  #include "xfs_log.h"
+> >  #include "xfs_filestream.h"
+> >  #include "xfs_rmap.h"
+> > +#include "xfs_ag_resv.h"
+> >  
+> >  /*
+> >   * File system operations
+> > @@ -630,6 +631,11 @@ xfs_growfs_data_private(
+> >  	xfs_set_low_space_thresholds(mp);
+> >  	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+> >  
+> > +	/* Reserve AG metadata blocks. */
+> > +	error = xfs_fs_reserve_ag_blocks(mp);
+> > +	if (error && error != -ENOSPC)
+> > +		goto out;
+> > +
+> >  	/* update secondary superblocks. */
+> >  	for (agno = 1; agno < nagcount; agno++) {
+> >  		error = 0;
+> > @@ -680,6 +686,8 @@ xfs_growfs_data_private(
+> >  			continue;
+> >  		}
+> >  	}
+> > +
+> > + out:
+> >  	return saved_error ? saved_error : error;
+> >  
+> >   error0:
+> > @@ -989,3 +997,59 @@ xfs_do_force_shutdown(
+> >  	"Please umount the filesystem and rectify the problem(s)");
+> >  	}
+> >  }
+> > +
+> > +/*
+> > + * Reserve free space for per-AG metadata.
+> > + */
+> > +int
+> > +xfs_fs_reserve_ag_blocks(
+> > +	struct xfs_mount	*mp)
+> > +{
+> > +	xfs_agnumber_t		agno;
+> > +	struct xfs_perag	*pag;
+> > +	int			error = 0;
+> > +	int			err2;
+> > +
+> > +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> > +		pag = xfs_perag_get(mp, agno);
+> > +		err2 = xfs_ag_resv_init(pag);
+> > +		xfs_perag_put(pag);
+> > +		if (err2 && !error)
+> > +			error = err2;
+> > +	}
+> > +
+> > +	if (error && error != -ENOSPC) {
+> > +		xfs_warn(mp,
+> > +	"Error %d reserving per-AG metadata reserve pool.", error);
+> > +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> > +	}
+> > +
+> > +	return error;
+> > +}
+> > +
+> > +/*
+> > + * Free space reserved for per-AG metadata.
+> > + */
+> > +int
+> > +xfs_fs_unreserve_ag_blocks(
+> > +	struct xfs_mount	*mp)
+> > +{
+> > +	xfs_agnumber_t		agno;
+> > +	struct xfs_perag	*pag;
+> > +	int			error = 0;
+> > +	int			err2;
+> > +
+> > +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> > +		pag = xfs_perag_get(mp, agno);
+> > +		err2 = xfs_ag_resv_free(pag);
+> > +		xfs_perag_put(pag);
+> > +		if (err2 && !error)
+> > +			error = err2;
+> > +	}
+> > +
+> > +	if (error)
+> > +		xfs_warn(mp,
+> > +	"Error %d freeing per-AG metadata reserve pool.", error);
+> > +
+> > +	return error;
+> > +}
+> > diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+> > index f32713f..f349158 100644
+> > --- a/fs/xfs/xfs_fsops.h
+> > +++ b/fs/xfs/xfs_fsops.h
+> > @@ -26,4 +26,7 @@ extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
+> >  				xfs_fsop_resblks_t *outval);
+> >  extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
+> >  
+> > +extern int xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
+> > +extern int xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
+> > +
+> >  #endif	/* __XFS_FSOPS_H__ */
+> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > index caecbd2..b5da81d 100644
+> > --- a/fs/xfs/xfs_mount.c
+> > +++ b/fs/xfs/xfs_mount.c
+> > @@ -986,10 +986,17 @@ xfs_mountfs(
+> >  			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> >  			goto out_quota;
+> >  		}
+> > +
+> > +		/* Reserve AG blocks for future btree expansion. */
+> > +		error = xfs_fs_reserve_ag_blocks(mp);
+> > +		if (error && error != -ENOSPC)
+> > +			goto out_agresv;
+> >  	}
+> >  
+> >  	return 0;
+> >  
+> > + out_agresv:
+> > +	xfs_fs_unreserve_ag_blocks(mp);
+> >   out_quota:
+> >  	xfs_qm_unmount_quotas(mp);
+> >   out_rtunmount:
+> > @@ -1034,6 +1041,7 @@ xfs_unmountfs(
+> >  
+> >  	cancel_delayed_work_sync(&mp->m_eofblocks_work);
+> >  
+> > +	xfs_fs_unreserve_ag_blocks(mp);
+> >  	xfs_qm_unmount_quotas(mp);
+> >  	xfs_rtunmount_inodes(mp);
+> >  	IRELE(mp->m_rootip);
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index e6aaa91..875ab9f 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -1315,10 +1315,22 @@ xfs_fs_remount(
+> >  			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> >  			return error;
+> >  		}
+> > +
+> > +		/* Create the per-AG metadata reservation pool .*/
+> > +		error = xfs_fs_reserve_ag_blocks(mp);
+> > +		if (error && error != -ENOSPC)
+> > +			return error;
+> >  	}
+> >  
+> >  	/* rw -> ro */
+> >  	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
+> > +		/* Free the per-AG metadata reservation pool. */
+> > +		error = xfs_fs_unreserve_ag_blocks(mp);
+> > +		if (error) {
+> > +			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> > +			return error;
+> > +		}
+> > +
+> >  		/*
+> >  		 * Before we sync the metadata, we need to free up the reserve
+> >  		 * block pool so that the used block count in the superblock on
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
