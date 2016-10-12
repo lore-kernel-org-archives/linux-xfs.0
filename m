@@ -1,61 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:35478 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752492AbcJORFH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 15 Oct 2016 13:05:07 -0400
-Date: Sat, 15 Oct 2016 10:03:03 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] misc: fix fallocate commands that need the unshare
- switch
-Message-ID: <20161015170303.GB11829@infradead.org>
-References: <147646876990.19627.5046740854955682441.stgit@birch.djwong.org>
- <147646878237.19627.11366131824882808123.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <147646878237.19627.11366131824882808123.stgit@birch.djwong.org>
+Received: from mga07.intel.com ([134.134.136.100]:32645 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933225AbcJLWuc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Oct 2016 18:50:32 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v6 05/17] dax: make 'wait_table' global variable static
+Date: Wed, 12 Oct 2016 16:50:10 -0600
+Message-Id: <20161012225022.15507-6-ross.zwisler@linux.intel.com>
+In-Reply-To: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
+References: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Fri, Oct 14, 2016 at 11:13:02AM -0700, Darrick J. Wong wrote:
-> We re-added the UNSHARE flag to fallocate, so go make sure that all
-> the unshare tests actually check that the xfs_io falloc command
-> supports that flag.
+The global 'wait_table' variable is only used within fs/dax.c, and
+generates the following sparse warning:
 
-We'll need to improve _require_xfs_io_command to actually run the
-command for this to work, otherwise this will fail if the fs supports
-reflink but not unshared once xfs_io supports -u.
+fs/dax.c:39:19: warning: symbol 'wait_table' was not declared. Should it be static?
 
-The poster child would be btrfs, and I would have added some output
-here if btrfs support in xfstests wasn't completely broken at this
-point.
+Make it static so it has scope local to fs/dax.c, and to make sparse happy.
 
-Well, added Ccs and some output anyway in this case..
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-root@testvm:~/xfstests# mkfs.btrfs -f /dev/vdb
-Btrfs v3.17
-See http://btrfs.wiki.kernel.org for more information.
+diff --git a/fs/dax.c b/fs/dax.c
+index 9b9be8a..ac28cdf 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -52,7 +52,7 @@
+ #define DAX_WAIT_TABLE_BITS 12
+ #define DAX_WAIT_TABLE_ENTRIES (1 << DAX_WAIT_TABLE_BITS)
+ 
+-wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
++static wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
+ 
+ static int __init init_dax_wait_table(void)
+ {
+-- 
+2.9.0
 
-Turning ON incompat feature 'extref': increased hardlink limit per file
-to 65536
-[  243.592803] BTRFS: device fsid 364c6d95-eaae-43c9-b6bd-139e86206519
-devid 1 transid 3 /dev/vdb
-fs created label (null) on /dev/vdb
-	nodesize 16384 leafsize 16384 sectorsize 4096 size 10.00GiB
-root@testvm:~/xfstests# ./check -g quick
-[  246.101606] BTRFS info (device vdb): disk space caching is enabled
-[  246.102260] BTRFS info (device vdb): flagging fs with big metadata
-feature
-[  246.106123] BTRFS info (device vdb): creating UUID tree
-FSTYP         -- btrfs
-PLATFORM      -- Linux/x86_64 testvm 4.8.0+
-MKFS_OPTIONS  -- /dev/vdb
-MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
-
-our local _scratch_mkfs routine ...
-Error: /dev/vdb is mounted
-check: failed to mkfs $SCRATCH_DEV using specified options
-Passed all 0 tests
