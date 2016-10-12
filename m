@@ -1,184 +1,279 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47083 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751790AbcJYXGx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:06:53 -0400
-Subject: [PATCH 30/39] xfs_repair: record reflink inode state
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Oct 2016 16:06:48 -0700
-Message-ID: <147743680894.11035.12324719494742257672.stgit@birch.djwong.org>
-In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
-References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mga07.intel.com ([134.134.136.100]:14117 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933377AbcJLWuh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Oct 2016 18:50:37 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v6 09/17] dax: remove dax_pmd_fault()
+Date: Wed, 12 Oct 2016 16:50:14 -0600
+Message-Id: <20161012225022.15507-10-ross.zwisler@linux.intel.com>
+In-Reply-To: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
+References: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Record the state of the per-inode reflink flag, so that we can
-compare against the rmap data and update the flags accordingly.
-Clear the (reflink) state if we clear the inode.
+dax_pmd_fault() is the old struct buffer_head + get_block_t based 2 MiB DAX
+fault handler.  This fault handler has been disabled for several kernel
+releases, and support for PMDs will be reintroduced using the struct iomap
+interface instead.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- repair/dino_chunks.c |    1 +
- repair/dinode.c      |    6 ++++++
- repair/incore.h      |   38 ++++++++++++++++++++++++++++++++++++++
- repair/incore_ino.c  |    2 ++
- repair/rmap.c        |   26 ++++++++++++++++++++++++++
- repair/rmap.h        |    2 ++
- 6 files changed, 75 insertions(+)
+ fs/dax.c            | 213 ----------------------------------------------------
+ include/linux/dax.h |   6 +-
+ 2 files changed, 1 insertion(+), 218 deletions(-)
 
-
-diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-index 7dbaca6..4db9512 100644
---- a/repair/dino_chunks.c
-+++ b/repair/dino_chunks.c
-@@ -931,6 +931,7 @@ process_inode_chunk(
- 				do_warn(_("would have cleared inode %" PRIu64 "\n"),
- 					ino);
- 			}
-+			clear_inode_was_rl(ino_rec, irec_offset);
- 		}
- 
- process_next:
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 98afdc9..64fc983 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2636,6 +2636,12 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
- 		goto clear_bad_out;
- 
- 	/*
-+	 * record the state of the reflink flag
-+	 */
-+	if (collect_rmaps)
-+		record_inode_reflink_flag(mp, dino, agno, ino, lino);
-+
-+	/*
- 	 * check data fork -- if it's bad, clear the inode
- 	 */
- 	if (process_inode_data_fork(mp, agno, ino, dino, type, dirty,
-diff --git a/repair/incore.h b/repair/incore.h
-index b6c4b4f..bcd2f4b 100644
---- a/repair/incore.h
-+++ b/repair/incore.h
-@@ -283,6 +283,8 @@ typedef struct ino_tree_node  {
- 	__uint64_t		ir_sparse;	/* sparse inode bitmask */
- 	__uint64_t		ino_confirmed;	/* confirmed bitmask */
- 	__uint64_t		ino_isa_dir;	/* bit == 1 if a directory */
-+	__uint64_t		ino_was_rl;	/* bit == 1 if reflink flag set */
-+	__uint64_t		ino_is_rl;	/* bit == 1 if reflink flag should be set */
- 	__uint8_t		nlink_size;
- 	union ino_nlink		disk_nlinks;	/* on-disk nlinks, set in P3 */
- 	union  {
-@@ -494,6 +496,42 @@ static inline bool is_inode_sparse(struct ino_tree_node *irec, int offset)
+diff --git a/fs/dax.c b/fs/dax.c
+index e103053..3d0b103 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -915,219 +915,6 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
  }
+ EXPORT_SYMBOL_GPL(dax_fault);
  
- /*
-+ * set/clear/test was inode marked as reflinked
-+ */
-+static inline void set_inode_was_rl(struct ino_tree_node *irec, int offset)
-+{
-+	irec->ino_was_rl |= IREC_MASK(offset);
-+}
-+
-+static inline void clear_inode_was_rl(struct ino_tree_node *irec, int offset)
-+{
-+	irec->ino_was_rl &= ~IREC_MASK(offset);
-+}
-+
-+static inline int inode_was_rl(struct ino_tree_node *irec, int offset)
-+{
-+	return (irec->ino_was_rl & IREC_MASK(offset)) != 0;
-+}
-+
-+/*
-+ * set/clear/test should inode be marked as reflinked
-+ */
-+static inline void set_inode_is_rl(struct ino_tree_node *irec, int offset)
-+{
-+	irec->ino_is_rl |= IREC_MASK(offset);
-+}
-+
-+static inline void clear_inode_is_rl(struct ino_tree_node *irec, int offset)
-+{
-+	irec->ino_is_rl &= ~IREC_MASK(offset);
-+}
-+
-+static inline int inode_is_rl(struct ino_tree_node *irec, int offset)
-+{
-+	return (irec->ino_is_rl & IREC_MASK(offset)) != 0;
-+}
-+
-+/*
-  * add_inode_reached() is set on inode I only if I has been reached
-  * by an inode P claiming to be the parent and if I is a directory,
-  * the .. link in the I says that P is I's parent.
-diff --git a/repair/incore_ino.c b/repair/incore_ino.c
-index 1898257..2ec1765 100644
---- a/repair/incore_ino.c
-+++ b/repair/incore_ino.c
-@@ -257,6 +257,8 @@ alloc_ino_node(
- 	irec->ino_startnum = starting_ino;
- 	irec->ino_confirmed = 0;
- 	irec->ino_isa_dir = 0;
-+	irec->ino_was_rl = 0;
-+	irec->ino_is_rl = 0;
- 	irec->ir_free = (xfs_inofree_t) - 1;
- 	irec->ir_sparse = 0;
- 	irec->ino_un.ex_data = NULL;
-diff --git a/repair/rmap.c b/repair/rmap.c
-index e95f6c8..5de4d32 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -1083,6 +1083,32 @@ rmap_high_key_from_rec(
+-#if defined(CONFIG_TRANSPARENT_HUGEPAGE)
+-/*
+- * The 'colour' (ie low bits) within a PMD of a page offset.  This comes up
+- * more often than one might expect in the below function.
+- */
+-#define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
+-
+-static void __dax_dbg(struct buffer_head *bh, unsigned long address,
+-		const char *reason, const char *fn)
+-{
+-	if (bh) {
+-		char bname[BDEVNAME_SIZE];
+-		bdevname(bh->b_bdev, bname);
+-		pr_debug("%s: %s addr: %lx dev %s state %lx start %lld "
+-			"length %zd fallback: %s\n", fn, current->comm,
+-			address, bname, bh->b_state, (u64)bh->b_blocknr,
+-			bh->b_size, reason);
+-	} else {
+-		pr_debug("%s: %s addr: %lx fallback: %s\n", fn,
+-			current->comm, address, reason);
+-	}
+-}
+-
+-#define dax_pmd_dbg(bh, address, reason)	__dax_dbg(bh, address, reason, "dax_pmd")
+-
+-/**
+- * dax_pmd_fault - handle a PMD fault on a DAX file
+- * @vma: The virtual memory area where the fault occurred
+- * @vmf: The description of the fault
+- * @get_block: The filesystem method used to translate file offsets to blocks
+- *
+- * When a page fault occurs, filesystems may call this helper in their
+- * pmd_fault handler for DAX files.
+- */
+-int dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
+-		pmd_t *pmd, unsigned int flags, get_block_t get_block)
+-{
+-	struct file *file = vma->vm_file;
+-	struct address_space *mapping = file->f_mapping;
+-	struct inode *inode = mapping->host;
+-	struct buffer_head bh;
+-	unsigned blkbits = inode->i_blkbits;
+-	unsigned long pmd_addr = address & PMD_MASK;
+-	bool write = flags & FAULT_FLAG_WRITE;
+-	struct block_device *bdev;
+-	pgoff_t size, pgoff;
+-	sector_t block;
+-	int result = 0;
+-	bool alloc = false;
+-
+-	/* dax pmd mappings require pfn_t_devmap() */
+-	if (!IS_ENABLED(CONFIG_FS_DAX_PMD))
+-		return VM_FAULT_FALLBACK;
+-
+-	/* Fall back to PTEs if we're going to COW */
+-	if (write && !(vma->vm_flags & VM_SHARED)) {
+-		split_huge_pmd(vma, pmd, address);
+-		dax_pmd_dbg(NULL, address, "cow write");
+-		return VM_FAULT_FALLBACK;
+-	}
+-	/* If the PMD would extend outside the VMA */
+-	if (pmd_addr < vma->vm_start) {
+-		dax_pmd_dbg(NULL, address, "vma start unaligned");
+-		return VM_FAULT_FALLBACK;
+-	}
+-	if ((pmd_addr + PMD_SIZE) > vma->vm_end) {
+-		dax_pmd_dbg(NULL, address, "vma end unaligned");
+-		return VM_FAULT_FALLBACK;
+-	}
+-
+-	pgoff = linear_page_index(vma, pmd_addr);
+-	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
+-	if (pgoff >= size)
+-		return VM_FAULT_SIGBUS;
+-	/* If the PMD would cover blocks out of the file */
+-	if ((pgoff | PG_PMD_COLOUR) >= size) {
+-		dax_pmd_dbg(NULL, address,
+-				"offset + huge page size > file size");
+-		return VM_FAULT_FALLBACK;
+-	}
+-
+-	memset(&bh, 0, sizeof(bh));
+-	bh.b_bdev = inode->i_sb->s_bdev;
+-	block = (sector_t)pgoff << (PAGE_SHIFT - blkbits);
+-
+-	bh.b_size = PMD_SIZE;
+-
+-	if (get_block(inode, block, &bh, 0) != 0)
+-		return VM_FAULT_SIGBUS;
+-
+-	if (!buffer_mapped(&bh) && write) {
+-		if (get_block(inode, block, &bh, 1) != 0)
+-			return VM_FAULT_SIGBUS;
+-		alloc = true;
+-		WARN_ON_ONCE(buffer_unwritten(&bh) || buffer_new(&bh));
+-	}
+-
+-	bdev = bh.b_bdev;
+-
+-	if (bh.b_size < PMD_SIZE) {
+-		dax_pmd_dbg(&bh, address, "allocated block too small");
+-		return VM_FAULT_FALLBACK;
+-	}
+-
+-	/*
+-	 * If we allocated new storage, make sure no process has any
+-	 * zero pages covering this hole
+-	 */
+-	if (alloc) {
+-		loff_t lstart = pgoff << PAGE_SHIFT;
+-		loff_t lend = lstart + PMD_SIZE - 1; /* inclusive */
+-
+-		truncate_pagecache_range(inode, lstart, lend);
+-	}
+-
+-	if (!write && !buffer_mapped(&bh)) {
+-		spinlock_t *ptl;
+-		pmd_t entry;
+-		struct page *zero_page = get_huge_zero_page();
+-
+-		if (unlikely(!zero_page)) {
+-			dax_pmd_dbg(&bh, address, "no zero page");
+-			goto fallback;
+-		}
+-
+-		ptl = pmd_lock(vma->vm_mm, pmd);
+-		if (!pmd_none(*pmd)) {
+-			spin_unlock(ptl);
+-			dax_pmd_dbg(&bh, address, "pmd already present");
+-			goto fallback;
+-		}
+-
+-		dev_dbg(part_to_dev(bdev->bd_part),
+-				"%s: %s addr: %lx pfn: <zero> sect: %llx\n",
+-				__func__, current->comm, address,
+-				(unsigned long long) to_sector(&bh, inode));
+-
+-		entry = mk_pmd(zero_page, vma->vm_page_prot);
+-		entry = pmd_mkhuge(entry);
+-		set_pmd_at(vma->vm_mm, pmd_addr, pmd, entry);
+-		result = VM_FAULT_NOPAGE;
+-		spin_unlock(ptl);
+-	} else {
+-		struct blk_dax_ctl dax = {
+-			.sector = to_sector(&bh, inode),
+-			.size = PMD_SIZE,
+-		};
+-		long length = dax_map_atomic(bdev, &dax);
+-
+-		if (length < 0) {
+-			dax_pmd_dbg(&bh, address, "dax-error fallback");
+-			goto fallback;
+-		}
+-		if (length < PMD_SIZE) {
+-			dax_pmd_dbg(&bh, address, "dax-length too small");
+-			dax_unmap_atomic(bdev, &dax);
+-			goto fallback;
+-		}
+-		if (pfn_t_to_pfn(dax.pfn) & PG_PMD_COLOUR) {
+-			dax_pmd_dbg(&bh, address, "pfn unaligned");
+-			dax_unmap_atomic(bdev, &dax);
+-			goto fallback;
+-		}
+-
+-		if (!pfn_t_devmap(dax.pfn)) {
+-			dax_unmap_atomic(bdev, &dax);
+-			dax_pmd_dbg(&bh, address, "pfn not in memmap");
+-			goto fallback;
+-		}
+-		dax_unmap_atomic(bdev, &dax);
+-
+-		/*
+-		 * For PTE faults we insert a radix tree entry for reads, and
+-		 * leave it clean.  Then on the first write we dirty the radix
+-		 * tree entry via the dax_pfn_mkwrite() path.  This sequence
+-		 * allows the dax_pfn_mkwrite() call to be simpler and avoid a
+-		 * call into get_block() to translate the pgoff to a sector in
+-		 * order to be able to create a new radix tree entry.
+-		 *
+-		 * The PMD path doesn't have an equivalent to
+-		 * dax_pfn_mkwrite(), though, so for a read followed by a
+-		 * write we traverse all the way through dax_pmd_fault()
+-		 * twice.  This means we can just skip inserting a radix tree
+-		 * entry completely on the initial read and just wait until
+-		 * the write to insert a dirty entry.
+-		 */
+-		if (write) {
+-			/*
+-			 * We should insert radix-tree entry and dirty it here.
+-			 * For now this is broken...
+-			 */
+-		}
+-
+-		dev_dbg(part_to_dev(bdev->bd_part),
+-				"%s: %s addr: %lx pfn: %lx sect: %llx\n",
+-				__func__, current->comm, address,
+-				pfn_t_to_pfn(dax.pfn),
+-				(unsigned long long) dax.sector);
+-		result |= vmf_insert_pfn_pmd(vma, address, pmd,
+-				dax.pfn, write);
+-	}
+-
+- out:
+-	return result;
+-
+- fallback:
+-	count_vm_event(THP_FAULT_FALLBACK);
+-	result = VM_FAULT_FALLBACK;
+-	goto out;
+-}
+-EXPORT_SYMBOL_GPL(dax_pmd_fault);
+-#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+-
+ /**
+  * dax_pfn_mkwrite - handle first write to DAX page
+  * @vma: The virtual memory area where the fault occurred
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index a41a747..0f74866 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -48,16 +48,12 @@ static inline int __dax_zero_page_range(struct block_device *bdev,
  }
+ #endif
  
- /*
-+ * Record that an inode had the reflink flag set when repair started.  The
-+ * inode reflink flag will be adjusted as necessary.
-+ */
-+void
-+record_inode_reflink_flag(
-+	struct xfs_mount	*mp,
-+	struct xfs_dinode	*dino,
-+	xfs_agnumber_t		agno,
-+	xfs_agino_t		ino,
-+	xfs_ino_t		lino)
-+{
-+	struct ino_tree_node	*irec;
-+	int			off;
+-#if defined(CONFIG_TRANSPARENT_HUGEPAGE)
+-int dax_pmd_fault(struct vm_area_struct *, unsigned long addr, pmd_t *,
+-				unsigned int flags, get_block_t);
+-#else
+ static inline int dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
+ 				pmd_t *pmd, unsigned int flags, get_block_t gb)
+ {
+ 	return VM_FAULT_FALLBACK;
+ }
+-#endif
 +
-+	ASSERT(XFS_AGINO_TO_INO(mp, agno, ino) == be64_to_cpu(dino->di_ino));
-+	if (!(be64_to_cpu(dino->di_flags2) & XFS_DIFLAG2_REFLINK))
-+		return;
-+	irec = find_inode_rec(mp, agno, ino);
-+	off = get_inode_offset(mp, lino, irec);
-+	ASSERT(!inode_was_rl(irec, off));
-+	set_inode_was_rl(irec, off);
-+	dbg_printf("set was_rl lino=%llu was=0x%llx\n",
-+		(unsigned long long)lino, (unsigned long long)irec->ino_was_rl);
-+}
-+
-+/*
-  * Regenerate the AGFL so that we don't run out of it while rebuilding the
-  * rmap btree.  If skip_rmapbt is true, don't update the rmapbt (most probably
-  * because we're updating the rmapbt).
-diff --git a/repair/rmap.h b/repair/rmap.h
-index 01dec9f..ab6f434 100644
---- a/repair/rmap.h
-+++ b/repair/rmap.h
-@@ -50,6 +50,8 @@ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
- 		struct xfs_rmap_irec *key);
+ int dax_pfn_mkwrite(struct vm_area_struct *, struct vm_fault *);
+ #define dax_mkwrite(vma, vmf, gb)	dax_fault(vma, vmf, gb)
  
- extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
-+extern void record_inode_reflink_flag(struct xfs_mount *, struct xfs_dinode *,
-+	xfs_agnumber_t, xfs_agino_t, xfs_ino_t);
- 
- extern void fix_freelist(struct xfs_mount *, xfs_agnumber_t, bool);
- extern void rmap_store_agflcount(struct xfs_mount *, xfs_agnumber_t, int);
+-- 
+2.9.0
 
