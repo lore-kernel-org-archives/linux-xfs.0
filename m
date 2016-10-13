@@ -1,85 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:42402 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:4196 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751736AbcJMHQU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Oct 2016 03:16:20 -0400
-Date: Thu, 13 Oct 2016 09:06:39 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 8/9] xfs: optimize xfs_reflink_end_cow
-Message-ID: <20161013070639.GE10579@lst.de>
-References: <1476106685-29048-1-git-send-email-hch@lst.de> <1476106685-29048-9-git-send-email-hch@lst.de> <20161012141536.GD56019@bfoster.bfoster>
+        id S1754360AbcJMN0H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Oct 2016 09:26:07 -0400
+Date: Thu, 13 Oct 2016 09:26:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 5/9] xfs: optimize writes to reflink files
+Message-ID: <20161013132604.GA9339@bfoster.bfoster>
+References: <1476106685-29048-1-git-send-email-hch@lst.de>
+ <1476106685-29048-6-git-send-email-hch@lst.de>
+ <20161012141232.GA56019@bfoster.bfoster>
+ <20161013064925.GB10579@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161012141536.GD56019@bfoster.bfoster>
+In-Reply-To: <20161013064925.GB10579@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Wed, Oct 12, 2016 at 10:15:37AM -0400, Brian Foster wrote:
-> > +	xfs_bmap_search_extents(ip, end_fsb - 1, XFS_COW_FORK, &eof, &idx,
-> > +			&got, &prev);
-> > +	if (eof) {
-> > +		ASSERT(idx > 0);
-> > +		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, --idx), &got);
-> > +	}
+On Thu, Oct 13, 2016 at 08:49:25AM +0200, Christoph Hellwig wrote:
+> On Wed, Oct 12, 2016 at 10:12:34AM -0400, Brian Foster wrote:
+> > > +		if (xfs_is_reflink_inode(ip)) {
+> > > +			bool		shared;
+> > > +
+> > > +			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
+> > > +					maxbytes_fsb);
+> > > +			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
+> > > +			error = xfs_reflink_reserve_cow(ip, &got, &shared);
+> > > +			if (error)
+> > > +				goto out_unlock;
+> > 
+> > All in all this seems fine, but I don't see why we need to get all the
+> > way down through xfs_reflink_reserve_cow() ->
+> > xfs_reflink_trim_around_shared() to handle the basic delalloc overwrite
+> > case on a reflink inode. Could we enhance the is_reflink_inode() helper
+> > or create a new one that can consider whether the data fork extent is a
+> > hole or delalloc?
 > 
-> Hmm, should this happen? Do we really want to proceed with the previous
-> extent?
-
-Yes.  This is the same pattern as xfs_bunmapi and it is needed.  For
-an explanation we need to recall the semantics of xfs_bmap_search_extents,
-which gives us the extent at bno IFF there is one, else if gives us the
-extent beyond bno.
-
-So we search for the last extent in the to be deleted range here,
-but if there is no extent at the end of the range we'll get a return
-outside the range, in which case we need to back one up (which
-bunmapi does and we catch somewhat confusingly with the trim_extent
-and goto next_extent, I should clean that up..), but as a special
-case we can get the eof case where there is no extent beyong bno.
-
-> I suppose the extent trim below would catch if we've dropped outside the
-> range of the I/O, but note that if trim extent sets blockcount = 0, it
-> doesn't necessarily reset the start offset for the (del.br_startoff ==
-> offset_fsb) check at next_extent. Perhaps that should break once the del
-> end offset precedes offset_fsb..?
+> Do you mean delalloc non-overwrite?  We could skip non-overwrite extents
+> by factoring out a helper that checks for extent types that don't need to
+> be overwritten.  But this would defeat the COW fork speculative
+> preallocation logic, which causes additional COW operations even for
+> extents we would not nessecarily have to COW.  So we'll always have to
+> look at the COW fork first if we already have an allocation to implement
+> that scheme (and we should probably document it better).
 > 
-> Either way, it would be nice to have a comment here if there's some
-> reason we shouldn't just bail out or flag a problem...
 
-Yes, both this code and bumapi could use some cleanup..
+Either way... delalloc into a hole or overwrite of an existing (data
+fork) delalloc, will fall out of xfs_reflink_reserve_cow() so long as
+nothing is in the cow fork, right?
 
-> Maybe it's just me, but I find this whole loop kind of confusing. I
-> realize it is tricky because we have to handle several different cases
-> with regard to index (no more extents to the left, bmap_del_extent_cow()
-> pushing index forward or back).
+But regardless, I see your point now. For whatever reason the comment
+update in xfs_reflink_reserve_cow() went right over my head. IIUC, the
+idea is that cow delalloc writes can include preallocation and thus have
+delalloc for blocks that might not actually be shared in the data fork.
+Therefore, we have to query the cow fork first and cannot reliably use
+the data fork shared state to determine whether cow fork blocks actually
+exist. A clarification of the comment is probably fine.. thanks for the
+explanation.
 
-I found it rather confusing as well.
-> 
-> In staring at it a bit, I'm wondering if something like the following
-> would work:
-> 
-> 	/* walk backwards until we're out of the I/O range... */
-> 	while (got.br_startoff + got.br_blockcount > offset_fsb) {
-> 		del = got;
-> 		xfs_trim_extent(&del, offset_fsb, end_fsb - offset_fsb);
-> 		/* extent delete may have bumped idx forward */
-> 		if (!del.br_blockcount) {
-> 			idx--;
-> 			goto next_extent;
-> 		}
-> 
-> 		...
-> 
-> next_extent:
-> 		if (idx < 0)
-> 			break;
-> 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), &got);
-> 	}
-> 
-> Thoughts?
+Brian
 
-That looks reasonable, I'll see if it passes xfstests.. :)
+> xfs_reflink_trim_around_shared does a check for the non-COWable extent
+> types as the very first thing, so that's where we are done with the COW
+> overhead for a non-overwrite that doesn't have a speculative
+> preallocation in the COW fork.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
