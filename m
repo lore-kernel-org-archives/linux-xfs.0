@@ -1,94 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52902 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933012AbcJMPya (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Oct 2016 11:54:30 -0400
-Date: Thu, 13 Oct 2016 17:42:24 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v6 15/17] dax: add struct iomap based DAX PMD support
-Message-ID: <20161013154224.GB30680@quack2.suse.cz>
-References: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
- <20161012225022.15507-16-ross.zwisler@linux.intel.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:22563 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756580AbcJMUtb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2016 16:49:31 -0400
+Date: Fri, 14 Oct 2016 07:49:17 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [bisected] Re: local DoS - systemd hang or timeout (WAS: Re:
+ [RFC][CFT] splice_read reworked)
+Message-ID: <20161013204917.GQ23194@dastard>
+References: <CA+55aFxrqCng2Qxasc9pyMrKUGFjo==fEaFT1vkH9Lncte3RgQ@mail.gmail.com>
+ <1267347639.1072505.1475854075552.JavaMail.zimbra@redhat.com>
+ <1337864351.1107846.1475866582573.JavaMail.zimbra@redhat.com>
+ <20161009215454.GM9806@dastard>
+ <988281682.41395.1476108629872.JavaMail.zimbra@redhat.com>
+ <20161010215714.GF23194@dastard>
+ <885869771.578073.1476301836438.JavaMail.zimbra@redhat.com>
+ <20161012205901.GF27872@dastard>
+ <895314622.769515.1476375930648.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161012225022.15507-16-ross.zwisler@linux.intel.com>
+In-Reply-To: <895314622.769515.1476375930648.JavaMail.zimbra@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: CAI Qian <caiqian@redhat.com>
+Cc: Sage Weil <sage@redhat.com>, Brian Foster <bfoster@redhat.com>, Jan Kara <jack@suse.cz>, Miklos Szeredi <miklos@szeredi.hu>, tj <tj@kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>, Linus Torvalds <torvalds@linux-foundation.org>, linux-xfs <linux-xfs@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel@vger.kernel.org, Dave Jones <davej@codemonkey.org.uk>
 
-On Wed 12-10-16 16:50:20, Ross Zwisler wrote:
-> DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
-> locking.  This patch allows DAX PMDs to participate in the DAX radix tree
-> based locking scheme so that they can be re-enabled using the new struct
-> iomap based fault handlers.
+On Thu, Oct 13, 2016 at 12:25:30PM -0400, CAI Qian wrote:
 > 
-> There are currently three types of DAX 4k entries: 4k zero pages, 4k DAX
-> mappings that have an associated block allocation, and 4k DAX empty
-> entries.  The empty entries exist to provide locking for the duration of a
-> given page fault.
 > 
-> This patch adds three equivalent 2MiB DAX entries: Huge Zero Page (HZP)
-> entries, PMD DAX entries that have associated block allocations, and 2 MiB
-> DAX empty entries.
-> 
-> Unlike the 4k case where we insert a struct page* into the radix tree for
-> 4k zero pages, for HZP we insert a DAX exceptional entry with the new
-> RADIX_DAX_HZP flag set.  This is because we use a single 2 MiB zero page in
-> every 2MiB hole mapping, and it doesn't make sense to have that same struct
-> page* with multiple entries in multiple trees.  This would cause contention
-> on the single page lock for the one Huge Zero Page, and it would break the
-> page->index and page->mapping associations that are assumed to be valid in
-> many other places in the kernel.
-> 
-> One difficult use case is when one thread is trying to use 4k entries in
-> radix tree for a given offset, and another thread is using 2 MiB entries
-> for that same offset.  The current code handles this by making the 2 MiB
-> user fall back to 4k entries for most cases.  This was done because it is
-> the simplest solution, and because the use of 2MiB pages is already
-> opportunistic.
-> 
-> If we were to try to upgrade from 4k pages to 2MiB pages for a given range,
-> we run into the problem of how we lock out 4k page faults for the entire
-> 2MiB range while we clean out the radix tree so we can insert the 2MiB
-> entry.  We can solve this problem if we need to, but I think that the cases
-> where both 2MiB entries and 4K entries are being used for the same range
-> will be rare enough and the gain small enough that it probably won't be
-> worth the complexity.
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> ----- Original Message -----
+> > From: "Dave Chinner" <david@fromorbit.com>
+> > Sent: Wednesday, October 12, 2016 4:59:01 PM
+> > Subject: Re: [bisected] Re: local DoS - systemd hang or timeout (WAS: Re: [RFC][CFT] splice_read reworked)
+> > 
+> > On Wed, Oct 12, 2016 at 03:50:36PM -0400, CAI Qian wrote:
+> > > 
+> > > 
+> > > ----- Original Message -----
+> > > > From: "Dave Chinner" <david@fromorbit.com>
+> > > > Sent: Monday, October 10, 2016 5:57:14 PM
+> > > > 
+> > > > > http://people.redhat.com/qcai/tmp/dmesg
+> > > > 
+> > > > It's a page lock order bug in the XFS seek hole/data implementation.
+> > > So reverted this commit against the latest mainline allows trinity run
+> > > hours. Otherwise, it always hang at fdatasync() within 30 minutes.
+> > > 
+> > > fc0561cefc04e7803c0f6501ca4f310a502f65b8
+> > > xfs: optimise away log forces on timestamp updates for fdatasync
+> > 
+> > Has nothing at all to do with the hang.
+> > 
+> > > PS: tested against the vfs tree's #work.splice_read with this commit
+> > > reverted is now hanging at sync() instead which won't be  reproduced
+> > > against the mainline so far.
+> > > http://people.redhat.com/qcai/tmp/dmesg-sync
+> > 
+> > It is the same page lock vs seek hole/data issue.
+> FYI, CVE-2016-8660 was assigned for it.
 
-Just one small bug below. Feel free to add:
+Why? This isn't a security issue - CVEs cost time and effort for
+everyone to track and follow and raising them for issues like this
+does not help anyone fix the actual problem.  It doesn't help us
+track it, analyse it, communicate with the bug reporter, test it or
+get the fix committed.  It's meaningless to the developers fixing
+the code, it's meaningless to users, and it's meaningless to most
+distros that are supporting XFS because the distro maintainers don't
+watch the CVE lists for XFS bugs they need to backport and fix.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+All this does is artificially inflate the supposed importance of the
+bug. CVEs are for security or severe issues. This is neither serious
+or a security issue - please have the common courtesy to ask the
+people with the knowledge to make such a determination (i.e. the
+maintainers) before you waste the time of a /large number/ of people
+by raising a useless CVE...
 
-after fixing that.
+Yes, you found a bug. No, it's not a security bug. No, you should
+not abusing of the CVE process to apply pressure to get it fixed.
+Please don't do this again.
 
->  	/* No entry for given index? Make sure radix tree is big enough. */
-> -	if (!entry) {
-> +	if (!entry || pmd_downgrade) {
->  		int err;
->  
-> +		if (pmd_downgrade) {
-> +			/*
-> +			 * Make sure 'entry' remains valid while we drop
-> +			 * mapping->tree_lock.
-> +			 */
-> +			entry = lock_slot(mapping, slot);
-> +		}
-> +
->  		spin_unlock_irq(&mapping->tree_lock);
->  		err = radix_tree_preload(
->  				mapping_gfp_mask(mapping) & ~__GFP_HIGHMEM);
-> -		if (err)
-> +		if (err) {
-> +			put_locked_mapping_entry(mapping, index, entry);
+Cheers,
 
-Better do this only in pmd_downgrade case...
-
-								Honza
+Dave.
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
