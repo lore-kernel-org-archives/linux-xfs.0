@@ -1,52 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:36468 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750752AbcJQGPq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 02:15:46 -0400
+Received: from verein.lst.de ([213.95.11.211]:42333 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750717AbcJMGyf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Oct 2016 02:54:35 -0400
+Date: Thu, 13 Oct 2016 08:54:32 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 6/9] xfs: refactor xfs_bunmapi_cow
+Message-ID: <20161013065432.GC10579@lst.de>
+References: <1476106685-29048-1-git-send-email-hch@lst.de> <1476106685-29048-7-git-send-email-hch@lst.de> <20161012141308.GB56019@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20161016212839.GB14023@dastard>
-References: <1476608111-28948-1-git-send-email-amir73il@gmail.com> <20161016212839.GB14023@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 17 Oct 2016 09:15:43 +0300
-Message-ID: <CAOQ4uxhWDW7V4zakTNfaJpERWo1aa1-iOvxvaD2DqhwowpbxYA@mail.gmail.com>
-Subject: Re: [PATCH v2] xfs_io: add command line option -M to run as multi
- threaded process
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161012141308.GB56019@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Mon, Oct 17, 2016 at 12:28 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Sun, Oct 16, 2016 at 11:55:11AM +0300, Amir Goldstein wrote:
->> xfs_io -M will start by spawning an idle thread.
->> The purpose of this idle thread is to test io from a multi threaded
->> process. With single threaded process, the file table is not shared
->> and file structs are not reference counted.
->
-> I can see this option being confusing to those who do not understand
-> what is actually be done here. i.e. we'll get complaints along the
-> lines of "-M say xfs_io does multithreaded IO, but I only see IO
-> from one thread!". Can we name this "-i" to mean "run an idle-loop",
-> which will stop people trying to use it for something it doesn't do?
->
+On Wed, Oct 12, 2016 at 10:13:08AM -0400, Brian Foster wrote:
+> > +	/*
+> > +	 * Update the inode delalloc counter now and wait to update the
+> > +	 * sb counters as we might have to borrow some blocks for the
+> > +	 * indirect block accounting.
+> > +	 */
+> > +	xfs_trans_reserve_quota_nblks(NULL, ip, -((long)del->br_blockcount), 0,
+> > +			isrt ? XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS);
+> > +	ip->i_delayed_blks -= del->br_blockcount;
+> > +
+> 
+> This appears to be fixed up later, but i_delayed_blks is accounted twice
+> as of this patch. It would be nice if we could avoid known breakage,
+> even if transient.
 
-I considered those 2 options. I see what you are saying.
-Will go for -i in v3.
+Where do we account for it the second time?
 
->> --- a/io/Makefile
->> +++ b/io/Makefile
-> ....
->> --- a/io/init.c
->> +++ b/io/init.c
-> ....
->
-> Missing a man page update to document this new option.
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+> > +	case 0:
+> > +		/*
+> > +		 * Deleting the middle of the extent.
+> > +		 *
+> > +		 * Distribute the original indlen reservation across the two
+> > +		 * new extents.  Steal blocks from the deleted extent if
+> > +		 * necessary. Stealing blocks simply fudges the fdblocks
+> > +		 * accounting in xfs_bunmapi().
+> > +		 */
+> > +		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
+> > +		got->br_blockcount = del->br_startoff - got->br_startoff;
+> > +
+> > +		got_indlen = xfs_bmap_worst_indlen(ip, got->br_blockcount);
+> > +		new_indlen = xfs_bmap_worst_indlen(ip, new.br_blockcount);
+> 
+> Doesn't look like new.br_blockcount is set until a few lines below.
+
+Indeed.  Fixed for the next resend.
