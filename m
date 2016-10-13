@@ -1,31 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50414 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52384 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753000AbcJMPN1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Oct 2016 11:13:27 -0400
-Date: Thu, 13 Oct 2016 17:11:49 +0200
+        id S1753090AbcJMPoL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Oct 2016 11:44:11 -0400
+Date: Thu, 13 Oct 2016 17:42:57 +0200
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v6 14/17] dax: move put_(un)locked_mapping_entry() in
- dax.c
-Message-ID: <20161013151149.GA30680@quack2.suse.cz>
+Subject: Re: [PATCH v6 17/17] dax: remove "depends on BROKEN" from FS_DAX_PMD
+Message-ID: <20161013154257.GC30680@quack2.suse.cz>
 References: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
- <20161012225022.15507-15-ross.zwisler@linux.intel.com>
+ <20161012225022.15507-18-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161012225022.15507-15-ross.zwisler@linux.intel.com>
+In-Reply-To: <20161012225022.15507-18-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Ross Zwisler <ross.zwisler@linux.intel.com>
 Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Wed 12-10-16 16:50:19, Ross Zwisler wrote:
-> No functional change.
-> 
-> The static functions put_locked_mapping_entry() and
-> put_unlocked_mapping_entry() will soon be used in error cases in
-> grab_mapping_entry(), so move their definitions above this function.
+On Wed 12-10-16 16:50:22, Ross Zwisler wrote:
+> Now that DAX PMD faults are once again working and are now participating in
+> DAX's radix tree locking scheme, allow their config option to be enabled.
 > 
 > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
@@ -36,77 +32,21 @@ Reviewed-by: Jan Kara <jack@suse.cz>
 								Honza
 
 > ---
->  fs/dax.c | 50 +++++++++++++++++++++++++-------------------------
->  1 file changed, 25 insertions(+), 25 deletions(-)
+>  fs/Kconfig | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index c45cc4d..0582c7c 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -382,6 +382,31 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
->  	}
->  }
+> diff --git a/fs/Kconfig b/fs/Kconfig
+> index 2bc7ad7..b6f0fce 100644
+> --- a/fs/Kconfig
+> +++ b/fs/Kconfig
+> @@ -55,7 +55,6 @@ config FS_DAX_PMD
+>  	depends on FS_DAX
+>  	depends on ZONE_DEVICE
+>  	depends on TRANSPARENT_HUGEPAGE
+> -	depends on BROKEN
 >  
-> +static void put_locked_mapping_entry(struct address_space *mapping,
-> +				     pgoff_t index, void *entry)
-> +{
-> +	if (!radix_tree_exceptional_entry(entry)) {
-> +		unlock_page(entry);
-> +		put_page(entry);
-> +	} else {
-> +		dax_unlock_mapping_entry(mapping, index);
-> +	}
-> +}
-> +
-> +/*
-> + * Called when we are done with radix tree entry we looked up via
-> + * get_unlocked_mapping_entry() and which we didn't lock in the end.
-> + */
-> +static void put_unlocked_mapping_entry(struct address_space *mapping,
-> +				       pgoff_t index, void *entry)
-> +{
-> +	if (!radix_tree_exceptional_entry(entry))
-> +		return;
-> +
-> +	/* We have to wake up next waiter for the radix tree entry lock */
-> +	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
-> +}
-> +
->  /*
->   * Find radix tree entry at given index. If it points to a page, return with
->   * the page locked. If it points to the exceptional entry, return with the
-> @@ -486,31 +511,6 @@ void dax_unlock_mapping_entry(struct address_space *mapping, pgoff_t index)
->  	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
->  }
+>  endif # BLOCK
 >  
-> -static void put_locked_mapping_entry(struct address_space *mapping,
-> -				     pgoff_t index, void *entry)
-> -{
-> -	if (!radix_tree_exceptional_entry(entry)) {
-> -		unlock_page(entry);
-> -		put_page(entry);
-> -	} else {
-> -		dax_unlock_mapping_entry(mapping, index);
-> -	}
-> -}
-> -
-> -/*
-> - * Called when we are done with radix tree entry we looked up via
-> - * get_unlocked_mapping_entry() and which we didn't lock in the end.
-> - */
-> -static void put_unlocked_mapping_entry(struct address_space *mapping,
-> -				       pgoff_t index, void *entry)
-> -{
-> -	if (!radix_tree_exceptional_entry(entry))
-> -		return;
-> -
-> -	/* We have to wake up next waiter for the radix tree entry lock */
-> -	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
-> -}
-> -
->  /*
->   * Delete exceptional DAX entry at @index from @mapping. Wait for radix tree
->   * entry to get unlocked before deleting it.
 > -- 
 > 2.9.0
 > 
