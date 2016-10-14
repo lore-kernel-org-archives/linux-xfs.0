@@ -1,29 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39932 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752372AbcJNSM4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2016 14:12:56 -0400
-Subject: [PATCH 0/3] xfstests: fix tests for rmap/reflink
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 14 Oct 2016 11:12:49 -0700
-Message-ID: <147646876990.19627.5046740854955682441.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34046 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754265AbcJNUpk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2016 16:45:40 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH] xfs_io: add command line option -M to run as multi threaded process
+Date: Fri, 14 Oct 2016 23:44:38 +0300
+Message-Id: <1476477878-17588-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Hi all,
+xfs_io -M will start by spawning an idle thread.
+The purpose of this idle thread is to test io from a multi threaded
+process. With single threaded process, the file table is not shared
+and file structs are not reference counted.
 
-Here are some cleanups[1] for the rmap/reflink tests to reflect recent
-API changes (the readdition of the unshare fallocate flag and the
-removal of the reflink inode flag), a last-minute disk format change
-for the XFS reflink implementation, and some cleanups that were left
-out of the previous patch submission.
+So in order to detect file struct reference leaks, spawning an idle
+thread will do the trick.
 
---D
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ io/Makefile |  2 +-
+ io/init.c   | 32 +++++++++++++++++++++++++++++++-
+ 2 files changed, 32 insertions(+), 2 deletions(-)
 
-[1] https://github.com/djwong/xfstests/tree/djwong-devel
+diff --git a/io/Makefile b/io/Makefile
+index 1997ca9..032a8c7 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -13,7 +13,7 @@ CFILES = init.c \
+ 	mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
+ 	sync.c truncate.c reflink.c
+ 
+-LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
++LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/io/init.c b/io/init.c
+index 6b88cc6..1d1b97f 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -16,6 +16,7 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+ 
++#include <pthread.h>
+ #include "platform_defs.h"
+ #include "command.h"
+ #include "input.h"
+@@ -25,6 +26,7 @@
+ char	*progname;
+ int	exitcode;
+ int	expert;
++int	multithreaded;
+ size_t	pagesize;
+ struct timeval stopwatch;
+ 
+@@ -141,7 +143,7 @@ init(
+ 	pagesize = getpagesize();
+ 	gettimeofday(&stopwatch, NULL);
+ 
+-	while ((c = getopt(argc, argv, "ac:dFfmp:nrRstTVx")) != EOF) {
++	while ((c = getopt(argc, argv, "ac:dFfmMp:nrRstTVx")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			flags |= IO_APPEND;
+@@ -166,6 +168,9 @@ init(
+ 				exit(1);
+ 			}
+ 			break;
++		case 'M':
++			multithreaded = 1;
++			break;
+ 		case 'n':
+ 			flags |= IO_NONBLOCK;
+ 			break;
+@@ -213,12 +218,37 @@ init(
+ 	add_check_command(init_check_command);
+ }
+ 
++/*
++ * The purpose of this idle thread is to test io from a multi threaded process.
++ * With single threaded process, the file table is not shared and file structs
++ * are not reference counted. So in order to detect file struct reference
++ * leaks, spawning an idle thread will do the trick.
++ */
++void *
++idle_loop(void *arg)
++{
++	for (;;) pause();
++}
++
++void
++start_idle_thread()
++{
++	pthread_t t;
++
++	if (pthread_create(&t, NULL, idle_loop, NULL)) {
++		fprintf(stderr, "Error creating idle thread\n");
++		exit(1);
++	}
++}
++
+ int
+ main(
+ 	int	argc,
+ 	char	**argv)
+ {
+ 	init(argc, argv);
++	if (multithreaded)
++		start_idle_thread();
+ 	command_loop();
+ 	return exitcode;
+ }
+-- 
+2.7.4
+
