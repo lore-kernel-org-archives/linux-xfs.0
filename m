@@ -1,40 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:45524 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933479AbcJLWuu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Oct 2016 18:50:50 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v6 17/17] dax: remove "depends on BROKEN" from FS_DAX_PMD
-Date: Wed, 12 Oct 2016 16:50:22 -0600
-Message-Id: <20161012225022.15507-18-ross.zwisler@linux.intel.com>
-In-Reply-To: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
-References: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:40016 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752753AbcJNSNE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2016 14:13:04 -0400
+Subject: [PATCH 1/3] xfs: set the refcount btree cowflag when setting up cow
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 14 Oct 2016 11:12:56 -0700
+Message-ID: <147646877615.19627.12845265308407861169.stgit@birch.djwong.org>
+In-Reply-To: <147646876990.19627.5046740854955682441.stgit@birch.djwong.org>
+References: <147646876990.19627.5046740854955682441.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Now that DAX PMD faults are once again working and are now participating in
-DAX's radix tree locking scheme, allow their config option to be enabled.
+When we're setting up a fake cow extent in the refcountbt to test
+cleanup of fake cow extents, set the cowflag in the record field
+to reflect our new disk format of storing the staging extents in
+the right side of the tree.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/Kconfig | 1 -
- 1 file changed, 1 deletion(-)
+ tests/xfs/307 |    1 +
+ tests/xfs/308 |    1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/fs/Kconfig b/fs/Kconfig
-index 2bc7ad7..b6f0fce 100644
---- a/fs/Kconfig
-+++ b/fs/Kconfig
-@@ -55,7 +55,6 @@ config FS_DAX_PMD
- 	depends on FS_DAX
- 	depends on ZONE_DEVICE
- 	depends on TRANSPARENT_HUGEPAGE
--	depends on BROKEN
+
+diff --git a/tests/xfs/307 b/tests/xfs/307
+index 869f5cc..2a99459 100755
+--- a/tests/xfs/307
++++ b/tests/xfs/307
+@@ -145,6 +145,7 @@ _set_agf_data numrecs 1 -c 'addr refcntroot'
+ _set_agf_data "recs[1].startblock" $debris_bno -c 'addr refcntroot'
+ _set_agf_data "recs[1].blockcount" $debris_len -c 'addr refcntroot'
+ _set_agf_data "recs[1].refcount" 1 -c 'addr refcntroot'
++_set_agf_data "recs[1].cowflag" 1 -c 'addr refcntroot'
  
- endif # BLOCK
+ if [ $is_rmap -gt 0 ]; then
+ 	rmap_nr=$((rmap_nr + 1))
+diff --git a/tests/xfs/308 b/tests/xfs/308
+index 8f8f380..5bfa432 100755
+--- a/tests/xfs/308
++++ b/tests/xfs/308
+@@ -145,6 +145,7 @@ _set_agf_data numrecs 1 -c 'addr refcntroot'
+ _set_agf_data "recs[1].startblock" $debris_bno -c 'addr refcntroot'
+ _set_agf_data "recs[1].blockcount" $debris_len -c 'addr refcntroot'
+ _set_agf_data "recs[1].refcount" 1 -c 'addr refcntroot'
++_set_agf_data "recs[1].cowflag" 1 -c 'addr refcntroot'
  
--- 
-2.9.0
+ if [ $is_rmap -gt 0 ]; then
+ 	rmap_nr=$((rmap_nr + 1))
 
