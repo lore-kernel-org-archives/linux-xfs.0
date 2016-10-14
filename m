@@ -1,130 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53856 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933010AbcJMAuR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Oct 2016 20:50:17 -0400
-From: "Benjamin Coddington" <bcodding@redhat.com>
-Subject: Re: SEEK_HOLE second hole problem
-Date: Wed, 12 Oct 2016 20:50:14 -0400
-Message-ID: <CF090CA4-3E5C-48EA-B392-4BFC19F6890C@redhat.com>
-In-Reply-To: <20161012205405.GE27872@dastard>
-References: <2303295B-3B56-404D-BAE3-A644D67EEC49@redhat.com>
- <8273699b-8f7d-e7b9-492f-77cbb4f74ec5@sandeen.net>
- <4639FD81-EE17-4497-AB45-CC87348AE4F1@redhat.com>
- <20161012205405.GE27872@dastard>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:48644 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755469AbcJNM2N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2016 08:28:13 -0400
+From: Chris Mason <clm@fb.com>
+Subject: [PATCH RFC] xfs: drop SYNC_WAIT from xfs_reclaim_inodes_ag during
+ slab reclaim
+Message-ID: <06aade22-b29e-f55e-7f00-39154f220aa6@fb.com>
+Date: Fri, 14 Oct 2016 08:27:24 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
 
-On 12 Oct 2016, at 16:54, Dave Chinner wrote:
+Hi Dave,
 
-> On Wed, Oct 12, 2016 at 02:40:06PM -0400, Benjamin Coddington wrote:
->> On 12 Oct 2016, at 13:06, Eric Sandeen wrote:
->>
->>> On 10/12/16 11:15 AM, Benjamin Coddington wrote:
->>>> While investigating generic/285 failure on NFS on an XFS export I 
->>>> think I
->>>> found a seek hole bug.
->>>>
->>>> For a file with a hole/data pattern of hole, data, hole, data; it 
->>>> appears
->>>> that SEEK_HOLE for pattern chunks larger than 65536 will be 
->>>> incorrect for
->>>> seeking the start of the next hole after the first hole.
->>>
->>> [sandeen@sandeen ~]$ ./bcodding testfile
->>> SEEK_HOLE found second hole at 196608, expecting 139264
->>> [sandeen@sandeen ~]$ xfs_bmap testfile
->>> testfile:
->>> 	0: [0..135]: hole
->>> 	1: [136..383]: 134432656..134432903
->>> 	2: [384..407]: hole
->>> 	3: [408..543]: 134432392..134432527
->>>
->>> the numbers in brackets are sector numbers, so there is a hole
->>> at 0, blocks at 69632, hole at 196608, and more blocks at 208896.
->>>
->>> As bfoster mentioned on IRC, I think you are seeing xfs's 
->>> speculative
->>> preallocation at work; more data got written than you asked for,
->>> but there's no guarantee about how a filesystem will allocate
->>> blocks based on an IO pattern.
->>>
->>> The /data/ is correct even if a zero-filled block ended up somewhere
->>> you didn't expect:
->>
->> OK, this makes sense.  It's clear my understanding of a "hole" was 
->> off --
->> we're really looking for the next unallocated range, not the next 
->> unwritten
->> or zero range.
->
-> Which, quite frankly, is a major red flag. Filesystems control
-> allocation, not applications. Yes, you can /guide/ allocation with
-> fallocate() and things like extent size hints, but you cannot
-> /directly control/ how any filesystem allocates the blocks
-> underlying a file from userspace.
->
-> i.e. the moment an application makes an assumption that the
-> filesystem "must leave a hole" when doing some operation, or that
-> "we need to find the next unallocated region" in a file, the design
-> should be thrown away and shoul dbe started again without those
-> assumptions. That's because filesystem allocation behaviour is
-> completely undefined by any standard, not guaranteed by any
-> filesystem, and change between different filesystems and even
-> different versions of the same filesystem.
->
-> Remember - fallocate() defines a set of user visible behaviours, but
-> it does not dictate how a filesystem should implement them. e.g.
-> preallocation needs to guarantee that the next write to that region
-> does not ENOSPC. That can be done in several different ways - write
-> zeroes, allocate unwritten extents, accounting tricks to reserve
-> blocks, etc. Every one of these is going to give different output
-> when seek hole/data passes over those regions, but they will still
-> /all be correct/.
->
->> Like me, generic/285 seems to have gotten this wrong too, but
->
-> The test isn't wrong - it's just a demonstration of the fact we
-> can't easily cater for every different allocation strategy that
-> filesystems and storage uses to optimise IO patterns and pervent
-> fragmentation.
->
-> e.g. the hack in generic/285 to turn off ext4's "zero-around"
-> functionality, which allocates and zeros small regions between data
-> rather than leaving a hole. That's a different style of
-> anti-fragmentation optimisation to what XFS uses, but the result is
-> the same - there is data (all zeroes) on ext4 where other
-> filesystems leave a hole.
->
-> IOWs, by changing a sysfs value we make ext4 return different
-> information from seek hole/data for exactly the same user IO
-> pattern. Yet both are correct....
->
->> the short allocation sizes aren't triggering this preallocation when 
->> used
->> directly on XFS.  For NFS the larger st_blksize means we see the
->
->                                       ^ NFS client side
->> preallocation happen.
->
-> NFS client write IO patterns require aggressive preallocation
-> strategies when XFS is used on the server to prevent excessive
-> fragmentation of larger files. What is being returned from seek
-> hole/data in this case is still correct and valid - it's just not
-> what you (or the test) were expecting.
+This is part of a series of patches we're growing to fix a perf
+regression on a few straggler tiers that are still on v3.10.  In this
+case, hadoop had to switch back to v3.10 because v4.x is as much as 15%
+slower on recent kernels.
 
-What happened here is that I used generic/285 to guide how I thought
-seek_hole should work rather than think about it from first principles 
-(and
-careful reading of the man pages), and fired off this presumptive bug
-report.  That's just laziness and I am ashamed.  Thanks for taking time 
-to take
-me to school.
+Between v3.10 and v4.x, kswapd is less effective overall.  This leads
+more and more procs to get bogged down in direct reclaim Using SYNC_WAIT
+in xfs_reclaim_inodes_ag().
 
-Ben
+Since slab shrinking happens very early in direct reclaim, we've seen
+systems with 130GB of ram where hundreds of procs are stuck on the xfs
+slab shrinker fighting to walk a slab 900MB in size.  They'd have better
+luck moving on to the page cache instead.
+
+Also, we're going into direct reclaim much more often than we should
+because kswapd is getting stuck on XFS inode locks and writeback.
+Dropping the SYNC_WAIT means that kswapd can move on to other things and
+let the async worker threads get kicked to work on the inodes.
+
+We're still working on the series, and this is only compile tested on
+current Linus git.  I'm working out some better simulations for the
+hadoop workload to stuff into Mel's tests.  Numbers from prod take
+roughly 3 days to stabilize, so I haven't isolated this patch from the rest
+of the series.
+
+Unpatched v4.x our base allocation stall rate goes up to as much as
+200-300/sec, averaging 70/sec.  The series I'm finalizing gets that
+number down to < 1 /sec.
+
+Omar Sandoval did some digging and found you added the SYNC_WAIT in
+response to a workload I sent ages ago.  I tried to make this OOM with
+fsmark creating empty files, and it has been soaking in memory
+constrained workloads in production for almost two weeks.
+
+Signed-off-by: Chris Mason <clm@fb.com>
+---
+ fs/xfs/xfs_icache.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index bf2d607..63938fb 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1195,7 +1195,7 @@ xfs_reclaim_inodes_nr(
+ 	xfs_reclaim_work_queue(mp);
+ 	xfs_ail_push_all(mp->m_ail);
+ 
+-	return xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT, &nr_to_scan);
++	return xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK, &nr_to_scan);
+ }
+ 
+ /*
+-- 
+2.9.3
+
