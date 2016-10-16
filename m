@@ -1,68 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51013 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932571AbcJRBws (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 21:52:48 -0400
-Date: Mon, 17 Oct 2016 18:52:44 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] docs: update refcount btree to reflect new cow staging
- extent policy
-Message-ID: <20161018015243.GC20337@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33952 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752018AbcJPIzn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 Oct 2016 04:55:43 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v2] xfs_io: add command line option -M to run as multi threaded process
+Date: Sun, 16 Oct 2016 11:55:11 +0300
+Message-Id: <1476608111-28948-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-We now record the extents being used to stage a copy on write operation
-in the refcount btree with the high bit of rc_startblock set and a
-reference count of 1.  Setting the high bit helps us reduce CoW GC time
-at mount by moving all the records to the right side of the tree.
+xfs_io -M will start by spawning an idle thread.
+The purpose of this idle thread is to test io from a multi threaded
+process. With single threaded process, the file table is not shared
+and file structs are not reference counted.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+So in order to detect file struct reference leaks, spawning an idle
+thread will do the trick.
+
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- .../XFS_Filesystem_Structure/refcountbt.asciidoc   |   19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+ io/Makefile |  2 +-
+ io/init.c   | 33 ++++++++++++++++++++++++++++++++-
+ 2 files changed, 33 insertions(+), 2 deletions(-)
 
-diff --git a/design/XFS_Filesystem_Structure/refcountbt.asciidoc b/design/XFS_Filesystem_Structure/refcountbt.asciidoc
-index dbbb98e..508a9dd 100644
---- a/design/XFS_Filesystem_Structure/refcountbt.asciidoc
-+++ b/design/XFS_Filesystem_Structure/refcountbt.asciidoc
-@@ -25,7 +25,10 @@ struct xfs_refcount_rec {
- ----
+diff --git a/io/Makefile b/io/Makefile
+index 1997ca9..032a8c7 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -13,7 +13,7 @@ CFILES = init.c \
+ 	mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
+ 	sync.c truncate.c reflink.c
  
- *rc_startblock*::
--AG block number of this record.
-+AG block number of this record.  The high bit is set for all records
-+referring to an extent that is being used to stage a copy on write
-+operation.  This reduces recovery time during mount operations.  The
-+reference count of these staging events must only be 1.
+-LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
++LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
+ LLDFLAGS = -static-libtool-libs
  
- *rc_blockcount*::
- The length of this extent.
-@@ -81,12 +84,18 @@ lsn = 0x200004ec2
- uuid = f1f89746-e00b-49c9-96b3-ecef0f2f14ae
- owner = 0
- crc = 0xc3962813 (correct)
--recs[1-80] = [startblock,blockcount,refcount]
--        1:[65780,1,2] 2:[65781,1,3] 3:[65785,2,2] 4:[66640,1,2]
--        5:[69602,4,2] 6:[72256,16,2] 7:[72871,4,2] 8:[72879,20,2]
--        9:[73395,4,2] 10:[75063,4,2] 11:[79093,4,2] 12:[86344,16,2]
-+recs[1-80] = [startblock,blockcount,refcount,cowflag]
-+        1:[65780,1,2,0] 2:[65781,1,3,0] 3:[65785,2,2,0] 4:[66640,1,2,0]
-+        5:[69602,4,2,0] 6:[72256,16,2,0] 7:[72871,4,2,0] 8:[72879,20,2,0]
-+        9:[73395,4,2,0] 10:[75063,4,2,0] 11:[79093,4,2,0] 12:[86344,16,2,0]
-+        ...
-+        80:[35235,10,1,1]
- ----
+diff --git a/io/init.c b/io/init.c
+index 6b88cc6..8a34ceb 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -16,6 +16,7 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
  
-+Notice record 80.  The copy on write flag is set and the reference count is
-+1, which indicates that the extent 35,235 - 35,244 are being used to stage a
-+copy on write activity.  The "cowflag" field is the high bit of rc_startblock.
++#include <pthread.h>
+ #include "platform_defs.h"
+ #include "command.h"
+ #include "input.h"
+@@ -25,6 +26,7 @@
+ char	*progname;
+ int	exitcode;
+ int	expert;
++int	multithreaded;
+ size_t	pagesize;
+ struct timeval stopwatch;
+ 
+@@ -141,7 +143,7 @@ init(
+ 	pagesize = getpagesize();
+ 	gettimeofday(&stopwatch, NULL);
+ 
+-	while ((c = getopt(argc, argv, "ac:dFfmp:nrRstTVx")) != EOF) {
++	while ((c = getopt(argc, argv, "ac:dFfmMp:nrRstTVx")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			flags |= IO_APPEND;
+@@ -166,6 +168,9 @@ init(
+ 				exit(1);
+ 			}
+ 			break;
++		case 'M':
++			multithreaded = 1;
++			break;
+ 		case 'n':
+ 			flags |= IO_NONBLOCK;
+ 			break;
+@@ -213,12 +218,38 @@ init(
+ 	add_check_command(init_check_command);
+ }
+ 
++/*
++ * The purpose of this idle thread is to test io from a multi threaded process.
++ * With single threaded process, the file table is not shared and file structs
++ * are not reference counted. So in order to detect file struct reference
++ * leaks, spawning an idle thread will do the trick.
++ */
++void *
++idle_loop(void *arg)
++{
++	for (;;)
++		pause();
++}
 +
- Record 6 in the reference count B+tree for AG 0 indicates that the AG extent
- starting at block 72,256 and running for 16 blocks has a reference count of 2.
- This means that there are two files sharing the block:
++void
++start_idle_thread()
++{
++	pthread_t t;
++
++	if (pthread_create(&t, NULL, idle_loop, NULL)) {
++		fprintf(stderr, "Error creating idle thread\n");
++		exit(1);
++	}
++}
++
+ int
+ main(
+ 	int	argc,
+ 	char	**argv)
+ {
+ 	init(argc, argv);
++	if (multithreaded)
++		start_idle_thread();
+ 	command_loop();
+ 	return exitcode;
+ }
+-- 
+2.7.4
+
