@@ -1,153 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:2888 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754866AbcJQXRl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 19:17:41 -0400
-Date: Tue, 18 Oct 2016 10:07:56 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: fix unbalanced inode reclaim flush locking
-Message-ID: <20161017230756.GX23194@dastard>
-References: <1476727673-19109-1-git-send-email-bfoster@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42845 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935374AbcJQQSJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 12:18:09 -0400
+Date: Mon, 17 Oct 2016 09:18:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/9] iomap: add IOMAP_REPORT
+Message-ID: <20161017161801.GA1120@birch.djwong.org>
+References: <1476521554-1894-1-git-send-email-hch@lst.de>
+ <1476521554-1894-2-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1476727673-19109-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1476521554-1894-2-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, zlang@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-On Mon, Oct 17, 2016 at 02:07:53PM -0400, Brian Foster wrote:
-> Filesystem shutdown testing on an older distro kernel has uncovered an
-> imbalanced locking pattern for the inode flush lock in
-> xfs_reclaim_inode(). Specifically, there is a double unlock sequence
-> between the call to xfs_iflush_abort() and xfs_reclaim_inode() at the
-> "reclaim:" label.
+On Sat, Oct 15, 2016 at 10:52:26AM +0200, Christoph Hellwig wrote:
+> This allows the file system to tell a FIEMAP from a read operation, and thus
+> avoids the need to report flags that aren't actually used in the read path.
 > 
-> This actually does not cause obvious problems on current kernels due to
-> the current flush lock implementation. Older kernels use a counting
-> based flush lock mechanism, however, which effectively breaks the lock
-> indefinitely when an already unlocked flush lock is repeatedly unlocked.
-> Though this only currently occurs on filesystem shutdown, it has
-> reproduced the effect of elevating an fs shutdown to a system-wide crash
-> or hang.
-> 
-> Because this problem exists on filesystem shutdown and thus only after
-> unrelated catastrophic failure, issue the simple fix to reacquire the
-> flush lock in xfs_reclaim_inode() before jumping to the reclaim code.
-> Add an assert to xfs_ifunlock() to help prevent future occurrences of
-> the same problem. Finally, update a couple places to bitwise-OR the
-> reclaim flag to avoid smashing the flush lock in the process (which is
-> based on an inode flag in current kernels). This avoids a (spurious)
-> failure of the newly introduced xfs_ifunlock() assertion.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reported-by: Zorro Lang <zlang@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
 > ---
+>  fs/iomap.c            |  2 +-
+>  include/linux/iomap.h | 17 +++++++++++------
+>  2 files changed, 12 insertions(+), 7 deletions(-)
 > 
-> v2:
-> - Add comment in xfs_reclaim_inode() wrt to flush lock.
-> - Fix XFS_IRECLAIM usage in xfs_inode_free().
-> 
->  fs/xfs/xfs_icache.c |  9 +++++++--
->  fs/xfs/xfs_inode.h  | 11 ++++++-----
->  2 files changed, 13 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 14796b7..2317b74 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -140,7 +140,7 @@ xfs_inode_free(
->  	 * races.
->  	 */
->  	spin_lock(&ip->i_flags_lock);
-> -	ip->i_flags = XFS_IRECLAIM;
-> +	ip->i_flags |= XFS_IRECLAIM;
->  	ip->i_ino = 0;
->  	spin_unlock(&ip->i_flags_lock);
->  
-> @@ -981,7 +981,12 @@ restart:
->  
->  	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
->  		xfs_iunpin_wait(ip);
-> +		/*
-> +		 * xfs_iflush_abort() drops the flush lock. Reacquire it as the
-> +		 * reclaim code expects to drop the flush lock.
-> +		 */
->  		xfs_iflush_abort(ip, false);
-> +		xfs_iflock(ip);
->  		goto reclaim;
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 013d1d3..a922040 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -561,7 +561,7 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
 >  	}
->  	if (xfs_ipincount(ip)) {
-> @@ -1044,7 +1049,7 @@ reclaim:
->  	 * skip.
->  	 */
->  	spin_lock(&ip->i_flags_lock);
-> -	ip->i_flags = XFS_IRECLAIM;
-> +	ip->i_flags |= XFS_IRECLAIM;
->  	ip->i_ino = 0;
->  	spin_unlock(&ip->i_flags_lock);
-
-I'd prefer that we don't change this - an inode that has had it's
-inode number cleared should also only have XFS_IRECLAIM set in it's
-flags.
-
-FWIW, there is nothing that should be waiting on the flush lock by
-this point - we hold the inode locked exclusively, there are not
-other references to the inode, and we've got a clean inode. As long
-as we've cycled the flush lock inside the current XFS_ILOCK_EXCL
-hold, then we can guarantee the inode is clean and nothing is
-waiting on the flush lock as you have to hold the ILOCK before
-grabbing the flush lock.
-
-Hence it doesn't matter if we hold or don't hold the flush lock
-at the point where we set ip->i_flags = XFS_IRECLAIM and ip->i_ino =
-0 - clearing the bit drops the flush lock if we hold it, and
-clearing ip->i_ino means that any lookups inside the RCU grace
-period (either from xfs_iflush_cluster or cache lookups) means
-they'll drop the inode without doing anything with it.
-
-Hence it think we can simple do something like:
-
- 	}
- 
--	xfs_iflock(ip);
- reclaim:
- 	/*
- 	 * Because we use RCU freeing we need to ensure the inode always appears
- 	 * to be reclaimed with an invalid inode number when in the free state.
- 	 * We do this as early as possible under the ILOCK and flush lock so
- 	 * that xfs_iflush_cluster() can be guaranteed to detect races with us
- 	 * here. By doing this, we guarantee that once xfs_iflush_cluster has
- 	 * locked both the XFS_ILOCK and the flush lock that it will see either
- 	 * a valid, flushable inode that will serialise correctly against the
- 	 * locks below, or it will see a clean (and invalid) inode that it can
- 	 * skip.
-+	 *
-+	 * If we are currently holding the flush lock, then nothing else can
-+	 * be waiting on it as we hold the XFS_ILOCK_EXCL. Resetting the i_flags
-+	 * here effectively unlocks the flush lock if we currently hold it,
-+	 * but it's a no-op if we don't hold it. This means we don't have to
-+	 * add a lock cycle to the paths that drop the flush lock due to
-+	 * IO completion or abort here.
- 	 */
- 	spin_lock(&ip->i_flags_lock);
- 	ip->i_flags = XFS_IRECLAIM;
- 	ip->i_ino = 0;
- 	spin_unlock(&ip->i_flags_lock);
- 
--	xfs_ifunlock(ip);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-
-The rest of the code (adding the assert to xfs_ifunlock()) looks
-fine, but this code here is quite special because of the way it
-controls behaviour of the inode lookups within the RCU grace
-period...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  
+>  	while (len > 0) {
+> -		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
+> +		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
+>  				iomap_fiemap_actor);
+>  		/* inode with no (attribute) mapping will give ENOENT */
+>  		if (ret == -ENOENT)
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index e63e288..7892f55 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -19,11 +19,15 @@ struct vm_fault;
+>  #define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
+>  
+>  /*
+> - * Flags for iomap mappings:
+> + * Flags for all iomap mappings:
+>   */
+> -#define IOMAP_F_MERGED	0x01	/* contains multiple blocks/extents */
+> -#define IOMAP_F_SHARED	0x02	/* block shared with another file */
+> -#define IOMAP_F_NEW	0x04	/* blocks have been newly allocated */
+> +#define IOMAP_F_NEW	0x01	/* blocks have been newly allocated */
+> +
+> +/*
+> + * Flags that only need to be reported for IOMAP_REPORT requests:
+> + */
+> +#define IOMAP_F_MERGED	0x10	/* contains multiple blocks/extents */
+> +#define IOMAP_F_SHARED	0x20	/* block shared with another file */
+>  
+>  /*
+>   * Magic value for blkno:
+> @@ -42,8 +46,9 @@ struct iomap {
+>  /*
+>   * Flags for iomap_begin / iomap_end.  No flag implies a read.
+>   */
+> -#define IOMAP_WRITE		(1 << 0)
+> -#define IOMAP_ZERO		(1 << 1)
+> +#define IOMAP_WRITE		(1 << 0) /* writing, must allocate blocks */
+> +#define IOMAP_ZERO		(1 << 1) /* zeroing operation, may skip holes */
+> +#define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
+>  
+>  struct iomap_ops {
+>  	/*
+> -- 
+> 2.1.4
+> 
