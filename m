@@ -1,53 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45818 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754120AbcJYXEI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:04:08 -0400
-Subject: [PATCH 04/39] xfs: add refcount btree operations
+Received: from aserp1040.oracle.com ([141.146.126.69]:49307 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935159AbcJQQ1I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 12:27:08 -0400
+Date: Mon, 17 Oct 2016 09:27:02 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Oct 2016 16:04:02 -0700
-Message-ID: <147743664272.11035.6730520387402463910.stgit@birch.djwong.org>
-In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
-References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+Subject: Re: [PATCH 2/9] xfs: add xfs_trim_extent
+Message-ID: <20161017162702.GB1120@birch.djwong.org>
+References: <1476521554-1894-1-git-send-email-hch@lst.de>
+ <1476521554-1894-3-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1476521554-1894-3-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-Implement the generic btree operations required to manipulate refcount
-btree blocks.  The implementation is similar to the bmapbt, though it
-will only allocate and free blocks from the AG.
+On Sat, Oct 15, 2016 at 10:52:27AM +0200, Christoph Hellwig wrote:
+> From: "Darrick J. Wong" <darrick.wong@oracle.com>
+> 
+> This helpers allows to trim an extent to a subset of it's original range
+> while making sure the block numbers in it remain valid,
+> 
+> In the future xfs_trim_extent and xfs_bmapi_trim_map should probably be
+> merged in some form.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> [hch: split from a previous patch from Darrick, moved around and added
+>  support for "raw" delayed extents"]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-[Add the xfs_refcount.h file to the standard include list.]
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-[hch: fix logging of AGF refcount btree fields]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
-v2: Remove init_rec_from_key since we no longer need it, and add
-tracepoints when refcount btree operations fail.
-
-Since the refcount root and level fields are separate from the
-existing roots and levels array, they need a separate logging flag.
----
- include/libxfs.h |    1 +
- 1 file changed, 1 insertion(+)
-
-
-diff --git a/include/libxfs.h b/include/libxfs.h
-index ec8f6ab..e5e1523 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -80,6 +80,7 @@ extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
- #include "xfs_rmap_btree.h"
- #include "xfs_rmap.h"
- #include "xfs_refcount_btree.h"
-+#include "xfs_refcount.h"
- 
- #ifndef ARRAY_SIZE
- #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 33 +++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_bmap.h |  2 ++
+>  2 files changed, 35 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index c27344c..016dacc 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3999,6 +3999,39 @@ xfs_bmap_alloc(
+>  	return xfs_bmap_btalloc(ap);
+>  }
+>  
+> +/* Trim extent to fit a logical block range. */
+> +void
+> +xfs_trim_extent(
+> +	struct xfs_bmbt_irec	*irec,
+> +	xfs_fileoff_t		bno,
+> +	xfs_filblks_t		len)
+> +{
+> +	xfs_fileoff_t		distance;
+> +	xfs_fileoff_t		end = bno + len;
+> +
+> +	if (irec->br_startoff + irec->br_blockcount <= bno ||
+> +	    irec->br_startoff >= end) {
+> +		irec->br_blockcount = 0;
+> +		return;
+> +	}
+> +
+> +	if (irec->br_startoff < bno) {
+> +		distance = bno - irec->br_startoff;
+> +		if (isnullstartblock(irec->br_startblock))
+> +			irec->br_startblock = DELAYSTARTBLOCK;
+> +		if (irec->br_startblock != DELAYSTARTBLOCK &&
+> +		    irec->br_startblock != HOLESTARTBLOCK)
+> +			irec->br_startblock += distance;
+> +		irec->br_startoff += distance;
+> +		irec->br_blockcount -= distance;
+> +	}
+> +
+> +	if (end < irec->br_startoff + irec->br_blockcount) {
+> +		distance = irec->br_startoff + irec->br_blockcount - end;
+> +		irec->br_blockcount -= distance;
+> +	}
+> +}
+> +
+>  /*
+>   * Trim the returned map to the required bounds
+>   */
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index f97db71..eb86af0 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -190,6 +190,8 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
+>  #define	XFS_BMAP_TRACE_EXLIST(ip,c,w)
+>  #endif
+>  
+> +void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
+> +		xfs_filblks_t len);
+>  int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+>  void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+>  void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+> -- 
+> 2.1.4
+> 
