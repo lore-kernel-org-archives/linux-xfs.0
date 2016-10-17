@@ -1,48 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:17683 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755948AbcJPV7E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 Oct 2016 17:59:04 -0400
-Date: Mon, 17 Oct 2016 08:28:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs_io: add command line option -M to run as multi
- threaded process
-Message-ID: <20161016212839.GB14023@dastard>
-References: <1476608111-28948-1-git-send-email-amir73il@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1476608111-28948-1-git-send-email-amir73il@gmail.com>
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:34667 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756546AbcJQHV6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 03:21:58 -0400
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v3] xfs_io: add command line option -i to start an idle thread
+Date: Mon, 17 Oct 2016 10:20:51 +0300
+Message-Id: <1476688851-32647-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Sun, Oct 16, 2016 at 11:55:11AM +0300, Amir Goldstein wrote:
-> xfs_io -M will start by spawning an idle thread.
-> The purpose of this idle thread is to test io from a multi threaded
-> process. With single threaded process, the file table is not shared
-> and file structs are not reference counted.
+xfs_io -i will start by spawning an idle thread.
 
-I can see this option being confusing to those who do not understand
-what is actually be done here. i.e. we'll get complaints along the
-lines of "-M say xfs_io does multithreaded IO, but I only see IO
-from one thread!". Can we name this "-i" to mean "run an idle-loop",
-which will stop people trying to use it for something it doesn't do?
+The purpose of this idle thread is to test io from a multi threaded
+process. With single threaded process, the file table is not shared
+and file structs are not reference counted. Spawning an idle thread
+can help detecting file struct reference leaks.
 
-> --- a/io/Makefile
-> +++ b/io/Makefile
-....
-> --- a/io/init.c
-> +++ b/io/init.c
-....
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ io/Makefile       |  2 +-
+ io/init.c         | 35 +++++++++++++++++++++++++++++++++--
+ man/man8/xfs_io.8 |  8 +++++++-
+ 3 files changed, 41 insertions(+), 4 deletions(-)
 
-Missing a man page update to document this new option.
-
-Cheers,
-
-Dave.
+diff --git a/io/Makefile b/io/Makefile
+index 1997ca9..032a8c7 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -13,7 +13,7 @@ CFILES = init.c \
+ 	mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
+ 	sync.c truncate.c reflink.c
+ 
+-LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
++LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/io/init.c b/io/init.c
+index 6b88cc6..2db48a2 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -16,6 +16,7 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
+ 
++#include <pthread.h>
+ #include "platform_defs.h"
+ #include "command.h"
+ #include "input.h"
+@@ -25,6 +26,7 @@
+ char	*progname;
+ int	exitcode;
+ int	expert;
++int	idlethread;
+ size_t	pagesize;
+ struct timeval stopwatch;
+ 
+@@ -32,7 +34,7 @@ void
+ usage(void)
+ {
+ 	fprintf(stderr,
+-		_("Usage: %s [-adfmnrRstVx] [-p prog] [-c cmd]... file\n"),
++		_("Usage: %s [-adfimnrRstTVx] [-p prog] [-c cmd]... file\n"),
+ 		progname);
+ 	exit(1);
+ }
+@@ -141,7 +143,7 @@ init(
+ 	pagesize = getpagesize();
+ 	gettimeofday(&stopwatch, NULL);
+ 
+-	while ((c = getopt(argc, argv, "ac:dFfmp:nrRstTVx")) != EOF) {
++	while ((c = getopt(argc, argv, "ac:dFfimp:nrRstTVx")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			flags |= IO_APPEND;
+@@ -158,6 +160,9 @@ init(
+ 		case 'f':
+ 			flags |= IO_CREAT;
+ 			break;
++		case 'i':
++			idlethread = 1;
++			break;
+ 		case 'm':
+ 			mode = strtoul(optarg, &sp, 0);
+ 			if (!sp || sp == optarg) {
+@@ -213,12 +218,38 @@ init(
+ 	add_check_command(init_check_command);
+ }
+ 
++/*
++ * The purpose of this idle thread is to test io from a multi threaded process.
++ * With single threaded process, the file table is not shared and file structs
++ * are not reference counted. Spawning an idle thread can help detecting file
++ * struct reference leaks.
++ */
++void *
++idle_loop(void *arg)
++{
++	for (;;)
++		pause();
++}
++
++void
++start_idle_thread()
++{
++	pthread_t t;
++
++	if (pthread_create(&t, NULL, idle_loop, NULL)) {
++		fprintf(stderr, "Error creating idle thread\n");
++		exit(1);
++	}
++}
++
+ int
+ main(
+ 	int	argc,
+ 	char	**argv)
+ {
+ 	init(argc, argv);
++	if (idlethread)
++		start_idle_thread();
+ 	command_loop();
+ 	return exitcode;
+ }
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index eb7b878..885df7f 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -4,7 +4,7 @@ xfs_io \- debug the I/O path of an XFS filesystem
+ .SH SYNOPSIS
+ .B xfs_io
+ [
+-.B \-adfmrRstxT
++.B \-adfimrRstxT
+ ] [
+ .B \-c
+ .I cmd
+@@ -51,6 +51,12 @@ read-only, initially. This is required if
+ .I file
+ is immutable or append-only.
+ .TP
++.B \-i
++Start an idle thread. The purpose of this idle thread is to test io
++from a multi threaded process. With single threaded process,
++the file table is not shared and file structs are not reference counted.
++Spawning an idle thread can help detecting file struct reference leaks.
++.TP
+ .B \-x
+ Expert mode. Dangerous commands are only available in this mode.
+ These commands also tend to require additional privileges.
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
