@@ -1,81 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36524 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754759AbcJQSep (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 14:34:45 -0400
-Date: Mon, 17 Oct 2016 11:34:34 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 9/9] xfs: remove xfs_bunmapi_cow
-Message-ID: <20161017183434.GM1120@birch.djwong.org>
-References: <1476521554-1894-1-git-send-email-hch@lst.de>
- <1476521554-1894-10-git-send-email-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:52740 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934489AbcJQWHO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Oct 2016 18:07:14 -0400
+Subject: Re: [xfsprogs] Update FSF address in COPYING file
+References: <CAFLt3ph9uHQxNQxY3WVm020MZdgv1EjCoZ-NvyRFGW8-2R1bEw@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6b23d905-5c60-02e0-47c8-c2b6fe4d7ad6@sandeen.net>
+Date: Mon, 17 Oct 2016 17:07:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1476521554-1894-10-git-send-email-hch@lst.de>
+In-Reply-To: <CAFLt3ph9uHQxNQxY3WVm020MZdgv1EjCoZ-NvyRFGW8-2R1bEw@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: Grozdan <neutrino8@gmail.com>, linux-xfs@vger.kernel.org
 
-On Sat, Oct 15, 2016 at 10:52:34AM +0200, Christoph Hellwig wrote:
-> Since no one uses it anymore.
+This should have a Signed-off-by: line, please.
+
+But I thought best practice was now to leave the address out entirely,
+because it may change again?
+
+At least GPL V3 leaves it out entirely:
+
+https://www.gnu.org/licenses/gpl.txt says:
+
+>                     GNU GENERAL PUBLIC LICENSE
+>                        Version 3, 29 June 2007
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 22 ----------------------
->  fs/xfs/libxfs/xfs_bmap.h |  1 -
->  2 files changed, 23 deletions(-)
+>  Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+>  Everyone is permitted to copy and distribute verbatim copies
+>  of this license document, but changing it is not allowed.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 64f82c8..cc193e6 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5417,28 +5417,6 @@ xfs_bmap_del_extent(
->  	return error;
->  }
+>                             Preamble
+
+...
+
+Doesn't matter much to me, I guess.
+
+Still, best practice is to send a patch with [PATCH] in the subject, i.e.:
+
+[PATCH] xfsprogs: Update FSF address in COPYING file
+
+a brief explanation of the change (what caught this?  where did the
+new address come from?) and a Signed-off-by: line.
+
+-Eric
+
+On 10/17/16 4:55 PM, Grozdan wrote:
+> Patch attached
+> 
+> -- Yours truly
+> 
+> 
+> COPYING.diff
+> 
+> 
+> --- xfsprogs-4.7.0/doc/COPYING	2009-12-30 23:30:13.000000000 +0100
+> +++ xfsprogs-4.7.0.new/doc/COPYING	2016-10-17 23:46:05.280631426 +0200
+> @@ -11,7 +11,7 @@
+>  		       Version 2.1, February 1999
 >  
-> -/* Remove an extent from the CoW fork.  Similar to xfs_bmap_del_extent. */
-> -int
-> -xfs_bunmapi_cow(
-> -	struct xfs_inode		*ip,
-> -	struct xfs_bmbt_irec		*del)
-> -{
-> -	struct xfs_bmbt_rec_host	*ep;
-> -	struct xfs_bmbt_irec		got;
-> -	struct xfs_bmbt_irec		new;
-> -	int				eof;
-> -	xfs_extnum_t			eidx;
-> -
-> -	ep = xfs_bmap_search_extents(ip, del->br_startoff, XFS_COW_FORK, &eof,
-> -				&eidx, &got, &new);
-> -	ASSERT(ep);
-> -	if (isnullstartblock(got.br_startblock))
-> -		xfs_bmap_del_extent_delay(ip, XFS_COW_FORK, &eidx, &got, del);
-> -	else
-> -		xfs_bmap_del_extent_cow(ip, &eidx, &got, del);
-> -	return 0;
-> -}
-> -
->  /*
->   * Unmap (remove) blocks from a file.
->   * If nexts is nonzero then the number of extents to remove is limited to
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index 5f18248..7cae6ec 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -223,7 +223,6 @@ int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
->  		xfs_fileoff_t bno, xfs_filblks_t len, int flags,
->  		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
->  		struct xfs_defer_ops *dfops, int *done);
-> -int	xfs_bunmapi_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *del);
->  int	xfs_bmap_del_extent_delay(struct xfs_inode *ip, int whichfork,
->  		xfs_extnum_t *idx, struct xfs_bmbt_irec *got,
->  		struct xfs_bmbt_irec *del);
-> -- 
-> 2.1.4
+>   Copyright (C) 1991, 1999 Free Software Foundation, Inc.
+> -     59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+> + 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+>   Everyone is permitted to copy and distribute verbatim copies
+>   of this license document, but changing it is not allowed.
+>  
+> @@ -518,8 +518,8 @@
+>  		    GNU GENERAL PUBLIC LICENSE
+>  		       Version 2, June 1991
+>  
+> - Copyright (C) 1989, 1991 Free Software Foundation, Inc.
+> -                       59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+> + Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
+> + 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+>   Everyone is permitted to copy and distribute verbatim copies
+>   of this license document, but changing it is not allowed.
+>  
 > 
