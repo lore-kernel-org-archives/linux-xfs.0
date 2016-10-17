@@ -1,439 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49034 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941883AbcJYPIf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 11:08:35 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/6] iomap: implement direct I/O
-Date: Tue, 25 Oct 2016 17:08:17 +0200
-Message-Id: <1477408098-10153-6-git-send-email-hch@lst.de>
-In-Reply-To: <1477408098-10153-1-git-send-email-hch@lst.de>
-References: <1477408098-10153-1-git-send-email-hch@lst.de>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:47519 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755187AbcJQNai (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 09:30:38 -0400
+Subject: Re: [PATCH RFC] xfs: drop SYNC_WAIT from xfs_reclaim_inodes_ag during
+ slab reclaim
+References: <06aade22-b29e-f55e-7f00-39154f220aa6@fb.com>
+ <20161015223454.GS23194@dastard>
+ <20161017002427.GA70229@clm-mbp.masoncoding.com>
+ <20161017015251.GU23194@dastard>
+From: Chris Mason <clm@fb.com>
+Message-ID: <e0c37926-a670-98b6-4bd7-b438def130bd@fb.com>
+Date: Mon, 17 Oct 2016 09:30:05 -0400
+MIME-Version: 1.0
+In-Reply-To: <20161017015251.GU23194@dastard>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: axboe@fb.com, kent.overstreet@gmail.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-This adds a full fledget direct I/O implementation using the iomap
-interface. Full fledged in this case means all features are supported:
-AIO, vectored I/O, any iov_iter type including kernel pointers, bvecs
-and pipes, support for hole filling and async apending writes.  It does
-not mean supporting all the warts of the old generic code.  We expect
-i_rwsem to be held over the duration of the call, and we expect to
-maintain i_dio_count ourselves, and we pass on any kinds of mapping
-to the file system for now.
 
-The algorithm used is very simple: We use iomap_apply to iterate over
-the range of the I/O, and then we use the new bio_iov_iter_get_pages
-helper to lock down the user range for the size of the extent.
-bio_iov_iter_get_pages can currently lock down twice as many pages as
-the old direct I/O code did, which means that we will have a better
-batch factor for everything but overwrites of badly fragmented files.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c            | 358 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/iomap.h |   8 ++
- 2 files changed, 366 insertions(+)
+On 10/16/2016 09:52 PM, Dave Chinner wrote:
+> On Sun, Oct 16, 2016 at 08:24:33PM -0400, Chris Mason wrote:
+>> On Sun, Oct 16, 2016 at 09:34:54AM +1100, Dave Chinner wrote:
+>>> On Fri, Oct 14, 2016 at 08:27:24AM -0400, Chris Mason wrote:
+>>>>
+>>>> Hi Dave,
+>>>>
+>>>> This is part of a series of patches we're growing to fix a perf
+>>>> regression on a few straggler tiers that are still on v3.10.  In this
+>>>> case, hadoop had to switch back to v3.10 because v4.x is as much as 15%
+>>>> slower on recent kernels.
+>>>>
+>>>> Between v3.10 and v4.x, kswapd is less effective overall.  This leads
+>>>> more and more procs to get bogged down in direct reclaim Using SYNC_WAIT
+>>>> in xfs_reclaim_inodes_ag().
+>>>>
+>>>> Since slab shrinking happens very early in direct reclaim, we've seen
+>>>> systems with 130GB of ram where hundreds of procs are stuck on the xfs
+>>>> slab shrinker fighting to walk a slab 900MB in size.  They'd have better
+>>>> luck moving on to the page cache instead.
+>>>
+>>> We've already scanned the page cache for direct reclaim by the time
+>>> we get to running the shrinkers. Indeed, the amount of work the
+>>> shrinkers do is directly controlled by the amount of work done
+>>> scanning the page cache beforehand....
+>>>
+>>>> Also, we're going into direct reclaim much more often than we should
+>>>> because kswapd is getting stuck on XFS inode locks and writeback.
+>>>
+>>> Where and what locks, exactly?
+>>
+>> This is from v4.0, because all of my newer hosts are trying a
+>> variety of patched kernels.  But the traces were very similar on
+>> newer kernels:
+>>
+>> # cat /proc/282/stack
+>> [<ffffffff812ea2cd>] xfs_buf_submit_wait+0xbd/0x1d0
+>> [<ffffffff812ea6e4>] xfs_bwrite+0x24/0x60
+>> [<ffffffff812f18a4>] xfs_reclaim_inode+0x304/0x320
+>> [<ffffffff812f1b17>] xfs_reclaim_inodes_ag+0x257/0x370
+>> [<ffffffff812f2613>] xfs_reclaim_inodes_nr+0x33/0x40
+>> [<ffffffff81300fb9>] xfs_fs_free_cached_objects+0x19/0x20
+>> [<ffffffff811bb13b>] super_cache_scan+0x18b/0x190
+>> [<ffffffff8115acc6>] shrink_slab.part.40+0x1f6/0x380
+>> [<ffffffff8115e9da>] shrink_zone+0x30a/0x320
+>> [<ffffffff8115f94f>] kswapd+0x51f/0x9e0
+>> [<ffffffff810886b2>] kthread+0xd2/0xf0
+>> [<ffffffff81770d88>] ret_from_fork+0x58/0x90
+>> [<ffffffffffffffff>] 0xffffffffffffffff
+>>
+>> This one hurts the most.  While kswapd is waiting for IO, all the
+>> other reclaim he might have been doing is backing up.
+>
+> Which says two things: the journal tail pushing nor the background
+> inode reclaim threads are keeping up with dirty inode writeback
+> demand. Without knowing why that is occurring, we cannot solve the
+> problem.
+>
+>> The other common path is the pag->pag_ici_reclaim_lock lock in
+>> xfs_reclaim_inodes_ag.  It goes through the trylock loop, didn't
+>> free enough, and then waits on the locks for real.
+>
+> Which is the "prevent hundreds of threads from all issuing inode
+> writeback concurrently" throttling. Working as designed.
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index a8ee8c3..502be3d 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -24,6 +24,7 @@
- #include <linux/uio.h>
- #include <linux/backing-dev.h>
- #include <linux/buffer_head.h>
-+#include <linux/task_io_accounting_ops.h>
- #include <linux/dax.h>
- #include "internal.h"
- 
-@@ -583,3 +584,360 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(iomap_fiemap);
-+
-+/*
-+ * Private flags for iomap_dio, must not overlap with the public ones in
-+ * iomap.h:
-+ */
-+#define IOMAP_DIO_WRITE		(1 << 30)
-+#define IOMAP_DIO_DIRTY	(1 << 31)
-+
-+struct iomap_dio {
-+	struct kiocb		*iocb;
-+	iomap_dio_end_io_t	*end_io;
-+	loff_t			i_size;
-+	loff_t			size;
-+	atomic_t		ref;
-+	unsigned		flags;
-+	int			error;
-+
-+	union {
-+		/* used during submission and for synchronous completion: */
-+		struct {
-+			struct iov_iter		*iter;
-+			struct task_struct	*waiter;
-+			struct request_queue	*last_queue;
-+			blk_qc_t		cookie;
-+		} submit;
-+
-+		/* used for aio completion: */
-+		struct {
-+			struct work_struct	work;
-+		} aio;
-+	};
-+};
-+
-+static ssize_t iomap_dio_complete(struct iomap_dio *dio)
-+{
-+	struct kiocb *iocb = dio->iocb;
-+	ssize_t ret;
-+
-+	if (dio->end_io) {
-+		ret = dio->end_io(iocb,
-+				dio->error ? dio->error : dio->size,
-+				dio->flags);
-+	} else {
-+		ret = dio->error;
-+	}
-+
-+	if (likely(!ret)) {
-+		ret = dio->size;
-+		/* check for short read */
-+		if (iocb->ki_pos + ret > dio->i_size &&
-+		    !(dio->flags & IOMAP_DIO_WRITE))
-+			ret = dio->i_size - iocb->ki_pos;
-+		iocb->ki_pos += ret;
-+	}
-+
-+	inode_dio_end(file_inode(iocb->ki_filp));
-+	kfree(dio);
-+
-+	return ret;
-+}
-+
-+static void iomap_dio_complete_work(struct work_struct *work)
-+{
-+	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
-+	struct kiocb *iocb = dio->iocb;
-+	bool is_write = (dio->flags & IOMAP_DIO_WRITE);
-+	ssize_t ret;
-+
-+	ret = iomap_dio_complete(dio);
-+	if (is_write && ret > 0)
-+		ret = generic_write_sync(iocb, ret);
-+	iocb->ki_complete(iocb, ret, 0);
-+}
-+
-+static void iomap_dio_bio_end_io(struct bio *bio)
-+{
-+	struct iomap_dio *dio = bio->bi_private;
-+	bool should_dirty = (dio->flags & IOMAP_DIO_DIRTY);
-+
-+	if (bio->bi_error)
-+		cmpxchg(&dio->error, 0, bio->bi_error);
-+
-+	if (atomic_dec_and_test(&dio->ref)) {
-+		if (is_sync_kiocb(dio->iocb)) {
-+			struct task_struct *waiter = dio->submit.waiter;
-+
-+			WRITE_ONCE(dio->submit.waiter, NULL);
-+			wake_up_process(waiter);
-+		} else if (dio->flags & IOMAP_DIO_WRITE) {
-+			struct inode *inode = file_inode(dio->iocb->ki_filp);
-+
-+			INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
-+			queue_work(inode->i_sb->s_dio_done_wq, &dio->aio.work);
-+		} else {
-+			iomap_dio_complete_work(&dio->aio.work);
-+		}
-+	}
-+
-+	if (should_dirty) {
-+		bio_check_pages_dirty(bio);
-+	} else {
-+		struct bio_vec *bvec;
-+		int i;
-+
-+		bio_for_each_segment_all(bvec, bio, i)
-+			put_page(bvec->bv_page);
-+		bio_put(bio);
-+	}
-+}
-+
-+static blk_qc_t
-+iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
-+		unsigned len)
-+{
-+	struct page *page = ZERO_PAGE(0);
-+	struct bio *bio;
-+
-+	bio = bio_alloc(GFP_KERNEL, 1);
-+	bio->bi_bdev = iomap->bdev;
-+	bio->bi_iter.bi_sector =
-+		iomap->blkno + ((pos - iomap->offset) >> 9);
-+	bio->bi_private = dio;
-+	bio->bi_end_io = iomap_dio_bio_end_io;
-+
-+	get_page(page);
-+	if (bio_add_page(bio, page, len, 0) != len)
-+		BUG();
-+	bio_set_op_attrs(bio, REQ_OP_WRITE, WRITE_ODIRECT);
-+
-+	atomic_inc(&dio->ref);
-+	return submit_bio(bio);
-+}
-+
-+static loff_t
-+iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
-+		void *data, struct iomap *iomap)
-+{
-+	struct iomap_dio *dio = data;
-+	unsigned blkbits = blksize_bits(bdev_logical_block_size(iomap->bdev));
-+	unsigned fs_block_size = (1 << inode->i_blkbits), pad;
-+	struct iov_iter iter = *dio->submit.iter;
-+	struct bio *bio;
-+	bool may_zero = false;
-+	int nr_pages, ret;
-+
-+	if ((pos | length | iov_iter_alignment(&iter)) & ((1 << blkbits) - 1))
-+		return -EINVAL;
-+
-+	switch (iomap->type) {
-+	case IOMAP_HOLE:
-+		/*
-+		 * We return -ENOTBLK to fall back to buffered I/O for file
-+		 * systems that can't fill holes from direct writes.
-+		 */
-+		if (dio->flags & IOMAP_DIO_WRITE)
-+			return -ENOTBLK;
-+		/*FALLTHRU*/
-+	case IOMAP_UNWRITTEN:
-+		if (!(dio->flags & IOMAP_DIO_WRITE)) {
-+			iov_iter_zero(length, dio->submit.iter);
-+			dio->size += length;
-+			return length;
-+		}
-+		dio->flags |= IOMAP_DIO_UNWRITTEN;
-+		may_zero = true;
-+		break;
-+	case IOMAP_MAPPED:
-+		if (iomap->flags & IOMAP_F_SHARED)
-+			dio->flags |= IOMAP_DIO_COW;
-+		if (iomap->flags & IOMAP_F_NEW)
-+			may_zero = true;
-+		break;
-+	default:
-+		WARN_ON_ONCE(1);
-+		return -EIO;
-+	}
-+
-+	iov_iter_truncate(&iter, length);
-+	nr_pages = iov_iter_npages(&iter, BIO_MAX_PAGES);
-+	if (nr_pages <= 0)
-+		return nr_pages;
-+
-+	if (may_zero) {
-+		pad = pos & (fs_block_size - 1);
-+		if (pad)
-+			iomap_dio_zero(dio, iomap, pos - pad, pad);
-+	}
-+
-+	do {
-+		if (dio->error)
-+			return 0;
-+
-+		bio = bio_alloc(GFP_KERNEL, nr_pages);
-+		bio->bi_bdev = iomap->bdev;
-+		bio->bi_iter.bi_sector =
-+			iomap->blkno + ((pos - iomap->offset) >> 9);
-+		bio->bi_private = dio;
-+		bio->bi_end_io = iomap_dio_bio_end_io;
-+
-+		ret = bio_iov_iter_get_pages(bio, &iter);
-+		if (unlikely(ret)) {
-+			bio_put(bio);
-+			return ret;
-+		}
-+
-+		if (dio->flags & IOMAP_DIO_WRITE) {
-+			bio_set_op_attrs(bio, REQ_OP_WRITE, WRITE_ODIRECT);
-+			task_io_account_write(bio->bi_iter.bi_size);
-+		} else {
-+			bio_set_op_attrs(bio, REQ_OP_READ, 0);
-+			if (dio->flags & IOMAP_DIO_DIRTY)
-+				bio_set_pages_dirty(bio);
-+		}
-+
-+		dio->size += bio->bi_iter.bi_size;
-+		pos += bio->bi_iter.bi_size;
-+
-+		nr_pages = iov_iter_npages(&iter, BIO_MAX_PAGES);
-+
-+		atomic_inc(&dio->ref);
-+
-+		dio->submit.last_queue = bdev_get_queue(iomap->bdev);
-+		dio->submit.cookie = submit_bio(bio);
-+	} while (nr_pages);
-+
-+	if (may_zero) {
-+		pad = pos & (fs_block_size - 1);
-+		if (pad)
-+			iomap_dio_zero(dio, iomap, pos, fs_block_size - pad);
-+	}
-+
-+	iov_iter_advance(dio->submit.iter, length);
-+	return length;
-+}
-+
-+ssize_t
-+iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter, struct iomap_ops *ops,
-+		iomap_dio_end_io_t end_io)
-+{
-+	struct address_space *mapping = iocb->ki_filp->f_mapping;
-+	struct inode *inode = file_inode(iocb->ki_filp);
-+	size_t count = iov_iter_count(iter);
-+	loff_t pos = iocb->ki_pos, end = iocb->ki_pos + count - 1, ret = 0;
-+	unsigned int flags = IOMAP_DIRECT;
-+	struct blk_plug plug;
-+	struct iomap_dio *dio;
-+
-+	lockdep_assert_held(&inode->i_rwsem);
-+
-+	if (!count)
-+		return 0;
-+
-+	dio = kmalloc(sizeof(*dio), GFP_KERNEL);
-+	if (!dio)
-+		return -ENOMEM;
-+
-+	dio->iocb = iocb;
-+	atomic_set(&dio->ref, 1);
-+	dio->size = 0;
-+	dio->i_size = i_size_read(inode);
-+	dio->end_io = end_io;
-+	dio->error = 0;
-+	dio->flags = 0;
-+
-+	dio->submit.iter = iter;
-+	if (is_sync_kiocb(iocb)) {
-+		dio->submit.waiter = current;
-+		dio->submit.cookie = BLK_QC_T_NONE;
-+		dio->submit.last_queue = NULL;
-+	}
-+
-+	if (iov_iter_rw(iter) == READ) {
-+		if (pos >= dio->i_size)
-+			goto out_free_dio;
-+
-+		if (iter->type == ITER_IOVEC)
-+			dio->flags |= IOMAP_DIO_DIRTY;
-+	} else {
-+		dio->flags |= IOMAP_DIO_WRITE;
-+		flags |= IOMAP_WRITE;
-+	}
-+
-+	if (mapping->nrpages) {
-+		ret = filemap_write_and_wait_range(mapping, iocb->ki_pos, end);
-+		if (ret)
-+			goto out_free_dio;
-+
-+		ret = invalidate_inode_pages2_range(mapping,
-+				iocb->ki_pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
-+		WARN_ON_ONCE(ret);
-+		ret = 0;
-+	}
-+
-+	inode_dio_begin(inode);
-+
-+	blk_start_plug(&plug);
-+	do {
-+		ret = iomap_apply(inode, pos, count, flags, ops, dio,
-+				iomap_dio_actor);
-+		if (ret <= 0) {
-+			/* magic error code to fall back to buffered I/O */
-+			if (ret == -ENOTBLK)
-+				ret = 0;
-+			break;
-+		}
-+		pos += ret;
-+	} while ((count = iov_iter_count(iter)) > 0);
-+	blk_finish_plug(&plug);
-+
-+	if (ret < 0)
-+		cmpxchg(&dio->error, 0, ret);
-+
-+	if (ret >= 0 && iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
-+			!inode->i_sb->s_dio_done_wq) {
-+		ret = sb_init_dio_done_wq(inode->i_sb);
-+		if (ret < 0)
-+			cmpxchg(&dio->error, 0, ret);
-+	}
-+
-+	if (!atomic_dec_and_test(&dio->ref)) {
-+		if (!is_sync_kiocb(iocb))
-+			return -EIOCBQUEUED;
-+
-+		for (;;) {
-+			set_current_state(TASK_UNINTERRUPTIBLE);
-+			if (!READ_ONCE(dio->submit.waiter))
-+				break;
-+
-+			if (!(iocb->ki_flags & IOCB_HIPRI) ||
-+			    !dio->submit.last_queue ||
-+			    !blk_poll(dio->submit.last_queue,
-+					dio->submit.cookie))
-+				io_schedule();
-+		}
-+		__set_current_state(TASK_RUNNING);
-+	}
-+
-+	/*
-+	 * Try again to invalidate clean pages which might have been cached by
-+	 * non-direct readahead, or faulted in by get_user_pages() if the source
-+	 * of the write was an mmap'ed region of the file we're writing.  Either
-+	 * one is a pretty crazy thing to do, so we don't support it 100%.  If
-+	 * this invalidation fails, tough, the write still worked...
-+	 */
-+	if (iov_iter_rw(iter) == WRITE && mapping->nrpages) {
-+		ret = invalidate_inode_pages2_range(mapping,
-+				iocb->ki_pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
-+		WARN_ON_ONCE(ret);
-+	}
-+
-+	return iomap_dio_complete(dio);
-+
-+out_free_dio:
-+	kfree(dio);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(iomap_dio_rw);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 7892f55..1b53109 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -49,6 +49,7 @@ struct iomap {
- #define IOMAP_WRITE		(1 << 0) /* writing, must allocate blocks */
- #define IOMAP_ZERO		(1 << 1) /* zeroing operation, may skip holes */
- #define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
-+#define IOMAP_DIRECT		(1 << 3)
- 
- struct iomap_ops {
- 	/*
-@@ -82,4 +83,11 @@ int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
- int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
- 		loff_t start, loff_t len, struct iomap_ops *ops);
- 
-+#define IOMAP_DIO_UNWRITTEN	(1 << 0)
-+#define IOMAP_DIO_COW		(1 << 1)
-+typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t ret,
-+		unsigned flags);
-+ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-+		struct iomap_ops *ops, iomap_dio_end_io_t end_io);
-+
- #endif /* LINUX_IOMAP_H */
--- 
-2.1.4
+Ok, I think we're just not on the same page about how kswapd is 
+designed.  So instead of worrying about some crusty old kernel, lets 
+talk about that for a minute.  I'm not trying to explain kswapd to you, 
+just putting what I'm seeing from the shrinker in terms of how kswapd 
+deals with dirty pages:
 
+LRUs try to keep the dirty pages away from kswapd in hopes that 
+background writeback will clean them instead of kswapd.
+
+When system memory pressure gets bad enough, kswapd will call pageout(). 
+  This includes a check for congested bdis where it will skip the IO 
+because it doesn't want to wait on busy resources.
+
+The main throttling mechanism is to slow down the creation of new dirty 
+pages via balance_dirty_pages().
+
+IO is avoided from inside kswapd because there's only one kswapd 
+per-numa node.  It is trying to take a global view of the freeable 
+memory in the node, instead of focusing on any one individual page.
+
+Shrinkers are a little different because while individual shrinkers have 
+a definition of dirty, the general concept doesn't.  kswapd calls into 
+the shrinkers to ask them to be smaller.
+
+With dirty pages, kswapd will start IO but not wait on it.
+With the xfs shrinker, kswapd does synchronous IO to write a single 
+inode in xfs_buf_submit_wait().
+
+With congested BDIs, kswapd will skip the IO and wait for progress after 
+running through a good chunk of pages.  With the xfs shrinker, kswapd 
+will synchronously wait for progress on a single FS, even if there are 
+dozens of other filesystems around.
+
+For the xfs shrinker, the mechanism to throttle new dirty inodes on a 
+single FS is stalling every process in the system in direct reclaim?
+
+>
+>> XFS is also limiting the direct reclaim speed of all the other
+>> slabs.  We have 15 drives, each with its own filesystem.  But end
+>> result of the current system is to bottleneck behind whichever FS is
+>> slowest at any given moment.
+>
+> So why is the filesystem slow in 4.0 and not slow at all in 3.10?
+>
+
+It's not that v3.10 is fast.  It's just faster.  v4.x is faster in a 
+bunch of other ways, but this one part of v3.10 isn't slowing down the 
+system as much as this one part of v4.x
+
+> And how does a 4.8 kernel compare, given there were major changes to
+> the mm/ subsystem in this release? i.e. are you chasing a mm/
+> problem that has already been solved?
+
+We don't think it's already solved in v4.8, but we're setting up a test 
+to confirm that.  I'm working on a better simulation of the parts we're 
+tripping over so I can model this outside of production.  I definitely 
+agree that something is wrong in MM land too, we have to clamp down on 
+the dirty ratios much more than we should to keep kswapd from calling 
+pageout().
+
+We can dive into workload specifics too, but I'd rather do that against 
+simulations where I can try individual experiments more quickly.  The 
+reason it takes me a week to get hard numbers is because the workload is 
+very inconsistent.  The only way to get a good comparison is to put the 
+test kernel on roughly 30 machines and then average major metrics over a 
+period of days.  Just installing the kernel takes almost a day because I 
+can only reboot one machine every 20 minutes.
+
+-chris
