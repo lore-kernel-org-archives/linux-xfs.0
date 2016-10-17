@@ -1,193 +1,223 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22217 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964894AbcJQVQk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 17:16:40 -0400
-Date: Mon, 17 Oct 2016 14:16:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/4] xfs: move inode locking from xfs_reflink_remap_range
- to xfs_file_share_range
-Message-ID: <20161017211635.GD26485@birch.djwong.org>
-References: <1476705920-32493-1-git-send-email-hch@lst.de>
- <1476705920-32493-4-git-send-email-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:54652 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932125AbcJQRxL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Oct 2016 13:53:11 -0400
+Date: Mon, 17 Oct 2016 13:53:09 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 8/9] xfs: optimize xfs_reflink_end_cow
+Message-ID: <20161017175309.GK12736@bfoster.bfoster>
+References: <1476521554-1894-1-git-send-email-hch@lst.de>
+ <1476521554-1894-9-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1476705920-32493-4-git-send-email-hch@lst.de>
+In-Reply-To: <1476521554-1894-9-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Mon, Oct 17, 2016 at 02:05:19PM +0200, Christoph Hellwig wrote:
-> We need the iolock protection to stabilizie the IS_SWAPFILE and IS_IMMUTABLE
-> values, as well as preventing new buffered writers re-dirtying the file data
-> that we just wrote out.
+On Sat, Oct 15, 2016 at 10:52:33AM +0200, Christoph Hellwig wrote:
+> Instead of doing a full extent list search for each extent that is to be
+> deleted using xfs_bmapi_read and then doing another one inside of
+> xfs_bunmapi_cow use the same scheme that xfs_bumapi uses:  look up the
+> last extent to be deleted and then use the extent index to walk downward
+> until we are outside the range to be deleted.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
 > ---
->  fs/xfs/xfs_file.c    | 62 ++++++++++++++++++++++++++++++++++------------------
->  fs/xfs/xfs_reflink.c | 15 -------------
->  2 files changed, 41 insertions(+), 36 deletions(-)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_reflink.c | 119 ++++++++++++++++++++++++---------------------------
+>  fs/xfs/xfs_trace.h   |   1 -
+>  2 files changed, 56 insertions(+), 64 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 012a960..0960264 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -996,38 +996,54 @@ xfs_file_share_range(
->  	inode_out = file_inode(file_out);
->  	bs = inode_out->i_sb->s_blocksize;
->  
-> +	/* Lock both files against IO */
-> +	same_inode = (inode_in == inode_out);
-> +	if (same_inode) {
-> +		xfs_ilock(XFS_I(inode_in), XFS_IOLOCK_EXCL);
-> +		xfs_ilock(XFS_I(inode_in), XFS_MMAPLOCK_EXCL);
-> +	} else {
-> +		xfs_lock_two_inodes(XFS_I(inode_in), XFS_I(inode_out),
-> +				XFS_IOLOCK_EXCL);
-> +		xfs_lock_two_inodes(XFS_I(inode_in), XFS_I(inode_out),
-> +				XFS_MMAPLOCK_EXCL);
-> +	}
-> +
->  	/* Don't touch certain kinds of inodes */
-> +	ret = -EPERM;
->  	if (IS_IMMUTABLE(inode_out))
-> -		return -EPERM;
-> -	if (IS_SWAPFILE(inode_in) ||
-> -	    IS_SWAPFILE(inode_out))
-> -		return -ETXTBSY;
-> -
-> -	same_inode = (inode_in == inode_out);
-> +		goto out_unlock;
-> +	ret = -ETXTBSY;
-> +	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
-> +		goto out_unlock;
->  
->  	/* Don't reflink dirs, pipes, sockets... */
-> +	ret = -EISDIR;
->  	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
-> -		return -EISDIR;
-> +		goto out_unlock;
-> +	ret = -EINVAL;
->  	if (S_ISFIFO(inode_in->i_mode) || S_ISFIFO(inode_out->i_mode))
-> -		return -EINVAL;
-> +		goto out_unlock;
->  	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-> -		return -EINVAL;
-> +		goto out_unlock;
->  
->  	/* Don't share DAX file data for now. */
->  	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-> -		return -EINVAL;
-> +		goto out_unlock;
->  
->  	/* Are we going all the way to the end? */
->  	isize = i_size_read(inode_in);
-> -	if (isize == 0)
-> -		return 0;
-> +	if (isize == 0) {
-> +		ret = 0;
-> +		goto out_unlock;
-> +	}
-> +
->  	if (len == 0)
->  		len = isize - pos_in;
->  
->  	/* Ensure offsets don't wrap and the input is inside i_size */
->  	if (pos_in + len < pos_in || pos_out + len < pos_out ||
->  	    pos_in + len > isize)
-> -		return -EINVAL;
-> +		goto out_unlock;
->  
->  	/* Don't allow dedupe past EOF in the dest file */
->  	if (is_dedupe) {
-> @@ -1035,7 +1051,7 @@ xfs_file_share_range(
->  
->  		disize = i_size_read(inode_out);
->  		if (pos_out >= disize || pos_out + len > disize)
-> -			return -EINVAL;
-> +			goto out_unlock;
->  	}
->  
->  	/* If we're linking to EOF, continue to the block boundary. */
-> @@ -1047,28 +1063,32 @@ xfs_file_share_range(
->  	/* Only reflink if we're aligned to block boundaries */
->  	if (!IS_ALIGNED(pos_in, bs) || !IS_ALIGNED(pos_in + blen, bs) ||
->  	    !IS_ALIGNED(pos_out, bs) || !IS_ALIGNED(pos_out + blen, bs))
-> -		return -EINVAL;
-> +		goto out_unlock;
->  
->  	/* Don't allow overlapped reflink within the same file */
->  	if (same_inode && pos_out + blen > pos_in && pos_out < pos_in + blen)
-> -		return -EINVAL;
-> +		goto out_unlock;
->  
->  	/* Wait for the completion of any pending IOs on srcfile */
->  	ret = xfs_file_wait_for_io(inode_in, pos_in, len);
->  	if (ret)
-> -		goto out;
-> +		goto out_unlock;
->  	ret = xfs_file_wait_for_io(inode_out, pos_out, len);
->  	if (ret)
-> -		goto out;
-> +		goto out_unlock;
->  
->  	if (is_dedupe)
->  		flags |= XFS_REFLINK_DEDUPE;
->  	ret = xfs_reflink_remap_range(XFS_I(inode_in), pos_in, XFS_I(inode_out),
->  			pos_out, len, flags);
-> -	if (ret < 0)
-> -		goto out;
->  
-> -out:
-> +out_unlock:
-> +	xfs_iunlock(XFS_I(inode_in), XFS_MMAPLOCK_EXCL);
-> +	xfs_iunlock(XFS_I(inode_in), XFS_IOLOCK_EXCL);
-> +	if (!same_inode) {
-> +		xfs_iunlock(XFS_I(inode_out), XFS_MMAPLOCK_EXCL);
-> +		xfs_iunlock(XFS_I(inode_out), XFS_IOLOCK_EXCL);
-> +	}
->  	return ret;
->  }
->  
 > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 5965e94..d012746 100644
+> index 7979d46..93a863e 100644
 > --- a/fs/xfs/xfs_reflink.c
 > +++ b/fs/xfs/xfs_reflink.c
-> @@ -1341,15 +1341,6 @@ xfs_reflink_remap_range(
+> @@ -634,25 +634,26 @@ xfs_reflink_end_cow(
+>  	xfs_off_t			offset,
+>  	xfs_off_t			count)
+>  {
+> -	struct xfs_bmbt_irec		irec;
+> -	struct xfs_bmbt_irec		uirec;
+> +	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+> +	struct xfs_bmbt_irec		got, prev, del;
+>  	struct xfs_trans		*tp;
+>  	xfs_fileoff_t			offset_fsb;
+>  	xfs_fileoff_t			end_fsb;
+> -	xfs_filblks_t			count_fsb;
+>  	xfs_fsblock_t			firstfsb;
+>  	struct xfs_defer_ops		dfops;
+> -	int				error;
+> +	int				error, eof = 0;
+>  	unsigned int			resblks;
+> -	xfs_filblks_t			ilen;
+>  	xfs_filblks_t			rlen;
+> -	int				nimaps;
+> +	xfs_extnum_t			idx;
 >  
->  	trace_xfs_reflink_remap_range(src, srcoff, len, dest, destoff);
+>  	trace_xfs_reflink_end_cow(ip, offset, count);
 >  
-> -	/* Lock both files against IO */
-> -	if (src->i_ino == dest->i_ino) {
-> -		xfs_ilock(src, XFS_IOLOCK_EXCL);
-> -		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
-> -	} else {
-> -		xfs_lock_two_inodes(src, dest, XFS_IOLOCK_EXCL);
-> -		xfs_lock_two_inodes(src, dest, XFS_MMAPLOCK_EXCL);
-> -	}
+> +	/* No COW extents?  That's easy! */
+> +	if (ifp->if_bytes == 0)
+> +		return 0;
+> +
+>  	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+>  	end_fsb = XFS_B_TO_FSB(ip->i_mount, offset + count);
+> -	count_fsb = (xfs_filblks_t)(end_fsb - offset_fsb);
+>  
+>  	/* Start a rolling transaction to switch the mappings */
+>  	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
+> @@ -664,72 +665,65 @@ xfs_reflink_end_cow(
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+> -	/* Go find the old extent in the CoW fork. */
+> -	while (offset_fsb < end_fsb) {
+> -		/* Read extent from the source file */
+> -		nimaps = 1;
+> -		count_fsb = (xfs_filblks_t)(end_fsb - offset_fsb);
+> -		error = xfs_bmapi_read(ip, offset_fsb, count_fsb, &irec,
+> -				&nimaps, XFS_BMAPI_COWFORK);
+> -		if (error)
+> -			goto out_cancel;
+> -		ASSERT(nimaps == 1);
+> +	xfs_bmap_search_extents(ip, end_fsb - 1, XFS_COW_FORK, &eof, &idx,
+> +			&got, &prev);
+>  
+> -		ASSERT(irec.br_startblock != DELAYSTARTBLOCK);
+> -		trace_xfs_reflink_cow_remap(ip, &irec);
+> +	/* If there is a hole at end_fsb - 1 go to the previous extent */
+> +	if (eof || got.br_startoff > end_fsb) {
+> +		ASSERT(idx > 0);
+> +		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, --idx), &got);
+> +	}
+>  
+> -		/*
+> -		 * We can have a hole in the CoW fork if part of a directio
+> -		 * write is CoW but part of it isn't.
+> -		 */
+> -		rlen = ilen = irec.br_blockcount;
+> -		if (irec.br_startblock == HOLESTARTBLOCK)
+> +	/* Walk backwards until we're out of the I/O range... */
+> +	while (got.br_startoff + got.br_blockcount > offset_fsb) {
+> +		del = got;
+> +		xfs_trim_extent(&del, offset_fsb, end_fsb - offset_fsb);
+> +
+> +		/* Extent delete may have bumped idx forward */
+> +		if (!del.br_blockcount) {
+> +			idx--;
+>  			goto next_extent;
+> +		}
+> +
+> +		ASSERT(!isnullstartblock(got.br_startblock));
+>  
+>  		/* Unmap the old blocks in the data fork. */
+> -		while (rlen) {
+> -			xfs_defer_init(&dfops, &firstfsb);
+> -			error = __xfs_bunmapi(tp, ip, irec.br_startoff,
+> -					&rlen, 0, 1, &firstfsb, &dfops);
+> -			if (error)
+> -				goto out_defer;
 > -
->  	/*
->  	 * Check that the extents are the same.
->  	 */
-> @@ -1401,12 +1392,6 @@ xfs_reflink_remap_range(
->  		goto out_error;
+> -			/*
+> -			 * Trim the extent to whatever got unmapped.
+> -			 * Remember, bunmapi works backwards.
+> -			 */
+> -			uirec.br_startblock = irec.br_startblock + rlen;
+> -			uirec.br_startoff = irec.br_startoff + rlen;
+> -			uirec.br_blockcount = irec.br_blockcount - rlen;
+> -			irec.br_blockcount = rlen;
+> -			trace_xfs_reflink_cow_remap_piece(ip, &uirec);
+> +		xfs_defer_init(&dfops, &firstfsb);
+> +		rlen = del.br_blockcount;
+> +		error = __xfs_bunmapi(tp, ip, del.br_startoff, &rlen, 0, 1,
+> +				&firstfsb, &dfops);
+> +		if (error)
+> +			goto out_defer;
 >  
->  out_error:
-> -	xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
-> -	xfs_iunlock(src, XFS_IOLOCK_EXCL);
-> -	if (src->i_ino != dest->i_ino) {
-> -		xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
-> -		xfs_iunlock(dest, XFS_IOLOCK_EXCL);
-> -	}
->  	if (error)
->  		trace_xfs_reflink_remap_range_error(dest, error, _RET_IP_);
->  	return error;
+> -			/* Free the CoW orphan record. */
+> -			error = xfs_refcount_free_cow_extent(tp->t_mountp,
+> -					&dfops, uirec.br_startblock,
+> -					uirec.br_blockcount);
+> -			if (error)
+> -				goto out_defer;
+> +		/* Trim the extent to whatever got unmapped. */
+> +		if (rlen) {
+> +			xfs_trim_extent(&del, del.br_startoff + rlen,
+> +				del.br_blockcount - rlen);
+> +		}
+> +		trace_xfs_reflink_cow_remap(ip, &del);
+>  
+> -			/* Map the new blocks into the data fork. */
+> -			error = xfs_bmap_map_extent(tp->t_mountp, &dfops,
+> -					ip, &uirec);
+> -			if (error)
+> -				goto out_defer;
+> +		/* Free the CoW orphan record. */
+> +		error = xfs_refcount_free_cow_extent(tp->t_mountp, &dfops,
+> +				del.br_startblock, del.br_blockcount);
+> +		if (error)
+> +			goto out_defer;
+>  
+> -			/* Remove the mapping from the CoW fork. */
+> -			error = xfs_bunmapi_cow(ip, &uirec);
+> -			if (error)
+> -				goto out_defer;
+> +		/* Map the new blocks into the data fork. */
+> +		error = xfs_bmap_map_extent(tp->t_mountp, &dfops, ip, &del);
+> +		if (error)
+> +			goto out_defer;
+>  
+> -			error = xfs_defer_finish(&tp, &dfops, ip);
+> -			if (error)
+> -				goto out_defer;
+> -		}
+> +		/* Remove the mapping from the CoW fork. */
+> +		xfs_bmap_del_extent_cow(ip, &idx, &got, &del);
+> +
+> +		error = xfs_defer_finish(&tp, &dfops, ip);
+> +		if (error)
+> +			goto out_defer;
+>  
+>  next_extent:
+> -		/* Roll on... */
+> -		offset_fsb = irec.br_startoff + ilen;
+> +		if (idx < 0)
+> +			break;
+> +		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), &got);
+>  	}
+>  
+>  	error = xfs_trans_commit(tp);
+> @@ -740,7 +734,6 @@ xfs_reflink_end_cow(
+>  
+>  out_defer:
+>  	xfs_defer_cancel(&dfops);
+> -out_cancel:
+>  	xfs_trans_cancel(tp);
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  out:
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 72f9f6b..0907752 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3356,7 +3356,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
+>  DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap);
+> -DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap_piece);
+>  
+>  DEFINE_INODE_ERROR_EVENT(xfs_reflink_allocate_cow_range_error);
+>  DEFINE_INODE_ERROR_EVENT(xfs_reflink_cancel_cow_range_error);
 > -- 
 > 2.1.4
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
