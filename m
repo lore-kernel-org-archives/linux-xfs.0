@@ -1,47 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58064 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934300AbcJQK1A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 17 Oct 2016 06:27:00 -0400
-Date: Mon, 17 Oct 2016 12:26:57 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: Lock ordering in iomap code
-Message-ID: <20161017102657.GA12164@lst.de>
-References: <20161007111314.GA24081@quack2.suse.cz> <20161017093148.GA6375@quack2.suse.cz>
+Received: from xavier.telenet-ops.be ([195.130.132.52]:36221 "EHLO
+        xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934171AbcJQKQo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 06:16:44 -0400
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] xfs: Fix uninitialized variable in xfs_reflink_reserve_cow_range()
+Date: Mon, 17 Oct 2016 12:16:44 +0200
+Message-Id: <1476699404-5977-1-git-send-email-geert@linux-m68k.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161017093148.GA6375@quack2.suse.cz>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
 
-Hi Jan,
+with gcc 4.1.2:
 
-sorry for the delay, I've been overloaded with various projects
-recently..
+    fs/xfs/xfs_reflink.c: In function ‘xfs_reflink_reserve_cow_range’:
+    fs/xfs/xfs_reflink.c:327: warning: ‘error’ may be used uninitialized in this function
 
-> Ping? I have ext4 DAX read & write path working with the iomap code but to
-> convert the fault path, I need this resolved. Are you OK with moving
-> iomap_begin() / iomap_end() calls outside of page lock / entry lock in the
-> fault path?
+Indeed, if "count" is zero, the function will return an uninitialized
+error value.
 
-Yes, that sounds fine.
-> 
-> I was also thinking about the implications of iomap_begin() (and thus block
-> allocation for buffered writes in nodelalloc case) being no longer protected
-> by page lock and at least for ext2 / ext3 compatibility modes this will
-> lead to uninitialized data exposure when page fault races in the right way
-> with buffered write. So current locking scheme in iomap code is not easily
-> usable for ext4 for buffered writes.
+While "count" is unlikely to be zero, this function is called through
+the public iomap API. Hence fix this by preinitializing error to zero.
 
-Right, the iomap I/O code assumes that you either use delalloc, or that
-your have unwritten extents that your convert to written once I/O has
-finished.  XFS uses the latter feature for direct I/O, or if an extent
-size hints is set.
+Fixes: 2a06705cd5954030 ("xfs: create delalloc extents in CoW fork")
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ fs/xfs/xfs_reflink.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I can't really think of a good way to handle file systems without
-either feature - the problem is that we'd have to introduce a file-wide
-(or range based) lock to protect allocated but not written ranges.
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 5965e9455d91e036..d48a7cc2fe007f66 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -324,7 +324,7 @@
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_fileoff_t		offset_fsb, end_fsb;
+ 	bool			skipped = false;
+-	int			error;
++	int			error = 0;
+ 
+ 	trace_xfs_reflink_reserve_cow_range(ip, offset, count);
+ 
+-- 
+1.9.1
+
