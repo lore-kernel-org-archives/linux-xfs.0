@@ -1,50 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51433 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932571AbcJRBye (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 21:54:34 -0400
-Subject: [PATCH 1/2] man2/fallocate.2: document behavior with shared blocks
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 17 Oct 2016 18:54:27 -0700
-Message-ID: <147675566778.12400.16090171199161180354.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39902 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030397AbcJQRVF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Oct 2016 13:21:05 -0400
+Date: Mon, 17 Oct 2016 13:21:03 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 6/9] xfs: refactor xfs_bunmapi_cow
+Message-ID: <20161017172103.GH12736@bfoster.bfoster>
+References: <1476521554-1894-1-git-send-email-hch@lst.de>
+ <1476521554-1894-7-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1476521554-1894-7-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: mtk.manpages@gmail.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-man@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-Add a blurb to the fallocate manpage explaining that the fallocate
-command with the UNSHARE mode flag may use CoW to unshare blocks to
-guarantee that a disk write won't fail with ENOSPC.
+On Sat, Oct 15, 2016 at 10:52:31AM +0200, Christoph Hellwig wrote:
+> Split out two helpers for deleting delayed or real extents from the COW fork.
+> This allows to call them directly from xfs_reflink_cow_end_io once that
+> function is refactored to iterate the extent tree.  It will also allow
+> to reuse the delalloc deletion from xfs_bunmapi in the future.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 374 ++++++++++++++++++++++++++++-------------------
+>  fs/xfs/libxfs/xfs_bmap.h |   5 +
+>  fs/xfs/xfs_reflink.c     |   5 -
+>  3 files changed, 225 insertions(+), 159 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 5d230ea..f33f737 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -535,11 +535,6 @@ xfs_reflink_cancel_cow_blocks(
+>  		trace_xfs_reflink_cancel_cow(ip, &irec);
+>  
+>  		if (irec.br_startblock == DELAYSTARTBLOCK) {
+> -			/* Free a delayed allocation. */
+> -			xfs_mod_fdblocks(ip->i_mount, irec.br_blockcount,
+> -					false);
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- man2/fallocate.2 |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+Don't we still need this call, or am I missing where it exists
+elsewhere? Also, IIRC we might need to make sure this occurs after
+xfs_bunmapi_cow() since the latter can steal blocks from the deleted
+extent for indirect blocks (e.g., where we call
+xfs_bmap_split_indlen()).
 
+Brian
 
-diff --git a/man2/fallocate.2 b/man2/fallocate.2
-index 54d6340..3ed1460 100644
---- a/man2/fallocate.2
-+++ b/man2/fallocate.2
-@@ -79,6 +79,16 @@ but the file size will not be changed even if
- is greater than the file size.
- Preallocating zeroed blocks beyond the end of the file in this manner
- is useful for optimizing append workloads.
-+
-+If the
-+.B FALLOC_FL_UNSHARE
-+flag is specified in
-+.IR mode ,
-+shared file data extents will be made private to the file to guarantee
-+that a subsequent write will not fail due to lack of space.
-+Typically, this will be done by performing a copy-on-write operation on
-+all shared data in the file.
-+This flag may not be supported by all filesystems.
- .PP
- Because allocation is done in block size chunks,
- .BR fallocate ()
-
+> -			ip->i_delayed_blks -= irec.br_blockcount;
+> -
+>  			/* Remove the mapping from the CoW fork. */
+>  			error = xfs_bunmapi_cow(ip, &irec);
+>  			if (error)
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
