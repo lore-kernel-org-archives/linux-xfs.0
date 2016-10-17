@@ -1,86 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41210 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35130 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754595AbcJQPfq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 17 Oct 2016 11:35:46 -0400
-Date: Mon, 17 Oct 2016 11:35:44 -0400
+        id S1754595AbcJQPfw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Oct 2016 11:35:52 -0400
+Date: Mon, 17 Oct 2016 11:35:50 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/9] iomap: add IOMAP_REPORT
-Message-ID: <20161017153542.GB12736@bfoster.bfoster>
+Subject: Re: [PATCH 2/9] xfs: add xfs_trim_extent
+Message-ID: <20161017153550.GC12736@bfoster.bfoster>
 References: <1476521554-1894-1-git-send-email-hch@lst.de>
- <1476521554-1894-2-git-send-email-hch@lst.de>
+ <1476521554-1894-3-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1476521554-1894-2-git-send-email-hch@lst.de>
+In-Reply-To: <1476521554-1894-3-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Sat, Oct 15, 2016 at 10:52:26AM +0200, Christoph Hellwig wrote:
-> This allows the file system to tell a FIEMAP from a read operation, and thus
-> avoids the need to report flags that aren't actually used in the read path.
+On Sat, Oct 15, 2016 at 10:52:27AM +0200, Christoph Hellwig wrote:
+> From: "Darrick J. Wong" <darrick.wong@oracle.com>
 > 
+> This helpers allows to trim an extent to a subset of it's original range
+> while making sure the block numbers in it remain valid,
+> 
+> In the future xfs_trim_extent and xfs_bmapi_trim_map should probably be
+> merged in some form.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> [hch: split from a previous patch from Darrick, moved around and added
+>  support for "raw" delayed extents"]
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/iomap.c            |  2 +-
->  include/linux/iomap.h | 17 +++++++++++------
->  2 files changed, 12 insertions(+), 7 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 33 +++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_bmap.h |  2 ++
+>  2 files changed, 35 insertions(+)
 > 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 013d1d3..a922040 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -561,7 +561,7 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
->  	}
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index c27344c..016dacc 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3999,6 +3999,39 @@ xfs_bmap_alloc(
+>  	return xfs_bmap_btalloc(ap);
+>  }
 >  
->  	while (len > 0) {
-> -		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
-> +		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
->  				iomap_fiemap_actor);
->  		/* inode with no (attribute) mapping will give ENOENT */
->  		if (ret == -ENOENT)
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index e63e288..7892f55 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -19,11 +19,15 @@ struct vm_fault;
->  #define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
->  
->  /*
-> - * Flags for iomap mappings:
-> + * Flags for all iomap mappings:
->   */
-> -#define IOMAP_F_MERGED	0x01	/* contains multiple blocks/extents */
-> -#define IOMAP_F_SHARED	0x02	/* block shared with another file */
-> -#define IOMAP_F_NEW	0x04	/* blocks have been newly allocated */
-> +#define IOMAP_F_NEW	0x01	/* blocks have been newly allocated */
+> +/* Trim extent to fit a logical block range. */
+> +void
+> +xfs_trim_extent(
+> +	struct xfs_bmbt_irec	*irec,
+> +	xfs_fileoff_t		bno,
+> +	xfs_filblks_t		len)
+> +{
+> +	xfs_fileoff_t		distance;
+> +	xfs_fileoff_t		end = bno + len;
 > +
-> +/*
-> + * Flags that only need to be reported for IOMAP_REPORT requests:
-> + */
-> +#define IOMAP_F_MERGED	0x10	/* contains multiple blocks/extents */
-> +#define IOMAP_F_SHARED	0x20	/* block shared with another file */
->  
+> +	if (irec->br_startoff + irec->br_blockcount <= bno ||
+> +	    irec->br_startoff >= end) {
+> +		irec->br_blockcount = 0;
+> +		return;
+> +	}
+> +
+> +	if (irec->br_startoff < bno) {
+> +		distance = bno - irec->br_startoff;
+> +		if (isnullstartblock(irec->br_startblock))
+> +			irec->br_startblock = DELAYSTARTBLOCK;
+> +		if (irec->br_startblock != DELAYSTARTBLOCK &&
+> +		    irec->br_startblock != HOLESTARTBLOCK)
+> +			irec->br_startblock += distance;
+> +		irec->br_startoff += distance;
+> +		irec->br_blockcount -= distance;
+> +	}
+> +
+> +	if (end < irec->br_startoff + irec->br_blockcount) {
+> +		distance = irec->br_startoff + irec->br_blockcount - end;
+> +		irec->br_blockcount -= distance;
+> +	}
+> +}
+> +
 >  /*
->   * Magic value for blkno:
-> @@ -42,8 +46,9 @@ struct iomap {
->  /*
->   * Flags for iomap_begin / iomap_end.  No flag implies a read.
+>   * Trim the returned map to the required bounds
 >   */
-> -#define IOMAP_WRITE		(1 << 0)
-> -#define IOMAP_ZERO		(1 << 1)
-> +#define IOMAP_WRITE		(1 << 0) /* writing, must allocate blocks */
-> +#define IOMAP_ZERO		(1 << 1) /* zeroing operation, may skip holes */
-> +#define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index f97db71..eb86af0 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -190,6 +190,8 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
+>  #define	XFS_BMAP_TRACE_EXLIST(ip,c,w)
+>  #endif
 >  
->  struct iomap_ops {
->  	/*
+> +void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
+> +		xfs_filblks_t len);
+>  int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+>  void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+>  void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
 > -- 
 > 2.1.4
 > 
