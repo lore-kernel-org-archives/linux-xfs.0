@@ -1,79 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44816 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38148 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932125AbcJQRxH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 17 Oct 2016 13:53:07 -0400
-Date: Mon, 17 Oct 2016 13:53:05 -0400
+        id S1753877AbcJQSHz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Oct 2016 14:07:55 -0400
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 66BB8793D8
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2016 18:07:55 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/9] xfs: refactor xfs_bunmapi_cow
-Message-ID: <20161017175304.GJ12736@bfoster.bfoster>
-References: <1476521554-1894-1-git-send-email-hch@lst.de>
- <1476521554-1894-7-git-send-email-hch@lst.de>
- <20161017172103.GH12736@bfoster.bfoster>
- <20161017174411.GA22930@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161017174411.GA22930@lst.de>
+Subject: [PATCH v2] xfs: fix unbalanced inode reclaim flush locking
+Date: Mon, 17 Oct 2016 14:07:53 -0400
+Message-Id: <1476727673-19109-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: linux-xfs@vger.kernel.org
+Cc: zlang@redhat.com
 
-On Mon, Oct 17, 2016 at 07:44:11PM +0200, Christoph Hellwig wrote:
-> On Mon, Oct 17, 2016 at 01:21:03PM -0400, Brian Foster wrote:
-> > On Sat, Oct 15, 2016 at 10:52:31AM +0200, Christoph Hellwig wrote:
-> > > Split out two helpers for deleting delayed or real extents from the COW fork.
-> > > This allows to call them directly from xfs_reflink_cow_end_io once that
-> > > function is refactored to iterate the extent tree.  It will also allow
-> > > to reuse the delalloc deletion from xfs_bunmapi in the future.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_bmap.c | 374 ++++++++++++++++++++++++++++-------------------
-> > >  fs/xfs/libxfs/xfs_bmap.h |   5 +
-> > >  fs/xfs/xfs_reflink.c     |   5 -
-> > >  3 files changed, 225 insertions(+), 159 deletions(-)
-> > > 
-> > ...
-> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > > index 5d230ea..f33f737 100644
-> > > --- a/fs/xfs/xfs_reflink.c
-> > > +++ b/fs/xfs/xfs_reflink.c
-> > > @@ -535,11 +535,6 @@ xfs_reflink_cancel_cow_blocks(
-> > >  		trace_xfs_reflink_cancel_cow(ip, &irec);
-> > >  
-> > >  		if (irec.br_startblock == DELAYSTARTBLOCK) {
-> > > -			/* Free a delayed allocation. */
-> > > -			xfs_mod_fdblocks(ip->i_mount, irec.br_blockcount,
-> > > -					false);
-> > 
-> > Don't we still need this call, or am I missing where it exists
-> > elsewhere? Also, IIRC we might need to make sure this occurs after
-> > xfs_bunmapi_cow() since the latter can steal blocks from the deleted
-> > extent for indirect blocks (e.g., where we call
-> > xfs_bmap_split_indlen()).
-> 
-> xfs_bmap_del_extent_delay is now taking care of this:
-> 
-> +       ASSERT(da_old >= da_new);
-> +       da_diff = da_old - da_new;
-> +       if (!isrt)
-> +               da_diff += del->br_blockcount;
-> +       if (da_diff)
-> +               xfs_mod_fdblocks(mp, da_diff, false);
-> +       return error;
-> 
-> Note that the old code also was buggy if for some reason
-> the cancellation was for a partial cow extent.
+Filesystem shutdown testing on an older distro kernel has uncovered an
+imbalanced locking pattern for the inode flush lock in
+xfs_reclaim_inode(). Specifically, there is a double unlock sequence
+between the call to xfs_iflush_abort() and xfs_reclaim_inode() at the
+"reclaim:" label.
 
-Ah, missed that. Thanks.
+This actually does not cause obvious problems on current kernels due to
+the current flush lock implementation. Older kernels use a counting
+based flush lock mechanism, however, which effectively breaks the lock
+indefinitely when an already unlocked flush lock is repeatedly unlocked.
+Though this only currently occurs on filesystem shutdown, it has
+reproduced the effect of elevating an fs shutdown to a system-wide crash
+or hang.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Because this problem exists on filesystem shutdown and thus only after
+unrelated catastrophic failure, issue the simple fix to reacquire the
+flush lock in xfs_reclaim_inode() before jumping to the reclaim code.
+Add an assert to xfs_ifunlock() to help prevent future occurrences of
+the same problem. Finally, update a couple places to bitwise-OR the
+reclaim flag to avoid smashing the flush lock in the process (which is
+based on an inode flag in current kernels). This avoids a (spurious)
+failure of the newly introduced xfs_ifunlock() assertion.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reported-by: Zorro Lang <zlang@redhat.com>
+---
+
+v2:
+- Add comment in xfs_reclaim_inode() wrt to flush lock.
+- Fix XFS_IRECLAIM usage in xfs_inode_free().
+
+ fs/xfs/xfs_icache.c |  9 +++++++--
+ fs/xfs/xfs_inode.h  | 11 ++++++-----
+ 2 files changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 14796b7..2317b74 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -140,7 +140,7 @@ xfs_inode_free(
+ 	 * races.
+ 	 */
+ 	spin_lock(&ip->i_flags_lock);
+-	ip->i_flags = XFS_IRECLAIM;
++	ip->i_flags |= XFS_IRECLAIM;
+ 	ip->i_ino = 0;
+ 	spin_unlock(&ip->i_flags_lock);
+ 
+@@ -981,7 +981,12 @@ restart:
+ 
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+ 		xfs_iunpin_wait(ip);
++		/*
++		 * xfs_iflush_abort() drops the flush lock. Reacquire it as the
++		 * reclaim code expects to drop the flush lock.
++		 */
+ 		xfs_iflush_abort(ip, false);
++		xfs_iflock(ip);
+ 		goto reclaim;
+ 	}
+ 	if (xfs_ipincount(ip)) {
+@@ -1044,7 +1049,7 @@ reclaim:
+ 	 * skip.
+ 	 */
+ 	spin_lock(&ip->i_flags_lock);
+-	ip->i_flags = XFS_IRECLAIM;
++	ip->i_flags |= XFS_IRECLAIM;
+ 	ip->i_ino = 0;
+ 	spin_unlock(&ip->i_flags_lock);
+ 
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index f14c1de..71e8a81 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -246,6 +246,11 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+  * Synchronize processes attempting to flush the in-core inode back to disk.
+  */
+ 
++static inline int xfs_isiflocked(struct xfs_inode *ip)
++{
++	return xfs_iflags_test(ip, XFS_IFLOCK);
++}
++
+ extern void __xfs_iflock(struct xfs_inode *ip);
+ 
+ static inline int xfs_iflock_nowait(struct xfs_inode *ip)
+@@ -261,16 +266,12 @@ static inline void xfs_iflock(struct xfs_inode *ip)
+ 
+ static inline void xfs_ifunlock(struct xfs_inode *ip)
+ {
++	ASSERT(xfs_isiflocked(ip));
+ 	xfs_iflags_clear(ip, XFS_IFLOCK);
+ 	smp_mb();
+ 	wake_up_bit(&ip->i_flags, __XFS_IFLOCK_BIT);
+ }
+ 
+-static inline int xfs_isiflocked(struct xfs_inode *ip)
+-{
+-	return xfs_iflags_test(ip, XFS_IFLOCK);
+-}
+-
+ /*
+  * Flags for inode locking.
+  * Bit ranges:	1<<1  - 1<<16-1 -- iolock/ilock modes (bitfield)
+-- 
+2.7.4
+
