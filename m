@@ -1,24 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38208 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:38215 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932436AbcJQMGp (ORCPT
+        with ESMTP id S932594AbcJQMGp (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 08:06:45 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: fix locking for the reflink operation
-Date: Mon, 17 Oct 2016 14:05:16 +0200
-Message-Id: <1476705920-32493-1-git-send-email-hch@lst.de>
+Subject: [PATCH 2/4] xfs: fix the same_inode check in xfs_file_share_range
+Date: Mon, 17 Oct 2016 14:05:18 +0200
+Message-Id: <1476705920-32493-3-git-send-email-hch@lst.de>
+In-Reply-To: <1476705920-32493-1-git-send-email-hch@lst.de>
+References: <1476705920-32493-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: darrick.wong@oracle.com
 
-When creating a reflink we need to take the iolock much earlier, as
-various early checks done in xfs_file_share_range currently are racy
-without it.  Patches 1-3 sort that out in a minimal invasive way,
-but I think we should just merge xfs_file_share_range and
-xfs_reflink_remap_range, which is what patch 4 does.
+The VFS i_ino is an unsigned long, while XFS inode numbers are 64-bit
+wide, so checking i_ino for equality could lead to rate false positives
+on 32-bit architectures.  Just compare the inode pointers themselves
+to be safe.
 
-Patches 1-3 are something I'd like to see in 4.9, patch 4 might not
-fully qualify, but just getting it in might make everyones life easier.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_file.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 20563f2..012a960 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1003,7 +1003,7 @@ xfs_file_share_range(
+ 	    IS_SWAPFILE(inode_out))
+ 		return -ETXTBSY;
+ 
+-	same_inode = (inode_in->i_ino == inode_out->i_ino);
++	same_inode = (inode_in == inode_out);
+ 
+ 	/* Don't reflink dirs, pipes, sockets... */
+ 	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
+-- 
+2.1.4
 
