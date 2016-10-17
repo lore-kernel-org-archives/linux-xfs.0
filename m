@@ -1,111 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33578 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754421AbcJMN1r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Oct 2016 09:27:47 -0400
-Date: Thu, 13 Oct 2016 09:27:36 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 8/9] xfs: optimize xfs_reflink_end_cow
-Message-ID: <20161013132735.GC9339@bfoster.bfoster>
-References: <1476106685-29048-1-git-send-email-hch@lst.de>
- <1476106685-29048-9-git-send-email-hch@lst.de>
- <20161012141536.GD56019@bfoster.bfoster>
- <20161013070639.GE10579@lst.de>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:47229 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754411AbcJQGzl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 02:55:41 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9H641VL107134
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2016 02:07:08 -0400
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 264nf3rsu2-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2016 02:07:08 -0400
+Received: from localhost
+        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <aneesh.kumar@linux.vnet.ibm.com>;
+        Mon, 17 Oct 2016 00:07:07 -0600
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH v7 15/17] dax: add struct iomap based DAX PMD support
+In-Reply-To: <1476386619-2727-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <20161013154224.GB30680@quack2.suse.cz> <1476386619-2727-1-git-send-email-ross.zwisler@linux.intel.com>
+Date: Mon, 17 Oct 2016 11:36:55 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161013070639.GE10579@lst.de>
+Content-Type: text/plain
+Message-Id: <87a8e3tsow.fsf@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org
+Cc: Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Thu, Oct 13, 2016 at 09:06:39AM +0200, Christoph Hellwig wrote:
-> On Wed, Oct 12, 2016 at 10:15:37AM -0400, Brian Foster wrote:
-> > > +	xfs_bmap_search_extents(ip, end_fsb - 1, XFS_COW_FORK, &eof, &idx,
-> > > +			&got, &prev);
-> > > +	if (eof) {
-> > > +		ASSERT(idx > 0);
-> > > +		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, --idx), &got);
-> > > +	}
-> > 
-> > Hmm, should this happen? Do we really want to proceed with the previous
-> > extent?
-> 
-> Yes.  This is the same pattern as xfs_bunmapi and it is needed.  For
-> an explanation we need to recall the semantics of xfs_bmap_search_extents,
-> which gives us the extent at bno IFF there is one, else if gives us the
-> extent beyond bno.
-> 
+Ross Zwisler <ross.zwisler@linux.intel.com> writes:
 
-Ok, right..
+> DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
+> locking.  This patch allows DAX PMDs to participate in the DAX radix tree
+> based locking scheme so that they can be re-enabled using the new struct
+> iomap based fault handlers.
+>
+> There are currently three types of DAX 4k entries: 4k zero pages, 4k DAX
+> mappings that have an associated block allocation, and 4k DAX empty
+> entries.  The empty entries exist to provide locking for the duration of a
+> given page fault.
+>
+> This patch adds three equivalent 2MiB DAX entries: Huge Zero Page (HZP)
+> entries, PMD DAX entries that have associated block allocations, and 2 MiB
+> DAX empty entries.
+>
+> Unlike the 4k case where we insert a struct page* into the radix tree for
+> 4k zero pages, for HZP we insert a DAX exceptional entry with the new
+> RADIX_DAX_HZP flag set.  This is because we use a single 2 MiB zero page in
+> every 2MiB hole mapping, and it doesn't make sense to have that same struct
+> page* with multiple entries in multiple trees.  This would cause contention
+> on the single page lock for the one Huge Zero Page, and it would break the
+> page->index and page->mapping associations that are assumed to be valid in
+> many other places in the kernel.
+>
+> One difficult use case is when one thread is trying to use 4k entries in
+> radix tree for a given offset, and another thread is using 2 MiB entries
+> for that same offset.  The current code handles this by making the 2 MiB
+> user fall back to 4k entries for most cases.  This was done because it is
+> the simplest solution, and because the use of 2MiB pages is already
+> opportunistic.
+>
+> If we were to try to upgrade from 4k pages to 2MiB pages for a given range,
+> we run into the problem of how we lock out 4k page faults for the entire
+> 2MiB range while we clean out the radix tree so we can insert the 2MiB
+> entry.  We can solve this problem if we need to, but I think that the cases
+> where both 2MiB entries and 4K entries are being used for the same range
+> will be rare enough and the gain small enough that it probably won't be
+> worth the complexity.
+>
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/dax.c            | 378 +++++++++++++++++++++++++++++++++++++++++++++++-----
+>  include/linux/dax.h |  55 ++++++--
+>  mm/filemap.c        |   3 +-
+>  3 files changed, 386 insertions(+), 50 deletions(-)
+>
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 0582c7c..153cfd5 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -76,6 +76,26 @@ static void dax_unmap_atomic(struct block_device *bdev,
+>  	blk_queue_exit(bdev->bd_queue);
+>  }
+>  
+> +static int dax_is_pmd_entry(void *entry)
+> +{
+> +	return (unsigned long)entry & RADIX_DAX_PMD;
+> +}
+> +
+> +static int dax_is_pte_entry(void *entry)
+> +{
+> +	return !((unsigned long)entry & RADIX_DAX_PMD);
+> +}
+> +
+> +static int dax_is_zero_entry(void *entry)
+> +{
+> +	return (unsigned long)entry & RADIX_DAX_HZP;
+> +}
 
-> So we search for the last extent in the to be deleted range here,
-> but if there is no extent at the end of the range we'll get a return
-> outside the range, in which case we need to back one up (which
-> bunmapi does and we catch somewhat confusingly with the trim_extent
-> and goto next_extent, I should clean that up..), but as a special
-> case we can get the eof case where there is no extent beyong bno.
-> 
+How about dax_is_pmd_zero_entry() ?
 
-Got it, thanks. I think it was just the bmap_search_extents() semantics
-that threw me off. For some reason I was thinking eof meant there was
-nothing in the range, but that's not valid here because we are walking
-backwards.
 
-And the ASSERT(idx > 0) exists because if we're at eof, we must have at
-least one preceding extent because we're in the end I/O handler, after
-all. Makes sense.
+> +
+> +static int dax_is_empty_entry(void *entry)
+> +{
+> +	return (unsigned long)entry & RADIX_DAX_EMPTY;
+> +}
+> +
 
-> > I suppose the extent trim below would catch if we've dropped outside the
-> > range of the I/O, but note that if trim extent sets blockcount = 0, it
-> > doesn't necessarily reset the start offset for the (del.br_startoff ==
-> > offset_fsb) check at next_extent. Perhaps that should break once the del
-> > end offset precedes offset_fsb..?
-> > 
-> > Either way, it would be nice to have a comment here if there's some
-> > reason we shouldn't just bail out or flag a problem...
-> 
-> Yes, both this code and bumapi could use some cleanup..
-> 
-> > Maybe it's just me, but I find this whole loop kind of confusing. I
-> > realize it is tricky because we have to handle several different cases
-> > with regard to index (no more extents to the left, bmap_del_extent_cow()
-> > pushing index forward or back).
-> 
-> I found it rather confusing as well.
-> > 
-> > In staring at it a bit, I'm wondering if something like the following
-> > would work:
-> > 
-> > 	/* walk backwards until we're out of the I/O range... */
-> > 	while (got.br_startoff + got.br_blockcount > offset_fsb) {
-> > 		del = got;
-> > 		xfs_trim_extent(&del, offset_fsb, end_fsb - offset_fsb);
-> > 		/* extent delete may have bumped idx forward */
-> > 		if (!del.br_blockcount) {
-> > 			idx--;
-> > 			goto next_extent;
-> > 		}
-> > 
-> > 		...
-> > 
-> > next_extent:
-> > 		if (idx < 0)
-> > 			break;
-> > 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), &got);
-> > 	}
-> > 
-> > Thoughts?
-> 
-> That looks reasonable, I'll see if it passes xfstests.. :)
+-aneesh
 
-Great, thanks!
-
-Brian
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
