@@ -1,53 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49877 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753038AbcJOIwx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 15 Oct 2016 04:52:53 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/9] xfs: don't bother looking at the refcount tree for reads
-Date: Sat, 15 Oct 2016 10:52:29 +0200
-Message-Id: <1476521554-1894-5-git-send-email-hch@lst.de>
-In-Reply-To: <1476521554-1894-1-git-send-email-hch@lst.de>
-References: <1476521554-1894-1-git-send-email-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:37699 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754734AbcJQNy1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Oct 2016 09:54:27 -0400
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8FC65800B0
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2016 13:54:26 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn03.gateway.prod.ext.phx2.redhat.com [10.5.9.3])
+        by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u9HDsP2u010840
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2016 09:54:26 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: remove pointless error goto in xfs_bmap_remap_alloc
+Message-ID: <3f9689e1-3e1a-c874-f6ae-88ac40f9cde1@redhat.com>
+Date: Mon, 17 Oct 2016 08:54:25 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, bfoster@redhat.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-There is no need to trim an extent into a shared or non-shared one, or
-report any flags for plain old reads.
+The commit:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+f65306ea xfs: map an inode's offset to an exact physical block
+
+added a pointless error0: target; remove it.
+
+Addresses-Coverity-Id: 1373865
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_iomap.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index d907eb9..1dabf2e 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -996,11 +996,14 @@ xfs_file_iomap_begin(
- 		return error;
- 	}
- 
--	/* Trim the mapping to the nearest shared extent boundary. */
--	error = xfs_reflink_trim_around_shared(ip, &imap, &shared, &trimmed);
--	if (error) {
--		xfs_iunlock(ip, lockmode);
--		return error;
-+	if (flags & (IOMAP_WRITE | IOMAP_ZERO | IOMAP_REPORT)) {
-+		/* Trim the mapping to the nearest shared extent boundary. */
-+		error = xfs_reflink_trim_around_shared(ip, &imap, &shared,
-+				&trimmed);
-+		if (error) {
-+			xfs_iunlock(ip, lockmode);
-+			return error;
-+		}
- 	}
- 
- 	if ((flags & IOMAP_WRITE) && imap_needs_alloc(inode, &imap, nimaps)) {
--- 
-2.1.4
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index c27344c..861cf8d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3974,9 +3974,6 @@ xfs_bmap_remap_alloc(
+ 	 * allocating, so skip that check by pretending to be freeing.
+ 	 */
+ 	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
+-	if (error)
+-		goto error0;
+-error0:
+ 	xfs_perag_put(args.pag);
+ 	if (error)
+ 		trace_xfs_bmap_remap_alloc_error(ap->ip, error, _RET_IP_);
 
