@@ -1,50 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44933 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932239AbcJMOMH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Oct 2016 10:12:07 -0400
-Date: Thu, 13 Oct 2016 16:11:45 +0200
-From: Cyril Hrubis <chrubis@suse.cz>
-Subject: Re: [LTP] [PATCH] m4/ltp-xfs_quota.m4: fix xfs quota check
-Message-ID: <20161013141145.GA12204@rei.lan>
-References: <1476150729-2128-1-git-send-email-yangx.jy@cn.fujitsu.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37413 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1757211AbcJQF5g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 01:57:36 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9H5rSLU056275
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2016 01:57:35 -0400
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 264ksmkfd1-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2016 01:57:35 -0400
+Received: from localhost
+        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <aneesh.kumar@linux.vnet.ibm.com>;
+        Sun, 16 Oct 2016 23:57:35 -0600
+From: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Subject: Re: [PATCH v6 17/17] dax: remove "depends on BROKEN" from FS_DAX_PMD
+In-Reply-To: <20161012225022.15507-18-ross.zwisler@linux.intel.com>
+References: <20161012225022.15507-1-ross.zwisler@linux.intel.com> <20161012225022.15507-18-ross.zwisler@linux.intel.com>
+Date: Mon, 17 Oct 2016 11:27:24 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1476150729-2128-1-git-send-email-yangx.jy@cn.fujitsu.com>
+Content-Type: text/plain
+Message-Id: <87eg3ftt4r.fsf@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Xiao Yang <yangx.jy@cn.fujitsu.com>
-Cc: ltp@lists.linux.it, linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org
+Cc: Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Hi!
-> Current check doesn't work since xfsprogs v4.5.0.
-> Undefined off64_t type leads to this issue, so we
-> need to define _GNU_SOURCE to make off64_t defined.
-> 
-> This has been broken by upstream xfsporgs-dev commmit
-> 
-> commit cb898f157f8410a03cf5f3400baa1df9e5eecd33
-> Author: Felix Janda <felix.janda@posteo.de>
-> Date: Fri Feb 5 08:34:06 2016 +1100
-> 
->   linux.h: Use off64_t instead of loff_t
+Ross Zwisler <ross.zwisler@linux.intel.com> writes:
 
-That kind of looks like a bug in xfs-progs, since off64_t is not exposed
-from glibc unless we enable either largefile support or define
-_GNU_SOURCE. As a matter of fact the _GNU_SOURCE enables
-_LARGEFILE64_SOURCE which then enables the typedef that exposes the
-off64_t typedef.
+> Now that DAX PMD faults are once again working and are now participating in
+> DAX's radix tree locking scheme, allow their config option to be enabled.
+>
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> ---
+>  fs/Kconfig | 1 -
+>  1 file changed, 1 deletion(-)
+>
+> diff --git a/fs/Kconfig b/fs/Kconfig
+> index 2bc7ad7..b6f0fce 100644
+> --- a/fs/Kconfig
+> +++ b/fs/Kconfig
+> @@ -55,7 +55,6 @@ config FS_DAX_PMD
+>  	depends on FS_DAX
+>  	depends on ZONE_DEVICE
+>  	depends on TRANSPARENT_HUGEPAGE
+> -	depends on BROKEN
+>  
+>  endif # BLOCK
 
-So they are depending on a type that is not defined by default but since
-the code has been part of at least three releases already we have to
-apply the workaround for it anyway.
 
-Patch pushed, thanks.
+This series made dax_pmd_fault return VM_FAULT_FALLBACK in [PATCH v6 09/17] dax: remove dax_pmd_fault(). 
+That essentially disable dax pmd for ext4. Any plans to fix that ?
 
-[CCing the XFS mailing list in case they want to do something about it]
+-aneesh
 
--- 
-Cyril Hrubis
-chrubis@suse.cz
