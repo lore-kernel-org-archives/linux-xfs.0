@@ -1,79 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46112 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754120AbcJYXEF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:04:05 -0400
-Subject: [PATCH 03/39] xfs: define the on-disk refcount btree format
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Oct 2016 16:03:56 -0700
-Message-ID: <147743663655.11035.6044942751505512619.stgit@birch.djwong.org>
-In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
-References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:53850 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758890AbcJQWT5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Oct 2016 18:19:57 -0400
+Subject: Re: [PATCH] xfsprogs: Update FSF address in COPYING file
+References: <CAFLt3pjDj0m0u5vdjfBXM+AXU+41FDPrcV8Nm7426A4PURPmaQ@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <0e17e597-55f9-6661-8db6-95b0969c7772@sandeen.net>
+Date: Mon, 17 Oct 2016 17:19:51 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAFLt3pjDj0m0u5vdjfBXM+AXU+41FDPrcV8Nm7426A4PURPmaQ@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Grozdan <neutrino8@gmail.com>, linux-xfs@vger.kernel.org
 
-Start constructing the refcount btree implementation by establishing
-the on-disk format and everything needed to read, write, and
-manipulate the refcount btree blocks.
+On 10/17/16 5:13 PM, Grozdan wrote:
+> The FSF address in doc/COPYING needs an update. This was caught and
+> reported by the openSUSE build service while building the xfsprogs
+> package. The new address is taken directly from FSF's license files
+> put on their site
+> 
+> Signed-off-by: Grozdan Nikolov <neutrino8@gmail.com>
 
-[Initialize the in-core mount context.]
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-[hch: allocate the cursor with KM_NOFS to quiet lockdep]
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
-v2: Calculate a separate maxlevels for the refcount btree.
-
-v3: Enable the tracking of per-cursor stats for refcount btrees.
-The refcount update code will use this to guess if it's time to
-split a refcountbt update across two transactions to avoid
-exhausing the transaction reservation.
-
-xfs_refcountbt_init_cursor can be called under the ilock, so
-use KM_NOFS to prevent fs activity with a lock held.  This
-should shut up some of the lockdep warnings.
----
- include/libxfs.h |    1 +
- libxfs/init.c    |    2 ++
- 2 files changed, 3 insertions(+)
-
-
-diff --git a/include/libxfs.h b/include/libxfs.h
-index cf59d6c..ec8f6ab 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -79,6 +79,7 @@ extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
- #include "xfs_trans.h"
- #include "xfs_rmap_btree.h"
- #include "xfs_rmap.h"
-+#include "xfs_refcount_btree.h"
- 
- #ifndef ARRAY_SIZE
- #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-diff --git a/libxfs/init.c b/libxfs/init.c
-index 828ae3e..c962d3e 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -32,6 +32,7 @@
- #include "xfs_inode.h"
- #include "xfs_trans.h"
- #include "xfs_rmap_btree.h"
-+#include "xfs_refcount_btree.h"
- 
- #include "libxfs.h"		/* for now */
- 
-@@ -689,6 +690,7 @@ libxfs_mount(
- 	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
- 	xfs_ialloc_compute_maxlevels(mp);
- 	xfs_rmapbt_compute_maxlevels(mp);
-+	xfs_refcountbt_compute_maxlevels(mp);
- 
- 	if (sbp->sb_imax_pct) {
- 		/* Make sure the maximum inode count is a multiple of the
-
+> 
+> -- Yours truly
+> 
+> 
+> COPYING.diff
+> 
+> 
+> --- xfsprogs-4.7.0/doc/COPYING	2009-12-30 23:30:13.000000000 +0100
+> +++ xfsprogs-4.7.0.new/doc/COPYING	2016-10-17 23:46:05.280631426 +0200
+> @@ -11,7 +11,7 @@
+>  		       Version 2.1, February 1999
+>  
+>   Copyright (C) 1991, 1999 Free Software Foundation, Inc.
+> -     59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+> + 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+>   Everyone is permitted to copy and distribute verbatim copies
+>   of this license document, but changing it is not allowed.
+>  
+> @@ -518,8 +518,8 @@
+>  		    GNU GENERAL PUBLIC LICENSE
+>  		       Version 2, June 1991
+>  
+> - Copyright (C) 1989, 1991 Free Software Foundation, Inc.
+> -                       59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+> + Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
+> + 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+>   Everyone is permitted to copy and distribute verbatim copies
+>   of this license document, but changing it is not allowed.
+>  
+> 
