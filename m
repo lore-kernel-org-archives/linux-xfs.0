@@ -1,173 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:56239 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753763AbcJQX3f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 19:29:35 -0400
-Date: Tue, 18 Oct 2016 10:29:08 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs: don't block the log commit handler for discards
-Message-ID: <20161017232908.GY23194@dastard>
-References: <1476735753-5861-1-git-send-email-hch@lst.de>
- <1476735753-5861-3-git-send-email-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:49056 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934344AbcJQPyU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Oct 2016 11:54:20 -0400
+Subject: Re: [PATCH] xfs: fix unbalanced inode reclaim flush locking
+References: <1476716576-14427-1-git-send-email-bfoster@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5b9824d0-2cce-93a9-09ce-aa3c5825e4df@sandeen.net>
+Date: Mon, 17 Oct 2016 10:54:18 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1476735753-5861-3-git-send-email-hch@lst.de>
+In-Reply-To: <1476716576-14427-1-git-send-email-bfoster@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, michaelcallahan@fb.com
+To: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Cc: zlang@redhat.com
 
-On Mon, Oct 17, 2016 at 10:22:32PM +0200, Christoph Hellwig wrote:
-> Instead we submit the discard requests and use another workqueue to
-> release the extents from the extent busy list.
-
-I lik ethe idea, and have toyed with it in the past. A couple of
-questions about the implementation, though....
-
+On 10/17/16 10:02 AM, Brian Foster wrote:
+> Filesystem shutdown testing on an older distro kernel has uncovered an
+> imbalanced locking pattern for the inode flush lock in
+> xfs_reclaim_inode(). Specifically, there is a double unlock sequence
+> between the call to xfs_iflush_abort() and xfs_reclaim_inode() at the
+> "reclaim:" label.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> This actually does not cause obvious problems on current kernels due to
+> the current flush lock implementation. Older kernels use a counting
+> based flush lock mechanism, however, which effectively breaks the lock
+> indefinitely when an already unlocked flush lock is repeatedly unlocked.
+> Though this only currently occurs on filesystem shutdown, it has
+> reproduced the effect of elevating an fs shutdown to a system-wide crash
+> or hang.
+> 
+> Because this problem exists on filesystem shutdown and thus only after
+> unrelated catastrophic failure, issue the simple fix to reacquire the
+> flush lock in xfs_reclaim_inode() before jumping to the reclaim code.
+> Add an assert to xfs_ifunlock() to help prevent future occurrences of
+> the same problem. Finally, update xfs_reclaim_inode() to bitwise-OR the
+> reclaim flag to avoid smashing the flush lock in the process (which is
+> based on an inode flag in current kernels). This avoids a (spurious)
+> failure of the newly introduced xfs_ifunlock() assertion.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reported-by: Zorro Lang <zlang@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 11 ++++++-
->  fs/xfs/xfs_discard.c     | 29 -----------------
->  fs/xfs/xfs_discard.h     |  1 -
->  fs/xfs/xfs_log_cil.c     | 84 +++++++++++++++++++++++++++++++++++++++++++-----
->  fs/xfs/xfs_log_priv.h    |  1 +
->  fs/xfs/xfs_mount.c       |  1 +
->  fs/xfs/xfs_super.c       |  8 +++++
->  fs/xfs/xfs_super.h       |  2 ++
->  8 files changed, 98 insertions(+), 39 deletions(-)
+>  fs/xfs/xfs_icache.c |  3 ++-
+>  fs/xfs/xfs_inode.h  | 11 ++++++-----
+>  2 files changed, 8 insertions(+), 6 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index c27344c..cbea3b2 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3684,10 +3684,12 @@ xfs_bmap_btalloc(
->  	int		tryagain;
->  	int		error;
->  	int		stripe_align;
-> +	bool		trydiscard;
->  
->  	ASSERT(ap->length);
->  
->  	mp = ap->ip->i_mount;
-> +	trydiscard = (mp->m_flags & XFS_MOUNT_DISCARD);
->  
->  	/* stripe alignment for allocation is determined by mount parameters */
->  	stripe_align = 0;
-> @@ -3708,7 +3710,7 @@ xfs_bmap_btalloc(
->  		ASSERT(ap->length);
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 14796b7..7375313 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -982,6 +982,7 @@ restart:
+>  	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+>  		xfs_iunpin_wait(ip);
+
+I suppose comments here might help...
+
+Other callers of xfs_iflush_abort include:
+
+        /*
+         * Unlocks the flush lock
+         */
+
+and immediately re-locking it here might be worth explaining as well.
+
+>  		xfs_iflush_abort(ip, false);
+> +		xfs_iflock(ip);
+>  		goto reclaim;
 >  	}
+>  	if (xfs_ipincount(ip)) {
+
+> @@ -1044,7 +1045,7 @@ reclaim:
+>  	 * skip.
+>  	 */
+>  	spin_lock(&ip->i_flags_lock);
+> -	ip->i_flags = XFS_IRECLAIM;
+> +	ip->i_flags |= XFS_IRECLAIM;
+>  	ip->i_ino = 0;
+>  	spin_unlock(&ip->i_flags_lock);
 >  
+
+I think xfs_inode_free() should get the same |= treatment?
+
+-Eric
+
+
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index f14c1de..71e8a81 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -246,6 +246,11 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+>   * Synchronize processes attempting to flush the in-core inode back to disk.
+>   */
+>  
+> +static inline int xfs_isiflocked(struct xfs_inode *ip)
+> +{
+> +	return xfs_iflags_test(ip, XFS_IFLOCK);
+> +}
+> +
+>  extern void __xfs_iflock(struct xfs_inode *ip);
+>  
+>  static inline int xfs_iflock_nowait(struct xfs_inode *ip)
+> @@ -261,16 +266,12 @@ static inline void xfs_iflock(struct xfs_inode *ip)
+>  
+>  static inline void xfs_ifunlock(struct xfs_inode *ip)
+>  {
+> +	ASSERT(xfs_isiflocked(ip));
+>  	xfs_iflags_clear(ip, XFS_IFLOCK);
+>  	smp_mb();
+>  	wake_up_bit(&ip->i_flags, __XFS_IFLOCK_BIT);
+>  }
+>  
+> -static inline int xfs_isiflocked(struct xfs_inode *ip)
+> -{
+> -	return xfs_iflags_test(ip, XFS_IFLOCK);
+> -}
 > -
-> +retry:
->  	nullfb = *ap->firstblock == NULLFSBLOCK;
->  	fb_agno = nullfb ? NULLAGNUMBER : XFS_FSB_TO_AGNO(mp, *ap->firstblock);
->  	if (nullfb) {
-> @@ -3888,6 +3890,13 @@ xfs_bmap_btalloc(
->  			return error;
->  		ap->dfops->dop_low = true;
->  	}
-> +
-> +	if (args.fsbno == NULLFSBLOCK && trydiscard) {
-> +		trydiscard = false;
-> +		flush_workqueue(xfs_discard_wq);
-> +		goto retry;
-> +	}
-
-So this is the new behaviour that triggers flushing of the discard
-list rather than having it occur from a log force inside
-xfs_extent_busy_update_extent().
-
-However, xfs_extent_busy_update_extent() also has backoff when it
-finds an extent on the busy list being discarded, which means it
-could spin waiting for the discard work to complete.
-
-Wouldn't it be better to trigger this workqueue flush in
-xfs_extent_busy_update_extent() in both these cases so that the
-behaviour remains the same for userdata allocations hitting
-uncommitted busy extents, but also allow us to remove the spinning
-for allocations where the busy extent is currently being discarded?
-
-> +xlog_discard_endio_work(
-> +	struct work_struct	*work)
-> +{
-> +	struct xfs_cil_ctx	*ctx =
-> +		container_of(work, struct xfs_cil_ctx, discard_endio_work);
-> +	struct xfs_mount	*mp = ctx->cil->xc_log->l_mp;
-> +
-> +	xfs_extent_busy_clear(mp, &ctx->busy_extents, false);
-> +	kmem_free(ctx);
-> +}
-> +
-> +/*
-> + * Queue up the actual completion to a thread to avoid IRQ-safe locking for
-> + * pagb_lock.  Note that we need a unbounded workqueue, otherwise we might
-> + * get the execution delayed up to 30 seconds for weird reasons.
-> + */
-> +static void
-> +xlog_discard_endio(
-> +	struct bio		*bio)
-> +{
-> +	struct xfs_cil_ctx	*ctx = bio->bi_private;
-> +
-> +	INIT_WORK(&ctx->discard_endio_work, xlog_discard_endio_work);
-> +	queue_work(xfs_discard_wq, &ctx->discard_endio_work);
-> +}
-> +
-> +static void
-> +xlog_discard_busy_extents(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_cil_ctx	*ctx)
-> +{
-> +	struct list_head	*list = &ctx->busy_extents;
-> +	struct xfs_extent_busy	*busyp;
-> +	struct bio		*bio = NULL;
-> +	struct blk_plug		plug;
-> +	int			error = 0;
-> +
-> +	ASSERT(mp->m_flags & XFS_MOUNT_DISCARD);
-> +
-> +	blk_start_plug(&plug);
-> +	list_for_each_entry(busyp, list, list) {
-> +		trace_xfs_discard_extent(mp, busyp->agno, busyp->bno,
-> +					 busyp->length);
-> +
-> +		error = __blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
-> +				XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno),
-> +				XFS_FSB_TO_BB(mp, busyp->length),
-> +				GFP_NOFS, 0, &bio);
-> +		if (error && error != -EOPNOTSUPP) {
-> +			xfs_info(mp,
-> +	 "discard failed for extent [0x%llx,%u], error %d",
-> +				 (unsigned long long)busyp->bno,
-> +				 busyp->length,
-> +				 error);
-> +			break;
-> +		}
-> +	}
-> +
-> +	if (bio) {
-> +		bio->bi_private = ctx;
-> +		bio->bi_end_io = xlog_discard_endio;
-> +		submit_bio(bio);
-> +	} else {
-> +		xlog_discard_endio_work(&ctx->discard_endio_work);
-> +	}
-
-This creates one long bio chain with all the regions to discard on
-it, and then when all it completes we call xlog_discard_endio() to
-release all the busy extents.
-
-Why not pull the busy extent from the list and attach it to each
-bio returned and submit them individually and run per-busy extent
-completions? That will substantially reduce the latency of discard
-completions when there are long lists of extents to discard....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  /*
+>   * Flags for inode locking.
+>   * Bit ranges:	1<<1  - 1<<16-1 -- iolock/ilock modes (bitfield)
+> 
