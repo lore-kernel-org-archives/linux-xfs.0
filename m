@@ -1,56 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52701 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53245 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933389AbcJQJJq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 17 Oct 2016 05:09:46 -0400
-Date: Mon, 17 Oct 2016 11:09:37 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v6 17/17] dax: remove "depends on BROKEN" from FS_DAX_PMD
-Message-ID: <20161017090937.GG3359@quack2.suse.cz>
-References: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
- <20161012225022.15507-18-ross.zwisler@linux.intel.com>
- <87eg3ftt4r.fsf@linux.vnet.ibm.com>
+        id S932627AbcJQJQk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Oct 2016 05:16:40 -0400
+Date: Mon, 17 Oct 2016 11:16:14 +0200
+From: Cyril Hrubis <chrubis@suse.cz>
+Subject: Re: [LTP] [PATCH] m4/ltp-xfs_quota.m4: fix xfs quota check
+Message-ID: <20161017091614.GA26999@rei.lan>
+References: <1476150729-2128-1-git-send-email-yangx.jy@cn.fujitsu.com>
+ <20161013141145.GA12204@rei.lan>
+ <20161013194613.GP23194@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87eg3ftt4r.fsf@linux.vnet.ibm.com>
+In-Reply-To: <20161013194613.GP23194@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Xiao Yang <yangx.jy@cn.fujitsu.com>, ltp@lists.linux.it, linux-xfs@vger.kernel.org
 
-On Mon 17-10-16 11:27:24, Aneesh Kumar K.V wrote:
-> Ross Zwisler <ross.zwisler@linux.intel.com> writes:
+Hi!
+> > That kind of looks like a bug in xfs-progs, since off64_t is not exposed
+> > from glibc unless we enable either largefile support or define
+> > _GNU_SOURCE. As a matter of fact the _GNU_SOURCE enables
+> > _LARGEFILE64_SOURCE which then enables the typedef that exposes the
+> > off64_t typedef.
 > 
-> > Now that DAX PMD faults are once again working and are now participating in
-> > DAX's radix tree locking scheme, allow their config option to be enabled.
-> >
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > ---
-> >  fs/Kconfig | 1 -
-> >  1 file changed, 1 deletion(-)
-> >
-> > diff --git a/fs/Kconfig b/fs/Kconfig
-> > index 2bc7ad7..b6f0fce 100644
-> > --- a/fs/Kconfig
-> > +++ b/fs/Kconfig
-> > @@ -55,7 +55,6 @@ config FS_DAX_PMD
-> >  	depends on FS_DAX
-> >  	depends on ZONE_DEVICE
-> >  	depends on TRANSPARENT_HUGEPAGE
-> > -	depends on BROKEN
-> >  
-> >  endif # BLOCK
-> 
-> 
-> This series made dax_pmd_fault return VM_FAULT_FALLBACK in [PATCH v6 09/17] dax: remove dax_pmd_fault(). 
-> That essentially disable dax pmd for ext4. Any plans to fix that ?
+> Which is a bug in the application build - if you are doing anything
+> with XFS, you need to define _LARGEFILE64_SOURCE. No ifs, buts or
+> maybes - it's a 64 bit filesystem with 64 bit interfaces (e.g.
+> ioctls) and so applications that include XFS headers to poke at XFS
+> filesystems need to fully support 64 bit file offsets....
 
-I'm working on converting ext4 to the new iomap infrastructure. Once that
-is done, it can use new DAX helpers for PMD faults easily.
+Ok, so this was our fault.
 
-								Honza
+Is there somewhere bit fat warning that I've missed somewhere?
+
+> > So they are depending on a type that is not defined by default but since
+> > the code has been part of at least three releases already we have to
+> > apply the workaround for it anyway.
+> 
+> We're only going to get stricter on this - next cycle we're removing
+> off64_t and replacing it with off_t, and then we'll be /explicitly/
+> breaking the build of any application that hasn't set up it's build
+> environment to define off_t as a 64 bit variable.  i.e.  specifying
+> _LARGEFILE64_SOURCE before the inclusion of XFS headers will be a
+> mandatory requirement - that's far better than ending up with clean
+> builds and subtly broken applications...
+
+Ending the build with clear #error or something similar sounds much
+better than failing with undefined type to me.
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Cyril Hrubis
+chrubis@suse.cz
