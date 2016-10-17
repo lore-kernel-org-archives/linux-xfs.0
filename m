@@ -1,59 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30783 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754447AbcJQSgL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 14:36:11 -0400
-Date: Mon, 17 Oct 2016 11:36:05 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: Fix uninitialized variable in
- xfs_reflink_reserve_cow_range()
-Message-ID: <20161017183605.GA26485@birch.djwong.org>
-References: <1476699404-5977-1-git-send-email-geert@linux-m68k.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:47073 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938669AbcJQRco (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 13:32:44 -0400
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] xfs: remove redundant assignment of ifp
+Date: Mon, 17 Oct 2016 18:32:40 +0100
+Message-Id: <20161017173240.26542-1-colin.king@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <1476699404-5977-1-git-send-email-geert@linux-m68k.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-kernel@vger.kernel.org
 
-On Mon, Oct 17, 2016 at 12:16:44PM +0200, Geert Uytterhoeven wrote:
-> with gcc 4.1.2:
-> 
->     fs/xfs/xfs_reflink.c: In function ‘xfs_reflink_reserve_cow_range’:
->     fs/xfs/xfs_reflink.c:327: warning: ‘error’ may be used uninitialized in this function
-> 
-> Indeed, if "count" is zero, the function will return an uninitialized
-> error value.
-> 
-> While "count" is unlikely to be zero, this function is called through
-> the public iomap API. Hence fix this by preinitializing error to zero.
-> 
-> Fixes: 2a06705cd5954030 ("xfs: create delalloc extents in CoW fork")
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+From: Colin Ian King <colin.king@canonical.com>
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Remove redundant ifp = ifp statement, it does nothing. Found with
+static analysis by CoverityScan.
 
-> ---
->  fs/xfs/xfs_reflink.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 5965e9455d91e036..d48a7cc2fe007f66 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -324,7 +324,7 @@
->  	struct xfs_mount	*mp = ip->i_mount;
->  	xfs_fileoff_t		offset_fsb, end_fsb;
->  	bool			skipped = false;
-> -	int			error;
-> +	int			error = 0;
->  
->  	trace_xfs_reflink_reserve_cow_range(ip, offset, count);
->  
-> -- 
-> 1.9.1
-> 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index c27344c..0283b7e 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5204,7 +5204,7 @@ xfs_bunmapi_cow(
+ 	ep = xfs_bmap_search_extents(ip, del->br_startoff, XFS_COW_FORK, &eof,
+ 			&eidx, &got, &new);
+ 
+-	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK); ifp = ifp;
++	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+ 	ASSERT((eidx >= 0) && (eidx < ifp->if_bytes /
+ 		(uint)sizeof(xfs_bmbt_rec_t)));
+ 	ASSERT(del->br_blockcount > 0);
+-- 
+2.9.3
+
