@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40123 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754769AbcJNSNQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2016 14:13:16 -0400
-Subject: [PATCH 3/3] misc: fix more xfs_db usage
+Received: from userp1040.oracle.com ([156.151.31.81]:16524 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933751AbcJQWKH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 18:10:07 -0400
+Subject: [PATCH 3/3] misc: fix more xfs_db open-coding instances
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 14 Oct 2016 11:13:08 -0700
-Message-ID: <147646878869.19627.4760911876287258529.stgit@birch.djwong.org>
-In-Reply-To: <147646876990.19627.5046740854955682441.stgit@birch.djwong.org>
-References: <147646876990.19627.5046740854955682441.stgit@birch.djwong.org>
+Date: Mon, 17 Oct 2016 15:09:34 -0700
+Message-ID: <147674217475.23842.9304657231302422666.stgit@birch.djwong.org>
+In-Reply-To: <147674215521.23842.13841682595738466897.stgit@birch.djwong.org>
+References: <147674215521.23842.13841682595738466897.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,9 +16,13 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, hch@infradead.org, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org
+
+Convert some more cases of 'xfs_db $SCRATCH_DEV' to _scratch_xfs_db
+that were left out of the initial cleanup patch.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
  tests/xfs/004 |    2 +-
  tests/xfs/007 |    8 ++++----
