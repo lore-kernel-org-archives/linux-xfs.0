@@ -1,29 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46221 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932489AbcJQWJq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 18:09:46 -0400
-Subject: [PATCH v2 0/3] xfstests: fix tests for rmap/reflink
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 17 Oct 2016 15:09:15 -0700
-Message-ID: <147674215521.23842.13841682595738466897.stgit@birch.djwong.org>
+Received: from mx2.suse.de ([195.135.220.15]:52701 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933389AbcJQJJq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Oct 2016 05:09:46 -0400
+Date: Mon, 17 Oct 2016 11:09:37 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v6 17/17] dax: remove "depends on BROKEN" from FS_DAX_PMD
+Message-ID: <20161017090937.GG3359@quack2.suse.cz>
+References: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
+ <20161012225022.15507-18-ross.zwisler@linux.intel.com>
+ <87eg3ftt4r.fsf@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87eg3ftt4r.fsf@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org, fstests@vger.kernel.org
+To: "Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Hi all,
+On Mon 17-10-16 11:27:24, Aneesh Kumar K.V wrote:
+> Ross Zwisler <ross.zwisler@linux.intel.com> writes:
+> 
+> > Now that DAX PMD faults are once again working and are now participating in
+> > DAX's radix tree locking scheme, allow their config option to be enabled.
+> >
+> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > ---
+> >  fs/Kconfig | 1 -
+> >  1 file changed, 1 deletion(-)
+> >
+> > diff --git a/fs/Kconfig b/fs/Kconfig
+> > index 2bc7ad7..b6f0fce 100644
+> > --- a/fs/Kconfig
+> > +++ b/fs/Kconfig
+> > @@ -55,7 +55,6 @@ config FS_DAX_PMD
+> >  	depends on FS_DAX
+> >  	depends on ZONE_DEVICE
+> >  	depends on TRANSPARENT_HUGEPAGE
+> > -	depends on BROKEN
+> >  
+> >  endif # BLOCK
+> 
+> 
+> This series made dax_pmd_fault return VM_FAULT_FALLBACK in [PATCH v6 09/17] dax: remove dax_pmd_fault(). 
+> That essentially disable dax pmd for ext4. Any plans to fix that ?
 
-Here are some cleanups[1] for the rmap/reflink tests to reflect recent
-API changes (the readdition of the unshare fallocate flag and the
-removal of the reflink inode flag), a last-minute disk format change
-for the XFS reflink implementation, and some cleanups that were left
-out of the previous patch submission.
+I'm working on converting ext4 to the new iomap infrastructure. Once that
+is done, it can use new DAX helpers for PMD faults easily.
 
---D
-
-[1] https://github.com/djwong/xfstests/tree/djwong-devel
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
