@@ -1,99 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46238 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932571AbcJRByl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 21:54:41 -0400
-Subject: [PATCH 2/2] man2/ioctl_fideduperange.2: clarify operation some more
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 17 Oct 2016 18:54:35 -0700
-Message-ID: <147675567514.12400.12489294497404900248.stgit@birch.djwong.org>
-In-Reply-To: <147675566778.12400.16090171199161180354.stgit@birch.djwong.org>
-References: <147675566778.12400.16090171199161180354.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41210 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754595AbcJQPfq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 17 Oct 2016 11:35:46 -0400
+Date: Mon, 17 Oct 2016 11:35:44 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/9] iomap: add IOMAP_REPORT
+Message-ID: <20161017153542.GB12736@bfoster.bfoster>
+References: <1476521554-1894-1-git-send-email-hch@lst.de>
+ <1476521554-1894-2-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1476521554-1894-2-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: mtk.manpages@gmail.com, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-man@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-Clarify the behavior of the dedupe ioctl.
+On Sat, Oct 15, 2016 at 10:52:26AM +0200, Christoph Hellwig wrote:
+> This allows the file system to tell a FIEMAP from a read operation, and thus
+> avoids the need to report flags that aren't actually used in the read path.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- man2/ioctl_ficlonerange.2  |    2 +-
- man2/ioctl_fideduperange.2 |   26 ++++++++++++++++++++++----
- 2 files changed, 23 insertions(+), 5 deletions(-)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-
-diff --git a/man2/ioctl_ficlonerange.2 b/man2/ioctl_ficlonerange.2
-index ac0738a..0e3ae0e 100644
---- a/man2/ioctl_ficlonerange.2
-+++ b/man2/ioctl_ficlonerange.2
-@@ -114,7 +114,7 @@ regions in directories.
- .TP
- .B EOPNOTSUPP
- This can appear if the filesystem does not support reflinking either file
--descriptor.
-+descriptor, or if either file descriptor refers to special inodes.
- .TP
- .B EPERM
- .IR dest_fd
-diff --git a/man2/ioctl_fideduperange.2 b/man2/ioctl_fideduperange.2
-index c52fa2a..2112d10 100644
---- a/man2/ioctl_fideduperange.2
-+++ b/man2/ioctl_fideduperange.2
-@@ -99,21 +99,39 @@ Each deduplication operation targets
- bytes in file descriptor
- .IR dest_fd
- at offset
--.IR logical_offset ".
-+.IR dest_offset ".
- The field
- .IR reserved
- must be zero.
-+During the call,
-+.IR src_fd
-+must be open for reading and
-+.IR dest_fd
-+must be open for writing.
-+For any call to this ioctl, there may not be more than 65,536
-+requests attached; each request may not exceed 16MiB.
-+By convention, the storage used by
-+.IR src_fd
-+is mapped into
-+.IR dest_fd
-+and the previous contents in
-+.IR dest_fd
-+are freed.
- 
- Upon successful completion of this ioctl, the number of bytes successfully
- deduplicated is returned in
- .IR bytes_deduped
- and a status code for the deduplication operation is returned in
- .IR status ".
--
-+If even a single byte in the range does not match, the deduplication
-+request will be ignored and
-+.IR status
-+set to
-+.BR FILE_DEDUPE_RANGE_DIFFERS .
- The
- .IR status
- code is set to
--.B 0
-+.B FILE_DEDUPE_RANGE_SAME
- for success, a negative error code in case of error, or
- .B FILE_DEDUPE_RANGE_DIFFERS
- if the data did not match.
-@@ -150,7 +168,7 @@ regions in directories.
- .TP
- .B EOPNOTSUPP
- This can appear if the filesystem does not support deduplicating either file
--descriptor.
-+descriptor, or if either file descriptor refers to special inodes.
- .TP
- .B EPERM
- .IR dest_fd
-
+>  fs/iomap.c            |  2 +-
+>  include/linux/iomap.h | 17 +++++++++++------
+>  2 files changed, 12 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 013d1d3..a922040 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -561,7 +561,7 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+>  	}
+>  
+>  	while (len > 0) {
+> -		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
+> +		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
+>  				iomap_fiemap_actor);
+>  		/* inode with no (attribute) mapping will give ENOENT */
+>  		if (ret == -ENOENT)
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index e63e288..7892f55 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -19,11 +19,15 @@ struct vm_fault;
+>  #define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
+>  
+>  /*
+> - * Flags for iomap mappings:
+> + * Flags for all iomap mappings:
+>   */
+> -#define IOMAP_F_MERGED	0x01	/* contains multiple blocks/extents */
+> -#define IOMAP_F_SHARED	0x02	/* block shared with another file */
+> -#define IOMAP_F_NEW	0x04	/* blocks have been newly allocated */
+> +#define IOMAP_F_NEW	0x01	/* blocks have been newly allocated */
+> +
+> +/*
+> + * Flags that only need to be reported for IOMAP_REPORT requests:
+> + */
+> +#define IOMAP_F_MERGED	0x10	/* contains multiple blocks/extents */
+> +#define IOMAP_F_SHARED	0x20	/* block shared with another file */
+>  
+>  /*
+>   * Magic value for blkno:
+> @@ -42,8 +46,9 @@ struct iomap {
+>  /*
+>   * Flags for iomap_begin / iomap_end.  No flag implies a read.
+>   */
+> -#define IOMAP_WRITE		(1 << 0)
+> -#define IOMAP_ZERO		(1 << 1)
+> +#define IOMAP_WRITE		(1 << 0) /* writing, must allocate blocks */
+> +#define IOMAP_ZERO		(1 << 1) /* zeroing operation, may skip holes */
+> +#define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
+>  
+>  struct iomap_ops {
+>  	/*
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
