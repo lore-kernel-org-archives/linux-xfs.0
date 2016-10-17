@@ -1,467 +1,223 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58558 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934322AbcJQMfV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 08:35:21 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/4] xfs: merge xfs_reflink_remap_range and xfs_file_share_range
-Date: Mon, 17 Oct 2016 14:05:20 +0200
-Message-Id: <1476705920-32493-5-git-send-email-hch@lst.de>
-In-Reply-To: <1476705920-32493-1-git-send-email-hch@lst.de>
-References: <1476705920-32493-1-git-send-email-hch@lst.de>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:44472 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932863AbcJQWbB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 18:31:01 -0400
+Date: Tue, 18 Oct 2016 09:30:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RFC] xfs: drop SYNC_WAIT from xfs_reclaim_inodes_ag
+ during slab reclaim
+Message-ID: <20161017223057.GV23194@dastard>
+References: <06aade22-b29e-f55e-7f00-39154f220aa6@fb.com>
+ <20161015223454.GS23194@dastard>
+ <20161017002427.GA70229@clm-mbp.masoncoding.com>
+ <20161017015251.GU23194@dastard>
+ <e0c37926-a670-98b6-4bd7-b438def130bd@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e0c37926-a670-98b6-4bd7-b438def130bd@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: Chris Mason <clm@fb.com>
+Cc: linux-xfs@vger.kernel.org
 
-There is no clear division of responsibility between those functions, so
-just merge them into one to keep the code simple.  Also move
-xfs_file_wait_for_io to xfs_reflink.c together with its only caller.
+On Mon, Oct 17, 2016 at 09:30:05AM -0400, Chris Mason wrote:
+> On 10/16/2016 09:52 PM, Dave Chinner wrote:
+> >On Sun, Oct 16, 2016 at 08:24:33PM -0400, Chris Mason wrote:
+> >>On Sun, Oct 16, 2016 at 09:34:54AM +1100, Dave Chinner wrote:
+> >>This one hurts the most.  While kswapd is waiting for IO, all the
+> >>other reclaim he might have been doing is backing up.
+> >
+> >Which says two things: the journal tail pushing nor the background
+> >inode reclaim threads are keeping up with dirty inode writeback
+> >demand. Without knowing why that is occurring, we cannot solve the
+> >problem.
+> >
+> >>The other common path is the pag->pag_ici_reclaim_lock lock in
+> >>xfs_reclaim_inodes_ag.  It goes through the trylock loop, didn't
+> >>free enough, and then waits on the locks for real.
+> >
+> >Which is the "prevent hundreds of threads from all issuing inode
+> >writeback concurrently" throttling. Working as designed.
+> 
+> Ok, I think we're just not on the same page about how kswapd is
+> designed.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c    | 145 -------------------------------------
- fs/xfs/xfs_reflink.c | 199 ++++++++++++++++++++++++++++++++++++++++-----------
- fs/xfs/xfs_reflink.h |   8 +--
- 3 files changed, 161 insertions(+), 191 deletions(-)
+Chris, I understand perfectly well what kswapd is and how it is
+supposed to work. I also understand how shrinkers work and how they
+are supposed to interact with page reclaim - my dirty paws are all
+over the shrinker infrastructure (context specific shrinkers,
+NUMA, GFP_NOFS anti-windup mechanisms, cgroup, etc).
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 0960264..cd37573 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -947,151 +947,6 @@ xfs_file_fallocate(
- 	return error;
- }
- 
--/*
-- * Flush all file writes out to disk.
-- */
--static int
--xfs_file_wait_for_io(
--	struct inode	*inode,
--	loff_t		offset,
--	size_t		len)
--{
--	loff_t		rounding;
--	loff_t		ioffset;
--	loff_t		iendoffset;
--	loff_t		bs;
--	int		ret;
--
--	bs = inode->i_sb->s_blocksize;
--	inode_dio_wait(inode);
--
--	rounding = max_t(xfs_off_t, bs, PAGE_SIZE);
--	ioffset = round_down(offset, rounding);
--	iendoffset = round_up(offset + len, rounding) - 1;
--	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset,
--					   iendoffset);
--	return ret;
--}
--
--/* Hook up to the VFS reflink function */
--STATIC int
--xfs_file_share_range(
--	struct file	*file_in,
--	loff_t		pos_in,
--	struct file	*file_out,
--	loff_t		pos_out,
--	u64		len,
--	bool		is_dedupe)
--{
--	struct inode	*inode_in;
--	struct inode	*inode_out;
--	ssize_t		ret;
--	loff_t		bs;
--	loff_t		isize;
--	int		same_inode;
--	loff_t		blen;
--	unsigned int	flags = 0;
--
--	inode_in = file_inode(file_in);
--	inode_out = file_inode(file_out);
--	bs = inode_out->i_sb->s_blocksize;
--
--	/* Lock both files against IO */
--	same_inode = (inode_in == inode_out);
--	if (same_inode) {
--		xfs_ilock(XFS_I(inode_in), XFS_IOLOCK_EXCL);
--		xfs_ilock(XFS_I(inode_in), XFS_MMAPLOCK_EXCL);
--	} else {
--		xfs_lock_two_inodes(XFS_I(inode_in), XFS_I(inode_out),
--				XFS_IOLOCK_EXCL);
--		xfs_lock_two_inodes(XFS_I(inode_in), XFS_I(inode_out),
--				XFS_MMAPLOCK_EXCL);
--	}
--
--	/* Don't touch certain kinds of inodes */
--	ret = -EPERM;
--	if (IS_IMMUTABLE(inode_out))
--		goto out_unlock;
--	ret = -ETXTBSY;
--	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
--		goto out_unlock;
--
--	/* Don't reflink dirs, pipes, sockets... */
--	ret = -EISDIR;
--	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
--		goto out_unlock;
--	ret = -EINVAL;
--	if (S_ISFIFO(inode_in->i_mode) || S_ISFIFO(inode_out->i_mode))
--		goto out_unlock;
--	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
--		goto out_unlock;
--
--	/* Don't share DAX file data for now. */
--	if (IS_DAX(inode_in) || IS_DAX(inode_out))
--		goto out_unlock;
--
--	/* Are we going all the way to the end? */
--	isize = i_size_read(inode_in);
--	if (isize == 0) {
--		ret = 0;
--		goto out_unlock;
--	}
--
--	if (len == 0)
--		len = isize - pos_in;
--
--	/* Ensure offsets don't wrap and the input is inside i_size */
--	if (pos_in + len < pos_in || pos_out + len < pos_out ||
--	    pos_in + len > isize)
--		goto out_unlock;
--
--	/* Don't allow dedupe past EOF in the dest file */
--	if (is_dedupe) {
--		loff_t	disize;
--
--		disize = i_size_read(inode_out);
--		if (pos_out >= disize || pos_out + len > disize)
--			goto out_unlock;
--	}
--
--	/* If we're linking to EOF, continue to the block boundary. */
--	if (pos_in + len == isize)
--		blen = ALIGN(isize, bs) - pos_in;
--	else
--		blen = len;
--
--	/* Only reflink if we're aligned to block boundaries */
--	if (!IS_ALIGNED(pos_in, bs) || !IS_ALIGNED(pos_in + blen, bs) ||
--	    !IS_ALIGNED(pos_out, bs) || !IS_ALIGNED(pos_out + blen, bs))
--		goto out_unlock;
--
--	/* Don't allow overlapped reflink within the same file */
--	if (same_inode && pos_out + blen > pos_in && pos_out < pos_in + blen)
--		goto out_unlock;
--
--	/* Wait for the completion of any pending IOs on srcfile */
--	ret = xfs_file_wait_for_io(inode_in, pos_in, len);
--	if (ret)
--		goto out_unlock;
--	ret = xfs_file_wait_for_io(inode_out, pos_out, len);
--	if (ret)
--		goto out_unlock;
--
--	if (is_dedupe)
--		flags |= XFS_REFLINK_DEDUPE;
--	ret = xfs_reflink_remap_range(XFS_I(inode_in), pos_in, XFS_I(inode_out),
--			pos_out, len, flags);
--
--out_unlock:
--	xfs_iunlock(XFS_I(inode_in), XFS_MMAPLOCK_EXCL);
--	xfs_iunlock(XFS_I(inode_in), XFS_IOLOCK_EXCL);
--	if (!same_inode) {
--		xfs_iunlock(XFS_I(inode_out), XFS_MMAPLOCK_EXCL);
--		xfs_iunlock(XFS_I(inode_out), XFS_IOLOCK_EXCL);
--	}
--	return ret;
--}
--
- STATIC ssize_t
- xfs_file_copy_range(
- 	struct file	*file_in,
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index d012746..11ed2ad 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1308,23 +1308,56 @@ xfs_compare_extents(
- }
- 
- /*
-+ * Flush all file writes out to disk.
-+ */
-+static int
-+xfs_file_wait_for_io(
-+	struct inode	*inode,
-+	loff_t		offset,
-+	size_t		len)
-+{
-+	loff_t		rounding;
-+	loff_t		ioffset;
-+	loff_t		iendoffset;
-+	loff_t		bs;
-+	int		ret;
-+
-+	bs = inode->i_sb->s_blocksize;
-+	inode_dio_wait(inode);
-+
-+	rounding = max_t(xfs_off_t, bs, PAGE_SIZE);
-+	ioffset = round_down(offset, rounding);
-+	iendoffset = round_up(offset + len, rounding) - 1;
-+	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset,
-+					   iendoffset);
-+	return ret;
-+}
-+
-+/*
-  * Link a range of blocks from one file to another.
-  */
- int
--xfs_reflink_remap_range(
--	struct xfs_inode	*src,
--	xfs_off_t		srcoff,
--	struct xfs_inode	*dest,
--	xfs_off_t		destoff,
--	xfs_off_t		len,
--	unsigned int		flags)
-+xfs_file_share_range(
-+	struct file		*file_in,
-+	loff_t			pos_in,
-+	struct file		*file_out,
-+	loff_t			pos_out,
-+	u64			len,
-+	bool			is_dedupe)
- {
-+	struct inode		*inode_in = file_inode(file_in);
-+	struct xfs_inode	*src = XFS_I(inode_in);
-+	struct inode		*inode_out = file_inode(file_out);
-+	struct xfs_inode	*dest = XFS_I(inode_out);
- 	struct xfs_mount	*mp = src->i_mount;
-+	loff_t			bs = inode_out->i_sb->s_blocksize;
-+	bool			same_inode = (inode_in == inode_out);
- 	xfs_fileoff_t		sfsbno, dfsbno;
- 	xfs_filblks_t		fsblen;
--	int			error;
- 	xfs_extlen_t		cowextsize;
--	bool			is_same;
-+	loff_t			isize;
-+	ssize_t			ret;
-+	loff_t			blen;
- 
- 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
- 		return -EOPNOTSUPP;
-@@ -1332,48 +1365,128 @@ xfs_reflink_remap_range(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
-+	/* Lock both files against IO */
-+	if (same_inode) {
-+		xfs_ilock(src, XFS_IOLOCK_EXCL);
-+		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
-+	} else {
-+		xfs_lock_two_inodes(src, dest, XFS_IOLOCK_EXCL);
-+		xfs_lock_two_inodes(src, dest, XFS_MMAPLOCK_EXCL);
-+	}
-+
-+	/* Don't touch certain kinds of inodes */
-+	ret = -EPERM;
-+	if (IS_IMMUTABLE(inode_out))
-+		goto out_unlock;
-+
-+	ret = -ETXTBSY;
-+	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
-+		goto out_unlock;
-+
-+
-+	/* Don't reflink dirs, pipes, sockets... */
-+	ret = -EISDIR;
-+	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
-+		goto out_unlock;
-+	ret = -EINVAL;
-+	if (S_ISFIFO(inode_in->i_mode) || S_ISFIFO(inode_out->i_mode))
-+		goto out_unlock;
-+	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-+		goto out_unlock;
-+
- 	/* Don't reflink realtime inodes */
- 	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
--		return -EINVAL;
-+		goto out_unlock;
-+
-+	/* Don't share DAX file data for now. */
-+	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-+		goto out_unlock;
-+
-+	/* Are we going all the way to the end? */
-+	isize = i_size_read(inode_in);
-+	if (isize == 0) {
-+		ret = 0;
-+		goto out_unlock;
-+	}
-+
-+	if (len == 0)
-+		len = isize - pos_in;
- 
--	if (flags & ~XFS_REFLINK_ALL)
--		return -EINVAL;
-+	/* Ensure offsets don't wrap and the input is inside i_size */
-+	if (pos_in + len < pos_in || pos_out + len < pos_out ||
-+	    pos_in + len > isize)
-+		goto out_unlock;
-+
-+	/* Don't allow dedupe past EOF in the dest file */
-+	if (is_dedupe) {
-+		loff_t	disize;
-+
-+		disize = i_size_read(inode_out);
-+		if (pos_out >= disize || pos_out + len > disize)
-+			goto out_unlock;
-+	}
- 
--	trace_xfs_reflink_remap_range(src, srcoff, len, dest, destoff);
-+	/* If we're linking to EOF, continue to the block boundary. */
-+	if (pos_in + len == isize)
-+		blen = ALIGN(isize, bs) - pos_in;
-+	else
-+		blen = len;
-+
-+	/* Only reflink if we're aligned to block boundaries */
-+	if (!IS_ALIGNED(pos_in, bs) || !IS_ALIGNED(pos_in + blen, bs) ||
-+	    !IS_ALIGNED(pos_out, bs) || !IS_ALIGNED(pos_out + blen, bs))
-+		goto out_unlock;
-+
-+	/* Don't allow overlapped reflink within the same file */
-+	if (same_inode) {
-+		if (pos_out + blen > pos_in && pos_out < pos_in + blen)
-+			goto out_unlock;
-+	}
-+
-+	/* Wait for the completion of any pending IOs on srcfile */
-+	ret = xfs_file_wait_for_io(inode_in, pos_in, len);
-+	if (ret)
-+		goto out_unlock;
-+	ret = xfs_file_wait_for_io(inode_out, pos_out, len);
-+	if (ret)
-+		goto out_unlock;
-+
-+	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
- 
- 	/*
- 	 * Check that the extents are the same.
- 	 */
--	if (flags & XFS_REFLINK_DEDUPE) {
--		is_same = false;
--		error = xfs_compare_extents(VFS_I(src), srcoff, VFS_I(dest),
--				destoff, len, &is_same);
--		if (error)
--			goto out_error;
-+	if (is_dedupe) {
-+		bool		is_same = false;
-+
-+		ret = xfs_compare_extents(inode_in, pos_in, inode_out, pos_out,
-+				len, &is_same);
-+		if (ret)
-+			goto out_unlock;;
- 		if (!is_same) {
--			error = -EBADE;
--			goto out_error;
-+			ret = -EBADE;
-+			goto out_unlock;
- 		}
- 	}
- 
--	error = xfs_reflink_set_inode_flag(src, dest);
--	if (error)
--		goto out_error;
-+	ret = xfs_reflink_set_inode_flag(src, dest);
-+	if (ret)
-+		goto out_unlock;
- 
- 	/*
- 	 * Invalidate the page cache so that we can clear any CoW mappings
- 	 * in the destination file.
- 	 */
--	truncate_inode_pages_range(&VFS_I(dest)->i_data, destoff,
--				   PAGE_ALIGN(destoff + len) - 1);
-+	truncate_inode_pages_range(&inode_out->i_data, pos_out,
-+				   PAGE_ALIGN(pos_out + len) - 1);
- 
--	dfsbno = XFS_B_TO_FSBT(mp, destoff);
--	sfsbno = XFS_B_TO_FSBT(mp, srcoff);
-+	dfsbno = XFS_B_TO_FSBT(mp, pos_out);
-+	sfsbno = XFS_B_TO_FSBT(mp, pos_in);
- 	fsblen = XFS_B_TO_FSB(mp, len);
--	error = xfs_reflink_remap_blocks(src, sfsbno, dest, dfsbno, fsblen,
--			destoff + len);
--	if (error)
--		goto out_error;
-+	ret = xfs_reflink_remap_blocks(src, sfsbno, dest, dfsbno, fsblen,
-+			pos_out + len);
-+	if (ret)
-+		goto out_unlock;
- 
- 	/*
- 	 * Carry the cowextsize hint from src to dest if we're sharing the
-@@ -1381,20 +1494,24 @@ xfs_reflink_remap_range(
- 	 * has a cowextsize hint, and the destination file does not.
- 	 */
- 	cowextsize = 0;
--	if (srcoff == 0 && len == i_size_read(VFS_I(src)) &&
-+	if (pos_in == 0 && len == i_size_read(inode_in) &&
- 	    (src->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
--	    destoff == 0 && len >= i_size_read(VFS_I(dest)) &&
-+	    pos_out == 0 && len >= i_size_read(inode_out) &&
- 	    !(dest->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
- 		cowextsize = src->i_d.di_cowextsize;
- 
--	error = xfs_reflink_update_dest(dest, destoff + len, cowextsize);
--	if (error)
--		goto out_error;
-+	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize);
- 
--out_error:
--	if (error)
--		trace_xfs_reflink_remap_range_error(dest, error, _RET_IP_);
--	return error;
-+out_unlock:
-+	xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
-+	xfs_iunlock(src, XFS_IOLOCK_EXCL);
-+	if (src->i_ino != dest->i_ino) {
-+		xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
-+		xfs_iunlock(dest, XFS_IOLOCK_EXCL);
-+	}
-+	if (ret)
-+		trace_xfs_reflink_remap_range_error(dest, ret, _RET_IP_);
-+	return ret;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 5dc3c8a..25a8956 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -43,11 +43,6 @@ extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
- extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
- extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
--#define XFS_REFLINK_DEDUPE	1	/* only reflink if contents match */
--#define XFS_REFLINK_ALL		(XFS_REFLINK_DEDUPE)
--extern int xfs_reflink_remap_range(struct xfs_inode *src, xfs_off_t srcoff,
--		struct xfs_inode *dest, xfs_off_t destoff, xfs_off_t len,
--		unsigned int flags);
- extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
- 		struct xfs_trans **tpp);
- extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
-@@ -55,4 +50,7 @@ extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
- 
- extern bool xfs_reflink_has_real_cow_blocks(struct xfs_inode *ip);
- 
-+int xfs_file_share_range(struct file *file_in, loff_t pos_in,
-+		struct file *file_out, loff_t pos_out, u64 len, bool is_dedupe);
-+
- #endif /* __XFS_REFLINK_H */
+> The main throttling mechanism is to slow down the creation of new
+> dirty pages via balance_dirty_pages().
+
+I'm also the guy who architected the IO-less dirty page throttling
+infrastructure so there's not much you can teach me about that,
+either. Indeed, the XFS behaviour that you want to remove implements
+a similar (but much more complex) feedback mechanism as the IO-less
+dirty throttle.
+
+> IO is avoided from inside kswapd because there's only one kswapd
+> per-numa node.  It is trying to take a global view of the freeable
+> memory in the node, instead of focusing on any one individual page.
+
+kswapd is also the "get out of gaol free" thread for reclaim when
+the memory pressure is entirely filesystem bound and so direct
+reclaim skips all filesystem reclaim because GFP_NOFS is being
+asserted. This happens a lot in XFS.....
+
+The result of this is that only in kswapd context (i.e. GFP_KERNEL,
+PF_KSWAPD shrinker context) can we do the things necessary to
+/guarantee forwards reclaim progress/.  That means kswapd might
+sometimes be slow, but if we don't allow the shrinker to block from
+time to time then there's every chance that reclaim will not make
+progress.
+
+> Shrinkers are a little different because while individual shrinkers
+> have a definition of dirty, the general concept doesn't.  kswapd
+> calls into the shrinkers to ask them to be smaller.
+
+Well, that's not exactly what the shrinkers are being asked to do.
+Speaking as the guy who designed the current shrinker API, shrinkers
+are being asked to /scan their subsystem/ and take actions that will
+/allow/ memory to be reclaimed. Not all shrinkers sit in front of
+slab caches - some sit on hardware related pools and trigger early
+garbage collection of completed commands and queues. e.g. the DRI
+subsystem shrinkers. Shrinkers are for more than just slab caches
+these days - they are a general "memory pressure notification"
+mechanism and need to be thought of as such rather than a traditional
+"slab cache shrinker".
+
+IOWs, the actions that shrinkers take may not directly free memory,
+but they may result in memory becoming reclaimable in the near
+future e.g. writing back dirty inodes doesn't free memory - it can
+actually create memory demand - but it does then allow the inodes
+and their backing buffers to be reclaimed once the inodes are clean.
+
+To allow such generic implementations to exist, shrinkers are
+allowed to block just like the page cache reclaim is allowed to
+block. Blocking should be as limited as possible, but it is allowed
+as it may be necessary to guarantee progress.
+
+The difference here is that page cache reclaim has a far more
+context in which to make decisions on whether to block or not.
+Shrinkers have a gfp mask, and nothing else. i.e shrinkers are not
+given enough context by the mm subsystem to make smart decisions on
+how much they are allowed to block. e.g. GFP_NOFS means no
+filesystem shrinker can run, even though the memory allocation may
+be coming from a different fs and there's no possibility of a
+deadlock.
+
+I've been talking about this with the mm/ guys and what we can do
+differently to pass more context to the shrinkers (e.g. task based
+reclaim context structures rather than GFP_* flags passed on the
+stack) so we can be smarter in the shrinkers about what we can and
+can't do.
+
+> With dirty pages, kswapd will start IO but not wait on it.
+> With the xfs shrinker, kswapd does synchronous IO to write a single
+> inode in xfs_buf_submit_wait().
+
+That's because there is /no other throttling mechanism/ for shrinker
+controlled slab caches. We can't throttle at allocation time because
+we have no mechanism for either counting or limiting the number of
+dirty objects in a slab caches, like we do the page cache. We have
+/limited/ control via the size of the filesystem journal (which is
+why I've been asking for that information!), but realistically the
+only solid, reliable method we have to prevent excessive dirty inode
+accumulation in large memory machines with multiple filesystems and
+slow disks is to throttle memory allocation to the rate at which we
+can reclaim inodes.
+
+This prevents the sorts of situations we were regularly seeing 7-8
+years ago where a freeze (for a snapshot) or unmount could take
+/hours/ because we have built up hundreds of thousands of dirty
+inodes in cache over a period of days because the slow SATA RAID6
+array can only do 50 write IOPS.....
+
+i.e. there are many, many good reasons for why XFS treats inode
+reclaim the way it does. I don't expect you to understand all the
+issues that we are preventing by throttling memory allocation like
+this, but I do expect you to respect the fact it's done for very
+good reasons.
+
+> With congested BDIs, kswapd will skip the IO and wait for progress
+> after running through a good chunk of pages.  With the xfs shrinker,
+> kswapd will synchronously wait for progress on a single FS, even if
+> there are dozens of other filesystems around.
+
+Yes, that can happen but, again, this behaviour indicates something
+else is wrong and the system is out of whack in some way.  In the
+normal case, kswapd will only block on IO long enough for the other
+other async threads run through inode writeback and clean inode
+reclaim as efficiently as possible. By the time that the shrinker
+wakes up after blocking on an IO, it should either have clean inodes
+to reclaim or nothing more to do.
+
+What you are reporting is equivalent to having pageout() run and do
+all the writeback (badly) instead of the bdi flusher threads doing
+all the writeback (efficiently). pageout() is a /worst case/
+behaviour we try very hard to avoid and when it occurs it is
+generally indicative of some other problem or imbalance. Same goes
+here for the inode shrinker.
+
+> For the xfs shrinker, the mechanism to throttle new dirty inodes on
+> a single FS is stalling every process in the system in direct
+> reclaim?
+
+We're not throttling dirty inodes - we are throttling memory
+allocation because that's the only hammer we have to prevent
+excessive buildup of dirty of inodes that have already been
+allocated.
+
+We can't do that throttling when we dirty inodes because that
+happens in transaction context holding locked objects and blocking
+there waiting on inode writeback progress will cause journal
+deadlocks....
+
+This stuff is way more complex than just "have cache, will shrink".
+
+> We don't think it's already solved in v4.8, but we're setting up a
+> test to confirm that.  I'm working on a better simulation of the
+> parts we're tripping over so I can model this outside of production.
+> I definitely agree that something is wrong in MM land too, we have
+> to clamp down on the dirty ratios much more than we should to keep
+> kswapd from calling pageout().
+
+Having pageout() run is pretty indicative of instantaneous memory
+demand being significantly higher than the IO throughput of the
+storage subsystem and the only reclaimable memory in the system
+being dirty filesystem caches. i.e. background writeback is not
+keeping up memory demand and dirtying rates for some reason. The
+general rule of thumb is that if getting pageout() is occurring then
+the IO subsystem is about to die a horrible death of random IO.
+
+If you're taking great lengths to avoid pageout() from being called,
+then it's no surprise to me that your workload is, instead,
+triggering the equivalent "oh shit, we're in real trouble here"
+behaviour in XFS inode cache reclaim.  I also wonder, after turning
+down the dirty ratios, if you've done other typical writeback tuning
+tweaks like speeding up XFS's periodic metadata writeback to clean
+inodes faster in the absence of journal pressure.
+
+It's detailed information like this that I've been asking for -
+there's good reasons I've asked for that information, and any
+further discussion will just be a waste of my time without all the
+details I've already asked for.
+
+> We can dive into workload specifics too, but I'd rather do that
+> against simulations where I can try individual experiments more
+> quickly. 
+
+Yup, I think you need to come up with a reproducable test case you
+can share....
+
+Cheers,
+
+Dave.
 -- 
-2.1.4
-
+Dave Chinner
+david@fromorbit.com
