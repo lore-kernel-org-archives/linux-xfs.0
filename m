@@ -1,47 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34817 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:49611 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753616AbcJRBK4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 21:10:56 -0400
-Date: Mon, 17 Oct 2016 18:10:51 -0700
+        with ESMTP id S934164AbcJQQ13 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 12:27:29 -0400
+Date: Mon, 17 Oct 2016 09:27:24 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: unset MS_ACTIVE if mount fails
-Message-ID: <20161018011051.GB20337@birch.djwong.org>
+Subject: Re: [PATCH 3/9] xfs: handle "raw" delayed extents
+ xfs_reflink_trim_around_shared
+Message-ID: <20161017162724.GC1120@birch.djwong.org>
+References: <1476521554-1894-1-git-send-email-hch@lst.de>
+ <1476521554-1894-4-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <1476521554-1894-4-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-As part of the inode block map intent log item recovery process, we had
-to set the IRECOVERY flag to prevent an unlinked inode from being
-truncated during the first iput call.  This required us to set MS_ACTIVE
-so that iput puts the inode on the lru instead of immediately evicting
-the inode.
+On Sat, Oct 15, 2016 at 10:52:28AM +0200, Christoph Hellwig wrote:
+> Delalloc extents in the extent list contain the number of reserved
+> indirect blocks in their startblock value and don't use the magic
+> DELAYSTARTBLOCK constant.  Ensure that xfs_reflink_trim_around_shared
+> handles them properly by checking for isnullstartblock().
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Unfortunately, if the mount fails later on, the inodes that have been
-loaded (root dir and realtime) actually need to be evicted since we're
-aborting the mount.  If we don't clear MS_ACTIVE in the failure step,
-those inodes are not evicted and therefore leak.   The leak was found
-by running xfs/130 and rmmoding xfs immediately after the test.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_mount.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index fc78739..b341f10 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1009,6 +1009,7 @@ xfs_mountfs(
-  out_quota:
- 	xfs_qm_unmount_quotas(mp);
-  out_rtunmount:
-+	mp->m_super->s_flags &= ~MS_ACTIVE;
- 	xfs_rtunmount_inodes(mp);
-  out_rele_rip:
- 	IRELE(rip);
+> ---
+>  fs/xfs/xfs_reflink.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 5965e94..46c824c 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -182,7 +182,8 @@ xfs_reflink_trim_around_shared(
+>  	if (!xfs_is_reflink_inode(ip) ||
+>  	    ISUNWRITTEN(irec) ||
+>  	    irec->br_startblock == HOLESTARTBLOCK ||
+> -	    irec->br_startblock == DELAYSTARTBLOCK) {
+> +	    irec->br_startblock == DELAYSTARTBLOCK ||
+> +	    isnullstartblock(irec->br_startblock)) {
+>  		*shared = false;
+>  		return 0;
+>  	}
+> -- 
+> 2.1.4
+> 
