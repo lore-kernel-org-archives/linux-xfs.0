@@ -1,44 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:47073 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938669AbcJQRco (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 13:32:44 -0400
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] xfs: remove redundant assignment of ifp
-Date: Mon, 17 Oct 2016 18:32:40 +0100
-Message-Id: <20161017173240.26542-1-colin.king@canonical.com>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:32826 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757886AbcJRGGO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2016 02:06:14 -0400
+Subject: Re: [PATCH 1/2] man2/fallocate.2: document behavior with shared
+ blocks
+References: <147675566778.12400.16090171199161180354.stgit@birch.djwong.org>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Message-ID: <d4886eaf-3b80-ca55-012f-e5d06d87b8a5@gmail.com>
+Date: Tue, 18 Oct 2016 08:06:10 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <147675566778.12400.16090171199161180354.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: mtk.manpages@gmail.com, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-man@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Hi Darrick,
 
-Remove redundant ifp = ifp statement, it does nothing. Found with
-static analysis by CoverityScan.
+On 10/18/2016 03:54 AM, Darrick J. Wong wrote:
+> Add a blurb to the fallocate manpage explaining that the fallocate
+> command with the UNSHARE mode flag may use CoW to unshare blocks to
+> guarantee that a disk write won't fail with ENOSPC.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks! Applied.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index c27344c..0283b7e 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5204,7 +5204,7 @@ xfs_bunmapi_cow(
- 	ep = xfs_bmap_search_extents(ip, del->br_startoff, XFS_COW_FORK, &eof,
- 			&eidx, &got, &new);
- 
--	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK); ifp = ifp;
-+	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	ASSERT((eidx >= 0) && (eidx < ifp->if_bytes /
- 		(uint)sizeof(xfs_bmbt_rec_t)));
- 	ASSERT(del->br_blockcount > 0);
+Cheers,
+
+Michael
+
+
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  man2/fallocate.2 |   10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> 
+> diff --git a/man2/fallocate.2 b/man2/fallocate.2
+> index 54d6340..3ed1460 100644
+> --- a/man2/fallocate.2
+> +++ b/man2/fallocate.2
+> @@ -79,6 +79,16 @@ but the file size will not be changed even if
+>  is greater than the file size.
+>  Preallocating zeroed blocks beyond the end of the file in this manner
+>  is useful for optimizing append workloads.
+> +
+> +If the
+> +.B FALLOC_FL_UNSHARE
+> +flag is specified in
+> +.IR mode ,
+> +shared file data extents will be made private to the file to guarantee
+> +that a subsequent write will not fail due to lack of space.
+> +Typically, this will be done by performing a copy-on-write operation on
+> +all shared data in the file.
+> +This flag may not be supported by all filesystems.
+>  .PP
+>  Because allocation is done in block size chunks,
+>  .BR fallocate ()
+> 
+> 
+
+
 -- 
-2.9.3
-
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
