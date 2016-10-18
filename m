@@ -1,57 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:53529 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753122AbcJTUWg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Oct 2016 16:22:36 -0400
-Date: Fri, 21 Oct 2016 07:22:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Lock ordering in iomap code
-Message-ID: <20161020202201.GN14023@dastard>
-References: <20161007111314.GA24081@quack2.suse.cz>
- <20161017093148.GA6375@quack2.suse.cz>
- <20161017102657.GA12164@lst.de>
- <20161020115500.GB25779@quack2.suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161020115500.GB25779@quack2.suse.cz>
+Received: from ns.lynxeye.de ([87.118.118.114]:51485 "EHLO lynxeye.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753162AbcJRUVW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Oct 2016 16:21:22 -0400
+From: Lucas Stach <dev@lynxeye.de>
+Subject: [PATCH 0/2] XFS buffer cache scalability improvements
+Date: Tue, 18 Oct 2016 22:14:11 +0200
+Message-Id: <1476821653-2595-1-git-send-email-dev@lynxeye.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 20, 2016 at 01:55:00PM +0200, Jan Kara wrote:
-> Hi Christoph,
-> 
-> On Mon 17-10-16 12:26:57, Christoph Hellwig wrote:
-> > > Ping? I have ext4 DAX read & write path working with the iomap code but to
-> > > convert the fault path, I need this resolved. Are you OK with moving
-> > > iomap_begin() / iomap_end() calls outside of page lock / entry lock in the
-> > > fault path?
-> > 
-> > Yes, that sounds fine.
-> 
-> I've been looking into this some more and realized it's not as easy as I've
-> originally though. ->page_mkwrite callback is expected to return with the
-> page locked so locking it inside the iomap actor is really awkward (think
-> of situation when blocksize < pagesize). Since nobody currently has issues
-> with ->iomap_begin being sometimes called with page lock and sometimes
-> without, I don't think changing that would be worth the hassle. Just one
-> more question: Doesn't XFS have some lock ordering issues when
-> xfs_file_iomap_begin() gets called with page lock held from
-> iomap_page_mkwrite() for a file with extent size hints and thus we end up
-> in xfs_iomap_write_direct() with page lock held? We do a lot of stuff there
-> including transaction setup and such...
+Hi all,
 
-Lock order in xfs is iolock->page lock->transaction->ilock, so what
-is being done in xfs_file_iomap_begin (transactions, ilock) is fine
-regardless of whether we hold the page locked or noti when called.
+this series scratches my own small itch with XFS, namely scalability of the buffer
+cache in metadata intensive workloads. With a large number of cached buffers those
+workloads are CPU bound with a significant amount of time spent searching the cache.
 
-Cheers,
+The first commit replaces the rbtree used to index the cache with an rhashtable. The
+rbtree is a bottleneck in scalability, as the data structure itself is pretty CPU
+cache unfriendly. For larger numbers of cached buffers over 80% of the CPU time
+is spent waiting on cache misses resulting from the inherent pointer chasing.
 
-Dave.
+rhashtables provide a fast lookup with the ability to have lookups proceed while the
+hashtable is being resized. This seems to match the read dominated workload of the
+buffer cache index structure pretty well.
+
+The second patch is logical follow up. The rhashtable cache index is protected by
+RCU and does not need any additional locking. By switching the buffer cache entries
+over to RCU freeing the buffer cache can be operated in a completely lock-free
+manner. This should help scalability in the long run.
+
+This series survives at least a xfstests auto group run (though with the scratch
+device being a ramdisk) with no regressions and didn't show any problems in my
+real world testing (using the patched FS with multiple large git trees) so far.
+
+Regards,
+Lucas
+
+Lucas Stach (2):
+  xfs: use rhashtable to track buffer cache
+  xfs: switch buffer cache entries to RCU freeing
+
+ fs/xfs/xfs_buf.c   | 155 ++++++++++++++++++++++++++++++++++-------------------
+ fs/xfs/xfs_buf.h   |   4 +-
+ fs/xfs/xfs_linux.h |   1 +
+ fs/xfs/xfs_mount.c |   7 ++-
+ fs/xfs/xfs_mount.h |   6 ++-
+ 5 files changed, 114 insertions(+), 59 deletions(-)
 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
