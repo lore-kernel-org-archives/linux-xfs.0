@@ -1,64 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:34364 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932836AbcJRFSA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Oct 2016 01:18:00 -0400
-Date: Tue, 18 Oct 2016 07:17:58 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 4/4] xfs: merge xfs_reflink_remap_range and
-        xfs_file_share_range
-Message-ID: <20161018051758.GA2184@lst.de>
-References: <1476705920-32493-1-git-send-email-hch@lst.de> <1476705920-32493-5-git-send-email-hch@lst.de> <20161017212933.GE26485@birch.djwong.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:49925 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752700AbcJRGuP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2016 02:50:15 -0400
+Date: Mon, 17 Oct 2016 23:50:14 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: unset MS_ACTIVE if mount fails
+Message-ID: <20161018065014.GA10999@infradead.org>
+References: <20161018011051.GB20337@birch.djwong.org>
+ <20161018052413.GA32065@infradead.org>
+ <20161018053849.GG26485@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161017212933.GE26485@birch.djwong.org>
+In-Reply-To: <20161018053849.GG26485@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Mon, Oct 17, 2016 at 02:29:33PM -0700, Darrick J. Wong wrote:
-> > +	bs = inode->i_sb->s_blocksize;
-> > +	inode_dio_wait(inode);
-> > +
-> > +	rounding = max_t(xfs_off_t, bs, PAGE_SIZE);
-> > +	ioffset = round_down(offset, rounding);
-> > +	iendoffset = round_up(offset + len, rounding) - 1;
-> > +	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset,
-> > +					   iendoffset);
-> > +	return ret;
-> > +}
+On Mon, Oct 17, 2016 at 10:38:49PM -0700, Darrick J. Wong wrote:
+> In a way, yes.  We don't need to keep it on the LRU necessarily, we
+> just need it not to think "Oh, this inode has i_nlink == 0 so we can
+> truncate all the blocks and free the inode" prior to the end of bmap
+> intent processing.
 > 
-> This seems like a file action not specific to reflink.
-
-But it's only used by the reflink code :)
-
-That being said given that filemap_write_and_wait_range operates
-on pages there is no need for the rounding anyway, and we could
-just replace it with open coded calls to inode_dio_wait and
-filemap_write_and_wait_range.  Maybe I should do that before
-this patch so we don't have to bother moving it.
-
-> > +xfs_file_share_range(
+> > I'd really prefer if we could just do it in our own ->drop_inode call
+> > then instead of messing with MS_ACTIVE.
 > 
-> xfs_reflink_share_file_range() ?
-> 
-> I'd like to maintain the convention that all reflink functions
-> start with xfs_reflink_*, particularly since the xfs_file_* functions
-> largely live in xfs_file.c.
+> The difficulty here is that without MS_ACTIVE, the vfs will always
+> evict the inode when i_count == 0.  I suppose bmap intent processing
+> could bump up i_count and stash the inode somewhere to prevent the
+> i_count from hitting zero until after we're done recovering the log...
+> ...but otherwise I'm sorta stumped about how to do that.
 
-Ok, fine.
+Let me try to understand the issue here.
 
-> > +	if (is_dedupe) {
-> > +		bool		is_same = false;
-> > +
-> > +		ret = xfs_compare_extents(inode_in, pos_in, inode_out, pos_out,
-> > +				len, &is_same);
-> > +		if (ret)
-> > +			goto out_unlock;;
-> 
-> Double-semicolon here.
+We get a final iput for an inode that recover once i_count hits zero.
+We then want to hit the "if (!drop && (sb->s_flags & MS_ACTIVE)) {"
+conditional there to add it to the lru, or at least not truncate it.
+I guess for now we'll need MS_ACTIVE early here, yes.
 
-I'll fix it.
+So reluctantly:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
