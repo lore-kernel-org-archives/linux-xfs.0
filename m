@@ -1,47 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49925 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752700AbcJRGuP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2016 02:50:15 -0400
-Date: Mon, 17 Oct 2016 23:50:14 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: unset MS_ACTIVE if mount fails
-Message-ID: <20161018065014.GA10999@infradead.org>
-References: <20161018011051.GB20337@birch.djwong.org>
- <20161018052413.GA32065@infradead.org>
- <20161018053849.GG26485@birch.djwong.org>
+Received: from mx2.suse.de ([195.135.220.15]:53045 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758634AbcJRIiZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Oct 2016 04:38:25 -0400
+Date: Tue, 18 Oct 2016 10:38:23 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] xfs: don't take the IOLOCK exclusive for direct I/O page
+ invalidation
+Message-ID: <20161018083823.GH3359@quack2.suse.cz>
+References: <1476706392-2264-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161018053849.GG26485@birch.djwong.org>
+In-Reply-To: <1476706392-2264-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, david@fromorbit.com, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, jack@suse.cz, linux-fsdevel@vger.kernel.org
 
-On Mon, Oct 17, 2016 at 10:38:49PM -0700, Darrick J. Wong wrote:
-> In a way, yes.  We don't need to keep it on the LRU necessarily, we
-> just need it not to think "Oh, this inode has i_nlink == 0 so we can
-> truncate all the blocks and free the inode" prior to the end of bmap
-> intent processing.
+On Mon 17-10-16 14:13:12, Christoph Hellwig wrote:
+> XFS historically took the iolock exclusive when invalidating pages
+> before direct I/O operations to protect against writeback starvations.
 > 
-> > I'd really prefer if we could just do it in our own ->drop_inode call
-> > then instead of messing with MS_ACTIVE.
+> But this writeback starvation issues has been fixed a long time ago
+> in the core writeback code, and all other file systems manage to do
+> without the exclusive lock.  Convert XFS over to avoid the exclusive
+> lock in this case, and also move to range invalidations like done
+> by the other file systems.
 > 
-> The difficulty here is that without MS_ACTIVE, the vfs will always
-> evict the inode when i_count == 0.  I suppose bmap intent processing
-> could bump up i_count and stash the inode somewhere to prevent the
-> i_count from hitting zero until after we're done recovering the log...
-> ...but otherwise I'm sorta stumped about how to do that.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Let me try to understand the issue here.
+The patch looks good to me. You can add:
 
-We get a final iput for an inode that recover once i_count hits zero.
-We then want to hit the "if (!drop && (sb->s_flags & MS_ACTIVE)) {"
-conditional there to add it to the lru, or at least not truncate it.
-I guess for now we'll need MS_ACTIVE early here, yes.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-So reluctantly:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
