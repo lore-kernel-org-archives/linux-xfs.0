@@ -1,93 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:9768 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751621AbcJCAGW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2016 20:06:22 -0400
-Received: from dave by dastard with local (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1bqqlt-0007Hx-KY
-        for linux-xfs@vger.kernel.org; Mon, 03 Oct 2016 11:06:17 +1100
-Date: Mon, 3 Oct 2016 11:06:17 +1100
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:5590 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753763AbcJRAFw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 20:05:52 -0400
+Date: Tue, 18 Oct 2016 11:04:39 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch rebased to 155cd433b516
-Message-ID: <20161003000617.GL27872@dastard>
+Subject: Re: [LTP] [PATCH] m4/ltp-xfs_quota.m4: fix xfs quota check
+Message-ID: <20161018000439.GZ23194@dastard>
+References: <1476150729-2128-1-git-send-email-yangx.jy@cn.fujitsu.com>
+ <20161013141145.GA12204@rei.lan>
+ <20161013194613.GP23194@dastard>
+ <20161017091614.GA26999@rei.lan>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="TB36FDmn/VVEgNH/"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20161017091614.GA26999@rei.lan>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Cyril Hrubis <chrubis@suse.cz>
+Cc: Xiao Yang <yangx.jy@cn.fujitsu.com>, ltp@lists.linux.it, linux-xfs@vger.kernel.org
 
+On Mon, Oct 17, 2016 at 11:16:14AM +0200, Cyril Hrubis wrote:
+> Hi!
+> > > That kind of looks like a bug in xfs-progs, since off64_t is not exposed
+> > > from glibc unless we enable either largefile support or define
+> > > _GNU_SOURCE. As a matter of fact the _GNU_SOURCE enables
+> > > _LARGEFILE64_SOURCE which then enables the typedef that exposes the
+> > > off64_t typedef.
+> > 
+> > Which is a bug in the application build - if you are doing anything
+> > with XFS, you need to define _LARGEFILE64_SOURCE. No ifs, buts or
+> > maybes - it's a 64 bit filesystem with 64 bit interfaces (e.g.
+> > ioctls) and so applications that include XFS headers to poke at XFS
+> > filesystems need to fully support 64 bit file offsets....
+> 
+> Ok, so this was our fault.
 
---TB36FDmn/VVEgNH/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+No, not your fault - the XFS headers have never made this clear.  In
+the past we've tried to hide this requirement by using
+glibc-specific types and it wasn't until we changed stuff to support
+C libraries other than glibc for building xfsprogs that it became
+clear that we needed to be explicit about this requirement.
 
-Hi folks,
+> Is there somewhere bit fat warning that I've missed somewhere?
 
-The for-next branch of the xfs kernel repository at
+This was an unintentional "first warning" that there may be bugs
+lurking in 32 bit application builds. It's when the first app build
+failure reports started coming that we realised there was a bigger
+problem we needed to fix.  :/
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+> > > So they are depending on a type that is not defined by default but since
+> > > the code has been part of at least three releases already we have to
+> > > apply the workaround for it anyway.
+> > 
+> > We're only going to get stricter on this - next cycle we're removing
+> > off64_t and replacing it with off_t, and then we'll be /explicitly/
+> > breaking the build of any application that hasn't set up it's build
+> > environment to define off_t as a 64 bit variable.  i.e.  specifying
+> > _LARGEFILE64_SOURCE before the inclusion of XFS headers will be a
+> > mandatory requirement - that's far better than ending up with clean
+> > builds and subtly broken applications...
+> 
+> Ending the build with clear #error or something similar sounds much
+> better than failing with undefined type to me.
 
-has just been updated. This was a rebase as I added fixes to the end
-of stable topic branches and remerged them to rebuild the tree
-cleanly. The tree, as it sits, is what I plan to send to Linus later
-in the week, so if there's anything you notice wrong, please let me
-know quickly...
+Yup, that's exactly what it will do. It's part of a cleanup of
+xfsprogs to simply use LFS for ensuring everything is 64 bit clean
+when we build. last set of patches for this were posted here:
 
-The new head of the for-next branch is commit:
+http://oss.sgi.com/archives/xfs/2016-08/msg00390.html
 
-155cd433b516 Merge branch 'xfs-4.9-log-recovery-fixes' into for-next
+And this is the one that will break the build if off_t is not a
+64 bit size:
 
-New Commits:
+http://oss.sgi.com/archives/xfs/2016-08/msg00402.html
 
-Christoph Hellwig (3):
-      [d5bfccdf38d0] ext2: fix possible integer truncation in ext2_iomap_be=
-gin
-      [a447d7cd15c7] xfs: update atime before I/O in xfs_file_dio_aio_read
-      [0d5b0cf246a3] fs: update atime before I/O in generic_file_read_iter
+I'm hoping to get this in the next xfsprogs cycle....
 
-Dave Chinner (5):
-      [b036b97050a9] Merge branch 'iomap-4.9-misc-fixes-1' into for-next
-      [79ad57612495] Merge branch 'xfs-4.9-reflink-prep' into for-next
-      [a89b3f97bb7c] Merge branch 'xfs-4.9-delalloc-rework' into for-next
-      [a1f45e668e14] Merge branch 'iomap-4.9-dax' into for-next
-      [155cd433b516] Merge branch 'xfs-4.9-log-recovery-fixes' into for-next
+Cheers,
 
-
-Code Diffstat:
-
- fs/ext2/inode.c   |  2 +-
- fs/xfs/xfs_file.c |  3 ++-
- mm/filemap.c      | 14 +++++++-------
- 3 files changed, 10 insertions(+), 9 deletions(-)
---=20
+Dave.
+-- 
 Dave Chinner
 david@fromorbit.com
-
---TB36FDmn/VVEgNH/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJX8aD5AAoJEK3oKUf0dfodiVoP/2lOmppGDcMnQbGrp/ap/3z1
-VnHKgNujpR3wzs3uIPRWl/ZJwmUlTihfrL3+HEucZiaE0bZtpfgwlMw7ESAxQeQP
-raBvSHvVOawFOb0UqIYCn8cng7UC5CjJhMSYtmrLoc8CqOU01Y27w2ZaWPGmI1Bi
-MD4W2urNtJRq2iJLlengigq9/vi4pi+AyD9SDf0KKmIub36QU+DitaMRXxlYotRr
-/zNPeqRbgeDVm4kwQCj2yicvZsj716+l+nSstv25ux0niRm9/x1ymR06zRvMZfh/
-SceakjICui/0QjI9xwPbEqJhnlJysRxFFNeSYJtf3xYVTup8P+ubntF2ZVTcfl93
-jWqgpX1kd1y5NxRpWwspppTsWdoFCNxLcW9EFk6wljdCg0dJopvDxl7WhE6vRfdG
-cl7uYUH90wRtA9y5+DcDE0y09SXshMPt1oyE1C+7wDxgDu490bdVAfPPEHVygPOX
-1M+VlSsm6eKwNpS5oWEOSBdDmnEkNKU1wNuMWV9yiopwEqTL53A4WHP4A92pmRIq
-xqq6sytYzbr6IDtuW4D5MwOICqMeLM07Zpd4rH1uZ1P+Nkv8WRSNVcyP8r0bRhH3
-YSTGEacBe6fFyj4eeUIov3Fw+D9W+9X+b672r3EXmAfLwp2OvYMe7oA1ACqt3q6Z
-Z9LEr9jJpHERxePh4RO5
-=mUHp
------END PGP SIGNATURE-----
-
---TB36FDmn/VVEgNH/--
