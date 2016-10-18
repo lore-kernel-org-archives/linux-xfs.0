@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53045 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:41258 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758634AbcJRIiZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Oct 2016 04:38:25 -0400
-Date: Tue, 18 Oct 2016 10:38:23 +0200
-From: Jan Kara <jack@suse.cz>
+        id S1754431AbcJRM6E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Oct 2016 08:58:04 -0400
+Date: Tue, 18 Oct 2016 14:58:00 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
 Subject: Re: [PATCH] xfs: don't take the IOLOCK exclusive for direct I/O page
  invalidation
-Message-ID: <20161018083823.GH3359@quack2.suse.cz>
+Message-ID: <20161018125800.j532h3aponjxyqe3@eorzea.usersys.redhat.com>
 References: <1476706392-2264-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -19,7 +19,7 @@ List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org, jack@suse.cz, linux-fsdevel@vger.kernel.org
 
-On Mon 17-10-16 14:13:12, Christoph Hellwig wrote:
+On Mon, Oct 17, 2016 at 02:13:12PM +0200, Christoph Hellwig wrote:
 > XFS historically took the iolock exclusive when invalidating pages
 > before direct I/O operations to protect against writeback starvations.
 > 
@@ -30,12 +30,33 @@ On Mon 17-10-16 14:13:12, Christoph Hellwig wrote:
 > by the other file systems.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_file.c | 98 +++++++++++++++++--------------------------------------
+>  1 file changed, 30 insertions(+), 68 deletions(-)
+> 
+>  
+>  	/*
+>  	 * If we are doing unaligned IO, wait for all other IO to drain,
+> -	 * otherwise demote the lock if we had to flush cached pages
+> +	 * otherwise demote the lock if we had to take the exclusive lock
+> +	 * for other reaosons in xfs_file_aio_write_checks.
+		     ^ reasons
 
-The patch looks good to me. You can add:
+>  	 */
+>  	if (unaligned_io)
+>  		inode_dio_wait(inode);
+> -- 
+> 2.1.4
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Despite typo above, it looks good to me.
 
-								Honza
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Carlos
