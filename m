@@ -1,102 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49307 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:34817 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935159AbcJQQ1I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 12:27:08 -0400
-Date: Mon, 17 Oct 2016 09:27:02 -0700
+        with ESMTP id S1753616AbcJRBK4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 21:10:56 -0400
+Date: Mon, 17 Oct 2016 18:10:51 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/9] xfs: add xfs_trim_extent
-Message-ID: <20161017162702.GB1120@birch.djwong.org>
-References: <1476521554-1894-1-git-send-email-hch@lst.de>
- <1476521554-1894-3-git-send-email-hch@lst.de>
+Subject: [PATCH] xfs: unset MS_ACTIVE if mount fails
+Message-ID: <20161018011051.GB20337@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1476521554-1894-3-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: david@fromorbit.com
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, Oct 15, 2016 at 10:52:27AM +0200, Christoph Hellwig wrote:
-> From: "Darrick J. Wong" <darrick.wong@oracle.com>
-> 
-> This helpers allows to trim an extent to a subset of it's original range
-> while making sure the block numbers in it remain valid,
-> 
-> In the future xfs_trim_extent and xfs_bmapi_trim_map should probably be
-> merged in some form.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> [hch: split from a previous patch from Darrick, moved around and added
->  support for "raw" delayed extents"]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+As part of the inode block map intent log item recovery process, we had
+to set the IRECOVERY flag to prevent an unlinked inode from being
+truncated during the first iput call.  This required us to set MS_ACTIVE
+so that iput puts the inode on the lru instead of immediately evicting
+the inode.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Unfortunately, if the mount fails later on, the inodes that have been
+loaded (root dir and realtime) actually need to be evicted since we're
+aborting the mount.  If we don't clear MS_ACTIVE in the failure step,
+those inodes are not evicted and therefore leak.   The leak was found
+by running xfs/130 and rmmoding xfs immediately after the test.
 
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 33 +++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_bmap.h |  2 ++
->  2 files changed, 35 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index c27344c..016dacc 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3999,6 +3999,39 @@ xfs_bmap_alloc(
->  	return xfs_bmap_btalloc(ap);
->  }
->  
-> +/* Trim extent to fit a logical block range. */
-> +void
-> +xfs_trim_extent(
-> +	struct xfs_bmbt_irec	*irec,
-> +	xfs_fileoff_t		bno,
-> +	xfs_filblks_t		len)
-> +{
-> +	xfs_fileoff_t		distance;
-> +	xfs_fileoff_t		end = bno + len;
-> +
-> +	if (irec->br_startoff + irec->br_blockcount <= bno ||
-> +	    irec->br_startoff >= end) {
-> +		irec->br_blockcount = 0;
-> +		return;
-> +	}
-> +
-> +	if (irec->br_startoff < bno) {
-> +		distance = bno - irec->br_startoff;
-> +		if (isnullstartblock(irec->br_startblock))
-> +			irec->br_startblock = DELAYSTARTBLOCK;
-> +		if (irec->br_startblock != DELAYSTARTBLOCK &&
-> +		    irec->br_startblock != HOLESTARTBLOCK)
-> +			irec->br_startblock += distance;
-> +		irec->br_startoff += distance;
-> +		irec->br_blockcount -= distance;
-> +	}
-> +
-> +	if (end < irec->br_startoff + irec->br_blockcount) {
-> +		distance = irec->br_startoff + irec->br_blockcount - end;
-> +		irec->br_blockcount -= distance;
-> +	}
-> +}
-> +
->  /*
->   * Trim the returned map to the required bounds
->   */
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index f97db71..eb86af0 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -190,6 +190,8 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
->  #define	XFS_BMAP_TRACE_EXLIST(ip,c,w)
->  #endif
->  
-> +void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
-> +		xfs_filblks_t len);
->  int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
->  void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
->  void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
-> -- 
-> 2.1.4
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_mount.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index fc78739..b341f10 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1009,6 +1009,7 @@ xfs_mountfs(
+  out_quota:
+ 	xfs_qm_unmount_quotas(mp);
+  out_rtunmount:
++	mp->m_super->s_flags &= ~MS_ACTIVE;
+ 	xfs_rtunmount_inodes(mp);
+  out_rele_rip:
+ 	IRELE(rip);
