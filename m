@@ -1,53 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:52464 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755932AbcJSBPP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2016 21:15:15 -0400
-Date: Wed, 19 Oct 2016 12:15:12 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: use rhashtable to track buffer cache
-Message-ID: <20161019011512.GH23194@dastard>
-References: <1476821653-2595-1-git-send-email-dev@lynxeye.de>
- <1476821653-2595-2-git-send-email-dev@lynxeye.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1476821653-2595-2-git-send-email-dev@lynxeye.de>
+Received: from mga09.intel.com ([134.134.136.24]:14463 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932453AbcJSTew (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Oct 2016 15:34:52 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v8 12/16] dax: move RADIX_DAX_* defines to dax.h
+Date: Wed, 19 Oct 2016 13:34:31 -0600
+Message-Id: <1476905675-32581-13-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Lucas Stach <dev@lynxeye.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Tue, Oct 18, 2016 at 10:14:12PM +0200, Lucas Stach wrote:
-> On filesystems with a lot of metadata and in metadata intensive workloads
-> xfs_buf_find() is showing up at the top of the CPU cycles trace. Most of
-> the CPU time is spent on CPU cache misses while traversing the rbtree.
-> 
-> As the buffer cache does not need any kind of ordering, but fast lookups
-> a hashtable is the natural data structure to use. The rhashtable
-> infrastructure provides a self-scaling hashtable implementation and
-> allows lookups to proceed while the table is going through a resize
-> operation.
-> 
-> This reduces the CPU-time spent for the lookups to 1/3 even for small
-> filesystems with a relatively small number of cached buffers, with
-> possibly much larger gains on higher loaded filesystems.
-> 
-> The minimum size of 4096 buckets was chosen as it was the size of the
-> xfs buffer cache hash before it was converted to an rbtree.
-> 
-> Signed-off-by: Lucas Stach <dev@lynxeye.de>
+The RADIX_DAX_* defines currently mostly live in fs/dax.c, with just
+RADIX_DAX_ENTRY_LOCK being in include/linux/dax.h so it can be used in
+mm/filemap.c.  When we add PMD support, though, mm/filemap.c will also need
+access to the RADIX_DAX_PTE type so it can properly construct a 4k sized
+empty entry.
 
-This fails to compile on CONFIG_XFS_DEBUG=y kernels due to various
-ASSERT statements not being updated appropriately. When making XFS
-changes to core infrastructure like this, it is highly recommended
-that you use CONFIG_XFS_DEBUG=y so that it catches mistakes and
-assumptions that your changes violate at runtime....
+Instead of shifting the defines between dax.c and dax.h as they are
+individually used in other code, just move them wholesale to dax.h so
+they'll be available when we need them.
 
-Cheers,
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c            | 14 --------------
+ include/linux/dax.h | 15 ++++++++++++++-
+ 2 files changed, 14 insertions(+), 15 deletions(-)
 
-Dave.
+diff --git a/fs/dax.c b/fs/dax.c
+index 6edd89b..c45cc4d 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -34,20 +34,6 @@
+ #include <linux/iomap.h>
+ #include "internal.h"
+ 
+-/*
+- * We use lowest available bit in exceptional entry for locking, other two
+- * bits to determine entry type. In total 3 special bits.
+- */
+-#define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 3)
+-#define RADIX_DAX_PTE (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
+-#define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
+-#define RADIX_DAX_TYPE_MASK (RADIX_DAX_PTE | RADIX_DAX_PMD)
+-#define RADIX_DAX_TYPE(entry) ((unsigned long)entry & RADIX_DAX_TYPE_MASK)
+-#define RADIX_DAX_SECTOR(entry) (((unsigned long)entry >> RADIX_DAX_SHIFT))
+-#define RADIX_DAX_ENTRY(sector, pmd) ((void *)((unsigned long)sector << \
+-		RADIX_DAX_SHIFT | (pmd ? RADIX_DAX_PMD : RADIX_DAX_PTE) | \
+-		RADIX_TREE_EXCEPTIONAL_ENTRY))
+-
+ /* We choose 4096 entries - same as per-zone page wait tables */
+ #define DAX_WAIT_TABLE_BITS 12
+ #define DAX_WAIT_TABLE_ENTRIES (1 << DAX_WAIT_TABLE_BITS)
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index a3dfee4..e9ea78c 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -8,8 +8,21 @@
+ 
+ struct iomap_ops;
+ 
+-/* We use lowest available exceptional entry bit for locking */
++/*
++ * We use lowest available bit in exceptional entry for locking, other two
++ * bits to determine entry type. In total 3 special bits.
++ */
++#define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 3)
+ #define RADIX_DAX_ENTRY_LOCK (1 << RADIX_TREE_EXCEPTIONAL_SHIFT)
++#define RADIX_DAX_PTE (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
++#define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
++#define RADIX_DAX_TYPE_MASK (RADIX_DAX_PTE | RADIX_DAX_PMD)
++#define RADIX_DAX_TYPE(entry) ((unsigned long)entry & RADIX_DAX_TYPE_MASK)
++#define RADIX_DAX_SECTOR(entry) (((unsigned long)entry >> RADIX_DAX_SHIFT))
++#define RADIX_DAX_ENTRY(sector, pmd) ((void *)((unsigned long)sector << \
++		RADIX_DAX_SHIFT | (pmd ? RADIX_DAX_PMD : RADIX_DAX_PTE) | \
++		RADIX_TREE_EXCEPTIONAL_ENTRY))
++
+ 
+ ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		struct iomap_ops *ops);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
