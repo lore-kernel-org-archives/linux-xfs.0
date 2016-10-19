@@ -1,77 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37096 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:41903 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941117AbcJSO2E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Oct 2016 10:28:04 -0400
-Date: Wed, 19 Oct 2016 09:48:08 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: fix the AG loop in xfs_alloc_vextent for busy
- extents
-Message-ID: <20161019134806.GB28993@bfoster.bfoster>
-References: <1476735753-5861-1-git-send-email-hch@lst.de>
- <1476735753-5861-2-git-send-email-hch@lst.de>
+        id S942645AbcJSOge (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Oct 2016 10:36:34 -0400
+Date: Wed, 19 Oct 2016 12:58:25 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/3] xfs: don't block the log commit handler for
+        discards
+Message-ID: <20161019105825.GA2279@lst.de>
+References: <1476735753-5861-1-git-send-email-hch@lst.de> <1476735753-5861-3-git-send-email-hch@lst.de> <20161017232908.GY23194@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1476735753-5861-2-git-send-email-hch@lst.de>
+In-Reply-To: <20161017232908.GY23194@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, michaelcallahan@fb.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, michaelcallahan@fb.com
 
-On Mon, Oct 17, 2016 at 10:22:31PM +0200, Christoph Hellwig wrote:
-> If we have too many busy extents, or just enough to make our wanted
-> allocation impossible we will never move on to another AG in
-> xfs_alloc_vextent currently.  Change the loop exit condition to keep
-> looking for an AG if we can't allocate an extent.
+On Tue, Oct 18, 2016 at 10:29:08AM +1100, Dave Chinner wrote:
+> > +	if (args.fsbno == NULLFSBLOCK && trydiscard) {
+> > +		trydiscard = false;
+> > +		flush_workqueue(xfs_discard_wq);
+> > +		goto retry;
+> > +	}
 > 
-> For the single AG cases we don't need to change anything as the higher
-> layers need to handle this case.
+> So this is the new behaviour that triggers flushing of the discard
+> list rather than having it occur from a log force inside
+> xfs_extent_busy_update_extent().
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c | 11 ++++++++---
->  1 file changed, 8 insertions(+), 3 deletions(-)
+> However, xfs_extent_busy_update_extent() also has backoff when it
+> finds an extent on the busy list being discarded, which means it
+> could spin waiting for the discard work to complete.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index effb64c..0a04bec 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2753,13 +2753,18 @@ xfs_alloc_vextent(
->  				trace_xfs_alloc_vextent_nofix(args);
->  				goto error0;
->  			}
-> +
->  			/*
-> -			 * If we get a buffer back then the allocation will fly.
-> +			 * If we get a buffer back then the allocation will fly,
-> +			 * unless there are busy extents in the way.
->  			 */
->  			if (args->agbp) {
-> -				if ((error = xfs_alloc_ag_vextent(args)))
-> +				error = xfs_alloc_ag_vextent(args);
-> +				if (error)
->  					goto error0;
-> -				break;
-> +				if (args->agbno != NULLAGBLOCK)
-> +					break;
-> +				xfs_trans_brelse(args->tp, args->agbp);
+> Wouldn't it be better to trigger this workqueue flush in
+> xfs_extent_busy_update_extent() in both these cases so that the
+> behaviour remains the same for userdata allocations hitting
+> uncommitted busy extents, but also allow us to remove the spinning
+> for allocations where the busy extent is currently being discarded?
 
-How is this safe with respect to xfs_alloc_fix_freelist() potentially
-dirtying the agf? Haven't we had deadlock and/or other problems due to
-xfs_alloc_fix_freelist() succeeding when an allocation ultimately fails,
-and subsequently rotating to a potentially lower agno?
+So the current xfs_extent_busy_update_extent busy wait is something we
+actually never hit at all - it's only hit when an extent under discard
+is reused by an AGFL allocation, which basically does not happen.
 
-Brian
+I'm not feeling very eager to touch that corner case code, and would
+rather leave it as-is.
 
->  			}
->  
->  			trace_xfs_alloc_vextent_loopfailed(args);
-> -- 
-> 2.1.4
+The new flush deals with the case where we weren't able to find any space
+due to the discard list.  To honest I almost don't manage to trigger it
+anymore once I found the issue fixed in patch 1.  It might be possible
+to even drop this retry entirely now.
+
+> This creates one long bio chain with all the regions to discard on
+> it, and then when all it completes we call xlog_discard_endio() to
+> release all the busy extents.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Why not pull the busy extent from the list and attach it to each
+> bio returned and submit them individually and run per-busy extent
+> completions? That will substantially reduce the latency of discard
+> completions when there are long lists of extents to discard....
+
+Because that would defeat the merging I currently do, which is
+very effectice.  It would also increase the size of the busy extent
+structure as it would grow a work_struct, and increase lock contention
+in the completion handler.  All in all not that pretty, especially
+as the most common number of discards are one digit or small two
+digit.  And this is just going to further decrease once I finish
+up my block layer patches to allow multi-range discards by merging
+multiple discard bios into a single request.  With that even double
+digit numbers of discards are fairly rare.
+
+Now if we eventually want to split the completions I think we'll
+need to start merging the extent_busy structures once they are added
+to the CIL.  That's quite a bit of effort and I'd like to avoid it
+for now.
