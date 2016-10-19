@@ -1,66 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47832 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:14275 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932739AbcJURWP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Oct 2016 13:22:15 -0400
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 593868124B
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Oct 2016 17:22:15 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u9LHMFnv020290
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Oct 2016 13:22:15 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/3] xfs: clear cowblocks tag when cow fork is emptied
-Date: Fri, 21 Oct 2016 13:22:12 -0400
-Message-Id: <1477070533-59327-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1477070533-59327-1-git-send-email-bfoster@redhat.com>
-References: <1477070533-59327-1-git-send-email-bfoster@redhat.com>
+        id S938977AbcJSTep (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Oct 2016 15:34:45 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v8 01/16] ext4: tell DAX the size of allocation holes
+Date: Wed, 19 Oct 2016 13:34:20 -0600
+Message-Id: <1476905675-32581-2-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-The background cowblocks scan job takes care of scanning for inodes with
-potentially lingering blocks in the cow fork and clearing them out. If
-the background scanner reclaims the cow fork blocks, however, it doesn't
-immediately clear the cowblocks tag from the inode. Instead, the inode
-remains tagged until the background scanner comes around again,
-discovers the inode cow fork has no blocks, clears the tag and fires the
-trace_xfs_inode_free_cowblocks_invalid() tracepoint to indicate that the
-inode may have been incorrectly tagged.
+When DAX calls _ext4_get_block() and the file offset points to a hole we
+currently don't set bh->b_size.  This is current worked around via
+buffer_size_valid() in fs/dax.c.
 
-This is not a major functional problem as the tag is ultimately cleared.
-Nonetheless, clear the tag when an inode cow fork is explicitly emptied
-to avoid the extra round trip through the background scanner and
-spurious "invalid" tracepoint.
+_ext4_get_block() has the hole size information from ext4_map_blocks(), so
+populate bh->b_size so we can remove buffer_size_valid() in a later patch.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/xfs_reflink.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ fs/ext4/inode.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index cd308f1..a279b4e 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -567,10 +567,14 @@ xfs_reflink_cancel_cow_blocks(
- 		}
- 
- 		if (++idx >= ifp->if_bytes / sizeof(struct xfs_bmbt_rec))
--			return 0;
-+			break;
- 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), &got);
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 9c06472..3d58b2b 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -767,6 +767,9 @@ static int _ext4_get_block(struct inode *inode, sector_t iblock,
+ 		ext4_update_bh_state(bh, map.m_flags);
+ 		bh->b_size = inode->i_sb->s_blocksize * map.m_len;
+ 		ret = 0;
++	} else if (ret == 0) {
++		/* hole case, need to fill in bh->b_size */
++		bh->b_size = inode->i_sb->s_blocksize * map.m_len;
  	}
- 
-+	/* clear tag if cow fork is emptied */
-+	if (!ifp->if_bytes)
-+		xfs_inode_clear_cowblocks_tag(ip);
-+
- 	return error;
+ 	return ret;
  }
- 
 -- 
 2.7.4
 
