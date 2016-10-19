@@ -1,58 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:28189 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:14463 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941451AbcJSTes (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Oct 2016 15:34:48 -0400
+        id S941196AbcJSTer (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Oct 2016 15:34:47 -0400
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v8 00/16] re-enable DAX PMD support
-Date: Wed, 19 Oct 2016 13:34:19 -0600
-Message-Id: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v8 04/16] dax: make 'wait_table' global variable static
+Date: Wed, 19 Oct 2016 13:34:23 -0600
+Message-Id: <1476905675-32581-5-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-kernel@vger.kernel.org
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
-locking.  This series allows DAX PMDs to participate in the DAX radix tree
-based locking scheme so that they can be re-enabled.
+The global 'wait_table' variable is only used within fs/dax.c, and
+generates the following sparse warning:
 
-Changes since v7:
- - Rebased on v4.9-rc1, dropping one ext4 patch that had already been merged.
- - Added Reviewed-by tags from Jan Kara.
+fs/dax.c:39:19: warning: symbol 'wait_table' was not declared. Should it be static?
 
-Here is a tree containing my changes:
-https://git.kernel.org/cgit/linux/kernel/git/zwisler/linux.git/log/?h=dax_pmd_v8
+Make it static so it has scope local to fs/dax.c, and to make sparse happy.
 
-Ross Zwisler (16):
-  ext4: tell DAX the size of allocation holes
-  dax: remove buffer_size_valid()
-  ext2: remove support for DAX PMD faults
-  dax: make 'wait_table' global variable static
-  dax: remove the last BUG_ON() from fs/dax.c
-  dax: consistent variable naming for DAX entries
-  dax: coordinate locking for offsets in PMD range
-  dax: remove dax_pmd_fault()
-  dax: correct dax iomap code namespace
-  dax: add dax_iomap_sector() helper function
-  dax: dax_iomap_fault() needs to call iomap_end()
-  dax: move RADIX_DAX_* defines to dax.h
-  dax: move put_(un)locked_mapping_entry() in dax.c
-  dax: add struct iomap based DAX PMD support
-  xfs: use struct iomap based DAX PMD fault path
-  dax: remove "depends on BROKEN" from FS_DAX_PMD
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/dax.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- fs/Kconfig          |   1 -
- fs/dax.c            | 826 +++++++++++++++++++++++++++++-----------------------
- fs/ext2/file.c      |  35 +--
- fs/ext4/inode.c     |   3 +
- fs/xfs/xfs_aops.c   |  26 +-
- fs/xfs/xfs_aops.h   |   3 -
- fs/xfs/xfs_file.c   |  10 +-
- include/linux/dax.h |  58 +++-
- mm/filemap.c        |   5 +-
- 9 files changed, 537 insertions(+), 430 deletions(-)
-
+diff --git a/fs/dax.c b/fs/dax.c
+index b09817a..e52e754 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -52,7 +52,7 @@
+ #define DAX_WAIT_TABLE_BITS 12
+ #define DAX_WAIT_TABLE_ENTRIES (1 << DAX_WAIT_TABLE_BITS)
+ 
+-wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
++static wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
+ 
+ static int __init init_dax_wait_table(void)
+ {
 -- 
 2.7.4
 
