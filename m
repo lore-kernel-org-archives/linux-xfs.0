@@ -1,98 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:20587 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933808AbcJUWUJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Oct 2016 18:20:09 -0400
-Date: Sat, 22 Oct 2016 09:20:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
-Message-ID: <20161021222005.GU23194@dastard>
-References: <5244720.RPRsZ88NJ0@libor-nb>
- <20161021175912.GB54851@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20161021175912.GB54851@bfoster.bfoster>
+Received: from mga09.intel.com ([134.134.136.24]:14275 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S941037AbcJSTeq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Oct 2016 15:34:46 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v8 03/16] ext2: remove support for DAX PMD faults
+Date: Wed, 19 Oct 2016 13:34:22 -0600
+Message-Id: <1476905675-32581-4-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>, linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Fri, Oct 21, 2016 at 01:59:13PM -0400, Brian Foster wrote:
-> On Fri, Oct 21, 2016 at 07:09:06PM +0200, Libor Klepáč wrote:
-> > Hello,
-> > sorry for last incomplete email (if it arrives), i hit some send button by accident.
-> > 
-> > Last week we have started to have problems with one virtual machine running debian jessie, with kernel 3.16.7-ckt20-1+deb8u4.
-> > virtualization is done on vmware 5.5 on dell r610, disks are on perc h700.
-> > 
-> > XFS is on data disk (/dev/mapper/vgDisk2-lvData) running cyrus, mysql, apache+php.
-> > It resides on single disk LVM, without partitions.
-> > #pvs
-> >   PV         VG      Fmt  Attr PSize   PFree
-> >   /dev/sda2  vgDisk1 lvm2 a--   15.76g    0 
-> >   /dev/sdb   vgDisk2 lvm2 a--  410.00g    0
-> > 
-> > #lvs
-> >   LV       VG      Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
-> >   lvSwap   vgDisk1 -wi-ao----   1.86g                                                    
-> >   lvSystem vgDisk1 -wi-ao----  13.90g                                                    
-> >   lvData   vgDisk2 -wi-ao---- 410.00g
-> > 
-> > #grep xfs /etc/fstab 
-> > /dev/mapper/vgDisk2-lvData      /mountpoint       xfs     noatime,logbufs=8       0       1
-> > 
-> > It was created in Debian Squeeze on kernel 2.6.32 OR Wheezy on 3.2.0.
-> > 
-> > 
-> > There are some logs, this one repeats but doesn't cause shutdown
-> > 
-> > Oct 14 07:02:58 vps2 kernel: [18855093.206725] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x46/0xd0 [xfs], block 0x24c17ba8
-> > Oct 14 07:02:58 vps2 kernel: [18855093.210393] XFS (dm-2): Unmount and run xfs_repair
-> > Oct 14 07:02:58 vps2 kernel: [18855093.211224] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
-> > Oct 14 07:02:58 vps2 kernel: [18855093.212092] ffff8801853da000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
-> > Oct 14 07:02:58 vps2 kernel: [18855093.213932] ffff8801853da010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
-> > Oct 14 07:02:58 vps2 kernel: [18855093.215915] ffff8801853da020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > Oct 14 07:02:58 vps2 kernel: [18855093.218054] ffff8801853da030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+DAX PMD support was added via the following commit:
 
-ffff8801853da000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
-                  | forw     |  back     |magic| pad |count|usedbytes
-ffff8801853da010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
-	      firstused|hl|pd|base0|size0|base1|size1|base2|size2|
-ffff8801853da020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-		  entry data....
-ffff8801853da030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+commit e7b1ea2ad658 ("ext2: huge page fault support")
 
-Ok, that's a completely empty attribute leaf block. It's got no
-attribute entries in it, and because the entry data is zero, it's
-never had any data in it. It's failing the verifier because the
-entry count in the header is zero. i.e. this sort of empty buffer
-should never end up on disk.
+I believe this path to be untested as ext2 doesn't reliably provide block
+allocations that are aligned to 2MiB.  In my testing I've been unable to
+get ext2 to actually fault in a PMD.  It always fails with a "pfn
+unaligned" message because the sector returned by ext2_get_block() isn't
+aligned.
 
-This rings a bell, but I can't put my finger on it right now. It may
-be a really old corruption that has been sitting on disk for a long
-time (i.e. from whatever kernel the fs was originally created and
-run on) that is only manifest now on a more recent kernel that has
-better validity checking...
+I've tried various settings for the "stride" and "stripe_width" extended
+options to mkfs.ext2, without any luck.
 
-> > Is there some way to stop this? Maybe upgrading to kernel 4.7 from backports?
-> > Is there a way to map those "block 0x12f4ca30" , "block 0x24c17ba8" to a specific file?
-> > 
-> 
-> v3.16 is certainly kind of old. For starters though, I would suggest to
-> grab the most recent xfsprogs release you can (you can even grab the
-> source and run it right out of the build tree), run 'xfs_repair -n' and
-> report the results.
+Since we can't reliably get PMDs, remove support so that we don't have an
+untested code path that we may someday traverse when we happen to get an
+aligned block allocation.  This should also make 4k DAX faults in ext2 a
+bit faster since they will no longer have to call the PMD fault handler
+only to get a response of VM_FAULT_FALLBACK.
 
-This, please, and paste the output for us to see. If repair is not
-detecting and correcting the corrupt attribute block you'll continue
-to see the problem. 
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/ext2/file.c | 29 ++++++-----------------------
+ 1 file changed, 6 insertions(+), 23 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/ext2/file.c b/fs/ext2/file.c
+index a0e1478..fb88b51 100644
+--- a/fs/ext2/file.c
++++ b/fs/ext2/file.c
+@@ -107,27 +107,6 @@ static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ 	return ret;
+ }
+ 
+-static int ext2_dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
+-						pmd_t *pmd, unsigned int flags)
+-{
+-	struct inode *inode = file_inode(vma->vm_file);
+-	struct ext2_inode_info *ei = EXT2_I(inode);
+-	int ret;
+-
+-	if (flags & FAULT_FLAG_WRITE) {
+-		sb_start_pagefault(inode->i_sb);
+-		file_update_time(vma->vm_file);
+-	}
+-	down_read(&ei->dax_sem);
+-
+-	ret = dax_pmd_fault(vma, addr, pmd, flags, ext2_get_block);
+-
+-	up_read(&ei->dax_sem);
+-	if (flags & FAULT_FLAG_WRITE)
+-		sb_end_pagefault(inode->i_sb);
+-	return ret;
+-}
+-
+ static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
+ 		struct vm_fault *vmf)
+ {
+@@ -154,7 +133,11 @@ static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
+ 
+ static const struct vm_operations_struct ext2_dax_vm_ops = {
+ 	.fault		= ext2_dax_fault,
+-	.pmd_fault	= ext2_dax_pmd_fault,
++	/*
++	 * .pmd_fault is not supported for DAX because allocation in ext2
++	 * cannot be reliably aligned to huge page sizes and so pmd faults
++	 * will always fail and fail back to regular faults.
++	 */
+ 	.page_mkwrite	= ext2_dax_fault,
+ 	.pfn_mkwrite	= ext2_dax_pfn_mkwrite,
+ };
+@@ -166,7 +149,7 @@ static int ext2_file_mmap(struct file *file, struct vm_area_struct *vma)
+ 
+ 	file_accessed(file);
+ 	vma->vm_ops = &ext2_dax_vm_ops;
+-	vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
++	vma->vm_flags |= VM_MIXEDMAP;
+ 	return 0;
+ }
+ #else
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
