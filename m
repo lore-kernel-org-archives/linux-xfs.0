@@ -1,55 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47572 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753233AbcJSCoy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Oct 2016 22:44:54 -0400
-Subject: Re: [PATCH] libxfs: clean up _calc_dquots_per_chunk
-References: <20161018233554.GD20337@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ae361df5-0808-7886-c297-4a87ca6fb903@sandeen.net>
-Date: Tue, 18 Oct 2016 21:44:50 -0500
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:52464 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755932AbcJSBPP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2016 21:15:15 -0400
+Date: Wed, 19 Oct 2016 12:15:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: use rhashtable to track buffer cache
+Message-ID: <20161019011512.GH23194@dastard>
+References: <1476821653-2595-1-git-send-email-dev@lynxeye.de>
+ <1476821653-2595-2-git-send-email-dev@lynxeye.de>
 MIME-Version: 1.0
-In-Reply-To: <20161018233554.GD20337@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1476821653-2595-2-git-send-email-dev@lynxeye.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+To: Lucas Stach <dev@lynxeye.de>
 Cc: linux-xfs@vger.kernel.org
 
-Well it's not a cleanup - it's fix ;)
-
-On 10/18/16 6:35 PM, Darrick J. Wong wrote:
-> The function xfs_calc_dquots_per_chunk takes a parameter in units
-> of basic blocks.  The kernel seems to get the units wrong, but
-> userspace got 'fixed' by commenting out the unnecessary conversion.
-> Fix both.
+On Tue, Oct 18, 2016 at 10:14:12PM +0200, Lucas Stach wrote:
+> On filesystems with a lot of metadata and in metadata intensive workloads
+> xfs_buf_find() is showing up at the top of the CPU cycles trace. Most of
+> the CPU time is spent on CPU cache misses while traversing the rbtree.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  fs/xfs/libxfs/xfs_dquot_buf.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+> As the buffer cache does not need any kind of ordering, but fast lookups
+> a hashtable is the natural data structure to use. The rhashtable
+> infrastructure provides a self-scaling hashtable implementation and
+> allows lookups to proceed while the table is going through a resize
+> operation.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-> index 3cc3cf7..ac9a003 100644
-> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
-> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-> @@ -191,8 +191,7 @@ xfs_dquot_buf_verify_crc(
->  	if (mp->m_quotainfo)
->  		ndquots = mp->m_quotainfo->qi_dqperchunk;
->  	else
-> -		ndquots = xfs_calc_dquots_per_chunk(
-> -					XFS_BB_TO_FSB(mp, bp->b_length));
-> +		ndquots = xfs_calc_dquots_per_chunk(bp->b_length);
->  
->  	for (i = 0; i < ndquots; i++, d++) {
->  		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> This reduces the CPU-time spent for the lookups to 1/3 even for small
+> filesystems with a relatively small number of cached buffers, with
+> possibly much larger gains on higher loaded filesystems.
 > 
+> The minimum size of 4096 buckets was chosen as it was the size of the
+> xfs buffer cache hash before it was converted to an rbtree.
+> 
+> Signed-off-by: Lucas Stach <dev@lynxeye.de>
+
+This fails to compile on CONFIG_XFS_DEBUG=y kernels due to various
+ASSERT statements not being updated appropriately. When making XFS
+changes to core infrastructure like this, it is highly recommended
+that you use CONFIG_XFS_DEBUG=y so that it catches mistakes and
+assumptions that your changes violate at runtime....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
