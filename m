@@ -1,77 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41903 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S942645AbcJSOge (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Oct 2016 10:36:34 -0400
-Date: Wed, 19 Oct 2016 12:58:25 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/3] xfs: don't block the log commit handler for
-        discards
-Message-ID: <20161019105825.GA2279@lst.de>
-References: <1476735753-5861-1-git-send-email-hch@lst.de> <1476735753-5861-3-git-send-email-hch@lst.de> <20161017232908.GY23194@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:43111 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S944162AbcJSPZA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Oct 2016 11:25:00 -0400
+Date: Wed, 19 Oct 2016 08:24:54 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/5] xfs: remove xfs_file_wait_for_io
+Message-ID: <20161019152454.GI26485@birch.djwong.org>
+References: <1476881248-18669-1-git-send-email-hch@lst.de>
+ <1476881248-18669-5-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161017232908.GY23194@dastard>
+In-Reply-To: <1476881248-18669-5-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, michaelcallahan@fb.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 18, 2016 at 10:29:08AM +1100, Dave Chinner wrote:
-> > +	if (args.fsbno == NULLFSBLOCK && trydiscard) {
-> > +		trydiscard = false;
-> > +		flush_workqueue(xfs_discard_wq);
-> > +		goto retry;
-> > +	}
+On Wed, Oct 19, 2016 at 02:47:27PM +0200, Christoph Hellwig wrote:
+> filemap_write_and_wait_range operates on full pages, so there is no need
+> for the rounding operations.  Additionally this allows us to micro-optimize
+> by skipping the second inode_dio_wait for a intra-file clone.
 > 
-> So this is the new behaviour that triggers flushing of the discard
-> list rather than having it occur from a log force inside
-> xfs_extent_busy_update_extent().
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+> ---
+>  fs/xfs/xfs_file.c | 39 ++++++++++-----------------------------
+>  1 file changed, 10 insertions(+), 29 deletions(-)
 > 
-> However, xfs_extent_busy_update_extent() also has backoff when it
-> finds an extent on the busy list being discarded, which means it
-> could spin waiting for the discard work to complete.
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 0960264..a61be33 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -947,32 +947,6 @@ xfs_file_fallocate(
+>  	return error;
+>  }
+>  
+> -/*
+> - * Flush all file writes out to disk.
+> - */
+> -static int
+> -xfs_file_wait_for_io(
+> -	struct inode	*inode,
+> -	loff_t		offset,
+> -	size_t		len)
+> -{
+> -	loff_t		rounding;
+> -	loff_t		ioffset;
+> -	loff_t		iendoffset;
+> -	loff_t		bs;
+> -	int		ret;
+> -
+> -	bs = inode->i_sb->s_blocksize;
+> -	inode_dio_wait(inode);
+> -
+> -	rounding = max_t(xfs_off_t, bs, PAGE_SIZE);
+> -	ioffset = round_down(offset, rounding);
+> -	iendoffset = round_up(offset + len, rounding) - 1;
+> -	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset,
+> -					   iendoffset);
+> -	return ret;
+> -}
+> -
+>  /* Hook up to the VFS reflink function */
+>  STATIC int
+>  xfs_file_share_range(
+> @@ -1069,11 +1043,18 @@ xfs_file_share_range(
+>  	if (same_inode && pos_out + blen > pos_in && pos_out < pos_in + blen)
+>  		goto out_unlock;
+>  
+> -	/* Wait for the completion of any pending IOs on srcfile */
+> -	ret = xfs_file_wait_for_io(inode_in, pos_in, len);
+> +	/* Wait for the completion of any pending IOs on both files */
+> +	inode_dio_wait(inode_in);
+> +	if (!same_inode)
+> +		inode_dio_wait(inode_out);
+> +
+> +	ret = filemap_write_and_wait_range(inode_in->i_mapping,
+> +			pos_in, pos_in + len - 1);
+>  	if (ret)
+>  		goto out_unlock;
+> -	ret = xfs_file_wait_for_io(inode_out, pos_out, len);
+> +
+> +	ret = filemap_write_and_wait_range(inode_out->i_mapping,
+> +			pos_out, pos_out + len - 1);
+>  	if (ret)
+>  		goto out_unlock;
+>  
+> -- 
+> 2.1.4
 > 
-> Wouldn't it be better to trigger this workqueue flush in
-> xfs_extent_busy_update_extent() in both these cases so that the
-> behaviour remains the same for userdata allocations hitting
-> uncommitted busy extents, but also allow us to remove the spinning
-> for allocations where the busy extent is currently being discarded?
-
-So the current xfs_extent_busy_update_extent busy wait is something we
-actually never hit at all - it's only hit when an extent under discard
-is reused by an AGFL allocation, which basically does not happen.
-
-I'm not feeling very eager to touch that corner case code, and would
-rather leave it as-is.
-
-The new flush deals with the case where we weren't able to find any space
-due to the discard list.  To honest I almost don't manage to trigger it
-anymore once I found the issue fixed in patch 1.  It might be possible
-to even drop this retry entirely now.
-
-> This creates one long bio chain with all the regions to discard on
-> it, and then when all it completes we call xlog_discard_endio() to
-> release all the busy extents.
-> 
-> Why not pull the busy extent from the list and attach it to each
-> bio returned and submit them individually and run per-busy extent
-> completions? That will substantially reduce the latency of discard
-> completions when there are long lists of extents to discard....
-
-Because that would defeat the merging I currently do, which is
-very effectice.  It would also increase the size of the busy extent
-structure as it would grow a work_struct, and increase lock contention
-in the completion handler.  All in all not that pretty, especially
-as the most common number of discards are one digit or small two
-digit.  And this is just going to further decrease once I finish
-up my block layer patches to allow multi-range discards by merging
-multiple discard bios into a single request.  With that even double
-digit numbers of discards are fairly rare.
-
-Now if we eventually want to split the completions I think we'll
-need to start merging the extent_busy structures once they are added
-to the CIL.  That's quite a bit of effort and I'd like to avoid it
-for now.
