@@ -1,183 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ns.lynxeye.de ([87.118.118.114]:51486 "EHLO lynxeye.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753969AbcJRUVX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Oct 2016 16:21:23 -0400
-From: Lucas Stach <dev@lynxeye.de>
-Subject: [PATCH 2/2] xfs: switch buffer cache entries to RCU freeing
-Date: Tue, 18 Oct 2016 22:14:13 +0200
-Message-Id: <1476821653-2595-3-git-send-email-dev@lynxeye.de>
-In-Reply-To: <1476821653-2595-1-git-send-email-dev@lynxeye.de>
-References: <1476821653-2595-1-git-send-email-dev@lynxeye.de>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:46646 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752008AbcJTWOK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Oct 2016 18:14:10 -0400
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1bxLbB-0007n9-Li
+        for linux-xfs@vger.kernel.org; Fri, 21 Oct 2016 09:14:05 +1100
+Date: Fri, 21 Oct 2016 09:14:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs: for-next branch updated to 64e6428ddd00
+Message-ID: <20161020221405.GO14023@dastard>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="nFreZHaLTZJo0R7j"
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-The buffer cache hash as the indexing data structure into the buffer
-cache is already protected by RCU. By freeing the entries itself by
-RCU we can get rid of the buffer cache lock altogether.
 
-Signed-off-by: Lucas Stach <dev@lynxeye.de>
----
- fs/xfs/xfs_buf.c   | 41 +++++++++++++++++++++++++++--------------
- fs/xfs/xfs_buf.h   |  2 ++
- fs/xfs/xfs_mount.h |  1 -
- 3 files changed, 29 insertions(+), 15 deletions(-)
+--nFreZHaLTZJo0R7j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 50c5b01..3ee0a3d1 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -326,6 +326,16 @@ xfs_buf_free(
- 	kmem_zone_free(xfs_buf_zone, bp);
- }
- 
-+STATIC void
-+__xfs_buf_rcu_free(
-+	struct rcu_head	*head)
-+{
-+	xfs_buf_t *bp = container_of(head, struct xfs_buf, rcu_head);
-+
-+	ASSERT(atomic_read(&bp->b_hold) == 0);
-+	xfs_buf_free(bp);
-+}
-+
- /*
-  * Allocates all the pages for buffer in question and builds it's page list.
-  */
-@@ -491,6 +501,14 @@ _xfs_buf_cmp(
- 	BUILD_BUG_ON(offsetof(struct xfs_buf_cmp_arg, blkno) != 0);
- 
- 	if (bp->b_bn == cmp_arg->blkno) {
-+		/*
-+		 * Skip matches with a hold count of zero, as they are about to
-+		 * be freed by RCU. Continue searching as another valid entry
-+		 * might have already been inserted into the hash.
-+		 */
-+		if (unlikely(atomic_read(&bp->b_hold) == 0))
-+			return 1;
-+
- 		if (unlikely(bp->b_length != cmp_arg->numblks)) {
- 			/*
- 			 * found a block number match. If the range doesn't
-@@ -522,7 +540,6 @@ static const struct rhashtable_params xfs_buf_hash_params = {
- int xfs_buf_hash_init(
- 	struct xfs_perag *pag)
- {
--	spin_lock_init(&pag->pag_buf_lock);
- 	return rhashtable_init(&pag->pag_buf_hash, &xfs_buf_hash_params);
- }
- 
-@@ -580,14 +597,16 @@ _xfs_buf_find(
- 	pag = xfs_perag_get(btp->bt_mount,
- 			    xfs_daddr_to_agno(btp->bt_mount, cmp_arg.blkno));
- 
-+	rcu_read_lock();
- 	/* lookup buf in pag hash */
--	spin_lock(&pag->pag_buf_lock);
- 	bp = rhashtable_lookup_fast(&pag->pag_buf_hash, &cmp_arg,
- 				    xfs_buf_hash_params);
--	if (bp) {
--		atomic_inc(&bp->b_hold);
-+
-+	/* if the hold count is zero the buffer is about to be freed by RCU */
-+	if (bp && atomic_inc_not_zero(&bp->b_hold))
- 		goto found;
--	}
-+
-+	rcu_read_unlock();
- 
- 	/* No match found */
- 	if (new_bp) {
-@@ -596,16 +615,14 @@ _xfs_buf_find(
- 		rhashtable_insert_fast(&pag->pag_buf_hash,
- 				       &new_bp->b_rhash_head,
- 				       xfs_buf_hash_params);
--		spin_unlock(&pag->pag_buf_lock);
- 	} else {
- 		XFS_STATS_INC(btp->bt_mount, xb_miss_locked);
--		spin_unlock(&pag->pag_buf_lock);
- 		xfs_perag_put(pag);
- 	}
- 	return new_bp;
- 
- found:
--	spin_unlock(&pag->pag_buf_lock);
-+	rcu_read_unlock();
- 	xfs_perag_put(pag);
- 
- 	if (!xfs_buf_trylock(bp)) {
-@@ -956,7 +973,6 @@ xfs_buf_rele(
- 	xfs_buf_t		*bp)
- {
- 	struct xfs_perag	*pag = bp->b_pag;
--	bool			release;
- 	bool			freebuf = false;
- 
- 	trace_xfs_buf_rele(bp, _RET_IP_);
-@@ -975,9 +991,8 @@ xfs_buf_rele(
- 
- 	ASSERT(atomic_read(&bp->b_hold) > 0);
- 
--	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
- 	spin_lock(&bp->b_lock);
--	if (!release) {
-+	if (!atomic_dec_and_test(&bp->b_hold)) {
- 		/*
- 		 * Drop the in-flight state if the buffer is already on the LRU
- 		 * and it holds the only reference. This is racy because we
-@@ -1001,7 +1016,6 @@ xfs_buf_rele(
- 			bp->b_state &= ~XFS_BSTATE_DISPOSE;
- 			atomic_inc(&bp->b_hold);
- 		}
--		spin_unlock(&pag->pag_buf_lock);
- 	} else {
- 		/*
- 		 * most of the time buffers will already be removed from the
-@@ -1018,7 +1032,6 @@ xfs_buf_rele(
- 		ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
- 		rhashtable_remove_fast(&pag->pag_buf_hash, &bp->b_rhash_head,
- 				       xfs_buf_hash_params);
--		spin_unlock(&pag->pag_buf_lock);
- 		xfs_perag_put(pag);
- 		freebuf = true;
- 	}
-@@ -1027,7 +1040,7 @@ xfs_buf_rele(
- 	spin_unlock(&bp->b_lock);
- 
- 	if (freebuf)
--		xfs_buf_free(bp);
-+		call_rcu(&bp->rcu_head, __xfs_buf_rcu_free);
- }
- 
- 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 37943ac..3f99ea7 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -210,6 +210,8 @@ typedef struct xfs_buf {
- 
- 	const struct xfs_buf_ops	*b_ops;
- 
-+	struct rcu_head		rcu_head;
-+
- #ifdef XFS_BUF_LOCK_TRACKING
- 	int			b_last_holder;
- #endif
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 84f7852..1116909 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -393,7 +393,6 @@ typedef struct xfs_perag {
- 	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
- 
- 	/* buffer cache index */
--	spinlock_t	pag_buf_lock;	/* lock for pag_buf_hash */
- 	struct rhashtable pag_buf_hash;
- 
- 	/* for rcu-safe freeing */
--- 
-2.7.4
+Hi folks,
 
+The for-next branch of the xfs kernel repository at
+
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+
+has just been updated. This is the first round of fixes for 4.9-rc3
+after the reflink merge. It's a little bit bigger than I'd
+anticipated, but most of that change is the refactoring that
+Christoph has done on top of all his fixes. If I've missed anything
+critical, please let me know.
+
+-Dave.
+
+The new head of the for-next branch is commit:
+
+64e6428ddd00 xfs: remove xfs_bunmapi_cow
+
+New Commits:
+
+Christoph Hellwig (14):
+      [0ee7a3f6b5b2] xfs: don't take the IOLOCK exclusive for direct I/O pa=
+ge invalidation
+      [4fbc2c65255f] xfs: remove the same fs check from xfs_file_share_range
+      [a62e82b35b97] xfs: fix the same_inode check in xfs_file_share_range
+      [576177818e6f] xfs: move inode locking from xfs_reflink_remap_range t=
+o xfs_file_share_range
+      [ec4075990255] xfs: remove xfs_file_wait_for_io
+      [5faaf4fa0a20] xfs: merge xfs_reflink_remap_range and xfs_file_share_=
+range
+      [d33fd776f992] iomap: add IOMAP_REPORT
+      [62c5ac89de7d] xfs: handle "raw" delayed extents xfs_reflink_trim_aro=
+und_shared
+      [5f9268ca53ac] xfs: don't bother looking at the refcount tree for rea=
+ds
+      [3ba020befef0] xfs: optimize writes to reflink files
+      [fa5c836ca8eb] xfs: refactor xfs_bunmapi_cow
+      [3e0ee78f7a5a] xfs: optimize xfs_reflink_cancel_cow_blocks
+      [c1112b6e6266] xfs: optimize xfs_reflink_end_cow
+      [64e6428ddd00] xfs: remove xfs_bunmapi_cow
+
+Colin Ian King (1):
+      [1d55a4bfd080] xfs: remove redundant assignment of ifp
+
+Darrick J. Wong (3):
+      [d099245297e2] xfs: unset MS_ACTIVE if mount fails
+      [58d789678546] libxfs: clean up _calc_dquots_per_chunk
+      [0a0af28cad9a] xfs: add xfs_trim_extent
+
+Eric Biggers (1):
+      [f1b8243c55ca] xfs: add some 'static' annotations
+
+Eric Sandeen (1):
+      [fe23759eaf2f] xfs: remove pointless error goto in xfs_bmap_remap_all=
+oc
+
+Geert Uytterhoeven (1):
+      [1be7f9be0efa] xfs: Fix uninitialized variable in xfs_reflink_reserve=
+_cow_range()
+
+Roger Willcocks (1):
+      [8cdcc8102c0c] libxfs: v3 inodes are only valid on crc-enabled filesy=
+stems
+
+
+Code Diffstat:
+
+ fs/iomap.c                    |   2 +-
+ fs/xfs/libxfs/xfs_bmap.c      | 418 ++++++++++++++++++++++----------------
+ fs/xfs/libxfs/xfs_bmap.h      |   8 +-
+ fs/xfs/libxfs/xfs_btree.c     |   2 +-
+ fs/xfs/libxfs/xfs_dquot_buf.c |   3 +-
+ fs/xfs/libxfs/xfs_format.h    |   1 -
+ fs/xfs/libxfs/xfs_inode_buf.c |  13 +-
+ fs/xfs/libxfs/xfs_inode_buf.h |   2 +
+ fs/xfs/xfs_file.c             | 232 +++------------------
+ fs/xfs/xfs_iomap.c            |  57 ++++--
+ fs/xfs/xfs_mount.c            |   1 +
+ fs/xfs/xfs_reflink.c          | 495 ++++++++++++++++++++++++--------------=
+-------
+ fs/xfs/xfs_reflink.h          |  11 +-
+ fs/xfs/xfs_sysfs.c            |   4 +-
+ fs/xfs/xfs_trace.h            |   4 +-
+ include/linux/iomap.h         |  17 +-
+ 16 files changed, 631 insertions(+), 639 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--nFreZHaLTZJo0R7j
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJYCUGtAAoJEK3oKUf0dfodgzIQAIs+DjcfP3JuAWl/peVeu7Ff
+adIISDwZS2VWp1KC+iGZQt4rASQ0349mKLHTV6O2pTqc20U9YwpneLqCPNKObGwG
+QxYWfF5FSKwY3BvAWdxltDMHnefMVi0CgN615jndCOkFCtK9ljuz6/ZsHyjFAzkO
+sJp+Te7JEFmRF3coOF2oN+VUG+kSSRAorYCdcEv3qO8LihRiB2LsosFXVDSj/R11
+54aTO0tqpgJ6A4+V6nr05YV/c5scNvop/xj9/uFyiAJqoEG+2Hsf/djthIJMsI7X
+i+6QO01nu1fLsnOGcS94PfAU9Lf4MnWu0qKHHA3FNS+A/hZkRHcJoDBYwJf5OK7h
+7YNC/B06fJvgw0Vbv6HpjVnU9PSTvKATLI9mguHzzxfgB0ArV2rMp6qv/Jt+5aBX
+yDMKnxMWt3BThwyZwdKJYm5MnYjjtVTKYJZsMdAPi5BaME5geUBkTfkd5X9fv0Z5
+p2I8EtMzFkgbwOl4ljRbm/HUorag03U48+WsMI2AQpatWRg6JBNojquzk2yeJBqs
+b4tiJBxPhlQlWb9r8s14FIBEhtI9Xo/JNX4z6TtwWtCZOZ9XtOfS40AYaZepg8UB
+jUlQdXoSqPgBEiiw3HJP7JDp+CJQi6dJMoIHvE1Q+SixG+HSX8tEv60BlFRjvTnD
+PCAIN68lSri/97UZEA9J
+=qZfM
+-----END PGP SIGNATURE-----
+
+--nFreZHaLTZJo0R7j--
