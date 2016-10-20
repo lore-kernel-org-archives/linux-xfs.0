@@ -1,100 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:14275 "EHLO mga09.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:60201 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941037AbcJSTeq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Oct 2016 15:34:46 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v8 03/16] ext2: remove support for DAX PMD faults
-Date: Wed, 19 Oct 2016 13:34:22 -0600
-Message-Id: <1476905675-32581-4-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
+        id S1751164AbcJTLzD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Oct 2016 07:55:03 -0400
+Date: Thu, 20 Oct 2016 13:55:00 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Lock ordering in iomap code
+Message-ID: <20161020115500.GB25779@quack2.suse.cz>
+References: <20161007111314.GA24081@quack2.suse.cz>
+ <20161017093148.GA6375@quack2.suse.cz>
+ <20161017102657.GA12164@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161017102657.GA12164@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-DAX PMD support was added via the following commit:
+Hi Christoph,
 
-commit e7b1ea2ad658 ("ext2: huge page fault support")
+On Mon 17-10-16 12:26:57, Christoph Hellwig wrote:
+> > Ping? I have ext4 DAX read & write path working with the iomap code but to
+> > convert the fault path, I need this resolved. Are you OK with moving
+> > iomap_begin() / iomap_end() calls outside of page lock / entry lock in the
+> > fault path?
+> 
+> Yes, that sounds fine.
 
-I believe this path to be untested as ext2 doesn't reliably provide block
-allocations that are aligned to 2MiB.  In my testing I've been unable to
-get ext2 to actually fault in a PMD.  It always fails with a "pfn
-unaligned" message because the sector returned by ext2_get_block() isn't
-aligned.
+I've been looking into this some more and realized it's not as easy as I've
+originally though. ->page_mkwrite callback is expected to return with the
+page locked so locking it inside the iomap actor is really awkward (think
+of situation when blocksize < pagesize). Since nobody currently has issues
+with ->iomap_begin being sometimes called with page lock and sometimes
+without, I don't think changing that would be worth the hassle. Just one
+more question: Doesn't XFS have some lock ordering issues when
+xfs_file_iomap_begin() gets called with page lock held from
+iomap_page_mkwrite() for a file with extent size hints and thus we end up
+in xfs_iomap_write_direct() with page lock held? We do a lot of stuff there
+including transaction setup and such...
 
-I've tried various settings for the "stride" and "stripe_width" extended
-options to mkfs.ext2, without any luck.
+For DAX I have switched the locking order as there we fully handle the
+fault and unlock radix tree entry inside the ->fault / ->page_mkwrite
+handler so the locking is sane and also ext4 needs this to be able to use
+the iomap infrastructure. The locking difference between DAX and !DAX path
+is unfortunate but looks as the least evil to me.
 
-Since we can't reliably get PMDs, remove support so that we don't have an
-untested code path that we may someday traverse when we happen to get an
-aligned block allocation.  This should also make 4k DAX faults in ext2 a
-bit faster since they will no longer have to call the PMD fault handler
-only to get a response of VM_FAULT_FALLBACK.
+> > I was also thinking about the implications of iomap_begin() (and thus block
+> > allocation for buffered writes in nodelalloc case) being no longer protected
+> > by page lock and at least for ext2 / ext3 compatibility modes this will
+> > lead to uninitialized data exposure when page fault races in the right way
+> > with buffered write. So current locking scheme in iomap code is not easily
+> > usable for ext4 for buffered writes.
+> 
+> Right, the iomap I/O code assumes that you either use delalloc, or that
+> your have unwritten extents that your convert to written once I/O has
+> finished.  XFS uses the latter feature for direct I/O, or if an extent
+> size hints is set.
+> 
+> I can't really think of a good way to handle file systems without
+> either feature - the problem is that we'd have to introduce a file-wide
+> (or range based) lock to protect allocated but not written ranges.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- fs/ext2/file.c | 29 ++++++-----------------------
- 1 file changed, 6 insertions(+), 23 deletions(-)
+Yup, I had something similar in mind but definitely don't want to go into
+that rathole now ;).
 
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index a0e1478..fb88b51 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -107,27 +107,6 @@ static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
- 	return ret;
- }
- 
--static int ext2_dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
--						pmd_t *pmd, unsigned int flags)
--{
--	struct inode *inode = file_inode(vma->vm_file);
--	struct ext2_inode_info *ei = EXT2_I(inode);
--	int ret;
--
--	if (flags & FAULT_FLAG_WRITE) {
--		sb_start_pagefault(inode->i_sb);
--		file_update_time(vma->vm_file);
--	}
--	down_read(&ei->dax_sem);
--
--	ret = dax_pmd_fault(vma, addr, pmd, flags, ext2_get_block);
--
--	up_read(&ei->dax_sem);
--	if (flags & FAULT_FLAG_WRITE)
--		sb_end_pagefault(inode->i_sb);
--	return ret;
--}
--
- static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
- 		struct vm_fault *vmf)
- {
-@@ -154,7 +133,11 @@ static int ext2_dax_pfn_mkwrite(struct vm_area_struct *vma,
- 
- static const struct vm_operations_struct ext2_dax_vm_ops = {
- 	.fault		= ext2_dax_fault,
--	.pmd_fault	= ext2_dax_pmd_fault,
-+	/*
-+	 * .pmd_fault is not supported for DAX because allocation in ext2
-+	 * cannot be reliably aligned to huge page sizes and so pmd faults
-+	 * will always fail and fail back to regular faults.
-+	 */
- 	.page_mkwrite	= ext2_dax_fault,
- 	.pfn_mkwrite	= ext2_dax_pfn_mkwrite,
- };
-@@ -166,7 +149,7 @@ static int ext2_file_mmap(struct file *file, struct vm_area_struct *vma)
- 
- 	file_accessed(file);
- 	vma->vm_ops = &ext2_dax_vm_ops;
--	vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
-+	vma->vm_flags |= VM_MIXEDMAP;
- 	return 0;
- }
- #else
+								Honza
 -- 
-2.7.4
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
