@@ -1,60 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:35510 "EHLO
-        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750912AbcJTHPb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Oct 2016 03:15:31 -0400
-Received: by mail-lf0-f54.google.com with SMTP id l131so65609116lfl.2
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Oct 2016 00:15:30 -0700 (PDT)
-Date: Thu, 20 Oct 2016 09:15:26 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
-Message-ID: <20161020071526.GA14609@dhcp22.suse.cz>
-References: <20160517144912.GZ3193@twins.programming.kicks-ass.net>
- <20160517223549.GV26977@dastard>
- <20160519081146.GS3193@twins.programming.kicks-ass.net>
- <20160520001714.GC26977@dastard>
- <20160601131758.GO26601@dhcp22.suse.cz>
- <20160601181617.GV3190@twins.programming.kicks-ass.net>
- <20161006130454.GI10570@dhcp22.suse.cz>
- <20161019083304.GD3102@twins.programming.kicks-ass.net>
- <20161019120626.GI7517@dhcp22.suse.cz>
- <20161019214923.GI23194@dastard>
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:34805 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941174AbcJTPrf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Oct 2016 11:47:35 -0400
+Received: by mail-pf0-f174.google.com with SMTP id r16so39402339pfg.1
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Oct 2016 08:47:35 -0700 (PDT)
+Date: Thu, 20 Oct 2016 08:47:33 -0700
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: About reflink len = 0 behavior
+Message-ID: <20161020154733.GA5436@vader>
+References: <bedcb76a-4deb-bc0e-7a50-350a8a8db86f@cn.fujitsu.com>
+ <94d643cc-fa49-4b20-b265-55d50af15e47@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161019214923.GI23194@dastard>
+In-Reply-To: <94d643cc-fa49-4b20-b265-55d50af15e47@cn.fujitsu.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Qu Wenruo <quwenruo@cn.fujitsu.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Ingo Molnar <mingo@kernel.org>
+To: Qu Wenruo <quwenruo@cn.fujitsu.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, fstests@vger.kernel.org, btrfs <linux-btrfs@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-On Thu 20-10-16 08:49:23, Dave Chinner wrote:
-> On Wed, Oct 19, 2016 at 02:06:27PM +0200, Michal Hocko wrote:
-> > On Wed 19-10-16 10:33:04, Peter Zijlstra wrote:
-> > [...]
-> > > So I'm all for this if this works for Dave.
-> > > 
-> > > Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
-> > 
-> > Thanks Peter!
-> > 
-> > > Please take it through the XFS tree which would introduce its first user
-> > > etc..
-> > 
-> > Dave, does that work for you? I agree that having this followed by a
-> > first user would be really preferable. Maybe to turn some of those added
-> > by b17cb364dbbb? I wish I could help here but as you've said earlier
-> > each such annotation should be accompanied by an explanation which I am
-> > not qualified to provide.
+On Thu, Oct 20, 2016 at 03:50:46PM +0800, Qu Wenruo wrote:
+> Add cc to new xfs mail list.
 > 
-> I've got my hands full right now, so I'm not going to try to page
-> all this stuff back into my brain right now.  Try reminding me as
-> the merge window gets closer...
+> 
+> At 10/20/2016 03:46 PM, Qu Wenruo wrote:
+> > Hi Darrick, xfs guys and btrfs guys.
+> > 
+> > Although such question is quite late as reflink generic tests are in
+> > fstests for a long time, I'm still not sure what's the correct behavior
+> > for reflink len = 0.
+> > 
+> > Test case generic/182 is causing different output between btrfs and xfs.
+> > 
+> > For btrfs, dedupe will just return 0 and check nothing, while for xfs
+> > len == 0 means to check the whole file length.
+> > 
+> > Both makes sense for me, for btrfs len = 0 behavior, it just follows
+> > read/write functions.
+> > And I assume xfs follows reflink behavior, when len is not specified,
+> > then reflink the length of src file.
+> > 
+> > But since it's a generic test, we need to unify the behavior.
+> > 
+> > So, which one is the standard and which document should we follow for
+> > such behavior definition?
+> > 
+> > Thanks,
+> > Qu
 
-Sure, I do not think we are in hurry.
+Hey, Qu,
 
-Thanks!
+I brought this up a few months back here [1], and I think the conclusion
+was that consistency with clone (so the XFS behavior) was probably what
+we wanted. I just forgot to follow up and figure out if it would break
+any userspace programs in a way that mattered (I doubt it).
+
+1: http://marc.info/?l=linux-btrfs&m=146828374631829&w=2
+
 -- 
-Michal Hocko
-SUSE Labs
+Omar
