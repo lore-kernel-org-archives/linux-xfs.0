@@ -1,61 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54264 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932673AbcJURWP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Oct 2016 13:22:15 -0400
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 52648340759
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Oct 2016 17:22:15 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u9LHMEC8009860
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Oct 2016 13:22:15 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/3] xfs: fix up inode cowblocks tracking tracepoints
-Date: Fri, 21 Oct 2016 13:22:11 -0400
-Message-Id: <1477070533-59327-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1477070533-59327-1-git-send-email-bfoster@redhat.com>
-References: <1477070533-59327-1-git-send-email-bfoster@redhat.com>
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:35510 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750912AbcJTHPb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Oct 2016 03:15:31 -0400
+Received: by mail-lf0-f54.google.com with SMTP id l131so65609116lfl.2
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Oct 2016 00:15:30 -0700 (PDT)
+Date: Thu, 20 Oct 2016 09:15:26 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: Xfs lockdep warning with for-dave-for-4.6 branch
+Message-ID: <20161020071526.GA14609@dhcp22.suse.cz>
+References: <20160517144912.GZ3193@twins.programming.kicks-ass.net>
+ <20160517223549.GV26977@dastard>
+ <20160519081146.GS3193@twins.programming.kicks-ass.net>
+ <20160520001714.GC26977@dastard>
+ <20160601131758.GO26601@dhcp22.suse.cz>
+ <20160601181617.GV3190@twins.programming.kicks-ass.net>
+ <20161006130454.GI10570@dhcp22.suse.cz>
+ <20161019083304.GD3102@twins.programming.kicks-ass.net>
+ <20161019120626.GI7517@dhcp22.suse.cz>
+ <20161019214923.GI23194@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161019214923.GI23194@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Qu Wenruo <quwenruo@cn.fujitsu.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Ingo Molnar <mingo@kernel.org>
 
-These calls are still using the eofblocks tracepoints. The cowblocks
-equivalents are already defined, we just aren't actually calling them.
+On Thu 20-10-16 08:49:23, Dave Chinner wrote:
+> On Wed, Oct 19, 2016 at 02:06:27PM +0200, Michal Hocko wrote:
+> > On Wed 19-10-16 10:33:04, Peter Zijlstra wrote:
+> > [...]
+> > > So I'm all for this if this works for Dave.
+> > > 
+> > > Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+> > 
+> > Thanks Peter!
+> > 
+> > > Please take it through the XFS tree which would introduce its first user
+> > > etc..
+> > 
+> > Dave, does that work for you? I agree that having this followed by a
+> > first user would be really preferable. Maybe to turn some of those added
+> > by b17cb364dbbb? I wish I could help here but as you've said earlier
+> > each such annotation should be accompanied by an explanation which I am
+> > not qualified to provide.
+> 
+> I've got my hands full right now, so I'm not going to try to page
+> all this stuff back into my brain right now.  Try reminding me as
+> the merge window gets closer...
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_icache.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Sure, I do not think we are in hurry.
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 14796b7..f295049 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1656,9 +1656,9 @@ void
- xfs_inode_set_cowblocks_tag(
- 	xfs_inode_t	*ip)
- {
--	trace_xfs_inode_set_eofblocks_tag(ip);
-+	trace_xfs_inode_set_cowblocks_tag(ip);
- 	return __xfs_inode_set_eofblocks_tag(ip, xfs_queue_cowblocks,
--			trace_xfs_perag_set_eofblocks,
-+			trace_xfs_perag_set_cowblocks,
- 			XFS_ICI_COWBLOCKS_TAG);
- }
- 
-@@ -1666,7 +1666,7 @@ void
- xfs_inode_clear_cowblocks_tag(
- 	xfs_inode_t	*ip)
- {
--	trace_xfs_inode_clear_eofblocks_tag(ip);
-+	trace_xfs_inode_clear_cowblocks_tag(ip);
- 	return __xfs_inode_clear_eofblocks_tag(ip,
--			trace_xfs_perag_clear_eofblocks, XFS_ICI_COWBLOCKS_TAG);
-+			trace_xfs_perag_clear_cowblocks, XFS_ICI_COWBLOCKS_TAG);
- }
+Thanks!
 -- 
-2.7.4
-
+Michal Hocko
+SUSE Labs
