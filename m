@@ -1,47 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38372 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:47936 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752275AbcJCPBO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Oct 2016 11:01:14 -0400
-Subject: Re: [PATCH] xfs: add XBF_XBF_NO_IOACCT to buf trace output
-References: <4074f575-f4cf-e8ee-7c79-0bbc45333f5d@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <41ae7c95-cdfc-ed01-a213-a9a7c4f49447@sandeen.net>
-Date: Mon, 3 Oct 2016 10:01:12 -0500
-MIME-Version: 1.0
-In-Reply-To: <4074f575-f4cf-e8ee-7c79-0bbc45333f5d@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+        id S932345AbcJTOLW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Oct 2016 10:11:22 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C3A7F80099
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Oct 2016 14:11:21 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u9KEBL6q001881
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Oct 2016 10:11:21 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs_io: use fiemap -c param to query cow fork
+Date: Thu, 20 Oct 2016 10:11:19 -0400
+Message-Id: <1476972679-571-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1476972679-571-1-git-send-email-bfoster@redhat.com>
+References: <1476972679-571-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Ping?
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ io/fiemap.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-On 9/8/16 4:53 PM, Eric Sandeen wrote:
-> When XBF_NO_IOACCT got added, it missed the translation
-> in XFS_BUF_FLAGS, so we see "0x8" in trace output rather
-> than the flag name.  Fix it.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 1c2e52b..424f6b0 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -71,6 +71,7 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ XBF_READ,		"READ" }, \
->  	{ XBF_WRITE,		"WRITE" }, \
->  	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
-> +	{ XBF_NO_IOACCT,	"NO_IOACCT" }, \
->  	{ XBF_ASYNC,		"ASYNC" }, \
->  	{ XBF_DONE,		"DONE" }, \
->  	{ XBF_STALE,		"STALE" }, \
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/io/fiemap.c b/io/fiemap.c
+index f89da06..9114af1 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -206,6 +206,10 @@ calc_print_format(
+ 	}
+ }
+ 
++#ifndef FIEMAP_FLAG_COW
++#define FIEMAP_FLAG_COW		0x00000010
++#endif
++
+ int
+ fiemap_f(
+ 	int		argc,
+@@ -231,11 +235,14 @@ fiemap_f(
+ 	__u64		last_logical = 0;
+ 	struct stat	st;
+ 
+-	while ((c = getopt(argc, argv, "aln:v")) != EOF) {
++	while ((c = getopt(argc, argv, "acln:v")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			fiemap_flags |= FIEMAP_FLAG_XATTR;
+ 			break;
++		case 'c':
++			fiemap_flags |= FIEMAP_FLAG_COW;
++			break;
+ 		case 'l':
+ 			lflag = 1;
+ 			break;
+-- 
+2.7.4
+
