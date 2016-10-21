@@ -1,172 +1,167 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34274 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757521AbcJRS0R (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Oct 2016 14:26:17 -0400
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A5896804E3
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Oct 2016 18:26:16 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3] xfs: fix unbalanced inode reclaim flush locking
-Date: Tue, 18 Oct 2016 14:26:15 -0400
-Message-Id: <1476815175-25909-1-git-send-email-bfoster@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:53438 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932372AbcJUQuT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Oct 2016 12:50:19 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/2] locking/lockdep: Provide a type check for lock_is_held
+Date: Fri, 21 Oct 2016 18:50:05 +0200
+Message-Id: <1477068606-21936-2-git-send-email-hch@lst.de>
+In-Reply-To: <1477068606-21936-1-git-send-email-hch@lst.de>
+References: <1477068606-21936-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: zlang@redhat.com
+Cc: peterz@infradead.org
 
-Filesystem shutdown testing on an older distro kernel has uncovered an
-imbalanced locking pattern for the inode flush lock in
-xfs_reclaim_inode(). Specifically, there is a double unlock sequence
-between the call to xfs_iflush_abort() and xfs_reclaim_inode() at the
-"reclaim:" label.
+From: Peter Zijlstra <peterz@infradead.org>
 
-This actually does not cause obvious problems on current kernels due to
-the current flush lock implementation. Older kernels use a counting
-based flush lock mechanism, however, which effectively breaks the lock
-indefinitely when an already unlocked flush lock is repeatedly unlocked.
-Though this only currently occurs on filesystem shutdown, it has
-reproduced the effect of elevating an fs shutdown to a system-wide crash
-or hang.
+Christoph requested lockdep_assert_held() variants that distinguish
+between held-for-read or held-for-write.
 
-As it turns out, the flush lock is not actually required for the reclaim
-logic in xfs_reclaim_inode() because by that time we have already cycled
-the flush lock once while holding ILOCK_EXCL. Therefore, remove the
-additional flush lock/unlock cycle around the 'reclaim:' label and
-update branches into this label to release the flush lock where
-appropriate. Add an assert to xfs_ifunlock() to help prevent future
-occurences of the same problem.
+Provide:
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reported-by: Zorro Lang <zlang@redhat.com>
+  int lock_is_held_type(struct lockdep_map *lock, int read)
+
+which takes the same argument as lock_acquire(.read) and matches it to
+the held_lock instance.
+
+Use of this function should be gated by the debug_locks variable. When
+that is 0 the return value of the lock_is_held_type() function is
+undefined. This is done to allow both negative and positive tests for
+holding locks.
+
+By default we provide (positive) lockdep_assert_held{,_exclusive,_read}()
+macros.
+
+Requested-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
+ include/linux/lockdep.h  | 23 +++++++++++++++++++++--
+ kernel/locking/lockdep.c | 20 ++++++++++++--------
+ 2 files changed, 33 insertions(+), 10 deletions(-)
 
-v3:
-- Rework to drop flush lock around reclaim bits.
-- Rebase against latest for-next.
-v2:
-- Add comment in xfs_reclaim_inode() wrt to flush lock.
-- Fix XFS_IRECLAIM usage in xfs_inode_free().
-
-
- fs/xfs/xfs_icache.c | 27 ++++++++++++++-------------
- fs/xfs/xfs_inode.h  | 11 ++++++-----
- 2 files changed, 20 insertions(+), 18 deletions(-)
-
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 14796b7..8b528f1 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -123,7 +123,6 @@ __xfs_inode_free(
- {
- 	/* asserts to verify all state is correct here */
- 	ASSERT(atomic_read(&ip->i_pincount) == 0);
--	ASSERT(!xfs_isiflocked(ip));
- 	XFS_STATS_DEC(ip->i_mount, vn_active);
+diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
+index c1458fe..5b46871 100644
+--- a/include/linux/lockdep.h
++++ b/include/linux/lockdep.h
+@@ -338,9 +338,18 @@ extern void lock_acquire(struct lockdep_map *lock, unsigned int subclass,
+ extern void lock_release(struct lockdep_map *lock, int nested,
+ 			 unsigned long ip);
  
- 	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
-@@ -133,6 +132,8 @@ void
- xfs_inode_free(
- 	struct xfs_inode	*ip)
- {
-+	ASSERT(!xfs_isiflocked(ip));
+-#define lockdep_is_held(lock)	lock_is_held(&(lock)->dep_map)
++/*
++ * Same "read" as for lock_acquire(), except -1 means any.
++ */
++extern int lock_is_held_type(struct lockdep_map *lock, int read);
 +
- 	/*
- 	 * Because we use RCU freeing we need to ensure the inode always
- 	 * appears to be reclaimed with an invalid inode number when in the
-@@ -981,6 +982,7 @@ xfs_reclaim_inode(
- 
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
- 		xfs_iunpin_wait(ip);
-+		/* xfs_iflush_abort() drops the flush lock */
- 		xfs_iflush_abort(ip, false);
- 		goto reclaim;
- 	}
-@@ -989,10 +991,10 @@ xfs_reclaim_inode(
- 			goto out_ifunlock;
- 		xfs_iunpin_wait(ip);
- 	}
--	if (xfs_iflags_test(ip, XFS_ISTALE))
--		goto reclaim;
--	if (xfs_inode_clean(ip))
-+	if (xfs_iflags_test(ip, XFS_ISTALE) || xfs_inode_clean(ip)) {
-+		xfs_ifunlock(ip);
- 		goto reclaim;
-+	}
- 
- 	/*
- 	 * Never flush out dirty data during non-blocking reclaim, as it would
-@@ -1030,25 +1032,24 @@ xfs_reclaim_inode(
- 		xfs_buf_relse(bp);
- 	}
- 
--	xfs_iflock(ip);
- reclaim:
-+	ASSERT(!xfs_isiflocked(ip));
-+
- 	/*
- 	 * Because we use RCU freeing we need to ensure the inode always appears
- 	 * to be reclaimed with an invalid inode number when in the free state.
--	 * We do this as early as possible under the ILOCK and flush lock so
--	 * that xfs_iflush_cluster() can be guaranteed to detect races with us
--	 * here. By doing this, we guarantee that once xfs_iflush_cluster has
--	 * locked both the XFS_ILOCK and the flush lock that it will see either
--	 * a valid, flushable inode that will serialise correctly against the
--	 * locks below, or it will see a clean (and invalid) inode that it can
--	 * skip.
-+	 * We do this as early as possible under the ILOCK so that
-+	 * xfs_iflush_cluster() can be guaranteed to detect races with us here.
-+	 * By doing this, we guarantee that once xfs_iflush_cluster has locked
-+	 * XFS_ILOCK that it will see either a valid, flushable inode that will
-+	 * serialise correctly, or it will see a clean (and invalid) inode that
-+	 * it can skip.
- 	 */
- 	spin_lock(&ip->i_flags_lock);
- 	ip->i_flags = XFS_IRECLAIM;
- 	ip->i_ino = 0;
- 	spin_unlock(&ip->i_flags_lock);
- 
--	xfs_ifunlock(ip);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
- 	XFS_STATS_INC(ip->i_mount, xs_ig_reclaims);
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index f14c1de..71e8a81 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -246,6 +246,11 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
-  * Synchronize processes attempting to flush the in-core inode back to disk.
-  */
- 
-+static inline int xfs_isiflocked(struct xfs_inode *ip)
++static inline int lock_is_held(struct lockdep_map *lock)
 +{
-+	return xfs_iflags_test(ip, XFS_IFLOCK);
++	return lock_is_held_type(lock, -1);
 +}
+ 
+-extern int lock_is_held(struct lockdep_map *lock);
++#define lockdep_is_held(lock)		lock_is_held(&(lock)->dep_map)
++#define lockdep_is_held_type(lock, r)	lock_is_held_type(&(lock)->dep_map, (r))
+ 
+ extern void lock_set_class(struct lockdep_map *lock, const char *name,
+ 			   struct lock_class_key *key, unsigned int subclass,
+@@ -372,6 +381,14 @@ extern void lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie);
+ 		WARN_ON(debug_locks && !lockdep_is_held(l));	\
+ 	} while (0)
+ 
++#define lockdep_assert_held_exclusive(l)	do {			\
++		WARN_ON(debug_locks && !lockdep_is_held_type(l, 0));	\
++	} while (0)
 +
- extern void __xfs_iflock(struct xfs_inode *ip);
++#define lockdep_assert_held_read(l)	do {				\
++		WARN_ON(debug_locks && !lockdep_is_held_type(l, 1));	\
++	} while (0)
++
+ #define lockdep_assert_held_once(l)	do {				\
+ 		WARN_ON_ONCE(debug_locks && !lockdep_is_held(l));	\
+ 	} while (0)
+@@ -429,6 +446,8 @@ struct lock_class_key { };
+ #define lockdep_depth(tsk)	(0)
  
- static inline int xfs_iflock_nowait(struct xfs_inode *ip)
-@@ -261,16 +266,12 @@ static inline void xfs_iflock(struct xfs_inode *ip)
+ #define lockdep_assert_held(l)			do { (void)(l); } while (0)
++#define lockdep_assert_held_exclusive(l)	do { (void)(l); } while (0)
++#define lockdep_assert_held_read(l)		do { (void)(l); } while (0)
+ #define lockdep_assert_held_once(l)		do { (void)(l); } while (0)
  
- static inline void xfs_ifunlock(struct xfs_inode *ip)
- {
-+	ASSERT(xfs_isiflocked(ip));
- 	xfs_iflags_clear(ip, XFS_IFLOCK);
- 	smp_mb();
- 	wake_up_bit(&ip->i_flags, __XFS_IFLOCK_BIT);
+ #define lockdep_recursing(tsk)			(0)
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index 589d763..cff580a 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -3188,7 +3188,7 @@ print_lock_nested_lock_not_held(struct task_struct *curr,
+ 	return 0;
  }
  
--static inline int xfs_isiflocked(struct xfs_inode *ip)
--{
--	return xfs_iflags_test(ip, XFS_IFLOCK);
--}
--
+-static int __lock_is_held(struct lockdep_map *lock);
++static int __lock_is_held(struct lockdep_map *lock, int read);
+ 
  /*
-  * Flags for inode locking.
-  * Bit ranges:	1<<1  - 1<<16-1 -- iolock/ilock modes (bitfield)
+  * This gets called for every mutex_lock*()/spin_lock*() operation.
+@@ -3329,7 +3329,7 @@ static int __lock_acquire(struct lockdep_map *lock, unsigned int subclass,
+ 	}
+ 	chain_key = iterate_chain_key(chain_key, class_idx);
+ 
+-	if (nest_lock && !__lock_is_held(nest_lock))
++	if (nest_lock && !__lock_is_held(nest_lock, -1))
+ 		return print_lock_nested_lock_not_held(curr, hlock, ip);
+ 
+ 	if (!validate_chain(curr, lock, hlock, chain_head, chain_key))
+@@ -3576,7 +3576,7 @@ __lock_release(struct lockdep_map *lock, int nested, unsigned long ip)
+ 	return 1;
+ }
+ 
+-static int __lock_is_held(struct lockdep_map *lock)
++static int __lock_is_held(struct lockdep_map *lock, int read)
+ {
+ 	struct task_struct *curr = current;
+ 	int i;
+@@ -3584,8 +3584,12 @@ static int __lock_is_held(struct lockdep_map *lock)
+ 	for (i = 0; i < curr->lockdep_depth; i++) {
+ 		struct held_lock *hlock = curr->held_locks + i;
+ 
+-		if (match_held_lock(hlock, lock))
+-			return 1;
++		if (match_held_lock(hlock, lock)) {
++			if (read == -1 || hlock->read == read)
++				return 1;
++
++			return 0;
++		}
+ 	}
+ 
+ 	return 0;
+@@ -3769,7 +3773,7 @@ void lock_release(struct lockdep_map *lock, int nested,
+ }
+ EXPORT_SYMBOL_GPL(lock_release);
+ 
+-int lock_is_held(struct lockdep_map *lock)
++int lock_is_held_type(struct lockdep_map *lock, int read)
+ {
+ 	unsigned long flags;
+ 	int ret = 0;
+@@ -3781,13 +3785,13 @@ int lock_is_held(struct lockdep_map *lock)
+ 	check_flags(flags);
+ 
+ 	current->lockdep_recursion = 1;
+-	ret = __lock_is_held(lock);
++	ret = __lock_is_held(lock, read);
+ 	current->lockdep_recursion = 0;
+ 	raw_local_irq_restore(flags);
+ 
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(lock_is_held);
++EXPORT_SYMBOL_GPL(lock_is_held_type);
+ 
+ struct pin_cookie lock_pin_lock(struct lockdep_map *lock)
+ {
 -- 
-2.7.4
+2.1.4
 
