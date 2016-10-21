@@ -1,158 +1,209 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:43050 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752265AbcJSADB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2016 20:03:01 -0400
-Received: from dave by dastard with local (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1bweKv-0002XK-9k
-        for linux-xfs@vger.kernel.org; Wed, 19 Oct 2016 11:02:25 +1100
-Date: Wed, 19 Oct 2016 11:02:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfsprogs: v4.8.0 released!
-Message-ID: <20161019000225.GF23194@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:49246 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933000AbcJUR7R (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Oct 2016 13:59:17 -0400
+Date: Fri, 21 Oct 2016 13:59:13 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
+Message-ID: <20161021175912.GB54851@bfoster.bfoster>
+References: <5244720.RPRsZ88NJ0@libor-nb>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="UfEAyuTBtIjiZzX6"
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <5244720.RPRsZ88NJ0@libor-nb>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
+Cc: linux-xfs@vger.kernel.org
 
+On Fri, Oct 21, 2016 at 07:09:06PM +0200, Libor Klepáč wrote:
+> Hello,
+> sorry for last incomplete email (if it arrives), i hit some send button by accident.
+> 
+> Last week we have started to have problems with one virtual machine running debian jessie, with kernel 3.16.7-ckt20-1+deb8u4.
+> virtualization is done on vmware 5.5 on dell r610, disks are on perc h700.
+> 
+> XFS is on data disk (/dev/mapper/vgDisk2-lvData) running cyrus, mysql, apache+php.
+> It resides on single disk LVM, without partitions.
+> #pvs
+>   PV         VG      Fmt  Attr PSize   PFree
+>   /dev/sda2  vgDisk1 lvm2 a--   15.76g    0 
+>   /dev/sdb   vgDisk2 lvm2 a--  410.00g    0
+> 
+> #lvs
+>   LV       VG      Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+>   lvSwap   vgDisk1 -wi-ao----   1.86g                                                    
+>   lvSystem vgDisk1 -wi-ao----  13.90g                                                    
+>   lvData   vgDisk2 -wi-ao---- 410.00g
+> 
+> #grep xfs /etc/fstab 
+> /dev/mapper/vgDisk2-lvData      /mountpoint       xfs     noatime,logbufs=8       0       1
+> 
+> It was created in Debian Squeeze on kernel 2.6.32 OR Wheezy on 3.2.0.
+> 
+> 
+> There are some logs, this one repeats but doesn't cause shutdown
+> 
+> Oct 14 07:02:58 vps2 kernel: [18855093.206725] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x46/0xd0 [xfs], block 0x24c17ba8
+> Oct 14 07:02:58 vps2 kernel: [18855093.210393] XFS (dm-2): Unmount and run xfs_repair
+> Oct 14 07:02:58 vps2 kernel: [18855093.211224] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
+> Oct 14 07:02:58 vps2 kernel: [18855093.212092] ffff8801853da000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
+> Oct 14 07:02:58 vps2 kernel: [18855093.213932] ffff8801853da010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
+> Oct 14 07:02:58 vps2 kernel: [18855093.215915] ffff8801853da020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 14 07:02:58 vps2 kernel: [18855093.218054] ffff8801853da030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 14 07:02:58 vps2 kernel: [18855093.220317] XFS (dm-2): metadata I/O error: block 0x24c17ba8 ("xfs_trans_read_buf_map") error 117 numblks 8
+> 
+> Then shutdown occured on different block 0x12f63f40
+> Oct 14 12:00:24 vps2 kernel: [18872956.205316] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_write_verify+0xd5/0xe0 [xfs], block 0x12f63f40
+> Oct 14 12:00:24 vps2 kernel: [18872956.208382] XFS (dm-2): Unmount and run xfs_repair
+> Oct 14 12:00:24 vps2 kernel: [18872956.209385] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
+> Oct 14 12:00:24 vps2 kernel: [18872956.210187] ffff88011dadd000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
+> Oct 14 12:00:24 vps2 kernel: [18872956.211816] ffff88011dadd010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
+> Oct 14 12:00:24 vps2 kernel: [18872956.213390] ffff88011dadd020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 14 12:00:24 vps2 kernel: [18872956.214983] ffff88011dadd030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 14 12:00:24 vps2 kernel: [18872956.216598] XFS (dm-2): xfs_do_force_shutdown(0x8) called from line 1330 of file /build/linux-U7H2aZ/linux-3.16.7-ckt20/fs/xfs/xfs_buf.c.  Return address = 0xffffffffa03ef820
+> Oct 14 12:00:24 vps2 kernel: [18872956.217448] XFS (dm-2): Corruption of in-memory data detected.  Shutting down filesystem
+> Oct 14 12:00:24 vps2 kernel: [18872956.218338] XFS (dm-2): Please umount the filesystem and rectify the problem(s)
+> 
 
---UfEAyuTBtIjiZzX6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The shutdown has more to do with whether the corruption is detected on
+read vs. write. E.g., we shutdown on write verifier failure to avoid
+writing corrupted data to disk and causing further damage.
 
-Hi Folks,
+I suppose in this particular instance we don't really know whether the
+corruption existed on disk or originated in memory. Regardless, the
+corruption appears to be consistently associated with extended attribute
+blocks. Are you running an application that makes heavy use of xattrs?
 
-The xfsprogs repositories have just been updated and tagged with the
-v4.8.0 release tag. It can be found here:
+> after killing all relevant processes and unmounting some bind-mount points and remounting
+> 
+> Oct 14 12:09:21 vps2 kernel: [18873494.193987] XFS (dm-2): xfs_log_force: error 5 returned.
+> Oct 14 12:09:28 vps2 kernel: [18873501.622426] XFS (dm-2): Mounting V4 Filesystem
+> Oct 14 12:09:29 vps2 kernel: [18873501.700781] XFS (dm-2): Starting recovery (logdev: internal)
+> Oct 14 12:09:29 vps2 kernel: [18873501.998101] XFS (dm-2): Ending recovery (logdev: internal)
+> 
+> filesystem mounts ok, but after while it logs again on block 0x24c17ba8, without shutdown
+> 
 
-git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git v4.8.0
+Note that a remount isn't going to resolve on-disk corruption. We're
+just going to trip over it again on the next access as we have here.
 
-There is a *new location* for obtaining the source tarballs. They are
-now hosted on kernel.org, and can be found here:
+> Oct 14 12:20:31 vps2 kernel: [18874164.759507] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x46/0xd0 [xfs], block 0x24c17ba8
+> Oct 14 12:20:31 vps2 kernel: [18874164.764684] XFS (dm-2): Unmount and run xfs_repair
+> Oct 14 12:20:31 vps2 kernel: [18874164.766246] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
+> Oct 14 12:20:31 vps2 kernel: [18874164.767802] ffff880115a49000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
+> Oct 14 12:20:31 vps2 kernel: [18874164.770820] ffff880115a49010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
+> Oct 14 12:20:31 vps2 kernel: [18874164.773848] ffff880115a49020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 14 12:20:31 vps2 kernel: [18874164.776839] ffff880115a49030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 14 12:20:31 vps2 kernel: [18874164.779904] XFS (dm-2): metadata I/O error: block 0x24c17ba8 ("xfs_trans_read_buf_map") error 117 numblks 8
+> 
+> FS shutdown happened on Oct 13, but i don't have logs ...
+> 
+> Over night i upgraded kernel to debian kernel 3.16.36-1+deb8u1 , rebooted a ran xfs_repair. It repaired some metadata (sorry, don't have logs either :(
+> 
 
-https://kernel.org/pub/linux/utils/fs/xfs/xfsprogs/
+So presumably xfs_repair found and fixed some problems. What version of
+xfs_repair is being used? 
 
-The format of the archives is slightly different now because of the
-way uploads to kernel.org work. The uncompressed tarball is signed,
-rather than the compressed tarball that you download. This means
-there are multiple different compressed formats you can select from
-and you have to decompress it before verifying the signature. The
-currently available compressed files are:
+> It seems it logged this problem over week, i didn't check, busy on different tasks ...
+> Oct 16 07:05:09 vps2 kernel: [103607.064314] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x46/0xd0 [xfs], block 0x12f63f40
+> Oct 16 07:05:09 vps2 kernel: [103607.067200] XFS (dm-2): Unmount and run xfs_repair
+> Oct 16 07:05:09 vps2 kernel: [103607.068510] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
+> Oct 16 07:05:09 vps2 kernel: [103607.069554] ffff8801262e9000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
+> Oct 16 07:05:09 vps2 kernel: [103607.070712] ffff8801262e9010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
+> Oct 16 07:05:09 vps2 kernel: [103607.071971] ffff8801262e9020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 16 07:05:09 vps2 kernel: [103607.072990] ffff8801262e9030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 16 07:05:09 vps2 kernel: [103607.074329] XFS (dm-2): metadata I/O error: block 0x12f63f40 ("xfs_trans_read_buf_map") error 117 numblks 8
+> 
 
-	xfsprogs-4.8.0.tar.gz
-	xfsprogs-4.8.0.tar.xz
+This looks like the same block that tripped over the write verifier
+above.
 
-And the signature (signed with the same key as this email) is in
-this file:
+> This night, FS shutdown occured again, with slightly different log
+> Oct 21 01:00:06 vps2 kernel: [514098.568389] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_write_verify+0xd5/0xe0 [xfs], block 0x12f4ca30
+> Oct 21 01:00:06 vps2 kernel: [514098.570073] XFS (dm-2): Unmount and run xfs_repair
+> Oct 21 01:00:06 vps2 kernel: [514098.571014] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
+> Oct 21 01:00:06 vps2 kernel: [514098.571800] ffff88020e8b0000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
+> Oct 21 01:00:06 vps2 kernel: [514098.572408] ffff88020e8b0010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
+> Oct 21 01:00:06 vps2 kernel: [514098.573167] ffff88020e8b0020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 21 01:00:06 vps2 kernel: [514098.573779] ffff88020e8b0030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 21 01:00:06 vps2 kernel: [514098.574347] XFS (dm-2): xfs_do_force_shutdown(0x8) called from line 1337 of file /build/linux-EZT6bx/linux-3.16.36/fs/xfs/xfs_buf.c.  Return address = 0xffffffffa03eac00
+> Oct 21 01:00:06 vps2 kernel: [514098.574447] XFS (dm-2): Corruption of in-memory data detected.  Shutting down filesystem
+> Oct 21 01:00:06 vps2 kernel: [514098.575000] XFS (dm-2): Please umount the filesystem and rectify the problem(s)
+> Oct 21 01:00:06 vps2 kernel: [514098.627574] XFS (dm-2): xfs_log_force: error 5 returned.
+> Oct 21 01:00:06 vps2 kernel: [514098.680405] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x46/0xd0 [xfs], block 0x12f4ca30
+> Oct 21 01:00:06 vps2 kernel: [514098.681555] XFS (dm-2): Unmount and run xfs_repair
+> Oct 21 01:00:06 vps2 kernel: [514098.682143] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
+> Oct 21 01:00:06 vps2 kernel: [514098.682726] ffff88020e8b0000: 3c 3f 70 68 70 20 2f 2a 25 25 53 6d 61 72 74 79  <?php /*%%Smarty
+> Oct 21 01:00:06 vps2 kernel: [514098.683315] ffff88020e8b0010: 48 65 61 64 65 72 43 6f 64 65 3a 31 30 30 37 36  HeaderCode:10076
+> Oct 21 01:00:06 vps2 kernel: [514098.683930] ffff88020e8b0020: 34 36 39 39 35 35 38 30 39 33 30 37 65 30 36 33  469955809307e063
+> Oct 21 01:00:06 vps2 kernel: [514098.684501] ffff88020e8b0030: 37 63 30 2d 33 32 38 39 34 32 38 31 25 25 2a 2f  7c0-32894281%%*/
+> Oct 21 01:00:06 vps2 kernel: [514098.685064] XFS (dm-2): metadata I/O error: block 0x12f4ca30 ("xfs_trans_read_buf_map") error 117 numblks 8
+> Oct 21 01:00:06 vps2 kernel: [514098.745473] XFS (dm-2): xfs_imap_to_bp: xfs_trans_read_buf() returned error 5.
+> 
+> Is there some way to stop this? Maybe upgrading to kernel 4.7 from backports?
+> Is there a way to map those "block 0x12f4ca30" , "block 0x24c17ba8" to a specific file?
+> 
 
-	xfsprogs-4.8.0.tar.sign
+v3.16 is certainly kind of old. For starters though, I would suggest to
+grab the most recent xfsprogs release you can (you can even grab the
+source and run it right out of the build tree), run 'xfs_repair -n' and
+report the results. Presumably there has been some corruption on disk
+since the last run, so it might find some things you want to fix. If you
+run repair without -n to actually fix the problems, I find it usually a
+good idea to follow up with 'xfs_repair -n' again to make sure repair
+fixed up everything it found.
 
-Because this is a new location and requires a different signing
-method, the old packages on oss.sgi.com could not be moved over
-without resigning them. At this point in time, I have only uploaded
-xfsprogs packages from 3.2.3 onwards, as they are only versions I
-still have the original release tarball on my local machine. Hence
-it was trivial to resign and upload them.
+With regard to mapping the block back to an inode, you may be able to
+use xfs_db:
 
-At some point in the near future I will download, verify, resign and
-upload all the old packages on oss.sgi.com that are signed. This
-should keep all currently supported distros happy, but I'm not sure
-yet what I'll do with older unsigned release tarballs. I will need
-to do the same thing with xfsdump packages, too.
+$ xfs_db <dev>
+xfs_db> blockget
+xfs_db> daddr 0x2309
+xfs_db> blockuse
+...
 
-Anyway, back to the xfsprogs v4.8.0 release - Many thanks go to all
-the contributors to this release. The summary of changes since
-v4.7.0 can be found listed in doc/CHANGES, which I have reproduced
-in part below.
+Brian
 
-Cheers,
-
-Dave.
-
-----
-
-xfsprogs-4.8-0 (17 Oct 2016)
-	- no changes from v4.8.0-rc3
-
-xfsprogs-4.8-0-rc3 (3 Oct 2016)
-	- xfs_io: clean up inode command (Eric Sandeen)
-	- xfs_repair: fix phase 5 btree size overestimation (Darrick Wong)
-	- xfs_repair: fix phase 5 AGFL rmap update (Darrick Wong)
-	- libxfs: libxfs_iget() cleanup (Eric Sandeen)
-	- libxcmd: fix count of XFS filesystems in path table (Eryu Guan)
-
-xfsprogs-4.8-0-rc2 (23 Sep 2016)
-	- xfs_copy: uuid handling fixes (Eric Sandeen)
-	- xfs_repair: directory rebuild segfault fix (Eric Sandeen)
-	- xfs_repair: report log dirtiness correctly (Eric Sandeen)
-	- libxfs: mounted filesystem detection cleanups (Eric Sandeen)
-	- xfs_logprint: don't print transaction types anymore (Hou Tao)
-	- xfs_quota: allow operation on non-XFS filesystems (Bill O'Donnell)
-	- xfs_io: allow project quota operations on non-XFS (Eric Sandeen)
-	- mkfs.xfs: man page calrification for ftype defaults (Eric Sandeen)
-
-xfsprogs-4.8-0-rc1 (9 Sep 2016)
-	- change contact emails to linux-xfs@vger.kernel.org
-	- libxfs: kernel sync up to 4.8-rc1
-	- Initial reverse mapping support (Darrick Wong)
-	- buffer lock trace analysis tool (Darrick Wong)
-	- logprint: cleanups and fixes (Darrick Wong)
-	- man page updates (various)
-	- libxcmd: mount option parsing fixes (Darrick Wong)
-	- xfs_quota: use XFS_GETQSTATV (Eric Sandeen)
-	- xfs_quota: allow use on non-XFS filesystems (Bill O'Donnell)
-	- xfs_db: allow direct manipulation of CRCs (Eric Sandeen)
-	- libxfs: get rid of ustat() calls (Felix Janda)
-
------
-
-The new head of the master branch is commit:
-
-152fa26f3a8f xfsprogs: Release 4.8.0
-
-New Commits:
-
-Dave Chinner (1):
-      [152fa26f3a8f] xfsprogs: Release 4.8.0
-
-
-Code Diffstat:
-
- VERSION          | 2 +-
- configure.ac     | 2 +-
- debian/changelog | 6 ++++++
- doc/CHANGES      | 3 +++
- 4 files changed, 11 insertions(+), 2 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---UfEAyuTBtIjiZzX6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJYBrgQAAoJEK3oKUf0dfodL0YP/3hQPsFcM4DVJ3kdJ0mZEUG+
-7VAe0squOqHSFhxzxts8TrOM1f5l5hTXU1zRkJifzsqGQXTbc1pTdymuNbffoINN
-j0Z78UDlGlh0EE7KccXvidxa5clcUE2I8BvvC4abIUae6G2Cee4qmeAuqWJ6A9cH
-cXj5iNonjcQP0vEn9Xt0GTzkfYOW++moHpsSAFm+eWpsUkHic/X39XKSld4Ic7QK
-F7/Fl/MklTqoeLL0ty8GyvST37xXGGSxkHR7+2yHXsjD0cuCyqanV1vy2VuZCQLw
-NrCUHD9zDoSKVRrYQEuznUjjjelHWMQAPB5NiMh1b0y4RIJ/Lvp3gNNli4iS4DKZ
-qNAJ6iz/8eChCayw7kxOtWxswYIXUIB0J56hzM89SNHLP2x/I3eWyiTIkWlRlGlL
-T43Rsb0UTpvoEOlYf2RvmYkfD8VYgoVDHUlHSbO0p4xd38pDVHHmGrQcL8zjngUy
-dIKyUMI4WyZFHr7pHQhRvzrqwCENWjyG9z3Twg/PtTncYas9PyTB7OmKck9G4YFx
-Zq98xx7g3i3xUhUUcL0yA1JaDrlMYv6enKKMYFqflt01qzHl29MqqQKc9+1iM4gg
-1x7knzu2D+C3XxgBOROom9Ros+maiFgJV9hjcoSpEDRs6dD4EMBqgKvi3Ktjhi0q
-mJ1cceodtrYoHD/GeWPU
-=COnk
------END PGP SIGNATURE-----
-
---UfEAyuTBtIjiZzX6--
+> 
+> We have another virtual running in almost same configuration, but on different HW (dell r710) in same VM cluster.
+> It have had similar problems with in memory data corruption several times a year, but without logging any problems in between.
+> It had several 3.16 kernel versions (i always update to latest package when this happens)
+> Log is similar
+> Oct 11 14:18:01 vps1 kernel: [6376491.318342] XFS (dm-3): Metadata corruption detected at xfs_attr3_leaf_write_verify+0xd5/0xe0 [xfs], block 0x4b060
+> Oct 11 14:18:01 vps1 kernel: [6376491.320972] XFS (dm-3): Unmount and run xfs_repair
+> Oct 11 14:18:01 vps1 kernel: [6376491.321165] XFS (dm-3): First 64 bytes of corrupted metadata buffer:
+> Oct 11 14:18:01 vps1 kernel: [6376491.321437] ffff88000e97a000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
+> Oct 11 14:18:01 vps1 kernel: [6376491.321726] ffff88000e97a010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
+> Oct 11 14:18:01 vps1 kernel: [6376491.322023] ffff88000e97a020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 11 14:18:01 vps1 kernel: [6376491.322314] ffff88000e97a030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> Oct 11 14:18:01 vps1 kernel: [6376491.322630] XFS (dm-3): xfs_do_force_shutdown(0x8) called from line 1337 of file /build/linux-7z1rSb/linux-3.16.7-ckt25/fs/xfs/xfs_buf.c.  Return address = 0xffffffffa03a3820
+> Oct 11 14:18:01 vps1 kernel: [6376491.323832] XFS (dm-3): Corruption of in-memory data detected.  Shutting down filesystem
+> Oct 11 14:18:01 vps1 kernel: [6376491.324157] XFS (dm-3): Please umount the filesystem and rectify the problem(s)
+> Oct 11 14:18:16 vps1 kernel: [6376506.023406] XFS (dm-3): xfs_log_force: error 5 returned.
+> Oct 11 14:18:46 vps1 kernel: [6376536.132491] XFS (dm-3): xfs_log_force: error 5 returned.
+> Oct 11 14:19:16 vps1 kernel: [6376566.241488] XFS (dm-3): xfs_log_force: error 5 returned.
+> Oct 11 14:19:46 vps1 kernel: [6376596.350546] XFS (dm-3): xfs_log_force: error 5 returned.
+> Oct 11 14:20:16 vps1 kernel: [6376626.459602] XFS (dm-3): xfs_log_force: error 5 returned.
+> Oct 11 14:20:47 vps1 kernel: [6376656.568708] XFS (dm-3): xfs_log_force: error 5 returned.
+> Oct 11 14:21:17 vps1 kernel: [6376686.677853] XFS (dm-3): xfs_log_force: error 5 returned.
+> Oct 11 14:21:20 vps1 kernel: [6376689.870237] XFS (dm-3): xfs_log_force: error 5 returned.
+> Oct 11 14:21:22 vps1 kernel: [6376692.358466] XFS (dm-3): xfs_log_force: error 5 returned.
+> Oct 11 14:21:25 vps1 kernel: [6376694.871370] XFS (dm-3): xfs_log_force: error 5 returned.
+> Oct 11 14:21:31 vps1 kernel: [6376700.985227] XFS (dm-3): Mounting V4 Filesystem
+> Oct 11 14:21:31 vps1 kernel: [6376701.052522] XFS (dm-3): Starting recovery (logdev: internal)
+> Oct 11 14:21:31 vps1 kernel: [6376701.091589] XFS (dm-3): Ending recovery (logdev: internal)
+> 
+> 
+> Any clues what might be wrong? HW problem? but it doesn't affect other hosts, we use XFS on all of them for data.
+> 
+> With regards,
+> 
+> Libor
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
