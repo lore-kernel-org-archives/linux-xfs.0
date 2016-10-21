@@ -1,81 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48861 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750715AbcJUDAS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Oct 2016 23:00:18 -0400
-Date: Thu, 20 Oct 2016 20:00:05 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: About reflink len = 0 behavior
-Message-ID: <20161021030005.GB5257@birch.djwong.org>
-References: <bedcb76a-4deb-bc0e-7a50-350a8a8db86f@cn.fujitsu.com>
- <94d643cc-fa49-4b20-b265-55d50af15e47@cn.fujitsu.com>
- <20161020154733.GA5436@vader>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161020154733.GA5436@vader>
+Received: from mx1.redhat.com ([209.132.183.28]:39716 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932507AbcJURWP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Oct 2016 13:22:15 -0400
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 7409543A47
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Oct 2016 17:22:15 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u9LHMF66022355
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Oct 2016 13:22:15 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 3/3] xfs: don't skip cow forks w/ delalloc blocks in cowblocks scan
+Date: Fri, 21 Oct 2016 13:22:13 -0400
+Message-Id: <1477070533-59327-4-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1477070533-59327-1-git-send-email-bfoster@redhat.com>
+References: <1477070533-59327-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Omar Sandoval <osandov@osandov.com>
-Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, fstests@vger.kernel.org, btrfs <linux-btrfs@vger.kernel.org>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Oct 20, 2016 at 08:47:33AM -0700, Omar Sandoval wrote:
-> On Thu, Oct 20, 2016 at 03:50:46PM +0800, Qu Wenruo wrote:
-> > Add cc to new xfs mail list.
-> > 
-> > 
-> > At 10/20/2016 03:46 PM, Qu Wenruo wrote:
-> > > Hi Darrick, xfs guys and btrfs guys.
-> > > 
-> > > Although such question is quite late as reflink generic tests are in
-> > > fstests for a long time, I'm still not sure what's the correct behavior
-> > > for reflink len = 0.
+The cowblocks background scanner currently clears the cowblocks tag for
+inodes without any real allocations in the cow fork. This excludes
+inodes with only delalloc blocks in the cow fork. While we might never
+expect to clear delalloc blocks from the cow fork in the background
+scanner, it is not necessarily correct to clear the cowblocks tag from
+such inodes.
 
-"reflink to the end of the source file" is the current behavior for both.
+For example, if the background scanner happens to process an inode
+between a buffered write and writeback, the scanner catches the inode in
+a state after delalloc blocks have been allocated to the cow fork but
+before the delalloc blocks have been converted to real blocks by
+writeback. The background scanner then incorrectly clears the cowblocks
+tag, even if part of the aforementioned delalloc reservation will not be
+remapped to the data fork (i.e., extra blocks due to the cowextsize
+hint). This means that any such additional blocks in the cow fork might
+never be reclaimed by the background scanner and could persist until the
+inode itself is reclaimed.
 
-> > > Test case generic/182 is causing different output between btrfs and xfs.
-> > > 
-> > > For btrfs, dedupe will just return 0 and check nothing, while for xfs
-> > > len == 0 means to check the whole file length.
-> > > 
-> > > Both makes sense for me, for btrfs len = 0 behavior, it just follows
-> > > read/write functions.
-> > > And I assume xfs follows reflink behavior, when len is not specified,
-> > > then reflink the length of src file.
+To address this problem, only skip and clear inodes without any cow fork
+allocations whatsoever from the background scanner. While we generally
+do not want to cancel delalloc reservations from the background scanner,
+the pagecache dirty check following the cowblocks check should prevent
+that situation. If we do end up with delalloc cow fork blocks without a
+dirty address space mapping, this is probably an indication that
+something has gone wrong and the blocks should be reclaimed, as they may
+never be converted to a real allocation.
 
-Yes.
+XXX: There are probably multiple ways to deal with this. Another option
+could be to tweak the has_cow_blocks() helper to separately return
+whether a cow fork has delalloc blocks and skip over the inode without
+actually clearing the tag. Thoughts?
 
-> > > But since it's a generic test, we need to unify the behavior.
-> > > 
-> > > So, which one is the standard and which document should we follow for
-> > > such behavior definition?
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_icache.c  |  2 +-
+ fs/xfs/xfs_reflink.c | 23 ++++-------------------
+ fs/xfs/xfs_reflink.h |  2 +-
+ 3 files changed, 6 insertions(+), 21 deletions(-)
 
-<shrug> I suppose since it'll stop deduping at the first non-matching range,
-there's not a lot of point in having "dedupe to wherever is the end of the
-file" feature.
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index f295049..1191064 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1583,7 +1583,7 @@ xfs_inode_free_cowblocks(
+ 
+ 	ASSERT(!eofb || (eofb && eofb->eof_scan_owner != 0));
+ 
+-	if (!xfs_reflink_has_real_cow_blocks(ip)) {
++	if (!xfs_reflink_has_cow_blocks(ip)) {
+ 		trace_xfs_inode_free_cowblocks_invalid(ip);
+ 		xfs_inode_clear_cowblocks_tag(ip);
+ 		return 0;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index a279b4e..6057c37 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1699,35 +1699,20 @@ xfs_reflink_unshare(
+ }
+ 
+ /*
+- * Does this inode have any real CoW reservations?
++ * Does this inode have any CoW reservations?
+  */
+ bool
+-xfs_reflink_has_real_cow_blocks(
++xfs_reflink_has_cow_blocks(
+ 	struct xfs_inode		*ip)
+ {
+-	struct xfs_bmbt_irec		irec;
+ 	struct xfs_ifork		*ifp;
+-	struct xfs_bmbt_rec_host	*gotp;
+-	xfs_extnum_t			idx;
+ 
+ 	if (!xfs_is_reflink_inode(ip))
+ 		return false;
+ 
+-	/* Go find the old extent in the CoW fork. */
+ 	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+-	gotp = xfs_iext_bno_to_ext(ifp, 0, &idx);
+-	while (gotp) {
+-		xfs_bmbt_get_all(gotp, &irec);
+-
+-		if (!isnullstartblock(irec.br_startblock))
+-			return true;
+-
+-		/* Roll on... */
+-		idx++;
+-		if (idx >= ifp->if_bytes / sizeof(xfs_bmbt_rec_t))
+-			break;
+-		gotp = xfs_iext_get_ext(ifp, idx);
+-	}
++	if (ifp->if_bytes)
++		return true;
+ 
+ 	return false;
+ }
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index fad1160..cdd3b1a 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -50,6 +50,6 @@ extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
+ extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t len);
+ 
+-extern bool xfs_reflink_has_real_cow_blocks(struct xfs_inode *ip);
++extern bool xfs_reflink_has_cow_blocks(struct xfs_inode *ip);
+ 
+ #endif /* __XFS_REFLINK_H */
+-- 
+2.7.4
 
-(Also, if he hasn't already, I'm sure Christoph will point out that we
-shouldn't really go changing the interface after the fact, even if the
-interface was mostly undocumented and afaict not tested by anything like
-xfstests for years...)
-
-> > > Thanks,
-> > > Qu
-> 
-> Hey, Qu,
-> 
-> I brought this up a few months back here [1], and I think the conclusion
-> was that consistency with clone (so the XFS behavior) was probably what
-> we wanted. I just forgot to follow up and figure out if it would break
-> any userspace programs in a way that mattered (I doubt it).
-
-duperemove doesn't seem to send zero-byte dedupe requests.
-
---D
-
-> 
-> 1: http://marc.info/?l=linux-btrfs&m=146828374631829&w=2
-> 
-> -- 
-> Omar
