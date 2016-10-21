@@ -1,73 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60201 "EHLO mx2.suse.de"
+Received: from mout.gmx.net ([212.227.15.19]:59697 "EHLO mout.gmx.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751164AbcJTLzD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Oct 2016 07:55:03 -0400
-Date: Thu, 20 Oct 2016 13:55:00 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Lock ordering in iomap code
-Message-ID: <20161020115500.GB25779@quack2.suse.cz>
-References: <20161007111314.GA24081@quack2.suse.cz>
- <20161017093148.GA6375@quack2.suse.cz>
- <20161017102657.GA12164@lst.de>
+        id S1754181AbcJUFyp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Oct 2016 01:54:45 -0400
+Subject: Re: About reflink len = 0 behavior
+References: <bedcb76a-4deb-bc0e-7a50-350a8a8db86f@cn.fujitsu.com>
+ <94d643cc-fa49-4b20-b265-55d50af15e47@cn.fujitsu.com>
+ <20161020154733.GA5436@vader> <20161021030005.GB5257@birch.djwong.org>
+From: Qu Wenruo <quwenruo.btrfs@gmx.com>
+Message-ID: <5c16132f-46ca-ddbc-c55d-18ec46c9eb7d@gmx.com>
+Date: Fri, 21 Oct 2016 13:54:16 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161017102657.GA12164@lst.de>
+In-Reply-To: <20161021030005.GB5257@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Omar Sandoval <osandov@osandov.com>
+Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, fstests@vger.kernel.org, btrfs <linux-btrfs@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-Hi Christoph,
 
-On Mon 17-10-16 12:26:57, Christoph Hellwig wrote:
-> > Ping? I have ext4 DAX read & write path working with the iomap code but to
-> > convert the fault path, I need this resolved. Are you OK with moving
-> > iomap_begin() / iomap_end() calls outside of page lock / entry lock in the
-> > fault path?
-> 
-> Yes, that sounds fine.
 
-I've been looking into this some more and realized it's not as easy as I've
-originally though. ->page_mkwrite callback is expected to return with the
-page locked so locking it inside the iomap actor is really awkward (think
-of situation when blocksize < pagesize). Since nobody currently has issues
-with ->iomap_begin being sometimes called with page lock and sometimes
-without, I don't think changing that would be worth the hassle. Just one
-more question: Doesn't XFS have some lock ordering issues when
-xfs_file_iomap_begin() gets called with page lock held from
-iomap_page_mkwrite() for a file with extent size hints and thus we end up
-in xfs_iomap_write_direct() with page lock held? We do a lot of stuff there
-including transaction setup and such...
+On 10/21/2016 11:00 AM, Darrick J. Wong wrote:
+> On Thu, Oct 20, 2016 at 08:47:33AM -0700, Omar Sandoval wrote:
+>> On Thu, Oct 20, 2016 at 03:50:46PM +0800, Qu Wenruo wrote:
+>>> Add cc to new xfs mail list.
+>>>
+>>>
+>>> At 10/20/2016 03:46 PM, Qu Wenruo wrote:
+>>>> Hi Darrick, xfs guys and btrfs guys.
+>>>>
+>>>> Although such question is quite late as reflink generic tests are in
+>>>> fstests for a long time, I'm still not sure what's the correct behavior
+>>>> for reflink len = 0.
+>
+> "reflink to the end of the source file" is the current behavior for both.
+>
+>>>> Test case generic/182 is causing different output between btrfs and xfs.
+>>>>
+>>>> For btrfs, dedupe will just return 0 and check nothing, while for xfs
+>>>> len == 0 means to check the whole file length.
+>>>>
+>>>> Both makes sense for me, for btrfs len = 0 behavior, it just follows
+>>>> read/write functions.
+>>>> And I assume xfs follows reflink behavior, when len is not specified,
+>>>> then reflink the length of src file.
+>
+> Yes.
+>
+>>>> But since it's a generic test, we need to unify the behavior.
+>>>>
+>>>> So, which one is the standard and which document should we follow for
+>>>> such behavior definition?
+>
+> <shrug> I suppose since it'll stop deduping at the first non-matching range,
+> there's not a lot of point in having "dedupe to wherever is the end of the
+> file" feature.
+>
+> (Also, if he hasn't already, I'm sure Christoph will point out that we
+> shouldn't really go changing the interface after the fact, even if the
+> interface was mostly undocumented and afaict not tested by anything like
+> xfstests for years...)
 
-For DAX I have switched the locking order as there we fully handle the
-fault and unlock radix tree entry inside the ->fault / ->page_mkwrite
-handler so the locking is sane and also ext4 needs this to be able to use
-the iomap infrastructure. The locking difference between DAX and !DAX path
-is unfortunate but looks as the least evil to me.
+Thanks for all the info.
 
-> > I was also thinking about the implications of iomap_begin() (and thus block
-> > allocation for buffered writes in nodelalloc case) being no longer protected
-> > by page lock and at least for ext2 / ext3 compatibility modes this will
-> > lead to uninitialized data exposure when page fault races in the right way
-> > with buffered write. So current locking scheme in iomap code is not easily
-> > usable for ext4 for buffered writes.
-> 
-> Right, the iomap I/O code assumes that you either use delalloc, or that
-> your have unwritten extents that your convert to written once I/O has
-> finished.  XFS uses the latter feature for direct I/O, or if an extent
-> size hints is set.
-> 
-> I can't really think of a good way to handle file systems without
-> either feature - the problem is that we'd have to introduce a file-wide
-> (or range based) lock to protect allocated but not written ranges.
+I think we should change btrfs behavior to follow the standard.
 
-Yup, I had something similar in mind but definitely don't want to go into
-that rathole now ;).
+>
+>>>> Thanks,
+>>>> Qu
+>>
+>> Hey, Qu,
+>>
+>> I brought this up a few months back here [1], and I think the conclusion
+>> was that consistency with clone (so the XFS behavior) was probably what
+>> we wanted. I just forgot to follow up and figure out if it would break
+>> any userspace programs in a way that mattered (I doubt it).
+>
+> duperemove doesn't seem to send zero-byte dedupe requests.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Then no problem to modify btrfs behavior then.
+
+Thanks,
+Qu
+>
+> --D
+>
+>>
+>> 1: http://marc.info/?l=linux-btrfs&m=146828374631829&w=2
+>>
+>> --
+>> Omar
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
