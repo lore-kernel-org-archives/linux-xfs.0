@@ -1,74 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33960 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751827AbcJTOpD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Oct 2016 10:45:03 -0400
-Date: Thu, 20 Oct 2016 22:44:59 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 3/3] misc: fix more xfs_db open-coding instances
-Message-ID: <20161020144459.GL27776@eguan.usersys.redhat.com>
-References: <147674215521.23842.13841682595738466897.stgit@birch.djwong.org>
- <147674217475.23842.9304657231302422666.stgit@birch.djwong.org>
+Received: from mail-he1eur02hn0214.outbound.protection.outlook.com ([104.47.5.214]:22476
+        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932745AbcJUNbf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Oct 2016 09:31:35 -0400
+From: =?iso-8859-2?Q?Libor_Klep=E1=E8?= <libor.klepac@bcom.cz>
+Subject: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
+Date: Fri, 21 Oct 2016 12:46:21 +0000
+Message-ID: <3764770.FZr9v1sA2Y@libor-nb>
+Content-Language: en-US
+Content-Type: text/plain; charset="iso-8859-2"
+Content-ID: <1730BC2316747B4FB4CBF3C81E386689@eurprd03.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <147674217475.23842.9304657231302422666.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, hch@infradead.org, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Mon, Oct 17, 2016 at 03:09:34PM -0700, Darrick J. Wong wrote:
-> Convert some more cases of 'xfs_db $SCRATCH_DEV' to _scratch_xfs_db
-> that were left out of the initial cleanup patch.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  tests/xfs/004 |    2 +-
->  tests/xfs/007 |    8 ++++----
->  tests/xfs/021 |    4 ++--
->  tests/xfs/044 |    2 +-
->  tests/xfs/052 |    2 +-
->  tests/xfs/116 |    4 ++--
->  tests/xfs/136 |    6 +++---
->  tests/xfs/199 |    6 +++---
->  tests/xfs/278 |   16 ++++++++--------
->  tests/xfs/291 |    2 +-
->  tests/xfs/307 |   20 ++++++++++----------
->  tests/xfs/308 |   20 ++++++++++----------
->  12 files changed, 46 insertions(+), 46 deletions(-)
-> 
-> 
-> diff --git a/tests/xfs/004 b/tests/xfs/004
-> index 59b8997..09da2fe 100755
-> --- a/tests/xfs/004
-> +++ b/tests/xfs/004
-> @@ -74,7 +74,7 @@ eval `$DF_PROG $SCRATCH_MNT 2>&1 \
->  echo "df gave: blocks=$blocks used=$used avail=$avail" >>$seqres.full
->  echo "blocksize from mkfs is '$dbsize'" >>$seqres.full
->  
-> -xfs_db -r -c "freesp -s" $SCRATCH_DEV >$tmp.xfs_db
-> +_scratch_xfs_db -r -c "freesp -s"  >$tmp.xfs_db
->  echo "xfs_db for $SCRATCH_DEV" >>$seqres.full
->  cat $tmp.xfs_db >>$seqres.full
->  
-> diff --git a/tests/xfs/007 b/tests/xfs/007
-> index f2e3584..eb2c9b3 100755
-> --- a/tests/xfs/007
-> +++ b/tests/xfs/007
-> @@ -68,8 +68,8 @@ do_test()
->  			grep $qino_2 | awk '{print $NF}'`
->  
->  	echo "*** Usage before quotarm ***"
-> -	xfs_db -c "inode $QINO_1" -c "p core.nblocks" $SCRATCH_DEV
-> -	xfs_db -c "inode $QINO_2" -c "p core.nblocks" $SCRATCH_DEV
-> +	_scratch_xfs_db -c "inode $QINO_1" -c "p core.nblocks" 
-> +	_scratch_xfs_db -c "inode $QINO_2" -c "p core.nblocks" 
+Hello,
+last week we have started to have problems with one virtual machine running=
+ debian jessie, with kernel 3.16.7-ckt20-1+deb8u4.
 
-I removed the trailing whitespace at commit time added by above lines
-and some other lines in this patch.
+There are some logs,=20
 
-Thanks,
-Eryu
+
+I don't have complete logs, but filesystem shutdown twice with
+
+Oct 14 12:00:24 bajkonur2 kernel: [18872956.205316] XFS (dm-2): Metadata co=
+rruption detected at xfs_attr3_leaf_write_verify+0xd5/0xe0 [xfs], block 0x1=
+2f63f40
+Oct 14 12:00:24 bajkonur2 kernel: [18872956.208382] XFS (dm-2): Unmount and=
+ run xfs_repair
+Oct 14 12:00:24 bajkonur2 kernel: [18872956.209385] XFS (dm-2): First 64 by=
+tes of corrupted metadata buffer:
+Oct 14 12:00:24 bajkonur2 kernel: [18872956.210187] ffff88011dadd000: 00 00=
+ 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
+Oct 14 12:00:24 bajkonur2 kernel: [18872956.211816] ffff88011dadd010: 10 00=
+ 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
+Oct 14 12:00:24 bajkonur2 kernel: [18872956.213390] ffff88011dadd020: 00 00=
+ 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+Oct 14 12:00:24 bajkonur2 kernel: [18872956.214983] ffff88011dadd030: 00 00=
+ 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+Oct 14 12:00:24 bajkonur2 kernel: [18872956.216598] XFS (dm-2): xfs_do_forc=
+e_shutdown(0x8) called from line 1330 of file /build/linux-U7H2aZ/linux-3.1=
+6.7-ckt20/fs/xfs/xfs_buf.c.  Return address =3D 0xffffffffa03ef820
+Oct 14 12:00:24 bajkonur2 kernel: [18872956.217448] XFS (dm-2): Corruption =
+of in-memory data detected.  Shutting down filesystem
+Oct 14 12:00:24 bajkonur2 kernel: [18872956.218338] XFS (dm-2): Please umou=
+nt the filesystem and rectify the problem(s)=
