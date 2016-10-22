@@ -1,41 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:29826 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S941329AbcJaMC3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2016 08:02:29 -0400
-Date: Mon, 31 Oct 2016 23:02:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
-Message-ID: <20161031120226.GT14023@dastard>
-References: <5244720.RPRsZ88NJ0@libor-nb>
- <3822835.q6ryES8eE3@libor-nb>
- <20161024024024.GX14023@dastard>
- <3301912.kAxTXXYXM8@libor-nb>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <3301912.kAxTXXYXM8@libor-nb>
+Received: from ns.lynxeye.de ([87.118.118.114]:53179 "EHLO lynxeye.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S964884AbcJVRvN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 22 Oct 2016 13:51:13 -0400
+Message-ID: <1477158668.2070.6.camel@lynxeye.de>
+Subject: Re: [PATCH 0/2] XFS buffer cache scalability improvements
+From: Lucas Stach <dev@lynxeye.de>
+Date: Sat, 22 Oct 2016 19:51:08 +0200
+In-Reply-To: <20161018212116.GC23194@dastard>
+References: <1476821653-2595-1-git-send-email-dev@lynxeye.de>
+         <20161018212116.GC23194@dastard>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 31, 2016 at 09:54:00AM +0100, Libor Klepáč wrote:
-> Hello,
-> i have upgrade VM called vps1 in original email (the one on bottom of email)
-> to debian kernel 4.7.8-1~bpo8+1 and compiled xfsprogs 4.8.0.
+Am Mittwoch, den 19.10.2016, 08:21 +1100 schrieb Dave Chinner:
+> On Tue, Oct 18, 2016 at 10:14:11PM +0200, Lucas Stach wrote:
+> > 
+> > Hi all,
+> > 
+> > this series scratches my own small itch with XFS, namely
+> > scalability of the buffer
+> > cache in metadata intensive workloads. With a large number of
+> > cached buffers those
+> > workloads are CPU bound with a significant amount of time spent
+> > searching the cache.
+> > 
+> > The first commit replaces the rbtree used to index the cache with
+> > an rhashtable. The
+> > rbtree is a bottleneck in scalability, as the data structure itself
+> > is pretty CPU
+> > cache unfriendly. For larger numbers of cached buffers over 80% of
+> > the CPU time
+> > is spent waiting on cache misses resulting from the inherent
+> > pointer chasing.
+> > 
+> > rhashtables provide a fast lookup with the ability to have lookups
+> > proceed while the
+> > hashtable is being resized. This seems to match the read dominated
+> > workload of the
+> > buffer cache index structure pretty well.
 > 
-> Here is output of xfs_repair -n and xfs_repair. Is it supposed to write if/
-> what is being repaired, when i forgot -v option?
+> Yup, it's a good idea - I have considered doing this change for
+> these reasons, but have never found the time.
+> 
+> > 
+> > The second patch is logical follow up. The rhashtable cache index
+> > is protected by
+> > RCU and does not need any additional locking. By switching the
+> > buffer cache entries
+> > over to RCU freeing the buffer cache can be operated in a
+> > completely lock-free
+> > manner. This should help scalability in the long run.
+> 
+> Yup, that's another reason I'd considered rhashtables :P
+> 
+> However, this is where it gets hairy. The buffer lifecycle is
+> intricate, subtle, and has a history of nasty bugs that just never
+> seem to go away. This change will require a lot of verification
+> work to ensure things like the LRU manipulations haven't been
+> compromised by the removal of this lock...
+> 
+> > 
+> > This series survives at least a xfstests auto group run (though
+> > with the scratch
+> > device being a ramdisk) with no regressions and didn't show any
+> > problems in my
+> > real world testing (using the patched FS with multiple large git
+> > trees) so far.
+> 
+> It's a performance modification - any performance/profile numbers
+> that show the improvement?
+> 
+In my testing with a small scale FS (some linux kernel git trees on a
+FS with 4 AGs) the CPU time spent in xfs_buf_find while doing a git
+checkout (going from one specific revision to another) with warm caches
+goes down from 2% to 0.6% with this change.
 
-repair will always tell you if there are errors. The logs you have
-posted indicate a clean filesystem with no errors.
+I have a profile from a machine where xfs_buf_find is taking up the top
+spot of the profile at 6% CPU time. Unfortunately I haven't been able
+to re-run the test on a FS at that scale yet.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Regards,
+Lucas
