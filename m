@@ -1,90 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:14463 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932453AbcJSTew (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Oct 2016 15:34:52 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v8 12/16] dax: move RADIX_DAX_* defines to dax.h
-Date: Wed, 19 Oct 2016 13:34:31 -0600
-Message-Id: <1476905675-32581-13-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1476905675-32581-1-git-send-email-ross.zwisler@linux.intel.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:46752 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932389AbcJVIqj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Oct 2016 04:46:39 -0400
+Date: Sat, 22 Oct 2016 01:46:39 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] xfs: fix up inode cowblocks tracking tracepoints
+Message-ID: <20161022084639.GA7734@infradead.org>
+References: <1477070533-59327-1-git-send-email-bfoster@redhat.com>
+ <1477070533-59327-2-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1477070533-59327-2-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-The RADIX_DAX_* defines currently mostly live in fs/dax.c, with just
-RADIX_DAX_ENTRY_LOCK being in include/linux/dax.h so it can be used in
-mm/filemap.c.  When we add PMD support, though, mm/filemap.c will also need
-access to the RADIX_DAX_PTE type so it can properly construct a 4k sized
-empty entry.
+On Fri, Oct 21, 2016 at 01:22:11PM -0400, Brian Foster wrote:
+> These calls are still using the eofblocks tracepoints. The cowblocks
+> equivalents are already defined, we just aren't actually calling them.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Instead of shifting the defines between dax.c and dax.h as they are
-individually used in other code, just move them wholesale to dax.h so
-they'll be available when we need them.
+Looks fine,
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c            | 14 --------------
- include/linux/dax.h | 15 ++++++++++++++-
- 2 files changed, 14 insertions(+), 15 deletions(-)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index 6edd89b..c45cc4d 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -34,20 +34,6 @@
- #include <linux/iomap.h>
- #include "internal.h"
- 
--/*
-- * We use lowest available bit in exceptional entry for locking, other two
-- * bits to determine entry type. In total 3 special bits.
-- */
--#define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 3)
--#define RADIX_DAX_PTE (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
--#define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
--#define RADIX_DAX_TYPE_MASK (RADIX_DAX_PTE | RADIX_DAX_PMD)
--#define RADIX_DAX_TYPE(entry) ((unsigned long)entry & RADIX_DAX_TYPE_MASK)
--#define RADIX_DAX_SECTOR(entry) (((unsigned long)entry >> RADIX_DAX_SHIFT))
--#define RADIX_DAX_ENTRY(sector, pmd) ((void *)((unsigned long)sector << \
--		RADIX_DAX_SHIFT | (pmd ? RADIX_DAX_PMD : RADIX_DAX_PTE) | \
--		RADIX_TREE_EXCEPTIONAL_ENTRY))
--
- /* We choose 4096 entries - same as per-zone page wait tables */
- #define DAX_WAIT_TABLE_BITS 12
- #define DAX_WAIT_TABLE_ENTRIES (1 << DAX_WAIT_TABLE_BITS)
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index a3dfee4..e9ea78c 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -8,8 +8,21 @@
- 
- struct iomap_ops;
- 
--/* We use lowest available exceptional entry bit for locking */
-+/*
-+ * We use lowest available bit in exceptional entry for locking, other two
-+ * bits to determine entry type. In total 3 special bits.
-+ */
-+#define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 3)
- #define RADIX_DAX_ENTRY_LOCK (1 << RADIX_TREE_EXCEPTIONAL_SHIFT)
-+#define RADIX_DAX_PTE (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
-+#define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
-+#define RADIX_DAX_TYPE_MASK (RADIX_DAX_PTE | RADIX_DAX_PMD)
-+#define RADIX_DAX_TYPE(entry) ((unsigned long)entry & RADIX_DAX_TYPE_MASK)
-+#define RADIX_DAX_SECTOR(entry) (((unsigned long)entry >> RADIX_DAX_SHIFT))
-+#define RADIX_DAX_ENTRY(sector, pmd) ((void *)((unsigned long)sector << \
-+		RADIX_DAX_SHIFT | (pmd ? RADIX_DAX_PMD : RADIX_DAX_PTE) | \
-+		RADIX_TREE_EXCEPTIONAL_ENTRY))
-+
- 
- ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		struct iomap_ops *ops);
--- 
-2.7.4
-
