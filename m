@@ -1,95 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47281 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932328AbcJYXHb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:07:31 -0400
-Subject: [PATCH 36/39] xfs_repair: use range query when while checking rmaps
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Oct 2016 16:07:26 -0700
-Message-ID: <147743684680.11035.15884312919264954016.stgit@birch.djwong.org>
-In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
-References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from ns.lynxeye.de ([87.118.118.114]:53626 "EHLO lynxeye.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756858AbcJXLrT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Oct 2016 07:47:19 -0400
+Message-ID: <1477309633.25282.5.camel@lynxeye.de>
+Subject: Re: [PATCH 1/2] xfs: use rhashtable to track buffer cache
+From: Lucas Stach <dev@lynxeye.de>
+Date: Mon, 24 Oct 2016 13:47:13 +0200
+In-Reply-To: <20161024021515.GV14023@dastard>
+References: <1476821653-2595-1-git-send-email-dev@lynxeye.de>
+         <1476821653-2595-2-git-send-email-dev@lynxeye.de>
+         <20161018221849.GD23194@dastard> <1477159309.2070.14.camel@lynxeye.de>
+         <20161024021515.GV14023@dastard>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-For shared extents, we ought to use a range query on the rmapbt to
-find the corresponding rmap.  However, most of the time the observed
-rmap will be an exact match for the rmapbt rmap, in which case we
-could have used the (much faster) regular lookup.  Therefore, try the
-regular lookup first and resort to the range lookup if that doesn't
-get us what we want.  This can cut the run time of the rmap check of
-xfs_repair in half.
+Am Montag, den 24.10.2016, 13:15 +1100 schrieb Dave Chinner:
+> On Sat, Oct 22, 2016 at 08:01:49PM +0200, Lucas Stach wrote:
+> > 
+> > Am Mittwoch, den 19.10.2016, 09:18 +1100 schrieb Dave Chinner:
+> > > 
+> > > On Tue, Oct 18, 2016 at 10:14:12PM +0200, Lucas Stach wrote:
+> > > > 
+> > > > +	.key_len = sizeof(xfs_daddr_t),
+> > > > +	.key_offset = offsetof(struct xfs_buf, b_bn),
+> > > > +	.head_offset = offsetof(struct xfs_buf, b_rhash_head),
+> > > > +	.automatic_shrinking = true,
+> > > 
+> > > Hmmm - so memory pressure is going to cause this hash to be
+> > > resized
+> > > as the shrinker frees buffers. That, in turn, will cause the
+> > > rhashtable code to run GFP_KERNEL allocations, which could result
+> > > in
+> > > it re-entering the shrinker and trying to free buffers which will
+> > > modify the hash table.
+> > > 
+> > > That doesn't seem like a smart thing to do to me - it seems to me
+> > > like it introduces a whole new avenue for memory reclaim
+> > > deadlocks
+> > > (or, at minimum, lockdep false positives) to occur....
+> > > 
+> > Shrinking of the hash table is done in a worker, so I don't see the
+> > direct chain you are describing above.
+> 
+> We've had deadlocks where workqueue work has been stalled on memory
+> allocation trying to allocation a new worker thread to run the work.
+> The rhashtable code appears to use unbound system work queues which
+> means there are no rescuer threads, and they are being called to do
+> work in memory reclaim context. Rescuer threads come along with the
+> WQ_MEM_RECLAIM initialisation flag for workqueues, but the
+> rhashtable code is most definitely not doing that...
+> 
+> i.e. if memory reclaim requires that workqueue to make progress to
+> continue freeing memory or resolve a blocking situation in the
+> shrinker (e.g. waiting for IO completion) then a) it needs to have a
+> rescuer thread, and b) it must avoid re-entering the shrinker that
+> is already blocking waiting for the work to be run. i.e. it can't
+> do GFP_KERNEL allocations because that will result in re-entering
+> the blocked shrinker...
+> 
+> Now, this /might/ be ok for the rhashtable code as it may not block
+> future operations if a grow/shrink gets held up on memory
+> allocation, but I'm not intimately familiar with that code. It is,
+> however, a red flag that needs to be checked out and verified.
 
-Theoretically, the only reason why an observed rmap wouldn't be an
-exact match for an rmapbt rmap is because we modified some file on
-account of a metadata error.
+Right, this is exactly what I meant. Insertion/deletion of entries in
+rhashtables will not be held up by the grow/shrink worker. The bucket
+locks will only be taken once the worker succeeded in allocating the
+required memory.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/libxfs_api_defs.h |    1 +
- repair/rmap.c            |   26 ++++++++++++++++++++++++++
- 2 files changed, 27 insertions(+)
+If the shrink worker isn't able to make progress due to memory pressure
+we only end up with a sparsely populated hash table for a longer period
+of time. It does not affect insertion/deletion of the objects into the
+hash.
 
+Same goes for growing the table. If the expand worker is blocked on
+anything the only adverse effect is that we end up with longer hash
+chains than we would like until the expand worker has a chance to do
+its work.
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 8c15b75..e95763d 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -141,5 +141,6 @@
- #define xfs_refcountbt_init_cursor	libxfs_refcountbt_init_cursor
- #define xfs_refcount_lookup_le		libxfs_refcount_lookup_le
- #define xfs_refcount_get_rec		libxfs_refcount_get_rec
-+#define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
- 
- #endif /* __LIBXFS_API_DEFS_H__ */
-diff --git a/repair/rmap.c b/repair/rmap.c
-index 849b788..db5a30f 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -916,6 +916,20 @@ rmap_lookup(
- 	return -libxfs_rmap_get_rec(bt_cur, tmp, have);
- }
- 
-+/* Look for an rmap in the rmapbt that matches a given rmap. */
-+static int
-+rmap_lookup_overlapped(
-+	struct xfs_btree_cur	*bt_cur,
-+	struct xfs_rmap_irec	*rm_rec,
-+	struct xfs_rmap_irec	*tmp,
-+	int			*have)
-+{
-+	/* Have to use our fancy version for overlapped */
-+	return -libxfs_rmap_lookup_le_range(bt_cur, rm_rec->rm_startblock,
-+				rm_rec->rm_owner, rm_rec->rm_offset,
-+				rm_rec->rm_flags, tmp, have);
-+}
-+
- /* Does the btree rmap cover the observed rmap? */
- #define NEXTP(x)	((x)->rm_startblock + (x)->rm_blockcount)
- #define NEXTL(x)	((x)->rm_offset + (x)->rm_blockcount)
-@@ -1004,6 +1018,18 @@ rmaps_verify_btree(
- 		error = rmap_lookup(bt_cur, rm_rec, &tmp, &have);
- 		if (error)
- 			goto err;
-+		/*
-+		 * Using the range query is expensive, so only do it if
-+		 * the regular lookup doesn't find anything or if it doesn't
-+		 * match the observed rmap.
-+		 */
-+		if (xfs_sb_version_hasreflink(&bt_cur->bc_mp->m_sb) &&
-+				(!have || !rmap_is_good(rm_rec, &tmp))) {
-+			error = rmap_lookup_overlapped(bt_cur, rm_rec,
-+					&tmp, &have);
-+			if (error)
-+				goto err;
-+		}
- 		if (!have) {
- 			do_warn(
- _("Missing reverse-mapping record for (%u/%u) %slen %u owner %"PRId64" \
-
+Regards,
+Lucas
