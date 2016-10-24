@@ -1,102 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47362 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932328AbcJYXHt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:07:49 -0400
-Subject: [PATCH 38/39] xfs_repair: use thread pools to sort rmap data
+Received: from userp1040.oracle.com ([156.151.31.81]:47210 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S940854AbcJXQXx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Oct 2016 12:23:53 -0400
+Date: Mon, 24 Oct 2016 09:23:48 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Oct 2016 16:07:43 -0700
-Message-ID: <147743686365.11035.10049064734489474720.stgit@birch.djwong.org>
-In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
-References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+Subject: Re: [PATCH v2] xfs: don't skip cow forks w/ delalloc blocks in
+ cowblocks scan
+Message-ID: <20161024162348.GD5256@birch.djwong.org>
+References: <1477318574-65436-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1477318574-65436-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-Since each slab is a collection of independent mini-slabs, we can
-fire up a bunch of threads to sort the mini-slabs in parallel.
-This speeds up the sorting phase of the rmapbt rebuilding if we
-have a large number of mini slabs.
+On Mon, Oct 24, 2016 at 10:16:14AM -0400, Brian Foster wrote:
+> The cowblocks background scanner currently clears the cowblocks tag for
+> inodes without any real allocations in the cow fork. This excludes
+> inodes with only delalloc blocks in the cow fork. While we might never
+> expect to clear delalloc blocks from the cow fork in the background
+> scanner, it is not necessarily correct to clear the cowblocks tag from
+> such inodes.
+> 
+> For example, if the background scanner happens to process an inode
+> between a buffered write and writeback, the scanner catches the inode in
+> a state after delalloc blocks have been allocated to the cow fork but
+> before the delalloc blocks have been converted to real blocks by
+> writeback. The background scanner then incorrectly clears the cowblocks
+> tag, even if part of the aforementioned delalloc reservation will not be
+> remapped to the data fork (i.e., extra blocks due to the cowextsize
+> hint). This means that any such additional blocks in the cow fork might
+> never be reclaimed by the background scanner and could persist until the
+> inode itself is reclaimed.
+> 
+> To address this problem, only skip and clear inodes without any cow fork
+> allocations whatsoever from the background scanner. While we generally
+> do not want to cancel delalloc reservations from the background scanner,
+> the pagecache dirty check following the cowblocks check should prevent
+> that situation. If we do end up with delalloc cow fork blocks without a
+> dirty address space mapping, this is probably an indication that
+> something has gone wrong and the blocks should be reclaimed, as they may
+> never be converted to a real allocation.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- repair/slab.c |   46 ++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 44 insertions(+), 2 deletions(-)
+Looks reasonable and passes the clone tests, so:
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+--D
 
-diff --git a/repair/slab.c b/repair/slab.c
-index 97c13d3..8609270 100644
---- a/repair/slab.c
-+++ b/repair/slab.c
-@@ -201,6 +201,27 @@ slab_add(
- 	return 0;
- }
- 
-+#include "threads.h"
-+
-+struct qsort_slab {
-+	struct xfs_slab		*slab;
-+	struct xfs_slab_hdr	*hdr;
-+	int			(*compare_fn)(const void *, const void *);
-+};
-+
-+static void
-+qsort_slab_helper(
-+	struct work_queue	*wq,
-+	xfs_agnumber_t		agno,
-+	void			*arg)
-+{
-+	struct qsort_slab	*qs = arg;
-+
-+	qsort(slab_ptr(qs->slab, qs->hdr, 0), qs->hdr->sh_inuse,
-+			qs->slab->s_item_sz, qs->compare_fn);
-+	free(qs);
-+}
-+
- /*
-  * Sort the items in the slab.  Do not run this method if there are any
-  * cursors holding on to the slab.
-@@ -210,14 +231,35 @@ qsort_slab(
- 	struct xfs_slab		*slab,
- 	int (*compare_fn)(const void *, const void *))
- {
-+	struct work_queue	wq;
- 	struct xfs_slab_hdr	*hdr;
-+	struct qsort_slab	*qs;
-+
-+	/*
-+	 * If we don't have that many slabs, we're probably better
-+	 * off skipping all the thread overhead.
-+	 */
-+	if (slab->s_nr_slabs <= 4) {
-+		hdr = slab->s_first;
-+		while (hdr) {
-+			qsort(slab_ptr(slab, hdr, 0), hdr->sh_inuse,
-+					slab->s_item_sz, compare_fn);
-+			hdr = hdr->sh_next;
-+		}
-+		return;
-+	}
- 
-+	create_work_queue(&wq, NULL, libxfs_nproc());
- 	hdr = slab->s_first;
- 	while (hdr) {
--		qsort(slab_ptr(slab, hdr, 0), hdr->sh_inuse, slab->s_item_sz,
--		      compare_fn);
-+		qs = malloc(sizeof(struct qsort_slab));
-+		qs->slab = slab;
-+		qs->hdr = hdr;
-+		qs->compare_fn = compare_fn;
-+		queue_work(&wq, qsort_slab_helper, 0, qs);
- 		hdr = hdr->sh_next;
- 	}
-+	destroy_work_queue(&wq);
- }
- 
- /*
-
+> ---
+> 
+> v2:
+> - Drop the xfs_reflink_has_real_cow_blocks() helper entirely.
+> v1: http://www.spinics.net/lists/linux-xfs/msg01732.html
+> 
+>  fs/xfs/xfs_icache.c  |  7 ++++++-
+>  fs/xfs/xfs_reflink.c | 34 ----------------------------------
+>  fs/xfs/xfs_reflink.h |  2 --
+>  3 files changed, 6 insertions(+), 37 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index f295049..1b4861f 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -1580,10 +1580,15 @@ xfs_inode_free_cowblocks(
+>  	struct xfs_eofblocks *eofb = args;
+>  	bool need_iolock = true;
+>  	int match;
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+>  
+>  	ASSERT(!eofb || (eofb && eofb->eof_scan_owner != 0));
+>  
+> -	if (!xfs_reflink_has_real_cow_blocks(ip)) {
+> +	/*
+> +	 * Just clear the tag if we have an empty cow fork or none at all. It's
+> +	 * possible the inode was fully unshared since it was originally tagged.
+> +	 */
+> +	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
+>  		trace_xfs_inode_free_cowblocks_invalid(ip);
+>  		xfs_inode_clear_cowblocks_tag(ip);
+>  		return 0;
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index a279b4e..c069048 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1697,37 +1697,3 @@ xfs_reflink_unshare(
+>  	trace_xfs_reflink_unshare_error(ip, error, _RET_IP_);
+>  	return error;
+>  }
+> -
+> -/*
+> - * Does this inode have any real CoW reservations?
+> - */
+> -bool
+> -xfs_reflink_has_real_cow_blocks(
+> -	struct xfs_inode		*ip)
+> -{
+> -	struct xfs_bmbt_irec		irec;
+> -	struct xfs_ifork		*ifp;
+> -	struct xfs_bmbt_rec_host	*gotp;
+> -	xfs_extnum_t			idx;
+> -
+> -	if (!xfs_is_reflink_inode(ip))
+> -		return false;
+> -
+> -	/* Go find the old extent in the CoW fork. */
+> -	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+> -	gotp = xfs_iext_bno_to_ext(ifp, 0, &idx);
+> -	while (gotp) {
+> -		xfs_bmbt_get_all(gotp, &irec);
+> -
+> -		if (!isnullstartblock(irec.br_startblock))
+> -			return true;
+> -
+> -		/* Roll on... */
+> -		idx++;
+> -		if (idx >= ifp->if_bytes / sizeof(xfs_bmbt_rec_t))
+> -			break;
+> -		gotp = xfs_iext_get_ext(ifp, idx);
+> -	}
+> -
+> -	return false;
+> -}
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index fad1160..97ea9b4 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -50,6 +50,4 @@ extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
+>  extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
+>  		xfs_off_t len);
+>  
+> -extern bool xfs_reflink_has_real_cow_blocks(struct xfs_inode *ip);
+> -
+>  #endif /* __XFS_REFLINK_H */
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
