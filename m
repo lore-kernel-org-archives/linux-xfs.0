@@ -1,148 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47210 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S940854AbcJXQXx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Oct 2016 12:23:53 -0400
-Date: Mon, 24 Oct 2016 09:23:48 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: don't skip cow forks w/ delalloc blocks in
- cowblocks scan
-Message-ID: <20161024162348.GD5256@birch.djwong.org>
-References: <1477318574-65436-1-git-send-email-bfoster@redhat.com>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:45095 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752171AbcJXKvS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Oct 2016 06:51:18 -0400
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1bycpv-0006nB-Cg
+        for linux-xfs@vger.kernel.org; Mon, 24 Oct 2016 21:50:35 +1100
+Date: Mon, 24 Oct 2016 21:50:35 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs: for-next branch updated to b77428b12b55
+Message-ID: <20161024105035.GZ14023@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="8GpibOaaTibBMecb"
 Content-Disposition: inline
-In-Reply-To: <1477318574-65436-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Oct 24, 2016 at 10:16:14AM -0400, Brian Foster wrote:
-> The cowblocks background scanner currently clears the cowblocks tag for
-> inodes without any real allocations in the cow fork. This excludes
-> inodes with only delalloc blocks in the cow fork. While we might never
-> expect to clear delalloc blocks from the cow fork in the background
-> scanner, it is not necessarily correct to clear the cowblocks tag from
-> such inodes.
-> 
-> For example, if the background scanner happens to process an inode
-> between a buffered write and writeback, the scanner catches the inode in
-> a state after delalloc blocks have been allocated to the cow fork but
-> before the delalloc blocks have been converted to real blocks by
-> writeback. The background scanner then incorrectly clears the cowblocks
-> tag, even if part of the aforementioned delalloc reservation will not be
-> remapped to the data fork (i.e., extra blocks due to the cowextsize
-> hint). This means that any such additional blocks in the cow fork might
-> never be reclaimed by the background scanner and could persist until the
-> inode itself is reclaimed.
-> 
-> To address this problem, only skip and clear inodes without any cow fork
-> allocations whatsoever from the background scanner. While we generally
-> do not want to cancel delalloc reservations from the background scanner,
-> the pagecache dirty check following the cowblocks check should prevent
-> that situation. If we do end up with delalloc cow fork blocks without a
-> dirty address space mapping, this is probably an indication that
-> something has gone wrong and the blocks should be reclaimed, as they may
-> never be converted to a real allocation.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Looks reasonable and passes the clone tests, so:
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+--8GpibOaaTibBMecb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
---D
+Hi folks,
 
-> ---
-> 
-> v2:
-> - Drop the xfs_reflink_has_real_cow_blocks() helper entirely.
-> v1: http://www.spinics.net/lists/linux-xfs/msg01732.html
-> 
->  fs/xfs/xfs_icache.c  |  7 ++++++-
->  fs/xfs/xfs_reflink.c | 34 ----------------------------------
->  fs/xfs/xfs_reflink.h |  2 --
->  3 files changed, 6 insertions(+), 37 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index f295049..1b4861f 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1580,10 +1580,15 @@ xfs_inode_free_cowblocks(
->  	struct xfs_eofblocks *eofb = args;
->  	bool need_iolock = true;
->  	int match;
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
->  
->  	ASSERT(!eofb || (eofb && eofb->eof_scan_owner != 0));
->  
-> -	if (!xfs_reflink_has_real_cow_blocks(ip)) {
-> +	/*
-> +	 * Just clear the tag if we have an empty cow fork or none at all. It's
-> +	 * possible the inode was fully unshared since it was originally tagged.
-> +	 */
-> +	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
->  		trace_xfs_inode_free_cowblocks_invalid(ip);
->  		xfs_inode_clear_cowblocks_tag(ip);
->  		return 0;
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index a279b4e..c069048 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1697,37 +1697,3 @@ xfs_reflink_unshare(
->  	trace_xfs_reflink_unshare_error(ip, error, _RET_IP_);
->  	return error;
->  }
-> -
-> -/*
-> - * Does this inode have any real CoW reservations?
-> - */
-> -bool
-> -xfs_reflink_has_real_cow_blocks(
-> -	struct xfs_inode		*ip)
-> -{
-> -	struct xfs_bmbt_irec		irec;
-> -	struct xfs_ifork		*ifp;
-> -	struct xfs_bmbt_rec_host	*gotp;
-> -	xfs_extnum_t			idx;
-> -
-> -	if (!xfs_is_reflink_inode(ip))
-> -		return false;
-> -
-> -	/* Go find the old extent in the CoW fork. */
-> -	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> -	gotp = xfs_iext_bno_to_ext(ifp, 0, &idx);
-> -	while (gotp) {
-> -		xfs_bmbt_get_all(gotp, &irec);
-> -
-> -		if (!isnullstartblock(irec.br_startblock))
-> -			return true;
-> -
-> -		/* Roll on... */
-> -		idx++;
-> -		if (idx >= ifp->if_bytes / sizeof(xfs_bmbt_rec_t))
-> -			break;
-> -		gotp = xfs_iext_get_ext(ifp, idx);
-> -	}
-> -
-> -	return false;
-> -}
-> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> index fad1160..97ea9b4 100644
-> --- a/fs/xfs/xfs_reflink.h
-> +++ b/fs/xfs/xfs_reflink.h
-> @@ -50,6 +50,4 @@ extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
->  extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
->  		xfs_off_t len);
->  
-> -extern bool xfs_reflink_has_real_cow_blocks(struct xfs_inode *ip);
-> -
->  #endif /* __XFS_REFLINK_H */
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The for-next branch of the xfs kernel repository at
+
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+
+has just been updated.
+
+The new head of the for-next branch is commit:
+
+b77428b12b55 xfs: defer should abort intent items if the trans roll fails
+
+New Commits:
+
+Brian Foster (2):
+      [7b7381f04356] xfs: fix up inode cowblocks tracking tracepoints
+      [c17a8ef43d6b] xfs: clear cowblocks tag when cow fork is emptied
+
+Darrick J. Wong (1):
+      [b77428b12b55] xfs: defer should abort intent items if the trans roll=
+ fails
+
+Jan Kara (1):
+      [c663e29f8885] fs: Do to trim high file position bits in iomap_page_m=
+kwrite_actor
+
+
+Code Diffstat:
+
+ fs/iomap.c                |  3 +--
+ fs/xfs/libxfs/xfs_defer.c | 17 +++++------------
+ fs/xfs/xfs_icache.c       |  8 ++++----
+ fs/xfs/xfs_reflink.c      |  6 +++++-
+ 4 files changed, 15 insertions(+), 19 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--8GpibOaaTibBMecb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJYDed6AAoJEK3oKUf0dfodo0oP/AxWsTfFGFBd/dyRjf72CN1Y
+7lPtzddUm1xToYZx5JGENS15gZ50qEankjKk9INv5JsHsVxO/CcLQtW8GpGYqh8L
+sPAYFaAt8p1QV/UjeqPZcalbzJ3ui6XiELJLkfInO4bbZlnHmZSVXXyfsOD8JiEM
+vfsg87a6TxJhCb7wu8ZMEox6hrJxLZp8md3Y2PQAq1eWhlYuMJ8wUqeLoXprc3Z7
+x3Es454okMhyHpDilKbG5BY2ocYpvrLk9C/RzhtO8MfAuu+gtECmSrS9wpxFlEZz
+sGAHR4TM9A9kgn+2uMhSr71DRYRFwwTSFbevkTLwYEWcsuDApskkRd6pXz2sybXv
+ROTecsN4bLHqa2+IDv8fL+0QMrqsn/WDD1QZrmtAL40BDpUvTMMUjMpqrnPrtwhK
+XjLdzMQTEVPXZg/yFHexOwCRw+9faQ68WNv3p4BdUS/zYSTn+PtELxosiDdLR0BO
+A39ASNsQmVJGYM+ghDs1SJOc0GeLS5w4yzbxxJhdNilqxPypAPf7n5HqpvuNXqs8
+nQ6HhUxUpn5F8Y5Y/5fuiHhE+NpjKUqDDq5akCd0mXbDpoadu3NzNW9Rk4MbQzKT
+X0uZwsJQK6LAO8I7XzJUDfw99v9hNNIg7MZqTJqMoLQcuB23ua9lQdHcI5Xs9Pr5
+TEFuUqWcuhrGEvzNZJQa
+=bxy5
+-----END PGP SIGNATURE-----
+
+--8GpibOaaTibBMecb--
