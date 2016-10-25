@@ -1,60 +1,372 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:44575 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932543AbcJYQeq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Oct 2016 12:34:46 -0400
-Date: Tue, 25 Oct 2016 18:34:43 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 5/6] iomap: implement direct I/O
-Message-ID: <20161025163443.GA8730@lst.de>
-References: <1477408098-10153-1-git-send-email-hch@lst.de> <1477408098-10153-6-git-send-email-hch@lst.de> <20161025153156.cjhcvvoxd3c6pqf7@kmo-pixel>
+Received: from userp1040.oracle.com ([156.151.31.81]:46764 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932449AbcJYXGt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:06:49 -0400
+Subject: [PATCH 29/39] xfs_repair: process reverse-mapping data into
+ refcount data
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Oct 2016 16:06:41 -0700
+Message-ID: <147743680141.11035.18040400458852666259.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161025153156.cjhcvvoxd3c6pqf7@kmo-pixel>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, axboe@fb.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 25, 2016 at 07:31:56AM -0800, Kent Overstreet wrote:
-> So you're still walking the mappings, then for each mapping allocating a bio and
-> pinning pages - opposite of my approach, I started out by allocating a bio and
-> pinning pages and then walk the mapping, splitting the bio as needed.
-> 
-> I still like my approach better, I think it ought to perform better when doing
-> fragmented IOs and it feels cleaner to me - you're not going back and forth
-> between calling into the gup() code, and your filesystem's btree code, both of
-> which are going to require taking their own set of locks and such. That said, I
-> doubt it's much of a difference and your code is so much simpler than
-> direct-IO.c that who cares :)
+Take all the reverse-mapping data we've acquired and use it to generate
+reference count data.  This data is used in phase 5 to rebuild the
+refcount btree.
 
-Yes, this is the basic idea behind the whole iomap code - we have
-a generic apply function that calls into the fs allocator, and then
-takes a callback that it applies to one extent at a time.  It really
-helps a lot to separate responsibilities and factor the code into
-independent functions.
+v2: Update to reflect separation of rmap_irec flags.
 
-I looked at carrying over bios between different invocations of the
-callback, but it quickly turned into a mess.  In the end the only thing
-we'd optimize with it is the gup call - bios would have to be split
-anyway, etc, etc.  So with this code there indeed is a worsr case
-for badly fragmented files, but I'd rather work on the fs allocator
-to further reduce the amount of fragmentation we have rather than
-working around it.  E.g. for XFS Darrick and I have sketched a rough
-plan for an auto-COW mode where we'd simply not reuse fragmented blocks
-for an overwrite and will instead give the caller a nice contiguous
-single extent.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ repair/phase4.c |   27 ++++++
+ repair/rmap.c   |  232 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ repair/rmap.h   |    2 
+ 3 files changed, 259 insertions(+), 2 deletions(-)
 
-> Do you have your code up in a git repo somewhere? I'm going to compare it to
-> bcachefs's dio code and see if I can remember all edge cases I hit when I was
-> working on that.
 
-Git:
+diff --git a/repair/phase4.c b/repair/phase4.c
+index 9da1bb1..86992c9 100644
+--- a/repair/phase4.c
++++ b/repair/phase4.c
+@@ -193,6 +193,21 @@ _("%s while checking reverse-mappings"),
+ }
+ 
+ static void
++compute_ag_refcounts(
++	work_queue_t	*wq,
++	xfs_agnumber_t	agno,
++	void		*arg)
++{
++	int		error;
++
++	error = compute_refcounts(wq->mp, agno);
++	if (error)
++		do_error(
++_("%s while computing reference count records.\n"),
++			 strerror(-error));
++}
++
++static void
+ process_rmap_data(
+ 	struct xfs_mount	*mp)
+ {
+@@ -206,6 +221,14 @@ process_rmap_data(
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++)
+ 		queue_work(&wq, check_rmap_btrees, i, NULL);
+ 	destroy_work_queue(&wq);
++
++	if (!xfs_sb_version_hasreflink(&mp->m_sb))
++		return;
++
++	create_work_queue(&wq, mp, libxfs_nproc());
++	for (i = 0; i < mp->m_sb.sb_agcount; i++)
++		queue_work(&wq, compute_ag_refcounts, i, NULL);
++	destroy_work_queue(&wq);
+ }
+ 
+ void
+@@ -359,7 +382,9 @@ phase4(xfs_mount_t *mp)
+ 
+ 	/*
+ 	 * Process all the reverse-mapping data that we collected.  This
+-	 * involves checking the rmap data against the btree.
++	 * involves checking the rmap data against the btree, computing
++	 * reference counts based on the rmap data, and checking the counts
++	 * against the refcount btree.
+ 	 */
+ 	process_rmap_data(mp);
+ 
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 645af31..e95f6c8 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -42,6 +42,7 @@ struct xfs_ag_rmap {
+ 	int		ar_flcount;		/* agfl entries from leftover */
+ 						/* agbt allocations */
+ 	struct xfs_rmap_irec	ar_last_rmap;	/* last rmap seen */
++	struct xfs_slab	*ar_refcount_items;	/* refcount items, p4-5 */
+ };
+ 
+ static struct xfs_ag_rmap *ag_rmaps;
+@@ -88,7 +89,8 @@ bool
+ rmap_needs_work(
+ 	struct xfs_mount	*mp)
+ {
+-	return xfs_sb_version_hasrmapbt(&mp->m_sb);
++	return xfs_sb_version_hasreflink(&mp->m_sb) ||
++	       xfs_sb_version_hasrmapbt(&mp->m_sb);
+ }
+ 
+ /*
+@@ -120,6 +122,11 @@ _("Insufficient memory while allocating reverse mapping slabs."));
+ 			do_error(
+ _("Insufficient memory while allocating raw metadata reverse mapping slabs."));
+ 		ag_rmaps[i].ar_last_rmap.rm_owner = XFS_RMAP_OWN_UNKNOWN;
++		error = init_slab(&ag_rmaps[i].ar_refcount_items,
++				  sizeof(struct xfs_refcount_irec));
++		if (error)
++			do_error(
++_("Insufficient memory while allocating refcount item slabs."));
+ 	}
+ }
+ 
+@@ -138,6 +145,7 @@ rmaps_free(
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+ 		free_slab(&ag_rmaps[i].ar_rmaps);
+ 		free_slab(&ag_rmaps[i].ar_raw_rmaps);
++		free_slab(&ag_rmaps[i].ar_refcount_items);
+ 	}
+ 	free(ag_rmaps);
+ 	ag_rmaps = NULL;
+@@ -598,6 +606,228 @@ rmap_dump(
+ #endif
+ 
+ /*
++ * Rebuilding the Reference Count & Reverse Mapping Btrees
++ *
++ * The reference count (refcnt) and reverse mapping (rmap) btrees are rebuilt
++ * during phase 5, like all other AG btrees.  Therefore, reverse mappings must
++ * be processed into reference counts at the end of phase 4, and the rmaps must
++ * be recorded during phase 4.  There is a need to access the rmaps in physical
++ * block order, but no particular need for random access, so the slab.c code
++ * provides a big logical array (consisting of smaller slabs) and some inorder
++ * iterator functions.
++ *
++ * Once we've recorded all the reverse mappings, we're ready to translate the
++ * rmaps into refcount entries.  Imagine the rmap entries as rectangles
++ * representing extents of physical blocks, and that the rectangles can be laid
++ * down to allow them to overlap each other; then we know that we must emit
++ * a refcnt btree entry wherever the amount of overlap changes, i.e. the
++ * emission stimulus is level-triggered:
++ *
++ *                 -    ---
++ *       --      ----- ----   ---        ------
++ * --   ----     ----------- ----     ---------
++ * -------------------------------- -----------
++ * ^ ^  ^^ ^^    ^ ^^ ^^^  ^^^^  ^ ^^ ^  ^     ^
++ * 2 1  23 21    3 43 234  2123  1 01 2  3     0
++ *
++ * For our purposes, a rmap is a tuple (startblock, len, fileoff, owner).
++ *
++ * Note that in the actual refcnt btree we don't store the refcount < 2 cases
++ * because the bnobt tells us which blocks are free; single-use blocks aren't
++ * recorded in the bnobt or the refcntbt.  If the rmapbt supports storing
++ * multiple entries covering a given block we could theoretically dispense with
++ * the refcntbt and simply count rmaps, but that's inefficient in the (hot)
++ * write path, so we'll take the cost of the extra tree to save time.  Also
++ * there's no guarantee that rmap will be enabled.
++ *
++ * Given an array of rmaps sorted by physical block number, a starting physical
++ * block (sp), a bag to hold rmaps that cover sp, and the next physical
++ * block where the level changes (np), we can reconstruct the refcount
++ * btree as follows:
++ *
++ * While there are still unprocessed rmaps in the array,
++ *  - Set sp to the physical block (pblk) of the next unprocessed rmap.
++ *  - Add to the bag all rmaps in the array where startblock == sp.
++ *  - Set np to the physical block where the bag size will change.
++ *    This is the minimum of (the pblk of the next unprocessed rmap) and
++ *    (startblock + len of each rmap in the bag).
++ *  - Record the bag size as old_bag_size.
++ *
++ *  - While the bag isn't empty,
++ *     - Remove from the bag all rmaps where startblock + len == np.
++ *     - Add to the bag all rmaps in the array where startblock == np.
++ *     - If the bag size isn't old_bag_size, store the refcount entry
++ *       (sp, np - sp, bag_size) in the refcnt btree.
++ *     - If the bag is empty, break out of the inner loop.
++ *     - Set old_bag_size to the bag size
++ *     - Set sp = np.
++ *     - Set np to the physical block where the bag size will change.
++ *       This is the minimum of (the pblk of the next unprocessed rmap) and
++ *       (startblock + len of each rmap in the bag).
++ *
++ * An implementation detail is that because this processing happens during
++ * phase 4, the refcount entries are stored in an array so that phase 5 can
++ * load them into the refcount btree.  The rmaps can be loaded directly into
++ * the rmap btree during phase 5 as well.
++ */
++
++/*
++ * Emit a refcount object for refcntbt reconstruction during phase 5.
++ */
++#define REFCOUNT_CLAMP(nr)	((nr) > MAXREFCOUNT ? MAXREFCOUNT : (nr))
++static void
++refcount_emit(
++	struct xfs_mount		*mp,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		agbno,
++	xfs_extlen_t		len,
++	size_t			nr_rmaps)
++{
++	struct xfs_refcount_irec	rlrec;
++	int			error;
++	struct xfs_slab		*rlslab;
++
++	rlslab = ag_rmaps[agno].ar_refcount_items;
++	ASSERT(nr_rmaps > 0);
++
++	dbg_printf("REFL: agno=%u pblk=%u, len=%u -> refcount=%zu\n",
++		agno, agbno, len, nr_rmaps);
++	rlrec.rc_startblock = agbno;
++	rlrec.rc_blockcount = len;
++	rlrec.rc_refcount = REFCOUNT_CLAMP(nr_rmaps);
++	error = slab_add(rlslab, &rlrec);
++	if (error)
++		do_error(
++_("Insufficient memory while recreating refcount tree."));
++}
++#undef REFCOUNT_CLAMP
++
++/*
++ * Transform a pile of physical block mapping observations into refcount data
++ * for eventual rebuilding of the btrees.
++ */
++#define RMAP_END(r)	((r)->rm_startblock + (r)->rm_blockcount)
++int
++compute_refcounts(
++	struct xfs_mount		*mp,
++	xfs_agnumber_t		agno)
++{
++	struct xfs_bag		*stack_top = NULL;
++	struct xfs_slab		*rmaps;
++	struct xfs_slab_cursor	*rmaps_cur;
++	struct xfs_rmap_irec	*array_cur;
++	struct xfs_rmap_irec	*rmap;
++	xfs_agblock_t		sbno;	/* first bno of this rmap set */
++	xfs_agblock_t		cbno;	/* first bno of this refcount set */
++	xfs_agblock_t		nbno;	/* next bno where rmap set changes */
++	size_t			n, idx;
++	size_t			old_stack_nr;
++	int			error;
++
++	if (!xfs_sb_version_hasreflink(&mp->m_sb))
++		return 0;
++
++	rmaps = ag_rmaps[agno].ar_rmaps;
++
++	error = init_slab_cursor(rmaps, rmap_compare, &rmaps_cur);
++	if (error)
++		return error;
++
++	error = init_bag(&stack_top);
++	if (error)
++		goto err;
++
++	/* While there are rmaps to be processed... */
++	n = 0;
++	while (n < slab_count(rmaps)) {
++		array_cur = peek_slab_cursor(rmaps_cur);
++		sbno = cbno = array_cur->rm_startblock;
++		/* Push all rmaps with pblk == sbno onto the stack */
++		for (;
++		     array_cur && array_cur->rm_startblock == sbno;
++		     array_cur = peek_slab_cursor(rmaps_cur)) {
++			advance_slab_cursor(rmaps_cur); n++;
++			rmap_dump("push0", agno, array_cur);
++			error = bag_add(stack_top, array_cur);
++			if (error)
++				goto err;
++		}
++
++		/* Set nbno to the bno of the next refcount change */
++		if (n < slab_count(rmaps))
++			nbno = array_cur->rm_startblock;
++		else
++			nbno = NULLAGBLOCK;
++		foreach_bag_ptr(stack_top, idx, rmap) {
++			nbno = min(nbno, RMAP_END(rmap));
++		}
++
++		/* Emit reverse mappings, if needed */
++		ASSERT(nbno > sbno);
++		old_stack_nr = bag_count(stack_top);
++
++		/* While stack isn't empty... */
++		while (bag_count(stack_top)) {
++			/* Pop all rmaps that end at nbno */
++			foreach_bag_ptr_reverse(stack_top, idx, rmap) {
++				if (RMAP_END(rmap) != nbno)
++					continue;
++				rmap_dump("pop", agno, rmap);
++				error = bag_remove(stack_top, idx);
++				if (error)
++					goto err;
++			}
++
++			/* Push array items that start at nbno */
++			for (;
++			     array_cur && array_cur->rm_startblock == nbno;
++			     array_cur = peek_slab_cursor(rmaps_cur)) {
++				advance_slab_cursor(rmaps_cur); n++;
++				rmap_dump("push1", agno, array_cur);
++				error = bag_add(stack_top, array_cur);
++				if (error)
++					goto err;
++			}
++
++			/* Emit refcount if necessary */
++			ASSERT(nbno > cbno);
++			if (bag_count(stack_top) != old_stack_nr) {
++				if (old_stack_nr > 1) {
++					refcount_emit(mp, agno, cbno,
++						      nbno - cbno,
++						      old_stack_nr);
++				}
++				cbno = nbno;
++			}
++
++			/* Stack empty, go find the next rmap */
++			if (bag_count(stack_top) == 0)
++				break;
++			old_stack_nr = bag_count(stack_top);
++			sbno = nbno;
++
++			/* Set nbno to the bno of the next refcount change */
++			if (n < slab_count(rmaps))
++				nbno = array_cur->rm_startblock;
++			else
++				nbno = NULLAGBLOCK;
++			foreach_bag_ptr(stack_top, idx, rmap) {
++				nbno = min(nbno, RMAP_END(rmap));
++			}
++
++			/* Emit reverse mappings, if needed */
++			ASSERT(nbno > sbno);
++		}
++	}
++err:
++	free_bag(&stack_top);
++	free_slab_cursor(&rmaps_cur);
++
++	return error;
++}
++#undef RMAP_END
++
++/*
+  * Return the number of rmap objects for an AG.
+  */
+ size_t
+diff --git a/repair/rmap.h b/repair/rmap.h
+index 7106dfc..01dec9f 100644
+--- a/repair/rmap.h
++++ b/repair/rmap.h
+@@ -49,6 +49,8 @@ extern __int64_t rmap_diffkeys(struct xfs_rmap_irec *kp1,
+ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
+ 		struct xfs_rmap_irec *key);
+ 
++extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
++
+ extern void fix_freelist(struct xfs_mount *, xfs_agnumber_t, bool);
+ extern void rmap_store_agflcount(struct xfs_mount *, xfs_agnumber_t, int);
+ 
 
-git://git.infradead.org/users/hch/vfs.git iomap-dio
-
-Gitweb:
-
-http://git.infradead.org/users/hch/vfs.git/shortlog/refs/heads/iomap-dio
