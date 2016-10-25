@@ -1,77 +1,254 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:41850 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754071AbcJZA4J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 20:56:09 -0400
-Date: Wed, 26 Oct 2016 11:56:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 16/39] libxfs: add configure option to override system
- header fsxattr
-Message-ID: <20161026005606.GF23194@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:46519 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932449AbcJYXGG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:06:06 -0400
+Subject: [PATCH 23/39] xfs_logprint: support refcount redo items
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Oct 2016 16:06:02 -0700
+Message-ID: <147743676212.11035.6341580285293427233.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
- <147743671705.11035.1549555844450499931.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <147743671705.11035.1549555844450499931.stgit@birch.djwong.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 25, 2016 at 04:05:17PM -0700, Darrick J. Wong wrote:
-> By default, libxfs will use the kernel/system headers to define struct
-> fsxattr.  Unfortunately, this creates a problem for developers who are
-> writing new features but building xfsprogs on a stable system, because
-> the stable kernel's headers don't reflect the new feature.  In this
-> case, we want to be able to use the internal fsxattr definition while
-> the kernel headers catch up, so provide some configure magic to allow
-> developers to force the use of the internal definition.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-....
->  #include <stdio.h>
->  #include <asm/types.h>
->  #include <mntent.h>
-> +#ifdef OVERRIDE_SYSTEM_FSXATTR
-> +# define fsxattr sys_fsxattr
-> +#endif
->  #include <linux/fs.h> /* fsxattr defintion for new kernels */
-> +#ifdef OVERRIDE_SYSTEM_FSXATTR
-> +# undef fsxattr
-> +#endif
+Print reference count update redo items.
 
-messy, but I can't think of a cleaner way of doing this.
->  
->  static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
->  {
-> @@ -175,7 +181,7 @@ static inline void platform_mntent_close(struct mntent_cursor * cursor)
->   * are a copy of the definitions moved to linux/uapi/fs.h in the 4.5 kernel,
->   * so this is purely for supporting builds against old kernel headers.
->   */
-> -#ifndef FS_IOC_FSGETXATTR
-> +#if !defined FS_IOC_FSGETXATTR || defined OVERRIDE_SYSTEM_FSXATTR
->  struct fsxattr {
->  	__u32		fsx_xflags;	/* xflags field value (get/set) */
->  	__u32		fsx_extsize;	/* extsize field value (get/set)*/
-> @@ -184,7 +190,9 @@ struct fsxattr {
->  	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
->  	unsigned char	fsx_pad[8];
->  };
-> +#endif
->  
-> +#ifndef FS_IOC_FSGETXATTR
->  /*
->   * Flags for the fsx_xflags field
->   */
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ logprint/log_misc.c      |   11 +++
+ logprint/log_print_all.c |   12 ++++
+ logprint/log_redo.c      |  148 ++++++++++++++++++++++++++++++++++++++++++++++
+ logprint/logprint.h      |    5 ++
+ 4 files changed, 176 insertions(+)
 
-Hmmm - what happens if all we are doing is introducing new flags?
-Doesn't the overide need to cover them as well?
 
-Cheers,
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index dbe5729..8284206 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -962,6 +962,17 @@ xlog_print_record(
+ 					be32_to_cpu(op_head->oh_len));
+ 			break;
+ 		    }
++		    case XFS_LI_CUI: {
++			skip = xlog_print_trans_cui(&ptr,
++					be32_to_cpu(op_head->oh_len),
++					continued);
++			break;
++		    }
++		    case XFS_LI_CUD: {
++			skip = xlog_print_trans_cud(&ptr,
++					be32_to_cpu(op_head->oh_len));
++			break;
++		    }
+ 		    case XFS_LI_QUOTAOFF: {
+ 			skip = xlog_print_trans_qoff(&ptr,
+ 					be32_to_cpu(op_head->oh_len));
+diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
+index 46952c4..eb3e326 100644
+--- a/logprint/log_print_all.c
++++ b/logprint/log_print_all.c
+@@ -418,6 +418,12 @@ xlog_recover_print_logitem(
+ 	case XFS_LI_RUI:
+ 		xlog_recover_print_rui(item);
+ 		break;
++	case XFS_LI_CUD:
++		xlog_recover_print_cud(item);
++		break;
++	case XFS_LI_CUI:
++		xlog_recover_print_cui(item);
++		break;
+ 	case XFS_LI_DQUOT:
+ 		xlog_recover_print_dquot(item);
+ 		break;
+@@ -458,6 +464,12 @@ xlog_recover_print_item(
+ 	case XFS_LI_RUI:
+ 		printf("RUI");
+ 		break;
++	case XFS_LI_CUD:
++		printf("CUD");
++		break;
++	case XFS_LI_CUI:
++		printf("CUI");
++		break;
+ 	case XFS_LI_DQUOT:
+ 		printf("DQ ");
+ 		break;
+diff --git a/logprint/log_redo.c b/logprint/log_redo.c
+index 40e0727..6be073e 100644
+--- a/logprint/log_redo.c
++++ b/logprint/log_redo.c
+@@ -378,3 +378,151 @@ xlog_recover_print_rud(
+ 	f = item->ri_buf[0].i_addr;
+ 	xlog_print_trans_rud(&f, sizeof(struct xfs_rud_log_format));
+ }
++
++/* Reference Count Update Items */
++
++static int
++xfs_cui_copy_format(
++	char			  *buf,
++	uint			  len,
++	struct xfs_cui_log_format *dst_fmt,
++	int			  continued)
++{
++	uint nextents = ((struct xfs_cui_log_format *)buf)->cui_nextents;
++	uint dst_len = xfs_cui_log_format_sizeof(nextents);
++
++	if (len == dst_len || continued) {
++		memcpy((char *)dst_fmt, buf, len);
++		return 0;
++	}
++	fprintf(stderr, _("%s: bad size of CUI format: %u; expected %u; nextents = %u\n"),
++		progname, len, dst_len, nextents);
++	return 1;
++}
++
++int
++xlog_print_trans_cui(
++	char			**ptr,
++	uint			src_len,
++	int			continued)
++{
++	struct xfs_cui_log_format	*src_f, *f = NULL;
++	uint			dst_len;
++	uint			nextents;
++	struct xfs_phys_extent	*ex;
++	int			i;
++	int			error = 0;
++	int			core_size;
++
++	core_size = offsetof(struct xfs_cui_log_format, cui_extents);
++
++	/*
++	 * memmove to ensure 8-byte alignment for the long longs in
++	 * struct xfs_cui_log_format structure
++	 */
++	src_f = malloc(src_len);
++	if (src_f == NULL) {
++		fprintf(stderr, _("%s: %s: malloc failed\n"),
++			progname, __func__);
++		exit(1);
++	}
++	memmove((char*)src_f, *ptr, src_len);
++	*ptr += src_len;
++
++	/* convert to native format */
++	nextents = src_f->cui_nextents;
++	dst_len = xfs_cui_log_format_sizeof(nextents);
++
++	if (continued && src_len < core_size) {
++		printf(_("CUI: Not enough data to decode further\n"));
++		error = 1;
++		goto error;
++	}
++
++	f = malloc(dst_len);
++	if (f == NULL) {
++		fprintf(stderr, _("%s: %s: malloc failed\n"),
++			progname, __func__);
++		exit(1);
++	}
++	if (xfs_cui_copy_format((char *)src_f, src_len, f, continued)) {
++		error = 1;
++		goto error;
++	}
++
++	printf(_("CUI:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
++		f->cui_size, f->cui_nextents, (unsigned long long)f->cui_id);
++
++	if (continued) {
++		printf(_("CUI extent data skipped (CONTINUE set, no space)\n"));
++		goto error;
++	}
++
++	ex = f->cui_extents;
++	for (i=0; i < f->cui_nextents; i++) {
++		printf("(s: 0x%llx, l: %d, f: 0x%x) ",
++			(unsigned long long)ex->pe_startblock, ex->pe_len,
++			ex->pe_flags);
++		printf("\n");
++		ex++;
++	}
++error:
++	free(src_f);
++	free(f);
++	return error;
++}
++
++void
++xlog_recover_print_cui(
++	struct xlog_recover_item	*item)
++{
++	char				*src_f;
++	uint				src_len;
++
++	src_f = item->ri_buf[0].i_addr;
++	src_len = item->ri_buf[0].i_len;
++
++	xlog_print_trans_cui(&src_f, src_len, 0);
++}
++
++int
++xlog_print_trans_cud(
++	char				**ptr,
++	uint				len)
++{
++	struct xfs_cud_log_format	*f;
++	struct xfs_cud_log_format	lbuf;
++
++	/* size without extents at end */
++	uint core_size = sizeof(struct xfs_cud_log_format);
++
++	/*
++	 * memmove to ensure 8-byte alignment for the long longs in
++	 * xfs_efd_log_format_t structure
++	 */
++	memmove(&lbuf, *ptr, MIN(core_size, len));
++	f = &lbuf;
++	*ptr += len;
++	if (len >= core_size) {
++		printf(_("CUD:  #regs: %d	                 id: 0x%llx\n"),
++			f->cud_size,
++			(unsigned long long)f->cud_cui_id);
++
++		/* don't print extents as they are not used */
++
++		return 0;
++	} else {
++		printf(_("CUD: Not enough data to decode further\n"));
++		return 1;
++	}
++}
++
++void
++xlog_recover_print_cud(
++	struct xlog_recover_item	*item)
++{
++	char				*f;
++
++	f = item->ri_buf[0].i_addr;
++	xlog_print_trans_cud(&f, sizeof(struct xfs_cud_log_format));
++}
+diff --git a/logprint/logprint.h b/logprint/logprint.h
+index bdd0ee1..ae63c2e 100644
+--- a/logprint/logprint.h
++++ b/logprint/logprint.h
+@@ -54,4 +54,9 @@ extern void xlog_recover_print_rui(struct xlog_recover_item *item);
+ extern int xlog_print_trans_rud(char **ptr, uint len);
+ extern void xlog_recover_print_rud(struct xlog_recover_item *item);
+ 
++extern int xlog_print_trans_cui(char **ptr, uint src_len, int continued);
++extern void xlog_recover_print_cui(struct xlog_recover_item *item);
++extern int xlog_print_trans_cud(char **ptr, uint len);
++extern void xlog_recover_print_cud(struct xlog_recover_item *item);
++
+ #endif	/* LOGPRINT_H */
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
