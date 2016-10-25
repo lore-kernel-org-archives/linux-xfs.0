@@ -1,198 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:45524 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933378AbcJLWui (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Oct 2016 18:50:38 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v6 10/17] dax: correct dax iomap code namespace
-Date: Wed, 12 Oct 2016 16:50:15 -0600
-Message-Id: <20161012225022.15507-11-ross.zwisler@linux.intel.com>
-In-Reply-To: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
-References: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:47083 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751790AbcJYXGx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:06:53 -0400
+Subject: [PATCH 30/39] xfs_repair: record reflink inode state
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Oct 2016 16:06:48 -0700
+Message-ID: <147743680894.11035.12324719494742257672.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-The recently added DAX functions that use the new struct iomap data
-structure were named iomap_dax_rw(), iomap_dax_fault() and
-iomap_dax_actor().  These are actually defined in fs/dax.c, though, so
-should be part of the "dax" namespace and not the "iomap" namespace.
-Rename them to dax_iomap_rw(), dax_iomap_fault() and dax_iomap_actor()
-respectively.
+Record the state of the per-inode reflink flag, so that we can
+compare against the rmap data and update the flags accordingly.
+Clear the (reflink) state if we clear the inode.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/dax.c            | 16 ++++++++--------
- fs/ext2/file.c      |  6 +++---
- fs/xfs/xfs_file.c   |  8 ++++----
- include/linux/dax.h |  4 ++--
- 4 files changed, 17 insertions(+), 17 deletions(-)
+ repair/dino_chunks.c |    1 +
+ repair/dinode.c      |    6 ++++++
+ repair/incore.h      |   38 ++++++++++++++++++++++++++++++++++++++
+ repair/incore_ino.c  |    2 ++
+ repair/rmap.c        |   26 ++++++++++++++++++++++++++
+ repair/rmap.h        |    2 ++
+ 6 files changed, 75 insertions(+)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 3d0b103..fdbd7a1 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1031,7 +1031,7 @@ EXPORT_SYMBOL_GPL(dax_truncate_page);
+
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index 7dbaca6..4db9512 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -931,6 +931,7 @@ process_inode_chunk(
+ 				do_warn(_("would have cleared inode %" PRIu64 "\n"),
+ 					ino);
+ 			}
++			clear_inode_was_rl(ino_rec, irec_offset);
+ 		}
  
- #ifdef CONFIG_FS_IOMAP
- static loff_t
--iomap_dax_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-+dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		struct iomap *iomap)
- {
- 	struct iov_iter *iter = data;
-@@ -1088,7 +1088,7 @@ iomap_dax_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ process_next:
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 98afdc9..64fc983 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2636,6 +2636,12 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
+ 		goto clear_bad_out;
+ 
+ 	/*
++	 * record the state of the reflink flag
++	 */
++	if (collect_rmaps)
++		record_inode_reflink_flag(mp, dino, agno, ino, lino);
++
++	/*
+ 	 * check data fork -- if it's bad, clear the inode
+ 	 */
+ 	if (process_inode_data_fork(mp, agno, ino, dino, type, dirty,
+diff --git a/repair/incore.h b/repair/incore.h
+index b6c4b4f..bcd2f4b 100644
+--- a/repair/incore.h
++++ b/repair/incore.h
+@@ -283,6 +283,8 @@ typedef struct ino_tree_node  {
+ 	__uint64_t		ir_sparse;	/* sparse inode bitmask */
+ 	__uint64_t		ino_confirmed;	/* confirmed bitmask */
+ 	__uint64_t		ino_isa_dir;	/* bit == 1 if a directory */
++	__uint64_t		ino_was_rl;	/* bit == 1 if reflink flag set */
++	__uint64_t		ino_is_rl;	/* bit == 1 if reflink flag should be set */
+ 	__uint8_t		nlink_size;
+ 	union ino_nlink		disk_nlinks;	/* on-disk nlinks, set in P3 */
+ 	union  {
+@@ -494,6 +496,42 @@ static inline bool is_inode_sparse(struct ino_tree_node *irec, int offset)
  }
  
- /**
-- * iomap_dax_rw - Perform I/O to a DAX file
-+ * dax_iomap_rw - Perform I/O to a DAX file
-  * @iocb:	The control block for this I/O
-  * @iter:	The addresses to do I/O from or to
-  * @ops:	iomap ops passed from the file system
-@@ -1098,7 +1098,7 @@ iomap_dax_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-  * and evicting any page cache pages in the region under I/O.
-  */
- ssize_t
--iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
-+dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		struct iomap_ops *ops)
- {
- 	struct address_space *mapping = iocb->ki_filp->f_mapping;
-@@ -1128,7 +1128,7 @@ iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
- 
- 	while (iov_iter_count(iter)) {
- 		ret = iomap_apply(inode, pos, iov_iter_count(iter), flags, ops,
--				iter, iomap_dax_actor);
-+				iter, dax_iomap_actor);
- 		if (ret <= 0)
- 			break;
- 		pos += ret;
-@@ -1138,10 +1138,10 @@ iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	iocb->ki_pos += done;
- 	return done ? done : ret;
+ /*
++ * set/clear/test was inode marked as reflinked
++ */
++static inline void set_inode_was_rl(struct ino_tree_node *irec, int offset)
++{
++	irec->ino_was_rl |= IREC_MASK(offset);
++}
++
++static inline void clear_inode_was_rl(struct ino_tree_node *irec, int offset)
++{
++	irec->ino_was_rl &= ~IREC_MASK(offset);
++}
++
++static inline int inode_was_rl(struct ino_tree_node *irec, int offset)
++{
++	return (irec->ino_was_rl & IREC_MASK(offset)) != 0;
++}
++
++/*
++ * set/clear/test should inode be marked as reflinked
++ */
++static inline void set_inode_is_rl(struct ino_tree_node *irec, int offset)
++{
++	irec->ino_is_rl |= IREC_MASK(offset);
++}
++
++static inline void clear_inode_is_rl(struct ino_tree_node *irec, int offset)
++{
++	irec->ino_is_rl &= ~IREC_MASK(offset);
++}
++
++static inline int inode_is_rl(struct ino_tree_node *irec, int offset)
++{
++	return (irec->ino_is_rl & IREC_MASK(offset)) != 0;
++}
++
++/*
+  * add_inode_reached() is set on inode I only if I has been reached
+  * by an inode P claiming to be the parent and if I is a directory,
+  * the .. link in the I says that P is I's parent.
+diff --git a/repair/incore_ino.c b/repair/incore_ino.c
+index 1898257..2ec1765 100644
+--- a/repair/incore_ino.c
++++ b/repair/incore_ino.c
+@@ -257,6 +257,8 @@ alloc_ino_node(
+ 	irec->ino_startnum = starting_ino;
+ 	irec->ino_confirmed = 0;
+ 	irec->ino_isa_dir = 0;
++	irec->ino_was_rl = 0;
++	irec->ino_is_rl = 0;
+ 	irec->ir_free = (xfs_inofree_t) - 1;
+ 	irec->ir_sparse = 0;
+ 	irec->ino_un.ex_data = NULL;
+diff --git a/repair/rmap.c b/repair/rmap.c
+index e95f6c8..5de4d32 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -1083,6 +1083,32 @@ rmap_high_key_from_rec(
  }
--EXPORT_SYMBOL_GPL(iomap_dax_rw);
-+EXPORT_SYMBOL_GPL(dax_iomap_rw);
  
- /**
-- * iomap_dax_fault - handle a page fault on a DAX file
-+ * dax_iomap_fault - handle a page fault on a DAX file
-  * @vma: The virtual memory area where the fault occurred
-  * @vmf: The description of the fault
-  * @ops: iomap ops passed from the file system
-@@ -1150,7 +1150,7 @@ EXPORT_SYMBOL_GPL(iomap_dax_rw);
-  * or mkwrite handler for DAX files. Assumes the caller has done all the
-  * necessary locking for the page fault to proceed successfully.
-  */
--int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
-+int dax_iomap_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 			struct iomap_ops *ops)
- {
- 	struct address_space *mapping = vma->vm_file->f_mapping;
-@@ -1252,5 +1252,5 @@ int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 		return VM_FAULT_SIGBUS | major;
- 	return VM_FAULT_NOPAGE | major;
- }
--EXPORT_SYMBOL_GPL(iomap_dax_fault);
-+EXPORT_SYMBOL_GPL(dax_iomap_fault);
- #endif /* CONFIG_FS_IOMAP */
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index 0f257f8..32a4913 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -38,7 +38,7 @@ static ssize_t ext2_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 		return 0; /* skip atime */
+ /*
++ * Record that an inode had the reflink flag set when repair started.  The
++ * inode reflink flag will be adjusted as necessary.
++ */
++void
++record_inode_reflink_flag(
++	struct xfs_mount	*mp,
++	struct xfs_dinode	*dino,
++	xfs_agnumber_t		agno,
++	xfs_agino_t		ino,
++	xfs_ino_t		lino)
++{
++	struct ino_tree_node	*irec;
++	int			off;
++
++	ASSERT(XFS_AGINO_TO_INO(mp, agno, ino) == be64_to_cpu(dino->di_ino));
++	if (!(be64_to_cpu(dino->di_flags2) & XFS_DIFLAG2_REFLINK))
++		return;
++	irec = find_inode_rec(mp, agno, ino);
++	off = get_inode_offset(mp, lino, irec);
++	ASSERT(!inode_was_rl(irec, off));
++	set_inode_was_rl(irec, off);
++	dbg_printf("set was_rl lino=%llu was=0x%llx\n",
++		(unsigned long long)lino, (unsigned long long)irec->ino_was_rl);
++}
++
++/*
+  * Regenerate the AGFL so that we don't run out of it while rebuilding the
+  * rmap btree.  If skip_rmapbt is true, don't update the rmapbt (most probably
+  * because we're updating the rmapbt).
+diff --git a/repair/rmap.h b/repair/rmap.h
+index 01dec9f..ab6f434 100644
+--- a/repair/rmap.h
++++ b/repair/rmap.h
+@@ -50,6 +50,8 @@ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
+ 		struct xfs_rmap_irec *key);
  
- 	inode_lock_shared(inode);
--	ret = iomap_dax_rw(iocb, to, &ext2_iomap_ops);
-+	ret = dax_iomap_rw(iocb, to, &ext2_iomap_ops);
- 	inode_unlock_shared(inode);
+ extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
++extern void record_inode_reflink_flag(struct xfs_mount *, struct xfs_dinode *,
++	xfs_agnumber_t, xfs_agino_t, xfs_ino_t);
  
- 	file_accessed(iocb->ki_filp);
-@@ -62,7 +62,7 @@ static ssize_t ext2_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	if (ret)
- 		goto out_unlock;
- 
--	ret = iomap_dax_rw(iocb, from, &ext2_iomap_ops);
-+	ret = dax_iomap_rw(iocb, from, &ext2_iomap_ops);
- 	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
- 		i_size_write(inode, iocb->ki_pos);
- 		mark_inode_dirty(inode);
-@@ -99,7 +99,7 @@ static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
- 	}
- 	down_read(&ei->dax_sem);
- 
--	ret = iomap_dax_fault(vma, vmf, &ext2_iomap_ops);
-+	ret = dax_iomap_fault(vma, vmf, &ext2_iomap_ops);
- 
- 	up_read(&ei->dax_sem);
- 	if (vmf->flags & FAULT_FLAG_WRITE)
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index de7c53c..8f12152 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -344,7 +344,7 @@ xfs_file_dax_read(
- 		return 0; /* skip atime */
- 
- 	xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
--	ret = iomap_dax_rw(iocb, to, &xfs_iomap_ops);
-+	ret = dax_iomap_rw(iocb, to, &xfs_iomap_ops);
- 	xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
- 
- 	file_accessed(iocb->ki_filp);
-@@ -730,7 +730,7 @@ xfs_file_dax_write(
- 
- 	trace_xfs_file_dax_write(ip, count, pos);
- 
--	ret = iomap_dax_rw(iocb, from, &xfs_iomap_ops);
-+	ret = dax_iomap_rw(iocb, from, &xfs_iomap_ops);
- 	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
- 		i_size_write(inode, iocb->ki_pos);
- 		error = xfs_setfilesize(ip, pos, ret);
-@@ -1679,7 +1679,7 @@ xfs_filemap_page_mkwrite(
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
- 
- 	if (IS_DAX(inode)) {
--		ret = iomap_dax_fault(vma, vmf, &xfs_iomap_ops);
-+		ret = dax_iomap_fault(vma, vmf, &xfs_iomap_ops);
- 	} else {
- 		ret = iomap_page_mkwrite(vma, vmf, &xfs_iomap_ops);
- 		ret = block_page_mkwrite_return(ret);
-@@ -1713,7 +1713,7 @@ xfs_filemap_fault(
- 		 * changes to xfs_get_blocks_direct() to map unwritten extent
- 		 * ioend for conversion on read-only mappings.
- 		 */
--		ret = iomap_dax_fault(vma, vmf, &xfs_iomap_ops);
-+		ret = dax_iomap_fault(vma, vmf, &xfs_iomap_ops);
- 	} else
- 		ret = filemap_fault(vma, vmf);
- 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 0f74866..a3dfee4 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -11,13 +11,13 @@ struct iomap_ops;
- /* We use lowest available exceptional entry bit for locking */
- #define RADIX_DAX_ENTRY_LOCK (1 << RADIX_TREE_EXCEPTIONAL_SHIFT)
- 
--ssize_t iomap_dax_rw(struct kiocb *iocb, struct iov_iter *iter,
-+ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		struct iomap_ops *ops);
- ssize_t dax_do_io(struct kiocb *, struct inode *, struct iov_iter *,
- 		  get_block_t, dio_iodone_t, int flags);
- int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
- int dax_truncate_page(struct inode *, loff_t from, get_block_t);
--int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
-+int dax_iomap_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 			struct iomap_ops *ops);
- int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
--- 
-2.9.0
+ extern void fix_freelist(struct xfs_mount *, xfs_agnumber_t, bool);
+ extern void rmap_store_agflcount(struct xfs_mount *, xfs_agnumber_t, int);
 
