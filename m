@@ -1,68 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:33829 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753823AbcJLWuk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Oct 2016 18:50:40 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v6 11/17] dax: add dax_iomap_sector() helper function
-Date: Wed, 12 Oct 2016 16:50:16 -0600
-Message-Id: <20161012225022.15507-12-ross.zwisler@linux.intel.com>
-In-Reply-To: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
-References: <20161012225022.15507-1-ross.zwisler@linux.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:45665 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932328AbcJYXDm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:03:42 -0400
+Subject: [PATCH v10 00/39] xfsprogs: add reflink and dedupe support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Oct 2016 16:03:38 -0700
+Message-ID: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-To be able to correctly calculate the sector from a file position and a
-struct iomap there is a complex little bit of logic that currently happens
-in both dax_iomap_actor() and dax_iomap_fault().  This will need to be
-repeated yet again in the DAX PMD fault handler when it is added, so break
-it out into a helper function.
+Hi all,
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+This is the tenth revision of a patchset that adds to XFS userland tool
+support for mapping multiple file logical blocks to the same physical
+block (reflink/deduplication).
 
-diff --git a/fs/dax.c b/fs/dax.c
-index fdbd7a1..7737954 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1030,6 +1030,11 @@ int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
- EXPORT_SYMBOL_GPL(dax_truncate_page);
- 
- #ifdef CONFIG_FS_IOMAP
-+static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
-+{
-+	return iomap->blkno + (((pos & PAGE_MASK) - iomap->offset) >> 9);
-+}
-+
- static loff_t
- dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		struct iomap *iomap)
-@@ -1055,8 +1060,7 @@ dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		struct blk_dax_ctl dax = { 0 };
- 		ssize_t map_len;
- 
--		dax.sector = iomap->blkno +
--			(((pos & PAGE_MASK) - iomap->offset) >> 9);
-+		dax.sector = dax_iomap_sector(iomap, pos);
- 		dax.size = (length + offset + PAGE_SIZE - 1) & PAGE_MASK;
- 		map_len = dax_map_atomic(iomap->bdev, &dax);
- 		if (map_len < 0) {
-@@ -1193,7 +1197,7 @@ int dax_iomap_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 		goto unlock_entry;
- 	}
- 
--	sector = iomap.blkno + (((pos & PAGE_MASK) - iomap.offset) >> 9);
-+	sector = dax_iomap_sector(&iomap, pos);
- 
- 	if (vmf->cow_page) {
- 		switch (iomap.type) {
--- 
-2.9.0
+The core libxfs patches from the kernel have already been imported into
+for-next, so this patch series contains fixes for those patches followed
+by patches for the userspace programs themselves to support reflink.
 
+If you're going to start using this mess, you probably ought to just
+pull from my github trees for xfsprogs[1] and xfstests[2].  Kernel
+support is in 4.9-rc1 or later.
+
+The patches have been xfstested with x64, ppc64, and armhf; all tests
+in the clone and rmap groups pass.  AFAICT they don't cause any new
+failures for the 'auto' group.
+
+This is an extraordinary way to eat your data.  Enjoy! 
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://github.com/djwong/xfsprogs/tree/djwong-devel
+[2] https://github.com/djwong/xfstests/tree/djwong-devel
