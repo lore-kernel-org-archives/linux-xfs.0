@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46198 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:47013 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755720AbcJYXFI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:05:08 -0400
-Subject: [PATCH 14/39] xfs_growfs: report the presence of the reflink feature
+        with ESMTP id S1752173AbcJYXH0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:07:26 -0400
+Subject: [PATCH 35/39] xfs_repair: check the CoW extent size hint
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Oct 2016 16:05:04 -0700
-Message-ID: <147743670475.11035.10889703282416977316.stgit@birch.djwong.org>
+Date: Tue, 25 Oct 2016 16:07:20 -0700
+Message-ID: <147743684072.11035.2798529745917001253.stgit@birch.djwong.org>
 In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,73 +18,83 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Report the presence of the reflink feature in xfs_info.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- growfs/xfs_growfs.c |   12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ repair/dinode.c |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
 
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index 2b46480..a294e14 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -59,12 +59,14 @@ report_info(
- 	int		ftype_enabled,
- 	int		finobt_enabled,
- 	int		spinodes,
--	int		rmapbt_enabled)
-+	int		rmapbt_enabled,
-+	int		reflink_enabled)
- {
- 	printf(_(
- 	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
- 	    "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
- 	    "         =%-22s crc=%-8u finobt=%u spinodes=%u rmapbt=%u\n"
-+	    "         =%-22s reflink=%u\n"
- 	    "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
- 	    "         =%-22s sunit=%-6u swidth=%u blks\n"
- 	    "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
-@@ -75,6 +77,7 @@ report_info(
- 		mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
- 		"", geo.sectsize, attrversion, projid32bit,
- 		"", crcs_enabled, finobt_enabled, spinodes, rmapbt_enabled,
-+		"", reflink_enabled,
- 		"", geo.blocksize, (unsigned long long)geo.datablocks,
- 			geo.imaxpct,
- 		"", geo.sunit, geo.swidth,
-@@ -129,6 +132,7 @@ main(int argc, char **argv)
- 	int			finobt_enabled;	/* free inode btree */
- 	int			spinodes;
- 	int			rmapbt_enabled;
-+	int			reflink_enabled;
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 64fc983..11b60ce 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2531,6 +2531,38 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 			goto clear_bad_out;
+ 		}
  
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
-@@ -253,12 +257,13 @@ main(int argc, char **argv)
- 	finobt_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FINOBT ? 1 : 0;
- 	spinodes = geo.flags & XFS_FSOP_GEOM_FLAGS_SPINODES ? 1 : 0;
- 	rmapbt_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_RMAPBT ? 1 : 0;
-+	reflink_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_REFLINK ? 1 : 0;
- 	if (nflag) {
- 		report_info(geo, datadev, isint, logdev, rtdev,
- 				lazycount, dirversion, logversion,
- 				attrversion, projid32bit, crcs_enabled, ci,
- 				ftype_enabled, finobt_enabled, spinodes,
--				rmapbt_enabled);
-+				rmapbt_enabled, reflink_enabled);
- 		exit(0);
++		if ((flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
++		    !xfs_sb_version_hasreflink(&mp->m_sb)) {
++			if (!uncertain) {
++				do_warn(
++	_("inode %" PRIu64 " has CoW extent size hint but file system does not support reflink\n"),
++					lino);
++			}
++			flags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
++		}
++
++		if (flags2 & XFS_DIFLAG2_COWEXTSIZE) {
++			/* must be a directory or file */
++			if (di_mode && !S_ISDIR(di_mode) && !S_ISREG(di_mode)) {
++				if (!uncertain) {
++					do_warn(
++	_("CoW extent size flag set on non-file, non-directory inode %" PRIu64 "\n" ),
++						lino);
++				}
++				flags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
++			}
++		}
++
++		if ((flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
++		    (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT))) {
++			if (!uncertain) {
++				do_warn(
++	_("Cannot have CoW extent size hint on a realtime inode %" PRIu64 "\n"),
++					lino);
++			}
++			flags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
++		}
++
+ 		if (!verify_mode && flags2 != be64_to_cpu(dino->di_flags2)) {
+ 			if (!no_modify) {
+ 				do_warn(_("fixing bad flags2.\n"));
+@@ -2624,6 +2656,29 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
  	}
  
-@@ -296,7 +301,8 @@ main(int argc, char **argv)
- 	report_info(geo, datadev, isint, logdev, rtdev,
- 			lazycount, dirversion, logversion,
- 			attrversion, projid32bit, crcs_enabled, ci, ftype_enabled,
--			finobt_enabled, spinodes, rmapbt_enabled);
-+			finobt_enabled, spinodes, rmapbt_enabled,
-+			reflink_enabled);
- 
- 	ddsize = xi.dsize;
- 	dlsize = ( xi.logBBsize? xi.logBBsize :
+ 	/*
++	 * Only (regular files and directories) with COWEXTSIZE flags
++	 * set can have extsize set.
++	 */
++	if (dino->di_version >= 3 &&
++	    be32_to_cpu(dino->di_cowextsize) != 0) {
++		if ((type == XR_INO_DIR || type == XR_INO_DATA) &&
++		    (be64_to_cpu(dino->di_flags2) &
++					XFS_DIFLAG2_COWEXTSIZE)) {
++			/* s'okay */ ;
++		} else {
++			do_warn(
++_("Cannot have non-zero CoW extent size %u on non-cowextsize inode %" PRIu64 ", "),
++					be32_to_cpu(dino->di_cowextsize), lino);
++			if (!no_modify)  {
++				do_warn(_("resetting to zero\n"));
++				dino->di_cowextsize = 0;
++				*dirty = 1;
++			} else
++				do_warn(_("would reset to zero\n"));
++		}
++	}
++
++	/*
+ 	 * general size/consistency checks:
+ 	 */
+ 	if (process_check_inode_sizes(mp, dino, lino, type) != 0)
 
