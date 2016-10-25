@@ -1,39 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:38513 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752089AbcJXDyn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Oct 2016 23:54:43 -0400
-Date: Mon, 24 Oct 2016 14:54:34 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: defer should abort intent items if the trans roll
- fails
-Message-ID: <20161024035434.GY14023@dastard>
-References: <20161022021337.GC5256@birch.djwong.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46761 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932449AbcJYXGC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:06:02 -0400
+Subject: [PATCH 22/39] xfs_logprint: support cowextsize reporting in log
+ contents
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Oct 2016 16:05:55 -0700
+Message-ID: <147743675595.11035.1787107506258436197.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161022021337.GC5256@birch.djwong.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Oct 21, 2016 at 07:13:37PM -0700, Darrick J. Wong wrote:
-> If the deferred ops transaction roll fails, we need to abort the intent
-> items if we haven't already logged a done item for it, regardless of
-> whether or not the deferred ops has had a transaction committed.  Dave
-> found this while running generic/388.
-> 
-> Move the tracepoint to make it easier to track object lifetimes.
-> 
-> Reported-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ logprint/log_misc.c      |    4 ++++
+ logprint/log_print_all.c |    4 ++++
+ 2 files changed, 8 insertions(+)
 
-Looks good and fixes the hang here.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index e4af09b..dbe5729 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -467,6 +467,10 @@ xlog_print_trans_inode_core(
+ 	   ip->di_dmstate);
+     printf(_("flags 0x%x gen 0x%x\n"),
+ 	   ip->di_flags, ip->di_gen);
++    if (ip->di_version == 3) {
++        printf(_("flags2 0x%llx cowextsize 0x%x\n"),
++            (unsigned long long)ip->di_flags2, ip->di_cowextsize);
++    }
+ }
+ 
+ void
+diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
+index 0fe354b..46952c4 100644
+--- a/logprint/log_print_all.c
++++ b/logprint/log_print_all.c
+@@ -272,6 +272,10 @@ xlog_recover_print_inode_core(
+ 	     "gen:%d\n"),
+ 	       (int)di->di_forkoff, di->di_dmevmask, (int)di->di_dmstate,
+ 	       (int)di->di_flags, di->di_gen);
++	if (di->di_version == 3) {
++		printf(_("flags2 0x%llx cowextsize 0x%x\n"),
++			(unsigned long long)di->di_flags2, di->di_cowextsize);
++	}
+ }
+ 
+ STATIC void
+
