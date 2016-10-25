@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46546 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:46112 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932449AbcJYXFW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:05:22 -0400
-Subject: [PATCH 16/39] libxfs: add configure option to override system
- header fsxattr
+        with ESMTP id S1754120AbcJYXEF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:04:05 -0400
+Subject: [PATCH 03/39] xfs: define the on-disk refcount btree format
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Oct 2016 16:05:17 -0700
-Message-ID: <147743671705.11035.1549555844450499931.stgit@birch.djwong.org>
+Date: Tue, 25 Oct 2016 16:03:56 -0700
+Message-ID: <147743663655.11035.6044942751505512619.stgit@birch.djwong.org>
 In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -17,110 +16,64 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-By default, libxfs will use the kernel/system headers to define struct
-fsxattr.  Unfortunately, this creates a problem for developers who are
-writing new features but building xfsprogs on a stable system, because
-the stable kernel's headers don't reflect the new feature.  In this
-case, we want to be able to use the internal fsxattr definition while
-the kernel headers catch up, so provide some configure magic to allow
-developers to force the use of the internal definition.
+Start constructing the refcount btree implementation by establishing
+the on-disk format and everything needed to read, write, and
+manipulate the refcount btree blocks.
+
+[Initialize the in-core mount context.]
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[hch: allocate the cursor with KM_NOFS to quiet lockdep]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- configure.ac         |    5 +++++
- include/builddefs.in |    4 ++++
- include/linux.h      |   10 +++++++++-
- io/fiemap.c          |    1 -
- 4 files changed, 18 insertions(+), 2 deletions(-)
+v2: Calculate a separate maxlevels for the refcount btree.
+
+v3: Enable the tracking of per-cursor stats for refcount btrees.
+The refcount update code will use this to guess if it's time to
+split a refcountbt update across two transactions to avoid
+exhausing the transaction reservation.
+
+xfs_refcountbt_init_cursor can be called under the ilock, so
+use KM_NOFS to prevent fs activity with a lock held.  This
+should shut up some of the lockdep warnings.
+---
+ include/libxfs.h |    1 +
+ libxfs/init.c    |    2 ++
+ 2 files changed, 3 insertions(+)
 
 
-diff --git a/configure.ac b/configure.ac
-index 50e04df..8a39e75 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -61,6 +61,11 @@ AC_ARG_ENABLE(librt,
- 	enable_librt=yes)
- AC_SUBST(enable_librt)
+diff --git a/include/libxfs.h b/include/libxfs.h
+index cf59d6c..ec8f6ab 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -79,6 +79,7 @@ extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
+ #include "xfs_trans.h"
+ #include "xfs_rmap_btree.h"
+ #include "xfs_rmap.h"
++#include "xfs_refcount_btree.h"
  
-+AC_ARG_ENABLE(internal-fsxattr,
-+[ --enable-internal-fsxattr=[yes/no] Override system definition of struct fsxattr [default=no]],,
-+	enable_internal_fsxattr=no)
-+AC_SUBST(enable_internal_fsxattr)
-+
- #
- # If the user specified a libdir ending in lib64 do not append another
- # 64 to the library names.
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 7153d7a..fd7eb74 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -109,6 +109,7 @@ HAVE_MNTENT = @have_mntent@
- HAVE_FLS = @have_fls@
- HAVE_FSETXATTR = @have_fsetxattr@
- HAVE_MREMAP = @have_mremap@
-+ENABLE_INTERNAL_FSXATTR = @enable_internal_fsxattr@
+ #ifndef ARRAY_SIZE
+ #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 828ae3e..c962d3e 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -32,6 +32,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_trans.h"
+ #include "xfs_rmap_btree.h"
++#include "xfs_refcount_btree.h"
  
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-@@ -148,6 +149,9 @@ endif
- ifeq ($(ENABLE_BLKID),yes)
- PCFLAGS+= -DENABLE_BLKID
- endif
-+ifeq ($(ENABLE_INTERNAL_FSXATTR),yes)
-+PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
-+endif
+ #include "libxfs.h"		/* for now */
  
+@@ -689,6 +690,7 @@ libxfs_mount(
+ 	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
+ 	xfs_ialloc_compute_maxlevels(mp);
+ 	xfs_rmapbt_compute_maxlevels(mp);
++	xfs_refcountbt_compute_maxlevels(mp);
  
- GCFLAGS = $(OPTIMIZER) $(DEBUG) \
-diff --git a/include/linux.h b/include/linux.h
-index ddc053e..e26388b 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -32,7 +32,13 @@
- #include <stdio.h>
- #include <asm/types.h>
- #include <mntent.h>
-+#ifdef OVERRIDE_SYSTEM_FSXATTR
-+# define fsxattr sys_fsxattr
-+#endif
- #include <linux/fs.h> /* fsxattr defintion for new kernels */
-+#ifdef OVERRIDE_SYSTEM_FSXATTR
-+# undef fsxattr
-+#endif
- 
- static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
- {
-@@ -175,7 +181,7 @@ static inline void platform_mntent_close(struct mntent_cursor * cursor)
-  * are a copy of the definitions moved to linux/uapi/fs.h in the 4.5 kernel,
-  * so this is purely for supporting builds against old kernel headers.
-  */
--#ifndef FS_IOC_FSGETXATTR
-+#if !defined FS_IOC_FSGETXATTR || defined OVERRIDE_SYSTEM_FSXATTR
- struct fsxattr {
- 	__u32		fsx_xflags;	/* xflags field value (get/set) */
- 	__u32		fsx_extsize;	/* extsize field value (get/set)*/
-@@ -184,7 +190,9 @@ struct fsxattr {
- 	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
- 	unsigned char	fsx_pad[8];
- };
-+#endif
- 
-+#ifndef FS_IOC_FSGETXATTR
- /*
-  * Flags for the fsx_xflags field
-  */
-diff --git a/io/fiemap.c b/io/fiemap.c
-index f89da06..bcbae49 100644
---- a/io/fiemap.c
-+++ b/io/fiemap.c
-@@ -19,7 +19,6 @@
- #include "platform_defs.h"
- #include "command.h"
- #include <linux/fiemap.h>
--#include <linux/fs.h>
- #include "init.h"
- #include "io.h"
- 
+ 	if (sbp->sb_imax_pct) {
+ 		/* Make sure the maximum inode count is a multiple of the
 
