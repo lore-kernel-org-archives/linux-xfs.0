@@ -1,61 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42810 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753560AbcJKSnj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Oct 2016 14:43:39 -0400
-Date: Tue, 11 Oct 2016 09:04:09 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v5 09/17] dax: coordinate locking for offsets in PMD range
-Message-ID: <20161011070409.GC6952@quack2.suse.cz>
-References: <1475874544-24842-1-git-send-email-ross.zwisler@linux.intel.com>
- <1475874544-24842-10-git-send-email-ross.zwisler@linux.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46546 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932449AbcJYXFW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:05:22 -0400
+Subject: [PATCH 16/39] libxfs: add configure option to override system
+ header fsxattr
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Oct 2016 16:05:17 -0700
+Message-ID: <147743671705.11035.1549555844450499931.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1475874544-24842-10-git-send-email-ross.zwisler@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Fri 07-10-16 15:08:56, Ross Zwisler wrote:
-> DAX radix tree locking currently locks entries based on the unique
-> combination of the 'mapping' pointer and the pgoff_t 'index' for the entry.
-> This works for PTEs, but as we move to PMDs we will need to have all the
-> offsets within the range covered by the PMD to map to the same bit lock.
-> To accomplish this, for ranges covered by a PMD entry we will instead lock
-> based on the page offset of the beginning of the PMD entry.  The 'mapping'
-> pointer is still used in the same way.
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+By default, libxfs will use the kernel/system headers to define struct
+fsxattr.  Unfortunately, this creates a problem for developers who are
+writing new features but building xfsprogs on a stable system, because
+the stable kernel's headers don't reflect the new feature.  In this
+case, we want to be able to use the internal fsxattr definition while
+the kernel headers catch up, so provide some configure magic to allow
+developers to force the use of the internal definition.
 
-The patch looks good to me. You can add:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ configure.ac         |    5 +++++
+ include/builddefs.in |    4 ++++
+ include/linux.h      |   10 +++++++++-
+ io/fiemap.c          |    1 -
+ 4 files changed, 18 insertions(+), 2 deletions(-)
 
-Reviewed-by: Jan Kara <jack@suse.cz>
 
-Just one thing which IMO deserves a comment below:
+diff --git a/configure.ac b/configure.ac
+index 50e04df..8a39e75 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -61,6 +61,11 @@ AC_ARG_ENABLE(librt,
+ 	enable_librt=yes)
+ AC_SUBST(enable_librt)
+ 
++AC_ARG_ENABLE(internal-fsxattr,
++[ --enable-internal-fsxattr=[yes/no] Override system definition of struct fsxattr [default=no]],,
++	enable_internal_fsxattr=no)
++AC_SUBST(enable_internal_fsxattr)
++
+ #
+ # If the user specified a libdir ending in lib64 do not append another
+ # 64 to the library names.
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 7153d7a..fd7eb74 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -109,6 +109,7 @@ HAVE_MNTENT = @have_mntent@
+ HAVE_FLS = @have_fls@
+ HAVE_FSETXATTR = @have_fsetxattr@
+ HAVE_MREMAP = @have_mremap@
++ENABLE_INTERNAL_FSXATTR = @enable_internal_fsxattr@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+@@ -148,6 +149,9 @@ endif
+ ifeq ($(ENABLE_BLKID),yes)
+ PCFLAGS+= -DENABLE_BLKID
+ endif
++ifeq ($(ENABLE_INTERNAL_FSXATTR),yes)
++PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
++endif
+ 
+ 
+ GCFLAGS = $(OPTIMIZER) $(DEBUG) \
+diff --git a/include/linux.h b/include/linux.h
+index ddc053e..e26388b 100644
+--- a/include/linux.h
++++ b/include/linux.h
+@@ -32,7 +32,13 @@
+ #include <stdio.h>
+ #include <asm/types.h>
+ #include <mntent.h>
++#ifdef OVERRIDE_SYSTEM_FSXATTR
++# define fsxattr sys_fsxattr
++#endif
+ #include <linux/fs.h> /* fsxattr defintion for new kernels */
++#ifdef OVERRIDE_SYSTEM_FSXATTR
++# undef fsxattr
++#endif
+ 
+ static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
+ {
+@@ -175,7 +181,7 @@ static inline void platform_mntent_close(struct mntent_cursor * cursor)
+  * are a copy of the definitions moved to linux/uapi/fs.h in the 4.5 kernel,
+  * so this is purely for supporting builds against old kernel headers.
+  */
+-#ifndef FS_IOC_FSGETXATTR
++#if !defined FS_IOC_FSGETXATTR || defined OVERRIDE_SYSTEM_FSXATTR
+ struct fsxattr {
+ 	__u32		fsx_xflags;	/* xflags field value (get/set) */
+ 	__u32		fsx_extsize;	/* extsize field value (get/set)*/
+@@ -184,7 +190,9 @@ struct fsxattr {
+ 	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
+ 	unsigned char	fsx_pad[8];
+ };
++#endif
+ 
++#ifndef FS_IOC_FSGETXATTR
+ /*
+  * Flags for the fsx_xflags field
+  */
+diff --git a/io/fiemap.c b/io/fiemap.c
+index f89da06..bcbae49 100644
+--- a/io/fiemap.c
++++ b/io/fiemap.c
+@@ -19,7 +19,6 @@
+ #include "platform_defs.h"
+ #include "command.h"
+ #include <linux/fiemap.h>
+-#include <linux/fs.h>
+ #include "init.h"
+ #include "io.h"
+ 
 
-> @@ -448,9 +460,12 @@ restart:
->  }
->  
->  void dax_wake_mapping_entry_waiter(struct address_space *mapping,
-> -				   pgoff_t index, bool wake_all)
-> +		pgoff_t index, void *entry, bool wake_all)
->  {
-> -	wait_queue_head_t *wq = dax_entry_waitqueue(mapping, index);
-> +	struct exceptional_entry_key key;
-> +	wait_queue_head_t *wq;
-> +
-> +	wq = dax_entry_waitqueue(mapping, index, entry, &key);
-
-So I believe we should comment above this function that the 'entry' it gets
-may be invalid by the time it gets it (we call it without tree_lock held so
-the passed entry may be changed in the radix tree as we work) but we use it
-only to find appropriate waitqueue where tasks sleep waiting for that old
-entry to unlock so we indeed wake up all tasks we need.
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
