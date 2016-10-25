@@ -1,63 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ns.lynxeye.de ([87.118.118.114]:53236 "EHLO lynxeye.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S936532AbcJVSBx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 22 Oct 2016 14:01:53 -0400
-Message-ID: <1477159309.2070.14.camel@lynxeye.de>
-Subject: Re: [PATCH 1/2] xfs: use rhashtable to track buffer cache
-From: Lucas Stach <dev@lynxeye.de>
-Date: Sat, 22 Oct 2016 20:01:49 +0200
-In-Reply-To: <20161018221849.GD23194@dastard>
-References: <1476821653-2595-1-git-send-email-dev@lynxeye.de>
-         <1476821653-2595-2-git-send-email-dev@lynxeye.de>
-         <20161018221849.GD23194@dastard>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: from aserp1040.oracle.com ([141.146.126.69]:46682 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751790AbcJYXFr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:05:47 -0400
+Subject: [PATCH 20/39] xfs_io: provide long-format help for falloc
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Oct 2016 16:05:43 -0700
+Message-ID: <147743674377.11035.8133878879225366578.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Am Mittwoch, den 19.10.2016, 09:18 +1100 schrieb Dave Chinner:
-> On Tue, Oct 18, 2016 at 10:14:12PM +0200, Lucas Stach wrote:
-> > 
+Provide long-format help for falloc so that xfstests can use
+_require_xfs_io_command to check for falloc command line args.
 
-[ Snipped lots of comments that are all valid and will be taken care of
-in V2]
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ io/prealloc.c |   21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-> > +static const struct rhashtable_params xfs_buf_hash_params = {
-> > +	.min_size = 4096,
-> > +	.nelem_hint = 3072,
-> 
-> What does this hint do?
-> 
-It's the initial sizing of the hash. The shrinker will not resize the
-hash below min_size, but if the nelem_hint isn't given that hash will
-start out really small. Maybe that's just the behavior we want, will
-have to rethink this.
 
-> > 
-> > +	.key_len = sizeof(xfs_daddr_t),
-> > +	.key_offset = offsetof(struct xfs_buf, b_bn),
-> > +	.head_offset = offsetof(struct xfs_buf, b_rhash_head),
-> > +	.automatic_shrinking = true,
-> 
-> Hmmm - so memory pressure is going to cause this hash to be resized
-> as the shrinker frees buffers. That, in turn, will cause the
-> rhashtable code to run GFP_KERNEL allocations, which could result in
-> it re-entering the shrinker and trying to free buffers which will
-> modify the hash table.
-> 
-> That doesn't seem like a smart thing to do to me - it seems to me
-> like it introduces a whole new avenue for memory reclaim deadlocks
-> (or, at minimum, lockdep false positives) to occur....
-> 
-Shrinking of the hash table is done in a worker, so I don't see the
-direct chain you are describing above.
+diff --git a/io/prealloc.c b/io/prealloc.c
+index 713ea7b..7f5c200 100644
+--- a/io/prealloc.c
++++ b/io/prealloc.c
+@@ -164,6 +164,26 @@ zero_f(
+ 
+ 
+ #if defined (HAVE_FALLOCATE)
++static void
++falloc_help(void)
++{
++	printf(_(
++"\n"
++" modifies space associated with part of a file via fallocate"
++"\n"
++" Example:\n"
++" 'falloc 0 1m' - fills all holes within the first megabyte\n"
++"\n"
++" falloc uses the fallocate system call to alter space allocations in the\n"
++" open file.  The following operations are supported:\n"
++" All the file offsets are in units of bytes.\n"
++" -c -- collapses the given range.\n"
++" -i -- inserts a hole into the given range of the file.\n"
++" -k -- do not change file size.\n"
++" -p -- unmap the given range from the file.\n"
++"\n"));
++}
++
+ static int
+ fallocate_f(
+ 	int		argc,
+@@ -349,6 +369,7 @@ prealloc_init(void)
+ 	falloc_cmd.args = _("[-c] [-k] [-p] off len");
+ 	falloc_cmd.oneline =
+ 	_("allocates space associated with part of a file via fallocate");
++	falloc_cmd.help = falloc_help;
+ 	add_command(&falloc_cmd);
+ 
+ 	fpunch_cmd.name = "fpunch";
 
-[more valid remarks snipped]
-
-Regards,
-Lucas
