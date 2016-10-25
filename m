@@ -1,97 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50874 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757703AbcJZBQM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 21:16:12 -0400
-Date: Tue, 25 Oct 2016 18:16:05 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:46575 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932449AbcJYXGR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:06:17 -0400
+Subject: [PATCH 25/39] man: document the inode cowextsize flags & fields
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 16/39] libxfs: add configure option to override system
- header fsxattr
-Message-ID: <20161026011605.GE23568@birch.djwong.org>
+Date: Tue, 25 Oct 2016 16:06:14 -0700
+Message-ID: <147743677455.11035.16363741138480682509.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
- <147743671705.11035.1549555844450499931.stgit@birch.djwong.org>
- <20161026005606.GF23194@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161026005606.GF23194@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Oct 26, 2016 at 11:56:07AM +1100, Dave Chinner wrote:
-> On Tue, Oct 25, 2016 at 04:05:17PM -0700, Darrick J. Wong wrote:
-> > By default, libxfs will use the kernel/system headers to define struct
-> > fsxattr.  Unfortunately, this creates a problem for developers who are
-> > writing new features but building xfsprogs on a stable system, because
-> > the stable kernel's headers don't reflect the new feature.  In this
-> > case, we want to be able to use the internal fsxattr definition while
-> > the kernel headers catch up, so provide some configure magic to allow
-> > developers to force the use of the internal definition.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ....
-> >  #include <stdio.h>
-> >  #include <asm/types.h>
-> >  #include <mntent.h>
-> > +#ifdef OVERRIDE_SYSTEM_FSXATTR
-> > +# define fsxattr sys_fsxattr
-> > +#endif
-> >  #include <linux/fs.h> /* fsxattr defintion for new kernels */
-> > +#ifdef OVERRIDE_SYSTEM_FSXATTR
-> > +# undef fsxattr
-> > +#endif
-> 
-> messy, but I can't think of a cleaner way of doing this.
-> >  
-> >  static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
-> >  {
-> > @@ -175,7 +181,7 @@ static inline void platform_mntent_close(struct mntent_cursor * cursor)
-> >   * are a copy of the definitions moved to linux/uapi/fs.h in the 4.5 kernel,
-> >   * so this is purely for supporting builds against old kernel headers.
-> >   */
-> > -#ifndef FS_IOC_FSGETXATTR
-> > +#if !defined FS_IOC_FSGETXATTR || defined OVERRIDE_SYSTEM_FSXATTR
-> >  struct fsxattr {
-> >  	__u32		fsx_xflags;	/* xflags field value (get/set) */
-> >  	__u32		fsx_extsize;	/* extsize field value (get/set)*/
-> > @@ -184,7 +190,9 @@ struct fsxattr {
-> >  	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
-> >  	unsigned char	fsx_pad[8];
-> >  };
-> > +#endif
-> >  
-> > +#ifndef FS_IOC_FSGETXATTR
-> >  /*
-> >   * Flags for the fsx_xflags field
-> >   */
-> 
-> Hmmm - what happens if all we are doing is introducing new flags?
-> Doesn't the overide need to cover them as well?
+Document the new copy-on-write extent size fields and inode flags
+available in struct fsxattr.
 
-As I did in the next patch, my intent is for the include/ header files to
-define any flag that isn't picked up by the system headers.  IOWs, the
-OVERRIDE_SYSTEM_FSXATTR only helps us pick up changes to the struct
-fsxattr definition.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ man/man3/xfsctl.3 |   28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
 
-#ifndef FS_XFLAG_MOOCOW
-# define FS_XFLAG_MOOCOW   0xBEEF
-#endif
 
-(Inelegant, but oh well.)
+diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
+index 9e7f138..6e5027c 100644
+--- a/man/man3/xfsctl.3
++++ b/man/man3/xfsctl.3
+@@ -150,6 +150,15 @@ value returned indicates that a preferred extent size was previously
+ set on the file, a
+ .B fsx_extsize
+ of zero indicates that the defaults for that filesystem will be used.
++A
++.B fsx_cowextsize
++value returned indicates that a preferred copy on write extent size was
++previously set on the file, whereas a
++.B fsx_cowextsize
++of zero indicates that the defaults for that filesystem will be used.
++The current default for
++.B fsx_cowextsize
++is 128 blocks.
+ Currently the meaningful bits for the
+ .B fsx_xflags
+ field are:
+@@ -229,6 +238,19 @@ created and written into the directory.
+ If the filesystem lives on directly accessible persistent memory, reads and
+ writes to this file will go straight to the persistent memory, bypassing the
+ page cache.
++A file cannot be reflinked and have the
++.BR XFS_XFLAG_DAX
++set at the same time.
++That is to say that DAX files cannot share blocks.
++.TP
++.SM "Bit 16 (0x10000) \- XFS_XFLAG_COWEXTSIZE"
++Copy on Write Extent size bit - if a CoW extent size value is set on the file,
++the allocator will allocate extents for staging a copy on write operation
++in multiples of the set size for this file (see
++.B XFS_IOC_FSSETXATTR
++below).
++If the CoW extent size is set on a directory, then new file and directories
++created in the directory will inherit the parent's CoW extent size value.
+ .TP
+ .SM "Bit 31 (0x80000000) \- XFS_XFLAG_HASATTR"
+ The file has extended attributes associated with it.
+@@ -251,7 +273,8 @@ The final argument points to a variable of type
+ .BR "struct fsxattr" ,
+ but only the following fields are used in this call:
+ .BR fsx_xflags ,
+-.B fsx_extsize
++.BR fsx_extsize ,
++.BR fsx_cowextsize ,
+ and
+ .BR fsx_projid .
+ The
+@@ -261,6 +284,9 @@ when the file is empty, except in the case of a directory where
+ the extent size can be set at any time (this value is only used
+ for regular file allocations, so should only be set on a directory
+ in conjunction with the XFS_XFLAG_EXTSZINHERIT flag).
++The copy on write extent size,
++.BR fsx_cowextsize ,
++can be set at any time.
+ 
+ .TP
+ .B XFS_IOC_GETBMAP
 
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
