@@ -1,59 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:53850 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758890AbcJQWT5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 17 Oct 2016 18:19:57 -0400
-Subject: Re: [PATCH] xfsprogs: Update FSF address in COPYING file
-References: <CAFLt3pjDj0m0u5vdjfBXM+AXU+41FDPrcV8Nm7426A4PURPmaQ@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <0e17e597-55f9-6661-8db6-95b0969c7772@sandeen.net>
-Date: Mon, 17 Oct 2016 17:19:51 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:46062 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755795AbcJYXEv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:04:51 -0400
+Subject: [PATCH 11/39] xfs_db: metadump should copy the refcount btree too
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Oct 2016 16:04:46 -0700
+Message-ID: <147743668609.11035.16781673871765061912.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <CAFLt3pjDj0m0u5vdjfBXM+AXU+41FDPrcV8Nm7426A4PURPmaQ@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Grozdan <neutrino8@gmail.com>, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On 10/17/16 5:13 PM, Grozdan wrote:
-> The FSF address in doc/COPYING needs an update. This was caught and
-> reported by the openSUSE build service while building the xfsprogs
-> package. The new address is taken directly from FSF's license files
-> put on their site
-> 
-> Signed-off-by: Grozdan Nikolov <neutrino8@gmail.com>
+Teach metadump to copy the refcount btree.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/metadump.c |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
 
-> 
-> -- Yours truly
-> 
-> 
-> COPYING.diff
-> 
-> 
-> --- xfsprogs-4.7.0/doc/COPYING	2009-12-30 23:30:13.000000000 +0100
-> +++ xfsprogs-4.7.0.new/doc/COPYING	2016-10-17 23:46:05.280631426 +0200
-> @@ -11,7 +11,7 @@
->  		       Version 2.1, February 1999
->  
->   Copyright (C) 1991, 1999 Free Software Foundation, Inc.
-> -     59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-> + 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
->   Everyone is permitted to copy and distribute verbatim copies
->   of this license document, but changing it is not allowed.
->  
-> @@ -518,8 +518,8 @@
->  		    GNU GENERAL PUBLIC LICENSE
->  		       Version 2, June 1991
->  
-> - Copyright (C) 1989, 1991 Free Software Foundation, Inc.
-> -                       59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-> + Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
-> + 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
->   Everyone is permitted to copy and distribute verbatim copies
->   of this license document, but changing it is not allowed.
->  
-> 
+
+diff --git a/db/metadump.c b/db/metadump.c
+index c769958..1ba6b38 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -615,6 +615,78 @@ copy_rmap_btree(
+ 	return scan_btree(agno, root, levels, TYP_RMAPBT, agf, scanfunc_rmapbt);
+ }
+ 
++static int
++scanfunc_refcntbt(
++	struct xfs_btree_block	*block,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		agbno,
++	int			level,
++	typnm_t			btype,
++	void			*arg)
++{
++	xfs_refcount_ptr_t	*pp;
++	int			i;
++	int			numrecs;
++
++	if (level == 0)
++		return 1;
++
++	numrecs = be16_to_cpu(block->bb_numrecs);
++	if (numrecs > mp->m_refc_mxr[1]) {
++		if (show_warnings)
++			print_warning("invalid numrecs (%u) in %s block %u/%u",
++				numrecs, typtab[btype].name, agno, agbno);
++		return 1;
++	}
++
++	pp = XFS_REFCOUNT_PTR_ADDR(block, 1, mp->m_refc_mxr[1]);
++	for (i = 0; i < numrecs; i++) {
++		if (!valid_bno(agno, be32_to_cpu(pp[i]))) {
++			if (show_warnings)
++				print_warning("invalid block number (%u/%u) "
++					"in %s block %u/%u",
++					agno, be32_to_cpu(pp[i]),
++					typtab[btype].name, agno, agbno);
++			continue;
++		}
++		if (!scan_btree(agno, be32_to_cpu(pp[i]), level, btype, arg,
++				scanfunc_refcntbt))
++			return 0;
++	}
++	return 1;
++}
++
++static int
++copy_refcount_btree(
++	xfs_agnumber_t	agno,
++	struct xfs_agf	*agf)
++{
++	xfs_agblock_t	root;
++	int		levels;
++
++	if (!xfs_sb_version_hasreflink(&mp->m_sb))
++		return 1;
++
++	root = be32_to_cpu(agf->agf_refcount_root);
++	levels = be32_to_cpu(agf->agf_refcount_level);
++
++	/* validate root and levels before processing the tree */
++	if (root == 0 || root > mp->m_sb.sb_agblocks) {
++		if (show_warnings)
++			print_warning("invalid block number (%u) in refcntbt "
++					"root in agf %u", root, agno);
++		return 1;
++	}
++	if (levels >= XFS_BTREE_MAXLEVELS) {
++		if (show_warnings)
++			print_warning("invalid level (%u) in refcntbt root "
++					"in agf %u", levels, agno);
++		return 1;
++	}
++
++	return scan_btree(agno, root, levels, TYP_REFCBT, agf, scanfunc_refcntbt);
++}
++
+ /* filename and extended attribute obfuscation routines */
+ 
+ struct name_ent {
+@@ -2525,6 +2597,8 @@ scan_ag(
+ 			goto pop_out;
+ 		if (!copy_rmap_btree(agno, agf))
+ 			goto pop_out;
++		if (!copy_refcount_btree(agno, agf))
++			goto pop_out;
+ 	}
+ 
+ 	/* copy inode btrees and the inodes and their associated metadata */
+
