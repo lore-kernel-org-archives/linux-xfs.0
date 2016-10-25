@@ -1,82 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52740 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934489AbcJQWHO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 17 Oct 2016 18:07:14 -0400
-Subject: Re: [xfsprogs] Update FSF address in COPYING file
-References: <CAFLt3ph9uHQxNQxY3WVm020MZdgv1EjCoZ-NvyRFGW8-2R1bEw@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6b23d905-5c60-02e0-47c8-c2b6fe4d7ad6@sandeen.net>
-Date: Mon, 17 Oct 2016 17:07:12 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:45914 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754120AbcJYXEZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:04:25 -0400
+Subject: [PATCH 07/39] xfs: introduce the CoW fork
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Oct 2016 16:04:21 -0700
+Message-ID: <147743666109.11035.5850104676966406279.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <CAFLt3ph9uHQxNQxY3WVm020MZdgv1EjCoZ-NvyRFGW8-2R1bEw@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Grozdan <neutrino8@gmail.com>, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-This should have a Signed-off-by: line, please.
+Introduce a new in-core fork for storing copy-on-write delalloc
+reservations and allocated extents that are in the process of being
+written out.
 
-But I thought best practice was now to leave the address out entirely,
-because it may change again?
+[Clean up the CoW fork, should there ever be one.]
 
-At least GPL V3 leaves it out entirely:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: fix up bmapi_read so that we can query the CoW fork, and have it
+return a "hole" extent if there's no CoW fork.
+---
+ libxfs/rdwr.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-https://www.gnu.org/licenses/gpl.txt says:
 
->                     GNU GENERAL PUBLIC LICENSE
->                        Version 3, 29 June 2007
-> 
->  Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
->  Everyone is permitted to copy and distribute verbatim copies
->  of this license document, but changing it is not allowed.
-> 
->                             Preamble
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 526bc62..8b22eb4 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1372,6 +1372,8 @@ libxfs_idestroy(xfs_inode_t *ip)
+ 	}
+ 	if (ip->i_afp)
+ 		libxfs_idestroy_fork(ip, XFS_ATTR_FORK);
++	if (ip->i_cowfp)
++		xfs_idestroy_fork(ip, XFS_COW_FORK);
+ }
+ 
+ void
 
-...
-
-Doesn't matter much to me, I guess.
-
-Still, best practice is to send a patch with [PATCH] in the subject, i.e.:
-
-[PATCH] xfsprogs: Update FSF address in COPYING file
-
-a brief explanation of the change (what caught this?  where did the
-new address come from?) and a Signed-off-by: line.
-
--Eric
-
-On 10/17/16 4:55 PM, Grozdan wrote:
-> Patch attached
-> 
-> -- Yours truly
-> 
-> 
-> COPYING.diff
-> 
-> 
-> --- xfsprogs-4.7.0/doc/COPYING	2009-12-30 23:30:13.000000000 +0100
-> +++ xfsprogs-4.7.0.new/doc/COPYING	2016-10-17 23:46:05.280631426 +0200
-> @@ -11,7 +11,7 @@
->  		       Version 2.1, February 1999
->  
->   Copyright (C) 1991, 1999 Free Software Foundation, Inc.
-> -     59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-> + 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
->   Everyone is permitted to copy and distribute verbatim copies
->   of this license document, but changing it is not allowed.
->  
-> @@ -518,8 +518,8 @@
->  		    GNU GENERAL PUBLIC LICENSE
->  		       Version 2, June 1991
->  
-> - Copyright (C) 1989, 1991 Free Software Foundation, Inc.
-> -                       59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-> + Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
-> + 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
->   Everyone is permitted to copy and distribute verbatim copies
->   of this license document, but changing it is not allowed.
->  
-> 
