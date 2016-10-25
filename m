@@ -1,66 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49912 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752215AbcJZBNO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 21:13:14 -0400
-Date: Tue, 25 Oct 2016 18:13:09 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/39] xfs_db: add support for checking the refcount btree
-Message-ID: <20161026011308.GC23568@birch.djwong.org>
-References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
- <147743667991.11035.9533585332530820648.stgit@birch.djwong.org>
- <20161026004920.GD23194@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161026004920.GD23194@dastard>
+Received: from bombadil.infradead.org ([198.137.202.9]:48898 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941853AbcJYPIY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 11:08:24 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/6] locking/lockdep: Provide a type check for lock_is_held
+Date: Tue, 25 Oct 2016 17:08:13 +0200
+Message-Id: <1477408098-10153-2-git-send-email-hch@lst.de>
+In-Reply-To: <1477408098-10153-1-git-send-email-hch@lst.de>
+References: <1477408098-10153-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: axboe@fb.com, kent.overstreet@gmail.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>
 
-On Wed, Oct 26, 2016 at 11:49:20AM +1100, Dave Chinner wrote:
-> On Tue, Oct 25, 2016 at 04:04:39PM -0700, Darrick J. Wong wrote:
-> > Do some basic checks of the refcount btree.  xfs_repair will have to
-> > check that the reference counts match the various bmbt mappings.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> .....
-> > @@ -1561,10 +1597,15 @@ check_set_dbmap(
-> >  			agbno, agbno + len - 1, c_agno, c_agbno);
-> >  		return;
-> >  	}
-> > -	check_dbmap(agno, agbno, len, type1);
-> > +	check_dbmap(agno, agbno, len, type1, is_reflink(type2));
-> >  	mayprint = verbose | blist_size;
-> >  	for (i = 0, p = &dbmap[agno][agbno]; i < len; i++, p++) {
-> > -		*p = (char)type2;
-> > +		if (*p == DBM_RLDATA && type2 == DBM_DATA)
-> > +			;	/* do nothing */
-> > +		if (*p == DBM_DATA && type2 == DBM_DATA)
-> > +			*p = (char)DBM_RLDATA;
-> > +		else
-> > +			*p = (char)type2;
-> 
-> What this /* do nothing */ case for?
+From: Peter Zijlstra <peterz@infradead.org>
 
-Handles the case that a data block with multiple owners encounters
-another owner.  The second case in the block handles the case that
-a data block with a single owner encounters a second owner.
+Christoph requested lockdep_assert_held() variants that distinguish
+between held-for-read or held-for-write.
 
-(Assuming you're prodding me to add a comment, I'll go do that.)
+Provide:
 
---D
+  int lock_is_held_type(struct lockdep_map *lock, int read)
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+which takes the same argument as lock_acquire(.read) and matches it to
+the held_lock instance.
+
+Use of this function should be gated by the debug_locks variable. When
+that is 0 the return value of the lock_is_held_type() function is
+undefined. This is done to allow both negative and positive tests for
+holding locks.
+
+By default we provide (positive) lockdep_assert_held{,_exclusive,_read}()
+macros.
+
+Requested-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+---
+ include/linux/lockdep.h  | 25 +++++++++++++++++++++++--
+ kernel/locking/lockdep.c | 20 ++++++++++++--------
+ 2 files changed, 35 insertions(+), 10 deletions(-)
+
+diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
+index c1458fe..a87f3c9 100644
+--- a/include/linux/lockdep.h
++++ b/include/linux/lockdep.h
+@@ -338,9 +338,18 @@ extern void lock_acquire(struct lockdep_map *lock, unsigned int subclass,
+ extern void lock_release(struct lockdep_map *lock, int nested,
+ 			 unsigned long ip);
+ 
+-#define lockdep_is_held(lock)	lock_is_held(&(lock)->dep_map)
++/*
++ * Same "read" as for lock_acquire(), except -1 means any.
++ */
++extern int lock_is_held_type(struct lockdep_map *lock, int read);
++
++static inline int lock_is_held(struct lockdep_map *lock)
++{
++	return lock_is_held_type(lock, -1);
++}
+ 
+-extern int lock_is_held(struct lockdep_map *lock);
++#define lockdep_is_held(lock)		lock_is_held(&(lock)->dep_map)
++#define lockdep_is_held_type(lock, r)	lock_is_held_type(&(lock)->dep_map, (r))
+ 
+ extern void lock_set_class(struct lockdep_map *lock, const char *name,
+ 			   struct lock_class_key *key, unsigned int subclass,
+@@ -372,6 +381,14 @@ extern void lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie);
+ 		WARN_ON(debug_locks && !lockdep_is_held(l));	\
+ 	} while (0)
+ 
++#define lockdep_assert_held_exclusive(l)	do {			\
++		WARN_ON(debug_locks && !lockdep_is_held_type(l, 0));	\
++	} while (0)
++
++#define lockdep_assert_held_read(l)	do {				\
++		WARN_ON(debug_locks && !lockdep_is_held_type(l, 1));	\
++	} while (0)
++
+ #define lockdep_assert_held_once(l)	do {				\
+ 		WARN_ON_ONCE(debug_locks && !lockdep_is_held(l));	\
+ 	} while (0)
+@@ -428,7 +445,11 @@ struct lock_class_key { };
+ 
+ #define lockdep_depth(tsk)	(0)
+ 
++#define lockdep_is_held_type(l, r)		do { (void)(l); } while (0)
++
+ #define lockdep_assert_held(l)			do { (void)(l); } while (0)
++#define lockdep_assert_held_exclusive(l)	do { (void)(l); } while (0)
++#define lockdep_assert_held_read(l)		do { (void)(l); } while (0)
+ #define lockdep_assert_held_once(l)		do { (void)(l); } while (0)
+ 
+ #define lockdep_recursing(tsk)			(0)
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index 589d763..cff580a 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -3188,7 +3188,7 @@ print_lock_nested_lock_not_held(struct task_struct *curr,
+ 	return 0;
+ }
+ 
+-static int __lock_is_held(struct lockdep_map *lock);
++static int __lock_is_held(struct lockdep_map *lock, int read);
+ 
+ /*
+  * This gets called for every mutex_lock*()/spin_lock*() operation.
+@@ -3329,7 +3329,7 @@ static int __lock_acquire(struct lockdep_map *lock, unsigned int subclass,
+ 	}
+ 	chain_key = iterate_chain_key(chain_key, class_idx);
+ 
+-	if (nest_lock && !__lock_is_held(nest_lock))
++	if (nest_lock && !__lock_is_held(nest_lock, -1))
+ 		return print_lock_nested_lock_not_held(curr, hlock, ip);
+ 
+ 	if (!validate_chain(curr, lock, hlock, chain_head, chain_key))
+@@ -3576,7 +3576,7 @@ __lock_release(struct lockdep_map *lock, int nested, unsigned long ip)
+ 	return 1;
+ }
+ 
+-static int __lock_is_held(struct lockdep_map *lock)
++static int __lock_is_held(struct lockdep_map *lock, int read)
+ {
+ 	struct task_struct *curr = current;
+ 	int i;
+@@ -3584,8 +3584,12 @@ static int __lock_is_held(struct lockdep_map *lock)
+ 	for (i = 0; i < curr->lockdep_depth; i++) {
+ 		struct held_lock *hlock = curr->held_locks + i;
+ 
+-		if (match_held_lock(hlock, lock))
+-			return 1;
++		if (match_held_lock(hlock, lock)) {
++			if (read == -1 || hlock->read == read)
++				return 1;
++
++			return 0;
++		}
+ 	}
+ 
+ 	return 0;
+@@ -3769,7 +3773,7 @@ void lock_release(struct lockdep_map *lock, int nested,
+ }
+ EXPORT_SYMBOL_GPL(lock_release);
+ 
+-int lock_is_held(struct lockdep_map *lock)
++int lock_is_held_type(struct lockdep_map *lock, int read)
+ {
+ 	unsigned long flags;
+ 	int ret = 0;
+@@ -3781,13 +3785,13 @@ int lock_is_held(struct lockdep_map *lock)
+ 	check_flags(flags);
+ 
+ 	current->lockdep_recursion = 1;
+-	ret = __lock_is_held(lock);
++	ret = __lock_is_held(lock, read);
+ 	current->lockdep_recursion = 0;
+ 	raw_local_irq_restore(flags);
+ 
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(lock_is_held);
++EXPORT_SYMBOL_GPL(lock_is_held_type);
+ 
+ struct pin_cookie lock_pin_lock(struct lockdep_map *lock)
+ {
+-- 
+2.1.4
+
