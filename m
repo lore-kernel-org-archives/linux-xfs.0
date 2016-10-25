@@ -1,77 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:36083 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932547AbcJYRNd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 13:13:33 -0400
-Date: Tue, 25 Oct 2016 09:13:29 -0800
-From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: Re: [PATCH 5/6] iomap: implement direct I/O
-Message-ID: <20161025171329.2txmbsgdnvn5vinn@kmo-pixel>
-References: <1477408098-10153-1-git-send-email-hch@lst.de>
- <1477408098-10153-6-git-send-email-hch@lst.de>
- <20161025153156.cjhcvvoxd3c6pqf7@kmo-pixel>
- <20161025163443.GA8730@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:34496 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934156AbcJYRdO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Oct 2016 13:33:14 -0400
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8D3471555D
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2016 17:33:14 +0000 (UTC)
+Received: from laptop.bfoster (vpn-55-98.rdu2.redhat.com [10.10.55.98])
+        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u9PHXCxM006115
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO)
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2016 13:33:14 -0400
+Date: Tue, 25 Oct 2016 13:33:12 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v3] xfs: fix unbalanced inode reclaim flush locking
+Message-ID: <20161025173312.GA6594@laptop.bfoster>
+References: <1476815175-25909-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161025163443.GA8730@lst.de>
+In-Reply-To: <1476815175-25909-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, axboe@fb.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Oct 25, 2016 at 06:34:43PM +0200, Christoph Hellwig wrote:
-> On Tue, Oct 25, 2016 at 07:31:56AM -0800, Kent Overstreet wrote:
-> Yes, this is the basic idea behind the whole iomap code - we have
-> a generic apply function that calls into the fs allocator, and then
-> takes a callback that it applies to one extent at a time.  It really
-> helps a lot to separate responsibilities and factor the code into
-> independent functions.
+On Tue, Oct 18, 2016 at 02:26:15PM -0400, Brian Foster wrote:
+> Filesystem shutdown testing on an older distro kernel has uncovered an
+> imbalanced locking pattern for the inode flush lock in
+> xfs_reclaim_inode(). Specifically, there is a double unlock sequence
+> between the call to xfs_iflush_abort() and xfs_reclaim_inode() at the
+> "reclaim:" label.
 > 
-> I looked at carrying over bios between different invocations of the
-> callback, but it quickly turned into a mess.
+> This actually does not cause obvious problems on current kernels due to
+> the current flush lock implementation. Older kernels use a counting
+> based flush lock mechanism, however, which effectively breaks the lock
+> indefinitely when an already unlocked flush lock is repeatedly unlocked.
+> Though this only currently occurs on filesystem shutdown, it has
+> reproduced the effect of elevating an fs shutdown to a system-wide crash
+> or hang.
+> 
+> As it turns out, the flush lock is not actually required for the reclaim
+> logic in xfs_reclaim_inode() because by that time we have already cycled
+> the flush lock once while holding ILOCK_EXCL. Therefore, remove the
+> additional flush lock/unlock cycle around the 'reclaim:' label and
+> update branches into this label to release the flush lock where
+> appropriate. Add an assert to xfs_ifunlock() to help prevent future
+> occurences of the same problem.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reported-by: Zorro Lang <zlang@redhat.com>
+> ---
 
-Really? Ages ago that was the approach I was taking with my dio rewrite and it
-worked out fine - it was using get_block but I'd think the code would look
-almost exactly the same with iomap.
+ping?
 
-Anyways I'm not at all advocating you redo your code - if it works, please ship
-this so direct-IO.c can die in a fire! - but I would encourage you to take a
-look at my code, I think there's some good ideas in there.  I think my (ancient,
-and I never got it 100% debugged) dio rewrite is easiest to follow - maybe
-you've already seen it if you found my bio_get_user_pages() code, but if you
-haven't:
-https://evilpiepirate.org/git/linux-bcache.git/tree/fs/direct-io.c?h=dio
-
-getting on a bit of a tangent now: the actor approach you're taking with
-iomap_apply() really reminds me of going through internal vs. external iterators
-in bcache. We started out with internal iterators - which is what's still in the
-upstream code, bch_btree_map_keys() is roughly equivalent to iomap_apply() where
-you pass it a callback and it does the iteration.
-
-But later we ended up switching to external iterators - we've now got a struct
-btree_iter, with functions for init/peek/advance/set_pos, and inserting at an
-iterator's current position. It was actually another guy who convinced me to
-consider switching to external iterators (Slava Pestov), and it was quite a pain
-in the ass (walking a btree directly is a whole lot easier than implementing a
-state machine to do it, partly) - but it was _hugely_ worth it in the long run
-because it they're a whole lot more flexible to use and they made a lot of
-things possible that honestly I wouldn't have thought of before I had them.
-
-Don't know that it's actually relevant here - I haven't dug into your iomap code
-yet, just lately I've been noticing more places in the kernel where people have
-implemented stuff with internal iterators (e.g. the crypto code) or no real
-iterator at all for things where I'm pretty sure an external iterator could make
-things a whole lot simpler.
-
-> git://git.infradead.org/users/hch/vfs.git iomap-dio
-
-Cool, reading.
-
-Also - what are you doing about the race between shooting down the range in the
-pagecache and dirty pages being readded? The existing direct IO code falls back
-to buffered IO for that, but your code doesn't appear to - I seem to recall that
-XFS has its own locking for this, are you just relying on that for now?  It'd be
-really nice to get some generic locking for this, anything that relies on
-pagecache invalidation is sketchy as hell in other filesystems.
+> 
+> v3:
+> - Rework to drop flush lock around reclaim bits.
+> - Rebase against latest for-next.
+> v2:
+> - Add comment in xfs_reclaim_inode() wrt to flush lock.
+> - Fix XFS_IRECLAIM usage in xfs_inode_free().
+> 
+> 
+>  fs/xfs/xfs_icache.c | 27 ++++++++++++++-------------
+>  fs/xfs/xfs_inode.h  | 11 ++++++-----
+>  2 files changed, 20 insertions(+), 18 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 14796b7..8b528f1 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -123,7 +123,6 @@ __xfs_inode_free(
+>  {
+>  	/* asserts to verify all state is correct here */
+>  	ASSERT(atomic_read(&ip->i_pincount) == 0);
+> -	ASSERT(!xfs_isiflocked(ip));
+>  	XFS_STATS_DEC(ip->i_mount, vn_active);
+>  
+>  	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
+> @@ -133,6 +132,8 @@ void
+>  xfs_inode_free(
+>  	struct xfs_inode	*ip)
+>  {
+> +	ASSERT(!xfs_isiflocked(ip));
+> +
+>  	/*
+>  	 * Because we use RCU freeing we need to ensure the inode always
+>  	 * appears to be reclaimed with an invalid inode number when in the
+> @@ -981,6 +982,7 @@ xfs_reclaim_inode(
+>  
+>  	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+>  		xfs_iunpin_wait(ip);
+> +		/* xfs_iflush_abort() drops the flush lock */
+>  		xfs_iflush_abort(ip, false);
+>  		goto reclaim;
+>  	}
+> @@ -989,10 +991,10 @@ xfs_reclaim_inode(
+>  			goto out_ifunlock;
+>  		xfs_iunpin_wait(ip);
+>  	}
+> -	if (xfs_iflags_test(ip, XFS_ISTALE))
+> -		goto reclaim;
+> -	if (xfs_inode_clean(ip))
+> +	if (xfs_iflags_test(ip, XFS_ISTALE) || xfs_inode_clean(ip)) {
+> +		xfs_ifunlock(ip);
+>  		goto reclaim;
+> +	}
+>  
+>  	/*
+>  	 * Never flush out dirty data during non-blocking reclaim, as it would
+> @@ -1030,25 +1032,24 @@ xfs_reclaim_inode(
+>  		xfs_buf_relse(bp);
+>  	}
+>  
+> -	xfs_iflock(ip);
+>  reclaim:
+> +	ASSERT(!xfs_isiflocked(ip));
+> +
+>  	/*
+>  	 * Because we use RCU freeing we need to ensure the inode always appears
+>  	 * to be reclaimed with an invalid inode number when in the free state.
+> -	 * We do this as early as possible under the ILOCK and flush lock so
+> -	 * that xfs_iflush_cluster() can be guaranteed to detect races with us
+> -	 * here. By doing this, we guarantee that once xfs_iflush_cluster has
+> -	 * locked both the XFS_ILOCK and the flush lock that it will see either
+> -	 * a valid, flushable inode that will serialise correctly against the
+> -	 * locks below, or it will see a clean (and invalid) inode that it can
+> -	 * skip.
+> +	 * We do this as early as possible under the ILOCK so that
+> +	 * xfs_iflush_cluster() can be guaranteed to detect races with us here.
+> +	 * By doing this, we guarantee that once xfs_iflush_cluster has locked
+> +	 * XFS_ILOCK that it will see either a valid, flushable inode that will
+> +	 * serialise correctly, or it will see a clean (and invalid) inode that
+> +	 * it can skip.
+>  	 */
+>  	spin_lock(&ip->i_flags_lock);
+>  	ip->i_flags = XFS_IRECLAIM;
+>  	ip->i_ino = 0;
+>  	spin_unlock(&ip->i_flags_lock);
+>  
+> -	xfs_ifunlock(ip);
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  
+>  	XFS_STATS_INC(ip->i_mount, xs_ig_reclaims);
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index f14c1de..71e8a81 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -246,6 +246,11 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+>   * Synchronize processes attempting to flush the in-core inode back to disk.
+>   */
+>  
+> +static inline int xfs_isiflocked(struct xfs_inode *ip)
+> +{
+> +	return xfs_iflags_test(ip, XFS_IFLOCK);
+> +}
+> +
+>  extern void __xfs_iflock(struct xfs_inode *ip);
+>  
+>  static inline int xfs_iflock_nowait(struct xfs_inode *ip)
+> @@ -261,16 +266,12 @@ static inline void xfs_iflock(struct xfs_inode *ip)
+>  
+>  static inline void xfs_ifunlock(struct xfs_inode *ip)
+>  {
+> +	ASSERT(xfs_isiflocked(ip));
+>  	xfs_iflags_clear(ip, XFS_IFLOCK);
+>  	smp_mb();
+>  	wake_up_bit(&ip->i_flags, __XFS_IFLOCK_BIT);
+>  }
+>  
+> -static inline int xfs_isiflocked(struct xfs_inode *ip)
+> -{
+> -	return xfs_iflags_test(ip, XFS_IFLOCK);
+> -}
+> -
+>  /*
+>   * Flags for inode locking.
+>   * Bit ranges:	1<<1  - 1<<16-1 -- iolock/ilock modes (bitfield)
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
