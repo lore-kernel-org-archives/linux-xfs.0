@@ -1,86 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42845 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935374AbcJQQSJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 12:18:09 -0400
-Date: Mon, 17 Oct 2016 09:18:01 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:45818 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754120AbcJYXEI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:04:08 -0400
+Subject: [PATCH 04/39] xfs: add refcount btree operations
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/9] iomap: add IOMAP_REPORT
-Message-ID: <20161017161801.GA1120@birch.djwong.org>
-References: <1476521554-1894-1-git-send-email-hch@lst.de>
- <1476521554-1894-2-git-send-email-hch@lst.de>
+Date: Tue, 25 Oct 2016 16:04:02 -0700
+Message-ID: <147743664272.11035.6730520387402463910.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1476521554-1894-2-git-send-email-hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Sat, Oct 15, 2016 at 10:52:26AM +0200, Christoph Hellwig wrote:
-> This allows the file system to tell a FIEMAP from a read operation, and thus
-> avoids the need to report flags that aren't actually used in the read path.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Implement the generic btree operations required to manipulate refcount
+btree blocks.  The implementation is similar to the bmapbt, though it
+will only allocate and free blocks from the AG.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+[Add the xfs_refcount.h file to the standard include list.]
 
-> ---
->  fs/iomap.c            |  2 +-
->  include/linux/iomap.h | 17 +++++++++++------
->  2 files changed, 12 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 013d1d3..a922040 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -561,7 +561,7 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
->  	}
->  
->  	while (len > 0) {
-> -		ret = iomap_apply(inode, start, len, 0, ops, &ctx,
-> +		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
->  				iomap_fiemap_actor);
->  		/* inode with no (attribute) mapping will give ENOENT */
->  		if (ret == -ENOENT)
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index e63e288..7892f55 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -19,11 +19,15 @@ struct vm_fault;
->  #define IOMAP_UNWRITTEN	0x04	/* blocks allocated @blkno in unwritten state */
->  
->  /*
-> - * Flags for iomap mappings:
-> + * Flags for all iomap mappings:
->   */
-> -#define IOMAP_F_MERGED	0x01	/* contains multiple blocks/extents */
-> -#define IOMAP_F_SHARED	0x02	/* block shared with another file */
-> -#define IOMAP_F_NEW	0x04	/* blocks have been newly allocated */
-> +#define IOMAP_F_NEW	0x01	/* blocks have been newly allocated */
-> +
-> +/*
-> + * Flags that only need to be reported for IOMAP_REPORT requests:
-> + */
-> +#define IOMAP_F_MERGED	0x10	/* contains multiple blocks/extents */
-> +#define IOMAP_F_SHARED	0x20	/* block shared with another file */
->  
->  /*
->   * Magic value for blkno:
-> @@ -42,8 +46,9 @@ struct iomap {
->  /*
->   * Flags for iomap_begin / iomap_end.  No flag implies a read.
->   */
-> -#define IOMAP_WRITE		(1 << 0)
-> -#define IOMAP_ZERO		(1 << 1)
-> +#define IOMAP_WRITE		(1 << 0) /* writing, must allocate blocks */
-> +#define IOMAP_ZERO		(1 << 1) /* zeroing operation, may skip holes */
-> +#define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
->  
->  struct iomap_ops {
->  	/*
-> -- 
-> 2.1.4
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[hch: fix logging of AGF refcount btree fields]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+v2: Remove init_rec_from_key since we no longer need it, and add
+tracepoints when refcount btree operations fail.
+
+Since the refcount root and level fields are separate from the
+existing roots and levels array, they need a separate logging flag.
+---
+ include/libxfs.h |    1 +
+ 1 file changed, 1 insertion(+)
+
+
+diff --git a/include/libxfs.h b/include/libxfs.h
+index ec8f6ab..e5e1523 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -80,6 +80,7 @@ extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
+ #include "xfs_rmap_btree.h"
+ #include "xfs_rmap.h"
+ #include "xfs_refcount_btree.h"
++#include "xfs_refcount.h"
+ 
+ #ifndef ARRAY_SIZE
+ #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
