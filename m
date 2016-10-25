@@ -1,85 +1,255 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35428 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932538AbcJYTv5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 15:51:57 -0400
-Date: Tue, 25 Oct 2016 11:51:53 -0800
-From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: Re: [PATCH 5/6] iomap: implement direct I/O
-Message-ID: <20161025195153.ehrxmjqaqqkdc23f@kmo-pixel>
-References: <1477408098-10153-1-git-send-email-hch@lst.de>
- <1477408098-10153-6-git-send-email-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46815 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932449AbcJYXGM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:06:12 -0400
+Subject: [PATCH 24/39] xfs_logprint: support bmap redo items
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Oct 2016 16:06:08 -0700
+Message-ID: <147743676832.11035.3440154068421158467.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1477408098-10153-6-git-send-email-hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, axboe@fb.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 25, 2016 at 05:08:17PM +0200, Christoph Hellwig wrote:
-> This adds a full fledget direct I/O implementation using the iomap
-> interface. Full fledged in this case means all features are supported:
-> AIO, vectored I/O, any iov_iter type including kernel pointers, bvecs
-> and pipes, support for hole filling and async apending writes.  It does
-> not mean supporting all the warts of the old generic code.  We expect
-> i_rwsem to be held over the duration of the call, and we expect to
-> maintain i_dio_count ourselves, and we pass on any kinds of mapping
-> to the file system for now.
-> 
-> The algorithm used is very simple: We use iomap_apply to iterate over
-> the range of the I/O, and then we use the new bio_iov_iter_get_pages
-> helper to lock down the user range for the size of the extent.
-> bio_iov_iter_get_pages can currently lock down twice as many pages as
-> the old direct I/O code did, which means that we will have a better
-> batch factor for everything but overwrites of badly fragmented files.
+Print block mapping update redo items.
 
-So - you're hitting inode locks on each call to iomap_begin()/iomap_end()?  :/
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ logprint/log_misc.c      |   11 +++
+ logprint/log_print_all.c |   12 ++++
+ logprint/log_redo.c      |  149 ++++++++++++++++++++++++++++++++++++++++++++++
+ logprint/logprint.h      |    5 ++
+ 4 files changed, 177 insertions(+)
 
-But - (I'm not too familiar with the XFS code) - it looks like you're also doing
-a full extents btree traversal on each iomap_begin() call too, behind
-xfs_bmapi_read()?
 
-I guess that's probably how it worked before though, so ah well - if it was a
-performance issue worth caring about you'd know, and like you said it only
-matters for fragmented files - or, wouldn't alternating written/unwritten
-extents trigger this? That does happen.
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index 8284206..6dc0ed4 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -973,6 +973,17 @@ xlog_print_record(
+ 					be32_to_cpu(op_head->oh_len));
+ 			break;
+ 		    }
++		    case XFS_LI_BUI: {
++			skip = xlog_print_trans_bui(&ptr,
++					be32_to_cpu(op_head->oh_len),
++					continued);
++			break;
++		    }
++		    case XFS_LI_BUD: {
++			skip = xlog_print_trans_bud(&ptr,
++					be32_to_cpu(op_head->oh_len));
++			break;
++		    }
+ 		    case XFS_LI_QUOTAOFF: {
+ 			skip = xlog_print_trans_qoff(&ptr,
+ 					be32_to_cpu(op_head->oh_len));
+diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
+index eb3e326..f49316e 100644
+--- a/logprint/log_print_all.c
++++ b/logprint/log_print_all.c
+@@ -424,6 +424,12 @@ xlog_recover_print_logitem(
+ 	case XFS_LI_CUI:
+ 		xlog_recover_print_cui(item);
+ 		break;
++	case XFS_LI_BUD:
++		xlog_recover_print_bud(item);
++		break;
++	case XFS_LI_BUI:
++		xlog_recover_print_bui(item);
++		break;
+ 	case XFS_LI_DQUOT:
+ 		xlog_recover_print_dquot(item);
+ 		break;
+@@ -470,6 +476,12 @@ xlog_recover_print_item(
+ 	case XFS_LI_CUI:
+ 		printf("CUI");
+ 		break;
++	case XFS_LI_BUD:
++		printf("BUD");
++		break;
++	case XFS_LI_BUI:
++		printf("BUI");
++		break;
+ 	case XFS_LI_DQUOT:
+ 		printf("DQ ");
+ 		break;
+diff --git a/logprint/log_redo.c b/logprint/log_redo.c
+index 6be073e..9668567 100644
+--- a/logprint/log_redo.c
++++ b/logprint/log_redo.c
+@@ -526,3 +526,152 @@ xlog_recover_print_cud(
+ 	f = item->ri_buf[0].i_addr;
+ 	xlog_print_trans_cud(&f, sizeof(struct xfs_cud_log_format));
+ }
++
++/* Block Mapping Update Items */
++
++static int
++xfs_bui_copy_format(
++	char			  *buf,
++	uint			  len,
++	struct xfs_bui_log_format *dst_fmt,
++	int			  continued)
++{
++	uint nextents = ((struct xfs_bui_log_format *)buf)->bui_nextents;
++	uint dst_len = xfs_bui_log_format_sizeof(nextents);
++
++	if (len == dst_len || continued) {
++		memcpy((char *)dst_fmt, buf, len);
++		return 0;
++	}
++	fprintf(stderr, _("%s: bad size of BUI format: %u; expected %u; nextents = %u\n"),
++		progname, len, dst_len, nextents);
++	return 1;
++}
++
++int
++xlog_print_trans_bui(
++	char			**ptr,
++	uint			src_len,
++	int			continued)
++{
++	struct xfs_bui_log_format	*src_f, *f = NULL;
++	uint			dst_len;
++	uint			nextents;
++	struct xfs_map_extent	*ex;
++	int			i;
++	int			error = 0;
++	int			core_size;
++
++	core_size = offsetof(struct xfs_bui_log_format, bui_extents);
++
++	/*
++	 * memmove to ensure 8-byte alignment for the long longs in
++	 * struct xfs_bui_log_format structure
++	 */
++	src_f = malloc(src_len);
++	if (src_f == NULL) {
++		fprintf(stderr, _("%s: %s: malloc failed\n"),
++			progname, __func__);
++		exit(1);
++	}
++	memmove((char*)src_f, *ptr, src_len);
++	*ptr += src_len;
++
++	/* convert to native format */
++	nextents = src_f->bui_nextents;
++	dst_len = xfs_bui_log_format_sizeof(nextents);
++
++	if (continued && src_len < core_size) {
++		printf(_("BUI: Not enough data to decode further\n"));
++		error = 1;
++		goto error;
++	}
++
++	f = malloc(dst_len);
++	if (f == NULL) {
++		fprintf(stderr, _("%s: %s: malloc failed\n"),
++			progname, __func__);
++		exit(1);
++	}
++	if (xfs_bui_copy_format((char *)src_f, src_len, f, continued)) {
++		error = 1;
++		goto error;
++	}
++
++	printf(_("BUI:  #regs: %d	num_extents: %d  id: 0x%llx\n"),
++		f->bui_size, f->bui_nextents, (unsigned long long)f->bui_id);
++
++	if (continued) {
++		printf(_("BUI extent data skipped (CONTINUE set, no space)\n"));
++		goto error;
++	}
++
++	ex = f->bui_extents;
++	for (i=0; i < f->bui_nextents; i++) {
++		printf("(s: 0x%llx, l: %d, own: %lld, off: %llu, f: 0x%x) ",
++			(unsigned long long)ex->me_startblock, ex->me_len,
++			(long long)ex->me_owner,
++			(unsigned long long)ex->me_startoff, ex->me_flags);
++		printf("\n");
++		ex++;
++	}
++error:
++	free(src_f);
++	free(f);
++	return error;
++}
++
++void
++xlog_recover_print_bui(
++	struct xlog_recover_item	*item)
++{
++	char				*src_f;
++	uint				src_len;
++
++	src_f = item->ri_buf[0].i_addr;
++	src_len = item->ri_buf[0].i_len;
++
++	xlog_print_trans_bui(&src_f, src_len, 0);
++}
++
++int
++xlog_print_trans_bud(
++	char				**ptr,
++	uint				len)
++{
++	struct xfs_bud_log_format	*f;
++	struct xfs_bud_log_format	lbuf;
++
++	/* size without extents at end */
++	uint core_size = sizeof(struct xfs_bud_log_format);
++
++	/*
++	 * memmove to ensure 8-byte alignment for the long longs in
++	 * xfs_efd_log_format_t structure
++	 */
++	memmove(&lbuf, *ptr, MIN(core_size, len));
++	f = &lbuf;
++	*ptr += len;
++	if (len >= core_size) {
++		printf(_("BUD:  #regs: %d	                 id: 0x%llx\n"),
++			f->bud_size,
++			(unsigned long long)f->bud_bui_id);
++
++		/* don't print extents as they are not used */
++
++		return 0;
++	} else {
++		printf(_("BUD: Not enough data to decode further\n"));
++		return 1;
++	}
++}
++
++void
++xlog_recover_print_bud(
++	struct xlog_recover_item	*item)
++{
++	char				*f;
++
++	f = item->ri_buf[0].i_addr;
++	xlog_print_trans_bud(&f, sizeof(struct xfs_bud_log_format));
++}
+diff --git a/logprint/logprint.h b/logprint/logprint.h
+index ae63c2e..fc10e16 100644
+--- a/logprint/logprint.h
++++ b/logprint/logprint.h
+@@ -59,4 +59,9 @@ extern void xlog_recover_print_cui(struct xlog_recover_item *item);
+ extern int xlog_print_trans_cud(char **ptr, uint len);
+ extern void xlog_recover_print_cud(struct xlog_recover_item *item);
+ 
++extern int xlog_print_trans_bui(char **ptr, uint src_len, int continued);
++extern void xlog_recover_print_bui(struct xlog_recover_item *item);
++extern int xlog_print_trans_bud(char **ptr, uint len);
++extern void xlog_recover_print_bud(struct xlog_recover_item *item);
++
+ #endif	/* LOGPRINT_H */
 
-Anyways... more relevant comments...
-
-Are you returning the right thing on partial reads/writes? the existing dio code
-squashes -EFAULT (but not on other errors, even when some IO was successfully
-done, e.g. -ENOMEM from gup(), which doesn't seem right to me...)
-
-One thing you're not doing that the existing dio code does is limit the number
-of outstanding pinned pages. I don't think it needs to be, but it does mean
-you'll return an error from gup() if someone issues a huge IO, too big to pin
-all the pages at once (i'm not sure why they would do that... copying a mmap'd
-file? actually, running under severe memory pressure probably makes this a real
-issue) where it would've worked with the existing dio code - and userspace could
-just continue after the short read/write except a) we all know how much
-userspace code won't, and b) that means you've dropped and retaken locks, and
-it's no longer atomic, so it is a change in semantics.
-
-So I think it would be a good idea to handle any memory allocation failures by
-waiting for outstanding IOs to complete and then continuing, and only bailing
-out if there aren't any IOs outstanding (and that still gets rid of the stupid
-hard limit on the number of pinned pages in the existing dio code).
-
-Your dio refcounting - you have the submitting thread unconditionally holding
-its own ref, and dropping it in iomap_dio_rw() after submitting all the IOs:
-this is definitely the right way to do it for the sake of sanity, but it's going
-to be a performance hit - this is something I've been bit by recently. The issue
-is that you've already gone down the rest of the IO stack in either submit_bio()
-or blk_finish_plug(), so the ref is no longer cache hot and that one atomic is
-_significantly_ more expensive than the rest.
-
-The way you've got the code setup it looks like it wouldn't be that painful to
-get rid of that final atomic_dec_and_test() when it's not needed (async kiocbs),
-but I also wouldn't see anything wrong with keeping things simple until after
-the code is in and leaving that optimization for later.
-
-On the whole though it looks pretty clean to me, I can't find anything that
-looks wrong.
