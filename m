@@ -1,192 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60064 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754246AbcJTHud (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Oct 2016 03:50:33 -0400
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 07E60C057FA0
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Oct 2016 07:50:33 +0000 (UTC)
-Date: Thu, 20 Oct 2016 15:50:31 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH v3] xfs: fix unbalanced inode reclaim flush locking
-Message-ID: <20161020075031.GB30105@dhcp12-143.nay.redhat.com>
-References: <1476815175-25909-1-git-send-email-bfoster@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:45893 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932478AbcJYXET (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:04:19 -0400
+Subject: [PATCH 06/39] xfs: implement deferred bmbt map/unmap operations
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Oct 2016 16:04:14 -0700
+Message-ID: <147743665492.11035.7727340576342066591.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1476815175-25909-1-git-send-email-bfoster@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 18, 2016 at 02:26:15PM -0400, Brian Foster wrote:
-> Filesystem shutdown testing on an older distro kernel has uncovered an
-> imbalanced locking pattern for the inode flush lock in
-> xfs_reclaim_inode(). Specifically, there is a double unlock sequence
-> between the call to xfs_iflush_abort() and xfs_reclaim_inode() at the
-> "reclaim:" label.
-> 
-> This actually does not cause obvious problems on current kernels due to
-> the current flush lock implementation. Older kernels use a counting
-> based flush lock mechanism, however, which effectively breaks the lock
-> indefinitely when an already unlocked flush lock is repeatedly unlocked.
-> Though this only currently occurs on filesystem shutdown, it has
-> reproduced the effect of elevating an fs shutdown to a system-wide crash
-> or hang.
-> 
-> As it turns out, the flush lock is not actually required for the reclaim
-> logic in xfs_reclaim_inode() because by that time we have already cycled
-> the flush lock once while holding ILOCK_EXCL. Therefore, remove the
-> additional flush lock/unlock cycle around the 'reclaim:' label and
-> update branches into this label to release the flush lock where
-> appropriate. Add an assert to xfs_ifunlock() to help prevent future
-> occurences of the same problem.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reported-by: Zorro Lang <zlang@redhat.com>
-> ---
+Implement deferred versions of the inode block map/unmap functions.
+These will be used in subsequent patches to make reflink operations
+atomic.
 
-Hi Brian, I've backported this patch into RHEL kernel(which is easy to
-reproduce this bug). Then test passed, so it looks good to fix that bug :)
+[Plumb in bmap deferred op log items.]
 
-I'm doing more regression test for that. I'll let you know if I find some
-problems.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ include/xfs_trans.h |    1 
+ libxfs/defer_item.c |  107 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/init.c       |    1 
+ 3 files changed, 109 insertions(+)
 
-Thanks,
-Zorro
 
-> 
-> v3:
-> - Rework to drop flush lock around reclaim bits.
-> - Rebase against latest for-next.
-> v2:
-> - Add comment in xfs_reclaim_inode() wrt to flush lock.
-> - Fix XFS_IRECLAIM usage in xfs_inode_free().
-> 
-> 
->  fs/xfs/xfs_icache.c | 27 ++++++++++++++-------------
->  fs/xfs/xfs_inode.h  | 11 ++++++-----
->  2 files changed, 20 insertions(+), 18 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 14796b7..8b528f1 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -123,7 +123,6 @@ __xfs_inode_free(
->  {
->  	/* asserts to verify all state is correct here */
->  	ASSERT(atomic_read(&ip->i_pincount) == 0);
-> -	ASSERT(!xfs_isiflocked(ip));
->  	XFS_STATS_DEC(ip->i_mount, vn_active);
->  
->  	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
-> @@ -133,6 +132,8 @@ void
->  xfs_inode_free(
->  	struct xfs_inode	*ip)
->  {
-> +	ASSERT(!xfs_isiflocked(ip));
-> +
->  	/*
->  	 * Because we use RCU freeing we need to ensure the inode always
->  	 * appears to be reclaimed with an invalid inode number when in the
-> @@ -981,6 +982,7 @@ xfs_reclaim_inode(
->  
->  	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
->  		xfs_iunpin_wait(ip);
-> +		/* xfs_iflush_abort() drops the flush lock */
->  		xfs_iflush_abort(ip, false);
->  		goto reclaim;
->  	}
-> @@ -989,10 +991,10 @@ xfs_reclaim_inode(
->  			goto out_ifunlock;
->  		xfs_iunpin_wait(ip);
->  	}
-> -	if (xfs_iflags_test(ip, XFS_ISTALE))
-> -		goto reclaim;
-> -	if (xfs_inode_clean(ip))
-> +	if (xfs_iflags_test(ip, XFS_ISTALE) || xfs_inode_clean(ip)) {
-> +		xfs_ifunlock(ip);
->  		goto reclaim;
-> +	}
->  
->  	/*
->  	 * Never flush out dirty data during non-blocking reclaim, as it would
-> @@ -1030,25 +1032,24 @@ xfs_reclaim_inode(
->  		xfs_buf_relse(bp);
->  	}
->  
-> -	xfs_iflock(ip);
->  reclaim:
-> +	ASSERT(!xfs_isiflocked(ip));
-> +
->  	/*
->  	 * Because we use RCU freeing we need to ensure the inode always appears
->  	 * to be reclaimed with an invalid inode number when in the free state.
-> -	 * We do this as early as possible under the ILOCK and flush lock so
-> -	 * that xfs_iflush_cluster() can be guaranteed to detect races with us
-> -	 * here. By doing this, we guarantee that once xfs_iflush_cluster has
-> -	 * locked both the XFS_ILOCK and the flush lock that it will see either
-> -	 * a valid, flushable inode that will serialise correctly against the
-> -	 * locks below, or it will see a clean (and invalid) inode that it can
-> -	 * skip.
-> +	 * We do this as early as possible under the ILOCK so that
-> +	 * xfs_iflush_cluster() can be guaranteed to detect races with us here.
-> +	 * By doing this, we guarantee that once xfs_iflush_cluster has locked
-> +	 * XFS_ILOCK that it will see either a valid, flushable inode that will
-> +	 * serialise correctly, or it will see a clean (and invalid) inode that
-> +	 * it can skip.
->  	 */
->  	spin_lock(&ip->i_flags_lock);
->  	ip->i_flags = XFS_IRECLAIM;
->  	ip->i_ino = 0;
->  	spin_unlock(&ip->i_flags_lock);
->  
-> -	xfs_ifunlock(ip);
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  
->  	XFS_STATS_INC(ip->i_mount, xs_ig_reclaims);
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index f14c1de..71e8a81 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -246,6 +246,11 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
->   * Synchronize processes attempting to flush the in-core inode back to disk.
->   */
->  
-> +static inline int xfs_isiflocked(struct xfs_inode *ip)
-> +{
-> +	return xfs_iflags_test(ip, XFS_IFLOCK);
-> +}
-> +
->  extern void __xfs_iflock(struct xfs_inode *ip);
->  
->  static inline int xfs_iflock_nowait(struct xfs_inode *ip)
-> @@ -261,16 +266,12 @@ static inline void xfs_iflock(struct xfs_inode *ip)
->  
->  static inline void xfs_ifunlock(struct xfs_inode *ip)
->  {
-> +	ASSERT(xfs_isiflocked(ip));
->  	xfs_iflags_clear(ip, XFS_IFLOCK);
->  	smp_mb();
->  	wake_up_bit(&ip->i_flags, __XFS_IFLOCK_BIT);
->  }
->  
-> -static inline int xfs_isiflocked(struct xfs_inode *ip)
-> -{
-> -	return xfs_iflags_test(ip, XFS_IFLOCK);
-> -}
-> -
->  /*
->   * Flags for inode locking.
->   * Bit ranges:	1<<1  - 1<<16-1 -- iolock/ilock modes (bitfield)
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/include/xfs_trans.h b/include/xfs_trans.h
+index 739a792..44deebb 100644
+--- a/include/xfs_trans.h
++++ b/include/xfs_trans.h
+@@ -148,5 +148,6 @@ libxfs_trans_read_buf(
+ void xfs_extent_free_init_defer_op(void);
+ void xfs_rmap_update_init_defer_op(void);
+ void xfs_refcount_update_init_defer_op(void);
++void xfs_bmap_update_init_defer_op(void);
+ 
+ #endif	/* __XFS_TRANS_H__ */
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index 1b7d037..49bf7f8 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -32,6 +32,8 @@
+ #include "xfs_alloc.h"
+ #include "xfs_rmap.h"
+ #include "xfs_refcount.h"
++#include "xfs_bmap.h"
++#include "xfs_inode.h"
+ 
+ /* Dummy defer item ops, since we don't do logging. */
+ 
+@@ -387,3 +389,108 @@ xfs_refcount_update_init_defer_op(void)
+ {
+ 	xfs_defer_init_op_type(&xfs_refcount_update_defer_type);
+ }
++
++/* Inode Block Mapping */
++
++/* Sort bmap intents by inode. */
++static int
++xfs_bmap_update_diff_items(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
++{
++	struct xfs_bmap_intent		*ba;
++	struct xfs_bmap_intent		*bb;
++
++	ba = container_of(a, struct xfs_bmap_intent, bi_list);
++	bb = container_of(b, struct xfs_bmap_intent, bi_list);
++	return ba->bi_owner->i_ino - bb->bi_owner->i_ino;
++}
++
++/* Get an BUI. */
++STATIC void *
++xfs_bmap_update_create_intent(
++	struct xfs_trans		*tp,
++	unsigned int			count)
++{
++	return NULL;
++}
++
++/* Log bmap updates in the intent item. */
++STATIC void
++xfs_bmap_update_log_item(
++	struct xfs_trans		*tp,
++	void				*intent,
++	struct list_head		*item)
++{
++}
++
++/* Get an BUD so we can process all the deferred rmap updates. */
++STATIC void *
++xfs_bmap_update_create_done(
++	struct xfs_trans		*tp,
++	void				*intent,
++	unsigned int			count)
++{
++	return NULL;
++}
++
++/* Process a deferred rmap update. */
++STATIC int
++xfs_bmap_update_finish_item(
++	struct xfs_trans		*tp,
++	struct xfs_defer_ops		*dop,
++	struct list_head		*item,
++	void				*done_item,
++	void				**state)
++{
++	struct xfs_bmap_intent		*bmap;
++	int				error;
++
++	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
++	error = xfs_bmap_finish_one(tp, dop,
++			bmap->bi_owner,
++			bmap->bi_type, bmap->bi_whichfork,
++			bmap->bi_bmap.br_startoff,
++			bmap->bi_bmap.br_startblock,
++			bmap->bi_bmap.br_blockcount,
++			bmap->bi_bmap.br_state);
++	kmem_free(bmap);
++	return error;
++}
++
++/* Abort all pending BUIs. */
++STATIC void
++xfs_bmap_update_abort_intent(
++	void				*intent)
++{
++}
++
++/* Cancel a deferred rmap update. */
++STATIC void
++xfs_bmap_update_cancel_item(
++	struct list_head		*item)
++{
++	struct xfs_bmap_intent		*bmap;
++
++	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
++	kmem_free(bmap);
++}
++
++static const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
++	.type		= XFS_DEFER_OPS_TYPE_BMAP,
++	.diff_items	= xfs_bmap_update_diff_items,
++	.create_intent	= xfs_bmap_update_create_intent,
++	.abort_intent	= xfs_bmap_update_abort_intent,
++	.log_item	= xfs_bmap_update_log_item,
++	.create_done	= xfs_bmap_update_create_done,
++	.finish_item	= xfs_bmap_update_finish_item,
++	.cancel_item	= xfs_bmap_update_cancel_item,
++};
++
++/* Register the deferred op type. */
++void
++xfs_bmap_update_init_defer_op(void)
++{
++	xfs_defer_init_op_type(&xfs_bmap_update_defer_type);
++}
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 9d9e928..3721589 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -269,6 +269,7 @@ libxfs_init(libxfs_init_t *a)
+ 	xfs_extent_free_init_defer_op();
+ 	xfs_rmap_update_init_defer_op();
+ 	xfs_refcount_update_init_defer_op();
++	xfs_bmap_update_init_defer_op();
+ 
+ 	radix_tree_init();
+ 
+
