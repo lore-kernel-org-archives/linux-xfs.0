@@ -1,68 +1,247 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29137 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:46885 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754888AbcJVAwP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Oct 2016 20:52:15 -0400
-Date: Fri, 21 Oct 2016 17:52:11 -0700
+        with ESMTP id S932449AbcJYXHC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 19:07:02 -0400
+Subject: [PATCH 31/39] xfs_repair: fix inode reflink flags
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] xfs: fix up inode cowblocks tracking tracepoints
-Message-ID: <20161022005211.GA5256@birch.djwong.org>
-References: <1477070533-59327-1-git-send-email-bfoster@redhat.com>
- <1477070533-59327-2-git-send-email-bfoster@redhat.com>
+Date: Tue, 25 Oct 2016 16:06:55 -0700
+Message-ID: <147743681525.11035.5952237581298580531.stgit@birch.djwong.org>
+In-Reply-To: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1477070533-59327-2-git-send-email-bfoster@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Oct 21, 2016 at 01:22:11PM -0400, Brian Foster wrote:
-> These calls are still using the eofblocks tracepoints. The cowblocks
-> equivalents are already defined, we just aren't actually calling them.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+While we're computing reference counts, record which inodes actually
+share blocks with other files and fix the flags as necessary.
 
-Good catch!
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ repair/phase4.c |   20 ++++++++
+ repair/rmap.c   |  133 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ repair/rmap.h   |    1 
+ 3 files changed, 154 insertions(+)
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> ---
->  fs/xfs/xfs_icache.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 14796b7..f295049 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1656,9 +1656,9 @@ void
->  xfs_inode_set_cowblocks_tag(
->  	xfs_inode_t	*ip)
->  {
-> -	trace_xfs_inode_set_eofblocks_tag(ip);
-> +	trace_xfs_inode_set_cowblocks_tag(ip);
->  	return __xfs_inode_set_eofblocks_tag(ip, xfs_queue_cowblocks,
-> -			trace_xfs_perag_set_eofblocks,
-> +			trace_xfs_perag_set_cowblocks,
->  			XFS_ICI_COWBLOCKS_TAG);
->  }
->  
-> @@ -1666,7 +1666,7 @@ void
->  xfs_inode_clear_cowblocks_tag(
->  	xfs_inode_t	*ip)
->  {
-> -	trace_xfs_inode_clear_eofblocks_tag(ip);
-> +	trace_xfs_inode_clear_cowblocks_tag(ip);
->  	return __xfs_inode_clear_eofblocks_tag(ip,
-> -			trace_xfs_perag_clear_eofblocks, XFS_ICI_COWBLOCKS_TAG);
-> +			trace_xfs_perag_clear_cowblocks, XFS_ICI_COWBLOCKS_TAG);
->  }
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/repair/phase4.c b/repair/phase4.c
+index 86992c9..2c2d611 100644
+--- a/repair/phase4.c
++++ b/repair/phase4.c
+@@ -208,6 +208,21 @@ _("%s while computing reference count records.\n"),
+ }
+ 
+ static void
++process_inode_reflink_flags(
++	struct work_queue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
++{
++	int			error;
++
++	error = fix_inode_reflink_flags(wq->mp, agno);
++	if (error)
++		do_error(
++_("%s while fixing inode reflink flags.\n"),
++			 strerror(-error));
++}
++
++static void
+ process_rmap_data(
+ 	struct xfs_mount	*mp)
+ {
+@@ -229,6 +244,11 @@ process_rmap_data(
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++)
+ 		queue_work(&wq, compute_ag_refcounts, i, NULL);
+ 	destroy_work_queue(&wq);
++
++	create_work_queue(&wq, mp, libxfs_nproc());
++	for (i = 0; i < mp->m_sb.sb_agcount; i++)
++		queue_work(&wq, process_inode_reflink_flags, i, NULL);
++	destroy_work_queue(&wq);
+ }
+ 
+ void
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 5de4d32..4ef9051 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -672,6 +672,39 @@ rmap_dump(
+  */
+ 
+ /*
++ * Mark all inodes in the reverse-mapping observation stack as requiring the
++ * reflink inode flag, if the stack depth is greater than 1.
++ */
++static void
++mark_inode_rl(
++	struct xfs_mount		*mp,
++	struct xfs_bag		*rmaps)
++{
++	xfs_agnumber_t		iagno;
++	struct xfs_rmap_irec	*rmap;
++	struct ino_tree_node	*irec;
++	int			off;
++	size_t			idx;
++	xfs_agino_t		ino;
++
++	if (bag_count(rmaps) < 2)
++		return;
++
++	/* Reflink flag accounting */
++	foreach_bag_ptr(rmaps, idx, rmap) {
++		ASSERT(!XFS_RMAP_NON_INODE_OWNER(rmap->rm_owner));
++		iagno = XFS_INO_TO_AGNO(mp, rmap->rm_owner);
++		ino = XFS_INO_TO_AGINO(mp, rmap->rm_owner);
++		pthread_mutex_lock(&ag_locks[iagno].lock);
++		irec = find_inode_rec(mp, iagno, ino);
++		off = get_inode_offset(mp, rmap->rm_owner, irec);
++		/* lock here because we might go outside this ag */
++		set_inode_is_rl(irec, off);
++		pthread_mutex_unlock(&ag_locks[iagno].lock);
++	}
++}
++
++/*
+  * Emit a refcount object for refcntbt reconstruction during phase 5.
+  */
+ #define REFCOUNT_CLAMP(nr)	((nr) > MAXREFCOUNT ? MAXREFCOUNT : (nr))
+@@ -752,6 +785,7 @@ compute_refcounts(
+ 			if (error)
+ 				goto err;
+ 		}
++		mark_inode_rl(mp, stack_top);
+ 
+ 		/* Set nbno to the bno of the next refcount change */
+ 		if (n < slab_count(rmaps))
+@@ -788,6 +822,7 @@ compute_refcounts(
+ 				if (error)
+ 					goto err;
+ 			}
++			mark_inode_rl(mp, stack_top);
+ 
+ 			/* Emit refcount if necessary */
+ 			ASSERT(nbno > cbno);
+@@ -1109,6 +1144,104 @@ record_inode_reflink_flag(
+ }
+ 
+ /*
++ * Fix an inode's reflink flag.
++ */
++static int
++fix_inode_reflink_flag(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_agino_t		agino,
++	bool			set)
++{
++	struct xfs_dinode	*dino;
++	struct xfs_buf		*buf;
++
++	if (set)
++		do_warn(
++_("setting reflink flag on inode %"PRIu64"\n"),
++			XFS_AGINO_TO_INO(mp, agno, agino));
++	else if (!no_modify) /* && !set */
++		do_warn(
++_("clearing reflink flag on inode %"PRIu64"\n"),
++			XFS_AGINO_TO_INO(mp, agno, agino));
++	if (no_modify)
++		return 0;
++
++	buf = get_agino_buf(mp, agno, agino, &dino);
++	if (!buf)
++		return 1;
++	ASSERT(XFS_AGINO_TO_INO(mp, agno, agino) == be64_to_cpu(dino->di_ino));
++	if (set)
++		dino->di_flags2 |= cpu_to_be64(XFS_DIFLAG2_REFLINK);
++	else
++		dino->di_flags2 &= cpu_to_be64(~XFS_DIFLAG2_REFLINK);
++	libxfs_dinode_calc_crc(mp, dino);
++	libxfs_writebuf(buf, 0);
++
++	return 0;
++}
++
++/*
++ * Fix discrepancies between the state of the inode reflink flag and our
++ * observations as to whether or not the inode really needs it.
++ */
++int
++fix_inode_reflink_flags(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
++{
++	struct ino_tree_node	*irec;
++	int			bit;
++	__uint64_t		was;
++	__uint64_t		is;
++	__uint64_t		diff;
++	__uint64_t		mask;
++	int			error = 0;
++	xfs_agino_t		agino;
++
++	/*
++	 * Update the reflink flag for any inode where there's a discrepancy
++	 * between the inode flag and whether or not we found any reflinked
++	 * extents.
++	 */
++	for (irec = findfirst_inode_rec(agno);
++	     irec != NULL;
++	     irec = next_ino_rec(irec)) {
++		ASSERT((irec->ino_was_rl & irec->ir_free) == 0);
++		ASSERT((irec->ino_is_rl & irec->ir_free) == 0);
++		was = irec->ino_was_rl;
++		is = irec->ino_is_rl;
++		if (was == is)
++			continue;
++		diff = was ^ is;
++		dbg_printf("mismatch ino=%llu was=0x%lx is=0x%lx dif=0x%lx\n",
++			(unsigned long long)XFS_AGINO_TO_INO(mp, agno,
++						irec->ino_startnum),
++			was, is, diff);
++
++		for (bit = 0, mask = 1; bit < 64; bit++, mask <<= 1) {
++			agino = bit + irec->ino_startnum;
++			if (!(diff & mask))
++				continue;
++			else if (was & mask)
++				error = fix_inode_reflink_flag(mp, agno, agino,
++						false);
++			else if (is & mask)
++				error = fix_inode_reflink_flag(mp, agno, agino,
++						true);
++			else
++				ASSERT(0);
++			if (error)
++				do_error(
++_("Unable to fix reflink flag on inode %"PRIu64".\n"),
++					XFS_AGINO_TO_INO(mp, agno, agino));
++		}
++	}
++
++	return error;
++}
++
++/*
+  * Regenerate the AGFL so that we don't run out of it while rebuilding the
+  * rmap btree.  If skip_rmapbt is true, don't update the rmapbt (most probably
+  * because we're updating the rmapbt).
+diff --git a/repair/rmap.h b/repair/rmap.h
+index ab6f434..266448f 100644
+--- a/repair/rmap.h
++++ b/repair/rmap.h
+@@ -52,6 +52,7 @@ extern void rmap_high_key_from_rec(struct xfs_rmap_irec *rec,
+ extern int compute_refcounts(struct xfs_mount *, xfs_agnumber_t);
+ extern void record_inode_reflink_flag(struct xfs_mount *, struct xfs_dinode *,
+ 	xfs_agnumber_t, xfs_agino_t, xfs_ino_t);
++extern int fix_inode_reflink_flags(struct xfs_mount *, xfs_agnumber_t);
+ 
+ extern void fix_freelist(struct xfs_mount *, xfs_agnumber_t, bool);
+ extern void rmap_store_agflcount(struct xfs_mount *, xfs_agnumber_t, int);
+
