@@ -1,35 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:36330 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S946729AbcJaUxv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2016 16:53:51 -0400
-Received: by mail-wm0-f42.google.com with SMTP id p190so170777391wmp.1
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2016 13:53:51 -0700 (PDT)
+Received: from aserp1040.oracle.com ([141.146.126.69]:42723 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753399AbcJZQd4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Oct 2016 12:33:56 -0400
+Date: Wed, 26 Oct 2016 09:33:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 11/39] xfs_db: metadump should copy the refcount btree too
+Message-ID: <20161026163322.GA26572@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+ <147743668609.11035.16781673871765061912.stgit@birch.djwong.org>
+ <20161026102940.GI29648@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20161031203715.GV14023@dastard>
-References: <CAPvv1vytjK-n7Z3=Zi+vScuV-ej3CagQ5rFc9ppVC8JEihZPkQ@mail.gmail.com>
- <8bd7b65f-d85d-2958-dd7d-ba97c91ac9ea@telefonica.net> <CAPvv1vx-Juge8e=36bq4AFvGxs8Kf7-V_v0j+a9LGWYdDo5h+w@mail.gmail.com>
- <20161031194212.GU14023@dastard> <CAPvv1vzDQO9iMNhXByGfXrbLEtMt=F1xFd1Ybr63AAuPfvA6iw@mail.gmail.com>
- <20161031203715.GV14023@dastard>
-From: "Steffen D." <sdumke@gmail.com>
-Date: Mon, 31 Oct 2016 21:53:49 +0100
-Message-ID: <CAPvv1vyGXNHP3pFAB6DAGPWfrwqpV22bS35JUXwwCwRJ-xE8Fg@mail.gmail.com>
-Subject: Re: Fwd: mounting a xfs file system gives the message: "failure code
- -3003" and "structure needs cleaning"
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161026102940.GI29648@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-Hi Dave
+On Wed, Oct 26, 2016 at 03:29:40AM -0700, Christoph Hellwig wrote:
+> Looks fine,
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Do we have a testcase for metadump on a reflink fs, btw?
 
-2016-10-31 21:37 GMT+01:00 Dave Chinner <david@fromorbit.com>:
+xfs/129 for refcountbt, xfs/234 for rmapbt, and xfs/336 for realtime rmap.
 
-> What kernel version? 32 bit or 64 bit?
-
-booth kernels where 64 bit
-
--- 
-Signatur ausser Betrieb.
+--D
