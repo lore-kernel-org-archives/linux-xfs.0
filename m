@@ -1,64 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:5828 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S947110AbcJaVZq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2016 17:25:46 -0400
-Date: Tue, 1 Nov 2016 08:25:42 +1100
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:60893 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750832AbcJZDXz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 23:23:55 -0400
+Date: Wed, 26 Oct 2016 14:23:08 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Fwd: mounting a xfs file system gives the message: "failure code
- -3003" and "structure needs cleaning"
-Message-ID: <20161031212542.GO22126@dastard>
-References: <CAPvv1vytjK-n7Z3=Zi+vScuV-ej3CagQ5rFc9ppVC8JEihZPkQ@mail.gmail.com>
- <8bd7b65f-d85d-2958-dd7d-ba97c91ac9ea@telefonica.net>
- <CAPvv1vx-Juge8e=36bq4AFvGxs8Kf7-V_v0j+a9LGWYdDo5h+w@mail.gmail.com>
- <20161031194212.GU14023@dastard>
- <CAPvv1vzDQO9iMNhXByGfXrbLEtMt=F1xFd1Ybr63AAuPfvA6iw@mail.gmail.com>
- <20161031203715.GV14023@dastard>
- <CAPvv1vyGXNHP3pFAB6DAGPWfrwqpV22bS35JUXwwCwRJ-xE8Fg@mail.gmail.com>
- <20161031205810.GW14023@dastard>
- <CAPvv1vxt2MDwf8rXW9HCPprWyg-=h8YFxqhSya9WrKAhMo9kqg@mail.gmail.com>
+Subject: Re: [PATCH 13/39] xfs_db: print one array element per line
+Message-ID: <20161026032308.GH23194@dastard>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+ <147743669846.11035.8419161903309169766.stgit@birch.djwong.org>
+ <20161026005138.GE23194@dastard>
+ <20161026011343.GD23568@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPvv1vxt2MDwf8rXW9HCPprWyg-=h8YFxqhSya9WrKAhMo9kqg@mail.gmail.com>
+In-Reply-To: <20161026011343.GD23568@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Steffen D." <sdumke@gmail.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 31, 2016 at 10:09:09PM +0100, Steffen D. wrote:
-> 2016-10-31 21:58 GMT+01:00 Dave Chinner <david@fromorbit.com>:
-> > On Mon, Oct 31, 2016 at 09:53:49PM +0100, Steffen D. wrote:
-> >> Hi Dave
-> >>
-> >> 2016-10-31 21:37 GMT+01:00 Dave Chinner <david@fromorbit.com>:
-> >>
-> >> > What kernel version? 32 bit or 64 bit?
-> >>
-> >> booth kernels where 64 bit
-> >
-> > What kernel versions? Both old and new versions are important.
+On Tue, Oct 25, 2016 at 06:13:43PM -0700, Darrick J. Wong wrote:
+> On Wed, Oct 26, 2016 at 11:51:38AM +1100, Dave Chinner wrote:
+> > On Tue, Oct 25, 2016 at 04:04:58PM -0700, Darrick J. Wong wrote:
+> > > Print one array element per line so that the debugger output isn't
+> > > a gigantic pile of screen snow.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > What commands does this affect?
 > 
-> old kernel: 3.16
-> new kernel: 4.1
-> 
-> sorry, I have not more detailed informations
+> The 'print' command.
 
-Do youhave the minor numbers for the kernel versions? major numbers
-are insufficient to tell me what I need to know, because the commit
-I quoted got backported to various stable kernels....
-
-(uname -a output is usually best when someone asks for kernel
-versions).
-
-> > Also
-> > how long ago you did you upgrade?
-> 
-> The upgrade was just 2 days ago
-
-Ok, so the first iteration across the AGFLs could trigger this,
-depending on what version of 4.1 is being run...
+Ok, let me be more specific - what is an example of the change of
+behaviour? printing bmbt records in a block, or something else?
+Can you post a before/after example?
 
 Cheers,
 
