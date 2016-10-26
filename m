@@ -1,38 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45181 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753064AbcJZQha (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Oct 2016 12:37:30 -0400
-Date: Wed, 26 Oct 2016 09:37:04 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:45023 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934708AbcJZRVN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Oct 2016 13:21:13 -0400
+Date: Wed, 26 Oct 2016 10:20:33 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 20/39] xfs_io: provide long-format help for falloc
-Message-ID: <20161026163704.GB26572@birch.djwong.org>
+Subject: Re: [PATCH 25/39] man: document the inode cowextsize flags & fields
+Message-ID: <20161026172033.GD26572@birch.djwong.org>
 References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
- <147743674377.11035.8133878879225366578.stgit@birch.djwong.org>
- <20161026103405.GN29648@infradead.org>
+ <147743677455.11035.16363741138480682509.stgit@birch.djwong.org>
+ <20161026103944.GS29648@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161026103405.GN29648@infradead.org>
+In-Reply-To: <20161026103944.GS29648@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
 Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Wed, Oct 26, 2016 at 03:34:05AM -0700, Christoph Hellwig wrote:
-> On Tue, Oct 25, 2016 at 04:05:43PM -0700, Darrick J. Wong wrote:
-> > Provide long-format help for falloc so that xfstests can use
-> > _require_xfs_io_command to check for falloc command line args.
+On Wed, Oct 26, 2016 at 03:39:44AM -0700, Christoph Hellwig wrote:
+> On Tue, Oct 25, 2016 at 04:06:14PM -0700, Darrick J. Wong wrote:
+> > Document the new copy-on-write extent size fields and inode flags
+> > available in struct fsxattr.
 > 
-> As it turns out checking those args isn't actually suitable.
+> Looks fine.  Btw, now that fsxattr is in common code should this
+> documentation move to or be duplicated in the man-pages project?
 
-Yeah, ultimately I simply made an 'funshare' command and xfstests
-checks whether it works the same way it does for fzero/fpunch/etc.
-That makes the commit message a little out of date; will change it.
+Yeah.  I'll port the manpage over to man-pages and we can
+kill the one in xfsprogs later if we want.
 
---D
-
-> But documentation is always good to have, so:
-> 
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
