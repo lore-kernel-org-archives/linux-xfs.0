@@ -1,35 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:62128 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755341AbcJZAvq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 20:51:46 -0400
-Date: Wed, 26 Oct 2016 11:51:38 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 13/39] xfs_db: print one array element per line
-Message-ID: <20161026005138.GE23194@dastard>
+Received: from bombadil.infradead.org ([198.137.202.9]:51645 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753093AbcJZKXI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Oct 2016 06:23:08 -0400
+Date: Wed, 26 Oct 2016 03:23:06 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 03/39] xfs: define the on-disk refcount btree format
+Message-ID: <20161026102306.GC29648@infradead.org>
 References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
- <147743669846.11035.8419161903309169766.stgit@birch.djwong.org>
+ <147743663655.11035.6044942751505512619.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <147743669846.11035.8419161903309169766.stgit@birch.djwong.org>
+In-Reply-To: <147743663655.11035.6044942751505512619.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Tue, Oct 25, 2016 at 04:04:58PM -0700, Darrick J. Wong wrote:
-> Print one array element per line so that the debugger output isn't
-> a gigantic pile of screen snow.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Looks fine,
 
-What commands does this affect?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Cheers,
+> [hch: allocate the cursor with KM_NOFS to quiet lockdep]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I don't remember touching any of this, though :)
