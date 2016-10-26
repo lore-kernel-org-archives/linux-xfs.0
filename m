@@ -1,45 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:28813 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S946838AbcJaU6O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2016 16:58:14 -0400
-Date: Tue, 1 Nov 2016 07:58:10 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Fwd: mounting a xfs file system gives the message: "failure code
- -3003" and "structure needs cleaning"
-Message-ID: <20161031205810.GW14023@dastard>
-References: <CAPvv1vytjK-n7Z3=Zi+vScuV-ej3CagQ5rFc9ppVC8JEihZPkQ@mail.gmail.com>
- <8bd7b65f-d85d-2958-dd7d-ba97c91ac9ea@telefonica.net>
- <CAPvv1vx-Juge8e=36bq4AFvGxs8Kf7-V_v0j+a9LGWYdDo5h+w@mail.gmail.com>
- <20161031194212.GU14023@dastard>
- <CAPvv1vzDQO9iMNhXByGfXrbLEtMt=F1xFd1Ybr63AAuPfvA6iw@mail.gmail.com>
- <20161031203715.GV14023@dastard>
- <CAPvv1vyGXNHP3pFAB6DAGPWfrwqpV22bS35JUXwwCwRJ-xE8Fg@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:36237 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754329AbcJZV76 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Oct 2016 17:59:58 -0400
+Date: Wed, 26 Oct 2016 14:59:27 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 28/39] xfs_repair: handle multiple owners of data blocks
+Message-ID: <20161026215927.GB32036@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+ <147743679506.11035.9193078348507369875.stgit@birch.djwong.org>
+ <20161026105758.GC8254@infradead.org>
+ <20161026171553.GC26572@birch.djwong.org>
+ <20161026211540.GL23194@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPvv1vyGXNHP3pFAB6DAGPWfrwqpV22bS35JUXwwCwRJ-xE8Fg@mail.gmail.com>
+In-Reply-To: <20161026211540.GL23194@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Steffen D." <sdumke@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Mon, Oct 31, 2016 at 09:53:49PM +0100, Steffen D. wrote:
-> Hi Dave
+On Thu, Oct 27, 2016 at 08:15:40AM +1100, Dave Chinner wrote:
+> On Wed, Oct 26, 2016 at 10:15:53AM -0700, Darrick J. Wong wrote:
+> > On Wed, Oct 26, 2016 at 03:57:58AM -0700, Christoph Hellwig wrote:
+> > > > --- a/repair/dinode.c
+> > > > +++ b/repair/dinode.c
+> > > > @@ -722,6 +722,9 @@ _("Fatal error: inode %" PRIu64 " - blkmap_set_ext(): %s\n"
+> > > >  			 * checking each entry without setting the
+> > > >  			 * block bitmap
+> > > >  			 */
+> > > > +			if (type == XR_INO_DATA &&
+> > > > +			    xfs_sb_version_hasreflink(&mp->m_sb))
+> > > > +				goto skip_dup;
+> > > >  			if (search_dup_extent(agno, agbno, ebno)) {
+> > > >  				do_warn(
+> > > >  _("%s fork in ino %" PRIu64 " claims dup extent, "
+> > > > @@ -731,6 +734,7 @@ _("%s fork in ino %" PRIu64 " claims dup extent, "
+> > > >  					irec.br_blockcount);
+> > > >  				goto done;
+> > > >  			}
+> > > > +skip_dup:
+> > > 
+> > > For some weird reason this goto makes me sad.  I'm getting into
+> > > major nitpick terretory here, but can we avoid it?  Either duplicate
+> > > the *tot increment or find some funky condition?
+> > > 
+> > > Otherwise this looks fine.
+> > 
+> > Ugh, unnecessary goto.  Sad! ;)
+> > 
+> > But in all seriousness an 'else if' could do the same work, so:
+> > 
+> > if (type == XR_INO_DATA &&
+> >     xfs_sb_version_hasreflink(&mp->m_sb))
+> > 	; /* avoid the dup extent check below */
+> > else if (search_dup_extent(agno, agbno, ebno)) {
+> > 	do_warn(...);
+> > }
+> > *tot += irec.br_blockcount;
 > 
-> 2016-10-31 21:37 GMT+01:00 Dave Chinner <david@fromorbit.com>:
+> Even that is unnecessary, yes?
 > 
-> > What kernel version? 32 bit or 64 bit?
+> 	if ((type != XR_INO_DATA ||
+> 	     !xfs_sb_version_hasreflink(&mp->m_sb)) &&
+> 	    search_dup_extent(agno, agbno, ebno) {
+> 		do_warn(...);
+> 	}
+
+Err, yes.
+
+--D
+
 > 
-> booth kernels where 64 bit
-
-What kernel versions? Both old and new versions are important. Also
-how long ago you did you upgrade?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
