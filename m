@@ -1,37 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48871 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941853AbcJYPIW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 11:08:22 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: 
-Date: Tue, 25 Oct 2016 17:08:12 +0200
-Message-Id: <1477408098-10153-1-git-send-email-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:50046 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754631AbcJZBNx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2016 21:13:53 -0400
+Date: Tue, 25 Oct 2016 18:13:43 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 13/39] xfs_db: print one array element per line
+Message-ID: <20161026011343.GD23568@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+ <147743669846.11035.8419161903309169766.stgit@birch.djwong.org>
+ <20161026005138.GE23194@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161026005138.GE23194@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: axboe@fb.com, kent.overstreet@gmail.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Subject: an iomap-based direct I/O implementation
+On Wed, Oct 26, 2016 at 11:51:38AM +1100, Dave Chinner wrote:
+> On Tue, Oct 25, 2016 at 04:04:58PM -0700, Darrick J. Wong wrote:
+> > Print one array element per line so that the debugger output isn't
+> > a gigantic pile of screen snow.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> What commands does this affect?
 
-Hi all,
+The 'print' command.
 
-this series adds a new direct I/O implementation based on the iomap
-interface, and switches XFS to use it.
+--D
 
-The first two patches are a resend of my earlier series to remove the
-XFS iolock.  They are needed for the lockdep assert in the new iomap
-code.
-
-The third patch adds a new helper to the block layer that builds bio
-from locked down user pages without needing an additional page array.
-This helper was originally written by Kent and then heavily rewritten
-by me to use the iov_iter helper that also allow non-user page backed
-iov_iters.  (Kent - I kept your credits for it, if you feel this doesn't
-look like your code anymore I'll happily claim it for me).  This patch
-should probably go into a shared branch in the block layer tree as I
-have some other users for it as well.
-
-The rest implements a new iomap_dio_rw direct I/O implementation and
-switches XFS to use it.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
