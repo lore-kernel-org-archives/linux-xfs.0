@@ -1,48 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.webx.cz ([109.123.222.201]:41114 "EHLO mail.webx.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S944195AbcJaPgh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 31 Oct 2016 11:36:37 -0400
-From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
-Date: Mon, 31 Oct 2016 16:36:33 +0100
-Message-ID: <7837406.5hmCKvTK5C@libor-nb>
-In-Reply-To: <20161031120226.GT14023@dastard>
-References: <5244720.RPRsZ88NJ0@libor-nb> <3301912.kAxTXXYXM8@libor-nb> <20161031120226.GT14023@dastard>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45181 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753064AbcJZQha (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Oct 2016 12:37:30 -0400
+Date: Wed, 26 Oct 2016 09:37:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 20/39] xfs_io: provide long-format help for falloc
+Message-ID: <20161026163704.GB26572@birch.djwong.org>
+References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
+ <147743674377.11035.8133878879225366578.stgit@birch.djwong.org>
+ <20161026103405.GN29648@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161026103405.GN29648@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-Hello,
-
-On pondělí 31. října 2016 23:02:26 CET Dave Chinner wrote:
-> On Mon, Oct 31, 2016 at 09:54:00AM +0100, Libor Klep�? wrote:
-> > Hello,
-> > i have upgrade VM called vps1 in original email (the one on bottom of
-> > email) to debian kernel 4.7.8-1~bpo8+1 and compiled xfsprogs 4.8.0.
-> > 
-> > Here is output of xfs_repair -n and xfs_repair. Is it supposed to write
-> > if/
-> > what is being repaired, when i forgot -v option?
+On Wed, Oct 26, 2016 at 03:34:05AM -0700, Christoph Hellwig wrote:
+> On Tue, Oct 25, 2016 at 04:05:43PM -0700, Darrick J. Wong wrote:
+> > Provide long-format help for falloc so that xfstests can use
+> > _require_xfs_io_command to check for falloc command line args.
 > 
-> repair will always tell you if there are errors. The logs you have
-> posted indicate a clean filesystem with no errors.
+> As it turns out checking those args isn't actually suitable.
 
-Ok, so this one looks good for now.
-I have to arrange a "upgrade and xfs_repair run" window with other customer to 
-deal with machine called vps2 in my original email.
+Yeah, ultimately I simply made an 'funshare' command and xfstests
+checks whether it works the same way it does for fzero/fpunch/etc.
+That makes the commit message a little out of date; will change it.
 
+--D
+
+> But documentation is always good to have, so:
 > 
-> Cheers,
-> 
-> Dave.
-
-Thanks,
-
-Libor
-
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
