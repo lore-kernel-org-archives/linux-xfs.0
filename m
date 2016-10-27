@@ -1,51 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:37857 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S946921AbcJaVJL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2016 17:09:11 -0400
-Received: by mail-wm0-f44.google.com with SMTP id t79so73884797wmt.0
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2016 14:09:11 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:1230 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933724AbcJ0VnB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2016 17:43:01 -0400
+Date: Fri, 28 Oct 2016 08:42:44 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [rfc] larger batches for crc32c
+Message-ID: <20161027214244.GO14023@dastard>
+References: <20161028031747.68472ac7@roar.ozlabs.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20161031205810.GW14023@dastard>
-References: <CAPvv1vytjK-n7Z3=Zi+vScuV-ej3CagQ5rFc9ppVC8JEihZPkQ@mail.gmail.com>
- <8bd7b65f-d85d-2958-dd7d-ba97c91ac9ea@telefonica.net> <CAPvv1vx-Juge8e=36bq4AFvGxs8Kf7-V_v0j+a9LGWYdDo5h+w@mail.gmail.com>
- <20161031194212.GU14023@dastard> <CAPvv1vzDQO9iMNhXByGfXrbLEtMt=F1xFd1Ybr63AAuPfvA6iw@mail.gmail.com>
- <20161031203715.GV14023@dastard> <CAPvv1vyGXNHP3pFAB6DAGPWfrwqpV22bS35JUXwwCwRJ-xE8Fg@mail.gmail.com>
- <20161031205810.GW14023@dastard>
-From: "Steffen D." <sdumke@gmail.com>
-Date: Mon, 31 Oct 2016 22:09:09 +0100
-Message-ID: <CAPvv1vxt2MDwf8rXW9HCPprWyg-=h8YFxqhSya9WrKAhMo9kqg@mail.gmail.com>
-Subject: Re: Fwd: mounting a xfs file system gives the message: "failure code
- -3003" and "structure needs cleaning"
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161028031747.68472ac7@roar.ozlabs.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Nicholas Piggin <npiggin@gmail.com>
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>
 
-2016-10-31 21:58 GMT+01:00 Dave Chinner <david@fromorbit.com>:
-> On Mon, Oct 31, 2016 at 09:53:49PM +0100, Steffen D. wrote:
->> Hi Dave
->>
->> 2016-10-31 21:37 GMT+01:00 Dave Chinner <david@fromorbit.com>:
->>
->> > What kernel version? 32 bit or 64 bit?
->>
->> booth kernels where 64 bit
->
-> What kernel versions? Both old and new versions are important.
+On Fri, Oct 28, 2016 at 03:17:47AM +1100, Nicholas Piggin wrote:
+> Hi guys,
+> 
+> We're seeing crc32c_le show up in xfs log checksumming on a MySQL benchmark
+> on powerpc. I could reproduce similar overheads with dbench as well.
+> 
+> 1.11%  mysqld           [kernel.vmlinux]            [k] __crc32c_le
+>         |
+>         ---__crc32c_le
+>            |          
+>             --1.11%--chksum_update
+>                       |          
+>                        --1.11%--crypto_shash_update
+>                                  crc32c
+>                                  xlog_cksum
+>                                  xlog_sync
+>                                  _xfs_log_force_lsn
+>                                  xfs_file_fsync
+>                                  vfs_fsync_range
+>                                  do_fsync
+>                                  sys_fsync
+>                                  system_call
+>                                  0x17738
+>                                  0x17704
+>                                  os_file_flush_func
+>                                  fil_flush
 
-old kernel: 3.16
-new kernel: 4.1
+2-3% is the typical CRC CPU overhead I see on metadata/log intensive
+workloads on x86-64, so this doesn't seem unreasonable.
 
-sorry, I have not more detailed informations
+Looking more closely at xlog_cksum, it does:
 
+	crc = xfs_start_cksum(sizeof(struct xlog_rec_header) ...
+	for (i = 0; i < xheads; i++) {
+		...
+		crc = crc32c(crc, ... sizeof(struct xlog_rec_ext_header));
+		...
+	}
+	/* ... and finally for the payload */
+	crc = crc32c(crc, dp, size);
 
-> Also
-> how long ago you did you upgrade?
+	return xfs_end_cksum(crc);
 
-The upgrade was just 2 days ago
+The vast majority of the work it does is in the ".. and finally for
+the payload " call. The first is a sector, the loop (up to 8 times
+for 256k log buffer sizes) is over single sectors, and the payload
+is up to 256kb of data. So the payload CRC is the vast majority of
+the data being CRCed and so should dominate the CPU usage here.  It
+doesn't look like optimising xfs_start_cksum() would make much
+difference...
 
+> As a rule, it helps the crc implementation if it can operate on as large a
+> chunk as possible (alignment, startup overhead, etc). So I did a quick hack
+> at getting XFS checksumming to feed crc32c() with larger chunks, by setting
+> the existing crc to 0 before running over the entire buffer. Together with
+> some small work on the powerpc crc implementation, crc drops below 0.1%.
+
+I wouldn't have expected reducing call numbers and small alignment
+changes to make that amount of difference given the amount of data
+we are actually checksumming. How much of that difference was due to
+the improved CRC implementation?
+
+FWIW, can you provide some additional context by grabbing the log
+stats that tell us the load on the log that is generating this
+profile?  A sample over a minute of a typical workload (with a
+corresponding CPU profile) would probably be sufficient. You can get
+them simply by zeroing the xfs stats via
+/proc/sys/fs/xfs/stats_clear at the start of the sample period and
+then dumping /proc/fs/xfs/stat at the end.
+
+> I don't know if something like this would be acceptable? It's not pretty,
+> but I didn't see an easier way.
+
+ISTR we made the choice not to do that to avoid potential problems
+with potential race conditions and bugs (i.e. don't modify anything
+in objects on read access) but I can't point you at anything
+specific...
+
+Cheers,
+
+Dave.
 -- 
-Signatur ausser Betrieb.
+Dave Chinner
+david@fromorbit.com
