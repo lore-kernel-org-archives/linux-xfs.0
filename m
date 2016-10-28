@@ -1,91 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:37857 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S945887AbcJaUVE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2016 16:21:04 -0400
-Received: by mail-wm0-f47.google.com with SMTP id t79so71839902wmt.0
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2016 13:21:03 -0700 (PDT)
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:33543 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751223AbcJ1FC3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Oct 2016 01:02:29 -0400
+Received: by mail-pf0-f177.google.com with SMTP id 197so30734029pfu.0
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2016 22:02:29 -0700 (PDT)
+Date: Fri, 28 Oct 2016 16:02:18 +1100
+From: Nicholas Piggin <npiggin@gmail.com>
+Subject: Re: [rfc] larger batches for crc32c
+Message-ID: <20161028160218.1af40906@roar.ozlabs.ibm.com>
+In-Reply-To: <20161028131234.24a5cb6f@roar.ozlabs.ibm.com>
+References: <20161028031747.68472ac7@roar.ozlabs.ibm.com>
+        <20161027214244.GO14023@dastard>
+        <20161028131234.24a5cb6f@roar.ozlabs.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20161031194212.GU14023@dastard>
-References: <CAPvv1vytjK-n7Z3=Zi+vScuV-ej3CagQ5rFc9ppVC8JEihZPkQ@mail.gmail.com>
- <8bd7b65f-d85d-2958-dd7d-ba97c91ac9ea@telefonica.net> <CAPvv1vx-Juge8e=36bq4AFvGxs8Kf7-V_v0j+a9LGWYdDo5h+w@mail.gmail.com>
- <20161031194212.GU14023@dastard>
-From: "Steffen D." <sdumke@gmail.com>
-Date: Mon, 31 Oct 2016 21:20:56 +0100
-Message-ID: <CAPvv1vzDQO9iMNhXByGfXrbLEtMt=F1xFd1Ybr63AAuPfvA6iw@mail.gmail.com>
-Subject: Re: Fwd: mounting a xfs file system gives the message: "failure code
- -3003" and "structure needs cleaning"
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-Hi Dave,
+On Fri, 28 Oct 2016 13:12:34 +1100
+Nicholas Piggin <npiggin@gmail.com> wrote:
 
-2016-10-31 20:42 GMT+01:00 Dave Chinner <david@fromorbit.com>:
-> On Mon, Oct 31, 2016 at 08:29:37PM +0100, Steffen D. wrote:
->> Hello again
->> thanks to Carlos for the hint about the language.
->> Here are the messages in english:
->> ----------
->> linux-ibbi:/home/steffen # LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
->> ...
->
-> hmmm - AGFL sizing issue?
->
-> What is the error in dmesg when you try to mount the filesystem?
+> On Fri, 28 Oct 2016 08:42:44 +1100
+> Dave Chinner <david@fromorbit.com> wrote:
+> 
 
-----------
-[46389.083808] XFS (sda4): Mounting V5 Filesystem
-[46389.193790] XFS (sda4): Starting recovery (logdev: internal)
-[46390.697811] XFS (sda4): Metadata corruption detected at
-xfs_agf_read_verify+0x5a/0x100 [xfs], block 0x1a1d6001
-[46390.697814] XFS (sda4): Unmount and run xfs_repair
-[46390.697815] XFS (sda4): First 64 bytes of corrupted metadata buffer:
-[46390.697817] ffff880213e2d600: 58 41 47 46 00 00 00 01 00 00 00 02
-01 a1 d6 00  XAGF............
-[46390.697818] ffff880213e2d610: 00 72 fb d6 00 73 ee 3e 00 00 00 00
-00 00 00 02  .r...s.>........
-[46390.697819] ffff880213e2d620: 00 00 00 02 00 00 00 00 00 00 00 76
-00 00 00 06  ...........v....
-[46390.697820] ffff880213e2d630: 00 00 00 07 00 83 6d 93 00 28 47 02
-00 00 00 29  ......m..(G....)
-[46390.697853] XFS (sda4): metadata I/O error: block 0x1a1d6001
-("xfs_trans_read_buf_map") error 117 numblks 1
-----------
+> > > I don't know if something like this would be acceptable? It's not pretty,
+> > > but I didn't see an easier way.    
+> > 
+> > ISTR we made the choice not to do that to avoid potential problems
+> > with potential race conditions and bugs (i.e. don't modify anything
+> > in objects on read access) but I can't point you at anything
+> > specific...  
+> 
+> Sounds pretty reasonable, especially for the verifiers. For the paths
+> that create/update the checksums (including this log checksum), it seems
+> like it should be less controversial.
+> 
+> But yes let me get more data first. Thanks for taking a look.
 
-> What hardware are you running on (cpu, ram, etc) and
+Okay, the XFS crc sizes indeed don't look too so bad, so it's more the
+crc implementation I suppose. I was seeing a lot of small calls to crc,
+but as a fraction of the total number of bytes, it's not as significant
+as I thought. That said, there is some improvement you may be able to
+get even from x86 implementation.
 
-Intel i5-4460 4 x 3.20 GHz
-8 GB Ram
-HDD:
-sda: SCSI-SATA ST500DM002-1BD14
-sdd: Sandisk SDSSDP128G
-Linux OpenSuse 42.1
+I took an ilog2 histogram of frequency and total bytes going to XFS
+checksum, with total, head, and tail lengths. I'll give as percentages
+of total for easier comparison (total calls were around 1 million and
+500MB of data):
 
-
-
-> where/how was
-> this filesystem created? Did it come from another machine?
-
-Was created while installing the previous system (OpenSuse 13.2)
-
-The problem starts after a system crash while I was copying some files.
-
->
-> xfs_reapir -L should fix it, but I'd like to understand what the
-> problem was first and how it happened....
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+                frequency                   bytes
+ilog2   total   | head | tail       total | head | tail
+  3         0     1.51      0           0   0.01      0
+  4         0        0      0           0      0      0
+  5         0        0      0           0      0      0
+  6         0    22.35      0           0   1.36      0
+  7         0    76.10      0           0  14.40      0
+  8         0     0.04     ~0           0   0.02     ~0
+  9     22.25       ~0  98.39       13.81     ~0  71.07
+ 10     76.14        0      0       73.77      0      0
+ 11         0        0      0           0      0      0
+ 12         0        0   1.60           0      0  12.39
+ 13      1.60        0      0       12.42      0      0
 
 
+Keep in mind you have to sum the number of bytes for head and tail to
+get ~100%.
 
--- 
-Signatur ausser Betrieb.
+Now for x86-64, you need to be at 9-10 (depending on configuration) or
+greater to exceed the breakeven point for their fastest implementation.
+Split crc implementation will use the fast algorithm for about 85% of
+bytes in the best case, 12% at worst. Combined gets there for 85% at
+worst, and 100% at best. The slower x86 implementation still uses a
+hardware instruction, so it doesn't do too badly.
+
+For powerpc, the breakeven is at 512 + 16 bytes (9ish), but it falls
+back to generic implementation for bytes below that.  I think we can
+reduce the break even point on powerpc slightly and capture most of
+the rest, so it's not so bad.
+
+Anyway at least that's a data point to consider. Small improvement is
+possible.
+
+Thanks,
+Nick
+
