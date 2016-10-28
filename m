@@ -1,111 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:58704 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756965AbcJRCD2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 22:03:28 -0400
-Date: Tue, 18 Oct 2016 13:03:24 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC] xfs: drop SYNC_WAIT from xfs_reclaim_inodes_ag
- during slab reclaim
-Message-ID: <20161018020324.GA23194@dastard>
-References: <06aade22-b29e-f55e-7f00-39154f220aa6@fb.com>
- <20161015223454.GS23194@dastard>
- <20161017002427.GA70229@clm-mbp.masoncoding.com>
- <20161017015251.GU23194@dastard>
- <e0c37926-a670-98b6-4bd7-b438def130bd@fb.com>
- <20161017223057.GV23194@dastard>
- <f6dadb97-4233-4bbf-3edc-4985c7727548@fb.com>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:52001 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1756389AbcJ1QQJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Oct 2016 12:16:09 -0400
+From: Michael Callahan <michaelcallahan@fb.com>
+Subject: Re: [PATCH 2/3] xfs: don't block the log commit handler for discards
+Date: Fri, 28 Oct 2016 16:16:01 +0000
+Message-ID: <D438D4D4.2CD0%michaelcallahan@fb.com>
+References: <1476735753-5861-1-git-send-email-hch@lst.de>
+ <1476735753-5861-3-git-send-email-hch@lst.de>
+ <20161017232908.GY23194@dastard> <20161019105825.GA2279@lst.de>
+In-Reply-To: <20161019105825.GA2279@lst.de>
+Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <CD4AF2D4B9A1EC45814E45E8F5540CA0@namprd15.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f6dadb97-4233-4bbf-3edc-4985c7727548@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Mason <clm@fb.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Mon, Oct 17, 2016 at 07:20:56PM -0400, Chris Mason wrote:
-> On 10/17/2016 06:30 PM, Dave Chinner wrote:
-> >On Mon, Oct 17, 2016 at 09:30:05AM -0400, Chris Mason wrote:
-> >What you are reporting is equivalent to having pageout() run and do
-> >all the writeback (badly) instead of the bdi flusher threads doing
-> >all the writeback (efficiently). pageout() is a /worst case/
-> >behaviour we try very hard to avoid and when it occurs it is
-> >generally indicative of some other problem or imbalance. Same goes
-> >here for the inode shrinker.
-> 
-> Yes!  But the big difference is that pageout() already has a backoff
-> for congestion.  The xfs shrinker doesn't.
 
-pageout() is only ever called from kswapd context for file pages.
-Hence applications hitting direct reclaim really hard will never
-call pageout() directly - they'll skip over it and end up calling
-congestion_wait() instead and at that point the page cache dirty
-throttle and background writeback should take over.
 
-This, however, breaks down when there are hundreds of direct
-reclaimers because the pressure put on direct reclaim can exceed the
-amount of cleaning work that can be done by the background threads
-in the maximum congestion backoff period and there are other caches
-that require IO to clean.
+On 10/19/16, 4:58 AM, "Christoph Hellwig" <hch@lst.de> wrote:
 
-Direct reclaim then has no clean page cache pages to clean on each
-LRU scan, so it effectively then transfers that excess pressure to
-the shrinkers that require IO to reclaim.  If a shrinker hits a
-similar "reclaim pressure > background cleaning rate" threshold,
-then it will end up directly blocking on IO congestion, exactly as
-you are describing.
+>On Tue, Oct 18, 2016 at 10:29:08AM +1100, Dave Chinner wrote:
+>> > +	if (args.fsbno =3D=3D NULLFSBLOCK && trydiscard) {
+>> > +		trydiscard =3D false;
+>> > +		flush_workqueue(xfs_discard_wq);
+>> > +		goto retry;
+>> > +	}
+>>=20
+>> So this is the new behaviour that triggers flushing of the discard
+>> list rather than having it occur from a log force inside
+>> xfs_extent_busy_update_extent().
+>>=20
+>> However, xfs_extent_busy_update_extent() also has backoff when it
+>> finds an extent on the busy list being discarded, which means it
+>> could spin waiting for the discard work to complete.
+>>=20
+>> Wouldn't it be better to trigger this workqueue flush in
+>> xfs_extent_busy_update_extent() in both these cases so that the
+>> behaviour remains the same for userdata allocations hitting
+>> uncommitted busy extents, but also allow us to remove the spinning
+>> for allocations where the busy extent is currently being discarded?
+>
+>So the current xfs_extent_busy_update_extent busy wait is something we
+>actually never hit at all - it's only hit when an extent under discard
+>is reused by an AGFL allocation, which basically does not happen.
+>
+>I'm not feeling very eager to touch that corner case code, and would
+>rather leave it as-is.
+>
+>The new flush deals with the case where we weren't able to find any space
+>due to the discard list.  To honest I almost don't manage to trigger it
+>anymore once I found the issue fixed in patch 1.  It might be possible
+>to even drop this retry entirely now.
+>
+>> This creates one long bio chain with all the regions to discard on
+>> it, and then when all it completes we call xlog_discard_endio() to
+>> release all the busy extents.
+>>=20
+>> Why not pull the busy extent from the list and attach it to each
+>> bio returned and submit them individually and run per-busy extent
+>> completions? That will substantially reduce the latency of discard
+>> completions when there are long lists of extents to discard....
+>
+>Because that would defeat the merging I currently do, which is
+>very effectice.  It would also increase the size of the busy extent
+>structure as it would grow a work_struct, and increase lock contention
+>in the completion handler.  All in all not that pretty, especially
+>as the most common number of discards are one digit or small two
+>digit.  And this is just going to further decrease once I finish
+>up my block layer patches to allow multi-range discards by merging
+>multiple discard bios into a single request.  With that even double
+>digit numbers of discards are fairly rare.
+>
+>Now if we eventually want to split the completions I think we'll
+>need to start merging the extent_busy structures once they are added
+>to the CIL.  That's quite a bit of effort and I'd like to avoid it
+>for now.
 
-Both direct reclaim and kswapd can get stuck in this becase
-shrinkers - unlike pageout() - are called from direct reclaim as
-well as kswapd.  i.e. Shrinkers are exposed to unbound direct
-reclaim pressure, pageout() writeback isn't. Hence shrinkers need to
-handle unbound incoming concurrency without killing IO patterns,
-without trashing the working set of objects it controls, and it has
-to - somehow - adequately throttle reclaim rates in times of
-pressure overload.
+Doesn't the block layer already do a reasonable job of merging adjacent
+discards?  This is about the only bio-level optimization that blk-mq does
+but it should be working.
 
-Right now the XFS code uses IO submission to do that throttling.
-Shrinkers have no higher layer throttling we can rely on here.
-Blocking on congestion during IO submission is effectively no
-different to calling congestion_wait() in the shrinker itself after
-skipping a bunch of dirty inodes that we can't write because of
-congestion. While we can do this, it doesn't change the fact that
-shrinkers that do IO need to block callers to adequately control the
-reclaim pressure being directed at them.
+Also last I looked the md layer of the software raid stack could re-dice
+these into many stripe sized pieces anyway and that also needed to be
+fixed.
 
-If the XFS background metadata writeback threads are doing their
-work properly, shrinker reclaim should not be blocking on dirty
-inodes.  However, for all I know right now the problem could be that
-the background reclaimer is *working too well* and so leaving only
-dirty inodes for the shrinkers to act on.....
+  Michael
 
-IOWs, what we need to do *first* is to work out why there is so much
-blocking occuring - we need to find the /root cause of the
-blocking problem/ and once we've found that we can discuss potential
-solutions.
-
-[snip]
-
-> >If you're taking great lengths to avoid pageout() from being called,
-> >then it's no surprise to me that your workload is, instead,
-> >triggering the equivalent "oh shit, we're in real trouble here"
-> >behaviour in XFS inode cache reclaim.  I also wonder, after turning
-> >down the dirty ratios, if you've done other typical writeback tuning
-> >tweaks like speeding up XFS's periodic metadata writeback to clean
-> >inodes faster in the absence of journal pressure.
-> 
-> No, we haven't.  I'm trying really hard to avoid the need for 50
-> billion tunables when the shrinkers are so clearly doing the wrong
-> thing.
-
-XFS has *1* tunable that can change the behaviour of metadata
-writeback. Please try it.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
