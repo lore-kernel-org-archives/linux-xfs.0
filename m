@@ -1,34 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47346 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S943918AbcJaPQi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 31 Oct 2016 11:16:38 -0400
-Date: Mon, 31 Oct 2016 16:16:36 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/3] xfs: don't block the log commit handler for
-        discards
-Message-ID: <20161031151636.GA14981@lst.de>
-References: <1476735753-5861-1-git-send-email-hch@lst.de> <1476735753-5861-3-git-send-email-hch@lst.de> <20161017232908.GY23194@dastard> <20161019105825.GA2279@lst.de> <D438D4D4.2CD0%michaelcallahan@fb.com>
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:36330 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S946729AbcJaUxv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2016 16:53:51 -0400
+Received: by mail-wm0-f42.google.com with SMTP id p190so170777391wmp.1
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2016 13:53:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <D438D4D4.2CD0%michaelcallahan@fb.com>
+In-Reply-To: <20161031203715.GV14023@dastard>
+References: <CAPvv1vytjK-n7Z3=Zi+vScuV-ej3CagQ5rFc9ppVC8JEihZPkQ@mail.gmail.com>
+ <8bd7b65f-d85d-2958-dd7d-ba97c91ac9ea@telefonica.net> <CAPvv1vx-Juge8e=36bq4AFvGxs8Kf7-V_v0j+a9LGWYdDo5h+w@mail.gmail.com>
+ <20161031194212.GU14023@dastard> <CAPvv1vzDQO9iMNhXByGfXrbLEtMt=F1xFd1Ybr63AAuPfvA6iw@mail.gmail.com>
+ <20161031203715.GV14023@dastard>
+From: "Steffen D." <sdumke@gmail.com>
+Date: Mon, 31 Oct 2016 21:53:49 +0100
+Message-ID: <CAPvv1vyGXNHP3pFAB6DAGPWfrwqpV22bS35JUXwwCwRJ-xE8Fg@mail.gmail.com>
+Subject: Re: Fwd: mounting a xfs file system gives the message: "failure code
+ -3003" and "structure needs cleaning"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michael Callahan <michaelcallahan@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Oct 28, 2016 at 04:16:01PM +0000, Michael Callahan wrote:
-> Doesn't the block layer already do a reasonable job of merging adjacent
-> discards?
+Hi Dave
 
-It certainly didn't with my fast NVMe device.  But even if it did
-we have all the information available here, so it's still cheaper to
-do it in the submitter.  One thing we should try is to move it into
-__blkdev_issue_discard in the future, though.
+2016-10-31 21:37 GMT+01:00 Dave Chinner <david@fromorbit.com>:
 
-Note that I've also started to look into merging disjoint discard
-range into a single request for ranged trim/unmap/deallocate and that
-also seems to work nicely, but it will need some large tree-wide
-changes.
+> What kernel version? 32 bit or 64 bit?
+
+booth kernels where 64 bit
+
+-- 
+Signatur ausser Betrieb.
