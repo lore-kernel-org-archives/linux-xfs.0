@@ -1,47 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36428 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932758AbcJZSAY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Oct 2016 14:00:24 -0400
-Date: Wed, 26 Oct 2016 10:59:56 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/39] xfs: introduce the CoW fork
-Message-ID: <20161026175956.GG26572@birch.djwong.org>
-References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
- <147743666109.11035.5850104676966406279.stgit@birch.djwong.org>
- <20161026102524.GF29648@infradead.org>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:28813 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S946838AbcJaU6O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2016 16:58:14 -0400
+Date: Tue, 1 Nov 2016 07:58:10 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Fwd: mounting a xfs file system gives the message: "failure code
+ -3003" and "structure needs cleaning"
+Message-ID: <20161031205810.GW14023@dastard>
+References: <CAPvv1vytjK-n7Z3=Zi+vScuV-ej3CagQ5rFc9ppVC8JEihZPkQ@mail.gmail.com>
+ <8bd7b65f-d85d-2958-dd7d-ba97c91ac9ea@telefonica.net>
+ <CAPvv1vx-Juge8e=36bq4AFvGxs8Kf7-V_v0j+a9LGWYdDo5h+w@mail.gmail.com>
+ <20161031194212.GU14023@dastard>
+ <CAPvv1vzDQO9iMNhXByGfXrbLEtMt=F1xFd1Ybr63AAuPfvA6iw@mail.gmail.com>
+ <20161031203715.GV14023@dastard>
+ <CAPvv1vyGXNHP3pFAB6DAGPWfrwqpV22bS35JUXwwCwRJ-xE8Fg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161026102524.GF29648@infradead.org>
+In-Reply-To: <CAPvv1vyGXNHP3pFAB6DAGPWfrwqpV22bS35JUXwwCwRJ-xE8Fg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: "Steffen D." <sdumke@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Oct 26, 2016 at 03:25:24AM -0700, Christoph Hellwig wrote:
-> On Tue, Oct 25, 2016 at 04:04:21PM -0700, Darrick J. Wong wrote:
-> > Introduce a new in-core fork for storing copy-on-write delalloc
-> > reservations and allocated extents that are in the process of being
-> > written out.
-> > 
-> > [Clean up the CoW fork, should there ever be one.]
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Oct 31, 2016 at 09:53:49PM +0100, Steffen D. wrote:
+> Hi Dave
 > 
-> What's up with all these odd commit message and tiny not really
-> standalone patches?
+> 2016-10-31 21:37 GMT+01:00 Dave Chinner <david@fromorbit.com>:
+> 
+> > What kernel version? 32 bit or 64 bit?
+> 
+> booth kernels where 64 bit
 
-Silly me just rammed the old patch stack into the new for-next base,
-with the result that the patches that still had un-merged hunks got left
-in the patch stack with commit messages intact.
+What kernel versions? Both old and new versions are important. Also
+how long ago you did you upgrade?
 
-Dave yelled at me to fix the commit messages, so I changed the commit
-messages to be the text in the brackets before the S-o-B and pushed the
-mess to github.  I figured I ought to wait a day or two for more reviews
-to come in before re-spamming everyone.
+Cheers,
 
-Sorry about the spew.
-
---D
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
