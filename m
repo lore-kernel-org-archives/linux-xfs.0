@@ -1,111 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48066 "EHLO mx1.redhat.com"
+Received: from mail.webx.cz ([109.123.222.201]:41114 "EHLO mail.webx.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936166AbcJaL5q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 31 Oct 2016 07:57:46 -0400
-Date: Mon, 31 Oct 2016 07:57:43 -0400
-From: Brian Foster <bfoster@redhat.com>
+        id S944195AbcJaPgh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 31 Oct 2016 11:36:37 -0400
+From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
 Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
-Message-ID: <20161031115743.GA57171@bfoster.bfoster>
-References: <5244720.RPRsZ88NJ0@libor-nb>
- <3822835.q6ryES8eE3@libor-nb>
- <20161024024024.GX14023@dastard>
- <3301912.kAxTXXYXM8@libor-nb>
+Date: Mon, 31 Oct 2016 16:36:33 +0100
+Message-ID: <7837406.5hmCKvTK5C@libor-nb>
+In-Reply-To: <20161031120226.GT14023@dastard>
+References: <5244720.RPRsZ88NJ0@libor-nb> <3301912.kAxTXXYXM8@libor-nb> <20161031120226.GT14023@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <3301912.kAxTXXYXM8@libor-nb>
+Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Mon, Oct 31, 2016 at 09:54:00AM +0100, Libor Klepáč wrote:
-> Hello,
-> i have upgrade VM called vps1 in original email (the one on bottom of email)
-> to debian kernel 4.7.8-1~bpo8+1 and compiled xfsprogs 4.8.0.
-> 
-> Here is output of xfs_repair -n and xfs_repair. Is it supposed to write if/
-> what is being repaired, when i forgot -v option?
-> 
+Hello,
 
-Yes, xfs_repair will write some things to the fs when -n is not provided
-(if that was your question?).
-
-> With regards, 
-> Libor
+On pondělí 31. října 2016 23:02:26 CET Dave Chinner wrote:
+> On Mon, Oct 31, 2016 at 09:54:00AM +0100, Libor Klep�? wrote:
+> > Hello,
+> > i have upgrade VM called vps1 in original email (the one on bottom of
+> > email) to debian kernel 4.7.8-1~bpo8+1 and compiled xfsprogs 4.8.0.
+> > 
+> > Here is output of xfs_repair -n and xfs_repair. Is it supposed to write
+> > if/
+> > what is being repaired, when i forgot -v option?
 > 
-> root@vps1:~# xfs_repair -n /dev/vgEOSVPS1Disk2/lvData 
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify link counts...
-> No modify flag set, skipping filesystem flush and exiting.
-> 
+> repair will always tell you if there are errors. The logs you have
+> posted indicate a clean filesystem with no errors.
 
-Hmm, and it looks like all is well with the fs. Have you reproduced the
-original issue since updating the kernel as well?
+Ok, so this one looks good for now.
+I have to arrange a "upgrade and xfs_repair run" window with other customer to 
+deal with machine called vps2 in my original email.
 
-Brian
+> 
+> Cheers,
+> 
+> Dave.
 
-> -----
-> 
-> root@vps1:~# xfs_repair /dev/vgEOSVPS1Disk2/lvData 
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
-> Phase 5 - rebuild AG headers and trees...
->         - reset superblock...
-> Phase 6 - check inode connectivity...
->         - resetting contents of realtime bitmap and summary inodes
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify and correct link counts...
-> done
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+
+Libor
+
