@@ -1,87 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36237 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754329AbcJZV76 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Oct 2016 17:59:58 -0400
-Date: Wed, 26 Oct 2016 14:59:27 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 28/39] xfs_repair: handle multiple owners of data blocks
-Message-ID: <20161026215927.GB32036@birch.djwong.org>
-References: <147743661772.11035.560864407573832590.stgit@birch.djwong.org>
- <147743679506.11035.9193078348507369875.stgit@birch.djwong.org>
- <20161026105758.GC8254@infradead.org>
- <20161026171553.GC26572@birch.djwong.org>
- <20161026211540.GL23194@dastard>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:31296 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S946037AbcJaTms (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2016 15:42:48 -0400
+Date: Tue, 1 Nov 2016 06:42:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Fwd: mounting a xfs file system gives the message: "failure code
+ -3003" and "structure needs cleaning"
+Message-ID: <20161031194212.GU14023@dastard>
+References: <CAPvv1vytjK-n7Z3=Zi+vScuV-ej3CagQ5rFc9ppVC8JEihZPkQ@mail.gmail.com>
+ <8bd7b65f-d85d-2958-dd7d-ba97c91ac9ea@telefonica.net>
+ <CAPvv1vx-Juge8e=36bq4AFvGxs8Kf7-V_v0j+a9LGWYdDo5h+w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161026211540.GL23194@dastard>
+In-Reply-To: <CAPvv1vx-Juge8e=36bq4AFvGxs8Kf7-V_v0j+a9LGWYdDo5h+w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: "Steffen D." <sdumke@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 27, 2016 at 08:15:40AM +1100, Dave Chinner wrote:
-> On Wed, Oct 26, 2016 at 10:15:53AM -0700, Darrick J. Wong wrote:
-> > On Wed, Oct 26, 2016 at 03:57:58AM -0700, Christoph Hellwig wrote:
-> > > > --- a/repair/dinode.c
-> > > > +++ b/repair/dinode.c
-> > > > @@ -722,6 +722,9 @@ _("Fatal error: inode %" PRIu64 " - blkmap_set_ext(): %s\n"
-> > > >  			 * checking each entry without setting the
-> > > >  			 * block bitmap
-> > > >  			 */
-> > > > +			if (type == XR_INO_DATA &&
-> > > > +			    xfs_sb_version_hasreflink(&mp->m_sb))
-> > > > +				goto skip_dup;
-> > > >  			if (search_dup_extent(agno, agbno, ebno)) {
-> > > >  				do_warn(
-> > > >  _("%s fork in ino %" PRIu64 " claims dup extent, "
-> > > > @@ -731,6 +734,7 @@ _("%s fork in ino %" PRIu64 " claims dup extent, "
-> > > >  					irec.br_blockcount);
-> > > >  				goto done;
-> > > >  			}
-> > > > +skip_dup:
-> > > 
-> > > For some weird reason this goto makes me sad.  I'm getting into
-> > > major nitpick terretory here, but can we avoid it?  Either duplicate
-> > > the *tot increment or find some funky condition?
-> > > 
-> > > Otherwise this looks fine.
-> > 
-> > Ugh, unnecessary goto.  Sad! ;)
-> > 
-> > But in all seriousness an 'else if' could do the same work, so:
-> > 
-> > if (type == XR_INO_DATA &&
-> >     xfs_sb_version_hasreflink(&mp->m_sb))
-> > 	; /* avoid the dup extent check below */
-> > else if (search_dup_extent(agno, agbno, ebno)) {
-> > 	do_warn(...);
-> > }
-> > *tot += irec.br_blockcount;
+On Mon, Oct 31, 2016 at 08:29:37PM +0100, Steffen D. wrote:
+> Hello again
+> thanks to Carlos for the hint about the language.
+> Here are the messages in english:
+> ----------
+> linux-ibbi:/home/steffen # LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+> xfs_repair /dev/sda4
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+> ERROR: The filesystem has valuable metadata changes in a log which needs to
+> be replayed.  Mount the filesystem to replay the log, and unmount it before
+> re-running xfs_repair.  If you are unable to mount the filesystem, then use
+> the -L option to destroy the log and attempt a repair.
+> Note that destroying the log may cause corruption -- please attempt a mount
+> of the filesystem before doing this.
+> linux-ibbi:/home/steffen #
+> ----------
 > 
-> Even that is unnecessary, yes?
+> and
 > 
-> 	if ((type != XR_INO_DATA ||
-> 	     !xfs_sb_version_hasreflink(&mp->m_sb)) &&
-> 	    search_dup_extent(agno, agbno, ebno) {
-> 		do_warn(...);
-> 	}
+> ----------
+> linux-ibbi:/home/steffen # LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+> xfs_repair -n /dev/sda4
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - scan filesystem freespace and inode maps...
+> Metadata corruption detected at block 0x1a1d6001/0x200
+> flfirst 118 in agf 2 too large (max = 118)
+> agf 118 freelist blocks bad, skipping freelist scan
+> Metadata corruption detected at block 0x272c1001/0x200
+> flfirst 118 in agf 3 too large (max = 118)
+> agf 118 freelist blocks bad, skipping freelist scan
+> agi unlinked bucket 51 is 61133235 in ag 2 (inode=598004147)
+> sb_icount 349952, counted 357504
+> sb_ifree 9426, counted 7433
+> sb_fdblocks 9895143, counted 9426793
 
-Err, yes.
+hmmm - AGFL sizing issue?
 
---D
+What is the error in dmesg when you try to mount the filesystem?
+What hardware are you running on (cpu, ram, etc) and where/how was
+this filesystem created? Did it come from another machine?
 
-> 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+xfs_reapir -L should fix it, but I'd like to understand what the
+problem was first and how it happened....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
