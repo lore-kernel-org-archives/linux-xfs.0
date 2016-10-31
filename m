@@ -1,103 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57820 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:47346 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S943339AbcJaOOa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 31 Oct 2016 10:14:30 -0400
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 847E161BB9
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2016 14:14:29 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u9VEETaX011066
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2016 10:14:29 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: don't BUG() on mixed direct and mapped I/O
-Date: Mon, 31 Oct 2016 10:14:28 -0400
-Message-Id: <1477923268-59559-1-git-send-email-bfoster@redhat.com>
+        id S943918AbcJaPQi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 31 Oct 2016 11:16:38 -0400
+Date: Mon, 31 Oct 2016 16:16:36 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/3] xfs: don't block the log commit handler for
+        discards
+Message-ID: <20161031151636.GA14981@lst.de>
+References: <1476735753-5861-1-git-send-email-hch@lst.de> <1476735753-5861-3-git-send-email-hch@lst.de> <20161017232908.GY23194@dastard> <20161019105825.GA2279@lst.de> <D438D4D4.2CD0%michaelcallahan@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <D438D4D4.2CD0%michaelcallahan@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Michael Callahan <michaelcallahan@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-We've had reports of generic/095 causing XFS to BUG() in
-__xfs_get_blocks() due to the existence of delalloc blocks on a direct
-I/O read. generic/095 issues a mix of various types of I/O, including
-direct and memory mapped I/O to a single file. This is clearly not
-supported behavior and is known to lead to such problems. E.g., the lack
-of exclusion between the direct I/O and write fault paths means that a
-write fault can allocate delalloc blocks in a region of a file that was
-previously a hole after the direct read has attempted to flush/inval the
-file range, but before it actually reads the block mapping. In turn, the
-direct read discovers a delalloc extent and cannot proceed.
+On Fri, Oct 28, 2016 at 04:16:01PM +0000, Michael Callahan wrote:
+> Doesn't the block layer already do a reasonable job of merging adjacent
+> discards?
 
-While the appropriate solution here is to not mix direct and memory
-mapped I/O to the same regions of the same file, the current BUG_ON()
-behavior is probably overkill as it can crash the entire system.
-Instead, localize the failure to the I/O in question by returning an
-error for a direct I/O that cannot be handled safely due to delalloc
-blocks. Be careful to allow the case of a direct write to post-eof
-delalloc blocks. This can occur due to speculative preallocation and is
-safe as post-eof blocks are not accompanied by dirty pages in pagecache
-(conversely, preallocation within eof must have been zeroed, and thus
-dirtied, before the inode size could have been increased beyond said
-blocks).
+It certainly didn't with my fast NVMe device.  But even if it did
+we have all the information available here, so it's still cheaper to
+do it in the submitter.  One thing we should try is to move it into
+__blkdev_issue_discard in the future, though.
 
-Finally, provide an additional warning if a direct I/O write occurs
-while the file is memory mapped. This may not catch all problematic
-scenarios, but provides a hint that some known-to-be-problematic I/O
-methods are in use.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-
-FWIW, this survived xfstests and a weekend of a 16x fsstress run.
-
-Brian
-
- fs/xfs/xfs_aops.c | 22 ++++++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 3e57a56..2693ba8 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1361,6 +1361,26 @@ __xfs_get_blocks(
- 	if (error)
- 		goto out_unlock;
- 
-+	/*
-+	 * The only time we can ever safely find delalloc blocks on direct I/O
-+	 * is a dio write to post-eof speculative preallocation. All other
-+	 * scenarios are indicative of a problem or misuse (such as mixing
-+	 * direct and mapped I/O).
-+	 *
-+	 * The file may be unmapped by the time we get here so we cannot
-+	 * reliably fail the I/O based on mapping. Instead, fail the I/O if this
-+	 * is a read or a write within eof. Otherwise, carry on but warn as a
-+	 * precuation if the file happens to be mapped.
-+	 */
-+	if (direct && imap.br_startblock == DELAYSTARTBLOCK) {
-+		if (!create || offset < i_size_read(VFS_I(ip))) {
-+			WARN_ON_ONCE(1);
-+			error = -EIO;
-+			goto out_unlock;
-+		}
-+		WARN_ON_ONCE(mapping_mapped(VFS_I(ip)->i_mapping));
-+	}
-+
- 	/* for DAX, we convert unwritten extents directly */
- 	if (create &&
- 	    (!nimaps ||
-@@ -1450,8 +1470,6 @@ __xfs_get_blocks(
- 	     (new || ISUNWRITTEN(&imap))))
- 		set_buffer_new(bh_result);
- 
--	BUG_ON(direct && imap.br_startblock == DELAYSTARTBLOCK);
--
- 	return 0;
- 
- out_unlock:
--- 
-2.7.4
-
+Note that I've also started to look into merging disjoint discard
+range into a single request for ranged trim/unmap/deallocate and that
+also seems to work nicely, but it will need some large tree-wide
+changes.
