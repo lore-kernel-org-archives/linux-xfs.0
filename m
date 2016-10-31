@@ -1,65 +1,51 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EE7097CA2
-	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 09:21:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BD17C304039
-	for <xfs@oss.sgi.com>; Thu,  1 Sep 2016 07:21:23 -0700 (PDT)
-Received: from stampingparts.com ([111.225.75.242]) by cuda.sgi.com with SMTP
-	id wV9jKEl5cHLOHFPD for <xfs@oss.sgi.com>;
-	Thu, 01 Sep 2016 07:21:20 -0700 (PDT)
-From: "glstamping@outlook.com" <glstamping@outlook.com>
-Subject: Re:metal pressing parts for electronics, automotive and medical
-	devices
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60056 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933578AbcJaQZx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 31 Oct 2016 12:25:53 -0400
+Date: Mon, 31 Oct 2016 12:25:51 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: don't BUG() on mixed direct and mapped I/O
+Message-ID: <20161031162551.GB57171@bfoster.bfoster>
+References: <1477923268-59559-1-git-send-email-bfoster@redhat.com>
+ <20161031154642.GA28355@infradead.org>
 MIME-Version: 1.0
-Date: Thu, 1 Sep 2016 22:21:12 +0800
-Message-Id: <20160901142123.793611940065@cuda.sgi.com>
-Reply-To: glstamping@outlook.com
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7358454335061511416=="
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-
---===============7358454335061511416==
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20161031154642.GA28355@infradead.org>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9uYWwv
-L0VOIj4NCjxIVE1MPjxIRUFEPg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PVVU
-Ri04IiBodHRwLWVxdWl2PWNvbnRlbnQtdHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRl
-bnQ9Ik1TSFRNTCAxMS4wMC4xMDU3MC4xMDAxIj48L0hFQUQ+DQo8Qk9EWT4NCjxQPkhpIFB1cmNo
-YXNlIE1hbmFnZXIsPC9QPg0KPFA+SG93IGFyZSB5b3U/PC9QPg0KPFA+RG8geW91IG5lZWQgUHJl
-Y2lzaW9uIHN0YW1waW5nLCBtZXRhbCBmb3JtaW5nIG9yIENOQyBtYWNoaW5pbmcgY3VzdG9tZWQg
-DQpzZXJ2aWNlcyBmb3IgeW91ciBwcm9kdWN0cz8mbmJzcDsgPC9QPg0KPFA+UGxlYXNlIGtpbmRs
-eSBjYWxsIG1lIGlmIGFueSBuZWVkcyBvciBpbnRlcmVzdCBpbiBpdC48L1A+DQo8UD5JIHdpbGwg
-cHJvdmlkZSB5b3UgcmVzb25hYmxlIHByaWNlIHF1b3RhdGlvbiBhY2NvcmRpbmcgdG8geW91ciBk
-cmF3aW5nICZhbXA7IA0KcmVxdWlyZW1lbnRzLjwvUD4NCjxQPlAuUy46IElmIHlvdSBhcmUgbm90
-IHJlc3BvbnNpYmxlIGZvciB0aGlzIG1hdHRlciwgUGxlYXNlIGhlbHAgbWUgcGFzcyB0aGUgDQpw
-dXJjaGFzaW5nIGRlcGFydG1lbnQgb3Igc2FsZXMgZGVwYXJ0bWVudC4gVGhhbmsgeW91IHNvIG11
-Y2guPC9QPg0KPFA+VGhhbmtzICZhbXA7IEJlc3QgcmVnYXJkcyw8L1A+DQo8UD5TYXJhPC9QPg0K
-PFA+U2FsZXMgZGlyZWN0b3I8QlI+Q29tcGFueTpHJmFtcDtMIEhhcmR3YXJlIA0KQ28uLEx0ZC48
-QlI+VGVsL21vYmlsZTorODYtMTM5MzI3Njg4NjM8QlI+V2hhdHNhcHA6Kzg2LTEzOTMyNzY4ODYz
-PEJSPkZheDorODYtMTAtODQ5Mjg0NDk8QlI+U2t5cGU6c2FyYTg0MDQxNjwvUD48L0JPRFk+PC9I
-VE1MPg0KDQo=
+On Mon, Oct 31, 2016 at 08:46:42AM -0700, Christoph Hellwig wrote:
+> On Mon, Oct 31, 2016 at 10:14:28AM -0400, Brian Foster wrote:
+> > We've had reports of generic/095 causing XFS to BUG() in
+> > __xfs_get_blocks() due to the existence of delalloc blocks on a direct
+> > I/O read. generic/095 issues a mix of various types of I/O, including
+> > direct and memory mapped I/O to a single file.
+> 
+> Can you explain the scenario in which case this happens in a little
+> more detail?  The patch looks fine to me, but I'd really like to
+> understand how this happens.
 
+Sure... the case I reproduced is a race between a direct I/O read and a
+mapped write to a hole in a file. The direct read gets through
+xfs_file_dio_aio_read() and down to __xfs_get_blocks() while the region
+is still a hole. Before the xfs_bmapi_read() call from
+__xfs_get_blocks(), a mapped write occurs and allocates delalloc blocks
+in the associated file range. xfs_bmapi_read() then returns a delalloc
+mapping for a dio read and falls through to the BUG_ON().
 
---===============7358454335061511416==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+FWIW, the specific reproducer was a tweaked variant of generic/095 to up
+the iodepth (1024), iodepth_batch (60), and numjobs (20) fio params. It
+was also on a ppc64 box with a 64k page size, so that might have also
+improved the chances of a race. This can be manufactured on demand with a
+hack to delay the dio read in __xfs_get_blocks(), however. E.g., stick a
+'if (!create && direct) ssleep(N);' right before xfs_bmapi_read(), run a
+single block dio read to a hole in the file, and then a single block
+mapped write to the same offset as the read while it is delayed.
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Brian
 
---===============7358454335061511416==--
