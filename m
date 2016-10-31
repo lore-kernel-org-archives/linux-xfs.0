@@ -1,55 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47618 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750991AbcJCPbo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Oct 2016 11:31:44 -0400
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 87727745C1
-        for <linux-xfs@vger.kernel.org>; Mon,  3 Oct 2016 15:31:39 +0000 (UTC)
-Date: Mon, 3 Oct 2016 11:31:38 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: add XBF_XBF_NO_IOACCT to buf trace output
-Message-ID: <20161003153137.GA19245@bfoster.bfoster>
-References: <4074f575-f4cf-e8ee-7c79-0bbc45333f5d@redhat.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:29826 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S941329AbcJaMC3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2016 08:02:29 -0400
+Date: Mon, 31 Oct 2016 23:02:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
+Message-ID: <20161031120226.GT14023@dastard>
+References: <5244720.RPRsZ88NJ0@libor-nb>
+ <3822835.q6ryES8eE3@libor-nb>
+ <20161024024024.GX14023@dastard>
+ <3301912.kAxTXXYXM8@libor-nb>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <4074f575-f4cf-e8ee-7c79-0bbc45333f5d@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <3301912.kAxTXXYXM8@libor-nb>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Thu, Sep 08, 2016 at 04:53:28PM -0500, Eric Sandeen wrote:
-> When XBF_NO_IOACCT got added, it missed the translation
-> in XFS_BUF_FLAGS, so we see "0x8" in trace output rather
-> than the flag name.  Fix it.
+On Mon, Oct 31, 2016 at 09:54:00AM +0100, Libor Klepáč wrote:
+> Hello,
+> i have upgrade VM called vps1 in original email (the one on bottom of email)
+> to debian kernel 4.7.8-1~bpo8+1 and compiled xfsprogs 4.8.0.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> Here is output of xfs_repair -n and xfs_repair. Is it supposed to write if/
+> what is being repaired, when i forgot -v option?
 
-Thought I caught that, apparently not. Thanks!
+repair will always tell you if there are errors. The logs you have
+posted indicate a clean filesystem with no errors.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Cheers,
 
-> 
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 1c2e52b..424f6b0 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -71,6 +71,7 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ XBF_READ,		"READ" }, \
->  	{ XBF_WRITE,		"WRITE" }, \
->  	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
-> +	{ XBF_NO_IOACCT,	"NO_IOACCT" }, \
->  	{ XBF_ASYNC,		"ASYNC" }, \
->  	{ XBF_DONE,		"DONE" }, \
->  	{ XBF_STALE,		"STALE" }, \
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
