@@ -1,122 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:41546 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758961AbcJQUWp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2016 16:22:45 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/3] xfs: merge discard requests
-Date: Mon, 17 Oct 2016 22:22:33 +0200
-Message-Id: <1476735753-5861-4-git-send-email-hch@lst.de>
-In-Reply-To: <1476735753-5861-1-git-send-email-hch@lst.de>
-References: <1476735753-5861-1-git-send-email-hch@lst.de>
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:36717 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965526AbcKADj3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2016 23:39:29 -0400
+Received: by mail-pf0-f174.google.com with SMTP id 189so34324400pfz.3
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2016 20:39:29 -0700 (PDT)
+Date: Tue, 1 Nov 2016 14:39:18 +1100
+From: Nicholas Piggin <npiggin@gmail.com>
+Subject: Re: [rfc] larger batches for crc32c
+Message-ID: <20161101143918.4f154154@roar.ozlabs.ibm.com>
+In-Reply-To: <20161031030853.GK22126@dastard>
+References: <20161028031747.68472ac7@roar.ozlabs.ibm.com>
+        <20161027214244.GO14023@dastard>
+        <20161028131234.24a5cb6f@roar.ozlabs.ibm.com>
+        <20161028160218.1af40906@roar.ozlabs.ibm.com>
+        <20161031030853.GK22126@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: michaelcallahan@fb.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-We often have multiple busy extent entries that are adjacent.  Merge them
-before calling __blkdev_issue_discard to give the drive larger request.
+On Mon, 31 Oct 2016 14:08:53 +1100
+Dave Chinner <david@fromorbit.com> wrote:
 
-To allow for better merging the busy extent sort function is also updated
-to sort for the full block number and not just the AG number.
+> On Fri, Oct 28, 2016 at 04:02:18PM +1100, Nicholas Piggin wrote:
+> > Okay, the XFS crc sizes indeed don't look too so bad, so it's more the
+> > crc implementation I suppose. I was seeing a lot of small calls to crc,
+> > but as a fraction of the total number of bytes, it's not as significant
+> > as I thought. That said, there is some improvement you may be able to
+> > get even from x86 implementation.
+> > 
+> > I took an ilog2 histogram of frequency and total bytes going to XFS  
+> 
+> Which means ilog2 = 3 is 8-15 bytes and 9 is 512-1023 bytes? 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_extent_busy.c | 12 ++++++++----
- fs/xfs/xfs_log_cil.c     | 44 +++++++++++++++++++++++++++++++++-----------
- 2 files changed, 41 insertions(+), 15 deletions(-)
+Yes.
 
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 162dc18..50c277e 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -596,9 +596,13 @@ xfs_extent_busy_clear(
- int
- xfs_extent_busy_ag_cmp(
- 	void			*priv,
--	struct list_head	*a,
--	struct list_head	*b)
-+	struct list_head	*l1,
-+	struct list_head	*l2)
- {
--	return container_of(a, struct xfs_extent_busy, list)->agno -
--		container_of(b, struct xfs_extent_busy, list)->agno;
-+	struct xfs_extent_busy	*b1 =
-+		container_of(l1, struct xfs_extent_busy, list);
-+	struct xfs_extent_busy	*b2 =
-+		container_of(l2, struct xfs_extent_busy, list);
-+
-+	return b1->agno - b2->agno || b1->bno - b2->bno;
- }
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 82f1cbc..c30b19f 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -526,11 +526,14 @@ xlog_discard_busy_extents(
- 	struct xfs_mount	*mp,
- 	struct xfs_cil_ctx	*ctx)
- {
-+	struct block_device	*bdev = mp->m_ddev_targp->bt_bdev;
- 	struct list_head	*list = &ctx->busy_extents;
- 	struct xfs_extent_busy	*busyp;
- 	struct bio		*bio = NULL;
- 	struct blk_plug		plug;
- 	int			error = 0;
-+	bool			have_prev = false;
-+	sector_t		bno, len, prev_bno, prev_len;
- 
- 	ASSERT(mp->m_flags & XFS_MOUNT_DISCARD);
- 
-@@ -539,18 +542,37 @@ xlog_discard_busy_extents(
- 		trace_xfs_discard_extent(mp, busyp->agno, busyp->bno,
- 					 busyp->length);
- 
--		error = __blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
--				XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno),
--				XFS_FSB_TO_BB(mp, busyp->length),
--				GFP_NOFS, 0, &bio);
--		if (error && error != -EOPNOTSUPP) {
--			xfs_info(mp,
--	 "discard failed for extent [0x%llx,%u], error %d",
--				 (unsigned long long)busyp->bno,
--				 busyp->length,
--				 error);
--			break;
-+		bno = XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno);
-+		len = XFS_FSB_TO_BB(mp, busyp->length);
-+
-+		if (have_prev) {
-+			if (prev_bno + prev_len == bno) {
-+				prev_len += len;
-+				continue;
-+			}
-+
-+			error = __blkdev_issue_discard(bdev, prev_bno, prev_len,
-+					GFP_NOFS, 0, &bio);
-+			if (error && error != -EOPNOTSUPP)
-+				goto done;
- 		}
-+
-+		prev_bno = bno;
-+		prev_len = len;
-+		have_prev = true;
-+	}
-+
-+	if (have_prev) {
-+		error = __blkdev_issue_discard(bdev, prev_bno, prev_len,
-+				GFP_NOFS, 0, &bio);
-+	}
-+
-+done:
-+	if (error && error != -EOPNOTSUPP) {
-+		xfs_info(mp,
-+			"discard failed for extent [0x%llx,0x%llx], error %d",
-+			(unsigned long long)bno, (unsigned long long)len,
-+			error);
- 	}
- 
- 	if (bio) {
--- 
-2.1.4
+> > checksum, with total, head, and tail lengths. I'll give as percentages
+> > of total for easier comparison (total calls were around 1 million and
+> > 500MB of data):  
+> 
+> Does this table match the profile you showed with all the overhead
+> being through the fsync->log write path?
 
+Yes.
+
+[snip interesting summary]
+
+> Full sector, no head, no tail (i.e. external crc store)? I think
+> only log buffers (the extended header sector CRCs) can do that.
+> That implies a large log buffer (e.g. 256k) is configured and
+> (possibly) log stripe unit padding is being done. What is the
+> xfs_info and mount options from the test filesystem?
+
+See the end of the mail.
+
+[snip]
+
+> > Keep in mind you have to sum the number of bytes for head and tail to
+> > get ~100%.
+> > 
+> > Now for x86-64, you need to be at 9-10 (depending on configuration) or
+> > greater to exceed the breakeven point for their fastest implementation.
+> > Split crc implementation will use the fast algorithm for about 85% of
+> > bytes in the best case, 12% at worst. Combined gets there for 85% at
+> > worst, and 100% at best. The slower x86 implementation still uses a
+> > hardware instruction, so it doesn't do too badly.
+> > 
+> > For powerpc, the breakeven is at 512 + 16 bytes (9ish), but it falls
+> > back to generic implementation for bytes below that.  
+> 
+> Which means for the most common objects we won't be able to reach
+> breakeven easily simply because of the size of the objects we are
+> running CRCs on. e.g. sectors and inodes/dquots by default are all
+> 512 bytes or smaller. THere's only so much that can be optimised
+> here...
+
+Well for this workload at least, the full checksum size seems always
+>= 512. The small heads cut it down and drag a lot of crc32c calls
+from 1024-2047 range (optimal for Intel) to 512-1023. I don't *think*
+I've done the wrong thing here, but if it looks odd to you, I'll go
+back and double check.
+
+> 
+> > I think we can
+> > reduce the break even point on powerpc slightly and capture most of
+> > the rest, so it's not so bad.
+> > 
+> > Anyway at least that's a data point to consider. Small improvement is
+> > possible.  
+> 
+> Yup, but there's no huge gain to be made here - these numbers say to
+> me that the problem may not be the CRC overhead, but instead is the
+> amount of CRC work being done. Hence my request for mount options
+> + xfs_info to determine if what you are seeing is simply a bad fs
+> configuration for optimal small log write performance. CRC overhead
+> may just be a symptom of a filesystem config issue...
+
+Yes sorry, I forgot to send an xfs_info sample. mkfs.xfs is 4.3.0 from
+Ubuntu 16.04.
+
+npiggin@fstn3:/etc$ sudo mkfs.xfs -f /dev/ram0
+specified blocksize 4096 is less than device physical sector size 65536
+switching to logical sector size 512
+meta-data=/dev/ram0              isize=512    agcount=4, agsize=4194304 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=0
+data     =                       bsize=4096   blocks=16777216, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=8192, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+Mount options are standard:
+/dev/ram0 on /mnt type xfs (rw,relatime,attr2,inode64,noquota)
+
+xfs_info sample:
+extent_alloc 64475 822567 74740 1164625
+abt 0 0 0 0
+blk_map 1356685 1125591 334183 64406 227190 2816523 0
+bmbt 0 0 0 0
+dir 79418 460612 460544 5685160
+trans 0 3491960 0
+ig 381191 378085 0 3106 0 2972 153329
+log 89045 2859542 62 132145 143932
+push_ail 3491960 24 619 53860 0 6433 13135 284324 0 445
+xstrat 64342 0
+rw 951375 2937203
+attr 0 0 0 0
+icluster 47412 38985 221903
+vnodes 5294 0 0 0 381123 381123 381123 0
+buf 4497307 6910 4497106 1054073 13012 201 0 0 0
+abtb2 139597 675266 27639 27517 0 0 0 0 0 0 0 0 0 0 1411718
+abtc2 240942 1207277 120532 120410 0 0 0 0 0 0 0 0 0 0 4618844
+bmbt2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ibt2 762383 3048311 69 67 0 0 0 0 0 0 0 0 0 0 263
+fibt2 1114420 2571311 143583 143582 0 0 0 0 0 0 0 0 0 0 1232534
+rmapbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+refcntbt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+qm 0 0 0 0 0 0 0 0
+xpc 3366711296 24870568605 34799779740
+debug 0
+
+Thanks,
+Nick
