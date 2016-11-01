@@ -1,90 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62636 "EHLO mga11.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:56133 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754324AbcKATyf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 Nov 2016 15:54:35 -0400
+        id S1751743AbcKATy2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 Nov 2016 15:54:28 -0400
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v9 12/16] dax: move RADIX_DAX_* defines to dax.h
-Date: Tue,  1 Nov 2016 13:54:14 -0600
-Message-Id: <1478030058-1422-13-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1478030058-1422-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1478030058-1422-1-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v9 00/16] re-enable DAX PMD support
+Date: Tue,  1 Nov 2016 13:54:02 -0600
+Message-Id: <1478030058-1422-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-kernel@vger.kernel.org
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-The RADIX_DAX_* defines currently mostly live in fs/dax.c, with just
-RADIX_DAX_ENTRY_LOCK being in include/linux/dax.h so it can be used in
-mm/filemap.c.  When we add PMD support, though, mm/filemap.c will also need
-access to the RADIX_DAX_PTE type so it can properly construct a 4k sized
-empty entry.
+DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
+locking.  This series allows DAX PMDs to participate in the DAX radix tree
+based locking scheme so that they can be re-enabled.
 
-Instead of shifting the defines between dax.c and dax.h as they are
-individually used in other code, just move them wholesale to dax.h so
-they'll be available when we need them.
+Previously we had talked about this series going through the XFS tree, but
+Jan has a patch set that will need to build on this series and it heavily
+modifies the MM code.  I think he would prefer that series to go through
+Andrew Morton's -MM tree, so it probably makes sense for this series to go
+through that same tree.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- fs/dax.c            | 14 --------------
- include/linux/dax.h | 15 ++++++++++++++-
- 2 files changed, 14 insertions(+), 15 deletions(-)
+For reference, here is the series from Jan that I was talking about:
+https://marc.info/?l=linux-mm&m=147499252322902&w=2
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 6edd89b..c45cc4d 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -34,20 +34,6 @@
- #include <linux/iomap.h>
- #include "internal.h"
- 
--/*
-- * We use lowest available bit in exceptional entry for locking, other two
-- * bits to determine entry type. In total 3 special bits.
-- */
--#define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 3)
--#define RADIX_DAX_PTE (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
--#define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
--#define RADIX_DAX_TYPE_MASK (RADIX_DAX_PTE | RADIX_DAX_PMD)
--#define RADIX_DAX_TYPE(entry) ((unsigned long)entry & RADIX_DAX_TYPE_MASK)
--#define RADIX_DAX_SECTOR(entry) (((unsigned long)entry >> RADIX_DAX_SHIFT))
--#define RADIX_DAX_ENTRY(sector, pmd) ((void *)((unsigned long)sector << \
--		RADIX_DAX_SHIFT | (pmd ? RADIX_DAX_PMD : RADIX_DAX_PTE) | \
--		RADIX_TREE_EXCEPTIONAL_ENTRY))
--
- /* We choose 4096 entries - same as per-zone page wait tables */
- #define DAX_WAIT_TABLE_BITS 12
- #define DAX_WAIT_TABLE_ENTRIES (1 << DAX_WAIT_TABLE_BITS)
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index a3dfee4..e9ea78c 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -8,8 +8,21 @@
- 
- struct iomap_ops;
- 
--/* We use lowest available exceptional entry bit for locking */
-+/*
-+ * We use lowest available bit in exceptional entry for locking, other two
-+ * bits to determine entry type. In total 3 special bits.
-+ */
-+#define RADIX_DAX_SHIFT	(RADIX_TREE_EXCEPTIONAL_SHIFT + 3)
- #define RADIX_DAX_ENTRY_LOCK (1 << RADIX_TREE_EXCEPTIONAL_SHIFT)
-+#define RADIX_DAX_PTE (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
-+#define RADIX_DAX_PMD (1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
-+#define RADIX_DAX_TYPE_MASK (RADIX_DAX_PTE | RADIX_DAX_PMD)
-+#define RADIX_DAX_TYPE(entry) ((unsigned long)entry & RADIX_DAX_TYPE_MASK)
-+#define RADIX_DAX_SECTOR(entry) (((unsigned long)entry >> RADIX_DAX_SHIFT))
-+#define RADIX_DAX_ENTRY(sector, pmd) ((void *)((unsigned long)sector << \
-+		RADIX_DAX_SHIFT | (pmd ? RADIX_DAX_PMD : RADIX_DAX_PTE) | \
-+		RADIX_TREE_EXCEPTIONAL_ENTRY))
-+
- 
- ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		struct iomap_ops *ops);
+Andrew, can you please pick this up for the v4.10 merge window?
+This series is currently based on v4.9-rc3.  I tried to rebase onto a -mm
+branch or tag, but couldn't find one that contained the DAX iomap changes
+that were merged as part of the v4.9 merge window.  I'm happy to rebase &
+test on a v4.9-rc* based -MM branch or tag whenever they are available.
+
+Changes since v8:
+- Rebased onto v4.9-rc3.
+- Updated the DAX PMD fault path so that on fallback we always check to see
+  if we are dealing with a transparent huge page, and if we are we will
+  split it.  This was already happening for one of the fallback cases via a
+  patch from Toshi, and Jan hit a deadlock in another fallback case where
+  the same splitting was needed.  (Jan & Toshi)
+
+This series has passed all my xfstests testing, including the test that was
+hitting the deadlock with v8.
+
+Here is a tree containing my changes:
+https://git.kernel.org/cgit/linux/kernel/git/zwisler/linux.git/log/?h=dax_pmd_v9
+
+Ross Zwisler (16):
+  ext4: tell DAX the size of allocation holes
+  dax: remove buffer_size_valid()
+  ext2: remove support for DAX PMD faults
+  dax: make 'wait_table' global variable static
+  dax: remove the last BUG_ON() from fs/dax.c
+  dax: consistent variable naming for DAX entries
+  dax: coordinate locking for offsets in PMD range
+  dax: remove dax_pmd_fault()
+  dax: correct dax iomap code namespace
+  dax: add dax_iomap_sector() helper function
+  dax: dax_iomap_fault() needs to call iomap_end()
+  dax: move RADIX_DAX_* defines to dax.h
+  dax: move put_(un)locked_mapping_entry() in dax.c
+  dax: add struct iomap based DAX PMD support
+  xfs: use struct iomap based DAX PMD fault path
+  dax: remove "depends on BROKEN" from FS_DAX_PMD
+
+ fs/Kconfig          |   1 -
+ fs/dax.c            | 826 +++++++++++++++++++++++++++++-----------------------
+ fs/ext2/file.c      |  35 +--
+ fs/ext4/inode.c     |   3 +
+ fs/xfs/xfs_aops.c   |  26 +-
+ fs/xfs/xfs_aops.h   |   3 -
+ fs/xfs/xfs_file.c   |  10 +-
+ include/linux/dax.h |  58 +++-
+ mm/filemap.c        |   5 +-
+ 9 files changed, 537 insertions(+), 430 deletions(-)
+
 -- 
 2.7.4
 
