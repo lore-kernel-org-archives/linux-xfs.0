@@ -1,301 +1,227 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:54497 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752824AbcKNH1O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2016 02:27:14 -0500
-Date: Mon, 14 Nov 2016 18:27:08 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC] xfs: drop SYNC_WAIT from xfs_reclaim_inodes_ag
- during slab reclaim
-Message-ID: <20161114072708.GN28922@dastard>
-References: <06aade22-b29e-f55e-7f00-39154f220aa6@fb.com>
- <20161015223454.GS23194@dastard>
- <20161017002427.GA70229@clm-mbp.masoncoding.com>
- <20161017015251.GU23194@dastard>
- <e0c37926-a670-98b6-4bd7-b438def130bd@fb.com>
- <20161017223057.GV23194@dastard>
- <f6dadb97-4233-4bbf-3edc-4985c7727548@fb.com>
- <20161018020324.GA23194@dastard>
- <20161114005951.GB2127@clm-mbp.thefacebook.com>
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:36136 "EHLO
+        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751795AbcKBNvA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Nov 2016 09:51:00 -0400
+Received: by mail-oi0-f54.google.com with SMTP id v84so17014868oie.3
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Nov 2016 06:50:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161114005951.GB2127@clm-mbp.thefacebook.com>
+In-Reply-To: <20161021014833.GP14023@dastard>
+References: <CACQR=w17PSW8eNPr-ynPb2pB6UJPKCdPtfMYP-OCbaboo9HNzQ@mail.gmail.com>
+ <20161021014833.GP14023@dastard>
+From: "Jared D. Cottrell" <jcottr@gmail.com>
+Date: Wed, 2 Nov 2016 06:50:58 -0700
+Message-ID: <CACQR=w3VUvMoDk5sOKd8ecuAo+4waZjG_EUTV-R27+wWUbbddw@mail.gmail.com>
+Subject: Re: Periodic fstrim job vs mounting with discard
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Mason <clm@fb.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Nov 13, 2016 at 08:00:04PM -0500, Chris Mason wrote:
-> On Tue, Oct 18, 2016 at 01:03:24PM +1100, Dave Chinner wrote:
-> 
-> [ Long stalls from xfs_reclaim_inodes_ag ]
-> 
-> >XFS has *1* tunable that can change the behaviour of metadata
-> >writeback. Please try it.
-> 
-> [ weeks go by, so this email is insanely long ]
-> 
-> Testing all of this was slow going because two of the three test
-> boxes I had with the hadoop configuration starting having hardware
-> problems.  The good news is that while I was adjusting the
-> benchmark, we lined up access to a bunch of duplicate boxes, so I
-> can now try ~20 different configurations in parallel.
-> 
-> My rough benchmark is here:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/mason/simoop.git
-> 
-> The command line I ended up using was:
-> 
-> simoop -t 512 -m 190 -M 128 -C 28 -r 60000 -f 70 -T 20 -R1 -W 1 -i
-> 60 -w 300 -D 2 /hammer/*
+On Thu, Oct 20, 2016 at 6:48 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Oct 20, 2016 at 03:32:48PM -0700, Jared D. Cottrell wrote:
+>> We've been running our Ubuntu 14.04-based, SSD-backed databases with a
+>> weekly fstrim cron job, but have been finding more and more clusters
+>
+> Command line for fstrim?
 
-There's a lightly tested patch below that should do the trick.
+fstrim-all
 
-After 5 minutes on a modified simoop cli on a single filesystem,
-4.9-rc4+for-next:
+>> that are locking all IO for a couple minutes as a result of the job.
+>> In theory, mounting with discard could be appropriate for our use case
+>> as file deletes are infrequent and handled in background threads.
+>> However, we read some dire warnings about using discard on this list
+>> (http://oss.sgi.com/archives/xfs/2014-08/msg00465.html) that make us
+>> want to avoid it.
+>
+> discard is being improved - Christoph posted a patchset a few days
+> ago that solve many of the XFS specific issues. It also tries to
+> avoid the various deficiencies of underlying infrastructure as much
+> as possible.
+>
+>> Is discard still to be avoided at all costs? Are the corruption and
+>> bricking problems mentioned still something to be expected even with
+>> the protection of Linux's built-in blacklist of broken SSD hardware?
+>> We happen to be using Amazon's in-chassis SSDs. I'm sure they use
+>> multiple vendors but I can't imagine they're taking short-cuts with
+>> cheap hardware.
+>
+> Every so often we see a problem that manifests when discard is
+> enabled, and it goes away when it is turned off. Not just on XFS -
+> there's similar reports on the btrfs list. It's up to you to decide
+> whether you use it or not.
 
-$ ./simoop -t 128 -m 50 -M 128 -C 14 -r 60000 -f 2 -T 20 -R1 -W 1 -i 60 -w 300 -D 2 /mnt/scratch
-....
-Run time: 300 seconds
-Read latency (p50: 3,174,400) (p95: 4,530,176) (p99: 18,055,168)
-Write latency (p50: 14,991,360) (p95: 28,672,000) (p99: 33,325,056)
-Allocation latency (p50: 1,771,520) (p95: 17,530,880) (p99: 23,756,800)
-work rate = 4.75/sec (avg 5.24/sec) (p50: 5.79) (p95: 6.99) (p99: 6.99)
-alloc stall rate = 94.42/sec (avg: 51.63) (p50: 51.60) (p95: 59.12) (p99: 59.12)
+So if we want to be conservative we should stay away, then.
 
-With the patch below:
+It sounds like the issues don't follow any kind of pattern to support
+this, but is there any way to test our particular hardware to be
+confident it won't be a problem?
 
-Run time: 300 seconds
-Read latency (p50: 3,043,328) (p95: 3,649,536) (p99: 4,710,400)
-Write latency (p50: 21,004,288) (p95: 27,557,888) (p99: 29,130,752)
-Allocation latency (p50: 280,064) (p95: 680,960) (p99: 863,232)
-work rate = 4.08/sec (avg 4.76/sec) (p50: 5.39) (p95: 6.93) (p99: 6.93)
-alloc stall rate = 0.08/sec (avg: 0.02) (p50: 0.00) (p95: 0.01) (p99: 0.01)
+There was mention of corruption issues in the original thread. We're
+more worried about those than performance issues. Does that change the
+answer to the above?
 
-Stall rate went to zero and stayed there at the 120s mark of the
-warmup. Note the p99 difference for read and allocation latency,
-too.
+>> If discard is still strongly discouraged, perhaps we can approach the
+>> problem from the other side: does the slow fstrim we're seeing sounds
+>> like a known issue? After a bunch of testing and research, we've
+>> determined the following:
+>>
+>> Essentially, XFS looks to be iterating over every allocation group and
+>> issuing TRIM s for all free extents every time this ioctl is called.
+>> This, coupled with the facts that Linux's interface to the TRIM
+>> command is both synchronous and does not support a vectorized list of
+>> ranges (see: https://github.com/torvalds/linux/blob/3fc9d690936fb2e20e180710965ba2cc3a0881f8/block/blk-lib.c#L112),
+>> is leading to a large number of extraneous TRIM commands (each of
+>> which have been observed to be slow, see:
+>> http://oss.sgi.com/archives/xfs/2011-12/msg00311.html) being issued to
+>> the disk for ranges that both the filesystem and the disk know to be
+>> free. In practice, we have seen IO disruptions of up to 2 minutes. I
+>> realize that the duration of these disruptions may be controller
+>> dependent. Unfortunately, when running on a platform like AWS, one
+>> does not have the luxury of choosing specific hardware.
+>
+> Many issues here, none of what have changed recently.
+>
+> One of the common misconceptions about discard is that it will
+> improve performance. People are lead to think "empty drive" SSD
+> performance is what they should always get as that is what the
+> manufacturers quote, not the performance once the drive has been
+> completely written once. They are also lead to beleive that running
+> TRIM will restore their drive to "empty drive" performance. This is
+> not true - for most users, the "overwritten" performance is what
+> you'll get for the majority of the life of an active drive,
+> regardless of whether you use TRIM or not.
+>
+> If you want an idea of how different misleading the performance
+> expectations manufacturers set for their SSDs, go have a look at the
+> SSD "performance consistency" tests that are run on all SSDs at
+> anandtech.com. e.g: Samsung's latest 960 Pro. Quoted at 360,000
+> random 4k write iops, it can actually only sustain 25,000 random 4k
+> write iops once the drive has been filled, which only takes a few
+> minutes to do:
+>
+> http://www.anandtech.com/show/10754/samsung-960-pro-ssd-review/3
+>
+> This matches what will happen in the few hours after a TRIM is run
+> on a SSD under constant write pressure where the filesystem used
+> space pattern at the time of the fstrim was significantly different
+> to the SSD's used space pattern. i.e.  fstrim will free up used
+> space in the SSD which means performance will go up and be fast
+> (yay!), but as soon as the "known free" area is exhausted it will
+> fall into the steady state where the garbage collection algorithm
+> limits performance.
+>
+> At this point, running fstrim again won't make any difference to
+> performance unless there are new areas of the block device address
+> space have been freed by the filesystem. This is because SSD's
+> record of "used space" still closely matches the filesystem's view
+> of free space. Hence fstrim will fail to free any significant amount
+> of space in the SSD it could use to improve performance, and so the
+> SSD remains in the slow "garbage collection mode" to sustain ongoing
+> writes.
+>
+> IOWs, fstrim/discard will not restore any significant SSD
+> performance unless your application has a very dynamic filesystem
+> usage pattern (i.e.  regularly fills and empties the filesystem).
+> That doesn't seem to be the situation your application is running in
+> ("...  our use case [...] file deletes are infrequent .. "), so
+> maybe you're best to just disable fstrim altogether?
+>
+> Put simply: fstrim needs to be considered similarly to online
+> defragmentation - it can be actively harmful to production workloads
+> when it is used unnecessarily or inappropriately.
+>
+>> EXT4, on the other hand, tracks blocks that have been deleted since
+>> the previous FITRIM ioctl
+>
+> ext4 tracks /block groups/, not blocks. Freeing a single 4k block in
+> a 128MB block group will mark it for processing on the next fstrim
+> run. IOWs if you are freeing blocks all over your filesystem between
+> weekly fstrim runs, ext4 will behave pretty much identically to XFS.
+>
+>> and targets subsequent TRIM s to the
+>> appropriate block ranges (see:
+>> http://blog.taz.net.au/2012/01/07/fstrim-and-xfs/). In real-world
+>> tests this significantly reduces the impact of fstrim to the point
+>> that it is un-noticeable to the database / application.
+>
+> IMO that's a completely meaningless benchmark/comparison. To start
+> with nobody runs fstrim twice in a row on production systems, so
+> back-to-back behaviour is irrelevant to us. Also, every test is run
+> on different hardware so the results simply cannot be compared to
+> each other. Now if were run on the same hardware, with some kind of
+> significant workload in between runs it would be slightly more
+> meaningful.(*)
+>
+> A lot of the "interwebs knowledge" around discard, fstrim, TRIM, SSD
+> performance, etc that you find with google is really just cargo-cult
+> stuff. What impact fstrim is going to have on your SSDs is largely
+> workload dependent, and the reality is that a large number of
+> workloads don't have the dynamic allocation behaviour that allows
+> regular usage of fstrim to provide a meaningful, measurable and
+> sustained performance improvement.
+>
+> So, with all that in mind, the first thing you need to do is gather
+> measurements to determine if SSD performance is actually improved
+> after running a weekly fstrim. If there's no /significant/ change in
+> IO latency or throughput, then fstrim is not doing anything useful
+> for you and you can reduce the frequency at which you run it, only
+> run it in scheduled maintenance windows, or simply stop using it.
+>
+> If there is a significant improvement in IO performance as a result
+> of running fstrim, then we need to work out why your application is
+> getting stuck during fstrim.  sysrq-w output when fstrim is running
+> and the application is blocking will tell us where the blocking
+> issue lies (it may not be XFS!), and along with the various
+> information about your system here:
+>
+> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+>
+> we should be able to determine what is causing the blocking and
+> hence determine if it's fixable or not....
 
-I'll post some graphs tomorrow from my live PCP telemetry that
-demonstrate the difference in behaviour better than any words...
+Good points, we'll add to our testing regimen.
 
-Cheers,
+One issue we have is that no matter how much testing we do, we don't
+have just one workload, we have them all (well, all the workloads you
+can expect to see when running a database). Our customers are free to
+do whatever they want (within reason, of course) with their
+deployments.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Ideally each customer would go through a testing phase where they
+would determine whether and how often to run fstrim, but we'd like to
+simplify things for them as much as possible.
 
-xfs: reduce blocking in inode reclaim
+Obviously, the simplest thing is not to have to go through the tuning
+phase or consider in their operations. This is why discard is
+theoretically attractive, but also running fstrim perhaps more
+aggressively than needed to cover most cases.
 
-From: Dave Chinner <dchinner@redhat.com>
+But let's pretend we did disable automated fstrim jobs, didn't mount
+with discard, and just provided a button for folks to click to run
+fstrim on demand as needed. Are there any additional tools we can
+expose to help customers figure out when to push the button? Perhaps
+some telemetry we can present customers that might indicate when TRIM
+debt is getting high (e.g "Having performance problems and showing
+TRIM debt? Try fstrim.")? Maybe some of the stats here?
 
-When we already have maximum reclaim concurrency going on, stop the
-caller from doing any more reclaim rather than blocking them.
-Instead, transfer the scanning work the next context that gets
-access to the reclaim locks.
+http://xfs.org/index.php/Runtime_Stats
 
-Further, make sure not to block kswapd ireclaim on IO or locks. This
-means it will always be able to move on to reclaim something else
-rather than blocking and preventing reclaim from other filesytsems.
-
-Finally, change the blocking reclaim cases to follow the reclaim
-cursor so that we don't restart from a position where inodes may
-curentl be under IO from a previous flush. This means we cycle
-through all inodes int eh AG before revisting indoes that may now be
-clean for reclaim.
-
-This change does not appear to cause overall performance regression
-with the pure dirty inode cache load (such as fsmark inode creation)
-and inode traversal worklaods (find, rm -rf) on inodes
-collections much larger than can be cached in memory. The reclaim
-pattern is noticably lumpier, so work still to be done.
-
-Under initial simoop testing, p99 read latencies are down by 70%,
-p99 allocation latency is down by over 90% and allocation stalls
-completely go away.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/super.c          |  8 +++++++-
- fs/xfs/xfs_icache.c | 59 +++++++++++++++++++++++++++++++++++++++++++-------------
- 2 files changed, 53 insertions(+), 14 deletions(-)
-
-diff --git a/fs/super.c b/fs/super.c
-index c183835566c1..9fff5630b12d 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -102,8 +102,14 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
- 	freed += prune_icache_sb(sb, sc);
- 
- 	if (fs_objects) {
-+		unsigned long ret;
-+
- 		sc->nr_to_scan = fs_objects + 1;
--		freed += sb->s_op->free_cached_objects(sb, sc);
-+		ret = sb->s_op->free_cached_objects(sb, sc);
-+		if (ret == SHRINK_STOP)
-+			freed = SHRINK_STOP;
-+		else
-+			freed += ret;
- 	}
- 
- 	up_read(&sb->s_umount);
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 9c3e5c6ddf20..65c0f79f3edc 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -975,7 +975,7 @@ xfs_reclaim_inode(
- 	error = 0;
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	if (!xfs_iflock_nowait(ip)) {
--		if (!(sync_mode & SYNC_WAIT))
-+		if (sync_mode & SYNC_TRYLOCK)
- 			goto out;
- 		xfs_iflock(ip);
- 	}
-@@ -987,7 +987,7 @@ xfs_reclaim_inode(
- 		goto reclaim;
- 	}
- 	if (xfs_ipincount(ip)) {
--		if (!(sync_mode & SYNC_WAIT))
-+		if (sync_mode & SYNC_TRYLOCK)
- 			goto out_ifunlock;
- 		xfs_iunpin_wait(ip);
- 	}
-@@ -1103,7 +1103,7 @@ xfs_reclaim_inode(
-  * then a shut down during filesystem unmount reclaim walk leak all the
-  * unreclaimed inodes.
-  */
--STATIC int
-+STATIC long
- xfs_reclaim_inodes_ag(
- 	struct xfs_mount	*mp,
- 	int			flags,
-@@ -1113,18 +1113,22 @@ xfs_reclaim_inodes_ag(
- 	int			error = 0;
- 	int			last_error = 0;
- 	xfs_agnumber_t		ag;
--	int			trylock = flags & SYNC_TRYLOCK;
-+	int			trylock;
- 	int			skipped;
-+	int			dirty_ags;
- 
- restart:
-+	trylock = flags & SYNC_TRYLOCK;
- 	ag = 0;
- 	skipped = 0;
-+	dirty_ags = 0;
- 	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
- 		unsigned long	first_index = 0;
- 		int		done = 0;
- 		int		nr_found = 0;
- 
- 		ag = pag->pag_agno + 1;
-+		dirty_ags++;
- 
- 		if (trylock) {
- 			if (!mutex_trylock(&pag->pag_ici_reclaim_lock)) {
-@@ -1132,10 +1136,16 @@ xfs_reclaim_inodes_ag(
- 				xfs_perag_put(pag);
- 				continue;
- 			}
--			first_index = pag->pag_ici_reclaim_cursor;
- 		} else
- 			mutex_lock(&pag->pag_ici_reclaim_lock);
- 
-+		/*
-+		 * Always start from the last scanned inode so that we don't
-+		 * block on inodes that a previous iteration just flushed.
-+		 * Iterate over the entire inode range before coming back to
-+		 * skipped/dirty inodes.
-+		 */
-+		first_index = pag->pag_ici_reclaim_cursor;
- 		do {
- 			struct xfs_inode *batch[XFS_LOOKUP_BATCH];
- 			int	i;
-@@ -1201,23 +1211,31 @@ xfs_reclaim_inodes_ag(
- 
- 		} while (nr_found && !done && *nr_to_scan > 0);
- 
--		if (trylock && !done)
--			pag->pag_ici_reclaim_cursor = first_index;
--		else
--			pag->pag_ici_reclaim_cursor = 0;
-+		if (done)
-+			first_index = 0;
-+		pag->pag_ici_reclaim_cursor = first_index;
- 		mutex_unlock(&pag->pag_ici_reclaim_lock);
- 		xfs_perag_put(pag);
- 	}
- 
- 	/*
--	 * if we skipped any AG, and we still have scan count remaining, do
-+	 * If we skipped all AGs because they are locked, we've reached maximum
-+	 * reclaim concurrency. At this point there is no point in having more
-+	 * attempts to shrink the cache from this context. Tell the shrinker to
-+	 * stop and defer the reclaim work till later.
-+	 */
-+	if (skipped && skipped == dirty_ags)
-+		return SHRINK_STOP;
-+
-+	/*
-+	 * If we skipped any AG, and we still have scan count remaining, do
- 	 * another pass this time using blocking reclaim semantics (i.e
- 	 * waiting on the reclaim locks and ignoring the reclaim cursors). This
- 	 * ensure that when we get more reclaimers than AGs we block rather
- 	 * than spin trying to execute reclaim.
- 	 */
- 	if (skipped && (flags & SYNC_WAIT) && *nr_to_scan > 0) {
--		trylock = 0;
-+		flags &= ~SYNC_TRYLOCK;
- 		goto restart;
- 	}
- 	return last_error;
-@@ -1229,8 +1247,12 @@ xfs_reclaim_inodes(
- 	int		mode)
- {
- 	int		nr_to_scan = INT_MAX;
-+	long		ret;
- 
--	return xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
-+	ret = xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
-+	if (ret == SHRINK_STOP)
-+		return 0;
-+	return ret;
- }
- 
- /*
-@@ -1241,17 +1263,28 @@ xfs_reclaim_inodes(
-  * reclaim of inodes. That means if we come across dirty inodes, we wait for
-  * them to be cleaned, which we hope will not be very long due to the
-  * background walker having already kicked the IO off on those dirty inodes.
-+ *
-+ * Also, treat kswapd specially - we really want it to run asynchronously and
-+ * not block on dirty inodes, unlike direct reclaim that we can tolerate
-+ * blocking and some amount of IO latency. If we start to overload the reclaim
-+ * subsystem with too many direct reclaimers, it will start returning
-+ * SHRINK_STOP to tell the mm subsystem to defer the work rather than continuing
-+ * to call us and forcing us to block.
-  */
- long
- xfs_reclaim_inodes_nr(
- 	struct xfs_mount	*mp,
- 	int			nr_to_scan)
- {
-+	int			flags = SYNC_TRYLOCK;
-+
- 	/* kick background reclaimer and push the AIL */
- 	xfs_reclaim_work_queue(mp);
- 	xfs_ail_push_all(mp->m_ail);
- 
--	return xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT, &nr_to_scan);
-+	if (!current_is_kswapd())
-+		flags |= SYNC_WAIT;
-+	return xfs_reclaim_inodes_ag(mp, flags, &nr_to_scan);
- }
- 
- /*
+> Cheers,
+>
+> Dave.
+>
+> (*) This test it'll probably still come out in favour of ext4
+> because of empty filesystem allocation patterns.  i.e. ext4
+> allocation is all nice and compact until you dirty all the block
+> groups in the filesystem, then the allocation patterns become
+> scattered and non-deterministic. At that point, typical data
+> intensive workloads will always dirty a significant proportion of
+> the block groups in the filesystem, and fstrim behaviour becomes
+> much more like XFS.  XFS's behaviour does not change with workloads
+> - it only changes as free space patterns changes. Hence it should be
+> roughly consistent and predictable behaviour for a given free
+> space pattern regardless of the workload or the age of the
+> filesystem.
