@@ -1,81 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:56248 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755887AbcKCRvF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Nov 2016 13:51:05 -0400
-Date: Thu, 3 Nov 2016 11:51:02 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v9 00/16] re-enable DAX PMD support
-Message-ID: <20161103175102.GA11784@linux.intel.com>
-References: <1478030058-1422-1-git-send-email-ross.zwisler@linux.intel.com>
- <20161103015826.GI9920@dastard>
+Received: from ishtar.tlinx.org ([173.164.175.65]:49846 "EHLO
+        Ishtar.sc.tlinx.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755253AbcKBClI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Nov 2016 22:41:08 -0400
+Received: from [192.168.3.12] (Athenae [192.168.3.12])
+        by Ishtar.sc.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id uA22TrGc026864
+        for <linux-xfs@vger.kernel.org>; Tue, 1 Nov 2016 19:29:55 -0700
+Message-ID: <58194CF8.1000501@tlinx.org>
+Date: Tue, 01 Nov 2016 19:18:32 -0700
+From: "L.A. Walsh" <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161103015826.GI9920@dastard>
+Subject: Re: [rfe]: finobt option separable from crc option? (was [rfc] larger
+ batches for crc32c)
+References: <20161028031747.68472ac7@roar.ozlabs.ibm.com> <20161027214244.GO14023@dastard> <20161028131234.24a5cb6f@roar.ozlabs.ibm.com> <20161028160218.1af40906@roar.ozlabs.ibm.com> <20161031030853.GK22126@dastard> <20161101143918.4f154154@roar.ozlabs.ibm.com> <20161101054725.GZ14023@dastard>
+In-Reply-To: <20161101054725.GZ14023@dastard>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Nov 03, 2016 at 12:58:26PM +1100, Dave Chinner wrote:
-> On Tue, Nov 01, 2016 at 01:54:02PM -0600, Ross Zwisler wrote:
-> > DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
-> > locking.  This series allows DAX PMDs to participate in the DAX radix tree
-> > based locking scheme so that they can be re-enabled.
-> 
-> I've seen patch 0/16 - where did you send the other 16? I need to
-> pick up the bug fix that is in this patch set...
+Snipping in various places:
 
-I CC'd your "david@fromorbit.com" address on the entire set, as well as all
-the usual lists (linux-xfs, linux-fsdevel, linux-nvdimm, etc).
+Dave Chinner wrote:
+> directory operations:
+> 	lookups = 79418,  creates = 460612
+> 	removes = 460544, getdents = 5685160
+>
+> SO, we have 80k directory lookups to instantiate an inode, but 460k
+> creates and removes, and 5.6M readdir calls. That's a lot of readdir
+> calls....
+>   
+>> trans 0 3491960 0
+>>     
+> 3.5 million asynchronous transaction commits. That's a lot, so far I
+> can account for about 1.5M of them (creates, removes and a handful
+> of data extents). Oh, a couple of million data writes - I bet the
+> rest are timestamp/i_version updates.
+>   
+> [...]
+> log force sleeps = 143932               (fsync waits!)
+> ...
+> Identifying what that is will give you some idea
+> of how to reduce the fsync load and hence potentially decrease the
+> log and CRC overhead that it is causing....
+>   
+----
+    Back when the free-inode performance enhancement was introduced,
+it was required that crc'ing of metadata also be enabled.  Have
+these options been separated yet?  If so, save yourself some reading
+and just get the "thanks!", and ignore the rest of this, but if
+not... please read on, and please re-consider...
 
-They are also available via the libnvdimm patchwork:
+    I asked for a separation of these options on the basis that
+crc'ing of the file system was not something I wanted on my files due
+to performance and data security and recovery considerations.  I was
+told that the crc'ing of the data wouldn't be noticeable (something I
+was skeptical of), and that allowing the options separately wouldn't
+be offered). 
 
-https://patchwork.kernel.org/project/linux-nvdimm/list/
+    My inner-cynic thought that this was because many, if not most
+users wouldn't need the crc and it would only be another source of
+problems -- one that would disable data-access if the crc counts
+couldn't be verified. 
 
-or via my tree:
+    I really, still, don't want the crc's on my disks, I don't see
+that they would provide any positive benefit in my usage -- nor in
+many uses of xfs -- which ISN'T to say I can't see the need and/or
+desire to have them for many classes of xfs users -- just not one
+that I belong to at this point.  I was more worried about performance
+than anything else (always trying to eek the most out of fixed budget!).
 
-https://git.kernel.org/cgit/linux/kernel/git/zwisler/linux.git/log/?h=dax_pmd_v9
+    I see the speedup from the free-inode tree in saving the
+time during the real-time-search for free space, but only saw the crc
+calculations as time-wasting overhead for the customer not needing
+such integrity guarantees. 
 
-The only patch that is different between v8 and v9 is:
-[PATCH v9 14/16] dax: add struct iomap based DAX PMD support
+    Is the free-space inode feature anything more than something to
+offset the speed lost by crc calculations?  Wouldn't xfs be more
+flexible if it could be tuned for performance OR integrity (or
+a mix of both, using both).   Even if someone only wants to support
+the combination in some official release, allowing selection
+of those options to be separate would allow better testing
+as well as isolation of features for specific workloads, testing
+and/or benchmarks.
 
-> > Previously we had talked about this series going through the XFS tree, but
-> > Jan has a patch set that will need to build on this series and it heavily
-> > modifies the MM code.  I think he would prefer that series to go through
-> > Andrew Morton's -MM tree, so it probably makes sense for this series to go
-> > through that same tree.
-> 
-> Seriously, I was 10 minutes away from pushing out the previous
-> version of this patchset as a stable topic branch, just like has
-> been discussed and several times over the past week.  Indeed, I
-> mentioned that I was planning on pushing out this topic branch today
-> not more than 4 hours ago, and you were on the cc list.
+L. Walsh
 
-I'm confused - I sent v9 of this series out 2 days ago, on Tuesday?
-I have seen multiple messages from you this week saying you were going to pick
-this series up, but I saw them all after I had already sent this series out.
 
-> The -mm tree is not the place to merge patchsets with dependencies
-> like this because it's an unstable, rebasing tree. Hence it cannot
-> be shared and used as the base of common development between
-> multiple git trees like we have for the fs/ subsystem.
-> 
-> This needs to go out as a stable topic branch so that other
-> dependent work can reliably build on top of it for the next merge
-> window. e.g. the ext4 DAX iomap patch series that is likely to be
-> merged through the ext4 tree, so it needs a stable branch. There's
-> iomap direct IO patches for XFS pending, and they conflict with this
-> patchset. i.e. we need a stable git base to work from...
-
-Yea, my apologies.  Really this comes down to a lack of understanding on my
-part about about which series should be merged via which maintainers, and how
-stable topic branches can be shared.  I didn't realize that if you make a
-stable branch that could be easily used by other trees, and that for example
-Jan's MM or ext4 based patches could be merged by another maintainer but be
-based on your topic branch.
-
-Sorry for the confusion, I was just trying to figure out a way that Jan's
-changes could also be merged.  Please do pick up v9 of my PMD set. :)
