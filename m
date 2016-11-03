@@ -1,48 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:36671 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754435AbcKDU44 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 16:56:56 -0400
-Received: by mail-pf0-f172.google.com with SMTP id 189so57520701pfz.3
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Nov 2016 13:56:56 -0700 (PDT)
-Date: Fri, 4 Nov 2016 14:56:54 -0600
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 4/5] iomap: implement direct I/O
-Message-ID: <20161104205654.GB11764@kernel.dk>
-References: <1478276479-10749-1-git-send-email-hch@lst.de>
- <1478276479-10749-5-git-send-email-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:36892 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750970AbcKCT5C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Nov 2016 15:57:02 -0400
+Subject: Re: Can I add external log device after filesystem was created?
+References: <CACNifpV5z3r0WB3xypSfGxk6E-=b+3TWrsS4Od7+bKwmmD3yeA@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1e60fac5-f2b9-3903-c18c-0a73d0206e0a@sandeen.net>
+Date: Thu, 3 Nov 2016 14:57:01 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1478276479-10749-5-git-send-email-hch@lst.de>
+In-Reply-To: <CACNifpV5z3r0WB3xypSfGxk6E-=b+3TWrsS4Od7+bKwmmD3yeA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, kent.overstreet@gmail.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
+To: Marcin Sura <mailing-lists@sura.pl>, linux-xfs@vger.kernel.org
 
-On Fri, Nov 04 2016, Christoph Hellwig wrote:
-> This adds a full fledget direct I/O implementation using the iomap
-> interface. Full fledged in this case means all features are supported:
-> AIO, vectored I/O, any iov_iter type including kernel pointers, bvecs
-> and pipes, support for hole filling and async apending writes.  It does
-> not mean supporting all the warts of the old generic code.  We expect
-> i_rwsem to be held over the duration of the call, and we expect to
-> maintain i_dio_count ourselves, and we pass on any kinds of mapping
-> to the file system for now.
+On 11/3/16 2:28 PM, Marcin Sura wrote:
+> Hi,
 > 
-> The algorithm used is very simple: We use iomap_apply to iterate over
-> the range of the I/O, and then we use the new bio_iov_iter_get_pages
-> helper to lock down the user range for the size of the extent.
-> bio_iov_iter_get_pages can currently lock down twice as many pages as
-> the old direct I/O code did, which means that we will have a better
-> batch factor for everything but overwrites of badly fragmented files.
+> I've created filesystem with default mkfs.xfs command, started to use
+> the filesystem. Few days later I've got nice SSD-based lun which can
+> be used as external log device.
+> 
+> Can I add that lun as external log device to an existing filesystem? How?
+> 
+> BR
+> Marcin
 
-This looks pretty good, I'll give it a whirl on my fast(er) devices.
+There is no supported mechanism for doing this.  It can be done with xfs_db
+disk-editing surgery, but that's not really recommended.
 
-One question, since it isn't commented and isn't immediately obvious to
-me - what's the purpose of using the cmpxchg() on dio->error?
+What is your reason for wanting to move the log?
 
--- 
-Jens Axboe
-
+-Eric
