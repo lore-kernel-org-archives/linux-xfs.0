@@ -1,235 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:5601 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933372AbcKDAMw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Nov 2016 20:12:52 -0400
-Date: Fri, 4 Nov 2016 11:12:48 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [rfc] larger batches for crc32c
-Message-ID: <20161104001248.GD28177@dastard>
-References: <20161028031747.68472ac7@roar.ozlabs.ibm.com>
+Received: from mail-yw0-f170.google.com ([209.85.161.170]:36079 "EHLO
+        mail-yw0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758128AbcKCVOP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Nov 2016 17:14:15 -0400
+Received: by mail-yw0-f170.google.com with SMTP id l124so66601651ywb.3
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Nov 2016 14:14:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161028031747.68472ac7@roar.ozlabs.ibm.com>
+In-Reply-To: <1e60fac5-f2b9-3903-c18c-0a73d0206e0a@sandeen.net>
+References: <CACNifpV5z3r0WB3xypSfGxk6E-=b+3TWrsS4Od7+bKwmmD3yeA@mail.gmail.com>
+ <1e60fac5-f2b9-3903-c18c-0a73d0206e0a@sandeen.net>
+From: Marcin Sura <mailing-lists@sura.pl>
+Date: Thu, 3 Nov 2016 22:14:14 +0100
+Message-ID: <CACNifpV7qQ_5YzJJfdaKi3SThBa7x4N=VNeK1f_OkijiXh6zPA@mail.gmail.com>
+Subject: Re: Can I add external log device after filesystem was created?
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nicholas Piggin <npiggin@gmail.com>
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Oct 28, 2016 at 03:17:47AM +1100, Nicholas Piggin wrote:
-> Hi guys,
-> 
-> We're seeing crc32c_le show up in xfs log checksumming on a MySQL benchmark
-> on powerpc. I could reproduce similar overheads with dbench as well.
-> 
-> 1.11%  mysqld           [kernel.vmlinux]            [k] __crc32c_le
->         |
->         ---__crc32c_le
->            |          
->             --1.11%--chksum_update
->                       |          
->                        --1.11%--crypto_shash_update
->                                  crc32c
->                                  xlog_cksum
->                                  xlog_sync
->                                  _xfs_log_force_lsn
->                                  xfs_file_fsync
->                                  vfs_fsync_range
->                                  do_fsync
->                                  sys_fsync
->                                  system_call
->                                  0x17738
->                                  0x17704
->                                  os_file_flush_func
->                                  fil_flush
-> 
-> As a rule, it helps the crc implementation if it can operate on as large a
-> chunk as possible (alignment, startup overhead, etc). So I did a quick hack
-> at getting XFS checksumming to feed crc32c() with larger chunks, by setting
-> the existing crc to 0 before running over the entire buffer. Together with
-> some small work on the powerpc crc implementation, crc drops below 0.1%.
-> 
-> I don't know if something like this would be acceptable? It's not pretty,
-> but I didn't see an easier way.
+Hi,
 
-Here's an alternative, slightly cleaner patch that optimises the CRC
-update side but leaves the verify side as it is. I've not yet
-decided exactly what is cleanest for the xlog_cksum() call in log
-recovery, but that won't change the performance of the code.  Can
-you give this a run through, Nick?
+We are building huge test system with hundreds TB of data. We want to
+execute some performance tests without and with external log device.
+Filling in the data is a time consuming process, so my first idea was
+to create the filesystem without external log, execute the tests and
+then add external log and repeat the tests without recreating the
+filesystem. Now I know I have to do this. Thanks
 
-Cheers,
+BR
+Marcin
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-
-xfs: optimise CRC updates
-
-From: Dave Chinner <dchinner@redhat.com>
-
-Nick Piggin reported that the CRC overhead in an fsync heavy
-workload was higher than expected on a Power8 machine. Part of this
-was to do with the fact that the power8 CRC implementation is not
-efficient for CRC lengths of less than 512 bytes, and so the way we
-split the CRCs over the CRC field means a lot of the CRCs are
-reduced to being less than than optimal size.
-
-TO otpimise this, change the CRC update mechanism to zero the CRC
-field first, and then compute the CRC in one pass over the buffer
-and write the result back into the buffer. We can do this safely
-because anything writing a CRC has exclusive access to the buffer
-the CRC is being calculated over.
-
-We leave the CRC verify code the same - it still splits the CRC
-calculation - because we do not want read-only operations modifying
-the underlying buffer. This is because read-only operations may not
-have an exclusive access to the buffer guaranteed, and so temporary
-modifications could leak out to to other processes accessing the
-buffer concurrently.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_cksum.h     | 26 ++++++++++++++++++++++----
- fs/xfs/libxfs/xfs_inode_buf.c |  2 +-
- fs/xfs/xfs_log.c              |  2 +-
- fs/xfs/xfs_log_recover.c      | 12 +++++++-----
- 4 files changed, 31 insertions(+), 11 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_cksum.h b/fs/xfs/libxfs/xfs_cksum.h
-index fad1676ad8cd..a416c7cb23ea 100644
---- a/fs/xfs/libxfs/xfs_cksum.h
-+++ b/fs/xfs/libxfs/xfs_cksum.h
-@@ -6,10 +6,11 @@
- /*
-  * Calculate the intermediate checksum for a buffer that has the CRC field
-  * inside it.  The offset of the 32bit crc fields is passed as the
-- * cksum_offset parameter.
-+ * cksum_offset parameter. We do not modify the buffer during verification,
-+ * hence we have to split the CRC calculation across the cksum_offset.
-  */
- static inline __uint32_t
--xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
-+xfs_start_cksum_safe(char *buffer, size_t length, unsigned long cksum_offset)
- {
- 	__uint32_t zero = 0;
- 	__uint32_t crc;
-@@ -26,6 +27,20 @@ xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
- }
- 
- /*
-+ * Fast CRC method where the buffer is modified. Callers must have exclusive
-+ * access to the buffer while the calculation takes place.
-+ */
-+static inline __uint32_t
-+xfs_start_cksum_update(char *buffer, size_t length, unsigned long cksum_offset)
-+{
-+	/* zero the CRC field */
-+	*(__le32 *)(buffer + cksum_offset) = 0;
-+
-+	/* single pass CRC calculation for the entire buffer */
-+	return crc32c(XFS_CRC_SEED, buffer, length);
-+}
-+
-+/*
-  * Convert the intermediate checksum to the final ondisk format.
-  *
-  * The CRC32c calculation uses LE format even on BE machines, but returns the
-@@ -40,11 +55,14 @@ xfs_end_cksum(__uint32_t crc)
- 
- /*
-  * Helper to generate the checksum for a buffer.
-+ *
-+ * This modifies the buffer temporarily - callers must have exclusive
-+ * access to the buffer while the calculation takes place.
-  */
- static inline void
- xfs_update_cksum(char *buffer, size_t length, unsigned long cksum_offset)
- {
--	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
-+	__uint32_t crc = xfs_start_cksum_update(buffer, length, cksum_offset);
- 
- 	*(__le32 *)(buffer + cksum_offset) = xfs_end_cksum(crc);
- }
-@@ -55,7 +73,7 @@ xfs_update_cksum(char *buffer, size_t length, unsigned long cksum_offset)
- static inline int
- xfs_verify_cksum(char *buffer, size_t length, unsigned long cksum_offset)
- {
--	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
-+	__uint32_t crc = xfs_start_cksum_safe(buffer, length, cksum_offset);
- 
- 	return *(__le32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
- }
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 134424fac434..d3aa50eb998f 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -436,7 +436,7 @@ xfs_dinode_calc_crc(
- 		return;
- 
- 	ASSERT(xfs_sb_version_hascrc(&mp->m_sb));
--	crc = xfs_start_cksum((char *)dip, mp->m_sb.sb_inodesize,
-+	crc = xfs_start_cksum_update((char *)dip, mp->m_sb.sb_inodesize,
- 			      XFS_DINODE_CRC_OFF);
- 	dip->di_crc = xfs_end_cksum(crc);
- }
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 3b74fa011bb1..3ebe444eb60f 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1668,7 +1668,7 @@ xlog_cksum(
- 	__uint32_t		crc;
- 
- 	/* first generate the crc for the record header ... */
--	crc = xfs_start_cksum((char *)rhead,
-+	crc = xfs_start_cksum_update((char *)rhead,
- 			      sizeof(struct xlog_rec_header),
- 			      offsetof(struct xlog_rec_header, h_crc));
- 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 9b3d7c76915d..56b7a2f6aaf2 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -5113,19 +5113,21 @@ xlog_recover_process(
- 	struct list_head	*buffer_list)
- {
- 	int			error;
-+	__le32			old_crc = rhead->h_crc;
- 	__le32			crc;
- 
-+
- 	crc = xlog_cksum(log, rhead, dp, be32_to_cpu(rhead->h_len));
- 
- 	/*
- 	 * Nothing else to do if this is a CRC verification pass. Just return
- 	 * if this a record with a non-zero crc. Unfortunately, mkfs always
--	 * sets h_crc to 0 so we must consider this valid even on v5 supers.
-+	 * sets old_crc to 0 so we must consider this valid even on v5 supers.
- 	 * Otherwise, return EFSBADCRC on failure so the callers up the stack
- 	 * know precisely what failed.
- 	 */
- 	if (pass == XLOG_RECOVER_CRCPASS) {
--		if (rhead->h_crc && crc != rhead->h_crc)
-+		if (old_crc && crc != old_crc)
- 			return -EFSBADCRC;
- 		return 0;
- 	}
-@@ -5136,11 +5138,11 @@ xlog_recover_process(
- 	 * zero CRC check prevents warnings from being emitted when upgrading
- 	 * the kernel from one that does not add CRCs by default.
- 	 */
--	if (crc != rhead->h_crc) {
--		if (rhead->h_crc || xfs_sb_version_hascrc(&log->l_mp->m_sb)) {
-+	if (crc != old_crc) {
-+		if (old_crc || xfs_sb_version_hascrc(&log->l_mp->m_sb)) {
- 			xfs_alert(log->l_mp,
- 		"log record CRC mismatch: found 0x%x, expected 0x%x.",
--					le32_to_cpu(rhead->h_crc),
-+					le32_to_cpu(old_crc),
- 					le32_to_cpu(crc));
- 			xfs_hex_dump(dp, 32);
- 		}
+2016-11-03 20:57 GMT+01:00 Eric Sandeen <sandeen@sandeen.net>:
+> On 11/3/16 2:28 PM, Marcin Sura wrote:
+>> Hi,
+>>
+>> I've created filesystem with default mkfs.xfs command, started to use
+>> the filesystem. Few days later I've got nice SSD-based lun which can
+>> be used as external log device.
+>>
+>> Can I add that lun as external log device to an existing filesystem? How?
+>>
+>> BR
+>> Marcin
+>
+> There is no supported mechanism for doing this.  It can be done with xfs_db
+> disk-editing surgery, but that's not really recommended.
+>
+> What is your reason for wanting to move the log?
+>
+> -Eric
