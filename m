@@ -1,220 +1,183 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from [60.191.123.56] ([60.191.123.56]:60500 "EHLO h3cmg01-ex.h3c.com"
-        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755893AbcKCI6s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Nov 2016 04:58:48 -0400
-From: Zhangzengran <zhangzengran@h3c.com>
-Subject: xfs crash & mount hang
-Date: Thu, 3 Nov 2016 08:57:50 +0000
-Message-ID: <7BD28126D6935A4498AE6DE60B5D4CAB314EE233@H3CMLB12-EX.srv.huawei-3com.com>
-Content-Language: zh-CN
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Received: from mx1.redhat.com ([209.132.183.28]:12825 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758017AbcKCT5x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Nov 2016 15:57:53 -0400
+Date: Thu, 3 Nov 2016 15:57:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xfs crash & mount hang
+Message-ID: <20161103195750.GE27630@bfoster.bfoster>
+References: <7BD28126D6935A4498AE6DE60B5D4CAB314EE233@H3CMLB12-EX.srv.huawei-3com.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <7BD28126D6935A4498AE6DE60B5D4CAB314EE233@H3CMLB12-EX.srv.huawei-3com.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Zhangzengran <zhangzengran@h3c.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-d2UgbWVldCBhIG1vdW50IGhhbmcgaW4gbGludXgga2VybmVsLCBob3Bpbmcgc29tZW9uZSBjb3Vs
-ZCBnaXZlIHNvbWUgc3VnZ2VzdHMuLg0KDQp3ZSBjcmVhdGUgYSBmbGFzaGNhY2hlIGRtIGRpc2sg
-d2l0aCB3cml0ZWFyb3VuZCBtb2RlLGFuZCBpdCB3YXMgdXNlZCBieSBjZXBoLW9zZCBkYXRhIGRp
-c2sobm90IGpvdXJuYWwpLA0KY2VwaC1kaXNrIG1rZnMueGZzIG9uIGl0LiB0b2RheSB0aGUgaG9z
-dCBnb3QgaW50byBhbiB1bmV4cGVjdGVkIHBvd2VyIG91dGFnZSwgd2hlbiByZS1wb3dlciBvbiAs
-d2UgZm91bmQNCnRoYXQgY2VwaC1vc2QgZ290IGFuIElPIGVycm9yIHdoZW4gdHJ5IHRvIG9wZW4g
-bGV2ZWxkYidzIHNzdCBmaWxlIG9uIHRoZSBkaXNrLCB0aGVuIHRoZSBrZXJuZWwgY3Jhc2g6DQoN
-CjIwMTYtMTAtMTIgMDk6MDE6MjUuNDUxNzQ3IDdmZjcxNDE1MTc4MCAtMSBmaWxlc3RvcmUoL3Zh
-ci9saWIvY2VwaC9vc2QvY2VwaC0zKSBFcnJvciBpbml0aWFsaXppbmcgbGV2ZWxkYiA6IElPIGVy
-cm9yOiAvdmFyL2xpYi9jZXBoL29zZC9jZXBoLTMvY3VycmVudC9vbWFwLzAwMDA1OS5zc3Q6IFN0
-cnVjdHVyZSBuZWVkcyBjbGVhbmluZ2ANCg0KT2N0IDEyIDA5OjAxOjI1IE5IR08tQ1ZLMDEga2Vy
-bmVsOiBbICAxNjEuNjc0NzMwXSBYRlMgKGRtLTIpOiBJbnRlcm5hbCBlcnJvciBYRlNfV0FOVF9D
-T1JSVVBURURfR09UTyBhdCBsaW5lIDE2MDAgb2YgZmlsZSBmcy94ZnMvbGlieGZzL3hmc19hbGxv
-Yy5jLiAgQ2FsbGVyIHhmc19mcmVlX2V4dGVudCsweGVhLzB4OTUwIFt4ZnNdDQpPY3QgMTIgMDk6
-MDE6MjUgTkhHTy1DVkswMSBrZXJuZWw6IFsgIDE2MS42NzQ3MzNdIENQVTogMTAgUElEOiA3OTA5
-IENvbW06IGNlcGgtb3NkIFRhaW50ZWQ6IEcgICAgICAgICAgIE9FICAgNC4xLjAtZ2VuZXJpYyAj
-MQ0KT2N0IDEyIDA5OjAxOjI1IE5IR08tQ1ZLMDEga2VybmVsOiBbICAxNjEuNjc0NzM0XSBIYXJk
-d2FyZSBuYW1lOiBIYW5nemhvdSBIM0MgVGVjaG5vbG9naWVzIENvLiwgTHRkLiBVSVMgUjM5MFgg
-RzIvVUlTIFIzOTBYIEcyLCBCSU9TIDEuMDAuMTMgMDgvMjYvMjAxNg0KT2N0IDEyIDA5OjAxOjI1
-IE5IR08tQ1ZLMDEga2VybmVsOiBbICAxNjEuNjc0NzM2XSAgMDAwMDAwMDAwMDAwMDAwMCBmZmZm
-ODgyMDJkYmVmODQ4IGZmZmZmZmZmODE3ZWU1NjMgZmZmZjg4MjAyZGE1NDY1OA0KT2N0IDEyIDA5
-OjAxOjI1IE5IR08tQ1ZLMDEga2VybmVsOiBbICAxNjEuNjc0NzM3XSAgZmZmZjg4MjAzM2VmMjAw
-MCBmZmZmODgyMDJkYmVmODY4IGZmZmZmZmZmYzAzNGM0OWYgZmZmZmZmZmZjMDMwOGQ1YQ0KT2N0
-IDEyIDA5OjAxOjI1IE5IR08tQ1ZLMDEga2VybmVsOiBbICAxNjEuNjc0NzM5XSAgMDAwMDAwMDAw
-MDAwMDAwMCBmZmZmODgyMDJkYmVmOTE4IGZmZmZmZmZmYzAzMDVjZDkgZmZmZjg4MjAzNDU4NWM4
-MA0KT2N0IDEyIDA5OjAxOjI1IE5IR08tQ1ZLMDEga2VybmVsOiBbICAxNjEuNjc0NzM5XSBDYWxs
-IFRyYWNlOg0KT2N0IDEyIDA5OjAxOjI1IE5IR08tQ1ZLMDEga2VybmVsOiBbICAxNjEuNjc0NzQ1
-XSAgWzxmZmZmZmZmZjgxN2VlNTYzPl0gZHVtcF9zdGFjaysweDYzLzB4ODENCk9jdCAxMiAwOTow
-MToyNSBOSEdPLUNWSzAxIGtlcm5lbDogWyAgMTYxLjY3NDc1NF0gIFs8ZmZmZmZmZmZjMDM0YzQ5
-Zj5dIHhmc19lcnJvcl9yZXBvcnQrMHgzZi8weDUwIFt4ZnNdDQpPY3QgMTIgMDk6MDE6MjUgTkhH
-Ty1DVkswMSBrZXJuZWw6IFsgIDE2MS42NzQ3NThdICBbPGZmZmZmZmZmYzAzMDhkNWE+XSA/IHhm
-c19mcmVlX2V4dGVudCsweGVhLzB4OTUwIFt4ZnNdDQpPY3QgMTIgMDk6MDE6MjUgTkhHTy1DVksw
-MSBrZXJuZWw6IFsgIDE2MS42NzQ3NjFdICBbPGZmZmZmZmZmYzAzMDVjZDk+XSB4ZnNfYWxsb2Nf
-bG9nX2FnZisweDM5OS8weDhkMCBbeGZzXQ0KT2N0IDEyIDA5OjAxOjI1IE5IR08tQ1ZLMDEga2Vy
-bmVsOiBbICAxNjEuNjc0NzY1XSAgWzxmZmZmZmZmZmMwMzA4ZDVhPl0geGZzX2ZyZWVfZXh0ZW50
-KzB4ZWEvMHg5NTAgW3hmc10NCk9jdCAxMiAwOTowMToyNSBOSEdPLUNWSzAxIGtlcm5lbDogWyAg
-MTYxLjY3NDc3Ml0gIFs8ZmZmZmZmZmZjMDM0NTZhNT5dIHhmc19ibWFwX2ZpbmlzaCsweDE1NS8w
-eDFhMCBbeGZzXQ0KT2N0IDEyIDA5OjAxOjI1IE5IR08tQ1ZLMDEga2VybmVsOiBbICAxNjEuNjc0
-NzgwXSAgWzxmZmZmZmZmZmMwMzVjZGY5Pl0geGZzX2l0cnVuY2F0ZV9leHRlbnRzKzB4ZjkvMHg0
-MDAgW3hmc10NCk9jdCAxMiAwOTowMToyNSBOSEdPLUNWSzAxIGtlcm5lbDogWyAgMTYxLjY3NDc4
-N10gIFs8ZmZmZmZmZmZjMDM1OThkZD5dIHhmc19zZXRhdHRyX3NpemUrMHgzNmQvMHg0YTAgW3hm
-c10NCk9jdCAxMiAwOTowMToyNSBOSEdPLUNWSzAxIGtlcm5lbDogWyAgMTYxLjY3NDc5Ml0gIFs8
-ZmZmZmZmZmZjMDM1OWEwYz5dIHhmc19zZXRhdHRyX3NpemUrMHg0OWMvMHg0YTAgW3hmc10NCk9j
-dCAxMiAwOTowMToyNSBOSEdPLUNWSzAxIGtlcm5lbDogWyAgMTYxLjY3NDgxM10gIFs8ZmZmZmZm
-ZmY4MTIxZjBjNz5dIG5vdGlmeV9jaGFuZ2UrMHgxZDcvMHgzZTANCk9jdCAxMiAwOTowMToyNSBO
-SEdPLUNWSzAxIGtlcm5lbDogWyAgMTYxLjY3NDgxNl0gIFs8ZmZmZmZmZmY4MTIwMDg3MD5dIGRv
-X3RydW5jYXRlKzB4NjAvMHhhMA0KT2N0IDEyIDA5OjAxOjI1IE5IR08tQ1ZLMDEga2VybmVsOiBb
-ICAxNjEuNjc0ODE4XSAgWzxmZmZmZmZmZjgxMjEwZWRkPl0gZG9fbGFzdCsweGJmZC8weGZkMA0K
-T2N0IDEyIDA5OjAxOjI1IE5IR08tQ1ZLMDEga2VybmVsOiBbICAxNjEuNjc0ODE5XSAgWzxmZmZm
-ZmZmZjgxMjExMzNmPl0gcGF0aF9vcGVuYXQrMHg4Zi8weDYyMA0KT2N0IDEyIDA5OjAxOjI1IE5I
-R08tQ1ZLMDEga2VybmVsOiBbICAxNjEuNjc0ODI2XSAgWzxmZmZmZmZmZmMwMzRmMTZiPl0gPyB4
-ZnNfemVyb19lb2YrMHgzOWIvMHhjMTAgW3hmc10NCk9jdCAxMiAwOTowMToyNSBOSEdPLUNWSzAx
-IGtlcm5lbDogWyAgMTYxLjY3NDgyOF0gIFs8ZmZmZmZmZmY4MTIxMzliMz5dIGRvX2ZpbHBfb3Bl
-bisweDQzLzB4YTANCk9jdCAxMiAwOTowMToyNSBOSEdPLUNWSzAxIGtlcm5lbDogWyAgMTYxLjY3
-NDgzMF0gIFs8ZmZmZmZmZmY4MTIyMDQ0ZD5dID8gX19hbGxvY19mZCsweGNkLzB4MTIwDQpPY3Qg
-MTIgMDk6MDE6MjUgTkhHTy1DVkswMSBrZXJuZWw6IFsgIDE2MS42NzQ4MzJdICBbPGZmZmZmZmZm
-ODEyMDFhMTI+XSBkb19zeXNfb3BlbisweDEzMi8weDIzMA0KT2N0IDEyIDA5OjAxOjI1IE5IR08t
-Q1ZLMDEga2VybmVsOiBbICAxNjEuNjc0ODMzXSAgWzxmZmZmZmZmZjgxMjAxYjJlPl0gU3lTX29w
-ZW4rMHgxZS8weDIwDQpPY3QgMTIgMDk6MDE6MjUgTkhHTy1DVkswMSBrZXJuZWw6IFsgIDE2MS42
-NzQ4MzddICBbPGZmZmZmZmZmODE3ZjY1ZjI+XSBzeXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4
-NzUNCk9jdCAxMiAwOTowMToyNSBOSEdPLUNWSzAxIGtlcm5lbDogWyAgMTYxLjY3NDg0MF0gWEZT
-IChkbS0yKTogeGZzX2RvX2ZvcmNlX3NodXRkb3duKDB4OCkgY2FsbGVkIGZyb20gbGluZSAxMzUg
-b2YgZmlsZSBmcy94ZnMveGZzX2JtYXBfdXRpbC5jLiAgUmV0dXJuIGFkZHJlc3MgPSAweGZmZmZm
-ZmZmYzAzNDU2ZGUNCk9jdCAxMiAwOTowMToyNSBOSEdPLUNWSzAxIGtlcm5lbDogWyAgMTYxLjY3
-NDk5OV0gWEZTIChkbS0yKTogQ29ycnVwdGlvbiBvZiBpbi1tZW1vcnkgZGF0YSBkZXRlY3RlZC4g
-IFNodXR0aW5nIGRvd24gZmlsZXN5c3RlbQ0KT2N0IDEyIDA5OjAxOjI1IE5IR08tQ1ZLMDEga2Vy
-bmVsOiBbICAxNjEuNjc0OTk5XSBYRlMgKGRtLTIpOiBQbGVhc2UgdW1vdW50IHRoZSBmaWxlc3lz
-dGVtIGFuZCByZWN0aWZ5IHRoZSBwcm9ibGVtKHMpDQpPY3QgMTIgMDk6MDE6MjUgTkhHTy1DVksw
-MSBrZHVtcC10b29sczogL3NiaW4va2V4ZWMgLXAgLS1jb21tYW5kLWxpbmU9IkJPT1RfSU1BR0U9
-L2Jvb3Qvdm1saW51ei00LjEuMC1nZW5lcmljIHJvb3Q9VVVJRD1iNzMyNWE2OC03YWYyLTQ1ZDkt
-OTA0Yi1lMWQ0N2FkOTIzNmIgcm8gcmFtZGlza19zaXplPTIwNDgwMDAgbm9tb2Rlc2V0IGVsZXZh
-dG9yPWRlYWRsaW5lIHRyYW5zcGFyZW50X2h1Z2VwYWdlPWFsd2F5cyBxdWlldCBpcnFwb2xsIG1h
-eGNwdXM9MSBub3VzYiIgLS1pbml0cmQ9L2Jvb3QvaW5pdHJkLmltZy00LjEuMC1nZW5lcmljIC9i
-b290L3ZtbGludXotNC4xLjAtZ2VuZXJpYw0KT2N0IDEyIDA5OjAxOjI1IE5IR08tQ1ZLMDEga2R1
-bXAtdG9vbHM6IGxvYWRlZCBrZHVtcCBrZXJuZWwNCg0Kd2hlbiByZWJvb3QsIHVkZXYgY2FsbCBj
-ZXBoLWRpc2sgdHJ5IHRvIG1vdW50IHRoZSBkaXNrIGZvciBjZXBoLW9zZCAsYnV0IGZhaWxlZCBh
-Z2Fpbi4NCg0KT2N0IDEyIDEwOjE4OjE0IE5IR08tQ1ZLMDEga2VybmVsOiBbICAgIDYuMjc0Njk2
-XSBYRlMgKHNkZDEpOiBNb3VudGluZyBWNCBGaWxlc3lzdGVtDQpPY3QgMTIgMTA6MTg6MTQgTkhH
-Ty1DVkswMSBrZXJuZWw6IFsgICAgNi40MjM2MjRdIFhGUyAoc2RkMSk6IFN0YXJ0aW5nIHJlY292
-ZXJ5IChsb2dkZXY6IGludGVybmFsKQ0KT2N0IDEyIDEwOjE4OjE0IE5IR08tQ1ZLMDEga2VybmVs
-OiBbICAgIDYuNTUwMDYxXSBYRlMgKHNkZDEpOiBJbnRlcm5hbCBlcnJvciBYRlNfV0FOVF9DT1JS
-VVBURURfR09UTyBhdCBsaW5lIDE2MDAgb2YgZmlsZSBmcy94ZnMvbGlieGZzL3hmc19hbGxvYy5j
-LiAgQ2FsbGVyIHhmc19mcmVlX2V4dGVudCsweGVhLzB4OTUwIFt4ZnNdDQpPY3QgMTIgMTA6MTg6
-MTQgTkhHTy1DVkswMSBrZXJuZWw6IFsgICAgNi41NTAwNjRdIENQVTogOSBQSUQ6IDI3MzMgQ29t
-bTogbW91bnQgVGFpbnRlZDogRyAgICAgICAgICAgIEUgICA0LjEuMC1nZW5lcmljICMxDQpPY3Qg
-MTIgMTA6MTg6MTQgTkhHTy1DVkswMSBrZXJuZWw6IFsgICAgNi41NTAwNjVdIEhhcmR3YXJlIG5h
-bWU6IEhhbmd6aG91IEgzQyBUZWNobm9sb2dpZXMgQ28uLCBMdGQuIFVJUyBSMzkwWCBHMi9VSVMg
-UjM5MFggRzIsIEJJT1MgMS4wMC4xMyAwOC8yNi8yMDE2DQpPY3QgMTIgMTA6MTg6MTQgTkhHTy1D
-VkswMSBrZXJuZWw6IFsgICAgNi41NTAwNjhdICAwMDAwMDAwMDAwMDAwMDAwIGZmZmY4ODIwMmM4
-NmI5ZDggZmZmZmZmZmY4MTdlZTU2MyBmZmZmODgyMDJkOGRjMDAwDQpPY3QgMTIgMTA6MTg6MTQg
-TkhHTy1DVkswMSBrZXJuZWw6IFsgICAgNi41NTAwNjldICBmZmZmODgyMDM0YTkwMGQwIGZmZmY4
-ODIwMmM4NmI5ZjggZmZmZmZmZmZjMDMzZDQ5ZiBmZmZmZmZmZmMwMmY5ZDVhDQpPY3QgMTIgMTA6
-MTg6MTQgTkhHTy1DVkswMSBrZXJuZWw6IFsgICAgNi41NTAwNzBdICAwMDAwMDAwMDAwMDAwMDAw
-IGZmZmY4ODIwMmM4NmJhYTggZmZmZmZmZmZjMDJmNmNkOSBmZmZmODgyMDMzNjkxNjgwDQpPY3Qg
-MTIgMTA6MTg6MTQgTkhHTy1DVkswMSBrZXJuZWw6IFsgICAgNi41NTAwNzFdIENhbGwgVHJhY2U6
-DQpPY3QgMTIgMTA6MTg6MTQgTkhHTy1DVkswMSBrZXJuZWw6IFsgICAgNi41NTAwODBdICBbPGZm
-ZmZmZmZmODE3ZWU1NjM+XSBkdW1wX3N0YWNrKzB4NjMvMHg4MQ0KT2N0IDEyIDEwOjE4OjE0IE5I
-R08tQ1ZLMDEga2VybmVsOiBbICAgIDYuNTUwMTA2XSAgWzxmZmZmZmZmZmMwMzNkNDlmPl0geGZz
-X2Vycm9yX3JlcG9ydCsweDNmLzB4NTAgW3hmc10NCk9jdCAxMiAxMDoxODoxNCBOSEdPLUNWSzAx
-IGtlcm5lbDogWyAgICA2LjU1MDExMF0gIFs8ZmZmZmZmZmZjMDJmOWQ1YT5dID8geGZzX2ZyZWVf
-ZXh0ZW50KzB4ZWEvMHg5NTAgW3hmc10NCk9jdCAxMiAxMDoxODoxNCBOSEdPLUNWSzAxIGtlcm5l
-bDogWyAgICA2LjU1MDExM10gIFs8ZmZmZmZmZmZjMDJmNmNkOT5dIHhmc19hbGxvY19sb2dfYWdm
-KzB4Mzk5LzB4OGQwIFt4ZnNdDQpPY3QgMTIgMTA6MTg6MTQgTkhHTy1DVkswMSBrZXJuZWw6IFsg
-ICAgNi41NTAxMTZdICBbPGZmZmZmZmZmYzAyZjlkNWE+XSB4ZnNfZnJlZV9leHRlbnQrMHhlYS8w
-eDk1MCBbeGZzXQ0KT2N0IDEyIDEwOjE4OjE0IE5IR08tQ1ZLMDEga2VybmVsOiBbICAgIDYuNTUw
-MTI0XSAgWzxmZmZmZmZmZmMwMzYxZDcwPl0geGZzX2lub2RlX2l0ZW1fZm9ybWF0X2NvbnZlcnQr
-MHgyNDAvMHg2MGYwIFt4ZnNdDQpPY3QgMTIgMTA6MTg6MTQgTkhHTy1DVkswMSBrZXJuZWw6IFsg
-ICAgNi41NTAxMzBdICBbPGZmZmZmZmZmYzAzNjM0MTY+XSB4ZnNfaW5vZGVfaXRlbV9mb3JtYXRf
-Y29udmVydCsweDE4ZTYvMHg2MGYwIFt4ZnNdDQpPY3QgMTIgMTA6MTg6MTQgTkhHTy1DVkswMSBr
-ZXJuZWw6IFsgICAgNi41NTAxMzVdICBbPGZmZmZmZmZmYzAzNjdkM2E+XSB4bG9nX3JlY292ZXJf
-ZmluaXNoKzB4MmEvMHgxNTAgW3hmc10NCk9jdCAxMiAxMDoxODoxNCBOSEdPLUNWSzAxIGtlcm5l
-bDogWyAgICA2LjU1MDE0Ml0gIFs8ZmZmZmZmZmZjMDM1YjZkND5dIHhmc19sb2dfbW91bnRfZmlu
-aXNoKzB4MzQvMHg1MCBbeGZzXQ0KT2N0IDEyIDEwOjE4OjE0IE5IR08tQ1ZLMDEga2VybmVsOiBb
-ICAgIDYuNTUwMTQ5XSAgWzxmZmZmZmZmZmMwMzUyNjNjPl0geGZzX21vdW50ZnMrMHg0YmMvMHg3
-NTAgW3hmc10NCk9jdCAxMiAxMDoxODoxNCBOSEdPLUNWSzAxIGtlcm5lbDogWyAgICA2LjU1MDE1
-Nl0gIFs8ZmZmZmZmZmZjMDM0MDRiMD5dID8geGZzX3plcm9fZW9mKzB4NmUwLzB4YzEwIFt4ZnNd
-DQpPY3QgMTIgMTA6MTg6MTQgTkhHTy1DVkswMSBrZXJuZWw6IFsgICAgNi41NTAxNjNdICBbPGZm
-ZmZmZmZmYzAzNTU1ZDg+XSB4ZnNfbXJ1X2NhY2hlX2RvbmUrMHgxZTM4LzB4MjFmMCBbeGZzXQ0K
-T2N0IDEyIDEwOjE4OjE0IE5IR08tQ1ZLMDEga2VybmVsOiBbICAgIDYuNTUwMTY3XSAgWzxmZmZm
-ZmZmZjgxMjA1YWU5Pl0gbW91bnRfYmRldisweDFiOS8weDIwMA0KT2N0IDEyIDEwOjE4OjE0IE5I
-R08tQ1ZLMDEga2VybmVsOiBbICAgIDYuNTUwMTcyXSAgWzxmZmZmZmZmZmMwMzU1MjUwPl0gPyB4
-ZnNfbXJ1X2NhY2hlX2RvbmUrMHgxYWIwLzB4MjFmMCBbeGZzXQ0KT2N0IDEyIDEwOjE4OjE0IE5I
-R08tQ1ZLMDEga2VybmVsOiBbICAgIDYuNTUwMTc3XSAgWzxmZmZmZmZmZmMwMzUzODA1Pl0geGZz
-X21ydV9jYWNoZV9kb25lKzB4NjUvMHgyMWYwIFt4ZnNdDQpPY3QgMTIgMTA6MTg6MTQgTkhHTy1D
-VkswMSBrZXJuZWw6IFsgICAgNi41NTAxNzldICBbPGZmZmZmZmZmODEyMDY2OTM+XSBtb3VudF9m
-cysweDQzLzB4MTgwDQpPY3QgMTIgMTA6MTg6MTQgTkhHTy1DVkswMSBrZXJuZWw6IFsgICAgNi41
-NTAxODNdICBbPGZmZmZmZmZmODEyMjI2NjY+XSB2ZnNfa2Vybl9tb3VudCsweDc2LzB4MTQwDQpP
-Y3QgMTIgMTA6MTg6MTQgTkhHTy1DVkswMSBrZXJuZWw6IFsgICAgNi41NTAxODVdICBbPGZmZmZm
-ZmZmODEyMjQ4ZWQ+XSBkb19tb3VudCsweDIwZC8weGNiMA0KT2N0IDEyIDEwOjE4OjE0IE5IR08t
-Q1ZLMDEga2VybmVsOiBbICAgIDYuNTUwMTg2XSAgWzxmZmZmZmZmZjgxMjI0NThhPl0gPyBjb3B5
-X21vdW50X29wdGlvbnMrMHgzYS8weDE3MA0KT2N0IDEyIDEwOjE4OjE0IE5IR08tQ1ZLMDEga2Vy
-bmVsOiBbICAgIDYuNTUwMTg3XSAgWzxmZmZmZmZmZjgxMjI1NmZiPl0gU3lTX21vdW50KzB4N2Iv
-MHhjMA0KT2N0IDEyIDEwOjE4OjE0IE5IR08tQ1ZLMDEga2VybmVsOiBbICAgIDYuNTUwMTkyXSAg
-WzxmZmZmZmZmZjgxN2Y2NWYyPl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDc1DQpPY3Qg
-MTIgMTA6MTg6MTQgTkhHTy1DVkswMSBrZXJuZWw6IFsgICAgNi41NTAyMDZdIFhGUyAoc2RkMSk6
-IEZhaWxlZCB0byByZWNvdmVyIEVGSXMNCk9jdCAxMiAxMDoxODoxNCBOSEdPLUNWSzAxIGtlcm5l
-bDogWyAgICA2LjU1MDIwN10gWEZTIChzZGQxKTogbG9nIG1vdW50IGZpbmlzaCBmYWlsZWQNCg0K
-YWZ0ZXIgdGhlIGtkdW1wIHN0YXJ0ICx0aGUgbW91bnQgaGFuZyBlbmRsZXNzLi4uDQoNCk9jdCAx
-MiAxMDoyNDowOSBOSEdPLUNWSzAxIGtlcm5lbDogWyAgMzYxLjI5MzY4M10gSU5GTzogdGFzayBt
-b3VudDoyNzMzIGJsb2NrZWQgZm9yIG1vcmUgdGhhbiAxMjAgc2Vjb25kcy4NCk9jdCAxMiAxMDoy
-NDowOSBOSEdPLUNWSzAxIGtlcm5lbDogWyAgMzYxLjMyOTk1OV0gICAgICAgVGFpbnRlZDogRyAg
-ICAgICAgICAgT0UgICA0LjEuMC1nZW5lcmljICMxDQpPY3QgMTIgMTA6MjQ6MDkgTkhHTy1DVksw
-MSBrZXJuZWw6IFsgIDM2MS4zNjY3NThdICJlY2hvIDAgPiAvcHJvYy9zeXMva2VybmVsL2h1bmdf
-dGFza190aW1lb3V0X3NlY3MiIGRpc2FibGVzIHRoaXMgbWVzc2FnZS4NCk9jdCAxMiAxMDoyNDow
-OSBOSEdPLUNWSzAxIGtlcm5lbDogWyAgMzYxLjQ0MzEzNF0gbW91bnQgICAgICAgICAgIEQgZmZm
-Zjg4MjAyYzg2YmI2OCAgICAgMCAgMjczMyAgICAgIDEgMHgwMDAwMDAwMA0KT2N0IDEyIDEwOjI0
-OjA5IE5IR08tQ1ZLMDEga2VybmVsOiBbICAzNjEuNDQzMTM3XSAgZmZmZjg4MjAyYzg2YmI2OCBm
-ZmZmODgxMDM2NzVjODAwIGZmZmY4ODIwMzViYjUyODAgZmZmZjg4MTAzOGQwZGE5MA0KT2N0IDEy
-IDEwOjI0OjA5IE5IR08tQ1ZLMDEga2VybmVsOiBbICAzNjEuNDQzMTM5XSAgZmZmZjg4MjAzNTY4
-NmViMCAwMDAwMDAwMDAwMDAwMjQ2IGZmZmY4ODIwMmM4NmMwMDAgZmZmZjg4MjAyZmViNTA0MA0K
-T2N0IDEyIDEwOjI0OjA5IE5IR08tQ1ZLMDEga2VybmVsOiBbICAzNjEuNDQzMTQxXSAgZmZmZjg4
-MjAyZmViNTA2OCBmZmZmODgyMDJmZWI1MDEwIGZmZmY4ODIwMmZlZGMwMDAgZmZmZjg4MjAyYzg2
-YmI4OA0KT2N0IDEyIDEwOjI0OjA5IE5IR08tQ1ZLMDEga2VybmVsOiBbICAzNjEuNDQzMTQyXSBD
-YWxsIFRyYWNlOg0KT2N0IDEyIDEwOjI0OjA5IE5IR08tQ1ZLMDEga2VybmVsOiBbICAzNjEuNDQz
-MTUyXSAgWzxmZmZmZmZmZjgxN2YyNmM3Pl0gc2NoZWR1bGUrMHgzNy8weDkwDQpPY3QgMTIgMTA6
-MjQ6MDkgTkhHTy1DVkswMSBrZXJuZWw6IFsgIDM2MS40NDMxNjhdICBbPGZmZmZmZmZmYzAzNjg5
-Nzg+XSB4ZnNfYWlsX3B1c2hfYWxsX3N5bmMrMHg5OC8weGQwIFt4ZnNdDQpPY3QgMTIgMTA6MjQ6
-MDkgTkhHTy1DVkswMSBrZXJuZWw6IFsgIDM2MS40NDMxNzVdICBbPGZmZmZmZmZmODEwYzEwYTA+
-XSA/IHByZXBhcmVfdG9fd2FpdF9ldmVudCsweDEwMC8weDEwMA0KT2N0IDEyIDEwOjI0OjA5IE5I
-R08tQ1ZLMDEga2VybmVsOiBbICAzNjEuNDQzMTgyXSAgWzxmZmZmZmZmZmMwMzVkOTI3Pl0geGZz
-X2xvZ19xdWllc2NlKzB4MzcvMHg3MCBbeGZzXQ0KT2N0IDEyIDEwOjI0OjA5IE5IR08tQ1ZLMDEg
-a2VybmVsOiBbICAzNjEuNDQzMTg4XSAgWzxmZmZmZmZmZmMwMzVkOTgxPl0geGZzX2xvZ191bm1v
-dW50KzB4MjEvMHg3MCBbeGZzXQ0KT2N0IDEyIDEwOjI0OjA5IE5IR08tQ1ZLMDEga2VybmVsOiBb
-ICAzNjEuNDQzMTk1XSAgWzxmZmZmZmZmZmMwMzUyNzMxPl0geGZzX21vdW50ZnMrMHg1YjEvMHg3
-NTAgW3hmc10NCk9jdCAxMiAxMDoyNDowOSBOSEdPLUNWSzAxIGtlcm5lbDogWyAgMzYxLjQ0MzIw
-Ml0gIFs8ZmZmZmZmZmZjMDM0MDRiMD5dID8geGZzX3plcm9fZW9mKzB4NmUwLzB4YzEwIFt4ZnNd
-DQpPY3QgMTIgMTA6MjQ6MDkgTkhHTy1DVkswMSBrZXJuZWw6IFsgIDM2MS40NDMyMDldICBbPGZm
-ZmZmZmZmYzAzNTU1ZDg+XSB4ZnNfbXJ1X2NhY2hlX2RvbmUrMHgxZTM4LzB4MjFmMCBbeGZzXQ0K
-T2N0IDEyIDEwOjI0OjA5IE5IR08tQ1ZLMDEga2VybmVsOiBbICAzNjEuNDQzMjEzXSAgWzxmZmZm
-ZmZmZjgxMjA1YWU5Pl0gbW91bnRfYmRldisweDFiOS8weDIwMA0KT2N0IDEyIDEwOjI0OjA5IE5I
-R08tQ1ZLMDEga2VybmVsOiBbICAzNjEuNDQzMjE5XSAgWzxmZmZmZmZmZmMwMzU1MjUwPl0gPyB4
-ZnNfbXJ1X2NhY2hlX2RvbmUrMHgxYWIwLzB4MjFmMCBbeGZzXQ0KT2N0IDEyIDEwOjI0OjA5IE5I
-R08tQ1ZLMDEga2VybmVsOiBbICAzNjEuNDQzMjI0XSAgWzxmZmZmZmZmZmMwMzUzODA1Pl0geGZz
-X21ydV9jYWNoZV9kb25lKzB4NjUvMHgyMWYwIFt4ZnNdDQpPY3QgMTIgMTA6MjQ6MDkgTkhHTy1D
-VkswMSBrZXJuZWw6IFsgIDM2MS40NDMyMjZdICBbPGZmZmZmZmZmODEyMDY2OTM+XSBtb3VudF9m
-cysweDQzLzB4MTgwDQpPY3QgMTIgMTA6MjQ6MDkgTkhHTy1DVkswMSBrZXJuZWw6IFsgIDM2MS40
-NDMyMzFdICBbPGZmZmZmZmZmODEyMjI2NjY+XSB2ZnNfa2Vybl9tb3VudCsweDc2LzB4MTQwDQpP
-Y3QgMTIgMTA6MjQ6MDkgTkhHTy1DVkswMSBrZXJuZWw6IFsgIDM2MS40NDMyMzRdICBbPGZmZmZm
-ZmZmODEyMjQ4ZWQ+XSBkb19tb3VudCsweDIwZC8weGNiMA0KT2N0IDEyIDEwOjI0OjA5IE5IR08t
-Q1ZLMDEga2VybmVsOiBbICAzNjEuNDQzMjM1XSAgWzxmZmZmZmZmZjgxMjI0NThhPl0gPyBjb3B5
-X21vdW50X29wdGlvbnMrMHgzYS8weDE3MA0KT2N0IDEyIDEwOjI0OjA5IE5IR08tQ1ZLMDEga2Vy
-bmVsOiBbICAzNjEuNDQzMjM3XSAgWzxmZmZmZmZmZjgxMjI1NmZiPl0gU3lTX21vdW50KzB4N2Iv
-MHhjMA0KT2N0IDEyIDEwOjI0OjA5IE5IR08tQ1ZLMDEga2VybmVsOiBbICAzNjEuNDQzMjQxXSAg
-WzxmZmZmZmZmZjgxN2Y2NWYyPl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDc1DQoNCmJl
-c3QgcmVnYXJkcyENCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCuacrOmCruS7tuWPiuWFtumZhOS7tuWQ
-q+acieadreW3nuWNjuS4iemAmuS/oeaKgOacr+aciemZkOWFrOWPuOeahOS/neWvhuS/oeaBr++8
-jOS7hemZkOS6juWPkemAgee7meS4iumdouWcsOWdgOS4reWIl+WHug0K55qE5Liq5Lq65oiW576k
-57uE44CC56aB5q2i5Lu75L2V5YW25LuW5Lq65Lul5Lu75L2V5b2i5byP5L2/55So77yI5YyF5ous
-5L2G5LiN6ZmQ5LqO5YWo6YOo5oiW6YOo5YiG5Zyw5rOE6Zyy44CB5aSN5Yi244CBDQrmiJbmlaPl
-j5HvvInmnKzpgq7ku7bkuK3nmoTkv6Hmga/jgILlpoLmnpzmgqjplJnmlLbkuobmnKzpgq7ku7bv
-vIzor7fmgqjnq4vljbPnlLXor53miJbpgq7ku7bpgJrnn6Xlj5Hku7bkurrlubbliKDpmaTmnKwN
-CumCruS7tu+8gQ0KVGhpcyBlLW1haWwgYW5kIGl0cyBhdHRhY2htZW50cyBjb250YWluIGNvbmZp
-ZGVudGlhbCBpbmZvcm1hdGlvbiBmcm9tIEgzQywgd2hpY2ggaXMNCmludGVuZGVkIG9ubHkgZm9y
-IHRoZSBwZXJzb24gb3IgZW50aXR5IHdob3NlIGFkZHJlc3MgaXMgbGlzdGVkIGFib3ZlLiBBbnkg
-dXNlIG9mIHRoZQ0KaW5mb3JtYXRpb24gY29udGFpbmVkIGhlcmVpbiBpbiBhbnkgd2F5IChpbmNs
-dWRpbmcsIGJ1dCBub3QgbGltaXRlZCB0bywgdG90YWwgb3IgcGFydGlhbA0KZGlzY2xvc3VyZSwg
-cmVwcm9kdWN0aW9uLCBvciBkaXNzZW1pbmF0aW9uKSBieSBwZXJzb25zIG90aGVyIHRoYW4gdGhl
-IGludGVuZGVkDQpyZWNpcGllbnQocykgaXMgcHJvaGliaXRlZC4gSWYgeW91IHJlY2VpdmUgdGhp
-cyBlLW1haWwgaW4gZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlcg0KYnkgcGhvbmUgb3Ig
-ZW1haWwgaW1tZWRpYXRlbHkgYW5kIGRlbGV0ZSBpdCENCg==
+On Thu, Nov 03, 2016 at 08:57:50AM +0000, Zhangzengran wrote:
+> we meet a mount hang in linux kernel, hoping someone could give some suggests..
+> 
+> we create a flashcache dm disk with writearound mode,and it was used by ceph-osd data disk(not journal),
+> ceph-disk mkfs.xfs on it. today the host got into an unexpected power outage, when re-power on ,we found
+> that ceph-osd got an IO error when try to open leveldb's sst file on the disk, then the kernel crash:
+> 
+
+I assume the write-around mode will not ever write to the cache device,
+but to be clear, you are attempting to mount the device as originally
+constructed at runtime, yes?
+
+> 2016-10-12 09:01:25.451747 7ff714151780 -1 filestore(/var/lib/ceph/osd/ceph-3) Error initializing leveldb : IO error: /var/lib/ceph/osd/ceph-3/current/omap/000059.sst: Structure needs cleaning`
+> 
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674730] XFS (dm-2): Internal error XFS_WANT_CORRUPTED_GOTO at line 1600 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_extent+0xea/0x950 [xfs]
+
+This means that the blocks being freed from a file are already
+considered free by the free space btrees. This is clearly not
+consistent, hence the shutdown. Unfortunately, this is a corruption that
+had probably originated sometime in the past, independent from this
+failure event, by virtue of somehow mapping a range of blocks both in
+the free space btrees and the associated file.  We don't actually detect
+it until the blocks happen to be removed from the file, we attempt to
+put them back in the btree and discovery (incorrectly) that they are
+already there.
+
+Is this a filesystem that has seen a lot of unclean shutdowns over its
+lifetime to this point?
+
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674733] CPU: 10 PID: 7909 Comm: ceph-osd Tainted: G           OE   4.1.0-generic #1
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674734] Hardware name: Hangzhou H3C Technologies Co., Ltd. UIS R390X G2/UIS R390X G2, BIOS 1.00.13 08/26/2016
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674736]  0000000000000000 ffff88202dbef848 ffffffff817ee563 ffff88202da54658
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674737]  ffff882033ef2000 ffff88202dbef868 ffffffffc034c49f ffffffffc0308d5a
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674739]  0000000000000000 ffff88202dbef918 ffffffffc0305cd9 ffff882034585c80
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674739] Call Trace:
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674745]  [<ffffffff817ee563>] dump_stack+0x63/0x81
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674754]  [<ffffffffc034c49f>] xfs_error_report+0x3f/0x50 [xfs]
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674758]  [<ffffffffc0308d5a>] ? xfs_free_extent+0xea/0x950 [xfs]
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674761]  [<ffffffffc0305cd9>] xfs_alloc_log_agf+0x399/0x8d0 [xfs]
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674765]  [<ffffffffc0308d5a>] xfs_free_extent+0xea/0x950 [xfs]
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674772]  [<ffffffffc03456a5>] xfs_bmap_finish+0x155/0x1a0 [xfs]
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674780]  [<ffffffffc035cdf9>] xfs_itruncate_extents+0xf9/0x400 [xfs]
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674787]  [<ffffffffc03598dd>] xfs_setattr_size+0x36d/0x4a0 [xfs]
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674792]  [<ffffffffc0359a0c>] xfs_setattr_size+0x49c/0x4a0 [xfs]
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674813]  [<ffffffff8121f0c7>] notify_change+0x1d7/0x3e0
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674816]  [<ffffffff81200870>] do_truncate+0x60/0xa0
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674818]  [<ffffffff81210edd>] do_last+0xbfd/0xfd0
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674819]  [<ffffffff8121133f>] path_openat+0x8f/0x620
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674826]  [<ffffffffc034f16b>] ? xfs_zero_eof+0x39b/0xc10 [xfs]
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674828]  [<ffffffff812139b3>] do_filp_open+0x43/0xa0
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674830]  [<ffffffff8122044d>] ? __alloc_fd+0xcd/0x120
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674832]  [<ffffffff81201a12>] do_sys_open+0x132/0x230
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674833]  [<ffffffff81201b2e>] SyS_open+0x1e/0x20
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674837]  [<ffffffff817f65f2>] system_call_fastpath+0x16/0x75
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674840] XFS (dm-2): xfs_do_force_shutdown(0x8) called from line 135 of file fs/xfs/xfs_bmap_util.c.  Return address = 0xffffffffc03456de
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674999] XFS (dm-2): Corruption of in-memory data detected.  Shutting down filesystem
+> Oct 12 09:01:25 NHGO-CVK01 kernel: [  161.674999] XFS (dm-2): Please umount the filesystem and rectify the problem(s)
+> Oct 12 09:01:25 NHGO-CVK01 kdump-tools: /sbin/kexec -p --command-line="BOOT_IMAGE=/boot/vmlinuz-4.1.0-generic root=UUID=b7325a68-7af2-45d9-904b-e1d47ad9236b ro ramdisk_size=2048000 nomodeset elevator=deadline transparent_hugepage=always quiet irqpoll maxcpus=1 nousb" --initrd=/boot/initrd.img-4.1.0-generic /boot/vmlinuz-4.1.0-generic
+> Oct 12 09:01:25 NHGO-CVK01 kdump-tools: loaded kdump kernel
+> 
+> when reboot, udev call ceph-disk try to mount the disk for ceph-osd ,but failed again.
+> 
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.274696] XFS (sdd1): Mounting V4 Filesystem
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.423624] XFS (sdd1): Starting recovery (logdev: internal)
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550061] XFS (sdd1): Internal error XFS_WANT_CORRUPTED_GOTO at line 1600 of file fs/xfs/libxfs/xfs_alloc.c.  Caller xfs_free_extent+0xea/0x950 [xfs]
+
+Same error from log recovery. This calls out an interesting flaw with
+the EFI/EFD model (or deferred completion in general, perhaps): if we
+run into a catastrophic failure attempting to perform the actual extent
+free operation, we shutdown to avoid making the associated changes to
+the on-disk metadata and potentially causing further damage, but we do
+so after we've already committed a transaction that logs the EFI intent
+items. This is what causes the subsequent mount to immediately retry the
+free operation that caused the shutdown in the first place.
+
+It would be nice if we could avoid that, at the very least, to limit the
+subsequent recovery to something that doesn't have to clear everything
+else in the log up to that point that might be valid. That's a separate
+problem, however..
+
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550064] CPU: 9 PID: 2733 Comm: mount Tainted: G            E   4.1.0-generic #1
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550065] Hardware name: Hangzhou H3C Technologies Co., Ltd. UIS R390X G2/UIS R390X G2, BIOS 1.00.13 08/26/2016
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550068]  0000000000000000 ffff88202c86b9d8 ffffffff817ee563 ffff88202d8dc000
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550069]  ffff882034a900d0 ffff88202c86b9f8 ffffffffc033d49f ffffffffc02f9d5a
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550070]  0000000000000000 ffff88202c86baa8 ffffffffc02f6cd9 ffff882033691680
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550071] Call Trace:
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550080]  [<ffffffff817ee563>] dump_stack+0x63/0x81
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550106]  [<ffffffffc033d49f>] xfs_error_report+0x3f/0x50 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550110]  [<ffffffffc02f9d5a>] ? xfs_free_extent+0xea/0x950 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550113]  [<ffffffffc02f6cd9>] xfs_alloc_log_agf+0x399/0x8d0 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550116]  [<ffffffffc02f9d5a>] xfs_free_extent+0xea/0x950 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550124]  [<ffffffffc0361d70>] xfs_inode_item_format_convert+0x240/0x60f0 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550130]  [<ffffffffc0363416>] xfs_inode_item_format_convert+0x18e6/0x60f0 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550135]  [<ffffffffc0367d3a>] xlog_recover_finish+0x2a/0x150 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550142]  [<ffffffffc035b6d4>] xfs_log_mount_finish+0x34/0x50 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550149]  [<ffffffffc035263c>] xfs_mountfs+0x4bc/0x750 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550156]  [<ffffffffc03404b0>] ? xfs_zero_eof+0x6e0/0xc10 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550163]  [<ffffffffc03555d8>] xfs_mru_cache_done+0x1e38/0x21f0 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550167]  [<ffffffff81205ae9>] mount_bdev+0x1b9/0x200
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550172]  [<ffffffffc0355250>] ? xfs_mru_cache_done+0x1ab0/0x21f0 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550177]  [<ffffffffc0353805>] xfs_mru_cache_done+0x65/0x21f0 [xfs]
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550179]  [<ffffffff81206693>] mount_fs+0x43/0x180
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550183]  [<ffffffff81222666>] vfs_kern_mount+0x76/0x140
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550185]  [<ffffffff812248ed>] do_mount+0x20d/0xcb0
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550186]  [<ffffffff8122458a>] ? copy_mount_options+0x3a/0x170
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550187]  [<ffffffff812256fb>] SyS_mount+0x7b/0xc0
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550192]  [<ffffffff817f65f2>] system_call_fastpath+0x16/0x75
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550206] XFS (sdd1): Failed to recover EFIs
+> Oct 12 10:18:14 NHGO-CVK01 kernel: [    6.550207] XFS (sdd1): log mount finish failed
+> 
+> after the kdump start ,the mount hang endless...
+> 
+
+I'm guessing the mount hang has to do with bad EFI/EFD
+tracking/reference counting in older kernels. I believe that was fixed
+up in or around commits 5e4b5386 ("xfs: disentagle EFI release from the
+extent count") through f0b2efad ("xfs: don't leave EFIs on AIL on mount
+failure") or so, which went into the v4.3 kernel. Upgrading might
+resolve the mount hang, but I expect the mount will still fail. You
+probably want to run 'xfs_repair -n' and determine how much damage would
+be incurred by running a log clearing repair.
+
+Brian
+
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.293683] INFO: task mount:2733 blocked for more than 120 seconds.
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.329959]       Tainted: G           OE   4.1.0-generic #1
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.366758] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443134] mount           D ffff88202c86bb68     0  2733      1 0x00000000
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443137]  ffff88202c86bb68 ffff88103675c800 ffff882035bb5280 ffff881038d0da90
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443139]  ffff882035686eb0 0000000000000246 ffff88202c86c000 ffff88202feb5040
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443141]  ffff88202feb5068 ffff88202feb5010 ffff88202fedc000 ffff88202c86bb88
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443142] Call Trace:
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443152]  [<ffffffff817f26c7>] schedule+0x37/0x90
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443168]  [<ffffffffc0368978>] xfs_ail_push_all_sync+0x98/0xd0 [xfs]
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443175]  [<ffffffff810c10a0>] ? prepare_to_wait_event+0x100/0x100
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443182]  [<ffffffffc035d927>] xfs_log_quiesce+0x37/0x70 [xfs]
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443188]  [<ffffffffc035d981>] xfs_log_unmount+0x21/0x70 [xfs]
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443195]  [<ffffffffc0352731>] xfs_mountfs+0x5b1/0x750 [xfs]
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443202]  [<ffffffffc03404b0>] ? xfs_zero_eof+0x6e0/0xc10 [xfs]
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443209]  [<ffffffffc03555d8>] xfs_mru_cache_done+0x1e38/0x21f0 [xfs]
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443213]  [<ffffffff81205ae9>] mount_bdev+0x1b9/0x200
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443219]  [<ffffffffc0355250>] ? xfs_mru_cache_done+0x1ab0/0x21f0 [xfs]
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443224]  [<ffffffffc0353805>] xfs_mru_cache_done+0x65/0x21f0 [xfs]
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443226]  [<ffffffff81206693>] mount_fs+0x43/0x180
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443231]  [<ffffffff81222666>] vfs_kern_mount+0x76/0x140
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443234]  [<ffffffff812248ed>] do_mount+0x20d/0xcb0
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443235]  [<ffffffff8122458a>] ? copy_mount_options+0x3a/0x170
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443237]  [<ffffffff812256fb>] SyS_mount+0x7b/0xc0
+> Oct 12 10:24:09 NHGO-CVK01 kernel: [  361.443241]  [<ffffffff817f65f2>] system_call_fastpath+0x16/0x75
+> 
+> best regards!
+> -------------------------------------------------------------------------------------------------------------------------------------
+> 本邮件及其附件含有杭州华三通信技术有限公司的保密信息，仅限于发送给上面地址中列出
+> 的个人或群组。禁止任何其他人以任何形式使用（包括但不限于全部或部分地泄露、复制、
+> 或散发）本邮件中的信息。如果您错收了本邮件，请您立即电话或邮件通知发件人并删除本
+> 邮件！
+> This e-mail and its attachments contain confidential information from H3C, which is
+> intended only for the person or entity whose address is listed above. Any use of the
+> information contained herein in any way (including, but not limited to, total or partial
+> disclosure, reproduction, or dissemination) by persons other than the intended
+> recipient(s) is prohibited. If you receive this e-mail in error, please notify the sender
+> by phone or email immediately and delete it!
