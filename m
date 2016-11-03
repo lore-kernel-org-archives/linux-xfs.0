@@ -1,67 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46888 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934946AbcKDSbz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:31:55 -0400
-Subject: [PATCH 2/6] libxfs: synchronize dinode_verify with userspace
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 11:31:49 -0700
-Message-ID: <147828430980.31793.9062149848276522086.stgit@birch.djwong.org>
-In-Reply-To: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
-References: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:56674 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755446AbcKCSPq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Nov 2016 14:15:46 -0400
+Subject: Re: [rfe]: finobt option separable from crc option? (was [rfc] larger
+ batches for crc32c)
+References: <20161028031747.68472ac7@roar.ozlabs.ibm.com>
+ <20161027214244.GO14023@dastard>
+ <20161028131234.24a5cb6f@roar.ozlabs.ibm.com>
+ <20161028160218.1af40906@roar.ozlabs.ibm.com>
+ <20161031030853.GK22126@dastard>
+ <20161101143918.4f154154@roar.ozlabs.ibm.com>
+ <20161101054725.GZ14023@dastard> <58194CF8.1000501@tlinx.org>
+ <20161103082950.GJ9920@dastard> <581B601A.4060403@tlinx.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9e488621-04e1-a9c6-04f7-78c954bd3d6e@sandeen.net>
+Date: Thu, 3 Nov 2016 13:15:44 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <581B601A.4060403@tlinx.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
+To: "L.A. Walsh" <xfs@tlinx.org>, Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-The userspace version of _dinode_verify takes a raw inode number
-instead of an inode itself.  Since neither version actually needs
-the inode, port the changes to the kernel.  This will also reduce
-the libxfs diff noise.
+On 11/3/16 11:04 AM, L.A. Walsh wrote:
+> 
+> 
+> Dave Chinner wrote:
+>>
+>> As most users never have things go wrong, all they think is "CRCs
+>> are unnecessary overhead". It's just like backups - how many people
+>> don't make backups because they cost money right now and there's no
+>> tangible benefit until something goes wrong which almost never
+>> happens?
+> ----
+>     But it's not like backups.  You can't run a util
+> program upon discovering bad CRC's that will fix the file system
+> because the file system is no longer usable.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_inode_buf.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Sure you can - xfs_repair knows what to do in such a case.
 
+It's not guaranteed that you get /all/ your data back, in every
+corrupted fs situation, but that's not because of CRCs - a bad CRC
+is just the messenger about filesystem corruption.
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 134424f..3a6694b 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -380,10 +380,10 @@ xfs_log_dinode_to_disk(
- 	}
- }
- 
--static bool
-+bool
- xfs_dinode_verify(
- 	struct xfs_mount	*mp,
--	struct xfs_inode	*ip,
-+	xfs_ino_t		ino,
- 	struct xfs_dinode	*dip)
- {
- 	uint16_t		flags;
-@@ -401,7 +401,7 @@ xfs_dinode_verify(
- 	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
- 			      XFS_DINODE_CRC_OFF))
- 		return false;
--	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
-+	if (be64_to_cpu(dip->di_ino) != ino)
- 		return false;
- 	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_meta_uuid))
- 		return false;
-@@ -493,7 +493,7 @@ xfs_iread(
- 		return error;
- 
- 	/* even unallocated inodes are verified */
--	if (!xfs_dinode_verify(mp, ip, dip)) {
-+	if (!xfs_dinode_verify(mp, ip->i_ino, dip)) {
- 		xfs_alert(mp, "%s: validation failed for inode %lld failed",
- 				__func__, ip->i_ino);
- 
+> That means you
+> have to restore from backup.  Thus, for those keeping
+> backups, there is no benefit, as they'll have to restore
+> from backups in either case. 
 
+Again, as Dave said, the format changes implemented for CRCS help
+us support XFS.  It's not something /directly/ useful to the user,
+other than possibly stopping a corruption before it gets worse, by
+early detection.
+
+If you have a corruption which is so bad that you have to go to
+backups, that would be true with or without CRCs.
+
+-Eric
