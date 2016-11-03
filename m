@@ -1,121 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46842 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934946AbcKDSbr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:31:47 -0400
-Subject: [PATCH 1/6] libxfs: convert ushort to unsigned short
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 11:31:43 -0700
-Message-ID: <147828430373.31793.8618236112840458716.stgit@birch.djwong.org>
-In-Reply-To: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
-References: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
+Received: from mail-yw0-f169.google.com ([209.85.161.169]:35115 "EHLO
+        mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750764AbcKCT2Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Nov 2016 15:28:24 -0400
+Received: by mail-yw0-f169.google.com with SMTP id h14so62465426ywa.2
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Nov 2016 12:28:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Marcin Sura <mailing-lists@sura.pl>
+Date: Thu, 3 Nov 2016 20:28:22 +0100
+Message-ID: <CACNifpV5z3r0WB3xypSfGxk6E-=b+3TWrsS4Od7+bKwmmD3yeA@mail.gmail.com>
+Subject: Can I add external log device after filesystem was created?
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Since xfsprogs dropped ushort in favor of unsigned short, do that
-here too.
+Hi,
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_ialloc.c      |    4 ++--
- fs/xfs/libxfs/xfs_inode_buf.h   |    4 ++--
- fs/xfs/libxfs/xfs_log_format.h  |    4 ++--
- fs/xfs/libxfs/xfs_log_recover.h |    2 +-
- fs/xfs/xfs_log_recover.c        |    4 ++--
- 5 files changed, 9 insertions(+), 9 deletions(-)
+I've created filesystem with default mkfs.xfs command, started to use
+the filesystem. Few days later I've got nice SSD-based lun which can
+be used as external log device.
 
+Can I add that lun as external log device to an existing filesystem? How?
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 51b4e0d..60e1a67 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2344,7 +2344,7 @@ xfs_imap(
- 
- 		imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
- 		imap->im_len = XFS_FSB_TO_BB(mp, 1);
--		imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
-+		imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
- 		return 0;
- 	}
- 
-@@ -2372,7 +2372,7 @@ xfs_imap(
- 
- 	imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, cluster_agbno);
- 	imap->im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
--	imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
-+	imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
- 
- 	/*
- 	 * If the inode number maps to a block outside the bounds
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index 3cfe12a..a395d0c 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -58,8 +58,8 @@ struct xfs_icdinode {
-  */
- struct xfs_imap {
- 	xfs_daddr_t	im_blkno;	/* starting BB of inode chunk */
--	ushort		im_len;		/* length in BBs of inode chunk */
--	ushort		im_boffset;	/* inode offset in block in bytes */
-+	unsigned short		im_len;		/* length in BBs of inode chunk */
-+	unsigned short		im_boffset;	/* inode offset in block in bytes */
- };
- 
- int	xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 083cdd6..3fcea8c 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -481,8 +481,8 @@ static inline uint xfs_log_dinode_size(int version)
- typedef struct xfs_buf_log_format {
- 	unsigned short	blf_type;	/* buf log item type indicator */
- 	unsigned short	blf_size;	/* size of this item */
--	ushort		blf_flags;	/* misc state */
--	ushort		blf_len;	/* number of blocks in this buf */
-+	unsigned short		blf_flags;	/* misc state */
-+	unsigned short		blf_len;	/* number of blocks in this buf */
- 	__int64_t	blf_blkno;	/* starting blkno of this buf */
- 	unsigned int	blf_map_size;	/* used size of data bitmap in words */
- 	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
-diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-index 8e385f9..d9f65e2 100644
---- a/fs/xfs/libxfs/xfs_log_recover.h
-+++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -52,7 +52,7 @@ typedef struct xlog_recover {
- 	struct list_head	r_itemq;	/* q for items */
- } xlog_recover_t;
- 
--#define ITEM_TYPE(i)	(*(ushort *)(i)->ri_buf[0].i_addr)
-+#define ITEM_TYPE(i)	(*(unsigned short *)(i)->ri_buf[0].i_addr)
- 
- /*
-  * This is the number of entries in the l_buf_cancel_table used during
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 9b3d7c7..cf754bc 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2025,7 +2025,7 @@ xlog_peek_buffer_cancelled(
- 	struct xlog		*log,
- 	xfs_daddr_t		blkno,
- 	uint			len,
--	ushort			flags)
-+	unsigned short			flags)
- {
- 	struct list_head	*bucket;
- 	struct xfs_buf_cancel	*bcp;
-@@ -2065,7 +2065,7 @@ xlog_check_buffer_cancelled(
- 	struct xlog		*log,
- 	xfs_daddr_t		blkno,
- 	uint			len,
--	ushort			flags)
-+	unsigned short			flags)
- {
- 	struct xfs_buf_cancel	*bcp;
- 
-
+BR
+Marcin
