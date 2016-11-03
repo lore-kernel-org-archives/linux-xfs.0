@@ -1,72 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18462 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752149AbcKEAYb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:24:31 -0400
-Subject: [PATCH v2 00/39] xfsprogs: online scrub/repair support
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:24:28 -0700
-Message-ID: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:39655 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751699AbcKCB6l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Nov 2016 21:58:41 -0400
+Date: Thu, 3 Nov 2016 12:58:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v9 00/16] re-enable DAX PMD support
+Message-ID: <20161103015826.GI9920@dastard>
+References: <1478030058-1422-1-git-send-email-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1478030058-1422-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Hi all,
+On Tue, Nov 01, 2016 at 01:54:02PM -0600, Ross Zwisler wrote:
+> DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
+> locking.  This series allows DAX PMDs to participate in the DAX radix tree
+> based locking scheme so that they can be re-enabled.
 
-This is the second revision of a patchset that adds to XFS userland
-tools support for online metadata scrubbing and repair.  There aren't
-any on-disk format changes.
+I've seen patch 0/16 - where did you send the other 16? I need to
+pick up the bug fix that is in this patch set...
 
-Online scrub/repair support consists of four major pieces -- first, an
-ioctl that maps physical extents to their owners; second, various
-in-kernel metadata scrubbing ioctls to examine metadata records and
-cross-reference them with other filesystem metadata; third, an in-kernel
-mechanism for rebuilding damaged metadata objects and btrees; and
-fourth, a userspace component to initiate kernel scrubbing, walk all
-inodes and the directory tree, scrub data extents, and ask the kernel to
-repair anything that is broken.
+> Previously we had talked about this series going through the XFS tree, but
+> Jan has a patch set that will need to build on this series and it heavily
+> modifies the MM code.  I think he would prefer that series to go through
+> Andrew Morton's -MM tree, so it probably makes sense for this series to go
+> through that same tree.
 
-This new utility, xfs_scrub, is separate from the existing offline
-xfs_repair tool.  Scrub has three main modes of operation -- in its most
-powerful mode, it iterates all XFS metadata and asks the kernel to check
-the metadata and repair it if necessary.  The second most powerful mode
-can use certain VFS methods and XFS ioctls (BULKSTAT, GETBMAP, and
-GETFSMAP) to check as much metadata as it reasonably can from userspace.
-It cannot repair anything.  The least powerful mode uses only VFS
-functions to access as much of the directory/file/xattr graph as
-possible.  It has no mechanism to check internal metadata and also
-cannot repair anything.  This is good enough for scrubbing non-XFS
-filesystems, but it is intended for the first mode to be used.
+Seriously, I was 10 minutes away from pushing out the previous
+version of this patchset as a stable topic branch, just like has
+been discussed and several times over the past week.  Indeed, I
+mentioned that I was planning on pushing out this topic branch today
+not more than 4 hours ago, and you were on the cc list.
 
-Most of the patches in this series are direct imports of the libxfs
-changes that the kernel scrubber needed to operate.  The changes to
-userspace programs are limited to wiring up ioctl support in xfs_io,
-support for per-field fuzzing in xfs_db, and the last patch, which
-creates the xfs_scrub program.
+The -mm tree is not the place to merge patchsets with dependencies
+like this because it's an unstable, rebasing tree. Hence it cannot
+be shared and used as the base of common development between
+multiple git trees like we have for the fs/ subsystem.
 
-The final patch in the series provides the xfs_scrub utility.
+This needs to go out as a stable topic branch so that other
+dependent work can reliably build on top of it for the next merge
+window. e.g. the ext4 DAX iomap patch series that is likely to be
+merged through the ext4 tree, so it needs a stable branch. There's
+iomap direct IO patches for XFS pending, and they conflict with this
+patchset. i.e. we need a stable git base to work from...
 
-If you're going to start using this mess, you probably ought to just
-pull from my github trees for kernel[1], xfsprogs[2], and xfstests[3].
-The kernel patches in the git trees should apply to 4.9-rc3; xfsprogs
-patches to for-next; and xfstest to master.
+Cheers,
 
-The patches have survived all auto group xfstests both with scrub-only
-mode and also a special debugging mode to xfs_scrub that forces it to
-rebuild the metadata structures even if they're not damaged.  Note that
-I haven't thoroughly run the new tests in [3] that try to fuzz every
-field in every data structure on disk.
-
-This is an extraordinary way to eat your data.  Enjoy! 
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://github.com/djwong/linux/tree/djwong-devel
-[2] https://github.com/djwong/xfsprogs/tree/djwong-devel
-[3] https://github.com/djwong/xfstests/tree/djwong-devel
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
