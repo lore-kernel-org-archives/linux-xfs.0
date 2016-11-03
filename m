@@ -1,82 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42632 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:34082 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935886AbcKDTH2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 Nov 2016 15:07:28 -0400
-Subject: Re: [PATCH 2/6] libxfs: synchronize dinode_verify with userspace
-References: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
- <147828430980.31793.9062149848276522086.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a090d3e9-9c73-c463-8177-834bfabefa9d@sandeen.net>
-Date: Fri, 4 Nov 2016 14:07:27 -0500
-MIME-Version: 1.0
-In-Reply-To: <147828430980.31793.9062149848276522086.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+        id S1754788AbcKCJwP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Nov 2016 05:52:15 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfs: mount with corrupted inopblock in superblock
+Date: Thu,  3 Nov 2016 17:52:00 +0800
+Message-Id: <1478166720-14354-1-git-send-email-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, david@fromorbit.com
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-On 11/4/16 1:31 PM, Darrick J. Wong wrote:
-> The userspace version of _dinode_verify takes a raw inode number
-> instead of an inode itself.  Since neither version actually needs
-> the inode, port the changes to the kernel.  This will also reduce
-> the libxfs diff noise.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_inode_buf.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 134424f..3a6694b 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -380,10 +380,10 @@ xfs_log_dinode_to_disk(
->  	}
->  }
->  
-> -static bool
-> +bool
->  xfs_dinode_verify(
+When sb_inopblock is corrupted (out of boundary in this case), XFS
+should not crash and refuse to mount.
 
-I believe this can/should be static in both userspace & kernelspace.
+Kernel commit 392c6de98af1 ("xfs: sanitize sb_inopblock in
+xfs_mount_validate_sb") addresses this issue.
 
-Otherwise looks fine to me; not sure why the ip-vs-ino difference
-exists, but it's 6 one way half a dozen the other I guess.
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ tests/xfs/118     | 66 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/118.out |  2 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 69 insertions(+)
+ create mode 100755 tests/xfs/118
+ create mode 100644 tests/xfs/118.out
 
--Eric
+diff --git a/tests/xfs/118 b/tests/xfs/118
+new file mode 100755
+index 0000000..680add8
+--- /dev/null
++++ b/tests/xfs/118
+@@ -0,0 +1,66 @@
++#! /bin/bash
++# FS QA Test 118
++#
++# Mount an XFS with out of bounds inopblock
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Red Hat Inc.,  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os IRIX Linux
++# we corrupt scratch dev on purpose
++_require_scratch_nocheck
++
++_scratch_mkfs >>$seqres.full
++
++# corrupt sb_inopblock
++_scratch_xfs_db -x -c "sb 0" -c "write -c inopblock 512" >>$seqres.full
++
++# mount corrupted fs
++_scratch_mount >>$seqres.full 2>&1
++
++# no crash, and SCRATCH_DEV should not be mounted either
++_is_mounted $SCRATCH_DEV
++
++# success, all done
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/xfs/118.out b/tests/xfs/118.out
+new file mode 100644
+index 0000000..3daed86
+--- /dev/null
++++ b/tests/xfs/118.out
+@@ -0,0 +1,2 @@
++QA output created by 118
++Silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 3296eb9..3bfcb80 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -115,6 +115,7 @@
+ 115 parent attr
+ 116 quota auto quick
+ 117 fuzzers
++118 auto quick metadata
+ 119 log v2log auto freeze dangerous
+ 120 fuzzers
+ 121 log auto quick
+-- 
+2.7.4
 
->  	struct xfs_mount	*mp,
-> -	struct xfs_inode	*ip,
-> +	xfs_ino_t		ino,
->  	struct xfs_dinode	*dip)
->  {
->  	uint16_t		flags;
-> @@ -401,7 +401,7 @@ xfs_dinode_verify(
->  	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
->  			      XFS_DINODE_CRC_OFF))
->  		return false;
-> -	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
-> +	if (be64_to_cpu(dip->di_ino) != ino)
->  		return false;
->  	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_meta_uuid))
->  		return false;
-> @@ -493,7 +493,7 @@ xfs_iread(
->  		return error;
->  
->  	/* even unallocated inodes are verified */
-> -	if (!xfs_dinode_verify(mp, ip, dip)) {
-> +	if (!xfs_dinode_verify(mp, ip->i_ino, dip)) {
->  		xfs_alert(mp, "%s: validation failed for inode %lld failed",
->  				__func__, ip->i_ino);
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
