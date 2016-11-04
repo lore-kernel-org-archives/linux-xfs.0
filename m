@@ -1,47 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56133 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752718AbcKATy3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 Nov 2016 15:54:29 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v9 01/16] ext4: tell DAX the size of allocation holes
-Date: Tue,  1 Nov 2016 13:54:03 -0600
-Message-Id: <1478030058-1422-2-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1478030058-1422-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1478030058-1422-1-git-send-email-ross.zwisler@linux.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:25468 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934946AbcKDSbQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:31:16 -0400
+Subject: [PATCH 11/11] tools: create libxfs-diff to compare libxfses
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 11:31:13 -0700
+Message-ID: <147828427347.31492.2327135081578753144.stgit@birch.djwong.org>
+In-Reply-To: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
+References: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-When DAX calls _ext4_get_block() and the file offset points to a hole we
-currently don't set bh->b_size.  This is current worked around via
-buffer_size_valid() in fs/dax.c.
+Create a script to compare every file in libxfs to the same files
+in another libxfs.  This is useful for comparing upstream kernel
+and user progs to look for unported changes.
 
-_ext4_get_block() has the hole size information from ext4_map_blocks(), so
-populate bh->b_size so we can remove buffer_size_valid() in a later patch.
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/ext4/inode.c | 3 +++
- 1 file changed, 3 insertions(+)
+ tools/libxfs-diff |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+ create mode 100755 tools/libxfs-diff
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 9c06472..3d58b2b 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -767,6 +767,9 @@ static int _ext4_get_block(struct inode *inode, sector_t iblock,
- 		ext4_update_bh_state(bh, map.m_flags);
- 		bh->b_size = inode->i_sb->s_blocksize * map.m_len;
- 		ret = 0;
-+	} else if (ret == 0) {
-+		/* hole case, need to fill in bh->b_size */
-+		bh->b_size = inode->i_sb->s_blocksize * map.m_len;
- 	}
- 	return ret;
- }
--- 
-2.7.4
+
+diff --git a/tools/libxfs-diff b/tools/libxfs-diff
+new file mode 100755
+index 0000000..ad69c85
+--- /dev/null
++++ b/tools/libxfs-diff
+@@ -0,0 +1,25 @@
++#!/bin/bash
++
++if [ -z "$1" ] || [ ! -d "$1" ] || [ "$1" = "--help" ]; then
++	echo "Usage: $0 kernel_libxfs_dir"
++	exit 1
++fi
++
++if [ ! -d "libxfs/" ]; then
++	echo "$0: Must be run from the top level directory."
++	exit 2
++fi
++
++dir="$1"
++
++if [ ! -e "${dir}/xfs_format.h" ]; then
++	echo "${dir}: This doesn't seem to be a libxfs/ directory."
++	exit 3
++fi
++
++dir="$(readlink -m "${dir}/..")"
++
++for i in libxfs/xfs*.[ch]; do
++	kfile="${dir}/$i"
++	diff -Naurpw --label "$i" <(sed -e '/#include/d' "$i") --label "${kfile}" <(sed -e '/#include/d' "${kfile}")
++done
 
