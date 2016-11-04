@@ -1,147 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46604 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934946AbcKDSbK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:31:10 -0400
-Subject: [PATCH 10/11] libxfs: clean up _dir2_data_freescan
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 11:31:07 -0700
-Message-ID: <147828426737.31492.978199544435434965.stgit@birch.djwong.org>
-In-Reply-To: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
-References: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:34816 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750916AbcKDXUY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Nov 2016 19:20:24 -0400
+Subject: Re: [PATCH 5/6] libxfs: clean up _dir2_data_freescan
+References: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
+ <147828432807.31793.11613248965488442086.stgit@birch.djwong.org>
+ <b7044544-ebd4-b62c-4873-bcd04b1241ab@sandeen.net>
+ <20161104230952.GH32036@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <37b43c54-ae10-a1b6-2136-e3a3f9e96a2d@sandeen.net>
+Date: Fri, 4 Nov 2016 18:20:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20161104230952.GH32036@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Refactor the implementations of xfs_dir2_data_freescan into a
-routine that takes the raw directory block parameters and
-a second function that figures out the raw parameters from the
-directory inode.  This enables us to use the exact same code
-for both userspace and the kernel, since repair knows exactly
-which directory block geometry parameters it needs.
+On 11/4/16 6:09 PM, Darrick J. Wong wrote:
+> On Fri, Nov 04, 2016 at 05:58:57PM -0500, Eric Sandeen wrote:
+>> On 11/4/16 1:32 PM, Darrick J. Wong wrote:
+>>> Refactor the implementations of xfs_dir2_data_freescan into a
+>>> routine that takes the raw directory block parameters and
+>>> a second function that figures out the raw parameters from the
+>>> directory inode.  This enables us to use the exact same code
+>>> for both userspace and the kernel, since repair knows exactly
+>>> which directory block geometry parameters it needs.
+>>>
+>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> seems fine tho I can't say I like the new function name; what
+>> does "_hdr" mean?  They both take a *hdr ...
+>>
+>> maybe _xfs_dir2_data_freescan or xfs_dir2_data_freescan_int?
+> 
+> I'll change it to xfs_dir2_data_freescan_geo().
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/libxfs_api_defs.h |    2 +-
- libxfs/libxfs_priv.h     |    8 --------
- libxfs/xfs_dir2.h        |    4 +++-
- libxfs/xfs_dir2_data.c   |   12 +++++++++++-
- repair/dir2.c            |    4 ++--
- repair/phase6.c          |    3 ++-
- 6 files changed, 19 insertions(+), 14 deletions(-)
+it gets both geo and ops, both derived from dp ...
 
+see i.e. xfs_btree_init_block, xfs_rtmodify_summary etc for
+examples of a simple args translation calling an "*_int()"
+(internal?) function.  That's pretty common in the xfs code.
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index d60b6c2..12a668e 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -88,7 +88,7 @@
- #define xfs_dir_replace			libxfs_dir_replace
- #define xfs_dir2_isblock		libxfs_dir2_isblock
- #define xfs_dir2_isleaf			libxfs_dir2_isleaf
--#define __xfs_dir2_data_freescan	libxfs_dir2_data_freescan
-+#define xfs_dir2_data_freescan_hdr	libxfs_dir2_data_freescan_hdr
- #define xfs_dir2_data_log_entry		libxfs_dir2_data_log_entry
- #define xfs_dir2_data_log_header	libxfs_dir2_data_log_header
- #define xfs_dir2_data_make_free		libxfs_dir2_data_make_free
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index a101a00..f4db183 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -49,14 +49,6 @@
- #ifndef __LIBXFS_INTERNAL_XFS_H__
- #define __LIBXFS_INTERNAL_XFS_H__
- 
--/*
-- * Repair doesn't have a inode when it calls libxfs_dir2_data_freescan,
-- * so we to work around this internally for now.
-- */
--#define xfs_dir2_data_freescan(ip, hdr, loghead) \
--	__xfs_dir2_data_freescan((ip)->i_mount->m_dir_geo, \
--				 (ip)->d_ops, hdr, loghead)
--
- #include "libxfs_api_defs.h"
- #include "platform_defs.h"
- #include "xfs.h"
-diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-index 89b9e24..385d6d5 100644
---- a/libxfs/xfs_dir2.h
-+++ b/libxfs/xfs_dir2.h
-@@ -157,9 +157,11 @@ extern int xfs_dir2_isleaf(struct xfs_da_args *args, int *r);
- extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
- 				struct xfs_buf *bp);
- 
--extern void __xfs_dir2_data_freescan(struct xfs_da_geometry *geo,
-+extern void xfs_dir2_data_freescan_hdr(struct xfs_da_geometry *geo,
- 		const struct xfs_dir_ops *ops,
- 		struct xfs_dir2_data_hdr *hdr, int *loghead);
-+extern void xfs_dir2_data_freescan(struct xfs_inode *dp,
-+		struct xfs_dir2_data_hdr *hdr, int *loghead);
- extern void xfs_dir2_data_log_entry(struct xfs_da_args *args,
- 		struct xfs_buf *bp, struct xfs_dir2_data_entry *dep);
- extern void xfs_dir2_data_log_header(struct xfs_da_args *args,
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-index 6ae5cd2..1dc0fa6 100644
---- a/libxfs/xfs_dir2_data.c
-+++ b/libxfs/xfs_dir2_data.c
-@@ -502,7 +502,7 @@ xfs_dir2_data_freeremove(
-  * Given a data block, reconstruct its bestfree map.
-  */
- void
--__xfs_dir2_data_freescan(
-+xfs_dir2_data_freescan_hdr(
- 	struct xfs_da_geometry	*geo,
- 	const struct xfs_dir_ops *ops,
- 	struct xfs_dir2_data_hdr *hdr,
-@@ -562,6 +562,16 @@ __xfs_dir2_data_freescan(
- 	}
- }
- 
-+void
-+xfs_dir2_data_freescan(
-+	struct xfs_inode	*dp,
-+	struct xfs_dir2_data_hdr *hdr,
-+	int			*loghead)
-+{
-+	return xfs_dir2_data_freescan_hdr(dp->i_mount->m_dir_geo, dp->d_ops,
-+			hdr, loghead);
-+}
-+
- /*
-  * Initialize a data block at the given block number in the directory.
-  * Give back the buffer for the created block.
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 61912d1..10c693e 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -921,8 +921,8 @@ _("bad bestfree table in block %u in directory inode %" PRIu64 ": "),
- 			da_bno, ino);
- 		if (!no_modify) {
- 			do_warn(_("repairing table\n"));
--			libxfs_dir2_data_freescan(mp->m_dir_geo, M_DIROPS(mp),
--						  d, &i);
-+			libxfs_dir2_data_freescan_hdr(mp->m_dir_geo,
-+					M_DIROPS(mp), d, &i);
- 			*dirty = 1;
- 		} else {
- 			do_warn(_("would repair table\n"));
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 06eed16..1411d2e 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1883,7 +1883,8 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
- 	}
- 	*num_illegal += nbad;
- 	if (needscan)
--		libxfs_dir2_data_freescan(mp->m_dir_geo, M_DIROPS(mp), d, &i);
-+		libxfs_dir2_data_freescan_hdr(mp->m_dir_geo, M_DIROPS(mp),
-+				d, &i);
- 	if (needlog)
- 		libxfs_dir2_data_log_header(&da, bp);
- 	libxfs_defer_finish(&tp, &dfops, ip);
+-Eric
 
+> --D
+> 
+>>
+>> *shrug*
+>>
+>> -Eric
+>>
+>>> ---
+>>>  fs/xfs/libxfs/xfs_dir2.h      |    3 +++
+>>>  fs/xfs/libxfs/xfs_dir2_data.c |   24 +++++++++++++++++-------
+>>>  2 files changed, 20 insertions(+), 7 deletions(-)
+>>>
+>>>
+>>> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+>>> index becc926..42456de 100644
+>>> --- a/fs/xfs/libxfs/xfs_dir2.h
+>>> +++ b/fs/xfs/libxfs/xfs_dir2.h
+>>> @@ -157,6 +157,9 @@ extern int xfs_dir2_isleaf(struct xfs_da_args *args, int *r);
+>>>  extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
+>>>  				struct xfs_buf *bp);
+>>>  
+>>> +extern void xfs_dir2_data_freescan_hdr(struct xfs_da_geometry *geo,
+>>> +		const struct xfs_dir_ops *ops,
+>>> +		struct xfs_dir2_data_hdr *hdr, int *loghead);
+>>>  extern void xfs_dir2_data_freescan(struct xfs_inode *dp,
+>>>  		struct xfs_dir2_data_hdr *hdr, int *loghead);
+>>>  extern void xfs_dir2_data_log_entry(struct xfs_da_args *args,
+>>> diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+>>> index 725fc78..1729eb2 100644
+>>> --- a/fs/xfs/libxfs/xfs_dir2_data.c
+>>> +++ b/fs/xfs/libxfs/xfs_dir2_data.c
+>>> @@ -505,8 +505,9 @@ xfs_dir2_data_freeremove(
+>>>   * Given a data block, reconstruct its bestfree map.
+>>>   */
+>>>  void
+>>> -xfs_dir2_data_freescan(
+>>> -	struct xfs_inode	*dp,
+>>> +xfs_dir2_data_freescan_hdr(
+>>> +	struct xfs_da_geometry	*geo,
+>>> +	const struct xfs_dir_ops *ops,
+>>>  	struct xfs_dir2_data_hdr *hdr,
+>>>  	int			*loghead)
+>>>  {
+>>> @@ -516,7 +517,6 @@ xfs_dir2_data_freescan(
+>>>  	struct xfs_dir2_data_free *bf;
+>>>  	char			*endp;		/* end of block's data */
+>>>  	char			*p;		/* current entry pointer */
+>>> -	struct xfs_da_geometry	*geo = dp->i_mount->m_dir_geo;
+>>>  
+>>>  	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+>>>  	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
+>>> @@ -526,13 +526,13 @@ xfs_dir2_data_freescan(
+>>>  	/*
+>>>  	 * Start by clearing the table.
+>>>  	 */
+>>> -	bf = dp->d_ops->data_bestfree_p(hdr);
+>>> +	bf = ops->data_bestfree_p(hdr);
+>>>  	memset(bf, 0, sizeof(*bf) * XFS_DIR2_DATA_FD_COUNT);
+>>>  	*loghead = 1;
+>>>  	/*
+>>>  	 * Set up pointers.
+>>>  	 */
+>>> -	p = (char *)dp->d_ops->data_entry_p(hdr);
+>>> +	p = (char *)ops->data_entry_p(hdr);
+>>>  	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+>>>  	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
+>>>  		btp = xfs_dir2_block_tail_p(geo, hdr);
+>>> @@ -559,12 +559,22 @@ xfs_dir2_data_freescan(
+>>>  		else {
+>>>  			dep = (xfs_dir2_data_entry_t *)p;
+>>>  			ASSERT((char *)dep - (char *)hdr ==
+>>> -			       be16_to_cpu(*dp->d_ops->data_entry_tag_p(dep)));
+>>> -			p += dp->d_ops->data_entsize(dep->namelen);
+>>> +			       be16_to_cpu(*ops->data_entry_tag_p(dep)));
+>>> +			p += ops->data_entsize(dep->namelen);
+>>>  		}
+>>>  	}
+>>>  }
+>>>  
+>>> +void
+>>> +xfs_dir2_data_freescan(
+>>> +	struct xfs_inode	*dp,
+>>> +	struct xfs_dir2_data_hdr *hdr,
+>>> +	int			*loghead)
+>>> +{
+>>> +	return xfs_dir2_data_freescan_hdr(dp->i_mount->m_dir_geo, dp->d_ops,
+>>> +			hdr, loghead);
+>>> +}
+>>> +
+>>>  /*
+>>>   * Initialize a data block at the given block number in the directory.
+>>>   * Give back the buffer for the created block.
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
