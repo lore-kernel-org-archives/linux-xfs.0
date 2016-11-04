@@ -1,74 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:15894 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750727AbcKFWUa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Nov 2016 17:20:30 -0500
-Date: Mon, 7 Nov 2016 09:20:27 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/11] xfs: set XFS_DA_OP_OKNOENT in xfs_attr_get
-Message-ID: <20161106222027.GN14023@dastard>
-References: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
- <147828423671.31492.10920798285495163593.stgit@birch.djwong.org>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33786 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933023AbcKDC2Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Nov 2016 22:28:24 -0400
+Received: by mail-pf0-f196.google.com with SMTP id a136so6449991pfa.0
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Nov 2016 19:28:24 -0700 (PDT)
+Date: Fri, 4 Nov 2016 13:28:07 +1100
+From: Nicholas Piggin <npiggin@gmail.com>
+Subject: Re: [rfc] larger batches for crc32c
+Message-ID: <20161104132807.4cdbb78d@roar.ozlabs.ibm.com>
+In-Reply-To: <20161104001248.GD28177@dastard>
+References: <20161028031747.68472ac7@roar.ozlabs.ibm.com>
+        <20161104001248.GD28177@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <147828423671.31492.10920798285495163593.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>
 
-Darrick,
+On Fri, 4 Nov 2016 11:12:48 +1100
+Dave Chinner <david@fromorbit.com> wrote:
 
-There's something whacky with what you are doing to create these
-commit messages. The from address on the email itself is not from
-you (how did that get through SPF checks?) and instead there's this:
+> On Fri, Oct 28, 2016 at 03:17:47AM +1100, Nicholas Piggin wrote:
+> > Hi guys,
+> > 
+> > We're seeing crc32c_le show up in xfs log checksumming on a MySQL benchmark
+> > on powerpc. I could reproduce similar overheads with dbench as well.
+> > 
+> > 1.11%  mysqld           [kernel.vmlinux]            [k] __crc32c_le
+> >         |
+> >         ---__crc32c_le
+> >            |          
+> >             --1.11%--chksum_update
+> >                       |          
+> >                        --1.11%--crypto_shash_update
+> >                                  crc32c
+> >                                  xlog_cksum
+> >                                  xlog_sync
+> >                                  _xfs_log_force_lsn
+> >                                  xfs_file_fsync
+> >                                  vfs_fsync_range
+> >                                  do_fsync
+> >                                  sys_fsync
+> >                                  system_call
+> >                                  0x17738
+> >                                  0x17704
+> >                                  os_file_flush_func
+> >                                  fil_flush
+> > 
+> > As a rule, it helps the crc implementation if it can operate on as large a
+> > chunk as possible (alignment, startup overhead, etc). So I did a quick hack
+> > at getting XFS checksumming to feed crc32c() with larger chunks, by setting
+> > the existing crc to 0 before running over the entire buffer. Together with
+> > some small work on the powerpc crc implementation, crc drops below 0.1%.
+> > 
+> > I don't know if something like this would be acceptable? It's not pretty,
+> > but I didn't see an easier way.  
+> 
+> Here's an alternative, slightly cleaner patch that optimises the CRC
+> update side but leaves the verify side as it is. I've not yet
+> decided exactly what is cleanest for the xlog_cksum() call in log
+> recovery, but that won't change the performance of the code.  Can
+> you give this a run through, Nick?
 
-On Fri, Nov 04, 2016 at 11:30:36AM -0700, Eric Sandeen wrote:
-> >From c400ee3ed1b13d45adde68e12254dc6ab6977b59 Mon Sep 17 00:00:00 2001
+Hi Dave,
 
-Which tells me nothing useful about the origin of the patch and it
-means I have to mangle the commit message before committing it.
+Yeah sorry for the slow response, I've been getting a more realistic
+MySQL benchmark setup working (what I had reproduced what appeared to
+be the same overhead, but I wanted to get something better to retest
+with). So your patch comes at a good time (and thanks for working on
+it). I'll see if I can get something running and have results for you
+by next week.
 
-If you look at the libxfs sync commits that I applied for the
-4.9-rc1 sync, the libxfs-apply script ends up formating the commits
-like this:
-
-ommit ece930fa14a3439e40cd1b43063cab5b85ab9407
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Tue Oct 25 12:59:46 2016 +1100
-
-    xfs: refactor xfs_bunmapi_cow
-    
-    Source kernel commit: fa5c836ca8eb5bad6316ddfc066acbc4e2485356
-    
-    Split out two helpers for deleting delayed or real extents from the COW fork.
-    This allows to call them directly from xfs_reflink_cow_end_io once that
-    function is refactored to iterate the extent tree.  It will also allow
-    to reuse the delalloc deletion from xfs_bunmapi in the future.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-
-So there's a clear line where the orginal commit came from. It does
-this automatically now (see the fixup_header_format() function) so
-that this sort of things doesn't need to be cleaned up after the
-fact. If the commit is from xfsprogs and going to the kernel, it
-will say "Source xfsprogs commit: ....." instead.  This way it is
-clear to the reader that this commit is simply a libxfs sync commit,
-and that the sob and rvb tags applied to the commit in the source
-repository.
-
-Perhaps you are using an older version of the script to generate
-these commits?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Nick
