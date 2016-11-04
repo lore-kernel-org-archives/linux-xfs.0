@@ -1,211 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39612 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754146AbcKEA0J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:26:09 -0400
-Subject: [PATCH 14/39] xfs: support scrubbing inode btrees
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:26:05 -0700
-Message-ID: <147830556575.4165.2567549018894210404.stgit@birch.djwong.org>
-In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
-References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:42800 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934942AbcKDTJb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Nov 2016 15:09:31 -0400
+Subject: Re: [PATCH 1/6] libxfs: convert ushort to unsigned short
+References: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
+ <147828430373.31793.8618236112840458716.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <62b9f952-b40e-3bce-9919-85fec64d8f6e@sandeen.net>
+Date: Fri, 4 Nov 2016 14:09:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <147828430373.31793.8618236112840458716.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, david@fromorbit.com
 Cc: linux-xfs@vger.kernel.org
 
-Plumb in the pieces necessary to check the inode btrees.
+On 11/4/16 1:31 PM, Darrick J. Wong wrote:
+> Since xfsprogs dropped ushort in favor of unsigned short, do that
+> here too.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/xfs_fs.h           |    4 +++-
- libxfs/xfs_ialloc.c       |   41 +++++++++++++++++++++++++----------------
- libxfs/xfs_ialloc.h       |    3 +++
- libxfs/xfs_ialloc_btree.c |   32 ++++++++++++++++++++++++++------
- 4 files changed, 57 insertions(+), 23 deletions(-)
+This pushes 4 lines over 80 chars; can those be fixed up?
 
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c      |    4 ++--
+>  fs/xfs/libxfs/xfs_inode_buf.h   |    4 ++--
+>  fs/xfs/libxfs/xfs_log_format.h  |    4 ++--
+>  fs/xfs/libxfs/xfs_log_recover.h |    2 +-
+>  fs/xfs/xfs_log_recover.c        |    4 ++--
+>  5 files changed, 9 insertions(+), 9 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 51b4e0d..60e1a67 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -2344,7 +2344,7 @@ xfs_imap(
+>  
+>  		imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
+>  		imap->im_len = XFS_FSB_TO_BB(mp, 1);
+> -		imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
+> +		imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 0e0c35f..97df1b9 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -605,7 +605,9 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_AGI	4	/* AG inode header */
- #define XFS_SCRUB_TYPE_BNOBT	5	/* freesp by block btree */
- #define XFS_SCRUB_TYPE_CNTBT	6	/* freesp by length btree */
--#define XFS_SCRUB_TYPE_MAX	6
-+#define XFS_SCRUB_TYPE_INOBT	7	/* inode btree */
-+#define XFS_SCRUB_TYPE_FINOBT	8	/* free inode btree */
-+#define XFS_SCRUB_TYPE_MAX	8
- 
- #define XFS_SCRUB_FLAG_REPAIR	0x1	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x2	/* o: needs repair */
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 8f7fe60..1445315 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -93,24 +93,14 @@ xfs_inobt_update(
- 	return xfs_btree_update(cur, &rec);
- }
- 
--/*
-- * Get the data from the pointed-to record.
-- */
--int					/* error */
--xfs_inobt_get_rec(
--	struct xfs_btree_cur	*cur,	/* btree cursor */
--	xfs_inobt_rec_incore_t	*irec,	/* btree record */
--	int			*stat)	/* output: success/failure */
-+void
-+xfs_inobt_btrec_to_irec(
-+	struct xfs_mount		*mp,
-+	union xfs_btree_rec		*rec,
-+	struct xfs_inobt_rec_incore	*irec)
- {
--	union xfs_btree_rec	*rec;
--	int			error;
--
--	error = xfs_btree_get_rec(cur, &rec, stat);
--	if (error || *stat == 0)
--		return error;
--
- 	irec->ir_startino = be32_to_cpu(rec->inobt.ir_startino);
--	if (xfs_sb_version_hassparseinodes(&cur->bc_mp->m_sb)) {
-+	if (xfs_sb_version_hassparseinodes(&mp->m_sb)) {
- 		irec->ir_holemask = be16_to_cpu(rec->inobt.ir_u.sp.ir_holemask);
- 		irec->ir_count = rec->inobt.ir_u.sp.ir_count;
- 		irec->ir_freecount = rec->inobt.ir_u.sp.ir_freecount;
-@@ -125,6 +115,25 @@ xfs_inobt_get_rec(
- 				be32_to_cpu(rec->inobt.ir_u.f.ir_freecount);
- 	}
- 	irec->ir_free = be64_to_cpu(rec->inobt.ir_free);
-+}
-+
-+/*
-+ * Get the data from the pointed-to record.
-+ */
-+int					/* error */
-+xfs_inobt_get_rec(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	xfs_inobt_rec_incore_t	*irec,	/* btree record */
-+	int			*stat)	/* output: success/failure */
-+{
-+	union xfs_btree_rec	*rec;
-+	int			error;
-+
-+	error = xfs_btree_get_rec(cur, &rec, stat);
-+	if (error || *stat == 0)
-+		return error;
-+
-+	xfs_inobt_btrec_to_irec(cur->bc_mp, rec, irec);
- 
- 	return 0;
- }
-diff --git a/libxfs/xfs_ialloc.h b/libxfs/xfs_ialloc.h
-index 0bb8966..8e5861d 100644
---- a/libxfs/xfs_ialloc.h
-+++ b/libxfs/xfs_ialloc.h
-@@ -168,5 +168,8 @@ int xfs_ialloc_inode_init(struct xfs_mount *mp, struct xfs_trans *tp,
- int xfs_read_agi(struct xfs_mount *mp, struct xfs_trans *tp,
- 		xfs_agnumber_t agno, struct xfs_buf **bpp);
- 
-+union xfs_btree_rec;
-+void xfs_inobt_btrec_to_irec(struct xfs_mount *mp, union xfs_btree_rec *rec,
-+		struct xfs_inobt_rec_incore *irec);
- 
- #endif	/* __XFS_IALLOC_H__ */
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index c2d4a5e..4795f08 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -151,6 +151,18 @@ xfs_inobt_init_key_from_rec(
- }
- 
- STATIC void
-+xfs_inobt_init_high_key_from_rec(
-+	union xfs_btree_key	*key,
-+	union xfs_btree_rec	*rec)
-+{
-+	__u32			x;
-+
-+	x = be32_to_cpu(rec->inobt.ir_startino);
-+	x += XFS_INODES_PER_CHUNK - 1;
-+	key->inobt.ir_startino = cpu_to_be32(x);
-+}
-+
-+STATIC void
- xfs_inobt_init_rec_from_cur(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_rec	*rec)
-@@ -204,6 +216,16 @@ xfs_inobt_key_diff(
- 			  cur->bc_rec.i.ir_startino;
- }
- 
-+STATIC __int64_t
-+xfs_inobt_diff_two_keys(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	return (__int64_t)be32_to_cpu(k1->inobt.ir_startino) -
-+			  be32_to_cpu(k2->inobt.ir_startino);
-+}
-+
- static int
- xfs_inobt_verify(
- 	struct xfs_buf		*bp)
-@@ -278,7 +300,6 @@ const struct xfs_buf_ops xfs_inobt_buf_ops = {
- 	.verify_write = xfs_inobt_write_verify,
- };
- 
--#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_inobt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -298,7 +319,6 @@ xfs_inobt_recs_inorder(
- 	return be32_to_cpu(r1->inobt.ir_startino) + XFS_INODES_PER_CHUNK <=
- 		be32_to_cpu(r2->inobt.ir_startino);
- }
--#endif	/* DEBUG */
- 
- static const struct xfs_btree_ops xfs_inobt_ops = {
- 	.rec_len		= sizeof(xfs_inobt_rec_t),
-@@ -311,14 +331,14 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
- 	.get_minrecs		= xfs_inobt_get_minrecs,
- 	.get_maxrecs		= xfs_inobt_get_maxrecs,
- 	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
-+	.init_high_key_from_rec	= xfs_inobt_init_high_key_from_rec,
- 	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_inobt_init_ptr_from_cur,
- 	.key_diff		= xfs_inobt_key_diff,
- 	.buf_ops		= &xfs_inobt_buf_ops,
--#if defined(DEBUG) || defined(XFS_WARN)
-+	.diff_two_keys		= xfs_inobt_diff_two_keys,
- 	.keys_inorder		= xfs_inobt_keys_inorder,
- 	.recs_inorder		= xfs_inobt_recs_inorder,
--#endif
- };
- 
- static const struct xfs_btree_ops xfs_finobt_ops = {
-@@ -332,14 +352,14 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
- 	.get_minrecs		= xfs_inobt_get_minrecs,
- 	.get_maxrecs		= xfs_inobt_get_maxrecs,
- 	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
-+	.init_high_key_from_rec	= xfs_inobt_init_high_key_from_rec,
- 	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_finobt_init_ptr_from_cur,
- 	.key_diff		= xfs_inobt_key_diff,
- 	.buf_ops		= &xfs_inobt_buf_ops,
--#if defined(DEBUG) || defined(XFS_WARN)
-+	.diff_two_keys		= xfs_inobt_diff_two_keys,
- 	.keys_inorder		= xfs_inobt_keys_inorder,
- 	.recs_inorder		= xfs_inobt_recs_inorder,
--#endif
- };
- 
- /*
+here
 
+>  		return 0;
+>  	}
+>  
+> @@ -2372,7 +2372,7 @@ xfs_imap(
+>  
+>  	imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, cluster_agbno);
+>  	imap->im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
+> -	imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
+> +	imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
+>  
+>  	/*
+>  	 * If the inode number maps to a block outside the bounds
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+> index 3cfe12a..a395d0c 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.h
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.h
+> @@ -58,8 +58,8 @@ struct xfs_icdinode {
+>   */
+>  struct xfs_imap {
+>  	xfs_daddr_t	im_blkno;	/* starting BB of inode chunk */
+> -	ushort		im_len;		/* length in BBs of inode chunk */
+> -	ushort		im_boffset;	/* inode offset in block in bytes */
+> +	unsigned short		im_len;		/* length in BBs of inode chunk */
+> +	unsigned short		im_boffset;	/* inode offset in block in bytes */
+
+these 2
+
+>  };
+>  
+>  int	xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> index 083cdd6..3fcea8c 100644
+> --- a/fs/xfs/libxfs/xfs_log_format.h
+> +++ b/fs/xfs/libxfs/xfs_log_format.h
+> @@ -481,8 +481,8 @@ static inline uint xfs_log_dinode_size(int version)
+>  typedef struct xfs_buf_log_format {
+>  	unsigned short	blf_type;	/* buf log item type indicator */
+>  	unsigned short	blf_size;	/* size of this item */
+> -	ushort		blf_flags;	/* misc state */
+> -	ushort		blf_len;	/* number of blocks in this buf */
+> +	unsigned short		blf_flags;	/* misc state */
+> +	unsigned short		blf_len;	/* number of blocks in this buf */
+
+and here
+
+-Eric
+
+>  	__int64_t	blf_blkno;	/* starting blkno of this buf */
+>  	unsigned int	blf_map_size;	/* used size of data bitmap in words */
+>  	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
+> diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+> index 8e385f9..d9f65e2 100644
+> --- a/fs/xfs/libxfs/xfs_log_recover.h
+> +++ b/fs/xfs/libxfs/xfs_log_recover.h
+> @@ -52,7 +52,7 @@ typedef struct xlog_recover {
+>  	struct list_head	r_itemq;	/* q for items */
+>  } xlog_recover_t;
+>  
+> -#define ITEM_TYPE(i)	(*(ushort *)(i)->ri_buf[0].i_addr)
+> +#define ITEM_TYPE(i)	(*(unsigned short *)(i)->ri_buf[0].i_addr)
+>  
+>  /*
+>   * This is the number of entries in the l_buf_cancel_table used during
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 9b3d7c7..cf754bc 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -2025,7 +2025,7 @@ xlog_peek_buffer_cancelled(
+>  	struct xlog		*log,
+>  	xfs_daddr_t		blkno,
+>  	uint			len,
+> -	ushort			flags)
+> +	unsigned short			flags)
+>  {
+>  	struct list_head	*bucket;
+>  	struct xfs_buf_cancel	*bcp;
+> @@ -2065,7 +2065,7 @@ xlog_check_buffer_cancelled(
+>  	struct xlog		*log,
+>  	xfs_daddr_t		blkno,
+>  	uint			len,
+> -	ushort			flags)
+> +	unsigned short			flags)
+>  {
+>  	struct xfs_buf_cancel	*bcp;
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
