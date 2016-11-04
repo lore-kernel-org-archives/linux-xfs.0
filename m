@@ -1,78 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45105 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752083AbcKDS2W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:28:22 -0400
-Date: Fri, 4 Nov 2016 11:28:17 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:17075 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750933AbcKDUb7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 16:31:59 -0400
+Date: Fri, 4 Nov 2016 13:31:51 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS deadlock while running generic/019 test
-Message-ID: <20161104182817.GE32036@birch.djwong.org>
-References: <20161104182308.GC6650@quack2.suse.cz>
+Subject: Re: [PATCH 1/6] libxfs: convert ushort to unsigned short
+Message-ID: <20161104203151.GF32036@birch.djwong.org>
+References: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
+ <147828430373.31793.8618236112840458716.stgit@birch.djwong.org>
+ <62b9f952-b40e-3bce-9919-85fec64d8f6e@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161104182308.GC6650@quack2.suse.cz>
+In-Reply-To: <62b9f952-b40e-3bce-9919-85fec64d8f6e@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Fri, Nov 04, 2016 at 07:23:08PM +0100, Jan Kara wrote:
-> Hi,
+On Fri, Nov 04, 2016 at 02:09:29PM -0500, Eric Sandeen wrote:
+> On 11/4/16 1:31 PM, Darrick J. Wong wrote:
+> > Since xfsprogs dropped ushort in favor of unsigned short, do that
+> > here too.
 > 
-> XFS has deadlocked for me while running generic/019 test on umount. The
-> command is hanging in:
+> This pushes 4 lines over 80 chars; can those be fixed up?
 > 
-> [ 5429.070390] INFO: task umount:224228 blocked for more than 480 seconds.
-> [ 5429.088153]       Tainted: G        W       4.9.0-rc3-64-default+ #29
-> [ 5429.105523] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [ 5429.126043] umount          D ffffffff81618c9d     0 224228 222841 0x00000000
-> [ 5429.126055]  ffff881197089000 0000000000000000 ffff881168dcd2c0 ffff8817da5e0480
-> [ 5429.126062]  ffff8817dd918480 ffffc90033c83d58 ffffffff81618c9d ffffffff810ad30a
-> [ 5429.126073]  ffff8817dcdc0000 ffff881700000047 ffff881168dcd2c0 ffff8811a72ff840
-> [ 5429.126096] Call Trace:
-> [ 5429.126125]  [<ffffffff81618c9d>] ? __schedule+0x22d/0x6c0
-> [ 5429.126144]  [<ffffffff810ad30a>] ? try_to_wake_up+0x4a/0x380
-> [ 5429.126155]  [<ffffffff81619166>] schedule+0x36/0x80
-> [ 5429.126271]  [<ffffffffa090e0dc>] xfs_ail_push_all_sync+0xac/0xf0 [xfs]
-> [ 5429.126285]  [<ffffffff810c7540>] ? prepare_to_wait_event+0x110/0x110
-> [ 5429.126386]  [<ffffffffa08f45c3>] xfs_unmountfs+0x73/0x1c0 [xfs]
-> [ 5429.126485]  [<ffffffffa08f8ea2>] xfs_fs_put_super+0x32/0x90 [xfs]
-> [ 5429.126503]  [<ffffffff81214a8f>] generic_shutdown_super+0x6f/0x100
-> [ 5429.126513]  [<ffffffff81214ba7>] kill_block_super+0x27/0x70
-> [ 5429.126523]  [<ffffffff812144a3>] deactivate_locked_super+0x43/0x70
-> [ 5429.126533]  [<ffffffff81214516>] deactivate_super+0x46/0x60
-> [ 5429.126544]  [<ffffffff81231c3f>] cleanup_mnt+0x3f/0x80
-> [ 5429.126554]  [<ffffffff81231cd2>] __cleanup_mnt+0x12/0x20
-> [ 5429.126565]  [<ffffffff8109fe23>] task_work_run+0x83/0xb0
-> [ 5429.126575]  [<ffffffff8107c407>] exit_to_usermode_loop+0x66/0x92
-> [ 5429.126586]  [<ffffffff8100391a>] syscall_return_slowpath+0x9a/0xb0
-> [ 5429.126602]  [<ffffffff8161d904>] entry_SYSCALL_64_fastpath+0xa7/0xa9
-> 
-> In between these stuck messages, there are:
-> 
-> [ 5443.405374] XFS (ram1): xfs_log_force: error -5 returned.
-> 
-> errors. Full dmesg from the xfstest run is attached. The problem has been
-> triggered on XFS mounted with 'dax' mount option over 20G ramdisks. The
-> kernel is 4.9-rc3 + Ross' DAX PMD patches (latest series) + my ext4 iomap
-> conversion patches.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_ialloc.c      |    4 ++--
+> >  fs/xfs/libxfs/xfs_inode_buf.h   |    4 ++--
+> >  fs/xfs/libxfs/xfs_log_format.h  |    4 ++--
+> >  fs/xfs/libxfs/xfs_log_recover.h |    2 +-
+> >  fs/xfs/xfs_log_recover.c        |    4 ++--
+> >  5 files changed, 9 insertions(+), 9 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> > index 51b4e0d..60e1a67 100644
+> > --- a/fs/xfs/libxfs/xfs_ialloc.c
+> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> > @@ -2344,7 +2344,7 @@ xfs_imap(
+> >  
+> >  		imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
+> >  		imap->im_len = XFS_FSB_TO_BB(mp, 1);
+> > -		imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
+> > +		imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
 
-Hmmm, I posted a patch[1] for a similar unmount hang that Dave found
-via generic/388.  No idea if that'll fix this problem, but I suppose
-it's worth a shot if you can get it to reproduce quickly/consistently.
+Well xfsprogs is like this too, but I guess I can append another patch...
 
-(AFAIK it's still soaking in linux-next...)
+> here
+> 
+> >  		return 0;
+> >  	}
+> >  
+> > @@ -2372,7 +2372,7 @@ xfs_imap(
+> >  
+> >  	imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, cluster_agbno);
+> >  	imap->im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
+> > -	imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
+> > +	imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
+> >  
+> >  	/*
+> >  	 * If the inode number maps to a block outside the bounds
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+> > index 3cfe12a..a395d0c 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.h
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.h
+> > @@ -58,8 +58,8 @@ struct xfs_icdinode {
+> >   */
+> >  struct xfs_imap {
+> >  	xfs_daddr_t	im_blkno;	/* starting BB of inode chunk */
+> > -	ushort		im_len;		/* length in BBs of inode chunk */
+> > -	ushort		im_boffset;	/* inode offset in block in bytes */
+> > +	unsigned short		im_len;		/* length in BBs of inode chunk */
+> > +	unsigned short		im_boffset;	/* inode offset in block in bytes */
+> 
+> these 2
+
+Fixed.
+
+> >  };
+> >  
+> >  int	xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+> > diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> > index 083cdd6..3fcea8c 100644
+> > --- a/fs/xfs/libxfs/xfs_log_format.h
+> > +++ b/fs/xfs/libxfs/xfs_log_format.h
+> > @@ -481,8 +481,8 @@ static inline uint xfs_log_dinode_size(int version)
+> >  typedef struct xfs_buf_log_format {
+> >  	unsigned short	blf_type;	/* buf log item type indicator */
+> >  	unsigned short	blf_size;	/* size of this item */
+> > -	ushort		blf_flags;	/* misc state */
+> > -	ushort		blf_len;	/* number of blocks in this buf */
+> > +	unsigned short		blf_flags;	/* misc state */
+> > +	unsigned short		blf_len;	/* number of blocks in this buf */
+> 
+> and here
+
+Fixed.
 
 --D
 
-[1] https://www.spinics.net/lists/linux-xfs/msg01737.html
-
 > 
-> 								Honza
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
-
-
+> -Eric
+> 
+> >  	__int64_t	blf_blkno;	/* starting blkno of this buf */
+> >  	unsigned int	blf_map_size;	/* used size of data bitmap in words */
+> >  	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
+> > diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+> > index 8e385f9..d9f65e2 100644
+> > --- a/fs/xfs/libxfs/xfs_log_recover.h
+> > +++ b/fs/xfs/libxfs/xfs_log_recover.h
+> > @@ -52,7 +52,7 @@ typedef struct xlog_recover {
+> >  	struct list_head	r_itemq;	/* q for items */
+> >  } xlog_recover_t;
+> >  
+> > -#define ITEM_TYPE(i)	(*(ushort *)(i)->ri_buf[0].i_addr)
+> > +#define ITEM_TYPE(i)	(*(unsigned short *)(i)->ri_buf[0].i_addr)
+> >  
+> >  /*
+> >   * This is the number of entries in the l_buf_cancel_table used during
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index 9b3d7c7..cf754bc 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -2025,7 +2025,7 @@ xlog_peek_buffer_cancelled(
+> >  	struct xlog		*log,
+> >  	xfs_daddr_t		blkno,
+> >  	uint			len,
+> > -	ushort			flags)
+> > +	unsigned short			flags)
+> >  {
+> >  	struct list_head	*bucket;
+> >  	struct xfs_buf_cancel	*bcp;
+> > @@ -2065,7 +2065,7 @@ xlog_check_buffer_cancelled(
+> >  	struct xlog		*log,
+> >  	xfs_daddr_t		blkno,
+> >  	uint			len,
+> > -	ushort			flags)
+> > +	unsigned short			flags)
+> >  {
+> >  	struct xfs_buf_cancel	*bcp;
+> >  
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
