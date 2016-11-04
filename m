@@ -1,102 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:5918 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752933AbcKJEaH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Nov 2016 23:30:07 -0500
-Date: Thu, 10 Nov 2016 15:29:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to 0fc204e2eb64
-Message-ID: <20161110042953.GY28177@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:25112 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934946AbcKDSam (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:30:42 -0400
+Subject: [PATCH 05/11] xfs: set XFS_DA_OP_OKNOENT in xfs_attr_get
+From: Eric Sandeen <sandeen@redhat.com>
+Date: Fri, 04 Nov 2016 11:30:36 -0700
+Message-ID: <147828423671.31492.10920798285495163593.stgit@birch.djwong.org>
+In-Reply-To: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
+References: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="QKdGvSO+nmPlgiQ/"
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, tytso@mit.edu, ross.zwisler@linux.intel.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+
+>From c400ee3ed1b13d45adde68e12254dc6ab6977b59 Mon Sep 17 00:00:00 2001
+
+It's entirely possible for userspace to ask for an xattr which
+does not exist.
+
+Normally, there is no problem whatsoever when we ask for such
+a thing, but when we look at an obfuscated metadump image
+on a debug kernel with selinux, we trip over this ASSERT in
+xfs_da3_path_shift():
+
+        *result = -ENOENT;      /* we're out of our tree */
+        ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
+
+It (more or less) only shows up in the above scenario, because
+xfs_metadump obfuscates attr names, but chooses names which
+keep the same hash value - and xfs_da3_node_lookup_int does:
+
+        if (((retval == -ENOENT) || (retval == -ENOATTR)) &&
+            (blk->hashval == args->hashval)) {
+                error = xfs_da3_path_shift(state, &state->path, 1, 1,
+                                                 &retval);
+
+IOWS, we only get down to the xfs_da3_path_shift() ASSERT
+if we are looking for an xattr which doesn't exist, but we
+find xattrs on disk which have the same hash, and so might be
+a hash collision, so we try the path shift.  When *that*
+fails to find what we're looking for, we hit the assert about
+XFS_DA_OP_OKNOENT.
+
+Simply setting XFS_DA_OP_OKNOENT in xfs_attr_get solves this
+rather corner-case problem with no ill side effects.  It's
+fine for an attr name lookup to fail.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ libxfs/xfs_attr.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
 
---QKdGvSO+nmPlgiQ/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index c7f0afa..60513f9 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -135,6 +135,8 @@ xfs_attr_get(
+ 
+ 	args.value = value;
+ 	args.valuelen = *valuelenp;
++	/* Entirely possible to look up a name which doesn't exist */
++	args.op_flags = XFS_DA_OP_OKNOENT;
+ 
+ 	lock_mode = xfs_ilock_attr_map_shared(ip);
+ 	if (!xfs_inode_hasattr(ip))
 
-Hi folks,
-
-The for-next branch of the xfs kernel repository at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-has just been updated. This update has a couple of new patches
-for iomap and XFS, and a fixup of a cleanup patch. The topic
-branches were re-merged, so it's a rebuilt tree.
-
-I added the IOMAP_FAULT patch into the dax-4.10-iomap-pmd branch as
-Christoph requested. This will cause some minor hassles - that topic
-branch is based on 4.9-rc1, and there is a IOMAP_REPORT flag added
-in 4.9-rc3. Hence when you merge it into a more recent tree, a merge
-conflict will occur. The merge conflict resolution is trivial but if
-you need help it can be seen in the for-next branch (in the merge
-commit currently known as b649c42e25b7).
-
--Dave.
-
-The new head of the for-next branch is commit:
-
-0fc204e2eb64 Merge branch 'xfs-4.10-misc-fixes-1' into for-next
-
-New Commits:
-
-Brian Foster (1):
-      [98efe8af1c9f] xfs: fix unbalanced inode reclaim flush locking
-
-Darrick J. Wong (1):
-      [bec9d48d7a30] xfs: check minimum block size for CRC filesystems
-
-Dave Chinner (3):
-      [b649c42e25b7] Merge branch 'dax-4.10-iomap-pmd' into for-next
-      [8f23d318aa74] Merge branch 'xfs-4.10-libxfs-cleanups' into for-next
-      [0fc204e2eb64] Merge branch 'xfs-4.10-misc-fixes-1' into for-next
-
-Jan Kara (1):
-      [9484ab1bf446] dax: Introduce IOMAP_FAULT flag
-
-
-Code Diffstat:
-
- fs/dax.c               |  4 ++--
- fs/iomap.c             |  5 +++--
- fs/xfs/libxfs/xfs_sb.c |  3 +--
- fs/xfs/xfs_icache.c    | 27 ++++++++++++++-------------
- fs/xfs/xfs_inode.h     | 11 ++++++-----
- include/linux/iomap.h  |  1 +
- 6 files changed, 27 insertions(+), 24 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---QKdGvSO+nmPlgiQ/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJYI/fBAAoJEK3oKUf0dfodKJMP/jpNrCoMTRUmTTcqdO+N7cGn
-6Jm/d3sLWRjeLDX0+OeUILkZ4HV9+o8qbRSr2KtYv7qHrOzmFGD2N3nHFXDmYXfP
-cN0XyTY//x8BsxagVSfqmwZjOoH+txJPOiHgeDzG15cYxniZg1CIGGzzZRkz7V0l
-fbTBwXPhtQ4A9ET6LQTTcW2vG6hgIbCfS+EQjO6pqy1oJ8hIFrZioA+PFkTZvrqC
-f/v+bbxPoeQIdVaSZuTnBYzrwY9NRFw2az0a2e/C7KzPOAS78ehPZJYRjVOhQW3w
-ai5gYqPozsoUsHcOuinZA9on0OUDPudbHI+K0V8rFODSQlXKw+ARX1qkaPwkJCJq
-PJskdHoVb1euNPaxiSfm3tyNuXHpk4IS5mz0V4g+rfKdjVKFwCgf5u5s9lo6OhVG
-sVe816S+k2DUgjt6YAlJNljEf5Ew9yxwlXcz1nAdfyw+JRGFt+1YT1flzzMDYqeW
-K0gMPRvotYU+GsvabguWOr+iYSDPuFbuhThzDd58if1sJcQtkSC8BGKSIfil9gFC
-AJEQQQsgxQ0fRJUZCdhLRq8UA+ugu09U6DV2vuvd1nOEbVo4oxnk6vPJGY/qsM/q
-AQ1Ci9W7q4r8U6jt7IKH5B8mej3wavttW6umeTM029QtXQzt8x1EMVAmxFkslv7X
-dfZYkZKmt00RpE24LvV/
-=rr/H
------END PGP SIGNATURE-----
-
---QKdGvSO+nmPlgiQ/--
