@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51258 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750935AbcKEAIh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:08:37 -0400
-Subject: [PATCH 05/16] xfs: set XFS_DA_OP_OKNOENT in xfs_attr_get
-From: Eric Sandeen <sandeen@redhat.com>
-Date: Fri, 04 Nov 2016 17:08:30 -0700
-Message-ID: <147830451072.26713.4807330905355527976.stgit@birch.djwong.org>
-In-Reply-To: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
-References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46842 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934946AbcKDSbr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:31:47 -0400
+Subject: [PATCH 1/6] libxfs: convert ushort to unsigned short
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 11:31:43 -0700
+Message-ID: <147828430373.31793.8618236112840458716.stgit@birch.djwong.org>
+In-Reply-To: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
+References: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,60 +16,106 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
->From c400ee3ed1b13d45adde68e12254dc6ab6977b59 Mon Sep 17 00:00:00 2001
+Since xfsprogs dropped ushort in favor of unsigned short, do that
+here too.
 
-It's entirely possible for userspace to ask for an xattr which
-does not exist.
-
-Normally, there is no problem whatsoever when we ask for such
-a thing, but when we look at an obfuscated metadump image
-on a debug kernel with selinux, we trip over this ASSERT in
-xfs_da3_path_shift():
-
-        *result = -ENOENT;      /* we're out of our tree */
-        ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
-
-It (more or less) only shows up in the above scenario, because
-xfs_metadump obfuscates attr names, but chooses names which
-keep the same hash value - and xfs_da3_node_lookup_int does:
-
-        if (((retval == -ENOENT) || (retval == -ENOATTR)) &&
-            (blk->hashval == args->hashval)) {
-                error = xfs_da3_path_shift(state, &state->path, 1, 1,
-                                                 &retval);
-
-IOWS, we only get down to the xfs_da3_path_shift() ASSERT
-if we are looking for an xattr which doesn't exist, but we
-find xattrs on disk which have the same hash, and so might be
-a hash collision, so we try the path shift.  When *that*
-fails to find what we're looking for, we hit the assert about
-XFS_DA_OP_OKNOENT.
-
-Simply setting XFS_DA_OP_OKNOENT in xfs_attr_get solves this
-rather corner-case problem with no ill side effects.  It's
-fine for an attr name lookup to fail.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_attr.c |    2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/libxfs/xfs_ialloc.c      |    4 ++--
+ fs/xfs/libxfs/xfs_inode_buf.h   |    4 ++--
+ fs/xfs/libxfs/xfs_log_format.h  |    4 ++--
+ fs/xfs/libxfs/xfs_log_recover.h |    2 +-
+ fs/xfs/xfs_log_recover.c        |    4 ++--
+ 5 files changed, 9 insertions(+), 9 deletions(-)
 
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index c7f0afa..60513f9 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -135,6 +135,8 @@ xfs_attr_get(
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 51b4e0d..60e1a67 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2344,7 +2344,7 @@ xfs_imap(
  
- 	args.value = value;
- 	args.valuelen = *valuelenp;
-+	/* Entirely possible to look up a name which doesn't exist */
-+	args.op_flags = XFS_DA_OP_OKNOENT;
+ 		imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
+ 		imap->im_len = XFS_FSB_TO_BB(mp, 1);
+-		imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
++		imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
+ 		return 0;
+ 	}
  
- 	lock_mode = xfs_ilock_attr_map_shared(ip);
- 	if (!xfs_inode_hasattr(ip))
+@@ -2372,7 +2372,7 @@ xfs_imap(
+ 
+ 	imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, cluster_agbno);
+ 	imap->im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
+-	imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
++	imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
+ 
+ 	/*
+ 	 * If the inode number maps to a block outside the bounds
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+index 3cfe12a..a395d0c 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -58,8 +58,8 @@ struct xfs_icdinode {
+  */
+ struct xfs_imap {
+ 	xfs_daddr_t	im_blkno;	/* starting BB of inode chunk */
+-	ushort		im_len;		/* length in BBs of inode chunk */
+-	ushort		im_boffset;	/* inode offset in block in bytes */
++	unsigned short		im_len;		/* length in BBs of inode chunk */
++	unsigned short		im_boffset;	/* inode offset in block in bytes */
+ };
+ 
+ int	xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 083cdd6..3fcea8c 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -481,8 +481,8 @@ static inline uint xfs_log_dinode_size(int version)
+ typedef struct xfs_buf_log_format {
+ 	unsigned short	blf_type;	/* buf log item type indicator */
+ 	unsigned short	blf_size;	/* size of this item */
+-	ushort		blf_flags;	/* misc state */
+-	ushort		blf_len;	/* number of blocks in this buf */
++	unsigned short		blf_flags;	/* misc state */
++	unsigned short		blf_len;	/* number of blocks in this buf */
+ 	__int64_t	blf_blkno;	/* starting blkno of this buf */
+ 	unsigned int	blf_map_size;	/* used size of data bitmap in words */
+ 	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
+diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+index 8e385f9..d9f65e2 100644
+--- a/fs/xfs/libxfs/xfs_log_recover.h
++++ b/fs/xfs/libxfs/xfs_log_recover.h
+@@ -52,7 +52,7 @@ typedef struct xlog_recover {
+ 	struct list_head	r_itemq;	/* q for items */
+ } xlog_recover_t;
+ 
+-#define ITEM_TYPE(i)	(*(ushort *)(i)->ri_buf[0].i_addr)
++#define ITEM_TYPE(i)	(*(unsigned short *)(i)->ri_buf[0].i_addr)
+ 
+ /*
+  * This is the number of entries in the l_buf_cancel_table used during
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 9b3d7c7..cf754bc 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2025,7 +2025,7 @@ xlog_peek_buffer_cancelled(
+ 	struct xlog		*log,
+ 	xfs_daddr_t		blkno,
+ 	uint			len,
+-	ushort			flags)
++	unsigned short			flags)
+ {
+ 	struct list_head	*bucket;
+ 	struct xfs_buf_cancel	*bcp;
+@@ -2065,7 +2065,7 @@ xlog_check_buffer_cancelled(
+ 	struct xlog		*log,
+ 	xfs_daddr_t		blkno,
+ 	uint			len,
+-	ushort			flags)
++	unsigned short			flags)
+ {
+ 	struct xfs_buf_cancel	*bcp;
+ 
 
