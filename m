@@ -1,58 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:39655 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751699AbcKCB6l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Nov 2016 21:58:41 -0400
-Date: Thu, 3 Nov 2016 12:58:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v9 00/16] re-enable DAX PMD support
-Message-ID: <20161103015826.GI9920@dastard>
-References: <1478030058-1422-1-git-send-email-ross.zwisler@linux.intel.com>
+Received: from sandeen.net ([63.231.237.45]:33660 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752892AbcKDAhE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Nov 2016 20:37:04 -0400
+Subject: Re: Can I add external log device after filesystem was created?
+References: <CACNifpV5z3r0WB3xypSfGxk6E-=b+3TWrsS4Od7+bKwmmD3yeA@mail.gmail.com>
+ <1e60fac5-f2b9-3903-c18c-0a73d0206e0a@sandeen.net>
+ <CACNifpV7qQ_5YzJJfdaKi3SThBa7x4N=VNeK1f_OkijiXh6zPA@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ba7f0c5e-2e89-98b6-f1ff-9ad00334fcba@sandeen.net>
+Date: Thu, 3 Nov 2016 19:37:03 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1478030058-1422-1-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <CACNifpV7qQ_5YzJJfdaKi3SThBa7x4N=VNeK1f_OkijiXh6zPA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Marcin Sura <mailing-lists@sura.pl>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 01, 2016 at 01:54:02PM -0600, Ross Zwisler wrote:
-> DAX PMDs have been disabled since Jan Kara introduced DAX radix tree based
-> locking.  This series allows DAX PMDs to participate in the DAX radix tree
-> based locking scheme so that they can be re-enabled.
+If it's just test data, I can give you a recipe for moving it with
+xfs_db, I think - if you're willing to lose the filesystem if
+something goes wrong.  ;)
 
-I've seen patch 0/16 - where did you send the other 16? I need to
-pick up the bug fix that is in this patch set...
+-Eric
 
-> Previously we had talked about this series going through the XFS tree, but
-> Jan has a patch set that will need to build on this series and it heavily
-> modifies the MM code.  I think he would prefer that series to go through
-> Andrew Morton's -MM tree, so it probably makes sense for this series to go
-> through that same tree.
-
-Seriously, I was 10 minutes away from pushing out the previous
-version of this patchset as a stable topic branch, just like has
-been discussed and several times over the past week.  Indeed, I
-mentioned that I was planning on pushing out this topic branch today
-not more than 4 hours ago, and you were on the cc list.
-
-The -mm tree is not the place to merge patchsets with dependencies
-like this because it's an unstable, rebasing tree. Hence it cannot
-be shared and used as the base of common development between
-multiple git trees like we have for the fs/ subsystem.
-
-This needs to go out as a stable topic branch so that other
-dependent work can reliably build on top of it for the next merge
-window. e.g. the ext4 DAX iomap patch series that is likely to be
-merged through the ext4 tree, so it needs a stable branch. There's
-iomap direct IO patches for XFS pending, and they conflict with this
-patchset. i.e. we need a stable git base to work from...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+On 11/3/16 4:14 PM, Marcin Sura wrote:
+> Hi,
+> 
+> We are building huge test system with hundreds TB of data. We want to
+> execute some performance tests without and with external log device.
+> Filling in the data is a time consuming process, so my first idea was
+> to create the filesystem without external log, execute the tests and
+> then add external log and repeat the tests without recreating the
+> filesystem. Now I know I have to do this. Thanks
+> 
+> BR
+> Marcin
+> 
+> 2016-11-03 20:57 GMT+01:00 Eric Sandeen <sandeen@sandeen.net>:
+>> On 11/3/16 2:28 PM, Marcin Sura wrote:
+>>> Hi,
+>>>
+>>> I've created filesystem with default mkfs.xfs command, started to use
+>>> the filesystem. Few days later I've got nice SSD-based lun which can
+>>> be used as external log device.
+>>>
+>>> Can I add that lun as external log device to an existing filesystem? How?
+>>>
+>>> BR
+>>> Marcin
+>>
+>> There is no supported mechanism for doing this.  It can be done with xfs_db
+>> disk-editing surgery, but that's not really recommended.
+>>
+>> What is your reason for wanting to move the log?
+>>
+>> -Eric
+> 
