@@ -1,62 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:50707 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751203AbcKJF3r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Nov 2016 00:29:47 -0500
-Date: Thu, 10 Nov 2016 16:29:15 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
-Message-ID: <20161110052915.GG28922@dastard>
-References: <5244720.RPRsZ88NJ0@libor-nb>
- <20161031120226.GT14023@dastard>
- <1655526.YOeIAmCiZd@libor-nb>
- <2639114.hBi4OJ80y2@libor-nb>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <2639114.hBi4OJ80y2@libor-nb>
+Received: from mx1.redhat.com ([209.132.183.28]:45646 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934706AbcKDQQZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Nov 2016 12:16:25 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfs/021: filter out detailed array element info from xfs_db
+Date: Sat,  5 Nov 2016 00:16:10 +0800
+Message-Id: <1478276170-6618-1-git-send-email-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-On Tue, Nov 08, 2016 at 12:28:54PM +0100, Libor Klepáč wrote:
-> Adding more output from dmesg
-> 
->  XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x12f63f40
->  XFS (dm-2): Unmount and run xfs_repair
->  XFS (dm-2): First 64 bytes of corrupted metadata buffer:
->  ffff88018fe02000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
->  ffff88018fe02010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
->  ffff88018fe02020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->  ffff88018fe02030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->  XFS (dm-2): metadata I/O error: block 0x12f63f40 ("xfs_trans_read_buf_map") error 117 numblks 8
+Starting from xfsprogs commit 384283555871 ("xfs_db: print one array
+element per line"), xfs_db prints one array element per line. This
+breaks the filter in xfs/021, which now fails as:
 
-So, again, it is empty attribute blocks that are being tripped over
-at blkno 0x12f63f40 and 0x12645ef8
+  hdr.freemap[0-2] = [base,size] [FREEMAP..]
+ +0:[104,1892]
+ +1:[0,0]
+ +2:[0,0]
+  entries[0-2] = [hashval,nameidx,incomplete,root,local] [ENTRIES..]
 
-Which:
+So we have extra lines that need to be filtered out,
 
-> > Phase 3 - for each AG...
-> >         - scan (but don't clear) agi unlinked lists...
-> >         - process known inodes and perform inode discovery...
-> >         - agno = 0
-> >         - agno = 1
-> > Metadata corruption detected at xfs_attr3_leaf block 0x12645ef8/0x1000
-> > Metadata corruption detected at xfs_attr3_leaf block 0x12f63f40/0x1000
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ tests/xfs/021 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-These two blocks. It looks like repair didn't clean them up?
-
-Hmmmm - looking at the code I'm not sure that repair detects and
-removes empty attr leaf blocks, which would explain why the error
-showed up again.. Can you provide a metadump of the filesystem so we
-can did into the exact neature of the problem you are seeing?
-
-Cheers,
-
-Dave.
+diff --git a/tests/xfs/021 b/tests/xfs/021
+index 67a4346..b99eff7 100755
+--- a/tests/xfs/021
++++ b/tests/xfs/021
+@@ -151,7 +151,7 @@ s/^(hdr.info.magic =) 0x3bee/\1 0xfbee/;
+ s/^(hdr.firstused =) (\d+)/\1 FIRSTUSED/;
+ s/^(hdr.freemap\[0-2] = \[base,size]).*/\1 [FREEMAP..]/;
+ s/^(entries\[0-2] = \[hashval,nameidx,incomplete,root,local]).*/\1 [ENTRIES..]/;
+-	print;'
++	print unless /^[0-9]/;'
+ 
+ echo "*** done"
+ exit
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
