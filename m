@@ -1,88 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25200 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934946AbcKDSay (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:30:54 -0400
-Subject: [PATCH 07/11] libxfs: fix whitespace to match the kernel
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 11:30:48 -0700
-Message-ID: <147828424894.31492.17959603161330927485.stgit@birch.djwong.org>
-In-Reply-To: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
-References: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:36671 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754435AbcKDU44 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 16:56:56 -0400
+Received: by mail-pf0-f172.google.com with SMTP id 189so57520701pfz.3
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Nov 2016 13:56:56 -0700 (PDT)
+Date: Fri, 4 Nov 2016 14:56:54 -0600
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 4/5] iomap: implement direct I/O
+Message-ID: <20161104205654.GB11764@kernel.dk>
+References: <1478276479-10749-1-git-send-email-hch@lst.de>
+ <1478276479-10749-5-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1478276479-10749-5-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, kent.overstreet@gmail.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
 
-Fix some minor whitespace errors so that my automated libxfs diff
-scanning will stop reporting this.
+On Fri, Nov 04 2016, Christoph Hellwig wrote:
+> This adds a full fledget direct I/O implementation using the iomap
+> interface. Full fledged in this case means all features are supported:
+> AIO, vectored I/O, any iov_iter type including kernel pointers, bvecs
+> and pipes, support for hole filling and async apending writes.  It does
+> not mean supporting all the warts of the old generic code.  We expect
+> i_rwsem to be held over the duration of the call, and we expect to
+> maintain i_dio_count ourselves, and we pass on any kinds of mapping
+> to the file system for now.
+> 
+> The algorithm used is very simple: We use iomap_apply to iterate over
+> the range of the I/O, and then we use the new bio_iov_iter_get_pages
+> helper to lock down the user range for the size of the extent.
+> bio_iov_iter_get_pages can currently lock down twice as many pages as
+> the old direct I/O code did, which means that we will have a better
+> batch factor for everything but overwrites of badly fragmented files.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/xfs_dir2_node.c  |    2 ++
- libxfs/xfs_format.h     |    1 -
- libxfs/xfs_inode_buf.c  |    1 -
- libxfs/xfs_inode_fork.c |    1 +
- 4 files changed, 3 insertions(+), 2 deletions(-)
+This looks pretty good, I'll give it a whirl on my fast(er) devices.
 
+One question, since it isn't commented and isn't immediately obvious to
+me - what's the purpose of using the cmpxchg() on dio->error?
 
-diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index df599f9..b75b432 100644
---- a/libxfs/xfs_dir2_node.c
-+++ b/libxfs/xfs_dir2_node.c
-@@ -2146,12 +2146,14 @@ xfs_dir2_node_replace(
- 	state = xfs_da_state_alloc();
- 	state->args = args;
- 	state->mp = args->dp->i_mount;
-+
- 	/*
- 	 * We have to save new inode number and ftype since
- 	 * xfs_da3_node_lookup_int() is going to overwrite them
- 	 */
- 	inum = args->inumber;
- 	ftype = args->filetype;
-+
- 	/*
- 	 * Lookup the entry to change in the btree.
- 	 */
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 172fdfb..8628bab 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -473,7 +473,6 @@ xfs_sb_has_ro_compat_feature(
- #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
- #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
- #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
--
- #define XFS_SB_FEAT_INCOMPAT_ALL \
- 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
- 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 4796a59..8732359 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -537,7 +537,6 @@ xfs_iread(
- 	}
- 
- 	ASSERT(ip->i_d.di_version >= 2);
--
- 	ip->i_delayed_blks = 0;
- 
- 	/*
-diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-index 8212f77..2799e2d 100644
---- a/libxfs/xfs_inode_fork.c
-+++ b/libxfs/xfs_inode_fork.c
-@@ -29,6 +29,7 @@
- #include "xfs_attr_sf.h"
- #include "xfs_da_format.h"
- 
-+
- kmem_zone_t *xfs_ifork_zone;
- 
- STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
+-- 
+Jens Axboe
 
