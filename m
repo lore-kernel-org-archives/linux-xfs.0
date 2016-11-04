@@ -1,72 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51193 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750763AbcKEAII (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:08:08 -0400
-Subject: [PATCH 01/16] xfs_repair: fix some potential null pointer deferences
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:08:03 -0700
-Message-ID: <147830448375.26713.12061252375252670165.stgit@birch.djwong.org>
-In-Reply-To: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
-References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:33144 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754998AbcKDW67 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Nov 2016 18:58:59 -0400
+Subject: Re: [PATCH 5/6] libxfs: clean up _dir2_data_freescan
+References: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
+ <147828432807.31793.11613248965488442086.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b7044544-ebd4-b62c-4873-bcd04b1241ab@sandeen.net>
+Date: Fri, 4 Nov 2016 17:58:57 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <147828432807.31793.11613248965488442086.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, david@fromorbit.com
 Cc: linux-xfs@vger.kernel.org
 
-Fix some potential NULL pointer deferences that Coverity pointed out,
-and remove a trivial dead integer check.
+On 11/4/16 1:32 PM, Darrick J. Wong wrote:
+> Refactor the implementations of xfs_dir2_data_freescan into a
+> routine that takes the raw directory block parameters and
+> a second function that figures out the raw parameters from the
+> directory inode.  This enables us to use the exact same code
+> for both userspace and the kernel, since repair knows exactly
+> which directory block geometry parameters it needs.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Coverity-id: 1375789, 1375790, 1375791, 1375792
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- repair/phase5.c |    2 +-
- repair/rmap.c   |    2 +-
- repair/slab.h   |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+seems fine tho I can't say I like the new function name; what
+does "_hdr" mean?  They both take a *hdr ...
 
+maybe _xfs_dir2_data_freescan or xfs_dir2_data_freescan_int?
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 3604d1d..cbda556 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -1925,7 +1925,7 @@ _("Insufficient memory to construct refcount cursor."));
- 	refc_rec = pop_slab_cursor(refc_cur);
- 	lptr = &btree_curs->level[0];
- 
--	for (i = 0; i < lptr->num_blocks; i++)  {
-+	for (i = 0; i < lptr->num_blocks && refc_rec != NULL; i++)  {
- 		/*
- 		 * block initialization, lay in block header
- 		 */
-diff --git a/repair/rmap.c b/repair/rmap.c
-index 45e183a..7508973 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -790,7 +790,7 @@ compute_refcounts(
- 		mark_inode_rl(mp, stack_top);
- 
- 		/* Set nbno to the bno of the next refcount change */
--		if (n < slab_count(rmaps))
-+		if (n < slab_count(rmaps) && array_cur)
- 			nbno = array_cur->rm_startblock;
- 		else
- 			nbno = NULLAGBLOCK;
-diff --git a/repair/slab.h b/repair/slab.h
-index 4aa5512..a2201f1 100644
---- a/repair/slab.h
-+++ b/repair/slab.h
-@@ -54,7 +54,7 @@ extern void *bag_item(struct xfs_bag *, size_t);
- 
- #define foreach_bag_ptr_reverse(bag, idx, ptr) \
- 	for ((idx) = bag_count(bag) - 1, (ptr) = bag_item((bag), (idx)); \
--	     (idx) >= 0 && (ptr) != NULL; \
-+	     (ptr) != NULL; \
- 	     (idx)--, (ptr) = bag_item((bag), (idx)))
- 
- #endif /* SLAB_H_ */
+*shrug*
 
+-Eric
+
+> ---
+>  fs/xfs/libxfs/xfs_dir2.h      |    3 +++
+>  fs/xfs/libxfs/xfs_dir2_data.c |   24 +++++++++++++++++-------
+>  2 files changed, 20 insertions(+), 7 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> index becc926..42456de 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.h
+> +++ b/fs/xfs/libxfs/xfs_dir2.h
+> @@ -157,6 +157,9 @@ extern int xfs_dir2_isleaf(struct xfs_da_args *args, int *r);
+>  extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
+>  				struct xfs_buf *bp);
+>  
+> +extern void xfs_dir2_data_freescan_hdr(struct xfs_da_geometry *geo,
+> +		const struct xfs_dir_ops *ops,
+> +		struct xfs_dir2_data_hdr *hdr, int *loghead);
+>  extern void xfs_dir2_data_freescan(struct xfs_inode *dp,
+>  		struct xfs_dir2_data_hdr *hdr, int *loghead);
+>  extern void xfs_dir2_data_log_entry(struct xfs_da_args *args,
+> diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+> index 725fc78..1729eb2 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_data.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_data.c
+> @@ -505,8 +505,9 @@ xfs_dir2_data_freeremove(
+>   * Given a data block, reconstruct its bestfree map.
+>   */
+>  void
+> -xfs_dir2_data_freescan(
+> -	struct xfs_inode	*dp,
+> +xfs_dir2_data_freescan_hdr(
+> +	struct xfs_da_geometry	*geo,
+> +	const struct xfs_dir_ops *ops,
+>  	struct xfs_dir2_data_hdr *hdr,
+>  	int			*loghead)
+>  {
+> @@ -516,7 +517,6 @@ xfs_dir2_data_freescan(
+>  	struct xfs_dir2_data_free *bf;
+>  	char			*endp;		/* end of block's data */
+>  	char			*p;		/* current entry pointer */
+> -	struct xfs_da_geometry	*geo = dp->i_mount->m_dir_geo;
+>  
+>  	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+>  	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
+> @@ -526,13 +526,13 @@ xfs_dir2_data_freescan(
+>  	/*
+>  	 * Start by clearing the table.
+>  	 */
+> -	bf = dp->d_ops->data_bestfree_p(hdr);
+> +	bf = ops->data_bestfree_p(hdr);
+>  	memset(bf, 0, sizeof(*bf) * XFS_DIR2_DATA_FD_COUNT);
+>  	*loghead = 1;
+>  	/*
+>  	 * Set up pointers.
+>  	 */
+> -	p = (char *)dp->d_ops->data_entry_p(hdr);
+> +	p = (char *)ops->data_entry_p(hdr);
+>  	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+>  	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
+>  		btp = xfs_dir2_block_tail_p(geo, hdr);
+> @@ -559,12 +559,22 @@ xfs_dir2_data_freescan(
+>  		else {
+>  			dep = (xfs_dir2_data_entry_t *)p;
+>  			ASSERT((char *)dep - (char *)hdr ==
+> -			       be16_to_cpu(*dp->d_ops->data_entry_tag_p(dep)));
+> -			p += dp->d_ops->data_entsize(dep->namelen);
+> +			       be16_to_cpu(*ops->data_entry_tag_p(dep)));
+> +			p += ops->data_entsize(dep->namelen);
+>  		}
+>  	}
+>  }
+>  
+> +void
+> +xfs_dir2_data_freescan(
+> +	struct xfs_inode	*dp,
+> +	struct xfs_dir2_data_hdr *hdr,
+> +	int			*loghead)
+> +{
+> +	return xfs_dir2_data_freescan_hdr(dp->i_mount->m_dir_geo, dp->d_ops,
+> +			hdr, loghead);
+> +}
+> +
+>  /*
+>   * Initialize a data block at the given block number in the directory.
+>   * Give back the buffer for the created block.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
