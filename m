@@ -1,48 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51458 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934987AbcKMTHi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Nov 2016 14:07:38 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: an iomap-based direct I/O implementation V3
-Date: Sun, 13 Nov 2016 20:07:29 +0100
-Message-Id: <1479064054-10474-1-git-send-email-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:25200 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934946AbcKDSay (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:30:54 -0400
+Subject: [PATCH 07/11] libxfs: fix whitespace to match the kernel
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 11:30:48 -0700
+Message-ID: <147828424894.31492.17959603161330927485.stgit@birch.djwong.org>
+In-Reply-To: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
+References: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+Fix some minor whitespace errors so that my automated libxfs diff
+scanning will stop reporting this.
 
-this series adds a new direct I/O implementation based on the iomap
-interface, and switches XFS to use it.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/xfs_dir2_node.c  |    2 ++
+ libxfs/xfs_format.h     |    1 -
+ libxfs/xfs_inode_buf.c  |    1 -
+ libxfs/xfs_inode_fork.c |    1 +
+ 4 files changed, 3 insertions(+), 2 deletions(-)
 
-The first two patches are a resend of my earlier series to remove the
-XFS iolock.  They are needed for the lockdep assert in the new iomap
-code.
 
-The rest implements a new iomap_dio_rw direct I/O implementation and
-switches XFS to use it.
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index df599f9..b75b432 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -2146,12 +2146,14 @@ xfs_dir2_node_replace(
+ 	state = xfs_da_state_alloc();
+ 	state->args = args;
+ 	state->mp = args->dp->i_mount;
++
+ 	/*
+ 	 * We have to save new inode number and ftype since
+ 	 * xfs_da3_node_lookup_int() is going to overwrite them
+ 	 */
+ 	inum = args->inumber;
+ 	ftype = args->filetype;
++
+ 	/*
+ 	 * Lookup the entry to change in the btree.
+ 	 */
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 172fdfb..8628bab 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -473,7 +473,6 @@ xfs_sb_has_ro_compat_feature(
+ #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
+ #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
+ #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
+-
+ #define XFS_SB_FEAT_INCOMPAT_ALL \
+ 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
+ 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 4796a59..8732359 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -537,7 +537,6 @@ xfs_iread(
+ 	}
+ 
+ 	ASSERT(ip->i_d.di_version >= 2);
+-
+ 	ip->i_delayed_blks = 0;
+ 
+ 	/*
+diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
+index 8212f77..2799e2d 100644
+--- a/libxfs/xfs_inode_fork.c
++++ b/libxfs/xfs_inode_fork.c
+@@ -29,6 +29,7 @@
+ #include "xfs_attr_sf.h"
+ #include "xfs_da_format.h"
+ 
++
+ kmem_zone_t *xfs_ifork_zone;
+ 
+ STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
 
-Note that this series is on top of a merge of the XFS for-next
-tree with the block tree, which has a new helper needed for this
-implementation.  This is the block tree it's on top of:
-
-    git://git.kernel.dk/linux-block for-4.10/block
-
-To make everyones life easie I also have a git tree with the merge
-plus the patches in this series available here:
-
-    git://git.infradead.org/users/hch/vfs.git iomap-dio.3
-
-Changes since V2:
- - added a few comments to unconfuse reviewers
- - added a iomap_dio_set_error helper
- - dropped support for not filling holes on writes
- - pulled in a more recent block tree (blk_poll -> blk_mq_poll)
-
-Changes since V1:
- - dropped the bio_iov_iter_get_pages patch, now merged in the block tree
- - rebased on top of a merge of the XFS tree with the block tree
- - stopped using WRITE_ODIRECT which has been removed in the block tree
