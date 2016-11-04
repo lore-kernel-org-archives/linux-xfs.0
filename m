@@ -1,61 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33660 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752892AbcKDAhE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Nov 2016 20:37:04 -0400
-Subject: Re: Can I add external log device after filesystem was created?
-References: <CACNifpV5z3r0WB3xypSfGxk6E-=b+3TWrsS4Od7+bKwmmD3yeA@mail.gmail.com>
- <1e60fac5-f2b9-3903-c18c-0a73d0206e0a@sandeen.net>
- <CACNifpV7qQ_5YzJJfdaKi3SThBa7x4N=VNeK1f_OkijiXh6zPA@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ba7f0c5e-2e89-98b6-f1ff-9ad00334fcba@sandeen.net>
-Date: Thu, 3 Nov 2016 19:37:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <CACNifpV7qQ_5YzJJfdaKi3SThBa7x4N=VNeK1f_OkijiXh6zPA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([198.137.202.9]:52829 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936176AbcKDQVX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 12:21:23 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/5] locking/lockdep: Provide a type check for lock_is_held
+Date: Fri,  4 Nov 2016 10:21:15 -0600
+Message-Id: <1478276479-10749-2-git-send-email-hch@lst.de>
+In-Reply-To: <1478276479-10749-1-git-send-email-hch@lst.de>
+References: <1478276479-10749-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Marcin Sura <mailing-lists@sura.pl>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: axboe@fb.com, kent.overstreet@gmail.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>
 
-If it's just test data, I can give you a recipe for moving it with
-xfs_db, I think - if you're willing to lose the filesystem if
-something goes wrong.  ;)
+From: Peter Zijlstra <peterz@infradead.org>
 
--Eric
+Christoph requested lockdep_assert_held() variants that distinguish
+between held-for-read or held-for-write.
 
-On 11/3/16 4:14 PM, Marcin Sura wrote:
-> Hi,
-> 
-> We are building huge test system with hundreds TB of data. We want to
-> execute some performance tests without and with external log device.
-> Filling in the data is a time consuming process, so my first idea was
-> to create the filesystem without external log, execute the tests and
-> then add external log and repeat the tests without recreating the
-> filesystem. Now I know I have to do this. Thanks
-> 
-> BR
-> Marcin
-> 
-> 2016-11-03 20:57 GMT+01:00 Eric Sandeen <sandeen@sandeen.net>:
->> On 11/3/16 2:28 PM, Marcin Sura wrote:
->>> Hi,
->>>
->>> I've created filesystem with default mkfs.xfs command, started to use
->>> the filesystem. Few days later I've got nice SSD-based lun which can
->>> be used as external log device.
->>>
->>> Can I add that lun as external log device to an existing filesystem? How?
->>>
->>> BR
->>> Marcin
->>
->> There is no supported mechanism for doing this.  It can be done with xfs_db
->> disk-editing surgery, but that's not really recommended.
->>
->> What is your reason for wanting to move the log?
->>
->> -Eric
-> 
+Provide:
+
+  int lock_is_held_type(struct lockdep_map *lock, int read)
+
+which takes the same argument as lock_acquire(.read) and matches it to
+the held_lock instance.
+
+Use of this function should be gated by the debug_locks variable. When
+that is 0 the return value of the lock_is_held_type() function is
+undefined. This is done to allow both negative and positive tests for
+holding locks.
+
+By default we provide (positive) lockdep_assert_held{,_exclusive,_read}()
+macros.
+
+Requested-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+---
+ include/linux/lockdep.h  | 25 +++++++++++++++++++++++--
+ kernel/locking/lockdep.c | 20 ++++++++++++--------
+ 2 files changed, 35 insertions(+), 10 deletions(-)
+
+diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
+index c1458fe..a87f3c9 100644
+--- a/include/linux/lockdep.h
++++ b/include/linux/lockdep.h
+@@ -338,9 +338,18 @@ extern void lock_acquire(struct lockdep_map *lock, unsigned int subclass,
+ extern void lock_release(struct lockdep_map *lock, int nested,
+ 			 unsigned long ip);
+ 
+-#define lockdep_is_held(lock)	lock_is_held(&(lock)->dep_map)
++/*
++ * Same "read" as for lock_acquire(), except -1 means any.
++ */
++extern int lock_is_held_type(struct lockdep_map *lock, int read);
++
++static inline int lock_is_held(struct lockdep_map *lock)
++{
++	return lock_is_held_type(lock, -1);
++}
+ 
+-extern int lock_is_held(struct lockdep_map *lock);
++#define lockdep_is_held(lock)		lock_is_held(&(lock)->dep_map)
++#define lockdep_is_held_type(lock, r)	lock_is_held_type(&(lock)->dep_map, (r))
+ 
+ extern void lock_set_class(struct lockdep_map *lock, const char *name,
+ 			   struct lock_class_key *key, unsigned int subclass,
+@@ -372,6 +381,14 @@ extern void lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie);
+ 		WARN_ON(debug_locks && !lockdep_is_held(l));	\
+ 	} while (0)
+ 
++#define lockdep_assert_held_exclusive(l)	do {			\
++		WARN_ON(debug_locks && !lockdep_is_held_type(l, 0));	\
++	} while (0)
++
++#define lockdep_assert_held_read(l)	do {				\
++		WARN_ON(debug_locks && !lockdep_is_held_type(l, 1));	\
++	} while (0)
++
+ #define lockdep_assert_held_once(l)	do {				\
+ 		WARN_ON_ONCE(debug_locks && !lockdep_is_held(l));	\
+ 	} while (0)
+@@ -428,7 +445,11 @@ struct lock_class_key { };
+ 
+ #define lockdep_depth(tsk)	(0)
+ 
++#define lockdep_is_held_type(l, r)		do { (void)(l); } while (0)
++
+ #define lockdep_assert_held(l)			do { (void)(l); } while (0)
++#define lockdep_assert_held_exclusive(l)	do { (void)(l); } while (0)
++#define lockdep_assert_held_read(l)		do { (void)(l); } while (0)
+ #define lockdep_assert_held_once(l)		do { (void)(l); } while (0)
+ 
+ #define lockdep_recursing(tsk)			(0)
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index 589d763..cff580a 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -3188,7 +3188,7 @@ print_lock_nested_lock_not_held(struct task_struct *curr,
+ 	return 0;
+ }
+ 
+-static int __lock_is_held(struct lockdep_map *lock);
++static int __lock_is_held(struct lockdep_map *lock, int read);
+ 
+ /*
+  * This gets called for every mutex_lock*()/spin_lock*() operation.
+@@ -3329,7 +3329,7 @@ static int __lock_acquire(struct lockdep_map *lock, unsigned int subclass,
+ 	}
+ 	chain_key = iterate_chain_key(chain_key, class_idx);
+ 
+-	if (nest_lock && !__lock_is_held(nest_lock))
++	if (nest_lock && !__lock_is_held(nest_lock, -1))
+ 		return print_lock_nested_lock_not_held(curr, hlock, ip);
+ 
+ 	if (!validate_chain(curr, lock, hlock, chain_head, chain_key))
+@@ -3576,7 +3576,7 @@ __lock_release(struct lockdep_map *lock, int nested, unsigned long ip)
+ 	return 1;
+ }
+ 
+-static int __lock_is_held(struct lockdep_map *lock)
++static int __lock_is_held(struct lockdep_map *lock, int read)
+ {
+ 	struct task_struct *curr = current;
+ 	int i;
+@@ -3584,8 +3584,12 @@ static int __lock_is_held(struct lockdep_map *lock)
+ 	for (i = 0; i < curr->lockdep_depth; i++) {
+ 		struct held_lock *hlock = curr->held_locks + i;
+ 
+-		if (match_held_lock(hlock, lock))
+-			return 1;
++		if (match_held_lock(hlock, lock)) {
++			if (read == -1 || hlock->read == read)
++				return 1;
++
++			return 0;
++		}
+ 	}
+ 
+ 	return 0;
+@@ -3769,7 +3773,7 @@ void lock_release(struct lockdep_map *lock, int nested,
+ }
+ EXPORT_SYMBOL_GPL(lock_release);
+ 
+-int lock_is_held(struct lockdep_map *lock)
++int lock_is_held_type(struct lockdep_map *lock, int read)
+ {
+ 	unsigned long flags;
+ 	int ret = 0;
+@@ -3781,13 +3785,13 @@ int lock_is_held(struct lockdep_map *lock)
+ 	check_flags(flags);
+ 
+ 	current->lockdep_recursion = 1;
+-	ret = __lock_is_held(lock);
++	ret = __lock_is_held(lock, read);
+ 	current->lockdep_recursion = 0;
+ 	raw_local_irq_restore(flags);
+ 
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(lock_is_held);
++EXPORT_SYMBOL_GPL(lock_is_held_type);
+ 
+ struct pin_cookie lock_pin_lock(struct lockdep_map *lock)
+ {
+-- 
+2.1.4
+
