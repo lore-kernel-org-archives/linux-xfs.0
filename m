@@ -1,101 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58529 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:52751 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754386AbcKUQjX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2016 11:39:23 -0500
-Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-        id 1c8rco-0001T9-7x
-        for linux-xfs@vger.kernel.org; Mon, 21 Nov 2016 16:39:22 +0000
+        with ESMTP id S936176AbcKDQVV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 12:21:21 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/14] xfs: use new extent lookup helpers xfs_file_iomap_begin_delay
-Date: Mon, 21 Nov 2016 17:38:49 +0100
-Message-Id: <1479746336-10986-8-git-send-email-hch@lst.de>
-In-Reply-To: <1479746336-10986-1-git-send-email-hch@lst.de>
-References: <1479746336-10986-1-git-send-email-hch@lst.de>
+Subject: an iomap-based direct I/O implementation V2
+Date: Fri,  4 Nov 2016 10:21:14 -0600
+Message-Id: <1478276479-10749-1-git-send-email-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: axboe@fb.com, kent.overstreet@gmail.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
 
-And only lookup the previous extent inside xfs_iomap_prealloc_size
-if we actually need it.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_iomap.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+this series adds a new direct I/O implementation based on the iomap
+interface, and switches XFS to use it.
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 59ffcac..2272190 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -395,11 +395,12 @@ xfs_iomap_prealloc_size(
- 	struct xfs_inode	*ip,
- 	loff_t			offset,
- 	loff_t			count,
--	xfs_extnum_t		idx,
--	struct xfs_bmbt_irec	*prev)
-+	xfs_extnum_t		idx)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
- 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	struct xfs_bmbt_irec	prev;
- 	int			shift = 0;
- 	int64_t			freesp;
- 	xfs_fsblock_t		qblocks;
-@@ -419,8 +420,8 @@ xfs_iomap_prealloc_size(
- 	 */
- 	if ((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ||
- 	    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign) ||
--	    idx == 0 ||
--	    prev->br_startoff + prev->br_blockcount < offset_fsb)
-+	    !xfs_iext_get_extent(ifp, idx - 1, &prev) ||
-+	    prev.br_startoff + prev.br_blockcount < offset_fsb)
- 		return mp->m_writeio_blocks;
- 
- 	/*
-@@ -439,8 +440,8 @@ xfs_iomap_prealloc_size(
- 	 * always extends to MAXEXTLEN rather than falling short due to things
- 	 * like stripe unit/width alignment of real extents.
- 	 */
--	if (prev->br_blockcount <= (MAXEXTLEN >> 1))
--		alloc_blocks = prev->br_blockcount << 1;
-+	if (prev.br_blockcount <= (MAXEXTLEN >> 1))
-+		alloc_blocks = prev.br_blockcount << 1;
- 	else
- 		alloc_blocks = XFS_B_TO_FSB(mp, offset);
- 	if (!alloc_blocks)
-@@ -538,7 +539,6 @@ xfs_file_iomap_begin_delay(
- 	xfs_fileoff_t		end_fsb, orig_end_fsb;
- 	int			error = 0, eof = 0;
- 	struct xfs_bmbt_irec	got;
--	struct xfs_bmbt_irec	prev;
- 	xfs_extnum_t		idx;
- 
- 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
-@@ -563,8 +563,7 @@ xfs_file_iomap_begin_delay(
- 			goto out_unlock;
- 	}
- 
--	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
--			&got, &prev);
-+	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
- 	if (!eof && got.br_startoff <= offset_fsb) {
- 		if (xfs_is_reflink_inode(ip)) {
- 			bool		shared;
-@@ -601,8 +600,7 @@ xfs_file_iomap_begin_delay(
- 	if (eof) {
- 		xfs_fsblock_t	prealloc_blocks;
- 
--		prealloc_blocks =
--			xfs_iomap_prealloc_size(ip, offset, count, idx, &prev);
-+		prealloc_blocks = xfs_iomap_prealloc_size(ip, offset, count, idx);
- 		if (prealloc_blocks) {
- 			xfs_extlen_t	align;
- 			xfs_off_t	end_offset;
--- 
-2.1.4
+The first two patches are a resend of my earlier series to remove the
+XFS iolock.  They are needed for the lockdep assert in the new iomap
+code.
 
+The rest implements a new iomap_dio_rw direct I/O implementation and
+switches XFS to use it.
+
+Note that this series is on top of a merge of the XFS for-next
+tree with the block tree, which has a new helper needed for this
+implementation.  This is the block tree it's on top of:
+
+    git://git.kernel.dk/linux-block for-4.10/block
+
+To make everyones life easier І also have a git tree with the merge
+plus the patches in this series available here:
+
+    git://git.infradead.org/users/hch/vfs.git iomap-dio.2
+
+Changes since V1:
+ - dropped the bio_iov_iter_get_pages patch, now merged in the block tree
+ - rebased on top of a merge of the XFS tree with the block tree
+ - stopped using WRITE_ODIRECT which has been removed in the block tree
