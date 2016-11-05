@@ -1,70 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:64493 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751350AbcKGEqw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Nov 2016 23:46:52 -0500
-Date: Mon, 7 Nov 2016 15:46:48 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] fstests: make xfs_io mandatory
-Message-ID: <20161107044648.GI28177@dastard>
-References: <1478456601-7085-1-git-send-email-eguan@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:18800 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754187AbcKEA0q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:26:46 -0400
+Subject: [PATCH 20/39] xfs: scrub directories
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:26:42 -0700
+Message-ID: <147830560225.4165.236927505212222540.stgit@birch.djwong.org>
+In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1478456601-7085-1-git-send-email-eguan@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Nov 07, 2016 at 02:23:21AM +0800, Eryu Guan wrote:
-> _test_inode_flag() and _test_inode_extsz() use "which $XFS_IO_PROG"
-> to check if xfs_io command is available. And "-i" option was added
-> to XFS_IO_PROG varibable by commit 54659ecdb575 ("fstests: run
-> xfs_io with -i option if supported"). So the command becomes "which
-> /usr/sbin/xfs_io -i", and it stops and waits for input from stdin,
-> because "-i" option of "which" means "Read aliases from stdin".
+Scrub all the entries, hash tree, and freespace data in a
+directory.
 
-Funnily enough, I looked at those functions a couple of days ago and
-thought "wow, they must have been written a long time ago if they
-are trying to work if xfs_io is installed"...
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/xfs_dir2_priv.h |    2 ++
+ libxfs/xfs_fs.h        |    3 ++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-> I've seen xfs/008 hang when testing with latest xfsprogs, where
-> xfs_io has "-i" support.
-> 
-> Fix it by removing the xfs_io command detections, and making xfs_io
-> mandatory in common/config.
-> 
-> Also fix the indentions in these functions, use tab instead of
-> spaces, while we're at it.
 
-Yeah, I noticed that too :P
+diff --git a/libxfs/xfs_dir2_priv.h b/libxfs/xfs_dir2_priv.h
+index 1abd314..5e54571 100644
+--- a/libxfs/xfs_dir2_priv.h
++++ b/libxfs/xfs_dir2_priv.h
+@@ -131,5 +131,7 @@ extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
+ /* xfs_dir2_readdir.c */
+ extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
+ 		       size_t bufsize);
++extern int xfs_readdir_locked(struct xfs_trans *tp, struct xfs_inode *dp,
++		       struct dir_context *ctx, size_t bufsize);
+ 
+ #endif /* __XFS_DIR2_PRIV_H__ */
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index fc8efef..5dfa0bb 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -613,7 +613,8 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_TYPE_BMBTD	12	/* data fork block mapping */
+ #define XFS_SCRUB_TYPE_BMBTA	13	/* attr fork block mapping */
+ #define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
+-#define XFS_SCRUB_TYPE_MAX	14
++#define XFS_SCRUB_TYPE_DIR	15	/* directory */
++#define XFS_SCRUB_TYPE_MAX	15
+ 
+ #define XFS_SCRUB_FLAG_REPAIR	0x1	/* i: repair this metadata */
+ #define XFS_SCRUB_FLAG_CORRUPT	0x2	/* o: needs repair */
 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
->  common/config |  4 +++-
->  common/rc     | 24 ++++++++++--------------
->  tests/xfs/094 |  1 -
->  tests/xfs/103 |  1 -
->  4 files changed, 13 insertions(+), 17 deletions(-)
-> 
-> diff --git a/common/config b/common/config
-> index 168f46c..0b6cf01 100644
-> --- a/common/config
-> +++ b/common/config
-> @@ -158,11 +158,13 @@ export DF_PROG="`set_prog_path df`"
->  [ "$DF_PROG" = "" ] && _fatal "df not found"
->  [ "$HOSTOS" = "Linux" ] && export DF_PROG="$DF_PROG -T -P"
->  
-> +export XFS_IO_PROG="`set_prog_path xfs_io`"
-> +[ "$XFS_IO_PROG" = "" ] && _fatal "xfs_io not found"
-> +
-
-Yup, seems like a reasonable thing to do at this point.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
