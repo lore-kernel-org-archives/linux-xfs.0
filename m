@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:57523 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750795AbcKEVqk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Nov 2016 17:46:40 -0400
-Date: Sun, 6 Nov 2016 08:46:36 +1100
-From: Dave Chinner <david@fromorbit.com>
+Received: from mx2.suse.de ([195.135.220.15]:41528 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750801AbcKEWeG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 5 Nov 2016 18:34:06 -0400
+Date: Sat, 5 Nov 2016 23:34:04 +0100
+From: Jan Kara <jack@suse.cz>
 Subject: Re: XFS deadlock while running generic/019 test
-Message-ID: <20161105214636.GL14023@dastard>
+Message-ID: <20161105223404.GE32353@quack2.suse.cz>
 References: <20161104182308.GC6650@quack2.suse.cz>
  <20161104182817.GE32036@birch.djwong.org>
 MIME-Version: 1.0
@@ -19,7 +19,7 @@ List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org
 
-On Fri, Nov 04, 2016 at 11:28:17AM -0700, Darrick J. Wong wrote:
+On Fri 04-11-16 11:28:17, Darrick J. Wong wrote:
 > On Fri, Nov 04, 2016 at 07:23:08PM +0100, Jan Kara wrote:
 > > Hi,
 > > 
@@ -66,11 +66,13 @@ On Fri, Nov 04, 2016 at 11:28:17AM -0700, Darrick J. Wong wrote:
 > it's worth a shot if you can get it to reproduce quickly/consistently.
 > 
 > (AFAIK it's still soaking in linux-next...)
+> [1] https://www.spinics.net/lists/linux-xfs/msg01737.html
 
-Argh. I committed it (it's in for-next), but then tagged the prior
-commit when sending the -rc3 fixes to linus. I'll sort it.
+Thanks. This seems to have fixed the hang for me (only the xfstest still
+seems to fail because of some unexpected errors in dmesg).
 
--Dave.
+								Honza
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
