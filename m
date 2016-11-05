@@ -1,207 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18620 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754105AbcKEAZc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:25:32 -0400
-Subject: [PATCH 09/39] xfs: generic functions to scrub metadata and btrees
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:25:29 -0700
-Message-ID: <147830552967.4165.1042344470682230569.stgit@birch.djwong.org>
-In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
-References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51566 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751524AbcKEFvO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 5 Nov 2016 01:51:14 -0400
+Date: Sat, 5 Nov 2016 13:51:11 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH] xfs/021: filter out detailed array element info from
+ xfs_db
+Message-ID: <20161105055111.GW30105@dhcp12-143.nay.redhat.com>
+References: <1478276170-6618-1-git-send-email-eguan@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1478276170-6618-1-git-send-email-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Create a function that walks a btree, checking the integrity of each
-btree block (headers, keys, records) and calling back to the caller
-to perform further checks on the records.  Add some helper functions
-so that we report detailed scrub errors in a uniform manner in dmesg.
-These are helper functions for subsequent patches.
+On Sat, Nov 05, 2016 at 12:16:10AM +0800, Eryu Guan wrote:
+> Starting from xfsprogs commit 384283555871 ("xfs_db: print one array
+> element per line"), xfs_db prints one array element per line. This
+> breaks the filter in xfs/021, which now fails as:
+> 
+>   hdr.freemap[0-2] = [base,size] [FREEMAP..]
+>  +0:[104,1892]
+>  +1:[0,0]
+>  +2:[0,0]
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/xfs_alloc.c  |    2 +-
- libxfs/xfs_alloc.h  |    2 ++
- libxfs/xfs_btree.c  |   41 +++++++++++++++++++++++++++++++++++------
- libxfs/xfs_btree.h  |   17 +++++++++++++++--
- libxfs/xfs_format.h |    2 +-
- 5 files changed, 54 insertions(+), 10 deletions(-)
+Hmm... So [FREEMAP..] was printed in one line, but now every records
+will take one line.
 
+>   entries[0-2] = [hashval,nameidx,incomplete,root,local] [ENTRIES..]
+> 
+> So we have extra lines that need to be filtered out,
+> 
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
+>  tests/xfs/021 | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/tests/xfs/021 b/tests/xfs/021
+> index 67a4346..b99eff7 100755
+> --- a/tests/xfs/021
+> +++ b/tests/xfs/021
+> @@ -151,7 +151,7 @@ s/^(hdr.info.magic =) 0x3bee/\1 0xfbee/;
+>  s/^(hdr.firstused =) (\d+)/\1 FIRSTUSED/;
+>  s/^(hdr.freemap\[0-2] = \[base,size]).*/\1 [FREEMAP..]/;
 
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 3bfca12..0cb8db7 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -625,7 +625,7 @@ const struct xfs_buf_ops xfs_agfl_buf_ops = {
- /*
-  * Read in the allocation group free block array.
-  */
--STATIC int				/* error */
-+int					/* error */
- xfs_alloc_read_agfl(
- 	xfs_mount_t	*mp,		/* mount point structure */
- 	xfs_trans_t	*tp,		/* transaction pointer */
-diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
-index 0dc34bf..89a23be 100644
---- a/libxfs/xfs_alloc.h
-+++ b/libxfs/xfs_alloc.h
-@@ -217,6 +217,8 @@ xfs_alloc_get_rec(
- 
- int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
- 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
-+int xfs_alloc_read_agfl(struct xfs_mount *mp, struct xfs_trans *tp,
-+			xfs_agnumber_t agno, struct xfs_buf **bpp);
- int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
- int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
- 		struct xfs_buf **agbp);
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index ee2e489..4a291cc 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -548,7 +548,7 @@ xfs_btree_ptr_offset(
- /*
-  * Return a pointer to the n-th record in the btree block.
-  */
--STATIC union xfs_btree_rec *
-+union xfs_btree_rec *
- xfs_btree_rec_addr(
- 	struct xfs_btree_cur	*cur,
- 	int			n,
-@@ -561,7 +561,7 @@ xfs_btree_rec_addr(
- /*
-  * Return a pointer to the n-th key in the btree block.
-  */
--STATIC union xfs_btree_key *
-+union xfs_btree_key *
- xfs_btree_key_addr(
- 	struct xfs_btree_cur	*cur,
- 	int			n,
-@@ -574,7 +574,7 @@ xfs_btree_key_addr(
- /*
-  * Return a pointer to the n-th high key in the btree block.
-  */
--STATIC union xfs_btree_key *
-+union xfs_btree_key *
- xfs_btree_high_key_addr(
- 	struct xfs_btree_cur	*cur,
- 	int			n,
-@@ -587,7 +587,7 @@ xfs_btree_high_key_addr(
- /*
-  * Return a pointer to the n-th block pointer in the btree block.
-  */
--STATIC union xfs_btree_ptr *
-+union xfs_btree_ptr *
- xfs_btree_ptr_addr(
- 	struct xfs_btree_cur	*cur,
- 	int			n,
-@@ -621,7 +621,7 @@ xfs_btree_get_iroot(
-  * Retrieve the block pointer from the cursor at the given level.
-  * This may be an inode btree root or from a buffer.
-  */
--STATIC struct xfs_btree_block *		/* generic btree block pointer */
-+struct xfs_btree_block *		/* generic btree block pointer */
- xfs_btree_get_block(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
- 	int			level,	/* level in btree */
-@@ -1732,7 +1732,7 @@ xfs_btree_decrement(
- 	return error;
- }
- 
--STATIC int
-+int
- xfs_btree_lookup_get_block(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
- 	int			level,	/* level in the btree */
-@@ -4862,3 +4862,32 @@ xfs_btree_count_blocks(
- 	return xfs_btree_visit_blocks(cur, xfs_btree_count_blocks_helper,
- 			blocks);
- }
-+
-+/* If there's an extent, we're done. */
-+STATIC int
-+xfs_btree_has_record_helper(
-+	struct xfs_btree_cur		*cur,
-+	union xfs_btree_rec		*rec,
-+	void				*priv)
-+{
-+	return XFS_BTREE_QUERY_RANGE_ABORT;
-+}
-+
-+/* Is there a record covering a given range of keys? */
-+int
-+xfs_btree_has_record(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_irec	*low,
-+	union xfs_btree_irec	*high,
-+	bool			*exists)
-+{
-+	int			error;
-+
-+	error = xfs_btree_query_range(cur, low, high,
-+			&xfs_btree_has_record_helper, NULL);
-+	if (error && error != XFS_BTREE_QUERY_RANGE_ABORT)
-+		return error;
-+	*exists = error == XFS_BTREE_QUERY_RANGE_ABORT;
-+
-+	return 0;
-+}
-diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index 6ef5373..0210662 100644
---- a/libxfs/xfs_btree.h
-+++ b/libxfs/xfs_btree.h
-@@ -197,7 +197,6 @@ struct xfs_btree_ops {
- 
- 	const struct xfs_buf_ops	*buf_ops;
- 
--#if defined(DEBUG) || defined(XFS_WARN)
- 	/* check that k1 is lower than k2 */
- 	int	(*keys_inorder)(struct xfs_btree_cur *cur,
- 				union xfs_btree_key *k1,
-@@ -207,7 +206,6 @@ struct xfs_btree_ops {
- 	int	(*recs_inorder)(struct xfs_btree_cur *cur,
- 				union xfs_btree_rec *r1,
- 				union xfs_btree_rec *r2);
--#endif
- };
- 
- /*
-@@ -539,4 +537,19 @@ int xfs_btree_visit_blocks(struct xfs_btree_cur *cur,
- 
- int xfs_btree_count_blocks(struct xfs_btree_cur *cur, xfs_extlen_t *blocks);
- 
-+union xfs_btree_rec *xfs_btree_rec_addr(struct xfs_btree_cur *cur, int n,
-+		struct xfs_btree_block *block);
-+union xfs_btree_key *xfs_btree_key_addr(struct xfs_btree_cur *cur, int n,
-+		struct xfs_btree_block *block);
-+union xfs_btree_key *xfs_btree_high_key_addr(struct xfs_btree_cur *cur, int n,
-+		struct xfs_btree_block *block);
-+union xfs_btree_ptr *xfs_btree_ptr_addr(struct xfs_btree_cur *cur, int n,
-+		struct xfs_btree_block *block);
-+int xfs_btree_lookup_get_block(struct xfs_btree_cur *cur, int level,
-+		union xfs_btree_ptr *pp, struct xfs_btree_block **blkp);
-+struct xfs_btree_block *xfs_btree_get_block(struct xfs_btree_cur *cur,
-+		int level, struct xfs_buf **bpp);
-+int xfs_btree_has_record(struct xfs_btree_cur *cur, union xfs_btree_irec *low,
-+		union xfs_btree_irec *high, bool *exists);
-+
- #endif	/* __XFS_BTREE_H__ */
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index e14f964..d819d00 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -518,7 +518,7 @@ static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
- 		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
- }
- 
--static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
-+static inline bool xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
- {
- 	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
- 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
+So this line script trys to deal with all freemap things, but now it
+can't deal with multi-lines output. (Same as below)
 
+>  s/^(entries\[0-2] = \[hashval,nameidx,incomplete,root,local]).*/\1 [ENTRIES..]/;
+> -	print;'
+> +	print unless /^[0-9]/;'
+
+Filter all lines start with a digit(0~9). It works, but I can't be
+sure that if it'll affect others useful error output, maybe more
+accurate expression will be better?
+
+Thanks,
+Zorro
+
+>  
+>  echo "*** done"
+>  exit
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
