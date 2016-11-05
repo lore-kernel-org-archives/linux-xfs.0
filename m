@@ -1,102 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40168 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:49792 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751662AbcKHWka (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Nov 2016 17:40:30 -0500
-Date: Tue, 8 Nov 2016 17:39:31 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH RFC 0/4] xfs: basic cow fork speculative preallocation
-Message-ID: <20161108223930.GA8167@bfoster.bfoster>
-References: <1478636856-7590-1-git-send-email-bfoster@redhat.com>
- <20161108204800.GA16813@birch.djwong.org>
+        id S1750780AbcKECYR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Nov 2016 22:24:17 -0400
+Subject: [PATCH 1/2] xfs: fix up xfs_swap_extent_forks inline extent handling
+References: <d279d52e-49f6-6fc2-c78b-0054d7ee0a1e@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <893a260d-f511-a557-a248-d96a4de4dc8b@sandeen.net>
+Date: Fri, 4 Nov 2016 21:24:16 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161108204800.GA16813@birch.djwong.org>
+In-Reply-To: <d279d52e-49f6-6fc2-c78b-0054d7ee0a1e@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Nov 08, 2016 at 12:48:00PM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 08, 2016 at 03:27:32PM -0500, Brian Foster wrote:
-> > Hi all,
-> > 
-> > This is an experiment based on an idea for COW fork speculative
-> > preallocation. This is experimental, lightly/barely tested and sent in
-> > RFC form to solicit thoughts, ideas or flames before I spend time taking
-> > it further.
-> > 
-> > Patch 1 probably stands on its own. Patches 2 and 3 are some refactoring
-> > and patch 4 implements the basic idea, which is described in the commit
-> > log description. The testing I've done so far is basically similar to
-> > how one would test the effects of traditional speculative preallocation:
-> > write to multiple reflinked files in parallel and examine the resulting
-> > fragmentation. Specifically, I wrote sequentially to 16 different
-> > reflinked files of the same 8GB original (which has two data extents,
-> > completely shared). Without preallocation, the test results in ~248
-> > extents across the 16 files. With preallocation, the test results in 32
-> > extents across the 16 files (i.e., 2 extents per file, same as the
-> > source file).
-> > 
-> > An obvious tradeoff is the unnecessarily aggressive allocation that
-> > might occur in the event of random writes to a large file (such as in
-> > the cloned VM disk image use case), but my thinking is that the
-> > cowblocks tagging and reclaim infrastructure should manage that
-> > sufficiently (lack of testing notwithstanding). In any event, I'm
-> > interested in any thoughts along the lines of whether this is useful at
-> > all, alternative algorithm ideas, etc.
-> 
-> Was about to step out to lunch when this came in, but...
-> 
-> Is there an xfstest for this, so I can play too? :)
-> 
+There have been several reports over the years of NULL pointer
+dereferences in xfs_trans_log_inode during xfs_fsr processes,
+when the process is doing an fput and tearing down extents
+on the temporary inode, something like:
 
-Not yet.. I've only xfstests tested insofar as it hasn't blown anything
-up yet. :) Otherwise, I've just run manual write tests to observe
-whether it is doing what I expect it to in simple cases. It clearly
-needs more work, as noted in the patch, but if this is something worth
-pursuing further I can certainly come up with some tests as well.
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+PID: 29439  TASK: ffff880550584fa0  CPU: 6   COMMAND: "xfs_fsr"
+    [exception RIP: xfs_trans_log_inode+0x10]
+ #9 [ffff8800a57bbbe0] xfs_bunmapi at ffffffffa037398e [xfs]
+#10 [ffff8800a57bbce8] xfs_itruncate_extents at ffffffffa0391b29 [xfs]
+#11 [ffff8800a57bbd88] xfs_inactive_truncate at ffffffffa0391d0c [xfs]
+#12 [ffff8800a57bbdb8] xfs_inactive at ffffffffa0392508 [xfs]
+#13 [ffff8800a57bbdd8] xfs_fs_evict_inode at ffffffffa035907e [xfs]
+#14 [ffff8800a57bbe00] evict at ffffffff811e1b67
+#15 [ffff8800a57bbe28] iput at ffffffff811e23a5
+#16 [ffff8800a57bbe58] dentry_kill at ffffffff811dcfc8
+#17 [ffff8800a57bbe88] dput at ffffffff811dd06c
+#18 [ffff8800a57bbea8] __fput at ffffffff811c823b
+#19 [ffff8800a57bbef0] ____fput at ffffffff811c846e
+#20 [ffff8800a57bbf00] task_work_run at ffffffff81093b27
+#21 [ffff8800a57bbf30] do_notify_resume at ffffffff81013b0c
+#22 [ffff8800a57bbf50] int_signal at ffffffff8161405d
 
-FWIW, that COW fork fiemap hack I sent a bit ago came in handy for
-playing with this as well. :)
+As it turns out, this is because the i_itemp pointer, along
+with the d_ops pointer, has been overwritten with zeros
+when we tear down the extents during truncate.  When the in-core
+inode fork on the temporary inode used by xfs_fsr was originally
+set up during the extent swap, we mistakenly looked at di_nextents
+to determine whether all extents fit inline, but this misses extents
+generated by speculative preallocation; we should be using if_bytes
+instead.
 
-> As far as random writes go, some of the reflink tests look at fragmentation
-> behavior.  generic/301 generic/302 xfs/180 xfs/182 xfs/184 xfs/192 xfs/193
-> xfs/198 xfs/200 xfs/204 xfs/208 xfs/208 xfs/211 xfs/215 xfs/218 xfs/219 xfs/221
-> xfs/223 xfs/224 xfs/225 xfs/226 xfs/228 xfs/230 xfs/231 xfs/232 xfs/344 xfs/345
-> xfs/346 xfs/347 are the ones that grep 'new extents:' picked up.
-> 
+This mistake corrupts the in-memory inode, and code in
+xfs_iext_remove_inline eventually gets bad inputs, causing
+it to memmove and memset incorrect ranges; this became apparent
+because the two values in ifp->if_u2.if_inline_ext[1] contained
+what should have been in d_ops and i_itemp; they were memmoved due
+to incorrect array indexing and then the original locations
+were zeroed with memset, again due to an array overrun.
 
-Ok.
+Fix this by properly using i_df.if_bytes to determine the number
+of extents, not di_nextents.
 
-> Will look at the patches when I get back.
-> 
+Thanks to dchinner for looking at this with me and spotting the
+root cause.
 
-Thanks!
+Cc: stable@vger.kernel.org
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Brian
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 552465e..47074e0 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1792,6 +1792,7 @@
+ 	struct xfs_ifork	tempifp, *ifp, *tifp;
+ 	int			aforkblks = 0;
+ 	int			taforkblks = 0;
++	xfs_extnum_t		nextents;
+ 	__uint64_t		tmp;
+ 	int			error;
+ 
+@@ -1881,7 +1882,8 @@
+ 		 * pointer.  Otherwise it's already NULL or
+ 		 * pointing to the extent.
+ 		 */
+-		if (ip->i_d.di_nextents <= XFS_INLINE_EXTS) {
++		nextents = ip->i_df.if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++		if (nextents <= XFS_INLINE_EXTS) {
+ 			ifp->if_u1.if_extents =
+ 				ifp->if_u2.if_inline_ext;
+ 		}
+@@ -1900,7 +1902,8 @@
+ 		 * pointer.  Otherwise it's already NULL or
+ 		 * pointing to the extent.
+ 		 */
+-		if (tip->i_d.di_nextents <= XFS_INLINE_EXTS) {
++		nextents = tip->i_df.if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++		if (nextents <= XFS_INLINE_EXTS) {
+ 			tifp->if_u1.if_extents =
+ 				tifp->if_u2.if_inline_ext;
+ 		}
 
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > Brian Foster (4):
-> >   xfs: clean up cow fork reservation and tag inodes correctly
-> >   xfs: logically separate iomap range from allocation range
-> >   xfs: reuse xfs_file_iomap_begin_delay() for cow fork delalloc
-> >   xfs: implement basic COW fork speculative preallocation
-> > 
-> >  fs/xfs/xfs_iomap.c   | 132 +++++++++++++++++++++++++++++++++++++++++----------
-> >  fs/xfs/xfs_reflink.c |  28 ++---------
-> >  2 files changed, 111 insertions(+), 49 deletions(-)
-> > 
-> > -- 
-> > 2.7.4
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
