@@ -1,124 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.webx.cz ([109.123.222.201]:53540 "EHLO mail.webx.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932939AbcKHLKk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Nov 2016 06:10:40 -0500
-From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
-Date: Tue, 08 Nov 2016 12:09:51 +0100
-Message-ID: <1655526.YOeIAmCiZd@libor-nb>
-In-Reply-To: <20161031120226.GT14023@dastard>
-References: <5244720.RPRsZ88NJ0@libor-nb> <3301912.kAxTXXYXM8@libor-nb> <20161031120226.GT14023@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:19239 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754371AbcKEA2Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:28:16 -0400
+Subject: [PATCH 34/39] xfs: repair inode block maps
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:28:13 -0700
+Message-ID: <147830569369.4165.912811160069227760.stgit@birch.djwong.org>
+In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hello,
-status update on vps2.
-Booted to kernel 4.7.8-1~bpo8+1, xfsprogs 4.8.0.
+Use the reverse-mapping btree information to rebuild an inode fork.
 
-First check it:
-vps2:~# xfs_repair -n /dev/mapper/vgDisk2-lvData
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-Metadata corruption detected at xfs_attr3_leaf block 0x12645ef8/0x1000
-Metadata corruption detected at xfs_attr3_leaf block 0x12f63f40/0x1000
-        - agno = 2
-Metadata corruption detected at xfs_attr3_leaf block 0x24c17ba8/0x1000
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify link counts...
-No modify flag set, skipping filesystem flush and exiting.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/xfs_bmap.c |   20 ++++++++++++--------
+ libxfs/xfs_bmap.h |    6 +++++-
+ 2 files changed, 17 insertions(+), 9 deletions(-)
+
+
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 0e2f450..53d6848 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -2216,9 +2216,12 @@ xfs_bmap_add_extent_delay_real(
+ 	}
  
-then repair it
-vps2:~# xfs_repair /dev/mapper/vgDisk2-lvData
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-Metadata corruption detected at xfs_attr3_leaf block 0x12645ef8/0x1000
-Metadata corruption detected at xfs_attr3_leaf block 0x12f63f40/0x1000
-        - agno = 2
-Metadata corruption detected at xfs_attr3_leaf block 0x24c17ba8/0x1000
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-Phase 5 - rebuild AG headers and trees...
-        - reset superblock...
-Phase 6 - check inode connectivity...
-        - resetting contents of realtime bitmap and summary inodes
-        - traversing filesystem ...
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify and correct link counts...
-Done
-
-But after approx two hours:
-Nov  8 07:14:12 vps2 kernel: [ 6215.369387] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x12f63f40
-Nov  8 07:14:12 vps2 kernel: [ 6215.369468] XFS (dm-2): Unmount and run xfs_repair
-Nov  8 07:14:12 vps2 kernel: [ 6215.369498] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
-Nov  8 07:14:12 vps2 kernel: [ 6215.369750] XFS (dm-2): metadata I/O error: block 0x12f63f40 ("xfs_trans_read_buf_map") error 117 numblks 8
-Nov  8 07:21:16 vps2 kernel: [ 6639.384423] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x12645ef8
-Nov  8 07:21:16 vps2 kernel: [ 6639.384501] XFS (dm-2): Unmount and run xfs_repair
-Nov  8 07:21:16 vps2 kernel: [ 6639.384530] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
-Nov  8 07:21:16 vps2 kernel: [ 6639.384792] XFS (dm-2): metadata I/O error: block 0x12645ef8 ("xfs_trans_read_buf_map") error 117 numblks 8
-
-No problem since then, for now.
-
-What should be done next?
-
-Thanks,
-Libor
-
-
-On pondělí 31. října 2016 23:02:26 CET Dave Chinner wrote:
-> On Mon, Oct 31, 2016 at 09:54:00AM +0100, Libor Klep�? wrote:
-> > Hello,
-> > i have upgrade VM called vps1 in original email (the one on bottom of
-> > email) to debian kernel 4.7.8-1~bpo8+1 and compiled xfsprogs 4.8.0.
-> > 
-> > Here is output of xfs_repair -n and xfs_repair. Is it supposed to write
-> > if/
-> > what is being repaired, when i forgot -v option?
-> 
-> repair will always tell you if there are errors. The logs you have
-> posted indicate a clean filesystem with no errors.
-> 
-> Cheers,
-> 
-> Dave.
-
+ 	/* add reverse mapping */
+-	error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip, whichfork, new);
+-	if (error)
+-		goto done;
++	if (!(bma->flags & XFS_BMAPI_NORMAP)) {
++		error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip,
++				whichfork, new);
++		if (error)
++			goto done;
++	}
+ 
+ 	/* convert to a btree if necessary */
+ 	if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+@@ -3159,9 +3162,12 @@ xfs_bmap_add_extent_hole_real(
+ 	}
+ 
+ 	/* add reverse mapping */
+-	error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip, whichfork, new);
+-	if (error)
+-		goto done;
++	if (!(bma->flags & XFS_BMAPI_NORMAP)) {
++		error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip,
++				whichfork, new);
++		if (error)
++			goto done;
++	}
+ 
+ 	/* convert to a btree if necessary */
+ 	if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+@@ -4585,8 +4591,6 @@ xfs_bmapi_write(
+ 	ASSERT(len > 0);
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-	ASSERT(!(flags & XFS_BMAPI_REMAP) || whichfork == XFS_DATA_FORK);
+-	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || !(flags & XFS_BMAPI_REMAP));
+ 	ASSERT(!(flags & XFS_BMAPI_CONVERT) || !(flags & XFS_BMAPI_REMAP));
+ 	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || whichfork != XFS_COW_FORK);
+ 	ASSERT(!(flags & XFS_BMAPI_CONVERT) || whichfork != XFS_COW_FORK);
+diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
+index 7cae6ec..9d4754f 100644
+--- a/libxfs/xfs_bmap.h
++++ b/libxfs/xfs_bmap.h
+@@ -110,6 +110,9 @@ struct xfs_extent_free_item
+ /* Map something in the CoW fork. */
+ #define XFS_BMAPI_COWFORK	0x200
+ 
++/* Don't update the rmap btree. */
++#define XFS_BMAPI_NORMAP	0x400
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -120,7 +123,8 @@ struct xfs_extent_free_item
+ 	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
+ 	{ XFS_BMAPI_ZERO,	"ZERO" }, \
+ 	{ XFS_BMAPI_REMAP,	"REMAP" }, \
+-	{ XFS_BMAPI_COWFORK,	"COWFORK" }
++	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
++	{ XFS_BMAPI_NORMAP,	"NORMAP" }
+ 
+ 
+ static inline int xfs_bmapi_aflag(int w)
 
