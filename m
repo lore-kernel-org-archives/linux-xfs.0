@@ -1,43 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36574 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750935AbcKEAIW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:08:22 -0400
-Subject: [PATCH 03/16] xfs_io: fix libxfs naming violation
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:08:17 -0700
-Message-ID: <147830449771.26713.16395684581974689675.stgit@birch.djwong.org>
-In-Reply-To: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
-References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from ares41.inai.de ([46.4.122.207]:52954 "EHLO ares41.inai.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755966AbcKERrP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 5 Nov 2016 13:47:15 -0400
+From: Jan Engelhardt <jengelh@inai.de>
+Subject: [PATCH 1/2] build: resolve autoheader warning
+Date: Sat,  5 Nov 2016 18:38:05 +0100
+Message-Id: <20161105173806.20052-1-jengelh@inai.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-All the calls to libxfs code should start with 'libxfs'
-per libxfs_api_defs.h.
+$ autoreconf -fi
+[...]
+autoheader: warning: missing template: HAVE_UMODE_T
+autoheader: Use AC_DEFINE([HAVE_UMODE_T], [], [Description])
+autoreconf: /usr/bin/autoheader failed with exit status: 1
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Jan Engelhardt <jengelh@inai.de>
 ---
- db/io.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ m4/package_types.m4 | 1 +
+ 1 file changed, 1 insertion(+)
 
-
-diff --git a/db/io.c b/db/io.c
-index 8610f4d..f398195 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -504,7 +504,7 @@ write_cur(void)
- 	/* If we didn't write the crc automatically, re-check inode validity */
- 	if (xfs_sb_version_hascrc(&mp->m_sb) &&
- 	    skip_crc && iocur_top->ino_buf) {
--		iocur_top->ino_crc_ok = xfs_verify_cksum(iocur_top->data,
-+		iocur_top->ino_crc_ok = libxfs_verify_cksum(iocur_top->data,
- 						mp->m_sb.sb_inodesize,
- 						XFS_DINODE_CRC_OFF);
- 	}
+diff --git a/m4/package_types.m4 b/m4/package_types.m4
+index 4aa09a5..1c35839 100644
+--- a/m4/package_types.m4
++++ b/m4/package_types.m4
+@@ -1,6 +1,7 @@
+ #
+ # Check if we have umode_t
+ #
++AH_TEMPLATE([HAVE_UMODE_T], [Whether you have umode_t])
+ AC_DEFUN([AC_TYPE_UMODE_T],
+   [ AC_MSG_CHECKING([for umode_t])
+     AC_TRY_COMPILE([
+-- 
+2.10.2
 
