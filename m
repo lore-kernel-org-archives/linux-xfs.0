@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17876 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:51561 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751493AbcKEAVC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:21:02 -0400
-Subject: [PATCH 18/41] xfs: support scrubbing refcount btree
+        with ESMTP id S1751601AbcKEAKF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:10:05 -0400
+Subject: [PATCH 01/10] libxfs: convert ushort to unsigned short
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:20:59 -0700
-Message-ID: <147830525934.2155.15706433798683898467.stgit@birch.djwong.org>
-In-Reply-To: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
-References: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
+Date: Fri, 04 Nov 2016 17:10:02 -0700
+Message-ID: <147830460253.27129.6331721579622897783.stgit@birch.djwong.org>
+In-Reply-To: <147830459629.27129.4541676333173489075.stgit@birch.djwong.org>
+References: <147830459629.27129.4541676333173489075.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -18,148 +18,105 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Plumb in the pieces necessary to check the refcount btree.  If rmap is
-available, check the reference count by performing an interval query
-against the rmapbt.
-
-v2: Handle the case where the rmap records are not all at least the
-length of the refcount extent.
+Since xfsprogs dropped ushort in favor of unsigned short, do that
+here too.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h             |    3 +-
- fs/xfs/libxfs/xfs_refcount_btree.c |    4 ---
- fs/xfs/xfs_scrub.c                 |   51 ++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trace.h                 |    3 +-
- 4 files changed, 55 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c      |    5 +++--
+ fs/xfs/libxfs/xfs_inode_buf.h   |    4 ++--
+ fs/xfs/libxfs/xfs_log_format.h  |    4 ++--
+ fs/xfs/libxfs/xfs_log_recover.h |    2 +-
+ fs/xfs/xfs_log_recover.c        |    4 ++--
+ 5 files changed, 10 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index a5e0d51..559ee76 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -584,7 +584,8 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_INOBT	7	/* inode btree */
- #define XFS_SCRUB_TYPE_FINOBT	8	/* free inode btree */
- #define XFS_SCRUB_TYPE_RMAPBT	9	/* reverse mapping btree */
--#define XFS_SCRUB_TYPE_MAX	9
-+#define XFS_SCRUB_TYPE_REFCNTBT	10	/* reference count btree */
-+#define XFS_SCRUB_TYPE_MAX	10
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 51b4e0d..c507c1b 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2344,7 +2344,8 @@ xfs_imap(
  
- #define XFS_SCRUB_FLAG_REPAIR	0x1	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x2	/* o: needs repair */
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 453bb27..2b1ea4c 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -285,7 +285,6 @@ const struct xfs_buf_ops xfs_refcountbt_buf_ops = {
- 	.verify_write		= xfs_refcountbt_write_verify,
+ 		imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
+ 		imap->im_len = XFS_FSB_TO_BB(mp, 1);
+-		imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
++		imap->im_boffset = (unsigned short)(offset <<
++							mp->m_sb.sb_inodelog);
+ 		return 0;
+ 	}
+ 
+@@ -2372,7 +2373,7 @@ xfs_imap(
+ 
+ 	imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, cluster_agbno);
+ 	imap->im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
+-	imap->im_boffset = (ushort)(offset << mp->m_sb.sb_inodelog);
++	imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
+ 
+ 	/*
+ 	 * If the inode number maps to a block outside the bounds
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+index 3cfe12a..6848a0a 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -58,8 +58,8 @@ struct xfs_icdinode {
+  */
+ struct xfs_imap {
+ 	xfs_daddr_t	im_blkno;	/* starting BB of inode chunk */
+-	ushort		im_len;		/* length in BBs of inode chunk */
+-	ushort		im_boffset;	/* inode offset in block in bytes */
++	unsigned short	im_len;		/* length in BBs of inode chunk */
++	unsigned short	im_boffset;	/* inode offset in block in bytes */
  };
  
--#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_refcountbt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -306,7 +305,6 @@ xfs_refcountbt_recs_inorder(
- 		be32_to_cpu(r1->refc.rc_blockcount) <=
- 		be32_to_cpu(r2->refc.rc_startblock);
- }
--#endif
+ int	xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 083cdd6..7ae571f 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -481,8 +481,8 @@ static inline uint xfs_log_dinode_size(int version)
+ typedef struct xfs_buf_log_format {
+ 	unsigned short	blf_type;	/* buf log item type indicator */
+ 	unsigned short	blf_size;	/* size of this item */
+-	ushort		blf_flags;	/* misc state */
+-	ushort		blf_len;	/* number of blocks in this buf */
++	unsigned short	blf_flags;	/* misc state */
++	unsigned short	blf_len;	/* number of blocks in this buf */
+ 	__int64_t	blf_blkno;	/* starting blkno of this buf */
+ 	unsigned int	blf_map_size;	/* used size of data bitmap in words */
+ 	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
+diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+index 8e385f9..d9f65e2 100644
+--- a/fs/xfs/libxfs/xfs_log_recover.h
++++ b/fs/xfs/libxfs/xfs_log_recover.h
+@@ -52,7 +52,7 @@ typedef struct xlog_recover {
+ 	struct list_head	r_itemq;	/* q for items */
+ } xlog_recover_t;
  
- static const struct xfs_btree_ops xfs_refcountbt_ops = {
- 	.rec_len		= sizeof(struct xfs_refcount_rec),
-@@ -325,10 +323,8 @@ static const struct xfs_btree_ops xfs_refcountbt_ops = {
- 	.key_diff		= xfs_refcountbt_key_diff,
- 	.buf_ops		= &xfs_refcountbt_buf_ops,
- 	.diff_two_keys		= xfs_refcountbt_diff_two_keys,
--#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_refcountbt_keys_inorder,
- 	.recs_inorder		= xfs_refcountbt_recs_inorder,
--#endif
- };
+-#define ITEM_TYPE(i)	(*(ushort *)(i)->ri_buf[0].i_addr)
++#define ITEM_TYPE(i)	(*(unsigned short *)(i)->ri_buf[0].i_addr)
  
  /*
-diff --git a/fs/xfs/xfs_scrub.c b/fs/xfs/xfs_scrub.c
-index 1f682b4..ab92ea4 100644
---- a/fs/xfs/xfs_scrub.c
-+++ b/fs/xfs/xfs_scrub.c
-@@ -1972,6 +1972,56 @@ xfs_scrub_rmapbt(
- 			&oinfo, NULL);
- }
+  * This is the number of entries in the l_buf_cancel_table used during
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 9b3d7c7..cf754bc 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2025,7 +2025,7 @@ xlog_peek_buffer_cancelled(
+ 	struct xlog		*log,
+ 	xfs_daddr_t		blkno,
+ 	uint			len,
+-	ushort			flags)
++	unsigned short			flags)
+ {
+ 	struct list_head	*bucket;
+ 	struct xfs_buf_cancel	*bcp;
+@@ -2065,7 +2065,7 @@ xlog_check_buffer_cancelled(
+ 	struct xlog		*log,
+ 	xfs_daddr_t		blkno,
+ 	uint			len,
+-	ushort			flags)
++	unsigned short			flags)
+ {
+ 	struct xfs_buf_cancel	*bcp;
  
-+/* Reference count btree scrubber. */
-+
-+/* Scrub a refcountbt record. */
-+STATIC int
-+xfs_scrub_refcountbt_helper(
-+	struct xfs_scrub_btree		*bs,
-+	union xfs_btree_rec		*rec)
-+{
-+	struct xfs_mount		*mp = bs->cur->bc_mp;
-+	struct xfs_agf			*agf;
-+	struct xfs_refcount_irec	irec;
-+	xfs_agblock_t			eoag;
-+	bool				has_cowflag;
-+	int				error = 0;
-+
-+	irec.rc_startblock = be32_to_cpu(rec->refc.rc_startblock);
-+	irec.rc_blockcount = be32_to_cpu(rec->refc.rc_blockcount);
-+	irec.rc_refcount = be32_to_cpu(rec->refc.rc_refcount);
-+	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
-+	eoag = be32_to_cpu(agf->agf_length);
-+
-+	has_cowflag = !!(irec.rc_startblock & XFS_REFC_COW_START);
-+	XFS_SCRUB_BTREC_CHECK(bs, (irec.rc_refcount == 1 && has_cowflag) ||
-+				  (irec.rc_refcount != 1 && !has_cowflag));
-+	irec.rc_startblock &= ~XFS_REFC_COW_START;
-+	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < mp->m_sb.sb_agblocks);
-+	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < eoag);
-+	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < irec.rc_startblock +
-+			irec.rc_blockcount);
-+	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)irec.rc_startblock +
-+			irec.rc_blockcount <= mp->m_sb.sb_agblocks);
-+	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)irec.rc_startblock +
-+			irec.rc_blockcount <= eoag);
-+	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_refcount >= 1);
-+
-+	return error;
-+}
-+
-+/* Scrub the refcount btree for some AG. */
-+STATIC int
-+xfs_scrub_refcountbt(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_owner_info		oinfo;
-+
-+	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_REFC);
-+	return xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_helper,
-+			&oinfo, NULL);
-+}
-+
- /* Scrubbing dispatch. */
- 
- struct xfs_scrub_meta_fns {
-@@ -1993,6 +2043,7 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 	{xfs_scrub_setup_ag_header, xfs_scrub_inobt, NULL, NULL},
- 	{xfs_scrub_setup_ag_header, xfs_scrub_finobt, NULL, xfs_sb_version_hasfinobt},
- 	{xfs_scrub_setup_ag_header, xfs_scrub_rmapbt, NULL, xfs_sb_version_hasrmapbt},
-+	{xfs_scrub_setup_ag_header, xfs_scrub_refcountbt, NULL, xfs_sb_version_hasreflink},
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index c0a2389..039ef32 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3471,7 +3471,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_CNTBT,		"cntbt" }, \
- 	{ XFS_SCRUB_TYPE_INOBT,		"inobt" }, \
- 	{ XFS_SCRUB_TYPE_FINOBT,	"finobt" }, \
--	{ XFS_SCRUB_TYPE_RMAPBT,	"rmapbt" }
-+	{ XFS_SCRUB_TYPE_RMAPBT,	"rmapbt" }, \
-+	{ XFS_SCRUB_TYPE_REFCNTBT,	"refcountbt" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, int type, xfs_agnumber_t agno,
- 		 xfs_ino_t inum, unsigned int gen, unsigned int flags,
 
