@@ -1,191 +1,363 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17329 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:18196 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750935AbcKEARs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:17:48 -0400
-Subject: [PATCH 5/9] common/fuzzy: move fuzzing helper functions here
+        with ESMTP id S1753593AbcKEAW5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:22:57 -0400
+Subject: [PATCH 35/41] xfs: repair free space btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:17:41 -0700
-Message-ID: <147830506170.1919.4771681083616395313.stgit@birch.djwong.org>
-In-Reply-To: <147830503054.1919.4998804611100937975.stgit@birch.djwong.org>
-References: <147830503054.1919.4998804611100937975.stgit@birch.djwong.org>
+Date: Fri, 04 Nov 2016 17:22:52 -0700
+Message-ID: <147830537209.2155.6984728895058977429.stgit@birch.djwong.org>
+In-Reply-To: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
+References: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Move some fuzzing helper functions into a new common/fuzzy file.
-We'll add a lot more fuzzing helpers in subsequent patches.
+Rebuild the free space btrees from the gaps in the rmap btree.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/fuzzy    |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- common/populate |   36 ------------------------
- tests/ext4/006  |    1 +
- tests/xfs/083   |    1 +
- 4 files changed, 85 insertions(+), 36 deletions(-)
- create mode 100644 common/fuzzy
+ fs/xfs/xfs_scrub.c |  316 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 314 insertions(+), 2 deletions(-)
 
 
-diff --git a/common/fuzzy b/common/fuzzy
-new file mode 100644
-index 0000000..20f1d29
---- /dev/null
-+++ b/common/fuzzy
-@@ -0,0 +1,83 @@
-+##/bin/bash
-+
-+# Routines for fuzzing and scrubbing a filesystem.
-+#
-+#-----------------------------------------------------------------------
-+#  Copyright (c) 2016 Oracle.  All Rights Reserved.
-+#  This program is free software; you can redistribute it and/or modify
-+#  it under the terms of the GNU General Public License as published by
-+#  the Free Software Foundation; either version 2 of the License, or
-+#  (at your option) any later version.
-+#
-+#  This program is distributed in the hope that it will be useful,
-+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+#  GNU General Public License for more details.
-+#
-+#  You should have received a copy of the GNU General Public License
-+#  along with this program; if not, write to the Free Software
-+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
-+#  USA
-+#
-+#  Contact information: Silicon Graphics, Inc., 1500 Crittenden Lane,
-+#  Mountain View, CA 94043, USA, or: http://www.sgi.com
-+#-----------------------------------------------------------------------
-+
-+# Modify various files after a fuzzing operation
-+_scratch_fuzz_modify() {
-+	nr="$1"
-+
-+	test -z "${nr}" && nr=50000
-+	echo "+++ touch ${nr} files"
-+	blk_sz=$(stat -f -c '%s' ${SCRATCH_MNT})
-+	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${blk_sz}" "/tmp/afile" > /dev/null
-+	date="$(date)"
-+	find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
-+		setfattr -n "user.date" -v "${date}" "$f"
-+		cat "/tmp/afile" >> "$f"
-+		mv "$f" "$f.longer"
-+	done
-+	sync
-+	rm -rf "/tmp/afile"
-+
-+	echo "+++ create files"
-+	mkdir -p "${SCRATCH_MNT}/test.moo"
-+	$XFS_IO_PROG -f -c 'pwrite -S 0x80 0 65536' "${SCRATCH_MNT}/test.moo/urk"
-+	sync
-+
-+	echo "+++ remove files"
-+	rm -rf "${SCRATCH_MNT}/test.moo"
-+}
-+
-+# Try to access files after fuzzing
-+_scratch_fuzz_test() {
-+	echo "+++ ls -laR" >> $seqres.full
-+	ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
-+
-+	echo "+++ cat files" >> $seqres.full
-+	(find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
-+}
-+
-+# Do we have an online scrub program?
-+_require_scrub() {
-+	case "${FSTYP}" in
-+	"xfs"|"ext4")
-+		test -x $XFS_SCRUB_PROG || _notrun "xfs_scrub not found"
-+		;;
-+	*)
-+		_notrun "No online scrub program for ${FSTYP}."
-+		;;
-+	esac
-+}
-+
-+# Scrub the scratch filesystem (online)
-+_scratch_scrub() {
-+	case "${FSTYP}" in
-+	"xfs"|"ext4")
-+		$XFS_SCRUB_PROG -d -T -v "$@" $SCRATCH_MNT
-+		;;
-+	*)
-+		_fail "No online scrub program for ${FSTYP}."
-+		;;
-+	esac
-+}
-diff --git a/common/populate b/common/populate
-index d2df121..947d74f 100644
---- a/common/populate
-+++ b/common/populate
-@@ -599,39 +599,3 @@ _scratch_populate() {
- 		;;
- 	esac
+diff --git a/fs/xfs/xfs_scrub.c b/fs/xfs/xfs_scrub.c
+index 981f1e3..def1209 100644
+--- a/fs/xfs/xfs_scrub.c
++++ b/fs/xfs/xfs_scrub.c
+@@ -3100,6 +3100,318 @@ xfs_scrub_cntbt(
+ 	return xfs_scrub_allocbt(sc, XFS_BTNUM_CNT);
  }
--
--# Modify various files after a fuzzing operation
--_scratch_fuzz_modify() {
--	nr="$1"
--
--	test -z "${nr}" && nr=50000
--	echo "+++ touch ${nr} files"
--	blk_sz=$(stat -f -c '%s' ${SCRATCH_MNT})
--	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${blk_sz}" "/tmp/afile" > /dev/null
--	date="$(date)"
--	find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
--		setfattr -n "user.date" -v "${date}" "$f"
--		cat "/tmp/afile" >> "$f"
--		mv "$f" "$f.longer"
--	done
--	sync
--	rm -rf "/tmp/afile"
--
--	echo "+++ create files"
--	mkdir -p "${SCRATCH_MNT}/test.moo"
--	$XFS_IO_PROG -f -c 'pwrite -S 0x80 0 65536' "${SCRATCH_MNT}/test.moo/urk"
--	sync
--
--	echo "+++ remove files"
--	rm -rf "${SCRATCH_MNT}/test.moo"
--}
--
--# Try to access files after fuzzing
--_scratch_fuzz_test() {
--	echo "+++ ls -laR" >> $seqres.full
--	ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
--
--	echo "+++ cat files" >> $seqres.full
--	(find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
--}
--
-diff --git a/tests/ext4/006 b/tests/ext4/006
-index 9662f50..bb9b7e5 100755
---- a/tests/ext4/006
-+++ b/tests/ext4/006
-@@ -43,6 +43,7 @@ _cleanup()
- . ./common/filter
- . ./common/attr
- . ./common/populate
-+. ./common/fuzzy
  
- if [ ! -x "$(which e2fuzz)" ]; then
- 	_notrun "Couldn't find e2fuzz"
-diff --git a/tests/xfs/083 b/tests/xfs/083
-index 39bd75f..e2b5f82 100755
---- a/tests/xfs/083
-+++ b/tests/xfs/083
-@@ -43,6 +43,7 @@ _cleanup()
- . ./common/filter
- . ./common/attr
- . ./common/populate
-+. ./common/fuzzy
++struct xfs_repair_alloc_extent {
++	struct list_head		list;
++	xfs_agblock_t			bno;
++	xfs_extlen_t			len;
++};
++
++struct xfs_repair_alloc {
++	struct list_head		extlist;
++	struct list_head		btlist;	  /* OWN_AG blocks */
++	struct list_head		nobtlist; /* rmapbt/agfl blocks */
++	xfs_agblock_t			next_bno;
++	uint64_t			nr_records;
++};
++
++/* Record extents that aren't in use from gaps in the rmap records. */
++STATIC int
++xfs_repair_alloc_extent_fn(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
++{
++	struct xfs_repair_alloc		*ra = priv;
++	struct xfs_repair_alloc_extent	*rae;
++	struct xfs_buf			*bp;
++	xfs_fsblock_t			fsb;
++	int				i;
++	int				error;
++
++	/* Record all the OWN_AG blocks... */
++	if (rec->rm_owner == XFS_RMAP_OWN_AG) {
++		fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
++				rec->rm_startblock);
++		error = xfs_repair_collect_btree_extent(&ra->btlist, fsb,
++				rec->rm_blockcount);
++		if (error)
++			return error;
++	}
++
++	/* ...and all the rmapbt blocks... */
++	for (i = 0; i < cur->bc_nlevels && cur->bc_ptrs[i] == 1; i++) {
++		xfs_btree_get_block(cur, i, &bp);
++		if (!bp)
++			continue;
++		fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
++		error = xfs_repair_collect_btree_extent(&ra->nobtlist, fsb, 1);
++		if (error)
++			return error;
++	}
++
++	/* ...and all the free space. */
++	if (rec->rm_startblock > ra->next_bno) {
++		rae = kmem_alloc(sizeof(*rae), KM_NOFS);
++		if (!rae)
++			return -ENOMEM;
++		INIT_LIST_HEAD(&rae->list);
++		rae->bno = ra->next_bno;
++		rae->len = rec->rm_startblock - ra->next_bno;
++		list_add_tail(&rae->list, &ra->extlist);
++		ra->nr_records++;
++	}
++	ra->next_bno = max_t(xfs_agblock_t, ra->next_bno,
++			rec->rm_startblock + rec->rm_blockcount);
++	return 0;
++}
++
++/* Find the longest free extent in the list. */
++static struct xfs_repair_alloc_extent *
++xfs_repair_allocbt_get_longest(
++	struct xfs_repair_alloc		*ra)
++{
++	struct xfs_repair_alloc_extent	*rae;
++	struct xfs_repair_alloc_extent	*longest = NULL;
++
++	list_for_each_entry(rae, &ra->extlist, list)
++		if (!longest || rae->len > longest->len)
++			longest = rae;
++	return longest;
++}
++
++/* Collect an AGFL block for the not-to-release list. */
++static int
++xfs_repair_collect_agfl_block(
++	struct xfs_scrub_context	*sc,
++	xfs_agblock_t			bno,
++	void				*data)
++{
++	struct xfs_repair_alloc		*ra = data;
++	xfs_fsblock_t			fsb;
++
++	fsb = XFS_AGB_TO_FSB(sc->tp->t_mountp, sc->sa.agno, bno);
++	return xfs_repair_collect_btree_extent(&ra->nobtlist, fsb, 1);
++}
++
++/* Compare two btree extents. */
++static int
++xfs_repair_allocbt_extent_cmp(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
++{
++	struct xfs_repair_alloc_extent	*ap;
++	struct xfs_repair_alloc_extent	*bp;
++
++	ap = container_of(a, struct xfs_repair_alloc_extent, list);
++	bp = container_of(b, struct xfs_repair_alloc_extent, list);
++
++	if (ap->bno > bp->bno)
++		return 1;
++	else if (ap->bno < bp->bno)
++		return -1;
++	return 0;
++}
++
++/* Repair the freespace btrees for some AG. */
++STATIC int
++xfs_repair_allocbt(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_repair_alloc		ra;
++	struct xfs_owner_info		oinfo;
++	struct xfs_mount		*mp = sc->tp->t_mountp;
++	struct xfs_btree_cur		*cur = NULL;
++	struct xfs_repair_alloc_extent	*longest;
++	struct xfs_repair_alloc_extent	*rae;
++	struct xfs_repair_alloc_extent	*n;
++	struct xfs_perag		*pag;
++	struct xfs_agf			*agf;
++	struct xfs_buf			*bp;
++	xfs_fsblock_t			bnofsb;
++	xfs_fsblock_t			cntfsb;
++	xfs_extlen_t			oldf;
++	xfs_extlen_t			nr_blocks;
++	xfs_agblock_t			agend;
++	int				error;
++
++	/* We require the rmapbt to rebuild anything. */
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return -EOPNOTSUPP;
++
++	/* Collect all reverse mappings for free extents. */
++	INIT_LIST_HEAD(&ra.extlist);
++	INIT_LIST_HEAD(&ra.btlist);
++	INIT_LIST_HEAD(&ra.nobtlist);
++	ra.next_bno = 0;
++	ra.nr_records = 0;
++	cur = xfs_rmapbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno);
++	error = xfs_rmap_query_all(cur, xfs_repair_alloc_extent_fn, &ra);
++	if (error)
++		goto out;
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	cur = NULL;
++
++	/* Insert a record for space between the last rmap and EOAG. */
++	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++	agend = be32_to_cpu(agf->agf_length);
++	if (ra.next_bno < agend) {
++		rae = kmem_alloc(sizeof(*rae), KM_NOFS);
++		if (!rae)
++			return -ENOMEM;
++		INIT_LIST_HEAD(&rae->list);
++		rae->bno = ra.next_bno;
++		rae->len = agend - ra.next_bno;
++		list_add_tail(&rae->list, &ra.extlist);
++		ra.nr_records++;
++	}
++
++	/* Collect all the AGFL blocks. */
++	error = xfs_scrub_walk_agfl(sc, xfs_repair_collect_agfl_block, &ra);
++	if (error)
++		goto out;
++
++	/* Do we actually have enough space to do this? */
++	pag = xfs_perag_get(mp, sc->sa.agno);
++	nr_blocks = 2 * xfs_allocbt_calc_size(mp, ra.nr_records);
++	if (!xfs_repair_ag_has_space(pag, nr_blocks, XFS_AG_RESV_NONE)) {
++		xfs_perag_put(pag);
++		error = -ENOSPC;
++		goto out;
++	}
++	xfs_perag_put(pag);
++
++	/* Allocate new bnobt root. */
++	longest = xfs_repair_allocbt_get_longest(&ra);
++	if (longest == NULL)
++		return -ENOSPC;
++	bnofsb = XFS_AGB_TO_FSB(mp, sc->sa.agno, longest->bno);
++	longest->bno++;
++	longest->len--;
++
++	/* Allocate new cntbt root. */
++	if (longest->len == 0) {
++		list_del(&longest->list);
++		kmem_free(longest);
++		longest = xfs_repair_allocbt_get_longest(&ra);
++		if (longest == NULL)
++			return -ENOSPC;
++	}
++	cntfsb = XFS_AGB_TO_FSB(mp, sc->sa.agno, longest->bno);
++	longest->bno++;
++	longest->len--;
++	if (longest->len == 0) {
++		list_del(&longest->list);
++		kmem_free(longest);
++		longest = xfs_repair_allocbt_get_longest(&ra);
++	}
++
++	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++	/* Initialize new bnobt root. */
++	error = xfs_repair_init_btblock(sc, bnofsb, &bp, XFS_ABTB_CRC_MAGIC,
++			&xfs_allocbt_buf_ops);
++	if (error)
++		goto out;
++	agf->agf_roots[XFS_BTNUM_BNOi] =
++			cpu_to_be32(XFS_FSB_TO_AGBNO(mp, bnofsb));
++	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
++
++	/* Initialize new cntbt root. */
++	error = xfs_repair_init_btblock(sc, cntfsb, &bp, XFS_ABTC_CRC_MAGIC,
++			&xfs_allocbt_buf_ops);
++	if (error)
++		goto out;
++	agf->agf_roots[XFS_BTNUM_CNTi] =
++			cpu_to_be32(XFS_FSB_TO_AGBNO(mp, cntfsb));
++	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
++
++	/*
++	 * Since we're abandoning the old bnobt/cntbt, we have to
++	 * decrease fdblocks by the # of blocks in those trees.
++	 * btreeblks counts the non-root blocks of the free space
++	 * and rmap btrees.  Do this before resetting the AGF counters.
++	 */
++	pag = xfs_perag_get(mp, sc->sa.agno);
++	oldf = pag->pagf_btreeblks + 2;
++	oldf -= (be32_to_cpu(agf->agf_rmap_blocks) - 1);
++	error = xfs_mod_fdblocks(mp, -(int64_t)oldf, false);
++	if (error)
++		goto out;
++
++	/* Reset the perag info. */
++	pag->pagf_btreeblks = be32_to_cpu(agf->agf_rmap_blocks) - 1;
++	pag->pagf_freeblks = 0;
++	pag->pagf_longest = 0;
++	pag->pagf_levels[XFS_BTNUM_BNOi] =
++			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
++	pag->pagf_levels[XFS_BTNUM_CNTi] =
++			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
++
++	/* Now reset the AGF counters. */
++	agf->agf_btreeblks = cpu_to_be32(pag->pagf_btreeblks);
++	agf->agf_freeblks = cpu_to_be32(pag->pagf_freeblks);
++	agf->agf_longest = cpu_to_be32(pag->pagf_longest);
++	xfs_perag_put(pag);
++	xfs_alloc_log_agf(sc->tp, sc->sa.agf_bp,
++			XFS_AGF_ROOTS | XFS_AGF_LEVELS | XFS_AGF_BTREEBLKS |
++			XFS_AGF_LONGEST | XFS_AGF_FREEBLKS);
++	error = xfs_repair_roll_ag_trans(sc);
++	if (error)
++		goto out;
++
++	/* Insert records into the new btrees. */
++	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_UNKNOWN);
++	list_sort(NULL, &ra.extlist, xfs_repair_allocbt_extent_cmp);
++	list_for_each_entry_safe(rae, n, &ra.extlist, list) {
++		error = xfs_free_extent(sc->tp,
++				XFS_AGB_TO_FSB(mp, sc->sa.agno, rae->bno),
++				rae->len, &oinfo, 0);
++		if (error)
++			goto out;
++		error = xfs_repair_roll_ag_trans(sc);
++		if (error)
++			goto out;
++		error = xfs_mod_fdblocks(mp, -(int64_t)rae->len, false);
++		if (error)
++			goto out;
++		list_del(&rae->list);
++		kmem_free(rae);
++	}
++
++	/* Add rmap records for the btree roots */
++	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
++	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno,
++			XFS_FSB_TO_AGBNO(mp, bnofsb), 1, &oinfo);
++	if (error)
++		goto out;
++	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno,
++			XFS_FSB_TO_AGBNO(mp, cntfsb), 1, &oinfo);
++	if (error)
++		goto out;
++
++	/* Free all the OWN_AG blocks that are not in the rmapbt/agfl. */
++	error = xfs_repair_subtract_extents(mp, &ra.btlist, &ra.nobtlist);
++	if (error)
++		goto out;
++	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
++	error = xfs_repair_reap_btree_extents(sc, &ra.btlist, &oinfo,
++			XFS_AG_RESV_NONE);
++	if (error)
++		goto out;
++
++	return 0;
++out:
++	xfs_repair_cancel_btree_extents(sc, &ra.btlist);
++	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
++	if (cur)
++		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	list_for_each_entry_safe(rae, n, &ra.extlist, list) {
++		list_del(&rae->list);
++		kmem_free(rae);
++	}
++	return error;
++}
++
+ /* Inode btree scrubber. */
  
- # real QA test starts here
- _supported_fs xfs
+ /* Scrub a chunk of an inobt record. */
+@@ -5210,8 +5522,8 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+ 	{xfs_scrub_setup_ag_header, xfs_scrub_agf, NULL, NULL},
+ 	{xfs_scrub_setup_ag_header, xfs_scrub_agfl, NULL, NULL},
+ 	{xfs_scrub_setup_ag_header, xfs_scrub_agi, NULL, NULL},
+-	{xfs_scrub_setup_ag_header, xfs_scrub_bnobt, NULL, NULL},
+-	{xfs_scrub_setup_ag_header, xfs_scrub_cntbt, NULL, NULL},
++	{xfs_scrub_setup_ag_header, xfs_scrub_bnobt, xfs_repair_allocbt, NULL},
++	{xfs_scrub_setup_ag_header, xfs_scrub_cntbt, xfs_repair_allocbt, NULL},
+ 	{xfs_scrub_setup_ag_header, xfs_scrub_inobt, NULL, NULL},
+ 	{xfs_scrub_setup_ag_header, xfs_scrub_finobt, NULL, xfs_sb_version_hasfinobt},
+ 	{xfs_scrub_setup_ag_header, xfs_scrub_rmapbt, NULL, xfs_sb_version_hasrmapbt},
 
