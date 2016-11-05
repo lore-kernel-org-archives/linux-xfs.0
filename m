@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36706 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750935AbcKEAJF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:09:05 -0400
-Subject: [PATCH 10/16] libxfs: clean up _dir2_data_freescan
+Received: from userp1040.oracle.com ([156.151.31.81]:18620 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754105AbcKEAZc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:25:32 -0400
+Subject: [PATCH 09/39] xfs: generic functions to scrub metadata and btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:09:01 -0700
-Message-ID: <147830454147.26713.11280885080763890502.stgit@birch.djwong.org>
-In-Reply-To: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
-References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+Date: Fri, 04 Nov 2016 17:25:29 -0700
+Message-ID: <147830552967.4165.1042344470682230569.stgit@birch.djwong.org>
+In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -18,130 +18,190 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Refactor the implementations of xfs_dir2_data_freescan into a
-routine that takes the raw directory block parameters and
-a second function that figures out the raw parameters from the
-directory inode.  This enables us to use the exact same code
-for both userspace and the kernel, since repair knows exactly
-which directory block geometry parameters it needs.
+Create a function that walks a btree, checking the integrity of each
+btree block (headers, keys, records) and calling back to the caller
+to perform further checks on the records.  Add some helper functions
+so that we report detailed scrub errors in a uniform manner in dmesg.
+These are helper functions for subsequent patches.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/libxfs_api_defs.h |    2 +-
- libxfs/libxfs_priv.h     |    8 --------
- libxfs/xfs_dir2.h        |    4 +++-
- libxfs/xfs_dir2_data.c   |   12 +++++++++++-
- repair/dir2.c            |    4 ++--
- repair/phase6.c          |    3 ++-
- 6 files changed, 19 insertions(+), 14 deletions(-)
+ libxfs/xfs_alloc.c  |    2 +-
+ libxfs/xfs_alloc.h  |    2 ++
+ libxfs/xfs_btree.c  |   41 +++++++++++++++++++++++++++++++++++------
+ libxfs/xfs_btree.h  |   17 +++++++++++++++--
+ libxfs/xfs_format.h |    2 +-
+ 5 files changed, 54 insertions(+), 10 deletions(-)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index d60b6c2..b7b1043 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -88,7 +88,7 @@
- #define xfs_dir_replace			libxfs_dir_replace
- #define xfs_dir2_isblock		libxfs_dir2_isblock
- #define xfs_dir2_isleaf			libxfs_dir2_isleaf
--#define __xfs_dir2_data_freescan	libxfs_dir2_data_freescan
-+#define xfs_dir2_data_freescan_int	libxfs_dir2_data_freescan_int
- #define xfs_dir2_data_log_entry		libxfs_dir2_data_log_entry
- #define xfs_dir2_data_log_header	libxfs_dir2_data_log_header
- #define xfs_dir2_data_make_free		libxfs_dir2_data_make_free
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index a101a00..f4db183 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -49,14 +49,6 @@
- #ifndef __LIBXFS_INTERNAL_XFS_H__
- #define __LIBXFS_INTERNAL_XFS_H__
- 
--/*
-- * Repair doesn't have a inode when it calls libxfs_dir2_data_freescan,
-- * so we to work around this internally for now.
-- */
--#define xfs_dir2_data_freescan(ip, hdr, loghead) \
--	__xfs_dir2_data_freescan((ip)->i_mount->m_dir_geo, \
--				 (ip)->d_ops, hdr, loghead)
--
- #include "libxfs_api_defs.h"
- #include "platform_defs.h"
- #include "xfs.h"
-diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-index 89b9e24..0197590 100644
---- a/libxfs/xfs_dir2.h
-+++ b/libxfs/xfs_dir2.h
-@@ -157,9 +157,11 @@ extern int xfs_dir2_isleaf(struct xfs_da_args *args, int *r);
- extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
- 				struct xfs_buf *bp);
- 
--extern void __xfs_dir2_data_freescan(struct xfs_da_geometry *geo,
-+extern void xfs_dir2_data_freescan_int(struct xfs_da_geometry *geo,
- 		const struct xfs_dir_ops *ops,
- 		struct xfs_dir2_data_hdr *hdr, int *loghead);
-+extern void xfs_dir2_data_freescan(struct xfs_inode *dp,
-+		struct xfs_dir2_data_hdr *hdr, int *loghead);
- extern void xfs_dir2_data_log_entry(struct xfs_da_args *args,
- 		struct xfs_buf *bp, struct xfs_dir2_data_entry *dep);
- extern void xfs_dir2_data_log_header(struct xfs_da_args *args,
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-index 6ae5cd2..f8def7c 100644
---- a/libxfs/xfs_dir2_data.c
-+++ b/libxfs/xfs_dir2_data.c
-@@ -502,7 +502,7 @@ xfs_dir2_data_freeremove(
-  * Given a data block, reconstruct its bestfree map.
+diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
+index 3bfca12..0cb8db7 100644
+--- a/libxfs/xfs_alloc.c
++++ b/libxfs/xfs_alloc.c
+@@ -625,7 +625,7 @@ const struct xfs_buf_ops xfs_agfl_buf_ops = {
+ /*
+  * Read in the allocation group free block array.
   */
- void
--__xfs_dir2_data_freescan(
-+xfs_dir2_data_freescan_int(
- 	struct xfs_da_geometry	*geo,
- 	const struct xfs_dir_ops *ops,
- 	struct xfs_dir2_data_hdr *hdr,
-@@ -562,6 +562,16 @@ __xfs_dir2_data_freescan(
- 	}
+-STATIC int				/* error */
++int					/* error */
+ xfs_alloc_read_agfl(
+ 	xfs_mount_t	*mp,		/* mount point structure */
+ 	xfs_trans_t	*tp,		/* transaction pointer */
+diff --git a/libxfs/xfs_alloc.h b/libxfs/xfs_alloc.h
+index 0dc34bf..89a23be 100644
+--- a/libxfs/xfs_alloc.h
++++ b/libxfs/xfs_alloc.h
+@@ -217,6 +217,8 @@ xfs_alloc_get_rec(
+ 
+ int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
++int xfs_alloc_read_agfl(struct xfs_mount *mp, struct xfs_trans *tp,
++			xfs_agnumber_t agno, struct xfs_buf **bpp);
+ int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+ 		struct xfs_buf **agbp);
+diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
+index ee2e489..4a291cc 100644
+--- a/libxfs/xfs_btree.c
++++ b/libxfs/xfs_btree.c
+@@ -548,7 +548,7 @@ xfs_btree_ptr_offset(
+ /*
+  * Return a pointer to the n-th record in the btree block.
+  */
+-STATIC union xfs_btree_rec *
++union xfs_btree_rec *
+ xfs_btree_rec_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -561,7 +561,7 @@ xfs_btree_rec_addr(
+ /*
+  * Return a pointer to the n-th key in the btree block.
+  */
+-STATIC union xfs_btree_key *
++union xfs_btree_key *
+ xfs_btree_key_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -574,7 +574,7 @@ xfs_btree_key_addr(
+ /*
+  * Return a pointer to the n-th high key in the btree block.
+  */
+-STATIC union xfs_btree_key *
++union xfs_btree_key *
+ xfs_btree_high_key_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -587,7 +587,7 @@ xfs_btree_high_key_addr(
+ /*
+  * Return a pointer to the n-th block pointer in the btree block.
+  */
+-STATIC union xfs_btree_ptr *
++union xfs_btree_ptr *
+ xfs_btree_ptr_addr(
+ 	struct xfs_btree_cur	*cur,
+ 	int			n,
+@@ -621,7 +621,7 @@ xfs_btree_get_iroot(
+  * Retrieve the block pointer from the cursor at the given level.
+  * This may be an inode btree root or from a buffer.
+  */
+-STATIC struct xfs_btree_block *		/* generic btree block pointer */
++struct xfs_btree_block *		/* generic btree block pointer */
+ xfs_btree_get_block(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+ 	int			level,	/* level in btree */
+@@ -1732,7 +1732,7 @@ xfs_btree_decrement(
+ 	return error;
  }
  
-+void
-+xfs_dir2_data_freescan(
-+	struct xfs_inode	*dp,
-+	struct xfs_dir2_data_hdr *hdr,
-+	int			*loghead)
+-STATIC int
++int
+ xfs_btree_lookup_get_block(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+ 	int			level,	/* level in the btree */
+@@ -4862,3 +4862,32 @@ xfs_btree_count_blocks(
+ 	return xfs_btree_visit_blocks(cur, xfs_btree_count_blocks_helper,
+ 			blocks);
+ }
++
++/* If there's an extent, we're done. */
++STATIC int
++xfs_btree_has_record_helper(
++	struct xfs_btree_cur		*cur,
++	union xfs_btree_rec		*rec,
++	void				*priv)
 +{
-+	return xfs_dir2_data_freescan_int(dp->i_mount->m_dir_geo, dp->d_ops,
-+			hdr, loghead);
++	return XFS_BTREE_QUERY_RANGE_ABORT;
 +}
 +
++/* Is there a record covering a given range of keys? */
++int
++xfs_btree_has_record(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_irec	*low,
++	union xfs_btree_irec	*high,
++	bool			*exists)
++{
++	int			error;
++
++	error = xfs_btree_query_range(cur, low, high,
++			&xfs_btree_has_record_helper, NULL);
++	if (error && error != XFS_BTREE_QUERY_RANGE_ABORT)
++		return error;
++	*exists = error == XFS_BTREE_QUERY_RANGE_ABORT;
++
++	return 0;
++}
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index 6ef5373..0210662 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -197,7 +197,6 @@ struct xfs_btree_ops {
+ 
+ 	const struct xfs_buf_ops	*buf_ops;
+ 
+-#if defined(DEBUG) || defined(XFS_WARN)
+ 	/* check that k1 is lower than k2 */
+ 	int	(*keys_inorder)(struct xfs_btree_cur *cur,
+ 				union xfs_btree_key *k1,
+@@ -207,7 +206,6 @@ struct xfs_btree_ops {
+ 	int	(*recs_inorder)(struct xfs_btree_cur *cur,
+ 				union xfs_btree_rec *r1,
+ 				union xfs_btree_rec *r2);
+-#endif
+ };
+ 
  /*
-  * Initialize a data block at the given block number in the directory.
-  * Give back the buffer for the created block.
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 61912d1..e6415e4 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -921,8 +921,8 @@ _("bad bestfree table in block %u in directory inode %" PRIu64 ": "),
- 			da_bno, ino);
- 		if (!no_modify) {
- 			do_warn(_("repairing table\n"));
--			libxfs_dir2_data_freescan(mp->m_dir_geo, M_DIROPS(mp),
--						  d, &i);
-+			libxfs_dir2_data_freescan_int(mp->m_dir_geo,
-+					M_DIROPS(mp), d, &i);
- 			*dirty = 1;
- 		} else {
- 			do_warn(_("would repair table\n"));
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 06eed16..399ecde 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1883,7 +1883,8 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
- 	}
- 	*num_illegal += nbad;
- 	if (needscan)
--		libxfs_dir2_data_freescan(mp->m_dir_geo, M_DIROPS(mp), d, &i);
-+		libxfs_dir2_data_freescan_int(mp->m_dir_geo, M_DIROPS(mp),
-+				d, &i);
- 	if (needlog)
- 		libxfs_dir2_data_log_header(&da, bp);
- 	libxfs_defer_finish(&tp, &dfops, ip);
+@@ -539,4 +537,19 @@ int xfs_btree_visit_blocks(struct xfs_btree_cur *cur,
+ 
+ int xfs_btree_count_blocks(struct xfs_btree_cur *cur, xfs_extlen_t *blocks);
+ 
++union xfs_btree_rec *xfs_btree_rec_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++union xfs_btree_key *xfs_btree_key_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++union xfs_btree_key *xfs_btree_high_key_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++union xfs_btree_ptr *xfs_btree_ptr_addr(struct xfs_btree_cur *cur, int n,
++		struct xfs_btree_block *block);
++int xfs_btree_lookup_get_block(struct xfs_btree_cur *cur, int level,
++		union xfs_btree_ptr *pp, struct xfs_btree_block **blkp);
++struct xfs_btree_block *xfs_btree_get_block(struct xfs_btree_cur *cur,
++		int level, struct xfs_buf **bpp);
++int xfs_btree_has_record(struct xfs_btree_cur *cur, union xfs_btree_irec *low,
++		union xfs_btree_irec *high, bool *exists);
++
+ #endif	/* __XFS_BTREE_H__ */
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index e14f964..d819d00 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -518,7 +518,7 @@ static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
+ 		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
+ }
+ 
+-static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
++static inline bool xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
+ {
+ 	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
+ 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
 
