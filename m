@@ -1,398 +1,397 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38929 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:38100 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753593AbcKEAWY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:22:24 -0400
-Subject: [PATCH 31/41] xfs: cross-reference refcount btree during scrub
+        with ESMTP id S1750935AbcKEAR3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:17:29 -0400
+Subject: [PATCH 2/9] populate: add _require_populate_commands to check for
+ tools
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:22:21 -0700
-Message-ID: <147830534138.2155.8133521734475480572.stgit@birch.djwong.org>
-In-Reply-To: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
-References: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
+Date: Fri, 04 Nov 2016 17:17:23 -0700
+Message-ID: <147830504306.1919.15509242384721251908.stgit@birch.djwong.org>
+In-Reply-To: <147830503054.1919.4998804611100937975.stgit@birch.djwong.org>
+References: <147830503054.1919.4998804611100937975.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-During metadata btree scrub, we should cross-reference with the
-reference counts.
+Back when I created common/populate, I thought it was sufficient to
+_require the tools that the populate functions need in the main
+file.  This turned out to be a bit sloppy, so move them into a
+helper function and call it from everything that uses populate.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_refcount.c |   19 ++++
- fs/xfs/libxfs/xfs_refcount.h |    3 +
- fs/xfs/xfs_scrub.c           |  184 ++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 206 insertions(+)
+ common/populate |    9 ++++++---
+ tests/ext4/006  |    1 +
+ tests/xfs/083   |    3 +--
+ tests/xfs/085   |    1 +
+ tests/xfs/086   |    1 +
+ tests/xfs/087   |    1 +
+ tests/xfs/088   |    1 +
+ tests/xfs/089   |    1 +
+ tests/xfs/091   |    1 +
+ tests/xfs/093   |    1 +
+ tests/xfs/097   |    1 +
+ tests/xfs/098   |    1 +
+ tests/xfs/099   |    1 +
+ tests/xfs/100   |    1 +
+ tests/xfs/101   |    1 +
+ tests/xfs/102   |    1 +
+ tests/xfs/105   |    1 +
+ tests/xfs/112   |    1 +
+ tests/xfs/113   |    1 +
+ tests/xfs/117   |    1 +
+ tests/xfs/120   |    1 +
+ tests/xfs/123   |    1 +
+ tests/xfs/124   |    1 +
+ tests/xfs/125   |    1 +
+ tests/xfs/126   |    1 +
+ tests/xfs/269   |    1 +
+ tests/xfs/273   |    1 +
+ 27 files changed, 32 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index b177ef3..c6c875d 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1696,3 +1696,22 @@ xfs_refcount_recover_cow_leftovers(
- 	xfs_trans_cancel(tp);
- 	goto out_free;
- }
-+
-+/* Is there a record covering a given extent? */
-+int
-+xfs_refcount_has_record(
-+	struct xfs_btree_cur	*cur,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	bool			*exists)
-+{
-+	union xfs_btree_irec	low;
-+	union xfs_btree_irec	high;
-+
-+	memset(&low, 0, sizeof(low));
-+	low.rc.rc_startblock = bno;
-+	memset(&high, 0xFF, sizeof(high));
-+	high.rc.rc_startblock = bno + len - 1;
-+
-+	return xfs_btree_has_record(cur, &low, &high, exists);
+diff --git a/common/populate b/common/populate
+index 6ada902..2ac2c22 100644
+--- a/common/populate
++++ b/common/populate
+@@ -22,9 +22,12 @@
+ #  Mountain View, CA 94043, USA, or: http://www.sgi.com
+ #-----------------------------------------------------------------------
+ 
+-_require_xfs_io_command "falloc"
+-_require_xfs_io_command "fpunch"
+-_require_test_program "punch-alternating"
++_require_populate_commands() {
++	_require_xfs_io_command "falloc"
++	_require_xfs_io_command "fpunch"
++	_require_test_program "punch-alternating"
++	_require_command "$XFS_DB_PROG" "xfs_db"
 +}
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index 098dc66..78cb142 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -67,4 +67,7 @@ extern int xfs_refcount_free_cow_extent(struct xfs_mount *mp,
- extern int xfs_refcount_recover_cow_leftovers(struct xfs_mount *mp,
- 		xfs_agnumber_t agno);
  
-+extern int xfs_refcount_has_record(struct xfs_btree_cur *cur,
-+		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
-+
- #endif	/* __XFS_REFCOUNT_H__ */
-diff --git a/fs/xfs/xfs_scrub.c b/fs/xfs/xfs_scrub.c
-index 8dd2668..0ada8c9 100644
---- a/fs/xfs/xfs_scrub.c
-+++ b/fs/xfs/xfs_scrub.c
-@@ -1735,6 +1735,7 @@ xfs_scrub_superblock(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				error;
- 	int				err2;
+ _require_xfs_db_blocktrash_z_command() {
+ 	test "${FSTYP}" = "xfs" || _notrun "cannot run xfs_db on ${FSTYP}"
+diff --git a/tests/ext4/006 b/tests/ext4/006
+index f6cca66..9662f50 100755
+--- a/tests/ext4/006
++++ b/tests/ext4/006
+@@ -54,6 +54,7 @@ _supported_os Linux
  
-@@ -1837,6 +1838,14 @@ xfs_scrub_superblock(
- 			XFS_SCRUB_SB_CHECK(has_rmap);
- 	}
+ _require_scratch
+ _require_attrs
++_require_populate_commands
  
-+	/* Cross-reference with the refcountbt. */
-+	if (psa->refc_cur) {
-+		err2 = xfs_refcount_has_record(psa->refc_cur, XFS_SB_BLOCK(mp),
-+				1, &has_refcount);
-+		if (xfs_scrub_should_xref(sc, err2, &psa->refc_cur))
-+			XFS_SCRUB_SB_CHECK(!has_refcount);
-+	}
-+
- out:
- 	return error;
- }
-@@ -1881,6 +1890,7 @@ xfs_scrub_agf(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				have;
- 	int				level;
- 	int				error = 0;
-@@ -2046,6 +2056,20 @@ xfs_scrub_agf(
- 					agf->agf_btreeblks));
- 	}
+ repair_scratch() {
+ 	fsck_pass="$1"
+diff --git a/tests/xfs/083 b/tests/xfs/083
+index 040f3b6..39bd75f 100755
+--- a/tests/xfs/083
++++ b/tests/xfs/083
+@@ -48,12 +48,11 @@ _cleanup()
+ _supported_fs xfs
+ _supported_os Linux
  
-+	/* Cross-reference with the refcountbt. */
-+	if (psa->refc_cur) {
-+		err2 = xfs_refcount_has_record(psa->refc_cur, XFS_AGF_BLOCK(mp),
-+				1, &has_refcount);
-+		if (xfs_scrub_should_xref(sc, err2, &psa->refc_cur))
-+			XFS_SCRUB_AGF_CHECK(!has_refcount);
-+	}
-+	if (psa->refc_cur) {
-+		err2 = xfs_btree_count_blocks(psa->refc_cur, &blocks);
-+		if (xfs_scrub_should_xref(sc, err2, &psa->refc_cur))
-+			XFS_SCRUB_AGF_CHECK(blocks == be32_to_cpu(
-+					agf->agf_refcount_blocks));
-+	}
-+
- out:
- 	return error;
- }
-@@ -2125,6 +2149,7 @@ xfs_scrub_agfl_block(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				err2;
+-_require_xfs_io_command "falloc"
+-_require_xfs_io_command "fpunch"
+ _require_scratch
+ #_require_xfs_crc	# checksum not required, but you probably want it anyway...
+ #_require_xfs_mkfs_crc
+ _require_attrs
++_require_populate_commands
  
- 	XFS_SCRUB_AGFL_CHECK(agbno > XFS_AGI_BLOCK(mp));
-@@ -2167,6 +2192,14 @@ xfs_scrub_agfl_block(
- 			XFS_SCRUB_AGFL_CHECK(has_rmap);
- 	}
+ scratch_repair() {
+ 	fsck_pass="$1"
+diff --git a/tests/xfs/085 b/tests/xfs/085
+index 1ca5354..0c85850 100755
+--- a/tests/xfs/085
++++ b/tests/xfs/085
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
  
-+	/* Cross-reference with the refcountbt. */
-+	if (sc->sa.refc_cur) {
-+		err2 = xfs_refcount_has_record(sc->sa.refc_cur, agbno, 1,
-+				&has_refcount);
-+		if (xfs_scrub_should_xref(sc, err2, &sc->sa.refc_cur))
-+			XFS_SCRUB_AGFL_CHECK(!has_refcount);
-+	}
-+
- 	return 0;
- }
+ rm -f $seqres.full
+diff --git a/tests/xfs/086 b/tests/xfs/086
+index cf0a71a..787f886 100755
+--- a/tests/xfs/086
++++ b/tests/xfs/086
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-@@ -2181,6 +2214,7 @@ xfs_scrub_agfl(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				err2;
+diff --git a/tests/xfs/087 b/tests/xfs/087
+index 0bb3ec1..58ba958 100755
+--- a/tests/xfs/087
++++ b/tests/xfs/087
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
- 	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-@@ -2220,6 +2254,14 @@ xfs_scrub_agfl(
- 			XFS_SCRUB_AGFL_CHECK(has_rmap);
- 	}
+diff --git a/tests/xfs/088 b/tests/xfs/088
+index d6972a4..36745b2 100755
+--- a/tests/xfs/088
++++ b/tests/xfs/088
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-+	/* Set up cross-reference with refcountbt. */
-+	if (sc->sa.refc_cur) {
-+		err2 = xfs_refcount_has_record(sc->sa.refc_cur,
-+				XFS_AGFL_BLOCK(mp), 1, &has_refcount);
-+		if (xfs_scrub_should_xref(sc, err2, &sc->sa.refc_cur))
-+			XFS_SCRUB_AGFL_CHECK(!has_refcount);
-+	}
-+
- 	/* Check the blocks in the AGFL. */
- 	xfs_rmap_ag_owner(&sagfl.oinfo, XFS_RMAP_OWN_AG);
- 	return xfs_scrub_walk_agfl(sc, xfs_scrub_agfl_block, &sagfl);
-@@ -2249,6 +2291,7 @@ xfs_scrub_agi(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				i;
- 	int				level;
- 	int				error = 0;
-@@ -2353,6 +2396,14 @@ xfs_scrub_agi(
- 			XFS_SCRUB_AGI_CHECK(has_rmap);
- 	}
+diff --git a/tests/xfs/089 b/tests/xfs/089
+index 06996a5..52bdd54 100755
+--- a/tests/xfs/089
++++ b/tests/xfs/089
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-+	/* Cross-reference with the refcountbt. */
-+	if (psa->refc_cur) {
-+		err2 = xfs_refcount_has_record(psa->refc_cur, XFS_AGI_BLOCK(mp),
-+				1, &has_refcount);
-+		if (xfs_scrub_should_xref(sc, err2, &psa->refc_cur))
-+			XFS_SCRUB_AGI_CHECK(!has_refcount);
-+	}
-+
- out:
- 	return error;
- }
-@@ -2376,6 +2427,7 @@ xfs_scrub_allocbt_helper(
- 	xfs_extlen_t			len;
- 	bool				has_rmap;
- 	bool				has_inodes;
-+	bool				has_refcount;
- 	int				has_otherrec;
- 	int				error = 0;
- 	int				err2;
-@@ -2443,6 +2495,14 @@ xfs_scrub_allocbt_helper(
- 			XFS_SCRUB_BTREC_CHECK(bs, !has_rmap);
- 	}
+diff --git a/tests/xfs/091 b/tests/xfs/091
+index a263cb0..ae62337 100755
+--- a/tests/xfs/091
++++ b/tests/xfs/091
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-+	/* Cross-reference with the refcountbt. */
-+	if (psa->refc_cur) {
-+		err2 = xfs_refcount_has_record(psa->refc_cur, bno, len,
-+				&has_refcount);
-+		if (xfs_scrub_btree_should_xref(bs, err2, &psa->refc_cur))
-+			XFS_SCRUB_BTREC_CHECK(bs, !has_refcount);
-+	}
-+
- out:
- 	return error;
- }
-@@ -2497,6 +2557,7 @@ xfs_scrub_iallocbt_chunk(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_rmap;
-+	bool				has_refcount;
- 	int				error = 0;
- 	int				err2;
+diff --git a/tests/xfs/093 b/tests/xfs/093
+index 753231e..0f9311e 100755
+--- a/tests/xfs/093
++++ b/tests/xfs/093
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-@@ -2553,6 +2614,14 @@ xfs_scrub_iallocbt_chunk(
- 			XFS_SCRUB_BTREC_CHECK(bs, has_rmap);
- 	}
+diff --git a/tests/xfs/097 b/tests/xfs/097
+index a75f06a..303ad04 100755
+--- a/tests/xfs/097
++++ b/tests/xfs/097
+@@ -52,6 +52,7 @@ _require_xfs_mkfs_finobt
+ _require_xfs_finobt
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-+	/* Cross-reference with the refcountbt. */
-+	if (psa->refc_cur) {
-+		err2 = xfs_refcount_has_record(psa->refc_cur, bno,
-+				len, &has_refcount);
-+		if (xfs_scrub_btree_should_xref(bs, err2, &psa->refc_cur))
-+			XFS_SCRUB_BTREC_CHECK(bs, !has_refcount);
-+	}
-+
- out:
- 	return error;
- }
-@@ -2664,13 +2733,18 @@ xfs_scrub_rmapbt_helper(
- 	struct xfs_agf			*agf;
- 	struct xfs_scrub_ag		*psa;
- 	struct xfs_rmap_irec		irec;
-+	struct xfs_refcount_irec	crec;
- 	xfs_agblock_t			eoag;
-+	xfs_agblock_t			fbno;
-+	xfs_extlen_t			flen;
- 	bool				is_freesp;
- 	bool				non_inode;
- 	bool				is_unwritten;
- 	bool				is_bmbt;
- 	bool				is_attr;
- 	bool				has_inodes;
-+	bool				has_cowflag;
-+	int				has_refcount;
- 	int				error = 0;
- 	int				err2;
+diff --git a/tests/xfs/098 b/tests/xfs/098
+index 581377e..7873f32 100755
+--- a/tests/xfs/098
++++ b/tests/xfs/098
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-@@ -2760,6 +2834,60 @@ xfs_scrub_rmapbt_helper(
- 					!has_inodes);
- 	}
+diff --git a/tests/xfs/099 b/tests/xfs/099
+index 85193ab..7835df9 100755
+--- a/tests/xfs/099
++++ b/tests/xfs/099
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-+	/* Cross-reference with the refcount btree. */
-+	if (psa->refc_cur) {
-+		if (irec.rm_owner == XFS_RMAP_OWN_COW) {
-+			/* Check this CoW staging extent. */
-+			err2 = xfs_refcount_lookup_le(psa->refc_cur,
-+					irec.rm_startblock + XFS_REFC_COW_START,
-+					&has_refcount);
-+			if (xfs_scrub_btree_should_xref(bs, err2,
-+					&psa->refc_cur)) {
-+				XFS_SCRUB_BTREC_GOTO(bs, has_refcount,
-+						skip_refc_xref);
-+			} else
-+				goto skip_refc_xref;
-+
-+			err2 = xfs_refcount_get_rec(psa->refc_cur, &crec,
-+					&has_refcount);
-+			if (xfs_scrub_btree_should_xref(bs, err2,
-+					&psa->refc_cur)) {
-+				XFS_SCRUB_BTREC_GOTO(bs, has_refcount,
-+						skip_refc_xref);
-+			} else
-+				goto skip_refc_xref;
-+
-+			has_cowflag = !!(crec.rc_startblock & XFS_REFC_COW_START);
-+			XFS_SCRUB_BTREC_CHECK(bs,
-+					(crec.rc_refcount == 1 && has_cowflag) ||
-+					(crec.rc_refcount != 1 && !has_cowflag));
-+			crec.rc_startblock &= ~XFS_REFC_COW_START;
-+			XFS_SCRUB_BTREC_CHECK(bs, crec.rc_startblock <=
-+					irec.rm_startblock);
-+			XFS_SCRUB_BTREC_CHECK(bs, crec.rc_startblock +
-+					crec.rc_blockcount >
-+					crec.rc_startblock);
-+			XFS_SCRUB_BTREC_CHECK(bs, crec.rc_startblock +
-+					crec.rc_blockcount >=
-+					irec.rm_startblock +
-+					irec.rm_blockcount);
-+			XFS_SCRUB_BTREC_CHECK(bs,
-+					crec.rc_refcount == 1);
-+		} else {
-+			/* If this is shared, the inode flag must be set. */
-+			err2 = xfs_refcount_find_shared(psa->refc_cur,
-+					irec.rm_startblock, irec.rm_blockcount,
-+					&fbno, &flen, false);
-+			if (xfs_scrub_btree_should_xref(bs, err2,
-+					&psa->refc_cur))
-+				XFS_SCRUB_BTREC_CHECK(bs, flen == 0 ||
-+						(!non_inode && !is_attr &&
-+						 !is_bmbt && !is_unwritten));
-+		}
-+skip_refc_xref:
-+		;
-+	}
-+
- out:
- 	return error;
- }
-@@ -3144,12 +3272,17 @@ xfs_scrub_bmap_extent(
- 	xfs_agnumber_t			agno;
- 	xfs_fsblock_t			bno;
- 	struct xfs_rmap_irec		rmap;
-+	struct xfs_refcount_irec	rc;
- 	uint64_t			owner;
- 	xfs_fileoff_t			offset;
-+	xfs_agblock_t			fbno;
-+	xfs_extlen_t			flen;
- 	bool				is_freesp;
- 	bool				has_inodes;
-+	bool				has_cowflag;
- 	unsigned int			rflags;
- 	int				has_rmap;
-+	int				has_refcount;
- 	int				error = 0;
- 	int				err2 = 0;
+diff --git a/tests/xfs/100 b/tests/xfs/100
+index 3bfafce..ebb656d 100755
+--- a/tests/xfs/100
++++ b/tests/xfs/100
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-@@ -3305,6 +3438,57 @@ xfs_scrub_bmap_extent(
- 		;
- 	}
+diff --git a/tests/xfs/101 b/tests/xfs/101
+index d3abd19..709fc9d 100755
+--- a/tests/xfs/101
++++ b/tests/xfs/101
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-+	/*
-+	 * If this is a non-shared file on a reflink filesystem,
-+	 * check the refcountbt to see if the flag is wrong.
-+	 */
-+	if (sa.refc_cur) {
-+		if (info->whichfork == XFS_COW_FORK) {
-+			/* Check this CoW staging extent. */
-+			err2 = xfs_refcount_lookup_le(sa.refc_cur,
-+					bno + XFS_REFC_COW_START,
-+					&has_refcount);
-+			if (xfs_scrub_should_xref(info->sc, err2,
-+					&sa.refc_cur)) {
-+				XFS_SCRUB_BMAP_GOTO(has_refcount,
-+						skip_refc_xref);
-+			} else
-+				goto skip_refc_xref;
-+
-+			err2 = xfs_refcount_get_rec(sa.refc_cur, &rc,
-+					&has_refcount);
-+			if (xfs_scrub_should_xref(info->sc, err2,
-+					&sa.refc_cur)) {
-+				XFS_SCRUB_BMAP_GOTO(has_refcount,
-+						skip_refc_xref);
-+			} else
-+				goto skip_refc_xref;
-+
-+			has_cowflag = !!(rc.rc_startblock & XFS_REFC_COW_START);
-+			XFS_SCRUB_BMAP_CHECK(
-+					(rc.rc_refcount == 1 && has_cowflag) ||
-+					(rc.rc_refcount != 1 && !has_cowflag));
-+			rc.rc_startblock &= ~XFS_REFC_COW_START;
-+			XFS_SCRUB_BMAP_CHECK(rc.rc_startblock <= bno);
-+			XFS_SCRUB_BMAP_CHECK(rc.rc_startblock <
-+					rc.rc_startblock + rc.rc_blockcount);
-+			XFS_SCRUB_BMAP_CHECK(bno + irec->br_blockcount <=
-+					rc.rc_startblock + rc.rc_blockcount);
-+			XFS_SCRUB_BMAP_CHECK(rc.rc_refcount == 1);
-+		} else {
-+			/* If this is shared, the inode flag must be set. */
-+			err2 = xfs_refcount_find_shared(sa.refc_cur, bno,
-+					irec->br_blockcount, &fbno, &flen,
-+					false);
-+			if (xfs_scrub_should_xref(info->sc, err2,
-+					&sa.refc_cur))
-+				XFS_SCRUB_BMAP_CHECK(flen == 0 ||
-+						xfs_is_reflink_inode(ip));
-+		}
-+skip_refc_xref:
-+		;
-+	}
-+
- 	xfs_scrub_ag_free(&sa);
- out:
- 	info->lastoff = irec->br_startoff + irec->br_blockcount;
+diff --git a/tests/xfs/102 b/tests/xfs/102
+index cf0d7a6..3d51c6a 100755
+--- a/tests/xfs/102
++++ b/tests/xfs/102
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/105 b/tests/xfs/105
+index 07ccf00..fc91a4f 100755
+--- a/tests/xfs/105
++++ b/tests/xfs/105
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/112 b/tests/xfs/112
+index 84f1f1d..ae75684 100755
+--- a/tests/xfs/112
++++ b/tests/xfs/112
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/113 b/tests/xfs/113
+index ec328bc..c347db7 100755
+--- a/tests/xfs/113
++++ b/tests/xfs/113
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/117 b/tests/xfs/117
+index f251fb3..f0b95aa 100755
+--- a/tests/xfs/117
++++ b/tests/xfs/117
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/120 b/tests/xfs/120
+index 3deece6..5a38000 100755
+--- a/tests/xfs/120
++++ b/tests/xfs/120
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/123 b/tests/xfs/123
+index e6cd8e7..7355e86 100755
+--- a/tests/xfs/123
++++ b/tests/xfs/123
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/124 b/tests/xfs/124
+index cfea2e6..a828dd6 100755
+--- a/tests/xfs/124
++++ b/tests/xfs/124
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/125 b/tests/xfs/125
+index 3f2f6f0..3afb4cc 100755
+--- a/tests/xfs/125
++++ b/tests/xfs/125
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/126 b/tests/xfs/126
+index 77779e0..d696ff1 100755
+--- a/tests/xfs/126
++++ b/tests/xfs/126
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/269 b/tests/xfs/269
+index b51ce64..318dd22 100755
+--- a/tests/xfs/269
++++ b/tests/xfs/269
+@@ -44,6 +44,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_os Linux
+ _require_scratch
++_require_populate_commands
+ _require_test_program "attr-list-by-handle-cursor-test"
+ 
+ rm -f "$seqres.full"
+diff --git a/tests/xfs/273 b/tests/xfs/273
+index f4b57bb..1a4ee93 100755
+--- a/tests/xfs/273
++++ b/tests/xfs/273
+@@ -44,6 +44,7 @@ _cleanup()
+ _supported_os Linux
+ _supported_fs xfs
+ _require_scratch
++_require_populate_commands
+ _require_xfs_io_command "fsmap"
+ 
+ rm -f "$seqres.full"
 
