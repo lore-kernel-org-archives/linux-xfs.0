@@ -1,161 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45596 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751976AbcKHFgU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Nov 2016 00:36:20 -0500
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH v5] fstests: test xfs_copy V5 XFS without -d option
-Date: Tue,  8 Nov 2016 13:33:50 +0800
-Message-Id: <1478583230-11076-1-git-send-email-zlang@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:19126 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754341AbcKEA16 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:27:58 -0400
+Subject: [PATCH 32/39] xfs: rebuild the rmapbt
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:27:55 -0700
+Message-ID: <147830567519.4165.13826961638090689882.stgit@birch.djwong.org>
+In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Before xfsprogs commit a872b62 (xfs_copy: band-aids for CRC
-filesystems), xfs_copy requires the "-d" option to copy a V5 XFS,
-because it can't rewrite the UUID of V5 XFS properly.
+Rebuild the reverse mapping btree from all primary metadata.
 
-Now xfs_copy already full support to copy a V5 XFS. But for above
-old problem, xfstests use below patch to make sure xfs_copy always
-use "-d" option to copy a V5 XFS:
-
-  8346e53 common: append -d option to XFS_COPY_PROG when testing v5 xfs
-
-That cause xfstests miss the coverage of copying a V5 XFS without
-"-d". For test this feature I did below things:
-
-  1. Changed init_rc(), add "-d" to $XFS_COPY_PROG if xfs_copy can't
-     copy a V5 XFS properly.
-  2. xfs/073 test V4 xfs forcibly by specify "-m crc=0" in case. I
-     think it's useless now, so remove it.
-  3. Changed xfs/032. If xfs_copy full support to copy a V5 XFS, test
-     with and without "-d" option, or only test with "-d" option.
-
-Signed-off-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-
-Hi,
-
-V2:
-1. remove require_xfs_copy() function
-2. change the code logic of init_rc function about how to add "-d" to
-   $XFS_COPY_PROG
-3. remove xfs_copy "-d" option of xfs/032
-
-V3:
-add comments to explain the change in init_rc()
-
-V4:
-Due to xfs/032 test "xfs_copy -d" by default, I don't want to
-change the original test coverage. So if xfs_copy full support to
-copy a V5 XFS, then test with and without "-d" option twice.
-
-V5:
-Pick up "xfs_copy and xfs_repair" part into a function named do_copy.
+ libxfs/xfs_refcount.c |    2 +-
+ libxfs/xfs_refcount.h |    3 +++
+ libxfs/xfs_rmap.c     |   28 ++++++++++++++++++++++++++++
+ libxfs/xfs_rmap.h     |    1 +
+ 4 files changed, 33 insertions(+), 1 deletion(-)
 
 
-Thanks,
-Zorro
-
-
- common/rc     | 15 ++++++++++++---
- tests/xfs/032 | 21 ++++++++++++++++-----
- tests/xfs/073 |  8 ++------
- 3 files changed, 30 insertions(+), 14 deletions(-)
-
-diff --git a/common/rc b/common/rc
-index a84efe4..7ff4f5d 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3808,9 +3808,18 @@ init_rc()
- 	$XFS_IO_PROG -i -c quit 2>/dev/null && \
- 		export XFS_IO_PROG="$XFS_IO_PROG -i"
- 
--	# xfs_copy doesn't work on v5 xfs yet without -d option
--	if [ "$FSTYP" == "xfs" ] && [[ $MKFS_OPTIONS =~ crc=1 ]]; then
--		export XFS_COPY_PROG="$XFS_COPY_PROG -d"
-+	# xfs_copy on v5 filesystems do not require the "-d" option if xfs_db
-+	# can change the UUID on v5 filesystems
-+	if [ "$FSTYP" == "xfs" ]; then
-+		touch $tmp.img
-+		$MKFS_XFS_PROG $MKFS_OPTIONS -d file,name=$tmp.img,size=512m \
-+							>/dev/null 2>&1
-+		# xfs_db will return 0 even if it can't generate a new uuid, so
-+		# check the output to make sure if it can change UUID of V5 xfs
-+		$XFS_DB_PROG -x -c "uuid generate" $tmp.img \
-+			| grep -q "invalid UUID\|supported on V5 fs" \
-+			&& export XFS_COPY_PROG="$XFS_COPY_PROG -d"
-+		rm -f $tmp.img
- 	fi
+diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
+index 124d5c0..be0eab3 100644
+--- a/libxfs/xfs_refcount.c
++++ b/libxfs/xfs_refcount.c
+@@ -87,7 +87,7 @@ xfs_refcount_lookup_ge(
  }
  
-diff --git a/tests/xfs/032 b/tests/xfs/032
-index 4b675ee..6d644ad 100755
---- a/tests/xfs/032
-+++ b/tests/xfs/032
-@@ -53,6 +53,17 @@ IMGFILE=$TEST_DIR/${seq}_copy.img
+ /* Convert on-disk record to in-core format. */
+-static inline void
++void
+ xfs_refcount_btrec_to_irec(
+ 	union xfs_btree_rec		*rec,
+ 	struct xfs_refcount_irec	*irec)
+diff --git a/libxfs/xfs_refcount.h b/libxfs/xfs_refcount.h
+index 78cb142..5973c56 100644
+--- a/libxfs/xfs_refcount.h
++++ b/libxfs/xfs_refcount.h
+@@ -69,5 +69,8 @@ extern int xfs_refcount_recover_cow_leftovers(struct xfs_mount *mp,
  
- echo "Silence is golden."
+ extern int xfs_refcount_has_record(struct xfs_btree_cur *cur,
+ 		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
++union xfs_btree_rec;
++extern void xfs_refcount_btrec_to_irec(union xfs_btree_rec *rec,
++		struct xfs_refcount_irec *irec);
  
-+do_copy()
+ #endif	/* __XFS_REFCOUNT_H__ */
+diff --git a/libxfs/xfs_rmap.c b/libxfs/xfs_rmap.c
+index c7d8aac..77ddb0b 100644
+--- a/libxfs/xfs_rmap.c
++++ b/libxfs/xfs_rmap.c
+@@ -1975,6 +1975,34 @@ xfs_rmap_map_shared(
+ 	return error;
+ }
+ 
++/* Insert a raw rmap into the rmapbt. */
++int
++xfs_rmap_map_raw(
++	struct xfs_btree_cur	*cur,
++	struct xfs_rmap_irec	*rmap)
 +{
-+	local opts="$*"
++	struct xfs_owner_info	oinfo;
 +
-+	$XFS_COPY_PROG $opts $SCRATCH_DEV $IMGFILE >> $seqres.full 2>&1 || \
-+		_fail "xfs_copy $opts failed for Sector size $SECTORSIZE Block size $BLOCKSIZE"
-+	# Must use "-n" to get exit code; without it xfs_repair always returns 0
-+	$XFS_REPAIR_PROG -n -f $IMGFILE >> $seqres.full 2>&1 || \
-+		_fail "xfs_copy $opts corrupted for Sector size $SECTORSIZE Block size $BLOCKSIZE"
++	oinfo.oi_owner = rmap->rm_owner;
++	oinfo.oi_offset = rmap->rm_offset;
++	oinfo.oi_flags = 0;
++	if (rmap->rm_flags & XFS_RMAP_ATTR_FORK)
++		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
++	if (rmap->rm_flags & XFS_RMAP_BMBT_BLOCK)
++		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
++
++	if (rmap->rm_flags || XFS_RMAP_NON_INODE_OWNER(rmap->rm_owner))
++		return xfs_rmap_map(cur, rmap->rm_startblock,
++				rmap->rm_blockcount,
++				rmap->rm_flags & XFS_RMAP_UNWRITTEN,
++				&oinfo);
++
++	return xfs_rmap_map_shared(cur, rmap->rm_startblock,
++			rmap->rm_blockcount,
++			rmap->rm_flags & XFS_RMAP_UNWRITTEN,
++			&oinfo);
 +}
 +
- while [ $SECTORSIZE -le $PAGESIZE ]; do
- 	BLOCKSIZE=$SECTORSIZE;
+ struct xfs_rmap_query_range_info {
+ 	xfs_rmap_query_range_fn	fn;
+ 	void				*priv;
+diff --git a/libxfs/xfs_rmap.h b/libxfs/xfs_rmap.h
+index 606efe3..eac90d7 100644
+--- a/libxfs/xfs_rmap.h
++++ b/libxfs/xfs_rmap.h
+@@ -225,5 +225,6 @@ int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
+ int xfs_rmap_has_other_keys(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
+ 		xfs_filblks_t len, struct xfs_owner_info *oinfo,
+ 		bool *has_rmap);
++int xfs_rmap_map_raw(struct xfs_btree_cur *cur, struct xfs_rmap_irec *rmap);
  
-@@ -70,11 +81,11 @@ while [ $SECTORSIZE -le $PAGESIZE ]; do
- 		$FSSTRESS_PROG -n 100 -d $SCRATCH_MNT >> $seqres.full 2>&1
- 		_scratch_unmount
- 
--		$XFS_COPY_PROG -d $SCRATCH_DEV $IMGFILE >> $seqres.full 2>&1 || \
--			_fail "Copy failed for Sector size $SECTORSIZE Block size $BLOCKSIZE"
--		# Must use "-n" to get exit code; without it xfs_repair always returns 0
--		$XFS_REPAIR_PROG -n -f $IMGFILE >> $seqres.full 2>&1 || \
--			_fail "Copy corrupted for Sector size $SECTORSIZE Block size $BLOCKSIZE"
-+		# Test "duplicate" copy at first, if $XFS_COPY_PROG won't do it.
-+		if [[ ! "$XFS_COPY_PROG" =~ -d ]]; then
-+			do_copy -d
-+		fi
-+		do_copy
- 
- 		BLOCKSIZE=$(($BLOCKSIZE * 2));
- 	done
-diff --git a/tests/xfs/073 b/tests/xfs/073
-index 9e29223..7228dd9 100755
---- a/tests/xfs/073
-+++ b/tests/xfs/073
-@@ -138,7 +138,7 @@ _require_loop
- 
- rm -f $seqres.full
- 
--_scratch_mkfs_xfs -m crc=0 -dsize=41m,agcount=2 >>$seqres.full 2>&1
-+_scratch_mkfs_xfs -dsize=41m,agcount=2 >>$seqres.full 2>&1
- _scratch_mount 2>/dev/null || _fail "initial scratch mount failed"
- 
- echo
-@@ -158,11 +158,7 @@ _verify_copy $imgs.image $SCRATCH_DEV $SCRATCH_MNT
- 
- echo 
- echo === copying scratch device to single target, large ro device
--mkfs_crc_opts="-m crc=0"
--if [ -n "$XFS_MKFS_HAS_NO_META_SUPPORT" ]; then
--	mkfs_crc_opts=""
--fi
--${MKFS_XFS_PROG} $mkfs_crc_opts -dfile,name=$imgs.source,size=100g \
-+${MKFS_XFS_PROG} -dfile,name=$imgs.source,size=100g \
- 	| _filter_mkfs 2>/dev/null
- rmdir $imgs.source_dir 2>/dev/null
- mkdir $imgs.source_dir
--- 
-2.7.4
+ #endif	/* __XFS_RMAP_H__ */
 
