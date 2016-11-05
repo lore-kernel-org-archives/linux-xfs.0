@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36756 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:36589 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750935AbcKEAJ3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:09:29 -0400
-Subject: [PATCH 14/16] libxfs: remove useless stuff from the kernel
+        with ESMTP id S1750935AbcKEAI2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:08:28 -0400
+Subject: [PATCH 04/16] libxfs: remove unnecessary hascrc test in btree
+ verifiers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:09:26 -0700
-Message-ID: <147830456618.26713.15449667779126141448.stgit@birch.djwong.org>
+Date: Fri, 04 Nov 2016 17:08:24 -0700
+Message-ID: <147830450463.26713.17853370356150959278.stgit@birch.djwong.org>
 In-Reply-To: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
 References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,42 +19,50 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Evidently the libxfs-apply script sucked in some fs/xfs/ content from
-the kernel patches and an extra redefinition of _bmap_search_extents.
-We don't need this, so get rid of it.
+xfs_btree_sblock_v5hdr_verify already checks _hascrc, so we can
+remove it from the verifier functions.  For whatever reason this
+change made it into the kernel but not xfsprogs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_rmap_item.c |    0 
- fs/xfs/xfs_rmap_item.h |    0 
- libxfs/xfs_bmap.h      |    7 -------
- 3 files changed, 7 deletions(-)
- delete mode 100644 fs/xfs/xfs_rmap_item.c
- delete mode 100644 fs/xfs/xfs_rmap_item.h
+ libxfs/xfs_alloc_btree.c  |    4 ----
+ libxfs/xfs_ialloc_btree.c |    2 --
+ 2 files changed, 6 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-deleted file mode 100644
-index e69de29..0000000
-diff --git a/fs/xfs/xfs_rmap_item.h b/fs/xfs/xfs_rmap_item.h
-deleted file mode 100644
-index e69de29..0000000
-diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
-index 482e151..7cae6ec 100644
---- a/libxfs/xfs_bmap.h
-+++ b/libxfs/xfs_bmap.h
-@@ -246,13 +246,6 @@ int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
- 		struct xfs_bmbt_irec *got, struct xfs_bmbt_irec *prev,
- 		xfs_extnum_t *lastx, int eof);
- 
--struct xfs_bmbt_rec_host *
--	xfs_bmap_search_extents(struct xfs_inode *ip, xfs_fileoff_t bno,
--				int fork, int *eofp, xfs_extnum_t *lastxp,
--				struct xfs_bmbt_irec *gotp,
--				struct xfs_bmbt_irec *prevp);
--
--
- enum xfs_bmap_intent_type {
- 	XFS_BMAP_MAP = 1,
- 	XFS_BMAP_UNMAP,
+diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
+index f993b87..ff4bae4 100644
+--- a/libxfs/xfs_alloc_btree.c
++++ b/libxfs/xfs_alloc_btree.c
+@@ -278,8 +278,6 @@ xfs_allocbt_verify(
+ 	level = be16_to_cpu(block->bb_level);
+ 	switch (block->bb_magic) {
+ 	case cpu_to_be32(XFS_ABTB_CRC_MAGIC):
+-		if (!xfs_sb_version_hascrc(&mp->m_sb))
+-			return false;
+ 		if (!xfs_btree_sblock_v5hdr_verify(bp))
+ 			return false;
+ 		/* fall through */
+@@ -291,8 +289,6 @@ xfs_allocbt_verify(
+ 			return false;
+ 		break;
+ 	case cpu_to_be32(XFS_ABTC_CRC_MAGIC):
+-		if (!xfs_sb_version_hascrc(&mp->m_sb))
+-			return false;
+ 		if (!xfs_btree_sblock_v5hdr_verify(bp))
+ 			return false;
+ 		/* fall through */
+diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
+index 8ccabcc..7bf6040 100644
+--- a/libxfs/xfs_ialloc_btree.c
++++ b/libxfs/xfs_ialloc_btree.c
+@@ -225,8 +225,6 @@ xfs_inobt_verify(
+ 	switch (block->bb_magic) {
+ 	case cpu_to_be32(XFS_IBT_CRC_MAGIC):
+ 	case cpu_to_be32(XFS_FIBT_CRC_MAGIC):
+-		if (!xfs_sb_version_hascrc(&mp->m_sb))
+-			return false;
+ 		if (!xfs_btree_sblock_v5hdr_verify(bp))
+ 			return false;
+ 		/* fall through */
 
