@@ -1,992 +1,2997 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18245 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:17403 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753593AbcKEAXK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:23:10 -0400
-Subject: [PATCH 37/41] xfs: rebuild the rmapbt
+        with ESMTP id S1751824AbcKEASL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:18:11 -0400
+Subject: [PATCH 8/9] xfs: fuzz every field of every structure
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:23:04 -0700
-Message-ID: <147830538461.2155.13978281278743535306.stgit@birch.djwong.org>
-In-Reply-To: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
-References: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
+Date: Fri, 04 Nov 2016 17:18:00 -0700
+Message-ID: <147830508036.1919.9626426021774095650.stgit@birch.djwong.org>
+In-Reply-To: <147830503054.1919.4998804611100937975.stgit@birch.djwong.org>
+References: <147830503054.1919.4998804611100937975.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Rebuild the reverse mapping btree from all primary metadata.
+Previously, our XFS fuzzing efforts were limited to using the xfs_db
+blocktrash command to scribble garbage all over a block.  This is
+pretty easy to discover; it would be far more interesting if we could
+fuzz individual fields looking for unhandled corner cases.  Since we
+now have an online scrub tool, use it to check for our targeted
+corruptions prior to the usual steps of writing to the FS, taking it
+offline, repairing, and re-checking.
+
+These tests use the new xfs_db 'fuzz' command to test corner case
+handling of every field.  The 'print' command tells us which fields
+are available, and the fuzz command can write zeroes or ones to the
+field; set the high, middle, or low bit; add or subtract numbers; or
+randomize the field.  We loop through all fields and all fuzz verbs to
+see if we can trip up the kernel.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_refcount.c |    2 
- fs/xfs/libxfs/xfs_refcount.h |    3 
- fs/xfs/libxfs/xfs_rmap.c     |   28 +
- fs/xfs/libxfs/xfs_rmap.h     |    1 
- fs/xfs/xfs_error.c           |    2 
- fs/xfs/xfs_scrub.c           |  809 ++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 841 insertions(+), 4 deletions(-)
+ common/fuzzy        |   49 ++++++++++++++++++++++++++++++------
+ common/populate     |   10 ++++---
+ common/rc           |   15 +++++++++++
+ tests/ext4/1300     |   60 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/ext4/1300.out |    3 ++
+ tests/ext4/group    |    1 +
+ tests/xfs/1300      |   62 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1300.out  |    3 ++
+ tests/xfs/1301      |   62 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1301.out  |    4 +++
+ tests/xfs/1302      |   62 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1302.out  |    4 +++
+ tests/xfs/1303      |   62 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1303.out  |    4 +++
+ tests/xfs/1304      |   62 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1304.out  |    4 +++
+ tests/xfs/1305      |   62 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1305.out  |    4 +++
+ tests/xfs/1306      |   62 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1306.out  |    4 +++
+ tests/xfs/1307      |   62 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1307.out  |    4 +++
+ tests/xfs/1308      |   62 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1308.out  |    4 +++
+ tests/xfs/1309      |   63 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1309.out  |    4 +++
+ tests/xfs/1310      |   63 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1310.out  |    4 +++
+ tests/xfs/1311      |   63 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1311.out  |    4 +++
+ tests/xfs/1312      |   64 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1312.out  |    4 +++
+ tests/xfs/1313      |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1313.out  |    5 ++++
+ tests/xfs/1314      |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1314.out  |    5 ++++
+ tests/xfs/1315      |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1315.out  |    5 ++++
+ tests/xfs/1316      |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1316.out  |    5 ++++
+ tests/xfs/1317      |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1317.out  |    5 ++++
+ tests/xfs/1318      |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1318.out  |    5 ++++
+ tests/xfs/1319      |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1319.out  |    5 ++++
+ tests/xfs/1320      |   68 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1320.out  |    5 ++++
+ tests/xfs/1321      |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1321.out  |    5 ++++
+ tests/xfs/1322      |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1322.out  |    5 ++++
+ tests/xfs/1323      |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1323.out  |    5 ++++
+ tests/xfs/1324      |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1324.out  |    5 ++++
+ tests/xfs/1325      |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1325.out  |    5 ++++
+ tests/xfs/1326      |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1326.out  |    5 ++++
+ tests/xfs/1327      |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1327.out  |    5 ++++
+ tests/xfs/1328      |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1328.out  |    5 ++++
+ tests/xfs/1329      |   63 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1329.out  |    4 +++
+ tests/xfs/1330      |   61 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1330.out  |    4 +++
+ tests/xfs/group     |   31 +++++++++++++++++++++++
+ 69 files changed, 2313 insertions(+), 13 deletions(-)
+ create mode 100755 tests/ext4/1300
+ create mode 100644 tests/ext4/1300.out
+ create mode 100755 tests/xfs/1300
+ create mode 100644 tests/xfs/1300.out
+ create mode 100755 tests/xfs/1301
+ create mode 100644 tests/xfs/1301.out
+ create mode 100755 tests/xfs/1302
+ create mode 100644 tests/xfs/1302.out
+ create mode 100755 tests/xfs/1303
+ create mode 100644 tests/xfs/1303.out
+ create mode 100755 tests/xfs/1304
+ create mode 100644 tests/xfs/1304.out
+ create mode 100755 tests/xfs/1305
+ create mode 100644 tests/xfs/1305.out
+ create mode 100755 tests/xfs/1306
+ create mode 100644 tests/xfs/1306.out
+ create mode 100755 tests/xfs/1307
+ create mode 100644 tests/xfs/1307.out
+ create mode 100755 tests/xfs/1308
+ create mode 100644 tests/xfs/1308.out
+ create mode 100755 tests/xfs/1309
+ create mode 100644 tests/xfs/1309.out
+ create mode 100755 tests/xfs/1310
+ create mode 100644 tests/xfs/1310.out
+ create mode 100755 tests/xfs/1311
+ create mode 100644 tests/xfs/1311.out
+ create mode 100755 tests/xfs/1312
+ create mode 100644 tests/xfs/1312.out
+ create mode 100755 tests/xfs/1313
+ create mode 100644 tests/xfs/1313.out
+ create mode 100755 tests/xfs/1314
+ create mode 100644 tests/xfs/1314.out
+ create mode 100755 tests/xfs/1315
+ create mode 100644 tests/xfs/1315.out
+ create mode 100755 tests/xfs/1316
+ create mode 100644 tests/xfs/1316.out
+ create mode 100755 tests/xfs/1317
+ create mode 100644 tests/xfs/1317.out
+ create mode 100755 tests/xfs/1318
+ create mode 100644 tests/xfs/1318.out
+ create mode 100755 tests/xfs/1319
+ create mode 100644 tests/xfs/1319.out
+ create mode 100755 tests/xfs/1320
+ create mode 100644 tests/xfs/1320.out
+ create mode 100755 tests/xfs/1321
+ create mode 100644 tests/xfs/1321.out
+ create mode 100755 tests/xfs/1322
+ create mode 100644 tests/xfs/1322.out
+ create mode 100755 tests/xfs/1323
+ create mode 100644 tests/xfs/1323.out
+ create mode 100755 tests/xfs/1324
+ create mode 100644 tests/xfs/1324.out
+ create mode 100755 tests/xfs/1325
+ create mode 100644 tests/xfs/1325.out
+ create mode 100755 tests/xfs/1326
+ create mode 100644 tests/xfs/1326.out
+ create mode 100755 tests/xfs/1327
+ create mode 100644 tests/xfs/1327.out
+ create mode 100755 tests/xfs/1328
+ create mode 100644 tests/xfs/1328.out
+ create mode 100755 tests/xfs/1329
+ create mode 100644 tests/xfs/1329.out
+ create mode 100755 tests/xfs/1330
+ create mode 100644 tests/xfs/1330.out
 
 
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index c6c875d..f63cfdb 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -88,7 +88,7 @@ xfs_refcount_lookup_ge(
+diff --git a/common/fuzzy b/common/fuzzy
+index 6af47f1..dbff744 100644
+--- a/common/fuzzy
++++ b/common/fuzzy
+@@ -85,32 +85,47 @@ _scratch_scrub() {
+ # Filter the xfs_db print command's field debug information
+ # into field name and type.
+ __filter_xfs_db_print_fields() {
++	filter="$1"
++	if [ -z "${filter}" ] || [ "${filter}" = "nofilter" ]; then
++		filter='^'
++	fi
+ 	grep ' = ' | while read key equals value; do
+-		fuzzkey="$(echo "${key}" | sed -e 's/\([a-zA-Z0-9_]*\)\[\([0-9]*\)-[0-9]*\]/\1[\2]/g')"
+-		if [[ "${value}" == "["* ]]; then
++		# Filter out any keys with an array index >= 10, and
++		# collapse any array range ("[1-195]") to the first item.
++		fuzzkey="$(echo "${key}" | sed -e '/\([a-z]*\)\[\([0-9][0-9]\+\)\].*/d' -e 's/\([a-zA-Z0-9_]*\)\[\([0-9]*\)-[0-9]*\]/\1[\2]/g')"
++		if [ -z "${fuzzkey}" ]; then
++			continue
++		elif [[ "${value}" == "["* ]]; then
+ 			echo "${value}" | sed -e 's/^.//g' -e 's/.$//g' -e 's/,/\n/g' | while read subfield; do
+ 				echo "${fuzzkey}.${subfield}"
+ 			done
+ 		else
+ 			echo "${fuzzkey}"
+ 		fi
+-	done
++	done | egrep "${filter}"
  }
  
- /* Convert on-disk record to in-core format. */
--static inline void
-+void
- xfs_refcount_btrec_to_irec(
- 	union xfs_btree_rec		*rec,
- 	struct xfs_refcount_irec	*irec)
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index 78cb142..5973c56 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -69,5 +69,8 @@ extern int xfs_refcount_recover_cow_leftovers(struct xfs_mount *mp,
+ # Navigate to some part of the filesystem and print the field info.
++# The first argument is an egrep filter for the fields
++# The rest of the arguments are xfs_db commands to locate the metadata.
+ _scratch_xfs_list_metadata_fields() {
++	filter="$1"
++	shift
+ 	if [ -n "${SCRATCH_XFS_LIST_METADATA_FIELDS}" ]; then
+-		echo "${SCRATCH_XFS_LIST_METADATA_FIELDS}" | sed -e 's/ /\n/g'
++		echo "${SCRATCH_XFS_LIST_METADATA_FIELDS}" | \
++			sed -e 's/ /\n/g' | __filter_xfs_db_print_fields "${filter}"
+ 		return;
+ 	fi
  
- extern int xfs_refcount_has_record(struct xfs_btree_cur *cur,
- 		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
-+union xfs_btree_rec;
-+extern void xfs_refcount_btrec_to_irec(union xfs_btree_rec *rec,
-+		struct xfs_refcount_irec *irec);
- 
- #endif	/* __XFS_REFCOUNT_H__ */
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index ec24e24..cc0a5c8 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -1977,6 +1977,34 @@ xfs_rmap_map_shared(
- 	return error;
+ 	(for arg in "$@"; do
+ 		echo "${arg}"
+ 	done
+-	echo "print") | _scratch_xfs_db | __filter_xfs_db_print_fields
++	echo "print") | _scratch_xfs_db | __filter_xfs_db_print_fields "${filter}"
  }
  
-+/* Insert a raw rmap into the rmapbt. */
-+int
-+xfs_rmap_map_raw(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_rmap_irec	*rmap)
-+{
-+	struct xfs_owner_info	oinfo;
-+
-+	oinfo.oi_owner = rmap->rm_owner;
-+	oinfo.oi_offset = rmap->rm_offset;
-+	oinfo.oi_flags = 0;
-+	if (rmap->rm_flags & XFS_RMAP_ATTR_FORK)
-+		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
-+	if (rmap->rm_flags & XFS_RMAP_BMBT_BLOCK)
-+		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
-+
-+	if (rmap->rm_flags || XFS_RMAP_NON_INODE_OWNER(rmap->rm_owner))
-+		return xfs_rmap_map(cur, rmap->rm_startblock,
-+				rmap->rm_blockcount,
-+				rmap->rm_flags & XFS_RMAP_UNWRITTEN,
-+				&oinfo);
-+
-+	return xfs_rmap_map_shared(cur, rmap->rm_startblock,
-+			rmap->rm_blockcount,
-+			rmap->rm_flags & XFS_RMAP_UNWRITTEN,
-+			&oinfo);
-+}
-+
- struct xfs_rmap_query_range_info {
- 	xfs_rmap_query_range_fn	fn;
- 	void				*priv;
-diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-index 606efe3..eac90d7 100644
---- a/fs/xfs/libxfs/xfs_rmap.h
-+++ b/fs/xfs/libxfs/xfs_rmap.h
-@@ -225,5 +225,6 @@ int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
- int xfs_rmap_has_other_keys(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
- 		xfs_filblks_t len, struct xfs_owner_info *oinfo,
- 		bool *has_rmap);
-+int xfs_rmap_map_raw(struct xfs_btree_cur *cur, struct xfs_rmap_irec *rmap);
- 
- #endif	/* __XFS_RMAP_H__ */
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index ed7ee4e..bfc0422 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -44,7 +44,7 @@ xfs_error_test(int error_tag, int *fsidp, char *expression,
- 
- 	for (i = 0; i < XFS_NUM_INJECT_ERROR; i++)  {
- 		if (xfs_etest[i] == error_tag && xfs_etest_fsid[i] == fsid) {
--			xfs_warn(NULL,
-+			xfs_warn_ratelimited(NULL,
- 	"Injecting error (%s) at file %s, line %d, on filesystem \"%s\"",
- 				expression, file, line, xfs_etest_fsname[i]);
- 			return 1;
-diff --git a/fs/xfs/xfs_scrub.c b/fs/xfs/xfs_scrub.c
-index 4b46f03..814dcc5 100644
---- a/fs/xfs/xfs_scrub.c
-+++ b/fs/xfs/xfs_scrub.c
-@@ -190,6 +190,9 @@ struct xfs_scrub_context {
- 
- 	/* State tracking for single-AG operations. */
- 	struct xfs_scrub_ag		sa;
-+
-+	int				(*teardown)(struct xfs_scrub_context *,
-+						    struct xfs_inode *, int);
- };
- 
- /* Fix something if errors were detected and the user asked for repair. */
-@@ -899,6 +902,24 @@ xfs_repair_btree_extent_cmp(
- 	return 0;
+ # Get a metadata field
++# The first arg is the field name
++# The rest of the arguments are xfs_db commands to find the metadata.
+ _scratch_xfs_get_metadata_field() {
+ 	key="$1"
+ 	shift
+@@ -124,6 +139,9 @@ _scratch_xfs_get_metadata_field() {
  }
  
-+/* Dump an extent list. */
-+static inline void
-+xfs_repair_dump_exlist(
-+	struct xfs_mount		*mp,
-+	const char			*descr,
-+	struct list_head		*exlist)
-+{
-+	struct xfs_repair_btree_extent	*rbe;
-+
-+	list_sort(NULL, exlist, xfs_repair_btree_extent_cmp);
-+	trace_printk("BEGIN %s", descr);
-+	list_for_each_entry(rbe, exlist, list) {
-+		trace_printk("%u/%u %u", XFS_FSB_TO_AGNO(mp, rbe->fsbno),
-+				XFS_FSB_TO_AGBNO(mp, rbe->fsbno), rbe->len);
-+	}
-+	trace_printk("END %s", descr);
-+}
-+
- /* Remove all the blocks in sublist from exlist. */
- STATIC int
- xfs_repair_subtract_extents(
-@@ -1950,6 +1971,8 @@ xfs_scrub_teardown(
- 	struct xfs_inode		*ip_in,
- 	int				error)
- {
-+	int				err2;
-+
- 	xfs_scrub_ag_free(&sc->sa);
- 	if (sc->ag_lock.agmask != sc->ag_lock.__agmask)
- 		kmem_free(sc->ag_lock.agmask);
-@@ -1958,6 +1981,13 @@ xfs_scrub_teardown(
- 		error = xfs_trans_commit(sc->tp);
- 	else
- 		xfs_trans_cancel(sc->tp);
-+
-+	if (sc->teardown) {
-+		err2 = sc->teardown(sc, ip_in, error);
-+		if (!error && err2)
-+			error = err2;
-+	}
-+
- 	sc->tp = NULL;
- 	if (sc->ip != NULL) {
- 		xfs_iunlock(sc->ip, XFS_ILOCK_EXCL);
-@@ -2107,6 +2137,78 @@ xfs_scrub_setup_ag_header(
- 	return error;
+ # Set a metadata field
++# The first arg is the field name
++# The second arg is the new value
++# The rest of the arguments are xfs_db commands to find the metadata.
+ _scratch_xfs_set_metadata_field() {
+ 	key="$1"
+ 	value="$2"
+@@ -136,6 +154,9 @@ _scratch_xfs_set_metadata_field() {
  }
  
-+/* Unfreeze the FS. */
-+STATIC int
-+xfs_scrub_teardown_thaw(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip,
-+	int				error)
-+{
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct super_block		*sb = mp->m_super;
-+	int				err2;
-+
-+	/* Re-freeze the last level of filesystem. */
-+	down_write(&sb->s_umount);
-+	percpu_down_write(sb->s_writers.rw_sem + SB_FREEZE_PAGEFAULT);
-+	sb->s_writers.frozen = SB_FREEZE_COMPLETE;
-+	up_write(&sb->s_umount);
-+	err2 = thaw_super(sb);
-+	if (!error && err2)
-+		error = err2;
-+
-+	return error;
-+}
-+
-+/* Set us up with AG headers and btree cursors, and freeze the FS. */
-+STATIC int
-+xfs_scrub_setup_ag_header_freeze(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip,
-+	struct xfs_scrub_metadata	*sm,
-+	bool				retry_deadlocked)
-+{
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct super_block		*sb = mp->m_super;
-+	int				error;
-+
-+	if (!(sm->sm_flags & XFS_SCRUB_FLAG_REPAIR))
-+		return xfs_scrub_setup_ag_header(sc, ip, sm, retry_deadlocked);
-+
-+	/* Freeze out any further writes or page faults. */
-+	error = freeze_super(sb);
-+	if (error)
-+		return error;
-+
-+	/* Thaw it to the point that we can make transactions. */
-+	down_write(&sb->s_umount);
-+	percpu_up_write(sb->s_writers.rw_sem + SB_FREEZE_PAGEFAULT);
-+	sb->s_writers.frozen = SB_FREEZE_FS;
-+	up_write(&sb->s_umount);
-+
-+	/* Check the AG number and set up the scrub context. */
-+	error = xfs_scrub_setup_ag(sc, ip, sm, retry_deadlocked);
-+	if (error)
-+		return xfs_scrub_teardown_thaw(sc, ip, error);
-+
-+	/* Lock all the AG header buffers. */
-+	sc->teardown = xfs_scrub_teardown_thaw;
-+	xfs_scrub_ag_lock_init(mp, &sc->ag_lock);
-+	error = xfs_scrub_ag_lock_all(sc);
-+	if (error)
-+		return error;
-+
-+	/* Now grab the headers of the AGF we want. */
-+	sc->sa.agno = sm->sm_agno;
-+	error = xfs_scrub_ag_read_headers(sc, sm->sm_agno, &sc->sa.agi_bp,
-+			&sc->sa.agf_bp, &sc->sa.agfl_bp);
-+	if (error)
-+		return error;
-+
-+	/* ...and initialize the btree cursors for xref. */
-+	return xfs_scrub_ag_btcur_init(sc, &sc->sa);
-+}
-+
- /*
-  * Given an inode and the scrub control structure, return either the
-  * inode referenced in the control structure or the inode passed in.
-@@ -3241,7 +3343,11 @@ xfs_repair_allocbt(
- 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
- 		return -EOPNOTSUPP;
- 
--	/* Collect all reverse mappings for free extents. */
-+	/*
-+	 * Collect all reverse mappings for free extents, and the rmapbt
-+	 * blocks.  We can discover the rmapbt blocks completely from a
-+	 * query_all handler because there are always rmapbt entries.
-+	 */
- 	INIT_LIST_HEAD(&ra.extlist);
- 	INIT_LIST_HEAD(&ra.btlist);
- 	INIT_LIST_HEAD(&ra.nobtlist);
-@@ -4119,6 +4225,705 @@ xfs_scrub_rmapbt(
- 			&oinfo, NULL);
+ # Fuzz a metadata field
++# The first arg is the field name
++# The second arg is the xfs_db fuzz verb
++# The rest of the arguments are xfs_db commands to find the metadata.
+ _scratch_xfs_fuzz_metadata_field() {
+ 	key="$1"
+ 	value="$2"
+@@ -263,12 +284,24 @@ _scratch_xfs_list_fuzz_verbs() {
+ 		sed -e 's/[,.]//g' -e 's/Verbs: //g' -e 's/ /\n/g'
  }
  
-+struct xfs_repair_rmapbt_extent {
-+	struct list_head		list;
-+	struct xfs_rmap_irec		rmap;
-+};
+-# Fuzz the fields of some piece of metadata
+-_scratch_xfs_fuzz_fields() {
+-	_scratch_xfs_list_metadata_fields "$@" | while read field; do
++# Fuzz some of the fields of some piece of metadata
++# The first argument is an egrep filter
++# The rest of the arguments are xfs_db commands to locate the metadata.
++_scratch_xfs_fuzz_some_fields() {
++	filter="$1"
++	shift
++	echo "Fields we propose to fuzz: $@"
++	_scratch_xfs_list_metadata_fields "${filter}" "$@"
++	_scratch_xfs_list_metadata_fields "${filter}" "$@" | while read field; do
+ 		_scratch_xfs_list_fuzz_verbs | while read fuzzverb; do
+ 			__scratch_xfs_fuzz_mdrestore
+ 			__scratch_xfs_fuzz_field_test "${field}" "${fuzzverb}" "$@"
+ 		done
+ 	done
+ }
 +
-+struct xfs_repair_rmapbt {
-+	struct list_head		rmaplist;
-+	struct list_head		rmap_freelist;
-+	struct list_head		bno_freelist;
-+	struct xfs_scrub_context	*sc;
-+	uint64_t			owner;
-+	xfs_extlen_t			btblocks;
-+	xfs_agblock_t			next_bno;
-+	uint64_t			nr_records;
-+};
-+
-+/* Initialize an rmap. */
-+static inline int
-+xfs_repair_rmapbt_new_rmap(
-+	struct xfs_repair_rmapbt	*rr,
-+	xfs_fsblock_t			startblock,
-+	xfs_filblks_t			blockcount,
-+	__uint64_t			owner,
-+	__uint64_t			offset,
-+	unsigned int			flags)
-+{
-+	struct xfs_repair_rmapbt_extent	*rre;
-+
-+	rre = kmem_alloc(sizeof(*rre), KM_NOFS);
-+	if (!rre)
-+		return -ENOMEM;
-+	INIT_LIST_HEAD(&rre->list);
-+	rre->rmap.rm_startblock = startblock;
-+	rre->rmap.rm_blockcount = blockcount;
-+	rre->rmap.rm_owner = owner;
-+	rre->rmap.rm_offset = offset;
-+	rre->rmap.rm_flags = flags;
-+	list_add_tail(&rre->list, &rr->rmaplist);
-+	rr->nr_records++;
-+
-+	return 0;
++# Fuzz all of the fields of some piece of metadata
++# All arguments are xfs_db commands to locate the metadata.
++_scratch_xfs_fuzz_fields() {
++	_scratch_xfs_fuzz_some_fields '' "$@"
 +}
-+
-+/* Add an AGFL block to the rmap list. */
-+STATIC int
-+xfs_repair_rmapbt_walk_agfl(
-+	struct xfs_scrub_context	*sc,
-+	xfs_agblock_t			bno,
-+	void				*priv)
-+{
-+	struct xfs_repair_rmapbt	*rr = priv;
-+
-+	return xfs_repair_rmapbt_new_rmap(rr, bno, 1, XFS_RMAP_OWN_AG, 0, 0);
-+}
-+
-+/* Add a btree block to the rmap list. */
-+STATIC int
-+xfs_repair_rmapbt_visit_btblock(
-+	struct xfs_btree_cur		*cur,
-+	int				level,
-+	void				*priv)
-+{
-+	struct xfs_repair_rmapbt	*rr = priv;
-+	struct xfs_buf			*bp;
-+	xfs_fsblock_t			fsb;
-+
-+	xfs_btree_get_block(cur, level, &bp);
-+	if (!bp)
-+		return 0;
-+
-+	rr->btblocks++;
-+	fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
-+	return xfs_repair_rmapbt_new_rmap(rr, XFS_FSB_TO_AGBNO(cur->bc_mp, fsb),
-+			1, rr->owner, 0, 0);
-+}
-+
-+/* Record inode btree rmaps. */
-+STATIC int
-+xfs_repair_rmapbt_inodes(
-+	struct xfs_btree_cur		*cur,
-+	union xfs_btree_rec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_inobt_rec_incore	irec;
-+	struct xfs_repair_rmapbt	*rr = priv;
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	struct xfs_buf			*bp;
-+	xfs_fsblock_t			fsb;
-+	xfs_agino_t			agino;
-+	xfs_agino_t			iperhole;
-+	unsigned int			i;
-+	int				error;
-+
-+	/* Record the inobt blocks */
-+	for (i = 0; i < cur->bc_nlevels && cur->bc_ptrs[i] == 1; i++) {
-+		xfs_btree_get_block(cur, i, &bp);
-+		if (!bp)
-+			continue;
-+		fsb = XFS_DADDR_TO_FSB(mp, bp->b_bn);
-+		error = xfs_repair_rmapbt_new_rmap(rr,
-+				XFS_FSB_TO_AGBNO(mp, fsb), 1,
-+				XFS_RMAP_OWN_INOBT, 0, 0);
-+		if (error)
-+			return error;
-+	}
-+
-+	xfs_inobt_btrec_to_irec(mp, rec, &irec);
-+
-+	/* Record a non-sparse inode chunk. */
-+	if (irec.ir_holemask == XFS_INOBT_HOLEMASK_FULL)
-+		return xfs_repair_rmapbt_new_rmap(rr,
-+				XFS_AGINO_TO_AGBNO(mp, irec.ir_startino),
-+				XFS_INODES_PER_CHUNK / mp->m_sb.sb_inopblock,
-+				XFS_RMAP_OWN_INODES, 0, 0);
-+
-+	/* Iterate each chunk. */
-+	iperhole = max_t(xfs_agino_t, mp->m_sb.sb_inopblock,
-+			XFS_INODES_PER_HOLEMASK_BIT);
-+	for (i = 0, agino = irec.ir_startino;
-+	     i < XFS_INOBT_HOLEMASK_BITS;
-+	     i += iperhole / XFS_INODES_PER_HOLEMASK_BIT, agino += iperhole) {
-+		/* Skip holes. */
-+		if (irec.ir_holemask & (1 << i))
-+			continue;
-+
-+		/* Record the inode chunk otherwise. */
-+		error = xfs_repair_rmapbt_new_rmap(rr,
-+				XFS_AGINO_TO_AGBNO(mp, agino),
-+				iperhole / mp->m_sb.sb_inopblock,
-+				XFS_RMAP_OWN_INODES, 0, 0);
-+		if (error)
-+			return error;
-+	}
-+
-+	return 0;
-+}
-+
-+/* Record a CoW staging extent. */
-+STATIC int
-+xfs_repair_rmapbt_refcount(
-+	struct xfs_btree_cur		*cur,
-+	union xfs_btree_rec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_repair_rmapbt	*rr = priv;
-+	struct xfs_refcount_irec	refc;
-+
-+	xfs_refcount_btrec_to_irec(rec, &refc);
-+	if (refc.rc_refcount != 1)
-+		return -EFSCORRUPTED;
-+
-+	return xfs_repair_rmapbt_new_rmap(rr,
-+			refc.rc_startblock - XFS_REFC_COW_START,
-+			refc.rc_blockcount, XFS_RMAP_OWN_COW, 0, 0);
-+}
-+
-+/* Add a bmbt block to the rmap list. */
-+STATIC int
-+xfs_repair_rmapbt_visit_bmbt(
-+	struct xfs_btree_cur		*cur,
-+	int				level,
-+	void				*priv)
-+{
-+	struct xfs_repair_rmapbt	*rr = priv;
-+	struct xfs_buf			*bp;
-+	xfs_fsblock_t			fsb;
-+	unsigned int			flags = XFS_RMAP_BMBT_BLOCK;
-+
-+	xfs_btree_get_block(cur, level, &bp);
-+	if (!bp)
-+		return 0;
-+
-+	fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
-+	if (XFS_FSB_TO_AGNO(cur->bc_mp, fsb) != rr->sc->sa.agno)
-+		return 0;
-+
-+	if (cur->bc_private.b.whichfork == XFS_ATTR_FORK)
-+		flags |= XFS_RMAP_ATTR_FORK;
-+	return xfs_repair_rmapbt_new_rmap(rr,
-+			XFS_FSB_TO_AGBNO(cur->bc_mp, fsb), 1,
-+			cur->bc_private.b.ip->i_ino, 0, flags);
-+}
-+
-+/* Determine rmap flags from fork and bmbt state. */
-+static inline unsigned int
-+xfs_repair_rmapbt_bmap_flags(
-+	int			whichfork,
-+	xfs_exntst_t		state)
-+{
-+	return  (whichfork == XFS_ATTR_FORK ? XFS_RMAP_ATTR_FORK : 0) |
-+		(state == XFS_EXT_UNWRITTEN ? XFS_RMAP_UNWRITTEN : 0);
-+}
-+
-+/* Find all the extents from a given AG in an inode fork. */
-+STATIC int
-+xfs_repair_rmapbt_scan_ifork(
-+	struct xfs_repair_rmapbt	*rr,
-+	struct xfs_inode		*ip,
-+	int				whichfork)
-+{
-+	struct xfs_bmbt_irec		rec;
-+	struct xfs_mount		*mp = rr->sc->tp->t_mountp;
-+	struct xfs_btree_cur		*cur = NULL;
-+	xfs_fileoff_t			off;
-+	xfs_fileoff_t			endoff;
-+	unsigned int			bflags;
-+	unsigned int			rflags;
-+	int				nmaps;
-+	int				fmt;
-+	int				error;
-+
-+	/* Do we even have data mapping extents? */
-+	fmt = XFS_IFORK_FORMAT(ip, whichfork);
-+	switch (fmt) {
-+	case XFS_DINODE_FMT_BTREE:
-+	case XFS_DINODE_FMT_EXTENTS:
-+		break;
-+	default:
-+		return 0;
-+	}
-+	if (!XFS_IFORK_PTR(ip, whichfork))
-+		return 0;
-+
-+	/* Find all the BMBT blocks in the AG. */
-+	if (fmt == XFS_DINODE_FMT_BTREE) {
-+		cur = xfs_bmbt_init_cursor(mp, rr->sc->tp, ip, whichfork);
-+		error = xfs_btree_visit_blocks(cur,
-+				xfs_repair_rmapbt_visit_bmbt, rr);
-+		if (error)
-+			goto out;
-+		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+		cur = NULL;
-+	}
-+
-+	/* We're done if this is an rt inode's data fork. */
-+	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip))
-+		return 0;
-+
-+	/* Find the offset of the last extent in the mapping. */
-+	error = xfs_bmap_last_offset(ip, &endoff, whichfork);
-+	if (error)
-+		goto out;
-+
-+	/* Find all the extents in the AG. */
-+	bflags = whichfork == XFS_ATTR_FORK ? XFS_BMAPI_ATTRFORK : 0;
-+	off = 0;
-+	while (true) {
-+		nmaps = 1;
-+		error = xfs_bmapi_read(ip, off, endoff - off, &rec,
-+				&nmaps, bflags);
-+		if (error || nmaps == 0)
-+			break;
-+		/* Stash non-hole extent. */
-+		if (rec.br_startblock != HOLESTARTBLOCK &&
-+		    rec.br_startblock != DELAYSTARTBLOCK &&
-+		    XFS_FSB_TO_AGNO(mp, rec.br_startblock) == rr->sc->sa.agno) {
-+			rflags = xfs_repair_rmapbt_bmap_flags(whichfork,
-+					rec.br_state);
-+			error = xfs_repair_rmapbt_new_rmap(rr,
-+					XFS_FSB_TO_AGBNO(mp, rec.br_startblock),
-+					rec.br_blockcount, ip->i_ino,
-+					rec.br_startoff, rflags);
-+			if (error)
-+				goto out;
-+		}
-+
-+		off += rec.br_blockcount;
-+	}
-+out:
-+	if (cur)
-+		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+	return error;
-+}
-+
-+/* Iterate all the inodes in an AG group. */
-+STATIC int
-+xfs_repair_rmapbt_scan_inobt(
-+	struct xfs_btree_cur		*cur,
-+	union xfs_btree_rec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_inobt_rec_incore	irec;
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	struct xfs_inode		*ip = NULL;
-+	xfs_ino_t			ino;
-+	xfs_agino_t			agino;
-+	int				chunkidx;
-+	int				error;
-+
-+	xfs_inobt_btrec_to_irec(mp, rec, &irec);
-+
-+	for (chunkidx = 0, agino = irec.ir_startino;
-+	     chunkidx < XFS_INODES_PER_CHUNK;
-+	     chunkidx++, agino++) {
-+		/* Skip if this inode is free */
-+		if (XFS_INOBT_MASK(chunkidx) & irec.ir_free)
-+			continue;
-+		ino = XFS_AGINO_TO_INO(mp, cur->bc_private.a.agno, agino);
-+		error = xfs_iget(mp, cur->bc_tp, ino, 0, XFS_ILOCK_EXCL, &ip);
-+		if (error)
-+			break;
-+
-+		/* Check the data fork. */
-+		error = xfs_repair_rmapbt_scan_ifork(priv, ip, XFS_DATA_FORK);
-+		if (error)
-+			break;
-+
-+		/* Check the attr fork. */
-+		error = xfs_repair_rmapbt_scan_ifork(priv, ip, XFS_ATTR_FORK);
-+		if (error)
-+			break;
-+
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		IRELE(ip);
-+		ip = NULL;
-+	}
-+
-+	if (ip) {
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		IRELE(ip);
-+	}
-+	return error;
-+}
-+
-+/* Record extents that aren't in use from gaps in the rmap records. */
-+STATIC int
-+xfs_repair_rmapbt_record_rmap_freesp(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_repair_rmapbt	*rr = priv;
-+	xfs_fsblock_t			fsb;
-+	int				error;
-+
-+	/* Record the free space we find. */
-+	if (rec->rm_startblock > rr->next_bno) {
-+		fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
-+				rr->next_bno);
-+		error = xfs_repair_collect_btree_extent(&rr->rmap_freelist, fsb,
-+				rec->rm_startblock - rr->next_bno);
-+		if (error)
-+			return error;
-+	}
-+	rr->next_bno = max_t(xfs_agblock_t, rr->next_bno,
-+			rec->rm_startblock + rec->rm_blockcount);
-+	return 0;
-+}
-+
-+/* Record extents that aren't in use from the bnobt records. */
-+STATIC int
-+xfs_repair_rmapbt_record_bno_freesp(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_alloc_rec_incore	*rec,
-+	void				*priv)
-+{
-+	struct xfs_repair_rmapbt	*rr = priv;
-+	xfs_fsblock_t			fsb;
-+
-+	/* Record the free space we find. */
-+	fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
-+			rec->ar_startblock);
-+	return xfs_repair_collect_btree_extent(&rr->bno_freelist, fsb,
-+			rec->ar_blockcount);
-+}
-+
-+/* Compare two rmapbt extents. */
-+static int
-+xfs_repair_rmapbt_extent_cmp(
-+	void				*priv,
-+	struct list_head		*a,
-+	struct list_head		*b)
-+{
-+	struct xfs_repair_rmapbt_extent	*ap;
-+	struct xfs_repair_rmapbt_extent	*bp;
-+	__u64				oa;
-+	__u64				ob;
-+
-+	ap = container_of(a, struct xfs_repair_rmapbt_extent, list);
-+	bp = container_of(b, struct xfs_repair_rmapbt_extent, list);
-+	oa = xfs_rmap_irec_offset_pack(&ap->rmap);
-+	ob = xfs_rmap_irec_offset_pack(&bp->rmap);
-+
-+	if (ap->rmap.rm_startblock > bp->rmap.rm_startblock)
-+		return 1;
-+	else if (ap->rmap.rm_startblock < bp->rmap.rm_startblock)
-+		return -1;
-+	else if (ap->rmap.rm_owner > bp->rmap.rm_owner)
-+		return 1;
-+	else if (ap->rmap.rm_owner < bp->rmap.rm_owner)
-+		return -1;
-+	else if (oa > ob)
-+		return 1;
-+	else if (oa < ob)
-+		return -1;
-+	return 0;
-+}
-+
-+#define RMAP(type, startblock, blockcount) xfs_repair_rmapbt_new_rmap( \
-+		&rr, (startblock), (blockcount), \
-+		XFS_RMAP_OWN_##type, 0, 0)
-+/* Repair the rmap btree for some AG. */
-+STATIC int
-+xfs_repair_rmapbt(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_repair_rmapbt	rr;
-+	struct xfs_owner_info		oinfo;
-+	struct xfs_repair_rmapbt_extent	*rre;
-+	struct xfs_repair_rmapbt_extent	*n;
-+	struct xfs_mount		*mp = sc->tp->t_mountp;
-+	struct xfs_btree_cur		*cur = NULL;
-+	struct xfs_buf			*bp = NULL;
-+	struct xfs_agf			*agf;
-+	struct xfs_agi			*agi;
-+	struct xfs_perag		*pag;
-+	xfs_fsblock_t			btfsb;
-+	xfs_agnumber_t			ag;
-+	xfs_agblock_t			agend;
-+	xfs_extlen_t			freesp_btblocks;
-+	int				error;
-+
-+	INIT_LIST_HEAD(&rr.rmaplist);
-+	INIT_LIST_HEAD(&rr.rmap_freelist);
-+	INIT_LIST_HEAD(&rr.bno_freelist);
-+	rr.sc = sc;
-+	rr.nr_records = 0;
-+
-+	/* Collect rmaps for all AG headers. */
-+	error = RMAP(FS, XFS_SB_BLOCK(mp), 1);
-+	if (error)
-+		goto out;
-+	rre = list_last_entry(&rr.rmaplist, struct xfs_repair_rmapbt_extent,
-+			list);
-+
-+	if (rre->rmap.rm_startblock != XFS_AGF_BLOCK(mp)) {
-+		error = RMAP(FS, XFS_AGF_BLOCK(mp), 1);
-+		if (error)
-+			goto out;
-+		rre = list_last_entry(&rr.rmaplist,
-+				struct xfs_repair_rmapbt_extent, list);
-+	}
-+
-+	if (rre->rmap.rm_startblock != XFS_AGI_BLOCK(mp)) {
-+		error = RMAP(FS, XFS_AGI_BLOCK(mp), 1);
-+		if (error)
-+			goto out;
-+		rre = list_last_entry(&rr.rmaplist,
-+				struct xfs_repair_rmapbt_extent, list);
-+	}
-+
-+	if (rre->rmap.rm_startblock != XFS_AGFL_BLOCK(mp)) {
-+		error = RMAP(FS, XFS_AGFL_BLOCK(mp), 1);
-+		if (error)
-+			goto out;
-+	}
-+
-+	error = xfs_scrub_walk_agfl(sc, xfs_repair_rmapbt_walk_agfl, &rr);
-+	if (error)
-+		goto out;
-+
-+	/* Collect rmap for the log if it's in this AG. */
-+	if (mp->m_sb.sb_logstart &&
-+	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == sc->sa.agno) {
-+		error = RMAP(LOG, XFS_FSB_TO_AGBNO(mp, mp->m_sb.sb_logstart),
-+				mp->m_sb.sb_logblocks);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Collect rmaps for the free space btrees. */
-+	rr.owner = XFS_RMAP_OWN_AG;
-+	rr.btblocks = 0;
-+	cur = xfs_allocbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno,
-+			XFS_BTNUM_BNO);
-+	error = xfs_btree_visit_blocks(cur, xfs_repair_rmapbt_visit_btblock,
-+			&rr);
-+	if (error)
-+		goto out;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	cur = NULL;
-+
-+	/* Collect rmaps for the cntbt. */
-+	cur = xfs_allocbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno,
-+			XFS_BTNUM_CNT);
-+	error = xfs_btree_visit_blocks(cur, xfs_repair_rmapbt_visit_btblock,
-+			&rr);
-+	if (error)
-+		goto out;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	cur = NULL;
-+	freesp_btblocks = rr.btblocks;
-+
-+	/* Collect rmaps for the inode btree. */
-+	cur = xfs_inobt_init_cursor(mp, sc->tp, sc->sa.agi_bp, sc->sa.agno,
-+			XFS_BTNUM_INO);
-+	error = xfs_btree_query_all(cur, xfs_repair_rmapbt_inodes, &rr);
-+	if (error)
-+		goto out;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+
-+	/* If there are no inodes, we have to include the inobt root. */
-+	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
-+	if (agi->agi_count == cpu_to_be32(0)) {
-+		error = xfs_repair_rmapbt_new_rmap(&rr,
-+				be32_to_cpu(agi->agi_root), 1,
-+				XFS_RMAP_OWN_INOBT, 0, 0);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Collect rmaps for the free inode btree. */
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-+		rr.owner = XFS_RMAP_OWN_INOBT;
-+		cur = xfs_inobt_init_cursor(mp, sc->tp, sc->sa.agi_bp,
-+				sc->sa.agno, XFS_BTNUM_FINO);
-+		error = xfs_btree_visit_blocks(cur,
-+				xfs_repair_rmapbt_visit_btblock, &rr);
-+		if (error)
-+			goto out;
-+		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+		cur = NULL;
-+	}
-+
-+	/* Collect rmaps for the refcount btree. */
-+	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		union xfs_btree_irec		low;
-+		union xfs_btree_irec		high;
-+
-+		rr.owner = XFS_RMAP_OWN_REFC;
-+		cur = xfs_refcountbt_init_cursor(mp, sc->tp, sc->sa.agf_bp,
-+				sc->sa.agno, NULL);
-+		error = xfs_btree_visit_blocks(cur,
-+				xfs_repair_rmapbt_visit_btblock, &rr);
-+		if (error)
-+			goto out;
-+
-+		/* Collect rmaps for CoW staging extents. */
-+		memset(&low, 0, sizeof(low));
-+		low.rc.rc_startblock = XFS_REFC_COW_START;
-+		memset(&high, 0xFF, sizeof(high));
-+		error = xfs_btree_query_range(cur, &low, &high,
-+				xfs_repair_rmapbt_refcount, &rr);
-+		if (error)
-+			goto out;
-+		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+		cur = NULL;
-+	}
-+
-+	/* Iterate all AGs for inodes. */
-+	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
-+		ASSERT(xfs_scrub_ag_can_lock(sc, ag));
-+		error = xfs_ialloc_read_agi(mp, sc->tp, ag, &bp);
-+		if (error)
-+			goto out;
-+		cur = xfs_inobt_init_cursor(mp, sc->tp, bp, ag, XFS_BTNUM_INO);
-+		error = xfs_btree_query_all(cur, xfs_repair_rmapbt_scan_inobt,
-+				&rr);
-+		if (error)
-+			goto out;
-+		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+		cur = NULL;
-+		xfs_trans_brelse(sc->tp, bp);
-+		bp = NULL;
-+	}
-+
-+	/* Do we actually have enough space to do this? */
-+	pag = xfs_perag_get(mp, sc->sa.agno);
-+	if (!xfs_repair_ag_has_space(pag,
-+			xfs_rmapbt_calc_size(mp, rr.nr_records),
-+			XFS_AG_RESV_AGFL)) {
-+		xfs_perag_put(pag);
-+		error = -ENOSPC;
-+		goto out;
-+	}
-+
-+	/* Initialize a new rmapbt root. */
-+	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_UNKNOWN);
-+	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-+	error = xfs_repair_alloc_ag_block(sc, &oinfo, &btfsb, XFS_AG_RESV_AGFL);
-+	if (error)
-+		goto out;
-+	error = xfs_repair_init_btblock(sc, btfsb, &bp, XFS_RMAP_CRC_MAGIC,
-+			&xfs_rmapbt_buf_ops);
-+	if (error)
-+		goto out;
-+	agf->agf_roots[XFS_BTNUM_RMAPi] = cpu_to_be32(XFS_FSB_TO_AGBNO(mp,
-+			btfsb));
-+	agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
-+	agf->agf_rmap_blocks = cpu_to_be32(1);
-+
-+	/* Reset the perag info. */
-+	pag->pagf_btreeblks = freesp_btblocks - 2;
-+	pag->pagf_levels[XFS_BTNUM_RMAPi] =
-+			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
-+
-+	/* Now reset the AGF counters. */
-+	agf->agf_btreeblks = cpu_to_be32(pag->pagf_btreeblks);
-+	xfs_perag_put(pag);
-+	xfs_alloc_log_agf(sc->tp, sc->sa.agf_bp, XFS_AGF_ROOTS |
-+			XFS_AGF_LEVELS | XFS_AGF_RMAP_BLOCKS |
-+			XFS_AGF_BTREEBLKS);
-+	bp = NULL;
-+	error = xfs_repair_roll_ag_trans(sc);
-+	if (error)
-+		goto out;
-+
-+	/* Insert all the metadata rmaps. */
-+	list_sort(NULL, &rr.rmaplist, xfs_repair_rmapbt_extent_cmp);
-+	list_for_each_entry_safe(rre, n, &rr.rmaplist, list) {
-+		/*
-+		 * Ensure the freelist is full, but don't let it shrink.
-+		 * The rmapbt isn't fully set up yet, which means that
-+		 * the current AGFL blocks might not be reflected in the
-+		 * rmapbt, which is a problem if we want to unmap blocks
-+		 * from the AGFL.
-+		 */
-+		error = xfs_repair_fix_freelist(sc, false);
-+		if (error)
-+			goto out;
-+
-+		/* Add the rmap. */
-+		cur = xfs_rmapbt_init_cursor(mp, sc->tp, sc->sa.agf_bp,
-+				sc->sa.agno);
-+		error = xfs_rmap_map_raw(cur, &rre->rmap);
-+		if (error)
-+			goto out;
-+		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+		cur = NULL;
-+
-+		error = xfs_repair_roll_ag_trans(sc);
-+		if (error)
-+			goto out;
-+
-+		list_del(&rre->list);
-+		kmem_free(rre);
-+	}
-+
-+	/* Compute free space from the new rmapbt. */
-+	rr.next_bno = 0;
-+	cur = xfs_rmapbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno);
-+	error = xfs_rmap_query_all(cur, xfs_repair_rmapbt_record_rmap_freesp,
-+			&rr);
-+	if (error)
-+		goto out;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	cur = NULL;
-+
-+	/* Insert a record for space between the last rmap and EOAG. */
-+	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-+	agend = be32_to_cpu(agf->agf_length);
-+	if (rr.next_bno < agend) {
-+		btfsb = XFS_AGB_TO_FSB(mp, sc->sa.agno, rr.next_bno);
-+		error = xfs_repair_collect_btree_extent(&rr.rmap_freelist,
-+				btfsb, agend - rr.next_bno);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Compute free space from the existing bnobt. */
-+	cur = xfs_allocbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno,
-+			XFS_BTNUM_BNO);
-+	error = xfs_alloc_query_all(cur, xfs_repair_rmapbt_record_bno_freesp,
-+			&rr);
-+	if (error)
-+		goto out;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	cur = NULL;
-+
-+	/*
-+	 * Free the "free" blocks that the new rmapbt knows about but
-+	 * the old bnobt doesn't.  These are the old rmapbt blocks.
-+	 */
-+	error = xfs_repair_subtract_extents(mp, &rr.rmap_freelist,
-+			&rr.bno_freelist);
-+	if (error)
-+		goto out;
-+	xfs_repair_cancel_btree_extents(sc, &rr.bno_freelist);
-+	error = xfs_repair_reap_btree_extents(sc, &rr.rmap_freelist, &oinfo,
-+			XFS_AG_RESV_AGFL);
-+	if (error)
-+		goto out;
-+
-+	return 0;
-+out:
-+	if (cur)
-+		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+	if (bp)
-+		xfs_trans_brelse(sc->tp, bp);
-+	xfs_repair_cancel_btree_extents(sc, &rr.bno_freelist);
-+	xfs_repair_cancel_btree_extents(sc, &rr.rmap_freelist);
-+	list_for_each_entry_safe(rre, n, &rr.rmaplist, list) {
-+		list_del(&rre->list);
-+		kmem_free(rre);
-+	}
-+	return error;
-+}
-+#undef FS_RMAP
-+
- /* Reference count btree scrubber. */
+diff --git a/common/populate b/common/populate
+index 15d68fc..7d103f0 100644
+--- a/common/populate
++++ b/common/populate
+@@ -180,13 +180,13 @@ _scratch_xfs_populate() {
+ 	# FMT_EXTENTS with a remote less-than-a-block value
+ 	echo "+ attr extents with a remote less-than-a-block value"
+ 	touch "${SCRATCH_MNT}/ATTR.FMT_EXTENTS_REMOTE3K"
+-	$XFS_IO_PROG -f -c "pwrite -S 0x43 0 3k" "${SCRATCH_MNT}/attrvalfile" > /dev/null
++	$XFS_IO_PROG -f -c "pwrite -S 0x43 0 $((blksz - 300))" "${SCRATCH_MNT}/attrvalfile" > /dev/null
+ 	attr -q -s user.remotebtreeattrname "${SCRATCH_MNT}/ATTR.FMT_EXTENTS_REMOTE3K" < "${SCRATCH_MNT}/attrvalfile"
  
- struct xfs_scrub_refcountbt_fragment {
-@@ -5865,7 +6670,7 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 	{xfs_scrub_setup_ag_header, xfs_scrub_cntbt, xfs_repair_allocbt, NULL},
- 	{xfs_scrub_setup_ag_header, xfs_scrub_inobt, xfs_repair_iallocbt, NULL},
- 	{xfs_scrub_setup_ag_header, xfs_scrub_finobt, xfs_repair_iallocbt, xfs_sb_version_hasfinobt},
--	{xfs_scrub_setup_ag_header, xfs_scrub_rmapbt, NULL, xfs_sb_version_hasrmapbt},
-+	{xfs_scrub_setup_ag_header_freeze, xfs_scrub_rmapbt, xfs_repair_rmapbt, xfs_sb_version_hasrmapbt},
- 	{xfs_scrub_setup_ag_header, xfs_scrub_refcountbt, NULL, xfs_sb_version_hasreflink},
- 	{xfs_scrub_setup_inode, xfs_scrub_inode, NULL, NULL},
- 	{xfs_scrub_setup_inode_bmap, xfs_scrub_bmap_data, NULL, NULL},
+ 	# FMT_EXTENTS with a remote block-size value
+ 	echo "+ attr extents with a remote one-block value"
+ 	touch "${SCRATCH_MNT}/ATTR.FMT_EXTENTS_REMOTE4K"
+-	$XFS_IO_PROG -f -c "pwrite -S 0x44 0 4k" "${SCRATCH_MNT}/attrvalfile" > /dev/null
++	$XFS_IO_PROG -f -c "pwrite -S 0x44 0 ${blksz}" "${SCRATCH_MNT}/attrvalfile" > /dev/null
+ 	attr -q -s user.remotebtreeattrname "${SCRATCH_MNT}/ATTR.FMT_EXTENTS_REMOTE4K" < "${SCRATCH_MNT}/attrvalfile"
+ 	rm -rf "${SCRATCH_MNT}/attrvalfile"
+ 
+@@ -482,8 +482,8 @@ _scratch_xfs_populate_check() {
+ 	__populate_check_xfs_aformat "${btree_attr}" "btree"
+ 	__populate_check_xfs_agbtree_height "bno"
+ 	__populate_check_xfs_agbtree_height "cnt"
+-	test -n $is_rmapbt && __populate_check_xfs_agbtree_height "rmap"
+-	test -n $is_reflink && __populate_check_xfs_agbtree_height "refcnt"
++	test $is_rmapbt -ne 0 && __populate_check_xfs_agbtree_height "rmap"
++	test $is_reflink -ne 0 && __populate_check_xfs_agbtree_height "refcnt"
+ }
+ 
+ # Check data fork format of ext4 file
+@@ -609,7 +609,7 @@ _scratch_populate_cached() {
+ 	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
+ 
+ 	# Throw away cached image if it doesn't match our spec.
+-	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS ${MKFS_OPTIONS} ARGS $@"
++	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS $(_scratch_mkfs_options) ARGS $@"
+ 	cmp -s "${POPULATE_METADUMP_DESCR}" <(echo "${meta_descr}") || rm -rf "${POPULATE_METADUMP}"
+ 
+ 	# Do we have a cached image?
+diff --git a/common/rc b/common/rc
+index d904582..ec1f5de 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1870,6 +1870,21 @@ _require_xfs_finobt()
+ 	_scratch_unmount
+ }
+ 
++# Do we have a fre
++_require_scratch_finobt()
++{
++	_require_scratch
++
++	if [ $FSTYP != "xfs" ]; then
++		_notrun "finobt not supported by scratch filesystem type: $FSTYP"
++		return
++	fi
++	_scratch_mkfs > /dev/null
++	_scratch_mount
++	xfs_info $SCRATCH_MNT | grep -q 'finobt=1' || _notrun "finobt not supported by scratch filesystem type: $FSTYP"
++	_scratch_unmount
++}
++
+ # this test requires xfs sysfs attribute support
+ #
+ _require_xfs_sysfs()
+diff --git a/tests/ext4/1300 b/tests/ext4/1300
+new file mode 100755
+index 0000000..3f8135e
+--- /dev/null
++++ b/tests/ext4/1300
+@@ -0,0 +1,60 @@
++#! /bin/bash
++# FS QA Test No. 1300
++#
++# Populate a ext4 filesystem and ensure that scrub and repair are happy.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs ext4
++_require_scratch
++_require_scrub
++
++echo "Format and populate"
++_scratch_populate_cached > $seqres.full 2>&1
++
++echo "Scrub"
++_scratch_mount >> $seqres.full 2>&1
++_scratch_scrub >> $seqres.full
++
++# success, all done
++status=0
++exit
+diff --git a/tests/ext4/1300.out b/tests/ext4/1300.out
+new file mode 100644
+index 0000000..8aaa3bb
+--- /dev/null
++++ b/tests/ext4/1300.out
+@@ -0,0 +1,3 @@
++QA output created by 1300
++Format and populate
++Scrub
+diff --git a/tests/ext4/group b/tests/ext4/group
+index 53fe03e..9fbaa76 100644
+--- a/tests/ext4/group
++++ b/tests/ext4/group
+@@ -34,3 +34,4 @@
+ 306 auto rw resize quick
+ 307 auto ioctl rw
+ 308 auto ioctl rw prealloc quick
++1300 auto quick scrub
+diff --git a/tests/xfs/1300 b/tests/xfs/1300
+new file mode 100755
+index 0000000..68befe0
+--- /dev/null
++++ b/tests/xfs/1300
+@@ -0,0 +1,62 @@
++#! /bin/bash
++# FS QA Test No. 1300
++#
++# Populate a XFS filesystem and ensure that scrub and repair are happy.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++
++_require_scratch
++_require_scrub
++_require_populate_commands
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Scrub"
++_scratch_mount >> $seqres.full 2>&1
++_scratch_scrub >> $seqres.full
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1300.out b/tests/xfs/1300.out
+new file mode 100644
+index 0000000..8aaa3bb
+--- /dev/null
++++ b/tests/xfs/1300.out
+@@ -0,0 +1,3 @@
++QA output created by 1300
++Format and populate
++Scrub
+diff --git a/tests/xfs/1301 b/tests/xfs/1301
+new file mode 100755
+index 0000000..4e3885c
+--- /dev/null
++++ b/tests/xfs/1301
+@@ -0,0 +1,62 @@
++#! /bin/bash
++# FS QA Test No. 1301
++#
++# Populate a XFS filesystem and fuzz every superblock field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: sb 0" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'sb 0' >> $seqres.full
++
++echo "Fuzz superblock"
++_scratch_xfs_fuzz_fields 'sb 0' >> $seqres.full
++echo "Done fuzzing superblock"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1301.out b/tests/xfs/1301.out
+new file mode 100644
+index 0000000..f804acc
+--- /dev/null
++++ b/tests/xfs/1301.out
+@@ -0,0 +1,4 @@
++QA output created by 1301
++Format and populate
++Fuzz superblock
++Done fuzzing superblock
+diff --git a/tests/xfs/1302 b/tests/xfs/1302
+new file mode 100755
+index 0000000..0f53c47
+--- /dev/null
++++ b/tests/xfs/1302
+@@ -0,0 +1,62 @@
++#! /bin/bash
++# FS QA Test No. 1302
++#
++# Populate a XFS filesystem and fuzz every AGF field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1302  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: agf 0" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'agf 0' >> $seqres.full
++
++echo "Fuzz AGF"
++_scratch_xfs_fuzz_fields 'agf 0' >> $seqres.full
++echo "Done fuzzing AGF"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1302.out b/tests/xfs/1302.out
+new file mode 100644
+index 0000000..1e416d5
+--- /dev/null
++++ b/tests/xfs/1302.out
+@@ -0,0 +1,4 @@
++QA output created by 1302
++Format and populate
++Fuzz AGF
++Done fuzzing AGF
+diff --git a/tests/xfs/1303 b/tests/xfs/1303
+new file mode 100755
+index 0000000..19799c0
+--- /dev/null
++++ b/tests/xfs/1303
+@@ -0,0 +1,62 @@
++#! /bin/bash
++# FS QA Test No. 1303
++#
++# Populate a XFS filesystem and fuzz every AGFL field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: agfl 0" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'agfl 0' >> $seqres.full
++
++echo "Fuzz AGFL"
++_scratch_xfs_fuzz_fields 'agfl 0' >> $seqres.full
++echo "Done fuzzing AGFL"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1303.out b/tests/xfs/1303.out
+new file mode 100644
+index 0000000..ac6c01b
+--- /dev/null
++++ b/tests/xfs/1303.out
+@@ -0,0 +1,4 @@
++QA output created by 1303
++Format and populate
++Fuzz AGFL
++Done fuzzing AGFL
+diff --git a/tests/xfs/1304 b/tests/xfs/1304
+new file mode 100755
+index 0000000..71af7bd
+--- /dev/null
++++ b/tests/xfs/1304
+@@ -0,0 +1,62 @@
++#! /bin/bash
++# FS QA Test No. 1304
++#
++# Populate a XFS filesystem and fuzz every AGI field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: agi 0" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'agi 0' >> $seqres.full
++
++echo "Fuzz AGI"
++_scratch_xfs_fuzz_fields 'agi 0' >> $seqres.full
++echo "Done fuzzing AGI"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1304.out b/tests/xfs/1304.out
+new file mode 100644
+index 0000000..886157b
+--- /dev/null
++++ b/tests/xfs/1304.out
+@@ -0,0 +1,4 @@
++QA output created by 1304
++Format and populate
++Fuzz AGI
++Done fuzzing AGI
+diff --git a/tests/xfs/1305 b/tests/xfs/1305
+new file mode 100755
+index 0000000..a4c7a68
+--- /dev/null
++++ b/tests/xfs/1305
+@@ -0,0 +1,62 @@
++#! /bin/bash
++# FS QA Test No. 1305
++#
++# Populate a XFS filesystem and fuzz every bnobt field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: agf 0 addr bnoroot addr ptrs[1]" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'agf 0' 'addr bnoroot' 'addr ptrs[1]' >> $seqres.full
++
++echo "Fuzz bnobt recs"
++_scratch_xfs_fuzz_fields  'agf 0' 'addr bnoroot' 'addr ptrs[1]' >> $seqres.full
++echo "Done fuzzing bnobt recs"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1305.out b/tests/xfs/1305.out
+new file mode 100644
+index 0000000..b2108f1
+--- /dev/null
++++ b/tests/xfs/1305.out
+@@ -0,0 +1,4 @@
++QA output created by 1305
++Format and populate
++Fuzz bnobt recs
++Done fuzzing bnobt recs
+diff --git a/tests/xfs/1306 b/tests/xfs/1306
+new file mode 100755
+index 0000000..cb8f5e2
+--- /dev/null
++++ b/tests/xfs/1306
+@@ -0,0 +1,62 @@
++#! /bin/bash
++# FS QA Test No. 1306
++#
++# Populate a XFS filesystem and fuzz every bnobt key/pointer.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: agf 0 addr bnoroot" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'agf 0' 'addr bnoroot' >> $seqres.full
++
++echo "Fuzz bnobt keyptr"
++_scratch_xfs_fuzz_fields  'agf 0' 'addr bnoroot' >> $seqres.full
++echo "Done fuzzing bnobt keyptr"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1306.out b/tests/xfs/1306.out
+new file mode 100644
+index 0000000..4b1e0c6
+--- /dev/null
++++ b/tests/xfs/1306.out
+@@ -0,0 +1,4 @@
++QA output created by 1306
++Format and populate
++Fuzz bnobt keyptr
++Done fuzzing bnobt keyptr
+diff --git a/tests/xfs/1307 b/tests/xfs/1307
+new file mode 100755
+index 0000000..b25c338
+--- /dev/null
++++ b/tests/xfs/1307
+@@ -0,0 +1,62 @@
++#! /bin/bash
++# FS QA Test No. 1307
++#
++# Populate a XFS filesystem and fuzz every cntbt field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: agf 0 addr cntroot addr ptrs[1]" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'agf 0' 'addr cntroot' 'addr ptrs[1]' >> $seqres.full
++
++echo "Fuzz cntbt"
++_scratch_xfs_fuzz_fields  'agf 0' 'addr cntroot' 'addr ptrs[1]' >> $seqres.full
++echo "Done fuzzing cntbt"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1307.out b/tests/xfs/1307.out
+new file mode 100644
+index 0000000..a7cedf1
+--- /dev/null
++++ b/tests/xfs/1307.out
+@@ -0,0 +1,4 @@
++QA output created by 1307
++Format and populate
++Fuzz cntbt
++Done fuzzing cntbt
+diff --git a/tests/xfs/1308 b/tests/xfs/1308
+new file mode 100755
+index 0000000..5fae1d1
+--- /dev/null
++++ b/tests/xfs/1308
+@@ -0,0 +1,62 @@
++#! /bin/bash
++# FS QA Test No. 1308
++#
++# Populate a XFS filesystem and fuzz every inobt field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: agi 0 addr root" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'agi 0' 'addr root' >> $seqres.full
++
++echo "Fuzz inobt"
++_scratch_xfs_fuzz_fields  'agi 0' 'addr root' >> $seqres.full
++echo "Done fuzzing inobt"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1308.out b/tests/xfs/1308.out
+new file mode 100644
+index 0000000..cc72bb7
+--- /dev/null
++++ b/tests/xfs/1308.out
+@@ -0,0 +1,4 @@
++QA output created by 1308
++Format and populate
++Fuzz inobt
++Done fuzzing inobt
+diff --git a/tests/xfs/1309 b/tests/xfs/1309
+new file mode 100755
+index 0000000..5aa7992
+--- /dev/null
++++ b/tests/xfs/1309
+@@ -0,0 +1,63 @@
++#! /bin/bash
++# FS QA Test No. 1309
++#
++# Populate a XFS filesystem and fuzz every finobt field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_finobt
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: agi 0 addr free_root" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'agi 0' 'addr free_root' >> $seqres.full
++
++echo "Fuzz finobt"
++_scratch_xfs_fuzz_fields  'agi 0' 'addr free_root' >> $seqres.full
++echo "Done fuzzing finobt"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1309.out b/tests/xfs/1309.out
+new file mode 100644
+index 0000000..b4084ef
+--- /dev/null
++++ b/tests/xfs/1309.out
+@@ -0,0 +1,4 @@
++QA output created by 1309
++Format and populate
++Fuzz finobt
++Done fuzzing finobt
+diff --git a/tests/xfs/1310 b/tests/xfs/1310
+new file mode 100755
+index 0000000..2756778
+--- /dev/null
++++ b/tests/xfs/1310
+@@ -0,0 +1,63 @@
++#! /bin/bash
++# FS QA Test No. 1310
++#
++# Populate a XFS filesystem and fuzz every rmapbt field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_xfs_scratch_rmapbt
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: agf 0 addr rmaproot addr ptrs[1]" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'agf 0' 'addr rmaproot' 'addr ptrs[1]' >> $seqres.full
++
++echo "Fuzz rmapbt recs"
++_scratch_xfs_fuzz_fields  'agf 0' 'addr rmaproot' 'addr ptrs[1]' >> $seqres.full
++echo "Done fuzzing rmapbt recs"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1310.out b/tests/xfs/1310.out
+new file mode 100644
+index 0000000..e784f8b
+--- /dev/null
++++ b/tests/xfs/1310.out
+@@ -0,0 +1,4 @@
++QA output created by 1310
++Format and populate
++Fuzz rmapbt recs
++Done fuzzing rmapbt recs
+diff --git a/tests/xfs/1311 b/tests/xfs/1311
+new file mode 100755
+index 0000000..be9fe54
+--- /dev/null
++++ b/tests/xfs/1311
+@@ -0,0 +1,63 @@
++#! /bin/bash
++# FS QA Test No. 1311
++#
++# Populate a XFS filesystem and fuzz every rmapbt key/pointer field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_xfs_scratch_rmapbt
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: agf 0 addr rmaproot" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'agf 0' 'addr rmaproot' >> $seqres.full
++
++echo "Fuzz rmapbt keyptr"
++_scratch_xfs_fuzz_fields  'agf 0' 'addr rmaproot' >> $seqres.full
++echo "Done fuzzing rmapbt keyptr"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1311.out b/tests/xfs/1311.out
+new file mode 100644
+index 0000000..70150a1
+--- /dev/null
++++ b/tests/xfs/1311.out
+@@ -0,0 +1,4 @@
++QA output created by 1311
++Format and populate
++Fuzz rmapbt keyptr
++Done fuzzing rmapbt keyptr
+diff --git a/tests/xfs/1312 b/tests/xfs/1312
+new file mode 100755
+index 0000000..73ec478
+--- /dev/null
++++ b/tests/xfs/1312
+@@ -0,0 +1,64 @@
++#! /bin/bash
++# FS QA Test No. 1312
++#
++# Populate a XFS filesystem and fuzz every refcountbt field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_reflink
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fields we propose to fuzz: agf 0 addr refcntroot" >> $seqres.full
++_scratch_xfs_list_metadata_fields 'agf 0' 'addr refcntroot' >> $seqres.full
++
++echo "Fuzz refcountbt"
++_scratch_xfs_fuzz_fields  'agf 0' 'addr refcntroot' >> $seqres.full
++echo "Done fuzzing refcountbt"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1312.out b/tests/xfs/1312.out
+new file mode 100644
+index 0000000..ca40b46
+--- /dev/null
++++ b/tests/xfs/1312.out
+@@ -0,0 +1,4 @@
++QA output created by 1312
++Format and populate
++Fuzz refcountbt
++Done fuzzing refcountbt
+diff --git a/tests/xfs/1313 b/tests/xfs/1313
+new file mode 100755
+index 0000000..13da0b3
+--- /dev/null
++++ b/tests/xfs/1313
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# FS QA Test No. 1313
++#
++# Populate a XFS filesystem and fuzz every btree-format directory inode field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find btree-format dir inode"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_BTREE)
++_scratch_unmount
++
++echo "Fields we propose to fuzz: inode ${inum}" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" >> $seqres.full
++
++echo "Fuzz inode"
++_scratch_xfs_fuzz_fields  "inode ${inum}" >> $seqres.full
++echo "Done fuzzing inode"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1313.out b/tests/xfs/1313.out
+new file mode 100644
+index 0000000..b087a06
+--- /dev/null
++++ b/tests/xfs/1313.out
+@@ -0,0 +1,5 @@
++QA output created by 1313
++Format and populate
++Find btree-format dir inode
++Fuzz inode
++Done fuzzing inode
+diff --git a/tests/xfs/1314 b/tests/xfs/1314
+new file mode 100755
+index 0000000..a9a552c
+--- /dev/null
++++ b/tests/xfs/1314
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# FS QA Test No. 1314
++#
++# Populate a XFS filesystem and fuzz every extents-format file inode field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find extents-format file inode"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFREG.FMT_EXTENTS)
++_scratch_unmount
++
++echo "Fields we propose to fuzz: inode ${inum}" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" >> $seqres.full
++
++echo "Fuzz inode"
++_scratch_xfs_fuzz_fields  "inode ${inum}" >> $seqres.full
++echo "Done fuzzing inode"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1314.out b/tests/xfs/1314.out
+new file mode 100644
+index 0000000..c5c1a3a
+--- /dev/null
++++ b/tests/xfs/1314.out
+@@ -0,0 +1,5 @@
++QA output created by 1314
++Format and populate
++Find extents-format file inode
++Fuzz inode
++Done fuzzing inode
+diff --git a/tests/xfs/1315 b/tests/xfs/1315
+new file mode 100755
+index 0000000..1df5b5a
+--- /dev/null
++++ b/tests/xfs/1315
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# FS QA Test No. 1315
++#
++# Populate a XFS filesystem and fuzz every btree-format file inode field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find btree-format file inode"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFREG.FMT_BTREE)
++_scratch_unmount
++
++echo "Fields we propose to fuzz: inode ${inum}" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" >> $seqres.full
++
++echo "Fuzz inode"
++_scratch_xfs_fuzz_fields  "inode ${inum}" >> $seqres.full
++echo "Done fuzzing inode"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1315.out b/tests/xfs/1315.out
+new file mode 100644
+index 0000000..421b645
+--- /dev/null
++++ b/tests/xfs/1315.out
+@@ -0,0 +1,5 @@
++QA output created by 1315
++Format and populate
++Find btree-format file inode
++Fuzz inode
++Done fuzzing inode
+diff --git a/tests/xfs/1316 b/tests/xfs/1316
+new file mode 100755
+index 0000000..564639b
+--- /dev/null
++++ b/tests/xfs/1316
+@@ -0,0 +1,69 @@
++#! /bin/bash
++# FS QA Test No. 1316
++#
++# Populate a XFS filesystem and fuzz every bmbt block field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find bmbt block"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFREG.FMT_BTREE)
++_scratch_unmount
++
++inode_ver=$(_scratch_xfs_get_metadata_field "core.version" "inode ${inum}")
++
++echo "Fields we propose to fuzz: inode ${inum} addr u${inode_ver}.bmbt.ptrs[1]" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" "addr u${inode_ver}.bmbt.ptrs[1]" >> $seqres.full
++
++echo "Fuzz bmbt"
++_scratch_xfs_fuzz_fields  "inode ${inum}" "addr u${inode_ver}.bmbt.ptrs[1]" >> $seqres.full
++echo "Done fuzzing bmbt"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1316.out b/tests/xfs/1316.out
+new file mode 100644
+index 0000000..1ae75f6
+--- /dev/null
++++ b/tests/xfs/1316.out
+@@ -0,0 +1,5 @@
++QA output created by 1316
++Format and populate
++Find bmbt block
++Fuzz bmbt
++Done fuzzing bmbt
+diff --git a/tests/xfs/1317 b/tests/xfs/1317
+new file mode 100755
+index 0000000..b8205e9
+--- /dev/null
++++ b/tests/xfs/1317
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# FS QA Test No. 1317
++#
++# Populate a XFS filesystem and fuzz every symlink remote block field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find symlink remote block"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFLNK.FMT_EXTENTS)
++_scratch_unmount
++
++echo "Fields we propose to fuzz: inode ${inum} dblock 0" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" 'dblock 0' >> $seqres.full
++
++echo "Fuzz symlink remote block"
++_scratch_xfs_fuzz_fields "inode ${inum}" 'dblock 0' >> $seqres.full
++echo "Done fuzzing symlink remote block"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1317.out b/tests/xfs/1317.out
+new file mode 100644
+index 0000000..92affb2
+--- /dev/null
++++ b/tests/xfs/1317.out
+@@ -0,0 +1,5 @@
++QA output created by 1317
++Format and populate
++Find symlink remote block
++Fuzz symlink remote block
++Done fuzzing symlink remote block
+diff --git a/tests/xfs/1318 b/tests/xfs/1318
+new file mode 100755
+index 0000000..b46f333
+--- /dev/null
++++ b/tests/xfs/1318
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# FS QA Test No. 1318
++#
++# Populate a XFS filesystem and fuzz every inline directory inode field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find inline-format dir inode"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_INLINE)
++_scratch_unmount
++
++echo "Fields we propose to fuzz: inode ${inum}" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" >> $seqres.full
++
++echo "Fuzz inline-format dir inode"
++_scratch_xfs_fuzz_fields  "inode ${inum}" >> $seqres.full
++echo "Done fuzzing inline-format dir inode"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1318.out b/tests/xfs/1318.out
+new file mode 100644
+index 0000000..c12e336
+--- /dev/null
++++ b/tests/xfs/1318.out
+@@ -0,0 +1,5 @@
++QA output created by 1318
++Format and populate
++Find inline-format dir inode
++Fuzz inline-format dir inode
++Done fuzzing inline-format dir inode
+diff --git a/tests/xfs/1319 b/tests/xfs/1319
+new file mode 100755
+index 0000000..a891248
+--- /dev/null
++++ b/tests/xfs/1319
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# FS QA Test No. 1319
++#
++# Populate a XFS filesystem and fuzz every block-format dir block field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find data-format dir block"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_BLOCK)
++_scratch_unmount
++
++echo "Fields we propose to fuzz: inode ${inum} dblock 0" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" 'dblock 0' >> $seqres.full
++
++echo "Fuzz data-format dir block"
++_scratch_xfs_fuzz_fields  "inode ${inum}" 'dblock 0' >> $seqres.full
++echo "Done fuzzing data-format dir block"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1319.out b/tests/xfs/1319.out
+new file mode 100644
+index 0000000..72ab82a
+--- /dev/null
++++ b/tests/xfs/1319.out
+@@ -0,0 +1,5 @@
++QA output created by 1319
++Format and populate
++Find data-format dir block
++Fuzz data-format dir block
++Done fuzzing data-format dir block
+diff --git a/tests/xfs/1320 b/tests/xfs/1320
+new file mode 100755
+index 0000000..d2321f8
+--- /dev/null
++++ b/tests/xfs/1320
+@@ -0,0 +1,68 @@
++#! /bin/bash
++# FS QA Test No. 1320
++#
++# Populate a XFS filesystem and fuzz every data-format dir block field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find data-format dir block"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_LEAF)
++blk_sz=$(get_block_size $SCRATCH_MNT)
++_scratch_unmount
++
++echo "Fields we propose to fuzz: inode ${inum} dblock 0" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" "dblock 0" >> $seqres.full
++
++echo "Fuzz data-format dir block"
++_scratch_xfs_fuzz_fields  "inode ${inum}" "dblock 0" >> $seqres.full
++echo "Done fuzzing data-format dir block"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1320.out b/tests/xfs/1320.out
+new file mode 100644
+index 0000000..409a25b
+--- /dev/null
++++ b/tests/xfs/1320.out
+@@ -0,0 +1,5 @@
++QA output created by 1320
++Format and populate
++Find data-format dir block
++Fuzz data-format dir block
++Done fuzzing data-format dir block
+diff --git a/tests/xfs/1321 b/tests/xfs/1321
+new file mode 100755
+index 0000000..ca5474b
+--- /dev/null
++++ b/tests/xfs/1321
+@@ -0,0 +1,69 @@
++#! /bin/bash
++# FS QA Test No. 1321
++#
++# Populate a XFS filesystem and fuzz every leaf1-format dir block field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find leaf1-format dir block"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_LEAF)
++blk_sz=$(get_block_size $SCRATCH_MNT)
++_scratch_unmount
++
++leaf_offset=$(( (2 ** 35) / blk_sz))
++echo "Fields we propose to fuzz: inode ${inum} dblock ${leaf_offset}" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" "dblock ${leaf_offset}" >> $seqres.full
++
++echo "Fuzz leaf1-format dir block"
++_scratch_xfs_fuzz_fields  "inode ${inum}" "dblock ${leaf_offset}" >> $seqres.full
++echo "Done fuzzing leaf1-format dir block"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1321.out b/tests/xfs/1321.out
+new file mode 100644
+index 0000000..ef3fa37
+--- /dev/null
++++ b/tests/xfs/1321.out
+@@ -0,0 +1,5 @@
++QA output created by 1321
++Format and populate
++Find leaf1-format dir block
++Fuzz leaf1-format dir block
++Done fuzzing leaf1-format dir block
+diff --git a/tests/xfs/1322 b/tests/xfs/1322
+new file mode 100755
+index 0000000..dff6e67
+--- /dev/null
++++ b/tests/xfs/1322
+@@ -0,0 +1,69 @@
++#! /bin/bash
++# FS QA Test No. 1322
++#
++# Populate a XFS filesystem and fuzz every leafn-format dir block field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find leafn-format dir block"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_NODE)
++blk_sz=$(get_block_size $SCRATCH_MNT)
++_scratch_unmount
++
++leaf_offset=$(( ( (2 ** 35) / blk_sz) + 1))
++echo "Fields we propose to fuzz: inode ${inum} dblock ${leaf_offset}" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" "dblock ${leaf_offset}" >> $seqres.full
++
++echo "Fuzz leafn-format dir block"
++_scratch_xfs_fuzz_fields  "inode ${inum}" "dblock ${leaf_offset}" >> $seqres.full
++echo "Done fuzzing leafn-format dir block"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1322.out b/tests/xfs/1322.out
+new file mode 100644
+index 0000000..d1e0c7d
+--- /dev/null
++++ b/tests/xfs/1322.out
+@@ -0,0 +1,5 @@
++QA output created by 1322
++Format and populate
++Find leafn-format dir block
++Fuzz leafn-format dir block
++Done fuzzing leafn-format dir block
+diff --git a/tests/xfs/1323 b/tests/xfs/1323
+new file mode 100755
+index 0000000..51a1b0e
+--- /dev/null
++++ b/tests/xfs/1323
+@@ -0,0 +1,69 @@
++#! /bin/bash
++# FS QA Test No. 1323
++#
++# Populate a XFS filesystem and fuzz every node-format dir block field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find node-format dir block"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_NODE)
++blk_sz=$(get_block_size $SCRATCH_MNT)
++_scratch_unmount
++
++leaf_offset=$(( (2 ** 35) / blk_sz ))
++echo "Fields we propose to fuzz: inode ${inum} dblock ${leaf_offset}" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" "dblock ${leaf_offset}" >> $seqres.full
++
++echo "Fuzz node-format dir block"
++_scratch_xfs_fuzz_fields  "inode ${inum}" "dblock ${leaf_offset}" >> $seqres.full
++echo "Done fuzzing node-format dir block"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1323.out b/tests/xfs/1323.out
+new file mode 100644
+index 0000000..2debc5c
+--- /dev/null
++++ b/tests/xfs/1323.out
+@@ -0,0 +1,5 @@
++QA output created by 1323
++Format and populate
++Find node-format dir block
++Fuzz node-format dir block
++Done fuzzing node-format dir block
+diff --git a/tests/xfs/1324 b/tests/xfs/1324
+new file mode 100755
+index 0000000..f968b6d
+--- /dev/null
++++ b/tests/xfs/1324
+@@ -0,0 +1,69 @@
++#! /bin/bash
++# FS QA Test No. 1324
++#
++# Populate a XFS filesystem and fuzz every freeindex-format dir block field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find freeindex-format dir block"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_NODE)
++blk_sz=$(get_block_size $SCRATCH_MNT)
++_scratch_unmount
++
++leaf_offset=$(( (2 ** 36) / blk_sz ))
++echo "Fields we propose to fuzz: inode ${inum} dblock ${leaf_offset}" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" "dblock ${leaf_offset}" >> $seqres.full
++
++echo "Fuzz freeindex-format dir block"
++_scratch_xfs_fuzz_fields  "inode ${inum}" "dblock ${leaf_offset}" >> $seqres.full
++echo "Done fuzzing freeindex-format dir block"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1324.out b/tests/xfs/1324.out
+new file mode 100644
+index 0000000..1e373e0
+--- /dev/null
++++ b/tests/xfs/1324.out
+@@ -0,0 +1,5 @@
++QA output created by 1324
++Format and populate
++Find freeindex-format dir block
++Fuzz freeindex-format dir block
++Done fuzzing freeindex-format dir block
+diff --git a/tests/xfs/1325 b/tests/xfs/1325
+new file mode 100755
+index 0000000..239f342
+--- /dev/null
++++ b/tests/xfs/1325
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# FS QA Test No. 1325
++#
++# Populate a XFS filesystem and fuzz every inline attr inode field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find inline-format attr inode"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/ATTR.FMT_LOCAL)
++_scratch_unmount
++
++echo "Fields we propose to fuzz: inode ${inum}" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" >> $seqres.full
++
++echo "Fuzz inline-format attr inode"
++_scratch_xfs_fuzz_fields  "inode ${inum}" >> $seqres.full
++echo "Done fuzzing inline-format attr inode"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1325.out b/tests/xfs/1325.out
+new file mode 100644
+index 0000000..5259fe8
+--- /dev/null
++++ b/tests/xfs/1325.out
+@@ -0,0 +1,5 @@
++QA output created by 1325
++Format and populate
++Find inline-format attr inode
++Fuzz inline-format attr inode
++Done fuzzing inline-format attr inode
+diff --git a/tests/xfs/1326 b/tests/xfs/1326
+new file mode 100755
+index 0000000..aa6d683
+--- /dev/null
++++ b/tests/xfs/1326
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# FS QA Test No. 1326
++#
++# Populate a XFS filesystem and fuzz every leaf-format attr block field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find leaf-format attr block"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/ATTR.FMT_LEAF)
++_scratch_unmount
++
++echo "Fields we propose to fuzz: inode ${inum} ablock 0" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" 'ablock 0' >> $seqres.full
++
++echo "Fuzz leaf-format attr block"
++_scratch_xfs_fuzz_fields  "inode ${inum}" 'ablock 0' >> $seqres.full
++echo "Done fuzzing leaf-format attr block"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1326.out b/tests/xfs/1326.out
+new file mode 100644
+index 0000000..d10cdb7
+--- /dev/null
++++ b/tests/xfs/1326.out
+@@ -0,0 +1,5 @@
++QA output created by 1326
++Format and populate
++Find leaf-format attr block
++Fuzz leaf-format attr block
++Done fuzzing leaf-format attr block
+diff --git a/tests/xfs/1327 b/tests/xfs/1327
+new file mode 100755
+index 0000000..923c405
+--- /dev/null
++++ b/tests/xfs/1327
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# FS QA Test No. 1327
++#
++# Populate a XFS filesystem and fuzz every node-format attr block field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find node-format attr block"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/ATTR.FMT_NODE)
++_scratch_unmount
++
++echo "Fields we propose to fuzz: inode ${inum} ablock 0" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" "ablock 0" >> $seqres.full
++
++echo "Fuzz node-format attr block"
++_scratch_xfs_fuzz_fields  "inode ${inum}" "ablock 0" >> $seqres.full
++echo "Done fuzzing node-format attr block"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1327.out b/tests/xfs/1327.out
+new file mode 100644
+index 0000000..b3a4f1d
+--- /dev/null
++++ b/tests/xfs/1327.out
+@@ -0,0 +1,5 @@
++QA output created by 1327
++Format and populate
++Find node-format attr block
++Fuzz node-format attr block
++Done fuzzing node-format attr block
+diff --git a/tests/xfs/1328 b/tests/xfs/1328
+new file mode 100755
+index 0000000..a4aad22
+--- /dev/null
++++ b/tests/xfs/1328
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# FS QA Test No. 1328
++#
++# Populate a XFS filesystem and fuzz every external attr block field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Find external attr block"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/ATTR.FMT_EXTENTS_REMOTE3K)
++_scratch_unmount
++
++echo "Fields we propose to fuzz: inode ${inum} ablock 1" >> $seqres.full
++_scratch_xfs_list_metadata_fields "inode ${inum}" "ablock 1" >> $seqres.full
++
++echo "Fuzz external attr block"
++_scratch_xfs_fuzz_fields  "inode ${inum}" "ablock 1" >> $seqres.full
++echo "Done fuzzing external attr block"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1328.out b/tests/xfs/1328.out
+new file mode 100644
+index 0000000..758f322
+--- /dev/null
++++ b/tests/xfs/1328.out
+@@ -0,0 +1,5 @@
++QA output created by 1328
++Format and populate
++Find external attr block
++Fuzz external attr block
++Done fuzzing external attr block
+diff --git a/tests/xfs/1329 b/tests/xfs/1329
+new file mode 100755
+index 0000000..2e21aeb
+--- /dev/null
++++ b/tests/xfs/1329
+@@ -0,0 +1,63 @@
++#! /bin/bash
++# FS QA Test No. 1329
++#
++# Populate a XFS filesystem and fuzz every rtrmapbt record field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_realtime
++_require_xfs_scratch_rmapbt
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++inode_ver=$(_scratch_xfs_get_metadata_field "core.version" 'sb 0' 'addr rrmapino')
++
++echo "Fuzz rtrmapbt recs"
++_scratch_xfs_fuzz_fields 'sb 0' 'addr rrmapino' "addr u${inode_ver}.rtrmapbt.ptrs[1]" >> $seqres.full
++echo "Done fuzzing rtrmapbt recs"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1329.out b/tests/xfs/1329.out
+new file mode 100644
+index 0000000..d9d8b89
+--- /dev/null
++++ b/tests/xfs/1329.out
+@@ -0,0 +1,4 @@
++QA output created by 1329
++Format and populate
++Fuzz rtrmapbt recs
++Done fuzzing rtrmapbt recs
+diff --git a/tests/xfs/1330 b/tests/xfs/1330
+new file mode 100755
+index 0000000..3ca44ae
+--- /dev/null
++++ b/tests/xfs/1330
+@@ -0,0 +1,61 @@
++#! /bin/bash
++# FS QA Test No. 1330
++#
++# Populate a XFS filesystem and fuzz every rtrmapbt keyptr field.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1303  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_realtime
++_require_xfs_scratch_rmapbt
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Fuzz rtrmapbt keyptrs"
++_scratch_xfs_fuzz_some_fields '(rtrmapbt)' 'sb 0' 'addr rrmapino' >> $seqres.full
++echo "Done fuzzing rtrmapbt keyptrs"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1330.out b/tests/xfs/1330.out
+new file mode 100644
+index 0000000..ce16b43
+--- /dev/null
++++ b/tests/xfs/1330.out
+@@ -0,0 +1,4 @@
++QA output created by 1330
++Format and populate
++Fuzz rtrmapbt keyptrs
++Done fuzzing rtrmapbt keyptrs
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 3296eb9..2cbd3e6 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -333,3 +333,34 @@
+ 345 auto quick clone
+ 346 auto quick clone
+ 347 auto quick clone
++1300 dangerous_fuzzers scrub
++1301 dangerous_fuzzers scrub
++1302 dangerous_fuzzers scrub
++1303 dangerous_fuzzers scrub
++1304 dangerous_fuzzers scrub
++1305 dangerous_fuzzers scrub
++1306 dangerous_fuzzers scrub
++1307 dangerous_fuzzers scrub
++1308 dangerous_fuzzers scrub
++1309 dangerous_fuzzers scrub
++1310 dangerous_fuzzers scrub
++1311 dangerous_fuzzers scrub
++1312 dangerous_fuzzers scrub
++1313 dangerous_fuzzers scrub
++1314 dangerous_fuzzers scrub
++1315 dangerous_fuzzers scrub
++1316 dangerous_fuzzers scrub
++1317 dangerous_fuzzers scrub
++1318 dangerous_fuzzers scrub
++1319 dangerous_fuzzers scrub
++1320 dangerous_fuzzers scrub
++1321 dangerous_fuzzers scrub
++1322 dangerous_fuzzers scrub
++1323 dangerous_fuzzers scrub
++1324 dangerous_fuzzers scrub
++1325 dangerous_fuzzers scrub
++1326 dangerous_fuzzers scrub
++1327 dangerous_fuzzers scrub
++1328 dangerous_fuzzers scrub
++1329 dangerous_fuzzers scrub
++1330 dangerous_fuzzers scrub
 
