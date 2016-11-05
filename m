@@ -1,38 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51536 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932513AbcKMMIt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Nov 2016 07:08:49 -0500
-Date: Sun, 13 Nov 2016 04:08:48 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: EFI SLAB use after free in generic/388 run
-Message-ID: <20161113120848.GA32761@infradead.org>
-References: <20161112174049.GB27521@infradead.org>
- <20161113002634.GI16813@birch.djwong.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:36730 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750935AbcKEAJS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:09:18 -0400
+Subject: [PATCH 12/16] libxfs: fix line lengths
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:09:14 -0700
+Message-ID: <147830455401.26713.11368437004356317380.stgit@birch.djwong.org>
+In-Reply-To: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161113002634.GI16813@birch.djwong.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
 
-On Sat, Nov 12, 2016 at 04:26:34PM -0800, Darrick J. Wong wrote:
-> On Sat, Nov 12, 2016 at 09:40:49AM -0800, Christoph Hellwig wrote:
-> > Just saw this during a xfstests auto run on virtio with default
-> > XFS parameters.  I don't think I saw this before when running the
-> > same config, so it might not be 100% reproducible.  I'd be surpised
-> > if my laptop has bad ram, but who knows..
-> 
-> Does your kernel have commit b77428b12b5 ("xfs: defer should abort
-> intent items if the trans roll fails") in it?  I saw similar symptoms
-> and fixed them with that patch.
-> 
-> (Patch should appear in -rc5 tomorrow.)
+Fix some 80-char line length issues.
 
-Let me try to reproduce it - I though I was just testing latest
-for-next with my direct I/O changes, which would have it included,
-but I just noticed I made a mess off my tree due to an unfinished
-rebase, so maybe I actually was using an older base.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reported-by: Eric Sandeen <sandeen@sandeen.net>
+---
+ libxfs/xfs_ialloc.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 5c88b0b..efb37d3 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -2338,7 +2338,8 @@ xfs_imap(
+ 
+ 		imap->im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
+ 		imap->im_len = XFS_FSB_TO_BB(mp, 1);
+-		imap->im_boffset = (unsigned short)(offset << mp->m_sb.sb_inodelog);
++		imap->im_boffset = (unsigned short)(offset <<
++							mp->m_sb.sb_inodelog);
+ 		return 0;
+ 	}
+ 
+
