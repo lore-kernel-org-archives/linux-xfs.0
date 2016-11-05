@@ -1,69 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36676 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751035AbcKFEe4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 6 Nov 2016 00:34:56 -0400
-Date: Sun, 6 Nov 2016 12:34:54 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs/021: filter out detailed array element info from
- xfs_db
-Message-ID: <20161106043454.GD27776@eguan.usersys.redhat.com>
-References: <1478276170-6618-1-git-send-email-eguan@redhat.com>
- <20161105055111.GW30105@dhcp12-143.nay.redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:19050 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754303AbcKEA1e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:27:34 -0400
+Subject: [PATCH 28/39] xfs: cross-reference refcount btree during scrub
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:27:30 -0700
+Message-ID: <147830565091.4165.3968389866491066069.stgit@birch.djwong.org>
+In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161105055111.GW30105@dhcp12-143.nay.redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, Nov 05, 2016 at 01:51:11PM +0800, Zorro Lang wrote:
-> On Sat, Nov 05, 2016 at 12:16:10AM +0800, Eryu Guan wrote:
-> > Starting from xfsprogs commit 384283555871 ("xfs_db: print one array
-> > element per line"), xfs_db prints one array element per line. This
-> > breaks the filter in xfs/021, which now fails as:
-> > 
-> >   hdr.freemap[0-2] = [base,size] [FREEMAP..]
-> >  +0:[104,1892]
-> >  +1:[0,0]
-> >  +2:[0,0]
-> 
-> Hmm... So [FREEMAP..] was printed in one line, but now every records
-> will take one line.
-> 
-> >   entries[0-2] = [hashval,nameidx,incomplete,root,local] [ENTRIES..]
-> > 
-> > So we have extra lines that need to be filtered out,
-> > 
-> > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> > ---
-> >  tests/xfs/021 | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/tests/xfs/021 b/tests/xfs/021
-> > index 67a4346..b99eff7 100755
-> > --- a/tests/xfs/021
-> > +++ b/tests/xfs/021
-> > @@ -151,7 +151,7 @@ s/^(hdr.info.magic =) 0x3bee/\1 0xfbee/;
-> >  s/^(hdr.firstused =) (\d+)/\1 FIRSTUSED/;
-> >  s/^(hdr.freemap\[0-2] = \[base,size]).*/\1 [FREEMAP..]/;
-> 
-> So this line script trys to deal with all freemap things, but now it
-> can't deal with multi-lines output. (Same as below)
-> 
-> >  s/^(entries\[0-2] = \[hashval,nameidx,incomplete,root,local]).*/\1 [ENTRIES..]/;
-> > -	print;'
-> > +	print unless /^[0-9]/;'
-> 
-> Filter all lines start with a digit(0~9). It works, but I can't be
-> sure that if it'll affect others useful error output, maybe more
-> accurate expression will be better?
+During metadata btree scrub, we should cross-reference with the
+reference counts.
 
-I think it's fine, we only filter stdout here and if there's any error
-it should go to stderr and we can still catch it.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/xfs_refcount.c |   19 +++++++++++++++++++
+ libxfs/xfs_refcount.h |    3 +++
+ 2 files changed, 22 insertions(+)
 
-Thanks,
-Eryu
+
+diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
+index 0508ec3..124d5c0 100644
+--- a/libxfs/xfs_refcount.c
++++ b/libxfs/xfs_refcount.c
+@@ -1695,3 +1695,22 @@ xfs_refcount_recover_cow_leftovers(
+ 	xfs_trans_cancel(tp);
+ 	goto out_free;
+ }
++
++/* Is there a record covering a given extent? */
++int
++xfs_refcount_has_record(
++	struct xfs_btree_cur	*cur,
++	xfs_agblock_t		bno,
++	xfs_extlen_t		len,
++	bool			*exists)
++{
++	union xfs_btree_irec	low;
++	union xfs_btree_irec	high;
++
++	memset(&low, 0, sizeof(low));
++	low.rc.rc_startblock = bno;
++	memset(&high, 0xFF, sizeof(high));
++	high.rc.rc_startblock = bno + len - 1;
++
++	return xfs_btree_has_record(cur, &low, &high, exists);
++}
+diff --git a/libxfs/xfs_refcount.h b/libxfs/xfs_refcount.h
+index 098dc66..78cb142 100644
+--- a/libxfs/xfs_refcount.h
++++ b/libxfs/xfs_refcount.h
+@@ -67,4 +67,7 @@ extern int xfs_refcount_free_cow_extent(struct xfs_mount *mp,
+ extern int xfs_refcount_recover_cow_leftovers(struct xfs_mount *mp,
+ 		xfs_agnumber_t agno);
+ 
++extern int xfs_refcount_has_record(struct xfs_btree_cur *cur,
++		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
++
+ #endif	/* __XFS_REFCOUNT_H__ */
+
