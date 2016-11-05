@@ -1,130 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49728 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750859AbcKFSX1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 6 Nov 2016 13:23:27 -0500
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] fstests: make xfs_io mandatory
-Date: Mon,  7 Nov 2016 02:23:21 +0800
-Message-Id: <1478456601-7085-1-git-send-email-eguan@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:36706 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750935AbcKEAJF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:09:05 -0400
+Subject: [PATCH 10/16] libxfs: clean up _dir2_data_freescan
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:09:01 -0700
+Message-ID: <147830454147.26713.11280885080763890502.stgit@birch.djwong.org>
+In-Reply-To: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-_test_inode_flag() and _test_inode_extsz() use "which $XFS_IO_PROG"
-to check if xfs_io command is available. And "-i" option was added
-to XFS_IO_PROG varibable by commit 54659ecdb575 ("fstests: run
-xfs_io with -i option if supported"). So the command becomes "which
-/usr/sbin/xfs_io -i", and it stops and waits for input from stdin,
-because "-i" option of "which" means "Read aliases from stdin".
+Refactor the implementations of xfs_dir2_data_freescan into a
+routine that takes the raw directory block parameters and
+a second function that figures out the raw parameters from the
+directory inode.  This enables us to use the exact same code
+for both userspace and the kernel, since repair knows exactly
+which directory block geometry parameters it needs.
 
-I've seen xfs/008 hang when testing with latest xfsprogs, where
-xfs_io has "-i" support.
-
-Fix it by removing the xfs_io command detections, and making xfs_io
-mandatory in common/config.
-
-Also fix the indentions in these functions, use tab instead of
-spaces, while we're at it.
-
-Signed-off-by: Eryu Guan <eguan@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/config |  4 +++-
- common/rc     | 24 ++++++++++--------------
- tests/xfs/094 |  1 -
- tests/xfs/103 |  1 -
- 4 files changed, 13 insertions(+), 17 deletions(-)
+ libxfs/libxfs_api_defs.h |    2 +-
+ libxfs/libxfs_priv.h     |    8 --------
+ libxfs/xfs_dir2.h        |    4 +++-
+ libxfs/xfs_dir2_data.c   |   12 +++++++++++-
+ repair/dir2.c            |    4 ++--
+ repair/phase6.c          |    3 ++-
+ 6 files changed, 19 insertions(+), 14 deletions(-)
 
-diff --git a/common/config b/common/config
-index 168f46c..0b6cf01 100644
---- a/common/config
-+++ b/common/config
-@@ -158,11 +158,13 @@ export DF_PROG="`set_prog_path df`"
- [ "$DF_PROG" = "" ] && _fatal "df not found"
- [ "$HOSTOS" = "Linux" ] && export DF_PROG="$DF_PROG -T -P"
+
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index d60b6c2..b7b1043 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -88,7 +88,7 @@
+ #define xfs_dir_replace			libxfs_dir_replace
+ #define xfs_dir2_isblock		libxfs_dir2_isblock
+ #define xfs_dir2_isleaf			libxfs_dir2_isleaf
+-#define __xfs_dir2_data_freescan	libxfs_dir2_data_freescan
++#define xfs_dir2_data_freescan_int	libxfs_dir2_data_freescan_int
+ #define xfs_dir2_data_log_entry		libxfs_dir2_data_log_entry
+ #define xfs_dir2_data_log_header	libxfs_dir2_data_log_header
+ #define xfs_dir2_data_make_free		libxfs_dir2_data_make_free
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index a101a00..f4db183 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -49,14 +49,6 @@
+ #ifndef __LIBXFS_INTERNAL_XFS_H__
+ #define __LIBXFS_INTERNAL_XFS_H__
  
-+export XFS_IO_PROG="`set_prog_path xfs_io`"
-+[ "$XFS_IO_PROG" = "" ] && _fatal "xfs_io not found"
+-/*
+- * Repair doesn't have a inode when it calls libxfs_dir2_data_freescan,
+- * so we to work around this internally for now.
+- */
+-#define xfs_dir2_data_freescan(ip, hdr, loghead) \
+-	__xfs_dir2_data_freescan((ip)->i_mount->m_dir_geo, \
+-				 (ip)->d_ops, hdr, loghead)
+-
+ #include "libxfs_api_defs.h"
+ #include "platform_defs.h"
+ #include "xfs.h"
+diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
+index 89b9e24..0197590 100644
+--- a/libxfs/xfs_dir2.h
++++ b/libxfs/xfs_dir2.h
+@@ -157,9 +157,11 @@ extern int xfs_dir2_isleaf(struct xfs_da_args *args, int *r);
+ extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
+ 				struct xfs_buf *bp);
+ 
+-extern void __xfs_dir2_data_freescan(struct xfs_da_geometry *geo,
++extern void xfs_dir2_data_freescan_int(struct xfs_da_geometry *geo,
+ 		const struct xfs_dir_ops *ops,
+ 		struct xfs_dir2_data_hdr *hdr, int *loghead);
++extern void xfs_dir2_data_freescan(struct xfs_inode *dp,
++		struct xfs_dir2_data_hdr *hdr, int *loghead);
+ extern void xfs_dir2_data_log_entry(struct xfs_da_args *args,
+ 		struct xfs_buf *bp, struct xfs_dir2_data_entry *dep);
+ extern void xfs_dir2_data_log_header(struct xfs_da_args *args,
+diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
+index 6ae5cd2..f8def7c 100644
+--- a/libxfs/xfs_dir2_data.c
++++ b/libxfs/xfs_dir2_data.c
+@@ -502,7 +502,7 @@ xfs_dir2_data_freeremove(
+  * Given a data block, reconstruct its bestfree map.
+  */
+ void
+-__xfs_dir2_data_freescan(
++xfs_dir2_data_freescan_int(
+ 	struct xfs_da_geometry	*geo,
+ 	const struct xfs_dir_ops *ops,
+ 	struct xfs_dir2_data_hdr *hdr,
+@@ -562,6 +562,16 @@ __xfs_dir2_data_freescan(
+ 	}
+ }
+ 
++void
++xfs_dir2_data_freescan(
++	struct xfs_inode	*dp,
++	struct xfs_dir2_data_hdr *hdr,
++	int			*loghead)
++{
++	return xfs_dir2_data_freescan_int(dp->i_mount->m_dir_geo, dp->d_ops,
++			hdr, loghead);
++}
 +
- export XFS_LOGPRINT_PROG="`set_prog_path xfs_logprint`"
- export XFS_REPAIR_PROG="`set_prog_path xfs_repair`"
- export XFS_DB_PROG="`set_prog_path xfs_db`"
- export XFS_GROWFS_PROG=`set_prog_path xfs_growfs`
--export XFS_IO_PROG="`set_prog_path xfs_io`"
- export XFS_SCRUB_PROG="`set_prog_path xfs_scrub`"
- export XFS_PARALLEL_REPAIR_PROG="`set_prog_path xfs_prepair`"
- export XFS_PARALLEL_REPAIR64_PROG="`set_prog_path xfs_prepair64`"
-diff --git a/common/rc b/common/rc
-index a84efe4..088ede6 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2896,30 +2896,26 @@ _populate_fs()
- #
- _test_inode_flag()
- {
--    flag=$1
--    file=$2
-+	flag=$1
-+	file=$2
- 
--    if which $XFS_IO_PROG >/dev/null; then
--        if $XFS_IO_PROG -r -c 'lsattr -v' "$file" | grep -q "$flag" ; then
--	    return 0
--        fi
--    fi
--    return 1
-+	if $XFS_IO_PROG -r -c 'lsattr -v' "$file" | grep -q "$flag" ; then
-+		return 0
-+	fi
-+	return 1
- }
- 
- # query the given files extsize allocator hint in bytes (if any)
- #
- _test_inode_extsz()
- {
--    file=$1
--    blocks=""
-+	file=$1
-+	blocks=""
- 
--    if which $XFS_IO_PROG >/dev/null; then
- 	blocks=`$XFS_IO_PROG -r -c 'stat' "$file" | \
- 		awk '/^xattr.extsize =/ { print $3 }'`
--    fi
--    [ -z "$blocks" ] && blocks="0"
--    echo $blocks
-+	[ -z "$blocks" ] && blocks="0"
-+	echo $blocks
- }
- 
- # scratch_dev_pool should contain the disks pool for the btrfs raid
-diff --git a/tests/xfs/094 b/tests/xfs/094
-index cee42d6..bf9eb2f 100755
---- a/tests/xfs/094
-+++ b/tests/xfs/094
-@@ -46,7 +46,6 @@ _supported_fs xfs
- _supported_os IRIX Linux
- _require_realtime
- _require_scratch
--_require_command "$XFS_IO_PROG" xfs_io
- 
- _filter_realtime_flag()
- {
-diff --git a/tests/xfs/103 b/tests/xfs/103
-index cbe884f..48b8c59 100755
---- a/tests/xfs/103
-+++ b/tests/xfs/103
-@@ -66,7 +66,6 @@ _filter_noymlinks_flag()
- # real QA test starts here
- _supported_os Linux IRIX
- _supported_fs xfs
--_require_command "$XFS_IO_PROG" xfs_io
- _require_scratch
- 
- _create_scratch
--- 
-2.7.4
+ /*
+  * Initialize a data block at the given block number in the directory.
+  * Give back the buffer for the created block.
+diff --git a/repair/dir2.c b/repair/dir2.c
+index 61912d1..e6415e4 100644
+--- a/repair/dir2.c
++++ b/repair/dir2.c
+@@ -921,8 +921,8 @@ _("bad bestfree table in block %u in directory inode %" PRIu64 ": "),
+ 			da_bno, ino);
+ 		if (!no_modify) {
+ 			do_warn(_("repairing table\n"));
+-			libxfs_dir2_data_freescan(mp->m_dir_geo, M_DIROPS(mp),
+-						  d, &i);
++			libxfs_dir2_data_freescan_int(mp->m_dir_geo,
++					M_DIROPS(mp), d, &i);
+ 			*dirty = 1;
+ 		} else {
+ 			do_warn(_("would repair table\n"));
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 06eed16..399ecde 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1883,7 +1883,8 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
+ 	}
+ 	*num_illegal += nbad;
+ 	if (needscan)
+-		libxfs_dir2_data_freescan(mp->m_dir_geo, M_DIROPS(mp), d, &i);
++		libxfs_dir2_data_freescan_int(mp->m_dir_geo, M_DIROPS(mp),
++				d, &i);
+ 	if (needlog)
+ 		libxfs_dir2_data_log_header(&da, bp);
+ 	libxfs_defer_finish(&tp, &dfops, ip);
 
