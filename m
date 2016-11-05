@@ -1,60 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:24962 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750909AbcKFWDo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Nov 2016 17:03:44 -0500
-Date: Mon, 7 Nov 2016 09:02:58 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: provide helper for counting extents from
- if_bytes
-Message-ID: <20161106220258.GM14023@dastard>
-References: <d279d52e-49f6-6fc2-c78b-0054d7ee0a1e@redhat.com>
- <6191b8d6-4a89-0191-728a-18ebdf9254c6@sandeen.net>
+Received: from userp1040.oracle.com ([156.151.31.81]:18920 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751601AbcKEA1E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:27:04 -0400
+Subject: [PATCH 23/39] xfs: scrub realtime bitmap/summary
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:27:00 -0700
+Message-ID: <147830562057.4165.2147505014848003749.stgit@birch.djwong.org>
+In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6191b8d6-4a89-0191-728a-18ebdf9254c6@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Nov 04, 2016 at 09:27:18PM -0500, Eric Sandeen wrote:
-> The open-coded pattern:
-> 
-> ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)
-> 
-> is all over the xfs code; provide a new helper
-> xfs_iext_count(ifp) to count the number of inline extents
-> in an inode fork.
-....
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 5dd56d3..a9e4904 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -775,6 +775,16 @@
->  	}
->  }
->  
-> +/* Count number of inline extents based on if_bytes */
-> +xfs_extnum_t
-> +xfs_iext_count(struct xfs_ifork *ifp)
-> +{
-> +	xfs_extnum_t	nextents;
-> +
-> +	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
-> +	return nextents;
-> +}
+Perform simple tests of the realtime bitmap and summary.
 
-Why not just "return ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);"?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/xfs_format.h   |    5 +++++
+ libxfs/xfs_fs.h       |    4 +++-
+ libxfs/xfs_rtbitmap.c |    2 +-
+ 3 files changed, 9 insertions(+), 2 deletions(-)
 
-Otherwise looks good - a needed cleanup.
 
-Cheers,
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index d819d00..46e4794 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -315,6 +315,11 @@ static inline bool xfs_sb_good_version(struct xfs_sb *sbp)
+ 	return false;
+ }
+ 
++static inline bool xfs_sb_version_hasrealtime(struct xfs_sb *sbp)
++{
++	return sbp->sb_rblocks > 0;
++}
++
+ /*
+  * Detect a mismatched features2 field.  Older kernels read/wrote
+  * this into the wrong slot, so to be safe we keep them in sync.
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 2709d1f..c2275b1 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -616,7 +616,9 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_TYPE_DIR	15	/* directory */
+ #define XFS_SCRUB_TYPE_XATTR	16	/* extended attribute */
+ #define XFS_SCRUB_TYPE_SYMLINK	17	/* symbolic link */
+-#define XFS_SCRUB_TYPE_MAX	17
++#define XFS_SCRUB_TYPE_RTBITMAP	18	/* realtime bitmap */
++#define XFS_SCRUB_TYPE_RTSUM	19	/* realtime summary */
++#define XFS_SCRUB_TYPE_MAX	19
+ 
+ #define XFS_SCRUB_FLAG_REPAIR	0x1	/* i: repair this metadata */
+ #define XFS_SCRUB_FLAG_CORRUPT	0x2	/* o: needs repair */
+diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
+index 36fe323..70ea975 100644
+--- a/libxfs/xfs_rtbitmap.c
++++ b/libxfs/xfs_rtbitmap.c
+@@ -65,7 +65,7 @@ const struct xfs_buf_ops xfs_rtbuf_ops = {
+  * Get a buffer for the bitmap or summary file block specified.
+  * The buffer is returned read and locked.
+  */
+-static int
++int
+ xfs_rtbuf_get(
+ 	xfs_mount_t	*mp,		/* file system mount structure */
+ 	xfs_trans_t	*tp,		/* transaction pointer */
 
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
