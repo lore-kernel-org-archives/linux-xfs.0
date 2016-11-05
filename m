@@ -1,66 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49206 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753353AbcKGQqB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 Nov 2016 11:46:01 -0500
-Subject: Re: [PATCH 2/2] xfs: provide helper for counting extents from
- if_bytes
-References: <d279d52e-49f6-6fc2-c78b-0054d7ee0a1e@redhat.com>
- <6191b8d6-4a89-0191-728a-18ebdf9254c6@sandeen.net>
- <20161106220258.GM14023@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f7034819-569a-59e1-5e98-8ee9f25d65bc@sandeen.net>
-Date: Mon, 7 Nov 2016 10:45:59 -0600
+Received: from aserp1040.oracle.com ([141.146.126.69]:40069 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754341AbcKEA1x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:27:53 -0400
+Subject: [PATCH 31/39] xfs: repair inode btrees
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:27:49 -0700
+Message-ID: <147830566914.4165.17086320240433756588.stgit@birch.djwong.org>
+In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20161106220258.GM14023@dastard>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On 11/6/16 4:02 PM, Dave Chinner wrote:
-> On Fri, Nov 04, 2016 at 09:27:18PM -0500, Eric Sandeen wrote:
->> The open-coded pattern:
->>
->> ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)
->>
->> is all over the xfs code; provide a new helper
->> xfs_iext_count(ifp) to count the number of inline extents
->> in an inode fork.
-> ....
->> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
->> index 5dd56d3..a9e4904 100644
->> --- a/fs/xfs/libxfs/xfs_inode_fork.c
->> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
->> @@ -775,6 +775,16 @@
->>  	}
->>  }
->>  
->> +/* Count number of inline extents based on if_bytes */
->> +xfs_extnum_t
->> +xfs_iext_count(struct xfs_ifork *ifp)
->> +{
->> +	xfs_extnum_t	nextents;
->> +
->> +	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
->> +	return nextents;
->> +}
-> 
-> Why not just "return ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);"?
+Use the rmapbt to find inode chunks, query the chunks to compute
+hole and free masks, and with that information rebuild the inobt
+and finobt.
 
-No real reason -I started that way and for some reason it seemed more
-cryptic and less self-documenting, but can't put my finger on why.  ;)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/xfs_ialloc.c |    2 +-
+ libxfs/xfs_ialloc.h |    3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-Happy to send V2 if that's what's preferred.
 
--Eric
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 3d02a16..923214a 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -141,7 +141,7 @@ xfs_inobt_get_rec(
+ /*
+  * Insert a single inobt record. Cursor must already point to desired location.
+  */
+-STATIC int
++int
+ xfs_inobt_insert_rec(
+ 	struct xfs_btree_cur	*cur,
+ 	__uint16_t		holemask,
+diff --git a/libxfs/xfs_ialloc.h b/libxfs/xfs_ialloc.h
+index f20d958..afcb250 100644
+--- a/libxfs/xfs_ialloc.h
++++ b/libxfs/xfs_ialloc.h
+@@ -175,5 +175,8 @@ int xfs_ialloc_has_inodes_at_extent(struct xfs_btree_cur *cur,
+ 		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
+ int xfs_ialloc_has_inode_record(struct xfs_btree_cur *cur, xfs_agino_t low,
+ 		xfs_agino_t high, bool *exists);
++int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, __uint16_t holemask,
++		__uint8_t count, __int32_t freecount, xfs_inofree_t free,
++		int *stat);
+ 
+ #endif	/* __XFS_IALLOC_H__ */
 
-> Otherwise looks good - a needed cleanup.
-> 
-> Cheers,
-> 
-> Dave.
-> 
