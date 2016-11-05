@@ -1,132 +1,196 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33614 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58340 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753767AbcKHU1h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Nov 2016 15:27:37 -0500
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8DC6D61BA8
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2016 20:27:37 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uA8KRbOq005419
-        for <linux-xfs@vger.kernel.org>; Tue, 8 Nov 2016 15:27:37 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH RFC 4/4] xfs: implement basic COW fork speculative preallocation
-Date: Tue,  8 Nov 2016 15:27:36 -0500
-Message-Id: <1478636856-7590-5-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1478636856-7590-1-git-send-email-bfoster@redhat.com>
-References: <1478636856-7590-1-git-send-email-bfoster@redhat.com>
+        id S1752921AbcKEJkx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 5 Nov 2016 05:40:53 -0400
+Date: Sat, 5 Nov 2016 17:40:50 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] xfs: testcase for kernelspace xfs_fsr extent handling
+ flaw
+Message-ID: <20161105094050.GC27776@eguan.usersys.redhat.com>
+References: <bf5d8f48-76d6-9859-cd15-bd49d5dcf62e@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bf5d8f48-76d6-9859-cd15-bd49d5dcf62e@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: fstests <fstests@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-COW fork preallocation is currently limited to what is specified by the
-COW extent size hint, which is typically much less aggressive than
-traditional speculative preallocation added when sufficiently large
-files are extended. This type of algorithm is not relevant for COW
-reservation since by design, COW reservation never involves extending
-the size of a file.
+[fixed linux-xfs list address on reply]
 
-That said, we can be more aggressive with COW fork preallocation given
-that we have extended the same inode tagging and reclaim infrastructure
-used for post-eof preallocation to support COW fork preallocation. This
-provides the ability to reclaim COW fork preallocation in the background
-or on demand.
+On Fri, Nov 04, 2016 at 09:00:09PM -0500, Eric Sandeen wrote:
+> This is a testcase for a bug which goes way back; googling
+> "xfs_trans_log_inode NULL pointer dereference" yields sporadic
+> reports over several years.
+> 
+> The test sets up several two-extent files with speculative
+> preallocation on them, and then runs xfs_fsr.  The kernelside
+> code ignores the preallocation, and therefore sets up the
+> temporary inode incorrectly after the inode fork swap.
+> 
+> It is a "dangerous" test because the extent mishandling on
+> the temporary inode causes a null pointer dereference and
+> oops when the inode's i_itemp pointer gets overwritten
+> and we blow up in logging code that tries to use it.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-As such, add a simple COW fork speculative preallocation algorithm that
-extends COW fork reservations due to file writes out to the next data
-fork extent, unshared boundary or the next preexisting extent in the COW
-fork, whichever limit we hit first. This provides a prealloc algorithm
-that, like post-eof speculative preallocation, is based on the size of
-preexisting extents.
+Tested with 4.9-rc3 kernel and saw NULL pointer dereference as expected.
+And test passed without problem after applying "xfs: fix up
+xfs_swap_extent_forks inline extent handling".
 
-XXX: This requires refinements such as throttling, reclaim, etc., as
-noted in the comments.
+Just some tiny issues inline:
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_iomap.c | 48 +++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 45 insertions(+), 3 deletions(-)
+> ---
+> 
+> diff --git a/tests/xfs/118 b/tests/xfs/118
+> new file mode 100755
+> index 0000000..d2c9080
+> --- /dev/null
+> +++ b/tests/xfs/118
+> @@ -0,0 +1,99 @@
+> +#! /bin/bash
+> +# FS QA Test 118
+> +#
+> +# Test xfs_fsr's handling of 2-extent files with preallocation
+> +#
+> +# An error in xfs_swap_extent_forks() incorrectly set up the
+> +# temporary inode's if_extents pointer to inline, leading to
+> +# in-memory corruption when the temporary inode was released 
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 40bf66c..43936aa 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -540,8 +540,11 @@ xfs_file_iomap_begin_delay(
- 	struct xfs_bmbt_irec	got;
- 	struct xfs_bmbt_irec	prev;
- 	struct xfs_bmbt_irec	imap;	/* for iomap */
-+	struct xfs_bmbt_irec	drec;	/* raw data fork record */
- 	xfs_extnum_t		idx;
- 	int			fork = XFS_DATA_FORK;
-+	bool			shared;
-+	bool			trimmed;
- 
- 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
- 	ASSERT(!xfs_get_extsz_hint(ip));
-@@ -574,11 +577,9 @@ xfs_file_iomap_begin_delay(
- 	 */
- 	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
- 			&got, &prev);
--	imap = got;
-+	drec = imap = got;
- 	if (!eof && got.br_startoff <= offset_fsb) {
- 		if (xfs_is_reflink_inode(ip)) {
--			bool		shared, trimmed;
--
- 			/*
- 			 * Assume the data extent is shared if an extent exists
- 			 * in the cow fork.
-@@ -651,6 +652,47 @@ xfs_file_iomap_begin_delay(
- 			end_fsb = min(end_fsb, maxbytes_fsb);
- 			ASSERT(end_fsb > offset_fsb);
- 		}
-+	} else if (fork == XFS_COW_FORK && !trimmed) {
-+		struct xfs_bmbt_irec	tmp = drec;
-+		xfs_extlen_t		len;
-+
-+		/*
-+		 * If we get here, we have a shared data extent without a COW
-+		 * fork reservation and the range of the write doesn't cross an
-+		 * unshared boundary. To implement COW fork preallocation,
-+		 * allocate as much as possible up until the next data fork
-+		 * extent, the next data fork unshared boundary or the next
-+		 * existing extent in the COW fork.
-+		 */
-+		ASSERT(shared && offset_fsb >= tmp.br_startoff);
-+
-+		/*
-+		 * Trim the original data fork extent to the start of the write
-+		 * and the next unshared boundary. This defines the maximum COW
-+		 * fork preallocation. bmapi_reserve_delalloc() will trim to the
-+		 * next COW fork extent (got) if one exists.
-+		 */
-+		len = tmp.br_blockcount - (offset_fsb - tmp.br_startoff);
-+		xfs_trim_extent(&tmp, offset_fsb, len);
-+		error = xfs_reflink_trim_around_shared(ip, &tmp, &shared,
-+						       &trimmed);
-+		if (error)
-+			goto out_unlock;
-+		ASSERT(shared);
-+		end_fsb = tmp.br_startoff + tmp.br_blockcount;
-+
-+		/*
-+		 * TODO:
-+		 * - Throttling based on low free space conditions (try to
-+		 *   refactor into xfs_iomap_prealloc_size()).
-+		 * - Associated scan/reclaim mechanism on buffered write ENOSPC.
-+		 * - Alignment? Might not want to overlap unshared blocks.
-+		 *   bmapi_reserve_delalloc() might do this anyways due to
-+		 *   cowextszhint.
-+		 * - Adopt similar cowextsz hint behavior as for traditional
-+		 *   extsz hint? E.g., cowextsz hint overrides prealloc?
-+		 * 	- allocsize mount option?
-+		 */
- 	}
- 
- retry:
--- 
-2.7.4
+Trailing whitespace here
 
+> +# and torn down; i_itemp and d_ops got overwritten with zeros,
+> +# which led to an oops in xfs_trans_log_inode down the fput path.
+> +#
+> +# Fixed upstream by proper nextents counting using 
+
+And here :)
+
+> +# ip->i_df.if_bytes not ip->i_d.di_nextents in xfs_swap_extent_forks
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2016 Red Hat, inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +_supported_fs xfs
+> +_supported_os IRIX Linux
+> +
+> +_require_scratch
+> +_require_command "$XFS_FSR_PROG" "xfs_fsr"
+> +
+> +# 50M
+> +_scratch_mkfs_sized $((50 * 1024 * 1024)) >> $seqres.full 2>&1
+> +_scratch_mount
+> +
+> +echo "Silence is golden"
+> +
+> +# Fragment freespace
+> +# The aim is to create a fragmented two-extent file *with* prealloc
+> +# so make the free holes big enough that a 2-extent file will have
+> +# preallocation added.  Let's say... 64k free chunks.
+> +
+> +$XFS_IO_PROG -fs -c "falloc 0 40000k" $SCRATCH_MNT/fill >> $seqres.full 2>&1
+> +sync
+> +
+> +dd if=/dev/zero of=$SCRATCH_MNT/remainder oflag=direct > /dev/null 2>&1
+> +
+> +# Free up a bunch of 64k chunks
+> +for i in `seq 0 68 40000`; do
+> +	$XFS_IO_PROG -fs -c "unresvsp ${i}k 64k" $SCRATCH_MNT/fill
+> +done
+> +
+> +# Create 2-extent files w/ preallocation (via extending writes)
+> +for I in `seq 1 64`; do
+> +	$XFS_IO_PROG -f -c "pwrite 0 64k" $SCRATCH_MNT/newfile-$I \
+> +						 >> $seqres.full 2>&1
+> +	$XFS_IO_PROG -f -c "pwrite 64k 64k" $SCRATCH_MNT/newfile-$I \
+> +						>> $seqres.full 2>&1
+> +done
+> +# sync to get extents on disk so fsr sees them
+> +sync
+> +
+> +# Free up some space for defragmentation temp file
+> +rm -f $SCRATCH_MNT/fill
+> +
+> +$XFS_FSR_PROG -vd $SCRATCH_MNT/newfile* >> $seqres.full 2>&1
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/118.out b/tests/xfs/118.out
+> new file mode 100644
+> index 0000000..3daed86
+> --- /dev/null
+> +++ b/tests/xfs/118.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 118
+> +Silence is golden
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 3296eb9..0a7a0a8 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -115,6 +115,7 @@
+>  115 parent attr
+>  116 quota auto quick
+>  117 fuzzers
+> +118 growfs dangerous
+       ^^^^^^ should be "fsr" I think.
+
+As this test crashes current upstream kernel, I'm going to let the
+kenrel fixes go upstream first, then merge this patch, so it won't break
+normal upstream kernel tests by crashing the test hosts.
+
+Then 118 could be in 'auto' and 'quick' group. I can fix all the minor
+issues at commit time.
+
+Thanks,
+Eryu
+
+>  119 log v2log auto freeze dangerous
+>  120 fuzzers
+>  121 log auto quick
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
