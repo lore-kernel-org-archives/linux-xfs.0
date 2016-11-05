@@ -1,54 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51882 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932518AbcKONlU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Nov 2016 08:41:20 -0500
-Subject: Re: [PATCH 05/16] xfs: set XFS_DA_OP_OKNOENT in xfs_attr_get
+Received: from userp1040.oracle.com ([156.151.31.81]:51458 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752523AbcKEAJm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:09:42 -0400
+Subject: [PATCH 16/16] xfs: check minimum block size for CRC filesystems
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:09:38 -0700
+Message-ID: <147830457847.26713.15949781885999402794.stgit@birch.djwong.org>
+In-Reply-To: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
 References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
- <147830451072.26713.4807330905355527976.stgit@birch.djwong.org>
- <20161115101650.GE1607@infradead.org>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <47f53245-13eb-f77a-f9d8-f532efc907fe@redhat.com>
-Date: Tue, 15 Nov 2016 07:41:19 -0600
 MIME-Version: 1.0
-In-Reply-To: <20161115101650.GE1607@infradead.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: david@fromorbit.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On 11/15/16 4:16 AM, Christoph Hellwig wrote:
-> On Fri, Nov 04, 2016 at 05:08:30PM -0700, Eric Sandeen wrote:
->> >From c400ee3ed1b13d45adde68e12254dc6ab6977b59 Mon Sep 17 00:00:00 2001
-> 
-> It should claim to be from Eric here I think..
+Check the minimum block size on v5 filesystems.
 
-> And mention that it's a port from a kernel commit.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/xfs_sb.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-I suppose - do we have a clear policy on that?  What should the format
-be for kernel<->userspace cross-ports in terms of From:, SoB:, etc?
 
-I guess the libxfs-apply script in tools/ implicitly defines that, i.e. -
-
-        # We want to format it like a normal patch with a line to say what repo
-        # and commit it was sourced from:
-        #
-        # xfs: make several functions static
-        #
-        # From: Eric Sandeen <sandeen@sandeen.net>
-        #
-        # Source kernel commit: 0d5a75e9e23ee39cd0d8a167393dcedb4f0f47b2
-        #
-        # <body>
-
--Eric
-
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index adc47e2..46e57aa 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -259,6 +259,13 @@ xfs_mount_validate_sb(
+ 		return -EFSCORRUPTED;
+ 	}
  
-> Otherwise looks fine:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
++	if (xfs_sb_version_hascrc(&mp->m_sb) &&
++	    unlikely(
++	    sbp->sb_blocksize < XFS_MIN_CRC_BLOCKSIZE)) {
++		xfs_notice(mp, "v5 SB sanity check failed");
++		return -EFSCORRUPTED;
++	}
++
+ 	/*
+ 	 * Currently only very few inode sizes are supported.
+ 	 */
 
