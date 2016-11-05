@@ -1,169 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17584 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751411AbcKEATb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:19:31 -0400
-Subject: [PATCH 03/41] xfs: create a function to query all records in a btree
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:19:25 -0700
-Message-ID: <147830516585.2155.14729804291528465042.stgit@birch.djwong.org>
-In-Reply-To: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
-References: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43970 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753312AbcKEFW6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 5 Nov 2016 01:22:58 -0400
+Date: Sat, 5 Nov 2016 13:22:56 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 39/39] xfs_scrub: create online filesystem scrub program
+Message-ID: <20161105052256.GB27776@eguan.usersys.redhat.com>
+References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+ <147830572454.4165.18074642184555452652.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <147830572454.4165.18074642184555452652.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-Create a helper function that will query all records in a btree.
-This will be used by the online repair functions to examine every
-record in a btree to rebuild a second btree.
+On Fri, Nov 04, 2016 at 05:28:44PM -0700, Darrick J. Wong wrote:
+> Create a filesystem scrubbing tool that walks the directory tree,
+> queries every file's extents, extended attributes, and stat data.  For
+> generic (non-XFS) filesystems this depends on the kernel to do nearly
+> all the validation.  Optionally, we can (try to) read all the file
+> data.
+> 
+> For XFS, we perform sequential scans of each AG's metadata, inodes,
+> extent maps, and file data.  Being XFS specific, we can work with
+> the in-kernel scrubbers to perform much stronger
+> metadata checking and cross-referencing.  We can also take advantage
+> of newer ioctls such as GETFSMAP to perform faster read verification.
+> 
+> In the future we will be able to take advantage of (still unwritten)
+> features such as parent directory pointers to fully validate all
+> metadata.  However, this tool /should/ work for most non-XFS
+> filesystems such as ext4 and btrfs.
+> 
+> Note also that the scrub tool can shut down the filesystem if errors
+> are found.  This is not a default option since scrubbing is very
+> immature at this time.  It can also ask the XFS driver in the kernel
+> to optimize or repair metadata, though this may not be successful.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+[snip]
+> --- /dev/null
+> +++ b/scrub/scrub.c
+> @@ -0,0 +1,1009 @@
+> +/*
+> + * Copyright (C) 2016 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#include "libxfs.h"
+> +#include <stdio.h>
+> +#include <mntent.h>
+> +#include <unistd.h>
+> +#include <sys/types.h>
+> +#include <sys/stat.h>
+> +#include <sys/time.h>
+> +#include <sys/resource.h>
+> +#include <sys/statvfs.h>
+> +#include <sys/vfs.h>
+> +#include <fcntl.h>
+> +#include <dirent.h>
+> +#include "disk.h"
+> +#include "scrub.h"
+> +#include "../../repair/threads.h"
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_alloc.c |   15 +++++++++++++++
- fs/xfs/libxfs/xfs_alloc.h |    2 ++
- fs/xfs/libxfs/xfs_btree.c |   14 ++++++++++++++
- fs/xfs/libxfs/xfs_btree.h |    2 ++
- fs/xfs/libxfs/xfs_rmap.c  |   28 +++++++++++++++++++++-------
- fs/xfs/libxfs/xfs_rmap.h  |    2 ++
- 6 files changed, 56 insertions(+), 7 deletions(-)
+I have trouble compiling the djwong-devel branch, it failed to find
+"../../repair/threads.h", seems it should be "../repair/threads.h" here.
 
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 0e274e8..6bffa98 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2972,3 +2972,18 @@ xfs_alloc_query_range(
- 	return xfs_btree_query_range(cur, &low_brec, &high_brec,
- 			xfs_alloc_query_range_helper, &query);
- }
-+
-+/* Find all free space records. */
-+int
-+xfs_alloc_query_all(
-+	struct xfs_btree_cur			*cur,
-+	xfs_alloc_query_range_fn		fn,
-+	void					*priv)
-+{
-+	struct xfs_alloc_query_range_info	query;
-+
-+	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
-+	query.priv = priv;
-+	query.fn = fn;
-+	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
-+}
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index f9f8b81..0dc34bf 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -232,5 +232,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
- 		struct xfs_alloc_rec_incore *low_rec,
- 		struct xfs_alloc_rec_incore *high_rec,
- 		xfs_alloc_query_range_fn fn, void *priv);
-+int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
-+		void *priv);
- 
- #endif	/* __XFS_ALLOC_H__ */
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 0e80993..629b68a 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4802,6 +4802,20 @@ xfs_btree_query_range(
- 			fn, priv);
- }
- 
-+/* Query a btree for all records. */
-+int
-+xfs_btree_query_all(
-+	struct xfs_btree_cur		*cur,
-+	xfs_btree_query_range_fn	fn,
-+	void				*priv)
-+{
-+	union xfs_btree_irec		low_rec = {0};
-+	union xfs_btree_irec		high_rec;
-+
-+	memset(&high_rec, 0xFF, sizeof(high_rec));
-+	return xfs_btree_query_range(cur, &low_rec, &high_rec, fn, priv);
-+}
-+
- /*
-  * Calculate the number of blocks needed to store a given number of records
-  * in a short-format (per-AG metadata) btree.
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index c2b01d1..b8affec 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -529,6 +529,8 @@ typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
- int xfs_btree_query_range(struct xfs_btree_cur *cur,
- 		union xfs_btree_irec *low_rec, union xfs_btree_irec *high_rec,
- 		xfs_btree_query_range_fn fn, void *priv);
-+int xfs_btree_query_all(struct xfs_btree_cur *cur, xfs_btree_query_range_fn fn,
-+		void *priv);
- 
- typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
- 		void *data);
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 3a8cc71..3840556 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -2001,14 +2001,14 @@ xfs_rmap_query_range_helper(
- /* Find all rmaps between two keys. */
- int
- xfs_rmap_query_range(
--	struct xfs_btree_cur		*cur,
--	struct xfs_rmap_irec		*low_rec,
--	struct xfs_rmap_irec		*high_rec,
--	xfs_rmap_query_range_fn	fn,
--	void				*priv)
-+	struct xfs_btree_cur			*cur,
-+	struct xfs_rmap_irec			*low_rec,
-+	struct xfs_rmap_irec			*high_rec,
-+	xfs_rmap_query_range_fn			fn,
-+	void					*priv)
- {
--	union xfs_btree_irec		low_brec;
--	union xfs_btree_irec		high_brec;
-+	union xfs_btree_irec			low_brec;
-+	union xfs_btree_irec			high_brec;
- 	struct xfs_rmap_query_range_info	query;
- 
- 	low_brec.r = *low_rec;
-@@ -2019,6 +2019,20 @@ xfs_rmap_query_range(
- 			xfs_rmap_query_range_helper, &query);
- }
- 
-+/* Find all rmaps. */
-+int
-+xfs_rmap_query_all(
-+	struct xfs_btree_cur			*cur,
-+	xfs_rmap_query_range_fn			fn,
-+	void					*priv)
-+{
-+	struct xfs_rmap_query_range_info	query;
-+
-+	query.priv = priv;
-+	query.fn = fn;
-+	return xfs_btree_query_all(cur, xfs_rmap_query_range_helper, &query);
-+}
-+
- /* Clean up after calling xfs_rmap_finish_one. */
- void
- xfs_rmap_finish_one_cleanup(
-diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-index 7899305..faf2c1a 100644
---- a/fs/xfs/libxfs/xfs_rmap.h
-+++ b/fs/xfs/libxfs/xfs_rmap.h
-@@ -162,6 +162,8 @@ typedef int (*xfs_rmap_query_range_fn)(
- int xfs_rmap_query_range(struct xfs_btree_cur *cur,
- 		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
- 		xfs_rmap_query_range_fn fn, void *priv);
-+int xfs_rmap_query_all(struct xfs_btree_cur *cur, xfs_rmap_query_range_fn fn,
-+		void *priv);
- 
- enum xfs_rmap_intent_type {
- 	XFS_RMAP_MAP,
-
+Thanks,
+Eryu
