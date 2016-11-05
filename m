@@ -1,75 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.webx.cz ([109.123.222.201]:34765 "EHLO mail.webx.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935727AbcKWLkT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Nov 2016 06:40:19 -0500
-From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
-Date: Wed, 23 Nov 2016 12:40:15 +0100
-Message-ID: <1673187.nXukm9ZPb1@libor-nb>
-In-Reply-To: <20161110213057.GH28922@dastard>
-References: <5244720.RPRsZ88NJ0@libor-nb> <2152865.L3K5Xz7SXO@libor-nb> <20161110213057.GH28922@dastard>
+Received: from userp1040.oracle.com ([156.151.31.81]:19250 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754386AbcKEA2W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:28:22 -0400
+Subject: [PATCH 35/39] xfs: query the per-AG reservation counters
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:28:19 -0700
+Message-ID: <147830569976.4165.6437344899663566177.stgit@birch.djwong.org>
+In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hello,
-collegue of mine was trying metadump, but it segfaults :-(
+Establish an ioctl for userspace to query the original and current
+per-AG reservation counts.  This will be used by xfs_scrub to
+check that the vfs counters are at least somewhat sane.
 
-# xfs_metadump -g /dev/vgDisk2/lvData /mnt/xfs_dump/vps2_metadump
-Copied 2588032 of 5767488 inodes (1 of 3 AGs)              Segmentation fault
-
-He ran it twice, segfault occured on same place
-
-dmesg says
-Nov 23 05:04:42 vps2 kernel: [1294386.804427] xfs_db[25156]: segfault at fffffffffffffff0 ip 00007f6bd7bc567d sp 00007ffc1a2897b8 error 7 in libc-2.19.so[7f6bd7b40000+1a1000]
-Nov 23 05:20:22 vps2 kernel: [1295327.311413] xfs_db[28241]: segfault at fffffffffffffff0 ip 00007f7b7426d67d sp 00007ffddefeb4f8 error 7 in libc-2.19.so[7f7b741e8000+1a1000]
-
-Are you interested in this partial metadump? It has over 3GB decompressed.
-I will keep it here for few days:
-https://download.bcom.cz/vps2_metadump_20161123.xz
-
-btw, it seems to contain strings from inside of files, is that normal? 
-It also contains strings from mail.log which is on another (ext4) filesystem.
-
-Thanks,
-Libor
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/xfs_fs.h |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 
-> On Thu, Nov 10, 2016 at 05:04:48PM +0100, Libor Klep�? wrote:
-> > On ?tvrtek 10. listopadu 2016 16:29:15 CET Dave Chinner wrote:
-> > > Which:
-> > > > > Phase 3 - for each AG...
-> > > > > 
-> > > > >         - scan (but don't clear) agi unlinked lists...
-> > > > >         - process known inodes and perform inode discovery...
-> > > > >         - agno = 0
-> > > > >         - agno = 1
-> > > > > 
-> > > > > Metadata corruption detected at xfs_attr3_leaf block 0x12645ef8/0x1000
-> > > > > Metadata corruption detected at xfs_attr3_leaf block 0x12f63f40/0x1000
-> > > 
-> > > These two blocks. It looks like repair didn't clean them up?
-> > > 
-> > > Hmmmm - looking at the code I'm not sure that repair detects and
-> > > removes empty attr leaf blocks, which would explain why the error
-> > > showed up again.. Can you provide a metadump of the filesystem so we
-> > > can did into the exact neature of the problem you are seeing?
-> > 
-> > Sure not a problem. How much time will it take giving xfs_repair took approx 40 minutes?
-> 
-> No longer than that, with agood possibility it will be much faster
-> as metadump only needs 1 pass over the metadata, not three...
-> 
-> Cheers,
-> 
-> Dave.
-> 
-
-
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index c2275b1..deebb57 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -632,6 +632,15 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
+ 
+ /*
++ * AG reserved block counters
++ */
++struct xfs_fsop_ag_resblks {
++	__u64 resblks;		/* blocks reserved now */
++	__u64 resblks_orig;	/* blocks reserved at mount time */
++	__u64 reserved[2];
++};
++
++/*
+  * ioctl limits
+  */
+ #ifdef XATTR_LIST_MAX
+@@ -705,6 +714,7 @@ struct xfs_scrub_metadata {
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
++#define XFS_IOC_GET_AG_RESBLKS	     _IOR ('X', 126, struct xfs_fsop_ag_resblks)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ /* reflink ioctls; these MUST match the btrfs ioctl definitions */
 
