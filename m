@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18303 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:17584 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754387AbcKEAXd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:23:33 -0400
-Subject: [PATCH 41/41] xfs: query the per-AG reservation counters
+        with ESMTP id S1751411AbcKEATb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:19:31 -0400
+Subject: [PATCH 03/41] xfs: create a function to query all records in a btree
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:23:29 -0700
-Message-ID: <147830540963.2155.6293582452925259913.stgit@birch.djwong.org>
+Date: Fri, 04 Nov 2016 17:19:25 -0700
+Message-ID: <147830516585.2155.14729804291528465042.stgit@birch.djwong.org>
 In-Reply-To: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
 References: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,142 +18,152 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Establish an ioctl for userspace to query the original and current
-per-AG reservation counts.  This will be used by xfs_scrub to
-check that the vfs counters are at least somewhat sane.
+Create a helper function that will query all records in a btree.
+This will be used by the online repair functions to examine every
+record in a btree to rebuild a second btree.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h |   10 ++++++++++
- fs/xfs/xfs_fsops.c     |   29 +++++++++++++++++++++++++++++
- fs/xfs/xfs_fsops.h     |    2 ++
- fs/xfs/xfs_ioctl.c     |   16 ++++++++++++++++
- fs/xfs/xfs_ioctl32.c   |    1 +
- 5 files changed, 58 insertions(+)
+ fs/xfs/libxfs/xfs_alloc.c |   15 +++++++++++++++
+ fs/xfs/libxfs/xfs_alloc.h |    2 ++
+ fs/xfs/libxfs/xfs_btree.c |   14 ++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h |    2 ++
+ fs/xfs/libxfs/xfs_rmap.c  |   28 +++++++++++++++++++++-------
+ fs/xfs/libxfs/xfs_rmap.h  |    2 ++
+ 6 files changed, 56 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 122c31f..3fd9978 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -608,6 +608,15 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
- 
- /*
-+ * AG reserved block counters
-+ */
-+struct xfs_fsop_ag_resblks {
-+	__u64 resblks;		/* blocks reserved now */
-+	__u64 resblks_orig;	/* blocks reserved at mount time */
-+	__u64 reserved[2];
-+};
-+
-+/*
-  * ioctl limits
-  */
- #ifdef XATTR_LIST_MAX
-@@ -683,6 +692,7 @@ struct xfs_scrub_metadata {
- #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
- #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
- #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
-+#define XFS_IOC_GET_AG_RESBLKS	     _IOR ('X', 126, struct xfs_fsop_ag_resblks)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
- 
- 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 93d12fa..87b954d 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -44,6 +44,7 @@
- #include "xfs_filestream.h"
- #include "xfs_rmap.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_fs.h"
- 
- /*
-  * File system operations
-@@ -1053,3 +1054,31 @@ xfs_fs_unreserve_ag_blocks(
- 
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 0e274e8..6bffa98 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2972,3 +2972,18 @@ xfs_alloc_query_range(
+ 	return xfs_btree_query_range(cur, &low_brec, &high_brec,
+ 			xfs_alloc_query_range_helper, &query);
  }
 +
-+/* Query the per-AG reservations to see how many blocks we have reserved. */
++/* Find all free space records. */
 +int
-+xfs_fs_get_ag_reserve_blocks(
-+	struct xfs_mount		*mp,
-+	struct xfs_fsop_ag_resblks	*out)
++xfs_alloc_query_all(
++	struct xfs_btree_cur			*cur,
++	xfs_alloc_query_range_fn		fn,
++	void					*priv)
 +{
-+	struct xfs_ag_resv		*r;
-+	struct xfs_perag		*pag;
-+	xfs_agnumber_t			agno;
++	struct xfs_alloc_query_range_info	query;
 +
-+	out->resblks = 0;
-+	out->resblks_orig = 0;
-+	out->reserved[0] = out->reserved[1] = 0;
-+
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		pag = xfs_perag_get(mp, agno);
-+		r = xfs_perag_resv(pag, XFS_AG_RESV_METADATA);
-+		out->resblks += r->ar_reserved;
-+		out->resblks_orig += r->ar_asked;
-+		r = xfs_perag_resv(pag, XFS_AG_RESV_AGFL);
-+		out->resblks += r->ar_reserved;
-+		out->resblks_orig += r->ar_asked;
-+		xfs_perag_put(pag);
-+	}
-+
-+	return 0;
++	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
 +}
-diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
-index f349158..91609ae 100644
---- a/fs/xfs/xfs_fsops.h
-+++ b/fs/xfs/xfs_fsops.h
-@@ -25,6 +25,8 @@ extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
- extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
- 				xfs_fsop_resblks_t *outval);
- extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
-+extern int xfs_fs_get_ag_reserve_blocks(struct xfs_mount *mp,
-+		struct xfs_fsop_ag_resblks *out);
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index f9f8b81..0dc34bf 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -232,5 +232,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
+ 		struct xfs_alloc_rec_incore *low_rec,
+ 		struct xfs_alloc_rec_incore *high_rec,
+ 		xfs_alloc_query_range_fn fn, void *priv);
++int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
++		void *priv);
  
- extern int xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
- extern int xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 76f3e47..aab7860 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -2023,6 +2023,22 @@ xfs_file_ioctl(
- 		return 0;
- 	}
+ #endif	/* __XFS_ALLOC_H__ */
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 0e80993..629b68a 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4802,6 +4802,20 @@ xfs_btree_query_range(
+ 			fn, priv);
+ }
  
-+	case XFS_IOC_GET_AG_RESBLKS: {
-+		struct xfs_fsop_ag_resblks	out;
++/* Query a btree for all records. */
++int
++xfs_btree_query_all(
++	struct xfs_btree_cur		*cur,
++	xfs_btree_query_range_fn	fn,
++	void				*priv)
++{
++	union xfs_btree_irec		low_rec = {0};
++	union xfs_btree_irec		high_rec;
 +
-+		if (!capable(CAP_SYS_ADMIN))
-+			return -EPERM;
++	memset(&high_rec, 0xFF, sizeof(high_rec));
++	return xfs_btree_query_range(cur, &low_rec, &high_rec, fn, priv);
++}
 +
-+		error = xfs_fs_get_ag_reserve_blocks(mp, &out);
-+		if (error)
-+			return error;
-+
-+		if (copy_to_user(arg, &out, sizeof(out)))
-+			return -EFAULT;
-+
-+		return 0;
-+	}
-+
- 	case XFS_IOC_FSGROWFSDATA: {
- 		xfs_growfs_data_t in;
+ /*
+  * Calculate the number of blocks needed to store a given number of records
+  * in a short-format (per-AG metadata) btree.
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index c2b01d1..b8affec 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -529,6 +529,8 @@ typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
+ int xfs_btree_query_range(struct xfs_btree_cur *cur,
+ 		union xfs_btree_irec *low_rec, union xfs_btree_irec *high_rec,
+ 		xfs_btree_query_range_fn fn, void *priv);
++int xfs_btree_query_all(struct xfs_btree_cur *cur, xfs_btree_query_range_fn fn,
++		void *priv);
  
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 58ed5e3..5b2572b 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -556,6 +556,7 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_ERROR_CLEARALL:
- 	case XFS_IOC_GETFSMAP:
- 	case XFS_IOC_SCRUB_METADATA:
-+	case XFS_IOC_GET_AG_RESBLKS:
- 		return xfs_file_ioctl(filp, cmd, p);
- #ifndef BROKEN_X86_ALIGNMENT
- 	/* These are handled fine if no alignment issues */
+ typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
+ 		void *data);
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 3a8cc71..3840556 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2001,14 +2001,14 @@ xfs_rmap_query_range_helper(
+ /* Find all rmaps between two keys. */
+ int
+ xfs_rmap_query_range(
+-	struct xfs_btree_cur		*cur,
+-	struct xfs_rmap_irec		*low_rec,
+-	struct xfs_rmap_irec		*high_rec,
+-	xfs_rmap_query_range_fn	fn,
+-	void				*priv)
++	struct xfs_btree_cur			*cur,
++	struct xfs_rmap_irec			*low_rec,
++	struct xfs_rmap_irec			*high_rec,
++	xfs_rmap_query_range_fn			fn,
++	void					*priv)
+ {
+-	union xfs_btree_irec		low_brec;
+-	union xfs_btree_irec		high_brec;
++	union xfs_btree_irec			low_brec;
++	union xfs_btree_irec			high_brec;
+ 	struct xfs_rmap_query_range_info	query;
+ 
+ 	low_brec.r = *low_rec;
+@@ -2019,6 +2019,20 @@ xfs_rmap_query_range(
+ 			xfs_rmap_query_range_helper, &query);
+ }
+ 
++/* Find all rmaps. */
++int
++xfs_rmap_query_all(
++	struct xfs_btree_cur			*cur,
++	xfs_rmap_query_range_fn			fn,
++	void					*priv)
++{
++	struct xfs_rmap_query_range_info	query;
++
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_all(cur, xfs_rmap_query_range_helper, &query);
++}
++
+ /* Clean up after calling xfs_rmap_finish_one. */
+ void
+ xfs_rmap_finish_one_cleanup(
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 7899305..faf2c1a 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -162,6 +162,8 @@ typedef int (*xfs_rmap_query_range_fn)(
+ int xfs_rmap_query_range(struct xfs_btree_cur *cur,
+ 		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
+ 		xfs_rmap_query_range_fn fn, void *priv);
++int xfs_rmap_query_all(struct xfs_btree_cur *cur, xfs_rmap_query_range_fn fn,
++		void *priv);
+ 
+ enum xfs_rmap_intent_type {
+ 	XFS_RMAP_MAP,
 
