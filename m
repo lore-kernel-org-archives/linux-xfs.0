@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39074 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753958AbcKEAXW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:23:22 -0400
-Subject: [PATCH 39/41] xfs: online repair of inodes
+Received: from userp1040.oracle.com ([156.151.31.81]:17553 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751411AbcKEATR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:19:17 -0400
+Subject: [PATCH 01/41] xfs: plumb in needed functions for range querying of
+ the freespace btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:23:17 -0700
-Message-ID: <147830539728.2155.15604839816096522035.stgit@birch.djwong.org>
+Date: Fri, 04 Nov 2016 17:19:09 -0700
+Message-ID: <147830514977.2155.11956579182051349470.stgit@birch.djwong.org>
 In-Reply-To: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
 References: <147830514302.2155.3920703176812208304.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,43 +19,251 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Wire up the only online inode repair that we know how to do --
-clearing the reflink flag when it's no longer needed.
+Plumb in the pieces (init_high_key, diff_two_keys) necessary to call
+query_range on the free space btrees.  Remove the debugging asserts
+so that we can make queries starting from block 0.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_scrub.c |   12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_alloc_btree.c |  156 +++++++++++++++++++++++++++++----------
+ 1 file changed, 117 insertions(+), 39 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_scrub.c b/fs/xfs/xfs_scrub.c
-index d5f430e..6d3df68 100644
---- a/fs/xfs/xfs_scrub.c
-+++ b/fs/xfs/xfs_scrub.c
-@@ -5683,6 +5683,16 @@ xfs_scrub_inode(
- 
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 5ba2dac..bfbda677 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -205,19 +205,28 @@ xfs_allocbt_init_key_from_rec(
+ 	union xfs_btree_key	*key,
+ 	union xfs_btree_rec	*rec)
+ {
+-	ASSERT(rec->alloc.ar_startblock != 0);
+-
+ 	key->alloc.ar_startblock = rec->alloc.ar_startblock;
+ 	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
  }
-+
-+/* Repair an inode's fields. */
-+STATIC int
-+xfs_repair_inode(
-+	struct xfs_scrub_context	*sc)
-+{
-+	if (xfs_is_reflink_inode(sc->ip))
-+		return xfs_reflink_clear_inode_flag(sc->ip, &sc->tp);
-+	return 0;
-+}
- #undef XFS_SCRUB_INODE_GOTO
- #undef XFS_SCRUB_INODE_CHECK
  
-@@ -7106,7 +7116,7 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 	{xfs_scrub_setup_ag_header, xfs_scrub_finobt, xfs_repair_iallocbt, xfs_sb_version_hasfinobt},
- 	{xfs_scrub_setup_ag_header_freeze, xfs_scrub_rmapbt, xfs_repair_rmapbt, xfs_sb_version_hasrmapbt},
- 	{xfs_scrub_setup_ag_header, xfs_scrub_refcountbt, xfs_repair_refcountbt, xfs_sb_version_hasreflink},
--	{xfs_scrub_setup_inode, xfs_scrub_inode, NULL, NULL},
-+	{xfs_scrub_setup_inode, xfs_scrub_inode, xfs_repair_inode, NULL},
- 	{xfs_scrub_setup_inode_bmap, xfs_scrub_bmap_data, NULL, NULL},
- 	{xfs_scrub_setup_inode_bmap, xfs_scrub_bmap_attr, NULL, NULL},
- 	{xfs_scrub_setup_inode_bmap, xfs_scrub_bmap_cow, NULL, NULL},
+ STATIC void
++xfs_bnobt_init_high_key_from_rec(
++	union xfs_btree_key	*key,
++	union xfs_btree_rec	*rec)
++{
++	__u32			x;
++
++	x = be32_to_cpu(rec->alloc.ar_startblock);
++	x += be32_to_cpu(rec->alloc.ar_blockcount) - 1;
++	key->alloc.ar_startblock = cpu_to_be32(x);
++	key->alloc.ar_blockcount = 0;
++}
++
++STATIC void
+ xfs_allocbt_init_rec_from_cur(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_rec	*rec)
+ {
+-	ASSERT(cur->bc_rec.a.ar_startblock != 0);
+-
+ 	rec->alloc.ar_startblock = cpu_to_be32(cur->bc_rec.a.ar_startblock);
+ 	rec->alloc.ar_blockcount = cpu_to_be32(cur->bc_rec.a.ar_blockcount);
+ }
+@@ -236,18 +245,24 @@ xfs_allocbt_init_ptr_from_cur(
+ }
+ 
+ STATIC __int64_t
+-xfs_allocbt_key_diff(
++xfs_bnobt_key_diff(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*key)
+ {
+ 	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
+ 	xfs_alloc_key_t		*kp = &key->alloc;
+-	__int64_t		diff;
+ 
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return (__int64_t)be32_to_cpu(kp->ar_startblock) -
+-				rec->ar_startblock;
+-	}
++	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
++}
++
++STATIC __int64_t
++xfs_cntbt_key_diff(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*key)
++{
++	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
++	xfs_alloc_key_t		*kp = &key->alloc;
++	__int64_t		diff;
+ 
+ 	diff = (__int64_t)be32_to_cpu(kp->ar_blockcount) - rec->ar_blockcount;
+ 	if (diff)
+@@ -256,6 +271,33 @@ xfs_allocbt_key_diff(
+ 	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
+ }
+ 
++STATIC __int64_t
++xfs_bnobt_diff_two_keys(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	return (__int64_t)be32_to_cpu(k1->alloc.ar_startblock) -
++			  be32_to_cpu(k2->alloc.ar_startblock);
++}
++
++STATIC __int64_t
++xfs_cntbt_diff_two_keys(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	__int64_t		diff;
++
++	diff =  be32_to_cpu(k1->alloc.ar_blockcount) -
++		be32_to_cpu(k2->alloc.ar_blockcount);
++	if (diff)
++		return diff;
++
++	return  be32_to_cpu(k1->alloc.ar_startblock) -
++		be32_to_cpu(k2->alloc.ar_startblock);
++}
++
+ static bool
+ xfs_allocbt_verify(
+ 	struct xfs_buf		*bp)
+@@ -346,44 +388,78 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
+ 
+ #if defined(DEBUG) || defined(XFS_WARN)
+ STATIC int
+-xfs_allocbt_keys_inorder(
++xfs_bnobt_keys_inorder(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*k1,
+ 	union xfs_btree_key	*k2)
+ {
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return be32_to_cpu(k1->alloc.ar_startblock) <
+-		       be32_to_cpu(k2->alloc.ar_startblock);
+-	} else {
+-		return be32_to_cpu(k1->alloc.ar_blockcount) <
+-			be32_to_cpu(k2->alloc.ar_blockcount) ||
+-			(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
+-			 be32_to_cpu(k1->alloc.ar_startblock) <
+-			 be32_to_cpu(k2->alloc.ar_startblock));
+-	}
++	return be32_to_cpu(k1->alloc.ar_startblock) <
++	       be32_to_cpu(k2->alloc.ar_startblock);
+ }
+ 
+ STATIC int
+-xfs_allocbt_recs_inorder(
++xfs_bnobt_recs_inorder(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_rec	*r1,
+ 	union xfs_btree_rec	*r2)
+ {
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return be32_to_cpu(r1->alloc.ar_startblock) +
+-			be32_to_cpu(r1->alloc.ar_blockcount) <=
+-			be32_to_cpu(r2->alloc.ar_startblock);
+-	} else {
+-		return be32_to_cpu(r1->alloc.ar_blockcount) <
+-			be32_to_cpu(r2->alloc.ar_blockcount) ||
+-			(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
+-			 be32_to_cpu(r1->alloc.ar_startblock) <
+-			 be32_to_cpu(r2->alloc.ar_startblock));
+-	}
++	return be32_to_cpu(r1->alloc.ar_startblock) +
++		be32_to_cpu(r1->alloc.ar_blockcount) <=
++		be32_to_cpu(r2->alloc.ar_startblock);
++}
++
++STATIC int
++xfs_cntbt_keys_inorder(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	return be32_to_cpu(k1->alloc.ar_blockcount) <
++		be32_to_cpu(k2->alloc.ar_blockcount) ||
++		(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
++		 be32_to_cpu(k1->alloc.ar_startblock) <
++		 be32_to_cpu(k2->alloc.ar_startblock));
++}
++
++STATIC int
++xfs_cntbt_recs_inorder(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_rec	*r1,
++	union xfs_btree_rec	*r2)
++{
++	return be32_to_cpu(r1->alloc.ar_blockcount) <
++		be32_to_cpu(r2->alloc.ar_blockcount) ||
++		(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
++		 be32_to_cpu(r1->alloc.ar_startblock) <
++		 be32_to_cpu(r2->alloc.ar_startblock));
+ }
+-#endif	/* DEBUG */
++#endif /* DEBUG */
++
++static const struct xfs_btree_ops xfs_bnobt_ops = {
++	.rec_len		= sizeof(xfs_alloc_rec_t),
++	.key_len		= sizeof(xfs_alloc_key_t),
++
++	.dup_cursor		= xfs_allocbt_dup_cursor,
++	.set_root		= xfs_allocbt_set_root,
++	.alloc_block		= xfs_allocbt_alloc_block,
++	.free_block		= xfs_allocbt_free_block,
++	.update_lastrec		= xfs_allocbt_update_lastrec,
++	.get_minrecs		= xfs_allocbt_get_minrecs,
++	.get_maxrecs		= xfs_allocbt_get_maxrecs,
++	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
++	.init_high_key_from_rec	= xfs_bnobt_init_high_key_from_rec,
++	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
++	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
++	.key_diff		= xfs_bnobt_key_diff,
++	.buf_ops		= &xfs_allocbt_buf_ops,
++	.diff_two_keys		= xfs_bnobt_diff_two_keys,
++#if defined(DEBUG) || defined(XFS_WARN)
++	.keys_inorder		= xfs_bnobt_keys_inorder,
++	.recs_inorder		= xfs_bnobt_recs_inorder,
++#endif
++};
+ 
+-static const struct xfs_btree_ops xfs_allocbt_ops = {
++static const struct xfs_btree_ops xfs_cntbt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 	.key_len		= sizeof(xfs_alloc_key_t),
+ 
+@@ -397,11 +473,12 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
+ 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
+ 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+-	.key_diff		= xfs_allocbt_key_diff,
++	.key_diff		= xfs_cntbt_key_diff,
+ 	.buf_ops		= &xfs_allocbt_buf_ops,
++	.diff_two_keys		= xfs_cntbt_diff_two_keys,
+ #if defined(DEBUG) || defined(XFS_WARN)
+-	.keys_inorder		= xfs_allocbt_keys_inorder,
+-	.recs_inorder		= xfs_allocbt_recs_inorder,
++	.keys_inorder		= xfs_cntbt_keys_inorder,
++	.recs_inorder		= xfs_cntbt_recs_inorder,
+ #endif
+ };
+ 
+@@ -427,12 +504,13 @@ xfs_allocbt_init_cursor(
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = btnum;
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+-	cur->bc_ops = &xfs_allocbt_ops;
+ 
+ 	if (btnum == XFS_BTNUM_CNT) {
++		cur->bc_ops = &xfs_cntbt_ops;
+ 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
+ 		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
+ 	} else {
++		cur->bc_ops = &xfs_bnobt_ops;
+ 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
+ 	}
+ 
 
