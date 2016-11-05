@@ -1,136 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48845 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933384AbcKNRNK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2016 12:13:10 -0500
-Received: from [83.175.99.196] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-        id 1c6Kof-0005Gm-O9
-        for linux-xfs@vger.kernel.org; Mon, 14 Nov 2016 17:13:10 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/14] xfs: use new extent lookup helpers in __xfs_bunmapi
-Date: Mon, 14 Nov 2016 18:12:36 +0100
-Message-Id: <1479143565-30615-6-git-send-email-hch@lst.de>
-In-Reply-To: <1479143565-30615-1-git-send-email-hch@lst.de>
-References: <1479143565-30615-1-git-send-email-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:36743 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750935AbcKEAJX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:09:23 -0400
+Subject: [PATCH 13/16] libxfs: synchronize dinode_verify with userspace
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:09:20 -0700
+Message-ID: <147830456011.26713.11759326361226626805.stgit@birch.djwong.org>
+In-Reply-To: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+The userspace version of _dinode_verify takes a raw inode number
+instead of an inode itself.  Since neither version actually needs
+the inode, port the changes to the kernel.  This will also reduce
+the libxfs diff noise.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 39 ++++++++++++---------------------------
- 1 file changed, 12 insertions(+), 27 deletions(-)
+ libxfs/xfs_inode_buf.c |    2 +-
+ libxfs/xfs_inode_buf.h |    2 --
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9a8621d..18de89c 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5433,8 +5433,6 @@ __xfs_bunmapi(
- {
- 	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
- 	xfs_bmbt_irec_t		del;		/* extent being deleted */
--	int			eof;		/* is deleting at eof */
--	xfs_bmbt_rec_host_t	*ep;		/* extent record pointer */
- 	int			error;		/* error return value */
- 	xfs_extnum_t		extno;		/* extent number in list */
- 	xfs_bmbt_irec_t		got;		/* current extent record */
-@@ -5444,7 +5442,6 @@ __xfs_bunmapi(
- 	int			logflags;	/* transaction logging flags */
- 	xfs_extlen_t		mod;		/* rt extent offset */
- 	xfs_mount_t		*mp;		/* mount structure */
--	xfs_bmbt_irec_t		prev;		/* previous extent record */
- 	xfs_fileoff_t		start;		/* first file offset deleted */
- 	int			tmp_logflags;	/* partial logging flags */
- 	int			wasdel;		/* was a delayed alloc extent */
-@@ -5483,18 +5480,17 @@ __xfs_bunmapi(
- 	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
- 	start = bno;
- 	bno = start + len - 1;
--	ep = xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got,
--		&prev);
- 
- 	/*
- 	 * Check to see if the given block number is past the end of the
- 	 * file, back up to the last block if so...
- 	 */
--	if (eof) {
--		ep = xfs_iext_get_ext(ifp, --lastx);
--		xfs_bmbt_get_all(ep, &got);
-+	if (!xfs_iext_lookup_extent(ip, ifp, bno, &lastx, &got)) {
-+		ASSERT(lastx > 0);
-+		xfs_iext_get_extent(ifp, --lastx, &got);
- 		bno = got.br_startoff + got.br_blockcount - 1;
+
+diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
+index 8732359..3f2049b 100644
+--- a/libxfs/xfs_inode_buf.c
++++ b/libxfs/xfs_inode_buf.c
+@@ -378,7 +378,7 @@ xfs_log_dinode_to_disk(
  	}
-+
- 	logflags = 0;
- 	if (ifp->if_flags & XFS_IFBROOT) {
- 		ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE);
-@@ -5525,8 +5521,7 @@ __xfs_bunmapi(
- 		if (got.br_startoff > bno) {
- 			if (--lastx < 0)
- 				break;
--			ep = xfs_iext_get_ext(ifp, lastx);
--			xfs_bmbt_get_all(ep, &got);
-+			xfs_iext_get_extent(ifp, lastx, &got);
- 		}
- 		/*
- 		 * Is the last block of this extent before the range
-@@ -5540,7 +5535,6 @@ __xfs_bunmapi(
- 		 * Then deal with the (possibly delayed) allocated space
- 		 * we found.
- 		 */
--		ASSERT(ep != NULL);
- 		del = got;
- 		wasdel = isnullstartblock(del.br_startblock);
- 		if (got.br_startoff < start) {
-@@ -5621,15 +5615,11 @@ __xfs_bunmapi(
- 				 */
- 				ASSERT(bno >= del.br_blockcount);
- 				bno -= del.br_blockcount;
--				if (got.br_startoff > bno) {
--					if (--lastx >= 0) {
--						ep = xfs_iext_get_ext(ifp,
--								      lastx);
--						xfs_bmbt_get_all(ep, &got);
--					}
--				}
-+				if (got.br_startoff > bno && --lastx >= 0)
-+					xfs_iext_get_extent(ifp, lastx, &got);
- 				continue;
- 			} else if (del.br_state == XFS_EXT_UNWRITTEN) {
-+				xfs_bmbt_irec_t		prev;
- 				/*
- 				 * This one is already unwritten.
- 				 * It must have a written left neighbor.
-@@ -5637,8 +5627,7 @@ __xfs_bunmapi(
- 				 * try again.
- 				 */
- 				ASSERT(lastx > 0);
--				xfs_bmbt_get_all(xfs_iext_get_ext(ifp,
--						lastx - 1), &prev);
-+				xfs_iext_get_extent(ifp, lastx - 1, &prev);
- 				ASSERT(prev.br_state == XFS_EXT_NORM);
- 				ASSERT(!isnullstartblock(prev.br_startblock));
- 				ASSERT(del.br_startblock ==
-@@ -5736,13 +5725,9 @@ __xfs_bunmapi(
- 		 */
- 		if (bno != (xfs_fileoff_t)-1 && bno >= start) {
- 			if (lastx >= 0) {
--				ep = xfs_iext_get_ext(ifp, lastx);
--				if (xfs_bmbt_get_startoff(ep) > bno) {
--					if (--lastx >= 0)
--						ep = xfs_iext_get_ext(ifp,
--								      lastx);
--				}
--				xfs_bmbt_get_all(ep, &got);
-+				xfs_iext_get_extent(ifp, lastx, &got);
-+				if (got.br_startoff > bno && --lastx >= 0)
-+					xfs_iext_get_extent(ifp, lastx, &got);
- 			}
- 			extno++;
- 		}
--- 
-2.1.4
+ }
+ 
+-bool
++static bool
+ xfs_dinode_verify(
+ 	struct xfs_mount	*mp,
+ 	xfs_ino_t		ino,
+diff --git a/libxfs/xfs_inode_buf.h b/libxfs/xfs_inode_buf.h
+index 99f1821..6848a0a 100644
+--- a/libxfs/xfs_inode_buf.h
++++ b/libxfs/xfs_inode_buf.h
+@@ -73,8 +73,6 @@ void	xfs_inode_to_disk(struct xfs_inode *ip, struct xfs_dinode *to,
+ void	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
+ void	xfs_log_dinode_to_disk(struct xfs_log_dinode *from,
+ 			       struct xfs_dinode *to);
+-bool	xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
+-			  struct xfs_dinode *dip);
+ 
+ bool	xfs_dinode_good_version(struct xfs_mount *mp, __u8 version);
+ 
 
