@@ -1,165 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36576 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751095AbcKFRqF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 6 Nov 2016 12:46:05 -0500
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] fstests: multi-threads freeze/unfreeze test under fsstress stress
-Date: Mon,  7 Nov 2016 01:45:59 +0800
-Message-Id: <1478454359-27154-1-git-send-email-zlang@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:40027 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754328AbcKEA1k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:27:40 -0400
+Subject: [PATCH 29/39] xfs: scrub should cross-reference the realtime bitmap
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 04 Nov 2016 17:27:37 -0700
+Message-ID: <147830565697.4165.16930074308934665449.stgit@birch.djwong.org>
+In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Multi-threads freeze/unfreeze maybe trigger some bugs, e.g: panic,
-hang or data corruption etc. It does't check the return value of
-freeze/unfreeze, but it trys to make sure fsstress won't run fails,
-and no any other bugs happen.
+While we're scrubbing various btrees, cross-reference the records
+with the other metadata.
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ libxfs/xfs_rtbitmap.c |   30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-Hi,
 
-I can trigger some different hang or panic bugs on different
-linux versions. But it test passed on linux v4.9-rc2 at least.
-
-Thanks,
-Zorro
-
- tests/generic/999     | 95 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/999.out |  2 ++
- tests/generic/group   |  3 +-
- 3 files changed, 99 insertions(+), 1 deletion(-)
- create mode 100755 tests/generic/999
- create mode 100644 tests/generic/999.out
-
-diff --git a/tests/generic/999 b/tests/generic/999
-new file mode 100755
-index 0000000..a759927
---- /dev/null
-+++ b/tests/generic/999
-@@ -0,0 +1,95 @@
-+#! /bin/bash
-+# FS QA Test 999
-+#
-+# Multi-threads freeze/unfreeze testing. This's a stress test case,
-+# it won't do functional check.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
+diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
+index 70ea975..80fff5f 100644
+--- a/libxfs/xfs_rtbitmap.c
++++ b/libxfs/xfs_rtbitmap.c
+@@ -1011,3 +1011,33 @@ xfs_rtfree_extent(
+ 	}
+ 	return 0;
+ }
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
++/* Is the given extent all free? */
++int
++xfs_rtbitmap_extent_is_free(
++	struct xfs_mount		*mp,
++	struct xfs_trans		*tp,
++	xfs_rtblock_t			start,
++	xfs_rtblock_t			len,
++	bool				*is_free)
 +{
-+	cd /
-+	rm -f $tmp.*
++	xfs_rtblock_t			end;
++	xfs_extlen_t			clen;
++	int				matches;
++	int				error;
++
++	*is_free = false;
++	while (len) {
++		clen = len > ~0U ? ~0U : len;
++		error = xfs_rtcheck_range(mp, tp, start, clen, 1, &end,
++				&matches);
++		if (error || !matches || end < start + clen)
++			return error;
++
++		len -= end - start;
++		start = end + 1;
++	}
++
++	*is_free = true;
++	return error;
 +}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+echo "Silence is golden"
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_freeze
-+
-+_scratch_mkfs >>$seqres.full 2>&1
-+_scratch_mount >>$seqres.full 2>&1
-+
-+num_cpus=`$here/src/feature -o`
-+
-+# Start fsstress in background
-+procs=$num_cpus
-+if [ $procs -gt 20 ]; then
-+	procs=20
-+elif [ $procs -le 1 ]; then
-+	procs=2
-+fi
-+nops=600
-+STRESS_DIR="$SCRATCH_MNT/fsstress_test_dir"
-+mkdir "$STRESS_DIR"
-+FSSTRESS_ARGS=`_scale_fsstress_args -d $STRESS_DIR -p $procs -n $nops $FSSTRESS_AVOID`
-+$FSSTRESS_PROG $FSSTRESS_ARGS >>$seqres.full 2>&1 &
-+fsstress_pid=$!
-+
-+# Start multi-threads freeze/unfreeze
-+for ((i=0; i<$procs; i++))
-+do
-+	while [ $(ps -ef | grep "fsstress" | grep -v -c grep) -gt 0 ]
-+	do
-+		xfs_freeze -f $SCRATCH_MNT 2>/dev/null
-+		xfs_freeze -u $SCRATCH_MNT 2>/dev/null
-+	done &
-+	freeze_pids="$! $freeze_pids"
-+done
-+
-+wait $fsstress_pid
-+result=$?
-+wait $freeze_pids
-+
-+# Make sure $SCRATCH_MNT is unfreezed
-+xfs_freeze -u $SCRATCH_MNT 2>/dev/null
-+
-+# Exit with fsstress return value
-+status=$result
-+exit
-diff --git a/tests/generic/999.out b/tests/generic/999.out
-new file mode 100644
-index 0000000..3b276ca
---- /dev/null
-+++ b/tests/generic/999.out
-@@ -0,0 +1,2 @@
-+QA output created by 999
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index 08007d7..39e1876 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -1,4 +1,4 @@
--# QA groups control file
-+G# QA groups control file
- # Defines test groups and nominal group owners
- # - do not start group names with a digit
- # - comment line before each group is "new" description
-@@ -392,3 +392,4 @@
- 387 auto clone
- 388 auto log metadata
- 389 auto quick acl
-+999 auto freeze stress dangerous
--- 
-2.7.4
 
