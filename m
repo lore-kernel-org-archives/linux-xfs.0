@@ -1,47 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44904 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752564AbcKECJ1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 Nov 2016 22:09:27 -0400
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B7B333D949
-        for <linux-xfs@vger.kernel.org>; Sat,  5 Nov 2016 02:09:26 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn03.gateway.prod.ext.phx2.redhat.com [10.5.9.3])
-        by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uA529PHp002004
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-        for <linux-xfs@vger.kernel.org>; Fri, 4 Nov 2016 22:09:26 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 0/2] xfs: fix up xfs_swap_extent_forks inline extent handling
-Message-ID: <d279d52e-49f6-6fc2-c78b-0054d7ee0a1e@redhat.com>
-Date: Fri, 4 Nov 2016 21:09:25 -0500
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:32881 "EHLO
+        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754724AbcKESOS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Nov 2016 14:14:18 -0400
+Received: by mail-wm0-f53.google.com with SMTP id c184so18635979wmd.0
+        for <linux-xfs@vger.kernel.org>; Sat, 05 Nov 2016 11:14:18 -0700 (PDT)
+Subject: Re: [PATCH 4/5] iomap: implement direct I/O
+References: <1478276479-10749-1-git-send-email-hch@lst.de>
+ <1478276479-10749-5-git-send-email-hch@lst.de>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <2dabe3ec-193b-3ecf-af5c-a5ba976de6eb@scylladb.com>
+Date: Sat, 5 Nov 2016 20:14:14 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1478276479-10749-5-git-send-email-hch@lst.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Cc: axboe@fb.com, kent.overstreet@gmail.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
 
-xfs_swap_extent_forks() was wrongly using di_nextents
-(on-disk extents) for determining whether the /incore/
-inode could keep extents inline.  The code should be testing
-if_bytes, not di_nextents, to make this determination.
+Hello,
 
-The mistake led to an oops in some situations when running
-xfs_fsr.
 
-Throughout the code we have this sort of open-coded handling
-like:
+On 11/04/2016 06:21 PM, Christoph Hellwig wrote:
+> This adds a full fledget direct I/O implementation using the iomap
+> interface. Full fledged in this case means all features are supported:
+> AIO, vectored I/O, any iov_iter type including kernel pointers, bvecs
+> and pipes, support for hole filling and async apending writes.
 
-nextents = ip->i_df.if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+Does this include support for more than one concurrent appending write 
+for the same file?
 
-so patch 2 creates a helper for that and uses it throughout
-the codebase.
+If so, that's great, but please make this feature discoverable. Right 
+now applications have to benchmark or guess how fully asynchronous the 
+aio implementation is.
 
-I should maybe also create a helper for the things that expand
-it back out, i.e. nextents * (uint)sizeof(xfs_bmbt_rec_t) but
-that seems error prone...
-
--Eric
