@@ -1,147 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39473 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754109AbcKEAZc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:25:32 -0400
-Subject: [PATCH 04/39] xfs: introduce the XFS_IOC_GETFSMAP ioctl
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:24:57 -0700
-Message-ID: <147830549775.4165.9686887818420463480.stgit@birch.djwong.org>
-In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
-References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:49728 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750859AbcKFSX1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 6 Nov 2016 13:23:27 -0500
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] fstests: make xfs_io mandatory
+Date: Mon,  7 Nov 2016 02:23:21 +0800
+Message-Id: <1478456601-7085-1-git-send-email-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-Introduce a new ioctl that uses the reverse mapping btree to return
-information about the physical layout of the filesystem.
+_test_inode_flag() and _test_inode_extsz() use "which $XFS_IO_PROG"
+to check if xfs_io command is available. And "-i" option was added
+to XFS_IO_PROG varibable by commit 54659ecdb575 ("fstests: run
+xfs_io with -i option if supported"). So the command becomes "which
+/usr/sbin/xfs_io -i", and it stops and waits for input from stdin,
+because "-i" option of "which" means "Read aliases from stdin".
 
-v2: shorten the device field to u32 since that's all we need for
-dev_t.  Support reporting reverse mapping information for all the
-devices that XFS supports (data, log).
+I've seen xfs/008 hang when testing with latest xfsprogs, where
+xfs_io has "-i" support.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Fix it by removing the xfs_io command detections, and making xfs_io
+mandatory in common/config.
+
+Also fix the indentions in these functions, use tab instead of
+spaces, while we're at it.
+
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- libxfs/xfs_fs.h |   95 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 95 insertions(+)
+ common/config |  4 +++-
+ common/rc     | 24 ++++++++++--------------
+ tests/xfs/094 |  1 -
+ tests/xfs/103 |  1 -
+ 4 files changed, 13 insertions(+), 17 deletions(-)
 
-
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index df58c1c..6857355 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -117,6 +117,100 @@ struct getbmapx {
- #define BMV_OF_SHARED		0x8	/* segment shared with another file */
+diff --git a/common/config b/common/config
+index 168f46c..0b6cf01 100644
+--- a/common/config
++++ b/common/config
+@@ -158,11 +158,13 @@ export DF_PROG="`set_prog_path df`"
+ [ "$DF_PROG" = "" ] && _fatal "df not found"
+ [ "$HOSTOS" = "Linux" ] && export DF_PROG="$DF_PROG -T -P"
  
- /*
-+ *	Structure for XFS_IOC_GETFSMAP.
-+ *
-+ *	The memory layout for this call are the scalar values defined in
-+ *	struct fsmap_head, followed by two struct fsmap that describe
-+ *	the lower and upper bound of mappings to return, followed by an
-+ *	array of struct fsmap mappings.
-+ *
-+ *	fmh_iflags control the output of the call, whereas fmh_oflags report
-+ *	on the overall record output.  fmh_count should be set to the
-+ *	length of the fmh_recs array, and fmh_entries will be set to the
-+ *	number of entries filled out during each call.  If fmh_count is
-+ *	zero, the number of reverse mappings will be returned in
-+ *	fmh_entries, though no mappings will be returned.  fmh_reserved
-+ *	must be set to zero.
-+ *
-+ *	The two elements in the fmh_keys array are used to constrain the
-+ *	output.  The first element in the array should represent the
-+ *	lowest disk mapping ("low key") that the user wants to learn
-+ *	about.  If this value is all zeroes, the filesystem will return
-+ *	the first entry it knows about.  For a subsequent call, the
-+ *	contents of fsmap_head.fmh_recs[fsmap_head.fmh_count - 1] should be
-+ *	copied into fmh_keys[0] to have the kernel start where it left off.
-+ *
-+ *	The second element in the fmh_keys array should represent the
-+ *	highest disk mapping ("high key") that the user wants to learn
-+ *	about.  If this value is all ones, the filesystem will not stop
-+ *	until it runs out of mapping to return or runs out of space in
-+ *	fmh_recs.
-+ *
-+ *	fmr_device can be either a 32-bit cookie representing a device, or
-+ *	a 32-bit dev_t if the FMH_OF_DEV_T flag is set.  fmr_physical,
-+ *	fmr_offset, and fmr_length are expressed in units of bytes.
-+ *	fmr_owner is either an inode number, or a special value if
-+ *	FMR_OF_SPECIAL_OWNER is set in fmr_flags.
-+ */
-+#ifndef HAVE_GETFSMAP
-+struct fsmap {
-+	__u32		fmr_device;	/* device id */
-+	__u32		fmr_flags;	/* mapping flags */
-+	__u64		fmr_physical;	/* device offset of segment */
-+	__u64		fmr_owner;	/* owner id */
-+	__u64		fmr_offset;	/* file offset of segment */
-+	__u64		fmr_length;	/* length of segment */
-+	__u64		fmr_reserved[3];	/* must be zero */
-+};
++export XFS_IO_PROG="`set_prog_path xfs_io`"
++[ "$XFS_IO_PROG" = "" ] && _fatal "xfs_io not found"
 +
-+struct fsmap_head {
-+	__u32		fmh_iflags;	/* control flags */
-+	__u32		fmh_oflags;	/* output flags */
-+	__u32		fmh_count;	/* # of entries in array incl. input */
-+	__u32		fmh_entries;	/* # of entries filled in (output). */
-+	__u64		fmh_reserved[6];	/* must be zero */
-+
-+	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
-+	struct fsmap	fmh_recs[];	/* returned records */
-+};
-+
-+/* Size of an fsmap_head with room for nr records. */
-+static inline size_t
-+fsmap_sizeof(
-+	unsigned int	nr)
-+{
-+	return sizeof(struct fsmap_head) + nr * sizeof(struct fsmap);
-+}
-+#endif
-+
-+/*	fmh_iflags values - set by XFS_IOC_GETFSMAP caller in the header. */
-+/* no flags defined yet */
-+#define FMH_IF_VALID		0
-+
-+/*	fmh_oflags values - returned in the header segment only. */
-+#define FMH_OF_DEV_T		0x1	/* fmr_device values will be dev_t */
-+
-+/*	fmr_flags values - returned for each non-header segment */
-+#define FMR_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-+#define FMR_OF_ATTR_FORK	0x2	/* segment = attribute fork */
-+#define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
-+#define FMR_OF_SHARED		0x8	/* segment = shared with another file */
-+#define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
-+#define FMR_OF_LAST		0x20	/* segment is the last in the FS */
-+
-+/*	fmr_owner special values */
-+#define FMR_OWN_FREE		(-1ULL)	/* free space */
-+#define FMR_OWN_UNKNOWN		(-2ULL)	/* unknown owner */
-+#define FMR_OWN_FS		(-3ULL)	/* static fs metadata */
-+#define FMR_OWN_LOG		(-4ULL)	/* journalling log */
-+#define FMR_OWN_AG		(-5ULL)	/* per-AG metadata */
-+#define FMR_OWN_INOBT		(-6ULL)	/* inode btree blocks */
-+#define FMR_OWN_INODES		(-7ULL)	/* inodes */
-+#define FMR_OWN_REFC		(-8ULL) /* refcount tree */
-+#define FMR_OWN_COW		(-9ULL) /* cow staging */
-+#define FMR_OWN_DEFECTIVE	(-10ULL) /* bad blocks */
-+
-+/*
-  * Structure for XFS_IOC_FSSETDM.
-  * For use by backup and restore programs to set the XFS on-disk inode
-  * fields di_dmevmask and di_dmstate.  These must be set to exactly and
-@@ -523,6 +617,7 @@ typedef struct xfs_swapext
- #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
- #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
-+#define XFS_IOC_GETFSMAP	_IOWR('X', 59, struct fsmap_head)
+ export XFS_LOGPRINT_PROG="`set_prog_path xfs_logprint`"
+ export XFS_REPAIR_PROG="`set_prog_path xfs_repair`"
+ export XFS_DB_PROG="`set_prog_path xfs_db`"
+ export XFS_GROWFS_PROG=`set_prog_path xfs_growfs`
+-export XFS_IO_PROG="`set_prog_path xfs_io`"
+ export XFS_SCRUB_PROG="`set_prog_path xfs_scrub`"
+ export XFS_PARALLEL_REPAIR_PROG="`set_prog_path xfs_prepair`"
+ export XFS_PARALLEL_REPAIR64_PROG="`set_prog_path xfs_prepair64`"
+diff --git a/common/rc b/common/rc
+index a84efe4..088ede6 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2896,30 +2896,26 @@ _populate_fs()
+ #
+ _test_inode_flag()
+ {
+-    flag=$1
+-    file=$2
++	flag=$1
++	file=$2
  
- /*
-  * ioctl commands that replace IRIX syssgi()'s
+-    if which $XFS_IO_PROG >/dev/null; then
+-        if $XFS_IO_PROG -r -c 'lsattr -v' "$file" | grep -q "$flag" ; then
+-	    return 0
+-        fi
+-    fi
+-    return 1
++	if $XFS_IO_PROG -r -c 'lsattr -v' "$file" | grep -q "$flag" ; then
++		return 0
++	fi
++	return 1
+ }
+ 
+ # query the given files extsize allocator hint in bytes (if any)
+ #
+ _test_inode_extsz()
+ {
+-    file=$1
+-    blocks=""
++	file=$1
++	blocks=""
+ 
+-    if which $XFS_IO_PROG >/dev/null; then
+ 	blocks=`$XFS_IO_PROG -r -c 'stat' "$file" | \
+ 		awk '/^xattr.extsize =/ { print $3 }'`
+-    fi
+-    [ -z "$blocks" ] && blocks="0"
+-    echo $blocks
++	[ -z "$blocks" ] && blocks="0"
++	echo $blocks
+ }
+ 
+ # scratch_dev_pool should contain the disks pool for the btrfs raid
+diff --git a/tests/xfs/094 b/tests/xfs/094
+index cee42d6..bf9eb2f 100755
+--- a/tests/xfs/094
++++ b/tests/xfs/094
+@@ -46,7 +46,6 @@ _supported_fs xfs
+ _supported_os IRIX Linux
+ _require_realtime
+ _require_scratch
+-_require_command "$XFS_IO_PROG" xfs_io
+ 
+ _filter_realtime_flag()
+ {
+diff --git a/tests/xfs/103 b/tests/xfs/103
+index cbe884f..48b8c59 100755
+--- a/tests/xfs/103
++++ b/tests/xfs/103
+@@ -66,7 +66,6 @@ _filter_noymlinks_flag()
+ # real QA test starts here
+ _supported_os Linux IRIX
+ _supported_fs xfs
+-_require_command "$XFS_IO_PROG" xfs_io
+ _require_scratch
+ 
+ _create_scratch
+-- 
+2.7.4
 
