@@ -1,80 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39645 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754162AbcKEA0V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:26:21 -0400
-Subject: [PATCH 16/39] xfs: support scrubbing refcount btree
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:26:18 -0700
-Message-ID: <147830557798.4165.9601630741560607905.stgit@birch.djwong.org>
-In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
-References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:26520 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750909AbcKFWky (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Nov 2016 17:40:54 -0500
+Date: Mon, 7 Nov 2016 09:40:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/5] iomap: implement direct I/O
+Message-ID: <20161106224049.GP14023@dastard>
+References: <1478276479-10749-1-git-send-email-hch@lst.de>
+ <1478276479-10749-5-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1478276479-10749-5-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, axboe@fb.com, kent.overstreet@gmail.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
 
-Plumb in the pieces necessary to check the refcount btree.  If rmap is
-available, check the reference count by performing an interval query
-against the rmapbt.
+On Fri, Nov 04, 2016 at 10:21:18AM -0600, Christoph Hellwig wrote:
+> This adds a full fledget direct I/O implementation using the iomap
+> interface. Full fledged in this case means all features are supported:
+> AIO, vectored I/O, any iov_iter type including kernel pointers, bvecs
+> and pipes, support for hole filling and async apending writes.  It does
+> not mean supporting all the warts of the old generic code.  We expect
+> i_rwsem to be held over the duration of the call, and we expect to
+> maintain i_dio_count ourselves, and we pass on any kinds of mapping
+> to the file system for now.
+> 
+> The algorithm used is very simple: We use iomap_apply to iterate over
+> the range of the I/O, and then we use the new bio_iov_iter_get_pages
+> helper to lock down the user range for the size of the extent.
+> bio_iov_iter_get_pages can currently lock down twice as many pages as
+> the old direct I/O code did, which means that we will have a better
+> batch factor for everything but overwrites of badly fragmented files.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+.....
+> +static loff_t
+> +iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+> +		void *data, struct iomap *iomap)
+> +{
+> +	struct iomap_dio *dio = data;
+> +	unsigned blkbits = blksize_bits(bdev_logical_block_size(iomap->bdev));
+> +	unsigned fs_block_size = (1 << inode->i_blkbits), pad;
+> +	struct iov_iter iter = *dio->submit.iter;
+> +	struct bio *bio;
+> +	bool may_zero = false;
+> +	int nr_pages, ret;
+> +
+> +	if ((pos | length | iov_iter_alignment(&iter)) & ((1 << blkbits) - 1))
+> +		return -EINVAL;
+> +
+> +	switch (iomap->type) {
+> +	case IOMAP_HOLE:
+> +		/*
+> +		 * We return -ENOTBLK to fall back to buffered I/O for file
+> +		 * systems that can't fill holes from direct writes.
+> +		 */
+> +		if (dio->flags & IOMAP_DIO_WRITE)
+> +			return -ENOTBLK;
+> +		/*FALLTHRU*/
 
-v2: Handle the case where the rmap records are not all at least the
-length of the refcount extent.
+This is preventing direct IO writes from being done into holes for
+all filesystems.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/xfs_fs.h             |    3 ++-
- libxfs/xfs_refcount_btree.c |    4 ----
- 2 files changed, 2 insertions(+), 5 deletions(-)
+> +	case IOMAP_UNWRITTEN:
+> +		if (!(dio->flags & IOMAP_DIO_WRITE)) {
+> +			iov_iter_zero(length, dio->submit.iter);
+> +			dio->size += length;
+> +			return length;
+> +		}
+> +		dio->flags |= IOMAP_DIO_UNWRITTEN;
+> +		may_zero = true;
+> +		break;
+> +	case IOMAP_MAPPED:
+> +		if (iomap->flags & IOMAP_F_SHARED)
+> +			dio->flags |= IOMAP_DIO_COW;
+> +		if (iomap->flags & IOMAP_F_NEW)
+> +			may_zero = true;
+> +		break;
+> +	default:
+> +		WARN_ON_ONCE(1);
+> +		return -EIO;
+> +	}
+> +
+> +	iov_iter_truncate(&iter, length);
 
+Won't this truncate the entire DIO down to the length of the first
+extent that is mapped? 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index ff3c232..91146ac 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -608,7 +608,8 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_INOBT	7	/* inode btree */
- #define XFS_SCRUB_TYPE_FINOBT	8	/* free inode btree */
- #define XFS_SCRUB_TYPE_RMAPBT	9	/* reverse mapping btree */
--#define XFS_SCRUB_TYPE_MAX	9
-+#define XFS_SCRUB_TYPE_REFCNTBT	10	/* reference count btree */
-+#define XFS_SCRUB_TYPE_MAX	10
- 
- #define XFS_SCRUB_FLAG_REPAIR	0x1	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x2	/* o: needs repair */
-diff --git a/libxfs/xfs_refcount_btree.c b/libxfs/xfs_refcount_btree.c
-index 50c4682..9276d4f 100644
---- a/libxfs/xfs_refcount_btree.c
-+++ b/libxfs/xfs_refcount_btree.c
-@@ -284,7 +284,6 @@ const struct xfs_buf_ops xfs_refcountbt_buf_ops = {
- 	.verify_write		= xfs_refcountbt_write_verify,
- };
- 
--#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_refcountbt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -305,7 +304,6 @@ xfs_refcountbt_recs_inorder(
- 		be32_to_cpu(r1->refc.rc_blockcount) <=
- 		be32_to_cpu(r2->refc.rc_startblock);
- }
--#endif
- 
- static const struct xfs_btree_ops xfs_refcountbt_ops = {
- 	.rec_len		= sizeof(struct xfs_refcount_rec),
-@@ -324,10 +322,8 @@ static const struct xfs_btree_ops xfs_refcountbt_ops = {
- 	.key_diff		= xfs_refcountbt_key_diff,
- 	.buf_ops		= &xfs_refcountbt_buf_ops,
- 	.diff_two_keys		= xfs_refcountbt_diff_two_keys,
--#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_refcountbt_keys_inorder,
- 	.recs_inorder		= xfs_refcountbt_recs_inorder,
--#endif
- };
- 
- /*
+> +	if (may_zero) {
+> +		pad = pos & (fs_block_size - 1);
+> +		if (pad)
+> +			iomap_dio_zero(dio, iomap, pos, fs_block_size - pad);
+> +	}
 
+Repeated zeroing code. helper function?
+
+> +	inode_dio_begin(inode);
+> +
+> +	blk_start_plug(&plug);
+> +	do {
+> +		ret = iomap_apply(inode, pos, count, flags, ops, dio,
+> +				iomap_dio_actor);
+> +		if (ret <= 0) {
+> +			/* magic error code to fall back to buffered I/O */
+> +			if (ret == -ENOTBLK)
+> +				ret = 0;
+> +			break;
+> +		}
+> +		pos += ret;
+> +	} while ((count = iov_iter_count(iter)) > 0);
+> +	blk_finish_plug(&plug);
+> +
+> +	if (ret < 0)
+> +		cmpxchg(&dio->error, 0, ret);
+
+Why cmpxchg? What are we racing with here? Helper (e.g.
+dio_set_error())?
+
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -49,6 +49,7 @@ struct iomap {
+>  #define IOMAP_WRITE		(1 << 0) /* writing, must allocate blocks */
+>  #define IOMAP_ZERO		(1 << 1) /* zeroing operation, may skip holes */
+>  #define IOMAP_REPORT		(1 << 2) /* report extent status, e.g. FIEMAP */
+> +#define IOMAP_DIRECT		(1 << 3)
+
+Comment decribing use?
+
+>  struct iomap_ops {
+>  	/*
+> @@ -82,4 +83,11 @@ int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+>  int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+>  		loff_t start, loff_t len, struct iomap_ops *ops);
+>  
+> +#define IOMAP_DIO_UNWRITTEN	(1 << 0)
+> +#define IOMAP_DIO_COW		(1 << 1)
+> +typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t ret,
+> +		unsigned flags);
+> +ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+> +		struct iomap_ops *ops, iomap_dio_end_io_t end_io);
+
+Comment on the context the new flags are used under and what they
+mean?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
