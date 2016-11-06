@@ -1,112 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39999 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754294AbcKEA12 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:27:28 -0400
-Subject: [PATCH 27/39] xfs: cross-reference reverse-mapping btree
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:27:24 -0700
-Message-ID: <147830564483.4165.15700660701028715848.stgit@birch.djwong.org>
-In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
-References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:36676 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751035AbcKFEe4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 6 Nov 2016 00:34:56 -0400
+Date: Sun, 6 Nov 2016 12:34:54 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] xfs/021: filter out detailed array element info from
+ xfs_db
+Message-ID: <20161106043454.GD27776@eguan.usersys.redhat.com>
+References: <1478276170-6618-1-git-send-email-eguan@redhat.com>
+ <20161105055111.GW30105@dhcp12-143.nay.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161105055111.GW30105@dhcp12-143.nay.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-When scrubbing various btrees, we should cross-reference the records
-with the reverse mapping btree.
+On Sat, Nov 05, 2016 at 01:51:11PM +0800, Zorro Lang wrote:
+> On Sat, Nov 05, 2016 at 12:16:10AM +0800, Eryu Guan wrote:
+> > Starting from xfsprogs commit 384283555871 ("xfs_db: print one array
+> > element per line"), xfs_db prints one array element per line. This
+> > breaks the filter in xfs/021, which now fails as:
+> > 
+> >   hdr.freemap[0-2] = [base,size] [FREEMAP..]
+> >  +0:[104,1892]
+> >  +1:[0,0]
+> >  +2:[0,0]
+> 
+> Hmm... So [FREEMAP..] was printed in one line, but now every records
+> will take one line.
+> 
+> >   entries[0-2] = [hashval,nameidx,incomplete,root,local] [ENTRIES..]
+> > 
+> > So we have extra lines that need to be filtered out,
+> > 
+> > Signed-off-by: Eryu Guan <eguan@redhat.com>
+> > ---
+> >  tests/xfs/021 | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/tests/xfs/021 b/tests/xfs/021
+> > index 67a4346..b99eff7 100755
+> > --- a/tests/xfs/021
+> > +++ b/tests/xfs/021
+> > @@ -151,7 +151,7 @@ s/^(hdr.info.magic =) 0x3bee/\1 0xfbee/;
+> >  s/^(hdr.firstused =) (\d+)/\1 FIRSTUSED/;
+> >  s/^(hdr.freemap\[0-2] = \[base,size]).*/\1 [FREEMAP..]/;
+> 
+> So this line script trys to deal with all freemap things, but now it
+> can't deal with multi-lines output. (Same as below)
+> 
+> >  s/^(entries\[0-2] = \[hashval,nameidx,incomplete,root,local]).*/\1 [ENTRIES..]/;
+> > -	print;'
+> > +	print unless /^[0-9]/;'
+> 
+> Filter all lines start with a digit(0~9). It works, but I can't be
+> sure that if it'll affect others useful error output, maybe more
+> accurate expression will be better?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/xfs_rmap.c |   58 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_rmap.h |    5 +++++
- 2 files changed, 63 insertions(+)
+I think it's fine, we only filter stdout here and if there's any error
+it should go to stderr and we can still catch it.
 
-
-diff --git a/libxfs/xfs_rmap.c b/libxfs/xfs_rmap.c
-index 97fc4dd..0b8eed1 100644
---- a/libxfs/xfs_rmap.c
-+++ b/libxfs/xfs_rmap.c
-@@ -2304,3 +2304,61 @@ xfs_rmap_free_extent(
- 	return __xfs_rmap_add(mp, dfops, XFS_RMAP_FREE, owner,
- 			XFS_DATA_FORK, &bmap);
- }
-+
-+/* Is there a record covering a given extent? */
-+int
-+xfs_rmap_has_record(
-+	struct xfs_btree_cur	*cur,
-+	xfs_fsblock_t		bno,
-+	xfs_filblks_t		len,
-+	bool			*exists)
-+{
-+	union xfs_btree_irec	low;
-+	union xfs_btree_irec	high;
-+
-+	memset(&low, 0, sizeof(low));
-+	low.r.rm_startblock = bno;
-+	memset(&high, 0xFF, sizeof(high));
-+	high.r.rm_startblock = bno + len - 1;
-+
-+	return xfs_btree_has_record(cur, &low, &high, exists);
-+}
-+
-+/* Is there a record covering a given extent? */
-+int
-+xfs_rmap_record_exists(
-+	struct xfs_btree_cur	*cur,
-+	xfs_fsblock_t		bno,
-+	xfs_filblks_t		len,
-+	struct xfs_owner_info	*oinfo,
-+	bool			*has_rmap)
-+{
-+	uint64_t		owner;
-+	uint64_t		offset;
-+	unsigned int		flags;
-+	int			stat;
-+	struct xfs_rmap_irec	irec;
-+	int			error;
-+
-+	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
-+
-+	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags, &stat);
-+	if (error)
-+		return error;
-+	if (!stat) {
-+		*has_rmap = false;
-+		return 0;
-+	}
-+
-+	error = xfs_rmap_get_rec(cur, &irec, &stat);
-+	if (error)
-+		return error;
-+	if (!stat) {
-+		*has_rmap = false;
-+		return 0;
-+	}
-+
-+	*has_rmap = (irec.rm_startblock <= bno &&
-+		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
-+	return 0;
-+}
-diff --git a/libxfs/xfs_rmap.h b/libxfs/xfs_rmap.h
-index 3fa4559..ea359ab 100644
---- a/libxfs/xfs_rmap.h
-+++ b/libxfs/xfs_rmap.h
-@@ -217,5 +217,10 @@ int xfs_rmap_lookup_le_range(struct xfs_btree_cur *cur, xfs_agblock_t bno,
- union xfs_btree_rec;
- int xfs_rmap_btrec_to_irec(union xfs_btree_rec *rec,
- 		struct xfs_rmap_irec *irec);
-+int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
-+		xfs_filblks_t len, bool *exists);
-+int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
-+		xfs_filblks_t len, struct xfs_owner_info *oinfo,
-+		bool *has_rmap);
- 
- #endif	/* __XFS_RMAP_H__ */
-
+Thanks,
+Eryu
