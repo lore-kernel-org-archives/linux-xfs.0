@@ -1,43 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39855 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751601AbcKEA07 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:26:59 -0400
-Subject: [PATCH 22/39] xfs: scrub symbolic links
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:26:54 -0700
-Message-ID: <147830561451.4165.5228393569780943304.stgit@birch.djwong.org>
-In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
-References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:24962 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750909AbcKFWDo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Nov 2016 17:03:44 -0500
+Date: Mon, 7 Nov 2016 09:02:58 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: provide helper for counting extents from
+ if_bytes
+Message-ID: <20161106220258.GM14023@dastard>
+References: <d279d52e-49f6-6fc2-c78b-0054d7ee0a1e@redhat.com>
+ <6191b8d6-4a89-0191-728a-18ebdf9254c6@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6191b8d6-4a89-0191-728a-18ebdf9254c6@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Create the infrastructure to scrub symbolic link data.
+On Fri, Nov 04, 2016 at 09:27:18PM -0500, Eric Sandeen wrote:
+> The open-coded pattern:
+> 
+> ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)
+> 
+> is all over the xfs code; provide a new helper
+> xfs_iext_count(ifp) to count the number of inline extents
+> in an inode fork.
+....
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 5dd56d3..a9e4904 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -775,6 +775,16 @@
+>  	}
+>  }
+>  
+> +/* Count number of inline extents based on if_bytes */
+> +xfs_extnum_t
+> +xfs_iext_count(struct xfs_ifork *ifp)
+> +{
+> +	xfs_extnum_t	nextents;
+> +
+> +	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+> +	return nextents;
+> +}
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/xfs_fs.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Why not just "return ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);"?
 
+Otherwise looks good - a needed cleanup.
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index c5d7dd9..2709d1f 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -615,7 +615,8 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
- #define XFS_SCRUB_TYPE_DIR	15	/* directory */
- #define XFS_SCRUB_TYPE_XATTR	16	/* extended attribute */
--#define XFS_SCRUB_TYPE_MAX	16
-+#define XFS_SCRUB_TYPE_SYMLINK	17	/* symbolic link */
-+#define XFS_SCRUB_TYPE_MAX	17
- 
- #define XFS_SCRUB_FLAG_REPAIR	0x1	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x2	/* o: needs repair */
+Cheers,
 
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
