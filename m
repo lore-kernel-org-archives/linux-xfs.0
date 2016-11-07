@@ -1,117 +1,204 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39690 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754146AbcKEA0d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:26:33 -0400
-Subject: [PATCH 18/39] xfs: scrub inode block mappings
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:26:30 -0700
-Message-ID: <147830559011.4165.17937663704012458827.stgit@birch.djwong.org>
-In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
-References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41540 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751599AbcKGDe0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 6 Nov 2016 22:34:26 -0500
+Date: Mon, 7 Nov 2016 11:34:08 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] fstests: multi-threads freeze/unfreeze test under
+ fsstress stress
+Message-ID: <20161107033408.GG27776@eguan.usersys.redhat.com>
+References: <1478454359-27154-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1478454359-27154-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Scrub an individual inode's block mappings to make sure they make sense.
+On Mon, Nov 07, 2016 at 01:45:59AM +0800, Zorro Lang wrote:
+> Multi-threads freeze/unfreeze maybe trigger some bugs, e.g: panic,
+> hang or data corruption etc. It does't check the return value of
+> freeze/unfreeze, but it trys to make sure fsstress won't run fails,
+> and no any other bugs happen.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> Hi,
+> 
+> I can trigger some different hang or panic bugs on different
+> linux versions. But it test passed on linux v4.9-rc2 at least.
+> 
+> Thanks,
+> Zorro
+> 
+>  tests/generic/999     | 95 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/999.out |  2 ++
+>  tests/generic/group   |  3 +-
+>  3 files changed, 99 insertions(+), 1 deletion(-)
+>  create mode 100755 tests/generic/999
+>  create mode 100644 tests/generic/999.out
+> 
+> diff --git a/tests/generic/999 b/tests/generic/999
+> new file mode 100755
+> index 0000000..a759927
+> --- /dev/null
+> +++ b/tests/generic/999
+> @@ -0,0 +1,95 @@
+> +#! /bin/bash
+> +# FS QA Test 999
+> +#
+> +# Multi-threads freeze/unfreeze testing. This's a stress test case,
+> +# it won't do functional check.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +echo "Silence is golden"
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch
+> +_require_freeze
+> +
+> +_scratch_mkfs >>$seqres.full 2>&1
+> +_scratch_mount >>$seqres.full 2>&1
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/xfs_bmap_btree.c |   26 ++++++++++++++++++++++----
- libxfs/xfs_fs.h         |    5 ++++-
- 2 files changed, 26 insertions(+), 5 deletions(-)
+I don't think we can ignore _scratch_mount status here, we need to make
+sure SCRATCH_DEV is really mounted, and _fail if not. Otherwise the test
+would freeze/unfreeze root fs.
 
+> +
+> +num_cpus=`$here/src/feature -o`
 
-diff --git a/libxfs/xfs_bmap_btree.c b/libxfs/xfs_bmap_btree.c
-index 2997a3a..78a0440 100644
---- a/libxfs/xfs_bmap_btree.c
-+++ b/libxfs/xfs_bmap_btree.c
-@@ -620,6 +620,16 @@ xfs_bmbt_init_key_from_rec(
- }
- 
- STATIC void
-+xfs_bmbt_init_high_key_from_rec(
-+	union xfs_btree_key	*key,
-+	union xfs_btree_rec	*rec)
-+{
-+	key->bmbt.br_startoff = cpu_to_be64(
-+			xfs_bmbt_disk_get_startoff(&rec->bmbt) +
-+			xfs_bmbt_disk_get_blockcount(&rec->bmbt) - 1);
-+}
-+
-+STATIC void
- xfs_bmbt_init_rec_from_cur(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_rec	*rec)
-@@ -644,6 +654,16 @@ xfs_bmbt_key_diff(
- 				      cur->bc_rec.b.br_startoff;
- }
- 
-+STATIC __int64_t
-+xfs_bmbt_diff_two_keys(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	return (__int64_t)be64_to_cpu(k1->bmbt.br_startoff) -
-+			  be64_to_cpu(k2->bmbt.br_startoff);
-+}
-+
- static bool
- xfs_bmbt_verify(
- 	struct xfs_buf		*bp)
-@@ -734,7 +754,6 @@ const struct xfs_buf_ops xfs_bmbt_buf_ops = {
- };
- 
- 
--#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_bmbt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -755,7 +774,6 @@ xfs_bmbt_recs_inorder(
- 		xfs_bmbt_disk_get_blockcount(&r1->bmbt) <=
- 		xfs_bmbt_disk_get_startoff(&r2->bmbt);
- }
--#endif	/* DEBUG */
- 
- static const struct xfs_btree_ops xfs_bmbt_ops = {
- 	.rec_len		= sizeof(xfs_bmbt_rec_t),
-@@ -769,14 +787,14 @@ static const struct xfs_btree_ops xfs_bmbt_ops = {
- 	.get_minrecs		= xfs_bmbt_get_minrecs,
- 	.get_dmaxrecs		= xfs_bmbt_get_dmaxrecs,
- 	.init_key_from_rec	= xfs_bmbt_init_key_from_rec,
-+	.init_high_key_from_rec	= xfs_bmbt_init_high_key_from_rec,
- 	.init_rec_from_cur	= xfs_bmbt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_bmbt_init_ptr_from_cur,
- 	.key_diff		= xfs_bmbt_key_diff,
-+	.diff_two_keys		= xfs_bmbt_diff_two_keys,
- 	.buf_ops		= &xfs_bmbt_buf_ops,
--#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_bmbt_keys_inorder,
- 	.recs_inorder		= xfs_bmbt_recs_inorder,
--#endif
- };
- 
- /*
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 7a794b4..fc8efef 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -610,7 +610,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_RMAPBT	9	/* reverse mapping btree */
- #define XFS_SCRUB_TYPE_REFCNTBT	10	/* reference count btree */
- #define XFS_SCRUB_TYPE_INODE	11	/* inode record */
--#define XFS_SCRUB_TYPE_MAX	11
-+#define XFS_SCRUB_TYPE_BMBTD	12	/* data fork block mapping */
-+#define XFS_SCRUB_TYPE_BMBTA	13	/* attr fork block mapping */
-+#define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
-+#define XFS_SCRUB_TYPE_MAX	14
- 
- #define XFS_SCRUB_FLAG_REPAIR	0x1	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x2	/* o: needs repair */
+Need '_require_test_program "feature"' first.
 
+> +
+> +# Start fsstress in background
+> +procs=$num_cpus
+> +if [ $procs -gt 20 ]; then
+> +	procs=20
+> +elif [ $procs -le 1 ]; then
+> +	procs=2
+> +fi
+> +nops=600
+> +STRESS_DIR="$SCRATCH_MNT/fsstress_test_dir"
+
+Better to use lower case for local variables, e.g. stress_dir and
+fsstress_args.
+
+> +mkdir "$STRESS_DIR"
+> +FSSTRESS_ARGS=`_scale_fsstress_args -d $STRESS_DIR -p $procs -n $nops $FSSTRESS_AVOID`
+> +$FSSTRESS_PROG $FSSTRESS_ARGS >>$seqres.full 2>&1 &
+> +fsstress_pid=$!
+> +
+> +# Start multi-threads freeze/unfreeze
+> +for ((i=0; i<$procs; i++))
+> +do
+
+"for ...; do" and "while ...; do"
+
+> +	while [ $(ps -ef | grep "fsstress" | grep -v -c grep) -gt 0 ]
+
+How about "while kill -s 0 $fsstress_pid >/dev/null 2>&1", seems a bit
+simpler.
+
+> +	do
+> +		xfs_freeze -f $SCRATCH_MNT 2>/dev/null
+> +		xfs_freeze -u $SCRATCH_MNT 2>/dev/null
+> +	done &
+> +	freeze_pids="$! $freeze_pids"
+> +done
+> +
+> +wait $fsstress_pid
+> +result=$?
+> +wait $freeze_pids
+> +
+> +# Make sure $SCRATCH_MNT is unfreezed
+> +xfs_freeze -u $SCRATCH_MNT 2>/dev/null
+
+I think this belongs to _cleanup().
+
+> +
+> +# Exit with fsstress return value
+> +status=$result
+> +exit
+> diff --git a/tests/generic/999.out b/tests/generic/999.out
+> new file mode 100644
+> index 0000000..3b276ca
+> --- /dev/null
+> +++ b/tests/generic/999.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 999
+> +Silence is golden
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 08007d7..39e1876 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -1,4 +1,4 @@
+> -# QA groups control file
+> +G# QA groups control file
+
+Extra "G" :)
+
+Thanks,
+Eryu
+
+>  # Defines test groups and nominal group owners
+>  # - do not start group names with a digit
+>  # - comment line before each group is "new" description
+> @@ -392,3 +392,4 @@
+>  387 auto clone
+>  388 auto log metadata
+>  389 auto quick acl
+> +999 auto freeze stress dangerous
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
