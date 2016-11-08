@@ -1,72 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24916 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932496AbcKDSaT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:30:19 -0400
-Subject: [PATCH 01/11] xfs_repair: fix some potential null pointer deferences
+Received: from aserp1040.oracle.com ([141.146.126.69]:42368 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932280AbcKHIhT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2016 03:37:19 -0500
+Date: Tue, 8 Nov 2016 00:37:07 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 11:30:11 -0700
-Message-ID: <147828421174.31492.258418976731027281.stgit@birch.djwong.org>
-In-Reply-To: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
-References: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
+Subject: Re: [PATCH 39/39] xfs_scrub: create online filesystem scrub program
+Message-ID: <20161108083706.GB20710@birch.djwong.org>
+References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
+ <147830572454.4165.18074642184555452652.stgit@birch.djwong.org>
+ <20161105052256.GB27776@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161105052256.GB27776@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-Fix some potential NULL pointer deferences that Coverity pointed out,
-and remove a trivial dead integer check.
+On Sat, Nov 05, 2016 at 01:22:56PM +0800, Eryu Guan wrote:
+> On Fri, Nov 04, 2016 at 05:28:44PM -0700, Darrick J. Wong wrote:
+> > Create a filesystem scrubbing tool that walks the directory tree,
+> > queries every file's extents, extended attributes, and stat data.  For
+> > generic (non-XFS) filesystems this depends on the kernel to do nearly
+> > all the validation.  Optionally, we can (try to) read all the file
+> > data.
+> > 
+> > For XFS, we perform sequential scans of each AG's metadata, inodes,
+> > extent maps, and file data.  Being XFS specific, we can work with
+> > the in-kernel scrubbers to perform much stronger
+> > metadata checking and cross-referencing.  We can also take advantage
+> > of newer ioctls such as GETFSMAP to perform faster read verification.
+> > 
+> > In the future we will be able to take advantage of (still unwritten)
+> > features such as parent directory pointers to fully validate all
+> > metadata.  However, this tool /should/ work for most non-XFS
+> > filesystems such as ext4 and btrfs.
+> > 
+> > Note also that the scrub tool can shut down the filesystem if errors
+> > are found.  This is not a default option since scrubbing is very
+> > immature at this time.  It can also ask the XFS driver in the kernel
+> > to optimize or repair metadata, though this may not be successful.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> [snip]
+> > --- /dev/null
+> > +++ b/scrub/scrub.c
+> > @@ -0,0 +1,1009 @@
+> > +/*
+> > + * Copyright (C) 2016 Oracle.  All Rights Reserved.
+> > + *
+> > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > + * modify it under the terms of the GNU General Public License
+> > + * as published by the Free Software Foundation; either version 2
+> > + * of the License, or (at your option) any later version.
+> > + *
+> > + * This program is distributed in the hope that it would be useful,
+> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > + * GNU General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, write the Free Software Foundation,
+> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> > + */
+> > +#include "libxfs.h"
+> > +#include <stdio.h>
+> > +#include <mntent.h>
+> > +#include <unistd.h>
+> > +#include <sys/types.h>
+> > +#include <sys/stat.h>
+> > +#include <sys/time.h>
+> > +#include <sys/resource.h>
+> > +#include <sys/statvfs.h>
+> > +#include <sys/vfs.h>
+> > +#include <fcntl.h>
+> > +#include <dirent.h>
+> > +#include "disk.h"
+> > +#include "scrub.h"
+> > +#include "../../repair/threads.h"
+> 
+> I have trouble compiling the djwong-devel branch, it failed to find
+> "../../repair/threads.h", seems it should be "../repair/threads.h" here.
 
-Coverity-id: 1375789, 1375790, 1375791, 1375792
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- repair/phase5.c |    2 +-
- repair/rmap.c   |    2 +-
- repair/slab.h   |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+Doh.  Yeah.  I'll fix that in the morning.  Sorry about that.
 
+In a nutshell: I build xfsprogs git for each arch in a build-$arch/ subdirs
+containing symlinks to everything in the parent, which is why I never tripped
+on this. :/
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 3604d1d..cbda556 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -1925,7 +1925,7 @@ _("Insufficient memory to construct refcount cursor."));
- 	refc_rec = pop_slab_cursor(refc_cur);
- 	lptr = &btree_curs->level[0];
- 
--	for (i = 0; i < lptr->num_blocks; i++)  {
-+	for (i = 0; i < lptr->num_blocks && refc_rec != NULL; i++)  {
- 		/*
- 		 * block initialization, lay in block header
- 		 */
-diff --git a/repair/rmap.c b/repair/rmap.c
-index 45e183a..7508973 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -790,7 +790,7 @@ compute_refcounts(
- 		mark_inode_rl(mp, stack_top);
- 
- 		/* Set nbno to the bno of the next refcount change */
--		if (n < slab_count(rmaps))
-+		if (n < slab_count(rmaps) && array_cur)
- 			nbno = array_cur->rm_startblock;
- 		else
- 			nbno = NULLAGBLOCK;
-diff --git a/repair/slab.h b/repair/slab.h
-index 4aa5512..a2201f1 100644
---- a/repair/slab.h
-+++ b/repair/slab.h
-@@ -54,7 +54,7 @@ extern void *bag_item(struct xfs_bag *, size_t);
- 
- #define foreach_bag_ptr_reverse(bag, idx, ptr) \
- 	for ((idx) = bag_count(bag) - 1, (ptr) = bag_item((bag), (idx)); \
--	     (idx) >= 0 && (ptr) != NULL; \
-+	     (ptr) != NULL; \
- 	     (idx)--, (ptr) = bag_item((bag), (idx)))
- 
- #endif /* SLAB_H_ */
+--D
 
+> 
+> Thanks,
+> Eryu
