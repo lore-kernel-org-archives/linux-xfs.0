@@ -1,847 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40214 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754394AbcKEA2a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:28:30 -0400
-Subject: [PATCH 36/39] xfs_db: introduce fuzz command
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:28:25 -0700
-Message-ID: <147830570583.4165.5135118214114881262.stgit@birch.djwong.org>
-In-Reply-To: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
-References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:46958 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752851AbcKHU1h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 Nov 2016 15:27:37 -0500
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 64EF57F7D5
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2016 20:27:37 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uA8KRb6R014912
+        for <linux-xfs@vger.kernel.org>; Tue, 8 Nov 2016 15:27:37 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH RFC 2/4] xfs: logically separate iomap range from allocation range
+Date: Tue,  8 Nov 2016 15:27:34 -0500
+Message-Id: <1478636856-7590-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1478636856-7590-1-git-send-email-bfoster@redhat.com>
+References: <1478636856-7590-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Introduce a new 'fuzz' command to write creative values into
-disk structure fields.
+The xfs_file_iomap_begin_delay() function currently converts the bmbt
+record output from the xfs_bmapi_reserve_delalloc() call to the iomap
+mapping for the higher level iomap code. In preparation to reuse
+xfs_file_iomap_begin_delay() for data fork and COW fork allocation,
+logically separate the iomap mapping provided to the caller from the
+bmbt record returned by xfs_bmapi_reserve_delalloc().
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+This is necessary because while COW reservation involves delalloc
+allocation to the COW fork, the mapping returned to the caller must
+still refer to the shared blocks from the data fork. Note that this
+patch does not change behavior in any way.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- db/Makefile       |    3 
- db/bit.c          |   17 +-
- db/bit.h          |    5 -
- db/command.c      |    2 
- db/fuzz.c         |  461 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- db/fuzz.h         |   21 ++
- db/io.c           |    9 +
- db/io.h           |    1 
- db/type.c         |   44 ++++-
- db/type.h         |    1 
- man/man8/xfs_db.8 |   55 ++++++
- 11 files changed, 598 insertions(+), 21 deletions(-)
- create mode 100644 db/fuzz.c
- create mode 100644 db/fuzz.h
+ fs/xfs/xfs_iomap.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-
-diff --git a/db/Makefile b/db/Makefile
-index cdc0b99..feeacf6 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -12,7 +12,8 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
- 	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
- 	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
- 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
--	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h
-+	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
-+	fuzz.h
- CFILES = $(HFILES:.h=.c)
- LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 193aee4..7446531 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -539,6 +539,7 @@ xfs_file_iomap_begin_delay(
+ 	int			error = 0, eof = 0;
+ 	struct xfs_bmbt_irec	got;
+ 	struct xfs_bmbt_irec	prev;
++	struct xfs_bmbt_irec	imap;	/* for iomap */
+ 	xfs_extnum_t		idx;
  
-diff --git a/db/bit.c b/db/bit.c
-index 24872bf..3fcb085 100644
---- a/db/bit.c
-+++ b/db/bit.c
-@@ -19,13 +19,8 @@
- #include "libxfs.h"
- #include "bit.h"
+ 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+@@ -565,19 +566,20 @@ xfs_file_iomap_begin_delay(
  
--#undef setbit	/* defined in param.h on Linux */
--
--static int	getbit(char *ptr, int bit);
--static void	setbit(char *ptr, int bit, int val);
--
--static int
--getbit(
-+int
-+getbit_l(
- 	char	*ptr,
- 	int	bit)
- {
-@@ -39,8 +34,8 @@ getbit(
- 	return (*ptr & mask) >> shift;
- }
+ 	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
+ 			&got, &prev);
++	imap = got;
+ 	if (!eof && got.br_startoff <= offset_fsb) {
+ 		if (xfs_is_reflink_inode(ip)) {
+ 			bool		shared;
  
--static void
--setbit(
-+void
-+setbit_l(
- 	char *ptr,
- 	int  bit,
- 	int  val)
-@@ -106,7 +101,7 @@ getbitval(
+ 			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
+ 					maxbytes_fsb);
+-			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
+-			error = xfs_reflink_reserve_cow(ip, &got, &shared);
++			xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
++			error = xfs_reflink_reserve_cow(ip, &imap, &shared);
+ 			if (error)
+ 				goto out_unlock;
+ 		}
  
+-		trace_xfs_iomap_found(ip, offset, count, 0, &got);
++		trace_xfs_iomap_found(ip, offset, count, 0, &imap);
+ 		goto done;
+ 	}
  
- 	for (i = 0, rval = 0LL; i < nbits; i++) {
--		if (getbit(p, bit + i)) {
-+		if (getbit_l(p, bit + i)) {
- 			/* If the last bit is on and we care about sign
- 			 * bits and we don't have a full 64 bit
- 			 * container, turn all bits on between the
-@@ -162,7 +157,7 @@ setbitval(
+@@ -648,17 +650,18 @@ xfs_file_iomap_begin_delay(
+ 		xfs_inode_set_eofblocks_tag(ip);
  
- 	if (bitoff % NBBY || nbits % NBBY) {
- 		for (bit = 0; bit < nbits; bit++)
--			setbit(out, bit + bitoff, getbit(in, bit));
-+			setbit_l(out, bit + bitoff, getbit_l(in, bit));
- 	} else
- 		memcpy(out + byteize(bitoff), in, byteize(nbits));
- }
-diff --git a/db/bit.h b/db/bit.h
-index 80ba24c..4506679 100644
---- a/db/bit.h
-+++ b/db/bit.h
-@@ -21,9 +21,12 @@
- #define	bitszof(x,y)	bitize(szof(x,y))
- #define	byteize(s)	((s) / NBBY)
- #define	bitoffs(s)	((s) % NBBY)
-+#define	byteize_up(s)	(((s) + NBBY - 1) / NBBY)
+ 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
++	imap = got;
+ done:
+-	if (isnullstartblock(got.br_startblock))
+-		got.br_startblock = DELAYSTARTBLOCK;
++	if (isnullstartblock(imap.br_startblock))
++		imap.br_startblock = DELAYSTARTBLOCK;
  
- #define	BVUNSIGNED	0
- #define	BVSIGNED	1
+-	if (!got.br_startblock) {
+-		error = xfs_alert_fsblock_zero(ip, &got);
++	if (!imap.br_startblock) {
++		error = xfs_alert_fsblock_zero(ip, &imap);
+ 		if (error)
+ 			goto out_unlock;
+ 	}
  
- extern __int64_t	getbitval(void *obj, int bitoff, int nbits, int flags);
--extern void             setbitval(void *obuf, int bitoff, int nbits, void *ibuf);
-+extern void		setbitval(void *obuf, int bitoff, int nbits, void *ibuf);
-+extern int		getbit_l(char *ptr, int bit);
-+extern void		setbit_l(char *ptr, int bit, int val);
-diff --git a/db/command.c b/db/command.c
-index 3d7cfd7..0eb4944 100644
---- a/db/command.c
-+++ b/db/command.c
-@@ -51,6 +51,7 @@
- #include "dquot.h"
- #include "fsmap.h"
- #include "crc.h"
-+#include "fuzz.h"
+-	xfs_bmbt_to_iomap(ip, iomap, &got);
++	xfs_bmbt_to_iomap(ip, iomap, &imap);
  
- cmdinfo_t	*cmdtab;
- int		ncmds;
-@@ -146,4 +147,5 @@ init_commands(void)
- 	type_init();
- 	write_init();
- 	dquot_init();
-+	fuzz_init();
- }
-diff --git a/db/fuzz.c b/db/fuzz.c
-new file mode 100644
-index 0000000..061ecd1
---- /dev/null
-+++ b/db/fuzz.c
-@@ -0,0 +1,461 @@
-+/*
-+ * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include "libxfs.h"
-+#include <ctype.h>
-+#include <time.h>
-+#include "bit.h"
-+#include "block.h"
-+#include "command.h"
-+#include "type.h"
-+#include "faddr.h"
-+#include "fprint.h"
-+#include "field.h"
-+#include "flist.h"
-+#include "io.h"
-+#include "init.h"
-+#include "output.h"
-+#include "print.h"
-+#include "write.h"
-+#include "malloc.h"
-+
-+static int	fuzz_f(int argc, char **argv);
-+static void     fuzz_help(void);
-+
-+static const cmdinfo_t	fuzz_cmd =
-+	{ "fuzz", NULL, fuzz_f, 0, -1, 0, N_("[-c] [-d] field fuzzcmd..."),
-+	  N_("fuzz values on disk"), fuzz_help };
-+
-+void
-+fuzz_init(void)
-+{
-+	if (!expert_mode)
-+		return;
-+
-+	add_command(&fuzz_cmd);
-+	srand48(clock());
-+}
-+
-+static void
-+fuzz_help(void)
-+{
-+	dbprintf(_(
-+"\n"
-+" The 'fuzz' command fuzzes fields in any on-disk data structure.  For\n"
-+" block fuzzing, see the 'blocktrash' or 'write' commands."
-+"\n"
-+" Examples:\n"
-+"  Struct mode: 'fuzz core.uid zeroes'    - set an inode uid field to 0.\n"
-+"               'fuzz crc ones'           - set a crc filed to all ones.\n"
-+"               'fuzz bno[11] firstbit'   - set the high bit of a block array.\n"
-+"               'fuzz keys[5].startblock add'    - increase a btree key value.\n"
-+"               'fuzz uuid random'        - randomize the superblock uuid.\n"
-+"\n"
-+" In data mode type 'fuzz' by itself for a list of specific commands.\n\n"
-+" Specifying the -c option will allow writes of invalid (corrupt) data with\n"
-+" an invalid CRC. Specifying the -d option will allow writes of invalid data,\n"
-+" but still recalculate the CRC so we are forced to check and detect the\n"
-+" invalid data appropriately.\n\n"
-+));
-+
-+}
-+
-+static int
-+fuzz_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	pfunc_t	pf;
-+	extern char *progname;
-+	int c;
-+	bool corrupt = false;	/* Allow write of bad data w/ invalid CRC */
-+	bool invalid_data = false; /* Allow write of bad data w/ valid CRC */
-+	struct xfs_buf_ops local_ops;
-+	const struct xfs_buf_ops *stashed_ops = NULL;
-+
-+	if (x.isreadonly & LIBXFS_ISREADONLY) {
-+		dbprintf(_("%s started in read only mode, fuzzing disabled\n"),
-+			progname);
-+		return 0;
-+	}
-+
-+	if (cur_typ == NULL) {
-+		dbprintf(_("no current type\n"));
-+		return 0;
-+	}
-+
-+	pf = cur_typ->pfunc;
-+	if (pf == NULL) {
-+		dbprintf(_("no handler function for type %s, fuzz unsupported.\n"),
-+			 cur_typ->name);
-+		return 0;
-+	}
-+
-+	while ((c = getopt(argc, argv, "cd")) != EOF) {
-+		switch (c) {
-+		case 'c':
-+			corrupt = true;
-+			break;
-+		case 'd':
-+			invalid_data = true;
-+			break;
-+		default:
-+			dbprintf(_("bad option for fuzz command\n"));
-+			return 0;
-+		}
-+	}
-+
-+	if (corrupt && invalid_data) {
-+		dbprintf(_("Cannot specify both -c and -d options\n"));
-+		return 0;
-+	}
-+
-+	if (invalid_data && iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF &&
-+			!iocur_top->ino_buf) {
-+		dbprintf(_("Cannot recalculate CRCs on this type of object\n"));
-+		return 0;
-+	}
-+
-+	argc -= optind;
-+	argv += optind;
-+
-+	/*
-+	 * If the buffer has no verifier or we are using standard verifier
-+	 * paths, then just fuzz it and return
-+	 */
-+	if (!iocur_top->bp->b_ops ||
-+	    !(corrupt || invalid_data)) {
-+		(*pf)(DB_FUZZ, cur_typ->fields, argc, argv);
-+		return 0;
-+	}
-+
-+
-+	/* Temporarily remove write verifier to write bad data */
-+	stashed_ops = iocur_top->bp->b_ops;
-+	local_ops.verify_read = stashed_ops->verify_read;
-+	iocur_top->bp->b_ops = &local_ops;
-+
-+	if (corrupt) {
-+		local_ops.verify_write = xfs_dummy_verify;
-+		dbprintf(_("Allowing fuzz of corrupted data and bad CRC\n"));
-+	} else if (iocur_top->ino_buf) {
-+		local_ops.verify_write = xfs_verify_recalc_inode_crc;
-+		dbprintf(_("Allowing fuzz of corrupted inode with good CRC\n"));
-+	} else { /* invalid data */
-+		local_ops.verify_write = xfs_verify_recalc_crc;
-+		dbprintf(_("Allowing fuzz of corrupted data with good CRC\n"));
-+	}
-+
-+	(*pf)(DB_FUZZ, cur_typ->fields, argc, argv);
-+
-+	iocur_top->bp->b_ops = stashed_ops;
-+
-+	return 0;
-+}
-+
-+/* Write zeroes to the field */
-+static bool
-+fuzz_zeroes(
-+	void		*buf,
-+	int		bitoff,
-+	int		nbits)
-+{
-+	char		*out = buf;
-+	int		bit;
-+
-+	if (bitoff % NBBY || nbits % NBBY) {
-+		for (bit = 0; bit < nbits; bit++)
-+			setbit_l(out, bit + bitoff, 0);
-+	} else
-+		memset(out + byteize(bitoff), 0, byteize(nbits));
-+	return true;
-+}
-+
-+/* Write ones to the field */
-+static bool
-+fuzz_ones(
-+	void		*buf,
-+	int		bitoff,
-+	int		nbits)
-+{
-+	char		*out = buf;
-+	int		bit;
-+
-+	if (bitoff % NBBY || nbits % NBBY) {
-+		for (bit = 0; bit < nbits; bit++)
-+			setbit_l(out, bit + bitoff, 1);
-+	} else
-+		memset(out + byteize(bitoff), 0xFF, byteize(nbits));
-+	return true;
-+}
-+
-+/* Flip the high bit in the (presumably big-endian) field */
-+static bool
-+fuzz_firstbit(
-+	void		*buf,
-+	int		bitoff,
-+	int		nbits)
-+{
-+	setbit_l((char *)buf, bitoff, !getbit_l((char *)buf, bitoff));
-+	return true;
-+}
-+
-+/* Flip the low bit in the (presumably big-endian) field */
-+static bool
-+fuzz_lastbit(
-+	void		*buf,
-+	int		bitoff,
-+	int		nbits)
-+{
-+	setbit_l((char *)buf, bitoff + nbits - 1,
-+			!getbit_l((char *)buf, bitoff));
-+	return true;
-+}
-+
-+/* Flip the middle bit in the (presumably big-endian) field */
-+static bool
-+fuzz_middlebit(
-+	void		*buf,
-+	int		bitoff,
-+	int		nbits)
-+{
-+	setbit_l((char *)buf, bitoff + nbits / 2,
-+			!getbit_l((char *)buf, bitoff));
-+	return true;
-+}
-+
-+/* Format and shift a number into a buffer for setbitval. */
-+static char *
-+format_number(
-+	uint64_t	val,
-+	__be64		*out,
-+	int		bit_length)
-+{
-+	int		offset;
-+	char		*rbuf = (char *)out;
-+
-+	/*
-+	 * If the length of the field is not a multiple of a byte, push
-+	 * the bits up in the field, so the most signicant field bit is
-+	 * the most significant bit in the byte:
-+	 *
-+	 * before:
-+	 * val  |----|----|----|----|----|--MM|mmmm|llll|
-+	 * after
-+	 * val  |----|----|----|----|----|MMmm|mmll|ll00|
-+	 */
-+	offset = bit_length % NBBY;
-+	if (offset)
-+		val <<= (NBBY - offset);
-+
-+	/*
-+	 * convert to big endian and copy into the array
-+	 * rbuf |----|----|----|----|----|MMmm|mmll|ll00|
-+	 */
-+	*out = cpu_to_be64(val);
-+
-+	/*
-+	 * Align the array to point to the field in the array.
-+	 *  rbuf  = |MMmm|mmll|ll00|
-+	 */
-+	offset = sizeof(__be64) - 1 - ((bit_length - 1) / sizeof(__be64));
-+	return rbuf + offset;
-+}
-+
-+/* Increase the value by some small prime number. */
-+static bool
-+fuzz_add(
-+	void		*buf,
-+	int		bitoff,
-+	int		nbits)
-+{
-+	uint64_t	val;
-+	__be64		out;
-+	char		*b;
-+
-+	if (nbits > 64)
-+		return false;
-+
-+	val = getbitval(buf, bitoff, nbits, BVUNSIGNED);
-+	val += (nbits > 8 ? 2017 : 137);
-+	b = format_number(val, &out, nbits);
-+	setbitval(buf, bitoff, nbits, b);
-+
-+	return true;
-+}
-+
-+/* Decrease the value by some small prime number. */
-+static bool
-+fuzz_sub(
-+	void		*buf,
-+	int		bitoff,
-+	int		nbits)
-+{
-+	uint64_t	val;
-+	__be64		out;
-+	char		*b;
-+
-+	if (nbits > 64)
-+		return false;
-+
-+	val = getbitval(buf, bitoff, nbits, BVUNSIGNED);
-+	val -= (nbits > 8 ? 2017 : 137);
-+	b = format_number(val, &out, nbits);
-+	setbitval(buf, bitoff, nbits, b);
-+
-+	return true;
-+}
-+
-+/* Randomize the field. */
-+static bool
-+fuzz_random(
-+	void		*buf,
-+	int		bitoff,
-+	int		nbits)
-+{
-+	int		i, bytes;
-+	char		*b, *rbuf;
-+
-+	bytes = byteize_up(nbits);
-+	rbuf = b = malloc(bytes);
-+	if (!b) {
-+		perror("fuzz_random");
-+		return false;
-+	}
-+
-+	for (i = 0; i < bytes; i++)
-+		*b++ = (char)lrand48();
-+
-+	setbitval(buf, bitoff, nbits, rbuf);
-+	free(rbuf);
-+
-+	return true;
-+}
-+
-+struct fuzzcmd {
-+	const char	*verb;
-+	bool		(*fn)(void *buf, int bitoff, int nbits);
-+};
-+
-+/* Keep these verbs in sync with enum fuzzcmds. */
-+static struct fuzzcmd fuzzverbs[] = {
-+	{"zeroes",		fuzz_zeroes},
-+	{"ones",		fuzz_ones},
-+	{"firstbit",		fuzz_firstbit},
-+	{"middlebit",		fuzz_middlebit},
-+	{"lastbit",		fuzz_lastbit},
-+	{"add",			fuzz_add},
-+	{"sub",			fuzz_sub},
-+	{"random",		fuzz_random},
-+	{NULL,			NULL},
-+};
-+
-+/* ARGSUSED */
-+void
-+fuzz_struct(
-+	const field_t	*fields,
-+	int		argc,
-+	char		**argv)
-+{
-+	const ftattr_t	*fa;
-+	flist_t		*fl;
-+	flist_t		*sfl;
-+	int		bit_length;
-+	struct fuzzcmd	*fc;
-+	bool		success;
-+	int		parentoffset;
-+
-+	if (argc != 2) {
-+		dbprintf(_("Usage: fuzz fieldname verb\n"));
-+		dbprintf("Verbs: %s", fuzzverbs->verb);
-+		for (fc = fuzzverbs + 1; fc->verb != NULL; fc++)
-+			dbprintf(", %s", fc->verb);
-+		dbprintf(".\n");
-+		return;
-+	}
-+
-+	fl = flist_scan(argv[0]);
-+	if (!fl) {
-+		dbprintf(_("unable to parse '%s'.\n"), argv[0]);
-+		return;
-+	}
-+
-+	/* Find our fuzz verb */
-+	for (fc = fuzzverbs; fc->verb != NULL; fc++)
-+		if (!strcmp(fc->verb, argv[1]))
-+			break;
-+	if (fc->fn == NULL) {
-+		dbprintf(_("Unknown fuzz command '%s'.\n"), argv[1]);
-+		return;
-+	}
-+
-+	/* if we're a root field type, go down 1 layer to get field list */
-+	if (fields->name[0] == '\0') {
-+		fa = &ftattrtab[fields->ftyp];
-+		ASSERT(fa->ftyp == fields->ftyp);
-+		fields = fa->subfld;
-+	}
-+
-+	/* run down the field list and set offsets into the data */
-+	if (!flist_parse(fields, fl, iocur_top->data, 0)) {
-+		flist_free(fl);
-+		dbprintf(_("parsing error\n"));
-+		return;
-+	}
-+
-+	sfl = fl;
-+	parentoffset = 0;
-+	while (sfl->child) {
-+		parentoffset = sfl->offset;
-+		sfl = sfl->child;
-+	}
-+
-+	/*
-+	 * For structures, fsize * fcount tells us the size of the region we are
-+	 * modifying, which is usually a single structure member and is pointed
-+	 * to by the last child in the list.
-+	 *
-+	 * However, if the base structure is an array and we have a direct index
-+	 * into the array (e.g. write bno[5]) then we are returned a single
-+	 * flist object with the offset pointing directly at the location we
-+	 * need to modify. The length of the object we are modifying is then
-+	 * determined by the size of the individual array entry (fsize) and the
-+	 * indexes defined in the object, not the overall size of the array
-+	 * (which is what fcount returns).
-+	 */
-+	bit_length = fsize(sfl->fld, iocur_top->data, parentoffset, 0);
-+	if (sfl->fld->flags & FLD_ARRAY)
-+		bit_length *= sfl->high - sfl->low + 1;
-+	else
-+		bit_length *= fcount(sfl->fld, iocur_top->data, parentoffset);
-+
-+	/* Fuzz the value */
-+	success = fc->fn(iocur_top->data, sfl->offset, bit_length);
-+	if (!success) {
-+		dbprintf(_("unable to fuzz field '%s'\n"), argv[0]);
-+		flist_free(fl);
-+		return;
-+	}
-+
-+	/* Write the fuzzed value back */
-+	write_cur();
-+
-+	flist_print(fl);
-+	print_flist(fl);
-+	flist_free(fl);
-+}
-diff --git a/db/fuzz.h b/db/fuzz.h
-new file mode 100644
-index 0000000..30ada2f
---- /dev/null
-+++ b/db/fuzz.h
-@@ -0,0 +1,21 @@
-+/*
-+ * Copyright (C) 2016 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+extern void	fuzz_init(void);
-+extern void	fuzz_struct(const field_t *fields, int argc, char **argv);
-diff --git a/db/io.c b/db/io.c
-index f398195..1f316d8 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -465,6 +465,15 @@ xfs_dummy_verify(
- }
- 
- void
-+xfs_verify_recalc_inode_crc(
-+	struct xfs_buf *bp)
-+{
-+	ASSERT(iocur_top->ino_buf);
-+	libxfs_dinode_calc_crc(mp, iocur_top->data);
-+	iocur_top->ino_crc_ok = 1;
-+}
-+
-+void
- xfs_verify_recalc_crc(
- 	struct xfs_buf *bp)
- {
-diff --git a/db/io.h b/db/io.h
-index c69e9ce..12d96c2 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -64,6 +64,7 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
- extern void     ring_add(void);
- extern void	set_iocur_type(const struct typ *t);
- extern void	xfs_dummy_verify(struct xfs_buf *bp);
-+extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
- extern void	xfs_verify_recalc_crc(struct xfs_buf *bp);
- 
- /*
-diff --git a/db/type.c b/db/type.c
-index 10fa54e..adab10a 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -39,6 +39,7 @@
- #include "dir2.h"
- #include "text.h"
- #include "symlink.h"
-+#include "fuzz.h"
- 
- static const typ_t	*findtyp(char *name);
- static int		type_f(int argc, char **argv);
-@@ -254,10 +255,17 @@ handle_struct(
- 	int           argc,
- 	char          **argv)
- {
--	if (action == DB_WRITE)
-+	switch (action) {
-+	case DB_FUZZ:
-+		fuzz_struct(fields, argc, argv);
-+		break;
-+	case DB_WRITE:
- 		write_struct(fields, argc, argv);
--	else
-+		break;
-+	case DB_READ:
- 		print_struct(fields, argc, argv);
-+		break;
-+	}
- }
- 
- void
-@@ -267,10 +275,17 @@ handle_string(
- 	int           argc,
- 	char          **argv)
- {
--	if (action == DB_WRITE)
-+	switch (action) {
-+	case DB_WRITE:
- 		write_string(fields, argc, argv);
--	else
-+		break;
-+	case DB_READ:
- 		print_string(fields, argc, argv);
-+		break;
-+	case DB_FUZZ:
-+		dbprintf(_("string fuzzing not supported.\n"));
-+		break;
-+	}
- }
- 
- void
-@@ -280,10 +295,17 @@ handle_block(
- 	int           argc,
- 	char          **argv)
- {
--	if (action == DB_WRITE)
-+	switch (action) {
-+	case DB_WRITE:
- 		write_block(fields, argc, argv);
--	else
-+		break;
-+	case DB_READ:
- 		print_block(fields, argc, argv);
-+		break;
-+	case DB_FUZZ:
-+		dbprintf(_("use 'blocktrash' or 'write' to fuzz a block.\n"));
-+		break;
-+	}
- }
- 
- void
-@@ -293,6 +315,14 @@ handle_text(
- 	int           argc,
- 	char          **argv)
- {
--	if (action != DB_WRITE)
-+	switch (action) {
-+	case DB_FUZZ:
-+		/* fall through */
-+	case DB_WRITE:
-+		dbprintf(_("text writing/fuzzing not supported.\n"));
-+		break;
-+	case DB_READ:
- 		print_text(fields, argc, argv);
-+		break;
-+	}
- }
-diff --git a/db/type.h b/db/type.h
-index 87ff107..a50d705 100644
---- a/db/type.h
-+++ b/db/type.h
-@@ -30,6 +30,7 @@ typedef enum typnm
- 	TYP_TEXT, TYP_FINOBT, TYP_NONE
- } typnm_t;
- 
-+#define DB_FUZZ  2
- #define DB_WRITE 1
- #define DB_READ  0
- 
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 460d89d..55e0629 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -594,6 +594,55 @@ in units of 512-byte blocks, no matter what the filesystem's block size is.
- .BI "The optional " start " and " end " arguments can be used to constrain
- the output to a particular range of disk blocks.
- .TP
-+.BI "fuzz [\-c] [\-d] " "field action"
-+Write garbage into a specific structure field on disk.
-+Expert mode must be enabled to use this command.
-+The operation happens immediately; there is no buffering.
-+.IP
-+The fuzz command can take the following
-+.IR action "s"
-+against a field:
-+.RS 1.0i
-+.TP 0.4i
-+.B zeroes
-+Clears all bits in the field.
-+.TP 0.4i
-+.B ones
-+Sets all bits in the field.
-+.TP 0.4i
-+.B firstbit
-+Flips the first bit in the field.
-+For a scalar value, this is the highest bit.
-+.TP 0.4i
-+.B middlebit
-+Flips the middle bit in the field.
-+.TP 0.4i
-+.B lastbit
-+Flips the last bit in the field.
-+For a scalar value, this is the lowest bit.
-+.TP 0.4i
-+.B add
-+Adds a small value to a scalar field.
-+.TP 0.4i
-+.B sub
-+Subtracts a small value from a scalar field.
-+.TP 0.4i
-+.B random
-+Randomizes the contents of the field.
-+.RE
-+.IP
-+The following switches affect the write behavior:
-+.RS 1.0i
-+.TP 0.4i
-+.B \-c
-+Skip write verifiers and CRC recalculation; allows invalid data to be written
-+to disk.
-+.TP 0.4i
-+.B \-d
-+Skip write verifiers but perform CRC recalculation; allows invalid data to be
-+written to disk to test detection of invalid data.
-+.RE
-+.TP
- .BI hash " string
- Prints the hash value of
- .I string
-@@ -755,7 +804,7 @@ and
- bits respectively, and their string equivalent reported
- (but no modifications are made).
- .TP
--.BI "write [\-c] [" "field value" "] ..."
-+.BI "write [\-c] [\-d] [" "field value" "] ..."
- Write a value to disk.
- Specific fields can be set in structures (struct mode),
- or a block can be set to data values (data mode),
-@@ -778,6 +827,10 @@ with no arguments gives more information on the allowed commands.
- .B \-c
- Skip write verifiers and CRC recalculation; allows invalid data to be written
- to disk.
-+.TP 0.4i
-+.B \-d
-+Skip write verifiers but perform CRC recalculation; allows invalid data to be
-+written to disk to test detection of invalid data.
- .RE
- .SH TYPES
- This section gives the fields in each structure type and their meanings.
+ out_unlock:
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-- 
+2.7.4
 
