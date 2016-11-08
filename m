@@ -1,159 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49539 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933664AbcKNRN1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2016 12:13:27 -0500
-Received: from [83.175.99.196] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-        id 1c6Kow-0005bF-6r
-        for linux-xfs@vger.kernel.org; Mon, 14 Nov 2016 17:13:26 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/14] xfs: cleanup xfs_reflink_find_cow_mapping
-Date: Mon, 14 Nov 2016 18:12:40 +0100
-Message-Id: <1479143565-30615-10-git-send-email-hch@lst.de>
-In-Reply-To: <1479143565-30615-1-git-send-email-hch@lst.de>
-References: <1479143565-30615-1-git-send-email-hch@lst.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:18099 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752225AbcKHBkF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Nov 2016 20:40:05 -0500
+Date: Tue, 8 Nov 2016 12:38:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/5] iomap: implement direct I/O
+Message-ID: <20161108013805.GA28922@dastard>
+References: <1478276479-10749-1-git-send-email-hch@lst.de>
+ <1478276479-10749-5-git-send-email-hch@lst.de>
+ <20161106224049.GP14023@dastard>
+ <20161107150807.GA10865@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161107150807.GA10865@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, axboe@fb.com, kent.overstreet@gmail.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
 
-Use xfs_iext_lookup_extent to look up the extent, drop a useless check,
-drop a unneeded return value and clean up the general style a little bit.
+On Mon, Nov 07, 2016 at 04:08:07PM +0100, Christoph Hellwig wrote:
+> On Mon, Nov 07, 2016 at 09:40:49AM +1100, Dave Chinner wrote:
+> > > +	case IOMAP_HOLE:
+> > > +		/*
+> > > +		 * We return -ENOTBLK to fall back to buffered I/O for file
+> > > +		 * systems that can't fill holes from direct writes.
+> > > +		 */
+> > > +		if (dio->flags & IOMAP_DIO_WRITE)
+> > > +			return -ENOTBLK;
+> > > +		/*FALLTHRU*/
+> > 
+> > This is preventing direct IO writes from being done into holes for
+> > all filesystems.
+> 
+> It's not.  Hint:  the whole iomap code very much assumes a file system
+> fills holes before applying the actor on writes.
+> 
+> That being said I should remove this check - as-is it's dead, untested
+> code that I only used for my aborted ext2 conversion, so we're better
+> off not having it.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c    | 16 ++++++++--------
- fs/xfs/xfs_reflink.c | 30 +++++++++---------------------
- fs/xfs/xfs_reflink.h |  2 +-
- 3 files changed, 18 insertions(+), 30 deletions(-)
+Yup, agreed.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index dd6cacf..ab266d6 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -777,7 +777,7 @@ xfs_map_cow(
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_bmbt_irec	imap;
--	bool			is_cow = false, need_alloc = false;
-+	bool			is_cow = false;
- 	int			error;
- 
- 	/*
-@@ -795,7 +795,7 @@ xfs_map_cow(
- 	 * Else we need to check if there is a COW mapping at this offset.
- 	 */
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap, &need_alloc);
-+	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap);
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
- 	if (!is_cow)
-@@ -805,7 +805,7 @@ xfs_map_cow(
- 	 * And if the COW mapping has a delayed extent here we need to
- 	 * allocate real space for it now.
- 	 */
--	if (need_alloc) {
-+	if (isnullstartblock(imap.br_startblock)) {
- 		error = xfs_iomap_write_allocate(ip, XFS_COW_FORK, offset,
- 				&imap);
- 		if (error)
-@@ -1311,7 +1311,6 @@ __xfs_get_blocks(
- 	ssize_t			size;
- 	int			new = 0;
- 	bool			is_cow = false;
--	bool			need_alloc = false;
- 
- 	BUG_ON(create && !direct);
- 
-@@ -1337,9 +1336,11 @@ __xfs_get_blocks(
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + size);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 
--	if (create && direct && xfs_is_reflink_inode(ip))
--		is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap,
--					&need_alloc);
-+	if (create && direct && xfs_is_reflink_inode(ip)) {
-+		is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap);
-+		ASSERT(!is_cow || !isnullstartblock(imap.br_startblock));
-+	}
-+
- 	if (!is_cow) {
- 		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
- 					&imap, &nimaps, XFS_BMAPI_ENTIRE);
-@@ -1356,7 +1357,6 @@ __xfs_get_blocks(
- 			xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb,
- 					&imap);
- 	}
--	ASSERT(!need_alloc);
- 	if (error)
- 		goto out_unlock;
- 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 35e02ce..6056fd1 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -427,37 +427,25 @@ bool
- xfs_reflink_find_cow_mapping(
- 	struct xfs_inode		*ip,
- 	xfs_off_t			offset,
--	struct xfs_bmbt_irec		*imap,
--	bool				*need_alloc)
-+	struct xfs_bmbt_irec		*imap)
- {
--	struct xfs_bmbt_irec		irec;
--	struct xfs_ifork		*ifp;
--	struct xfs_bmbt_rec_host	*gotp;
--	xfs_fileoff_t			bno;
-+	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-+	xfs_fileoff_t			offset_fsb;
-+	struct xfs_bmbt_irec		got;
- 	xfs_extnum_t			idx;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
- 	ASSERT(xfs_is_reflink_inode(ip));
- 
--	/* Find the extent in the CoW fork. */
--	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
--	bno = XFS_B_TO_FSBT(ip->i_mount, offset);
--	gotp = xfs_iext_bno_to_ext(ifp, bno, &idx);
--	if (!gotp)
-+	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
-+	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got))
- 		return false;
--
--	xfs_bmbt_get_all(gotp, &irec);
--	if (bno >= irec.br_startoff + irec.br_blockcount ||
--	    bno < irec.br_startoff)
-+	if (got.br_startoff > offset_fsb)
- 		return false;
- 
- 	trace_xfs_reflink_find_cow_mapping(ip, offset, 1, XFS_IO_OVERWRITE,
--			&irec);
--
--	/* If it's still delalloc, we must allocate later. */
--	*imap = irec;
--	*need_alloc = !!(isnullstartblock(irec.br_startblock));
--
-+			&got);
-+	*imap = got;
- 	return true;
- }
- 
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 97ea9b4..cff5fc3 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -31,7 +31,7 @@ extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
- extern int xfs_reflink_allocate_cow_range(struct xfs_inode *ip,
- 		xfs_off_t offset, xfs_off_t count);
- extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
--		struct xfs_bmbt_irec *imap, bool *need_alloc);
-+		struct xfs_bmbt_irec *imap);
- extern int xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
- 		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
- 
+> > > +	iov_iter_truncate(&iter, length);
+> > 
+> > Won't this truncate the entire DIO down to the length of the first
+> > extent that is mapped? 
+> 
+> It truncates a copy of the main iter down to the length of the extent
+> we're working on.  That allows us to limit all the iov_iter based helper
+> (most importantly get_user_pages) to only operate on a given extent.
+> Later in the function we then advance the primary iter when moving to
+> the next extent.
+
+Hmmm, I must be missing something here. iomap_dio_rw() stores a
+pointer to the primary iter in the dio structure, and that gets
+passed to the actor function, and then it....
+
+Oh, bloody hell, Christoph! :/ You hid a structure copy in the
+variable initialisations and used the same variable name for the
+copy as the primary pointer:
+
+	struct iov_iter iter = *dio->submit.iter;
+
+That's really subtle and easy for idiots like me to miss when
+reading the code. Please make it clear that we're working on
+a copy of the primary iter here, not the primary iter itself.
+
+> > > +		if (ret <= 0) {
+> > > +			/* magic error code to fall back to buffered I/O */
+> > > +			if (ret == -ENOTBLK)
+> > > +				ret = 0;
+> > > +			break;
+> > > +		}
+> > > +		pos += ret;
+> > > +	} while ((count = iov_iter_count(iter)) > 0);
+> > > +	blk_finish_plug(&plug);
+> > > +
+> > > +	if (ret < 0)
+> > > +		cmpxchg(&dio->error, 0, ret);
+> > 
+> > Why cmpxchg? What are we racing with here? Helper (e.g.
+> > dio_set_error())?
+> 
+> The submission thread against I/O completions (which in the worst
+> case could come from multiple threads as well).  Same reason as
+> the one in xfs_buf_bio_end_io added in commit 9bdd9bd69b
+> ("xfs: buffer ->bi_end_io function requires irq-safe lock")
+
+Yup, that's what I suspected - a comment is needed at least, though,
+IMO, a helper w/ comment is the most maintainable approach here.
+
+Cheers,
+
+Dave.
 -- 
-2.1.4
-
+Dave Chinner
+david@fromorbit.com
