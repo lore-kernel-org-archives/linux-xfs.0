@@ -1,151 +1,215 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42480 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752417AbcKIACD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2016 19:02:03 -0500
-Date: Tue, 8 Nov 2016 16:01:53 -0800
+Received: from userp1040.oracle.com ([156.151.31.81]:30641 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752282AbcKIA3z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2016 19:29:55 -0500
+Date: Tue, 8 Nov 2016 16:29:46 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [ANNOUNCE] xfs: for-next branch updated to 84716639acc3
-Message-ID: <20161109000152.GB16813@birch.djwong.org>
-References: <20161108231639.GC28922@dastard>
+Subject: Re: [PATCH 1/9] populate: create all types of XFS metadata
+Message-ID: <20161109002946.GE20710@birch.djwong.org>
+References: <147830503054.1919.4998804611100937975.stgit@birch.djwong.org>
+ <147830503682.1919.1673201723512253812.stgit@birch.djwong.org>
+ <20161107153413.GL27776@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161108231639.GC28922@dastard>
+In-Reply-To: <20161107153413.GL27776@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, tytso@mit.edu, ross.zwisler@linux.intel.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Wed, Nov 09, 2016 at 10:16:39AM +1100, Dave Chinner wrote:
-> Hi folks,
+On Mon, Nov 07, 2016 at 11:34:13PM +0800, Eryu Guan wrote:
+> On Fri, Nov 04, 2016 at 05:17:16PM -0700, Darrick J. Wong wrote:
+> > We have three new metadata types -- rmapbt, rtrmapbt, and refcountbt.
+> > Ensure that we populate the scratch fs with all three.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  common/populate |   87 ++++++++++++++++++++++++++++++++++++++++++++++++++-----
+> >  1 file changed, 79 insertions(+), 8 deletions(-)
+> > 
+> > 
+> > diff --git a/common/populate b/common/populate
+> > index d0003c5..6ada902 100644
+> > --- a/common/populate
+> > +++ b/common/populate
+> > @@ -24,6 +24,7 @@
+> >  
+> >  _require_xfs_io_command "falloc"
+> >  _require_xfs_io_command "fpunch"
+> > +_require_test_program "punch-alternating"
+> >  
+> >  _require_xfs_db_blocktrash_z_command() {
+> >  	test "${FSTYP}" = "xfs" || _notrun "cannot run xfs_db on ${FSTYP}"
+> > @@ -106,9 +107,7 @@ _scratch_xfs_populate() {
+> >  	echo "+ btree extents file"
+> >  	nr="$((blksz * 2 / 16))"
+> >  	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/S_IFREG.FMT_BTREE"
+> > -	for i in $(seq 1 2 ${nr}); do
+> > -		$XFS_IO_PROG -f -c "fpunch $((i * blksz)) ${blksz}" "${SCRATCH_MNT}/S_IFREG.FMT_BTREE"
+> > -	done
+> > +	./src/punch-alternating "${SCRATCH_MNT}/S_IFREG.FMT_BTREE"
+> >  
+> >  	# Directories
+> >  	# - INLINE
+> > @@ -128,6 +127,7 @@ _scratch_xfs_populate() {
+> >  	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_NODE" "$((16 * dblksz / 40))" true
+> >  
+> >  	# - BTREE
+> > +	echo "+ btree dir"
+> >  	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$((128 * dblksz / 40))" true
+> >  
+> >  	# Symlinks
+> > @@ -180,10 +180,43 @@ _scratch_xfs_populate() {
+> >  	$XFS_IO_PROG -f -c 'fsync' "${SCRATCH_MNT}/unused"
+> >  	rm -rf "${SCRATCH_MNT}/unused"
+> >  
+> > +	# Free space btree
+> > +	echo "+ freesp btree"
+> > +	nr="$((blksz * 2 / 8))"
+> > +	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/BNOBT"
+> > +	./src/punch-alternating "${SCRATCH_MNT}/BNOBT"
+> > +
+> > +	# Reverse-mapping btree
+> > +	is_rmapbt="$(xfs_info "${SCRATCH_MNT}" | grep -c 'rmapbt=1')"
+> > +	if [ $is_rmapbt -gt 0 ]; then
+> > +		echo "+ rmapbt btree"
+> > +		nr="$((blksz * 2 / 24))"
+> > +		$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/RMAPBT"
+> > +		./src/punch-alternating "${SCRATCH_MNT}/RMAPBT"
+> > +	fi
+> > +
+> > +	# Realtime Reverse-mapping btree
+> > +	is_rt="$(xfs_info "${SCRATCH_MNT}" | grep -c 'rtextents=[1-9]')"
+> > +	if [ $is_rmapbt -gt 0 ] && [ $is_rt -gt 0 ]; then
+> > +		echo "+ rtrmapbt btree"
+> > +		nr="$((blksz * 2 / 32))"
+> > +		$XFS_IO_PROG -f -R -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/RTRMAPBT"
+> > +		./src/punch-alternating "${SCRATCH_MNT}/RTRMAPBT"
+> > +	fi
+> > +
+> > +	# Reference-count btree
+> > +	is_reflink="$(xfs_info "${SCRATCH_MNT}" | grep -c 'reflink=1')"
+> > +	if [ $is_reflink -gt 0 ]; then
+> > +		echo "+ reflink btree"
+> > +		nr="$((blksz * 2 / 12))"
+> > +		$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/REFCOUNTBT"
+> > +		cp --reflink=always "${SCRATCH_MNT}/REFCOUNTBT" "${SCRATCH_MNT}/REFCOUNTBT2"
+> > +		./src/punch-alternating "${SCRATCH_MNT}/REFCOUNTBT"
+> > +	fi
+> > +
+> >  	# Copy some real files (xfs tests, I guess...)
+> >  	echo "+ real files"
+> > -	#__populate_fill_fs "${SCRATCH_MNT}" 40
+> > -	cp -pRdu --reflink=always "${SCRATCH_MNT}/S_IFREG.FMT_BTREE" "${SCRATCH_MNT}/S_IFREG.FMT_BTREE.REFLINK" 2> /dev/null
+> > +	test $fill -ne 0 && __populate_fill_fs "${SCRATCH_MNT}" 5
 > 
-> The for-next branch of the xfs kernel repository at
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-> 
-> has just been updated.
-> 
-> This update includes the DAX iomap PMD fault infrastructure, a bunch
-> of libxfs cleanups that sync the kernel code with changes that
-> have been made in the userspace libxfs and a few bug fixes thrown in
-> there for good measure.
+> Seems this hunk belongs to patch 3/9? There's no "fill" in this context.
 
-/me notices the commit message for 132f2ac5055a96 ("xfs: check minimum block
-size for CRC filesystems") says that you cleaned up the XFS_MIN_CRC_BLOCKSIZE
-check, but the patch appears identical to the one that I sent.  I think all
-you changed was removing the unlikely()...?
+Yep.  I'll fix this.
 
-(<shrug> I doubt it's a big deal either way really...)
+> >  	umount "${SCRATCH_MNT}"
+> >  }
+> > @@ -212,9 +245,7 @@ _scratch_ext4_populate() {
+> >  	echo "+ extent tree file"
+> >  	nr="$((blksz * 2 / 12))"
+> >  	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/S_IFREG.FMT_ETREE"
+> > -	for i in $(seq 1 2 ${nr}); do
+> > -		$XFS_IO_PROG -f -c "fpunch $((i * blksz)) ${blksz}" "${SCRATCH_MNT}/S_IFREG.FMT_ETREE"
+> > -	done
+> > +	./src/punch-alternating "${SCRATCH_MNT}/S_IFREG.FMT_ETREE"
+> >  
+> >  	# Directories
+> >  	# - INLINE
+> > @@ -349,6 +380,39 @@ __populate_check_xfs_attr() {
+> >  	esac
+> >  }
+> >  
+> > +# Check that there's at least one per-AG btree with multiple levels
+> > +__populate_check_xfs_agbtree_height() {
+> > +	bt_type="$1"
+> > +	nr_ags=$(_scratch_xfs_db -c 'sb 0' -c 'p agcount' | awk '{print $3}')
+> > +
+> > +	case "${bt_type}" in
+> > +	"bno"|"cnt"|"rmap"|"refcnt")
+> > +		hdr="agf"
+> > +		bt_prefix="${bt_type}"
+> > +		;;
+> > +	"ino")
+> > +		hdr="agi"
+> > +		bt_prefix=""
+> > +		;;
+> > +	"fino")
+> > +		hdr="agi"
+> > +		bt_prefix="free_"
+> > +		;;
+> > +	*)
+> > +		_fail "Don't know about AG btree ${bt_type}"
+> > +		;;
+> > +	esac
+> > +
+> > +	seq 0 $((nr_ags - 1)) | while read ag; do
+> > +		bt_level=$(_scratch_xfs_db -c "${hdr} ${ag}" -c "p ${bt_prefix}level" | awk '{print $3}')
+> > +		if [ "${bt_level}" -gt 1 ]; then
+> > +			return 100
+> > +		fi
+> > +	done
+> > +	test $? -eq 100 || _fail "Failed to create ${bt_type} of sufficient height!"
+> 
+> I'm a bit confused here, why test against 100? Because of the
+> "return 100" above? That should exit the function and return to caller
+> already.
+
+The while loop+body executes in a subshell because of the "seq ... |
+while" behavior, so the 'return 100' exits the subshell with a return
+code of 100, depositing us at the first statement after the "done"
+clause.  That's the "test $? -eq 100" statement, which is how
+__populate_check_xfs_agbtree_height catches the early loop termination
+so that we can _fail the test.  We can't call _fail from inside the
+subshell because that will only abort the loop, not the whole test.
+
+FWIW all that is unnecessary if we do:
+
+for ag in $(seq 0 $((nr_ags - 1)) ); do
+	...
+done 
+
+But I prefer to code that a little more defensively when possible since
+that could result in a very long command line.
 
 --D
 
 > 
-> Jan, Ted and Ross:
+> Thanks,
+> Eryu
 > 
-> I have pushed the DAX changes into a stable topic branch named
-> "dax-4.10-iomap-pmd".  Any fixes to this code will be appended to
-> this branch - the commits are now stable so that it can be pulled
-> into other trees for further development of DAX features for this
-> cycle.
-> 
-> The dax-4.10-iomap-pmd branch will also reach linux-next via the
-> merge into the for-next branch. However, keep in mind that the 
-> for-next in the XFS tree is not a stable branch - it may get
-> rebased from time to time as stable topic branches have commits
-> appended - so treat the for-next branch like you treat linux-next.
-> 
-> -Dave.
-> 
-> The new head of the for-next branch is commit:
-> 
-> 84716639acc3 Merge branch 'xfs-4.10-misc-fixes-1' into for-next
-> 
-> New Commits:
-> 
-> Brian Foster (2):
->       [399372349a7f] xfs: don't skip cow forks w/ delalloc blocks in cowblocks scan
->       [04197b341f23] xfs: don't BUG() on mixed direct and mapped I/O
-> 
-> Darrick J. Wong (8):
->       [755c7bf5ddca] libxfs: convert ushort to unsigned short
->       [420fbeb4bff4] libxfs: synchronize dinode_verify with userspace
->       [68c098582b20] libxfs: fix whitespace problems
->       [ae90b994b40f] libxfs: fix xfs_attr_shortform_bytesfit declaration
->       [523b2e76e3ec] libxfs: clean up _dir2_data_freescan
->       [5e52365ac863] xfs: move dir_ino_validate declaration per xfsprogs
->       [4fd29ec47212] xfs: check return value of _trans_reserve_quota_nblks
->       [132f2ac5055a] xfs: check minimum block size for CRC filesystems
-> 
-> Dave Chinner (3):
->       [e823656675ac] Merge branch 'dax-4.10-iomap-pmd' into for-next
->       [baa5baeb87de] Merge branch 'xfs-4.10-libxfs-cleanups' into for-next
->       [84716639acc3] Merge branch 'xfs-4.10-misc-fixes-1' into for-next
-> 
-> Eric Sandeen (3):
->       [e6fc6fcf4447] xfs: don't call xfs_sb_quota_from_disk twice
->       [4dfce57db635] xfs: fix up xfs_swap_extent_forks inline extent handling
->       [5d829300bee0] xfs: provide helper for counting extents from if_bytes
-> 
-> Ross Zwisler (16):
->       [547edce3ba23] ext4: tell DAX the size of allocation holes
->       [fa0d3fce7cef] dax: remove buffer_size_valid()
->       [03e0990fc88f] ext2: remove support for DAX PMD faults
->       [ce95ab0fa669] dax: make 'wait_table' global variable static
->       [aada54f98004] dax: remove the last BUG_ON() from fs/dax.c
->       [e3ad61c64abc] dax: consistent variable naming for DAX entries
->       [63e95b5c4f16] dax: coordinate locking for offsets in PMD range
->       [b9fde0462e34] dax: remove dax_pmd_fault()
->       [11c59c92f44d] dax: correct dax iomap code namespace
->       [333ccc978e1e] dax: add dax_iomap_sector() helper function
->       [1550290b0801] dax: dax_iomap_fault() needs to call iomap_end()
->       [fa28f7296a7c] dax: move RADIX_DAX_* defines to dax.h
->       [422476c4641e] dax: move put_(un)locked_mapping_entry() in dax.c
->       [642261ac995e] dax: add struct iomap based DAX PMD support
->       [862f1b9d6718] xfs: use struct iomap based DAX PMD fault path
->       [190b5caad750] dax: remove "depends on BROKEN" from FS_DAX_PMD
-> 
-> 
-> Code Diffstat:
-> 
->  fs/Kconfig                      |   1 -
->  fs/dax.c                        | 826 ++++++++++++++++++++++++-------------------
->  fs/ext2/file.c                  |  35 +-
->  fs/ext4/inode.c                 |   3 +
->  fs/xfs/libxfs/xfs_attr_leaf.h   |   2 +-
->  fs/xfs/libxfs/xfs_bmap.c        |  54 +--
->  fs/xfs/libxfs/xfs_dir2.h        |   5 +
->  fs/xfs/libxfs/xfs_dir2_data.c   |  24 +-
->  fs/xfs/libxfs/xfs_dir2_priv.h   |   1 -
->  fs/xfs/libxfs/xfs_ialloc.c      |   5 +-
->  fs/xfs/libxfs/xfs_inode_buf.c   |   6 +-
->  fs/xfs/libxfs/xfs_inode_buf.h   |   4 +-
->  fs/xfs/libxfs/xfs_inode_fork.c  |  31 +-
->  fs/xfs/libxfs/xfs_inode_fork.h  |   1 +
->  fs/xfs/libxfs/xfs_log_format.h  |   4 +-
->  fs/xfs/libxfs/xfs_log_recover.h |   2 +-
->  fs/xfs/libxfs/xfs_rtbitmap.c    |   1 -
->  fs/xfs/libxfs/xfs_sb.c          |  14 +-
->  fs/xfs/libxfs/xfs_types.h       |   3 +
->  fs/xfs/xfs_aops.c               |  48 +--
->  fs/xfs/xfs_aops.h               |   3 -
->  fs/xfs/xfs_bmap_util.c          |  33 +-
->  fs/xfs/xfs_file.c               |  10 +-
->  fs/xfs/xfs_icache.c             |   7 +-
->  fs/xfs/xfs_inode_item.c         |   4 +-
->  fs/xfs/xfs_ioctl.c              |   6 +-
->  fs/xfs/xfs_log_recover.c        |   4 +-
->  fs/xfs/xfs_qm.c                 |   2 +-
->  fs/xfs/xfs_reflink.c            |  38 +-
->  fs/xfs/xfs_reflink.h            |   2 -
->  include/linux/dax.h             |  58 ++-
->  mm/filemap.c                    |   5 +-
->  32 files changed, 683 insertions(+), 559 deletions(-)
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > +	return 1
+> > +}
+> > +
+> >  # Check that populate created all the types of files we wanted
+> >  _scratch_xfs_populate_check() {
+> >  	_scratch_mount
+> > @@ -367,6 +431,9 @@ _scratch_xfs_populate_check() {
+> >  	leaf_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_LEAF")"
+> >  	node_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_NODE")"
+> >  	btree_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_BTREE")"
+> > +	is_finobt=$(xfs_info "${SCRATCH_MNT}" | grep -c 'finobt=1')
+> > +	is_rmapbt=$(xfs_info "${SCRATCH_MNT}" | grep -c 'rmapbt=1')
+> > +	is_reflink=$(xfs_info "${SCRATCH_MNT}" | grep -c 'reflink=1')
+> >  
+> >  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+> >  	dblksz="$(xfs_info "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
+> > @@ -389,6 +456,10 @@ _scratch_xfs_populate_check() {
+> >  	__populate_check_xfs_attr "${node_attr}" "node"
+> >  	__populate_check_xfs_attr "${btree_attr}" "btree"
+> >  	__populate_check_xfs_aformat "${btree_attr}" "btree"
+> > +	__populate_check_xfs_agbtree_height "bno"
+> > +	__populate_check_xfs_agbtree_height "cnt"
+> > +	test -n $is_rmapbt && __populate_check_xfs_agbtree_height "rmap"
+> > +	test -n $is_reflink && __populate_check_xfs_agbtree_height "refcnt"
+> >  }
+> >  
+> >  # Check data fork format of ext4 file
+> > 
