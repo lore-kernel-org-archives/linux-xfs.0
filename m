@@ -1,101 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:18099 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752225AbcKHBkF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Nov 2016 20:40:05 -0500
-Date: Tue, 8 Nov 2016 12:38:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/5] iomap: implement direct I/O
-Message-ID: <20161108013805.GA28922@dastard>
-References: <1478276479-10749-1-git-send-email-hch@lst.de>
- <1478276479-10749-5-git-send-email-hch@lst.de>
- <20161106224049.GP14023@dastard>
- <20161107150807.GA10865@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42480 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752417AbcKIACD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2016 19:02:03 -0500
+Date: Tue, 8 Nov 2016 16:01:53 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [ANNOUNCE] xfs: for-next branch updated to 84716639acc3
+Message-ID: <20161109000152.GB16813@birch.djwong.org>
+References: <20161108231639.GC28922@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161107150807.GA10865@lst.de>
+In-Reply-To: <20161108231639.GC28922@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, axboe@fb.com, kent.overstreet@gmail.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, tytso@mit.edu, ross.zwisler@linux.intel.com
 
-On Mon, Nov 07, 2016 at 04:08:07PM +0100, Christoph Hellwig wrote:
-> On Mon, Nov 07, 2016 at 09:40:49AM +1100, Dave Chinner wrote:
-> > > +	case IOMAP_HOLE:
-> > > +		/*
-> > > +		 * We return -ENOTBLK to fall back to buffered I/O for file
-> > > +		 * systems that can't fill holes from direct writes.
-> > > +		 */
-> > > +		if (dio->flags & IOMAP_DIO_WRITE)
-> > > +			return -ENOTBLK;
-> > > +		/*FALLTHRU*/
-> > 
-> > This is preventing direct IO writes from being done into holes for
-> > all filesystems.
+On Wed, Nov 09, 2016 at 10:16:39AM +1100, Dave Chinner wrote:
+> Hi folks,
 > 
-> It's not.  Hint:  the whole iomap code very much assumes a file system
-> fills holes before applying the actor on writes.
+> The for-next branch of the xfs kernel repository at
 > 
-> That being said I should remove this check - as-is it's dead, untested
-> code that I only used for my aborted ext2 conversion, so we're better
-> off not having it.
-
-Yup, agreed.
-
-> > > +	iov_iter_truncate(&iter, length);
-> > 
-> > Won't this truncate the entire DIO down to the length of the first
-> > extent that is mapped? 
+> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 > 
-> It truncates a copy of the main iter down to the length of the extent
-> we're working on.  That allows us to limit all the iov_iter based helper
-> (most importantly get_user_pages) to only operate on a given extent.
-> Later in the function we then advance the primary iter when moving to
-> the next extent.
-
-Hmmm, I must be missing something here. iomap_dio_rw() stores a
-pointer to the primary iter in the dio structure, and that gets
-passed to the actor function, and then it....
-
-Oh, bloody hell, Christoph! :/ You hid a structure copy in the
-variable initialisations and used the same variable name for the
-copy as the primary pointer:
-
-	struct iov_iter iter = *dio->submit.iter;
-
-That's really subtle and easy for idiots like me to miss when
-reading the code. Please make it clear that we're working on
-a copy of the primary iter here, not the primary iter itself.
-
-> > > +		if (ret <= 0) {
-> > > +			/* magic error code to fall back to buffered I/O */
-> > > +			if (ret == -ENOTBLK)
-> > > +				ret = 0;
-> > > +			break;
-> > > +		}
-> > > +		pos += ret;
-> > > +	} while ((count = iov_iter_count(iter)) > 0);
-> > > +	blk_finish_plug(&plug);
-> > > +
-> > > +	if (ret < 0)
-> > > +		cmpxchg(&dio->error, 0, ret);
-> > 
-> > Why cmpxchg? What are we racing with here? Helper (e.g.
-> > dio_set_error())?
+> has just been updated.
 > 
-> The submission thread against I/O completions (which in the worst
-> case could come from multiple threads as well).  Same reason as
-> the one in xfs_buf_bio_end_io added in commit 9bdd9bd69b
-> ("xfs: buffer ->bi_end_io function requires irq-safe lock")
+> This update includes the DAX iomap PMD fault infrastructure, a bunch
+> of libxfs cleanups that sync the kernel code with changes that
+> have been made in the userspace libxfs and a few bug fixes thrown in
+> there for good measure.
 
-Yup, that's what I suspected - a comment is needed at least, though,
-IMO, a helper w/ comment is the most maintainable approach here.
+/me notices the commit message for 132f2ac5055a96 ("xfs: check minimum block
+size for CRC filesystems") says that you cleaned up the XFS_MIN_CRC_BLOCKSIZE
+check, but the patch appears identical to the one that I sent.  I think all
+you changed was removing the unlikely()...?
 
-Cheers,
+(<shrug> I doubt it's a big deal either way really...)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+> 
+> Jan, Ted and Ross:
+> 
+> I have pushed the DAX changes into a stable topic branch named
+> "dax-4.10-iomap-pmd".  Any fixes to this code will be appended to
+> this branch - the commits are now stable so that it can be pulled
+> into other trees for further development of DAX features for this
+> cycle.
+> 
+> The dax-4.10-iomap-pmd branch will also reach linux-next via the
+> merge into the for-next branch. However, keep in mind that the 
+> for-next in the XFS tree is not a stable branch - it may get
+> rebased from time to time as stable topic branches have commits
+> appended - so treat the for-next branch like you treat linux-next.
+> 
+> -Dave.
+> 
+> The new head of the for-next branch is commit:
+> 
+> 84716639acc3 Merge branch 'xfs-4.10-misc-fixes-1' into for-next
+> 
+> New Commits:
+> 
+> Brian Foster (2):
+>       [399372349a7f] xfs: don't skip cow forks w/ delalloc blocks in cowblocks scan
+>       [04197b341f23] xfs: don't BUG() on mixed direct and mapped I/O
+> 
+> Darrick J. Wong (8):
+>       [755c7bf5ddca] libxfs: convert ushort to unsigned short
+>       [420fbeb4bff4] libxfs: synchronize dinode_verify with userspace
+>       [68c098582b20] libxfs: fix whitespace problems
+>       [ae90b994b40f] libxfs: fix xfs_attr_shortform_bytesfit declaration
+>       [523b2e76e3ec] libxfs: clean up _dir2_data_freescan
+>       [5e52365ac863] xfs: move dir_ino_validate declaration per xfsprogs
+>       [4fd29ec47212] xfs: check return value of _trans_reserve_quota_nblks
+>       [132f2ac5055a] xfs: check minimum block size for CRC filesystems
+> 
+> Dave Chinner (3):
+>       [e823656675ac] Merge branch 'dax-4.10-iomap-pmd' into for-next
+>       [baa5baeb87de] Merge branch 'xfs-4.10-libxfs-cleanups' into for-next
+>       [84716639acc3] Merge branch 'xfs-4.10-misc-fixes-1' into for-next
+> 
+> Eric Sandeen (3):
+>       [e6fc6fcf4447] xfs: don't call xfs_sb_quota_from_disk twice
+>       [4dfce57db635] xfs: fix up xfs_swap_extent_forks inline extent handling
+>       [5d829300bee0] xfs: provide helper for counting extents from if_bytes
+> 
+> Ross Zwisler (16):
+>       [547edce3ba23] ext4: tell DAX the size of allocation holes
+>       [fa0d3fce7cef] dax: remove buffer_size_valid()
+>       [03e0990fc88f] ext2: remove support for DAX PMD faults
+>       [ce95ab0fa669] dax: make 'wait_table' global variable static
+>       [aada54f98004] dax: remove the last BUG_ON() from fs/dax.c
+>       [e3ad61c64abc] dax: consistent variable naming for DAX entries
+>       [63e95b5c4f16] dax: coordinate locking for offsets in PMD range
+>       [b9fde0462e34] dax: remove dax_pmd_fault()
+>       [11c59c92f44d] dax: correct dax iomap code namespace
+>       [333ccc978e1e] dax: add dax_iomap_sector() helper function
+>       [1550290b0801] dax: dax_iomap_fault() needs to call iomap_end()
+>       [fa28f7296a7c] dax: move RADIX_DAX_* defines to dax.h
+>       [422476c4641e] dax: move put_(un)locked_mapping_entry() in dax.c
+>       [642261ac995e] dax: add struct iomap based DAX PMD support
+>       [862f1b9d6718] xfs: use struct iomap based DAX PMD fault path
+>       [190b5caad750] dax: remove "depends on BROKEN" from FS_DAX_PMD
+> 
+> 
+> Code Diffstat:
+> 
+>  fs/Kconfig                      |   1 -
+>  fs/dax.c                        | 826 ++++++++++++++++++++++++-------------------
+>  fs/ext2/file.c                  |  35 +-
+>  fs/ext4/inode.c                 |   3 +
+>  fs/xfs/libxfs/xfs_attr_leaf.h   |   2 +-
+>  fs/xfs/libxfs/xfs_bmap.c        |  54 +--
+>  fs/xfs/libxfs/xfs_dir2.h        |   5 +
+>  fs/xfs/libxfs/xfs_dir2_data.c   |  24 +-
+>  fs/xfs/libxfs/xfs_dir2_priv.h   |   1 -
+>  fs/xfs/libxfs/xfs_ialloc.c      |   5 +-
+>  fs/xfs/libxfs/xfs_inode_buf.c   |   6 +-
+>  fs/xfs/libxfs/xfs_inode_buf.h   |   4 +-
+>  fs/xfs/libxfs/xfs_inode_fork.c  |  31 +-
+>  fs/xfs/libxfs/xfs_inode_fork.h  |   1 +
+>  fs/xfs/libxfs/xfs_log_format.h  |   4 +-
+>  fs/xfs/libxfs/xfs_log_recover.h |   2 +-
+>  fs/xfs/libxfs/xfs_rtbitmap.c    |   1 -
+>  fs/xfs/libxfs/xfs_sb.c          |  14 +-
+>  fs/xfs/libxfs/xfs_types.h       |   3 +
+>  fs/xfs/xfs_aops.c               |  48 +--
+>  fs/xfs/xfs_aops.h               |   3 -
+>  fs/xfs/xfs_bmap_util.c          |  33 +-
+>  fs/xfs/xfs_file.c               |  10 +-
+>  fs/xfs/xfs_icache.c             |   7 +-
+>  fs/xfs/xfs_inode_item.c         |   4 +-
+>  fs/xfs/xfs_ioctl.c              |   6 +-
+>  fs/xfs/xfs_log_recover.c        |   4 +-
+>  fs/xfs/xfs_qm.c                 |   2 +-
+>  fs/xfs/xfs_reflink.c            |  38 +-
+>  fs/xfs/xfs_reflink.h            |   2 -
+>  include/linux/dax.h             |  58 ++-
+>  mm/filemap.c                    |   5 +-
+>  32 files changed, 683 insertions(+), 559 deletions(-)
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
