@@ -1,104 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([59.151.112.132]:25801 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1755295AbcKOHyF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Nov 2016 02:54:05 -0500
-Subject: Re: About difference in extent sharing in btrfs and xfs
-References: <1de48152-0ec5-1bf0-1ea9-b5ccbe4a3867@cn.fujitsu.com>
- <20161115074715.GA23680@birch.djwong.org>
-From: Qu Wenruo <quwenruo@cn.fujitsu.com>
-Message-ID: <598d644b-fe2c-f0d8-6deb-cbd4889e77ec@cn.fujitsu.com>
-Date: Tue, 15 Nov 2016 15:53:49 +0800
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:19593 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S938629AbcKKW2d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Nov 2016 17:28:33 -0500
+Date: Sat, 12 Nov 2016 09:28:24 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] shared/006: improve the speed of case running
+Message-ID: <20161111222824.GJ28922@dastard>
+References: <1478795242-14022-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20161115074715.GA23680@birch.djwong.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1478795242-14022-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, btrfs <linux-btrfs@vger.kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
+On Fri, Nov 11, 2016 at 12:27:22AM +0800, Zorro Lang wrote:
+> There're three problems of this case:
+> 1. Thousands of threads will be created to create lots of files, then
+>    kernel need to waste lots of system resource to schedule these
+>    threads. Some poor performance machines will take long long time
+>    on that.
+> 2. Per thread try to create 1000 files by run 1000 times "echo >file".
+> 
+> For the 1st problem, I limit 2 threads per cpu, and the maximum is 20.
+> For the 2nd problem, use "sed 1 1000 | xargs touch" to instead of
+> the old way.
+> 
+> With this change, this case can run over in 2 mins on my x86_64
+> virtual machine with 1 cpu and 1G memory. Before that, it was still
+> running even a quarter passed.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> Hi,
+> 
+> The performance of this case affect the test time of xfstests,
+> especially on poor performance VM. I always doubt it hangs there,
+> because it has run too long time.
+> 
+> After this improvement:
+> It ran 105s on my virtual machine with 1 cpu and 1G memory.
+> It ran 60s on my real machine with 8 cpu and 64G memory.
+> 
+> The difference of "for ((i=0;i<1000;i++)); echo -n > file$i;done"
+> and "touch file{1..1000}" is:
+> The 1st one will run 1000 times execve, open, close and so on. The
+> execve() will take much time, especially on VM.
+> But the 2nd one will run once execve, 1000 times open and once close.
+> open() take much less time than execve().
+> 
+> Too many threads really waste too much time. For example, on my VM,
+> when I use $((ncpus * 2)) threads to run this case, it ran 100s. But
+> if I use $((ncpus * 4)) threads, the time increase to 130s. So too
+> many threads is not helpful, in contrast it wastes more time.
 
+If the only aim is to create inodes faster, then going above 4
+threads making inodes concurrently isn't going to increase speed.
+Most small filesystems don't have the configuration necessary to
+scale much past this (e.g. journal size, AG/BG count, etc all will
+limit concurrency on typical test filesystems.
 
-At 11/15/2016 03:47 PM, Darrick J. Wong wrote:
-> On Tue, Nov 15, 2016 at 02:33:31PM +0800, Qu Wenruo wrote:
->> Hi, xfs guys and btrfs guys.
->>
->> Although the test case generic/372 exists for some time, I noticed that
->> btrfs always fails the test case, due to the difference in how btrfs
->> and xfs handle shared extents.
->>
->> The difference is, btrfs can handle shared extents which points to a subset
->> of a larger extent, so it doesn't need to split reflink source.
->>
->> In case of the test case.
->>
->> On Disk Extent A:
->> Bytenr X
->> |<-----------Data=0x61, Length=320K---------------------------|
->>
->>
->> File1: File Extent 0 -> Extent A, offset=0, referred len=320K
->>
->> File2: File Extent 0 -> Hole
->>        File Extent 64K -> Extent A, offset=192k, refferred len=64k
->>        File Extent 128K -> Hole
->>        File Extent 192K -> Extent A, offset=64k, refferred len=64k
->>
->> Unlike Xfs, Btrfs don't split the source extent, as its file extent has more
->> fields which can handle offset/length inside the large extent.
->
-> XFS doesn't split the extent either, internally.  The FIEMAP
-> implementation cross-references extent data with the refcount records,
-> using extra struct fiemap_extent to report precisely which blocks are
-> shared and which aren't.  ocfs2 exhibits the same behavior.
->
-> It's only btrfs that reports file1 as having one big shared extent when
-> only parts of that extent are actually shared.  I'd rather btrfs only
-> report blocks that are actually shared as shared, but since fiemap
-> results can be obsolete as soon as the ioctl returns I don't consider it
-> a huge priority.
->
->> The btrfs way to handle shared extent has its pros and cons.
->> For example, it's very flex, but it wastes more space for COW since the
->> whole extent can only be freed after all referencer is freed.
->
-> Wait, what?  So if I reflinked a single block of file1 into file3 and
-> then deleted file1 and file2, btrfs would hold on to all 320K?
+There's a reason that the tests that create hundreds of thousands of
+inodes are quite limited in the amount of concurrency they support...
 
-Yep. That's the biggest problem for such extent booking.
-Normally it's defrag to split and free the unused part...
+Cheers,
 
-But ironically, current btrfs defrag can't handle shared extents at all.
-So defrag is only useful when there is only last referencer on that extent.
-
->
->> But since the test case is generic test case, I think it doesn't take such
->> btrfs behavior into consideration.
->> So it always fails on btrfs.
->>
->> How about moving it to xfs specific tests?
->
-> I'd prefer the testcase be left in generic/ and _notrun'd on btrfs since
-> two of the three reflink fses have this behavior.
->
-> (Assuming the btrfs behavior doesn't get changed.)
-
-I don't think btrfs will change the behavior soon, so I'd prefer to 
-blacklist btrfs for this test case.
-
-Thanks,
-Qu
->
-> --D
->
->>
->> Thanks,
->> Qu
->>
->>
->
->
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
