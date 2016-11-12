@@ -1,30 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56312 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:37846 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755456AbcKOIz3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Nov 2016 03:55:29 -0500
-Date: Tue, 15 Nov 2016 00:55:26 -0800
+        with ESMTP id S966438AbcKLQcs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Nov 2016 11:32:48 -0500
+Date: Sat, 12 Nov 2016 08:32:48 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: About difference in extent sharing in btrfs and xfs
-Message-ID: <20161115085526.GA18347@infradead.org>
-References: <1de48152-0ec5-1bf0-1ea9-b5ccbe4a3867@cn.fujitsu.com>
- <20161115074715.GA23680@birch.djwong.org>
+Subject: new xfs/103 failure
+Message-ID: <20161112163248.GA24737@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161115074715.GA23680@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Qu Wenruo <quwenruo@cn.fujitsu.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org, btrfs <linux-btrfs@vger.kernel.org>
+To: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Nov 14, 2016 at 11:47:15PM -0800, Darrick J. Wong wrote:
-> XFS doesn't split the extent either, internally.  The FIEMAP
-> implementation cross-references extent data with the refcount records,
-> using extra struct fiemap_extent to report precisely which blocks are
-> shared and which aren't.  ocfs2 exhibits the same behavior.
+After recently upgrading the xfs and xfsprogs trees I get reproducible
+xfs/103 failures because the n flags is not reported.  Does anyone else
+see this?
 
-And I think exact reporting of already shared extents in FIEMAP is
-extremely important - independent of the internal implementation btrfs
-should report the extents correctly.
+root@testvm:~/xfstests# diff -u tests/xfs/103.out
+/root/xfstests/results//xfs/103
+--- tests/xfs/103.outs# 2016-03-29 13:59:30.451720622
++0000stests/results//xfs/10
++++ /root/xfstests/results//xfs/103.out.bad	2016-11-12
+16:30:37.032780388 +0000
+@@ -3,7 +3,7 @@
+ *** mount
+ *** testing nosymlinks directories
+ *** setting nosymlinks bit
+---n-- SCRATCH_MNT/nosymlink
++----- SCRATCH_MNT/nosymlink
+ ln: creating symbolic link 'SCRATCH_MNT/nosymlink/target': Operation not permitted
+ *** 1st listing...
+ SCRATCH_MNT
+
