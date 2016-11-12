@@ -1,57 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56012 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966447AbcKLSbc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 12 Nov 2016 13:31:32 -0500
-Date: Sun, 13 Nov 2016 02:31:29 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: new xfs/103 failure
-Message-ID: <20161112183129.GJ27776@eguan.usersys.redhat.com>
-References: <20161112163248.GA24737@infradead.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:51170 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753010AbcKLRku (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Nov 2016 12:40:50 -0500
+Received: from hch by bombadil.infradead.org with local (Exim 4.85_2 #1 (Red Hat Linux))
+        id 1c5cIL-0002o9-OL
+        for linux-xfs@vger.kernel.org; Sat, 12 Nov 2016 17:40:49 +0000
+Date: Sat, 12 Nov 2016 09:40:49 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: EFI SLAB use after free in generic/388 run
+Message-ID: <20161112174049.GB27521@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161112163248.GA24737@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Sat, Nov 12, 2016 at 08:32:48AM -0800, Christoph Hellwig wrote:
-> After recently upgrading the xfs and xfsprogs trees I get reproducible
-> xfs/103 failures because the n flags is not reported.  Does anyone else
-> see this?
+Just saw this during a xfstests auto run on virtio with default
+XFS parameters.  I don't think I saw this before when running the
+same config, so it might not be 100% reproducible.  I'd be surpised
+if my laptop has bad ram, but who knows..
 
-I see xfs/103 hang with latest xfsprogs & xfstests, and after applying
-this xfstests patch xfs/103 passed for me without problem. kernel is
-for-next branch from xfs tree.
+[ 2412.538076] XFS (vdc): Mounting V5 Filesystem
+[ 2412.783150] XFS (vdc): Starting recovery (logdev: internal)
+[ 2412.998385] XFS (vdc): Ending recovery (logdev: internal)
+[ 2413.014579] Slab corruption (Tainted: G        W      ): xfs_efi_item start=ffff88008636ac18, len=408
+[ 2413.015789] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+[ 2413.017236] Last user:
+[<ffffffff815c6689>](xfs_efi_item_free+0x29/0x40)
+[ 2413.018854] 070: 6b 6b 6b 6b 6b 6b 6b 6b 6a 6b 6b 6b 6b 6b 6b 6b kkkkkkkkjkkkkkkk
+[ 2413.019815] Single bit error detected. Probably bad RAM.
+[ 2413.020350] Run memtest86+ or a similar memory test tool.
+[ 2413.020915] Prev obj: start=ffff88008636aa68, len=408
+[ 2413.021645] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+[ 2413.022191] Last user: [<ffffffff815c6689>](xfs_efi_item_free+0x29/0x40)
+[ 2413.023397] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+[ 2413.024217] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+[ 2413.026503] Next obj: start=ffff88008636adc8, len=408
+[ 2413.027304] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
+[ 2413.027941] Last user: [<ffffffff815c6689>](xfs_efi_item_free+0x29/0x40)
+[ 2413.028695] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+[ 2413.029616] 010: [ 2413.029810] 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
 
-http://www.spinics.net/lists/fstests/msg04308.html
-
-Not sure if this is related to your problem.
-
-Thanks,
-Eryu
-
-> 
-> root@testvm:~/xfstests# diff -u tests/xfs/103.out
-> /root/xfstests/results//xfs/103
-> --- tests/xfs/103.outs# 2016-03-29 13:59:30.451720622
-> +0000stests/results//xfs/10
-> +++ /root/xfstests/results//xfs/103.out.bad	2016-11-12
-> 16:30:37.032780388 +0000
-> @@ -3,7 +3,7 @@
->  *** mount
->  *** testing nosymlinks directories
->  *** setting nosymlinks bit
-> ---n-- SCRATCH_MNT/nosymlink
-> +----- SCRATCH_MNT/nosymlink
->  ln: creating symbolic link 'SCRATCH_MNT/nosymlink/target': Operation not permitted
->  *** 1st listing...
->  SCRATCH_MNT
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
