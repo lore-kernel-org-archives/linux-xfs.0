@@ -1,45 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail2.postbox.xyz ([81.169.216.193]:53343 "EHLO
-        mail2.postbox.xyz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935170AbcKJUYD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Nov 2016 15:24:03 -0500
-Message-ID: <164fda6af0c9e67fcacbe9b0860bf44f.squirrel@mail2.postbox.xyz>
-In-Reply-To: <bbd0f6bd-2d69-29ab-4205-19e3202c8444@sandeen.net>
-References: <44d2cb2765781d64e9549b371a2f9686.squirrel@mail2.postbox.xyz>
-    <bbd0f6bd-2d69-29ab-4205-19e3202c8444@sandeen.net>
-Date: Thu, 10 Nov 2016 21:23:59 +0100
-Subject: Re: sb_agblocks
-From: "Chris" <chris2014@postbox.xyz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Received: from bombadil.infradead.org ([198.137.202.9]:51462 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934996AbcKMTHq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Nov 2016 14:07:46 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/5] fs: make sb_init_dio_done_wq available outside of direct-io.c
+Date: Sun, 13 Nov 2016 20:07:32 +0100
+Message-Id: <1479064054-10474-4-git-send-email-hch@lst.de>
+In-Reply-To: <1479064054-10474-1-git-send-email-hch@lst.de>
+References: <1479064054-10474-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
 
-Thank you!
+We want to use the per-sb completion workqueue from the new iomap
+direct I/O code.
 
-Eric Sandeen wrote:
-> On 11/10/16 8:15 AM, Chris wrote:
->> All,
->>
->> howto display size and number of Allocation Groups? I think 1 varialbe
->> is
->> sb_agblocks.
->
-> (whoops, reply-all this time)
->
-> xfs_info /path/to/mount/point will tell you, if it's mounted.
->
-> Otherwise xfs_db -c "sb 0" -c "p blocksize" -c "p agblocks" -c "p agcount"
-> /dev/whatever
->
-> will give you block size, blocks per AG, and number of AGs.
->
-> -Eric
->
->> - Chris
->
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/direct-io.c | 2 +-
+ fs/internal.h  | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 835e23a..48f9279 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -554,7 +554,7 @@ static inline int dio_bio_reap(struct dio *dio, struct dio_submit *sdio)
+  * filesystems that don't need it and also allows us to create the workqueue
+  * late enough so the we can include s_id in the name of the workqueue.
+  */
+-static int sb_init_dio_done_wq(struct super_block *sb)
++int sb_init_dio_done_wq(struct super_block *sb)
+ {
+ 	struct workqueue_struct *old;
+ 	struct workqueue_struct *wq = alloc_workqueue("dio/%s",
+diff --git a/fs/internal.h b/fs/internal.h
+index f4da334..4fcf517 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -184,3 +184,6 @@ typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
+ loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
+ 		unsigned flags, struct iomap_ops *ops, void *data,
+ 		iomap_actor_t actor);
++
++/* direct-io.c: */
++int sb_init_dio_done_wq(struct super_block *sb);
+-- 
+2.1.4
 
