@@ -1,43 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47079 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934946AbcKDScF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:32:05 -0400
-Subject: [PATCH 4/6] libxfs: fix xfs_attr_shortform_bytesfit declaration
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 11:32:02 -0700
-Message-ID: <147828432194.31793.10820468139447856863.stgit@birch.djwong.org>
-In-Reply-To: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
-References: <147828429514.31793.3070284385118900515.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([198.137.202.9]:51458 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934987AbcKMTHi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Nov 2016 14:07:38 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: an iomap-based direct I/O implementation V3
+Date: Sun, 13 Nov 2016 20:07:29 +0100
+Message-Id: <1479064054-10474-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
 
-Change the xfs_attr_shortform_bytesfit declaration to have
-struct xfs_inode to avoid tripping up the libxfs-diff scanner.
+Hi all,
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_attr_leaf.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+this series adds a new direct I/O implementation based on the iomap
+interface, and switches XFS to use it.
 
+The first two patches are a resend of my earlier series to remove the
+XFS iolock.  They are needed for the lockdep assert in the new iomap
+code.
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-index 4f2aed0..8ef420a 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.h
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-@@ -51,7 +51,7 @@ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
- int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
- int	xfs_attr_shortform_remove(struct xfs_da_args *args);
- int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
--int	xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes);
-+int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
- void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
- 
- /*
+The rest implements a new iomap_dio_rw direct I/O implementation and
+switches XFS to use it.
 
+Note that this series is on top of a merge of the XFS for-next
+tree with the block tree, which has a new helper needed for this
+implementation.  This is the block tree it's on top of:
+
+    git://git.kernel.dk/linux-block for-4.10/block
+
+To make everyones life easie I also have a git tree with the merge
+plus the patches in this series available here:
+
+    git://git.infradead.org/users/hch/vfs.git iomap-dio.3
+
+Changes since V2:
+ - added a few comments to unconfuse reviewers
+ - added a iomap_dio_set_error helper
+ - dropped support for not filling holes on writes
+ - pulled in a more recent block tree (blk_poll -> blk_mq_poll)
+
+Changes since V1:
+ - dropped the bio_iov_iter_get_pages patch, now merged in the block tree
+ - rebased on top of a merge of the XFS tree with the block tree
+ - stopped using WRITE_ODIRECT which has been removed in the block tree
