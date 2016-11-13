@@ -1,65 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47032 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752933AbcKJEdi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Nov 2016 23:33:38 -0500
-Date: Thu, 10 Nov 2016 12:33:36 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH v2] xfs/021: filter out detailed array element info from
- xfs_db
-Message-ID: <20161110043336.GE3327@dhcp12-143.nay.redhat.com>
-References: <1478752183-27499-1-git-send-email-eguan@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:51536 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932513AbcKMMIt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 Nov 2016 07:08:49 -0500
+Date: Sun, 13 Nov 2016 04:08:48 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: EFI SLAB use after free in generic/388 run
+Message-ID: <20161113120848.GA32761@infradead.org>
+References: <20161112174049.GB27521@infradead.org>
+ <20161113002634.GI16813@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1478752183-27499-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <20161113002634.GI16813@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Thu, Nov 10, 2016 at 12:29:43PM +0800, Eryu Guan wrote:
-> Starting from xfsprogs commit 384283555871 ("xfs_db: print one array
-> element per line"), xfs_db prints one array element per line. This
-> breaks the filter in xfs/021, which now fails as:
+On Sat, Nov 12, 2016 at 04:26:34PM -0800, Darrick J. Wong wrote:
+> On Sat, Nov 12, 2016 at 09:40:49AM -0800, Christoph Hellwig wrote:
+> > Just saw this during a xfstests auto run on virtio with default
+> > XFS parameters.  I don't think I saw this before when running the
+> > same config, so it might not be 100% reproducible.  I'd be surpised
+> > if my laptop has bad ram, but who knows..
 > 
->   hdr.freemap[0-2] = [base,size] [FREEMAP..]
->  +0:[104,1892]
->  +1:[0,0]
->  +2:[0,0]
->   entries[0-2] = [hashval,nameidx,incomplete,root,local] [ENTRIES..]
+> Does your kernel have commit b77428b12b5 ("xfs: defer should abort
+> intent items if the trans roll fails") in it?  I saw similar symptoms
+> and fixed them with that patch.
 > 
-> So we have extra lines that need to be filtered out,
-> 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
+> (Patch should appear in -rc5 tomorrow.)
 
-V2 looks better to me,
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
-> - be more precise on matching the array output, address Zorro's comment
-> 
->  tests/xfs/021 | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/tests/xfs/021 b/tests/xfs/021
-> index 67a4346..0471b95 100755
-> --- a/tests/xfs/021
-> +++ b/tests/xfs/021
-> @@ -151,7 +151,7 @@ s/^(hdr.info.magic =) 0x3bee/\1 0xfbee/;
->  s/^(hdr.firstused =) (\d+)/\1 FIRSTUSED/;
->  s/^(hdr.freemap\[0-2] = \[base,size]).*/\1 [FREEMAP..]/;
->  s/^(entries\[0-2] = \[hashval,nameidx,incomplete,root,local]).*/\1 [ENTRIES..]/;
-> -	print;'
-> +	print unless /^\d+:\[.*/;'
->  
->  echo "*** done"
->  exit
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Let me try to reproduce it - I though I was just testing latest
+for-next with my direct I/O changes, which would have it included,
+but I just noticed I made a mess off my tree due to an unfinished
+rebase, so maybe I actually was using an older base.
