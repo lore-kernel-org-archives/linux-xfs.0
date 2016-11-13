@@ -1,82 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:53662 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752834AbcKHXgJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2016 18:36:09 -0500
-Date: Wed, 9 Nov 2016 10:34:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC 0/4] xfs: basic cow fork speculative preallocation
-Message-ID: <20161108233459.GD28922@dastard>
-References: <1478636856-7590-1-git-send-email-bfoster@redhat.com>
- <20161108204800.GA16813@birch.djwong.org>
- <20161108223930.GA8167@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:59560 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753019AbcKMPb7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 13 Nov 2016 10:31:59 -0500
+Date: Sun, 13 Nov 2016 23:31:56 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH] shared/006: improve the speed of case running
+Message-ID: <20161113153156.GI3327@dhcp12-143.nay.redhat.com>
+References: <1478795242-14022-1-git-send-email-zlang@redhat.com>
+ <20161111222824.GJ28922@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161108223930.GA8167@bfoster.bfoster>
+In-Reply-To: <20161111222824.GJ28922@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Nov 08, 2016 at 05:39:31PM -0500, Brian Foster wrote:
-> On Tue, Nov 08, 2016 at 12:48:00PM -0800, Darrick J. Wong wrote:
-> > On Tue, Nov 08, 2016 at 03:27:32PM -0500, Brian Foster wrote:
-> > > Hi all,
-> > > 
-> > > This is an experiment based on an idea for COW fork speculative
-> > > preallocation. This is experimental, lightly/barely tested and sent in
-> > > RFC form to solicit thoughts, ideas or flames before I spend time taking
-> > > it further.
-> > > 
-> > > Patch 1 probably stands on its own. Patches 2 and 3 are some refactoring
-> > > and patch 4 implements the basic idea, which is described in the commit
-> > > log description. The testing I've done so far is basically similar to
-> > > how one would test the effects of traditional speculative preallocation:
-> > > write to multiple reflinked files in parallel and examine the resulting
-> > > fragmentation. Specifically, I wrote sequentially to 16 different
-> > > reflinked files of the same 8GB original (which has two data extents,
-> > > completely shared). Without preallocation, the test results in ~248
-> > > extents across the 16 files. With preallocation, the test results in 32
-> > > extents across the 16 files (i.e., 2 extents per file, same as the
-> > > source file).
-> > > 
-> > > An obvious tradeoff is the unnecessarily aggressive allocation that
-> > > might occur in the event of random writes to a large file (such as in
-> > > the cloned VM disk image use case), but my thinking is that the
-> > > cowblocks tagging and reclaim infrastructure should manage that
-> > > sufficiently (lack of testing notwithstanding). In any event, I'm
-> > > interested in any thoughts along the lines of whether this is useful at
-> > > all, alternative algorithm ideas, etc.
+On Sat, Nov 12, 2016 at 09:28:24AM +1100, Dave Chinner wrote:
+> On Fri, Nov 11, 2016 at 12:27:22AM +0800, Zorro Lang wrote:
+> > There're three problems of this case:
+> > 1. Thousands of threads will be created to create lots of files, then
+> >    kernel need to waste lots of system resource to schedule these
+> >    threads. Some poor performance machines will take long long time
+> >    on that.
+> > 2. Per thread try to create 1000 files by run 1000 times "echo >file".
 > > 
-> > Was about to step out to lunch when this came in, but...
+> > For the 1st problem, I limit 2 threads per cpu, and the maximum is 20.
+> > For the 2nd problem, use "sed 1 1000 | xargs touch" to instead of
+> > the old way.
 > > 
-> > Is there an xfstest for this, so I can play too? :)
+> > With this change, this case can run over in 2 mins on my x86_64
+> > virtual machine with 1 cpu and 1G memory. Before that, it was still
+> > running even a quarter passed.
 > > 
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > ---
+> > 
+> > Hi,
+> > 
+> > The performance of this case affect the test time of xfstests,
+> > especially on poor performance VM. I always doubt it hangs there,
+> > because it has run too long time.
+> > 
+> > After this improvement:
+> > It ran 105s on my virtual machine with 1 cpu and 1G memory.
+> > It ran 60s on my real machine with 8 cpu and 64G memory.
+> > 
+> > The difference of "for ((i=0;i<1000;i++)); echo -n > file$i;done"
+> > and "touch file{1..1000}" is:
+> > The 1st one will run 1000 times execve, open, close and so on. The
+> > execve() will take much time, especially on VM.
+> > But the 2nd one will run once execve, 1000 times open and once close.
+> > open() take much less time than execve().
+> > 
+> > Too many threads really waste too much time. For example, on my VM,
+> > when I use $((ncpus * 2)) threads to run this case, it ran 100s. But
+> > if I use $((ncpus * 4)) threads, the time increase to 130s. So too
+> > many threads is not helpful, in contrast it wastes more time.
 > 
-> Not yet.. I've only xfstests tested insofar as it hasn't blown anything
-> up yet. :) Otherwise, I've just run manual write tests to observe
-> whether it is doing what I expect it to in simple cases. It clearly
-> needs more work, as noted in the patch, but if this is something worth
-> pursuing further I can certainly come up with some tests as well.
+> If the only aim is to create inodes faster, then going above 4
+> threads making inodes concurrently isn't going to increase speed.
+> Most small filesystems don't have the configuration necessary to
+> scale much past this (e.g. journal size, AG/BG count, etc all will
+> limit concurrency on typical test filesystems.
 
-I think it definitely has value for preventing COW overwrite
-fragmentation - this will be an issue if people start reflinking
-files widely (e.g. container roots) and then occasionally 
-overwriting files completely.
+Yes, more threads can't increase speed. I'm not trying to find the
+fastest way to run this case, just hope it can end in short enough
+time. The original case run too long time(15~30 min) on my poor
+performance machine, I reduce the time to 105s. I think it'll be
+better to a case in "auto" group.
 
-> FWIW, that COW fork fiemap hack I sent a bit ago came in handy for
-> playing with this as well. :)
+Thanks,
+Zorro
 
-It might be worth keeping these two patchsets together for the
-purposes of development and review. The fiemap hack by itself is
-neat, but having a demonstrated use for development of new features
-makes it more than just a "neat hack". :P
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> There's a reason that the tests that create hundreds of thousands of
+> inodes are quite limited in the amount of concurrency they support...
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
