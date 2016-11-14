@@ -1,118 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41734 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751180AbcKNNOh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Nov 2016 08:14:37 -0500
-Date: Mon, 14 Nov 2016 08:14:36 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Which version of xfs-progs to use on Debian?
-Message-ID: <20161114131435.GB37689@bfoster.bfoster>
-References: <CA+sGqUv5X4JKQrMoOvVJupL4JadocZCd=AgzwfeR4iWjc_tG7w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+sGqUv5X4JKQrMoOvVJupL4JadocZCd=AgzwfeR4iWjc_tG7w@mail.gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:48465 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753899AbcKNRNB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2016 12:13:01 -0500
+Received: from [83.175.99.196] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+        id 1c6KoW-00058u-3F
+        for linux-xfs@vger.kernel.org; Mon, 14 Nov 2016 17:13:00 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 02/14] xfs: cleanup xfs_bmap_last_before
+Date: Mon, 14 Nov 2016 18:12:33 +0100
+Message-Id: <1479143565-30615-3-git-send-email-hch@lst.de>
+In-Reply-To: <1479143565-30615-1-git-send-email-hch@lst.de>
+References: <1479143565-30615-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: John Henderson <jhender982@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Nov 14, 2016 at 01:23:50AM -0600, John Henderson wrote:
-> Hi,
-> 
-> I'm trying to determine the optimal combination of kernel version and
-> xfs-progs version to use on a Debian Jessie system (for amd64).
-> 
-> I've searched this mailing list, and noticed the following exchange:
-> 
->   http://www.spinics.net/lists/xfs/msg36165.html
-> 
-> specifically, Dave's response:
-> 
->   "As it is, in future the version of xfsprogs will tell you what
-> kernel has the same feature support. i.e. xfsprogs 4.2.0 has exactly
-> the same code/feature support as kernel 4.2.0. Similarly for
-> xfsprogs/kernel 4.3.0."
-> 
-> I'm also aware that prior to xfsprogs 4.2.0, userspace versioning did
-> not match kernel numbering, as noted:
-> 
->   https://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.git/refs/tags
->   https://www.spinics.net/lists/xfs/msg33984.html
-> 
-> So, as I understand the situation, xfsprogs 3.2.x was associated with
-> a lot of different 3.x and 4.y (y<2) kernels.  Further, I want to make
-> sure to take advantage of all the (current and future) reliability
-> improvements of the new xfs v5 on-disk format, which means (from what
-> I follow) that I need at least kernel 3.15 and xfsprogs 3.2.0, as seen
-> here:
-> 
->   https://www.spinics.net/lists/xfs/msg27961.html
-> 
-> My main concern focuses on the options currently available in Debian
-> (primarily Jessie + backports).  Here's the matchup of what Debian
-> ships (jessie, jessie-bpo, and stretch):
-> 
->                       linux-kernel     xfs-progs
-> Jessie:               3.16.36          3.2.1
-> Jessie Backports:     4.7.8            4.3.0
-> Stretch:              4.8.5            4.3.0
-> 
-> So, at first pass, I could just use native jessie's kernel 3.16.36 and
-> xfsprogs 3.2.1 (and they seem to match well, as they were released
-> together).  However, I actually have to use a more recent kernel
-> anyway for some SkyLake support issues.  So, that takes us to at least
-> kernel 4.7.8.  I note, though, that jessie-backports is *not*
-> packaging xfsprogs 4.7 alongside its kernel (but instead xfsprogs
-> 4.3.0); similar issues exist for the 4.8.5 kernel from stretch.
-> 
+Rewrite the function using xfs_iext_lookup_extent and xfs_iext_get_extent,
+and massage the flow into something easily understandable.
 
-Others might be able to chime in on this, but that strikes me as a
-packaging issue. My understanding is that the marriage between the
-kernel revision and xfsprogs revision tracking numbers is to help define
-dependencies between the two. That said, it might not be a problem for
-you if you aren't using anything notable introduced between 4.3 and 4.7.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 64 ++++++++++++++++++++++++------------------------
+ 1 file changed, 32 insertions(+), 32 deletions(-)
 
-> Assuming I stick to binary packages distributed through the official
-> Debian repos, what's the recommendation of the xfs experts: would I be
-> better off (in terms of reliability) with xfsprogs 3.2.1 or xfsprogs
-> 4.3.0 used with kernel 4.7.8?  As an alternative, would it be even
-> better for me to use xfsprogs 4.7 (via compiling from source, even
-> though I'd rather not)?
-> 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 5c3c4dd..98f490b 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1523,44 +1523,44 @@ xfs_bmap_first_unused(
+  */
+ int						/* error */
+ xfs_bmap_last_before(
+-	xfs_trans_t	*tp,			/* transaction pointer */
+-	xfs_inode_t	*ip,			/* incore inode */
+-	xfs_fileoff_t	*last_block,		/* last block */
+-	int		whichfork)		/* data or attr fork */
++	struct xfs_trans	*tp,		/* transaction pointer */
++	struct xfs_inode	*ip,		/* incore inode */
++	xfs_fileoff_t		*last_block,	/* last block */
++	int			whichfork)	/* data or attr fork */
+ {
+-	xfs_fileoff_t	bno;			/* input file offset */
+-	int		eof;			/* hit end of file */
+-	xfs_bmbt_rec_host_t *ep;		/* pointer to last extent */
+-	int		error;			/* error return value */
+-	xfs_bmbt_irec_t	got;			/* current extent value */
+-	xfs_ifork_t	*ifp;			/* inode fork pointer */
+-	xfs_extnum_t	lastx;			/* last extent used */
+-	xfs_bmbt_irec_t	prev;			/* previous extent value */
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
++	struct xfs_bmbt_irec	got;
++	xfs_extnum_t		idx;
++	int			error;
+ 
+-	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
+-	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+-	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
+-	       return -EIO;
+-	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
++	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
++	case XFS_DINODE_FMT_LOCAL:
+ 		*last_block = 0;
+ 		return 0;
++	case XFS_DINODE_FMT_BTREE:
++	case XFS_DINODE_FMT_EXTENTS:
++		break;
++	default:
++		return -EIO;
+ 	}
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	if (!(ifp->if_flags & XFS_IFEXTENTS) &&
+-	    (error = xfs_iread_extents(tp, ip, whichfork)))
+-		return error;
+-	bno = *last_block - 1;
+-	ep = xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got,
+-		&prev);
+-	if (eof || xfs_bmbt_get_startoff(ep) > bno) {
+-		if (prev.br_startoff == NULLFILEOFF)
+-			*last_block = 0;
+-		else
+-			*last_block = prev.br_startoff + prev.br_blockcount;
++
++	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++		error = xfs_iread_extents(tp, ip, whichfork);
++		if (error)
++			return error;
+ 	}
+-	/*
+-	 * Otherwise *last_block is already the right answer.
+-	 */
++
++	if (xfs_iext_lookup_extent(ip, ifp, *last_block - 1, &idx, &got)) {
++		if (got.br_startoff <= *last_block - 1)
++			return 0;
++	}
++
++	if (xfs_iext_get_extent(ifp, idx - 1, &got)) {
++		*last_block = got.br_startoff + got.br_blockcount;
++		return 0;
++	}
++
++	*last_block = 0;
+ 	return 0;
+ }
+ 
+-- 
+2.1.4
 
-v4.7 of xfsprogs is probably best, but IMO, you'll probably be fine with
-the v4.3 in the simple cases (you haven't mentioned whether you're
-planning to use xfsprogs for anything beyond mkfs and possibly repair if
-something goes wrong). Just keep in mind that it is out of date with
-respect to your kernel in the event that you do run into problems down
-the road and may want to update.
-
-> Also, what are current best-practice parameters for 'mkfs.xfs' in
-> order to optimize reliability?  Filesystem size is ~10 TB on top of
-> LUKS-encrypted Software RAID-1 (using enterprise 512e drives).
-> 
-> I'd assume, we'd at least want the following:
-> 
->   -m crc=1 finobt=1
-> 
-
-Usually it is best to go with defaults. Indeed, crc=1,finobt=1 are both
-defaults and have been for a while now. See commit 566ebd5a ("mkfs:
-default to CRC enabled filesystems") which first appeared in xfsprogs
-v3.2.3. I'm not aware of any special/magic options required for raid1 or
-encryption.
-
-Brian
-
-> Any pointers to a good write-up on optimizing such creation (and
-> later, mount-time) decisions?
-> 
-> Thanks so much (and for all your work on XFS, too).
-> 
-> -John
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
