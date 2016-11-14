@@ -1,56 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:13145 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753248AbcKJEjZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Nov 2016 23:39:25 -0500
-Date: Thu, 10 Nov 2016 15:38:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: updates for 4.9-rc5
-Message-ID: <20161110043830.GF28922@dastard>
+Received: from mail2.postbox.xyz ([81.169.216.193]:34240 "EHLO
+        mail2.postbox.xyz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933675AbcKNSjI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2016 13:39:08 -0500
+Message-ID: <25b69ec53ba731ddd2f04d4e70341bdd.squirrel@mail2.postbox.xyz>
+In-Reply-To: <20161114125654.GA37689@bfoster.bfoster>
+References: <004eca882d70d671bce9dff6f25633cc.squirrel@mail2.postbox.xyz>
+    <20161114125654.GA37689@bfoster.bfoster>
+Date: Mon, 14 Nov 2016 19:39:03 +0100
+Subject: Re: XFS_WANT_CORRUPTED_GOTO
+From: "Chris" <chris2014@postbox.xyz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>
 
-Hi Linus,
+Dear Brian,
 
-Can you please pull the XFS fix from the tag below. It's a fix for
-an unmount hang (regression) when the filesystem is shutdown. It
-was supposed to go to you for -rc3, but I accidentally tagged the
-commit prior to it in that pullreq.
+thank you for your detailed answer.
 
-Thanks,
+Brian Foster wrote:
+> On Sat, Nov 12, 2016 at 11:52:02AM +0100, Chris wrote:
+>> I tried XFS-repair, but it couldn't find the first or second super block
+>> after four hours.
+>>
+>
+> That sounds like something more significant is going on either with the
+> fs, the storage or xfs_repair has been pointed in the wrong place. The
+> above issue should at worst require zeroing the log, dealing with the
+> resulting inconsistency and rebuilding the fs btrees accurately.
 
--Dave.
+Well, did it crash, because I called
 
-The following changes since commit c17a8ef43d6b80ed3519b828c37d18645445949f:
+xfs_db -c "freespc -s" /dev/...
 
-  xfs: clear cowblocks tag when cow fork is emptied (2016-10-24 14:21:08 +1100)
+while it was still in this unmount-loop?
 
-are available in the git repository at:
+> I suspect it's too late to inspect what's going on there if you have
+> already restored from backup. In the future, you can use xfs_metadump to
+> capture a metadata only image of a broken fs to share with us and help
+> us diagnose what might have gone wrong.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-fixes-for-linus-4.9-rc5
+OK.
 
-for you to fetch changes up to b77428b12b55437b28deae738d9ce8b2e0663b55:
+> I'd suggest to run "xfs_repair -n" on those as soon as possible to see
+> if they are affected by the same problem. It might also be a good idea
+> to run it against the fs you've restored from backup to see if it
+> returns and possibly get an idea on what might have caused the problem.
 
-  xfs: defer should abort intent items if the trans roll fails (2016-10-24 14:21:18 +1100)
+On those filesystems, that aren't in use now, xfs_repair hasn't found any
+problems.
 
-----------------------------------------------------------------
-xfs: update for 4.9-rc5
+Thanks again for your help. Next time, I'll do a metadump.
 
-In this update:
-o fix for aborting deferred transactions on filesystem shutdown.
+- Chris
 
-----------------------------------------------------------------
-Darrick J. Wong (1):
-      xfs: defer should abort intent items if the trans roll fails
-
- fs/xfs/libxfs/xfs_defer.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
--- 
-Dave Chinner
-david@fromorbit.com
