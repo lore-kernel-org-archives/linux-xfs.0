@@ -1,154 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45633 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935329AbcKJRUd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Nov 2016 12:20:33 -0500
-Date: Thu, 10 Nov 2016 09:20:26 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] shared/006: improve the speed of case running
-Message-ID: <20161110172026.GF16813@birch.djwong.org>
-References: <1478795242-14022-1-git-send-email-zlang@redhat.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:41052 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752729AbcKNU41 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2016 15:56:27 -0500
+Subject: Re: [PATCH RFC] xfs: drop SYNC_WAIT from xfs_reclaim_inodes_ag during
+ slab reclaim
+References: <06aade22-b29e-f55e-7f00-39154f220aa6@fb.com>
+ <20161015223454.GS23194@dastard>
+ <20161017002427.GA70229@clm-mbp.masoncoding.com>
+ <20161017015251.GU23194@dastard>
+ <e0c37926-a670-98b6-4bd7-b438def130bd@fb.com>
+ <20161017223057.GV23194@dastard>
+ <f6dadb97-4233-4bbf-3edc-4985c7727548@fb.com>
+ <20161018020324.GA23194@dastard>
+ <20161114005951.GB2127@clm-mbp.thefacebook.com>
+ <20161114072708.GN28922@dastard>
+From: Chris Mason <clm@fb.com>
+Message-ID: <1f19925d-6ba8-9bde-b3a8-0bdade80f564@fb.com>
+Date: Mon, 14 Nov 2016 15:56:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1478795242-14022-1-git-send-email-zlang@redhat.com>
+In-Reply-To: <20161114072708.GN28922@dastard>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Nov 11, 2016 at 12:27:22AM +0800, Zorro Lang wrote:
-> There're three problems of this case:
-> 1. Thousands of threads will be created to create lots of files, then
->    kernel need to waste lots of system resource to schedule these
->    threads. Some poor performance machines will take long long time
->    on that.
-> 2. Per thread try to create 1000 files by run 1000 times "echo >file".
-> 
-> For the 1st problem, I limit 2 threads per cpu, and the maximum is 20.
-> For the 2nd problem, use "sed 1 1000 | xargs touch" to instead of
-> the old way.
-> 
-> With this change, this case can run over in 2 mins on my x86_64
-> virtual machine with 1 cpu and 1G memory. Before that, it was still
-> running even a quarter passed.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
-> 
-> Hi,
-> 
-> The performance of this case affect the test time of xfstests,
-> especially on poor performance VM. I always doubt it hangs there,
-> because it has run too long time.
-> 
-> After this improvement:
-> It ran 105s on my virtual machine with 1 cpu and 1G memory.
-> It ran 60s on my real machine with 8 cpu and 64G memory.
-> 
-> The difference of "for ((i=0;i<1000;i++)); echo -n > file$i;done"
-> and "touch file{1..1000}" is:
-> The 1st one will run 1000 times execve, open, close and so on. The
-> execve() will take much time, especially on VM.
-> But the 2nd one will run once execve, 1000 times open and once close.
-> open() take much less time than execve().
-> 
-> Too many threads really waste too much time. For example, on my VM,
-> when I use $((ncpus * 2)) threads to run this case, it ran 100s. But
-> if I use $((ncpus * 4)) threads, the time increase to 130s. So too
-> many threads is not helpful, in contrast it wastes more time.
-> 
-> Thanks,
-> Zorro
-> 
->  tests/shared/006 | 42 ++++++++++++++++++++++++++++--------------
->  1 file changed, 28 insertions(+), 14 deletions(-)
-> 
-> diff --git a/tests/shared/006 b/tests/shared/006
-> index 6a237c9..42cd34d 100755
-> --- a/tests/shared/006
-> +++ b/tests/shared/006
-> @@ -43,13 +43,16 @@ create_file()
->  {
->  	local dir=$1
->  	local nr_file=$2
-> -	local prefix=$3
-> -	local i=0
->  
-> -	while [ $i -lt $nr_file ]; do
-> -		echo -n > $dir/${prefix}_${i}
-> -		let i=$i+1
-> -	done
-> +	if [ ! -d $dir ]; then
-> +		mkdir -p $dir
-> +	fi
-> +
-> +	if [ ${nr_file} -gt 0 ]; then
-> +		pushd $dir >/dev/null
-> +		seq 1 $nr_file | xargs touch
-> +		popd >/dev/null
-> +	fi
->  }
->  
->  # get standard environment, filters and checks
-> @@ -61,6 +64,9 @@ _supported_fs ext4 ext3 ext2 xfs
->  _supported_os Linux
->  
->  _require_scratch
-> +_require_test_program "feature"
-> +
-> +ncpus=`$here/src/feature -o`
->  
->  rm -f $seqres.full
->  echo "Silence is golden"
-> @@ -68,19 +74,27 @@ echo "Silence is golden"
->  _scratch_mkfs_sized $((1024 * 1024 * 1024)) >>$seqres.full 2>&1
->  _scratch_mount
->  
-> -i=0
->  free_inode=`_get_free_inode $SCRATCH_MNT`
->  file_per_dir=1000
-> -loop=$((free_inode / file_per_dir + 1))
-> -mkdir -p $SCRATCH_MNT/testdir
-> -
-> -echo "Create $((loop * file_per_dir)) files in $SCRATCH_MNT/testdir" >>$seqres.full
-> -while [ $i -lt $loop ]; do
-> -	create_file $SCRATCH_MNT/testdir $file_per_dir $i >>$seqres.full 2>&1 &
-> -	let i=$i+1
-> +num_dirs=$(( free_inode / (file_per_dir + 1) ))
-> +num_threads=$(( ncpus * 2 ))
-> +[ $num_threads -gt 20 ] && num_threads=20
+On 11/14/2016 02:27 AM, Dave Chinner wrote:
+> On Sun, Nov 13, 2016 at 08:00:04PM -0500, Chris Mason wrote:
+>> On Tue, Oct 18, 2016 at 01:03:24PM +1100, Dave Chinner wrote:
+>>
+>> [ Long stalls from xfs_reclaim_inodes_ag ]
+>>
+>>> XFS has *1* tunable that can change the behaviour of metadata
+>>> writeback. Please try it.
+>>
+>> [ weeks go by, so this email is insanely long ]
+>>
+>> Testing all of this was slow going because two of the three test
+>> boxes I had with the hadoop configuration starting having hardware
+>> problems.  The good news is that while I was adjusting the
+>> benchmark, we lined up access to a bunch of duplicate boxes, so I
+>> can now try ~20 different configurations in parallel.
+>>
+>> My rough benchmark is here:
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/mason/simoop.git
+>>
+>> The command line I ended up using was:
+>>
+>> simoop -t 512 -m 190 -M 128 -C 28 -r 60000 -f 70 -T 20 -R1 -W 1 -i
+>> 60 -w 300 -D 2 /hammer/*
+>
+> There's a lightly tested patch below that should do the trick.
+>
+> After 5 minutes on a modified simoop cli on a single filesystem,
+> 4.9-rc4+for-next:
+>
+> $ ./simoop -t 128 -m 50 -M 128 -C 14 -r 60000 -f 2 -T 20 -R1 -W 1 -i 60 -w 300 -D 2 /mnt/scratch
+> ....
+> Run time: 300 seconds
+> Read latency (p50: 3,174,400) (p95: 4,530,176) (p99: 18,055,168)
+> Write latency (p50: 14,991,360) (p95: 28,672,000) (p99: 33,325,056)
+> Allocation latency (p50: 1,771,520) (p95: 17,530,880) (p99: 23,756,800)
+> work rate = 4.75/sec (avg 5.24/sec) (p50: 5.79) (p95: 6.99) (p99: 6.99)
+> alloc stall rate = 94.42/sec (avg: 51.63) (p50: 51.60) (p95: 59.12) (p99: 59.12)
+>
+> With the patch below:
+>
+> Run time: 300 seconds
+> Read latency (p50: 3,043,328) (p95: 3,649,536) (p99: 4,710,400)
+> Write latency (p50: 21,004,288) (p95: 27,557,888) (p99: 29,130,752)
+> Allocation latency (p50: 280,064) (p95: 680,960) (p99: 863,232)
+> work rate = 4.08/sec (avg 4.76/sec) (p50: 5.39) (p95: 6.93) (p99: 6.93)
+> alloc stall rate = 0.08/sec (avg: 0.02) (p50: 0.00) (p95: 0.01) (p99: 0.01)
+>
+> Stall rate went to zero and stayed there at the 120s mark of the
+> warmup. Note the p99 difference for read and allocation latency,
+> too.
+>
+> I'll post some graphs tomorrow from my live PCP telemetry that
+> demonstrate the difference in behaviour better than any words...
 
-Only 20 threads?  Not much of a workout for my 40-cpu system. :P
+Thanks Dave, this is definitely better.  But at least for the multi-disk 
+setup, it's not quite there yet.
 
-Was also wondering if we wanted to scale by $LOAD_FACTOR here...
+Your patch:
+___
+Run time: 15535 seconds
+Read latency (p50: 22,708,224) (p95: 34,668,544) (p99: 41,746,432)
+Write latency (p50: 21,200,896) (p95: 34,799,616) (p99: 41,877,504)
+Allocation latency (p50: 11,550,720) (p95: 31,424,512) (p99: 39,518,208)
+work rate = 7.48/sec (avg 8.41/sec) (p50: 8.69) (p95: 9.57) (p99: 9.87)
+alloc stall rate = 14.08/sec (avg: 14.85) (p50: 15.74) (p95: 19.74) 
+(p99: 22.04)
 
---D
+Original patch:
+___
+Run time: 15474 seconds
+Read latency (p50: 20,414,464) (p95: 29,786,112) (p99: 34,275,328)
+Write latency (p50: 15,155,200) (p95: 25,591,808) (p99: 31,621,120)
+Allocation latency (p50: 7,675,904) (p95: 22,970,368) (p99: 29,523,968)
+work rate = 8.33/sec (avg 10.54/sec) (p50: 10.54) (p95: 10.58) (p99: 10.58)
+alloc stall rate = 37.08/sec (avg: 21.73) (p50: 23.16) (p95: 24.68) 
+(p99: 25.00)
 
-> +loop=$(( num_dirs / num_threads ))
-> +
-> +echo "Create $((loop * num_threads)) dirs and $file_per_dir files per dir in $SCRATCH_MNT" >>$seqres.full
-> +for ((i=0; i<ncpus*2; i++)); do
-> +	for ((j=0; j<$loop; j++)); do
-> +		create_file $SCRATCH_MNT/testdir_$i_$j $file_per_dir
-> +	done &
->  done
->  wait
->  
-> +free_inode=`_get_free_inode $SCRATCH_MNT`
-> +if [ $free_inode -gt 0 ]; then
-> +	echo "Create $((free_inode - 1)) files and 1 dir to fill all remaining free inodes" >>$seqres.full
-> +	create_file $SCRATCH_MNT/testdir_$i_$j $((free_inode - 1))
-> +fi
-> +
->  # log inode status in $seqres.full for debug purpose
->  echo "Inode status after taking all inodes" >>$seqres.full
->  $DF_PROG -i $SCRATCH_MNT >>$seqres.full
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+v4.8
+___
+Run time: 15492 seconds
+Read latency (p50: 22,642,688) (p95: 35,848,192) (p99: 43,712,512)
+Write latency (p50: 21,200,896) (p95: 35,454,976) (p99: 43,450,368)
+Allocation latency (p50: 12,599,296) (p95: 34,144,256) (p99: 41,615,360)
+work rate = 9.77/sec (avg 8.15/sec) (p50: 8.37) (p95: 9.29) (p99: 9.55)
+alloc stall rate = 8.33/sec (avg: 33.65) (p50: 34.52) (p95: 37.40) (p99: 
+37.96)
+
+One thing that might have been too far buried in my email yesterday. 
+The read/write latencies include the time to start threads, that's not 
+just IO in there.
+
+I've had this running all day, but the differences stabilized after 5-10 
+minutes.  Everyone's p99s trend higher as the day goes on, but the 
+percentage difference stays about the same.
+
+I think the difference between mine and yours is we didn't quite get the 
+allocation stalls down to zero, so making tasks wait for the shrinker 
+shows up in the end numbers.
+
+For your patch, the stalls from xfs_reclaim_inodes_ag() were about the 
+same as the unpatched kernel yesterday.  We still had long tails in the 
+30 second+ category.
+
+I did a trace on vmscan:mm_vmscan_direct_reclaim_begin, and 91% of the 
+allocation stalls were:
+
+order=0 may_writepage=1 gfp_flags=GFP_HIGHUSER_MOVABLE|__GFP_ZERO 
+classzone_idx=3
+
+These are all page faults, either during read() syscalls or when simoop 
+was touching all the pages in its mmap()'d area (-M from the cmdline)
+
+One detail I didn't give yesterday was these are all using deadline as 
+the IO scheduler.
+
+-chris
