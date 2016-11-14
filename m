@@ -1,46 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51170 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753010AbcKLRku (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Nov 2016 12:40:50 -0500
-Received: from hch by bombadil.infradead.org with local (Exim 4.85_2 #1 (Red Hat Linux))
-        id 1c5cIL-0002o9-OL
-        for linux-xfs@vger.kernel.org; Sat, 12 Nov 2016 17:40:49 +0000
-Date: Sat, 12 Nov 2016 09:40:49 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: EFI SLAB use after free in generic/388 run
-Message-ID: <20161112174049.GB27521@infradead.org>
+Received: from mail-yw0-f180.google.com ([209.85.161.180]:34819 "EHLO
+        mail-yw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932979AbcKNQ7Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2016 11:59:16 -0500
+Received: by mail-yw0-f180.google.com with SMTP id i145so67864963ywg.2
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2016 08:59:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20161114131435.GB37689@bfoster.bfoster>
+References: <CA+sGqUv5X4JKQrMoOvVJupL4JadocZCd=AgzwfeR4iWjc_tG7w@mail.gmail.com>
+ <20161114131435.GB37689@bfoster.bfoster>
+From: John Henderson <jhender982@gmail.com>
+Date: Mon, 14 Nov 2016 10:59:15 -0600
+Message-ID: <CA+sGqUv5GpcsvD=SE3Z8LsoCLyJtGwCwmHgvNo7JVAnp-3_Q_A@mail.gmail.com>
+Subject: Re: Which version of xfs-progs to use on Debian?
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Just saw this during a xfstests auto run on virtio with default
-XFS parameters.  I don't think I saw this before when running the
-same config, so it might not be 100% reproducible.  I'd be surpised
-if my laptop has bad ram, but who knows..
+Hi Brian,
 
-[ 2412.538076] XFS (vdc): Mounting V5 Filesystem
-[ 2412.783150] XFS (vdc): Starting recovery (logdev: internal)
-[ 2412.998385] XFS (vdc): Ending recovery (logdev: internal)
-[ 2413.014579] Slab corruption (Tainted: G        W      ): xfs_efi_item start=ffff88008636ac18, len=408
-[ 2413.015789] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-[ 2413.017236] Last user:
-[<ffffffff815c6689>](xfs_efi_item_free+0x29/0x40)
-[ 2413.018854] 070: 6b 6b 6b 6b 6b 6b 6b 6b 6a 6b 6b 6b 6b 6b 6b 6b kkkkkkkkjkkkkkkk
-[ 2413.019815] Single bit error detected. Probably bad RAM.
-[ 2413.020350] Run memtest86+ or a similar memory test tool.
-[ 2413.020915] Prev obj: start=ffff88008636aa68, len=408
-[ 2413.021645] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-[ 2413.022191] Last user: [<ffffffff815c6689>](xfs_efi_item_free+0x29/0x40)
-[ 2413.023397] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
-[ 2413.024217] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
-[ 2413.026503] Next obj: start=ffff88008636adc8, len=408
-[ 2413.027304] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-[ 2413.027941] Last user: [<ffffffff815c6689>](xfs_efi_item_free+0x29/0x40)
-[ 2413.028695] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
-[ 2413.029616] 010: [ 2413.029810] 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+Thanks for your prompt response.  More inline.
 
+On Mon, Nov 14, 2016 at 7:14 AM, Brian Foster <bfoster@redhat.com> wrote:
+> On Mon, Nov 14, 2016 at 01:23:50AM -0600, John Henderson wrote:
+>> Hi,
+>>
+>> I'm trying to determine the optimal combination of kernel version and
+>> xfs-progs version to use on a Debian Jessie system (for amd64).
+>>
+>> I've searched this mailing list, and noticed the following exchange:
+>>
+>>   http://www.spinics.net/lists/xfs/msg36165.html
+>>
+>> specifically, Dave's response:
+>>
+>>   "As it is, in future the version of xfsprogs will tell you what
+>> kernel has the same feature support. i.e. xfsprogs 4.2.0 has exactly
+>> the same code/feature support as kernel 4.2.0. Similarly for
+>> xfsprogs/kernel 4.3.0."
+>>
+>> I'm also aware that prior to xfsprogs 4.2.0, userspace versioning did
+>> not match kernel numbering, as noted:
+>>
+>>   https://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.git/refs/tags
+>>   https://www.spinics.net/lists/xfs/msg33984.html
+>>
+>> So, as I understand the situation, xfsprogs 3.2.x was associated with
+>> a lot of different 3.x and 4.y (y<2) kernels.  Further, I want to make
+>> sure to take advantage of all the (current and future) reliability
+>> improvements of the new xfs v5 on-disk format, which means (from what
+>> I follow) that I need at least kernel 3.15 and xfsprogs 3.2.0, as seen
+>> here:
+>>
+>>   https://www.spinics.net/lists/xfs/msg27961.html
+>>
+>> My main concern focuses on the options currently available in Debian
+>> (primarily Jessie + backports).  Here's the matchup of what Debian
+>> ships (jessie, jessie-bpo, and stretch):
+>>
+>>                       linux-kernel     xfs-progs
+>> Jessie:               3.16.36          3.2.1
+>> Jessie Backports:     4.7.8            4.3.0
+>> Stretch:              4.8.5            4.3.0
+>>
+>> So, at first pass, I could just use native jessie's kernel 3.16.36 and
+>> xfsprogs 3.2.1 (and they seem to match well, as they were released
+>> together).  However, I actually have to use a more recent kernel
+>> anyway for some SkyLake support issues.  So, that takes us to at least
+>> kernel 4.7.8.  I note, though, that jessie-backports is *not*
+>> packaging xfsprogs 4.7 alongside its kernel (but instead xfsprogs
+>> 4.3.0); similar issues exist for the 4.8.5 kernel from stretch.
+>>
+>
+> Others might be able to chime in on this, but that strikes me as a
+> packaging issue.
+
+Agree completely.  I very strongly prefer to use 100% default packages within
+single repo in Debian (ie, no pulling from Jessie backports).  However, usage
+of the workstation in this case requires support of the Skylake CPU, available
+only in more modern 4.x series of kernels (Jessie [stable] is still at 3.16.x).
+So, that means pulling some kernel like 4.7.x from Jessie backports.  Oh, well.
+
+> My understanding is that the marriage between the
+> kernel revision and xfsprogs revision tracking numbers is to help define
+> dependencies between the two.
+
+Yes, I was a bit surprised that Debian testing / unstable have non-matched
+kernel / xfsprogs as currently packaged (ie, 4.7 & 4.8 kernels, respectively,
+with 4.3 xfsprogs).  Debian stable is indeed matched with kernel 3.16.x and
+xfsprogs 3.2.1.  I also noted that the most recent (ie, testing / unstable)
+xfsprogs uploads to Debian repos appear to be non-maintainer uploads
+(NMUs); perhaps, there's something going on with Debian XFS maintainers?
+
+> That said, it might not be a problem for
+> you if you aren't using anything notable introduced between 4.3 and 4.7.
+
+Given that crc / finobt are default, I don't plan on using anything
+else, but still
+am glad to check with the list, here.  Thanks for your input.
+
+>> Assuming I stick to binary packages distributed through the official
+>> Debian repos, what's the recommendation of the xfs experts: would I be
+>> better off (in terms of reliability) with xfsprogs 3.2.1 or xfsprogs
+>> 4.3.0 used with kernel 4.7.8?  As an alternative, would it be even
+>> better for me to use xfsprogs 4.7 (via compiling from source, even
+>> though I'd rather not)?
+>>
+>
+> v4.7 of xfsprogs is probably best, but IMO, you'll probably be fine with
+> the v4.3 in the simple cases (you haven't mentioned whether you're
+> planning to use xfsprogs for anything beyond mkfs and possibly repair if
+> something goes wrong).
+
+Yes, plan is only to use xfsprogs for mkfs (+ fsck).  If I'm in the situation
+where I have to repair anything, perhaps that's the time to look more carefully
+at getting (compiling?) xfsprogs that matches kernel specifically.
+
+> Just keep in mind that it is out of date with
+> respect to your kernel in the event that you do run into problems down
+> the road and may want to update.
+>
+>> Also, what are current best-practice parameters for 'mkfs.xfs' in
+>> order to optimize reliability?  Filesystem size is ~10 TB on top of
+>> LUKS-encrypted Software RAID-1 (using enterprise 512e drives).
+>>
+>> I'd assume, we'd at least want the following:
+>>
+>>   -m crc=1 finobt=1
+>>
+>
+> Usually it is best to go with defaults. Indeed, crc=1,finobt=1 are both
+> defaults and have been for a while now. See commit 566ebd5a ("mkfs:
+> default to CRC enabled filesystems") which first appeared in xfsprogs
+> v3.2.3. I'm not aware of any special/magic options required for raid1 or
+> encryption.
+
+Yep, saw those changes in the defaults in xfs list announcements.  Thanks
+for reiterating.
+
+Take care,
+John
