@@ -1,60 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38047 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752708AbcKMA1C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Nov 2016 19:27:02 -0500
-Date: Sat, 12 Nov 2016 16:26:34 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: EFI SLAB use after free in generic/388 run
-Message-ID: <20161113002634.GI16813@birch.djwong.org>
-References: <20161112174049.GB27521@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161112174049.GB27521@infradead.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:48845 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933384AbcKNRNK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2016 12:13:10 -0500
+Received: from [83.175.99.196] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+        id 1c6Kof-0005Gm-O9
+        for linux-xfs@vger.kernel.org; Mon, 14 Nov 2016 17:13:10 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 05/14] xfs: use new extent lookup helpers in __xfs_bunmapi
+Date: Mon, 14 Nov 2016 18:12:36 +0100
+Message-Id: <1479143565-30615-6-git-send-email-hch@lst.de>
+In-Reply-To: <1479143565-30615-1-git-send-email-hch@lst.de>
+References: <1479143565-30615-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Sat, Nov 12, 2016 at 09:40:49AM -0800, Christoph Hellwig wrote:
-> Just saw this during a xfstests auto run on virtio with default
-> XFS parameters.  I don't think I saw this before when running the
-> same config, so it might not be 100% reproducible.  I'd be surpised
-> if my laptop has bad ram, but who knows..
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 39 ++++++++++++---------------------------
+ 1 file changed, 12 insertions(+), 27 deletions(-)
 
-Does your kernel have commit b77428b12b5 ("xfs: defer should abort
-intent items if the trans roll fails") in it?  I saw similar symptoms
-and fixed them with that patch.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 9a8621d..18de89c 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5433,8 +5433,6 @@ __xfs_bunmapi(
+ {
+ 	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
+ 	xfs_bmbt_irec_t		del;		/* extent being deleted */
+-	int			eof;		/* is deleting at eof */
+-	xfs_bmbt_rec_host_t	*ep;		/* extent record pointer */
+ 	int			error;		/* error return value */
+ 	xfs_extnum_t		extno;		/* extent number in list */
+ 	xfs_bmbt_irec_t		got;		/* current extent record */
+@@ -5444,7 +5442,6 @@ __xfs_bunmapi(
+ 	int			logflags;	/* transaction logging flags */
+ 	xfs_extlen_t		mod;		/* rt extent offset */
+ 	xfs_mount_t		*mp;		/* mount structure */
+-	xfs_bmbt_irec_t		prev;		/* previous extent record */
+ 	xfs_fileoff_t		start;		/* first file offset deleted */
+ 	int			tmp_logflags;	/* partial logging flags */
+ 	int			wasdel;		/* was a delayed alloc extent */
+@@ -5483,18 +5480,17 @@ __xfs_bunmapi(
+ 	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
+ 	start = bno;
+ 	bno = start + len - 1;
+-	ep = xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got,
+-		&prev);
+ 
+ 	/*
+ 	 * Check to see if the given block number is past the end of the
+ 	 * file, back up to the last block if so...
+ 	 */
+-	if (eof) {
+-		ep = xfs_iext_get_ext(ifp, --lastx);
+-		xfs_bmbt_get_all(ep, &got);
++	if (!xfs_iext_lookup_extent(ip, ifp, bno, &lastx, &got)) {
++		ASSERT(lastx > 0);
++		xfs_iext_get_extent(ifp, --lastx, &got);
+ 		bno = got.br_startoff + got.br_blockcount - 1;
+ 	}
++
+ 	logflags = 0;
+ 	if (ifp->if_flags & XFS_IFBROOT) {
+ 		ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE);
+@@ -5525,8 +5521,7 @@ __xfs_bunmapi(
+ 		if (got.br_startoff > bno) {
+ 			if (--lastx < 0)
+ 				break;
+-			ep = xfs_iext_get_ext(ifp, lastx);
+-			xfs_bmbt_get_all(ep, &got);
++			xfs_iext_get_extent(ifp, lastx, &got);
+ 		}
+ 		/*
+ 		 * Is the last block of this extent before the range
+@@ -5540,7 +5535,6 @@ __xfs_bunmapi(
+ 		 * Then deal with the (possibly delayed) allocated space
+ 		 * we found.
+ 		 */
+-		ASSERT(ep != NULL);
+ 		del = got;
+ 		wasdel = isnullstartblock(del.br_startblock);
+ 		if (got.br_startoff < start) {
+@@ -5621,15 +5615,11 @@ __xfs_bunmapi(
+ 				 */
+ 				ASSERT(bno >= del.br_blockcount);
+ 				bno -= del.br_blockcount;
+-				if (got.br_startoff > bno) {
+-					if (--lastx >= 0) {
+-						ep = xfs_iext_get_ext(ifp,
+-								      lastx);
+-						xfs_bmbt_get_all(ep, &got);
+-					}
+-				}
++				if (got.br_startoff > bno && --lastx >= 0)
++					xfs_iext_get_extent(ifp, lastx, &got);
+ 				continue;
+ 			} else if (del.br_state == XFS_EXT_UNWRITTEN) {
++				xfs_bmbt_irec_t		prev;
+ 				/*
+ 				 * This one is already unwritten.
+ 				 * It must have a written left neighbor.
+@@ -5637,8 +5627,7 @@ __xfs_bunmapi(
+ 				 * try again.
+ 				 */
+ 				ASSERT(lastx > 0);
+-				xfs_bmbt_get_all(xfs_iext_get_ext(ifp,
+-						lastx - 1), &prev);
++				xfs_iext_get_extent(ifp, lastx - 1, &prev);
+ 				ASSERT(prev.br_state == XFS_EXT_NORM);
+ 				ASSERT(!isnullstartblock(prev.br_startblock));
+ 				ASSERT(del.br_startblock ==
+@@ -5736,13 +5725,9 @@ __xfs_bunmapi(
+ 		 */
+ 		if (bno != (xfs_fileoff_t)-1 && bno >= start) {
+ 			if (lastx >= 0) {
+-				ep = xfs_iext_get_ext(ifp, lastx);
+-				if (xfs_bmbt_get_startoff(ep) > bno) {
+-					if (--lastx >= 0)
+-						ep = xfs_iext_get_ext(ifp,
+-								      lastx);
+-				}
+-				xfs_bmbt_get_all(ep, &got);
++				xfs_iext_get_extent(ifp, lastx, &got);
++				if (got.br_startoff > bno && --lastx >= 0)
++					xfs_iext_get_extent(ifp, lastx, &got);
+ 			}
+ 			extno++;
+ 		}
+-- 
+2.1.4
 
-(Patch should appear in -rc5 tomorrow.)
-
---D
-
-> 
-> [ 2412.538076] XFS (vdc): Mounting V5 Filesystem
-> [ 2412.783150] XFS (vdc): Starting recovery (logdev: internal)
-> [ 2412.998385] XFS (vdc): Ending recovery (logdev: internal)
-> [ 2413.014579] Slab corruption (Tainted: G        W      ): xfs_efi_item start=ffff88008636ac18, len=408
-> [ 2413.015789] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-> [ 2413.017236] Last user:
-> [<ffffffff815c6689>](xfs_efi_item_free+0x29/0x40)
-> [ 2413.018854] 070: 6b 6b 6b 6b 6b 6b 6b 6b 6a 6b 6b 6b 6b 6b 6b 6b kkkkkkkkjkkkkkkk
-> [ 2413.019815] Single bit error detected. Probably bad RAM.
-> [ 2413.020350] Run memtest86+ or a similar memory test tool.
-> [ 2413.020915] Prev obj: start=ffff88008636aa68, len=408
-> [ 2413.021645] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-> [ 2413.022191] Last user: [<ffffffff815c6689>](xfs_efi_item_free+0x29/0x40)
-> [ 2413.023397] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
-> [ 2413.024217] 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
-> [ 2413.026503] Next obj: start=ffff88008636adc8, len=408
-> [ 2413.027304] Redzone: 0x9f911029d74e35b/0x9f911029d74e35b
-> [ 2413.027941] Last user: [<ffffffff815c6689>](xfs_efi_item_free+0x29/0x40)
-> [ 2413.028695] 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
-> [ 2413.029616] 010: [ 2413.029810] 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
