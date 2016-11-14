@@ -1,76 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:19593 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S938629AbcKKW2d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Nov 2016 17:28:33 -0500
-Date: Sat, 12 Nov 2016 09:28:24 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] shared/006: improve the speed of case running
-Message-ID: <20161111222824.GJ28922@dastard>
-References: <1478795242-14022-1-git-send-email-zlang@redhat.com>
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:35143 "EHLO
+        mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753440AbcKNHXx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2016 02:23:53 -0500
+Received: by mail-lf0-f50.google.com with SMTP id b14so51565302lfg.2
+        for <linux-xfs@vger.kernel.org>; Sun, 13 Nov 2016 23:23:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1478795242-14022-1-git-send-email-zlang@redhat.com>
+From: John Henderson <jhender982@gmail.com>
+Date: Mon, 14 Nov 2016 01:23:50 -0600
+Message-ID: <CA+sGqUv5X4JKQrMoOvVJupL4JadocZCd=AgzwfeR4iWjc_tG7w@mail.gmail.com>
+Subject: Which version of xfs-progs to use on Debian?
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Nov 11, 2016 at 12:27:22AM +0800, Zorro Lang wrote:
-> There're three problems of this case:
-> 1. Thousands of threads will be created to create lots of files, then
->    kernel need to waste lots of system resource to schedule these
->    threads. Some poor performance machines will take long long time
->    on that.
-> 2. Per thread try to create 1000 files by run 1000 times "echo >file".
-> 
-> For the 1st problem, I limit 2 threads per cpu, and the maximum is 20.
-> For the 2nd problem, use "sed 1 1000 | xargs touch" to instead of
-> the old way.
-> 
-> With this change, this case can run over in 2 mins on my x86_64
-> virtual machine with 1 cpu and 1G memory. Before that, it was still
-> running even a quarter passed.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
-> 
-> Hi,
-> 
-> The performance of this case affect the test time of xfstests,
-> especially on poor performance VM. I always doubt it hangs there,
-> because it has run too long time.
-> 
-> After this improvement:
-> It ran 105s on my virtual machine with 1 cpu and 1G memory.
-> It ran 60s on my real machine with 8 cpu and 64G memory.
-> 
-> The difference of "for ((i=0;i<1000;i++)); echo -n > file$i;done"
-> and "touch file{1..1000}" is:
-> The 1st one will run 1000 times execve, open, close and so on. The
-> execve() will take much time, especially on VM.
-> But the 2nd one will run once execve, 1000 times open and once close.
-> open() take much less time than execve().
-> 
-> Too many threads really waste too much time. For example, on my VM,
-> when I use $((ncpus * 2)) threads to run this case, it ran 100s. But
-> if I use $((ncpus * 4)) threads, the time increase to 130s. So too
-> many threads is not helpful, in contrast it wastes more time.
+Hi,
 
-If the only aim is to create inodes faster, then going above 4
-threads making inodes concurrently isn't going to increase speed.
-Most small filesystems don't have the configuration necessary to
-scale much past this (e.g. journal size, AG/BG count, etc all will
-limit concurrency on typical test filesystems.
+I'm trying to determine the optimal combination of kernel version and
+xfs-progs version to use on a Debian Jessie system (for amd64).
 
-There's a reason that the tests that create hundreds of thousands of
-inodes are quite limited in the amount of concurrency they support...
+I've searched this mailing list, and noticed the following exchange:
 
-Cheers,
+  http://www.spinics.net/lists/xfs/msg36165.html
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+specifically, Dave's response:
+
+  "As it is, in future the version of xfsprogs will tell you what
+kernel has the same feature support. i.e. xfsprogs 4.2.0 has exactly
+the same code/feature support as kernel 4.2.0. Similarly for
+xfsprogs/kernel 4.3.0."
+
+I'm also aware that prior to xfsprogs 4.2.0, userspace versioning did
+not match kernel numbering, as noted:
+
+  https://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.git/refs/tags
+  https://www.spinics.net/lists/xfs/msg33984.html
+
+So, as I understand the situation, xfsprogs 3.2.x was associated with
+a lot of different 3.x and 4.y (y<2) kernels.  Further, I want to make
+sure to take advantage of all the (current and future) reliability
+improvements of the new xfs v5 on-disk format, which means (from what
+I follow) that I need at least kernel 3.15 and xfsprogs 3.2.0, as seen
+here:
+
+  https://www.spinics.net/lists/xfs/msg27961.html
+
+My main concern focuses on the options currently available in Debian
+(primarily Jessie + backports).  Here's the matchup of what Debian
+ships (jessie, jessie-bpo, and stretch):
+
+                      linux-kernel     xfs-progs
+Jessie:               3.16.36          3.2.1
+Jessie Backports:     4.7.8            4.3.0
+Stretch:              4.8.5            4.3.0
+
+So, at first pass, I could just use native jessie's kernel 3.16.36 and
+xfsprogs 3.2.1 (and they seem to match well, as they were released
+together).  However, I actually have to use a more recent kernel
+anyway for some SkyLake support issues.  So, that takes us to at least
+kernel 4.7.8.  I note, though, that jessie-backports is *not*
+packaging xfsprogs 4.7 alongside its kernel (but instead xfsprogs
+4.3.0); similar issues exist for the 4.8.5 kernel from stretch.
+
+Assuming I stick to binary packages distributed through the official
+Debian repos, what's the recommendation of the xfs experts: would I be
+better off (in terms of reliability) with xfsprogs 3.2.1 or xfsprogs
+4.3.0 used with kernel 4.7.8?  As an alternative, would it be even
+better for me to use xfsprogs 4.7 (via compiling from source, even
+though I'd rather not)?
+
+Also, what are current best-practice parameters for 'mkfs.xfs' in
+order to optimize reliability?  Filesystem size is ~10 TB on top of
+LUKS-encrypted Software RAID-1 (using enterprise 512e drives).
+
+I'd assume, we'd at least want the following:
+
+  -m crc=1 finobt=1
+
+Any pointers to a good write-up on optimizing such creation (and
+later, mount-time) decisions?
+
+Thanks so much (and for all your work on XFS, too).
+
+-John
