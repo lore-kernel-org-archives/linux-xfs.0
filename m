@@ -1,101 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48986 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:53919 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933775AbcKNRNO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2016 12:13:14 -0500
-Received: from [83.175.99.196] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-        id 1c6Koj-0005LA-0X
-        for linux-xfs@vger.kernel.org; Mon, 14 Nov 2016 17:13:13 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/14] xfs: remove prev argument to xfs_bmapi_reserve_delalloc
-Date: Mon, 14 Nov 2016 18:12:37 +0100
-Message-Id: <1479143565-30615-7-git-send-email-hch@lst.de>
-In-Reply-To: <1479143565-30615-1-git-send-email-hch@lst.de>
-References: <1479143565-30615-1-git-send-email-hch@lst.de>
+        with ESMTP id S941318AbcKOKPG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Nov 2016 05:15:06 -0500
+Date: Tue, 15 Nov 2016 02:15:05 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 02/16] xfs_repair: fix bogus rmapbt record owner check
+Message-ID: <20161115101505.GB1607@infradead.org>
+References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+ <147830449083.26713.15599439011374416048.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <147830449083.26713.15599439011374416048.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-We can easily lookup the previous extent for the cases where we need it,
-which saves the callers from looking it up for us later in the series.
+On Fri, Nov 04, 2016 at 05:08:10PM -0700, Darrick J. Wong wrote:
+> Make the reverse mapping owner check actually validate inode numbers.
+> 
+> Coverity-id: 1371628
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  repair/scan.c |    8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/repair/scan.c b/repair/scan.c
+> index 0e13581..b9ef4dc 100644
+> --- a/repair/scan.c
+> +++ b/repair/scan.c
+> @@ -1052,8 +1052,12 @@ _("%s rmap btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+>  			}
+>  
+>  			/* Look for impossible owners. */
+> -			if (!(owner > 0 || (owner > XFS_RMAP_OWN_MIN &&
+> -					    owner <= XFS_RMAP_OWN_FS)))
+> +			if (!((owner > XFS_RMAP_OWN_MIN &&
+> +			       owner <= XFS_RMAP_OWN_FS) ||
+> +			      (XFS_INO_TO_AGNO(mp, owner) < mp->m_sb.sb_agcount &&
+> +			       XFS_AGINO_TO_AGBNO(mp,
+> +					XFS_INO_TO_AGINO(mp, owner)) <
+> +					mp->m_sb.sb_agblocks)))
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 8 ++++++--
- fs/xfs/libxfs/xfs_bmap.h | 3 +--
- fs/xfs/xfs_iomap.c       | 3 +--
- fs/xfs/xfs_reflink.c     | 2 +-
- 4 files changed, 9 insertions(+), 7 deletions(-)
+This condition looks complex enough to break it out into a helper.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 18de89c..4aa9c07 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4235,7 +4235,6 @@ xfs_bmapi_reserve_delalloc(
- 	xfs_fileoff_t		aoff,
- 	xfs_filblks_t		len,
- 	struct xfs_bmbt_irec	*got,
--	struct xfs_bmbt_irec	*prev,
- 	xfs_extnum_t		*lastx,
- 	int			eof)
- {
-@@ -4257,7 +4256,12 @@ xfs_bmapi_reserve_delalloc(
- 	else
- 		extsz = xfs_get_extsz_hint(ip);
- 	if (extsz) {
--		error = xfs_bmap_extsize_align(mp, got, prev, extsz, rt, eof,
-+		struct xfs_bmbt_irec	prev;
-+
-+		if (!xfs_iext_get_extent(ifp, *lastx - 1, &prev))
-+			prev.br_startoff = NULLFILEOFF;
-+
-+		error = xfs_bmap_extsize_align(mp, got, &prev, extsz, rt, eof,
- 					       1, 0, &aoff, &alen);
- 		ASSERT(!error);
- 	}
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 7cae6ec..e3c2b5a 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -243,8 +243,7 @@ struct xfs_bmbt_rec_host *
- 		struct xfs_bmbt_irec *gotp, struct xfs_bmbt_irec *prevp);
- int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
- 		xfs_fileoff_t aoff, xfs_filblks_t len,
--		struct xfs_bmbt_irec *got, struct xfs_bmbt_irec *prev,
--		xfs_extnum_t *lastx, int eof);
-+		struct xfs_bmbt_irec *got, xfs_extnum_t *lastx, int eof);
- 
- enum xfs_bmap_intent_type {
- 	XFS_BMAP_MAP = 1,
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 436e109..59ffcac 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -622,8 +622,7 @@ xfs_file_iomap_begin_delay(
- 
- retry:
- 	error = xfs_bmapi_reserve_delalloc(ip, XFS_DATA_FORK, offset_fsb,
--			end_fsb - offset_fsb, &got,
--			&prev, &idx, eof);
-+			end_fsb - offset_fsb, &got, &idx, eof);
- 	switch (error) {
- 	case 0:
- 		break;
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 0edf835..52cdfba 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -293,7 +293,7 @@ xfs_reflink_reserve_cow(
- 
- retry:
- 	error = xfs_bmapi_reserve_delalloc(ip, XFS_COW_FORK, imap->br_startoff,
--			end_fsb - imap->br_startoff, &got, &prev, &idx, eof);
-+			end_fsb - imap->br_startoff, &got, &idx, eof);
- 	switch (error) {
- 	case 0:
- 		break;
--- 
-2.1.4
 
+Except for that this looks fine:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
