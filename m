@@ -1,157 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36668 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47470 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932974AbcKQTMt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Nov 2016 14:12:49 -0500
-Date: Thu, 17 Nov 2016 14:12:47 -0500
+        id S932305AbcKOSL1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 Nov 2016 13:11:27 -0500
+Date: Tue, 15 Nov 2016 13:11:25 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 13/14] xfs: remove xfs_bmap_search_extents
-Message-ID: <20161117191246.GO49658@bfoster.bfoster>
-References: <1479143565-30615-1-git-send-email-hch@lst.de>
- <1479143565-30615-14-git-send-email-hch@lst.de>
+Subject: Re: [PATCH RFC 3/4] xfs: reuse xfs_file_iomap_begin_delay() for cow
+ fork delalloc
+Message-ID: <20161115181125.GE65218@bfoster.bfoster>
+References: <1478636856-7590-1-git-send-email-bfoster@redhat.com>
+ <1478636856-7590-4-git-send-email-bfoster@redhat.com>
+ <20161115142826.GC18630@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1479143565-30615-14-git-send-email-hch@lst.de>
+In-Reply-To: <20161115142826.GC18630@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Nov 14, 2016 at 06:12:44PM +0100, Christoph Hellwig wrote:
-> Now that all users are gone.
+On Tue, Nov 15, 2016 at 06:28:26AM -0800, Christoph Hellwig wrote:
+> > +	/*
+> > +	 * Search for a preexisting extent. COW fork allocation may still be
+> > +	 * required for reflink inodes if the data extent is shared.
+> > +	 */
+> >  	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
+> >  			&got, &prev);
+> >  	imap = got;
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> Maybe we should look up directly into imap and now duplicate that
+> information for imap and got?
+> 
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Didn't you recently change this code from doing that? I'm not following
+how changing it back helps us...
 
->  fs/xfs/libxfs/xfs_bmap.c | 91 ------------------------------------------------
->  fs/xfs/libxfs/xfs_bmap.h |  4 ---
->  2 files changed, 95 deletions(-)
+> >  		if (xfs_is_reflink_inode(ip)) {
+> > +			bool		shared, trimmed;
+> >  
+> > +			/*
+> > +			 * Assume the data extent is shared if an extent exists
+> > +			 * in the cow fork.
+> > +			 */
+> > +			xfs_trim_extent(&imap, offset_fsb,
+> > +					end_fsb - offset_fsb);
+> > +			xfs_bmap_search_extents(ip, imap.br_startoff,
+> > +					XFS_COW_FORK, &eof, &idx, &got, &prev);
+> > +			if (!eof && got.br_startoff <= imap.br_startoff) {
+> > +				trace_xfs_reflink_cow_found(ip, &got);
+> > +				xfs_trim_extent(&imap, got.br_startoff,
+> > +						got.br_blockcount);
+> > +				goto done;
+> > +			}
+> > +
+> > +			/*
+> > +			 * No existing cow fork extent. Now we have to actually
+> > +			 * check if the data extent is shared and trim the
+> > +			 * mapping to the next (un)shared boundary.
+> > +			 */
+> > +			error = xfs_reflink_trim_around_shared(ip, &imap,
+> > +						       &shared, &trimmed);
+> >  			if (error)
+> >  				goto out_unlock;
+> > +			if (!shared)
+> > +				goto done;
+> > +
+> > +			end_fsb = imap.br_startoff + imap.br_blockcount;
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 4aa9c07..856d98d 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1370,97 +1370,6 @@ xfs_bmap_read_extents(
->  	return -EFSCORRUPTED;
->  }
->  
-> -
-> -/*
-> - * Search the extent records for the entry containing block bno.
-> - * If bno lies in a hole, point to the next entry.  If bno lies
-> - * past eof, *eofp will be set, and *prevp will contain the last
-> - * entry (null if none).  Else, *lastxp will be set to the index
-> - * of the found entry; *gotp will contain the entry.
-> - */
-> -STATIC xfs_bmbt_rec_host_t *		/* pointer to found extent entry */
-> -xfs_bmap_search_multi_extents(
-> -	xfs_ifork_t	*ifp,		/* inode fork pointer */
-> -	xfs_fileoff_t	bno,		/* block number searched for */
-> -	int		*eofp,		/* out: end of file found */
-> -	xfs_extnum_t	*lastxp,	/* out: last extent index */
-> -	xfs_bmbt_irec_t	*gotp,		/* out: extent entry found */
-> -	xfs_bmbt_irec_t	*prevp)		/* out: previous extent entry found */
-> -{
-> -	xfs_bmbt_rec_host_t *ep;		/* extent record pointer */
-> -	xfs_extnum_t	lastx;		/* last extent index */
-> -
-> -	/*
-> -	 * Initialize the extent entry structure to catch access to
-> -	 * uninitialized br_startblock field.
-> -	 */
-> -	gotp->br_startoff = 0xffa5a5a5a5a5a5a5LL;
-> -	gotp->br_blockcount = 0xa55a5a5a5a5a5a5aLL;
-> -	gotp->br_state = XFS_EXT_INVALID;
-> -	gotp->br_startblock = 0xffffa5a5a5a5a5a5LL;
-> -	prevp->br_startoff = NULLFILEOFF;
-> -
-> -	ep = xfs_iext_bno_to_ext(ifp, bno, &lastx);
-> -	if (lastx > 0) {
-> -		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, lastx - 1), prevp);
-> -	}
-> -	if (lastx < xfs_iext_count(ifp)) {
-> -		xfs_bmbt_get_all(ep, gotp);
-> -		*eofp = 0;
-> -	} else {
-> -		if (lastx > 0) {
-> -			*gotp = *prevp;
-> -		}
-> -		*eofp = 1;
-> -		ep = NULL;
-> -	}
-> -	*lastxp = lastx;
-> -	return ep;
-> -}
-> -
-> -/*
-> - * Search the extents list for the inode, for the extent containing bno.
-> - * If bno lies in a hole, point to the next entry.  If bno lies past eof,
-> - * *eofp will be set, and *prevp will contain the last entry (null if none).
-> - * Else, *lastxp will be set to the index of the found
-> - * entry; *gotp will contain the entry.
-> - */
-> -xfs_bmbt_rec_host_t *                 /* pointer to found extent entry */
-> -xfs_bmap_search_extents(
-> -	xfs_inode_t     *ip,            /* incore inode pointer */
-> -	xfs_fileoff_t   bno,            /* block number searched for */
-> -	int             fork,      	/* data or attr fork */
-> -	int             *eofp,          /* out: end of file found */
-> -	xfs_extnum_t    *lastxp,        /* out: last extent index */
-> -	xfs_bmbt_irec_t *gotp,          /* out: extent entry found */
-> -	xfs_bmbt_irec_t *prevp)         /* out: previous extent entry found */
-> -{
-> -	xfs_ifork_t	*ifp;		/* inode fork pointer */
-> -	xfs_bmbt_rec_host_t  *ep;            /* extent record pointer */
-> -
-> -	XFS_STATS_INC(ip->i_mount, xs_look_exlist);
-> -	ifp = XFS_IFORK_PTR(ip, fork);
-> -
-> -	ep = xfs_bmap_search_multi_extents(ifp, bno, eofp, lastxp, gotp, prevp);
-> -
-> -	if (unlikely(!(gotp->br_startblock) && (*lastxp != NULLEXTNUM) &&
-> -		     !(XFS_IS_REALTIME_INODE(ip) && fork == XFS_DATA_FORK))) {
-> -		xfs_alert_tag(ip->i_mount, XFS_PTAG_FSBLOCK_ZERO,
-> -				"Access to block zero in inode %llu "
-> -				"start_block: %llx start_off: %llx "
-> -				"blkcnt: %llx extent-state: %x lastx: %x",
-> -			(unsigned long long)ip->i_ino,
-> -			(unsigned long long)gotp->br_startblock,
-> -			(unsigned long long)gotp->br_startoff,
-> -			(unsigned long long)gotp->br_blockcount,
-> -			gotp->br_state, *lastxp);
-> -		*lastxp = NULLEXTNUM;
-> -		*eofp = 1;
-> -		return NULL;
-> -	}
-> -	return ep;
-> -}
-> -
->  /*
->   * Returns the file-relative block number of the first unused block(s)
->   * in the file with at least "len" logically contiguous blocks free.
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index e3c2b5a..ffed1f9 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -237,10 +237,6 @@ int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
->  		struct xfs_defer_ops *dfops, enum shift_direction direction,
->  		int num_exts);
->  int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
-> -struct xfs_bmbt_rec_host *
-> -	xfs_bmap_search_extents(struct xfs_inode *ip, xfs_fileoff_t bno,
-> -		int fork, int *eofp, xfs_extnum_t *lastxp,
-> -		struct xfs_bmbt_irec *gotp, struct xfs_bmbt_irec *prevp);
->  int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
->  		xfs_fileoff_t aoff, xfs_filblks_t len,
->  		struct xfs_bmbt_irec *got, xfs_extnum_t *lastx, int eof);
-> -- 
-> 2.1.4
+> I think the code for looking at the COW fork should go into a little
+> helper, even if it means passing a few arguments to it.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Ok.
+
+> > +			fork = XFS_COW_FORK;
+> > +		} else {
+> > +			trace_xfs_iomap_found(ip, offset, count, 0, &imap);
+> > +			goto done;
+> >  		}
+> 
+> And while we're at it - try to always handle the a that ends with a
+> goto first, that helps to reduce the indentation level.
+> 
+
+Indeed, that looks like a nice cleanup.
+
+Brian
