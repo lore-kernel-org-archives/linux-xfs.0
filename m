@@ -1,121 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54100 "EHLO sandeen.net"
+Received: from verein.lst.de ([213.95.11.211]:60155 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753180AbcKNNvD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Nov 2016 08:51:03 -0500
-Subject: Re: Which version of xfs-progs to use on Debian?
-References: <CA+sGqUv5X4JKQrMoOvVJupL4JadocZCd=AgzwfeR4iWjc_tG7w@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <479fd03d-4850-ab17-9000-036c0e7e6c53@sandeen.net>
-Date: Mon, 14 Nov 2016 07:51:01 -0600
+        id S1751884AbcKOQwH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 Nov 2016 11:52:07 -0500
+Date: Tue, 15 Nov 2016 17:52:04 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/5] xfs: remove i_iolock and use i_rwsem in the VFS
+        inode instead
+Message-ID: <20161115165204.GA1490@lst.de>
+References: <1479064054-10474-1-git-send-email-hch@lst.de> <1479064054-10474-3-git-send-email-hch@lst.de> <20161115153408.GA65218@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <CA+sGqUv5X4JKQrMoOvVJupL4JadocZCd=AgzwfeR4iWjc_tG7w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161115153408.GA65218@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: John Henderson <jhender982@gmail.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On 11/14/16 1:23 AM, John Henderson wrote:
-> Hi,
+On Tue, Nov 15, 2016 at 10:34:10AM -0500, Brian Foster wrote:
+> > @@ -1592,12 +1591,10 @@ xfs_vm_bmap(
+> >  	 * that on reflinks inodes, so we have to skip out here.  And yes,
+> >  	 * 0 is the magic code for a bmap error..
+> >  	 */
+> > -	if (xfs_is_reflink_inode(ip)) {
+> > -		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> > +	if (xfs_is_reflink_inode(ip))
+> >  		return 0;
+> > -	}
+> > +
+> >  	filemap_write_and_wait(mapping);
+> > -	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
 > 
-> I'm trying to determine the optimal combination of kernel version
-> and xfs-progs version to use on a Debian Jessie system (for amd64).
+> The commit log makes no mention of dropping lock usage, unless I missed
+> where the inode lock is taken elsewhere..?
 
-Generally, the package version to use with a distribution are the
-ones shipped by the distribution.
+For swapon, the only case where the lock matter is is taken by the
+calller now.  For the ioctl it simply doesn't matter as the result
+will be stale by the time we return.
 
-> I've searched this mailing list, and noticed the following exchange:
+> >  
+> >  	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
+> >  		if (!(lock_flags & XFS_IOLOCK_SHARED))
+> > -			return !!ip->i_iolock.mr_writer;
+> > -		return rwsem_is_locked(&ip->i_iolock.mr_lock);
+> > +			return !debug_locks ||
+> > +				lockdep_is_held_type(&VFS_I(ip)->i_rwsem, 0);
+> > +		return rwsem_is_locked(&VFS_I(ip)->i_rwsem);
 > 
-> http://www.spinics.net/lists/xfs/msg36165.html
-> 
-> specifically, Dave's response:
-> 
-> "As it is, in future the version of xfsprogs will tell you what 
-> kernel has the same feature support. i.e. xfsprogs 4.2.0 has exactly 
-> the same code/feature support as kernel 4.2.0. Similarly for 
-> xfsprogs/kernel 4.3.0."
+> So if I read this correctly, we can no longer safely assert that an
+> inode is not exclusively locked because the debug_locks == 0 case would
+> always tell us it is. It doesn't look like we do that today, but it
+> warrants a comment IMO.
 
-Yes, but things stay compatible either way
-
-> I'm also aware that prior to xfsprogs 4.2.0, userspace versioning
-> did not match kernel numbering, as noted:
-> 
-> https://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.git/refs/tags 
-> https://www.spinics.net/lists/xfs/msg33984.html
-> 
-> So, as I understand the situation, xfsprogs 3.2.x was associated
-> with a lot of different 3.x and 4.y (y<2) kernels.  Further, I want
-> to make sure to take advantage of all the (current and future)
-> reliability improvements of the new xfs v5 on-disk format, which
-> means (from what I follow) that I need at least kernel 3.15 and
-> xfsprogs 3.2.0, as seen here:
-> 
-> https://www.spinics.net/lists/xfs/msg27961.html
-
-FWIW, crcs became /default/ in 3.2.3:
-
-566ebd5 mkfs: default to CRC enabled filesystems
-$ git describe --contains 566ebd5
-v3.2.3-rc1~2
- 
-> My main concern focuses on the options currently available in Debian 
-> (primarily Jessie + backports).  Here's the matchup of what Debian 
-> ships (jessie, jessie-bpo, and stretch):
-> 
-> linux-kernel     xfs-progs Jessie:               3.16.36
-> 3.2.1 Jessie Backports:     4.7.8            4.3.0 Stretch:
-> 4.8.5            4.3.0
-> 
-> So, at first pass, I could just use native jessie's kernel 3.16.36
-> and xfsprogs 3.2.1 (and they seem to match well, as they were
-> released together).  However, I actually have to use a more recent
-> kernel anyway for some SkyLake support issues.  So, that takes us to
-> at least kernel 4.7.8.  I note, though, that jessie-backports is
-> *not* packaging xfsprogs 4.7 alongside its kernel (but instead
-> xfsprogs 4.3.0); similar issues exist for the 4.8.5 kernel from
-> stretch.
-
-that's not really a problem per se.  There is no hard requirement
-for xfsprogs version to match.  Version tells you more about the time of
-release, and so has a loose notion of "matching features" but it's
-far from mandatory to match.
-
-> Assuming I stick to binary packages distributed through the official 
-> Debian repos, what's the recommendation of the xfs experts: would I
-> be better off (in terms of reliability) with xfsprogs 3.2.1 or
-> xfsprogs 4.3.0 used with kernel 4.7.8?  As an alternative, would it
-> be even better for me to use xfsprogs 4.7 (via compiling from source,
-> even though I'd rather not)?
-> 
-> Also, what are current best-practice parameters for 'mkfs.xfs' in 
-> order to optimize reliability?  Filesystem size is ~10 TB on top of 
-> LUKS-encrypted Software RAID-1 (using enterprise 512e drives).
-> 
-> I'd assume, we'd at least want the following:
-> 
-> -m crc=1 finobt=1
-> 
-> Any pointers to a good write-up on optimizing such creation (and 
-> later, mount-time) decisions?
-
-http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E
- 
-> Thanks so much (and for all your work on XFS, too).
-
-Newer kernels and newer xfsprogs will /always/ have more features
-and bugfixes than older ones (and, rarely, new regressions).
-
-However, other than very rare deprecations, any userspace/kernelspace
-pair will /work/ just fine and be compatible, though not all features
-may be available.  (Newer userspace than kernelspace may result in
-unmountable filesystems though, if you enable some feature at mkfs time
-that isn't supported by your kernel.)
-
-Generally, I'd defer to your distro.  It's presumably what they
-test, and what they can support.  If you have specific needs not
-met by your distro and need to grab something newer, then you're
-largely on your own.  There is no "best" release.
-
--Eric
+Ok, I can add a comment.
