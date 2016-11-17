@@ -1,57 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:60155 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:36668 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751884AbcKOQwH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Nov 2016 11:52:07 -0500
-Date: Tue, 15 Nov 2016 17:52:04 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/5] xfs: remove i_iolock and use i_rwsem in the VFS
-        inode instead
-Message-ID: <20161115165204.GA1490@lst.de>
-References: <1479064054-10474-1-git-send-email-hch@lst.de> <1479064054-10474-3-git-send-email-hch@lst.de> <20161115153408.GA65218@bfoster.bfoster>
+        id S932974AbcKQTMt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Nov 2016 14:12:49 -0500
+Date: Thu, 17 Nov 2016 14:12:47 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 13/14] xfs: remove xfs_bmap_search_extents
+Message-ID: <20161117191246.GO49658@bfoster.bfoster>
+References: <1479143565-30615-1-git-send-email-hch@lst.de>
+ <1479143565-30615-14-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161115153408.GA65218@bfoster.bfoster>
+In-Reply-To: <1479143565-30615-14-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 15, 2016 at 10:34:10AM -0500, Brian Foster wrote:
-> > @@ -1592,12 +1591,10 @@ xfs_vm_bmap(
-> >  	 * that on reflinks inodes, so we have to skip out here.  And yes,
-> >  	 * 0 is the magic code for a bmap error..
-> >  	 */
-> > -	if (xfs_is_reflink_inode(ip)) {
-> > -		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
-> > +	if (xfs_is_reflink_inode(ip))
-> >  		return 0;
-> > -	}
-> > +
-> >  	filemap_write_and_wait(mapping);
-> > -	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+On Mon, Nov 14, 2016 at 06:12:44PM +0100, Christoph Hellwig wrote:
+> Now that all users are gone.
 > 
-> The commit log makes no mention of dropping lock usage, unless I missed
-> where the inode lock is taken elsewhere..?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-For swapon, the only case where the lock matter is is taken by the
-calller now.  For the ioctl it simply doesn't matter as the result
-will be stale by the time we return.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> >  
-> >  	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
-> >  		if (!(lock_flags & XFS_IOLOCK_SHARED))
-> > -			return !!ip->i_iolock.mr_writer;
-> > -		return rwsem_is_locked(&ip->i_iolock.mr_lock);
-> > +			return !debug_locks ||
-> > +				lockdep_is_held_type(&VFS_I(ip)->i_rwsem, 0);
-> > +		return rwsem_is_locked(&VFS_I(ip)->i_rwsem);
+>  fs/xfs/libxfs/xfs_bmap.c | 91 ------------------------------------------------
+>  fs/xfs/libxfs/xfs_bmap.h |  4 ---
+>  2 files changed, 95 deletions(-)
 > 
-> So if I read this correctly, we can no longer safely assert that an
-> inode is not exclusively locked because the debug_locks == 0 case would
-> always tell us it is. It doesn't look like we do that today, but it
-> warrants a comment IMO.
-
-Ok, I can add a comment.
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 4aa9c07..856d98d 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1370,97 +1370,6 @@ xfs_bmap_read_extents(
+>  	return -EFSCORRUPTED;
+>  }
+>  
+> -
+> -/*
+> - * Search the extent records for the entry containing block bno.
+> - * If bno lies in a hole, point to the next entry.  If bno lies
+> - * past eof, *eofp will be set, and *prevp will contain the last
+> - * entry (null if none).  Else, *lastxp will be set to the index
+> - * of the found entry; *gotp will contain the entry.
+> - */
+> -STATIC xfs_bmbt_rec_host_t *		/* pointer to found extent entry */
+> -xfs_bmap_search_multi_extents(
+> -	xfs_ifork_t	*ifp,		/* inode fork pointer */
+> -	xfs_fileoff_t	bno,		/* block number searched for */
+> -	int		*eofp,		/* out: end of file found */
+> -	xfs_extnum_t	*lastxp,	/* out: last extent index */
+> -	xfs_bmbt_irec_t	*gotp,		/* out: extent entry found */
+> -	xfs_bmbt_irec_t	*prevp)		/* out: previous extent entry found */
+> -{
+> -	xfs_bmbt_rec_host_t *ep;		/* extent record pointer */
+> -	xfs_extnum_t	lastx;		/* last extent index */
+> -
+> -	/*
+> -	 * Initialize the extent entry structure to catch access to
+> -	 * uninitialized br_startblock field.
+> -	 */
+> -	gotp->br_startoff = 0xffa5a5a5a5a5a5a5LL;
+> -	gotp->br_blockcount = 0xa55a5a5a5a5a5a5aLL;
+> -	gotp->br_state = XFS_EXT_INVALID;
+> -	gotp->br_startblock = 0xffffa5a5a5a5a5a5LL;
+> -	prevp->br_startoff = NULLFILEOFF;
+> -
+> -	ep = xfs_iext_bno_to_ext(ifp, bno, &lastx);
+> -	if (lastx > 0) {
+> -		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, lastx - 1), prevp);
+> -	}
+> -	if (lastx < xfs_iext_count(ifp)) {
+> -		xfs_bmbt_get_all(ep, gotp);
+> -		*eofp = 0;
+> -	} else {
+> -		if (lastx > 0) {
+> -			*gotp = *prevp;
+> -		}
+> -		*eofp = 1;
+> -		ep = NULL;
+> -	}
+> -	*lastxp = lastx;
+> -	return ep;
+> -}
+> -
+> -/*
+> - * Search the extents list for the inode, for the extent containing bno.
+> - * If bno lies in a hole, point to the next entry.  If bno lies past eof,
+> - * *eofp will be set, and *prevp will contain the last entry (null if none).
+> - * Else, *lastxp will be set to the index of the found
+> - * entry; *gotp will contain the entry.
+> - */
+> -xfs_bmbt_rec_host_t *                 /* pointer to found extent entry */
+> -xfs_bmap_search_extents(
+> -	xfs_inode_t     *ip,            /* incore inode pointer */
+> -	xfs_fileoff_t   bno,            /* block number searched for */
+> -	int             fork,      	/* data or attr fork */
+> -	int             *eofp,          /* out: end of file found */
+> -	xfs_extnum_t    *lastxp,        /* out: last extent index */
+> -	xfs_bmbt_irec_t *gotp,          /* out: extent entry found */
+> -	xfs_bmbt_irec_t *prevp)         /* out: previous extent entry found */
+> -{
+> -	xfs_ifork_t	*ifp;		/* inode fork pointer */
+> -	xfs_bmbt_rec_host_t  *ep;            /* extent record pointer */
+> -
+> -	XFS_STATS_INC(ip->i_mount, xs_look_exlist);
+> -	ifp = XFS_IFORK_PTR(ip, fork);
+> -
+> -	ep = xfs_bmap_search_multi_extents(ifp, bno, eofp, lastxp, gotp, prevp);
+> -
+> -	if (unlikely(!(gotp->br_startblock) && (*lastxp != NULLEXTNUM) &&
+> -		     !(XFS_IS_REALTIME_INODE(ip) && fork == XFS_DATA_FORK))) {
+> -		xfs_alert_tag(ip->i_mount, XFS_PTAG_FSBLOCK_ZERO,
+> -				"Access to block zero in inode %llu "
+> -				"start_block: %llx start_off: %llx "
+> -				"blkcnt: %llx extent-state: %x lastx: %x",
+> -			(unsigned long long)ip->i_ino,
+> -			(unsigned long long)gotp->br_startblock,
+> -			(unsigned long long)gotp->br_startoff,
+> -			(unsigned long long)gotp->br_blockcount,
+> -			gotp->br_state, *lastxp);
+> -		*lastxp = NULLEXTNUM;
+> -		*eofp = 1;
+> -		return NULL;
+> -	}
+> -	return ep;
+> -}
+> -
+>  /*
+>   * Returns the file-relative block number of the first unused block(s)
+>   * in the file with at least "len" logically contiguous blocks free.
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index e3c2b5a..ffed1f9 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -237,10 +237,6 @@ int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		struct xfs_defer_ops *dfops, enum shift_direction direction,
+>  		int num_exts);
+>  int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
+> -struct xfs_bmbt_rec_host *
+> -	xfs_bmap_search_extents(struct xfs_inode *ip, xfs_fileoff_t bno,
+> -		int fork, int *eofp, xfs_extnum_t *lastxp,
+> -		struct xfs_bmbt_irec *gotp, struct xfs_bmbt_irec *prevp);
+>  int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
+>  		xfs_fileoff_t aoff, xfs_filblks_t len,
+>  		struct xfs_bmbt_irec *got, xfs_extnum_t *lastx, int eof);
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
