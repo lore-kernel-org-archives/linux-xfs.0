@@ -1,101 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42368 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932280AbcKHIhT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2016 03:37:19 -0500
-Date: Tue, 8 Nov 2016 00:37:07 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 39/39] xfs_scrub: create online filesystem scrub program
-Message-ID: <20161108083706.GB20710@birch.djwong.org>
-References: <147830546754.4165.17790362300876898017.stgit@birch.djwong.org>
- <147830572454.4165.18074642184555452652.stgit@birch.djwong.org>
- <20161105052256.GB27776@eguan.usersys.redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39106 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751058AbcKQXT0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Nov 2016 18:19:26 -0500
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 6DF224E4CB
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2016 23:19:16 +0000 (UTC)
+Received: from Liberator.example.com (ovpn03.gateway.prod.ext.phx2.redhat.com [10.5.9.3])
+        by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uAHNJF3l023948
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2016 18:19:16 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_db: add alignment filter to freesp command
+Message-ID: <1ed1ffd4-75e0-fa14-f812-b6ac4fd12987@redhat.com>
+Date: Thu, 17 Nov 2016 17:19:15 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161105052256.GB27776@eguan.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sat, Nov 05, 2016 at 01:22:56PM +0800, Eryu Guan wrote:
-> On Fri, Nov 04, 2016 at 05:28:44PM -0700, Darrick J. Wong wrote:
-> > Create a filesystem scrubbing tool that walks the directory tree,
-> > queries every file's extents, extended attributes, and stat data.  For
-> > generic (non-XFS) filesystems this depends on the kernel to do nearly
-> > all the validation.  Optionally, we can (try to) read all the file
-> > data.
-> > 
-> > For XFS, we perform sequential scans of each AG's metadata, inodes,
-> > extent maps, and file data.  Being XFS specific, we can work with
-> > the in-kernel scrubbers to perform much stronger
-> > metadata checking and cross-referencing.  We can also take advantage
-> > of newer ioctls such as GETFSMAP to perform faster read verification.
-> > 
-> > In the future we will be able to take advantage of (still unwritten)
-> > features such as parent directory pointers to fully validate all
-> > metadata.  However, this tool /should/ work for most non-XFS
-> > filesystems such as ext4 and btrfs.
-> > 
-> > Note also that the scrub tool can shut down the filesystem if errors
-> > are found.  This is not a default option since scrubbing is very
-> > immature at this time.  It can also ask the XFS driver in the kernel
-> > to optimize or repair metadata, though this may not be successful.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> [snip]
-> > --- /dev/null
-> > +++ b/scrub/scrub.c
-> > @@ -0,0 +1,1009 @@
-> > +/*
-> > + * Copyright (C) 2016 Oracle.  All Rights Reserved.
-> > + *
-> > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> > + *
-> > + * This program is free software; you can redistribute it and/or
-> > + * modify it under the terms of the GNU General Public License
-> > + * as published by the Free Software Foundation; either version 2
-> > + * of the License, or (at your option) any later version.
-> > + *
-> > + * This program is distributed in the hope that it would be useful,
-> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > + * GNU General Public License for more details.
-> > + *
-> > + * You should have received a copy of the GNU General Public License
-> > + * along with this program; if not, write the Free Software Foundation,
-> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> > + */
-> > +#include "libxfs.h"
-> > +#include <stdio.h>
-> > +#include <mntent.h>
-> > +#include <unistd.h>
-> > +#include <sys/types.h>
-> > +#include <sys/stat.h>
-> > +#include <sys/time.h>
-> > +#include <sys/resource.h>
-> > +#include <sys/statvfs.h>
-> > +#include <sys/vfs.h>
-> > +#include <fcntl.h>
-> > +#include <dirent.h>
-> > +#include "disk.h"
-> > +#include "scrub.h"
-> > +#include "../../repair/threads.h"
-> 
-> I have trouble compiling the djwong-devel branch, it failed to find
-> "../../repair/threads.h", seems it should be "../repair/threads.h" here.
+This adds an alignment filter to the xfs_db freesp command, i.e.
 
-Doh.  Yeah.  I'll fix that in the morning.  Sorry about that.
+xfs_db> freesp -A 4
 
-In a nutshell: I build xfsprogs git for each arch in a build-$arch/ subdirs
-containing symlinks to everything in the parent, which is why I never tripped
-on this. :/
+will show only 4-block aligned free extents.
 
---D
+This can be useful for finding freespace suitable for allocations
+with specific alignment requirements, such as inode allocation.
 
-> 
-> Thanks,
-> Eryu
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/db/freesp.c b/db/freesp.c
+index 27e9f5a..c3ca2f3 100644
+--- a/db/freesp.c
++++ b/db/freesp.c
+@@ -54,6 +54,7 @@ static int	usage(void);
+ 
+ static int		agcount;
+ static xfs_agnumber_t	*aglist;
++static int		alignment;
+ static int		countflag;
+ static int		dumpflag;
+ static int		equalsize;
+@@ -67,7 +68,7 @@ static long long	totexts;
+ 
+ static const cmdinfo_t	freesp_cmd =
+ 	{ "freesp", NULL, freesp_f, 0, -1, 0,
+-	  "[-bcdfs] [-a agno]... [-e binsize] [-h h1]... [-m binmult]",
++	  "[-bcdfs] [-A alignment] [-a agno]... [-e binsize] [-h h1]... [-m binmult]",
+ 	  "summarize free space for filesystem", NULL };
+ 
+ static int
+@@ -147,8 +148,11 @@ init(
+ 	totblocks = totexts = 0;
+ 	aglist = NULL;
+ 	hist = NULL;
+-	while ((c = getopt(argc, argv, "a:bcde:h:m:s")) != EOF) {
++	while ((c = getopt(argc, argv, "A:a:bcde:h:m:s")) != EOF) {
+ 		switch (c) {
++		case 'A':
++			alignment = atoi(optarg);
++			break;
+ 		case 'a':
+ 			aglistadd(optarg);
+ 			break;
+@@ -372,6 +376,9 @@ addtohist(
+ {
+ 	int		i;
+ 
++	if (alignment && (XFS_AGB_TO_FSB(mp,agno,agbno) % alignment))
++		return;
++
+ 	if (dumpflag)
+ 		dbprintf("%8d %8d %8d\n", agno, agbno, len);
+ 	totexts++;
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 460d89d..2c89769 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -512,12 +512,17 @@ enables processing of realtime control file data.
+ enables processing of realtime file data.
+ .RE
+ .TP
+-.BI "freesp [\-bcds] [\-a " ag "] ... [\-e " i "] [\-h " h1 "] ... [\-m " m ]
++.BI "freesp [\-bcds] [\-A " alignment "] [\-a " ag "] ... [\-e " i "] [\-h " h1 "] ... [\-m " m ]
+ Summarize free space for the filesystem. The free blocks are examined
+ and totalled, and displayed in the form of a histogram, with a count
+ of extents in each range of free extent sizes.
+ .RS 1.0i
+ .TP 0.4i
++.B \-A
++reports only free extents with starting blocks aligned to
++.I alignment
++blocks.
++.TP
+ .B \-a
+ adds
+ .I ag
+
