@@ -1,80 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35486 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753525AbcKQSMA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Nov 2016 13:12:00 -0500
-Date: Thu, 17 Nov 2016 13:11:58 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 03/14] xfs: use new extent lookup helpers in
- xfs_bmapi_read
-Message-ID: <20161117181158.GE49658@bfoster.bfoster>
-References: <1479143565-30615-1-git-send-email-hch@lst.de>
- <1479143565-30615-4-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1479143565-30615-4-git-send-email-hch@lst.de>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:34021 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752747AbcKQX5F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2016 18:57:05 -0500
+Received: from disappointment.disaster.area ([192.168.1.110] helo=disappointment)
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <dave@fromorbit.com>)
+        id 1c7WWq-0008NP-Od
+        for linux-xfs@vger.kernel.org; Fri, 18 Nov 2016 10:55:40 +1100
+Received: from dave by disappointment with local (Exim 4.87)
+        (envelope-from <dave@disappointment.disaster>)
+        id 1c7WWr-00020E-Lr
+        for linux-xfs@vger.kernel.org; Fri, 18 Nov 2016 10:55:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/4] xfs: factor rmap btree size into the indlen calculations
+Date: Fri, 18 Nov 2016 10:55:32 +1100
+Message-Id: <1479426935-7112-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1479426935-7112-1-git-send-email-david@fromorbit.com>
+References: <20161117213224.GD28177@dastard>
+ <1479426935-7112-1-git-send-email-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Nov 14, 2016 at 06:12:34PM +0100, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+When we're estimating the amount of space it's going to take to satisfy
+a delalloc reservation, we need to include the space that we might need
+to grow the rmapbt.  This helps us to avoid running out of space later
+when _iomap_write_allocate needs more space than we reserved.  Eryu Guan
+observed this happening on generic/224 when sunit/swidth were set.
 
->  fs/xfs/libxfs/xfs_bmap.c | 14 ++++++--------
->  1 file changed, 6 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 98f490b..1a0fee4 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4145,12 +4145,11 @@ xfs_bmapi_read(
->  	struct xfs_mount	*mp = ip->i_mount;
->  	struct xfs_ifork	*ifp;
->  	struct xfs_bmbt_irec	got;
-> -	struct xfs_bmbt_irec	prev;
->  	xfs_fileoff_t		obno;
->  	xfs_fileoff_t		end;
-> -	xfs_extnum_t		lastx;
-> +	xfs_extnum_t		idx;
->  	int			error;
-> -	int			eof;
-> +	bool			eof = false;
->  	int			n = 0;
->  	int			whichfork = xfs_bmapi_whichfork(flags);
->  
-> @@ -4190,7 +4189,8 @@ xfs_bmapi_read(
->  			return error;
->  	}
->  
-> -	xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got, &prev);
-> +	if (!xfs_iext_lookup_extent(ip, ifp, bno, &idx, &got))
-> +		eof = true;
->  	end = bno + len;
->  	obno = bno;
->  
-> @@ -4221,10 +4221,8 @@ xfs_bmapi_read(
->  			break;
->  
->  		/* Else go on to the next record. */
-> -		if (++lastx < xfs_iext_count(ifp))
-> -			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, lastx), &got);
-> -		else
-> -			eof = 1;
-> +		if (!xfs_iext_get_extent(ifp, ++idx, &got))
-> +			eof = true;
->  	}
->  	*nmap = n;
->  	return 0;
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reported-by: Eryu Guan <eguan@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 5c3c4dd14735..00188f559c8d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -49,6 +49,7 @@
+ #include "xfs_rmap.h"
+ #include "xfs_ag_resv.h"
+ #include "xfs_refcount.h"
++#include "xfs_rmap_btree.h"
+ 
+ 
+ kmem_zone_t		*xfs_bmap_free_item_zone;
+@@ -190,8 +191,12 @@ xfs_bmap_worst_indlen(
+ 	int		maxrecs;	/* maximum record count at this level */
+ 	xfs_mount_t	*mp;		/* mount structure */
+ 	xfs_filblks_t	rval;		/* return value */
++	xfs_filblks_t   orig_len;
+ 
+ 	mp = ip->i_mount;
++
++	/* Calculate the worst-case size of the bmbt. */
++	orig_len = len;
+ 	maxrecs = mp->m_bmap_dmxr[0];
+ 	for (level = 0, rval = 0;
+ 	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
+@@ -199,12 +204,20 @@ xfs_bmap_worst_indlen(
+ 		len += maxrecs - 1;
+ 		do_div(len, maxrecs);
+ 		rval += len;
+-		if (len == 1)
+-			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
++		if (len == 1) {
++			rval += XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
+ 				level - 1;
++			break;
++		}
+ 		if (level == 0)
+ 			maxrecs = mp->m_bmap_dmxr[1];
+ 	}
++
++	/* Calculate the worst-case size of the rmapbt. */
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		rval += 1 + xfs_rmapbt_calc_size(mp, orig_len) +
++				mp->m_rmap_maxlevels;
++
+ 	return rval;
+ }
+ 
+-- 
+2.8.0.rc3
+
