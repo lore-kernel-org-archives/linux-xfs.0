@@ -1,85 +1,320 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:34279 "EHLO
-        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752415AbcKPBBS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Nov 2016 20:01:18 -0500
-Received: by mail-pf0-f175.google.com with SMTP id c4so27158999pfb.1
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Nov 2016 17:01:17 -0800 (PST)
-From: Kyle Brown <kyle.brown@coreos.com>
-Subject: xfs hangup
-Message-ID: <80971623-820b-b53d-abdf-01ddbb742498@coreos.com>
-Date: Tue, 15 Nov 2016 17:01:15 -0800
+Received: from mx1.redhat.com ([209.132.183.28]:37592 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S941350AbcKQRjU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Nov 2016 12:39:20 -0500
+Date: Thu, 17 Nov 2016 22:00:19 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] generic/391: check inode metadata on f{data}sync after
+ power-cut
+Message-ID: <20161117140019.GA27776@eguan.usersys.redhat.com>
+References: <20161117032753.69315-1-jaegeuk@kernel.org>
+ <20161117083527.GY27776@eguan.usersys.redhat.com>
+ <20161117125658.GA49658@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161117125658.GA49658@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: luis.pabon@coreos.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Jaegeuk Kim <jaegeuk@kernel.org>, fstests@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
 
-Hello, 
+On Thu, Nov 17, 2016 at 07:56:58AM -0500, Brian Foster wrote:
+> On Thu, Nov 17, 2016 at 04:35:27PM +0800, Eryu Guan wrote:
+> > [cc'ed linux-xfs for inputs on a flush log issue]
+> > 
+> > On Wed, Nov 16, 2016 at 07:27:53PM -0800, Jaegeuk Kim wrote:
+> > > This patch adds tests/generic/391 to test fsync and fdatasync with power-cuts.
+> > > 
+> > > The rule to check is:
+> > > 1) fsync should guarantee all the inode metadata after power-cut,
+> > > 2) fdatasync should guarantee i_size and i_blocks at least after power-cut.
+> > > 
+> > > Suggested-by: Chao Yu <yuchao0@huawei.com>
+> > > Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+> > > ---
+> > >  tests/generic/391     | 125 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/generic/391.out |  11 +++++
+> > >  tests/generic/group   |   1 +
+> > >  3 files changed, 137 insertions(+)
+> > >  create mode 100644 tests/generic/391
+> > >  create mode 100644 tests/generic/391.out
+> > > 
+> > > diff --git a/tests/generic/391 b/tests/generic/391
+> > > new file mode 100644
+> > > index 0000000..17c3fd3
+> > > --- /dev/null
+> > > +++ b/tests/generic/391
+> > > @@ -0,0 +1,125 @@
+> > > +#! /bin/bash
+> > > +# FS QA Test 391
+> > > +#
+> > > +# Test inode's metadata after fsync or fdatasync calls.
+> > > +# In the case of fsync, filesystem should recover all the inode metadata, while
+> > > +# recovering i_blocks and i_size at least for fdatasync.
+> > > +#
+> > > +#-----------------------------------------------------------------------
+> > > +# Copyright (c) 2016 Jaegeuk Kim.  All Rights Reserved.
+> > > +#
+> > > +# This program is free software; you can redistribute it and/or
+> > > +# modify it under the terms of the GNU General Public License as
+> > > +# published by the Free Software Foundation.
+> > > +#
+> > > +# This program is distributed in the hope that it would be useful,
+> > > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > > +# GNU General Public License for more details.
+> > > +#
+> > > +# You should have received a copy of the GNU General Public License
+> > > +# along with this program; if not, write the Free Software Foundation,
+> > > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > > +#-----------------------------------------------------------------------
+> > > +#
+> > > +
+> > > +seq=`basename $0`
+> > > +seqres=$RESULT_DIR/$seq
+> > > +echo "QA output created by $seq"
+> > > +
+> > > +here=`pwd`
+> > > +tmp=/tmp/$$
+> > > +status=1	# failure is the default!
+> > > +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> > 
+> > Better to follow the template and other tests on how to do cleanup, i.e.
+> > trap _cleanup on exit and do real cleanups in it. e.g.
+> > 
+> > trap "_cleanup; exit \$status" 0 1 2 3 15
+> > 
+> > _cleanup()
+> > {
+> > 	cd /
+> > 	rm -f $tmp.*
+> > }
+> > 
+> > Not a big deal, but it's better to maintain consistency :)
+> > 
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/rc
+> > > +. ./common/filter
+> > > +. ./common/punch
+> > > +
+> > > +# real QA test starts here
+> > > +_supported_fs generic
+> > > +_supported_os Linux
+> > > +
+> > > +rm -f $seqres.full
+> > > +_require_scratch
+> > > +_require_scratch_shutdown
+> > > +_require_xfs_io_command "fpunch"
+> > > +
+> > > +_scratch_mkfs >/dev/null 2>&1
+> > > +_scratch_mount
+> > > +
+> > > +testfile=$SCRATCH_MNT/testfile
+> > > +
+> > > +# check inode metadata after shutdown
+> > > +_check_inode_metadata()
+> > 
+> > No need to name local functions with the leading "_", that's for global
+> > helper functions.
+> > 
+> > > +{
+> > > +	src/godown $SCRATCH_MNT >> $seqres.full
+> > > +	$XFS_IO_PROG -r -c "stat -v" $1 >$tmp.before
+> > 
+> > Shouldn't we call godown *after* xfs_io -c stat? I saw EIO on this
+> > xfs_io command and all sub-tests reported stat diff.
+> > 
+> 
+> Yeah.. I haven't run the test, but I would expect pretty much anything
+> to return an error after an fs shutdown.
+> 
+> > And perhaps we need to flush the log on godown for XFS? i.e.
+> > 
+> > src/godown -f $SCRATCH_MNT >> $seqres.full
+> > 
+> 
+> I don't think this is necessary. The semantics of fsync() dictate that
+> the fs do what is necessary to make the file persistent on disk. This
+> means it is the fs responsibility to ensure the changes are logged on
+> disk. Indeed, xfs_file_fsync() calls _xfs_log_force_lsn() to flush the
+> log up to the most recent LSN that covered the inode in question.
+> 
+> > Otherwise XFS fails all the "1024" & fsync tests (after I fixed the
+> > godown & xfs_io order locally), fdatasync tests are fine.
+> > 
+> > @@ -1,8 +1,16 @@
+> >  QA output created by 391
+> >  ==== i_size 1024 test with fsync ====
+> > +6c6
+> > +< stat.blocks = 8200
+> > +---
+> > +> stat.blocks = 16256
+> >  ==== i_size 4096 test with fsync ====
+> >  ==== i_time test with fsync ====
+> >  ==== fpunch 1024 test with fsync ====
+> > +6c6
+> > +< stat.blocks = 8208
+> > +---
+> > +> stat.blocks = 24576
+> >  ==== fpunch 4096 test with fsync ====
+> > 
+> > Not sure if this is the expected behavior on XFS. cc'ed xfs list for
+> > some inputs.
+> > 
+> 
+> Am I reading this correctly that you're seeing more blocks than
+> expected? If so, preallocation perhaps?
 
-Reaching out for advice as I am running into a problem where glusterfsd gets blocked due to an xfs hang up while writing to the underneath block device. The system often ends up with high load averages causing high latencies at the client side. Power cycling the node causes the filesystem to start recovery from journal.  Here is the stacktrace: 
+Yes, you're correct, I see more blocks after godown than before godown.
 
-```
-[404917.204050] INFO: task glusterfsd:50485 blocked for more than 120 seconds.
-[404917.212111]       Not tainted 4.2.2-coreos-r2 #2
-[404917.217638] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[404917.226940] glusterfsd      D ffff88103f755340     0 50485  45406 0x00000080
-[404917.235222]  ffff881ce933bcf8 0000000000000086 ffff882038bd8000 ffff881f7d4fd640
-[404917.244098]  ffff881ce933bce8 ffff881ce933c000 ffff880c81c20b80 ffff880fcfb231c0
-[404917.253018]  0000000000020acc 0000000000000000 ffff881ce933bd18 ffffffff81527c87
-[404917.261986] Call Trace:
-[404917.265060]  [<ffffffff81527c87>] schedule+0x37/0x80
-[404917.270953]  [<ffffffffa051dda2>] uuid_equal+0x452/0x1690 [xfs]
-[404917.277943]  [<ffffffffa051df15>] uuid_equal+0x5c5/0x1690 [xfs]
-[404917.284922]  [<ffffffffa0521572>] xfs_log_reserve+0xb2/0x180 [xfs]
-[404917.292230]  [<ffffffffa051c413>] xfs_trans_reserve+0x173/0x1d0 [xfs]
-[404917.299818]  [<ffffffffa051c1fa>] ? _xfs_trans_alloc+0x3a/0xa0 [xfs]
-[404917.307283]  [<ffffffffa050ef75>] xfs_iomap_write_unwritten+0x545/0x10b0 [xfs]
-[404917.315995]  [<ffffffff811d9a78>] touch_atime+0x88/0xa0
-[404917.322193]  [<ffffffff811c333c>] SyS_readlink+0xdc/0x100
-[404917.328606]  [<ffffffff81021e93>] ? syscall_trace_leave+0x93/0xf0
-[404917.335810]  [<ffffffff8152bbae>] entry_SYSCALL_64_fastpath+0x12/0x71
-[404917.343347] INFO: task glusterfsd:71708 blocked for more than 120 seconds.
-[404917.351381]       Not tainted 4.2.2-coreos-r2 #2
-[404917.356905] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[404917.366264] glusterfsd      D ffff88203f075340     0 71708  45406 0x00000080
-[404917.374572]  ffff88001b36bbf8 0000000000000086 ffff88203801d640 ffff881ddae51cc0
-[404917.383484]  ffffffff00000000 ffff88001b36c000 ffff8810187f4170 ffff880fcfb231c0
-[404917.392381]  00000000000ed174 0000000000000034 ffff88001b36bc18 ffffffff81527c87
-[404917.401283] Call Trace:
-[404917.404337]  [<ffffffff81527c87>] schedule+0x37/0x80
-[404917.410265]  [<ffffffffa051dda2>] uuid_equal+0x452/0x1690 [xfs]
-[404917.417232]  [<ffffffffa051df15>] uuid_equal+0x5c5/0x1690 [xfs]
-[404917.424204]  [<ffffffffa0521572>] xfs_log_reserve+0xb2/0x180 [xfs]
-[404917.431463]  [<ffffffffa051c413>] xfs_trans_reserve+0x173/0x1d0 [xfs]
-[404917.439059]  [<ffffffffa051c1fa>] ? _xfs_trans_alloc+0x3a/0xa0 [xfs]
-[404917.446595]  [<ffffffffa0512a5c>] xfs_create+0x15c/0x5d0 [xfs]
-[404917.453493]  [<ffffffff81217fa9>] ? posix_acl_create+0x119/0x160
-[404917.460582]  [<ffffffffa050f89d>] xfs_iomap_write_unwritten+0xe6d/0x10b0 [xfs]
-[404917.469245]  [<ffffffffa050fa94>] xfs_iomap_write_unwritten+0x1064/0x10b0 [xfs]
-[404917.477996]  [<ffffffffa050fab6>] xfs_iomap_write_unwritten+0x1086/0x10b0 [xfs]
-[404917.486830]  [<ffffffff811c936b>] vfs_mkdir+0xbb/0x150
-[404917.492975]  [<ffffffff811ce47b>] SyS_mkdir+0x6b/0xc0
-[404917.498981]  [<ffffffff81021e93>] ? syscall_trace_leave+0x93/0xf0
-[404917.506130]  [<ffffffff8152bbae>] entry_SYSCALL_64_fastpath+0x12/0x71
-```
+I tried adding "-o allocsize=4k" to MOUNT_OPTIONS, it works but not
+always. e.g. on a host with sunit/swidth reported from underlying block
+device, test still fails.
 
+# xfs_info /mnt/xfs
+meta-data=/dev/mapper/systemvg-testlv2 isize=512    agcount=16, agsize=245696 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=3931136, imaxpct=25
+         =                       sunit=64     swidth=192 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=64 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-The hardware is a direct attached device with RAID level 0. The virtual device is built through hardware raid controller. HBA type is DELL PERC 317 mini. The command used to create the file system was: 
+Part of the test diff:
+ ==== i_size 1024 test with fsync ====
++6c6
++< stat.blocks = 8200
++---
++> stat.blocks = 8704
 
-```
-mkfs.xfs -i size=512 -n size=8192 -d su=64k,sw=4 /dev/sdb1
-```
+On the other hand, adding "-f" to godown always works for me.
 
+Thanks,
+Eryu
 
-Kernel version is 4.2.2. No kernel tuning has been attempted at this time. Any suggestions to tune or provide additional details to debug xfs would be greatly appreciated. 
-
-
-
-Cheers,
-
-Kyle Brown
-
+> 
+> Brian
+> 
+> > > +	_scratch_cycle_mount
+> > > +	$XFS_IO_PROG -r -c "stat -v" $1 >$tmp.after
+> > > +	diff $tmp.before $tmp.after >>$tmp.diff
+> > 
+> > I think $tmp.diff should be overwritten on each sub-test.
+> > 
+> > > +
+> > > +	if [ "$2" = "fdatasync" ]; then
+> > > +		cat $tmp.diff | grep stat.size
+> > > +		cat $tmp.diff | grep stat.blocks
+> > > +	else
+> > > +		cat $tmp.diff
+> > > +	fi
+> > > +	cat $tmp.before >> $seqres.full
+> > > +	cat $tmp.after >> $seqres.full
+> > > +}
+> > > +
+> > > +# append XX KB with f{data}sync, followed by power-cut
+> > > +_test_i_size()
+> > > +{
+> > > +	echo "==== i_size $2 test with $1 ===="
+> > 
+> > I find it's much easier to read the $seqres.full log if we append these
+> > kind of logs to $seqres.full too, e.g.
+> > 
+> > 	echo "==== i_size $2 test with $1 ====" | tee -a $seqres.full
+> > 
+> > Thanks,
+> > Eryu
+> > 
+> > > +	$XFS_IO_PROG -f -c "pwrite 0 4M"	\
+> > > +			-c "fsync"		\
+> > > +			-c "pwrite 4M $2"	\
+> > > +			-c "$1"			\
+> > > +			$testfile >/dev/null
+> > > +	_check_inode_metadata $testfile $1
+> > > +}
+> > > +
+> > > +# update times with f{data}sync, followed by power-cut
+> > > +_test_i_time()
+> > > +{
+> > > +	echo "==== i_time test with $1 ===="
+> > > +	$XFS_IO_PROG -f -c "pwrite 0 4M"	\
+> > > +			-c "fsync"		\
+> > > +			$testfile >/dev/null
+> > > +	sleep 1
+> > > +	touch $testfile
+> > > +	$XFS_IO_PROG -c "$1"			\
+> > > +			$testfile >/dev/null
+> > > +	_check_inode_metadata $testfile $1
+> > > +}
+> > > +
+> > > +# punch XX KB with f{data}sync, followed by power-cut
+> > > +_test_punch()
+> > > +{
+> > > +	echo "==== fpunch $2 test with $1 ===="
+> > > +	$XFS_IO_PROG -f -c "pwrite 0 4202496"	\
+> > > +			-c "fsync"		\
+> > > +			-c "fpunch 4194304 $2"\
+> > > +			-c "$1"			\
+> > > +			$testfile >/dev/null
+> > > +
+> > > +	_check_inode_metadata $testfile $1
+> > > +}
+> > > +
+> > > +for i in fsync fdatasync
+> > > +do
+> > > +	_test_i_size $i 1024
+> > > +	_test_i_size $i 4096
+> > > +	_test_i_time $i
+> > > +	_test_punch $i 1024
+> > > +	_test_punch $i 4096
+> > > +done
+> > > +
+> > > +rm -f $tmp.*
+> > > +
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/generic/391.out b/tests/generic/391.out
+> > > new file mode 100644
+> > > index 0000000..7c66776
+> > > --- /dev/null
+> > > +++ b/tests/generic/391.out
+> > > @@ -0,0 +1,11 @@
+> > > +QA output created by 391
+> > > +==== i_size 1024 test with fsync ====
+> > > +==== i_size 4096 test with fsync ====
+> > > +==== i_time test with fsync ====
+> > > +==== fpunch 1024 test with fsync ====
+> > > +==== fpunch 4096 test with fsync ====
+> > > +==== i_size 1024 test with fdatasync ====
+> > > +==== i_size 4096 test with fdatasync ====
+> > > +==== i_time test with fdatasync ====
+> > > +==== fpunch 1024 test with fdatasync ====
+> > > +==== fpunch 4096 test with fdatasync ====
+> > > diff --git a/tests/generic/group b/tests/generic/group
+> > > index 08007d7..9de3415 100644
+> > > --- a/tests/generic/group
+> > > +++ b/tests/generic/group
+> > > @@ -392,3 +392,4 @@
+> > >  387 auto clone
+> > >  388 auto log metadata
+> > >  389 auto quick acl
+> > > +391 auto quick metadata
+> > > -- 
+> > > 2.8.3
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
