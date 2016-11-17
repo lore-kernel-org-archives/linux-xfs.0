@@ -1,273 +1,222 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56664 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932627AbcKQScA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Nov 2016 13:32:00 -0500
-Date: Thu, 17 Nov 2016 10:31:55 -0800
-From: Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: Re: [PATCH] generic/391: check inode metadata on f{data}sync after
- power-cut
-Message-ID: <20161117183155.GC74211@jaegeuk>
-References: <20161117032753.69315-1-jaegeuk@kernel.org>
- <20161117083527.GY27776@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161117083527.GY27776@eguan.usersys.redhat.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:65460 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752338AbcKQX5H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2016 18:57:07 -0500
+Received: from disappointment.disaster.area ([192.168.1.110] helo=disappointment)
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <dave@fromorbit.com>)
+        id 1c7WWq-0008NS-PY
+        for linux-xfs@vger.kernel.org; Fri, 18 Nov 2016 10:55:40 +1100
+Received: from dave by disappointment with local (Exim 4.87)
+        (envelope-from <dave@disappointment.disaster>)
+        id 1c7WWr-00020N-NV
+        for linux-xfs@vger.kernel.org; Fri, 18 Nov 2016 10:55:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 4/4] xfs: defer indirect delalloc rmap reservations
+Date: Fri, 18 Nov 2016 10:55:35 +1100
+Message-Id: <1479426935-7112-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1479426935-7112-1-git-send-email-david@fromorbit.com>
+References: <20161117213224.GD28177@dastard>
+ <1479426935-7112-1-git-send-email-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Hi,
+From: Dave Chinner <dchinner@redhat.com>
 
-Thank you for the review.
-Yup, I'll submit v2 with changes for the comments except log flush. ;)
+When we do rmap additions for delalloc extents, we need to ensure we
+have space reserved for them. We do this by keeping the space
+required in the indirect length associated with a delalloc extent.
 
-Thanks,
+However, when we allocate the extent, we immediately release the
+unused portion of the indlen reservation, and hence when we come to
+needing it when processing the deferred rmap btree insertion, it's
+no longer available. Because it gets returned to the global free
+space pool, other delalloc reservations can take it before we use
+it, resulting in having no space available to fix up the free list
+to the correct length before doing the rmap insertion. This results
+in an insertion failure and shutdown.
 
-On Thu, Nov 17, 2016 at 04:35:27PM +0800, Eryu Guan wrote:
-> [cc'ed linux-xfs for inputs on a flush log issue]
-> 
-> On Wed, Nov 16, 2016 at 07:27:53PM -0800, Jaegeuk Kim wrote:
-> > This patch adds tests/generic/391 to test fsync and fdatasync with power-cuts.
-> > 
-> > The rule to check is:
-> > 1) fsync should guarantee all the inode metadata after power-cut,
-> > 2) fdatasync should guarantee i_size and i_blocks at least after power-cut.
-> > 
-> > Suggested-by: Chao Yu <yuchao0@huawei.com>
-> > Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
-> > ---
-> >  tests/generic/391     | 125 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/391.out |  11 +++++
-> >  tests/generic/group   |   1 +
-> >  3 files changed, 137 insertions(+)
-> >  create mode 100644 tests/generic/391
-> >  create mode 100644 tests/generic/391.out
-> > 
-> > diff --git a/tests/generic/391 b/tests/generic/391
-> > new file mode 100644
-> > index 0000000..17c3fd3
-> > --- /dev/null
-> > +++ b/tests/generic/391
-> > @@ -0,0 +1,125 @@
-> > +#! /bin/bash
-> > +# FS QA Test 391
-> > +#
-> > +# Test inode's metadata after fsync or fdatasync calls.
-> > +# In the case of fsync, filesystem should recover all the inode metadata, while
-> > +# recovering i_blocks and i_size at least for fdatasync.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2016 Jaegeuk Kim.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> 
-> Better to follow the template and other tests on how to do cleanup, i.e.
-> trap _cleanup on exit and do real cleanups in it. e.g.
-> 
-> trap "_cleanup; exit \$status" 0 1 2 3 15
-> 
-> _cleanup()
-> {
-> 	cd /
-> 	rm -f $tmp.*
-> }
-> 
-> Not a big deal, but it's better to maintain consistency :)
-> 
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +. ./common/punch
-> > +
-> > +# real QA test starts here
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +
-> > +rm -f $seqres.full
-> > +_require_scratch
-> > +_require_scratch_shutdown
-> > +_require_xfs_io_command "fpunch"
-> > +
-> > +_scratch_mkfs >/dev/null 2>&1
-> > +_scratch_mount
-> > +
-> > +testfile=$SCRATCH_MNT/testfile
-> > +
-> > +# check inode metadata after shutdown
-> > +_check_inode_metadata()
-> 
-> No need to name local functions with the leading "_", that's for global
-> helper functions.
-> 
-> > +{
-> > +	src/godown $SCRATCH_MNT >> $seqres.full
-> > +	$XFS_IO_PROG -r -c "stat -v" $1 >$tmp.before
-> 
-> Shouldn't we call godown *after* xfs_io -c stat? I saw EIO on this
-> xfs_io command and all sub-tests reported stat diff.
-> 
-> And perhaps we need to flush the log on godown for XFS? i.e.
-> 
-> src/godown -f $SCRATCH_MNT >> $seqres.full
-> 
-> Otherwise XFS fails all the "1024" & fsync tests (after I fixed the
-> godown & xfs_io order locally), fdatasync tests are fine.
-> 
-> @@ -1,8 +1,16 @@
->  QA output created by 391
->  ==== i_size 1024 test with fsync ====
-> +6c6
-> +< stat.blocks = 8200
-> +---
-> +> stat.blocks = 16256
->  ==== i_size 4096 test with fsync ====
->  ==== i_time test with fsync ====
->  ==== fpunch 1024 test with fsync ====
-> +6c6
-> +< stat.blocks = 8208
-> +---
-> +> stat.blocks = 24576
->  ==== fpunch 4096 test with fsync ====
-> 
-> Not sure if this is the expected behavior on XFS. cc'ed xfs list for
-> some inputs.
-> 
-> > +	_scratch_cycle_mount
-> > +	$XFS_IO_PROG -r -c "stat -v" $1 >$tmp.after
-> > +	diff $tmp.before $tmp.after >>$tmp.diff
-> 
-> I think $tmp.diff should be overwritten on each sub-test.
-> 
-> > +
-> > +	if [ "$2" = "fdatasync" ]; then
-> > +		cat $tmp.diff | grep stat.size
-> > +		cat $tmp.diff | grep stat.blocks
-> > +	else
-> > +		cat $tmp.diff
-> > +	fi
-> > +	cat $tmp.before >> $seqres.full
-> > +	cat $tmp.after >> $seqres.full
-> > +}
-> > +
-> > +# append XX KB with f{data}sync, followed by power-cut
-> > +_test_i_size()
-> > +{
-> > +	echo "==== i_size $2 test with $1 ===="
-> 
-> I find it's much easier to read the $seqres.full log if we append these
-> kind of logs to $seqres.full too, e.g.
-> 
-> 	echo "==== i_size $2 test with $1 ====" | tee -a $seqres.full
-> 
-> Thanks,
-> Eryu
-> 
-> > +	$XFS_IO_PROG -f -c "pwrite 0 4M"	\
-> > +			-c "fsync"		\
-> > +			-c "pwrite 4M $2"	\
-> > +			-c "$1"			\
-> > +			$testfile >/dev/null
-> > +	_check_inode_metadata $testfile $1
-> > +}
-> > +
-> > +# update times with f{data}sync, followed by power-cut
-> > +_test_i_time()
-> > +{
-> > +	echo "==== i_time test with $1 ===="
-> > +	$XFS_IO_PROG -f -c "pwrite 0 4M"	\
-> > +			-c "fsync"		\
-> > +			$testfile >/dev/null
-> > +	sleep 1
-> > +	touch $testfile
-> > +	$XFS_IO_PROG -c "$1"			\
-> > +			$testfile >/dev/null
-> > +	_check_inode_metadata $testfile $1
-> > +}
-> > +
-> > +# punch XX KB with f{data}sync, followed by power-cut
-> > +_test_punch()
-> > +{
-> > +	echo "==== fpunch $2 test with $1 ===="
-> > +	$XFS_IO_PROG -f -c "pwrite 0 4202496"	\
-> > +			-c "fsync"		\
-> > +			-c "fpunch 4194304 $2"\
-> > +			-c "$1"			\
-> > +			$testfile >/dev/null
-> > +
-> > +	_check_inode_metadata $testfile $1
-> > +}
-> > +
-> > +for i in fsync fdatasync
-> > +do
-> > +	_test_i_size $i 1024
-> > +	_test_i_size $i 4096
-> > +	_test_i_time $i
-> > +	_test_punch $i 1024
-> > +	_test_punch $i 4096
-> > +done
-> > +
-> > +rm -f $tmp.*
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/391.out b/tests/generic/391.out
-> > new file mode 100644
-> > index 0000000..7c66776
-> > --- /dev/null
-> > +++ b/tests/generic/391.out
-> > @@ -0,0 +1,11 @@
-> > +QA output created by 391
-> > +==== i_size 1024 test with fsync ====
-> > +==== i_size 4096 test with fsync ====
-> > +==== i_time test with fsync ====
-> > +==== fpunch 1024 test with fsync ====
-> > +==== fpunch 4096 test with fsync ====
-> > +==== i_size 1024 test with fdatasync ====
-> > +==== i_size 4096 test with fdatasync ====
-> > +==== i_time test with fdatasync ====
-> > +==== fpunch 1024 test with fdatasync ====
-> > +==== fpunch 4096 test with fdatasync ====
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index 08007d7..9de3415 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -392,3 +392,4 @@
-> >  387 auto clone
-> >  388 auto log metadata
-> >  389 auto quick acl
-> > +391 auto quick metadata
-> > -- 
-> > 2.8.3
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To avoid this problem, rather than releasing the unused indlen
+reservation, store it in the transaction to be released when the
+transaction is finally committed. When we roll a transaction during
+defer ops processing, we transfer the unused block reservation to
+the new transaction before we commit the old one. This keeps the
+unused reservation local to the deferred ops context. On final
+commit, the unused reservation space can be returned to the global
+pool.
+
+The final piece of the puzzle is hooking this up to the free list
+fixup that ensures we have enough blocks on the free list for the
+rmap insert. In this case, ensure that xfs_rmapbt_alloc_block()
+always decrements a block from the reservation on the transaction.
+This will track the number of blocks we've actually consumed from
+the free list for the rmapbt, hence ensuring that we accurately
+account of those blocks when the final transaction commit occurs.
+
+Because we now hold the delalloc rmapbt block reservation until
+we've done all the rmapbt block allocation, we should not see ENOSPC
+problems as a result of the AGFL being emptied during rmap btree
+insertion operations.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c | 14 ++++++++++++++
+ fs/xfs/libxfs/xfs_bmap.c  | 16 ++++++++++++----
+ fs/xfs/xfs_trans.c        | 28 ++++++++++++++++++++++++++++
+ fs/xfs/xfs_trans.h        |  1 +
+ 4 files changed, 55 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index a5a9d8360e74..e835bf24a85b 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2228,6 +2228,20 @@ xfs_alloc_fix_freelist(
+ 							agflbp, bno, 0);
+ 			if (error)
+ 				goto out_agflbp_relse;
++
++			/*
++			 * If we've just done a delayed allocation and now we
++			 * are processing a deferred metadata update (such as an
++			 * rmapbt update), we'll have a space reservation for
++			 * the rmapbt blocks that may be needed. These are
++			 * allocated from the freelist, so account for them here
++			 * when we refill the AGFL. We've held the AGF locked
++			 * across the defered transactions, so this should only
++			 * be refilling blocks we consumed from the AGFL in the
++			 * preceeding transaction.
++			 */
++			if (tp->t_blk_deferred)
++				tp->t_blk_deferred--;
+ 		}
+ 	}
+ 	xfs_trans_brelse(tp, agflbp);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 6211b4b5e826..f1db9a03e4c4 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2203,10 +2203,19 @@ xfs_bmap_add_extent_delay_real(
+ 		temp2 = xfs_bmap_worst_indlen(bma->ip, temp2);
+ 		diff = (int)(temp + temp2 - startblockval(PREV.br_startblock) -
+ 			(bma->cur ? bma->cur->bc_private.b.allocated : 0));
++
+ 		if (diff > 0) {
++			/*
++			 * XXX (dgc): Ouch! Pulling more blocks from the free pool
++			 * during allocation during delalloc split. This will
++			 * fail at ENOSPC and it screws up rmapbt space
++			 * accounting. We need to know when this happens so
++			 * we can isolate the typical causes of reservation
++			 * underruns so that they never happen in production.
++			 */
++			ASSERT(0);
+ 			error = xfs_mod_fdblocks(bma->ip->i_mount,
+ 						 -((int64_t)diff), false);
+-			ASSERT(!error);
+ 			if (error)
+ 				goto done;
+ 		}
+@@ -2261,8 +2270,7 @@ xfs_bmap_add_extent_delay_real(
+ 			temp += bma->cur->bc_private.b.allocated;
+ 		ASSERT(temp <= da_old);
+ 		if (temp < da_old)
+-			xfs_mod_fdblocks(bma->ip->i_mount,
+-					(int64_t)(da_old - temp), false);
++			bma->tp->t_blk_deferred += (int64_t)(da_old - temp);
+ 	}
+ 
+ 	/* clear out the allocated field, done with it now in any case. */
+@@ -5437,7 +5445,7 @@ xfs_bmap_del_extent(
+ 	 */
+ 	ASSERT(da_old >= da_new);
+ 	if (da_old > da_new)
+-		xfs_mod_fdblocks(mp, (int64_t)(da_old - da_new), false);
++		tp->t_blk_deferred += (int64_t)(da_old - da_new);
+ done:
+ 	*logflagsp = flags;
+ 	return error;
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 70f42ea86dfb..0728ff7a04ab 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -103,6 +103,16 @@ xfs_trans_dup(
+ 	tp->t_rtx_res = tp->t_rtx_res_used;
+ 	ntp->t_pflags = tp->t_pflags;
+ 
++	/*
++	 * Transfer deferred block reservations to new transaction so the remain
++	 * available to the ongoing deferred ops processing. We clear the
++	 * existing transaction count so that the deferred block reservation is
++	 * not released when that transaction is committed (i.e. it's not a
++	 * regrantable reservation).
++	 */
++	ntp->t_blk_deferred = tp->t_blk_deferred;
++	tp->t_blk_deferred = 0;
++
+ 	xfs_trans_dup_dqinfo(tp, ntp);
+ 
+ 	atomic_inc(&tp->t_mountp->m_active_trans);
+@@ -680,6 +690,21 @@ xfs_trans_unreserve_and_mod_sb(
+ }
+ 
+ /*
++ * Release unused defered block reservations back to the global free space pool.
++ * These blocks came from the in-core counter, so return them there.
++ */
++static void
++xfs_trans_release_deferred_blocks(
++	struct xfs_trans	*tp)
++{
++	ASSERT(tp->t_blk_deferred >= 0);
++	if (!tp->t_blk_deferred)
++		return;
++	xfs_mod_fdblocks(tp->t_mountp, tp->t_blk_deferred,
++			 !!(tp->t_flags & XFS_TRANS_RESERVE));
++}
++
++/*
+  * Add the given log item to the transaction's list of log items.
+  *
+  * The log item will now point to its new descriptor with its li_desc field.
+@@ -908,6 +933,7 @@ __xfs_trans_commit(
+ 	/*
+ 	 * If we need to update the superblock, then do it now.
+ 	 */
++	xfs_trans_release_deferred_blocks(tp);
+ 	if (tp->t_flags & XFS_TRANS_SB_DIRTY)
+ 		xfs_trans_apply_sb_deltas(tp);
+ 	xfs_trans_apply_dquot_deltas(tp);
+@@ -931,6 +957,7 @@ __xfs_trans_commit(
+ 	return error;
+ 
+ out_unreserve:
++	xfs_trans_release_deferred_blocks(tp);
+ 	xfs_trans_unreserve_and_mod_sb(tp);
+ 
+ 	/*
+@@ -991,6 +1018,7 @@ xfs_trans_cancel(
+ 			ASSERT(!(lidp->lid_item->li_type == XFS_LI_EFD));
+ 	}
+ #endif
++	xfs_trans_release_deferred_blocks(tp);
+ 	xfs_trans_unreserve_and_mod_sb(tp);
+ 	xfs_trans_unreserve_and_mod_dquots(tp);
+ 
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 61b7fbdd3ebd..6126e6fb9f5c 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -132,6 +132,7 @@ typedef struct xfs_trans {
+ 	int64_t			t_rblocks_delta;/* superblock rblocks change */
+ 	int64_t			t_rextents_delta;/* superblocks rextents chg */
+ 	int64_t			t_rextslog_delta;/* superblocks rextslog chg */
++	int64_t			t_blk_deferred;	/* blocks for deferred ops */
+ 	struct list_head	t_items;	/* log item descriptors */
+ 	struct list_head	t_busy;		/* list of busy extents */
+ 	unsigned long		t_pflags;	/* saved process flags state */
+-- 
+2.8.0.rc3
+
