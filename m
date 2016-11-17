@@ -1,104 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32992 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49926 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750813AbcKQTHu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Nov 2016 14:07:50 -0500
-Date: Thu, 17 Nov 2016 14:07:23 -0500
+        id S934681AbcKQTMw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Nov 2016 14:12:52 -0500
+Date: Thu, 17 Nov 2016 14:12:50 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 09/14] xfs: cleanup xfs_reflink_find_cow_mapping
-Message-ID: <20161117190722.GK49658@bfoster.bfoster>
+Subject: Re: [PATCH 14/14] xfs: remove NULLEXTNUM
+Message-ID: <20161117191250.GP49658@bfoster.bfoster>
 References: <1479143565-30615-1-git-send-email-hch@lst.de>
- <1479143565-30615-10-git-send-email-hch@lst.de>
+ <1479143565-30615-15-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1479143565-30615-10-git-send-email-hch@lst.de>
+In-Reply-To: <1479143565-30615-15-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Nov 14, 2016 at 06:12:40PM +0100, Christoph Hellwig wrote:
-> Use xfs_iext_lookup_extent to look up the extent, drop a useless check,
-> drop a unneeded return value and clean up the general style a little bit.
+On Mon, Nov 14, 2016 at 06:12:45PM +0100, Christoph Hellwig wrote:
+> We only ever set a field to this constant for an impossible to reach
+> error case in xfs_bmap_search_extents.  That functions has been removed,
+> so we can remove the constant as well.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_aops.c    | 16 ++++++++--------
->  fs/xfs/xfs_reflink.c | 30 +++++++++---------------------
->  fs/xfs/xfs_reflink.h |  2 +-
->  3 files changed, 18 insertions(+), 30 deletions(-)
-> 
-...
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 35e02ce..6056fd1 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -427,37 +427,25 @@ bool
->  xfs_reflink_find_cow_mapping(
->  	struct xfs_inode		*ip,
->  	xfs_off_t			offset,
-> -	struct xfs_bmbt_irec		*imap,
-> -	bool				*need_alloc)
-> +	struct xfs_bmbt_irec		*imap)
-
-The comment above the function needs fixing as well. Otherwise:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  {
-> -	struct xfs_bmbt_irec		irec;
-> -	struct xfs_ifork		*ifp;
-> -	struct xfs_bmbt_rec_host	*gotp;
-> -	xfs_fileoff_t			bno;
-> +	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> +	xfs_fileoff_t			offset_fsb;
-> +	struct xfs_bmbt_irec		got;
->  	xfs_extnum_t			idx;
+>  fs/xfs/libxfs/xfs_bmap.c  | 2 +-
+>  fs/xfs/libxfs/xfs_types.h | 1 -
+>  2 files changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 856d98d..3ab68db 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4260,7 +4260,7 @@ xfs_bmapi_allocate(
+>  	if (bma->wasdel) {
+>  		bma->length = (xfs_extlen_t)bma->got.br_blockcount;
+>  		bma->offset = bma->got.br_startoff;
+> -		if (bma->idx != NULLEXTNUM && bma->idx) {
+> +		if (bma->idx) {
+>  			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1),
+>  					 &bma->prev);
+>  		}
+> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> index cf044c0..717909f 100644
+> --- a/fs/xfs/libxfs/xfs_types.h
+> +++ b/fs/xfs/libxfs/xfs_types.h
+> @@ -57,7 +57,6 @@ typedef __int64_t	xfs_sfiloff_t;	/* signed block number in a file */
 >  
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
->  	ASSERT(xfs_is_reflink_inode(ip));
+>  #define	NULLAGBLOCK	((xfs_agblock_t)-1)
+>  #define	NULLAGNUMBER	((xfs_agnumber_t)-1)
+> -#define	NULLEXTNUM	((xfs_extnum_t)-1)
 >  
-> -	/* Find the extent in the CoW fork. */
-> -	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> -	bno = XFS_B_TO_FSBT(ip->i_mount, offset);
-> -	gotp = xfs_iext_bno_to_ext(ifp, bno, &idx);
-> -	if (!gotp)
-> +	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
-> +	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got))
->  		return false;
-> -
-> -	xfs_bmbt_get_all(gotp, &irec);
-> -	if (bno >= irec.br_startoff + irec.br_blockcount ||
-> -	    bno < irec.br_startoff)
-> +	if (got.br_startoff > offset_fsb)
->  		return false;
->  
->  	trace_xfs_reflink_find_cow_mapping(ip, offset, 1, XFS_IO_OVERWRITE,
-> -			&irec);
-> -
-> -	/* If it's still delalloc, we must allocate later. */
-> -	*imap = irec;
-> -	*need_alloc = !!(isnullstartblock(irec.br_startblock));
-> -
-> +			&got);
-> +	*imap = got;
->  	return true;
->  }
->  
-> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> index 97ea9b4..cff5fc3 100644
-> --- a/fs/xfs/xfs_reflink.h
-> +++ b/fs/xfs/xfs_reflink.h
-> @@ -31,7 +31,7 @@ extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
->  extern int xfs_reflink_allocate_cow_range(struct xfs_inode *ip,
->  		xfs_off_t offset, xfs_off_t count);
->  extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
-> -		struct xfs_bmbt_irec *imap, bool *need_alloc);
-> +		struct xfs_bmbt_irec *imap);
->  extern int xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
->  		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
+>  #define NULLCOMMITLSN	((xfs_lsn_t)-1)
 >  
 > -- 
 > 2.1.4
