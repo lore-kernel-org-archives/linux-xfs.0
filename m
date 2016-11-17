@@ -1,79 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57894 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44552 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933728AbcKQRLF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Nov 2016 12:11:05 -0500
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4AFE57DCD3
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2016 16:35:17 +0000 (UTC)
-Received: from localhost (dhcp-12-157.nay.redhat.com [10.66.12.157])
-        by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uAHGZGEA010032
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2016 11:35:16 -0500
-Date: Fri, 18 Nov 2016 00:35:15 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: [BUG] dd doesn't return on ENOSPC and hang when fulfilling rmapbt XFS
-Message-ID: <20161117163515.GB27776@eguan.usersys.redhat.com>
+        id S1753058AbcKQSL4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Nov 2016 13:11:56 -0500
+Date: Thu, 17 Nov 2016 13:11:54 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 02/14] xfs: cleanup xfs_bmap_last_before
+Message-ID: <20161117181153.GD49658@bfoster.bfoster>
+References: <1479143565-30615-1-git-send-email-hch@lst.de>
+ <1479143565-30615-3-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <1479143565-30615-3-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+On Mon, Nov 14, 2016 at 06:12:33PM +0100, Christoph Hellwig wrote:
+> Rewrite the function using xfs_iext_lookup_extent and xfs_iext_get_extent,
+> and massage the flow into something easily understandable.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 64 ++++++++++++++++++++++++------------------------
+>  1 file changed, 32 insertions(+), 32 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 5c3c4dd..98f490b 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1523,44 +1523,44 @@ xfs_bmap_first_unused(
+>   */
+>  int						/* error */
+>  xfs_bmap_last_before(
+> -	xfs_trans_t	*tp,			/* transaction pointer */
+> -	xfs_inode_t	*ip,			/* incore inode */
+> -	xfs_fileoff_t	*last_block,		/* last block */
+> -	int		whichfork)		/* data or attr fork */
+> +	struct xfs_trans	*tp,		/* transaction pointer */
+> +	struct xfs_inode	*ip,		/* incore inode */
+> +	xfs_fileoff_t		*last_block,	/* last block */
+> +	int			whichfork)	/* data or attr fork */
+>  {
+> -	xfs_fileoff_t	bno;			/* input file offset */
+> -	int		eof;			/* hit end of file */
+> -	xfs_bmbt_rec_host_t *ep;		/* pointer to last extent */
+> -	int		error;			/* error return value */
+> -	xfs_bmbt_irec_t	got;			/* current extent value */
+> -	xfs_ifork_t	*ifp;			/* inode fork pointer */
+> -	xfs_extnum_t	lastx;			/* last extent used */
+> -	xfs_bmbt_irec_t	prev;			/* previous extent value */
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	struct xfs_bmbt_irec	got;
+> +	xfs_extnum_t		idx;
+> +	int			error;
+>  
+> -	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
+> -	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+> -	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
+> -	       return -EIO;
+> -	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
+> +	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
+> +	case XFS_DINODE_FMT_LOCAL:
+>  		*last_block = 0;
+>  		return 0;
+> +	case XFS_DINODE_FMT_BTREE:
+> +	case XFS_DINODE_FMT_EXTENTS:
+> +		break;
+> +	default:
+> +		return -EIO;
+>  	}
+> -	ifp = XFS_IFORK_PTR(ip, whichfork);
+> -	if (!(ifp->if_flags & XFS_IFEXTENTS) &&
+> -	    (error = xfs_iread_extents(tp, ip, whichfork)))
+> -		return error;
+> -	bno = *last_block - 1;
+> -	ep = xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got,
+> -		&prev);
+> -	if (eof || xfs_bmbt_get_startoff(ep) > bno) {
+> -		if (prev.br_startoff == NULLFILEOFF)
+> -			*last_block = 0;
+> -		else
+> -			*last_block = prev.br_startoff + prev.br_blockcount;
+> +
+> +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> +		error = xfs_iread_extents(tp, ip, whichfork);
+> +		if (error)
+> +			return error;
+>  	}
+> -	/*
+> -	 * Otherwise *last_block is already the right answer.
+> -	 */
+> +
+> +	if (xfs_iext_lookup_extent(ip, ifp, *last_block - 1, &idx, &got)) {
+> +		if (got.br_startoff <= *last_block - 1)
+> +			return 0;
+> +	}
+> +
+> +	if (xfs_iext_get_extent(ifp, idx - 1, &got)) {
 
-I hit a test hang in generic/224 when testing rmapbt enabled XFS on a
-host that has non-zero sunit/swidth reported from underlying device. And
-I simplified the reproducer to the following script, and the hang can be
-reproduced on any host now.
+It may not be an issue in current usage, but I think we should check for
+idx here (i.e., 'if (idx && xfs_iext_get_extent(..))').
 
------
-#!/bin/bash
+Brian
 
-dev=/dev/sda5
-mnt=/mnt/xfs
-
-mkfs -t xfs -m rmapbt=1 -d agcount=8,size=1g -f $dev
-mount $dev $mnt
-xfs_io -x -c "resblks 4" $mnt
-
-dd if=/dev/zero of=/mnt/xfs/testfile
-
-echo "dd should return and report ENOSPC"
------
-
-sysrq-w output:
-sysrq: SysRq : Show Blocked State
-  task                        PC stack   pid father
-dd              D    0  2504   2491 0x00000080
- ffff88021077dd00 0000000000000000 ffff88021623be40 ffff88021fd99300
- ffff8802107467c0 ffffc900019dbc18 ffffffff816e2cf5 ffff88020fa8ce90
- ffffc900019dbc40 0000000000000286 ffff8802107467c0 ffff88020fa8ce90
-Call Trace:
- [<ffffffff816e2cf5>] ? __schedule+0x195/0x630
- [<ffffffff816e31c6>] schedule+0x36/0x80
- [<ffffffff812534b4>] wb_wait_for_completion+0x64/0x90
- [<ffffffff810d2910>] ? prepare_to_wait_event+0xf0/0xf0
- [<ffffffff81255b3d>] sync_inodes_sb+0xad/0x290
- [<ffffffff81288bc0>] ? iomap_write_end+0x80/0x80
- [<ffffffff8128922c>] ? iomap_apply+0x6c/0x130
- [<ffffffffa014c2a8>] xfs_flush_inodes+0x28/0x40 [xfs]
- [<ffffffffa013370b>] xfs_file_buffered_aio_write+0x18b/0x280 [xfs]
- [<ffffffffa0133890>] xfs_file_write_iter+0x90/0x130 [xfs]
- [<ffffffff81226b52>] __vfs_write+0xe2/0x140
- [<ffffffff812279d2>] vfs_write+0xb2/0x1b0
- [<ffffffff81003510>] ? syscall_trace_enter+0x1d0/0x2b0
- [<ffffffff81228e25>] SyS_write+0x55/0xc0
- [<ffffffff81003a47>] do_syscall_64+0x67/0x180
- [<ffffffff816e796b>] entry_SYSCALL64_slow_path+0x25/0x25
-
-I tested on 4.9-rc5 kernel, for-next branch from linux-xfs tree and
-latest djwong-devel branch from Darrick's tree.
-
-If you need more information please let me know.
-
-Thanks,
-Eryu
+> +		*last_block = got.br_startoff + got.br_blockcount;
+> +		return 0;
+> +	}
+> +
+> +	*last_block = 0;
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
