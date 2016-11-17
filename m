@@ -1,87 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47394 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754666AbcKQSMK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Nov 2016 13:12:10 -0500
-Date: Thu, 17 Nov 2016 13:12:03 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 04/14] xfs: use new extent lookup helpers in
- xfs_bmapi_write
-Message-ID: <20161117181203.GF49658@bfoster.bfoster>
-References: <1479143565-30615-1-git-send-email-hch@lst.de>
- <1479143565-30615-5-git-send-email-hch@lst.de>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:40255 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752173AbcKQVdc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2016 16:33:32 -0500
+Date: Fri, 18 Nov 2016 08:32:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [BUG] dd doesn't return on ENOSPC and hang when fulfilling
+ rmapbt XFS
+Message-ID: <20161117213224.GD28177@dastard>
+References: <20161117163515.GB27776@eguan.usersys.redhat.com>
+ <20161117173639.GJ16813@birch.djwong.org>
+ <20161117201102.GK16813@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1479143565-30615-5-git-send-email-hch@lst.de>
+In-Reply-To: <20161117201102.GK16813@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
 
-On Mon, Nov 14, 2016 at 06:12:35PM +0100, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Thu, Nov 17, 2016 at 12:11:02PM -0800, Darrick J. Wong wrote:
+> On Thu, Nov 17, 2016 at 09:36:39AM -0800, Darrick J. Wong wrote:
+> > On Fri, Nov 18, 2016 at 12:35:15AM +0800, Eryu Guan wrote:
+> > > Hi all,
+> > > 
+> > > I hit a test hang in generic/224 when testing rmapbt enabled XFS on a
+> > > host that has non-zero sunit/swidth reported from underlying device. And
+> > > I simplified the reproducer to the following script, and the hang can be
+> > > reproduced on any host now.
+> > > 
+> > > -----
+> > > #!/bin/bash
+> > > 
+> > > dev=/dev/sda5
+> > > mnt=/mnt/xfs
+> > > 
+> > > mkfs -t xfs -m rmapbt=1 -d agcount=8,size=1g -f $dev
+> > 
+> > Hm.  I formatted with:
+> > mkfs.xfs -m rmapbt=1 -d sunit=4096,swidth=40960 -f /dev/sdf
+> > 
+> > (made up sunit numbers just to see how whacky it could get)
+> > 
+> > and got a different hang instead.  It looks like we are unable to
+> > allocate any blocks to the bmbt and various things blow up from
+> > there.  Will go retry with tracepoints on to see if we're running
+> > out of AG reservation or if we're really out of disk blocks or what.
+> > 
+> > Crash message attached at the end.
+> 
+> Hm.  Looking at the indlen calculations, I see that we don't include the
+> space that the rmapbt might need to store all the reverse mappings.  I
+> think this is a problem, since we decline delalloc reservations if (len
+> + indlen) > fdblocks, but we potentially end up using more than indlen
+> blocks to map len blocks into the file, so the allocator goes nuts.
+> 
+> Eryu, does the following patch fix the problem you see?  I ran your
+> reproducer and mine and it fixed the problem in both cases.  I didn't
+> observe any issues running generic/224 either.
+> 
+> --D
+> 
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 15 +++++++--------
->  1 file changed, 7 insertions(+), 8 deletions(-)
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> Subject: [PATCH] xfs: factor rmap btree size into the indlen calculations
+> 
+> When we're estimating the amount of space it's going to take to satisfy
+> a delalloc reservation, we need to include the space that we might need
+> to grow the rmapbt.  This helps us to avoid running out of space later
+> when _iomap_write_allocate needs more space than we reserved.  Eryu Guan
+> observed this happening on generic/224 when sunit/swidth were set.
+> 
+> Reported-by: Eryu Guan <eguan@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c |   17 +++++++++++++++--
+>  1 file changed, 15 insertions(+), 2 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 1a0fee4..9a8621d 100644
+> index b80a294..afedf96 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4561,7 +4561,7 @@ xfs_bmapi_write(
->  	struct xfs_ifork	*ifp;
->  	struct xfs_bmalloca	bma = { NULL };	/* args for xfs_bmap_alloc */
->  	xfs_fileoff_t		end;		/* end of mapped file region */
-> -	int			eof;		/* after the end of extents */
-> +	bool			eof = false;	/* after the end of extents */
->  	int			error;		/* error return */
->  	int			n;		/* current extent index */
->  	xfs_fileoff_t		obno;		/* old block number (offset) */
-> @@ -4639,12 +4639,14 @@ xfs_bmapi_write(
->  			goto error0;
+> @@ -49,6 +49,7 @@
+>  #include "xfs_rmap.h"
+>  #include "xfs_ag_resv.h"
+>  #include "xfs_refcount.h"
+> +#include "xfs_rmap_btree.h"
+>  
+>  
+>  kmem_zone_t		*xfs_bmap_free_item_zone;
+> @@ -190,8 +191,12 @@ xfs_bmap_worst_indlen(
+>  	int		maxrecs;	/* maximum record count at this level */
+>  	xfs_mount_t	*mp;		/* mount structure */
+>  	xfs_filblks_t	rval;		/* return value */
+> +	xfs_filblks_t   orig_len;
+>  
+>  	mp = ip->i_mount;
+> +
+> +	/* Calculate the worst-case size of the bmbt. */
+> +	orig_len = len;
+>  	maxrecs = mp->m_bmap_dmxr[0];
+>  	for (level = 0, rval = 0;
+>  	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
+> @@ -199,12 +204,20 @@ xfs_bmap_worst_indlen(
+>  		len += maxrecs - 1;
+>  		do_div(len, maxrecs);
+>  		rval += len;
+> -		if (len == 1)
+> -			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
+> +		if (len == 1) {
+> +			rval += XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
+>  				level - 1;
+> +			break;
+> +		}
+>  		if (level == 0)
+>  			maxrecs = mp->m_bmap_dmxr[1];
 >  	}
->  
-> -	xfs_bmap_search_extents(ip, bno, whichfork, &eof, &bma.idx, &bma.got,
-> -				&bma.prev);
->  	n = 0;
->  	end = bno + len;
->  	obno = bno;
->  
-> +	if (!xfs_iext_lookup_extent(ip, ifp, bno, &bma.idx, &bma.got))
-> +		eof = true;
-> +	if (!xfs_iext_get_extent(ifp, bma.idx - 1, &bma.prev))
+> +
+> +	/* Calculate the worst-case size of the rmapbt. */
+> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+> +		rval += 1 + xfs_rmapbt_calc_size(mp, orig_len) +
+> +				mp->m_rmap_maxlevels;
+> +
+>  	return rval;
+>  }
 
-Similar issue here:
+So, I wrote an identical patch back when rmap was first merged and
+224 was failing, but the ENOSPC problem I was hitting with 224 went
+away with the reflink merge a cycle later.
 
-	if (!bma.idx || !xfs_iext_get_extent(..))
-		...
+This change then uncovered a separate failure with rmap+delalloc
+reservation: when we allocate the delalloc extent, we release the
+entire remaining indlen reservation, and so it's not available for
+the rmapbt allocation that it was reserved for. Hence we still
+get lockups at ENOSPC. There were a series of patches to address
+this that I never finished - let me go forward port it, smoke test
+it and repost it....
 
-Brian
+Cheers,
 
-> +		bma.prev.br_startoff = NULLFILEOFF;
->  	bma.tp = tp;
->  	bma.ip = ip;
->  	bma.total = total;
-> @@ -4731,11 +4733,8 @@ xfs_bmapi_write(
->  
->  		/* Else go on to the next record. */
->  		bma.prev = bma.got;
-> -		if (++bma.idx < xfs_iext_count(ifp)) {
-> -			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma.idx),
-> -					 &bma.got);
-> -		} else
-> -			eof = 1;
-> +		if (!xfs_iext_get_extent(ifp, ++bma.idx, &bma.got))
-> +			eof = true;
->  	}
->  	*nmap = n;
->  
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
