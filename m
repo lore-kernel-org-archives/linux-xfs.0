@@ -1,208 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34390 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:57894 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933255AbcKQTUz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Nov 2016 14:20:55 -0500
-Date: Thu, 17 Nov 2016 11:20:51 -0800
-From: Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: Re: [PATCH v2] generic/391: check inode metadata on f{data}sync
- after power-cut
-Message-ID: <20161117192051.GE74211@jaegeuk>
-References: <20161117032753.69315-1-jaegeuk@kernel.org>
+        id S933728AbcKQRLF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Nov 2016 12:11:05 -0500
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4AFE57DCD3
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2016 16:35:17 +0000 (UTC)
+Received: from localhost (dhcp-12-157.nay.redhat.com [10.66.12.157])
+        by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uAHGZGEA010032
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2016 11:35:16 -0500
+Date: Fri, 18 Nov 2016 00:35:15 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: [BUG] dd doesn't return on ENOSPC and hang when fulfilling rmapbt XFS
+Message-ID: <20161117163515.GB27776@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161117032753.69315-1-jaegeuk@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-This patch adds tests/generic/391 to test fsync and fdatasync with power-cuts.
+Hi all,
 
-The rule to check is:
-1) fsync should guarantee all the inode metadata after power-cut,
-2) fdatasync should guarantee i_size and i_blocks at least after power-cut.
+I hit a test hang in generic/224 when testing rmapbt enabled XFS on a
+host that has non-zero sunit/swidth reported from underlying device. And
+I simplified the reproducer to the following script, and the hang can be
+reproduced on any host now.
 
-Suggested-by: Chao Yu <yuchao0@huawei.com>
-Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
----
- tests/generic/391     | 136 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/391.out |  11 ++++
- tests/generic/group   |   1 +
- 3 files changed, 148 insertions(+)
- create mode 100644 tests/generic/391
- create mode 100644 tests/generic/391.out
+-----
+#!/bin/bash
 
-diff --git a/tests/generic/391 b/tests/generic/391
-new file mode 100644
-index 0000000..2b95151
---- /dev/null
-+++ b/tests/generic/391
-@@ -0,0 +1,136 @@
-+#! /bin/bash
-+# FS QA Test 391
-+#
-+# Test inode's metadata after fsync or fdatasync calls.
-+# In the case of fsync, filesystem should recover all the inode metadata, while
-+# recovering i_blocks and i_size at least for fdatasync.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016 Jaegeuk Kim.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/punch
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+rm -f $seqres.full
-+_require_scratch
-+_require_scratch_shutdown
-+_require_xfs_io_command "fpunch"
-+
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+testfile=$SCRATCH_MNT/testfile
-+
-+# check inode metadata after shutdown
-+check_inode_metadata()
-+{
-+	$XFS_IO_PROG -r -c "stat -v" $1 >$tmp.before
-+	src/godown $SCRATCH_MNT >> $seqres.full
-+	_scratch_cycle_mount
-+	$XFS_IO_PROG -r -c "stat -v" $1 >$tmp.after
-+
-+	if [ $FSTYP = xfs ]; then
-+		sed -i '/stat.blocks/d' $tmp.before
-+		sed -i '/stat.blocks/d' $tmp.after
-+	fi
-+	diff $tmp.before $tmp.after >$tmp.diff
-+
-+	if [ "$2" = "fdatasync" ]; then
-+		cat $tmp.diff | grep stat.size
-+		cat $tmp.diff | grep stat.blocks
-+	else
-+		cat $tmp.diff $dont_care
-+	fi
-+	cat $tmp.before >> $seqres.full
-+	cat $tmp.after >> $seqres.full
-+}
-+
-+# append XX KB with f{data}sync, followed by power-cut
-+test_i_size()
-+{
-+	echo "==== i_size $2 test with $1 ====" | tee -a $seqres.full
-+	$XFS_IO_PROG -f -c "pwrite 0 4M"	\
-+			-c "fsync"		\
-+			-c "pwrite 4M $2"	\
-+			-c "$1"			\
-+			$testfile >/dev/null
-+	check_inode_metadata $testfile $1
-+}
-+
-+# update times with f{data}sync, followed by power-cut
-+test_i_time()
-+{
-+	echo "==== i_time test with $1 ====" | tee -a $seqres.full
-+	$XFS_IO_PROG -f -c "pwrite 0 4M"	\
-+			-c "fsync"		\
-+			$testfile >/dev/null
-+	sleep 1
-+	touch $testfile
-+	$XFS_IO_PROG -c "$1"			\
-+			$testfile >/dev/null
-+	check_inode_metadata $testfile $1
-+}
-+
-+# punch XX KB with f{data}sync, followed by power-cut
-+test_punch()
-+{
-+	echo "==== fpunch $2 test with $1 ====" | tee -a $seqres.full
-+	$XFS_IO_PROG -f -c "pwrite 0 4202496"	\
-+			-c "fsync"		\
-+			-c "fpunch 4194304 $2"\
-+			-c "$1"			\
-+			$testfile >/dev/null
-+
-+	check_inode_metadata $testfile $1
-+}
-+
-+for i in fsync fdatasync
-+do
-+	test_i_size $i 1024
-+	test_i_size $i 4096
-+	test_i_time $i
-+	test_punch $i 1024
-+	test_punch $i 4096
-+done
-+
-+rm -f $tmp.*
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/391.out b/tests/generic/391.out
-new file mode 100644
-index 0000000..7c66776
---- /dev/null
-+++ b/tests/generic/391.out
-@@ -0,0 +1,11 @@
-+QA output created by 391
-+==== i_size 1024 test with fsync ====
-+==== i_size 4096 test with fsync ====
-+==== i_time test with fsync ====
-+==== fpunch 1024 test with fsync ====
-+==== fpunch 4096 test with fsync ====
-+==== i_size 1024 test with fdatasync ====
-+==== i_size 4096 test with fdatasync ====
-+==== i_time test with fdatasync ====
-+==== fpunch 1024 test with fdatasync ====
-+==== fpunch 4096 test with fdatasync ====
-diff --git a/tests/generic/group b/tests/generic/group
-index 08007d7..9de3415 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -392,3 +392,4 @@
- 387 auto clone
- 388 auto log metadata
- 389 auto quick acl
-+391 auto quick metadata
--- 
-2.8.3
+dev=/dev/sda5
+mnt=/mnt/xfs
 
+mkfs -t xfs -m rmapbt=1 -d agcount=8,size=1g -f $dev
+mount $dev $mnt
+xfs_io -x -c "resblks 4" $mnt
+
+dd if=/dev/zero of=/mnt/xfs/testfile
+
+echo "dd should return and report ENOSPC"
+-----
+
+sysrq-w output:
+sysrq: SysRq : Show Blocked State
+  task                        PC stack   pid father
+dd              D    0  2504   2491 0x00000080
+ ffff88021077dd00 0000000000000000 ffff88021623be40 ffff88021fd99300
+ ffff8802107467c0 ffffc900019dbc18 ffffffff816e2cf5 ffff88020fa8ce90
+ ffffc900019dbc40 0000000000000286 ffff8802107467c0 ffff88020fa8ce90
+Call Trace:
+ [<ffffffff816e2cf5>] ? __schedule+0x195/0x630
+ [<ffffffff816e31c6>] schedule+0x36/0x80
+ [<ffffffff812534b4>] wb_wait_for_completion+0x64/0x90
+ [<ffffffff810d2910>] ? prepare_to_wait_event+0xf0/0xf0
+ [<ffffffff81255b3d>] sync_inodes_sb+0xad/0x290
+ [<ffffffff81288bc0>] ? iomap_write_end+0x80/0x80
+ [<ffffffff8128922c>] ? iomap_apply+0x6c/0x130
+ [<ffffffffa014c2a8>] xfs_flush_inodes+0x28/0x40 [xfs]
+ [<ffffffffa013370b>] xfs_file_buffered_aio_write+0x18b/0x280 [xfs]
+ [<ffffffffa0133890>] xfs_file_write_iter+0x90/0x130 [xfs]
+ [<ffffffff81226b52>] __vfs_write+0xe2/0x140
+ [<ffffffff812279d2>] vfs_write+0xb2/0x1b0
+ [<ffffffff81003510>] ? syscall_trace_enter+0x1d0/0x2b0
+ [<ffffffff81228e25>] SyS_write+0x55/0xc0
+ [<ffffffff81003a47>] do_syscall_64+0x67/0x180
+ [<ffffffff816e796b>] entry_SYSCALL64_slow_path+0x25/0x25
+
+I tested on 4.9-rc5 kernel, for-next branch from linux-xfs tree and
+latest djwong-devel branch from Darrick's tree.
+
+If you need more information please let me know.
+
+Thanks,
+Eryu
