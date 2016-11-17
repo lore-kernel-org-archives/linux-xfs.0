@@ -1,152 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47428 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754682AbcKQSMM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Nov 2016 13:12:12 -0500
-Date: Thu, 17 Nov 2016 13:12:10 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 05/14] xfs: use new extent lookup helpers in __xfs_bunmapi
-Message-ID: <20161117181210.GG49658@bfoster.bfoster>
-References: <1479143565-30615-1-git-send-email-hch@lst.de>
- <1479143565-30615-6-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1479143565-30615-6-git-send-email-hch@lst.de>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:10553 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752723AbcKQX5F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2016 18:57:05 -0500
+Received: from disappointment.disaster.area ([192.168.1.110] helo=disappointment)
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <dave@fromorbit.com>)
+        id 1c7WWq-0008NQ-Og
+        for linux-xfs@vger.kernel.org; Fri, 18 Nov 2016 10:55:40 +1100
+Received: from dave by disappointment with local (Exim 4.87)
+        (envelope-from <dave@disappointment.disaster>)
+        id 1c7WWr-00020H-MK
+        for linux-xfs@vger.kernel.org; Fri, 18 Nov 2016 10:55:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/4] xfs: add more AGF/AGFL manipulation tracepoints
+Date: Fri, 18 Nov 2016 10:55:33 +1100
+Message-Id: <1479426935-7112-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1479426935-7112-1-git-send-email-david@fromorbit.com>
+References: <20161117213224.GD28177@dastard>
+ <1479426935-7112-1-git-send-email-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Nov 14, 2016 at 06:12:36PM +0100, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 39 ++++++++++++---------------------------
->  1 file changed, 12 insertions(+), 27 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 9a8621d..18de89c 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5433,8 +5433,6 @@ __xfs_bunmapi(
->  {
->  	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
->  	xfs_bmbt_irec_t		del;		/* extent being deleted */
-> -	int			eof;		/* is deleting at eof */
-> -	xfs_bmbt_rec_host_t	*ep;		/* extent record pointer */
->  	int			error;		/* error return value */
->  	xfs_extnum_t		extno;		/* extent number in list */
->  	xfs_bmbt_irec_t		got;		/* current extent record */
-> @@ -5444,7 +5442,6 @@ __xfs_bunmapi(
->  	int			logflags;	/* transaction logging flags */
->  	xfs_extlen_t		mod;		/* rt extent offset */
->  	xfs_mount_t		*mp;		/* mount structure */
-> -	xfs_bmbt_irec_t		prev;		/* previous extent record */
->  	xfs_fileoff_t		start;		/* first file offset deleted */
->  	int			tmp_logflags;	/* partial logging flags */
->  	int			wasdel;		/* was a delayed alloc extent */
-> @@ -5483,18 +5480,17 @@ __xfs_bunmapi(
->  	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
->  	start = bno;
->  	bno = start + len - 1;
-> -	ep = xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got,
-> -		&prev);
->  
->  	/*
->  	 * Check to see if the given block number is past the end of the
->  	 * file, back up to the last block if so...
->  	 */
-> -	if (eof) {
-> -		ep = xfs_iext_get_ext(ifp, --lastx);
-> -		xfs_bmbt_get_all(ep, &got);
-> +	if (!xfs_iext_lookup_extent(ip, ifp, bno, &lastx, &got)) {
-> +		ASSERT(lastx > 0);
-> +		xfs_iext_get_extent(ifp, --lastx, &got);
->  		bno = got.br_startoff + got.br_blockcount - 1;
->  	}
-> +
->  	logflags = 0;
->  	if (ifp->if_flags & XFS_IFBROOT) {
->  		ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE);
-> @@ -5525,8 +5521,7 @@ __xfs_bunmapi(
->  		if (got.br_startoff > bno) {
->  			if (--lastx < 0)
->  				break;
-> -			ep = xfs_iext_get_ext(ifp, lastx);
-> -			xfs_bmbt_get_all(ep, &got);
-> +			xfs_iext_get_extent(ifp, lastx, &got);
->  		}
->  		/*
->  		 * Is the last block of this extent before the range
-> @@ -5540,7 +5535,6 @@ __xfs_bunmapi(
->  		 * Then deal with the (possibly delayed) allocated space
->  		 * we found.
->  		 */
-> -		ASSERT(ep != NULL);
->  		del = got;
->  		wasdel = isnullstartblock(del.br_startblock);
->  		if (got.br_startoff < start) {
-> @@ -5621,15 +5615,11 @@ __xfs_bunmapi(
->  				 */
->  				ASSERT(bno >= del.br_blockcount);
->  				bno -= del.br_blockcount;
-> -				if (got.br_startoff > bno) {
-> -					if (--lastx >= 0) {
-> -						ep = xfs_iext_get_ext(ifp,
-> -								      lastx);
-> -						xfs_bmbt_get_all(ep, &got);
-> -					}
-> -				}
-> +				if (got.br_startoff > bno && --lastx >= 0)
-> +					xfs_iext_get_extent(ifp, lastx, &got);
+From: Dave Chinner <dchinner@redhat.com>
 
-Slightly tricky, but Ok.
+So we can see what blocks are added to or removed from the AGFL during
+allocation.
 
->  				continue;
->  			} else if (del.br_state == XFS_EXT_UNWRITTEN) {
-> +				xfs_bmbt_irec_t		prev;
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c |  8 ++++++--
+ fs/xfs/xfs_trace.h        | 11 ++++++++++-
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-struct xfs_bmbt_irec
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index effb64cf714f..a5a9d8360e74 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2264,10 +2264,12 @@ xfs_alloc_get_freelist(
+ 	xfs_mount_t	*mp = tp->t_mountp;
+ 	xfs_perag_t	*pag;	/* per allocation group data */
+ 
++	agf = XFS_BUF_TO_AGF(agbp);
++	trace_xfs_alloc_get_freelist(mp, agf, 0, _RET_IP_);
++
+ 	/*
+ 	 * Freelist is empty, give up.
+ 	 */
+-	agf = XFS_BUF_TO_AGF(agbp);
+ 	if (!agf->agf_flcount) {
+ 		*bnop = NULLAGBLOCK;
+ 		return 0;
+@@ -2392,8 +2394,9 @@ xfs_alloc_put_freelist(
+ 	__be32			*agfl_bno;
+ 	int			startoff;
+ 
+-	agf = XFS_BUF_TO_AGF(agbp);
+ 	mp = tp->t_mountp;
++	agf = XFS_BUF_TO_AGF(agbp);
++	trace_xfs_alloc_put_freelist(mp, agf, 0, _RET_IP_);
+ 
+ 	if (!agflbp && (error = xfs_alloc_read_agfl(mp, tp,
+ 			be32_to_cpu(agf->agf_seqno), &agflbp)))
+@@ -2555,6 +2558,7 @@ xfs_read_agf(
+ 	if (!*bpp)
+ 		return 0;
+ 
++	trace_xfs_read_agf_detail(mp, XFS_BUF_TO_AGF(*bpp), 0, _RET_IP_);
+ 	ASSERT(!(*bpp)->b_error);
+ 	xfs_buf_set_ref(*bpp, XFS_AGF_REF);
+ 	return 0;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 0907752be62d..73e001d795ce 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1516,7 +1516,7 @@ TRACE_EVENT(xfs_trans_commit_lsn,
+ 		  __entry->lsn)
+ );
+ 
+-TRACE_EVENT(xfs_agf,
++DECLARE_EVENT_CLASS(xfs_agf_class,
+ 	TP_PROTO(struct xfs_mount *mp, struct xfs_agf *agf, int flags,
+ 		 unsigned long caller_ip),
+ 	TP_ARGS(mp, agf, flags, caller_ip),
+@@ -1572,6 +1572,15 @@ TRACE_EVENT(xfs_agf,
+ 		  __entry->longest,
+ 		  (void *)__entry->caller_ip)
+ );
++#define DEFINE_AGF_EVENT(name) \
++DEFINE_EVENT(xfs_agf_class, name, \
++	TP_PROTO(struct xfs_mount *mp, struct xfs_agf *agf, int flags, \
++		 unsigned long caller_ip), \
++	TP_ARGS(mp, agf, flags, caller_ip))
++DEFINE_AGF_EVENT(xfs_agf);
++DEFINE_AGF_EVENT(xfs_read_agf_detail);
++DEFINE_AGF_EVENT(xfs_alloc_get_freelist);
++DEFINE_AGF_EVENT(xfs_alloc_put_freelist);
+ 
+ TRACE_EVENT(xfs_free_extent,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
+-- 
+2.8.0.rc3
 
-Otherwise looks good:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  				/*
->  				 * This one is already unwritten.
->  				 * It must have a written left neighbor.
-> @@ -5637,8 +5627,7 @@ __xfs_bunmapi(
->  				 * try again.
->  				 */
->  				ASSERT(lastx > 0);
-> -				xfs_bmbt_get_all(xfs_iext_get_ext(ifp,
-> -						lastx - 1), &prev);
-> +				xfs_iext_get_extent(ifp, lastx - 1, &prev);
->  				ASSERT(prev.br_state == XFS_EXT_NORM);
->  				ASSERT(!isnullstartblock(prev.br_startblock));
->  				ASSERT(del.br_startblock ==
-> @@ -5736,13 +5725,9 @@ __xfs_bunmapi(
->  		 */
->  		if (bno != (xfs_fileoff_t)-1 && bno >= start) {
->  			if (lastx >= 0) {
-> -				ep = xfs_iext_get_ext(ifp, lastx);
-> -				if (xfs_bmbt_get_startoff(ep) > bno) {
-> -					if (--lastx >= 0)
-> -						ep = xfs_iext_get_ext(ifp,
-> -								      lastx);
-> -				}
-> -				xfs_bmbt_get_all(ep, &got);
-> +				xfs_iext_get_extent(ifp, lastx, &got);
-> +				if (got.br_startoff > bno && --lastx >= 0)
-> +					xfs_iext_get_extent(ifp, lastx, &got);
->  			}
->  			extno++;
->  		}
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
