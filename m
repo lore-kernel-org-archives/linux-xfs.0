@@ -1,70 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30381 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933584AbcKVSWY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2016 13:22:24 -0500
-Date: Tue, 22 Nov 2016 10:21:49 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/16] xfs: set XFS_DA_OP_OKNOENT in xfs_attr_get
-Message-ID: <20161122182149.GN16813@birch.djwong.org>
-References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
- <147830451072.26713.4807330905355527976.stgit@birch.djwong.org>
- <20161115101650.GE1607@infradead.org>
- <47f53245-13eb-f77a-f9d8-f532efc907fe@redhat.com>
- <20161116052116.GR28922@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:43239 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751598AbcKQTHu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Nov 2016 14:07:50 -0500
+Date: Thu, 17 Nov 2016 14:07:32 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 11/14] xfs: use new extent lookup helpers in
+ xfs_reflink_cancel_cow_blocks
+Message-ID: <20161117190731.GM49658@bfoster.bfoster>
+References: <1479143565-30615-1-git-send-email-hch@lst.de>
+ <1479143565-30615-12-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161116052116.GR28922@dastard>
+In-Reply-To: <1479143565-30615-12-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Nov 16, 2016 at 04:21:16PM +1100, Dave Chinner wrote:
-> On Tue, Nov 15, 2016 at 07:41:19AM -0600, Eric Sandeen wrote:
-> > On 11/15/16 4:16 AM, Christoph Hellwig wrote:
-> > > On Fri, Nov 04, 2016 at 05:08:30PM -0700, Eric Sandeen wrote:
-> > >> >From c400ee3ed1b13d45adde68e12254dc6ab6977b59 Mon Sep 17 00:00:00 2001
-> > > 
-> > > It should claim to be from Eric here I think..
-> > 
-> > > And mention that it's a port from a kernel commit.
-> > 
-> > I suppose - do we have a clear policy on that?  What should the format
-> > be for kernel<->userspace cross-ports in terms of From:, SoB:, etc?
-> > 
-> > I guess the libxfs-apply script in tools/ implicitly defines that, i.e. -
-> > 
-> >         # We want to format it like a normal patch with a line to say what repo
-> >         # and commit it was sourced from:
-> >         #
-> >         # xfs: make several functions static
-> >         #
-> >         # From: Eric Sandeen <sandeen@sandeen.net>
-> >         #
-> >         # Source kernel commit: 0d5a75e9e23ee39cd0d8a167393dcedb4f0f47b2
-> >         #
-> >         # <body>
+On Mon, Nov 14, 2016 at 06:12:42PM +0100, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_reflink.c | 12 ++++--------
+>  1 file changed, 4 insertions(+), 8 deletions(-)
 > 
-> Yes, exactly. I asked Darricki last week to regenerate the patches
-> with this commit message problem using the libxfs-apply tool as it
-> handles all this commit reference/orignal author reformatting
-> automatically now.
-
-Heh, I fixed up the patches and forgot to send out v2 patches.
-I'll do that now.
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 0668490..a878d42 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -493,18 +493,15 @@ xfs_reflink_cancel_cow_blocks(
+>  	xfs_fileoff_t			end_fsb)
+>  {
+>  	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+> -	struct xfs_bmbt_irec		got, prev, del;
+> +	struct xfs_bmbt_irec		got, del;
+>  	xfs_extnum_t			idx;
+>  	xfs_fsblock_t			firstfsb;
+>  	struct xfs_defer_ops		dfops;
+> -	int				error = 0, eof = 0;
+> +	int				error = 0;
+>  
+>  	if (!xfs_is_reflink_inode(ip))
+>  		return 0;
+> -
+> -	xfs_bmap_search_extents(ip, offset_fsb, XFS_COW_FORK, &eof, &idx,
+> -			&got, &prev);
+> -	if (eof)
+> +	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got))
+>  		return 0;
+>  
+>  	while (got.br_startoff < end_fsb) {
+> @@ -547,9 +544,8 @@ xfs_reflink_cancel_cow_blocks(
+>  			xfs_bmap_del_extent_cow(ip, &idx, &got, &del);
+>  		}
+>  
+> -		if (++idx >= xfs_iext_count(ifp))
+> +		if (!xfs_iext_get_extent(ifp, ++idx, &got))
+>  			break;
+> -		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), &got);
+>  	}
+>  
+>  	/* clear tag if cow fork is emptied */
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.1.4
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
