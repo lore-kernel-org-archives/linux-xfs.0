@@ -1,147 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:40255 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752173AbcKQVdc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2016 16:33:32 -0500
-Date: Fri, 18 Nov 2016 08:32:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [BUG] dd doesn't return on ENOSPC and hang when fulfilling
- rmapbt XFS
-Message-ID: <20161117213224.GD28177@dastard>
-References: <20161117163515.GB27776@eguan.usersys.redhat.com>
- <20161117173639.GJ16813@birch.djwong.org>
- <20161117201102.GK16813@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:47748 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934027AbcKQSLj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Nov 2016 13:11:39 -0500
+Date: Thu, 17 Nov 2016 13:11:37 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 01/14] xfs: new inode extent list lookup helpers
+Message-ID: <20161117181137.GC49658@bfoster.bfoster>
+References: <1479143565-30615-1-git-send-email-hch@lst.de>
+ <1479143565-30615-2-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161117201102.GK16813@birch.djwong.org>
+In-Reply-To: <1479143565-30615-2-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Nov 17, 2016 at 12:11:02PM -0800, Darrick J. Wong wrote:
-> On Thu, Nov 17, 2016 at 09:36:39AM -0800, Darrick J. Wong wrote:
-> > On Fri, Nov 18, 2016 at 12:35:15AM +0800, Eryu Guan wrote:
-> > > Hi all,
-> > > 
-> > > I hit a test hang in generic/224 when testing rmapbt enabled XFS on a
-> > > host that has non-zero sunit/swidth reported from underlying device. And
-> > > I simplified the reproducer to the following script, and the hang can be
-> > > reproduced on any host now.
-> > > 
-> > > -----
-> > > #!/bin/bash
-> > > 
-> > > dev=/dev/sda5
-> > > mnt=/mnt/xfs
-> > > 
-> > > mkfs -t xfs -m rmapbt=1 -d agcount=8,size=1g -f $dev
-> > 
-> > Hm.  I formatted with:
-> > mkfs.xfs -m rmapbt=1 -d sunit=4096,swidth=40960 -f /dev/sdf
-> > 
-> > (made up sunit numbers just to see how whacky it could get)
-> > 
-> > and got a different hang instead.  It looks like we are unable to
-> > allocate any blocks to the bmbt and various things blow up from
-> > there.  Will go retry with tracepoints on to see if we're running
-> > out of AG reservation or if we're really out of disk blocks or what.
-> > 
-> > Crash message attached at the end.
+On Mon, Nov 14, 2016 at 06:12:32PM +0100, Christoph Hellwig wrote:
+> xfs_iext_lookup_extent looks up a single extent at the passed in offset,
+> and returns the extent covering the area, or the one behind it in case
+> of a hole, as well as the index of the returned extent in arguments,
+> as well as a simple bool as return value that is set to false if no
+> extent could be found because the offset is behind EOF.  It is a simpler
+> replacement for xfs_bmap_search_extent that leaves looking up the rarely
+> needed previous extent to the caller and has a nicer calling convention.
 > 
-> Hm.  Looking at the indlen calculations, I see that we don't include the
-> space that the rmapbt might need to store all the reverse mappings.  I
-> think this is a problem, since we decline delalloc reservations if (len
-> + indlen) > fdblocks, but we potentially end up using more than indlen
-> blocks to map len blocks into the file, so the allocator goes nuts.
+> xfs_iext_get_extent is a helper for iterating over the extent list,
+> it takes an extent index as input, and returns the extent at that index
+> in it's expanded form in an argument if it exists.  The actual return
+> value is a bool whether the index is valid or not.
 > 
-> Eryu, does the following patch fix the problem you see?  I ran your
-> reproducer and mine and it fixed the problem in both cases.  I didn't
-> observe any issues running generic/224 either.
-> 
-> --D
-> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> Subject: [PATCH] xfs: factor rmap btree size into the indlen calculations
+>  fs/xfs/libxfs/xfs_inode_fork.c | 46 ++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_inode_fork.h |  6 ++++++
+>  2 files changed, 52 insertions(+)
 > 
-> When we're estimating the amount of space it's going to take to satisfy
-> a delalloc reservation, we need to include the space that we might need
-> to grow the rmapbt.  This helps us to avoid running out of space later
-> when _iomap_write_allocate needs more space than we reserved.  Eryu Guan
-> observed this happening on generic/224 when sunit/swidth were set.
-> 
-> Reported-by: Eryu Guan <eguan@redhat.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c |   17 +++++++++++++++--
->  1 file changed, 15 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index b80a294..afedf96 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -49,6 +49,7 @@
->  #include "xfs_rmap.h"
->  #include "xfs_ag_resv.h"
->  #include "xfs_refcount.h"
-> +#include "xfs_rmap_btree.h"
->  
->  
->  kmem_zone_t		*xfs_bmap_free_item_zone;
-> @@ -190,8 +191,12 @@ xfs_bmap_worst_indlen(
->  	int		maxrecs;	/* maximum record count at this level */
->  	xfs_mount_t	*mp;		/* mount structure */
->  	xfs_filblks_t	rval;		/* return value */
-> +	xfs_filblks_t   orig_len;
->  
->  	mp = ip->i_mount;
-> +
-> +	/* Calculate the worst-case size of the bmbt. */
-> +	orig_len = len;
->  	maxrecs = mp->m_bmap_dmxr[0];
->  	for (level = 0, rval = 0;
->  	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
-> @@ -199,12 +204,20 @@ xfs_bmap_worst_indlen(
->  		len += maxrecs - 1;
->  		do_div(len, maxrecs);
->  		rval += len;
-> -		if (len == 1)
-> -			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
-> +		if (len == 1) {
-> +			rval += XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
->  				level - 1;
-> +			break;
-> +		}
->  		if (level == 0)
->  			maxrecs = mp->m_bmap_dmxr[1];
->  	}
-> +
-> +	/* Calculate the worst-case size of the rmapbt. */
-> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> +		rval += 1 + xfs_rmapbt_calc_size(mp, orig_len) +
-> +				mp->m_rmap_maxlevels;
-> +
->  	return rval;
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 5fbe24c..749fbfb 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -2003,3 +2003,49 @@ xfs_ifork_init_cow(
+>  	ip->i_cformat = XFS_DINODE_FMT_EXTENTS;
+>  	ip->i_cnextents = 0;
 >  }
+> +
+> +/*
+> + * Lookup the extent covering bno.
+> + *
+> + * If there is an extent covering bno return the extent index, and store the
+> + * expanded extent structure in *gotp, and the extent indes in *idx.
 
-So, I wrote an identical patch back when rmap was first merged and
-224 was failing, but the ENOSPC problem I was hitting with 224 went
-away with the reflink merge a cycle later.
+Typo:							 index
 
-This change then uncovered a separate failure with rmap+delalloc
-reservation: when we allocate the delalloc extent, we release the
-entire remaining indlen reservation, and so it's not available for
-the rmapbt allocation that it was reserved for. Hence we still
-get lockups at ENOSPC. There were a series of patches to address
-this that I never finished - let me go forward port it, smoke test
-it and repost it....
+Otherwise looks good:
 
-Cheers,
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> + * If there is no extent covering bno, but there is an extent after it (e.g.
+> + * it lies in a hole) return that extent in *gotp and its index in *idx
+> + * instead.
+> + * If bno is beyond the last extent return false, and return the index after
+> + * the last valid index in *idxp.
+> + */
+> +bool
+> +xfs_iext_lookup_extent(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_ifork	*ifp,
+> +	xfs_fileoff_t		bno,
+> +	xfs_extnum_t		*idxp,
+> +	struct xfs_bmbt_irec	*gotp)
+> +{
+> +	struct xfs_bmbt_rec_host *ep;
+> +
+> +	XFS_STATS_INC(ip->i_mount, xs_look_exlist);
+> +
+> +	ep = xfs_iext_bno_to_ext(ifp, bno, idxp);
+> +	if (!ep)
+> +		return false;
+> +	xfs_bmbt_get_all(ep, gotp);
+> +	return true;
+> +}
+> +
+> +/*
+> + * Return true if there is an extent at index idx, and return the expanded
+> + * extent structure at idx in that case.  Else return false.
+> + */
+> +bool
+> +xfs_iext_get_extent(
+> +	struct xfs_ifork	*ifp,
+> +	xfs_extnum_t		idx,
+> +	struct xfs_bmbt_irec	*gotp)
+> +{
+> +	if (idx < 0 || idx >= xfs_iext_count(ifp))
+> +		return false;
+> +	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), gotp);
+> +	return true;
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 8bf112e..7fb8365 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -182,6 +182,12 @@ void		xfs_iext_irec_compact_pages(struct xfs_ifork *);
+>  void		xfs_iext_irec_compact_full(struct xfs_ifork *);
+>  void		xfs_iext_irec_update_extoffs(struct xfs_ifork *, int, int);
+>  
+> +bool		xfs_iext_lookup_extent(struct xfs_inode *ip,
+> +			struct xfs_ifork *ifp, xfs_fileoff_t bno,
+> +			xfs_extnum_t *idxp, struct xfs_bmbt_irec *gotp);
+> +bool		xfs_iext_get_extent(struct xfs_ifork *ifp, xfs_extnum_t idx,
+> +			struct xfs_bmbt_irec *gotp);
+> +
+>  extern struct kmem_zone	*xfs_ifork_zone;
+>  
+>  extern void xfs_ifork_init_cow(struct xfs_inode *ip);
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
