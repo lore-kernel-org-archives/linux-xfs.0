@@ -1,43 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:34021 "EHLO
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:63633 "EHLO
         ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752338AbcKQX5D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2016 18:57:03 -0500
-Received: from disappointment.disaster.area ([192.168.1.110] helo=disappointment)
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <dave@fromorbit.com>)
-        id 1c7WWq-0008NO-Od
-        for linux-xfs@vger.kernel.org; Fri, 18 Nov 2016 10:55:40 +1100
-Received: from dave by disappointment with local (Exim 4.87)
-        (envelope-from <dave@disappointment.disaster>)
-        id 1c7WWr-00020C-L7
-        for linux-xfs@vger.kernel.org; Fri, 18 Nov 2016 10:55:41 +1100
+        by vger.kernel.org with ESMTP id S1750855AbcKRAxh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2016 19:53:37 -0500
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1c7XQo-0008VU-Ux
+        for linux-xfs@vger.kernel.org; Fri, 18 Nov 2016 11:53:30 +1100
+Date: Fri, 18 Nov 2016 11:53:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/4] xfs: fix rmapbt ENOSPC hangs
-Date: Fri, 18 Nov 2016 10:55:31 +1100
-Message-Id: <1479426935-7112-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <20161117213224.GD28177@dastard>
+Subject: Re: [PATCH 3/4] xfs: hold AGF buffers over defer ops
+Message-ID: <20161118005330.GF28177@dastard>
 References: <20161117213224.GD28177@dastard>
+ <1479426935-7112-1-git-send-email-david@fromorbit.com>
+ <1479426935-7112-4-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1479426935-7112-4-git-send-email-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Darrick,
+On Fri, Nov 18, 2016 at 10:55:34AM +1100, Dave Chinner wrote:
+> +static void
+> +xfs_defer_brelse(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_defer_ops	*dop)
+> +{
+> +	int				i;
+> +
+> +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS; i++) {
+> +		if (!tp)
+> +			tp = dop->dop_bufs[i]->b_transp;
+> +		if (dop->dop_bufs[i])
+> +			xfs_trans_bhold_release(tp, dop->dop_bufs[i]);
+> +	}
 
-This is the patchset I write to address the rmapbt enospc issue
-that generic/224 was tripping across. I replaced the first patch
-with yours as it's cleaner, and forward ported the other patches.
-
-I stopped working on this because the reflink merge fixed the
-problems I was seeing. maybe that was because I stopped testing
-rmapbt=1 by itself, though, so the problem never really got fixed.
-
-I'm running it through an auto test run right now, but I thought
-I'd post it now so you can comment on the next three patches in the
-series. Also to see if it passes the enospc tests on your setups...
+This let's the smoke out in generic/139. Will fix...
 
 Cheers,
 
 Dave.
-
+-- 
+Dave Chinner
+david@fromorbit.com
