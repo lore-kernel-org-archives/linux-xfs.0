@@ -1,67 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49926 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934681AbcKQTMw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Nov 2016 14:12:52 -0500
-Date: Thu, 17 Nov 2016 14:12:50 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 14/14] xfs: remove NULLEXTNUM
-Message-ID: <20161117191250.GP49658@bfoster.bfoster>
-References: <1479143565-30615-1-git-send-email-hch@lst.de>
- <1479143565-30615-15-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1479143565-30615-15-git-send-email-hch@lst.de>
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:32998 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753050AbcKRAIB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2016 19:08:01 -0500
+Received: by mail-pf0-f178.google.com with SMTP id d2so51369633pfd.0
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2016 16:08:01 -0800 (PST)
+From: Omar Sandoval <osandov@osandov.com>
+Subject: [RFC PATCH 1/2] Btrfs: refactor btrfs_extent_same() slightly
+Date: Thu, 17 Nov 2016 16:07:49 -0800
+Message-Id: <35c668f0a23e0424569f812523c76a1828219f76.1479427384.git.osandov@fb.com>
+In-Reply-To: <cover.1479427384.git.osandov@fb.com>
+References: <cover.1479427384.git.osandov@fb.com>
+In-Reply-To: <cover.1479427384.git.osandov@fb.com>
+References: <cover.1479427384.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Qu Wenruo <quwenruo@cn.fujitsu.com>, Christoph Hellwig <hch@infradead.org>, kernel-team@fb.com
 
-On Mon, Nov 14, 2016 at 06:12:45PM +0100, Christoph Hellwig wrote:
-> We only ever set a field to this constant for an impossible to reach
-> error case in xfs_bmap_search_extents.  That functions has been removed,
-> so we can remove the constant as well.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+From: Omar Sandoval <osandov@fb.com>
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+This just makes the following patch cleaner.
 
->  fs/xfs/libxfs/xfs_bmap.c  | 2 +-
->  fs/xfs/libxfs/xfs_types.h | 1 -
->  2 files changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 856d98d..3ab68db 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4260,7 +4260,7 @@ xfs_bmapi_allocate(
->  	if (bma->wasdel) {
->  		bma->length = (xfs_extlen_t)bma->got.br_blockcount;
->  		bma->offset = bma->got.br_startoff;
-> -		if (bma->idx != NULLEXTNUM && bma->idx) {
-> +		if (bma->idx) {
->  			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1),
->  					 &bma->prev);
->  		}
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index cf044c0..717909f 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -57,7 +57,6 @@ typedef __int64_t	xfs_sfiloff_t;	/* signed block number in a file */
->  
->  #define	NULLAGBLOCK	((xfs_agblock_t)-1)
->  #define	NULLAGNUMBER	((xfs_agnumber_t)-1)
-> -#define	NULLEXTNUM	((xfs_extnum_t)-1)
->  
->  #define NULLCOMMITLSN	((xfs_lsn_t)-1)
->  
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Omar Sandoval <osandov@fb.com>
+---
+ fs/btrfs/ioctl.c | 33 ++++++++++++---------------------
+ 1 file changed, 12 insertions(+), 21 deletions(-)
+
+diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+index 7acbd2c..e23f945 100644
+--- a/fs/btrfs/ioctl.c
++++ b/fs/btrfs/ioctl.c
+@@ -3124,26 +3124,27 @@ static int btrfs_extent_same(struct inode *src, u64 loff, u64 olen,
+ 	int ret;
+ 	u64 len = olen;
+ 	struct cmp_pages cmp;
+-	int same_inode = 0;
++	bool same_inode = (src == dst);
+ 	u64 same_lock_start = 0;
+ 	u64 same_lock_len = 0;
+ 
+-	if (src == dst)
+-		same_inode = 1;
+-
+ 	if (len == 0)
+ 		return 0;
+ 
+-	if (same_inode) {
++	if (same_inode)
+ 		inode_lock(src);
++	else
++		btrfs_double_inode_lock(src, dst);
+ 
+-		ret = extent_same_check_offsets(src, loff, &len, olen);
+-		if (ret)
+-			goto out_unlock;
+-		ret = extent_same_check_offsets(src, dst_loff, &len, olen);
+-		if (ret)
+-			goto out_unlock;
++	ret = extent_same_check_offsets(src, loff, &len, olen);
++	if (ret)
++		goto out_unlock;
+ 
++	ret = extent_same_check_offsets(dst, dst_loff, &len, olen);
++	if (ret)
++		goto out_unlock;
++
++	if (same_inode) {
+ 		/*
+ 		 * Single inode case wants the same checks, except we
+ 		 * don't want our length pushed out past i_size as
+@@ -3171,16 +3172,6 @@ static int btrfs_extent_same(struct inode *src, u64 loff, u64 olen,
+ 
+ 		same_lock_start = min_t(u64, loff, dst_loff);
+ 		same_lock_len = max_t(u64, loff, dst_loff) + len - same_lock_start;
+-	} else {
+-		btrfs_double_inode_lock(src, dst);
+-
+-		ret = extent_same_check_offsets(src, loff, &len, olen);
+-		if (ret)
+-			goto out_unlock;
+-
+-		ret = extent_same_check_offsets(dst, dst_loff, &len, olen);
+-		if (ret)
+-			goto out_unlock;
+ 	}
+ 
+ 	/* don't make the dst file partly checksummed */
+-- 
+2.10.2
+
