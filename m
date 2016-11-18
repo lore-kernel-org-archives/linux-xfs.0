@@ -1,54 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58556 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57216 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754445AbcKRPLH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 18 Nov 2016 10:11:07 -0500
-Date: Fri, 18 Nov 2016 10:11:05 -0500
+        id S1753531AbcKRPKs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 18 Nov 2016 10:10:48 -0500
+Date: Fri, 18 Nov 2016 10:10:42 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH RFC 3/4] xfs: reuse xfs_file_iomap_begin_delay() for cow
- fork delalloc
-Message-ID: <20161118151104.GD60705@bfoster.bfoster>
+Subject: Re: [PATCH RFC 1/4] xfs: clean up cow fork reservation and tag
+ inodes correctly
+Message-ID: <20161118151041.GC60705@bfoster.bfoster>
 References: <1478636856-7590-1-git-send-email-bfoster@redhat.com>
- <1478636856-7590-4-git-send-email-bfoster@redhat.com>
- <20161115142826.GC18630@infradead.org>
- <20161115181125.GE65218@bfoster.bfoster>
- <20161118081302.GB9788@infradead.org>
+ <1478636856-7590-2-git-send-email-bfoster@redhat.com>
+ <20161115141621.GA18630@infradead.org>
+ <20161115181101.GC65218@bfoster.bfoster>
+ <20161118081146.GA9788@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161118081302.GB9788@infradead.org>
+In-Reply-To: <20161118081146.GA9788@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Nov 18, 2016 at 12:13:02AM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 15, 2016 at 01:11:25PM -0500, Brian Foster wrote:
-> > On Tue, Nov 15, 2016 at 06:28:26AM -0800, Christoph Hellwig wrote:
-> > > > +	/*
-> > > > +	 * Search for a preexisting extent. COW fork allocation may still be
-> > > > +	 * required for reflink inodes if the data extent is shared.
-> > > > +	 */
-> > > >  	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
-> > > >  			&got, &prev);
-> > > >  	imap = got;
+On Fri, Nov 18, 2016 at 12:11:46AM -0800, Christoph Hellwig wrote:
+> On Tue, Nov 15, 2016 at 01:11:01PM -0500, Brian Foster wrote:
+> > On Tue, Nov 15, 2016 at 06:16:21AM -0800, Christoph Hellwig wrote:
+> > > > +	if (imap->br_startoff != got.br_startoff ||
+> > > > +	    imap->br_blockcount != got.br_blockcount)
+> > > >  		xfs_inode_set_cowblocks_tag(ip);
 > > > 
-> > > Maybe we should look up directly into imap and now duplicate that
-> > > information for imap and got?
+> > > Can't got.br_blockcount be smaller than imap->br_blockcount if we have
+> > > an existing COW fork reservation lying around behind the whole we're
+> > > filling?  Also they way xfs_bmapi_reserve_delalloc works the startoff
+> > > will be the same.  E.g. this check should probably be:
 > > > 
 > > 
-> > Didn't you recently change this code from doing that? I'm not following
-> > how changing it back helps us...
+> > Good point, though I think it can be smaller or larger without
+> > necessarily having preallocation due to being merged with surrounding
+> > extents. I'm not quite sure what the right answer for that is with
+> > regard to tagging, but I do think it's better to have false positive
+> > tagging than false negatives.
 > 
-> You only introduce imap in the previous patch.  I'd just try to avoid
-> copying the irec structures as much as possible.
-> 
+> Good point, merging can change both the start and length.  Based on
+> that I think tagging in the caller of xfs_bmapi_reserve_delalloc is
+> wrong, and we need to do it inside xfs_bmapi_reserve_delalloc where
+> we know if we did speculative preallocation.
 
-Ok, this took some playing around to try and get right since the imap
-record must continue to refer to the data extent (trimmed appropriately
-and whatnot) in the cow reservation case.. It's possible there's some
-unnecessary duplication in the current form. I'll make another pass at
-that once I have this rebased against your extent search cleanups.
+xfs_bmapi_reserve_delalloc() doesn't really know if it's doing
+preallocation outside of the extent size hint alignment. I don't think
+we want to try and bury all of the prealloc stuff down in the bmapi
+code, though we may be able to add a prealloc parameter to
+bmapi_reserve_delalloc() such that it can add the prealloc itself and
+also tell the difference between prealloc and merge cases. I'll play
+around with it, thanks.
 
 Brian
