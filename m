@@ -1,48 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:63633 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750855AbcKRAxh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2016 19:53:37 -0500
-Received: from dave by dastard with local (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1c7XQo-0008VU-Ux
-        for linux-xfs@vger.kernel.org; Fri, 18 Nov 2016 11:53:30 +1100
-Date: Fri, 18 Nov 2016 11:53:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/4] xfs: hold AGF buffers over defer ops
-Message-ID: <20161118005330.GF28177@dastard>
-References: <20161117213224.GD28177@dastard>
- <1479426935-7112-1-git-send-email-david@fromorbit.com>
- <1479426935-7112-4-git-send-email-david@fromorbit.com>
+Received: from cn.fujitsu.com ([59.151.112.132]:56263 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751985AbcKRDWT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2016 22:22:19 -0500
+Subject: Re: [RFC PATCH 1/2] Btrfs: refactor btrfs_extent_same() slightly
+References: <cover.1479427384.git.osandov@fb.com>
+ <35c668f0a23e0424569f812523c76a1828219f76.1479427384.git.osandov@fb.com>
+From: Qu Wenruo <quwenruo@cn.fujitsu.com>
+Message-ID: <b9dd52b8-c43a-8e95-2e0d-914f6b12fe23@cn.fujitsu.com>
+Date: Fri, 18 Nov 2016 11:22:07 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1479426935-7112-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <35c668f0a23e0424569f812523c76a1828219f76.1479427384.git.osandov@fb.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Omar Sandoval <osandov@osandov.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, kernel-team@fb.com
 
-On Fri, Nov 18, 2016 at 10:55:34AM +1100, Dave Chinner wrote:
-> +static void
-> +xfs_defer_brelse(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_defer_ops	*dop)
-> +{
-> +	int				i;
+
+
+At 11/18/2016 08:07 AM, Omar Sandoval wrote:
+> From: Omar Sandoval <osandov@fb.com>
+>
+> This just makes the following patch cleaner.
+Looks good for me.
+
+It is just a good refactoring. Making code short and easier to read.
+
+And it doesn't affect the len = 0 behavior.
+So no matter what the choice we do, it can be applied independently.
+
+Reviewed-by: Qu Wenruo <quwenruo@cn.fujitsu.com>
+
+Thanks,
+Qu
+>
+> Signed-off-by: Omar Sandoval <osandov@fb.com>
+> ---
+>  fs/btrfs/ioctl.c | 33 ++++++++++++---------------------
+>  1 file changed, 12 insertions(+), 21 deletions(-)
+>
+> diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+> index 7acbd2c..e23f945 100644
+> --- a/fs/btrfs/ioctl.c
+> +++ b/fs/btrfs/ioctl.c
+> @@ -3124,26 +3124,27 @@ static int btrfs_extent_same(struct inode *src, u64 loff, u64 olen,
+>  	int ret;
+>  	u64 len = olen;
+>  	struct cmp_pages cmp;
+> -	int same_inode = 0;
+> +	bool same_inode = (src == dst);
+>  	u64 same_lock_start = 0;
+>  	u64 same_lock_len = 0;
+>
+> -	if (src == dst)
+> -		same_inode = 1;
+> -
+>  	if (len == 0)
+>  		return 0;
+>
+> -	if (same_inode) {
+> +	if (same_inode)
+>  		inode_lock(src);
+> +	else
+> +		btrfs_double_inode_lock(src, dst);
+>
+> -		ret = extent_same_check_offsets(src, loff, &len, olen);
+> -		if (ret)
+> -			goto out_unlock;
+> -		ret = extent_same_check_offsets(src, dst_loff, &len, olen);
+> -		if (ret)
+> -			goto out_unlock;
+> +	ret = extent_same_check_offsets(src, loff, &len, olen);
+> +	if (ret)
+> +		goto out_unlock;
+>
+> +	ret = extent_same_check_offsets(dst, dst_loff, &len, olen);
+> +	if (ret)
+> +		goto out_unlock;
 > +
-> +	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS; i++) {
-> +		if (!tp)
-> +			tp = dop->dop_bufs[i]->b_transp;
-> +		if (dop->dop_bufs[i])
-> +			xfs_trans_bhold_release(tp, dop->dop_bufs[i]);
-> +	}
+> +	if (same_inode) {
+>  		/*
+>  		 * Single inode case wants the same checks, except we
+>  		 * don't want our length pushed out past i_size as
+> @@ -3171,16 +3172,6 @@ static int btrfs_extent_same(struct inode *src, u64 loff, u64 olen,
+>
+>  		same_lock_start = min_t(u64, loff, dst_loff);
+>  		same_lock_len = max_t(u64, loff, dst_loff) + len - same_lock_start;
+> -	} else {
+> -		btrfs_double_inode_lock(src, dst);
+> -
+> -		ret = extent_same_check_offsets(src, loff, &len, olen);
+> -		if (ret)
+> -			goto out_unlock;
+> -
+> -		ret = extent_same_check_offsets(dst, dst_loff, &len, olen);
+> -		if (ret)
+> -			goto out_unlock;
+>  	}
+>
+>  	/* don't make the dst file partly checksummed */
+>
 
-This let's the smoke out in generic/139. Will fix...
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
