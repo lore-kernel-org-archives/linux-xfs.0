@@ -1,102 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33272 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751180AbcKRGwh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 18 Nov 2016 01:52:37 -0500
-Date: Fri, 18 Nov 2016 14:52:34 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [BUG] dd doesn't return on ENOSPC and hang when fulfilling
- rmapbt XFS
-Message-ID: <20161118065234.GH27776@eguan.usersys.redhat.com>
-References: <20161117163515.GB27776@eguan.usersys.redhat.com>
- <20161117173639.GJ16813@birch.djwong.org>
- <20161117201102.GK16813@birch.djwong.org>
- <20161118052633.GE27776@eguan.usersys.redhat.com>
- <20161118054620.GG28177@dastard>
+Received: from bombadil.infradead.org ([198.137.202.9]:54091 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751180AbcKRILr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Nov 2016 03:11:47 -0500
+Date: Fri, 18 Nov 2016 00:11:46 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH RFC 1/4] xfs: clean up cow fork reservation and tag
+ inodes correctly
+Message-ID: <20161118081146.GA9788@infradead.org>
+References: <1478636856-7590-1-git-send-email-bfoster@redhat.com>
+ <1478636856-7590-2-git-send-email-bfoster@redhat.com>
+ <20161115141621.GA18630@infradead.org>
+ <20161115181101.GC65218@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161118054620.GG28177@dastard>
+In-Reply-To: <20161115181101.GC65218@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Fri, Nov 18, 2016 at 04:46:20PM +1100, Dave Chinner wrote:
-> On Fri, Nov 18, 2016 at 01:26:33PM +0800, Eryu Guan wrote:
-> > On Thu, Nov 17, 2016 at 12:11:02PM -0800, Darrick J. Wong wrote:
-> > > On Thu, Nov 17, 2016 at 09:36:39AM -0800, Darrick J. Wong wrote:
-> > > > On Fri, Nov 18, 2016 at 12:35:15AM +0800, Eryu Guan wrote:
-> > > > > Hi all,
-> > > > > 
-> > > > > I hit a test hang in generic/224 when testing rmapbt enabled XFS on a
-> > > > > host that has non-zero sunit/swidth reported from underlying device. And
-> > > > > I simplified the reproducer to the following script, and the hang can be
-> > > > > reproduced on any host now.
-> > > > > 
-> > > > > -----
-> > > > > #!/bin/bash
-> > > > > 
-> > > > > dev=/dev/sda5
-> > > > > mnt=/mnt/xfs
-> > > > > 
-> > > > > mkfs -t xfs -m rmapbt=1 -d agcount=8,size=1g -f $dev
-> > > > 
-> > > > Hm.  I formatted with:
-> > > > mkfs.xfs -m rmapbt=1 -d sunit=4096,swidth=40960 -f /dev/sdf
-> > > > 
-> > > > (made up sunit numbers just to see how whacky it could get)
-> > > > 
-> > > > and got a different hang instead.  It looks like we are unable to
-> > > > allocate any blocks to the bmbt and various things blow up from
-> > > > there.  Will go retry with tracepoints on to see if we're running
-> > > > out of AG reservation or if we're really out of disk blocks or what.
-> > > > 
-> > > > Crash message attached at the end.
-> > > 
-> > > Hm.  Looking at the indlen calculations, I see that we don't include the
-> > > space that the rmapbt might need to store all the reverse mappings.  I
-> > > think this is a problem, since we decline delalloc reservations if (len
-> > > + indlen) > fdblocks, but we potentially end up using more than indlen
-> > > blocks to map len blocks into the file, so the allocator goes nuts.
-> > > 
-> > > Eryu, does the following patch fix the problem you see?  I ran your
-> > > reproducer and mine and it fixed the problem in both cases.  I didn't
-> > > observe any issues running generic/224 either.
+On Tue, Nov 15, 2016 at 01:11:01PM -0500, Brian Foster wrote:
+> On Tue, Nov 15, 2016 at 06:16:21AM -0800, Christoph Hellwig wrote:
+> > > +	if (imap->br_startoff != got.br_startoff ||
+> > > +	    imap->br_blockcount != got.br_blockcount)
+> > >  		xfs_inode_set_cowblocks_tag(ip);
 > > 
-> > I applied your patch (and only your patch, patches posted by Dave were
-> > not included) on top of 4.9-rc5 kernel, and it passed my simplified
-> > reproducer, but still failed generic/224 with
+> > Can't got.br_blockcount be smaller than imap->br_blockcount if we have
+> > an existing COW fork reservation lying around behind the whole we're
+> > filling?  Also they way xfs_bmapi_reserve_delalloc works the startoff
+> > will be the same.  E.g. this check should probably be:
 > > 
-> > MKFS_OPTIONS="-b size=4k -m crc=1,rmapbt=1 -d agcount=8"
-> > 
-> > Not all the time, but easily to hit. And sysrq-w showed the same traces
-> > as before.
-> > 
-> > SECTION       -- xfs_test
-> > RECREATING    -- xfs on /dev/mapper/testvg-testlv1
-> > FSTYP         -- xfs (non-debug)
-> > PLATFORM      -- Linux/x86_64 ibm-x3550m3-05 4.9.0-rc5+
-> > MKFS_OPTIONS  -- -f -f -b size=4k -m crc=1,rmapbt=1 -d agcount=8 /dev/mapper/testvg-testlv2
-> > MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/mapper/testvg-testlv2 /mnt/testarea/scratch
-> > 
-> > generic/224 16s ...  <===== never return
 > 
-> My patchset does pass generic/224 here, but it fails lots of other tests
-> because of an accounting problem I've not yet found.
+> Good point, though I think it can be smaller or larger without
+> necessarily having preallocation due to being merged with surrounding
+> extents. I'm not quite sure what the right answer for that is with
+> regard to tagging, but I do think it's better to have false positive
+> tagging than false negatives.
 
-I applied all four patches you posted on top of v.9-rc5 this time. And
-generic/224 still failed my test (test hang).
-
-> 
-> SECTION       -- xfs
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 test2 4.9.0-rc4-dgc+
-> MKFS_OPTIONS  -- -f -m rmapbt=1 -i sparse=1 /dev/sdg
-
-Does appending "-d agcount=8" to MKFS_OPTIONS make any difference for
-you? I cannot reproduce the hang either if I remove the agcount config.
-
-Thanks,
-Eryu
+Good point, merging can change both the start and length.  Based on
+that I think tagging in the caller of xfs_bmapi_reserve_delalloc is
+wrong, and we need to do it inside xfs_bmapi_reserve_delalloc where
+we know if we did speculative preallocation.
