@@ -1,62 +1,226 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:6625 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755798AbcKWE0g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2016 23:26:36 -0500
-Date: Wed, 23 Nov 2016 15:26:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 0/2] Btrfs: make a source length of 0 imply EOF for
- dedupe
-Message-ID: <20161123042632.GQ31101@dastard>
-References: <cover.1479427384.git.osandov@fb.com>
- <20161123020210.GW21290@hungrycats.org>
+Received: from mail.kernel.org ([198.145.29.136]:37594 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751085AbcKSB5t (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 18 Nov 2016 20:57:49 -0500
+Date: Fri, 18 Nov 2016 17:57:45 -0800
+From: Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: Re: [f2fs-dev] [PATCH v4] generic/391: check inode metadata on
+ f{data}sync after power-cut
+Message-ID: <20161119015745.GB45056@jaegeuk>
+References: <20161117032753.69315-1-jaegeuk@kernel.org>
+ <20161117192051.GE74211@jaegeuk>
+ <20161118194549.GE31226@jaegeuk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161123020210.GW21290@hungrycats.org>
+In-Reply-To: <20161118194549.GE31226@jaegeuk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
-Cc: Omar Sandoval <osandov@osandov.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Qu Wenruo <quwenruo@cn.fujitsu.com>, Christoph Hellwig <hch@infradead.org>, kernel-team@fb.com
+To: fstests@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Nov 22, 2016 at 09:02:10PM -0500, Zygo Blaxell wrote:
-> On Thu, Nov 17, 2016 at 04:07:48PM -0800, Omar Sandoval wrote:
-> > 3. Both XFS and Btrfs cap each dedupe operation to 16MB, but the
-> >    implicit EOF gets around this in the existing XFS implementation. I
-> >    copied this for the Btrfs implementation.
-> 
-> Somewhat tangential to this patch, but on the dedup topic:  Can we raise
-> or drop that 16MB limit?
-> 
-> The maximum btrfs extent length is 128MB.  Currently the btrfs dedup
-> behavior for a 128MB extent is to generate 8x16MB shared extent references
-> with different extent offsets to a single 128MB physical extent.
-> These references no longer look like the original 128MB extent to a
-> userspace dedup tool.  That raises the difficulty level substantially
-> for a userspace dedup tool when it tries to figure out which extents to
-> keep and which to discard or rewrite.
+This patch adds tests/generic/391 to test fsync and fdatasync with power-cuts.
 
-That, IMO, is a btrfs design/implementation problem, not a problem
-with the API. Applications are always going to end up doing things
-that aren't perfectly aligned to extent boundaries or sizes
-regardless of the size limit that is placed on the dedupe ranges.
+The rule to check is:
+1) fsync should guarantee all the inode metadata after power-cut,
+2) fdatasync should guarantee i_size and i_blocks at least after power-cut.
 
-> XFS may not have this problem--I haven't checked.
+Note that, in XFS, it allocates more blocks when doing writes, so it should
+close the file before fsync in order to get actual i_blocks after power-cut.
 
-It doesn't - it tracks shared blocks exactly and merges adjacent
-extent records whenever possible.
+Suggested-by: Chao Yu <yuchao0@huawei.com>
+Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+---
+ tests/generic/391     | 149 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/391.out |  11 ++++
+ tests/generic/group   |   1 +
+ 3 files changed, 161 insertions(+)
+ create mode 100755 tests/generic/391
+ create mode 100644 tests/generic/391.out
 
-> Even if we want to keep the 16MB limit, there's also no way to query the
-> kernel from userspace to find out what the limit is, other than by trial
-> and error.  It's not even in a header file, userspace just has to *know*.
-
-So add a define to the API to make it visible to applications and
-document it in the man page.
-
-Cheers,
-
-Dave.
+diff --git a/tests/generic/391 b/tests/generic/391
+new file mode 100755
+index 0000000..121e01d
+--- /dev/null
++++ b/tests/generic/391
+@@ -0,0 +1,149 @@
++#! /bin/bash
++# FS QA Test 391
++#
++# Test inode's metadata after fsync or fdatasync calls.
++# In the case of fsync, filesystem should recover all the inode metadata, while
++# recovering i_blocks and i_size at least for fdatasync.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016 Jaegeuk Kim.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/punch
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++
++rm -f $seqres.full
++_require_scratch
++_require_scratch_shutdown
++_require_xfs_io_command "fpunch"
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++testfile=$SCRATCH_MNT/testfile
++
++f_stat()
++{
++	$XFS_IO_PROG -r -c "stat -v" $testfile >$tmp.$1
++}
++
++f_sync()
++{
++	$XFS_IO_PROG -c "$1" $testfile >/dev/null
++}
++
++# check inode metadata after shutdown
++check_inode_metadata()
++{
++	# prepare syncing metadata
++	f_sync $1
++
++	# get inode metadata #1
++	f_stat before
++
++	# shutdown
++	src/godown $SCRATCH_MNT >> $seqres.full
++	_scratch_cycle_mount
++
++	# get inode metadata #2
++	f_stat after
++
++	# compare #1 and #2
++	diff $tmp.before $tmp.after >$tmp.diff
++
++	# fdatasync only cares about i_size and i_blocks
++	if [ "$1" = "fdatasync" ]; then
++		cat $tmp.diff | grep stat.size
++		cat $tmp.diff | grep stat.blocks
++	else
++		cat $tmp.diff
++	fi
++	cat $tmp.before >> $seqres.full
++	cat $tmp.after >> $seqres.full
++
++	rm $testfile
++}
++
++# append XX KB with f{data}sync, followed by power-cut
++test_i_size()
++{
++	echo "==== i_size $2 test with $1 ====" | tee -a $seqres.full
++	$XFS_IO_PROG -f -c "pwrite 0 4M"	\
++			-c "fsync"		\
++			-c "pwrite 4M $2"	\
++			$testfile >/dev/null
++	check_inode_metadata $1
++}
++
++# update times with f{data}sync, followed by power-cut
++test_i_time()
++{
++	echo "==== i_time test with $1 ====" | tee -a $seqres.full
++	$XFS_IO_PROG -f -c "pwrite 0 4M"	\
++			-c "fsync"		\
++			$testfile >/dev/null
++	sleep 1
++	touch $testfile
++	check_inode_metadata $1
++}
++
++# punch XX KB with f{data}sync, followed by power-cut
++test_punch()
++{
++	echo "==== fpunch $2 test with $1 ====" | tee -a $seqres.full
++	$XFS_IO_PROG -f -c "pwrite 0 4202496"	\
++			-c "fsync"		\
++			-c "fpunch 4194304 $2"\
++			$testfile >/dev/null
++	check_inode_metadata $1
++}
++
++for i in fsync fdatasync
++do
++	test_i_size $i 1024
++	test_i_size $i 4096
++	test_i_time $i
++	test_punch $i 1024
++	test_punch $i 4096
++done
++
++rm -f $tmp.*
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/391.out b/tests/generic/391.out
+new file mode 100644
+index 0000000..7c66776
+--- /dev/null
++++ b/tests/generic/391.out
+@@ -0,0 +1,11 @@
++QA output created by 391
++==== i_size 1024 test with fsync ====
++==== i_size 4096 test with fsync ====
++==== i_time test with fsync ====
++==== fpunch 1024 test with fsync ====
++==== fpunch 4096 test with fsync ====
++==== i_size 1024 test with fdatasync ====
++==== i_size 4096 test with fdatasync ====
++==== i_time test with fdatasync ====
++==== fpunch 1024 test with fdatasync ====
++==== fpunch 4096 test with fdatasync ====
+diff --git a/tests/generic/group b/tests/generic/group
+index 08007d7..9de3415 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -392,3 +392,4 @@
+ 387 auto clone
+ 388 auto log metadata
+ 389 auto quick acl
++391 auto quick metadata
 -- 
-Dave Chinner
-david@fromorbit.com
+2.8.3
+
