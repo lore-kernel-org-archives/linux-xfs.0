@@ -1,80 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46243 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932356AbcKWErb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2016 23:47:31 -0500
-Date: Tue, 22 Nov 2016 20:47:26 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] fideduperange.2: fix the discussion of maximum sizes
-Message-ID: <20161123044726.GF16807@birch.djwong.org>
-References: <20161123042222.GA30324@birch.djwong.org>
- <20161123043918.GD29697@mew>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161123043918.GD29697@mew>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34089 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752754AbcKSNRH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Nov 2016 08:17:07 -0500
+From: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH] fs: xfs: xfs_icreate_item: constify xfs_item_ops structure
+Date: Sat, 19 Nov 2016 18:46:51 +0530
+Message-Id: <1479561411-27987-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Omar Sandoval <osandov@osandov.com>
-Cc: mtk.manpages@gmail.com, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-man@vger.kernel.org
+To: julia.lawall@lip6.fr, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
 
-On Tue, Nov 22, 2016 at 08:39:18PM -0800, Omar Sandoval wrote:
-> On Tue, Nov 22, 2016 at 08:22:22PM -0800, Darrick J. Wong wrote:
-> > Fix the discussion of the limitations on the dest_count and src_length
-> > parameters to the fideduperange ioctl to reflect what's actually in the
-> > kernel.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  man2/ioctl_fideduperange.2 |   12 +++++++++---
-> >  1 file changed, 9 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/man2/ioctl_fideduperange.2 b/man2/ioctl_fideduperange.2
-> > index 2112d10..59f0ea9 100644
-> > --- a/man2/ioctl_fideduperange.2
-> > +++ b/man2/ioctl_fideduperange.2
-> > @@ -95,7 +95,7 @@ struct file_dedupe_range_info {
-> >  .in
-> >  
-> >  Each deduplication operation targets
-> > -.IR length
-> > +.IR src_length
-> >  bytes in file descriptor
-> >  .IR dest_fd
-> >  at offset
-> > @@ -108,8 +108,14 @@ During the call,
-> >  must be open for reading and
-> >  .IR dest_fd
-> >  must be open for writing.
-> > -For any call to this ioctl, there may not be more than 65,536
-> > -requests attached; each request may not exceed 16MiB.
-> > +The combined size of the struct
-> > +.IR file_dedupe_range
-> > +and the struct
-> > +.IR file_dedupe_range_info
-> > +array must not exceed the system page size.
-> > +The maximum size of
-> > +.IR src_length
-> > +is filesystem dependent and is typically 16MiB.
-> >  By convention, the storage used by
-> >  .IR src_fd
-> >  is mapped into
-> 
-> Might be worth it to clarify that the file_dedupe_range_info limit is a
-> hard limit that will result in an error if exceeded and that the
-> src_length limit is silently enforced. These semantics suck...
+Declare the structure xfs_item_ops as const as it is only passed as an
+argument to the function xfs_log_item_init. As this argument is of type
+const struct xfs_item_ops *, so xfs_item_ops structures having this
+property can be declared as const.
+Done using Coccinelle:
 
-Yeah... :(
+@r1 disable optional_qualifier @
+identifier i;
+position p;
+@@
+static struct xfs_item_ops i@p = {...};
 
-Anyway I'll post a v2 patch.
+@ok1@
+identifier r1.i;
+position p;
+expression e1,e2,e3;
+@@
+xfs_log_item_init(e1,e2,e3,&i@p)
 
---D
+@bad@
+position p!={r1.p,ok1.p};
+identifier r1.i;
+@@
+i@p
 
-> 
-> -- 
-> Omar
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+@depends on !bad disable optional_qualifier@
+identifier r1.i;
+@@
+static
++const
+struct xfs_item_ops i={...};
+
+@depends on !bad disable optional_qualifier@
+identifier r1.i;
+@@
++const
+struct xfs_item_ops i;
+
+File size before:
+   text	   data	    bss	    dec	    hex	filename
+    737	     64	      8	    809	    329	fs/xfs/xfs_icreate_item.o
+
+File size after:
+   text	   data	    bss	    dec	    hex	filename
+    801	      0	      8	    809	    329	fs/xfs/xfs_icreate_item.o
+
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+---
+ fs/xfs/xfs_icreate_item.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
+index d45ca72..865ad13 100644
+--- a/fs/xfs/xfs_icreate_item.c
++++ b/fs/xfs/xfs_icreate_item.c
+@@ -133,7 +133,7 @@ static inline struct xfs_icreate_item *ICR_ITEM(struct xfs_log_item *lip)
+ /*
+  * This is the ops vector shared by all buf log items.
+  */
+-static struct xfs_item_ops xfs_icreate_item_ops = {
++static const struct xfs_item_ops xfs_icreate_item_ops = {
+ 	.iop_size	= xfs_icreate_item_size,
+ 	.iop_format	= xfs_icreate_item_format,
+ 	.iop_pin	= xfs_icreate_item_pin,
+-- 
+1.9.1
+
