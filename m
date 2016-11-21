@@ -1,111 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.molgen.mpg.de ([141.14.17.9]:39895 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754809AbcKUPf4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Nov 2016 10:35:56 -0500
-Subject: Re: INFO: rcu_sched detected stalls on CPUs/tasks with `kswapd` and
- `mem_cgroup_shrink_node`
-References: <24c226a5-1a4a-173e-8b4e-5107a2baac04@molgen.mpg.de>
- <28a9fabb-c9fe-c865-016a-467a4d5e2a34@molgen.mpg.de>
- <20161108170340.GB4127@linux.vnet.ibm.com>
- <6c717122-e671-b086-77ed-4b3c26398564@molgen.mpg.de>
- <20161108183938.GD4127@linux.vnet.ibm.com>
- <9f87f8f0-9d0f-f78f-8dca-993b09b19a69@molgen.mpg.de>
- <20161116173036.GK3612@linux.vnet.ibm.com>
- <20161121134130.GB18112@dhcp22.suse.cz>
- <20161121140122.GU3612@linux.vnet.ibm.com>
- <20161121141818.GD18112@dhcp22.suse.cz>
- <20161121142901.GV3612@linux.vnet.ibm.com>
-From: Donald Buczek <buczek@molgen.mpg.de>
-Message-ID: <68025f6c-6801-ab46-b0fc-a9407353d8ce@molgen.mpg.de>
-Date: Mon, 21 Nov 2016 16:35:53 +0100
-MIME-Version: 1.0
-In-Reply-To: <20161121142901.GV3612@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([198.137.202.9]:57993 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754228AbcKUQjE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2016 11:39:04 -0500
+Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+        id 1c8rcV-0001JA-97
+        for linux-xfs@vger.kernel.org; Mon, 21 Nov 2016 16:39:03 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/14] xfs: new inode extent list lookup helpers
+Date: Mon, 21 Nov 2016 17:38:43 +0100
+Message-Id: <1479746336-10986-2-git-send-email-hch@lst.de>
+In-Reply-To: <1479746336-10986-1-git-send-email-hch@lst.de>
+References: <1479746336-10986-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: dvteam@molgen.mpg.de, Michal Hocko <mhocko@kernel.org>
-Cc: Paul Menzel <pmenzel@molgen.mpg.de>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Josh Triplett <josh@joshtriplett.org>
+To: linux-xfs@vger.kernel.org
 
-On 11/21/16 15:29, Paul E. McKenney wrote:
-> On Mon, Nov 21, 2016 at 03:18:19PM +0100, Michal Hocko wrote:
->> On Mon 21-11-16 06:01:22, Paul E. McKenney wrote:
->>> On Mon, Nov 21, 2016 at 02:41:31PM +0100, Michal Hocko wrote:
->> [...]
->>>> To the patch. I cannot say I would like it. cond_resched_rcu_qs sounds
->>>> way too lowlevel for this usage. If anything cond_resched somewhere inside
->>>> mem_cgroup_iter would be more appropriate to me.
->>> Like this?
->>>
->>> 							Thanx, Paul
->>>
->>> ------------------------------------------------------------------------
->>>
->>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>> index ae052b5e3315..81cb30d5b2fc 100644
->>> --- a/mm/memcontrol.c
->>> +++ b/mm/memcontrol.c
->>> @@ -867,6 +867,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
->>>   out:
->>>   	if (prev && prev != root)
->>>   		css_put(&prev->css);
->>> +	cond_resched_rcu_qs();
->> I still do not understand why should we play with _rcu_qs at all and a
->> regular cond_resched is not sufficient. Anyway I would have to double
->> check whether we can do cond_resched in the iterator. I do not remember
->> having users which are atomic but I might be easily wrong here. Before
->> we touch this code, though, I would really like to understand what is
->> actually going on here because as I've already pointed out we should
->> have some resched points in the reclaim path.
-> If there is a tight loop in the kernel, cond_resched() will ensure that
-> other tasks get a chance to run, but if there are no such tasks, it does
-> nothing to give RCU the quiescent state that it needs from time to time.
-> So if there is a possibility of a long-running in-kernel loop without
-> preemption by some other task, cond_resched_rcu_qs() is required.
->
-> I welcome your deeper investigation -- I am very much treating symptoms
-> here, which might or might not have any relationship to fixing underlying
-> problems.
->
-> 							Thanx, Paul
->
+xfs_iext_lookup_extent looks up a single extent at the passed in offset,
+and returns the extent covering the area, or the one behind it in case
+of a hole, as well as the index of the returned extent in arguments,
+as well as a simple bool as return value that is set to false if no
+extent could be found because the offset is behind EOF.  It is a simpler
+replacement for xfs_bmap_search_extent that leaves looking up the rarely
+needed previous extent to the caller and has a nicer calling convention.
 
-Hello,
+xfs_iext_get_extent is a helper for iterating over the extent list,
+it takes an extent index as input, and returns the extent at that index
+in it's expanded form in an argument if it exists.  The actual return
+value is a bool whether the index is valid or not.
 
-thanks a lot for looking into this!
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c | 46 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_inode_fork.h |  6 ++++++
+ 2 files changed, 52 insertions(+)
 
-Let me add some information from the reporting site:
-
-* We've tried the patch from Paul E. McKenney (the one posted Wed, 16 
-Nov 2016)  and it doesn't shut up the rcu stall warnings.
-
-* Log file from a boot with the patch applied ( grep kernel 
-/var/log/messages ) is here : 
-http://owww.molgen.mpg.de/~buczek/321322/2016-11-21_syslog.txt
-
-* This system is a backup server and walks over thousands of files 
-sometimes with multiple parallel rsync processes.
-
-* No rcu_* warnings on that machine with 4.7.2, but with 4.8.4 , 4.8.6 , 
-4.8.8 and now 4.9.0-rc5+Pauls patch
-
-* When the backups are actually happening there might be relevant memory 
-pressure from inode cache and the rsync processes. We saw the oom-killer 
-kick in on another machine with same hardware and similar (a bit higher) 
-workload. This other machine also shows a lot of rcu stall warnings 
-since 4.8.4.
-
-* We see "rcu_sched detected stalls" also on some other machines since 
-we switched to 4.8 but not as frequently as on the two backup servers. 
-Usually there's "shrink_node" and "kswapd" on the top of the stack. 
-Often "xfs_reclaim_inodes" variants on top of that.
-
-Donald
-
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 5fbe24c..222e103 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -2003,3 +2003,49 @@ xfs_ifork_init_cow(
+ 	ip->i_cformat = XFS_DINODE_FMT_EXTENTS;
+ 	ip->i_cnextents = 0;
+ }
++
++/*
++ * Lookup the extent covering bno.
++ *
++ * If there is an extent covering bno return the extent index, and store the
++ * expanded extent structure in *gotp, and the extent index in *idx.
++ * If there is no extent covering bno, but there is an extent after it (e.g.
++ * it lies in a hole) return that extent in *gotp and its index in *idx
++ * instead.
++ * If bno is beyond the last extent return false, and return the index after
++ * the last valid index in *idxp.
++ */
++bool
++xfs_iext_lookup_extent(
++	struct xfs_inode	*ip,
++	struct xfs_ifork	*ifp,
++	xfs_fileoff_t		bno,
++	xfs_extnum_t		*idxp,
++	struct xfs_bmbt_irec	*gotp)
++{
++	struct xfs_bmbt_rec_host *ep;
++
++	XFS_STATS_INC(ip->i_mount, xs_look_exlist);
++
++	ep = xfs_iext_bno_to_ext(ifp, bno, idxp);
++	if (!ep)
++		return false;
++	xfs_bmbt_get_all(ep, gotp);
++	return true;
++}
++
++/*
++ * Return true if there is an extent at index idx, and return the expanded
++ * extent structure at idx in that case.  Else return false.
++ */
++bool
++xfs_iext_get_extent(
++	struct xfs_ifork	*ifp,
++	xfs_extnum_t		idx,
++	struct xfs_bmbt_irec	*gotp)
++{
++	if (idx < 0 || idx >= xfs_iext_count(ifp))
++		return false;
++	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), gotp);
++	return true;
++}
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 8bf112e..7fb8365 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -182,6 +182,12 @@ void		xfs_iext_irec_compact_pages(struct xfs_ifork *);
+ void		xfs_iext_irec_compact_full(struct xfs_ifork *);
+ void		xfs_iext_irec_update_extoffs(struct xfs_ifork *, int, int);
+ 
++bool		xfs_iext_lookup_extent(struct xfs_inode *ip,
++			struct xfs_ifork *ifp, xfs_fileoff_t bno,
++			xfs_extnum_t *idxp, struct xfs_bmbt_irec *gotp);
++bool		xfs_iext_get_extent(struct xfs_ifork *ifp, xfs_extnum_t idx,
++			struct xfs_bmbt_irec *gotp);
++
+ extern struct kmem_zone	*xfs_ifork_zone;
+ 
+ extern void xfs_ifork_init_cow(struct xfs_inode *ip);
 -- 
-Donald Buczek
-buczek@molgen.mpg.de
-Tel: +49 30 8413 1433
+2.1.4
 
