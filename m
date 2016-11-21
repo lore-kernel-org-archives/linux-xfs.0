@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58698 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:58881 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754386AbcKUQja (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2016 11:39:30 -0500
+        with ESMTP id S1754386AbcKUQjh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2016 11:39:37 -0500
 Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-        id 1c8rcv-0001ai-3H
-        for linux-xfs@vger.kernel.org; Mon, 21 Nov 2016 16:39:29 +0000
+        id 1c8rd2-0001hy-JB
+        for linux-xfs@vger.kernel.org; Mon, 21 Nov 2016 16:39:37 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/14] xfs: cleanup xfs_reflink_find_cow_mapping
-Date: Mon, 21 Nov 2016 17:38:51 +0100
-Message-Id: <1479746336-10986-10-git-send-email-hch@lst.de>
+Subject: [PATCH 11/14] xfs: use new extent lookup helpers in xfs_reflink_cancel_cow_blocks
+Date: Mon, 21 Nov 2016 17:38:53 +0100
+Message-Id: <1479746336-10986-12-git-send-email-hch@lst.de>
 In-Reply-To: <1479746336-10986-1-git-send-email-hch@lst.de>
 References: <1479746336-10986-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,151 +18,49 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Use xfs_iext_lookup_extent to look up the extent, drop a useless check,
-drop a unneeded return value and clean up the general style a little bit.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_aops.c    | 16 ++++++++--------
- fs/xfs/xfs_reflink.c | 33 ++++++++++-----------------------
- fs/xfs/xfs_reflink.h |  2 +-
- 3 files changed, 19 insertions(+), 32 deletions(-)
+ fs/xfs/xfs_reflink.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index dd6cacf..ab266d6 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -777,7 +777,7 @@ xfs_map_cow(
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_bmbt_irec	imap;
--	bool			is_cow = false, need_alloc = false;
-+	bool			is_cow = false;
- 	int			error;
- 
- 	/*
-@@ -795,7 +795,7 @@ xfs_map_cow(
- 	 * Else we need to check if there is a COW mapping at this offset.
- 	 */
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap, &need_alloc);
-+	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap);
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
- 	if (!is_cow)
-@@ -805,7 +805,7 @@ xfs_map_cow(
- 	 * And if the COW mapping has a delayed extent here we need to
- 	 * allocate real space for it now.
- 	 */
--	if (need_alloc) {
-+	if (isnullstartblock(imap.br_startblock)) {
- 		error = xfs_iomap_write_allocate(ip, XFS_COW_FORK, offset,
- 				&imap);
- 		if (error)
-@@ -1311,7 +1311,6 @@ __xfs_get_blocks(
- 	ssize_t			size;
- 	int			new = 0;
- 	bool			is_cow = false;
--	bool			need_alloc = false;
- 
- 	BUG_ON(create && !direct);
- 
-@@ -1337,9 +1336,11 @@ __xfs_get_blocks(
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + size);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 
--	if (create && direct && xfs_is_reflink_inode(ip))
--		is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap,
--					&need_alloc);
-+	if (create && direct && xfs_is_reflink_inode(ip)) {
-+		is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap);
-+		ASSERT(!is_cow || !isnullstartblock(imap.br_startblock));
-+	}
-+
- 	if (!is_cow) {
- 		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
- 					&imap, &nimaps, XFS_BMAPI_ENTIRE);
-@@ -1356,7 +1357,6 @@ __xfs_get_blocks(
- 			xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb,
- 					&imap);
- 	}
--	ASSERT(!need_alloc);
- 	if (error)
- 		goto out_unlock;
- 
 diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 35e02ce..e92355a 100644
+index d3cfae8..4e07da3 100644
 --- a/fs/xfs/xfs_reflink.c
 +++ b/fs/xfs/xfs_reflink.c
-@@ -420,44 +420,31 @@ xfs_reflink_allocate_cow_range(
- }
- 
- /*
-- * Find the CoW reservation (and whether or not it needs block allocation)
-- * for a given byte offset of a file.
-+ * Find the CoW reservation for a given byte offset of a file.
-  */
- bool
- xfs_reflink_find_cow_mapping(
- 	struct xfs_inode		*ip,
- 	xfs_off_t			offset,
--	struct xfs_bmbt_irec		*imap,
--	bool				*need_alloc)
-+	struct xfs_bmbt_irec		*imap)
+@@ -492,18 +492,15 @@ xfs_reflink_cancel_cow_blocks(
+ 	xfs_fileoff_t			end_fsb)
  {
--	struct xfs_bmbt_irec		irec;
--	struct xfs_ifork		*ifp;
--	struct xfs_bmbt_rec_host	*gotp;
--	xfs_fileoff_t			bno;
-+	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-+	xfs_fileoff_t			offset_fsb;
-+	struct xfs_bmbt_irec		got;
+ 	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+-	struct xfs_bmbt_irec		got, prev, del;
++	struct xfs_bmbt_irec		got, del;
  	xfs_extnum_t			idx;
+ 	xfs_fsblock_t			firstfsb;
+ 	struct xfs_defer_ops		dfops;
+-	int				error = 0, eof = 0;
++	int				error = 0;
  
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
- 	ASSERT(xfs_is_reflink_inode(ip));
- 
--	/* Find the extent in the CoW fork. */
--	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
--	bno = XFS_B_TO_FSBT(ip->i_mount, offset);
--	gotp = xfs_iext_bno_to_ext(ifp, bno, &idx);
--	if (!gotp)
-+	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+ 	if (!xfs_is_reflink_inode(ip))
+ 		return 0;
+-
+-	xfs_bmap_search_extents(ip, offset_fsb, XFS_COW_FORK, &eof, &idx,
+-			&got, &prev);
+-	if (eof)
 +	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got))
- 		return false;
--
--	xfs_bmbt_get_all(gotp, &irec);
--	if (bno >= irec.br_startoff + irec.br_blockcount ||
--	    bno < irec.br_startoff)
-+	if (got.br_startoff > offset_fsb)
- 		return false;
+ 		return 0;
  
- 	trace_xfs_reflink_find_cow_mapping(ip, offset, 1, XFS_IO_OVERWRITE,
--			&irec);
--
--	/* If it's still delalloc, we must allocate later. */
--	*imap = irec;
--	*need_alloc = !!(isnullstartblock(irec.br_startblock));
--
-+			&got);
-+	*imap = got;
- 	return true;
- }
+ 	while (got.br_startoff < end_fsb) {
+@@ -546,9 +543,8 @@ xfs_reflink_cancel_cow_blocks(
+ 			xfs_bmap_del_extent_cow(ip, &idx, &got, &del);
+ 		}
  
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 97ea9b4..cff5fc3 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -31,7 +31,7 @@ extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
- extern int xfs_reflink_allocate_cow_range(struct xfs_inode *ip,
- 		xfs_off_t offset, xfs_off_t count);
- extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
--		struct xfs_bmbt_irec *imap, bool *need_alloc);
-+		struct xfs_bmbt_irec *imap);
- extern int xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
- 		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
+-		if (++idx >= xfs_iext_count(ifp))
++		if (!xfs_iext_get_extent(ifp, ++idx, &got))
+ 			break;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), &got);
+ 	}
  
+ 	/* clear tag if cow fork is emptied */
 -- 
 2.1.4
 
