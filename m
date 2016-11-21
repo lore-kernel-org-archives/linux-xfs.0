@@ -1,72 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21617 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932600AbcKWG7f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Nov 2016 01:59:35 -0500
-Subject: [PATCH 2/2] docs: update refcount btree to reflect new cow staging
- extent policy
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 22 Nov 2016 22:59:32 -0800
-Message-ID: <147988437242.12225.5403821258157075504.stgit@birch.djwong.org>
-In-Reply-To: <147988436636.12225.3639807183440429674.stgit@birch.djwong.org>
-References: <147988436636.12225.3639807183440429674.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([198.137.202.9]:57894 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753695AbcKUQjA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2016 11:39:00 -0500
+Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+        id 1c8rcS-0001Gx-0j
+        for linux-xfs@vger.kernel.org; Mon, 21 Nov 2016 16:39:00 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: new helpers to clean up extent tree lookups V2
+Date: Mon, 21 Nov 2016 17:38:42 +0100
+Message-Id: <1479746336-10986-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-We now record the extents being used to stage a copy on write operation
-in the refcount btree with the high bit of rc_startblock set and a
-reference count of 1.  Setting the high bit helps us reduce CoW GC time
-at mount by moving all the records to the right side of the tree.
+Now that Eric send out xfs_iext_count before I could get to it I need
+to get my other iext helpers out ASAP before running into another
+rebase :)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- .../XFS_Filesystem_Structure/refcountbt.asciidoc   |   19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+This series adds two new helpers that make iterating the extent list
+a lot cleaner.  They are the first step towards better abstracting out
+access to the extent list and thus allowing us to experiment with
+better data structures for it.  The next step is the manipulations
+in xfs_bmap_{add,del}_extent*, which will be more work than these
+helpers, but I have some of that in progress.
 
-
-diff --git a/design/XFS_Filesystem_Structure/refcountbt.asciidoc b/design/XFS_Filesystem_Structure/refcountbt.asciidoc
-index dbbb98e..508a9dd 100644
---- a/design/XFS_Filesystem_Structure/refcountbt.asciidoc
-+++ b/design/XFS_Filesystem_Structure/refcountbt.asciidoc
-@@ -25,7 +25,10 @@ struct xfs_refcount_rec {
- ----
- 
- *rc_startblock*::
--AG block number of this record.
-+AG block number of this record.  The high bit is set for all records
-+referring to an extent that is being used to stage a copy on write
-+operation.  This reduces recovery time during mount operations.  The
-+reference count of these staging events must only be 1.
- 
- *rc_blockcount*::
- The length of this extent.
-@@ -81,12 +84,18 @@ lsn = 0x200004ec2
- uuid = f1f89746-e00b-49c9-96b3-ecef0f2f14ae
- owner = 0
- crc = 0xc3962813 (correct)
--recs[1-80] = [startblock,blockcount,refcount]
--        1:[65780,1,2] 2:[65781,1,3] 3:[65785,2,2] 4:[66640,1,2]
--        5:[69602,4,2] 6:[72256,16,2] 7:[72871,4,2] 8:[72879,20,2]
--        9:[73395,4,2] 10:[75063,4,2] 11:[79093,4,2] 12:[86344,16,2]
-+recs[1-80] = [startblock,blockcount,refcount,cowflag]
-+        1:[65780,1,2,0] 2:[65781,1,3,0] 3:[65785,2,2,0] 4:[66640,1,2,0]
-+        5:[69602,4,2,0] 6:[72256,16,2,0] 7:[72871,4,2,0] 8:[72879,20,2,0]
-+        9:[73395,4,2,0] 10:[75063,4,2,0] 11:[79093,4,2,0] 12:[86344,16,2,0]
-+        ...
-+        80:[35235,10,1,1]
- ----
- 
-+Notice record 80.  The copy on write flag is set and the reference count is
-+1, which indicates that the extent 35,235 - 35,244 are being used to stage a
-+copy on write activity.  The "cowflag" field is the high bit of rc_startblock.
-+
- Record 6 in the reference count B+tree for AG 0 indicates that the AG extent
- starting at block 72,256 and running for 16 blocks has a reference count of 2.
- This means that there are two files sharing the block:
-
+Changes since V1:
+ - incorporate review feedback from Brian (various minor items)
