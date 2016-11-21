@@ -1,31 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57894 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:58062 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753695AbcKUQjA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2016 11:39:00 -0500
+        with ESMTP id S1753817AbcKUQjH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2016 11:39:07 -0500
 Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-        id 1c8rcS-0001Gx-0j
-        for linux-xfs@vger.kernel.org; Mon, 21 Nov 2016 16:39:00 +0000
+        id 1c8rcY-0001Ky-3c
+        for linux-xfs@vger.kernel.org; Mon, 21 Nov 2016 16:39:06 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: new helpers to clean up extent tree lookups V2
-Date: Mon, 21 Nov 2016 17:38:42 +0100
-Message-Id: <1479746336-10986-1-git-send-email-hch@lst.de>
+Subject: [PATCH 02/14] xfs: cleanup xfs_bmap_last_before
+Date: Mon, 21 Nov 2016 17:38:44 +0100
+Message-Id: <1479746336-10986-3-git-send-email-hch@lst.de>
+In-Reply-To: <1479746336-10986-1-git-send-email-hch@lst.de>
+References: <1479746336-10986-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Now that Eric send out xfs_iext_count before I could get to it I need
-to get my other iext helpers out ASAP before running into another
-rebase :)
+Rewrite the function using xfs_iext_lookup_extent and xfs_iext_get_extent,
+and massage the flow into something easily understandable.
 
-This series adds two new helpers that make iterating the extent list
-a lot cleaner.  They are the first step towards better abstracting out
-access to the extent list and thus allowing us to experiment with
-better data structures for it.  The next step is the manipulations
-in xfs_bmap_{add,del}_extent*, which will be more work than these
-helpers, but I have some of that in progress.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 64 ++++++++++++++++++++++++------------------------
+ 1 file changed, 32 insertions(+), 32 deletions(-)
 
-Changes since V1:
- - incorporate review feedback from Brian (various minor items)
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 5c3c4dd..98f490b 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1523,44 +1523,44 @@ xfs_bmap_first_unused(
+  */
+ int						/* error */
+ xfs_bmap_last_before(
+-	xfs_trans_t	*tp,			/* transaction pointer */
+-	xfs_inode_t	*ip,			/* incore inode */
+-	xfs_fileoff_t	*last_block,		/* last block */
+-	int		whichfork)		/* data or attr fork */
++	struct xfs_trans	*tp,		/* transaction pointer */
++	struct xfs_inode	*ip,		/* incore inode */
++	xfs_fileoff_t		*last_block,	/* last block */
++	int			whichfork)	/* data or attr fork */
+ {
+-	xfs_fileoff_t	bno;			/* input file offset */
+-	int		eof;			/* hit end of file */
+-	xfs_bmbt_rec_host_t *ep;		/* pointer to last extent */
+-	int		error;			/* error return value */
+-	xfs_bmbt_irec_t	got;			/* current extent value */
+-	xfs_ifork_t	*ifp;			/* inode fork pointer */
+-	xfs_extnum_t	lastx;			/* last extent used */
+-	xfs_bmbt_irec_t	prev;			/* previous extent value */
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
++	struct xfs_bmbt_irec	got;
++	xfs_extnum_t		idx;
++	int			error;
+ 
+-	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
+-	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+-	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
+-	       return -EIO;
+-	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
++	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
++	case XFS_DINODE_FMT_LOCAL:
+ 		*last_block = 0;
+ 		return 0;
++	case XFS_DINODE_FMT_BTREE:
++	case XFS_DINODE_FMT_EXTENTS:
++		break;
++	default:
++		return -EIO;
+ 	}
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	if (!(ifp->if_flags & XFS_IFEXTENTS) &&
+-	    (error = xfs_iread_extents(tp, ip, whichfork)))
+-		return error;
+-	bno = *last_block - 1;
+-	ep = xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got,
+-		&prev);
+-	if (eof || xfs_bmbt_get_startoff(ep) > bno) {
+-		if (prev.br_startoff == NULLFILEOFF)
+-			*last_block = 0;
+-		else
+-			*last_block = prev.br_startoff + prev.br_blockcount;
++
++	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++		error = xfs_iread_extents(tp, ip, whichfork);
++		if (error)
++			return error;
+ 	}
+-	/*
+-	 * Otherwise *last_block is already the right answer.
+-	 */
++
++	if (xfs_iext_lookup_extent(ip, ifp, *last_block - 1, &idx, &got)) {
++		if (got.br_startoff <= *last_block - 1)
++			return 0;
++	}
++
++	if (xfs_iext_get_extent(ifp, idx - 1, &got)) {
++		*last_block = got.br_startoff + got.br_blockcount;
++		return 0;
++	}
++
++	*last_block = 0;
+ 	return 0;
+ }
+ 
+-- 
+2.1.4
+
