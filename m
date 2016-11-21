@@ -1,90 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wj0-f195.google.com ([209.85.210.195]:36857 "EHLO
-        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754151AbcKWHKi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Nov 2016 02:10:38 -0500
-Subject: Re: [PATCH v2] fideduperange.2: fix the discussion of maximum sizes
-References: <20161123044816.GG16807@birch.djwong.org>
-From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Message-ID: <c15252ae-ac37-5e02-44d6-d500228642e3@gmail.com>
-Date: Wed, 23 Nov 2016 08:05:56 +0100
+Received: from mx1.redhat.com ([209.132.183.28]:34256 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754465AbcKURT0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Nov 2016 12:19:26 -0500
+Date: Mon, 21 Nov 2016 12:19:24 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 04/14] xfs: use new extent lookup helpers in
+ xfs_bmapi_write
+Message-ID: <20161121171924.GC13300@bfoster.bfoster>
+References: <1479746336-10986-1-git-send-email-hch@lst.de>
+ <1479746336-10986-5-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20161123044816.GG16807@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1479746336-10986-5-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: mtk.manpages@gmail.com, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-man@vger.kernel.org, osandov@osandov.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On 11/23/2016 05:48 AM, Darrick J. Wong wrote:
-> Fix the discussion of the limitations on the dest_count and src_length
-> parameters to the fideduperange ioctl to reflect what's actually in the
-> kernel.
-
-Thanks Darrick. Applied.
-
-Cheers,
-
-Michael
-
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Nov 21, 2016 at 05:38:46PM +0100, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  man2/ioctl_fideduperange.2 |   20 +++++++++++++++++---
->  1 file changed, 17 insertions(+), 3 deletions(-)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/libxfs/xfs_bmap.c | 15 +++++++--------
+>  1 file changed, 7 insertions(+), 8 deletions(-)
 > 
-> diff --git a/man2/ioctl_fideduperange.2 b/man2/ioctl_fideduperange.2
-> index 2112d10..057229d 100644
-> --- a/man2/ioctl_fideduperange.2
-> +++ b/man2/ioctl_fideduperange.2
-> @@ -95,7 +95,7 @@ struct file_dedupe_range_info {
->  .in
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 1a0fee4..9a8621d 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4561,7 +4561,7 @@ xfs_bmapi_write(
+>  	struct xfs_ifork	*ifp;
+>  	struct xfs_bmalloca	bma = { NULL };	/* args for xfs_bmap_alloc */
+>  	xfs_fileoff_t		end;		/* end of mapped file region */
+> -	int			eof;		/* after the end of extents */
+> +	bool			eof = false;	/* after the end of extents */
+>  	int			error;		/* error return */
+>  	int			n;		/* current extent index */
+>  	xfs_fileoff_t		obno;		/* old block number (offset) */
+> @@ -4639,12 +4639,14 @@ xfs_bmapi_write(
+>  			goto error0;
+>  	}
 >  
->  Each deduplication operation targets
-> -.IR length
-> +.IR src_length
->  bytes in file descriptor
->  .IR dest_fd
->  at offset
-> @@ -108,8 +108,15 @@ During the call,
->  must be open for reading and
->  .IR dest_fd
->  must be open for writing.
-> -For any call to this ioctl, there may not be more than 65,536
-> -requests attached; each request may not exceed 16MiB.
-> +The combined size of the struct
-> +.IR file_dedupe_range
-> +and the struct
-> +.IR file_dedupe_range_info
-> +array must not exceed the system page size.
-> +The maximum size of
-> +.IR src_length
-> +is filesystem dependent and is typically 16MiB.
-> +This limit will be enforced silently by the filesystem.
->  By convention, the storage used by
->  .IR src_fd
->  is mapped into
-> @@ -144,6 +151,13 @@ is set to indicate the error.
->  .SH ERRORS
->  Error codes can be one of, but are not limited to, the following:
->  .TP
-> +.B ENOMEM
-> +The kernel was unable to allocate sufficient memory to perform the
-> +operation or
-> +.IR dest_count
-> +is so large that the input argument description spans more than a single
-> +page of memory.
-> +.TP
->  .B EBADF
->  .IR src_fd
->  is not open for reading;
-> .
+> -	xfs_bmap_search_extents(ip, bno, whichfork, &eof, &bma.idx, &bma.got,
+> -				&bma.prev);
+>  	n = 0;
+>  	end = bno + len;
+>  	obno = bno;
+>  
+> +	if (!xfs_iext_lookup_extent(ip, ifp, bno, &bma.idx, &bma.got))
+> +		eof = true;
+> +	if (!xfs_iext_get_extent(ifp, bma.idx - 1, &bma.prev))
+> +		bma.prev.br_startoff = NULLFILEOFF;
+>  	bma.tp = tp;
+>  	bma.ip = ip;
+>  	bma.total = total;
+> @@ -4731,11 +4733,8 @@ xfs_bmapi_write(
+>  
+>  		/* Else go on to the next record. */
+>  		bma.prev = bma.got;
+> -		if (++bma.idx < xfs_iext_count(ifp)) {
+> -			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma.idx),
+> -					 &bma.got);
+> -		} else
+> -			eof = 1;
+> +		if (!xfs_iext_get_extent(ifp, ++bma.idx, &bma.got))
+> +			eof = true;
+>  	}
+>  	*nmap = n;
+>  
+> -- 
+> 2.1.4
 > 
-
-
--- 
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
