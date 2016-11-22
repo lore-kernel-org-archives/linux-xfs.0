@@ -1,68 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36589 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:33850 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750935AbcKEAI2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:08:28 -0400
-Subject: [PATCH 04/16] libxfs: remove unnecessary hascrc test in btree
- verifiers
+        with ESMTP id S932355AbcKVSVd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2016 13:21:33 -0500
+Date: Tue, 22 Nov 2016 10:21:26 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:08:24 -0700
-Message-ID: <147830450463.26713.17853370356150959278.stgit@birch.djwong.org>
-In-Reply-To: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+Subject: [PATCH v2 05/16] xfs: set XFS_DA_OP_OKNOENT in xfs_attr_get
+Message-ID: <20161122182126.GM16813@birch.djwong.org>
 References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+ <147830451072.26713.4807330905355527976.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <147830451072.26713.4807330905355527976.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: david@fromorbit.com
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-xfs_btree_sblock_v5hdr_verify already checks _hascrc, so we can
-remove it from the verifier functions.  For whatever reason this
-change made it into the kernel but not xfsprogs.
+From: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Source kernel commit: c400ee3ed1b13d45adde68e12254dc6ab6977b59
+
+It's entirely possible for userspace to ask for an xattr which
+does not exist.
+
+Normally, there is no problem whatsoever when we ask for such
+a thing, but when we look at an obfuscated metadump image
+on a debug kernel with selinux, we trip over this ASSERT in
+xfs_da3_path_shift():
+
+*result = -ENOENT;      /* we're out of our tree */
+ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
+
+It (more or less) only shows up in the above scenario, because
+xfs_metadump obfuscates attr names, but chooses names which
+keep the same hash value - and xfs_da3_node_lookup_int does:
+
+if (((retval == -ENOENT) || (retval == -ENOATTR)) &&
+(blk->hashval == args->hashval)) {
+error = xfs_da3_path_shift(state, &state->path, 1, 1,
+&retval);
+
+IOWS, we only get down to the xfs_da3_path_shift() ASSERT
+if we are looking for an xattr which doesn't exist, but we
+find xattrs on disk which have the same hash, and so might be
+a hash collision, so we try the path shift.  When *that*
+fails to find what we're looking for, we hit the assert about
+XFS_DA_OP_OKNOENT.
+
+Simply setting XFS_DA_OP_OKNOENT in xfs_attr_get solves this
+rather corner-case problem with no ill side effects.  It's
+fine for an attr name lookup to fail.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- libxfs/xfs_alloc_btree.c  |    4 ----
- libxfs/xfs_ialloc_btree.c |    2 --
- 2 files changed, 6 deletions(-)
+ libxfs/xfs_attr.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-
-diff --git a/libxfs/xfs_alloc_btree.c b/libxfs/xfs_alloc_btree.c
-index f993b87..ff4bae4 100644
---- a/libxfs/xfs_alloc_btree.c
-+++ b/libxfs/xfs_alloc_btree.c
-@@ -278,8 +278,6 @@ xfs_allocbt_verify(
- 	level = be16_to_cpu(block->bb_level);
- 	switch (block->bb_magic) {
- 	case cpu_to_be32(XFS_ABTB_CRC_MAGIC):
--		if (!xfs_sb_version_hascrc(&mp->m_sb))
--			return false;
- 		if (!xfs_btree_sblock_v5hdr_verify(bp))
- 			return false;
- 		/* fall through */
-@@ -291,8 +289,6 @@ xfs_allocbt_verify(
- 			return false;
- 		break;
- 	case cpu_to_be32(XFS_ABTC_CRC_MAGIC):
--		if (!xfs_sb_version_hascrc(&mp->m_sb))
--			return false;
- 		if (!xfs_btree_sblock_v5hdr_verify(bp))
- 			return false;
- 		/* fall through */
-diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
-index 8ccabcc..7bf6040 100644
---- a/libxfs/xfs_ialloc_btree.c
-+++ b/libxfs/xfs_ialloc_btree.c
-@@ -225,8 +225,6 @@ xfs_inobt_verify(
- 	switch (block->bb_magic) {
- 	case cpu_to_be32(XFS_IBT_CRC_MAGIC):
- 	case cpu_to_be32(XFS_FIBT_CRC_MAGIC):
--		if (!xfs_sb_version_hascrc(&mp->m_sb))
--			return false;
- 		if (!xfs_btree_sblock_v5hdr_verify(bp))
- 			return false;
- 		/* fall through */
-
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index c7f0afa..60513f9 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -135,6 +135,8 @@ xfs_attr_get(
+ 
+ 	args.value = value;
+ 	args.valuelen = *valuelenp;
++	/* Entirely possible to look up a name which doesn't exist */
++	args.op_flags = XFS_DA_OP_OKNOENT;
+ 
+ 	lock_mode = xfs_ilock_attr_map_shared(ip);
+ 	if (!xfs_inode_hasattr(ip))
