@@ -1,110 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35726 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932604AbcKVNBW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 Nov 2016 08:01:22 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 271ED7FD45
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2016 13:01:22 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uAMD14iv028408
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2016 08:01:16 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/3] xfs: clean up cow fork reservation and tag inodes correctly
-Date: Tue, 22 Nov 2016 08:01:01 -0500
-Message-Id: <1479819662-64416-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1479819662-64416-1-git-send-email-bfoster@redhat.com>
-References: <1479819662-64416-1-git-send-email-bfoster@redhat.com>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:18032 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933931AbcKVWx0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2016 17:53:26 -0500
+Date: Wed, 23 Nov 2016 09:52:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: an iomap-based direct I/O implementation V3
+Message-ID: <20161122225243.GN31101@dastard>
+References: <1479064054-10474-1-git-send-email-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1479064054-10474-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, axboe@kernel.dk
 
-COW fork reservation is implemented via delayed allocation. The code is
-modeled after the traditional delalloc allocation code, but is slightly
-different in terms of how preallocation occurs. Rather than post-eof
-speculative preallocation, COW fork preallocation is implemented via a
-COW extent size hint that is designed to minimize fragmentation as a
-reflinked file is split over time.
+On Sun, Nov 13, 2016 at 08:07:29PM +0100, Christoph Hellwig wrote:
+> Hi all,
+> 
+> this series adds a new direct I/O implementation based on the iomap
+> interface, and switches XFS to use it.
+> 
+> The first two patches are a resend of my earlier series to remove the
+> XFS iolock.  They are needed for the lockdep assert in the new iomap
+> code.
+> 
+> The rest implements a new iomap_dio_rw direct I/O implementation and
+> switches XFS to use it.
+> 
+> Note that this series is on top of a merge of the XFS for-next
+> tree with the block tree, which has a new helper needed for this
+> implementation.  This is the block tree it's on top of:
+> 
+>     git://git.kernel.dk/linux-block for-4.10/block
 
-xfs_reflink_reserve_cow() still uses logic that is oriented towards
-dealing with post-eof speculative preallocation, however, and is stale
-or not necessarily correct. First, the EOF alignment to the COW extent
-size hint is implemented in xfs_bmapi_reserve_delalloc() (which does so
-correctly by aligning the start and end offsets) and so is not necessary
-in xfs_reflink_reserve_cow(). The backoff and retry logic on ENOSPC is
-also ineffective for the same reason, as xfs_bmapi_reserve_delalloc()
-will simply perform the same allocation request on the retry. Finally,
-since the COW extent size hint aligns the start and end offset of the
-range to allocate, the end_fsb != orig_end_fsb logic is not sufficient.
-Indeed, if a write request happens to end on an aligned offset, it is
-possible that we do not tag the inode for COW preallocation even though
-xfs_bmapi_reserve_delalloc() may have preallocated at the start offset.
+This tree fails compilation for me.
 
-Kill the unnecessary, duplicate code in xfs_reflink_reserve_cow().
-Remove the inode tag logic as well since xfs_bmapi_reserve_delalloc()
-has been updated to tag the inode correctly.
+block/blk-flush.c: In function "flush_data_end_io":
+block/blk-flush.c:369:20: error: "REQ_STARTED" undeclared (first use in this function)
+  rq->cmd_flags &= ~REQ_STARTED;
+                    ^~~~~~~~~~~
+block/blk-flush.c:369:20: note: each undeclared identifier is reported only once for each function it appears in
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_reflink.c | 29 +++--------------------------
- 1 file changed, 3 insertions(+), 26 deletions(-)
+Should be RQF_STARTED, right?
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 812c632..73675459 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -245,11 +245,9 @@ xfs_reflink_reserve_cow(
- {
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	struct xfs_bmbt_irec	got;
--	xfs_fileoff_t		end_fsb, orig_end_fsb;
- 	int			error = 0;
- 	bool			eof = false, trimmed;
- 	xfs_extnum_t		idx;
--	xfs_extlen_t		align;
- 
- 	/*
- 	 * Search the COW fork extent list first.  This serves two purposes:
-@@ -287,33 +285,12 @@ xfs_reflink_reserve_cow(
- 	if (error)
- 		return error;
- 
--	end_fsb = orig_end_fsb = imap->br_startoff + imap->br_blockcount;
--
--	align = xfs_eof_alignment(ip, xfs_get_cowextsz_hint(ip));
--	if (align)
--		end_fsb = roundup_64(end_fsb, align);
--
--retry:
- 	error = xfs_bmapi_reserve_delalloc(ip, XFS_COW_FORK, imap->br_startoff,
--			end_fsb - imap->br_startoff, 0, &got, &idx, eof);
--	switch (error) {
--	case 0:
--		break;
--	case -ENOSPC:
--	case -EDQUOT:
--		/* retry without any preallocation */
-+			imap->br_blockcount, 0, &got, &idx, eof);
-+	if (error == -ENOSPC || error == -EDQUOT)
- 		trace_xfs_reflink_cow_enospc(ip, imap);
--		if (end_fsb != orig_end_fsb) {
--			end_fsb = orig_end_fsb;
--			goto retry;
--		}
--		/*FALLTHRU*/
--	default:
-+	if (error)
- 		return error;
--	}
--
--	if (end_fsb != orig_end_fsb)
--		xfs_inode_set_cowblocks_tag(ip);
- 
- 	trace_xfs_reflink_cow_alloc(ip, &got);
- 	return 0;
+
+> To make everyones life easie I also have a git tree with the merge
+> plus the patches in this series available here:
+> 
+>     git://git.infradead.org/users/hch/vfs.git iomap-dio.3
+
+Is there a stable topic branch with all the relevant block changes
+in it? I'd like to pull this into the XFS tree so I can test it, but
+these things need to be pulled from the block tree:
+
+	- REQ_IDLE is undefined
+	- bio_iov_iter_get_pages() is undefined
+	- blk_mq_poll() is undefined
+
+Having these in a stable topic branch (or set of branches) would
+make this much easier for me....
+
+Cheers,
+
+Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
