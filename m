@@ -1,138 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58320 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754386AbcKUQjQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2016 11:39:16 -0500
-Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-        id 1c8rch-0001PC-4T
-        for linux-xfs@vger.kernel.org; Mon, 21 Nov 2016 16:39:15 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/14] xfs: use new extent lookup helpers in __xfs_bunmapi
-Date: Mon, 21 Nov 2016 17:38:47 +0100
-Message-Id: <1479746336-10986-6-git-send-email-hch@lst.de>
-In-Reply-To: <1479746336-10986-1-git-send-email-hch@lst.de>
-References: <1479746336-10986-1-git-send-email-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:49250 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932577AbcKVNBW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 22 Nov 2016 08:01:22 -0500
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 19374C0528A0
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2016 13:01:22 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uAMD13lC025931
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2016 08:01:16 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 0/3] clean up speculative preallocation tracking and tagging
+Date: Tue, 22 Nov 2016 08:00:59 -0500
+Message-Id: <1479819662-64416-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 40 +++++++++++++---------------------------
- 1 file changed, 13 insertions(+), 27 deletions(-)
+Hi all,
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9a8621d..3ed2157 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5433,8 +5433,6 @@ __xfs_bunmapi(
- {
- 	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
- 	xfs_bmbt_irec_t		del;		/* extent being deleted */
--	int			eof;		/* is deleting at eof */
--	xfs_bmbt_rec_host_t	*ep;		/* extent record pointer */
- 	int			error;		/* error return value */
- 	xfs_extnum_t		extno;		/* extent number in list */
- 	xfs_bmbt_irec_t		got;		/* current extent record */
-@@ -5444,7 +5442,6 @@ __xfs_bunmapi(
- 	int			logflags;	/* transaction logging flags */
- 	xfs_extlen_t		mod;		/* rt extent offset */
- 	xfs_mount_t		*mp;		/* mount structure */
--	xfs_bmbt_irec_t		prev;		/* previous extent record */
- 	xfs_fileoff_t		start;		/* first file offset deleted */
- 	int			tmp_logflags;	/* partial logging flags */
- 	int			wasdel;		/* was a delayed alloc extent */
-@@ -5483,18 +5480,17 @@ __xfs_bunmapi(
- 	isrt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(ip);
- 	start = bno;
- 	bno = start + len - 1;
--	ep = xfs_bmap_search_extents(ip, bno, whichfork, &eof, &lastx, &got,
--		&prev);
- 
- 	/*
- 	 * Check to see if the given block number is past the end of the
- 	 * file, back up to the last block if so...
- 	 */
--	if (eof) {
--		ep = xfs_iext_get_ext(ifp, --lastx);
--		xfs_bmbt_get_all(ep, &got);
-+	if (!xfs_iext_lookup_extent(ip, ifp, bno, &lastx, &got)) {
-+		ASSERT(lastx > 0);
-+		xfs_iext_get_extent(ifp, --lastx, &got);
- 		bno = got.br_startoff + got.br_blockcount - 1;
- 	}
-+
- 	logflags = 0;
- 	if (ifp->if_flags & XFS_IFBROOT) {
- 		ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE);
-@@ -5525,8 +5521,7 @@ __xfs_bunmapi(
- 		if (got.br_startoff > bno) {
- 			if (--lastx < 0)
- 				break;
--			ep = xfs_iext_get_ext(ifp, lastx);
--			xfs_bmbt_get_all(ep, &got);
-+			xfs_iext_get_extent(ifp, lastx, &got);
- 		}
- 		/*
- 		 * Is the last block of this extent before the range
-@@ -5540,7 +5535,6 @@ __xfs_bunmapi(
- 		 * Then deal with the (possibly delayed) allocated space
- 		 * we found.
- 		 */
--		ASSERT(ep != NULL);
- 		del = got;
- 		wasdel = isnullstartblock(del.br_startblock);
- 		if (got.br_startoff < start) {
-@@ -5621,15 +5615,12 @@ __xfs_bunmapi(
- 				 */
- 				ASSERT(bno >= del.br_blockcount);
- 				bno -= del.br_blockcount;
--				if (got.br_startoff > bno) {
--					if (--lastx >= 0) {
--						ep = xfs_iext_get_ext(ifp,
--								      lastx);
--						xfs_bmbt_get_all(ep, &got);
--					}
--				}
-+				if (got.br_startoff > bno && --lastx >= 0)
-+					xfs_iext_get_extent(ifp, lastx, &got);
- 				continue;
- 			} else if (del.br_state == XFS_EXT_UNWRITTEN) {
-+				struct xfs_bmbt_irec	prev;
-+
- 				/*
- 				 * This one is already unwritten.
- 				 * It must have a written left neighbor.
-@@ -5637,8 +5628,7 @@ __xfs_bunmapi(
- 				 * try again.
- 				 */
- 				ASSERT(lastx > 0);
--				xfs_bmbt_get_all(xfs_iext_get_ext(ifp,
--						lastx - 1), &prev);
-+				xfs_iext_get_extent(ifp, lastx - 1, &prev);
- 				ASSERT(prev.br_state == XFS_EXT_NORM);
- 				ASSERT(!isnullstartblock(prev.br_startblock));
- 				ASSERT(del.br_startblock ==
-@@ -5736,13 +5726,9 @@ __xfs_bunmapi(
- 		 */
- 		if (bno != (xfs_fileoff_t)-1 && bno >= start) {
- 			if (lastx >= 0) {
--				ep = xfs_iext_get_ext(ifp, lastx);
--				if (xfs_bmbt_get_startoff(ep) > bno) {
--					if (--lastx >= 0)
--						ep = xfs_iext_get_ext(ifp,
--								      lastx);
--				}
--				xfs_bmbt_get_all(ep, &got);
-+				xfs_iext_get_extent(ifp, lastx, &got);
-+				if (got.br_startoff > bno && --lastx >= 0)
-+					xfs_iext_get_extent(ifp, lastx, &got);
- 			}
- 			extno++;
- 		}
+These are a few patches that resulted from the following discussion with
+regard to how to tag reflink inodes correctly for COW fork
+preallocation:
+
+  http://www.spinics.net/lists/linux-xfs/msg02155.html
+
+The problem with the current code is that xfs_reflink_reserve_cow()
+doesn't consider preallocation due to start offset alignment. The
+problem with the first pass patch above is that the same function
+doesn't distinguish between extent preallocation and extent merge.
+
+The solution in this series pushes down the incorporation of
+preallocation to the bmapi call, where it already has the additional
+context to identify whether an extent allocation was widened due to
+cowextszhint alignment. The callers are still responsible for defining
+how much to preallocate, to throttle, retry if necessary, etc.
+
+Note that this series is based on top of Christoph's recent extent
+lookup cleanup patches. This survives xfstests for me on a reflink=1 fs.
+Thoughts, reviews, flames appreciated.
+
+Brian
+
+Brian Foster (3):
+  xfs: track preallocation separately in xfs_bmapi_reserve_delalloc()
+  xfs: clean up cow fork reservation and tag inodes correctly
+  xfs: pass post-eof speculative prealloc blocks to bmapi
+
+ fs/xfs/libxfs/xfs_bmap.c | 23 +++++++++++++++++++++--
+ fs/xfs/libxfs/xfs_bmap.h |  2 +-
+ fs/xfs/xfs_iomap.c       | 33 +++++++++++++--------------------
+ fs/xfs/xfs_reflink.c     | 29 +++--------------------------
+ 4 files changed, 38 insertions(+), 49 deletions(-)
+
 -- 
-2.1.4
+2.7.4
 
