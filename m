@@ -1,134 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54142 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753137AbcK1TJo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 28 Nov 2016 14:09:44 -0500
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 92A55A794
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 19:09:43 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uASJ9hPb025625
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 14:09:43 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 3/6] xfs: logically separate iomap range from allocation range
-Date: Mon, 28 Nov 2016 14:09:38 -0500
-Message-Id: <1480360181-20396-4-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1480360181-20396-1-git-send-email-bfoster@redhat.com>
-References: <1480360181-20396-1-git-send-email-bfoster@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:35233 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932996AbcKWTNj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Nov 2016 14:13:39 -0500
+Date: Wed, 23 Nov 2016 11:13:26 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3] generic/182: retain existing btrfs behavior when len
+ == 0
+Message-ID: <20161123191325.GF23680@birch.djwong.org>
+References: <147986705412.27133.3961713804630246198.stgit@birch.djwong.org>
+ <20161123103323.GG12442@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161123103323.GG12442@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-xfs_file_iomap_begin_delay() uses the got variable for the extent
-returned by the in-core extent list lookup, the allocated extent
-returned by xfs_bmapi_reserve_delalloc() and the extent mapped to the
-iomap data structure for the caller.
+On Wed, Nov 23, 2016 at 06:33:23PM +0800, Eryu Guan wrote:
+> On Tue, Nov 22, 2016 at 06:10:54PM -0800, Darrick J. Wong wrote:
+> > Since btrfs doesn't interpret len=0 as "go to EOF", test for that instead.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  tests/generic/182     |    3 ++-
+> >  tests/generic/182.out |    2 --
+> >  2 files changed, 2 insertions(+), 3 deletions(-)
+> > 
+> > 
+> > diff --git a/tests/generic/182 b/tests/generic/182
+> > index f484399..dacb989 100755
+> > --- a/tests/generic/182
+> > +++ b/tests/generic/182
+> > @@ -1,7 +1,8 @@
+> >  #! /bin/bash
+> >  # FS QA Test No. 182
+> >  #
+> > -# Test the convention that dedupe with length == 0 means "to the end of fileA"
+> > +# Test the convention that dedupe with length == 0 doesn't mean "to the end of
+> > +# fileA"
+> 
+> If I read the xfs patch and btrfs RFC patch thread correctly, 0 length
+> means do nothing, right? Should we make it more clear and specific in
+> the comments instead of "doesn't mean..."? I think that helps people
+> understand the test.
 
-This is fine for current usage, but doesn't work for COW fork
-reservation. In that case, the extent returned by
-xfs_bmapi_reserve_delalloc() is the COW reservation and not the extent
-to be mapped to the iomap. Instead, the shared data fork extent should
-be trimmed appropriately and mapped to the iomap.
+Yeah, this is confusing and contradictory; I'll fix it.
 
-To prepare *_begin_delay() to support COW fork reservation, add a new
-imap variable to separately track the data fork extent (for iomap) from
-the extent returned from the lookup. The latter extent may refer to
-either the data or COW fork in the future.
+--D
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_iomap.c | 33 +++++++++++++++++++++------------
- 1 file changed, 21 insertions(+), 12 deletions(-)
-
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 0a4ef18..0dec431c 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -536,6 +536,7 @@ xfs_iomap_search_extents(
- 	struct xfs_inode	*ip,
- 	xfs_fileoff_t		offset_fsb,
- 	xfs_fileoff_t		end_fsb,
-+	struct xfs_bmbt_irec	*imap,		/* for iomap mapping */
- 	int			*eof,
- 	int			*idx,
- 	struct xfs_bmbt_irec	*got,
-@@ -546,15 +547,21 @@ xfs_iomap_search_extents(
- 
- 	*found = false;
- 
--	*eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, idx, got);
--	if (*eof || got->br_startoff > offset_fsb)
-+	/*
-+	 * Look up a preexisting extent directly into imap. Set got for the
-+	 * bmapi delalloc call if nothing is found.
-+	 */
-+	*eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, idx, imap);
-+	if (*eof || imap->br_startoff > offset_fsb) {
-+		*got = *imap;
- 		return 0;
-+	}
- 
- 	if (xfs_is_reflink_inode(ip)) {
- 		bool		shared;
- 
--		xfs_trim_extent(got, offset_fsb, end_fsb - offset_fsb);
--		error = xfs_reflink_reserve_cow(ip, got, &shared);
-+		xfs_trim_extent(imap, offset_fsb, end_fsb - offset_fsb);
-+		error = xfs_reflink_reserve_cow(ip, imap, &shared);
- 		if (error)
- 			return error;
- 	}
-@@ -580,6 +587,7 @@ xfs_file_iomap_begin_delay(
- 	xfs_fileoff_t		maxbytes_fsb =
- 		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
- 	int			error = 0, eof = 0;
-+	struct xfs_bmbt_irec	imap;
- 	struct xfs_bmbt_irec	got;
- 	xfs_extnum_t		idx;
- 	xfs_fsblock_t		prealloc_blocks = 0;
-@@ -614,12 +622,12 @@ xfs_file_iomap_begin_delay(
- 	 * Search for preexisting extents. If an existing data extent is shared,
- 	 * this will perform COW fork reservation.
- 	 */
--	error = xfs_iomap_search_extents(ip, offset_fsb, end_fsb, &eof, &idx,
--					 &got, &found);
-+	error = xfs_iomap_search_extents(ip, offset_fsb, end_fsb, &imap, &eof,
-+					 &idx, &got, &found);
- 	if (error)
- 		goto out_unlock;
- 	if (found) {
--		trace_xfs_iomap_found(ip, offset, count, 0, &got);
-+		trace_xfs_iomap_found(ip, offset, count, 0, &imap);
- 		goto done;
- 	}
- 
-@@ -680,17 +688,18 @@ xfs_file_iomap_begin_delay(
- 	}
- 
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
-+	imap = got;
- done:
--	if (isnullstartblock(got.br_startblock))
--		got.br_startblock = DELAYSTARTBLOCK;
-+	if (isnullstartblock(imap.br_startblock))
-+		imap.br_startblock = DELAYSTARTBLOCK;
- 
--	if (!got.br_startblock) {
--		error = xfs_alert_fsblock_zero(ip, &got);
-+	if (!imap.br_startblock) {
-+		error = xfs_alert_fsblock_zero(ip, &imap);
- 		if (error)
- 			goto out_unlock;
- 	}
- 
--	xfs_bmbt_to_iomap(ip, iomap, &got);
-+	xfs_bmbt_to_iomap(ip, iomap, &imap);
- 
- out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--- 
-2.7.4
-
+> 
+> >  #   - Create a file.
+> >  #   - Try to dedupe "zero" bytes (which means dedupe to EOF).
+> >  #   - Check that the dedupe happened.
+> 
+> These comments need fixes too.
+> 
+> Thanks,
+> Eryu
+> 
+> > diff --git a/tests/generic/182.out b/tests/generic/182.out
+> > index 049a3ee..9841b76 100644
+> > --- a/tests/generic/182.out
+> > +++ b/tests/generic/182.out
+> > @@ -1,12 +1,10 @@
+> >  QA output created by 182
+> >  Create the original files
+> > -dedupe: Extents did not match.
+> >  f4820540fc0ac02750739896fe028d56  TEST_DIR/test-182/file1
+> >  69ad53078a16243d98e21d9f8704a071  TEST_DIR/test-182/file2
+> >  69ad53078a16243d98e21d9f8704a071  TEST_DIR/test-182/file2.chk
+> >  Compare against check files
+> >  Make the original file almost dedup-able
+> > -dedupe: Extents did not match.
+> >  f4820540fc0ac02750739896fe028d56  TEST_DIR/test-182/file1
+> >  158d4e3578b94b89cbb44493a2110fb9  TEST_DIR/test-182/file2
+> >  158d4e3578b94b89cbb44493a2110fb9  TEST_DIR/test-182/file2.chk
+> > 
