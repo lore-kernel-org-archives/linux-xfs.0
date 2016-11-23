@@ -1,41 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51161 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:46243 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750763AbcKEAIC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:08:02 -0400
-Subject: [PATCH v2 00/16] xfsprogs: miscellaneous libxfs cleanups
+        with ESMTP id S932356AbcKWErb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2016 23:47:31 -0500
+Date: Tue, 22 Nov 2016 20:47:26 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:07:57 -0700
-Message-ID: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+Subject: Re: [PATCH] fideduperange.2: fix the discussion of maximum sizes
+Message-ID: <20161123044726.GF16807@birch.djwong.org>
+References: <20161123042222.GA30324@birch.djwong.org>
+ <20161123043918.GD29697@mew>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161123043918.GD29697@mew>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Omar Sandoval <osandov@osandov.com>
+Cc: mtk.manpages@gmail.com, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-man@vger.kernel.org
 
-Hi all,
+On Tue, Nov 22, 2016 at 08:39:18PM -0800, Omar Sandoval wrote:
+> On Tue, Nov 22, 2016 at 08:22:22PM -0800, Darrick J. Wong wrote:
+> > Fix the discussion of the limitations on the dest_count and src_length
+> > parameters to the fideduperange ioctl to reflect what's actually in the
+> > kernel.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  man2/ioctl_fideduperange.2 |   12 +++++++++---
+> >  1 file changed, 9 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/man2/ioctl_fideduperange.2 b/man2/ioctl_fideduperange.2
+> > index 2112d10..59f0ea9 100644
+> > --- a/man2/ioctl_fideduperange.2
+> > +++ b/man2/ioctl_fideduperange.2
+> > @@ -95,7 +95,7 @@ struct file_dedupe_range_info {
+> >  .in
+> >  
+> >  Each deduplication operation targets
+> > -.IR length
+> > +.IR src_length
+> >  bytes in file descriptor
+> >  .IR dest_fd
+> >  at offset
+> > @@ -108,8 +108,14 @@ During the call,
+> >  must be open for reading and
+> >  .IR dest_fd
+> >  must be open for writing.
+> > -For any call to this ioctl, there may not be more than 65,536
+> > -requests attached; each request may not exceed 16MiB.
+> > +The combined size of the struct
+> > +.IR file_dedupe_range
+> > +and the struct
+> > +.IR file_dedupe_range_info
+> > +array must not exceed the system page size.
+> > +The maximum size of
+> > +.IR src_length
+> > +is filesystem dependent and is typically 16MiB.
+> >  By convention, the storage used by
+> >  .IR src_fd
+> >  is mapped into
+> 
+> Might be worth it to clarify that the file_dedupe_range_info limit is a
+> hard limit that will result in an error if exceeded and that the
+> src_length limit is silently enforced. These semantics suck...
 
-This is a patchset that aims to fix various discrepancies between the
-kernel and xfsprogs' copies of libxfs/.  They shouldn't affect the
-behavior of either codebase while bringing the benefit that libxfs-apply
-will run more smoothly.
+Yeah... :(
 
-The first two patches fix some problems that Coverity found with the
-initial commit of userspace support for reflink.  After that are nine
-patches that fix a few places where the kernel and xfsprogs' copies of
-libxfs have gotten out of sync.  There's a patch that refactors the
-directory freescan code so that xfs_repair and kernel can use the same
-code without the macro wrappers, and a second patch adding a script to
-show the differences between any file that appears in both libxfs/
-directories.
+Anyway I'll post a v2 patch.
 
-I've tested the first 11 patches successfully against the auto group,
-and the ones after that have passed the quick group.
+--D
 
---Darrick
-
-[1] https://github.com/djwong/linux/tree/libxfs-resync
-[2] https://github.com/djwong/xfsprogs/tree/libxfs-resync
+> 
+> -- 
+> Omar
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
