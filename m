@@ -1,58 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57216 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753531AbcKRPKs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 18 Nov 2016 10:10:48 -0500
-Date: Fri, 18 Nov 2016 10:10:42 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH RFC 1/4] xfs: clean up cow fork reservation and tag
- inodes correctly
-Message-ID: <20161118151041.GC60705@bfoster.bfoster>
-References: <1478636856-7590-1-git-send-email-bfoster@redhat.com>
- <1478636856-7590-2-git-send-email-bfoster@redhat.com>
- <20161115141621.GA18630@infradead.org>
- <20161115181101.GC65218@bfoster.bfoster>
- <20161118081146.GA9788@infradead.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:47907 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755616AbcKWCLF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2016 21:11:05 -0500
+Subject: [PATCH 2/3] misc: fix some minor problems testing ocfs2
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 22 Nov 2016 18:11:00 -0800
+Message-ID: <147986706035.27133.12508201579910106497.stgit@birch.djwong.org>
+In-Reply-To: <147986705412.27133.3961713804630246198.stgit@birch.djwong.org>
+References: <147986705412.27133.3961713804630246198.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161118081146.GA9788@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Fri, Nov 18, 2016 at 12:11:46AM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 15, 2016 at 01:11:01PM -0500, Brian Foster wrote:
-> > On Tue, Nov 15, 2016 at 06:16:21AM -0800, Christoph Hellwig wrote:
-> > > > +	if (imap->br_startoff != got.br_startoff ||
-> > > > +	    imap->br_blockcount != got.br_blockcount)
-> > > >  		xfs_inode_set_cowblocks_tag(ip);
-> > > 
-> > > Can't got.br_blockcount be smaller than imap->br_blockcount if we have
-> > > an existing COW fork reservation lying around behind the whole we're
-> > > filling?  Also they way xfs_bmapi_reserve_delalloc works the startoff
-> > > will be the same.  E.g. this check should probably be:
-> > > 
-> > 
-> > Good point, though I think it can be smaller or larger without
-> > necessarily having preallocation due to being merged with surrounding
-> > extents. I'm not quite sure what the right answer for that is with
-> > regard to tagging, but I do think it's better to have false positive
-> > tagging than false negatives.
-> 
-> Good point, merging can change both the start and length.  Based on
-> that I think tagging in the caller of xfs_bmapi_reserve_delalloc is
-> wrong, and we need to do it inside xfs_bmapi_reserve_delalloc where
-> we know if we did speculative preallocation.
+There are a a few things about ocfs2 tools that need special-casing in
+xfstests, so fix them so that we can start testing ocfs2.
 
-xfs_bmapi_reserve_delalloc() doesn't really know if it's doing
-preallocation outside of the extent size hint alignment. I don't think
-we want to try and bury all of the prealloc stuff down in the bmapi
-code, though we may be able to add a prealloc parameter to
-bmapi_reserve_delalloc() such that it can add the prealloc itself and
-also tell the difference between prealloc and merge cases. I'll play
-around with it, thanks.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ common/quota |    2 +-
+ common/rc    |   10 ++++++++--
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-Brian
+
+diff --git a/common/quota b/common/quota
+index 678bc43..d9bb8d9 100644
+--- a/common/quota
++++ b/common/quota
+@@ -34,7 +34,7 @@ _require_quota()
+ 	    _notrun "Installed kernel does not support quotas"
+ 	fi
+ 	;;
+-    gfs2)
++    gfs2|ocfs2)
+ 	;;
+     xfs)
+ 	if [ ! -f /proc/fs/xfs/xqmstat ]; then
+diff --git a/common/rc b/common/rc
+index 8e078da..c75b614 100644
+--- a/common/rc
++++ b/common/rc
+@@ -978,7 +978,7 @@ _scratch_mkfs_sized()
+     xfs)
+ 	def_blksz=`echo $MKFS_OPTIONS|sed -rn 's/.*-b ?size= ?+([0-9]+).*/\1/p'`
+ 	;;
+-    ext2|ext3|ext4|ext4dev|udf|btrfs|reiser4)
++    ext2|ext3|ext4|ext4dev|udf|btrfs|reiser4|ocfs2)
+ 	def_blksz=`echo $MKFS_OPTIONS| sed -rn 's/.*-b ?+([0-9]+).*/\1/p'`
+ 	;;
+     esac
+@@ -1015,6 +1015,9 @@ _scratch_mkfs_sized()
+     ext2|ext3|ext4|ext4dev)
+ 	${MKFS_PROG}.$FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+ 	;;
++    ocfs2)
++	yes | ${MKFS_PROG}.$FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
++	;;
+     udf)
+ 	$MKFS_UDF_PROG $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+ 	;;
+@@ -1087,9 +1090,12 @@ _scratch_mkfs_blocksized()
+     xfs)
+ 	_scratch_mkfs_xfs $MKFS_OPTIONS -b size=$blocksize
+ 	;;
+-    ext2|ext3|ext4|ocfs2)
++    ext2|ext3|ext4)
+ 	${MKFS_PROG}.$FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV
+ 	;;
++    ocfs2)
++	yes | ${MKFS_PROG}.$FSTYP -F $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV
++	;;
+     *)
+ 	_notrun "Filesystem $FSTYP not supported in _scratch_mkfs_blocksized"
+ 	;;
+
