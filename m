@@ -1,75 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32792 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935134AbcKWKdZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 Nov 2016 05:33:25 -0500
-Date: Wed, 23 Nov 2016 18:33:23 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 1/3] generic/182: retain existing btrfs behavior when len
- == 0
-Message-ID: <20161123103323.GG12442@eguan.usersys.redhat.com>
-References: <147986705412.27133.3961713804630246198.stgit@birch.djwong.org>
+Received: from james.kirk.hungrycats.org ([174.142.39.145]:39814 "EHLO
+        james.kirk.hungrycats.org" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S933269AbcKWN4B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Nov 2016 08:56:01 -0500
+Date: Wed, 23 Nov 2016 08:55:59 -0500
+From: Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
+Subject: Re: [RFC PATCH 0/2] Btrfs: make a source length of 0 imply EOF for
+ dedupe
+Message-ID: <20161123135559.GC8685@hungrycats.org>
+References: <cover.1479427384.git.osandov@fb.com>
+ <20161123020210.GW21290@hungrycats.org>
+ <20161123042632.GQ31101@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="VMt1DrMGOVs3KQwf"
 Content-Disposition: inline
-In-Reply-To: <147986705412.27133.3961713804630246198.stgit@birch.djwong.org>
+In-Reply-To: <20161123042632.GQ31101@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Omar Sandoval <osandov@osandov.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Qu Wenruo <quwenruo@cn.fujitsu.com>, Christoph Hellwig <hch@infradead.org>, kernel-team@fb.com
 
-On Tue, Nov 22, 2016 at 06:10:54PM -0800, Darrick J. Wong wrote:
-> Since btrfs doesn't interpret len=0 as "go to EOF", test for that instead.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/generic/182     |    3 ++-
->  tests/generic/182.out |    2 --
->  2 files changed, 2 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/tests/generic/182 b/tests/generic/182
-> index f484399..dacb989 100755
-> --- a/tests/generic/182
-> +++ b/tests/generic/182
-> @@ -1,7 +1,8 @@
->  #! /bin/bash
->  # FS QA Test No. 182
->  #
-> -# Test the convention that dedupe with length == 0 means "to the end of fileA"
-> +# Test the convention that dedupe with length == 0 doesn't mean "to the end of
-> +# fileA"
 
-If I read the xfs patch and btrfs RFC patch thread correctly, 0 length
-means do nothing, right? Should we make it more clear and specific in
-the comments instead of "doesn't mean..."? I think that helps people
-understand the test.
+--VMt1DrMGOVs3KQwf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->  #   - Create a file.
->  #   - Try to dedupe "zero" bytes (which means dedupe to EOF).
->  #   - Check that the dedupe happened.
+On Wed, Nov 23, 2016 at 03:26:32PM +1100, Dave Chinner wrote:
+> On Tue, Nov 22, 2016 at 09:02:10PM -0500, Zygo Blaxell wrote:
+> > On Thu, Nov 17, 2016 at 04:07:48PM -0800, Omar Sandoval wrote:
+> > > 3. Both XFS and Btrfs cap each dedupe operation to 16MB, but the
+> > >    implicit EOF gets around this in the existing XFS implementation. I
+> > >    copied this for the Btrfs implementation.
+> >=20
+> > Somewhat tangential to this patch, but on the dedup topic:  Can we raise
+> > or drop that 16MB limit?
+> >=20
+> > The maximum btrfs extent length is 128MB.  Currently the btrfs dedup
+> > behavior for a 128MB extent is to generate 8x16MB shared extent referen=
+ces
+> > with different extent offsets to a single 128MB physical extent.
+> > These references no longer look like the original 128MB extent to a
+> > userspace dedup tool.  That raises the difficulty level substantially
+> > for a userspace dedup tool when it tries to figure out which extents to
+> > keep and which to discard or rewrite.
+>=20
+> That, IMO, is a btrfs design/implementation problem, not a problem
+> with the API. Applications are always going to end up doing things
+> that aren't perfectly aligned to extent boundaries or sizes
+> regardless of the size limit that is placed on the dedupe ranges.
 
-These comments need fixes too.
+Given that XFS doesn't have all the problems btrfs does, why does XFS
+have the same aribitrary size limit?  Especially since XFS demonstrably
+doesn't need it?
 
-Thanks,
-Eryu
+> > XFS may not have this problem--I haven't checked.
+>=20
+> It doesn't - it tracks shared blocks exactly and merges adjacent
+> extent records whenever possible.
+>=20
+> > Even if we want to keep the 16MB limit, there's also no way to query the
+> > kernel from userspace to find out what the limit is, other than by trial
+> > and error.  It's not even in a header file, userspace just has to *know=
+*.
+>=20
+> So add a define to the API to make it visible to applications and
+> document it in the man page.
 
-> diff --git a/tests/generic/182.out b/tests/generic/182.out
-> index 049a3ee..9841b76 100644
-> --- a/tests/generic/182.out
-> +++ b/tests/generic/182.out
-> @@ -1,12 +1,10 @@
->  QA output created by 182
->  Create the original files
-> -dedupe: Extents did not match.
->  f4820540fc0ac02750739896fe028d56  TEST_DIR/test-182/file1
->  69ad53078a16243d98e21d9f8704a071  TEST_DIR/test-182/file2
->  69ad53078a16243d98e21d9f8704a071  TEST_DIR/test-182/file2.chk
->  Compare against check files
->  Make the original file almost dedup-able
-> -dedupe: Extents did not match.
->  f4820540fc0ac02750739896fe028d56  TEST_DIR/test-182/file1
->  158d4e3578b94b89cbb44493a2110fb9  TEST_DIR/test-182/file2
->  158d4e3578b94b89cbb44493a2110fb9  TEST_DIR/test-182/file2.chk
-> 
+To answer some of my own questions on the btrfs side:  It looks like
+the btrfs implementation does have a reason for it (fixed-size arrays).
+
+> Cheers,
+>=20
+> Dave.
+> --=20
+> Dave Chinner
+> david@fromorbit.com
+>=20
+
+--VMt1DrMGOVs3KQwf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlg1n+8ACgkQgfmLGlazG5xAOQCghyuzCEmUK0gwanWn7rpQfMAy
+nWUAoOGnK4M7B5myEYHeSYa/+vr8BqMZ
+=0rpy
+-----END PGP SIGNATURE-----
+
+--VMt1DrMGOVs3KQwf--
