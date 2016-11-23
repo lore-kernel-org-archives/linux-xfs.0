@@ -1,59 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:59093 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754386AbcKUQjs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2016 11:39:48 -0500
-Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-        id 1c8rdD-0001oJ-HR
-        for linux-xfs@vger.kernel.org; Mon, 21 Nov 2016 16:39:48 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/14] xfs: remove NULLEXTNUM
-Date: Mon, 21 Nov 2016 17:38:56 +0100
-Message-Id: <1479746336-10986-15-git-send-email-hch@lst.de>
-In-Reply-To: <1479746336-10986-1-git-send-email-hch@lst.de>
-References: <1479746336-10986-1-git-send-email-hch@lst.de>
+Received: from mail-wj0-f195.google.com ([209.85.210.195]:36857 "EHLO
+        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754151AbcKWHKi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Nov 2016 02:10:38 -0500
+Subject: Re: [PATCH v2] fideduperange.2: fix the discussion of maximum sizes
+References: <20161123044816.GG16807@birch.djwong.org>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Message-ID: <c15252ae-ac37-5e02-44d6-d500228642e3@gmail.com>
+Date: Wed, 23 Nov 2016 08:05:56 +0100
+MIME-Version: 1.0
+In-Reply-To: <20161123044816.GG16807@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: mtk.manpages@gmail.com, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-man@vger.kernel.org, osandov@osandov.com
 
-We only ever set a field to this constant for an impossible to reach
-error case in xfs_bmap_search_extents.  That functions has been removed,
-so we can remove the constant as well.
+On 11/23/2016 05:48 AM, Darrick J. Wong wrote:
+> Fix the discussion of the limitations on the dest_count and src_length
+> parameters to the fideduperange ioctl to reflect what's actually in the
+> kernel.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c  | 2 +-
- fs/xfs/libxfs/xfs_types.h | 1 -
- 2 files changed, 1 insertion(+), 2 deletions(-)
+Thanks Darrick. Applied.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 23cf045..4a5b335 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4260,7 +4260,7 @@ xfs_bmapi_allocate(
- 	if (bma->wasdel) {
- 		bma->length = (xfs_extlen_t)bma->got.br_blockcount;
- 		bma->offset = bma->got.br_startoff;
--		if (bma->idx != NULLEXTNUM && bma->idx) {
-+		if (bma->idx) {
- 			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1),
- 					 &bma->prev);
- 		}
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index cf044c0..717909f 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -57,7 +57,6 @@ typedef __int64_t	xfs_sfiloff_t;	/* signed block number in a file */
- 
- #define	NULLAGBLOCK	((xfs_agblock_t)-1)
- #define	NULLAGNUMBER	((xfs_agnumber_t)-1)
--#define	NULLEXTNUM	((xfs_extnum_t)-1)
- 
- #define NULLCOMMITLSN	((xfs_lsn_t)-1)
- 
+Cheers,
+
+Michael
+
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  man2/ioctl_fideduperange.2 |   20 +++++++++++++++++---
+>  1 file changed, 17 insertions(+), 3 deletions(-)
+> 
+> diff --git a/man2/ioctl_fideduperange.2 b/man2/ioctl_fideduperange.2
+> index 2112d10..057229d 100644
+> --- a/man2/ioctl_fideduperange.2
+> +++ b/man2/ioctl_fideduperange.2
+> @@ -95,7 +95,7 @@ struct file_dedupe_range_info {
+>  .in
+>  
+>  Each deduplication operation targets
+> -.IR length
+> +.IR src_length
+>  bytes in file descriptor
+>  .IR dest_fd
+>  at offset
+> @@ -108,8 +108,15 @@ During the call,
+>  must be open for reading and
+>  .IR dest_fd
+>  must be open for writing.
+> -For any call to this ioctl, there may not be more than 65,536
+> -requests attached; each request may not exceed 16MiB.
+> +The combined size of the struct
+> +.IR file_dedupe_range
+> +and the struct
+> +.IR file_dedupe_range_info
+> +array must not exceed the system page size.
+> +The maximum size of
+> +.IR src_length
+> +is filesystem dependent and is typically 16MiB.
+> +This limit will be enforced silently by the filesystem.
+>  By convention, the storage used by
+>  .IR src_fd
+>  is mapped into
+> @@ -144,6 +151,13 @@ is set to indicate the error.
+>  .SH ERRORS
+>  Error codes can be one of, but are not limited to, the following:
+>  .TP
+> +.B ENOMEM
+> +The kernel was unable to allocate sufficient memory to perform the
+> +operation or
+> +.IR dest_count
+> +is so large that the input argument description spans more than a single
+> +page of memory.
+> +.TP
+>  .B EBADF
+>  .IR src_fd
+>  is not open for reading;
+> .
+> 
+
+
 -- 
-2.1.4
-
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
