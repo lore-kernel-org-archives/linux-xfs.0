@@ -1,170 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44040 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753048AbcK2R2Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2016 12:28:24 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/5] locking/lockdep: Provide a type check for lock_is_held
-Date: Tue, 29 Nov 2016 18:28:12 +0100
-Message-Id: <1480440496-25737-2-git-send-email-hch@lst.de>
-In-Reply-To: <1480440496-25737-1-git-send-email-hch@lst.de>
-References: <1480440496-25737-1-git-send-email-hch@lst.de>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:25416 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751095AbcKXToY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Nov 2016 14:44:24 -0500
+Date: Fri, 25 Nov 2016 06:44:19 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS + LVM + DM-Thin + Multi-Volume External RAID
+Message-ID: <20161124194419.GR28177@dastard>
+References: <1495de1c-3384-f1d6-be76-1ad02fdc8cb1@binghamton.edu>
+ <20161124094332.o3hbaubrligsa7l3@eorzea.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161124094332.o3hbaubrligsa7l3@eorzea.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: axboe@fb.com, linux-fsdevel@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>
+To: Dave Hall <kdhall@binghamton.edu>, linux-xfs@vger.kernel.org
 
-From: Peter Zijlstra <peterz@infradead.org>
+On Thu, Nov 24, 2016 at 10:43:32AM +0100, Carlos Maiolino wrote:
+> Hi,
+> 
+> On Wed, Nov 23, 2016 at 08:23:42PM -0500, Dave Hall wrote:
+> > Hello,
+> > 
+> > I'm planning a storage installation on new hardware and I'd like to
+> > configure for best performance.  I will have 24 to 48 drives in a
+> > SAS-attached RAID box with dual 12GB/s controllers (Dell MD3420 with 10K
+> > 1.8TB drives.  The server is dual socket with 28 cores, 256GB RAM, dual 12GB
+> > HBAs, and multiple 10GB NICS.
+> > 
+> > My workload is NFS for user home directories - highly random access patterns
+> > with frequent bursts of random writes.
+> > 
+> > In order to maximize performance I'm planning to make multiple small RAID
+> > volumes (i.e. RAID5 - 4+1, or RAID6 - 8+2) that would be either striped or
+> > concatenated together.
+> > 
+> > I'm looking for information on:
+> > 
+> > - Are there any cautions or recommendations about  XFS stability/performance
+> > on a thin volume with thin snapshots?
+> > 
+> > - I've read that there are tricks and calculations for aligning XFS to the
+> > RAID stripes.  Can use suggest any guidelines or tools for calculating the
+> > right configuration?
+> 
+> There is no magical trick :), you need to configure Stripe unit and stripe width
+> according to your raid configuration. You should set stripe unit (su option) to
+> the size of the stripes on your raid, and set the stripe width (sw option)
+> according to the number of data disks on your array (if you have a 4+1 raid 5,
+> it should be 4, into a 8+2 raid 6, it should be 8).
 
-Christoph requested lockdep_assert_held() variants that distinguish
-between held-for-read or held-for-write.
+mkfs.xfs will do this setup automatically on software raid and any
+block device that exports the necessary information to set it up.
+In general, it's only older/cheaper hardware RAID that you have to
+worry about this anymore.
 
-Provide:
+> > - I've read also about tuning the number of allocation groups to reflect the
+> > CPU configuration of the server.  Any suggestions on this?
+> > 
+> 
+> Allocation groups can't be bigger than 1TB. Assuming it should reflect your cpu
+> configuration is wrong, having too few or too many allocation groups can kill
+> your performance, and you also might face some another allocation problems in
+> the future, when the filesystem get aged when runnning with very small
+> allocation groups.
 
-  int lock_is_held_type(struct lockdep_map *lock, int read)
+It also depends on your storage, mostly. SSDs can handle
+agcount=NCPUS*2 easily, but for spinning storage this will cause
+additional seek loading and slow things down. In this case, the
+defaults are best.
 
-which takes the same argument as lock_acquire(.read) and matches it to
-the held_lock instance.
+> Determining the size of the allocation groups, is a case-by-case approach, and
+> it might need some experimenting.
+> 
+> Since you are dealing with thin provisioning devices, I'd be more careful then.
+> If you start with a small filesystem, and use the default configuration for
+> mkfs, it will give you a number of AGs according to your current block device
+> size, which can be a problem in the future when you decide to extend the
+> filesystem, AG size can't be changed after you make the filesystem. Make a
+> search on xfs list and you will see some reports of performance problems that
+> ended up being caused by very small filesystems that were extended later,
+> causing it to have lots of AGs.
 
-Use of this function should be gated by the debug_locks variable. When
-that is 0 the return value of the lock_is_held_type() function is
-undefined. This is done to allow both negative and positive tests for
-holding locks.
+Yup, rule of thumb is that growing the fs size by an order of
+magnitude is fine, growing it by two orders of magnitude will cause
+problems.
 
-By default we provide (positive) lockdep_assert_held{,_exclusive,_read}()
-macros.
+Cheers,
 
-Requested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
----
- include/linux/lockdep.h  | 25 +++++++++++++++++++++++--
- kernel/locking/lockdep.c | 20 ++++++++++++--------
- 2 files changed, 35 insertions(+), 10 deletions(-)
-
-diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
-index c1458fe..1e327bb 100644
---- a/include/linux/lockdep.h
-+++ b/include/linux/lockdep.h
-@@ -338,9 +338,18 @@ extern void lock_acquire(struct lockdep_map *lock, unsigned int subclass,
- extern void lock_release(struct lockdep_map *lock, int nested,
- 			 unsigned long ip);
- 
--#define lockdep_is_held(lock)	lock_is_held(&(lock)->dep_map)
-+/*
-+ * Same "read" as for lock_acquire(), except -1 means any.
-+ */
-+extern int lock_is_held_type(struct lockdep_map *lock, int read);
-+
-+static inline int lock_is_held(struct lockdep_map *lock)
-+{
-+	return lock_is_held_type(lock, -1);
-+}
- 
--extern int lock_is_held(struct lockdep_map *lock);
-+#define lockdep_is_held(lock)		lock_is_held(&(lock)->dep_map)
-+#define lockdep_is_held_type(lock, r)	lock_is_held_type(&(lock)->dep_map, (r))
- 
- extern void lock_set_class(struct lockdep_map *lock, const char *name,
- 			   struct lock_class_key *key, unsigned int subclass,
-@@ -372,6 +381,14 @@ extern void lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie);
- 		WARN_ON(debug_locks && !lockdep_is_held(l));	\
- 	} while (0)
- 
-+#define lockdep_assert_held_exclusive(l)	do {			\
-+		WARN_ON(debug_locks && !lockdep_is_held_type(l, 0));	\
-+	} while (0)
-+
-+#define lockdep_assert_held_read(l)	do {				\
-+		WARN_ON(debug_locks && !lockdep_is_held_type(l, 1));	\
-+	} while (0)
-+
- #define lockdep_assert_held_once(l)	do {				\
- 		WARN_ON_ONCE(debug_locks && !lockdep_is_held(l));	\
- 	} while (0)
-@@ -428,7 +445,11 @@ struct lock_class_key { };
- 
- #define lockdep_depth(tsk)	(0)
- 
-+#define lockdep_is_held_type(l, r)		(1)
-+
- #define lockdep_assert_held(l)			do { (void)(l); } while (0)
-+#define lockdep_assert_held_exclusive(l)	do { (void)(l); } while (0)
-+#define lockdep_assert_held_read(l)		do { (void)(l); } while (0)
- #define lockdep_assert_held_once(l)		do { (void)(l); } while (0)
- 
- #define lockdep_recursing(tsk)			(0)
-diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
-index 589d763..cff580a 100644
---- a/kernel/locking/lockdep.c
-+++ b/kernel/locking/lockdep.c
-@@ -3188,7 +3188,7 @@ print_lock_nested_lock_not_held(struct task_struct *curr,
- 	return 0;
- }
- 
--static int __lock_is_held(struct lockdep_map *lock);
-+static int __lock_is_held(struct lockdep_map *lock, int read);
- 
- /*
-  * This gets called for every mutex_lock*()/spin_lock*() operation.
-@@ -3329,7 +3329,7 @@ static int __lock_acquire(struct lockdep_map *lock, unsigned int subclass,
- 	}
- 	chain_key = iterate_chain_key(chain_key, class_idx);
- 
--	if (nest_lock && !__lock_is_held(nest_lock))
-+	if (nest_lock && !__lock_is_held(nest_lock, -1))
- 		return print_lock_nested_lock_not_held(curr, hlock, ip);
- 
- 	if (!validate_chain(curr, lock, hlock, chain_head, chain_key))
-@@ -3576,7 +3576,7 @@ __lock_release(struct lockdep_map *lock, int nested, unsigned long ip)
- 	return 1;
- }
- 
--static int __lock_is_held(struct lockdep_map *lock)
-+static int __lock_is_held(struct lockdep_map *lock, int read)
- {
- 	struct task_struct *curr = current;
- 	int i;
-@@ -3584,8 +3584,12 @@ static int __lock_is_held(struct lockdep_map *lock)
- 	for (i = 0; i < curr->lockdep_depth; i++) {
- 		struct held_lock *hlock = curr->held_locks + i;
- 
--		if (match_held_lock(hlock, lock))
--			return 1;
-+		if (match_held_lock(hlock, lock)) {
-+			if (read == -1 || hlock->read == read)
-+				return 1;
-+
-+			return 0;
-+		}
- 	}
- 
- 	return 0;
-@@ -3769,7 +3773,7 @@ void lock_release(struct lockdep_map *lock, int nested,
- }
- EXPORT_SYMBOL_GPL(lock_release);
- 
--int lock_is_held(struct lockdep_map *lock)
-+int lock_is_held_type(struct lockdep_map *lock, int read)
- {
- 	unsigned long flags;
- 	int ret = 0;
-@@ -3781,13 +3785,13 @@ int lock_is_held(struct lockdep_map *lock)
- 	check_flags(flags);
- 
- 	current->lockdep_recursion = 1;
--	ret = __lock_is_held(lock);
-+	ret = __lock_is_held(lock, read);
- 	current->lockdep_recursion = 0;
- 	raw_local_irq_restore(flags);
- 
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(lock_is_held);
-+EXPORT_SYMBOL_GPL(lock_is_held_type);
- 
- struct pin_cookie lock_pin_lock(struct lockdep_map *lock)
- {
+Dave.
 -- 
-2.1.4
-
+Dave Chinner
+david@fromorbit.com
