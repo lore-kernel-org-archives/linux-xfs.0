@@ -1,120 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:32879 "EHLO
-        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932654AbcKYRJJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Nov 2016 12:09:09 -0500
-Received: by mail-io0-f171.google.com with SMTP id j65so134019716iof.0
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Nov 2016 09:09:09 -0800 (PST)
-Subject: Re: XFS + LVM + DM-Thin + Multi-Volume External RAID
-References: <1495de1c-3384-f1d6-be76-1ad02fdc8cb1@binghamton.edu>
- <20161124094332.o3hbaubrligsa7l3@eorzea.usersys.redhat.com>
- <ca974620-fff5-e26b-897d-c1c62d47cc64@binghamton.edu>
- <20161125111814.p7ltczag7akqk3w5@eorzea.usersys.redhat.com>
- <264e0ba1-f3ea-b320-1c22-c1e23e74ffa6@binghamton.edu>
-From: Dave Hall <kdhall@binghamton.edu>
-Message-ID: <14553049-ef53-5594-61a7-a91394b66d95@binghamton.edu>
-Date: Fri, 25 Nov 2016 12:09:10 -0500
+Received: from mr002msb.fastweb.it ([85.18.95.86]:56567 "EHLO
+        mr002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750997AbcKYKqw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Nov 2016 05:46:52 -0500
+Received: from ceres.assyoma.it (93.63.55.57) by mr002msb.fastweb.it (8.5.140.05)
+        id 579B514005B8038C for linux-xfs@vger.kernel.org; Fri, 25 Nov 2016 11:40:41 +0100
+From: Gionatan Danti <g.danti@assyoma.it>
+Subject: Slow file stat/deletion
+Message-ID: <bef58272-f791-52bf-cc4c-1cb1b7c9efec@assyoma.it>
+Date: Fri, 25 Nov 2016 11:40:40 +0100
 MIME-Version: 1.0
-In-Reply-To: <264e0ba1-f3ea-b320-1c22-c1e23e74ffa6@binghamton.edu>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: Gionatan Danti <g.danti@assyoma.it>
 
+Hi all,
+I am using a XFS filesystem as a target for rsnapshot hardlink-based 
+backups.
+
+Being hardlink-based, our backups generally are quite fast. However, I 
+noticed that for some directories having many small files the longer 
+part of the backup process is to remove the old (out-of-retention) 
+subdirs that must be purged to make room for the new backup iteration.
+
+Further analysis show that the slower part of the 'rm' process is the 
+reading of the affected inodes/dentries. An example: to remove a subdir 
+with ~700000 files and directories, the system needs about 30 minutes. 
+At the same time, issuing a simple "find <dir> / | wc -l" (after having 
+dropped the caches) need ~24 minutes. In other words, actual reads need 
+4x the real delete time.
+
+So, my question is: there is anything I can do to speedup the 
+read/stat/deletion?
+
+Here is my system config:
+CPU: AMD Opteron(tm) Processor 4334
+RAM: 16 GB
+HDD: 12x 2TB WD RE in a RAID6 array (64k stripe unit), attached to a 
+PERC H700 controller with 512MB BBU writeback cache
+OS:  CentOS 7.2 x86_64 with 3.10.0-327.18.2.el7.x86_64 kernel
+
+Relevant LVM setup:
+LV           VG         Attr       LSize  Pool         Origin Data% 
+Meta%  Move Log Cpy%Sync Convert Chunk
+000-ThinPool vg_storage twi-aotz-- 10,85t                     86,71 
+38,53                            8,00m
+Storage      vg_storage Vwi-aotz-- 10,80t 000-ThinPool        87,12 
+                                 0
+
+XFS filesystem info:
+meta-data=/dev/mapper/vg_storage-Storage isize=512    agcount=32, 
+agsize=90596992 blks
+          =                       sectsz=512   attr=2, projid32bit=1
+          =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=2899103744, imaxpct=5
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal               bsize=4096   blocks=521728, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+Some consideration:
+1) I am using a single big thin volume because back in the time ( >2 
+years ago) I was not sure about XFS and, having no shrinking capability, 
+I relayed on thin volume unmap should the filesystem choice change. 
+However, thin pool's chunk size is quite big (8 MB) so it should not 
+pose acute fragmentation problem;
+
+2) due to being layered over a thinly provided volume, the filesystem 
+was created with "noalign" option. I run some in-the-lab test on a spare 
+machine and I (still) find that this option seems to *lower* the time 
+needed to stat/delete files when XFS is on top of a thin volume, so I do 
+not think this is a problem. I'm right?
+
+3) the filesystem is over 2 years old and has a very big number of files 
+on it (inode count is 12588595, but each inode has multiple hardlinked 
+files). Is this slow delete performance a side effect of "aging" ?
+
+4) I have not changed the default read-ahead value (256 KB). I know this 
+is quite small compared to available disk resources but, before messing 
+with low-level block device tuning, I would really like to know your 
+opinion on my case.
+
+Thank you all.
 
 -- 
-Dave Hall
-Binghamton University
-kdhall@binghamton.edu
-607-760-2328 (Cell)
-607-777-4641 (Office)
-
-On 11/25/16 10:20 AM, Dave Hall wrote:
->
->
-> On 11/25/16 6:18 AM, Carlos Maiolino wrote:
->>>> > > Regarding thing-provisioning, there are a couple things that 
->>>> you should keep in
->>>> > > mind.
->>>> > >
->>>> > > - AGs segment the metadata across a whole disk, and increase 
->>>> parallelism in the
->>>> > >   filesystem, but, thin-provisioning will make such allocations 
->>>> sequential,
->>>> > >   despite where in the block device the filesystem tries to 
->>>> write, this is the
->>>> > >   nature of thin-provisioning devices so, I believe you should 
->>>> be more careful
->>>> > >   planning your DM-thin structure than the filesystem itself.
->>> >
->>> > So it sounds like I should used striping for my logical volume to 
->>> assure
->>> > that data is distributed across the whole physical array?
->> I'm not sure if I understand you question here, what kind of 
->> architecture you
->> have in your mind. All thin-provisioning allocation are sequential, 
->> block
->> requested, next block available served (although with the recent 
->> dm-thin versions
->> it will serve blocks in bundles, not on a block-by-block granularity 
->> anymore,
->> but it is still a sequential alignment.
->>
->> I am really not sure what you have in mind to 'force' the 
->> distribution across
->> the whole physical array. The only thing I could think was to have 2 
->> dm-thin
->> devices, on different pools, and use them to build a stripped LVM. I 
->> don't know
->> if it is possible tbh, I never tried such configuration, but it's a 
->> setup bound
->> to have problems IMHO.
->>
->
-> Currently I have 4 LVM PVs that are mapped to explicit groups of 
-> physical disks (RAID 5) in my array.  I would either stripe or 
-> concatenate them together and create a single large DM-Thin LV and 
-> format it for XFS.
->
-> If the PVs are concatenated it sounds like DM-Thin would fill up the 
-> first PV before moving to the next.  It seems that DM-Thin on striped 
-> PVs would assure that disk activity is spread across all of the PVs 
-> and thus across all of the physical disks.  Without DM-Thin, an XFS on 
-> concatenated PVs would probably tend to organize an AGs into single 
-> PVs which would spread disk activity across all of the physical disks, 
-> just in a different way.
->
-I'd like to add some clarification just to be sure...
-
-The configuration strategy I've been using for my physical storage array 
-is to map specific disks into a small RAID group and define a single LUN 
-per RAID group.  Thus, each LUN presented to the server is currently 
-mapped to a group of 5 disks in RAID 5.
-
-If I understand correctly an LVM Logical Volume presents a single linear 
-storage space to the file system (XFS) regardless of the underlying 
-storage organization.  XFS divides this space into a number of 
-Allocation Groups that it perceives to be contiguous sub-volumes within 
-the Logical Volume.
-
-With a concatenated LV most AGs would be mapped to a single PV, but XFS 
-would still disperse disk activity across all AGs and thus across all 
-PVs.  With a striped LV each AG would be striped across multiple PVs, 
-which would change the distribution of disk activity across the PVs but 
-still lead to all PVs being fairly active.
-
-With DM-Thin, things would change.  XFS would perceive that it's AGs 
-were fully allocated, but in reality new chunks of storage would be 
-allocated as needed.  If DM-Thin uses a linear allocation algorithm on a 
-concatenated LV it would seem that certain kinds of disk activity would 
-tend to be concentrated in a single PV at a time.  On the other hand, 
-DM-Thin in a striped LV would tend to spread things around more evenly 
-regardless of allocation patterns.
-
-Please let me know if this perception is accurate.
-
-Thanks.
-
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
