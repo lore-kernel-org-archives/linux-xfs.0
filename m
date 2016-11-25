@@ -1,160 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.webx.cz ([109.123.222.201]:56633 "EHLO mail.webx.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932793AbcKHL25 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Nov 2016 06:28:57 -0500
-From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
-Date: Tue, 08 Nov 2016 12:28:54 +0100
-Message-ID: <2639114.hBi4OJ80y2@libor-nb>
-In-Reply-To: <1655526.YOeIAmCiZd@libor-nb>
-References: <5244720.RPRsZ88NJ0@libor-nb> <20161031120226.GT14023@dastard> <1655526.YOeIAmCiZd@libor-nb>
+Received: from james.kirk.hungrycats.org ([174.142.39.145]:41738 "EHLO
+        james.kirk.hungrycats.org" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751544AbcKYEUk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Nov 2016 23:20:40 -0500
+Date: Thu, 24 Nov 2016 23:20:39 -0500
+From: Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
+Subject: Re: [RFC PATCH 0/2] Btrfs: make a source length of 0 imply EOF for
+ dedupe
+Message-ID: <20161125042038.GF8685@hungrycats.org>
+References: <cover.1479427384.git.osandov@fb.com>
+ <20161123020210.GW21290@hungrycats.org>
+ <20161123042632.GQ31101@dastard>
+ <20161123135559.GC8685@hungrycats.org>
+ <20161123221328.GR31101@dastard>
+ <20161123231446.GD8685@hungrycats.org>
+ <20161123235324.GQ28177@dastard>
+ <20161124012618.GH23680@birch.djwong.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="oXNgvKVxGWJ0RPMJ"
+Content-Disposition: inline
+In-Reply-To: <20161124012618.GH23680@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-
-Adding more output from dmesg
-
-Nov  8 07:14:12 vps2 kernel: [ 6215.369387] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x12f63f40
-Nov  8 07:14:12 vps2 kernel: [ 6215.369468] XFS (dm-2): Unmount and run xfs_repair
-Nov  8 07:14:12 vps2 kernel: [ 6215.369498] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
-Nov  8 07:14:12 vps2 kernel: [ 6215.369538] ffff88018fe02000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
-Nov  8 07:14:12 vps2 kernel: [ 6215.369590] ffff88018fe02010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
-Nov  8 07:14:12 vps2 kernel: [ 6215.369642] ffff88018fe02020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-Nov  8 07:14:12 vps2 kernel: [ 6215.369693] ffff88018fe02030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-Nov  8 07:14:12 vps2 kernel: [ 6215.369750] XFS (dm-2): metadata I/O error: block 0x12f63f40 ("xfs_trans_read_buf_map") error 117 numblks 8
-
-Nov  8 07:21:16 vps2 kernel: [ 6639.384423] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x12645ef8
-Nov  8 07:21:16 vps2 kernel: [ 6639.384501] XFS (dm-2): Unmount and run xfs_repair
-Nov  8 07:21:16 vps2 kernel: [ 6639.384530] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
-Nov  8 07:21:16 vps2 kernel: [ 6639.384568] ffff88010d91c000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
-Nov  8 07:21:16 vps2 kernel: [ 6639.384617] ffff88010d91c010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
-Nov  8 07:21:16 vps2 kernel: [ 6639.384665] ffff88010d91c020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-Nov  8 07:21:16 vps2 kernel: [ 6639.384734] ffff88010d91c030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-Nov  8 07:21:16 vps2 kernel: [ 6639.384792] XFS (dm-2): metadata I/O error: block 0x12645ef8 ("xfs_trans_read_buf_map") error 117 numblks 8
-
-Libor
-
-On úterý 8. listopadu 2016 12:09:51 CET Libor Klepáč wrote:
-> This sender failed our fraud detection checks and may not be who they appear
-> to be. Learn about spoofing at http://aka.ms/LearnAboutSpoofing
-> 
-> Hello,
-> status update on vps2.
-> Booted to kernel 4.7.8-1~bpo8+1, xfsprogs 4.8.0.
-> 
-> First check it:
-> vps2:~# xfs_repair -n /dev/mapper/vgDisk2-lvData
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
-> Metadata corruption detected at xfs_attr3_leaf block 0x12645ef8/0x1000
-> Metadata corruption detected at xfs_attr3_leaf block 0x12f63f40/0x1000
->         - agno = 2
-> Metadata corruption detected at xfs_attr3_leaf block 0x24c17ba8/0x1000
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify link counts...
-> No modify flag set, skipping filesystem flush and exiting.
-> 
-> then repair it
-> vps2:~# xfs_repair /dev/mapper/vgDisk2-lvData
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
-> Metadata corruption detected at xfs_attr3_leaf block 0x12645ef8/0x1000
-> Metadata corruption detected at xfs_attr3_leaf block 0x12f63f40/0x1000
->         - agno = 2
-> Metadata corruption detected at xfs_attr3_leaf block 0x24c17ba8/0x1000
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
-> Phase 5 - rebuild AG headers and trees...
->         - reset superblock...
-> Phase 6 - check inode connectivity...
->         - resetting contents of realtime bitmap and summary inodes
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify and correct link counts...
-> Done
-> 
-> But after approx two hours:
-> Nov  8 07:14:12 vps2 kernel: [ 6215.369387] XFS (dm-2): Metadata corruption
-> detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf
-> block 0x12f63f40 Nov  8 07:14:12 vps2 kernel: [ 6215.369468] XFS (dm-2):
-> Unmount and run xfs_repair Nov  8 07:14:12 vps2 kernel: [ 6215.369498] XFS
-> (dm-2): First 64 bytes of corrupted metadata buffer: Nov  8 07:14:12 vps2
-> kernel: [ 6215.369750] XFS (dm-2): metadata I/O error: block 0x12f63f40
-> ("xfs_trans_read_buf_map") error 117 numblks 8 Nov  8 07:21:16 vps2 kernel:
-> [ 6639.384423] XFS (dm-2): Metadata corruption detected at
-> xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block
-> 0x12645ef8 Nov  8 07:21:16 vps2 kernel: [ 6639.384501] XFS (dm-2): Unmount
-> and run xfs_repair Nov  8 07:21:16 vps2 kernel: [ 6639.384530] XFS (dm-2):
-> First 64 bytes of corrupted metadata buffer: Nov  8 07:21:16 vps2 kernel: [
-> 6639.384792] XFS (dm-2): metadata I/O error: block 0x12645ef8
-> ("xfs_trans_read_buf_map") error 117 numblks 8
-> 
-> No problem since then, for now.
-> 
-> What should be done next?
-> 
-> Thanks,
-> Libor
-> 
-> On pondělí 31. října 2016 23:02:26 CET Dave Chinner wrote:
-> > On Mon, Oct 31, 2016 at 09:54:00AM +0100, Libor Klep�? wrote:
-> > > Hello,
-> > > i have upgrade VM called vps1 in original email (the one on bottom of
-> > > email) to debian kernel 4.7.8-1~bpo8+1 and compiled xfsprogs 4.8.0.
-> > > 
-> > > Here is output of xfs_repair -n and xfs_repair. Is it supposed to write
-> > > if/
-> > > what is being repaired, when i forgot -v option?
-> > 
-> > repair will always tell you if there are errors. The logs you have
-> > posted indicate a clean filesystem with no errors.
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Omar Sandoval <osandov@osandov.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, Qu Wenruo <quwenruo@cn.fujitsu.com>, Christoph Hellwig <hch@infradead.org>, kernel-team@fb.com
 
 
+--oXNgvKVxGWJ0RPMJ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Nov 23, 2016 at 05:26:18PM -0800, Darrick J. Wong wrote:
+[...]
+> Keep in mind that the number of bytes deduped is returned to userspace
+> via file_dedupe_range.info[x].bytes_deduped, so a properly functioning
+> userspace program actually /can/ detect that its 128MB request got cut
+> down to only 16MB and re-issue the request with the offsets moved up by
+> 16MB.  The dedupe client in xfs_io (see dedupe_ioctl() in io/reflink.c)
+> implements this strategy.  duperemove (the only other user I know of)
+> also does this.
+>=20
+> So it's really no big deal to increase the limit beyond 16MB, eliminate
+> it entirely, or even change it to cap the total request size while
+> dropping the per-item IO limit.
+>=20
+> As I mentioned in my other reply, the only hesitation I have for not
+> killing XFS_MAX_DEDUPE_LEN is that I feel that 2GB is enough IO for a
+> single ioctl call.
+
+Everything's relative.  btrfs has ioctls that will do hundreds of
+terabytes of IO and take months to run.  2GB of data is nothing.
+
+Deduping entire 100TB files with a single ioctl call makes as much
+sense to me as reflink copying them with a single ioctl call.  The only
+reason I see to keep the limit is to work around something wrong with
+the implementation.
+
+
+--oXNgvKVxGWJ0RPMJ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlg3vBYACgkQgfmLGlazG5xNfACgmwnLqgkMSEla5OODse8eUiHp
+84UAmwVbqj3wz6AKqAPF4lWN3uGMoDOC
+=QHr7
+-----END PGP SIGNATURE-----
+
+--oXNgvKVxGWJ0RPMJ--
