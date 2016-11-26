@@ -1,49 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46099 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932496AbcKDSaW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 14:30:22 -0400
-Subject: [PATCH 02/11] xfs_repair: fix bogus rmapbt record owner check
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 11:30:18 -0700
-Message-ID: <147828421818.31492.9965200959507600178.stgit@birch.djwong.org>
-In-Reply-To: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
-References: <147828420554.31492.4173929442743951581.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from sandeen.net ([63.231.237.45]:49750 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750757AbcKZGFQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 26 Nov 2016 01:05:16 -0500
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (1.0)
+Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <1673187.nXukm9ZPb1@libor-nb>
+Date: Sat, 26 Nov 2016 00:05:14 -0600
+Content-Transfer-Encoding: 8BIT
+Message-Id: <B169ECD9-00C2-43F8-A0CD-CA697CCCD6E1@sandeen.net>
+References: <5244720.RPRsZ88NJ0@libor-nb> <2152865.L3K5Xz7SXO@libor-nb> <20161110213057.GH28922@dastard> <1673187.nXukm9ZPb1@libor-nb>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: =?utf-8?Q?Libor_Klep=C3=A1=C4=8D?= <libor.klepac@bcom.cz>
+Cc: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-Make the reverse mapping owner check actually validate inode numbers.
+On Nov 23, 2016, at 5:40 AM, Libor Klepáč <libor.klepac@bcom.cz> wrote:
+> 
+> btw, it seems to contain strings from inside of files, is that normal? 
+> It also contains strings from mail.log which is on another (ext4) filesystem.
 
-Coverity-id: 1371628
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- repair/scan.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+Please try a newer version of metadump; it should not leak any stale data at all, and hopefully will not segfault, either.
 
+Eric
 
-diff --git a/repair/scan.c b/repair/scan.c
-index 0e13581..b9ef4dc 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1052,8 +1052,12 @@ _("%s rmap btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
- 			}
- 
- 			/* Look for impossible owners. */
--			if (!(owner > 0 || (owner > XFS_RMAP_OWN_MIN &&
--					    owner <= XFS_RMAP_OWN_FS)))
-+			if (!((owner > XFS_RMAP_OWN_MIN &&
-+			       owner <= XFS_RMAP_OWN_FS) ||
-+			      (XFS_INO_TO_AGNO(mp, owner) < mp->m_sb.sb_agcount &&
-+			       XFS_AGINO_TO_AGBNO(mp,
-+					XFS_INO_TO_AGINO(mp, owner)) <
-+					mp->m_sb.sb_agblocks)))
- 				do_warn(
- 	_("invalid owner in rmap btree record %d (%"PRId64" %u) block %u/%u\n"),
- 						i, owner, len, agno, bno);
 
