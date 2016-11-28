@@ -1,71 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:28027 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752772AbcK0V5N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Nov 2016 16:57:13 -0500
-Date: Mon, 28 Nov 2016 08:56:54 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS + LVM + DM-Thin + Multi-Volume External RAID
-Message-ID: <20161127215654.GU28177@dastard>
-References: <1495de1c-3384-f1d6-be76-1ad02fdc8cb1@binghamton.edu>
- <20161124094332.o3hbaubrligsa7l3@eorzea.usersys.redhat.com>
- <ca974620-fff5-e26b-897d-c1c62d47cc64@binghamton.edu>
- <20161125111814.p7ltczag7akqk3w5@eorzea.usersys.redhat.com>
- <264e0ba1-f3ea-b320-1c22-c1e23e74ffa6@binghamton.edu>
- <14553049-ef53-5594-61a7-a91394b66d95@binghamton.edu>
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:35357 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750860AbcK1FAI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2016 00:00:08 -0500
+Received: by mail-qt0-f175.google.com with SMTP id c47so112569759qtc.2
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Nov 2016 21:00:08 -0800 (PST)
+Subject: Re: Silent skipping of file during xfsrestore
+References: <b6f1eb73-c038-1573-c026-c38ae8eea2f0@gmail.com>
+ <20161128015956.GX28177@dastard>
+From: Will Dormann <wdormann@gmail.com>
+Message-ID: <d669a091-dd58-6809-f18c-2fc796568a1d@gmail.com>
+Date: Mon, 28 Nov 2016 00:00:06 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <14553049-ef53-5594-61a7-a91394b66d95@binghamton.edu>
+In-Reply-To: <20161128015956.GX28177@dastard>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Hall <kdhall@binghamton.edu>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Nov 25, 2016 at 12:09:10PM -0500, Dave Hall wrote:
-> With a concatenated LV most AGs would be mapped to a single PV, but
-> XFS would still disperse disk activity across all AGs and thus
-> across all PVs.
+Hi Dave,
 
-Like all things, this is only partially true.
+On 11/27/16 8:59 PM, Dave Chinner wrote:
+>> So what can cause a file to silently be skipped during restore?
+> 
+> Usually nothing. This is typical of xfsdump skipping a file due to
+> some unexpected occurrence during backup. It's in the dump
+> inventory as the directory was processed, but if somthing changed
+> during the dump process (e.g. file gets replaced due to atomic
+> overwrite via rename) then it may not end up being in the dump.
 
-For inode64 (the default) the allocation load is spread based on
-directory structure. If all your work hits a single directory, then
-it won't get spread across multiple devices. The log will land on a
-single device, so it will always be limited by the throughput of
-that device. And read/overwrite workloads will only hit single
-devices, too.  So unless you have a largely concurrent, widely
-distributed set of access patterns, XFS won't distribute the IO
-load.
+This file pretty much never gets written to after the first install of
+the system, so I wouldn't suspect anything like that would have happened.
 
-Now inode32, OTOH, distributes the data to different AGs at
-allocation time, meaning that data in a single directory is spread
-across multiple devices. However, all the metadata will be on the
-first device and that guarantees a device loading imbalance will
-occur.
 
-> With a striped LV each AG would be striped across
-> multiple PVs, which would change the distribution of disk activity
-> across the PVs but still lead to all PVs being fairly active.
+>> I'm
+>> running the latest xfsdump/xfsrestore provided by Ubuntu 14.04, which is
+>> 3.1.1.   I notice the same symptoms from my recovery environment, which
+>> is SystemRescueCD 4.2.0
+> 
+> That's /old/. Try running the latest (3.1.6 IIRC) and see if that
+> fixes the issue.
 
-Striped devices can be thought of as the same as a single spindle -
-the characteristics from the filesystem perspective are the same,
-just with some added alignment constraints to optimise placement...
 
-> With DM-Thin, things would change.  XFS would perceive that it's AGs
-> were fully allocated, but in reality new chunks of storage would be
-> allocated as needed.  If DM-Thin uses a linear allocation algorithm
-> on a concatenated LV it would seem that certain kinds of disk
-> activity would tend to be concentrated in a single PV at a time.  On
-> the other hand, DM-Thin in a striped LV would tend to spread things
-> around more evenly regardless of allocation patterns.
+I tried running xfsrestore 3.1.6 on the existing 3.1.1 dump, and I got
+the same symptoms:
 
-Yup, exactly the same as for a filesystem.
+---
 
-Cheers,
+ -> ls /etc/mythtv
+            4032 session-settings
+         4127166 session-settings~
+        50343916 config.xml
+         4884092 mysql.txt~
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+ -> add /etc/mythtv/config.xml
+
+ -> extract
+
+ --------------------------------- end dialog
+---------------------------------
+
+/home/wd/in/xfsdump-3.1.6/restore/xfsrestore: mkdir etc
+/home/wd/in/xfsdump-3.1.6/restore/xfsrestore: mkdir etc/mythtv
+/home/wd/in/xfsdump-3.1.6/restore/xfsrestore: dump session label: ""
+/home/wd/in/xfsdump-3.1.6/restore/xfsrestore: dump session id:
+f132cc65-5bd4-4a58-a810-52398fe99326
+/home/wd/in/xfsdump-3.1.6/restore/xfsrestore: stream 0, object 0, file 0
+/home/wd/in/xfsdump-3.1.6/restore/xfsrestore: restoring non-directory files
+/home/wd/in/xfsdump-3.1.6/restore/xfsrestore: media file 0 in object 0
+of stream 0
+/home/wd/in/xfsdump-3.1.6/restore/xfsrestore: restore complete: 207
+seconds elapsed
+/home/wd/in/xfsdump-3.1.6/restore/xfsrestore: Restore Status: SUCCESS
+
+
+
+---
+
+If the latest xfsrestore indicates that a file is in a backup, but then
+doesn't actually restore it when asked, isn't that still indicative of a
+problem?  That is, if xfsrestore indicates that a file is in a backup,
+shouldn't it be restoring something?
+
+
+I tried creating a new dump with 3.1.6, and subsequently restoring with
+3.1.6, and it did succeed in restoring config.xml.
+
+However, that may possibly have nothing to do with any sort of fix.
+Because I couldn't restore config.xml when I did my system restore, I
+had to create a new copy of it from a file-level backup.  Therefore, the
+original problematic file isn't present anywhere other than my existing
+xfsdump backups.
+
+
+
+-WD
+
