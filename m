@@ -1,133 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:10170 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751947AbcK0WOg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Nov 2016 17:14:36 -0500
-Date: Mon, 28 Nov 2016 09:14:33 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Slow file stat/deletion
-Message-ID: <20161127221433.GV28177@dastard>
-References: <bef58272-f791-52bf-cc4c-1cb1b7c9efec@assyoma.it>
+Received: from mail-qt0-f169.google.com ([209.85.216.169]:34260 "EHLO
+        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753290AbcK1BtQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Nov 2016 20:49:16 -0500
+Received: by mail-qt0-f169.google.com with SMTP id n6so110053496qtd.1
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Nov 2016 17:49:15 -0800 (PST)
+Received: from sslvpn-97-223.sei.cmu.edu (pool-74-109-198-208.pitbpa.fios.verizon.net. [74.109.198.208])
+        by smtp.googlemail.com with ESMTPSA id o31sm27270155qtf.20.2016.11.27.17.49.14
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 27 Nov 2016 17:49:14 -0800 (PST)
+From: Will Dormann <wdormann@gmail.com>
+Subject: Silent skipping of file during xfsrestore
+Message-ID: <b6f1eb73-c038-1573-c026-c38ae8eea2f0@gmail.com>
+Date: Sun, 27 Nov 2016 20:49:13 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bef58272-f791-52bf-cc4c-1cb1b7c9efec@assyoma.it>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Nov 25, 2016 at 11:40:40AM +0100, Gionatan Danti wrote:
-> Hi all,
-> I am using a XFS filesystem as a target for rsnapshot hardlink-based
-> backups.
-> 
-> Being hardlink-based, our backups generally are quite fast. However,
-> I noticed that for some directories having many small files the
-> longer part of the backup process is to remove the old
-> (out-of-retention) subdirs that must be purged to make room for the
-> new backup iteration.
+Hi folks,
 
-Ah, hard link farms. aka "How to fragment the AGI btrees for fun and
-profit."
+I recently did a restore of a xfsdump backup and I noticed that an
+important file was missing after the restore completed.  I tried going
+back in using interactive mode to see what was up:
 
-> Further analysis show that the slower part of the 'rm' process is
-> the reading of the affected inodes/dentries. An example: to remove a
-> subdir with ~700000 files and directories, the system needs about 30
-> minutes. At the same time, issuing a simple "find <dir> / | wc -l"
-> (after having dropped the caches) need ~24 minutes. In other words,
-> actual reads need 4x the real delete time.
-> 
-> So, my question is: there is anything I can do to speedup the
-> read/stat/deletion?
+-----
 
-Not now. Speed is a factor of the inode layout and seek times. Find
-relies on sequential directory access which is sped up on XFS by
-internal btree readahead and it doesn't require reading the extent
-list. rm processes inodes one at a time and requires reading of the
-extent list so per-inode there is more IO, a lot more CPU time spent
-and more per-op latency, so it's no surprise it's much slower than
-find.
+ -> ls /etc/mythtv
+            4032 session-settings
+         4127166 session-settings~
+        50343916 config.xml
+         4884092 mysql.txt~
 
-> 
-> Here is my system config:
-> CPU: AMD Opteron(tm) Processor 4334
-> RAM: 16 GB
-> HDD: 12x 2TB WD RE in a RAID6 array (64k stripe unit), attached to a
-> PERC H700 controller with 512MB BBU writeback cache
-> OS:  CentOS 7.2 x86_64 with 3.10.0-327.18.2.el7.x86_64 kernel
-> 
-> Relevant LVM setup:
-> LV           VG         Attr       LSize  Pool         Origin Data%
-> Meta%  Move Log Cpy%Sync Convert Chunk
-> 000-ThinPool vg_storage twi-aotz-- 10,85t                     86,71
-> 38,53                            8,00m
-> Storage      vg_storage Vwi-aotz-- 10,80t 000-ThinPool        87,12
-> 0
-> 
-> XFS filesystem info:
-> meta-data=/dev/mapper/vg_storage-Storage isize=512    agcount=32,
-> agsize=90596992 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=0        finobt=0
+ -> add /etc/mythtv
 
-finobt=0.
+ -> extract
 
-finobt was added primarily to solve inode allocation age-related
-degradation for hard link farm style workloads. It will have
-significant impact on unlink as well, because initial inode
-allocation patterns will be better...
+ --------------------------------- end dialog
+---------------------------------
 
-> Some consideration:
-> 1) I am using a single big thin volume because back in the time ( >2
-> years ago) I was not sure about XFS and, having no shrinking
-> capability, I relayed on thin volume unmap should the filesystem
-> choice change. However, thin pool's chunk size is quite big (8 MB)
-> so it should not pose acute fragmentation problem;
-
-Nope, but it means that what should be sequential IO is probably
-going to be random. i.e. instead of directory/inode/extent reading
-IO having minimum track-track seek latency because they are all
-nearby (1-2ms), they'll be average seeks (6-7ms) because locality is no
-longer as the filesystem has optimised for.
-
-> 
-> 2) due to being layered over a thinly provided volume, the
-> filesystem was created with "noalign" option.
-
-noalign affects data placement only, and only for filesystems that
-have a stripe unit/width set, which yours doesn't:
-
->			sunit=0      swidth=0 blks
-
-> I run some in-the-lab
-> test on a spare machine and I (still) find that this option seems to
-> *lower* the time needed to stat/delete files when XFS is on top of a
-> thin volume, so I do not think this is a problem. I'm right?
-
-It's not a problem because it doesn't do anything with your fs
-config.
-
-> 3) the filesystem is over 2 years old and has a very big number of
-> files on it (inode count is 12588595, but each inode has multiple
-> hardlinked files). Is this slow delete performance a side effect of
-> "aging" ?
-
-Yes. Made worse by being on a thinp volume.
+xfsrestore: mkdir etc
+xfsrestore: mkdir etc/mythtv
+xfsrestore: dump session label: ""
+xfsrestore: dump session id: f132cc65-5bd4-4a58-a810-52398fe99326
+xfsrestore: stream 0, object 0, file 0
+xfsrestore: restoring non-directory files
+xfsrestore: media file 0 in object 0 of stream 0
+xfsrestore: restoring etc/mythtv/session-settings (4032 221708883)
+xfsrestore: restoring regular file ino 4032 etc/mythtv/session-settings
+xfsrestore: truncating etc/mythtv/session-settings from 0 to 1170
+xfsrestore: restoring etc/mythtv/session-settings~ (4127166 4079738789)
+xfsrestore: restoring regular file ino 4127166 etc/mythtv/session-settings~
+xfsrestore: truncating etc/mythtv/session-settings~ from 0 to 1169
+xfsrestore: restoring etc/mythtv/mysql.txt~ (4884092 1828724895)
+xfsrestore: restoring regular file ino 4884092 etc/mythtv/mysql.txt~
+xfsrestore: truncating etc/mythtv/mysql.txt~ from 0 to 99
+xfsrestore: restore complete: 125 seconds elapsed
+xfsrestore: Restore Status: SUCCESS
+root@jerky:/mnt/rescue#
 
 
-> 4) I have not changed the default read-ahead value (256 KB). I know
-> this is quite small compared to available disk resources but, before
-> messing with low-level block device tuning, I would really like to
-> know your opinion on my case.
+-----
 
-Only used for data readahead. Will make no difference to
-directory/stat/unlink performance.
 
-Cheers,
+Note that the file "config.xml" is present in the directory listing, but
+when the restore completes with a SUCCESS status, that file is *not*
+present.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+My backup command is:
+xfsdump -e -l0 - / | pigz > $backupdir/mythbuntu.dgz
+
+My restore command is:
+pigz -d -c mythbuntu.dgz | xfsrestore -p 10 -r - /mnt/restore
+
+
+I don't see any special attributes set on /etc/mythtv/config.xml:
+$ lsattr /etc/mythtv/config.xml
+---------------- /etc/mythtv/config.xml
+
+And even so, if a file is excluded, I'd figure that it wouldn't show up
+in the xfsrestore directory listing, right?
+
+
+So what can cause a file to silently be skipped during restore?   I'm
+running the latest xfsdump/xfsrestore provided by Ubuntu 14.04, which is
+3.1.1.   I notice the same symptoms from my recovery environment, which
+is SystemRescueCD 4.2.0
+
+
+Thanks!
+-WD
