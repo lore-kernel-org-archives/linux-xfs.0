@@ -1,94 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:22430 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754475AbcK1IVa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2016 03:21:30 -0500
-Date: Mon, 28 Nov 2016 19:21:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Silent skipping of file during xfsrestore
-Message-ID: <20161128082116.GA28177@dastard>
-References: <b6f1eb73-c038-1573-c026-c38ae8eea2f0@gmail.com>
- <20161128015956.GX28177@dastard>
- <d669a091-dd58-6809-f18c-2fc796568a1d@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d669a091-dd58-6809-f18c-2fc796568a1d@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43918 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754172AbcK1TJo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 28 Nov 2016 14:09:44 -0500
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2DEE13D959
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 19:09:44 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uASJ9hvn006330
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 14:09:44 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 5/6] xfs: free cowblocks and retry on buffered write ENOSPC
+Date: Mon, 28 Nov 2016 14:09:40 -0500
+Message-Id: <1480360181-20396-6-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1480360181-20396-1-git-send-email-bfoster@redhat.com>
+References: <1480360181-20396-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Will Dormann <wdormann@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Nov 28, 2016 at 12:00:06AM -0500, Will Dormann wrote:
-> Hi Dave,
-> 
-> On 11/27/16 8:59 PM, Dave Chinner wrote:
-> >> So what can cause a file to silently be skipped during restore?
-> > 
-> > Usually nothing. This is typical of xfsdump skipping a file due to
-> > some unexpected occurrence during backup. It's in the dump
-> > inventory as the directory was processed, but if somthing changed
-> > during the dump process (e.g. file gets replaced due to atomic
-> > overwrite via rename) then it may not end up being in the dump.
-> 
-> This file pretty much never gets written to after the first install of
-> the system, so I wouldn't suspect anything like that would have happened.
-> 
-> 
-> >> I'm
-> >> running the latest xfsdump/xfsrestore provided by Ubuntu 14.04, which is
-> >> 3.1.1.   I notice the same symptoms from my recovery environment, which
-> >> is SystemRescueCD 4.2.0
-> > 
-> > That's /old/. Try running the latest (3.1.6 IIRC) and see if that
-> > fixes the issue.
-> 
-> 
-> I tried running xfsrestore 3.1.6 on the existing 3.1.1 dump, and I got
-> the same symptoms:
+XFS runs an eofblocks reclaim scan before returning an ENOSPC error to
+userspace for buffered writes. This facilitates aggressive speculative
+preallocation without causing user visible side effects such as
+premature ENOSPC.
 
-Yes, that's expected - the file is missing from the dump, indicating
-a problem exncountered by xfsdump, not xfsrestore.
+Run a cowblocks scan in the same situation to reclaim lingering COW fork
+preallocation throughout the filesystem.
 
-> If the latest xfsrestore indicates that a file is in a backup, but then
-> doesn't actually restore it when asked, isn't that still indicative of a
-> problem?  That is, if xfsrestore indicates that a file is in a backup,
-> shouldn't it be restoring something?
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_file.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I think you misunderstand how the inventory and dump process
-works. The dump process first builds the inventory inode map that it
-needs to back up, then goes and backs up what it mapped in the
-inventory.  The filesystem can change between the inventory build
-an dump trying to backup the file, and if the file does not match
-the inventory for some reason (e.g. different inode generation
-number) it will skip it. The file does not get removed from the
-inventory, though, because that's already been written to the dump
-file.
-
-There have also been situations where kernel bugs have meant xfsdump
-missed files. e.g. off-by-ones in bulkstat continuation code. These
-bugs had identical symptoms to what you are reporting, but given a
-new dump worked this is probably not the issue....
-
-> I tried creating a new dump with 3.1.6, and subsequently restoring with
-> 3.1.6, and it did succeed in restoring config.xml.
-
-Yup, no surprise there, either.
-
-> However, that may possibly have nothing to do with any sort of fix.
-> Because I couldn't restore config.xml when I did my system restore, I
-> had to create a new copy of it from a file-level backup.  Therefore, the
-> original problematic file isn't present anywhere other than my existing
-> xfsdump backups.
-
-Yup, in general, problems with dump contents seen with xfs_restore
-are most likely going to be a dump issue and can only be rectified
-by running new backups.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index d818c16..7fd97c3 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -716,6 +716,7 @@ xfs_file_buffered_aio_write(
+ 		eofb.eof_scan_owner = ip->i_ino; /* for locking */
+ 		eofb.eof_flags = XFS_EOF_FLAGS_SYNC;
+ 		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
++		xfs_icache_free_cowblocks(ip->i_mount, &eofb);
+ 		goto write_retry;
+ 	}
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
