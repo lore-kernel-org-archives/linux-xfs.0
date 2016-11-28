@@ -1,61 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52824 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:19779 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754592AbcK1QdB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 28 Nov 2016 11:33:01 -0500
-Subject: Re: Silent skipping of file during xfsrestore
-References: <b6f1eb73-c038-1573-c026-c38ae8eea2f0@gmail.com>
- <20161128015956.GX28177@dastard>
- <d669a091-dd58-6809-f18c-2fc796568a1d@gmail.com>
- <20161128082116.GA28177@dastard>
- <eaf5e5dc-5fa8-176b-7d39-47570ee7fd83@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <3bf9711f-5fa4-4446-47f5-12108b8802c6@sandeen.net>
-Date: Mon, 28 Nov 2016 10:32:59 -0600
-MIME-Version: 1.0
-In-Reply-To: <eaf5e5dc-5fa8-176b-7d39-47570ee7fd83@gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+        id S1754134AbcK1TJo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 28 Nov 2016 14:09:44 -0500
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A5F6561E4C
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 19:09:43 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uASJ9hEc032612
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 14:09:43 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/6] xfs: fiemap support for cow fork
+Date: Mon, 28 Nov 2016 14:09:36 -0500
+Message-Id: <1480360181-20396-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1480360181-20396-1-git-send-email-bfoster@redhat.com>
+References: <1480360181-20396-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Will Dormann <wdormann@gmail.com>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 11/28/16 10:10 AM, Will Dormann wrote:
+The XFS reflink implementation adds a copy-on-write inode fork to track
+newly allocated extents used to replace shared blocks on write. While,
+in principle, these extents are tracked by the cow fork temporarily,
+fragmentation avoidance mechanisms like the cowextsize hint and COW fork
+speculative preallocation allocate additional blocks outside of the
+range of the write. This means that blocks in the COW fork can linger
+for some time until written to and remapped to the data fork or reaped
+by the background cow fork reclaimer.
 
-> Another possible scenario that I'm wondering whether it's plausible:
-> 
-> My XFS filesystem was mildly corrupted (e.g. because of power failure or
-> other trouble).  But not in a way that was checked/noticed/corrected
-> automatically on system boot, or even had a noticeable effect on the
-> system other than the missing file on xfsrestore?
+To facilitate development and debugging, define and wire up a fiemap
+flag to query the cow fork extent list of an inode. Note that fiemap
+triggers writeback, which means all COW fork extents that are the target
+of I/O are remapped to the data fork as part of the query. As a result,
+the cow fork fiemap request returns only the blocks that have been
+allocated and not yet written to or reclaimed.
 
-There is no explicit check on boot for xfs, so nothing would happen there.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_iomap.c          | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_iomap.h          |  1 +
+ fs/xfs/xfs_iops.c           |  4 ++++
+ include/uapi/linux/fiemap.h |  1 +
+ 4 files changed, 51 insertions(+)
 
-If the fs were corrupted, it likely would have been noticed by the kernel
-when xfsdump was traversing the filesystem.  If the filesystem didn't
-shut down, and you didn't see anything in kernel messages, then there
-is likely no corruption.  You could always unmount & check manually
-w/ xfs_repair (possibly with -n) to confirm.
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 15a83813..4f46f49 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1159,3 +1159,48 @@ xfs_xattr_iomap_begin(
+ struct iomap_ops xfs_xattr_iomap_ops = {
+ 	.iomap_begin		= xfs_xattr_iomap_begin,
+ };
++
++static int
++xfs_cow_iomap_begin(
++	struct inode		*inode,
++	loff_t			offset,
++	loff_t			length,
++	unsigned		flags,
++	struct iomap		*iomap)
++{
++	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + length);
++	struct xfs_bmbt_irec	imap;
++	int			error = 0;
++	int			nimaps = 1;
++	unsigned		lockmode;
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return -EIO;
++
++	lockmode = xfs_ilock_data_map_shared(ip);
++
++	if (!xfs_is_reflink_inode(ip)) {
++		error = -ENOENT;
++		goto out_unlock;
++	}
++
++	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
++			       &nimaps, XFS_BMAPI_ENTIRE | XFS_BMAPI_COWFORK);
++
++out_unlock:
++	xfs_iunlock(ip, lockmode);
++
++	if (!error) {
++		ASSERT(nimaps);
++		xfs_bmbt_to_iomap(ip, iomap, &imap);
++	}
++
++	return error;
++}
++
++struct iomap_ops xfs_cow_iomap_ops = {
++	.iomap_begin		= xfs_cow_iomap_begin,
++};
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index 6d45cf0..69b62e4 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -35,5 +35,6 @@ xfs_extlen_t xfs_eof_alignment(struct xfs_inode *ip, xfs_extlen_t extsize);
+ 
+ extern struct iomap_ops xfs_iomap_ops;
+ extern struct iomap_ops xfs_xattr_iomap_ops;
++extern struct iomap_ops xfs_cow_iomap_ops;
+ 
+ #endif /* __XFS_IOMAP_H__*/
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 405a65c..517eeed 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1043,6 +1043,10 @@ xfs_vn_fiemap(
+ 		fieinfo->fi_flags &= ~FIEMAP_FLAG_XATTR;
+ 		error = iomap_fiemap(inode, fieinfo, start, length,
+ 				&xfs_xattr_iomap_ops);
++	} else if (fieinfo->fi_flags & FIEMAP_FLAG_COW) {
++		fieinfo->fi_flags &= ~FIEMAP_FLAG_COW;
++		error = iomap_fiemap(inode, fieinfo, start, length,
++				&xfs_cow_iomap_ops);
+ 	} else {
+ 		error = iomap_fiemap(inode, fieinfo, start, length,
+ 				&xfs_iomap_ops);
+diff --git a/include/uapi/linux/fiemap.h b/include/uapi/linux/fiemap.h
+index 0c51d61..7014b4c 100644
+--- a/include/uapi/linux/fiemap.h
++++ b/include/uapi/linux/fiemap.h
+@@ -41,6 +41,7 @@ struct fiemap {
+ #define FIEMAP_FLAG_SYNC	0x00000001 /* sync file data before map */
+ #define FIEMAP_FLAG_XATTR	0x00000002 /* map extended attribute tree */
+ #define FIEMAP_FLAG_CACHE	0x00000004 /* request caching of the extents */
++#define FIEMAP_FLAG_COW		0x00000010 /* map cow fork extents */
+ 
+ #define FIEMAP_FLAGS_COMPAT	(FIEMAP_FLAG_SYNC | FIEMAP_FLAG_XATTR)
+ 
+-- 
+2.7.4
 
-> The system is back up and running, seemingly-fine.  But perhaps
-> obviously, my main concern here is to avoid this kind of scenario in the
-> future.   e.g., is there something I'm missing in my backup routine?
-> Silent failures on backup/restore are not very reassuring.
-
-Can you check timestamps on the file to be sure that your assumption
-that it's not getting written is correct?  I know cups likes to write
-and rewrite config files even if no changes occur, for example.
-
--Eric
-
-> 
-> 
-> Thanks!
-> -WD
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
