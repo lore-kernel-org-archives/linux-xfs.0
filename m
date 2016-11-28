@@ -1,58 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:32875 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932373AbcK1QKf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2016 11:10:35 -0500
-Received: by mail-qt0-f180.google.com with SMTP id p16so126427733qta.0
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 08:10:34 -0800 (PST)
-Subject: Re: Silent skipping of file during xfsrestore
-References: <b6f1eb73-c038-1573-c026-c38ae8eea2f0@gmail.com>
- <20161128015956.GX28177@dastard>
- <d669a091-dd58-6809-f18c-2fc796568a1d@gmail.com>
- <20161128082116.GA28177@dastard>
-From: Will Dormann <wdormann@gmail.com>
-Message-ID: <eaf5e5dc-5fa8-176b-7d39-47570ee7fd83@gmail.com>
-Date: Mon, 28 Nov 2016 11:10:36 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:37564 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751033AbcK1R7M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2016 12:59:12 -0500
+Date: Mon, 28 Nov 2016 09:58:27 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH 0/2] Btrfs: make a source length of 0 imply EOF for
+ dedupe
+Message-ID: <20161128175827.GS16813@birch.djwong.org>
+References: <cover.1479427384.git.osandov@fb.com>
+ <20161123020210.GW21290@hungrycats.org>
+ <20161123042632.GQ31101@dastard>
+ <20161123135559.GC8685@hungrycats.org>
+ <20161123221328.GR31101@dastard>
+ <20161123231446.GD8685@hungrycats.org>
+ <20161123235324.GQ28177@dastard>
+ <20161124012618.GH23680@birch.djwong.org>
+ <20161125042038.GF8685@hungrycats.org>
 MIME-Version: 1.0
-In-Reply-To: <20161128082116.GA28177@dastard>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161125042038.GF8685@hungrycats.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
+Cc: Dave Chinner <david@fromorbit.com>, Omar Sandoval <osandov@osandov.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, Qu Wenruo <quwenruo@cn.fujitsu.com>, Christoph Hellwig <hch@infradead.org>, kernel-team@fb.com
 
-On 11/28/16 3:21 AM, Dave Chinner wrote:
-> I think you misunderstand how the inventory and dump process
-> works. The dump process first builds the inventory inode map that it
-> needs to back up, then goes and backs up what it mapped in the
-> inventory.  The filesystem can change between the inventory build
-> an dump trying to backup the file, and if the file does not match
-> the inventory for some reason (e.g. different inode generation
-> number) it will skip it. The file does not get removed from the
-> inventory, though, because that's already been written to the dump
-> file.
+On Thu, Nov 24, 2016 at 11:20:39PM -0500, Zygo Blaxell wrote:
+> On Wed, Nov 23, 2016 at 05:26:18PM -0800, Darrick J. Wong wrote:
+> [...]
+> > Keep in mind that the number of bytes deduped is returned to userspace
+> > via file_dedupe_range.info[x].bytes_deduped, so a properly functioning
+> > userspace program actually /can/ detect that its 128MB request got cut
+> > down to only 16MB and re-issue the request with the offsets moved up by
+> > 16MB.  The dedupe client in xfs_io (see dedupe_ioctl() in io/reflink.c)
+> > implements this strategy.  duperemove (the only other user I know of)
+> > also does this.
+> > 
+> > So it's really no big deal to increase the limit beyond 16MB, eliminate
+> > it entirely, or even change it to cap the total request size while
+> > dropping the per-item IO limit.
+> > 
+> > As I mentioned in my other reply, the only hesitation I have for not
+> > killing XFS_MAX_DEDUPE_LEN is that I feel that 2GB is enough IO for a
+> > single ioctl call.
 > 
-> There have also been situations where kernel bugs have meant xfsdump
-> missed files. e.g. off-by-ones in bulkstat continuation code. These
-> bugs had identical symptoms to what you are reporting, but given a
-> new dump worked this is probably not the issue....
+> Everything's relative.  btrfs has ioctls that will do hundreds of
+> terabytes of IO and take months to run.  2GB of data is nothing.
+> 
+> Deduping entire 100TB files with a single ioctl call makes as much
+> sense to me as reflink copying them with a single ioctl call.  The only
+> reason I see to keep the limit is to work around something wrong with
+> the implementation.
 
+Ok.  I'll post patches removing the 16MB limitation for XFS and ocfs2 in 4.10
+if nobody objects.
 
-Another possible scenario that I'm wondering whether it's plausible:
-
-My XFS filesystem was mildly corrupted (e.g. because of power failure or
-other trouble).  But not in a way that was checked/noticed/corrected
-automatically on system boot, or even had a noticeable effect on the
-system other than the missing file on xfsrestore?
-
-The system is back up and running, seemingly-fine.  But perhaps
-obviously, my main concern here is to avoid this kind of scenario in the
-future.   e.g., is there something I'm missing in my backup routine?
-Silent failures on backup/restore are not very reassuring.
-
-
-
-Thanks!
--WD
+--D
