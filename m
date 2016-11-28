@@ -1,126 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47748 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934027AbcKQSLj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Nov 2016 13:11:39 -0500
-Date: Thu, 17 Nov 2016 13:11:37 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 01/14] xfs: new inode extent list lookup helpers
-Message-ID: <20161117181137.GC49658@bfoster.bfoster>
-References: <1479143565-30615-1-git-send-email-hch@lst.de>
- <1479143565-30615-2-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1479143565-30615-2-git-send-email-hch@lst.de>
+Received: from mail-pg0-f53.google.com ([74.125.83.53]:33973 "EHLO
+        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755071AbcK1Wmw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2016 17:42:52 -0500
+Received: by mail-pg0-f53.google.com with SMTP id x23so61567830pgx.1
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 14:42:52 -0800 (PST)
+From: Eric Biggers <ebiggers@google.com>
+Subject: [PATCH] Fix building xfsprogs on 32-bit platforms
+Date: Mon, 28 Nov 2016 14:42:35 -0800
+Message-Id: <1480372955-41315-1-git-send-email-ebiggers@google.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Eric Biggers <ebiggers@google.com>
 
-On Mon, Nov 14, 2016 at 06:12:32PM +0100, Christoph Hellwig wrote:
-> xfs_iext_lookup_extent looks up a single extent at the passed in offset,
-> and returns the extent covering the area, or the one behind it in case
-> of a hole, as well as the index of the returned extent in arguments,
-> as well as a simple bool as return value that is set to false if no
-> extent could be found because the offset is behind EOF.  It is a simpler
-> replacement for xfs_bmap_search_extent that leaves looking up the rarely
-> needed previous extent to the caller and has a nicer calling convention.
-> 
-> xfs_iext_get_extent is a helper for iterating over the extent list,
-> it takes an extent index as input, and returns the extent at that index
-> in it's expanded form in an argument if it exists.  The actual return
-> value is a bool whether the index is valid or not.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_inode_fork.c | 46 ++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_inode_fork.h |  6 ++++++
->  2 files changed, 52 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 5fbe24c..749fbfb 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -2003,3 +2003,49 @@ xfs_ifork_init_cow(
->  	ip->i_cformat = XFS_DINODE_FMT_EXTENTS;
->  	ip->i_cnextents = 0;
->  }
-> +
-> +/*
-> + * Lookup the extent covering bno.
-> + *
-> + * If there is an extent covering bno return the extent index, and store the
-> + * expanded extent structure in *gotp, and the extent indes in *idx.
+Since commit 7fda99a0c297 ("xfs.h: require transparent LFS for all
+users"), building xfsprogs fails on a 32-bit platform because it does
+not define _FILE_OFFSET_BITS=64 itself.  Fix it by adding this to CFLAGS
+in builddefs.in.
 
-Typo:							 index
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ include/builddefs.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Otherwise looks good:
+diff --git a/include/builddefs.in b/include/builddefs.in
+index aeb2905..5219071 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -25,7 +25,7 @@ OPTIMIZER = @opt_build@
+ MALLOCLIB = @malloc_lib@
+ LOADERFLAGS = @LDFLAGS@
+ LTLDFLAGS = @LDFLAGS@
+-CFLAGS = @CFLAGS@
++CFLAGS = @CFLAGS@ -D_FILE_OFFSET_BITS=64
+ 
+ LIBRT = @librt@
+ LIBUUID = @libuuid@
+-- 
+2.8.0.rc3.226.g39d4020
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> + * If there is no extent covering bno, but there is an extent after it (e.g.
-> + * it lies in a hole) return that extent in *gotp and its index in *idx
-> + * instead.
-> + * If bno is beyond the last extent return false, and return the index after
-> + * the last valid index in *idxp.
-> + */
-> +bool
-> +xfs_iext_lookup_extent(
-> +	struct xfs_inode	*ip,
-> +	struct xfs_ifork	*ifp,
-> +	xfs_fileoff_t		bno,
-> +	xfs_extnum_t		*idxp,
-> +	struct xfs_bmbt_irec	*gotp)
-> +{
-> +	struct xfs_bmbt_rec_host *ep;
-> +
-> +	XFS_STATS_INC(ip->i_mount, xs_look_exlist);
-> +
-> +	ep = xfs_iext_bno_to_ext(ifp, bno, idxp);
-> +	if (!ep)
-> +		return false;
-> +	xfs_bmbt_get_all(ep, gotp);
-> +	return true;
-> +}
-> +
-> +/*
-> + * Return true if there is an extent at index idx, and return the expanded
-> + * extent structure at idx in that case.  Else return false.
-> + */
-> +bool
-> +xfs_iext_get_extent(
-> +	struct xfs_ifork	*ifp,
-> +	xfs_extnum_t		idx,
-> +	struct xfs_bmbt_irec	*gotp)
-> +{
-> +	if (idx < 0 || idx >= xfs_iext_count(ifp))
-> +		return false;
-> +	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), gotp);
-> +	return true;
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> index 8bf112e..7fb8365 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> @@ -182,6 +182,12 @@ void		xfs_iext_irec_compact_pages(struct xfs_ifork *);
->  void		xfs_iext_irec_compact_full(struct xfs_ifork *);
->  void		xfs_iext_irec_update_extoffs(struct xfs_ifork *, int, int);
->  
-> +bool		xfs_iext_lookup_extent(struct xfs_inode *ip,
-> +			struct xfs_ifork *ifp, xfs_fileoff_t bno,
-> +			xfs_extnum_t *idxp, struct xfs_bmbt_irec *gotp);
-> +bool		xfs_iext_get_extent(struct xfs_ifork *ifp, xfs_extnum_t idx,
-> +			struct xfs_bmbt_irec *gotp);
-> +
->  extern struct kmem_zone	*xfs_ifork_zone;
->  
->  extern void xfs_ifork_init_cow(struct xfs_inode *ip);
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
