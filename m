@@ -1,87 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.molgen.mpg.de ([141.14.17.9]:34311 "EHLO mx1.molgen.mpg.de"
+Received: from sandeen.net ([63.231.237.45]:58188 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753222AbcK0JTL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 27 Nov 2016 04:19:11 -0500
-Subject: Re: INFO: rcu_sched detected stalls on CPUs/tasks with `kswapd` and
- `mem_cgroup_shrink_node`
-References: <20161108170340.GB4127@linux.vnet.ibm.com>
- <6c717122-e671-b086-77ed-4b3c26398564@molgen.mpg.de>
- <20161108183938.GD4127@linux.vnet.ibm.com>
- <9f87f8f0-9d0f-f78f-8dca-993b09b19a69@molgen.mpg.de>
- <20161116173036.GK3612@linux.vnet.ibm.com>
- <20161121134130.GB18112@dhcp22.suse.cz>
- <20161121140122.GU3612@linux.vnet.ibm.com>
- <20161121141818.GD18112@dhcp22.suse.cz>
- <20161121142901.GV3612@linux.vnet.ibm.com>
- <68025f6c-6801-ab46-b0fc-a9407353d8ce@molgen.mpg.de>
- <20161124101525.GB20668@dhcp22.suse.cz>
-From: Donald Buczek <buczek@molgen.mpg.de>
-Message-ID: <583AA50A.9010608@molgen.mpg.de>
-Date: Sun, 27 Nov 2016 10:19:06 +0100
+        id S1751432AbcK1RpV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 28 Nov 2016 12:45:21 -0500
+Subject: Re: Silent skipping of file during xfsrestore
+References: <b6f1eb73-c038-1573-c026-c38ae8eea2f0@gmail.com>
+ <20161128015956.GX28177@dastard>
+ <d669a091-dd58-6809-f18c-2fc796568a1d@gmail.com>
+ <20161128082116.GA28177@dastard>
+ <eaf5e5dc-5fa8-176b-7d39-47570ee7fd83@gmail.com>
+ <3bf9711f-5fa4-4446-47f5-12108b8802c6@sandeen.net>
+ <beb6ebbd-b794-6c96-3cff-42412cd963f7@gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <df11f135-32c2-38c9-db3e-ded3db199f36@sandeen.net>
+Date: Mon, 28 Nov 2016 11:45:19 -0600
 MIME-Version: 1.0
-In-Reply-To: <20161124101525.GB20668@dhcp22.suse.cz>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <beb6ebbd-b794-6c96-3cff-42412cd963f7@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: dvteam@molgen.mpg.de, Paul Menzel <pmenzel@molgen.mpg.de>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Josh Triplett <josh@joshtriplett.org>
+To: Will Dormann <wdormann@gmail.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 24.11.2016 11:15, Michal Hocko wrote:
-> On Mon 21-11-16 16:35:53, Donald Buczek wrote:
-> [...]
->> Hello,
->>
->> thanks a lot for looking into this!
->>
->> Let me add some information from the reporting site:
->>
->> * We've tried the patch from Paul E. McKenney (the one posted Wed, 16 Nov
->> 2016)  and it doesn't shut up the rcu stall warnings.
->>
->> * Log file from a boot with the patch applied ( grep kernel
->> /var/log/messages ) is here :
->> http://owww.molgen.mpg.de/~buczek/321322/2016-11-21_syslog.txt
->>
->> * This system is a backup server and walks over thousands of files sometimes
->> with multiple parallel rsync processes.
->>
->> * No rcu_* warnings on that machine with 4.7.2, but with 4.8.4 , 4.8.6 ,
->> 4.8.8 and now 4.9.0-rc5+Pauls patch
-> I assume you haven't tried the Linus 4.8 kernel without any further
-> stable patches? Just to be sure we are not talking about some later
-> regression which found its way to the stable tree.
+On 11/28/16 10:43 AM, Will Dormann wrote:
+> On 11/28/16 11:32 AM, Eric Sandeen wrote:
+>> There is no explicit check on boot for xfs, so nothing would happen there.
+> 
+> Yeah, I thought that was the case.  Just wanted to make sure.
+> 
+> 
+>> Can you check timestamps on the file to be sure that your assumption
+>> that it's not getting written is correct?  I know cups likes to write
+>> and rewrite config files even if no changes occur, for example.
+> 
+> The problem is that I wiped the target partition clean before doing the
+> xfsrestore.   So the only copy that could be present anywhere is in the
+> xfsdump backups.    Is it possible to check the timestamp / metadata of
+> a file from within xfsrestore?
+> 
+> If not, then I don't think it will be possible to tell what about that
+> file may have been problematic.  The data in the file is pretty static,
+> and it's basically the database information that MythTV uses.  That is,
+> the hostname, username, and password for the MySQL database, and that's
+> about it.  Those things don't change.  There is also no open handle for
+> that file when the system is running.  It's just read in once on system
+> startup.
+> 
+> I replaced the file with a file-level backup that I had from over 3
+> years ago, and the system is now fine.  My faith in xfsdump is what I'm
+> still trying to repair.  :)
 
-We've tried v4.8 and got the first rcu stall warnings with this, too. 
-First one after about 20 hours uptime.
+Yep, understood.  I guess that's why part of a good backup strategy is to
+test your backups.  ;)
 
+Maybe watch the existing config file on your rebuilt box to see if timestamps
+change; otherwise I don't really know what to say about why it was skipped,
+if there's nothing in the xfsdump logs from before.
 
->> * When the backups are actually happening there might be relevant memory
->> pressure from inode cache and the rsync processes. We saw the oom-killer
->> kick in on another machine with same hardware and similar (a bit higher)
->> workload. This other machine also shows a lot of rcu stall warnings since
->> 4.8.4.
->>
->> * We see "rcu_sched detected stalls" also on some other machines since we
->> switched to 4.8 but not as frequently as on the two backup servers. Usually
->> there's "shrink_node" and "kswapd" on the top of the stack. Often
->> "xfs_reclaim_inodes" variants on top of that.
-> I would be interested to see some reclaim tracepoints enabled. Could you
-> try that out? At least mm_shrink_slab_{start,end} and
-> mm_vmscan_lru_shrink_inactive. This should tell us more about how the
-> reclaim behaved.
+-Eric
 
-http://owww.molgen.mpg.de/~buczek/321322/2016-11-26.dmesg.txt  (80K)
-http://owww.molgen.mpg.de/~buczek/321322/2016-11-26.trace.txt (50M)
-
-Traces wrapped, but the last event is covered. all vmscan events were 
-enabled
-
-
--- 
-Donald Buczek
-buczek@molgen.mpg.de
-Tel: +49 30 8413 1433
-
+> 
+> -WD
+> 
