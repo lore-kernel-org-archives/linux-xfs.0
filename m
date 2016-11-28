@@ -1,41 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f170.google.com ([209.85.223.170]:36382 "EHLO
-        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754553AbcKYOvB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Nov 2016 09:51:01 -0500
-Received: by mail-io0-f170.google.com with SMTP id x94so128327808ioi.3
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Nov 2016 06:50:17 -0800 (PST)
-Subject: Re: XFS + LVM + DM-Thin + Multi-Volume External RAID
-References: <1495de1c-3384-f1d6-be76-1ad02fdc8cb1@binghamton.edu>
- <20161124094332.o3hbaubrligsa7l3@eorzea.usersys.redhat.com>
- <20161124194419.GR28177@dastard>
-From: Dave Hall <kdhall@binghamton.edu>
-Message-ID: <96f2ee29-7f75-500d-3ac2-687632ece24b@binghamton.edu>
-Date: Fri, 25 Nov 2016 09:50:20 -0500
-MIME-Version: 1.0
-In-Reply-To: <20161124194419.GR28177@dastard>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:54140 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754093AbcK1TJo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 28 Nov 2016 14:09:44 -0500
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 9C02E31B326
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 19:09:43 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uASJ9huA006317
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 14:09:43 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 2/6] xfs: refactor iomap delalloc existing extent search into helper
+Date: Mon, 28 Nov 2016 14:09:37 -0500
+Message-Id: <1480360181-20396-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1480360181-20396-1-git-send-email-bfoster@redhat.com>
+References: <1480360181-20396-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 11/24/16 2:44 PM, Dave Chinner wrote:
->>> - I've read that there are tricks and calculations for aligning XFS to the
->>> > > RAID stripes.  Can use suggest any guidelines or tools for calculating the
->>> > > right configuration?
->> >
->> > There is no magical trick :), you need to configure Stripe unit and stripe width
->> > according to your raid configuration. You should set stripe unit (su option) to
->> > the size of the stripes on your raid, and set the stripe width (sw option)
->> > according to the number of data disks on your array (if you have a 4+1 raid 5,
->> > it should be 4, into a 8+2 raid 6, it should be 8).
-> mkfs.xfs will do this setup automatically on software raid and any
-> block device that exports the necessary information to set it up.
-> In general, it's only older/cheaper hardware RAID that you have to
-> worry about this anymore.
->
-So how do we know for sure?  Is there a way that we can be sure that the 
-hardware RAID has exported this information?  In lieu of this, is there 
-a solid way to deduce or test for correct alignment?
+In preparation for reuse of the existing delayed allocation code for COW
+reservation, factor out the part of xfs_file_iomap_begin_delay()
+responsible for existing extent lookup into a new helper. This patch
+does not change behavior.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_iomap.c | 72 ++++++++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 57 insertions(+), 15 deletions(-)
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 4f46f49..0a4ef18 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -522,6 +522,48 @@ xfs_iomap_prealloc_size(
+ 	return alloc_blocks;
+ }
+ 
++/*
++ * Prepare to handle delayed allocation based on whether extents exist in the
++ * inode data and COW forks. If an existing data extent is shared, determine
++ * whether COW fork reservation is necessary.
++ *
++ * The 'found' parameter indicates whether a writable mapping was found. If the
++ * mapping is shared, a COW reservation is performed for the corresponding
++ * range.
++ */
++static int
++xfs_iomap_search_extents(
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		offset_fsb,
++	xfs_fileoff_t		end_fsb,
++	int			*eof,
++	int			*idx,
++	struct xfs_bmbt_irec	*got,
++	bool			*found)		/* found usable extent */
++{
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	int			error = 0;
++
++	*found = false;
++
++	*eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, idx, got);
++	if (*eof || got->br_startoff > offset_fsb)
++		return 0;
++
++	if (xfs_is_reflink_inode(ip)) {
++		bool		shared;
++
++		xfs_trim_extent(got, offset_fsb, end_fsb - offset_fsb);
++		error = xfs_reflink_reserve_cow(ip, got, &shared);
++		if (error)
++			return error;
++	}
++
++	*found = true;
++
++	return error;
++}
++
+ static int
+ xfs_file_iomap_begin_delay(
+ 	struct inode		*inode,
+@@ -533,18 +575,22 @@ xfs_file_iomap_begin_delay(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+-	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	xfs_fileoff_t		offset_fsb;
++	xfs_fileoff_t		end_fsb;
+ 	xfs_fileoff_t		maxbytes_fsb =
+ 		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+-	xfs_fileoff_t		end_fsb;
+ 	int			error = 0, eof = 0;
+ 	struct xfs_bmbt_irec	got;
+ 	xfs_extnum_t		idx;
+ 	xfs_fsblock_t		prealloc_blocks = 0;
++	bool			found;
+ 
+ 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+ 	ASSERT(!xfs_get_extsz_hint(ip));
+ 
++	offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
++
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 
+ 	if (unlikely(XFS_TEST_ERROR(
+@@ -564,19 +610,15 @@ xfs_file_iomap_begin_delay(
+ 			goto out_unlock;
+ 	}
+ 
+-	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
+-	if (!eof && got.br_startoff <= offset_fsb) {
+-		if (xfs_is_reflink_inode(ip)) {
+-			bool		shared;
+-
+-			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
+-					maxbytes_fsb);
+-			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
+-			error = xfs_reflink_reserve_cow(ip, &got, &shared);
+-			if (error)
+-				goto out_unlock;
+-		}
+-
++	/*
++	 * Search for preexisting extents. If an existing data extent is shared,
++	 * this will perform COW fork reservation.
++	 */
++	error = xfs_iomap_search_extents(ip, offset_fsb, end_fsb, &eof, &idx,
++					 &got, &found);
++	if (error)
++		goto out_unlock;
++	if (found) {
+ 		trace_xfs_iomap_found(ip, offset, count, 0, &got);
+ 		goto done;
+ 	}
+-- 
+2.7.4
+
