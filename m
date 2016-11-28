@@ -1,53 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44215 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754123AbcK2R2b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2016 12:28:31 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/5] fs: make sb_init_dio_done_wq available outside of direct-io.c
-Date: Tue, 29 Nov 2016 18:28:14 +0100
-Message-Id: <1480440496-25737-4-git-send-email-hch@lst.de>
-In-Reply-To: <1480440496-25737-1-git-send-email-hch@lst.de>
-References: <1480440496-25737-1-git-send-email-hch@lst.de>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:56841 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753387AbcK1CMA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Nov 2016 21:12:00 -0500
+Date: Mon, 28 Nov 2016 12:59:56 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Silent skipping of file during xfsrestore
+Message-ID: <20161128015956.GX28177@dastard>
+References: <b6f1eb73-c038-1573-c026-c38ae8eea2f0@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b6f1eb73-c038-1573-c026-c38ae8eea2f0@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: axboe@fb.com, linux-fsdevel@vger.kernel.org
+To: Will Dormann <wdormann@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-We want to use the per-sb completion workqueue from the new iomap
-direct I/O code.
+On Sun, Nov 27, 2016 at 08:49:13PM -0500, Will Dormann wrote:
+> Hi folks,
+> 
+> I recently did a restore of a xfsdump backup and I noticed that an
+> important file was missing after the restore completed.  I tried going
+> back in using interactive mode to see what was up:
+> 
+> -----
+> 
+>  -> ls /etc/mythtv
+>             4032 session-settings
+>          4127166 session-settings~
+>         50343916 config.xml
+>          4884092 mysql.txt~
+> 
+>  -> add /etc/mythtv
+> 
+>  -> extract
+> 
+>  --------------------------------- end dialog
+> ---------------------------------
+> 
+> xfsrestore: mkdir etc
+> xfsrestore: mkdir etc/mythtv
+> xfsrestore: dump session label: ""
+> xfsrestore: dump session id: f132cc65-5bd4-4a58-a810-52398fe99326
+> xfsrestore: stream 0, object 0, file 0
+> xfsrestore: restoring non-directory files
+> xfsrestore: media file 0 in object 0 of stream 0
+> xfsrestore: restoring etc/mythtv/session-settings (4032 221708883)
+> xfsrestore: restoring regular file ino 4032 etc/mythtv/session-settings
+> xfsrestore: truncating etc/mythtv/session-settings from 0 to 1170
+> xfsrestore: restoring etc/mythtv/session-settings~ (4127166 4079738789)
+> xfsrestore: restoring regular file ino 4127166 etc/mythtv/session-settings~
+> xfsrestore: truncating etc/mythtv/session-settings~ from 0 to 1169
+> xfsrestore: restoring etc/mythtv/mysql.txt~ (4884092 1828724895)
+> xfsrestore: restoring regular file ino 4884092 etc/mythtv/mysql.txt~
+> xfsrestore: truncating etc/mythtv/mysql.txt~ from 0 to 99
+> xfsrestore: restore complete: 125 seconds elapsed
+> xfsrestore: Restore Status: SUCCESS
+> root@jerky:/mnt/rescue#
+> 
+> 
+> -----
+> 
+> 
+> Note that the file "config.xml" is present in the directory listing, but
+> when the restore completes with a SUCCESS status, that file is *not*
+> present.
+> 
+> My backup command is:
+> xfsdump -e -l0 - / | pigz > $backupdir/mythbuntu.dgz
+> 
+> My restore command is:
+> pigz -d -c mythbuntu.dgz | xfsrestore -p 10 -r - /mnt/restore
+> 
+> 
+> I don't see any special attributes set on /etc/mythtv/config.xml:
+> $ lsattr /etc/mythtv/config.xml
+> ---------------- /etc/mythtv/config.xml
+> 
+> And even so, if a file is excluded, I'd figure that it wouldn't show up
+> in the xfsrestore directory listing, right?
+> 
+> 
+> So what can cause a file to silently be skipped during restore?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/direct-io.c | 2 +-
- fs/internal.h  | 3 +++
- 2 files changed, 4 insertions(+), 1 deletion(-)
+Usually nothing. This is typical of xfsdump skipping a file due to
+some unexpected occurrence during backup. It's in the dump
+inventory as the directory was processed, but if somthing changed
+during the dump process (e.g. file gets replaced due to atomic
+overwrite via rename) then it may not end up being in the dump.
 
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index fb9aa16..19aa448 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -554,7 +554,7 @@ static inline int dio_bio_reap(struct dio *dio, struct dio_submit *sdio)
-  * filesystems that don't need it and also allows us to create the workqueue
-  * late enough so the we can include s_id in the name of the workqueue.
-  */
--static int sb_init_dio_done_wq(struct super_block *sb)
-+int sb_init_dio_done_wq(struct super_block *sb)
- {
- 	struct workqueue_struct *old;
- 	struct workqueue_struct *wq = alloc_workqueue("dio/%s",
-diff --git a/fs/internal.h b/fs/internal.h
-index f4da334..4fcf517 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -184,3 +184,6 @@ typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
- loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
- 		unsigned flags, struct iomap_ops *ops, void *data,
- 		iomap_actor_t actor);
-+
-+/* direct-io.c: */
-+int sb_init_dio_done_wq(struct super_block *sb);
+> I'm
+> running the latest xfsdump/xfsrestore provided by Ubuntu 14.04, which is
+> 3.1.1.   I notice the same symptoms from my recovery environment, which
+> is SystemRescueCD 4.2.0
+
+That's /old/. Try running the latest (3.1.6 IIRC) and see if that
+fixes the issue.
+
+Cheers,
+
+Dave.
 -- 
-2.1.4
-
+Dave Chinner
+david@fromorbit.com
