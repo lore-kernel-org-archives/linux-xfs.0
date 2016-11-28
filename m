@@ -1,90 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:58378 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932414AbcK1Vxq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2016 16:53:46 -0500
-Date: Tue, 29 Nov 2016 08:53:08 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Slow file stat/deletion
-Message-ID: <20161128215308.GD28177@dastard>
-References: <bef58272-f791-52bf-cc4c-1cb1b7c9efec@assyoma.it>
- <20161127221433.GV28177@dastard>
- <a5774248-db44-bdfe-2310-bb1a327756fb@assyoma.it>
+Received: from mail02.iobjects.de ([188.40.134.68]:59176 "EHLO
+        mail02.iobjects.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933235AbcK1Qfn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2016 11:35:43 -0500
+Received: from tux.wizards.de (p579D0799.dip0.t-ipconnect.de [87.157.7.153])
+        by mail02.iobjects.de (Postfix) with ESMTPSA id 3B36841601BB
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 17:35:41 +0100 (CET)
+Received: from [192.168.100.223] (ragnarok.applied-asynchrony.com [192.168.100.223])
+        by tux.wizards.de (Postfix) with ESMTP id AD92711C0EBF
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 17:35:40 +0100 (CET)
+From: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
+Subject: New package locations of xfsprogs vs. xfsdump
+Message-ID: <583C5CDC.6050009@applied-asynchrony.com>
+Date: Mon, 28 Nov 2016 17:35:40 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a5774248-db44-bdfe-2310-bb1a327756fb@assyoma.it>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Nov 28, 2016 at 10:51:42AM +0100, Gionatan Danti wrote:
-> 
-> 
-> On 27/11/2016 23:14, Dave Chinner wrote:
-> >
-> >Ah, hard link farms. aka "How to fragment the AGI btrees for fun and
-> >profit."
-> >
-> 
-> Interesting... there is anything I can read about AGI fragmentation?
+Hi,
 
-Read up on finobt and the bug reports on the list about how inode
-allocation slows to a crawl....
+I just bumped my xfsprogs on Gentoo to 4.8.0 to use the new download location
+at kernel.org and noticed that xfsdump is still at sgi.com, even though it has
+an empty directory at https://www.kernel.org/pub/linux/utils/fs/xfs/xfsdump/.
 
-> >Nope, but it means that what should be sequential IO is probably
-> >going to be random. i.e. instead of directory/inode/extent reading
-> >IO having minimum track-track seek latency because they are all
-> >nearby (1-2ms), they'll be average seeks (6-7ms) because locality is no
-> >longer as the filesystem has optimised for.
-> >
-> 
-> Should not thinp overhead be minimized by the big (8 MB) chunk size?
+Is xfsdump supposed to be there as well or has that migration just not
+happened yet? Just asking for packaging reasons.
 
-Minimised - maybe. Removed - no.
+thanks,
+Holger
 
-> Are inode allocation so much scattered around LBAs?
-
-Yes. XFS distributes inodes across the entire device LBA.
-
-> Maybe the
-> slowdown can be increased by bad journal placement (I imagine it is
-> near the start of the disk, while current read/write activity surely
-> happen near the end)?
-
-Contributing factor, yes. You just have to live with that thinp
-behaviour.
-
-> >noalign affects data placement only, and only for filesystems that
-> >have a stripe unit/width set, which yours doesn't:
-> >
-> >>			sunit=0      swidth=0 blks
-> 
-> Isn't that the proper results of "noalign"?
-
-No. "noalign" is a mount option - the sunit/swidth are geometry
-values stored in the superblock. noalign will override the
-superblock values, but it does not make them go away.
-
-> By opting for "noalign"
-> I am telling mkfs to discard any stripe information, right?
-
-No. You are telling it to ignore stripe alignment for file data
-allocation purposes.
-
-> >Yes. Made worse by being on a thinp volume.
-> 
-> I can't do anything for that?
-
-Nope. There's always going to be a penalty for subverting the
-filesystem's physical layout optimisations on storage subsystems
-that require physical layout optimisation for performance.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
