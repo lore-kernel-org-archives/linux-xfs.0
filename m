@@ -1,73 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51995 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751726AbcK2XSf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2016 18:18:35 -0500
-Date: Tue, 29 Nov 2016 15:18:25 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: an iomap-based direct I/O implementation V4
-Message-ID: <20161129231825.GU16813@birch.djwong.org>
-References: <1480440496-25737-1-git-send-email-hch@lst.de>
+Received: from ishtar.tlinx.org ([173.164.175.65]:53006 "EHLO
+        Ishtar.sc.tlinx.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751726AbcK2Xvk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2016 18:51:40 -0500
+Received: from [192.168.3.12] (Athenae [192.168.3.12])
+        by Ishtar.sc.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id uATNpbn8015199
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2016 15:51:39 -0800
+Message-ID: <583E1488.7090502@tlinx.org>
+Date: Tue, 29 Nov 2016 15:51:36 -0800
+From: "L.A. Walsh" <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1480440496-25737-1-git-send-email-hch@lst.de>
+Subject: Fwd: default mount options
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, axboe@fb.com, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Nov 29, 2016 at 06:28:11PM +0100, Christoph Hellwig wrote:
-> Hi all,
-> 
-> this series adds a new direct I/O implementation based on the iomap
-> interface, and switches XFS to use it.
-> 
-> The first two patches are a resend of my earlier series to remove the
-> XFS iolock.  They are needed for the lockdep assert in the new iomap
-> code.
-> 
-> The rest implements a new iomap_dio_rw direct I/O implementation and
-> switches XFS to use it.
-> 
-> It requires a patch from the block tree which we'll need to cherry-pick
-> into the XFS tree to avoid pulling in the whole block tree:
-> 
-> 9cd56d91 ("block: add bio_iov_iter_get_pages()")
-> 
-> To make everyones lifer easie I also have a git tree that includes this
-> cherry pick:
-> 
->     git://git.infradead.org/users/hch/vfs.git iomap-dio.4
-> 
-> Note that with this patch I see somewhat increased failure rates on
-> generic/209.  This is not because of any locking or invalidation changes
-> in this series, but just because it's always been fundamentally race,
-> and the new direct I/O code is a lot faster, which causes the direct
-> writes in this test to race significantly more often with readahead.
 
-I looked through the patches and didn't have any questions, so:
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Is it possible for the 'mount' man page to be enhanced to show
+what the defaults are?  Or if that's not possible,
+maybe the xfs(5) manpage?
 
---D
+Also, I'm again "unclear" on barriers.
 
-> 
-> 
-> Changes since V3:
->  - untangle from the block tree
-> 
-> Changes since V2:
->  - added a few comments to unconfuse reviewers
->  - added a iomap_dio_set_error helper
->  - dropped support for not filling holes on writes
->  - pulled in a more recent block tree (blk_poll -> blk_mq_poll)
-> 
-> Changes since V1:
->  - dropped the bio_iov_iter_get_pages patch, now merged in the block tree
->  - rebased on top of a merge of the XFS tree with the block tree
->  - stopped using WRITE_ODIRECT which has been removed in the block tree
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The xfs(5) man page says:
+
+ "barrier|nobarrier - Enables/disables the use of block layer write
+ barriers... this allows for drive level write caching to be enabled.
+ Barriers are enabled by default.
+
+This seems to say that barriers are enabled.  Does that mean
+the the barriers are implemented in the HW of the disk, or that
+SW adds "barriers" for disks that don't have them implemented in HW?
+
+It also says drives may enable write-caching -- but this should
+only be done if they support write barriers.  How is this "decided"?
+I.e is it done "automatically" in HW? in SW? 
+Or should the user "know"?
+
+Is this related to whether or not the drives support "state" over
+power interruptions?  By having non-volatile "write-cache" memory,
+battery-backed cache, or backed by a UPS?  Wouldn't SSD's be
+considers safe for this purpose (because their state is non-volatile?).
+
+I seem to "get" this topic periodically, but after some time passes,
+and upon rereading the associated manpages, I realize I'm not
+real clear which way is what and realize the lack of defaults
+being specified and whether or not SSD's and/or UPS-backed disks
+were safe whether barriers were present or not was still vague.
+
+
+Thanks!
+-linda
+
+
+
+
+
+
+
+
