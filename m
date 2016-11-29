@@ -1,74 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58826 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752415AbcK1TJo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 28 Nov 2016 14:09:44 -0500
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 938067971C
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 19:09:43 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uASJ9hdY025624
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2016 14:09:43 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/6] xfs: basic cow fork speculative preallocation
-Date: Mon, 28 Nov 2016 14:09:35 -0500
-Message-Id: <1480360181-20396-1-git-send-email-bfoster@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:44040 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753048AbcK2R2Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2016 12:28:24 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/5] locking/lockdep: Provide a type check for lock_is_held
+Date: Tue, 29 Nov 2016 18:28:12 +0100
+Message-Id: <1480440496-25737-2-git-send-email-hch@lst.de>
+In-Reply-To: <1480440496-25737-1-git-send-email-hch@lst.de>
+References: <1480440496-25737-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: axboe@fb.com, linux-fsdevel@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>
 
-Hi all,
+From: Peter Zijlstra <peterz@infradead.org>
 
-Here is a first legitimate pass at COW fork speculative preallocation.
-Updates from the previously posted rfc are noted below. Highlights are
-inclusion of the COW fork fiemap patch, support for throttling
-preallocation on low free space conditions and refactoring tweaks to
-create a separate helper for the data fork -> COW fork lookup sequence.
-Other changes are minor updates based on review of the rfc. Note that I
-decided to retain patch 3 as an independent patch and hopefully explain
-it a bit better. We can still squash it into the subsequent patch if
-warranted, however.
+Christoph requested lockdep_assert_held() variants that distinguish
+between held-for-read or held-for-write.
 
-The xfs_io patch to take advantage of COW fork fiemap is available here:
+Provide:
 
-  http://www.spinics.net/lists/linux-xfs/msg01710.html
+  int lock_is_held_type(struct lockdep_map *lock, int read)
 
-This survives xfstests with the exception of generic/305, which appears
-to just be a case of hardcoded accounting in the golden output file
-changing due to preallocation. I'll have to figure out the best way to
-deal with that (a preceding eofb scan perhaps?). Thoughts, reviews,
-flames appreciated.
+which takes the same argument as lock_acquire(.read) and matches it to
+the held_lock instance.
 
-Brian
+Use of this function should be gated by the debug_locks variable. When
+that is 0 the return value of the lock_is_held_type() function is
+undefined. This is done to allow both negative and positive tests for
+holding locks.
 
-v1:
-- Rebase onto for-next (new iext lookup helpers).
-- Split off speculative prealloc refactor patches into separate series.
-- Prepend the COW fork fiemap patch.
-- Create xfs_iomap_search_extents() helper for data/COW fork extent
-  lookup.
-- Reuse xfs_iomap_prealloc_size() to incorporate prealloc throttling.
-- Added patch to reclaim cowblocks on write failure due to ENOSPC.
-rfc: http://www.spinics.net/lists/linux-xfs/msg02152.html
+By default we provide (positive) lockdep_assert_held{,_exclusive,_read}()
+macros.
 
-Brian Foster (6):
-  xfs: fiemap support for cow fork
-  xfs: refactor iomap delalloc existing extent search into helper
-  xfs: logically separate iomap range from allocation range
-  xfs: reuse iomap delalloc code for COW fork reservation
-  xfs: free cowblocks and retry on buffered write ENOSPC
-  xfs: implement basic COW fork speculative preallocation
+Requested-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+---
+ include/linux/lockdep.h  | 25 +++++++++++++++++++++++--
+ kernel/locking/lockdep.c | 20 ++++++++++++--------
+ 2 files changed, 35 insertions(+), 10 deletions(-)
 
- fs/xfs/xfs_file.c           |   1 +
- fs/xfs/xfs_iomap.c          | 315 +++++++++++++++++++++++++++++++++-----------
- fs/xfs/xfs_iomap.h          |   1 +
- fs/xfs/xfs_iops.c           |   4 +
- include/uapi/linux/fiemap.h |   1 +
- 5 files changed, 244 insertions(+), 78 deletions(-)
-
+diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
+index c1458fe..1e327bb 100644
+--- a/include/linux/lockdep.h
++++ b/include/linux/lockdep.h
+@@ -338,9 +338,18 @@ extern void lock_acquire(struct lockdep_map *lock, unsigned int subclass,
+ extern void lock_release(struct lockdep_map *lock, int nested,
+ 			 unsigned long ip);
+ 
+-#define lockdep_is_held(lock)	lock_is_held(&(lock)->dep_map)
++/*
++ * Same "read" as for lock_acquire(), except -1 means any.
++ */
++extern int lock_is_held_type(struct lockdep_map *lock, int read);
++
++static inline int lock_is_held(struct lockdep_map *lock)
++{
++	return lock_is_held_type(lock, -1);
++}
+ 
+-extern int lock_is_held(struct lockdep_map *lock);
++#define lockdep_is_held(lock)		lock_is_held(&(lock)->dep_map)
++#define lockdep_is_held_type(lock, r)	lock_is_held_type(&(lock)->dep_map, (r))
+ 
+ extern void lock_set_class(struct lockdep_map *lock, const char *name,
+ 			   struct lock_class_key *key, unsigned int subclass,
+@@ -372,6 +381,14 @@ extern void lock_unpin_lock(struct lockdep_map *lock, struct pin_cookie);
+ 		WARN_ON(debug_locks && !lockdep_is_held(l));	\
+ 	} while (0)
+ 
++#define lockdep_assert_held_exclusive(l)	do {			\
++		WARN_ON(debug_locks && !lockdep_is_held_type(l, 0));	\
++	} while (0)
++
++#define lockdep_assert_held_read(l)	do {				\
++		WARN_ON(debug_locks && !lockdep_is_held_type(l, 1));	\
++	} while (0)
++
+ #define lockdep_assert_held_once(l)	do {				\
+ 		WARN_ON_ONCE(debug_locks && !lockdep_is_held(l));	\
+ 	} while (0)
+@@ -428,7 +445,11 @@ struct lock_class_key { };
+ 
+ #define lockdep_depth(tsk)	(0)
+ 
++#define lockdep_is_held_type(l, r)		(1)
++
+ #define lockdep_assert_held(l)			do { (void)(l); } while (0)
++#define lockdep_assert_held_exclusive(l)	do { (void)(l); } while (0)
++#define lockdep_assert_held_read(l)		do { (void)(l); } while (0)
+ #define lockdep_assert_held_once(l)		do { (void)(l); } while (0)
+ 
+ #define lockdep_recursing(tsk)			(0)
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index 589d763..cff580a 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -3188,7 +3188,7 @@ print_lock_nested_lock_not_held(struct task_struct *curr,
+ 	return 0;
+ }
+ 
+-static int __lock_is_held(struct lockdep_map *lock);
++static int __lock_is_held(struct lockdep_map *lock, int read);
+ 
+ /*
+  * This gets called for every mutex_lock*()/spin_lock*() operation.
+@@ -3329,7 +3329,7 @@ static int __lock_acquire(struct lockdep_map *lock, unsigned int subclass,
+ 	}
+ 	chain_key = iterate_chain_key(chain_key, class_idx);
+ 
+-	if (nest_lock && !__lock_is_held(nest_lock))
++	if (nest_lock && !__lock_is_held(nest_lock, -1))
+ 		return print_lock_nested_lock_not_held(curr, hlock, ip);
+ 
+ 	if (!validate_chain(curr, lock, hlock, chain_head, chain_key))
+@@ -3576,7 +3576,7 @@ __lock_release(struct lockdep_map *lock, int nested, unsigned long ip)
+ 	return 1;
+ }
+ 
+-static int __lock_is_held(struct lockdep_map *lock)
++static int __lock_is_held(struct lockdep_map *lock, int read)
+ {
+ 	struct task_struct *curr = current;
+ 	int i;
+@@ -3584,8 +3584,12 @@ static int __lock_is_held(struct lockdep_map *lock)
+ 	for (i = 0; i < curr->lockdep_depth; i++) {
+ 		struct held_lock *hlock = curr->held_locks + i;
+ 
+-		if (match_held_lock(hlock, lock))
+-			return 1;
++		if (match_held_lock(hlock, lock)) {
++			if (read == -1 || hlock->read == read)
++				return 1;
++
++			return 0;
++		}
+ 	}
+ 
+ 	return 0;
+@@ -3769,7 +3773,7 @@ void lock_release(struct lockdep_map *lock, int nested,
+ }
+ EXPORT_SYMBOL_GPL(lock_release);
+ 
+-int lock_is_held(struct lockdep_map *lock)
++int lock_is_held_type(struct lockdep_map *lock, int read)
+ {
+ 	unsigned long flags;
+ 	int ret = 0;
+@@ -3781,13 +3785,13 @@ int lock_is_held(struct lockdep_map *lock)
+ 	check_flags(flags);
+ 
+ 	current->lockdep_recursion = 1;
+-	ret = __lock_is_held(lock);
++	ret = __lock_is_held(lock, read);
+ 	current->lockdep_recursion = 0;
+ 	raw_local_irq_restore(flags);
+ 
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(lock_is_held);
++EXPORT_SYMBOL_GPL(lock_is_held_type);
+ 
+ struct pin_cookie lock_pin_lock(struct lockdep_map *lock)
+ {
 -- 
-2.7.4
+2.1.4
 
