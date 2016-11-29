@@ -1,96 +1,750 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr002msb.fastweb.it ([85.18.95.86]:56567 "EHLO
-        mr002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750997AbcKYKqw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Nov 2016 05:46:52 -0500
-Received: from ceres.assyoma.it (93.63.55.57) by mr002msb.fastweb.it (8.5.140.05)
-        id 579B514005B8038C for linux-xfs@vger.kernel.org; Fri, 25 Nov 2016 11:40:41 +0100
-From: Gionatan Danti <g.danti@assyoma.it>
-Subject: Slow file stat/deletion
-Message-ID: <bef58272-f791-52bf-cc4c-1cb1b7c9efec@assyoma.it>
-Date: Fri, 25 Nov 2016 11:40:40 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([198.137.202.9]:44504 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756587AbcK2R2l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2016 12:28:41 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 5/5] xfs: use iomap_dio_rw
+Date: Tue, 29 Nov 2016 18:28:16 +0100
+Message-Id: <1480440496-25737-6-git-send-email-hch@lst.de>
+In-Reply-To: <1480440496-25737-1-git-send-email-hch@lst.de>
+References: <1480440496-25737-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Gionatan Danti <g.danti@assyoma.it>
+Cc: axboe@fb.com, linux-fsdevel@vger.kernel.org
 
-Hi all,
-I am using a XFS filesystem as a target for rsnapshot hardlink-based 
-backups.
+Straight switch over to using iomap for direct I/O - we already have the
+non-COW dio path in write_begin for DAX and files with extent size hints,
+so nothing to add there.  The COW path is ported over from the old
+get_blocks version and a bit of a mess, but I have some work in progress
+to make it look more like the buffered I/O COW path.
 
-Being hardlink-based, our backups generally are quite fast. However, I 
-noticed that for some directories having many small files the longer 
-part of the backup process is to remove the old (out-of-retention) 
-subdirs that must be purged to make room for the new backup iteration.
+This gets rid of xfs_get_blocks_direct and the last caller of
+xfs_get_blocks with the create flag set, so all that code can be removed.
 
-Further analysis show that the slower part of the 'rm' process is the 
-reading of the affected inodes/dentries. An example: to remove a subdir 
-with ~700000 files and directories, the system needs about 30 minutes. 
-At the same time, issuing a simple "find <dir> / | wc -l" (after having 
-dropped the caches) need ~24 minutes. In other words, actual reads need 
-4x the real delete time.
+Last but not least I've removed a comment in xfs_filemap_fault that
+refers to xfs_get_blocks entirely instead of updating it - while the
+reference is correct, the whole DAX fault path looks different than
+the non-DAX one, so it seems rather pointless.
 
-So, my question is: there is anything I can do to speedup the 
-read/stat/deletion?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c         |   2 +-
+ fs/xfs/xfs_aops.c  | 291 ++---------------------------------------------------
+ fs/xfs/xfs_aops.h  |   6 --
+ fs/xfs/xfs_file.c  | 149 +++++++++++----------------
+ fs/xfs/xfs_iomap.c |  50 +++++++--
+ 5 files changed, 111 insertions(+), 387 deletions(-)
 
-Here is my system config:
-CPU: AMD Opteron(tm) Processor 4334
-RAM: 16 GB
-HDD: 12x 2TB WD RE in a RAID6 array (64k stripe unit), attached to a 
-PERC H700 controller with 512MB BBU writeback cache
-OS:  CentOS 7.2 x86_64 with 3.10.0-327.18.2.el7.x86_64 kernel
-
-Relevant LVM setup:
-LV           VG         Attr       LSize  Pool         Origin Data% 
-Meta%  Move Log Cpy%Sync Convert Chunk
-000-ThinPool vg_storage twi-aotz-- 10,85t                     86,71 
-38,53                            8,00m
-Storage      vg_storage Vwi-aotz-- 10,80t 000-ThinPool        87,12 
-                                 0
-
-XFS filesystem info:
-meta-data=/dev/mapper/vg_storage-Storage isize=512    agcount=32, 
-agsize=90596992 blks
-          =                       sectsz=512   attr=2, projid32bit=1
-          =                       crc=0        finobt=0
-data     =                       bsize=4096   blocks=2899103744, imaxpct=5
-          =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
-log      =internal               bsize=4096   blocks=521728, version=2
-          =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-Some consideration:
-1) I am using a single big thin volume because back in the time ( >2 
-years ago) I was not sure about XFS and, having no shrinking capability, 
-I relayed on thin volume unmap should the filesystem choice change. 
-However, thin pool's chunk size is quite big (8 MB) so it should not 
-pose acute fragmentation problem;
-
-2) due to being layered over a thinly provided volume, the filesystem 
-was created with "noalign" option. I run some in-the-lab test on a spare 
-machine and I (still) find that this option seems to *lower* the time 
-needed to stat/delete files when XFS is on top of a thin volume, so I do 
-not think this is a problem. I'm right?
-
-3) the filesystem is over 2 years old and has a very big number of files 
-on it (inode count is 12588595, but each inode has multiple hardlinked 
-files). Is this slow delete performance a side effect of "aging" ?
-
-4) I have not changed the default read-ahead value (256 KB). I know this 
-is quite small compared to available disk resources but, before messing 
-with low-level block device tuning, I would really like to know your 
-opinion on my case.
-
-Thank you all.
-
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 93d36fd..fc24462 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -591,7 +591,7 @@ EXPORT_SYMBOL_GPL(iomap_fiemap);
+  * iomap.h:
+  */
+ #define IOMAP_DIO_WRITE		(1 << 30)
+-#define IOMAP_DIO_DIRTY	(1 << 31)
++#define IOMAP_DIO_DIRTY		(1 << 31)
+ 
+ struct iomap_dio {
+ 	struct kiocb		*iocb;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index e8f6c2b..265000a 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -37,11 +37,6 @@
+ #include <linux/pagevec.h>
+ #include <linux/writeback.h>
+ 
+-/* flags for direct write completions */
+-#define XFS_DIO_FLAG_UNWRITTEN	(1 << 0)
+-#define XFS_DIO_FLAG_APPEND	(1 << 1)
+-#define XFS_DIO_FLAG_COW	(1 << 2)
+-
+ /*
+  * structure owned by writepages passed to individual writepage calls
+  */
+@@ -1176,45 +1171,6 @@ xfs_vm_releasepage(
+ }
+ 
+ /*
+- * When we map a DIO buffer, we may need to pass flags to
+- * xfs_end_io_direct_write to tell it what kind of write IO we are doing.
+- *
+- * Note that for DIO, an IO to the highest supported file block offset (i.e.
+- * 2^63 - 1FSB bytes) will result in the offset + count overflowing a signed 64
+- * bit variable. Hence if we see this overflow, we have to assume that the IO is
+- * extending the file size. We won't know for sure until IO completion is run
+- * and the actual max write offset is communicated to the IO completion
+- * routine.
+- */
+-static void
+-xfs_map_direct(
+-	struct inode		*inode,
+-	struct buffer_head	*bh_result,
+-	struct xfs_bmbt_irec	*imap,
+-	xfs_off_t		offset,
+-	bool			is_cow)
+-{
+-	uintptr_t		*flags = (uintptr_t *)&bh_result->b_private;
+-	xfs_off_t		size = bh_result->b_size;
+-
+-	trace_xfs_get_blocks_map_direct(XFS_I(inode), offset, size,
+-		ISUNWRITTEN(imap) ? XFS_IO_UNWRITTEN : is_cow ? XFS_IO_COW :
+-		XFS_IO_OVERWRITE, imap);
+-
+-	if (ISUNWRITTEN(imap)) {
+-		*flags |= XFS_DIO_FLAG_UNWRITTEN;
+-		set_buffer_defer_completion(bh_result);
+-	} else if (is_cow) {
+-		*flags |= XFS_DIO_FLAG_COW;
+-		set_buffer_defer_completion(bh_result);
+-	}
+-	if (offset + size > i_size_read(inode) || offset + size < 0) {
+-		*flags |= XFS_DIO_FLAG_APPEND;
+-		set_buffer_defer_completion(bh_result);
+-	}
+-}
+-
+-/*
+  * If this is O_DIRECT or the mpage code calling tell them how large the mapping
+  * is, so that we can avoid repeated get_blocks calls.
+  *
+@@ -1254,51 +1210,12 @@ xfs_map_trim_size(
+ 	bh_result->b_size = mapping_size;
+ }
+ 
+-/* Bounce unaligned directio writes to the page cache. */
+ static int
+-xfs_bounce_unaligned_dio_write(
+-	struct xfs_inode	*ip,
+-	xfs_fileoff_t		offset_fsb,
+-	struct xfs_bmbt_irec	*imap)
+-{
+-	struct xfs_bmbt_irec	irec;
+-	xfs_fileoff_t		delta;
+-	bool			shared;
+-	bool			x;
+-	int			error;
+-
+-	irec = *imap;
+-	if (offset_fsb > irec.br_startoff) {
+-		delta = offset_fsb - irec.br_startoff;
+-		irec.br_blockcount -= delta;
+-		irec.br_startblock += delta;
+-		irec.br_startoff = offset_fsb;
+-	}
+-	error = xfs_reflink_trim_around_shared(ip, &irec, &shared, &x);
+-	if (error)
+-		return error;
+-
+-	/*
+-	 * We're here because we're trying to do a directio write to a
+-	 * region that isn't aligned to a filesystem block.  If any part
+-	 * of the extent is shared, fall back to buffered mode to handle
+-	 * the RMW.  This is done by returning -EREMCHG ("remote addr
+-	 * changed"), which is caught further up the call stack.
+-	 */
+-	if (shared) {
+-		trace_xfs_reflink_bounce_dio_write(ip, imap);
+-		return -EREMCHG;
+-	}
+-	return 0;
+-}
+-
+-STATIC int
+-__xfs_get_blocks(
++xfs_get_blocks(
+ 	struct inode		*inode,
+ 	sector_t		iblock,
+ 	struct buffer_head	*bh_result,
+-	int			create,
+-	bool			direct)
++	int			create)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -1309,10 +1226,8 @@ __xfs_get_blocks(
+ 	int			nimaps = 1;
+ 	xfs_off_t		offset;
+ 	ssize_t			size;
+-	int			new = 0;
+-	bool			is_cow = false;
+ 
+-	BUG_ON(create && !direct);
++	BUG_ON(create);
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+@@ -1321,7 +1236,7 @@ __xfs_get_blocks(
+ 	ASSERT(bh_result->b_size >= (1 << inode->i_blkbits));
+ 	size = bh_result->b_size;
+ 
+-	if (!create && offset >= i_size_read(inode))
++	if (offset >= i_size_read(inode))
+ 		return 0;
+ 
+ 	/*
+@@ -1336,73 +1251,12 @@ __xfs_get_blocks(
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + size);
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 
+-	if (create && direct && xfs_is_reflink_inode(ip)) {
+-		is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap);
+-		ASSERT(!is_cow || !isnullstartblock(imap.br_startblock));
+-	}
+-
+-	if (!is_cow) {
+-		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+-					&imap, &nimaps, XFS_BMAPI_ENTIRE);
+-		/*
+-		 * Truncate an overwrite extent if there's a pending CoW
+-		 * reservation before the end of this extent.  This
+-		 * forces us to come back to get_blocks to take care of
+-		 * the CoW.
+-		 */
+-		if (create && direct && nimaps &&
+-		    imap.br_startblock != HOLESTARTBLOCK &&
+-		    imap.br_startblock != DELAYSTARTBLOCK &&
+-		    !ISUNWRITTEN(&imap))
+-			xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb,
+-					&imap);
+-	}
++	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
++				&imap, &nimaps, XFS_BMAPI_ENTIRE);
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	/*
+-	 * The only time we can ever safely find delalloc blocks on direct I/O
+-	 * is a dio write to post-eof speculative preallocation. All other
+-	 * scenarios are indicative of a problem or misuse (such as mixing
+-	 * direct and mapped I/O).
+-	 *
+-	 * The file may be unmapped by the time we get here so we cannot
+-	 * reliably fail the I/O based on mapping. Instead, fail the I/O if this
+-	 * is a read or a write within eof. Otherwise, carry on but warn as a
+-	 * precuation if the file happens to be mapped.
+-	 */
+-	if (direct && imap.br_startblock == DELAYSTARTBLOCK) {
+-		if (!create || offset < i_size_read(VFS_I(ip))) {
+-			WARN_ON_ONCE(1);
+-			error = -EIO;
+-			goto out_unlock;
+-		}
+-		WARN_ON_ONCE(mapping_mapped(VFS_I(ip)->i_mapping));
+-	}
+-
+-	/* for DAX, we convert unwritten extents directly */
+-	if (create &&
+-	    (!nimaps ||
+-	     (imap.br_startblock == HOLESTARTBLOCK ||
+-	      imap.br_startblock == DELAYSTARTBLOCK) ||
+-	     (IS_DAX(inode) && ISUNWRITTEN(&imap)))) {
+-		/*
+-		 * xfs_iomap_write_direct() expects the shared lock. It
+-		 * is unlocked on return.
+-		 */
+-		if (lockmode == XFS_ILOCK_EXCL)
+-			xfs_ilock_demote(ip, lockmode);
+-
+-		error = xfs_iomap_write_direct(ip, offset, size,
+-					       &imap, nimaps);
+-		if (error)
+-			return error;
+-		new = 1;
+-
+-		trace_xfs_get_blocks_alloc(ip, offset, size,
+-				ISUNWRITTEN(&imap) ? XFS_IO_UNWRITTEN
+-						   : XFS_IO_DELALLOC, &imap);
+-	} else if (nimaps) {
++	if (nimaps) {
+ 		trace_xfs_get_blocks_found(ip, offset, size,
+ 				ISUNWRITTEN(&imap) ? XFS_IO_UNWRITTEN
+ 						   : XFS_IO_OVERWRITE, &imap);
+@@ -1412,12 +1266,6 @@ __xfs_get_blocks(
+ 		goto out_unlock;
+ 	}
+ 
+-	if (IS_DAX(inode) && create) {
+-		ASSERT(!ISUNWRITTEN(&imap));
+-		/* zeroing is not needed at a higher layer */
+-		new = 0;
+-	}
+-
+ 	/* trim mapping down to size requested */
+ 	xfs_map_trim_size(inode, iblock, bh_result, &imap, offset, size);
+ 
+@@ -1427,43 +1275,14 @@ __xfs_get_blocks(
+ 	 */
+ 	if (imap.br_startblock != HOLESTARTBLOCK &&
+ 	    imap.br_startblock != DELAYSTARTBLOCK &&
+-	    (create || !ISUNWRITTEN(&imap))) {
+-		if (create && direct && !is_cow) {
+-			error = xfs_bounce_unaligned_dio_write(ip, offset_fsb,
+-					&imap);
+-			if (error)
+-				return error;
+-		}
+-
++	    !ISUNWRITTEN(&imap))
+ 		xfs_map_buffer(inode, bh_result, &imap, offset);
+-		if (ISUNWRITTEN(&imap))
+-			set_buffer_unwritten(bh_result);
+-		/* direct IO needs special help */
+-		if (create)
+-			xfs_map_direct(inode, bh_result, &imap, offset, is_cow);
+-	}
+ 
+ 	/*
+ 	 * If this is a realtime file, data may be on a different device.
+ 	 * to that pointed to from the buffer_head b_bdev currently.
+ 	 */
+ 	bh_result->b_bdev = xfs_find_bdev_for_inode(inode);
+-
+-	/*
+-	 * If we previously allocated a block out beyond eof and we are now
+-	 * coming back to use it then we will need to flag it as new even if it
+-	 * has a disk address.
+-	 *
+-	 * With sub-block writes into unwritten extents we also need to mark
+-	 * the buffer as new so that the unwritten parts of the buffer gets
+-	 * correctly zeroed.
+-	 */
+-	if (create &&
+-	    ((!buffer_mapped(bh_result) && !buffer_uptodate(bh_result)) ||
+-	     (offset >= i_size_read(inode)) ||
+-	     (new || ISUNWRITTEN(&imap))))
+-		set_buffer_new(bh_result);
+-
+ 	return 0;
+ 
+ out_unlock:
+@@ -1471,100 +1290,6 @@ __xfs_get_blocks(
+ 	return error;
+ }
+ 
+-int
+-xfs_get_blocks(
+-	struct inode		*inode,
+-	sector_t		iblock,
+-	struct buffer_head	*bh_result,
+-	int			create)
+-{
+-	return __xfs_get_blocks(inode, iblock, bh_result, create, false);
+-}
+-
+-int
+-xfs_get_blocks_direct(
+-	struct inode		*inode,
+-	sector_t		iblock,
+-	struct buffer_head	*bh_result,
+-	int			create)
+-{
+-	return __xfs_get_blocks(inode, iblock, bh_result, create, true);
+-}
+-
+-/*
+- * Complete a direct I/O write request.
+- *
+- * xfs_map_direct passes us some flags in the private data to tell us what to
+- * do.  If no flags are set, then the write IO is an overwrite wholly within
+- * the existing allocated file size and so there is nothing for us to do.
+- *
+- * Note that in this case the completion can be called in interrupt context,
+- * whereas if we have flags set we will always be called in task context
+- * (i.e. from a workqueue).
+- */
+-int
+-xfs_end_io_direct_write(
+-	struct kiocb		*iocb,
+-	loff_t			offset,
+-	ssize_t			size,
+-	void			*private)
+-{
+-	struct inode		*inode = file_inode(iocb->ki_filp);
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	uintptr_t		flags = (uintptr_t)private;
+-	int			error = 0;
+-
+-	trace_xfs_end_io_direct_write(ip, offset, size);
+-
+-	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+-		return -EIO;
+-
+-	if (size <= 0)
+-		return size;
+-
+-	/*
+-	 * The flags tell us whether we are doing unwritten extent conversions
+-	 * or an append transaction that updates the on-disk file size. These
+-	 * cases are the only cases where we should *potentially* be needing
+-	 * to update the VFS inode size.
+-	 */
+-	if (flags == 0) {
+-		ASSERT(offset + size <= i_size_read(inode));
+-		return 0;
+-	}
+-
+-	/*
+-	 * We need to update the in-core inode size here so that we don't end up
+-	 * with the on-disk inode size being outside the in-core inode size. We
+-	 * have no other method of updating EOF for AIO, so always do it here
+-	 * if necessary.
+-	 *
+-	 * We need to lock the test/set EOF update as we can be racing with
+-	 * other IO completions here to update the EOF. Failing to serialise
+-	 * here can result in EOF moving backwards and Bad Things Happen when
+-	 * that occurs.
+-	 */
+-	spin_lock(&ip->i_flags_lock);
+-	if (offset + size > i_size_read(inode))
+-		i_size_write(inode, offset + size);
+-	spin_unlock(&ip->i_flags_lock);
+-
+-	if (flags & XFS_DIO_FLAG_COW)
+-		error = xfs_reflink_end_cow(ip, offset, size);
+-	if (flags & XFS_DIO_FLAG_UNWRITTEN) {
+-		trace_xfs_end_io_direct_write_unwritten(ip, offset, size);
+-
+-		error = xfs_iomap_write_unwritten(ip, offset, size);
+-	}
+-	if (flags & XFS_DIO_FLAG_APPEND) {
+-		trace_xfs_end_io_direct_write_append(ip, offset, size);
+-
+-		error = xfs_setfilesize(ip, offset, size);
+-	}
+-
+-	return error;
+-}
+-
+ STATIC ssize_t
+ xfs_vm_direct_IO(
+ 	struct kiocb		*iocb,
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 34dc00d..cc174ec 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -55,12 +55,6 @@ struct xfs_ioend {
+ 
+ extern const struct address_space_operations xfs_address_space_operations;
+ 
+-int	xfs_get_blocks(struct inode *inode, sector_t offset,
+-		       struct buffer_head *map_bh, int create);
+-int	xfs_get_blocks_direct(struct inode *inode, sector_t offset,
+-			      struct buffer_head *map_bh, int create);
+-int	xfs_end_io_direct_write(struct kiocb *iocb, loff_t offset,
+-		ssize_t size, void *private);
+ int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
+ 
+ extern void xfs_count_page_state(struct page *, int *, int *);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index d054b73..f5effa6 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -210,62 +210,21 @@ xfs_file_dio_aio_read(
+ 	struct kiocb		*iocb,
+ 	struct iov_iter		*to)
+ {
+-	struct address_space	*mapping = iocb->ki_filp->f_mapping;
+-	struct inode		*inode = mapping->host;
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	loff_t			isize = i_size_read(inode);
++	struct xfs_inode	*ip = XFS_I(file_inode(iocb->ki_filp));
+ 	size_t			count = iov_iter_count(to);
+-	loff_t			end = iocb->ki_pos + count - 1;
+-	struct iov_iter		data;
+-	struct xfs_buftarg	*target;
+-	ssize_t			ret = 0;
++	ssize_t			ret;
+ 
+ 	trace_xfs_file_direct_read(ip, count, iocb->ki_pos);
+ 
+ 	if (!count)
+ 		return 0; /* skip atime */
+ 
+-	if (XFS_IS_REALTIME_INODE(ip))
+-		target = ip->i_mount->m_rtdev_targp;
+-	else
+-		target = ip->i_mount->m_ddev_targp;
+-
+-	/* DIO must be aligned to device logical sector size */
+-	if ((iocb->ki_pos | count) & target->bt_logical_sectormask) {
+-		if (iocb->ki_pos == isize)
+-			return 0;
+-		return -EINVAL;
+-	}
+-
+ 	file_accessed(iocb->ki_filp);
+ 
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+-	if (mapping->nrpages) {
+-		ret = filemap_write_and_wait_range(mapping, iocb->ki_pos, end);
+-		if (ret)
+-			goto out_unlock;
+-
+-		/*
+-		 * Invalidate whole pages. This can return an error if we fail
+-		 * to invalidate a page, but this should never happen on XFS.
+-		 * Warn if it does fail.
+-		 */
+-		ret = invalidate_inode_pages2_range(mapping,
+-				iocb->ki_pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
+-		WARN_ON_ONCE(ret);
+-		ret = 0;
+-	}
+-
+-	data = *to;
+-	ret = __blockdev_direct_IO(iocb, inode, target->bt_bdev, &data,
+-			xfs_get_blocks_direct, NULL, NULL, 0);
+-	if (ret >= 0) {
+-		iocb->ki_pos += ret;
+-		iov_iter_advance(to, ret);
+-	}
+-
+-out_unlock:
++	ret = iomap_dio_rw(iocb, to, &xfs_iomap_ops, NULL);
+ 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
++
+ 	return ret;
+ }
+ 
+@@ -465,6 +424,58 @@ xfs_file_aio_write_checks(
+ 	return 0;
+ }
+ 
++static int
++xfs_dio_write_end_io(
++	struct kiocb		*iocb,
++	ssize_t			size,
++	unsigned		flags)
++{
++	struct inode		*inode = file_inode(iocb->ki_filp);
++	struct xfs_inode	*ip = XFS_I(inode);
++	loff_t			offset = iocb->ki_pos;
++	bool			update_size = false;
++	int			error = 0;
++
++	trace_xfs_end_io_direct_write(ip, offset, size);
++
++	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
++		return -EIO;
++
++	if (size <= 0)
++		return size;
++
++	/*
++	 * We need to update the in-core inode size here so that we don't end up
++	 * with the on-disk inode size being outside the in-core inode size. We
++	 * have no other method of updating EOF for AIO, so always do it here
++	 * if necessary.
++	 *
++	 * We need to lock the test/set EOF update as we can be racing with
++	 * other IO completions here to update the EOF. Failing to serialise
++	 * here can result in EOF moving backwards and Bad Things Happen when
++	 * that occurs.
++	 */
++	spin_lock(&ip->i_flags_lock);
++	if (offset + size > i_size_read(inode)) {
++		i_size_write(inode, offset + size);
++		update_size = true;
++	}
++	spin_unlock(&ip->i_flags_lock);
++
++	if (flags & IOMAP_DIO_COW) {
++		error = xfs_reflink_end_cow(ip, offset, size);
++		if (error)
++			return error;
++	}
++
++	if (flags & IOMAP_DIO_UNWRITTEN)
++		error = xfs_iomap_write_unwritten(ip, offset, size);
++	else if (update_size)
++		error = xfs_setfilesize(ip, offset, size);
++
++	return error;
++}
++
+ /*
+  * xfs_file_dio_aio_write - handle direct IO writes
+  *
+@@ -504,9 +515,7 @@ xfs_file_dio_aio_write(
+ 	int			unaligned_io = 0;
+ 	int			iolock;
+ 	size_t			count = iov_iter_count(from);
+-	loff_t			end;
+-	struct iov_iter		data;
+-	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
++	struct xfs_buftarg      *target = XFS_IS_REALTIME_INODE(ip) ?
+ 					mp->m_rtdev_targp : mp->m_ddev_targp;
+ 
+ 	/* DIO must be aligned to device logical sector size */
+@@ -534,23 +543,6 @@ xfs_file_dio_aio_write(
+ 	if (ret)
+ 		goto out;
+ 	count = iov_iter_count(from);
+-	end = iocb->ki_pos + count - 1;
+-
+-	if (mapping->nrpages) {
+-		ret = filemap_write_and_wait_range(mapping, iocb->ki_pos, end);
+-		if (ret)
+-			goto out;
+-
+-		/*
+-		 * Invalidate whole pages. This can return an error if we fail
+-		 * to invalidate a page, but this should never happen on XFS.
+-		 * Warn if it does fail.
+-		 */
+-		ret = invalidate_inode_pages2_range(mapping,
+-				iocb->ki_pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
+-		WARN_ON_ONCE(ret);
+-		ret = 0;
+-	}
+ 
+ 	/*
+ 	 * If we are doing unaligned IO, wait for all other IO to drain,
+@@ -573,22 +565,7 @@ xfs_file_dio_aio_write(
+ 			goto out;
+ 	}
+ 
+-	data = *from;
+-	ret = __blockdev_direct_IO(iocb, inode, target->bt_bdev, &data,
+-			xfs_get_blocks_direct, xfs_end_io_direct_write,
+-			NULL, DIO_ASYNC_EXTEND);
+-
+-	/* see generic_file_direct_write() for why this is necessary */
+-	if (mapping->nrpages) {
+-		invalidate_inode_pages2_range(mapping,
+-					      iocb->ki_pos >> PAGE_SHIFT,
+-					      end >> PAGE_SHIFT);
+-	}
+-
+-	if (ret > 0) {
+-		iocb->ki_pos += ret;
+-		iov_iter_advance(from, ret);
+-	}
++	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
+ out:
+ 	xfs_iunlock(ip, iolock);
+ 
+@@ -1468,15 +1445,9 @@ xfs_filemap_fault(
+ 		return xfs_filemap_page_mkwrite(vma, vmf);
+ 
+ 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+-	if (IS_DAX(inode)) {
+-		/*
+-		 * we do not want to trigger unwritten extent conversion on read
+-		 * faults - that is unnecessary overhead and would also require
+-		 * changes to xfs_get_blocks_direct() to map unwritten extent
+-		 * ioend for conversion on read-only mappings.
+-		 */
++	if (IS_DAX(inode))
+ 		ret = dax_iomap_fault(vma, vmf, &xfs_iomap_ops);
+-	} else
++	else
+ 		ret = filemap_fault(vma, vmf);
+ 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+ 
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 15a83813..0d14742 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -950,6 +950,19 @@ static inline bool imap_needs_alloc(struct inode *inode,
+ 		(IS_DAX(inode) && ISUNWRITTEN(imap));
+ }
+ 
++static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
++{
++	/*
++	 * COW writes will allocate delalloc space, so we need to make sure
++	 * to take the lock exclusively here.
++	 */
++	if (xfs_is_reflink_inode(ip) && (flags & (IOMAP_WRITE | IOMAP_ZERO)))
++		return true;
++	if ((flags & IOMAP_DIRECT) && (flags & IOMAP_WRITE))
++		return true;
++	return false;
++}
++
+ static int
+ xfs_file_iomap_begin(
+ 	struct inode		*inode,
+@@ -969,18 +982,14 @@ xfs_file_iomap_begin(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	if ((flags & IOMAP_WRITE) && !IS_DAX(inode) &&
+-		   !xfs_get_extsz_hint(ip)) {
++	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
++			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
+ 		/* Reserve delalloc blocks for regular writeback. */
+ 		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
+ 				iomap);
+ 	}
+ 
+-	/*
+-	 * COW writes will allocate delalloc space, so we need to make sure
+-	 * to take the lock exclusively here.
+-	 */
+-	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
++	if (need_excl_ilock(ip, flags)) {
+ 		lockmode = XFS_ILOCK_EXCL;
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	} else {
+@@ -993,17 +1002,41 @@ xfs_file_iomap_begin(
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
+ 
++	if (xfs_is_reflink_inode(ip) &&
++	    (flags & IOMAP_WRITE) && (flags & IOMAP_DIRECT)) {
++		shared = xfs_reflink_find_cow_mapping(ip, offset, &imap);
++		if (shared) {
++			xfs_iunlock(ip, lockmode);
++			goto alloc_done;
++		}
++		ASSERT(!isnullstartblock(imap.br_startblock));
++	}
++
+ 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+ 			       &nimaps, 0);
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	if (flags & IOMAP_REPORT) {
++	if ((flags & IOMAP_REPORT) ||
++	    (xfs_is_reflink_inode(ip) &&
++	     (flags & IOMAP_WRITE) && (flags & IOMAP_DIRECT))) {
+ 		/* Trim the mapping to the nearest shared extent boundary. */
+ 		error = xfs_reflink_trim_around_shared(ip, &imap, &shared,
+ 				&trimmed);
+ 		if (error)
+ 			goto out_unlock;
++
++		/*
++		 * We're here because we're trying to do a directio write to a
++		 * region that isn't aligned to a filesystem block.  If the
++		 * extent is shared, fall back to buffered mode to handle the
++		 * RMW.
++		 */
++		if (!(flags & IOMAP_REPORT) && shared) {
++			trace_xfs_reflink_bounce_dio_write(ip, &imap);
++			error = -EREMCHG;
++			goto out_unlock;
++		}
+ 	}
+ 
+ 	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
+@@ -1038,6 +1071,7 @@ xfs_file_iomap_begin(
+ 		if (error)
+ 			return error;
+ 
++alloc_done:
+ 		iomap->flags = IOMAP_F_NEW;
+ 		trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
+ 	} else {
 -- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+2.1.4
+
