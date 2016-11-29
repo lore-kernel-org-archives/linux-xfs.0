@@ -1,47 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51458 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752523AbcKEAJm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2016 20:09:42 -0400
-Subject: [PATCH 16/16] xfs: check minimum block size for CRC filesystems
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 04 Nov 2016 17:09:38 -0700
-Message-ID: <147830457847.26713.15949781885999402794.stgit@birch.djwong.org>
-In-Reply-To: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
-References: <147830447710.26713.9536263528122988931.stgit@birch.djwong.org>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:28322 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753042AbcK2Vo6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2016 16:44:58 -0500
+Date: Wed, 30 Nov 2016 08:44:56 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] Fix building xfsprogs on 32-bit platforms
+Message-ID: <20161129214456.GE31101@dastard>
+References: <1480372955-41315-1-git-send-email-ebiggers@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1480372955-41315-1-git-send-email-ebiggers@google.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
+To: Eric Biggers <ebiggers@google.com>
 Cc: linux-xfs@vger.kernel.org
 
-Check the minimum block size on v5 filesystems.
+On Mon, Nov 28, 2016 at 02:42:35PM -0800, Eric Biggers wrote:
+> Since commit 7fda99a0c297 ("xfs.h: require transparent LFS for all
+> users"), building xfsprogs fails on a 32-bit platform because it does
+> not define _FILE_OFFSET_BITS=64 itself.  Fix it by adding this to CFLAGS
+> in builddefs.in.
+> 
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> ---
+>  include/builddefs.in | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index aeb2905..5219071 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -25,7 +25,7 @@ OPTIMIZER = @opt_build@
+>  MALLOCLIB = @malloc_lib@
+>  LOADERFLAGS = @LDFLAGS@
+>  LTLDFLAGS = @LDFLAGS@
+> -CFLAGS = @CFLAGS@
+> +CFLAGS = @CFLAGS@ -D_FILE_OFFSET_BITS=64
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/xfs_sb.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+So, umm, why aren't these lines in configure.ac setting this already
+on your system?
 
+AC_SYS_LARGEFILE
+AC_NEED_LFS
 
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index adc47e2..46e57aa 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -259,6 +259,13 @@ xfs_mount_validate_sb(
- 		return -EFSCORRUPTED;
- 	}
- 
-+	if (xfs_sb_version_hascrc(&mp->m_sb) &&
-+	    unlikely(
-+	    sbp->sb_blocksize < XFS_MIN_CRC_BLOCKSIZE)) {
-+		xfs_notice(mp, "v5 SB sanity check failed");
-+		return -EFSCORRUPTED;
-+	}
-+
- 	/*
- 	 * Currently only very few inode sizes are supported.
- 	 */
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
