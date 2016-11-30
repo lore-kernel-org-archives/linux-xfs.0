@@ -1,97 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51524 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753327AbcK3AOo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 Nov 2016 19:14:44 -0500
-Subject: Re: Fwd: default mount options
-References: <583E1488.7090502@tlinx.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6ecda11c-a993-3dd7-5b87-1947506953ff@sandeen.net>
-Date: Tue, 29 Nov 2016 18:14:42 -0600
+Received: from userp1040.oracle.com ([156.151.31.81]:20683 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752044AbcK3BQA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2016 20:16:00 -0500
+Date: Tue, 29 Nov 2016 17:15:55 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/6] xfs: refactor iomap delalloc existing extent search
+ into helper
+Message-ID: <20161130011555.GV16813@birch.djwong.org>
+References: <1480360181-20396-1-git-send-email-bfoster@redhat.com>
+ <1480360181-20396-3-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <583E1488.7090502@tlinx.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1480360181-20396-3-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "L.A. Walsh" <xfs@tlinx.org>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 11/29/16 5:51 PM, L.A. Walsh wrote:
+On Mon, Nov 28, 2016 at 02:09:37PM -0500, Brian Foster wrote:
+> In preparation for reuse of the existing delayed allocation code for COW
+> reservation, factor out the part of xfs_file_iomap_begin_delay()
+> responsible for existing extent lookup into a new helper. This patch
+> does not change behavior.
 > 
-> Is it possible for the 'mount' man page to be enhanced to show
-> what the defaults are?  Or if that's not possible,
-> maybe the xfs(5) manpage?
-
-xfs(5) covers xfs mount options now.  AFAIK, defaults are clearly
-stated.  Is something missing?
-
-i.e. -
-
-"Barriers are enabled by default."
-
-"For this reason, nodiscard is the default."
-
-"For kernel v3.7 and later, inode64 is the default."
-
-"noikeep is the default."
-
-etc.
-
-If there's something missing, please let us know (or send a patch).
-
-> Also, I'm again "unclear" on barriers.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_iomap.c | 72 ++++++++++++++++++++++++++++++++++++++++++------------
+>  1 file changed, 57 insertions(+), 15 deletions(-)
 > 
-> The xfs(5) man page says:
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 4f46f49..0a4ef18 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -522,6 +522,48 @@ xfs_iomap_prealloc_size(
+>  	return alloc_blocks;
+>  }
+>  
+> +/*
+> + * Prepare to handle delayed allocation based on whether extents exist in the
+> + * inode data and COW forks. If an existing data extent is shared, determine
+> + * whether COW fork reservation is necessary.
+> + *
+> + * The 'found' parameter indicates whether a writable mapping was found. If the
+> + * mapping is shared, a COW reservation is performed for the corresponding
+> + * range.
+> + */
+> +static int
+> +xfs_iomap_search_extents(
+> +	struct xfs_inode	*ip,
+> +	xfs_fileoff_t		offset_fsb,
+> +	xfs_fileoff_t		end_fsb,
+> +	int			*eof,
+> +	int			*idx,
+> +	struct xfs_bmbt_irec	*got,
+> +	bool			*found)		/* found usable extent */
+> +{
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> +	int			error = 0;
+> +
+> +	*found = false;
+> +
+> +	*eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, idx, got);
+> +	if (*eof || got->br_startoff > offset_fsb)
+> +		return 0;
+> +
+> +	if (xfs_is_reflink_inode(ip)) {
+> +		bool		shared;
+> +
+> +		xfs_trim_extent(got, offset_fsb, end_fsb - offset_fsb);
+> +		error = xfs_reflink_reserve_cow(ip, got, &shared);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	*found = true;
+> +
+> +	return error;
+> +}
+> +
+>  static int
+>  xfs_file_iomap_begin_delay(
+>  	struct inode		*inode,
+> @@ -533,18 +575,22 @@ xfs_file_iomap_begin_delay(
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> -	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> +	xfs_fileoff_t		offset_fsb;
+> +	xfs_fileoff_t		end_fsb;
+>  	xfs_fileoff_t		maxbytes_fsb =
+>  		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+> -	xfs_fileoff_t		end_fsb;
+>  	int			error = 0, eof = 0;
+>  	struct xfs_bmbt_irec	got;
+>  	xfs_extnum_t		idx;
+>  	xfs_fsblock_t		prealloc_blocks = 0;
+> +	bool			found;
+>  
+>  	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+>  	ASSERT(!xfs_get_extsz_hint(ip));
+>  
+> +	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> +	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
+> +
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  
+>  	if (unlikely(XFS_TEST_ERROR(
+> @@ -564,19 +610,15 @@ xfs_file_iomap_begin_delay(
+>  			goto out_unlock;
+>  	}
+>  
+> -	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
+> -	if (!eof && got.br_startoff <= offset_fsb) {
+> -		if (xfs_is_reflink_inode(ip)) {
+> -			bool		shared;
+> -
+> -			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
+> -					maxbytes_fsb);
+> -			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
+> -			error = xfs_reflink_reserve_cow(ip, &got, &shared);
+> -			if (error)
+> -				goto out_unlock;
+> -		}
+> -
+> +	/*
+> +	 * Search for preexisting extents. If an existing data extent is shared,
+> +	 * this will perform COW fork reservation.
+> +	 */
+> +	error = xfs_iomap_search_extents(ip, offset_fsb, end_fsb, &eof, &idx,
+> +					 &got, &found);
+> +	if (error)
+> +		goto out_unlock;
+> +	if (found) {
+
+Looks ok...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+>  		trace_xfs_iomap_found(ip, offset, count, 0, &got);
+>  		goto done;
+>  	}
+> -- 
+> 2.7.4
 > 
-> "barrier|nobarrier - Enables/disables the use of block layer write
-> barriers... this allows for drive level write caching to be enabled.
-> Barriers are enabled by default.
-> 
-> This seems to say that barriers are enabled.  Does that mean
-> the the barriers are implemented in the HW of the disk, or that
-> SW adds "barriers" for disks that don't have them implemented in HW?
-
-It means that the xfs "barrier" mount option is enabled by default.  ;)
-
-There is no "barrier implemented in hardware" - having barriers
-turned on means that XFS will requeseet block device flushes at
-appropriate times to maintain consistency, even with write caching.
-
-> It also says drives may enable write-caching -- but this should
-> only be done if they support write barriers.  How is this "decided"?
-> I.e is it done "automatically" in HW? in SW? Or should the user "know"?
-
-What this means is that if barriers are enabled, write-caching
-on the drive can be safely enabled.
-
-The user should leave barriers on.  Devices which don't need them
-should ignore them.
-
-Simplified, if turning barriers /off/ made your workload go faster,
-that means you should have left them on in the first place.  If it
-didn't, then there was no reason to turn the knob in the first place...
-
-> Is this related to whether or not the drives support "state" over
-> power interruptions?  By having non-volatile "write-cache" memory,
-> battery-backed cache, or backed by a UPS?  Wouldn't SSD's be
-> considers safe for this purpose (because their state is non-volatile?).
-
-I'm not sure there is any universal answer for what SSDs may do
-on a power loss, but I think it's certainly common for them to
-have a volatile write cache as well.
-
-> I seem to "get" this topic periodically, but after some time passes,
-> and upon rereading the associated manpages, I realize I'm not
-> real clear which way is what and realize the lack of defaults
-> being specified and whether or not SSD's and/or UPS-backed disks
-> were safe whether barriers were present or not was still vague.
-
-Just leave the option at the default, and you'll be fine.  There is
-rarely, if ever, a reason to change it.
-
--Eric
-
-> 
-> Thanks!
-> -linda
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
