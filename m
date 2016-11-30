@@ -1,34 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38154 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:37130 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755008AbcK3Wg1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 Nov 2016 17:36:27 -0500
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3F095AACEC
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Nov 2016 22:36:26 +0000 (UTC)
-Received: from Liberator.example.com (ovpn03.gateway.prod.ext.phx2.redhat.com [10.5.9.3])
-        by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uAUMaPib000807
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Nov 2016 17:36:26 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 0/2] xfs: AGI buffer type handling
-Message-ID: <203e6e5c-7663-b49b-36af-5885aa1f461a@redhat.com>
-Date: Wed, 30 Nov 2016 16:36:25 -0600
+        id S1753043AbcK3WkU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Nov 2016 17:40:20 -0500
+Subject: [PATCH 1/2] xfs: set AGI buffer type in xlog_recover_clear_agi_bucket
+References: <203e6e5c-7663-b49b-36af-5885aa1f461a@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <4a62db7d-d3aa-9ad7-4b28-87964f312e15@sandeen.net>
+Date: Wed, 30 Nov 2016 16:40:18 -0600
 MIME-Version: 1.0
+In-Reply-To: <203e6e5c-7663-b49b-36af-5885aa1f461a@redhat.com>
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-We were missing a xfs_trans_buf_set_type() to XFS_BLFT_AGI_BUF
-in xlog_recover_clear_agi_bucket.
+xlog_recover_clear_agi_bucket didn't set the
+type to XFS_BLFT_AGI_BUF, so we got a warning during log
+replay (or an ASSERT on a debug build).
 
-Fix this in 2 stages; first simply add it to this function for
-simple -stable backports, then move all of them into
-xfs_read_agi() so it doesn't get forgotten again.
+    XFS (md0): Unknown buffer type 0!
+    XFS (md0): _xfs_buf_ioapply: no ops on block 0xaea8802/0x1
 
--Eric
+Fix this, as was done in f19b872b for 2 other locations
+with the same problem.
+
+cc: <stable@vger.kernel.org> # 3.10 to current
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 9b3d7c7..2d91f5a 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4929,6 +4929,7 @@ static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
+ 	agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+ 	offset = offsetof(xfs_agi_t, agi_unlinked) +
+ 		 (sizeof(xfs_agino_t) * bucket);
++	xfs_trans_buf_set_type(tp, agibp, XFS_BLFT_AGI_BUF);
+ 	xfs_trans_log_buf(tp, agibp, offset,
+ 			  (offset + sizeof(xfs_agino_t) - 1));
+ 
+
