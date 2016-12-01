@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:16654 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755231AbcLAKbB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2016 05:31:01 -0500
+        by vger.kernel.org with ESMTP id S1754409AbcLAKa7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2016 05:30:59 -0500
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1cCOdj-0006fo-1I
+        id 1cCOdj-0006fq-29
         for linux-xfs@vger.kernel.org; Thu, 01 Dec 2016 21:30:55 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.88)
         (envelope-from <david@fromorbit.com>)
-        id 1cCOdj-0000Cf-02
+        id 1cCOdj-0000Ci-0s
         for linux-xfs@vger.kernel.org; Thu, 01 Dec 2016 21:30:55 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] xfs: use rhashtable to track buffer cache
-Date: Thu,  1 Dec 2016 21:30:51 +1100
-Message-Id: <20161201103052.28453-3-david@fromorbit.com>
+Subject: [PATCH 3/3] xfs: optimise CRC updates
+Date: Thu,  1 Dec 2016 21:30:52 +1100
+Message-Id: <20161201103052.28453-4-david@fromorbit.com>
 In-Reply-To: <20161201103052.28453-1-david@fromorbit.com>
 References: <20161201103052.28453-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -23,324 +23,169 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-From: Lucas Stach <dev@lynxeye.de>
+From: Dave Chinner <dchinner@redhat.com>
 
-On filesystems with a lot of metadata and in metadata intensive workloads
-xfs_buf_find() is showing up at the top of the CPU cycles trace. Most of
-the CPU time is spent on CPU cache misses while traversing the rbtree.
+Nick Piggin reported that the CRC overhead in an fsync heavy
+workload was higher than expected on a Power8 machine. Part of this
+was to do with the fact that the power8 CRC implementation is not
+efficient for CRC lengths of less than 512 bytes, and so the way we
+split the CRCs over the CRC field means a lot of the CRCs are
+reduced to being less than than optimal size.
 
-As the buffer cache does not need any kind of ordering, but fast lookups
-a hashtable is the natural data structure to use. The rhashtable
-infrastructure provides a self-scaling hashtable implementation and
-allows lookups to proceed while the table is going through a resize
-operation.
+TO otpimise this, change the CRC update mechanism to zero the CRC
+field first, and then compute the CRC in one pass over the buffer
+and write the result back into the buffer. We can do this safely
+because anything writing a CRC has exclusive access to the buffer
+the CRC is being calculated over.
 
-This reduces the CPU-time spent for the lookups to 1/3 even for small
-filesystems with a relatively small number of cached buffers, with
-possibly much larger gains on higher loaded filesystems.
+We leave the CRC verify code the same - it still splits the CRC
+calculation - because we do not want read-only operations modifying
+the underlying buffer. This is because read-only operations may not
+have an exclusive access to the buffer guaranteed, and so temporary
+modifications could leak out to to other processes accessing the
+buffer concurrently.
 
-[dchinner: reduce minimum hash size to an acceptable size for large
-	   filesystems with many AGs with no active use.]
-[dchinner: remove stale rbtree asserts.]
-[dchinner: use xfs_buf_map for compare function argument.]
-[dchinner: make functions static.]
-[dchinner: remove redundant comments.]
-
-Signed-off-by: Lucas Stach <dev@lynxeye.de>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c   | 121 ++++++++++++++++++++++++++++++++---------------------
- fs/xfs/xfs_buf.h   |   2 +-
- fs/xfs/xfs_linux.h |   1 +
- fs/xfs/xfs_mount.c |   7 +++-
- fs/xfs/xfs_mount.h |   7 +++-
- 5 files changed, 86 insertions(+), 52 deletions(-)
+ fs/xfs/libxfs/xfs_cksum.h     | 26 ++++++++++++++++++++++----
+ fs/xfs/libxfs/xfs_inode_buf.c |  2 +-
+ fs/xfs/xfs_log.c              |  2 +-
+ fs/xfs/xfs_log_recover.c      | 12 +++++++-----
+ 4 files changed, 31 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index b5b9bffe3520..a2f0648743db 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -219,7 +219,6 @@ _xfs_buf_alloc(
- 	init_completion(&bp->b_iowait);
- 	INIT_LIST_HEAD(&bp->b_lru);
- 	INIT_LIST_HEAD(&bp->b_list);
--	RB_CLEAR_NODE(&bp->b_rbnode);
- 	sema_init(&bp->b_sema, 0); /* held, no waiters */
- 	spin_lock_init(&bp->b_lock);
- 	XB_SET_OWNER(bp);
-@@ -473,6 +472,63 @@ _xfs_buf_map_pages(
+diff --git a/fs/xfs/libxfs/xfs_cksum.h b/fs/xfs/libxfs/xfs_cksum.h
+index fad1676ad8cd..a416c7cb23ea 100644
+--- a/fs/xfs/libxfs/xfs_cksum.h
++++ b/fs/xfs/libxfs/xfs_cksum.h
+@@ -6,10 +6,11 @@
  /*
-  *	Finding and Reading Buffers
+  * Calculate the intermediate checksum for a buffer that has the CRC field
+  * inside it.  The offset of the 32bit crc fields is passed as the
+- * cksum_offset parameter.
++ * cksum_offset parameter. We do not modify the buffer during verification,
++ * hence we have to split the CRC calculation across the cksum_offset.
   */
-+static int
-+_xfs_buf_cmp(
-+	struct rhashtable_compare_arg *arg,
-+	const void *obj)
-+{
-+	const struct xfs_buf_map *map = arg->key;
-+	const struct xfs_buf *bp = obj;
-+
-+	/*
-+	 * The key hashing in the lookup path depends on the key being the
-+	 * first element of the compare_arg, make sure to assert this.
-+	 */
-+	BUILD_BUG_ON(offsetof(struct xfs_buf_map, bm_bn) != 0);
-+
-+	if (bp->b_bn == map->bm_bn) {
-+		if (unlikely(bp->b_length != map->bm_len)) {
-+			/*
-+			 * found a block number match. If the range doesn't
-+			 * match, the only way this is allowed is if the buffer
-+			 * in the cache is stale and the transaction that made
-+			 * it stale has not yet committed. i.e. we are
-+			 * reallocating a busy extent. Skip this buffer and
-+			 * continue searching for an exact match.
-+			 */
-+			ASSERT(bp->b_flags & XBF_STALE);
-+			return 1;
-+		}
-+
-+		return 0;
-+	}
-+
-+	return 1;
-+}
-+
-+static const struct rhashtable_params xfs_buf_hash_params = {
-+	.min_size = 32,		/* empty/unused AGs have minimal footprint */
-+	.nelem_hint = 16,
-+	.key_len = sizeof(xfs_daddr_t),
-+	.key_offset = offsetof(struct xfs_buf, b_bn),
-+	.head_offset = offsetof(struct xfs_buf, b_rhash_head),
-+	.automatic_shrinking = true,
-+	.obj_cmpfn = _xfs_buf_cmp,
-+};
-+
-+int xfs_buf_hash_init(
-+	struct xfs_perag *pag)
-+{
-+	spin_lock_init(&pag->pag_buf_lock);
-+	return rhashtable_init(&pag->pag_buf_hash, &xfs_buf_hash_params);
-+}
-+
-+void
-+xfs_buf_hash_destroy(
-+	struct xfs_perag *pag)
-+{
-+	rhashtable_destroy(&pag->pag_buf_hash);
-+}
+ static inline __uint32_t
+-xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
++xfs_start_cksum_safe(char *buffer, size_t length, unsigned long cksum_offset)
+ {
+ 	__uint32_t zero = 0;
+ 	__uint32_t crc;
+@@ -26,6 +27,20 @@ xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+ }
  
  /*
-  *	Look up, and creates if absent, a lockable buffer for
-@@ -488,27 +544,24 @@ _xfs_buf_find(
- 	xfs_buf_t		*new_bp)
++ * Fast CRC method where the buffer is modified. Callers must have exclusive
++ * access to the buffer while the calculation takes place.
++ */
++static inline __uint32_t
++xfs_start_cksum_update(char *buffer, size_t length, unsigned long cksum_offset)
++{
++	/* zero the CRC field */
++	*(__le32 *)(buffer + cksum_offset) = 0;
++
++	/* single pass CRC calculation for the entire buffer */
++	return crc32c(XFS_CRC_SEED, buffer, length);
++}
++
++/*
+  * Convert the intermediate checksum to the final ondisk format.
+  *
+  * The CRC32c calculation uses LE format even on BE machines, but returns the
+@@ -40,11 +55,14 @@ xfs_end_cksum(__uint32_t crc)
+ 
+ /*
+  * Helper to generate the checksum for a buffer.
++ *
++ * This modifies the buffer temporarily - callers must have exclusive
++ * access to the buffer while the calculation takes place.
+  */
+ static inline void
+ xfs_update_cksum(char *buffer, size_t length, unsigned long cksum_offset)
  {
- 	struct xfs_perag	*pag;
--	struct rb_node		**rbp;
--	struct rb_node		*parent;
- 	xfs_buf_t		*bp;
--	xfs_daddr_t		blkno = map[0].bm_bn;
-+	struct xfs_buf_map	cmap = { .bm_bn = map[0].bm_bn };
- 	xfs_daddr_t		eofs;
--	int			numblks = 0;
- 	int			i;
+-	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
++	__uint32_t crc = xfs_start_cksum_update(buffer, length, cksum_offset);
  
- 	for (i = 0; i < nmaps; i++)
--		numblks += map[i].bm_len;
-+		cmap.bm_len += map[i].bm_len;
+ 	*(__le32 *)(buffer + cksum_offset) = xfs_end_cksum(crc);
+ }
+@@ -55,7 +73,7 @@ xfs_update_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+ static inline int
+ xfs_verify_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+ {
+-	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
++	__uint32_t crc = xfs_start_cksum_safe(buffer, length, cksum_offset);
  
- 	/* Check for IOs smaller than the sector size / not sector aligned */
--	ASSERT(!(BBTOB(numblks) < btp->bt_meta_sectorsize));
--	ASSERT(!(BBTOB(blkno) & (xfs_off_t)btp->bt_meta_sectormask));
-+	ASSERT(!(BBTOB(cmap.bm_len) < btp->bt_meta_sectorsize));
-+	ASSERT(!(BBTOB(cmap.bm_bn) & (xfs_off_t)btp->bt_meta_sectormask));
+ 	return *(__le32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
+ }
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 54817f82212c..5efeb4233387 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -436,7 +436,7 @@ xfs_dinode_calc_crc(
+ 		return;
+ 
+ 	ASSERT(xfs_sb_version_hascrc(&mp->m_sb));
+-	crc = xfs_start_cksum((char *)dip, mp->m_sb.sb_inodesize,
++	crc = xfs_start_cksum_update((char *)dip, mp->m_sb.sb_inodesize,
+ 			      XFS_DINODE_CRC_OFF);
+ 	dip->di_crc = xfs_end_cksum(crc);
+ }
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 3b74fa011bb1..3ebe444eb60f 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1668,7 +1668,7 @@ xlog_cksum(
+ 	__uint32_t		crc;
+ 
+ 	/* first generate the crc for the record header ... */
+-	crc = xfs_start_cksum((char *)rhead,
++	crc = xfs_start_cksum_update((char *)rhead,
+ 			      sizeof(struct xlog_rec_header),
+ 			      offsetof(struct xlog_rec_header, h_crc));
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index cf754bcbcb1c..4a98762ec8b4 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -5113,19 +5113,21 @@ xlog_recover_process(
+ 	struct list_head	*buffer_list)
+ {
+ 	int			error;
++	__le32			old_crc = rhead->h_crc;
+ 	__le32			crc;
+ 
++
+ 	crc = xlog_cksum(log, rhead, dp, be32_to_cpu(rhead->h_len));
  
  	/*
- 	 * Corrupted block numbers can get through to here, unfortunately, so we
- 	 * have to check that the buffer falls within the filesystem bounds.
+ 	 * Nothing else to do if this is a CRC verification pass. Just return
+ 	 * if this a record with a non-zero crc. Unfortunately, mkfs always
+-	 * sets h_crc to 0 so we must consider this valid even on v5 supers.
++	 * sets old_crc to 0 so we must consider this valid even on v5 supers.
+ 	 * Otherwise, return EFSBADCRC on failure so the callers up the stack
+ 	 * know precisely what failed.
  	 */
- 	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
--	if (blkno < 0 || blkno >= eofs) {
-+	if (cmap.bm_bn < 0 || cmap.bm_bn >= eofs) {
- 		/*
- 		 * XXX (dgc): we should really be returning -EFSCORRUPTED here,
- 		 * but none of the higher level infrastructure supports
-@@ -516,53 +569,29 @@ _xfs_buf_find(
- 		 */
- 		xfs_alert(btp->bt_mount,
- 			  "%s: Block out of range: block 0x%llx, EOFS 0x%llx ",
--			  __func__, blkno, eofs);
-+			  __func__, cmap.bm_bn, eofs);
- 		WARN_ON(1);
- 		return NULL;
+ 	if (pass == XLOG_RECOVER_CRCPASS) {
+-		if (rhead->h_crc && crc != rhead->h_crc)
++		if (old_crc && crc != old_crc)
+ 			return -EFSBADCRC;
+ 		return 0;
  	}
- 
--	/* get tree root */
- 	pag = xfs_perag_get(btp->bt_mount,
--				xfs_daddr_to_agno(btp->bt_mount, blkno));
-+			    xfs_daddr_to_agno(btp->bt_mount, cmap.bm_bn));
- 
--	/* walk tree */
- 	spin_lock(&pag->pag_buf_lock);
--	rbp = &pag->pag_buf_tree.rb_node;
--	parent = NULL;
--	bp = NULL;
--	while (*rbp) {
--		parent = *rbp;
--		bp = rb_entry(parent, struct xfs_buf, b_rbnode);
--
--		if (blkno < bp->b_bn)
--			rbp = &(*rbp)->rb_left;
--		else if (blkno > bp->b_bn)
--			rbp = &(*rbp)->rb_right;
--		else {
--			/*
--			 * found a block number match. If the range doesn't
--			 * match, the only way this is allowed is if the buffer
--			 * in the cache is stale and the transaction that made
--			 * it stale has not yet committed. i.e. we are
--			 * reallocating a busy extent. Skip this buffer and
--			 * continue searching to the right for an exact match.
--			 */
--			if (bp->b_length != numblks) {
--				ASSERT(bp->b_flags & XBF_STALE);
--				rbp = &(*rbp)->rb_right;
--				continue;
--			}
--			atomic_inc(&bp->b_hold);
--			goto found;
--		}
-+	bp = rhashtable_lookup_fast(&pag->pag_buf_hash, &cmap,
-+				    xfs_buf_hash_params);
-+	if (bp) {
-+		atomic_inc(&bp->b_hold);
-+		goto found;
- 	}
- 
- 	/* No match found */
- 	if (new_bp) {
--		rb_link_node(&new_bp->b_rbnode, parent, rbp);
--		rb_insert_color(&new_bp->b_rbnode, &pag->pag_buf_tree);
- 		/* the buffer keeps the perag reference until it is freed */
- 		new_bp->b_pag = pag;
-+		rhashtable_insert_fast(&pag->pag_buf_hash,
-+				       &new_bp->b_rhash_head,
-+				       xfs_buf_hash_params);
- 		spin_unlock(&pag->pag_buf_lock);
- 	} else {
- 		XFS_STATS_INC(btp->bt_mount, xb_miss_locked);
-@@ -930,7 +959,6 @@ xfs_buf_rele(
- 
- 	if (!pag) {
- 		ASSERT(list_empty(&bp->b_lru));
--		ASSERT(RB_EMPTY_NODE(&bp->b_rbnode));
- 		if (atomic_dec_and_test(&bp->b_hold)) {
- 			xfs_buf_ioacct_dec(bp);
- 			xfs_buf_free(bp);
-@@ -938,8 +966,6 @@ xfs_buf_rele(
- 		return;
- 	}
- 
--	ASSERT(!RB_EMPTY_NODE(&bp->b_rbnode));
--
- 	ASSERT(atomic_read(&bp->b_hold) > 0);
- 
- 	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
-@@ -983,7 +1009,8 @@ xfs_buf_rele(
+@@ -5136,11 +5138,11 @@ xlog_recover_process(
+ 	 * zero CRC check prevents warnings from being emitted when upgrading
+ 	 * the kernel from one that does not add CRCs by default.
+ 	 */
+-	if (crc != rhead->h_crc) {
+-		if (rhead->h_crc || xfs_sb_version_hascrc(&log->l_mp->m_sb)) {
++	if (crc != old_crc) {
++		if (old_crc || xfs_sb_version_hascrc(&log->l_mp->m_sb)) {
+ 			xfs_alert(log->l_mp,
+ 		"log record CRC mismatch: found 0x%x, expected 0x%x.",
+-					le32_to_cpu(rhead->h_crc),
++					le32_to_cpu(old_crc),
+ 					le32_to_cpu(crc));
+ 			xfs_hex_dump(dp, 32);
  		}
- 
- 		ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
--		rb_erase(&bp->b_rbnode, &pag->pag_buf_tree);
-+		rhashtable_remove_fast(&pag->pag_buf_hash, &bp->b_rhash_head,
-+				       xfs_buf_hash_params);
- 		spin_unlock(&pag->pag_buf_lock);
- 		xfs_perag_put(pag);
- 		freebuf = true;
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 38c9a95bda7d..8a9d3a9599f0 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -151,7 +151,7 @@ typedef struct xfs_buf {
- 	 * which is the only bit that is touched if we hit the semaphore
- 	 * fast-path on locking.
- 	 */
--	struct rb_node		b_rbnode;	/* rbtree node */
-+	struct rhash_head	b_rhash_head;	/* pag buffer hash node */
- 	xfs_daddr_t		b_bn;		/* block number of buffer */
- 	int			b_length;	/* size of buffer in BBs */
- 	atomic_t		b_hold;		/* reference count */
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 68640fb63a54..a415f822f2c1 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -78,6 +78,7 @@ typedef __u32			xfs_nlink_t;
- #include <linux/freezer.h>
- #include <linux/list_sort.h>
- #include <linux/ratelimit.h>
-+#include <linux/rhashtable.h>
- 
- #include <asm/page.h>
- #include <asm/div64.h>
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index b341f10cf481..9b9540db17a6 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -157,6 +157,7 @@ xfs_free_perag(
- 		spin_unlock(&mp->m_perag_lock);
- 		ASSERT(pag);
- 		ASSERT(atomic_read(&pag->pag_ref) == 0);
-+		xfs_buf_hash_destroy(pag);
- 		call_rcu(&pag->rcu_head, __xfs_free_perag);
- 	}
- }
-@@ -212,8 +213,8 @@ xfs_initialize_perag(
- 		spin_lock_init(&pag->pag_ici_lock);
- 		mutex_init(&pag->pag_ici_reclaim_lock);
- 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
--		spin_lock_init(&pag->pag_buf_lock);
--		pag->pag_buf_tree = RB_ROOT;
-+		if (xfs_buf_hash_init(pag))
-+			goto out_unwind;
- 
- 		if (radix_tree_preload(GFP_NOFS))
- 			goto out_unwind;
-@@ -239,9 +240,11 @@ xfs_initialize_perag(
- 	return 0;
- 
- out_unwind:
-+	xfs_buf_hash_destroy(pag);
- 	kmem_free(pag);
- 	for (; index > first_initialised; index--) {
- 		pag = radix_tree_delete(&mp->m_perag_tree, index);
-+		xfs_buf_hash_destroy(pag);
- 		kmem_free(pag);
- 	}
- 	return error;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 819b80b15bfb..84f785218907 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -393,8 +393,8 @@ typedef struct xfs_perag {
- 	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
- 
- 	/* buffer cache index */
--	spinlock_t	pag_buf_lock;	/* lock for pag_buf_tree */
--	struct rb_root	pag_buf_tree;	/* ordered tree of active buffers */
-+	spinlock_t	pag_buf_lock;	/* lock for pag_buf_hash */
-+	struct rhashtable pag_buf_hash;
- 
- 	/* for rcu-safe freeing */
- 	struct rcu_head	rcu_head;
-@@ -424,6 +424,9 @@ xfs_perag_resv(
- 	}
- }
- 
-+int xfs_buf_hash_init(xfs_perag_t *pag);
-+void xfs_buf_hash_destroy(xfs_perag_t *pag);
-+
- extern void	xfs_uuid_table_free(void);
- extern int	xfs_log_sbcount(xfs_mount_t *);
- extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
 -- 
 2.10.2
 
