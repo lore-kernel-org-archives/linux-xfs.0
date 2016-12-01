@@ -1,56 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22301 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756246AbcLCBfu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Dec 2016 20:35:50 -0500
-Subject: [PATCH 05/55] xfs: error out if trying to add attrs and anextents >
- 0
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Dec 2016 17:35:46 -0800
-Message-ID: <148072894673.12995.4984707319578582555.stgit@birch.djwong.org>
-In-Reply-To: <148072891404.12995.15510849192837089093.stgit@birch.djwong.org>
-References: <148072891404.12995.15510849192837089093.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39557 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757396AbcLAMP7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Dec 2016 07:15:59 -0500
+Date: Thu, 1 Dec 2016 07:15:52 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: Move AGI buffer type setting to xfs_read_agi
+Message-ID: <20161201121552.GC22890@bfoster.bfoster>
+References: <203e6e5c-7663-b49b-36af-5885aa1f461a@redhat.com>
+ <0df5fea5-2658-f2ac-a465-09d0ada4cccf@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0df5fea5-2658-f2ac-a465-09d0ada4cccf@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-We shouldn't assert if somehow we end up trying to add an attr fork to
-an inode that apparently already has attr extents because this is an
-indication of on-disk corruption.  Instead, return an error code to
-userspace.
+On Wed, Nov 30, 2016 at 04:42:50PM -0600, Eric Sandeen wrote:
+> We've missed properly setting the buffer type for
+> an AGI transaction in 3 spots now, so just move it
+> into xfs_read_agi() and set it if we are in a transaction
+> to avoid the problem in the future.
+> 
+> This is similar to how it is done in i.e. the dir3
+> and attr3 read functions.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Looks like there's one more instance that can be removed in
+xfs_iunlink(). Otherwise, looks good:
 
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9821161..b29601d 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1151,6 +1151,10 @@ xfs_bmap_add_attrfork(
- 		goto trans_cancel;
- 	if (XFS_IFORK_Q(ip))
- 		goto trans_cancel;
-+	if (ip->i_d.di_anextents != 0) {
-+		error = -EFSCORRUPTED;
-+		goto trans_cancel;
-+	}
- 	if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS) {
- 		/*
- 		 * For inodes coming from pre-6.2 filesystems.
-@@ -1158,7 +1162,6 @@ xfs_bmap_add_attrfork(
- 		ASSERT(ip->i_d.di_aformat == 0);
- 		ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
- 	}
--	ASSERT(ip->i_d.di_anextents == 0);
- 
- 	xfs_trans_ijoin(tp, ip, 0);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 51b4e0d..c482b97 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -2450,8 +2450,6 @@
+>  	ASSERT(agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC));
+>  #endif
+>  
+> -	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_AGI_BUF);
+> -
+>  	/*
+>  	 * Compute byte offsets for the first and last fields in the first
+>  	 * region and log the agi buffer. This only logs up through
+> @@ -2592,6 +2590,8 @@
+>  			XFS_FSS_TO_BB(mp, 1), 0, bpp, &xfs_agi_buf_ops);
+>  	if (error)
+>  		return error;
+> +	if (tp)
+> +		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_AGI_BUF);
+>  
+>  	xfs_buf_set_ref(*bpp, XFS_AGI_REF);
+>  	return 0;
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 4e560e6..36e6372 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2133,7 +2133,6 @@
+>  		agi->agi_unlinked[bucket_index] = cpu_to_be32(next_agino);
+>  		offset = offsetof(xfs_agi_t, agi_unlinked) +
+>  			(sizeof(xfs_agino_t) * bucket_index);
+> -		xfs_trans_buf_set_type(tp, agibp, XFS_BLFT_AGI_BUF);
+>  		xfs_trans_log_buf(tp, agibp, offset,
+>  				  (offset + sizeof(xfs_agino_t) - 1));
+>  	} else {
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 2d91f5a..9b3d7c7 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -4929,7 +4929,6 @@ static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
+>  	agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+>  	offset = offsetof(xfs_agi_t, agi_unlinked) +
+>  		 (sizeof(xfs_agino_t) * bucket);
+> -	xfs_trans_buf_set_type(tp, agibp, XFS_BLFT_AGI_BUF);
+>  	xfs_trans_log_buf(tp, agibp, offset,
+>  			  (offset + sizeof(xfs_agino_t) - 1));
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
