@@ -1,102 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.webx.cz ([109.123.222.201]:48853 "EHLO mail.webx.cz"
+Received: from mx1.redhat.com ([209.132.183.28]:39836 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751443AbcLFJJ0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Dec 2016 04:09:26 -0500
-From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
-Date: Tue, 06 Dec 2016 10:08:35 +0100
-Message-ID: <3543192.v6q4dNmvom@libor-nb>
-In-Reply-To: <20161110213057.GH28922@dastard>
-References: <5244720.RPRsZ88NJ0@libor-nb> <2152865.L3K5Xz7SXO@libor-nb> <20161110213057.GH28922@dastard>
+        id S1754600AbcLANoz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Dec 2016 08:44:55 -0500
+Date: Thu, 1 Dec 2016 08:44:52 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: XFS blocking suspend
+Message-ID: <20161201134452.GF22890@bfoster.bfoster>
+References: <20161201084757.GE12804@quack2.suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161201084757.GE12804@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-xfs@vger.kernel.org
 
-Hello,
-did you get anything useful from partial metadata dump?
-
-Meanwhile, we have another VPS/machine acting like that, this one was installed as Debian Jessie, 
-so it was always on some version of kernel 3.16 (+xfsprogs 3.2.1)
-I wiil upgrade to kernel 4.7.8 and xfsprogs 4.8.0 and run check, repair and metadata dump.
-Error has some new lines 
-
-Dec  6 04:00:36 vps3 kernel: [29332726.258682] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_write_verify+0xd5/0xe0 [xfs], block 0x4878b30
-Dec  6 04:00:36 vps3 kernel: [29332726.259234] XFS (dm-2): Unmount and run xfs_repair
-Dec  6 04:00:36 vps3 kernel: [29332726.259598] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
-Dec  6 04:00:36 vps3 kernel: [29332726.259929] ffff880129d9b000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
-Dec  6 04:00:36 vps3 kernel: [29332726.260661] ffff880129d9b010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
-Dec  6 04:00:36 vps3 kernel: [29332726.261552] ffff880129d9b020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-Dec  6 04:00:36 vps3 kernel: [29332726.262594] ffff880129d9b030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-Dec  6 04:00:36 vps3 kernel: [29332726.263800] XFS (dm-2): xfs_do_force_shutdown(0x8) called from line 1330 of file /build/linux-HklQoT/linux-3.16.7-ckt20/fs/xfs/xfs_buf.c.  Return address = 0xffffffffa0385820
-Dec  6 04:00:36 vps3 kernel: [29332726.277233] XFS (dm-2): Corruption of in-memory data detected.  Shutting down filesystem
-Dec  6 04:00:36 vps3 kernel: [29332726.277926] XFS (dm-2): Please umount the filesystem and rectify the problem(s)
-Dec  6 04:00:36 vps3 kernel: [29332726.285057] Buffer I/O error on device dm-2, logical block 10636433
-Dec  6 04:00:36 vps3 kernel: [29332726.285854] lost page write due to I/O error on dm-2
-Dec  6 04:00:36 vps3 kernel: [29332726.285860] Buffer I/O error on device dm-2, logical block 10636434
-Dec  6 04:00:36 vps3 kernel: [29332726.286580] lost page write due to I/O error on dm-2
-Dec  6 04:00:36 vps3 kernel: [29332726.286602] Buffer I/O error on device dm-2, logical block 14169416
-Dec  6 04:00:36 vps3 kernel: [29332726.287347] lost page write due to I/O error on dm-2
-Dec  6 04:00:36 vps3 kernel: [29332726.287354] Buffer I/O error on device dm-2, logical block 13145613
-Dec  6 04:00:36 vps3 kernel: [29332726.288100] lost page write due to I/O error on dm-2
-Dec  6 04:00:36 vps3 kernel: [29332726.288105] Buffer I/O error on device dm-2, logical block 13145614
-Dec  6 04:00:36 vps3 kernel: [29332726.288851] lost page write due to I/O error on dm-2
-Dec  6 04:00:36 vps3 kernel: [29332726.288856] Buffer I/O error on device dm-2, logical block 13145615
-Dec  6 04:00:36 vps3 kernel: [29332726.289611] lost page write due to I/O error on dm-2
-Dec  6 04:00:36 vps3 kernel: [29332726.289615] Buffer I/O error on device dm-2, logical block 13145616
-Dec  6 04:00:36 vps3 kernel: [29332726.290347] lost page write due to I/O error on dm-2
-Dec  6 04:00:36 vps3 kernel: [29332726.290352] Buffer I/O error on device dm-2, logical block 13145617
-Dec  6 04:00:36 vps3 kernel: [29332726.291072] lost page write due to I/O error on dm-2
-Dec  6 04:00:36 vps3 kernel: [29332726.291075] Buffer I/O error on device dm-2, logical block 13145618
-Dec  6 04:00:36 vps3 kernel: [29332726.291814] lost page write due to I/O error on dm-2
-Dec  6 04:00:36 vps3 kernel: [29332726.291819] Buffer I/O error on device dm-2, logical block 13145619
-Dec  6 04:00:36 vps3 kernel: [29332726.292535] lost page write due to I/O error on dm-2
-Dec  6 04:00:48 vps3 kernel: [29332737.898720] XFS (dm-2): xfs_log_force: error 5 returned.
-
-
-dm-2 is logical volume created on single disk without partitions
-
-
-Could it be HW problem? HW servers do have ECC memory and HW raids
-
-Thanks,
-Libor
-
-
-On pátek 11. listopadu 2016 8:30:57 CET Dave Chinner wrote:
-> On Thu, Nov 10, 2016 at 05:04:48PM +0100, Libor Klep�? wrote:
-> > On ?tvrtek 10. listopadu 2016 16:29:15 CET Dave Chinner wrote:
-> > > Which:
-> > > > > Phase 3 - for each AG...
-> > > > > 
-> > > > >         - scan (but don't clear) agi unlinked lists...
-> > > > >         - process known inodes and perform inode discovery...
-> > > > >         - agno = 0
-> > > > >         - agno = 1
-> > > > > 
-> > > > > Metadata corruption detected at xfs_attr3_leaf block 0x12645ef8/0x1000
-> > > > > Metadata corruption detected at xfs_attr3_leaf block 0x12f63f40/0x1000
-> > > 
-> > > These two blocks. It looks like repair didn't clean them up?
-> > > 
-> > > Hmmmm - looking at the code I'm not sure that repair detects and
-> > > removes empty attr leaf blocks, which would explain why the error
-> > > showed up again.. Can you provide a metadump of the filesystem so we
-> > > can did into the exact neature of the problem you are seeing?
-> > 
-> > Sure not a problem. How much time will it take giving xfs_repair took approx 40 minutes?
+On Thu, Dec 01, 2016 at 09:47:57AM +0100, Jan Kara wrote:
+> Hi,
 > 
-> No longer than that, with agood possibility it will be much faster
-> as metadump only needs 1 pass over the metadata, not three...
+> I've got a report of xfs_aild blocking system suspend in 4.8.7 (in openSUSE
+> Tumbleweed which is our rolling distro):
 > 
-> Cheers,
+> Freezing of tasks failed after 20.003 seconds (1 tasks refusing to freeze, wq_busy=0):
+> xfsaild/sdb3    D 0000000000019680     0 918      2 0x00000080
+>  ffff9e685409fb88 0000000000000000 ffff9e67beaea080 ffff9e68504c6000
+>  ffff9e6677226b80 ffff9e68540a0000 ffff9e676068c6d8 ffff9e68504c6000
+>  ffff9e685e48dc00 ffff9e676068c600 ffff9e685409fba0 ffffffffb66cfbac
+> Call Trace:
+>  [<ffffffffb66cfbac>] schedule+0x3c/0x90
+>  [<ffffffffb66d2f1e>] schedule_timeout+0x22e/0x410
+>  [<ffffffffb66d0f4a>] wait_for_completion+0x9a/0x100
+>  [<ffffffffc0f0689e>] xfs_buf_submit_wait+0x7e/0x250 [xfs]
+>  [<ffffffffc0f06ba8>] xfs_buf_read_map+0x108/0x190 [xfs]
+>  [<ffffffffc0f340c0>] xfs_trans_read_buf_map+0x100/0x370 [xfs]
+>  [<ffffffffc0ef631e>] xfs_imap_to_bp+0x5e/0xd0 [xfs]
+>  [<ffffffffc0f1ac6a>] xfs_iflush+0xca/0x220 [xfs]                                                                                        
+>  [<ffffffffc0f2b21b>] xfs_inode_item_push+0xcb/0x120 [xfs]
+>  [<ffffffffc0f32e8e>] xfsaild+0x30e/0x770 [xfs]
+>  [<ffffffffb609c5ed>] kthread+0xbd/0xe0
+>  [<ffffffffb66d459f>] ret_from_fork+0x1f/0x40
+> DWARF2 unwinder stuck at ret_from_fork+0x1f/0x40
 > 
-> Dave.
+> Leftover inexact backtrace:
+>  [<ffffffffb609c530>] ?  kthread_worker_fn+0x170/0x170
+> 
+> What I think has happened is that b_ioend_wq got already frozen during
+> suspend and thus submitted read could not be completed (all buffer IO
+> completions seem to be happening from workqueue now if I'm reading the code
+> right) and thus xfs_aild never finished waiting for IO so that it could be
+> frozen in try_to_freeze().
 > 
 
+Hmm, I'm not terribly familiar with the freezer, but shouldn't xfsaild()
+end up frozen before the associated workqueues? Skimming through the
+code, perhaps it is possible for the freezer to poke xfsaild(), but if
+it doesn't actually wait for the freeze (and xfsaild() is busy doing
+work), it goes ahead onto other tasks and potentially the workqueue if
+it happens to not be busy at just the right time. Is that what you are
+thinking?
 
+If so, perhaps we need some kind of way to pin the workqueue as busy so
+long as xfsaild() is active..? I was also wondering how necessary it is
+for this workqueue to be freezable, but that goes back to 8018ec083c
+("xfs: mark all internal workqueues as freezable") which apparently
+added necessarily serialization to avoid reported corruptions.
+
+Brian
+
+> I'm not sure how to best fix this since I don't think we can easily have
+> suspend dependencies between different execution contexts... We could
+> possibly complete buffer IO already from softirq (which should also reduce
+> IO latency somewhat) if it does not have ->iodone callback but maybe there's
+> some problem with it I'm missing.
+> 
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
