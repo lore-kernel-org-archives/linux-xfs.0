@@ -1,57 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34738 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758130AbcLAMPq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Dec 2016 07:15:46 -0500
-Date: Thu, 1 Dec 2016 07:15:44 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: set AGI buffer type in
- xlog_recover_clear_agi_bucket
-Message-ID: <20161201121543.GB22890@bfoster.bfoster>
-References: <203e6e5c-7663-b49b-36af-5885aa1f461a@redhat.com>
- <4a62db7d-d3aa-9ad7-4b28-87964f312e15@sandeen.net>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:48053 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751892AbcLAUUX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2016 15:20:23 -0500
+Date: Fri, 2 Dec 2016 07:15:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS bug?
+Message-ID: <20161201201552.GF11750@dastard>
+References: <0F1FE7A8-D5C6-4FFD-9B9C-E03FB1962F3E@flyingcircus.io>
+ <20161201110347.GD11750@dastard>
+ <7D83E56E-5922-4B0D-A963-3C9F22491F94@flyingcircus.io>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4a62db7d-d3aa-9ad7-4b28-87964f312e15@sandeen.net>
+In-Reply-To: <7D83E56E-5922-4B0D-A963-3C9F22491F94@flyingcircus.io>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Christian Theune <ct@flyingcircus.io>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Nov 30, 2016 at 04:40:18PM -0600, Eric Sandeen wrote:
-> xlog_recover_clear_agi_bucket didn't set the
-> type to XFS_BLFT_AGI_BUF, so we got a warning during log
-> replay (or an ASSERT on a debug build).
+On Thu, Dec 01, 2016 at 12:56:08PM +0100, Christian Theune wrote:
+> Hi Dave,
 > 
->     XFS (md0): Unknown buffer type 0!
->     XFS (md0): _xfs_buf_ioapply: no ops on block 0xaea8802/0x1
+> (I hope I pick up the right quoting style.)
 > 
-> Fix this, as was done in f19b872b for 2 other locations
-> with the same problem.
+> > On 1 Dec 2016, at 12:03, Dave Chinner <david@fromorbit.com> wrote:
+> > 
+> > Hi Christian - thanks for perservering and getting this report to
+> > the list. :P
 > 
-> cc: <stable@vger.kernel.org> # 3.10 to current
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> Thanks for nudging me. :)
+> 
+> Not sure whether its possible or makes sense to answer this questions at the moment: should we feel safe running 4.4 right now?
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Yes, I think this is a result of the kernel upgrade, not a problem
+with the individual kernels. I strongly suggest that you run
+xfsprogs 4.5.0 or more recent with the 4.4 kernel because it has
+the matching AGFL packing fix in it.
 
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 9b3d7c7..2d91f5a 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -4929,6 +4929,7 @@ static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
->  	agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
->  	offset = offsetof(xfs_agi_t, agi_unlinked) +
->  		 (sizeof(xfs_agino_t) * bucket);
-> +	xfs_trans_buf_set_type(tp, agibp, XFS_BLFT_AGI_BUF);
->  	xfs_trans_log_buf(tp, agibp, offset,
->  			  (offset + sizeof(xfs_agino_t) - 1));
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
