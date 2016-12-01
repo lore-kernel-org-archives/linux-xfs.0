@@ -1,25 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:54211 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752480AbcLBNQM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Dec 2016 08:16:12 -0500
-Date: Fri, 2 Dec 2016 05:16:11 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2 V2] xfs: Move AGI buffer type setting to xfs_read_agi
-Message-ID: <20161202131611.GB426@infradead.org>
-References: <203e6e5c-7663-b49b-36af-5885aa1f461a@redhat.com>
- <0df5fea5-2658-f2ac-a465-09d0ada4cccf@sandeen.net>
- <f536723f-93ea-2524-636e-f09bfb2b6ff8@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f536723f-93ea-2524-636e-f09bfb2b6ff8@sandeen.net>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:16654 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754014AbcLAKa6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2016 05:30:58 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1cCOdi-0006fm-Vt
+        for linux-xfs@vger.kernel.org; Thu, 01 Dec 2016 21:30:55 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.88)
+        (envelope-from <david@fromorbit.com>)
+        id 1cCOdi-0000CW-UQ
+        for linux-xfs@vger.kernel.org; Thu, 01 Dec 2016 21:30:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 0/3] xfs: miscellaneous improvements for 4.10
+Date: Thu,  1 Dec 2016 21:30:49 +1100
+Message-Id: <20161201103052.28453-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-Looks good,
+Hi folks,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Some things that need review, hoepfully in time for the 4.10 cycle.
+I've been running all these in my test kernels for some time now,
+and they all seem stable and perform as expected. The btree stats
+patch substantially reduces the icache footprint of the core btree
+code. The rhashtable patch (many thanks to Lucas for writing the
+original patch!) gets rid of most of the _xfs_buf_find() lookup
+overhead. The CRC update optimisation patch (thanks to the
+diagnosis, analysis and prototyping work done by Nick Piggin)
+removes CRCs almost entirely from my kernel profiles on metadata
+intensive workloads.
+
+Comments, flames and thoughts welcome.
+
+-Dave.
+
