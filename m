@@ -1,247 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.webx.cz ([109.123.222.201]:40224 "EHLO mail.webx.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750745AbcLUIZb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Dec 2016 03:25:31 -0500
-From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
-Date: Wed, 21 Dec 2016 09:25:27 +0100
-Message-ID: <31558703.FzcorNpFY2@libor-nb>
-In-Reply-To: <a6e607fc-9a54-a372-7ffa-bfdef58b3dc0@sandeen.net>
-References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com> <2626665.Hsx8YazNWY@libor-nb> <a6e607fc-9a54-a372-7ffa-bfdef58b3dc0@sandeen.net>
+Received: from bombadil.infradead.org ([198.137.202.9]:47894 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753103AbcLAJ7c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2016 04:59:32 -0500
+Date: Thu, 1 Dec 2016 01:59:30 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: deprecate barrier/nobarrier mount option
+Message-ID: <20161201095930.GA3471@infradead.org>
+References: <20161130225444.15869-1-david@fromorbit.com>
+ <20161130225444.15869-3-david@fromorbit.com>
+ <20161201095439.GB16028@quack2.suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161201095439.GB16028@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-Hello,
-
-On úterý 13. prosince 2016 10:04:27 CET Eric Sandeen wrote:
-> On 12/13/16 4:52 AM, Libor Klep�? wrote:
-> > Hello,
-> > should this patch possibly fix errors i reported in this thread?
-> > https://www.spinics.net/lists/linux-xfs/msg01728.html
+On Thu, Dec 01, 2016 at 10:54:39AM +0100, Jan Kara wrote:
+> On Thu 01-12-16 09:54:44, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Is it safe to test it? (i do have backups)
-> 
-> It should be safe, yes.
-> 
-> (you could always run xfs_repair -n first to be extra careful).
-> 
-> Were those errors during mount/replay, though, or was it when the
-> filesystem was up and running?
-> 
-> I ask because I also sent a patch to ignore these empty attributes
-> in the verifier during log replay.
-
-Is that patch in 4.8.11 kernel?
-I ask, because i rebooted machine from this email
-https://www.spinics.net/lists/linux-xfs/msg02672.html
-
-with kernel 4.8.11-1~bpo8+1 (from debian)
-mount was clean 
-[    3.220692] SGI XFS with ACLs, security attributes, realtime, no debug enabled
-[    3.222135] XFS (dm-2): Mounting V4 Filesystem
-[    3.284697] XFS (dm-2): Ending clean mount
-
-
-and i ran xfs_repair -n -v (xfsprogs 4.8.0 without your patch) and it came clean I think
----------------------------------
-#xfs_repair -n -v /dev/dm-2
-Phase 1 - find and verify superblock...
-        - block cache size set to 758064 entries
-Phase 2 - using internal log
-        - zero log...
-zero_log: head block 5035 tail block 5035
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - agno = 4
-        - agno = 5
-        - agno = 6
-        - agno = 7
-        - agno = 8
-        - agno = 9
-        - agno = 10
-        - agno = 11
-        - agno = 12
-        - agno = 13
-        - agno = 14
-        - agno = 15
-        - agno = 16
-        - agno = 17
-        - agno = 18
-        - agno = 19
-        - agno = 20
-        - agno = 21
-        - agno = 22
-        - agno = 23
-        - agno = 24
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - agno = 4
-        - agno = 5
-        - agno = 6
-        - agno = 7
-        - agno = 8
-        - agno = 9
-        - agno = 10
-        - agno = 11
-        - agno = 12
-        - agno = 13
-        - agno = 14
-        - agno = 15
-        - agno = 16
-        - agno = 17
-        - agno = 18
-        - agno = 19
-        - agno = 20
-        - agno = 21
-        - agno = 22
-        - agno = 23
-        - agno = 24
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - agno = 4
-        - agno = 5
-        - agno = 6
-        - agno = 7
-        - agno = 8
-        - agno = 9
-        - agno = 10
-        - agno = 11
-        - agno = 12
-        - agno = 13
-        - agno = 14
-        - agno = 15
-        - agno = 16
-        - agno = 17
-        - agno = 18
-        - agno = 19
-        - agno = 20
-        - agno = 21
-        - agno = 22
-        - agno = 23
-        - agno = 24
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify link counts...
-No modify flag set, skipping filesystem flush and exiting.
-
-        XFS_REPAIR Summary    Tue Dec 20 06:01:14 2016
-
-Phase           Start           End             Duration
-Phase 1:        12/20 05:49:02  12/20 05:49:02
-Phase 2:        12/20 05:49:02  12/20 05:49:02
-Phase 3:        12/20 05:49:02  12/20 05:59:24  10 minutes, 22 seconds
-Phase 4:        12/20 05:59:24  12/20 06:00:17  53 seconds
-Phase 5:        Skipped
-Phase 6:        12/20 06:00:17  12/20 06:01:13  56 seconds
-Phase 7:        12/20 06:01:13  12/20 06:01:14  1 second
-
-Total run time: 12 minutes, 12 seconds
----------------------------------
-
-then i ran metadump and then i ran out of time of my repair window ;)
-
-
-
-Libor
-
-
-> 
-> FWIW, Only some of your reported buffers look "empty" though, the one
-> at 514098.682726 may have had something else wrong.
-> 
-> Anyway, yes, probably worth checking with xfs_repair (-n) with this
-> patch added.  Let us know what you find! :)
-> 
-> -Eric
-> 
->  
-> > Thanks,
-> > Libor
+> > We always perform integrity operations now, so these mount options
+> > don't do anything. Deprecate them and mark them for removal in
+> > in a year.
 > > 
-> > On ?tvrtek 8. prosince 2016 12:06:03 CET Eric Sandeen wrote:
-> >> We have recently seen a case where, during log replay, the
-> >> attr3 leaf verifier reported corruption when encountering a
-> >> leaf attribute with a count of 0 in the header.
-> >>
-> >> We chalked this up to a transient state when a shortform leaf
-> >> was created, the attribute didn't fit, and we promoted the
-> >> (empty) attribute to the larger leaf form.
-> >>
-> >> I've recently been given a metadump of unknown provenance which actually
-> >> contains a leaf attribute with count 0 on disk.  This causes the
-> >> verifier to fire every time xfs_repair is run:
-> >>
-> >>  Metadata corruption detected at xfs_attr3_leaf block 0x480988/0x1000
-> >>
-> >> If this 0-count state is detected, we should just junk the leaf, same
-> >> as we would do if the count was too high.  With this change, we now
-> >> remedy the problem:
-> >>
-> >>  Metadata corruption detected at xfs_attr3_leaf block 0x480988/0x1000
-> >>  bad attribute count 0 in attr block 0, inode 12587828
-> >>  problem with attribute contents in inode 12587828
-> >>  clearing inode 12587828 attributes
-> >>  correcting nblocks for inode 12587828, was 2 - counted 1
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>
-> >> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-> >> index 40cb5f7..b855a10 100644
-> >> --- a/repair/attr_repair.c
-> >> +++ b/repair/attr_repair.c
-> >> @@ -593,7 +593,8 @@ process_leaf_attr_block(
-> >>  	stop = xfs_attr3_leaf_hdr_size(leaf);
-> >>  
-> >>  	/* does the count look sorta valid? */
-> >> -	if (leafhdr.count * sizeof(xfs_attr_leaf_entry_t) + stop >
-> >> +	if (!leafhdr.count ||
-> >> +	    leafhdr.count * sizeof(xfs_attr_leaf_entry_t) + stop >
-> >>  						mp->m_sb.sb_blocksize) {
-> >>  		do_warn(
-> >>  	_("bad attribute count %d in attr block %u, inode %" PRIu64 "\n"),
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>
-> > 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
+> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 > 
+> We use 'nobarrier' mount option to simulate disks with battery-backed
+> caches in some of our IO performance testing. I don't say we cannot live
+> with this mount option but it was convenient...
 
-
---------
-[1] mailto:libor.klepac@bcom.cz
-[2] tel:+420377457676
-[3] http://www.bcom.cz
-
+FYI, for scsi (and thus ATA as well) you can override the cache type
+using the cache_type sysfs file, which is a much better interface for
+this than anything file system related.
