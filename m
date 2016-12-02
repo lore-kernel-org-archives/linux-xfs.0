@@ -1,44 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:8287 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756587AbcLAKuX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2016 05:50:23 -0500
-Date: Thu, 1 Dec 2016 21:50:15 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: default mount options
-Message-ID: <20161201105015.GC11750@dastard>
-References: <583E1488.7090502@tlinx.org>
- <6ecda11c-a993-3dd7-5b87-1947506953ff@sandeen.net>
- <583F2806.7080102@tlinx.org>
- <e727dd60-777a-60d4-121e-2dd68981e176@sandeen.net>
- <583F30C8.1000206@tlinx.org>
- <20161130221837.GH31101@dastard>
- <583FA154.9050905@tlinx.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:54909 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755026AbcLBNUw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Dec 2016 08:20:52 -0500
+Date: Fri, 2 Dec 2016 05:20:44 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] xfs: make xfs btree stats less huge
+Message-ID: <20161202132044.GC426@infradead.org>
+References: <20161201103052.28453-1-david@fromorbit.com>
+ <20161201103052.28453-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <583FA154.9050905@tlinx.org>
+In-Reply-To: <20161201103052.28453-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: L A Walsh <xfs@tlinx.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Nov 30, 2016 at 08:04:36PM -0800, L A Walsh wrote:
-> 	Related -- wondering about how external journals would affect need
-> for barriers.
 
-XFS correctly orders the cache flushes for it's different
-devices to ensure integrity. e.g. it flushes the caches of the data
-device which contains the filesytsem metadata before it issues the
-the FUA write to the external log device.
+> --- a/fs/xfs/xfs_stats.h
+> +++ b/fs/xfs/xfs_stats.h
+> @@ -21,10 +21,30 @@
+>  
+>  #include <linux/percpu.h>
+>  
+> +enum {
+> +	__XBTS_lookup = 0,
 
-And it does all the right cache flushes for both data and real-time
-devices on fsync to ensure data updates are stable, too.
+Add a comment on top of the enum to explain these are the
+offsets into each btree type?
 
-Cheers,
+> +#define XFS_STATS_CALC_INDEX(member)	\
+> +	(offsetof(struct __xfsstats, member) / (int)sizeof(__uint32_t))
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+what's that int cast for?
+
+Except for these nitpicks this looks great:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
