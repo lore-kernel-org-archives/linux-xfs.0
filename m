@@ -1,174 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46862 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751255AbcLAMrn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Dec 2016 07:47:43 -0500
-Date: Thu, 1 Dec 2016 07:47:41 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: Always flush caches when integrity is required
-Message-ID: <20161201124740.GD22890@bfoster.bfoster>
-References: <20161130225444.15869-1-david@fromorbit.com>
- <20161130225444.15869-2-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161130225444.15869-2-david@fromorbit.com>
+Received: from ns.lynxeye.de ([87.118.118.114]:52957 "EHLO lynxeye.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751990AbcLBWB3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Dec 2016 17:01:29 -0500
+Message-ID: <1480715692.6684.1.camel@lynxeye.de>
+Subject: Re: [PATCH 0/2] XFS buffer cache scalability improvements
+From: Lucas Stach <dev@lynxeye.de>
+Date: Fri, 02 Dec 2016 22:54:52 +0100
+In-Reply-To: <20161110230200.GI28922@dastard>
+References: <1476821653-2595-1-git-send-email-dev@lynxeye.de>
+         <20161018212116.GC23194@dastard> <20161110230200.GI28922@dastard>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Dec 01, 2016 at 09:54:43AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+Hi Dave,
+
+Am Freitag, den 11.11.2016, 10:02 +1100 schrieb Dave Chinner:
+> Hi Lucas,
 > 
-> There is no reason anymore for not issuing device integrity
-> operations when teh filesystem requires ordering or data integrity
-> guarantees. We should always issue cache flushes and FUA writes
-> where necessary and let the underlying storage optimise them as
-> necessary for correct integrity operation.
+> On Wed, Oct 19, 2016 at 08:21:16AM +1100, Dave Chinner wrote:
+> > On Tue, Oct 18, 2016 at 10:14:11PM +0200, Lucas Stach wrote:
+> > > The second patch is logical follow up. The rhashtable cache index
+> > > is protected by
+> > > RCU and does not need any additional locking. By switching the
+> > > buffer cache entries
+> > > over to RCU freeing the buffer cache can be operated in a
+> > > completely lock-free
+> > > manner. This should help scalability in the long run.
+> > 
+> > Yup, that's another reason I'd considered rhashtables :P
+> > 
+> > However, this is where it gets hairy. The buffer lifecycle is
+> > intricate, subtle, and has a history of nasty bugs that just never
+> > seem to go away. This change will require a lot of verification
+> > work to ensure things like the LRU manipulations haven't been
+> > compromised by the removal of this lock...
 > 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
-
-Seems reasonable to me. Just a few nits below..
-
->  fs/xfs/xfs_buf.c  |  3 +--
->  fs/xfs/xfs_file.c | 29 ++++++++++++-----------------
->  fs/xfs/xfs_log.c  | 36 +++++++++++++++---------------------
->  3 files changed, 28 insertions(+), 40 deletions(-)
+> .....
+> > It's a performance modification - any performance/profile numbers
+> > that show the improvement?
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index a2f0648743db..1264908ef8f2 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1738,8 +1738,7 @@ xfs_free_buftarg(
->  	percpu_counter_destroy(&btp->bt_io_count);
->  	list_lru_destroy(&btp->bt_lru);
->  
-> -	if (mp->m_flags & XFS_MOUNT_BARRIER)
-> -		xfs_blkdev_issue_flush(btp);
-> +	xfs_blkdev_issue_flush(btp);
->  
->  	kmem_free(btp);
->  }
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index f5effa68e037..2951c483b24b 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -149,19 +149,16 @@ xfs_file_fsync(
->  
->  	xfs_iflags_clear(ip, XFS_ITRUNCATED);
->  
-> -	if (mp->m_flags & XFS_MOUNT_BARRIER) {
-> -		/*
-> -		 * If we have an RT and/or log subvolume we need to make sure
-> -		 * to flush the write cache the device used for file data
-> -		 * first.  This is to ensure newly written file data make
-> -		 * it to disk before logging the new inode size in case of
-> -		 * an extending write.
-> -		 */
-> -		if (XFS_IS_REALTIME_INODE(ip))
-> -			xfs_blkdev_issue_flush(mp->m_rtdev_targp);
-> -		else if (mp->m_logdev_targp != mp->m_ddev_targp)
-> -			xfs_blkdev_issue_flush(mp->m_ddev_targp);
-> -	}
-> +	/*
-> +	 * If we have an RT and/or log subvolume we need to make sure to flush
-> +	 * the write cache the device used for file data first.  This is to
-> +	 * ensure newly written file data make it to disk before logging the new
-> +	 * inode size in case of an extending write.
-> +	 */
-> +	if (XFS_IS_REALTIME_INODE(ip))
-> +		xfs_blkdev_issue_flush(mp->m_rtdev_targp);
-> +	else if (mp->m_logdev_targp != mp->m_ddev_targp)
-> +		xfs_blkdev_issue_flush(mp->m_ddev_targp);
->  
->  	/*
->  	 * All metadata updates are logged, which means that we just have to
-> @@ -196,10 +193,8 @@ xfs_file_fsync(
->  	 * an already allocated file and thus do not have any metadata to
->  	 * commit.
->  	 */
-> -	if ((mp->m_flags & XFS_MOUNT_BARRIER) &&
-> -	    mp->m_logdev_targp == mp->m_ddev_targp &&
-> -	    !XFS_IS_REALTIME_INODE(ip) &&
-> -	    !log_flushed)
-> +	if (!log_flushed && !XFS_IS_REALTIME_INODE(ip) &&
-> +	    mp->m_logdev_targp == mp->m_ddev_targp)
->  		xfs_blkdev_issue_flush(mp->m_ddev_targp);
->  
->  	return error;
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 3ebe444eb60f..573d0841851d 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1863,25 +1863,21 @@ xlog_sync(
->  	bp->b_io_length = BTOBB(count);
->  	bp->b_fspriv = iclog;
->  	bp->b_flags &= ~(XBF_FUA | XBF_FLUSH);
-> -	bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE);
-> +	bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
-
-There's no need to clear XBF_FUA on the line above any longer.
-
->  
-> -	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER) {
-> -		bp->b_flags |= XBF_FUA;
-> -
-> -		/*
-> -		 * Flush the data device before flushing the log to make
-> -		 * sure all meta data written back from the AIL actually made
-> -		 * it to disk before stamping the new log tail LSN into the
-> -		 * log buffer.  For an external log we need to issue the
-> -		 * flush explicitly, and unfortunately synchronously here;
-> -		 * for an internal log we can simply use the block layer
-> -		 * state machine for preflushes.
-> -		 */
-> -		if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
-> -			xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
-> -		else
-> -			bp->b_flags |= XBF_FLUSH;
-> -	}
-> +	/*
-> +	 * Flush the data device before flushing the log to make
-> +	 * sure all meta data written back from the AIL actually made
-> +	 * it to disk before stamping the new log tail LSN into the
-> +	 * log buffer.  For an external log we need to issue the
-> +	 * flush explicitly, and unfortunately synchronously here;
-> +	 * for an internal log we can simply use the block layer
-> +	 * state machine for preflushes.
-> +	 */
-
-Comment can be rewrapped.
-
-> +	if (log->l_mp->m_logdev_targp != log->l_mp->m_ddev_targp)
-> +		xfs_blkdev_issue_flush(log->l_mp->m_ddev_targp);
-> +	else
-> +		bp->b_flags |= XBF_FLUSH;
->  
->  	ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
->  	ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
-> @@ -1907,9 +1903,7 @@ xlog_sync(
->  				(char *)&iclog->ic_header + count, split);
->  		bp->b_fspriv = iclog;
->  		bp->b_flags &= ~(XBF_FUA | XBF_FLUSH);
-
-No need to clear XBF_FUA here as well.
-
-Brian
-
-> -		bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE);
-> -		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
-> -			bp->b_flags |= XBF_FUA;
-> +		bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
->  
->  		ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
->  		ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
-> -- 
-> 2.10.2
+> Here's why detailed performance measurement for changes like this
+> are important: RCU freeing and lockless lookups are not a win for
+> the XFS buffer cache.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I fixed the code to be RCU safe (use bp->b_lock, XFS_BSTATE_FREE and
+> memory barriers) and verified that it worked OK (no regressions over
+> a nightly xfstests cycle across all my test machines) so this
+> morning I've run performance tests against it. I've also modified
+> the rhashtable patch with all my review comments:
+> 
+> [dchinner: reduce minimum hash size to an acceptable size for large
+> 	   filesystems with many AGs with no active use.]
+> [dchinner: remove stale rbtree asserts.]
+> [dchinner: use xfs_buf_map for compare function argument.]
+> [dchinner: make functions static.]
+> [dchinner: remove redundant comments.]
+> 
+> The results show that RCU freeing significantly slows down my fsmark
+> file creation benchmark (https://lkml.org/lkml/2016/3/31/1161) that
+> hammers the buffer cache - it is not uncommon for profiles to show
+> 10-11% CPU usage in _xfs_buf_find() with the rbtree implementation.
+> These tests were run on 4.9-rc4+for-next:
+> 
+> 			files/s		wall time	sys CPU
+> rbtree:		     220910+/-1.9e+04	4m21.639s	
+> 48m17.206s
+> rhashtable:	     227518+/-1.9e+04	4m22.179s	45m4
+> 1.639s
+> With RCU freeing:    198181+/-3e+04	4m45.286s	51m36.842
+> s
+> 
+> So we can see that rbtree->rhashtable reduces system time and
+> increases create a little but not significantly, and the overall
+> runtime is pretty much unchanged. However, adding RCU lookup/freeing
+> to the rhashtable shows a siginficant degradation - 10% decrease in
+> create rate, 50% increase in create rate stddev, and a 10% increase
+> in system time. Not good.
+> 
+> The reasons for this change is quite obvious from my monitoring:
+> there is significant change in memory usage footprint and memory
+> reclaim overhead. RCU freeing delays the freeing of the buffers,
+> which means the buffer cache shrinker is not actually freeing memory
+> when demand occurs.  Instead, freeing is delayed to the end of the
+> rcu grace period and hence does not releive pressure quickly. Hence
+> memory reclaim transfers that pressure to other caches, increasing
+> reclaim scanning work and allocation latency. The result is higher
+> reclaim CPU usage, a very different memory usage profile over the
+> course of the test and, ultimately, lower performance.
+> 
+> Further, because we normally cycle through buffers so fast, RCU
+> freeing means that we are no longer finding hot buffers in the slab
+> cache during allocation. The idea of the slab cache is that on
+> heavily cycled slabs the objects being allocated are the ones that
+> were just freed and so are still hot in the CPU caches. When we
+> switch to RCU freeing, this no longer happens because freeing only
+> ever happens in sparse, periodic batches. Hence we end up allocating
+> cache cold buffers and so end up with more cache misses when first
+> allocating new buffers.
+> 
+> IOWs, the loss of performance due to RCU freeing is not made up by
+> the anticipated reduction the overhead of uncontended locks on
+> lookup. This is mainly because there is no measurable lookup locking
+> overhead now that rhashtables are used. rbtree CPU profile:
+> 
+>    - 9.39%  _xfs_buf_find
+>         0.92%
+> xfs_perag_get                                                        
+>                                                                      
+>                ¿
+>       - 0.90%
+> xfs_buf_trylock                                                      
+>                                                                      
+>                ¿
+>            0.71% down_trylock
+> 
+> rhashtable:
+> 
+>    - 2.62% _xfs_buf_find
+>       - 1.12% xfs_perag_get
+>          + 0.58% radix_tree_lookup
+>       - 0.91% xfs_buf_trylock
+>            0.82% down_trylock
+> 
+> rhashtable+RCU:
+> 
+>    - 2.31% _xfs_buf_find
+>         0.91% xfs_perag_get
+>       - 0.83% xfs_buf_trylock
+>            0.75% down_trylock
+> 
+> So with the rhashtable change in place, we've already removed the
+> cause of the pag_buf_lock contention (the rbtree pointer chasing) so
+> there just isn't any overhead that using RCU can optimise away.
+> Hence there's no gains to amortise the efficiency losses using RCU
+> freeing introduces, and as a result using RCU is slower than
+> traditional locking techniques.
+> 
+> I'll keep testing the rhashtbale code - it look solid enough at this
+> point to consider it for the 4.10 cycle.
+> 
+Thanks for running those numbers. I had started to modify the patches
+according to the review, but didn't get around to fix the RCU path.
+
+Do you still consider this change to go in with 4.10?
+
+Regards,
+Lucas
