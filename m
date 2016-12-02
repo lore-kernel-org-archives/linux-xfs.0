@@ -1,53 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:45955 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754525AbcLAK06 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2016 05:26:58 -0500
-Date: Thu, 1 Dec 2016 02:26:35 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: use xfs_vn_setattr_size to check on new size
-Message-ID: <20161201102635.GA23215@infradead.org>
-References: <20161201101800.11419-1-eguan@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:45893 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752154AbcLBNrx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Dec 2016 08:47:53 -0500
+Date: Fri, 2 Dec 2016 14:47:51 +0100 (CET)
+From: Jiri Kosina <jikos@kernel.org>
+Subject: Re: XFS blocking suspend
+In-Reply-To: <20161201201249.GE11750@dastard>
+Message-ID: <alpine.LNX.2.00.1612021443100.29400@cbobk.fhfr.pm>
+References: <20161201084757.GE12804@quack2.suse.cz> <20161201134452.GF22890@bfoster.bfoster> <20161201140959.GA16514@quack2.suse.cz> <20161201201249.GE11750@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161201101800.11419-1-eguan@redhat.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Thu, Dec 01, 2016 at 06:18:00PM +0800, Eryu Guan wrote:
-> Commit 6552321831dc ("xfs: remove i_iolock and use i_rwsem in the
-> VFS inode instead") introduced a regression that truncate(2) doesn't
-> check on new size, so it succeeds even if the new size exceeds the
-> current resource limit. Because xfs_setattr_size() was used instead
-> of xfs_vn_setattr_size(), and the latter calls xfs_vn_change_ok()
-> first to do sanity check on permission and new size.
+On Fri, 2 Dec 2016, Dave Chinner wrote:
 
-Oops, looks like this was a merge error..
-
+> > Ultimately, the correct solution is to use filesystem freezing during
+> > suspend to quiesce the filesystem. However that requires more work on the
+> > suspend side - added Jiri to CC who promised to look into it some time ago
+> > ;).
 > 
-> This is found by truncate03 test from ltp, and the following is a
-> simplified reproducer:
-> 
->   #!/bin/bash
->   dev=/dev/sda5
->   mnt=/mnt/xfs
-> 
->   mkfs -t xfs -f $dev
->   mount $dev $mnt
-> 
->   # set max file size to 16k
->   ulimit -f 16
->   truncate -s $((16 * 1024 + 1)) /mnt/xfs/testfile
->   [ $? -eq 0 ] && echo "FAIL: truncate exceeded max file size"
->   ulimit -f unlimited
->   umount $mnt
+> I've been saying that for 10 years, too, so I'm not going to hold my
+> breathe waiting for someone to fix this problem.
 
-Can you add this to xfstests?
+Thanks for bringing up just another example why kthread freezer is such a 
+mess.
 
-The patch looks good:
+I already have a sort-of working implementation that gets rid of kthread 
+freezer, but there is still quite some work to do before it's mainline 
+ready. Namely, we first have to get rid of all of the spurious kthread 
+freezer usage we have in the tree so far.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+The main part of this effort are these commits
+
+https://git.kernel.org/cgit/linux/kernel/git/jikos/jikos.git/commit/?h=might-rebase/get-rid-of-kthread-freezer&id=394aa67810abefde6d79ea96a90e5d41a7df99f4
+https://git.kernel.org/cgit/linux/kernel/git/jikos/jikos.git/commit/?h=might-rebase/get-rid-of-kthread-freezer&id=3f0d7690cbf813ce497f2ca816d8086afe490271
+https://git.kernel.org/cgit/linux/kernel/git/jikos/jikos.git/commit/?h=might-rebase/get-rid-of-kthread-freezer&id=a637de712f9ca60bea6e93b13d09534170ec29fa
+
+but especially the second commit needs a lot more care, as I am pretty 
+sure it'd break some obscure corner cases, and needs to be investigated 
+more.
+Also, NFS needs to be taught about fs freezing before we can proceed this 
+way.
+
+Thanks,
+
+-- 
+Jiri Kosina
+SUSE Labs
+
