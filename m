@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23659 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:23700 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932509AbcLCBj5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Dec 2016 20:39:57 -0500
-Subject: [PATCH 42/55] xfs: implement the metadata repair ioctl flag
+        with ESMTP id S1757875AbcLCBkF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Dec 2016 20:40:05 -0500
+Subject: [PATCH 43/55] xfs: add helper routines for the repair code
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Dec 2016 17:39:54 -0800
-Message-ID: <148072919414.12995.13986437137984000516.stgit@birch.djwong.org>
+Date: Fri, 02 Dec 2016 17:40:00 -0800
+Message-ID: <148072920045.12995.15459549109644427744.stgit@birch.djwong.org>
 In-Reply-To: <148072891404.12995.15510849192837089093.stgit@birch.djwong.org>
 References: <148072891404.12995.15510849192837089093.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,188 +18,1113 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Plumb in the pieces necessary to make the "repair" subfunction of
-the scrub ioctl actually work.
+Add some helper functions for repair functions that will help us to
+allocate and initialize new metadata blocks for btrees that we're
+rebuilding.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/repair/common.c |  100 ++++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_error.h     |    4 +-
- 2 files changed, 98 insertions(+), 6 deletions(-)
+ fs/xfs/Makefile                  |    1 
+ fs/xfs/libxfs/xfs_alloc_btree.c  |    9 
+ fs/xfs/libxfs/xfs_alloc_btree.h  |    2 
+ fs/xfs/libxfs/xfs_bmap_btree.c   |    9 
+ fs/xfs/libxfs/xfs_bmap_btree.h   |    3 
+ fs/xfs/libxfs/xfs_btree.c        |    4 
+ fs/xfs/libxfs/xfs_btree.h        |    2 
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    9 
+ fs/xfs/libxfs/xfs_ialloc_btree.h |    3 
+ fs/xfs/libxfs/xfs_rmap.c         |   51 +++
+ fs/xfs/libxfs/xfs_rmap.h         |    3 
+ fs/xfs/repair/common.c           |    8 
+ fs/xfs/repair/common.h           |   50 ++
+ fs/xfs/repair/repair.c           |  763 ++++++++++++++++++++++++++++++++++++++
+ 14 files changed, 913 insertions(+), 4 deletions(-)
+ create mode 100644 fs/xfs/repair/repair.c
 
 
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index e98adcf..d9b07ce 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -114,6 +114,7 @@ xfs-$(CONFIG_XFS_ONLINE_REPAIR)	+= $(addprefix repair/, \
+ 				   ialloc.o \
+ 				   inode.o \
+ 				   refcount.o \
++				   repair.o \
+ 				   rmap.o \
+ 				   rtbitmap.o \
+ 				   symlink.o \
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 927f444..3954c2f 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -532,3 +532,12 @@ xfs_allocbt_maxrecs(
+ 		return blocklen / sizeof(xfs_alloc_rec_t);
+ 	return blocklen / (sizeof(xfs_alloc_key_t) + sizeof(xfs_alloc_ptr_t));
+ }
++
++/* Calculate the freespace btree size for some records. */
++xfs_extlen_t
++xfs_allocbt_calc_size(
++	struct xfs_mount	*mp,
++	unsigned long long	len)
++{
++	return xfs_btree_calc_size(mp, mp->m_alloc_mnr, len);
++}
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.h b/fs/xfs/libxfs/xfs_alloc_btree.h
+index 45e189e..2fd5472 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.h
++++ b/fs/xfs/libxfs/xfs_alloc_btree.h
+@@ -61,5 +61,7 @@ extern struct xfs_btree_cur *xfs_allocbt_init_cursor(struct xfs_mount *,
+ 		struct xfs_trans *, struct xfs_buf *,
+ 		xfs_agnumber_t, xfs_btnum_t);
+ extern int xfs_allocbt_maxrecs(struct xfs_mount *, int, int);
++extern xfs_extlen_t xfs_allocbt_calc_size(struct xfs_mount *mp,
++		unsigned long long len);
+ 
+ #endif	/* __XFS_ALLOC_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 54dd7a7..659e41b 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -912,3 +912,12 @@ xfs_bmbt_change_owner(
+ 	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+ 	return error;
+ }
++
++/* Calculate the bmap btree size for some records. */
++unsigned long long
++xfs_bmbt_calc_size(
++	struct xfs_mount	*mp,
++	unsigned long long	len)
++{
++	return xfs_btree_calc_size(mp, mp->m_bmap_dmnr, len);
++}
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+index 819a8a4..835f0a3 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.h
++++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+@@ -140,4 +140,7 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
+ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
+ 		struct xfs_trans *, struct xfs_inode *, int);
+ 
++extern unsigned long long xfs_bmbt_calc_size(struct xfs_mount *mp,
++		unsigned long long len);
++
+ #endif	/* __XFS_BMAP_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 3fa30a2..3788adb 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4840,7 +4840,7 @@ xfs_btree_query_all(
+  * Calculate the number of blocks needed to store a given number of records
+  * in a short-format (per-AG metadata) btree.
+  */
+-xfs_extlen_t
++unsigned long long
+ xfs_btree_calc_size(
+ 	struct xfs_mount	*mp,
+ 	uint			*limits,
+@@ -4848,7 +4848,7 @@ xfs_btree_calc_size(
+ {
+ 	int			level;
+ 	int			maxrecs;
+-	xfs_extlen_t		rval;
++	unsigned long long	rval;
+ 
+ 	maxrecs = limits[0];
+ 	for (level = 0, rval = 0; len > 1; level++) {
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 644f953..b088670 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -515,7 +515,7 @@ bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
+ bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
+ uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
+ 				 unsigned long len);
+-xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
++unsigned long long xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
+ 		unsigned long long len);
+ 
+ /* return codes */
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index dbdd532..951dd64 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -498,3 +498,12 @@ xfs_inobt_rec_check_count(
+ 	return 0;
+ }
+ #endif	/* DEBUG */
++
++/* Calculate the inobt btree size for some records. */
++xfs_extlen_t
++xfs_iallocbt_calc_size(
++	struct xfs_mount	*mp,
++	unsigned long long	len)
++{
++	return xfs_btree_calc_size(mp, mp->m_inobt_mnr, len);
++}
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
+index bd88453..3046c11 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.h
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
+@@ -72,4 +72,7 @@ int xfs_inobt_rec_check_count(struct xfs_mount *,
+ #define xfs_inobt_rec_check_count(mp, rec)	0
+ #endif	/* DEBUG */
+ 
++extern xfs_extlen_t xfs_iallocbt_calc_size(struct xfs_mount *mp,
++		unsigned long long len);
++
+ #endif	/* __XFS_IALLOC_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index cce51cb..e61d816 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2364,3 +2364,54 @@ xfs_rmap_record_exists(
+ 		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
+ 	return 0;
+ }
++
++struct xfs_rmap_has_other_keys {
++	uint64_t			owner;
++	uint64_t			offset;
++	bool				*has_rmap;
++	unsigned int			flags;
++};
++
++/* For each rmap given, figure out if it doesn't match the key we want. */
++STATIC int
++xfs_rmap_has_other_keys_helper(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
++{
++	struct xfs_rmap_has_other_keys	*rhok = priv;
++
++	if (rhok->owner == rec->rm_owner && rhok->offset == rec->rm_offset &&
++	    ((rhok->flags & rec->rm_flags) & XFS_RMAP_KEY_FLAGS) == rhok->flags)
++		return 0;
++	*rhok->has_rmap = true;
++	return XFS_BTREE_QUERY_RANGE_ABORT;
++}
++
++/*
++ * Given an extent and some owner info, can we find records overlapping
++ * the extent whose owner info does not match the given owner?
++ */
++int
++xfs_rmap_has_other_keys(
++	struct xfs_btree_cur		*cur,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
++	struct xfs_owner_info		*oinfo,
++	bool				*has_rmap)
++{
++	struct xfs_rmap_irec		low = {0};
++	struct xfs_rmap_irec		high;
++	struct xfs_rmap_has_other_keys	rhok;
++
++	xfs_owner_info_unpack(oinfo, &rhok.owner, &rhok.offset, &rhok.flags);
++	*has_rmap = false;
++	rhok.has_rmap = has_rmap;
++
++	low.rm_startblock = bno;
++	memset(&high, 0xFF, sizeof(high));
++	high.rm_startblock = bno + len - 1;
++
++	return xfs_rmap_query_range(cur, &low, &high,
++			xfs_rmap_has_other_keys_helper, &rhok);
++}
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index ea359ab..606efe3 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -222,5 +222,8 @@ int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
+ int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
+ 		xfs_filblks_t len, struct xfs_owner_info *oinfo,
+ 		bool *has_rmap);
++int xfs_rmap_has_other_keys(struct xfs_btree_cur *cur, xfs_fsblock_t bno,
++		xfs_filblks_t len, struct xfs_owner_info *oinfo,
++		bool *has_rmap);
+ 
+ #endif	/* __XFS_RMAP_H__ */
 diff --git a/fs/xfs/repair/common.c b/fs/xfs/repair/common.c
-index 8c69ac4..05ca327 100644
+index 05ca327..acf93a5 100644
 --- a/fs/xfs/repair/common.c
 +++ b/fs/xfs/repair/common.c
-@@ -46,6 +46,7 @@
- #include "xfs_trans_priv.h"
- #include "xfs_icache.h"
- #include "xfs_itable.h"
-+#include "xfs_error.h"
- #include "repair/xfs_scrub.h"
- #include "repair/common.h"
- #include "repair/btree.h"
-@@ -113,8 +114,43 @@
-  * the metadata is correct but otherwise suboptimal, there's a "preen"
-  * flag to signal that.  Finally, if we were unable to access a data
-  * structure to perform cross-referencing, we can signal that as well.
-+ *
-+ * If a piece of metadata proves corrupt or suboptimal, the userspace
-+ * program can ask the kernel to apply some tender loving care (TLC) to
-+ * the metadata object.  "Corruption" is defined by metadata violating
-+ * the on-disk specification; operations cannot continue if the
-+ * violation is left untreated.  It is possible for XFS to continue if
-+ * an object is "suboptimal", however performance may be degraded.
-+ * Repairs are usually performed by rebuilding the metadata entirely out
-+ * of redundant metadata.  Optimizing, on the other hand, can sometimes
-+ * be done without rebuilding entire structures.
-+ *
-+ * Generally speaking, the repair code has the following code structure:
-+ * Lock -> scrub -> repair -> commit -> re-lock -> re-scrub -> unlock.
-+ * The first check helps us figure out if we need to rebuild or simply
-+ * optimize the structure so that the rebuild knows what to do.  The
-+ * second check evaluates the completeness of the repair; that is what
-+ * is reported to userspace.
-  */
- 
-+/* Fix something if errors were detected and the user asked for repair. */
-+static inline bool
-+xfs_scrub_should_fix(
-+	struct xfs_scrub_metadata	*sm)
-+{
-+	return (sm->sm_flags & XFS_SCRUB_FLAG_REPAIR) &&
-+	       (sm->sm_flags & (XFS_SCRUB_FLAG_CORRUPT | XFS_SCRUB_FLAG_PREEN));
-+}
+@@ -643,6 +643,8 @@ xfs_scrub_teardown(
+ 	struct xfs_inode		*ip_in,
+ 	int				error)
+ {
++	struct xfs_mount		*mp = sc->tp->t_mountp;
 +
-+/* Clear the corruption status flags. */
-+static inline bool
-+xfs_scrub_reset_corruption_flags(
-+	struct xfs_scrub_metadata	*sm)
-+{
-+	return sm->sm_flags &= ~(XFS_SCRUB_FLAG_CORRUPT | XFS_SCRUB_FLAG_PREEN |
-+			      XFS_SCRUB_FLAG_XREF_FAIL);
-+}
-+
- /* Check for operational errors. */
- bool
- xfs_scrub_op_ok(
-@@ -611,7 +647,10 @@ xfs_scrub_teardown(
+ 	xfs_scrub_ag_free(&sc->sa);
  	if (sc->ag_lock.agmask != sc->ag_lock.__agmask)
  		kmem_free(sc->ag_lock.agmask);
- 	sc->ag_lock.agmask = NULL;
--	xfs_trans_cancel(sc->tp);
-+	if (error == 0 && (sc->sm->sm_flags & XFS_SCRUB_FLAG_REPAIR))
-+		error = xfs_trans_commit(sc->tp);
-+	else
-+		xfs_trans_cancel(sc->tp);
- 	sc->tp = NULL;
- 	if (sc->ip != NULL) {
- 		xfs_iunlock(sc->ip, XFS_ILOCK_EXCL);
-@@ -988,6 +1027,8 @@ xfs_scrub_metadata(
+@@ -664,6 +666,8 @@ xfs_scrub_teardown(
+ 		kmem_free(sc->buf);
+ 		sc->buf = NULL;
+ 	}
++	if (sc->reset_counters && !error)
++		error = xfs_repair_reset_counters(mp);
+ 	return error;
+ }
+ 
+@@ -676,11 +680,13 @@ xfs_scrub_setup(
+ 	bool				retry_deadlocked)
+ {
  	struct xfs_mount		*mp = ip->i_mount;
- 	const struct xfs_scrub_meta_fns	*fns;
- 	bool				deadlocked = false;
-+	bool				already_fixed = false;
-+	bool				was_corrupt = false;
- 	int				error = 0;
++	xfs_extlen_t			resblks;
  
- 	trace_xfs_scrub(ip, sm->sm_type, sm->sm_agno, sm->sm_ino, sm->sm_gen,
-@@ -1001,12 +1042,18 @@ xfs_scrub_metadata(
- 	sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
- 	if (sm->sm_flags & ~XFS_SCRUB_FLAGS_IN)
- 		goto out;
--	if (sm->sm_flags & XFS_SCRUB_FLAG_REPAIR)
--		goto out;
- 	error = -ENOTTY;
- 	if (sm->sm_type > XFS_SCRUB_TYPE_MAX)
- 		goto out;
- 	fns = &meta_scrub_fns[sm->sm_type];
-+	if ((sm->sm_flags & XFS_SCRUB_FLAG_REPAIR) &&
-+	    (fns->repair == NULL || !xfs_sb_version_hascrc(&mp->m_sb)))
-+		goto out;
+ 	memset(sc, 0, sizeof(*sc));
+ 	sc->sm = sm;
++	resblks = xfs_repair_calc_ag_resblks(sc, ip, sm);
+ 	return xfs_scrub_trans_alloc(sm, mp, &M_RES(mp)->tr_itruncate,
+-			0, 0, 0, &sc->tp);
++			resblks, 0, 0, &sc->tp);
+ }
+ 
+ /* Set us up to check an AG header. */
+diff --git a/fs/xfs/repair/common.h b/fs/xfs/repair/common.h
+index f638703..0d6c7e3 100644
+--- a/fs/xfs/repair/common.h
++++ b/fs/xfs/repair/common.h
+@@ -60,6 +60,7 @@ struct xfs_scrub_context {
+ 	struct xfs_trans		*tp;
+ 	struct xfs_inode		*ip;
+ 	void				*buf;
++	bool				reset_counters;
+ 
+ 	/* State tracking for multi-AG operations. */
+ 	struct xfs_scrub_ag_lock	ag_lock;
+@@ -96,6 +97,9 @@ xfs_scrub_trans_alloc(
+ 	uint				flags,
+ 	struct xfs_trans		**tpp)
+ {
++	if (sm->sm_flags & XFS_SCRUB_FLAG_REPAIR)
++		return xfs_trans_alloc(mp, resp, blocks, rtextents, flags, tpp);
 +
-+	error = -EROFS;
-+	if ((sm->sm_flags & XFS_SCRUB_FLAG_REPAIR) &&
-+	    (mp->m_flags & XFS_MOUNT_RDONLY))
-+		goto out;
+ 	return xfs_trans_alloc_empty(mp, tpp);
+ }
  
- 	/* Do we even have this type of metadata? */
- 	error = -ENOENT;
-@@ -1046,8 +1093,51 @@ xfs_scrub_metadata(
- 	} else if (error)
- 		goto out_teardown;
+@@ -228,4 +232,50 @@ int xfs_scrub_symlink(struct xfs_scrub_context *sc);
+ int xfs_scrub_rtbitmap(struct xfs_scrub_context *sc);
+ int xfs_scrub_rtsummary(struct xfs_scrub_context *sc);
  
--	if (sm->sm_flags & XFS_SCRUB_FLAG_CORRUPT)
--		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
-+	/* Let debug users force us into the repair routines. */
-+	if ((sm->sm_flags & XFS_SCRUB_FLAG_REPAIR) && !already_fixed &&
-+	    XFS_TEST_ERROR(false, mp,
-+			XFS_ERRTAG_FORCE_SCRUB_REPAIR,
-+			XFS_RANDOM_FORCE_SCRUB_REPAIR)) {
-+		sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
++/* Repair helpers */
++
++struct xfs_repair_find_ag_btree {
++	uint64_t			rmap_owner;
++	const struct xfs_buf_ops	*buf_ops;
++	uint32_t			magic;
++	xfs_agblock_t			root;
++	unsigned int			level;
++};
++
++struct xfs_repair_btree_extent {
++	struct list_head		list;
++	xfs_fsblock_t			fsbno;
++	xfs_extlen_t			len;
++};
++
++int xfs_repair_roll_ag_trans(struct xfs_scrub_context *sc);
++bool xfs_repair_ag_has_space(struct xfs_perag *pag, xfs_extlen_t nr_blocks,
++			     enum xfs_ag_resv_type type);
++int xfs_repair_alloc_ag_block(struct xfs_scrub_context *sc,
++			      struct xfs_owner_info *oinfo,
++			      xfs_fsblock_t *fsbno, enum xfs_ag_resv_type resv);
++int xfs_repair_init_btblock(struct xfs_scrub_context *sc, xfs_fsblock_t fsb,
++			    struct xfs_buf **bpp, __u32 magic,
++			    const struct xfs_buf_ops *ops);
++int xfs_repair_fix_freelist(struct xfs_scrub_context *sc, bool can_shrink);
++int xfs_repair_put_freelist(struct xfs_scrub_context *sc, xfs_agblock_t agbno);
++int xfs_repair_collect_btree_extent(struct xfs_mount *mp,
++				    struct list_head *btlist,
++				    xfs_fsblock_t fsbno, xfs_extlen_t len);
++int xfs_repair_reap_btree_extents(struct xfs_scrub_context *sc,
++				  struct list_head *btlist,
++				  struct xfs_owner_info *oinfo,
++				  enum xfs_ag_resv_type type);
++void xfs_repair_cancel_btree_extents(struct xfs_scrub_context *sc,
++				     struct list_head *btlist);
++int xfs_repair_subtract_extents(struct xfs_mount *mp, struct list_head *exlist,
++				struct list_head *sublist);
++int xfs_repair_find_ag_btree_roots(struct xfs_scrub_context *sc,
++				   struct xfs_buf *agf_bp,
++				   struct xfs_repair_find_ag_btree *btree_info);
++int xfs_repair_reset_counters(struct xfs_mount	*mp);
++xfs_extlen_t xfs_repair_calc_ag_resblks(struct xfs_scrub_context *sc,
++					struct xfs_inode *ip,
++					struct xfs_scrub_metadata *sm);
++
+ #endif	/* __XFS_REPAIR_COMMON_H__ */
+diff --git a/fs/xfs/repair/repair.c b/fs/xfs/repair/repair.c
+new file mode 100644
+index 0000000..24d5725
+--- /dev/null
++++ b/fs/xfs/repair/repair.c
+@@ -0,0 +1,763 @@
++/*
++ * Copyright (C) 2016-2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_trace.h"
++#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_alloc.h"
++#include "xfs_alloc_btree.h"
++#include "xfs_ialloc.h"
++#include "xfs_ialloc_btree.h"
++#include "xfs_rmap.h"
++#include "xfs_rmap_btree.h"
++#include "xfs_refcount.h"
++#include "xfs_refcount_btree.h"
++#include "xfs_extent_busy.h"
++#include "xfs_ag_resv.h"
++#include "xfs_trans_space.h"
++#include "repair/common.h"
++
++/*
++ * Roll a transaction, keeping the AG headers locked and reinitializing
++ * the btree cursors.
++ */
++int
++xfs_repair_roll_ag_trans(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_trans		*tp;
++	int				error;
++
++	/* Keep the AG header buffers locked so we can keep going. */
++	xfs_trans_bhold(sc->tp, sc->sa.agi_bp);
++	xfs_trans_bhold(sc->tp, sc->sa.agf_bp);
++	xfs_trans_bhold(sc->tp, sc->sa.agfl_bp);
++
++	/* Roll the transaction. */
++	tp = sc->tp;
++	error = xfs_trans_roll(&sc->tp, NULL);
++	if (error)
++		return error;
++
++	/* Join the buffer to the new transaction or release the hold. */
++	if (sc->tp != tp) {
++		xfs_trans_bjoin(sc->tp, sc->sa.agi_bp);
++		xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
++		xfs_trans_bjoin(sc->tp, sc->sa.agfl_bp);
++	} else {
++		xfs_trans_bhold_release(sc->tp, sc->sa.agi_bp);
++		xfs_trans_bhold_release(sc->tp, sc->sa.agf_bp);
++		xfs_trans_bhold_release(sc->tp, sc->sa.agfl_bp);
 +	}
-+	if (!already_fixed)
-+		was_corrupt = (sm->sm_flags & XFS_SCRUB_FLAG_CORRUPT);
 +
-+	if (!already_fixed && xfs_scrub_should_fix(sm)) {
-+		xfs_scrub_ag_btcur_free(&sc.sa);
++	return error;
++}
 +
-+		/* Ok, something's wrong.  Repair it. */
-+		trace_xfs_repair_attempt(ip, sm->sm_type, sm->sm_agno,
-+			sm->sm_ino, sm->sm_gen, sm->sm_flags, error);
-+		error = fns->repair(&sc);
-+		trace_xfs_repair_done(ip, sm->sm_type, sm->sm_agno,
-+			sm->sm_ino, sm->sm_gen, sm->sm_flags, error);
++/*
++ * Does the given AG have enough space to rebuild a btree?  Neither AG
++ * reservation can be critical, and we must have enough space (factoring
++ * in AG reservations) to construct a whole btree.
++ */
++bool
++xfs_repair_ag_has_space(
++	struct xfs_perag		*pag,
++	xfs_extlen_t			nr_blocks,
++	enum xfs_ag_resv_type		type)
++{
++	return  !xfs_ag_resv_critical(pag, XFS_AG_RESV_AGFL) &&
++		!xfs_ag_resv_critical(pag, XFS_AG_RESV_METADATA) &&
++		pag->pagf_freeblks - xfs_ag_resv_needed(pag, type) > nr_blocks;
++}
++
++/* Allocate a block in an AG. */
++int
++xfs_repair_alloc_ag_block(
++	struct xfs_scrub_context	*sc,
++	struct xfs_owner_info		*oinfo,
++	xfs_fsblock_t			*fsbno,
++	enum xfs_ag_resv_type		resv)
++{
++	struct xfs_alloc_arg		args = {0};
++	xfs_agblock_t			bno;
++	int				error;
++
++	if (resv == XFS_AG_RESV_AGFL) {
++		error = xfs_alloc_get_freelist(sc->tp, sc->sa.agf_bp, &bno, 1);
 +		if (error)
-+			goto out_teardown;
++			return error;
++		xfs_extent_busy_reuse(sc->tp->t_mountp, sc->sa.agno, bno,
++				1, false);
++		*fsbno = XFS_AGB_TO_FSB(sc->tp->t_mountp, sc->sa.agno, bno);
++		return 0;
++	}
++
++	args.tp = sc->tp;
++	args.mp = sc->tp->t_mountp;
++	args.oinfo = *oinfo;
++	args.fsbno = XFS_AGB_TO_FSB(args.mp, sc->sa.agno, 0);
++	args.minlen = 1;
++	args.maxlen = 1;
++	args.prod = 1;
++	args.type = XFS_ALLOCTYPE_NEAR_BNO;
++	args.resv = resv;
++
++	error = xfs_alloc_vextent(&args);
++	if (error)
++		return error;
++	if (args.fsbno == NULLFSBLOCK)
++		return -ENOSPC;
++	ASSERT(args.len == 1);
++	*fsbno = args.fsbno;
++
++	return 0;
++}
++
++/* Initialize an AG block to a zeroed out btree header. */
++int
++xfs_repair_init_btblock(
++	struct xfs_scrub_context	*sc,
++	xfs_fsblock_t			fsb,
++	struct xfs_buf			**bpp,
++	__u32				magic,
++	const struct xfs_buf_ops	*ops)
++{
++	struct xfs_trans		*tp = sc->tp;
++	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_buf			*bp;
++
++	trace_xfs_repair_init_btblock(mp, XFS_FSB_TO_AGNO(mp, fsb),
++			XFS_FSB_TO_AGBNO(mp, fsb), magic);
++
++	ASSERT(XFS_FSB_TO_AGNO(mp, fsb) == sc->sa.agno);
++	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, XFS_FSB_TO_DADDR(mp, fsb),
++			XFS_FSB_TO_BB(mp, 1), 0);
++	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
++	xfs_btree_init_block(mp, bp, magic, 0, 0, sc->sa.agno,
++			XFS_BTREE_CRC_BLOCKS);
++	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_BTREE_BUF);
++	xfs_trans_log_buf(tp, bp, 0, bp->b_length);
++	bp->b_ops = ops;
++	*bpp = bp;
++
++	return 0;
++}
++
++/* Ensure the freelist is full. */
++int
++xfs_repair_fix_freelist(
++	struct xfs_scrub_context	*sc,
++	bool				can_shrink)
++{
++	struct xfs_alloc_arg		args = {0};
++	int				error;
++
++	args.mp = sc->tp->t_mountp;
++	args.tp = sc->tp;
++	args.agno = sc->sa.agno;
++	args.alignment = 1;
++	args.pag = xfs_perag_get(args.mp, sc->sa.agno);
++
++	error = xfs_alloc_fix_freelist(&args,
++			can_shrink ? 0 : XFS_ALLOC_FLAG_NOSHRINK);
++	xfs_perag_put(args.pag);
++
++	return error;
++}
++
++/* Put a block back on the AGFL. */
++int
++xfs_repair_put_freelist(
++	struct xfs_scrub_context	*sc,
++	xfs_agblock_t			agbno)
++{
++	struct xfs_owner_info		oinfo;
++	int				error;
++
++	/*
++	 * Since we're "freeing" a lost block onto the AGFL, we have to
++	 * create an rmap for the block prior to merging it or else other
++	 * parts will break.
++	 */
++	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
++	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno, agbno, 1,
++			&oinfo);
++	if (error)
++		return error;
++
++	/* Put the block on the AGFL. */
++	error = xfs_alloc_put_freelist(sc->tp, sc->sa.agf_bp, sc->sa.agfl_bp,
++			agbno, 0);
++	if (error)
++		return error;
++	xfs_extent_busy_insert(sc->tp, sc->sa.agno, agbno, 1,
++			XFS_EXTENT_BUSY_SKIP_DISCARD);
++
++	/* Make sure the AGFL doesn't overfill. */
++	return xfs_repair_fix_freelist(sc, true);
++}
++
++/*
++ * For a given metadata extent and owner, delete the associated rmap.
++ * If the block has no other owners, free it.
++ */
++STATIC int
++xfs_repair_free_or_unmap_extent(
++	struct xfs_scrub_context	*sc,
++	xfs_fsblock_t			fsbno,
++	xfs_extlen_t			len,
++	struct xfs_owner_info		*oinfo,
++	enum xfs_ag_resv_type		resv)
++{
++	struct xfs_mount		*mp = sc->tp->t_mountp;
++	struct xfs_btree_cur		*rmap_cur;
++	struct xfs_buf			*agf_bp = NULL;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			agbno;
++	bool				has_other_rmap;
++	int				error = 0;
++
++	ASSERT(xfs_sb_version_hasrmapbt(&mp->m_sb));
++	agno = XFS_FSB_TO_AGNO(mp, fsbno);
++	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
++
++	trace_xfs_repair_free_or_unmap_extent(mp, agno, agbno, len);
++
++	for (; len > 0 && !error; len--, agbno++, fsbno++) {
++		ASSERT(sc->ip != NULL || agno == sc->sa.agno);
++
++		/* Can we find any other rmappings? */
++		if (sc->ip) {
++			error = xfs_alloc_read_agf(mp, sc->tp, agno, 0,
++					&agf_bp);
++			if (error)
++				break;
++		}
++		rmap_cur = xfs_rmapbt_init_cursor(mp, sc->tp,
++				agf_bp ? agf_bp : sc->sa.agf_bp, agno);
++		error = xfs_rmap_has_other_keys(rmap_cur, agbno, 1, oinfo,
++				&has_other_rmap);
++		if (error)
++			goto out_cur;
++		xfs_btree_del_cursor(rmap_cur, XFS_BTREE_NOERROR);
++		if (agf_bp)
++			xfs_trans_brelse(sc->tp, agf_bp);
 +
 +		/*
-+		 * Commit the fixes and perform a second dry-run scrub
-+		 * so that we can tell userspace if we fixed the problem.
++		 * If there are other rmappings, this block is cross
++		 * linked and must not be freed.  Remove the reverse
++		 * mapping and move on.  Otherwise, we were the only
++		 * owner of the block, so free the extent, which will
++		 * also remove the rmap.
 +		 */
-+		error = xfs_scrub_teardown(&sc, ip, error);
++		if (has_other_rmap)
++			error = xfs_rmap_free(sc->tp, agf_bp, agno, agbno, 1,
++					oinfo);
++		else if (resv == XFS_AG_RESV_AGFL)
++			error = xfs_repair_put_freelist(sc, agbno);
++		else
++			error = xfs_free_extent(sc->tp, fsbno, 1, oinfo, resv);
 +		if (error)
-+			goto out;
-+		xfs_scrub_reset_corruption_flags(sm);
-+		already_fixed = true;
-+		goto retry_op;
++			break;
++
++		if (sc->ip)
++			error = xfs_trans_roll(&sc->tp, sc->ip);
++		else
++			error = xfs_repair_roll_ag_trans(sc);
 +	}
 +
-+	if (sm->sm_flags & XFS_SCRUB_FLAG_CORRUPT) {
-+		char	*errstr;
++	return error;
++out_cur:
++	xfs_btree_del_cursor(rmap_cur, XFS_BTREE_ERROR);
++	if (agf_bp)
++		xfs_trans_brelse(sc->tp, agf_bp);
++	return error;
++}
 +
-+		if (sm->sm_flags & XFS_SCRUB_FLAG_REPAIR)
-+			errstr = "Corruption not fixed during online repair.  "
-+				 "Unmount and run xfs_repair.";
-+		else
-+			errstr = "Corruption detected during scrub.";
-+		xfs_alert_ratelimited(mp, errstr);
-+	} else if (already_fixed && was_corrupt)
-+		xfs_alert_ratelimited(mp, "Corruption repaired during scrub.");
- 
- out_teardown:
- 	error = xfs_scrub_teardown(&sc, ip, error);
-diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index 05f8666..4c22d9a 100644
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -96,7 +96,8 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
- #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
- #define XFS_ERRTAG_BMAP_FINISH_ONE			26
- #define XFS_ERRTAG_AG_RESV_CRITICAL			27
--#define XFS_ERRTAG_MAX					28
-+#define XFS_ERRTAG_FORCE_SCRUB_REPAIR			28
-+#define XFS_ERRTAG_MAX					29
- 
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -129,6 +130,7 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
- #define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
- #define XFS_RANDOM_BMAP_FINISH_ONE			1
- #define XFS_RANDOM_AG_RESV_CRITICAL			4
-+#define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
- 
- #ifdef DEBUG
- extern int xfs_error_test_active;
++/* Collect a dead btree extent for later disposal. */
++int
++xfs_repair_collect_btree_extent(
++	struct xfs_mount		*mp,
++	struct list_head		*btlist,
++	xfs_fsblock_t			fsbno,
++	xfs_extlen_t			len)
++{
++	struct xfs_repair_btree_extent	*rbe;
++
++	trace_xfs_repair_collect_btree_extent(mp, XFS_FSB_TO_AGNO(mp, fsbno),
++			XFS_FSB_TO_AGBNO(mp, fsbno), len);
++
++	rbe = kmem_alloc(sizeof(*rbe), KM_NOFS);
++	if (!rbe)
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&rbe->list);
++	rbe->fsbno = fsbno;
++	rbe->len = len;
++	list_add_tail(&rbe->list, btlist);
++
++	return 0;
++}
++
++/* Dispose of dead btree extents.  If oinfo is NULL, just delete the list. */
++int
++xfs_repair_reap_btree_extents(
++	struct xfs_scrub_context	*sc,
++	struct list_head		*btlist,
++	struct xfs_owner_info		*oinfo,
++	enum xfs_ag_resv_type		type)
++{
++	struct xfs_repair_btree_extent	*rbe;
++	struct xfs_repair_btree_extent	*n;
++	int				error = 0;
++
++	list_for_each_entry_safe(rbe, n, btlist, list) {
++		if (oinfo) {
++			error = xfs_repair_free_or_unmap_extent(sc, rbe->fsbno,
++					rbe->len, oinfo, type);
++			if (error)
++				oinfo = NULL;
++		}
++		list_del(&rbe->list);
++		kmem_free(rbe);
++	}
++
++	return error;
++}
++
++/* Errors happened, just delete the dead btree extent list. */
++void
++xfs_repair_cancel_btree_extents(
++	struct xfs_scrub_context	*sc,
++	struct list_head		*btlist)
++{
++	xfs_repair_reap_btree_extents(sc, btlist, NULL, XFS_AG_RESV_NONE);
++}
++
++/* Compare two btree extents. */
++static int
++xfs_repair_btree_extent_cmp(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
++{
++	struct xfs_repair_btree_extent	*ap;
++	struct xfs_repair_btree_extent	*bp;
++
++	ap = container_of(a, struct xfs_repair_btree_extent, list);
++	bp = container_of(b, struct xfs_repair_btree_extent, list);
++
++	if (ap->fsbno > bp->fsbno)
++		return 1;
++	else if (ap->fsbno < bp->fsbno)
++		return -1;
++	return 0;
++}
++
++/* Remove all the blocks in sublist from exlist. */
++int
++xfs_repair_subtract_extents(
++	struct xfs_mount		*mp,
++	struct list_head		*exlist,
++	struct list_head		*sublist)
++{
++	struct xfs_repair_btree_extent	*newrbe;
++	struct xfs_repair_btree_extent	*rbe;
++	struct xfs_repair_btree_extent	*n;
++	struct xfs_repair_btree_extent	*subp;
++	struct xfs_repair_btree_extent	sub;
++	xfs_fsblock_t			fsb;
++	xfs_fsblock_t			newfsb;
++	xfs_extlen_t			newlen;
++
++	list_sort(NULL, exlist, xfs_repair_btree_extent_cmp);
++	list_sort(NULL, sublist, xfs_repair_btree_extent_cmp);
++
++	subp = list_first_entry(sublist, struct xfs_repair_btree_extent, list);
++	if (subp == NULL)
++		return 0;
++
++	sub = *subp;
++	/* For every block mentioned in exlist... */
++	list_for_each_entry_safe(rbe, n, exlist, list) {
++		newfsb = NULLFSBLOCK;
++		newlen = 0;
++		for (fsb = rbe->fsbno; fsb < rbe->fsbno + rbe->len; fsb++) {
++			/*
++			 * If the current location of the extent list is
++			 * beyond the subtract list, move the subtract list
++			 * forward by one block or by one record.
++			 */
++			while (fsb > sub.fsbno || sub.len == 0) {
++				if (sub.len) {
++					sub.len--;
++					sub.fsbno++;
++				} else {
++					/*
++					 * Get the next subtract extent.  If
++					 * there isn't one, make the current
++					 * extent match the unprocessed part of
++					 * that extent, and jump out.
++					 */
++					if (subp->list.next == sublist ||
++					    subp->list.next == NULL) {
++						rbe->len -= fsb - rbe->fsbno;
++						rbe->fsbno = fsb;
++						subp = NULL;
++						rbe = NULL;
++						goto out_frag;
++					}
++					subp = list_next_entry(subp, list);
++					sub = *subp;
++				}
++			}
++
++			if (fsb != sub.fsbno) {
++				/*
++				 * Block not in the subtract list; stash
++				 * it for later reinsertion in the list.
++				 */
++				if (newfsb == NULLFSBLOCK) {
++					newfsb = fsb;
++					newlen = 1;
++				} else
++					newlen++;
++			} else {
++				/* Match! */
++				if (newfsb != NULLFSBLOCK) {
++					/*
++					 * Last block of the extent and we have
++					 * a saved extent.  Store the saved
++					 * extent in this extent.
++					 */
++					if (fsb == rbe->fsbno + rbe->len - 1) {
++						rbe->fsbno = newfsb;
++						rbe->len = newlen;
++						newfsb = NULLFSBLOCK;
++						rbe = NULL;
++						goto out_frag;
++					}
++					/* Stash the new extent in the list. */
++					newrbe = kmem_alloc(sizeof(*newrbe),
++							KM_NOFS);
++					if (!newrbe)
++						return -ENOMEM;
++					INIT_LIST_HEAD(&newrbe->list);
++					newrbe->fsbno = newfsb;
++					newrbe->len = newlen;
++					list_add_tail(&newrbe->list,
++							&rbe->list);
++				}
++
++				newfsb = NULLFSBLOCK;
++				newlen = 0;
++			}
++		} /* end for loop */
++
++out_frag:
++		/* If we have an extent to add back, do that now. */
++		if (newfsb != NULLFSBLOCK) {
++			if (rbe) {
++				newrbe = rbe;
++				rbe = NULL;
++			} else {
++				newrbe = kmem_alloc(sizeof(*newrbe), KM_NOFS);
++				if (!newrbe)
++					return -ENOMEM;
++				INIT_LIST_HEAD(&newrbe->list);
++				list_add_tail(&newrbe->list, &rbe->list);
++			}
++			newrbe->fsbno = newfsb;
++			newrbe->len = newlen;
++		}
++		if (rbe) {
++			list_del(&rbe->list);
++			kmem_free(rbe);
++		}
++		if (subp == NULL)
++			break;
++	}
++
++	return 0;
++}
++
++/* Find btree roots from the AGF. */
++STATIC int
++xfs_repair_find_ag_btree_roots_helper(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
++{
++	struct xfs_mount		*mp = cur->bc_mp;
++	struct xfs_repair_find_ag_btree	*btree_info = priv;
++	struct xfs_repair_find_ag_btree	*fab;
++	struct xfs_buf			*bp;
++	struct xfs_btree_block		*btblock;
++	xfs_daddr_t			daddr;
++	xfs_agblock_t			agbno;
++	int				error;
++
++	if (!XFS_RMAP_NON_INODE_OWNER(rec->rm_owner))
++		return 0;
++
++	for (agbno = 0; agbno < rec->rm_blockcount; agbno++) {
++		daddr = XFS_AGB_TO_DADDR(mp, cur->bc_private.a.agno,
++				rec->rm_startblock + agbno);
++		for (fab = btree_info; fab->buf_ops; fab++) {
++			if (rec->rm_owner != fab->rmap_owner)
++				continue;
++
++			error = xfs_trans_read_buf(mp, cur->bc_tp,
++					mp->m_ddev_targp, daddr, mp->m_bsize,
++					0, &bp, NULL);
++			if (error)
++				return error;
++
++			btblock = XFS_BUF_TO_BLOCK(bp);
++			if (be32_to_cpu(btblock->bb_magic) != fab->magic)
++				goto next_fab;
++			if (fab->root != NULLAGBLOCK &&
++			    xfs_btree_get_level(btblock) <= fab->level)
++				goto next_fab;
++
++			bp->b_ops = fab->buf_ops;
++			bp->b_ops->verify_read(bp);
++			if (bp->b_error)
++				goto next_fab;
++			fab->root = rec->rm_startblock + agbno;
++			fab->level = xfs_btree_get_level(btblock);
++
++			trace_xfs_repair_find_ag_btree_roots_helper(mp,
++					cur->bc_private.a.agno,
++					rec->rm_startblock + agbno,
++					be32_to_cpu(btblock->bb_magic),
++					fab->level);
++next_fab:
++			xfs_trans_brelse(cur->bc_tp, bp);
++			if (be32_to_cpu(btblock->bb_magic) == fab->magic)
++				break;
++		}
++	}
++
++	return error;
++}
++
++/* Find the roots of the given btrees from the rmap info. */
++int
++xfs_repair_find_ag_btree_roots(
++	struct xfs_scrub_context	*sc,
++	struct xfs_buf			*agf_bp,
++	struct xfs_repair_find_ag_btree	*btree_info)
++{
++	struct xfs_mount		*mp = sc->tp->t_mountp;
++	struct xfs_repair_find_ag_btree	*fab;
++	struct xfs_btree_cur		*cur;
++	int				error;
++
++	for (fab = btree_info; fab->buf_ops; fab++) {
++		fab->root = NULLAGBLOCK;
++		fab->level = 0;
++	}
++
++	cur = xfs_rmapbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno);
++	error = xfs_rmap_query_all(cur, xfs_repair_find_ag_btree_roots_helper,
++			btree_info);
++	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++
++	for (fab = btree_info; !error && fab->buf_ops; fab++)
++		if (fab->root != NULLAGBLOCK)
++			fab->level++;
++
++	return error;
++}
++
++/* Reset the superblock counters from the AGF/AGI. */
++int
++xfs_repair_reset_counters(
++	struct xfs_mount	*mp)
++{
++	struct xfs_trans	*tp;
++	struct xfs_buf		*agi_bp;
++	struct xfs_buf		*agf_bp;
++	struct xfs_agi		*agi;
++	struct xfs_agf		*agf;
++	xfs_agnumber_t		agno;
++	xfs_ino_t		icount = 0;
++	xfs_ino_t		ifree = 0;
++	xfs_filblks_t		fdblocks = 0;
++	int64_t			delta_icount;
++	int64_t			delta_ifree;
++	int64_t			delta_fdblocks;
++	int			error;
++
++	trace_xfs_repair_reset_counters(mp);
++
++	error = xfs_trans_alloc_empty(mp, &tp);
++	if (error)
++		return error;
++
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		/* Count all the inodes... */
++		error = xfs_ialloc_read_agi(mp, tp, agno, &agi_bp);
++		if (error)
++			goto out;
++		agi = XFS_BUF_TO_AGI(agi_bp);
++		icount += be32_to_cpu(agi->agi_count);
++		ifree += be32_to_cpu(agi->agi_freecount);
++
++		/* Add up the free/freelist/bnobt/cntbt blocks... */
++		error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
++		if (error)
++			goto out;
++		agf = XFS_BUF_TO_AGF(agf_bp);
++		fdblocks += be32_to_cpu(agf->agf_freeblks);
++		fdblocks += be32_to_cpu(agf->agf_flcount);
++		fdblocks += be32_to_cpu(agf->agf_btreeblks);
++	}
++
++	/*
++	 * Reinitialize the counters.  The on-disk and in-core counters
++	 * differ by the number of inodes/blocks reserved by the admin,
++	 * the per-AG reservation, and any transactions in progress, so
++	 * we have to account for that.
++	 */
++	spin_lock(&mp->m_sb_lock);
++	delta_icount = (int64_t)mp->m_sb.sb_icount - icount;
++	delta_ifree = (int64_t)mp->m_sb.sb_ifree - ifree;
++	delta_fdblocks = (int64_t)mp->m_sb.sb_fdblocks - fdblocks;
++	mp->m_sb.sb_icount = icount;
++	mp->m_sb.sb_ifree = ifree;
++	mp->m_sb.sb_fdblocks = fdblocks;
++	spin_unlock(&mp->m_sb_lock);
++
++	if (delta_icount) {
++		error = xfs_mod_icount(mp, delta_icount);
++		if (error)
++			goto out;
++	}
++	if (delta_ifree) {
++		error = xfs_mod_ifree(mp, delta_ifree);
++		if (error)
++			goto out;
++	}
++	if (delta_fdblocks) {
++		error = xfs_mod_fdblocks(mp, delta_fdblocks, false);
++		if (error)
++			goto out;
++	}
++
++out:
++	xfs_trans_cancel(tp);
++	return error;
++}
++
++/* Figure out how many blocks to reserve for an AG repair. */
++xfs_extlen_t
++xfs_repair_calc_ag_resblks(
++	struct xfs_scrub_context	*sc,
++	struct xfs_inode		*ip,
++	struct xfs_scrub_metadata	*sm)
++{
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_agi			*agi;
++	struct xfs_agf			*agf;
++	struct xfs_buf			*bp;
++	xfs_agino_t			icount;
++	xfs_extlen_t			aglen;
++	xfs_extlen_t			usedlen;
++	xfs_extlen_t			freelen;
++	xfs_extlen_t			bnobt_sz;
++	xfs_extlen_t			inobt_sz;
++	xfs_extlen_t			rmapbt_sz;
++	xfs_extlen_t			refcbt_sz;
++	int				error;
++
++	if (!(sm->sm_flags & XFS_SCRUB_FLAG_REPAIR))
++		return 0;
++
++	if (sm->sm_agno >= mp->m_sb.sb_agcount)
++		return -EINVAL;
++
++	/*
++	 * Try to get the actual counters from disk; if not, make
++	 * some worst case assumptions.
++	 */
++	error = xfs_read_agi(mp, NULL, sm->sm_agno, &bp);
++	if (!error) {
++		agi = XFS_BUF_TO_AGI(bp);
++		icount = be32_to_cpu(agi->agi_count);
++		xfs_trans_brelse(NULL, bp);
++	} else
++		icount = mp->m_sb.sb_agblocks / mp->m_sb.sb_inopblock;
++
++	error = xfs_alloc_read_agf(mp, NULL, sm->sm_agno, 0, &bp);
++	if (!error) {
++		agf = XFS_BUF_TO_AGF(bp);
++		aglen = be32_to_cpu(agf->agf_length);
++		freelen = be32_to_cpu(agf->agf_freeblks);
++		usedlen = aglen - freelen;
++		xfs_trans_brelse(NULL, bp);
++	} else {
++		aglen = mp->m_sb.sb_agblocks;
++		freelen = aglen;
++		usedlen = aglen;
++	}
++
++	trace_xfs_repair_calc_ag_resblks(mp, sm->sm_agno, icount, aglen,
++			freelen, usedlen);
++
++	/*
++	 * Figure out how many blocks we'd need worst case to rebuild
++	 * each type of btree.  Note that we can only rebuild the
++	 * bnobt/cntbt or inobt/finobt as pairs.
++	 */
++	bnobt_sz = 2 * xfs_allocbt_calc_size(mp, freelen);
++	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
++		inobt_sz = xfs_iallocbt_calc_size(mp, icount /
++				XFS_INODES_PER_HOLEMASK_BIT);
++	else
++		inobt_sz = xfs_iallocbt_calc_size(mp, icount /
++				XFS_INODES_PER_CHUNK);
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		inobt_sz *= 2;
++	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++		rmapbt_sz = xfs_rmapbt_calc_size(mp, aglen);
++		refcbt_sz = xfs_refcountbt_calc_size(mp, usedlen);
++	} else {
++		rmapbt_sz = xfs_rmapbt_calc_size(mp, usedlen);
++		refcbt_sz = 0;
++	}
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		rmapbt_sz = 0;
++
++	trace_xfs_repair_calc_ag_resblks_btsize(mp, sm->sm_agno, bnobt_sz,
++			inobt_sz, rmapbt_sz, refcbt_sz);
++
++	return max(max(bnobt_sz, inobt_sz), max(rmapbt_sz, refcbt_sz));
++}
 
