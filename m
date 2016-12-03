@@ -1,62 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54458 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753428AbcLAK3e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Dec 2016 05:29:34 -0500
-Date: Thu, 1 Dec 2016 18:29:32 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs: use xfs_vn_setattr_size to check on new size
-Message-ID: <20161201102932.GD29149@eguan.usersys.redhat.com>
-References: <20161201101800.11419-1-eguan@redhat.com>
- <20161201102635.GA23215@infradead.org>
+Received: from aserp1050.oracle.com ([141.146.126.70]:21122 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758635AbcLCBhj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Dec 2016 20:37:39 -0500
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id uB31bZbm031589
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 3 Dec 2016 01:37:35 GMT
+Subject: [PATCH 12/55] xfs: report shared extents in getfsmapx
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 02 Dec 2016 17:36:30 -0800
+Message-ID: <148072899066.12995.7008694214191898404.stgit@birch.djwong.org>
+In-Reply-To: <148072891404.12995.15510849192837089093.stgit@birch.djwong.org>
+References: <148072891404.12995.15510849192837089093.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161201102635.GA23215@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Dec 01, 2016 at 02:26:35AM -0800, Christoph Hellwig wrote:
-> On Thu, Dec 01, 2016 at 06:18:00PM +0800, Eryu Guan wrote:
-> > Commit 6552321831dc ("xfs: remove i_iolock and use i_rwsem in the
-> > VFS inode instead") introduced a regression that truncate(2) doesn't
-> > check on new size, so it succeeds even if the new size exceeds the
-> > current resource limit. Because xfs_setattr_size() was used instead
-> > of xfs_vn_setattr_size(), and the latter calls xfs_vn_change_ok()
-> > first to do sanity check on permission and new size.
-> 
-> Oops, looks like this was a merge error..
-> 
-> > 
-> > This is found by truncate03 test from ltp, and the following is a
-> > simplified reproducer:
-> > 
-> >   #!/bin/bash
-> >   dev=/dev/sda5
-> >   mnt=/mnt/xfs
-> > 
-> >   mkfs -t xfs -f $dev
-> >   mount $dev $mnt
-> > 
-> >   # set max file size to 16k
-> >   ulimit -f 16
-> >   truncate -s $((16 * 1024 + 1)) /mnt/xfs/testfile
-> >   [ $? -eq 0 ] && echo "FAIL: truncate exceeded max file size"
-> >   ulimit -f unlimited
-> >   umount $mnt
-> 
-> Can you add this to xfstests?
+Cross-reference the reverse mapping data with the refcount btree to find
+out which extents are shared.
 
-Sure, I'll work on it.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_fsmap.c |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
-> 
-> The patch looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Thanks!
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 153117cff..3665638 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -37,6 +37,8 @@
+ #include "xfs_alloc.h"
+ #include "xfs_bit.h"
+ #include "xfs_fsmap.h"
++#include "xfs_refcount.h"
++#include "xfs_refcount_btree.h"
+ 
+ /* Convert an xfs_fsmap to an fsmap. */
+ void
+@@ -192,6 +194,42 @@ xfs_getfsmap_rec_before_low_key(
+ 	return false;
+ }
+ 
++/* Decide if this mapping is shared. */
++STATIC int
++xfs_getfsmap_is_shared(
++	struct xfs_mount		*mp,
++	struct xfs_getfsmap_info	*info,
++	struct xfs_rmap_irec		*rec,
++	bool				*stat)
++{
++	struct xfs_btree_cur		*cur;
++	xfs_agblock_t			fbno;
++	xfs_extlen_t			flen;
++	int				error;
++
++	*stat = false;
++	if (!xfs_sb_version_hasreflink(&mp->m_sb))
++		return 0;
++	/* rt files will have agno set to NULLAGNUMBER */
++	if (info->agno == NULLAGNUMBER)
++		return 0;
++
++	/* Are there any shared blocks here? */
++	flen = 0;
++	cur = xfs_refcountbt_init_cursor(mp, NULL, info->agf_bp,
++			info->agno, NULL);
++
++	error = xfs_refcount_find_shared(cur, rec->rm_startblock,
++			rec->rm_blockcount, &fbno, &flen, false);
++
++	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	if (error)
++		return error;
++
++	*stat = flen > 0;
++	return 0;
++}
++
+ /*
+  * Format a reverse mapping for getfsmap, having translated rm_startblock
+  * into the appropriate daddr units.
+@@ -205,6 +243,7 @@ xfs_getfsmap_helper(
+ {
+ 	struct xfs_fsmap		fmr;
+ 	xfs_daddr_t			key_end;
++	bool				shared;
+ 	int				error;
+ 
+ 	/*
+@@ -304,6 +343,13 @@ xfs_getfsmap_helper(
+ 		fmr.fmr_flags |= FMR_OF_ATTR_FORK;
+ 	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK)
+ 		fmr.fmr_flags |= FMR_OF_EXTENT_MAP;
++	if (fmr.fmr_flags == 0) {
++		error = xfs_getfsmap_is_shared(mp, info, rec, &shared);
++		if (error)
++			return error;
++		if (shared)
++			fmr.fmr_flags |= FMR_OF_SHARED;
++	}
+ 	error = info->formatter(&fmr, info->format_arg);
+ 	if (error)
+ 		return error;
 
-Eryu
