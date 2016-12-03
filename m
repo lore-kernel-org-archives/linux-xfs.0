@@ -1,16 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:32162 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758775AbcLCBjd (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:19830 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756546AbcLCBjd (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Dec 2016 20:39:33 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id uB31dG1p009282
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 3 Dec 2016 01:39:16 GMT
-Subject: [PATCH 26/55] xfs: scrub inodes
+Subject: [PATCH 33/55] xfs: scrub should cross-reference with the bnobt
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Dec 2016 17:38:05 -0800
-Message-ID: <148072908521.12995.6788205546348781541.stgit@birch.djwong.org>
+Date: Fri, 02 Dec 2016 17:38:49 -0800
+Message-ID: <148072912942.12995.9447728497997104497.stgit@birch.djwong.org>
 In-Reply-To: <148072891404.12995.15510849192837089093.stgit@birch.djwong.org>
 References: <148072891404.12995.15510849192837089093.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -22,571 +18,687 @@ List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Scrub the fields within an inode.
+When we're scrubbing various btrees, cross-reference the records with
+the bnobt to ensure that we don't also think the space is free.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile               |    1 
- fs/xfs/libxfs/xfs_fs.h        |    3 
- fs/xfs/libxfs/xfs_inode_buf.c |    2 
- fs/xfs/libxfs/xfs_inode_buf.h |    3 
- fs/xfs/repair/common.c        |  121 ++++++++++++++++++-
- fs/xfs/repair/common.h        |    1 
- fs/xfs/repair/inode.c         |  266 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_itable.c           |    2 
- fs/xfs/xfs_itable.h           |    5 +
- fs/xfs/xfs_trace.h            |    3 
- 10 files changed, 401 insertions(+), 6 deletions(-)
- create mode 100644 fs/xfs/repair/inode.c
+ fs/xfs/libxfs/xfs_alloc.c |   19 ++++++++
+ fs/xfs/libxfs/xfs_alloc.h |    3 +
+ fs/xfs/repair/agheader.c  |  106 ++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/repair/bmap.c      |   14 ++++++
+ fs/xfs/repair/btree.c     |  101 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/repair/common.c    |   42 ++++++++++++++++++
+ fs/xfs/repair/common.h    |   10 ++++
+ fs/xfs/repair/ialloc.c    |   13 ++++++
+ fs/xfs/repair/refcount.c  |   17 +++++++
+ fs/xfs/repair/rmap.c      |   18 +++++++-
+ 10 files changed, 340 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index e81212a..a037d8e 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -108,6 +108,7 @@ xfs-$(CONFIG_XFS_ONLINE_REPAIR)	+= $(addprefix repair/, \
- 				   btree.o \
- 				   common.o \
- 				   ialloc.o \
-+				   inode.o \
- 				   refcount.o \
- 				   rmap.o \
- 				   )
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 559ee76..251db32 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -585,7 +585,8 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_FINOBT	8	/* free inode btree */
- #define XFS_SCRUB_TYPE_RMAPBT	9	/* reverse mapping btree */
- #define XFS_SCRUB_TYPE_REFCNTBT	10	/* reference count btree */
--#define XFS_SCRUB_TYPE_MAX	10
-+#define XFS_SCRUB_TYPE_INODE	11	/* inode record */
-+#define XFS_SCRUB_TYPE_MAX	11
- 
- #define XFS_SCRUB_FLAG_REPAIR	0x1	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x2	/* o: needs repair */
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 60e3e6f..81fb626 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -380,7 +380,7 @@ xfs_log_dinode_to_disk(
- 	}
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 1b6bddb..ad8044b 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2991,3 +2991,22 @@ xfs_alloc_query_all(
+ 	query.fn = fn;
+ 	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
  }
- 
--static bool
-+bool
- xfs_dinode_verify(
- 	struct xfs_mount	*mp,
- 	xfs_ino_t		ino,
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index 6848a0a..988fd67 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -82,4 +82,7 @@ void	xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
- #define	xfs_inobp_check(mp, bp)
- #endif /* DEBUG */
- 
-+bool	xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
-+			  struct xfs_dinode *dip);
 +
- #endif	/* __XFS_INODE_BUF_H__ */
-diff --git a/fs/xfs/repair/common.c b/fs/xfs/repair/common.c
-index a1bdf62..40d304d65 100644
---- a/fs/xfs/repair/common.c
-+++ b/fs/xfs/repair/common.c
-@@ -44,6 +44,8 @@
- #include "xfs_rtalloc.h"
- #include "xfs_log.h"
- #include "xfs_trans_priv.h"
-+#include "xfs_icache.h"
-+#include "xfs_itable.h"
- #include "repair/xfs_scrub.h"
++/* Is there a record covering a given extent? */
++int
++xfs_alloc_has_record(
++	struct xfs_btree_cur	*cur,
++	xfs_agblock_t		bno,
++	xfs_extlen_t		len,
++	bool			*exists)
++{
++	union xfs_btree_irec	low;
++	union xfs_btree_irec	high;
++
++	memset(&low, 0, sizeof(low));
++	low.a.ar_startblock = bno;
++	memset(&high, 0xFF, sizeof(high));
++	high.a.ar_startblock = bno + len - 1;
++
++	return xfs_btree_has_record(cur, &low, &high, exists);
++}
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 89a23be..3fd6540 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -237,4 +237,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
+ int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
+ 		void *priv);
+ 
++int xfs_alloc_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++		xfs_extlen_t len, bool *exist);
++
+ #endif	/* __XFS_ALLOC_H__ */
+diff --git a/fs/xfs/repair/agheader.c b/fs/xfs/repair/agheader.c
+index 07087f4..bcb67c9 100644
+--- a/fs/xfs/repair/agheader.c
++++ b/fs/xfs/repair/agheader.c
+@@ -30,6 +30,7 @@
+ #include "xfs_trans.h"
+ #include "xfs_trace.h"
+ #include "xfs_sb.h"
++#include "xfs_alloc.h"
  #include "repair/common.h"
- #include "repair/btree.h"
-@@ -560,6 +562,7 @@ xfs_scrub_dummy(
- STATIC int
- xfs_scrub_teardown(
- 	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip_in,
- 	int				error)
+ 
+ /* Find the size of the AG, in blocks. */
+@@ -113,10 +114,13 @@ xfs_scrub_superblock(
  {
- 	xfs_scrub_ag_free(&sc->sa);
-@@ -568,6 +571,14 @@ xfs_scrub_teardown(
- 	sc->ag_lock.agmask = NULL;
- 	xfs_trans_cancel(sc->tp);
- 	sc->tp = NULL;
-+	if (sc->ip != NULL) {
-+		xfs_iunlock(sc->ip, XFS_ILOCK_EXCL);
-+		xfs_iunlock(sc->ip, XFS_IOLOCK_EXCL);
-+		xfs_iunlock(sc->ip, XFS_MMAPLOCK_EXCL);
-+		if (sc->ip != ip_in)
-+			IRELE(sc->ip);
-+		sc->ip = NULL;
-+	}
- 	return error;
- }
+ 	struct xfs_mount		*mp = sc->tp->t_mountp;
+ 	struct xfs_buf			*bp;
++	struct xfs_scrub_ag		*psa;
+ 	struct xfs_sb			sb;
+ 	xfs_agnumber_t			agno;
+ 	uint32_t			v2_ok;
++	bool				is_freesp;
+ 	int				error;
++	int				err2;
  
-@@ -685,6 +696,111 @@ xfs_scrub_setup_ag_header(
- 	return error;
- }
+ 	agno = sc->sm->sm_agno;
  
-+/*
-+ * Given an inode and the scrub control structure, return either the
-+ * inode referenced in the control structure or the inode passed in.
-+ * The inode is not locked.
-+ */
-+STATIC struct xfs_inode *
-+xfs_scrub_get_inode(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip)
-+{
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_inode		*ips = NULL;
-+	int				error;
-+
-+	if (sc->sm->sm_gen && !sc->sm->sm_ino)
-+		return ERR_PTR(-EINVAL);
-+
-+	if (sc->sm->sm_ino && sc->sm->sm_ino != ip->i_ino) {
-+		if (xfs_internal_inum(mp, sc->sm->sm_ino))
-+			return ERR_PTR(-ENOENT);
-+		error = xfs_iget(mp, NULL, sc->sm->sm_ino,
-+				XFS_IGET_UNTRUSTED | XFS_IGET_DONTCACHE,
-+				0, &ips);
-+		if (error) {
-+			trace_xfs_scrub_op_error(mp,
-+					XFS_INO_TO_AGNO(mp, sc->sm->sm_ino),
-+					XFS_INO_TO_AGBNO(mp, sc->sm->sm_ino),
-+					"inode", error, __func__, __LINE__);
-+			goto out_err;
-+		}
-+		if (VFS_I(ips)->i_generation != sc->sm->sm_gen) {
-+			IRELE(ips);
-+			return ERR_PTR(-ENOENT);
-+		}
-+
-+		return ips;
-+	}
-+
-+	return ip;
-+out_err:
-+	return ERR_PTR(error);
-+}
-+
-+/* Set us up with an inode. */
-+STATIC int
-+xfs_scrub_setup_inode(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip,
-+	struct xfs_scrub_metadata	*sm,
-+	bool				retry_deadlocked)
-+{
-+	struct xfs_mount		*mp = ip->i_mount;
-+	int				error;
-+
-+	memset(sc, 0, sizeof(*sc));
-+	sc->sm = sm;
-+	sc->ip = xfs_scrub_get_inode(sc, ip);
-+	if (IS_ERR(sc->ip))
-+		return PTR_ERR(sc->ip);
-+	else if (sc->ip == NULL)
-+		return -ENOENT;
-+
-+	xfs_ilock(sc->ip, XFS_IOLOCK_EXCL);
-+	xfs_ilock(sc->ip, XFS_MMAPLOCK_EXCL);
-+	error = xfs_scrub_trans_alloc(sm, mp, &M_RES(mp)->tr_itruncate,
-+			0, 0, 0, &sc->tp);
+@@ -136,7 +140,7 @@ xfs_scrub_superblock(
+ 	 * so there's no point in comparing the two.
+ 	 */
+ 	if (agno == 0)
+-		goto out;
++		goto btree_xref;
+ 
+ 	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
+ 
+@@ -233,6 +237,24 @@ xfs_scrub_superblock(
+ 	XFS_SCRUB_SB_FEAT(realtime);
+ #undef XFS_SCRUB_SB_FEAT
+ 
 +	if (error)
-+		goto out_unlock;
-+	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
++		goto out;
 +
-+	xfs_scrub_ag_lock_init(mp, &sc->ag_lock);
-+	return error;
-+out_unlock:
-+	xfs_iunlock(sc->ip, XFS_IOLOCK_EXCL);
-+	xfs_iunlock(sc->ip, XFS_MMAPLOCK_EXCL);
-+	if (sc->ip != ip)
-+		IRELE(sc->ip);
-+	return error;
-+}
++btree_xref:
 +
-+/* Try to get the in-core inode.  If we can't, we'll just have to do it raw. */
-+STATIC int
-+xfs_scrub_setup_inode_raw(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip,
-+	struct xfs_scrub_metadata	*sm,
-+	bool				retry_deadlocked)
-+{
-+	struct xfs_mount		*mp = ip->i_mount;
-+	int				error;
++	err2 = xfs_scrub_ag_init(sc, agno, &sc->sa);
++	if (!xfs_scrub_should_xref(sc, err2, NULL))
++		goto out;
 +
-+	if (sm->sm_ino && xfs_internal_inum(mp, sm->sm_ino))
-+		return -ENOENT;
-+
-+	error = xfs_scrub_setup_inode(sc, ip, sm, retry_deadlocked);
-+	if (error) {
-+		memset(sc, 0, sizeof(*sc));
-+		sc->ip = NULL;
-+		sc->sm = sm;
-+		return xfs_scrub_trans_alloc(sm, mp,
-+				&M_RES(mp)->tr_itruncate, 0, 0, 0, &sc->tp);
++	psa = &sc->sa;
++	/* Cross-reference with bnobt. */
++	if (psa->bno_cur) {
++		err2 = xfs_alloc_has_record(psa->bno_cur, XFS_SB_BLOCK(mp),
++				1, &is_freesp);
++		if (xfs_scrub_should_xref(sc, err2, &psa->bno_cur))
++			XFS_SCRUB_SB_CHECK(!is_freesp);
 +	}
++
+ out:
+ 	return error;
+ }
+@@ -241,6 +263,19 @@ xfs_scrub_superblock(
+ 
+ /* AGF */
+ 
++/* Tally freespace record lengths. */
++STATIC int
++xfs_scrub_agf_record_bno_lengths(
++	struct xfs_btree_cur		*cur,
++	struct xfs_alloc_rec_incore	*rec,
++	void				*priv)
++{
++	xfs_extlen_t			*blocks = priv;
++
++	(*blocks) += rec->ar_blockcount;
 +	return 0;
 +}
 +
- /* Scrubbing dispatch. */
+ #define XFS_SCRUB_AGF_CHECK(fs_ok) \
+ 	XFS_SCRUB_CHECK(sc, sc->sa.agf_bp, "AGF", fs_ok)
+ #define XFS_SCRUB_AGF_OP_ERROR_GOTO(error, label) \
+@@ -253,6 +288,7 @@ xfs_scrub_agf(
+ {
+ 	struct xfs_mount		*mp = sc->tp->t_mountp;
+ 	struct xfs_agf			*agf;
++	struct xfs_scrub_ag		*psa;
+ 	xfs_daddr_t			daddr;
+ 	xfs_daddr_t			eofs;
+ 	xfs_agnumber_t			agno;
+@@ -262,8 +298,11 @@ xfs_scrub_agf(
+ 	xfs_agblock_t			agfl_last;
+ 	xfs_agblock_t			agfl_count;
+ 	xfs_agblock_t			fl_count;
++	xfs_extlen_t			blocks;
++	bool				is_freesp;
+ 	int				level;
+ 	int				error = 0;
++	int				err2;
  
- struct xfs_scrub_meta_fns {
-@@ -707,6 +823,7 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 	{xfs_scrub_setup_ag_header, xfs_scrub_finobt, NULL, xfs_sb_version_hasfinobt},
- 	{xfs_scrub_setup_ag_header, xfs_scrub_rmapbt, NULL, xfs_sb_version_hasrmapbt},
- 	{xfs_scrub_setup_ag_header, xfs_scrub_refcountbt, NULL, xfs_sb_version_hasreflink},
-+	{xfs_scrub_setup_inode_raw, xfs_scrub_inode, NULL, NULL},
- };
+ 	agno = sc->sm->sm_agno;
+ 	error = xfs_scrub_load_ag_headers(sc, agno, XFS_SCRUB_TYPE_AGF);
+@@ -335,6 +374,31 @@ xfs_scrub_agf(
+ 		fl_count = XFS_AGFL_SIZE(mp) - agfl_first + agfl_last + 1;
+ 	XFS_SCRUB_AGF_CHECK(agfl_count == 0 || fl_count == agfl_count);
  
- /* Dispatch metadata scrubbing. */
-@@ -770,7 +887,7 @@ xfs_scrub_metadata(
- 	error = fns->scrub(&sc);
- 	if (!deadlocked && error == -EDEADLOCK) {
- 		deadlocked = true;
--		error = xfs_scrub_teardown(&sc, error);
-+		error = xfs_scrub_teardown(&sc, ip, error);
- 		if (error != -EDEADLOCK)
- 			goto out;
- 		goto retry_op;
-@@ -781,7 +898,7 @@ xfs_scrub_metadata(
- 		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
- 
- out_teardown:
--	error = xfs_scrub_teardown(&sc, error);
-+	error = xfs_scrub_teardown(&sc, ip, error);
- out:
- 	trace_xfs_scrub_done(ip, sm->sm_type, sm->sm_agno, sm->sm_ino,
- 			sm->sm_gen, sm->sm_flags, error);
-diff --git a/fs/xfs/repair/common.h b/fs/xfs/repair/common.h
-index 3c24b58..223d245 100644
---- a/fs/xfs/repair/common.h
-+++ b/fs/xfs/repair/common.h
-@@ -204,5 +204,6 @@ int xfs_scrub_inobt(struct xfs_scrub_context *sc);
- int xfs_scrub_finobt(struct xfs_scrub_context *sc);
- int xfs_scrub_rmapbt(struct xfs_scrub_context *sc);
- int xfs_scrub_refcountbt(struct xfs_scrub_context *sc);
-+int xfs_scrub_inode(struct xfs_scrub_context *sc);
- 
- #endif	/* __XFS_REPAIR_COMMON_H__ */
-diff --git a/fs/xfs/repair/inode.c b/fs/xfs/repair/inode.c
-new file mode 100644
-index 0000000..b0786a2
---- /dev/null
-+++ b/fs/xfs/repair/inode.c
-@@ -0,0 +1,266 @@
-+/*
-+ * Copyright (C) 2016-2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trace.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_icache.h"
-+#include "xfs_itable.h"
-+#include "xfs_inode_buf.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_ialloc.h"
-+#include "repair/common.h"
-+
-+/* Inode core */
-+
-+#define XFS_SCRUB_INODE_CHECK(fs_ok) \
-+	XFS_SCRUB_INO_CHECK(sc, ino, bp, "inode", fs_ok);
-+#define XFS_SCRUB_INODE_GOTO(fs_ok, label) \
-+	XFS_SCRUB_INO_GOTO(sc, ino, bp, "inode", fs_ok, label);
-+#define XFS_SCRUB_INODE_OP_ERROR_GOTO(label) \
-+	XFS_SCRUB_OP_ERROR_GOTO(sc, XFS_INO_TO_AGNO(mp, ino), \
-+			XFS_INO_TO_AGBNO(mp, ino), "inode", &error, label);
-+#define XFS_SCRUB_INODE_PREEN(fs_ok) \
-+	XFS_SCRUB_INO_PREEN(sc, bp, "inode", fs_ok);
-+/* Scrub an inode. */
-+int
-+xfs_scrub_inode(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_imap			imap;
-+	struct xfs_dinode		di;
-+	struct xfs_mount		*mp = sc->tp->t_mountp;
-+	struct xfs_ifork		*ifp;
-+	struct xfs_buf			*bp = NULL;
-+	struct xfs_dinode		*dip;
-+	xfs_ino_t			ino;
-+	unsigned long long		isize;
-+	uint64_t			flags2;
-+	uint32_t			nextents;
-+	uint32_t			extsize;
-+	uint32_t			cowextsize;
-+	uint16_t			flags;
-+	uint16_t			mode;
-+	int				error = 0;
-+
-+	/* Did we get the in-core inode, or are we doing this manually? */
-+	if (sc->ip) {
-+		ino = sc->ip->i_ino;
-+		xfs_inode_to_disk(sc->ip, &di, 0);
-+		dip = &di;
-+	} else {
-+		/* Map & read inode. */
-+		ino = sc->sm->sm_ino;
-+		error = xfs_imap(mp, sc->tp, ino, &imap, XFS_IGET_UNTRUSTED);
-+		XFS_SCRUB_INODE_OP_ERROR_GOTO(out);
-+
-+		error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-+				imap.im_blkno, imap.im_len, XBF_UNMAPPED, &bp,
-+				NULL);
-+		XFS_SCRUB_INODE_OP_ERROR_GOTO(out);
-+
-+		/* Is this really the inode we want? */
-+		bp->b_ops = &xfs_inode_buf_ops;
-+		dip = xfs_buf_offset(bp, imap.im_boffset);
-+		error = xfs_dinode_verify(mp, ino, dip) ? 0 : -EFSCORRUPTED;
-+		XFS_SCRUB_INODE_OP_ERROR_GOTO(out);
-+		XFS_SCRUB_INODE_GOTO(
-+				xfs_dinode_good_version(mp, dip->di_version),
-+				out);
-+		if (be32_to_cpu(dip->di_gen) != sc->sm->sm_gen) {
-+			error = -EINVAL;
-+			goto out;
-+		}
-+	}
-+
-+	flags = be16_to_cpu(dip->di_flags);
-+	if (dip->di_version >= 3)
-+		flags2 = be64_to_cpu(dip->di_flags2);
-+	else
-+		flags2 = 0;
-+
-+	/* di_mode */
-+	mode = be16_to_cpu(dip->di_mode);
-+	XFS_SCRUB_INODE_CHECK(!(mode & ~(S_IALLUGO | S_IFMT)));
-+
-+	/* v1/v2 fields */
-+	switch (dip->di_version) {
-+	case 1:
-+		XFS_SCRUB_INODE_CHECK(dip->di_nlink == 0);
-+		XFS_SCRUB_INODE_CHECK(dip->di_onlink > 0 || !sc->ip);
-+		XFS_SCRUB_INODE_CHECK(dip->di_projid_lo == 0);
-+		XFS_SCRUB_INODE_CHECK(dip->di_projid_hi == 0);
-+		break;
-+	case 2:
-+	case 3:
-+		XFS_SCRUB_INODE_CHECK(dip->di_onlink == 0);
-+		XFS_SCRUB_INODE_CHECK(dip->di_nlink > 0 || !sc->ip);
-+		XFS_SCRUB_INODE_CHECK(dip->di_projid_hi == 0 ||
-+				xfs_sb_version_hasprojid32bit(&mp->m_sb));
-+		break;
-+	default:
-+		ASSERT(0);
-+		break;
-+	}
-+
-+	/* di_format */
-+	switch (dip->di_format) {
-+	case XFS_DINODE_FMT_DEV:
-+		XFS_SCRUB_INODE_CHECK(S_ISCHR(mode) || S_ISBLK(mode) ||
-+				      S_ISFIFO(mode) || S_ISSOCK(mode));
-+		break;
-+	case XFS_DINODE_FMT_LOCAL:
-+		XFS_SCRUB_INODE_CHECK(S_ISDIR(mode) || S_ISLNK(mode));
-+		break;
-+	case XFS_DINODE_FMT_EXTENTS:
-+		XFS_SCRUB_INODE_CHECK(S_ISREG(mode) || S_ISDIR(mode) ||
-+				      S_ISLNK(mode));
-+		break;
-+	case XFS_DINODE_FMT_BTREE:
-+		XFS_SCRUB_INODE_CHECK(S_ISREG(mode) || S_ISDIR(mode));
-+		break;
-+	case XFS_DINODE_FMT_UUID:
-+	default:
-+		XFS_SCRUB_INODE_CHECK(false);
-+		break;
-+	}
-+
-+	/* di_size */
-+	isize = be64_to_cpu(dip->di_size);
-+	XFS_SCRUB_INODE_CHECK(!(isize & (1ULL << 63)));
-+	if (!S_ISDIR(mode) && !S_ISREG(mode) && !S_ISLNK(mode))
-+		XFS_SCRUB_INODE_CHECK(isize == 0);
-+
-+	/* di_nblocks */
-+	if (flags2 & XFS_DIFLAG2_REFLINK) {
-+		; /* nblocks can exceed dblocks */
-+	} else if (flags & XFS_DIFLAG_REALTIME) {
-+		XFS_SCRUB_INODE_CHECK(be64_to_cpu(dip->di_nblocks) <
-+				mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks);
-+	} else {
-+		XFS_SCRUB_INODE_CHECK(be64_to_cpu(dip->di_nblocks) <
-+				mp->m_sb.sb_dblocks);
-+	}
-+
-+	/* di_extsize */
-+	if (flags & XFS_DIFLAG_EXTSIZE) {
-+		extsize = be32_to_cpu(dip->di_extsize);
-+		XFS_SCRUB_INODE_CHECK(extsize > 0);
-+		XFS_SCRUB_INODE_CHECK(extsize <= MAXEXTLEN);
-+		XFS_SCRUB_INODE_CHECK(extsize <= mp->m_sb.sb_agblocks / 2 ||
-+				(flags & XFS_DIFLAG_REALTIME));
-+	}
-+
-+	/* di_flags */
-+	XFS_SCRUB_INODE_CHECK(!(flags & XFS_DIFLAG_IMMUTABLE) ||
-+			      !(flags & XFS_DIFLAG_APPEND));
-+
-+	XFS_SCRUB_INODE_CHECK(!(flags & XFS_DIFLAG_FILESTREAM) ||
-+			      !(flags & XFS_DIFLAG_REALTIME));
-+
-+	/* di_nextents */
-+	nextents = be32_to_cpu(dip->di_nextents);
-+	switch (dip->di_format) {
-+	case XFS_DINODE_FMT_EXTENTS:
-+		XFS_SCRUB_INODE_CHECK(nextents <=
-+			XFS_DFORK_DSIZE(dip, mp) / sizeof(struct xfs_bmbt_rec));
-+		break;
-+	case XFS_DINODE_FMT_BTREE:
-+		XFS_SCRUB_INODE_CHECK(nextents >
-+			XFS_DFORK_DSIZE(dip, mp) / sizeof(struct xfs_bmbt_rec));
-+		break;
-+	case XFS_DINODE_FMT_LOCAL:
-+	case XFS_DINODE_FMT_DEV:
-+	case XFS_DINODE_FMT_UUID:
-+	default:
-+		XFS_SCRUB_INODE_CHECK(nextents == 0);
-+		break;
-+	}
-+
-+	/* di_anextents */
-+	nextents = be16_to_cpu(dip->di_anextents);
-+	switch (dip->di_aformat) {
-+	case XFS_DINODE_FMT_EXTENTS:
-+		XFS_SCRUB_INODE_CHECK(nextents <=
-+			XFS_DFORK_ASIZE(dip, mp) / sizeof(struct xfs_bmbt_rec));
-+		break;
-+	case XFS_DINODE_FMT_BTREE:
-+		XFS_SCRUB_INODE_CHECK(nextents >
-+			XFS_DFORK_ASIZE(dip, mp) / sizeof(struct xfs_bmbt_rec));
-+		break;
-+	case XFS_DINODE_FMT_LOCAL:
-+	case XFS_DINODE_FMT_DEV:
-+	case XFS_DINODE_FMT_UUID:
-+	default:
-+		XFS_SCRUB_INODE_CHECK(nextents == 0);
-+		break;
-+	}
-+
-+	/* di_forkoff */
-+	XFS_SCRUB_INODE_CHECK(XFS_DFORK_APTR(dip) <
-+			(char *)dip + mp->m_sb.sb_inodesize);
-+	XFS_SCRUB_INODE_CHECK(dip->di_anextents == 0 || dip->di_forkoff);
-+
-+	/* di_aformat */
-+	XFS_SCRUB_INODE_CHECK(dip->di_aformat == XFS_DINODE_FMT_LOCAL ||
-+			      dip->di_aformat == XFS_DINODE_FMT_EXTENTS ||
-+			      dip->di_aformat == XFS_DINODE_FMT_BTREE);
-+
-+	/* di_cowextsize */
-+	if (flags2 & XFS_DIFLAG2_COWEXTSIZE) {
-+		cowextsize = be32_to_cpu(dip->di_cowextsize);
-+		XFS_SCRUB_INODE_CHECK(xfs_sb_version_hasreflink(&mp->m_sb));
-+		XFS_SCRUB_INODE_CHECK(cowextsize > 0);
-+		XFS_SCRUB_INODE_CHECK(cowextsize <= MAXEXTLEN);
-+		XFS_SCRUB_INODE_CHECK(cowextsize <= mp->m_sb.sb_agblocks / 2);
-+	}
-+
-+	/* Now let's do the things that require a live inode. */
-+	if (!sc->ip)
++	/* Load btrees for xref if the AGF is ok. */
++	psa = &sc->sa;
++	if (error || (sc->sm->sm_flags & XFS_SCRUB_FLAG_CORRUPT))
++		goto out;
++	error = xfs_scrub_ag_btcur_init(sc, psa);
++	if (error)
 +		goto out;
 +
++	/* Cross-reference with the bnobt. */
++	if (psa->bno_cur) {
++		err2 = xfs_alloc_has_record(psa->bno_cur, XFS_AGF_BLOCK(mp),
++				1, &is_freesp);
++		if (!xfs_scrub_should_xref(sc, err2, &psa->bno_cur))
++			goto skip_bnobt;
++		XFS_SCRUB_AGF_CHECK(!is_freesp);
++
++		blocks = 0;
++		err2 = xfs_alloc_query_all(psa->bno_cur,
++				xfs_scrub_agf_record_bno_lengths, &blocks);
++		if (!xfs_scrub_should_xref(sc, err2, &psa->bno_cur))
++			goto skip_bnobt;
++		XFS_SCRUB_AGF_CHECK(blocks == be32_to_cpu(agf->agf_freeblks));
++	}
++skip_bnobt:
++
+ out:
+ 	return error;
+ }
+@@ -360,12 +424,22 @@ xfs_scrub_agfl_block(
+ 	struct xfs_mount		*mp = sc->tp->t_mountp;
+ 	xfs_agnumber_t			agno = sc->sa.agno;
+ 	struct xfs_scrub_agfl		*sagfl = priv;
++	bool				is_freesp;
++	int				err2;
+ 
+ 	XFS_SCRUB_AGFL_CHECK(agbno > XFS_AGI_BLOCK(mp));
+ 	XFS_SCRUB_AGFL_CHECK(XFS_AGB_TO_DADDR(mp, agno, agbno) < sagfl->eofs);
+ 	XFS_SCRUB_AGFL_CHECK(agbno < mp->m_sb.sb_agblocks);
+ 	XFS_SCRUB_AGFL_CHECK(agbno < sagfl->eoag);
+ 
++	/* Cross-reference with the bnobt. */
++	if (sc->sa.bno_cur) {
++		err2 = xfs_alloc_has_record(sc->sa.bno_cur, agbno,
++				1, &is_freesp);
++		if (xfs_scrub_should_xref(sc, err2, &sc->sa.bno_cur))
++			XFS_SCRUB_AGFL_CHECK(!is_freesp);
++	}
++
+ 	return 0;
+ }
+ 
+@@ -380,7 +454,9 @@ xfs_scrub_agfl(
+ 	struct xfs_scrub_agfl		sagfl;
+ 	struct xfs_mount		*mp = sc->tp->t_mountp;
+ 	struct xfs_agf			*agf;
++	bool				is_freesp;
+ 	int				error;
++	int				err2;
+ 
+ 	error = xfs_scrub_load_ag_headers(sc, sc->sm->sm_agno,
+ 			XFS_SCRUB_TYPE_AGFL);
+@@ -392,6 +468,14 @@ xfs_scrub_agfl(
+ 	sagfl.eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+ 	sagfl.eoag = be32_to_cpu(agf->agf_length);
+ 
++	/* Cross-reference with the bnobt. */
++	if (sc->sa.bno_cur) {
++		err2 = xfs_alloc_has_record(sc->sa.bno_cur, XFS_AGFL_BLOCK(mp),
++				1, &is_freesp);
++		if (xfs_scrub_should_xref(sc, err2, &sc->sa.bno_cur))
++			XFS_SCRUB_AGFL_CHECK(!is_freesp);
++	}
++
+ 	/* Check the blocks in the AGFL. */
+ 	return xfs_scrub_walk_agfl(sc, xfs_scrub_agfl_block, &sagfl);
+ out:
+@@ -414,6 +498,7 @@ xfs_scrub_agi(
+ {
+ 	struct xfs_mount		*mp = sc->tp->t_mountp;
+ 	struct xfs_agi			*agi;
++	struct xfs_scrub_ag		*psa;
+ 	xfs_daddr_t			daddr;
+ 	xfs_daddr_t			eofs;
+ 	xfs_agnumber_t			agno;
+@@ -422,9 +507,11 @@ xfs_scrub_agi(
+ 	xfs_agino_t			agino;
+ 	xfs_agino_t			first_agino;
+ 	xfs_agino_t			last_agino;
++	bool				is_freesp;
+ 	int				i;
+ 	int				level;
+ 	int				error = 0;
++	int				err2;
+ 
+ 	agno = sc->sm->sm_agno;
+ 	error = xfs_scrub_load_ag_headers(sc, agno, XFS_SCRUB_TYPE_AGI);
+@@ -490,8 +577,23 @@ xfs_scrub_agi(
+ 		XFS_SCRUB_AGI_CHECK(agino <= last_agino);
+ 	}
+ 
++	/* Load btrees for xref if the AGI is ok. */
++	psa = &sc->sa;
++	if (error || (sc->sm->sm_flags & XFS_SCRUB_FLAG_CORRUPT))
++		goto out;
++	error = xfs_scrub_ag_btcur_init(sc, &sc->sa);
++	if (error)
++		goto out;
++
++	/* Cross-reference with bnobt. */
++	if (psa->bno_cur) {
++		err2 = xfs_alloc_has_record(psa->bno_cur, XFS_AGI_BLOCK(mp),
++				1, &is_freesp);
++		if (xfs_scrub_should_xref(sc, err2, &psa->bno_cur))
++			XFS_SCRUB_AGI_CHECK(!is_freesp);
++	}
++
+ out:
+ 	return error;
+ }
+ #undef XFS_SCRUB_AGI_CHECK
+-#undef XFS_SCRUB_AGI_OP_ERROR_GOTO
+diff --git a/fs/xfs/repair/bmap.c b/fs/xfs/repair/bmap.c
+index 2550228..d81214a 100644
+--- a/fs/xfs/repair/bmap.c
++++ b/fs/xfs/repair/bmap.c
+@@ -36,6 +36,7 @@
+ #include "xfs_bmap_util.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_rmap.h"
++#include "xfs_alloc.h"
+ #include "repair/common.h"
+ #include "repair/btree.h"
+ 
+@@ -77,7 +78,10 @@ xfs_scrub_bmap_extent(
+ 	xfs_daddr_t			daddr;
+ 	xfs_daddr_t			dlen;
+ 	xfs_agnumber_t			agno;
++	xfs_fsblock_t			bno;
++	bool				is_freesp;
+ 	int				error = 0;
++	int				err2 = 0;
+ 
+ 	if (cur)
+ 		xfs_btree_get_block(cur, 0, &bp);
+@@ -94,10 +98,12 @@ xfs_scrub_bmap_extent(
+ 	if (info->is_rt) {
+ 		daddr = XFS_FSB_TO_BB(mp, irec->br_startblock);
+ 		agno = NULLAGNUMBER;
++		bno = irec->br_startblock;
+ 	} else {
+ 		daddr = XFS_FSB_TO_DADDR(mp, irec->br_startblock);
+ 		agno = XFS_FSB_TO_AGNO(mp, irec->br_startblock);
+ 		XFS_SCRUB_BMAP_GOTO(agno < mp->m_sb.sb_agcount, out);
++		bno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
+ 	}
+ 	dlen = XFS_FSB_TO_BB(mp, irec->br_blockcount);
+ 	XFS_SCRUB_BMAP_CHECK(daddr < info->eofs);
+@@ -115,6 +121,14 @@ xfs_scrub_bmap_extent(
+ 		XFS_SCRUB_BMAP_OP_ERROR_GOTO(out);
+ 	}
+ 
++	/* Cross-reference with the bnobt. */
++	if (sa.bno_cur) {
++		err2 = xfs_alloc_has_record(sa.bno_cur, bno,
++				irec->br_blockcount, &is_freesp);
++		if (xfs_scrub_should_xref(info->sc, err2, &sa.bno_cur))
++			XFS_SCRUB_BMAP_CHECK(!is_freesp);
++	}
++
+ 	xfs_scrub_ag_free(&sa);
+ out:
+ 	info->lastoff = irec->br_startoff + irec->br_blockcount;
+diff --git a/fs/xfs/repair/btree.c b/fs/xfs/repair/btree.c
+index 9502844..ed6628f 100644
+--- a/fs/xfs/repair/btree.c
++++ b/fs/xfs/repair/btree.c
+@@ -494,6 +494,93 @@ xfs_scrub_btree_sblock_check_siblings(
+ 	return error;
+ }
+ 
++struct check_owner {
++	struct list_head	list;
++	xfs_fsblock_t		fsb;
++};
++
++/*
++ * Make sure this btree block isn't in the free list and that there's
++ * an rmap record for it.
++ */
++STATIC int
++xfs_scrub_btree_check_block_owner(
++	struct xfs_scrub_btree		*bs,
++	xfs_fsblock_t			fsb)
++{
++	struct xfs_scrub_ag		sa;
++	struct xfs_scrub_ag		*psa;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			bno;
++	bool				is_freesp;
++	int				error = 0;
++	int				err2;
++
++	agno = XFS_FSB_TO_AGNO(bs->cur->bc_mp, fsb);
++	bno = XFS_FSB_TO_AGBNO(bs->cur->bc_mp, fsb);
++
++	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
++		if (!xfs_scrub_ag_can_lock(bs->sc, agno))
++			return -EDEADLOCK;
++		error = xfs_scrub_ag_init(bs->sc, agno, &sa);
++		if (error)
++			return error;
++		psa = &sa;
++	} else
++		psa = &bs->sc->sa;
++
++	/* Check that this block isn't free. */
++	if (psa->bno_cur) {
++		err2 = xfs_alloc_has_record(psa->bno_cur, bno, 1, &is_freesp);
++		if (xfs_scrub_btree_should_xref(bs, err2, NULL))
++			XFS_SCRUB_BTREC_CHECK(bs, !is_freesp);
++	}
++
++	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS)
++		xfs_scrub_ag_free(&sa);
++
++	return error;
++}
++
++/* Check the owner of a btree block. */
++STATIC int
++xfs_scrub_btree_check_owner(
++	struct xfs_scrub_btree		*bs,
++	struct xfs_buf			*bp)
++{
++	struct xfs_btree_cur		*cur = bs->cur;
++	struct check_owner		*co;
++	xfs_fsblock_t			fsbno;
++	xfs_agnumber_t			agno;
++
++	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) && bp == NULL)
++		return 0;
++
++	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
++	agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
++
++	/* Turn back if we could deadlock. */
++	if ((bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) &&
++	    !xfs_scrub_ag_can_lock(bs->sc, agno))
++		return -EDEADLOCK;
++
 +	/*
-+	 * If this is a reflink inode with no CoW in progress, maybe we
-+	 * can turn off the reflink flag?
++	 * We want to cross-reference each btree block with the bnobt
++	 * and the rmapbt.  We cannot cross-reference the bnobt or
++	 * rmapbt while scanning the bnobt or rmapbt, respectively,
++	 * because that would trash the cursor state.  Therefore, save
++	 * the block numbers for later scanning.
 +	 */
-+	if (xfs_is_reflink_inode(sc->ip)) {
-+		ifp = XFS_IFORK_PTR(sc->ip, XFS_COW_FORK);
-+		XFS_SCRUB_INODE_PREEN(ifp->if_bytes > 0);
++	if (cur->bc_btnum == XFS_BTNUM_BNO || cur->bc_btnum == XFS_BTNUM_RMAP) {
++		co = kmem_alloc(sizeof(struct check_owner), KM_SLEEP | KM_NOFS);
++		co->fsb = fsbno;
++		list_add_tail(&co->list, &bs->to_check);
++		return 0;
++	}
++
++	return xfs_scrub_btree_check_block_owner(bs, fsbno);
++}
++
+ /* Grab and scrub a btree block. */
+ STATIC int
+ xfs_scrub_btree_block(
+@@ -514,6 +601,10 @@ xfs_scrub_btree_block(
+ 	if (error)
+ 		return error;
+ 
++	error = xfs_scrub_btree_check_owner(bs, *pbp);
++	if (error)
++		return error;
++
+ 	return bs->check_siblings_fn(bs, *pblock);
+ }
+ 
+@@ -539,6 +630,8 @@ xfs_scrub_btree(
+ 	struct xfs_btree_block		*block;
+ 	int				level;
+ 	struct xfs_buf			*bp;
++	struct check_owner		*co;
++	struct check_owner		*n;
+ 	int				i;
+ 	int				error = 0;
+ 
+@@ -653,6 +746,14 @@ xfs_scrub_btree(
+ 		}
+ 	}
+ 
++	/* Process deferred owner checks on btree blocks. */
++	list_for_each_entry_safe(co, n, &bs.to_check, list) {
++		if (!error)
++			error = xfs_scrub_btree_check_block_owner(&bs, co->fsb);
++		list_del(&co->list);
++		kmem_free(co);
++	}
++
+ out_badcursor:
+ 	return error;
+ }
+diff --git a/fs/xfs/repair/common.c b/fs/xfs/repair/common.c
+index a35a962..8c69ac4 100644
+--- a/fs/xfs/repair/common.c
++++ b/fs/xfs/repair/common.c
+@@ -538,6 +538,48 @@ xfs_scrub_ag_lock_all(
+ 	return error;
+ }
+ 
++/*
++ * Predicate that decides if we need to evaluate the cross-reference check.
++ * If there was an error accessing the cross-reference btree, just delete
++ * the cursor and skip the check.
++ */
++bool
++__xfs_scrub_should_xref(
++	struct xfs_scrub_context	*sc,
++	int				error,
++	struct xfs_btree_cur		**curpp,
++	const char			*func,
++	int				line)
++{
++	struct xfs_mount		*mp = sc->tp->t_mountp;
++
++	/* If not a btree cross-reference, just check the error code. */
++	if (curpp == NULL) {
++		if (error == 0)
++			return true;
++		trace_xfs_scrub_xref_error(mp, "unknown", error, func, line);
++		return false;
++	}
++
++	ASSERT(*curpp != NULL);
++	/* If no error or we've already given up on xref, just bail out. */
++	if (error == 0 || *curpp == NULL)
++		return true;
++
++	/* xref error, delete cursor and bail out. */
++	sc->sm->sm_flags |= XFS_SCRUB_FLAG_XREF_FAIL;
++	trace_xfs_scrub_xref_error(mp, btree_types[(*curpp)->bc_btnum],
++			error, func, line);
++	xfs_btree_del_cursor(*curpp, XFS_BTREE_ERROR);
++	*curpp = NULL;
++
++	return false;
++}
++#define xfs_scrub_should_xref(sc, error, curpp) \
++	__xfs_scrub_should_xref((sc), (error), (curpp), __func__, __LINE__)
++#define xfs_scrub_btree_should_xref(bs, error, curpp) \
++	__xfs_scrub_should_xref((bs)->sc, (error), (curpp), __func__, __LINE__)
++
+ /* Dummy scrubber */
+ 
+ STATIC int
+diff --git a/fs/xfs/repair/common.h b/fs/xfs/repair/common.h
+index 13986cd..fbde19c 100644
+--- a/fs/xfs/repair/common.h
++++ b/fs/xfs/repair/common.h
+@@ -179,6 +179,14 @@ bool xfs_scrub_data_ok(struct xfs_scrub_context *sc, int whichfork,
+ 			goto label; \
+ 	} while(0)
+ 
++bool __xfs_scrub_should_xref(struct xfs_scrub_context *sc, int error,
++			     struct xfs_btree_cur **curpp, const char *func,
++			     int line);
++#define xfs_scrub_should_xref(sc, error, curpp) \
++	__xfs_scrub_should_xref((sc), (error), (curpp), __func__, __LINE__)
++#define xfs_scrub_btree_should_xref(bs, error, curpp) \
++	__xfs_scrub_should_xref((bs)->sc, (error), (curpp), __func__, __LINE__)
++
+ bool xfs_scrub_ag_can_lock(struct xfs_scrub_context *sc, xfs_agnumber_t agno);
+ int xfs_scrub_ag_lock_all(struct xfs_scrub_context *sc);
+ void xfs_scrub_ag_free(struct xfs_scrub_ag *sa);
+@@ -188,6 +196,8 @@ int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
+ 			    struct xfs_scrub_ag *sa);
+ int xfs_scrub_load_ag_headers(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+ 			      unsigned int type);
++int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
++			    struct xfs_scrub_ag *sa);
+ 
+ int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
+ 			int (*fn)(struct xfs_scrub_context *, xfs_agblock_t bno,
+diff --git a/fs/xfs/repair/ialloc.c b/fs/xfs/repair/ialloc.c
+index 33d9458..70fc5fc 100644
+--- a/fs/xfs/repair/ialloc.c
++++ b/fs/xfs/repair/ialloc.c
+@@ -35,6 +35,7 @@
+ #include "xfs_ialloc_btree.h"
+ #include "xfs_icache.h"
+ #include "xfs_rmap.h"
++#include "xfs_alloc.h"
+ #include "repair/common.h"
+ #include "repair/btree.h"
+ 
+@@ -51,9 +52,12 @@ xfs_scrub_iallocbt_chunk(
+ {
+ 	struct xfs_mount		*mp = bs->cur->bc_mp;
+ 	struct xfs_agf			*agf;
++	struct xfs_scrub_ag		*psa;
+ 	xfs_agblock_t			eoag;
+ 	xfs_agblock_t			bno;
++	bool				is_freesp;
+ 	int				error = 0;
++	int				err2;
+ 
+ 	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
+ 	eoag = be32_to_cpu(agf->agf_length);
+@@ -72,6 +76,15 @@ xfs_scrub_iallocbt_chunk(
+ 		goto out;
+ 	}
+ 
++	psa = &bs->sc->sa;
++	/* Cross-reference with the bnobt. */
++	if (psa->bno_cur) {
++		err2 = xfs_alloc_has_record(psa->bno_cur, bno, len,
++				&is_freesp);
++		if (xfs_scrub_btree_should_xref(bs, err2, &psa->bno_cur))
++			XFS_SCRUB_BTREC_CHECK(bs, !is_freesp);
++	}
++
+ out:
+ 	return error;
+ }
+diff --git a/fs/xfs/repair/refcount.c b/fs/xfs/repair/refcount.c
+index 740888b..f5c0aef 100644
+--- a/fs/xfs/repair/refcount.c
++++ b/fs/xfs/repair/refcount.c
+@@ -31,6 +31,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_sb.h"
+ #include "xfs_rmap.h"
++#include "xfs_alloc.h"
+ #include "repair/common.h"
+ #include "repair/btree.h"
+ 
+@@ -44,10 +45,13 @@ xfs_scrub_refcountbt_helper(
+ {
+ 	struct xfs_mount		*mp = bs->cur->bc_mp;
+ 	struct xfs_agf			*agf;
++	struct xfs_scrub_ag		*psa;
+ 	struct xfs_refcount_irec	irec;
+ 	xfs_agblock_t			eoag;
+ 	bool				has_cowflag;
++	bool				is_freesp;
+ 	int				error = 0;
++	int				err2;
+ 
+ 	irec.rc_startblock = be32_to_cpu(rec->refc.rc_startblock);
+ 	irec.rc_blockcount = be32_to_cpu(rec->refc.rc_blockcount);
+@@ -69,6 +73,19 @@ xfs_scrub_refcountbt_helper(
+ 			irec.rc_blockcount <= eoag);
+ 	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_refcount >= 1);
+ 
++	if (error)
++		goto out;
++
++	psa = &bs->sc->sa;
++	/* Cross-reference with the bnobt. */
++	if (psa->bno_cur) {
++		err2 = xfs_alloc_has_record(psa->bno_cur, irec.rc_startblock,
++				irec.rc_blockcount, &is_freesp);
++		if (xfs_scrub_btree_should_xref(bs, err2, &psa->bno_cur))
++			XFS_SCRUB_BTREC_CHECK(bs, !is_freesp);
 +	}
 +
 +out:
-+	if (bp)
-+		xfs_trans_brelse(sc->tp, bp);
-+	return error;
-+}
-+#undef XFS_SCRUB_INODE_PREEN
-+#undef XFS_SCRUB_INODE_OP_ERROR_GOTO
-+#undef XFS_SCRUB_INODE_GOTO
-+#undef XFS_SCRUB_INODE_CHECK
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 66e8817..4fd5fe1 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -31,7 +31,7 @@
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/repair/rmap.c b/fs/xfs/repair/rmap.c
+index d84bef1..ef2aea5 100644
+--- a/fs/xfs/repair/rmap.c
++++ b/fs/xfs/repair/rmap.c
+@@ -31,6 +31,7 @@
  #include "xfs_trace.h"
- #include "xfs_icache.h"
+ #include "xfs_sb.h"
+ #include "xfs_rmap.h"
++#include "xfs_alloc.h"
+ #include "repair/common.h"
+ #include "repair/btree.h"
  
--STATIC int
-+int
- xfs_internal_inum(
- 	xfs_mount_t	*mp,
- 	xfs_ino_t	ino)
-diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-index 6ea8b39..dd2427b 100644
---- a/fs/xfs/xfs_itable.h
-+++ b/fs/xfs/xfs_itable.h
-@@ -96,4 +96,9 @@ xfs_inumbers(
- 	void			__user *buffer, /* buffer with inode info */
- 	inumbers_fmt_pf		formatter);
+@@ -44,13 +45,16 @@ xfs_scrub_rmapbt_helper(
+ {
+ 	struct xfs_mount		*mp = bs->cur->bc_mp;
+ 	struct xfs_agf			*agf;
++	struct xfs_scrub_ag		*psa;
+ 	struct xfs_rmap_irec		irec;
+ 	xfs_agblock_t			eoag;
++	bool				is_freesp;
+ 	bool				non_inode;
+ 	bool				is_unwritten;
+ 	bool				is_bmbt;
+ 	bool				is_attr;
+-	int				error;
++	int				error = 0;
++	int				err2;
  
-+int
-+xfs_internal_inum(
-+	xfs_mount_t	*mp,
-+	xfs_ino_t	ino);
+ 	error = xfs_rmap_btrec_to_irec(rec, &irec);
+ 	XFS_SCRUB_BTREC_OP_ERROR_GOTO(bs, &error, out);
+@@ -99,6 +103,18 @@ xfs_scrub_rmapbt_helper(
+ 	XFS_SCRUB_BTREC_CHECK(bs, !non_inode ||
+ 			(irec.rm_owner > XFS_RMAP_OWN_MIN &&
+ 			 irec.rm_owner <= XFS_RMAP_OWN_FS));
++	if (error)
++		goto out;
 +
- #endif	/* __XFS_ITABLE_H__ */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 4e27db0..5314fca 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3472,7 +3472,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_INOBT,		"inobt" }, \
- 	{ XFS_SCRUB_TYPE_FINOBT,	"finobt" }, \
- 	{ XFS_SCRUB_TYPE_RMAPBT,	"rmapbt" }, \
--	{ XFS_SCRUB_TYPE_REFCNTBT,	"refcountbt" }
-+	{ XFS_SCRUB_TYPE_REFCNTBT,	"refcountbt" }, \
-+	{ XFS_SCRUB_TYPE_INODE,		"inode" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, int type, xfs_agnumber_t agno,
- 		 xfs_ino_t inum, unsigned int gen, unsigned int flags,
++	psa = &bs->sc->sa;
++	/* check there's no record in freesp btrees */
++	if (psa->bno_cur) {
++		err2 = xfs_alloc_has_record(psa->bno_cur, irec.rm_startblock,
++				irec.rm_blockcount, &is_freesp);
++		if (xfs_scrub_btree_should_xref(bs, err2, &psa->bno_cur))
++			XFS_SCRUB_BTREC_CHECK(bs, !is_freesp);
++	}
++
+ out:
+ 	return error;
+ }
 
