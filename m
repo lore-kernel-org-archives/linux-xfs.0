@@ -1,358 +1,258 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49164 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751563AbcLEVFi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2016 16:05:38 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/3] xfs: allocate direct I/O COW blocks in iomap_begin
-Date: Mon,  5 Dec 2016 22:05:24 +0100
-Message-Id: <1480971924-4864-4-git-send-email-hch@lst.de>
-In-Reply-To: <1480971924-4864-1-git-send-email-hch@lst.de>
-References: <1480971924-4864-1-git-send-email-hch@lst.de>
+Received: from mail-yb0-f178.google.com ([209.85.213.178]:34629 "EHLO
+        mail-yb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751070AbcLDWHV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Dec 2016 17:07:21 -0500
+Received: by mail-yb0-f178.google.com with SMTP id d59so53108163ybi.1
+        for <linux-xfs@vger.kernel.org>; Sun, 04 Dec 2016 14:07:21 -0800 (PST)
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 10.1 \(3251\))
+Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc on
+ glusterfs setup
+From: Cyril Peponnet <cyril.peponnet@nuagenetworks.net>
+In-Reply-To: <20161204214950.GL31101@dastard>
+Date: Sun, 4 Dec 2016 14:07:18 -0800
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <9B23CFED-4AFC-46FC-8E35-AD85B11FEA02@nuagenetworks.net>
+References: <E861E5C1-D1C2-4368-8BFC-505533C9A3A3@nuagenetworks.net>
+ <20161204214950.GL31101@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Instead of preallocating all the required COW blocks in the high-level
-write code do it inside the iomap code, like we do for all other I/O.
+Hi here is the details. The issue is on the scratch RAID array (used to =
+store kvm snapshots). The other raid array is fine (no snapshot =
+storage).
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+	=E2=80=A2 kernel version (uname -a) : Linux gluster05 =
+3.10.0-123.el7.x86_64 #1 SMP Mon Jun 30 12:09:22 UTC 2014 x86_64 x86_64 =
+x86_64 GNU/Linux
+
+	=E2=80=A2 xfsprogs version (xfs_repair -V) : xfs_repair version =
+3.2.0-alpha2
+
+	=E2=80=A2 number of CPUs Bi Intel=C2=AE Xeon=C2=AE CPU E5-2630 =
+v3 @ 2.40GHz (8 cores)
+
+	=E2=80=A2 contents of /proc/meminfo
+MemTotal:       65699268 kB
+MemFree:         2058304 kB
+MemAvailable:   62753028 kB
+Buffers:              12 kB
+Cached:         57664044 kB
+SwapCached:        14840 kB
+Active:         26757700 kB
+Inactive:       31967204 kB
+Active(anon):     502064 kB
+Inactive(anon):   719452 kB
+Active(file):   26255636 kB
+Inactive(file): 31247752 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       4194300 kB
+SwapFree:        3679388 kB
+Dirty:              6804 kB
+Writeback:           120 kB
+AnonPages:       1048576 kB
+Mapped:            55104 kB
+Shmem:            160888 kB
+Slab:            3999548 kB
+SReclaimable:    3529220 kB
+SUnreclaim:       470328 kB
+KernelStack:        4240 kB
+PageTables:         9464 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    37043932 kB
+Committed_AS:    2200816 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:      422024 kB
+VmallocChunk:   34324311040 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:    899072 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      111936 kB
+DirectMap2M:     7118848 kB
+DirectMap1G:    61865984 kB
+
+	=E2=80=A2 contents of /proc/mounts
+rootfs / rootfs rw 0 0
+proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
+sysfs /sys sysfs rw,nosuid,nodev,noexec,relatime 0 0
+devtmpfs /dev devtmpfs =
+rw,nosuid,size=3D32842984k,nr_inodes=3D8210746,mode=3D755 0 0
+securityfs /sys/kernel/security securityfs =
+rw,nosuid,nodev,noexec,relatime 0 0
+tmpfs /dev/shm tmpfs rw,nosuid,nodev 0 0
+devpts /dev/pts devpts =
+rw,nosuid,noexec,relatime,gid=3D5,mode=3D620,ptmxmode=3D000 0 0
+tmpfs /run tmpfs rw,nosuid,nodev,mode=3D755 0 0
+tmpfs /sys/fs/cgroup tmpfs rw,nosuid,nodev,noexec,mode=3D755 0 0
+cgroup /sys/fs/cgroup/systemd cgroup =
+rw,nosuid,nodev,noexec,relatime,xattr,release_agent=3D/usr/lib/systemd/sys=
+temd-cgroups-agent,name=3Dsystemd 0 0
+pstore /sys/fs/pstore pstore rw,nosuid,nodev,noexec,relatime 0 0
+cgroup /sys/fs/cgroup/cpuset cgroup =
+rw,nosuid,nodev,noexec,relatime,cpuset 0 0
+cgroup /sys/fs/cgroup/cpu,cpuacct cgroup =
+rw,nosuid,nodev,noexec,relatime,cpuacct,cpu 0 0
+cgroup /sys/fs/cgroup/memory cgroup =
+rw,nosuid,nodev,noexec,relatime,memory 0 0
+cgroup /sys/fs/cgroup/devices cgroup =
+rw,nosuid,nodev,noexec,relatime,devices 0 0
+cgroup /sys/fs/cgroup/freezer cgroup =
+rw,nosuid,nodev,noexec,relatime,freezer 0 0
+cgroup /sys/fs/cgroup/net_cls cgroup =
+rw,nosuid,nodev,noexec,relatime,net_cls 0 0
+cgroup /sys/fs/cgroup/blkio cgroup rw,nosuid,nodev,noexec,relatime,blkio =
+0 0
+cgroup /sys/fs/cgroup/perf_event cgroup =
+rw,nosuid,nodev,noexec,relatime,perf_event 0 0
+cgroup /sys/fs/cgroup/hugetlb cgroup =
+rw,nosuid,nodev,noexec,relatime,hugetlb 0 0
+configfs /sys/kernel/config configfs rw,relatime 0 0
+/dev/mapper/system-root_vol / xfs rw,relatime,attr2,inode64,noquota 0 0
+systemd-1 /proc/sys/fs/binfmt_misc autofs =
+rw,relatime,fd=3D36,pgrp=3D1,timeout=3D300,minproto=3D5,maxproto=3D5,direc=
+t 0 0
+hugetlbfs /dev/hugepages hugetlbfs rw,relatime 0 0
+mqueue /dev/mqueue mqueue rw,relatime 0 0
+debugfs /sys/kernel/debug debugfs rw,relatime 0 0
+sunrpc /var/lib/nfs/rpc_pipefs rpc_pipefs rw,relatime 0 0
+sunrpc /proc/fs/nfsd nfsd rw,relatime 0 0
+/dev/sdc1 /boot ext4 rw,relatime,data=3Dordered 0 0
+/dev/sda /export/raid/data xfs =
+rw,noatime,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,=
+swidth=3D1536,noquota 0 0
+/dev/sdb /export/raid/scratch xfs =
+rw,noatime,nodiratime,attr2,nobarrier,inode64,logbsize=3D128k,sunit=3D256,=
+swidth=3D1024,noquota 0 0
+binfmt_misc /proc/sys/fs/binfmt_misc binfmt_misc rw,relatime 0 0
+=09
+	=E2=80=A2 contents of /proc/partitions
+major minor  #blocks  name
+
+   8        0 11717836800 sda
+   8       16 7811891200 sdb
+   8       32  500107608 sdc
+   8       33     512000 sdc1
+   8       34    4194304 sdc2
+   8       35  495399936 sdc3
+ 253        0  495386624 dm-0
+	=E2=80=A2 RAID layout (hardware and/or software) - Hardware
+VD LIST :
+=3D=3D=3D=3D=3D=3D=3D
+
+----------------------------------------------------------------
+DG/VD TYPE  State Access Consist Cache Cac sCC     Size Name
+----------------------------------------------------------------
+0/0   RAID0 Optl  RW     Yes     RAWBC -   ON  7.275 TB scratch
+----------------------------------------------------------------
+
+Cac=3DCacheCade|Rec=3DRecovery|OfLn=3DOffLine|Pdgd=3DPartially =
+Degraded|dgrd=3DDegraded
+Optl=3DOptimal|RO=3DRead Only|RW=3DRead =
+Write|HD=3DHidden|B=3DBlocked|Consist=3DConsistent|
+R=3DRead Ahead Always|NR=3DNo Read Ahead|WB=3DWriteBack|
+AWB=3DAlways WriteBack|WT=3DWriteThrough|C=3DCached IO|D=3DDirect =
+IO|sCC=3DScheduled
+Check Consistency
+
+Physical Drives =3D 4
+
+PD LIST :
+=3D=3D=3D=3D=3D=3D=3D
+
+=
+--------------------------------------------------------------------------=
 ---
- fs/xfs/xfs_file.c    |   8 ---
- fs/xfs/xfs_iomap.c   |  31 ++++-------
- fs/xfs/xfs_reflink.c | 154 +++++++++++++++++++--------------------------------
- fs/xfs/xfs_reflink.h |   5 +-
- fs/xfs/xfs_trace.h   |   2 -
- 5 files changed, 73 insertions(+), 127 deletions(-)
+EID:Slt DID State DG     Size Intf Med SED PI SeSz Model                 =
+ Sp
+=
+--------------------------------------------------------------------------=
+---
+252:0     8 Onln   0 1.818 TB SATA HDD N   N  512B WDC =
+WD2000FYYZ-01UL1B2 U
+252:1    10 Onln   0 1.818 TB SATA HDD N   N  512B WDC =
+WD2000FYYZ-01UL1B2 U
+252:2    11 Onln   0 1.818 TB SATA HDD N   N  512B WDC =
+WD2000FYYZ-01UL1B2 U
+252:3     9 Onln   0 1.818 TB SATA HDD N   N  512B WDC =
+WD2000FYYZ-01UL1B2 U
+=
+--------------------------------------------------------------------------=
+---
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 873cd42..e6138f3 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -564,14 +564,6 @@ xfs_file_dio_aio_write(
- 	}
- 
- 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
--
--	/* If this is a block-aligned directio CoW, remap immediately. */
--	if (xfs_is_reflink_inode(ip) && !unaligned_io) {
--		ret = xfs_reflink_allocate_cow_range(ip, iocb->ki_pos, count);
--		if (ret)
--			goto out;
--	}
--
- 	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
- out:
- 	xfs_iunlock(ip, iolock);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 78105db..01c6e31 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1002,37 +1002,31 @@ xfs_file_iomap_begin(
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
- 
--	if (xfs_is_reflink_inode(ip) &&
--	    (flags & IOMAP_WRITE) && (flags & IOMAP_DIRECT)) {
--		shared = xfs_reflink_find_cow_mapping(ip, offset, &imap);
--		if (shared) {
--			xfs_iunlock(ip, lockmode);
--			goto alloc_done;
--		}
--		ASSERT(!isnullstartblock(imap.br_startblock));
--	}
--
- 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
- 			       &nimaps, 0);
- 	if (error)
- 		goto out_unlock;
- 
--	if ((flags & IOMAP_REPORT) ||
--	    (xfs_is_reflink_inode(ip) &&
--	     (flags & IOMAP_WRITE) && (flags & IOMAP_DIRECT))) {
-+	if (flags & IOMAP_REPORT) {
- 		/* Trim the mapping to the nearest shared extent boundary. */
- 		error = xfs_reflink_trim_around_shared(ip, &imap, &shared,
- 				&trimmed);
- 		if (error)
- 			goto out_unlock;
--
--		ASSERT((flags & IOMAP_REPORT) || !shared);
- 	}
- 
- 	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
--		error = xfs_reflink_reserve_cow(ip, &imap, &shared);
--		if (error)
--			goto out_unlock;
-+		if (flags & IOMAP_DIRECT) {
-+			/* may drop and re-acquire the ilock */
-+			error = xfs_reflink_allocate_cow(ip, offset_fsb, end_fsb,
-+					&imap, &shared, &lockmode);
-+			if (error)
-+				goto out_unlock;
-+		} else {
-+			error = xfs_reflink_reserve_cow(ip, &imap, &shared);
-+			if (error)
-+				goto out_unlock;
-+		}
- 
- 		end_fsb = imap.br_startoff + imap.br_blockcount;
- 		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
-@@ -1061,7 +1055,6 @@ xfs_file_iomap_begin(
- 		if (error)
- 			return error;
- 
--alloc_done:
- 		iomap->flags = IOMAP_F_NEW;
- 		trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
- 	} else {
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 0a077e80..2cddc9a 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -297,88 +297,92 @@ xfs_reflink_reserve_cow(
- }
- 
- /* Allocate all CoW reservations covering a range of blocks in a file. */
--static int
--__xfs_reflink_allocate_cow(
-+int
-+xfs_reflink_allocate_cow(
- 	struct xfs_inode	*ip,
--	xfs_fileoff_t		*offset_fsb,
--	xfs_fileoff_t		end_fsb)
-+	xfs_fileoff_t		offset_fsb,
-+	xfs_fileoff_t		end_fsb,
-+	struct xfs_bmbt_irec	*imap,
-+	bool			*shared,
-+	uint			*lockmode)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_bmbt_irec	imap, got;
-+	struct xfs_bmbt_irec	got;
- 	struct xfs_defer_ops	dfops;
--	struct xfs_trans	*tp;
-+	struct xfs_trans	*tp = NULL;
- 	xfs_fsblock_t		first_block;
--	int			nimaps, error, lockmode;
--	bool			shared, trimmed;
-+	int			nimaps, error = 0;
-+	bool			trimmed;
- 	xfs_extlen_t		resblks, align;
- 	xfs_extnum_t		idx;
- 
--	align = xfs_eof_alignment(ip, xfs_get_cowextsz_hint(ip));
--	if (align)
--		end_fsb = roundup_64(end_fsb, align);
--
--	resblks = XFS_DIOSTRAT_SPACE_RES(mp, end_fsb - *offset_fsb);
--
--	error = xfs_qm_dqattach(ip, 0);
--	if (error)
--		return error;
--
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
--	if (error)
--		return error;
--
--	lockmode = XFS_ILOCK_EXCL;
--	xfs_ilock(ip, lockmode);
-+retry:
-+	ASSERT(xfs_is_reflink_inode(ip));
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
- 
- 	/*
- 	 * Even if the extent is not shared we might have a preallocation for
- 	 * it in the COW fork.  If so use it.
- 	 */
--	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, *offset_fsb, &idx, &got) &&
--	    got.br_startoff <= *offset_fsb) {
-+	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &idx, &got) &&
-+	    got.br_startoff <= offset_fsb) {
-+		*shared = true;
-+
- 		/* If we have a real allocation in the COW fork we're done. */
- 		if (!isnullstartblock(got.br_startblock)) {
--			xfs_trim_extent(&got, *offset_fsb,
--					end_fsb - *offset_fsb);
--			*offset_fsb = got.br_startoff + got.br_blockcount;
--			goto out_trans_cancel;
-+			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
-+			*imap = got;
-+			goto out;
- 		}
-+
-+		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
- 	} else {
--		nimaps = 1;
--		error = xfs_bmapi_read(ip, *offset_fsb, end_fsb - *offset_fsb,
--				&imap, &nimaps, 0);
-+		error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
-+		if (error || !*shared)
-+			goto out;
-+	}
-+
-+	if (!tp) {
-+		align = xfs_eof_alignment(ip, xfs_get_cowextsz_hint(ip));
-+		if (align)
-+			end_fsb = roundup_64(end_fsb, align);
-+
-+		resblks = XFS_DIOSTRAT_SPACE_RES(mp, end_fsb - offset_fsb);
-+
-+		xfs_iunlock(ip, *lockmode);
-+		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
-+		*lockmode = XFS_ILOCK_EXCL;
-+		xfs_ilock(ip, *lockmode);
-+
- 		if (error)
--			goto out_trans_cancel;
--		ASSERT(nimaps == 1);
-+			return error;
- 
--		/* Trim the mapping to the nearest shared extent boundary. */
--		error = xfs_reflink_trim_around_shared(ip, &imap, &shared,
--				&trimmed);
-+		error = xfs_qm_dqattach_locked(ip, 0);
- 		if (error)
--			goto out_trans_cancel;
-+			goto out;
- 
--		if (!shared) {
--			*offset_fsb = imap.br_startoff + imap.br_blockcount;
--			goto out_trans_cancel;
--		}
-+		/* Read extent from the source file. */
-+		nimaps = 1;
-+		error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
-+				imap, &nimaps, 0);
-+		if (error)
-+			goto out;
-+		ASSERT(nimaps == 1);
- 
--		*offset_fsb = imap.br_startoff;
--		end_fsb = imap.br_startoff + imap.br_blockcount;
--		if (align)
--			end_fsb = roundup_64(end_fsb, align);
-+		goto retry;
- 	}
- 
- 	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
- 			XFS_QMOPT_RES_REGBLKS);
- 	if (error)
--		goto out_trans_cancel;
-+		goto out;
- 
- 	xfs_trans_ijoin(tp, ip, 0);
- 
- 	xfs_defer_init(&dfops, &first_block);
- 	nimaps = 1;
--	error = xfs_bmapi_write(tp, ip, *offset_fsb, end_fsb - *offset_fsb,
--			XFS_BMAPI_COWFORK, &first_block, resblks, &imap,
-+	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
-+			XFS_BMAPI_COWFORK, &first_block, resblks, imap,
- 			&nimaps, &dfops);
- 	if (error)
- 		goto out_bmap_cancel;
-@@ -387,57 +391,15 @@ __xfs_reflink_allocate_cow(
- 	if (error)
- 		goto out_bmap_cancel;
- 
--	error = xfs_trans_commit(tp);
--	if (error)
--		goto out_unlock;
--
--	*offset_fsb = imap.br_startoff + imap.br_blockcount;
--
--out_unlock:
--	xfs_iunlock(ip, lockmode);
--	return error;
-+	return xfs_trans_commit(tp);
- 
- out_bmap_cancel:
- 	xfs_defer_cancel(&dfops);
- 	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
- 			XFS_QMOPT_RES_REGBLKS);
--out_trans_cancel:
--	xfs_trans_cancel(tp);
--	goto out_unlock;
--}
--
--/* Allocate all CoW reservations covering a part of a file. */
--int
--xfs_reflink_allocate_cow_range(
--	struct xfs_inode	*ip,
--	xfs_off_t		offset,
--	xfs_off_t		count)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
--	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
--	int			error;
--
--	ASSERT(xfs_is_reflink_inode(ip));
--
--	trace_xfs_reflink_allocate_cow_range(ip, offset, count);
--
--	/*
--	 * Make sure that the dquots are there.
--	 */
--	error = xfs_qm_dqattach(ip, 0);
--	if (error)
--		return error;
--
--	while (offset_fsb < end_fsb) {
--		error = __xfs_reflink_allocate_cow(ip, &offset_fsb, end_fsb);
--		if (error) {
--			trace_xfs_reflink_allocate_cow_range_error(ip, error,
--					_RET_IP_);
--			break;
--		}
--	}
--
-+out:
-+	if (tp)
-+		xfs_trans_cancel(tp);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index aa6a4d6..2813d49 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -28,8 +28,9 @@ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
- 
- extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
- 		struct xfs_bmbt_irec *imap, bool *shared);
--extern int xfs_reflink_allocate_cow_range(struct xfs_inode *ip,
--		xfs_off_t offset, xfs_off_t count);
-+extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
-+		xfs_fileoff_t offset_fsb, xfs_fileoff_t end_fsb,
-+		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
- extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
- 		struct xfs_bmbt_irec *imap);
- extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 0907752..54aa1b2 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3347,7 +3347,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_found);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_enospc);
- 
- DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
--DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
- 
- DEFINE_INODE_IREC_EVENT(xfs_reflink_bounce_dio_write);
- DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
-@@ -3357,7 +3356,6 @@ DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap);
- 
--DEFINE_INODE_ERROR_EVENT(xfs_reflink_allocate_cow_range_error);
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_cancel_cow_range_error);
- DEFINE_INODE_ERROR_EVENT(xfs_reflink_end_cow_error);
- 
--- 
-2.1.4
+	=E2=80=A2 xfs_info output on the filesystem in question
+
+xfs_info /export/raid/scratch/
+meta-data=3D/dev/sdb               isize=3D256    agcount=3D32, =
+agsize=3D61030368 blks
+         =3D                       sectsz=3D512   attr=3D2, =
+projid32bit=3D1
+         =3D                       crc=3D0
+data     =3D                       bsize=3D4096   blocks=3D1952971776, =
+imaxpct=3D5
+         =3D                       sunit=3D32     swidth=3D128 blks
+naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0 ftype=3D0
+log      =3Dinternal               bsize=3D4096   blocks=3D521728, =
+version=3D2
+         =3D                       sectsz=3D512   sunit=3D32 blks, =
+lazy-count=3D1
+realtime =3Dnone                   extsz=3D4096   blocks=3D0, =
+rtextents=3D0
+
+	=E2=80=A2 dmesg output showing all error messages and stack =
+traces
+
+Nothing relevant in dmesg except several occurences of the following.
+
+[7649583.386283] XFS: possible memory allocation deadlock in kmem_alloc =
+(mode:0x250)
+[7649585.370830] XFS: possible memory allocation deadlock in kmem_alloc =
+(mode:0x250)
+[7649587.241290] XFS: possible memory allocation deadlock in kmem_alloc =
+(mode:0x250)
+[7649589.243881] XFS: possible memory allocation deadlock in kmem_alloc =
+(mode:0x250)
+
+Thanks
+
+> On Dec 4, 2016, at 1:49 PM, Dave Chinner <david@fromorbit.com> wrote:
+>=20
+> On Sat, Dec 03, 2016 at 11:08:58AM -0800, Cyril Peponnet wrote:
+>> Hi xfs community :),
+>>=20
+>> We have a glusterfs setup running under centos7.2. We are using
+>> xfs as underlying storage for the bricks.  The volume is used to
+>> store vm snapshots that=E2=80=99s gets created dynamically from the
+>> hypervisors through glusterfs mount points.
+>>=20
+>> While this is working fine we have some issues from time to time
+>> that make the mount points hang.
+>>=20
+>> We have the famous XFS: possible memory allocation deadlock in
+>> kmem_alloc (mode:0x250) errors appearing from time to time on some
+>> of our gluster nodes.
+>=20
+> And the complete output in dmesg is?
+>=20
+>> Let me know if you need more information about our systems (like
+>> kernel version, underlying storage=E2=80=A6)
+>=20
+> =
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when=
+_reporting_a_problem.3F
+>=20
+> -Dave.
+> --=20
+> Dave Chinner
+> david@fromorbit.com
 
