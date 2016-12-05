@@ -1,93 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55530 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750841AbcLEOTD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Dec 2016 09:19:03 -0500
-Subject: Re: [PATCH v2] xfs_io: support -c "open foo" command
-References: <1480943017-6175-1-git-send-email-amir73il@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9125bb5e-49f5-e40e-0181-fea7f80ae553@sandeen.net>
-Date: Mon, 5 Dec 2016 08:19:01 -0600
+Received: from bombadil.infradead.org ([198.137.202.9]:40480 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751411AbcLEREL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2016 12:04:11 -0500
+Date: Mon, 5 Dec 2016 09:04:11 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/3] xfs: use rhashtable to track buffer cache
+Message-ID: <20161205170411.GA14091@infradead.org>
+References: <20161201103052.28453-1-david@fromorbit.com>
+ <20161201103052.28453-3-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <1480943017-6175-1-git-send-email-amir73il@gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161201103052.28453-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 12/5/16 7:03 AM, Amir Goldstein wrote:
-> There is an undocumented and possibly unused feature in xfs_io
-> where all commands are executed per file in the file args list.
-> 
-> This feature creates ambiguity when trying to execute commands
-> such as "open" and "file" from command line and result in an
-> endless loop in the command loop code.
+> +static int
+> +_xfs_buf_cmp(
+> +	struct rhashtable_compare_arg *arg,
+> +	const void *obj)
+> +{
+> +	const struct xfs_buf_map *map = arg->key;
+> +	const struct xfs_buf *bp = obj;
 
-I may well be dense, but it's not immediately obvious what the
-old and/or problematic behavior is.  Can you spell it out a bit
-more?  What is an example of this loop?
- 
-> Also, when running xfs_io -c <cmd> without any file args, xfs_io
-> exits without doing anything. This behavior is also undocumented
-> and makes very little sense.
+How about aligning the parameter / variable names here like we
+normally do in XFS?
 
-What /should/ it do if there is no file specified?  Is this just for
-cmds that don't require a file, such as "-c sync?"
+> +static const struct rhashtable_params xfs_buf_hash_params = {
+> +	.min_size = 32,		/* empty/unused AGs have minimal footprint */
+> +	.nelem_hint = 16,
+> +	.key_len = sizeof(xfs_daddr_t),
+> +	.key_offset = offsetof(struct xfs_buf, b_bn),
+> +	.head_offset = offsetof(struct xfs_buf, b_rhash_head),
+> +	.automatic_shrinking = true,
+> +	.obj_cmpfn = _xfs_buf_cmp,
 
-> Change the behavior of xfs_io to execute each command specified
-> with -c <cmd> exactly once, regardless of the number of files in
-> the file args list.
+Some tab alignments before the equal signs here?
 
-So then which file does it act on?  I'm not saying this is incorrect,
-I'm just not quite understanding what this fixes, and what the new
-behavior is, sorry.
+Also please name the compare function so that it fits the field name,
+as that makes grepping so much easier..
 
-Thanks,
--Eric
+	.obj_cmpfn	= xfs_buf_obj_cmpfn,
 
-> This enables writing proper xfs_io scripts in command line, which
-> include "open" and "file" commands.
-> 
-> This change does not modify the behavior of xfs_io in the most
-> commonly used case of single file argument in command line and
-> no "open" and "file" commands in command line.
-> 
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->  io/init.c | 9 +++++----
->  1 file changed, 5 insertions(+), 4 deletions(-)
-> 
-> v2:
-> - Fix the case of multiple file args
-> 
-> v1:
-> - Fix the case of zero file args
-> 
-> diff --git a/io/init.c b/io/init.c
-> index a9191cf..82b6700 100644
-> --- a/io/init.c
-> +++ b/io/init.c
-> @@ -90,14 +90,15 @@ init_commands(void)
->  	cowextsize_init();
->  }
->  
-> +/*
-> + * Return true for first call and false for the next call,
-> + * to execute each command once.
-> + */
->  static int
->  init_args_command(
->  	int	index)
->  {
-> -	if (index >= filecount)
-> -		return 0;
-> -	file = &filetable[index++];
-> -	return index;
-> +	return !index;
->  }
->  
->  static int
-> 
+
+Otherwise this looks fine to me and seems to survive testing so far:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
