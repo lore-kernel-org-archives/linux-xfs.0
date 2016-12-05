@@ -1,84 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:19447 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751070AbcLEBXM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Dec 2016 20:23:12 -0500
-Date: Mon, 5 Dec 2016 12:22:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc on
- glusterfs setup
-Message-ID: <20161205012243.GQ31101@dastard>
-References: <E861E5C1-D1C2-4368-8BFC-505533C9A3A3@nuagenetworks.net>
- <20161204214950.GL31101@dastard>
- <9B23CFED-4AFC-46FC-8E35-AD85B11FEA02@nuagenetworks.net>
- <20161204224604.GN31101@dastard>
- <D3BB642A-1CBB-47CB-89AA-E99837228F35@nuagenetworks.net>
- <20161204235059.GO31101@dastard>
- <A9F9389E-0CD8-4A85-BA08-C5503B781679@nuagenetworks.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <A9F9389E-0CD8-4A85-BA08-C5503B781679@nuagenetworks.net>
+Received: from mail-wj0-f193.google.com ([209.85.210.193]:35168 "EHLO
+        mail-wj0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751059AbcLEHFJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2016 02:05:09 -0500
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH] xfs_io: support -c <cmd> without <file> args
+Date: Mon,  5 Dec 2016 09:04:45 +0200
+Message-Id: <1480921485-14888-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Cyril Peponnet <cyril.peponnet@nuagenetworks.net>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Sun, Dec 04, 2016 at 05:14:51PM -0800, Cyril Peponnet wrote:
-> 
-> > On Dec 4, 2016, at 3:50 PM, Dave Chinner <david@fromorbit.com>
-> > wrote:
-> > 
-> > On Sun, Dec 04, 2016 at 03:24:50PM -0800, Cyril Peponnet wrote:
-> >>> On Dec 4, 2016, at 2:46 PM, Dave Chinner <david@fromorbit.com>
-> >>> Which used LVM snapshots to take snapshots of the entire
-> >>> brick.  I don't see any LVM in your config, so I'm not sure
-> >>> what snapshot implementation you are using here. What are you
-> >>> using to take the snapshots of your VM image files? Are you
-> >>> actually using the qemu qcow2 snapshot functionality rather
-> >>> than anything native to gluster?
-> >>> 
-> >> 
-> >> Yes sorry it was not clear enough, qemu-img snapshots no native
-> >> snapshots.
-> > 
-> > Ok, so that's a fragmentation problem in it's own right. both
-> > internal qcow2 fragmentation and file fragmentation.
-> > 
-> >>> Also, can you attach the 'xfs_bmap -vp' output of some of
-> >>> these image files and their snapshots?
-> >> 
-> >> A snapshot:
-> >> https://gist.github.com/CyrilPeponnet/8108c74b9e8fd1d9edbf239b2872378d
-> >> (let me know if you need more basically there is around 600
-> >> live snapshots sitting here).
-> > 
-> > 1200 extents, mostly small, almost entirely adjacent. Typical
-> > qcow2 file fragmentation pattern. That's not going to cause your
-> > memory allocation problems - can you find one that has hundreds
-> > of thousands of extents?
-> 
-> I found one with 10799109 :/ 576GB in size (I need to find why
-> this one is so big this is not normal…)… Could it lead to
-> the issue?
+There is an undocumented and possibly unused feature in xfs_io
+where all commands are executed per file given in the file args list.
 
-The memory allocation issue, yes. 10 million extents is
-unusually high even for VM image files...
+This feature creates ambiguity when trying to execute commands
+such as "open" and "file" from command line.
 
-> I mean could one file cause the deadlock of the entire
-> FS?
+When running xfs_io -c <cmd> without any file args, xfs_io exits
+without doing anything. This behavior is undocumented and does not
+make much sense either.
 
-What deadlock is that? XFS is reporting memory allocation issues,
-not that there is a filesystem deadlock. Your comments that dropping
-caches make the problem go away indicate that there isn't any
-deadlock, just blocking on memory allocation that is taking a long
-time to resolve...
+Change the behavior in the case where no file args are given in
+command line to execute every command exactly once, exactly as if
+the commands where executed from an interactive shell.
 
-Cheers,
+This enables writing proper xfs_io scripts in command line, which
+include "open" and "file" commands.
 
-Dave.
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ io/init.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/io/init.c b/io/init.c
+index a9191cf..785eb05 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -91,7 +91,7 @@ init_commands(void)
+ }
+ 
+ static int
+-init_args_command(
++per_file_args_command(
+ 	int	index)
+ {
+ 	if (index >= filecount)
+@@ -101,6 +101,13 @@ init_args_command(
+ }
+ 
+ static int
++do_once_args_command(
++	int	index)
++{
++	return !index;
++}
++
++static int
+ init_check_command(
+ 	const cmdinfo_t	*ct)
+ {
+@@ -214,7 +221,12 @@ init(
+ 	}
+ 
+ 	init_commands();
+-	add_args_command(init_args_command);
++	/*
++	 * If file args exist, execute all commands for every file.
++	 * Otherwise, execute every command once exactly as in interactive mode.
++	 */
++	add_args_command(filecount ? per_file_args_command :
++			 do_once_args_command);
+ 	add_check_command(init_check_command);
+ }
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
