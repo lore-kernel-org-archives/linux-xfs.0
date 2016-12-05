@@ -1,53 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx141.netapp.com ([216.240.21.12]:9155 "EHLO mx141.netapp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753398AbcLNVcP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Dec 2016 16:32:15 -0500
-From: Anna Schumaker <Anna.Schumaker@Netapp.com>
-Subject: [PATCH v2] xfs_io: Improvements to copy_range return code handling
-Date: Wed, 14 Dec 2016 16:28:46 -0500
-Message-ID: <20161214212846.22198-1-Anna.Schumaker@Netapp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from bombadil.infradead.org ([198.137.202.9]:49112 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751530AbcLEVFa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2016 16:05:30 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: reflink COW improvements
+Date: Mon,  5 Dec 2016 22:05:21 +0100
+Message-Id: <1480971924-4864-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com
+Cc: darrick.wong@oracle.com
 
-If copy_file_range() returns 0, then that means no data was copied.  We
-should break out of the loop in this case to prevent looping
-indefinitely.
+Hi all,
 
-Additionally, if an error is returned by copy_file_range() then we need
-to print out the string form to be used by error checking tests in
-xfstests.
+this series adds a few improvements to the direct I/O COW path.
 
-Signed-off-by: Anna Schumaker <Anna.Schumaker@Netapp.com>
----
-v2:
-- Use perror() instead of fprintf()
----
- io/copy_file_range.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Note that patch 2 at this point causes a regression in xfs/214:
 
-diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-index 88203e9..249c649 100644
---- a/io/copy_file_range.c
-+++ b/io/copy_file_range.c
-@@ -49,8 +49,11 @@ copy_file_range(int fd, loff_t *src, loff_t *dst, size_t len)
- 
- 	do {
- 		ret = syscall(__NR_copy_file_range, fd, src, file->fd, dst, len, 0);
--		if (ret == -1)
-+		if (ret == -1) {
-+			perror("copy_range");
- 			return errno;
-+		} else if (ret == 0)
-+			break;
- 		len -= ret;
- 	} while (len > 0);
- 
--- 
-2.10.2
+@ -11,7 +11,7 @@
+ CoW one of the files
+ root      --       0       0       0              4     0     0       
+ nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3520       0       0              4     0     0       
++fsgqa     --    3072       0       0              4     0     0       
+ Remount the FS to see if accounting changes
+ root      --       0       0       0              4     0     0       
+ nobody    --       0       0       0              1     0     0 
 
+But I think the test golden output actually is wrong - the test
+claims it tests that we don't get blocks charged during the COW,
+but the 3520 here means 512 bytes were charged, and later in the
+golden output we actually see that going away after a remount.
