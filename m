@@ -1,81 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wj0-f193.google.com ([209.85.210.193]:35168 "EHLO
-        mail-wj0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751059AbcLEHFJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2016 02:05:09 -0500
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH] xfs_io: support -c <cmd> without <file> args
-Date: Mon,  5 Dec 2016 09:04:45 +0200
-Message-Id: <1480921485-14888-1-git-send-email-amir73il@gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:52096 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751327AbcLEMpY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2016 07:45:24 -0500
+Date: Mon, 5 Dec 2016 04:45:20 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [BUG] xfs/109 crashed 2k block size reflink enabled XFS
+Message-ID: <20161205124520.GA30956@infradead.org>
+References: <20161205092112.GS29149@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161205092112.GS29149@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-There is an undocumented and possibly unused feature in xfs_io
-where all commands are executed per file given in the file args list.
+On Mon, Dec 05, 2016 at 05:21:12PM +0800, Eryu Guan wrote:
+> Hi,
+> 
+> I hit an xfs/109 crash today while testing reflink XFS with 2k block
+> size on x86_64 hosts (both baremetal and kvm guest).
+> 
+> It can be reproduced by running xfs/109 many times, I tried 50-times
+> loop twice and it crashed at the 21st and 46th runs. And I can reproduce
+> it with both linus tree (4.9-rc4) and linux-xfs tree for-next branch
+> (updated on 2016-11-30). I haven't been able to reproduce it with 4k
+> block size XFS.
+> 
+> Detailed host info and crash log are appended at the end of this mail.
 
-This feature creates ambiguity when trying to execute commands
-such as "open" and "file" from command line.
+FYI, I've got a bug report for a very similar OOPS on a 4k file system,
+but the reproducer is not xfstests but a complex customer workload.
 
-When running xfs_io -c <cmd> without any file args, xfs_io exits
-without doing anything. This behavior is undocumented and does not
-make much sense either.
+The actual out of range block number is a little different, but it's
+the same odd pattern with something set in the highest byte of the block
+number.
 
-Change the behavior in the case where no file args are given in
-command line to execute every command exactly once, exactly as if
-the commands where executed from an interactive shell.
-
-This enables writing proper xfs_io scripts in command line, which
-include "open" and "file" commands.
-
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- io/init.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/io/init.c b/io/init.c
-index a9191cf..785eb05 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -91,7 +91,7 @@ init_commands(void)
- }
- 
- static int
--init_args_command(
-+per_file_args_command(
- 	int	index)
- {
- 	if (index >= filecount)
-@@ -101,6 +101,13 @@ init_args_command(
- }
- 
- static int
-+do_once_args_command(
-+	int	index)
-+{
-+	return !index;
-+}
-+
-+static int
- init_check_command(
- 	const cmdinfo_t	*ct)
- {
-@@ -214,7 +221,12 @@ init(
- 	}
- 
- 	init_commands();
--	add_args_command(init_args_command);
-+	/*
-+	 * If file args exist, execute all commands for every file.
-+	 * Otherwise, execute every command once exactly as in interactive mode.
-+	 */
-+	add_args_command(filecount ? per_file_args_command :
-+			 do_once_args_command);
- 	add_check_command(init_check_command);
- }
- 
--- 
-2.7.4
-
+I'll start looking into it today, and this reproducer might be really
+useful.
