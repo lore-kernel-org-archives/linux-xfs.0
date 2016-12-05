@@ -1,79 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wj0-f195.google.com ([209.85.210.195]:36227 "EHLO
-        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750951AbcLEL2A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2016 06:28:00 -0500
+Received: from bombadil.infradead.org ([198.137.202.9]:48784 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751598AbcLEPKa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2016 10:10:30 -0500
+Date: Mon, 5 Dec 2016 06:39:06 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [BUG] xfs/109 crashed 2k block size reflink enabled XFS
+Message-ID: <20161205143906.GA16352@infradead.org>
+References: <20161205092112.GS29149@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20161205110257.GC4326@dastard>
-References: <1480921485-14888-1-git-send-email-amir73il@gmail.com> <20161205110257.GC4326@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 5 Dec 2016 13:27:57 +0200
-Message-ID: <CAOQ4uxg80mjF7KcLbfhdCnDQx8p50MABvh=fpSZaucKZPy9Chw@mail.gmail.com>
-Subject: Re: [PATCH] xfs_io: support -c <cmd> without <file> args
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161205092112.GS29149@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Dec 5, 2016 at 1:02 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Dec 05, 2016 at 09:04:45AM +0200, Amir Goldstein wrote:
->> There is an undocumented and possibly unused feature in xfs_io
->> where all commands are executed per file given in the file args list.
->>
->> This feature creates ambiguity when trying to execute commands
->> such as "open" and "file" from command line.
->>
->> When running xfs_io -c <cmd> without any file args, xfs_io exits
->> without doing anything. This behavior is undocumented and does not
->> make much sense either.
->>
->> Change the behavior in the case where no file args are given in
->> command line to execute every command exactly once, exactly as if
->> the commands where executed from an interactive shell.
->>
->> This enables writing proper xfs_io scripts in command line, which
->> include "open" and "file" commands.
->
-> NACK.
->
-> This does not fix any of the underlying problems. It just adds
-> another WTF case to CLI processing as two things that should be
-> equivlent now behave differently. i.e.
->
-> $ xfs_io -c "open foo" -c "open bar" -c file
->
+On Mon, Dec 05, 2016 at 05:21:12PM +0800, Eryu Guan wrote:
+> Hi,
+> 
+> I hit an xfs/109 crash today while testing reflink XFS with 2k block
+> size on x86_64 hosts (both baremetal and kvm guest).
+> 
+> It can be reproduced by running xfs/109 many times, I tried 50-times
+> loop twice and it crashed at the 21st and 46th runs. And I can reproduce
+> it with both linus tree (4.9-rc4) and linux-xfs tree for-next branch
+> (updated on 2016-11-30). I haven't been able to reproduce it with 4k
+> block size XFS.
 
-You meant:
-$ xfs_io -c "open foo" -c "open bar"
+Haven't been able to reproduce it yet unfortunately.  But from looking
+at the out of range block this looks like it could be NULLFSBLOCK
+converted to a daddr.
 
-> and
->
-> $ xfs_io -c "open bar" -c file foo
->
-> will have different behaviour, even though the man page says they
-> should be equivalent and do exactly the same thing.
->
-> Fix the underlying problems once and for all: do not hack bandaids
-> into the code that only hides the symptom for your specific use
-> case.
->
+I assume you are running without CONFIG_XFS_DEBUG or CONFIG_XFS_WARN
+enabled?
 
-Dave,
+Below would catch this issue in a non-debug build.  Still trying to
+reproduce in the meantime..
 
-I would be glad to fix the code, but you did not answer my question.
 
-The "execute all commands per file" behavior is not documented,
-does not appear to have any known users and makes every attempt
-to parse "file" commands ambiguous.
-
-Can we, in your option, do away with this behavior?
-
-If the answer is yes, then the patch is even simpler then these 16 lines.
-Just replace the old init_args_command() with the new
-do_once_args_command().
-
-Would you like me to re-submit the patch with this change?
-
-Amir.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index c6eb219..2c19b11 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -780,12 +780,14 @@ try_another_ag:
+ 	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
+ 	    args.fsbno == NULLFSBLOCK &&
+ 	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
++		printk("trying another AG\n");
+ 		dfops->dop_low = true;
+ 		goto try_another_ag;
+ 	}
+ 	/*
+ 	 * Allocation can't fail, the space was reserved.
+ 	 */
++	BUG_ON(args.fsbno == NULLFSBLOCK);
+ 	ASSERT(args.fsbno != NULLFSBLOCK);
+ 	ASSERT(*firstblock == NULLFSBLOCK ||
+ 	       args.agno == XFS_FSB_TO_AGNO(mp, *firstblock) ||
