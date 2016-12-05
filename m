@@ -1,117 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53968 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:60582 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751590AbcLEVdz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Dec 2016 16:33:55 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BE0D466CA7
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Dec 2016 21:33:54 +0000 (UTC)
-Date: Mon, 5 Dec 2016 16:33:52 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: ignore leaf attr ichdr.count in verifier during log
- replay
-Message-ID: <20161205213352.GA16193@bfoster.bfoster>
-References: <596737a3-fbf8-8712-422c-4705ce36deae@redhat.com>
- <20161201121538.GA22890@bfoster.bfoster>
- <73c72838-1239-3dd5-1ed3-ec63f99625d0@redhat.com>
+        id S1750951AbcLEP0E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Dec 2016 10:26:04 -0500
+Subject: Re: [PATCH v2] xfs_io: support -c "open foo" command
+References: <1480943017-6175-1-git-send-email-amir73il@gmail.com>
+ <9125bb5e-49f5-e40e-0181-fea7f80ae553@sandeen.net>
+ <CAOQ4uxhw8Y_9NVwuAZ_xzvPYZ8k1CRonmQ=CAn=Y9j-_nkToMA@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <00b2b645-3cd2-f3b2-b026-40dfc97f3f90@sandeen.net>
+Date: Mon, 5 Dec 2016 09:26:02 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <73c72838-1239-3dd5-1ed3-ec63f99625d0@redhat.com>
+In-Reply-To: <CAOQ4uxhw8Y_9NVwuAZ_xzvPYZ8k1CRonmQ=CAn=Y9j-_nkToMA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
 
-On Mon, Dec 05, 2016 at 02:31:32PM -0600, Eric Sandeen wrote:
-> On 12/1/16 6:15 AM, Brian Foster wrote:
-> > On Wed, Nov 30, 2016 at 04:33:15PM -0600, Eric Sandeen wrote:
-> >> When we create a new attribute, we first create a shortform
-> >> attribute, and try to fit the new attribute into it.
-> >> If that fails, we copy the (empty) attribute into a leaf attribute,
-> >> and do the copy again.  Thus there can be a transient state where
-> >> we have an empty leaf attribute.
-> >>
-> >> If we encounter this during log replay, the verifier will fail.
-> >> So add a test to ignore this part of the leaf attr verification
-> >> during log replay.
-> >>
-> >> Thanks as usual to dchinner for spotting the problem.
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>
-> >> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> >> index 8ea91f3..2852521 100644
-> >> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> >> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> >> @@ -253,6 +253,7 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
-> >>  {
-> >>  	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> >>  	struct xfs_attr_leafblock *leaf = bp->b_addr;
-> >> +	struct xfs_perag *pag = bp->b_pag;
-> >>  	struct xfs_attr3_icleaf_hdr ichdr;
-> >>  
-> >>  	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
-> >> @@ -273,7 +274,12 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
-> >>  		if (ichdr.magic != XFS_ATTR_LEAF_MAGIC)
-> >>  			return false;
-> >>  	}
-> >> -	if (ichdr.count == 0)
-> >> +	/*
-> >> +	 * In recovery there is a transient state where count == 0 is valid
-> >> +	 * because we may have transitioned an empty shortform attr to a leaf
-> >> +	 * if the attr didn't fit in shortform.
-> >> +	 */
-> >> +	if (pag && pag->pagf_init && ichdr.count == 0)
-> >>  		return false;
-> > 
-> > Seems fine, but if the idea is to filter out failures during log
-> > recovery, can we detect that state explicitly? E.g., check for some
-> > combination of XLOG_ACTIVE_RECOVERY and/or XLOG_RECOVERY_NEEDED (or just
-> > define and use a new flag/helper if necessary)?
+On 12/5/16 9:19 AM, Amir Goldstein wrote:
+> On Mon, Dec 5, 2016 at 4:19 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> On 12/5/16 7:03 AM, Amir Goldstein wrote:
+>>> There is an undocumented and possibly unused feature in xfs_io
+>>> where all commands are executed per file in the file args list.
+>>>
+>>> This feature creates ambiguity when trying to execute commands
+>>> such as "open" and "file" from command line and result in an
+>>> endless loop in the command loop code.
+>>
+>> I may well be dense, but it's not immediately obvious what the
+>> old and/or problematic behavior is.  Can you spell it out a bit
+>> more?  What is an example of this loop?
 > 
-> Yeah, this is done in several other places; see xfs_allocbt_verify, 
-> xfs_refcountbt_verify, xfs_rmapbt_verify and the comments in those.
+> $ touch foo
+> $ xfs_io -c "open foo" foo
 > 
+> you will see the shit storm
 
-Ok, but that doesn't necessarily look like the same thing. Those places
-check for perag initialization because they check against values in the
-perag data structure. Here we are just using the state to imply that log
-recovery hasn't occurred yet.
+;)  Ok thanks.  (would be nice to have that in the changelog)
 
-What happens if for some unknown future reason we need an initialized
-perag during/before log recovery and so decide to initialize it earlier
-and invalidate it post-recovery (for e.g.) to deal with potential
-inconsistencies? AFAICT the existing verifier logic should generally
-work as expected, but this can become a landmine.
+> 
+>>
+>>> Also, when running xfs_io -c <cmd> without any file args, xfs_io
+>>> exits without doing anything. This behavior is also undocumented
+>>> and makes very little sense.
+>>
+>> What /should/ it do if there is no file specified?  Is this just for
+>> cmds that don't require a file, such as "-c sync?"
+> 
+> Execute the commands as if you ran xfs_io and entered those commands
+> in the shell, for example:
+> 
+> $ xfs_io -c "open foo" -c "pread -v 0 4"
 
-Granted, that isn't the case right now, it may never be, and you have an
-r-b. So I guess it just depends on whether you reach my level of
-paranoia. :)
+ok, I see.
 
-Brian
+>>
+>>> Change the behavior of xfs_io to execute each command specified
+>>> with -c <cmd> exactly once, regardless of the number of files in
+>>> the file args list.
+>>
+>> So then which file does it act on?  I'm not saying this is incorrect,
+>> I'm just not quite understanding what this fixes, and what the new
+>> behavior is, sorry.
+>>
+> 
+> You are not to be blamed for not knowing what the old behavior is
+> it is undocumented and I have never seen it used in tests.
+> 
+> Old behavior of
+> 
+> $ xfs_io -c -c "pread -v 0 4" -c "pread -v 4 8" foo bar
+> 
+> - print 0..4 from foo
+> - print 4..8 from foo
+> - print 0..4 from bar
+> - print 4..8 from bar
 
-> Right now, XLOG_ACTIVE_RECOVERY is only used in the actual logging code.
+Ok, interesting.  yeah, the manpage does not even say more than one file
+arg is allowed.
+
+> New behavior is:
 > 
-> I did consider that a helper w/ an explanation of why "pag && pag->pagf_init"
-> would be a good idea, though.
+> - print 0..4 from bar (the "current" file)
+> - print 4..8 from bar
 > 
-> -Eric
+> Same behavior as when you issue the same command after running
 > 
-> > Brian
-> > 
-> >>  
-> >>  	/* XXX: need to range check rest of attr header values */
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> $ xfs_io foo bar
+
+Given that neither the manpage nor the short help mention that more than
+one filename is accepted, should this even succeed at all?
+
+If it does succeed, and has a known behavior, and its desirable, then this
+warrants a documentation update as well.
+
+And then probably an xfstests test case to be sure it doesn't drift. ;)
+
+-Eric
+
+> Amir.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
