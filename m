@@ -1,77 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58054 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:43294 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752094AbcLORxW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Dec 2016 12:53:22 -0500
-Subject: Re: [PATCH 1/1 linux-next] xfs: remove unnecessary return
-References: <1481352729-7020-1-git-send-email-fabf@skynet.be>
- <7ce30624-de82-f682-776c-7b6f1757026d@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7e956ae4-bb46-383a-05fe-b9ac2eb9f855@sandeen.net>
-Date: Thu, 15 Dec 2016 11:53:18 -0600
+        id S1751798AbcLFPTr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Dec 2016 10:19:47 -0500
+Date: Tue, 6 Dec 2016 10:19:46 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [BUG] xfs/109 crashed 2k block size reflink enabled XFS
+Message-ID: <20161206151945.GC3211@bfoster.bfoster>
+References: <20161205092112.GS29149@eguan.usersys.redhat.com>
+ <20161205143906.GA16352@infradead.org>
+ <20161205153625.GA20032@infradead.org>
+ <20161205182802.GB8436@birch.djwong.org>
+ <20161206144559.GA14623@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <7ce30624-de82-f682-776c-7b6f1757026d@sandeen.net>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161206144559.GA14623@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Fabian Frederick <fabf@skynet.be>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
 
-On 12/14/16 10:17 PM, Eric Sandeen wrote:
-> On 12/10/16 12:52 AM, Fabian Frederick wrote:
->> Commit f7a136aee3c1
->> ("xfs: several xattr functions can be void")
->>
->> updated 2 end of function return 0 to return in void
->> functions. Remove it.
->>
->> Signed-off-by: Fabian Frederick <fabf@skynet.be>
+On Tue, Dec 06, 2016 at 06:45:59AM -0800, Christoph Hellwig wrote:
+> I think the problem is that the extents -> btree conversion does not
+> use the per-AG reservations, but it should probably use it (even if it
+> predates if of course).
 > 
-> Oh, sure.  :)
-> 
-> Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+> In the reproduce the fs still has enough blocks to allocate the
+> one block for the first bmap btree leave.  But all free space sits
+> in AGs with a lower agno then what we used for allocating the actual
+> extent, and thus xfs_alloc_vextent never manages to allocate it.
 
-On second thought, it seems to be quite common in 
-xfs to have a last "return;" in void functions:
+Not that I have any insight into the problem here... :P but I'm still[1]
+kind of wondering how that mechanism is supposed to work when it
+ultimately calls xfs_mod_fdblocks() for each AG..?
 
-# grep -n -B1 ^} fs/xfs/*.c fs/xfs/*/*.c | grep "return;" | wc -l
-14
+Brian
 
-so it's really just a style issue, and probably no reason
-to change it in just these 2 cases... *shrug* dchinner, take
-it or leave it as you see fit.  :)
+[1] http://www.spinics.net/lists/linux-xfs/msg01509.html
 
--Eric
- 
->> ---
->>  fs/xfs/xfs_attr_list.c | 2 --
->>  1 file changed, 2 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
->> index 97c45b6..5aa46c3 100644
->> --- a/fs/xfs/xfs_attr_list.c
->> +++ b/fs/xfs/xfs_attr_list.c
->> @@ -433,7 +433,6 @@ xfs_attr3_leaf_list_int(
->>  		cursor->offset++;
->>  	}
->>  	trace_xfs_attr_list_leaf_end(context);
->> -	return;
->>  }
->>  
->>  /*
->> @@ -543,7 +542,6 @@ xfs_attr_put_listent(
->>  	alist->al_offset[context->count++] = context->firstu;
->>  	alist->al_count = context->count;
->>  	trace_xfs_attr_list_add(context);
->> -	return;
->>  }
->>  
->>  /*
->>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
