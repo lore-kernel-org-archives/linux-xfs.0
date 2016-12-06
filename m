@@ -1,50 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx143.netapp.com ([216.240.21.24]:50372 "EHLO mx143.netapp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932177AbcLHSpE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Dec 2016 13:45:04 -0500
-From: Anna Schumaker <Anna.Schumaker@Netapp.com>
-Subject: [PATCH] xfs_io: Improvements to copy_range return code handling
-Date: Thu, 8 Dec 2016 13:44:47 -0500
-Message-ID: <20161208184447.23020-1-Anna.Schumaker@Netapp.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:35033 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752094AbcLFOqG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 09:46:06 -0500
+Date: Tue, 6 Dec 2016 06:45:59 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [BUG] xfs/109 crashed 2k block size reflink enabled XFS
+Message-ID: <20161206144559.GA14623@infradead.org>
+References: <20161205092112.GS29149@eguan.usersys.redhat.com>
+ <20161205143906.GA16352@infradead.org>
+ <20161205153625.GA20032@infradead.org>
+ <20161205182802.GB8436@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161205182802.GB8436@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: david@fromorbit.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
 
-If copy_file_range() returns 0, then that means no data was copied.  We
-should break out of the loop in this case to prevent looping
-indefinitely.
+I think the problem is that the extents -> btree conversion does not
+use the per-AG reservations, but it should probably use it (even if it
+predates if of course).
 
-Additionally, if an error is returned by copy_file_range() then we need
-to print out the string form to be used by error checking tests in
-xfstests.
-
-Signed-off-by: Anna Schumaker <Anna.Schumaker@Netapp.com>
----
- io/copy_file_range.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-index eddc634..161bdcf 100644
---- a/io/copy_file_range.c
-+++ b/io/copy_file_range.c
-@@ -49,8 +49,11 @@ copy_file_range(int fd, loff_t *src, loff_t *dst, size_t len)
- 
- 	do {
- 		ret = syscall(__NR_copy_file_range, fd, src, file->fd, dst, len, 0);
--		if (ret == -1)
-+		if (ret == -1) {
-+			fprintf(stderr, _("copy_range: %s\n"), strerror(errno));
- 			return errno;
-+		} else if (ret == 0)
-+			break;
- 		len -= ret;
- 	} while (len > 0);
- 
--- 
-2.10.2
-
+In the reproduce the fs still has enough blocks to allocate the
+one block for the first bmap btree leave.  But all free space sits
+in AGs with a lower agno then what we used for allocating the actual
+extent, and thus xfs_alloc_vextent never manages to allocate it.
