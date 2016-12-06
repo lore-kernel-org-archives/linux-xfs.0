@@ -1,129 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:38599 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751593AbcLIEm2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Dec 2016 23:42:28 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1cFD0o-00030H-Ev
-        for linux-xfs@vger.kernel.org; Fri, 09 Dec 2016 15:42:22 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.88)
-        (envelope-from <david@fromorbit.com>)
-        id 1cFD0o-0000Al-Dp
-        for linux-xfs@vger.kernel.org; Fri, 09 Dec 2016 15:42:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: icreate transactions should be replayed first
-Date: Fri,  9 Dec 2016 15:42:22 +1100
-Message-Id: <20161209044222.618-1-david@fromorbit.com>
+Received: from mail.webx.cz ([109.123.222.201]:48853 "EHLO mail.webx.cz"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751443AbcLFJJ0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Dec 2016 04:09:26 -0500
+From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
+Subject: Re: BUG: Metadata corruption detected at xfs_attr3_leaf_read_verify
+Date: Tue, 06 Dec 2016 10:08:35 +0100
+Message-ID: <3543192.v6q4dNmvom@libor-nb>
+In-Reply-To: <20161110213057.GH28922@dastard>
+References: <5244720.RPRsZ88NJ0@libor-nb> <2152865.L3K5Xz7SXO@libor-nb> <20161110213057.GH28922@dastard>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hello,
+did you get anything useful from partial metadata dump?
 
-There is an ordering problem that results in icreate transactions
-being replayed after the inode items that depend on the create being
-replayed. This can result in inode replay reporting corruption or
-being skipped because the underlying buffer has not be initialised
-correctly when the inode change is replayed.
+Meanwhile, we have another VPS/machine acting like that, this one was installed as Debian Jessie, 
+so it was always on some version of kernel 3.16 (+xfsprogs 3.2.1)
+I wiil upgrade to kernel 4.7.8 and xfsprogs 4.8.0 and run check, repair and metadata dump.
+Error has some new lines 
 
-Whilst touching the reorder code, fix the name of the catch-all log
-item list from "inode_list" to "item_list" and clean up the comments
-around ICREATE item ordering.
+Dec  6 04:00:36 vps3 kernel: [29332726.258682] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_write_verify+0xd5/0xe0 [xfs], block 0x4878b30
+Dec  6 04:00:36 vps3 kernel: [29332726.259234] XFS (dm-2): Unmount and run xfs_repair
+Dec  6 04:00:36 vps3 kernel: [29332726.259598] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
+Dec  6 04:00:36 vps3 kernel: [29332726.259929] ffff880129d9b000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
+Dec  6 04:00:36 vps3 kernel: [29332726.260661] ffff880129d9b010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
+Dec  6 04:00:36 vps3 kernel: [29332726.261552] ffff880129d9b020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+Dec  6 04:00:36 vps3 kernel: [29332726.262594] ffff880129d9b030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+Dec  6 04:00:36 vps3 kernel: [29332726.263800] XFS (dm-2): xfs_do_force_shutdown(0x8) called from line 1330 of file /build/linux-HklQoT/linux-3.16.7-ckt20/fs/xfs/xfs_buf.c.  Return address = 0xffffffffa0385820
+Dec  6 04:00:36 vps3 kernel: [29332726.277233] XFS (dm-2): Corruption of in-memory data detected.  Shutting down filesystem
+Dec  6 04:00:36 vps3 kernel: [29332726.277926] XFS (dm-2): Please umount the filesystem and rectify the problem(s)
+Dec  6 04:00:36 vps3 kernel: [29332726.285057] Buffer I/O error on device dm-2, logical block 10636433
+Dec  6 04:00:36 vps3 kernel: [29332726.285854] lost page write due to I/O error on dm-2
+Dec  6 04:00:36 vps3 kernel: [29332726.285860] Buffer I/O error on device dm-2, logical block 10636434
+Dec  6 04:00:36 vps3 kernel: [29332726.286580] lost page write due to I/O error on dm-2
+Dec  6 04:00:36 vps3 kernel: [29332726.286602] Buffer I/O error on device dm-2, logical block 14169416
+Dec  6 04:00:36 vps3 kernel: [29332726.287347] lost page write due to I/O error on dm-2
+Dec  6 04:00:36 vps3 kernel: [29332726.287354] Buffer I/O error on device dm-2, logical block 13145613
+Dec  6 04:00:36 vps3 kernel: [29332726.288100] lost page write due to I/O error on dm-2
+Dec  6 04:00:36 vps3 kernel: [29332726.288105] Buffer I/O error on device dm-2, logical block 13145614
+Dec  6 04:00:36 vps3 kernel: [29332726.288851] lost page write due to I/O error on dm-2
+Dec  6 04:00:36 vps3 kernel: [29332726.288856] Buffer I/O error on device dm-2, logical block 13145615
+Dec  6 04:00:36 vps3 kernel: [29332726.289611] lost page write due to I/O error on dm-2
+Dec  6 04:00:36 vps3 kernel: [29332726.289615] Buffer I/O error on device dm-2, logical block 13145616
+Dec  6 04:00:36 vps3 kernel: [29332726.290347] lost page write due to I/O error on dm-2
+Dec  6 04:00:36 vps3 kernel: [29332726.290352] Buffer I/O error on device dm-2, logical block 13145617
+Dec  6 04:00:36 vps3 kernel: [29332726.291072] lost page write due to I/O error on dm-2
+Dec  6 04:00:36 vps3 kernel: [29332726.291075] Buffer I/O error on device dm-2, logical block 13145618
+Dec  6 04:00:36 vps3 kernel: [29332726.291814] lost page write due to I/O error on dm-2
+Dec  6 04:00:36 vps3 kernel: [29332726.291819] Buffer I/O error on device dm-2, logical block 13145619
+Dec  6 04:00:36 vps3 kernel: [29332726.292535] lost page write due to I/O error on dm-2
+Dec  6 04:00:48 vps3 kernel: [29332737.898720] XFS (dm-2): xfs_log_force: error 5 returned.
 
-This problem was found by inspection when looking into another
-recovery problem Eric was seeing.
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log_recover.c | 26 ++++++++++++++------------
- 1 file changed, 14 insertions(+), 12 deletions(-)
+dm-2 is logical volume created on single disk without partitions
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 4a98762ec8b4..450702d6b994 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1851,7 +1851,7 @@ xlog_clear_stale_blocks(
-  *	   from the transaction. However, we can't do that until after we've
-  *	   replayed all the other items because they may be dependent on the
-  *	   cancelled buffer and replaying the cancelled buffer can remove it
-- *	   form the cancelled buffer table. Hence they have tobe done last.
-+ *	   form the cancelled buffer table. Hence they have to be done last.
-  *
-  *	3. Inode allocation buffers must be replayed before inode items that
-  *	   read the buffer and replay changes into it. For filesystems using the
-@@ -1866,13 +1866,14 @@ xlog_clear_stale_blocks(
-  * Hence the ordering needs to be inode allocation buffers first, inode items
-  * second, inode unlink buffers third and cancelled buffers last.
-  *
-- * But there's a problem with that - we can't tell an inode allocation buffer
-- * apart from a regular buffer, so we can't separate them. We can, however,
-- * tell an inode unlink buffer from the others, and so we can separate them out
-- * from all the other buffers and move them to last.
-+ * But there's a problem with that for v4 filesystems - we can't tell an inode
-+ * allocation buffer apart from a regular buffer, so we can't separate them. We
-+ * can, however, tell an inode unlink buffer from the others, and so we can
-+ * separate them out from all the other buffers and move them to last.
-  *
-  * Hence, 4 lists, in order from head to tail:
-  *	- buffer_list for all buffers except cancelled/inode unlink buffers
-+ *	  and contains ICREATE items at it's head.
-  *	- item_list for all non-buffer items
-  *	- inode_buffer_list for inode unlink buffers
-  *	- cancel_list for the cancelled buffers
-@@ -1881,9 +1882,10 @@ xlog_clear_stale_blocks(
-  * ordering is preserved within the lists. Adding objects to the head of the
-  * list means when we traverse from the head we walk them in last-to-first
-  * order. For cancelled buffers and inode unlink buffers this doesn't matter,
-- * but for all other items there may be specific ordering that we need to
-- * preserve.
-+ * for ICREATE operations we know they need to come first, but for all other
-+ * items there may be specific ordering that we need to preserve.
-  */
-+
- STATIC int
- xlog_recover_reorder_trans(
- 	struct xlog		*log,
-@@ -1896,7 +1898,7 @@ xlog_recover_reorder_trans(
- 	LIST_HEAD(cancel_list);
- 	LIST_HEAD(buffer_list);
- 	LIST_HEAD(inode_buffer_list);
--	LIST_HEAD(inode_list);
-+	LIST_HEAD(item_list);
- 
- 	list_splice_init(&trans->r_itemq, &sort_list);
- 	list_for_each_entry_safe(item, n, &sort_list, ri_list) {
-@@ -1904,7 +1906,7 @@ xlog_recover_reorder_trans(
- 
- 		switch (ITEM_TYPE(item)) {
- 		case XFS_LI_ICREATE:
--			list_move_tail(&item->ri_list, &buffer_list);
-+			list_move(&item->ri_list, &buffer_list);
- 			break;
- 		case XFS_LI_BUF:
- 			if (buf_f->blf_flags & XFS_BLF_CANCEL) {
-@@ -1932,7 +1934,7 @@ xlog_recover_reorder_trans(
- 		case XFS_LI_BUD:
- 			trace_xfs_log_recover_item_reorder_tail(log,
- 							trans, item, pass);
--			list_move_tail(&item->ri_list, &inode_list);
-+			list_move_tail(&item->ri_list, &item_list);
- 			break;
- 		default:
- 			xfs_warn(log->l_mp,
-@@ -1953,8 +1955,8 @@ xlog_recover_reorder_trans(
- 	ASSERT(list_empty(&sort_list));
- 	if (!list_empty(&buffer_list))
- 		list_splice(&buffer_list, &trans->r_itemq);
--	if (!list_empty(&inode_list))
--		list_splice_tail(&inode_list, &trans->r_itemq);
-+	if (!list_empty(&item_list))
-+		list_splice_tail(&item_list, &trans->r_itemq);
- 	if (!list_empty(&inode_buffer_list))
- 		list_splice_tail(&inode_buffer_list, &trans->r_itemq);
- 	if (!list_empty(&cancel_list))
--- 
-2.10.2
+
+Could it be HW problem? HW servers do have ECC memory and HW raids
+
+Thanks,
+Libor
+
+
+On pátek 11. listopadu 2016 8:30:57 CET Dave Chinner wrote:
+> On Thu, Nov 10, 2016 at 05:04:48PM +0100, Libor Klep�? wrote:
+> > On ?tvrtek 10. listopadu 2016 16:29:15 CET Dave Chinner wrote:
+> > > Which:
+> > > > > Phase 3 - for each AG...
+> > > > > 
+> > > > >         - scan (but don't clear) agi unlinked lists...
+> > > > >         - process known inodes and perform inode discovery...
+> > > > >         - agno = 0
+> > > > >         - agno = 1
+> > > > > 
+> > > > > Metadata corruption detected at xfs_attr3_leaf block 0x12645ef8/0x1000
+> > > > > Metadata corruption detected at xfs_attr3_leaf block 0x12f63f40/0x1000
+> > > 
+> > > These two blocks. It looks like repair didn't clean them up?
+> > > 
+> > > Hmmmm - looking at the code I'm not sure that repair detects and
+> > > removes empty attr leaf blocks, which would explain why the error
+> > > showed up again.. Can you provide a metadump of the filesystem so we
+> > > can did into the exact neature of the problem you are seeing?
+> > 
+> > Sure not a problem. How much time will it take giving xfs_repair took approx 40 minutes?
+> 
+> No longer than that, with agood possibility it will be much faster
+> as metadump only needs 1 pass over the metadata, not three...
+> 
+> Cheers,
+> 
+> Dave.
+> 
+
 
