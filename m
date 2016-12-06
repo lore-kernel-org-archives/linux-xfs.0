@@ -1,292 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40790 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752785AbcLGNgn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Dec 2016 08:36:43 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A2C1AC049D59
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2016 13:27:41 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 01/22] mkfs: remove intermediate getstr followed by getnum
-Date: Wed,  7 Dec 2016 14:27:08 +0100
-Message-Id: <1481117249-21273-2-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36559 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751556AbcLFFl3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 00:41:29 -0500
+MIME-Version: 1.0
+In-Reply-To: <20161205221548.GD4326@dastard>
+References: <1480943017-6175-1-git-send-email-amir73il@gmail.com>
+ <9125bb5e-49f5-e40e-0181-fea7f80ae553@sandeen.net> <CAOQ4uxhw8Y_9NVwuAZ_xzvPYZ8k1CRonmQ=CAn=Y9j-_nkToMA@mail.gmail.com>
+ <00b2b645-3cd2-f3b2-b026-40dfc97f3f90@sandeen.net> <CAOQ4uxhmLe32AMkBmRJx37Pmg3oZMFLt_6Q0kTNYxix_qz7vZA@mail.gmail.com>
+ <20161205221548.GD4326@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 6 Dec 2016 07:24:12 +0200
+Message-ID: <CAOQ4uxiSDniBTpfgOT9AQ8YGG5Ffz1rSLcBvWdm8TgY_OEArJA@mail.gmail.com>
+Subject: Re: [PATCH v2] xfs_io: support -c "open foo" command
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
 
-Some options loaded a number as a string with getstr and converted it to
-number with getnum later in the code, without any reason for this approach.
-(They were probably forgotten in some past cleaning.)
+On Tue, Dec 6, 2016 at 12:15 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Dec 05, 2016 at 05:39:17PM +0200, Amir Goldstein wrote:
+>> On Mon, Dec 5, 2016 at 5:26 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> > On 12/5/16 9:19 AM, Amir Goldstein wrote:
+>> >> On Mon, Dec 5, 2016 at 4:19 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> >>> On 12/5/16 7:03 AM, Amir Goldstein wrote:
+>> >>>> There is an undocumented and possibly unused feature in xfs_io
+>> >>>> where all commands are executed per file in the file args list.
+>> >>>>
+>> >>>> This feature creates ambiguity when trying to execute commands
+>> >>>> such as "open" and "file" from command line and result in an
+>> >>>> endless loop in the command loop code.
+>> >>>
+>> >>> I may well be dense, but it's not immediately obvious what the
+>> >>> old and/or problematic behavior is.  Can you spell it out a bit
+>> >>> more?  What is an example of this loop?
+>> >>
+>> >> $ touch foo
+>> >> $ xfs_io -c "open foo" foo
+>> >>
+>> >> you will see the shit storm
+>> >
+>> > ;)  Ok thanks.  (would be nice to have that in the changelog)
+>> >
+>>
+>> Good point. I will add that.
+>>
+>>
+>> >
+>> > Given that neither the manpage nor the short help mention that more than
+>> > one filename is accepted, should this even succeed at all?
+>> >
+>>
+>> Make sense to me to fail on multiple file args.
+>
+> It doesn't to me.
+>
+> The fact that xfs_io has an open command, and it has
+> commands that can act on multiple files (e.g. sendfile) indicate
+> that it should be able to handle multiple files.
+>
+> Indeed, in interactive mode, the current file is really just an
+> index into the stack of open files. It works exactly the same way as
+> other XFS tools do with context stacks and accessed object rings
+> (e.g. xfs_db). i.e. you only need to open the file/access the object
+> once and then you can use the stack/ring to jump straight back to
+> it. In this case, it's the xfs_io "file" command.
+>
+> i.e. xfs_io is intended to by able to operate on multiple files at
+> once, and I do use that in interactive mode from time to time.
+>
+> What I haven't ever done is try to access that through the command
+> line, so I didn't know it had this "command loop" iteration problem.
+>
+> It's the command loop iteration problem we need to fix, not neuter
+> the multiple file capability of xfs_io.
+>
 
-This patch changes them to skip the string and use getnum directly in the main
-option-parsing loop, as do all the other numerical options.
+OK, v4 it is.
+For some reason you fail to spell out your idea of "fixing",
+so I keep having to guess what you mean.
+This time I am guessing that you mean:
+- open all the files in args list (all using the same -r/-f flags)
+- iterate all commands exactly once without implicitly changing "file"
 
-And as we now have two variables of the same type for the same value,
-merge them together. (e.g. former string dsize and number dbytes).
-
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- mkfs/xfs_mkfs.c | 88 +++++++++++++++++++++++++--------------------------------
- 1 file changed, 38 insertions(+), 50 deletions(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index affa405..b3bc218 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1417,7 +1417,7 @@ main(
- 	char			*dfile;
- 	int			dirblocklog;
- 	int			dirblocksize;
--	char			*dsize;
-+	__uint64_t 		dbytes;
- 	int			dsu;
- 	int			dsw;
- 	int			dsunit;
-@@ -1441,7 +1441,7 @@ main(
- 	xfs_rfsblock_t		logblocks;
- 	char			*logfile;
- 	int			loginternal;
--	char			*logsize;
-+	__uint64_t 		logbytes;
- 	xfs_fsblock_t		logstart;
- 	int			lvflag;
- 	int			lsflag;
-@@ -1470,11 +1470,11 @@ main(
- 	char			*protostring;
- 	int			qflag;
- 	xfs_rfsblock_t		rtblocks;
-+	__uint64_t 		rtbytes;
- 	xfs_extlen_t		rtextblocks;
- 	xfs_rtblock_t		rtextents;
--	char			*rtextsize;
-+	__uint64_t 		rtextbytes;
- 	char			*rtfile;
--	char			*rtsize;
- 	xfs_sb_t		*sbp;
- 	int			sectorlog;
- 	__uint64_t		sector_mask;
-@@ -1522,7 +1522,8 @@ main(
- 	qflag = 0;
- 	imaxpct = inodelog = inopblock = isize = 0;
- 	dfile = logfile = rtfile = NULL;
--	dsize = logsize = rtsize = rtextsize = protofile = NULL;
-+	protofile = NULL;
-+	rtbytes = rtextbytes = logbytes = dbytes = 0;
- 	dsu = dsw = dsunit = dswidth = lalign = lsu = lsunit = 0;
- 	nodsflag = norsflag = 0;
- 	force_overwrite = 0;
-@@ -1586,7 +1587,7 @@ main(
- 					xi.dname = getstr(value, &dopts, D_NAME);
- 					break;
- 				case D_SIZE:
--					dsize = getstr(value, &dopts, D_SIZE);
-+					dbytes = getnum(value, &dopts, D_SIZE);
- 					break;
- 				case D_SUNIT:
- 					dsunit = getnum(value, &dopts, D_SUNIT);
-@@ -1731,7 +1732,7 @@ main(
- 					lvflag = 1;
- 					break;
- 				case L_SIZE:
--					logsize = getstr(value, &lopts, L_SIZE);
-+					logbytes = getnum(value, &lopts, L_SIZE);
- 					break;
- 				case L_SECTLOG:
- 					lsectorlog = getnum(value, &lopts,
-@@ -1860,8 +1861,7 @@ main(
- 
- 				switch (getsubopt(&p, subopts, &value)) {
- 				case R_EXTSIZE:
--					rtextsize = getstr(value, &ropts,
--							   R_EXTSIZE);
-+					rtextbytes = getnum(value, &ropts, R_EXTSIZE);
- 					break;
- 				case R_FILE:
- 					xi.risfile = getnum(value, &ropts,
-@@ -1873,7 +1873,7 @@ main(
- 							   R_NAME);
- 					break;
- 				case R_SIZE:
--					rtsize = getstr(value, &ropts, R_SIZE);
-+					rtbytes = getnum(value, &ropts, R_SIZE);
- 					break;
- 				case R_NOALIGN:
- 					norsflag = getnum(value, &ropts,
-@@ -1976,14 +1976,14 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
- 	 * sector size mismatches between the new filesystem and the underlying
- 	 * host filesystem.
- 	 */
--	check_device_type(dfile, &xi.disfile, !dsize, !dfile,
-+	check_device_type(dfile, &xi.disfile, !dbytes, !dfile,
- 			  Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
- 	if (!loginternal)
--		check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
-+		check_device_type(xi.logname, &xi.lisfile, !logbytes, !xi.logname,
- 				  Nflag ? NULL : &xi.lcreat,
- 				  force_overwrite, "l");
- 	if (xi.rtname)
--		check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
-+		check_device_type(xi.rtname, &xi.risfile, !rtbytes, !xi.rtname,
- 				  Nflag ? NULL : &xi.rcreat,
- 				  force_overwrite, "r");
- 	if (xi.disfile || xi.lisfile || xi.risfile)
-@@ -2164,10 +2164,7 @@ _("rmapbt not supported with realtime devices\n"));
- 	}
- 
- 
--	if (dsize) {
--		__uint64_t dbytes;
--
--		dbytes = getnum(dsize, &dopts, D_SIZE);
-+	if (dbytes) {
- 		if (dbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
- 			_("illegal data length %lld, not a multiple of %d\n"),
-@@ -2196,10 +2193,7 @@ _("rmapbt not supported with realtime devices\n"));
- 		usage();
- 	}
- 
--	if (logsize) {
--		__uint64_t logbytes;
--
--		logbytes = getnum(logsize, &lopts, L_SIZE);
-+	if (logbytes) {
- 		if (logbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
- 			_("illegal log length %lld, not a multiple of %d\n"),
-@@ -2213,10 +2207,7 @@ _("rmapbt not supported with realtime devices\n"));
- 				(long long)logbytes, blocksize,
- 				(long long)(logblocks << blocklog));
- 	}
--	if (rtsize) {
--		__uint64_t rtbytes;
--
--		rtbytes = getnum(rtsize, &ropts, R_SIZE);
-+	if (rtbytes) {
- 		if (rtbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
- 			_("illegal rt length %lld, not a multiple of %d\n"),
-@@ -2233,10 +2224,7 @@ _("rmapbt not supported with realtime devices\n"));
- 	/*
- 	 * If specified, check rt extent size against its constraints.
- 	 */
--	if (rtextsize) {
--		__uint64_t rtextbytes;
--
--		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
-+	if (rtextbytes) {
- 		if (rtextbytes % blocksize) {
- 			fprintf(stderr,
- 		_("illegal rt extent size %lld, not a multiple of %d\n"),
-@@ -2253,7 +2241,7 @@ _("rmapbt not supported with realtime devices\n"));
- 		__uint64_t	rswidth;
- 		__uint64_t	rtextbytes;
- 
--		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
-+		if (!norsflag && !xi.risfile && !(!rtbytes && xi.disfile))
- 			rswidth = ft.rtswidth;
- 		else
- 			rswidth = 0;
-@@ -2364,15 +2352,15 @@ _("rmapbt not supported with realtime devices\n"));
- 		rtfile = _("volume rt");
- 	else if (!xi.rtdev)
- 		rtfile = _("none");
--	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
-+	if (dbytes && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
- 		fprintf(stderr,
--			_("size %s specified for data subvolume is too large, "
-+			_("size %lld specified for data subvolume is too large, "
- 			"maximum is %lld blocks\n"),
--			dsize, (long long)DTOBT(xi.dsize));
-+			(long long)dbytes, (long long)DTOBT(xi.dsize));
- 		usage();
--	} else if (!dsize && xi.dsize > 0)
-+	} else if (!dbytes && xi.dsize > 0)
- 		dblocks = DTOBT(xi.dsize);
--	else if (!dsize) {
-+	else if (!dbytes) {
- 		fprintf(stderr, _("can't get size of data subvolume\n"));
- 		usage();
- 	}
-@@ -2405,22 +2393,22 @@ reported by the device (%u).\n"),
- reported by the device (%u).\n"),
- 			lsectorsize, xi.lbsize);
- 	}
--	if (rtsize && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
-+	if (rtbytes && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
- 		fprintf(stderr, _(
- "Warning: the realtime subvolume sector size %u is less than the sector size\n\
- reported by the device (%u).\n"),
- 			sectorsize, xi.rtbsize);
- 	}
- 
--	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
-+	if (rtbytes && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
- 		fprintf(stderr,
--			_("size %s specified for rt subvolume is too large, "
-+			_("size %lld specified for rt subvolume is too large, "
- 			"maximum is %lld blocks\n"),
--			rtsize, (long long)DTOBT(xi.rtsize));
-+			(long long)rtbytes, (long long)DTOBT(xi.rtsize));
- 		usage();
--	} else if (!rtsize && xi.rtsize > 0)
-+	} else if (!rtbytes && xi.rtsize > 0)
- 		rtblocks = DTOBT(xi.rtsize);
--	else if (rtsize && !xi.rtdev) {
-+	else if (rtbytes && !xi.rtdev) {
- 		fprintf(stderr,
- 			_("size specified for non-existent rt subvolume\n"));
- 		usage();
-@@ -2625,26 +2613,26 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 				   sb_feat.rmapbt, sb_feat.reflink);
- 	ASSERT(min_logblocks);
- 	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
--	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
-+	if (!logbytes && dblocks >= (1024*1024*1024) >> blocklog)
- 		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
--	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
-+	if (logbytes && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
- 		fprintf(stderr,
--_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
--			logsize, (long long)DTOBT(xi.logBBsize));
-+_("size %lld specified for log subvolume is too large, maximum is %lld blocks\n"),
-+			(long long)logbytes, (long long)DTOBT(xi.logBBsize));
- 		usage();
--	} else if (!logsize && xi.logBBsize > 0) {
-+	} else if (!logbytes && xi.logBBsize > 0) {
- 		logblocks = DTOBT(xi.logBBsize);
--	} else if (logsize && !xi.logdev && !loginternal) {
-+	} else if (logbytes && !xi.logdev && !loginternal) {
- 		fprintf(stderr,
- 			_("size specified for non-existent log subvolume\n"));
- 		usage();
--	} else if (loginternal && logsize && logblocks >= dblocks) {
-+	} else if (loginternal && logbytes && logblocks >= dblocks) {
- 		fprintf(stderr, _("size %lld too large for internal log\n"),
- 			(long long)logblocks);
- 		usage();
- 	} else if (!loginternal && !xi.logdev) {
- 		logblocks = 0;
--	} else if (loginternal && !logsize) {
-+	} else if (loginternal && !logbytes) {
- 
- 		if (dblocks < GIGABYTES(1, blocklog)) {
- 			/* tiny filesystems get minimum sized logs. */
-@@ -2708,7 +2696,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		 * Readjust the log size to fit within an AG if it was sized
- 		 * automatically.
- 		 */
--		if (!logsize) {
-+		if (!logbytes) {
- 			logblocks = MIN(logblocks,
- 					libxfs_alloc_ag_max_usable(mp));
- 
--- 
-2.8.1
-
+Amir.
