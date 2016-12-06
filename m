@@ -1,77 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtprelay0037.hostedemail.com ([216.40.44.37]:48291 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752111AbcLLSUd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2016 13:20:33 -0500
-Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
-        by smtpgrave02.hostedemail.com (Postfix) with ESMTP id EF89B3AB4
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Dec 2016 18:14:15 +0000 (UTC)
-Message-ID: <1481566450.1764.23.camel@perches.com>
-Subject: Re: [PATCH 1/1] Fixed to codestyle
-From: Joe Perches <joe@perches.com>
-Date: Mon, 12 Dec 2016 10:14:10 -0800
-In-Reply-To: <66c68b88-e338-1d9a-b9dd-b8d858ebf349@sandeen.net>
-References: <987271481540010@web27o.yandex.ru>
-         <66c68b88-e338-1d9a-b9dd-b8d858ebf349@sandeen.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:53818 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751388AbcLFGha (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Dec 2016 01:37:30 -0500
+Date: Tue, 6 Dec 2016 14:37:28 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [BUG] xfs/109 crashed 2k block size reflink enabled XFS
+Message-ID: <20161206063728.GV29149@eguan.usersys.redhat.com>
+References: <20161205092112.GS29149@eguan.usersys.redhat.com>
+ <20161205143906.GA16352@infradead.org>
+ <20161205153625.GA20032@infradead.org>
+ <20161205182802.GB8436@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161205182802.GB8436@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Ozgur Karatas <okaratas@member.fsf.org>, david@fromorbit.com
-Cc: linux-xfs@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Mon, 2016-12-12 at 07:49 -0600, Eric Sandeen wrote:
-> On 12/12/16 4:53 AM, Ozgur Karatas wrote:
-> > 
-> > Hello,
-> > 
-> > I have error to use uuid and I think the functions should be used when -i'm eye-catching- "(* uuid)".
-> > I tested it.
-> > 
-> > Regards,
-> > 
-> > Signed-off-by: Ozgur Karatas <okaratas@member.fsf.org>
-> 
-> NAK
-> 
-> This doesn't fix code style at all; there is no need and no
-> precedence for i.e. (*uuid) in function arguments in the xfs code,
-> and you have broken indentation in the loop within the function.
+On Mon, Dec 05, 2016 at 10:28:02AM -0800, Darrick J. Wong wrote:
+> Does it happen if rmapbt=0 ?  Since xfs/109 isn't doing any CoW, it's
 
-Perhaps better would be to convert the xfs uuid_t typedef
-to the include/uapi/linux/uuid.h appropriate struct and
-maybe use a comparison to NULL_UUID_<type>
+FYI, I looped xfs/109 for 150 times with rmapbt=0, and didn't hit any
+problem.
 
-> > diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
-[]
-> > @@ -33,7 +33,7 @@ typedef struct {
-> >   * it just something that's needed for user-level file handles.
-> >   */
-> >  void
-> > -uuid_getnodeuniq(uuid_t *uuid, int fsid [2])
-> > +uuid_getnodeuniq(uuid_t (*uuid), int fsid [2])
+[root@ibm-x3550m3-05 xfstests]# xfs_info /mnt/xfs
+meta-data=/dev/mapper/testvg-testlv2 isize=512    agcount=4, agsize=20480 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+         =                       reflink=0
+data     =                       bsize=2048   blocks=81920, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=2048   blocks=1445, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-And to amplify Eric's comment:
-
-that bit is confusing as it makes uuid look
-like a function pointer.
-
-> >  {
-> >  	xfs_uu_t *uup = (xfs_uu_t *)uuid;
-> >  
-> > @@ -51,8 +51,8 @@ uuid_is_nil(uuid_t *uuid)
-> >  	if (uuid == NULL)
-> >  		return 0;
-> >  	/* implied check of version number here... */
-> > -	for (i = 0; i < sizeof *uuid; i++)
-> > -		if (*cp++) return 0;	/* not nil */
-> > +	for (i = 0; i < sizeof (*uuid); i++) 
-> > +	if (*cp++) return 0;	/* not nil */
-
-There shouldn't be a space after sizeof.
-
-> >  	return 1;	/* is nil */
-> >  }
-> > 
+Thanks,
+Eryu
