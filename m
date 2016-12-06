@@ -1,73 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29421 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752646AbcLGASz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 19:18:55 -0500
-Subject: [PATCH 06/11] populate: fix some silly errors when modifying a fs
- while fuzzing
+Received: from aserp1040.oracle.com ([141.146.126.69]:35293 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753341AbcLFSPB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 13:15:01 -0500
+Date: Tue, 6 Dec 2016 10:14:20 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Dec 2016 16:18:49 -0800
-Message-ID: <148106992913.19334.7386542666559072356.stgit@birch.djwong.org>
-In-Reply-To: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
-References: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
+Subject: Re: [BUG] xfs/109 crashed 2k block size reflink enabled XFS
+Message-ID: <20161206181420.GE8436@birch.djwong.org>
+References: <20161205092112.GS29149@eguan.usersys.redhat.com>
+ <20161205143906.GA16352@infradead.org>
+ <20161205153625.GA20032@infradead.org>
+ <20161205182802.GB8436@birch.djwong.org>
+ <20161206144559.GA14623@infradead.org>
+ <20161206151945.GC3211@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161206151945.GC3211@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
 
-There were some silly errors in _scratch_fuzz_modify such that it
-wasn't really doing much of anything because of undefined variables.
-(Sloppy refactoring when converting xfsfuzz.sh into xfstests.)
+On Tue, Dec 06, 2016 at 10:19:46AM -0500, Brian Foster wrote:
+> On Tue, Dec 06, 2016 at 06:45:59AM -0800, Christoph Hellwig wrote:
+> > I think the problem is that the extents -> btree conversion does not
+> > use the per-AG reservations, but it should probably use it (even if it
+> > predates if of course).
+> > 
+> > In the reproduce the fs still has enough blocks to allocate the
+> > one block for the first bmap btree leave.  But all free space sits
+> > in AGs with a lower agno then what we used for allocating the actual
+> > extent, and thus xfs_alloc_vextent never manages to allocate it.
+> 
+> Not that I have any insight into the problem here... :P but I'm still[1]
+> kind of wondering how that mechanism is supposed to work when it
+> ultimately calls xfs_mod_fdblocks() for each AG..?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/populate |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+Oh, heh, I was meaning to reply to that and never did. :(
 
+Will go work on that!
 
-diff --git a/common/populate b/common/populate
-index 2385c8d..5227cd1 100644
---- a/common/populate
-+++ b/common/populate
-@@ -596,7 +596,7 @@ _scratch_populate() {
- 		_scratch_xfs_populate
- 		_scratch_xfs_populate_check
- 		;;
--	"ext4")
-+	"ext2"|"ext3"|"ext4")
- 		_scratch_ext4_populate
- 		_scratch_ext4_populate_check
- 		;;
-@@ -612,22 +612,24 @@ _scratch_fuzz_modify() {
- 
- 	test -z "${nr}" && nr=50000
- 	echo "+++ touch ${nr} files"
--	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${BLK_SZ}" "/tmp/afile" > /dev/null
-+	blk_sz=$(stat -f -c '%s' ${SCRATCH_MNT})
-+	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${blk_sz}" "/tmp/afile" > /dev/null
- 	date="$(date)"
- 	find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
- 		setfattr -n "user.date" -v "${date}" "$f"
- 		cat "/tmp/afile" >> "$f"
- 		mv "$f" "$f.longer"
- 	done
-+	sync
- 	rm -rf "/tmp/afile"
- 
- 	echo "+++ create files"
--	cp -pRdu "${SRCDIR}" "${SCRATCH_MNT}/test.moo"
-+	mkdir -p "${SCRATCH_MNT}/test.moo"
-+	$XFS_IO_PROG -f -c 'pwrite -S 0x80 0 65536' "${SCRATCH_MNT}/test.moo/urk"
- 	sync
- 
- 	echo "+++ remove files"
- 	rm -rf "${SCRATCH_MNT}/test.moo"
--	rm -rf "${SCRATCH_MNT}/test.1"
- }
- 
- # Try to access files after fuzzing
+--D
 
+> 
+> Brian
+> 
+> [1] http://www.spinics.net/lists/linux-xfs/msg01509.html
+> 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
