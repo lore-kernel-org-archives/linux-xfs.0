@@ -1,47 +1,284 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:45117 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756614AbcLNT0J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2016 14:26:09 -0500
-Date: Wed, 14 Dec 2016 11:26:07 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] duperemove: test presence of dedupe ioctl
-Message-ID: <20161214192607.GA2280@infradead.org>
-References: <20161209175645.GB16813@birch.djwong.org>
- <20161214104436.GB16862@infradead.org>
- <20161214183845.GA5357@birch.djwong.org>
+Received: from mail-wj0-f193.google.com ([209.85.210.193]:34409 "EHLO
+        mail-wj0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750825AbcLGEtz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 23:49:55 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161214183845.GA5357@birch.djwong.org>
+In-Reply-To: <20161207034724.1613-7-david@fromorbit.com>
+References: <20161207034724.1613-1-david@fromorbit.com> <20161207034724.1613-7-david@fromorbit.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 7 Dec 2016 06:49:16 +0200
+Message-ID: <CAOQ4uxj2AROKtg=ZE64Q-RJbMaiRdP7SvoosmvCD4C1h-X-4bA@mail.gmail.com>
+Subject: Re: [PATCH 6/6] libxcmd: add non-iterating user commands
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, mfasheh@versity.com, xfs <linux-xfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
 
-On Wed, Dec 14, 2016 at 10:38:45AM -0800, Darrick J. Wong wrote:
-> > > +struct fake_btrfs_ioctl_same_args {
-> > > +	struct btrfs_ioctl_same_args args;
-> > > +	struct btrfs_ioctl_same_extent_info info;
-> > > +};
-> > 
-> > Why does this need a fake structure here?
-> 
-> In order to test the ioctl we have to fill out at least one
-> btrfs_ioctl_same_extent_info so that we get far enough into the fs-specific
-> dedupe_range handler that we've verified that the fs is capable of dedupe and
-> that the fs is willing to try to satisfy the request.
+On Wed, Dec 7, 2016 at 5:47 AM, Dave Chinner <david@fromorbit.com> wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>
 
-Oh, got it, it's just the fake that tripped me up.
+Thank you for fixing this!
+See some typo fixes below.
+I will test the fix later today.
 
-> We could just malloc sizeof(_same_args) + sizeof(_same_extent_info)...
+Cheers,
+Amir.
 
-Either that, or more simply just don't give the structure a name
-by just declaring it locally on the stack:
 
-	struct {
-		struct btrfs_ioctl_same_args args;
-		struct btrfs_ioctl_same_extent_info info;
-	} sa = { 0 };
+> Right now command iteration is not directly controllable by the
+> user; it is controlled entirely by the application command flag
+> setup. Sometimes we don't want commands to iterate but only operate
+> on the currently selected object.
+>
+> For example, the stat command iterates:
+>
+> $ xfs_io -c "open -r foo" -c "open bar" -C "file" -c "stat" foo
 
+-c "file"
+
+>  000  foo            (foreign,non-sync,non-direct,read-write)
+>  001  foo            (foreign,non-sync,non-direct,read-only)
+> [002] bar            (foreign,non-sync,non-direct,read-write)
+> fd.path = "foo"
+> fd.flags = non-sync,non-direct,read-write
+> stat.ino = 462399
+> stat.type = regular file
+> stat.size = 776508
+> stat.blocks = 1528
+> fd.path = "foo"
+> fd.flags = non-sync,non-direct,read-only
+> stat.ino = 462399
+> stat.type = regular file
+> stat.size = 776508
+> stat.blocks = 1528
+> fd.path = "bar"
+> fd.flags = non-sync,non-direct,read-write
+> stat.ino = 475227
+> stat.type = regular file
+> stat.size = 0
+> stat.blocks = 0
+> $
+>
+> To do this, add a function to supply a "non-iterating" user command
+> that will execute an iterating-capable command as though it
+> CMD_FLAG_ONESHOT was set. Add a new command line option to xfs_io to
+> drive it (-C <command>) and connect it all up. Document it in the
+> xfs_IO man page, too.
+
+xfs_io
+
+>
+> The result of "-C stat":
+>
+> $ xfs_io -c "open -r foo" -c "open bar" -c "file" -C "stat" foo
+>  000  foo            (foreign,non-sync,non-direct,read-write)
+>  001  foo            (foreign,non-sync,non-direct,read-only)
+> [002] bar            (foreign,non-sync,non-direct,read-write)
+> fd.path = "bar"
+> fd.flags = non-sync,non-direct,read-write
+> stat.ino = 475227
+> stat.type = regular file
+> stat.size = 0
+> stat.blocks = 0
+> $
+>
+> Is that we only see the stat output for the active open file
+> which is "bar".
+>
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
+>  include/command.h |  1 +
+>  io/init.c         |  7 +++++--
+>  libxcmd/command.c | 33 +++++++++++++++++++++++++++------
+>  man/man8/xfs_io.8 | 36 ++++++++++++++++++++++++++++++------
+>  4 files changed, 63 insertions(+), 14 deletions(-)
+>
+> diff --git a/include/command.h b/include/command.h
+> index 348002cbe3ed..fb3f5c79b991 100644
+> --- a/include/command.h
+> +++ b/include/command.h
+> @@ -56,6 +56,7 @@ typedef int (*checkfunc_t)(const cmdinfo_t *ci);
+>
+>  extern void            add_command(const cmdinfo_t *ci);
+>  extern void            add_user_command(char *optarg);
+> +extern void            add_oneshot_user_command(char *optarg);
+>  extern void            add_command_iterator(iterfunc_t func);
+>  extern void            add_check_command(checkfunc_t cf);
+>
+> diff --git a/io/init.c b/io/init.c
+> index 5ce627ef22c9..cf8573f0ecd5 100644
+> --- a/io/init.c
+> +++ b/io/init.c
+> @@ -34,7 +34,7 @@ void
+>  usage(void)
+>  {
+>         fprintf(stderr,
+> -               _("Usage: %s [-adfinrRstVx] [-m mode] [-p prog] [-c cmd]... file\n"),
+> +_("Usage: %s [-adfinrRstVx] [-m mode] [-p prog] [[-c|-C] cmd]... file\n"),
+
+Suggest: [file]...
+
+>                 progname);
+>         exit(1);
+>  }
+> @@ -145,7 +145,7 @@ init(
+>         pagesize = getpagesize();
+>         gettimeofday(&stopwatch, NULL);
+>
+> -       while ((c = getopt(argc, argv, "ac:dFfim:p:nrRstTVx")) != EOF) {
+> +       while ((c = getopt(argc, argv, "ac:C:dFfim:p:nrRstTVx")) != EOF) {
+>                 switch (c) {
+>                 case 'a':
+>                         flags |= IO_APPEND;
+> @@ -153,6 +153,9 @@ init(
+>                 case 'c':
+>                         add_user_command(optarg);
+>                         break;
+> +               case 'C':
+> +                       add_oneshot_user_command(optarg);
+> +                       break;
+>                 case 'd':
+>                         flags |= IO_DIRECT;
+>                         break;
+> diff --git a/libxcmd/command.c b/libxcmd/command.c
+> index decc442a9d03..5917aea42611 100644
+> --- a/libxcmd/command.c
+> +++ b/libxcmd/command.c
+> @@ -25,8 +25,14 @@ int          ncmds;
+>
+>  static iterfunc_t      iter_func;
+>  static checkfunc_t     check_func;
+> -static int             ncmdline;
+> -static char            **cmdline;
+> +
+> +struct cmdline {
+> +       char    *cmdline;
+> +       bool    iterate;
+> +};
+> +
+> +static int     ncmdline;
+> +struct cmdline *cmdline;
+>
+>  static int
+>  compare(const void *a, const void *b)
+> @@ -120,12 +126,27 @@ void
+>  add_user_command(char *optarg)
+>  {
+>         ncmdline++;
+> -       cmdline = realloc(cmdline, sizeof(char*) * (ncmdline));
+> +       cmdline = realloc(cmdline, sizeof(struct cmdline) * (ncmdline));
+> +       if (!cmdline) {
+> +               perror("realloc");
+> +               exit(1);
+> +       }
+> +       cmdline[ncmdline-1].cmdline = optarg;
+> +       cmdline[ncmdline-1].iterate = true;
+> +
+> +}
+> +
+> +void
+> +add_oneshot_user_command(char *optarg)
+> +{
+> +       ncmdline++;
+> +       cmdline = realloc(cmdline, sizeof(struct cmdline) * (ncmdline));
+>         if (!cmdline) {
+>                 perror("realloc");
+>                 exit(1);
+>         }
+> -       cmdline[ncmdline-1] = optarg;
+> +       cmdline[ncmdline-1].cmdline = optarg;
+> +       cmdline[ncmdline-1].iterate = false;
+>  }
+>
+>  /*
+> @@ -212,14 +233,14 @@ command_loop(void)
+>
+>         /* command line mode */
+>         for (i = 0; !done && i < ncmdline; i++) {
+> -               input = strdup(cmdline[i]);
+> +               input = strdup(cmdline[i].cmdline);
+>                 if (!input) {
+>                         fprintf(stderr,
+>                                 _("cannot strdup command '%s': %s\n"),
+>                                 cmdline[i], strerror(errno));
+>                         exit(1);
+>                 }
+> -               done = process_input(input, true);
+> +               done = process_input(input, cmdline[i].iterate);
+>         }
+>         free(cmdline);
+>         return;
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 885df7f141e2..d6bacaf0438d 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -9,10 +9,13 @@ xfs_io \- debug the I/O path of an XFS filesystem
+>  .B \-c
+>  .I cmd
+>  ] ... [
+> +.B \-C
+> +.I cmd
+> +] ... [
+>  .B \-p
+>  .I prog
+>  ]
+> -.I file
+> +.I [ file ]
+
+Suggest: [ file ] ...
+
+>  .br
+>  .B xfs_io \-V
+>  .SH DESCRIPTION
+> @@ -25,14 +28,35 @@ These code paths include not only the obvious read/write/mmap interfaces
+>  for manipulating files, but also cover all of the XFS extensions (such
+>  as space preallocation, additional inode flags, etc).
+>  .SH OPTIONS
+> +.B xfs_io
+> +commands may be run interactively (the default) or as arguments on the
+> +command line.
+> +Interactive mode always runs commands on the current open file, whilst commands
+> +run from the command line may operate on all open files rather than the current
+> +open file.
+
+"operate on all open files" is ambiguous. does the loop go files -> cmds or
+cmds -> files? this is part of the confusion IMO.
+
+> +Multiple arguments may be given on the command line and they are run in the
+> +sequence given. The program exits one all commands have
+> +been run.
+>  .TP 1.0i
+>  .BI \-c " cmd"
+> -.B xfs_io
+> -commands may be run interactively (the default) or as arguments on
+> -the command line. Multiple
+> +Run the specified command on all currently open files.
+> +Some commands can not be run on all open files, so they will execute on only
+> +the current open file to maintain compatibility with historical usage.
+> +Multiple
+> +.B \-c
+> +arguments may be given and may be interleaved on the command line in any order
+> +with
+> +.B \-C
+> +commands.
+> +.TP
+> +.BI \-C " cmd"
+> +Run the specified command only on the active open file.
+> +Multiple
+> +.B \-C
+> +arguments may be given and may be interleaved on the command line in any order
+> +with
+>  .B \-c
+> -arguments may be given. The commands are run in the sequence given,
+> -then the program exits.
+> +commands.
+>  .TP
+>  .BI \-p " prog"
+>  Set the program name for prompts and some error messages,
+> --
+> 2.10.2
+>
