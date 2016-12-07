@@ -1,79 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:34467 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751510AbcLEVwy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2016 16:52:54 -0500
-Date: Tue, 6 Dec 2016 08:45:57 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:56141 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752017AbcLGDrf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 22:47:35 -0500
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc on
- glusterfs setup
-Message-ID: <20161205214557.GC4219@dastard>
-References: <20161204214950.GL31101@dastard>
- <9B23CFED-4AFC-46FC-8E35-AD85B11FEA02@nuagenetworks.net>
- <20161204224604.GN31101@dastard>
- <D3BB642A-1CBB-47CB-89AA-E99837228F35@nuagenetworks.net>
- <20161204235059.GO31101@dastard>
- <A9F9389E-0CD8-4A85-BA08-C5503B781679@nuagenetworks.net>
- <20161205012243.GQ31101@dastard>
- <C07DD929-5600-4934-A6B0-C0A7D83D7247@nuagenetworks.net>
- <20161205074645.GB4326@dastard>
- <07D60BAA-A340-4AB0-9F22-D962A0478891@nuagenetworks.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <07D60BAA-A340-4AB0-9F22-D962A0478891@nuagenetworks.net>
+Subject: [PATCH 2/6] libxcmd: rename args_command to command_iterator
+Date: Wed,  7 Dec 2016 14:47:20 +1100
+Message-Id: <20161207034724.1613-3-david@fromorbit.com>
+In-Reply-To: <20161207034724.1613-1-david@fromorbit.com>
+References: <20161207034724.1613-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Cyril Peponnet <cyril.peponnet@nuagenetworks.net>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, amir73il@gmail.com
 
-On Mon, Dec 05, 2016 at 07:51:45AM -0800, Cyril Peponnet wrote:
-> I had the issue again but I don’t have more output in dmesg or
-> journalctl even with the echo 11 > /proc/sys/fs/xfs/error_level
-> set.
+From: Dave Chinner <dchinner@redhat.com>
 
-Which means your kernel does not have this commit:
+It is not particularly easy to understand the function of the
+args_command abstraction. it's actually a command iterator interface
+that allows callers to specify the target of the command and iterate
+the command multiple times over different targets. Rename and
+document the abstraction to make this functionality clear.
 
-commit 847f9f6875fb02b576035e3dc31f5e647b7617a7
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Oct 12 16:04:45 2015 +1100
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ include/command.h |  4 ++--
+ io/init.c         |  9 +++++++--
+ libxcmd/command.c | 16 ++++++++--------
+ quota/init.c      |  9 +++++++--
+ 4 files changed, 24 insertions(+), 14 deletions(-)
 
-    xfs: more info from kmem deadlocks and high-level error msgs
-    
-    In an effort to get more useful out of "possible memory
-    allocation deadlock" messages, print the size of the
-    requested allocation, and dump the stack if the xfs error
-    level is tuned high.
-    
-    The stack dump is implemented in define_xfs_printk_level()
-    for error levels >= LOGLEVEL_ERR, partly because it
-    seems generically useful, and also because kmem.c has
-    no knowledge of xfs error level tunables or other such bits,
-    it's very kmem-specific.
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-> Is there another location where I should look at ?
-
-Nope, there's nothing in your kernel we can use to identify the
-source of memory allocations. I'm pretty sure that RH have used
-systemtap scripts to pull this information from these kernels for
-RHEL customers - we've added additional debug help here to avoid
-that need, but your kernel doesn't have that code....
-
-Essentially, best guess is that it's file fragmentation causing
-problems with extent list allocation. Finding out why that one
-snapshot is fragmenting so much and mitigating it is probably the
-only thing you can do right now (i.e. extent size hints). Long term
-is to get gluster to do the mitigation for VM images automatically.
-
-Cheers,
-
-Dave.
+diff --git a/include/command.h b/include/command.h
+index 58bfcaac44a0..637ee06e6e9a 100644
+--- a/include/command.h
++++ b/include/command.h
+@@ -50,12 +50,12 @@ extern int		ncmds;
+ extern void		help_init(void);
+ extern void		quit_init(void);
+ 
+-typedef int (*argsfunc_t)(int index);
++typedef int (*iterfunc_t)(int index);
+ typedef int (*checkfunc_t)(const cmdinfo_t *ci);
+ 
+ extern void		add_command(const cmdinfo_t *ci);
+ extern void		add_user_command(char *optarg);
+-extern void		add_args_command(argsfunc_t af);
++extern void		add_command_iterator(iterfunc_t func);
+ extern void		add_check_command(checkfunc_t cf);
+ 
+ extern const cmdinfo_t	*find_command(const char *cmd);
+diff --git a/io/init.c b/io/init.c
+index ab40f3745390..34009b024833 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -90,8 +90,13 @@ init_commands(void)
+ 	cowextsize_init();
+ }
+ 
++/*
++ * This allows xfs_io commands specified on the command line to be run on every
++ * open file in the file table. Commands that should not be iterated across all
++ * open files need to specify CMD_FLAG_ONESHOT in their command flags.
++ */
+ static int
+-init_args_command(
++filetable_iterator(
+ 	int	index)
+ {
+ 	if (index >= filecount)
+@@ -214,7 +219,7 @@ init(
+ 	}
+ 
+ 	init_commands();
+-	add_args_command(init_args_command);
++	add_command_iterator(filetable_iterator);
+ 	add_check_command(init_check_command);
+ }
+ 
+diff --git a/libxcmd/command.c b/libxcmd/command.c
+index dce8361ce3ea..789aeb5c5e5a 100644
+--- a/libxcmd/command.c
++++ b/libxcmd/command.c
+@@ -23,7 +23,7 @@
+ cmdinfo_t	*cmdtab;
+ int		ncmds;
+ 
+-static argsfunc_t	args_func;
++static iterfunc_t	iter_func;
+ static checkfunc_t	check_func;
+ static int		ncmdline;
+ static char		**cmdline;
+@@ -130,7 +130,7 @@ add_user_command(char *optarg)
+  * so we abort straight away.
+  */
+ static int
+-args_command(
++iterate_command(
+ 	const cmdinfo_t	*ct,
+ 	int		index)
+ {
+@@ -138,16 +138,16 @@ args_command(
+ 		return 0;
+ 	if (ct->flags & CMD_FLAG_ONESHOT)
+ 		return -1;
+-	if (args_func)
+-		return args_func(index);
++	if (iter_func)
++		return iter_func(index);
+ 	return 0;
+ }
+ 
+ void
+-add_args_command(
+-	argsfunc_t	af)
++add_command_iterator(
++	iterfunc_t	func)
+ {
+-	args_func = af;
++	iter_func = func;
+ }
+ 
+ void
+@@ -171,7 +171,7 @@ command_loop(void)
+ 			ct = find_command(v[0]);
+ 			if (ct) {
+ 				j = 0;
+-				while (!done && (j = args_command(ct, j)))
++				while (!done && (j = iterate_command(ct, j)))
+ 					done = command(ct, c, v);
+ 			} else
+ 				fprintf(stderr, _("command \"%s\" not found\n"),
+diff --git a/quota/init.c b/quota/init.c
+index 3bebbb8735f3..193f6421fd59 100644
+--- a/quota/init.c
++++ b/quota/init.c
+@@ -75,8 +75,13 @@ init_commands(void)
+ 	state_init();
+ }
+ 
++/*
++ * This function allows xfs_quota commands to iterate across all discovered
++ * quota enabled filesystems. Commands that should not iterate all filesystems
++ * should specify CMD_FLAG_ONESHOT in their command flags.
++ */
+ static int
+-init_args_command(
++filesystem_iterator(
+ 	int	index)
+ {
+ 	if (index >= fs_count)
+@@ -189,7 +194,7 @@ init(
+ 	free(projopts);
+ 
+ 	init_commands();
+-	add_args_command(init_args_command);
++	add_command_iterator(filesystem_iterator);
+ 	add_check_command(init_check_command);
+ 
+ 	/*
 -- 
-Dave Chinner
-david@fromorbit.com
+2.10.2
+
