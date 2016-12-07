@@ -1,108 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:46343 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751129AbcLGGRt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2016 01:17:49 -0500
-Date: Wed, 7 Dec 2016 17:16:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc on
- glusterfs setup
-Message-ID: <20161207061646.GG4326@dastard>
-References: <20161204224604.GN31101@dastard>
- <D3BB642A-1CBB-47CB-89AA-E99837228F35@nuagenetworks.net>
- <20161204235059.GO31101@dastard>
- <A9F9389E-0CD8-4A85-BA08-C5503B781679@nuagenetworks.net>
- <20161205012243.GQ31101@dastard>
- <C07DD929-5600-4934-A6B0-C0A7D83D7247@nuagenetworks.net>
- <20161205074645.GB4326@dastard>
- <07D60BAA-A340-4AB0-9F22-D962A0478891@nuagenetworks.net>
- <20161205214557.GC4219@dastard>
- <C257E648-B5F6-473D-B659-74434CF0FB51@nuagenetworks.net>
+Received: from userp1040.oracle.com ([156.151.31.81]:29400 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753202AbcLGASt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 19:18:49 -0500
+Subject: [PATCH 05/11] populate: optionally fill the filesystem when
+ populating fs
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 06 Dec 2016 16:18:42 -0800
+Message-ID: <148106992296.19334.9245887582971974275.stgit@birch.djwong.org>
+In-Reply-To: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
+References: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <C257E648-B5F6-473D-B659-74434CF0FB51@nuagenetworks.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Cyril Peponnet <cyril.peponnet@nuagenetworks.net>
-Cc: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Tue, Dec 06, 2016 at 09:54:37AM -0800, Cyril Peponnet wrote:
-> 
-> > On Dec 5, 2016, at 1:45 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > 
-> > On Mon, Dec 05, 2016 at 07:51:45AM -0800, Cyril Peponnet wrote:
-> >> I had the issue again but I don’t have more output in dmesg or
-> >> journalctl even with the echo 11 > /proc/sys/fs/xfs/error_level
-> >> set.
-> > 
-> > Which means your kernel does not have this commit:
-> > 
-> > commit 847f9f6875fb02b576035e3dc31f5e647b7617a7
-> > Author: Eric Sandeen <sandeen@redhat.com>
-> > Date:   Mon Oct 12 16:04:45 2015 +1100
-> > 
-> >    xfs: more info from kmem deadlocks and high-level error msgs
-> > 
-> >    In an effort to get more useful out of "possible memory
-> >    allocation deadlock" messages, print the size of the
-> >    requested allocation, and dump the stack if the xfs error
-> >    level is tuned high.
-> > 
-> >    The stack dump is implemented in define_xfs_printk_level()
-> >    for error levels >= LOGLEVEL_ERR, partly because it
-> >    seems generically useful, and also because kmem.c has
-> >    no knowledge of xfs error level tunables or other such bits,
-> >    it's very kmem-specific.
-> > 
-> >    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> >    Signed-off-by: Dave Chinner <david@fromorbit.com>
-> 
-> Indeed we should plan an upgrade window.
-> 
-> > 
-> >> Is there another location where I should look at ?
-> > 
-> > Nope, there's nothing in your kernel we can use to identify the
-> > source of memory allocations. I'm pretty sure that RH have used
-> > systemtap scripts to pull this information from these kernels for
-> > RHEL customers - we've added additional debug help here to avoid
-> > that need, but your kernel doesn't have that code....
-> > 
-> > Essentially, best guess is that it's file fragmentation causing
-> > problems with extent list allocation. Finding out why that one
-> > snapshot is fragmenting so much and mitigating it is probably the
-> > only thing you can do right now (i.e. extent size hints). Long term
-> > is to get gluster to do the mitigation for VM images automatically.
-> > 
-> 
-> Looks like it’s better since I disabled the vm that was taking a lot of disk space:
-> 
-> qemu-img info disk0.snapshot.qcow2
-> image: disk0.snapshot.qcow2
-> file format: qcow2
-> virtual size: 265G (284541583360 bytes)
-> disk size: 798G
-> cluster_size: 65536
-> backing file: base.qcow2
-> 
-> Note the virtual size vs the disk size, looks pretty fragmented.
-> 
-> I will follow up with glusters guys.
-> 
-> One dumb question, can the extent size hint be done at the root
-> level?
+Be a little more flexible in how much we fill up a pre-populated
+filesystem.  For the field fuzzing tests, we don't need the extra
+space/inode usage and therefore won't want much at all.
 
-Yes. Just set it immediately after mkfs on the root directory inode
-and everything in the filesystem will inherit that extent size hint
-at create time.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ common/populate |   37 +++++++++++++++++++++++++++++--------
+ 1 file changed, 29 insertions(+), 8 deletions(-)
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/common/populate b/common/populate
+index 2340eb6..2385c8d 100644
+--- a/common/populate
++++ b/common/populate
+@@ -73,26 +73,39 @@ __populate_create_attr() {
+ 	done
+ }
+ 
+-# Fill up 60% of the remaining free space
++# Fill up some percentage of the remaining free space
+ __populate_fill_fs() {
+ 	dir="$1"
+ 	pct="$2"
+ 	test -z "${pct}" && pct=60
+ 
+-	SRC_SZ="$(du -ks "${SRCDIR}" | cut -f 1)"
++	mkdir -p "${dir}/test/1"
++	cp -pRdu "${dir}"/S_IFREG* "${dir}/test/1/"
++
++	SRC_SZ="$(du -ks "${dir}/test/1" | cut -f 1)"
+ 	FS_SZ="$(( $(stat -f "${dir}" -c '%a * %S') / 1024 ))"
+ 
+ 	NR="$(( (FS_SZ * ${pct} / 100) / SRC_SZ ))"
+-	test "${NR}" -lt 1 && NR=1
+ 
+-	seq 1 "${NR}" | while read nr; do
+-		cp -pRdu "${SRCDIR}" "${dir}/test.${nr}" >> $seqres.full 2>&1
++	echo "FILL FS"
++	echo "src_sz $SRC_SZ fs_sz $FS_SZ nr $NR"
++	seq 2 "${NR}" | while read nr; do
++		cp -pRdu "${dir}/test/1" "${dir}/test/${nr}"
+ 	done
+ }
+ 
+ # Populate an XFS on the scratch device with (we hope) all known
+ # types of metadata block
+ _scratch_xfs_populate() {
++	fill=1
++
++	for arg in $@; do
++		case "${arg}" in
++		"nofill")
++			fill=0;;
++		esac
++	done
++
+ 	_scratch_mount
+ 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+ 	dblksz="$(xfs_info "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
+@@ -225,7 +238,7 @@ _scratch_xfs_populate() {
+ 
+ 	# Copy some real files (xfs tests, I guess...)
+ 	echo "+ real files"
+-	__populate_fill_fs "${SCRATCH_MNT}" 5
++	test $fill -ne 0 && __populate_fill_fs "${SCRATCH_MNT}" 5
+ 
+ 	umount "${SCRATCH_MNT}"
+ }
+@@ -233,6 +246,15 @@ _scratch_xfs_populate() {
+ # Populate an ext4 on the scratch device with (we hope) all known
+ # types of metadata block
+ _scratch_ext4_populate() {
++	fill=1
++
++	for arg in $@; do
++		case "${arg}" in
++		"nofill")
++			fill=0;;
++		esac
++	done
++
+ 	_scratch_mount
+ 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+ 	dblksz="${blksz}"
+@@ -300,8 +322,7 @@ _scratch_ext4_populate() {
+ 
+ 	# Copy some real files (xfs tests, I guess...)
+ 	echo "+ real files"
+-	__populate_fill_fs "${SCRATCH_MNT}"
+-	cp -pRdu --reflink=always "${SCRATCH_MNT}/S_IFREG.FMT_ETREE" "${SCRATCH_MNT}/S_IREG.FMT_ETREE.REFLINK" 2> /dev/null
++	test $fill -ne 0 && __populate_fill_fs "${SCRATCH_MNT}" 5
+ 
+ 	umount "${SCRATCH_MNT}"
+ }
+
