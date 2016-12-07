@@ -1,370 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29327 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751680AbcLGASa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 19:18:30 -0500
-Subject: [PATCH 02/11] xfs/ext4: check negative inode size
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Dec 2016 16:18:23 -0800
-Message-ID: <148106990395.19334.5033524587338012054.stgit@birch.djwong.org>
-In-Reply-To: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
-References: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35244 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751569AbcLGDt6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 22:49:58 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20161206225147.GF4219@dastard>
+References: <1481003038-23740-1-git-send-email-amir73il@gmail.com> <20161206225147.GF4219@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 7 Dec 2016 05:49:55 +0200
+Message-ID: <CAOQ4uxh=fGTObQ=mix1ZbP7DbJ287WKfNNi8ePzSMUyb1egS9A@mail.gmail.com>
+Subject: Re: [PATCH v4] xfs_io: support -c "open foo" command
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
 
-Craft a malicious filesystem image with a negative inode size,
-then try to trigger a kernel DoS by appending data to the file.
-Ideally this should trigger verifier errors instead of hanging.
+On Wed, Dec 7, 2016 at 12:51 AM, Dave Chinner <david@fromorbit.com> wrote:
+...
+> Again, you've defined the solution to meet only your immediate
+> needs.  The git history will tells us what is "proper", and I'm
+> pretty sure what I suggested first up (use of CMD_FLAG_GLOBAL) will
+> be close to the mark....
+>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/ext4/400   |   71 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/ext4/401   |   71 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/ext4/group |    2 ++
- tests/xfs/400    |   72 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/401    |   72 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/group  |    2 ++
- 6 files changed, 290 insertions(+)
- create mode 100755 tests/ext4/400
- create mode 100755 tests/ext4/401
- create mode 100755 tests/xfs/400
- create mode 100755 tests/xfs/401
+True, I've defined the solution to meet my needs, though I believe my
+needs are not crazy and serve a greater good.
+The reason I did not go for the "proper" solution is because I did not
+understand how your suggestion aims to solve the problem defined
+by my test. And by solve I don't mean just avoid the endless loop.
+
+> So the initial fix for the current problem is to mark all the
+> "one-shot" commands with CMD_FLAG_GLOBAL so they don't iterate the
+> file table and behave sanely by default. I'd rename CMD_FLAG_GLOBAL
+> to something more appropriate as well,
+
+CMD_FLAG_ONESHOT?
+
+> and probably rework the main
+> command loop to get this check out of the main loop and into the
+> args_command() function where we can do single shot command
+> control cleanly.
+>
 
 
-diff --git a/tests/ext4/400 b/tests/ext4/400
-new file mode 100755
-index 0000000..5857549
---- /dev/null
-+++ b/tests/ext4/400
-@@ -0,0 +1,71 @@
-+#! /bin/bash
-+# FSQA Test No. 400
-+#
-+# Since loff_t is a signed type, it is invalid for a filesystem to load
-+# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-+# which means that we can trivially DoS the VFS by creating such a file
-+# and appending to it.  This causes an integer overflow in the routines
-+# underlying writeback, which results in the kernel locking up.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016-2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+PIDS=""
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs ext2 ext3 ext4
-+_require_scratch_nocheck
-+_disable_dmesg_check
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+_scratch_mkfs  >> $seqres.full 2>&1
-+_scratch_mount
-+
-+testdir=$SCRATCH_MNT
-+echo m > $testdir/a
-+
-+echo "Corrupt filesystem"
-+_scratch_unmount
-+debugfs -w -R "sif /a size -1" $SCRATCH_DEV >> $seqres.full 2>&1
-+
-+echo "Remount, try to append"
-+_scratch_mount
-+dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-+sync
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/ext4/401 b/tests/ext4/401
-new file mode 100755
-index 0000000..ee7ecf3
---- /dev/null
-+++ b/tests/ext4/401
-@@ -0,0 +1,71 @@
-+#! /bin/bash
-+# FSQA Test No. 401
-+#
-+# Since loff_t is a signed type, it is invalid for a filesystem to load
-+# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-+# which means that we can trivially DoS the VFS by creating such a file
-+# and appending to it.  This causes an integer overflow in the routines
-+# underlying writeback, which results in the kernel locking up.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016-2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+PIDS=""
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs ext2 ext3 ext4
-+_require_scratch_nocheck
-+_disable_dmesg_check
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+_scratch_mkfs  >> $seqres.full 2>&1
-+_scratch_mount
-+
-+testdir=$SCRATCH_MNT
-+echo m > $testdir/a
-+
-+echo "Corrupt filesystem"
-+_scratch_unmount
-+debugfs -w -R "sif /a size 0xFFFFFFFFFFFFFE00" $SCRATCH_DEV >> $seqres.full 2>&1
-+
-+echo "Remount, try to append"
-+_scratch_mount
-+dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=direct,append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-+sync
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/ext4/group b/tests/ext4/group
-index 53fe03e..8e4aad2 100644
---- a/tests/ext4/group
-+++ b/tests/ext4/group
-@@ -34,3 +34,5 @@
- 306 auto rw resize quick
- 307 auto ioctl rw
- 308 auto ioctl rw prealloc quick
-+400 auto quick
-+401 auto quick
-diff --git a/tests/xfs/400 b/tests/xfs/400
-new file mode 100755
-index 0000000..498c024
---- /dev/null
-+++ b/tests/xfs/400
-@@ -0,0 +1,72 @@
-+#! /bin/bash
-+# FSQA Test No. 400
-+#
-+# Since loff_t is a signed type, it is invalid for a filesystem to load
-+# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-+# which means that we can trivially DoS the VFS by creating such a file
-+# and appending to it.  This causes an integer overflow in the routines
-+# underlying writeback, which results in the kernel locking up.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016-2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+PIDS=""
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_nocheck
-+_disable_dmesg_check
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+_scratch_mkfs  >> $seqres.full 2>&1
-+_scratch_mount
-+
-+testdir=$SCRATCH_MNT
-+echo m > $testdir/a
-+inum=$(stat -c "%i" $testdir/a)
-+
-+echo "Corrupt filesystem"
-+_scratch_unmount
-+_scratch_xfs_db -x -c "inode ${inum}" -c 'write core.size -- -1' >> $seqres.full
-+
-+echo "Remount, try to append"
-+_scratch_mount
-+dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-+sync
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/401 b/tests/xfs/401
-new file mode 100755
-index 0000000..41b262d
---- /dev/null
-+++ b/tests/xfs/401
-@@ -0,0 +1,72 @@
-+#! /bin/bash
-+# FSQA Test No. 401
-+#
-+# Since loff_t is a signed type, it is invalid for a filesystem to load
-+# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-+# which means that we can trivially DoS the VFS by creating such a file
-+# and appending to it.  This causes an integer overflow in the routines
-+# underlying writeback, which results in the kernel locking up.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016-2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+PIDS=""
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_nocheck
-+_disable_dmesg_check
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+_scratch_mkfs  >> $seqres.full 2>&1
-+_scratch_mount
-+
-+testdir=$SCRATCH_MNT
-+echo m > $testdir/a
-+inum=$(stat -c "%i" $testdir/a)
-+
-+echo "Corrupt filesystem"
-+_scratch_unmount
-+_scratch_xfs_db -x -c "inode ${inum}" -c 'write core.size -- -1' >> $seqres.full
-+
-+echo "Remount, try to append"
-+_scratch_mount
-+dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=direct,append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-+sync
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/group b/tests/xfs/group
-index c237b50..fcb9644 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -334,3 +334,5 @@
- 345 auto quick clone
- 346 auto quick clone
- 347 auto quick clone
-+400 auto quick
-+401 auto quick
+And I would gladly follow your suggestion to fix endless loop issue,
+but first I would like to understood where this is going to end up in terms
+of "expected behavior" (see below).
 
+> The next fix is to be able to control iteration directly, so if we
+> want to stat all or just the current file we can. I'd suggest that
+> we should introduce a "-C <cmd>" option to indicate that the command
+> should only be run on the current active file. That will allow new
+> tests that use multiple files to control behaviour appropriately...
+>
+
+So that is what I was missing in your first reply.
+I realized that a new semantic must be added to be able to both
+keep existing behavior and enable the desired functionality.
+
+But I am not sure that -C <cmd> does the job.
+See the example below from test overlay/016.
+It's a perfectly valid use case that cannot be described with
+existing semantics.
+
+#
+# case #1:
+# open file for read (rofd)
+# open file for write (rwfd)
+# write to rwfd
+# read from rofd
+#
+$XFS_IO_PROG \
+        -c "open -r foo" \
+        -c "open foo" \
+        -c "pwrite -S 0x61 0 16" \
+        -c "file 0" \
+        -c "pread -v 0 16" \
+
+With the suggested -C <cmd> semantics,
+it would look something like this:
+$XFS_IO_PROG \
+        -c "open -r foo" \
+        -c "open foo" \
+        -C "pwrite -S 0x61 0 16" \
+        -c "file 0" \
+        -C "pread -v 0 16" \
+
+
+This could work out if -C meant to mark that cmd CMD_FLAG_ONESHOT
+and run it only once. It suffice for the use case of writing a script, but
+not sure if that is what you meant.
+
+I assert that any usage containing multiple files and -C commands is
+going to be confusing to read, but if that is the price we have to pay
+for not getting the semantics clear from the start, so be it.
+
+I am hoping you are able to clarify that we are on the same page,
+so I can go on with implementation.
+
+Thanks,
+Amir.
