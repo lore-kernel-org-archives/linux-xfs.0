@@ -1,503 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47376 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752236AbcLGNd7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Dec 2016 08:33:59 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4F4B364DC
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2016 13:27:54 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 13/22] mkfs: remove zeroed items from conflicts declaration
-Date: Wed,  7 Dec 2016 14:27:20 +0100
-Message-Id: <1481117249-21273-14-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:29291 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751762AbcLGASX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 19:18:23 -0500
+Subject: [PATCH 01/11] ocfs2: test reflinking to inline data files
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 06 Dec 2016 16:18:17 -0800
+Message-ID: <148106989741.19334.14324200960917685576.stgit@birch.djwong.org>
+In-Reply-To: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
+References: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-opts is a global array of structs, so it is already zeroed. No need
-for explicit zeros on items unless we want to highlight the value.
+Make sure that we can handle reflinking from and to inline-data files.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- mkfs/xfs_mkfs.c | 200 --------------------------------------------------------
- 1 file changed, 200 deletions(-)
+ common/reflink       |    2 +
+ tests/ocfs2/001      |   88 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/ocfs2/001.out  |   14 ++++++++
+ tests/ocfs2/Makefile |   20 +++++++++++
+ tests/ocfs2/group    |    1 +
+ 5 files changed, 124 insertions(+), 1 deletion(-)
+ create mode 100755 tests/ocfs2/001
+ create mode 100644 tests/ocfs2/001.out
+ create mode 100644 tests/ocfs2/Makefile
+ create mode 100644 tests/ocfs2/group
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index b0e5d75..61caceb 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -239,10 +239,6 @@ struct opt_params {
- 			{ .index = B_LOG,
- 			  .conflicts = { {.opt = OPT_B,
- 					  .subopt = B_SIZE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_BLOCKSIZE_LOG,
-@@ -254,10 +250,6 @@ struct opt_params {
- 			  .is_power_2 = true,
- 			  .conflicts = { {.opt = OPT_B,
- 					  .subopt = B_LOG,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_BLOCKSIZE,
-@@ -291,10 +283,6 @@ struct opt_params {
- 			{ .index = D_AGCOUNT,
- 			  .conflicts = { {.opt = OPT_D,
- 					  .subopt = D_AGSIZE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = 1,
-@@ -321,24 +309,12 @@ struct opt_params {
- 			{ .index = D_SUNIT,
- 			  .conflicts = { {.opt = OPT_D,
- 					  .subopt = D_NOALIGN,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_D,
- 					  .subopt = D_SU,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_D,
- 					  .subopt = D_SW,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
-@@ -348,24 +324,12 @@ struct opt_params {
- 			{ .index = D_SWIDTH,
- 			  .conflicts = { {.opt = OPT_D,
- 					  .subopt = D_NOALIGN,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_D,
- 					  .subopt = D_SU,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_D,
- 					  .subopt = D_SW,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
-@@ -375,10 +339,6 @@ struct opt_params {
- 			{ .index = D_AGSIZE,
- 			  .conflicts = { {.opt = OPT_D,
- 					  .subopt = D_AGCOUNT,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .convert = true,
-@@ -389,24 +349,12 @@ struct opt_params {
- 			{ .index = D_SU,
- 			  .conflicts = { {.opt = OPT_D,
- 					  .subopt = D_NOALIGN,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_D,
- 					  .subopt = D_SUNIT,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_D,
- 					  .subopt = D_SWIDTH,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .convert = true,
-@@ -417,24 +365,12 @@ struct opt_params {
- 			{ .index = D_SW,
- 			  .conflicts = { {.opt = OPT_D,
- 					  .subopt = D_NOALIGN,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_D,
- 					  .subopt = D_SUNIT,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_D,
- 					  .subopt = D_SWIDTH,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
-@@ -444,10 +380,6 @@ struct opt_params {
- 			{ .index = D_SECTLOG,
- 			  .conflicts = { {.opt = OPT_D,
- 					  .subopt = D_SECTSIZE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_SECTORSIZE_LOG,
-@@ -457,10 +389,6 @@ struct opt_params {
- 			{ .index = D_SECTSIZE,
- 			  .conflicts = { {.opt = OPT_D,
- 					  .subopt = D_SECTLOG,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .convert = true,
-@@ -472,31 +400,15 @@ struct opt_params {
- 			{ .index = D_NOALIGN,
- 			  .conflicts = { {.opt = OPT_D,
- 					  .subopt = D_SU,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_D,
- 					  .subopt = D_SW,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_D,
- 					  .subopt = D_SUNIT,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_D,
- 					  .subopt = D_SWIDTH,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
-@@ -555,17 +467,9 @@ struct opt_params {
- 			{ .index = I_LOG,
- 			  .conflicts = { {.opt = OPT_I,
- 					  .subopt = I_PERBLOCK,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_I,
- 					  .subopt = I_SIZE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_DINODE_MIN_LOG,
-@@ -581,17 +485,9 @@ struct opt_params {
- 			{ .index = I_PERBLOCK,
- 			  .conflicts = { {.opt = OPT_I,
- 					  .subopt = I_LOG,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_I,
- 					  .subopt = I_SIZE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .is_power_2 = true,
-@@ -602,17 +498,9 @@ struct opt_params {
- 			{ .index = I_SIZE,
- 			  .conflicts = { {.opt = OPT_I,
- 					  .subopt = I_PERBLOCK,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_I,
- 					  .subopt = I_LOG,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .is_power_2 = true,
-@@ -687,10 +575,6 @@ struct opt_params {
- 			{ .index = L_AGNUM,
- 			  .conflicts = { {.opt = OPT_L,
- 					  .subopt = L_DEV,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
-@@ -700,17 +584,9 @@ struct opt_params {
- 			{ .index = L_INTERNAL,
- 			  .conflicts = { {.opt = OPT_L,
- 					  .subopt = L_FILE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_L,
- 					  .subopt = L_DEV,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
-@@ -741,10 +617,6 @@ struct opt_params {
- 			{ .index = L_SUNIT,
- 			  .conflicts = { {.opt = OPT_L,
- 					  .subopt = L_SU,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = 1,
-@@ -754,10 +626,6 @@ struct opt_params {
- 			{ .index = L_SU,
- 			  .conflicts = { {.opt = OPT_L,
- 					  .subopt = L_SUNIT,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .convert = true,
-@@ -768,17 +636,9 @@ struct opt_params {
- 			{ .index = L_DEV,
- 			  .conflicts = { {.opt = OPT_L,
- 					  .subopt = L_AGNUM,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_L,
- 					  .subopt = L_INTERNAL,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -786,10 +646,6 @@ struct opt_params {
- 			{ .index = L_SECTLOG,
- 			  .conflicts = { {.opt = OPT_L,
- 					  .subopt = L_SECTSIZE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_SECTORSIZE_LOG,
-@@ -799,10 +655,6 @@ struct opt_params {
- 			{ .index = L_SECTSIZE,
- 			  .conflicts = { {.opt = OPT_L,
- 					  .subopt = L_SECTLOG,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .convert = true,
-@@ -814,10 +666,6 @@ struct opt_params {
- 			{ .index = L_FILE,
- 			  .conflicts = { {.opt = OPT_L,
- 					  .subopt = L_INTERNAL,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
-@@ -827,17 +675,9 @@ struct opt_params {
- 			{ .index = L_NAME,
- 			  .conflicts = { {.opt = OPT_L,
- 					  .subopt = L_AGNUM,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_L,
- 					  .subopt = L_INTERNAL,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -872,10 +712,6 @@ struct opt_params {
- 			{ .index = N_LOG,
- 			  .conflicts = { {.opt = OPT_N,
- 					  .subopt = N_SIZE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_REC_DIRSIZE,
-@@ -885,10 +721,6 @@ struct opt_params {
- 			{ .index = N_SIZE,
- 			  .conflicts = { {.opt = OPT_N,
- 					  .subopt = N_LOG,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .convert = true,
-@@ -998,17 +830,9 @@ struct opt_params {
- 			{ .index = S_LOG,
- 			  .conflicts = { {.opt = OPT_S,
- 					  .subopt = S_SIZE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_S,
- 					  .subopt = S_SECTSIZE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_SECTORSIZE_LOG,
-@@ -1018,17 +842,9 @@ struct opt_params {
- 			{ .index = S_SECTLOG,
- 			  .conflicts = { {.opt = OPT_S,
- 					  .subopt = S_SIZE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_S,
- 					  .subopt = S_SECTSIZE,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_SECTORSIZE_LOG,
-@@ -1038,17 +854,9 @@ struct opt_params {
- 			{ .index = S_SIZE,
- 			  .conflicts = { {.opt = OPT_S,
- 					  .subopt = S_LOG,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_S,
- 					  .subopt = S_SECTLOG,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .convert = true,
-@@ -1060,17 +868,9 @@ struct opt_params {
- 			{ .index = S_SECTSIZE,
- 			  .conflicts = { {.opt = OPT_S,
- 					  .subopt = S_LOG,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {.opt = OPT_S,
- 					  .subopt = S_SECTLOG,
--					  .test_values = false,
--					  .test_default_value = false,
--					  .invalid_value = 0,
--					  .at_value = 0
- 					 },
- 					 {LAST_CONFLICT} },
- 			  .convert = true,
--- 
-2.8.1
+
+diff --git a/common/reflink b/common/reflink
+index 9d51729..d048045 100644
+--- a/common/reflink
++++ b/common/reflink
+@@ -197,7 +197,7 @@ _cp_reflink() {
+ 	file1="$1"
+ 	file2="$2"
+ 
+-	cp --reflink=always -p "$file1" "$file2"
++	cp --reflink=always -p -f "$file1" "$file2"
+ }
+ 
+ # Reflink some file1 into file2
+diff --git a/tests/ocfs2/001 b/tests/ocfs2/001
+new file mode 100755
+index 0000000..afb9ce9
+--- /dev/null
++++ b/tests/ocfs2/001
+@@ -0,0 +1,88 @@
++#! /bin/bash
++# FS QA Test No. 001
++#
++# Ensure that reflink works correctly with inline-data files.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs ocfs2
++_require_scratch_reflink
++_require_cp_reflink
++
++rm -f $seqres.full
++
++echo "Format and mount"
++_scratch_mkfs --fs-features=local,unwritten,refcount,inline-data > $seqres.full 2>&1
++tunefs.ocfs2 --query '%H' $SCRATCH_DEV | grep -q 'inline-data' || \
++	_notrun "Inline data is not supported."
++_scratch_mount >> $seqres.full 2>&1
++
++testdir=$SCRATCH_MNT/test-$seq
++mkdir $testdir
++
++sz=65536
++echo "Create the original files"
++$XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file1 >> $seqres.full
++echo x > $testdir/file2
++echo x > $testdir/file3
++echo y > $testdir/file4
++$XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file5 >> $seqres.full
++echo a > $testdir/file6
++_scratch_cycle_mount
++
++echo "reflink into the start of file2"
++_cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
++
++echo "reflink past the stuff in file3"
++_reflink_range $testdir/file1 0 $testdir/file3 $sz $sz >> $seqres.full
++
++echo "reflink an inline-data file to a regular one"
++_cp_reflink $testdir/file4 $testdir/file5 >> $seqres.full
++
++echo "reflink an inline-data file to another inline-data file"
++_cp_reflink $testdir/file4 $testdir/file6 >> $seqres.full
++
++echo "Verify the whole mess"
++_scratch_cycle_mount
++md5sum $testdir/file* | _filter_scratch
++
++# success, all done
++status=0
++exit
+diff --git a/tests/ocfs2/001.out b/tests/ocfs2/001.out
+new file mode 100644
+index 0000000..99fa43a
+--- /dev/null
++++ b/tests/ocfs2/001.out
+@@ -0,0 +1,14 @@
++QA output created by 001
++Format and mount
++Create the original files
++reflink into the start of file2
++reflink past the stuff in file3
++reflink an inline-data file to a regular one
++reflink an inline-data file to another inline-data file
++Verify the whole mess
++2d61aa54b58c2e94403fb092c3dbc027  SCRATCH_MNT/test-001/file1
++2d61aa54b58c2e94403fb092c3dbc027  SCRATCH_MNT/test-001/file2
++4e68a2e24b6b0f386ab39d01d902293d  SCRATCH_MNT/test-001/file3
++009520053b00386d1173f3988c55d192  SCRATCH_MNT/test-001/file4
++009520053b00386d1173f3988c55d192  SCRATCH_MNT/test-001/file5
++009520053b00386d1173f3988c55d192  SCRATCH_MNT/test-001/file6
+diff --git a/tests/ocfs2/Makefile b/tests/ocfs2/Makefile
+new file mode 100644
+index 0000000..70a4f16
+--- /dev/null
++++ b/tests/ocfs2/Makefile
+@@ -0,0 +1,20 @@
++#
++# Copyright (c) 2016 Oracle.  All Rights Reserved.
++#
++
++TOPDIR = ../..
++include $(TOPDIR)/include/builddefs
++
++OCFS2_DIR = ocfs2
++TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(OCFS2_DIR)
++
++include $(BUILDRULES)
++
++install:
++	$(INSTALL) -m 755 -d $(TARGET_DIR)
++	$(INSTALL) -m 755 $(TESTS) $(TARGET_DIR)
++	$(INSTALL) -m 644 group $(TARGET_DIR)
++	$(INSTALL) -m 644 $(OUTFILES) $(TARGET_DIR)
++
++# Nothing.
++install-dev install-lib:
+diff --git a/tests/ocfs2/group b/tests/ocfs2/group
+new file mode 100644
+index 0000000..28e6807
+--- /dev/null
++++ b/tests/ocfs2/group
+@@ -0,0 +1 @@
++001 auto quick clone
 
