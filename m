@@ -1,397 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23617 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752426AbcLGASn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 19:18:43 -0500
-Subject: [PATCH 04/11] populate: add _require_populate_commands to check for
- tools
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Dec 2016 16:18:36 -0800
-Message-ID: <148106991660.19334.15802559484540451447.stgit@birch.djwong.org>
-In-Reply-To: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
-References: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:46343 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751129AbcLGGRt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2016 01:17:49 -0500
+Date: Wed, 7 Dec 2016 17:16:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc on
+ glusterfs setup
+Message-ID: <20161207061646.GG4326@dastard>
+References: <20161204224604.GN31101@dastard>
+ <D3BB642A-1CBB-47CB-89AA-E99837228F35@nuagenetworks.net>
+ <20161204235059.GO31101@dastard>
+ <A9F9389E-0CD8-4A85-BA08-C5503B781679@nuagenetworks.net>
+ <20161205012243.GQ31101@dastard>
+ <C07DD929-5600-4934-A6B0-C0A7D83D7247@nuagenetworks.net>
+ <20161205074645.GB4326@dastard>
+ <07D60BAA-A340-4AB0-9F22-D962A0478891@nuagenetworks.net>
+ <20161205214557.GC4219@dastard>
+ <C257E648-B5F6-473D-B659-74434CF0FB51@nuagenetworks.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <C257E648-B5F6-473D-B659-74434CF0FB51@nuagenetworks.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Cyril Peponnet <cyril.peponnet@nuagenetworks.net>
+Cc: linux-xfs@vger.kernel.org
 
-Back when I created common/populate, I thought it was sufficient to
-_require the tools that the populate functions need in the main
-file.  This turned out to be a bit sloppy, so move them into a
-helper function and call it from everything that uses populate.
+On Tue, Dec 06, 2016 at 09:54:37AM -0800, Cyril Peponnet wrote:
+> 
+> > On Dec 5, 2016, at 1:45 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > 
+> > On Mon, Dec 05, 2016 at 07:51:45AM -0800, Cyril Peponnet wrote:
+> >> I had the issue again but I don’t have more output in dmesg or
+> >> journalctl even with the echo 11 > /proc/sys/fs/xfs/error_level
+> >> set.
+> > 
+> > Which means your kernel does not have this commit:
+> > 
+> > commit 847f9f6875fb02b576035e3dc31f5e647b7617a7
+> > Author: Eric Sandeen <sandeen@redhat.com>
+> > Date:   Mon Oct 12 16:04:45 2015 +1100
+> > 
+> >    xfs: more info from kmem deadlocks and high-level error msgs
+> > 
+> >    In an effort to get more useful out of "possible memory
+> >    allocation deadlock" messages, print the size of the
+> >    requested allocation, and dump the stack if the xfs error
+> >    level is tuned high.
+> > 
+> >    The stack dump is implemented in define_xfs_printk_level()
+> >    for error levels >= LOGLEVEL_ERR, partly because it
+> >    seems generically useful, and also because kmem.c has
+> >    no knowledge of xfs error level tunables or other such bits,
+> >    it's very kmem-specific.
+> > 
+> >    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> >    Signed-off-by: Dave Chinner <david@fromorbit.com>
+> 
+> Indeed we should plan an upgrade window.
+> 
+> > 
+> >> Is there another location where I should look at ?
+> > 
+> > Nope, there's nothing in your kernel we can use to identify the
+> > source of memory allocations. I'm pretty sure that RH have used
+> > systemtap scripts to pull this information from these kernels for
+> > RHEL customers - we've added additional debug help here to avoid
+> > that need, but your kernel doesn't have that code....
+> > 
+> > Essentially, best guess is that it's file fragmentation causing
+> > problems with extent list allocation. Finding out why that one
+> > snapshot is fragmenting so much and mitigating it is probably the
+> > only thing you can do right now (i.e. extent size hints). Long term
+> > is to get gluster to do the mitigation for VM images automatically.
+> > 
+> 
+> Looks like it’s better since I disabled the vm that was taking a lot of disk space:
+> 
+> qemu-img info disk0.snapshot.qcow2
+> image: disk0.snapshot.qcow2
+> file format: qcow2
+> virtual size: 265G (284541583360 bytes)
+> disk size: 798G
+> cluster_size: 65536
+> backing file: base.qcow2
+> 
+> Note the virtual size vs the disk size, looks pretty fragmented.
+> 
+> I will follow up with glusters guys.
+> 
+> One dumb question, can the extent size hint be done at the root
+> level?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/populate |    9 ++++++---
- tests/ext4/006  |    1 +
- tests/xfs/083   |    3 +--
- tests/xfs/085   |    1 +
- tests/xfs/086   |    1 +
- tests/xfs/087   |    1 +
- tests/xfs/088   |    1 +
- tests/xfs/089   |    1 +
- tests/xfs/091   |    1 +
- tests/xfs/093   |    1 +
- tests/xfs/097   |    1 +
- tests/xfs/098   |    1 +
- tests/xfs/099   |    1 +
- tests/xfs/100   |    1 +
- tests/xfs/101   |    1 +
- tests/xfs/102   |    1 +
- tests/xfs/105   |    1 +
- tests/xfs/112   |    1 +
- tests/xfs/113   |    1 +
- tests/xfs/117   |    1 +
- tests/xfs/120   |    1 +
- tests/xfs/123   |    1 +
- tests/xfs/124   |    1 +
- tests/xfs/125   |    1 +
- tests/xfs/126   |    1 +
- tests/xfs/269   |    1 +
- tests/xfs/273   |    1 +
- 27 files changed, 32 insertions(+), 5 deletions(-)
+Yes. Just set it immediately after mkfs on the root directory inode
+and everything in the filesystem will inherit that extent size hint
+at create time.
 
+Cheers,
 
-diff --git a/common/populate b/common/populate
-index efabc1e..2340eb6 100644
---- a/common/populate
-+++ b/common/populate
-@@ -22,9 +22,12 @@
- #  Mountain View, CA 94043, USA, or: http://www.sgi.com
- #-----------------------------------------------------------------------
- 
--_require_xfs_io_command "falloc"
--_require_xfs_io_command "fpunch"
--_require_test_program "punch-alternating"
-+_require_populate_commands() {
-+	_require_xfs_io_command "falloc"
-+	_require_xfs_io_command "fpunch"
-+	_require_test_program "punch-alternating"
-+	_require_command "$XFS_DB_PROG" "xfs_db"
-+}
- 
- _require_xfs_db_blocktrash_z_command() {
- 	test "${FSTYP}" = "xfs" || _notrun "cannot run xfs_db on ${FSTYP}"
-diff --git a/tests/ext4/006 b/tests/ext4/006
-index f6cca66..9662f50 100755
---- a/tests/ext4/006
-+++ b/tests/ext4/006
-@@ -54,6 +54,7 @@ _supported_os Linux
- 
- _require_scratch
- _require_attrs
-+_require_populate_commands
- 
- repair_scratch() {
- 	fsck_pass="$1"
-diff --git a/tests/xfs/083 b/tests/xfs/083
-index 040f3b6..39bd75f 100755
---- a/tests/xfs/083
-+++ b/tests/xfs/083
-@@ -48,12 +48,11 @@ _cleanup()
- _supported_fs xfs
- _supported_os Linux
- 
--_require_xfs_io_command "falloc"
--_require_xfs_io_command "fpunch"
- _require_scratch
- #_require_xfs_crc	# checksum not required, but you probably want it anyway...
- #_require_xfs_mkfs_crc
- _require_attrs
-+_require_populate_commands
- 
- scratch_repair() {
- 	fsck_pass="$1"
-diff --git a/tests/xfs/085 b/tests/xfs/085
-index 1ca5354..0c85850 100755
---- a/tests/xfs/085
-+++ b/tests/xfs/085
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- 
- rm -f $seqres.full
-diff --git a/tests/xfs/086 b/tests/xfs/086
-index cf0a71a..787f886 100755
---- a/tests/xfs/086
-+++ b/tests/xfs/086
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/087 b/tests/xfs/087
-index 0bb3ec1..58ba958 100755
---- a/tests/xfs/087
-+++ b/tests/xfs/087
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/088 b/tests/xfs/088
-index d6972a4..36745b2 100755
---- a/tests/xfs/088
-+++ b/tests/xfs/088
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/089 b/tests/xfs/089
-index 06996a5..52bdd54 100755
---- a/tests/xfs/089
-+++ b/tests/xfs/089
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/091 b/tests/xfs/091
-index a263cb0..ae62337 100755
---- a/tests/xfs/091
-+++ b/tests/xfs/091
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/093 b/tests/xfs/093
-index 753231e..0f9311e 100755
---- a/tests/xfs/093
-+++ b/tests/xfs/093
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/097 b/tests/xfs/097
-index a75f06a..303ad04 100755
---- a/tests/xfs/097
-+++ b/tests/xfs/097
-@@ -52,6 +52,7 @@ _require_xfs_mkfs_finobt
- _require_xfs_finobt
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/098 b/tests/xfs/098
-index 581377e..7873f32 100755
---- a/tests/xfs/098
-+++ b/tests/xfs/098
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/099 b/tests/xfs/099
-index 85193ab..7835df9 100755
---- a/tests/xfs/099
-+++ b/tests/xfs/099
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/100 b/tests/xfs/100
-index 3bfafce..ebb656d 100755
---- a/tests/xfs/100
-+++ b/tests/xfs/100
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/101 b/tests/xfs/101
-index d3abd19..709fc9d 100755
---- a/tests/xfs/101
-+++ b/tests/xfs/101
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/102 b/tests/xfs/102
-index cf0d7a6..3d51c6a 100755
---- a/tests/xfs/102
-+++ b/tests/xfs/102
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/105 b/tests/xfs/105
-index 07ccf00..fc91a4f 100755
---- a/tests/xfs/105
-+++ b/tests/xfs/105
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/112 b/tests/xfs/112
-index 84f1f1d..ae75684 100755
---- a/tests/xfs/112
-+++ b/tests/xfs/112
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/113 b/tests/xfs/113
-index ec328bc..c347db7 100755
---- a/tests/xfs/113
-+++ b/tests/xfs/113
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/117 b/tests/xfs/117
-index f251fb3..f0b95aa 100755
---- a/tests/xfs/117
-+++ b/tests/xfs/117
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/120 b/tests/xfs/120
-index 3deece6..5a38000 100755
---- a/tests/xfs/120
-+++ b/tests/xfs/120
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/123 b/tests/xfs/123
-index e6cd8e7..7355e86 100755
---- a/tests/xfs/123
-+++ b/tests/xfs/123
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/124 b/tests/xfs/124
-index cfea2e6..a828dd6 100755
---- a/tests/xfs/124
-+++ b/tests/xfs/124
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/125 b/tests/xfs/125
-index 3f2f6f0..3afb4cc 100755
---- a/tests/xfs/125
-+++ b/tests/xfs/125
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/126 b/tests/xfs/126
-index 77779e0..d696ff1 100755
---- a/tests/xfs/126
-+++ b/tests/xfs/126
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/269 b/tests/xfs/269
-index b51ce64..318dd22 100755
---- a/tests/xfs/269
-+++ b/tests/xfs/269
-@@ -44,6 +44,7 @@ _cleanup()
- # real QA test starts here
- _supported_os Linux
- _require_scratch
-+_require_populate_commands
- _require_test_program "attr-list-by-handle-cursor-test"
- 
- rm -f "$seqres.full"
-diff --git a/tests/xfs/273 b/tests/xfs/273
-index f4b57bb..1a4ee93 100755
---- a/tests/xfs/273
-+++ b/tests/xfs/273
-@@ -44,6 +44,7 @@ _cleanup()
- _supported_os Linux
- _supported_fs xfs
- _require_scratch
-+_require_populate_commands
- _require_xfs_io_command "fsmap"
- 
- rm -f "$seqres.full"
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
