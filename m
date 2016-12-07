@@ -1,129 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40608 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932319AbcLGNhH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Dec 2016 08:37:07 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id CAACB3F1E7
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2016 13:27:45 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 05/22] mkfs: add a check for conflicting values
-Date: Wed,  7 Dec 2016 14:27:12 +0100
-Message-Id: <1481117249-21273-6-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:56135 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752198AbcLGDre (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 22:47:34 -0500
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 3/6] libxcmd: merge command() and iterate_command()
+Date: Wed,  7 Dec 2016 14:47:21 +1100
+Message-Id: <20161207034724.1613-4-david@fromorbit.com>
+In-Reply-To: <20161207034724.1613-1-david@fromorbit.com>
+References: <20161207034724.1613-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+Cc: fstests@vger.kernel.org, amir73il@gmail.com
 
-Add a check that reports a conflict only when subopts are mixed with specific values.
+From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Simplify the command loop further by merging the command loop
+iteration checks with the command execution function. This removes
+all visibility of command iteration from the main command execution
+loop, and enables us to factor and clean up the command loop
+processing neatly.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 52 ++++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 44 insertions(+), 8 deletions(-)
+ libxcmd/command.c | 110 ++++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 66 insertions(+), 44 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index b47cdae..3bb9f09 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1311,18 +1311,18 @@ illegal_option(
-  */
- static void
- check_opt(
--	struct opt_params	*opts,
-+	struct opt_params	*opt,
- 	int			index,
- 	bool			str_seen)
- {
--	struct subopt_param	*sp = &opts->subopt_params[index];
-+	struct subopt_param	*sp = &opt->subopt_params[index];
- 	int			i;
- 
- 	if (sp->index != index) {
- 		fprintf(stderr,
- 	("Developer screwed up option parsing (%d/%d)! Please report!\n"),
- 			sp->index, index);
--		reqval(opts->name, (char **)opts->subopts, index);
-+		reqval(opt->name, (char **)opt->subopts, index);
- 	}
- 
- 	/*
-@@ -1335,11 +1335,11 @@ check_opt(
- 	 */
- 	if (!str_seen) {
- 		if (sp->seen)
--			respec(opts->name, (char **)opts->subopts, index);
-+			respec(opt->name, (char **)opt->subopts, index);
- 		sp->seen = true;
- 	} else {
- 		if (sp->str_seen)
--			respec(opts->name, (char **)opts->subopts, index);
-+			respec(opt->name, (char **)opt->subopts, index);
- 		sp->str_seen = true;
- 	}
- 
-@@ -1349,10 +1349,44 @@ check_opt(
- 
- 		if (conflict_opt.opt == LAST_CONFLICT)
- 			break;
--		if (opts->subopt_params[conflict_opt.subopt].seen ||
--		    opts->subopt_params[conflict_opt.subopt].str_seen)
--			conflict(opts->name, (char **)opts->subopts,
-+		if (conflict_opt.test_values)
-+			break;
-+		if (opt->subopt_params[conflict_opt.subopt].seen ||
-+		    opt->subopt_params[conflict_opt.subopt].str_seen) {
-+			conflict(opt->name, (char **)opt->subopts,
- 				 conflict_opt.subopt, index);
-+		}
-+	}
-+}
-+
-+/*
-+ * Check for conflict values between options.
-+ */
-+static void
-+check_opt_value(
-+	struct opt_params	*opt,
-+	int			index,
-+	long long 		value)
-+{
-+	struct subopt_param	*sp = &opt->subopt_params[index];
-+	int			i;
-+
-+	/* check for conflicts with the option */
-+	for (i = 0; i < MAX_CONFLICTS; i++) {
-+		struct subopt_conflict conflict_opt = sp->conflicts[i];
-+
-+		if (conflict_opt.opt == LAST_CONFLICT)
-+			break;
-+		if (!conflict_opt.test_values)
-+			break;
-+		if ((opt->subopt_params[conflict_opt.subopt].seen ||
-+				    opt->subopt_params[conflict_opt.subopt].str_seen) &&
-+		    opt->subopt_params[conflict_opt.subopt].value
-+				== conflict_opt.invalid_value &&
-+		    value == conflict_opt.at_value) {
-+			conflict(opt->name, (char **)opt->subopts,
-+				 conflict_opt.subopt, index);
-+		}
- 	}
+diff --git a/libxcmd/command.c b/libxcmd/command.c
+index 789aeb5c5e5a..2c94a3199115 100644
+--- a/libxcmd/command.c
++++ b/libxcmd/command.c
+@@ -125,22 +125,30 @@ add_user_command(char *optarg)
  }
  
-@@ -1399,6 +1433,8 @@ getnum(
- 			illegal_option(str, opts, index, NULL);
- 	}
- 
-+	check_opt_value(opts, index, c);
+ /*
+- * To detect one-shot commands, they will return a negative index. If we
+- * get a negative index on entry, we've already run the one-shot command,
+- * so we abort straight away.
++ * Run a command, iterating as necessary. Return 0 for success, non-zero
++ * if an error occurred. Errors terminate loop iteration immediately.
+  */
+ static int
+ iterate_command(
+ 	const cmdinfo_t	*ct,
+-	int		index)
++	int		argc,
++	char		**argv)
+ {
+-	if (index < 0)
++	int		error = 0;
++	int		j;
 +
- 	/* Validity check the result. */
- 	if (c < sp->minval)
- 		illegal_option(str, opts, index, _("value is too small"));
++	/* if there's nothing to iterate, we're done! */
++	if (!iter_func)
+ 		return 0;
+-	if (ct->flags & CMD_FLAG_ONESHOT)
+-		return -1;
+-	if (iter_func)
+-		return iter_func(index);
+-	return 0;
++
++	for (j = iter_func(0); j; j = iter_func(j)) {
++		error = command(ct, argc, argv);
++		if (error)
++			break;
++
++	}
++
++	return error;
+ }
+ 
+ void
+@@ -150,14 +158,55 @@ add_command_iterator(
+ 	iter_func = func;
+ }
+ 
+-void
+-command_loop(void)
++static int
++process_input(
++	char	*input,
++	bool	iterate)
+ {
+-	int		c, i, j = 0, done = 0;
+-	char		*input;
+ 	char		**v;
+ 	const cmdinfo_t	*ct;
++	int		c = 0;
++	int		error = 0;
++
++	v = breakline(input, &c);
++	if (!c)
++		goto out;
++
++	ct = find_command(v[0]);
++	if (!ct) {
++		fprintf(stderr, _("command \"%s\" not found\n"), v[0]);
++		goto out;
++	}
++
++	/* oneshot commands don't iterate */
++	if (!iterate || (ct->flags & CMD_FLAG_ONESHOT))
++		error = command(ct, c, v);
++	else
++		error = iterate_command(ct, c, v);
++out:
++	doneline(input, v);
++	return error;
++}
++
++void
++command_loop(void)
++{
++	char	*input;
++	int	done = 0;
++	int	i;
++
++	if (!cmdline) {
++		/* interactive mode */
++		while (!done) {
++			input = fetchline();
++			if (!input)
++				break;
++			done = process_input(input, false);
++		}
++		return;
++	}
+ 
++	/* command line mode */
+ 	for (i = 0; !done && i < ncmdline; i++) {
+ 		input = strdup(cmdline[i]);
+ 		if (!input) {
+@@ -166,37 +215,10 @@ command_loop(void)
+ 				cmdline[i], strerror(errno));
+ 			exit(1);
+ 		}
+-		v = breakline(input, &c);
+-		if (c) {
+-			ct = find_command(v[0]);
+-			if (ct) {
+-				j = 0;
+-				while (!done && (j = iterate_command(ct, j)))
+-					done = command(ct, c, v);
+-			} else
+-				fprintf(stderr, _("command \"%s\" not found\n"),
+-					v[0]);
+-		}
+-		doneline(input, v);
+-	}
+-	if (cmdline) {
+-		free(cmdline);
+-		return;
+-	}
+-	while (!done) {
+-		if ((input = fetchline()) == NULL)
+-			break;
+-		v = breakline(input, &c);
+-		if (c) {
+-			ct = find_command(v[0]);
+-			if (ct)
+-				done = command(ct, c, v);
+-			else
+-				fprintf(stderr, _("command \"%s\" not found\n"),
+-					v[0]);
+-		}
+-		doneline(input, v);
++		done = process_input(input, true);
+ 	}
++	free(cmdline);
++	return;
+ }
+ 
+ void
 -- 
-2.8.1
+2.10.2
 
