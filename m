@@ -1,104 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:58649 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752795AbcLGUZq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2016 15:25:46 -0500
-Received: from dave by dastard with local (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1cEilx-0007zl-IA
-        for linux-xfs@vger.kernel.org; Thu, 08 Dec 2016 07:25:01 +1100
-Date: Thu, 8 Dec 2016 07:25:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to a444d72e6090
-Message-ID: <20161207202501.GK4326@dastard>
+Received: from bombadil.infradead.org ([198.137.202.9]:48206 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932711AbcLGRke (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2016 12:40:34 -0500
+Date: Wed, 7 Dec 2016 09:40:32 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [BUG] xfs/109 crashed 2k block size reflink enabled XFS
+Message-ID: <20161207174032.GA1072@infradead.org>
+References: <20161205092112.GS29149@eguan.usersys.redhat.com>
+ <20161205143906.GA16352@infradead.org>
+ <20161205153625.GA20032@infradead.org>
+ <20161205182802.GB8436@birch.djwong.org>
+ <20161206144559.GA14623@infradead.org>
+ <20161207034903.GX16813@birch.djwong.org>
+ <20161207071857.GA23809@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20161207071857.GA23809@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
 
-Hi folks,
+On Tue, Dec 06, 2016 at 11:18:57PM -0800, Christoph Hellwig wrote:
+> > Wellll... I cobbled together a crappy patch that flips on
+> > XFS_AG_RESV_AGFL if xfs_bmap_extents_to_btree really can't get a block.
+> > It seems to have survived ~175 iterations of xfs/109 so I'll try to
+> > clean it up tomorrow.
+> 
+> I tried it with XFS_AG_RESV_METADATA, but that didn't work.  But then
+> again I didn't add an additional reservation and I was about to head
+> out for dinner so I didn't investigate the details.  It might have been
+> the case Ross pointed out yeserday, so I'll look into the details more
+> today.
 
-The for-next branch of the xfs kernel repository at
+XFS_AG_RESV_AGFL works.  For some kinds of "work".  I can't see the
+original issue anymore, but I can see this related assert a lot (which
+I've also seen before, but no as often), so there is some more I need
+to look into.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+[ 2594.324341] XFS: Assertion failed: fs_is_ok, file: fs/xfs/libxfs/xfs_btree.c, line: 3484
+[ 2594.329918] ------------[ cut here ]------------
+[ 2594.330309] kernel BUG at fs/xfs/xfs_message.c:113!
+[ 2594.330641] invalid opcode: 0000 [#1] SMP
+[ 2594.330912] Modules linked in:
+[ 2594.331129] CPU: 2 PID: 29744 Comm: kworker/u8:0 Tainted: G        W 4.9.0-rc1+ #1758
+[ 2594.331680] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.7.5-20140531_083030-gandalf 04/01/2014
+[ 2594.332353] Workqueue: writeback wb_workfn (flush-252:32)
+[ 2594.332731] task: ffff88000d86ccc0 task.stack: ffffc90009f74000
+[ 2594.333127] RIP: 0010:[<ffffffff815aee1d>]  [<ffffffff815aee1d>] assfail+0x1d/0x20
+[ 2594.333214] RSP: 0018:ffffc90009f774c8  EFLAGS: 00010282
+[ 2594.333214] RAX: 00000000ffffffea RBX: ffff880132b2ac08 RCX: 0000000000000021
+[ 2594.333214] RDX: ffffc90009f773f0 RSI: 000000000000000a RDI: ffffffff8240a75b
+[ 2594.333214] RBP: ffffc90009f774c8 R08: 0000000000000000 R09: 0000000000000000
+[ 2594.333214] R10: 000000000000000a R11: f000000000000000 R12: ffff880132b2ac08
+[ 2594.333214] R13: 0000000000000000 R14: ffffc90009f774ec R15: ffffc90009f775dc
+[ 2594.333214] FS:  0000000000000000(0000) GS:ffff88013fd00000(0000) knlGS:0000000000000000
+[ 2594.333214] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 2594.333214] CR2: 00007f7f7c43c6c0 CR3: 0000000002606000 CR4: 00000000000006e0
+[ 2594.333214] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[ 2594.333214] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[ 2594.333214] Stack:
+[ 2594.333214]  ffffc90009f77568 ffffffff8154fddc ffffc90009f774ec 000000000000007b
+[ 2594.333214]  0000000009f77568 ffffffffffffffff 0000000000000000 00c01e0000000000
+[ 2594.333214]  1f0000b830000000 ffffffffffffffff 600f000000000000 ffffffff8157102d
+[ 2594.333214] Call Trace:
+[ 2594.333214]  [<ffffffff8154fddc>] xfs_btree_insert+0xac/0x1f0
+[ 2594.333214]  [<ffffffff8157102d>] ? xfs_iext_insert+0xad/0x1e0
+[ 2594.333214]  [<ffffffff81536802>] ? xfs_bmap_add_extent_delay_real+0xe22/0x3670
+[ 2594.333214]  [<ffffffff8153887f>] xfs_bmap_add_extent_delay_real+0x2e9f/0x3670
+[ 2594.333214]  [<ffffffff8154072a>] xfs_bmapi_write+0xb5a/0x1200
+[ 2594.333214]  [<ffffffff815a45ad>] xfs_iomap_write_allocate+0x18d/0x370
+[ 2594.333214]  [<ffffffff81587274>] xfs_map_blocks+0x214/0x460
+[ 2594.333214]  [<ffffffff8158847c>] xfs_do_writepage+0x2bc/0x800
+[ 2594.333214]  [<ffffffff811cbfea>] write_cache_pages+0x1fa/0x5a0
+[ 2594.333214]  [<ffffffff815881c0>] ? xfs_aops_discard_page+0x140/0x140
+[ 2594.333214]  [<ffffffff8158779e>] xfs_vm_writepages+0x9e/0xd0
+[ 2594.333214]  [<ffffffff811ce77c>] do_writepages+0x1c/0x30
+[ 2594.333214]  [<ffffffff8124a84c>] __writeback_single_inode+0x5c/0x6f0
+[ 2594.333214]  [<ffffffff8124bb91>] writeback_sb_inodes+0x2a1/0x5e0
+[ 2594.333214]  [<ffffffff8124c142>] wb_writeback+0x112/0x4f0
+[ 2594.333214]  [<ffffffff8124cc05>] wb_workfn+0x115/0x5f0
+[ 2594.333214]  [<ffffffff810f70fb>] ? process_one_work+0x13b/0x600
+[ 2594.333214]  [<ffffffff810f7181>] process_one_work+0x1c1/0x600
+[ 2594.333214]  [<ffffffff810f70fb>] ? process_one_work+0x13b/0x600
+[ 2594.333214]  [<ffffffff810f7624>] worker_thread+0x64/0x4a0
+[ 2594.333214]  [<ffffffff810f75c0>] ? process_one_work+0x600/0x600
+[ 2594.333214]  [<ffffffff810f75c0>] ? process_one_work+0x600/0x600
+[ 2594.333214]  [<ffffffff810fd2e2>] kthread+0xf2/0x110
+[ 2594.333214]  [<ffffffff810d5a1e>] ? put_task_stack+0x15e/0x190
+[ 2594.333214]  [<ffffffff810fd1f0>] ? kthread_park+0x60/0x60
+[ 2594.333214]  [<ffffffff81e7156a>] ret_from_fork+0x2a/0x40
 
-has just been updated. This update contains a bunch of verification
-enhancments to detect field corruptions as metadata is read from
-disk, faster CRC calculations, a faster buffer cache indexing
-structure and some cleanups.
-
-With the merge window likely to open next week, this may be the last
-update for the 4.10-rc1 cycle.  Let me know if there's anything
-critical that I've missed for 4.10 so I can sort it out before the
-end of the week.
-
--Dave.
-
-The new head of the for-next branch is commit:
-
-a444d72e6090 Merge branch 'xfs-4.10-misc-fixes-3' into for-next
-
-New Commits:
-
-Darrick J. Wong (7):
-      [d2a047f31e86] xfs: forbid AG btrees with level == 0
-      [bb3be7e7c1c1] xfs: check for bogus values in btree block headers
-      [356a3225222e] xfs: complain if we don't get nextents bmap records
-      [96a3aefb8ffd] xfs: don't crash if reading a directory results in an unexpected hole
-      [0f352f8ee841] xfs: error out if trying to add attrs and anextents > 0
-      [ef388e2054fe] xfs: don't allow di_size with high bit set
-      [1bb33a98702d] xfs: don't cap maximum dedupe request length
-
-Dave Chinner (3):
-      [11ef38afe98c] xfs: make xfs btree stats less huge
-      [cae028df5344] xfs: optimise CRC updates
-      [a444d72e6090] Merge branch 'xfs-4.10-misc-fixes-3' into for-next
-
-Eric Sandeen (5):
-      [6b10b23ca944] xfs: set AGI buffer type in xlog_recover_clear_agi_bucket
-      [200237d6746f] xfs: Move AGI buffer type setting to xfs_read_agi
-      [7710517fc37b] xfs: pass state not whichfork to trace_xfs_extlist
-      [c44a1f22626c] xfs: handle cow fork in xfs_bmap_trace_exlist
-      [f7a136aee3c1] xfs: several xattr functions can be void
-
-Lucas Stach (1):
-      [6031e73a5b3f] xfs: use rhashtable to track buffer cache
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_alloc.c          |  10 +-
- fs/xfs/libxfs/xfs_alloc_btree.c    |   4 +
- fs/xfs/libxfs/xfs_attr_leaf.h      |   2 +-
- fs/xfs/libxfs/xfs_bmap.c           |  14 ++-
- fs/xfs/libxfs/xfs_bmap_btree.c     |   1 +
- fs/xfs/libxfs/xfs_btree.c          |  20 ++++
- fs/xfs/libxfs/xfs_btree.h          |  43 +-------
- fs/xfs/libxfs/xfs_cksum.h          |  26 ++++-
- fs/xfs/libxfs/xfs_dir2_data.c      |   2 +-
- fs/xfs/libxfs/xfs_ialloc.c         |  13 ++-
- fs/xfs/libxfs/xfs_ialloc_btree.c   |   2 +
- fs/xfs/libxfs/xfs_inode_buf.c      |  10 +-
- fs/xfs/libxfs/xfs_refcount_btree.c |   1 +
- fs/xfs/libxfs/xfs_rmap_btree.c     |   1 +
- fs/xfs/xfs_attr.h                  |   4 +-
- fs/xfs/xfs_attr_list.c             |  59 ++++-------
- fs/xfs/xfs_buf.c                   | 120 +++++++++++++---------
- fs/xfs/xfs_buf.h                   |   2 +-
- fs/xfs/xfs_file.c                  |   9 --
- fs/xfs/xfs_inode.c                 |   2 -
- fs/xfs/xfs_linux.h                 |   1 +
- fs/xfs/xfs_log.c                   |   2 +-
- fs/xfs/xfs_log_recover.c           |  12 ++-
- fs/xfs/xfs_mount.c                 |   7 +-
- fs/xfs/xfs_mount.h                 |   7 +-
- fs/xfs/xfs_stats.c                 |  10 +-
- fs/xfs/xfs_stats.h                 | 200 +++++++++++++++----------------------
- fs/xfs/xfs_xattr.c                 |  23 ++---
- 28 files changed, 306 insertions(+), 301 deletions(-)
--- 
-Dave Chinner
-david@fromorbit.com
