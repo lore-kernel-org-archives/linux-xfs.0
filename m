@@ -1,179 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:56135 "EHLO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:15852 "EHLO
         ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752198AbcLGDre (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 22:47:34 -0500
+        by vger.kernel.org with ESMTP id S1751223AbcLGGaN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2016 01:30:13 -0500
+Date: Wed, 7 Dec 2016 17:30:09 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] libxcmd: merge command() and iterate_command()
-Date: Wed,  7 Dec 2016 14:47:21 +1100
-Message-Id: <20161207034724.1613-4-david@fromorbit.com>
-In-Reply-To: <20161207034724.1613-1-david@fromorbit.com>
-References: <20161207034724.1613-1-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: during log recovery, destroy the unlinked inodes
+ even for read-only mount
+Message-ID: <20161207063009.GH4326@dastard>
+References: <1481014847-22242-1-git-send-email-houtao1@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1481014847-22242-1-git-send-email-houtao1@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, amir73il@gmail.com
+To: Hou Tao <houtao1@huawei.com>
+Cc: linux-xfs@vger.kernel.org, stable@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Dec 06, 2016 at 05:00:47PM +0800, Hou Tao wrote:
+> During the 2nd stage of log recovery, if the filesystem is firstly mounted
+> as read-only, the unlink inodes will not be destroyed and the unlinked list
+> in AGI will not be cleared. Even after a read-write remount or umount,
+> the unlinked inodes will still be valid and be kept on disk, and the
+> available freespace will be incorrect.
+> 
+> To fix the problem, we need to force xfs_inactive() to destroy the
+> unlinked inode when the filesystem is mounted as read-only.
+> So clear the XFS_MOUNT_RDONLY flag temporarily before the recovery
+> of unlinked inodes and restore the flag after the recovery has done.
+> 
+> The problem can be reproduced by the following steps:
+> 1. mount a xfs fs on a KVM VM
+> 2. on the VM launch an application which does the following things:
+>    open(xfs_file); unlink(xfs_file);
+>    while(1) { write(xfs_file, 2MB); sleep(1); }
+> 3. wait 5 seconds, sync the xfs fs, and wait 5 seconds
+> 4. terminate the VM
+> 5. start the VM and mount the xfs as read-only
+> 6. remount the xfs as read-write or umount
+> 7. check the unlinked list and the available freespace
 
-Simplify the command loop further by merging the command loop
-iteration checks with the command execution function. This removes
-all visibility of command iteration from the main command execution
-loop, and enables us to factor and clean up the command loop
-processing neatly.
+This is only papering over the larger problem.
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- libxcmd/command.c | 110 ++++++++++++++++++++++++++++++++----------------------
- 1 file changed, 66 insertions(+), 44 deletions(-)
+I was talking to Eric about this larger "recovery on read-only
+mount" problem last week on IRC - I can't find it my logs right now,
+but IIRC I'd suggested that we should always run xfs_mountfs()
+in read-write mount if the underlying device can be written to,
+and then once that is complete do a rw->ro transition exactly as we
+do for a remount,ro operation.
 
-diff --git a/libxcmd/command.c b/libxcmd/command.c
-index 789aeb5c5e5a..2c94a3199115 100644
---- a/libxcmd/command.c
-+++ b/libxcmd/command.c
-@@ -125,22 +125,30 @@ add_user_command(char *optarg)
- }
- 
- /*
-- * To detect one-shot commands, they will return a negative index. If we
-- * get a negative index on entry, we've already run the one-shot command,
-- * so we abort straight away.
-+ * Run a command, iterating as necessary. Return 0 for success, non-zero
-+ * if an error occurred. Errors terminate loop iteration immediately.
-  */
- static int
- iterate_command(
- 	const cmdinfo_t	*ct,
--	int		index)
-+	int		argc,
-+	char		**argv)
- {
--	if (index < 0)
-+	int		error = 0;
-+	int		j;
-+
-+	/* if there's nothing to iterate, we're done! */
-+	if (!iter_func)
- 		return 0;
--	if (ct->flags & CMD_FLAG_ONESHOT)
--		return -1;
--	if (iter_func)
--		return iter_func(index);
--	return 0;
-+
-+	for (j = iter_func(0); j; j = iter_func(j)) {
-+		error = command(ct, argc, argv);
-+		if (error)
-+			break;
-+
-+	}
-+
-+	return error;
- }
- 
- void
-@@ -150,14 +158,55 @@ add_command_iterator(
- 	iter_func = func;
- }
- 
--void
--command_loop(void)
-+static int
-+process_input(
-+	char	*input,
-+	bool	iterate)
- {
--	int		c, i, j = 0, done = 0;
--	char		*input;
- 	char		**v;
- 	const cmdinfo_t	*ct;
-+	int		c = 0;
-+	int		error = 0;
-+
-+	v = breakline(input, &c);
-+	if (!c)
-+		goto out;
-+
-+	ct = find_command(v[0]);
-+	if (!ct) {
-+		fprintf(stderr, _("command \"%s\" not found\n"), v[0]);
-+		goto out;
-+	}
-+
-+	/* oneshot commands don't iterate */
-+	if (!iterate || (ct->flags & CMD_FLAG_ONESHOT))
-+		error = command(ct, c, v);
-+	else
-+		error = iterate_command(ct, c, v);
-+out:
-+	doneline(input, v);
-+	return error;
-+}
-+
-+void
-+command_loop(void)
-+{
-+	char	*input;
-+	int	done = 0;
-+	int	i;
-+
-+	if (!cmdline) {
-+		/* interactive mode */
-+		while (!done) {
-+			input = fetchline();
-+			if (!input)
-+				break;
-+			done = process_input(input, false);
-+		}
-+		return;
-+	}
- 
-+	/* command line mode */
- 	for (i = 0; !done && i < ncmdline; i++) {
- 		input = strdup(cmdline[i]);
- 		if (!input) {
-@@ -166,37 +215,10 @@ command_loop(void)
- 				cmdline[i], strerror(errno));
- 			exit(1);
- 		}
--		v = breakline(input, &c);
--		if (c) {
--			ct = find_command(v[0]);
--			if (ct) {
--				j = 0;
--				while (!done && (j = iterate_command(ct, j)))
--					done = command(ct, c, v);
--			} else
--				fprintf(stderr, _("command \"%s\" not found\n"),
--					v[0]);
--		}
--		doneline(input, v);
--	}
--	if (cmdline) {
--		free(cmdline);
--		return;
--	}
--	while (!done) {
--		if ((input = fetchline()) == NULL)
--			break;
--		v = breakline(input, &c);
--		if (c) {
--			ct = find_command(v[0]);
--			if (ct)
--				done = command(ct, c, v);
--			else
--				fprintf(stderr, _("command \"%s\" not found\n"),
--					v[0]);
--		}
--		doneline(input, v);
-+		done = process_input(input, true);
- 	}
-+	free(cmdline);
-+	return;
- }
- 
- void
+That way we remove all the special "write on read only mount" hacks
+we currently have throughout the code to enable log recovery to run
+on read-only mounts.
+
+Essentially is requires moving the device read only check from the
+log code to xfs_fs_fill_super() and handling the no-recovery flag
+there before we call xfs_mountfs() and adding the rw->ro state
+transition after we return. This will be much simpler and much more
+reliable than trying to turn off "read only" state around certain
+operations...
+
+Cheers,
+
+Dave.
 -- 
-2.10.2
-
+Dave Chinner
+david@fromorbit.com
