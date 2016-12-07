@@ -1,191 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23719 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752099AbcLGATC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 19:19:02 -0500
-Subject: [PATCH 07/11] common/fuzzy: move fuzzing helper functions here
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Dec 2016 16:18:55 -0800
-Message-ID: <148106993543.19334.11695200561855461297.stgit@birch.djwong.org>
-In-Reply-To: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
-References: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35231 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752899AbcLGEVo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 23:21:44 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20161206232547.GH4219@dastard>
+References: <1480943017-6175-1-git-send-email-amir73il@gmail.com>
+ <9125bb5e-49f5-e40e-0181-fea7f80ae553@sandeen.net> <CAOQ4uxhw8Y_9NVwuAZ_xzvPYZ8k1CRonmQ=CAn=Y9j-_nkToMA@mail.gmail.com>
+ <00b2b645-3cd2-f3b2-b026-40dfc97f3f90@sandeen.net> <CAOQ4uxhmLe32AMkBmRJx37Pmg3oZMFLt_6Q0kTNYxix_qz7vZA@mail.gmail.com>
+ <20161205221548.GD4326@dastard> <CAOQ4uxiSDniBTpfgOT9AQ8YGG5Ffz1rSLcBvWdm8TgY_OEArJA@mail.gmail.com>
+ <20161206232547.GH4219@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 7 Dec 2016 06:21:41 +0200
+Message-ID: <CAOQ4uxj8VQ106M_3dHoWXHUx8TROUYkvDMOGyE0qHjWuJgdp4w@mail.gmail.com>
+Subject: Re: [PATCH v2] xfs_io: support -c "open foo" command
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
 
-Move some fuzzing helper functions into a new common/fuzzy file.
-We'll add a lot more fuzzing helpers in subsequent patches.
+On Wed, Dec 7, 2016 at 1:25 AM, Dave Chinner <david@fromorbit.com> wrote:
+...
+>
+> Nope. I meant "go look at the git history and determine what the
+> historical behaviour was and determine how we ended up with this
+> mess. Then from that analysis, decide what to do."
+>
+> Unfortunately, you haven't shown any indication that you've looked
+> at the git history, nor that you actually listened to me about the
+> CMD_FLAG_GLOBAL. I've now done that code archeology and it indicates
+> that my suggestion was correct.
+>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/fuzzy    |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- common/populate |   36 ------------------------
- tests/ext4/006  |    1 +
- tests/xfs/083   |    1 +
- 4 files changed, 85 insertions(+), 36 deletions(-)
- create mode 100644 common/fuzzy
+Thank you for doing that digging. I might have gotten the wrong impression
+that you were going to do that anyway and figured you would do a better
+job at this than me, having a longer history with libxfs and xfs_io than me.
 
+> If you didn't understand what I suggested, then say so clearly and
+> unambiguously so I know I need to explain it more clearly.
 
-diff --git a/common/fuzzy b/common/fuzzy
-new file mode 100644
-index 0000000..964a463
---- /dev/null
-+++ b/common/fuzzy
-@@ -0,0 +1,83 @@
-+##/bin/bash
-+
-+# Routines for fuzzing and scrubbing a filesystem.
-+#
-+#-----------------------------------------------------------------------
-+#  Copyright (c) 2016 Oracle.  All Rights Reserved.
-+#  This program is free software; you can redistribute it and/or modify
-+#  it under the terms of the GNU General Public License as published by
-+#  the Free Software Foundation; either version 2 of the License, or
-+#  (at your option) any later version.
-+#
-+#  This program is distributed in the hope that it will be useful,
-+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+#  GNU General Public License for more details.
-+#
-+#  You should have received a copy of the GNU General Public License
-+#  along with this program; if not, write to the Free Software
-+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
-+#  USA
-+#
-+#  Contact information: Silicon Graphics, Inc., 1500 Crittenden Lane,
-+#  Mountain View, CA 94043, USA, or: http://www.sgi.com
-+#-----------------------------------------------------------------------
-+
-+# Modify various files after a fuzzing operation
-+_scratch_fuzz_modify() {
-+	nr="$1"
-+
-+	test -z "${nr}" && nr=50000
-+	echo "+++ touch ${nr} files"
-+	blk_sz=$(stat -f -c '%s' ${SCRATCH_MNT})
-+	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${blk_sz}" "/tmp/afile" > /dev/null
-+	date="$(date)"
-+	find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
-+		setfattr -n "user.date" -v "${date}" "$f"
-+		cat "/tmp/afile" >> "$f"
-+		mv "$f" "$f.longer"
-+	done
-+	sync
-+	rm -rf "/tmp/afile"
-+
-+	echo "+++ create files"
-+	mkdir -p "${SCRATCH_MNT}/test.moo"
-+	$XFS_IO_PROG -f -c 'pwrite -S 0x80 0 65536' "${SCRATCH_MNT}/test.moo/urk"
-+	sync
-+
-+	echo "+++ remove files"
-+	rm -rf "${SCRATCH_MNT}/test.moo"
-+}
-+
-+# Try to access files after fuzzing
-+_scratch_fuzz_test() {
-+	echo "+++ ls -laR" >> $seqres.full
-+	ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
-+
-+	echo "+++ cat files" >> $seqres.full
-+	(find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
-+}
-+
-+# Do we have an online scrub program?
-+_require_scrub() {
-+	case "${FSTYP}" in
-+	"xfs"|"ext4")
-+		test -x $XFS_SCRUB_PROG || _notrun "xfs_scrub not found"
-+		;;
-+	*)
-+		_notrun "No online scrub program for ${FSTYP}."
-+		;;
-+	esac
-+}
-+
-+# Scrub the scratch filesystem metadata (online)
-+_scratch_scrub() {
-+	case "${FSTYP}" in
-+	"xfs"|"ext4"|"ext3"|"ext2")
-+		$XFS_SCRUB_PROG -d -T -v "$@" $SCRATCH_MNT
-+		;;
-+	*)
-+		_fail "No online scrub program for ${FSTYP}."
-+		;;
-+	esac
-+}
-diff --git a/common/populate b/common/populate
-index 5227cd1..74a77a1 100644
---- a/common/populate
-+++ b/common/populate
-@@ -605,39 +605,3 @@ _scratch_populate() {
- 		;;
- 	esac
- }
--
--# Modify various files after a fuzzing operation
--_scratch_fuzz_modify() {
--	nr="$1"
--
--	test -z "${nr}" && nr=50000
--	echo "+++ touch ${nr} files"
--	blk_sz=$(stat -f -c '%s' ${SCRATCH_MNT})
--	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${blk_sz}" "/tmp/afile" > /dev/null
--	date="$(date)"
--	find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
--		setfattr -n "user.date" -v "${date}" "$f"
--		cat "/tmp/afile" >> "$f"
--		mv "$f" "$f.longer"
--	done
--	sync
--	rm -rf "/tmp/afile"
--
--	echo "+++ create files"
--	mkdir -p "${SCRATCH_MNT}/test.moo"
--	$XFS_IO_PROG -f -c 'pwrite -S 0x80 0 65536' "${SCRATCH_MNT}/test.moo/urk"
--	sync
--
--	echo "+++ remove files"
--	rm -rf "${SCRATCH_MNT}/test.moo"
--}
--
--# Try to access files after fuzzing
--_scratch_fuzz_test() {
--	echo "+++ ls -laR" >> $seqres.full
--	ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
--
--	echo "+++ cat files" >> $seqres.full
--	(find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
--}
--
-diff --git a/tests/ext4/006 b/tests/ext4/006
-index 9662f50..bb9b7e5 100755
---- a/tests/ext4/006
-+++ b/tests/ext4/006
-@@ -43,6 +43,7 @@ _cleanup()
- . ./common/filter
- . ./common/attr
- . ./common/populate
-+. ./common/fuzzy
- 
- if [ ! -x "$(which e2fuzz)" ]; then
- 	_notrun "Couldn't find e2fuzz"
-diff --git a/tests/xfs/083 b/tests/xfs/083
-index 39bd75f..e2b5f82 100755
---- a/tests/xfs/083
-+++ b/tests/xfs/083
-@@ -43,6 +43,7 @@ _cleanup()
- . ./common/filter
- . ./common/attr
- . ./common/populate
-+. ./common/fuzzy
- 
- # real QA test starts here
- _supported_fs xfs
+Sorry I wasn't clear about that. My problem, or lack of clarity, was
+revolving around the semantic changes that would have to be made.
+I did not want to go fix the problem without knowing what those are
+going to be, so in the mean while, I suggested a few starter options
+which do not change semantics for existing known users, allow
+overlay/016 to work properly and leave the multiple file semantics
+for you to clarify.
 
+> The
+> /worst/ thing you can do is keep sending new patches that take the
+> same path to one I've already NACKed without having looked at the
+> solution I proposed or done the historical analysis I suggested was
+> necessary.
+>
+
+Had I known /this/ was the worst thing in your book, I would have
+avoided it. I took that path mainly because we seem to have little
+overlap working hours, so the round trip of this thread makes progress
+hard. I apologize if this came off as "shut up Dave! and take my patch".
+
+The only reason I suggested changing behavior for multiple
+files and "break existing users" is because Eric indicated he had
+no idea about this feature and indicated that it is an undocumented
+feature. With someone like Eric saying that, it grew my suspicion that
+maybe we really do not need to fix multiple files for xfs_io??
+
+Could you please consider this option for a moment?
+Perhaps we are better off correcting a wrong turn taken in 2004
+then fixing its consequences now?
+
+After all, xfs_io is not the Linux kernel. Its a tool used mainly
+by developers as you yourself indicated. If killing multiple files will
+break someones use case, you should know about it pretty quick
+and we can then resort to changing semantics and adding new
+command line flags.
+
+The motivation for taking this path is not just laziness to
+"fix the real problem". It stands to make the code a lot simpler
+and to keep the man page correct and coherent with expected
+behavior rather then adding more obscure semantics which
+/are/ going to be confusing.
+
+For your consideration.
+Sorry if we started off on the wrong foot.
+Amir.
