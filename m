@@ -1,104 +1,256 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35244 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751569AbcLGDt6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 22:49:58 -0500
-MIME-Version: 1.0
-In-Reply-To: <20161206225147.GF4219@dastard>
-References: <1481003038-23740-1-git-send-email-amir73il@gmail.com> <20161206225147.GF4219@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 7 Dec 2016 05:49:55 +0200
-Message-ID: <CAOQ4uxh=fGTObQ=mix1ZbP7DbJ287WKfNNi8ePzSMUyb1egS9A@mail.gmail.com>
-Subject: Re: [PATCH v4] xfs_io: support -c "open foo" command
-Content-Type: text/plain; charset=UTF-8
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:56135 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751618AbcLGDrd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 22:47:33 -0500
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 6/6] libxcmd: add non-iterating user commands
+Date: Wed,  7 Dec 2016 14:47:24 +1100
+Message-Id: <20161207034724.1613-7-david@fromorbit.com>
+In-Reply-To: <20161207034724.1613-1-david@fromorbit.com>
+References: <20161207034724.1613-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, amir73il@gmail.com
 
-On Wed, Dec 7, 2016 at 12:51 AM, Dave Chinner <david@fromorbit.com> wrote:
-...
-> Again, you've defined the solution to meet only your immediate
-> needs.  The git history will tells us what is "proper", and I'm
-> pretty sure what I suggested first up (use of CMD_FLAG_GLOBAL) will
-> be close to the mark....
->
+From: Dave Chinner <dchinner@redhat.com>
 
-True, I've defined the solution to meet my needs, though I believe my
-needs are not crazy and serve a greater good.
-The reason I did not go for the "proper" solution is because I did not
-understand how your suggestion aims to solve the problem defined
-by my test. And by solve I don't mean just avoid the endless loop.
+Right now command iteration is not directly controllable by the
+user; it is controlled entirely by the application command flag
+setup. Sometimes we don't want commands to iterate but only operate
+on the currently selected object.
 
-> So the initial fix for the current problem is to mark all the
-> "one-shot" commands with CMD_FLAG_GLOBAL so they don't iterate the
-> file table and behave sanely by default. I'd rename CMD_FLAG_GLOBAL
-> to something more appropriate as well,
+For example, the stat command iterates:
 
-CMD_FLAG_ONESHOT?
+$ xfs_io -c "open -r foo" -c "open bar" -C "file" -c "stat" foo
+ 000  foo            (foreign,non-sync,non-direct,read-write)
+ 001  foo            (foreign,non-sync,non-direct,read-only)
+[002] bar            (foreign,non-sync,non-direct,read-write)
+fd.path = "foo"
+fd.flags = non-sync,non-direct,read-write
+stat.ino = 462399
+stat.type = regular file
+stat.size = 776508
+stat.blocks = 1528
+fd.path = "foo"
+fd.flags = non-sync,non-direct,read-only
+stat.ino = 462399
+stat.type = regular file
+stat.size = 776508
+stat.blocks = 1528
+fd.path = "bar"
+fd.flags = non-sync,non-direct,read-write
+stat.ino = 475227
+stat.type = regular file
+stat.size = 0
+stat.blocks = 0
+$
 
-> and probably rework the main
-> command loop to get this check out of the main loop and into the
-> args_command() function where we can do single shot command
-> control cleanly.
->
+To do this, add a function to supply a "non-iterating" user command
+that will execute an iterating-capable command as though it
+CMD_FLAG_ONESHOT was set. Add a new command line option to xfs_io to
+drive it (-C <command>) and connect it all up. Document it in the
+xfs_IO man page, too.
 
+The result of "-C stat":
 
-And I would gladly follow your suggestion to fix endless loop issue,
-but first I would like to understood where this is going to end up in terms
-of "expected behavior" (see below).
+$ xfs_io -c "open -r foo" -c "open bar" -c "file" -C "stat" foo
+ 000  foo            (foreign,non-sync,non-direct,read-write)
+ 001  foo            (foreign,non-sync,non-direct,read-only)
+[002] bar            (foreign,non-sync,non-direct,read-write)
+fd.path = "bar"
+fd.flags = non-sync,non-direct,read-write
+stat.ino = 475227
+stat.type = regular file
+stat.size = 0
+stat.blocks = 0
+$
 
-> The next fix is to be able to control iteration directly, so if we
-> want to stat all or just the current file we can. I'd suggest that
-> we should introduce a "-C <cmd>" option to indicate that the command
-> should only be run on the current active file. That will allow new
-> tests that use multiple files to control behaviour appropriately...
->
+Is that we only see the stat output for the active open file
+which is "bar".
 
-So that is what I was missing in your first reply.
-I realized that a new semantic must be added to be able to both
-keep existing behavior and enable the desired functionality.
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ include/command.h |  1 +
+ io/init.c         |  7 +++++--
+ libxcmd/command.c | 33 +++++++++++++++++++++++++++------
+ man/man8/xfs_io.8 | 36 ++++++++++++++++++++++++++++++------
+ 4 files changed, 63 insertions(+), 14 deletions(-)
 
-But I am not sure that -C <cmd> does the job.
-See the example below from test overlay/016.
-It's a perfectly valid use case that cannot be described with
-existing semantics.
+diff --git a/include/command.h b/include/command.h
+index 348002cbe3ed..fb3f5c79b991 100644
+--- a/include/command.h
++++ b/include/command.h
+@@ -56,6 +56,7 @@ typedef int (*checkfunc_t)(const cmdinfo_t *ci);
+ 
+ extern void		add_command(const cmdinfo_t *ci);
+ extern void		add_user_command(char *optarg);
++extern void		add_oneshot_user_command(char *optarg);
+ extern void		add_command_iterator(iterfunc_t func);
+ extern void		add_check_command(checkfunc_t cf);
+ 
+diff --git a/io/init.c b/io/init.c
+index 5ce627ef22c9..cf8573f0ecd5 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -34,7 +34,7 @@ void
+ usage(void)
+ {
+ 	fprintf(stderr,
+-		_("Usage: %s [-adfinrRstVx] [-m mode] [-p prog] [-c cmd]... file\n"),
++_("Usage: %s [-adfinrRstVx] [-m mode] [-p prog] [[-c|-C] cmd]... file\n"),
+ 		progname);
+ 	exit(1);
+ }
+@@ -145,7 +145,7 @@ init(
+ 	pagesize = getpagesize();
+ 	gettimeofday(&stopwatch, NULL);
+ 
+-	while ((c = getopt(argc, argv, "ac:dFfim:p:nrRstTVx")) != EOF) {
++	while ((c = getopt(argc, argv, "ac:C:dFfim:p:nrRstTVx")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			flags |= IO_APPEND;
+@@ -153,6 +153,9 @@ init(
+ 		case 'c':
+ 			add_user_command(optarg);
+ 			break;
++		case 'C':
++			add_oneshot_user_command(optarg);
++			break;
+ 		case 'd':
+ 			flags |= IO_DIRECT;
+ 			break;
+diff --git a/libxcmd/command.c b/libxcmd/command.c
+index decc442a9d03..5917aea42611 100644
+--- a/libxcmd/command.c
++++ b/libxcmd/command.c
+@@ -25,8 +25,14 @@ int		ncmds;
+ 
+ static iterfunc_t	iter_func;
+ static checkfunc_t	check_func;
+-static int		ncmdline;
+-static char		**cmdline;
++
++struct cmdline {
++	char	*cmdline;
++	bool	iterate;
++};
++
++static int	ncmdline;
++struct cmdline	*cmdline;
+ 
+ static int
+ compare(const void *a, const void *b)
+@@ -120,12 +126,27 @@ void
+ add_user_command(char *optarg)
+ {
+ 	ncmdline++;
+-	cmdline = realloc(cmdline, sizeof(char*) * (ncmdline));
++	cmdline = realloc(cmdline, sizeof(struct cmdline) * (ncmdline));
++	if (!cmdline) {
++		perror("realloc");
++		exit(1);
++	}
++	cmdline[ncmdline-1].cmdline = optarg;
++	cmdline[ncmdline-1].iterate = true;
++
++}
++
++void
++add_oneshot_user_command(char *optarg)
++{
++	ncmdline++;
++	cmdline = realloc(cmdline, sizeof(struct cmdline) * (ncmdline));
+ 	if (!cmdline) {
+ 		perror("realloc");
+ 		exit(1);
+ 	}
+-	cmdline[ncmdline-1] = optarg;
++	cmdline[ncmdline-1].cmdline = optarg;
++	cmdline[ncmdline-1].iterate = false;
+ }
+ 
+ /*
+@@ -212,14 +233,14 @@ command_loop(void)
+ 
+ 	/* command line mode */
+ 	for (i = 0; !done && i < ncmdline; i++) {
+-		input = strdup(cmdline[i]);
++		input = strdup(cmdline[i].cmdline);
+ 		if (!input) {
+ 			fprintf(stderr,
+ 				_("cannot strdup command '%s': %s\n"),
+ 				cmdline[i], strerror(errno));
+ 			exit(1);
+ 		}
+-		done = process_input(input, true);
++		done = process_input(input, cmdline[i].iterate);
+ 	}
+ 	free(cmdline);
+ 	return;
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 885df7f141e2..d6bacaf0438d 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -9,10 +9,13 @@ xfs_io \- debug the I/O path of an XFS filesystem
+ .B \-c
+ .I cmd
+ ] ... [
++.B \-C
++.I cmd
++] ... [
+ .B \-p
+ .I prog
+ ]
+-.I file
++.I [ file ]
+ .br
+ .B xfs_io \-V
+ .SH DESCRIPTION
+@@ -25,14 +28,35 @@ These code paths include not only the obvious read/write/mmap interfaces
+ for manipulating files, but also cover all of the XFS extensions (such
+ as space preallocation, additional inode flags, etc).
+ .SH OPTIONS
++.B xfs_io
++commands may be run interactively (the default) or as arguments on the
++command line.
++Interactive mode always runs commands on the current open file, whilst commands
++run from the command line may operate on all open files rather than the current
++open file.
++Multiple arguments may be given on the command line and they are run in the
++sequence given. The program exits one all commands have
++been run.
+ .TP 1.0i
+ .BI \-c " cmd"
+-.B xfs_io
+-commands may be run interactively (the default) or as arguments on
+-the command line. Multiple
++Run the specified command on all currently open files.
++Some commands can not be run on all open files, so they will execute on only
++the current open file to maintain compatibility with historical usage.
++Multiple
++.B \-c
++arguments may be given and may be interleaved on the command line in any order
++with
++.B \-C
++commands.
++.TP
++.BI \-C " cmd"
++Run the specified command only on the active open file. 
++Multiple
++.B \-C
++arguments may be given and may be interleaved on the command line in any order
++with
+ .B \-c
+-arguments may be given. The commands are run in the sequence given,
+-then the program exits.
++commands.
+ .TP
+ .BI \-p " prog"
+ Set the program name for prompts and some error messages,
+-- 
+2.10.2
 
-#
-# case #1:
-# open file for read (rofd)
-# open file for write (rwfd)
-# write to rwfd
-# read from rofd
-#
-$XFS_IO_PROG \
-        -c "open -r foo" \
-        -c "open foo" \
-        -c "pwrite -S 0x61 0 16" \
-        -c "file 0" \
-        -c "pread -v 0 16" \
-
-With the suggested -C <cmd> semantics,
-it would look something like this:
-$XFS_IO_PROG \
-        -c "open -r foo" \
-        -c "open foo" \
-        -C "pwrite -S 0x61 0 16" \
-        -c "file 0" \
-        -C "pread -v 0 16" \
-
-
-This could work out if -C meant to mark that cmd CMD_FLAG_ONESHOT
-and run it only once. It suffice for the use case of writing a script, but
-not sure if that is what you meant.
-
-I assert that any usage containing multiple files and -C commands is
-going to be confusing to read, but if that is the price we have to pay
-for not getting the semantics clear from the start, so be it.
-
-I am hoping you are able to clarify that we are on the same page,
-so I can go on with implementation.
-
-Thanks,
-Amir.
