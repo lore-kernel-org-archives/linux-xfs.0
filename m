@@ -1,86 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:59411 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751064AbcLEWPw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2016 17:15:52 -0500
-Date: Tue, 6 Dec 2016 09:15:48 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:24351 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751618AbcLGGix (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2016 01:38:53 -0500
+Date: Wed, 7 Dec 2016 17:32:13 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs_io: support -c "open foo" command
-Message-ID: <20161205221548.GD4326@dastard>
-References: <1480943017-6175-1-git-send-email-amir73il@gmail.com>
- <9125bb5e-49f5-e40e-0181-fea7f80ae553@sandeen.net>
- <CAOQ4uxhw8Y_9NVwuAZ_xzvPYZ8k1CRonmQ=CAn=Y9j-_nkToMA@mail.gmail.com>
- <00b2b645-3cd2-f3b2-b026-40dfc97f3f90@sandeen.net>
- <CAOQ4uxhmLe32AMkBmRJx37Pmg3oZMFLt_6Q0kTNYxix_qz7vZA@mail.gmail.com>
+Subject: Re: [PATCH 2/3] xfs: use rhashtable to track buffer cache
+Message-ID: <20161207063213.GI4326@dastard>
+References: <20161201103052.28453-1-david@fromorbit.com>
+ <20161201103052.28453-3-david@fromorbit.com>
+ <20161205170411.GA14091@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxhmLe32AMkBmRJx37Pmg3oZMFLt_6Q0kTNYxix_qz7vZA@mail.gmail.com>
+In-Reply-To: <20161205170411.GA14091@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Dec 05, 2016 at 05:39:17PM +0200, Amir Goldstein wrote:
-> On Mon, Dec 5, 2016 at 5:26 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> > On 12/5/16 9:19 AM, Amir Goldstein wrote:
-> >> On Mon, Dec 5, 2016 at 4:19 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> >>> On 12/5/16 7:03 AM, Amir Goldstein wrote:
-> >>>> There is an undocumented and possibly unused feature in xfs_io
-> >>>> where all commands are executed per file in the file args list.
-> >>>>
-> >>>> This feature creates ambiguity when trying to execute commands
-> >>>> such as "open" and "file" from command line and result in an
-> >>>> endless loop in the command loop code.
-> >>>
-> >>> I may well be dense, but it's not immediately obvious what the
-> >>> old and/or problematic behavior is.  Can you spell it out a bit
-> >>> more?  What is an example of this loop?
-> >>
-> >> $ touch foo
-> >> $ xfs_io -c "open foo" foo
-> >>
-> >> you will see the shit storm
-> >
-> > ;)  Ok thanks.  (would be nice to have that in the changelog)
-> >
+On Mon, Dec 05, 2016 at 09:04:11AM -0800, Christoph Hellwig wrote:
+> > +static int
+> > +_xfs_buf_cmp(
+> > +	struct rhashtable_compare_arg *arg,
+> > +	const void *obj)
+> > +{
+> > +	const struct xfs_buf_map *map = arg->key;
+> > +	const struct xfs_buf *bp = obj;
 > 
-> Good point. I will add that.
+> How about aligning the parameter / variable names here like we
+> normally do in XFS?
+
+Sorry, forgot to do that when I updated the patch.
+
+> > +static const struct rhashtable_params xfs_buf_hash_params = {
+> > +	.min_size = 32,		/* empty/unused AGs have minimal footprint */
+> > +	.nelem_hint = 16,
+> > +	.key_len = sizeof(xfs_daddr_t),
+> > +	.key_offset = offsetof(struct xfs_buf, b_bn),
+> > +	.head_offset = offsetof(struct xfs_buf, b_rhash_head),
+> > +	.automatic_shrinking = true,
+> > +	.obj_cmpfn = _xfs_buf_cmp,
 > 
+> Some tab alignments before the equal signs here?
 > 
-> >
-> > Given that neither the manpage nor the short help mention that more than
-> > one filename is accepted, should this even succeed at all?
-> >
+> Also please name the compare function so that it fits the field name,
+> as that makes grepping so much easier..
 > 
-> Make sense to me to fail on multiple file args.
+> 	.obj_cmpfn	= xfs_buf_obj_cmpfn,
 
-It doesn't to me.
+Will do.
 
-The fact that xfs_io has an open command, and it has
-commands that can act on multiple files (e.g. sendfile) indicate
-that it should be able to handle multiple files.
+> Otherwise this looks fine to me and seems to survive testing so far:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Indeed, in interactive mode, the current file is really just an
-index into the stack of open files. It works exactly the same way as
-other XFS tools do with context stacks and accessed object rings
-(e.g. xfs_db). i.e. you only need to open the file/access the object
-once and then you can use the stack/ring to jump straight back to
-it. In this case, it's the xfs_io "file" command.
+Thanks.
 
-i.e. xfs_io is intended to by able to operate on multiple files at
-once, and I do use that in interactive mode from time to time.
-
-What I haven't ever done is try to access that through the command
-line, so I didn't know it had this "command loop" iteration problem.
-
-It's the command loop iteration problem we need to fix, not neuter
-the multiple file capability of xfs_io.
-
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
