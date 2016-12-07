@@ -1,116 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29400 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753202AbcLGASt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 19:18:49 -0500
-Subject: [PATCH 05/11] populate: optionally fill the filesystem when
- populating fs
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Dec 2016 16:18:42 -0800
-Message-ID: <148106992296.19334.9245887582971974275.stgit@birch.djwong.org>
-In-Reply-To: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
-References: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:6352 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751152AbcLGGOm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2016 01:14:42 -0500
+Date: Wed, 7 Dec 2016 17:14:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS bug?
+Message-ID: <20161207061436.GF4326@dastard>
+References: <0F1FE7A8-D5C6-4FFD-9B9C-E03FB1962F3E@flyingcircus.io>
+ <20161201110347.GD11750@dastard>
+ <7D83E56E-5922-4B0D-A963-3C9F22491F94@flyingcircus.io>
+ <20161201201552.GF11750@dastard>
+ <C28A1C2E-423B-48BC-8953-735B85CDFE08@flyingcircus.io>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <C28A1C2E-423B-48BC-8953-735B85CDFE08@flyingcircus.io>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Christian Theune <ct@flyingcircus.io>
+Cc: linux-xfs@vger.kernel.org
 
-Be a little more flexible in how much we fill up a pre-populated
-filesystem.  For the field fuzzing tests, we don't need the extra
-space/inode usage and therefore won't want much at all.
+On Tue, Dec 06, 2016 at 08:25:52PM +0100, Christian Theune wrote:
+> Hi,
+> 
+> here’s a follow-up. We found we have one host still running 4.1 that is awaiting its reboot to activate 4.4.
+> 
+> Is there a safe way forward that you would recommend? I would guess something like:
+> 
+> - shut down clients
+> - unmount filesystems
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/populate |   37 +++++++++++++++++++++++++++++--------
- 1 file changed, 29 insertions(+), 8 deletions(-)
+- run xfs_repair from xfsprogs >4.5.0
+- boot into 4.4 kernel.
 
+Cheers,
 
-diff --git a/common/populate b/common/populate
-index 2340eb6..2385c8d 100644
---- a/common/populate
-+++ b/common/populate
-@@ -73,26 +73,39 @@ __populate_create_attr() {
- 	done
- }
- 
--# Fill up 60% of the remaining free space
-+# Fill up some percentage of the remaining free space
- __populate_fill_fs() {
- 	dir="$1"
- 	pct="$2"
- 	test -z "${pct}" && pct=60
- 
--	SRC_SZ="$(du -ks "${SRCDIR}" | cut -f 1)"
-+	mkdir -p "${dir}/test/1"
-+	cp -pRdu "${dir}"/S_IFREG* "${dir}/test/1/"
-+
-+	SRC_SZ="$(du -ks "${dir}/test/1" | cut -f 1)"
- 	FS_SZ="$(( $(stat -f "${dir}" -c '%a * %S') / 1024 ))"
- 
- 	NR="$(( (FS_SZ * ${pct} / 100) / SRC_SZ ))"
--	test "${NR}" -lt 1 && NR=1
- 
--	seq 1 "${NR}" | while read nr; do
--		cp -pRdu "${SRCDIR}" "${dir}/test.${nr}" >> $seqres.full 2>&1
-+	echo "FILL FS"
-+	echo "src_sz $SRC_SZ fs_sz $FS_SZ nr $NR"
-+	seq 2 "${NR}" | while read nr; do
-+		cp -pRdu "${dir}/test/1" "${dir}/test/${nr}"
- 	done
- }
- 
- # Populate an XFS on the scratch device with (we hope) all known
- # types of metadata block
- _scratch_xfs_populate() {
-+	fill=1
-+
-+	for arg in $@; do
-+		case "${arg}" in
-+		"nofill")
-+			fill=0;;
-+		esac
-+	done
-+
- 	_scratch_mount
- 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- 	dblksz="$(xfs_info "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-@@ -225,7 +238,7 @@ _scratch_xfs_populate() {
- 
- 	# Copy some real files (xfs tests, I guess...)
- 	echo "+ real files"
--	__populate_fill_fs "${SCRATCH_MNT}" 5
-+	test $fill -ne 0 && __populate_fill_fs "${SCRATCH_MNT}" 5
- 
- 	umount "${SCRATCH_MNT}"
- }
-@@ -233,6 +246,15 @@ _scratch_xfs_populate() {
- # Populate an ext4 on the scratch device with (we hope) all known
- # types of metadata block
- _scratch_ext4_populate() {
-+	fill=1
-+
-+	for arg in $@; do
-+		case "${arg}" in
-+		"nofill")
-+			fill=0;;
-+		esac
-+	done
-+
- 	_scratch_mount
- 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- 	dblksz="${blksz}"
-@@ -300,8 +322,7 @@ _scratch_ext4_populate() {
- 
- 	# Copy some real files (xfs tests, I guess...)
- 	echo "+ real files"
--	__populate_fill_fs "${SCRATCH_MNT}"
--	cp -pRdu --reflink=always "${SCRATCH_MNT}/S_IFREG.FMT_ETREE" "${SCRATCH_MNT}/S_IREG.FMT_ETREE.REFLINK" 2> /dev/null
-+	test $fill -ne 0 && __populate_fill_fs "${SCRATCH_MNT}" 5
- 
- 	umount "${SCRATCH_MNT}"
- }
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
