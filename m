@@ -1,197 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29291 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751762AbcLGASX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 19:18:23 -0500
-Subject: [PATCH 01/11] ocfs2: test reflinking to inline data files
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 06 Dec 2016 16:18:17 -0800
-Message-ID: <148106989741.19334.14324200960917685576.stgit@birch.djwong.org>
-In-Reply-To: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
-References: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:23240 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932500AbcLGURf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2016 15:17:35 -0500
+Date: Thu, 8 Dec 2016 07:16:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 6/6] libxcmd: add non-iterating user commands
+Message-ID: <20161207201637.GI4219@dastard>
+References: <20161207034724.1613-1-david@fromorbit.com>
+ <20161207034724.1613-7-david@fromorbit.com>
+ <CAOQ4uxj2AROKtg=ZE64Q-RJbMaiRdP7SvoosmvCD4C1h-X-4bA@mail.gmail.com>
+ <CAOQ4uxhrtaHauNJypezpFAT0VCN61oZLFKtxuBLw32jn7FOSFw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxhrtaHauNJypezpFAT0VCN61oZLFKtxuBLw32jn7FOSFw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
 
-Make sure that we can handle reflinking from and to inline-data files.
+On Wed, Dec 07, 2016 at 04:21:31PM +0200, Amir Goldstein wrote:
+> On Wed, Dec 7, 2016 at 6:49 AM, Amir Goldstein <amir73il@gmail.com> wrote:
+> > On Wed, Dec 7, 2016 at 5:47 AM, Dave Chinner <david@fromorbit.com> wrote:
+> >> From: Dave Chinner <dchinner@redhat.com>
+> >>
+> >
+> > Thank you for fixing this!
+> > See some typo fixes below.
+> > I will test the fix later today.
+> >
+> 
+> Short of one compilation warning I commented on,
+> I tested these changes and found no regression with -g quick run
+> I also verified that my test can be converted to use the one shot commands,
+> e.g.:
+> 
+> $XFS_IO_PROG -r foo \
+>        -C "open foo" \
+>        -C "pwrite -S 0x61 0 16" \
+>        -C "file 0" \
+>        -C "pread -v 0 16" \
+> | _filter_xfs_io
+> 
+> $XFS_IO_PROG -r bar \
+>        -C "mmap -r 0 16" \
+>        -C "open bar" \
+>        -C "pwrite -S 0x61 0 16" \
+>        -C "mread -v 0 16" \
+> | _filter_xfs_io
+> 
+> Notice that I used explicit -C for all commands including the implicit
+> one shot commands.
+> 
+> 1. Do you think that xfs_io should error on -c "open foo"  to force
+> explicit -C "open foo"?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/reflink       |    2 +
- tests/ocfs2/001      |   88 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/ocfs2/001.out  |   14 ++++++++
- tests/ocfs2/Makefile |   20 +++++++++++
- tests/ocfs2/group    |    1 +
- 5 files changed, 124 insertions(+), 1 deletion(-)
- create mode 100755 tests/ocfs2/001
- create mode 100644 tests/ocfs2/001.out
- create mode 100644 tests/ocfs2/Makefile
- create mode 100644 tests/ocfs2/group
+No.
 
+>     it can't be breaking any existing users, because -c "open foo" is
+> already very broken.
 
-diff --git a/common/reflink b/common/reflink
-index 9d51729..d048045 100644
---- a/common/reflink
-+++ b/common/reflink
-@@ -197,7 +197,7 @@ _cp_reflink() {
- 	file1="$1"
- 	file2="$2"
- 
--	cp --reflink=always -p "$file1" "$file2"
-+	cp --reflink=always -p -f "$file1" "$file2"
- }
- 
- # Reflink some file1 into file2
-diff --git a/tests/ocfs2/001 b/tests/ocfs2/001
-new file mode 100755
-index 0000000..afb9ce9
---- /dev/null
-+++ b/tests/ocfs2/001
-@@ -0,0 +1,88 @@
-+#! /bin/bash
-+# FS QA Test No. 001
-+#
-+# Ensure that reflink works correctly with inline-data files.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2016, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs ocfs2
-+_require_scratch_reflink
-+_require_cp_reflink
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+_scratch_mkfs --fs-features=local,unwritten,refcount,inline-data > $seqres.full 2>&1
-+tunefs.ocfs2 --query '%H' $SCRATCH_DEV | grep -q 'inline-data' || \
-+	_notrun "Inline data is not supported."
-+_scratch_mount >> $seqres.full 2>&1
-+
-+testdir=$SCRATCH_MNT/test-$seq
-+mkdir $testdir
-+
-+sz=65536
-+echo "Create the original files"
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file1 >> $seqres.full
-+echo x > $testdir/file2
-+echo x > $testdir/file3
-+echo y > $testdir/file4
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file5 >> $seqres.full
-+echo a > $testdir/file6
-+_scratch_cycle_mount
-+
-+echo "reflink into the start of file2"
-+_cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
-+
-+echo "reflink past the stuff in file3"
-+_reflink_range $testdir/file1 0 $testdir/file3 $sz $sz >> $seqres.full
-+
-+echo "reflink an inline-data file to a regular one"
-+_cp_reflink $testdir/file4 $testdir/file5 >> $seqres.full
-+
-+echo "reflink an inline-data file to another inline-data file"
-+_cp_reflink $testdir/file4 $testdir/file6 >> $seqres.full
-+
-+echo "Verify the whole mess"
-+_scratch_cycle_mount
-+md5sum $testdir/file* | _filter_scratch
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/ocfs2/001.out b/tests/ocfs2/001.out
-new file mode 100644
-index 0000000..99fa43a
---- /dev/null
-+++ b/tests/ocfs2/001.out
-@@ -0,0 +1,14 @@
-+QA output created by 001
-+Format and mount
-+Create the original files
-+reflink into the start of file2
-+reflink past the stuff in file3
-+reflink an inline-data file to a regular one
-+reflink an inline-data file to another inline-data file
-+Verify the whole mess
-+2d61aa54b58c2e94403fb092c3dbc027  SCRATCH_MNT/test-001/file1
-+2d61aa54b58c2e94403fb092c3dbc027  SCRATCH_MNT/test-001/file2
-+4e68a2e24b6b0f386ab39d01d902293d  SCRATCH_MNT/test-001/file3
-+009520053b00386d1173f3988c55d192  SCRATCH_MNT/test-001/file4
-+009520053b00386d1173f3988c55d192  SCRATCH_MNT/test-001/file5
-+009520053b00386d1173f3988c55d192  SCRATCH_MNT/test-001/file6
-diff --git a/tests/ocfs2/Makefile b/tests/ocfs2/Makefile
-new file mode 100644
-index 0000000..70a4f16
---- /dev/null
-+++ b/tests/ocfs2/Makefile
-@@ -0,0 +1,20 @@
-+#
-+# Copyright (c) 2016 Oracle.  All Rights Reserved.
-+#
-+
-+TOPDIR = ../..
-+include $(TOPDIR)/include/builddefs
-+
-+OCFS2_DIR = ocfs2
-+TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(OCFS2_DIR)
-+
-+include $(BUILDRULES)
-+
-+install:
-+	$(INSTALL) -m 755 -d $(TARGET_DIR)
-+	$(INSTALL) -m 755 $(TESTS) $(TARGET_DIR)
-+	$(INSTALL) -m 644 group $(TARGET_DIR)
-+	$(INSTALL) -m 644 $(OUTFILES) $(TARGET_DIR)
-+
-+# Nothing.
-+install-dev install-lib:
-diff --git a/tests/ocfs2/group b/tests/ocfs2/group
-new file mode 100644
-index 0000000..28e6807
---- /dev/null
-+++ b/tests/ocfs2/group
-@@ -0,0 +1 @@
-+001 auto quick clone
+Maybe so, but there are users of it. e.g:
 
+$ git grep open |grep XFS_IO
+tests/overlay/001:      $XFS_IO_PROG -c "open" $f >>$seqres.full
+$
+
+This is precisely why I made oneshot commands just work silently
+with "-c" - who knows what will break if we start rejecting commands
+that otherwise work just fine when there is only one open file....
+
+> 2. You marked mmap ONE_SHOT, but not all the m* commands.
+>    Stands to reason that they should all be marked ONE_SHOT. because iterating
+>    the file table has nothing to do with the m* commands. no?
+
+It is not clear to me what the correct thing to do here is, I don't
+have the time right now to look into it, so I didn't
+change mread/mwrite/msync behaviour. If it's broken before it is
+still broken now.
+
+> About the fix to overlay/016.
+> How would you prefer to address the conditional availability of xfs_io -C?
+> 
+> 1. new helper _require_xfs_io_one_shot_command
+> 2. _require_xfs_io_command "open" (which internally checks for xfs_io -C "open")
+> 3. third option?
+
+I don't really care - #2 is probably neatest. If what you do is too
+ugly to live then I'll let you know.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
