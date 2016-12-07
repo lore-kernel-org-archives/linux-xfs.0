@@ -1,55 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35293 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:23719 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753341AbcLFSPB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 13:15:01 -0500
-Date: Tue, 6 Dec 2016 10:14:20 -0800
+        with ESMTP id S1752099AbcLGATC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 19:19:02 -0500
+Subject: [PATCH 07/11] common/fuzzy: move fuzzing helper functions here
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [BUG] xfs/109 crashed 2k block size reflink enabled XFS
-Message-ID: <20161206181420.GE8436@birch.djwong.org>
-References: <20161205092112.GS29149@eguan.usersys.redhat.com>
- <20161205143906.GA16352@infradead.org>
- <20161205153625.GA20032@infradead.org>
- <20161205182802.GB8436@birch.djwong.org>
- <20161206144559.GA14623@infradead.org>
- <20161206151945.GC3211@bfoster.bfoster>
+Date: Tue, 06 Dec 2016 16:18:55 -0800
+Message-ID: <148106993543.19334.11695200561855461297.stgit@birch.djwong.org>
+In-Reply-To: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
+References: <148106989109.19334.6839386416313318071.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161206151945.GC3211@bfoster.bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Tue, Dec 06, 2016 at 10:19:46AM -0500, Brian Foster wrote:
-> On Tue, Dec 06, 2016 at 06:45:59AM -0800, Christoph Hellwig wrote:
-> > I think the problem is that the extents -> btree conversion does not
-> > use the per-AG reservations, but it should probably use it (even if it
-> > predates if of course).
-> > 
-> > In the reproduce the fs still has enough blocks to allocate the
-> > one block for the first bmap btree leave.  But all free space sits
-> > in AGs with a lower agno then what we used for allocating the actual
-> > extent, and thus xfs_alloc_vextent never manages to allocate it.
-> 
-> Not that I have any insight into the problem here... :P but I'm still[1]
-> kind of wondering how that mechanism is supposed to work when it
-> ultimately calls xfs_mod_fdblocks() for each AG..?
+Move some fuzzing helper functions into a new common/fuzzy file.
+We'll add a lot more fuzzing helpers in subsequent patches.
 
-Oh, heh, I was meaning to reply to that and never did. :(
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ common/fuzzy    |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ common/populate |   36 ------------------------
+ tests/ext4/006  |    1 +
+ tests/xfs/083   |    1 +
+ 4 files changed, 85 insertions(+), 36 deletions(-)
+ create mode 100644 common/fuzzy
 
-Will go work on that!
 
---D
+diff --git a/common/fuzzy b/common/fuzzy
+new file mode 100644
+index 0000000..964a463
+--- /dev/null
++++ b/common/fuzzy
+@@ -0,0 +1,83 @@
++##/bin/bash
++
++# Routines for fuzzing and scrubbing a filesystem.
++#
++#-----------------------------------------------------------------------
++#  Copyright (c) 2016 Oracle.  All Rights Reserved.
++#  This program is free software; you can redistribute it and/or modify
++#  it under the terms of the GNU General Public License as published by
++#  the Free Software Foundation; either version 2 of the License, or
++#  (at your option) any later version.
++#
++#  This program is distributed in the hope that it will be useful,
++#  but WITHOUT ANY WARRANTY; without even the implied warranty of
++#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++#  GNU General Public License for more details.
++#
++#  You should have received a copy of the GNU General Public License
++#  along with this program; if not, write to the Free Software
++#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
++#  USA
++#
++#  Contact information: Silicon Graphics, Inc., 1500 Crittenden Lane,
++#  Mountain View, CA 94043, USA, or: http://www.sgi.com
++#-----------------------------------------------------------------------
++
++# Modify various files after a fuzzing operation
++_scratch_fuzz_modify() {
++	nr="$1"
++
++	test -z "${nr}" && nr=50000
++	echo "+++ touch ${nr} files"
++	blk_sz=$(stat -f -c '%s' ${SCRATCH_MNT})
++	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${blk_sz}" "/tmp/afile" > /dev/null
++	date="$(date)"
++	find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
++		setfattr -n "user.date" -v "${date}" "$f"
++		cat "/tmp/afile" >> "$f"
++		mv "$f" "$f.longer"
++	done
++	sync
++	rm -rf "/tmp/afile"
++
++	echo "+++ create files"
++	mkdir -p "${SCRATCH_MNT}/test.moo"
++	$XFS_IO_PROG -f -c 'pwrite -S 0x80 0 65536' "${SCRATCH_MNT}/test.moo/urk"
++	sync
++
++	echo "+++ remove files"
++	rm -rf "${SCRATCH_MNT}/test.moo"
++}
++
++# Try to access files after fuzzing
++_scratch_fuzz_test() {
++	echo "+++ ls -laR" >> $seqres.full
++	ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
++
++	echo "+++ cat files" >> $seqres.full
++	(find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
++}
++
++# Do we have an online scrub program?
++_require_scrub() {
++	case "${FSTYP}" in
++	"xfs"|"ext4")
++		test -x $XFS_SCRUB_PROG || _notrun "xfs_scrub not found"
++		;;
++	*)
++		_notrun "No online scrub program for ${FSTYP}."
++		;;
++	esac
++}
++
++# Scrub the scratch filesystem metadata (online)
++_scratch_scrub() {
++	case "${FSTYP}" in
++	"xfs"|"ext4"|"ext3"|"ext2")
++		$XFS_SCRUB_PROG -d -T -v "$@" $SCRATCH_MNT
++		;;
++	*)
++		_fail "No online scrub program for ${FSTYP}."
++		;;
++	esac
++}
+diff --git a/common/populate b/common/populate
+index 5227cd1..74a77a1 100644
+--- a/common/populate
++++ b/common/populate
+@@ -605,39 +605,3 @@ _scratch_populate() {
+ 		;;
+ 	esac
+ }
+-
+-# Modify various files after a fuzzing operation
+-_scratch_fuzz_modify() {
+-	nr="$1"
+-
+-	test -z "${nr}" && nr=50000
+-	echo "+++ touch ${nr} files"
+-	blk_sz=$(stat -f -c '%s' ${SCRATCH_MNT})
+-	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${blk_sz}" "/tmp/afile" > /dev/null
+-	date="$(date)"
+-	find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
+-		setfattr -n "user.date" -v "${date}" "$f"
+-		cat "/tmp/afile" >> "$f"
+-		mv "$f" "$f.longer"
+-	done
+-	sync
+-	rm -rf "/tmp/afile"
+-
+-	echo "+++ create files"
+-	mkdir -p "${SCRATCH_MNT}/test.moo"
+-	$XFS_IO_PROG -f -c 'pwrite -S 0x80 0 65536' "${SCRATCH_MNT}/test.moo/urk"
+-	sync
+-
+-	echo "+++ remove files"
+-	rm -rf "${SCRATCH_MNT}/test.moo"
+-}
+-
+-# Try to access files after fuzzing
+-_scratch_fuzz_test() {
+-	echo "+++ ls -laR" >> $seqres.full
+-	ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
+-
+-	echo "+++ cat files" >> $seqres.full
+-	(find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
+-}
+-
+diff --git a/tests/ext4/006 b/tests/ext4/006
+index 9662f50..bb9b7e5 100755
+--- a/tests/ext4/006
++++ b/tests/ext4/006
+@@ -43,6 +43,7 @@ _cleanup()
+ . ./common/filter
+ . ./common/attr
+ . ./common/populate
++. ./common/fuzzy
+ 
+ if [ ! -x "$(which e2fuzz)" ]; then
+ 	_notrun "Couldn't find e2fuzz"
+diff --git a/tests/xfs/083 b/tests/xfs/083
+index 39bd75f..e2b5f82 100755
+--- a/tests/xfs/083
++++ b/tests/xfs/083
+@@ -43,6 +43,7 @@ _cleanup()
+ . ./common/filter
+ . ./common/attr
+ . ./common/populate
++. ./common/fuzzy
+ 
+ # real QA test starts here
+ _supported_fs xfs
 
-> 
-> Brian
-> 
-> [1] http://www.spinics.net/lists/linux-xfs/msg01509.html
-> 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
