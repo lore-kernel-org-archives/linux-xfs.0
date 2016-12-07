@@ -1,428 +1,443 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36793 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753772AbcLPAlV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 19:41:21 -0500
-From: Eric Biggers <ebiggers3@gmail.com>
-Subject: [PATCH v2] xfs_io: implement 'set_encpolicy' and 'get_encpolicy' commands
-Date: Thu, 15 Dec 2016 16:40:15 -0800
-Message-Id: <1481848815-104231-1-git-send-email-ebiggers3@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35913 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753058AbcLGNgH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 7 Dec 2016 08:36:07 -0500
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 656067FD44
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2016 13:27:56 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 15/22] mkfs: replace SUBOPT_NEEDS_VAL for a flag
+Date: Wed,  7 Dec 2016 14:27:22 +0100
+Message-Id: <1481117249-21273-16-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Richard Weinberger <richard@nod.at>, David Gstir <david@sigma-star.at>, Michael Halcrow <mhalcrow@google.com>, Eric Biggers <ebiggers@google.com>
+Cc: Jan Tulak <jtulak@redhat.com>
 
-From: Eric Biggers <ebiggers@google.com>
+Do not use a special value as a signal for a required value,
+as it causes issues when we have more value types.
 
-Add set_encpolicy and get_encpolicy commands to xfs_io so that xfstests
-will be able to test filesystem encryption using the actual user API,
-not just hacked in with a mount option.  These commands use the common
-"fscrypt" API currently implemented by ext4 and f2fs, but it's also
-under development for ubifs and planned for xfs.
-
-Note that to get encrypted files to actually work, it's also necessary
-to add a key to the kernel keyring.  This patch does not add a command
-for this to xfs_io because it's possible to do it using keyctl.  keyctl
-can also be used to remove keys, revoke keys, invalidate keys, etc.
-
-Signed-off-by: Eric Biggers <ebiggers@google.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- io/Makefile       |   6 +-
- io/encrypt.c      | 302 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- io/init.c         |   1 +
- io/io.h           |   1 +
- man/man8/xfs_io.8 |  27 +++++
- 5 files changed, 334 insertions(+), 3 deletions(-)
- create mode 100644 io/encrypt.c
+ mkfs/xfs_mkfs.c | 93 +++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 48 insertions(+), 45 deletions(-)
 
-diff --git a/io/Makefile b/io/Makefile
-index 1072e74..89cca66 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -9,9 +9,9 @@ LTCOMMAND = xfs_io
- LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
- HFILES = init.h io.h
- CFILES = init.c \
--	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c link.c \
--	mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
--	sync.c truncate.c reflink.c cowextsize.c
-+	attr.c bmap.c encrypt.c file.c freeze.c fsync.c getrusage.c imap.c   \
-+	link.c mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c     \
-+	shutdown.c sync.c truncate.c reflink.c cowextsize.c
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index f7eb191..7ffe8ff 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -44,7 +44,6 @@ unsigned int		sectorsize;
  
- LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBPTHREAD)
- LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
-diff --git a/io/encrypt.c b/io/encrypt.c
-new file mode 100644
-index 0000000..d844c5e
---- /dev/null
-+++ b/io/encrypt.c
-@@ -0,0 +1,302 @@
-+/*
-+ * Copyright (c) 2016 Google, Inc.  All Rights Reserved.
-+ *
-+ * Author: Eric Biggers <ebiggers@google.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include "platform_defs.h"
-+#include "command.h"
-+#include "init.h"
-+#include "io.h"
-+
-+#ifndef ARRAY_SIZE
-+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-+#endif
-+
-+/*
-+ * We may have to declare the fscrypt ioctls ourselves because someone may be
-+ * compiling xfsprogs with old kernel headers.  And since some old versions of
-+ * <linux/fs.h> declared the policy struct and ioctl numbers but not the flags
-+ * and modes, our declarations must be split into two conditional blocks.
-+ */
-+
-+/* Policy struct and ioctl numbers */
-+#ifndef FS_IOC_SET_ENCRYPTION_POLICY
-+#define FS_KEY_DESCRIPTOR_SIZE  8
-+
-+struct fscrypt_policy {
-+	__u8 version;
-+	__u8 contents_encryption_mode;
-+	__u8 filenames_encryption_mode;
-+	__u8 flags;
-+	__u8 master_key_descriptor[FS_KEY_DESCRIPTOR_SIZE];
-+} __attribute__((packed));
-+
-+#define FS_IOC_SET_ENCRYPTION_POLICY	_IOR('f', 19, struct fscrypt_policy)
-+#define FS_IOC_GET_ENCRYPTION_PWSALT	_IOW('f', 20, __u8[16])
-+#define FS_IOC_GET_ENCRYPTION_POLICY	_IOW('f', 21, struct fscrypt_policy)
-+#endif /* FS_IOC_SET_ENCRYPTION_POLICY */
-+
-+/* Policy flags and encryption modes */
-+#ifndef FS_ENCRYPTION_MODE_AES_256_XTS
-+#define FS_POLICY_FLAGS_PAD_4		0x00
-+#define FS_POLICY_FLAGS_PAD_8		0x01
-+#define FS_POLICY_FLAGS_PAD_16		0x02
-+#define FS_POLICY_FLAGS_PAD_32		0x03
-+#define FS_POLICY_FLAGS_PAD_MASK	0x03
-+#define FS_POLICY_FLAGS_VALID		0x03
-+
-+#define FS_ENCRYPTION_MODE_INVALID	0
-+#define FS_ENCRYPTION_MODE_AES_256_XTS	1
-+#define FS_ENCRYPTION_MODE_AES_256_GCM	2
-+#define FS_ENCRYPTION_MODE_AES_256_CBC	3
-+#define FS_ENCRYPTION_MODE_AES_256_CTS	4
-+#endif /* FS_ENCRYPTION_MODE_AES_256_XTS */
-+
-+static cmdinfo_t get_encpolicy_cmd;
-+static cmdinfo_t set_encpolicy_cmd;
-+
-+static void
-+set_encpolicy_help(void)
-+{
-+	printf(_(
-+"\n"
-+" assign an encryption policy to the currently open file\n"
-+"\n"
-+" Examples:\n"
-+" 'set_encpolicy' - assign policy with default key [0000000000000000]\n"
-+" 'set_encpolicy 0000111122223333' - assign policy with specified key\n"
-+"\n"
-+" -c MODE -- contents encryption mode\n"
-+" -n MODE -- filenames encryption mode\n"
-+" -f FLAGS -- policy flags\n"
-+" -v VERSION -- version of policy structure\n"
-+"\n"
-+" MODE can be numeric or one of the following predefined values:\n"
-+"    AES-256-XTS, AES-256-CTS, AES-256-GCM, AES-256-CBC\n"
-+" FLAGS and VERSION must be numeric.\n"
-+"\n"
-+" Note that it's only possible to set an encryption policy on an empty\n"
-+" directory.  It's then inherited by new files and subdirectories.\n"
-+"\n"));
-+}
-+
-+static const struct {
-+	__u8 mode;
-+	const char *name;
-+} available_modes[] = {
-+	{FS_ENCRYPTION_MODE_AES_256_XTS, "AES-256-XTS"},
-+	{FS_ENCRYPTION_MODE_AES_256_CTS, "AES-256-CTS"},
-+	{FS_ENCRYPTION_MODE_AES_256_GCM, "AES-256-GCM"},
-+	{FS_ENCRYPTION_MODE_AES_256_CBC, "AES-256-CBC"},
-+};
-+
-+static bool
-+parse_byte_value(const char *arg, __u8 *value_ret)
-+{
-+	long value;
-+	char *tmp;
-+
-+	value = strtol(arg, &tmp, 0);
-+	if (value < 0 || value > 255 || tmp == arg || *tmp != '\0')
-+		return false;
-+	*value_ret = value;
-+	return true;
-+}
-+
-+static bool
-+parse_mode(const char *arg, __u8 *mode_ret)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(available_modes); i++) {
-+		if (strcmp(arg, available_modes[i].name) == 0) {
-+			*mode_ret = available_modes[i].mode;
-+			return true;
-+		}
-+	}
-+
-+	return parse_byte_value(arg, mode_ret);
-+}
-+
-+static const char *
-+mode2str(__u8 mode)
-+{
-+	static char buf[32];
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(available_modes); i++)
-+		if (mode == available_modes[i].mode)
-+			return available_modes[i].name;
-+
-+	sprintf(buf, "0x%02x", mode);
-+	return buf;
-+}
-+
-+static const char *
-+keydesc2str(__u8 master_key_descriptor[FS_KEY_DESCRIPTOR_SIZE])
-+{
-+	static char buf[2 * FS_KEY_DESCRIPTOR_SIZE + 1];
-+	int i;
-+
-+	for (i = 0; i < FS_KEY_DESCRIPTOR_SIZE; i++)
-+		sprintf(&buf[2 * i], "%02x", master_key_descriptor[i]);
-+
-+	return buf;
-+}
-+
-+static int
-+get_encpolicy_f(int argc, char **argv)
-+{
-+	struct fscrypt_policy policy;
-+
-+	if (ioctl(file->fd, FS_IOC_GET_ENCRYPTION_POLICY, &policy) < 0) {
-+		fprintf(stderr, "%s: failed to get encryption policy: %s\n",
-+			file->name, strerror(errno));
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	printf("Encryption policy for %s:\n", file->name);
-+	printf("\tPolicy version: %u\n", policy.version);
-+	printf("\tMaster key descriptor: %s\n",
-+	       keydesc2str(policy.master_key_descriptor));
-+	printf("\tContents encryption mode: %u (%s)\n",
-+	       policy.contents_encryption_mode,
-+	       mode2str(policy.contents_encryption_mode));
-+	printf("\tFilenames encryption mode: %u (%s)\n",
-+	       policy.filenames_encryption_mode,
-+	       mode2str(policy.filenames_encryption_mode));
-+	printf("\tFlags: 0x%02x\n", policy.flags);
-+	return 0;
-+}
-+
-+static int
-+set_encpolicy_f(int argc, char **argv)
-+{
-+	int c;
-+	struct fscrypt_policy policy;
-+
-+	/* Initialize the policy structure with default values */
-+	memset(&policy, 0, sizeof(policy));
-+	policy.contents_encryption_mode = FS_ENCRYPTION_MODE_AES_256_XTS;
-+	policy.filenames_encryption_mode = FS_ENCRYPTION_MODE_AES_256_CTS;
-+	policy.flags = FS_POLICY_FLAGS_PAD_16;
-+
-+	/* Parse options */
-+	while ((c = getopt(argc, argv, "c:n:f:v:")) != EOF) {
-+		switch (c) {
-+		case 'c':
-+			if (!parse_mode(optarg,
-+					&policy.contents_encryption_mode)) {
-+				fprintf(stderr, "invalid contents encryption "
-+					"mode: %s\n", optarg);
-+				return 0;
-+			}
-+			break;
-+		case 'n':
-+			if (!parse_mode(optarg,
-+					&policy.filenames_encryption_mode)) {
-+				fprintf(stderr, "invalid filenames encryption "
-+					"mode: %s\n", optarg);
-+				return 0;
-+			}
-+			break;
-+		case 'f':
-+			if (!parse_byte_value(optarg, &policy.flags)) {
-+				fprintf(stderr, "invalid flags: %s\n", optarg);
-+				return 0;
-+			}
-+			break;
-+		case 'v':
-+			if (!parse_byte_value(optarg, &policy.version)) {
-+				fprintf(stderr, "invalid policy version: %s\n",
-+					optarg);
-+				return 0;
-+			}
-+			break;
-+		default:
-+			return command_usage(&set_encpolicy_cmd);
-+		}
-+	}
-+	argc -= optind;
-+	argv += optind;
-+
-+	if (argc > 1)
-+		return command_usage(&set_encpolicy_cmd);
-+
-+	/* Parse key descriptor if specified */
-+	if (argc > 0) {
-+		const char *keydesc = argv[0];
-+		char *tmp;
-+		unsigned long long x;
-+		int i;
-+
-+		if (strlen(keydesc) != FS_KEY_DESCRIPTOR_SIZE * 2) {
-+			fprintf(stderr, "invalid key descriptor: %s\n",
-+				keydesc);
-+			return 0;
-+		}
-+
-+		x = strtoull(keydesc, &tmp, 16);
-+		if (tmp == keydesc || *tmp != '\0') {
-+			fprintf(stderr, "invalid key descriptor: %s\n",
-+				keydesc);
-+			return 0;
-+		}
-+
-+		for (i = 0; i < FS_KEY_DESCRIPTOR_SIZE; i++) {
-+			policy.master_key_descriptor[i] = x >> 56;
-+			x <<= 8;
-+		}
-+	}
-+
-+	/* Set the encryption policy */
-+	if (ioctl(file->fd, FS_IOC_SET_ENCRYPTION_POLICY, &policy) < 0) {
-+		fprintf(stderr, "%s: failed to set encryption policy: %s\n",
-+			file->name, strerror(errno));
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	return 0;
-+}
-+
-+void
-+encrypt_init(void)
-+{
-+	get_encpolicy_cmd.name = "get_encpolicy";
-+	get_encpolicy_cmd.cfunc = get_encpolicy_f;
-+	get_encpolicy_cmd.argmin = 0;
-+	get_encpolicy_cmd.argmax = 0;
-+	get_encpolicy_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	get_encpolicy_cmd.oneline =
-+		_("display the encryption policy of the current file");
-+
-+	set_encpolicy_cmd.name = "set_encpolicy";
-+	set_encpolicy_cmd.cfunc = set_encpolicy_f;
-+	set_encpolicy_cmd.args =
-+		_("[-c mode] [-n mode] [-f flags] [-v version] [keydesc]");
-+	set_encpolicy_cmd.argmin = 0;
-+	set_encpolicy_cmd.argmax = -1;
-+	set_encpolicy_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	set_encpolicy_cmd.oneline =
-+		_("assign an encryption policy to the current file");
-+	set_encpolicy_cmd.help = set_encpolicy_help;
-+
-+	add_command(&get_encpolicy_cmd);
-+	add_command(&set_encpolicy_cmd);
-+}
-diff --git a/io/init.c b/io/init.c
-index a9191cf..ee7683e 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -59,6 +59,7 @@ init_commands(void)
- 	attr_init();
- 	bmap_init();
- 	copy_range_init();
-+	encrypt_init();
- 	fadvise_init();
- 	file_init();
- 	flink_init();
-diff --git a/io/io.h b/io/io.h
-index 5d21314..d257daa 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -94,6 +94,7 @@ extern void		dump_buffer(off64_t, ssize_t);
+ #define MAX_OPTS	16
+ #define MAX_SUBOPTS	16
+-#define SUBOPT_NEEDS_VAL	(-1LL)
+ #define MAX_CONFLICTS	32
+ #define LAST_CONFLICT	(-1)
  
- extern void		attr_init(void);
- extern void		bmap_init(void);
-+extern void		encrypt_init(void);
- extern void		file_init(void);
- extern void		flink_init(void);
- extern void		freeze_init(void);
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index efdba13..fd6f41d 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -886,6 +886,33 @@ verbose output will be printed.
- .IP
- .B [NOTE: Not currently operational on Linux.]
- .PD
-+.TP
-+.BI "set_encpolicy [ \-c " mode " ] [ \-n " mode " ] [ \-f " flags " ] [ \-v " version " ] [ " keydesc " ]
-+On filesystems that support encryption, assign an encryption policy to the
-+current file.
-+.I keydesc
-+is a 16-byte hex string which identifies the encryption key to use.
-+If not specified, a "default" key descriptor of all 0's will be used.
-+.RS 1.0i
-+.PD 0
-+.TP 0.4i
-+.BI \-c " mode
-+contents encryption mode (e.g. AES-256-XTS)
-+.TP
-+.BI \-n " mode
-+filenames encryption mode (e.g. AES-256-CTS)
-+.TP
-+.BI \-f " flags
-+policy flags (numeric)
-+.TP
-+.BI \-v " version
-+version of policy structure (numeric)
-+.RE
-+.PD
-+.TP
-+.BR get_encpolicy
-+On filesystems that support encryption, display the encryption policy of the
-+current file.
+@@ -193,14 +192,17 @@ unsigned int		sectorsize;
+  *     The value used if user specifies the subopt, but no value.
+  *     If the subopt accepts some values (-d file=[1|0]), then this
+  *     sets what is used with simple specifying the subopt (-d file).
+- *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
+- *     value in any case.
+  *
+  *   value INTERNAL
+  *     Do not set this on initialization. Use flagval for what you want
+  *     to do. This is filled with user input and anything you write here now
+  *     is overwritten. (If the user input is a string and not a number, this
+  *     value is set to a positive non-zero number.)
++ *
++ *   needs_val OPTIONAL
++ *     Set to true if, when user specifies the option, she has to specify
++ *     a value too. That is, if needs_val is true, then it is not possible to
++ *     use the subopt as a flag.
+  */
+ struct opt_params {
+ 	int		index;
+@@ -225,6 +227,7 @@ struct opt_params {
+ 		long long	maxval;
+ 		long long	flagval;
+ 		long long	value;
++		bool		needs_val;
+ 	}		subopt_params[MAX_SUBOPTS];
+ } opts[MAX_OPTS] = {
+ 	{
+@@ -243,7 +246,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_BLOCKSIZE_LOG,
+ 			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = B_SIZE,
+ 			  .convert = true,
+@@ -254,7 +257,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_BLOCKSIZE,
+ 			  .maxval = XFS_MAX_BLOCKSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 		},
+ 	},
+@@ -287,7 +290,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 1,
+ 			  .maxval = XFS_MAX_AGNUMBER,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_FILE,
+ 			  .conflicts = { {LAST_CONFLICT} },
+@@ -297,14 +300,14 @@ struct opt_params {
+ 			},
+ 			{ .index = D_NAME,
+ 			  .conflicts = { {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SIZE,
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .convert = true,
+ 			  .minval = XFS_AG_MIN_BYTES,
+ 			  .maxval = LLONG_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SUNIT,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -319,7 +322,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SWIDTH,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -334,7 +337,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_AGSIZE,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -344,7 +347,7 @@ struct opt_params {
+ 			  .convert = true,
+ 			  .minval = XFS_AG_MIN_BYTES,
+ 			  .maxval = XFS_AG_MAX_BYTES,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SU,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -360,7 +363,7 @@ struct opt_params {
+ 			  .convert = true,
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SW,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -375,7 +378,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SECTLOG,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -384,7 +387,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SECTSIZE,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -395,7 +398,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_MIN_SECTORSIZE,
+ 			  .maxval = XFS_MAX_SECTORSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_NOALIGN,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -425,13 +428,13 @@ struct opt_params {
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_EXTSZINHERIT,
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 		},
+ 	},
+@@ -474,13 +477,13 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_DINODE_MIN_LOG,
+ 			  .maxval = XFS_DINODE_MAX_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = I_MAXPCT,
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = 100,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = I_PERBLOCK,
+ 			  .conflicts = { {.opt = OPT_I,
+@@ -493,7 +496,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_MIN_INODE_PERBLOCK,
+ 			  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = I_SIZE,
+ 			  .conflicts = { {.opt = OPT_I,
+@@ -506,7 +509,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_DINODE_MIN_SIZE,
+ 			  .maxval = XFS_DINODE_MAX_SIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = I_ATTR,
+ 			  .conflicts = { {.opt = OPT_M,
+@@ -520,7 +523,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = 2,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = I_PROJID32BIT,
+ 			  .conflicts = { {.opt = OPT_M,
+@@ -579,7 +582,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_INTERNAL,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -598,7 +601,7 @@ struct opt_params {
+ 			  .convert = true,
+ 			  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
+ 			  .maxval = XFS_MAX_LOG_BYTES,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_VERSION,
+ 			  .conflicts = {{.opt = OPT_M,
+@@ -612,7 +615,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 1,
+ 			  .maxval = 2,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_SUNIT,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -621,7 +624,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 1,
+ 			  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_SU,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -631,7 +634,7 @@ struct opt_params {
+ 			  .convert = true,
+ 			  .minval = BBTOB(1),
+ 			  .maxval = XLOG_MAX_RECORD_BSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_DEV,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -641,7 +644,7 @@ struct opt_params {
+ 					  .subopt = L_INTERNAL,
+ 					 },
+ 					 {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_SECTLOG,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -650,7 +653,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_SECTSIZE,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -661,7 +664,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_MIN_SECTORSIZE,
+ 			  .maxval = XFS_MAX_SECTORSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_FILE,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -680,7 +683,7 @@ struct opt_params {
+ 					  .subopt = L_INTERNAL,
+ 					 },
+ 					 {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_LAZYSBCNTR,
+ 			  .conflicts = { {.opt = OPT_M,
+@@ -716,7 +719,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_REC_DIRSIZE,
+ 			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = N_SIZE,
+ 			  .conflicts = { {.opt = OPT_N,
+@@ -727,13 +730,13 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = 1 << XFS_MIN_REC_DIRSIZE,
+ 			  .maxval = XFS_MAX_BLOCKSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = N_VERSION,
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .minval = 2,
+ 			  .maxval = 2,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = N_FTYPE,
+ 			  .conflicts = {  {.opt = OPT_M,
+@@ -769,14 +772,14 @@ struct opt_params {
+ 			  .convert = true,
+ 			  .minval = XFS_MIN_RTEXTSIZE,
+ 			  .maxval = XFS_MAX_RTEXTSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = R_SIZE,
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .convert = true,
+ 			  .minval = 0,
+ 			  .maxval = LLONG_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = R_DEV,
+ 			  .conflicts = { {.opt = OPT_M,
+@@ -788,7 +791,7 @@ struct opt_params {
+ 					  .message =
+ 		"rmapbt not supported without CRC support."},
+ 					 {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = R_FILE,
+ 			  .minval = 0,
+@@ -806,7 +809,7 @@ struct opt_params {
+ 					  .message =
+ 		"rmapbt not supported without CRC support."},
+ 					 {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = R_NOALIGN,
+ 			  .minval = 0,
+@@ -837,7 +840,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = S_SECTLOG,
+ 			  .conflicts = { {.opt = OPT_S,
+@@ -849,7 +852,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = S_SIZE,
+ 			  .conflicts = { {.opt = OPT_S,
+@@ -863,7 +866,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_MIN_SECTORSIZE,
+ 			  .maxval = XFS_MAX_SECTORSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = S_SECTSIZE,
+ 			  .conflicts = { {.opt = OPT_S,
+@@ -877,7 +880,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_MIN_SECTORSIZE,
+ 			  .maxval = XFS_MAX_SECTORSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 		},
+ 	},
+@@ -995,7 +998,7 @@ struct opt_params {
+ 			},
+ 			{ .index = M_UUID,
+ 			  .conflicts = { {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = M_RMAPBT,
+ 			.conflicts = { {.opt = OPT_M,
+@@ -1039,7 +1042,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = 1,
+-			  .flagval = 0,
++			  .needs_val = true,
+ 			},
+ 		},
+ 	},
+@@ -1715,7 +1718,7 @@ getnum(
  
- .SH SEE ALSO
- .BR mkfs.xfs (8),
+ 	/* empty strings might just return a default value */
+ 	if (!str || *str == '\0') {
+-		if (sp->flagval == SUBOPT_NEEDS_VAL)
++		if (sp->needs_val)
+ 			reqval(opts->name, (char **)opts->subopts, index);
+ 		sp->seen = true;
+ 		return sp->flagval;
 -- 
-2.8.0.rc3.226.g39d4020
+2.8.1
 
