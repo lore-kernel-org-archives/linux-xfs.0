@@ -1,124 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:61931 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932427AbcLHWWy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Dec 2016 17:22:54 -0500
-Date: Fri, 9 Dec 2016 09:22:49 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/6] libxcmd: add non-iterating user commands
-Message-ID: <20161208222249.GJ4219@dastard>
-References: <20161207034724.1613-1-david@fromorbit.com>
- <20161207034724.1613-7-david@fromorbit.com>
- <CAOQ4uxj2AROKtg=ZE64Q-RJbMaiRdP7SvoosmvCD4C1h-X-4bA@mail.gmail.com>
- <CAOQ4uxhrtaHauNJypezpFAT0VCN61oZLFKtxuBLw32jn7FOSFw@mail.gmail.com>
- <20161207201637.GI4219@dastard>
- <CAOQ4uxh+QX5uzJCXtEG8vg0qhUTgQ0QG1ZWDkr1ryH0kQxi0ZA@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:47130 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751640AbcLHGgE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Dec 2016 01:36:04 -0500
+Date: Wed, 7 Dec 2016 22:36:00 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [ANNOUNCE] xfs: for-next branch updated to a444d72e6090
+Message-ID: <20161208063600.GY16813@birch.djwong.org>
+References: <20161207202501.GK4326@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxh+QX5uzJCXtEG8vg0qhUTgQ0QG1ZWDkr1ryH0kQxi0ZA@mail.gmail.com>
+In-Reply-To: <20161207202501.GK4326@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Dec 08, 2016 at 12:14:24PM +0200, Amir Goldstein wrote:
-> On Wed, Dec 7, 2016 at 10:16 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Wed, Dec 07, 2016 at 04:21:31PM +0200, Amir Goldstein wrote:
-> ...
-> >>
-> >> 1. Do you think that xfs_io should error on -c "open foo"  to force
-> >> explicit -C "open foo"?
-> >
-> > No.
-> >
-> >>     it can't be breaking any existing users, because -c "open foo" is
-> >> already very broken.
-> >
-> > Maybe so, but there are users of it. e.g:
-> >
-> > $ git grep open |grep XFS_IO
-> > tests/overlay/001:      $XFS_IO_PROG -c "open" $f >>$seqres.full
-> > $
-> >
-> > This is precisely why I made oneshot commands just work silently
-> > with "-c" - who knows what will break if we start rejecting commands
-> > that otherwise work just fine when there is only one open file....
-> >
+On Thu, Dec 08, 2016 at 07:25:01AM +1100, Dave Chinner wrote:
+> Hi folks,
 > 
-> Interesting example. Here -c "open" is actually an 'alias' for
-> -c "stat", which could have been non one shot.
-> Nevertheless, I see your point.
+> The for-next branch of the xfs kernel repository at
 > 
-> >> 2. You marked mmap ONE_SHOT, but not all the m* commands.
-> >>    Stands to reason that they should all be marked ONE_SHOT. because iterating
-> >>    the file table has nothing to do with the m* commands. no?
-> >
-> > It is not clear to me what the correct thing to do here is, I don't
-> > have the time right now to look into it, so I didn't
-> > change mread/mwrite/msync behaviour. If it's broken before it is
-> > still broken now.
-> >
+> git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 > 
-> Very well, but I am not sure why mmap should be marked one shot?
-
-Look at the help documentation:
-
-$ xfs_io -c "help mmap"
-mmap [N] | [-rwx] [-s size] [off len] -- mmap a range in the current file, show mappings
-
- maps a range within the current file into memory
-
- Example:
- 'mmap -rw 0 1m' - maps one megabyte from the start of the current file
-....
-
-It explicitly and repeatedly says "current file" in the
-description of it's operation. Any typical user is going to read
-that and think that it means "current open file", not "map a range
-on all open files".
-
-> Possibly, mmap caught your filters because it is CMD_NOFILE_OK,
-> but in fact, the only case where mmap with no open files works is
-> after mmaping files and closing all open files.
-
-Well, yes. We've come across applications that do exactly this
-in the past, and had to simulate their behaviours. It's entirely
-reasonable to want to list or change the active mappings after all
-the open files have been closed.
-
-> Currently, this command:
-> $ xfs_io -c "mmap 0 4" -C "mmap" foo bar
+> has just been updated. This update contains a bunch of verification
+> enhancments to detect field corruptions as metadata is read from
+> disk, faster CRC calculations, a faster buffer cache indexing
+> structure and some cleanups.
 > 
-> Results in:
-> [000] 0x7f17319ae000 - 0x7f17319ae004 rwx             bar (0 : 4)
+> With the merge window likely to open next week, this may be the last
+> update for the 4.10-rc1 cycle.  Let me know if there's anything
+> critical that I've missed for 4.10 so I can sort it out before the
+> end of the week.
+
+Well I /was/ sorta hoping that you'd have time to review the online
+scrub patches for 4.10, but unless you're already digging through them I
+probably ought to just put out a call for online scrub reviewers for 4.11.
+
+You're not missing anything critical from my trees, however.
+
+--D
+
 > 
-> IMO, it would be more useful if it resulted in:
->  000  0x7f27e289d000 - 0x7f27e289d004 rwx             foo (0 : 4)
-> [001] 0x7f27e289c000 - 0x7f27e289c004 rwx             bar (0 : 4)
+> -Dave.
 > 
-> Which will allow following up with more specific -C m* commands
-> and it would be more consistent with the result of:
-> $ xfs_io -C "file" foo bar
->  000  foo            (foreign,non-sync,non-direct,read-write)
-> [001] bar            (foreign,non-sync,non-direct,read-write)
-
-Maybe so but, unfortunately, mapping tables are different to the
-file tables.
-
-As I have already said: it's not clear what the correct behaviour
-here is because mapping commands /don't iterate the mapping table/.
-The exception is the mmap command, and that mapping table iteration
-behaviour is the reason I changed mmap to be a oneshot command,
-otherwise it does stupid things when multiple files are open
-and they are iterated.
-
-If you want to have mmap commands do sane things for iteration, then
-you need to address the file vs mapping iteration problem, not hack
-special one-off behaviours into the mmap commands.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> The new head of the for-next branch is commit:
+> 
+> a444d72e6090 Merge branch 'xfs-4.10-misc-fixes-3' into for-next
+> 
+> New Commits:
+> 
+> Darrick J. Wong (7):
+>       [d2a047f31e86] xfs: forbid AG btrees with level == 0
+>       [bb3be7e7c1c1] xfs: check for bogus values in btree block headers
+>       [356a3225222e] xfs: complain if we don't get nextents bmap records
+>       [96a3aefb8ffd] xfs: don't crash if reading a directory results in an unexpected hole
+>       [0f352f8ee841] xfs: error out if trying to add attrs and anextents > 0
+>       [ef388e2054fe] xfs: don't allow di_size with high bit set
+>       [1bb33a98702d] xfs: don't cap maximum dedupe request length
+> 
+> Dave Chinner (3):
+>       [11ef38afe98c] xfs: make xfs btree stats less huge
+>       [cae028df5344] xfs: optimise CRC updates
+>       [a444d72e6090] Merge branch 'xfs-4.10-misc-fixes-3' into for-next
+> 
+> Eric Sandeen (5):
+>       [6b10b23ca944] xfs: set AGI buffer type in xlog_recover_clear_agi_bucket
+>       [200237d6746f] xfs: Move AGI buffer type setting to xfs_read_agi
+>       [7710517fc37b] xfs: pass state not whichfork to trace_xfs_extlist
+>       [c44a1f22626c] xfs: handle cow fork in xfs_bmap_trace_exlist
+>       [f7a136aee3c1] xfs: several xattr functions can be void
+> 
+> Lucas Stach (1):
+>       [6031e73a5b3f] xfs: use rhashtable to track buffer cache
+> 
+> 
+> Code Diffstat:
+> 
+>  fs/xfs/libxfs/xfs_alloc.c          |  10 +-
+>  fs/xfs/libxfs/xfs_alloc_btree.c    |   4 +
+>  fs/xfs/libxfs/xfs_attr_leaf.h      |   2 +-
+>  fs/xfs/libxfs/xfs_bmap.c           |  14 ++-
+>  fs/xfs/libxfs/xfs_bmap_btree.c     |   1 +
+>  fs/xfs/libxfs/xfs_btree.c          |  20 ++++
+>  fs/xfs/libxfs/xfs_btree.h          |  43 +-------
+>  fs/xfs/libxfs/xfs_cksum.h          |  26 ++++-
+>  fs/xfs/libxfs/xfs_dir2_data.c      |   2 +-
+>  fs/xfs/libxfs/xfs_ialloc.c         |  13 ++-
+>  fs/xfs/libxfs/xfs_ialloc_btree.c   |   2 +
+>  fs/xfs/libxfs/xfs_inode_buf.c      |  10 +-
+>  fs/xfs/libxfs/xfs_refcount_btree.c |   1 +
+>  fs/xfs/libxfs/xfs_rmap_btree.c     |   1 +
+>  fs/xfs/xfs_attr.h                  |   4 +-
+>  fs/xfs/xfs_attr_list.c             |  59 ++++-------
+>  fs/xfs/xfs_buf.c                   | 120 +++++++++++++---------
+>  fs/xfs/xfs_buf.h                   |   2 +-
+>  fs/xfs/xfs_file.c                  |   9 --
+>  fs/xfs/xfs_inode.c                 |   2 -
+>  fs/xfs/xfs_linux.h                 |   1 +
+>  fs/xfs/xfs_log.c                   |   2 +-
+>  fs/xfs/xfs_log_recover.c           |  12 ++-
+>  fs/xfs/xfs_mount.c                 |   7 +-
+>  fs/xfs/xfs_mount.h                 |   7 +-
+>  fs/xfs/xfs_stats.c                 |  10 +-
+>  fs/xfs/xfs_stats.h                 | 200 +++++++++++++++----------------------
+>  fs/xfs/xfs_xattr.c                 |  23 ++---
+>  28 files changed, 306 insertions(+), 301 deletions(-)
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
