@@ -1,55 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:25152 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752295AbcLHW7G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Dec 2016 17:59:06 -0500
-Date: Fri, 9 Dec 2016 09:58:49 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:21375 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752430AbcLIVrB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Dec 2016 16:47:01 -0500
+Date: Sat, 10 Dec 2016 08:46:51 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ANNOUNCE] xfs: for-next branch updated to a444d72e6090
-Message-ID: <20161208225849.GL4219@dastard>
-References: <20161207202501.GK4326@dastard>
- <20161208063600.GY16813@birch.djwong.org>
+Subject: Re: [PATCH, RFC] xfs: take indirect blocks into accounting when
+ selecting an AG
+Message-ID: <20161209214651.GR4326@dastard>
+References: <1481303709-12632-1-git-send-email-hch@lst.de>
+ <20161209173213.GZ16813@birch.djwong.org>
+ <20161209174145.GA15960@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161208063600.GY16813@birch.djwong.org>
+In-Reply-To: <20161209174145.GA15960@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, eguan@redhat.com
 
-On Wed, Dec 07, 2016 at 10:36:00PM -0800, Darrick J. Wong wrote:
-> On Thu, Dec 08, 2016 at 07:25:01AM +1100, Dave Chinner wrote:
-> > Hi folks,
+On Fri, Dec 09, 2016 at 06:41:45PM +0100, Christoph Hellwig wrote:
+> On Fri, Dec 09, 2016 at 09:32:13AM -0800, Darrick J. Wong wrote:
+> > > +	if (xfs_alloc_is_userdata(args->datatype))
+> > > +		indlen = __xfs_bmap_worst_indlen(args->mp, max(args->minlen, args->maxlen));
 > > 
-> > The for-next branch of the xfs kernel repository at
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-> > 
-> > has just been updated. This update contains a bunch of verification
-> > enhancments to detect field corruptions as metadata is read from
-> > disk, faster CRC calculations, a faster buffer cache indexing
-> > structure and some cleanups.
-> > 
-> > With the merge window likely to open next week, this may be the last
-> > update for the 4.10-rc1 cycle.  Let me know if there's anything
-> > critical that I've missed for 4.10 so I can sort it out before the
-> > end of the week.
+> > /me wonders, when is it the case that minlen > maxlen?
 > 
-> Well I /was/ sorta hoping that you'd have time to review the online
-> scrub patches for 4.10, but unless you're already digging through them I
-> probably ought to just put out a call for online scrub reviewers for 4.11.
+> Good question.  I just added that when I noticed minlen alone doesn't
+> work as we might need the bigger calculation based on maxlen.  I'll
+> do a quick audit and move to maxlen only.
+> 
+> > 
+> > I'm also wondering why we can't just increase args->minleft to require
+> > that we leave enough space in whichever AG we pick to expand to bmbt?
+> > AFAICT that's the purpose of the minleft field.
+> 
+> Not sure what the original intentions was, but as-is it seems pretty
+> b0rked.
+> 
+> E.g. xfs_bmap_btalloc, xfs_bmapi_allocate or xfs_alloc_vextentjust set
+> minleft to 0 when when we are low on space which make it a bit pointless.
 
-I started on them, but I just haven't been able to spend any
-substantial time reading them or testing them so, unfortunately,
-it's going to have to miss 4.10 at this point.
+I'm pretty sure these cases were added as a mechanism to prevent
+ENOSPC occurrences during delalloc conversion when, in the general
+case, the allocation would have succeeded. i.e. "in most cases the
+BMBT is not going to change shape, so let's just ignore the blocks
+that might be needed for that and hope we don't need them".
 
-> You're not missing anything critical from my trees, however.
+> Also in the bmap code where we set minleft we don't really know how
+> much we'll need as we'll only decide on the actual final allocation
+> size deep down in the allocator.  I'll do a little archeology session
+> now to figure out how we got the current minleft semantics, as they seem
+> really weird.
 
-Thanks for checking!
+I'd just set it according to maxlen. I don't really care if we can't
+allocate the last few blocks in an AG for certain types of
+allocation - the failure fallbacks should drop back to an allocation
+attempt of maxlen = minlen and we can set minleft accordingly
+for those. If it still fails, then we really have ENOSPC...
 
--Dave.
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
