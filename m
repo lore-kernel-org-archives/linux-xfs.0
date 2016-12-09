@@ -1,40 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53899 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:45080 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753055AbcLNVwB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Dec 2016 16:52:01 -0500
-Date: Wed, 14 Dec 2016 16:51:58 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/4] xfs: don't rely on ->total in
- xfs_alloc_space_available
-Message-ID: <20161214215158.GB26688@bfoster.bfoster>
-References: <1481644767-9098-1-git-send-email-hch@lst.de>
- <1481644767-9098-5-git-send-email-hch@lst.de>
- <20161214183017.GD24645@bfoster.bfoster>
- <20161214193802.GB12217@lst.de>
+        id S1750744AbcLIRlr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Dec 2016 12:41:47 -0500
+Date: Fri, 9 Dec 2016 18:41:45 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH, RFC] xfs: take indirect blocks into accounting when
+        selecting an AG
+Message-ID: <20161209174145.GA15960@lst.de>
+References: <1481303709-12632-1-git-send-email-hch@lst.de> <20161209173213.GZ16813@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161214193802.GB12217@lst.de>
+In-Reply-To: <20161209173213.GZ16813@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com
 
-On Wed, Dec 14, 2016 at 08:38:02PM +0100, Christoph Hellwig wrote:
-> On Wed, Dec 14, 2016 at 01:30:18PM -0500, Brian Foster wrote:
-> > >  	/* do we have enough contiguous free space for the allocation? */
-> > > +	alloc_len = args->minlen + (args->alignment - 1)+ args->minalignslop;
-> > 
-> > Whitespace nit, missing space:				^
-> > 
-> > Also, is the addition of braces intentional? I believe it is possible
-> > for args->alignment == 0.
+On Fri, Dec 09, 2016 at 09:32:13AM -0800, Darrick J. Wong wrote:
+> > +	if (xfs_alloc_is_userdata(args->datatype))
+> > +		indlen = __xfs_bmap_worst_indlen(args->mp, max(args->minlen, args->maxlen));
 > 
-> It's mostly for explaining the - 1 to the reader as it took me a while
-> to figure out what it was for.
+> /me wonders, when is it the case that minlen > maxlen?
 
-Oh, care to elaborate? :)
+Good question.  I just added that when I noticed minlen alone doesn't
+work as we might need the bigger calculation based on maxlen.  I'll
+do a quick audit and move to maxlen only.
 
-Brian
+> 
+> I'm also wondering why we can't just increase args->minleft to require
+> that we leave enough space in whichever AG we pick to expand to bmbt?
+> AFAICT that's the purpose of the minleft field.
+
+Not sure what the original intentions was, but as-is it seems pretty
+b0rked.
+
+E.g. xfs_bmap_btalloc, xfs_bmapi_allocate or xfs_alloc_vextentjust set
+minleft to 0 when when we are low on space which make it a bit pointless.
+
+Also in the bmap code where we set minleft we don't really know how
+much we'll need as we'll only decide on the actual final allocation
+size deep down in the allocator.  I'll do a little archeology session
+now to figure out how we got the current minleft semantics, as they seem
+really weird.
+
+> /* Make sure we leave enough space in this AG for a bmbt expansion. */
+
+Sure.
+
+> > +xfs_filblks_t
+> > +__xfs_bmap_worst_indlen(
+> > +	xfs_mount_t	*mp,		/* mount structure */
+> 
+> struct xfs_mount?
+
+Yeah, minimum changes for now.  If we end up going down this route I'd
+probably just always pass the mount to xfs_bmap_worst_indlen, but
+I wanted the minimal amount of change for now.
