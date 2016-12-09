@@ -1,39 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:32927 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751934AbcLOFqi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 00:46:38 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:36012 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751756AbcLIR4v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Dec 2016 12:56:51 -0500
+Date: Fri, 9 Dec 2016 09:56:45 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] duperemove: test presence of dedupe ioctl
+Message-ID: <20161209175645.GB16813@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20161215041639.GU4219@dastard>
-References: <20161215041639.GU4219@dastard>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 14 Dec 2016 21:46:22 -0800
-Message-ID: <CA+55aFzZeNKo2nkKutnnrYA1_kL836BV2bZoXNzuG2qBqxQLSw@mail.gmail.com>
-Subject: Re: [GIT PULL] xfs: updates for 4.10-rc1
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, djwong@djwong.org
+To: mfasheh@versity.com
+Cc: xfs <linux-xfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On Wed, Dec 14, 2016 at 8:16 PM, Dave Chinner <david@fromorbit.com> wrote:
->
-> Can you please pull the XFS update from the tag below?
+Since a zero-length dedupe operation is guaranteed to succeed, use that
+to test whether or not this filesystem supports dedupe.
 
-Pulled, going through my usual build stuff now.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ file_scan.c |   47 +++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 37 insertions(+), 10 deletions(-)
 
-> In other news you need to know about, this is likely the last pull
-> request you'll see from me for some time. I'm about to go on
-> extended leave at xmas time and won't be back until July next year.
-> While I'm gone, Darrick is going to be taking over the job  [...]
-
-.. and thanks for the heads-up.
-
-I will try to act like I remembered this email when Darrick sends me a
-pull request.
-
-[ More likely, I'll instead be momentarily confused, search my email
-archives, find this and go "Ahh.. " ]
-
-                Linus
+diff --git a/file_scan.c b/file_scan.c
+index 617f166..a34453e 100644
+--- a/file_scan.c
++++ b/file_scan.c
+@@ -45,11 +45,7 @@
+ #include "file_scan.h"
+ #include "dbfile.h"
+ #include "util.h"
+-
+-/* This is not in linux/magic.h */
+-#ifndef	XFS_SB_MAGIC
+-#define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
+-#endif
++#include "btrfs-ioctl.h"
+ 
+ static char path[PATH_MAX] = { 0, };
+ static char *pathp = path;
+@@ -189,6 +185,39 @@ static int walk_dir(const char *name)
+ 	return ret;
+ }
+ 
++struct fake_btrfs_ioctl_same_args {
++	struct btrfs_ioctl_same_args args;
++	struct btrfs_ioctl_same_extent_info info;
++};
++
++/*
++ * A zero-length dedupe between two files should always succeed,
++ * so we can use this to test the presence of dedupe functionality.
++ */
++static bool check_ioctl_works(int fd)
++{
++	struct fake_btrfs_ioctl_same_args sa = {0};
++	struct stat sb;
++	static int cached = -1;
++	int ret;
++
++	if (cached >= 0)
++		return cached != 0;
++
++	ret = fstat(fd, &sb);
++	if (ret)
++		return false;
++
++	sa.args.dest_count = 1;
++	sa.args.length = 0;
++	sa.info.fd = fd;
++	sa.info.logical_offset = 0;
++	errno = 0;
++	ret = btrfs_extent_same(fd, &sa.args);
++	cached = !ret && !errno && !sa.info.status;
++	return cached != 0;
++}
++
+ static int __add_file(const char *name, struct stat *st,
+ 		      struct filerec **ret_file)
+ {
+@@ -235,12 +264,10 @@ static int __add_file(const char *name, struct stat *st,
+ 		goto out;
+ 	}
+ 
+-	if (run_dedupe &&
+-	    ((fs.f_type != BTRFS_SUPER_MAGIC &&
+-	      fs.f_type != XFS_SB_MAGIC))) {
++	if (run_dedupe && !check_ioctl_works(fd)) {
+ 		close(fd);
+-		fprintf(stderr,	"\"%s\": Can only dedupe files on btrfs or xfs "
+-			"(experimental)\n", name);
++		fprintf(stderr,	"\"%s\": dedupe ioctl not supported on this "
++			"filesystem.\n", name);
+ 		return ENOSYS;
+ 	}
+ 
