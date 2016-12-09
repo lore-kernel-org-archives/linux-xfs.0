@@ -1,86 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52368 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752478AbcLNVvg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Dec 2016 16:51:36 -0500
-Date: Wed, 14 Dec 2016 16:51:33 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
-Message-ID: <20161214215133.GA26688@bfoster.bfoster>
-References: <1481644767-9098-1-git-send-email-hch@lst.de>
- <1481644767-9098-2-git-send-email-hch@lst.de>
- <20161214173507.GA24645@bfoster.bfoster>
- <20161214193626.GA12106@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161214193626.GA12106@lst.de>
+Received: from bombadil.infradead.org ([198.137.202.9]:59171 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932658AbcLIRPO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Dec 2016 12:15:14 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH, RFC] xfs: take indirect blocks into accounting when selecting an AG
+Date: Fri,  9 Dec 2016 18:15:09 +0100
+Message-Id: <1481303709-12632-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: linux-xfs@vger.kernel.org
+Cc: eguan@redhat.com, darrick.wong@oracle.com
 
-On Wed, Dec 14, 2016 at 08:36:26PM +0100, Christoph Hellwig wrote:
-> On Wed, Dec 14, 2016 at 12:35:07PM -0500, Brian Foster wrote:
-> > I'm still trying to grok the minleft/dop_low stuff, but doesn't this
-> > increase the risk of bmbt block allocation failure?
-> 
-> No.  If working correctly it reduces the chance of a failing bmbt block
-> allocation in transaction to zero, at the expense of potentially
-> failing whole block allocations while we still have a few blocks left.
-> But given that the first leads to a fs shutdown and the latter just to
-> an ENOSPC it seems worthwhile.
-> 
+We need to make sure that the indirect blocks (e.g. bmap btree blocks)
+can be allocated from the same AG [1] when comitting to an AG for a
+file data block allocation.  To do that we calculate the worst possible
+indirect len and subtract that from the free space in the AG.
 
-Indeed, I completely agree in principle with the series. It's much
-better to leave some free space efficiency on the table for greater
-reliability.  I just want to make sure I understand how this change
-works and whether it does so correctly...
+I don't really like how this makes the space allocator call back into
+the bmap code (even if only for a trivial helper), but I can't think
+of a better idea.
 
-> > E.g., args.minleft
-> > is set to the transaction reservation earlier in the function. AFAIK the
-> > res is not guaranteed to be in a particular AG, but in that case we're
-> > just setting a start AG and ultimately cycling through the AGs. If that
-> > fails, this hunk resets minleft, restarts at fsbno 0 and activates the
-> > sequential agno allocation requirement for subsequent allocs. Doesn't
-> > removing this logic mean we can successfully reserve blocks in a write
-> > transaction that will never ultimately be able to allocate bmbt blocks,
-> > even if the data blocks can all be allocated..?
-> 
-> We only set it to res if no firstblock was set.  The only case where
-> that is possible during the first bmbt block allocation in a reflink
-> operation - for actual direct I/O writes, fallocate calls or unwritten
-> extent conversion we will always have firstblock set from the allocation
-> of the actual data extent.  And that allocation now has the proper minleft
-> set after this series so that we are guaranteed we have enough space
-> in one single AG for the whole allocation.
-> 
+[1] strictly speaking the same AG or one with a higher AG number, but
+that is so incredibly hard to express that we settle for the same AG.
 
-Ok, I need to stare at that codepath a bit more..
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_alloc.c |  7 ++++++-
+ fs/xfs/libxfs/xfs_bmap.c  | 17 +++++++++++------
+ fs/xfs/libxfs/xfs_bmap.h  |  5 +++++
+ 3 files changed, 22 insertions(+), 7 deletions(-)
 
-In the meantime, what about the delalloc codepath as well? We reserve
-indlen out of the global pool at write time and track the res in the
-in-core extents. Writeback comes around later and we try to allocate
-real blocks without any need for transaction reservation. Now that we
-set 'args.minleft = xfs_bmap_worst_indlen()' in xfs_bmap_btalloc() and
-never reset it, what guarantees any particular AG can satisfy that
-request based on the global reservation?
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index effb64c..037cbd8 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -38,6 +38,7 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_log.h"
+ #include "xfs_ag_resv.h"
++#include "xfs_bmap.h"
+ 
+ struct workqueue_struct *xfs_alloc_wq;
+ 
+@@ -2058,6 +2059,7 @@ xfs_alloc_space_available(
+ 	struct xfs_perag	*pag = args->pag;
+ 	xfs_extlen_t		longest;
+ 	xfs_extlen_t		reservation; /* blocks that are still reserved */
++	xfs_extlen_t		indlen = 0;
+ 	int			available;
+ 
+ 	if (flags & XFS_ALLOC_FLAG_FREEING)
+@@ -2071,9 +2073,12 @@ xfs_alloc_space_available(
+ 	if ((args->minlen + args->alignment + args->minalignslop - 1) > longest)
+ 		return false;
+ 
++	if (xfs_alloc_is_userdata(args->datatype))
++		indlen = __xfs_bmap_worst_indlen(args->mp, max(args->minlen, args->maxlen));
++
+ 	/* do we have enough free space remaining for the allocation? */
+ 	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
+-			  reservation - min_free - args->total);
++			  reservation - min_free - indlen - args->total);
+ 	if (available < (int)args->minleft || available <= 0)
+ 		return false;
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 266f641..b52a32d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -183,19 +183,16 @@ xfs_bmbt_update(
+  * Compute the worst-case number of indirect blocks that will be used
+  * for ip's delayed extent of length "len".
+  */
+-STATIC xfs_filblks_t
+-xfs_bmap_worst_indlen(
+-	xfs_inode_t	*ip,		/* incore inode pointer */
++xfs_filblks_t
++__xfs_bmap_worst_indlen(
++	xfs_mount_t	*mp,		/* mount structure */
+ 	xfs_filblks_t	len)		/* delayed extent length */
+ {
+ 	int		level;		/* btree level number */
+ 	int		maxrecs;	/* maximum record count at this level */
+-	xfs_mount_t	*mp;		/* mount structure */
+ 	xfs_filblks_t	rval;		/* return value */
+ 	xfs_filblks_t   orig_len;
+ 
+-	mp = ip->i_mount;
+-
+ 	/* Calculate the worst-case size of the bmbt. */
+ 	orig_len = len;
+ 	maxrecs = mp->m_bmap_dmxr[0];
+@@ -222,6 +219,14 @@ xfs_bmap_worst_indlen(
+ 	return rval;
+ }
+ 
++STATIC xfs_filblks_t
++xfs_bmap_worst_indlen(
++	xfs_inode_t	*ip,		/* incore inode pointer */
++	xfs_filblks_t	len)		/* delayed extent length */
++{
++	return __xfs_bmap_worst_indlen(ip->i_mount, len);
++}
++
+ /*
+  * Calculate the default attribute fork offset for newly created inodes.
+  */
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index cecd094..aa2964a 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -263,4 +263,9 @@ int	xfs_bmap_map_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+ int	xfs_bmap_unmap_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+ 		struct xfs_inode *ip, struct xfs_bmbt_irec *imap);
+ 
++xfs_filblks_t
++__xfs_bmap_worst_indlen(
++	xfs_mount_t	*mp,		/* mount structure */
++	xfs_filblks_t	len);		/* delayed extent length */
++
+ #endif	/* __XFS_BMAP_H__ */
+-- 
+2.1.4
 
-I'm basically just a little nervous that we might rely on some of these
-minleft hacks to avoid serious failures like in bmbt allocation or
-writeback, despite the fact that the broader mechanism may be bogus...
-
-Brian
-
-> In the reflink case where firstblock wasn't set the minleft ensures
-> that we fail the first allocation if we don't have enough blocks
-> in a single AG.
-> retryloop to try the allocation 
-> 
-> > The other thing to note here is that minleft is initialized to 0 and
-> > only set to the transaction res conditionally, so if firstblock is
-> > already set we won't use minleft at all.
-> 
-> Yes, that's intentional - we already did our minleft check when allocating
-> the data extent.
