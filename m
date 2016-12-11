@@ -1,59 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:43316 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:50296 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753388AbcLNTg2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Dec 2016 14:36:28 -0500
-Date: Wed, 14 Dec 2016 20:36:26 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
-Message-ID: <20161214193626.GA12106@lst.de>
-References: <1481644767-9098-1-git-send-email-hch@lst.de> <1481644767-9098-2-git-send-email-hch@lst.de> <20161214173507.GA24645@bfoster.bfoster>
+        id S1752089AbcLKFT6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 11 Dec 2016 00:19:58 -0500
+Date: Sun, 11 Dec 2016 13:19:55 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH, RFC] xfs: take indirect blocks into accounting when
+ selecting an AG
+Message-ID: <20161211051955.GR29149@eguan.usersys.redhat.com>
+References: <1481303709-12632-1-git-send-email-hch@lst.de>
+ <20161210061641.GQ29149@eguan.usersys.redhat.com>
+ <20161210164236.GA3542@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161214173507.GA24645@bfoster.bfoster>
+In-Reply-To: <20161210164236.GA3542@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Wed, Dec 14, 2016 at 12:35:07PM -0500, Brian Foster wrote:
-> I'm still trying to grok the minleft/dop_low stuff, but doesn't this
-> increase the risk of bmbt block allocation failure?
+On Sat, Dec 10, 2016 at 05:42:36PM +0100, Christoph Hellwig wrote:
+> Btw, is this on 4.9-rc or for-next?
 
-No.  If working correctly it reduces the chance of a failing bmbt block
-allocation in transaction to zero, at the expense of potentially
-failing whole block allocations while we still have a few blocks left.
-But given that the first leads to a fs shutdown and the latter just to
-an ENOSPC it seems worthwhile.
+It's for-next. Sorry, I should've included this info.
 
-> E.g., args.minleft
-> is set to the transaction reservation earlier in the function. AFAIK the
-> res is not guaranteed to be in a particular AG, but in that case we're
-> just setting a start AG and ultimately cycling through the AGs. If that
-> fails, this hunk resets minleft, restarts at fsbno 0 and activates the
-> sequential agno allocation requirement for subsequent allocs. Doesn't
-> removing this logic mean we can successfully reserve blocks in a write
-> transaction that will never ultimately be able to allocate bmbt blocks,
-> even if the data blocks can all be allocated..?
-
-We only set it to res if no firstblock was set.  The only case where
-that is possible during the first bmbt block allocation in a reflink
-operation - for actual direct I/O writes, fallocate calls or unwritten
-extent conversion we will always have firstblock set from the allocation
-of the actual data extent.  And that allocation now has the proper minleft
-set after this series so that we are guaranteed we have enough space
-in one single AG for the whole allocation.
-
-In the reflink case where firstblock wasn't set the minleft ensures
-that we fail the first allocation if we don't have enough blocks
-in a single AG.
-retryloop to try the allocation 
-
-> The other thing to note here is that minleft is initialized to 0 and
-> only set to the transaction res conditionally, so if firstblock is
-> already set we won't use minleft at all.
-
-Yes, that's intentional - we already did our minleft check when allocating
-the data extent.
+Thanks,
+Eryu
