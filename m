@@ -1,65 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52370 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:38064 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751736AbcLLNtT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Dec 2016 08:49:19 -0500
-Subject: Re: [PATCH 1/1] Fixed to codestyle
-References: <987271481540010@web27o.yandex.ru>
+        id S1751697AbcLLWjv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Dec 2016 17:39:51 -0500
+Subject: Re: [PATCH] xfs: handle error if xfs_btree_get_bufs fails
+References: <4348f961-deda-8733-1cd7-dd7ca646bb6b@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <66c68b88-e338-1d9a-b9dd-b8d858ebf349@sandeen.net>
-Date: Mon, 12 Dec 2016 07:49:18 -0600
+Message-ID: <f4473870-0514-87c3-6cf2-1dfd548a1e4a@sandeen.net>
+Date: Mon, 12 Dec 2016 16:39:49 -0600
 MIME-Version: 1.0
-In-Reply-To: <987271481540010@web27o.yandex.ru>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <4348f961-deda-8733-1cd7-dd7ca646bb6b@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ozgur Karatas <okaratas@member.fsf.org>, david@fromorbit.com
-Cc: linux-xfs@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Jason L Tibbitts III <tibbs@math.uh.edu>
 
-On 12/12/16 4:53 AM, Ozgur Karatas wrote:
-> 
-> Hello,
-> 
-> I have error to use uuid and I think the functions should be used when -i'm eye-catching- "(* uuid)".
-> I tested it.
-> 
-> Regards,
-> 
-> Signed-off-by: Ozgur Karatas <okaratas@member.fsf.org>
+Jason reported that a corrupted filesystem failed to replay
+the log with a metadata block out of bounds warning:
 
-NAK
+XFS (dm-2): _xfs_buf_find: Block out of range: block 0x80270fff8, EOFS 0x9c40000 
 
-This doesn't fix code style at all; there is no need and no
-precedence for i.e. (*uuid) in function arguments in the xfs code,
-and you have broken indentation in the loop within the function.
+_xfs_buf_find() and xfs_btree_get_bufs() return NULL if
+that happens, and then when xfs_alloc_fix_freelist() calls
+xfs_trans_binval() on that NULL bp, we oops with:
 
-Thanks,
--Eric
+BUG: unable to handle kernel NULL pointer dereference at 00000000000000f8
 
-> ---
-> diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
-> index b83f76b..cd8bc8e 100644
-> --- a/fs/xfs/uuid.c
-> +++ b/fs/xfs/uuid.c
-> @@ -33,7 +33,7 @@ typedef struct {
->   * it just something that's needed for user-level file handles.
->   */
->  void
-> -uuid_getnodeuniq(uuid_t *uuid, int fsid [2])
-> +uuid_getnodeuniq(uuid_t (*uuid), int fsid [2])
->  {
->  	xfs_uu_t *uup = (xfs_uu_t *)uuid;
->  
-> @@ -51,8 +51,8 @@ uuid_is_nil(uuid_t *uuid)
->  	if (uuid == NULL)
->  		return 0;
->  	/* implied check of version number here... */
-> -	for (i = 0; i < sizeof *uuid; i++)
-> -		if (*cp++) return 0;	/* not nil */
-> +	for (i = 0; i < sizeof (*uuid); i++) 
-> +	if (*cp++) return 0;	/* not nil */
->  	return 1;	/* is nil */
->  }
-> 
+We don't handle _xfs_buf_find errors very well, every
+caller higher up the stack gets to guess at why it failed.
+But we should at least handle it somehow, so return
+EFSCORRUPTED here.
+
+Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+V2: use EFSCORRUPTED.
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index effb64c..c90b307 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -1640,6 +1640,10 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 
+ 				bp = xfs_btree_get_bufs(args->mp, args->tp,
+ 					args->agno, fbno, 0);
++				if (!bp) {
++					error = -EFSCORRUPTED;
++					goto error0;
++				}
+ 				xfs_trans_binval(args->tp, bp);
+ 			}
+ 			args->len = 1;
+@@ -2185,6 +2189,10 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		if (error)
+ 			goto out_agbp_relse;
+ 		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
++		if (!bp) {
++			error = -EFSCORRUPTED;
++			goto out_agbp_relse;
++		}
+ 		xfs_trans_binval(tp, bp);
+ 	}
+ 
+
+
