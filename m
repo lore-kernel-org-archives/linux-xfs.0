@@ -1,72 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33954 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751194AbcLJIEm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Dec 2016 03:04:42 -0500
-Received: by mail-wm0-f67.google.com with SMTP id g23so1038077wme.1
-        for <linux-xfs@vger.kernel.org>; Sat, 10 Dec 2016 00:04:41 -0800 (PST)
+Received: from forward12h.cmail.yandex.net ([87.250.230.154]:50751 "EHLO
+        forward12h.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932227AbcLLLBU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2016 06:01:20 -0500
+From: Ozgur Karatas <okaratas@member.fsf.org>
+Subject: [PATCH 1/1] Fixed to codestyle
 MIME-Version: 1.0
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Sat, 10 Dec 2016 10:04:39 +0200
-Message-ID: <CAOQ4uxi_x+7Kc3P_xMr4O3DUKK7uhkfoUoyQsp7PYnxJaeLzcw@mail.gmail.com>
-Subject: [RFC] Preparing for XFS reflink D-day
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <987271481540010@web27o.yandex.ru>
+Date: Mon, 12 Dec 2016 12:53:30 +0200
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
-
-Dave,
-
-I would like to have some system's storage pre-formatted
-with rmapbt and reflink support without allowing reflink until
-the day comes where the feature is declared stable.
-
-I realize that rmapbt/reflink features are declared unstable and
-bugs could certainly be lurking without doing any reflinks at all.
-However, I estimate the the class of bugs introduces by heavily
-reflinked file systems is going to take more time to tame.
-
-Considering these options for said systems:
-1. kernel v4.8.y or v4.9.y and mkfs.xfs -m rmapbt=1
-2. kernel v4.9.y and mkfs.xfs -m rmapbt=1
-3. kernel v4.9.y and mkfs.xfs -m rmapbt=1,reflink=1
-    and new mount option -onoreflink
-4. kernel v4.9.y and mkfs.xfs -m rmapbt=1,reflinkbt=1
-    (separate rocomapt features reflinkbt from reflink)
-
-Options 1-2 would require adding support in xfs_admin to
-enable reflink on an existing fs (by cloning the bmbt).
-
-Option 3 would require adding a simple noreflink
-mount option to disable reflink related ops.
-
-Option 4 requires changing mkfs.xfs before 4.9 release
-and possibly setting recompat feature reflink on first file
-reflink. There are several precedents to this sort of  "set
-on first use" feature in ext4, not sure if there are any in xfs.
-
-The benefit of having this functionality is that others,
-like me, could provide more testing for the refcount<=1
-use case. I myself intend to test refcount>1 as well, but
-the goal of getting recount<=1 ready for production is
-higher priority.
-
-Another benefit from option #4 is that you may be able
-to declare rmapbt=1,reflinkbt=1 stable and/or default
-mkfs options prior to declaring reflink=1 stable.
-
-Which, if any, of the options above would you be willing
-to endorse?
-
-Darrick,
-
-I seem to recall you taking about enabling reflink on existing
-fs sometime before, but I could not find that reference.
-I suppose you had an idea of how this should be done?
-
-Amir.
+To: david@fromorbit.com
+Cc: linux-xfs@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
 
-* D-Day of course stands for Darrick's-day ;-)
+Hello,
+
+I have error to use uuid and I think the functions should be used when -i'm eye-catching- "(* uuid)".
+I tested it.
+
+Regards,
+
+Signed-off-by: Ozgur Karatas <okaratas@member.fsf.org>
+---
+diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
+index b83f76b..cd8bc8e 100644
+--- a/fs/xfs/uuid.c
++++ b/fs/xfs/uuid.c
+@@ -33,7 +33,7 @@ typedef struct {
+  * it just something that's needed for user-level file handles.
+  */
+ void
+-uuid_getnodeuniq(uuid_t *uuid, int fsid [2])
++uuid_getnodeuniq(uuid_t (*uuid), int fsid [2])
+ {
+ 	xfs_uu_t *uup = (xfs_uu_t *)uuid;
+ 
+@@ -51,8 +51,8 @@ uuid_is_nil(uuid_t *uuid)
+ 	if (uuid == NULL)
+ 		return 0;
+ 	/* implied check of version number here... */
+-	for (i = 0; i < sizeof *uuid; i++)
+-		if (*cp++) return 0;	/* not nil */
++	for (i = 0; i < sizeof (*uuid); i++) 
++	if (*cp++) return 0;	/* not nil */
+ 	return 1;	/* is nil */
+ }
+
+-- 
+2.1.4
