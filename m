@@ -1,69 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:21375 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752430AbcLIVrB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Dec 2016 16:47:01 -0500
-Date: Sat, 10 Dec 2016 08:46:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH, RFC] xfs: take indirect blocks into accounting when
- selecting an AG
-Message-ID: <20161209214651.GR4326@dastard>
-References: <1481303709-12632-1-git-send-email-hch@lst.de>
- <20161209173213.GZ16813@birch.djwong.org>
- <20161209174145.GA15960@lst.de>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:32915 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751028AbcLLIK7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2016 03:10:59 -0500
+Received: by mail-wm0-f67.google.com with SMTP id u144so9507179wmu.0
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Dec 2016 00:10:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161209174145.GA15960@lst.de>
+In-Reply-To: <20161212074430.GX4326@dastard>
+References: <CAOQ4uxi_x+7Kc3P_xMr4O3DUKK7uhkfoUoyQsp7PYnxJaeLzcw@mail.gmail.com>
+ <20161212015959.GT4326@dastard> <CAOQ4uxhiOb9SBgDaqjY5gQ+Z99BRWCFtc=vyGiB4PmXyDYQQZA@mail.gmail.com>
+ <20161212074430.GX4326@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 12 Dec 2016 10:10:57 +0200
+Message-ID: <CAOQ4uxg=2X27tKod1EcwGCUYArMKPjOhW2toWnLM3w2ju79HTg@mail.gmail.com>
+Subject: Re: [RFC] Preparing for XFS reflink D-day
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, eguan@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Fri, Dec 09, 2016 at 06:41:45PM +0100, Christoph Hellwig wrote:
-> On Fri, Dec 09, 2016 at 09:32:13AM -0800, Darrick J. Wong wrote:
-> > > +	if (xfs_alloc_is_userdata(args->datatype))
-> > > +		indlen = __xfs_bmap_worst_indlen(args->mp, max(args->minlen, args->maxlen));
-> > 
-> > /me wonders, when is it the case that minlen > maxlen?
-> 
-> Good question.  I just added that when I noticed minlen alone doesn't
-> work as we might need the bigger calculation based on maxlen.  I'll
-> do a quick audit and move to maxlen only.
-> 
-> > 
-> > I'm also wondering why we can't just increase args->minleft to require
-> > that we leave enough space in whichever AG we pick to expand to bmbt?
-> > AFAICT that's the purpose of the minleft field.
-> 
-> Not sure what the original intentions was, but as-is it seems pretty
-> b0rked.
-> 
-> E.g. xfs_bmap_btalloc, xfs_bmapi_allocate or xfs_alloc_vextentjust set
-> minleft to 0 when when we are low on space which make it a bit pointless.
+On Mon, Dec 12, 2016 at 9:44 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Dec 12, 2016 at 07:06:37AM +0200, Amir Goldstein wrote:
+...
+>
+> IOWs, the /earliest/ anything like this could be done is 4.11, but
+> I'd be really hesitant to rush anything like this into 4.11 because
+> of all the stuff we already have in the pipeline.  And given that
+> we're currently looking at around the 4.12 release timeframe for
+> moving to full support for reflink, what does all this extra
+> "refcount-but-not-reflink" format shenanigans buy us? At best it's
+> going to be useful for a 3-6 month window, with very very limited
+> relevance or use to the rest of the XFS userbase?
+>
 
-I'm pretty sure these cases were added as a mechanism to prevent
-ENOSPC occurrences during delalloc conversion when, in the general
-case, the allocation would have succeeded. i.e. "in most cases the
-BMBT is not going to change shape, so let's just ignore the blocks
-that might be needed for that and hope we don't need them".
+If I truly believed that 4.12 is a realistic target, I wouldn't have bothered
+at all. But to get there we need to have a sufficiently large beta group
+of bleeding edge testers, don't you think?
+In fact, I am hoping that overlayfs "clone up" is merged to 4.10, creating
+a big incentive to CoreOS users to start experimenting with docker
+with overlayfs over XFS reflink, so there may be hope for that beta group.
 
-> Also in the bmap code where we set minleft we don't really know how
-> much we'll need as we'll only decide on the actual final allocation
-> size deep down in the allocator.  I'll do a little archeology session
-> now to figure out how we got the current minleft semantics, as they seem
-> really weird.
+FYI, and unrelated, in coming up docker 1.13 release I implemented
+support for container disk usage quota with overlayfs storage driver
+over xfs using project quotas.
+This is catching up with a feature that btrfs/zfs/lvm storage driver
+already have.
+So soon enough, docker users will have a new incentive to use xfs
+an base fs.
 
-I'd just set it according to maxlen. I don't really care if we can't
-allocate the last few blocks in an AG for certain types of
-allocation - the failure fallbacks should drop back to an allocation
-attempt of maxlen = minlen and we can set minleft accordingly
-for those. If it still fails, then we really have ENOSPC...
+> When I look at what you are proposing from this perspective, the
+> cost-benefit analysis does not fall favourably on the side of making
+> these changes.
+>
+
+There is only one single benefit to what I am proposing
+and that is for admins that want to install systems near the day that
+reflink is declared stable and wait for the D-day before activation.
+How many such admins are there, I have no idea. This is why I am
+posting this requirement on a public mailing list - to find out.
+
+Following your feedback, I suppose I am going to go for the
+option of carrying a patch for -onoreflink.
+And yes, take the support of experimental reflink (refcount<=1)
+on myself.
 
 Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Amir.
