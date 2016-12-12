@@ -1,164 +1,234 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41005 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751143AbcLJTmV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Dec 2016 14:42:21 -0500
-Date: Sat, 10 Dec 2016 11:42:14 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC] Preparing for XFS reflink D-day
-Message-ID: <20161210194214.GL8436@birch.djwong.org>
-References: <CAOQ4uxi_x+7Kc3P_xMr4O3DUKK7uhkfoUoyQsp7PYnxJaeLzcw@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:40820 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751266AbcLLIB2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Dec 2016 03:01:28 -0500
+Date: Mon, 12 Dec 2016 16:01:25 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] fstests: xfs_fsr SWAPEXT fails when temp forkoff smaller
+ than target
+Message-ID: <20161212080125.GT29149@eguan.usersys.redhat.com>
+References: <1481303873-11981-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi_x+7Kc3P_xMr4O3DUKK7uhkfoUoyQsp7PYnxJaeLzcw@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1481303873-11981-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Sat, Dec 10, 2016 at 10:04:39AM +0200, Amir Goldstein wrote:
-> Dave,
+On Sat, Dec 10, 2016 at 01:17:53AM +0800, Zorro Lang wrote:
+> If there's a file under a parent dir, but before running xfs_fsr the
+> parent dir's attr is changed(grown), and these attrs will be inherited
+> by new files. Then xfs_fsr's temp file and target file will have
+> different attrs.
 > 
-> I would like to have some system's storage pre-formatted
-> with rmapbt and reflink support without allowing reflink until
-> the day comes where the feature is declared stable.
-
-Heh heh heh.... ;)
-
-> I realize that rmapbt/reflink features are declared unstable and
-> bugs could certainly be lurking without doing any reflinks at all.
-> However, I estimate the the class of bugs introduces by heavily
-> reflinked file systems is going to take more time to tame.
-
-Yes, probably.  It seems reasonably stable on a young FS, though we'll
-see how gracefully it ages.  There's probably mistakes in the ENOSPC
-handling since that seems to be everyone's Achilles heel.
-
-> Considering these options for said systems:
-> 1. kernel v4.8.y or v4.9.y and mkfs.xfs -m rmapbt=1
-> 2. kernel v4.9.y and mkfs.xfs -m rmapbt=1
-> 3. kernel v4.9.y and mkfs.xfs -m rmapbt=1,reflink=1
->     and new mount option -onoreflink
-> 4. kernel v4.9.y and mkfs.xfs -m rmapbt=1,reflinkbt=1
->     (separate rocomapt features reflinkbt from reflink)
+> At this moment, if the data already fill whole data area, then there
+> is not enough space to move di_forkoff to data direction, swap the
+> extents between temp and target file will fail.
 > 
-> Options 1-2 would require adding support in xfs_admin to
-> enable reflink on an existing fs (by cloning the bmbt).
-
-Not sure why you'd clone the bmbt...?
-
-You'd simply use the rmap information to calculate a new refcountbt,
-just like the offline repair already knows how to do.
-
-Now obviously if you don't have rmap information then you have to walk
-all the inode data forks in the system to get rmap information... we
-don't share non-data blocks and never will, particularly since we've
-stamped owner information into all the metadata headers.
-
-(More on this later)
-
-> Option 3 would require adding a simple noreflink
-> mount option to disable reflink related ops.
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
 > 
-> Option 4 requires changing mkfs.xfs before 4.9 release
-> and possibly setting recompat feature reflink on first file
-> reflink. There are several precedents to this sort of  "set
-> on first use" feature in ext4, not sure if there are any in xfs.
-
-There are several of these in XFS, but I don't want to burn another
-feature bit if I can avoid it.  Dave might have a different opinion
-though?
-
-> The benefit of having this functionality is that others,
-> like me, could provide more testing for the refcount<=1
-> use case. I myself intend to test refcount>1 as well, but
-> the goal of getting recount<=1 ready for production is
-> higher priority.
-
-If you're building your own kernels, you could just tweak
-xfs_reflink_remap_range with something like:
-
-if (!capable(CAP_SYS_ADMIN))
-	return -EOPNOTSUPP;
-
-so that only you (well, root) can make files share blocks.
-
-> Another benefit from option #4 is that you may be able
-> to declare rmapbt=1,reflinkbt=1 stable and/or default
-> mkfs options prior to declaring reflink=1 stable.
-
-Ew, more mkfs options to test. :(
-
-(I'd call it refcountbt anyway.)
-
-In any case there is no point to having a separate refcountbt option
-because if nobody ever shares any blocks, each AG will have a single
-refcountbt block with zero records that never gets touched.
-
-> Which, if any, of the options above would you be willing
-> to endorse?
-
-Well, to paraphrase the ext4 manual,
-
-"The recommended method for upgrading an [old] filesystem to [a new one]
-is to back up the entire volume, reformat the storage device with [the
-new mkfs options], and restore the entire volume onto the fresh
-filesystem."
-
-https://ext4.wiki.kernel.org/index.php/UpgradeToExt4
-
-But I'd also say read on...
-
-> Darrick,
+> Hi,
 > 
-> I seem to recall you taking about enabling reflink on existing
-> fs sometime before, but I could not find that reference.
-> I suppose you had an idea of how this should be done?
-
-Christoph posted the first patchset to enable at runtime:
-http://oss.sgi.com/archives/xfs/2016-06/msg00053.html
-
-ISTR Dave didn't really like the idea of a mount option.  I think it's
-a little awkward to toggle fs features that way and would rather just
-implement a SET_GEOMETRY ioctl that the administrator can call to flip
-on certain features.
-
-As for dynamically constructing a new rmapbt or a new refcountbt --
-there's a few tricky bits that have to be dealt with before we start
-turning on features.  The first is ensuring that the log size is
-sufficient to handle the new options being turned on, the second is to
-teach xfs_repair not to freak out if its precalculated notions of where
-the root inode should be don't square with where it actually is
-(provided the root inode looks ok), and the third is making sure there's
-enough space in each AG to build the relevant data structures.  There
-might be more; I haven't had time to investigate this.
-
-xfs_repair already knows how to construct fresh rmap and refcount
-btrees; it does this any time you run xfs_repair without -n.  I've done
-evil things like manually flip on the two feature bits via xfs_db and
-run xfs_repair to build the btrees.  It works, more or less, though
-messing with your filesystem with the debugger is sketchy. ;)
-
-As far as doing things online, we actually now have the raw pieces you'd
-need to enable (some) features.  The upcoming online repair code can
-(via questionable VFS interactions) freeze incoming IO so that we can
-scan the whole FS to construct a new rmap btree.  It also can use
-existing rmap information to construct a new refcount btree.
-
-In theory we could allow people to turn things on dynamically provided
-the FS meets all the requirements (log space, rootino doesn't move, free
-AG space).  It'd be pretty easy to do this for reflink since the space
-requirements are minimal, and much more risky to let people do that for
-rmap.  We'd need thorough testing, too.
-
---D
-
-PS: I resurrected spaceman and ported it to GETFSMAP.
-
+> The original case use SELinux to test. For common test, I change to use
+> ACL. As my test, when inode size is 512 bytes(or more), it'll increase
+> enough bytes to attr area, if add new default ACL attr.
 > 
-> Amir.
+> The "enough bytes" I expect is 16+ bytes. Because an extent is 128 bits,
+> I keep using extent data format, so the growing step is 16 bytes. When I
+> try to fill whole data area, at last (di_forkoff - size of di_u) will be
+> in [0, 16).
 > 
+> As my test, 256 bytes inode size can't always reproduce this bug(especially
+> in RHEL-6). But 512 (or more) inode size can help that.
 > 
-> * D-Day of course stands for Darrick's-day ;-)
+> Thanks,
+> Zorro
+> 
+>  tests/xfs/999     | 115 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |   2 +
+>  tests/xfs/group   |   1 +
+>  3 files changed, 118 insertions(+)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
+> 
+> diff --git a/tests/xfs/999 b/tests/xfs/999
+> new file mode 100755
+> index 0000000..d896287
+> --- /dev/null
+> +++ b/tests/xfs/999
+> @@ -0,0 +1,115 @@
+> +#! /bin/bash
+> +# FS QA Test 999
+> +#
+> +# Test xfs_fsr when temp's attr is larger than the target attr area, and
+> +# without enough room to move di_forkoff to date direction. Then it'll fail
+> +# to swap extents between temp and target files.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2016 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/attr
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +_require_scratch
+> +# need a user to set ACL
+> +_require_user
+> +_require_acls
+> +_require_xfs_io_command "falloc"
+> +
+> +# use fixed attr test parameters, 512+ bytes inode size is helpful
+> +# to alloc more default ACL space
+> +_scratch_mkfs_xfs -i size=512,attr=2 >> $seqres.full 2>&1
+> +# Manually mount to avoid effect from some mount options
+> +mount $SCRATCH_DEV $SCRATCH_MNT
+
+I think you can unset MOUNT_OPTS and SELINUX_MOUNT_OPTIONS and use
+_scratch_mount, e.g.
+
+# comments here
+MOUNT_OPTS=""
+SELINUX_MOUNT_OPTIONS=""
+export MOUNT_OPTS SELINUX_MOUNT_OPTIONS
+_scratch_mount
+
+> +
+> +rm -f $SCRATCH_MNT/$seq.test 2>/dev/null
+
+SCRATCH_DEV was just created, there's no need to remove this test file.
+
+> +# remove all default ACL
+> +setfacl -k $SCRATCH_MNT
+> +sync
+> +touch $SCRATCH_MNT/$seq.test
+> +INODE_NUM=`ls -i $SCRATCH_MNT/$seq.test | awk '{print $1}'`
+
+I think it's time to introduce a new helper to get inode number and use
+"stat -c %i" to implement it.
+
+> +
+> +# unmount SCRATCH_DEV to get the di_forkoff size
+> +_scratch_unmount
+> +FORK_OFF=`_scratch_xfs_db -c "inode $INODE_NUM" -c "print core.forkoff" | awk -F "=" '{print $2}'`
+> +# the attributes are stored in the inode’s literal area starting a forkoff * 8
+> +FORK_OFF=$((FORK_OFF * 8))
+> +# an on-disk extent takes 128 bits = 16 bytes, get the max in-fork extents to
+> +# keep using extent data format
+> +MAX_EXTENTS=$((FORK_OFF / 16))
+> +
+> +mount $SCRATCH_DEV $SCRATCH_MNT
+> +
+> +# fragment the file by writing backwards, and alloc MAX_EXTENTS extents to
+> +# make the di_u nearly/already touch the di_forkoff
+> +for i in `seq $((MAX_EXTENTS - 1)) -1 0`; do
+> +	$XFS_IO_PROG -f -c "falloc $((i * 262144)) 262144" \
+> +		$SCRATCH_MNT/$seq.test >> $seqres.full
+> +done
+
+Any comments on this 256k size?
+
+> +
+> +# add new default ACL to $SCRATCH_MNT, for xfs_fsr will use a *temp* file
+> +# which takes more di_a field (smaller di_forkoff than *target* file)
+> +# Generally this operation need to grow attr area ~32 bytes
+> +setfacl --set d:u:fsgqa:rwx,d:g:fsgqa:rwx,d:o:rwx $SCRATCH_MNT
+> +sync
+> +
+> +# At this moment, xfs_fsr will hit below situation:
+> +#
+> +# target:         forkoff
+> +#                    |
+> +# +------------------v--------+
+> +# |       di_u       |  di_a  |
+> +# +------------------^--------+
+> +#
+> +# temp:       forkoff
+> +#                |
+> +# +--------------v------------+
+> +# |       di_u   |     di_a   |
+> +# +--------------^------------+
+> +$XFS_FSR_PROG $SCRATCH_MNT/$seq.test
+
+I saw xfs_fsr reported EINVAL on failure, so better to have some
+comments on the failure behavior.
+
+BTW, upstream 4.8.0 xfsprogs fails this test too, an xfsprogs
+regression?
+
+Thanks,
+Eryu
+
+> +
+> +dmesg | tail -10 >> $seqres.full
+> +echo "Silence is golden"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+> new file mode 100644
+> index 0000000..3b276ca
+> --- /dev/null
+> +++ b/tests/xfs/999.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 999
+> +Silence is golden
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index c237b50..ad01b8e 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -334,3 +334,4 @@
+>  345 auto quick clone
+>  346 auto quick clone
+>  347 auto quick clone
+> +999 auto quick fsr
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
