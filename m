@@ -1,116 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23451 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754042AbcLPA7A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 19:59:00 -0500
-Date: Thu, 15 Dec 2016 16:58:49 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] xfs_repair: fix some potential null pointer
- deferences
-Message-ID: <20161216005849.GF5357@birch.djwong.org>
-References: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
- <e50f0bdd-9555-2c67-781c-362b4140e431@sandeen.net>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:46606 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751119AbcLLHok (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2016 02:44:40 -0500
+Date: Mon, 12 Dec 2016 18:44:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC] Preparing for XFS reflink D-day
+Message-ID: <20161212074430.GX4326@dastard>
+References: <CAOQ4uxi_x+7Kc3P_xMr4O3DUKK7uhkfoUoyQsp7PYnxJaeLzcw@mail.gmail.com>
+ <20161212015959.GT4326@dastard>
+ <CAOQ4uxhiOb9SBgDaqjY5gQ+Z99BRWCFtc=vyGiB4PmXyDYQQZA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e50f0bdd-9555-2c67-781c-362b4140e431@sandeen.net>
+In-Reply-To: <CAOQ4uxhiOb9SBgDaqjY5gQ+Z99BRWCFtc=vyGiB4PmXyDYQQZA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Thu, Dec 15, 2016 at 05:17:14PM -0600, Eric Sandeen wrote:
-> On 12/15/16 12:11 PM, Darrick J. Wong wrote:
-> > Fix some potential NULL pointer deferences that Coverity pointed out,
-> > and remove a trivial dead integer check.
-> > 
-> > Coverity-id: 1375789, 1375790, 1375791, 1375792
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  repair/phase5.c |    2 +-
-> >  repair/rmap.c   |    2 +-
-> >  repair/slab.h   |    2 +-
-> >  3 files changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/repair/phase5.c b/repair/phase5.c
-> > index 3604d1d..cbda556 100644
-> > --- a/repair/phase5.c
-> > +++ b/repair/phase5.c
-> > @@ -1925,7 +1925,7 @@ _("Insufficient memory to construct refcount cursor."));
-> >  	refc_rec = pop_slab_cursor(refc_cur);
-> >  	lptr = &btree_curs->level[0];
-> >  
-> > -	for (i = 0; i < lptr->num_blocks; i++)  {
-> > +	for (i = 0; i < lptr->num_blocks && refc_rec != NULL; i++)  {
+On Mon, Dec 12, 2016 at 07:06:37AM +0200, Amir Goldstein wrote:
+> On Mon, Dec 12, 2016 at 3:59 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Sat, Dec 10, 2016 at 10:04:39AM +0200, Amir Goldstein wrote:
+> > our upstream feature stabilisation and support plans.  If you want
+> > to run your user base on reflink=1 filesystems on 4.9 kernels then
+> > feel free to support them directly. That's enitrely your own choice
+> > made entirely your own risk as a downstream distributor.  We'll
+> > triage and fix bugs as you report them and incorporate fixes and
+> > improvements as relevant, but we're not going to do any more than
+> > that.  "Use at your own risk" means exactly that.
+> >
 > 
-> Ok, you sent this patch already as well :)
+> This makes sense. To be clear, my intention was not exactly to run
+> 4.9 with reflink=1, but to run 4.9 with "reflink pre-formatted".
+> That means addressing exactly the issues you mentioned below
+> of preallocating the refcountbt space in all AGs.
+
+This requires all sorts of changes to the code to make that work.
+The ship has already sailed for 4.9 so stop thinking we're
+going to add /anything/ to mkfs in 4.9.
+
+And given that xfsprogs 4.10 needs to match the functionality we're
+about to merge into the kernel for the 4.10 cycle, we're unlikely to
+add support for on-disk changes that aren't supported by the 4.10
+kernel - that dev cycle is already over, too.
+
+The next 3 dev month cycle is for 4.11, and there's already all the
+online scrub/repair code lined up for this release, so getting that
+merged holds much greater priority than hacking reflink formats to
+work around the EXPERIMENTAL tag.
+
+IOWs, the /earliest/ anything like this could be done is 4.11, but
+I'd be really hesitant to rush anything like this into 4.11 because
+of all the stuff we already have in the pipeline.  And given that
+we're currently looking at around the 4.12 release timeframe for
+moving to full support for reflink, what does all this extra
+"refcount-but-not-reflink" format shenanigans buy us? At best it's
+going to be useful for a 3-6 month window, with very very limited
+relevance or use to the rest of the XFS userbase?
+
+When I look at what you ar eproposing from this perspective, the
+cost-benefit analysis does not fall favourably on the side of making
+these changes.
+
+> > FWIW, Christoph has taken this "downstream risk" path for his own
+> > clients and customers that are using the reflink functionality in
+> > their systems. He doesn't bother us with triaging or fixing issues
+> > his customers hit; all we see from him is a constant stream of bug
+> > fixes and improvements to the experimental features his customers
+> > are using...
+> >
 > 
-> And it matches the exact same thing that exists for a while in
-> the rmap_tree builder, so yay for that.  :)
-> 
-> but is this just shutting up coverity, or is this something that could
-> happen?  If it /does/ happen, is skipping the loop all we really need
-> to do?  Sorry - I have to think harder about what's going on in here
-> as we build the tree, but maybe you already know. 
+> If I have to go down that path I will, but only as last resort.
 
-It's just shutting Coverity up -- we should always run out of num_blocks
-before pop_slab_cursor runs out of records to put in the leaf blocks and
-returns NULL.  init_{rmap,refcount}bt_cursor does the following:
+That's the preferrable first path - it's been widely used across the
+vendor storage ecosystem for many years. It's proven to be a good
+model over many years because it puts no additional support or
+development load on upstream but provides a steady flow of
+additional features and bug fixes back to us.
 
-num_recs = {rmap,refcount}_record_count(...);
-lptr->num_blocks = (num_recs + maxrecs - 1) / maxrecs;
+That's the exact opposite of what you are proposing: that
+we supply you with the functionality you require, immediately,
+without forward planning, without caring about impact on
+established lines of development, etc.
 
-But there's no harm in sanity checking just in case this ever becomes
-untrue.
+There's just a little bit of difference here.
 
-> My sense of tidiness and consistency is bothered by the fact that
-> we don't have similar null-check-skip-loop for, say, ino_rec
-> in build_ino_tree, or ext_ptr in build_freespace_tree.
+Cheers,
 
-The other tree builders don't use slabs, so the loops are different.
-
---D
-
-> 
-> 
-> >  		/*
-> >  		 * block initialization, lay in block header
-> >  		 */
-> > diff --git a/repair/rmap.c b/repair/rmap.c
-> > index 45e183a..7508973 100644
-> > --- a/repair/rmap.c
-> > +++ b/repair/rmap.c
-> > @@ -790,7 +790,7 @@ compute_refcounts(
-> >  		mark_inode_rl(mp, stack_top);
-> >  
-> >  		/* Set nbno to the bno of the next refcount change */
-> > -		if (n < slab_count(rmaps))
-> > +		if (n < slab_count(rmaps) && array_cur)
-> >  			nbno = array_cur->rm_startblock;
-> >  		else
-> >  			nbno = NULLAGBLOCK;
-> > diff --git a/repair/slab.h b/repair/slab.h
-> > index 4aa5512..a2201f1 100644
-> > --- a/repair/slab.h
-> > +++ b/repair/slab.h
-> > @@ -54,7 +54,7 @@ extern void *bag_item(struct xfs_bag *, size_t);
-> >  
-> >  #define foreach_bag_ptr_reverse(bag, idx, ptr) \
-> >  	for ((idx) = bag_count(bag) - 1, (ptr) = bag_item((bag), (idx)); \
-> > -	     (idx) >= 0 && (ptr) != NULL; \
-> > +	     (ptr) != NULL; \
-> >  	     (idx)--, (ptr) = bag_item((bag), (idx)))
-> >  
-> >  #endif /* SLAB_H_ */
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
