@@ -1,88 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:51771 "EHLO ozlabs.org"
+Received: from mx1.redhat.com ([209.132.183.28]:43020 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753930AbcLKXTu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 11 Dec 2016 18:19:50 -0500
-Date: Mon, 12 Dec 2016 10:19:44 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: manual merge of the vfs tree with the xfs tree
-Message-ID: <20161212101945.31f29cb1@canb.auug.org.au>
+        id S1751652AbcLLWA2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Dec 2016 17:00:28 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: handle error if xfs_btree_get_bufs fails
+Message-ID: <4348f961-deda-8733-1cd7-dd7ca646bb6b@redhat.com>
+Date: Mon, 12 Dec 2016 16:00:26 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Jason L Tibbitts III <tibbs@math.uh.edu>
 
-Hi Al,
+Jason reported that a corrupted filesystem failed to replay
+the log with a metadata block out of bounds warning:
 
-Today's linux-next merge of the vfs tree got a conflict in:
+XFS (dm-2): _xfs_buf_find: Block out of range: block 0x80270fff8, EOFS 0x9c40000 
 
-  fs/xfs/xfs_reflink.c
+_xfs_buf_find() and xfs_btree_get_bufs() return NULL if
+that happens, and then when xfs_alloc_fix_freelist() calls
+xfs_trans_binval() on that NULL bp, we oops with:
 
-between commit:
+BUG: unable to handle kernel NULL pointer dereference at 00000000000000f8
 
-  fba3e594ef0a ("xfs: always succeed when deduping zero bytes")
+We don't handle _xfs_buf_find errors very well, every
+caller higher up the stack gets to guess at why it failed.
+But we should at least handle it somehow.  I chose EIO here
+for lack of a better idea.  :)
 
-from the xfs tree and commit:
+Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-  876bec6f9bbf ("vfs: refactor clone/dedupe_file_range common functions")
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index effb64c..d125135 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -1640,6 +1640,10 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 
+ 				bp = xfs_btree_get_bufs(args->mp, args->tp,
+ 					args->agno, fbno, 0);
++				if (!bp) {
++					error = -EIO;
++					goto error0;
++				}
+ 				xfs_trans_binval(args->tp, bp);
+ 			}
+ 			args->len = 1;
+@@ -2185,6 +2189,10 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		if (error)
+ 			goto out_agbp_relse;
+ 		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
++		if (!bp) {
++			error = -EIO;
++			goto out_agbp_relse;
++		}
+ 		xfs_trans_binval(tp, bp);
+ 	}
+ 
 
-from the vfs tree.
-
-I fixed it up (the latter removed some code updated by the former and
-see below) and can carry the fix as necessary. This is now fixed as far
-as linux-next is concerned, but any non trivial conflicts should be
-mentioned to your upstream maintainer when your tree is submitted for
-merging.  You may also want to consider cooperating with the maintainer
-of the conflicting tree to minimise any particularly complex conflicts.
-
--- 
-Cheers,
-Stephen Rothwell
-
-diff --cc fs/xfs/xfs_reflink.c
-index 88fd03c66e99,95d6828967f0..000000000000
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@@ -1251,32 -1194,16 +1143,14 @@@ xfs_reflink_remap_range
-  		return -EIO;
-  
-  	/* Lock both files against IO */
- -	if (same_inode) {
- -		xfs_ilock(src, XFS_IOLOCK_EXCL);
- +	lock_two_nondirectories(inode_in, inode_out);
- +	if (same_inode)
-  		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
- -	} else {
- -		xfs_lock_two_inodes(src, dest, XFS_IOLOCK_EXCL);
- +	else
-  		xfs_lock_two_inodes(src, dest, XFS_MMAPLOCK_EXCL);
- -	}
-  
-- 	/* Don't touch certain kinds of inodes */
-- 	ret = -EPERM;
-- 	if (IS_IMMUTABLE(inode_out))
-- 		goto out_unlock;
-- 
-- 	ret = -ETXTBSY;
-- 	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
-- 		goto out_unlock;
-- 
-- 
-- 	/* Don't reflink dirs, pipes, sockets... */
-- 	ret = -EISDIR;
-- 	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
-- 		goto out_unlock;
-+ 	/* Check file eligibility and prepare for block sharing. */
-  	ret = -EINVAL;
-- 	if (S_ISFIFO(inode_in->i_mode) || S_ISFIFO(inode_out->i_mode))
-- 		goto out_unlock;
-- 	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-- 		goto out_unlock;
-- 
-  	/* Don't reflink realtime inodes */
-  	if (XFS_IS_REALTIME_INODE(src) || XFS_IS_REALTIME_INODE(dest))
-  		goto out_unlock;
