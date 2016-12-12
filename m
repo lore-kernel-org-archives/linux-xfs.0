@@ -1,124 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:5911 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753810AbcLLCAE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Dec 2016 21:00:04 -0500
-Date: Mon, 12 Dec 2016 12:59:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC] Preparing for XFS reflink D-day
-Message-ID: <20161212015959.GT4326@dastard>
-References: <CAOQ4uxi_x+7Kc3P_xMr4O3DUKK7uhkfoUoyQsp7PYnxJaeLzcw@mail.gmail.com>
+Received: from forward3h.cmail.yandex.net ([87.250.230.18]:34927 "EHLO
+        forward3h.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752818AbcLLUeF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2016 15:34:05 -0500
+From: Ozgur Karatas <okaratas@member.fsf.org>
+In-Reply-To: <50420874-ffde-283f-f2e7-cb2ebbec1b84@sandeen.net>
+References: <987271481540010@web27o.yandex.ru>
+         <66c68b88-e338-1d9a-b9dd-b8d858ebf349@sandeen.net>
+         <1481566450.1764.23.camel@perches.com> <50420874-ffde-283f-f2e7-cb2ebbec1b84@sandeen.net>
+Subject: Re: [PATCH 1/1] Fixed to codestyle
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi_x+7Kc3P_xMr4O3DUKK7uhkfoUoyQsp7PYnxJaeLzcw@mail.gmail.com>
+Message-Id: <737751481574841@web26j.yandex.ru>
+Date: Mon, 12 Dec 2016 22:34:01 +0200
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, Joe Perches <joe@perches.com>, "david@fromorbit.com" <david@fromorbit.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Sat, Dec 10, 2016 at 10:04:39AM +0200, Amir Goldstein wrote:
-> Dave,
-> 
-> I would like to have some system's storage pre-formatted
-> with rmapbt and reflink support without allowing reflink until
-> the day comes where the feature is declared stable.
+12.12.2016, 20:35, "Eric Sandeen" <sandeen@sandeen.net>:
+> On 12/12/16 12:14 PM, Joe Perches wrote:
+>>  On Mon, 2016-12-12 at 07:49 -0600, Eric Sandeen wrote:
+>>>  On 12/12/16 4:53 AM, Ozgur Karatas wrote:
+>>>>  Hello,
+>>>>
+>>>>  I have error to use uuid and I think the functions should be used when -i'm eye-catching- "(* uuid)".
+>>>>  I tested it.
+>>>>
+>>>>  Regards,
+>>>>
+>>>>  Signed-off-by: Ozgur Karatas <okaratas@member.fsf.org>
+>>>
+>>>  NAK
+>>>
+>>>  This doesn't fix code style at all; there is no need and no
+>>>  precedence for i.e. (*uuid) in function arguments in the xfs code,
+>>>  and you have broken indentation in the loop within the function.
+>>
+>>  Perhaps better would be to convert the xfs uuid_t typedef
+>>  to the include/uapi/linux/uuid.h appropriate struct and
+>>  maybe use a comparison to NULL_UUID_<type>
+>>
+>>>>  diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
+>>  []
+>>>>  @@ -33,7 +33,7 @@ typedef struct {
+>>>>    * it just something that's needed for user-level file handles.
+>>>>    */
+>>>>   void
+>>>>  -uuid_getnodeuniq(uuid_t *uuid, int fsid [2])
+>>>>  +uuid_getnodeuniq(uuid_t (*uuid), int fsid [2])
+>>
+>>  And to amplify Eric's comment:
+>>
+>>  that bit is confusing as it makes uuid look
+>>  like a function pointer.
+>>
+>>>>   {
+>>>>           xfs_uu_t *uup = (xfs_uu_t *)uuid;
+>>>>
+>>>>  @@ -51,8 +51,8 @@ uuid_is_nil(uuid_t *uuid)
+>>>>           if (uuid == NULL)
+>>>>                   return 0;
+>>>>           /* implied check of version number here... */
+>>>>  - for (i = 0; i < sizeof *uuid; i++)
+>>>>  - if (*cp++) return 0; /* not nil */
+>>>>  + for (i = 0; i < sizeof (*uuid); i++)
+>>>>  + if (*cp++) return 0; /* not nil */
+>>
+>>  There shouldn't be a space after sizeof.
+>
+> and the "if" /should/ be indented under the for loop, because
+> it is within the loop...
+>
+> I suppose simply:
+>
+> - for (i = 0; i < sizeof *uuid; i++)
+> + for (i = 0; i < sizeof(*uuid); i++)
+>
+> would be fine on its own, though, because that is a bit
+> unusual/inconsistent. I'll admit that I didn't spot
+> that change as I scanned over the unnecessary & incorrect parts
+> of the first patch. :)
+>
+> thanks,
+> -Eric
 
-Amir, you should have realised by now that - as a matter of policy -
-I simply say no to anything that is intended as a short-term
-convenience for a special interest use case that has no long term
-benefit to the wider community.
+Dear Eric;
 
-Your timeline for downstream customer feature delivery don't change
-our upstream feature stabilisation and support plans.  If you want
-to run your user base on reflink=1 filesystems on 4.9 kernels then
-feel free to support them directly. That's enitrely your own choice
-made entirely your own risk as a downstream distributor.  We'll
-triage and fix bugs as you report them and incorporate fixes and
-improvements as relevant, but we're not going to do any more than
-that.  "Use at your own risk" means exactly that.
+Can you tell me the true code style? should use to (* uuid)? 
+I'm learn to new and I'm newbies :)
 
-FWIW, Christoph has taken this "downstream risk" path for his own
-clients and customers that are using the reflink functionality in
-their systems. He doesn't bother us with triaging or fixing issues
-his customers hit; all we see from him is a constant stream of bug
-fixes and improvements to the experimental features his customers
-are using...
+Sorry,
 
-> Considering these options for said systems:
-> 1. kernel v4.8.y or v4.9.y and mkfs.xfs -m rmapbt=1
-> 2. kernel v4.9.y and mkfs.xfs -m rmapbt=1
-> 3. kernel v4.9.y and mkfs.xfs -m rmapbt=1,reflink=1
->     and new mount option -onoreflink
-> 4. kernel v4.9.y and mkfs.xfs -m rmapbt=1,reflinkbt=1
->     (separate rocomapt features reflinkbt from reflink)
-> 
-> Options 1-2 would require adding support in xfs_admin to
-> enable reflink on an existing fs
+Regards
 
-If we can properly design and implement the addition of the reflink
-btree and reliably test it then this would be my preferred option.
-However, I can see lots of intricate problems with adding reflink
-after the fact.  e.g. if we've already got a full AG we won't be
-able to have the refcount btree added to it dynamically, so how do
-we prevent this sort of failure half way through the conversion?
-
-And if we do fail half way through the conversion (for whatever
-reason), how the hell do we clean up the mess reliably?
-
-So while this seems simple in concept, I don't think the
-implementation is going to be simple regardless of whether we do the
-conversion online or offline. It'll be yet more experimental code
-that will take a good length of time to test and stabilise, and has
-the definite possibility of making it take longer to stabilise the
-reflink feature..
-
->From this persepective, it makes no sense for upstream invest time
-and effort into dynamic reflink enabling like this because it's just
-a short term workaround to avoid waiting for the new feature to
-stabilise. Our time is much better spent stabilising that feature to
-reduce the amount of time it is considered EXPERIMENTAL.
-
-> Option 3 would require adding a simple noreflink
-> mount option to disable reflink related ops.
-
-You can add it to your own kernels easily enough, but don't expect
-us to carry one-off, special case mount options like this in the
-upstream kernel.
-
-> Option 4 requires changing mkfs.xfs before 4.9 release
-> and possibly setting recompat feature reflink on first file
-> reflink. There are several precedents to this sort of  "set
-> on first use" feature in ext4, not sure if there are any in xfs.
-
-There's a few in XFS, historically speaking (attribute fork layout,
-v1->v2 inodes, etc). These days, however, we tend to avoid silent
-dynamic feature bit addition because of the "upgrade kernel, random
-feature bit gets added silently, upgrade causes other problems,
-downgrade kernel, old kernel can't mount fs anymore" type of
-problem it can cause the wider userbase.
-
-FWIW, setting a feature bit on first reflink will require kernel
-changes, and the soonest you'd get them into the kernel is 4.11 if
-all the issues and problems could be sorted before then. So this
-doesn't help you at all for the 4.9 kernel. It also requires that
-the recountbt is being maintained for refcount=1 extents, otherwise
-it introduces all the same problems as options 1-2. IMO, this is the
-least appealing of all the options you presented.
-
-> Another benefit from option #4 is that you may be able
-> to declare rmapbt=1,reflinkbt=1 stable and/or default
-> mkfs options prior to declaring reflink=1 stable.
-
-Again, no. Once the kernel libxfs code is declared stable, we'll
-merge that back into the next xfsprogs release which will also mark
-that feature as stable. Madness lies in trying to support anything
-else in the upstream code base.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Ozgur
