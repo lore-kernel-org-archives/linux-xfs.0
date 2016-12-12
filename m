@@ -1,159 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23244 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932353AbcLIRc1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Dec 2016 12:32:27 -0500
-Date: Fri, 9 Dec 2016 09:32:13 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH, RFC] xfs: take indirect blocks into accounting when
- selecting an AG
-Message-ID: <20161209173213.GZ16813@birch.djwong.org>
-References: <1481303709-12632-1-git-send-email-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:59404 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752781AbcLLVRy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Dec 2016 16:17:54 -0500
+Subject: Re: [PATCH 1/1] Fixed to codestyle
+References: <987271481540010@web27o.yandex.ru>
+ <66c68b88-e338-1d9a-b9dd-b8d858ebf349@sandeen.net>
+ <1481566450.1764.23.camel@perches.com>
+ <50420874-ffde-283f-f2e7-cb2ebbec1b84@sandeen.net>
+ <737751481574841@web26j.yandex.ru>
+ <cbf01379-fbcb-b42e-abc1-1b368b9d6633@sandeen.net>
+ <1481575838.1764.39.camel@perches.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <0b7ecb73-6d9a-a1c0-f006-4764ce07d5ab@sandeen.net>
+Date: Mon, 12 Dec 2016 15:17:52 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1481303709-12632-1-git-send-email-hch@lst.de>
+In-Reply-To: <1481575838.1764.39.camel@perches.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com
+To: Joe Perches <joe@perches.com>, Ozgur Karatas <okaratas@member.fsf.org>, "david@fromorbit.com" <david@fromorbit.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Fri, Dec 09, 2016 at 06:15:09PM +0100, Christoph Hellwig wrote:
-> We need to make sure that the indirect blocks (e.g. bmap btree blocks)
-> can be allocated from the same AG [1] when comitting to an AG for a
-> file data block allocation.  To do that we calculate the worst possible
-> indirect len and subtract that from the free space in the AG.
+
+
+On 12/12/16 2:50 PM, Joe Perches wrote:
+> On Mon, 2016-12-12 at 14:41 -0600, Eric Sandeen wrote:
+>> On 12/12/16 2:34 PM, Ozgur Karatas wrote:
+> []
+>>> Can you tell me the true code style? should use to (* uuid)? 
+>>> I'm learn to new and I'm newbies :)
+>>
+>> Well, rule #1 for newbies is "code style patches aren't
+>> very useful, and usually are not welcomed by the project."
 > 
-> I don't really like how this makes the space allocator call back into
-> the bmap code (even if only for a trivial helper), but I can't think
-> of a better idea.
+> I'd amend that to
 > 
-> [1] strictly speaking the same AG or one with a higher AG number, but
-> that is so incredibly hard to express that we settle for the same AG.
+> "newbies should only use checkpatch on files in drivers/staging/"
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c |  7 ++++++-
->  fs/xfs/libxfs/xfs_bmap.c  | 17 +++++++++++------
->  fs/xfs/libxfs/xfs_bmap.h  |  5 +++++
->  3 files changed, 22 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index effb64c..037cbd8 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -38,6 +38,7 @@
->  #include "xfs_buf_item.h"
->  #include "xfs_log.h"
->  #include "xfs_ag_resv.h"
-> +#include "xfs_bmap.h"
->  
->  struct workqueue_struct *xfs_alloc_wq;
->  
-> @@ -2058,6 +2059,7 @@ xfs_alloc_space_available(
->  	struct xfs_perag	*pag = args->pag;
->  	xfs_extlen_t		longest;
->  	xfs_extlen_t		reservation; /* blocks that are still reserved */
-> +	xfs_extlen_t		indlen = 0;
->  	int			available;
->  
->  	if (flags & XFS_ALLOC_FLAG_FREEING)
-> @@ -2071,9 +2073,12 @@ xfs_alloc_space_available(
->  	if ((args->minlen + args->alignment + args->minalignslop - 1) > longest)
->  		return false;
->  
-> +	if (xfs_alloc_is_userdata(args->datatype))
-> +		indlen = __xfs_bmap_worst_indlen(args->mp, max(args->minlen, args->maxlen));
+> and are generally welcome to do exactly that in order to learn
+> how to submit patches appropriately before finding something
+> actually useful to change in other areas of the kernel.
 
-/me wonders, when is it the case that minlen > maxlen?
+Ok, that's a fair amendment.  :)
 
-I'm also wondering why we can't just increase args->minleft to require
-that we leave enough space in whichever AG we pick to expand to bmbt?
-AFAICT that's the purpose of the minleft field.
-
-(That said, I'd been working on a patch to do exactly this and it hasn't
-solved the problem yet...)
-
-It also would be useful to add a comment as to why we're doing this,
-/* Make sure we leave enough space in this AG for a bmbt expansion. */
-
-> +
->  	/* do we have enough free space remaining for the allocation? */
->  	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
-> -			  reservation - min_free - args->total);
-> +			  reservation - min_free - indlen - args->total);
->  	if (available < (int)args->minleft || available <= 0)
->  		return false;
->  
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 266f641..b52a32d 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -183,19 +183,16 @@ xfs_bmbt_update(
->   * Compute the worst-case number of indirect blocks that will be used
->   * for ip's delayed extent of length "len".
->   */
-> -STATIC xfs_filblks_t
-> -xfs_bmap_worst_indlen(
-> -	xfs_inode_t	*ip,		/* incore inode pointer */
-> +xfs_filblks_t
-> +__xfs_bmap_worst_indlen(
-> +	xfs_mount_t	*mp,		/* mount structure */
-
-struct xfs_mount?
-
->  	xfs_filblks_t	len)		/* delayed extent length */
->  {
->  	int		level;		/* btree level number */
->  	int		maxrecs;	/* maximum record count at this level */
-> -	xfs_mount_t	*mp;		/* mount structure */
->  	xfs_filblks_t	rval;		/* return value */
->  	xfs_filblks_t   orig_len;
->  
-> -	mp = ip->i_mount;
-> -
->  	/* Calculate the worst-case size of the bmbt. */
->  	orig_len = len;
->  	maxrecs = mp->m_bmap_dmxr[0];
-> @@ -222,6 +219,14 @@ xfs_bmap_worst_indlen(
->  	return rval;
->  }
->  
-> +STATIC xfs_filblks_t
-> +xfs_bmap_worst_indlen(
-> +	xfs_inode_t	*ip,		/* incore inode pointer */
-> +	xfs_filblks_t	len)		/* delayed extent length */
-> +{
-> +	return __xfs_bmap_worst_indlen(ip->i_mount, len);
-> +}
-> +
->  /*
->   * Calculate the default attribute fork offset for newly created inodes.
->   */
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index cecd094..aa2964a 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -263,4 +263,9 @@ int	xfs_bmap_map_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
->  int	xfs_bmap_unmap_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
->  		struct xfs_inode *ip, struct xfs_bmbt_irec *imap);
->  
-> +xfs_filblks_t
-> +__xfs_bmap_worst_indlen(
-> +	xfs_mount_t	*mp,		/* mount structure */
-
-struct xfs_mount?
-
---D
-
-> +	xfs_filblks_t	len);		/* delayed extent length */
-> +
->  #endif	/* __XFS_BMAP_H__ */
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Eric
