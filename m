@@ -1,99 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from forward3h.cmail.yandex.net ([87.250.230.18]:34927 "EHLO
-        forward3h.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752818AbcLLUeF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2016 15:34:05 -0500
-From: Ozgur Karatas <okaratas@member.fsf.org>
-In-Reply-To: <50420874-ffde-283f-f2e7-cb2ebbec1b84@sandeen.net>
-References: <987271481540010@web27o.yandex.ru>
-         <66c68b88-e338-1d9a-b9dd-b8d858ebf349@sandeen.net>
-         <1481566450.1764.23.camel@perches.com> <50420874-ffde-283f-f2e7-cb2ebbec1b84@sandeen.net>
-Subject: Re: [PATCH 1/1] Fixed to codestyle
-MIME-Version: 1.0
-Message-Id: <737751481574841@web26j.yandex.ru>
-Date: Mon, 12 Dec 2016 22:34:01 +0200
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset=utf-8
+Received: from bombadil.infradead.org ([198.137.202.9]:40469 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932688AbcLMP7v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2016 10:59:51 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/4] xfs: fix bogus minleft manipulations
+Date: Tue, 13 Dec 2016 16:59:24 +0100
+Message-Id: <1481644767-9098-2-git-send-email-hch@lst.de>
+In-Reply-To: <1481644767-9098-1-git-send-email-hch@lst.de>
+References: <1481644767-9098-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Joe Perches <joe@perches.com>, "david@fromorbit.com" <david@fromorbit.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: eguan@redhat.com, darrick.wong@oracle.com
 
-12.12.2016, 20:35, "Eric Sandeen" <sandeen@sandeen.net>:
-> On 12/12/16 12:14 PM, Joe Perches wrote:
->>  On Mon, 2016-12-12 at 07:49 -0600, Eric Sandeen wrote:
->>>  On 12/12/16 4:53 AM, Ozgur Karatas wrote:
->>>>  Hello,
->>>>
->>>>  I have error to use uuid and I think the functions should be used when -i'm eye-catching- "(* uuid)".
->>>>  I tested it.
->>>>
->>>>  Regards,
->>>>
->>>>  Signed-off-by: Ozgur Karatas <okaratas@member.fsf.org>
->>>
->>>  NAK
->>>
->>>  This doesn't fix code style at all; there is no need and no
->>>  precedence for i.e. (*uuid) in function arguments in the xfs code,
->>>  and you have broken indentation in the loop within the function.
->>
->>  Perhaps better would be to convert the xfs uuid_t typedef
->>  to the include/uapi/linux/uuid.h appropriate struct and
->>  maybe use a comparison to NULL_UUID_<type>
->>
->>>>  diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
->>  []
->>>>  @@ -33,7 +33,7 @@ typedef struct {
->>>>    * it just something that's needed for user-level file handles.
->>>>    */
->>>>   void
->>>>  -uuid_getnodeuniq(uuid_t *uuid, int fsid [2])
->>>>  +uuid_getnodeuniq(uuid_t (*uuid), int fsid [2])
->>
->>  And to amplify Eric's comment:
->>
->>  that bit is confusing as it makes uuid look
->>  like a function pointer.
->>
->>>>   {
->>>>           xfs_uu_t *uup = (xfs_uu_t *)uuid;
->>>>
->>>>  @@ -51,8 +51,8 @@ uuid_is_nil(uuid_t *uuid)
->>>>           if (uuid == NULL)
->>>>                   return 0;
->>>>           /* implied check of version number here... */
->>>>  - for (i = 0; i < sizeof *uuid; i++)
->>>>  - if (*cp++) return 0; /* not nil */
->>>>  + for (i = 0; i < sizeof (*uuid); i++)
->>>>  + if (*cp++) return 0; /* not nil */
->>
->>  There shouldn't be a space after sizeof.
->
-> and the "if" /should/ be indented under the for loop, because
-> it is within the loop...
->
-> I suppose simply:
->
-> - for (i = 0; i < sizeof *uuid; i++)
-> + for (i = 0; i < sizeof(*uuid); i++)
->
-> would be fine on its own, though, because that is a bit
-> unusual/inconsistent. I'll admit that I didn't spot
-> that change as I scanned over the unnecessary & incorrect parts
-> of the first patch. :)
->
-> thanks,
-> -Eric
+We can't just set minleft to 0 when we're low on space - that's exactly
+what we need minleft for: to protect space in the AG for btree block
+allocations when we are low on free space.
 
-Dear Eric;
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_alloc.c      | 24 +++++++-----------------
+ fs/xfs/libxfs/xfs_bmap.c       |  3 ---
+ fs/xfs/libxfs/xfs_bmap_btree.c | 14 --------------
+ 3 files changed, 7 insertions(+), 34 deletions(-)
 
-Can you tell me the true code style? should use to (* uuid)? 
-I'm learn to new and I'm newbies :)
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 5050056..91a6c17 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2638,12 +2638,10 @@ xfs_alloc_vextent(
+ 	xfs_agblock_t	agsize;	/* allocation group size */
+ 	int		error;
+ 	int		flags;	/* XFS_ALLOC_FLAG_... locking flags */
+-	xfs_extlen_t	minleft;/* minimum left value, temp copy */
+ 	xfs_mount_t	*mp;	/* mount structure pointer */
+ 	xfs_agnumber_t	sagno;	/* starting allocation group number */
+ 	xfs_alloctype_t	type;	/* input allocation type */
+ 	int		bump_rotor = 0;
+-	int		no_min = 0;
+ 	xfs_agnumber_t	rotorstep = xfs_rotorstep; /* inode32 agf stepper */
+ 
+ 	mp = args->mp;
+@@ -2672,7 +2670,6 @@ xfs_alloc_vextent(
+ 		trace_xfs_alloc_vextent_badargs(args);
+ 		return 0;
+ 	}
+-	minleft = args->minleft;
+ 
+ 	switch (type) {
+ 	case XFS_ALLOCTYPE_THIS_AG:
+@@ -2683,9 +2680,7 @@ xfs_alloc_vextent(
+ 		 */
+ 		args->agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
+ 		args->pag = xfs_perag_get(mp, args->agno);
+-		args->minleft = 0;
+ 		error = xfs_alloc_fix_freelist(args, 0);
+-		args->minleft = minleft;
+ 		if (error) {
+ 			trace_xfs_alloc_vextent_nofix(args);
+ 			goto error0;
+@@ -2750,9 +2745,7 @@ xfs_alloc_vextent(
+ 		 */
+ 		for (;;) {
+ 			args->pag = xfs_perag_get(mp, args->agno);
+-			if (no_min) args->minleft = 0;
+ 			error = xfs_alloc_fix_freelist(args, flags);
+-			args->minleft = minleft;
+ 			if (error) {
+ 				trace_xfs_alloc_vextent_nofix(args);
+ 				goto error0;
+@@ -2792,20 +2785,17 @@ xfs_alloc_vextent(
+ 			 * or switch to non-trylock mode.
+ 			 */
+ 			if (args->agno == sagno) {
+-				if (no_min == 1) {
++				if (flags == 0) {
+ 					args->agbno = NULLAGBLOCK;
+ 					trace_xfs_alloc_vextent_allfailed(args);
+ 					break;
+ 				}
+-				if (flags == 0) {
+-					no_min = 1;
+-				} else {
+-					flags = 0;
+-					if (type == XFS_ALLOCTYPE_START_BNO) {
+-						args->agbno = XFS_FSB_TO_AGBNO(mp,
+-							args->fsbno);
+-						args->type = XFS_ALLOCTYPE_NEAR_BNO;
+-					}
++
++				flags = 0;
++				if (type == XFS_ALLOCTYPE_START_BNO) {
++					args->agbno = XFS_FSB_TO_AGBNO(mp,
++						args->fsbno);
++					args->type = XFS_ALLOCTYPE_NEAR_BNO;
+ 				}
+ 			}
+ 			xfs_perag_put(args->pag);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 2760bc3..44773c9 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3812,7 +3812,6 @@ xfs_bmap_btalloc(
+ 		args.fsbno = 0;
+ 		args.type = XFS_ALLOCTYPE_FIRST_AG;
+ 		args.total = ap->minlen;
+-		args.minleft = 0;
+ 		if ((error = xfs_alloc_vextent(&args)))
+ 			return error;
+ 		ap->dfops->dop_low = true;
+@@ -4344,8 +4343,6 @@ xfs_bmapi_allocate(
+ 	if (error)
+ 		return error;
+ 
+-	if (bma->dfops->dop_low)
+-		bma->minleft = 0;
+ 	if (bma->cur)
+ 		bma->cur->bc_private.b.firstblock = *bma->firstblock;
+ 	if (bma->blkno == NULLFSBLOCK)
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index d6330c2..9581ee8 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -499,20 +499,6 @@ xfs_bmbt_alloc_block(
+ 		goto try_another_ag;
+ 	}
+ 
+-	if (args.fsbno == NULLFSBLOCK && args.minleft) {
+-		/*
+-		 * Could not find an AG with enough free space to satisfy
+-		 * a full btree split.  Try again without minleft and if
+-		 * successful activate the lowspace algorithm.
+-		 */
+-		args.fsbno = 0;
+-		args.type = XFS_ALLOCTYPE_FIRST_AG;
+-		args.minleft = 0;
+-		error = xfs_alloc_vextent(&args);
+-		if (error)
+-			goto error0;
+-		cur->bc_private.b.dfops->dop_low = true;
+-	}
+ 	if (args.fsbno == NULLFSBLOCK) {
+ 		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+ 		*stat = 0;
+-- 
+2.1.4
 
-Sorry,
-
-Regards
-
-Ozgur
