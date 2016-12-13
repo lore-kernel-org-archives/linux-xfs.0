@@ -1,41 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50676 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:40441 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966324AbcLVUAc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2016 15:00:32 -0500
+        with ESMTP id S932493AbcLMP7v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2016 10:59:51 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/5] xfs: fix the alignment fallback in xfs_bmap_btalloc
-Date: Thu, 22 Dec 2016 21:00:19 +0100
-Message-Id: <1482436822-31546-3-git-send-email-hch@lst.de>
-In-Reply-To: <1482436822-31546-1-git-send-email-hch@lst.de>
-References: <1482436822-31546-1-git-send-email-hch@lst.de>
+Subject: minleft fixes
+Date: Tue, 13 Dec 2016 16:59:23 +0100
+Message-Id: <1481644767-9098-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: eguan@redhat.com, darrick.wong@oracle.com
 
-The way the alignment field is used the minimum possible alignment is 1.
-By setting it to 0 we'll mess up calculations that rely on this.
+[now to the correct list address]
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is my attempt to fix the problems with rmap and reflink file system
+running out of space during delayed extent conversions.  It turns out
+the way minleft has been handled has always been bogus, but the rmap
+enablement made it even worse..
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 2760bc3..19c05e9 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3796,7 +3796,7 @@ xfs_bmap_btalloc(
- 		 */
- 		args.type = atype;
- 		args.fsbno = ap->blkno;
--		args.alignment = 0;
-+		args.alignment = 1;
- 		if ((error = xfs_alloc_vextent(&args)))
- 			return error;
- 	}
--- 
-2.1.4
+This has survived xfstests xfs/109 on a 2k fs for 2 1/2 hour here now,
+but Eryu was much better than me at reproducing the problems, so it could
+use some further testing.
 
