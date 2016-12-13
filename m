@@ -1,238 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48010 "EHLO mx1.redhat.com"
+Received: from mail.webx.cz ([109.123.222.201]:53250 "EHLO mail.webx.cz"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932632AbcLGTAL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Dec 2016 14:00:11 -0500
-Date: Wed, 7 Dec 2016 14:00:09 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: go straight to real allocations for direct I/O
- COW writes
-Message-ID: <20161207190008.GC23106@bfoster.bfoster>
-References: <1480971924-4864-1-git-send-email-hch@lst.de>
- <1480971924-4864-3-git-send-email-hch@lst.de>
+        id S1752746AbcLMKws (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Dec 2016 05:52:48 -0500
+From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
+Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
+Date: Tue, 13 Dec 2016 11:52:44 +0100
+Message-ID: <2626665.Hsx8YazNWY@libor-nb>
+In-Reply-To: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com>
+References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1480971924-4864-3-git-send-email-hch@lst.de>
+Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Dec 05, 2016 at 10:05:23PM +0100, Christoph Hellwig wrote:
-> When we allocate COW fork blocks for direct I/O writes we currently first
-> create a delayed allocation, and then convert it to a real allocation
-> once we've got the delayed one.
+Hello,
+should this patch possibly fix errors i reported in this thread?
+https://www.spinics.net/lists/linux-xfs/msg01728.html
+
+Is it safe to test it? (i do have backups)
+
+Thanks,
+Libor
+
+On čtvrtek 8. prosince 2016 12:06:03 CET Eric Sandeen wrote:
+> We have recently seen a case where, during log replay, the
+> attr3 leaf verifier reported corruption when encountering a
+> leaf attribute with a count of 0 in the header.
 > 
-> As there is no good reason for that this patch instead makes use call
-> xfs_bmapi_write from the COW allocation path.  The only interesting bits
-> are a few tweaks the low-level allocator to allow for this, most notably
-> the need to remove the call to xfs_bmap_extsize_align for the cowextsize
-> in xfs_bmap_btalloc - for the existing convert case it's a no-op, but
-> for the direct allocation case it would blow up our block reservation
-> way beyond what we reserved for the transaction.
+> We chalked this up to a transient state when a shortform leaf
+> was created, the attribute didn't fit, and we promoted the
+> (empty) attribute to the larger leaf form.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> I've recently been given a metadump of unknown provenance which actually
+> contains a leaf attribute with count 0 on disk.  This causes the
+> verifier to fire every time xfs_repair is run:
+> 
+>  Metadata corruption detected at xfs_attr3_leaf block 0x480988/0x1000
+> 
+> If this 0-count state is detected, we should just junk the leaf, same
+> as we would do if the count was too high.  With this change, we now
+> remedy the problem:
+> 
+>  Metadata corruption detected at xfs_attr3_leaf block 0x480988/0x1000
+>  bad attribute count 0 in attr block 0, inode 12587828
+>  problem with attribute contents in inode 12587828
+>  clearing inode 12587828 attributes
+>  correcting nblocks for inode 12587828, was 2 - counted 1
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c |   9 ++---
->  fs/xfs/xfs_reflink.c     | 101 ++++++++++++++++++++++++++++++++++-------------
->  2 files changed, 76 insertions(+), 34 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 6f28814..a4a4327 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -2893,13 +2893,14 @@ xfs_bmap_add_extent_hole_real(
->  	ASSERT(!isnullstartblock(new->br_startblock));
->  	ASSERT(!bma->cur ||
->  	       !(bma->cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
-> -	ASSERT(whichfork != XFS_COW_FORK);
+> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+> index 40cb5f7..b855a10 100644
+> --- a/repair/attr_repair.c
+> +++ b/repair/attr_repair.c
+> @@ -593,7 +593,8 @@ process_leaf_attr_block(
+>  	stop = xfs_attr3_leaf_hdr_size(leaf);
 >  
->  	XFS_STATS_INC(mp, xs_add_exlist);
->  
->  	state = 0;
->  	if (whichfork == XFS_ATTR_FORK)
->  		state |= BMAP_ATTRFORK;
-> +	if (whichfork == XFS_COW_FORK)
-> +		state |= BMAP_COWFORK;
->  
->  	/*
->  	 * Check and set flags if this segment has a left neighbor.
-> @@ -3619,9 +3620,7 @@ xfs_bmap_btalloc(
->  	else if (mp->m_dalign)
->  		stripe_align = mp->m_dalign;
->  
-> -	if (ap->flags & XFS_BMAPI_COWFORK)
-> -		align = xfs_get_cowextsz_hint(ap->ip);
-> -	else if (xfs_alloc_is_userdata(ap->datatype))
-> +	if (xfs_alloc_is_userdata(ap->datatype))
-
-Doesn't this defeat the purpose (i.e., fragmentation avoidance via wider
-allocations) of the cowextszhint for direct I/O? I think it would be
-better to be consistent with the approach for traditional I/O + extsz
-and incorporate the alignment into the reservation. Perhaps the hunk of
-code that already does just that in xfs_iomap_write_direct() could be
-converted to a small helper and reused..?
-
->  		align = xfs_get_extsz_hint(ap->ip);
->  	if (unlikely(align)) {
->  		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
-> @@ -4608,8 +4607,6 @@ xfs_bmapi_write(
->  		 */
->  		if (flags & XFS_BMAPI_REMAP)
->  			ASSERT(inhole);
-> -		if (flags & XFS_BMAPI_COWFORK)
-> -			ASSERT(!inhole);
->  
->  		/*
->  		 * First, deal with the hole before the allocated space
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 88fd03c..0a077e80 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -304,59 +304,104 @@ __xfs_reflink_allocate_cow(
->  	xfs_fileoff_t		end_fsb)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
-> -	struct xfs_bmbt_irec	imap;
-> +	struct xfs_bmbt_irec	imap, got;
->  	struct xfs_defer_ops	dfops;
->  	struct xfs_trans	*tp;
->  	xfs_fsblock_t		first_block;
-> -	int			nimaps = 1, error;
-> -	bool			shared;
-> +	int			nimaps, error, lockmode;
-> +	bool			shared, trimmed;
-> +	xfs_extlen_t		resblks, align;
-> +	xfs_extnum_t		idx;
->  
-> -	xfs_defer_init(&dfops, &first_block);
-> +	align = xfs_eof_alignment(ip, xfs_get_cowextsz_hint(ip));
-> +	if (align)
-> +		end_fsb = roundup_64(end_fsb, align);
->  
-> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0,
-> -			XFS_TRANS_RESERVE, &tp);
-> +	resblks = XFS_DIOSTRAT_SPACE_RES(mp, end_fsb - *offset_fsb);
-> +
-> +	error = xfs_qm_dqattach(ip, 0);
-
-This is already in the (only) caller.
-
-Brian
-
->  	if (error)
->  		return error;
->  
-> -	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -
-> -	/* Read extent from the source file. */
-> -	nimaps = 1;
-> -	error = xfs_bmapi_read(ip, *offset_fsb, end_fsb - *offset_fsb,
-> -			&imap, &nimaps, 0);
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
->  	if (error)
-> -		goto out_unlock;
-> -	ASSERT(nimaps == 1);
-> +		return error;
->  
-> -	error = xfs_reflink_reserve_cow(ip, &imap, &shared);
-> -	if (error)
-> -		goto out_trans_cancel;
-> +	lockmode = XFS_ILOCK_EXCL;
-> +	xfs_ilock(ip, lockmode);
->  
-> -	if (!shared) {
-> -		*offset_fsb = imap.br_startoff + imap.br_blockcount;
-> -		goto out_trans_cancel;
-> +	/*
-> +	 * Even if the extent is not shared we might have a preallocation for
-> +	 * it in the COW fork.  If so use it.
-> +	 */
-> +	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, *offset_fsb, &idx, &got) &&
-> +	    got.br_startoff <= *offset_fsb) {
-> +		/* If we have a real allocation in the COW fork we're done. */
-> +		if (!isnullstartblock(got.br_startblock)) {
-> +			xfs_trim_extent(&got, *offset_fsb,
-> +					end_fsb - *offset_fsb);
-> +			*offset_fsb = got.br_startoff + got.br_blockcount;
-> +			goto out_trans_cancel;
-> +		}
-> +	} else {
-> +		nimaps = 1;
-> +		error = xfs_bmapi_read(ip, *offset_fsb, end_fsb - *offset_fsb,
-> +				&imap, &nimaps, 0);
-> +		if (error)
-> +			goto out_trans_cancel;
-> +		ASSERT(nimaps == 1);
-> +
-> +		/* Trim the mapping to the nearest shared extent boundary. */
-> +		error = xfs_reflink_trim_around_shared(ip, &imap, &shared,
-> +				&trimmed);
-> +		if (error)
-> +			goto out_trans_cancel;
-> +
-> +		if (!shared) {
-> +			*offset_fsb = imap.br_startoff + imap.br_blockcount;
-> +			goto out_trans_cancel;
-> +		}
-> +
-> +		*offset_fsb = imap.br_startoff;
-> +		end_fsb = imap.br_startoff + imap.br_blockcount;
-> +		if (align)
-> +			end_fsb = roundup_64(end_fsb, align);
->  	}
->  
-> -	xfs_trans_ijoin(tp, ip, 0);
-> -	error = xfs_bmapi_write(tp, ip, imap.br_startoff, imap.br_blockcount,
-> -			XFS_BMAPI_COWFORK, &first_block,
-> -			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK),
-> -			&imap, &nimaps, &dfops);
-> +	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
-> +			XFS_QMOPT_RES_REGBLKS);
->  	if (error)
->  		goto out_trans_cancel;
->  
-> +	xfs_trans_ijoin(tp, ip, 0);
-> +
-> +	xfs_defer_init(&dfops, &first_block);
-> +	nimaps = 1;
-> +	error = xfs_bmapi_write(tp, ip, *offset_fsb, end_fsb - *offset_fsb,
-> +			XFS_BMAPI_COWFORK, &first_block, resblks, &imap,
-> +			&nimaps, &dfops);
-> +	if (error)
-> +		goto out_bmap_cancel;
-> +
->  	error = xfs_defer_finish(&tp, &dfops, NULL);
->  	if (error)
-> -		goto out_trans_cancel;
-> +		goto out_bmap_cancel;
->  
->  	error = xfs_trans_commit(tp);
-> +	if (error)
-> +		goto out_unlock;
->  
->  	*offset_fsb = imap.br_startoff + imap.br_blockcount;
-> +
->  out_unlock:
-> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	xfs_iunlock(ip, lockmode);
->  	return error;
-> -out_trans_cancel:
-> +
-> +out_bmap_cancel:
->  	xfs_defer_cancel(&dfops);
-> +	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
-> +			XFS_QMOPT_RES_REGBLKS);
-> +out_trans_cancel:
->  	xfs_trans_cancel(tp);
->  	goto out_unlock;
->  }
-> -- 
-> 2.1.4
-> 
+>  	/* does the count look sorta valid? */
+> -	if (leafhdr.count * sizeof(xfs_attr_leaf_entry_t) + stop >
+> +	if (!leafhdr.count ||
+> +	    leafhdr.count * sizeof(xfs_attr_leaf_entry_t) + stop >
+>  						mp->m_sb.sb_blocksize) {
+>  		do_warn(
+>  	_("bad attribute count %d in attr block %u, inode %" PRIu64 "\n"),
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
