@@ -1,105 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56390 "EHLO sandeen.net"
+Received: from ozlabs.org ([103.22.144.67]:54177 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752997AbcLLUlg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Dec 2016 15:41:36 -0500
-Subject: Re: [PATCH 1/1] Fixed to codestyle
-References: <987271481540010@web27o.yandex.ru>
- <66c68b88-e338-1d9a-b9dd-b8d858ebf349@sandeen.net>
- <1481566450.1764.23.camel@perches.com>
- <50420874-ffde-283f-f2e7-cb2ebbec1b84@sandeen.net>
- <737751481574841@web26j.yandex.ru>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <cbf01379-fbcb-b42e-abc1-1b368b9d6633@sandeen.net>
-Date: Mon, 12 Dec 2016 14:41:34 -0600
+        id S1750899AbcLMXdq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Dec 2016 18:33:46 -0500
+Date: Wed, 14 Dec 2016 10:31:23 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [GIT PULL] Block core changes for 4.10
+Message-ID: <20161214103123.20d9b2d0@canb.auug.org.au>
+In-Reply-To: <6176de36-7f4f-040b-f277-e872cc98eb5e@kernel.dk>
+References: <6176de36-7f4f-040b-f277-e872cc98eb5e@kernel.dk>
 MIME-Version: 1.0
-In-Reply-To: <737751481574841@web26j.yandex.ru>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ozgur Karatas <okaratas@member.fsf.org>, Joe Perches <joe@perches.com>, "david@fromorbit.com" <david@fromorbit.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jens Axboe <axboe@kernel.dk>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On 12/12/16 2:34 PM, Ozgur Karatas wrote:
-> 12.12.2016, 20:35, "Eric Sandeen" <sandeen@sandeen.net>:
->> On 12/12/16 12:14 PM, Joe Perches wrote:
+Hi Linus,
 
-...
-
->>>>>   {
->>>>>           xfs_uu_t *uup = (xfs_uu_t *)uuid;
->>>>>
->>>>>  @@ -51,8 +51,8 @@ uuid_is_nil(uuid_t *uuid)
->>>>>           if (uuid == NULL)
->>>>>                   return 0;
->>>>>           /* implied check of version number here... */
->>>>>  - for (i = 0; i < sizeof *uuid; i++)
->>>>>  - if (*cp++) return 0; /* not nil */
->>>>>  + for (i = 0; i < sizeof (*uuid); i++)
->>>>>  + if (*cp++) return 0; /* not nil */
->>>
->>>  There shouldn't be a space after sizeof.
->>
->> and the "if" /should/ be indented under the for loop, because
->> it is within the loop...
->>
->> I suppose simply:
->>
->> - for (i = 0; i < sizeof *uuid; i++)
->> + for (i = 0; i < sizeof(*uuid); i++)
->>
->> would be fine on its own, though, because that is a bit
->> unusual/inconsistent. I'll admit that I didn't spot
->> that change as I scanned over the unnecessary & incorrect parts
->> of the first patch. :)
->>
->> thanks,
->> -Eric
+On Sun, 11 Dec 2016 18:52:29 -0700 Jens Axboe <axboe@kernel.dk> wrote:
+>
+> Note that this pull will throw 3 trivial merge conflicts, since we had
+> patches that went into mainline after 4.9-rc1 (upon which this branch is
+> based), and one that will not show up in block/blk-flush.c. The latter
+> is due to a fix that went in for the flush code using an old request
+> flag that is now changed to a per-request one. To ensure that this all
+> goes smoothly, I just merged 4.9 with this branch and provide that as a
+> reference:
 > 
-> Dear Eric;
+>   git://git.kernel.dk/linux-block.git for-4.10/merge
 > 
-> Can you tell me the true code style? should use to (* uuid)? 
-> I'm learn to new and I'm newbies :)
-
-Well, rule #1 for newbies is "code style patches aren't
-very useful, and usually are not welcomed by the project."
-
-Making style changes just because checkpatch told you to is
-not particularly helpful.  If it were important, it would have
-been done by now.  If it hasn't been done by now, odds are
-it's not important.  :)
-
-If you are writing /new/ code, then sure, conform to the kernel
-style, /aided/ by checkpatch.pl, and using your discretion as
-well.
-
-If you are just now looking at xfs/* code, best not to start
-with "style" cleanups.  You'll find this to be true in general
-across the kernel, maintainers are usually not thrilled to have
-this kind of patch.
-
-If you want to start with a new project, learn about the code,
-learn what it /does/, learn how to use it.  use it.  Find things
-that don't work as expected, or could work better.  Look into
-bug reports and if you understand them, and the code involved,
-try to write and test a fix.  But don't go looking for whitespace
-nitpicks.
-
-> Sorry,
-
-No need to be sorry, this is how we learn.  ;)  But really, making
-purely cosmetic changes for their own sake is not helpful in
-general.
-
--Eric
-
-> Regards
+> But really, the only one you to watch for is this line in
+> block/blk-flush.c:
 > 
-> Ozgur
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>         /* for avoiding double accounting */
+> 	rq->cmd_flags &= ~REQ_STARTED;
 > 
+> which should now be:
+> 
+>         rq->rq_flags &= ~RQF_STARTED;
+> 
+> and the three merge conflicts that do show up are trivially resolvable.
+
+I have also been carrying a fix patch for the merge between the block
+tree and the xfs tree:
+
+Commits
+
+  70fd76140a6c ("block,fs: use REQ_* flags directly")
+  bbd7bb7017d5 ("block: move poll code to blk-mq")
+
+from the block tree interacting with commit
+
+  ff6a9292e6f6 ("iomap: implement direct I/O")
+
+from the xfs tree.
+
+
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Date: Thu, 1 Dec 2016 13:45:33 +1100
+Subject: [PATCH] iomap: fix up for blk_poll and WRITE_ODIRECT change
+
+Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+---
+ fs/iomap.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index fc2446242935..c9d6c1176345 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -722,7 +722,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
+ 	get_page(page);
+ 	if (bio_add_page(bio, page, len, 0) != len)
+ 		BUG();
+-	bio_set_op_attrs(bio, REQ_OP_WRITE, WRITE_ODIRECT);
++	bio_set_op_attrs(bio, REQ_OP_WRITE, REQ_SYNC | REQ_IDLE);
+ 
+ 	atomic_inc(&dio->ref);
+ 	return submit_bio(bio);
+@@ -805,7 +805,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 		}
+ 
+ 		if (dio->flags & IOMAP_DIO_WRITE) {
+-			bio_set_op_attrs(bio, REQ_OP_WRITE, WRITE_ODIRECT);
++			bio_set_op_attrs(bio, REQ_OP_WRITE, REQ_SYNC | REQ_IDLE);
+ 			task_io_account_write(bio->bi_iter.bi_size);
+ 		} else {
+ 			bio_set_op_attrs(bio, REQ_OP_READ, 0);
+@@ -930,7 +930,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter, struct iomap_ops *ops,
+ 
+ 			if (!(iocb->ki_flags & IOCB_HIPRI) ||
+ 			    !dio->submit.last_queue ||
+-			    !blk_poll(dio->submit.last_queue,
++			    !blk_mq_poll(dio->submit.last_queue,
+ 					dio->submit.cookie))
+ 				io_schedule();
+ 		}
+-- 
+2.10.2
+
+
+-- 
+Cheers,
+Stephen Rothwell
