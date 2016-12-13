@@ -1,54 +1,214 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:55382 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751075AbcLHX0b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Dec 2016 18:26:31 -0500
-Date: Fri, 9 Dec 2016 10:15:15 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_io: Improvements to copy_range return code handling
-Message-ID: <20161208231514.GM4219@dastard>
-References: <20161208184447.23020-1-Anna.Schumaker@Netapp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161208184447.23020-1-Anna.Schumaker@Netapp.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:40503 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933153AbcLMP7v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2016 10:59:51 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/4] xfs: adjust allocation length in xfs_alloc_space_available
+Date: Tue, 13 Dec 2016 16:59:26 +0100
+Message-Id: <1481644767-9098-4-git-send-email-hch@lst.de>
+In-Reply-To: <1481644767-9098-1-git-send-email-hch@lst.de>
+References: <1481644767-9098-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Anna Schumaker <Anna.Schumaker@Netapp.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: eguan@redhat.com, darrick.wong@oracle.com
 
-On Thu, Dec 08, 2016 at 01:44:47PM -0500, Anna Schumaker wrote:
-> If copy_file_range() returns 0, then that means no data was copied.  We
-> should break out of the loop in this case to prevent looping
-> indefinitely.
-> 
-> Additionally, if an error is returned by copy_file_range() then we need
-> to print out the string form to be used by error checking tests in
-> xfstests.
-> 
-> Signed-off-by: Anna Schumaker <Anna.Schumaker@Netapp.com>
-> ---
->  io/copy_file_range.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-> index eddc634..161bdcf 100644
-> --- a/io/copy_file_range.c
-> +++ b/io/copy_file_range.c
-> @@ -49,8 +49,11 @@ copy_file_range(int fd, loff_t *src, loff_t *dst, size_t len)
->  
->  	do {
->  		ret = syscall(__NR_copy_file_range, fd, src, file->fd, dst, len, 0);
-> -		if (ret == -1)
-> +		if (ret == -1) {
-> +			fprintf(stderr, _("copy_range: %s\n"), strerror(errno));
+We must decide in xfs_alloc_fix_freelist if we can perform an
+allocation from a given AG is possible or not based on the available
+space, and should not fail the allocation past that point on a
+healthy file system.
 
-perror("copy_range")?
+But currently we have two additional places that second-guess
+xfs_alloc_fix_freelist: xfs_alloc_ag_vextent tries to adjust the
+maxlen parameter to remove the reservation before doing the
+allocation (but ignores the various minium freespace requirements),
+and xfs_alloc_fix_minleft tries to fix up the allocated length
+after we've found an extent, but ignores the reservations and also
+doesn't take the AGFL into account (and thus fails allocations
+for not matching minlen in some cases).
 
-Cheers,
+Remove all these later fixups and just correct the maxlen argument
+inside xfs_alloc_fix_freelist once we have the AGF buffer locked.
 
-Dave.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_alloc.c | 78 +++++++++--------------------------------------
+ fs/xfs/libxfs/xfs_alloc.h |  2 +-
+ 2 files changed, 16 insertions(+), 64 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 91a6c17..87328a8 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -365,36 +365,12 @@ xfs_alloc_fix_len(
+ 		return;
+ 	ASSERT(rlen >= args->minlen && rlen <= args->maxlen);
+ 	ASSERT(rlen % args->prod == args->mod);
++	ASSERT(args->pag->pagf_freeblks + args->pag->pagf_flcount >=
++		rlen + args->minleft);
+ 	args->len = rlen;
+ }
+ 
+ /*
+- * Fix up length if there is too little space left in the a.g.
+- * Return 1 if ok, 0 if too little, should give up.
+- */
+-STATIC int
+-xfs_alloc_fix_minleft(
+-	xfs_alloc_arg_t	*args)		/* allocation argument structure */
+-{
+-	xfs_agf_t	*agf;		/* a.g. freelist header */
+-	int		diff;		/* free space difference */
+-
+-	if (args->minleft == 0)
+-		return 1;
+-	agf = XFS_BUF_TO_AGF(args->agbp);
+-	diff = be32_to_cpu(agf->agf_freeblks)
+-		- args->len - args->minleft;
+-	if (diff >= 0)
+-		return 1;
+-	args->len += diff;		/* shrink the allocated space */
+-	/* casts to (int) catch length underflows */
+-	if ((int)args->len >= (int)args->minlen)
+-		return 1;
+-	args->agbno = NULLAGBLOCK;
+-	return 0;
+-}
+-
+-/*
+  * Update the two btrees, logically removing from freespace the extent
+  * starting at rbno, rlen blocks.  The extent is contained within the
+  * actual (current) free extent fbno for flen blocks.
+@@ -689,8 +665,6 @@ xfs_alloc_ag_vextent(
+ 	xfs_alloc_arg_t	*args)	/* argument structure for allocation */
+ {
+ 	int		error=0;
+-	xfs_extlen_t	reservation;
+-	xfs_extlen_t	oldmax;
+ 
+ 	ASSERT(args->minlen > 0);
+ 	ASSERT(args->maxlen > 0);
+@@ -699,20 +673,6 @@ xfs_alloc_ag_vextent(
+ 	ASSERT(args->alignment > 0);
+ 
+ 	/*
+-	 * Clamp maxlen to the amount of free space minus any reservations
+-	 * that have been made.
+-	 */
+-	oldmax = args->maxlen;
+-	reservation = xfs_ag_resv_needed(args->pag, args->resv);
+-	if (args->maxlen > args->pag->pagf_freeblks - reservation)
+-		args->maxlen = args->pag->pagf_freeblks - reservation;
+-	if (args->maxlen == 0) {
+-		args->agbno = NULLAGBLOCK;
+-		args->maxlen = oldmax;
+-		return 0;
+-	}
+-
+-	/*
+ 	 * Branch to correct routine based on the type.
+ 	 */
+ 	args->wasfromfl = 0;
+@@ -731,8 +691,6 @@ xfs_alloc_ag_vextent(
+ 		/* NOTREACHED */
+ 	}
+ 
+-	args->maxlen = oldmax;
+-
+ 	if (error || args->agbno == NULLAGBLOCK)
+ 		return error;
+ 
+@@ -841,9 +799,6 @@ xfs_alloc_ag_vextent_exact(
+ 	args->len = XFS_AGBLOCK_MIN(tend, args->agbno + args->maxlen)
+ 						- args->agbno;
+ 	xfs_alloc_fix_len(args);
+-	if (!xfs_alloc_fix_minleft(args))
+-		goto not_found;
+-
+ 	ASSERT(args->agbno + args->len <= tend);
+ 
+ 	/*
+@@ -1149,11 +1104,6 @@ xfs_alloc_ag_vextent_near(
+ 		XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
+ 		ASSERT(ltbno + ltlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
+ 		args->len = blen;
+-		if (!xfs_alloc_fix_minleft(args)) {
+-			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+-			trace_xfs_alloc_near_nominleft(args);
+-			return 0;
+-		}
+ 		blen = args->len;
+ 		/*
+ 		 * We are allocating starting at bnew for blen blocks.
+@@ -1346,12 +1296,6 @@ xfs_alloc_ag_vextent_near(
+ 	 */
+ 	args->len = XFS_EXTLEN_MIN(ltlena, args->maxlen);
+ 	xfs_alloc_fix_len(args);
+-	if (!xfs_alloc_fix_minleft(args)) {
+-		trace_xfs_alloc_near_nominleft(args);
+-		xfs_btree_del_cursor(bno_cur_lt, XFS_BTREE_NOERROR);
+-		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+-		return 0;
+-	}
+ 	rlen = args->len;
+ 	(void)xfs_alloc_compute_diff(args->agbno, rlen, args->alignment,
+ 				     args->datatype, ltbnoa, ltlena, &ltnew);
+@@ -1553,8 +1497,6 @@ xfs_alloc_ag_vextent_size(
+ 	}
+ 	xfs_alloc_fix_len(args);
+ 
+-	if (!xfs_alloc_fix_minleft(args))
+-		goto out_nominleft;
+ 	rlen = args->len;
+ 	XFS_WANT_CORRUPTED_GOTO(args->mp, rlen <= flen, error0);
+ 	/*
+@@ -2073,10 +2015,19 @@ xfs_alloc_space_available(
+ 
+ 	/* do we have enough free space remaining for the allocation? */
+ 	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
+-			  reservation - min_free - args->total);
+-	if (available < (int)args->minleft || available <= 0)
++			  reservation - min_free - args->minleft);
++	if (available < (int)args->total)
+ 		return false;
+ 
++	/*
++	 * Clamp maxlen to the amount of free space available for the actual
++	 * extent allocation.
++	 */
++	if (available < (int)args->maxlen && !(flags & XFS_ALLOC_FLAG_CHECK)) {
++		args->maxlen = available;
++		ASSERT(args->maxlen > 0);
++	}
++
+ 	return true;
+ }
+ 
+@@ -2122,7 +2073,8 @@ xfs_alloc_fix_freelist(
+ 	}
+ 
+ 	need = xfs_alloc_min_freelist(mp, pag);
+-	if (!xfs_alloc_space_available(args, need, flags))
++	if (!xfs_alloc_space_available(args, need, flags |
++			XFS_ALLOC_FLAG_CHECK))
+ 		goto out_agbp_relse;
+ 
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 7c404a6..1d0f48a 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -56,7 +56,7 @@ typedef unsigned int xfs_alloctype_t;
+ #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
+ #define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
+ #define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
+-
++#define	XFS_ALLOC_FLAG_CHECK	0x00000010  /* test only, don't modify args */
+ 
+ /*
+  * Argument structure for xfs_alloc routines.
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.4
+
