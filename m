@@ -1,64 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:23204 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752112AbcLLWOq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2016 17:14:46 -0500
-Date: Tue, 13 Dec 2016 09:14:42 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: handle error if xfs_btree_get_bufs fails
-Message-ID: <20161212221442.GY4326@dastard>
-References: <4348f961-deda-8733-1cd7-dd7ca646bb6b@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:45117 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756614AbcLNT0J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2016 14:26:09 -0500
+Date: Wed, 14 Dec 2016 11:26:07 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] duperemove: test presence of dedupe ioctl
+Message-ID: <20161214192607.GA2280@infradead.org>
+References: <20161209175645.GB16813@birch.djwong.org>
+ <20161214104436.GB16862@infradead.org>
+ <20161214183845.GA5357@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4348f961-deda-8733-1cd7-dd7ca646bb6b@redhat.com>
+In-Reply-To: <20161214183845.GA5357@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Jason L Tibbitts III <tibbs@math.uh.edu>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, mfasheh@versity.com, xfs <linux-xfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On Mon, Dec 12, 2016 at 04:00:26PM -0600, Eric Sandeen wrote:
-> Jason reported that a corrupted filesystem failed to replay
-> the log with a metadata block out of bounds warning:
+On Wed, Dec 14, 2016 at 10:38:45AM -0800, Darrick J. Wong wrote:
+> > > +struct fake_btrfs_ioctl_same_args {
+> > > +	struct btrfs_ioctl_same_args args;
+> > > +	struct btrfs_ioctl_same_extent_info info;
+> > > +};
+> > 
+> > Why does this need a fake structure here?
 > 
-> XFS (dm-2): _xfs_buf_find: Block out of range: block 0x80270fff8, EOFS 0x9c40000 
-> 
-> _xfs_buf_find() and xfs_btree_get_bufs() return NULL if
-> that happens, and then when xfs_alloc_fix_freelist() calls
-> xfs_trans_binval() on that NULL bp, we oops with:
-> 
-> BUG: unable to handle kernel NULL pointer dereference at 00000000000000f8
-> 
-> We don't handle _xfs_buf_find errors very well, every
-> caller higher up the stack gets to guess at why it failed.
-> But we should at least handle it somehow.  I chose EIO here
-> for lack of a better idea.  :)
-> 
-> Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index effb64c..d125135 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -1640,6 +1640,10 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
->  
->  				bp = xfs_btree_get_bufs(args->mp, args->tp,
->  					args->agno, fbno, 0);
-> +				if (!bp) {
-> +					error = -EIO;
-> +					goto error0;
-> +				}
+> In order to test the ioctl we have to fill out at least one
+> btrfs_ioctl_same_extent_info so that we get far enough into the fs-specific
+> dedupe_range handler that we've verified that the fs is capable of dedupe and
+> that the fs is willing to try to satisfy the request.
 
-If this happens, it's because the filesystem is corrupted, not
-because we had an IO error. -EFSCORRUPTED is more appropriate here,
-as the comment in _xfs_buf_find() says...
+Oh, got it, it's just the fake that tripped me up.
 
-Cheers,
+> We could just malloc sizeof(_same_args) + sizeof(_same_extent_info)...
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Either that, or more simply just don't give the structure a name
+by just declaring it locally on the stack:
+
+	struct {
+		struct btrfs_ioctl_same_args args;
+		struct btrfs_ioctl_same_extent_info info;
+	} sa = { 0 };
+
