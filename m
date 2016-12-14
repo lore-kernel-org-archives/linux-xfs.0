@@ -1,69 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45134 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:58620 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941783AbcLVXEf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Dec 2016 18:04:35 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id A44D8550
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Dec 2016 17:04:19 -0600 (CST)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs: v4.9.0-rc1 released
-Message-ID: <ca13058e-d3a6-fd0e-4ea3-ac13bf22fe8c@sandeen.net>
-Date: Thu, 22 Dec 2016 17:04:33 -0600
+        id S1753520AbcLNSZC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Dec 2016 13:25:02 -0500
+Date: Wed, 14 Dec 2016 13:24:32 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/4] xfs: adjust allocation length in
+ xfs_alloc_space_available
+Message-ID: <20161214182432.GC24645@bfoster.bfoster>
+References: <1481644767-9098-1-git-send-email-hch@lst.de>
+ <1481644767-9098-4-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1481644767-9098-4-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-Hi folks,
+On Tue, Dec 13, 2016 at 04:59:26PM +0100, Christoph Hellwig wrote:
+> We must decide in xfs_alloc_fix_freelist if we can perform an
+> allocation from a given AG is possible or not based on the available
+> space, and should not fail the allocation past that point on a
+> healthy file system.
+> 
+> But currently we have two additional places that second-guess
+> xfs_alloc_fix_freelist: xfs_alloc_ag_vextent tries to adjust the
+> maxlen parameter to remove the reservation before doing the
+> allocation (but ignores the various minium freespace requirements),
+> and xfs_alloc_fix_minleft tries to fix up the allocated length
+> after we've found an extent, but ignores the reservations and also
+> doesn't take the AGFL into account (and thus fails allocations
+> for not matching minlen in some cases).
+> 
+> Remove all these later fixups and just correct the maxlen argument
+> inside xfs_alloc_fix_freelist once we have the AGF buffer locked.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 78 +++++++++--------------------------------------
+>  fs/xfs/libxfs/xfs_alloc.h |  2 +-
+>  2 files changed, 16 insertions(+), 64 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 91a6c17..87328a8 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+...
+> @@ -2073,10 +2015,19 @@ xfs_alloc_space_available(
+>  
+>  	/* do we have enough free space remaining for the allocation? */
+>  	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
+> -			  reservation - min_free - args->total);
+> -	if (available < (int)args->minleft || available <= 0)
+> +			  reservation - min_free - args->minleft);
+> +	if (available < (int)args->total)
+>  		return false;
+>  
+> +	/*
+> +	 * Clamp maxlen to the amount of free space available for the actual
+> +	 * extent allocation.
+> +	 */
+> +	if (available < (int)args->maxlen && !(flags & XFS_ALLOC_FLAG_CHECK)) {
+> +		args->maxlen = available;
+> +		ASSERT(args->maxlen > 0);
 
-The xfsprogs repository at:
+Nit: could we assert args->maxlen >= args->minlen here as well?
+Otherwise looks good to me:
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-has just been updated and tagged with v4.9.0-rc1.
-
-This is the first release candidate with support for the new
-reflink & dedupe support, and contains several other updates and
-fixes. See the doc/CHANGES file summary included below for details.
-
-xfsprogs-4.9-rc1 (22 Dec 2016)
-        - add reflink and dedupe support (Darrick Wong)
-        - Convert from off64_t to off_t (Felix Janda)
-        - xfs_io: add command line option to start an idle thread (Amir Goldstein)
-        - xfs_repair: junk leaf attribute if count == 0 (Eric Sandeen)
-        - xfs_quota: handle wrapped id from GETNEXTQUOTA (Eric Sandeen)
-        - xfs_repair: fix some potential null pointer deferences (Darrick Wong)
-        - libxfs_apply: filtering fixes (Dave Chinner)
-
-Note, when this release is complete I'll get all the other pending
-patches merged, and you can bug me about anything that got missed.
-
-The new head of the master branch is commit:
-
-3ad9120 xfsprogs: Release v4.9.0-rc1
-
-New Commits:
-
-Eric Biggers (1):
-      [5c0599b] Fix building xfsprogs on 32-bit platforms
-
-Eric Sandeen (2):
-      [c89be81] xfs_quota: Fix test for wrapped id from GETNEXTQUOTA
-      [3ad9120] xfsprogs: Release v4.9.0-rc1
-
-
-Code Diffstat:
-
- VERSION               |  4 ++--
- configure.ac          |  5 +----
- doc/CHANGES           |  9 +++++++++
- include/builddefs.in  |  2 +-
- m4/package_libcdev.m4 | 16 ----------------
- quota/report.c        | 20 ++++++++++----------
- 6 files changed, 23 insertions(+), 33 deletions(-)
+> +	}
+> +
+>  	return true;
+>  }
+>  
+> @@ -2122,7 +2073,8 @@ xfs_alloc_fix_freelist(
+>  	}
+>  
+>  	need = xfs_alloc_min_freelist(mp, pag);
+> -	if (!xfs_alloc_space_available(args, need, flags))
+> +	if (!xfs_alloc_space_available(args, need, flags |
+> +			XFS_ALLOC_FLAG_CHECK))
+>  		goto out_agbp_relse;
+>  
+>  	/*
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index 7c404a6..1d0f48a 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -56,7 +56,7 @@ typedef unsigned int xfs_alloctype_t;
+>  #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
+>  #define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
+>  #define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
+> -
+> +#define	XFS_ALLOC_FLAG_CHECK	0x00000010  /* test only, don't modify args */
+>  
+>  /*
+>   * Argument structure for xfs_alloc routines.
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
