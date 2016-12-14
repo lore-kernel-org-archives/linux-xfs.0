@@ -1,55 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:9458 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750873AbcLHW5H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Dec 2016 17:57:07 -0500
-Date: Fri, 9 Dec 2016 09:57:03 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ANNOUNCE] xfs: for-next branch updated to a444d72e6090
-Message-ID: <20161208225703.GK4219@dastard>
-References: <20161207202501.GK4326@dastard>
- <20161208033250.GD29149@eguan.usersys.redhat.com>
+Received: from verein.lst.de ([213.95.11.211]:43316 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753388AbcLNTg2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Dec 2016 14:36:28 -0500
+Date: Wed, 14 Dec 2016 20:36:26 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
+Message-ID: <20161214193626.GA12106@lst.de>
+References: <1481644767-9098-1-git-send-email-hch@lst.de> <1481644767-9098-2-git-send-email-hch@lst.de> <20161214173507.GA24645@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161208033250.GD29149@eguan.usersys.redhat.com>
+In-Reply-To: <20161214173507.GA24645@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-On Thu, Dec 08, 2016 at 11:32:50AM +0800, Eryu Guan wrote:
-> Hi Dave,
-> 
-> On Thu, Dec 08, 2016 at 07:25:01AM +1100, Dave Chinner wrote:
-> > Hi folks,
-> > 
-> > The for-next branch of the xfs kernel repository at
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-> > 
-> > has just been updated. This update contains a bunch of verification
-> > enhancments to detect field corruptions as metadata is read from
-> > disk, faster CRC calculations, a faster buffer cache indexing
-> > structure and some cleanups.
-> > 
-> > With the merge window likely to open next week, this may be the last
-> > update for the 4.10-rc1 cycle.  Let me know if there's anything
-> > critical that I've missed for 4.10 so I can sort it out before the
-> > end of the week.
-> 
-> I didn't see patch "xfs: use xfs_vn_setattr_size to check on new size"
-> was included in this update nor folded into other commits, do you want
-> to take it for 4.10?
-> 
-> http://www.spinics.net/lists/linux-xfs/msg02529.html
+On Wed, Dec 14, 2016 at 12:35:07PM -0500, Brian Foster wrote:
+> I'm still trying to grok the minleft/dop_low stuff, but doesn't this
+> increase the risk of bmbt block allocation failure?
 
-Ok, I missed that one - I did intend to pick it up. Will fix.
+No.  If working correctly it reduces the chance of a failing bmbt block
+allocation in transaction to zero, at the expense of potentially
+failing whole block allocations while we still have a few blocks left.
+But given that the first leads to a fs shutdown and the latter just to
+an ENOSPC it seems worthwhile.
 
-Cheers,
+> E.g., args.minleft
+> is set to the transaction reservation earlier in the function. AFAIK the
+> res is not guaranteed to be in a particular AG, but in that case we're
+> just setting a start AG and ultimately cycling through the AGs. If that
+> fails, this hunk resets minleft, restarts at fsbno 0 and activates the
+> sequential agno allocation requirement for subsequent allocs. Doesn't
+> removing this logic mean we can successfully reserve blocks in a write
+> transaction that will never ultimately be able to allocate bmbt blocks,
+> even if the data blocks can all be allocated..?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+We only set it to res if no firstblock was set.  The only case where
+that is possible during the first bmbt block allocation in a reflink
+operation - for actual direct I/O writes, fallocate calls or unwritten
+extent conversion we will always have firstblock set from the allocation
+of the actual data extent.  And that allocation now has the proper minleft
+set after this series so that we are guaranteed we have enough space
+in one single AG for the whole allocation.
+
+In the reflink case where firstblock wasn't set the minleft ensures
+that we fail the first allocation if we don't have enough blocks
+in a single AG.
+retryloop to try the allocation 
+
+> The other thing to note here is that minleft is initialized to 0 and
+> only set to the transaction res conditionally, so if firstblock is
+> already set we won't use minleft at all.
+
+Yes, that's intentional - we already did our minleft check when allocating
+the data extent.
