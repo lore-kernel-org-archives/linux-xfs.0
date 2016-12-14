@@ -1,105 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58620 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47390 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753520AbcLNSZC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Dec 2016 13:25:02 -0500
-Date: Wed, 14 Dec 2016 13:24:32 -0500
+        id S1753436AbcLNRfl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Dec 2016 12:35:41 -0500
+Date: Wed, 14 Dec 2016 12:35:07 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/4] xfs: adjust allocation length in
- xfs_alloc_space_available
-Message-ID: <20161214182432.GC24645@bfoster.bfoster>
+Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
+Message-ID: <20161214173507.GA24645@bfoster.bfoster>
 References: <1481644767-9098-1-git-send-email-hch@lst.de>
- <1481644767-9098-4-git-send-email-hch@lst.de>
+ <1481644767-9098-2-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1481644767-9098-4-git-send-email-hch@lst.de>
+In-Reply-To: <1481644767-9098-2-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-On Tue, Dec 13, 2016 at 04:59:26PM +0100, Christoph Hellwig wrote:
-> We must decide in xfs_alloc_fix_freelist if we can perform an
-> allocation from a given AG is possible or not based on the available
-> space, and should not fail the allocation past that point on a
-> healthy file system.
-> 
-> But currently we have two additional places that second-guess
-> xfs_alloc_fix_freelist: xfs_alloc_ag_vextent tries to adjust the
-> maxlen parameter to remove the reservation before doing the
-> allocation (but ignores the various minium freespace requirements),
-> and xfs_alloc_fix_minleft tries to fix up the allocated length
-> after we've found an extent, but ignores the reservations and also
-> doesn't take the AGFL into account (and thus fails allocations
-> for not matching minlen in some cases).
-> 
-> Remove all these later fixups and just correct the maxlen argument
-> inside xfs_alloc_fix_freelist once we have the AGF buffer locked.
+On Tue, Dec 13, 2016 at 04:59:24PM +0100, Christoph Hellwig wrote:
+> We can't just set minleft to 0 when we're low on space - that's exactly
+> what we need minleft for: to protect space in the AG for btree block
+> allocations when we are low on free space.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/libxfs/xfs_alloc.c | 78 +++++++++--------------------------------------
->  fs/xfs/libxfs/xfs_alloc.h |  2 +-
->  2 files changed, 16 insertions(+), 64 deletions(-)
+>  fs/xfs/libxfs/xfs_alloc.c      | 24 +++++++-----------------
+>  fs/xfs/libxfs/xfs_bmap.c       |  3 ---
+>  fs/xfs/libxfs/xfs_bmap_btree.c | 14 --------------
+>  3 files changed, 7 insertions(+), 34 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 91a6c17..87328a8 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
 ...
-> @@ -2073,10 +2015,19 @@ xfs_alloc_space_available(
->  
->  	/* do we have enough free space remaining for the allocation? */
->  	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
-> -			  reservation - min_free - args->total);
-> -	if (available < (int)args->minleft || available <= 0)
-> +			  reservation - min_free - args->minleft);
-> +	if (available < (int)args->total)
->  		return false;
->  
-> +	/*
-> +	 * Clamp maxlen to the amount of free space available for the actual
-> +	 * extent allocation.
-> +	 */
-> +	if (available < (int)args->maxlen && !(flags & XFS_ALLOC_FLAG_CHECK)) {
-> +		args->maxlen = available;
-> +		ASSERT(args->maxlen > 0);
-
-Nit: could we assert args->maxlen >= args->minlen here as well?
-Otherwise looks good to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> +	}
-> +
->  	return true;
->  }
->  
-> @@ -2122,7 +2073,8 @@ xfs_alloc_fix_freelist(
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> index d6330c2..9581ee8 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> @@ -499,20 +499,6 @@ xfs_bmbt_alloc_block(
+>  		goto try_another_ag;
 >  	}
 >  
->  	need = xfs_alloc_min_freelist(mp, pag);
-> -	if (!xfs_alloc_space_available(args, need, flags))
-> +	if (!xfs_alloc_space_available(args, need, flags |
-> +			XFS_ALLOC_FLAG_CHECK))
->  		goto out_agbp_relse;
->  
->  	/*
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 7c404a6..1d0f48a 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -56,7 +56,7 @@ typedef unsigned int xfs_alloctype_t;
->  #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
->  #define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
->  #define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
-> -
-> +#define	XFS_ALLOC_FLAG_CHECK	0x00000010  /* test only, don't modify args */
->  
->  /*
->   * Argument structure for xfs_alloc routines.
+> -	if (args.fsbno == NULLFSBLOCK && args.minleft) {
+> -		/*
+> -		 * Could not find an AG with enough free space to satisfy
+> -		 * a full btree split.  Try again without minleft and if
+> -		 * successful activate the lowspace algorithm.
+> -		 */
+> -		args.fsbno = 0;
+> -		args.type = XFS_ALLOCTYPE_FIRST_AG;
+> -		args.minleft = 0;
+> -		error = xfs_alloc_vextent(&args);
+> -		if (error)
+> -			goto error0;
+> -		cur->bc_private.b.dfops->dop_low = true;
+> -	}
+
+I'm still trying to grok the minleft/dop_low stuff, but doesn't this
+increase the risk of bmbt block allocation failure? E.g., args.minleft
+is set to the transaction reservation earlier in the function. AFAIK the
+res is not guaranteed to be in a particular AG, but in that case we're
+just setting a start AG and ultimately cycling through the AGs. If that
+fails, this hunk resets minleft, restarts at fsbno 0 and activates the
+sequential agno allocation requirement for subsequent allocs. Doesn't
+removing this logic mean we can successfully reserve blocks in a write
+transaction that will never ultimately be able to allocate bmbt blocks,
+even if the data blocks can all be allocated..?
+
+The other thing to note here is that minleft is initialized to 0 and
+only set to the transaction res conditionally, so if firstblock is
+already set we won't use minleft at all. It's definitely possible I'm
+still missing something about how this was all "supposed" to work
+originally, but the logic that's left here seems a bit... erratic. :/
+
+Brian
+
+>  	if (args.fsbno == NULLFSBLOCK) {
+>  		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+>  		*stat = 0;
 > -- 
 > 2.1.4
 > 
