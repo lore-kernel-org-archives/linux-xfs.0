@@ -1,114 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:33125 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752170AbcLRThb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Dec 2016 14:37:31 -0500
-Received: by mail-it0-f68.google.com with SMTP id c20so8284117itb.0
-        for <linux-xfs@vger.kernel.org>; Sun, 18 Dec 2016 11:37:30 -0800 (PST)
+Received: from sandeen.net ([63.231.237.45]:49496 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754873AbcLOWMZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Dec 2016 17:12:25 -0500
+Subject: Re: [PATCH] xfs_io: implement 'set_encpolicy' and 'get_encpolicy'
+ commands
+References: <1480371512-12493-1-git-send-email-ebiggers@google.com>
+ <c6553dba-e7da-0692-cc2e-a1a59aaa8bf8@sandeen.net>
+ <9445b3d2-d0d9-dec2-1c92-3e4e103a711e@sandeen.net>
+ <20161215212037.GA103871@google.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <4d67ca4b-58cd-9738-1441-d5cf94b28d94@sandeen.net>
+Date: Thu, 15 Dec 2016 15:48:46 -0600
 MIME-Version: 1.0
-In-Reply-To: <90aed6a0-f407-d915-ab39-eef8cab89169@sandeen.net>
-References: <1482026266-6988-1-git-send-email-deepa.kernel@gmail.com> <90aed6a0-f407-d915-ab39-eef8cab89169@sandeen.net>
-From: Deepa Dinamani <deepa.kernel@gmail.com>
-Date: Sun, 18 Dec 2016 11:37:30 -0800
-Message-ID: <CABeXuvpTAQpugPrFbhTktw2d5Eu6355W-_-iQ3mH=ER9Wrdbfg@mail.gmail.com>
-Subject: Re: [PATCH] xfs_io: implement 'utimes' command
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20161215212037.GA103871@google.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, y2038 Mailman List <y2038@lists.linaro.org>
+To: Eric Biggers <ebiggers@google.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Richard Weinberger <richard@nod.at>, David Gstir <david@sigma-star.at>, Michael Halcrow <mhalcrow@google.com>
 
->> +     if (argc != 5)
->> +             return command_usage(&utimes_cmd);
->
-> Because you set argsmin & argsmax to 4, it should be impossible
-> to get here with anything other than argc=5 - it's caught
-> elsewhere:
 
-Yes, you are right. This was something I was using to debug.
-I will remove this. Thanks.
 
->> +     /* Get the timestamps */
->> +     result = timespec_from_string(argv[1], argv[2], &t[0]);
->> +     if (result) {
->> +             fprintf(stderr, "Bad value for atime\n");
->> +             return 1;
->> +     }
->> +     result = timespec_from_string(argv[3], argv[4], &t[1]);
->> +     if (result) {
->> +             fprintf(stderr, "Bad value for mtime\n");
->> +             return 1;
->> +     }
->> +
->> +     /* Call futimens to update time. */
->> +     if (futimens(file->fd, t)) {
->> +             perror("futimens");
->> +             return 1;
->> +     }
->
-> Most xfs_io functions return 0 even on errors, possibly after
-> setting exit_code = 1 to change the ultimate exit code;
-> returning 1 will cause all processing to stop, and/or kick you
-> out of the interactive shell:
->
-> $ xfs_io file
-> xfs_io> utimes a b c d
-> Bad value for atime
-> $
->
-> This needs some attention across all of xfs_io, but you might want
-> to return 0 for now for consistency with other commands.
+On 12/15/16 3:20 PM, Eric Biggers wrote:
+> On Thu, Dec 15, 2016 at 01:40:12PM -0600, Eric Sandeen wrote:
+>> On 12/14/16 10:19 PM, Eric Sandeen wrote:
+>>>> +
+>>>> +static int
+>>>> +get_encpolicy_f(int argc, char **argv)
+>>>> +{
+>>>> +	struct fscrypt_policy policy;
+>>>> +
+>>>> +	if (ioctl(file->fd, FS_IOC_GET_ENCRYPTION_POLICY, &policy) < 0) {
+>>>> +		fprintf(stderr, "%s: failed to get encryption policy: %s\n",
+>>>> +			file->name, strerror(errno));
+>>>> +		return 1;
+>>> Ok, I need to go look at dave's other patch series to give you guidance
+>>> on what to return here, or anything else under the foo_f() functions.
+>>>
+>>> see [PATCH 0/6] xfs_io: fix up command iteration - I need to see how dave
+>>> wants that all to work now.  Prior to that, anyway, most commands returned
+>>> 0 even on an error, and possibly set exitcode = 1, but I have to see what
+>>> that patchset does.
+>>
+>> Ok, having looked at dave's patchset, it doesn't really change this yet.
+>>
+>> Today, almost every command returns 0 regardless of failure, but sets
+>> exitcode=1 if a failure occurred.  This lets command processing continue,
+>> but results in an ultimate non-zero exit from the utility.
+>>
+>> For argument parsing, failures should almost certainly return 0;
+>> even command_usage() does this.
+>>
+>> For functional failures, see i.e. allocsp_f:
+>>
+>>         if (xfsctl(file->name, file->fd, XFS_IOC_ALLOCSP64, &segment) < 0) {
+>>                 perror("XFS_IOC_ALLOCSP64");
+>>                 return 0;
+>>         }
+>>
+>> (though that didn't set exitcode...)
+>>
+>> This all needs cleanup across xfs_io, but I think these new functions will
+>> be outliers for now if you are returning 1 in many locations under your
+>> new foo_f functions.  Unless you want commandline processing to stop,
+>> and for interactive shell to quit, you probably want to switch to returning
+>> 0 even on errors, (usually after printing a message.)
+>>
+>> At some point we should probably clean this up, and possibly make it
+>> continue for interactive shell, but stop for commandline operation,
+>> or something along those lines.  But that's for another day ...
+>>
+> 
+> Okay, I guess I'll make them always return 0, and additionally set exitcode=1 if
+> the actual ioctl failed.  I'll send v2 of the patch to address this and your
+> other comments.
+> 
+> I'm not an expert in xfs_io or xfsprogs, but the way I would have expected it to
+> work is that commands would return a nonzero value if they fail, and then the
+> higher level logic would use that value to decide whether to continue on and
+> what to use as the overall exit status --- probably continue by default, then
+> exit with failure status overall if any one command failed.
 
-Will change to return 0 always. Thanks.
+Yes, it's unexpected, and needs work, but for a new command it's probably
+best to be consistent with the current (odd) framework... :)
 
->>  /*
->> + * Convert from a pair of arbitrary user strings into a timespec.
->> + */
->> +
->> +int
->> +timespec_from_string(
->> +     const char      * secs,
->> +     const char      * nsecs,
->> +     struct timespec * ts)
->> +{
->> +     char* p;
->> +     if (!secs || !nsecs || !ts)
->> +             return -1;
->> +     ts->tv_sec = strtoull(secs, &p, 0);
->> +     if (*p)
->> +             return -1;
->> +     ts->tv_nsec = strtoull(nsecs, &p, 0);
->> +     if (*p)
->> +             return -1;
->> +     return 0;
->
-> I'd return 1/0 not -1/0 - not that big a deal, but the reason
-> the i.e. prid_from_string() functions return -1 on error
-> is because they actually return an ID, which is >= 0, so
-> it detects "== -1" as an error, and can't simply test
-> 1/0.
+Thanks,
+-Eric
 
-Ok. Will change this to return 1/0.
-
->> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
->> index 2c56f09..3ffe439 100644
->> --- a/man/man8/xfs_io.8
->> +++ b/man/man8/xfs_io.8
->> @@ -589,6 +589,17 @@ Copy data into the open file beginning at
->>  Copy up to
->>  .I length
->>  bytes of data.
->> +.RE
->> +.PD
->> +.TP
->> +.TP
->
-> don't need two .TPs, a patch to remove the others is pending.
-
-Ok, will remove it.
-
-I will wait for a couple of days to see if there are any more comments
-before submitting a v2.
-
--Deepa
+> Thanks,
+> 
+> Eric
+> 
