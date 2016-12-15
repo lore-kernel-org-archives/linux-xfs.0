@@ -1,12 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23476 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:23565 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753971AbcLOSLu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 13:11:50 -0500
-Subject: [PATCH 1/3] xfs_repair: fix some potential null pointer deferences
+        with ESMTP id S1753971AbcLOSL4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 13:11:56 -0500
+Subject: [PATCH 2/3] xfs_repair: fix bogus rmapbt record owner check
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 15 Dec 2016 10:11:45 -0800
-Message-ID: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
+Date: Thu, 15 Dec 2016 10:11:51 -0800
+Message-ID: <148182551170.24784.17780632480854888664.stgit@birch.djwong.org>
+In-Reply-To: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
+References: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,55 +18,32 @@ List-Id: xfs
 To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Fix some potential NULL pointer deferences that Coverity pointed out,
-and remove a trivial dead integer check.
+Make the reverse mapping owner check actually validate inode numbers.
 
-Coverity-id: 1375789, 1375790, 1375791, 1375792
+Coverity-id: 1371628
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/phase5.c |    2 +-
- repair/rmap.c   |    2 +-
- repair/slab.h   |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ repair/scan.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 3604d1d..cbda556 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -1925,7 +1925,7 @@ _("Insufficient memory to construct refcount cursor."));
- 	refc_rec = pop_slab_cursor(refc_cur);
- 	lptr = &btree_curs->level[0];
+diff --git a/repair/scan.c b/repair/scan.c
+index 0e13581..b9ef4dc 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -1052,8 +1052,12 @@ _("%s rmap btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+ 			}
  
--	for (i = 0; i < lptr->num_blocks; i++)  {
-+	for (i = 0; i < lptr->num_blocks && refc_rec != NULL; i++)  {
- 		/*
- 		 * block initialization, lay in block header
- 		 */
-diff --git a/repair/rmap.c b/repair/rmap.c
-index 45e183a..7508973 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -790,7 +790,7 @@ compute_refcounts(
- 		mark_inode_rl(mp, stack_top);
- 
- 		/* Set nbno to the bno of the next refcount change */
--		if (n < slab_count(rmaps))
-+		if (n < slab_count(rmaps) && array_cur)
- 			nbno = array_cur->rm_startblock;
- 		else
- 			nbno = NULLAGBLOCK;
-diff --git a/repair/slab.h b/repair/slab.h
-index 4aa5512..a2201f1 100644
---- a/repair/slab.h
-+++ b/repair/slab.h
-@@ -54,7 +54,7 @@ extern void *bag_item(struct xfs_bag *, size_t);
- 
- #define foreach_bag_ptr_reverse(bag, idx, ptr) \
- 	for ((idx) = bag_count(bag) - 1, (ptr) = bag_item((bag), (idx)); \
--	     (idx) >= 0 && (ptr) != NULL; \
-+	     (ptr) != NULL; \
- 	     (idx)--, (ptr) = bag_item((bag), (idx)))
- 
- #endif /* SLAB_H_ */
+ 			/* Look for impossible owners. */
+-			if (!(owner > 0 || (owner > XFS_RMAP_OWN_MIN &&
+-					    owner <= XFS_RMAP_OWN_FS)))
++			if (!((owner > XFS_RMAP_OWN_MIN &&
++			       owner <= XFS_RMAP_OWN_FS) ||
++			      (XFS_INO_TO_AGNO(mp, owner) < mp->m_sb.sb_agcount &&
++			       XFS_AGINO_TO_AGBNO(mp,
++					XFS_INO_TO_AGINO(mp, owner)) <
++					mp->m_sb.sb_agblocks)))
+ 				do_warn(
+ 	_("invalid owner in rmap btree record %d (%"PRId64" %u) block %u/%u\n"),
+ 						i, owner, len, agno, bno);
 
