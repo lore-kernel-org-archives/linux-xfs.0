@@ -1,34 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34457 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759834AbcLPMqn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Dec 2016 07:46:43 -0500
-From: Michal Hocko <mhocko@kernel.org>
-Subject: [DEBUG PATCH 0/2] debug explicit GFP_NO{FS,IO} usage from the scope context
-Date: Fri, 16 Dec 2016 13:46:26 +0100
-Message-Id: <20161216124628.26846-1-mhocko@kernel.org>
-In-Reply-To: <20161215140715.12732-1-mhocko@kernel.org>
-References: <20161215140715.12732-1-mhocko@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51166 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757464AbcLOKYI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Dec 2016 05:24:08 -0500
+Date: Thu, 15 Dec 2016 18:24:06 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: minleft fixes
+Message-ID: <20161215102406.GJ28577@eguan.usersys.redhat.com>
+References: <1481644767-9098-1-git-send-email-hch@lst.de>
+ <20161214105101.GD28577@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161214105101.GD28577@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-Hi,
-I've forgot to add the following two patches which should help to
-identify explicit GFP_NO{FS,IO} usage from withing a scope context. Such
-a usage can be changed to the full GFP_KERNEL because all the calls
-from within the NO{FS,IO} scope will drop the __GFP_FS resp. __GFP_IO
-automatically and if the function is called outside of the scope then
-we do not need to restrict it to NOFS/NOIO as long as all the reclaim
-recursion unsafe contexts are marked properly. This means that each
-such a reported allocation site has to be checked before converted.
+On Wed, Dec 14, 2016 at 06:51:01PM +0800, Eryu Guan wrote:
+> On Tue, Dec 13, 2016 at 04:59:23PM +0100, Christoph Hellwig wrote:
+> > [now to the correct list address]
+> > 
+> > This is my attempt to fix the problems with rmap and reflink file system
+> > running out of space during delayed extent conversions.  It turns out
+> > the way minleft has been handled has always been bogus, but the rmap
+> > enablement made it even worse..
+> > 
+> > This has survived xfstests xfs/109 on a 2k fs for 2 1/2 hour here now,
+> > but Eryu was much better than me at reproducing the problems, so it could
+> > use some further testing.
+> > 
+> 
+> Test results looked good to me so far. It passed 200 iterations of
+> xfs/109 with both xfs_2k_reflink and xfs_1k_reflink test configs. 
 
-The debugging has to be enabled explicitly by a kernel command line
-parameter and then it reports the stack trace of the allocation and
-also the function which has started the current scope.
+Results of full auto group runs with different test configs also look
+good to me, I didn't notice any regression. Thanks!
 
-These two patches are _not_ intended to be merged and they are only
-aimed at debugging.
-
+Eryu
