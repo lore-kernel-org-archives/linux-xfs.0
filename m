@@ -1,70 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38064 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751697AbcLLWjv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Dec 2016 17:39:51 -0500
-Subject: Re: [PATCH] xfs: handle error if xfs_btree_get_bufs fails
-References: <4348f961-deda-8733-1cd7-dd7ca646bb6b@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f4473870-0514-87c3-6cf2-1dfd548a1e4a@sandeen.net>
-Date: Mon, 12 Dec 2016 16:39:49 -0600
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33096 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752959AbcLOAHc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2016 19:07:32 -0500
+Date: Wed, 14 Dec 2016 16:07:29 -0800
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: [PATCH] xfs_io: implement 'set_encpolicy' and 'get_encpolicy'
+ commands
+Message-ID: <20161215000729.GA18462@gmail.com>
+References: <1480371512-12493-1-git-send-email-ebiggers@google.com>
+ <9f56ed00-177e-392f-0afd-f87b41777533@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <4348f961-deda-8733-1cd7-dd7ca646bb6b@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9f56ed00-177e-392f-0afd-f87b41777533@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Jason L Tibbitts III <tibbs@math.uh.edu>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Biggers <ebiggers@google.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, Richard Weinberger <richard@nod.at>, David Gstir <david@sigma-star.at>, Michael Halcrow <mhalcrow@google.com>
 
-Jason reported that a corrupted filesystem failed to replay
-the log with a metadata block out of bounds warning:
+Hi Eric,
 
-XFS (dm-2): _xfs_buf_find: Block out of range: block 0x80270fff8, EOFS 0x9c40000 
+On Wed, Dec 14, 2016 at 05:45:49PM -0600, Eric Sandeen wrote:
+> On 11/28/16 4:18 PM, Eric Biggers wrote:
+> > Add set_encpolicy and get_encpolicy commands to xfs_io so that xfstests
+> > will be able to test filesystem encryption using the actual user API,
+> > not just hacked in with a mount option.  These commands use the common
+> > "fscrypt" API currently implemented by ext4 and f2fs, but it's also
+> > under development for ubifs and planned for xfs.
+> > 
+> > Note that to get encrypted files to actually work, it's also necessary
+> > to add a key to the kernel keyring.  This patch does not add a command
+> > for this to xfs_io because it's possible to do it using keyctl.  keyctl
+> > can also be used to remove keys, revoke keys, invalidate keys, etc.
+> 
+> What is the standard utility for doing this?  I ask because while
+> xfs_io does operate on non-xfs filesystems, this may be the first dedicated
+> command proposed for xfs_io which isn't actually useful on xfs itself.
+> And that seems a little out of place to me at this point.
+> 
+> If it's just for the purpose of facilitating fstests, we do have some
+> single-purpose helpers in src/ in the xfstests repo, as well.
+> 
 
-_xfs_buf_find() and xfs_btree_get_bufs() return NULL if
-that happens, and then when xfs_alloc_fix_freelist() calls
-xfs_trans_binval() on that NULL bp, we oops with:
+The new xfs_io commands are indeed only intended for xfstests.  My original
+proposal was to add a fscrypt_util program to xfstests, but Dave Chinner said
+the commands should be added to xfs_io instead and that it's planned to
+eventually make XFS support the encryption API too.
 
-BUG: unable to handle kernel NULL pointer dereference at 00000000000000f8
+set_policy and get_policy commands are also available in 'e4crypt', which is
+part of e2fsprogs.  There is also a common userspace utility called 'fscrypt'
+being designed to replace e4crypt.  However, neither of these programs are
+intended to simply expose the raw ioctls.  Therefore, not everything I am
+testing in the new xfstests could be tested with them.
 
-We don't handle _xfs_buf_find errors very well, every
-caller higher up the stack gets to guess at why it failed.
-But we should at least handle it somehow, so return
-EFSCORRUPTED here.
-
-Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-V2: use EFSCORRUPTED.
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index effb64c..c90b307 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1640,6 +1640,10 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
- 
- 				bp = xfs_btree_get_bufs(args->mp, args->tp,
- 					args->agno, fbno, 0);
-+				if (!bp) {
-+					error = -EFSCORRUPTED;
-+					goto error0;
-+				}
- 				xfs_trans_binval(args->tp, bp);
- 			}
- 			args->len = 1;
-@@ -2185,6 +2189,10 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
- 		if (error)
- 			goto out_agbp_relse;
- 		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
-+		if (!bp) {
-+			error = -EFSCORRUPTED;
-+			goto out_agbp_relse;
-+		}
- 		xfs_trans_binval(tp, bp);
- 	}
- 
-
-
+Eric
