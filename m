@@ -1,158 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40606 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:33308 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932206AbcLGNhH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Dec 2016 08:37:07 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 96B823D97C
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2016 13:28:00 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 19/22] mkfs: subopt flags should be saved as bool
-Date: Wed,  7 Dec 2016 14:27:26 +0100
-Message-Id: <1481117249-21273-20-git-send-email-jtulak@redhat.com>
-In-Reply-To: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+        id S1754253AbcLOSig (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Dec 2016 13:38:36 -0500
+Subject: Re: [PATCH 3/3] xfs_io: fix the minimum arguments to the reflink
+ command
+References: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
+ <148182551808.24784.14290922921211733530.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e5f24dd4-8c2b-7b72-0622-22a1e14e6ffc@sandeen.net>
+Date: Thu, 15 Dec 2016 12:38:34 -0600
+MIME-Version: 1.0
+In-Reply-To: <148182551808.24784.14290922921211733530.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-Flag suboptions are not united in what data type they use internally.
-Unify them as boolean.
+On 12/15/16 12:11 PM, Darrick J. Wong wrote:
+> The reflink command can reflink the entirety of two files if the
+> offsets and lengths are not specified... but we forgot to permit
+> that case.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- mkfs/xfs_mkfs.c | 52 ++++++++++++++++++++++++++--------------------------
- 1 file changed, 26 insertions(+), 26 deletions(-)
+Could you do me a favor and also make that clear in the help output?
+The manpage says:
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index e8fd49b..9e726f7 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -664,10 +664,10 @@ struct opt_params {
- 			},
- 			{ .index = D_RTINHERIT,
- 			  .conflicts = { {LAST_CONFLICT} },
--			  .minval.u = 1,
--			  .maxval.u = 1,
--			  .flagval.u = 1,
--			  .type = UINT,
-+			  .minval.b = false,
-+			  .maxval.b = true,
-+			  .flagval.b = true,
-+			  .type = BOOL,
- 			},
- 			{ .index = D_PROJINHERIT,
- 			  .conflicts = { {LAST_CONFLICT} },
-@@ -804,10 +804,10 @@ struct opt_params {
- 					  .message = \
- 		"Sparse inodes not supported without CRC support."},
- 					 {LAST_CONFLICT} },
--			  .minval.i = 0,
--			  .maxval.i = 1,
--			  .flagval.i = 1,
--			  .type = INT,
-+			  .minval.b = false,
-+			  .maxval.b = true,
-+			  .flagval.b = true,
-+			  .type = BOOL,
- 			},
- 		},
- 	},
-@@ -937,10 +937,10 @@ struct opt_params {
- 					  .subopt = L_INTERNAL,
- 					 },
- 					 {LAST_CONFLICT} },
--			  .minval.i = 0,
--			  .maxval.i = 1,
--			  .flagval.i = 1,
--			  .type = INT,
-+			  .minval.b = false,
-+			  .maxval.b = true,
-+			  .flagval.b = true,
-+			  .type = BOOL,
- 			},
- 			{ .index = L_NAME,
- 			  .conflicts = { {.opt = OPT_L,
-@@ -1070,10 +1070,10 @@ struct opt_params {
- 			  .type = STRING,
- 			},
- 			{ .index = R_FILE,
--			  .minval.i = 0,
--			  .maxval.i = 1,
--			  .flagval.i = 1,
--			  .type = INT,
-+			  .minval.b = false,
-+			  .maxval.b = true,
-+			  .flagval.b = true,
-+			  .type = BOOL,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			},
- 			{ .index = R_NAME,
-@@ -1090,10 +1090,10 @@ struct opt_params {
- 			  .type = STRING,
- 			},
- 			{ .index = R_NOALIGN,
--			  .minval.i = 0,
--			  .maxval.i = 1,
--			  .flagval.i = 1,
--			  .type = INT,
-+			  .minval.b = false,
-+			  .maxval.b = true,
-+			  .flagval.b = true,
-+			  .type = BOOL,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			},
- 		},
-@@ -2193,7 +2193,7 @@ main(
- 	xfs_extlen_t		nbmblocks;
- 	int			nlflag;
- 	int			*nodsflag;
--	int			*norsflag;
-+	bool			*norsflag;
- 	xfs_alloc_rec_t		*nrec;
- 	int			nsflag;
- 	int			nvflag;
-@@ -2256,7 +2256,7 @@ main(
- 	dsu = &opts[OPT_D].subopt_params[D_SU].value.i;
- 	dsw = &opts[OPT_D].subopt_params[D_SW].value.i;
- 	nodsflag = &opts[OPT_D].subopt_params[D_NOALIGN].value.i;
--	norsflag = &opts[OPT_R].subopt_params[R_NOALIGN].value.i;
-+	norsflag = &opts[OPT_R].subopt_params[R_NOALIGN].value.b;
- 	logagno = &opts[OPT_L].subopt_params[L_AGNUM].value.u;
- 	lsu = &opts[OPT_L].subopt_params[L_SU].value.i;
- 	lsunit = &opts[OPT_L].subopt_params[L_SUNIT].value.i;
-@@ -2391,7 +2391,7 @@ main(
- 					if (c)
- 						fsx.fsx_xflags |=
- 							XFS_DIFLAG_RTINHERIT;
--					opts[OPT_D].subopt_params[D_RTINHERIT].value.u = c;
-+					opts[OPT_D].subopt_params[D_RTINHERIT].value.b = c;
- 					break;
- 				case D_PROJINHERIT:
- 					fsx.fsx_projid = getnum(value, &opts[OPT_D],
-@@ -2727,15 +2727,15 @@ main(
- 	opts[OPT_D].subopt_params[D_FILE].value.i  = xi.disfile;
- 	opts[OPT_D].subopt_params[D_PROJINHERIT].value.u = fsx.fsx_projid;
- 	opts[OPT_D].subopt_params[D_EXTSZINHERIT].value.u = fsx.fsx_extsize;
--	opts[OPT_L].subopt_params[L_FILE].value.i = xi.lisfile;
-+	opts[OPT_L].subopt_params[L_FILE].value.b = xi.lisfile;
- 	opts[OPT_L].subopt_params[L_VERSION].value.i = sb_feat.log_version;
- 	opts[OPT_L].subopt_params[L_LAZYSBCNTR].value.b = sb_feat.lazy_sb_counters;
- 	opts[OPT_I].subopt_params[I_ATTR].value.i = sb_feat.attr_version ;
- 	opts[OPT_I].subopt_params[I_PROJID32BIT].value.b = !sb_feat.projid16bit ;
--	opts[OPT_I].subopt_params[I_SPINODES].value.i = sb_feat.spinodes ;
-+	opts[OPT_I].subopt_params[I_SPINODES].value.b = sb_feat.spinodes ;
- 	opts[OPT_M].subopt_params[M_FINOBT].value.i = sb_feat.finobt ;
- 	opts[OPT_M].subopt_params[M_RMAPBT].value.b = sb_feat.rmapbt ;
--	opts[OPT_R].subopt_params[R_FILE].value.i = xi.risfile ;
-+	opts[OPT_R].subopt_params[R_FILE].value.b = xi.risfile ;
- 	opts[OPT_R].subopt_params[R_NAME].value.s = xi.rtname;
- 	opts[OPT_R].subopt_params[R_DEV].value.s = xi.rtname;
- 	opts[OPT_S].subopt_params[S_LOG].value.u = sectorsize;
--- 
-2.8.1
+       reflink  [ -C ] [ -q ] src_file [src_offset dst_offset length]
 
+
+but the short help doesn't indicate that it's optional:
+
+reflink infile src_off dst_off len -- reflinks a number of bytes at a specified offset
+
+and neither it nor the long help mentions the -C & -q switches:
+
+xfs_io> help reflink
+reflink infile src_off dst_off len -- reflinks a number of bytes at a specified offset
+
+ Links a range of bytes (in block size increments) from a file into a range
+ of bytes in the open file.  The two extent ranges need not contain identical
+ data.
+
+ Example:
+ 'reflink some_file 0 4096 32768' - links 32768 bytes from some_file at
+                                    offset 0 to into the open file at
+                                    position 4096
+ 'reflink some_file' - links all bytes from some_file into the open file
+                       at position 0
+
+ Reflink a range of blocks from a given input file to the open file.  Both
+ files share the same range of physical disk blocks; a write to the shared
+ range of either file should result in the write landing in a new block and
+ that range of the file being remapped (i.e. copy-on-write).  Both files
+ must reside on the same filesystem.
+
+V2 or patch 4/3 is fine :)
+
+Thanks,
+-Eric
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  io/reflink.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> 
+> diff --git a/io/reflink.c b/io/reflink.c
+> index a09e82d..d26cbdd 100644
+> --- a/io/reflink.c
+> +++ b/io/reflink.c
+> @@ -302,7 +302,7 @@ reflink_init(void)
+>  	reflink_cmd.name = "reflink";
+>  	reflink_cmd.altname = "rl";
+>  	reflink_cmd.cfunc = reflink_f;
+> -	reflink_cmd.argmin = 4;
+> +	reflink_cmd.argmin = 1;
+>  	reflink_cmd.argmax = -1;
+>  	reflink_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+>  	reflink_cmd.args =
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
