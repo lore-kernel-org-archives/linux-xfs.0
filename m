@@ -1,26 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:40441 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932493AbcLMP7v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2016 10:59:51 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: minleft fixes
-Date: Tue, 13 Dec 2016 16:59:23 +0100
-Message-Id: <1481644767-9098-1-git-send-email-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:23476 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753971AbcLOSLu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 13:11:50 -0500
+Subject: [PATCH 1/3] xfs_repair: fix some potential null pointer deferences
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 15 Dec 2016 10:11:45 -0800
+Message-ID: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: eguan@redhat.com, darrick.wong@oracle.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-[now to the correct list address]
+Fix some potential NULL pointer deferences that Coverity pointed out,
+and remove a trivial dead integer check.
 
-This is my attempt to fix the problems with rmap and reflink file system
-running out of space during delayed extent conversions.  It turns out
-the way minleft has been handled has always been bogus, but the rmap
-enablement made it even worse..
+Coverity-id: 1375789, 1375790, 1375791, 1375792
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ repair/phase5.c |    2 +-
+ repair/rmap.c   |    2 +-
+ repair/slab.h   |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-This has survived xfstests xfs/109 on a 2k fs for 2 1/2 hour here now,
-but Eryu was much better than me at reproducing the problems, so it could
-use some further testing.
+
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 3604d1d..cbda556 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -1925,7 +1925,7 @@ _("Insufficient memory to construct refcount cursor."));
+ 	refc_rec = pop_slab_cursor(refc_cur);
+ 	lptr = &btree_curs->level[0];
+ 
+-	for (i = 0; i < lptr->num_blocks; i++)  {
++	for (i = 0; i < lptr->num_blocks && refc_rec != NULL; i++)  {
+ 		/*
+ 		 * block initialization, lay in block header
+ 		 */
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 45e183a..7508973 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -790,7 +790,7 @@ compute_refcounts(
+ 		mark_inode_rl(mp, stack_top);
+ 
+ 		/* Set nbno to the bno of the next refcount change */
+-		if (n < slab_count(rmaps))
++		if (n < slab_count(rmaps) && array_cur)
+ 			nbno = array_cur->rm_startblock;
+ 		else
+ 			nbno = NULLAGBLOCK;
+diff --git a/repair/slab.h b/repair/slab.h
+index 4aa5512..a2201f1 100644
+--- a/repair/slab.h
++++ b/repair/slab.h
+@@ -54,7 +54,7 @@ extern void *bag_item(struct xfs_bag *, size_t);
+ 
+ #define foreach_bag_ptr_reverse(bag, idx, ptr) \
+ 	for ((idx) = bag_count(bag) - 1, (ptr) = bag_item((bag), (idx)); \
+-	     (idx) >= 0 && (ptr) != NULL; \
++	     (ptr) != NULL; \
+ 	     (idx)--, (ptr) = bag_item((bag), (idx)))
+ 
+ #endif /* SLAB_H_ */
 
