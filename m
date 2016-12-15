@@ -1,86 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47390 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:54190 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753436AbcLNRfl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Dec 2016 12:35:41 -0500
-Date: Wed, 14 Dec 2016 12:35:07 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
-Message-ID: <20161214173507.GA24645@bfoster.bfoster>
-References: <1481644767-9098-1-git-send-email-hch@lst.de>
- <1481644767-9098-2-git-send-email-hch@lst.de>
+        id S1753936AbcLOXRr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Dec 2016 18:17:47 -0500
+Subject: Re: [PATCH 1/3] xfs_repair: fix some potential null pointer
+ deferences
+References: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e50f0bdd-9555-2c67-781c-362b4140e431@sandeen.net>
+Date: Thu, 15 Dec 2016 17:17:14 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1481644767-9098-2-git-send-email-hch@lst.de>
+In-Reply-To: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Dec 13, 2016 at 04:59:24PM +0100, Christoph Hellwig wrote:
-> We can't just set minleft to 0 when we're low on space - that's exactly
-> what we need minleft for: to protect space in the AG for btree block
-> allocations when we are low on free space.
+On 12/15/16 12:11 PM, Darrick J. Wong wrote:
+> Fix some potential NULL pointer deferences that Coverity pointed out,
+> and remove a trivial dead integer check.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Coverity-id: 1375789, 1375790, 1375791, 1375792
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_alloc.c      | 24 +++++++-----------------
->  fs/xfs/libxfs/xfs_bmap.c       |  3 ---
->  fs/xfs/libxfs/xfs_bmap_btree.c | 14 --------------
->  3 files changed, 7 insertions(+), 34 deletions(-)
+>  repair/phase5.c |    2 +-
+>  repair/rmap.c   |    2 +-
+>  repair/slab.h   |    2 +-
+>  3 files changed, 3 insertions(+), 3 deletions(-)
 > 
-...
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> index d6330c2..9581ee8 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> @@ -499,20 +499,6 @@ xfs_bmbt_alloc_block(
->  		goto try_another_ag;
->  	}
+> 
+> diff --git a/repair/phase5.c b/repair/phase5.c
+> index 3604d1d..cbda556 100644
+> --- a/repair/phase5.c
+> +++ b/repair/phase5.c
+> @@ -1925,7 +1925,7 @@ _("Insufficient memory to construct refcount cursor."));
+>  	refc_rec = pop_slab_cursor(refc_cur);
+>  	lptr = &btree_curs->level[0];
 >  
-> -	if (args.fsbno == NULLFSBLOCK && args.minleft) {
-> -		/*
-> -		 * Could not find an AG with enough free space to satisfy
-> -		 * a full btree split.  Try again without minleft and if
-> -		 * successful activate the lowspace algorithm.
-> -		 */
-> -		args.fsbno = 0;
-> -		args.type = XFS_ALLOCTYPE_FIRST_AG;
-> -		args.minleft = 0;
-> -		error = xfs_alloc_vextent(&args);
-> -		if (error)
-> -			goto error0;
-> -		cur->bc_private.b.dfops->dop_low = true;
-> -	}
+> -	for (i = 0; i < lptr->num_blocks; i++)  {
+> +	for (i = 0; i < lptr->num_blocks && refc_rec != NULL; i++)  {
 
-I'm still trying to grok the minleft/dop_low stuff, but doesn't this
-increase the risk of bmbt block allocation failure? E.g., args.minleft
-is set to the transaction reservation earlier in the function. AFAIK the
-res is not guaranteed to be in a particular AG, but in that case we're
-just setting a start AG and ultimately cycling through the AGs. If that
-fails, this hunk resets minleft, restarts at fsbno 0 and activates the
-sequential agno allocation requirement for subsequent allocs. Doesn't
-removing this logic mean we can successfully reserve blocks in a write
-transaction that will never ultimately be able to allocate bmbt blocks,
-even if the data blocks can all be allocated..?
+Ok, you sent this patch already as well :)
 
-The other thing to note here is that minleft is initialized to 0 and
-only set to the transaction res conditionally, so if firstblock is
-already set we won't use minleft at all. It's definitely possible I'm
-still missing something about how this was all "supposed" to work
-originally, but the logic that's left here seems a bit... erratic. :/
+And it matches the exact same thing that exists for a while in
+the rmap_tree builder, so yay for that.  :)
 
-Brian
+but is this just shutting up coverity, or is this something that could
+happen?  If it /does/ happen, is skipping the loop all we really need
+to do?  Sorry - I have to think harder about what's going on in here
+as we build the tree, but maybe you already know. 
 
->  	if (args.fsbno == NULLFSBLOCK) {
->  		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
->  		*stat = 0;
-> -- 
-> 2.1.4
+My sense of tidiness and consistency is bothered by the fact that
+we don't have similar null-check-skip-loop for, say, ino_rec
+in build_ino_tree, or ext_ptr in build_freespace_tree.
+
+
+>  		/*
+>  		 * block initialization, lay in block header
+>  		 */
+> diff --git a/repair/rmap.c b/repair/rmap.c
+> index 45e183a..7508973 100644
+> --- a/repair/rmap.c
+> +++ b/repair/rmap.c
+> @@ -790,7 +790,7 @@ compute_refcounts(
+>  		mark_inode_rl(mp, stack_top);
+>  
+>  		/* Set nbno to the bno of the next refcount change */
+> -		if (n < slab_count(rmaps))
+> +		if (n < slab_count(rmaps) && array_cur)
+>  			nbno = array_cur->rm_startblock;
+>  		else
+>  			nbno = NULLAGBLOCK;
+> diff --git a/repair/slab.h b/repair/slab.h
+> index 4aa5512..a2201f1 100644
+> --- a/repair/slab.h
+> +++ b/repair/slab.h
+> @@ -54,7 +54,7 @@ extern void *bag_item(struct xfs_bag *, size_t);
+>  
+>  #define foreach_bag_ptr_reverse(bag, idx, ptr) \
+>  	for ((idx) = bag_count(bag) - 1, (ptr) = bag_item((bag), (idx)); \
+> -	     (idx) >= 0 && (ptr) != NULL; \
+> +	     (ptr) != NULL; \
+>  	     (idx)--, (ptr) = bag_item((bag), (idx)))
+>  
+>  #endif /* SLAB_H_ */
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
