@@ -1,172 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:43617 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1757125AbcLPEpd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 23:45:33 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1cHkKb-00023l-Qj
-        for linux-xfs@vger.kernel.org; Fri, 16 Dec 2016 15:41:17 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.88)
-        (envelope-from <david@fromorbit.com>)
-        id 1cHkKb-0005Zp-Ph
-        for linux-xfs@vger.kernel.org; Fri, 16 Dec 2016 15:41:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/6] libxcmd: rename args_command to command_iterator
-Date: Fri, 16 Dec 2016 15:41:11 +1100
-Message-Id: <20161216044115.21287-3-david@fromorbit.com>
-In-Reply-To: <20161216044115.21287-1-david@fromorbit.com>
-References: <20161216044115.21287-1-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57744 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752070AbcLOMAE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Dec 2016 07:00:04 -0500
+Date: Thu, 15 Dec 2016 07:00:02 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/4] xfs: don't rely on ->total in
+ xfs_alloc_space_available
+Message-ID: <20161215120002.GA29477@bfoster.bfoster>
+References: <1481644767-9098-1-git-send-email-hch@lst.de>
+ <1481644767-9098-5-git-send-email-hch@lst.de>
+ <20161214183017.GD24645@bfoster.bfoster>
+ <20161214193802.GB12217@lst.de>
+ <20161214215158.GB26688@bfoster.bfoster>
+ <20161215085534.GB2864@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161215085534.GB2864@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Dec 15, 2016 at 09:55:34AM +0100, Christoph Hellwig wrote:
+> On Wed, Dec 14, 2016 at 04:51:58PM -0500, Brian Foster wrote:
+> > On Wed, Dec 14, 2016 at 08:38:02PM +0100, Christoph Hellwig wrote:
+> > > On Wed, Dec 14, 2016 at 01:30:18PM -0500, Brian Foster wrote:
+> > > > >  	/* do we have enough contiguous free space for the allocation? */
+> > > > > +	alloc_len = args->minlen + (args->alignment - 1)+ args->minalignslop;
+> > > > 
+> > > > Whitespace nit, missing space:				^
+> > > > 
+> > > > Also, is the addition of braces intentional? I believe it is possible
+> > > > for args->alignment == 0.
+> > > 
+> > > It's mostly for explaining the - 1 to the reader as it took me a while
+> > > to figure out what it was for.
+> > 
+> > Oh, care to elaborate? :)
+> 
+> the alignment is the boundary we want to align to, so we'll have to add
+> alignment - 1 at max to achive it. 
 
-It is not particularly easy to understand the function of the
-args_command abstraction. it's actually a command iterator interface
-that allows callers to specify the target of the command and iterate
-the command multiple times over different targets. Rename and
-document the abstraction to make this functionality clear.
+Gotcha, so perhaps we should check that alignment != 0?
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- include/command.h |  4 ++--
- io/init.c         |  9 +++++++--
- libxcmd/command.c | 16 ++++++++--------
- quota/init.c      |  9 +++++++--
- 4 files changed, 24 insertions(+), 14 deletions(-)
+Brian
 
-diff --git a/include/command.h b/include/command.h
-index 58bfcaac44a0..637ee06e6e9a 100644
---- a/include/command.h
-+++ b/include/command.h
-@@ -50,12 +50,12 @@ extern int		ncmds;
- extern void		help_init(void);
- extern void		quit_init(void);
- 
--typedef int (*argsfunc_t)(int index);
-+typedef int (*iterfunc_t)(int index);
- typedef int (*checkfunc_t)(const cmdinfo_t *ci);
- 
- extern void		add_command(const cmdinfo_t *ci);
- extern void		add_user_command(char *optarg);
--extern void		add_args_command(argsfunc_t af);
-+extern void		add_command_iterator(iterfunc_t func);
- extern void		add_check_command(checkfunc_t cf);
- 
- extern const cmdinfo_t	*find_command(const char *cmd);
-diff --git a/io/init.c b/io/init.c
-index ab40f3745390..34009b024833 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -90,8 +90,13 @@ init_commands(void)
- 	cowextsize_init();
- }
- 
-+/*
-+ * This allows xfs_io commands specified on the command line to be run on every
-+ * open file in the file table. Commands that should not be iterated across all
-+ * open files need to specify CMD_FLAG_ONESHOT in their command flags.
-+ */
- static int
--init_args_command(
-+filetable_iterator(
- 	int	index)
- {
- 	if (index >= filecount)
-@@ -214,7 +219,7 @@ init(
- 	}
- 
- 	init_commands();
--	add_args_command(init_args_command);
-+	add_command_iterator(filetable_iterator);
- 	add_check_command(init_check_command);
- }
- 
-diff --git a/libxcmd/command.c b/libxcmd/command.c
-index dce8361ce3ea..789aeb5c5e5a 100644
---- a/libxcmd/command.c
-+++ b/libxcmd/command.c
-@@ -23,7 +23,7 @@
- cmdinfo_t	*cmdtab;
- int		ncmds;
- 
--static argsfunc_t	args_func;
-+static iterfunc_t	iter_func;
- static checkfunc_t	check_func;
- static int		ncmdline;
- static char		**cmdline;
-@@ -130,7 +130,7 @@ add_user_command(char *optarg)
-  * so we abort straight away.
-  */
- static int
--args_command(
-+iterate_command(
- 	const cmdinfo_t	*ct,
- 	int		index)
- {
-@@ -138,16 +138,16 @@ args_command(
- 		return 0;
- 	if (ct->flags & CMD_FLAG_ONESHOT)
- 		return -1;
--	if (args_func)
--		return args_func(index);
-+	if (iter_func)
-+		return iter_func(index);
- 	return 0;
- }
- 
- void
--add_args_command(
--	argsfunc_t	af)
-+add_command_iterator(
-+	iterfunc_t	func)
- {
--	args_func = af;
-+	iter_func = func;
- }
- 
- void
-@@ -171,7 +171,7 @@ command_loop(void)
- 			ct = find_command(v[0]);
- 			if (ct) {
- 				j = 0;
--				while (!done && (j = args_command(ct, j)))
-+				while (!done && (j = iterate_command(ct, j)))
- 					done = command(ct, c, v);
- 			} else
- 				fprintf(stderr, _("command \"%s\" not found\n"),
-diff --git a/quota/init.c b/quota/init.c
-index 3bebbb8735f3..193f6421fd59 100644
---- a/quota/init.c
-+++ b/quota/init.c
-@@ -75,8 +75,13 @@ init_commands(void)
- 	state_init();
- }
- 
-+/*
-+ * This function allows xfs_quota commands to iterate across all discovered
-+ * quota enabled filesystems. Commands that should not iterate all filesystems
-+ * should specify CMD_FLAG_ONESHOT in their command flags.
-+ */
- static int
--init_args_command(
-+filesystem_iterator(
- 	int	index)
- {
- 	if (index >= fs_count)
-@@ -189,7 +194,7 @@ init(
- 	free(projopts);
- 
- 	init_commands();
--	add_args_command(init_args_command);
-+	add_command_iterator(filesystem_iterator);
- 	add_check_command(init_check_command);
- 
- 	/*
--- 
-2.10.2
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
