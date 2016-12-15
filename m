@@ -1,54 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57744 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752070AbcLOMAE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Dec 2016 07:00:04 -0500
-Date: Thu, 15 Dec 2016 07:00:02 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/4] xfs: don't rely on ->total in
- xfs_alloc_space_available
-Message-ID: <20161215120002.GA29477@bfoster.bfoster>
-References: <1481644767-9098-1-git-send-email-hch@lst.de>
- <1481644767-9098-5-git-send-email-hch@lst.de>
- <20161214183017.GD24645@bfoster.bfoster>
- <20161214193802.GB12217@lst.de>
- <20161214215158.GB26688@bfoster.bfoster>
- <20161215085534.GB2864@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161215085534.GB2864@lst.de>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35184 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757846AbcLOOH4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 09:07:56 -0500
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [PATCH 5/9] xfs: use memalloc_nofs_{save,restore} instead of memalloc_noio*
+Date: Thu, 15 Dec 2016 15:07:11 +0100
+Message-Id: <20161215140715.12732-6-mhocko@kernel.org>
+In-Reply-To: <20161215140715.12732-1-mhocko@kernel.org>
+References: <20161215140715.12732-1-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
-On Thu, Dec 15, 2016 at 09:55:34AM +0100, Christoph Hellwig wrote:
-> On Wed, Dec 14, 2016 at 04:51:58PM -0500, Brian Foster wrote:
-> > On Wed, Dec 14, 2016 at 08:38:02PM +0100, Christoph Hellwig wrote:
-> > > On Wed, Dec 14, 2016 at 01:30:18PM -0500, Brian Foster wrote:
-> > > > >  	/* do we have enough contiguous free space for the allocation? */
-> > > > > +	alloc_len = args->minlen + (args->alignment - 1)+ args->minalignslop;
-> > > > 
-> > > > Whitespace nit, missing space:				^
-> > > > 
-> > > > Also, is the addition of braces intentional? I believe it is possible
-> > > > for args->alignment == 0.
-> > > 
-> > > It's mostly for explaining the - 1 to the reader as it took me a while
-> > > to figure out what it was for.
-> > 
-> > Oh, care to elaborate? :)
-> 
-> the alignment is the boundary we want to align to, so we'll have to add
-> alignment - 1 at max to achive it. 
+From: Michal Hocko <mhocko@suse.com>
 
-Gotcha, so perhaps we should check that alignment != 0?
+kmem_zalloc_large and _xfs_buf_map_pages use memalloc_noio_{save,restore}
+API to prevent from reclaim recursion into the fs because vmalloc can
+invoke unconditional GFP_KERNEL allocations and these functions might be
+called from the NOFS contexts. The memalloc_noio_save will enforce
+GFP_NOIO context which is even weaker than GFP_NOFS and that seems to be
+unnecessary. Let's use memalloc_nofs_{save,restore} instead as it should
+provide exactly what we need here - implicit GFP_NOFS context.
 
-Brian
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ fs/xfs/kmem.c    | 10 +++++-----
+ fs/xfs/xfs_buf.c |  8 ++++----
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index a76a05dae96b..d69ed5e76621 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -65,7 +65,7 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+ void *
+ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+ {
+-	unsigned noio_flag = 0;
++	unsigned nofs_flag = 0;
+ 	void	*ptr;
+ 	gfp_t	lflags;
+ 
+@@ -80,14 +80,14 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+ 	 * context via PF_MEMALLOC_NOIO to prevent memory reclaim re-entering
+ 	 * the filesystem here and potentially deadlocking.
+ 	 */
+-	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+-		noio_flag = memalloc_noio_save();
++	if (flags & KM_NOFS)
++		nofs_flag = memalloc_nofs_save();
+ 
+ 	lflags = kmem_flags_convert(flags);
+ 	ptr = __vmalloc(size, lflags | __GFP_HIGHMEM | __GFP_ZERO, PAGE_KERNEL);
+ 
+-	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+-		memalloc_noio_restore(noio_flag);
++	if (flags & KM_NOFS)
++		memalloc_nofs_restore(nofs_flag);
+ 
+ 	return ptr;
+ }
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index f31ae592dcae..5c6f9bd4d8be 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -441,17 +441,17 @@ _xfs_buf_map_pages(
+ 		bp->b_addr = NULL;
+ 	} else {
+ 		int retried = 0;
+-		unsigned noio_flag;
++		unsigned nofs_flag;
+ 
+ 		/*
+ 		 * vm_map_ram() will allocate auxillary structures (e.g.
+ 		 * pagetables) with GFP_KERNEL, yet we are likely to be under
+ 		 * GFP_NOFS context here. Hence we need to tell memory reclaim
+-		 * that we are in such a context via PF_MEMALLOC_NOIO to prevent
++		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
+ 		 * memory reclaim re-entering the filesystem here and
+ 		 * potentially deadlocking.
+ 		 */
+-		noio_flag = memalloc_noio_save();
++		nofs_flag = memalloc_nofs_save();
+ 		do {
+ 			bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
+ 						-1, PAGE_KERNEL);
+@@ -459,7 +459,7 @@ _xfs_buf_map_pages(
+ 				break;
+ 			vm_unmap_aliases();
+ 		} while (retried++ <= 1);
+-		memalloc_noio_restore(noio_flag);
++		memalloc_noio_restore(nofs_flag);
+ 
+ 		if (!bp->b_addr)
+ 			return -ENOMEM;
+-- 
+2.10.2
+
