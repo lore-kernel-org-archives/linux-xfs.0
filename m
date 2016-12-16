@@ -1,45 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:52958 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759020AbcLPIUq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Dec 2016 03:20:46 -0500
-Date: Fri, 16 Dec 2016 09:20:44 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
-Message-ID: <20161216082044.GB32288@lst.de>
-References: <1481644767-9098-1-git-send-email-hch@lst.de> <1481644767-9098-2-git-send-email-hch@lst.de> <20161215220938.GV4219@dastard>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25008 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754581AbcLPBWP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 20:22:15 -0500
+Date: Thu, 15 Dec 2016 17:21:47 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] duperemove: test presence of dedupe ioctl
+Message-ID: <20161216012147.GH5357@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161215220938.GV4219@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: mfasheh@versity.com
+Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On Fri, Dec 16, 2016 at 09:09:38AM +1100, Dave Chinner wrote:
-> > @@ -3812,7 +3812,6 @@ xfs_bmap_btalloc(
-> >  		args.fsbno = 0;
-> >  		args.type = XFS_ALLOCTYPE_FIRST_AG;
-> >  		args.total = ap->minlen;
-> > -		args.minleft = 0;
-> >  		if ((error = xfs_alloc_vextent(&args)))
-> >  			return error;
-> >  		ap->dfops->dop_low = true;
-> 
-> But this looks wrong. when combined with the next patch that sets:
-> 
-> 	args.minleft = xfs_bmap_worst_indlen(ap->ip, args.maxlen);
-> 
-> we've got a minleft value that might be for multigigabyte
-> allocation, but now we are only asking for a total allocation
-> of minlen, and that might be 1 block. IOWs, shouldn't this "last,
-> final attempt" code actually do something like this:
-> 
-> 		args.maxlen = ap->minlen;
-> 		args.total = ap->minlen;
-> 		args.minleft = xfs_bmap_worst_indlen(ap->ip, args.maxlen);
+Since a zero-length dedupe operation is guaranteed to succeed, use that
+to test whether or not this filesystem supports dedupe.
 
-Yes.  And I actually had that in a previous iteration, and it got
-dropped at some point.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: Don't declare a new type; just declare the struct on the stack.
+---
+ file_scan.c |   45 +++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 35 insertions(+), 10 deletions(-)
+
+diff --git a/file_scan.c b/file_scan.c
+index 617f166..2708bfe 100644
+--- a/file_scan.c
++++ b/file_scan.c
+@@ -45,11 +45,7 @@
+ #include "file_scan.h"
+ #include "dbfile.h"
+ #include "util.h"
+-
+-/* This is not in linux/magic.h */
+-#ifndef	XFS_SB_MAGIC
+-#define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
+-#endif
++#include "btrfs-ioctl.h"
+ 
+ static char path[PATH_MAX] = { 0, };
+ static char *pathp = path;
+@@ -189,6 +185,37 @@ static int walk_dir(const char *name)
+ 	return ret;
+ }
+ 
++/*
++ * A zero-length dedupe between two files should always succeed,
++ * so we can use this to test the presence of dedupe functionality.
++ */
++static bool check_ioctl_works(int fd)
++{
++	struct {
++		struct btrfs_ioctl_same_args args;
++		struct btrfs_ioctl_same_extent_info info;
++	} sa = {0};
++	struct stat sb;
++	static int cached = -1;
++	int ret;
++
++	if (cached >= 0)
++		return cached != 0;
++
++	ret = fstat(fd, &sb);
++	if (ret)
++		return false;
++
++	sa.args.dest_count = 1;
++	sa.args.length = 0;
++	sa.info.fd = fd;
++	sa.info.logical_offset = 0;
++	errno = 0;
++	ret = btrfs_extent_same(fd, &sa.args);
++	cached = !ret && !errno && !sa.info.status;
++	return cached;
++}
++
+ static int __add_file(const char *name, struct stat *st,
+ 		      struct filerec **ret_file)
+ {
+@@ -235,12 +262,10 @@ static int __add_file(const char *name, struct stat *st,
+ 		goto out;
+ 	}
+ 
+-	if (run_dedupe &&
+-	    ((fs.f_type != BTRFS_SUPER_MAGIC &&
+-	      fs.f_type != XFS_SB_MAGIC))) {
++	if (run_dedupe && !check_ioctl_works(fd)) {
+ 		close(fd);
+-		fprintf(stderr,	"\"%s\": Can only dedupe files on btrfs or xfs "
+-			"(experimental)\n", name);
++		fprintf(stderr,	"\"%s\": dedupe ioctl not supported on this "
++			"filesystem.\n", name);
+ 		return ENOSYS;
+ 	}
+ 
