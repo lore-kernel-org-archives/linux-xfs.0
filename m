@@ -1,78 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33162 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754045AbcLPBrL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 20:47:11 -0500
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id uBG1kjWK030996
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Dec 2016 01:46:45 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id uBG1kjBx013118
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Dec 2016 01:46:45 GMT
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id uBG1kjR6019729
-        for <linux-xfs@vger.kernel.org>; Fri, 16 Dec 2016 01:46:45 GMT
-Date: Thu, 15 Dec 2016 17:46:42 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [bug report] xfs: connect refcount adjust functions to upper
- layers
-Message-ID: <20161216014642.GI5357@birch.djwong.org>
-References: <20161215122357.GA13876@elgon.mountain>
+Received: from verein.lst.de ([213.95.11.211]:53058 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753951AbcLPIrk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Dec 2016 03:47:40 -0500
+Date: Fri, 16 Dec 2016 09:25:44 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/4] xfs: adjust allocation length in
+        xfs_alloc_space_available
+Message-ID: <20161216082544.GD32288@lst.de>
+References: <1481644767-9098-1-git-send-email-hch@lst.de> <1481644767-9098-4-git-send-email-hch@lst.de> <20161216002851.GW4219@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161215122357.GA13876@elgon.mountain>
+In-Reply-To: <20161216002851.GW4219@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-On Thu, Dec 15, 2016 at 03:23:57PM +0300, Dan Carpenter wrote:
-> Hello Darrick J. Wong,
+On Fri, Dec 16, 2016 at 11:28:51AM +1100, Dave Chinner wrote:
+> >  	/* do we have enough free space remaining for the allocation? */
+> >  	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
+> > -			  reservation - min_free - args->total);
+> > +			  reservation - min_free - args->minleft);
 > 
-> The patch 33ba61292084: "xfs: connect refcount adjust functions to
-> upper layers" from Oct 3, 2016, leads to the following static checker
-> warning:
+> This is fine, but...
 > 
-> 	fs/xfs/xfs_refcount_item.c:535 xfs_cui_recover()
-> 	warn: passing freed memory 'rcur'
+> > -	if (available < (int)args->minleft || available <= 0)
+> > +	if (available < (int)args->total)
+> >  		return false;
 > 
-> fs/xfs/xfs_refcount_item.c
->    523                  }
->    524          }
->    525  
->    526          xfs_refcount_finish_one_cleanup(tp, rcur, error);
->                                                     ^^^^
-> Freed here.
-> 
->    527          error = xfs_defer_finish(&tp, &dfops, NULL);
->    528          if (error)
->    529                  goto abort_error;
->    530          set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
->    531          error = xfs_trans_commit(tp);
->    532          return error;
->    533  
->    534  abort_error:
->    535          xfs_refcount_finish_one_cleanup(tp, rcur, error);
->                                                     ^^^^
-> Again here...
+> this is where I begin to wonder. The "args->total" logic here just
+> doesn't read cleanly to me. xfs_bmapi_write() says:
 
-Yep, definitely a bug.  I'll make a fix.
+args->total is a complete mess, but the above just rearranged the
+deckchairs by moving it to a different place in the equation without
+changing the result..
 
---D
+> So if we are asked to allocate 1 block, but the AG doesn't have 10
+> total blocks free, then allocation will fail. What this is used for
+> is to chain multiple independent data block allocations together in
+> a single transaction to attempt to get them all from the one AG.
+> This is used only by the directory/attr code for ensuring all the
+> allocations needed to add an entry to the dir/attr tree will succeed.
+> It's essentially an "external block reservation" as the AGF will be
+> held locked across the multiple allocations once the first
+> allocation has been done.
+
+Symlink creation also uses it to cover the blocks for the symlink
+body.  And unlike all users it actually seems to get the semantics
+right by decrementing the used blocks from args->total after each
+allocation..
+
+> The only time "total" is actually meaningful is the first
+> allocation in a chain. i.e. when firstblock is null. It's really a
+> "free blocks required to proceed" parameter , not a length
+> bound for the current allocation.
+
+Yes.
+
+> However, it's impact is to set a maximum length bound on the
+> allocation, so I'm left to wonder why this was is being hidden this
+> inside xfs_alloc_space_available() rather than dealing with it when
+> setting up args->maxlen/minlen/minleft in xfs_bmap_btalloc()?
+> 
+> i.e args->maxlen must always be less than args->total. And if we are
+> using minleft to protect against running out of space for
+> bmbt/rmapbt allocation, then I think it should be args->maxlen +
+> args->minleft < args->total.
+> 
+> If this can all be done and enforced in xfs_bmap_btalloc(), then we
+> can get rid of args->total from the allocargs completely...
+
+My long terms plan was to kill it of in favour of passing a minleft
+parameter that's only set on the first call to xfs_bmapi_write.
+But I didn't fancy rewriting hairy parts of the dir code while trying
+to get an urgent customer escalation fixed..
 
 > 
->    536          xfs_defer_cancel(&dfops);
->    537          xfs_trans_cancel(tp);
->    538          return error;
->    539  }
 > 
-> regards,
-> dan carpenter
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > +	/*
+> > +	 * Clamp maxlen to the amount of free space available for the actual
+> > +	 * extent allocation.
+> > +	 */
+> > +	if (available < (int)args->maxlen && !(flags & XFS_ALLOC_FLAG_CHECK)) {
+> > +		args->maxlen = available;
+> > +		ASSERT(args->maxlen > 0);
+> > +	}
+> 
+> I'd love to get rid of all these (int) casts, too...
+
+The problem here is that we compare 32-bit signed to 32-bit unsigned
+variables.  And given that this is ripe for nasty bugs due to the C
+type promotion rules I'd rather be extra careful.
