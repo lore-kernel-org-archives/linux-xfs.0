@@ -1,71 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16562 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754334AbcLNSj6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2016 13:39:58 -0500
-Date: Wed, 14 Dec 2016 10:38:45 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] duperemove: test presence of dedupe ioctl
-Message-ID: <20161214183845.GA5357@birch.djwong.org>
-References: <20161209175645.GB16813@birch.djwong.org>
- <20161214104436.GB16862@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41176 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161101AbcLPQiO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Dec 2016 11:38:14 -0500
+Date: Fri, 16 Dec 2016 11:38:11 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 5/9] xfs: use memalloc_nofs_{save,restore} instead of
+ memalloc_noio*
+Message-ID: <20161216163811.GG8447@bfoster.bfoster>
+References: <20161215140715.12732-1-mhocko@kernel.org>
+ <20161215140715.12732-6-mhocko@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161214104436.GB16862@infradead.org>
+In-Reply-To: <20161215140715.12732-6-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: mfasheh@versity.com, xfs <linux-xfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
-On Wed, Dec 14, 2016 at 02:44:36AM -0800, Christoph Hellwig wrote:
-> On Fri, Dec 09, 2016 at 09:56:45AM -0800, Darrick J. Wong wrote:
-> > Since a zero-length dedupe operation is guaranteed to succeed, use that
-> > to test whether or not this filesystem supports dedupe.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  file_scan.c |   47 +++++++++++++++++++++++++++++++++++++----------
-> >  1 file changed, 37 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/file_scan.c b/file_scan.c
-> > index 617f166..a34453e 100644
-> > --- a/file_scan.c
-> > +++ b/file_scan.c
-> > @@ -45,11 +45,7 @@
-> >  #include "file_scan.h"
-> >  #include "dbfile.h"
-> >  #include "util.h"
-> > -
-> > -/* This is not in linux/magic.h */
-> > -#ifndef	XFS_SB_MAGIC
-> > -#define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
-> > -#endif
-> > +#include "btrfs-ioctl.h"
-> >  
-> >  static char path[PATH_MAX] = { 0, };
-> >  static char *pathp = path;
-> > @@ -189,6 +185,39 @@ static int walk_dir(const char *name)
-> >  	return ret;
-> >  }
-> >  
-> > +struct fake_btrfs_ioctl_same_args {
-> > +	struct btrfs_ioctl_same_args args;
-> > +	struct btrfs_ioctl_same_extent_info info;
-> > +};
+On Thu, Dec 15, 2016 at 03:07:11PM +0100, Michal Hocko wrote:
+> From: Michal Hocko <mhocko@suse.com>
 > 
-> Why does this need a fake structure here?
+> kmem_zalloc_large and _xfs_buf_map_pages use memalloc_noio_{save,restore}
+> API to prevent from reclaim recursion into the fs because vmalloc can
+> invoke unconditional GFP_KERNEL allocations and these functions might be
+> called from the NOFS contexts. The memalloc_noio_save will enforce
+> GFP_NOIO context which is even weaker than GFP_NOFS and that seems to be
+> unnecessary. Let's use memalloc_nofs_{save,restore} instead as it should
+> provide exactly what we need here - implicit GFP_NOFS context.
+> 
+> Signed-off-by: Michal Hocko <mhocko@suse.com>
+> ---
+>  fs/xfs/kmem.c    | 10 +++++-----
+>  fs/xfs/xfs_buf.c |  8 ++++----
+>  2 files changed, 9 insertions(+), 9 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index f31ae592dcae..5c6f9bd4d8be 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -441,17 +441,17 @@ _xfs_buf_map_pages(
+>  		bp->b_addr = NULL;
+>  	} else {
+>  		int retried = 0;
+> -		unsigned noio_flag;
+> +		unsigned nofs_flag;
+>  
+>  		/*
+>  		 * vm_map_ram() will allocate auxillary structures (e.g.
+>  		 * pagetables) with GFP_KERNEL, yet we are likely to be under
+>  		 * GFP_NOFS context here. Hence we need to tell memory reclaim
+> -		 * that we are in such a context via PF_MEMALLOC_NOIO to prevent
+> +		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
+>  		 * memory reclaim re-entering the filesystem here and
+>  		 * potentially deadlocking.
+>  		 */
+> -		noio_flag = memalloc_noio_save();
+> +		nofs_flag = memalloc_nofs_save();
+>  		do {
+>  			bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
+>  						-1, PAGE_KERNEL);
+> @@ -459,7 +459,7 @@ _xfs_buf_map_pages(
+>  				break;
+>  			vm_unmap_aliases();
+>  		} while (retried++ <= 1);
+> -		memalloc_noio_restore(noio_flag);
+> +		memalloc_noio_restore(nofs_flag);
 
-In order to test the ioctl we have to fill out at least one
-btrfs_ioctl_same_extent_info so that we get far enough into the fs-specific
-dedupe_range handler that we've verified that the fs is capable of dedupe and
-that the fs is willing to try to satisfy the request.
+memalloc_nofs_restore() ?
 
-We could just malloc sizeof(_same_args) + sizeof(_same_extent_info)...
+Brian
 
---D
-
+>  
+>  		if (!bp->b_addr)
+>  			return -ENOMEM;
+> -- 
+> 2.10.2
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
