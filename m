@@ -1,47 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:52938 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:53026 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753839AbcLPIUE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Dec 2016 03:20:04 -0500
-Date: Fri, 16 Dec 2016 09:20:01 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/4] xfs: adjust allocation length in
-        xfs_alloc_space_available
-Message-ID: <20161216082001.GA32288@lst.de>
-References: <1481644767-9098-1-git-send-email-hch@lst.de> <1481644767-9098-4-git-send-email-hch@lst.de> <4769689.jYzaBPWb0Z@libor-nb>
+        id S1761614AbcLPP4k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Dec 2016 10:56:40 -0500
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1FFB03F217
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Dec 2016 15:56:20 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uBGFuJWW022928
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Dec 2016 10:56:19 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_repair: don't indicate dirtiness if FSGEOMETRY fails
+Message-ID: <fceea296-989c-a71d-a6e7-23560fd6db8b@redhat.com>
+Date: Fri, 16 Dec 2016 09:56:19 -0600
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <4769689.jYzaBPWb0Z@libor-nb>
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Dec 15, 2016 at 09:41:39PM +0100, Libor Klepáč wrote:
-> > index 91a6c17..87328a8 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -1149,11 +1104,6 @@ xfs_alloc_ag_vextent_near(
-> >  		XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
-> >  		ASSERT(ltbno + ltlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)-
-> >agf_length));
-> >  		args->len = blen;
-> > -		if (!xfs_alloc_fix_minleft(args)) {
-> > -			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-> > -			trace_xfs_alloc_near_nominleft(args);
-> > -			return 0;
-> > -		}
-> >  		blen = args->len;
-> >  		/*
-> >  		 * We are allocating starting at bnew for blen blocks.
-> 
-> Doesn't this produce this code?
-> 
->   		args->len = blen;
->   		blen = args->len;
+Today, pointing repair at an image hosted on a non-xfs
+filesystem will result in a XFS_IOC_FSGEOMETRY_V1 failure,
+but repair generally proceeds without further problems.
 
-Yes, that second line could be removed, and I'll do that in the next
-iteration.
+However, calling do_warn() sets fs_is_dirty to 1, so
+xfs_repair -n exits with non-zero status, indicating
+corruption.  This is incorrect.
+
+Change the message to use do_log so that it does not
+incorrectly indicate corruption.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+--- 
+
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index d950a32..5c79fd9 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -696,7 +696,7 @@ main(int argc, char **argv)
+ 		struct xfs_fsop_geom_v1 geom = { 0 };
+ 
+ 		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
+-			do_warn(_("Cannot get host filesystem geometry.\n"
++			do_log(_("Cannot get host filesystem geometry.\n"
+ 		"Repair may fail if there is a sector size mismatch between\n"
+ 		"the image and the host filesystem.\n"));
+ 			geom.sectsize = BBSIZE;
+
