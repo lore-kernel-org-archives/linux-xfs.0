@@ -1,274 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33059 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753671AbcLPGjd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Dec 2016 01:39:33 -0500
-Received: by mail-oi0-f68.google.com with SMTP id f201so8910138oib.0
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Dec 2016 22:39:33 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:42116 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932768AbcLPA37 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 19:29:59 -0500
+Date: Fri, 16 Dec 2016 11:28:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/4] xfs: adjust allocation length in
+ xfs_alloc_space_available
+Message-ID: <20161216002851.GW4219@dastard>
+References: <1481644767-9098-1-git-send-email-hch@lst.de>
+ <1481644767-9098-4-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20161216044115.21287-7-david@fromorbit.com>
-References: <20161216044115.21287-1-david@fromorbit.com> <20161216044115.21287-7-david@fromorbit.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 16 Dec 2016 08:39:31 +0200
-Message-ID: <CAOQ4uxgpFS5gcavtEGSxnFEiotX__4gMfoOAF=6mUW1sVxdYsA@mail.gmail.com>
-Subject: Re: [PATCH 6/6] libxcmd: add non-iterating user commands
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1481644767-9098-4-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-On Fri, Dec 16, 2016 at 6:41 AM, Dave Chinner <david@fromorbit.com> wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> Right now command iteration is not directly controllable by the
-> user; it is controlled entirely by the application command flag
-> setup. Sometimes we don't want commands to iterate but only operate
-> on the currently selected object.
->
-> For example, the stat command iterates:
->
-> $ xfs_io -c "open -r foo" -c "open bar" -c "file" -c "stat" foo
->  000  foo            (foreign,non-sync,non-direct,read-write)
->  001  foo            (foreign,non-sync,non-direct,read-only)
-> [002] bar            (foreign,non-sync,non-direct,read-write)
-> fd.path = "foo"
-> fd.flags = non-sync,non-direct,read-write
-> stat.ino = 462399
-> stat.type = regular file
-> stat.size = 776508
-> stat.blocks = 1528
-> fd.path = "foo"
-> fd.flags = non-sync,non-direct,read-only
-> stat.ino = 462399
-> stat.type = regular file
-> stat.size = 776508
-> stat.blocks = 1528
-> fd.path = "bar"
-> fd.flags = non-sync,non-direct,read-write
-> stat.ino = 475227
-> stat.type = regular file
-> stat.size = 0
-> stat.blocks = 0
-> $
->
-> To do this, add a function to supply a "non-iterating" user command
-> that will execute an iterating-capable command as though it
-> CMD_FLAG_ONESHOT was set. Add a new command line option to xfs_io to
-> drive it (-C <command>) and connect it all up. Document it in the
-> xfs_io man page, too.
->
-> The result of "-C stat":
->
-> $ xfs_io -c "open -r foo" -c "open bar" -c "file" -C "stat" foo
->  000  foo            (foreign,non-sync,non-direct,read-write)
->  001  foo            (foreign,non-sync,non-direct,read-only)
-> [002] bar            (foreign,non-sync,non-direct,read-write)
-> fd.path = "bar"
-> fd.flags = non-sync,non-direct,read-write
-> stat.ino = 475227
-> stat.type = regular file
-> stat.size = 0
-> stat.blocks = 0
-> $
->
-> Is that we only see the stat output for the active open file
-> which is "bar".
->
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
->  include/command.h |  1 +
->  io/init.c         |  7 +++++--
->  libxcmd/command.c | 33 +++++++++++++++++++++++++++------
->  man/man8/xfs_io.8 | 40 ++++++++++++++++++++++++++++++++++------
->  4 files changed, 67 insertions(+), 14 deletions(-)
->
-> diff --git a/include/command.h b/include/command.h
-> index 348002cbe3ed..fb3f5c79b991 100644
-> --- a/include/command.h
-> +++ b/include/command.h
-> @@ -56,6 +56,7 @@ typedef int (*checkfunc_t)(const cmdinfo_t *ci);
->
->  extern void            add_command(const cmdinfo_t *ci);
->  extern void            add_user_command(char *optarg);
-> +extern void            add_oneshot_user_command(char *optarg);
->  extern void            add_command_iterator(iterfunc_t func);
->  extern void            add_check_command(checkfunc_t cf);
->
-> diff --git a/io/init.c b/io/init.c
-> index 5ce627ef22c9..cf8573f0ecd5 100644
-> --- a/io/init.c
-> +++ b/io/init.c
-> @@ -34,7 +34,7 @@ void
->  usage(void)
->  {
->         fprintf(stderr,
-> -               _("Usage: %s [-adfinrRstVx] [-m mode] [-p prog] [-c cmd]... file\n"),
-> +_("Usage: %s [-adfinrRstVx] [-m mode] [-p prog] [[-c|-C] cmd]... file\n"),
->                 progname);
->         exit(1);
->  }
-> @@ -145,7 +145,7 @@ init(
->         pagesize = getpagesize();
->         gettimeofday(&stopwatch, NULL);
->
-> -       while ((c = getopt(argc, argv, "ac:dFfim:p:nrRstTVx")) != EOF) {
-> +       while ((c = getopt(argc, argv, "ac:C:dFfim:p:nrRstTVx")) != EOF) {
->                 switch (c) {
->                 case 'a':
->                         flags |= IO_APPEND;
-> @@ -153,6 +153,9 @@ init(
->                 case 'c':
->                         add_user_command(optarg);
->                         break;
-> +               case 'C':
-> +                       add_oneshot_user_command(optarg);
-> +                       break;
->                 case 'd':
->                         flags |= IO_DIRECT;
->                         break;
-> diff --git a/libxcmd/command.c b/libxcmd/command.c
-> index decc442a9d03..5917aea42611 100644
-> --- a/libxcmd/command.c
-> +++ b/libxcmd/command.c
-> @@ -25,8 +25,14 @@ int          ncmds;
->
->  static iterfunc_t      iter_func;
->  static checkfunc_t     check_func;
-> -static int             ncmdline;
-> -static char            **cmdline;
-> +
-> +struct cmdline {
-> +       char    *cmdline;
-> +       bool    iterate;
-> +};
-> +
-> +static int     ncmdline;
-> +struct cmdline *cmdline;
->
->  static int
->  compare(const void *a, const void *b)
-> @@ -120,12 +126,27 @@ void
->  add_user_command(char *optarg)
->  {
->         ncmdline++;
-> -       cmdline = realloc(cmdline, sizeof(char*) * (ncmdline));
-> +       cmdline = realloc(cmdline, sizeof(struct cmdline) * (ncmdline));
-> +       if (!cmdline) {
-> +               perror("realloc");
-> +               exit(1);
-> +       }
-> +       cmdline[ncmdline-1].cmdline = optarg;
-> +       cmdline[ncmdline-1].iterate = true;
-> +
-> +}
-> +
-> +void
-> +add_oneshot_user_command(char *optarg)
-> +{
-> +       ncmdline++;
-> +       cmdline = realloc(cmdline, sizeof(struct cmdline) * (ncmdline));
->         if (!cmdline) {
->                 perror("realloc");
->                 exit(1);
->         }
-> -       cmdline[ncmdline-1] = optarg;
-> +       cmdline[ncmdline-1].cmdline = optarg;
-> +       cmdline[ncmdline-1].iterate = false;
->  }
->
->  /*
-> @@ -212,14 +233,14 @@ command_loop(void)
->
->         /* command line mode */
->         for (i = 0; !done && i < ncmdline; i++) {
-> -               input = strdup(cmdline[i]);
-> +               input = strdup(cmdline[i].cmdline);
->                 if (!input) {
->                         fprintf(stderr,
->                                 _("cannot strdup command '%s': %s\n"),
->                                 cmdline[i], strerror(errno));
+On Tue, Dec 13, 2016 at 04:59:26PM +0100, Christoph Hellwig wrote:
+> We must decide in xfs_alloc_fix_freelist if we can perform an
+> allocation from a given AG is possible or not based on the available
+> space, and should not fail the allocation past that point on a
+> healthy file system.
+> 
+> But currently we have two additional places that second-guess
+> xfs_alloc_fix_freelist: xfs_alloc_ag_vextent tries to adjust the
+> maxlen parameter to remove the reservation before doing the
+> allocation (but ignores the various minium freespace requirements),
+> and xfs_alloc_fix_minleft tries to fix up the allocated length
+> after we've found an extent, but ignores the reservations and also
+> doesn't take the AGFL into account (and thus fails allocations
+> for not matching minlen in some cases).
+> 
+> Remove all these later fixups and just correct the maxlen argument
+> inside xfs_alloc_fix_freelist once we have the AGF buffer locked.
 
-cmdline[i].cmdline, strerror(errno));
+Ok, the concept seems solid....
 
-I wonder how come you don't get a build warning on this?
+> @@ -2073,10 +2015,19 @@ xfs_alloc_space_available(
+>  
+>  	/* do we have enough free space remaining for the allocation? */
+>  	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
+> -			  reservation - min_free - args->total);
+> +			  reservation - min_free - args->minleft);
 
->                         exit(1);
->                 }
-> -               done = process_input(input, true);
-> +               done = process_input(input, cmdline[i].iterate);
->         }
->         free(cmdline);
->         return;
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 885df7f141e2..9db2d97d8310 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -9,10 +9,13 @@ xfs_io \- debug the I/O path of an XFS filesystem
->  .B \-c
->  .I cmd
->  ] ... [
-> +.B \-C
-> +.I cmd
-> +] ... [
->  .B \-p
->  .I prog
->  ]
-> -.I file
-> +.I [ file ]
->  .br
->  .B xfs_io \-V
->  .SH DESCRIPTION
-> @@ -25,14 +28,39 @@ These code paths include not only the obvious read/write/mmap interfaces
->  for manipulating files, but also cover all of the XFS extensions (such
->  as space preallocation, additional inode flags, etc).
->  .SH OPTIONS
-> +.B xfs_io
-> +commands may be run interactively (the default) or as arguments on the
-> +command line.
-> +Interactive mode always runs commands on the current open file, whilst commands
-> +run from the command line may be repeated on all open files rather than just the current
-> +open file.
-> +In general, open file iteration will occur for commands that operate on file
-> +content or state. In contrast, commands that operate on filesystem or
-> +system-wide state will only be run on the current file regardless of how many
-> +files are currently open.
-> +Multiple arguments may be given on the command line and they are run in the
-> +sequence given. The program exits one all commands have
-> +been run.
->  .TP 1.0i
->  .BI \-c " cmd"
-> -.B xfs_io
-> -commands may be run interactively (the default) or as arguments on
-> -the command line. Multiple
-> +Run the specified command on all currently open files.
-> +To maintain compatibility with historical usage, commands that can not be run on
-> +all open files will still be run but only execute once on the current open file.
-> +Multiple
-> +.B \-c
-> +arguments may be given and may be interleaved on the command line in any order
-> +with
-> +.B \-C
-> +commands.
-> +.TP
-> +.BI \-C " cmd"
-> +Run the specified command only on the current open file.
-> +Multiple
-> +.B \-C
-> +arguments may be given and may be interleaved on the command line in any order
-> +with
->  .B \-c
-> -arguments may be given. The commands are run in the sequence given,
-> -then the program exits.
-> +commands.
->  .TP
->  .BI \-p " prog"
->  Set the program name for prompts and some error messages,
-> --
-> 2.10.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is fine, but...
+
+> -	if (available < (int)args->minleft || available <= 0)
+> +	if (available < (int)args->total)
+>  		return false;
+
+this is where I begin to wonder. The "args->total" logic here just
+doesn't read cleanly to me. xfs_bmapi_write() says:
+
+ * An upper bound for the number of blocks to be allocated is supplied to
+ * the first call in "total"; if no allocation group has that many free
+ * blocks then the call will fail (return NULLFSBLOCK in "firstblock"). 
+
+So if we are asked to allocate 1 block, but the AG doesn't have 10
+total blocks free, then allocation will fail. What this is used for
+is to chain multiple independent data block allocations together in
+a single transaction to attempt to get them all from the one AG.
+This is used only by the directory/attr code for ensuring all the
+allocations needed to add an entry to the dir/attr tree will succeed.
+It's essentially an "external block reservation" as the AGF will be
+held locked across the multiple allocations once the first
+allocation has been done.
+
+The only time "total" is actually meaningful is the first
+allocation in a chain. i.e. when firstblock is null. It's really a
+"free blocks required to proceed" parameter , not a length
+bound for the current allocation.
+
+However, it's impact is to set a maximum length bound on the
+allocation, so I'm left to wonder why this was is being hidden this
+inside xfs_alloc_space_available() rather than dealing with it when
+setting up args->maxlen/minlen/minleft in xfs_bmap_btalloc()?
+
+i.e args->maxlen must always be less than args->total. And if we are
+using minleft to protect against running out of space for
+bmbt/rmapbt allocation, then I think it should be args->maxlen +
+args->minleft < args->total.
+
+If this can all be done and enforced in xfs_bmap_btalloc(), then we
+can get rid of args->total from the allocargs completely...
+
+
+> +	/*
+> +	 * Clamp maxlen to the amount of free space available for the actual
+> +	 * extent allocation.
+> +	 */
+> +	if (available < (int)args->maxlen && !(flags & XFS_ALLOC_FLAG_CHECK)) {
+> +		args->maxlen = available;
+> +		ASSERT(args->maxlen > 0);
+> +	}
+
+I'd love to get rid of all these (int) casts, too...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
