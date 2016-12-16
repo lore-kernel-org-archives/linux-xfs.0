@@ -1,104 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33357 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760097AbcLPMqp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Dec 2016 07:46:45 -0500
-From: Michal Hocko <mhocko@kernel.org>
-Subject: [DEBUG PATCH 2/2] silent warnings which we cannot do anything about
-Date: Fri, 16 Dec 2016 13:46:28 +0100
-Message-Id: <20161216124628.26846-3-mhocko@kernel.org>
-In-Reply-To: <20161216124628.26846-1-mhocko@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:35907 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935062AbcLPQhx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Dec 2016 11:37:53 -0500
+Date: Fri, 16 Dec 2016 11:37:50 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/9 v2] xfs: introduce and use KM_NOLOCKDEP to silence
+ reclaim lockdep false positives
+Message-ID: <20161216163749.GE8447@bfoster.bfoster>
 References: <20161215140715.12732-1-mhocko@kernel.org>
- <20161216124628.26846-1-mhocko@kernel.org>
+ <20161215140715.12732-3-mhocko@kernel.org>
+ <20161216154041.GA7645@dhcp22.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161216154041.GA7645@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-From: Michal Hocko <mhocko@suse.com>
+On Fri, Dec 16, 2016 at 04:40:41PM +0100, Michal Hocko wrote:
+> Updated patch after Mike noticed a BUG_ON when KM_NOLOCKDEP is used.
+> ---
+> From 1497e713e11639157aef21cae29052cb3dc7ab44 Mon Sep 17 00:00:00 2001
+> From: Michal Hocko <mhocko@suse.com>
+> Date: Thu, 15 Dec 2016 13:06:43 +0100
+> Subject: [PATCH] xfs: introduce and use KM_NOLOCKDEP to silence reclaim
+>  lockdep false positives
+> 
+> Now that the page allocator offers __GFP_NOLOCKDEP let's introduce
+> KM_NOLOCKDEP alias for the xfs allocation APIs. While we are at it
+> also change KM_NOFS users introduced by b17cb364dbbb ("xfs: fix missing
+> KM_NOFS tags to keep lockdep happy") and use the new flag for them
+> instead. There is really no reason to make these allocations contexts
+> weaker just because of the lockdep which even might not be enabled
+> in most cases.
+> 
 
-THIS PATCH IS FOR TESTING ONLY AND NOT MEANT TO HIT LINUS TREE
+Hi Michal,
 
-There are some code paths used by all the filesystems which we cannot
-change to drop the GFP_NOFS, yet they generate a lot of warnings.
-Provide {disable,enable}_scope_gfp_check to silence those.
-alloc_page_buffers and grow_dev_page are silenced right away.
+I haven't gone back to fully grok b17cb364dbbb ("xfs: fix missing
+KM_NOFS tags to keep lockdep happy"), so I'm not really familiar with
+the original problem. FWIW, there was another KM_NOFS instance added by
+that commit in xlog_cil_prepare_log_vecs() that is now in
+xlog_cil_alloc_shadow_bufs(). Perhaps Dave can confirm whether the
+original issue still applies..?
 
-Signed-off-by: Michal Hocko <mhocko@suse.com>
----
- fs/buffer.c           |  4 ++++
- include/linux/sched.h | 11 +++++++++++
- mm/page_alloc.c       |  3 +++
- 3 files changed, 18 insertions(+)
+Brian
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index d21771fcf7d3..d27e8f05f736 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -873,7 +873,9 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
- 	head = NULL;
- 	offset = PAGE_SIZE;
- 	while ((offset -= size) >= 0) {
-+		disable_scope_gfp_check();
- 		bh = alloc_buffer_head(GFP_NOFS);
-+		enable_scope_gfp_check();
- 		if (!bh)
- 			goto no_grow;
- 
-@@ -1003,7 +1005,9 @@ grow_dev_page(struct block_device *bdev, sector_t block,
- 	 */
- 	gfp_mask |= __GFP_NOFAIL;
- 
-+	disable_scope_gfp_check();
- 	page = find_or_create_page(inode->i_mapping, index, gfp_mask);
-+	enable_scope_gfp_check();
- 	if (!page)
- 		return ret;
- 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 288946bfc326..b379ef9ed464 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1988,6 +1988,7 @@ struct task_struct {
- 	/* A live task holds one reference. */
- 	atomic_t stack_refcount;
- #endif
-+	bool disable_scope_gfp_warn;
- 	unsigned long nofs_caller;
- 	unsigned long noio_caller;
- /* CPU-specific state of this task */
-@@ -2390,6 +2391,16 @@ static inline unsigned int __memalloc_nofs_save(unsigned long caller)
- 	return flags;
- }
- 
-+static inline void disable_scope_gfp_check(void)
-+{
-+	current->disable_scope_gfp_warn = true;
-+}
-+
-+static inline void enable_scope_gfp_check(void)
-+{
-+	current->disable_scope_gfp_warn = false;
-+}
-+
- #define memalloc_nofs_save()	__memalloc_nofs_save(_RET_IP_)
- 
- static inline void memalloc_nofs_restore(unsigned int flags)
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 9e35fb2a8681..7ecae58abf74 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -3758,6 +3758,9 @@ void debug_scope_gfp_context(gfp_t gfp_mask)
- 	if (!(gfp_mask & __GFP_DIRECT_RECLAIM))
- 		return;
- 
-+	if (current->disable_scope_gfp_warn)
-+		return;
-+
- 	if (current->flags & PF_MEMALLOC_NOIO)
- 		restrict_mask = __GFP_IO;
- 	else if ((current->flags & PF_MEMALLOC_NOFS) && (gfp_mask & __GFP_IO))
--- 
-2.10.2
-
+> Changes since v1
+> - check for KM_NOLOCKDEP in kmem_flags_convert to not hit sanity BUG_ON
+>   as per Mike Galbraith
+> 
+> Signed-off-by: Michal Hocko <mhocko@suse.com>
+> ---
+>  fs/xfs/kmem.h                | 6 +++++-
+>  fs/xfs/libxfs/xfs_da_btree.c | 4 ++--
+>  fs/xfs/xfs_buf.c             | 2 +-
+>  fs/xfs/xfs_dir2_readdir.c    | 2 +-
+>  4 files changed, 9 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+> index 689f746224e7..d5d634ef1f7f 100644
+> --- a/fs/xfs/kmem.h
+> +++ b/fs/xfs/kmem.h
+> @@ -33,6 +33,7 @@ typedef unsigned __bitwise xfs_km_flags_t;
+>  #define KM_NOFS		((__force xfs_km_flags_t)0x0004u)
+>  #define KM_MAYFAIL	((__force xfs_km_flags_t)0x0008u)
+>  #define KM_ZERO		((__force xfs_km_flags_t)0x0010u)
+> +#define KM_NOLOCKDEP	((__force xfs_km_flags_t)0x0020u)
+>  
+>  /*
+>   * We use a special process flag to avoid recursive callbacks into
+> @@ -44,7 +45,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
+>  {
+>  	gfp_t	lflags;
+>  
+> -	BUG_ON(flags & ~(KM_SLEEP|KM_NOSLEEP|KM_NOFS|KM_MAYFAIL|KM_ZERO));
+> +	BUG_ON(flags & ~(KM_SLEEP|KM_NOSLEEP|KM_NOFS|KM_MAYFAIL|KM_ZERO|KM_NOLOCKDEP));
+>  
+>  	if (flags & KM_NOSLEEP) {
+>  		lflags = GFP_ATOMIC | __GFP_NOWARN;
+> @@ -57,6 +58,9 @@ kmem_flags_convert(xfs_km_flags_t flags)
+>  	if (flags & KM_ZERO)
+>  		lflags |= __GFP_ZERO;
+>  
+> +	if (flags & KM_NOLOCKDEP)
+> +		lflags |= __GFP_NOLOCKDEP;
+> +
+>  	return lflags;
+>  }
+>  
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index f2dc1a950c85..b8b5f6914863 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -2429,7 +2429,7 @@ xfs_buf_map_from_irec(
+>  
+>  	if (nirecs > 1) {
+>  		map = kmem_zalloc(nirecs * sizeof(struct xfs_buf_map),
+> -				  KM_SLEEP | KM_NOFS);
+> +				  KM_SLEEP | KM_NOLOCKDEP);
+>  		if (!map)
+>  			return -ENOMEM;
+>  		*mapp = map;
+> @@ -2488,7 +2488,7 @@ xfs_dabuf_map(
+>  		 */
+>  		if (nfsb != 1)
+>  			irecs = kmem_zalloc(sizeof(irec) * nfsb,
+> -					    KM_SLEEP | KM_NOFS);
+> +					    KM_SLEEP | KM_NOLOCKDEP);
+>  
+>  		nirecs = nfsb;
+>  		error = xfs_bmapi_read(dp, (xfs_fileoff_t)bno, nfsb, irecs,
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 7f0a01f7b592..f31ae592dcae 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1785,7 +1785,7 @@ xfs_alloc_buftarg(
+>  {
+>  	xfs_buftarg_t		*btp;
+>  
+> -	btp = kmem_zalloc(sizeof(*btp), KM_SLEEP | KM_NOFS);
+> +	btp = kmem_zalloc(sizeof(*btp), KM_SLEEP | KM_NOLOCKDEP);
+>  
+>  	btp->bt_mount = mp;
+>  	btp->bt_dev =  bdev->bd_dev;
+> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+> index 003a99b83bd8..033ed65d7ce6 100644
+> --- a/fs/xfs/xfs_dir2_readdir.c
+> +++ b/fs/xfs/xfs_dir2_readdir.c
+> @@ -503,7 +503,7 @@ xfs_dir2_leaf_getdents(
+>  	length = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
+>  	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
+>  				(length * sizeof(struct xfs_bmbt_irec)),
+> -			       KM_SLEEP | KM_NOFS);
+> +			       KM_SLEEP | KM_NOLOCKDEP);
+>  	map_info->map_size = length;
+>  
+>  	/*
+> -- 
+> 2.10.2
+> 
+> -- 
+> Michal Hocko
+> SUSE Labs
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
