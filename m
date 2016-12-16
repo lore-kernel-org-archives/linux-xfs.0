@@ -1,51 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from forward1m.cmail.yandex.net ([5.255.216.2]:40650 "EHLO
-        forward1m.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932179AbcLLVAz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2016 16:00:55 -0500
-From: Ozgur Karatas <okaratas@member.fsf.org>
-In-Reply-To: <1481575838.1764.39.camel@perches.com>
-References: <987271481540010@web27o.yandex.ru>
-         <66c68b88-e338-1d9a-b9dd-b8d858ebf349@sandeen.net>
-         <1481566450.1764.23.camel@perches.com>
-         <50420874-ffde-283f-f2e7-cb2ebbec1b84@sandeen.net>
-         <737751481574841@web26j.yandex.ru>
-         <cbf01379-fbcb-b42e-abc1-1b368b9d6633@sandeen.net> <1481575838.1764.39.camel@perches.com>
-Subject: Re: [PATCH 1/1] Fixed to codestyle
+Received: from userp1040.oracle.com ([156.151.31.81]:23451 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754042AbcLPA7A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 19:59:00 -0500
+Date: Thu, 15 Dec 2016 16:58:49 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3] xfs_repair: fix some potential null pointer
+ deferences
+Message-ID: <20161216005849.GF5357@birch.djwong.org>
+References: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
+ <e50f0bdd-9555-2c67-781c-362b4140e431@sandeen.net>
 MIME-Version: 1.0
-Message-Id: <1199671481576047@web19h.yandex.ru>
-Date: Mon, 12 Dec 2016 22:54:07 +0200
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e50f0bdd-9555-2c67-781c-362b4140e431@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Joe Perches <joe@perches.com>, Eric Sandeen <sandeen@sandeen.net>, "david@fromorbit.com" <david@fromorbit.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-12.12.2016, 22:50, "Joe Perches" <joe@perches.com>:
-> On Mon, 2016-12-12 at 14:41 -0600, Eric Sandeen wrote:
->>  On 12/12/16 2:34 PM, Ozgur Karatas wrote:
->
-> []
->>  > Can you tell me the true code style? should use to (* uuid)?
->>  > I'm learn to new and I'm newbies :)
->>
->>  Well, rule #1 for newbies is "code style patches aren't
->>  very useful, and usually are not welcomed by the project."
->
-> I'd amend that to
->
-> "newbies should only use checkpatch on files in drivers/staging/"
->
-> and are generally welcome to do exactly that in order to learn
-> how to submit patches appropriately before finding something
-> actually useful to change in other areas of the kernel.
+On Thu, Dec 15, 2016 at 05:17:14PM -0600, Eric Sandeen wrote:
+> On 12/15/16 12:11 PM, Darrick J. Wong wrote:
+> > Fix some potential NULL pointer deferences that Coverity pointed out,
+> > and remove a trivial dead integer check.
+> > 
+> > Coverity-id: 1375789, 1375790, 1375791, 1375792
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  repair/phase5.c |    2 +-
+> >  repair/rmap.c   |    2 +-
+> >  repair/slab.h   |    2 +-
+> >  3 files changed, 3 insertions(+), 3 deletions(-)
+> > 
+> > 
+> > diff --git a/repair/phase5.c b/repair/phase5.c
+> > index 3604d1d..cbda556 100644
+> > --- a/repair/phase5.c
+> > +++ b/repair/phase5.c
+> > @@ -1925,7 +1925,7 @@ _("Insufficient memory to construct refcount cursor."));
+> >  	refc_rec = pop_slab_cursor(refc_cur);
+> >  	lptr = &btree_curs->level[0];
+> >  
+> > -	for (i = 0; i < lptr->num_blocks; i++)  {
+> > +	for (i = 0; i < lptr->num_blocks && refc_rec != NULL; i++)  {
+> 
+> Ok, you sent this patch already as well :)
+> 
+> And it matches the exact same thing that exists for a while in
+> the rmap_tree builder, so yay for that.  :)
+> 
+> but is this just shutting up coverity, or is this something that could
+> happen?  If it /does/ happen, is skipping the loop all we really need
+> to do?  Sorry - I have to think harder about what's going on in here
+> as we build the tree, but maybe you already know. 
 
-Dear Joe;
-I understand, thank you very much but I use XFS and I'm trying to learn how to code to XFS filesystems. 
-Maybe, I can try for XFS and I need to very learn more :)
+It's just shutting Coverity up -- we should always run out of num_blocks
+before pop_slab_cursor runs out of records to put in the leaf blocks and
+returns NULL.  init_{rmap,refcount}bt_cursor does the following:
 
-Regards,
+num_recs = {rmap,refcount}_record_count(...);
+lptr->num_blocks = (num_recs + maxrecs - 1) / maxrecs;
 
-Ozgur Karatas
+But there's no harm in sanity checking just in case this ever becomes
+untrue.
+
+> My sense of tidiness and consistency is bothered by the fact that
+> we don't have similar null-check-skip-loop for, say, ino_rec
+> in build_ino_tree, or ext_ptr in build_freespace_tree.
+
+The other tree builders don't use slabs, so the loops are different.
+
+--D
+
+> 
+> 
+> >  		/*
+> >  		 * block initialization, lay in block header
+> >  		 */
+> > diff --git a/repair/rmap.c b/repair/rmap.c
+> > index 45e183a..7508973 100644
+> > --- a/repair/rmap.c
+> > +++ b/repair/rmap.c
+> > @@ -790,7 +790,7 @@ compute_refcounts(
+> >  		mark_inode_rl(mp, stack_top);
+> >  
+> >  		/* Set nbno to the bno of the next refcount change */
+> > -		if (n < slab_count(rmaps))
+> > +		if (n < slab_count(rmaps) && array_cur)
+> >  			nbno = array_cur->rm_startblock;
+> >  		else
+> >  			nbno = NULLAGBLOCK;
+> > diff --git a/repair/slab.h b/repair/slab.h
+> > index 4aa5512..a2201f1 100644
+> > --- a/repair/slab.h
+> > +++ b/repair/slab.h
+> > @@ -54,7 +54,7 @@ extern void *bag_item(struct xfs_bag *, size_t);
+> >  
+> >  #define foreach_bag_ptr_reverse(bag, idx, ptr) \
+> >  	for ((idx) = bag_count(bag) - 1, (ptr) = bag_item((bag), (idx)); \
+> > -	     (idx) >= 0 && (ptr) != NULL; \
+> > +	     (ptr) != NULL; \
+> >  	     (idx)--, (ptr) = bag_item((bag), (idx)))
+> >  
+> >  #endif /* SLAB_H_ */
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
