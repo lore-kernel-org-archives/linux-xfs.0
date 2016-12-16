@@ -1,34 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49020 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:52958 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754615AbcLPPrn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Dec 2016 10:47:43 -0500
-Date: Fri, 16 Dec 2016 09:37:32 -0600
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [LSF/MM ATTEND] filesystems / xfs
-Message-ID: <20161216153732.GA26958@redhat.com>
+        id S1759020AbcLPIUq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Dec 2016 03:20:46 -0500
+Date: Fri, 16 Dec 2016 09:20:44 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
+Message-ID: <20161216082044.GB32288@lst.de>
+References: <1481644767-9098-1-git-send-email-hch@lst.de> <1481644767-9098-2-git-send-email-hch@lst.de> <20161215220938.GV4219@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20161215220938.GV4219@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-Hello-
+On Fri, Dec 16, 2016 at 09:09:38AM +1100, Dave Chinner wrote:
+> > @@ -3812,7 +3812,6 @@ xfs_bmap_btalloc(
+> >  		args.fsbno = 0;
+> >  		args.type = XFS_ALLOCTYPE_FIRST_AG;
+> >  		args.total = ap->minlen;
+> > -		args.minleft = 0;
+> >  		if ((error = xfs_alloc_vextent(&args)))
+> >  			return error;
+> >  		ap->dfops->dop_low = true;
+> 
+> But this looks wrong. when combined with the next patch that sets:
+> 
+> 	args.minleft = xfs_bmap_worst_indlen(ap->ip, args.maxlen);
+> 
+> we've got a minleft value that might be for multigigabyte
+> allocation, but now we are only asking for a total allocation
+> of minlen, and that might be 1 block. IOWs, shouldn't this "last,
+> final attempt" code actually do something like this:
+> 
+> 		args.maxlen = ap->minlen;
+> 		args.total = ap->minlen;
+> 		args.minleft = xfs_bmap_worst_indlen(ap->ip, args.maxlen);
 
-I've been a full time XFS developer for 1.5 years, and I've
-contributed to XFS in previous lives. Naturally, I'm interested
-in filesystem work, particularly relating to XFS. I've also done
-some work with ext4 and btrfs, and I've been comparing and
-contrasting various attributes and shortcomings of these popular
-offerings.
-
-I'd like to learn more about the latest developments in reflink,
-rmap and dedup, and LSF/MM provides a good forum for those
-discussions. Please consider me for invitation.
-
-Thanks-
-Bill
-
+Yes.  And I actually had that in a previous iteration, and it got
+dropped at some point.
