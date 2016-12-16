@@ -1,125 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33454 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753008AbcLYLOI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Dec 2016 06:14:08 -0500
-Received: by mail-wm0-f68.google.com with SMTP id u144so49345715wmu.0
-        for <linux-xfs@vger.kernel.org>; Sun, 25 Dec 2016 03:14:07 -0800 (PST)
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2] libxfs: fix the size of xfs_mode_to_ftype table
-Date: Sun, 25 Dec 2016 13:13:48 +0200
-Message-Id: <1482664428-17338-1-git-send-email-amir73il@gmail.com>
+Received: from userp1050.oracle.com ([156.151.31.82]:40571 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756654AbcLPCjf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 21:39:35 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id uBG0sl0a019251
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Dec 2016 00:54:48 GMT
+Date: Thu, 15 Dec 2016 16:52:51 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 4/3] xfs_io: fix some documentation problems
+Message-ID: <20161216005251.GE5357@birch.djwong.org>
+References: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-Fix the size of the xfs_mode_to_ftype conversion table,
-which was too small to handle an invalid value of mode=S_IFMT.
+Describe the numberless (i.e. "reflink the whole file") behavior
+in the xfs_io help system and since the clone/dedupe ioctls were
+promoted to the VFS before XFS reflink landed, mention those in
+the manpage.
 
-Use a convenience macro S_DT(mode) to convert from
-mode to dirent file type and change the name of the table
-to xfs_dtype_to_ftype to correctly describe its index values.
-
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_dir2.c    | 18 +++++++++---------
- libxfs/xfs_dir2.h    |  4 +++-
- repair/dino_chunks.c |  3 +--
- repair/phase6.c      |  2 +-
- 4 files changed, 14 insertions(+), 13 deletions(-)
+ io/reflink.c      |    4 ++--
+ man/man8/xfs_io.8 |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-Eric,
-
-This is a matching patch to the one I am sending Darrick for kernel,
-so that xfsprogs and kernel's libxfs will stay in sync.
-
-Tested xfs_repair with the new xfs/348 test with -n ftype=0|1.
-
-Amir.
-
-
-v2:
-- remove wrong argument about on-disk malformed mode from commit message
-- address Brian's review comments
-- test with new xfs/348
-
-v1:
-- fix patch for xfsprogs derived from kernel patch
-
-diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-index 4180a93..e21fd33 100644
---- a/libxfs/xfs_dir2.c
-+++ b/libxfs/xfs_dir2.c
-@@ -39,15 +39,15 @@ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
-  * for file type specification. This will be propagated into the directory
-  * structure if appropriate for the given operation and filesystem config.
-  */
--const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
--	[0]			= XFS_DIR3_FT_UNKNOWN,
--	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
--	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
--	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
--	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
--	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
--	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
--	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
-+const unsigned char xfs_dtype_to_ftype[S_DT_MAX+1] = {
-+	[0]                = XFS_DIR3_FT_UNKNOWN,
-+	[S_DT(S_IFREG)]    = XFS_DIR3_FT_REG_FILE,
-+	[S_DT(S_IFDIR)]    = XFS_DIR3_FT_DIR,
-+	[S_DT(S_IFCHR)]    = XFS_DIR3_FT_CHRDEV,
-+	[S_DT(S_IFBLK)]    = XFS_DIR3_FT_BLKDEV,
-+	[S_DT(S_IFIFO)]    = XFS_DIR3_FT_FIFO,
-+	[S_DT(S_IFSOCK)]   = XFS_DIR3_FT_SOCK,
-+	[S_DT(S_IFLNK)]    = XFS_DIR3_FT_SYMLINK,
- };
+diff --git a/io/reflink.c b/io/reflink.c
+index 7b15e89..d4c745c 100644
+--- a/io/reflink.c
++++ b/io/reflink.c
+@@ -307,9 +307,9 @@ reflink_init(void)
+ 	reflink_cmd.argmax = -1;
+ 	reflink_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+ 	reflink_cmd.args =
+-_("infile src_off dst_off len");
++_("infile [src_off dst_off len]");
+ 	reflink_cmd.oneline =
+-		_("reflinks a number of bytes at a specified offset");
++		_("reflinks an entire file, or a number of bytes at a specified offset");
+ 	reflink_cmd.help = reflink_help;
  
- /*
-diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-index 89b9e24..0291f0f 100644
---- a/libxfs/xfs_dir2.h
-+++ b/libxfs/xfs_dir2.h
-@@ -35,7 +35,9 @@ extern struct xfs_name	xfs_name_dotdot;
-  * directory filetype conversion tables.
-  */
- #define S_SHIFT 12
--extern const unsigned char xfs_mode_to_ftype[];
-+#define S_DT(mode)     (((mode) & S_IFMT) >> S_SHIFT)
-+#define S_DT_MAX       S_DT(S_IFMT)
-+extern const unsigned char xfs_dtype_to_ftype[];
- 
- /*
-  * directory operations vector for encode/decode routines
-diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-index 4db9512..dd893af 100644
---- a/repair/dino_chunks.c
-+++ b/repair/dino_chunks.c
-@@ -847,9 +847,8 @@ next_readbuf:
- 			 * phase 6.
- 			 */
- 			di_mode = be16_to_cpu(dino->di_mode);
--			di_mode = (di_mode & S_IFMT) >> S_SHIFT;
- 			set_inode_ftype(ino_rec, irec_offset,
--					xfs_mode_to_ftype[di_mode]);
-+					xfs_dtype_to_ftype[S_DT(di_mode)]);
- 
- 			/*
- 			 * store on-disk nlink count for comparing in phase 7
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 06eed16..941fffc 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1082,7 +1082,7 @@ mv_orphanage(
- 	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
- 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
- 
--	xname.type = xfs_mode_to_ftype[(VFS_I(ino_p)->i_mode & S_IFMT)>>S_SHIFT];
-+	xname.type = xfs_dtype_to_ftype[S_DT(VFS_I(ino_p)->i_mode)];
- 
- 	if (isa_dir)  {
- 		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, orphanage_ino),
--- 
-2.7.4
-
+ 	add_command(&reflink_cmd);
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index f5e89ab..5cea992 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -577,7 +577,7 @@ both data and holes are displayed together or performing a recusively display.
+ .TP
+ .BI "reflink  [ \-C ] [ \-q ] src_file [src_offset dst_offset length]"
+ On filesystems that support the
+-.B XFS_IOC_CLONE_RANGE
++.B FICLONERANGE
+ or
+ .B BTRFS_IOC_CLONE_RANGE
+ ioctls, map
+@@ -607,7 +607,7 @@ Do not print timing statistics at all.
+ .TP
+ .BI "dedupe  [ \-C ] [ \-q ] src_file src_offset dst_offset length"
+ On filesystems that support the
+-.B XFS_IOC_FILE_EXTENT_SAME
++.B FIDEDUPERANGE
+ or
+ .B BTRFS_IOC_FILE_EXTENT_SAME
+ ioctls, map
