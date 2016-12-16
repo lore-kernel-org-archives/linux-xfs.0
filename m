@@ -1,70 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from forward3h.cmail.yandex.net ([87.250.230.18]:37686 "EHLO
-        forward3h.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932187AbcLLUtn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2016 15:49:43 -0500
-From: Ozgur Karatas <okaratas@member.fsf.org>
-In-Reply-To: <cbf01379-fbcb-b42e-abc1-1b368b9d6633@sandeen.net>
-References: <987271481540010@web27o.yandex.ru>
-         <66c68b88-e338-1d9a-b9dd-b8d858ebf349@sandeen.net>
-         <1481566450.1764.23.camel@perches.com>
-         <50420874-ffde-283f-f2e7-cb2ebbec1b84@sandeen.net>
-         <737751481574841@web26j.yandex.ru> <cbf01379-fbcb-b42e-abc1-1b368b9d6633@sandeen.net>
-Subject: Re: [PATCH 1/1] Fixed to codestyle
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:32446 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754177AbcLPEVm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 23:21:42 -0500
+Date: Fri, 16 Dec 2016 15:21:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/6] xfs_io: make various commands one-shot only
+Message-ID: <20161216042113.GL4326@dastard>
+References: <20161207034724.1613-1-david@fromorbit.com>
+ <20161207034724.1613-6-david@fromorbit.com>
+ <fec1a6dd-cebd-1ff4-e916-f696139b876e@sandeen.net>
+ <20161216005326.GK4326@dastard>
+ <533e20be-406a-c028-f51f-9c90775a8b66@sandeen.net>
 MIME-Version: 1.0
-Message-Id: <1093131481575777@web26g.yandex.ru>
-Date: Mon, 12 Dec 2016 22:49:37 +0200
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <533e20be-406a-c028-f51f-9c90775a8b66@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Joe Perches <joe@perches.com>, "david@fromorbit.com" <david@fromorbit.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, amir73il@gmail.com
 
-12.12.2016, 22:41, "Eric Sandeen" <sandeen@sandeen.net>:
-> Well, rule #1 for newbies is "code style patches aren't
-> very useful, and usually are not welcomed by the project."
->
-> Making style changes just because checkpatch told you to is
-> not particularly helpful. If it were important, it would have
-> been done by now. If it hasn't been done by now, odds are
-> it's not important. :)
->
-> If you are writing /new/ code, then sure, conform to the kernel
-> style, /aided/ by checkpatch.pl, and using your discretion as
-> well.
->
-> If you are just now looking at xfs/* code, best not to start
-> with "style" cleanups. You'll find this to be true in general
-> across the kernel, maintainers are usually not thrilled to have
-> this kind of patch.
+On Thu, Dec 15, 2016 at 07:50:33PM -0600, Eric Sandeen wrote:
+> On 12/15/16 6:53 PM, Dave Chinner wrote:
+> > On Thu, Dec 15, 2016 at 12:21:43PM -0600, Eric Sandeen wrote:
+> > Because they are aimed at single, specific filesystem operations
+> > only. It just doesn't make sense to iterate them across all open
+> > files inside xfs_io. If you have multiple filesystems youneed to
+> > query/modify, then do an xfs_io call for each. 
+> 
+> Ok, I guess this finally clicked for me; a very easily described
+> test for whether the flag gets set:
+> 
+>   Only operations which specifically operate on /files/ will iterate*.
+> 
+>   System-wide and fs-wide operations (even if they happen to take a
+>   file as an argument, as i.e. freeze can) do /not/ iterate.
+> 
+> *and open doesn't iterate because recursion :)
+> 
+> I'm happy with that, though I think it should be documented clearly.
+> 
+> Sorry if I was slow getting to your point.
 
-Dear Eric;
-this information was very good and thank you, I will try for the better :)
+No, you're not slow, I simply couldn't explain my rationale as
+clearly and obviously as you've just done. I'll add that to my man
+page updates, and repost the series for you.
 
-> If you want to start with a new project, learn about the code,
-> learn what it /does/, learn how to use it. use it. Find things
-> that don't work as expected, or could work better. Look into
-> bug reports and if you understand them, and the code involved,
-> try to write and test a fix. But don't go looking for whitespace
-> nitpicks.
+Cheers,
 
-I get it now, I understand but I think the error was only uuid functions.
-Now, me more careful.
-
->>  Sorry,
-
->
-> No need to be sorry, this is how we learn. ;) But really, making
-> purely cosmetic changes for their own sake is not helpful in
-> general.
->
-> -Eric
-
-I have mentioned above, thank you for all the information. 
-You are helping me and  your mentoring in some way.
-
-Regards
-
-Ozgur Karatas
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
