@@ -1,100 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21247 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756682AbcLPAv7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 19:51:59 -0500
-Date: Thu, 15 Dec 2016 16:51:52 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/3] xfs_io: fix the minimum arguments to the reflink
- command
-Message-ID: <20161216005152.GD5357@birch.djwong.org>
-References: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
- <148182551808.24784.14290922921211733530.stgit@birch.djwong.org>
- <e5f24dd4-8c2b-7b72-0622-22a1e14e6ffc@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e5f24dd4-8c2b-7b72-0622-22a1e14e6ffc@sandeen.net>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33357 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760097AbcLPMqp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Dec 2016 07:46:45 -0500
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [DEBUG PATCH 2/2] silent warnings which we cannot do anything about
+Date: Fri, 16 Dec 2016 13:46:28 +0100
+Message-Id: <20161216124628.26846-3-mhocko@kernel.org>
+In-Reply-To: <20161216124628.26846-1-mhocko@kernel.org>
+References: <20161215140715.12732-1-mhocko@kernel.org>
+ <20161216124628.26846-1-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
-On Thu, Dec 15, 2016 at 12:38:34PM -0600, Eric Sandeen wrote:
-> On 12/15/16 12:11 PM, Darrick J. Wong wrote:
-> > The reflink command can reflink the entirety of two files if the
-> > offsets and lengths are not specified... but we forgot to permit
-> > that case.
-> 
-> Could you do me a favor and also make that clear in the help output?
-> The manpage says:
-> 
->        reflink  [ -C ] [ -q ] src_file [src_offset dst_offset length]
-> 
-> 
-> but the short help doesn't indicate that it's optional:
-> 
-> reflink infile src_off dst_off len -- reflinks a number of bytes at a specified offset
+From: Michal Hocko <mhocko@suse.com>
 
-Hah, ok, yes, that's unclear and I'll fix it in a 4/3 patch.
+THIS PATCH IS FOR TESTING ONLY AND NOT MEANT TO HIT LINUS TREE
 
---D
+There are some code paths used by all the filesystems which we cannot
+change to drop the GFP_NOFS, yet they generate a lot of warnings.
+Provide {disable,enable}_scope_gfp_check to silence those.
+alloc_page_buffers and grow_dev_page are silenced right away.
 
-> 
-> and neither it nor the long help mentions the -C & -q switches:
-> 
-> xfs_io> help reflink
-> reflink infile src_off dst_off len -- reflinks a number of bytes at a specified offset
-> 
->  Links a range of bytes (in block size increments) from a file into a range
->  of bytes in the open file.  The two extent ranges need not contain identical
->  data.
-> 
->  Example:
->  'reflink some_file 0 4096 32768' - links 32768 bytes from some_file at
->                                     offset 0 to into the open file at
->                                     position 4096
->  'reflink some_file' - links all bytes from some_file into the open file
->                        at position 0
-> 
->  Reflink a range of blocks from a given input file to the open file.  Both
->  files share the same range of physical disk blocks; a write to the shared
->  range of either file should result in the write landing in a new block and
->  that range of the file being remapped (i.e. copy-on-write).  Both files
->  must reside on the same filesystem.
-> 
-> V2 or patch 4/3 is fine :)
-> 
-> Thanks,
-> -Eric
-> 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  io/reflink.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/io/reflink.c b/io/reflink.c
-> > index a09e82d..d26cbdd 100644
-> > --- a/io/reflink.c
-> > +++ b/io/reflink.c
-> > @@ -302,7 +302,7 @@ reflink_init(void)
-> >  	reflink_cmd.name = "reflink";
-> >  	reflink_cmd.altname = "rl";
-> >  	reflink_cmd.cfunc = reflink_f;
-> > -	reflink_cmd.argmin = 4;
-> > +	reflink_cmd.argmin = 1;
-> >  	reflink_cmd.argmax = -1;
-> >  	reflink_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> >  	reflink_cmd.args =
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ fs/buffer.c           |  4 ++++
+ include/linux/sched.h | 11 +++++++++++
+ mm/page_alloc.c       |  3 +++
+ 3 files changed, 18 insertions(+)
+
+diff --git a/fs/buffer.c b/fs/buffer.c
+index d21771fcf7d3..d27e8f05f736 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -873,7 +873,9 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
+ 	head = NULL;
+ 	offset = PAGE_SIZE;
+ 	while ((offset -= size) >= 0) {
++		disable_scope_gfp_check();
+ 		bh = alloc_buffer_head(GFP_NOFS);
++		enable_scope_gfp_check();
+ 		if (!bh)
+ 			goto no_grow;
+ 
+@@ -1003,7 +1005,9 @@ grow_dev_page(struct block_device *bdev, sector_t block,
+ 	 */
+ 	gfp_mask |= __GFP_NOFAIL;
+ 
++	disable_scope_gfp_check();
+ 	page = find_or_create_page(inode->i_mapping, index, gfp_mask);
++	enable_scope_gfp_check();
+ 	if (!page)
+ 		return ret;
+ 
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 288946bfc326..b379ef9ed464 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1988,6 +1988,7 @@ struct task_struct {
+ 	/* A live task holds one reference. */
+ 	atomic_t stack_refcount;
+ #endif
++	bool disable_scope_gfp_warn;
+ 	unsigned long nofs_caller;
+ 	unsigned long noio_caller;
+ /* CPU-specific state of this task */
+@@ -2390,6 +2391,16 @@ static inline unsigned int __memalloc_nofs_save(unsigned long caller)
+ 	return flags;
+ }
+ 
++static inline void disable_scope_gfp_check(void)
++{
++	current->disable_scope_gfp_warn = true;
++}
++
++static inline void enable_scope_gfp_check(void)
++{
++	current->disable_scope_gfp_warn = false;
++}
++
+ #define memalloc_nofs_save()	__memalloc_nofs_save(_RET_IP_)
+ 
+ static inline void memalloc_nofs_restore(unsigned int flags)
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 9e35fb2a8681..7ecae58abf74 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -3758,6 +3758,9 @@ void debug_scope_gfp_context(gfp_t gfp_mask)
+ 	if (!(gfp_mask & __GFP_DIRECT_RECLAIM))
+ 		return;
+ 
++	if (current->disable_scope_gfp_warn)
++		return;
++
+ 	if (current->flags & PF_MEMALLOC_NOIO)
+ 		restrict_mask = __GFP_IO;
+ 	else if ((current->flags & PF_MEMALLOC_NOFS) && (gfp_mask & __GFP_IO))
+-- 
+2.10.2
+
