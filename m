@@ -1,99 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25008 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754581AbcLPBWP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 20:22:15 -0500
-Date: Thu, 15 Dec 2016 17:21:47 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] duperemove: test presence of dedupe ioctl
-Message-ID: <20161216012147.GH5357@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:36964 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933722AbcLPBuf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Dec 2016 20:50:35 -0500
+Subject: Re: [PATCH 5/6] xfs_io: make various commands one-shot only
+References: <20161207034724.1613-1-david@fromorbit.com>
+ <20161207034724.1613-6-david@fromorbit.com>
+ <fec1a6dd-cebd-1ff4-e916-f696139b876e@sandeen.net>
+ <20161216005326.GK4326@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <533e20be-406a-c028-f51f-9c90775a8b66@sandeen.net>
+Date: Thu, 15 Dec 2016 19:50:33 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20161216005326.GK4326@dastard>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: mfasheh@versity.com
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, amir73il@gmail.com
 
-Since a zero-length dedupe operation is guaranteed to succeed, use that
-to test whether or not this filesystem supports dedupe.
+On 12/15/16 6:53 PM, Dave Chinner wrote:
+> On Thu, Dec 15, 2016 at 12:21:43PM -0600, Eric Sandeen wrote:
+>> On 12/6/16 9:47 PM, Dave Chinner wrote:
+>>> From: Dave Chinner <dchinner@redhat.com>
+>>>
+>>> It makes no sense to iterate the file table for some xfs_io
+>>> commands. Some commands are already marked in this way, but lots of
+>>> them are not and this leads to bad behaviour. For example, the open
+>>> command will run until the process fd table is full and EMFILE is
+>>> returned rather than just opening the specified file once.
+>>
+>> Ok, I'm not quite clear on when we should expect commands to be
+>> "oneshot"
+>>
+>> With freeze, for example, this:
+>>
+>> xfs_io -x -c freeze mnt/file mnt2/file
+>>
+>> will freeze both filesystems today.  With this change,
+> 
+> xfs_freeze will ignore multiple filesystem options, so it only ever
+> passes a single file to xfs_io.  IOWs, it's behaviour will be
+> completely unchanged by making the xfs_io freeze command a one-shot
+> command.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: Don't declare a new type; just declare the struct on the stack.
----
- file_scan.c |   45 +++++++++++++++++++++++++++++++++++----------
- 1 file changed, 35 insertions(+), 10 deletions(-)
+Sure, but xfs_freeze is not xfs_io, it's a wrapper which by design
+presents /simple/ single-fs arguments to xfs_io.
+ 
+> And right now, I think that's the only case we have to care about.
+> unless someone is actually using xfs_io directly to freeze multiple
+> filesystems like this, then I think it's better to make it a
+> one-shot command.
+> 
+>> xfs_io -x -c freeze mnt/file mnt2/file
+>>
+>> freezes the mnt2 filesystem but not mnt.  Is that desired?
+> 
+> It's exactly what the man page says the freeze command does.
+> 
+>> I guess the command /is/ documented as "freeze fs of /current/ file"
+>> but i wonder if that's just an accident of documentation.
+> 
+> If the man page documents it as operating on the current file,
+> but instead it freezes all the open files, then that's a bug that
+> needs fixing.
 
-diff --git a/file_scan.c b/file_scan.c
-index 617f166..2708bfe 100644
---- a/file_scan.c
-+++ b/file_scan.c
-@@ -45,11 +45,7 @@
- #include "file_scan.h"
- #include "dbfile.h"
- #include "util.h"
--
--/* This is not in linux/magic.h */
--#ifndef	XFS_SB_MAGIC
--#define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
--#endif
-+#include "btrfs-ioctl.h"
+yes, in either the man page /or/ the code...
  
- static char path[PATH_MAX] = { 0, };
- static char *pathp = path;
-@@ -189,6 +185,37 @@ static int walk_dir(const char *name)
- 	return ret;
- }
- 
-+/*
-+ * A zero-length dedupe between two files should always succeed,
-+ * so we can use this to test the presence of dedupe functionality.
-+ */
-+static bool check_ioctl_works(int fd)
-+{
-+	struct {
-+		struct btrfs_ioctl_same_args args;
-+		struct btrfs_ioctl_same_extent_info info;
-+	} sa = {0};
-+	struct stat sb;
-+	static int cached = -1;
-+	int ret;
-+
-+	if (cached >= 0)
-+		return cached != 0;
-+
-+	ret = fstat(fd, &sb);
-+	if (ret)
-+		return false;
-+
-+	sa.args.dest_count = 1;
-+	sa.args.length = 0;
-+	sa.info.fd = fd;
-+	sa.info.logical_offset = 0;
-+	errno = 0;
-+	ret = btrfs_extent_same(fd, &sa.args);
-+	cached = !ret && !errno && !sa.info.status;
-+	return cached;
-+}
-+
- static int __add_file(const char *name, struct stat *st,
- 		      struct filerec **ret_file)
- {
-@@ -235,12 +262,10 @@ static int __add_file(const char *name, struct stat *st,
- 		goto out;
- 	}
- 
--	if (run_dedupe &&
--	    ((fs.f_type != BTRFS_SUPER_MAGIC &&
--	      fs.f_type != XFS_SB_MAGIC))) {
-+	if (run_dedupe && !check_ioctl_works(fd)) {
- 		close(fd);
--		fprintf(stderr,	"\"%s\": Can only dedupe files on btrfs or xfs "
--			"(experimental)\n", name);
-+		fprintf(stderr,	"\"%s\": dedupe ioctl not supported on this "
-+			"filesystem.\n", name);
- 		return ENOSYS;
- 	}
- 
+>> ditto for i.e. the inode command, or resblks - why not
+>> iterate those?
+> 
+> Because they are aimed at single, specific filesystem operations
+> only. It just doesn't make sense to iterate them across all open
+> files inside xfs_io. If you have multiple filesystems youneed to
+> query/modify, then do an xfs_io call for each. 
+
+Ok, I guess this finally clicked for me; a very easily described
+test for whether the flag gets set:
+
+  Only operations which specifically operate on /files/ will iterate*.
+
+  System-wide and fs-wide operations (even if they happen to take a
+  file as an argument, as i.e. freeze can) do /not/ iterate.
+
+*and open doesn't iterate because recursion :)
+
+I'm happy with that, though I think it should be documented clearly.
+
+Sorry if I was slow getting to your point.
+
+-Eric
+
+> Cheers,
+> 
+> Dave.
+> 
