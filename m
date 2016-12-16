@@ -1,32 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:52963 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752944AbcLPIVS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Dec 2016 03:21:18 -0500
-Date: Fri, 16 Dec 2016 09:21:16 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
-Message-ID: <20161216082116.GC32288@lst.de>
-References: <1481644767-9098-1-git-send-email-hch@lst.de> <1481644767-9098-2-git-send-email-hch@lst.de> <20161214173507.GA24645@bfoster.bfoster> <20161214193626.GA12106@lst.de> <20161214215133.GA26688@bfoster.bfoster> <20161215143430.GB29477@bfoster.bfoster>
+Received: from bombadil.infradead.org ([198.137.202.9]:49408 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754214AbcLPHxv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Dec 2016 02:53:51 -0500
+Date: Thu, 15 Dec 2016 23:53:03 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] duperemove: test presence of dedupe ioctl
+Message-ID: <20161216075303.GA14470@infradead.org>
+References: <20161209175645.GB16813@birch.djwong.org>
+ <20161214104436.GB16862@infradead.org>
+ <20161214183845.GA5357@birch.djwong.org>
+ <20161214192607.GA2280@infradead.org>
+ <20161216012014.GG5357@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161215143430.GB29477@bfoster.bfoster>
+In-Reply-To: <20161216012014.GG5357@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, mfasheh@versity.com, xfs <linux-xfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On Thu, Dec 15, 2016 at 09:34:33AM -0500, Brian Foster wrote:
-> FWIW, I was playing with this a bit more and managed to manufacture a
-> filesystem layout that this series doesn't handle too well. Emphasis on
-> "manufactured" because this might not be a likely real world scenario,
-> but either way the current code handles it fine.
-> 
-> I've attached a metadump of the offending image. mdestore it, mount and
-> attempt something like 'dd if=/dev/zero of=/mnt/file' on the root. The
-> buffered write looks like it's in a livelock, waiting indefinitely for a
-> writeback cycle that will never complete...
+On Thu, Dec 15, 2016 at 05:20:14PM -0800, Darrick J. Wong wrote:
+> Fair enough, no need to pollute the namespace.
 
-Ok, I'll give it a spin.
+Or confuse poor readers with the 'fake' name :)
