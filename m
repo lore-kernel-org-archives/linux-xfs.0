@@ -1,23 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49571 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755577AbcLPHxv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Dec 2016 02:53:51 -0500
-Date: Thu, 15 Dec 2016 23:53:29 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] duperemove: test presence of dedupe ioctl
-Message-ID: <20161216075329.GB14470@infradead.org>
-References: <20161216012147.GH5357@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49020 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754615AbcLPPrn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Dec 2016 10:47:43 -0500
+Date: Fri, 16 Dec 2016 09:37:32 -0600
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: [LSF/MM ATTEND] filesystems / xfs
+Message-ID: <20161216153732.GA26958@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161216012147.GH5357@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: mfasheh@versity.com, xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-xfs@vger.kernel.org
 
-Looks fine,
+Hello-
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I've been a full time XFS developer for 1.5 years, and I've
+contributed to XFS in previous lives. Naturally, I'm interested
+in filesystem work, particularly relating to XFS. I've also done
+some work with ext4 and btrfs, and I've been comparing and
+contrasting various attributes and shortcomings of these popular
+offerings.
+
+I'd like to learn more about the latest developments in reflink,
+rmap and dedup, and LSF/MM provides a good forum for those
+discussions. Please consider me for invitation.
+
+Thanks-
+Bill
+
