@@ -1,41 +1,207 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:36777 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757633AbcLTIeR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2016 03:34:17 -0500
-Date: Tue, 20 Dec 2016 00:34:16 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/6] libxcmd: don't check generic library commands
-Message-ID: <20161220083416.GB12768@infradead.org>
-References: <20161216044115.21287-1-david@fromorbit.com>
- <20161216044115.21287-5-david@fromorbit.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:32135 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750727AbcLQGT3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Dec 2016 01:19:29 -0500
+Date: Fri, 16 Dec 2016 22:19:20 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: use the actual AG length when reserving blocks
+Message-ID: <20161217061920.GJ5357@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161216044115.21287-5-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Dec 16, 2016 at 03:41:13PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The generic "help" and "quit" commands have different methods of
-> skipping user provided command check functions that may prevent them
-> from running. xfs_quota use CMD_ALL_FSTYPES and xfs_io uses
-> CMD_FLAG_ONESHOT.  Add a new CMD_FLAG_LIBRARY to indicate commands
-> that should not be checked against application specific check
-> functions so they are always present and can be run regardless of
-> the context in which they are run.
-> 
-> This gets rid of the CMD_ALL_FSTYPES flag, and enables us to remove
-> the ONESHOT check in xfs_io so we use only app specific flags for
-> determining if app commands should run or not.
+We need to use the actual AG length when making per-AG reservations,
+since we could otherwise end up reserving more blocks out of the last
+AG than there are actual blocks.
 
-This should also remove the defintion of CMD_ALL_FSTYPES from init.h.
+Complained-about-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ag_resv.c        |    4 ++++
+ fs/xfs/libxfs/xfs_refcount_btree.c |    9 ++++++---
+ fs/xfs/libxfs/xfs_refcount_btree.h |    3 ++-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |   14 ++++++++------
+ fs/xfs/libxfs/xfs_rmap_btree.h     |    3 ++-
+ fs/xfs/xfs_fsops.c                 |   14 ++++++++++++++
+ 6 files changed, 36 insertions(+), 11 deletions(-)
 
-Except for that it looks fine to me:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index e5ebc37..fac3430 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -225,6 +225,7 @@ xfs_ag_resv_init(
+ {
+ 	xfs_extlen_t			ask;
+ 	xfs_extlen_t			used;
++	xfs_extlen_t			reserved;
+ 	int				error = 0;
+ 
+ 	/* Create the metadata reservation. */
+@@ -256,6 +257,9 @@ xfs_ag_resv_init(
+ 			goto out;
+ 	}
+ 
++	reserved = xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
++		   xfs_perag_resv(pag, XFS_AG_RESV_AGFL)->ar_reserved;
++	ASSERT(reserved <= pag->pagf_freeblks + pag->pagf_flcount);
+ out:
+ 	return error;
+ }
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index 2b1ea4c..622ef12 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -404,13 +404,14 @@ xfs_refcountbt_calc_size(
+  */
+ xfs_extlen_t
+ xfs_refcountbt_max_size(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	xfs_agblock_t		agblocks)
+ {
+ 	/* Bail out if we're uninitialized, which can happen in mkfs. */
+ 	if (mp->m_refc_mxr[0] == 0)
+ 		return 0;
+ 
+-	return xfs_refcountbt_calc_size(mp, mp->m_sb.sb_agblocks);
++	return xfs_refcountbt_calc_size(mp, agblocks);
+ }
+ 
+ /*
+@@ -425,22 +426,24 @@ xfs_refcountbt_calc_reserves(
+ {
+ 	struct xfs_buf		*agbp;
+ 	struct xfs_agf		*agf;
++	xfs_agblock_t		agblocks;
+ 	xfs_extlen_t		tree_len;
+ 	int			error;
+ 
+ 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+ 		return 0;
+ 
+-	*ask += xfs_refcountbt_max_size(mp);
+ 
+ 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
+ 	if (error)
+ 		return error;
+ 
+ 	agf = XFS_BUF_TO_AGF(agbp);
++	agblocks = be32_to_cpu(agf->agf_length);
+ 	tree_len = be32_to_cpu(agf->agf_refcount_blocks);
+ 	xfs_buf_relse(agbp);
+ 
++	*ask += xfs_refcountbt_max_size(mp, agblocks);
+ 	*used += tree_len;
+ 
+ 	return error;
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
+index 3be7768..9db008b 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.h
++++ b/fs/xfs/libxfs/xfs_refcount_btree.h
+@@ -66,7 +66,8 @@ extern void xfs_refcountbt_compute_maxlevels(struct xfs_mount *mp);
+ 
+ extern xfs_extlen_t xfs_refcountbt_calc_size(struct xfs_mount *mp,
+ 		unsigned long long len);
+-extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp);
++extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp,
++		xfs_agblock_t agblocks);
+ 
+ extern int xfs_refcountbt_calc_reserves(struct xfs_mount *mp,
+ 		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 045f075..d5b3df9 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -545,13 +545,14 @@ xfs_rmapbt_calc_size(
+  */
+ xfs_extlen_t
+ xfs_rmapbt_max_size(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	xfs_agblock_t		agblocks)
+ {
+ 	/* Bail out if we're uninitialized, which can happen in mkfs. */
+ 	if (mp->m_rmap_mxr[0] == 0)
+ 		return 0;
+ 
+-	return xfs_rmapbt_calc_size(mp, mp->m_sb.sb_agblocks);
++	return xfs_rmapbt_calc_size(mp, agblocks);
+ }
+ 
+ /*
+@@ -566,6 +567,7 @@ xfs_rmapbt_calc_reserves(
+ {
+ 	struct xfs_buf		*agbp;
+ 	struct xfs_agf		*agf;
++	xfs_agblock_t		agblocks;
+ 	xfs_extlen_t		pool_len;
+ 	xfs_extlen_t		tree_len;
+ 	int			error;
+@@ -573,18 +575,18 @@ xfs_rmapbt_calc_reserves(
+ 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+ 		return 0;
+ 
+-	/* Reserve 1% of the AG or enough for 1 block per record. */
+-	pool_len = max(mp->m_sb.sb_agblocks / 100, xfs_rmapbt_max_size(mp));
+-	*ask += pool_len;
+-
+ 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
+ 	if (error)
+ 		return error;
+ 
+ 	agf = XFS_BUF_TO_AGF(agbp);
++	agblocks = be32_to_cpu(agf->agf_length);
+ 	tree_len = be32_to_cpu(agf->agf_rmap_blocks);
+ 	xfs_buf_relse(agbp);
+ 
++	/* Reserve 1% of the AG or enough for 1 block per record. */
++	*ask += pool_len = max(agblocks / 100,
++			xfs_rmapbt_max_size(mp, agblocks));
+ 	*used += tree_len;
+ 
+ 	return error;
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+index 2a9ac47..19c08e9 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.h
++++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+@@ -60,7 +60,8 @@ extern void xfs_rmapbt_compute_maxlevels(struct xfs_mount *mp);
+ 
+ extern xfs_extlen_t xfs_rmapbt_calc_size(struct xfs_mount *mp,
+ 		unsigned long long len);
+-extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp);
++extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp,
++		xfs_agblock_t agblocks);
+ 
+ extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp,
+ 		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 87b954d..70b50f2 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -632,6 +632,20 @@ xfs_growfs_data_private(
+ 	xfs_set_low_space_thresholds(mp);
+ 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+ 
++	/*
++	 * If we expanded the last AG, free the per-AG reservation
++	 * so we can reinitialize it with the new size.
++	 */
++	if (new) {
++		struct xfs_perag	*pag;
++
++		pag = xfs_perag_get(mp, agno);
++		error = xfs_ag_resv_free(pag);
++		xfs_perag_put(pag);
++		if (error)
++			goto out;
++	}
++
+ 	/* Reserve AG metadata blocks. */
+ 	error = xfs_fs_reserve_ag_blocks(mp);
+ 	if (error && error != -ENOSPC)
