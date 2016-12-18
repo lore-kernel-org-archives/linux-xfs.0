@@ -1,153 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35907 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:51928 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935062AbcLPQhx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Dec 2016 11:37:53 -0500
-Date: Fri, 16 Dec 2016 11:37:50 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/9 v2] xfs: introduce and use KM_NOLOCKDEP to silence
- reclaim lockdep false positives
-Message-ID: <20161216163749.GE8447@bfoster.bfoster>
-References: <20161215140715.12732-1-mhocko@kernel.org>
- <20161215140715.12732-3-mhocko@kernel.org>
- <20161216154041.GA7645@dhcp22.suse.cz>
+        id S1759425AbcLRCwr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 17 Dec 2016 21:52:47 -0500
+Subject: Re: [PATCH] xfs_io: implement 'utimes' command
+References: <1482026266-6988-1-git-send-email-deepa.kernel@gmail.com>
+ <90aed6a0-f407-d915-ab39-eef8cab89169@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ecef76a5-ef46-8791-79a4-31cfc593efed@sandeen.net>
+Date: Sat, 17 Dec 2016 20:52:45 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161216154041.GA7645@dhcp22.suse.cz>
+In-Reply-To: <90aed6a0-f407-d915-ab39-eef8cab89169@sandeen.net>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: Deepa Dinamani <deepa.kernel@gmail.com>, linux-xfs@vger.kernel.org
+Cc: arnd@arndb.de, y2038@lists.linaro.org
 
-On Fri, Dec 16, 2016 at 04:40:41PM +0100, Michal Hocko wrote:
-> Updated patch after Mike noticed a BUG_ON when KM_NOLOCKDEP is used.
-> ---
-> From 1497e713e11639157aef21cae29052cb3dc7ab44 Mon Sep 17 00:00:00 2001
-> From: Michal Hocko <mhocko@suse.com>
-> Date: Thu, 15 Dec 2016 13:06:43 +0100
-> Subject: [PATCH] xfs: introduce and use KM_NOLOCKDEP to silence reclaim
->  lockdep false positives
+On 12/17/16 8:40 PM, Eric Sandeen wrote:
+> This needs some attention across all of xfs_io, but you might want
+> to return 0 for now for consistency with other commands.
 > 
-> Now that the page allocator offers __GFP_NOLOCKDEP let's introduce
-> KM_NOLOCKDEP alias for the xfs allocation APIs. While we are at it
-> also change KM_NOFS users introduced by b17cb364dbbb ("xfs: fix missing
-> KM_NOFS tags to keep lockdep happy") and use the new flag for them
-> instead. There is really no reason to make these allocations contexts
-> weaker just because of the lockdep which even might not be enabled
-> in most cases.
-> 
+> -Eric
 
-Hi Michal,
-
-I haven't gone back to fully grok b17cb364dbbb ("xfs: fix missing
-KM_NOFS tags to keep lockdep happy"), so I'm not really familiar with
-the original problem. FWIW, there was another KM_NOFS instance added by
-that commit in xlog_cil_prepare_log_vecs() that is now in
-xlog_cil_alloc_shadow_bufs(). Perhaps Dave can confirm whether the
-original issue still applies..?
-
-Brian
-
-> Changes since v1
-> - check for KM_NOLOCKDEP in kmem_flags_convert to not hit sanity BUG_ON
->   as per Mike Galbraith
+sorry, signed off too early, there were more comments below :)
+ 
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +void
+>> +utimes_init(void)
+>> +{
+>> +	utimes_cmd.name = "utimes";
+>> +	utimes_cmd.cfunc = utimes_f;
+>> +	utimes_cmd.argmin = 4;
+>> +	utimes_cmd.argmax = 4;
+>> +	utimes_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+>> +	utimes_cmd.args = _("atime_sec atime_nsec mtime_sec mtime_nsec");
+>> +	utimes_cmd.oneline = _("Update file times of the current file");
+>> +	utimes_cmd.help = utimes_help;
+>> +
+>> +	add_command(&utimes_cmd);
+>> +}
+>> diff --git a/libxcmd/input.c b/libxcmd/input.c
+>> index 5a7dce3..2fdb3e8 100644
+>> --- a/libxcmd/input.c
+>> +++ b/libxcmd/input.c
+>> @@ -327,6 +327,28 @@ timestr(
+>>  }
+>>  
+>>  /*
+>> + * Convert from a pair of arbitrary user strings into a timespec.
+>> + */
+>> +
+>> +int
+>> +timespec_from_string(
+>> +	const char	* secs,
+>> +	const char	* nsecs,
+>> +	struct timespec	* ts)
+>> +{
+>> +	char* p;
+>> +	if (!secs || !nsecs || !ts)
+>> +		return -1;
+>> +	ts->tv_sec = strtoull(secs, &p, 0);
+>> +	if (*p)
+>> +		return -1;
+>> +	ts->tv_nsec = strtoull(nsecs, &p, 0);
+>> +	if (*p)
+>> +		return -1;
+>> +	return 0;
+> I'd return 1/0 not -1/0 - not that big a deal, but the reason
+> the i.e. prid_from_string() functions return -1 on error
+> is because they actually return an ID, which is >= 0, so
+> it detects "== -1" as an error, and can't simply test
+> 1/0.
 > 
-> Signed-off-by: Michal Hocko <mhocko@suse.com>
-> ---
->  fs/xfs/kmem.h                | 6 +++++-
->  fs/xfs/libxfs/xfs_da_btree.c | 4 ++--
->  fs/xfs/xfs_buf.c             | 2 +-
->  fs/xfs/xfs_dir2_readdir.c    | 2 +-
->  4 files changed, 9 insertions(+), 5 deletions(-)
 > 
-> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-> index 689f746224e7..d5d634ef1f7f 100644
-> --- a/fs/xfs/kmem.h
-> +++ b/fs/xfs/kmem.h
-> @@ -33,6 +33,7 @@ typedef unsigned __bitwise xfs_km_flags_t;
->  #define KM_NOFS		((__force xfs_km_flags_t)0x0004u)
->  #define KM_MAYFAIL	((__force xfs_km_flags_t)0x0008u)
->  #define KM_ZERO		((__force xfs_km_flags_t)0x0010u)
-> +#define KM_NOLOCKDEP	((__force xfs_km_flags_t)0x0020u)
->  
->  /*
->   * We use a special process flag to avoid recursive callbacks into
-> @@ -44,7 +45,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
->  {
->  	gfp_t	lflags;
->  
-> -	BUG_ON(flags & ~(KM_SLEEP|KM_NOSLEEP|KM_NOFS|KM_MAYFAIL|KM_ZERO));
-> +	BUG_ON(flags & ~(KM_SLEEP|KM_NOSLEEP|KM_NOFS|KM_MAYFAIL|KM_ZERO|KM_NOLOCKDEP));
->  
->  	if (flags & KM_NOSLEEP) {
->  		lflags = GFP_ATOMIC | __GFP_NOWARN;
-> @@ -57,6 +58,9 @@ kmem_flags_convert(xfs_km_flags_t flags)
->  	if (flags & KM_ZERO)
->  		lflags |= __GFP_ZERO;
->  
-> +	if (flags & KM_NOLOCKDEP)
-> +		lflags |= __GFP_NOLOCKDEP;
-> +
->  	return lflags;
->  }
->  
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index f2dc1a950c85..b8b5f6914863 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -2429,7 +2429,7 @@ xfs_buf_map_from_irec(
->  
->  	if (nirecs > 1) {
->  		map = kmem_zalloc(nirecs * sizeof(struct xfs_buf_map),
-> -				  KM_SLEEP | KM_NOFS);
-> +				  KM_SLEEP | KM_NOLOCKDEP);
->  		if (!map)
->  			return -ENOMEM;
->  		*mapp = map;
-> @@ -2488,7 +2488,7 @@ xfs_dabuf_map(
->  		 */
->  		if (nfsb != 1)
->  			irecs = kmem_zalloc(sizeof(irec) * nfsb,
-> -					    KM_SLEEP | KM_NOFS);
-> +					    KM_SLEEP | KM_NOLOCKDEP);
->  
->  		nirecs = nfsb;
->  		error = xfs_bmapi_read(dp, (xfs_fileoff_t)bno, nfsb, irecs,
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 7f0a01f7b592..f31ae592dcae 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1785,7 +1785,7 @@ xfs_alloc_buftarg(
->  {
->  	xfs_buftarg_t		*btp;
->  
-> -	btp = kmem_zalloc(sizeof(*btp), KM_SLEEP | KM_NOFS);
-> +	btp = kmem_zalloc(sizeof(*btp), KM_SLEEP | KM_NOLOCKDEP);
->  
->  	btp->bt_mount = mp;
->  	btp->bt_dev =  bdev->bd_dev;
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index 003a99b83bd8..033ed65d7ce6 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -503,7 +503,7 @@ xfs_dir2_leaf_getdents(
->  	length = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
->  	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
->  				(length * sizeof(struct xfs_bmbt_irec)),
-> -			       KM_SLEEP | KM_NOFS);
-> +			       KM_SLEEP | KM_NOLOCKDEP);
->  	map_info->map_size = length;
->  
->  	/*
-> -- 
-> 2.10.2
+>> +}
+>> +
+>> +/*
+>>   * Convert from arbitrary user strings into a numeric ID.
+>>   * If it's all numeric, we convert that inplace, else we do
+>>   * the name lookup, and return the found identifier.
+>> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+>> index 2c56f09..3ffe439 100644
+>> --- a/man/man8/xfs_io.8
+>> +++ b/man/man8/xfs_io.8
+>> @@ -589,6 +589,17 @@ Copy data into the open file beginning at
+>>  Copy up to
+>>  .I length
+>>  bytes of data.
+>> +.RE
+>> +.PD
+>> +.TP
+>> +.TP
+> don't need two .TPs, a patch to remove the others is pending.
 > 
-> -- 
-> Michal Hocko
-> SUSE Labs
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> thanks,
+> -Eric
+> 
+>> +.BI utimes " atime_sec atime_nsec mtime_sec mtime_nsec"
+>> +The utimes command changes the atime and mtime of the current file.
+>> +sec uses UNIX timestamp notation and is the seconds elapsed since
+>> +1970-01-01 00:00:00 UTC.
+>> +nsec is the nanoseconds since the sec. This value needs to be in
+>> +the range 0-999999999 with UTIME_NOW and UTIME_OMIT being exceptions.
+>> +Each (sec, nsec) pair constitutes a single timestamp value.
+>>  
+>>  .SH MEMORY MAPPED I/O COMMANDS
+>>  .TP
+>> @@ -875,6 +886,7 @@ verbose output will be printed.
+>>  .BR fstatfs (2),
+>>  .BR fsync (2),
+>>  .BR ftruncate (2),
+>> +.BR futimens (3),
+>>  .BR mmap (2),
+>>  .BR msync (2),
+>>  .BR open (2),
