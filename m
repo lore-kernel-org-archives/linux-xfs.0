@@ -1,59 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52054 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1765747AbcLTUY3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Dec 2016 15:24:29 -0500
-Subject: Re: [PATCH] xfs_io: prefix dedupe command error messages consistently
-References: <20161219195020.GA5487@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1e4c0a50-43cc-73cf-e7d6-6ea30ec17f4a@sandeen.net>
-Date: Tue, 20 Dec 2016 14:24:27 -0600
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:63247 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752268AbcLRXza (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Dec 2016 18:55:30 -0500
+Date: Mon, 19 Dec 2016 10:55:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/4] xfs: adjust allocation length in
+ xfs_alloc_space_available
+Message-ID: <20161218235527.GM4326@dastard>
+References: <1481644767-9098-1-git-send-email-hch@lst.de>
+ <1481644767-9098-4-git-send-email-hch@lst.de>
+ <20161216002851.GW4219@dastard>
+ <20161216082544.GD32288@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20161219195020.GA5487@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161216082544.GD32288@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-On 12/19/16 1:50 PM, Darrick J. Wong wrote:
-> Prefix the perror output of the dedupe command consistently.  All the
-> other perror calls reference the ioctl name directly, so we might as
-> well do that for all the dedupe cases.
+On Fri, Dec 16, 2016 at 09:25:44AM +0100, Christoph Hellwig wrote:
+> On Fri, Dec 16, 2016 at 11:28:51AM +1100, Dave Chinner wrote:
+> > > +	/*
+> > > +	 * Clamp maxlen to the amount of free space available for the actual
+> > > +	 * extent allocation.
+> > > +	 */
+> > > +	if (available < (int)args->maxlen && !(flags & XFS_ALLOC_FLAG_CHECK)) {
+> > > +		args->maxlen = available;
+> > > +		ASSERT(args->maxlen > 0);
+> > > +	}
+> > 
+> > I'd love to get rid of all these (int) casts, too...
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> The problem here is that we compare 32-bit signed to 32-bit unsigned
+> variables.  And given that this is ripe for nasty bugs due to the C
+> type promotion rules I'd rather be extra careful.
 
-ok, after some offline discussion, *shrug* this is fine.
+Yes, I know - it's bitten me several times in the past. The
+underlying problem (IMO) is using xfs_extlen_t for things that
+aren't physical BMBT extent lengths, which are bound to:
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+#define MAXEXTLEN       ((xfs_extlen_t)0x001fffff)      /* 21 bits */            
 
-> ---
->  io/reflink.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/io/reflink.c b/io/reflink.c
-> index d4c745c..dde26b8 100644
-> --- a/io/reflink.c
-> +++ b/io/reflink.c
-> @@ -79,12 +79,12 @@ dedupe_ioctl(
->  			goto done;
->  		}
->  		if (info->status < 0) {
-> -			fprintf(stderr, "dedupe: %s\n",
-> +			fprintf(stderr, "XFS_IOC_FILE_EXTENT_SAME: %s\n",
->  					_(strerror(-info->status)));
->  			goto done;
->  		}
->  		if (info->status == XFS_EXTENT_DATA_DIFFERS) {
-> -			fprintf(stderr, "dedupe: %s\n",
-> +			fprintf(stderr, "XFS_IOC_FILE_EXTENT_SAME: %s\n",
->  					_("Extents did not match."));
->  			goto done;
->  		}
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+but it's grown to be used for everything that needs to store or
+operate on the length of an extent.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
