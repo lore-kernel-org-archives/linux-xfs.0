@@ -1,86 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41176 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:51060 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1161101AbcLPQiO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Dec 2016 11:38:14 -0500
-Date: Fri, 16 Dec 2016 11:38:11 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 5/9] xfs: use memalloc_nofs_{save,restore} instead of
- memalloc_noio*
-Message-ID: <20161216163811.GG8447@bfoster.bfoster>
-References: <20161215140715.12732-1-mhocko@kernel.org>
- <20161215140715.12732-6-mhocko@kernel.org>
+        id S1759519AbcLRCkG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 17 Dec 2016 21:40:06 -0500
+Subject: Re: [PATCH] xfs_io: implement 'utimes' command
+References: <1482026266-6988-1-git-send-email-deepa.kernel@gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <90aed6a0-f407-d915-ab39-eef8cab89169@sandeen.net>
+Date: Sat, 17 Dec 2016 20:40:04 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161215140715.12732-6-mhocko@kernel.org>
+In-Reply-To: <1482026266-6988-1-git-send-email-deepa.kernel@gmail.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
+To: Deepa Dinamani <deepa.kernel@gmail.com>, linux-xfs@vger.kernel.org
+Cc: arnd@arndb.de, y2038@lists.linaro.org
 
-On Thu, Dec 15, 2016 at 03:07:11PM +0100, Michal Hocko wrote:
-> From: Michal Hocko <mhocko@suse.com>
+On 12/17/16 7:57 PM, Deepa Dinamani wrote:
+> Add the utimes command to provide a way to utilize
+> the futimens C library call. This is the
+> interface to the utimensat system call, which updates
+> the mtime and atime of a file.
 > 
-> kmem_zalloc_large and _xfs_buf_map_pages use memalloc_noio_{save,restore}
-> API to prevent from reclaim recursion into the fs because vmalloc can
-> invoke unconditional GFP_KERNEL allocations and these functions might be
-> called from the NOFS contexts. The memalloc_noio_save will enforce
-> GFP_NOIO context which is even weaker than GFP_NOFS and that seems to be
-> unnecessary. Let's use memalloc_nofs_{save,restore} instead as it should
-> provide exactly what we need here - implicit GFP_NOFS context.
-> 
-> Signed-off-by: Michal Hocko <mhocko@suse.com>
-> ---
->  fs/xfs/kmem.c    | 10 +++++-----
->  fs/xfs/xfs_buf.c |  8 ++++----
->  2 files changed, 9 insertions(+), 9 deletions(-)
-> 
+> Signed-off-by: Deepa Dinamani <deepa.kernel@gmail.com>
+
 ...
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index f31ae592dcae..5c6f9bd4d8be 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -441,17 +441,17 @@ _xfs_buf_map_pages(
->  		bp->b_addr = NULL;
->  	} else {
->  		int retried = 0;
-> -		unsigned noio_flag;
-> +		unsigned nofs_flag;
+
+> +static int
+> +utimes_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	struct timespec t[2];
+> +	int result;
+> +
+> +	if (argc != 5)
+> +		return command_usage(&utimes_cmd);
+
+Because you set argsmin & argsmax to 4, it should be impossible
+to get here with anything other than argc=5 - it's caught
+elsewhere:
+
+xfs_io> utimes
+bad argument count 0 to utimes, expected 4 arguments
+xfs_io> utimes 1 2 3 4 5
+bad argument count 5 to utimes, expected 4 arguments
+
+> +
+> +	/* Get the timestamps */
+> +	result = timespec_from_string(argv[1], argv[2], &t[0]);
+> +	if (result) {
+> +		fprintf(stderr, "Bad value for atime\n");
+> +		return 1;
+> +	}
+> +	result = timespec_from_string(argv[3], argv[4], &t[1]);
+> +	if (result) {
+> +		fprintf(stderr, "Bad value for mtime\n");
+> +		return 1;
+> +	}
+> +
+> +	/* Call futimens to update time. */
+> +	if (futimens(file->fd, t)) {
+> +		perror("futimens");
+> +		return 1;
+> +	}
+
+Most xfs_io functions return 0 even on errors, possibly after
+setting exit_code = 1 to change the ultimate exit code;
+returning 1 will cause all processing to stop, and/or kick you
+out of the interactive shell:
+
+$ xfs_io file
+xfs_io> utimes a b c d
+Bad value for atime
+$
+
+This needs some attention across all of xfs_io, but you might want
+to return 0 for now for consistency with other commands.
+
+-Eric
+
+> +
+> +	return 0;
+> +}
+> +
+> +void
+> +utimes_init(void)
+> +{
+> +	utimes_cmd.name = "utimes";
+> +	utimes_cmd.cfunc = utimes_f;
+> +	utimes_cmd.argmin = 4;
+> +	utimes_cmd.argmax = 4;
+> +	utimes_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+> +	utimes_cmd.args = _("atime_sec atime_nsec mtime_sec mtime_nsec");
+> +	utimes_cmd.oneline = _("Update file times of the current file");
+> +	utimes_cmd.help = utimes_help;
+> +
+> +	add_command(&utimes_cmd);
+> +}
+> diff --git a/libxcmd/input.c b/libxcmd/input.c
+> index 5a7dce3..2fdb3e8 100644
+> --- a/libxcmd/input.c
+> +++ b/libxcmd/input.c
+> @@ -327,6 +327,28 @@ timestr(
+>  }
 >  
->  		/*
->  		 * vm_map_ram() will allocate auxillary structures (e.g.
->  		 * pagetables) with GFP_KERNEL, yet we are likely to be under
->  		 * GFP_NOFS context here. Hence we need to tell memory reclaim
-> -		 * that we are in such a context via PF_MEMALLOC_NOIO to prevent
-> +		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
->  		 * memory reclaim re-entering the filesystem here and
->  		 * potentially deadlocking.
->  		 */
-> -		noio_flag = memalloc_noio_save();
-> +		nofs_flag = memalloc_nofs_save();
->  		do {
->  			bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
->  						-1, PAGE_KERNEL);
-> @@ -459,7 +459,7 @@ _xfs_buf_map_pages(
->  				break;
->  			vm_unmap_aliases();
->  		} while (retried++ <= 1);
-> -		memalloc_noio_restore(noio_flag);
-> +		memalloc_noio_restore(nofs_flag);
+>  /*
+> + * Convert from a pair of arbitrary user strings into a timespec.
+> + */
+> +
+> +int
+> +timespec_from_string(
+> +	const char	* secs,
+> +	const char	* nsecs,
+> +	struct timespec	* ts)
+> +{
+> +	char* p;
+> +	if (!secs || !nsecs || !ts)
+> +		return -1;
+> +	ts->tv_sec = strtoull(secs, &p, 0);
+> +	if (*p)
+> +		return -1;
+> +	ts->tv_nsec = strtoull(nsecs, &p, 0);
+> +	if (*p)
+> +		return -1;
+> +	return 0;
 
-memalloc_nofs_restore() ?
+I'd return 1/0 not -1/0 - not that big a deal, but the reason
+the i.e. prid_from_string() functions return -1 on error
+is because they actually return an ID, which is >= 0, so
+it detects "== -1" as an error, and can't simply test
+1/0.
 
-Brian
 
+> +}
+> +
+> +/*
+>   * Convert from arbitrary user strings into a numeric ID.
+>   * If it's all numeric, we convert that inplace, else we do
+>   * the name lookup, and return the found identifier.
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 2c56f09..3ffe439 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -589,6 +589,17 @@ Copy data into the open file beginning at
+>  Copy up to
+>  .I length
+>  bytes of data.
+> +.RE
+> +.PD
+> +.TP
+> +.TP
+
+don't need two .TPs, a patch to remove the others is pending.
+
+thanks,
+-Eric
+
+> +.BI utimes " atime_sec atime_nsec mtime_sec mtime_nsec"
+> +The utimes command changes the atime and mtime of the current file.
+> +sec uses UNIX timestamp notation and is the seconds elapsed since
+> +1970-01-01 00:00:00 UTC.
+> +nsec is the nanoseconds since the sec. This value needs to be in
+> +the range 0-999999999 with UTIME_NOW and UTIME_OMIT being exceptions.
+> +Each (sec, nsec) pair constitutes a single timestamp value.
 >  
->  		if (!bp->b_addr)
->  			return -ENOMEM;
-> -- 
-> 2.10.2
+>  .SH MEMORY MAPPED I/O COMMANDS
+>  .TP
+> @@ -875,6 +886,7 @@ verbose output will be printed.
+>  .BR fstatfs (2),
+>  .BR fsync (2),
+>  .BR ftruncate (2),
+> +.BR futimens (3),
+>  .BR mmap (2),
+>  .BR msync (2),
+>  .BR open (2),
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
