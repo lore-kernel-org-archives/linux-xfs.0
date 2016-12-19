@@ -1,72 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47204 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936440AbcLUREE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Dec 2016 12:04:04 -0500
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [RFC PATCH v1 16/30] exofs: switch to new i_version API
-Date: Wed, 21 Dec 2016 12:03:33 -0500
-Message-Id: <1482339827-7882-17-git-send-email-jlayton@redhat.com>
-In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:54762 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751621AbcLSVYT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2016 16:24:19 -0500
+Date: Tue, 20 Dec 2016 08:24:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/9] xfs: introduce and use KM_NOLOCKDEP to silence
+ reclaim lockdep false positives
+Message-ID: <20161219212413.GN4326@dastard>
+References: <20161215140715.12732-1-mhocko@kernel.org>
+ <20161215140715.12732-3-mhocko@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161215140715.12732-3-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- fs/exofs/dir.c   | 8 ++++----
- fs/exofs/super.c | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+On Thu, Dec 15, 2016 at 03:07:08PM +0100, Michal Hocko wrote:
+> From: Michal Hocko <mhocko@suse.com>
+> 
+> Now that the page allocator offers __GFP_NOLOCKDEP let's introduce
+> KM_NOLOCKDEP alias for the xfs allocation APIs. While we are at it
+> also change KM_NOFS users introduced by b17cb364dbbb ("xfs: fix missing
+> KM_NOFS tags to keep lockdep happy") and use the new flag for them
+> instead. There is really no reason to make these allocations contexts
+> weaker just because of the lockdep which even might not be enabled
+> in most cases.
+> 
+> Signed-off-by: Michal Hocko <mhocko@suse.com>
 
-diff --git a/fs/exofs/dir.c b/fs/exofs/dir.c
-index 42f9a0a0c4ca..753828ef2db1 100644
---- a/fs/exofs/dir.c
-+++ b/fs/exofs/dir.c
-@@ -60,7 +60,7 @@ static int exofs_commit_chunk(struct page *page, loff_t pos, unsigned len)
- 	struct inode *dir = mapping->host;
- 	int err = 0;
- 
--	dir->i_version++;
-+	inode_inc_iversion_locked(dir);
- 
- 	if (!PageUptodate(page))
- 		SetPageUptodate(page);
-@@ -241,7 +241,7 @@ exofs_readdir(struct file *file, struct dir_context *ctx)
- 	unsigned long n = pos >> PAGE_SHIFT;
- 	unsigned long npages = dir_pages(inode);
- 	unsigned chunk_mask = ~(exofs_chunk_size(inode)-1);
--	int need_revalidate = (file->f_version != inode->i_version);
-+	bool need_revalidate = inode_cmp_iversion(inode, file->f_version);
- 
- 	if (pos > inode->i_size - EXOFS_DIR_REC_LEN(1))
- 		return 0;
-@@ -264,8 +264,8 @@ exofs_readdir(struct file *file, struct dir_context *ctx)
- 								chunk_mask);
- 				ctx->pos = (n<<PAGE_SHIFT) + offset;
- 			}
--			file->f_version = inode->i_version;
--			need_revalidate = 0;
-+			file->f_version = inode_get_iversion(inode);
-+			need_revalidate = false;
- 		}
- 		de = (struct exofs_dir_entry *)(kaddr + offset);
- 		limit = kaddr + exofs_last_byte(inode, n) -
-diff --git a/fs/exofs/super.c b/fs/exofs/super.c
-index 1076a4233b39..74400d1dcea5 100644
---- a/fs/exofs/super.c
-+++ b/fs/exofs/super.c
-@@ -159,7 +159,7 @@ static struct inode *exofs_alloc_inode(struct super_block *sb)
- 	if (!oi)
- 		return NULL;
- 
--	oi->vfs_inode.i_version = 1;
-+	inode_set_iversion(&oi->vfs_inode, 1);
- 	return &oi->vfs_inode;
- }
- 
+I'd suggest that it might be better to drop this patch for now -
+it's not necessary for the context flag changeover but does
+introduce a risk of regressions if the conversion is wrong.
+
+Hence I think this is better as a completely separate series
+which audits and changes all the unnecessary KM_NOFS allocations
+in one go. I've never liked whack-a-mole style changes like this -
+do it once, do it properly....
+
+Cheers,
+
+Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
