@@ -1,84 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34738 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936401AbcLURED (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Dec 2016 12:04:03 -0500
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [RFC PATCH v1 15/30] btrfs: convert to new i_version API
-Date: Wed, 21 Dec 2016 12:03:32 -0500
-Message-Id: <1482339827-7882-16-git-send-email-jlayton@redhat.com>
-In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:42068 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751583AbcLSWHQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2016 17:07:16 -0500
+Date: Mon, 19 Dec 2016 14:06:19 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/9] xfs: introduce and use KM_NOLOCKDEP to silence
+ reclaim lockdep false positives
+Message-ID: <20161219220619.GA7296@birch.djwong.org>
+References: <20161215140715.12732-1-mhocko@kernel.org>
+ <20161215140715.12732-3-mhocko@kernel.org>
+ <20161219212413.GN4326@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161219212413.GN4326@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- fs/btrfs/delayed-inode.c | 4 ++--
- fs/btrfs/inode.c         | 4 ++--
- fs/btrfs/tree-log.c      | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+On Tue, Dec 20, 2016 at 08:24:13AM +1100, Dave Chinner wrote:
+> On Thu, Dec 15, 2016 at 03:07:08PM +0100, Michal Hocko wrote:
+> > From: Michal Hocko <mhocko@suse.com>
+> > 
+> > Now that the page allocator offers __GFP_NOLOCKDEP let's introduce
+> > KM_NOLOCKDEP alias for the xfs allocation APIs. While we are at it
+> > also change KM_NOFS users introduced by b17cb364dbbb ("xfs: fix missing
+> > KM_NOFS tags to keep lockdep happy") and use the new flag for them
+> > instead. There is really no reason to make these allocations contexts
+> > weaker just because of the lockdep which even might not be enabled
+> > in most cases.
+> > 
+> > Signed-off-by: Michal Hocko <mhocko@suse.com>
+> 
+> I'd suggest that it might be better to drop this patch for now -
+> it's not necessary for the context flag changeover but does
+> introduce a risk of regressions if the conversion is wrong.
 
-diff --git a/fs/btrfs/delayed-inode.c b/fs/btrfs/delayed-inode.c
-index 80982a83c9fd..5e1015705c8b 100644
---- a/fs/btrfs/delayed-inode.c
-+++ b/fs/btrfs/delayed-inode.c
-@@ -1744,7 +1744,7 @@ static void fill_stack_inode_item(struct btrfs_trans_handle *trans,
- 	btrfs_set_stack_inode_nbytes(inode_item, inode_get_bytes(inode));
- 	btrfs_set_stack_inode_generation(inode_item,
- 					 BTRFS_I(inode)->generation);
--	btrfs_set_stack_inode_sequence(inode_item, inode->i_version);
-+	btrfs_set_stack_inode_sequence(inode_item, inode_get_iversion(inode));
- 	btrfs_set_stack_inode_transid(inode_item, trans->transid);
- 	btrfs_set_stack_inode_rdev(inode_item, inode->i_rdev);
- 	btrfs_set_stack_inode_flags(inode_item, BTRFS_I(inode)->flags);
-@@ -1798,7 +1798,7 @@ int btrfs_fill_inode(struct inode *inode, u32 *rdev)
- 	BTRFS_I(inode)->generation = btrfs_stack_inode_generation(inode_item);
-         BTRFS_I(inode)->last_trans = btrfs_stack_inode_transid(inode_item);
- 
--	inode->i_version = btrfs_stack_inode_sequence(inode_item);
-+	inode_set_iversion_read(inode, btrfs_stack_inode_sequence(inode_item));
- 	inode->i_rdev = 0;
- 	*rdev = btrfs_stack_inode_rdev(inode_item);
- 	BTRFS_I(inode)->flags = btrfs_stack_inode_flags(inode_item);
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index f2b281ad7af6..a56a45a3e992 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -3732,7 +3732,7 @@ static int btrfs_read_locked_inode(struct inode *inode)
- 	BTRFS_I(inode)->generation = btrfs_inode_generation(leaf, inode_item);
- 	BTRFS_I(inode)->last_trans = btrfs_inode_transid(leaf, inode_item);
- 
--	inode->i_version = btrfs_inode_sequence(leaf, inode_item);
-+	inode_set_iversion_read(inode, btrfs_inode_sequence(leaf, inode_item));
- 	inode->i_generation = BTRFS_I(inode)->generation;
- 	inode->i_rdev = 0;
- 	rdev = btrfs_inode_rdev(leaf, inode_item);
-@@ -3903,7 +3903,7 @@ static void fill_inode_item(struct btrfs_trans_handle *trans,
- 				     &token);
- 	btrfs_set_token_inode_generation(leaf, item, BTRFS_I(inode)->generation,
- 					 &token);
--	btrfs_set_token_inode_sequence(leaf, item, inode->i_version, &token);
-+	btrfs_set_token_inode_sequence(leaf, item, inode_get_iversion(inode), &token);
- 	btrfs_set_token_inode_transid(leaf, item, trans->transid, &token);
- 	btrfs_set_token_inode_rdev(leaf, item, inode->i_rdev, &token);
- 	btrfs_set_token_inode_flags(leaf, item, BTRFS_I(inode)->flags, &token);
-diff --git a/fs/btrfs/tree-log.c b/fs/btrfs/tree-log.c
-index f10bf5213ed8..4acc4d27383a 100644
---- a/fs/btrfs/tree-log.c
-+++ b/fs/btrfs/tree-log.c
-@@ -3585,7 +3585,7 @@ static void fill_inode_item(struct btrfs_trans_handle *trans,
- 	btrfs_set_token_inode_nbytes(leaf, item, inode_get_bytes(inode),
- 				     &token);
- 
--	btrfs_set_token_inode_sequence(leaf, item, inode->i_version, &token);
-+	btrfs_set_token_inode_sequence(leaf, item, inode_get_iversion(inode), &token);
- 	btrfs_set_token_inode_transid(leaf, item, trans->transid, &token);
- 	btrfs_set_token_inode_rdev(leaf, item, inode->i_rdev, &token);
- 	btrfs_set_token_inode_flags(leaf, item, BTRFS_I(inode)->flags, &token);
--- 
-2.7.4
+I was just about to write in that while I didn't see anything obviously
+wrong with the NOFS removals, I also don't know for sure that we can't
+end up recursively in those code paths (specifically the directory
+traversal thing).
 
+--D
+
+> Hence I think this is better as a completely separate series
+> which audits and changes all the unnecessary KM_NOFS allocations
+> in one go. I've never liked whack-a-mole style changes like this -
+> do it once, do it properly....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
