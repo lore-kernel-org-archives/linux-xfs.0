@@ -1,46 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:54762 "EHLO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:27295 "EHLO
         ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751621AbcLSVYT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2016 16:24:19 -0500
-Date: Tue, 20 Dec 2016 08:24:13 +1100
+        by vger.kernel.org with ESMTP id S1751583AbcLSV1J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2016 16:27:09 -0500
+Date: Tue, 20 Dec 2016 08:26:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/9] xfs: introduce and use KM_NOLOCKDEP to silence
- reclaim lockdep false positives
-Message-ID: <20161219212413.GN4326@dastard>
-References: <20161215140715.12732-1-mhocko@kernel.org>
- <20161215140715.12732-3-mhocko@kernel.org>
+Subject: Re: Switching from group to project quota's
+Message-ID: <20161219212636.GO4326@dastard>
+References: <8f374ce3da8517c472b897b07ec28517@ncoulson.com>
+ <d69ca26d-4c6c-e5a6-1c36-9d28f0b53a5a@sandeen.net>
+ <d684dc35-cc2a-b582-18d7-d9a7c30cd38c@ncoulson.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161215140715.12732-3-mhocko@kernel.org>
+In-Reply-To: <d684dc35-cc2a-b582-18d7-d9a7c30cd38c@ncoulson.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
+To: Nathan Coulson <ncoulson-ml@ncoulson.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-On Thu, Dec 15, 2016 at 03:07:08PM +0100, Michal Hocko wrote:
-> From: Michal Hocko <mhocko@suse.com>
-> 
-> Now that the page allocator offers __GFP_NOLOCKDEP let's introduce
-> KM_NOLOCKDEP alias for the xfs allocation APIs. While we are at it
-> also change KM_NOFS users introduced by b17cb364dbbb ("xfs: fix missing
-> KM_NOFS tags to keep lockdep happy") and use the new flag for them
-> instead. There is really no reason to make these allocations contexts
-> weaker just because of the lockdep which even might not be enabled
-> in most cases.
-> 
-> Signed-off-by: Michal Hocko <mhocko@suse.com>
+On Mon, Dec 19, 2016 at 11:23:19AM -0800, Nathan Coulson wrote:
+> With the long quotacheck time (+1wk,  I think one test I left
+> running for a few weeks) with our filesystem (not sure if that is
+> due to the number of files we have, or if something else is at
+> play),  I was hoping to find an alternative.
 
-I'd suggest that it might be better to drop this patch for now -
-it's not necessary for the context flag changeover but does
-introduce a risk of regressions if the conversion is wrong.
-
-Hence I think this is better as a completely separate series
-which audits and changes all the unnecessary KM_NOFS allocations
-in one go. I've never liked whack-a-mole style changes like this -
-do it once, do it properly....
+It's hung. output of sysrq-w please.
 
 Cheers,
 
