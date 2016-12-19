@@ -1,68 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45758 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936248AbcLUREC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Dec 2016 12:04:02 -0500
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [RFC PATCH v1 14/30] afs: convert to new i_version API
-Date: Wed, 21 Dec 2016 12:03:31 -0500
-Message-Id: <1482339827-7882-15-git-send-email-jlayton@redhat.com>
-In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:44608 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753160AbcLSWMy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2016 17:12:54 -0500
+Date: Mon, 19 Dec 2016 14:12:47 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] docs: enumerate possible directory ftype values
+Message-ID: <20161219221247.GB5487@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-For AFS, it's generally treated as an opaque value.
+We don't actually list the ftype constants, so do that.
 
-Note that AFS has quite a different definition for this counter. AFS
-only increments it on changes to the data, not for the metadata. We'll
-need to reconcile that somehow if we ever want to present this to
-userspace via statx.
-
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/afs/fsclient.c | 2 +-
- fs/afs/inode.c    | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ .../XFS_Filesystem_Structure/directories.asciidoc  |   29 ++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-diff --git a/fs/afs/fsclient.c b/fs/afs/fsclient.c
-index 31c616ab9b40..7958001a2bf7 100644
---- a/fs/afs/fsclient.c
-+++ b/fs/afs/fsclient.c
-@@ -108,7 +108,7 @@ static void xdr_decode_AFSFetchStatus(const __be32 **_bp,
- 		vnode->vfs_inode.i_ctime.tv_sec	= status->mtime_server;
- 		vnode->vfs_inode.i_mtime	= vnode->vfs_inode.i_ctime;
- 		vnode->vfs_inode.i_atime	= vnode->vfs_inode.i_ctime;
--		vnode->vfs_inode.i_version	= data_version;
-+		inode_set_iversion(&vnode->vfs_inode, data_version);
- 	}
+diff --git a/design/XFS_Filesystem_Structure/directories.asciidoc b/design/XFS_Filesystem_Structure/directories.asciidoc
+index 1758c4e..9bb50bd 100644
+--- a/design/XFS_Filesystem_Structure/directories.asciidoc
++++ b/design/XFS_Filesystem_Structure/directories.asciidoc
+@@ -26,6 +26,35 @@ directories.
  
- 	expected_version = status->data_version;
-diff --git a/fs/afs/inode.c b/fs/afs/inode.c
-index 86cc7264c21c..ec3a0274dc95 100644
---- a/fs/afs/inode.c
-+++ b/fs/afs/inode.c
-@@ -77,7 +77,7 @@ static int afs_inode_map_status(struct afs_vnode *vnode, struct key *key)
- 	inode->i_atime		= inode->i_mtime = inode->i_ctime;
- 	inode->i_blocks		= 0;
- 	inode->i_generation	= vnode->fid.unique;
--	inode->i_version	= vnode->status.data_version;
-+	inode_set_iversion(inode, vnode->status.data_version);
- 	inode->i_mapping->a_ops	= &afs_fs_aops;
+ * An +offset+ or +tag+ used for iterative readdir calls.
  
- 	/* check to see whether a symbolic link is really a mountpoint */
-@@ -182,7 +182,7 @@ struct inode *afs_iget_autocell(struct inode *dir, const char *dev_name,
- 	inode->i_ctime.tv_nsec	= 0;
- 	inode->i_atime		= inode->i_mtime = inode->i_ctime;
- 	inode->i_blocks		= 0;
--	inode->i_version	= 0;
-+	inode_set_iversion(inode, 0);
- 	inode->i_generation	= 0;
++* If the +XFS_SB_FEAT_INCOMPAT_FTYPE+ feature flag is set, each
++directory entry contains an +ftype+ field that caches the inode's type
++to avoid having to perform an inode lookup.
++
++.ftype values
++[options="header"]
++|=====
++| Flag				| Description
++| +XFS_DIR3_FT_UNKNOWN+ |
++Entry points to an unknown inode type.  This should never appear on disk.
++| +XFS_DIR3_FT_REG_FILE+ |
++Entry points to a file.
++| +XFS_DIR3_FT_DIR+ |
++Entry points to another directory.
++| +XFS_DIR3_FT_CHRDEV+ |
++Entry points to a character device.
++| +XFS_DIR3_FT_BLKDEV+ |
++Entry points to a block device.
++| +XFS_DIR3_FT_FIFO+ |
++Entry points to a FIFO.
++| +XFS_DIR3_FT_SOCK+ |
++Entry points to a socket.
++| +XFS_DIR3_FT_SYMLINK+ |
++Entry points to a symbolic link.
++| +XFS_DIR3_FT_WHT+ |
++Entry points to an overlayfs whiteout file.  This (as far as the author
++knows) has never appeared on disk.
++|=====
++
+ All non-shortform directories also contain two additional structures: ``leaves''
+ and ``freespace indexes''.
  
- 	set_bit(AFS_VNODE_PSEUDODIR, &vnode->flags);
--- 
-2.7.4
-
