@@ -1,60 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37148 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753844AbcLOT1X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Dec 2016 14:27:23 -0500
-Subject: Re: [PATCH 2/3] xfs_repair: fix bogus rmapbt record owner check
-References: <148182550558.24784.5628335536185073955.stgit@birch.djwong.org>
- <148182551170.24784.17780632480854888664.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7ace24be-d8c5-e306-9b33-ca6693eae586@sandeen.net>
-Date: Thu, 15 Dec 2016 13:20:36 -0600
-MIME-Version: 1.0
-In-Reply-To: <148182551170.24784.17780632480854888664.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Received: from mx1.polytechnique.org ([129.104.30.34]:38242 "EHLO
+        mx1.polytechnique.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755607AbcLSNli (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2016 08:41:38 -0500
+From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Subject: [PATCH 1/1] xfs: silent -Wformat-security warning
+Date: Mon, 19 Dec 2016 14:41:11 +0100
+Message-Id: <20161219134111.5267-1-nicolas.iooss_linux@m4x.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Nicolas Iooss <nicolas.iooss_linux@m4x.org>
 
-On 12/15/16 12:11 PM, Darrick J. Wong wrote:
-> Make the reverse mapping owner check actually validate inode numbers.
+When building the XFS driver with clang, the compiler reports a
+-Wformat-security warning in xlog_recover_validate_buf_type() because
+xfs_warn() is being called with a non-literal string. Even though
+variable warnmsg is always initialized as a constant string without any
+'%' character, silent the warning by calling xfs_warn with "%s" format
+string.
 
-Thanks, you also sent this on 11/4 so it's in my stack already.
+Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+---
+ fs/xfs/xfs_log_recover.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
--Eric
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 4a98762ec8b4..9208296e9f15 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2572,7 +2572,7 @@ xlog_recover_validate_buf_type(
+ 		return;
  
-> Coverity-id: 1371628
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  repair/scan.c |    8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/repair/scan.c b/repair/scan.c
-> index 0e13581..b9ef4dc 100644
-> --- a/repair/scan.c
-> +++ b/repair/scan.c
-> @@ -1052,8 +1052,12 @@ _("%s rmap btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
->  			}
->  
->  			/* Look for impossible owners. */
-> -			if (!(owner > 0 || (owner > XFS_RMAP_OWN_MIN &&
-> -					    owner <= XFS_RMAP_OWN_FS)))
-> +			if (!((owner > XFS_RMAP_OWN_MIN &&
-> +			       owner <= XFS_RMAP_OWN_FS) ||
-> +			      (XFS_INO_TO_AGNO(mp, owner) < mp->m_sb.sb_agcount &&
-> +			       XFS_AGINO_TO_AGBNO(mp,
-> +					XFS_INO_TO_AGINO(mp, owner)) <
-> +					mp->m_sb.sb_agblocks)))
->  				do_warn(
->  	_("invalid owner in rmap btree record %d (%"PRId64" %u) block %u/%u\n"),
->  						i, owner, len, agno, bno);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+ 	if (warnmsg) {
+-		xfs_warn(mp, warnmsg);
++		xfs_warn(mp, "%s", warnmsg);
+ 		ASSERT(0);
+ 	}
+ 
+-- 
+2.11.0
+
