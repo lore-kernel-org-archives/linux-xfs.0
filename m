@@ -1,84 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46218 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:33808 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936090AbcLUREB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Dec 2016 12:04:01 -0500
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [RFC PATCH v1 13/30] affs: convert to new i_version API
-Date: Wed, 21 Dec 2016 12:03:30 -0500
-Message-Id: <1482339827-7882-14-git-send-email-jlayton@redhat.com>
-In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+        id S1752752AbcLSOHZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Dec 2016 09:07:25 -0500
+Subject: Re: Switching from group to project quota's
+References: <8f374ce3da8517c472b897b07ec28517@ncoulson.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d69ca26d-4c6c-e5a6-1c36-9d28f0b53a5a@sandeen.net>
+Date: Mon, 19 Dec 2016 08:07:23 -0600
+MIME-Version: 1.0
+In-Reply-To: <8f374ce3da8517c472b897b07ec28517@ncoulson.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: ncoulson-ml@ncoulson.com, linux-xfs@vger.kernel.org
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- fs/affs/amigaffs.c | 4 ++--
- fs/affs/dir.c      | 4 ++--
- fs/affs/super.c    | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+On 12/18/16 7:03 PM, ncoulson-ml@ncoulson.com wrote:
+> We are currently using user and group quota's on multiple xfs
+> filesystem.  When trying to switch to Project Quota's, it attempts to
+> perform a quotacheck.
 
-diff --git a/fs/affs/amigaffs.c b/fs/affs/amigaffs.c
-index 0ec65c133b93..00aff7cfc883 100644
---- a/fs/affs/amigaffs.c
-+++ b/fs/affs/amigaffs.c
-@@ -59,7 +59,7 @@ affs_insert_hash(struct inode *dir, struct buffer_head *bh)
- 	affs_brelse(dir_bh);
- 
- 	dir->i_mtime = dir->i_ctime = current_time(dir);
--	dir->i_version++;
-+	inode_inc_iversion_locked(dir);
- 	mark_inode_dirty(dir);
- 
- 	return 0;
-@@ -113,7 +113,7 @@ affs_remove_hash(struct inode *dir, struct buffer_head *rem_bh)
- 	affs_brelse(bh);
- 
- 	dir->i_mtime = dir->i_ctime = current_time(dir);
--	dir->i_version++;
-+	inode_inc_iversion_locked(dir);
- 	mark_inode_dirty(dir);
- 
- 	return retval;
-diff --git a/fs/affs/dir.c b/fs/affs/dir.c
-index f1e7294381c5..a587d57668e3 100644
---- a/fs/affs/dir.c
-+++ b/fs/affs/dir.c
-@@ -79,7 +79,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
- 	 * we can jump directly to where we left off.
- 	 */
- 	ino = (u32)(long)file->private_data;
--	if (ino && file->f_version == inode->i_version) {
-+	if (ino && inode_cmp_iversion(inode, file->f_version) == 0) {
- 		pr_debug("readdir() left off=%d\n", ino);
- 		goto inside;
- 	}
-@@ -129,7 +129,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
- 		} while (ino);
- 	}
- done:
--	file->f_version = inode->i_version;
-+	file->f_version = inode_get_iversion(inode);
- 	file->private_data = (void *)(long)ino;
- 	affs_brelse(fh_bh);
- 
-diff --git a/fs/affs/super.c b/fs/affs/super.c
-index d6384863192c..b3ebf90f9798 100644
---- a/fs/affs/super.c
-+++ b/fs/affs/super.c
-@@ -99,7 +99,7 @@ static struct inode *affs_alloc_inode(struct super_block *sb)
- 	if (!i)
- 		return NULL;
- 
--	i->vfs_inode.i_version = 1;
-+	inode_set_iversion(&i->vfs_inode, 1);
- 	i->i_lc = NULL;
- 	i->i_ext_bh = NULL;
- 	i->i_pa_cnt = 0;
--- 
-2.7.4
+I assume that you mean you switched mount -o uquota,gquota for
+mount -o uquota,pquota or something like that?
 
+> Tested on a lvm snapshot of a live volume,  it was still not mounted
+> after about a week (and couldn't find a way to cancel the attempted
+> mount.  dmesg did mention quotacheck, but I can't say it was doing
+> the quotacheck for the full week).
+> 
+> Is there a way to convert from Group Quota's to Project Quota's while
+> avoiding the quotacheck?  (There are currently no project quota's
+> defined).  Outside of that, I was curious what scenario's would cause
+> quotacalc to recalculate.
+
+If any quota is on at mount time, and the "checked" flag is not present
+in the on-disk superblock, then quotacheck gets run.
+
+In general, we do accounting even if we don't do enforcement; i.e.
+having no quotas defined does not man that quota activity isn't
+happening - it is, because accounting happens regardless.
+
+> Thank You
+> 
+> 
+> 
+> 1TB Volumes, Reviewing one of them, we are using 67G of 934GB (they
+> vary from 400GB free to 50GB Free).
+> 
+> Inode usage seems to range from 5000000 to 8000000.
+> 
+> Using the 2.6.32 kernel from Centos 6.8, but was doing my tests with
+> a snapshot of the volume on a centos 7.2 host (kernel 3.10)
+
+
+
+> I thought I may be able to work around this by removing the group
+> quota information,  but xfs_quota -x, remove -g with and without
+> group quota's on failed to work.    Everytime I received XFS_QUOTARM:
+> Invalid argument
+
+This was likely fixed upstream in 3.16
+
+commit 9da93f9b7cdf8ab28da6b364cdc1fafc8670b4dc
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Mon May 5 17:25:50 2014 +1000
+
+    xfs: fix Q_XQUOTARM ioctl
+
+and should be fixed in sufficiently up to date centos7 as well.
+
+but removing quota inodes won't obviate the need for a quotacheck,
+I'm afraid.
+
+-Eric
+
+> 
+> User quota state on /test (/dev/sda) Accounting: ON Enforcement: OFF 
+> Inode: #131 (1663 blocks, 1639 extents) Group quota state on /test
+> (/dev/sda) Accounting: ON Enforcement: OFF Inode: #132 (1664 blocks,
+> 1648 extents) Project quota state on /test (/dev/sda) Accounting:
+> OFF Enforcement: OFF Inode: #132 (1664 blocks, 1648 extents) Blocks
+> grace time: [7 days 00:00:30] Inodes grace time: [7 days 00:00:30] 
+> Realtime Blocks grace time: [7 days 00:00:30]
+> 
+> 
+> Nathan Coulson. -- To unsubscribe from this list: send the line
+> "unsubscribe linux-xfs" in the body of a message to
+> majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
+> 
