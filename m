@@ -1,88 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:54182 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753944AbcLTVpf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2016 16:45:35 -0500
-Date: Wed, 21 Dec 2016 08:45:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
-Message-ID: <20161220214532.GR4326@dastard>
-References: <1481644767-9098-1-git-send-email-hch@lst.de>
- <1481644767-9098-2-git-send-email-hch@lst.de>
- <20161214173507.GA24645@bfoster.bfoster>
- <20161214193626.GA12106@lst.de>
- <20161214215133.GA26688@bfoster.bfoster>
- <20161215143430.GB29477@bfoster.bfoster>
- <20161219113826.GA26535@lst.de>
- <20161220141747.GA25290@bfoster.bfoster>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46653 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932479AbcLTX3E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2016 18:29:04 -0500
+Date: Tue, 20 Dec 2016 15:28:29 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: use the actual AG length when reserving blocks
+Message-ID: <20161220232828.GD9865@birch.djwong.org>
+References: <20161217061920.GJ5357@birch.djwong.org>
+ <20161220082000.GA14758@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161220141747.GA25290@bfoster.bfoster>
+In-Reply-To: <20161220082000.GA14758@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Dec 20, 2016 at 09:17:47AM -0500, Brian Foster wrote:
-> On Mon, Dec 19, 2016 at 12:38:26PM +0100, Christoph Hellwig wrote:
-> > On Thu, Dec 15, 2016 at 09:34:33AM -0500, Brian Foster wrote:
-> > > FWIW, I was playing with this a bit more and managed to manufacture a
-> > > filesystem layout that this series doesn't handle too well. Emphasis on
-> > > "manufactured" because this might not be a likely real world scenario,
-> > > but either way the current code handles it fine.
+On Tue, Dec 20, 2016 at 12:20:00AM -0800, Christoph Hellwig wrote:
+> On Fri, Dec 16, 2016 at 10:19:20PM -0800, Darrick J. Wong wrote:
+> > We need to use the actual AG length when making per-AG reservations,
+> > since we could otherwise end up reserving more blocks out of the last
+> > AG than there are actual blocks.
 > > 
-> > It does, although mostly by accident.  I suspect with an even better
-> > manufcatured image you could also drive the current code to it's knees,
-> > e.g. only have one single block free in the first few AGs, and then
-> > a small number just higher than that in a higher AG.
+> > Complained-about-by: Brian Foster <bfoster@redhat.com>
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_ag_resv.c        |    4 ++++
+> >  fs/xfs/libxfs/xfs_refcount_btree.c |    9 ++++++---
+> >  fs/xfs/libxfs/xfs_refcount_btree.h |    3 ++-
+> >  fs/xfs/libxfs/xfs_rmap_btree.c     |   14 ++++++++------
+> >  fs/xfs/libxfs/xfs_rmap_btree.h     |    3 ++-
+> >  fs/xfs/xfs_fsops.c                 |   14 ++++++++++++++
+> >  6 files changed, 36 insertions(+), 11 deletions(-)
 > > 
+> > diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+> > index e5ebc37..fac3430 100644
+> > --- a/fs/xfs/libxfs/xfs_ag_resv.c
+> > +++ b/fs/xfs/libxfs/xfs_ag_resv.c
+> > @@ -225,6 +225,7 @@ xfs_ag_resv_init(
+> >  {
+> >  	xfs_extlen_t			ask;
+> >  	xfs_extlen_t			used;
+> > +	xfs_extlen_t			reserved;
+> >  	int				error = 0;
+> >  
+> >  	/* Create the metadata reservation. */
+> > @@ -256,6 +257,9 @@ xfs_ag_resv_init(
+> >  			goto out;
+> >  	}
+> >  
+> > +	reserved = xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
+> > +		   xfs_perag_resv(pag, XFS_AG_RESV_AGFL)->ar_reserved;
+> > +	ASSERT(reserved <= pag->pagf_freeblks + pag->pagf_flcount);
 > 
-> Perhaps, I certainly wouldn't expect the code in current form to be
-> perfect. It's hard enough to understand as it is. Just trying to avoid
-> regressions and properly scope the required fix...
+> This will create a warning for non-debug builds due to the unused
+> reserved variable.
 > 
-> > > I've attached a metadump of the offending image. mdestore it, mount and
-> > > attempt something like 'dd if=/dev/zero of=/mnt/file' on the root. The
-> > > buffered write looks like it's in a livelock, waiting indefinitely for a
-> > > writeback cycle that will never complete...
-> > 
-> > Yeah, that's the loop that keeps going even if it can't allocate any
-> > blocks, which seems generally bogus.  But even without that we'd get
-> > ENOSPC despite not having a reservations. Which is a little easier to
-> > debug, but just as wrong.
-> > 
+> > +	/* Reserve 1% of the AG or enough for 1 block per record. */
+> > +	*ask += pool_len = max(agblocks / 100,
+> > +			xfs_rmapbt_max_size(mp, agblocks));
+> >  	*used += tree_len;
+> >  
+> >  	return error;
 > 
-> Indeed.
+> pool_len is initialized but not used.
 > 
-> > The only good way out I can see is to not hand out any more reservations
-> > after we only nave nr_ags * xfs_bmap_worst_indlen(1) available.  I'll
-> > see if I can come up with a patch for that.
-> 
-> Hmm, so the idea is to basically find a way we can infer accurate
-> information about the per-AG state at the time blocks are reserved from
-> the global pool (i.e., buffered write time) and cut off writes at the
-> point we can no longer guarantee at least one AG can satisfy the
-> smallest write..?
+> Otherwise this looks fine to me.
 
-We already do this for per-AG freelist minimum space requirements.
-See XFS_ALLOC_AGFL_RESERVE and the big comment above
-xfs_alloc_set_aside().
+Ok, will respin patch.
 
-What's worth noting is that xfs_alloc_set_aside() has a magic number
-of "4" added to it, which is supposedly for the bmbt split that
-might be needed. This is applied at delalloc space reservation time,
-so this would seem to me to be the place to hook into here.
+> But while looking at this patch and my current minleft "project" I've
+> started to wonder how the XFS_AG_RESV_METADATA reservations are
+> supposed to work: they are reserved out of the fs-wide pool, but
+> the user of XFS_AG_RESV_METADATA really needs a block in this particular
+> AG.
 
-I do see a problem here, though - it's only reserving space for a
-single BMBT split from the global free space pool. This is fine for
-the AGFL reservations (as they are static and fixed in size), but
-maybe this is where we are over-committing the freespace pool...
+For XFS_AG_RESV_METADATA, we hide enough free space in each AG to cover
+the absolute maximum size that we're ever going to need for the refcount
+btree, then deduct the sum of all AG reservations from the fs-wide pool.
+There's nothing tying a transaction to any specific chunk of the per-AG
+reservation; we simply reserve all blocks that we'll (hopefully) ever
+need, and only let the allocator release them to callers possessing the
+magic key^W^W^W^Wasking specifically for XFS_AG_RESV_METADATA blocks.
+For the refcount btree this was only 0.3% of the AG space.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
