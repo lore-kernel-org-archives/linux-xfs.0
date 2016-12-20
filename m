@@ -1,56 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56161 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754954AbcLNKpL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2016 05:45:11 -0500
-Date: Wed, 14 Dec 2016 02:44:36 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] duperemove: test presence of dedupe ioctl
-Message-ID: <20161214104436.GB16862@infradead.org>
-References: <20161209175645.GB16813@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:49512 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751583AbcLTAGP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Dec 2016 19:06:15 -0500
+Subject: Re: [PATCH] xfs_io: prefix dedupe command error messages consistently
+References: <20161219195020.GA5487@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ff9d53a6-fdb9-1343-eef0-4c44075cfef2@sandeen.net>
+Date: Mon, 19 Dec 2016 18:06:13 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161209175645.GB16813@birch.djwong.org>
+In-Reply-To: <20161219195020.GA5487@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: mfasheh@versity.com, xfs <linux-xfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Dec 09, 2016 at 09:56:45AM -0800, Darrick J. Wong wrote:
-> Since a zero-length dedupe operation is guaranteed to succeed, use that
-> to test whether or not this filesystem supports dedupe.
-> 
+On 12/19/16 1:50 PM, Darrick J. Wong wrote:
+> Prefix the perror output of the dedupe command consistently.  All the
+> other perror calls reference the ioctl name directly, so we might as
+> well do that for all the dedupe cases.
+
+I guess it's fine - technically, these aren't perrors.  :)
+
+and there are plenty of places like this too, though:
+
+       } else if (xfsctl(name, file->fd, FS_IOC_FSGETXATTR, &attr) < 0) {
+                fprintf(stderr, _("%s: cannot get flags on %s: %s\n"),
+                        progname, name, strerror(errno));
+
+as well.  I'd probably argue for an actual ioctl error to include
+the ioctl name, but the "eh, can't dedupe" message to be a bit more
+friendly (i.e. "dedupe: ...") - but I may be bikeshedding too much?
+
+-Eric
+
+
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  file_scan.c |   47 +++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 37 insertions(+), 10 deletions(-)
+>  io/reflink.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/file_scan.c b/file_scan.c
-> index 617f166..a34453e 100644
-> --- a/file_scan.c
-> +++ b/file_scan.c
-> @@ -45,11 +45,7 @@
->  #include "file_scan.h"
->  #include "dbfile.h"
->  #include "util.h"
-> -
-> -/* This is not in linux/magic.h */
-> -#ifndef	XFS_SB_MAGIC
-> -#define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
-> -#endif
-> +#include "btrfs-ioctl.h"
->  
->  static char path[PATH_MAX] = { 0, };
->  static char *pathp = path;
-> @@ -189,6 +185,39 @@ static int walk_dir(const char *name)
->  	return ret;
->  }
->  
-> +struct fake_btrfs_ioctl_same_args {
-> +	struct btrfs_ioctl_same_args args;
-> +	struct btrfs_ioctl_same_extent_info info;
-> +};
-
-Why does this need a fake structure here?
+> diff --git a/io/reflink.c b/io/reflink.c
+> index d4c745c..dde26b8 100644
+> --- a/io/reflink.c
+> +++ b/io/reflink.c
+> @@ -79,12 +79,12 @@ dedupe_ioctl(
+>  			goto done;
+>  		}
+>  		if (info->status < 0) {
+> -			fprintf(stderr, "dedupe: %s\n",
+> +			fprintf(stderr, "XFS_IOC_FILE_EXTENT_SAME: %s\n",
+>  					_(strerror(-info->status)));
+>  			goto done;
+>  		}
+>  		if (info->status == XFS_EXTENT_DATA_DIFFERS) {
+> -			fprintf(stderr, "dedupe: %s\n",
+> +			fprintf(stderr, "XFS_IOC_FILE_EXTENT_SAME: %s\n",
+>  					_("Extents did not match."));
+>  			goto done;
+>  		}
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
