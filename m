@@ -1,69 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36942 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936642AbcLUREH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Dec 2016 12:04:07 -0500
-From: Jeff Layton <jlayton@redhat.com>
-Subject: [RFC PATCH v1 20/30] nfsd: convert to new i_version API
-Date: Wed, 21 Dec 2016 12:03:37 -0500
-Message-Id: <1482339827-7882-21-git-send-email-jlayton@redhat.com>
-In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33063 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751245AbcLTIiW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2016 03:38:22 -0500
+Date: Tue, 20 Dec 2016 09:38:18 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 2/9] xfs: introduce and use KM_NOLOCKDEP to silence
+ reclaim lockdep false positives
+Message-ID: <20161220083818.GB3769@dhcp22.suse.cz>
+References: <20161215140715.12732-1-mhocko@kernel.org>
+ <20161215140715.12732-3-mhocko@kernel.org>
+ <20161219212413.GN4326@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161219212413.GN4326@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-Mostly just making sure we use the "get" wrappers so we know when
-it is being fetched for later use.
+On Tue 20-12-16 08:24:13, Dave Chinner wrote:
+> On Thu, Dec 15, 2016 at 03:07:08PM +0100, Michal Hocko wrote:
+> > From: Michal Hocko <mhocko@suse.com>
+> > 
+> > Now that the page allocator offers __GFP_NOLOCKDEP let's introduce
+> > KM_NOLOCKDEP alias for the xfs allocation APIs. While we are at it
+> > also change KM_NOFS users introduced by b17cb364dbbb ("xfs: fix missing
+> > KM_NOFS tags to keep lockdep happy") and use the new flag for them
+> > instead. There is really no reason to make these allocations contexts
+> > weaker just because of the lockdep which even might not be enabled
+> > in most cases.
+> > 
+> > Signed-off-by: Michal Hocko <mhocko@suse.com>
+> 
+> I'd suggest that it might be better to drop this patch for now -
+> it's not necessary for the context flag changeover but does
+> introduce a risk of regressions if the conversion is wrong.
+> 
+> Hence I think this is better as a completely separate series
+> which audits and changes all the unnecessary KM_NOFS allocations
+> in one go. I've never liked whack-a-mole style changes like this -
+> do it once, do it properly....
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- fs/nfsd/nfs3xdr.c | 2 +-
- fs/nfsd/nfs4xdr.c | 2 +-
- fs/nfsd/nfsfh.h   | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+OK, fair enough. I thought it might be better to have an example user so
+that others can follow but as you say, the risk of regression is really
+there and these kind of changes definitely need a throughout review.
 
-diff --git a/fs/nfsd/nfs3xdr.c b/fs/nfsd/nfs3xdr.c
-index dba2ff8eaa68..a645b1dbc4e3 100644
---- a/fs/nfsd/nfs3xdr.c
-+++ b/fs/nfsd/nfs3xdr.c
-@@ -260,7 +260,7 @@ void fill_post_wcc(struct svc_fh *fhp)
- 		printk("nfsd: inode locked twice during operation.\n");
- 
- 	err = fh_getattr(fhp, &fhp->fh_post_attr);
--	fhp->fh_post_change = d_inode(fhp->fh_dentry)->i_version;
-+	fhp->fh_post_change = inode_get_iversion(d_inode(fhp->fh_dentry));
- 	if (err) {
- 		fhp->fh_post_saved = false;
- 		/* Grab the ctime anyway - set_change_info might use it */
-diff --git a/fs/nfsd/nfs4xdr.c b/fs/nfsd/nfs4xdr.c
-index 7ecf16be4a44..98bd030f849a 100644
---- a/fs/nfsd/nfs4xdr.c
-+++ b/fs/nfsd/nfs4xdr.c
-@@ -1969,7 +1969,7 @@ nfsd4_decode_compound(struct nfsd4_compoundargs *argp)
- static __be32 *encode_change(__be32 *p, struct kstat *stat, struct inode *inode)
- {
- 	if (IS_I_VERSION(inode)) {
--		p = xdr_encode_hyper(p, inode->i_version);
-+		p = xdr_encode_hyper(p, inode_get_iversion(inode));
- 	} else {
- 		*p++ = cpu_to_be32(stat->ctime.tv_sec);
- 		*p++ = cpu_to_be32(stat->ctime.tv_nsec);
-diff --git a/fs/nfsd/nfsfh.h b/fs/nfsd/nfsfh.h
-index f84fe6bf9aee..7a66065f6e74 100644
---- a/fs/nfsd/nfsfh.h
-+++ b/fs/nfsd/nfsfh.h
-@@ -253,7 +253,7 @@ fill_pre_wcc(struct svc_fh *fhp)
- 		fhp->fh_pre_mtime = inode->i_mtime;
- 		fhp->fh_pre_ctime = inode->i_ctime;
- 		fhp->fh_pre_size  = inode->i_size;
--		fhp->fh_pre_change = inode->i_version;
-+		fhp->fh_pre_change = inode_get_iversion(inode);
- 		fhp->fh_pre_saved = true;
- 	}
- }
+I am not sure I will be able to post more of those changes because that
+requires an intimate knowledge of the fs so I hope somebody can take
+over there and follow up.
+
+Thanks!
 -- 
-2.7.4
-
+Michal Hocko
+SUSE Labs
