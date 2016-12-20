@@ -1,66 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34949 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934382AbcLTOHw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2016 09:07:52 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:37056 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755385AbcLTK3i (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Dec 2016 05:29:38 -0500
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4E241F44D7
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2016 10:29:38 +0000 (UTC)
+Received: from eorzea.usersys.redhat.com (dhcp-27-38.brq.redhat.com [10.34.27.38])
+        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uBKATZX2006731
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO)
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2016 05:29:37 -0500
+Date: Tue, 20 Dec 2016 11:29:35 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: XFS_IOC_FSEMAP requirements
+Message-ID: <20161220102935.ppt7ixjoh53uhu2e@eorzea.usersys.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxhsTqGd7Q18NG8nAGQFrbYRzZJd_A9My8AyjJGbyPvh4Q@mail.gmail.com>
-References: <1482178268-22883-1-git-send-email-amir73il@gmail.com>
- <1482178268-22883-12-git-send-email-amir73il@gmail.com> <20161219215539.GD7311@birch.djwong.org>
- <CAOQ4uxhsTqGd7Q18NG8nAGQFrbYRzZJd_A9My8AyjJGbyPvh4Q@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 20 Dec 2016 16:07:51 +0200
-Message-ID: <CAOQ4uxjFtKKS-8-kZmYPbOixDBxM6Ta=q+rN+Xv=9C_u+ghU4Q@mail.gmail.com>
-Subject: Re: [RFC][PATCH 11/11] xfs: use common file type conversion
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Dec 20, 2016 at 8:17 AM, Amir Goldstein <amir73il@gmail.com> wrote:
-> [adding linux-unionfs]
->
-> On Mon, Dec 19, 2016 at 11:55 PM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
->> On Mon, Dec 19, 2016 at 10:11:08PM +0200, Amir Goldstein wrote:
->>> deduplicate the xfs file type conversion implementation.
->>>
->>> xfs readdir code may expose DT_WHT type to user if that
->>> type was set on disk, but xfs code never set a file type
->>> of WHT on disk.
->>>
->>> If it is acceptable to expose to user DT_UNKNOWN in case
->>> WHT type somehow got to disk, then xfs_dir3_filetype_table
->>> could also be replaced with the common fs_dtype() helper.
->>
->> AFAIK XFS has never actually written XFS_DIR3_FT_WHT to disk.
->> I see that overlayfs whiteouts are now some sort of weird
->> chardev with rdev == 0, so I guess overlayfs doesn't either...?
->>
->
-> Nope. overlayfs calls vfs_whiteout() which calls i_op->mknod(.. S_IFCHR, 0)
-> So AFAIK, there is no evidence of DT_WHT even being use in Linux.
->
-> From overlayfs perspective, it could have been nice if conversion functions
-> took mode+rdev instead of just mode and produced the DT_WHT value,
-> but it is not all that easy to know how applications would react to this change.
->
-> I suppose there shouldn't be a problem to expose DT_WHT d_type in
-> iterate_dir() and convert it to DT_CHR in getdents' filldir().
-> It will be beneficial to overlayfs in case of a directory with tons of
-> whiteouts,
-> not having to stat all those inodes is a big win.
-> Not sure how common this use case is, but it is quite easy for users to
-> get to this sort of state when using inefficient container layouts.
->
-> How about xfs_repair? will it complain if it sees DT_WHT and a chardev
-> inode? does it check at all that the type and mode match?
->
+Hi folks,
 
-To answer my own question, yes, xfs_repair would complain and fix this,
-so not possible to set DT_WHT type for the VFS whiteout creature
-without adding a new feature flag.
+I've been working on the implementation of FSEMAP ioctl as we've been discussed
+previously, and, the first discussion about this, was about using the same
+fiemap structures to retrieve free extents from the btrees.
 
-Amir.
+By our last chat about it (it's been a while, I know, I got busy with more
+important stuff :), Dave suggested another uses for FSEMAP that were not in my
+mind, so, I think it deserves its own implementation, independent of fiemap from
+where the same idea came from.
+
+So, I'd like to know, what else might FSEMAP be used for, beyond iterating free
+space extents, so I can think of a new struct to be exchanged between user<->
+kernel. FSEMAP is supposed to complement GETFSMAPX, discussed in LSF this year,
+but I don't know if is there any plan to keep with GETFSMAPX or not, or even if
+FSEMAP is still a valuable idea :)
+
+Any comments, suggestions about to what direction should FSEMAP go?
+
+Cheers
+-- 
+Carlos
