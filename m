@@ -1,33 +1,24 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57236 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:34481 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755459AbcLSQGX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2016 11:06:23 -0500
-Date: Mon, 19 Dec 2016 08:05:44 -0800
+        with ESMTP id S1754673AbcLTI12 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2016 03:27:28 -0500
+Date: Tue, 20 Dec 2016 00:27:09 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/1] xfs: silent -Wformat-security warning
-Message-ID: <20161219160544.GA9994@infradead.org>
-References: <20161219134111.5267-1-nicolas.iooss_linux@m4x.org>
+Subject: Re: [PATCH 2/6] libxcmd: rename args_command to command_iterator
+Message-ID: <20161220082709.GB943@infradead.org>
+References: <20161216044115.21287-1-david@fromorbit.com>
+ <20161216044115.21287-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161219134111.5267-1-nicolas.iooss_linux@m4x.org>
+In-Reply-To: <20161216044115.21287-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Dec 19, 2016 at 02:41:11PM +0100, Nicolas Iooss wrote:
-> When building the XFS driver with clang, the compiler reports a
-> -Wformat-security warning in xlog_recover_validate_buf_type() because
-> xfs_warn() is being called with a non-literal string. Even though
-> variable warnmsg is always initialized as a constant string without any
-> '%' character, silent the warning by calling xfs_warn with "%s" format
-> string.
-> 
-> Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-
-Looks fine:
+Looks fine,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
