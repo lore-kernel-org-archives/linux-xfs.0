@@ -1,427 +1,243 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19255 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757714AbcLCBhj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Dec 2016 20:37:39 -0500
-Subject: [PATCH 16/55] xfs: add scrub tracepoints
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Dec 2016 17:36:55 -0800
-Message-ID: <148072901576.12995.2754148857945557965.stgit@birch.djwong.org>
-In-Reply-To: <148072891404.12995.15510849192837089093.stgit@birch.djwong.org>
-References: <148072891404.12995.15510849192837089093.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:33985 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754097AbcLTCvb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2016 21:51:31 -0500
+Received: by mail-pg0-f65.google.com with SMTP id b1so10138663pgc.1
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Dec 2016 18:51:31 -0800 (PST)
+From: Deepa Dinamani <deepa.kernel@gmail.com>
+Subject: [PATCH v2] xfs_io: implement 'utimes' command
+Date: Mon, 19 Dec 2016 18:51:26 -0800
+Message-Id: <1482202286-8390-1-git-send-email-deepa.kernel@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: arnd@arndb.de, y2038@lists.linaro.org
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Add the utimes command to provide a way to utilize
+the futimens C library call. This is the
+interface to the utimensat system call, which updates
+the mtime and atime of a file.
+
+Signed-off-by: Deepa Dinamani <deepa.kernel@gmail.com>
 ---
- fs/xfs/libxfs/xfs_types.h |    5 +
- fs/xfs/xfs_trace.h        |  372 +++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 377 insertions(+)
+Changes since v1:
+* changed error return values
+* removed redundant roff formatting directive
+* removed unneeded argument count check
 
+ include/input.h   |  1 +
+ io/Makefile       |  2 +-
+ io/init.c         |  1 +
+ io/io.h           |  1 +
+ io/utimes.c       | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ libxcmd/input.c   | 22 +++++++++++++++
+ man/man8/xfs_io.8 | 11 ++++++++
+ 7 files changed, 118 insertions(+), 1 deletion(-)
+ create mode 100755 io/utimes.c
+ mode change 100644 => 100755 libxcmd/input.c
 
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index 717909f..04145e5 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -94,6 +94,11 @@ typedef __int64_t	xfs_sfiloff_t;	/* signed block number in a file */
- #define	XFS_ATTR_FORK	1
- #define	XFS_COW_FORK	2
+diff --git a/include/input.h b/include/input.h
+index d02170f..221678e 100644
+--- a/include/input.h
++++ b/include/input.h
+@@ -48,6 +48,7 @@ extern uid_t	uid_from_string(char *user);
+ extern gid_t	gid_from_string(char *group);
+ extern prid_t	prid_from_string(char *project);
+ extern bool	isdigits_only(const char *str);
++extern int	timespec_from_string(const char *sec, const char *nsec, struct timespec *ts);
  
-+#define XFS_FORK_DESC \
-+	{ XFS_DATA_FORK,	"data" }, \
-+	{ XFS_ATTR_FORK,	"attr" }, \
-+	{ XFS_COW_FORK,		"CoW" }
+ #define HAVE_FTW_H 1	/* TODO: configure me */
+ 
+diff --git a/io/Makefile b/io/Makefile
+index 62bc03b..392e02a 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -11,7 +11,7 @@ HFILES = init.h io.h
+ CFILES = init.c \
+ 	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c link.c \
+ 	mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
+-	sync.c truncate.c reflink.c
++	sync.c truncate.c reflink.c utimes.c
+ 
+ LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
+diff --git a/io/init.c b/io/init.c
+index efe7390..6319aeb 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -85,6 +85,7 @@ init_commands(void)
+ 	sync_range_init();
+ 	truncate_init();
+ 	reflink_init();
++	utimes_init();
+ }
+ 
+ static int
+diff --git a/io/io.h b/io/io.h
+index 2bc7ac4..fddd7a3 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -113,6 +113,7 @@ extern void		seek_init(void);
+ extern void		shutdown_init(void);
+ extern void		sync_init(void);
+ extern void		truncate_init(void);
++extern void		utimes_init(void);
+ 
+ #ifdef HAVE_FADVISE
+ extern void		fadvise_init(void);
+diff --git a/io/utimes.c b/io/utimes.c
+new file mode 100755
+index 0000000..faf9b8d
+--- /dev/null
++++ b/io/utimes.c
+@@ -0,0 +1,81 @@
++/*
++ * Copyright (c) 2016 Deepa Dinamani
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
 +
++#include "command.h"
++#include "input.h"
++#include "init.h"
++#include "io.h"
++
++static cmdinfo_t utimes_cmd;
++
++static void
++utimes_help(void)
++{
++	printf(_(
++"\n"
++" Update file atime and mtime of the current file with nansecond precision.\n"
++"\n"
++" Usage: utimes atime_sec atime_nsec mtime_sec mtime_nsec.\n"
++" *_sec: Seconds elapsed since 1970-01-01 00:00:00 UTC.\n"
++" *_nsec: Nanoseconds since the corresponding *_sec.\n"
++"\n"));
++}
++
++static int
++utimes_f(
++	int		argc,
++	char		**argv)
++{
++	struct timespec t[2];
++	int result;
++
++	/* Get the timestamps */
++	result = timespec_from_string(argv[1], argv[2], &t[0]);
++	if (result) {
++		fprintf(stderr, "Bad value for atime\n");
++		return 0;
++	}
++	result = timespec_from_string(argv[3], argv[4], &t[1]);
++	if (result) {
++		fprintf(stderr, "Bad value for mtime\n");
++		return 0;
++	}
++
++	/* Call futimens to update time. */
++	if (futimens(file->fd, t)) {
++		perror("futimens");
++		return 0;
++	}
++
++	return 0;
++}
++
++void
++utimes_init(void)
++{
++	utimes_cmd.name = "utimes";
++	utimes_cmd.cfunc = utimes_f;
++	utimes_cmd.argmin = 4;
++	utimes_cmd.argmax = 4;
++	utimes_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
++	utimes_cmd.args = _("atime_sec atime_nsec mtime_sec mtime_nsec");
++	utimes_cmd.oneline = _("Update file times of the current file");
++	utimes_cmd.help = utimes_help;
++
++	add_command(&utimes_cmd);
++}
+diff --git a/libxcmd/input.c b/libxcmd/input.c
+old mode 100644
+new mode 100755
+index 5a7dce3..8aeb3b0
+--- a/libxcmd/input.c
++++ b/libxcmd/input.c
+@@ -327,6 +327,28 @@ timestr(
+ }
+ 
  /*
-  * Min numbers of data/attr fork btree root pointers.
-  */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 71778d0..ddbba0f 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3460,6 +3460,378 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_low_key);
- DEFINE_GETFSMAP_EVENT(xfs_getfsmap_high_key);
- DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
++ * Convert from a pair of arbitrary user strings into a timespec.
++ */
++
++int
++timespec_from_string(
++	const char	* secs,
++	const char	* nsecs,
++	struct timespec	* ts)
++{
++	char* p;
++	if (!secs || !nsecs || !ts)
++		return 1;
++	ts->tv_sec = strtoull(secs, &p, 0);
++	if (*p)
++		return 1;
++	ts->tv_nsec = strtoull(nsecs, &p, 0);
++	if (*p)
++		return 1;
++	return 0;
++}
++
++/*
+  * Convert from arbitrary user strings into a numeric ID.
+  * If it's all numeric, we convert that inplace, else we do
+  * the name lookup, and return the found identifier.
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 2c56f09..9efb7b2 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -589,6 +589,16 @@ Copy data into the open file beginning at
+ Copy up to
+ .I length
+ bytes of data.
++.RE
++.PD
++.TP
++.BI utimes " atime_sec atime_nsec mtime_sec mtime_nsec"
++The utimes command changes the atime and mtime of the current file.
++sec uses UNIX timestamp notation and is the seconds elapsed since
++1970-01-01 00:00:00 UTC.
++nsec is the nanoseconds since the sec. This value needs to be in
++the range 0-999999999 with UTIME_NOW and UTIME_OMIT being exceptions.
++Each (sec, nsec) pair constitutes a single timestamp value.
  
-+/* scrub */
-+#define XFS_SCRUB_TYPE_DESC \
-+	{ 0, NULL }
-+DECLARE_EVENT_CLASS(xfs_scrub_class,
-+	TP_PROTO(struct xfs_inode *ip, int type, xfs_agnumber_t agno,
-+		 xfs_ino_t inum, unsigned int gen, unsigned int flags,
-+		 int error),
-+	TP_ARGS(ip, type, agno, inum, gen, flags, error),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(int, type)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_ino_t, inum)
-+		__field(unsigned int, gen)
-+		__field(unsigned int, flags)
-+		__field(int, error)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = ip->i_mount->m_super->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->type = type;
-+		__entry->agno = agno;
-+		__entry->inum = inum;
-+		__entry->gen = gen;
-+		__entry->flags = flags;
-+		__entry->error = error;
-+	),
-+	TP_printk("dev %d:%d ino %llu type %s agno %u inum %llu gen %u flags 0x%x error %d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_DESC),
-+		  __entry->agno,
-+		  __entry->inum,
-+		  __entry->gen,
-+		  __entry->flags,
-+		  __entry->error)
-+)
-+#define DEFINE_SCRUB_EVENT(name) \
-+DEFINE_EVENT(xfs_scrub_class, name, \
-+	TP_PROTO(struct xfs_inode *ip, int type, xfs_agnumber_t agno, \
-+		 xfs_ino_t inum, unsigned int gen, unsigned int flags, \
-+		 int error), \
-+	TP_ARGS(ip, type, agno, inum, gen, flags, error))
-+
-+DECLARE_EVENT_CLASS(xfs_scrub_sbtree_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno,
-+		 xfs_btnum_t btnum, int level, int nlevels, int ptr),
-+	TP_ARGS(mp, agno, bno, btnum, level, nlevels, ptr),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_btnum_t, btnum)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, bno)
-+		__field(int, level)
-+		__field(int, nlevels)
-+		__field(int, ptr)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->btnum = btnum;
-+		__entry->bno = bno;
-+		__entry->level = level;
-+		__entry->nlevels = nlevels;
-+		__entry->ptr = ptr;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u btnum %d level %d nlevels %d ptr %d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->bno,
-+		  __entry->btnum,
-+		  __entry->level,
-+		  __entry->nlevels,
-+		  __entry->ptr)
-+)
-+#define DEFINE_SCRUB_SBTREE_EVENT(name) \
-+DEFINE_EVENT(xfs_scrub_sbtree_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno, \
-+		 xfs_btnum_t btnum, int level, int nlevels, int ptr), \
-+	TP_ARGS(mp, agno, bno, btnum, level, nlevels, ptr))
-+
-+DEFINE_SCRUB_EVENT(xfs_scrub);
-+DEFINE_SCRUB_EVENT(xfs_scrub_done);
-+DEFINE_SCRUB_SBTREE_EVENT(xfs_scrub_btree_rec);
-+DEFINE_SCRUB_SBTREE_EVENT(xfs_scrub_btree_key);
-+
-+TRACE_EVENT(xfs_scrub_op_error,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno,
-+		 const char *type, int error, const char *func,
-+		 int line),
-+	TP_ARGS(mp, agno, bno, type, error, func, line),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, bno)
-+		__string(type, type)
-+		__field(int, error)
-+		__string(func, func)
-+		__field(int, line)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->bno = bno;
-+		__assign_str(type, type);
-+		__entry->error = error;
-+		__assign_str(func, func);
-+		__entry->line = line;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u type '%s' error %d fn %s:%d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->bno,
-+		  __get_str(type),
-+		  __entry->error,
-+		  __get_str(func),
-+		  __entry->line)
-+);
-+
-+TRACE_EVENT(xfs_scrub_file_op_error,
-+	TP_PROTO(struct xfs_inode *ip, int whichfork, xfs_fileoff_t offset,
-+		 const char *type, int error, const char *func,
-+		 int line),
-+	TP_ARGS(ip, whichfork, offset, type, error, func, line),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(int, whichfork)
-+		__field(xfs_fileoff_t, offset)
-+		__string(type, type)
-+		__field(int, error)
-+		__string(func, func)
-+		__field(int, line)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = ip->i_mount->m_super->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->whichfork = whichfork;
-+		__entry->offset = offset;
-+		__assign_str(type, type);
-+		__entry->error = error;
-+		__assign_str(func, func);
-+		__entry->line = line;
-+	),
-+	TP_printk("dev %d:%d ino %llu %s offset %llu type '%s' error %d fn %s:%d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __print_symbolic(__entry->whichfork, XFS_FORK_DESC),
-+		  __entry->offset,
-+		  __get_str(type),
-+		  __entry->error,
-+		  __get_str(func),
-+		  __entry->line)
-+);
-+
-+DECLARE_EVENT_CLASS(xfs_scrub_block_error_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno,
-+		 const char *type, const char *check, const char *func,
-+		 int line),
-+	TP_ARGS(mp, agno, bno, type, check, func, line),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, bno)
-+		__string(type, type)
-+		__string(check, check)
-+		__string(func, func)
-+		__field(int, line)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->bno = bno;
-+		__assign_str(type, type);
-+		__assign_str(check, check);
-+		__assign_str(func, func);
-+		__entry->line = line;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u type '%s' check '%s' fn %s:%d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->bno,
-+		  __get_str(type),
-+		  __get_str(check),
-+		  __get_str(func),
-+		  __entry->line)
-+)
-+
-+#define DEFINE_SCRUB_BLOCK_ERROR_EVENT(name) \
-+DEFINE_EVENT(xfs_scrub_block_error_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t bno, \
-+		 const char *type, const char *check, const char *func, \
-+		 int line), \
-+	TP_ARGS(mp, agno, bno, type, check, func, line))
-+
-+DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_error);
-+DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_preen);
-+
-+DECLARE_EVENT_CLASS(xfs_scrub_ino_error_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno, xfs_agblock_t bno,
-+		 const char *type, const char *check, const char *func,
-+		 int line),
-+	TP_ARGS(mp, ino, agno, bno, type, check, func, line),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, bno)
-+		__string(type, type)
-+		__string(check, check)
-+		__string(func, func)
-+		__field(int, line)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->ino = ino;
-+		__entry->agno = agno;
-+		__entry->bno = bno;
-+		__assign_str(type, type);
-+		__assign_str(check, check);
-+		__assign_str(func, func);
-+		__entry->line = line;
-+	),
-+	TP_printk("dev %d:%d ino %llu agno %u agbno %u type '%s' check '%s' fn %s:%d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->agno,
-+		  __entry->bno,
-+		  __get_str(type),
-+		  __get_str(check),
-+		  __get_str(func),
-+		  __entry->line)
-+)
-+
-+#define DEFINE_SCRUB_INO_ERROR_EVENT(name) \
-+DEFINE_EVENT(xfs_scrub_ino_error_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno, xfs_agblock_t bno, \
-+		 const char *type, const char *check, const char *func, \
-+		 int line), \
-+	TP_ARGS(mp, ino, agno, bno, type, check, func, line))
-+
-+DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_error);
-+DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_preen);
-+
-+TRACE_EVENT(xfs_scrub_data_error,
-+	TP_PROTO(struct xfs_inode *ip, int whichfork, xfs_fileoff_t offset,
-+		 const char *type, const char *check, const char *func,
-+		 int line),
-+	TP_ARGS(ip, whichfork, offset, type, check, func, line),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(int, whichfork)
-+		__field(xfs_fileoff_t, offset)
-+		__string(type, type)
-+		__string(check, check)
-+		__string(func, func)
-+		__field(int, line)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = ip->i_mount->m_super->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->whichfork = whichfork;
-+		__entry->offset = offset;
-+		__assign_str(type, type);
-+		__assign_str(check, check);
-+		__assign_str(func, func);
-+		__entry->line = line;
-+	),
-+	TP_printk("dev %d:%d ino %llu %s fork offset %llu type '%s' check '%s' fn %s:%d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __print_symbolic(__entry->whichfork, XFS_FORK_DESC),
-+		  __entry->offset,
-+		  __get_str(type),
-+		  __get_str(check),
-+		  __get_str(func),
-+		  __entry->line)
-+);
-+
-+TRACE_EVENT(xfs_scrub_xref_error,
-+	TP_PROTO(struct xfs_mount *mp, const char *type, int error,
-+		 const char *func, int line),
-+	TP_ARGS(mp, type, error, func, line),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__string(type, type)
-+		__field(int, error)
-+		__string(func, func)
-+		__field(int, line)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__assign_str(type, type);
-+		__entry->error = error;
-+		__assign_str(func, func);
-+		__entry->line = line;
-+	),
-+	TP_printk("dev %d:%d btree %s xref error %d fn %s:%d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __get_str(type),
-+		  __entry->error,
-+		  __get_str(func),
-+		  __entry->line)
-+);
-+
-+TRACE_EVENT(xfs_scrub_btree_error,
-+	TP_PROTO(struct xfs_mount *mp, const char *bt_type, const char *bt_ptr,
-+		 xfs_agnumber_t agno, xfs_agblock_t bno, const char *check,
-+		 const char *func, int line),
-+	TP_ARGS(mp, bt_type, bt_ptr, agno, bno, check, func, line),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__string(bt_type, bt_type)
-+		__string(bt_ptr, bt_ptr)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, bno)
-+		__string(check, check)
-+		__string(func, func)
-+		__field(int, line)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__assign_str(bt_type, bt_type);
-+		__assign_str(bt_ptr, bt_ptr);
-+		__entry->agno = agno;
-+		__entry->bno = bno;
-+		__assign_str(check, check);
-+		__assign_str(func, func);
-+		__entry->line = line;
-+	),
-+	TP_printk("dev %d:%d %s %s agno %u agbno %u check '%s' fn %s:%d\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __get_str(bt_type),
-+		  __get_str(bt_ptr),
-+		  __entry->agno,
-+		  __entry->bno,
-+		  __get_str(check),
-+		  __get_str(func),
-+		  __entry->line)
-+);
-+
-+DECLARE_EVENT_CLASS(xfs_scrub_ag_lock_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t max_ag,
-+		 xfs_agnumber_t agno),
-+	TP_ARGS(mp, max_ag, agno),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, max_ag)
-+		__field(xfs_agnumber_t, agno)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->max_ag = max_ag;
-+		__entry->agno = agno;
-+	),
-+	TP_printk("dev %d:%d max_ag %u agno %u\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->max_ag,
-+		  __entry->agno)
-+)
-+#define DEFINE_SCRUB_AG_LOCK_EVENT(name) \
-+DEFINE_EVENT(xfs_scrub_ag_lock_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t max_ag, \
-+		 xfs_agnumber_t agno), \
-+	TP_ARGS(mp, max_ag, agno))
-+
-+DEFINE_SCRUB_AG_LOCK_EVENT(xfs_scrub_ag_can_lock);
-+DEFINE_SCRUB_AG_LOCK_EVENT(xfs_scrub_ag_may_deadlock);
-+DEFINE_SCRUB_AG_LOCK_EVENT(xfs_scrub_ag_lock_all);
-+
- #endif /* _TRACE_XFS_H */
- 
- #undef TRACE_INCLUDE_PATH
+ .SH MEMORY MAPPED I/O COMMANDS
+ .TP
+@@ -875,6 +885,7 @@ verbose output will be printed.
+ .BR fstatfs (2),
+ .BR fsync (2),
+ .BR ftruncate (2),
++.BR futimens (3),
+ .BR mmap (2),
+ .BR msync (2),
+ .BR open (2),
+-- 
+2.7.4
 
