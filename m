@@ -1,45 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:52213 "EHLO
-        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754093AbcLRWtw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Dec 2016 17:49:52 -0500
-From: Andreas Schwab <schwab@linux-m68k.org>
-Subject: Re: [PATCH 04/12] splice: lift pipe_lock out of splice_to_pipe()
-References: <20160917190023.GA8039@ZenIV.linux.org.uk>
-        <20160923190032.GA25771@ZenIV.linux.org.uk>
-        <20160923190326.GB2356@ZenIV.linux.org.uk>
-        <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
-        <20160923201025.GJ2356@ZenIV.linux.org.uk>
-        <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
-        <20160924035951.GN2356@ZenIV.linux.org.uk>
-        <87shpmxrey.fsf@linux-m68k.org>
-        <CA+55aFyJGz6njFjKe8O0+XRJhCrPHA_wnEuLbGSGypJ0G2-vpQ@mail.gmail.com>
-        <20161218201207.GY1555@ZenIV.linux.org.uk>
-        <20161218203003.GZ1555@ZenIV.linux.org.uk>
-        <CA+55aFzPE6FbwX2NuiMkz9G+FzAoiNeb8jOSWwSoX3O7+KuH4Q@mail.gmail.com>
-Date: Sun, 18 Dec 2016 23:49:46 +0100
-In-Reply-To: <CA+55aFzPE6FbwX2NuiMkz9G+FzAoiNeb8jOSWwSoX3O7+KuH4Q@mail.gmail.com>
-        (Linus Torvalds's message of "Sun, 18 Dec 2016 14:10:54 -0800")
-Message-ID: <87vaug3l9x.fsf@linux-m68k.org>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:54182 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753944AbcLTVpf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2016 16:45:35 -0500
+Date: Wed, 21 Dec 2016 08:45:32 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
+Message-ID: <20161220214532.GR4326@dastard>
+References: <1481644767-9098-1-git-send-email-hch@lst.de>
+ <1481644767-9098-2-git-send-email-hch@lst.de>
+ <20161214173507.GA24645@bfoster.bfoster>
+ <20161214193626.GA12106@lst.de>
+ <20161214215133.GA26688@bfoster.bfoster>
+ <20161215143430.GB29477@bfoster.bfoster>
+ <20161219113826.GA26535@lst.de>
+ <20161220141747.GA25290@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161220141747.GA25290@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-On Dez 18 2016, Linus Torvalds <torvalds@linux-foundation.org> wrote:
+On Tue, Dec 20, 2016 at 09:17:47AM -0500, Brian Foster wrote:
+> On Mon, Dec 19, 2016 at 12:38:26PM +0100, Christoph Hellwig wrote:
+> > On Thu, Dec 15, 2016 at 09:34:33AM -0500, Brian Foster wrote:
+> > > FWIW, I was playing with this a bit more and managed to manufacture a
+> > > filesystem layout that this series doesn't handle too well. Emphasis on
+> > > "manufactured" because this might not be a likely real world scenario,
+> > > but either way the current code handles it fine.
+> > 
+> > It does, although mostly by accident.  I suspect with an even better
+> > manufcatured image you could also drive the current code to it's knees,
+> > e.g. only have one single block free in the first few AGs, and then
+> > a small number just higher than that in a higher AG.
+> > 
+> 
+> Perhaps, I certainly wouldn't expect the code in current form to be
+> perfect. It's hard enough to understand as it is. Just trying to avoid
+> regressions and properly scope the required fix...
+> 
+> > > I've attached a metadump of the offending image. mdestore it, mount and
+> > > attempt something like 'dd if=/dev/zero of=/mnt/file' on the root. The
+> > > buffered write looks like it's in a livelock, waiting indefinitely for a
+> > > writeback cycle that will never complete...
+> > 
+> > Yeah, that's the loop that keeps going even if it can't allocate any
+> > blocks, which seems generally bogus.  But even without that we'd get
+> > ENOSPC despite not having a reservations. Which is a little easier to
+> > debug, but just as wrong.
+> > 
+> 
+> Indeed.
+> 
+> > The only good way out I can see is to not hand out any more reservations
+> > after we only nave nr_ags * xfs_bmap_worst_indlen(1) available.  I'll
+> > see if I can come up with a patch for that.
+> 
+> Hmm, so the idea is to basically find a way we can infer accurate
+> information about the per-AG state at the time blocks are reserved from
+> the global pool (i.e., buffered write time) and cut off writes at the
+> point we can no longer guarantee at least one AG can satisfy the
+> smallest write..?
 
-> Regardless - Andreas, can you verify that that fixes your issues? I'm
-> assuming you had some real load that made you notice this, not just he
-> dummy example..
+We already do this for per-AG freelist minimum space requirements.
+See XFS_ALLOC_AGFL_RESERVE and the big comment above
+xfs_alloc_set_aside().
 
-This is from the testsuite of pv, I only noticed because it was hanging.
+What's worth noting is that xfs_alloc_set_aside() has a magic number
+of "4" added to it, which is supposedly for the bmbt split that
+might be needed. This is applied at delalloc space reservation time,
+so this would seem to me to be the place to hook into here.
 
-Andreas.
+I do see a problem here, though - it's only reserving space for a
+single BMBT split from the global free space pool. This is fine for
+the AGFL reservations (as they are static and fixed in size), but
+maybe this is where we are over-committing the freespace pool...
 
+Cheers,
+
+Dave.
 -- 
-Andreas Schwab, schwab@linux-m68k.org
-GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
-"And now for something completely different."
+Dave Chinner
+david@fromorbit.com
