@@ -1,39 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.bravenet.com ([65.39.176.20]:53376 "EHLO mail.bravenet.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45734 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752043AbcLSXxA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Dec 2016 18:53:00 -0500
-Reply-To: ncoulson-ml@ncoulson.com
-Subject: Re: Switching from group to project quota's
-References: <8f374ce3da8517c472b897b07ec28517@ncoulson.com>
- <d69ca26d-4c6c-e5a6-1c36-9d28f0b53a5a@sandeen.net>
- <d684dc35-cc2a-b582-18d7-d9a7c30cd38c@ncoulson.com>
- <20161219212636.GO4326@dastard>
-From: Nathan Coulson <ncoulson-ml@ncoulson.com>
-Message-ID: <09e1f03d-3c33-7aa5-9e14-22038811d63a@ncoulson.com>
-Date: Mon, 19 Dec 2016 15:52:58 -0800
-MIME-Version: 1.0
-In-Reply-To: <20161219212636.GO4326@dastard>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+        id S935782AbcLURD6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Dec 2016 12:03:58 -0500
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [RFC PATCH v1 10/30] ntfs: remove i_version handling
+Date: Wed, 21 Dec 2016 12:03:27 -0500
+Message-Id: <1482339827-7882-11-git-send-email-jlayton@redhat.com>
+In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 2016-12-19 01:26 PM, Dave Chinner wrote:
-> On Mon, Dec 19, 2016 at 11:23:19AM -0800, Nathan Coulson wrote:
->> With the long quotacheck time (+1wk,  I think one test I left
->> running for a few weeks) with our filesystem (not sure if that is
->> due to the number of files we have, or if something else is at
->> play),  I was hoping to find an alternative.
-> It's hung. output of sysrq-w please.
->
-> Cheers,
->
-> Dave.
+Nothing uses this, and the i_version is never incremented on ntfs.
 
-I will need to setup the test again,  (machine has since been 
-rebooted).  I should be able to get resetup again tomorrow.
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/ntfs/inode.c | 9 ---------
+ fs/ntfs/mft.c   | 6 ------
+ 2 files changed, 15 deletions(-)
+
+diff --git a/fs/ntfs/inode.c b/fs/ntfs/inode.c
+index 7c410f879412..1c1ee489284b 100644
+--- a/fs/ntfs/inode.c
++++ b/fs/ntfs/inode.c
+@@ -560,13 +560,6 @@ static int ntfs_read_locked_inode(struct inode *vi)
+ 	ntfs_debug("Entering for i_ino 0x%lx.", vi->i_ino);
+ 
+ 	/* Setup the generic vfs inode parts now. */
+-
+-	/*
+-	 * This is for checking whether an inode has changed w.r.t. a file so
+-	 * that the file can be updated if necessary (compare with f_version).
+-	 */
+-	vi->i_version = 1;
+-
+ 	vi->i_uid = vol->uid;
+ 	vi->i_gid = vol->gid;
+ 	vi->i_mode = 0;
+@@ -1240,7 +1233,6 @@ static int ntfs_read_locked_attr_inode(struct inode *base_vi, struct inode *vi)
+ 	base_ni = NTFS_I(base_vi);
+ 
+ 	/* Just mirror the values from the base inode. */
+-	vi->i_version	= base_vi->i_version;
+ 	vi->i_uid	= base_vi->i_uid;
+ 	vi->i_gid	= base_vi->i_gid;
+ 	set_nlink(vi, base_vi->i_nlink);
+@@ -1507,7 +1499,6 @@ static int ntfs_read_locked_index_inode(struct inode *base_vi, struct inode *vi)
+ 	ni	= NTFS_I(vi);
+ 	base_ni = NTFS_I(base_vi);
+ 	/* Just mirror the values from the base inode. */
+-	vi->i_version	= base_vi->i_version;
+ 	vi->i_uid	= base_vi->i_uid;
+ 	vi->i_gid	= base_vi->i_gid;
+ 	set_nlink(vi, base_vi->i_nlink);
+diff --git a/fs/ntfs/mft.c b/fs/ntfs/mft.c
+index b6f402194f02..165133321577 100644
+--- a/fs/ntfs/mft.c
++++ b/fs/ntfs/mft.c
+@@ -2641,12 +2641,6 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+ 			goto undo_mftbmp_alloc;
+ 		}
+ 		vi->i_ino = bit;
+-		/*
+-		 * This is for checking whether an inode has changed w.r.t. a
+-		 * file so that the file can be updated if necessary (compare
+-		 * with f_version).
+-		 */
+-		vi->i_version = 1;
+ 
+ 		/* The owner and group come from the ntfs volume. */
+ 		vi->i_uid = vol->uid;
+-- 
+2.7.4
 
