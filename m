@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46122 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46136 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933996AbcLURDt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Dec 2016 12:03:49 -0500
+        id S934631AbcLURDu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Dec 2016 12:03:50 -0500
 From: Jeff Layton <jlayton@redhat.com>
-Subject: [RFC PATCH v1 01/30] lustre: don't set f_version in ll_readdir
-Date: Wed, 21 Dec 2016 12:03:18 -0500
-Message-Id: <1482339827-7882-2-git-send-email-jlayton@redhat.com>
+Subject: [RFC PATCH v1 02/30] ecryptfs: remove unnecessary i_version bump
+Date: Wed, 21 Dec 2016 12:03:19 -0500
+Message-Id: <1482339827-7882-3-git-send-email-jlayton@redhat.com>
 In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
 References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,35 +15,26 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-f_version is only ever used by filesystem-specific code, and nothing in
-lustre ever looks at it.
+ecryptfs bumps the i_version counter when a new inode is
+instantiated, but never touches it again.
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- drivers/staging/lustre/lustre/llite/dir.c | 3 ---
- 1 file changed, 3 deletions(-)
+ fs/ecryptfs/inode.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/staging/lustre/lustre/llite/dir.c b/drivers/staging/lustre/lustre/llite/dir.c
-index ea5d247a3f70..1d288ec5f03e 100644
---- a/drivers/staging/lustre/lustre/llite/dir.c
-+++ b/drivers/staging/lustre/lustre/llite/dir.c
-@@ -367,8 +367,6 @@ static int ll_readdir(struct file *filp, struct dir_context *ctx)
- 	}
- 	ctx->pos = pos;
- 	ll_finish_md_op_data(op_data);
--	filp->f_version = inode->i_version;
--
- out:
- 	if (!rc)
- 		ll_stats_ops_tally(sbi, LPROC_LL_READDIR, 1);
-@@ -1671,7 +1669,6 @@ static loff_t ll_dir_seek(struct file *file, loff_t offset, int origin)
- 			else
- 				fd->lfd_pos = offset;
- 			file->f_pos = offset;
--			file->f_version = 0;
- 		}
- 		ret = offset;
- 	}
+diff --git a/fs/ecryptfs/inode.c b/fs/ecryptfs/inode.c
+index e7413f82d27b..9493e8614de1 100644
+--- a/fs/ecryptfs/inode.c
++++ b/fs/ecryptfs/inode.c
+@@ -64,7 +64,6 @@ static int ecryptfs_inode_set(struct inode *inode, void *opaque)
+ 	/* i_size will be overwritten for encrypted regular files */
+ 	fsstack_copy_inode_size(inode, lower_inode);
+ 	inode->i_ino = lower_inode->i_ino;
+-	inode->i_version++;
+ 	inode->i_mapping->a_ops = &ecryptfs_aops;
+ 
+ 	if (S_ISLNK(inode->i_mode))
 -- 
 2.7.4
 
