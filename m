@@ -1,31 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38087 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758959AbcLUJiI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Dec 2016 04:38:08 -0500
-Date: Wed, 21 Dec 2016 01:38:06 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/6] libxcmd: merge command() and iterate_command()
-Message-ID: <20161221093806.GB32084@infradead.org>
-References: <20161216044115.21287-1-david@fromorbit.com>
- <20161216044115.21287-4-david@fromorbit.com>
- <20161220083119.GA12768@infradead.org>
- <33d8976c-54d7-1a72-d768-778df7fcb4ee@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <33d8976c-54d7-1a72-d768-778df7fcb4ee@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:46308 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964931AbcLUREO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Dec 2016 12:04:14 -0500
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [RFC PATCH v1 27/30] xfs: avoid setting XFS_ILOG_CORE if i_version doesn't need incrementing
+Date: Wed, 21 Dec 2016 12:03:44 -0500
+Message-Id: <1482339827-7882-28-git-send-email-jlayton@redhat.com>
+In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Dec 20, 2016 at 02:11:44PM -0600, Eric Sandeen wrote:
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Reviewed-by, maybe?
+We do go ahead and increment it though if XFS_ILOG_CORE is already
+set when we get to this point.
 
-Yes,
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/xfs/xfs_trans_inode.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index 844c08886170..fac422da0bbe 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -110,15 +110,15 @@ xfs_trans_log_inode(
+ 
+ 	/*
+ 	 * First time we log the inode in a transaction, bump the inode change
+-	 * counter if it is configured for this to occur. We don't use
+-	 * inode_inc_version() because there is no need for extra locking around
+-	 * i_version as we already hold the inode locked exclusively for
+-	 * metadata modification.
++	 * counter if it is configured for this to occur. While we hold the
++	 * inode locked exclusively for metadata modification, we still use
++	 * inode_inc_iversion as it allows us to avoid setting XFS_ILOG_CORE
++	 * if the version hasn't been queried since the last bump.
+ 	 */
+ 	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+ 	    IS_I_VERSION(VFS_I(ip))) {
+-		inode_inc_iversion_locked(VFS_I(ip));
+-		flags |= XFS_ILOG_CORE;
++		if (inode_inc_iversion(VFS_I(ip), flags & XFS_ILOG_CORE))
++			flags |= XFS_ILOG_CORE;
+ 	}
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+-- 
+2.7.4
+
