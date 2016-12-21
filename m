@@ -1,44 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38590 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:34792 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755440AbcLSLi2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Dec 2016 06:38:28 -0500
-Date: Mon, 19 Dec 2016 12:38:26 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
-Message-ID: <20161219113826.GA26535@lst.de>
-References: <1481644767-9098-1-git-send-email-hch@lst.de> <1481644767-9098-2-git-send-email-hch@lst.de> <20161214173507.GA24645@bfoster.bfoster> <20161214193626.GA12106@lst.de> <20161214215133.GA26688@bfoster.bfoster> <20161215143430.GB29477@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161215143430.GB29477@bfoster.bfoster>
+        id S936642AbcLUREL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Dec 2016 12:04:11 -0500
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [RFC PATCH v1 24/30] IMA: switch IMA over to new i_version API
+Date: Wed, 21 Dec 2016 12:03:41 -0500
+Message-Id: <1482339827-7882-25-git-send-email-jlayton@redhat.com>
+In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Dec 15, 2016 at 09:34:33AM -0500, Brian Foster wrote:
-> FWIW, I was playing with this a bit more and managed to manufacture a
-> filesystem layout that this series doesn't handle too well. Emphasis on
-> "manufactured" because this might not be a likely real world scenario,
-> but either way the current code handles it fine.
+This change is straightforward, but I have some serious doubts about
+this code.
 
-It does, although mostly by accident.  I suspect with an even better
-manufcatured image you could also drive the current code to it's knees,
-e.g. only have one single block free in the first few AGs, and then
-a small number just higher than that in a higher AG.
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ security/integrity/ima/ima_api.c  | 2 +-
+ security/integrity/ima/ima_main.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> I've attached a metadump of the offending image. mdestore it, mount and
-> attempt something like 'dd if=/dev/zero of=/mnt/file' on the root. The
-> buffered write looks like it's in a livelock, waiting indefinitely for a
-> writeback cycle that will never complete...
+diff --git a/security/integrity/ima/ima_api.c b/security/integrity/ima/ima_api.c
+index 9df26a2b75ba..1f676313c30b 100644
+--- a/security/integrity/ima/ima_api.c
++++ b/security/integrity/ima/ima_api.c
+@@ -204,7 +204,7 @@ int ima_collect_measurement(struct integrity_iint_cache *iint,
+ 	} hash;
+ 
+ 	if (!(iint->flags & IMA_COLLECTED)) {
+-		u64 i_version = file_inode(file)->i_version;
++		u64 i_version = inode_get_iversion(file_inode(file));
+ 
+ 		if (file->f_flags & O_DIRECT) {
+ 			audit_cause = "failed(directio)";
+diff --git a/security/integrity/ima/ima_main.c b/security/integrity/ima/ima_main.c
+index 423d111b3b94..8d95cf42d20c 100644
+--- a/security/integrity/ima/ima_main.c
++++ b/security/integrity/ima/ima_main.c
+@@ -122,7 +122,7 @@ static void ima_check_last_writer(struct integrity_iint_cache *iint,
+ 
+ 	inode_lock(inode);
+ 	if (atomic_read(&inode->i_writecount) == 1) {
+-		if ((iint->version != inode->i_version) ||
++		if (inode_cmp_iversion(inode, iint->version) ||
+ 		    (iint->flags & IMA_NEW_FILE)) {
+ 			iint->flags &= ~(IMA_DONE_MASK | IMA_NEW_FILE);
+ 			iint->measured_pcrs = 0;
+-- 
+2.7.4
 
-Yeah, that's the loop that keeps going even if it can't allocate any
-blocks, which seems generally bogus.  But even without that we'd get
-ENOSPC despite not having a reservations. Which is a little easier to
-debug, but just as wrong.
-
-The only good way out I can see is to not hand out any more reservations
-after we only nave nr_ags * xfs_bmap_worst_indlen(1) available.  I'll
-see if I can come up with a patch for that.
