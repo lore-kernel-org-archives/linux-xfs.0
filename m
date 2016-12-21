@@ -1,75 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33974 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753387AbcLTIUC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2016 03:20:02 -0500
-Date: Tue, 20 Dec 2016 00:20:00 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: use the actual AG length when reserving blocks
-Message-ID: <20161220082000.GA14758@infradead.org>
-References: <20161217061920.GJ5357@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42372 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935134AbcLUPNK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Dec 2016 10:13:10 -0500
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id D16BFC05AA54
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2016 15:13:09 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id uBLFD878002394
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2016 10:13:09 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_quota: Fix test for wrapped id from GETNEXTQUOTA
+Message-ID: <44762cf0-ec69-4cb0-ee08-d5889f24df4b@redhat.com>
+Date: Wed, 21 Dec 2016 09:13:08 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161217061920.GJ5357@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Dec 16, 2016 at 10:19:20PM -0800, Darrick J. Wong wrote:
-> We need to use the actual AG length when making per-AG reservations,
-> since we could otherwise end up reserving more blocks out of the last
-> AG than there are actual blocks.
-> 
-> Complained-about-by: Brian Foster <bfoster@redhat.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_ag_resv.c        |    4 ++++
->  fs/xfs/libxfs/xfs_refcount_btree.c |    9 ++++++---
->  fs/xfs/libxfs/xfs_refcount_btree.h |    3 ++-
->  fs/xfs/libxfs/xfs_rmap_btree.c     |   14 ++++++++------
->  fs/xfs/libxfs/xfs_rmap_btree.h     |    3 ++-
->  fs/xfs/xfs_fsops.c                 |   14 ++++++++++++++
->  6 files changed, 36 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-> index e5ebc37..fac3430 100644
-> --- a/fs/xfs/libxfs/xfs_ag_resv.c
-> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
-> @@ -225,6 +225,7 @@ xfs_ag_resv_init(
->  {
->  	xfs_extlen_t			ask;
->  	xfs_extlen_t			used;
-> +	xfs_extlen_t			reserved;
->  	int				error = 0;
->  
->  	/* Create the metadata reservation. */
-> @@ -256,6 +257,9 @@ xfs_ag_resv_init(
->  			goto out;
->  	}
->  
-> +	reserved = xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
-> +		   xfs_perag_resv(pag, XFS_AG_RESV_AGFL)->ar_reserved;
-> +	ASSERT(reserved <= pag->pagf_freeblks + pag->pagf_flcount);
+dump_file and report_mount can be called with null *oid if
+we aren't asking for the GETNEXTQUOTA interface, so we
+should only test for the GETNEXTQUOTA wrap if *oid is
+non-null.  Otherwise we'll deref a null pointer in the
+test.
 
-This will create a warning for non-debug builds due to the unused
-reserved variable.
+This only happens for certain invocations of reporting,
+which apparently are not covered by any regression tests
+at this point, at least on new kernels which contain
+GETNEXTQUOTA.
 
-> +	/* Reserve 1% of the AG or enough for 1 block per record. */
-> +	*ask += pool_len = max(agblocks / 100,
-> +			xfs_rmapbt_max_size(mp, agblocks));
->  	*used += tree_len;
->  
->  	return error;
+Addresses-Coverity-ID: 1397415
+Addresses-Coverity-ID: 1397416
+Brown-paper-bag-worn-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-pool_len is initialized but not used.
+diff --git a/quota/report.c b/quota/report.c
+index fc02302..3833dd6 100644
+--- a/quota/report.c
++++ b/quota/report.c
+@@ -98,12 +98,12 @@ dump_file(
+ 		return 0;
+ 	}
+ 
+-	if (oid)
++	if (oid) {
+ 		*oid = d.d_id;
+-
+-	/* Did kernelspace wrap? */
+-	if (*oid < id)
+-		return 0;
++		/* Did kernelspace wrap? */
++		if (*oid < id)
++			return 0;
++	}
+ 
+ 	if (!d.d_blk_softlimit && !d.d_blk_hardlimit &&
+ 	    !d.d_ino_softlimit && !d.d_ino_hardlimit &&
+@@ -361,12 +361,12 @@ report_mount(
+ 		return 0;
+ 	}
+ 
+-	if (oid)
++	if (oid) {
+ 		*oid = d.d_id;
+-
+-	/* Did kernelspace wrap? */
+-	if (*oid < id)
+-		return 0;
++		/* Did kernelspace wrap? */
++		if (* oid < id)
++			return 0;
++	}
+ 
+ 	if (flags & TERSE_FLAG) {
+ 		count = 0;
 
-Otherwise this looks fine to me.
-
-But while looking at this patch and my current minleft "project" I've
-started to wonder how the XFS_AG_RESV_METADATA reservations are
-supposed to work: they are reserved out of the fs-wide pool, but
-the user of XFS_AG_RESV_METADATA really needs a block in this particular
-AG.
