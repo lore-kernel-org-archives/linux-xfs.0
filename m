@@ -1,92 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45682 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:35422 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751674AbcLNSZC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Dec 2016 13:25:02 -0500
-Date: Wed, 14 Dec 2016 13:24:17 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/4] xfs: calculate minleft correctly for bmap allocations
-Message-ID: <20161214182417.GB24645@bfoster.bfoster>
-References: <1481644767-9098-1-git-send-email-hch@lst.de>
- <1481644767-9098-3-git-send-email-hch@lst.de>
+        id S1751137AbcLUFeD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Dec 2016 00:34:03 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 9824C9D
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2016 23:33:34 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: for-next branch updated to ebd6aa8
+Message-ID: <e1862d0c-6e1d-66d0-bf35-5a8650a08cef@sandeen.net>
+Date: Tue, 20 Dec 2016 23:33:39 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1481644767-9098-3-git-send-email-hch@lst.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="tH2Fqp1lG1oEsA8sultxQch6Mnhc5a4vR"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Dec 13, 2016 at 04:59:25PM +0100, Christoph Hellwig wrote:
-> We need to take into account the worst possible number of bmap and rmap
-> btree block allocations.  Use the helper we have to calculate it instead
-> of doing an overly optimistic estimate.  Also move the call to calculate
-> it into the function that sets the allocation parameters, as we have
-> more accurate information about the allocation there.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--tH2Fqp1lG1oEsA8sultxQch6Mnhc5a4vR
+Content-Type: multipart/mixed; boundary="96pqW6OXjV0hMcnFFlvMF67Acv48RsT2q";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <e1862d0c-6e1d-66d0-bf35-5a8650a08cef@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: for-next branch updated to ebd6aa8
 
-Seems reasonable:
+--96pqW6OXjV0hMcnFFlvMF67Acv48RsT2q
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Hi folks,
 
->  fs/xfs/libxfs/xfs_bmap.c | 16 ++++++----------
->  fs/xfs/libxfs/xfs_bmap.h |  1 -
->  2 files changed, 6 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 44773c9..2126ecc 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3764,7 +3764,12 @@ xfs_bmap_btalloc(
->  		args.alignment = 1;
->  		args.minalignslop = 0;
->  	}
-> -	args.minleft = ap->minleft;
-> +
-> +	/*
-> +	 * Ensure we have enough blocks left in the AG to satisfy all possible
-> +	 * bmap and rmap tree block allocations.
-> +	 */
-> +	args.minleft = xfs_bmap_worst_indlen(ap->ip, args.maxlen);
->  	args.wasdel = ap->wasdel;
->  	args.resv = XFS_AG_RESV_NONE;
->  	args.datatype = ap->datatype;
-> @@ -4572,15 +4577,6 @@ xfs_bmapi_write(
->  
->  	XFS_STATS_INC(mp, xs_blk_mapw);
->  
-> -	if (*firstblock == NULLFSBLOCK) {
-> -		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
-> -			bma.minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
-> -		else
-> -			bma.minleft = 1;
-> -	} else {
-> -		bma.minleft = 0;
-> -	}
-> -
->  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
->  		error = xfs_iread_extents(tp, ip, whichfork);
->  		if (error)
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index cecd094..92e6755 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -49,7 +49,6 @@ struct xfs_bmalloca {
->  
->  	xfs_extlen_t		total;	/* total blocks needed for xaction */
->  	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
-> -	xfs_extlen_t		minleft; /* amount must be left after alloc */
->  	bool			eof;	/* set if allocating past last extent */
->  	bool			wasdel;	/* replacing a delayed allocation */
->  	bool			aeof;	/* allocated space at eof */
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The for-next branch of the xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+This is just a handful of targeted fixes prior to the 4.9.0
+release.  If you have something else that you think is absolutely
+critical, please let me know ASAP.
+
+I'd appreciate some distributed testing.  If all goes well,
+the contents of the for-next branch will be the release this time,
+hopefully by the end of the week.
+
+The new head of the for-next branch is commit:
+
+ebd6aa8 xfs_quota: handle wrapped id from GETNEXTQUOTA
+
+New Commits:
+
+Darrick J. Wong (3):
+      [5ef80b9] xfs_repair: fix bogus rmapbt record owner check
+      [ff14f59] xfs_repair: fix some potential null pointer deferences
+      [f9cd7f8] xfs_repair: change null check to assertion
+
+Eric Sandeen (3):
+      [f714016] xfs_repair: junk leaf attribute if count =3D=3D 0
+      [8ebad4d] xfs_repair: don't indicate dirtiness if FSGEOMETRY fails
+      [ebd6aa8] xfs_quota: handle wrapped id from GETNEXTQUOTA
+
+
+Code Diffstat:
+
+ quota/report.c       |  8 ++++++++
+ repair/attr_repair.c |  3 ++-
+ repair/phase5.c      | 16 +++++++++++-----
+ repair/rmap.c        |  2 +-
+ repair/scan.c        |  8 ++++++--
+ repair/slab.h        |  2 +-
+ repair/xfs_repair.c  |  2 +-
+ 7 files changed, 30 insertions(+), 11 deletions(-)
+
+
+
+
+--96pqW6OXjV0hMcnFFlvMF67Acv48RsT2q--
+
+--tH2Fqp1lG1oEsA8sultxQch6Mnhc5a4vR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJYWhQ5AAoJECCuFpLhPd7gx+wP/3b6wgZP7Y9vauSwT62VrMOp
+EYxwXS+dnJVZcsjey3Sj21sEmm5UnAZpPFO8ww0ldVo0dRnT8PJvayuQYw2jPSO+
+3OdE0aOLK4Ffp47vquI8J8CP65GvLcWwkZ+6Uog8WvzA0iJnv/IKYqwp/29w58+f
+hku+TqLwlU50lh2wfaOdxvAt2uNv73cXWJikUnt72n5WNlxXQBnFJChhX+o2AsuA
+UY1/x2kGHNMf0UCC2B3l2N8uMUKSo/FMa41OjrMgufGJDScuJgDIl1js96N34VHM
+QNoheyEyEK0nGmtdzCFB6mIBEG3qclf1we4IukFfBsh5odd0dGehrl4qMEKFrqHB
+baHTGdLSMZN6poBFsKJhLKoCM0NUWbczPCbyYf9O8XGtVNdXwwNmIFsm+F0eyX8/
+CZ/RnLshOglxkVA5uDKOBX2DjmzIbJVHBOIaV3fVbwyjj6X0lssOYDU5bxSIxkqy
+2L9hN5DhBhPohF3RZ0597xYGggmFit9M30VRzo+ZaFRdQhVbSGF0E3nrU2Ormyji
+hkX9gS++lq1iYlP9mlxkCMAuKxwN03jVfTFUFdnxc4UdDlPDhBRce8bTausf6Dl6
+JOht815mWTdH17HdKhiEzrsVebU0tlrDeIT7dqkDWmQ2e6czgDCl6JIl/nfLZ3w6
+6wrp0VqIkwAKNJ6bJPw+
+=QW9c
+-----END PGP SIGNATURE-----
+
+--tH2Fqp1lG1oEsA8sultxQch6Mnhc5a4vR--
