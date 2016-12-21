@@ -1,52 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:38271 "EHLO
-        mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752112AbcLRT57 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Dec 2016 14:57:59 -0500
-From: Andreas Schwab <schwab@linux-m68k.org>
-Subject: Re: [PATCH 04/12] splice: lift pipe_lock out of splice_to_pipe()
-References: <20160914031648.GB2356@ZenIV.linux.org.uk>
-        <CA+55aFznQaOWoSMNphgGJJWZ=8-odrc0DAUMzfGPQe+_N4UgNA@mail.gmail.com>
-        <20160914042559.GC2356@ZenIV.linux.org.uk>
-        <20160917082007.GA6489@ZenIV.linux.org.uk>
-        <20160917190023.GA8039@ZenIV.linux.org.uk>
-        <20160923190032.GA25771@ZenIV.linux.org.uk>
-        <20160923190326.GB2356@ZenIV.linux.org.uk>
-        <CA+55aFxzPH2AYvDVWSAomO6bN_sW4+qDv87Xbq8XHMyvBEYe+w@mail.gmail.com>
-        <20160923201025.GJ2356@ZenIV.linux.org.uk>
-        <CA+55aFyr-X_6FcWkSXBUcxV0p1BUZw8d=46wawv2x+8y7f8YcQ@mail.gmail.com>
-        <20160924035951.GN2356@ZenIV.linux.org.uk>
-        <87shpmxrey.fsf@linux-m68k.org>
-        <CA+55aFyJGz6njFjKe8O0+XRJhCrPHA_wnEuLbGSGypJ0G2-vpQ@mail.gmail.com>
-Date: Sun, 18 Dec 2016 20:57:51 +0100
-In-Reply-To: <CA+55aFyJGz6njFjKe8O0+XRJhCrPHA_wnEuLbGSGypJ0G2-vpQ@mail.gmail.com>
-        (Linus Torvalds's message of "Sun, 18 Dec 2016 11:28:44 -0800")
-Message-ID: <87zijt2eo0.fsf@linux-m68k.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60184 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759629AbcLUQJi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Dec 2016 11:09:38 -0500
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B26BBC04B93B
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2016 16:09:37 +0000 (UTC)
+Date: Wed, 21 Dec 2016 10:09:35 -0600
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH] xfs_quota: Fix test for wrapped id from GETNEXTQUOTA
+Message-ID: <20161221160935.GA402@redhat.com>
+References: <44762cf0-ec69-4cb0-ee08-d5889f24df4b@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <44762cf0-ec69-4cb0-ee08-d5889f24df4b@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Dave Chinner <david@fromorbit.com>, CAI Qian <caiqian@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, xfs@oss.sgi.com, Jens Axboe <axboe@kernel.dk>, Nick Piggin <npiggin@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Dez 18 2016, Linus Torvalds <torvalds@linux-foundation.org> wrote:
+On Wed, Dec 21, 2016 at 09:13:08AM -0600, Eric Sandeen wrote:
+> dump_file and report_mount can be called with null *oid if
+> we aren't asking for the GETNEXTQUOTA interface, so we
+> should only test for the GETNEXTQUOTA wrap if *oid is
+> non-null.  Otherwise we'll deref a null pointer in the
+> test.
+> 
+> This only happens for certain invocations of reporting,
+> which apparently are not covered by any regression tests
+> at this point, at least on new kernels which contain
+> GETNEXTQUOTA.
+> 
+> Addresses-Coverity-ID: 1397415
+> Addresses-Coverity-ID: 1397416
+> Brown-paper-bag-worn-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-> On Sat, Dec 17, 2016 at 11:54 AM, Andreas Schwab <schwab@linux-m68k.org> wrote:
->> This break EPIPE handling inside splice when SIGPIPE is ignored:
->>
->> Before:
->> $ { sleep 1; strace -e splice pv -q /dev/zero; } | :
->
-> Where is that "splice" program from?
+Looks good.
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-It's running pv (splice is the argument of strace -e).
-
-http://ivarch.com/programs/pv.shtml
-
-Andreas.
-
--- 
-Andreas Schwab, schwab@linux-m68k.org
-GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
-"And now for something completely different."
+> ---
+> 
+> diff --git a/quota/report.c b/quota/report.c
+> index fc02302..3833dd6 100644
+> --- a/quota/report.c
+> +++ b/quota/report.c
+> @@ -98,12 +98,12 @@ dump_file(
+>  		return 0;
+>  	}
+>  
+> -	if (oid)
+> +	if (oid) {
+>  		*oid = d.d_id;
+> -
+> -	/* Did kernelspace wrap? */
+> -	if (*oid < id)
+> -		return 0;
+> +		/* Did kernelspace wrap? */
+> +		if (*oid < id)
+> +			return 0;
+> +	}
+>  
+>  	if (!d.d_blk_softlimit && !d.d_blk_hardlimit &&
+>  	    !d.d_ino_softlimit && !d.d_ino_hardlimit &&
+> @@ -361,12 +361,12 @@ report_mount(
+>  		return 0;
+>  	}
+>  
+> -	if (oid)
+> +	if (oid) {
+>  		*oid = d.d_id;
+> -
+> -	/* Did kernelspace wrap? */
+> -	if (*oid < id)
+> -		return 0;
+> +		/* Did kernelspace wrap? */
+> +		if (* oid < id)
+> +			return 0;
+> +	}
+>  
+>  	if (flags & TERSE_FLAG) {
+>  		count = 0;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
