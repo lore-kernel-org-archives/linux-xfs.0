@@ -1,63 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42068 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751583AbcLSWHQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2016 17:07:16 -0500
-Date: Mon, 19 Dec 2016 14:06:19 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/9] xfs: introduce and use KM_NOLOCKDEP to silence
- reclaim lockdep false positives
-Message-ID: <20161219220619.GA7296@birch.djwong.org>
-References: <20161215140715.12732-1-mhocko@kernel.org>
- <20161215140715.12732-3-mhocko@kernel.org>
- <20161219212413.GN4326@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161219212413.GN4326@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:42180 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964943AbcLUREP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Dec 2016 12:04:15 -0500
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [RFC PATCH v1 28/30] btrfs: only dirty the inode in btrfs_update_time if something was changed
+Date: Wed, 21 Dec 2016 12:03:45 -0500
+Message-Id: <1482339827-7882-29-git-send-email-jlayton@redhat.com>
+In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Dec 20, 2016 at 08:24:13AM +1100, Dave Chinner wrote:
-> On Thu, Dec 15, 2016 at 03:07:08PM +0100, Michal Hocko wrote:
-> > From: Michal Hocko <mhocko@suse.com>
-> > 
-> > Now that the page allocator offers __GFP_NOLOCKDEP let's introduce
-> > KM_NOLOCKDEP alias for the xfs allocation APIs. While we are at it
-> > also change KM_NOFS users introduced by b17cb364dbbb ("xfs: fix missing
-> > KM_NOFS tags to keep lockdep happy") and use the new flag for them
-> > instead. There is really no reason to make these allocations contexts
-> > weaker just because of the lockdep which even might not be enabled
-> > in most cases.
-> > 
-> > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> 
-> I'd suggest that it might be better to drop this patch for now -
-> it's not necessary for the context flag changeover but does
-> introduce a risk of regressions if the conversion is wrong.
+At this point, we know that "now" and the file times may differ, and we
+suspect that the i_version has been flagged to be bumped. Attempt to
+bump the i_version, and only mark the inode dirty if that actually
+occurred or if one of the times was updated.
 
-I was just about to write in that while I didn't see anything obviously
-wrong with the NOFS removals, I also don't know for sure that we can't
-end up recursively in those code paths (specifically the directory
-traversal thing).
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/btrfs/inode.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
---D
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index a03e5a1d5e05..65a7065c0fbf 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -6025,19 +6025,20 @@ static int btrfs_update_time(struct inode *inode, struct timespec *now,
+ 			     int flags)
+ {
+ 	struct btrfs_root *root = BTRFS_I(inode)->root;
++	bool dirty = flags & ~S_VERSION;
+ 
+ 	if (btrfs_root_readonly(root))
+ 		return -EROFS;
+ 
+ 	if (flags & S_VERSION)
+-		inode_inc_iversion(inode, true);
++		dirty |= inode_inc_iversion(inode, dirty);
+ 	if (flags & S_CTIME)
+ 		inode->i_ctime = *now;
+ 	if (flags & S_MTIME)
+ 		inode->i_mtime = *now;
+ 	if (flags & S_ATIME)
+ 		inode->i_atime = *now;
+-	return btrfs_dirty_inode(inode);
++	return dirty ? btrfs_dirty_inode(inode) : 0;
+ }
+ 
+ /*
+-- 
+2.7.4
 
-> Hence I think this is better as a completely separate series
-> which audits and changes all the unnecessary KM_NOFS allocations
-> in one go. I've never liked whack-a-mole style changes like this -
-> do it once, do it properly....
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
