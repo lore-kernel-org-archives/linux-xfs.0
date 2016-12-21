@@ -1,78 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:28500 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934667AbcLTVjJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2016 16:39:09 -0500
-Date: Wed, 21 Dec 2016 08:39:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/9] xfs: introduce and use KM_NOLOCKDEP to silence
- reclaim lockdep false positives
-Message-ID: <20161220213901.GQ4326@dastard>
-References: <20161215140715.12732-1-mhocko@kernel.org>
- <20161215140715.12732-3-mhocko@kernel.org>
- <20161219212413.GN4326@dastard>
- <20161219220619.GA7296@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161219220619.GA7296@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:45812 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964903AbcLUREK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Dec 2016 12:04:10 -0500
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [RFC PATCH v1 23/30] xfs: convert to new i_version API
+Date: Wed, 21 Dec 2016 12:03:40 -0500
+Message-Id: <1482339827-7882-24-git-send-email-jlayton@redhat.com>
+In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Dec 19, 2016 at 02:06:19PM -0800, Darrick J. Wong wrote:
-> On Tue, Dec 20, 2016 at 08:24:13AM +1100, Dave Chinner wrote:
-> > On Thu, Dec 15, 2016 at 03:07:08PM +0100, Michal Hocko wrote:
-> > > From: Michal Hocko <mhocko@suse.com>
-> > > 
-> > > Now that the page allocator offers __GFP_NOLOCKDEP let's introduce
-> > > KM_NOLOCKDEP alias for the xfs allocation APIs. While we are at it
-> > > also change KM_NOFS users introduced by b17cb364dbbb ("xfs: fix missing
-> > > KM_NOFS tags to keep lockdep happy") and use the new flag for them
-> > > instead. There is really no reason to make these allocations contexts
-> > > weaker just because of the lockdep which even might not be enabled
-> > > in most cases.
-> > > 
-> > > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> > 
-> > I'd suggest that it might be better to drop this patch for now -
-> > it's not necessary for the context flag changeover but does
-> > introduce a risk of regressions if the conversion is wrong.
-> 
-> I was just about to write in that while I didn't see anything obviously
-> wrong with the NOFS removals, I also don't know for sure that we can't
-> end up recursively in those code paths (specifically the directory
-> traversal thing).
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/xfs/libxfs/xfs_inode_buf.c | 4 ++--
+ fs/xfs/xfs_icache.c           | 4 ++--
+ fs/xfs/xfs_inode.c            | 2 +-
+ fs/xfs/xfs_inode_item.c       | 2 +-
+ fs/xfs/xfs_trans_inode.c      | 2 +-
+ 5 files changed, 7 insertions(+), 7 deletions(-)
 
-The issue is with code paths that can be called from both inside and
-outside transaction context - lockdep complains when it sees an
-allocation path that is used with both GFP_NOFS and GFP_KERNEL
-context, as it doesn't know that the GFP_KERNEL usage is safe or
-not.
-
-So things like the directory buffer path, which can be called from
-readdir without a transaction context, have various KM_NOFS flags
-scattered through it so that lockdep doesn't get all upset every
-time readdir is called...
-
-There are other cases like this - btree manipulation via bunmapi()
-can be called without transaction context to remove delayed alloc
-extents, and that puts all of the btree cursor and  incore extent
-list handling in the same boat (all those allocations are KM_NOFS),
-etc.
-
-So it's not really recursion that is the problem here - it's
-different allocation contexts that lockdep can't know about unless
-it's told about them. We've done that with KM_NOFS in the past; in
-future we should use this KM_NOLOCKDEP flag, though I'd prefer a
-better name for it. e.g. KM_NOTRANS to indicate that the allocation
-can occur both inside and outside of transaction context....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index dd483e2767f7..a45e9ae5a17e 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -263,7 +263,7 @@ xfs_inode_from_disk(
+ 	to->di_flags	= be16_to_cpu(from->di_flags);
+ 
+ 	if (to->di_version == 3) {
+-		inode->i_version = be64_to_cpu(from->di_changecount);
++		inode_set_iversion_read(inode, be64_to_cpu(from->di_changecount));
+ 		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
+ 		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
+ 		to->di_flags2 = be64_to_cpu(from->di_flags2);
+@@ -313,7 +313,7 @@ xfs_inode_to_disk(
+ 	to->di_flags = cpu_to_be16(from->di_flags);
+ 
+ 	if (from->di_version == 3) {
+-		to->di_changecount = cpu_to_be64(inode->i_version);
++		to->di_changecount = cpu_to_be64(inode_get_iversion_raw(inode));
+ 		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
+ 		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
+ 		to->di_flags2 = cpu_to_be64(from->di_flags2);
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index ff4d6311c7f4..f5be7fef8f59 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -278,14 +278,14 @@ xfs_reinit_inode(
+ 	int		error;
+ 	uint32_t	nlink = inode->i_nlink;
+ 	uint32_t	generation = inode->i_generation;
+-	uint64_t	version = inode->i_version;
++	uint64_t	version = inode_get_iversion_raw(inode);
+ 	umode_t		mode = inode->i_mode;
+ 
+ 	error = inode_init_always(mp->m_super, inode);
+ 
+ 	set_nlink(inode, nlink);
+ 	inode->i_generation = generation;
+-	inode->i_version = version;
++	inode_set_iversion_read(inode, version);
+ 	inode->i_mode = mode;
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index b9557795eb74..dad9c6476d6f 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -851,7 +851,7 @@ xfs_ialloc(
+ 	ip->i_d.di_flags = 0;
+ 
+ 	if (ip->i_d.di_version == 3) {
+-		inode->i_version = 1;
++		inode_set_iversion(inode, 1);
+ 		ip->i_d.di_flags2 = 0;
+ 		ip->i_d.di_cowextsize = 0;
+ 		ip->i_d.di_crtime.t_sec = (__int32_t)tv.tv_sec;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index d90e7811ccdd..838a045cf9e5 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -364,7 +364,7 @@ xfs_inode_to_log_dinode(
+ 	to->di_flags = from->di_flags;
+ 
+ 	if (from->di_version == 3) {
+-		to->di_changecount = inode->i_version;
++		to->di_changecount = inode_get_iversion_raw(inode);
+ 		to->di_crtime.t_sec = from->di_crtime.t_sec;
+ 		to->di_crtime.t_nsec = from->di_crtime.t_nsec;
+ 		to->di_flags2 = from->di_flags2;
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index dab8daa676f9..844c08886170 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -117,7 +117,7 @@ xfs_trans_log_inode(
+ 	 */
+ 	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+ 	    IS_I_VERSION(VFS_I(ip))) {
+-		VFS_I(ip)->i_version++;
++		inode_inc_iversion_locked(VFS_I(ip));
+ 		flags |= XFS_ILOG_CORE;
+ 	}
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
