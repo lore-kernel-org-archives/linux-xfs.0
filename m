@@ -1,75 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:59143 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S966791AbcLVUIN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2016 15:08:13 -0500
-Date: Fri, 23 Dec 2016 07:07:29 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS_IOC_FSEMAP requirements
-Message-ID: <20161222200729.GT4326@dastard>
-References: <20161220102935.ppt7ixjoh53uhu2e@eorzea.usersys.redhat.com>
- <20161221014816.GC5487@birch.djwong.org>
- <20161222085716.GA23054@infradead.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42833 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750795AbcLUHR0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Dec 2016 02:17:26 -0500
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id uBL7HPT1009073
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2016 07:17:26 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id uBL7HP1v019156
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2016 07:17:25 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id uBL7HPaV019444
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2016 07:17:25 GMT
+Date: Tue, 20 Dec 2016 23:17:24 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [ANNOUNCE] xfs-documentation: master branch updated to fc7cfa0
+Message-ID: <20161221071724.GB23294@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="98e8jtXdkpgskNou"
 Content-Disposition: inline
-In-Reply-To: <20161222085716.GA23054@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Dec 22, 2016 at 12:57:16AM -0800, Christoph Hellwig wrote:
-> On Tue, Dec 20, 2016 at 05:48:16PM -0800, Darrick J. Wong wrote:
-> > As for project ideas, I can think of a handful of them -- reworking the
-> > in-core extent tree not to require large contiguous memory allocations,
-> > sorting out reflink+dax,
-> 
-> FYI, I have significant work done on both of them.  I just need to sort
-> out the ENOSPC issues (just got another report where we're running into
-> ENOSPC for inobt updates, so there might be even more dragons there)
-> and the DAX DIO rework, which is 90% of the work for reflink+DAX.
-> 
-> For the extent tree I played around with a simple rbtree, but I need
-> to finish abstracting away the access the the extent list - the first
-> pile of that landed for 4.10, but there is a lot more to be done before
-> I can easily change the representation.  I'm also not sure anymore
-> that the rbtree is the best choice.
 
-And extent per rbtree node is almost certainly not the right choice
-because of the object count requirement - we do not want to a
-kmalloc for every extent we add to the list.  At I was looking at
-replacing the indirect array with an rbtree - potentially the
-interval tree variant - so that we still have pages of extents and
-increments/walking is still mainly just pointer increments.
+--98e8jtXdkpgskNou
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-That was before I found out how easy it is to use the rhashtable
-code and how much faster it is for large lists than an rbtree.
-That's the way I've been thinking recently, anyway...
+Hi folks,
 
-> > and stomping out the rest of the buffer head
-> > usage,
-> 
-> The next for that is the switch bmap and buffered reads for iomap,
-> I have a version that works for blocksize == page_size, just need
-> to finish the blocksize < pagesize case.  Once get_blocks is gone
-> we should be able to just kill buffer_heads trivially for the blocksize
-> == pagesize case, it's just the small block size that will require
-> a significant effort.  My initial plan was to just keep buffer_heads
-> for those as the first step while not using them for the common
-> blocksize == pagesize case.
+The master branch of the xfs-documentation repository at:
 
-My plan for the blocksize < page size was simply to track dirtines
-on pages and forget about sub-page dirtiness. That way the
-IO path is simply iterates entire pages to cover all the
-mapped regions of the page. iomap already does that for us, and I
-started on making writepage work that way, too. Haven't got to
-working writepage code yet, though.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
 
-Cheers,
+has just been updated.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+There's not a lot in this update, other than some minor typos
+and other fixes I've had queueing for a while.
+
+The new head of the master branch is commit:
+
+fc7cfa0	docs: enumerate possible directory ftype values
+
+New Commits:
+
+Darrick J. Wong (3):
+      docs: fix a typo in the AGF section of the disk format doc
+      docs: update refcount btree to reflect new cow staging extent policy
+      docs: enumerate possible directory ftype values
+
+--98e8jtXdkpgskNou
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCgAGBQJYWiyEAAoJEPh/dxk0SrTrUIsP/AkG9q1uwX/LTPcqsYIEx7X9
+XXqUNkr8G0j1YI/AOHJcm4lJNVIqpjz32hAILRR5lvu9PAO02IxZNXri9HajbMbd
+L0mLfsUHyJZF/FU9h+PyyeIGzFjDb4r3mPJI0qICg8nI1cmLLTBkPrg73HpHHMXc
+FJ5ReBSA4uUaKOlovs2VmUi86bVv7k95LcyiU68wB0x6Co/8K6cM6s2fAV4VQX0q
+yOjCacQqxRNQzPBOwFbfIY+36on3Y+uqeMRdXTQ0RuTDjNN5QEtbXzab/5WBVSVD
+v9CRQZgZSKQuldkF2HJWcQQq3iwL+Mjq93tpc0l3RwKvc4AwhEsOHBoA1E+GZG45
+ZqxB7UFNGVRf9X2+sMaskC99uqWZEftBQnxwIaEMT8i3sAST3aSxAUTIMlgaWRx4
+iZtBgCyikKj2XKoNFdNpQj/Vp1UXmdagprJP/ABdnHFxZPUhHrJf+Vu6Avcn/Kst
+WvhoBrgef3JS9Ov8U//3TmeyZTVQn4W4p1dSR0Cp4LcmxdS2qZ9mMHQsceEluA/S
+85LyHZkl7kY5KPKYp1Ie4lpRptEY6uZ7Oj/O00iJNw1u7TVAKUrRF02QtmwdF5j4
+z+lh1SBjtFXTLHkB3C7YjUm9ONaY/MNmlaw2I9J/WwdzJDnytJn7sBIGCctpyLSM
+KA0CE9ngxt7aNB0/MzLp
+=mx1D
+-----END PGP SIGNATURE-----
+
+--98e8jtXdkpgskNou--
