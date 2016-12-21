@@ -1,56 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36394 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752426AbcLYSKD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Dec 2016 13:10:03 -0500
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2 3/3] xfs/348: test readlink/readdir with malformed inode mode
-Date: Sun, 25 Dec 2016 20:09:36 +0200
-Message-Id: <1482689376-23553-4-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1482689376-23553-1-git-send-email-amir73il@gmail.com>
-References: <1482689376-23553-1-git-send-email-amir73il@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51379 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934923AbcLURDv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Dec 2016 12:03:51 -0500
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [RFC PATCH v1 03/30] ceph: remove the bump of i_version
+Date: Wed, 21 Dec 2016 12:03:20 -0500
+Message-Id: <1482339827-7882-4-git-send-email-jlayton@redhat.com>
+In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Brian Foster <bfoster@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-In addition to testing xfs_repair on inodes with malformed mode,
-and fstat of those inodes on a mounted fs, try to also list content
-of mock directory and readlink of mock symlink.
+Eventually, we'll want to wire it up to use the change attribute that
+the cluster tracks instead, but for now this is unneeded.
 
-Readdir of mock directory triggers XFS assertion on umount:
- XFS: Assertion failed: !rwsem_is_locked(&inode->i_rwsem), file:
- /home/amir/build/src/linux/fs/xfs/xfs_super.c, line: 951
-
-To reproduce, need to comment out the variable 'safety'.
-
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- tests/xfs/348 | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ fs/ceph/inode.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/tests/xfs/348 b/tests/xfs/348
-index 2a54f9e..cb0e3ea 100755
---- a/tests/xfs/348
-+++ b/tests/xfs/348
-@@ -132,6 +132,16 @@ for dt in $dtypes; do
- 			cat $tmp.stat.err
- 		else
- 			echo "stat: '$testdir/$file' is a $ftype"
-+			# Verify that readlink of a file posing as a symlink
-+			# and ls of a file posing as a directory does not blow up
-+			safety="-d"
-+			# NOTE that ls DOES blow up with kernel 4.9 on malformed
-+			# directory - remove the safety pin to explode
-+			if [ -d $testdir/$file ]; then
-+				ls "$safety" $testdir/$file &> /dev/null
-+			elif [ -h $testdir/$file ]; then
-+				readlink $testdir/$file &> /dev/null
-+			fi
- 		fi | _filter_scratch
- 	done
- 	_scratch_unmount
+diff --git a/fs/ceph/inode.c b/fs/ceph/inode.c
+index 398e5328b309..c3406acb36e7 100644
+--- a/fs/ceph/inode.c
++++ b/fs/ceph/inode.c
+@@ -796,7 +796,6 @@ static int fill_inode(struct inode *inode, struct page *locked_page,
+ 
+ 	/* update inode */
+ 	ci->i_version = le64_to_cpu(info->version);
+-	inode->i_version++;
+ 	inode->i_rdev = le32_to_cpu(info->rdev);
+ 	inode->i_blkbits = fls(le32_to_cpu(info->layout.fl_stripe_unit)) - 1;
+ 
 -- 
 2.7.4
 
