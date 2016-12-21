@@ -1,84 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.bravenet.com ([65.39.176.20]:46564 "EHLO mail.bravenet.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46218 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757291AbcLWWCM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Dec 2016 17:02:12 -0500
-Reply-To: ncoulson-ml@ncoulson.com
-Subject: Re: Switching from group to project quota's
-References: <8f374ce3da8517c472b897b07ec28517@ncoulson.com>
- <d69ca26d-4c6c-e5a6-1c36-9d28f0b53a5a@sandeen.net>
- <d684dc35-cc2a-b582-18d7-d9a7c30cd38c@ncoulson.com>
- <20161219212636.GO4326@dastard>
- <09e1f03d-3c33-7aa5-9e14-22038811d63a@ncoulson.com>
-From: Nathan Coulson <ncoulson-ml@ncoulson.com>
-Message-ID: <6b6e56ec-675a-123c-a01f-762ee4ee2249@ncoulson.com>
-Date: Fri, 23 Dec 2016 14:02:09 -0800
-MIME-Version: 1.0
-In-Reply-To: <09e1f03d-3c33-7aa5-9e14-22038811d63a@ncoulson.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+        id S936090AbcLUREB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Dec 2016 12:04:01 -0500
+From: Jeff Layton <jlayton@redhat.com>
+Subject: [RFC PATCH v1 13/30] affs: convert to new i_version API
+Date: Wed, 21 Dec 2016 12:03:30 -0500
+Message-Id: <1482339827-7882-14-git-send-email-jlayton@redhat.com>
+In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 2016-12-19 03:52 PM, Nathan Coulson wrote:
-> On 2016-12-19 01:26 PM, Dave Chinner wrote:
->> On Mon, Dec 19, 2016 at 11:23:19AM -0800, Nathan Coulson wrote:
->>> With the long quotacheck time (+1wk,  I think one test I left
->>> running for a few weeks) with our filesystem (not sure if that is
->>> due to the number of files we have, or if something else is at
->>> play),  I was hoping to find an alternative.
->> It's hung. output of sysrq-w please.
->>
->> Cheers,
->>
->> Dave.
->
-> I will need to setup the test again,  (machine has since been 
-> rebooted).  I should be able to get resetup again tomorrow.
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/affs/amigaffs.c | 4 ++--
+ fs/affs/dir.c      | 4 ++--
+ fs/affs/super.c    | 2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-Got it resetup.
-
-Ran as time mount /dev/medusa.32.vg/customers.lv z -o 
-nosuid,nodev,noexec,uqnoenforce,pquota,logbufs=8,logbsize=256k,rw. 
-(Snapshot made on a equallogic unit, copy on write based iscsi)
-
-(state ran off our live vm, but probably similar to the snapshot I wrote).
-
-xfs_quota> state
-User quota state on /medusa (/dev/sda)
-   Accounting: ON
-   Enforcement: OFF
-   Inode: #131 (1663 blocks, 1639 extents)
-Group quota state on /medusa (/dev/sda)
-   Accounting: ON
-   Enforcement: OFF
-   Inode: #132 (1664 blocks, 1648 extents)
-Project quota state on /medusa (/dev/sda)
-   Accounting: OFF
-   Enforcement: OFF
-   Inode: #132 (1664 blocks, 1648 extents)
-Blocks grace time: [7 days 00:00:30]
-Inodes grace time: [7 days 00:00:30]
-Realtime Blocks grace time: [7 days 00:00:30]
-
-root@medusa32 [/root]# df -i
-Filesystem            Inodes   IUsed   IFree IUse% Mounted on
-/dev/sda             279209456 7732832 271476624    3% /medusa
-
-root@medusa32 [/root]# df -h
-Filesystem            Size  Used Avail Use% Mounted on
-/dev/sda             1000G  936G   65G  94% /medusa
-
-
-Mount started on Dec 21 at 4:29 PM PST,  and this email was posted as of 
-Dec 23, 1:47pm PST.
-
-
-The mount is still in progress.
-
-Nathan Coulson
-
-Bravenet Web Services
+diff --git a/fs/affs/amigaffs.c b/fs/affs/amigaffs.c
+index 0ec65c133b93..00aff7cfc883 100644
+--- a/fs/affs/amigaffs.c
++++ b/fs/affs/amigaffs.c
+@@ -59,7 +59,7 @@ affs_insert_hash(struct inode *dir, struct buffer_head *bh)
+ 	affs_brelse(dir_bh);
+ 
+ 	dir->i_mtime = dir->i_ctime = current_time(dir);
+-	dir->i_version++;
++	inode_inc_iversion_locked(dir);
+ 	mark_inode_dirty(dir);
+ 
+ 	return 0;
+@@ -113,7 +113,7 @@ affs_remove_hash(struct inode *dir, struct buffer_head *rem_bh)
+ 	affs_brelse(bh);
+ 
+ 	dir->i_mtime = dir->i_ctime = current_time(dir);
+-	dir->i_version++;
++	inode_inc_iversion_locked(dir);
+ 	mark_inode_dirty(dir);
+ 
+ 	return retval;
+diff --git a/fs/affs/dir.c b/fs/affs/dir.c
+index f1e7294381c5..a587d57668e3 100644
+--- a/fs/affs/dir.c
++++ b/fs/affs/dir.c
+@@ -79,7 +79,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
+ 	 * we can jump directly to where we left off.
+ 	 */
+ 	ino = (u32)(long)file->private_data;
+-	if (ino && file->f_version == inode->i_version) {
++	if (ino && inode_cmp_iversion(inode, file->f_version) == 0) {
+ 		pr_debug("readdir() left off=%d\n", ino);
+ 		goto inside;
+ 	}
+@@ -129,7 +129,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
+ 		} while (ino);
+ 	}
+ done:
+-	file->f_version = inode->i_version;
++	file->f_version = inode_get_iversion(inode);
+ 	file->private_data = (void *)(long)ino;
+ 	affs_brelse(fh_bh);
+ 
+diff --git a/fs/affs/super.c b/fs/affs/super.c
+index d6384863192c..b3ebf90f9798 100644
+--- a/fs/affs/super.c
++++ b/fs/affs/super.c
+@@ -99,7 +99,7 @@ static struct inode *affs_alloc_inode(struct super_block *sb)
+ 	if (!i)
+ 		return NULL;
+ 
+-	i->vfs_inode.i_version = 1;
++	inode_set_iversion(&i->vfs_inode, 1);
+ 	i->i_lc = NULL;
+ 	i->i_ext_bh = NULL;
+ 	i->i_pa_cnt = 0;
+-- 
+2.7.4
 
