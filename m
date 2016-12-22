@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50650 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:50716 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966324AbcLVUA3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2016 15:00:29 -0500
+        with ESMTP id S966324AbcLVUAj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2016 15:00:39 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/5] xfs: bump up reserved blocks in xfs_alloc_set_aside
-Date: Thu, 22 Dec 2016 21:00:18 +0100
-Message-Id: <1482436822-31546-2-git-send-email-hch@lst.de>
+Subject: [PATCH 4/5] xfs: adjust allocation length in xfs_alloc_space_available
+Date: Thu, 22 Dec 2016 21:00:21 +0100
+Message-Id: <1482436822-31546-5-git-send-email-hch@lst.de>
 In-Reply-To: <1482436822-31546-1-git-send-email-hch@lst.de>
 References: <1482436822-31546-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,32 +15,202 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: eguan@redhat.com, darrick.wong@oracle.com
 
-Setting aside 4 blocks globally for bmbt splits isn't all that useful,
-as different threads can allocate space in parallel.  Bump it to 4
-blocks per AG to allow each thread that is currently doing an
-allocation to dip into it.
+We must decide in xfs_alloc_fix_freelist if we can perform an
+allocation from a given AG is possible or not based on the available
+space, and should not fail the allocation past that point on a
+healthy file system.
+
+But currently we have two additional places that second-guess
+xfs_alloc_fix_freelist: xfs_alloc_ag_vextent tries to adjust the
+maxlen parameter to remove the reservation before doing the
+allocation (but ignores the various minium freespace requirements),
+and xfs_alloc_fix_minleft tries to fix up the allocated length
+after we've found an extent, but ignores the reservations and also
+doesn't take the AGFL into account (and thus fails allocations
+for not matching minlen in some cases).
+
+Remove all these later fixups and just correct the maxlen argument
+inside xfs_alloc_fix_freelist once we have the AGF buffer locked.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_alloc.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c | 80 ++++++++++-------------------------------------
+ fs/xfs/libxfs/xfs_alloc.h |  2 +-
+ 2 files changed, 17 insertions(+), 65 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 5050056..0a46f84 100644
+index fe92570..6a10aab 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -95,10 +95,7 @@ unsigned int
- xfs_alloc_set_aside(
- 	struct xfs_mount	*mp)
- {
--	unsigned int		blocks;
--
--	blocks = 4 + (mp->m_sb.sb_agcount * XFS_ALLOC_AGFL_RESERVE);
--	return blocks;
-+	return mp->m_sb.sb_agcount * (XFS_ALLOC_AGFL_RESERVE + 4);
+@@ -362,36 +362,12 @@ xfs_alloc_fix_len(
+ 		return;
+ 	ASSERT(rlen >= args->minlen && rlen <= args->maxlen);
+ 	ASSERT(rlen % args->prod == args->mod);
++	ASSERT(args->pag->pagf_freeblks + args->pag->pagf_flcount >=
++		rlen + args->minleft);
+ 	args->len = rlen;
  }
  
  /*
+- * Fix up length if there is too little space left in the a.g.
+- * Return 1 if ok, 0 if too little, should give up.
+- */
+-STATIC int
+-xfs_alloc_fix_minleft(
+-	xfs_alloc_arg_t	*args)		/* allocation argument structure */
+-{
+-	xfs_agf_t	*agf;		/* a.g. freelist header */
+-	int		diff;		/* free space difference */
+-
+-	if (args->minleft == 0)
+-		return 1;
+-	agf = XFS_BUF_TO_AGF(args->agbp);
+-	diff = be32_to_cpu(agf->agf_freeblks)
+-		- args->len - args->minleft;
+-	if (diff >= 0)
+-		return 1;
+-	args->len += diff;		/* shrink the allocated space */
+-	/* casts to (int) catch length underflows */
+-	if ((int)args->len >= (int)args->minlen)
+-		return 1;
+-	args->agbno = NULLAGBLOCK;
+-	return 0;
+-}
+-
+-/*
+  * Update the two btrees, logically removing from freespace the extent
+  * starting at rbno, rlen blocks.  The extent is contained within the
+  * actual (current) free extent fbno for flen blocks.
+@@ -686,8 +662,6 @@ xfs_alloc_ag_vextent(
+ 	xfs_alloc_arg_t	*args)	/* argument structure for allocation */
+ {
+ 	int		error=0;
+-	xfs_extlen_t	reservation;
+-	xfs_extlen_t	oldmax;
+ 
+ 	ASSERT(args->minlen > 0);
+ 	ASSERT(args->maxlen > 0);
+@@ -696,20 +670,6 @@ xfs_alloc_ag_vextent(
+ 	ASSERT(args->alignment > 0);
+ 
+ 	/*
+-	 * Clamp maxlen to the amount of free space minus any reservations
+-	 * that have been made.
+-	 */
+-	oldmax = args->maxlen;
+-	reservation = xfs_ag_resv_needed(args->pag, args->resv);
+-	if (args->maxlen > args->pag->pagf_freeblks - reservation)
+-		args->maxlen = args->pag->pagf_freeblks - reservation;
+-	if (args->maxlen == 0) {
+-		args->agbno = NULLAGBLOCK;
+-		args->maxlen = oldmax;
+-		return 0;
+-	}
+-
+-	/*
+ 	 * Branch to correct routine based on the type.
+ 	 */
+ 	args->wasfromfl = 0;
+@@ -728,8 +688,6 @@ xfs_alloc_ag_vextent(
+ 		/* NOTREACHED */
+ 	}
+ 
+-	args->maxlen = oldmax;
+-
+ 	if (error || args->agbno == NULLAGBLOCK)
+ 		return error;
+ 
+@@ -838,9 +796,6 @@ xfs_alloc_ag_vextent_exact(
+ 	args->len = XFS_AGBLOCK_MIN(tend, args->agbno + args->maxlen)
+ 						- args->agbno;
+ 	xfs_alloc_fix_len(args);
+-	if (!xfs_alloc_fix_minleft(args))
+-		goto not_found;
+-
+ 	ASSERT(args->agbno + args->len <= tend);
+ 
+ 	/*
+@@ -1146,12 +1101,7 @@ xfs_alloc_ag_vextent_near(
+ 		XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
+ 		ASSERT(ltbno + ltlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
+ 		args->len = blen;
+-		if (!xfs_alloc_fix_minleft(args)) {
+-			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+-			trace_xfs_alloc_near_nominleft(args);
+-			return 0;
+-		}
+-		blen = args->len;
++
+ 		/*
+ 		 * We are allocating starting at bnew for blen blocks.
+ 		 */
+@@ -1343,12 +1293,6 @@ xfs_alloc_ag_vextent_near(
+ 	 */
+ 	args->len = XFS_EXTLEN_MIN(ltlena, args->maxlen);
+ 	xfs_alloc_fix_len(args);
+-	if (!xfs_alloc_fix_minleft(args)) {
+-		trace_xfs_alloc_near_nominleft(args);
+-		xfs_btree_del_cursor(bno_cur_lt, XFS_BTREE_NOERROR);
+-		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+-		return 0;
+-	}
+ 	rlen = args->len;
+ 	(void)xfs_alloc_compute_diff(args->agbno, rlen, args->alignment,
+ 				     args->datatype, ltbnoa, ltlena, &ltnew);
+@@ -1550,8 +1494,6 @@ xfs_alloc_ag_vextent_size(
+ 	}
+ 	xfs_alloc_fix_len(args);
+ 
+-	if (!xfs_alloc_fix_minleft(args))
+-		goto out_nominleft;
+ 	rlen = args->len;
+ 	XFS_WANT_CORRUPTED_GOTO(args->mp, rlen <= flen, error0);
+ 	/*
+@@ -2070,10 +2012,19 @@ xfs_alloc_space_available(
+ 
+ 	/* do we have enough free space remaining for the allocation? */
+ 	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
+-			  reservation - min_free - args->total);
+-	if (available < (int)args->minleft || available <= 0)
++			  reservation - min_free - args->minleft);
++	if (available < (int)args->total)
+ 		return false;
+ 
++	/*
++	 * Clamp maxlen to the amount of free space available for the actual
++	 * extent allocation.
++	 */
++	if (available < (int)args->maxlen && !(flags & XFS_ALLOC_FLAG_CHECK)) {
++		args->maxlen = available;
++		ASSERT(args->maxlen > 0);
++	}
++
+ 	return true;
+ }
+ 
+@@ -2119,7 +2070,8 @@ xfs_alloc_fix_freelist(
+ 	}
+ 
+ 	need = xfs_alloc_min_freelist(mp, pag);
+-	if (!xfs_alloc_space_available(args, need, flags))
++	if (!xfs_alloc_space_available(args, need, flags |
++			XFS_ALLOC_FLAG_CHECK))
+ 		goto out_agbp_relse;
+ 
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 7c404a6..1d0f48a 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -56,7 +56,7 @@ typedef unsigned int xfs_alloctype_t;
+ #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
+ #define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
+ #define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
+-
++#define	XFS_ALLOC_FLAG_CHECK	0x00000010  /* test only, don't modify args */
+ 
+ /*
+  * Argument structure for xfs_alloc routines.
 -- 
 2.1.4
 
