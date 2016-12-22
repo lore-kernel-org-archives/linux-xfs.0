@@ -1,60 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33196 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932418AbcLGTJU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Dec 2016 14:09:20 -0500
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3538932B71F
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2016 19:02:03 +0000 (UTC)
-Date: Wed, 7 Dec 2016 14:02:01 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_logprint: di_gen is unsigned
-Message-ID: <20161207190201.GD23106@bfoster.bfoster>
-References: <c453839b-61db-9500-b39d-e6580d1748b5@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c453839b-61db-9500-b39d-e6580d1748b5@redhat.com>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:36503 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938907AbcLVVnP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2016 16:43:15 -0500
+Received: by mail-wm0-f68.google.com with SMTP id m203so38326810wma.3
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Dec 2016 13:43:14 -0800 (PST)
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH] libxfs: fix the size of xfs_mode_to_ftype table
+Date: Thu, 22 Dec 2016 23:42:54 +0200
+Message-Id: <1482442974-22117-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Mon, Dec 05, 2016 at 04:48:01PM -0600, Eric Sandeen wrote:
-> di_gen is unsigned:
-> 
->         __uint32_t      di_gen;         /* generation number */
-> 
-> but we print it as a signed int in logprint, so see oddities like:
-> 
->  forkoff:24  dmevmask:0x0  dmstate:0  flags:0x0  gen:-628807103
-> 
-> Fix this.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+Fix the size of the xfs_mode_to_ftype conversion table,
+which was too small to handle a malformed on-disk value
+of mode=S_IFMT.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Use a convenience macros S_DT(mode) to convert from
+mode to dirent file type and change the name of the table
+to xfs_dtype_to_ftype to correctly describe its index values.
 
-> 
-> diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
-> index f49316e..3863ba9 100644
-> --- a/logprint/log_print_all.c
-> +++ b/logprint/log_print_all.c
-> @@ -269,7 +269,7 @@ xlog_recover_print_inode_core(
->  	       di->di_size, (unsigned long long)di->di_nblocks,
->  	       di->di_extsize, di->di_nextents, (int)di->di_anextents);
->  	printf(_("		forkoff:%d  dmevmask:0x%x  dmstate:%d  flags:0x%x  "
-> -	     "gen:%d\n"),
-> +	     "gen:%u\n"),
->  	       (int)di->di_forkoff, di->di_dmevmask, (int)di->di_dmstate,
->  	       (int)di->di_flags, di->di_gen);
->  	if (di->di_version == 3) {
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ libxfs/xfs_dir2.c    | 17 ++++++++---------
+ libxfs/xfs_dir2.h    |  4 +++-
+ repair/dino_chunks.c |  3 +--
+ repair/phase6.c      |  2 +-
+ 4 files changed, 13 insertions(+), 13 deletions(-)
+
+Darrick,
+
+This is the matcing patch to the kernel fix patch.
+
+I used S_DT(S_IF*) values in this patch instead of DT_* values to
+avoid complicating the build.
+
+Assuming you want the kernel libxfs to stay in sync with this code
+feel free to copy&paste the table chunk into the kernel patch I sent you
+or I can re-send the kernel patch if you like.
+
+Tested that xfs_repair detects and fixes wrong file type values.
+
+Amir.
+
+diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
+index 4180a93..8dd007d 100644
+--- a/libxfs/xfs_dir2.c
++++ b/libxfs/xfs_dir2.c
+@@ -39,15 +39,14 @@ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+  * for file type specification. This will be propagated into the directory
+  * structure if appropriate for the given operation and filesystem config.
+  */
+-const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
+-	[0]			= XFS_DIR3_FT_UNKNOWN,
+-	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
+-	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
+-	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
+-	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
+-	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
+-	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
+-	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
++const unsigned char xfs_dtype_to_ftype[S_DT_MAX] = {
++	[S_DT(S_IFREG)]    = XFS_DIR3_FT_REG_FILE,
++	[S_DT(S_IFDIR)]    = XFS_DIR3_FT_DIR,
++	[S_DT(S_IFCHR)]    = XFS_DIR3_FT_CHRDEV,
++	[S_DT(S_IFBLK)]    = XFS_DIR3_FT_BLKDEV,
++	[S_DT(S_IFIFO)]    = XFS_DIR3_FT_FIFO,
++	[S_DT(S_IFSOCK)]   = XFS_DIR3_FT_SOCK,
++	[S_DT(S_IFLNK)]    = XFS_DIR3_FT_SYMLINK,
+ };
+ 
+ /*
+diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
+index 89b9e24..8eeaa0c 100644
+--- a/libxfs/xfs_dir2.h
++++ b/libxfs/xfs_dir2.h
+@@ -35,7 +35,9 @@ extern struct xfs_name	xfs_name_dotdot;
+  * directory filetype conversion tables.
+  */
+ #define S_SHIFT 12
+-extern const unsigned char xfs_mode_to_ftype[];
++#define S_DT(mode)     (((mode) & S_IFMT) >> S_SHIFT)
++#define S_DT_MAX       (S_DT(S_IFMT) + 1)
++extern const unsigned char xfs_dtype_to_ftype[];
+ 
+ /*
+  * directory operations vector for encode/decode routines
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index 4db9512..dd893af 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -847,9 +847,8 @@ next_readbuf:
+ 			 * phase 6.
+ 			 */
+ 			di_mode = be16_to_cpu(dino->di_mode);
+-			di_mode = (di_mode & S_IFMT) >> S_SHIFT;
+ 			set_inode_ftype(ino_rec, irec_offset,
+-					xfs_mode_to_ftype[di_mode]);
++					xfs_dtype_to_ftype[S_DT(di_mode)]);
+ 
+ 			/*
+ 			 * store on-disk nlink count for comparing in phase 7
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 06eed16..941fffc 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1082,7 +1082,7 @@ mv_orphanage(
+ 	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
+ 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
+ 
+-	xname.type = xfs_mode_to_ftype[(VFS_I(ino_p)->i_mode & S_IFMT)>>S_SHIFT];
++	xname.type = xfs_dtype_to_ftype[S_DT(VFS_I(ino_p)->i_mode)];
+ 
+ 	if (isa_dir)  {
+ 		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, orphanage_ino),
+-- 
+2.7.4
+
