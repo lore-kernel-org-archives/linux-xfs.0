@@ -1,58 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:35839 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756663AbcLPBVv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2016 20:21:51 -0500
-Date: Thu, 15 Dec 2016 17:20:14 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] duperemove: test presence of dedupe ioctl
-Message-ID: <20161216012014.GG5357@birch.djwong.org>
-References: <20161209175645.GB16813@birch.djwong.org>
- <20161214104436.GB16862@infradead.org>
- <20161214183845.GA5357@birch.djwong.org>
- <20161214192607.GA2280@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44508 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755221AbcLVJW5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Dec 2016 04:22:57 -0500
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C250C208FE
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Dec 2016 09:22:56 +0000 (UTC)
+Date: Thu, 22 Dec 2016 10:22:53 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs_quota: Fix test for wrapped id from GETNEXTQUOTA
+Message-ID: <20161222092253.h4ecy6soe5qfi7uf@eorzea.usersys.redhat.com>
+References: <44762cf0-ec69-4cb0-ee08-d5889f24df4b@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161214192607.GA2280@infradead.org>
+In-Reply-To: <44762cf0-ec69-4cb0-ee08-d5889f24df4b@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: mfasheh@versity.com, xfs <linux-xfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Dec 14, 2016 at 11:26:07AM -0800, Christoph Hellwig wrote:
-> On Wed, Dec 14, 2016 at 10:38:45AM -0800, Darrick J. Wong wrote:
-> > > > +struct fake_btrfs_ioctl_same_args {
-> > > > +	struct btrfs_ioctl_same_args args;
-> > > > +	struct btrfs_ioctl_same_extent_info info;
-> > > > +};
-> > > 
-> > > Why does this need a fake structure here?
-> > 
-> > In order to test the ioctl we have to fill out at least one
-> > btrfs_ioctl_same_extent_info so that we get far enough into the fs-specific
-> > dedupe_range handler that we've verified that the fs is capable of dedupe and
-> > that the fs is willing to try to satisfy the request.
+On Wed, Dec 21, 2016 at 09:13:08AM -0600, Eric Sandeen wrote:
+> dump_file and report_mount can be called with null *oid if
+> we aren't asking for the GETNEXTQUOTA interface, so we
+> should only test for the GETNEXTQUOTA wrap if *oid is
+> non-null.  Otherwise we'll deref a null pointer in the
+> test.
 > 
-> Oh, got it, it's just the fake that tripped me up.
-> 
-> > We could just malloc sizeof(_same_args) + sizeof(_same_extent_info)...
-> 
-> Either that, or more simply just don't give the structure a name
-> by just declaring it locally on the stack:
-> 
-> 	struct {
-> 		struct btrfs_ioctl_same_args args;
-> 		struct btrfs_ioctl_same_extent_info info;
-> 	} sa = { 0 };
+> This only happens for certain invocations of reporting,
+> which apparently are not covered by any regression tests
+> at this point, at least on new kernels which contain
+> GETNEXTQUOTA.
 
-Fair enough, no need to pollute the namespace.
 
---D
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
+> 
+> Addresses-Coverity-ID: 1397415
+> Addresses-Coverity-ID: 1397416
+> Brown-paper-bag-worn-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/quota/report.c b/quota/report.c
+> index fc02302..3833dd6 100644
+> --- a/quota/report.c
+> +++ b/quota/report.c
+> @@ -98,12 +98,12 @@ dump_file(
+>  		return 0;
+>  	}
+>  
+> -	if (oid)
+> +	if (oid) {
+>  		*oid = d.d_id;
+> -
+> -	/* Did kernelspace wrap? */
+> -	if (*oid < id)
+> -		return 0;
+> +		/* Did kernelspace wrap? */
+> +		if (*oid < id)
+> +			return 0;
+> +	}
+>  
+>  	if (!d.d_blk_softlimit && !d.d_blk_hardlimit &&
+>  	    !d.d_ino_softlimit && !d.d_ino_hardlimit &&
+> @@ -361,12 +361,12 @@ report_mount(
+>  		return 0;
+>  	}
+>  
+> -	if (oid)
+> +	if (oid) {
+>  		*oid = d.d_id;
+> -
+> -	/* Did kernelspace wrap? */
+> -	if (*oid < id)
+> -		return 0;
+> +		/* Did kernelspace wrap? */
+> +		if (* oid < id)
+> +			return 0;
+> +	}
+>  
+>  	if (flags & TERSE_FLAG) {
+>  		count = 0;
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
