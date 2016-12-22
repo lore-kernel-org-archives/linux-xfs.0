@@ -1,140 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57626 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1766015AbcLVTn5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Dec 2016 14:43:57 -0500
-Subject: [PATCH 2/3 V2] xfs: make xfs_btree_magic more generic
-References: <670e1f09-754d-4171-0a73-f918956eba2d@redhat.com>
- <af5e3ed3-bc57-deeb-be96-9bbb6f19b0ed@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <728f2c88-971b-6615-639a-7e1d0e61c295@sandeen.net>
-Date: Thu, 22 Dec 2016 13:43:55 -0600
+Received: from bombadil.infradead.org ([198.137.202.9]:55955 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941542AbcLVUYO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2016 15:24:14 -0500
+Date: Thu, 22 Dec 2016 12:24:13 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: XFS_IOC_FSEMAP requirements
+Message-ID: <20161222202413.GA4951@infradead.org>
+References: <20161220102935.ppt7ixjoh53uhu2e@eorzea.usersys.redhat.com>
+ <20161221014816.GC5487@birch.djwong.org>
+ <20161222085716.GA23054@infradead.org>
+ <20161222200729.GT4326@dastard>
 MIME-Version: 1.0
-In-Reply-To: <af5e3ed3-bc57-deeb-be96-9bbb6f19b0ed@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20161222200729.GT4326@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-Right now the xfs_btree_magic() define takes only a cursor;
-change this to take crc and btnum args to make it more generically
-useful, and move to a function.
+On Fri, Dec 23, 2016 at 07:07:29AM +1100, Dave Chinner wrote:
+> And extent per rbtree node is almost certainly not the right choice
+> because of the object count requirement - we do not want to a
+> kmalloc for every extent we add to the list.
 
-This will allow xfs_btree_init_block_int callers which don't
-have a cursor to make use of the xfs_magics array, which will
-happen in the next patch.
+People are doing a kmalloc for each Packet / I/O at millions of 
+I/Os per second, so I'm not that worried about that.  It's certainly
+more efficient than the crazy amount of memmoves we're currently
+doing based on my first preliminary numbers.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+That beeing said I'm still looking for something even better.
 
-V2: turn xfs_btree_magic into a function with a built-in ASSERT
+> That was before I found out how easy it is to use the rhashtable
+> code and how much faster it is for large lists than an rbtree.
+> That's the way I've been thinking recently, anyway...
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index f49fc2f..81866dd 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -50,8 +50,15 @@
- 	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC,
- 	  XFS_REFC_CRC_MAGIC }
- };
--#define xfs_btree_magic(cur) \
--	xfs_magics[!!((cur)->bc_flags & XFS_BTREE_CRC_BLOCKS)][cur->bc_btnum]
-+
-+__uint32_t xfs_btree_magic(int crc, xfs_btnum_t btnum)
-+{
-+	__uint32_t magic = xfs_magics[crc][btnum];
-+
-+	/* Ensure we asked for crc for crc-only magics. */
-+	ASSERT(magic != 0);
-+	return magic;
-+}
- 
- STATIC int				/* error (0 or EFSCORRUPTED) */
- xfs_btree_check_lblock(
-@@ -62,10 +69,13 @@
- {
- 	int			lblock_ok = 1; /* block passes checks */
- 	struct xfs_mount	*mp;	/* file system mount point */
-+	xfs_btnum_t		btnum = cur->bc_btnum;
-+	int			crc;
- 
- 	mp = cur->bc_mp;
-+	crc = xfs_sb_version_hascrc(&mp->m_sb);
- 
--	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+	if (crc) {
- 		lblock_ok = lblock_ok &&
- 			uuid_equal(&block->bb_u.l.bb_uuid,
- 				   &mp->m_sb.sb_meta_uuid) &&
-@@ -74,7 +84,7 @@
- 	}
- 
- 	lblock_ok = lblock_ok &&
--		be32_to_cpu(block->bb_magic) == xfs_btree_magic(cur) &&
-+		be32_to_cpu(block->bb_magic) == xfs_btree_magic(crc, btnum) &&
- 		be16_to_cpu(block->bb_level) == level &&
- 		be16_to_cpu(block->bb_numrecs) <=
- 			cur->bc_ops->get_maxrecs(cur, level) &&
-@@ -110,13 +120,16 @@
- 	struct xfs_agf		*agf;	/* ag. freespace structure */
- 	xfs_agblock_t		agflen;	/* native ag. freespace length */
- 	int			sblock_ok = 1; /* block passes checks */
-+	xfs_btnum_t		btnum = cur->bc_btnum;
-+	int			crc;
- 
- 	mp = cur->bc_mp;
-+	crc = xfs_sb_version_hascrc(&mp->m_sb);
- 	agbp = cur->bc_private.a.agbp;
- 	agf = XFS_BUF_TO_AGF(agbp);
- 	agflen = be32_to_cpu(agf->agf_length);
- 
--	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+	if (crc) {
- 		sblock_ok = sblock_ok &&
- 			uuid_equal(&block->bb_u.s.bb_uuid,
- 				   &mp->m_sb.sb_meta_uuid) &&
-@@ -125,7 +138,7 @@
- 	}
- 
- 	sblock_ok = sblock_ok &&
--		be32_to_cpu(block->bb_magic) == xfs_btree_magic(cur) &&
-+		be32_to_cpu(block->bb_magic) == xfs_btree_magic(crc, btnum) &&
- 		be16_to_cpu(block->bb_level) == level &&
- 		be16_to_cpu(block->bb_numrecs) <=
- 			cur->bc_ops->get_maxrecs(cur, level) &&
-@@ -1142,7 +1155,9 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
- 	int			level,
- 	int			numrecs)
- {
--	__u64 owner;
-+	__u64			owner;
-+	int			crc = xfs_sb_version_hascrc(&cur->bc_mp->m_sb);
-+	xfs_btnum_t		btnum = cur->bc_btnum;
- 
- 	/*
- 	 * we can pull the owner from the cursor right now as the different
-@@ -1156,7 +1171,7 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
- 		owner = cur->bc_private.a.agno;
- 
- 	xfs_btree_init_block_int(cur->bc_mp, XFS_BUF_TO_BLOCK(bp), bp->b_bn,
--				 xfs_btree_magic(cur), level, numrecs,
-+				 xfs_btree_magic(crc, btnum), level, numrecs,
- 				 owner, cur->bc_flags);
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index c2b01d1..3aaced3 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -76,6 +76,8 @@
- #define	XFS_BTNUM_RMAP	((xfs_btnum_t)XFS_BTNUM_RMAPi)
- #define	XFS_BTNUM_REFC	((xfs_btnum_t)XFS_BTNUM_REFCi)
- 
-+__uint32_t xfs_btree_magic(int crc, xfs_btnum_t btnum);
-+
- /*
-  * For logging record fields.
-  */
+hashes generally aren't very good for sequential iteration, of which
+we do a lot for the extent tree.  That beeing said it was on my todo
+list to simply give it a try after I saw the buffer cache patch.
 
+> My plan for the blocksize < page size was simply to track dirtines
+> on pages and forget about sub-page dirtiness. That way the
+> IO path is simply iterates entire pages to cover all the
+> mapped regions of the page. iomap already does that for us, and I
+> started on making writepage work that way, too. Haven't got to
+> working writepage code yet, though.
+
+There are four things that buffer_heads are used for in the blocksize <
+pagesize case.
+
+ - dirties - could be handled as mentioned by you
+ - uptodateness - we could always read in the whole page and things
+	would just work.  But on 64k page size this actually seems
+	to be a performance issue, otherwise we wouldn't have the
+	is_partially_uptodate address_space operation
+ - tracking the block number for pure overwrites.  Probably not
+   	really needed
+ - tracking of I/O completions - we must write out the whole page
+	on a writepage call, and something must track when all I/Os
+	for the page have finished so that we can unlock it (or
+	drop the writepage bit for the write case).
+
+Nothing unsolveable, but at least the last one is a little nasty,
+and doing the dumb things for 1 and 2 might cause performance
+regressions.
