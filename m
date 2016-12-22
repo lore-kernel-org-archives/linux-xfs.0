@@ -1,48 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42904 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750958AbcL1Iek (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Dec 2016 03:34:40 -0500
-Date: Wed, 28 Dec 2016 16:34:20 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2] xfs_io: implement 'utimes' command
-Message-ID: <20161228083420.GZ1859@eguan.usersys.redhat.com>
-References: <1482202286-8390-1-git-send-email-deepa.kernel@gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:32793 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755644AbcLVJ3A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2016 04:29:00 -0500
+Date: Thu, 22 Dec 2016 01:28:58 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs: use the actual AG length when reserving blocks
+Message-ID: <20161222092858.GA10562@infradead.org>
+References: <20161221001015.GE9865@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1482202286-8390-1-git-send-email-deepa.kernel@gmail.com>
+In-Reply-To: <20161221001015.GE9865@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Deepa Dinamani <deepa.kernel@gmail.com>
-Cc: linux-xfs@vger.kernel.org, arnd@arndb.de, y2038@lists.linaro.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Dec 19, 2016 at 06:51:26PM -0800, Deepa Dinamani wrote:
-> Add the utimes command to provide a way to utilize
-> the futimens C library call. This is the
-> interface to the utimensat system call, which updates
-> the mtime and atime of a file.
+On Tue, Dec 20, 2016 at 04:10:15PM -0800, Darrick J. Wong wrote:
+> We need to use the actual AG length when making per-AG reservations,
+> since we could otherwise end up reserving more blocks out of the last
+> AG than there are actual blocks.
 > 
-> Signed-off-by: Deepa Dinamani <deepa.kernel@gmail.com>
-> ---
-> Changes since v1:
-> * changed error return values
-> * removed redundant roff formatting directive
-> * removed unneeded argument count check
-> 
->  include/input.h   |  1 +
->  io/Makefile       |  2 +-
->  io/init.c         |  1 +
->  io/io.h           |  1 +
->  io/utimes.c       | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  libxcmd/input.c   | 22 +++++++++++++++
->  man/man8/xfs_io.8 | 11 ++++++++
->  7 files changed, 118 insertions(+), 1 deletion(-)
->  create mode 100755 io/utimes.c
->  mode change 100644 => 100755 libxcmd/input.c
+> Complained-about-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Just one nit, I think c files should not have "x" in file modes.
+Looks fine,
 
-Thanks,
-Eryu
+Reviewed-by: Christoph Hellwig <hch@lst.de>
