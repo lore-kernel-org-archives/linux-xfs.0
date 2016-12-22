@@ -1,68 +1,254 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:55955 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941542AbcLVUYO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2016 15:24:14 -0500
-Date: Thu, 22 Dec 2016 12:24:13 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS_IOC_FSEMAP requirements
-Message-ID: <20161222202413.GA4951@infradead.org>
-References: <20161220102935.ppt7ixjoh53uhu2e@eorzea.usersys.redhat.com>
- <20161221014816.GC5487@birch.djwong.org>
- <20161222085716.GA23054@infradead.org>
- <20161222200729.GT4326@dastard>
+Received: from sandeen.net ([63.231.237.45]:57672 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936060AbcLVTov (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Dec 2016 14:44:51 -0500
+Subject: [PATCH 3/3 V2] xfs: remove boilerplate around xfs_btree_init_block
+References: <670e1f09-754d-4171-0a73-f918956eba2d@redhat.com>
+ <6dceebc0-6f81-ada3-f834-cbf4b34b91d9@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ad59dbfb-0528-77a5-8ff6-eae5272db4bf@sandeen.net>
+Date: Thu, 22 Dec 2016 13:44:50 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161222200729.GT4326@dastard>
+In-Reply-To: <6dceebc0-6f81-ada3-f834-cbf4b34b91d9@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Dec 23, 2016 at 07:07:29AM +1100, Dave Chinner wrote:
-> And extent per rbtree node is almost certainly not the right choice
-> because of the object count requirement - we do not want to a
-> kmalloc for every extent we add to the list.
+Now that xfs_btree_init_block_int is able to determine crc
+status from the passed-in mp, we can determine the proper
+magic as well if we are given a btree number, rather than
+an explicit magic value.
 
-People are doing a kmalloc for each Packet / I/O at millions of 
-I/Os per second, so I'm not that worried about that.  It's certainly
-more efficient than the crazy amount of memmoves we're currently
-doing based on my first preliminary numbers.
+Change xfs_btree_init_block[_int] callers to pass in the
+btree number, and let xfs_btree_init_block_int use the
+xfs_magics array via the xfs_btree_magic macro to determine
+which magic value is needed.  This makes all of the
+if (crc) / else stanzas identical, and the if/else can be
+removed, leading to a single, common init_block call.
 
-That beeing said I'm still looking for something even better.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> That was before I found out how easy it is to use the rhashtable
-> code and how much faster it is for large lists than an rbtree.
-> That's the way I've been thinking recently, anyway...
+V2: remove ASSERT after xfs_btree_magic now that it's built
+into that function
 
-hashes generally aren't very good for sequential iteration, of which
-we do a lot for the extent tree.  That beeing said it was on my todo
-list to simply give it a try after I saw the buffer cache patch.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index e645aa8..b30ff0a 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -724,15 +724,9 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+ 	 * Fill in the root.
+ 	 */
+ 	block = ifp->if_broot;
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		xfs_btree_init_block_int(mp, block, XFS_BUF_DADDR_NULL,
+-				 XFS_BMAP_CRC_MAGIC, 1, 1, ip->i_ino,
++	xfs_btree_init_block_int(mp, block, XFS_BUF_DADDR_NULL,
++				 XFS_BTNUM_BMAP, 1, 1, ip->i_ino,
+ 				 XFS_BTREE_LONG_PTRS);
+-	else
+-		xfs_btree_init_block_int(mp, block, XFS_BUF_DADDR_NULL,
+-				 XFS_BMAP_MAGIC, 1, 1, ip->i_ino,
+-				 XFS_BTREE_LONG_PTRS);
+-
+ 	/*
+ 	 * Need a cursor.  Can't allocate until bb_level is filled in.
+ 	 */
+@@ -801,13 +795,8 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+ 	 */
+ 	abp->b_ops = &xfs_bmbt_buf_ops;
+ 	ablock = XFS_BUF_TO_BLOCK(abp);
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		xfs_btree_init_block_int(mp, ablock, abp->b_bn,
+-				XFS_BMAP_CRC_MAGIC, 0, 0, ip->i_ino,
+-				XFS_BTREE_LONG_PTRS);
+-	else
+-		xfs_btree_init_block_int(mp, ablock, abp->b_bn,
+-				XFS_BMAP_MAGIC, 0, 0, ip->i_ino,
++	xfs_btree_init_block_int(mp, ablock, abp->b_bn,
++				XFS_BTNUM_BMAP, 0, 0, ip->i_ino,
+ 				XFS_BTREE_LONG_PTRS);
+ 
+ 	arp = XFS_BMBT_REC_ADDR(mp, ablock, 1);
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index f0293d4..a8867a7 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -71,15 +71,9 @@
+ 	xfs_bmbt_key_t		*tkp;
+ 	__be64			*tpp;
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		xfs_btree_init_block_int(mp, rblock, XFS_BUF_DADDR_NULL,
+-				 XFS_BMAP_CRC_MAGIC, 0, 0, ip->i_ino,
+-				 XFS_BTREE_LONG_PTRS);
+-	else
+-		xfs_btree_init_block_int(mp, rblock, XFS_BUF_DADDR_NULL,
+-				 XFS_BMAP_MAGIC, 0, 0, ip->i_ino,
++	xfs_btree_init_block_int(mp, rblock, XFS_BUF_DADDR_NULL,
++				 XFS_BTNUM_BMAP, 0, 0, ip->i_ino,
+ 				 XFS_BTREE_LONG_PTRS);
+-
+ 	rblock->bb_level = dblock->bb_level;
+ 	ASSERT(be16_to_cpu(rblock->bb_level) > 0);
+ 	rblock->bb_numrecs = dblock->bb_numrecs;
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 81866dd..0dcc5f2 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -1097,13 +1097,14 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
+ 	struct xfs_mount	*mp,
+ 	struct xfs_btree_block	*buf,
+ 	xfs_daddr_t		blkno,
+-	__u32			magic,
++	xfs_btnum_t		btnum,
+ 	__u16			level,
+ 	__u16			numrecs,
+ 	__u64			owner,
+ 	unsigned int		flags)
+ {
+ 	int			crc = xfs_sb_version_hascrc(&mp->m_sb);
++	__u32			magic = xfs_btree_magic(crc, btnum);
+ 
+ 	buf->bb_magic = cpu_to_be32(magic);
+ 	buf->bb_level = cpu_to_be16(level);
+@@ -1138,14 +1139,14 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
+ xfs_btree_init_block(
+ 	struct xfs_mount *mp,
+ 	struct xfs_buf	*bp,
+-	__u32		magic,
++	xfs_btnum_t	btnum,
+ 	__u16		level,
+ 	__u16		numrecs,
+ 	__u64		owner,
+ 	unsigned int	flags)
+ {
+ 	xfs_btree_init_block_int(mp, XFS_BUF_TO_BLOCK(bp), bp->b_bn,
+-				 magic, level, numrecs, owner, flags);
++				 btnum, level, numrecs, owner, flags);
+ }
+ 
+ STATIC void
+@@ -1156,8 +1157,6 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
+ 	int			numrecs)
+ {
+ 	__u64			owner;
+-	int			crc = xfs_sb_version_hascrc(&cur->bc_mp->m_sb);
+-	xfs_btnum_t		btnum = cur->bc_btnum;
+ 
+ 	/*
+ 	 * we can pull the owner from the cursor right now as the different
+@@ -1171,7 +1170,7 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
+ 		owner = cur->bc_private.a.agno;
+ 
+ 	xfs_btree_init_block_int(cur->bc_mp, XFS_BUF_TO_BLOCK(bp), bp->b_bn,
+-				 xfs_btree_magic(crc, btnum), level, numrecs,
++				 cur->bc_btnum, level, numrecs,
+ 				 owner, cur->bc_flags);
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 3aaced3..ae10b7b 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -415,7 +415,7 @@ struct xfs_buf *				/* buffer for agno/agbno */
+ xfs_btree_init_block(
+ 	struct xfs_mount *mp,
+ 	struct xfs_buf	*bp,
+-	__u32		magic,
++	xfs_btnum_t	btnum,
+ 	__u16		level,
+ 	__u16		numrecs,
+ 	__u64		owner,
+@@ -426,7 +426,7 @@ struct xfs_buf *				/* buffer for agno/agbno */
+ 	struct xfs_mount	*mp,
+ 	struct xfs_btree_block	*buf,
+ 	xfs_daddr_t		blkno,
+-	__u32			magic,
++	xfs_btnum_t		btnum,
+ 	__u16			level,
+ 	__u16			numrecs,
+ 	__u64			owner,
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index bd20051..e702928 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -352,12 +352,7 @@
+ 			goto error0;
+ 		}
+ 
+-		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, bp, XFS_ABTB_CRC_MAGIC, 0, 1,
+-						agno, 0);
+-		else
+-			xfs_btree_init_block(mp, bp, XFS_ABTB_MAGIC, 0, 1,
+-						agno, 0);
++		xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, agno, 0);
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+ 		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+@@ -381,12 +376,7 @@
+ 			goto error0;
+ 		}
+ 
+-		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, bp, XFS_ABTC_CRC_MAGIC, 0, 1,
+-						agno, 0);
+-		else
+-			xfs_btree_init_block(mp, bp, XFS_ABTC_MAGIC, 0, 1,
+-						agno, 0);
++		xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, agno, 0);
+ 
+ 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+ 		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+@@ -413,7 +403,7 @@
+ 				goto error0;
+ 			}
+ 
+-			xfs_btree_init_block(mp, bp, XFS_RMAP_CRC_MAGIC, 0, 0,
++			xfs_btree_init_block(mp, bp, XFS_BTNUM_RMAP, 0, 0,
+ 						agno, 0);
+ 			block = XFS_BUF_TO_BLOCK(bp);
+ 
+@@ -488,12 +478,7 @@
+ 			goto error0;
+ 		}
+ 
+-		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			xfs_btree_init_block(mp, bp, XFS_IBT_CRC_MAGIC, 0, 0,
+-						agno, 0);
+-		else
+-			xfs_btree_init_block(mp, bp, XFS_IBT_MAGIC, 0, 0,
+-						agno, 0);
++		xfs_btree_init_block(mp, bp, XFS_BTNUM_INO , 0, 0, agno, 0);
+ 
+ 		error = xfs_bwrite(bp);
+ 		xfs_buf_relse(bp);
+@@ -513,12 +498,8 @@
+ 				goto error0;
+ 			}
+ 
+-			if (xfs_sb_version_hascrc(&mp->m_sb))
+-				xfs_btree_init_block(mp, bp, XFS_FIBT_CRC_MAGIC,
++			xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO,
+ 						     0, 0, agno, 0);
+-			else
+-				xfs_btree_init_block(mp, bp, XFS_FIBT_MAGIC, 0,
+-						     0, agno, 0);
+ 
+ 			error = xfs_bwrite(bp);
+ 			xfs_buf_relse(bp);
+@@ -539,7 +520,7 @@
+ 				goto error0;
+ 			}
+ 
+-			xfs_btree_init_block(mp, bp, XFS_REFC_CRC_MAGIC,
++			xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC,
+ 					     0, 0, agno, 0);
+ 
+ 			error = xfs_bwrite(bp);
 
-> My plan for the blocksize < page size was simply to track dirtines
-> on pages and forget about sub-page dirtiness. That way the
-> IO path is simply iterates entire pages to cover all the
-> mapped regions of the page. iomap already does that for us, and I
-> started on making writepage work that way, too. Haven't got to
-> working writepage code yet, though.
-
-There are four things that buffer_heads are used for in the blocksize <
-pagesize case.
-
- - dirties - could be handled as mentioned by you
- - uptodateness - we could always read in the whole page and things
-	would just work.  But on 64k page size this actually seems
-	to be a performance issue, otherwise we wouldn't have the
-	is_partially_uptodate address_space operation
- - tracking the block number for pure overwrites.  Probably not
-   	really needed
- - tracking of I/O completions - we must write out the whole page
-	on a writepage call, and something must track when all I/Os
-	for the page have finished so that we can unlock it (or
-	drop the writepage bit for the write case).
-
-Nothing unsolveable, but at least the last one is a little nasty,
-and doing the dumb things for 1 and 2 might cause performance
-regressions.
