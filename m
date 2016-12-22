@@ -1,15 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49866 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:57626 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941840AbcLVR6H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Dec 2016 12:58:07 -0500
-Subject: [PATCH 3/3] xfs: remove boilerplate around xfs_btree_init_block
+        id S1766015AbcLVTn5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Dec 2016 14:43:57 -0500
+Subject: [PATCH 2/3 V2] xfs: make xfs_btree_magic more generic
 References: <670e1f09-754d-4171-0a73-f918956eba2d@redhat.com>
+ <af5e3ed3-bc57-deeb-be96-9bbb6f19b0ed@sandeen.net>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6dceebc0-6f81-ada3-f834-cbf4b34b91d9@sandeen.net>
-Date: Thu, 22 Dec 2016 11:51:21 -0600
+Message-ID: <728f2c88-971b-6615-639a-7e1d0e61c295@sandeen.net>
+Date: Thu, 22 Dec 2016 13:43:55 -0600
 MIME-Version: 1.0
-In-Reply-To: <670e1f09-754d-4171-0a73-f918956eba2d@redhat.com>
+In-Reply-To: <af5e3ed3-bc57-deeb-be96-9bbb6f19b0ed@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,236 +18,123 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Now that xfs_btree_init_block_int is able to determine crc
-status from the passed-in mp, we can determine the proper
-magic as well if we are given a btree number, rather than
-an explicit magic value.
+Right now the xfs_btree_magic() define takes only a cursor;
+change this to take crc and btnum args to make it more generically
+useful, and move to a function.
 
-Change xfs_btree_init_block[_int] callers to pass in the
-btree number, and let xfs_btree_init_block_int use the
-xfs_magics array via the xfs_btree_magic macro to determine
-which magic value is needed.  This makes all of the
-if (crc) / else stanzas identical, and the if/else can be
-removed, leading to a single, common init_block call.
+This will allow xfs_btree_init_block_int callers which don't
+have a cursor to make use of the xfs_magics array, which will
+happen in the next patch.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index e645aa8..b30ff0a 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -724,15 +724,9 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
- 	 * Fill in the root.
- 	 */
- 	block = ifp->if_broot;
--	if (xfs_sb_version_hascrc(&mp->m_sb))
--		xfs_btree_init_block_int(mp, block, XFS_BUF_DADDR_NULL,
--				 XFS_BMAP_CRC_MAGIC, 1, 1, ip->i_ino,
-+	xfs_btree_init_block_int(mp, block, XFS_BUF_DADDR_NULL,
-+				 XFS_BTNUM_BMAP, 1, 1, ip->i_ino,
- 				 XFS_BTREE_LONG_PTRS);
--	else
--		xfs_btree_init_block_int(mp, block, XFS_BUF_DADDR_NULL,
--				 XFS_BMAP_MAGIC, 1, 1, ip->i_ino,
--				 XFS_BTREE_LONG_PTRS);
--
- 	/*
- 	 * Need a cursor.  Can't allocate until bb_level is filled in.
- 	 */
-@@ -801,13 +795,8 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
- 	 */
- 	abp->b_ops = &xfs_bmbt_buf_ops;
- 	ablock = XFS_BUF_TO_BLOCK(abp);
--	if (xfs_sb_version_hascrc(&mp->m_sb))
--		xfs_btree_init_block_int(mp, ablock, abp->b_bn,
--				XFS_BMAP_CRC_MAGIC, 0, 0, ip->i_ino,
--				XFS_BTREE_LONG_PTRS);
--	else
--		xfs_btree_init_block_int(mp, ablock, abp->b_bn,
--				XFS_BMAP_MAGIC, 0, 0, ip->i_ino,
-+	xfs_btree_init_block_int(mp, ablock, abp->b_bn,
-+				XFS_BTNUM_BMAP, 0, 0, ip->i_ino,
- 				XFS_BTREE_LONG_PTRS);
- 
- 	arp = XFS_BMBT_REC_ADDR(mp, ablock, 1);
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index f0293d4..a8867a7 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -71,15 +71,9 @@
- 	xfs_bmbt_key_t		*tkp;
- 	__be64			*tpp;
- 
--	if (xfs_sb_version_hascrc(&mp->m_sb))
--		xfs_btree_init_block_int(mp, rblock, XFS_BUF_DADDR_NULL,
--				 XFS_BMAP_CRC_MAGIC, 0, 0, ip->i_ino,
--				 XFS_BTREE_LONG_PTRS);
--	else
--		xfs_btree_init_block_int(mp, rblock, XFS_BUF_DADDR_NULL,
--				 XFS_BMAP_MAGIC, 0, 0, ip->i_ino,
-+	xfs_btree_init_block_int(mp, rblock, XFS_BUF_DADDR_NULL,
-+				 XFS_BTNUM_BMAP, 0, 0, ip->i_ino,
- 				 XFS_BTREE_LONG_PTRS);
--
- 	rblock->bb_level = dblock->bb_level;
- 	ASSERT(be16_to_cpu(rblock->bb_level) > 0);
- 	rblock->bb_numrecs = dblock->bb_numrecs;
+V2: turn xfs_btree_magic into a function with a built-in ASSERT
+
 diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index cdb952a..8487005 100644
+index f49fc2f..81866dd 100644
 --- a/fs/xfs/libxfs/xfs_btree.c
 +++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -1088,14 +1088,16 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
- 	struct xfs_mount	*mp,
- 	struct xfs_btree_block	*buf,
- 	xfs_daddr_t		blkno,
--	__u32			magic,
-+	xfs_btnum_t		btnum,
- 	__u16			level,
- 	__u16			numrecs,
- 	__u64			owner,
- 	unsigned int		flags)
- {
- 	int			crc = xfs_sb_version_hascrc(&mp->m_sb);
-+	__u32			magic = xfs_btree_magic(crc, btnum);
- 
+@@ -50,8 +50,15 @@
+ 	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC,
+ 	  XFS_REFC_CRC_MAGIC }
+ };
+-#define xfs_btree_magic(cur) \
+-	xfs_magics[!!((cur)->bc_flags & XFS_BTREE_CRC_BLOCKS)][cur->bc_btnum]
++
++__uint32_t xfs_btree_magic(int crc, xfs_btnum_t btnum)
++{
++	__uint32_t magic = xfs_magics[crc][btnum];
++
++	/* Ensure we asked for crc for crc-only magics. */
 +	ASSERT(magic != 0);
- 	buf->bb_magic = cpu_to_be32(magic);
- 	buf->bb_level = cpu_to_be16(level);
- 	buf->bb_numrecs = cpu_to_be16(numrecs);
-@@ -1129,14 +1131,14 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
- xfs_btree_init_block(
- 	struct xfs_mount *mp,
- 	struct xfs_buf	*bp,
--	__u32		magic,
-+	xfs_btnum_t	btnum,
- 	__u16		level,
- 	__u16		numrecs,
- 	__u64		owner,
- 	unsigned int	flags)
- {
- 	xfs_btree_init_block_int(mp, XFS_BUF_TO_BLOCK(bp), bp->b_bn,
--				 magic, level, numrecs, owner, flags);
-+				 btnum, level, numrecs, owner, flags);
- }
++	return magic;
++}
  
- STATIC void
-@@ -1147,8 +1149,6 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
+ STATIC int				/* error (0 or EFSCORRUPTED) */
+ xfs_btree_check_lblock(
+@@ -62,10 +69,13 @@
+ {
+ 	int			lblock_ok = 1; /* block passes checks */
+ 	struct xfs_mount	*mp;	/* file system mount point */
++	xfs_btnum_t		btnum = cur->bc_btnum;
++	int			crc;
+ 
+ 	mp = cur->bc_mp;
++	crc = xfs_sb_version_hascrc(&mp->m_sb);
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (crc) {
+ 		lblock_ok = lblock_ok &&
+ 			uuid_equal(&block->bb_u.l.bb_uuid,
+ 				   &mp->m_sb.sb_meta_uuid) &&
+@@ -74,7 +84,7 @@
+ 	}
+ 
+ 	lblock_ok = lblock_ok &&
+-		be32_to_cpu(block->bb_magic) == xfs_btree_magic(cur) &&
++		be32_to_cpu(block->bb_magic) == xfs_btree_magic(crc, btnum) &&
+ 		be16_to_cpu(block->bb_level) == level &&
+ 		be16_to_cpu(block->bb_numrecs) <=
+ 			cur->bc_ops->get_maxrecs(cur, level) &&
+@@ -110,13 +120,16 @@
+ 	struct xfs_agf		*agf;	/* ag. freespace structure */
+ 	xfs_agblock_t		agflen;	/* native ag. freespace length */
+ 	int			sblock_ok = 1; /* block passes checks */
++	xfs_btnum_t		btnum = cur->bc_btnum;
++	int			crc;
+ 
+ 	mp = cur->bc_mp;
++	crc = xfs_sb_version_hascrc(&mp->m_sb);
+ 	agbp = cur->bc_private.a.agbp;
+ 	agf = XFS_BUF_TO_AGF(agbp);
+ 	agflen = be32_to_cpu(agf->agf_length);
+ 
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (crc) {
+ 		sblock_ok = sblock_ok &&
+ 			uuid_equal(&block->bb_u.s.bb_uuid,
+ 				   &mp->m_sb.sb_meta_uuid) &&
+@@ -125,7 +138,7 @@
+ 	}
+ 
+ 	sblock_ok = sblock_ok &&
+-		be32_to_cpu(block->bb_magic) == xfs_btree_magic(cur) &&
++		be32_to_cpu(block->bb_magic) == xfs_btree_magic(crc, btnum) &&
+ 		be16_to_cpu(block->bb_level) == level &&
+ 		be16_to_cpu(block->bb_numrecs) <=
+ 			cur->bc_ops->get_maxrecs(cur, level) &&
+@@ -1142,7 +1155,9 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
+ 	int			level,
  	int			numrecs)
  {
- 	__u64			owner;
--	int			crc = xfs_sb_version_hascrc(&cur->bc_mp->m_sb);
--	xfs_btnum_t		btnum = cur->bc_btnum;
+-	__u64 owner;
++	__u64			owner;
++	int			crc = xfs_sb_version_hascrc(&cur->bc_mp->m_sb);
++	xfs_btnum_t		btnum = cur->bc_btnum;
  
  	/*
  	 * we can pull the owner from the cursor right now as the different
-@@ -1162,7 +1162,7 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
+@@ -1156,7 +1171,7 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
  		owner = cur->bc_private.a.agno;
  
  	xfs_btree_init_block_int(cur->bc_mp, XFS_BUF_TO_BLOCK(bp), bp->b_bn,
--				 xfs_btree_magic(crc, btnum), level, numrecs,
-+				 cur->bc_btnum, level, numrecs,
+-				 xfs_btree_magic(cur), level, numrecs,
++				 xfs_btree_magic(crc, btnum), level, numrecs,
  				 owner, cur->bc_flags);
  }
  
 diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index c2b01d1..63de8dc 100644
+index c2b01d1..3aaced3 100644
 --- a/fs/xfs/libxfs/xfs_btree.h
 +++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -413,7 +413,7 @@ struct xfs_buf *				/* buffer for agno/agbno */
- xfs_btree_init_block(
- 	struct xfs_mount *mp,
- 	struct xfs_buf	*bp,
--	__u32		magic,
-+	xfs_btnum_t	btnum,
- 	__u16		level,
- 	__u16		numrecs,
- 	__u64		owner,
-@@ -424,7 +424,7 @@ struct xfs_buf *				/* buffer for agno/agbno */
- 	struct xfs_mount	*mp,
- 	struct xfs_btree_block	*buf,
- 	xfs_daddr_t		blkno,
--	__u32			magic,
-+	xfs_btnum_t		btnum,
- 	__u16			level,
- 	__u16			numrecs,
- 	__u64			owner,
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index bd20051..e702928 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -352,12 +352,7 @@
- 			goto error0;
- 		}
+@@ -76,6 +76,8 @@
+ #define	XFS_BTNUM_RMAP	((xfs_btnum_t)XFS_BTNUM_RMAPi)
+ #define	XFS_BTNUM_REFC	((xfs_btnum_t)XFS_BTNUM_REFCi)
  
--		if (xfs_sb_version_hascrc(&mp->m_sb))
--			xfs_btree_init_block(mp, bp, XFS_ABTB_CRC_MAGIC, 0, 1,
--						agno, 0);
--		else
--			xfs_btree_init_block(mp, bp, XFS_ABTB_MAGIC, 0, 1,
--						agno, 0);
-+		xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, agno, 0);
- 
- 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
- 		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
-@@ -381,12 +376,7 @@
- 			goto error0;
- 		}
- 
--		if (xfs_sb_version_hascrc(&mp->m_sb))
--			xfs_btree_init_block(mp, bp, XFS_ABTC_CRC_MAGIC, 0, 1,
--						agno, 0);
--		else
--			xfs_btree_init_block(mp, bp, XFS_ABTC_MAGIC, 0, 1,
--						agno, 0);
-+		xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, agno, 0);
- 
- 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
- 		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
-@@ -413,7 +403,7 @@
- 				goto error0;
- 			}
- 
--			xfs_btree_init_block(mp, bp, XFS_RMAP_CRC_MAGIC, 0, 0,
-+			xfs_btree_init_block(mp, bp, XFS_BTNUM_RMAP, 0, 0,
- 						agno, 0);
- 			block = XFS_BUF_TO_BLOCK(bp);
- 
-@@ -488,12 +478,7 @@
- 			goto error0;
- 		}
- 
--		if (xfs_sb_version_hascrc(&mp->m_sb))
--			xfs_btree_init_block(mp, bp, XFS_IBT_CRC_MAGIC, 0, 0,
--						agno, 0);
--		else
--			xfs_btree_init_block(mp, bp, XFS_IBT_MAGIC, 0, 0,
--						agno, 0);
-+		xfs_btree_init_block(mp, bp, XFS_BTNUM_INO , 0, 0, agno, 0);
- 
- 		error = xfs_bwrite(bp);
- 		xfs_buf_relse(bp);
-@@ -513,12 +498,8 @@
- 				goto error0;
- 			}
- 
--			if (xfs_sb_version_hascrc(&mp->m_sb))
--				xfs_btree_init_block(mp, bp, XFS_FIBT_CRC_MAGIC,
-+			xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO,
- 						     0, 0, agno, 0);
--			else
--				xfs_btree_init_block(mp, bp, XFS_FIBT_MAGIC, 0,
--						     0, agno, 0);
- 
- 			error = xfs_bwrite(bp);
- 			xfs_buf_relse(bp);
-@@ -539,7 +520,7 @@
- 				goto error0;
- 			}
- 
--			xfs_btree_init_block(mp, bp, XFS_REFC_CRC_MAGIC,
-+			xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC,
- 					     0, 0, agno, 0);
- 
- 			error = xfs_bwrite(bp);
++__uint32_t xfs_btree_magic(int crc, xfs_btnum_t btnum);
++
+ /*
+  * For logging record fields.
+  */
 
