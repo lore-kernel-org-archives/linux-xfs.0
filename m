@@ -1,83 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34506 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55344 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935110AbcLTORt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Dec 2016 09:17:49 -0500
-Date: Tue, 20 Dec 2016 09:17:47 -0500
+        id S1753178AbcLXOMW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 24 Dec 2016 09:12:22 -0500
+Date: Sat, 24 Dec 2016 09:11:47 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
-Message-ID: <20161220141747.GA25290@bfoster.bfoster>
-References: <1481644767-9098-1-git-send-email-hch@lst.de>
- <1481644767-9098-2-git-send-email-hch@lst.de>
- <20161214173507.GA24645@bfoster.bfoster>
- <20161214193626.GA12106@lst.de>
- <20161214215133.GA26688@bfoster.bfoster>
- <20161215143430.GB29477@bfoster.bfoster>
- <20161219113826.GA26535@lst.de>
+Subject: Re: [PATCH v4] xfs: fix the size of xfs_mode_to_ftype table
+Message-ID: <20161224141146.GA44791@bfoster.bfoster>
+References: <1482343293-9028-1-git-send-email-amir73il@gmail.com>
+ <1482440841-10819-1-git-send-email-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161219113826.GA26535@lst.de>
+In-Reply-To: <1482440841-10819-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, Dec 19, 2016 at 12:38:26PM +0100, Christoph Hellwig wrote:
-> On Thu, Dec 15, 2016 at 09:34:33AM -0500, Brian Foster wrote:
-> > FWIW, I was playing with this a bit more and managed to manufacture a
-> > filesystem layout that this series doesn't handle too well. Emphasis on
-> > "manufactured" because this might not be a likely real world scenario,
-> > but either way the current code handles it fine.
+On Thu, Dec 22, 2016 at 11:07:21PM +0200, Amir Goldstein wrote:
+> Fix the size of the xfs_mode_to_ftype conversion table,
+> which was too small to handle a malformed on-disk value
+> of mode=S_IFMT.
 > 
-> It does, although mostly by accident.  I suspect with an even better
-> manufcatured image you could also drive the current code to it's knees,
-> e.g. only have one single block free in the first few AGs, and then
-> a small number just higher than that in a higher AG.
+> Use a convenience macros S_DT(mode) to convert from
+> mode to dirent file type and change the name of the table
+> to xfs_dtype_to_ftype to correctly describe its index values.
 > 
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
 
-Perhaps, I certainly wouldn't expect the code in current form to be
-perfect. It's hard enough to understand as it is. Just trying to avoid
-regressions and properly scope the required fix...
+A couple nits...
 
-> > I've attached a metadump of the offending image. mdestore it, mount and
-> > attempt something like 'dd if=/dev/zero of=/mnt/file' on the root. The
-> > buffered write looks like it's in a livelock, waiting indefinitely for a
-> > writeback cycle that will never complete...
+>  fs/xfs/libxfs/xfs_dir2.c | 17 ++++++++---------
+>  fs/xfs/libxfs/xfs_dir2.h |  4 +++-
+>  fs/xfs/xfs_iops.c        |  2 +-
+>  3 files changed, 12 insertions(+), 11 deletions(-)
 > 
-> Yeah, that's the loop that keeps going even if it can't allocate any
-> blocks, which seems generally bogus.  But even without that we'd get
-> ENOSPC despite not having a reservations. Which is a little easier to
-> debug, but just as wrong.
+> Darrick,
 > 
+> So my holiday season cleanup is now down to this one patch.
+> I pulled back the common code and added the needed macros in
+> xfs code, so this can be safely applied to xfsprogs as well.
+> I will send a patch to xfsprogs later.
+> 
+> Tested with generic/396 with -n ftype=0|1.
+> 
+> Amir.
+> 
+> v4:
+> - independent fix patch for xfs
+> 
+> v3:
+> - resort to simpler cleanup with macros DT_MAX and S_DT()
+> - mention the minor bug fix in commit message
+> 
+> v2:
+> - add private conversion from common to on-disk values
+> 
+> v1:
+> - use common conversion functions to get on-disk values
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+> index c58d72c..539f498 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.c
+> +++ b/fs/xfs/libxfs/xfs_dir2.c
+> @@ -41,15 +41,14 @@ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+>   * for file type specification. This will be propagated into the directory
+>   * structure if appropriate for the given operation and filesystem config.
+>   */
+> -const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
+> -	[0]			= XFS_DIR3_FT_UNKNOWN,
+> -	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
+> -	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
+> -	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
+> -	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
+> -	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
+> -	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
+> -	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
+> +const unsigned char xfs_dtype_to_ftype[S_DT_MAX] = {
 
-Indeed.
+Please retain the use of FT_UNKNOWN.
 
-> The only good way out I can see is to not hand out any more reservations
-> after we only nave nr_ags * xfs_bmap_worst_indlen(1) available.  I'll
-> see if I can come up with a patch for that.
+> +	[DT_REG]    = XFS_DIR3_FT_REG_FILE,
+> +	[DT_DIR]    = XFS_DIR3_FT_DIR,
+> +	[DT_CHR]    = XFS_DIR3_FT_CHRDEV,
+> +	[DT_BLK]    = XFS_DIR3_FT_BLKDEV,
+> +	[DT_FIFO]   = XFS_DIR3_FT_FIFO,
+> +	[DT_SOCK]   = XFS_DIR3_FT_SOCK,
+> +	[DT_LNK]    = XFS_DIR3_FT_SYMLINK,
+>  };
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> index 0197590..a069c3e 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.h
+> +++ b/fs/xfs/libxfs/xfs_dir2.h
+> @@ -35,7 +35,9 @@ extern struct xfs_name	xfs_name_dotdot;
+>   * directory filetype conversion tables.
+>   */
+>  #define S_SHIFT 12
+> -extern const unsigned char xfs_mode_to_ftype[];
+> +#define S_DT(mode)     (((mode) & S_IFMT) >> S_SHIFT)
+> +#define S_DT_MAX       (S_DT(S_IFMT) + 1)
 
-Hmm, so the idea is to basically find a way we can infer accurate
-information about the per-AG state at the time blocks are reserved from
-the global pool (i.e., buffered write time) and cut off writes at the
-point we can no longer guarantee at least one AG can satisfy the
-smallest write..?
+I think I'd prefer to see the '+ 1' in the xfs_dtype_to_ftype()
+definition.
 
-If so, that seems reasonable to me in principle. I'd have to think about
-it a bit more. The first question that comes to mind is that we'd have
-to make sure all allocations honor the minleft heuristic, yes? (Or
-perhaps not allow any allocations after this point?) Otherwise, what
-prevents the assumption of (available > nr_ags *
-xfs_bmap_worst_indlen(1)) from becoming false after the reservation has
-been granted but before the physical allocation is attempted at
-writeback time? E.g., write/reserve the last available delalloc block,
-then chew up the remaining minleft in each AG via sparse inode allocs or
-something (for example), then writeback occurs and can't find an AG to
-honor minleft (??).
+Those aside, this patch seems fine to me with the simple justification
+that the array size doesn't match the set of index values we
+limit/validate/scope mode against. AFAIU, this isn't a known bug and
+applies to mode values either read from disk or passed in externally.
+Darrick has pointed out that we already validate mode values on disk. I
+assume we (the kernel) do the same thing for mode values that are passed
+to XFS, but I don't see anything wrong with considering invalid input
+sufficiently to prevent us from doing something stupid (going off the
+end of the array and crashing or, perhaps worse, reading a valid ftype
+value) due to potential external (or future) brokenness or corruption.
+
+IOW, it's a landmine fixup in a currently non-reproducible error
+condition bundled with a minor cleanup to avoid all of the ugly shifting
+in the array initialization.
 
 Brian
 
+> +extern const unsigned char xfs_dtype_to_ftype[];
+>  
+>  /*
+>   * directory operations vector for encode/decode routines
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 308bebb..d2da9ca 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -103,7 +103,7 @@ xfs_dentry_to_name(
+>  {
+>  	namep->name = dentry->d_name.name;
+>  	namep->len = dentry->d_name.len;
+> -	namep->type = xfs_mode_to_ftype[(mode & S_IFMT) >> S_SHIFT];
+> +	namep->type = xfs_dtype_to_ftype[S_DT(mode)];
+>  }
+>  
+>  STATIC void
+> -- 
+> 2.7.4
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
