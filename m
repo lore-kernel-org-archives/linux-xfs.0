@@ -1,126 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:56141 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751347AbcLGDre (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Dec 2016 22:47:34 -0500
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/6] libxcmd: don't check generic library commands
-Date: Wed,  7 Dec 2016 14:47:22 +1100
-Message-Id: <20161207034724.1613-5-david@fromorbit.com>
-In-Reply-To: <20161207034724.1613-1-david@fromorbit.com>
-References: <20161207034724.1613-1-david@fromorbit.com>
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:33551 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753137AbcLYLYZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Dec 2016 06:24:25 -0500
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v5] xfs: fix the size of xfs_mode_to_ftype table
+Date: Sun, 25 Dec 2016 13:23:45 +0200
+Message-Id: <1482665025-18003-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, amir73il@gmail.com
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Fix the size of the xfs_mode_to_ftype conversion table,
+which was too small to handle an invalid value of mode=S_IFMT.
 
-The generic "help" and "quit" commands have different methods of
-skipping user provided command check functions that may prevent them
-from running. xfs_quota use CMD_ALL_FSTYPES and xfs_io uses
-CMD_FLAG_ONESHOT.  Add a new CMD_FLAG_LIBRARY to indicate commands
-that should not be checked against application specific check
-functions so they are always present and can be run regardless of
-the context in which they are run.
+Use a convenience macro S_DT(mode) to convert from
+mode to dirent file type and change the name of the table
+to xfs_dtype_to_ftype to correctly describe its index values.
 
-This gets rid of the CMD_ALL_FSTYPES flag, and enables us to remove
-the ONESHOT check in xfs_io so we use only app specific flags for
-determining if app commands should run or not.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- include/command.h | 1 +
- io/init.c         | 3 ---
- libxcmd/command.c | 4 ++++
- libxcmd/help.c    | 2 +-
- libxcmd/quit.c    | 2 +-
- quota/init.c      | 4 ----
- 6 files changed, 7 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_dir2.c | 18 +++++++++---------
+ fs/xfs/libxfs/xfs_dir2.h |  4 +++-
+ fs/xfs/xfs_iops.c        |  2 +-
+ 3 files changed, 13 insertions(+), 11 deletions(-)
 
-diff --git a/include/command.h b/include/command.h
-index 637ee06e6e9a..348002cbe3ed 100644
---- a/include/command.h
-+++ b/include/command.h
-@@ -27,6 +27,7 @@
+Darrick,
+
+I implemented the xfs specific test case to test all possible
+malformed file type values as you suggested and fixed up some minor
+nits that Brian pointed out.
+
+Tested with generic/396 with -n ftype=0|1.
+Tested with new xfs/348 test with -n ftype=0|1.
+
+Amir.
+
+v5:
+- remove wrong argument about on-disk malformed mode from commit message
+- address Brian's review comments
+
+v4:
+- independent fix patch for xfs
+
+v3:
+- resort to simpler cleanup with macros DT_MAX and S_DT()
+- mention the minor bug fix in commit message
+
+v2:
+- add private conversion from common to on-disk values
+
+v1:
+- use common conversion functions to get on-disk values
+
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index c58d72c..48d7c45 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -41,15 +41,15 @@ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+  * for file type specification. This will be propagated into the directory
+  * structure if appropriate for the given operation and filesystem config.
   */
- #define CMD_FLAG_ONESHOT	(1<<31)
- #define CMD_FLAG_FOREIGN_OK	(1<<30)	/* command not restricted to XFS */
-+#define CMD_FLAG_LIBRARY	(1<<29)	/* command provided by libxcmd */
+-const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
+-	[0]			= XFS_DIR3_FT_UNKNOWN,
+-	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
+-	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
+-	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
+-	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
+-	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
+-	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
+-	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
++const unsigned char xfs_dtype_to_ftype[S_DT_MAX+1] = {
++	[0]                = XFS_DIR3_FT_UNKNOWN,
++	[S_DT(S_IFREG)]    = XFS_DIR3_FT_REG_FILE,
++	[S_DT(S_IFDIR)]    = XFS_DIR3_FT_DIR,
++	[S_DT(S_IFCHR)]    = XFS_DIR3_FT_CHRDEV,
++	[S_DT(S_IFBLK)]    = XFS_DIR3_FT_BLKDEV,
++	[S_DT(S_IFIFO)]    = XFS_DIR3_FT_FIFO,
++	[S_DT(S_IFSOCK)]   = XFS_DIR3_FT_SOCK,
++	[S_DT(S_IFLNK)]    = XFS_DIR3_FT_SYMLINK,
+ };
  
- typedef int (*cfunc_t)(int argc, char **argv);
- typedef void (*helpfunc_t)(void);
-diff --git a/io/init.c b/io/init.c
-index 34009b024833..5ce627ef22c9 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -109,9 +109,6 @@ static int
- init_check_command(
- 	const cmdinfo_t	*ct)
+ /*
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 0197590..4934d38 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -35,7 +35,9 @@ extern struct xfs_name	xfs_name_dotdot;
+  * directory filetype conversion tables.
+  */
+ #define S_SHIFT 12
+-extern const unsigned char xfs_mode_to_ftype[];
++#define S_DT(mode)     (((mode) & S_IFMT) >> S_SHIFT)
++#define S_DT_MAX       S_DT(S_IFMT)
++extern const unsigned char xfs_dtype_to_ftype[];
+ 
+ /*
+  * directory operations vector for encode/decode routines
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 308bebb..d2da9ca 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -103,7 +103,7 @@ xfs_dentry_to_name(
  {
--	if (ct->flags & CMD_FLAG_ONESHOT)
--		return 1;
--
- 	if (!file && !(ct->flags & CMD_NOFILE_OK)) {
- 		fprintf(stderr, _("no files are open, try 'help open'\n"));
- 		return 0;
-diff --git a/libxcmd/command.c b/libxcmd/command.c
-index 2c94a3199115..decc442a9d03 100644
---- a/libxcmd/command.c
-+++ b/libxcmd/command.c
-@@ -48,6 +48,10 @@ static int
- check_command(
- 	const cmdinfo_t	*ci)
- {
-+	/* always run internal library supplied commands */
-+	if (ci->flags & CMD_FLAG_LIBRARY)
-+		return 1;
-+
- 	if (check_func)
- 		return check_func(ci);
- 	return 1;
-diff --git a/libxcmd/help.c b/libxcmd/help.c
-index bc31d6df1d8a..f888377cabf7 100644
---- a/libxcmd/help.c
-+++ b/libxcmd/help.c
-@@ -89,7 +89,7 @@ help_init(void)
- 	help_cmd.cfunc = help_f;
- 	help_cmd.argmin = 0;
- 	help_cmd.argmax = 1;
--	help_cmd.flags = CMD_FLAG_ONESHOT | CMD_ALL_FSTYPES;
-+	help_cmd.flags = CMD_FLAG_ONESHOT | CMD_FLAG_LIBRARY;
- 	help_cmd.args = _("[command]");
- 	help_cmd.oneline = _("help for one or all commands");
+ 	namep->name = dentry->d_name.name;
+ 	namep->len = dentry->d_name.len;
+-	namep->type = xfs_mode_to_ftype[(mode & S_IFMT) >> S_SHIFT];
++	namep->type = xfs_dtype_to_ftype[S_DT(mode)];
+ }
  
-diff --git a/libxcmd/quit.c b/libxcmd/quit.c
-index 19431015aee2..1e1ba986f2ba 100644
---- a/libxcmd/quit.c
-+++ b/libxcmd/quit.c
-@@ -39,7 +39,7 @@ quit_init(void)
- 	quit_cmd.cfunc = quit_f;
- 	quit_cmd.argmin = -1;
- 	quit_cmd.argmax = -1;
--	quit_cmd.flags = CMD_FLAG_ONESHOT | CMD_ALL_FSTYPES;
-+	quit_cmd.flags = CMD_FLAG_ONESHOT | CMD_FLAG_LIBRARY;
- 	quit_cmd.oneline = _("exit the program");
- 
- 	add_command(&quit_cmd);
-diff --git a/quota/init.c b/quota/init.c
-index 193f6421fd59..d45dc4c5461e 100644
---- a/quota/init.c
-+++ b/quota/init.c
-@@ -117,10 +117,6 @@ init_check_command(
- 	if (!fs_path)
- 		return 1;
- 
--	/* Always run commands that are valid for all fs types. */
--	if (ct->flags & CMD_ALL_FSTYPES)
--		return 1;
--
- 	/* If it's an XFS filesystem, always run the command. */
- 	if (!(fs_path->fs_flags & FS_FOREIGN))
- 		return 1;
+ STATIC void
 -- 
-2.10.2
+2.7.4
 
