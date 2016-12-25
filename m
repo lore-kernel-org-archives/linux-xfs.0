@@ -1,188 +1,411 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36827 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750928AbcLXHbx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Dec 2016 02:31:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <20161223210110.GC12622@birch.djwong.org>
-References: <1482343293-9028-1-git-send-email-amir73il@gmail.com>
- <1482440841-10819-1-git-send-email-amir73il@gmail.com> <20161223210110.GC12622@birch.djwong.org>
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:36306 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750967AbcLYSKA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Dec 2016 13:10:00 -0500
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Sat, 24 Dec 2016 09:31:51 +0200
-Message-ID: <CAOQ4uxhZNGRCUneJXygxqnZo4yM2NbKPdj0XeO_cjrumuVqyXw@mail.gmail.com>
-Subject: Re: [PATCH v4] xfs: fix the size of xfs_mode_to_ftype table
-Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v2 1/3] xfs/348: test handling of invalid inode modes
+Date: Sun, 25 Dec 2016 20:09:34 +0200
+Message-Id: <1482689376-23553-2-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1482689376-23553-1-git-send-email-amir73il@gmail.com>
+References: <1482689376-23553-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>
+To: Eryu Guan <eguan@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Brian Foster <bfoster@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Dec 23, 2016 at 11:01 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Thu, Dec 22, 2016 at 11:07:21PM +0200, Amir Goldstein wrote:
->> Fix the size of the xfs_mode_to_ftype conversion table,
->> which was too small to handle a malformed on-disk value
->> of mode=S_IFMT.
->>
->> Use a convenience macros S_DT(mode) to convert from
->> mode to dirent file type and change the name of the table
->> to xfs_dtype_to_ftype to correctly describe its index values.
->>
->> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->> ---
->>  fs/xfs/libxfs/xfs_dir2.c | 17 ++++++++---------
->>  fs/xfs/libxfs/xfs_dir2.h |  4 +++-
->>  fs/xfs/xfs_iops.c        |  2 +-
->>  3 files changed, 12 insertions(+), 11 deletions(-)
->>
->> Darrick,
->>
->> So my holiday season cleanup is now down to this one patch.
->> I pulled back the common code and added the needed macros in
->> xfs code, so this can be safely applied to xfsprogs as well.
->> I will send a patch to xfsprogs later.
->>
->> Tested with generic/396 with -n ftype=0|1.
->
-> Hm... the 396 test looks ok, but I think we'd need a fs-specific
-> testcase to go write a corrupt i_mode = S_IFMT filesystem to try
-> to trigger the verifiers, right?
->
+Set all possible file type values for different types of files
+and verify that xfs_repair detects the correct errors.
 
-Right. I will write that testcase.
+When setting invalid file type values (e.g. core.mode = 0170644),
+all files are expected to have been junked by xfs_repair.
 
->> Amir.
->>
->> v4:
->> - independent fix patch for xfs
->>
->> v3:
->> - resort to simpler cleanup with macros DT_MAX and S_DT()
->> - mention the minor bug fix in commit message
->>
->> v2:
->> - add private conversion from common to on-disk values
->>
->> v1:
->> - use common conversion functions to get on-disk values
->>
->> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
->> index c58d72c..539f498 100644
->> --- a/fs/xfs/libxfs/xfs_dir2.c
->> +++ b/fs/xfs/libxfs/xfs_dir2.c
->> @@ -41,15 +41,14 @@ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
->>   * for file type specification. This will be propagated into the directory
->>   * structure if appropriate for the given operation and filesystem config.
->>   */
->> -const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
->> -     [0]                     = XFS_DIR3_FT_UNKNOWN,
->> -     [S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
->> -     [S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
->> -     [S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
->> -     [S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
->> -     [S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
->> -     [S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
->> -     [S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
->> +const unsigned char xfs_dtype_to_ftype[S_DT_MAX] = {
->> +     [DT_REG]    = XFS_DIR3_FT_REG_FILE,
->> +     [DT_DIR]    = XFS_DIR3_FT_DIR,
->> +     [DT_CHR]    = XFS_DIR3_FT_CHRDEV,
->> +     [DT_BLK]    = XFS_DIR3_FT_BLKDEV,
->> +     [DT_FIFO]   = XFS_DIR3_FT_FIFO,
->> +     [DT_SOCK]   = XFS_DIR3_FT_SOCK,
->> +     [DT_LNK]    = XFS_DIR3_FT_SYMLINK,
->>  };
->>
->>  /*
->> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
->> index 0197590..a069c3e 100644
->> --- a/fs/xfs/libxfs/xfs_dir2.h
->> +++ b/fs/xfs/libxfs/xfs_dir2.h
->> @@ -35,7 +35,9 @@ extern struct xfs_name      xfs_name_dotdot;
->>   * directory filetype conversion tables.
->>   */
->>  #define S_SHIFT 12
->> -extern const unsigned char xfs_mode_to_ftype[];
->> +#define S_DT(mode)     (((mode) & S_IFMT) >> S_SHIFT)
->> +#define S_DT_MAX       (S_DT(S_IFMT) + 1)
->> +extern const unsigned char xfs_dtype_to_ftype[];
->>
->>  /*
->>   * directory operations vector for encode/decode routines
->> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->> index 308bebb..d2da9ca 100644
->> --- a/fs/xfs/xfs_iops.c
->> +++ b/fs/xfs/xfs_iops.c
->> @@ -103,7 +103,7 @@ xfs_dentry_to_name(
->>  {
->>       namep->name = dentry->d_name.name;
->>       namep->len = dentry->d_name.len;
->> -     namep->type = xfs_mode_to_ftype[(mode & S_IFMT) >> S_SHIFT];
->> +     namep->type = xfs_dtype_to_ftype[S_DT(mode)];
->
-> So I think your concern here is that we could read a inode in from disk
-> that has an invalid i_mode such that we'd overflow xfs_mode_to_ftype
-> when trying to set the dirent ftype while linking the inode into a
-> directory, correct?
->
-> In that case, xfs_iread calls xfs_iformat_fork as part of pulling the
-> inode in off disk, and xfs_iformat_fork validates that the S_IFMT part
-> of i_mode actually corresponds to a known inode type and sends back
-> -EFSCORRUPTED if not.
->
-> I think that checking suffices to handle this.  I prefer that we look
-> for invalid on-disk metadata and prevent it from being loaded into
-> memory at all, rather than try to catch all the problems that happen as
-> a result of insufficient validation.
->
+When setting valid file type values to non matching file types,
+xfs_repair would either detect wrong format and junk the file, e.g.:
+  would have junked entry "FILE" in directory PARENT_INO
+or detect a ftype mismatch error, e.g.:
+  would fix ftype mismatch (5/3) in directory/child PARENT_INO/FIFO_INO
 
-In the context of the justification that I provided in the commit message of
-this patch, I agree with you. Like ext4, xfs also provides proper protection
-against reading malformed i_mode data from disk (unlike ext2 and its clones).
-So I shouldn't have included the malformed i_mode argument in my patch,
-when I copied the commit message over from ext2 patch.
+If ftype feature is enabled, when setting file type to one of the
+special types (i.e. FIFO(1), CHRDEV(2),BLKDEV(6),SOCKET(14)),
+xfs_repair is expected to detect ftype mismatch error. Otherewise,
+xfs_repair is not expected to detect ftype mismatch error.
 
-OTOH, is it really wise to keep the table at size 15 when fixing its size as
-the patch suggests costs practically nothing? better safe then sorry.
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ tests/xfs/348     | 128 ++++++++++++++++++++++++++++++++
+ tests/xfs/348.out | 216 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/group   |   1 +
+ 3 files changed, 345 insertions(+)
+ create mode 100755 tests/xfs/348
+ create mode 100644 tests/xfs/348.out
 
-And now for my real reasoning behind this patch.
+diff --git a/tests/xfs/348 b/tests/xfs/348
+new file mode 100755
+index 0000000..9ec696a
+--- /dev/null
++++ b/tests/xfs/348
+@@ -0,0 +1,128 @@
++#! /bin/bash
++# FSQA Test No. 348
++#
++# Test handling of invalid inode modes
++#
++# Set all possible file type values for different types of files
++# and verify that xfs_repair detects the correct errors.
++#
++#-----------------------------------------------------------------------
++#
++# Copyright (C) 2016 CTERA Networks. All Rights Reserved.
++# Author: Amir Goldstein <amir73il@gmail.com>
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/repair
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++_require_scratch
++
++rm -f $seqres.full
++
++_scratch_mkfs >>$seqres.full 2>&1
++
++_scratch_mount
++
++# Create our test files.
++testdir=$SCRATCH_MNT/test
++mkdir -p $testdir
++mkdir $testdir/DIR
++echo 123 > $testdir/FILE
++ln -s $testdir/FILE $testdir/SYMLINK
++mknod $testdir/CHRDEV c 1 1
++mknod $testdir/BLKDEV b 1 1
++mknod $testdir/FIFO p
++
++xfs_info $SCRATCH_MNT | grep -q "ftype=1" && FTYPE_FEATURE=1
++
++# Record test dir inode for xfs_repair filter
++inode_filter=$tmp.sed
++rm -f $inode_filter
++pino=$(ls -id $testdir | awk '{print $1}')
++echo "s/inode $pino/PARENT_INO/" >> $inode_filter
++echo "s/directory $pino/directory PARENT_INO/" >> $inode_filter
++
++inodes=""
++# Record inode numbers for xfs_db commands and xfs_repair filter
++for f in DIR FILE SYMLINK CHRDEV BLKDEV FIFO; do
++	ino=$(ls -id $testdir/$f | awk '{print $1}')
++	inodes="$inodes $ino"
++	echo "s/inode $ino/${f}_INO/" >> $inode_filter
++done
++
++_scratch_unmount
++
++# Possible mode file type values (mode & S_IFMT) >> 12
++dtypes="0 1 2 3 4 5 6 7 10 11 12 13 14 15 16 17"
++echo "===== Find inode by file type:"
++for dt in $dtypes; do
++	# Set all our test files to dt value
++	for ino in $inodes; do
++		_scratch_xfs_db -c "inode $ino" -c "print core.mode" | \
++			grep -q "0${dt}0...$" && \
++			(echo "dt=$dt => inode $ino" | sed -f $inode_filter)
++	done
++done
++for dt in $dtypes; do
++	echo
++	echo "===== Setting dt=$dt to all files:"
++	# Set all our test files to dt value
++	for ino in $inodes; do
++		_scratch_xfs_db -x -c "inode $ino" -c "write core.mode 0${dt}0644"
++	done
++	# Repair should detect the inconsistencies
++	# For invalid dt values, all files would have been junked.
++	# For valid dt values, one test file is expected to be valid.
++	# The rest would either have wrong format or non matching dir ftype.
++	_scratch_xfs_repair -n 2>&1  | tee -a $seqres.full | \
++		_filter_repair | grep "^would have junked" | sed -f $inode_filter | sort -u
++	# If ftype feature is enabled, when setting file type to one of the
++	# special types (i.e. FIFO(1), CHRDEV(2),BLKDEV(6),SOCKET(14)),
++	# xfs_repair is expected to detect ftype mismatch error. Otherewise,
++	# xfs_repair is not expected to detect ftype mismatch error.
++	if [ "$FTYPE_FEATURE" = 1 ] && (echo ':1:2:6:14:' | grep -q ":$dt:"); then
++		_scratch_xfs_repair -n 2>&1 | grep -q "^would fix ftype mismatch" || \
++			_fail "xfs_repair should fix ftype mismatch"
++	else
++		_scratch_xfs_repair -n 2>&1 | grep -q -v "^would fix ftype mismatch" || \
++			_fail "xfs_repair should not fix ftype mismatch"
++	fi
++done
++
++# Repair should detect and junk all test files
++_scratch_xfs_repair 2>&1 >> $seqres.full 2>&1 || _fail "xfs_repair should not fail"
++
++status=0
++exit
+diff --git a/tests/xfs/348.out b/tests/xfs/348.out
+new file mode 100644
+index 0000000..bf4924b
+--- /dev/null
++++ b/tests/xfs/348.out
+@@ -0,0 +1,216 @@
++QA output created by 348
++===== Find inode by file type:
++dt=1 => FIFO_INO
++dt=2 => CHRDEV_INO
++dt=4 => DIR_INO
++dt=6 => BLKDEV_INO
++dt=10 => FILE_INO
++dt=12 => SYMLINK_INO
++
++===== Setting dt=0 to all files:
++core.mode = 0644
++core.mode = 0644
++core.mode = 0644
++core.mode = 0644
++core.mode = 0644
++core.mode = 0644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=1 to all files:
++core.mode = 010644
++core.mode = 010644
++core.mode = 010644
++core.mode = 010644
++core.mode = 010644
++core.mode = 010644
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=2 to all files:
++core.mode = 020644
++core.mode = 020644
++core.mode = 020644
++core.mode = 020644
++core.mode = 020644
++core.mode = 020644
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=3 to all files:
++core.mode = 030644
++core.mode = 030644
++core.mode = 030644
++core.mode = 030644
++core.mode = 030644
++core.mode = 030644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=4 to all files:
++core.mode = 040644
++core.mode = 040644
++core.mode = 040644
++core.mode = 040644
++core.mode = 040644
++core.mode = 040644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++
++===== Setting dt=5 to all files:
++core.mode = 050644
++core.mode = 050644
++core.mode = 050644
++core.mode = 050644
++core.mode = 050644
++core.mode = 050644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=6 to all files:
++core.mode = 060644
++core.mode = 060644
++core.mode = 060644
++core.mode = 060644
++core.mode = 060644
++core.mode = 060644
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=7 to all files:
++core.mode = 070644
++core.mode = 070644
++core.mode = 070644
++core.mode = 070644
++core.mode = 070644
++core.mode = 070644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=10 to all files:
++core.mode = 0100644
++core.mode = 0100644
++core.mode = 0100644
++core.mode = 0100644
++core.mode = 0100644
++core.mode = 0100644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=11 to all files:
++core.mode = 0110644
++core.mode = 0110644
++core.mode = 0110644
++core.mode = 0110644
++core.mode = 0110644
++core.mode = 0110644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=12 to all files:
++core.mode = 0120644
++core.mode = 0120644
++core.mode = 0120644
++core.mode = 0120644
++core.mode = 0120644
++core.mode = 0120644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++
++===== Setting dt=13 to all files:
++core.mode = 0130644
++core.mode = 0130644
++core.mode = 0130644
++core.mode = 0130644
++core.mode = 0130644
++core.mode = 0130644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=14 to all files:
++core.mode = 0140644
++core.mode = 0140644
++core.mode = 0140644
++core.mode = 0140644
++core.mode = 0140644
++core.mode = 0140644
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=15 to all files:
++core.mode = 0150644
++core.mode = 0150644
++core.mode = 0150644
++core.mode = 0150644
++core.mode = 0150644
++core.mode = 0150644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=16 to all files:
++core.mode = 0160644
++core.mode = 0160644
++core.mode = 0160644
++core.mode = 0160644
++core.mode = 0160644
++core.mode = 0160644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
++
++===== Setting dt=17 to all files:
++core.mode = 0170644
++core.mode = 0170644
++core.mode = 0170644
++core.mode = 0170644
++core.mode = 0170644
++core.mode = 0170644
++would have junked entry "BLKDEV" in directory PARENT_INO
++would have junked entry "CHRDEV" in directory PARENT_INO
++would have junked entry "DIR" in directory PARENT_INO
++would have junked entry "FIFO" in directory PARENT_INO
++would have junked entry "FILE" in directory PARENT_INO
++would have junked entry "SYMLINK" in directory PARENT_INO
+diff --git a/tests/xfs/group b/tests/xfs/group
+index c237b50..68c2bb6 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -334,3 +334,4 @@
+ 345 auto quick clone
+ 346 auto quick clone
+ 347 auto quick clone
++348 auto quick repair
+-- 
+2.7.4
 
->From the point it time when xfs reflink is declared stable,
-using it as underlying (host) fs for overlayfs containers, is going to become
-a superior alternative to other local fs, because of:
- 2ea9846 ovl: use vfs_clone_file_range() for copy up if possible
-
-This head start paves the way to more xfs+overlayfs synergy.
-
-For one such feature, I posted an early POC to linux-unionfs:
-  ovl: use RENAME_DT_WHT to optimize ovl_dir_read_merged()
-https://marc.info/?l=linux-unionfs&m=148242757001436&w=3
-
-This requires fs specific support, for which I implemented a demo with xfs:
-  xfs: support RENAME_VFS_DTYPE flag
-https://marc.info/?l=linux-unionfs&m=148242757001433&w=3
-
-I wanted to avoid cross posting to lists, but I probably should've CC'ed
-you for context.
-
-So now you understand my reasoning for fixing xfs_mode_to_ftype[]
-to not assume anything about input mode.
-
-Of course, this xfs_mode_to_ftype size fix can wait in by topic branch
-until the future time when the said optimization will be considered and
-after I propose the needed feature flag to xfs.
-
-The reason I sent it out as is, detached from context and independent
-of future developments is that I believe fixing the table size does have
-merit on its own, certainly with nothing to loose.
-
-FYI, at this moment, neither vfs_mknod() nor xfs_vn_mknod() sanitize
-the mode argument. I know that overlayfs does not abuse this, but I did
-not check if the 2 other call sites that call vfs_mknod (ecryptfs and nfsd)
-sanitize mode.
-That could be fixes of course in either vfs_mknod() and xfs_vn_mknod()
-as well as audited in calling code.
-
-Cheers,
-Amir.
