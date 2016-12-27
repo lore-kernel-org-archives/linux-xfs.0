@@ -1,48 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57242 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758084AbcLVI5W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2016 03:57:22 -0500
-Date: Thu, 22 Dec 2016 00:57:16 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS_IOC_FSEMAP requirements
-Message-ID: <20161222085716.GA23054@infradead.org>
-References: <20161220102935.ppt7ixjoh53uhu2e@eorzea.usersys.redhat.com>
- <20161221014816.GC5487@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20161221014816.GC5487@birch.djwong.org>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:33052 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932916AbcL0QGZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Dec 2016 11:06:25 -0500
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH v1 42/54] xfs: convert to bio_for_each_segment_all_sp()
+Date: Wed, 28 Dec 2016 00:04:51 +0800
+Message-Id: <1482854706-14128-11-git-send-email-tom.leiming@gmail.com>
+In-Reply-To: <1482854706-14128-1-git-send-email-tom.leiming@gmail.com>
+References: <1482854706-14128-1-git-send-email-tom.leiming@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
+Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, Dave Chinner <david@fromorbit.com>, "supporter:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>
 
-On Tue, Dec 20, 2016 at 05:48:16PM -0800, Darrick J. Wong wrote:
-> As for project ideas, I can think of a handful of them -- reworking the
-> in-core extent tree not to require large contiguous memory allocations,
-> sorting out reflink+dax,
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+---
+ fs/xfs/xfs_aops.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-FYI, I have significant work done on both of them.  I just need to sort
-out the ENOSPC issues (just got another report where we're running into
-ENOSPC for inobt updates, so there might be even more dragons there)
-and the DAX DIO rework, which is 90% of the work for reflink+DAX.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 0f56fcd3a5d5..1acd6162aec1 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -139,6 +139,7 @@ xfs_destroy_ioend(
+ 	for (bio = &ioend->io_inline_bio; bio; bio = next) {
+ 		struct bio_vec	*bvec;
+ 		int		i;
++		struct bvec_iter_all bia;
+ 
+ 		/*
+ 		 * For the last bio, bi_private points to the ioend, so we
+@@ -150,7 +151,7 @@ xfs_destroy_ioend(
+ 			next = bio->bi_private;
+ 
+ 		/* walk each page on bio, ending page IO on them */
+-		bio_for_each_segment_all(bvec, bio, i)
++		bio_for_each_segment_all_sp(bvec, bio, i, bia)
+ 			xfs_finish_page_writeback(inode, bvec, error);
+ 
+ 		bio_put(bio);
+-- 
+2.7.4
 
-For the extent tree I played around with a simple rbtree, but I need
-to finish abstracting away the access the the extent list - the first
-pile of that landed for 4.10, but there is a lot more to be done before
-I can easily change the representation.  I'm also not sure anymore
-that the rbtree is the best choice.
-
-> and stomping out the rest of the buffer head
-> usage,
-
-The next for that is the switch bmap and buffered reads for iomap,
-I have a version that works for blocksize == page_size, just need
-to finish the blocksize < pagesize case.  Once get_blocks is gone
-we should be able to just kill buffer_heads trivially for the blocksize
-== pagesize case, it's just the small block size that will require
-a significant effort.  My initial plan was to just keep buffer_heads
-for those as the first step while not using them for the common
-blocksize == pagesize case.
