@@ -1,145 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50564 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753591AbcL3EJE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Dec 2016 23:09:04 -0500
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] generic/158,304: filter dedupe error message
-Date: Fri, 30 Dec 2016 12:08:54 +0800
-Message-Id: <20161230040854.17512-1-eguan@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:52062 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752294AbcL2IYU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Dec 2016 03:24:20 -0500
+Received: from 178.114.99.23.wireless.dyn.drei.com ([178.114.99.23] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
+        id 1cMVzr-0004Lf-3X
+        for linux-xfs@vger.kernel.org; Thu, 29 Dec 2016 08:23:35 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: don't print warnings when xfs_log_force fails
+Date: Thu, 29 Dec 2016 09:23:19 +0100
+Message-Id: <1482999799-11776-2-git-send-email-hch@lst.de>
+In-Reply-To: <1482999799-11776-1-git-send-email-hch@lst.de>
+References: <1482999799-11776-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, Eryu Guan <eguan@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-Kernel commit 22725ce4e4a0 ("vfs: fix isize/pos/len checks for reflink &
-dedupe") added more checks on reflink and dedupe, rejected dedupe past
-EOF early and explicitly, and causes generic/158 and generic/304 to fail.
+There are only two reasons for xfs_log_force / xfs_log_force_lsn to fail:
+one is an I/O error, for which xlog_bdstrat already logs a warning, and
+the second is an already shutdown log due to a previous I/O errors.  In
+the latter case we'll already have a previous indication for the actual
+error, but the large stream of misleading warnings from xfs_log_force
+will probably scroll it out of the message buffer.
 
-  Try dedupe from past EOF
- -dedupe: Invalid argument
- +XFS_IOC_FILE_EXTENT_SAME: Invalid argument
-  Try dedupe to past EOF, destination offset beyond EOF
+Simply removing the warnings thus makes the XFS log reporting significantly
+better.
 
-Fix it by replacing fs-specific ioctl in error message to "dedupe".
-
-Signed-off-by: Eryu Guan <eguan@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- common/reflink        | 7 +++++++
- tests/generic/158     | 7 +++++--
- tests/generic/158.out | 4 ++--
- tests/generic/304     | 9 ++++++---
- tests/generic/304.out | 2 +-
- 5 files changed, 21 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_log.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/common/reflink b/common/reflink
-index 64ee04f..7306efd 100644
---- a/common/reflink
-+++ b/common/reflink
-@@ -241,6 +241,13 @@ _dedupe_range() {
- 	$XFS_IO_PROG $xfs_io_args -f -c "dedupe $file1 $offset1 $offset2 $len" "$file2"
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index c39ac14..b1469f0 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3317,12 +3317,8 @@ xfs_log_force(
+ 	xfs_mount_t	*mp,
+ 	uint		flags)
+ {
+-	int	error;
+-
+ 	trace_xfs_log_force(mp, 0, _RET_IP_);
+-	error = _xfs_log_force(mp, flags, NULL);
+-	if (error)
+-		xfs_warn(mp, "%s: error %d returned.", __func__, error);
++	_xfs_log_force(mp, flags, NULL);
  }
  
-+# Filter fs-specific ioctl in error message to "dedupe"
-+# e.g. replace XFS_IOC_FILE_EXTENT_SAME with dedupe
-+_filter_dedupe()
-+{
-+	sed -e 's/XFS_IOC_FILE_EXTENT_SAME/dedupe/g'
-+}
-+
- # Create a file of interleaved unwritten and reflinked blocks
- _weave_reflink_unwritten() {
- 	blksz=$1
-diff --git a/tests/generic/158 b/tests/generic/158
-index 086c522..77ab1ce 100755
---- a/tests/generic/158
-+++ b/tests/generic/158
-@@ -81,10 +81,12 @@ mkfifo $testdir1/fifo1
- sync
- 
- _filter_enotty() {
-+	_filter_dedupe | \
- 	sed -e 's/Inappropriate ioctl for device/Invalid argument/g'
+ /*
+@@ -3466,12 +3462,8 @@ xfs_log_force_lsn(
+ 	xfs_lsn_t	lsn,
+ 	uint		flags)
+ {
+-	int	error;
+-
+ 	trace_xfs_log_force(mp, lsn, _RET_IP_);
+-	error = _xfs_log_force_lsn(mp, lsn, flags, NULL);
+-	if (error)
+-		xfs_warn(mp, "%s: error %d returned.", __func__, error);
++	_xfs_log_force_lsn(mp, lsn, flags, NULL);
  }
  
- _filter_eperm() {
-+	_filter_dedupe | \
- 	sed -e 's/Permission denied/Invalid argument/g'
- }
- 
-@@ -98,7 +100,8 @@ echo "Try overlapping dedupe"
- _dedupe_range $testdir1/file1 0 $testdir1/file1 1 $((blksz * 2))
- 
- echo "Try dedupe from past EOF"
--_dedupe_range $testdir1/file1 $(( (blks + 10) * blksz)) $testdir1/file1 0 $blksz
-+_dedupe_range $testdir1/file1 $(( (blks + 10) * blksz)) $testdir1/file1 0 $blksz \
-+	2>&1 | _filter_dedupe
- 
- echo "Try dedupe to past EOF, destination offset beyond EOF"
- _dedupe_range $testdir1/file1 0 $testdir1/file1 $(( (blks + 10) * blksz)) \
-@@ -109,7 +112,7 @@ _dedupe_range $testdir1/file1 0 $testdir1/file1 $(( (blks - 1) * blksz)) \
- 	$((blksz * 2))
- 
- echo "Try to dedupe a dir"
--_dedupe_range $testdir1/dir1 0 $testdir1/file2 0 $blksz
-+_dedupe_range $testdir1/dir1 0 $testdir1/file2 0 $blksz 2>&1 | _filter_dedupe
- 
- echo "Try to dedupe a device"
- _dedupe_range $testdir1/dev1 0 $testdir1/file2 0 $blksz 2>&1 | _filter_enotty
-diff --git a/tests/generic/158.out b/tests/generic/158.out
-index 9b82ddf..3a9596f 100644
---- a/tests/generic/158.out
-+++ b/tests/generic/158.out
-@@ -14,9 +14,9 @@ dedupe: Invalid argument
- Try dedupe to past EOF, destination offset behind EOF
- dedupe: Invalid argument
- Try to dedupe a dir
--XFS_IOC_FILE_EXTENT_SAME: Is a directory
-+dedupe: Is a directory
- Try to dedupe a device
--XFS_IOC_FILE_EXTENT_SAME: Invalid argument
-+dedupe: Invalid argument
- Try to dedupe to a dir
- TEST_DIR/test-158/dir1: Is a directory
- Try to dedupe to a device
-diff --git a/tests/generic/304 b/tests/generic/304
-index b7ee7b9..8f0a3b4 100755
---- a/tests/generic/304
-+++ b/tests/generic/304
-@@ -75,13 +75,16 @@ echo "Dedupe high offset to low offset"
- _dedupe_range $testdir/file1 $bigoff_64k $testdir/file6 1048576 65535 >> $seqres.full
- 
- echo "Dedupe past source file EOF (should fail)"
--_dedupe_range $testdir/file2 524288 $testdir/file7 0 1048576 >> $seqres.full
-+_dedupe_range $testdir/file2 524288 $testdir/file7 0 1048576 \
-+	2>&1 >> $seqres.full | _filter_dedupe
- 
- echo "Dedupe max size at nonzero offset (should fail)"
--_dedupe_range $testdir/file2 524288 $testdir/file8 0 $len >> $seqres.full
-+_dedupe_range $testdir/file2 524288 $testdir/file8 0 $len \
-+	2>&1 >> $seqres.full | _filter_dedupe
- 
- echo "Dedupe with huge off/len (should fail)"
--_dedupe_range $testdir/file2 $bigoff_64k $testdir/file9 0 $bigoff_64k >> $seqres.full
-+_dedupe_range $testdir/file2 $bigoff_64k $testdir/file9 0 $bigoff_64k \
-+	2>&1 >> $seqres.full | _filter_dedupe
- 
- echo "Check file creation"
- _test_cycle_mount
-diff --git a/tests/generic/304.out b/tests/generic/304.out
-index 7b5ff0e..fbba6f3 100644
---- a/tests/generic/304.out
-+++ b/tests/generic/304.out
-@@ -14,7 +14,7 @@ dedupe: Invalid argument
- Dedupe max size at nonzero offset (should fail)
- dedupe: Invalid argument
- Dedupe with huge off/len (should fail)
--XFS_IOC_FILE_EXTENT_SAME: Invalid argument
-+dedupe: Invalid argument
- Check file creation
- file3
- 7ffffffffffffffe:  61  a
+ /*
 -- 
-2.9.3
+2.1.4
 
