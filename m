@@ -1,180 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40607 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964977AbdAGAgK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:36:10 -0500
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070a8UB022991
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:36:09 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v070a8RR019735
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:36:08 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v070a7v8003441
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:36:08 GMT
-Subject: [PATCH 03/47] xfs: create a function to query all records in a btree
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 06 Jan 2017 16:36:04 -0800
-Message-ID: <148374936471.30431.3673493670324620999.stgit@birch.djwong.org>
-In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
-References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53518 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756743AbdACFw6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Jan 2017 00:52:58 -0500
+Date: Tue, 3 Jan 2017 13:52:56 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 0/3] xfs/348: test handling of malformed inode mode
+Message-ID: <20170103055256.GK1859@eguan.usersys.redhat.com>
+References: <1482689376-23553-1-git-send-email-amir73il@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1482689376-23553-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Create a helper function that will query all records in a btree.
-This will be used by the online repair functions to examine every
-record in a btree to rebuild a second btree.
+On Sun, Dec 25, 2016 at 08:09:33PM +0200, Amir Goldstein wrote:
+> Eryu,
+> 
+> I beefed up the initial test sent earlier today with more checks
+> on mounted fs.
+> 
+> The original patch testing only xfs_repair remains patch 1 in this series.
+> 
+> Patch 2 adds fstat tests on mounted fs, which are safe on my test system.
+> 
+> Patch 3 is explosive. It exposes an XFS assert, but I left a "safety pin"
+> that needs to be commented out to reproduce the assert.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_alloc.c |   15 +++++++++++++++
- fs/xfs/libxfs/xfs_alloc.h |    2 ++
- fs/xfs/libxfs/xfs_btree.c |   14 ++++++++++++++
- fs/xfs/libxfs/xfs_btree.h |    2 ++
- fs/xfs/libxfs/xfs_rmap.c  |   28 +++++++++++++++++++++-------
- fs/xfs/libxfs/xfs_rmap.h  |    2 ++
- 6 files changed, 56 insertions(+), 7 deletions(-)
+My kenrel config doesn't turn DEBUG on, so I don't see a kernel crash :)
 
+I can push this test out after the fix lands in upstream, then I think
+there's no need to leave a switch in the test.
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 860e297..e496447 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2976,3 +2976,18 @@ xfs_alloc_query_range(
- 	return xfs_btree_query_range(cur, &low_brec, &high_brec,
- 			xfs_alloc_query_range_helper, &query);
- }
-+
-+/* Find all free space records. */
-+int
-+xfs_alloc_query_all(
-+	struct xfs_btree_cur			*cur,
-+	xfs_alloc_query_range_fn		fn,
-+	void					*priv)
-+{
-+	struct xfs_alloc_query_range_info	query;
-+
-+	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
-+	query.priv = priv;
-+	query.fn = fn;
-+	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
-+}
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index f9f8b81..0dc34bf 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -232,5 +232,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
- 		struct xfs_alloc_rec_incore *low_rec,
- 		struct xfs_alloc_rec_incore *high_rec,
- 		xfs_alloc_query_range_fn fn, void *priv);
-+int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
-+		void *priv);
- 
- #endif	/* __XFS_ALLOC_H__ */
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 21e6a6a..1e68fd8 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4822,6 +4822,20 @@ xfs_btree_query_range(
- 			fn, priv);
- }
- 
-+/* Query a btree for all records. */
-+int
-+xfs_btree_query_all(
-+	struct xfs_btree_cur		*cur,
-+	xfs_btree_query_range_fn	fn,
-+	void				*priv)
-+{
-+	union xfs_btree_irec		low_rec = {0};
-+	union xfs_btree_irec		high_rec;
-+
-+	memset(&high_rec, 0xFF, sizeof(high_rec));
-+	return xfs_btree_query_range(cur, &low_rec, &high_rec, fn, priv);
-+}
-+
- /*
-  * Calculate the number of blocks needed to store a given number of records
-  * in a short-format (per-AG metadata) btree.
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index b69b947..4feea6d 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -494,6 +494,8 @@ typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
- int xfs_btree_query_range(struct xfs_btree_cur *cur,
- 		union xfs_btree_irec *low_rec, union xfs_btree_irec *high_rec,
- 		xfs_btree_query_range_fn fn, void *priv);
-+int xfs_btree_query_all(struct xfs_btree_cur *cur, xfs_btree_query_range_fn fn,
-+		void *priv);
- 
- typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
- 		void *data);
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 3a8cc71..3840556 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -2001,14 +2001,14 @@ xfs_rmap_query_range_helper(
- /* Find all rmaps between two keys. */
- int
- xfs_rmap_query_range(
--	struct xfs_btree_cur		*cur,
--	struct xfs_rmap_irec		*low_rec,
--	struct xfs_rmap_irec		*high_rec,
--	xfs_rmap_query_range_fn	fn,
--	void				*priv)
-+	struct xfs_btree_cur			*cur,
-+	struct xfs_rmap_irec			*low_rec,
-+	struct xfs_rmap_irec			*high_rec,
-+	xfs_rmap_query_range_fn			fn,
-+	void					*priv)
- {
--	union xfs_btree_irec		low_brec;
--	union xfs_btree_irec		high_brec;
-+	union xfs_btree_irec			low_brec;
-+	union xfs_btree_irec			high_brec;
- 	struct xfs_rmap_query_range_info	query;
- 
- 	low_brec.r = *low_rec;
-@@ -2019,6 +2019,20 @@ xfs_rmap_query_range(
- 			xfs_rmap_query_range_helper, &query);
- }
- 
-+/* Find all rmaps. */
-+int
-+xfs_rmap_query_all(
-+	struct xfs_btree_cur			*cur,
-+	xfs_rmap_query_range_fn			fn,
-+	void					*priv)
-+{
-+	struct xfs_rmap_query_range_info	query;
-+
-+	query.priv = priv;
-+	query.fn = fn;
-+	return xfs_btree_query_all(cur, xfs_rmap_query_range_helper, &query);
-+}
-+
- /* Clean up after calling xfs_rmap_finish_one. */
- void
- xfs_rmap_finish_one_cleanup(
-diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-index 7899305..faf2c1a 100644
---- a/fs/xfs/libxfs/xfs_rmap.h
-+++ b/fs/xfs/libxfs/xfs_rmap.h
-@@ -162,6 +162,8 @@ typedef int (*xfs_rmap_query_range_fn)(
- int xfs_rmap_query_range(struct xfs_btree_cur *cur,
- 		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
- 		xfs_rmap_query_range_fn fn, void *priv);
-+int xfs_rmap_query_all(struct xfs_btree_cur *cur, xfs_rmap_query_range_fn fn,
-+		void *priv);
- 
- enum xfs_rmap_intent_type {
- 	XFS_RMAP_MAP,
+Otherwise tests look good to me. But I'd like to have Darrick to review
+too, as he had written many fuzzer tests and suggested this test :)
 
+Thanks,
+Eryu
+
+> 
+> I will soon post my kernel configs and dmesg logs.
+> 
+> Amir.
+> 
+> v2:
+> - test fstat with malformed inode mode
+> - test readlink/readdir with malformed inode mode
+> 
+> v1:
+> - test xfs_repair with malformed inode mode
+> 
+> Amir Goldstein (3):
+>   xfs/348: test handling of invalid inode modes
+>   xfs/348: test fstat with malformed inode mode
+>   xfs/348: test readlink/readdir with malformed inode mode
+> 
+>  tests/xfs/348     | 154 +++++++++++++++++++++++++++
+>  tests/xfs/348.out | 312 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/group   |   1 +
+>  3 files changed, 467 insertions(+)
+>  create mode 100755 tests/xfs/348
+>  create mode 100644 tests/xfs/348.out
+> 
+> -- 
+> 2.7.4
+> 
