@@ -1,436 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23186 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751247AbdACUgk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jan 2017 15:36:40 -0500
-Date: Tue, 3 Jan 2017 12:36:02 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 1/3] xfs/348: test handling of invalid inode modes
-Message-ID: <20170103203602.GA14034@birch.djwong.org>
-References: <1482689376-23553-1-git-send-email-amir73il@gmail.com>
- <1482689376-23553-2-git-send-email-amir73il@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:48926 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965514AbdACS2Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Jan 2017 13:28:24 -0500
+Date: Tue, 3 Jan 2017 13:28:18 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/3] xfs: glean crc status from mp not flags in
+ xfs_btree_init_block_int
+Message-ID: <20170103182818.GB18120@bfoster.bfoster>
+References: <670e1f09-754d-4171-0a73-f918956eba2d@redhat.com>
+ <af7765f4-7930-71bb-aa2e-688a9fb644f0@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1482689376-23553-2-git-send-email-amir73il@gmail.com>
+In-Reply-To: <af7765f4-7930-71bb-aa2e-688a9fb644f0@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Eryu Guan <eguan@redhat.com>, Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Dec 25, 2016 at 08:09:34PM +0200, Amir Goldstein wrote:
-> Set all possible file type values for different types of files
-> and verify that xfs_repair detects the correct errors.
+On Thu, Dec 22, 2016 at 11:44:59AM -0600, Eric Sandeen wrote:
+> xfs_btree_init_block_int() can determine whether crcs are
+> in effect without the passed-in XFS_BTREE_CRC_BLOCKS flag;
+> the mp argument allows us to determine this from the
+> superblock.  Remove the flag from callers, and use
+> xfs_sb_version_hascrc(&mp->m_sb) internally instead.
 > 
-> When setting invalid file type values (e.g. core.mode = 0170644),
-> all files are expected to have been junked by xfs_repair.
+> This removes one difference between the if & else cases
+> in the callers.
 > 
-> When setting valid file type values to non matching file types,
-> xfs_repair would either detect wrong format and junk the file, e.g.:
->   would have junked entry "FILE" in directory PARENT_INO
-> or detect a ftype mismatch error, e.g.:
->   would fix ftype mismatch (5/3) in directory/child PARENT_INO/FIFO_INO
-> 
-> If ftype feature is enabled, when setting file type to one of the
-> special types (i.e. FIFO(1), CHRDEV(2),BLKDEV(6),SOCKET(14)),
-> xfs_repair is expected to detect ftype mismatch error. Otherewise,
-
-"Otherwise"
-
-> xfs_repair is not expected to detect ftype mismatch error.
-> 
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->  tests/xfs/348     | 128 ++++++++++++++++++++++++++++++++
->  tests/xfs/348.out | 216 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/group   |   1 +
->  3 files changed, 345 insertions(+)
->  create mode 100755 tests/xfs/348
->  create mode 100644 tests/xfs/348.out
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
 > 
-> diff --git a/tests/xfs/348 b/tests/xfs/348
-> new file mode 100755
-> index 0000000..9ec696a
-> --- /dev/null
-> +++ b/tests/xfs/348
-> @@ -0,0 +1,128 @@
-> +#! /bin/bash
-> +# FSQA Test No. 348
-> +#
-> +# Test handling of invalid inode modes
-> +#
-> +# Set all possible file type values for different types of files
-> +# and verify that xfs_repair detects the correct errors.
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +# Copyright (C) 2016 CTERA Networks. All Rights Reserved.
-> +# Author: Amir Goldstein <amir73il@gmail.com>
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index c27344c..e645aa8 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -727,7 +727,7 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+>  	if (xfs_sb_version_hascrc(&mp->m_sb))
+>  		xfs_btree_init_block_int(mp, block, XFS_BUF_DADDR_NULL,
+>  				 XFS_BMAP_CRC_MAGIC, 1, 1, ip->i_ino,
+> -				 XFS_BTREE_LONG_PTRS | XFS_BTREE_CRC_BLOCKS);
+> +				 XFS_BTREE_LONG_PTRS);
+>  	else
+>  		xfs_btree_init_block_int(mp, block, XFS_BUF_DADDR_NULL,
+>  				 XFS_BMAP_MAGIC, 1, 1, ip->i_ino,
+> @@ -804,7 +804,7 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+>  	if (xfs_sb_version_hascrc(&mp->m_sb))
+>  		xfs_btree_init_block_int(mp, ablock, abp->b_bn,
+>  				XFS_BMAP_CRC_MAGIC, 0, 0, ip->i_ino,
+> -				XFS_BTREE_LONG_PTRS | XFS_BTREE_CRC_BLOCKS);
+> +				XFS_BTREE_LONG_PTRS);
+>  	else
+>  		xfs_btree_init_block_int(mp, ablock, abp->b_bn,
+>  				XFS_BMAP_MAGIC, 0, 0, ip->i_ino,
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> index 8007d2b..f0293d4 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> @@ -74,7 +74,7 @@
+>  	if (xfs_sb_version_hascrc(&mp->m_sb))
+>  		xfs_btree_init_block_int(mp, rblock, XFS_BUF_DADDR_NULL,
+>  				 XFS_BMAP_CRC_MAGIC, 0, 0, ip->i_ino,
+> -				 XFS_BTREE_LONG_PTRS | XFS_BTREE_CRC_BLOCKS);
+> +				 XFS_BTREE_LONG_PTRS);
+>  	else
+>  		xfs_btree_init_block_int(mp, rblock, XFS_BUF_DADDR_NULL,
+>  				 XFS_BMAP_MAGIC, 0, 0, ip->i_ino,
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 5c8e6f2..f49fc2f 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -1090,6 +1090,8 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
+>  	__u64			owner,
+>  	unsigned int		flags)
+>  {
+> +	int			crc = xfs_sb_version_hascrc(&mp->m_sb);
 > +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/repair
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +rm -f $seqres.full
-> +
-> +_scratch_mkfs >>$seqres.full 2>&1
-> +
-> +_scratch_mount
-> +
-> +# Create our test files.
-> +testdir=$SCRATCH_MNT/test
-> +mkdir -p $testdir
-> +mkdir $testdir/DIR
-> +echo 123 > $testdir/FILE
-> +ln -s $testdir/FILE $testdir/SYMLINK
-> +mknod $testdir/CHRDEV c 1 1
-> +mknod $testdir/BLKDEV b 1 1
-> +mknod $testdir/FIFO p
-> +
-> +xfs_info $SCRATCH_MNT | grep -q "ftype=1" && FTYPE_FEATURE=1
-> +
-> +# Record test dir inode for xfs_repair filter
-> +inode_filter=$tmp.sed
-> +rm -f $inode_filter
-> +pino=$(ls -id $testdir | awk '{print $1}')
-> +echo "s/inode $pino/PARENT_INO/" >> $inode_filter
-> +echo "s/directory $pino/directory PARENT_INO/" >> $inode_filter
-> +
-> +inodes=""
-> +# Record inode numbers for xfs_db commands and xfs_repair filter
-> +for f in DIR FILE SYMLINK CHRDEV BLKDEV FIFO; do
-> +	ino=$(ls -id $testdir/$f | awk '{print $1}')
-> +	inodes="$inodes $ino"
-> +	echo "s/inode $ino/${f}_INO/" >> $inode_filter
-> +done
-> +
-> +_scratch_unmount
-> +
-> +# Possible mode file type values (mode & S_IFMT) >> 12
-> +dtypes="0 1 2 3 4 5 6 7 10 11 12 13 14 15 16 17"
-> +echo "===== Find inode by file type:"
-> +for dt in $dtypes; do
-> +	# Set all our test files to dt value
-> +	for ino in $inodes; do
-> +		_scratch_xfs_db -c "inode $ino" -c "print core.mode" | \
-> +			grep -q "0${dt}0...$" && \
-> +			(echo "dt=$dt => inode $ino" | sed -f $inode_filter)
-> +	done
-> +done
-> +for dt in $dtypes; do
-> +	echo
-> +	echo "===== Setting dt=$dt to all files:"
-> +	# Set all our test files to dt value
-> +	for ino in $inodes; do
-> +		_scratch_xfs_db -x -c "inode $ino" -c "write core.mode 0${dt}0644"
-> +	done
-> +	# Repair should detect the inconsistencies
-> +	# For invalid dt values, all files would have been junked.
-> +	# For valid dt values, one test file is expected to be valid.
-> +	# The rest would either have wrong format or non matching dir ftype.
-> +	_scratch_xfs_repair -n 2>&1  | tee -a $seqres.full | \
-> +		_filter_repair | grep "^would have junked" | sed -f $inode_filter | sort -u
-
-I would also like to see a second test that scrambles the ftype field in
-the directory entry (instead of changing the inode core.mode) but xfs_db
-can't write to dir3 blocks because it doesn't know how to set the dir
-block CRC.
-
-I'm going to send a patch to add that as part of my xfsprogs 4.11
-patchbomb (hopefully next week, but after the xfsprogs 4.9 release) so
-that test can wait.
-
-> +	# If ftype feature is enabled, when setting file type to one of the
-> +	# special types (i.e. FIFO(1), CHRDEV(2),BLKDEV(6),SOCKET(14)),
-> +	# xfs_repair is expected to detect ftype mismatch error. Otherewise,
-> +	# xfs_repair is not expected to detect ftype mismatch error.
-> +	if [ "$FTYPE_FEATURE" = 1 ] && (echo ':1:2:6:14:' | grep -q ":$dt:"); then
-> +		_scratch_xfs_repair -n 2>&1 | grep -q "^would fix ftype mismatch" || \
-> +			_fail "xfs_repair should fix ftype mismatch"
-> +	else
-> +		_scratch_xfs_repair -n 2>&1 | grep -q -v "^would fix ftype mismatch" || \
-> +			_fail "xfs_repair should not fix ftype mismatch"
-
-Just FYI the whole test will stop as soon as we hit a _fail.  Please
-consider simply echoing a complaint to stdout so that the golden output
-diff will catch this, and we can see all the failing cases.
-
---D
-
-> +	fi
-> +done
-> +
-> +# Repair should detect and junk all test files
-> +_scratch_xfs_repair 2>&1 >> $seqres.full 2>&1 || _fail "xfs_repair should not fail"
-> +
-> +status=0
-> +exit
-> diff --git a/tests/xfs/348.out b/tests/xfs/348.out
-> new file mode 100644
-> index 0000000..bf4924b
-> --- /dev/null
-> +++ b/tests/xfs/348.out
-> @@ -0,0 +1,216 @@
-> +QA output created by 348
-> +===== Find inode by file type:
-> +dt=1 => FIFO_INO
-> +dt=2 => CHRDEV_INO
-> +dt=4 => DIR_INO
-> +dt=6 => BLKDEV_INO
-> +dt=10 => FILE_INO
-> +dt=12 => SYMLINK_INO
-> +
-> +===== Setting dt=0 to all files:
-> +core.mode = 0644
-> +core.mode = 0644
-> +core.mode = 0644
-> +core.mode = 0644
-> +core.mode = 0644
-> +core.mode = 0644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=1 to all files:
-> +core.mode = 010644
-> +core.mode = 010644
-> +core.mode = 010644
-> +core.mode = 010644
-> +core.mode = 010644
-> +core.mode = 010644
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=2 to all files:
-> +core.mode = 020644
-> +core.mode = 020644
-> +core.mode = 020644
-> +core.mode = 020644
-> +core.mode = 020644
-> +core.mode = 020644
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=3 to all files:
-> +core.mode = 030644
-> +core.mode = 030644
-> +core.mode = 030644
-> +core.mode = 030644
-> +core.mode = 030644
-> +core.mode = 030644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=4 to all files:
-> +core.mode = 040644
-> +core.mode = 040644
-> +core.mode = 040644
-> +core.mode = 040644
-> +core.mode = 040644
-> +core.mode = 040644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +
-> +===== Setting dt=5 to all files:
-> +core.mode = 050644
-> +core.mode = 050644
-> +core.mode = 050644
-> +core.mode = 050644
-> +core.mode = 050644
-> +core.mode = 050644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=6 to all files:
-> +core.mode = 060644
-> +core.mode = 060644
-> +core.mode = 060644
-> +core.mode = 060644
-> +core.mode = 060644
-> +core.mode = 060644
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=7 to all files:
-> +core.mode = 070644
-> +core.mode = 070644
-> +core.mode = 070644
-> +core.mode = 070644
-> +core.mode = 070644
-> +core.mode = 070644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=10 to all files:
-> +core.mode = 0100644
-> +core.mode = 0100644
-> +core.mode = 0100644
-> +core.mode = 0100644
-> +core.mode = 0100644
-> +core.mode = 0100644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=11 to all files:
-> +core.mode = 0110644
-> +core.mode = 0110644
-> +core.mode = 0110644
-> +core.mode = 0110644
-> +core.mode = 0110644
-> +core.mode = 0110644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=12 to all files:
-> +core.mode = 0120644
-> +core.mode = 0120644
-> +core.mode = 0120644
-> +core.mode = 0120644
-> +core.mode = 0120644
-> +core.mode = 0120644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +
-> +===== Setting dt=13 to all files:
-> +core.mode = 0130644
-> +core.mode = 0130644
-> +core.mode = 0130644
-> +core.mode = 0130644
-> +core.mode = 0130644
-> +core.mode = 0130644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=14 to all files:
-> +core.mode = 0140644
-> +core.mode = 0140644
-> +core.mode = 0140644
-> +core.mode = 0140644
-> +core.mode = 0140644
-> +core.mode = 0140644
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=15 to all files:
-> +core.mode = 0150644
-> +core.mode = 0150644
-> +core.mode = 0150644
-> +core.mode = 0150644
-> +core.mode = 0150644
-> +core.mode = 0150644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=16 to all files:
-> +core.mode = 0160644
-> +core.mode = 0160644
-> +core.mode = 0160644
-> +core.mode = 0160644
-> +core.mode = 0160644
-> +core.mode = 0160644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> +
-> +===== Setting dt=17 to all files:
-> +core.mode = 0170644
-> +core.mode = 0170644
-> +core.mode = 0170644
-> +core.mode = 0170644
-> +core.mode = 0170644
-> +core.mode = 0170644
-> +would have junked entry "BLKDEV" in directory PARENT_INO
-> +would have junked entry "CHRDEV" in directory PARENT_INO
-> +would have junked entry "DIR" in directory PARENT_INO
-> +would have junked entry "FIFO" in directory PARENT_INO
-> +would have junked entry "FILE" in directory PARENT_INO
-> +would have junked entry "SYMLINK" in directory PARENT_INO
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index c237b50..68c2bb6 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -334,3 +334,4 @@
->  345 auto quick clone
->  346 auto quick clone
->  347 auto quick clone
-> +348 auto quick repair
-> -- 
-> 2.7.4
+>  	buf->bb_magic = cpu_to_be32(magic);
+>  	buf->bb_level = cpu_to_be16(level);
+>  	buf->bb_numrecs = cpu_to_be16(numrecs);
+> @@ -1097,7 +1099,7 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
+>  	if (flags & XFS_BTREE_LONG_PTRS) {
+>  		buf->bb_u.l.bb_leftsib = cpu_to_be64(NULLFSBLOCK);
+>  		buf->bb_u.l.bb_rightsib = cpu_to_be64(NULLFSBLOCK);
+> -		if (flags & XFS_BTREE_CRC_BLOCKS) {
+> +		if (crc) {
+>  			buf->bb_u.l.bb_blkno = cpu_to_be64(blkno);
+>  			buf->bb_u.l.bb_owner = cpu_to_be64(owner);
+>  			uuid_copy(&buf->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid);
+> @@ -1110,7 +1112,7 @@ static inline size_t xfs_btree_ptr_len(struct xfs_btree_cur *cur)
+>  
+>  		buf->bb_u.s.bb_leftsib = cpu_to_be32(NULLAGBLOCK);
+>  		buf->bb_u.s.bb_rightsib = cpu_to_be32(NULLAGBLOCK);
+> -		if (flags & XFS_BTREE_CRC_BLOCKS) {
+> +		if (crc) {
+>  			buf->bb_u.s.bb_blkno = cpu_to_be64(blkno);
+>  			buf->bb_u.s.bb_owner = cpu_to_be32(__owner);
+>  			uuid_copy(&buf->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid);
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 93d12fa..bd20051 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -354,7 +354,7 @@
+>  
+>  		if (xfs_sb_version_hascrc(&mp->m_sb))
+>  			xfs_btree_init_block(mp, bp, XFS_ABTB_CRC_MAGIC, 0, 1,
+> -						agno, XFS_BTREE_CRC_BLOCKS);
+> +						agno, 0);
+>  		else
+>  			xfs_btree_init_block(mp, bp, XFS_ABTB_MAGIC, 0, 1,
+>  						agno, 0);
+> @@ -383,7 +383,7 @@
+>  
+>  		if (xfs_sb_version_hascrc(&mp->m_sb))
+>  			xfs_btree_init_block(mp, bp, XFS_ABTC_CRC_MAGIC, 0, 1,
+> -						agno, XFS_BTREE_CRC_BLOCKS);
+> +						agno, 0);
+>  		else
+>  			xfs_btree_init_block(mp, bp, XFS_ABTC_MAGIC, 0, 1,
+>  						agno, 0);
+> @@ -414,7 +414,7 @@
+>  			}
+>  
+>  			xfs_btree_init_block(mp, bp, XFS_RMAP_CRC_MAGIC, 0, 0,
+> -						agno, XFS_BTREE_CRC_BLOCKS);
+> +						agno, 0);
+>  			block = XFS_BUF_TO_BLOCK(bp);
+>  
+>  
+> @@ -490,7 +490,7 @@
+>  
+>  		if (xfs_sb_version_hascrc(&mp->m_sb))
+>  			xfs_btree_init_block(mp, bp, XFS_IBT_CRC_MAGIC, 0, 0,
+> -						agno, XFS_BTREE_CRC_BLOCKS);
+> +						agno, 0);
+>  		else
+>  			xfs_btree_init_block(mp, bp, XFS_IBT_MAGIC, 0, 0,
+>  						agno, 0);
+> @@ -515,8 +515,7 @@
+>  
+>  			if (xfs_sb_version_hascrc(&mp->m_sb))
+>  				xfs_btree_init_block(mp, bp, XFS_FIBT_CRC_MAGIC,
+> -						     0, 0, agno,
+> -						     XFS_BTREE_CRC_BLOCKS);
+> +						     0, 0, agno, 0);
+>  			else
+>  				xfs_btree_init_block(mp, bp, XFS_FIBT_MAGIC, 0,
+>  						     0, agno, 0);
+> @@ -541,8 +540,7 @@
+>  			}
+>  
+>  			xfs_btree_init_block(mp, bp, XFS_REFC_CRC_MAGIC,
+> -					     0, 0, agno,
+> -					     XFS_BTREE_CRC_BLOCKS);
+> +					     0, 0, agno, 0);
+>  
+>  			error = xfs_bwrite(bp);
+>  			xfs_buf_relse(bp);
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
