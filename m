@@ -1,41 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29567 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756154AbdADGfo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 01:35:44 -0500
-Date: Tue, 3 Jan 2017 22:35:15 -0800
+Received: from userp1040.oracle.com ([156.151.31.81]:16923 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935605AbdADGcu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 01:32:50 -0500
+Date: Tue, 3 Jan 2017 22:32:39 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [ANNOUNCE] xfs-linux: xfs-4.10-misc-fixes-5 updated to ff97f23
-Message-ID: <20170104063515.GB14034@birch.djwong.org>
-References: <20170104054721.GC14031@birch.djwong.org>
- <20170104061141.GA4265@infradead.org>
+Subject: Re: [PATCH 1/4] xfs: fix bogus minleft manipulations
+Message-ID: <20170104063239.GF14031@birch.djwong.org>
+References: <1481644767-9098-1-git-send-email-hch@lst.de>
+ <1481644767-9098-2-git-send-email-hch@lst.de>
+ <20161215220938.GV4219@dastard>
+ <20161216082044.GB32288@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170104061141.GA4265@infradead.org>
+In-Reply-To: <20161216082044.GB32288@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, f@birch.djwong.org
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, eguan@redhat.com
 
-On Tue, Jan 03, 2017 at 10:11:41PM -0800, Christoph Hellwig wrote:
-> On Tue, Jan 03, 2017 at 09:47:21PM -0800, Darrick J. Wong wrote:
-> > Patches often get missed, so please check if your outstanding
-> > patches were in this update. If they have not been in this update,
-> > please resubmit them to linux-xfs@vger.kernel.org so they can be
-> > picked up in the next update.
+On Fri, Dec 16, 2016 at 09:20:44AM +0100, Christoph Hellwig wrote:
+> On Fri, Dec 16, 2016 at 09:09:38AM +1100, Dave Chinner wrote:
+> > > @@ -3812,7 +3812,6 @@ xfs_bmap_btalloc(
+> > >  		args.fsbno = 0;
+> > >  		args.type = XFS_ALLOCTYPE_FIRST_AG;
+> > >  		args.total = ap->minlen;
+> > > -		args.minleft = 0;
+> > >  		if ((error = xfs_alloc_vextent(&args)))
+> > >  			return error;
+> > >  		ap->dfops->dop_low = true;
 > > 
-> > I intend to send these four bugfixes to Linus later this week, but
-> > thought I'd run it by the list first to see if anyone spots anything
-> > obviously broken.
+> > But this looks wrong. when combined with the next patch that sets:
+> > 
+> > 	args.minleft = xfs_bmap_worst_indlen(ap->ip, args.maxlen);
+> > 
+> > we've got a minleft value that might be for multigigabyte
+> > allocation, but now we are only asking for a total allocation
+> > of minlen, and that might be 1 block. IOWs, shouldn't this "last,
+> > final attempt" code actually do something like this:
+> > 
+> > 		args.maxlen = ap->minlen;
+> > 		args.total = ap->minlen;
+> > 		args.minleft = xfs_bmap_worst_indlen(ap->ip, args.maxlen);
 > 
-> I'd really like to get the minleft fixes reviewed and to Linus:
-> 
-> http://www.spinics.net/lists/linux-xfs/msg03036.html
+> Yes.  And I actually had that in a previous iteration, and it got
+> dropped at some point.
 
-I was wondering if Eryu ever tried his reproducer with this series
-applied?  Also, in reminding myself what went on during the v1 review
-thread I also started having a few questions... (see list)
+I see the diff hunk in question hasn't changed in the v2 patchset...
+Did Dave's suggestion not work?
 
 --D
