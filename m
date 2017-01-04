@@ -1,172 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51855 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032643AbdAGAik (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:38:40 -0500
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070cdcA023647
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:38:39 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v070ccZd013072
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:38:38 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v070ccUH009059
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:38:38 GMT
-Subject: [PATCH 26/47] xfs: cross-reference bnobt records with cntbt
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 06 Jan 2017 16:38:37 -0800
-Message-ID: <148374951738.30431.9816411507202357535.stgit@birch.djwong.org>
-In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
-References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48056 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759138AbdADTmE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Jan 2017 14:42:04 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfsdump: handle bind mount targets
+Message-ID: <2334e0d3-dde7-eb4b-2bf5-bd0457cf5912@redhat.com>
+Date: Wed, 4 Jan 2017 13:42:02 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Jason L Tibbitts III <tibbs@math.uh.edu>
 
-Scrub should make sure that each bnobt record has a corresponding
-cntbt record.
+Today, xfsdump looks at the mount point it was handed, gets
+the inode of that directory, and assumes that it is the
+filesystem's root inode.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+This doesn't work if we have bind-mounted a subdirectory
+somewhere, and point xfsdump at that.  The inode number retrieved
+is not the filesystem's root inode number, and because this
+goes into the dump header and gets checked on restore, things
+go badly when the root inode found in the dump does not match
+the root inode in the dump header:
+
+# mkfs.xfs -dfile,name=fsfile,size=16g
+# mkdir mnt
+# mount -o loop fsfile mnt
+# mkdir -p mnt/dir
+# mkdir -p mnt2/dir
+# mount -o bind mnt/dir mnt2/dir
+# xfsdump -v trace -J -F -l 0 -  `pwd`/mnt2/dir | xfsdump/restore/xfsrestore -v trace -t - 
+...
+xfsrestore: tree.c:759: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth' failed.
+#
+
+Fix this by using bulkstat to get the first valid inode in the filesystem.
+Compare this to the inode number of the mounted directory, and if they
+differ, issue a notice that this may be a bind mount (which means that
+more than just the tree under the mount will be dumped; the whole
+filesystem is dumped by default).
+
+Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c |    2 +-
- fs/xfs/libxfs/xfs_alloc.h |    7 +++++++
- fs/xfs/repair/agheader.c  |   20 ++++++++++++++++++++
- fs/xfs/repair/alloc.c     |   31 +++++++++++++++++++++++++++++++
- 4 files changed, 59 insertions(+), 1 deletion(-)
 
+This passes xfstests dump group, FWIW, as well as the
+testcase above (which probably should get turned into a test)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index ad8044b..4776f66 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -169,7 +169,7 @@ xfs_alloc_lookup_ge(
-  * Lookup the first record less than or equal to [bno, len]
-  * in the btree given by cur.
-  */
--static int				/* error */
-+int					/* error */
- xfs_alloc_lookup_le(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
- 	xfs_agblock_t		bno,	/* starting block of extent */
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 3fd6540..b79159c 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -202,6 +202,13 @@ xfs_free_extent(
- 	enum xfs_ag_resv_type	type);	/* block reservation type */
- 
- int				/* error */
-+xfs_alloc_lookup_le(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	xfs_agblock_t		bno,	/* starting block of extent */
-+	xfs_extlen_t		len,	/* length of extent */
-+	int			*stat);	/* success/failure */
-+
-+int				/* error */
- xfs_alloc_lookup_ge(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
- 	xfs_agblock_t		bno,	/* starting block of extent */
-diff --git a/fs/xfs/repair/agheader.c b/fs/xfs/repair/agheader.c
-index 6375f19..b351885 100644
---- a/fs/xfs/repair/agheader.c
-+++ b/fs/xfs/repair/agheader.c
-@@ -318,6 +318,7 @@ xfs_scrub_agf(
- 	xfs_agblock_t			fl_count;
- 	xfs_extlen_t			blocks;
- 	bool				is_freesp;
-+	int				have;
- 	int				level;
- 	int				error = 0;
- 	int				err2;
-@@ -417,6 +418,25 @@ xfs_scrub_agf(
+diff --git a/dump/content.c b/dump/content.c
+index 1e86292..5a3c02f 100644
+--- a/dump/content.c
++++ b/dump/content.c
+@@ -1381,10 +1381,17 @@ baseuuidbypass:
  	}
- skip_bnobt:
  
-+	/* Cross-reference with the cntbt. */
-+	if (psa->cnt_cur) {
-+		err2 = xfs_alloc_lookup_le(psa->cnt_cur, 0, -1U, &have);
-+		if (!xfs_scrub_should_xref(sc, err2, &psa->cnt_cur))
-+			goto skip_cntbt;
-+		if (!have) {
-+			XFS_SCRUB_AGF_CHECK(agf->agf_freeblks ==
-+					be32_to_cpu(0));
-+			goto skip_cntbt;
-+		}
-+		err2 = xfs_alloc_get_rec(psa->cnt_cur, &agbno, &blocks, &have);
-+		if (!xfs_scrub_should_xref(sc, err2, &psa->cnt_cur))
-+			goto skip_cntbt;
-+		XFS_SCRUB_AGF_CHECK(have);
-+		XFS_SCRUB_AGF_CHECK(!have ||
-+				blocks == be32_to_cpu(agf->agf_longest));
-+	}
-+skip_cntbt:
+ 	/* figure out the ino for the root directory of the fs
+-	 * and get its xfs_bstat_t for inomap_build()
++	 * and get its xfs_bstat_t for inomap_build().  This could
++	 * be a bind mount; don't ask for the mount point inode,
++	 * find the actual lowest inode number in the filesystem.
+ 	 */
+ 	{
+ 		stat64_t rootstat;
++		xfs_ino_t lastino = 0;
++		int ocount = 0;
++		xfs_fsop_bulkreq_t bulkreq;
 +
- out:
- 	return error;
- }
-diff --git a/fs/xfs/repair/alloc.c b/fs/xfs/repair/alloc.c
-index 2fef449..7cc15b8 100644
---- a/fs/xfs/repair/alloc.c
-+++ b/fs/xfs/repair/alloc.c
-@@ -31,6 +31,7 @@
- #include "xfs_trace.h"
- #include "xfs_sb.h"
- #include "xfs_rmap.h"
-+#include "xfs_alloc.h"
- #include "repair/common.h"
- #include "repair/btree.h"
++		/* Get the inode of the mount point */
+ 		rval = fstat64( sc_fsfd, &rootstat );
+ 		if ( rval ) {
+ 			mlog( MLOG_NORMAL, _(
+@@ -1396,11 +1403,21 @@ baseuuidbypass:
+ 			( xfs_bstat_t * )calloc( 1, sizeof( xfs_bstat_t ));
+ 		assert( sc_rootxfsstatp );
  
-@@ -65,9 +66,15 @@ xfs_scrub_allocbt_helper(
- {
- 	struct xfs_mount		*mp = bs->cur->bc_mp;
- 	struct xfs_agf			*agf;
-+	struct xfs_btree_cur		**xcur;
-+	struct xfs_scrub_ag		*psa;
-+	xfs_agblock_t			fbno;
- 	xfs_agblock_t			bno;
-+	xfs_extlen_t			flen;
- 	xfs_extlen_t			len;
-+	int				has_otherrec;
- 	int				error = 0;
-+	int				err2;
- 
- 	bno = be32_to_cpu(rec->alloc.ar_startblock);
- 	len = be32_to_cpu(rec->alloc.ar_blockcount);
-@@ -81,6 +88,30 @@ xfs_scrub_allocbt_helper(
- 	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)bno + len <=
- 			be32_to_cpu(agf->agf_length));
- 
-+	if (error)
-+		goto out;
+-		if ( bigstat_one( sc_fsfd, rootstat.st_ino, sc_rootxfsstatp) < 0 ) {
++		/* Get the first valid (i.e. root) inode in this fs */
++		bulkreq.lastip = (__u64 *)&lastino;
++		bulkreq.icount = 1;
++		bulkreq.ubuffer = sc_rootxfsstatp;
++		bulkreq.ocount = &ocount;
++		if (ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT, &bulkreq) < 0) {
+ 			mlog( MLOG_ERROR,
+ 			      _("failed to get bulkstat information for root inode\n"));
+ 			return BOOL_FALSE;
+ 		}
 +
-+	psa = &bs->sc->sa;
-+	/*
-+	 * Ensure there's a corresponding cntbt/bnobt record matching
-+	 * this bnobt/cntbt record, respectively.
-+	 */
-+	xcur = bs->cur == psa->bno_cur ? &psa->cnt_cur : &psa->bno_cur;
-+	if (*xcur) {
-+		err2 = xfs_alloc_lookup_le(*xcur, bno, len, &has_otherrec);
-+		if (xfs_scrub_btree_should_xref(bs, err2, xcur)) {
-+			XFS_SCRUB_BTREC_GOTO(bs, has_otherrec, out);
-+			err2 = xfs_alloc_get_rec(*xcur, &fbno, &flen,
-+					&has_otherrec);
-+			if (xfs_scrub_btree_should_xref(bs, err2, xcur)) {
-+				XFS_SCRUB_BTREC_GOTO(bs, has_otherrec, out);
-+				XFS_SCRUB_BTREC_CHECK(bs, fbno == bno);
-+				XFS_SCRUB_BTREC_CHECK(bs, flen == len);
-+			}
-+		}
-+	}
-+
-+out:
- 	return error;
- }
- 
++		if (sc_rootxfsstatp->bs_ino != rootstat.st_ino)
++			mlog ( MLOG_NORMAL | MLOG_NOTE,
++			       _("root ino %lld differs from mount dir ino %lld, bind mount?\n"),
++			         sc_rootxfsstatp->bs_ino, rootstat.st_ino);
+ 	}
+ 	
+ 	/* alloc a file system handle, to be used with the jdm_open()
+
+
 
