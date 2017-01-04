@@ -1,61 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60862 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:37098 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760347AbdACSUA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Jan 2017 13:20:00 -0500
-Subject: Re: [PATCH] Fix max_retries _show and _store functions
-References: <20170103175331.8089-1-cmaiolino@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7818525d-fd15-d245-a958-1648b5df3ecd@sandeen.net>
-Date: Tue, 3 Jan 2017 12:19:53 -0600
+        id S965870AbdADD1P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Jan 2017 22:27:15 -0500
+Date: Wed, 4 Jan 2017 11:27:14 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] generic/158,304: filter dedupe error message
+Message-ID: <20170104032714.GM1859@eguan.usersys.redhat.com>
+References: <20161230040854.17512-1-eguan@redhat.com>
+ <20170103200149.GB14031@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170103175331.8089-1-cmaiolino@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170103200149.GB14031@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 1/3/17 11:53 AM, Carlos Maiolino wrote:
-> max_retries _show and _store functions should test against cfg->max_retries,
-> not cfg->retry_timeout
+On Tue, Jan 03, 2017 at 12:01:49PM -0800, Darrick J. Wong wrote:
+> On Fri, Dec 30, 2016 at 12:08:54PM +0800, Eryu Guan wrote:
+> > Kernel commit 22725ce4e4a0 ("vfs: fix isize/pos/len checks for reflink &
+> > dedupe") added more checks on reflink and dedupe, rejected dedupe past
+> > EOF early and explicitly, and causes generic/158 and generic/304 to fail.
+> > 
+> >   Try dedupe from past EOF
+> >  -dedupe: Invalid argument
+> >  +XFS_IOC_FILE_EXTENT_SAME: Invalid argument
+> >   Try dedupe to past EOF, destination offset beyond EOF
+> > 
+> > Fix it by replacing fs-specific ioctl in error message to "dedupe".
+> > 
+> > Signed-off-by: Eryu Guan <eguan@redhat.com>
+> > ---
+> >  common/reflink        | 7 +++++++
+> >  tests/generic/158     | 7 +++++--
+> >  tests/generic/158.out | 4 ++--
+> >  tests/generic/304     | 9 ++++++---
+> >  tests/generic/304.out | 2 +-
+> >  5 files changed, 21 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/common/reflink b/common/reflink
+> > index 64ee04f..7306efd 100644
+> > --- a/common/reflink
+> > +++ b/common/reflink
+> > @@ -241,6 +241,13 @@ _dedupe_range() {
+> >  	$XFS_IO_PROG $xfs_io_args -f -c "dedupe $file1 $offset1 $offset2 $len" "$file2"
+> >  }
+> >  
+> > +# Filter fs-specific ioctl in error message to "dedupe"
+> > +# e.g. replace XFS_IOC_FILE_EXTENT_SAME with dedupe
+> > +_filter_dedupe()
+> > +{
+> > +	sed -e 's/XFS_IOC_FILE_EXTENT_SAME/dedupe/g'
+> > +}
 > 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> I sent a patch to the xfs list last month ("xfs_io: prefix dedupe
+> command error messages consistently") changing all the error message
+> prefixes to "XFS_IOC_FILE_EXTENT_SAME".  Was going to send a patch to
+> fix up xfstests too... but evidently didn't.
 
-Whoever made those mistakes should be very ashamed.  ;)
-I guess it was a cut and paste error.  :(
+Ah, didn't notict that patch.. Or I did saw the patch but failed to link
+it with this test failure :)
 
-This should probably cc: stable, too.
-
-Thanks,
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  fs/xfs/xfs_sysfs.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index 276d302..de6195e 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -396,7 +396,7 @@ max_retries_show(
->  	int		retries;
->  	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
->  
-> -	if (cfg->retry_timeout == XFS_ERR_RETRY_FOREVER)
-> +	if (cfg->max_retries == XFS_ERR_RETRY_FOREVER)
->  		retries = -1;
->  	else
->  		retries = cfg->max_retries;
-> @@ -422,7 +422,7 @@ max_retries_store(
->  		return -EINVAL;
->  
->  	if (val == -1)
-> -		cfg->retry_timeout = XFS_ERR_RETRY_FOREVER;
-> +		cfg->max_retries = XFS_ERR_RETRY_FOREVER;
->  	else
->  		cfg->max_retries = val;
->  	return count;
-> 
+> If you change the sed command to 's/dedupe:/XFS_IOC_FILE_EXTENT_SAME:/g'
+> that'll suffice, I think.
+
+Will do. Thanks!
+
+Eryu
