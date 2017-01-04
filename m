@@ -1,70 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36246 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753183AbdADFyE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 00:54:04 -0500
-Date: Tue, 3 Jan 2017 21:53:58 -0800
+Received: from aserp1040.oracle.com ([141.146.126.69]:29567 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756154AbdADGfo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 01:35:44 -0500
+Date: Tue, 3 Jan 2017 22:35:15 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix crash and data corruption due to removal of
- busy COW extents
-Message-ID: <20170104055358.GD14031@birch.djwong.org>
-References: <1483258387-5548-1-git-send-email-hch@lst.de>
+Subject: Re: [ANNOUNCE] xfs-linux: xfs-4.10-misc-fixes-5 updated to ff97f23
+Message-ID: <20170104063515.GB14034@birch.djwong.org>
+References: <20170104054721.GC14031@birch.djwong.org>
+ <20170104061141.GA4265@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1483258387-5548-1-git-send-email-hch@lst.de>
+In-Reply-To: <20170104061141.GA4265@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, f@birch.djwong.org
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Jan 01, 2017 at 11:13:06AM +0300, Christoph Hellwig wrote:
-> There is a race window between write_cache_pages calling
-> clear_page_dirty_for_io and XFS calling set_page_writeback, in which
-> the mapping for an inode is tagged neither as dirty, nor as writeback.
+On Tue, Jan 03, 2017 at 10:11:41PM -0800, Christoph Hellwig wrote:
+> On Tue, Jan 03, 2017 at 09:47:21PM -0800, Darrick J. Wong wrote:
+> > Patches often get missed, so please check if your outstanding
+> > patches were in this update. If they have not been in this update,
+> > please resubmit them to linux-xfs@vger.kernel.org so they can be
+> > picked up in the next update.
+> > 
+> > I intend to send these four bugfixes to Linus later this week, but
+> > thought I'd run it by the list first to see if anyone spots anything
+> > obviously broken.
 > 
-> If the COW shrinker hits in exactly that window we'll remove the delayed
-> COW extents and writepages trying to write it back, which in release
-> kernels will manifest as corruption of the bmap btree, and in debug
-> kernels will trip the ASSERT about now calling xfs_bmapi_write with the
-> COWFORK flag for holes.  A complex customer load manages to hit this
-> window fairly reliably, probably by always having COW writeback in flight
-> while the cow shrinker runs.
+> I'd really like to get the minleft fixes reviewed and to Linus:
 > 
-> This patch adds another check for having the I_DIRTY_PAGES flag set,
-> which is still set during this race window.  While this fixes the problem
-> I'm still not overly happy about the way the COW shrinker works as it
-> still seems a bit fragile.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_icache.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index f295049..2d5a63a 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1593,7 +1593,8 @@ xfs_inode_free_cowblocks(
->  	 * If the mapping is dirty or under writeback we cannot touch the
->  	 * CoW fork.  Leave it alone if we're in the midst of a directio.
->  	 */
-> -	if (mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
-> +	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
-> +	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
->  	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
->  	    atomic_read(&VFS_I(ip)->i_dio_count))
->  		return 0;
+> http://www.spinics.net/lists/linux-xfs/msg03036.html
 
-Applied, thx.
+I was wondering if Eryu ever tried his reproducer with this series
+applied?  Also, in reminding myself what went on during the v1 review
+thread I also started having a few questions... (see list)
 
 --D
-
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
