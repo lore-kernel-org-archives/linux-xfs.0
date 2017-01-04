@@ -1,96 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33368 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42160 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753702AbdADSTe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Jan 2017 13:19:34 -0500
-Date: Wed, 4 Jan 2017 13:19:33 -0500
+        id S935207AbdADOdw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Jan 2017 09:33:52 -0500
+Date: Wed, 4 Jan 2017 09:33:51 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/5] xfs: fix bogus minleft manipulations
-Message-ID: <20170104181933.GC41989@bfoster.bfoster>
+Subject: Re: [PATCH 1/5] xfs: bump up reserved blocks in xfs_alloc_set_aside
+Message-ID: <20170104143350.GA41989@bfoster.bfoster>
 References: <1482436822-31546-1-git-send-email-hch@lst.de>
- <1482436822-31546-4-git-send-email-hch@lst.de>
+ <1482436822-31546-2-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1482436822-31546-4-git-send-email-hch@lst.de>
+In-Reply-To: <1482436822-31546-2-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-On Thu, Dec 22, 2016 at 09:00:20PM +0100, Christoph Hellwig wrote:
-> We can't just set minleft to 0 when we're low on space - that's exactly
-> what we need minleft for: to protect space in the AG for btree block
-> allocations when we are low on free space.
+On Thu, Dec 22, 2016 at 09:00:18PM +0100, Christoph Hellwig wrote:
+> Setting aside 4 blocks globally for bmbt splits isn't all that useful,
+> as different threads can allocate space in parallel.  Bump it to 4
+> blocks per AG to allow each thread that is currently doing an
+> allocation to dip into it.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
 
-Staring at this some more, I'm still not terribly fond of this, moreso
-because I wonder how much more of this can be ripped out and whether the
-low space allocator thing is still effective. Aside from that, afaict
-the set_aside change should make it robust and addresses my previous
-question in that it holds blocks out of all transaction reservations.
+Presumably this patch addresses the potential deadlock issues from the
+previous version, but the commit log description makes no mention of it
+whatsoever. While the code seems fine, I think the commit log
+description needs more information wrt to that situation and the
+relationship/dependency with minleft.
 
-I'm also curious whether the set_aside patch alone addresses the
-original problem, or setting minleft = 0 in one of these cases was
-actually the cause.
-
->  fs/xfs/libxfs/xfs_alloc.c      | 24 +++++++-----------------
->  fs/xfs/libxfs/xfs_bmap.c       |  3 ---
->  fs/xfs/libxfs/xfs_bmap_btree.c | 14 --------------
->  3 files changed, 7 insertions(+), 34 deletions(-)
+>  fs/xfs/libxfs/xfs_alloc.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
 > 
-...
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 19c05e9..62663a2 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3812,7 +3812,6 @@ xfs_bmap_btalloc(
->  		args.fsbno = 0;
->  		args.type = XFS_ALLOCTYPE_FIRST_AG;
->  		args.total = ap->minlen;
-> -		args.minleft = 0;
->  		if ((error = xfs_alloc_vextent(&args)))
->  			return error;
->  		ap->dfops->dop_low = true;
-...
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> index d6330c2..9581ee8 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> @@ -499,20 +499,6 @@ xfs_bmbt_alloc_block(
->  		goto try_another_ag;
->  	}
->  
-> -	if (args.fsbno == NULLFSBLOCK && args.minleft) {
-> -		/*
-> -		 * Could not find an AG with enough free space to satisfy
-> -		 * a full btree split.  Try again without minleft and if
-> -		 * successful activate the lowspace algorithm.
-> -		 */
-> -		args.fsbno = 0;
-> -		args.type = XFS_ALLOCTYPE_FIRST_AG;
-> -		args.minleft = 0;
-> -		error = xfs_alloc_vextent(&args);
-> -		if (error)
-> -			goto error0;
-> -		cur->bc_private.b.dfops->dop_low = true;
-> -	}
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 5050056..0a46f84 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -95,10 +95,7 @@ unsigned int
+>  xfs_alloc_set_aside(
+>  	struct xfs_mount	*mp)
+>  {
+> -	unsigned int		blocks;
+> -
+> -	blocks = 4 + (mp->m_sb.sb_agcount * XFS_ALLOC_AGFL_RESERVE);
+> -	return blocks;
+> +	return mp->m_sb.sb_agcount * (XFS_ALLOC_AGFL_RESERVE + 4);
 
-We have a similar retry pattern in xfs_bmap_btalloc() where, in the hunk
-just above, we retain the retry that appears analogous to this one (in
-that it activates the low space algo) and just drop the minleft = 0 bit.
-Here we are dropping the whole thing. Any reason not to be consistent
-one way or the other? (Though do note that we don't check firstblock
-here...).
+The comment above xfs_alloc_set_aside() already touches on the writeback
+situation, but why 4 blocks per ag? Wasn't the intent to use
+worst_indlen() since that's the base for minleft?
+
+Also, it looks like this causes a regression in xfs/004. On a quick
+look, we might just need a test update however...
 
 Brian
 
->  	if (args.fsbno == NULLFSBLOCK) {
->  		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
->  		*stat = 0;
+>  }
+>  
+>  /*
 > -- 
 > 2.1.4
 > 
