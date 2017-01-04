@@ -1,164 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39224 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752574AbdACUBz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jan 2017 15:01:55 -0500
-Date: Tue, 3 Jan 2017 12:01:49 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] generic/158,304: filter dedupe error message
-Message-ID: <20170103200149.GB14031@birch.djwong.org>
-References: <20161230040854.17512-1-eguan@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33394 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1761451AbdADSTm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Jan 2017 13:19:42 -0500
+Date: Wed, 4 Jan 2017 13:19:41 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/5] xfs: adjust allocation length in
+ xfs_alloc_space_available
+Message-ID: <20170104181940.GD41989@bfoster.bfoster>
+References: <1482436822-31546-1-git-send-email-hch@lst.de>
+ <1482436822-31546-5-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20161230040854.17512-1-eguan@redhat.com>
+In-Reply-To: <1482436822-31546-5-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-On Fri, Dec 30, 2016 at 12:08:54PM +0800, Eryu Guan wrote:
-> Kernel commit 22725ce4e4a0 ("vfs: fix isize/pos/len checks for reflink &
-> dedupe") added more checks on reflink and dedupe, rejected dedupe past
-> EOF early and explicitly, and causes generic/158 and generic/304 to fail.
+On Thu, Dec 22, 2016 at 09:00:21PM +0100, Christoph Hellwig wrote:
+> We must decide in xfs_alloc_fix_freelist if we can perform an
+> allocation from a given AG is possible or not based on the available
+> space, and should not fail the allocation past that point on a
+> healthy file system.
 > 
->   Try dedupe from past EOF
->  -dedupe: Invalid argument
->  +XFS_IOC_FILE_EXTENT_SAME: Invalid argument
->   Try dedupe to past EOF, destination offset beyond EOF
+> But currently we have two additional places that second-guess
+> xfs_alloc_fix_freelist: xfs_alloc_ag_vextent tries to adjust the
+> maxlen parameter to remove the reservation before doing the
+> allocation (but ignores the various minium freespace requirements),
+> and xfs_alloc_fix_minleft tries to fix up the allocated length
+> after we've found an extent, but ignores the reservations and also
+> doesn't take the AGFL into account (and thus fails allocations
+> for not matching minlen in some cases).
 > 
-> Fix it by replacing fs-specific ioctl in error message to "dedupe".
+> Remove all these later fixups and just correct the maxlen argument
+> inside xfs_alloc_fix_freelist once we have the AGF buffer locked.
 > 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  common/reflink        | 7 +++++++
->  tests/generic/158     | 7 +++++--
->  tests/generic/158.out | 4 ++--
->  tests/generic/304     | 9 ++++++---
->  tests/generic/304.out | 2 +-
->  5 files changed, 21 insertions(+), 8 deletions(-)
+>  fs/xfs/libxfs/xfs_alloc.c | 80 ++++++++++-------------------------------------
+>  fs/xfs/libxfs/xfs_alloc.h |  2 +-
+>  2 files changed, 17 insertions(+), 65 deletions(-)
 > 
-> diff --git a/common/reflink b/common/reflink
-> index 64ee04f..7306efd 100644
-> --- a/common/reflink
-> +++ b/common/reflink
-> @@ -241,6 +241,13 @@ _dedupe_range() {
->  	$XFS_IO_PROG $xfs_io_args -f -c "dedupe $file1 $offset1 $offset2 $len" "$file2"
->  }
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index fe92570..6a10aab 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+...
+> @@ -2070,10 +2012,19 @@ xfs_alloc_space_available(
 >  
-> +# Filter fs-specific ioctl in error message to "dedupe"
-> +# e.g. replace XFS_IOC_FILE_EXTENT_SAME with dedupe
-> +_filter_dedupe()
-> +{
-> +	sed -e 's/XFS_IOC_FILE_EXTENT_SAME/dedupe/g'
-> +}
+>  	/* do we have enough free space remaining for the allocation? */
+>  	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
+> -			  reservation - min_free - args->total);
+> -	if (available < (int)args->minleft || available <= 0)
+> +			  reservation - min_free - args->minleft);
+> +	if (available < (int)args->total)
+>  		return false;
+>  
+> +	/*
+> +	 * Clamp maxlen to the amount of free space available for the actual
+> +	 * extent allocation.
+> +	 */
+> +	if (available < (int)args->maxlen && !(flags & XFS_ALLOC_FLAG_CHECK)) {
+> +		args->maxlen = available;
+> +		ASSERT(args->maxlen > 0);
 
-I sent a patch to the xfs list last month ("xfs_io: prefix dedupe
-command error messages consistently") changing all the error message
-prefixes to "XFS_IOC_FILE_EXTENT_SAME".  Was going to send a patch to
-fix up xfstests too... but evidently didn't.
+Still missing my nit from the previous version. Otherwise:
 
-If you change the sed command to 's/dedupe:/XFS_IOC_FILE_EXTENT_SAME:/g'
-that'll suffice, I think.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
---D
-
+> +	}
 > +
->  # Create a file of interleaved unwritten and reflinked blocks
->  _weave_reflink_unwritten() {
->  	blksz=$1
-> diff --git a/tests/generic/158 b/tests/generic/158
-> index 086c522..77ab1ce 100755
-> --- a/tests/generic/158
-> +++ b/tests/generic/158
-> @@ -81,10 +81,12 @@ mkfifo $testdir1/fifo1
->  sync
->  
->  _filter_enotty() {
-> +	_filter_dedupe | \
->  	sed -e 's/Inappropriate ioctl for device/Invalid argument/g'
+>  	return true;
 >  }
 >  
->  _filter_eperm() {
-> +	_filter_dedupe | \
->  	sed -e 's/Permission denied/Invalid argument/g'
->  }
+> @@ -2119,7 +2070,8 @@ xfs_alloc_fix_freelist(
+>  	}
 >  
-> @@ -98,7 +100,8 @@ echo "Try overlapping dedupe"
->  _dedupe_range $testdir1/file1 0 $testdir1/file1 1 $((blksz * 2))
+>  	need = xfs_alloc_min_freelist(mp, pag);
+> -	if (!xfs_alloc_space_available(args, need, flags))
+> +	if (!xfs_alloc_space_available(args, need, flags |
+> +			XFS_ALLOC_FLAG_CHECK))
+>  		goto out_agbp_relse;
 >  
->  echo "Try dedupe from past EOF"
-> -_dedupe_range $testdir1/file1 $(( (blks + 10) * blksz)) $testdir1/file1 0 $blksz
-> +_dedupe_range $testdir1/file1 $(( (blks + 10) * blksz)) $testdir1/file1 0 $blksz \
-> +	2>&1 | _filter_dedupe
+>  	/*
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index 7c404a6..1d0f48a 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -56,7 +56,7 @@ typedef unsigned int xfs_alloctype_t;
+>  #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
+>  #define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
+>  #define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
+> -
+> +#define	XFS_ALLOC_FLAG_CHECK	0x00000010  /* test only, don't modify args */
 >  
->  echo "Try dedupe to past EOF, destination offset beyond EOF"
->  _dedupe_range $testdir1/file1 0 $testdir1/file1 $(( (blks + 10) * blksz)) \
-> @@ -109,7 +112,7 @@ _dedupe_range $testdir1/file1 0 $testdir1/file1 $(( (blks - 1) * blksz)) \
->  	$((blksz * 2))
->  
->  echo "Try to dedupe a dir"
-> -_dedupe_range $testdir1/dir1 0 $testdir1/file2 0 $blksz
-> +_dedupe_range $testdir1/dir1 0 $testdir1/file2 0 $blksz 2>&1 | _filter_dedupe
->  
->  echo "Try to dedupe a device"
->  _dedupe_range $testdir1/dev1 0 $testdir1/file2 0 $blksz 2>&1 | _filter_enotty
-> diff --git a/tests/generic/158.out b/tests/generic/158.out
-> index 9b82ddf..3a9596f 100644
-> --- a/tests/generic/158.out
-> +++ b/tests/generic/158.out
-> @@ -14,9 +14,9 @@ dedupe: Invalid argument
->  Try dedupe to past EOF, destination offset behind EOF
->  dedupe: Invalid argument
->  Try to dedupe a dir
-> -XFS_IOC_FILE_EXTENT_SAME: Is a directory
-> +dedupe: Is a directory
->  Try to dedupe a device
-> -XFS_IOC_FILE_EXTENT_SAME: Invalid argument
-> +dedupe: Invalid argument
->  Try to dedupe to a dir
->  TEST_DIR/test-158/dir1: Is a directory
->  Try to dedupe to a device
-> diff --git a/tests/generic/304 b/tests/generic/304
-> index b7ee7b9..8f0a3b4 100755
-> --- a/tests/generic/304
-> +++ b/tests/generic/304
-> @@ -75,13 +75,16 @@ echo "Dedupe high offset to low offset"
->  _dedupe_range $testdir/file1 $bigoff_64k $testdir/file6 1048576 65535 >> $seqres.full
->  
->  echo "Dedupe past source file EOF (should fail)"
-> -_dedupe_range $testdir/file2 524288 $testdir/file7 0 1048576 >> $seqres.full
-> +_dedupe_range $testdir/file2 524288 $testdir/file7 0 1048576 \
-> +	2>&1 >> $seqres.full | _filter_dedupe
->  
->  echo "Dedupe max size at nonzero offset (should fail)"
-> -_dedupe_range $testdir/file2 524288 $testdir/file8 0 $len >> $seqres.full
-> +_dedupe_range $testdir/file2 524288 $testdir/file8 0 $len \
-> +	2>&1 >> $seqres.full | _filter_dedupe
->  
->  echo "Dedupe with huge off/len (should fail)"
-> -_dedupe_range $testdir/file2 $bigoff_64k $testdir/file9 0 $bigoff_64k >> $seqres.full
-> +_dedupe_range $testdir/file2 $bigoff_64k $testdir/file9 0 $bigoff_64k \
-> +	2>&1 >> $seqres.full | _filter_dedupe
->  
->  echo "Check file creation"
->  _test_cycle_mount
-> diff --git a/tests/generic/304.out b/tests/generic/304.out
-> index 7b5ff0e..fbba6f3 100644
-> --- a/tests/generic/304.out
-> +++ b/tests/generic/304.out
-> @@ -14,7 +14,7 @@ dedupe: Invalid argument
->  Dedupe max size at nonzero offset (should fail)
->  dedupe: Invalid argument
->  Dedupe with huge off/len (should fail)
-> -XFS_IOC_FILE_EXTENT_SAME: Invalid argument
-> +dedupe: Invalid argument
->  Check file creation
->  file3
->  7ffffffffffffffe:  61  a
+>  /*
+>   * Argument structure for xfs_alloc routines.
 > -- 
-> 2.9.3
+> 2.1.4
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
