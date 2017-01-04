@@ -1,108 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28922 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760823AbdADVYP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 16:24:15 -0500
-Date: Wed, 4 Jan 2017 13:23:42 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH, RFC] xfs: use per-AG reservations for the finobt
-Message-ID: <20170104212342.GH14031@birch.djwong.org>
-References: <1483107598-6779-1-git-send-email-hch@lst.de>
- <20170103192426.GA14031@birch.djwong.org>
- <CAOQ4uxj0wxLq+=RXEo6FxCoEyncduheV0RC4gTfpS-=BLyuULA@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:35108 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936426AbdADPr4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Jan 2017 10:47:56 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 6F524AD223C
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Jan 2017 09:45:48 -0600 (CST)
+Subject: Re: [PATCH] Fix max_retries _show and _store functions
+References: <20170103175331.8089-1-cmaiolino@redhat.com>
+ <7818525d-fd15-d245-a958-1648b5df3ecd@sandeen.net>
+ <20170104105840.mr54e3ypljphb2pd@eorzea.usersys.redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6f9fcef4-bb02-148f-a339-d5b7396726b8@sandeen.net>
+Date: Wed, 4 Jan 2017 09:46:21 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxj0wxLq+=RXEo6FxCoEyncduheV0RC4gTfpS-=BLyuULA@mail.gmail.com>
+In-Reply-To: <20170104105840.mr54e3ypljphb2pd@eorzea.usersys.redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-On Wed, Jan 04, 2017 at 12:21:26PM +0200, Amir Goldstein wrote:
-> On Tue, Jan 3, 2017 at 9:24 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> ...
-> >
-> > There's also the unsolved problem of what happens if we mount and find
-> > agf_freeblks < (sum(ask) - sum(used)) -- right now we eat that state and
-> > hope that we don't later ENOSPC and crash.  For reflink and rmap we will
-> > have always had the AG reservation and therefore it should never happen
-> > that we have fewer free blocks than reserved blocks.  (Unless the user
-> > does something pathological like using CoW to create many billions of
-> > separate rmap records...)
-> >
+On 1/4/17 4:58 AM, Carlos Maiolino wrote:
+> On Tue, Jan 03, 2017 at 12:19:53PM -0600, Eric Sandeen wrote:
+>> On 1/3/17 11:53 AM, Carlos Maiolino wrote:
+>>> max_retries _show and _store functions should test against cfg->max_retries,
+>>> not cfg->retry_timeout
+>>>
+>>> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+>>
+>> Whoever made those mistakes should be very ashamed.  ;)
+>> I guess it was a cut and paste error.  :(
+>>
+>> This should probably cc: stable, too.
 > 
-> Darrick,
+> Yeah, I believe so,
 > 
-> Can you explain the "Unless the user..." part?
+> maybe if I just forward the patch to stable might work? 
+
+if cc: stable gets added when it's committed, that'll suffice.
+
+-Eric
+
+>>
+>> Thanks,
+>>
+>> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+>>
+>>> ---
+>>>  fs/xfs/xfs_sysfs.c | 4 ++--
+>>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+>>> index 276d302..de6195e 100644
+>>> --- a/fs/xfs/xfs_sysfs.c
+>>> +++ b/fs/xfs/xfs_sysfs.c
+>>> @@ -396,7 +396,7 @@ max_retries_show(
+>>>  	int		retries;
+>>>  	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
+>>>  
+>>> -	if (cfg->retry_timeout == XFS_ERR_RETRY_FOREVER)
+>>> +	if (cfg->max_retries == XFS_ERR_RETRY_FOREVER)
+>>>  		retries = -1;
+>>>  	else
+>>>  		retries = cfg->max_retries;
+>>> @@ -422,7 +422,7 @@ max_retries_store(
+>>>  		return -EINVAL;
+>>>  
+>>>  	if (val == -1)
+>>> -		cfg->retry_timeout = XFS_ERR_RETRY_FOREVER;
+>>> +		cfg->max_retries = XFS_ERR_RETRY_FOREVER;
+>>>  	else
+>>>  		cfg->max_retries = val;
+>>>  	return count;
+>>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> Is it not possible to actively limit the user from getting to the
-> pathologic case?
-
-It's difficult to avoid the pathologic case for CoW operations.  Say we
-have a shared extent in AG0, which is full.  A CoW operation finds that
-AG0 is full and allocates the new blocks in AG1, but updating the
-reference counts might cause AG0's refcount btree to split, which we
-can't do because there are no free blocks left in AG0.
-
-> If AG reservation size is a function of the maximum block refcount, then
-> an operation that is about to increase the maximum block refcount to a size
-> that will increase the worst case reservation beyond a certain percentage
-> of the AG (or beyond available space for that matter) should be denied
-> by a conservative ENOSPC.
-
-For the refcount btree there's an upper bound on how many refcount
-records we'll ever need to store, so we introduced a per-AG block
-reservation system to hide blocks from the allocators unless the
-allocation request has the magic key.  In other words, we permanently
-reserve all the blocks we'll ever need for the refcount tree, which
-prevents us ever from encountering ENOSPC.  This costs us 0.6% of the
-filesystem.
-
-(So, yeah, XFS does what you outlined, though somewhat differently.)
-
-However, it's the rmap btree that's the problem.  Any inode can reflink
-the same block to all possible file block offsets, which (roughly) means
-that (theoretically) we could need to store 2^63 * 2^51 * 2^31 = 2^145
-records.  That exceeds the size of any AG, so we can't just hide some
-blocks and expect that everything will be all right.
-
-In theory we could, for each CoW reservation, calculate the worst case
-per-AG btree block requirements for each AG in write_begin/page_mkwrite,
-fail with ENOSPC if there's not enough space, and track the reservation
-all the way to the conclusion in CoW remap.  That's problematic if we
-keep CoW reservations around long term, which we do to reduce
-fragmentation -- rarely do we actually /need/ the worst case.
-
-Maybe we'll end up doing something like that some day, but for now the
-focus is on reducing fragmentation and preventing clones on really full
-AGs (see below) to try to keep the rmap size sane.  By default we
-reserve enough space that each AG block can have its own rmap record.
-
-> I imagine it would be much easier and also understandable from user
-> POV to get a preventative ENOSPC for over cloning, then to get it
-> some time in the far future for trying to delete or deduplicate blocks.
-
-XFS sends the user a preemptive ENOSPC in response to a reflink request
-when the per-AG reservation dips below 10% or the maximum number of
-blocks needed for a full btree split in the hopes that the copy
-operation will fall back to regular copy.  We also established a default
-CoW extent allocation size hint of 32 blocks to reduce fragmentation,
-which should reduce the pressure somewhat.
-
-(So, yes.)
-
-Keep in mind that reflink and rmap will be experimental for a while, so
-we can tweak the reservations and/or re-engineer deficient parts.  The
-upcoming xfs_spaceman will make it easier to monitor which AGs are
-getting low on space while the fs is mounted.
-
---D
-
-> 
-> Amir.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
