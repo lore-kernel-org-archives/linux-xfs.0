@@ -1,197 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41893 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:49855 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752147AbdAEBEt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 20:04:49 -0500
-Subject: [PATCH 1/7] ocfs2: test reflinking to inline data files
+        with ESMTP id S1752334AbdADF6J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 00:58:09 -0500
+Date: Tue, 3 Jan 2017 21:58:03 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 04 Jan 2017 17:04:42 -0800
-Message-ID: <148357828242.7677.13067225295741794394.stgit@birch.djwong.org>
-In-Reply-To: <148357827617.7677.15595044775254927245.stgit@birch.djwong.org>
-References: <148357827617.7677.15595044775254927245.stgit@birch.djwong.org>
+Subject: Re: [PATCH] Fix max_retries _show and _store functions
+Message-ID: <20170104055803.GE14031@birch.djwong.org>
+References: <20170103175331.8089-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170103175331.8089-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Make sure that we can handle reflinking from and to inline-data files.
+On Tue, Jan 03, 2017 at 06:53:31PM +0100, Carlos Maiolino wrote:
+> max_retries _show and _store functions should test against cfg->max_retries,
+> not cfg->retry_timeout
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+>  fs/xfs/xfs_sysfs.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> index 276d302..de6195e 100644
+> --- a/fs/xfs/xfs_sysfs.c
+> +++ b/fs/xfs/xfs_sysfs.c
+> @@ -396,7 +396,7 @@ max_retries_show(
+>  	int		retries;
+>  	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
+>  
+> -	if (cfg->retry_timeout == XFS_ERR_RETRY_FOREVER)
+> +	if (cfg->max_retries == XFS_ERR_RETRY_FOREVER)
+>  		retries = -1;
+>  	else
+>  		retries = cfg->max_retries;
+> @@ -422,7 +422,7 @@ max_retries_store(
+>  		return -EINVAL;
+>  
+>  	if (val == -1)
+> -		cfg->retry_timeout = XFS_ERR_RETRY_FOREVER;
+> +		cfg->max_retries = XFS_ERR_RETRY_FOREVER;
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/reflink       |    2 +
- tests/ocfs2/001      |   88 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/ocfs2/001.out  |   14 ++++++++
- tests/ocfs2/Makefile |   20 +++++++++++
- tests/ocfs2/group    |    1 +
- 5 files changed, 124 insertions(+), 1 deletion(-)
- create mode 100755 tests/ocfs2/001
- create mode 100644 tests/ocfs2/001.out
- create mode 100644 tests/ocfs2/Makefile
- create mode 100644 tests/ocfs2/group
+Applied, thanks.
 
+--D
 
-diff --git a/common/reflink b/common/reflink
-index 64ee04f..55d82ac 100644
---- a/common/reflink
-+++ b/common/reflink
-@@ -206,7 +206,7 @@ _cp_reflink() {
- 	file1="$1"
- 	file2="$2"
- 
--	cp --reflink=always -p "$file1" "$file2"
-+	cp --reflink=always -p -f "$file1" "$file2"
- }
- 
- # Reflink some file1 into file2
-diff --git a/tests/ocfs2/001 b/tests/ocfs2/001
-new file mode 100755
-index 0000000..1cd9dc5
---- /dev/null
-+++ b/tests/ocfs2/001
-@@ -0,0 +1,88 @@
-+#! /bin/bash
-+# FS QA Test No. 001
-+#
-+# Ensure that reflink works correctly with inline-data files.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -rf $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs ocfs2
-+_require_scratch_reflink
-+_require_cp_reflink
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+_scratch_mkfs --fs-features=local,unwritten,refcount,inline-data > $seqres.full 2>&1
-+tunefs.ocfs2 --query '%H' $SCRATCH_DEV | grep -q 'inline-data' || \
-+	_notrun "Inline data is not supported."
-+_scratch_mount >> $seqres.full 2>&1
-+
-+testdir=$SCRATCH_MNT/test-$seq
-+mkdir $testdir
-+
-+sz=65536
-+echo "Create the original files"
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file1 >> $seqres.full
-+echo x > $testdir/file2
-+echo x > $testdir/file3
-+echo y > $testdir/file4
-+$XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file5 >> $seqres.full
-+echo a > $testdir/file6
-+_scratch_cycle_mount
-+
-+echo "reflink into the start of file2"
-+_cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
-+
-+echo "reflink past the stuff in file3"
-+_reflink_range $testdir/file1 0 $testdir/file3 $sz $sz >> $seqres.full
-+
-+echo "reflink an inline-data file to a regular one"
-+_cp_reflink $testdir/file4 $testdir/file5 >> $seqres.full
-+
-+echo "reflink an inline-data file to another inline-data file"
-+_cp_reflink $testdir/file4 $testdir/file6 >> $seqres.full
-+
-+echo "Verify the whole mess"
-+_scratch_cycle_mount
-+md5sum $testdir/file* | _filter_scratch
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/ocfs2/001.out b/tests/ocfs2/001.out
-new file mode 100644
-index 0000000..99fa43a
---- /dev/null
-+++ b/tests/ocfs2/001.out
-@@ -0,0 +1,14 @@
-+QA output created by 001
-+Format and mount
-+Create the original files
-+reflink into the start of file2
-+reflink past the stuff in file3
-+reflink an inline-data file to a regular one
-+reflink an inline-data file to another inline-data file
-+Verify the whole mess
-+2d61aa54b58c2e94403fb092c3dbc027  SCRATCH_MNT/test-001/file1
-+2d61aa54b58c2e94403fb092c3dbc027  SCRATCH_MNT/test-001/file2
-+4e68a2e24b6b0f386ab39d01d902293d  SCRATCH_MNT/test-001/file3
-+009520053b00386d1173f3988c55d192  SCRATCH_MNT/test-001/file4
-+009520053b00386d1173f3988c55d192  SCRATCH_MNT/test-001/file5
-+009520053b00386d1173f3988c55d192  SCRATCH_MNT/test-001/file6
-diff --git a/tests/ocfs2/Makefile b/tests/ocfs2/Makefile
-new file mode 100644
-index 0000000..e133790
---- /dev/null
-+++ b/tests/ocfs2/Makefile
-@@ -0,0 +1,20 @@
-+#
-+# Copyright (c) 2017 Oracle.  All Rights Reserved.
-+#
-+
-+TOPDIR = ../..
-+include $(TOPDIR)/include/builddefs
-+
-+OCFS2_DIR = ocfs2
-+TARGET_DIR = $(PKG_LIB_DIR)/$(TESTS_DIR)/$(OCFS2_DIR)
-+
-+include $(BUILDRULES)
-+
-+install:
-+	$(INSTALL) -m 755 -d $(TARGET_DIR)
-+	$(INSTALL) -m 755 $(TESTS) $(TARGET_DIR)
-+	$(INSTALL) -m 644 group $(TARGET_DIR)
-+	$(INSTALL) -m 644 $(OUTFILES) $(TARGET_DIR)
-+
-+# Nothing.
-+install-dev install-lib:
-diff --git a/tests/ocfs2/group b/tests/ocfs2/group
-new file mode 100644
-index 0000000..28e6807
---- /dev/null
-+++ b/tests/ocfs2/group
-@@ -0,0 +1 @@
-+001 auto quick clone
-
+>  	else
+>  		cfg->max_retries = val;
+>  	return count;
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
