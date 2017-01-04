@@ -1,72 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:33117 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752814AbdAFOLR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:11:17 -0500
-From: Michal Hocko <mhocko@kernel.org>
-Subject: [PATCH 0/8 v3] scope GFP_NOFS api
-Date: Fri,  6 Jan 2017 15:10:59 +0100
-Message-Id: <20170106141107.23953-1-mhocko@kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:24954 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751847AbdADUe2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 15:34:28 -0500
+Date: Wed, 4 Jan 2017 12:33:57 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 1/3] xfs/348: test handling of invalid inode modes
+Message-ID: <20170104203357.GG14031@birch.djwong.org>
+References: <1482689376-23553-1-git-send-email-amir73il@gmail.com>
+ <1482689376-23553-2-git-send-email-amir73il@gmail.com>
+ <20170103203602.GA14034@birch.djwong.org>
+ <CAOQ4uxhWj2aS95E2OXG0+9n8DRy7Uz2KEJ9cpX6gXQHWO7DvWg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxhWj2aS95E2OXG0+9n8DRy7Uz2KEJ9cpX6gXQHWO7DvWg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Michal Hocko <mhocko@suse.com>, "Peter Zijlstra (Intel)" <peterz@infradead.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Eryu Guan <eguan@redhat.com>, Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, fstests <fstests@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-Hi,
-I have posted the previous version here [1]. Since then I've added some
-reviewed bys and fixed some minor issues. I've dropped patch 2 [2] based
-on Dave's request [3]. I agree that this can be done later and doing
-all at once. I still think that __GFP_NOLOCKDEP should be added by this
-series to make the further development easier.
+On Wed, Jan 04, 2017 at 12:36:24PM +0200, Amir Goldstein wrote:
+> On Tue, Jan 3, 2017 at 10:36 PM, Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+> > On Sun, Dec 25, 2016 at 08:09:34PM +0200, Amir Goldstein wrote:
+> >> Set all possible file type values for different types of files
+> >> and verify that xfs_repair detects the correct errors.
+> >>
+> >> When setting invalid file type values (e.g. core.mode = 0170644),
+> >> all files are expected to have been junked by xfs_repair.
+> >>
+> >> When setting valid file type values to non matching file types,
+> >> xfs_repair would either detect wrong format and junk the file, e.g.:
+> >>   would have junked entry "FILE" in directory PARENT_INO
+> >> or detect a ftype mismatch error, e.g.:
+> >>   would fix ftype mismatch (5/3) in directory/child PARENT_INO/FIFO_INO
+> >>
+> >> If ftype feature is enabled, when setting file type to one of the
+> >> special types (i.e. FIFO(1), CHRDEV(2),BLKDEV(6),SOCKET(14)),
+> >> xfs_repair is expected to detect ftype mismatch error. Otherewise,
+> >
+> > "Otherwise"
+> >
+> 
+> thanks
+> 
+> > I would also like to see a second test that scrambles the ftype field in
+> > the directory entry (instead of changing the inode core.mode) but xfs_db
+> > can't write to dir3 blocks because it doesn't know how to set the dir
+> > block CRC.
+> >
+> > I'm going to send a patch to add that as part of my xfsprogs 4.11
+> > patchbomb (hopefully next week, but after the xfsprogs 4.9 release) so
+> > that test can wait.
+> >
+> 
+> Sure, I'll beef up the test when that code arrives.
+> 
+> >> +     # If ftype feature is enabled, when setting file type to one of the
+> >> +     # special types (i.e. FIFO(1), CHRDEV(2),BLKDEV(6),SOCKET(14)),
+> >> +     # xfs_repair is expected to detect ftype mismatch error. Otherewise,
+> >> +     # xfs_repair is not expected to detect ftype mismatch error.
+> >> +     if [ "$FTYPE_FEATURE" = 1 ] && (echo ':1:2:6:14:' | grep -q ":$dt:"); then
+> >> +             _scratch_xfs_repair -n 2>&1 | grep -q "^would fix ftype mismatch" || \
+> >> +                     _fail "xfs_repair should fix ftype mismatch"
+> >> +     else
+> >> +             _scratch_xfs_repair -n 2>&1 | grep -q -v "^would fix ftype mismatch" || \
+> >> +                     _fail "xfs_repair should not fix ftype mismatch"
+> >
+> > Just FYI the whole test will stop as soon as we hit a _fail.  Please
+> > consider simply echoing a complaint to stdout so that the golden output
+> > diff will catch this, and we can see all the failing cases.
+> >
+> 
+> Will do.
+> 
+> Can you please reply to v2 patch series.
+> It contain 2 more patches beyond this one with additional testing of access
+> to mounted fs with the malformed inodes.
+> 
+> My question is what to do WRT patch 3/3 which triggers an XFS Assert in the
+> kernel (readdir of a phony directory that is really a regular file or symlink).
+> http://www.spinics.net/lists/linux-xfs/msg03059.html
+> 
+> Is this something of concern to you? Can you instruct me whether the assertion
+> should be fixed or propose a fix yourself?
+> Or is it just a non issue and we should not add patch 3/3 to this test.
 
-There didn't seem to be any real objections and so I think we should go
-and merge this and build further on top. I would like to get rid of all
-explicit GFP_NOFS usage in ext4 code. I have something half baked already
-and will send it later on. I also hope we can get further with the xfs
-as well.
+ASSERTs by definition halt the system, so it's only a crasher bug if
+CONFIG_XFS_DEBUG=y.  However, your test writes garbage to the
+filesystem, so we must try to avoid interacting with corrupted junk when
+possible.
 
-I haven't heard anything from btrfs or other filesystems guys which is a
-bit unfortunate but I do not want to wait for them to much longer, they
-can join the effort later on.
+I suggest bouncing corruption out to userspace by changing that ASSERT to:
 
-The patchset is based on next-20170106
+if (rval == 0 || args->dp->i_d.di_size == args->geo->blksize)
+	return -EFSCORRUPTED;
 
-Diffstat says
- fs/ext4/acl.c             |  6 +++---
- fs/ext4/extents.c         |  8 ++++----
- fs/ext4/resize.c          |  4 ++--
- fs/ext4/xattr.c           |  4 ++--
- fs/jbd2/journal.c         |  7 +++++++
- fs/jbd2/transaction.c     | 11 +++++++++++
- fs/xfs/kmem.c             | 10 +++++-----
- fs/xfs/kmem.h             |  2 +-
- fs/xfs/libxfs/xfs_btree.c |  2 +-
- fs/xfs/xfs_aops.c         |  6 +++---
- fs/xfs/xfs_buf.c          |  8 ++++----
- fs/xfs/xfs_trans.c        | 12 ++++++------
- include/linux/gfp.h       | 18 +++++++++++++++++-
- include/linux/jbd2.h      |  2 ++
- include/linux/sched.h     | 32 ++++++++++++++++++++++++++------
- kernel/locking/lockdep.c  |  6 +++++-
- lib/radix-tree.c          |  2 ++
- mm/page_alloc.c           |  8 +++++---
- mm/vmscan.c               |  6 +++---
- 19 files changed, 109 insertions(+), 45 deletions(-)
+...and perhaps following it up with a check in _dinode_verify to reject
+the inode if it has an obviously bogus i_size.
 
-Shortlog:
-Michal Hocko (8):
-      lockdep: allow to disable reclaim lockup detection
-      xfs: abstract PF_FSTRANS to PF_MEMALLOC_NOFS
-      mm: introduce memalloc_nofs_{save,restore} API
-      xfs: use memalloc_nofs_{save,restore} instead of memalloc_noio*
-      jbd2: mark the transaction context with the scope GFP_NOFS context
-      jbd2: make the whole kjournald2 kthread NOFS safe
-      Revert "ext4: avoid deadlocks in the writeback path by using sb_getblk_gfp"
-      Revert "ext4: fix wrong gfp type under transaction"
+--D
 
-[1] http://lkml.kernel.org/r/20161215140715.12732-1-mhocko@kernel.org
-[2] http://lkml.kernel.org/r/20161215140715.12732-3-mhocko@kernel.org
-[3] http://lkml.kernel.org/r/20161219212413.GN4326@dastard
-
-
+> 
+> Amir.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
