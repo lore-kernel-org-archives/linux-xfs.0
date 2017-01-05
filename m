@@ -1,205 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33360 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751144AbdAFOTC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:19:02 -0500
-From: Michal Hocko <mhocko@kernel.org>
-Subject: [DEBUG PATCH 1/2] mm, debug: report when GFP_NO{FS,IO} is used explicitly from memalloc_no{fs,io}_{save,restore} context
-Date: Fri,  6 Jan 2017 15:18:44 +0100
-Message-Id: <20170106141845.24362-2-mhocko@kernel.org>
-In-Reply-To: <20170106141845.24362-1-mhocko@kernel.org>
-References: <20170106141107.23953-1-mhocko@kernel.org>
- <20170106141845.24362-1-mhocko@kernel.org>
+Received: from sandeen.net ([63.231.237.45]:42972 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754714AbdAEUBm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 5 Jan 2017 15:01:42 -0500
+Subject: Re: [BUG] xfs.mkfs recognizes wrong disk size
+References: <CABPa+v3fgLjBo2CLBXxg8xE3D5tWdjk2C3gM2o1-xEFT45_Rkg@mail.gmail.com>
+ <de4f0e6b-bd01-5bf5-42f6-ca2562c564cb@sandeen.net>
+ <20170105191316.GD17846@birch.djwong.org>
+ <CABPa+v2t_wF-n55GWRcHL7D3_ANcLqaDx1qa5SQ07pU7CgomXg@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <0e31b8db-9721-f735-7e29-0eaae5fd21eb@sandeen.net>
+Date: Thu, 5 Jan 2017 14:01:40 -0600
+MIME-Version: 1.0
+In-Reply-To: <CABPa+v2t_wF-n55GWRcHL7D3_ANcLqaDx1qa5SQ07pU7CgomXg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
+To: Xingbo Wu <wuxb45@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Michal Hocko <mhocko@suse.com>
+On 1/5/17 1:58 PM, Xingbo Wu wrote:
+> On Thu, Jan 5, 2017 at 1:13 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>> On Thu, Jan 05, 2017 at 12:58:23PM -0600, Eric Sandeen wrote:
+>>> On 1/5/17 12:02 PM, Xingbo Wu wrote:
+>>>> /dev/sdf is a 3TB hard drive.
+>>>> It has 2930266584 blocks, as reported in `badblocks -wsv /dev/sdf`:
+>>>> Checking for bad blocks in read-write mode
+>>>> From block 0 to 2930266583
+>>>
+>>> 2930266583 x 1024 == 3000592980992
+>>>
+>>> I'd rather see what /proc/partitions and/or blockdev says about it...
+>>
+>> From the badblocks manpage,
+>>
+>> "-b block_size: Specify the size of blocks in bytes.  The default is 1024."
+>>
+>> (So far so good.)
+>>
+>>>> However mkfs.xfs reports a larger block count:
+>>>> `sudo mkfs.xfs /dev/sdf`:
+>>>> meta-data=/dev/sdf               isize=512    agcount=4, agsize=183141662 blks
+>>>>          =                       sectsz=4096  attr=2, projid32bit=1
+>>>>          =                       crc=1        finobt=1, sparse=0, rmapbt=0
+>>>> data     =                       bsize=4096   blocks=732566646, imaxpct=5
+>>>>          =                       sunit=0      swidth=0 blks
+>>>> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+>>>> log      =internal log           bsize=4096   blocks=357698, version=2
+>>>>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+>>>> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>>>
+>>> 732566646 x 4k blocks == 3000592982016 bytes
+>>>
+>>> Ok, that is 1024 bytes bigger.  But the weird thing is that
+>>> mkfs.xfs actually writes the last block, and fails if that fails.
+>>>
+>>> So let's start with what /proc/partitions says, as well as
+>>>
+>>> # blkdev --getsize --getsize64 /dev/sdf
+>>>
+>>> -Eric
+>>>
+>>>> It later leads to IO error:
+>>>> `dmesg`:
+>>>> [1807875.741674] blk_update_request: I/O error, dev sdf, sector 2930266664
+>>>> [1807875.741732] blk_update_request: I/O error, dev sdf, sector 2930266664
+>>
+>> The kernel complains about "sector 2930266664", which is in 512-byte blocks.
+>>
+>> 2930266664 * 512 = 1500296531968, or halfway across your 3TB disk.
+>>
+>> Makes sense since the log generally ends up halfway across the disk.
+>> Not sure if there's any output before 1807875.741674 but this sort of
+>> looks like a disk error or something?
+>>
+> 
+> I grepped "sdf" from dmesg:
+> [    7.158847] sd 0:0:6:0: [sdf] 5860533168 512-byte logical blocks:
+> (3.00 TB/2.73 TiB)
+> [    7.158851] sd 0:0:6:0: [sdf] 4096-byte physical blocks
+> [    7.259937] sd 0:0:6:0: [sdf] Write Protect is off
+> [    7.259943] sd 0:0:6:0: [sdf] Mode Sense: 9b 00 10 08
+> [    7.282316] sd 0:0:6:0: [sdf] Write cache: enabled, read cache:
+> enabled, supports DPO and FUA
+> [    7.418959] sd 0:0:6:0: [sdf] Attached SCSI disk
+> [1807850.471959] XFS (sdf): Mounting V5 Filesystem
+> [1807850.605057] XFS (sdf): Ending clean mount
+> [1807875.741657] sd 0:0:6:0: [sdf] tag#0 UNKNOWN(0x2003) Result:
+> hostbyte=0x07 driverbyte=0x00
+> [1807875.741670] sd 0:0:6:0: [sdf] tag#0 CDB: opcode=0x8a 8a 08 00 00
+> 00 00 ae a8 52 28 00 00 00 08 00 00
+> [1807875.741674] blk_update_request: I/O error, dev sdf, sector 2930266664
+> [1807875.741732] blk_update_request: I/O error, dev sdf, sector 2930266664
 
-THIS PATCH IS FOR TESTING ONLY AND NOT MEANT TO HIT LINUS TREE
+Your disk is failing.  To solve this, get a new disk.
 
-It is desirable to reduce the direct GFP_NO{FS,IO} usage at minimum and
-prefer scope usage defined by memalloc_no{fs,io}_{save,restore} API.
+-Eric
 
-Let's help this process and add a debugging tool to catch when an
-explicit allocation request for GFP_NO{FS,IO} is done from the scope
-context. The printed stacktrace should help to identify the caller
-and evaluate whether it can be changed to use a wider context or whether
-it is called from another potentially dangerous context which needs
-a scope protection as well.
-
-The checks have to be enabled explicitly by debug_scope_gfp kernel
-command line parameter.
-
-Signed-off-by: Michal Hocko <mhocko@suse.com>
----
- include/linux/sched.h | 14 +++++++++++--
- include/linux/slab.h  |  3 +++
- mm/page_alloc.c       | 58 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 73 insertions(+), 2 deletions(-)
-
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 2032fc642a26..59428926e989 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1988,6 +1988,8 @@ struct task_struct {
- 	/* A live task holds one reference. */
- 	atomic_t stack_refcount;
- #endif
-+	unsigned long nofs_caller;
-+	unsigned long noio_caller;
- /* CPU-specific state of this task */
- 	struct thread_struct thread;
- /*
-@@ -2345,6 +2347,8 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
- #define tsk_used_math(p) ((p)->flags & PF_USED_MATH)
- #define used_math() tsk_used_math(current)
- 
-+extern void debug_scope_gfp_context(gfp_t gfp_mask);
-+
- /*
-  * Applies per-task gfp context to the given allocation flags.
-  * PF_MEMALLOC_NOIO implies GFP_NOIO
-@@ -2363,25 +2367,31 @@ static inline gfp_t current_gfp_context(gfp_t flags)
- 	return flags;
- }
- 
--static inline unsigned int memalloc_noio_save(void)
-+static inline unsigned int __memalloc_noio_save(unsigned long caller)
- {
- 	unsigned int flags = current->flags & PF_MEMALLOC_NOIO;
- 	current->flags |= PF_MEMALLOC_NOIO;
-+	current->noio_caller = caller;
- 	return flags;
- }
- 
-+#define memalloc_noio_save()	__memalloc_noio_save(_RET_IP_)
-+
- static inline void memalloc_noio_restore(unsigned int flags)
- {
- 	current->flags = (current->flags & ~PF_MEMALLOC_NOIO) | flags;
- }
- 
--static inline unsigned int memalloc_nofs_save(void)
-+static inline unsigned int __memalloc_nofs_save(unsigned long caller)
- {
- 	unsigned int flags = current->flags & PF_MEMALLOC_NOFS;
- 	current->flags |= PF_MEMALLOC_NOFS;
-+	current->nofs_caller = caller;
- 	return flags;
- }
- 
-+#define memalloc_nofs_save()	__memalloc_nofs_save(_RET_IP_)
-+
- static inline void memalloc_nofs_restore(unsigned int flags)
- {
- 	current->flags = (current->flags & ~PF_MEMALLOC_NOFS) | flags;
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 084b12bad198..6559668e29db 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -477,6 +477,7 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
-  */
- static __always_inline void *kmalloc(size_t size, gfp_t flags)
- {
-+	debug_scope_gfp_context(flags);
- 	if (__builtin_constant_p(size)) {
- 		if (size > KMALLOC_MAX_CACHE_SIZE)
- 			return kmalloc_large(size, flags);
-@@ -517,6 +518,7 @@ static __always_inline int kmalloc_size(int n)
- 
- static __always_inline void *kmalloc_node(size_t size, gfp_t flags, int node)
- {
-+	debug_scope_gfp_context(flags);
- #ifndef CONFIG_SLOB
- 	if (__builtin_constant_p(size) &&
- 		size <= KMALLOC_MAX_CACHE_SIZE && !(flags & GFP_DMA)) {
-@@ -575,6 +577,7 @@ int memcg_update_all_caches(int num_memcgs);
-  */
- static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
- {
-+	debug_scope_gfp_context(flags);
- 	if (size != 0 && n > SIZE_MAX / size)
- 		return NULL;
- 	if (__builtin_constant_p(n) && __builtin_constant_p(size))
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 5138b46a4295..87a2bb5262b2 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -3738,6 +3738,63 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
- 	return page;
- }
- 
-+static bool debug_scope_gfp;
-+
-+static int __init enable_debug_scope_gfp(char *unused)
-+{
-+	debug_scope_gfp = true;
-+	return 0;
-+}
-+
-+/*
-+ * spit the stack trace if the given gfp_mask clears flags which are context
-+ * wide cleared. Such a caller can remove special flags clearing and rely on
-+ * the context wide mask.
-+ */
-+void debug_scope_gfp_context(gfp_t gfp_mask)
-+{
-+	gfp_t restrict_mask;
-+
-+	if (likely(!debug_scope_gfp))
-+		return;
-+
-+	/* both NOFS, NOIO are irrelevant when direct reclaim is disabled */
-+	if (!(gfp_mask & __GFP_DIRECT_RECLAIM))
-+		return;
-+
-+	if (current->flags & PF_MEMALLOC_NOIO)
-+		restrict_mask = __GFP_IO;
-+	else if ((current->flags & PF_MEMALLOC_NOFS) && (gfp_mask & __GFP_IO))
-+		restrict_mask = __GFP_FS;
-+	else
-+		return;
-+
-+	if ((gfp_mask & restrict_mask) != restrict_mask) {
-+		/*
-+		 * If you see this this warning then the code does:
-+		 * memalloc_no{fs,io}_save()
-+		 * ...
-+		 *    foo()
-+		 *      alloc_page(GFP_NO{FS,IO})
-+		 * ...
-+		 * memalloc_no{fs,io}_restore()
-+		 *
-+		 * allocation which is unnecessary because the scope gfp
-+		 * context will do that for all allocation requests already.
-+		 * If foo() is called from multiple contexts then make sure other
-+		 * contexts are safe wrt. GFP_NO{FS,IO} semantic and either add
-+		 * scope protection into particular paths or change the gfp mask
-+		 * to GFP_KERNEL.
-+		 */
-+		pr_info("Unnecesarily specific gfp mask:%#x(%pGg) for the %s task wide context from %ps\n", gfp_mask, &gfp_mask,
-+				(current->flags & PF_MEMALLOC_NOIO)?"NOIO":"NOFS",
-+				(void*)((current->flags & PF_MEMALLOC_NOIO)?current->noio_caller:current->nofs_caller));
-+		dump_stack();
-+	}
-+}
-+EXPORT_SYMBOL(debug_scope_gfp_context);
-+early_param("debug_scope_gfp", enable_debug_scope_gfp);
-+
- /*
-  * This is the 'heart' of the zoned buddy allocator.
-  */
-@@ -3802,6 +3859,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
- 	}
- 
- 	/* First allocation attempt */
-+	debug_scope_gfp_context(gfp_mask);
- 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
- 	if (likely(page))
- 		goto out;
--- 
-2.11.0
-
+> [1807875.742306] XFS (sdf): metadata I/O error: block 0xaea85228
+> ("xlog_iodone") error 5 numblks 64
+> [1807875.742369] XFS (sdf): xfs_do_force_shutdown(0x2) called from
+> line 1200 of file fs/xfs/xfs_log.c.  Return address =
+> 0xffffffffa024090c
+> 
+> Earlier I tried to format the disk with ext4. It also had similar
+> errors. I thought it was the disk's problem. Would that be something
+> wrong with mkfs' math? I will try ext4 again and let you know if I
+> found something relevant.
+> 
