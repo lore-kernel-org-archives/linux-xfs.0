@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45715 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:45722 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933960AbdAEBRp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 20:17:45 -0500
-Subject: [PATCH 6/9] populate: cache scratch metadata images
+        with ESMTP id S933960AbdAEBRt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 20:17:49 -0500
+Subject: [PATCH 7/9] populate: discover XFS structure fields and fuzz verbs,
+ and use them to fuzz fields
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 04 Jan 2017 17:17:38 -0800
-Message-ID: <148357905878.10436.1866572956612127885.stgit@birch.djwong.org>
+Date: Wed, 04 Jan 2017 17:17:45 -0800
+Message-ID: <148357906498.10436.15608215429466271747.stgit@birch.djwong.org>
 In-Reply-To: <148357902056.10436.12795484251467155460.stgit@birch.djwong.org>
 References: <148357902056.10436.12795484251467155460.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,87 +19,215 @@ List-Id: xfs
 To: eguan@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Create a helper function to create a populated FS image and dump the
-metadata into a file on the test device, with the purpose of allowing
-future (fuzzer) invocations of _populate_fs use the cached metadata to
-save time.
+Create some routines to help us perform targeted fuzzing of individual
+fields in various XFS structures.  Specifically, we want the caller to
+drop the xfs_db iocursor on the victim field; from there, the scripts
+should discover all available fields and fuzzing verbs, and try each
+fuzz verb on every available field.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+--
+v2: fix some errors found by Eryu Guan.
 ---
- common/populate |   44 ++++++++++++++++++++++++++++++++++++++++++++
- common/rc       |    3 ++-
- 2 files changed, 46 insertions(+), 1 deletion(-)
+ common/fuzzy |  189 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 189 insertions(+)
 
 
-diff --git a/common/populate b/common/populate
-index f012173..91a7753 100644
---- a/common/populate
-+++ b/common/populate
-@@ -673,3 +673,47 @@ _fill_fs()
- 		file_count=$((file_count + 1))
- 	done
+diff --git a/common/fuzzy b/common/fuzzy
+index 1cc1d5e..2edcd9f 100644
+--- a/common/fuzzy
++++ b/common/fuzzy
+@@ -81,3 +81,192 @@ _scratch_scrub() {
+ 		;;
+ 	esac
  }
 +
-+# Populate a scratch FS from scratch or from a cached image.
-+_scratch_populate_cached() {
-+	POPULATE_METADUMP="${TEST_DIR}/__populate.${FSTYP}"
-+	POPULATE_METADUMP_DESCR="${TEST_DIR}/__populate.${FSTYP}.txt"
++# Filter the xfs_db print command's field debug information
++# into field name and type.
++__filter_xfs_db_print_fields() {
++	grep ' = ' | while read key equals value; do
++		fuzzkey="$(echo "${key}" | sed -e 's/\([a-zA-Z0-9_]*\)\[\([0-9]*\)-[0-9]*\]/\1[\2]/g')"
++		if [[ "${value}" == "["* ]]; then
++			echo "${value}" | sed -e 's/^.//g' -e 's/.$//g' -e 's/,/\n/g' | while read subfield; do
++				echo "${fuzzkey}.${subfield}"
++			done
++		else
++			echo "${fuzzkey}"
++		fi
++	done
++}
 +
-+	# Don't keep metadata images cached for more 48 hours...
-+	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
-+
-+	# Throw away cached image if it doesn't match our spec.
-+	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS ${MKFS_OPTIONS} ARGS $@"
-+	cmp -s "${POPULATE_METADUMP_DESCR}" <(echo "${meta_descr}") || rm -rf "${POPULATE_METADUMP}"
-+
-+	# Do we have a cached image?
-+	if [ -r "${POPULATE_METADUMP}" ]; then
-+		case "${FSTYP}" in
-+		"xfs")
-+			xfs_mdrestore "${POPULATE_METADUMP}" "${SCRATCH_DEV}" && return
-+			;;
-+		"ext2"|"ext3"|"ext4")
-+			e2image -r "${POPULATE_METADUMP}" "${SCRATCH_DEV}" && return
-+			;;
-+		esac
++# Navigate to some part of the filesystem and print the field info.
++_scratch_xfs_list_metadata_fields() {
++	if [ -n "${SCRATCH_XFS_LIST_METADATA_FIELDS}" ]; then
++		echo "${SCRATCH_XFS_LIST_METADATA_FIELDS}" | sed -e 's/ /\n/g'
++		return;
 +	fi
 +
-+	# Oh well, just create one from scratch
-+	_scratch_mkfs
-+	echo "${meta_descr}" > "${POPULATE_METADUMP_DESCR}"
-+	case "${FSTYP}" in
-+	"xfs")
-+		_scratch_xfs_populate $@
-+		_scratch_xfs_populate_check
-+		_scratch_metadump "${POPULATE_METADUMP}" -a -o
-+		;;
-+	"ext2"|"ext3"|"ext4")
-+		_scratch_ext4_populate $@
-+		_scratch_ext4_populate_check
-+		e2image -Q "${SCRATCH_DEV}" "${POPULATE_METADUMP}"
-+		;;
-+	*)
-+		_fail "Don't know how to populate a ${FSTYP} filesystem."
-+		;;
-+	esac
++	(for arg in "$@"; do
++		echo "${arg}"
++	done
++	echo "print") | _scratch_xfs_db | __filter_xfs_db_print_fields
 +}
-diff --git a/common/rc b/common/rc
-index 46bfb68..6323f54 100644
---- a/common/rc
-+++ b/common/rc
-@@ -471,12 +471,13 @@ _scratch_do_mkfs()
- _scratch_metadump()
- {
- 	dumpfile=$1
++
++# Get a metadata field
++_scratch_xfs_get_metadata_field() {
++	key="$1"
 +	shift
- 	options=
- 
- 	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
- 		options="-l $SCRATCH_LOGDEV"
- 
--	xfs_metadump $options $SCRATCH_DEV $dumpfile
-+	xfs_metadump $options "$@" $SCRATCH_DEV $dumpfile
- }
- 
- _setup_large_ext4_fs()
++
++	grep_key="$(echo "${key}" | tr '[]()' '....')"
++	(for arg in "$@"; do
++		echo "${arg}"
++	done
++	echo "print ${key}") | _scratch_xfs_db | grep "^${grep_key}" | \
++		sed -e 's/^.* = //g'
++}
++
++# Set a metadata field
++_scratch_xfs_set_metadata_field() {
++	key="$1"
++	value="$2"
++	shift; shift
++	(for arg in "$@"; do
++		echo "${arg}"
++	done
++	echo "write -d ${key} ${value}") | _scratch_xfs_db -x
++	echo
++}
++
++# Fuzz a metadata field
++_scratch_xfs_fuzz_metadata_field() {
++	key="$1"
++	value="$2"
++	shift; shift
++
++	if [ "${key}" = "crc" ]; then
++		fuzz_arg="-c"
++	else
++		fuzz_arg="-d"
++	fi
++	oldval="$(_scratch_xfs_get_metadata_field "${key}" "$@")"
++	(for arg in "$@"; do
++		echo "${arg}"
++	done
++	echo "fuzz ${fuzz_arg} ${key} ${value}") | _scratch_xfs_db -x
++	echo
++	newval="$(_scratch_xfs_get_metadata_field "${key}" "$@" 2> /dev/null)"
++	if [ "${oldval}" = "${newval}" ]; then
++		echo "Field ${key} already set to ${oldval}, skipping test."
++		return 1
++	fi
++	return 0
++}
++
++# Try to forcibly unmount the scratch fs
++__scratch_xfs_fuzz_unmount()
++{
++	while ! _scratch_unmount 2>/dev/null; do sleep 0.2; done
++}
++
++# Restore metadata to scratch device prior to field-fuzzing.
++__scratch_xfs_fuzz_mdrestore()
++{
++	test -e "${POPULATE_METADUMP}" || _fail "Need to set POPULATE_METADUMP"
++
++	__scratch_xfs_fuzz_unmount
++	xfs_mdrestore "${POPULATE_METADUMP}" "${SCRATCH_DEV}"
++}
++
++__fuzz_notify() {
++	echo "$@"
++	test -w /dev/ttyprintk && echo "$@" >> /dev/ttyprintk
++}
++
++# Fuzz one field of some piece of metadata
++__scratch_xfs_fuzz_field_test() {
++	field="$1"
++	fuzzverb="$2"
++	shift; shift
++
++	# Set the new field value
++	__fuzz_notify "+ Fuzz ${field} = ${fuzzverb}"
++	echo "========================"
++	_scratch_xfs_fuzz_metadata_field "${field}" ${fuzzverb} "$@"
++	res=$?
++	test $res -ne 0 && return
++
++	# Try to catch the error with scrub
++	echo "+ Try to catch the error"
++	_scratch_mount 2>&1
++	res=$?
++	if [ $res -eq 0 ]; then
++		_scratch_scrub -a 1 -e continue 2>&1
++		res=$?
++		test $res -eq 0 && \
++			(>&2 echo "scrub didn't fail with ${field} = ${fuzzverb}.")
++
++		# Try modifying the filesystem!
++		__fuzz_notify "++ Try to write filesystem"
++		#_scratch_fuzz_modify 100 2>&1
++		__scratch_xfs_fuzz_unmount
++	fi
++
++	# Repair the filesystem
++	echo "+ Fix the error"
++	_repair_scratch_fs 2>&1
++	res=$?
++	test $res -ne 0 && \
++		(>&2 echo "repair failed ($res) with ${field} = ${fuzzverb}.")
++
++	# See if scrub finds a clean fs
++	echo "+ Make sure error is gone"
++	_scratch_mount 2>&1
++	res=$?
++	if [ $res -eq 0 ]; then
++		_scratch_scrub -e continue 2>&1
++		res=$?
++		test $res -ne 0 && \
++			(>&2 echo "re-scrub ($res) with ${field} = ${fuzzverb}.")
++
++		# Try modifying the filesystem again!
++		__fuzz_notify "++ Try to write filesystem again"
++		_scratch_fuzz_modify 100 2>&1
++		__scratch_xfs_fuzz_unmount
++	else
++		(>&2 echo "re-mount failed ($res) with ${field} = ${fuzzverb}.")
++	fi
++
++	# See if repair finds a clean fs
++	_scratch_xfs_repair -n 2>&1
++	res=$?
++	test $res -ne 0 && \
++		(>&2 echo "re-repair failed ($res) with ${field} = ${fuzzverb}.")
++}
++
++# Make sure we have all the pieces we need for field fuzzing
++_require_scratch_xfs_fuzz_fields()
++{
++	_require_scratch
++	_require_scrub
++	_require_populate_commands
++	_scratch_mkfs_xfs >/dev/null 2>&1
++	_require_xfs_db_command "fuzz"
++}
++
++# Grab the list of available fuzzing verbs
++_scratch_xfs_list_fuzz_verbs() {
++	if [ -n "${SCRATCH_XFS_LIST_FUZZ_VERBS}" ]; then
++		echo "${SCRATCH_XFS_LIST_FUZZ_VERBS}" | sed -e 's/ /\n/g'
++		return;
++	fi
++	_scratch_xfs_db -x -c 'sb 0' -c 'fuzz' | grep '^Verbs:' | \
++		sed -e 's/[,.]//g' -e 's/Verbs: //g' -e 's/ /\n/g'
++}
++
++# Fuzz the fields of some piece of metadata
++_scratch_xfs_fuzz_fields() {
++	_scratch_xfs_list_metadata_fields "$@" | while read field; do
++		_scratch_xfs_list_fuzz_verbs | while read fuzzverb; do
++			__scratch_xfs_fuzz_mdrestore
++			__scratch_xfs_fuzz_field_test "${field}" "${fuzzverb}" "$@"
++		done
++	done
++}
 
