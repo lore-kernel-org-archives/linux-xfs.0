@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45586 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:45611 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751194AbdAEBRM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 20:17:12 -0500
-Subject: [PATCH 1/9] populate: create all types of XFS metadata
+        with ESMTP id S1751194AbdAEBRT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 20:17:19 -0500
+Subject: [PATCH 2/9] populate: add _require_populate_commands to check for
+ tools
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 04 Jan 2017 17:17:06 -0800
-Message-ID: <148357902687.10436.17971991022169598681.stgit@birch.djwong.org>
+Date: Wed, 04 Jan 2017 17:17:13 -0800
+Message-ID: <148357903318.10436.16326145791393674393.stgit@birch.djwong.org>
 In-Reply-To: <148357902056.10436.12795484251467155460.stgit@birch.djwong.org>
 References: <148357902056.10436.12795484251467155460.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,175 +19,379 @@ List-Id: xfs
 To: eguan@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-We have three new metadata types -- rmapbt, rtrmapbt, and refcountbt.
-Ensure that we populate the scratch fs with all three.
+Back when I created common/populate, I thought it was sufficient to
+_require the tools that the populate functions need in the main
+file.  This turned out to be a bit sloppy, so move them into a
+helper function and call it from everything that uses populate.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/populate |   93 ++++++++++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 85 insertions(+), 8 deletions(-)
+ common/populate |    9 ++++++---
+ tests/ext4/006  |    1 +
+ tests/xfs/083   |    3 +--
+ tests/xfs/085   |    1 +
+ tests/xfs/086   |    1 +
+ tests/xfs/087   |    1 +
+ tests/xfs/088   |    1 +
+ tests/xfs/089   |    1 +
+ tests/xfs/091   |    1 +
+ tests/xfs/093   |    1 +
+ tests/xfs/097   |    1 +
+ tests/xfs/098   |    1 +
+ tests/xfs/099   |    1 +
+ tests/xfs/100   |    1 +
+ tests/xfs/101   |    1 +
+ tests/xfs/102   |    1 +
+ tests/xfs/105   |    1 +
+ tests/xfs/112   |    1 +
+ tests/xfs/113   |    1 +
+ tests/xfs/117   |    1 +
+ tests/xfs/120   |    1 +
+ tests/xfs/123   |    1 +
+ tests/xfs/124   |    1 +
+ tests/xfs/125   |    1 +
+ tests/xfs/126   |    1 +
+ tests/xfs/269   |    1 +
+ tests/xfs/273   |    1 +
+ 27 files changed, 32 insertions(+), 5 deletions(-)
 
 
 diff --git a/common/populate b/common/populate
-index df6550d..9a90172 100644
+index 9a90172..39f2c51 100644
 --- a/common/populate
 +++ b/common/populate
-@@ -24,6 +24,7 @@
+@@ -22,9 +22,12 @@
+ #  Mountain View, CA 94043, USA, or: http://www.sgi.com
+ #-----------------------------------------------------------------------
  
- _require_xfs_io_command "falloc"
- _require_xfs_io_command "fpunch"
-+_require_test_program "punch-alternating"
+-_require_xfs_io_command "falloc"
+-_require_xfs_io_command "fpunch"
+-_require_test_program "punch-alternating"
++_require_populate_commands() {
++	_require_xfs_io_command "falloc"
++	_require_xfs_io_command "fpunch"
++	_require_test_program "punch-alternating"
++	_require_command "$XFS_DB_PROG" "xfs_db"
++}
  
  _require_xfs_db_blocktrash_z_command() {
  	test "${FSTYP}" = "xfs" || _notrun "cannot run xfs_db on ${FSTYP}"
-@@ -97,6 +98,12 @@ _scratch_xfs_populate() {
+diff --git a/tests/ext4/006 b/tests/ext4/006
+index f6cca66..9662f50 100755
+--- a/tests/ext4/006
++++ b/tests/ext4/006
+@@ -54,6 +54,7 @@ _supported_os Linux
  
- 	# Data:
+ _require_scratch
+ _require_attrs
++_require_populate_commands
  
-+	# Fill up the root inode chunk
-+	echo "+ fill root ino chunk"
-+	seq 1 64 | while read f; do
-+		$XFS_IO_PROG -f -c "truncate 0" "${SCRATCH_MNT}/dummy${f}"
-+	done
-+
- 	# Regular files
- 	# - FMT_EXTENTS
- 	echo "+ extents file"
-@@ -106,9 +113,7 @@ _scratch_xfs_populate() {
- 	echo "+ btree extents file"
- 	nr="$((blksz * 2 / 16))"
- 	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/S_IFREG.FMT_BTREE"
--	for i in $(seq 1 2 ${nr}); do
--		$XFS_IO_PROG -f -c "fpunch $((i * blksz)) ${blksz}" "${SCRATCH_MNT}/S_IFREG.FMT_BTREE"
--	done
-+	./src/punch-alternating "${SCRATCH_MNT}/S_IFREG.FMT_BTREE"
+ repair_scratch() {
+ 	fsck_pass="$1"
+diff --git a/tests/xfs/083 b/tests/xfs/083
+index 040f3b6..39bd75f 100755
+--- a/tests/xfs/083
++++ b/tests/xfs/083
+@@ -48,12 +48,11 @@ _cleanup()
+ _supported_fs xfs
+ _supported_os Linux
  
- 	# Directories
- 	# - INLINE
-@@ -128,6 +133,7 @@ _scratch_xfs_populate() {
- 	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_NODE" "$((16 * dblksz / 40))" true
+-_require_xfs_io_command "falloc"
+-_require_xfs_io_command "fpunch"
+ _require_scratch
+ #_require_xfs_crc	# checksum not required, but you probably want it anyway...
+ #_require_xfs_mkfs_crc
+ _require_attrs
++_require_populate_commands
  
- 	# - BTREE
-+	echo "+ btree dir"
- 	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$((128 * dblksz / 40))" true
+ scratch_repair() {
+ 	fsck_pass="$1"
+diff --git a/tests/xfs/085 b/tests/xfs/085
+index 1ca5354..0c85850 100755
+--- a/tests/xfs/085
++++ b/tests/xfs/085
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
  
- 	# Symlinks
-@@ -180,10 +186,43 @@ _scratch_xfs_populate() {
- 	$XFS_IO_PROG -f -c 'fsync' "${SCRATCH_MNT}/unused"
- 	rm -rf "${SCRATCH_MNT}/unused"
+ rm -f $seqres.full
+diff --git a/tests/xfs/086 b/tests/xfs/086
+index cf0a71a..787f886 100755
+--- a/tests/xfs/086
++++ b/tests/xfs/086
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-+	# Free space btree
-+	echo "+ freesp btree"
-+	nr="$((blksz * 2 / 8))"
-+	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/BNOBT"
-+	./src/punch-alternating "${SCRATCH_MNT}/BNOBT"
-+
-+	# Reverse-mapping btree
-+	is_rmapbt="$(xfs_info "${SCRATCH_MNT}" | grep -c 'rmapbt=1')"
-+	if [ $is_rmapbt -gt 0 ]; then
-+		echo "+ rmapbt btree"
-+		nr="$((blksz * 2 / 24))"
-+		$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/RMAPBT"
-+		./src/punch-alternating "${SCRATCH_MNT}/RMAPBT"
-+	fi
-+
-+	# Realtime Reverse-mapping btree
-+	is_rt="$(xfs_info "${SCRATCH_MNT}" | grep -c 'rtextents=[1-9]')"
-+	if [ $is_rmapbt -gt 0 ] && [ $is_rt -gt 0 ]; then
-+		echo "+ rtrmapbt btree"
-+		nr="$((blksz * 2 / 32))"
-+		$XFS_IO_PROG -f -R -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/RTRMAPBT"
-+		./src/punch-alternating "${SCRATCH_MNT}/RTRMAPBT"
-+	fi
-+
-+	# Reference-count btree
-+	is_reflink="$(xfs_info "${SCRATCH_MNT}" | grep -c 'reflink=1')"
-+	if [ $is_reflink -gt 0 ]; then
-+		echo "+ reflink btree"
-+		nr="$((blksz * 2 / 12))"
-+		$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/REFCOUNTBT"
-+		cp --reflink=always "${SCRATCH_MNT}/REFCOUNTBT" "${SCRATCH_MNT}/REFCOUNTBT2"
-+		./src/punch-alternating "${SCRATCH_MNT}/REFCOUNTBT"
-+	fi
-+
- 	# Copy some real files (xfs tests, I guess...)
- 	echo "+ real files"
--	#__populate_fill_fs "${SCRATCH_MNT}" 40
--	cp -pRdu --reflink=always "${SCRATCH_MNT}/S_IFREG.FMT_BTREE" "${SCRATCH_MNT}/S_IFREG.FMT_BTREE.REFLINK" 2> /dev/null
-+	__populate_fill_fs "${SCRATCH_MNT}" 5
+diff --git a/tests/xfs/087 b/tests/xfs/087
+index 0bb3ec1..58ba958 100755
+--- a/tests/xfs/087
++++ b/tests/xfs/087
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
- 	umount "${SCRATCH_MNT}"
- }
-@@ -212,9 +251,7 @@ _scratch_ext4_populate() {
- 	echo "+ extent tree file"
- 	nr="$((blksz * 2 / 12))"
- 	$XFS_IO_PROG -f -c "pwrite -S 0x62 0 $((blksz * nr))" "${SCRATCH_MNT}/S_IFREG.FMT_ETREE"
--	for i in $(seq 1 2 ${nr}); do
--		$XFS_IO_PROG -f -c "fpunch $((i * blksz)) ${blksz}" "${SCRATCH_MNT}/S_IFREG.FMT_ETREE"
--	done
-+	./src/punch-alternating "${SCRATCH_MNT}/S_IFREG.FMT_ETREE"
+diff --git a/tests/xfs/088 b/tests/xfs/088
+index d6972a4..36745b2 100755
+--- a/tests/xfs/088
++++ b/tests/xfs/088
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
- 	# Directories
- 	# - INLINE
-@@ -349,6 +386,39 @@ __populate_check_xfs_attr() {
- 	esac
- }
+diff --git a/tests/xfs/089 b/tests/xfs/089
+index 06996a5..52bdd54 100755
+--- a/tests/xfs/089
++++ b/tests/xfs/089
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
-+# Check that there's at least one per-AG btree with multiple levels
-+__populate_check_xfs_agbtree_height() {
-+	bt_type="$1"
-+	nr_ags=$(_scratch_xfs_db -c 'sb 0' -c 'p agcount' | awk '{print $3}')
-+
-+	case "${bt_type}" in
-+	"bno"|"cnt"|"rmap"|"refcnt")
-+		hdr="agf"
-+		bt_prefix="${bt_type}"
-+		;;
-+	"ino")
-+		hdr="agi"
-+		bt_prefix=""
-+		;;
-+	"fino")
-+		hdr="agi"
-+		bt_prefix="free_"
-+		;;
-+	*)
-+		_fail "Don't know about AG btree ${bt_type}"
-+		;;
-+	esac
-+
-+	seq 0 $((nr_ags - 1)) | while read ag; do
-+		bt_level=$(_scratch_xfs_db -c "${hdr} ${ag}" -c "p ${bt_prefix}level" | awk '{print $3}')
-+		if [ "${bt_level}" -gt 1 ]; then
-+			return 100
-+		fi
-+	done
-+	test $? -eq 100 || _fail "Failed to create ${bt_type} of sufficient height!"
-+	return 1
-+}
-+
- # Check that populate created all the types of files we wanted
- _scratch_xfs_populate_check() {
- 	_scratch_mount
-@@ -367,6 +437,9 @@ _scratch_xfs_populate_check() {
- 	leaf_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_LEAF")"
- 	node_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_NODE")"
- 	btree_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_BTREE")"
-+	is_finobt=$(xfs_info "${SCRATCH_MNT}" | grep -c 'finobt=1')
-+	is_rmapbt=$(xfs_info "${SCRATCH_MNT}" | grep -c 'rmapbt=1')
-+	is_reflink=$(xfs_info "${SCRATCH_MNT}" | grep -c 'reflink=1')
+diff --git a/tests/xfs/091 b/tests/xfs/091
+index a263cb0..ae62337 100755
+--- a/tests/xfs/091
++++ b/tests/xfs/091
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
- 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- 	dblksz="$(xfs_info "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-@@ -389,6 +462,10 @@ _scratch_xfs_populate_check() {
- 	__populate_check_xfs_attr "${node_attr}" "node"
- 	__populate_check_xfs_attr "${btree_attr}" "btree"
- 	__populate_check_xfs_aformat "${btree_attr}" "btree"
-+	__populate_check_xfs_agbtree_height "bno"
-+	__populate_check_xfs_agbtree_height "cnt"
-+	test -n $is_rmapbt && __populate_check_xfs_agbtree_height "rmap"
-+	test -n $is_reflink && __populate_check_xfs_agbtree_height "refcnt"
- }
+diff --git a/tests/xfs/093 b/tests/xfs/093
+index 753231e..0f9311e 100755
+--- a/tests/xfs/093
++++ b/tests/xfs/093
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
  
- # Check data fork format of ext4 file
+diff --git a/tests/xfs/097 b/tests/xfs/097
+index a75f06a..303ad04 100755
+--- a/tests/xfs/097
++++ b/tests/xfs/097
+@@ -52,6 +52,7 @@ _require_xfs_mkfs_finobt
+ _require_xfs_finobt
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/098 b/tests/xfs/098
+index 581377e..7873f32 100755
+--- a/tests/xfs/098
++++ b/tests/xfs/098
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/099 b/tests/xfs/099
+index 85193ab..7835df9 100755
+--- a/tests/xfs/099
++++ b/tests/xfs/099
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/100 b/tests/xfs/100
+index 3bfafce..ebb656d 100755
+--- a/tests/xfs/100
++++ b/tests/xfs/100
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/101 b/tests/xfs/101
+index d3abd19..709fc9d 100755
+--- a/tests/xfs/101
++++ b/tests/xfs/101
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/102 b/tests/xfs/102
+index cf0d7a6..3d51c6a 100755
+--- a/tests/xfs/102
++++ b/tests/xfs/102
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/105 b/tests/xfs/105
+index 07ccf00..fc91a4f 100755
+--- a/tests/xfs/105
++++ b/tests/xfs/105
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/112 b/tests/xfs/112
+index 84f1f1d..ae75684 100755
+--- a/tests/xfs/112
++++ b/tests/xfs/112
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/113 b/tests/xfs/113
+index ec328bc..c347db7 100755
+--- a/tests/xfs/113
++++ b/tests/xfs/113
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/117 b/tests/xfs/117
+index f251fb3..f0b95aa 100755
+--- a/tests/xfs/117
++++ b/tests/xfs/117
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/120 b/tests/xfs/120
+index 3deece6..5a38000 100755
+--- a/tests/xfs/120
++++ b/tests/xfs/120
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/123 b/tests/xfs/123
+index e6cd8e7..7355e86 100755
+--- a/tests/xfs/123
++++ b/tests/xfs/123
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/124 b/tests/xfs/124
+index cfea2e6..a828dd6 100755
+--- a/tests/xfs/124
++++ b/tests/xfs/124
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/125 b/tests/xfs/125
+index 3f2f6f0..3afb4cc 100755
+--- a/tests/xfs/125
++++ b/tests/xfs/125
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/126 b/tests/xfs/126
+index 77779e0..d696ff1 100755
+--- a/tests/xfs/126
++++ b/tests/xfs/126
+@@ -50,6 +50,7 @@ _supported_os Linux
+ _require_scratch
+ test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
+ _require_attrs
++_require_populate_commands
+ _require_xfs_db_blocktrash_z_command
+ test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 
+diff --git a/tests/xfs/269 b/tests/xfs/269
+index b51ce64..318dd22 100755
+--- a/tests/xfs/269
++++ b/tests/xfs/269
+@@ -44,6 +44,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_os Linux
+ _require_scratch
++_require_populate_commands
+ _require_test_program "attr-list-by-handle-cursor-test"
+ 
+ rm -f "$seqres.full"
+diff --git a/tests/xfs/273 b/tests/xfs/273
+index f4b57bb..1a4ee93 100755
+--- a/tests/xfs/273
++++ b/tests/xfs/273
+@@ -44,6 +44,7 @@ _cleanup()
+ _supported_os Linux
+ _supported_fs xfs
+ _require_scratch
++_require_populate_commands
+ _require_xfs_io_command "fsmap"
+ 
+ rm -f "$seqres.full"
 
