@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36713 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933960AbdAEBRh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 20:17:37 -0500
-Subject: [PATCH 5/9] common/fuzzy: move fuzzing helper functions here
+Received: from aserp1040.oracle.com ([141.146.126.69]:45715 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933960AbdAEBRp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 20:17:45 -0500
+Subject: [PATCH 6/9] populate: cache scratch metadata images
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 04 Jan 2017 17:17:32 -0800
-Message-ID: <148357905253.10436.560781214557366417.stgit@birch.djwong.org>
+Date: Wed, 04 Jan 2017 17:17:38 -0800
+Message-ID: <148357905878.10436.1866572956612127885.stgit@birch.djwong.org>
 In-Reply-To: <148357902056.10436.12795484251467155460.stgit@birch.djwong.org>
 References: <148357902056.10436.12795484251467155460.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,176 +18,87 @@ List-Id: xfs
 To: eguan@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Move some fuzzing helper functions into a new common/fuzzy file.
-We'll add a lot more fuzzing helpers in subsequent patches.
+Create a helper function to create a populated FS image and dump the
+metadata into a file on the test device, with the purpose of allowing
+future (fuzzer) invocations of _populate_fs use the cached metadata to
+save time.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/fuzzy    |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- common/populate |   35 -----------------------
- tests/ext4/006  |    1 +
- tests/xfs/083   |    1 +
- 4 files changed, 85 insertions(+), 35 deletions(-)
- create mode 100644 common/fuzzy
+ common/populate |   44 ++++++++++++++++++++++++++++++++++++++++++++
+ common/rc       |    3 ++-
+ 2 files changed, 46 insertions(+), 1 deletion(-)
 
 
-diff --git a/common/fuzzy b/common/fuzzy
-new file mode 100644
-index 0000000..1cc1d5e
---- /dev/null
-+++ b/common/fuzzy
-@@ -0,0 +1,83 @@
-+##/bin/bash
-+
-+# Routines for fuzzing and scrubbing a filesystem.
-+#
-+#-----------------------------------------------------------------------
-+#  Copyright (c) 2017 Oracle.  All Rights Reserved.
-+#  This program is free software; you can redistribute it and/or modify
-+#  it under the terms of the GNU General Public License as published by
-+#  the Free Software Foundation; either version 2 of the License, or
-+#  (at your option) any later version.
-+#
-+#  This program is distributed in the hope that it will be useful,
-+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+#  GNU General Public License for more details.
-+#
-+#  You should have received a copy of the GNU General Public License
-+#  along with this program; if not, write to the Free Software
-+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
-+#  USA
-+#
-+#  Contact information: Silicon Graphics, Inc., 1500 Crittenden Lane,
-+#  Mountain View, CA 94043, USA, or: http://www.sgi.com
-+#-----------------------------------------------------------------------
-+
-+# Modify various files after a fuzzing operation
-+_scratch_fuzz_modify() {
-+	nr="$1"
-+
-+	test -z "${nr}" && nr=50000
-+	echo "+++ touch ${nr} files"
-+	blk_sz=$(stat -f -c '%s' ${SCRATCH_MNT})
-+	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${blk_sz}" "/tmp/afile" > /dev/null
-+	date="$(date)"
-+	find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
-+		setfattr -n "user.date" -v "${date}" "$f"
-+		cat "/tmp/afile" >> "$f"
-+		mv "$f" "$f.longer"
-+	done
-+	sync
-+	rm -rf "/tmp/afile"
-+
-+	echo "+++ create files"
-+	mkdir -p "${SCRATCH_MNT}/test.moo"
-+	$XFS_IO_PROG -f -c 'pwrite -S 0x80 0 65536' "${SCRATCH_MNT}/test.moo/urk"
-+	sync
-+
-+	echo "+++ remove files"
-+	rm -rf "${SCRATCH_MNT}/test.moo"
-+}
-+
-+# Try to access files after fuzzing
-+_scratch_fuzz_test() {
-+	echo "+++ ls -laR" >> $seqres.full
-+	ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
-+
-+	echo "+++ cat files" >> $seqres.full
-+	(find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
-+}
-+
-+# Do we have an online scrub program?
-+_require_scrub() {
-+	case "${FSTYP}" in
-+	"xfs"|"ext4")
-+		test -x $XFS_SCRUB_PROG || _notrun "xfs_scrub not found"
-+		;;
-+	*)
-+		_notrun "No online scrub program for ${FSTYP}."
-+		;;
-+	esac
-+}
-+
-+# Scrub the scratch filesystem metadata (online)
-+_scratch_scrub() {
-+	case "${FSTYP}" in
-+	"xfs"|"ext4"|"ext3"|"ext2")
-+		$XFS_SCRUB_PROG -d -T -v "$@" $SCRATCH_MNT
-+		;;
-+	*)
-+		_fail "No online scrub program for ${FSTYP}."
-+		;;
-+	esac
-+}
 diff --git a/common/populate b/common/populate
-index 5808bc9..f012173 100644
+index f012173..91a7753 100644
 --- a/common/populate
 +++ b/common/populate
-@@ -606,41 +606,6 @@ _scratch_populate() {
- 	esac
+@@ -673,3 +673,47 @@ _fill_fs()
+ 		file_count=$((file_count + 1))
+ 	done
+ }
++
++# Populate a scratch FS from scratch or from a cached image.
++_scratch_populate_cached() {
++	POPULATE_METADUMP="${TEST_DIR}/__populate.${FSTYP}"
++	POPULATE_METADUMP_DESCR="${TEST_DIR}/__populate.${FSTYP}.txt"
++
++	# Don't keep metadata images cached for more 48 hours...
++	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
++
++	# Throw away cached image if it doesn't match our spec.
++	meta_descr="FSTYP ${FSTYP} MKFS_OPTIONS ${MKFS_OPTIONS} ARGS $@"
++	cmp -s "${POPULATE_METADUMP_DESCR}" <(echo "${meta_descr}") || rm -rf "${POPULATE_METADUMP}"
++
++	# Do we have a cached image?
++	if [ -r "${POPULATE_METADUMP}" ]; then
++		case "${FSTYP}" in
++		"xfs")
++			xfs_mdrestore "${POPULATE_METADUMP}" "${SCRATCH_DEV}" && return
++			;;
++		"ext2"|"ext3"|"ext4")
++			e2image -r "${POPULATE_METADUMP}" "${SCRATCH_DEV}" && return
++			;;
++		esac
++	fi
++
++	# Oh well, just create one from scratch
++	_scratch_mkfs
++	echo "${meta_descr}" > "${POPULATE_METADUMP_DESCR}"
++	case "${FSTYP}" in
++	"xfs")
++		_scratch_xfs_populate $@
++		_scratch_xfs_populate_check
++		_scratch_metadump "${POPULATE_METADUMP}" -a -o
++		;;
++	"ext2"|"ext3"|"ext4")
++		_scratch_ext4_populate $@
++		_scratch_ext4_populate_check
++		e2image -Q "${SCRATCH_DEV}" "${POPULATE_METADUMP}"
++		;;
++	*)
++		_fail "Don't know how to populate a ${FSTYP} filesystem."
++		;;
++	esac
++}
+diff --git a/common/rc b/common/rc
+index 46bfb68..6323f54 100644
+--- a/common/rc
++++ b/common/rc
+@@ -471,12 +471,13 @@ _scratch_do_mkfs()
+ _scratch_metadump()
+ {
+ 	dumpfile=$1
++	shift
+ 	options=
+ 
+ 	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+ 		options="-l $SCRATCH_LOGDEV"
+ 
+-	xfs_metadump $options $SCRATCH_DEV $dumpfile
++	xfs_metadump $options "$@" $SCRATCH_DEV $dumpfile
  }
  
--# Modify various files after a fuzzing operation
--_scratch_fuzz_modify() {
--	nr="$1"
--
--	test -z "${nr}" && nr=50000
--	echo "+++ touch ${nr} files"
--	blk_sz=$(stat -f -c '%s' ${SCRATCH_MNT})
--	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${blk_sz}" "/tmp/afile" > /dev/null
--	date="$(date)"
--	find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
--		setfattr -n "user.date" -v "${date}" "$f"
--		cat "/tmp/afile" >> "$f"
--		mv "$f" "$f.longer"
--	done
--	sync
--	rm -rf "/tmp/afile"
--
--	echo "+++ create files"
--	mkdir -p "${SCRATCH_MNT}/test.moo"
--	$XFS_IO_PROG -f -c 'pwrite -S 0x80 0 65536' "${SCRATCH_MNT}/test.moo/urk"
--	sync
--
--	echo "+++ remove files"
--	rm -rf "${SCRATCH_MNT}/test.moo"
--}
--
--# Try to access files after fuzzing
--_scratch_fuzz_test() {
--	echo "+++ ls -laR" >> $seqres.full
--	ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
--
--	echo "+++ cat files" >> $seqres.full
--	(find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
--}
--
- # Fill a file system by repeatedly creating files in the given folder
- # starting with the given file size.  Files are reduced in size when
- # they can no longer fit until no more files can be created.
-diff --git a/tests/ext4/006 b/tests/ext4/006
-index 9662f50..bb9b7e5 100755
---- a/tests/ext4/006
-+++ b/tests/ext4/006
-@@ -43,6 +43,7 @@ _cleanup()
- . ./common/filter
- . ./common/attr
- . ./common/populate
-+. ./common/fuzzy
- 
- if [ ! -x "$(which e2fuzz)" ]; then
- 	_notrun "Couldn't find e2fuzz"
-diff --git a/tests/xfs/083 b/tests/xfs/083
-index 39bd75f..e2b5f82 100755
---- a/tests/xfs/083
-+++ b/tests/xfs/083
-@@ -43,6 +43,7 @@ _cleanup()
- . ./common/filter
- . ./common/attr
- . ./common/populate
-+. ./common/fuzzy
- 
- # real QA test starts here
- _supported_fs xfs
+ _setup_large_ext4_fs()
 
