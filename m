@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45611 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751194AbdAEBRT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 20:17:19 -0500
-Subject: [PATCH 2/9] populate: add _require_populate_commands to check for
- tools
+Received: from userp1040.oracle.com ([156.151.31.81]:36664 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933960AbdAEBRY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 20:17:24 -0500
+Subject: [PATCH 3/9] populate: optionally fill the filesystem when
+ populating fs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 04 Jan 2017 17:17:13 -0800
-Message-ID: <148357903318.10436.16326145791393674393.stgit@birch.djwong.org>
+Date: Wed, 04 Jan 2017 17:17:19 -0800
+Message-ID: <148357903946.10436.15681089505539897730.stgit@birch.djwong.org>
 In-Reply-To: <148357902056.10436.12795484251467155460.stgit@birch.djwong.org>
 References: <148357902056.10436.12795484251467155460.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -19,379 +19,98 @@ List-Id: xfs
 To: eguan@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Back when I created common/populate, I thought it was sufficient to
-_require the tools that the populate functions need in the main
-file.  This turned out to be a bit sloppy, so move them into a
-helper function and call it from everything that uses populate.
+Be a little more flexible in how much we fill up a pre-populated
+filesystem.  For the field fuzzing tests, we don't need the extra
+space/inode usage and therefore won't want much at all.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/populate |    9 ++++++---
- tests/ext4/006  |    1 +
- tests/xfs/083   |    3 +--
- tests/xfs/085   |    1 +
- tests/xfs/086   |    1 +
- tests/xfs/087   |    1 +
- tests/xfs/088   |    1 +
- tests/xfs/089   |    1 +
- tests/xfs/091   |    1 +
- tests/xfs/093   |    1 +
- tests/xfs/097   |    1 +
- tests/xfs/098   |    1 +
- tests/xfs/099   |    1 +
- tests/xfs/100   |    1 +
- tests/xfs/101   |    1 +
- tests/xfs/102   |    1 +
- tests/xfs/105   |    1 +
- tests/xfs/112   |    1 +
- tests/xfs/113   |    1 +
- tests/xfs/117   |    1 +
- tests/xfs/120   |    1 +
- tests/xfs/123   |    1 +
- tests/xfs/124   |    1 +
- tests/xfs/125   |    1 +
- tests/xfs/126   |    1 +
- tests/xfs/269   |    1 +
- tests/xfs/273   |    1 +
- 27 files changed, 32 insertions(+), 5 deletions(-)
+ common/populate |   37 +++++++++++++++++++++++++++++--------
+ 1 file changed, 29 insertions(+), 8 deletions(-)
 
 
 diff --git a/common/populate b/common/populate
-index 9a90172..39f2c51 100644
+index 39f2c51..a23462d 100644
 --- a/common/populate
 +++ b/common/populate
-@@ -22,9 +22,12 @@
- #  Mountain View, CA 94043, USA, or: http://www.sgi.com
- #-----------------------------------------------------------------------
+@@ -73,26 +73,39 @@ __populate_create_attr() {
+ 	done
+ }
  
--_require_xfs_io_command "falloc"
--_require_xfs_io_command "fpunch"
--_require_test_program "punch-alternating"
-+_require_populate_commands() {
-+	_require_xfs_io_command "falloc"
-+	_require_xfs_io_command "fpunch"
-+	_require_test_program "punch-alternating"
-+	_require_command "$XFS_DB_PROG" "xfs_db"
-+}
+-# Fill up 60% of the remaining free space
++# Fill up some percentage of the remaining free space
+ __populate_fill_fs() {
+ 	dir="$1"
+ 	pct="$2"
+ 	test -z "${pct}" && pct=60
  
- _require_xfs_db_blocktrash_z_command() {
- 	test "${FSTYP}" = "xfs" || _notrun "cannot run xfs_db on ${FSTYP}"
-diff --git a/tests/ext4/006 b/tests/ext4/006
-index f6cca66..9662f50 100755
---- a/tests/ext4/006
-+++ b/tests/ext4/006
-@@ -54,6 +54,7 @@ _supported_os Linux
+-	SRC_SZ="$(du -ks "${SRCDIR}" | cut -f 1)"
++	mkdir -p "${dir}/test/1"
++	cp -pRdu "${dir}"/S_IFREG* "${dir}/test/1/"
++
++	SRC_SZ="$(du -ks "${dir}/test/1" | cut -f 1)"
+ 	FS_SZ="$(( $(stat -f "${dir}" -c '%a * %S') / 1024 ))"
  
- _require_scratch
- _require_attrs
-+_require_populate_commands
+ 	NR="$(( (FS_SZ * ${pct} / 100) / SRC_SZ ))"
+-	test "${NR}" -lt 1 && NR=1
  
- repair_scratch() {
- 	fsck_pass="$1"
-diff --git a/tests/xfs/083 b/tests/xfs/083
-index 040f3b6..39bd75f 100755
---- a/tests/xfs/083
-+++ b/tests/xfs/083
-@@ -48,12 +48,11 @@ _cleanup()
- _supported_fs xfs
- _supported_os Linux
+-	seq 1 "${NR}" | while read nr; do
+-		cp -pRdu "${SRCDIR}" "${dir}/test.${nr}" >> $seqres.full 2>&1
++	echo "FILL FS"
++	echo "src_sz $SRC_SZ fs_sz $FS_SZ nr $NR"
++	seq 2 "${NR}" | while read nr; do
++		cp -pRdu "${dir}/test/1" "${dir}/test/${nr}"
+ 	done
+ }
  
--_require_xfs_io_command "falloc"
--_require_xfs_io_command "fpunch"
- _require_scratch
- #_require_xfs_crc	# checksum not required, but you probably want it anyway...
- #_require_xfs_mkfs_crc
- _require_attrs
-+_require_populate_commands
+ # Populate an XFS on the scratch device with (we hope) all known
+ # types of metadata block
+ _scratch_xfs_populate() {
++	fill=1
++
++	for arg in $@; do
++		case "${arg}" in
++		"nofill")
++			fill=0;;
++		esac
++	done
++
+ 	_scratch_mount
+ 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+ 	dblksz="$(xfs_info "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
+@@ -225,7 +238,7 @@ _scratch_xfs_populate() {
  
- scratch_repair() {
- 	fsck_pass="$1"
-diff --git a/tests/xfs/085 b/tests/xfs/085
-index 1ca5354..0c85850 100755
---- a/tests/xfs/085
-+++ b/tests/xfs/085
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
+ 	# Copy some real files (xfs tests, I guess...)
+ 	echo "+ real files"
+-	__populate_fill_fs "${SCRATCH_MNT}" 5
++	test $fill -ne 0 && __populate_fill_fs "${SCRATCH_MNT}" 5
  
- rm -f $seqres.full
-diff --git a/tests/xfs/086 b/tests/xfs/086
-index cf0a71a..787f886 100755
---- a/tests/xfs/086
-+++ b/tests/xfs/086
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 	umount "${SCRATCH_MNT}"
+ }
+@@ -233,6 +246,15 @@ _scratch_xfs_populate() {
+ # Populate an ext4 on the scratch device with (we hope) all known
+ # types of metadata block
+ _scratch_ext4_populate() {
++	fill=1
++
++	for arg in $@; do
++		case "${arg}" in
++		"nofill")
++			fill=0;;
++		esac
++	done
++
+ 	_scratch_mount
+ 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+ 	dblksz="${blksz}"
+@@ -300,8 +322,7 @@ _scratch_ext4_populate() {
  
-diff --git a/tests/xfs/087 b/tests/xfs/087
-index 0bb3ec1..58ba958 100755
---- a/tests/xfs/087
-+++ b/tests/xfs/087
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
+ 	# Copy some real files (xfs tests, I guess...)
+ 	echo "+ real files"
+-	__populate_fill_fs "${SCRATCH_MNT}"
+-	cp -pRdu --reflink=always "${SCRATCH_MNT}/S_IFREG.FMT_ETREE" "${SCRATCH_MNT}/S_IREG.FMT_ETREE.REFLINK" 2> /dev/null
++	test $fill -ne 0 && __populate_fill_fs "${SCRATCH_MNT}" 5
  
-diff --git a/tests/xfs/088 b/tests/xfs/088
-index d6972a4..36745b2 100755
---- a/tests/xfs/088
-+++ b/tests/xfs/088
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/089 b/tests/xfs/089
-index 06996a5..52bdd54 100755
---- a/tests/xfs/089
-+++ b/tests/xfs/089
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/091 b/tests/xfs/091
-index a263cb0..ae62337 100755
---- a/tests/xfs/091
-+++ b/tests/xfs/091
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/093 b/tests/xfs/093
-index 753231e..0f9311e 100755
---- a/tests/xfs/093
-+++ b/tests/xfs/093
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/097 b/tests/xfs/097
-index a75f06a..303ad04 100755
---- a/tests/xfs/097
-+++ b/tests/xfs/097
-@@ -52,6 +52,7 @@ _require_xfs_mkfs_finobt
- _require_xfs_finobt
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/098 b/tests/xfs/098
-index 581377e..7873f32 100755
---- a/tests/xfs/098
-+++ b/tests/xfs/098
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/099 b/tests/xfs/099
-index 85193ab..7835df9 100755
---- a/tests/xfs/099
-+++ b/tests/xfs/099
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/100 b/tests/xfs/100
-index 3bfafce..ebb656d 100755
---- a/tests/xfs/100
-+++ b/tests/xfs/100
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/101 b/tests/xfs/101
-index d3abd19..709fc9d 100755
---- a/tests/xfs/101
-+++ b/tests/xfs/101
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/102 b/tests/xfs/102
-index cf0d7a6..3d51c6a 100755
---- a/tests/xfs/102
-+++ b/tests/xfs/102
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/105 b/tests/xfs/105
-index 07ccf00..fc91a4f 100755
---- a/tests/xfs/105
-+++ b/tests/xfs/105
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/112 b/tests/xfs/112
-index 84f1f1d..ae75684 100755
---- a/tests/xfs/112
-+++ b/tests/xfs/112
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/113 b/tests/xfs/113
-index ec328bc..c347db7 100755
---- a/tests/xfs/113
-+++ b/tests/xfs/113
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/117 b/tests/xfs/117
-index f251fb3..f0b95aa 100755
---- a/tests/xfs/117
-+++ b/tests/xfs/117
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/120 b/tests/xfs/120
-index 3deece6..5a38000 100755
---- a/tests/xfs/120
-+++ b/tests/xfs/120
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/123 b/tests/xfs/123
-index e6cd8e7..7355e86 100755
---- a/tests/xfs/123
-+++ b/tests/xfs/123
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/124 b/tests/xfs/124
-index cfea2e6..a828dd6 100755
---- a/tests/xfs/124
-+++ b/tests/xfs/124
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/125 b/tests/xfs/125
-index 3f2f6f0..3afb4cc 100755
---- a/tests/xfs/125
-+++ b/tests/xfs/125
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/126 b/tests/xfs/126
-index 77779e0..d696ff1 100755
---- a/tests/xfs/126
-+++ b/tests/xfs/126
-@@ -50,6 +50,7 @@ _supported_os Linux
- _require_scratch
- test -n "${FORCE_FUZZ}" || _require_scratch_xfs_crc
- _require_attrs
-+_require_populate_commands
- _require_xfs_db_blocktrash_z_command
- test -z "${FUZZ_ARGS}" && FUZZ_ARGS="-n 8 -3"
- 
-diff --git a/tests/xfs/269 b/tests/xfs/269
-index b51ce64..318dd22 100755
---- a/tests/xfs/269
-+++ b/tests/xfs/269
-@@ -44,6 +44,7 @@ _cleanup()
- # real QA test starts here
- _supported_os Linux
- _require_scratch
-+_require_populate_commands
- _require_test_program "attr-list-by-handle-cursor-test"
- 
- rm -f "$seqres.full"
-diff --git a/tests/xfs/273 b/tests/xfs/273
-index f4b57bb..1a4ee93 100755
---- a/tests/xfs/273
-+++ b/tests/xfs/273
-@@ -44,6 +44,7 @@ _cleanup()
- _supported_os Linux
- _supported_fs xfs
- _require_scratch
-+_require_populate_commands
- _require_xfs_io_command "fsmap"
- 
- rm -f "$seqres.full"
+ 	umount "${SCRATCH_MNT}"
+ }
 
