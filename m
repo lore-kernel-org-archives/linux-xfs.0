@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42134 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:42221 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761556AbdAEBFI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 20:05:08 -0500
-Subject: [PATCH 4/7] reflink: fix quota tests to work properly
+        with ESMTP id S967431AbdAEBFO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 20:05:14 -0500
+Subject: [PATCH 5/7] reflink: make error reporting consistent when
+ simulating EIO
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 04 Jan 2017 17:05:01 -0800
-Message-ID: <148357830178.7677.13949115107817848755.stgit@birch.djwong.org>
+Date: Wed, 04 Jan 2017 17:05:08 -0800
+Message-ID: <148357830813.7677.9130598389604768014.stgit@birch.djwong.org>
 In-Reply-To: <148357827617.7677.15595044775254927245.stgit@birch.djwong.org>
 References: <148357827617.7677.15595044775254927245.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,612 +19,343 @@ List-Id: xfs
 To: eguan@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Fix the reflink quota tests to su to the fsgqa user so that we actually
-test enforcement of quotas.  Seems that XFS enforces user quotas even
-if root is writing to a user file, whereas everything else lets root
-writes through.  Also clean up some of the variable usage and
-_require_user.
+When we're using dm-error to simulate failed devices, we don't really
+know if the write or the fdatasync is going to receive the EIO.  For
+tests that make a single (failed) write attempt and never retry, it's
+sufficient to check that the file md5 doesn't change after recovery.
+For tests that /do/ retry the write, we should capture the entire output
+and just look for the word error instead of enshrining the exact perror
+message (filename/function call and everything) in the golden output.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: Refactor the quota block reporting into a helper function and
-port all the existing tests.  Fix "fsgqa"/$qa_user usage too.
----
- common/quota          |   10 ++++++++++
- tests/generic/305     |   22 ++++++++++------------
- tests/generic/305.out |   30 +++++++++++++++---------------
- tests/generic/326     |   22 ++++++++++------------
- tests/generic/326.out |   30 +++++++++++++++---------------
- tests/generic/327     |   19 +++++++++----------
- tests/generic/327.out |   12 ++++++------
- tests/generic/328     |   29 ++++++++++++++---------------
- tests/generic/328.out |   28 ++++++++++++++--------------
- tests/xfs/213         |   22 ++++++++++------------
- tests/xfs/213.out     |   30 +++++++++++++++---------------
- tests/xfs/214         |   22 ++++++++++------------
- tests/xfs/214.out     |   30 +++++++++++++++---------------
- 13 files changed, 153 insertions(+), 153 deletions(-)
+ tests/generic/265     |    6 +++++-
+ tests/generic/265.out |    1 -
+ tests/generic/266     |    5 ++++-
+ tests/generic/266.out |    1 -
+ tests/generic/267     |    2 +-
+ tests/generic/268     |    5 ++++-
+ tests/generic/268.out |    1 -
+ tests/generic/271     |    5 +++--
+ tests/generic/271.out |    1 -
+ tests/generic/272     |    5 +++--
+ tests/generic/272.out |    1 -
+ tests/generic/276     |    2 +-
+ tests/generic/276.out |    1 -
+ tests/generic/278     |    5 +++--
+ tests/generic/278.out |    1 -
+ tests/generic/279     |    4 ++--
+ tests/generic/279.out |    1 -
+ tests/generic/281     |    4 ++--
+ tests/generic/281.out |    1 -
+ tests/generic/282     |    3 +--
+ tests/generic/283     |    6 ++++--
+ tests/generic/283.out |    1 -
+ 22 files changed, 33 insertions(+), 29 deletions(-)
 
 
-diff --git a/common/quota b/common/quota
-index d4ae861..5c6e680 100644
---- a/common/quota
-+++ b/common/quota
-@@ -302,5 +302,15 @@ _check_quota_usage()
- 	}
- }
- 
-+# Report the block usage of root, $qa_user, and nobody
-+_report_quota_blocks() {
-+	repquota $SCRATCH_MNT | egrep "^($qa_user|root|nobody)" | awk '{print $1, $3, $4, $5}'
-+}
-+
-+# Report the inode usage of root, $qa_user, and nobody
-+_report_quota_inodes() {
-+	repquota $SCRATCH_MNT | egrep "^($qa_user|root|nobody)" | awk '{print $1, $6, $7, $8}'
-+}
-+
- # make sure this script returns success
- /bin/true
-diff --git a/tests/generic/305 b/tests/generic/305
-index d73d87f..f0799eb 100755
---- a/tests/generic/305
-+++ b/tests/generic/305
-@@ -49,10 +49,8 @@ _require_cp_reflink
- _require_fiemap
- _require_quota
- _require_nobody
-+_require_user
- 
--_repquota() {
--	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
--}
- rm -f $seqres.full
- 
- echo "Format and mount"
-@@ -73,27 +71,27 @@ _cp_reflink $testdir/file1 $testdir/file3 >> $seqres.full
- touch $testdir/urk
- chown nobody $testdir/urk
- touch $testdir/erk
--chown fsgqa $testdir/erk
--_repquota
-+chown $qa_user $testdir/erk
-+_report_quota_blocks
- _scratch_cycle_mount
- 
- echo "Change file ownership"
--chown fsgqa $testdir/file1
--chown fsgqa $testdir/file2
--chown fsgqa $testdir/file3
--_repquota
-+chown $qa_user $testdir/file1
-+chown $qa_user $testdir/file2
-+chown $qa_user $testdir/file3
-+_report_quota_blocks
- 
- echo "CoW one of the files"
- $XFS_IO_PROG -f -c "pwrite -S 0x63 -b $((sz/2)) 0 $((sz/2))" -c "fsync" $testdir/file2 >> $seqres.full
--_repquota
-+_report_quota_blocks
- 
- echo "Remount the FS to see if accounting changes"
- _scratch_cycle_mount
--_repquota
-+_report_quota_blocks
- 
- echo "Chown one of the files"
- chown nobody $testdir/file3
--_repquota
-+_report_quota_blocks
- 
- # success, all done
- status=0
-diff --git a/tests/generic/305.out b/tests/generic/305.out
-index 0bfd620..fbd4e24 100644
---- a/tests/generic/305.out
-+++ b/tests/generic/305.out
-@@ -1,22 +1,22 @@
- QA output created by 305
- Format and mount
- Create the original files
--root      --    3072       0       0              7     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --       0       0       0              1     0     0       
-+root 3072 0 0
-+nobody 0 0 0
-+fsgqa 0 0 0
- Change file ownership
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3072       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3072 0 0
- CoW one of the files
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3072       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3072 0 0
- Remount the FS to see if accounting changes
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3072       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3072 0 0
- Chown one of the files
--root      --       0       0       0              4     0     0       
--nobody    --    1024       0       0              2     0     0       
--fsgqa     --    2048       0       0              3     0     0       
-+root 0 0 0
-+nobody 1024 0 0
-+fsgqa 2048 0 0
-diff --git a/tests/generic/326 b/tests/generic/326
-index 8afc6a2..a41e0cf 100755
---- a/tests/generic/326
-+++ b/tests/generic/326
-@@ -50,10 +50,8 @@ _require_fiemap
- _require_quota
- _require_nobody
- _require_odirect
-+_require_user
- 
--_repquota() {
--	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
--}
- rm -f $seqres.full
- 
- echo "Format and mount"
-@@ -74,27 +72,27 @@ _cp_reflink $testdir/file1 $testdir/file3 >> $seqres.full
- touch $testdir/urk
- chown nobody $testdir/urk
- touch $testdir/erk
--chown fsgqa $testdir/erk
--_repquota
-+chown $qa_user $testdir/erk
-+_report_quota_blocks
- _scratch_cycle_mount
- 
- echo "Change file ownership"
--chown fsgqa $testdir/file1
--chown fsgqa $testdir/file2
--chown fsgqa $testdir/file3
--_repquota
-+chown $qa_user $testdir/file1
-+chown $qa_user $testdir/file2
-+chown $qa_user $testdir/file3
-+_report_quota_blocks
- 
- echo "CoW one of the files"
- $XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $((sz/2)) 0 $((sz/2))" -c "fsync" $testdir/file2 >> $seqres.full
--_repquota
-+_report_quota_blocks
- 
- echo "Remount the FS to see if accounting changes"
- _scratch_cycle_mount
--_repquota
-+_report_quota_blocks
- 
- echo "Chown one of the files"
- chown nobody $testdir/file3
--_repquota
-+_report_quota_blocks
- 
- # success, all done
- status=0
-diff --git a/tests/generic/326.out b/tests/generic/326.out
-index e771eb7..de7f20b 100644
---- a/tests/generic/326.out
-+++ b/tests/generic/326.out
-@@ -1,22 +1,22 @@
- QA output created by 326
- Format and mount
- Create the original files
--root      --    3072       0       0              7     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --       0       0       0              1     0     0       
-+root 3072 0 0
-+nobody 0 0 0
-+fsgqa 0 0 0
- Change file ownership
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3072       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3072 0 0
- CoW one of the files
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3072       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3072 0 0
- Remount the FS to see if accounting changes
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3072       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3072 0 0
- Chown one of the files
--root      --       0       0       0              4     0     0       
--nobody    --    1024       0       0              2     0     0       
--fsgqa     --    2048       0       0              3     0     0       
-+root 0 0 0
-+nobody 1024 0 0
-+fsgqa 2048 0 0
-diff --git a/tests/generic/327 b/tests/generic/327
-index c165ad5..2f132fe 100755
---- a/tests/generic/327
-+++ b/tests/generic/327
-@@ -48,10 +48,8 @@ _require_cp_reflink
- _require_fiemap
- _require_quota
- _require_nobody
-+_require_user
- 
--_repquota() {
--	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
--}
- rm -f $seqres.full
- 
- echo "Format and mount"
-@@ -67,20 +65,21 @@ mkdir $testdir
- sz=1048576
- echo "Create the original files"
- $XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file1 >> $seqres.full
--chown fsgqa $testdir/file1
-+chown $qa_user $testdir/file1
- _cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
--_repquota
-+_report_quota_blocks
- _scratch_cycle_mount
-+quotaon $SCRATCH_MNT 2> /dev/null
- 
- echo "Set hard quota to prevent third reflink"
--setquota -u fsgqa 0 1024 0 0 $SCRATCH_MNT
--_repquota
-+setquota -u $qa_user 0 1024 0 0 $SCRATCH_MNT
-+_report_quota_blocks
- 
- echo "Try to reflink again"
- touch $testdir/file3
--chown fsgqa $testdir/file3
--_cp_reflink $testdir/file1 $testdir/file3 2>&1 | _filter_scratch
--_repquota
-+chown $qa_user $testdir/file3
-+su $qa_user -c "cp --reflink=always -f $testdir/file1 $testdir/file3" 2>&1 | _filter_scratch
-+_report_quota_blocks
- 
- # success, all done
- status=0
-diff --git a/tests/generic/327.out b/tests/generic/327.out
-index 7160ff2..f4e145a 100644
---- a/tests/generic/327.out
-+++ b/tests/generic/327.out
-@@ -1,12 +1,12 @@
- QA output created by 327
- Format and mount
- Create the original files
--root      --       0       0       0              4     0     0       
--fsgqa     --    2048       0       0              2     0     0       
-+root 0 0 0
-+fsgqa 2048 0 0
- Set hard quota to prevent third reflink
--root      --       0       0       0              4     0     0       
--fsgqa     +-    2048       0    1024              2     0     0       
-+root 0 0 0
-+fsgqa 2048 0 1024
- Try to reflink again
- cp: failed to clone 'SCRATCH_MNT/test-327/file3' from 'SCRATCH_MNT/test-327/file1': Disk quota exceeded
--root      --       0       0       0              4     0     0       
--fsgqa     +-    2048       0    1024              3     0     0       
-+root 0 0 0
-+fsgqa 2048 0 1024
-diff --git a/tests/generic/328 b/tests/generic/328
-index 705368e..dbf094f 100755
---- a/tests/generic/328
-+++ b/tests/generic/328
-@@ -49,10 +49,8 @@ _require_fiemap
- _require_quota
- _require_nobody
- _require_odirect
-+_require_user
- 
--_repquota() {
--	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
--}
- rm -f $seqres.full
- 
- echo "Format and mount"
-@@ -68,39 +66,40 @@ mkdir $testdir
- sz=1048576
- echo "Create the original files"
- $XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file1 >> $seqres.full
--chown fsgqa $testdir/file1
-+chown $qa_user $testdir/file1
- _cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
- _cp_reflink $testdir/file1 $testdir/file3 >> $seqres.full
--_repquota
-+_report_quota_blocks
- _scratch_cycle_mount
-+quotaon $SCRATCH_MNT 2> /dev/null
- 
- echo "Set hard quota to prevent rewrite"
--setquota -u fsgqa 0 1024 0 0 $SCRATCH_MNT
--_repquota
-+setquota -u $qa_user 0 1024 0 0 $SCRATCH_MNT
-+_report_quota_blocks
- 
- echo "Try to dio write the whole file"
--_pwrite_byte 0x62 0 $sz $testdir/file1 -d 2>&1 >> $seqres.full | \
-+su $qa_user -c '$XFS_IO_PROG -d -c "pwrite 0 '$((sz+65536))'" '$testdir'/file1' 2>&1 >> $seqres.full | \
- 	_filter_xfs_io_error
--_repquota
-+_report_quota_blocks
- 
- echo "Try to write the whole file"
--_pwrite_byte 0x62 0 $sz $testdir/file1 2>&1 >> $seqres.full | \
-+su $qa_user -c '$XFS_IO_PROG -c "pwrite 0 '$((sz+65536))'" '$testdir'/file1' 2>&1 >> $seqres.full | \
- 	_filter_xfs_io_error
--_repquota
-+_report_quota_blocks
- 
- echo "Set hard quota to allow rewrite"
--setquota -u fsgqa 0 8192 0 0 $SCRATCH_MNT
--_repquota
-+setquota -u $qa_user 0 8192 0 0 $SCRATCH_MNT
-+_report_quota_blocks
- 
- echo "Try to dio write the whole file"
- _pwrite_byte 0x62 0 $sz $testdir/file1 -d >> $seqres.full
+diff --git a/tests/generic/265 b/tests/generic/265
+index 8e9d5bc..ceddfbe 100755
+--- a/tests/generic/265
++++ b/tests/generic/265
+@@ -80,7 +80,11 @@ md5sum $testdir/file2 | _filter_scratch
+ echo "CoW and unmount"
  sync
--_repquota
-+_report_quota_blocks
- 
- echo "Try to write the whole file"
- _pwrite_byte 0x62 0 $sz $testdir/file3 >> $seqres.full
+ _dmerror_load_error_table
+-$XFS_IO_PROG -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" -c "fdatasync" $testdir/file2 >> $seqres.full
++urk=$($XFS_IO_PROG -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" \
++	-c "fdatasync" $testdir/file2 2>&1)
++echo $urk >> $seqres.full
++echo "$urk" | grep -q "error" || _fail "pwrite did not fail"
++
+ _dmerror_load_working_table
+ _dmerror_unmount
+ _dmerror_mount
+diff --git a/tests/generic/265.out b/tests/generic/265.out
+index 1b67114..31eb4e9 100644
+--- a/tests/generic/265.out
++++ b/tests/generic/265.out
+@@ -5,7 +5,6 @@ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-265/file1
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-265/file2
+ CoW and unmount
+-fdatasync: Input/output error
+ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-265/file1
+ Check for damage
+diff --git a/tests/generic/266 b/tests/generic/266
+index 4f9816a..09541c8 100755
+--- a/tests/generic/266
++++ b/tests/generic/266
+@@ -80,7 +80,10 @@ md5sum $testdir/file2 | _filter_scratch
+ echo "CoW and unmount"
  sync
--_repquota
-+_report_quota_blocks
+ _dmerror_load_error_table
+-$XFS_IO_PROG -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" -c "fdatasync" $testdir/file2 >> $seqres.full
++urk=$($XFS_IO_PROG -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" \
++	-c "fdatasync" $testdir/file2 2>&1)
++echo $urk >> $seqres.full
++echo "$urk" | grep -q "error" || _fail "pwrite did not fail"
  
- # success, all done
- status=0
-diff --git a/tests/generic/328.out b/tests/generic/328.out
-index 4630151..b7fe9f8 100644
---- a/tests/generic/328.out
-+++ b/tests/generic/328.out
-@@ -1,25 +1,25 @@
- QA output created by 328
- Format and mount
- Create the original files
--root      --       0       0       0              4     0     0       
--fsgqa     --    3072       0       0              3     0     0       
-+root 0 0 0
-+fsgqa 3072 0 0
- Set hard quota to prevent rewrite
--root      --       0       0       0              4     0     0       
--fsgqa     +-    3072       0    1024              3     0     0       
-+root 0 0 0
-+fsgqa 3072 0 1024
- Try to dio write the whole file
- pwrite: Disk quota exceeded
--root      --       0       0       0              4     0     0       
--fsgqa     +-    3072       0    1024              3     0     0       
-+root 0 0 0
-+fsgqa 3072 0 1024
- Try to write the whole file
- pwrite: Disk quota exceeded
--root      --       0       0       0              4     0     0       
--fsgqa     +-    3072       0    1024              3     0     0       
-+root 0 0 0
-+fsgqa 3072 0 1024
- Set hard quota to allow rewrite
--root      --       0       0       0              4     0     0       
--fsgqa     --    3072       0    8192              3     0     0       
-+root 0 0 0
-+fsgqa 3072 0 8192
- Try to dio write the whole file
--root      --       0       0       0              4     0     0       
--fsgqa     --    3072       0    8192              3     0     0       
-+root 0 0 0
-+fsgqa 3072 0 8192
- Try to write the whole file
--root      --       0       0       0              4     0     0       
--fsgqa     --    3072       0    8192              3     0     0       
-+root 0 0 0
-+fsgqa 3072 0 8192
-diff --git a/tests/xfs/213 b/tests/xfs/213
-index d5cc129..8e3565e 100755
---- a/tests/xfs/213
-+++ b/tests/xfs/213
-@@ -52,10 +52,8 @@ _require_fiemap
- _require_quota
- _require_nobody
- _require_xfs_io_command "cowextsize"
-+_require_user
+ echo "Clean up the mess"
+ _dmerror_unmount
+diff --git a/tests/generic/266.out b/tests/generic/266.out
+index dd34ad3..1641654 100644
+--- a/tests/generic/266.out
++++ b/tests/generic/266.out
+@@ -5,7 +5,6 @@ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-266/file1
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-266/file2
+ CoW and unmount
+-fdatasync: Input/output error
+ Clean up the mess
+ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-266/file1
+diff --git a/tests/generic/267 b/tests/generic/267
+index e3a6b0c..2ec6ad9 100755
+--- a/tests/generic/267
++++ b/tests/generic/267
+@@ -80,7 +80,7 @@ md5sum $testdir/file2 | _filter_scratch
+ echo "CoW and unmount"
+ sync
+ _dmerror_load_error_table
+-$XFS_IO_PROG -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" $testdir/file2 >> $seqres.full
++$XFS_IO_PROG -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" $testdir/file2 >> $seqres.full 2>&1
+ _dmerror_load_working_table
+ rm -rf $testdir/file2 >> $seqres.full 2>&1
+ _dmerror_unmount
+diff --git a/tests/generic/268 b/tests/generic/268
+index c7dcd57..b7d16ab 100755
+--- a/tests/generic/268
++++ b/tests/generic/268
+@@ -81,7 +81,10 @@ md5sum $testdir/file2 | _filter_scratch
+ echo "CoW and unmount"
+ sync
+ _dmerror_load_error_table
+-$XFS_IO_PROG -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" -c "fdatasync" $testdir/file2 >> $seqres.full
++urk=$($XFS_IO_PROG -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" \
++	-c "fdatasync" $testdir/file2 2>&1)
++echo $urk >> $seqres.full
++echo "$urk" | grep -q "error" || _fail "pwrite did not fail"
+ _dmerror_load_working_table
  
--_repquota() {
--	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
--}
- rm -f $seqres.full
+ echo "Rewrite"
+diff --git a/tests/generic/268.out b/tests/generic/268.out
+index 234e8be..1a3b39a 100644
+--- a/tests/generic/268.out
++++ b/tests/generic/268.out
+@@ -5,7 +5,6 @@ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-268/file1
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-268/file2
+ CoW and unmount
+-fdatasync: Input/output error
+ Rewrite
+ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-268/file1
+diff --git a/tests/generic/271 b/tests/generic/271
+index ded8854..9439327 100755
+--- a/tests/generic/271
++++ b/tests/generic/271
+@@ -81,8 +81,9 @@ md5sum $testdir/file2 | _filter_scratch
+ echo "CoW and unmount"
+ sync
+ _dmerror_load_error_table
+-$XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" $testdir/file2 \
+-	2>&1 >> $seqres.full | _filter_xfs_io_error
++urk=$($XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" $testdir/file2 2>&1)
++echo $urk >> $seqres.full
++echo "$urk" | grep -q "error" || _fail "dio pwrite did not fail"
+ _dmerror_load_working_table
+ _dmerror_unmount
+ _dmerror_mount
+diff --git a/tests/generic/271.out b/tests/generic/271.out
+index 54d5b0d..9b44ee7 100644
+--- a/tests/generic/271.out
++++ b/tests/generic/271.out
+@@ -5,7 +5,6 @@ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-271/file1
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-271/file2
+ CoW and unmount
+-pwrite: Input/output error
+ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-271/file1
+ Check for damage
+diff --git a/tests/generic/272 b/tests/generic/272
+index 5bc5b39..243adf5 100755
+--- a/tests/generic/272
++++ b/tests/generic/272
+@@ -81,8 +81,9 @@ md5sum $testdir/file2 | _filter_scratch
+ echo "CoW and unmount"
+ sync
+ _dmerror_load_error_table
+-$XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" $testdir/file2 \
+-	2>&1 >> $seqres.full | _filter_xfs_io_error
++urk=$($XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" $testdir/file2 2>&1)
++echo $urk >> $seqres.full
++echo "$urk" | grep -q "error" || _fail "dio pwrite did not fail"
  
- echo "Format and mount"
-@@ -78,27 +76,27 @@ _cp_reflink $testdir/file1 $testdir/file3 >> $seqres.full
- touch $testdir/urk
- chown nobody $testdir/urk
- touch $testdir/erk
--chown fsgqa $testdir/erk
--_repquota
-+chown $qa_user $testdir/erk
-+_report_quota_blocks
- _scratch_cycle_mount
+ echo "Clean up the mess"
+ _dmerror_unmount
+diff --git a/tests/generic/272.out b/tests/generic/272.out
+index 0b8bdca..10ecda9 100644
+--- a/tests/generic/272.out
++++ b/tests/generic/272.out
+@@ -5,7 +5,6 @@ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-272/file1
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-272/file2
+ CoW and unmount
+-pwrite: Input/output error
+ Clean up the mess
+ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-272/file1
+diff --git a/tests/generic/276 b/tests/generic/276
+index 83b902e..34b0029 100755
+--- a/tests/generic/276
++++ b/tests/generic/276
+@@ -82,7 +82,7 @@ echo "CoW and unmount"
+ sync
+ _dmerror_load_error_table
+ $XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" $testdir/file2 \
+-	2>&1 >> $seqres.full | _filter_xfs_io_error
++	>> $seqres.full 2>&1
+ _dmerror_load_working_table
+ rm -rf $testdir/file2 >> $seqres.full 2>&1
+ _dmerror_unmount
+diff --git a/tests/generic/276.out b/tests/generic/276.out
+index 88a0162..a080dd0 100644
+--- a/tests/generic/276.out
++++ b/tests/generic/276.out
+@@ -5,7 +5,6 @@ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-276/file1
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-276/file2
+ CoW and unmount
+-pwrite: Input/output error
+ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-276/file1
+ Check for damage
+diff --git a/tests/generic/278 b/tests/generic/278
+index 415742a..d751f01 100755
+--- a/tests/generic/278
++++ b/tests/generic/278
+@@ -82,8 +82,9 @@ md5sum $testdir/file2 | _filter_scratch
+ echo "CoW and unmount"
+ sync
+ _dmerror_load_error_table
+-$XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" $testdir/file2 \
+-	2>&1 >> $seqres.full | _filter_xfs_io_error
++urk=$($XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $bufsize 0 $filesize" $testdir/file2 2>&1)
++echo $urk >> $seqres.full
++echo "$urk" | grep -q "error" || _fail "dio pwrite did not fail"
+ _dmerror_load_working_table
  
- echo "Change file ownership"
--chown fsgqa $testdir/file1
--chown fsgqa $testdir/file2
--chown fsgqa $testdir/file3
--_repquota
-+chown $qa_user $testdir/file1
-+chown $qa_user $testdir/file2
-+chown $qa_user $testdir/file3
-+_report_quota_blocks
+ echo "Rewrite"
+diff --git a/tests/generic/278.out b/tests/generic/278.out
+index 9ead4ac..cd22fcd 100644
+--- a/tests/generic/278.out
++++ b/tests/generic/278.out
+@@ -5,7 +5,6 @@ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-278/file1
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-278/file2
+ CoW and unmount
+-pwrite: Input/output error
+ Rewrite
+ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-278/file1
+diff --git a/tests/generic/279 b/tests/generic/279
+index 2f1ec4f..4541de3 100755
+--- a/tests/generic/279
++++ b/tests/generic/279
+@@ -80,8 +80,8 @@ md5sum $testdir/file2 | _filter_scratch
+ echo "CoW and unmount"
+ sync
+ _dmerror_load_error_table
+-urk=$($XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" -c "msync -s 0 $filesize" $testdir/file2 > $TEST_DIR/mwrite.out 2>&1)
+-cat $TEST_DIR/mwrite.out | tee -a $seqres.full
++$XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" \
++	-c "msync -s 0 $filesize" $testdir/file2 >> $seqres.full 2>&1
+ _dmerror_load_working_table
+ _dmerror_unmount
+ _dmerror_mount
+diff --git a/tests/generic/279.out b/tests/generic/279.out
+index f34c2b2..009f05e 100644
+--- a/tests/generic/279.out
++++ b/tests/generic/279.out
+@@ -5,7 +5,6 @@ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-279/file1
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-279/file2
+ CoW and unmount
+-msync: Input/output error
+ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-279/file1
+ Check for damage
+diff --git a/tests/generic/281 b/tests/generic/281
+index c95acf2..e8e1661 100755
+--- a/tests/generic/281
++++ b/tests/generic/281
+@@ -80,8 +80,8 @@ md5sum $testdir/file2 | _filter_scratch
+ echo "CoW and unmount"
+ sync
+ _dmerror_load_error_table
+-urk=$($XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" -c "msync -s 0 $filesize" $testdir/file2 > $TEST_DIR/mwrite.out 2>&1)
+-cat $TEST_DIR/mwrite.out | tee -a $seqres.full
++$XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" \
++	-c "msync -s 0 $filesize" $testdir/file2 >> $seqres.full 2>&1
  
- echo "CoW one of the files"
- $XFS_IO_PROG -f -c "pwrite -S 0x63 -b $blksz $((sz - blksz)) $blksz" -c "fsync" $testdir/file2 >> $seqres.full
--_repquota
-+_report_quota_blocks
+ echo "Clean up the mess"
+ _dmerror_unmount
+diff --git a/tests/generic/281.out b/tests/generic/281.out
+index a2d8e3f..1bae187 100644
+--- a/tests/generic/281.out
++++ b/tests/generic/281.out
+@@ -5,7 +5,6 @@ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-281/file1
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-281/file2
+ CoW and unmount
+-msync: Input/output error
+ Clean up the mess
+ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-281/file1
+diff --git a/tests/generic/282 b/tests/generic/282
+index 6452025..8a30811 100755
+--- a/tests/generic/282
++++ b/tests/generic/282
+@@ -80,8 +80,7 @@ md5sum $testdir/file2 | _filter_scratch
+ echo "CoW and unmount"
+ sync
+ _dmerror_load_error_table
+-urk=$($XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" $testdir/file2 > $TEST_DIR/mwrite.out 2>&1)
+-cat $TEST_DIR/mwrite.out | tee -a $seqres.full
++$XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" $testdir/file2 >> $seqres.full 2>&1
+ _dmerror_load_working_table
+ rm -rf $testdir/file2 >> $seqres.full 2>&1
+ _dmerror_unmount
+diff --git a/tests/generic/283 b/tests/generic/283
+index 8d56ac3..7bfdb4d 100755
+--- a/tests/generic/283
++++ b/tests/generic/283
+@@ -81,8 +81,10 @@ md5sum $testdir/file2 | _filter_scratch
+ echo "CoW and unmount"
+ sync
+ _dmerror_load_error_table
+-urk=$($XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" -c "msync -s 0 $filesize" $testdir/file2 > $TEST_DIR/mwrite.out 2>&1)
+-cat $TEST_DIR/mwrite.out | tee -a $seqres.full
++urk=$($XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" \
++	-c "msync -s 0 $filesize" $testdir/file2 2>&1)
++echo $urk >> $seqres.full
++echo "$urk" | grep -q "error" || _fail "mwrite did not fail"
+ _dmerror_load_working_table
  
- echo "Remount the FS to see if accounting changes"
- _scratch_cycle_mount
--_repquota
-+_report_quota_blocks
- 
- echo "Chown one of the files"
- chown nobody $testdir/file3
--_repquota
-+_report_quota_blocks
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/213.out b/tests/xfs/213.out
-index be8d56c..7dd30dd 100644
---- a/tests/xfs/213.out
-+++ b/tests/xfs/213.out
-@@ -1,22 +1,22 @@
- QA output created by 213
- Format and mount
- Create the original files
--root      --    3072       0       0              7     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --       0       0       0              1     0     0       
-+root 3072 0 0
-+nobody 0 0 0
-+fsgqa 0 0 0
- Change file ownership
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3072       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3072 0 0
- CoW one of the files
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3520       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3520 0 0
- Remount the FS to see if accounting changes
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3072       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3072 0 0
- Chown one of the files
--root      --       0       0       0              4     0     0       
--nobody    --    1024       0       0              2     0     0       
--fsgqa     --    2048       0       0              3     0     0       
-+root 0 0 0
-+nobody 1024 0 0
-+fsgqa 2048 0 0
-diff --git a/tests/xfs/214 b/tests/xfs/214
-index 35972c6..f5234fd 100755
---- a/tests/xfs/214
-+++ b/tests/xfs/214
-@@ -53,10 +53,8 @@ _require_quota
- _require_nobody
- _require_xfs_io_command "cowextsize"
- _require_odirect
-+_require_user
- 
--_repquota() {
--	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
--}
- rm -f $seqres.full
- 
- echo "Format and mount"
-@@ -79,27 +77,27 @@ _cp_reflink $testdir/file1 $testdir/file3 >> $seqres.full
- touch $testdir/urk
- chown nobody $testdir/urk
- touch $testdir/erk
--chown fsgqa $testdir/erk
--_repquota
-+chown $qa_user $testdir/erk
-+_report_quota_blocks
- _scratch_cycle_mount
- 
- echo "Change file ownership"
--chown fsgqa $testdir/file1
--chown fsgqa $testdir/file2
--chown fsgqa $testdir/file3
--_repquota
-+chown $qa_user $testdir/file1
-+chown $qa_user $testdir/file2
-+chown $qa_user $testdir/file3
-+_report_quota_blocks
- 
- echo "CoW one of the files"
- $XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $blksz $((sz - blksz)) $blksz" -c "fsync" $testdir/file2 >> $seqres.full
--_repquota
-+_report_quota_blocks
- 
- echo "Remount the FS to see if accounting changes"
- _scratch_cycle_mount
--_repquota
-+_report_quota_blocks
- 
- echo "Chown one of the files"
- chown nobody $testdir/file3
--_repquota
-+_report_quota_blocks
- 
- # success, all done
- status=0
-diff --git a/tests/xfs/214.out b/tests/xfs/214.out
-index 496a503..2c7e358 100644
---- a/tests/xfs/214.out
-+++ b/tests/xfs/214.out
-@@ -1,22 +1,22 @@
- QA output created by 214
- Format and mount
- Create the original files
--root      --    3072       0       0              7     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --       0       0       0              1     0     0       
-+root 3072 0 0
-+nobody 0 0 0
-+fsgqa 0 0 0
- Change file ownership
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3072       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3072 0 0
- CoW one of the files
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3520       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3520 0 0
- Remount the FS to see if accounting changes
--root      --       0       0       0              4     0     0       
--nobody    --       0       0       0              1     0     0       
--fsgqa     --    3072       0       0              4     0     0       
-+root 0 0 0
-+nobody 0 0 0
-+fsgqa 3072 0 0
- Chown one of the files
--root      --       0       0       0              4     0     0       
--nobody    --    1024       0       0              2     0     0       
--fsgqa     --    2048       0       0              3     0     0       
-+root 0 0 0
-+nobody 1024 0 0
-+fsgqa 2048 0 0
+ echo "Rewrite"
+diff --git a/tests/generic/283.out b/tests/generic/283.out
+index f9fd5c8..b475054 100644
+--- a/tests/generic/283.out
++++ b/tests/generic/283.out
+@@ -5,7 +5,6 @@ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-283/file1
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-283/file2
+ CoW and unmount
+-msync: Input/output error
+ Rewrite
+ Compare files
+ 1886e67cf8783e89ce6ddc5bb09a3944  SCRATCH_MNT/test-283/file1
 
