@@ -1,72 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42160 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935207AbdADOdw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Jan 2017 09:33:52 -0500
-Date: Wed, 4 Jan 2017 09:33:51 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/5] xfs: bump up reserved blocks in xfs_alloc_set_aside
-Message-ID: <20170104143350.GA41989@bfoster.bfoster>
-References: <1482436822-31546-1-git-send-email-hch@lst.de>
- <1482436822-31546-2-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1482436822-31546-2-git-send-email-hch@lst.de>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34595 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755140AbdAFOLY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:11:24 -0500
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [PATCH 5/8] jbd2: mark the transaction context with the scope GFP_NOFS context
+Date: Fri,  6 Jan 2017 15:11:04 +0100
+Message-Id: <20170106141107.23953-6-mhocko@kernel.org>
+In-Reply-To: <20170106141107.23953-1-mhocko@kernel.org>
+References: <20170106141107.23953-1-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
-On Thu, Dec 22, 2016 at 09:00:18PM +0100, Christoph Hellwig wrote:
-> Setting aside 4 blocks globally for bmbt splits isn't all that useful,
-> as different threads can allocate space in parallel.  Bump it to 4
-> blocks per AG to allow each thread that is currently doing an
-> allocation to dip into it.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+From: Michal Hocko <mhocko@suse.com>
 
-Presumably this patch addresses the potential deadlock issues from the
-previous version, but the commit log description makes no mention of it
-whatsoever. While the code seems fine, I think the commit log
-description needs more information wrt to that situation and the
-relationship/dependency with minleft.
+now that we have memalloc_nofs_{save,restore} api we can mark the whole
+transaction context as implicitly GFP_NOFS. All allocations will
+automatically inherit GFP_NOFS this way. This means that we do not have
+to mark any of those requests with GFP_NOFS and moreover all the
+ext4_kv[mz]alloc(GFP_NOFS) are also safe now because even the hardcoded
+GFP_KERNEL allocations deep inside the vmalloc will be NOFS now.
 
->  fs/xfs/libxfs/xfs_alloc.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 5050056..0a46f84 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -95,10 +95,7 @@ unsigned int
->  xfs_alloc_set_aside(
->  	struct xfs_mount	*mp)
->  {
-> -	unsigned int		blocks;
-> -
-> -	blocks = 4 + (mp->m_sb.sb_agcount * XFS_ALLOC_AGFL_RESERVE);
-> -	return blocks;
-> +	return mp->m_sb.sb_agcount * (XFS_ALLOC_AGFL_RESERVE + 4);
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/jbd2/transaction.c | 11 +++++++++++
+ include/linux/jbd2.h  |  2 ++
+ 2 files changed, 13 insertions(+)
 
-The comment above xfs_alloc_set_aside() already touches on the writeback
-situation, but why 4 blocks per ag? Wasn't the intent to use
-worst_indlen() since that's the base for minleft?
+diff --git a/fs/jbd2/transaction.c b/fs/jbd2/transaction.c
+index e1652665bd93..35a5d3d76182 100644
+--- a/fs/jbd2/transaction.c
++++ b/fs/jbd2/transaction.c
+@@ -388,6 +388,11 @@ static int start_this_handle(journal_t *journal, handle_t *handle,
+ 
+ 	rwsem_acquire_read(&journal->j_trans_commit_map, 0, 0, _THIS_IP_);
+ 	jbd2_journal_free_transaction(new_transaction);
++	/*
++	 * Make sure that no allocations done while the transaction is
++	 * open is going to recurse back to the fs layer.
++	 */
++	handle->saved_alloc_context = memalloc_nofs_save();
+ 	return 0;
+ }
+ 
+@@ -466,6 +471,7 @@ handle_t *jbd2__journal_start(journal_t *journal, int nblocks, int rsv_blocks,
+ 	trace_jbd2_handle_start(journal->j_fs_dev->bd_dev,
+ 				handle->h_transaction->t_tid, type,
+ 				line_no, nblocks);
++
+ 	return handle;
+ }
+ EXPORT_SYMBOL(jbd2__journal_start);
+@@ -1760,6 +1766,11 @@ int jbd2_journal_stop(handle_t *handle)
+ 	if (handle->h_rsv_handle)
+ 		jbd2_journal_free_reserved(handle->h_rsv_handle);
+ free_and_exit:
++	/*
++	 * scope of th GFP_NOFS context is over here and so we can
++	 * restore the original alloc context.
++	 */
++	memalloc_nofs_restore(handle->saved_alloc_context);
+ 	jbd2_free_handle(handle);
+ 	return err;
+ }
+diff --git a/include/linux/jbd2.h b/include/linux/jbd2.h
+index dfaa1f4dcb0c..606b6bce3a5b 100644
+--- a/include/linux/jbd2.h
++++ b/include/linux/jbd2.h
+@@ -491,6 +491,8 @@ struct jbd2_journal_handle
+ 
+ 	unsigned long		h_start_jiffies;
+ 	unsigned int		h_requested_credits;
++
++	unsigned int		saved_alloc_context;
+ };
+ 
+ 
+-- 
+2.11.0
 
-Also, it looks like this causes a regression in xfs/004. On a quick
-look, we might just need a test update however...
-
-Brian
-
->  }
->  
->  /*
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
