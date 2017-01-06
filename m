@@ -1,33 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:38435 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751064AbdADGLm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2017 01:11:42 -0500
-Date: Tue, 3 Jan 2017 22:11:41 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [ANNOUNCE] xfs-linux: xfs-4.10-misc-fixes-5 updated to ff97f23
-Message-ID: <20170104061141.GA4265@infradead.org>
-References: <20170104054721.GC14031@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170104054721.GC14031@birch.djwong.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33117 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752814AbdAFOLR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:11:17 -0500
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [PATCH 0/8 v3] scope GFP_NOFS api
+Date: Fri,  6 Jan 2017 15:10:59 +0100
+Message-Id: <20170106141107.23953-1-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Michal Hocko <mhocko@suse.com>, "Peter Zijlstra (Intel)" <peterz@infradead.org>
 
-On Tue, Jan 03, 2017 at 09:47:21PM -0800, Darrick J. Wong wrote:
-> Patches often get missed, so please check if your outstanding
-> patches were in this update. If they have not been in this update,
-> please resubmit them to linux-xfs@vger.kernel.org so they can be
-> picked up in the next update.
-> 
-> I intend to send these four bugfixes to Linus later this week, but
-> thought I'd run it by the list first to see if anyone spots anything
-> obviously broken.
+Hi,
+I have posted the previous version here [1]. Since then I've added some
+reviewed bys and fixed some minor issues. I've dropped patch 2 [2] based
+on Dave's request [3]. I agree that this can be done later and doing
+all at once. I still think that __GFP_NOLOCKDEP should be added by this
+series to make the further development easier.
 
-I'd really like to get the minleft fixes reviewed and to Linus:
+There didn't seem to be any real objections and so I think we should go
+and merge this and build further on top. I would like to get rid of all
+explicit GFP_NOFS usage in ext4 code. I have something half baked already
+and will send it later on. I also hope we can get further with the xfs
+as well.
 
-http://www.spinics.net/lists/linux-xfs/msg03036.html
+I haven't heard anything from btrfs or other filesystems guys which is a
+bit unfortunate but I do not want to wait for them to much longer, they
+can join the effort later on.
+
+The patchset is based on next-20170106
+
+Diffstat says
+ fs/ext4/acl.c             |  6 +++---
+ fs/ext4/extents.c         |  8 ++++----
+ fs/ext4/resize.c          |  4 ++--
+ fs/ext4/xattr.c           |  4 ++--
+ fs/jbd2/journal.c         |  7 +++++++
+ fs/jbd2/transaction.c     | 11 +++++++++++
+ fs/xfs/kmem.c             | 10 +++++-----
+ fs/xfs/kmem.h             |  2 +-
+ fs/xfs/libxfs/xfs_btree.c |  2 +-
+ fs/xfs/xfs_aops.c         |  6 +++---
+ fs/xfs/xfs_buf.c          |  8 ++++----
+ fs/xfs/xfs_trans.c        | 12 ++++++------
+ include/linux/gfp.h       | 18 +++++++++++++++++-
+ include/linux/jbd2.h      |  2 ++
+ include/linux/sched.h     | 32 ++++++++++++++++++++++++++------
+ kernel/locking/lockdep.c  |  6 +++++-
+ lib/radix-tree.c          |  2 ++
+ mm/page_alloc.c           |  8 +++++---
+ mm/vmscan.c               |  6 +++---
+ 19 files changed, 109 insertions(+), 45 deletions(-)
+
+Shortlog:
+Michal Hocko (8):
+      lockdep: allow to disable reclaim lockup detection
+      xfs: abstract PF_FSTRANS to PF_MEMALLOC_NOFS
+      mm: introduce memalloc_nofs_{save,restore} API
+      xfs: use memalloc_nofs_{save,restore} instead of memalloc_noio*
+      jbd2: mark the transaction context with the scope GFP_NOFS context
+      jbd2: make the whole kjournald2 kthread NOFS safe
+      Revert "ext4: avoid deadlocks in the writeback path by using sb_getblk_gfp"
+      Revert "ext4: fix wrong gfp type under transaction"
+
+[1] http://lkml.kernel.org/r/20161215140715.12732-1-mhocko@kernel.org
+[2] http://lkml.kernel.org/r/20161215140715.12732-3-mhocko@kernel.org
+[3] http://lkml.kernel.org/r/20161219212413.GN4326@dastard
+
+
