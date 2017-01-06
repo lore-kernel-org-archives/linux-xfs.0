@@ -1,117 +1,205 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46216 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754333AbdAEOCn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 5 Jan 2017 09:02:43 -0500
-Date: Thu, 5 Jan 2017 09:02:35 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs/181 trigger xfs corruption on ppc64le
-Message-ID: <20170105140235.GA3345@bfoster.bfoster>
-References: <20160921030841.GQ12847@dhcp12-143.nay.redhat.com>
- <20170105040115.GB1946@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170105040115.GB1946@eguan.usersys.redhat.com>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33360 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751144AbdAFOTC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:19:02 -0500
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [DEBUG PATCH 1/2] mm, debug: report when GFP_NO{FS,IO} is used explicitly from memalloc_no{fs,io}_{save,restore} context
+Date: Fri,  6 Jan 2017 15:18:44 +0100
+Message-Id: <20170106141845.24362-2-mhocko@kernel.org>
+In-Reply-To: <20170106141845.24362-1-mhocko@kernel.org>
+References: <20170106141107.23953-1-mhocko@kernel.org>
+ <20170106141845.24362-1-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
-On Thu, Jan 05, 2017 at 12:03:13PM +0800, Eryu Guan wrote:
-> On Wed, Sep 21, 2016 at 11:08:41AM +0800, Zorro Lang wrote:
-> > Hi,
-> > 
-> > There's a XFS (v4/v5) corruption from xfs/181. If run xfs/181 on ppc64le
-> > 10~100 times (more or less) with 1k or 4k block size, it'll trigger a
-> > corruption:
-> > *** xfs_repair -n output ***
-> > Phase 1 - find and verify superblock...
-> > Phase 2 - using internal log
-> >         - zero log...
-> >         - scan filesystem freespace and inode maps...
-> >         - found root inode chunk
-> > Phase 3 - for each AG...
-> >         - scan (but don't clear) agi unlinked lists...
-> >         - process known inodes and perform inode discovery...
-> >         - agno = 0
-> > attribute entry #0 in attr block 0, inode 25194 is INCOMPLETE
-> > problem with attribute contents in inode 25194
-> > would clear attr fork
-> > bad nblocks 33 for inode 25194, would reset to 0
-> > bad anextents 1 for inode 25194, would reset to 0
-> >         - agno = 1
-> >         - agno = 2
-> >         - agno = 3
-> >         - process newly discovered inodes...
-> > Phase 4 - check for duplicate blocks...
-> >         - setting up duplicate extent list...
-> >         - check for inodes claiming duplicate blocks...
-> >         - agno = 0
-> >         - agno = 1
-> >         - agno = 2
-> >         - agno = 3
-> > No modify flag set, skipping phase 5
-> > Phase 6 - check inode connectivity...
-> >         - traversing filesystem ...
-> >         - traversal finished ...
-> >         - moving disconnected inodes to lost+found ...
-> > Phase 7 - verify link counts...
-> > No modify flag set, skipping filesystem flush and exiting.
-> > *** end xfs_repair output
-> 
-> I hit this corruption again today with 4.10-rc2 kernel & latest master
-> branch of xfsprogs, still ppc64le host.
-> 
-> *** xfs_repair -n output ***
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
-> attribute entry #0 in attr block 0, inode 10236 is INCOMPLETE
-> problem with attribute contents in inode 10236
-> would clear attr fork
-> bad nblocks 10 for inode 10236, would reset to 0
-> bad anextents 1 for inode 10236, would reset to 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 2
->         - agno = 3
->         - agno = 1
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify link counts...
-> No modify flag set, skipping filesystem flush and exiting.
-> *** end xfs_repair output
-> 
+From: Michal Hocko <mhocko@suse.com>
 
-Isn't this the same as rhbz 1377163 (not sure why that bug appears to be
-locked)? E.g., this is basically due to the fact that remote attribute
-block allocation occurs in a separate transaction. The existence of the
-incomplete flag means that by design, logging doesn't guarantee
-consistency for such attributes.
+THIS PATCH IS FOR TESTING ONLY AND NOT MEANT TO HIT LINUS TREE
 
-Brian
+It is desirable to reduce the direct GFP_NO{FS,IO} usage at minimum and
+prefer scope usage defined by memalloc_no{fs,io}_{save,restore} API.
 
-> I attached compressed xfs-181.full file, in case someone has interest to
-> look into it.
-> 
-> Thanks,
-> Eryu
+Let's help this process and add a debugging tool to catch when an
+explicit allocation request for GFP_NO{FS,IO} is done from the scope
+context. The printed stacktrace should help to identify the caller
+and evaluate whether it can be changed to use a wider context or whether
+it is called from another potentially dangerous context which needs
+a scope protection as well.
 
+The checks have to be enabled explicitly by debug_scope_gfp kernel
+command line parameter.
+
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ include/linux/sched.h | 14 +++++++++++--
+ include/linux/slab.h  |  3 +++
+ mm/page_alloc.c       | 58 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 73 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 2032fc642a26..59428926e989 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1988,6 +1988,8 @@ struct task_struct {
+ 	/* A live task holds one reference. */
+ 	atomic_t stack_refcount;
+ #endif
++	unsigned long nofs_caller;
++	unsigned long noio_caller;
+ /* CPU-specific state of this task */
+ 	struct thread_struct thread;
+ /*
+@@ -2345,6 +2347,8 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
+ #define tsk_used_math(p) ((p)->flags & PF_USED_MATH)
+ #define used_math() tsk_used_math(current)
+ 
++extern void debug_scope_gfp_context(gfp_t gfp_mask);
++
+ /*
+  * Applies per-task gfp context to the given allocation flags.
+  * PF_MEMALLOC_NOIO implies GFP_NOIO
+@@ -2363,25 +2367,31 @@ static inline gfp_t current_gfp_context(gfp_t flags)
+ 	return flags;
+ }
+ 
+-static inline unsigned int memalloc_noio_save(void)
++static inline unsigned int __memalloc_noio_save(unsigned long caller)
+ {
+ 	unsigned int flags = current->flags & PF_MEMALLOC_NOIO;
+ 	current->flags |= PF_MEMALLOC_NOIO;
++	current->noio_caller = caller;
+ 	return flags;
+ }
+ 
++#define memalloc_noio_save()	__memalloc_noio_save(_RET_IP_)
++
+ static inline void memalloc_noio_restore(unsigned int flags)
+ {
+ 	current->flags = (current->flags & ~PF_MEMALLOC_NOIO) | flags;
+ }
+ 
+-static inline unsigned int memalloc_nofs_save(void)
++static inline unsigned int __memalloc_nofs_save(unsigned long caller)
+ {
+ 	unsigned int flags = current->flags & PF_MEMALLOC_NOFS;
+ 	current->flags |= PF_MEMALLOC_NOFS;
++	current->nofs_caller = caller;
+ 	return flags;
+ }
+ 
++#define memalloc_nofs_save()	__memalloc_nofs_save(_RET_IP_)
++
+ static inline void memalloc_nofs_restore(unsigned int flags)
+ {
+ 	current->flags = (current->flags & ~PF_MEMALLOC_NOFS) | flags;
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+index 084b12bad198..6559668e29db 100644
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -477,6 +477,7 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
+  */
+ static __always_inline void *kmalloc(size_t size, gfp_t flags)
+ {
++	debug_scope_gfp_context(flags);
+ 	if (__builtin_constant_p(size)) {
+ 		if (size > KMALLOC_MAX_CACHE_SIZE)
+ 			return kmalloc_large(size, flags);
+@@ -517,6 +518,7 @@ static __always_inline int kmalloc_size(int n)
+ 
+ static __always_inline void *kmalloc_node(size_t size, gfp_t flags, int node)
+ {
++	debug_scope_gfp_context(flags);
+ #ifndef CONFIG_SLOB
+ 	if (__builtin_constant_p(size) &&
+ 		size <= KMALLOC_MAX_CACHE_SIZE && !(flags & GFP_DMA)) {
+@@ -575,6 +577,7 @@ int memcg_update_all_caches(int num_memcgs);
+  */
+ static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
+ {
++	debug_scope_gfp_context(flags);
+ 	if (size != 0 && n > SIZE_MAX / size)
+ 		return NULL;
+ 	if (__builtin_constant_p(n) && __builtin_constant_p(size))
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 5138b46a4295..87a2bb5262b2 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -3738,6 +3738,63 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+ 	return page;
+ }
+ 
++static bool debug_scope_gfp;
++
++static int __init enable_debug_scope_gfp(char *unused)
++{
++	debug_scope_gfp = true;
++	return 0;
++}
++
++/*
++ * spit the stack trace if the given gfp_mask clears flags which are context
++ * wide cleared. Such a caller can remove special flags clearing and rely on
++ * the context wide mask.
++ */
++void debug_scope_gfp_context(gfp_t gfp_mask)
++{
++	gfp_t restrict_mask;
++
++	if (likely(!debug_scope_gfp))
++		return;
++
++	/* both NOFS, NOIO are irrelevant when direct reclaim is disabled */
++	if (!(gfp_mask & __GFP_DIRECT_RECLAIM))
++		return;
++
++	if (current->flags & PF_MEMALLOC_NOIO)
++		restrict_mask = __GFP_IO;
++	else if ((current->flags & PF_MEMALLOC_NOFS) && (gfp_mask & __GFP_IO))
++		restrict_mask = __GFP_FS;
++	else
++		return;
++
++	if ((gfp_mask & restrict_mask) != restrict_mask) {
++		/*
++		 * If you see this this warning then the code does:
++		 * memalloc_no{fs,io}_save()
++		 * ...
++		 *    foo()
++		 *      alloc_page(GFP_NO{FS,IO})
++		 * ...
++		 * memalloc_no{fs,io}_restore()
++		 *
++		 * allocation which is unnecessary because the scope gfp
++		 * context will do that for all allocation requests already.
++		 * If foo() is called from multiple contexts then make sure other
++		 * contexts are safe wrt. GFP_NO{FS,IO} semantic and either add
++		 * scope protection into particular paths or change the gfp mask
++		 * to GFP_KERNEL.
++		 */
++		pr_info("Unnecesarily specific gfp mask:%#x(%pGg) for the %s task wide context from %ps\n", gfp_mask, &gfp_mask,
++				(current->flags & PF_MEMALLOC_NOIO)?"NOIO":"NOFS",
++				(void*)((current->flags & PF_MEMALLOC_NOIO)?current->noio_caller:current->nofs_caller));
++		dump_stack();
++	}
++}
++EXPORT_SYMBOL(debug_scope_gfp_context);
++early_param("debug_scope_gfp", enable_debug_scope_gfp);
++
+ /*
+  * This is the 'heart' of the zoned buddy allocator.
+  */
+@@ -3802,6 +3859,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
+ 	}
+ 
+ 	/* First allocation attempt */
++	debug_scope_gfp_context(gfp_mask);
+ 	page = get_page_from_freelist(alloc_mask, order, alloc_flags, &ac);
+ 	if (likely(page))
+ 		goto out;
+-- 
+2.11.0
 
