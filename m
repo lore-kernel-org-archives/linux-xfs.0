@@ -1,108 +1,128 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Subject: Bug#807879: (no subject)
-From: xfs-owner@oss.sgi.com
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============4452097268781235176=="
-Message-ID: <mailman.4831.1483660992.4130.xfs@oss.sgi.com>
-Date: Thu, 05 Jan 2017 18:03:12 -0600
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: sandeen@sandeen.net
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36045 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932627AbdAFOND (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:13:03 -0500
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
+Date: Fri,  6 Jan 2017 15:11:07 +0100
+Message-Id: <20170106141107.23953-9-mhocko@kernel.org>
+In-Reply-To: <20170106141107.23953-1-mhocko@kernel.org>
+References: <20170106141107.23953-1-mhocko@kernel.org>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
---===============4452097268781235176==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Michal Hocko <mhocko@suse.com>
 
-This list has been closed.  Please subscribe to the
-linux-xfs@vger.kernel.org mailing list and send any future messages
-there. You can subscribe to the linux-xfs list at
-http://vger.kernel.org/vger-lists.html#linux-xfs
+This reverts commit 216553c4b7f3e3e2beb4981cddca9b2027523928. Now that
+the transaction context uses memalloc_nofs_save and all allocations
+within the this context inherit GFP_NOFS automatically, there is no
+reason to mark specific allocations explicitly.
 
-For any questions please post to the new list.
+This patch should not introduce any functional change. The main point
+of this change is to reduce explicit GFP_NOFS usage inside ext4 code
+to make the review of the remaining usage easier.
 
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/ext4/acl.c     | 6 +++---
+ fs/ext4/extents.c | 2 +-
+ fs/ext4/resize.c  | 4 ++--
+ fs/ext4/xattr.c   | 4 ++--
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
---===============4452097268781235176==
-Content-Type: message/rfc822
-MIME-Version: 1.0
+diff --git a/fs/ext4/acl.c b/fs/ext4/acl.c
+index fd389935ecd1..9e98092c2a4b 100644
+--- a/fs/ext4/acl.c
++++ b/fs/ext4/acl.c
+@@ -32,7 +32,7 @@ ext4_acl_from_disk(const void *value, size_t size)
+ 		return ERR_PTR(-EINVAL);
+ 	if (count == 0)
+ 		return NULL;
+-	acl = posix_acl_alloc(count, GFP_NOFS);
++	acl = posix_acl_alloc(count, GFP_KERNEL);
+ 	if (!acl)
+ 		return ERR_PTR(-ENOMEM);
+ 	for (n = 0; n < count; n++) {
+@@ -94,7 +94,7 @@ ext4_acl_to_disk(const struct posix_acl *acl, size_t *size)
+ 
+ 	*size = ext4_acl_size(acl->a_count);
+ 	ext_acl = kmalloc(sizeof(ext4_acl_header) + acl->a_count *
+-			sizeof(ext4_acl_entry), GFP_NOFS);
++			sizeof(ext4_acl_entry), GFP_KERNEL);
+ 	if (!ext_acl)
+ 		return ERR_PTR(-ENOMEM);
+ 	ext_acl->a_version = cpu_to_le32(EXT4_ACL_VERSION);
+@@ -159,7 +159,7 @@ ext4_get_acl(struct inode *inode, int type)
+ 	}
+ 	retval = ext4_xattr_get(inode, name_index, "", NULL, 0);
+ 	if (retval > 0) {
+-		value = kmalloc(retval, GFP_NOFS);
++		value = kmalloc(retval, GFP_KERNEL);
+ 		if (!value)
+ 			return ERR_PTR(-ENOMEM);
+ 		retval = ext4_xattr_get(inode, name_index, "", value, retval);
+diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
+index 9867b9e5ad8f..0371e7aa7bea 100644
+--- a/fs/ext4/extents.c
++++ b/fs/ext4/extents.c
+@@ -2933,7 +2933,7 @@ int ext4_ext_remove_space(struct inode *inode, ext4_lblk_t start,
+ 				le16_to_cpu(path[k].p_hdr->eh_entries)+1;
+ 	} else {
+ 		path = kzalloc(sizeof(struct ext4_ext_path) * (depth + 1),
+-			       GFP_NOFS);
++			       GFP_KERNEL);
+ 		if (path == NULL) {
+ 			ext4_journal_stop(handle);
+ 			return -ENOMEM;
+diff --git a/fs/ext4/resize.c b/fs/ext4/resize.c
+index cf681004b196..e121f4e048b8 100644
+--- a/fs/ext4/resize.c
++++ b/fs/ext4/resize.c
+@@ -816,7 +816,7 @@ static int add_new_gdb(handle_t *handle, struct inode *inode,
+ 
+ 	n_group_desc = ext4_kvmalloc((gdb_num + 1) *
+ 				     sizeof(struct buffer_head *),
+-				     GFP_NOFS);
++				     GFP_KERNEL);
+ 	if (!n_group_desc) {
+ 		err = -ENOMEM;
+ 		ext4_warning(sb, "not enough memory for %lu groups",
+@@ -943,7 +943,7 @@ static int reserve_backup_gdb(handle_t *handle, struct inode *inode,
+ 	int res, i;
+ 	int err;
+ 
+-	primary = kmalloc(reserved_gdb * sizeof(*primary), GFP_NOFS);
++	primary = kmalloc(reserved_gdb * sizeof(*primary), GFP_KERNEL);
+ 	if (!primary)
+ 		return -ENOMEM;
+ 
+diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c
+index 5a94fa52b74f..172317462238 100644
+--- a/fs/ext4/xattr.c
++++ b/fs/ext4/xattr.c
+@@ -875,7 +875,7 @@ ext4_xattr_block_set(handle_t *handle, struct inode *inode,
+ 
+ 			unlock_buffer(bs->bh);
+ 			ea_bdebug(bs->bh, "cloning");
+-			s->base = kmalloc(bs->bh->b_size, GFP_NOFS);
++			s->base = kmalloc(bs->bh->b_size, GFP_KERNEL);
+ 			error = -ENOMEM;
+ 			if (s->base == NULL)
+ 				goto cleanup;
+@@ -887,7 +887,7 @@ ext4_xattr_block_set(handle_t *handle, struct inode *inode,
+ 		}
+ 	} else {
+ 		/* Allocate a buffer where we construct the new block. */
+-		s->base = kzalloc(sb->s_blocksize, GFP_NOFS);
++		s->base = kzalloc(sb->s_blocksize, GFP_KERNEL);
+ 		/* assert(header == s->base) */
+ 		error = -ENOMEM;
+ 		if (s->base == NULL)
+-- 
+2.11.0
 
-Return-Path: <debbugs@buxtehude.debian.org>
-X-Spam-Checker-Version: SpamAssassin 3.3.1 (2010-03-16) on oss.sgi.com
-X-Spam-Level: 
-X-Spam-Status: No, score=-100.0 required=5.0 tests=USER_IN_WHITELIST
-	autolearn=ham version=3.3.1
-X-Original-To: xfs@oss.sgi.com
-Delivered-To: xfs@oss.sgi.com
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C161F7CA0
-	for <xfs@oss.sgi.com>; Thu,  5 Jan 2017 18:03:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8570C30406B
-	for <xfs@oss.sgi.com>; Thu,  5 Jan 2017 16:03:08 -0800 (PST)
-X-ASG-Debug-ID: 1483660985-0bf57c674a24be30001-NocioJ
-Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39]) by cuda.sgi.com with ESMTP id a36VI5yDAGrNVWZt (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for <xfs@oss.sgi.com>; Thu, 05 Jan 2017 16:03:06 -0800 (PST)
-X-Barracuda-Envelope-From: debbugs@buxtehude.debian.org
-X-Barracuda-Effective-Source-IP: buxtehude.debian.org[209.87.16.39]
-X-Barracuda-Apparent-Source-IP: 209.87.16.39
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.84_2)
-	(envelope-from <debbugs@buxtehude.debian.org>)
-	id 1cPHzq-0007MJ-UE; Fri, 06 Jan 2017 00:03:02 +0000
-X-Loop: owner@bugs.debian.org
-Subject: Bug#807879: (no subject)
-Reply-To: Eric Sandeen <sandeen@sandeen.net>, 807879@bugs.debian.org
-X-ASG-Orig-Subj: Bug#807879: (no subject)
-Resent-From: Eric Sandeen <sandeen@sandeen.net>
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-CC: XFS Development Team <xfs@oss.sgi.com>
-X-Loop: owner@bugs.debian.org
-Resent-Date: Fri, 06 Jan 2017 00:03:01 +0000
-Resent-Message-ID: <handler.807879.B807879.148366078126772@bugs.debian.org>
-X-Debian-PR-Message: followup 807879
-X-Debian-PR-Package: xfsprogs
-X-Debian-PR-Keywords: 
-X-Debian-PR-Source: xfsprogs
-Received: via spool by 807879-submit@bugs.debian.org id=B807879.148366078126772
-          (code B ref 807879); Fri, 06 Jan 2017 00:03:01 +0000
-Received: (at 807879) by bugs.debian.org; 5 Jan 2017 23:59:41 +0000
-Received: from sandeen.net ([63.231.237.45])
-	by buxtehude.debian.org with esmtp (Exim 4.84_2)
-	(envelope-from <sandeen@sandeen.net>)
-	id 1cPHwb-0006rJ-1F
-	for 807879@bugs.debian.org; Thu, 05 Jan 2017 23:59:41 +0000
-Received: from Liberator.example.com (74-95-67-117-Minnesota.hfc.comcastbusiness.net [74.95.67.117])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 00A5CD4B
-	for <807879@bugs.debian.org>; Thu,  5 Jan 2017 17:50:24 -0600 (CST)
-To: 807879@bugs.debian.org
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <74b970bc-6b3b-6d73-96bb-bf5822f575bc@sandeen.net>
-Date: Thu, 5 Jan 2017 17:50:59 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:45.0)
- Gecko/20100101 Thunderbird/45.6.0
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-X-Greylist: delayed 515 seconds by postgrey-1.35 at buxtehude; Thu, 05 Jan 2017 23:59:40 UTC
-X-Barracuda-Connect: buxtehude.debian.org[209.87.16.39]
-X-Barracuda-Start-Time: 1483660986
-X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
-X-Barracuda-URL: https://192.48.176.15:443/cgi-mod/mark.cgi
-X-Barracuda-Scan-Msg-Size: 128
-X-Virus-Scanned: by bsmtpd at sgi.com
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Spam-Score: 0.00
-X-Barracuda-Spam-Status: No, SCORE=0.00 using per-user scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=2.7 tests=BSF_SC0_MISMATCH_TO
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.35615
-	Rule breakdown below
-	 pts rule name              description
-	---- ---------------------- --------------------------------------------------
-	0.00 BSF_SC0_MISMATCH_TO    Envelope rcpt doesn't match header
-
-tags: wontfix
-
-Tagging wontfix, as this is not a bug.  Dave points out the proper mkfs options for for older kernels, above.
-
-
---===============4452097268781235176==--
