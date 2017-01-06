@@ -1,131 +1,108 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24598 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934022AbdAEUVO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jan 2017 15:21:14 -0500
-Date: Thu, 5 Jan 2017 12:21:08 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [BUG] xfs.mkfs recognizes wrong disk size
-Message-ID: <20170105202108.GE17846@birch.djwong.org>
-References: <CABPa+v3fgLjBo2CLBXxg8xE3D5tWdjk2C3gM2o1-xEFT45_Rkg@mail.gmail.com>
- <de4f0e6b-bd01-5bf5-42f6-ca2562c564cb@sandeen.net>
- <20170105191316.GD17846@birch.djwong.org>
- <CABPa+v2t_wF-n55GWRcHL7D3_ANcLqaDx1qa5SQ07pU7CgomXg@mail.gmail.com>
- <0e31b8db-9721-f735-7e29-0eaae5fd21eb@sandeen.net>
+Return-Path: <xfs-bounces@oss.sgi.com>
+Subject: Bug#807879: (no subject)
+From: xfs-owner@oss.sgi.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0e31b8db-9721-f735-7e29-0eaae5fd21eb@sandeen.net>
-Sender: linux-xfs-owner@vger.kernel.org
-List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Xingbo Wu <wuxb45@gmail.com>, linux-xfs@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============4452097268781235176=="
+Message-ID: <mailman.4831.1483660992.4130.xfs@oss.sgi.com>
+Date: Thu, 05 Jan 2017 18:03:12 -0600
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: sandeen@sandeen.net
 
-On Thu, Jan 05, 2017 at 02:01:40PM -0600, Eric Sandeen wrote:
-> On 1/5/17 1:58 PM, Xingbo Wu wrote:
-> > On Thu, Jan 5, 2017 at 1:13 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >> On Thu, Jan 05, 2017 at 12:58:23PM -0600, Eric Sandeen wrote:
-> >>> On 1/5/17 12:02 PM, Xingbo Wu wrote:
-> >>>> /dev/sdf is a 3TB hard drive.
-> >>>> It has 2930266584 blocks, as reported in `badblocks -wsv /dev/sdf`:
-> >>>> Checking for bad blocks in read-write mode
-> >>>> From block 0 to 2930266583
-> >>>
-> >>> 2930266583 x 1024 == 3000592980992
-> >>>
-> >>> I'd rather see what /proc/partitions and/or blockdev says about it...
-> >>
-> >> From the badblocks manpage,
-> >>
-> >> "-b block_size: Specify the size of blocks in bytes.  The default is 1024."
-> >>
-> >> (So far so good.)
-> >>
-> >>>> However mkfs.xfs reports a larger block count:
-> >>>> `sudo mkfs.xfs /dev/sdf`:
-> >>>> meta-data=/dev/sdf               isize=512    agcount=4, agsize=183141662 blks
-> >>>>          =                       sectsz=4096  attr=2, projid32bit=1
-> >>>>          =                       crc=1        finobt=1, sparse=0, rmapbt=0
-> >>>> data     =                       bsize=4096   blocks=732566646, imaxpct=5
-> >>>>          =                       sunit=0      swidth=0 blks
-> >>>> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> >>>> log      =internal log           bsize=4096   blocks=357698, version=2
-> >>>>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> >>>> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> >>>
-> >>> 732566646 x 4k blocks == 3000592982016 bytes
-> >>>
-> >>> Ok, that is 1024 bytes bigger.  But the weird thing is that
-> >>> mkfs.xfs actually writes the last block, and fails if that fails.
-> >>>
-> >>> So let's start with what /proc/partitions says, as well as
-> >>>
-> >>> # blkdev --getsize --getsize64 /dev/sdf
-> >>>
-> >>> -Eric
-> >>>
-> >>>> It later leads to IO error:
-> >>>> `dmesg`:
-> >>>> [1807875.741674] blk_update_request: I/O error, dev sdf, sector 2930266664
-> >>>> [1807875.741732] blk_update_request: I/O error, dev sdf, sector 2930266664
-> >>
-> >> The kernel complains about "sector 2930266664", which is in 512-byte blocks.
-> >>
-> >> 2930266664 * 512 = 1500296531968, or halfway across your 3TB disk.
-> >>
-> >> Makes sense since the log generally ends up halfway across the disk.
-> >> Not sure if there's any output before 1807875.741674 but this sort of
-> >> looks like a disk error or something?
-> >>
-> > 
-> > I grepped "sdf" from dmesg:
-> > [    7.158847] sd 0:0:6:0: [sdf] 5860533168 512-byte logical blocks:
-> > (3.00 TB/2.73 TiB)
-> > [    7.158851] sd 0:0:6:0: [sdf] 4096-byte physical blocks
-> > [    7.259937] sd 0:0:6:0: [sdf] Write Protect is off
-> > [    7.259943] sd 0:0:6:0: [sdf] Mode Sense: 9b 00 10 08
-> > [    7.282316] sd 0:0:6:0: [sdf] Write cache: enabled, read cache:
-> > enabled, supports DPO and FUA
-> > [    7.418959] sd 0:0:6:0: [sdf] Attached SCSI disk
-> > [1807850.471959] XFS (sdf): Mounting V5 Filesystem
-> > [1807850.605057] XFS (sdf): Ending clean mount
-> > [1807875.741657] sd 0:0:6:0: [sdf] tag#0 UNKNOWN(0x2003) Result:
-> > hostbyte=0x07 driverbyte=0x00
-> > [1807875.741670] sd 0:0:6:0: [sdf] tag#0 CDB: opcode=0x8a 8a 08 00 00
-> > 00 00 ae a8 52 28 00 00 00 08 00 00
+--===============4452097268781235176==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-WRITE(16) with FUA set... on a SATA drive?
+This list has been closed.  Please subscribe to the
+linux-xfs@vger.kernel.org mailing list and send any future messages
+there. You can subscribe to the linux-xfs list at
+http://vger.kernel.org/vger-lists.html#linux-xfs
 
-A dumb Google search of "ST3000DM001 FUA" pulls up a lot of dmesg
-that show the drive not advertising DPO or FUA support.
+For any questions please post to the new list.
 
-0:0:6:0 ... SCSI host0, ctrl0, target6, lun0, huh?  Is this SATA drive
-connected to a SAS/RAID controller or something?  It could be
-advertising FUA support to Linux but the drive (or even the SATL I
-guess) rejects an actual command w/ the FUA bit set.
 
---D
+--===============4452097268781235176==
+Content-Type: message/rfc822
+MIME-Version: 1.0
 
-> > [1807875.741674] blk_update_request: I/O error, dev sdf, sector 2930266664
-> > [1807875.741732] blk_update_request: I/O error, dev sdf, sector 2930266664
-> 
-> Your disk is failing.  To solve this, get a new disk.
-> 
-> -Eric
-> 
-> > [1807875.742306] XFS (sdf): metadata I/O error: block 0xaea85228
-> > ("xlog_iodone") error 5 numblks 64
-> > [1807875.742369] XFS (sdf): xfs_do_force_shutdown(0x2) called from
-> > line 1200 of file fs/xfs/xfs_log.c.  Return address =
-> > 0xffffffffa024090c
-> > 
-> > Earlier I tried to format the disk with ext4. It also had similar
-> > errors. I thought it was the disk's problem. Would that be something
-> > wrong with mkfs' math? I will try ext4 again and let you know if I
-> > found something relevant.
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Return-Path: <debbugs@buxtehude.debian.org>
+X-Spam-Checker-Version: SpamAssassin 3.3.1 (2010-03-16) on oss.sgi.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-100.0 required=5.0 tests=USER_IN_WHITELIST
+	autolearn=ham version=3.3.1
+X-Original-To: xfs@oss.sgi.com
+Delivered-To: xfs@oss.sgi.com
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C161F7CA0
+	for <xfs@oss.sgi.com>; Thu,  5 Jan 2017 18:03:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8570C30406B
+	for <xfs@oss.sgi.com>; Thu,  5 Jan 2017 16:03:08 -0800 (PST)
+X-ASG-Debug-ID: 1483660985-0bf57c674a24be30001-NocioJ
+Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39]) by cuda.sgi.com with ESMTP id a36VI5yDAGrNVWZt (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for <xfs@oss.sgi.com>; Thu, 05 Jan 2017 16:03:06 -0800 (PST)
+X-Barracuda-Envelope-From: debbugs@buxtehude.debian.org
+X-Barracuda-Effective-Source-IP: buxtehude.debian.org[209.87.16.39]
+X-Barracuda-Apparent-Source-IP: 209.87.16.39
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.84_2)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1cPHzq-0007MJ-UE; Fri, 06 Jan 2017 00:03:02 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#807879: (no subject)
+Reply-To: Eric Sandeen <sandeen@sandeen.net>, 807879@bugs.debian.org
+X-ASG-Orig-Subj: Bug#807879: (no subject)
+Resent-From: Eric Sandeen <sandeen@sandeen.net>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-CC: XFS Development Team <xfs@oss.sgi.com>
+X-Loop: owner@bugs.debian.org
+Resent-Date: Fri, 06 Jan 2017 00:03:01 +0000
+Resent-Message-ID: <handler.807879.B807879.148366078126772@bugs.debian.org>
+X-Debian-PR-Message: followup 807879
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Keywords: 
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 807879-submit@bugs.debian.org id=B807879.148366078126772
+          (code B ref 807879); Fri, 06 Jan 2017 00:03:01 +0000
+Received: (at 807879) by bugs.debian.org; 5 Jan 2017 23:59:41 +0000
+Received: from sandeen.net ([63.231.237.45])
+	by buxtehude.debian.org with esmtp (Exim 4.84_2)
+	(envelope-from <sandeen@sandeen.net>)
+	id 1cPHwb-0006rJ-1F
+	for 807879@bugs.debian.org; Thu, 05 Jan 2017 23:59:41 +0000
+Received: from Liberator.example.com (74-95-67-117-Minnesota.hfc.comcastbusiness.net [74.95.67.117])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 00A5CD4B
+	for <807879@bugs.debian.org>; Thu,  5 Jan 2017 17:50:24 -0600 (CST)
+To: 807879@bugs.debian.org
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <74b970bc-6b3b-6d73-96bb-bf5822f575bc@sandeen.net>
+Date: Thu, 5 Jan 2017 17:50:59 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:45.0)
+ Gecko/20100101 Thunderbird/45.6.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+X-Greylist: delayed 515 seconds by postgrey-1.35 at buxtehude; Thu, 05 Jan 2017 23:59:40 UTC
+X-Barracuda-Connect: buxtehude.debian.org[209.87.16.39]
+X-Barracuda-Start-Time: 1483660986
+X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
+X-Barracuda-URL: https://192.48.176.15:443/cgi-mod/mark.cgi
+X-Barracuda-Scan-Msg-Size: 128
+X-Virus-Scanned: by bsmtpd at sgi.com
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-Spam-Score: 0.00
+X-Barracuda-Spam-Status: No, SCORE=0.00 using per-user scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=2.7 tests=BSF_SC0_MISMATCH_TO
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.35615
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
+	0.00 BSF_SC0_MISMATCH_TO    Envelope rcpt doesn't match header
+
+tags: wontfix
+
+Tagging wontfix, as this is not a bug.  Dave points out the proper mkfs options for for older kernels, above.
+
+
+--===============4452097268781235176==--
