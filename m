@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36045 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932627AbdAFOND (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:13:03 -0500
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33154 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755128AbdAFOLU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:11:20 -0500
 From: Michal Hocko <mhocko@kernel.org>
-Subject: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
-Date: Fri,  6 Jan 2017 15:11:07 +0100
-Message-Id: <20170106141107.23953-9-mhocko@kernel.org>
+Subject: [PATCH 2/8] xfs: abstract PF_FSTRANS to PF_MEMALLOC_NOFS
+Date: Fri,  6 Jan 2017 15:11:01 +0100
+Message-Id: <20170106141107.23953-3-mhocko@kernel.org>
 In-Reply-To: <20170106141107.23953-1-mhocko@kernel.org>
 References: <20170106141107.23953-1-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,112 +17,176 @@ Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com
 
 From: Michal Hocko <mhocko@suse.com>
 
-This reverts commit 216553c4b7f3e3e2beb4981cddca9b2027523928. Now that
-the transaction context uses memalloc_nofs_save and all allocations
-within the this context inherit GFP_NOFS automatically, there is no
-reason to mark specific allocations explicitly.
+xfs has defined PF_FSTRANS to declare a scope GFP_NOFS semantic quite
+some time ago. We would like to make this concept more generic and use
+it for other filesystems as well. Let's start by giving the flag a
+more generic name PF_MEMALLOC_NOFS which is in line with an exiting
+PF_MEMALLOC_NOIO already used for the same purpose for GFP_NOIO
+contexts. Replace all PF_FSTRANS usage from the xfs code in the first
+step before we introduce a full API for it as xfs uses the flag directly
+anyway.
 
-This patch should not introduce any functional change. The main point
-of this change is to reduce explicit GFP_NOFS usage inside ext4 code
-to make the review of the remaining usage easier.
+This patch doesn't introduce any functional change.
 
 Signed-off-by: Michal Hocko <mhocko@suse.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/ext4/acl.c     | 6 +++---
- fs/ext4/extents.c | 2 +-
- fs/ext4/resize.c  | 4 ++--
- fs/ext4/xattr.c   | 4 ++--
- 4 files changed, 8 insertions(+), 8 deletions(-)
+ fs/xfs/kmem.c             |  4 ++--
+ fs/xfs/kmem.h             |  2 +-
+ fs/xfs/libxfs/xfs_btree.c |  2 +-
+ fs/xfs/xfs_aops.c         |  6 +++---
+ fs/xfs/xfs_trans.c        | 12 ++++++------
+ include/linux/sched.h     |  2 ++
+ 6 files changed, 15 insertions(+), 13 deletions(-)
 
-diff --git a/fs/ext4/acl.c b/fs/ext4/acl.c
-index fd389935ecd1..9e98092c2a4b 100644
---- a/fs/ext4/acl.c
-+++ b/fs/ext4/acl.c
-@@ -32,7 +32,7 @@ ext4_acl_from_disk(const void *value, size_t size)
- 		return ERR_PTR(-EINVAL);
- 	if (count == 0)
- 		return NULL;
--	acl = posix_acl_alloc(count, GFP_NOFS);
-+	acl = posix_acl_alloc(count, GFP_KERNEL);
- 	if (!acl)
- 		return ERR_PTR(-ENOMEM);
- 	for (n = 0; n < count; n++) {
-@@ -94,7 +94,7 @@ ext4_acl_to_disk(const struct posix_acl *acl, size_t *size)
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index 339c696bbc01..a76a05dae96b 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -80,13 +80,13 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+ 	 * context via PF_MEMALLOC_NOIO to prevent memory reclaim re-entering
+ 	 * the filesystem here and potentially deadlocking.
+ 	 */
+-	if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
++	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+ 		noio_flag = memalloc_noio_save();
  
- 	*size = ext4_acl_size(acl->a_count);
- 	ext_acl = kmalloc(sizeof(ext4_acl_header) + acl->a_count *
--			sizeof(ext4_acl_entry), GFP_NOFS);
-+			sizeof(ext4_acl_entry), GFP_KERNEL);
- 	if (!ext_acl)
- 		return ERR_PTR(-ENOMEM);
- 	ext_acl->a_version = cpu_to_le32(EXT4_ACL_VERSION);
-@@ -159,7 +159,7 @@ ext4_get_acl(struct inode *inode, int type)
+ 	lflags = kmem_flags_convert(flags);
+ 	ptr = __vmalloc(size, lflags | __GFP_HIGHMEM | __GFP_ZERO, PAGE_KERNEL);
+ 
+-	if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
++	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+ 		memalloc_noio_restore(noio_flag);
+ 
+ 	return ptr;
+diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+index 689f746224e7..d973dbfc2bfa 100644
+--- a/fs/xfs/kmem.h
++++ b/fs/xfs/kmem.h
+@@ -50,7 +50,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
+ 		lflags = GFP_ATOMIC | __GFP_NOWARN;
+ 	} else {
+ 		lflags = GFP_KERNEL | __GFP_NOWARN;
+-		if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
++		if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+ 			lflags &= ~__GFP_FS;
  	}
- 	retval = ext4_xattr_get(inode, name_index, "", NULL, 0);
- 	if (retval > 0) {
--		value = kmalloc(retval, GFP_NOFS);
-+		value = kmalloc(retval, GFP_KERNEL);
- 		if (!value)
- 			return ERR_PTR(-ENOMEM);
- 		retval = ext4_xattr_get(inode, name_index, "", value, retval);
-diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-index 9867b9e5ad8f..0371e7aa7bea 100644
---- a/fs/ext4/extents.c
-+++ b/fs/ext4/extents.c
-@@ -2933,7 +2933,7 @@ int ext4_ext_remove_space(struct inode *inode, ext4_lblk_t start,
- 				le16_to_cpu(path[k].p_hdr->eh_entries)+1;
- 	} else {
- 		path = kzalloc(sizeof(struct ext4_ext_path) * (depth + 1),
--			       GFP_NOFS);
-+			       GFP_KERNEL);
- 		if (path == NULL) {
- 			ext4_journal_stop(handle);
- 			return -ENOMEM;
-diff --git a/fs/ext4/resize.c b/fs/ext4/resize.c
-index cf681004b196..e121f4e048b8 100644
---- a/fs/ext4/resize.c
-+++ b/fs/ext4/resize.c
-@@ -816,7 +816,7 @@ static int add_new_gdb(handle_t *handle, struct inode *inode,
  
- 	n_group_desc = ext4_kvmalloc((gdb_num + 1) *
- 				     sizeof(struct buffer_head *),
--				     GFP_NOFS);
-+				     GFP_KERNEL);
- 	if (!n_group_desc) {
- 		err = -ENOMEM;
- 		ext4_warning(sb, "not enough memory for %lu groups",
-@@ -943,7 +943,7 @@ static int reserve_backup_gdb(handle_t *handle, struct inode *inode,
- 	int res, i;
- 	int err;
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 21e6a6ab6b9a..a2672ba4dc33 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -2866,7 +2866,7 @@ xfs_btree_split_worker(
+ 	struct xfs_btree_split_args	*args = container_of(work,
+ 						struct xfs_btree_split_args, work);
+ 	unsigned long		pflags;
+-	unsigned long		new_pflags = PF_FSTRANS;
++	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
  
--	primary = kmalloc(reserved_gdb * sizeof(*primary), GFP_NOFS);
-+	primary = kmalloc(reserved_gdb * sizeof(*primary), GFP_KERNEL);
- 	if (!primary)
- 		return -ENOMEM;
+ 	/*
+ 	 * we are in a transaction context here, but may also be doing work
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index ef382bfb402b..d4094bb55033 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -189,7 +189,7 @@ xfs_setfilesize_trans_alloc(
+ 	 * We hand off the transaction to the completion thread now, so
+ 	 * clear the flag here.
+ 	 */
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	return 0;
+ }
  
-diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c
-index 5a94fa52b74f..172317462238 100644
---- a/fs/ext4/xattr.c
-+++ b/fs/ext4/xattr.c
-@@ -875,7 +875,7 @@ ext4_xattr_block_set(handle_t *handle, struct inode *inode,
+@@ -252,7 +252,7 @@ xfs_setfilesize_ioend(
+ 	 * thus we need to mark ourselves as being in a transaction manually.
+ 	 * Similarly for freeze protection.
+ 	 */
+-	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
  
- 			unlock_buffer(bs->bh);
- 			ea_bdebug(bs->bh, "cloning");
--			s->base = kmalloc(bs->bh->b_size, GFP_NOFS);
-+			s->base = kmalloc(bs->bh->b_size, GFP_KERNEL);
- 			error = -ENOMEM;
- 			if (s->base == NULL)
- 				goto cleanup;
-@@ -887,7 +887,7 @@ ext4_xattr_block_set(handle_t *handle, struct inode *inode,
+ 	/* we abort the update if there was an IO error */
+@@ -1015,7 +1015,7 @@ xfs_do_writepage(
+ 	 * Given that we do not allow direct reclaim to call us, we should
+ 	 * never be called while in a filesystem transaction.
+ 	 */
+-	if (WARN_ON_ONCE(current->flags & PF_FSTRANS))
++	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
+ 		goto redirty;
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 70f42ea86dfb..f5969c8274fc 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -134,7 +134,7 @@ xfs_trans_reserve(
+ 	bool		rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
+ 
+ 	/* Mark this thread as being in a transaction */
+-	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 
+ 	/*
+ 	 * Attempt to reserve the needed disk blocks by decrementing
+@@ -144,7 +144,7 @@ xfs_trans_reserve(
+ 	if (blocks > 0) {
+ 		error = xfs_mod_fdblocks(tp->t_mountp, -((int64_t)blocks), rsvd);
+ 		if (error != 0) {
+-			current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++			current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 			return -ENOSPC;
  		}
- 	} else {
- 		/* Allocate a buffer where we construct the new block. */
--		s->base = kzalloc(sb->s_blocksize, GFP_NOFS);
-+		s->base = kzalloc(sb->s_blocksize, GFP_KERNEL);
- 		/* assert(header == s->base) */
- 		error = -ENOMEM;
- 		if (s->base == NULL)
+ 		tp->t_blk_res += blocks;
+@@ -221,7 +221,7 @@ xfs_trans_reserve(
+ 		tp->t_blk_res = 0;
+ 	}
+ 
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 
+ 	return error;
+ }
+@@ -914,7 +914,7 @@ __xfs_trans_commit(
+ 
+ 	xfs_log_commit_cil(mp, tp, &commit_lsn, regrant);
+ 
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	xfs_trans_free(tp);
+ 
+ 	/*
+@@ -944,7 +944,7 @@ __xfs_trans_commit(
+ 		if (commit_lsn == -1 && !error)
+ 			error = -EIO;
+ 	}
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	xfs_trans_free_items(tp, NULLCOMMITLSN, !!error);
+ 	xfs_trans_free(tp);
+ 
+@@ -998,7 +998,7 @@ xfs_trans_cancel(
+ 		xfs_log_done(mp, tp->t_ticket, NULL, false);
+ 
+ 	/* mark this thread as no longer being in a transaction */
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 
+ 	xfs_trans_free_items(tp, NULLCOMMITLSN, dirty);
+ 	xfs_trans_free(tp);
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 1531c48f56e2..abeb84604d32 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -2320,6 +2320,8 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
+ #define PF_FREEZER_SKIP	0x40000000	/* Freezer should not count it as freezable */
+ #define PF_SUSPEND_TASK 0x80000000      /* this thread called freeze_processes and should not be frozen */
+ 
++#define PF_MEMALLOC_NOFS PF_FSTRANS	/* Transition to a more generic GFP_NOFS scope semantic */
++
+ /*
+  * Only the _current_ task can read/write to tsk->flags, but other
+  * tasks can access tsk->flags in readonly mode for example
 -- 
 2.11.0
 
