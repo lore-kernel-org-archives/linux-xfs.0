@@ -1,64 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58120 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1032941AbdAEWzf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 5 Jan 2017 17:55:35 -0500
-Received: from Liberator.example.com (74-95-67-117-Minnesota.hfc.comcastbusiness.net [74.95.67.117])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 26395D4B
-        for <linux-xfs@vger.kernel.org>; Thu,  5 Jan 2017 16:54:59 -0600 (CST)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs: v4.9.0 released
-Message-ID: <1cae2699-b903-638a-5313-b096d61d05c1@sandeen.net>
-Date: Thu, 5 Jan 2017 16:55:33 -0600
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Received: from mail-wj0-f194.google.com ([209.85.210.194]:34426 "EHLO
+        mail-wj0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932625AbdAFOL0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:11:26 -0500
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [PATCH 7/8] Revert "ext4: avoid deadlocks in the writeback path by using sb_getblk_gfp"
+Date: Fri,  6 Jan 2017 15:11:06 +0100
+Message-Id: <20170106141107.23953-8-mhocko@kernel.org>
+In-Reply-To: <20170106141107.23953-1-mhocko@kernel.org>
+References: <20170106141107.23953-1-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
-Hi folks,
+From: Michal Hocko <mhocko@suse.com>
 
-The xfsprogs repository at:
+This reverts commit c45653c341f5c8a0ce19c8f0ad4678640849cb86 because
+sb_getblk_gfp is not really needed as
+sb_getblk
+  __getblk_gfp
+    __getblk_slow
+      grow_buffers
+        grow_dev_page
+	  gfp_mask = mapping_gfp_constraint(inode->i_mapping, ~__GFP_FS) | gfp
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+so __GFP_FS is cleared unconditionally and therefore the above commit
+didn't have any real effect in fact.
 
-has just been updated and tagged with v4.9.0.
+This patch should not introduce any functional change. The main point
+of this change is to reduce explicit GFP_NOFS usage inside ext4 code to
+make the review of the remaining usage easier.
 
-This is the first release with support for the new
-reflink & dedupe features, and contains several other updates and
-fixes. See the doc/CHANGES file summary included below for details.
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/ext4/extents.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-xfsprogs-4.9.0 (5 Jan 2017)
-        - no changes from v4.9.0-rc1
-
-xfsprogs-4.9-rc1 (22 Dec 2016)
-        - add reflink and dedupe support (Darrick Wong)
-        - Convert from off64_t to off_t (Felix Janda)
-        - xfs_io: add command line option to start an idle thread (Amir Goldstein)
-        - xfs_repair: junk leaf attribute if count == 0 (Eric Sandeen)
-        - xfs_quota: handle wrapped id from GETNEXTQUOTA (Eric Sandeen)
-        - xfs_repair: fix some potential null pointer deferences (Darrick Wong)
-        - libxfs_apply: filtering fixes (Dave Chinner)
-
-The new head of the master branch is commit:
-
-95d8518 xfsprogs: Release v4.9.0
-
-New Commits:
-
-Eric Sandeen (1):
-      [95d8518] xfsprogs: Release v4.9.0
-
-
-Code Diffstat:
-
- VERSION          |  2 +-
- configure.ac     |  2 +-
- debian/changelog |  6 ++++++
- doc/CHANGES      | 13 ++++++++-----
- 4 files changed, 16 insertions(+), 7 deletions(-)
+diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
+index 3e295d3350a9..9867b9e5ad8f 100644
+--- a/fs/ext4/extents.c
++++ b/fs/ext4/extents.c
+@@ -518,7 +518,7 @@ __read_extent_tree_block(const char *function, unsigned int line,
+ 	struct buffer_head		*bh;
+ 	int				err;
+ 
+-	bh = sb_getblk_gfp(inode->i_sb, pblk, __GFP_MOVABLE | GFP_NOFS);
++	bh = sb_getblk(inode->i_sb, pblk);
+ 	if (unlikely(!bh))
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -1096,7 +1096,7 @@ static int ext4_ext_split(handle_t *handle, struct inode *inode,
+ 		err = -EFSCORRUPTED;
+ 		goto cleanup;
+ 	}
+-	bh = sb_getblk_gfp(inode->i_sb, newblock, __GFP_MOVABLE | GFP_NOFS);
++	bh = sb_getblk(inode->i_sb, newblock);
+ 	if (unlikely(!bh)) {
+ 		err = -ENOMEM;
+ 		goto cleanup;
+@@ -1290,7 +1290,7 @@ static int ext4_ext_grow_indepth(handle_t *handle, struct inode *inode,
+ 	if (newblock == 0)
+ 		return err;
+ 
+-	bh = sb_getblk_gfp(inode->i_sb, newblock, __GFP_MOVABLE | GFP_NOFS);
++	bh = sb_getblk(inode->i_sb, newblock);
+ 	if (unlikely(!bh))
+ 		return -ENOMEM;
+ 	lock_buffer(bh);
+-- 
+2.11.0
 
