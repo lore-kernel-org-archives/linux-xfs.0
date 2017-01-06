@@ -1,84 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35108 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936426AbdADPr4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Jan 2017 10:47:56 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 6F524AD223C
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Jan 2017 09:45:48 -0600 (CST)
-Subject: Re: [PATCH] Fix max_retries _show and _store functions
-References: <20170103175331.8089-1-cmaiolino@redhat.com>
- <7818525d-fd15-d245-a958-1648b5df3ecd@sandeen.net>
- <20170104105840.mr54e3ypljphb2pd@eorzea.usersys.redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6f9fcef4-bb02-148f-a339-d5b7396726b8@sandeen.net>
-Date: Wed, 4 Jan 2017 09:46:21 -0600
+Received: from userp1040.oracle.com ([156.151.31.81]:18044 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753592AbdAFHIK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 02:08:10 -0500
+Date: Thu, 5 Jan 2017 23:07:32 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] duperemove: test presence of dedupe ioctl
+Message-ID: <20170106070732.GA14020@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170104105840.mr54e3ypljphb2pd@eorzea.usersys.redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: mfasheh@versity.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On 1/4/17 4:58 AM, Carlos Maiolino wrote:
-> On Tue, Jan 03, 2017 at 12:19:53PM -0600, Eric Sandeen wrote:
->> On 1/3/17 11:53 AM, Carlos Maiolino wrote:
->>> max_retries _show and _store functions should test against cfg->max_retries,
->>> not cfg->retry_timeout
->>>
->>> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
->>
->> Whoever made those mistakes should be very ashamed.  ;)
->> I guess it was a cut and paste error.  :(
->>
->> This should probably cc: stable, too.
-> 
-> Yeah, I believe so,
-> 
-> maybe if I just forward the patch to stable might work? 
+Since a zero-length dedupe operation is guaranteed to succeed, use that
+to test whether or not this filesystem supports dedupe.
 
-if cc: stable gets added when it's committed, that'll suffice.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: declare variables on the stack instead of introducing fake types
+---
+ file_scan.c |   45 +++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 35 insertions(+), 10 deletions(-)
 
--Eric
-
->>
->> Thanks,
->>
->> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
->>
->>> ---
->>>  fs/xfs/xfs_sysfs.c | 4 ++--
->>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
->>> index 276d302..de6195e 100644
->>> --- a/fs/xfs/xfs_sysfs.c
->>> +++ b/fs/xfs/xfs_sysfs.c
->>> @@ -396,7 +396,7 @@ max_retries_show(
->>>  	int		retries;
->>>  	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
->>>  
->>> -	if (cfg->retry_timeout == XFS_ERR_RETRY_FOREVER)
->>> +	if (cfg->max_retries == XFS_ERR_RETRY_FOREVER)
->>>  		retries = -1;
->>>  	else
->>>  		retries = cfg->max_retries;
->>> @@ -422,7 +422,7 @@ max_retries_store(
->>>  		return -EINVAL;
->>>  
->>>  	if (val == -1)
->>> -		cfg->retry_timeout = XFS_ERR_RETRY_FOREVER;
->>> +		cfg->max_retries = XFS_ERR_RETRY_FOREVER;
->>>  	else
->>>  		cfg->max_retries = val;
->>>  	return count;
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/file_scan.c b/file_scan.c
+index 617f166..2708bfe 100644
+--- a/file_scan.c
++++ b/file_scan.c
+@@ -45,11 +45,7 @@
+ #include "file_scan.h"
+ #include "dbfile.h"
+ #include "util.h"
+-
+-/* This is not in linux/magic.h */
+-#ifndef	XFS_SB_MAGIC
+-#define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
+-#endif
++#include "btrfs-ioctl.h"
+ 
+ static char path[PATH_MAX] = { 0, };
+ static char *pathp = path;
+@@ -189,6 +185,37 @@ static int walk_dir(const char *name)
+ 	return ret;
+ }
+ 
++/*
++ * A zero-length dedupe between two files should always succeed,
++ * so we can use this to test the presence of dedupe functionality.
++ */
++static bool check_ioctl_works(int fd)
++{
++	struct {
++		struct btrfs_ioctl_same_args args;
++		struct btrfs_ioctl_same_extent_info info;
++	} sa = {0};
++	struct stat sb;
++	static int cached = -1;
++	int ret;
++
++	if (cached >= 0)
++		return cached != 0;
++
++	ret = fstat(fd, &sb);
++	if (ret)
++		return false;
++
++	sa.args.dest_count = 1;
++	sa.args.length = 0;
++	sa.info.fd = fd;
++	sa.info.logical_offset = 0;
++	errno = 0;
++	ret = btrfs_extent_same(fd, &sa.args);
++	cached = !ret && !errno && !sa.info.status;
++	return cached;
++}
++
+ static int __add_file(const char *name, struct stat *st,
+ 		      struct filerec **ret_file)
+ {
+@@ -235,12 +262,10 @@ static int __add_file(const char *name, struct stat *st,
+ 		goto out;
+ 	}
+ 
+-	if (run_dedupe &&
+-	    ((fs.f_type != BTRFS_SUPER_MAGIC &&
+-	      fs.f_type != XFS_SB_MAGIC))) {
++	if (run_dedupe && !check_ioctl_works(fd)) {
+ 		close(fd);
+-		fprintf(stderr,	"\"%s\": Can only dedupe files on btrfs or xfs "
+-			"(experimental)\n", name);
++		fprintf(stderr,	"\"%s\": dedupe ioctl not supported on this "
++			"filesystem.\n", name);
+ 		return ENOSYS;
+ 	}
+ 
