@@ -1,139 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50178 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53178 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760042AbdAFTk2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 6 Jan 2017 14:40:28 -0500
+        id S932266AbdAFThN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 6 Jan 2017 14:37:13 -0500
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id CDD36C04B941
+        for <linux-xfs@vger.kernel.org>; Fri,  6 Jan 2017 19:37:13 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v06JbD26003727
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jan 2017 14:37:13 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] generic: test racing getxattr requests against xattr add/remove
-Date: Fri,  6 Jan 2017 14:39:30 -0500
-Message-Id: <1483731570-55208-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH] xfs: remove racy hasattr check from attr get
+Date: Fri,  6 Jan 2017 14:37:12 -0500
+Message-Id: <1483731432-55042-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-This test reproduces a bug in XFS where a getxattr of an existing xattr
-returns failure due to a race with a setxattr that causes inode
-attribute fork conversion.
+xfs_attr_get() has an unlocked attribute fork check to optimize away a
+lock cycle in cases where the fork does not exist or is otherwise empty.
+This check is not safe, however, because an attribute fork short form to
+extent format conversion includes a transient state that causes the
+xfs_inode_hasattr() check to fail. Specifically,
+xfs_attr_shortform_to_leaf() creates an empty extent format attribute
+fork and then adds the existing shortform attributes to it.
+
+This means that lookup of an existing xattr can spuriously return
+-ENOATTR when racing against a setxattr that causes the associated
+format conversion. This was originally reproduced by an untar on a
+particularly configured glusterfs volume, but can also be reproduced on
+demand with properly crafted xattr requests.
+
+The format conversion occurs under the exclusive ilock. xfs_attr_get()
+already has the proper locking and checks further down in the function
+to handle this situation correctly. Drop the unlocked check to avoid the
+spurious failure and rely on the existing logic.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- tests/generic/402     | 85 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/402.out |  2 ++
- tests/generic/group   |  1 +
- 3 files changed, 88 insertions(+)
- create mode 100755 tests/generic/402
- create mode 100644 tests/generic/402.out
 
-diff --git a/tests/generic/402 b/tests/generic/402
-new file mode 100755
-index 0000000..b9739bb
---- /dev/null
-+++ b/tests/generic/402
-@@ -0,0 +1,85 @@
-+#! /bin/bash
-+# FS QA Test 402
-+#
-+# Test racing getxattr requests against large xattr add and remove loop. This
-+# reproduces a bug on XFS where a getxattr of an existing attribute spuriously
-+# returned failure due to races with attribute fork conversion.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Red hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/attr
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os IRIX Linux
-+_require_scratch
-+_require_attrs
-+
-+_scratch_mkfs > $seqres.full 2>&1 || _fail "mkfs"
-+_scratch_mount || _fail "mount"
-+
-+# create xattr small enough for local format on XFS
-+touch $SCRATCH_MNT/file
-+$SETFATTR_PROG -n trusted.small -v a $SCRATCH_MNT/file
-+
-+# start a background getxattr loop for the existing xattr
-+while [ true ]; do
-+	$GETFATTR_PROG --absolute-names -n trusted.small $SCRATCH_MNT/file \
-+		> /dev/null || break
-+done &
-+getfattr_pid=$!
-+
-+# while the above is spinning, add and remove a large attribute to cause back
-+# and forth inode attribute fork conversion
-+largeval=`for i in $(seq 0 511); do echo -n a; done`
-+for i in $(seq 0 99); do
-+	$SETFATTR_PROG -n trusted.big -v $largeval $SCRATCH_MNT/file
-+	$SETFATTR_PROG -x trusted.big $SCRATCH_MNT/file
-+done
-+
-+kill -9 $getfattr_pid > /dev/null 2>&1
-+wait > /dev/null 2>&1
-+
-+echo Silence is golden
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/402.out b/tests/generic/402.out
-new file mode 100644
-index 0000000..28e1501
---- /dev/null
-+++ b/tests/generic/402.out
-@@ -0,0 +1,2 @@
-+QA output created by 402
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index 64dae2b..eb11c0f 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -404,3 +404,4 @@
- 399 auto encrypt
- 400 auto quick quota
- 401 auto quick
-+402 auto quick attr
+This survives a local xfstests run and the original glusterfs
+reproducer. I also have an xfstests reproducer that I will post shortly.
+
+Brian
+
+ fs/xfs/libxfs/xfs_attr.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index af1ecb1..8fcbc52 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -131,9 +131,6 @@ xfs_attr_get(
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
+ 
+-	if (!xfs_inode_hasattr(ip))
+-		return -ENOATTR;
+-
+ 	error = xfs_attr_args_init(&args, ip, name, flags);
+ 	if (error)
+ 		return error;
 -- 
 2.7.4
 
