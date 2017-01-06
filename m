@@ -1,109 +1,106 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
-Subject: Bug#839129: (no subject)
-From: xfs-owner@oss.sgi.com
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============6347949392380920004=="
-Message-ID: <mailman.4830.1483660632.4130.xfs@oss.sgi.com>
-Date: Thu, 05 Jan 2017 17:57:12 -0600
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: sandeen@sandeen.net
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mail-wj0-f195.google.com ([209.85.210.195]:34414 "EHLO
+        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755138AbdAFOLW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:11:22 -0500
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [PATCH 4/8] xfs: use memalloc_nofs_{save,restore} instead of memalloc_noio*
+Date: Fri,  6 Jan 2017 15:11:03 +0100
+Message-Id: <20170106141107.23953-5-mhocko@kernel.org>
+In-Reply-To: <20170106141107.23953-1-mhocko@kernel.org>
+References: <20170106141107.23953-1-mhocko@kernel.org>
+Sender: linux-xfs-owner@vger.kernel.org
+List-ID: <linux-xfs.vger.kernel.org>
+List-Id: xfs
+To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
---===============6347949392380920004==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Michal Hocko <mhocko@suse.com>
 
-This list has been closed.  Please subscribe to the
-linux-xfs@vger.kernel.org mailing list and send any future messages
-there. You can subscribe to the linux-xfs list at
-http://vger.kernel.org/vger-lists.html#linux-xfs
+kmem_zalloc_large and _xfs_buf_map_pages use memalloc_noio_{save,restore}
+API to prevent from reclaim recursion into the fs because vmalloc can
+invoke unconditional GFP_KERNEL allocations and these functions might be
+called from the NOFS contexts. The memalloc_noio_save will enforce
+GFP_NOIO context which is even weaker than GFP_NOFS and that seems to be
+unnecessary. Let's use memalloc_nofs_{save,restore} instead as it should
+provide exactly what we need here - implicit GFP_NOFS context.
 
-For any questions please post to the new list.
+Changes since v1
+- s@memalloc_noio_restore@memalloc_nofs_restore@ in _xfs_buf_map_pages
+  as per Brian Foster
 
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ fs/xfs/kmem.c    | 10 +++++-----
+ fs/xfs/xfs_buf.c |  8 ++++----
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
---===============6347949392380920004==
-Content-Type: message/rfc822
-MIME-Version: 1.0
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index a76a05dae96b..d69ed5e76621 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -65,7 +65,7 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+ void *
+ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+ {
+-	unsigned noio_flag = 0;
++	unsigned nofs_flag = 0;
+ 	void	*ptr;
+ 	gfp_t	lflags;
+ 
+@@ -80,14 +80,14 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+ 	 * context via PF_MEMALLOC_NOIO to prevent memory reclaim re-entering
+ 	 * the filesystem here and potentially deadlocking.
+ 	 */
+-	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+-		noio_flag = memalloc_noio_save();
++	if (flags & KM_NOFS)
++		nofs_flag = memalloc_nofs_save();
+ 
+ 	lflags = kmem_flags_convert(flags);
+ 	ptr = __vmalloc(size, lflags | __GFP_HIGHMEM | __GFP_ZERO, PAGE_KERNEL);
+ 
+-	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+-		memalloc_noio_restore(noio_flag);
++	if (flags & KM_NOFS)
++		memalloc_nofs_restore(nofs_flag);
+ 
+ 	return ptr;
+ }
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 7f0a01f7b592..8cb8dd4cdfd8 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -441,17 +441,17 @@ _xfs_buf_map_pages(
+ 		bp->b_addr = NULL;
+ 	} else {
+ 		int retried = 0;
+-		unsigned noio_flag;
++		unsigned nofs_flag;
+ 
+ 		/*
+ 		 * vm_map_ram() will allocate auxillary structures (e.g.
+ 		 * pagetables) with GFP_KERNEL, yet we are likely to be under
+ 		 * GFP_NOFS context here. Hence we need to tell memory reclaim
+-		 * that we are in such a context via PF_MEMALLOC_NOIO to prevent
++		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
+ 		 * memory reclaim re-entering the filesystem here and
+ 		 * potentially deadlocking.
+ 		 */
+-		noio_flag = memalloc_noio_save();
++		nofs_flag = memalloc_nofs_save();
+ 		do {
+ 			bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
+ 						-1, PAGE_KERNEL);
+@@ -459,7 +459,7 @@ _xfs_buf_map_pages(
+ 				break;
+ 			vm_unmap_aliases();
+ 		} while (retried++ <= 1);
+-		memalloc_noio_restore(noio_flag);
++		memalloc_nofs_restore(nofs_flag);
+ 
+ 		if (!bp->b_addr)
+ 			return -ENOMEM;
+-- 
+2.11.0
 
-Return-Path: <debbugs@buxtehude.debian.org>
-X-Spam-Checker-Version: SpamAssassin 3.3.1 (2010-03-16) on oss.sgi.com
-X-Spam-Level: 
-X-Spam-Status: No, score=-100.0 required=5.0 tests=USER_IN_WHITELIST
-	autolearn=ham version=3.3.1
-X-Original-To: xfs@oss.sgi.com
-Delivered-To: xfs@oss.sgi.com
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 580867CA0
-	for <xfs@oss.sgi.com>; Thu,  5 Jan 2017 17:57:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 17D5B304062
-	for <xfs@oss.sgi.com>; Thu,  5 Jan 2017 15:57:10 -0800 (PST)
-X-ASG-Debug-ID: 1483660627-0bf8151b794ab7a0001-NocioJ
-Received: from buxtehude.debian.org (buxtehude.debian.org [209.87.16.39]) by cuda.sgi.com with ESMTP id lc29C6jfPYAcImee (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO) for <xfs@oss.sgi.com>; Thu, 05 Jan 2017 15:57:07 -0800 (PST)
-X-Barracuda-Envelope-From: debbugs@buxtehude.debian.org
-X-Barracuda-Effective-Source-IP: buxtehude.debian.org[209.87.16.39]
-X-Barracuda-Apparent-Source-IP: 209.87.16.39
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.84_2)
-	(envelope-from <debbugs@buxtehude.debian.org>)
-	id 1cPHu2-0006gF-RG; Thu, 05 Jan 2017 23:57:02 +0000
-X-Loop: owner@bugs.debian.org
-Subject: Bug#839129: (no subject)
-Reply-To: Eric Sandeen <sandeen@sandeen.net>, 839129@bugs.debian.org
-X-ASG-Orig-Subj: Bug#839129: (no subject)
-Resent-From: Eric Sandeen <sandeen@sandeen.net>
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-CC: XFS Development Team <xfs@oss.sgi.com>
-X-Loop: owner@bugs.debian.org
-Resent-Date: Thu, 05 Jan 2017 23:57:01 +0000
-Resent-Message-ID: <handler.839129.B839129.148366048124912@bugs.debian.org>
-X-Debian-PR-Message: followup 839129
-X-Debian-PR-Package: xfsprogs
-X-Debian-PR-Keywords: 
-X-Debian-PR-Source: xfsprogs
-Received: via spool by 839129-submit@bugs.debian.org id=B839129.148366048124912
-          (code B ref 839129); Thu, 05 Jan 2017 23:57:01 +0000
-Received: (at 839129) by bugs.debian.org; 5 Jan 2017 23:54:41 +0000
-Received: from sandeen.net ([63.231.237.45])
-	by buxtehude.debian.org with esmtp (Exim 4.84_2)
-	(envelope-from <sandeen@sandeen.net>)
-	id 1cPHrl-0006NA-Dm
-	for 839129@bugs.debian.org; Thu, 05 Jan 2017 23:54:41 +0000
-Received: from Liberator.example.com (74-95-67-117-Minnesota.hfc.comcastbusiness.net [74.95.67.117])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 86B1948E3
-	for <839129@bugs.debian.org>; Thu,  5 Jan 2017 17:46:37 -0600 (CST)
-To: 839129@bugs.debian.org
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9beb4d47-8704-b0d0-ea57-268684dd1cec@sandeen.net>
-Date: Thu, 5 Jan 2017 17:47:12 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:45.0)
- Gecko/20100101 Thunderbird/45.6.0
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-X-Greylist: delayed 443 seconds by postgrey-1.35 at buxtehude; Thu, 05 Jan 2017 23:54:41 UTC
-X-Barracuda-Connect: buxtehude.debian.org[209.87.16.39]
-X-Barracuda-Start-Time: 1483660627
-X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
-X-Barracuda-URL: https://192.48.157.11:443/cgi-mod/mark.cgi
-X-Barracuda-Scan-Msg-Size: 150
-X-Virus-Scanned: by bsmtpd at sgi.com
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Spam-Score: 0.00
-X-Barracuda-Spam-Status: No, SCORE=0.00 using per-user scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=2.7 tests=BSF_SC0_MISMATCH_TO
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.35615
-	Rule breakdown below
-	 pts rule name              description
-	---- ---------------------- --------------------------------------------------
-	0.00 BSF_SC0_MISMATCH_TO    Envelope rcpt doesn't match header
-
-If you can turn on tracing for the xfs_swap_extent\* tracepoints and rerun, that might give us more information about the failure.
-
-Thanks,
--Eric
-
-
---===============6347949392380920004==--
