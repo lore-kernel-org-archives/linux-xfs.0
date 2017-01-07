@@ -1,76 +1,288 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33696 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S970049AbdAEB55 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Jan 2017 20:57:57 -0500
-Date: Wed, 4 Jan 2017 17:57:53 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: updates for 4.10-rc3
-Message-ID: <20170105015753.GB17846@birch.djwong.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51656 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032643AbdAGAhV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:37:21 -0500
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070bK3q022939
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:37:20 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v070bKWF021288
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:37:20 GMT
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v070bIfu022095
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:37:19 GMT
+Subject: [PATCH 14/47] xfs: support scrubbing free space btrees
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 06 Jan 2017 16:37:17 -0800
+Message-ID: <148374943725.30431.16250175996360256674.stgit@birch.djwong.org>
+In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dave Chinner <david@fromorbit.com>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hi Linus,
+Check the extent records free space btrees to ensure that the values
+look sane.
 
-Could you please have a look at the XFS update from the tag below?  I
-think I got everything right, but the branch and the tag could use some
-more experienced eyes.  This is my first attempt at a LKML-style pull
-request, so I thought I'd send along a few fixes that have crept in
-since -rc1, and the MAINTAINERS update[1] promised by Dave last year.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/Makefile                 |    1 
+ fs/xfs/libxfs/xfs_alloc_btree.c |    6 --
+ fs/xfs/libxfs/xfs_fs.h          |    4 +
+ fs/xfs/repair/alloc.c           |  114 +++++++++++++++++++++++++++++++++++++++
+ fs/xfs/repair/common.c          |    2 +
+ fs/xfs/repair/common.h          |    6 ++
+ fs/xfs/xfs_trace.h              |    4 +
+ 7 files changed, 129 insertions(+), 8 deletions(-)
+ create mode 100644 fs/xfs/repair/alloc.c
 
-If the tag looks ok, please pull it; otherwise let me know what's wrong
-and I'll try again.  I plan to send some more fixes from Christoph soon,
-but for my first try at a pull request I want to keep things simple.
 
---Darrick
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index ae307ba..39c8fe0 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -104,6 +104,7 @@ xfs-y				+= xfs_aops.o \
+ # online scrub/repair
+ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix repair/, \
+ 				   agheader.o \
++				   alloc.o \
+ 				   btree.o \
+ 				   common.o \
+ 				   )
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index ba3ec9c..10d6c12 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -386,7 +386,6 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
+ };
+ 
+ 
+-#if defined(DEBUG) || defined(XFS_WARN)
+ STATIC int
+ xfs_bnobt_keys_inorder(
+ 	struct xfs_btree_cur	*cur,
+@@ -433,7 +432,6 @@ xfs_cntbt_recs_inorder(
+ 		 be32_to_cpu(r1->alloc.ar_startblock) <
+ 		 be32_to_cpu(r2->alloc.ar_startblock));
+ }
+-#endif /* DEBUG */
+ 
+ static const struct xfs_btree_ops xfs_bnobt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+@@ -453,10 +451,8 @@ static const struct xfs_btree_ops xfs_bnobt_ops = {
+ 	.key_diff		= xfs_bnobt_key_diff,
+ 	.buf_ops		= &xfs_allocbt_buf_ops,
+ 	.diff_two_keys		= xfs_bnobt_diff_two_keys,
+-#if defined(DEBUG) || defined(XFS_WARN)
+ 	.keys_inorder		= xfs_bnobt_keys_inorder,
+ 	.recs_inorder		= xfs_bnobt_recs_inorder,
+-#endif
+ };
+ 
+ static const struct xfs_btree_ops xfs_cntbt_ops = {
+@@ -476,10 +472,8 @@ static const struct xfs_btree_ops xfs_cntbt_ops = {
+ 	.key_diff		= xfs_cntbt_key_diff,
+ 	.buf_ops		= &xfs_allocbt_buf_ops,
+ 	.diff_two_keys		= xfs_cntbt_diff_two_keys,
+-#if defined(DEBUG) || defined(XFS_WARN)
+ 	.keys_inorder		= xfs_cntbt_keys_inorder,
+ 	.recs_inorder		= xfs_cntbt_recs_inorder,
+-#endif
+ };
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index f883dcd..4e61d8b 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -579,7 +579,9 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_TYPE_AGF	2	/* AG free header */
+ #define XFS_SCRUB_TYPE_AGFL	3	/* AG free list */
+ #define XFS_SCRUB_TYPE_AGI	4	/* AG inode header */
+-#define XFS_SCRUB_TYPE_MAX	4
++#define XFS_SCRUB_TYPE_BNOBT	5	/* freesp by block btree */
++#define XFS_SCRUB_TYPE_CNTBT	6	/* freesp by length btree */
++#define XFS_SCRUB_TYPE_MAX	6
+ 
+ #define XFS_SCRUB_FLAG_REPAIR	0x1	/* i: repair this metadata */
+ #define XFS_SCRUB_FLAG_CORRUPT	0x2	/* o: needs repair */
+diff --git a/fs/xfs/repair/alloc.c b/fs/xfs/repair/alloc.c
+new file mode 100644
+index 0000000..2fef449
+--- /dev/null
++++ b/fs/xfs/repair/alloc.c
+@@ -0,0 +1,114 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_trace.h"
++#include "xfs_sb.h"
++#include "xfs_rmap.h"
++#include "repair/common.h"
++#include "repair/btree.h"
++
++/* Set us up with AG headers and btree cursors. */
++int
++xfs_scrub_setup_ag_header(
++	struct xfs_scrub_context	*sc,
++	struct xfs_inode		*ip,
++	struct xfs_scrub_metadata	*sm,
++	bool				retry_deadlocked)
++{
++	int				error;
++
++	error = xfs_scrub_setup_ag(sc, ip, sm, retry_deadlocked);
++	if (error)
++		goto out;
++
++	error = xfs_scrub_ag_init(sc, sm->sm_agno, &sc->sa);
++	if (error)
++		xfs_trans_cancel(sc->tp);
++out:
++	return error;
++}
++
++/* Free space btree scrubber. */
++
++/* Scrub a bnobt/cntbt record. */
++STATIC int
++xfs_scrub_allocbt_helper(
++	struct xfs_scrub_btree		*bs,
++	union xfs_btree_rec		*rec)
++{
++	struct xfs_mount		*mp = bs->cur->bc_mp;
++	struct xfs_agf			*agf;
++	xfs_agblock_t			bno;
++	xfs_extlen_t			len;
++	int				error = 0;
++
++	bno = be32_to_cpu(rec->alloc.ar_startblock);
++	len = be32_to_cpu(rec->alloc.ar_blockcount);
++	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
++
++	XFS_SCRUB_BTREC_CHECK(bs, bno < mp->m_sb.sb_agblocks);
++	XFS_SCRUB_BTREC_CHECK(bs, bno < be32_to_cpu(agf->agf_length));
++	XFS_SCRUB_BTREC_CHECK(bs, bno < bno + len);
++	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)bno + len <=
++			mp->m_sb.sb_agblocks);
++	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)bno + len <=
++			be32_to_cpu(agf->agf_length));
++
++	return error;
++}
++
++/* Scrub the freespace btrees for some AG. */
++STATIC int
++xfs_scrub_allocbt(
++	struct xfs_scrub_context	*sc,
++	xfs_btnum_t			which)
++{
++	struct xfs_owner_info		oinfo;
++	struct xfs_btree_cur		*cur;
++
++	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
++	cur = which == XFS_BTNUM_BNO ? sc->sa.bno_cur : sc->sa.cnt_cur;
++	return xfs_scrub_btree(sc, cur, xfs_scrub_allocbt_helper,
++			&oinfo, NULL);
++}
++
++int
++xfs_scrub_bnobt(
++	struct xfs_scrub_context	*sc)
++{
++	return xfs_scrub_allocbt(sc, XFS_BTNUM_BNO);
++}
++
++int
++xfs_scrub_cntbt(
++	struct xfs_scrub_context	*sc)
++{
++	return xfs_scrub_allocbt(sc, XFS_BTNUM_CNT);
++}
+diff --git a/fs/xfs/repair/common.c b/fs/xfs/repair/common.c
+index eb5c03e..7c16c35 100644
+--- a/fs/xfs/repair/common.c
++++ b/fs/xfs/repair/common.c
+@@ -662,6 +662,8 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+ 	{xfs_scrub_setup_ag, xfs_scrub_agf, NULL, NULL},
+ 	{xfs_scrub_setup_ag, xfs_scrub_agfl, NULL, NULL},
+ 	{xfs_scrub_setup_ag, xfs_scrub_agi, NULL, NULL},
++	{xfs_scrub_setup_ag_header, xfs_scrub_bnobt, NULL, NULL},
++	{xfs_scrub_setup_ag_header, xfs_scrub_cntbt, NULL, NULL},
+ };
+ 
+ /* Dispatch metadata scrubbing. */
+diff --git a/fs/xfs/repair/common.h b/fs/xfs/repair/common.h
+index ec4c230..b4a907f 100644
+--- a/fs/xfs/repair/common.h
++++ b/fs/xfs/repair/common.h
+@@ -204,6 +204,10 @@ int xfs_scrub_setup(struct xfs_scrub_context *sc, struct xfs_inode *ip,
+ 		    struct xfs_scrub_metadata *sm, bool retry_deadlocked);
+ int xfs_scrub_setup_ag(struct xfs_scrub_context *sc, struct xfs_inode *ip,
+ 		       struct xfs_scrub_metadata *sm, bool retry_deadlocked);
++int xfs_scrub_setup_ag_header(struct xfs_scrub_context *sc,
++			      struct xfs_inode *ip,
++			      struct xfs_scrub_metadata *sm,
++			      bool retry_deadlocked);
+ 
+ /* Metadata scrubbers */
+ 
+@@ -211,5 +215,7 @@ int xfs_scrub_superblock(struct xfs_scrub_context *sc);
+ int xfs_scrub_agf(struct xfs_scrub_context *sc);
+ int xfs_scrub_agfl(struct xfs_scrub_context *sc);
+ int xfs_scrub_agi(struct xfs_scrub_context *sc);
++int xfs_scrub_bnobt(struct xfs_scrub_context *sc);
++int xfs_scrub_cntbt(struct xfs_scrub_context *sc);
+ 
+ #endif	/* __XFS_REPAIR_COMMON_H__ */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 38118f5..5cc7fed 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3357,7 +3357,9 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
+ 	{ XFS_SCRUB_TYPE_SB,		"superblock" }, \
+ 	{ XFS_SCRUB_TYPE_AGF,		"AGF" }, \
+ 	{ XFS_SCRUB_TYPE_AGFL,		"AGFL" }, \
+-	{ XFS_SCRUB_TYPE_AGI,		"AGI" }
++	{ XFS_SCRUB_TYPE_AGI,		"AGI" }, \
++	{ XFS_SCRUB_TYPE_BNOBT,		"bnobt" }, \
++	{ XFS_SCRUB_TYPE_CNTBT,		"cntbt" }
+ DECLARE_EVENT_CLASS(xfs_scrub_class,
+ 	TP_PROTO(struct xfs_inode *ip, int type, xfs_agnumber_t agno,
+ 		 xfs_ino_t inum, unsigned int gen, unsigned int flags,
 
-[1] https://lkml.org/lkml/2016/12/14/807
-
-The following changes since commit 0c744ea4f77d72b3dcebb7a8f2684633ec79be88:
-
-  Linux 4.10-rc2 (2017-01-01 14:31:53 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-for-linus-4.10-rc3
-
-for you to fetch changes up to ff97f2399edac1e0fb3fa7851d5fbcbdf04717cf:
-
-  xfs: fix max_retries _show and _store functions (2017-01-03 20:34:17 -0800)
-
-----------------------------------------------------------------
-Contained in this update:
-- Fixes for crashes and double-cleanup errors
-- XFS maintainership handover
-- Fix to prevent absurdly large block reservations
-- Fix broken sysfs getter/setters
-
-----------------------------------------------------------------
-Carlos Maiolino (1):
-      xfs: fix max_retries _show and _store functions
-
-Christoph Hellwig (1):
-      xfs: fix crash and data corruption due to removal of busy COW extents
-
-Darrick J. Wong (3):
-      xfs: fix double-cleanup when CUI recovery fails
-      xfs: use the actual AG length when reserving blocks
-      xfs: update MAINTAINERS
-
- MAINTAINERS                        |  4 ++--
- fs/xfs/libxfs/xfs_ag_resv.c        |  3 +++
- fs/xfs/libxfs/xfs_refcount_btree.c |  9 ++++++---
- fs/xfs/libxfs/xfs_refcount_btree.h |  3 ++-
- fs/xfs/libxfs/xfs_rmap_btree.c     | 14 +++++++-------
- fs/xfs/libxfs/xfs_rmap_btree.h     |  3 ++-
- fs/xfs/xfs_fsops.c                 | 14 ++++++++++++++
- fs/xfs/xfs_icache.c                |  3 ++-
- fs/xfs/xfs_refcount_item.c         |  3 ++-
- fs/xfs/xfs_sysfs.c                 |  4 ++--
- 10 files changed, 42 insertions(+), 18 deletions(-)
