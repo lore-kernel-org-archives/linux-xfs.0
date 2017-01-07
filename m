@@ -1,194 +1,217 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:33136 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755125AbdAFOLT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:11:19 -0500
-From: Michal Hocko <mhocko@kernel.org>
-Subject: [PATCH 1/8] lockdep: allow to disable reclaim lockup detection
-Date: Fri,  6 Jan 2017 15:11:00 +0100
-Message-Id: <20170106141107.23953-2-mhocko@kernel.org>
-In-Reply-To: <20170106141107.23953-1-mhocko@kernel.org>
-References: <20170106141107.23953-1-mhocko@kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51633 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032643AbdAGAhP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:37:15 -0500
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070bEre022863
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:37:14 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v070bEDa021908
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:37:14 GMT
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v070bCkE022086
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:37:13 GMT
+Subject: [PATCH 13/47] xfs: scrub the AGI
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 06 Jan 2017 16:37:11 -0800
+Message-ID: <148374943109.30431.2724190065869065651.stgit@birch.djwong.org>
+In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Michal Hocko <mhocko@suse.com>
+Add a forgotten check to the AGI verifier, then wire up the scrub
+infrastructure to check the AGI contents.
 
-The current implementation of the reclaim lockup detection can lead to
-false positives and those even happen and usually lead to tweak the
-code to silence the lockdep by using GFP_NOFS even though the context
-can use __GFP_FS just fine. See
-http://lkml.kernel.org/r/20160512080321.GA18496@dastard as an example.
-
-=================================
-[ INFO: inconsistent lock state ]
-4.5.0-rc2+ #4 Tainted: G           O
----------------------------------
-inconsistent {RECLAIM_FS-ON-R} -> {IN-RECLAIM_FS-W} usage.
-kswapd0/543 [HC0[0]:SC0[0]:HE1:SE1] takes:
-
-(&xfs_nondir_ilock_class){++++-+}, at: [<ffffffffa00781f7>] xfs_ilock+0x177/0x200 [xfs]
-
-{RECLAIM_FS-ON-R} state was registered at:
-  [<ffffffff8110f369>] mark_held_locks+0x79/0xa0
-  [<ffffffff81113a43>] lockdep_trace_alloc+0xb3/0x100
-  [<ffffffff81224623>] kmem_cache_alloc+0x33/0x230
-  [<ffffffffa008acc1>] kmem_zone_alloc+0x81/0x120 [xfs]
-  [<ffffffffa005456e>] xfs_refcountbt_init_cursor+0x3e/0xa0 [xfs]
-  [<ffffffffa0053455>] __xfs_refcount_find_shared+0x75/0x580 [xfs]
-  [<ffffffffa00539e4>] xfs_refcount_find_shared+0x84/0xb0 [xfs]
-  [<ffffffffa005dcb8>] xfs_getbmap+0x608/0x8c0 [xfs]
-  [<ffffffffa007634b>] xfs_vn_fiemap+0xab/0xc0 [xfs]
-  [<ffffffff81244208>] do_vfs_ioctl+0x498/0x670
-  [<ffffffff81244459>] SyS_ioctl+0x79/0x90
-  [<ffffffff81847cd7>] entry_SYSCALL_64_fastpath+0x12/0x6f
-
-       CPU0
-       ----
-  lock(&xfs_nondir_ilock_class);
-  <Interrupt>
-    lock(&xfs_nondir_ilock_class);
-
- *** DEADLOCK ***
-
-3 locks held by kswapd0/543:
-
-stack backtrace:
-CPU: 0 PID: 543 Comm: kswapd0 Tainted: G           O    4.5.0-rc2+ #4
-
-Hardware name: innotek GmbH VirtualBox/VirtualBox, BIOS VirtualBox 12/01/2006
-
- ffffffff82a34f10 ffff88003aa078d0 ffffffff813a14f9 ffff88003d8551c0
- ffff88003aa07920 ffffffff8110ec65 0000000000000000 0000000000000001
- ffff880000000001 000000000000000b 0000000000000008 ffff88003d855aa0
-Call Trace:
- [<ffffffff813a14f9>] dump_stack+0x4b/0x72
- [<ffffffff8110ec65>] print_usage_bug+0x215/0x240
- [<ffffffff8110ee85>] mark_lock+0x1f5/0x660
- [<ffffffff8110e100>] ? print_shortest_lock_dependencies+0x1a0/0x1a0
- [<ffffffff811102e0>] __lock_acquire+0xa80/0x1e50
- [<ffffffff8122474e>] ? kmem_cache_alloc+0x15e/0x230
- [<ffffffffa008acc1>] ? kmem_zone_alloc+0x81/0x120 [xfs]
- [<ffffffff811122e8>] lock_acquire+0xd8/0x1e0
- [<ffffffffa00781f7>] ? xfs_ilock+0x177/0x200 [xfs]
- [<ffffffffa0083a70>] ? xfs_reflink_cancel_cow_range+0x150/0x300 [xfs]
- [<ffffffff8110aace>] down_write_nested+0x5e/0xc0
- [<ffffffffa00781f7>] ? xfs_ilock+0x177/0x200 [xfs]
- [<ffffffffa00781f7>] xfs_ilock+0x177/0x200 [xfs]
- [<ffffffffa0083a70>] xfs_reflink_cancel_cow_range+0x150/0x300 [xfs]
- [<ffffffffa0085bdc>] xfs_fs_evict_inode+0xdc/0x1e0 [xfs]
- [<ffffffff8124d7d5>] evict+0xc5/0x190
- [<ffffffff8124d8d9>] dispose_list+0x39/0x60
- [<ffffffff8124eb2b>] prune_icache_sb+0x4b/0x60
- [<ffffffff8123317f>] super_cache_scan+0x14f/0x1a0
- [<ffffffff811e0d19>] shrink_slab.part.63.constprop.79+0x1e9/0x4e0
- [<ffffffff811e50ee>] shrink_zone+0x15e/0x170
- [<ffffffff811e5ef1>] kswapd+0x4f1/0xa80
- [<ffffffff811e5a00>] ? zone_reclaim+0x230/0x230
- [<ffffffff810e6882>] kthread+0xf2/0x110
- [<ffffffff810e6790>] ? kthread_create_on_node+0x220/0x220
- [<ffffffff8184803f>] ret_from_fork+0x3f/0x70
- [<ffffffff810e6790>] ? kthread_create_on_node+0x220/0x220
-
-To quote Dave:
-"
-Ignoring whether reflink should be doing anything or not, that's a
-"xfs_refcountbt_init_cursor() gets called both outside and inside
-transactions" lockdep false positive case. The problem here is
-lockdep has seen this allocation from within a transaction, hence a
-GFP_NOFS allocation, and now it's seeing it in a GFP_KERNEL context.
-Also note that we have an active reference to this inode.
-
-So, because the reclaim annotations overload the interrupt level
-detections and it's seen the inode ilock been taken in reclaim
-("interrupt") context, this triggers a reclaim context warning where
-it thinks it is unsafe to do this allocation in GFP_KERNEL context
-holding the inode ilock...
-"
-
-This sounds like a fundamental problem of the reclaim lock detection.
-It is really impossible to annotate such a special usecase IMHO unless
-the reclaim lockup detection is reworked completely. Until then it
-is much better to provide a way to add "I know what I am doing flag"
-and mark problematic places. This would prevent from abusing GFP_NOFS
-flag which has a runtime effect even on configurations which have
-lockdep disabled.
-
-Introduce __GFP_NOLOCKDEP flag which tells the lockdep gfp tracking to
-skip the current allocation request.
-
-While we are at it also make sure that the radix tree doesn't
-accidentaly override tags stored in the upper part of the gfp_mask.
-
-Suggested-by: Peter Zijlstra <peterz@infradead.org>
-Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
-Signed-off-by: Michal Hocko <mhocko@suse.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/linux/gfp.h      | 10 +++++++++-
- kernel/locking/lockdep.c |  4 ++++
- lib/radix-tree.c         |  2 ++
- 3 files changed, 15 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_fs.h   |    3 +
+ fs/xfs/repair/agheader.c |   96 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/repair/common.c   |    7 ++-
+ fs/xfs/repair/common.h   |    1 
+ fs/xfs/xfs_trace.h       |    3 +
+ 5 files changed, 106 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/gfp.h b/include/linux/gfp.h
-index 4175dca4ac39..1a934383cc20 100644
---- a/include/linux/gfp.h
-+++ b/include/linux/gfp.h
-@@ -41,6 +41,11 @@ struct vm_area_struct;
- #define ___GFP_OTHER_NODE	0x800000u
- #define ___GFP_WRITE		0x1000000u
- #define ___GFP_KSWAPD_RECLAIM	0x2000000u
-+#ifdef CONFIG_LOCKDEP
-+#define ___GFP_NOLOCKDEP	0x4000000u
-+#else
-+#define ___GFP_NOLOCKDEP	0
-+#endif
- /* If the above are modified, __GFP_BITS_SHIFT may need updating */
+
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index b7f2850..f883dcd 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -578,7 +578,8 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_TYPE_SB	1	/* superblock */
+ #define XFS_SCRUB_TYPE_AGF	2	/* AG free header */
+ #define XFS_SCRUB_TYPE_AGFL	3	/* AG free list */
+-#define XFS_SCRUB_TYPE_MAX	3
++#define XFS_SCRUB_TYPE_AGI	4	/* AG inode header */
++#define XFS_SCRUB_TYPE_MAX	4
  
- /*
-@@ -186,8 +191,11 @@ struct vm_area_struct;
- #define __GFP_NOTRACK_FALSE_POSITIVE (__GFP_NOTRACK)
- #define __GFP_OTHER_NODE ((__force gfp_t)___GFP_OTHER_NODE)
- 
-+/* Disable lockdep for GFP context tracking */
-+#define __GFP_NOLOCKDEP ((__force gfp_t)___GFP_NOLOCKDEP)
-+
- /* Room for N __GFP_FOO bits */
--#define __GFP_BITS_SHIFT 26
-+#define __GFP_BITS_SHIFT (26 + IS_ENABLED(CONFIG_LOCKDEP))
- #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
- 
- /*
-diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
-index 844cd04bb453..59e94ce8a0cf 100644
---- a/kernel/locking/lockdep.c
-+++ b/kernel/locking/lockdep.c
-@@ -2879,6 +2879,10 @@ static void __lockdep_trace_alloc(gfp_t gfp_mask, unsigned long flags)
- 	if (DEBUG_LOCKS_WARN_ON(irqs_disabled_flags(flags)))
- 		return;
- 
-+	/* Disable lockdep if explicitly requested */
-+	if (gfp_mask & __GFP_NOLOCKDEP)
-+		return;
-+
- 	mark_held_locks(curr, RECLAIM_FS);
+ #define XFS_SCRUB_FLAG_REPAIR	0x1	/* i: repair this metadata */
+ #define XFS_SCRUB_FLAG_CORRUPT	0x2	/* o: needs repair */
+diff --git a/fs/xfs/repair/agheader.c b/fs/xfs/repair/agheader.c
+index f937834..3623f4c 100644
+--- a/fs/xfs/repair/agheader.c
++++ b/fs/xfs/repair/agheader.c
+@@ -416,3 +416,99 @@ xfs_scrub_agfl(
  }
- 
-diff --git a/lib/radix-tree.c b/lib/radix-tree.c
-index 5ccf00277233..c63b719346ae 100644
---- a/lib/radix-tree.c
-+++ b/lib/radix-tree.c
-@@ -2198,6 +2198,8 @@ static int radix_tree_cpu_dead(unsigned int cpu)
- void __init radix_tree_init(void)
- {
- 	int ret;
+ #undef XFS_SCRUB_AGFL_OP_ERROR_GOTO
+ #undef XFS_SCRUB_AGFL_CHECK
 +
-+	BUILD_BUG_ON(RADIX_TREE_MAX_TAGS + __GFP_BITS_SHIFT > 32);
- 	radix_tree_node_cachep = kmem_cache_create("radix_tree_node",
- 			sizeof(struct radix_tree_node), 0,
- 			SLAB_PANIC | SLAB_RECLAIM_ACCOUNT,
--- 
-2.11.0
++/* AGI */
++
++#define XFS_SCRUB_AGI_CHECK(fs_ok) \
++	XFS_SCRUB_CHECK(sc, sc->sa.agi_bp, "AGI", fs_ok)
++#define XFS_SCRUB_AGI_OP_ERROR_GOTO(error, label) \
++	XFS_SCRUB_OP_ERROR_GOTO(sc, sc->sm->sm_agno, \
++			XFS_AGI_BLOCK(sc->tp->t_mountp), "AGI", error, label)
++/* Scrub the AGI. */
++int
++xfs_scrub_agi(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_mount		*mp = sc->tp->t_mountp;
++	struct xfs_agi			*agi;
++	xfs_daddr_t			daddr;
++	xfs_daddr_t			eofs;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			agbno;
++	xfs_agblock_t			eoag;
++	xfs_agino_t			agino;
++	xfs_agino_t			first_agino;
++	xfs_agino_t			last_agino;
++	int				i;
++	int				level;
++	int				error = 0;
++
++	agno = sc->sm->sm_agno;
++	error = xfs_scrub_load_ag_headers(sc, agno, XFS_SCRUB_TYPE_AGI);
++	XFS_SCRUB_AGI_OP_ERROR_GOTO(&error, out);
++
++	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
++
++	/* Check the AG length */
++	eoag = be32_to_cpu(agi->agi_length);
++	XFS_SCRUB_AGI_CHECK(eoag == xfs_scrub_ag_blocks(mp, agno));
++
++	/* Check btree roots and levels */
++	agbno = be32_to_cpu(agi->agi_root);
++	daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
++	XFS_SCRUB_AGI_CHECK(agbno > XFS_AGI_BLOCK(mp));
++	XFS_SCRUB_AGI_CHECK(agbno < mp->m_sb.sb_agblocks);
++	XFS_SCRUB_AGI_CHECK(agbno < eoag);
++	XFS_SCRUB_AGI_CHECK(daddr < eofs);
++
++	level = be32_to_cpu(agi->agi_level);
++	XFS_SCRUB_AGI_CHECK(level > 0);
++	XFS_SCRUB_AGI_CHECK(level <= XFS_BTREE_MAXLEVELS);
++
++	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++		agbno = be32_to_cpu(agi->agi_free_root);
++		daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
++		XFS_SCRUB_AGI_CHECK(agbno > XFS_AGI_BLOCK(mp));
++		XFS_SCRUB_AGI_CHECK(agbno < mp->m_sb.sb_agblocks);
++		XFS_SCRUB_AGI_CHECK(agbno < eoag);
++		XFS_SCRUB_AGI_CHECK(daddr < eofs);
++
++		level = be32_to_cpu(agi->agi_free_level);
++		XFS_SCRUB_AGI_CHECK(level > 0);
++		XFS_SCRUB_AGI_CHECK(level <= XFS_BTREE_MAXLEVELS);
++	}
++
++	/* Check inode counters */
++	first_agino = XFS_OFFBNO_TO_AGINO(mp, XFS_AGI_BLOCK(mp) + 1, 0);
++	last_agino = XFS_OFFBNO_TO_AGINO(mp, eoag + 1, 0) - 1;
++	agino = be32_to_cpu(agi->agi_count);
++	XFS_SCRUB_AGI_CHECK(agino <= last_agino - first_agino + 1);
++	XFS_SCRUB_AGI_CHECK(agino >= be32_to_cpu(agi->agi_freecount));
++
++	/* Check inode pointers */
++	agino = be32_to_cpu(agi->agi_newino);
++	if (agino != NULLAGINO) {
++		XFS_SCRUB_AGI_CHECK(agino >= first_agino);
++		XFS_SCRUB_AGI_CHECK(agino <= last_agino);
++	}
++	agino = be32_to_cpu(agi->agi_dirino);
++	if (agino != NULLAGINO) {
++		XFS_SCRUB_AGI_CHECK(agino >= first_agino);
++		XFS_SCRUB_AGI_CHECK(agino <= last_agino);
++	}
++
++	/* Check unlinked inode buckets */
++	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
++		agino = be32_to_cpu(agi->agi_unlinked[i]);
++		if (agino == NULLAGINO)
++			continue;
++		XFS_SCRUB_AGI_CHECK(agino >= first_agino);
++		XFS_SCRUB_AGI_CHECK(agino <= last_agino);
++	}
++
++out:
++	return error;
++}
++#undef XFS_SCRUB_AGI_CHECK
++#undef XFS_SCRUB_AGI_OP_ERROR_GOTO
+diff --git a/fs/xfs/repair/common.c b/fs/xfs/repair/common.c
+index eb303a3..eb5c03e 100644
+--- a/fs/xfs/repair/common.c
++++ b/fs/xfs/repair/common.c
+@@ -620,12 +620,14 @@ xfs_scrub_load_ag_headers(
+ 	struct xfs_mount		*mp = sc->tp->t_mountp;
+ 	int				error;
+ 
+-	ASSERT(type == XFS_SCRUB_TYPE_AGF || type == XFS_SCRUB_TYPE_AGFL);
++	ASSERT(type == XFS_SCRUB_TYPE_AGF || type == XFS_SCRUB_TYPE_AGFL ||
++	       type == XFS_SCRUB_TYPE_AGI);
+ 	memset(&sc->sa, 0, sizeof(sc->sa));
+ 	sc->sa.agno = agno;
+ 
+ 	error = xfs_scrub_load_ag_header(sc, XFS_AGI_DADDR(mp),
+-			&sc->sa.agi_bp, &xfs_agi_buf_ops, false);
++			&sc->sa.agi_bp, &xfs_agi_buf_ops,
++			type == XFS_SCRUB_TYPE_AGI);
+ 	if (error)
+ 		return error;
+ 
+@@ -659,6 +661,7 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+ 	{xfs_scrub_setup_ag, xfs_scrub_superblock, NULL, NULL},
+ 	{xfs_scrub_setup_ag, xfs_scrub_agf, NULL, NULL},
+ 	{xfs_scrub_setup_ag, xfs_scrub_agfl, NULL, NULL},
++	{xfs_scrub_setup_ag, xfs_scrub_agi, NULL, NULL},
+ };
+ 
+ /* Dispatch metadata scrubbing. */
+diff --git a/fs/xfs/repair/common.h b/fs/xfs/repair/common.h
+index 2f7075d..ec4c230 100644
+--- a/fs/xfs/repair/common.h
++++ b/fs/xfs/repair/common.h
+@@ -210,5 +210,6 @@ int xfs_scrub_setup_ag(struct xfs_scrub_context *sc, struct xfs_inode *ip,
+ int xfs_scrub_superblock(struct xfs_scrub_context *sc);
+ int xfs_scrub_agf(struct xfs_scrub_context *sc);
+ int xfs_scrub_agfl(struct xfs_scrub_context *sc);
++int xfs_scrub_agi(struct xfs_scrub_context *sc);
+ 
+ #endif	/* __XFS_REPAIR_COMMON_H__ */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index b8b0028..38118f5 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3356,7 +3356,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
+ 	{ XFS_SCRUB_TYPE_TEST,		"dummy" }, \
+ 	{ XFS_SCRUB_TYPE_SB,		"superblock" }, \
+ 	{ XFS_SCRUB_TYPE_AGF,		"AGF" }, \
+-	{ XFS_SCRUB_TYPE_AGFL,		"AGFL" }
++	{ XFS_SCRUB_TYPE_AGFL,		"AGFL" }, \
++	{ XFS_SCRUB_TYPE_AGI,		"AGI" }
+ DECLARE_EVENT_CLASS(xfs_scrub_class,
+ 	TP_PROTO(struct xfs_inode *ip, int type, xfs_agnumber_t agno,
+ 		 xfs_ino_t inum, unsigned int gen, unsigned int flags,
 
