@@ -1,94 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33906 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750812AbdALRRX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Jan 2017 12:17:23 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 8A2595CCE4A
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2017 11:15:07 -0600 (CST)
-Subject: [PATCH 3/3] libxfs-apply: minor improvements
-References: <056383cb-cf7e-3880-aecf-d97d5516a60f@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7f6aba51-3b6d-0ba2-57b8-344bc7fc32b7@sandeen.net>
-Date: Thu, 12 Jan 2017 11:15:52 -0600
+Received: from userp1040.oracle.com ([156.151.31.81]:40607 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964977AbdAGAgK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:36:10 -0500
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070a8UB022991
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:36:09 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v070a8RR019735
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:36:08 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v070a7v8003441
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:36:08 GMT
+Subject: [PATCH 03/47] xfs: create a function to query all records in a btree
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 06 Jan 2017 16:36:04 -0800
+Message-ID: <148374936471.30431.3673493670324620999.stgit@birch.djwong.org>
+In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <056383cb-cf7e-3880-aecf-d97d5516a60f@sandeen.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Three quick improvements to libxfs-apply:
+Create a helper function that will query all records in a btree.
+This will be used by the online repair functions to examine every
+record in a btree to rebuild a second btree.
 
-- Skip already-cross-merged commits, based on the
-  "Source XXX commit" line in the commitlog.
-
-- Be clearer about which patch failed if it does
-
-- Clean up guilt better after a failed application
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tools/libxfs-apply | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c |   15 +++++++++++++++
+ fs/xfs/libxfs/xfs_alloc.h |    2 ++
+ fs/xfs/libxfs/xfs_btree.c |   14 ++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h |    2 ++
+ fs/xfs/libxfs/xfs_rmap.c  |   28 +++++++++++++++++++++-------
+ fs/xfs/libxfs/xfs_rmap.h  |    2 ++
+ 6 files changed, 56 insertions(+), 7 deletions(-)
 
-diff --git a/tools/libxfs-apply b/tools/libxfs-apply
-index 5cf0879..e7d7e0a 100755
---- a/tools/libxfs-apply
-+++ b/tools/libxfs-apply
-@@ -288,6 +288,7 @@ apply_patch()
- 	local _current_commit=$3
- 	local _new_patch=`mktemp`
- 	local _source="kernel"
-+	local _target="xfsprogs"
- 
- 	# filter just the libxfs parts of the patch
- 	if [ $SOURCE == "xfsprogs" ]; then
-@@ -301,6 +302,7 @@ apply_patch()
- 
- 		filter_kernel_patch $_patch > $_new_patch
- 		_source="xfsprogs"
-+		_target="kernel"
- 	elif [ $SOURCE == "kernel" ]; then
- 
- 		[ -n "$VERBOSE" ] || lsdiff $_patch | grep -q "[ab]/fs/xfs/libxfs/"
-@@ -315,6 +317,13 @@ apply_patch()
- 		fail "Unknown source repo type: $SOURCE"
- 	fi
- 
-+	grep -q "Source $_target commit: " $_patch
-+	if [ "$?" -eq "0" ]; then
-+		echo "$_patch_name already synced up"
-+		echo "$_skipping commit $_current_commit"
-+		return
-+	fi
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 860e297..e496447 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2976,3 +2976,18 @@ xfs_alloc_query_range(
+ 	return xfs_btree_query_range(cur, &low_brec, &high_brec,
+ 			xfs_alloc_query_range_helper, &query);
+ }
 +
- 	# now munge the header to be in the correct format.
- 	fixup_header_format $_source $_new_patch > $_new_patch.2
++/* Find all free space records. */
++int
++xfs_alloc_query_all(
++	struct xfs_btree_cur			*cur,
++	xfs_alloc_query_range_fn		fn,
++	void					*priv)
++{
++	struct xfs_alloc_query_range_info	query;
++
++	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
++}
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index f9f8b81..0dc34bf 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -232,5 +232,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
+ 		struct xfs_alloc_rec_incore *low_rec,
+ 		struct xfs_alloc_rec_incore *high_rec,
+ 		xfs_alloc_query_range_fn fn, void *priv);
++int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
++		void *priv);
  
-@@ -338,14 +347,15 @@ apply_patch()
- 		if [ $? -eq 0 ]; then
- 			guilt refresh
- 		else
--			echo "Guilt push failed!"
-+			echo "Guilt push of $_current_commit $_patch_name failed!"
- 			read -r -p "Skip or Fail [s|F]? " response
- 			if [ -z "$response" -o "$response" != "s" ]; then
- 				echo "Force push patch, fix and refresh."
- 				echo "Restart from commit $_current_commit"
- 				fail "Manual cleanup required!"
- 			else
--				echo "Skipping. Manual series file cleanup needed!"
-+				echo "Skipping."
-+				guilt delete -f $_patch_name
- 			fi
- 		fi
- 	elif [ $STGIT -eq 1 ]; then
--- 
-1.8.3.1
-
+ #endif	/* __XFS_ALLOC_H__ */
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 21e6a6a..1e68fd8 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4822,6 +4822,20 @@ xfs_btree_query_range(
+ 			fn, priv);
+ }
+ 
++/* Query a btree for all records. */
++int
++xfs_btree_query_all(
++	struct xfs_btree_cur		*cur,
++	xfs_btree_query_range_fn	fn,
++	void				*priv)
++{
++	union xfs_btree_irec		low_rec = {0};
++	union xfs_btree_irec		high_rec;
++
++	memset(&high_rec, 0xFF, sizeof(high_rec));
++	return xfs_btree_query_range(cur, &low_rec, &high_rec, fn, priv);
++}
++
+ /*
+  * Calculate the number of blocks needed to store a given number of records
+  * in a short-format (per-AG metadata) btree.
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index b69b947..4feea6d 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -494,6 +494,8 @@ typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
+ int xfs_btree_query_range(struct xfs_btree_cur *cur,
+ 		union xfs_btree_irec *low_rec, union xfs_btree_irec *high_rec,
+ 		xfs_btree_query_range_fn fn, void *priv);
++int xfs_btree_query_all(struct xfs_btree_cur *cur, xfs_btree_query_range_fn fn,
++		void *priv);
+ 
+ typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
+ 		void *data);
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 3a8cc71..3840556 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2001,14 +2001,14 @@ xfs_rmap_query_range_helper(
+ /* Find all rmaps between two keys. */
+ int
+ xfs_rmap_query_range(
+-	struct xfs_btree_cur		*cur,
+-	struct xfs_rmap_irec		*low_rec,
+-	struct xfs_rmap_irec		*high_rec,
+-	xfs_rmap_query_range_fn	fn,
+-	void				*priv)
++	struct xfs_btree_cur			*cur,
++	struct xfs_rmap_irec			*low_rec,
++	struct xfs_rmap_irec			*high_rec,
++	xfs_rmap_query_range_fn			fn,
++	void					*priv)
+ {
+-	union xfs_btree_irec		low_brec;
+-	union xfs_btree_irec		high_brec;
++	union xfs_btree_irec			low_brec;
++	union xfs_btree_irec			high_brec;
+ 	struct xfs_rmap_query_range_info	query;
+ 
+ 	low_brec.r = *low_rec;
+@@ -2019,6 +2019,20 @@ xfs_rmap_query_range(
+ 			xfs_rmap_query_range_helper, &query);
+ }
+ 
++/* Find all rmaps. */
++int
++xfs_rmap_query_all(
++	struct xfs_btree_cur			*cur,
++	xfs_rmap_query_range_fn			fn,
++	void					*priv)
++{
++	struct xfs_rmap_query_range_info	query;
++
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_all(cur, xfs_rmap_query_range_helper, &query);
++}
++
+ /* Clean up after calling xfs_rmap_finish_one. */
+ void
+ xfs_rmap_finish_one_cleanup(
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 7899305..faf2c1a 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -162,6 +162,8 @@ typedef int (*xfs_rmap_query_range_fn)(
+ int xfs_rmap_query_range(struct xfs_btree_cur *cur,
+ 		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
+ 		xfs_rmap_query_range_fn fn, void *priv);
++int xfs_rmap_query_all(struct xfs_btree_cur *cur, xfs_rmap_query_range_fn fn,
++		void *priv);
+ 
+ enum xfs_rmap_intent_type {
+ 	XFS_RMAP_MAP,
 
