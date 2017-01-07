@@ -1,23 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40519 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964977AbdAGAfr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:35:47 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:51343 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964977AbdAGAfx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:35:53 -0500
 Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070ZkUa022584
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070ZqrM021672
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:35:46 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v070Zjal018385
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:35:52 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v070Zpgg018597
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:35:46 GMT
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:35:52 GMT
 Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v070ZjCT003280
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:35:45 GMT
-Subject: [PATCH v4 00/47] xfs: online scrub/repair support
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v070ZpP1015564
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:35:51 GMT
+Subject: [PATCH 01/47] xfs: plumb in needed functions for range querying of
+ the freespace btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 06 Jan 2017 16:35:44 -0800
-Message-ID: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+Date: Fri, 06 Jan 2017 16:35:50 -0800
+Message-ID: <148374935030.30431.1037014892099186108.stgit@birch.djwong.org>
+In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -27,88 +30,259 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+Plumb in the pieces (init_high_key, diff_two_keys) necessary to call
+query_range on the free space btrees.  Remove the debugging asserts
+so that we can make queries starting from block 0.
 
-This is the fourth revision of a patchset that adds to XFS kernel
-support for online metadata scrubbing and repair.  There aren't any
-on-disk format changes.  Changes since v3 include numerous bug fixes and
-reorganizing the code into smaller files in the fs/xfs/repair/
-directory.  I have also begun using it to check all my development
-workstations, which has been useful for flushing out more bugs.
+While we're at it, merge the redundant "if (btnum ==" hunks.
 
-Online scrub/repair support consists of four major pieces -- first, an
-ioctl that maps physical extents to their owners; second, various
-in-kernel metadata scrubbing ioctls to examine metadata records and
-cross-reference them with other filesystem metadata; third, an in-kernel
-mechanism for rebuilding damaged metadata objects and btrees; and
-fourth, a userspace component to initiate kernel scrubbing, walk all
-inodes and the directory tree, scrub data extents, and ask the kernel to
-repair anything that is broken.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_alloc_btree.c |  162 +++++++++++++++++++++++++++++----------
+ 1 file changed, 119 insertions(+), 43 deletions(-)
 
-This new utility, xfs_scrub, is separate from the existing offline
-xfs_repair tool.  Scrub has three main modes of operation -- in its most
-powerful mode, it iterates all XFS metadata and asks the kernel to check
-the metadata and repair it if necessary.  The second most powerful mode
-can use certain VFS methods and XFS ioctls (BULKSTAT, GETBMAP, and
-GETFSMAP) to check as much metadata as it reasonably can from userspace.
-It cannot repair anything.  The least powerful mode uses only VFS
-functions to access as much of the directory/file/xattr graph as
-possible.  It has no mechanism to check internal metadata and also
-cannot repair anything.  This is good enough for scrubbing non-XFS
-filesystems, but the primary goal is first-class XFS support.
 
-The first few patches in this series implements the GETFSMAP ioctl
-that maps a device number and physical extent either to filesystem
-metadata or to a range of file blocks.  The initial implementation
-uses the reverse-mapping B+tree to supply the mapping information,
-however a fallback implementation based on the free space btrees is
-also provided.  The flexibility of having both implementations is
-important when it comes to the userspace tool -- even without the
-owner/offset data, we still have enough information to set up a read
-verification.
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index efb467b..ba3ec9c 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -205,19 +205,28 @@ xfs_allocbt_init_key_from_rec(
+ 	union xfs_btree_key	*key,
+ 	union xfs_btree_rec	*rec)
+ {
+-	ASSERT(rec->alloc.ar_startblock != 0);
+-
+ 	key->alloc.ar_startblock = rec->alloc.ar_startblock;
+ 	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
+ }
+ 
+ STATIC void
++xfs_bnobt_init_high_key_from_rec(
++	union xfs_btree_key	*key,
++	union xfs_btree_rec	*rec)
++{
++	__u32			x;
++
++	x = be32_to_cpu(rec->alloc.ar_startblock);
++	x += be32_to_cpu(rec->alloc.ar_blockcount) - 1;
++	key->alloc.ar_startblock = cpu_to_be32(x);
++	key->alloc.ar_blockcount = 0;
++}
++
++STATIC void
+ xfs_allocbt_init_rec_from_cur(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_rec	*rec)
+ {
+-	ASSERT(cur->bc_rec.a.ar_startblock != 0);
+-
+ 	rec->alloc.ar_startblock = cpu_to_be32(cur->bc_rec.a.ar_startblock);
+ 	rec->alloc.ar_blockcount = cpu_to_be32(cur->bc_rec.a.ar_blockcount);
+ }
+@@ -236,18 +245,24 @@ xfs_allocbt_init_ptr_from_cur(
+ }
+ 
+ STATIC __int64_t
+-xfs_allocbt_key_diff(
++xfs_bnobt_key_diff(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*key)
+ {
+ 	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
+ 	xfs_alloc_key_t		*kp = &key->alloc;
+-	__int64_t		diff;
+ 
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return (__int64_t)be32_to_cpu(kp->ar_startblock) -
+-				rec->ar_startblock;
+-	}
++	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
++}
++
++STATIC __int64_t
++xfs_cntbt_key_diff(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*key)
++{
++	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
++	xfs_alloc_key_t		*kp = &key->alloc;
++	__int64_t		diff;
+ 
+ 	diff = (__int64_t)be32_to_cpu(kp->ar_blockcount) - rec->ar_blockcount;
+ 	if (diff)
+@@ -256,6 +271,33 @@ xfs_allocbt_key_diff(
+ 	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
+ }
+ 
++STATIC __int64_t
++xfs_bnobt_diff_two_keys(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	return (__int64_t)be32_to_cpu(k1->alloc.ar_startblock) -
++			  be32_to_cpu(k2->alloc.ar_startblock);
++}
++
++STATIC __int64_t
++xfs_cntbt_diff_two_keys(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	__int64_t		diff;
++
++	diff =  be32_to_cpu(k1->alloc.ar_blockcount) -
++		be32_to_cpu(k2->alloc.ar_blockcount);
++	if (diff)
++		return diff;
++
++	return  be32_to_cpu(k1->alloc.ar_startblock) -
++		be32_to_cpu(k2->alloc.ar_startblock);
++}
++
+ static bool
+ xfs_allocbt_verify(
+ 	struct xfs_buf		*bp)
+@@ -346,44 +388,78 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
+ 
+ #if defined(DEBUG) || defined(XFS_WARN)
+ STATIC int
+-xfs_allocbt_keys_inorder(
++xfs_bnobt_keys_inorder(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*k1,
+ 	union xfs_btree_key	*k2)
+ {
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return be32_to_cpu(k1->alloc.ar_startblock) <
+-		       be32_to_cpu(k2->alloc.ar_startblock);
+-	} else {
+-		return be32_to_cpu(k1->alloc.ar_blockcount) <
+-			be32_to_cpu(k2->alloc.ar_blockcount) ||
+-			(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
+-			 be32_to_cpu(k1->alloc.ar_startblock) <
+-			 be32_to_cpu(k2->alloc.ar_startblock));
+-	}
++	return be32_to_cpu(k1->alloc.ar_startblock) <
++	       be32_to_cpu(k2->alloc.ar_startblock);
+ }
+ 
+ STATIC int
+-xfs_allocbt_recs_inorder(
++xfs_bnobt_recs_inorder(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_rec	*r1,
+ 	union xfs_btree_rec	*r2)
+ {
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return be32_to_cpu(r1->alloc.ar_startblock) +
+-			be32_to_cpu(r1->alloc.ar_blockcount) <=
+-			be32_to_cpu(r2->alloc.ar_startblock);
+-	} else {
+-		return be32_to_cpu(r1->alloc.ar_blockcount) <
+-			be32_to_cpu(r2->alloc.ar_blockcount) ||
+-			(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
+-			 be32_to_cpu(r1->alloc.ar_startblock) <
+-			 be32_to_cpu(r2->alloc.ar_startblock));
+-	}
++	return be32_to_cpu(r1->alloc.ar_startblock) +
++		be32_to_cpu(r1->alloc.ar_blockcount) <=
++		be32_to_cpu(r2->alloc.ar_startblock);
++}
++
++STATIC int
++xfs_cntbt_keys_inorder(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	return be32_to_cpu(k1->alloc.ar_blockcount) <
++		be32_to_cpu(k2->alloc.ar_blockcount) ||
++		(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
++		 be32_to_cpu(k1->alloc.ar_startblock) <
++		 be32_to_cpu(k2->alloc.ar_startblock));
++}
++
++STATIC int
++xfs_cntbt_recs_inorder(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_rec	*r1,
++	union xfs_btree_rec	*r2)
++{
++	return be32_to_cpu(r1->alloc.ar_blockcount) <
++		be32_to_cpu(r2->alloc.ar_blockcount) ||
++		(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
++		 be32_to_cpu(r1->alloc.ar_startblock) <
++		 be32_to_cpu(r2->alloc.ar_startblock));
+ }
+-#endif	/* DEBUG */
++#endif /* DEBUG */
++
++static const struct xfs_btree_ops xfs_bnobt_ops = {
++	.rec_len		= sizeof(xfs_alloc_rec_t),
++	.key_len		= sizeof(xfs_alloc_key_t),
++
++	.dup_cursor		= xfs_allocbt_dup_cursor,
++	.set_root		= xfs_allocbt_set_root,
++	.alloc_block		= xfs_allocbt_alloc_block,
++	.free_block		= xfs_allocbt_free_block,
++	.update_lastrec		= xfs_allocbt_update_lastrec,
++	.get_minrecs		= xfs_allocbt_get_minrecs,
++	.get_maxrecs		= xfs_allocbt_get_maxrecs,
++	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
++	.init_high_key_from_rec	= xfs_bnobt_init_high_key_from_rec,
++	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
++	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
++	.key_diff		= xfs_bnobt_key_diff,
++	.buf_ops		= &xfs_allocbt_buf_ops,
++	.diff_two_keys		= xfs_bnobt_diff_two_keys,
++#if defined(DEBUG) || defined(XFS_WARN)
++	.keys_inorder		= xfs_bnobt_keys_inorder,
++	.recs_inorder		= xfs_bnobt_recs_inorder,
++#endif
++};
+ 
+-static const struct xfs_btree_ops xfs_allocbt_ops = {
++static const struct xfs_btree_ops xfs_cntbt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 	.key_len		= sizeof(xfs_alloc_key_t),
+ 
+@@ -397,11 +473,12 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
+ 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
+ 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+-	.key_diff		= xfs_allocbt_key_diff,
++	.key_diff		= xfs_cntbt_key_diff,
+ 	.buf_ops		= &xfs_allocbt_buf_ops,
++	.diff_two_keys		= xfs_cntbt_diff_two_keys,
+ #if defined(DEBUG) || defined(XFS_WARN)
+-	.keys_inorder		= xfs_allocbt_keys_inorder,
+-	.recs_inorder		= xfs_allocbt_recs_inorder,
++	.keys_inorder		= xfs_cntbt_keys_inorder,
++	.recs_inorder		= xfs_cntbt_recs_inorder,
+ #endif
+ };
+ 
+@@ -427,16 +504,15 @@ xfs_allocbt_init_cursor(
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = btnum;
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+-	cur->bc_ops = &xfs_allocbt_ops;
+-	if (btnum == XFS_BTNUM_BNO)
+-		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
+-	else
+-		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
+ 
+ 	if (btnum == XFS_BTNUM_CNT) {
++		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
++		cur->bc_ops = &xfs_cntbt_ops;
+ 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
+ 		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
+ 	} else {
++		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
++		cur->bc_ops = &xfs_bnobt_ops;
+ 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
+ 	}
+ 
 
-The next half of the patches implement in-kernel scrubbing.  This is
-implemented as a new ioctl.  Pass in a metadata type and control data
-such as an AG number or inode (when applicable); the kernel will examine
-each record in that metadata structure looking for obvious logical
-errors.  External corruption should be discoverable via the checksum
-embedded in each (v5) filesystem metadata block.  When applicable, the
-metadata record will be cross-referenced with the other metadata
-structures to look for discrepancies.  Should any errors be found, an
-error code is returned to userspace, which in the old days would require
-the administrator to take the filesystem offline and repair it.  I've
-hidden the new online scrubber behind CONFIG_XFS_DEBUG to keep it
-disabled by default.
-
-Last comes the online *repair* functionality, which largely uses the
-redundancy between the new reverse-mapping feature introduced in 4.8 and
-the existing storage space records (bno, cnt, ino, fino, and bmap) to
-reconstruct primary metadata from the secondary, or secondary metadata
-from the primaries.  That's right, we can regrow (some) of the XFS
-metadata even if parts of the filesystem go bad!  Should the kernel
-succeed, it is not necessary to take the filesystem offline for repair.
-
-The last two patches in the series enable xfs_scrub to query the per-AG
-block reservations so that the summary counters can be sanity-checked,
-and uses one of the new scrub features to prevent mount-time deadlocks
-if the refcountbt is corrupt, respectively.
-
-If you're going to start using this mess, you probably ought to just
-pull from my github trees.  The kernel patches[1] should apply against
-4.10-rc2.  xfsprogs[2] and xfstests[3] can be found in their usual
-places.
-
-The patches have survived all auto group xfstests both with scrub-only
-mode and also a special debugging mode to xfs_scrub that forces it to
-rebuild the metadata structures even if they're not damaged.  Since the
-last patch release, I have now had time to run the new tests in [3] that
-try to fuzz every field in every data structure on disk.
-
-This is an extraordinary way to eat your data.  Enjoy! 
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
