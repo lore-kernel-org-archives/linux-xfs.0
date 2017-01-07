@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16591 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:16611 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1162018AbdAGAkx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:40:53 -0500
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070eq4n024982
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:40:52 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v070eq0f008200
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:40:52 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v070ep7n005736
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:40:51 GMT
-Subject: [PATCH 46/47] xfs: query the per-AG reservation counters
+        with ESMTP id S1162018AbdAGAk6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:40:58 -0500
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070evUh025039
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:40:58 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v070evUg031912
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:40:57 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v070evU1009992
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:40:57 GMT
+Subject: [PATCH 47/47] xfs: avoid mount-time deadlock in CoW extent recovery
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 06 Jan 2017 16:40:50 -0800
-Message-ID: <148374965066.30431.4065646608838336576.stgit@birch.djwong.org>
+Date: Fri, 06 Jan 2017 16:40:56 -0800
+Message-ID: <148374965673.30431.8442483450257436954.stgit@birch.djwong.org>
 In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
 References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -29,142 +29,65 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Establish an ioctl for userspace to query the original and current
-per-AG reservation counts.  This will be used by xfs_scrub to
-check that the vfs counters are at least somewhat sane.
+If a malicious user corrupts the refcount btree to cause a cycle between
+different levels of the tree, the next mount attempt will deadlock in
+the CoW recovery routine.  The scrub code uses the ability to re-grab a
+buffer that was previous locked to a transaction to avoid deadlocks, so
+do that here too.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h |   10 ++++++++++
- fs/xfs/xfs_fsops.c     |   29 +++++++++++++++++++++++++++++
- fs/xfs/xfs_fsops.h     |    2 ++
- fs/xfs/xfs_ioctl.c     |   16 ++++++++++++++++
- fs/xfs/xfs_ioctl32.c   |    1 +
- 5 files changed, 58 insertions(+)
+ fs/xfs/libxfs/xfs_refcount.c |   16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 5cc8462..160916c 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -608,6 +608,15 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 1c47671..c845253 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1646,10 +1646,14 @@ xfs_refcount_recover_cow_leftovers(
+ 	if (mp->m_sb.sb_agblocks >= XFS_REFC_COW_START)
+ 		return -EOPNOTSUPP;
  
- /*
-+ * AG reserved block counters
-+ */
-+struct xfs_fsop_ag_resblks {
-+	__u64 resblks;		/* blocks reserved now */
-+	__u64 resblks_orig;	/* blocks reserved at mount time */
-+	__u64 reserved[2];
-+};
+-	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++	error = xfs_trans_alloc_empty(mp, &tp);
+ 	if (error)
+ 		return error;
+-	cur = xfs_refcountbt_init_cursor(mp, NULL, agbp, agno, NULL);
 +
-+/*
-  * ioctl limits
-  */
- #ifdef XATTR_LIST_MAX
-@@ -683,6 +692,7 @@ struct xfs_scrub_metadata {
- #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
- #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
- #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
-+#define XFS_IOC_GET_AG_RESBLKS	     _IOR ('X', 126, struct xfs_fsop_ag_resblks)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
++	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
++	if (error)
++		goto out_trans;
++	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
  
+ 	/* Find all the leftover CoW staging extents. */
+ 	INIT_LIST_HEAD(&debris);
+@@ -1662,7 +1666,7 @@ xfs_refcount_recover_cow_leftovers(
+ 	if (error)
+ 		goto out_cursor;
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+-	xfs_buf_relse(agbp);
++	xfs_trans_cancel(tp);
  
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 242e809..70b50f2 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -44,6 +44,7 @@
- #include "xfs_filestream.h"
- #include "xfs_rmap.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_fs.h"
+ 	/* Now iterate the list to free the leftovers */
+ 	list_for_each_entry(rr, &debris, rr_list) {
+@@ -1705,13 +1709,17 @@ xfs_refcount_recover_cow_leftovers(
  
- /*
-  * File system operations
-@@ -1067,3 +1068,31 @@ xfs_fs_unreserve_ag_blocks(
+ out_cursor:
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+-	xfs_buf_relse(agbp);
++	xfs_trans_cancel(tp);
+ 	goto out_free;
  
- 	return error;
+ out_defer:
+ 	xfs_defer_cancel(&dfops);
+ 	xfs_trans_cancel(tp);
+ 	goto out_free;
++
++out_trans:
++	xfs_trans_cancel(tp);
++	return error;
  }
-+
-+/* Query the per-AG reservations to see how many blocks we have reserved. */
-+int
-+xfs_fs_get_ag_reserve_blocks(
-+	struct xfs_mount		*mp,
-+	struct xfs_fsop_ag_resblks	*out)
-+{
-+	struct xfs_ag_resv		*r;
-+	struct xfs_perag		*pag;
-+	xfs_agnumber_t			agno;
-+
-+	out->resblks = 0;
-+	out->resblks_orig = 0;
-+	out->reserved[0] = out->reserved[1] = 0;
-+
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		pag = xfs_perag_get(mp, agno);
-+		r = xfs_perag_resv(pag, XFS_AG_RESV_METADATA);
-+		out->resblks += r->ar_reserved;
-+		out->resblks_orig += r->ar_asked;
-+		r = xfs_perag_resv(pag, XFS_AG_RESV_AGFL);
-+		out->resblks += r->ar_reserved;
-+		out->resblks_orig += r->ar_asked;
-+		xfs_perag_put(pag);
-+	}
-+
-+	return 0;
-+}
-diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
-index f349158..91609ae 100644
---- a/fs/xfs/xfs_fsops.h
-+++ b/fs/xfs/xfs_fsops.h
-@@ -25,6 +25,8 @@ extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
- extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
- 				xfs_fsop_resblks_t *outval);
- extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
-+extern int xfs_fs_get_ag_reserve_blocks(struct xfs_mount *mp,
-+		struct xfs_fsop_ag_resblks *out);
  
- extern int xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
- extern int xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index e9a4619..ee3720c 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -2021,6 +2021,22 @@ xfs_file_ioctl(
- 		return 0;
- 	}
- 
-+	case XFS_IOC_GET_AG_RESBLKS: {
-+		struct xfs_fsop_ag_resblks	out;
-+
-+		if (!capable(CAP_SYS_ADMIN))
-+			return -EPERM;
-+
-+		error = xfs_fs_get_ag_reserve_blocks(mp, &out);
-+		if (error)
-+			return error;
-+
-+		if (copy_to_user(arg, &out, sizeof(out)))
-+			return -EFAULT;
-+
-+		return 0;
-+	}
-+
- 	case XFS_IOC_FSGROWFSDATA: {
- 		xfs_growfs_data_t in;
- 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 40952b1..5e46832 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -556,6 +556,7 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_ERROR_CLEARALL:
- 	case XFS_IOC_GETFSMAP:
- 	case XFS_IOC_SCRUB_METADATA:
-+	case XFS_IOC_GET_AG_RESBLKS:
- 		return xfs_file_ioctl(filp, cmd, p);
- #ifndef BROKEN_X86_ALIGNMENT
- 	/* These are handled fine if no alignment issues */
+ /* Is there a record covering a given extent? */
 
