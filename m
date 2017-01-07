@@ -1,237 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51691 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032643AbdAGAhi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:37:38 -0500
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070bbY0023037
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:37:38 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v070bb6L001871
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:37:37 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v070bagZ003958
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:37:37 GMT
-Subject: [PATCH 17/47] xfs: support scrubbing refcount btree
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 06 Jan 2017 16:37:35 -0800
-Message-ID: <148374945578.30431.234483470422774042.stgit@birch.djwong.org>
-In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
-References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+Received: from mailly.debian.org ([82.195.75.114]:43718 "EHLO
+        mailly.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752455AbdAGVZF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Jan 2017 16:25:05 -0500
+From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Subject: xfsprogs_4.9.0_amd64.changes ACCEPTED into unstable
+Message-Id: <E1cPyBe-000DvZ-AA@fasolo.debian.org>
+Date: Sat, 07 Jan 2017 21:06:02 +0000
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
-
-Plumb in the pieces necessary to check the refcount btree.  If rmap is
-available, check the reference count by performing an interval query
-against the rmapbt.
-
-v2: Handle the case where the rmap records are not all at least the
-length of the refcount extent.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/Makefile                    |    1 
- fs/xfs/libxfs/xfs_fs.h             |    3 +
- fs/xfs/libxfs/xfs_refcount_btree.c |    4 --
- fs/xfs/repair/common.c             |    1 
- fs/xfs/repair/common.h             |    1 
- fs/xfs/repair/refcount.c           |   85 ++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trace.h                 |    3 +
- 7 files changed, 92 insertions(+), 6 deletions(-)
- create mode 100644 fs/xfs/repair/refcount.c
+To: XFS Development Team <linux-xfs@vger.kernel.org>, Nathan Scott <nathans@debian.org>
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 3b5ef7b..2995503 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -108,6 +108,7 @@ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix repair/, \
- 				   btree.o \
- 				   common.o \
- 				   ialloc.o \
-+				   refcount.o \
- 				   rmap.o \
- 				   )
- 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index d89b965..9f3603cb 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -584,7 +584,8 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_INOBT	7	/* inode btree */
- #define XFS_SCRUB_TYPE_FINOBT	8	/* free inode btree */
- #define XFS_SCRUB_TYPE_RMAPBT	9	/* reverse mapping btree */
--#define XFS_SCRUB_TYPE_MAX	9
-+#define XFS_SCRUB_TYPE_REFCNTBT	10	/* reference count btree */
-+#define XFS_SCRUB_TYPE_MAX	10
- 
- #define XFS_SCRUB_FLAG_REPAIR	0x1	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x2	/* o: needs repair */
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 50add52..cae24bd 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -285,7 +285,6 @@ const struct xfs_buf_ops xfs_refcountbt_buf_ops = {
- 	.verify_write		= xfs_refcountbt_write_verify,
- };
- 
--#if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
- xfs_refcountbt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
-@@ -306,7 +305,6 @@ xfs_refcountbt_recs_inorder(
- 		be32_to_cpu(r1->refc.rc_blockcount) <=
- 		be32_to_cpu(r2->refc.rc_startblock);
- }
--#endif
- 
- static const struct xfs_btree_ops xfs_refcountbt_ops = {
- 	.rec_len		= sizeof(struct xfs_refcount_rec),
-@@ -325,10 +323,8 @@ static const struct xfs_btree_ops xfs_refcountbt_ops = {
- 	.key_diff		= xfs_refcountbt_key_diff,
- 	.buf_ops		= &xfs_refcountbt_buf_ops,
- 	.diff_two_keys		= xfs_refcountbt_diff_two_keys,
--#if defined(DEBUG) || defined(XFS_WARN)
- 	.keys_inorder		= xfs_refcountbt_keys_inorder,
- 	.recs_inorder		= xfs_refcountbt_recs_inorder,
--#endif
- };
- 
- /*
-diff --git a/fs/xfs/repair/common.c b/fs/xfs/repair/common.c
-index 95e653a..6bbaed8 100644
---- a/fs/xfs/repair/common.c
-+++ b/fs/xfs/repair/common.c
-@@ -667,6 +667,7 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 	{xfs_scrub_setup_ag_iallocbt, xfs_scrub_inobt, NULL, NULL},
- 	{xfs_scrub_setup_ag_iallocbt, xfs_scrub_finobt, NULL, xfs_sb_version_hasfinobt},
- 	{xfs_scrub_setup_ag_header, xfs_scrub_rmapbt, NULL, xfs_sb_version_hasrmapbt},
-+	{xfs_scrub_setup_ag_header, xfs_scrub_refcountbt, NULL, xfs_sb_version_hasreflink},
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/repair/common.h b/fs/xfs/repair/common.h
-index 7f160e4..7dea98a 100644
---- a/fs/xfs/repair/common.h
-+++ b/fs/xfs/repair/common.h
-@@ -225,5 +225,6 @@ int xfs_scrub_cntbt(struct xfs_scrub_context *sc);
- int xfs_scrub_inobt(struct xfs_scrub_context *sc);
- int xfs_scrub_finobt(struct xfs_scrub_context *sc);
- int xfs_scrub_rmapbt(struct xfs_scrub_context *sc);
-+int xfs_scrub_refcountbt(struct xfs_scrub_context *sc);
- 
- #endif	/* __XFS_REPAIR_COMMON_H__ */
-diff --git a/fs/xfs/repair/refcount.c b/fs/xfs/repair/refcount.c
-new file mode 100644
-index 0000000..186d83c
---- /dev/null
-+++ b/fs/xfs/repair/refcount.c
-@@ -0,0 +1,85 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trace.h"
-+#include "xfs_sb.h"
-+#include "xfs_rmap.h"
-+#include "repair/common.h"
-+#include "repair/btree.h"
-+
-+/* Reference count btree scrubber. */
-+
-+/* Scrub a refcountbt record. */
-+STATIC int
-+xfs_scrub_refcountbt_helper(
-+	struct xfs_scrub_btree		*bs,
-+	union xfs_btree_rec		*rec)
-+{
-+	struct xfs_mount		*mp = bs->cur->bc_mp;
-+	struct xfs_agf			*agf;
-+	struct xfs_refcount_irec	irec;
-+	xfs_agblock_t			eoag;
-+	bool				has_cowflag;
-+	int				error = 0;
-+
-+	irec.rc_startblock = be32_to_cpu(rec->refc.rc_startblock);
-+	irec.rc_blockcount = be32_to_cpu(rec->refc.rc_blockcount);
-+	irec.rc_refcount = be32_to_cpu(rec->refc.rc_refcount);
-+	agf = XFS_BUF_TO_AGF(bs->sc->sa.agf_bp);
-+	eoag = be32_to_cpu(agf->agf_length);
-+
-+	has_cowflag = !!(irec.rc_startblock & XFS_REFC_COW_START);
-+	XFS_SCRUB_BTREC_CHECK(bs, (irec.rc_refcount == 1 && has_cowflag) ||
-+				  (irec.rc_refcount != 1 && !has_cowflag));
-+	irec.rc_startblock &= ~XFS_REFC_COW_START;
-+	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < mp->m_sb.sb_agblocks);
-+	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < eoag);
-+	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_startblock < irec.rc_startblock +
-+			irec.rc_blockcount);
-+	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)irec.rc_startblock +
-+			irec.rc_blockcount <= mp->m_sb.sb_agblocks);
-+	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)irec.rc_startblock +
-+			irec.rc_blockcount <= eoag);
-+	XFS_SCRUB_BTREC_CHECK(bs, irec.rc_refcount >= 1);
-+
-+	return error;
-+}
-+
-+/* Scrub the refcount btree for some AG. */
-+int
-+xfs_scrub_refcountbt(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_owner_info		oinfo;
-+
-+	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_REFC);
-+	return xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_helper,
-+			&oinfo, NULL);
-+}
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index e752f68..4757fea 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3362,7 +3362,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_CNTBT,		"cntbt" }, \
- 	{ XFS_SCRUB_TYPE_INOBT,		"inobt" }, \
- 	{ XFS_SCRUB_TYPE_FINOBT,	"finobt" }, \
--	{ XFS_SCRUB_TYPE_RMAPBT,	"rmapbt" }
-+	{ XFS_SCRUB_TYPE_RMAPBT,	"rmapbt" }, \
-+	{ XFS_SCRUB_TYPE_REFCNTBT,	"refcountbt" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, int type, xfs_agnumber_t agno,
- 		 xfs_ino_t inum, unsigned int gen, unsigned int flags,
 
+Accepted:
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+Format: 1.8
+Date: Thu, 05 Jan 2017 16:05:55 -0600
+Source: xfsprogs
+Binary: xfsprogs xfslibs-dev xfsprogs-udeb
+Architecture: source amd64
+Version: 4.9.0
+Distribution: unstable
+Urgency: low
+Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+Changed-By: Nathan Scott <nathans@debian.org>
+Description:
+ xfslibs-dev - XFS filesystem-specific static libraries and headers
+ xfsprogs   - Utilities for managing the XFS filesystem
+ xfsprogs-udeb - A stripped-down version of xfsprogs, for debian-installer (udeb)
+Changes:
+ xfsprogs (4.9.0) unstable; urgency=low
+ .
+   * New upstream release
+Checksums-Sha1:
+ bedf4d38e9b93b6c23132d127b406009ebb3e0a6 1756 xfsprogs_4.9.0.dsc
+ 650c9e1f97212e1b13162c494be05ff52be36040 1643687 xfsprogs_4.9.0.tar.gz
+ f4432d8ec68b4b3d0f4ea9d36390944a273a0a4b 58272 xfslibs-dev_4.9.0_amd64.deb
+ 8f951add47c09a4d2284302733d5a9c222ff381a 5176784 xfsprogs-dbgsym_4.9.0_amd64.deb
+ a3f19ca88d1f50ba24c94f198195f05384594dc7 153020 xfsprogs-udeb_4.9.0_amd64.udeb
+ d286054ddbbf22882152de4ab07fabe385604582 5370 xfsprogs_4.9.0_amd64.buildinfo
+ 3e59136b3bdaf47036cbe89ae26d7c2822cb70f3 785566 xfsprogs_4.9.0_amd64.deb
+Checksums-Sha256:
+ bb50d3ced7b7b8344b66453adf6a992a223974f6bf03a1a96e5c709ead71bd2a 1756 xfsprogs_4.9.0.dsc
+ 409f12e7aaec93f02a98ae6fb74754f64bce3c43f91e33b8f73185416b56f015 1643687 xfsprogs_4.9.0.tar.gz
+ ddaca9baa8fdf32826e3d2b930d52bac30953034efe20ea6316575698896e637 58272 xfslibs-dev_4.9.0_amd64.deb
+ 5d67fbfdcac7f84f2c9017c8705511ece9b013d067bc9d9a06201383d82fe0d4 5176784 xfsprogs-dbgsym_4.9.0_amd64.deb
+ a99577dbc4cdc38b758700ed35168d4ec489ddd53e5a4c176069658fb11fb522 153020 xfsprogs-udeb_4.9.0_amd64.udeb
+ 50c10dfbc5ff3a48f2a72067217263bc75288b5517e84f3652e91b5880bb41f0 5370 xfsprogs_4.9.0_amd64.buildinfo
+ e7ee15f1f696c8a1dbbb5351e34feea52b8ba2b0c433b0ad48c19b2af73f2489 785566 xfsprogs_4.9.0_amd64.deb
+Files:
+ bb6306cb54e8ce4e99a692162826c35a 1756 admin optional xfsprogs_4.9.0.dsc
+ 5e510043ec717c76be795e29c64d2ef4 1643687 admin optional xfsprogs_4.9.0.tar.gz
+ e36a554287edb5244a1be714512f7aab 58272 libdevel extra xfslibs-dev_4.9.0_amd64.deb
+ f6123445fce22f1d45992361583e01ea 5176784 debug extra xfsprogs-dbgsym_4.9.0_amd64.deb
+ d7b7a93c129e062feeaf5e3b0d54bfb3 153020 debian-installer optional xfsprogs-udeb_4.9.0_amd64.udeb
+ c3ada617755cdcdb9175c97ee80fea44 5370 admin optional xfsprogs_4.9.0_amd64.buildinfo
+ 4ebf6b851c61d974bc4ebea4b8d7d88c 785566 admin optional xfsprogs_4.9.0_amd64.deb
+Package-Type: udeb
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJYcU1aAAoJEP4IQu423YwMKGEQAM/GML+Lwm8QlP4faVkqdW+R
+cyhILbLBkqy6vOHIeQfPjYGbvuBpY5Fj8ifsiWjr4KzD1h6bx2gF+qjQxiXun8fO
+hgiRRa6nOz36TpA6Rf9/8FjQ1FG9LKN7ElzYlEYT1FNo1d76apKDMoR0TnE8Rm0z
+5H17Dm21DZz+iM5eSRp+VHNU8yqcjYwZVVRqC5PlQJtEMFCrARAx8T4jsUodcFxR
+L4Bj/stTGNvAY5abqJNYBiQYntdDw+zrSV51oJma1rdbyu0dtg41+KV48UVXXeCY
++pJ0HlW5uJgSLP5+mj/6sgecthN4EwDbk1cv7hfC/lr+aTMd1kbdAEDx+r1g2w7H
+2ywm/k16c+HtK2Up5DKfKjdV2qXWNTKFegRYQ4NmprOVSWITtEM49JAlgBo66DFT
+YllFMzxVci/ThBKdRgNcTzHuND0HaHxmnEJv1ZC1nBlqRH/o2AjS5T1Pk1axZ9bh
+xBn0+U0JNMGs5WQG9/eeb8yM47Dho136sFlfiXvE1k4Sy2nBDNxWH7VXMjembPLa
+5H3XrFup7MjFGYdb2IWO1/+YJyPPYVXzVfHZSsgrfwDvuvoQOLYXxVb6LiYCcNoR
+/k3UGtdIbBdFexTBasel7Yb3zekd4Z4uOP5cRVLcfyAAWK1MD9VPhZuA+osRei3l
+g3wWxpUjlEZlmOVPYkA8
+=a5t4
+-----END PGP SIGNATURE-----
+
+
+Thank you for your contribution to Debian.
