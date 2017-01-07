@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41066 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161539AbdAGAjR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:39:17 -0500
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070dGpB025188
+Received: from aserp1040.oracle.com ([141.146.126.69]:16388 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161539AbdAGAjY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:39:24 -0500
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070dMZx024197
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:17 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v070dGKV027117
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:23 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v070dMJO014696
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:16 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v070dFvU004514
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:16 GMT
-Subject: [PATCH 32/47] xfs: cross-reference the block mappings when possible
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:22 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v070dLvC009231
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:22 GMT
+Subject: [PATCH 33/47] xfs: create tracepoints for online repair
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 06 Jan 2017 16:39:14 -0800
-Message-ID: <148374955484.30431.7066197703632274610.stgit@birch.djwong.org>
+Date: Fri, 06 Jan 2017 16:39:20 -0800
+Message-ID: <148374956087.30431.6960984708580599826.stgit@birch.djwong.org>
 In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
 References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -29,80 +29,170 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Check inode field contents against the block mappings when possible.
+These tracepoints will be used to debug the online repair routines.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/repair/inode.c |   43 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
+ fs/xfs/xfs_trace.h |  147 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 147 insertions(+)
 
 
-diff --git a/fs/xfs/repair/inode.c b/fs/xfs/repair/inode.c
-index 14d9e19..51f0e78 100644
---- a/fs/xfs/repair/inode.c
-+++ b/fs/xfs/repair/inode.c
-@@ -39,6 +39,8 @@
- #include "xfs_log.h"
- #include "xfs_trans_priv.h"
- #include "xfs_rmap.h"
-+#include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "repair/common.h"
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index c52e3a5..becdb7a 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3742,6 +3742,153 @@ DEFINE_SCRUB_AG_LOCK_EVENT(xfs_scrub_ag_can_lock);
+ DEFINE_SCRUB_AG_LOCK_EVENT(xfs_scrub_ag_may_deadlock);
+ DEFINE_SCRUB_AG_LOCK_EVENT(xfs_scrub_ag_lock_all);
  
- /*
-@@ -176,6 +178,7 @@ xfs_scrub_inode(
- 	struct xfs_dinode		*dip;
- 	xfs_ino_t			ino;
- 	unsigned long long		isize;
-+	unsigned long long		count;
- 	uint64_t			flags2;
- 	uint32_t			nextents;
- 	uint32_t			extsize;
-@@ -391,6 +394,46 @@ xfs_scrub_inode(
- 		xfs_scrub_ag_free(&sa);
- 	}
++/* repair tracepoints */
++DEFINE_SCRUB_EVENT(xfs_repair_attempt);
++DEFINE_SCRUB_EVENT(xfs_repair_done);
++DEFINE_BUSY_EVENT(xfs_repair_free_or_unmap_extent);
++DEFINE_BUSY_EVENT(xfs_repair_collect_btree_extent);
++TRACE_EVENT(xfs_repair_init_btblock,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
++		 uint32_t magic),
++	TP_ARGS(mp, agno, agbno, magic),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(uint32_t, magic)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->magic = magic;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u magic 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->agbno, __entry->magic)
++)
++TRACE_EVENT(xfs_repair_find_ag_btree_roots_helper,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
++		 uint32_t magic, uint16_t level),
++	TP_ARGS(mp, agno, agbno, magic, level),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(uint32_t, magic)
++		__field(uint16_t, level)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->magic = magic;
++		__entry->level = level;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u magic 0x%x level %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->agbno, __entry->magic, __entry->level)
++)
++TRACE_EVENT(xfs_repair_calc_ag_resblks,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agino_t icount, xfs_agblock_t aglen, xfs_agblock_t freelen,
++		 xfs_agblock_t usedlen),
++	TP_ARGS(mp, agno, icount, aglen, freelen, usedlen),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, icount)
++		__field(xfs_agblock_t, aglen)
++		__field(xfs_agblock_t, freelen)
++		__field(xfs_agblock_t, usedlen)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->icount = icount;
++		__entry->aglen = aglen;
++		__entry->freelen = freelen;
++		__entry->usedlen = usedlen;
++	),
++	TP_printk("dev %d:%d agno %d icount %u aglen %u freelen %u usedlen %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->icount, __entry->aglen, __entry->freelen,
++		  __entry->usedlen)
++)
++TRACE_EVENT(xfs_repair_calc_ag_resblks_btsize,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t bnobt_sz, xfs_agblock_t inobt_sz,
++		 xfs_agblock_t rmapbt_sz, xfs_agblock_t refcbt_sz),
++	TP_ARGS(mp, agno, bnobt_sz, inobt_sz, rmapbt_sz, refcbt_sz),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bnobt_sz)
++		__field(xfs_agblock_t, inobt_sz)
++		__field(xfs_agblock_t, rmapbt_sz)
++		__field(xfs_agblock_t, refcbt_sz)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->bnobt_sz = bnobt_sz;
++		__entry->inobt_sz = inobt_sz;
++		__entry->rmapbt_sz = rmapbt_sz;
++		__entry->refcbt_sz = refcbt_sz;
++	),
++	TP_printk("dev %d:%d agno %d bno %u ino %u rmap %u refcount %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->bnobt_sz, __entry->inobt_sz, __entry->rmapbt_sz,
++		  __entry->refcbt_sz)
++)
++TRACE_EVENT(xfs_repair_reset_counters,
++	TP_PROTO(struct xfs_mount *mp),
++	TP_ARGS(mp),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++	),
++	TP_printk("dev %d:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev))
++)
++
++DEFINE_BUSY_EVENT(xfs_repair_agfl_insert);
++DEFINE_RMAPBT_EVENT(xfs_repair_alloc_extent_fn);
++DEFINE_RMAPBT_EVENT(xfs_repair_ialloc_extent_fn);
++TRACE_EVENT(xfs_repair_ialloc_insert,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agino_t startino, uint16_t holemask, uint8_t count,
++		 uint8_t freecount, uint64_t freemask),
++	TP_ARGS(mp, agno, startino, holemask, count, freecount, freemask),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, startino)
++		__field(uint16_t, holemask)
++		__field(uint8_t, count)
++		__field(uint8_t, freecount)
++		__field(uint64_t, freemask)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startino = startino;
++		__entry->holemask = holemask;
++		__entry->count = count;
++		__entry->freecount = freecount;
++		__entry->freemask = freemask;
++	),
++	TP_printk("dev %d:%d agno %d startino %u holemask 0x%x count %u freecount %u freemask 0x%llx",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->startino, __entry->holemask, __entry->count,
++		  __entry->freecount, __entry->freemask)
++)
++DEFINE_RMAPBT_EVENT(xfs_repair_rmap_extent_fn);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_repair_refcount_extent_fn);
++DEFINE_RMAPBT_EVENT(xfs_repair_bmap_extent_fn);
++
+ #endif /* _TRACE_XFS_H */
  
-+	/* Walk all the extents to check nextents/naextents/nblocks. */
-+	count = 0;
-+	err2 = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_DATA_FORK,
-+			&nextents, &count);
-+	if (!xfs_scrub_should_xref(sc, err2, NULL))
-+		goto skip_block_check;
-+	XFS_SCRUB_INODE_CHECK(nextents >= be32_to_cpu(dip->di_nextents));
-+
-+	err2 = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_ATTR_FORK,
-+			&nextents, &count);
-+	if (!xfs_scrub_should_xref(sc, err2, NULL))
-+		goto skip_block_check;
-+	XFS_SCRUB_INODE_CHECK(nextents == be16_to_cpu(dip->di_anextents));
-+
-+	/* Check nblocks, taking any delalloc extents into account. */
-+	if (sc->ip)
-+		count -= sc->ip->i_delayed_blks;
-+	XFS_SCRUB_INODE_CHECK(count == be64_to_cpu(dip->di_nblocks));
-+
-+skip_block_check:
-+	/* Make sure we don't have any written extents after EOF. */
-+	if (S_ISREG(mode) && !(flags & XFS_DIFLAG_PREALLOC) &&
-+	    (dip->di_format == XFS_DINODE_FMT_EXTENTS ||
-+	     dip->di_format == XFS_DINODE_FMT_BTREE)) {
-+		struct xfs_bmbt_irec		got;
-+		struct xfs_ifork		*ifp;
-+		xfs_fileoff_t			lblk;
-+		xfs_extnum_t			idx;
-+		bool				found;
-+
-+		lblk = XFS_B_TO_FSB(mp, i_size_read(VFS_I(sc->ip)));
-+		ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
-+		found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &idx, &got);
-+		while (found) {
-+			XFS_SCRUB_INODE_PREEN(got.br_startoff < lblk ||
-+					got.br_state != XFS_EXT_NORM);
-+			lblk = got.br_startoff + got.br_blockcount;
-+			found = xfs_iext_get_extent(ifp, ++idx, &got);
-+		}
-+	}
- out:
- 	if (bp)
- 		xfs_trans_brelse(sc->tp, bp);
+ #undef TRACE_INCLUDE_PATH
 
