@@ -1,23 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51943 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161539AbdAGAjL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:39:11 -0500
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070dA6j024081
+Received: from userp1040.oracle.com ([156.151.31.81]:41066 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161539AbdAGAjR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:39:17 -0500
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070dGpB025188
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:10 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v070dAfp005999
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:17 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v070dGKV027117
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:10 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v070d9vJ016528
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:09 GMT
-Subject: [PATCH 31/47] xfs: scrub should cross-reference the realtime bitmap
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:16 GMT
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v070dFvU004514
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:39:16 GMT
+Subject: [PATCH 32/47] xfs: cross-reference the block mappings when possible
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 06 Jan 2017 16:39:08 -0800
-Message-ID: <148374954879.30431.3031775510959585094.stgit@birch.djwong.org>
+Date: Fri, 06 Jan 2017 16:39:14 -0800
+Message-ID: <148374955484.30431.7066197703632274610.stgit@birch.djwong.org>
 In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
 References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -29,109 +29,80 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-While we're scrubbing various btrees, cross-reference the records
-with the other metadata.
+Check inode field contents against the block mappings when possible.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |   30 ++++++++++++++++++++++++++++++
- fs/xfs/repair/bmap.c         |   10 ++++++++++
- fs/xfs/xfs_rtalloc.h         |    3 +++
- 3 files changed, 43 insertions(+)
+ fs/xfs/repair/inode.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index f4b68c0..4b8457c 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -1016,3 +1016,33 @@ xfs_rtfree_extent(
- 	}
- 	return 0;
- }
-+
-+/* Is the given extent all free? */
-+int
-+xfs_rtbitmap_extent_is_free(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		*tp,
-+	xfs_rtblock_t			start,
-+	xfs_rtblock_t			len,
-+	bool				*is_free)
-+{
-+	xfs_rtblock_t			end;
-+	xfs_extlen_t			clen;
-+	int				matches;
-+	int				error;
-+
-+	*is_free = false;
-+	while (len) {
-+		clen = len > ~0U ? ~0U : len;
-+		error = xfs_rtcheck_range(mp, tp, start, clen, 1, &end,
-+				&matches);
-+		if (error || !matches || end < start + clen)
-+			return error;
-+
-+		len -= end - start;
-+		start = end + 1;
-+	}
-+
-+	*is_free = true;
-+	return error;
-+}
-diff --git a/fs/xfs/repair/bmap.c b/fs/xfs/repair/bmap.c
-index 5cc7d51..bd6a620 100644
---- a/fs/xfs/repair/bmap.c
-+++ b/fs/xfs/repair/bmap.c
-@@ -39,6 +39,7 @@
- #include "xfs_alloc.h"
- #include "xfs_ialloc.h"
- #include "xfs_refcount.h"
-+#include "xfs_rtalloc.h"
+diff --git a/fs/xfs/repair/inode.c b/fs/xfs/repair/inode.c
+index 14d9e19..51f0e78 100644
+--- a/fs/xfs/repair/inode.c
++++ b/fs/xfs/repair/inode.c
+@@ -39,6 +39,8 @@
+ #include "xfs_log.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_rmap.h"
++#include "xfs_bmap.h"
++#include "xfs_bmap_util.h"
  #include "repair/common.h"
- #include "repair/btree.h"
  
-@@ -113,6 +114,7 @@ xfs_scrub_bmap_extent(
- 	bool				is_freesp;
- 	bool				has_inodes;
- 	bool				has_cowflag;
-+	bool				is_free = false;
- 	unsigned int			rflags;
- 	int				has_rmap;
- 	int				has_refcount;
-@@ -168,6 +170,14 @@ xfs_scrub_bmap_extent(
- 				irec->br_blockcount, &is_freesp);
- 		if (xfs_scrub_should_xref(info->sc, err2, &sa.bno_cur))
- 			XFS_SCRUB_BMAP_CHECK(!is_freesp);
-+	} else {
-+		xfs_ilock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
-+		err2 = xfs_rtbitmap_extent_is_free(mp, info->sc->tp,
-+				irec->br_startblock, irec->br_blockcount,
-+				&is_free);
-+		if (xfs_scrub_should_xref(info->sc, err2, NULL))
-+			XFS_SCRUB_BMAP_CHECK(!is_free);
-+		xfs_iunlock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
+ /*
+@@ -176,6 +178,7 @@ xfs_scrub_inode(
+ 	struct xfs_dinode		*dip;
+ 	xfs_ino_t			ino;
+ 	unsigned long long		isize;
++	unsigned long long		count;
+ 	uint64_t			flags2;
+ 	uint32_t			nextents;
+ 	uint32_t			extsize;
+@@ -391,6 +394,46 @@ xfs_scrub_inode(
+ 		xfs_scrub_ag_free(&sa);
  	}
  
- 	/* Cross-reference with inobt. */
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index 3036349..bd1c6a9 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -121,6 +121,8 @@ int xfs_rtmodify_summary(struct xfs_mount *mp, struct xfs_trans *tp, int log,
- int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
- 		     xfs_rtblock_t start, xfs_extlen_t len,
- 		     struct xfs_buf **rbpp, xfs_fsblock_t *rsb);
-+int xfs_rtbitmap_extent_is_free(struct xfs_mount *mp, struct xfs_trans *tp,
-+		xfs_rtblock_t start, xfs_rtblock_t len, bool *is_free);
- 
- 
- #else
-@@ -131,6 +133,7 @@ int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
- # define xfs_rtcheck_range(...)                         (ENOSYS)
- # define xfs_rtfind_forw(...)                           (ENOSYS)
- # define xfs_rtbuf_get(m,t,b,i,p)                       (ENOSYS)
-+# define xfs_rtbitmap_extent_is_free(m,t,s,l,i)         (ENOSYS)
- static inline int		/* error */
- xfs_rtmount_init(
- 	xfs_mount_t	*mp)	/* file system mount structure */
++	/* Walk all the extents to check nextents/naextents/nblocks. */
++	count = 0;
++	err2 = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_DATA_FORK,
++			&nextents, &count);
++	if (!xfs_scrub_should_xref(sc, err2, NULL))
++		goto skip_block_check;
++	XFS_SCRUB_INODE_CHECK(nextents >= be32_to_cpu(dip->di_nextents));
++
++	err2 = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_ATTR_FORK,
++			&nextents, &count);
++	if (!xfs_scrub_should_xref(sc, err2, NULL))
++		goto skip_block_check;
++	XFS_SCRUB_INODE_CHECK(nextents == be16_to_cpu(dip->di_anextents));
++
++	/* Check nblocks, taking any delalloc extents into account. */
++	if (sc->ip)
++		count -= sc->ip->i_delayed_blks;
++	XFS_SCRUB_INODE_CHECK(count == be64_to_cpu(dip->di_nblocks));
++
++skip_block_check:
++	/* Make sure we don't have any written extents after EOF. */
++	if (S_ISREG(mode) && !(flags & XFS_DIFLAG_PREALLOC) &&
++	    (dip->di_format == XFS_DINODE_FMT_EXTENTS ||
++	     dip->di_format == XFS_DINODE_FMT_BTREE)) {
++		struct xfs_bmbt_irec		got;
++		struct xfs_ifork		*ifp;
++		xfs_fileoff_t			lblk;
++		xfs_extnum_t			idx;
++		bool				found;
++
++		lblk = XFS_B_TO_FSB(mp, i_size_read(VFS_I(sc->ip)));
++		ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
++		found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &idx, &got);
++		while (found) {
++			XFS_SCRUB_INODE_PREEN(got.br_startoff < lblk ||
++					got.br_state != XFS_EXT_NORM);
++			lblk = got.br_startoff + got.br_blockcount;
++			found = xfs_iext_get_extent(ifp, ++idx, &got);
++		}
++	}
+ out:
+ 	if (bp)
+ 		xfs_trans_brelse(sc->tp, bp);
 
