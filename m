@@ -1,42 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48452 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:32768 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752566AbdAHQKB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 8 Jan 2017 11:10:01 -0500
-Date: Sun, 8 Jan 2017 11:10:00 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: minleft fixes V2
-Message-ID: <20170108160959.GD62847@bfoster.bfoster>
-References: <1482436822-31546-1-git-send-email-hch@lst.de>
- <20170105012159.GS1859@eguan.usersys.redhat.com>
- <20170105020105.GC17846@birch.djwong.org>
- <20170108103647.GD26451@lst.de>
+        id S1751691AbdAHPOc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 8 Jan 2017 10:14:32 -0500
+Date: Sun, 8 Jan 2017 16:14:30 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: xfs:  commit 6552321831dc "xfs: remove i_iolock and use
+        i_rwsem in the VFS inode instead"  change causes hang
+Message-ID: <20170108151430.GA29847@lst.de>
+References: <1483886924.8189.81.camel@linux.vnet.ibm.com> <20170108145200.GA29570@lst.de> <1483887789.8189.90.camel@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170108103647.GD26451@lst.de>
+In-Reply-To: <1483887789.8189.90.camel@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
+To: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>
 
-On Sun, Jan 08, 2017 at 11:36:47AM +0100, Christoph Hellwig wrote:
-> On Wed, Jan 04, 2017 at 06:01:05PM -0800, Darrick J. Wong wrote:
-> > Ok, sounds good.  I just sent out my first attempt at a pull request to Linus,
-> > so I'll queue this series for another pull req. after that.
-> 
-> I'll resend with a few minor updates based on the comments from Brian
-> in a few days, so this should be ready for -rc4.
+On Sun, Jan 08, 2017 at 10:03:09AM -0500, Mimi Zohar wrote:
+> But not normally for a normal file read.
 
-So I just noticed that this series was merged into for-next (which iiuc
-is easily fixable, yes?). Christoph already mentioned he was sending a
-new variant... but juuuuuust a note that not all of these patches had a
-reviewed-by yet either. ;) 
+Depends on the file system.  In addition to XFS at least the NFS
+also uses i_rwsem by default.  Also all file systems supporting
+a DAX I/O path.
 
-Brian
+> Unless something has changed recently, to synchronize reading files to
+> calculate the file hash and writing xattrs it has to take the i_rwsem
+> prior to reading the file.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+No, you must simply not do this at all.  If you take a lock that
+belongs to the fs and is not your own over ->read_iter you're toast
+as you've seen.
