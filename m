@@ -1,71 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53518 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:57824 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756743AbdACFw6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Jan 2017 00:52:58 -0500
-Date: Tue, 3 Jan 2017 13:52:56 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 0/3] xfs/348: test handling of malformed inode mode
-Message-ID: <20170103055256.GK1859@eguan.usersys.redhat.com>
-References: <1482689376-23553-1-git-send-email-amir73il@gmail.com>
+        id S1752230AbdAHKbg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 8 Jan 2017 05:31:36 -0500
+Date: Sun, 8 Jan 2017 11:31:34 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/5] xfs: fix the alignment fallback in xfs_bmap_btalloc
+Message-ID: <20170108103134.GB26451@lst.de>
+References: <1482436822-31546-1-git-send-email-hch@lst.de> <1482436822-31546-3-git-send-email-hch@lst.de> <20170104143405.GB41989@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1482689376-23553-1-git-send-email-amir73il@gmail.com>
+In-Reply-To: <20170104143405.GB41989@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-On Sun, Dec 25, 2016 at 08:09:33PM +0200, Amir Goldstein wrote:
-> Eryu,
+On Wed, Jan 04, 2017 at 09:34:05AM -0500, Brian Foster wrote:
+> Ok, but we have the following near the top of xfs_alloc_vextent():
 > 
-> I beefed up the initial test sent earlier today with more checks
-> on mounted fs.
+>         if (args->alignment == 0)
+>                 args->alignment = 1;
 > 
-> The original patch testing only xfs_repair remains patch 1 in this series.
+> ... so I'm not sure the commit log description is accurate. That aside:
 > 
-> Patch 2 adds fstat tests on mounted fs, which are safe on my test system.
-> 
-> Patch 3 is explosive. It exposes an XFS assert, but I left a "safety pin"
-> that needs to be commented out to reproduce the assert.
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-My kenrel config doesn't turn DEBUG on, so I don't see a kernel crash :)
+Well, in that case we might not actually need it.  This was just a
+a drive-by patch from investigating what the alignmnet - 1 mean in
+the allocator.
 
-I can push this test out after the fix lands in upstream, then I think
-there's no need to leave a switch in the test.
-
-Otherwise tests look good to me. But I'd like to have Darrick to review
-too, as he had written many fuzzer tests and suggested this test :)
-
-Thanks,
-Eryu
-
-> 
-> I will soon post my kernel configs and dmesg logs.
-> 
-> Amir.
-> 
-> v2:
-> - test fstat with malformed inode mode
-> - test readlink/readdir with malformed inode mode
-> 
-> v1:
-> - test xfs_repair with malformed inode mode
-> 
-> Amir Goldstein (3):
->   xfs/348: test handling of invalid inode modes
->   xfs/348: test fstat with malformed inode mode
->   xfs/348: test readlink/readdir with malformed inode mode
-> 
->  tests/xfs/348     | 154 +++++++++++++++++++++++++++
->  tests/xfs/348.out | 312 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/group   |   1 +
->  3 files changed, 467 insertions(+)
->  create mode 100755 tests/xfs/348
->  create mode 100644 tests/xfs/348.out
-> 
-> -- 
-> 2.7.4
-> 
+Either way this could be cleaned up, but probably shouldn't be in
+a minimal bugfix series.
