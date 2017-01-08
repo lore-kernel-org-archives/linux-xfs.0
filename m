@@ -1,52 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59656 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753255AbdAHQIU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 8 Jan 2017 11:08:20 -0500
-Date: Sun, 8 Jan 2017 11:08:14 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/5] xfs: fix the alignment fallback in xfs_bmap_btalloc
-Message-ID: <20170108160814.GB62847@bfoster.bfoster>
-References: <1482436822-31546-1-git-send-email-hch@lst.de>
- <1482436822-31546-3-git-send-email-hch@lst.de>
- <20170104143405.GB41989@bfoster.bfoster>
- <20170108103134.GB26451@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170108103134.GB26451@lst.de>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36350 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751818AbdAHPDS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2017 10:03:18 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v08EwwqW035117
+        for <linux-xfs@vger.kernel.org>; Sun, 8 Jan 2017 10:03:18 -0500
+Received: from e23smtp02.au.ibm.com (e23smtp02.au.ibm.com [202.81.31.144])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 27upx116pb-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Sun, 08 Jan 2017 10:03:17 -0500
+Received: from localhost
+        by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
+        Mon, 9 Jan 2017 01:03:15 +1000
+Subject: Re: xfs:  commit 6552321831dc "xfs: remove i_iolock and use    i_rwsem
+ in the VFS inode instead"  change causes hang
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Date: Sun, 08 Jan 2017 10:03:09 -0500
+In-Reply-To: <20170108145200.GA29570@lst.de>
+References: <1483886924.8189.81.camel@linux.vnet.ibm.com>
+         <20170108145200.GA29570@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Message-Id: <1483887789.8189.90.camel@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>
 
-On Sun, Jan 08, 2017 at 11:31:34AM +0100, Christoph Hellwig wrote:
-> On Wed, Jan 04, 2017 at 09:34:05AM -0500, Brian Foster wrote:
-> > Ok, but we have the following near the top of xfs_alloc_vextent():
-> > 
-> >         if (args->alignment == 0)
-> >                 args->alignment = 1;
-> > 
-> > ... so I'm not sure the commit log description is accurate. That aside:
-> > 
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+On Sun, 2017-01-08 at 15:52 +0100, Christoph Hellwig wrote:
+> On Sun, Jan 08, 2017 at 09:48:44AM -0500, Mimi Zohar wrote:
+> > IMA takes the i_rwsem (fomerly i_mutex) before reading the file to
+> > synchronize calculating the file hash and validating the file's
+> > hash/signature stored as security.ima xattr
 > 
-> Well, in that case we might not actually need it.  This was just a
-> a drive-by patch from investigating what the alignmnet - 1 mean in
-> the allocator.
-> 
-> Either way this could be cleaned up, but probably shouldn't be in
-> a minimal bugfix series.
+> Well, it shouldn't do that.  In the I/O path i_rwsem is up to the
+> fs to use.  Various other file systems also take it internally for
+> reads, although mostly only for direct I/O.
 
-We could also just replace it with something like ASSERT(args->alignment
-> 0) before the use of (alignment - 1), which is kind of
-self-documenting (but still probably not worth a patch on its own). But
-fair enough either way...
+But not normally for a normal file read.  For direct I/O, IMA fails the
+file hash/signature verification, measurement, audit unless the IMA
+"permit_directio" rule is defined.
 
-Brian
+> So the answer here is that ima needs to stop playing with i_rwsem.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Unless something has changed recently, to synchronize reading files to
+calculate the file hash and writing xattrs it has to take the i_rwsem
+prior to reading the file.
+
+Mimi
+
