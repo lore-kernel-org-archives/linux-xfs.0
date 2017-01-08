@@ -1,72 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:57907 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:60650 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755984AbdAHKgN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 8 Jan 2017 05:36:13 -0500
-Date: Sun, 8 Jan 2017 11:36:11 +0100
+        id S1751691AbdAHOwC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 8 Jan 2017 09:52:02 -0500
+Date: Sun, 8 Jan 2017 15:52:00 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 3/5] xfs: fix bogus minleft manipulations
-Message-ID: <20170108103611.GC26451@lst.de>
-References: <1482436822-31546-1-git-send-email-hch@lst.de> <1482436822-31546-4-git-send-email-hch@lst.de> <20170104181933.GC41989@bfoster.bfoster>
+Subject: Re: xfs:  commit 6552321831dc "xfs: remove i_iolock and use
+        i_rwsem in the VFS inode instead"  change causes hang
+Message-ID: <20170108145200.GA29570@lst.de>
+References: <1483886924.8189.81.camel@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170104181933.GC41989@bfoster.bfoster>
+In-Reply-To: <1483886924.8189.81.camel@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>
 
-On Wed, Jan 04, 2017 at 01:19:33PM -0500, Brian Foster wrote:
-> Staring at this some more, I'm still not terribly fond of this, moreso
-> because I wonder how much more of this can be ripped out
+On Sun, Jan 08, 2017 at 09:48:44AM -0500, Mimi Zohar wrote:
+> IMA takes the i_rwsem (fomerly i_mutex) before reading the file to
+> synchronize calculating the file hash and validating the file's
+> hash/signature stored as security.ima xattr
 
-What else do you have in mind?
+Well, it shouldn't do that.  In the I/O path i_rwsem is up to the
+fs to use.  Various other file systems also take it internally for
+reads, although mostly only for direct I/O.
 
-> and whether the
-> low space allocator thing is still effective.
-
-That's a good question.  Another item added to my not critical allocator
-TODO list, which keeps growing..
-
-> Aside from that, afaict
-> the set_aside change should make it robust and addresses my previous
-> question in that it holds blocks out of all transaction reservations.
-> 
-> I'm also curious whether the set_aside patch alone addresses the
-> original problem, or setting minleft = 0 in one of these cases was
-> actually the cause.
-
-I think I needed both changes, but it's been a while and I'll have to
-retest.
-
-> > -		/*
-> > -		 * Could not find an AG with enough free space to satisfy
-> > -		 * a full btree split.  Try again without minleft and if
-> > -		 * successful activate the lowspace algorithm.
-> > -		 */
-> > -		args.fsbno = 0;
-> > -		args.type = XFS_ALLOCTYPE_FIRST_AG;
-> > -		args.minleft = 0;
-> > -		error = xfs_alloc_vextent(&args);
-> > -		if (error)
-> > -			goto error0;
-> > -		cur->bc_private.b.dfops->dop_low = true;
-> > -	}
-> 
-> We have a similar retry pattern in xfs_bmap_btalloc() where, in the hunk
-> just above, we retain the retry that appears analogous to this one (in
-> that it activates the low space algo) and just drop the minleft = 0 bit.
-> Here we are dropping the whole thing. Any reason not to be consistent
-> one way or the other? (Though do note that we don't check firstblock
-> here...).
-
-xfs_bmap_btalloc is a bit different because the alignment question
-comes into play as well, in addition to the non-binding AG selection
-from the higher level allocator code.  But I suspect that there is a lot
-of dead or questionable code in it, and it's been on my todo list
-to audit xfs_bmap_btalloc, xfs_alloc_vectent and it's subfunction,
-and make the argument passing, allocator modes and things like the
-lowspace mode aswell as the firstblock magic a lot cleaner and properly
-documented.
+So the answer here is that ima needs to stop playing with i_rwsem.
