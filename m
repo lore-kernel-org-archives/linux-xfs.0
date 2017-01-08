@@ -1,85 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47286 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753566AbdAHQij (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2017 11:38:39 -0500
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v08GY3JM098463
-        for <linux-xfs@vger.kernel.org>; Sun, 8 Jan 2017 11:38:38 -0500
-Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 27urhtrvdj-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Sun, 08 Jan 2017 11:38:38 -0500
-Received: from localhost
-        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-        Mon, 9 Jan 2017 02:38:35 +1000
-Subject: Re: xfs:  commit 6552321831dc "xfs: remove i_iolock and use    i_rwsem
- in the VFS inode instead"  change causes hang
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-Date: Sun, 08 Jan 2017 11:38:26 -0500
-In-Reply-To: <20170108153725.GA30270@lst.de>
-References: <1483886924.8189.81.camel@linux.vnet.ibm.com>
-         <20170108145200.GA29570@lst.de>
-         <1483887789.8189.90.camel@linux.vnet.ibm.com>
-         <20170108151430.GA29847@lst.de>
-         <1483889482.8189.104.camel@linux.vnet.ibm.com>
-         <20170108153725.GA30270@lst.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Message-Id: <1483893506.8189.147.camel@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:59812 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753255AbdAHQJg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 8 Jan 2017 11:09:36 -0500
+Date: Sun, 8 Jan 2017 11:09:35 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/5] xfs: fix bogus minleft manipulations
+Message-ID: <20170108160935.GC62847@bfoster.bfoster>
+References: <1482436822-31546-1-git-send-email-hch@lst.de>
+ <1482436822-31546-4-git-send-email-hch@lst.de>
+ <20170104181933.GC41989@bfoster.bfoster>
+ <20170108103611.GC26451@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170108103611.GC26451@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>, James Morris <jmorris@namei.org>, Andrew Morton <akpm@linux-foundation.org>, David Safford <david.safford@ge.com>
+Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-On Sun, 2017-01-08 at 16:37 +0100, Christoph Hellwig wrote:
-> On Sun, Jan 08, 2017 at 10:31:22AM -0500, Mimi Zohar wrote:
-> > > Depends on the file system.  In addition to XFS at least the NFS
-> > > also uses i_rwsem by default.  Also all file systems supporting
-> > > a DAX I/O path.
+On Sun, Jan 08, 2017 at 11:36:11AM +0100, Christoph Hellwig wrote:
+> On Wed, Jan 04, 2017 at 01:19:33PM -0500, Brian Foster wrote:
+> > Staring at this some more, I'm still not terribly fond of this, moreso
+> > because I wonder how much more of this can be ripped out
+> 
+> What else do you have in mind?
+> 
+
+Oh, I don't have anything better to offer atm. :P It's just that we're
+messing with this little corner of the low space allocation mechanism
+when a broader reassessment of the bigger picture seems more appropriate
+(hence the low space allocator question). It sounds like doing that is
+on your radar, though..
+
+Sorry, I recognize there's a bug to fix here.. I guess I'm just trying
+to convince myself this is as minimal as necessary to fix it.
+
+> > and whether the
+> > low space allocator thing is still effective.
+> 
+> That's a good question.  Another item added to my not critical allocator
+> TODO list, which keeps growing..
+> 
+
+You're welcome. ;)
+
+> > Aside from that, afaict
+> > the set_aside change should make it robust and addresses my previous
+> > question in that it holds blocks out of all transaction reservations.
 > > 
-> > We're only interested in the integrity of the local file system.
+> > I'm also curious whether the set_aside patch alone addresses the
+> > original problem, or setting minleft = 0 in one of these cases was
+> > actually the cause.
 > 
-> And I'm only interested in supporting sane use cases that don't include
-> IMA.
-
-Nothing new, you haven't changed your position all these years.  I'm not
-sure whether your problem is with the concepts that the integrity
-subsystem provides (eg. extending secure and trusted boot to the OS,
-auditing file hashes for use in forensics) or just with the
-implementation.
-
-Others are interested in these features and are using the integrity
-subsystem (eg. David Safford LSS 2016 "Design and Implementation of a
-Security Architecture for Critical Infrastructure"
-(https://www.youtube.com/watch?v=LDQxzz42Bs0),  Eric Richter's LSS 2016
-talk "(Ab)using Linux as a Trusted Bootloader",  and many, many others).
-
-> But even if you only care about local file systems IMA is simply
-> fundamentally broken.  Read/Write zerialization in Linux has always been
-> in the fs (or generic library called by it) and not by the caller.
+> I think I needed both changes, but it's been a while and I'll have to
+> retest.
 > 
-> > IMA needs a mechanism for quickly reading a file to calculate the file
-> > hash and validate (or set) the file signature/hash stored as an xattr,
-> > prior to any other process getting access to the file.
+
+Ok, thanks.
+
+> > > -		/*
+> > > -		 * Could not find an AG with enough free space to satisfy
+> > > -		 * a full btree split.  Try again without minleft and if
+> > > -		 * successful activate the lowspace algorithm.
+> > > -		 */
+> > > -		args.fsbno = 0;
+> > > -		args.type = XFS_ALLOCTYPE_FIRST_AG;
+> > > -		args.minleft = 0;
+> > > -		error = xfs_alloc_vextent(&args);
+> > > -		if (error)
+> > > -			goto error0;
+> > > -		cur->bc_private.b.dfops->dop_low = true;
+> > > -	}
+> > 
+> > We have a similar retry pattern in xfs_bmap_btalloc() where, in the hunk
+> > just above, we retain the retry that appears analogous to this one (in
+> > that it activates the low space algo) and just drop the minleft = 0 bit.
+> > Here we are dropping the whole thing. Any reason not to be consistent
+> > one way or the other? (Though do note that we don't check firstblock
+> > here...).
 > 
-> And that's simply not doable in Linux from a layer outside the file system.
-> And really questionable even from inside the fs.    We should simply drop
-> IMA from the tree in the current state because it's obviously broken.
+> xfs_bmap_btalloc is a bit different because the alignment question
+> comes into play as well, in addition to the non-binding AG selection
+> from the higher level allocator code.  But I suspect that there is a lot
+> of dead or questionable code in it, and it's been on my todo list
+> to audit xfs_bmap_btalloc, xfs_alloc_vectent and it's subfunction,
+> and make the argument passing, allocator modes and things like the
+> lowspace mode aswell as the firstblock magic a lot cleaner and properly
+> documented.
 
-True, it is now broken on XFS, but please don't generalize this XFS
-regression to all file systems.
+I agree that is much needed and may very well kill some of this code
+off...
 
-> If you can convince fs maintainers to do the right calls from the file
-> systems itself for given file systems (and only support IMA for those)
-> we can add it back just for those.
+In this particular case, I think it's probably safer to defer the
+removal of the entire bmbt_alloc_block() hunk to that audit that will
+take into consideration the broader context. IOWs, take the same
+approach in bmbt_alloc_block() as you have in xfs_bmap_btalloc().
 
-We definitely need VFS help in resolving this regression.  As a last
-resort, we could always update the default IMA builtin policy to exclude
-XFS.
+I'm not even sure the code is correct as it is, but if we're in a
+situation where multiple bmbt block allocations are required, afaict
+that hunk can affect subsequent bmbt block allocs in terms of how
+aggressive the allocation request is (via allocation mode). I think that
+also provides some logical separation between minleft changes and all of
+this retry logic and low space allocator stuff, fwiw.
 
-Mimi
+Brian
 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
