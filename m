@@ -1,288 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51343 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964977AbdAGAfx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 19:35:53 -0500
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v070ZqrM021672
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:35:52 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v070Zpgg018597
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:35:52 GMT
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v070ZpP1015564
-        for <linux-xfs@vger.kernel.org>; Sat, 7 Jan 2017 00:35:51 GMT
-Subject: [PATCH 01/47] xfs: plumb in needed functions for range querying of
- the freespace btrees
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 06 Jan 2017 16:35:50 -0800
-Message-ID: <148374935030.30431.1037014892099186108.stgit@birch.djwong.org>
-In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
-References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+Received: from verein.lst.de ([213.95.11.211]:57818 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755968AbdAHKab (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 8 Jan 2017 05:30:31 -0500
+Date: Sun, 8 Jan 2017 11:30:28 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/5] xfs: bump up reserved blocks in xfs_alloc_set_aside
+Message-ID: <20170108103028.GA26451@lst.de>
+References: <1482436822-31546-1-git-send-email-hch@lst.de> <1482436822-31546-2-git-send-email-hch@lst.de> <20170104143350.GA41989@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170104143350.GA41989@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-Plumb in the pieces (init_high_key, diff_two_keys) necessary to call
-query_range on the free space btrees.  Remove the debugging asserts
-so that we can make queries starting from block 0.
+On Wed, Jan 04, 2017 at 09:33:51AM -0500, Brian Foster wrote:
+> Presumably this patch addresses the potential deadlock issues from the
+> previous version, but the commit log description makes no mention of it
+> whatsoever. While the code seems fine, I think the commit log
+> description needs more information wrt to that situation and the
+> relationship/dependency with minleft.
 
-While we're at it, merge the redundant "if (btnum ==" hunks.
+Ok.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_alloc_btree.c |  162 +++++++++++++++++++++++++++++----------
- 1 file changed, 119 insertions(+), 43 deletions(-)
+> The comment above xfs_alloc_set_aside() already touches on the writeback
+> situation, but why 4 blocks per ag? Wasn't the intent to use
+> worst_indlen() since that's the base for minleft?
 
+No, I've given up on that.  worst_indlen deals with the fact that
+for converting a delayed extent of a given length we might need multiple
+real extents, possible in different AGs.
 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index efb467b..ba3ec9c 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -205,19 +205,28 @@ xfs_allocbt_init_key_from_rec(
- 	union xfs_btree_key	*key,
- 	union xfs_btree_rec	*rec)
- {
--	ASSERT(rec->alloc.ar_startblock != 0);
--
- 	key->alloc.ar_startblock = rec->alloc.ar_startblock;
- 	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
- }
- 
- STATIC void
-+xfs_bnobt_init_high_key_from_rec(
-+	union xfs_btree_key	*key,
-+	union xfs_btree_rec	*rec)
-+{
-+	__u32			x;
-+
-+	x = be32_to_cpu(rec->alloc.ar_startblock);
-+	x += be32_to_cpu(rec->alloc.ar_blockcount) - 1;
-+	key->alloc.ar_startblock = cpu_to_be32(x);
-+	key->alloc.ar_blockcount = 0;
-+}
-+
-+STATIC void
- xfs_allocbt_init_rec_from_cur(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_rec	*rec)
- {
--	ASSERT(cur->bc_rec.a.ar_startblock != 0);
--
- 	rec->alloc.ar_startblock = cpu_to_be32(cur->bc_rec.a.ar_startblock);
- 	rec->alloc.ar_blockcount = cpu_to_be32(cur->bc_rec.a.ar_blockcount);
- }
-@@ -236,18 +245,24 @@ xfs_allocbt_init_ptr_from_cur(
- }
- 
- STATIC __int64_t
--xfs_allocbt_key_diff(
-+xfs_bnobt_key_diff(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_key	*key)
- {
- 	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
- 	xfs_alloc_key_t		*kp = &key->alloc;
--	__int64_t		diff;
- 
--	if (cur->bc_btnum == XFS_BTNUM_BNO) {
--		return (__int64_t)be32_to_cpu(kp->ar_startblock) -
--				rec->ar_startblock;
--	}
-+	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
-+}
-+
-+STATIC __int64_t
-+xfs_cntbt_key_diff(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*key)
-+{
-+	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
-+	xfs_alloc_key_t		*kp = &key->alloc;
-+	__int64_t		diff;
- 
- 	diff = (__int64_t)be32_to_cpu(kp->ar_blockcount) - rec->ar_blockcount;
- 	if (diff)
-@@ -256,6 +271,33 @@ xfs_allocbt_key_diff(
- 	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
- }
- 
-+STATIC __int64_t
-+xfs_bnobt_diff_two_keys(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	return (__int64_t)be32_to_cpu(k1->alloc.ar_startblock) -
-+			  be32_to_cpu(k2->alloc.ar_startblock);
-+}
-+
-+STATIC __int64_t
-+xfs_cntbt_diff_two_keys(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	__int64_t		diff;
-+
-+	diff =  be32_to_cpu(k1->alloc.ar_blockcount) -
-+		be32_to_cpu(k2->alloc.ar_blockcount);
-+	if (diff)
-+		return diff;
-+
-+	return  be32_to_cpu(k1->alloc.ar_startblock) -
-+		be32_to_cpu(k2->alloc.ar_startblock);
-+}
-+
- static bool
- xfs_allocbt_verify(
- 	struct xfs_buf		*bp)
-@@ -346,44 +388,78 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
- 
- #if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
--xfs_allocbt_keys_inorder(
-+xfs_bnobt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_key	*k1,
- 	union xfs_btree_key	*k2)
- {
--	if (cur->bc_btnum == XFS_BTNUM_BNO) {
--		return be32_to_cpu(k1->alloc.ar_startblock) <
--		       be32_to_cpu(k2->alloc.ar_startblock);
--	} else {
--		return be32_to_cpu(k1->alloc.ar_blockcount) <
--			be32_to_cpu(k2->alloc.ar_blockcount) ||
--			(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
--			 be32_to_cpu(k1->alloc.ar_startblock) <
--			 be32_to_cpu(k2->alloc.ar_startblock));
--	}
-+	return be32_to_cpu(k1->alloc.ar_startblock) <
-+	       be32_to_cpu(k2->alloc.ar_startblock);
- }
- 
- STATIC int
--xfs_allocbt_recs_inorder(
-+xfs_bnobt_recs_inorder(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_rec	*r1,
- 	union xfs_btree_rec	*r2)
- {
--	if (cur->bc_btnum == XFS_BTNUM_BNO) {
--		return be32_to_cpu(r1->alloc.ar_startblock) +
--			be32_to_cpu(r1->alloc.ar_blockcount) <=
--			be32_to_cpu(r2->alloc.ar_startblock);
--	} else {
--		return be32_to_cpu(r1->alloc.ar_blockcount) <
--			be32_to_cpu(r2->alloc.ar_blockcount) ||
--			(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
--			 be32_to_cpu(r1->alloc.ar_startblock) <
--			 be32_to_cpu(r2->alloc.ar_startblock));
--	}
-+	return be32_to_cpu(r1->alloc.ar_startblock) +
-+		be32_to_cpu(r1->alloc.ar_blockcount) <=
-+		be32_to_cpu(r2->alloc.ar_startblock);
-+}
-+
-+STATIC int
-+xfs_cntbt_keys_inorder(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	return be32_to_cpu(k1->alloc.ar_blockcount) <
-+		be32_to_cpu(k2->alloc.ar_blockcount) ||
-+		(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
-+		 be32_to_cpu(k1->alloc.ar_startblock) <
-+		 be32_to_cpu(k2->alloc.ar_startblock));
-+}
-+
-+STATIC int
-+xfs_cntbt_recs_inorder(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*r1,
-+	union xfs_btree_rec	*r2)
-+{
-+	return be32_to_cpu(r1->alloc.ar_blockcount) <
-+		be32_to_cpu(r2->alloc.ar_blockcount) ||
-+		(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
-+		 be32_to_cpu(r1->alloc.ar_startblock) <
-+		 be32_to_cpu(r2->alloc.ar_startblock));
- }
--#endif	/* DEBUG */
-+#endif /* DEBUG */
-+
-+static const struct xfs_btree_ops xfs_bnobt_ops = {
-+	.rec_len		= sizeof(xfs_alloc_rec_t),
-+	.key_len		= sizeof(xfs_alloc_key_t),
-+
-+	.dup_cursor		= xfs_allocbt_dup_cursor,
-+	.set_root		= xfs_allocbt_set_root,
-+	.alloc_block		= xfs_allocbt_alloc_block,
-+	.free_block		= xfs_allocbt_free_block,
-+	.update_lastrec		= xfs_allocbt_update_lastrec,
-+	.get_minrecs		= xfs_allocbt_get_minrecs,
-+	.get_maxrecs		= xfs_allocbt_get_maxrecs,
-+	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
-+	.init_high_key_from_rec	= xfs_bnobt_init_high_key_from_rec,
-+	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
-+	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
-+	.key_diff		= xfs_bnobt_key_diff,
-+	.buf_ops		= &xfs_allocbt_buf_ops,
-+	.diff_two_keys		= xfs_bnobt_diff_two_keys,
-+#if defined(DEBUG) || defined(XFS_WARN)
-+	.keys_inorder		= xfs_bnobt_keys_inorder,
-+	.recs_inorder		= xfs_bnobt_recs_inorder,
-+#endif
-+};
- 
--static const struct xfs_btree_ops xfs_allocbt_ops = {
-+static const struct xfs_btree_ops xfs_cntbt_ops = {
- 	.rec_len		= sizeof(xfs_alloc_rec_t),
- 	.key_len		= sizeof(xfs_alloc_key_t),
- 
-@@ -397,11 +473,12 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
- 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
- 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
--	.key_diff		= xfs_allocbt_key_diff,
-+	.key_diff		= xfs_cntbt_key_diff,
- 	.buf_ops		= &xfs_allocbt_buf_ops,
-+	.diff_two_keys		= xfs_cntbt_diff_two_keys,
- #if defined(DEBUG) || defined(XFS_WARN)
--	.keys_inorder		= xfs_allocbt_keys_inorder,
--	.recs_inorder		= xfs_allocbt_recs_inorder,
-+	.keys_inorder		= xfs_cntbt_keys_inorder,
-+	.recs_inorder		= xfs_cntbt_recs_inorder,
- #endif
- };
- 
-@@ -427,16 +504,15 @@ xfs_allocbt_init_cursor(
- 	cur->bc_mp = mp;
- 	cur->bc_btnum = btnum;
- 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
--	cur->bc_ops = &xfs_allocbt_ops;
--	if (btnum == XFS_BTNUM_BNO)
--		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
--	else
--		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
- 
- 	if (btnum == XFS_BTNUM_CNT) {
-+		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
-+		cur->bc_ops = &xfs_cntbt_ops;
- 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
- 		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
- 	} else {
-+		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
-+		cur->bc_ops = &xfs_bnobt_ops;
- 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
- 	}
- 
+This version of the series keeps the previous minleft that is for just
+allocating a single extent in the AG - the callers will handle "short"
+returns from xfs_bmapi_write and just start a new allocation.  And
+except for a corner case in the large directory block allocation code
+these are in a new / rolled over transaction.  Fixing the latter also
+is on my todo list, but it's another big issue that so far hasn't
+trigger in practive, so I'd like to keep it in a separate series.
 
+> Also, it looks like this causes a regression in xfs/004. On a quick
+> look, we might just need a test update however...
+
+Yes.  Hard to do in a series for the kernel, though :)
