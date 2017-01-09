@@ -1,52 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34122 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933704AbdAKIYi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 03:24:38 -0500
-Received: by mail-wm0-f65.google.com with SMTP id c85so35008049wmi.1
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 00:24:37 -0800 (PST)
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v8 6/6] xfs: sanity check inode di_mode
-Date: Wed, 11 Jan 2017 10:24:10 +0200
-Message-Id: <1484123050-11064-7-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
-References: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:58178 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938404AbdAIPjz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:55 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 17/32] xfs: Move AGI buffer type setting to xfs_read_agi
+Date: Mon,  9 Jan 2017 16:38:48 +0100
+Message-Id: <1483976343-661-18-git-send-email-hch@lst.de>
+In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
+References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-Check for invalid file type in xfs_dinode_verify()
-and fail to load the inode structure from disk.
+From: Eric Sandeen <sandeen@sandeen.net>
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+commit 200237d6746faaeaf7f4ff4abbf13f3917cee60a upstream.
+
+We've missed properly setting the buffer type for
+an AGI transaction in 3 spots now, so just move it
+into xfs_read_agi() and set it if we are in a transaction
+to avoid the problem in the future.
+
+This is similar to how it is done in i.e. the dir3
+and attr3 read functions.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c | 3 +++
- 1 file changed, 3 insertions(+)
+ fs/xfs/libxfs/xfs_ialloc.c | 4 ++--
+ fs/xfs/xfs_inode.c         | 2 --
+ fs/xfs/xfs_log_recover.c   | 1 -
+ 3 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 0091ac3..d93f9d9 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -29,6 +29,7 @@
- #include "xfs_icache.h"
- #include "xfs_trans.h"
- #include "xfs_ialloc.h"
-+#include "xfs_dir2.h"
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 51b4e0d..c482b97 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2450,8 +2450,6 @@ xfs_ialloc_log_agi(
+ 	ASSERT(agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC));
+ #endif
  
- /*
-  * Check that none of the inode's in the buffer have a next
-@@ -398,6 +399,8 @@ xfs_dinode_verify(
- 		return false;
+-	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_AGI_BUF);
+-
+ 	/*
+ 	 * Compute byte offsets for the first and last fields in the first
+ 	 * region and log the agi buffer. This only logs up through
+@@ -2592,6 +2590,8 @@ xfs_read_agi(
+ 			XFS_FSS_TO_BB(mp, 1), 0, bpp, &xfs_agi_buf_ops);
+ 	if (error)
+ 		return error;
++	if (tp)
++		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_AGI_BUF);
  
- 	mode = be16_to_cpu(dip->di_mode);
-+	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
-+		return false;
+ 	xfs_buf_set_ref(*bpp, XFS_AGI_REF);
+ 	return 0;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 4e560e6..512ff13 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2041,7 +2041,6 @@ xfs_iunlink(
+ 	agi->agi_unlinked[bucket_index] = cpu_to_be32(agino);
+ 	offset = offsetof(xfs_agi_t, agi_unlinked) +
+ 		(sizeof(xfs_agino_t) * bucket_index);
+-	xfs_trans_buf_set_type(tp, agibp, XFS_BLFT_AGI_BUF);
+ 	xfs_trans_log_buf(tp, agibp, offset,
+ 			  (offset + sizeof(xfs_agino_t) - 1));
+ 	return 0;
+@@ -2133,7 +2132,6 @@ xfs_iunlink_remove(
+ 		agi->agi_unlinked[bucket_index] = cpu_to_be32(next_agino);
+ 		offset = offsetof(xfs_agi_t, agi_unlinked) +
+ 			(sizeof(xfs_agino_t) * bucket_index);
+-		xfs_trans_buf_set_type(tp, agibp, XFS_BLFT_AGI_BUF);
+ 		xfs_trans_log_buf(tp, agibp, offset,
+ 				  (offset + sizeof(xfs_agino_t) - 1));
+ 	} else {
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 2d91f5a..9b3d7c7 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4929,7 +4929,6 @@ xlog_recover_clear_agi_bucket(
+ 	agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+ 	offset = offsetof(xfs_agi_t, agi_unlinked) +
+ 		 (sizeof(xfs_agino_t) * bucket);
+-	xfs_trans_buf_set_type(tp, agibp, XFS_BLFT_AGI_BUF);
+ 	xfs_trans_log_buf(tp, agibp, offset,
+ 			  (offset + sizeof(xfs_agino_t) - 1));
  
- 	/* No zero-length symlinks/dirs. */
- 	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
 -- 
-2.7.4
+2.1.4
 
