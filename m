@@ -1,67 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:59124 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:60910 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938649AbdAIPkH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:07 -0500
+        with ESMTP id S938686AbdAIPkY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:24 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 21/32] xfs: check for bogus values in btree block headers
-Date: Mon,  9 Jan 2017 16:38:52 +0100
-Message-Id: <1483976343-661-22-git-send-email-hch@lst.de>
+Subject: [PATCH 27/32] xfs: ignore leaf attr ichdr.count in verifier during log replay
+Date: Mon,  9 Jan 2017 16:38:58 +0100
+Message-Id: <1483976343-661-28-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Eric Sandeen <sandeen@redhat.com>
 
-commit bb3be7e7c1c18e1b141d4cadeb98cc89ecf78099 upstream.
+commit 2e1d23370e75d7d89350d41b4ab58c7f6a0e26b2 upstream.
 
-When we're reading a btree block, make sure that what we retrieved
-matches the owner and level; and has a plausible number of records.
+When we create a new attribute, we first create a shortform
+attribute, and try to fit the new attribute into it.
+If that fails, we copy the (empty) attribute into a leaf attribute,
+and do the copy again.  Thus there can be a transient state where
+we have an empty leaf attribute.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+If we encounter this during log replay, the verifier will fail.
+So add a test to ignore this part of the leaf attr verification
+during log replay.
+
+Thanks as usual to dchinner for spotting the problem.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/libxfs/xfs_btree.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ fs/xfs/libxfs/xfs_attr_leaf.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 0e80993..21e6a6a 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -1769,8 +1769,28 @@ xfs_btree_lookup_get_block(
- 	if (error)
- 		return error;
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 8ea91f3..2852521 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -253,6 +253,7 @@ xfs_attr3_leaf_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_attr_leafblock *leaf = bp->b_addr;
++	struct xfs_perag *pag = bp->b_pag;
+ 	struct xfs_attr3_icleaf_hdr ichdr;
  
-+	/* Check the inode owner since the verifiers don't. */
-+	if (xfs_sb_version_hascrc(&cur->bc_mp->m_sb) &&
-+	    (cur->bc_flags & XFS_BTREE_LONG_PTRS) &&
-+	    be64_to_cpu((*blkp)->bb_u.l.bb_owner) !=
-+			cur->bc_private.b.ip->i_ino)
-+		goto out_bad;
-+
-+	/* Did we get the level we were looking for? */
-+	if (be16_to_cpu((*blkp)->bb_level) != level)
-+		goto out_bad;
-+
-+	/* Check that internal nodes have at least one record. */
-+	if (level != 0 && be16_to_cpu((*blkp)->bb_numrecs) == 0)
-+		goto out_bad;
-+
- 	xfs_btree_setbuf(cur, level, bp);
- 	return 0;
-+
-+out_bad:
-+	*blkp = NULL;
-+	xfs_trans_brelse(cur->bc_tp, bp);
-+	return -EFSCORRUPTED;
- }
+ 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
+@@ -273,7 +274,12 @@ xfs_attr3_leaf_verify(
+ 		if (ichdr.magic != XFS_ATTR_LEAF_MAGIC)
+ 			return false;
+ 	}
+-	if (ichdr.count == 0)
++	/*
++	 * In recovery there is a transient state where count == 0 is valid
++	 * because we may have transitioned an empty shortform attr to a leaf
++	 * if the attr didn't fit in shortform.
++	 */
++	if (pag && pag->pagf_init && ichdr.count == 0)
+ 		return false;
  
- /*
+ 	/* XXX: need to range check rest of attr header values */
 -- 
 2.1.4
 
