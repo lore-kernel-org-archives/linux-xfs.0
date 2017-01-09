@@ -1,83 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37541 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933659AbdAIVPo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 16:15:44 -0500
-Date: Mon, 9 Jan 2017 13:15:40 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v4 00/47] xfs: online scrub/repair support
-Message-ID: <20170109211540.GB14038@birch.djwong.org>
-References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
- <CAOQ4uxhhOqhsZwrncsfUmra9nLGKpF2mFGp35BuiPyucWkN1yw@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:43883 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754718AbdAIM7O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Jan 2017 07:59:14 -0500
+Subject: Re: [PATCH 2/8] xfs: abstract PF_FSTRANS to PF_MEMALLOC_NOFS
+References: <20170106141107.23953-1-mhocko@kernel.org>
+ <20170106141107.23953-3-mhocko@kernel.org>
+From: Vlastimil Babka <vbabka@suse.cz>
+Message-ID: <bf7594a9-7e1a-0895-2d0e-df1f27502db1@suse.cz>
+Date: Mon, 9 Jan 2017 13:59:05 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxhhOqhsZwrncsfUmra9nLGKpF2mFGp35BuiPyucWkN1yw@mail.gmail.com>
+In-Reply-To: <20170106141107.23953-3-mhocko@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
-On Mon, Jan 09, 2017 at 02:40:56PM +0200, Amir Goldstein wrote:
-> On Sat, Jan 7, 2017 at 2:35 AM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > Hi all,
-> >
-> ...
-> > If you're going to start using this mess, you probably ought to just
-> > pull from my github trees.  The kernel patches[1] should apply against
-> > 4.10-rc2.  xfsprogs[2] and xfstests[3] can be found in their usual
-> > places.
-> >
-> > The patches have survived all auto group xfstests both with scrub-only
-> > mode and also a special debugging mode to xfs_scrub that forces it to
-> > rebuild the metadata structures even if they're not damaged.  Since the
-> > last patch release, I have now had time to run the new tests in [3] that
-> > try to fuzz every field in every data structure on disk.
-> >
+On 01/06/2017 03:11 PM, Michal Hocko wrote:
+> From: Michal Hocko <mhocko@suse.com>
 > 
-> Darrick,
+> xfs has defined PF_FSTRANS to declare a scope GFP_NOFS semantic quite
+> some time ago. We would like to make this concept more generic and use
+> it for other filesystems as well. Let's start by giving the flag a
+> more generic name PF_MEMALLOC_NOFS which is in line with an exiting
+> PF_MEMALLOC_NOIO already used for the same purpose for GFP_NOIO
+> contexts. Replace all PF_FSTRANS usage from the xfs code in the first
+> step before we introduce a full API for it as xfs uses the flag directly
+> anyway.
 > 
-> I started running the dangerous_scrub group yersterday and it's killing my
-> test machine. The test machine is x86_64 (i5-3470) 16GB RAM
-> and test partitions are 100GB volume on spinning disk.
+> This patch doesn't introduce any functional change.
 > 
-> xfs_db swaps my system to death and most of the tests it eventually
-> gets shot down by oom killer.
+> Signed-off-by: Michal Hocko <mhocko@suse.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+Acked-by: Vlastimil Babka <vbabka@suse.cz>
+
+A nit:
+
+> --- a/include/linux/sched.h
+> +++ b/include/linux/sched.h
+> @@ -2320,6 +2320,8 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
+>  #define PF_FREEZER_SKIP	0x40000000	/* Freezer should not count it as freezable */
+>  #define PF_SUSPEND_TASK 0x80000000      /* this thread called freeze_processes and should not be frozen */
+>  
+> +#define PF_MEMALLOC_NOFS PF_FSTRANS	/* Transition to a more generic GFP_NOFS scope semantic */
+
+I don't see why this transition is needed, as there are already no users
+of PF_FSTRANS after this patch. The next patch doesn't remove any more,
+so this is just extra churn IMHO. But not a strong objection.
+
+> +
+>  /*
+>   * Only the _current_ task can read/write to tsk->flags, but other
+>   * tasks can access tsk->flags in readonly mode for example
 > 
-> Is that surprising to you?
 
-Yes.
-
-> How much RAM does you test systems have?
-
-2GB in a VM so the host system won't go down.  Usually the test disks 
-are 8GB disks to keep the fuzzer runtimes down, but I've also run them
-against 100GB volumes without OOMing...
-
-> Can you figure out a minimal RAM requirement to run these fuzzers
-> and maybe check required RAM before running the test?
-
-I wouldn't have thought xfs_check would OOM... it would help to know
-exactly what the xfs_db invocation thought it was doing.
-
-> Alternatively, can you figure out how to reduce the amount of RAM
-> used by the fuzzer?
-> 
-> I was using mkfs options "-m rmapbt=1,reflink=1"
-> and I tried running with and then without TEST_XFS_SCRUB=1.
-> I don't see a reason to send the logs at this point, they are just a complete
-> mass of destruction.
-
-All the tests?  The full dmesg output would be useful to narrow it down to
-a specific xfstest number, field name, and fuzz verb.  I'm running them
-
---D
-
-> Let me know if you need more inputs from me.
-> 
-> Amir.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
