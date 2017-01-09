@@ -1,114 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40226 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751224AbdAOUcB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 15 Jan 2017 15:32:01 -0500
-Subject: Re: [RFC] libxfs: cross-compile fixes
-References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
- <1473493051-12838-1-git-send-email-ralph.sennhauser@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <704667b9-d8d4-974b-6be7-aef2ef275b12@sandeen.net>
-Date: Sun, 15 Jan 2017 14:32:00 -0600
-MIME-Version: 1.0
-In-Reply-To: <1473493051-12838-1-git-send-email-ralph.sennhauser@gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33801 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933203AbdAINGp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 08:06:45 -0500
+Received: by mail-wm0-f65.google.com with SMTP id c85so21873636wmi.1
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Jan 2017 05:06:44 -0800 (PST)
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v6 1/3] xfs: fix the size of xfs_mode_to_ftype table
+Date: Mon,  9 Jan 2017 15:06:27 +0200
+Message-Id: <1483967189-27313-2-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1483967189-27313-1-git-send-email-amir73il@gmail.com>
+References: <1483967189-27313-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ralph Sennhauser <ralph.sennhauser@gmail.com>, linux-xfs@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On 9/10/16 2:37 AM, Ralph Sennhauser wrote:
-> ---
-> 
-> Based on the earlier discussion this seems to be the preferred way of
-> handling things.
-> 
-> Should I split it into 3 patches?
-> Do you want something different to happen when cross-compiling?
+Fix the size of the xfs_mode_to_ftype conversion table,
+which was too small to handle an invalid value of mode=S_IFMT.
 
-Hi Ralph -
+Use a convenience macro S_DT(mode) to convert from
+mode to dirent file type and change the name of the table
+to xfs_dtype_to_ftype to correctly describe its index values.
 
-I just merged a patch to for-next to address cross-compiling;
-it was on the list prior to this one.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/xfs/libxfs/xfs_dir2.c | 18 +++++++++---------
+ fs/xfs/libxfs/xfs_dir2.h |  4 +++-
+ fs/xfs/xfs_iops.c        |  2 +-
+ 3 files changed, 13 insertions(+), 11 deletions(-)
 
-Can you confirm that it resolves your issues?
-
-Thanks,
--Eric
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index c58d72c..48d7c45 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -41,15 +41,15 @@ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+  * for file type specification. This will be propagated into the directory
+  * structure if appropriate for the given operation and filesystem config.
+  */
+-const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
+-	[0]			= XFS_DIR3_FT_UNKNOWN,
+-	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
+-	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
+-	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
+-	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
+-	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
+-	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
+-	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
++const unsigned char xfs_dtype_to_ftype[S_DT_MAX+1] = {
++	[0]                = XFS_DIR3_FT_UNKNOWN,
++	[S_DT(S_IFREG)]    = XFS_DIR3_FT_REG_FILE,
++	[S_DT(S_IFDIR)]    = XFS_DIR3_FT_DIR,
++	[S_DT(S_IFCHR)]    = XFS_DIR3_FT_CHRDEV,
++	[S_DT(S_IFBLK)]    = XFS_DIR3_FT_BLKDEV,
++	[S_DT(S_IFIFO)]    = XFS_DIR3_FT_FIFO,
++	[S_DT(S_IFSOCK)]   = XFS_DIR3_FT_SOCK,
++	[S_DT(S_IFLNK)]    = XFS_DIR3_FT_SYMLINK,
+ };
  
-> Cheers
-> Ralph
-> 
-> ---
->  configure.ac         |  3 +++
->  include/builddefs.in |  1 +
->  libxfs/Makefile      | 10 ++++++++--
->  3 files changed, 12 insertions(+), 2 deletions(-)
-> 
-> diff --git a/configure.ac b/configure.ac
-> index 79053e5..89334d6 100644
-> --- a/configure.ac
-> +++ b/configure.ac
-> @@ -10,11 +10,14 @@ AC_PROG_LIBTOOL
->  
->  AC_PROG_CC
->  if test $cross_compiling = no; then
-> +  CROSS_COMPILING=no
->    BUILD_CC="$CC"
->    AC_SUBST(BUILD_CC)
->  else
-> +  CROSS_COMPILING=yes
->    AC_CHECK_PROGS(BUILD_CC, gcc cc)
->  fi
-> +AC_SUBST(CROSS_COMPILING)
->  
->  AC_ARG_ENABLE(shared,
->  [ --enable-shared=[yes/no] Enable use of shared libraries [default=yes]],,
-> diff --git a/include/builddefs.in b/include/builddefs.in
-> index 7153d7a..0c4ce36 100644
-> --- a/include/builddefs.in
-> +++ b/include/builddefs.in
-> @@ -26,6 +26,7 @@ MALLOCLIB = @malloc_lib@
->  LOADERFLAGS = @LDFLAGS@
->  LTLDFLAGS = @LDFLAGS@
->  CFLAGS = @CFLAGS@
-> +CROSS_COMPILING = @CROSS_COMPILING@
->  
->  LIBRT = @librt@
->  LIBUUID = @libuuid@
-> diff --git a/libxfs/Makefile b/libxfs/Makefile
-> index 62608bd..ad492e5 100644
-> --- a/libxfs/Makefile
-> +++ b/libxfs/Makefile
-> @@ -114,11 +114,15 @@ DEBUG = -DNDEBUG
->  
->  LDIRT = gen_crc32table crc32table.h crc32selftest
->  
-> +ifeq ($(CROSS_COMPILING),no)
-> +BUILD_CFLAGS:=$(CFLAGS)
-> +endif
-> +
->  default: crc32selftest ltdepend $(LTLIBRARY)
->  
->  crc32table.h: gen_crc32table.c
->  	@echo "    [CC]     gen_crc32table"
-> -	$(Q) $(BUILD_CC) $(CFLAGS) -o gen_crc32table $<
-> +	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
->  	@echo "    [GENERATE] $@"
->  	$(Q) ./gen_crc32table > crc32table.h
->  
-> @@ -128,9 +132,11 @@ crc32table.h: gen_crc32table.c
->  # busted CRC calculation at build time and hence avoid putting bad CRCs down on
->  # disk.
->  crc32selftest: gen_crc32table.c crc32table.h crc32.c
-> +ifeq ($(CROSS_COMPILING),no)
->  	@echo "    [TEST]    CRC32"
-> -	$(Q) $(BUILD_CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
-> +	$(Q) $(CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
->  	$(Q) ./$@
-> +endif
->  
->  # set up include/xfs header directory
->  include $(BUILDRULES)
-> 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 0197590..4934d38 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -35,7 +35,9 @@ extern struct xfs_name	xfs_name_dotdot;
+  * directory filetype conversion tables.
+  */
+ #define S_SHIFT 12
+-extern const unsigned char xfs_mode_to_ftype[];
++#define S_DT(mode)     (((mode) & S_IFMT) >> S_SHIFT)
++#define S_DT_MAX       S_DT(S_IFMT)
++extern const unsigned char xfs_dtype_to_ftype[];
+ 
+ /*
+  * directory operations vector for encode/decode routines
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 308bebb..d2da9ca 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -103,7 +103,7 @@ xfs_dentry_to_name(
+ {
+ 	namep->name = dentry->d_name.name;
+ 	namep->len = dentry->d_name.len;
+-	namep->type = xfs_mode_to_ftype[(mode & S_IFMT) >> S_SHIFT];
++	namep->type = xfs_dtype_to_ftype[S_DT(mode)];
+ }
+ 
+ STATIC void
+-- 
+2.7.4
+
