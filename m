@@ -1,102 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57366 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:58040 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934508AbdAIPji (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:38 -0500
+        with ESMTP id S938390AbdAIPjw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:52 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/32] xfs: remove prev argument to xfs_bmapi_reserve_delalloc
-Date: Mon,  9 Jan 2017 16:38:42 +0100
-Message-Id: <1483976343-661-12-git-send-email-hch@lst.de>
+Subject: [PATCH 16/32] xfs: pass post-eof speculative prealloc blocks to bmapi
+Date: Mon,  9 Jan 2017 16:38:47 +0100
+Message-Id: <1483976343-661-17-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-commit 65c5f419788d623a0410eca1866134f5e4628594 upstream.
+From: Brian Foster <bfoster@redhat.com>
 
-We can easily lookup the previous extent for the cases where we need it,
-which saves the callers from looking it up for us later in the series.
+commit f782088c9e5d08e9494c63e68b4e85716df3e5f8 upstream.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+xfs_file_iomap_begin_delay() implements post-eof speculative
+preallocation by extending the block count of the requested delayed
+allocation. Now that xfs_bmapi_reserve_delalloc() has been updated to
+handle prealloc blocks separately and tag the inode, update
+xfs_file_iomap_begin_delay() to use the new parameter and rely on the
+former to tag the inode.
+
+Note that this patch does not change behavior.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 8 ++++++--
- fs/xfs/libxfs/xfs_bmap.h | 3 +--
- fs/xfs/xfs_iomap.c       | 3 +--
- fs/xfs/xfs_reflink.c     | 2 +-
- 4 files changed, 9 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_iomap.c | 33 +++++++++++++--------------------
+ 1 file changed, 13 insertions(+), 20 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 00188f5..09b5d4f 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4250,7 +4250,6 @@ xfs_bmapi_reserve_delalloc(
- 	xfs_fileoff_t		aoff,
- 	xfs_filblks_t		len,
- 	struct xfs_bmbt_irec	*got,
--	struct xfs_bmbt_irec	*prev,
- 	xfs_extnum_t		*lastx,
- 	int			eof)
- {
-@@ -4272,7 +4271,12 @@ xfs_bmapi_reserve_delalloc(
- 	else
- 		extsz = xfs_get_extsz_hint(ip);
- 	if (extsz) {
--		error = xfs_bmap_extsize_align(mp, got, prev, extsz, rt, eof,
-+		struct xfs_bmbt_irec	prev;
-+
-+		if (!xfs_iext_get_extent(ifp, *lastx - 1, &prev))
-+			prev.br_startoff = NULLFILEOFF;
-+
-+		error = xfs_bmap_extsize_align(mp, got, &prev, extsz, rt, eof,
- 					       1, 0, &aoff, &alen);
- 		ASSERT(!error);
- 	}
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 7cae6ec..e3c2b5a 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -243,8 +243,7 @@ struct xfs_bmbt_rec_host *
- 		struct xfs_bmbt_irec *gotp, struct xfs_bmbt_irec *prevp);
- int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
- 		xfs_fileoff_t aoff, xfs_filblks_t len,
--		struct xfs_bmbt_irec *got, struct xfs_bmbt_irec *prev,
--		xfs_extnum_t *lastx, int eof);
-+		struct xfs_bmbt_irec *got, xfs_extnum_t *lastx, int eof);
- 
- enum xfs_bmap_intent_type {
- 	XFS_BMAP_MAP = 1,
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 436e109..59ffcac 100644
+index e4bfde2..15a83813 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -622,8 +622,7 @@ xfs_file_iomap_begin_delay(
+@@ -536,10 +536,11 @@ xfs_file_iomap_begin_delay(
+ 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	xfs_fileoff_t		maxbytes_fsb =
+ 		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+-	xfs_fileoff_t		end_fsb, orig_end_fsb;
++	xfs_fileoff_t		end_fsb;
+ 	int			error = 0, eof = 0;
+ 	struct xfs_bmbt_irec	got;
+ 	xfs_extnum_t		idx;
++	xfs_fsblock_t		prealloc_blocks = 0;
+ 
+ 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+ 	ASSERT(!xfs_get_extsz_hint(ip));
+@@ -594,33 +595,32 @@ xfs_file_iomap_begin_delay(
+ 	 * the lower level functions are updated.
+ 	 */
+ 	count = min_t(loff_t, count, 1024 * PAGE_SIZE);
+-	end_fsb = orig_end_fsb =
+-		min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
++	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
+ 
+ 	if (eof) {
+-		xfs_fsblock_t	prealloc_blocks;
+-
+ 		prealloc_blocks = xfs_iomap_prealloc_size(ip, offset, count, idx);
+ 		if (prealloc_blocks) {
+ 			xfs_extlen_t	align;
+ 			xfs_off_t	end_offset;
++			xfs_fileoff_t	p_end_fsb;
+ 
+ 			end_offset = XFS_WRITEIO_ALIGN(mp, offset + count - 1);
+-			end_fsb = XFS_B_TO_FSBT(mp, end_offset) +
+-				prealloc_blocks;
++			p_end_fsb = XFS_B_TO_FSBT(mp, end_offset) +
++					prealloc_blocks;
+ 
+ 			align = xfs_eof_alignment(ip, 0);
+ 			if (align)
+-				end_fsb = roundup_64(end_fsb, align);
++				p_end_fsb = roundup_64(p_end_fsb, align);
+ 
+-			end_fsb = min(end_fsb, maxbytes_fsb);
+-			ASSERT(end_fsb > offset_fsb);
++			p_end_fsb = min(p_end_fsb, maxbytes_fsb);
++			ASSERT(p_end_fsb > offset_fsb);
++			prealloc_blocks = p_end_fsb - end_fsb;
+ 		}
+ 	}
  
  retry:
  	error = xfs_bmapi_reserve_delalloc(ip, XFS_DATA_FORK, offset_fsb,
--			end_fsb - offset_fsb, &got,
--			&prev, &idx, eof);
-+			end_fsb - offset_fsb, &got, &idx, eof);
+-			end_fsb - offset_fsb, 0, &got, &idx, eof);
++			end_fsb - offset_fsb, prealloc_blocks, &got, &idx, eof);
  	switch (error) {
  	case 0:
  		break;
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 4d99100..ae17b81 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -293,7 +293,7 @@ xfs_reflink_reserve_cow(
+@@ -628,8 +628,8 @@ xfs_file_iomap_begin_delay(
+ 	case -EDQUOT:
+ 		/* retry without any preallocation */
+ 		trace_xfs_delalloc_enospc(ip, offset, count);
+-		if (end_fsb != orig_end_fsb) {
+-			end_fsb = orig_end_fsb;
++		if (prealloc_blocks) {
++			prealloc_blocks = 0;
+ 			goto retry;
+ 		}
+ 		/*FALLTHRU*/
+@@ -637,13 +637,6 @@ xfs_file_iomap_begin_delay(
+ 		goto out_unlock;
+ 	}
  
- retry:
- 	error = xfs_bmapi_reserve_delalloc(ip, XFS_COW_FORK, imap->br_startoff,
--			end_fsb - imap->br_startoff, &got, &prev, &idx, eof);
-+			end_fsb - imap->br_startoff, &got, &idx, eof);
- 	switch (error) {
- 	case 0:
- 		break;
+-	/*
+-	 * Tag the inode as speculatively preallocated so we can reclaim this
+-	 * space on demand, if necessary.
+-	 */
+-	if (end_fsb != orig_end_fsb)
+-		xfs_inode_set_eofblocks_tag(ip);
+-
+ 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
+ done:
+ 	if (isnullstartblock(got.br_startblock))
 -- 
 2.1.4
 
