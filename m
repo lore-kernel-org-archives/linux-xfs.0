@@ -1,464 +1,629 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:44461 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932306AbdAIUgd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 15:36:33 -0500
-Date: Mon, 9 Jan 2017 12:36:26 -0800
+Received: from aserp1040.oracle.com ([141.146.126.69]:25980 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933024AbdAIUxm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 15:53:42 -0500
+Date: Mon, 9 Jan 2017 12:53:35 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/7] xfs/ext4: check negative inode size
-Message-ID: <20170109203626.GB14033@birch.djwong.org>
+Subject: [PATCH v2 4/7] reflink: fix quota tests to work properly
+Message-ID: <20170109205335.GD14033@birch.djwong.org>
 References: <148357827617.7677.15595044775254927245.stgit@birch.djwong.org>
- <148357832063.7677.12994144585642711957.stgit@birch.djwong.org>
- <20170109093635.GC1859@eguan.usersys.redhat.com>
+ <148357830178.7677.13949115107817848755.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170109093635.GC1859@eguan.usersys.redhat.com>
+In-Reply-To: <148357830178.7677.13949115107817848755.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
+To: eguan@redhat.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Jan 09, 2017 at 05:36:35PM +0800, Eryu Guan wrote:
-> On Wed, Jan 04, 2017 at 05:05:20PM -0800, Darrick J. Wong wrote:
-> > Craft a malicious filesystem image with a negative inode size,
-> > then try to trigger a kernel DoS by appending data to the file.
-> > Ideally this should trigger verifier errors instead of hanging.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  tests/shared/400     |   71 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/shared/400.out |    5 +++
-> >  tests/shared/401     |   71 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/shared/401.out |    5 +++
-> >  tests/shared/group   |    2 +
-> >  tests/xfs/400        |   72 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/400.out    |    5 +++
-> >  tests/xfs/401        |   72 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/401.out    |    5 +++
-> >  tests/xfs/group      |    2 +
-> >  10 files changed, 310 insertions(+)
-> >  create mode 100755 tests/shared/400
-> >  create mode 100644 tests/shared/400.out
-> >  create mode 100755 tests/shared/401
-> >  create mode 100644 tests/shared/401.out
-> >  create mode 100755 tests/xfs/400
-> >  create mode 100644 tests/xfs/400.out
-> >  create mode 100755 tests/xfs/401
-> >  create mode 100644 tests/xfs/401.out
-> > 
-> > 
-> > diff --git a/tests/shared/400 b/tests/shared/400
-> > new file mode 100755
-> > index 0000000..ba7bcda
-> > --- /dev/null
-> > +++ b/tests/shared/400
-> > @@ -0,0 +1,71 @@
-> > +#! /bin/bash
-> > +# FSQA Test No. 400
-> > +#
-> > +# Since loff_t is a signed type, it is invalid for a filesystem to load
-> > +# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-> > +# which means that we can trivially DoS the VFS by creating such a file
-> > +# and appending to it.  This causes an integer overflow in the routines
-> > +# underlying writeback, which results in the kernel locking up.
-> 
-> How about adding some more descriptions here? Stating that this test is
-> testing buffered I/O, and adding some comments about testing direct I/O
-> to shared/401? The same to xfs/400 and xfs/401. Otherwise they look the
-> same just from the test description.
+Fix the reflink quota tests to su to the fsgqa user so that we actually
+test enforcement of quotas.  Seems that XFS enforces user quotas even
+if root is writing to a user file, whereas everything else lets root
+writes through.  Also clean up some of the variable usage and
+_require_user.
 
-Ok.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: Refactor the quota block reporting into a helper function and
+port all the existing tests.  Fix "fsgqa"/$qa_user usage too.
+v3: _report_quota_* should take a mountpoint as an argument.
+---
+ common/quota          |   10 ++++++++++
+ tests/generic/305     |   22 ++++++++++------------
+ tests/generic/305.out |   30 +++++++++++++++---------------
+ tests/generic/326     |   22 ++++++++++------------
+ tests/generic/326.out |   30 +++++++++++++++---------------
+ tests/generic/327     |   19 +++++++++----------
+ tests/generic/327.out |   12 ++++++------
+ tests/generic/328     |   29 ++++++++++++++---------------
+ tests/generic/328.out |   28 ++++++++++++++--------------
+ tests/xfs/213         |   22 ++++++++++------------
+ tests/xfs/213.out     |   30 +++++++++++++++---------------
+ tests/xfs/214         |   22 ++++++++++------------
+ tests/xfs/214.out     |   30 +++++++++++++++---------------
+ 13 files changed, 153 insertions(+), 153 deletions(-)
 
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +PIDS=""
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# real QA test starts here
-> > +_supported_os Linux
-> > +_supported_fs ext2 ext3 ext4
-> > +_require_scratch_nocheck
-> > +_disable_dmesg_check
-> 
-> _require_command "$DEBUGFS_PROG" debugfs  and..
-
-<nod>
-
-> 
-> > +
-> > +rm -f $seqres.full
-> > +
-> > +echo "Format and mount"
-> > +_scratch_mkfs  >> $seqres.full 2>&1
-> > +_scratch_mount
-> > +
-> > +testdir=$SCRATCH_MNT
-> > +echo m > $testdir/a
-> > +
-> > +echo "Corrupt filesystem"
-> > +_scratch_unmount
-> > +debugfs -w -R "sif /a size -1" $SCRATCH_DEV >> $seqres.full 2>&1
-> 
-> $DEBUGFS_PROG here
-
-<nod>
-> 
-> > +
-> > +echo "Remount, try to append"
-> > +_scratch_mount
-> > +dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-> > +sync
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/shared/400.out b/tests/shared/400.out
-> > new file mode 100644
-> > index 0000000..ddf8a28
-> > --- /dev/null
-> > +++ b/tests/shared/400.out
-> > @@ -0,0 +1,5 @@
-> > +QA output created by 400
-> > +Format and mount
-> > +Corrupt filesystem
-> > +Remount, try to append
-> > +Write did not succeed (ok).
-> > diff --git a/tests/shared/401 b/tests/shared/401
-> > new file mode 100755
-> > index 0000000..d790381
-> > --- /dev/null
-> > +++ b/tests/shared/401
-> > @@ -0,0 +1,71 @@
-> > +#! /bin/bash
-> > +# FSQA Test No. 401
-> > +#
-> > +# Since loff_t is a signed type, it is invalid for a filesystem to load
-> > +# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-> > +# which means that we can trivially DoS the VFS by creating such a file
-> > +# and appending to it.  This causes an integer overflow in the routines
-> > +# underlying writeback, which results in the kernel locking up.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +PIDS=""
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# real QA test starts here
-> > +_supported_os Linux
-> > +_supported_fs ext2 ext3 ext4
-> > +_require_scratch_nocheck
-> > +_disable_dmesg_check
-> > +
-> > +rm -f $seqres.full
-> > +
-> > +echo "Format and mount"
-> > +_scratch_mkfs  >> $seqres.full 2>&1
-> > +_scratch_mount
-> > +
-> > +testdir=$SCRATCH_MNT
-> > +echo m > $testdir/a
-> > +
-> > +echo "Corrupt filesystem"
-> > +_scratch_unmount
-> > +debugfs -w -R "sif /a size 0xFFFFFFFFFFFFFE00" $SCRATCH_DEV >> $seqres.full 2>&1
-> 
-> Better to have your explanation to 0XFFFFFFFFFFFFFE00 as comments. (Same
-> to xfs/400 and xfs/401.)
-> 
-> "The 0xFFFFFFFFFFFFFE00 rounds the file size down to a multiple of 512
-> so that we can do the directio"
-
-Ok, fixed.
-
---D
-
-> 
-> Thanks,
-> Eryu
-> 
-> > +
-> > +echo "Remount, try to append"
-> > +_scratch_mount
-> > +dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=direct,append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-> > +sync
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/shared/401.out b/tests/shared/401.out
-> > new file mode 100644
-> > index 0000000..0d45add
-> > --- /dev/null
-> > +++ b/tests/shared/401.out
-> > @@ -0,0 +1,5 @@
-> > +QA output created by 401
-> > +Format and mount
-> > +Corrupt filesystem
-> > +Remount, try to append
-> > +Write did not succeed (ok).
-> > diff --git a/tests/shared/group b/tests/shared/group
-> > index 55bb594..64d2d2f 100644
-> > --- a/tests/shared/group
-> > +++ b/tests/shared/group
-> > @@ -13,3 +13,5 @@
-> >  272 auto enospc rw
-> >  289 auto quick
-> >  298 auto trim
-> > +400 dangerous_fuzzers
-> > +401 dangerous_fuzzers
-> > diff --git a/tests/xfs/400 b/tests/xfs/400
-> > new file mode 100755
-> > index 0000000..eed8fdf
-> > --- /dev/null
-> > +++ b/tests/xfs/400
-> > @@ -0,0 +1,72 @@
-> > +#! /bin/bash
-> > +# FSQA Test No. 400
-> > +#
-> > +# Since loff_t is a signed type, it is invalid for a filesystem to load
-> > +# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-> > +# which means that we can trivially DoS the VFS by creating such a file
-> > +# and appending to it.  This causes an integer overflow in the routines
-> > +# underlying writeback, which results in the kernel locking up.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +PIDS=""
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# real QA test starts here
-> > +_supported_os Linux
-> > +_supported_fs xfs
-> > +_require_scratch_nocheck
-> > +_disable_dmesg_check
-> > +
-> > +rm -f $seqres.full
-> > +
-> > +echo "Format and mount"
-> > +_scratch_mkfs  >> $seqres.full 2>&1
-> > +_scratch_mount
-> > +
-> > +testdir=$SCRATCH_MNT
-> > +echo m > $testdir/a
-> > +inum=$(stat -c "%i" $testdir/a)
-> > +
-> > +echo "Corrupt filesystem"
-> > +_scratch_unmount
-> > +_scratch_xfs_db -x -c "inode ${inum}" -c 'write core.size -- -1' >> $seqres.full
-> > +
-> > +echo "Remount, try to append"
-> > +_scratch_mount
-> > +dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-> > +sync
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/400.out b/tests/xfs/400.out
-> > new file mode 100644
-> > index 0000000..ddf8a28
-> > --- /dev/null
-> > +++ b/tests/xfs/400.out
-> > @@ -0,0 +1,5 @@
-> > +QA output created by 400
-> > +Format and mount
-> > +Corrupt filesystem
-> > +Remount, try to append
-> > +Write did not succeed (ok).
-> > diff --git a/tests/xfs/401 b/tests/xfs/401
-> > new file mode 100755
-> > index 0000000..2be684a
-> > --- /dev/null
-> > +++ b/tests/xfs/401
-> > @@ -0,0 +1,72 @@
-> > +#! /bin/bash
-> > +# FSQA Test No. 401
-> > +#
-> > +# Since loff_t is a signed type, it is invalid for a filesystem to load
-> > +# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-> > +# which means that we can trivially DoS the VFS by creating such a file
-> > +# and appending to it.  This causes an integer overflow in the routines
-> > +# underlying writeback, which results in the kernel locking up.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +PIDS=""
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# real QA test starts here
-> > +_supported_os Linux
-> > +_supported_fs xfs
-> > +_require_scratch_nocheck
-> > +_disable_dmesg_check
-> > +
-> > +rm -f $seqres.full
-> > +
-> > +echo "Format and mount"
-> > +_scratch_mkfs  >> $seqres.full 2>&1
-> > +_scratch_mount
-> > +
-> > +testdir=$SCRATCH_MNT
-> > +echo m > $testdir/a
-> > +inum=$(stat -c "%i" $testdir/a)
-> > +
-> > +echo "Corrupt filesystem"
-> > +_scratch_unmount
-> > +_scratch_xfs_db -x -c "inode ${inum}" -c 'write core.size -- -512' >> $seqres.full
-> > +
-> > +echo "Remount, try to append"
-> > +_scratch_mount
-> > +dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=direct,append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-> > +sync
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/401.out b/tests/xfs/401.out
-> > new file mode 100644
-> > index 0000000..0d45add
-> > --- /dev/null
-> > +++ b/tests/xfs/401.out
-> > @@ -0,0 +1,5 @@
-> > +QA output created by 401
-> > +Format and mount
-> > +Corrupt filesystem
-> > +Remount, try to append
-> > +Write did not succeed (ok).
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index c237b50..10ba27b 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -334,3 +334,5 @@
-> >  345 auto quick clone
-> >  346 auto quick clone
-> >  347 auto quick clone
-> > +400 dangerous_fuzzers
-> > +401 dangerous_fuzzers
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/common/quota b/common/quota
+index d4ae861..c48cc70 100644
+--- a/common/quota
++++ b/common/quota
+@@ -302,5 +302,15 @@ _check_quota_usage()
+ 	}
+ }
+ 
++# Report the block usage of root, $qa_user, and nobody
++_report_quota_blocks() {
++	repquota $1 | egrep "^($qa_user|root|nobody)" | awk '{print $1, $3, $4, $5}'
++}
++
++# Report the inode usage of root, $qa_user, and nobody
++_report_quota_inodes() {
++	repquota $1 | egrep "^($qa_user|root|nobody)" | awk '{print $1, $6, $7, $8}'
++}
++
+ # make sure this script returns success
+ /bin/true
+diff --git a/tests/generic/305 b/tests/generic/305
+index d73d87f..ceef333 100755
+--- a/tests/generic/305
++++ b/tests/generic/305
+@@ -49,10 +49,8 @@ _require_cp_reflink
+ _require_fiemap
+ _require_quota
+ _require_nobody
++_require_user
+ 
+-_repquota() {
+-	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
+-}
+ rm -f $seqres.full
+ 
+ echo "Format and mount"
+@@ -73,27 +71,27 @@ _cp_reflink $testdir/file1 $testdir/file3 >> $seqres.full
+ touch $testdir/urk
+ chown nobody $testdir/urk
+ touch $testdir/erk
+-chown fsgqa $testdir/erk
+-_repquota
++chown $qa_user $testdir/erk
++_report_quota_blocks $SCRATCH_MNT
+ _scratch_cycle_mount
+ 
+ echo "Change file ownership"
+-chown fsgqa $testdir/file1
+-chown fsgqa $testdir/file2
+-chown fsgqa $testdir/file3
+-_repquota
++chown $qa_user $testdir/file1
++chown $qa_user $testdir/file2
++chown $qa_user $testdir/file3
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "CoW one of the files"
+ $XFS_IO_PROG -f -c "pwrite -S 0x63 -b $((sz/2)) 0 $((sz/2))" -c "fsync" $testdir/file2 >> $seqres.full
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Remount the FS to see if accounting changes"
+ _scratch_cycle_mount
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Chown one of the files"
+ chown nobody $testdir/file3
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ # success, all done
+ status=0
+diff --git a/tests/generic/305.out b/tests/generic/305.out
+index 0bfd620..fbd4e24 100644
+--- a/tests/generic/305.out
++++ b/tests/generic/305.out
+@@ -1,22 +1,22 @@
+ QA output created by 305
+ Format and mount
+ Create the original files
+-root      --    3072       0       0              7     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --       0       0       0              1     0     0       
++root 3072 0 0
++nobody 0 0 0
++fsgqa 0 0 0
+ Change file ownership
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3072       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3072 0 0
+ CoW one of the files
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3072       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3072 0 0
+ Remount the FS to see if accounting changes
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3072       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3072 0 0
+ Chown one of the files
+-root      --       0       0       0              4     0     0       
+-nobody    --    1024       0       0              2     0     0       
+-fsgqa     --    2048       0       0              3     0     0       
++root 0 0 0
++nobody 1024 0 0
++fsgqa 2048 0 0
+diff --git a/tests/generic/326 b/tests/generic/326
+index 8afc6a2..3568efe 100755
+--- a/tests/generic/326
++++ b/tests/generic/326
+@@ -50,10 +50,8 @@ _require_fiemap
+ _require_quota
+ _require_nobody
+ _require_odirect
++_require_user
+ 
+-_repquota() {
+-	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
+-}
+ rm -f $seqres.full
+ 
+ echo "Format and mount"
+@@ -74,27 +72,27 @@ _cp_reflink $testdir/file1 $testdir/file3 >> $seqres.full
+ touch $testdir/urk
+ chown nobody $testdir/urk
+ touch $testdir/erk
+-chown fsgqa $testdir/erk
+-_repquota
++chown $qa_user $testdir/erk
++_report_quota_blocks $SCRATCH_MNT
+ _scratch_cycle_mount
+ 
+ echo "Change file ownership"
+-chown fsgqa $testdir/file1
+-chown fsgqa $testdir/file2
+-chown fsgqa $testdir/file3
+-_repquota
++chown $qa_user $testdir/file1
++chown $qa_user $testdir/file2
++chown $qa_user $testdir/file3
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "CoW one of the files"
+ $XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $((sz/2)) 0 $((sz/2))" -c "fsync" $testdir/file2 >> $seqres.full
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Remount the FS to see if accounting changes"
+ _scratch_cycle_mount
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Chown one of the files"
+ chown nobody $testdir/file3
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ # success, all done
+ status=0
+diff --git a/tests/generic/326.out b/tests/generic/326.out
+index e771eb7..de7f20b 100644
+--- a/tests/generic/326.out
++++ b/tests/generic/326.out
+@@ -1,22 +1,22 @@
+ QA output created by 326
+ Format and mount
+ Create the original files
+-root      --    3072       0       0              7     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --       0       0       0              1     0     0       
++root 3072 0 0
++nobody 0 0 0
++fsgqa 0 0 0
+ Change file ownership
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3072       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3072 0 0
+ CoW one of the files
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3072       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3072 0 0
+ Remount the FS to see if accounting changes
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3072       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3072 0 0
+ Chown one of the files
+-root      --       0       0       0              4     0     0       
+-nobody    --    1024       0       0              2     0     0       
+-fsgqa     --    2048       0       0              3     0     0       
++root 0 0 0
++nobody 1024 0 0
++fsgqa 2048 0 0
+diff --git a/tests/generic/327 b/tests/generic/327
+index c165ad5..05cfb4a 100755
+--- a/tests/generic/327
++++ b/tests/generic/327
+@@ -48,10 +48,8 @@ _require_cp_reflink
+ _require_fiemap
+ _require_quota
+ _require_nobody
++_require_user
+ 
+-_repquota() {
+-	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
+-}
+ rm -f $seqres.full
+ 
+ echo "Format and mount"
+@@ -67,20 +65,21 @@ mkdir $testdir
+ sz=1048576
+ echo "Create the original files"
+ $XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file1 >> $seqres.full
+-chown fsgqa $testdir/file1
++chown $qa_user $testdir/file1
+ _cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ _scratch_cycle_mount
++quotaon $SCRATCH_MNT 2> /dev/null
+ 
+ echo "Set hard quota to prevent third reflink"
+-setquota -u fsgqa 0 1024 0 0 $SCRATCH_MNT
+-_repquota
++setquota -u $qa_user 0 1024 0 0 $SCRATCH_MNT
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Try to reflink again"
+ touch $testdir/file3
+-chown fsgqa $testdir/file3
+-_cp_reflink $testdir/file1 $testdir/file3 2>&1 | _filter_scratch
+-_repquota
++chown $qa_user $testdir/file3
++su $qa_user -c "cp --reflink=always -f $testdir/file1 $testdir/file3" 2>&1 | _filter_scratch
++_report_quota_blocks $SCRATCH_MNT
+ 
+ # success, all done
+ status=0
+diff --git a/tests/generic/327.out b/tests/generic/327.out
+index 7160ff2..f4e145a 100644
+--- a/tests/generic/327.out
++++ b/tests/generic/327.out
+@@ -1,12 +1,12 @@
+ QA output created by 327
+ Format and mount
+ Create the original files
+-root      --       0       0       0              4     0     0       
+-fsgqa     --    2048       0       0              2     0     0       
++root 0 0 0
++fsgqa 2048 0 0
+ Set hard quota to prevent third reflink
+-root      --       0       0       0              4     0     0       
+-fsgqa     +-    2048       0    1024              2     0     0       
++root 0 0 0
++fsgqa 2048 0 1024
+ Try to reflink again
+ cp: failed to clone 'SCRATCH_MNT/test-327/file3' from 'SCRATCH_MNT/test-327/file1': Disk quota exceeded
+-root      --       0       0       0              4     0     0       
+-fsgqa     +-    2048       0    1024              3     0     0       
++root 0 0 0
++fsgqa 2048 0 1024
+diff --git a/tests/generic/328 b/tests/generic/328
+index 705368e..21ec9d3 100755
+--- a/tests/generic/328
++++ b/tests/generic/328
+@@ -49,10 +49,8 @@ _require_fiemap
+ _require_quota
+ _require_nobody
+ _require_odirect
++_require_user
+ 
+-_repquota() {
+-	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
+-}
+ rm -f $seqres.full
+ 
+ echo "Format and mount"
+@@ -68,39 +66,40 @@ mkdir $testdir
+ sz=1048576
+ echo "Create the original files"
+ $XFS_IO_PROG -f -c "pwrite -S 0x61 -b $sz 0 $sz" $testdir/file1 >> $seqres.full
+-chown fsgqa $testdir/file1
++chown $qa_user $testdir/file1
+ _cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
+ _cp_reflink $testdir/file1 $testdir/file3 >> $seqres.full
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ _scratch_cycle_mount
++quotaon $SCRATCH_MNT 2> /dev/null
+ 
+ echo "Set hard quota to prevent rewrite"
+-setquota -u fsgqa 0 1024 0 0 $SCRATCH_MNT
+-_repquota
++setquota -u $qa_user 0 1024 0 0 $SCRATCH_MNT
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Try to dio write the whole file"
+-_pwrite_byte 0x62 0 $sz $testdir/file1 -d 2>&1 >> $seqres.full | \
++su $qa_user -c '$XFS_IO_PROG -d -c "pwrite 0 '$((sz+65536))'" '$testdir'/file1' 2>&1 >> $seqres.full | \
+ 	_filter_xfs_io_error
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Try to write the whole file"
+-_pwrite_byte 0x62 0 $sz $testdir/file1 2>&1 >> $seqres.full | \
++su $qa_user -c '$XFS_IO_PROG -c "pwrite 0 '$((sz+65536))'" '$testdir'/file1' 2>&1 >> $seqres.full | \
+ 	_filter_xfs_io_error
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Set hard quota to allow rewrite"
+-setquota -u fsgqa 0 8192 0 0 $SCRATCH_MNT
+-_repquota
++setquota -u $qa_user 0 8192 0 0 $SCRATCH_MNT
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Try to dio write the whole file"
+ _pwrite_byte 0x62 0 $sz $testdir/file1 -d >> $seqres.full
+ sync
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Try to write the whole file"
+ _pwrite_byte 0x62 0 $sz $testdir/file3 >> $seqres.full
+ sync
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ # success, all done
+ status=0
+diff --git a/tests/generic/328.out b/tests/generic/328.out
+index 4630151..b7fe9f8 100644
+--- a/tests/generic/328.out
++++ b/tests/generic/328.out
+@@ -1,25 +1,25 @@
+ QA output created by 328
+ Format and mount
+ Create the original files
+-root      --       0       0       0              4     0     0       
+-fsgqa     --    3072       0       0              3     0     0       
++root 0 0 0
++fsgqa 3072 0 0
+ Set hard quota to prevent rewrite
+-root      --       0       0       0              4     0     0       
+-fsgqa     +-    3072       0    1024              3     0     0       
++root 0 0 0
++fsgqa 3072 0 1024
+ Try to dio write the whole file
+ pwrite: Disk quota exceeded
+-root      --       0       0       0              4     0     0       
+-fsgqa     +-    3072       0    1024              3     0     0       
++root 0 0 0
++fsgqa 3072 0 1024
+ Try to write the whole file
+ pwrite: Disk quota exceeded
+-root      --       0       0       0              4     0     0       
+-fsgqa     +-    3072       0    1024              3     0     0       
++root 0 0 0
++fsgqa 3072 0 1024
+ Set hard quota to allow rewrite
+-root      --       0       0       0              4     0     0       
+-fsgqa     --    3072       0    8192              3     0     0       
++root 0 0 0
++fsgqa 3072 0 8192
+ Try to dio write the whole file
+-root      --       0       0       0              4     0     0       
+-fsgqa     --    3072       0    8192              3     0     0       
++root 0 0 0
++fsgqa 3072 0 8192
+ Try to write the whole file
+-root      --       0       0       0              4     0     0       
+-fsgqa     --    3072       0    8192              3     0     0       
++root 0 0 0
++fsgqa 3072 0 8192
+diff --git a/tests/xfs/213 b/tests/xfs/213
+index d5cc129..844166c 100755
+--- a/tests/xfs/213
++++ b/tests/xfs/213
+@@ -52,10 +52,8 @@ _require_fiemap
+ _require_quota
+ _require_nobody
+ _require_xfs_io_command "cowextsize"
++_require_user
+ 
+-_repquota() {
+-	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
+-}
+ rm -f $seqres.full
+ 
+ echo "Format and mount"
+@@ -78,27 +76,27 @@ _cp_reflink $testdir/file1 $testdir/file3 >> $seqres.full
+ touch $testdir/urk
+ chown nobody $testdir/urk
+ touch $testdir/erk
+-chown fsgqa $testdir/erk
+-_repquota
++chown $qa_user $testdir/erk
++_report_quota_blocks $SCRATCH_MNT
+ _scratch_cycle_mount
+ 
+ echo "Change file ownership"
+-chown fsgqa $testdir/file1
+-chown fsgqa $testdir/file2
+-chown fsgqa $testdir/file3
+-_repquota
++chown $qa_user $testdir/file1
++chown $qa_user $testdir/file2
++chown $qa_user $testdir/file3
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "CoW one of the files"
+ $XFS_IO_PROG -f -c "pwrite -S 0x63 -b $blksz $((sz - blksz)) $blksz" -c "fsync" $testdir/file2 >> $seqres.full
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Remount the FS to see if accounting changes"
+ _scratch_cycle_mount
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Chown one of the files"
+ chown nobody $testdir/file3
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ # success, all done
+ status=0
+diff --git a/tests/xfs/213.out b/tests/xfs/213.out
+index be8d56c..7dd30dd 100644
+--- a/tests/xfs/213.out
++++ b/tests/xfs/213.out
+@@ -1,22 +1,22 @@
+ QA output created by 213
+ Format and mount
+ Create the original files
+-root      --    3072       0       0              7     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --       0       0       0              1     0     0       
++root 3072 0 0
++nobody 0 0 0
++fsgqa 0 0 0
+ Change file ownership
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3072       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3072 0 0
+ CoW one of the files
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3520       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3520 0 0
+ Remount the FS to see if accounting changes
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3072       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3072 0 0
+ Chown one of the files
+-root      --       0       0       0              4     0     0       
+-nobody    --    1024       0       0              2     0     0       
+-fsgqa     --    2048       0       0              3     0     0       
++root 0 0 0
++nobody 1024 0 0
++fsgqa 2048 0 0
+diff --git a/tests/xfs/214 b/tests/xfs/214
+index 35972c6..01ffbaf 100755
+--- a/tests/xfs/214
++++ b/tests/xfs/214
+@@ -53,10 +53,8 @@ _require_quota
+ _require_nobody
+ _require_xfs_io_command "cowextsize"
+ _require_odirect
++_require_user
+ 
+-_repquota() {
+-	repquota $SCRATCH_MNT | egrep '^(fsgqa|root|nobody)'
+-}
+ rm -f $seqres.full
+ 
+ echo "Format and mount"
+@@ -79,27 +77,27 @@ _cp_reflink $testdir/file1 $testdir/file3 >> $seqres.full
+ touch $testdir/urk
+ chown nobody $testdir/urk
+ touch $testdir/erk
+-chown fsgqa $testdir/erk
+-_repquota
++chown $qa_user $testdir/erk
++_report_quota_blocks $SCRATCH_MNT
+ _scratch_cycle_mount
+ 
+ echo "Change file ownership"
+-chown fsgqa $testdir/file1
+-chown fsgqa $testdir/file2
+-chown fsgqa $testdir/file3
+-_repquota
++chown $qa_user $testdir/file1
++chown $qa_user $testdir/file2
++chown $qa_user $testdir/file3
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "CoW one of the files"
+ $XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $blksz $((sz - blksz)) $blksz" -c "fsync" $testdir/file2 >> $seqres.full
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Remount the FS to see if accounting changes"
+ _scratch_cycle_mount
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ echo "Chown one of the files"
+ chown nobody $testdir/file3
+-_repquota
++_report_quota_blocks $SCRATCH_MNT
+ 
+ # success, all done
+ status=0
+diff --git a/tests/xfs/214.out b/tests/xfs/214.out
+index 496a503..2c7e358 100644
+--- a/tests/xfs/214.out
++++ b/tests/xfs/214.out
+@@ -1,22 +1,22 @@
+ QA output created by 214
+ Format and mount
+ Create the original files
+-root      --    3072       0       0              7     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --       0       0       0              1     0     0       
++root 3072 0 0
++nobody 0 0 0
++fsgqa 0 0 0
+ Change file ownership
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3072       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3072 0 0
+ CoW one of the files
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3520       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3520 0 0
+ Remount the FS to see if accounting changes
+-root      --       0       0       0              4     0     0       
+-nobody    --       0       0       0              1     0     0       
+-fsgqa     --    3072       0       0              4     0     0       
++root 0 0 0
++nobody 0 0 0
++fsgqa 3072 0 0
+ Chown one of the files
+-root      --       0       0       0              4     0     0       
+-nobody    --    1024       0       0              2     0     0       
+-fsgqa     --    2048       0       0              3     0     0       
++root 0 0 0
++nobody 1024 0 0
++fsgqa 2048 0 0
