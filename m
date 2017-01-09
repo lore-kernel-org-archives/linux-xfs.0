@@ -1,65 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58452 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:59124 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938513AbdAIPkB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:01 -0500
+        with ESMTP id S938649AbdAIPkH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:07 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/32] xfs: handle cow fork in xfs_bmap_trace_exlist
-Date: Mon,  9 Jan 2017 16:38:50 +0100
-Message-Id: <1483976343-661-20-git-send-email-hch@lst.de>
+Subject: [PATCH 21/32] xfs: check for bogus values in btree block headers
+Date: Mon,  9 Jan 2017 16:38:52 +0100
+Message-Id: <1483976343-661-22-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
 
-From: Eric Sandeen <sandeen@sandeen.net>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit c44a1f22626c153976289e1cd67bdcdfefc16e1f upstream.
+commit bb3be7e7c1c18e1b141d4cadeb98cc89ecf78099 upstream.
 
-By inspection, xfs_bmap_trace_exlist isn't handling cow forks,
-and will trace the data fork instead.
+When we're reading a btree block, make sure that what we retrieved
+matches the owner and level; and has a plausible number of records.
 
-Fix this by setting state appropriately if whichfork
-== XFS_COW_FORK.
-
-()___()
-< @ @ >
- |   |
- {o_o}
-  (|)
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_btree.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index cfd1fdd..d4481d4 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -518,7 +518,7 @@ void
- xfs_bmap_trace_exlist(
- 	xfs_inode_t	*ip,		/* incore inode pointer */
- 	xfs_extnum_t	cnt,		/* count of entries in the list */
--	int		whichfork,	/* data or attr fork */
-+	int		whichfork,	/* data or attr or cow fork */
- 	unsigned long	caller_ip)
- {
- 	xfs_extnum_t	idx;		/* extent record index */
-@@ -527,6 +527,8 @@ xfs_bmap_trace_exlist(
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 0e80993..21e6a6a 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -1769,8 +1769,28 @@ xfs_btree_lookup_get_block(
+ 	if (error)
+ 		return error;
  
- 	if (whichfork == XFS_ATTR_FORK)
- 		state |= BMAP_ATTRFORK;
-+	else if (whichfork == XFS_COW_FORK)
-+		state |= BMAP_COWFORK;
++	/* Check the inode owner since the verifiers don't. */
++	if (xfs_sb_version_hascrc(&cur->bc_mp->m_sb) &&
++	    (cur->bc_flags & XFS_BTREE_LONG_PTRS) &&
++	    be64_to_cpu((*blkp)->bb_u.l.bb_owner) !=
++			cur->bc_private.b.ip->i_ino)
++		goto out_bad;
++
++	/* Did we get the level we were looking for? */
++	if (be16_to_cpu((*blkp)->bb_level) != level)
++		goto out_bad;
++
++	/* Check that internal nodes have at least one record. */
++	if (level != 0 && be16_to_cpu((*blkp)->bb_numrecs) == 0)
++		goto out_bad;
++
+ 	xfs_btree_setbuf(cur, level, bp);
+ 	return 0;
++
++out_bad:
++	*blkp = NULL;
++	xfs_trans_brelse(cur->bc_tp, bp);
++	return -EFSCORRUPTED;
+ }
  
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT(cnt == xfs_iext_count(ifp));
+ /*
 -- 
 2.1.4
 
