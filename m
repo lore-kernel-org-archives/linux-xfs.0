@@ -1,66 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53673 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S937838AbdAIO3e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Jan 2017 09:29:34 -0500
-Date: Mon, 9 Jan 2017 15:29:30 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 2/8] xfs: abstract PF_FSTRANS to PF_MEMALLOC_NOFS
-Message-ID: <20170109142930.GL7495@dhcp22.suse.cz>
-References: <20170106141107.23953-1-mhocko@kernel.org>
- <20170106141107.23953-3-mhocko@kernel.org>
- <bf7594a9-7e1a-0895-2d0e-df1f27502db1@suse.cz>
+Received: from userp1040.oracle.com ([156.151.31.81]:44555 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932168AbdAIUgp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 15:36:45 -0500
+Date: Mon, 9 Jan 2017 12:36:41 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/7] dedupe: fix consistent error message prefixes for
+ dedupe tests
+Message-ID: <20170109203641.GC14033@birch.djwong.org>
+References: <148357827617.7677.15595044775254927245.stgit@birch.djwong.org>
+ <148357831442.7677.16850160926032292098.stgit@birch.djwong.org>
+ <20170109092600.GB1859@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bf7594a9-7e1a-0895-2d0e-df1f27502db1@suse.cz>
+In-Reply-To: <20170109092600.GB1859@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon 09-01-17 13:59:05, Vlastimil Babka wrote:
-> On 01/06/2017 03:11 PM, Michal Hocko wrote:
-> > From: Michal Hocko <mhocko@suse.com>
+On Mon, Jan 09, 2017 at 05:26:00PM +0800, Eryu Guan wrote:
+> On Wed, Jan 04, 2017 at 05:05:14PM -0800, Darrick J. Wong wrote:
+> > Since we're fixing the xfs_io dedupe command to consistently
+> > print the dedupe ioctl name on error, fix the tests too.
 > > 
-> > xfs has defined PF_FSTRANS to declare a scope GFP_NOFS semantic quite
-> > some time ago. We would like to make this concept more generic and use
-> > it for other filesystems as well. Let's start by giving the flag a
-> > more generic name PF_MEMALLOC_NOFS which is in line with an exiting
-> > PF_MEMALLOC_NOIO already used for the same purpose for GFP_NOIO
-> > contexts. Replace all PF_FSTRANS usage from the xfs code in the first
-> > step before we introduce a full API for it as xfs uses the flag directly
-> > anyway.
-> > 
-> > This patch doesn't introduce any functional change.
-> > 
-> > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Acked-by: Vlastimil Babka <vbabka@suse.cz>
+> Seems you need to rebase against current master, I just pushed my patch
+> out on Sunday with your Reviewed-by :)
+> 
+> 1300cbc generic/158,304: filter dedupe error message
+> 
+> And take use the new _filter_dedupe_error()? So both old and new version
+> of xfs_io pass the tests.
 
-Thanks!
+Ok, will do.
+
+--D
 
 > 
-> A nit:
-> 
-> > --- a/include/linux/sched.h
-> > +++ b/include/linux/sched.h
-> > @@ -2320,6 +2320,8 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut,
-> >  #define PF_FREEZER_SKIP	0x40000000	/* Freezer should not count it as freezable */
-> >  #define PF_SUSPEND_TASK 0x80000000      /* this thread called freeze_processes and should not be frozen */
-> >  
-> > +#define PF_MEMALLOC_NOFS PF_FSTRANS	/* Transition to a more generic GFP_NOFS scope semantic */
-> 
-> I don't see why this transition is needed, as there are already no users
-> of PF_FSTRANS after this patch. The next patch doesn't remove any more,
-> so this is just extra churn IMHO. But not a strong objection.
-
-I just wanted to have this transparent for the xfs in this patch.
-AFAIR Dave wanted to have xfs and generic parts separated. So it was the
-easiest to simply keep the flag and then remove it in a separate patach.
-
--- 
-Michal Hocko
-SUSE Labs
+> Thanks,
+> Eryu
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
