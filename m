@@ -1,63 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:60700 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:33346 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938682AbdAIPkW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:22 -0500
+        with ESMTP id S1162773AbdAIPki (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:38 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 26/32] xfs: don't cap maximum dedupe request length
-Date: Mon,  9 Jan 2017 16:38:57 +0100
-Message-Id: <1483976343-661-27-git-send-email-hch@lst.de>
+Subject: [PATCH 32/32] xfs: fix max_retries _show and _store functions
+Date: Mon,  9 Jan 2017 16:39:03 +0100
+Message-Id: <1483976343-661-33-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Carlos Maiolino <cmaiolino@redhat.com>
 
-commit 1bb33a98702d8360947f18a44349df75ba555d5d upstream.
+commit ff97f2399edac1e0fb3fa7851d5fbcbdf04717cf upstream.
 
-After various discussions on linux-fsdevel, it has been decided that it
-is not necessary to cap the length of a dedupe request, and that
-correctly-written userspace client programs will be able to absorb the
-change.  Therefore, remove the length clamping behavior.
+max_retries _show and _store functions should test against cfg->max_retries,
+not cfg->retry_timeout
 
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_file.c | 9 ---------
- 1 file changed, 9 deletions(-)
+ fs/xfs/xfs_sysfs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 6e4f7f9..9a5d64b 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -939,7 +939,6 @@ xfs_file_clone_range(
- 				     len, false);
- }
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index 276d302..de6195e 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -396,7 +396,7 @@ max_retries_show(
+ 	int		retries;
+ 	struct xfs_error_cfg *cfg = to_error_cfg(kobject);
  
--#define XFS_MAX_DEDUPE_LEN	(16 * 1024 * 1024)
- STATIC ssize_t
- xfs_file_dedupe_range(
- 	struct file	*src_file,
-@@ -950,14 +949,6 @@ xfs_file_dedupe_range(
- {
- 	int		error;
+-	if (cfg->retry_timeout == XFS_ERR_RETRY_FOREVER)
++	if (cfg->max_retries == XFS_ERR_RETRY_FOREVER)
+ 		retries = -1;
+ 	else
+ 		retries = cfg->max_retries;
+@@ -422,7 +422,7 @@ max_retries_store(
+ 		return -EINVAL;
  
--	/*
--	 * Limit the total length we will dedupe for each operation.
--	 * This is intended to bound the total time spent in this
--	 * ioctl to something sane.
--	 */
--	if (len > XFS_MAX_DEDUPE_LEN)
--		len = XFS_MAX_DEDUPE_LEN;
--
- 	error = xfs_reflink_remap_range(src_file, loff, dst_file, dst_loff,
- 				     len, true);
- 	if (error)
+ 	if (val == -1)
+-		cfg->retry_timeout = XFS_ERR_RETRY_FOREVER;
++		cfg->max_retries = XFS_ERR_RETRY_FOREVER;
+ 	else
+ 		cfg->max_retries = val;
+ 	return count;
 -- 
 2.1.4
 
