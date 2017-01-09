@@ -1,86 +1,548 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57108 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:56604 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934298AbdAIPjc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:32 -0500
+        with ESMTP id S1757242AbdAIPjW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:22 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/32] xfs: factor rmap btree size into the indlen calculations
-Date: Mon,  9 Jan 2017 16:38:40 +0100
-Message-Id: <1483976343-661-10-git-send-email-hch@lst.de>
+Subject: [PATCH 05/32] xfs: provide helper for counting extents from if_bytes
+Date: Mon,  9 Jan 2017 16:38:36 +0100
+Message-Id: <1483976343-661-6-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Eric Sandeen <sandeen@sandeen.net>
 
-commit fd26a88093bab6529ea2de819114ca92dbd1d71d upstream.
+commit 5d829300bee000980a09ac2ccb761cb25867b67c upstream.
 
-When we're estimating the amount of space it's going to take to satisfy
-a delalloc reservation, we need to include the space that we might need
-to grow the rmapbt.  This helps us to avoid running out of space later
-when _iomap_write_allocate needs more space than we reserved.  Eryu Guan
-observed this happening on generic/224 when sunit/swidth were set.
+The open-coded pattern:
 
-Reported-by: Eryu Guan <eguan@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)
+
+is all over the xfs code; provide a new helper
+xfs_iext_count(ifp) to count the number of inline extents
+in an inode fork.
+
+[dchinner: pick up several missed conversions]
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c       | 49 ++++++++++++++++++++----------------------
+ fs/xfs/libxfs/xfs_inode_fork.c | 31 +++++++++++++++-----------
+ fs/xfs/libxfs/xfs_inode_fork.h |  1 +
+ fs/xfs/xfs_bmap_util.c         | 34 ++++++++++++-----------------
+ fs/xfs/xfs_inode_item.c        |  4 ++--
+ fs/xfs/xfs_ioctl.c             |  6 ++----
+ fs/xfs/xfs_qm.c                |  2 +-
+ fs/xfs/xfs_reflink.c           |  4 ++--
+ 8 files changed, 64 insertions(+), 67 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 5c3c4dd..00188f5 100644
+index 71dd6d7..5c3c4dd 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -49,6 +49,7 @@
- #include "xfs_rmap.h"
- #include "xfs_ag_resv.h"
- #include "xfs_refcount.h"
-+#include "xfs_rmap_btree.h"
+@@ -515,7 +515,7 @@ xfs_bmap_trace_exlist(
+ 		state |= BMAP_ATTRFORK;
  
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	ASSERT(cnt == (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)));
++	ASSERT(cnt == xfs_iext_count(ifp));
+ 	for (idx = 0; idx < cnt; idx++)
+ 		trace_xfs_extlist(ip, idx, whichfork, caller_ip);
+ }
+@@ -811,7 +811,7 @@ xfs_bmap_extents_to_btree(
+ 				XFS_BTREE_LONG_PTRS);
  
- kmem_zone_t		*xfs_bmap_free_item_zone;
-@@ -190,8 +191,12 @@ xfs_bmap_worst_indlen(
- 	int		maxrecs;	/* maximum record count at this level */
- 	xfs_mount_t	*mp;		/* mount structure */
- 	xfs_filblks_t	rval;		/* return value */
-+	xfs_filblks_t   orig_len;
+ 	arp = XFS_BMBT_REC_ADDR(mp, ablock, 1);
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nextents =  xfs_iext_count(ifp);
+ 	for (cnt = i = 0; i < nextents; i++) {
+ 		ep = xfs_iext_get_ext(ifp, i);
+ 		if (!isnullstartblock(xfs_bmbt_get_startblock(ep))) {
+@@ -1296,7 +1296,7 @@ xfs_bmap_read_extents(
+ 	/*
+ 	 * Here with bp and block set to the leftmost leaf node in the tree.
+ 	 */
+-	room = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	room = xfs_iext_count(ifp);
+ 	i = 0;
+ 	/*
+ 	 * Loop over all leaf nodes.  Copy information to the extent records.
+@@ -1361,7 +1361,7 @@ xfs_bmap_read_extents(
+ 			return error;
+ 		block = XFS_BUF_TO_BLOCK(bp);
+ 	}
+-	ASSERT(i == (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)));
++	ASSERT(i == xfs_iext_count(ifp));
+ 	ASSERT(i == XFS_IFORK_NEXTENTS(ip, whichfork));
+ 	XFS_BMAP_TRACE_EXLIST(ip, i, whichfork);
+ 	return 0;
+@@ -1404,7 +1404,7 @@ xfs_bmap_search_multi_extents(
+ 	if (lastx > 0) {
+ 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, lastx - 1), prevp);
+ 	}
+-	if (lastx < (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t))) {
++	if (lastx < xfs_iext_count(ifp)) {
+ 		xfs_bmbt_get_all(ep, gotp);
+ 		*eofp = 0;
+ 	} else {
+@@ -1497,7 +1497,7 @@ xfs_bmap_first_unused(
+ 	    (error = xfs_iread_extents(tp, ip, whichfork)))
+ 		return error;
+ 	lowest = *first_unused;
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nextents = xfs_iext_count(ifp);
+ 	for (idx = 0, lastaddr = 0, max = lowest; idx < nextents; idx++) {
+ 		xfs_bmbt_rec_host_t *ep = xfs_iext_get_ext(ifp, idx);
+ 		off = xfs_bmbt_get_startoff(ep);
+@@ -1582,7 +1582,7 @@ xfs_bmap_last_extent(
+ 			return error;
+ 	}
+ 
+-	nextents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
++	nextents = xfs_iext_count(ifp);
+ 	if (nextents == 0) {
+ 		*is_empty = 1;
+ 		return 0;
+@@ -1735,7 +1735,7 @@ xfs_bmap_add_extent_delay_real(
+ 						&bma->ip->i_d.di_nextents);
+ 
+ 	ASSERT(bma->idx >= 0);
+-	ASSERT(bma->idx <= ifp->if_bytes / sizeof(struct xfs_bmbt_rec));
++	ASSERT(bma->idx <= xfs_iext_count(ifp));
+ 	ASSERT(!isnullstartblock(new->br_startblock));
+ 	ASSERT(!bma->cur ||
+ 	       (bma->cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
+@@ -1794,7 +1794,7 @@ xfs_bmap_add_extent_delay_real(
+ 	 * Don't set contiguous if the combined extent would be too large.
+ 	 * Also check for all-three-contiguous being too large.
+ 	 */
+-	if (bma->idx < ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t) - 1) {
++	if (bma->idx < xfs_iext_count(ifp) - 1) {
+ 		state |= BMAP_RIGHT_VALID;
+ 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx + 1), &RIGHT);
+ 
+@@ -2300,7 +2300,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+ 
+ 	ASSERT(*idx >= 0);
+-	ASSERT(*idx <= ifp->if_bytes / sizeof(struct xfs_bmbt_rec));
++	ASSERT(*idx <= xfs_iext_count(ifp));
+ 	ASSERT(!isnullstartblock(new->br_startblock));
+ 
+ 	XFS_STATS_INC(mp, xs_add_exlist);
+@@ -2356,7 +2356,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	 * Don't set contiguous if the combined extent would be too large.
+ 	 * Also check for all-three-contiguous being too large.
+ 	 */
+-	if (*idx < ip->i_df.if_bytes / (uint)sizeof(xfs_bmbt_rec_t) - 1) {
++	if (*idx < xfs_iext_count(&ip->i_df) - 1) {
+ 		state |= BMAP_RIGHT_VALID;
+ 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx + 1), &RIGHT);
+ 		if (isnullstartblock(RIGHT.br_startblock))
+@@ -2836,7 +2836,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	 * Check and set flags if the current (right) segment exists.
+ 	 * If it doesn't exist, we're converting the hole at end-of-file.
+ 	 */
+-	if (*idx < ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)) {
++	if (*idx < xfs_iext_count(ifp)) {
+ 		state |= BMAP_RIGHT_VALID;
+ 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
+ 
+@@ -2966,7 +2966,7 @@ xfs_bmap_add_extent_hole_real(
+ 	ifp = XFS_IFORK_PTR(bma->ip, whichfork);
+ 
+ 	ASSERT(bma->idx >= 0);
+-	ASSERT(bma->idx <= ifp->if_bytes / sizeof(struct xfs_bmbt_rec));
++	ASSERT(bma->idx <= xfs_iext_count(ifp));
+ 	ASSERT(!isnullstartblock(new->br_startblock));
+ 	ASSERT(!bma->cur ||
+ 	       !(bma->cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
+@@ -2992,7 +2992,7 @@ xfs_bmap_add_extent_hole_real(
+ 	 * Check and set flags if this segment has a current value.
+ 	 * Not true if we're inserting into the "hole" at eof.
+ 	 */
+-	if (bma->idx < ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)) {
++	if (bma->idx < xfs_iext_count(ifp)) {
+ 		state |= BMAP_RIGHT_VALID;
+ 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx), &right);
+ 		if (isnullstartblock(right.br_startblock))
+@@ -4221,7 +4221,7 @@ xfs_bmapi_read(
+ 			break;
+ 
+ 		/* Else go on to the next record. */
+-		if (++lastx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t))
++		if (++lastx < xfs_iext_count(ifp))
+ 			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, lastx), &got);
+ 		else
+ 			eof = 1;
+@@ -4733,7 +4733,7 @@ xfs_bmapi_write(
+ 
+ 		/* Else go on to the next record. */
+ 		bma.prev = bma.got;
+-		if (++bma.idx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t)) {
++		if (++bma.idx < xfs_iext_count(ifp)) {
+ 			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma.idx),
+ 					 &bma.got);
+ 		} else
+@@ -4885,7 +4885,7 @@ xfs_bmap_del_extent_delay(
+ 	da_new = 0;
+ 
+ 	ASSERT(*idx >= 0);
+-	ASSERT(*idx < ifp->if_bytes / sizeof(struct xfs_bmbt_rec));
++	ASSERT(*idx <= xfs_iext_count(ifp));
+ 	ASSERT(del->br_blockcount > 0);
+ 	ASSERT(got->br_startoff <= del->br_startoff);
+ 	ASSERT(got_endoff >= del_endoff);
+@@ -5016,7 +5016,7 @@ xfs_bmap_del_extent_cow(
+ 	got_endoff = got->br_startoff + got->br_blockcount;
+ 
+ 	ASSERT(*idx >= 0);
+-	ASSERT(*idx < ifp->if_bytes / sizeof(struct xfs_bmbt_rec));
++	ASSERT(*idx <= xfs_iext_count(ifp));
+ 	ASSERT(del->br_blockcount > 0);
+ 	ASSERT(got->br_startoff <= del->br_startoff);
+ 	ASSERT(got_endoff >= del_endoff);
+@@ -5122,8 +5122,7 @@ xfs_bmap_del_extent(
+ 		state |= BMAP_COWFORK;
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	ASSERT((*idx >= 0) && (*idx < ifp->if_bytes /
+-		(uint)sizeof(xfs_bmbt_rec_t)));
++	ASSERT((*idx >= 0) && (*idx < xfs_iext_count(ifp)));
+ 	ASSERT(del->br_blockcount > 0);
+ 	ep = xfs_iext_get_ext(ifp, *idx);
+ 	xfs_bmbt_get_all(ep, &got);
+@@ -5448,7 +5447,6 @@ __xfs_bunmapi(
+ 	int			logflags;	/* transaction logging flags */
+ 	xfs_extlen_t		mod;		/* rt extent offset */
+ 	xfs_mount_t		*mp;		/* mount structure */
+-	xfs_extnum_t		nextents;	/* number of file extents */
+ 	xfs_bmbt_irec_t		prev;		/* previous extent record */
+ 	xfs_fileoff_t		start;		/* first file offset deleted */
+ 	int			tmp_logflags;	/* partial logging flags */
+@@ -5480,8 +5478,7 @@ __xfs_bunmapi(
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS) &&
+ 	    (error = xfs_iread_extents(tp, ip, whichfork)))
+ 		return error;
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-	if (nextents == 0) {
++	if (xfs_iext_count(ifp) == 0) {
+ 		*rlen = 0;
+ 		return 0;
+ 	}
+@@ -5966,7 +5963,7 @@ xfs_bmse_shift_one(
  
  	mp = ip->i_mount;
-+
-+	/* Calculate the worst-case size of the bmbt. */
-+	orig_len = len;
- 	maxrecs = mp->m_bmap_dmxr[0];
- 	for (level = 0, rval = 0;
- 	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
-@@ -199,12 +204,20 @@ xfs_bmap_worst_indlen(
- 		len += maxrecs - 1;
- 		do_div(len, maxrecs);
- 		rval += len;
--		if (len == 1)
--			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
-+		if (len == 1) {
-+			rval += XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
- 				level - 1;
-+			break;
-+		}
- 		if (level == 0)
- 			maxrecs = mp->m_bmap_dmxr[1];
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	total_extents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
++	total_extents = xfs_iext_count(ifp);
+ 
+ 	xfs_bmbt_get_all(gotp, &got);
+ 
+@@ -6143,7 +6140,7 @@ xfs_bmap_shift_extents(
+ 	 * are collapsing out, so we cannot use the count of real extents here.
+ 	 * Instead we have to calculate it from the incore fork.
+ 	 */
+-	total_extents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
++	total_extents = xfs_iext_count(ifp);
+ 	if (total_extents == 0) {
+ 		*done = 1;
+ 		goto del_cursor;
+@@ -6203,7 +6200,7 @@ xfs_bmap_shift_extents(
+ 		 * count can change. Update the total and grade the next record.
+ 		 */
+ 		if (direction == SHIFT_LEFT) {
+-			total_extents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
++			total_extents = xfs_iext_count(ifp);
+ 			stop_extent = total_extents;
+ 		}
+ 
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 5dd56d3..5fbe24c 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -775,6 +775,13 @@ xfs_idestroy_fork(
  	}
-+
-+	/* Calculate the worst-case size of the rmapbt. */
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		rval += 1 + xfs_rmapbt_calc_size(mp, orig_len) +
-+				mp->m_rmap_maxlevels;
-+
- 	return rval;
  }
  
++/* Count number of incore extents based on if_bytes */
++xfs_extnum_t
++xfs_iext_count(struct xfs_ifork *ifp)
++{
++	return ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++}
++
+ /*
+  * Convert in-core extents to on-disk form
+  *
+@@ -803,7 +810,7 @@ xfs_iextents_copy(
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+ 	ASSERT(ifp->if_bytes > 0);
+ 
+-	nrecs = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nrecs = xfs_iext_count(ifp);
+ 	XFS_BMAP_TRACE_EXLIST(ip, nrecs, whichfork);
+ 	ASSERT(nrecs > 0);
+ 
+@@ -941,7 +948,7 @@ xfs_iext_get_ext(
+ 	xfs_extnum_t	idx)		/* index of target extent */
+ {
+ 	ASSERT(idx >= 0);
+-	ASSERT(idx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t));
++	ASSERT(idx < xfs_iext_count(ifp));
+ 
+ 	if ((ifp->if_flags & XFS_IFEXTIREC) && (idx == 0)) {
+ 		return ifp->if_u1.if_ext_irec->er_extbuf;
+@@ -1017,7 +1024,7 @@ xfs_iext_add(
+ 	int		new_size;	/* size of extents after adding */
+ 	xfs_extnum_t	nextents;	/* number of extents in file */
+ 
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nextents = xfs_iext_count(ifp);
+ 	ASSERT((idx >= 0) && (idx <= nextents));
+ 	byte_diff = ext_diff * sizeof(xfs_bmbt_rec_t);
+ 	new_size = ifp->if_bytes + byte_diff;
+@@ -1241,7 +1248,7 @@ xfs_iext_remove(
+ 	trace_xfs_iext_remove(ip, idx, state, _RET_IP_);
+ 
+ 	ASSERT(ext_diff > 0);
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nextents = xfs_iext_count(ifp);
+ 	new_size = (nextents - ext_diff) * sizeof(xfs_bmbt_rec_t);
+ 
+ 	if (new_size == 0) {
+@@ -1270,7 +1277,7 @@ xfs_iext_remove_inline(
+ 
+ 	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC));
+ 	ASSERT(idx < XFS_INLINE_EXTS);
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nextents = xfs_iext_count(ifp);
+ 	ASSERT(((nextents - ext_diff) > 0) &&
+ 		(nextents - ext_diff) < XFS_INLINE_EXTS);
+ 
+@@ -1309,7 +1316,7 @@ xfs_iext_remove_direct(
+ 	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC));
+ 	new_size = ifp->if_bytes -
+ 		(ext_diff * sizeof(xfs_bmbt_rec_t));
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nextents = xfs_iext_count(ifp);
+ 
+ 	if (new_size == 0) {
+ 		xfs_iext_destroy(ifp);
+@@ -1546,7 +1553,7 @@ xfs_iext_indirect_to_direct(
+ 	int		size;		/* size of file extents */
+ 
+ 	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nextents = xfs_iext_count(ifp);
+ 	ASSERT(nextents <= XFS_LINEAR_EXTS);
+ 	size = nextents * sizeof(xfs_bmbt_rec_t);
+ 
+@@ -1620,7 +1627,7 @@ xfs_iext_bno_to_ext(
+ 	xfs_extnum_t	nextents;	/* number of file extents */
+ 	xfs_fileoff_t	startoff = 0;	/* start offset of extent */
+ 
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nextents = xfs_iext_count(ifp);
+ 	if (nextents == 0) {
+ 		*idxp = 0;
+ 		return NULL;
+@@ -1733,8 +1740,8 @@ xfs_iext_idx_to_irec(
+ 
+ 	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+ 	ASSERT(page_idx >= 0);
+-	ASSERT(page_idx <= ifp->if_bytes / sizeof(xfs_bmbt_rec_t));
+-	ASSERT(page_idx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t) || realloc);
++	ASSERT(page_idx <= xfs_iext_count(ifp));
++	ASSERT(page_idx < xfs_iext_count(ifp) || realloc);
+ 
+ 	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+ 	erp_idx = 0;
+@@ -1782,7 +1789,7 @@ xfs_iext_irec_init(
+ 	xfs_extnum_t	nextents;	/* number of extents in file */
+ 
+ 	ASSERT(!(ifp->if_flags & XFS_IFEXTIREC));
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nextents = xfs_iext_count(ifp);
+ 	ASSERT(nextents <= XFS_LINEAR_EXTS);
+ 
+ 	erp = kmem_alloc(sizeof(xfs_ext_irec_t), KM_NOFS);
+@@ -1906,7 +1913,7 @@ xfs_iext_irec_compact(
+ 
+ 	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
+ 	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nextents = xfs_iext_count(ifp);
+ 
+ 	if (nextents == 0) {
+ 		xfs_iext_destroy(ifp);
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index c9476f5..8bf112e 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -152,6 +152,7 @@ void		xfs_init_local_fork(struct xfs_inode *, int, const void *, int);
+ 
+ struct xfs_bmbt_rec_host *
+ 		xfs_iext_get_ext(struct xfs_ifork *, xfs_extnum_t);
++xfs_extnum_t	xfs_iext_count(struct xfs_ifork *);
+ void		xfs_iext_insert(struct xfs_inode *, xfs_extnum_t, xfs_extnum_t,
+ 				struct xfs_bmbt_irec *, int);
+ void		xfs_iext_add(struct xfs_ifork *, xfs_extnum_t, int);
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 47074e0c..0670a8b 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -359,9 +359,7 @@ xfs_bmap_count_blocks(
+ 	mp = ip->i_mount;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
+-		xfs_bmap_count_leaves(ifp, 0,
+-			ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t),
+-			count);
++		xfs_bmap_count_leaves(ifp, 0, xfs_iext_count(ifp), count);
+ 		return 0;
+ 	}
+ 
+@@ -426,7 +424,7 @@ xfs_getbmapx_fix_eof_hole(
+ 		ifp = XFS_IFORK_PTR(ip, whichfork);
+ 		if (!moretocome &&
+ 		    xfs_iext_bno_to_ext(ifp, fileblock, &lastx) &&
+-		   (lastx == (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t))-1))
++		   (lastx == xfs_iext_count(ifp) - 1))
+ 			out->bmv_oflags |= BMV_OF_LAST;
+ 	}
+ 
+@@ -1878,15 +1876,13 @@ xfs_swap_extent_forks(
+ 
+ 	switch (ip->i_d.di_format) {
+ 	case XFS_DINODE_FMT_EXTENTS:
+-		/* If the extents fit in the inode, fix the
+-		 * pointer.  Otherwise it's already NULL or
+-		 * pointing to the extent.
++		/*
++		 * If the extents fit in the inode, fix the pointer.  Otherwise
++		 * it's already NULL or pointing to the extent.
+ 		 */
+-		nextents = ip->i_df.if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-		if (nextents <= XFS_INLINE_EXTS) {
+-			ifp->if_u1.if_extents =
+-				ifp->if_u2.if_inline_ext;
+-		}
++		nextents = xfs_iext_count(&ip->i_df);
++		if (nextents <= XFS_INLINE_EXTS)
++			ifp->if_u1.if_extents = ifp->if_u2.if_inline_ext;
+ 		(*src_log_flags) |= XFS_ILOG_DEXT;
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+@@ -1898,15 +1894,13 @@ xfs_swap_extent_forks(
+ 
+ 	switch (tip->i_d.di_format) {
+ 	case XFS_DINODE_FMT_EXTENTS:
+-		/* If the extents fit in the inode, fix the
+-		 * pointer.  Otherwise it's already NULL or
+-		 * pointing to the extent.
++		/*
++		 * If the extents fit in the inode, fix the pointer.  Otherwise
++		 * it's already NULL or pointing to the extent.
+ 		 */
+-		nextents = tip->i_df.if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+-		if (nextents <= XFS_INLINE_EXTS) {
+-			tifp->if_u1.if_extents =
+-				tifp->if_u2.if_inline_ext;
+-		}
++		nextents = xfs_iext_count(&tip->i_df);
++		if (nextents <= XFS_INLINE_EXTS)
++			tifp->if_u1.if_extents = tifp->if_u2.if_inline_ext;
+ 		(*target_log_flags) |= XFS_ILOG_DEXT;
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 9610e9c..d90e781 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -164,7 +164,7 @@ xfs_inode_item_format_data_fork(
+ 			struct xfs_bmbt_rec *p;
+ 
+ 			ASSERT(ip->i_df.if_u1.if_extents != NULL);
+-			ASSERT(ip->i_df.if_bytes / sizeof(xfs_bmbt_rec_t) > 0);
++			ASSERT(xfs_iext_count(&ip->i_df) > 0);
+ 
+ 			p = xlog_prepare_iovec(lv, vecp, XLOG_REG_TYPE_IEXT);
+ 			data_bytes = xfs_iextents_copy(ip, p, XFS_DATA_FORK);
+@@ -261,7 +261,7 @@ xfs_inode_item_format_attr_fork(
+ 		    ip->i_afp->if_bytes > 0) {
+ 			struct xfs_bmbt_rec *p;
+ 
+-			ASSERT(ip->i_afp->if_bytes / sizeof(xfs_bmbt_rec_t) ==
++			ASSERT(xfs_iext_count(ip->i_afp) ==
+ 				ip->i_d.di_anextents);
+ 			ASSERT(ip->i_afp->if_u1.if_extents != NULL);
+ 
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index c245bed..a391975 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -910,16 +910,14 @@ xfs_ioc_fsgetxattr(
+ 	if (attr) {
+ 		if (ip->i_afp) {
+ 			if (ip->i_afp->if_flags & XFS_IFEXTENTS)
+-				fa.fsx_nextents = ip->i_afp->if_bytes /
+-							sizeof(xfs_bmbt_rec_t);
++				fa.fsx_nextents = xfs_iext_count(ip->i_afp);
+ 			else
+ 				fa.fsx_nextents = ip->i_d.di_anextents;
+ 		} else
+ 			fa.fsx_nextents = 0;
+ 	} else {
+ 		if (ip->i_df.if_flags & XFS_IFEXTENTS)
+-			fa.fsx_nextents = ip->i_df.if_bytes /
+-						sizeof(xfs_bmbt_rec_t);
++			fa.fsx_nextents = xfs_iext_count(&ip->i_df);
+ 		else
+ 			fa.fsx_nextents = ip->i_d.di_nextents;
+ 	}
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index a60d9e2..45e50ea 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1135,7 +1135,7 @@ xfs_qm_get_rtblks(
+ 			return error;
+ 	}
+ 	rtblks = 0;
+-	nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
++	nextents = xfs_iext_count(ifp);
+ 	for (idx = 0; idx < nextents; idx++)
+ 		rtblks += xfs_bmbt_get_blockcount(xfs_iext_get_ext(ifp, idx));
+ 	*O_rtblks = (xfs_qcnt_t)rtblks;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index c069048..0edf835 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -486,7 +486,7 @@ xfs_reflink_trim_irec_to_next_cow(
+ 	/* This is the extent before; try sliding up one. */
+ 	if (irec.br_startoff < offset_fsb) {
+ 		idx++;
+-		if (idx >= ifp->if_bytes / sizeof(xfs_bmbt_rec_t))
++		if (idx >= xfs_iext_count(ifp))
+ 			return 0;
+ 		gotp = xfs_iext_get_ext(ifp, idx);
+ 		xfs_bmbt_get_all(gotp, &irec);
+@@ -566,7 +566,7 @@ xfs_reflink_cancel_cow_blocks(
+ 			xfs_bmap_del_extent_cow(ip, &idx, &got, &del);
+ 		}
+ 
+-		if (++idx >= ifp->if_bytes / sizeof(struct xfs_bmbt_rec))
++		if (++idx >= xfs_iext_count(ifp))
+ 			break;
+ 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), &got);
+ 	}
 -- 
 2.1.4
 
