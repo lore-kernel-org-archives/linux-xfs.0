@@ -1,171 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33720 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936356AbdAKIYh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 03:24:37 -0500
-Received: by mail-wm0-f65.google.com with SMTP id r144so26434428wme.0
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 00:24:36 -0800 (PST)
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36071 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935556AbdAIMk6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 07:40:58 -0500
+Received: by mail-oi0-f68.google.com with SMTP id u143so15989263oif.3
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Jan 2017 04:40:57 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v8 5/6] xfs: sanity check inode mode when creating new dentry
-Date: Wed, 11 Jan 2017 10:24:09 +0200
-Message-Id: <1484123050-11064-6-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
-References: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
+Date: Mon, 9 Jan 2017 14:40:56 +0200
+Message-ID: <CAOQ4uxhhOqhsZwrncsfUmra9nLGKpF2mFGp35BuiPyucWkN1yw@mail.gmail.com>
+Subject: Re: [PATCH v4 00/47] xfs: online scrub/repair support
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-The helper xfs_dentry_to_name() is used by 2 different
-classes of callers: Callers that pass zero mode and don't care
-about the returned name.type field and Callers that pass
-non zero mode and do care about the name.type field.
+On Sat, Jan 7, 2017 at 2:35 AM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> Hi all,
+>
+...
+> If you're going to start using this mess, you probably ought to just
+> pull from my github trees.  The kernel patches[1] should apply against
+> 4.10-rc2.  xfsprogs[2] and xfstests[3] can be found in their usual
+> places.
+>
+> The patches have survived all auto group xfstests both with scrub-only
+> mode and also a special debugging mode to xfs_scrub that forces it to
+> rebuild the metadata structures even if they're not damaged.  Since the
+> last patch release, I have now had time to run the new tests in [3] that
+> try to fuzz every field in every data structure on disk.
+>
 
-Change xfs_dentry_to_name() to not take the mode argument and
-change the call sites of the first class to not pass the mode
-argument.
+Darrick,
 
-Create a new helper xfs_dentry_mode_to_name() which does pass
-the mode argument and returns -EFSCORRUPTED if mode is invalid.
-Callers that translate non zero mode to on-disk file type now
-check the return value and will export the error to user instead
-of staging an invalid file type to be written to directory entry.
+I started running the dangerous_scrub group yersterday and it's killing my
+test machine. The test machine is x86_64 (i5-3470) 16GB RAM
+and test partitions are 100GB volume on spinning disk.
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/xfs/xfs_iops.c | 48 +++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 39 insertions(+), 9 deletions(-)
+xfs_db swaps my system to death and most of the tests it eventually
+gets shot down by oom killer.
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 821f08d..22c1615 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -98,12 +98,27 @@ xfs_init_security(
- static void
- xfs_dentry_to_name(
- 	struct xfs_name	*namep,
-+	struct dentry	*dentry)
-+{
-+	namep->name = dentry->d_name.name;
-+	namep->len = dentry->d_name.len;
-+	namep->type = XFS_DIR3_FT_UNKNOWN;
-+}
-+
-+static int
-+xfs_dentry_mode_to_name(
-+	struct xfs_name	*namep,
- 	struct dentry	*dentry,
- 	int		mode)
- {
- 	namep->name = dentry->d_name.name;
- 	namep->len = dentry->d_name.len;
- 	namep->type = xfs_mode_to_ftype(mode);
-+
-+	if (unlikely(namep->type == XFS_DIR3_FT_UNKNOWN))
-+		return -EFSCORRUPTED;
-+
-+	return 0;
- }
- 
- STATIC void
-@@ -119,7 +134,7 @@ xfs_cleanup_inode(
- 	 * xfs_init_security we must back out.
- 	 * ENOSPC can hit here, among other things.
- 	 */
--	xfs_dentry_to_name(&teardown, dentry, 0);
-+	xfs_dentry_to_name(&teardown, dentry);
- 
- 	xfs_remove(XFS_I(dir), &teardown, XFS_I(inode));
- }
-@@ -154,8 +169,12 @@ xfs_generic_create(
- 	if (error)
- 		return error;
- 
-+	/* Verify mode is valid also for tmpfile case */
-+	error = xfs_dentry_mode_to_name(&name, dentry, mode);
-+	if (unlikely(error))
-+		goto out_free_acl;
-+
- 	if (!tmpfile) {
--		xfs_dentry_to_name(&name, dentry, mode);
- 		error = xfs_create(XFS_I(dir), &name, mode, rdev, &ip);
- 	} else {
- 		error = xfs_create_tmpfile(XFS_I(dir), dentry, mode, &ip);
-@@ -248,7 +267,7 @@ xfs_vn_lookup(
- 	if (dentry->d_name.len >= MAXNAMELEN)
- 		return ERR_PTR(-ENAMETOOLONG);
- 
--	xfs_dentry_to_name(&name, dentry, 0);
-+	xfs_dentry_to_name(&name, dentry);
- 	error = xfs_lookup(XFS_I(dir), &name, &cip, NULL);
- 	if (unlikely(error)) {
- 		if (unlikely(error != -ENOENT))
-@@ -275,7 +294,7 @@ xfs_vn_ci_lookup(
- 	if (dentry->d_name.len >= MAXNAMELEN)
- 		return ERR_PTR(-ENAMETOOLONG);
- 
--	xfs_dentry_to_name(&xname, dentry, 0);
-+	xfs_dentry_to_name(&xname, dentry);
- 	error = xfs_lookup(XFS_I(dir), &xname, &ip, &ci_name);
- 	if (unlikely(error)) {
- 		if (unlikely(error != -ENOENT))
-@@ -310,7 +329,9 @@ xfs_vn_link(
- 	struct xfs_name	name;
- 	int		error;
- 
--	xfs_dentry_to_name(&name, dentry, inode->i_mode);
-+	error = xfs_dentry_mode_to_name(&name, dentry, inode->i_mode);
-+	if (unlikely(error))
-+		return error;
- 
- 	error = xfs_link(XFS_I(dir), XFS_I(inode), &name);
- 	if (unlikely(error))
-@@ -329,7 +350,7 @@ xfs_vn_unlink(
- 	struct xfs_name	name;
- 	int		error;
- 
--	xfs_dentry_to_name(&name, dentry, 0);
-+	xfs_dentry_to_name(&name, dentry);
- 
- 	error = xfs_remove(XFS_I(dir), &name, XFS_I(d_inode(dentry)));
- 	if (error)
-@@ -359,7 +380,9 @@ xfs_vn_symlink(
- 
- 	mode = S_IFLNK |
- 		(irix_symlink_mode ? 0777 & ~current_umask() : S_IRWXUGO);
--	xfs_dentry_to_name(&name, dentry, mode);
-+	error = xfs_dentry_mode_to_name(&name, dentry, mode);
-+	if (unlikely(error))
-+		goto out;
- 
- 	error = xfs_symlink(XFS_I(dir), &name, symname, mode, &cip);
- 	if (unlikely(error))
-@@ -395,6 +418,7 @@ xfs_vn_rename(
- {
- 	struct inode	*new_inode = d_inode(ndentry);
- 	int		omode = 0;
-+	int		error;
- 	struct xfs_name	oname;
- 	struct xfs_name	nname;
- 
-@@ -405,8 +429,14 @@ xfs_vn_rename(
- 	if (flags & RENAME_EXCHANGE)
- 		omode = d_inode(ndentry)->i_mode;
- 
--	xfs_dentry_to_name(&oname, odentry, omode);
--	xfs_dentry_to_name(&nname, ndentry, d_inode(odentry)->i_mode);
-+	error = xfs_dentry_mode_to_name(&oname, odentry, omode);
-+	if (omode && unlikely(error))
-+		return error;
-+
-+	error = xfs_dentry_mode_to_name(&nname, ndentry,
-+					d_inode(odentry)->i_mode);
-+	if (unlikely(error))
-+		return error;
- 
- 	return xfs_rename(XFS_I(odir), &oname, XFS_I(d_inode(odentry)),
- 			  XFS_I(ndir), &nname,
--- 
-2.7.4
+Is that surprising to you? How much RAM does you test systems have?
+Can you figure out a minimal RAM requirement to run these fuzzers
+and maybe check required RAM before running the test?
 
+Alternatively, can you figure out how to reduce the amount of RAM
+used by the fuzzer?
+
+I was using mkfs options "-m rmapbt=1,reflink=1"
+and I tried running with and then without TEST_XFS_SCRUB=1.
+I don't see a reason to send the logs at this point, they are just a complete
+mass of destruction.
+
+Let me know if you need more inputs from me.
+
+Amir.
