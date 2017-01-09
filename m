@@ -1,64 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:33102 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759342AbdAINGn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 08:06:43 -0500
-Received: by mail-wm0-f66.google.com with SMTP id r144so13204315wme.0
-        for <linux-xfs@vger.kernel.org>; Mon, 09 Jan 2017 05:06:43 -0800 (PST)
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33143 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S937976AbdAINGq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 08:06:46 -0500
+Received: by mail-wm0-f68.google.com with SMTP id r144so13204641wme.0
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Jan 2017 05:06:45 -0800 (PST)
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v6 0/3] xfs: fixes for malformed on-disk i_mode
-Date: Mon,  9 Jan 2017 15:06:26 +0200
-Message-Id: <1483967189-27313-1-git-send-email-amir73il@gmail.com>
+Subject: [PATCH v6 2/3] xfs: sanity check directory inode di_size
+Date: Mon,  9 Jan 2017 15:06:28 +0200
+Message-Id: <1483967189-27313-3-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1483967189-27313-1-git-send-email-amir73il@gmail.com>
+References: <1483967189-27313-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-Darrick,
+This changes fixes an assertion hit when fuzzing on-disk
+i_mode values.
 
-This is 6th revision of the fixes for malformed on-disk i_mode.
+The easy case to fix is when changing an empty file
+i_mode to S_IFDIR. In this case, xfs_dinode_verify()
+detects an illegal zero size for directory and fails
+to load the inode structure from disk.
 
-I implemented the xfs specific test case (xfs/348) to test all
-possible malformed file type values as you suggested.
+For the case of non empty file whose i_mode is changed
+to S_IFDIR, the ASSERT() statement in xfs_dir2_isblock()
+is replaced with return -EFSCORRUPTED as suggested by
+Darrick, to avoid interacting with corrupted jusk also
+when XFS_DEBUG is disabled.
 
-Tested with generic/401 with -n ftype=0|1.
-Tested with new xfs/348 test with -n ftype=0|1.
+Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/xfs/libxfs/xfs_dir2.c      | 3 ++-
+ fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++--
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-Test xfs/348 exposed an ASSERT on attempt to readdir of regular
-file that is posing as a directory.
-
-Patch 2 implements your suggestion to address this case.
-
-Patch 3 fixes a very strage upsidedown unlikely() in the
-xfs ASSERT macros. I hope I am not tripping...
-
-Amir.
-
-v6:
-- Added Reviewed-by Brian for patch 1
-- Added patch 2 to address new xfs/348 failures
-- Added patch 3 to fix ASSERT() likely
-
-v5:
-- remove wrong argument about on-disk malformed mode from commit message
-- address Brian's review comments
-
-v4:
-- independent fix patch for xfs
-
-Amir Goldstein (3):
-  xfs: fix the size of xfs_mode_to_ftype table
-  xfs: sanity check directory inode di_size
-  xfs: make the ASSERT() condition likely
-
- fs/xfs/libxfs/xfs_dir2.c      | 21 +++++++++++----------
- fs/xfs/libxfs/xfs_dir2.h      |  4 +++-
- fs/xfs/libxfs/xfs_inode_buf.c |  7 +++++--
- fs/xfs/xfs_iops.c             |  2 +-
- fs/xfs/xfs_linux.h            |  6 +++---
- 5 files changed, 23 insertions(+), 17 deletions(-)
-
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 48d7c45..3f73f49 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -631,7 +631,8 @@ xfs_dir2_isblock(
+ 	if ((rval = xfs_bmap_last_offset(args->dp, &last, XFS_DATA_FORK)))
+ 		return rval;
+ 	rval = XFS_FSB_TO_B(args->dp->i_mount, last) == args->geo->blksize;
+-	ASSERT(rval == 0 || args->dp->i_d.di_size == args->geo->blksize);
++	if (rval != 0 && args->dp->i_d.di_size != args->geo->blksize)
++		return -EFSCORRUPTED;
+ 	*vp = rval;
+ 	return 0;
+ }
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index dd483e2..0091ac3 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -386,6 +386,7 @@ xfs_dinode_verify(
+ 	xfs_ino_t		ino,
+ 	struct xfs_dinode	*dip)
+ {
++	uint16_t		mode;
+ 	uint16_t		flags;
+ 	uint64_t		flags2;
+ 
+@@ -396,8 +397,10 @@ xfs_dinode_verify(
+ 	if (be64_to_cpu(dip->di_size) & (1ULL << 63))
+ 		return false;
+ 
+-	/* No zero-length symlinks. */
+-	if (S_ISLNK(be16_to_cpu(dip->di_mode)) && dip->di_size == 0)
++	mode = be16_to_cpu(dip->di_mode);
++
++	/* No zero-length symlinks/dirs. */
++	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
+ 		return false;
+ 
+ 	/* only version 3 or greater inodes are extensively verified here */
 -- 
 2.7.4
 
