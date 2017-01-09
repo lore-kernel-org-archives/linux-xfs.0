@@ -1,91 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58768 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:57912 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938588AbdAIPkE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:04 -0500
+        with ESMTP id S938364AbdAIPju (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:50 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 20/32] xfs: forbid AG btrees with level == 0
-Date: Mon,  9 Jan 2017 16:38:51 +0100
-Message-Id: <1483976343-661-21-git-send-email-hch@lst.de>
+Subject: [PATCH 15/32] xfs: use new extent lookup helpers xfs_file_iomap_begin_delay
+Date: Mon,  9 Jan 2017 16:38:46 +0100
+Message-Id: <1483976343-661-16-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+commit 656152e552e5cbe0c11ad261b524376217c2fb13 upstream.
 
-commit d2a047f31e86941fa896e0e3271536d50aba415e upstream.
+And only lookup the previous extent inside xfs_iomap_prealloc_size
+if we actually need it.
 
-There is no such thing as a zero-level AG btree since even a single-node
-zero-records btree has one level.  Btree cursor constructors read
-cur_nlevels straight from disk and then access things like
-cur_bufs[cur_nlevels - 1] which is /really/ bad if cur_nlevels is zero!
-Therefore, strengthen the verifiers to prevent this possibility.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c  | 10 +++++++---
- fs/xfs/libxfs/xfs_ialloc.c |  9 ++++++++-
- 2 files changed, 15 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_iomap.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index effb64c..5050056 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2455,12 +2455,15 @@ xfs_agf_verify(
- 	      be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp)))
- 		return false;
- 
--	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) > XFS_BTREE_MAXLEVELS ||
-+	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) < 1 ||
-+	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) < 1 ||
-+	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) > XFS_BTREE_MAXLEVELS ||
- 	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) > XFS_BTREE_MAXLEVELS)
- 		return false;
- 
- 	if (xfs_sb_version_hasrmapbt(&mp->m_sb) &&
--	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) > XFS_BTREE_MAXLEVELS)
-+	    (be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) < 1 ||
-+	     be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) > XFS_BTREE_MAXLEVELS))
- 		return false;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index cc25892..e4bfde2 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -395,11 +395,12 @@ xfs_iomap_prealloc_size(
+ 	struct xfs_inode	*ip,
+ 	loff_t			offset,
+ 	loff_t			count,
+-	xfs_extnum_t		idx,
+-	struct xfs_bmbt_irec	*prev)
++	xfs_extnum_t		idx)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+ 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	struct xfs_bmbt_irec	prev;
+ 	int			shift = 0;
+ 	int64_t			freesp;
+ 	xfs_fsblock_t		qblocks;
+@@ -419,8 +420,8 @@ xfs_iomap_prealloc_size(
+ 	 */
+ 	if ((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ||
+ 	    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign) ||
+-	    idx == 0 ||
+-	    prev->br_startoff + prev->br_blockcount < offset_fsb)
++	    !xfs_iext_get_extent(ifp, idx - 1, &prev) ||
++	    prev.br_startoff + prev.br_blockcount < offset_fsb)
+ 		return mp->m_writeio_blocks;
  
  	/*
-@@ -2477,7 +2480,8 @@ xfs_agf_verify(
- 		return false;
+@@ -439,8 +440,8 @@ xfs_iomap_prealloc_size(
+ 	 * always extends to MAXEXTLEN rather than falling short due to things
+ 	 * like stripe unit/width alignment of real extents.
+ 	 */
+-	if (prev->br_blockcount <= (MAXEXTLEN >> 1))
+-		alloc_blocks = prev->br_blockcount << 1;
++	if (prev.br_blockcount <= (MAXEXTLEN >> 1))
++		alloc_blocks = prev.br_blockcount << 1;
+ 	else
+ 		alloc_blocks = XFS_B_TO_FSB(mp, offset);
+ 	if (!alloc_blocks)
+@@ -538,7 +539,6 @@ xfs_file_iomap_begin_delay(
+ 	xfs_fileoff_t		end_fsb, orig_end_fsb;
+ 	int			error = 0, eof = 0;
+ 	struct xfs_bmbt_irec	got;
+-	struct xfs_bmbt_irec	prev;
+ 	xfs_extnum_t		idx;
  
- 	if (xfs_sb_version_hasreflink(&mp->m_sb) &&
--	    be32_to_cpu(agf->agf_refcount_level) > XFS_BTREE_MAXLEVELS)
-+	    (be32_to_cpu(agf->agf_refcount_level) < 1 ||
-+	     be32_to_cpu(agf->agf_refcount_level) > XFS_BTREE_MAXLEVELS))
- 		return false;
+ 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+@@ -563,8 +563,7 @@ xfs_file_iomap_begin_delay(
+ 			goto out_unlock;
+ 	}
  
- 	return true;;
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index c482b97..d45c037 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2510,8 +2510,15 @@ xfs_agi_verify(
- 	if (!XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)))
- 		return false;
+-	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
+-			&got, &prev);
++	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
+ 	if (!eof && got.br_startoff <= offset_fsb) {
+ 		if (xfs_is_reflink_inode(ip)) {
+ 			bool		shared;
+@@ -601,8 +600,7 @@ xfs_file_iomap_begin_delay(
+ 	if (eof) {
+ 		xfs_fsblock_t	prealloc_blocks;
  
--	if (be32_to_cpu(agi->agi_level) > XFS_BTREE_MAXLEVELS)
-+	if (be32_to_cpu(agi->agi_level) < 1 ||
-+	    be32_to_cpu(agi->agi_level) > XFS_BTREE_MAXLEVELS)
- 		return false;
-+
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
-+	    (be32_to_cpu(agi->agi_free_level) < 1 ||
-+	     be32_to_cpu(agi->agi_free_level) > XFS_BTREE_MAXLEVELS))
-+		return false;
-+
- 	/*
- 	 * during growfs operations, the perag is not fully initialised,
- 	 * so we can't use it for any useful checking. growfs ensures we can't
+-		prealloc_blocks =
+-			xfs_iomap_prealloc_size(ip, offset, count, idx, &prev);
++		prealloc_blocks = xfs_iomap_prealloc_size(ip, offset, count, idx);
+ 		if (prealloc_blocks) {
+ 			xfs_extlen_t	align;
+ 			xfs_off_t	end_offset;
 -- 
 2.1.4
 
