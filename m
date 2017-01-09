@@ -1,81 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32978 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965224AbdAIVVe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 16:21:34 -0500
-Date: Mon, 9 Jan 2017 13:21:29 -0800
+Received: from aserp1040.oracle.com ([141.146.126.69]:37541 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933659AbdAIVPo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 16:15:44 -0500
+Date: Mon, 9 Jan 2017 13:15:40 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: don't print warnings when xfs_log_force fails
-Message-ID: <20170109212129.GD14038@birch.djwong.org>
-References: <1482999799-11776-1-git-send-email-hch@lst.de>
- <1482999799-11776-2-git-send-email-hch@lst.de>
+Subject: Re: [PATCH v4 00/47] xfs: online scrub/repair support
+Message-ID: <20170109211540.GB14038@birch.djwong.org>
+References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+ <CAOQ4uxhhOqhsZwrncsfUmra9nLGKpF2mFGp35BuiPyucWkN1yw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1482999799-11776-2-git-send-email-hch@lst.de>
+In-Reply-To: <CAOQ4uxhhOqhsZwrncsfUmra9nLGKpF2mFGp35BuiPyucWkN1yw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Amir Goldstein <amir73il@gmail.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Dec 29, 2016 at 09:23:19AM +0100, Christoph Hellwig wrote:
-> There are only two reasons for xfs_log_force / xfs_log_force_lsn to fail:
-> one is an I/O error, for which xlog_bdstrat already logs a warning, and
-> the second is an already shutdown log due to a previous I/O errors.  In
-> the latter case we'll already have a previous indication for the actual
-> error, but the large stream of misleading warnings from xfs_log_force
-> will probably scroll it out of the message buffer.
+On Mon, Jan 09, 2017 at 02:40:56PM +0200, Amir Goldstein wrote:
+> On Sat, Jan 7, 2017 at 2:35 AM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > Hi all,
+> >
+> ...
+> > If you're going to start using this mess, you probably ought to just
+> > pull from my github trees.  The kernel patches[1] should apply against
+> > 4.10-rc2.  xfsprogs[2] and xfstests[3] can be found in their usual
+> > places.
+> >
+> > The patches have survived all auto group xfstests both with scrub-only
+> > mode and also a special debugging mode to xfs_scrub that forces it to
+> > rebuild the metadata structures even if they're not damaged.  Since the
+> > last patch release, I have now had time to run the new tests in [3] that
+> > try to fuzz every field in every data structure on disk.
+> >
 > 
-> Simply removing the warnings thus makes the XFS log reporting significantly
-> better.
+> Darrick,
+> 
+> I started running the dangerous_scrub group yersterday and it's killing my
+> test machine. The test machine is x86_64 (i5-3470) 16GB RAM
+> and test partitions are 100GB volume on spinning disk.
+> 
+> xfs_db swaps my system to death and most of the tests it eventually
+> gets shot down by oom killer.
+> 
+> Is that surprising to you?
 
-Looks ok to me, so:
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Yes.
+
+> How much RAM does you test systems have?
+
+2GB in a VM so the host system won't go down.  Usually the test disks 
+are 8GB disks to keep the fuzzer runtimes down, but I've also run them
+against 100GB volumes without OOMing...
+
+> Can you figure out a minimal RAM requirement to run these fuzzers
+> and maybe check required RAM before running the test?
+
+I wouldn't have thought xfs_check would OOM... it would help to know
+exactly what the xfs_db invocation thought it was doing.
+
+> Alternatively, can you figure out how to reduce the amount of RAM
+> used by the fuzzer?
+> 
+> I was using mkfs options "-m rmapbt=1,reflink=1"
+> and I tried running with and then without TEST_XFS_SCRUB=1.
+> I don't see a reason to send the logs at this point, they are just a complete
+> mass of destruction.
+
+All the tests?  The full dmesg output would be useful to narrow it down to
+a specific xfstest number, field name, and fuzz verb.  I'm running them
 
 --D
 
+> Let me know if you need more inputs from me.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_log.c | 12 ++----------
->  1 file changed, 2 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index c39ac14..b1469f0 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -3317,12 +3317,8 @@ xfs_log_force(
->  	xfs_mount_t	*mp,
->  	uint		flags)
->  {
-> -	int	error;
-> -
->  	trace_xfs_log_force(mp, 0, _RET_IP_);
-> -	error = _xfs_log_force(mp, flags, NULL);
-> -	if (error)
-> -		xfs_warn(mp, "%s: error %d returned.", __func__, error);
-> +	_xfs_log_force(mp, flags, NULL);
->  }
->  
->  /*
-> @@ -3466,12 +3462,8 @@ xfs_log_force_lsn(
->  	xfs_lsn_t	lsn,
->  	uint		flags)
->  {
-> -	int	error;
-> -
->  	trace_xfs_log_force(mp, lsn, _RET_IP_);
-> -	error = _xfs_log_force_lsn(mp, lsn, flags, NULL);
-> -	if (error)
-> -		xfs_warn(mp, "%s: error %d returned.", __func__, error);
-> +	_xfs_log_force_lsn(mp, lsn, flags, NULL);
->  }
->  
->  /*
-> -- 
-> 2.1.4
-> 
+> Amir.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
