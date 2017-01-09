@@ -1,64 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42062 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33430 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751754AbdAIUAA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Jan 2017 15:00:00 -0500
-Date: Mon, 9 Jan 2017 14:59:59 -0500
+        id S1161067AbdAIPW7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Jan 2017 10:22:59 -0500
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C2A5715567
+        for <linux-xfs@vger.kernel.org>; Mon,  9 Jan 2017 15:22:59 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v09FMx1n015605
+        for <linux-xfs@vger.kernel.org>; Mon, 9 Jan 2017 10:22:59 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/4] xfs: bump up reserved blocks in xfs_alloc_set_aside
-Message-ID: <20170109195958.GF22368@bfoster.bfoster>
-References: <1483991622-2339-1-git-send-email-hch@lst.de>
- <1483991622-2339-2-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1483991622-2339-2-git-send-email-hch@lst.de>
+Subject: [PATCH v2] xfs: remove racy hasattr check from attr ops
+Date: Mon,  9 Jan 2017 10:22:58 -0500
+Message-Id: <1483975378-23483-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: linux-xfs@vger.kernel.org
 
-On Mon, Jan 09, 2017 at 08:53:39PM +0100, Christoph Hellwig wrote:
-> Setting aside 4 blocks globally for bmbt splits isn't all that useful,
-> as different threads can allocate space in parallel.  Bump it to 4
-> blocks per AG to allow each thread that is currently doing an
-> allocation to dip into it separately.  Without that we may no have
-> enough reserved blocks if there are enough parallel transactions
-> in an almost out space file system that all run into bmap btree
-> splits.
-> 
+xfs_attr_[get|remove]() have unlocked attribute fork checks to optimize
+away a lock cycle in cases where the fork does not exist or is otherwise
+empty. This check is not safe, however, because an attribute fork short
+form to extent format conversion includes a transient state that causes
+the xfs_inode_hasattr() check to fail. Specifically,
+xfs_attr_shortform_to_leaf() creates an empty extent format attribute
+fork and then adds the existing shortform attributes to it.
 
-Thanks.
+This means that lookup of an existing xattr can spuriously return
+-ENOATTR when racing against a setxattr that causes the associated
+format conversion. This was originally reproduced by an untar on a
+particularly configured glusterfs volume, but can also be reproduced on
+demand with properly crafted xattr requests.
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+The format conversion occurs under the exclusive ilock. xfs_attr_get()
+and xfs_attr_remove() already have the proper locking and checks further
+down in the functions to handle this situation correctly. Drop the
+unlocked checks to avoid the spurious failure and rely on the existing
+logic.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
->  fs/xfs/libxfs/xfs_alloc.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 5050056..0a46f84 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -95,10 +95,7 @@ unsigned int
->  xfs_alloc_set_aside(
->  	struct xfs_mount	*mp)
->  {
-> -	unsigned int		blocks;
-> -
-> -	blocks = 4 + (mp->m_sb.sb_agcount * XFS_ALLOC_AGFL_RESERVE);
-> -	return blocks;
-> +	return mp->m_sb.sb_agcount * (XFS_ALLOC_AGFL_RESERVE + 4);
->  }
->  
->  /*
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+v2:
+- Fix up xfs_attr_remove() as well.
+v1: https://patchwork.kernel.org/patch/9501675/
+
+ fs/xfs/libxfs/xfs_attr.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index af1ecb1..6622d46 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -131,9 +131,6 @@ xfs_attr_get(
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
+ 
+-	if (!xfs_inode_hasattr(ip))
+-		return -ENOATTR;
+-
+ 	error = xfs_attr_args_init(&args, ip, name, flags);
+ 	if (error)
+ 		return error;
+@@ -392,9 +389,6 @@ xfs_attr_remove(
+ 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+ 		return -EIO;
+ 
+-	if (!xfs_inode_hasattr(dp))
+-		return -ENOATTR;
+-
+ 	error = xfs_attr_args_init(&args, dp, name, flags);
+ 	if (error)
+ 		return error;
+-- 
+2.7.4
+
