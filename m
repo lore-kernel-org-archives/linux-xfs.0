@@ -1,74 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45551 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753664AbdAJHpf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 02:45:35 -0500
-Date: Mon, 9 Jan 2017 23:45:24 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Reading about CoW architecture / Performance Limits
-Message-ID: <20170110074524.GI14038@birch.djwong.org>
-References: <BC894F29-47E7-47A3-93FB-3E4EEE1DCDD5@flyingcircus.io>
+Received: from mx1.redhat.com ([209.132.183.28]:56016 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161066AbdAIPWH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Jan 2017 10:22:07 -0500
+Date: Mon, 9 Jan 2017 10:22:06 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: minleft fixes V2
+Message-ID: <20170109152205.GA22368@bfoster.bfoster>
+References: <1482436822-31546-1-git-send-email-hch@lst.de>
+ <20170105012159.GS1859@eguan.usersys.redhat.com>
+ <20170105020105.GC17846@birch.djwong.org>
+ <20170108103647.GD26451@lst.de>
+ <20170108160959.GD62847@bfoster.bfoster>
+ <20170108181002.GA3732@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <BC894F29-47E7-47A3-93FB-3E4EEE1DCDD5@flyingcircus.io>
+In-Reply-To: <20170108181002.GA3732@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christian Theune <ct@flyingcircus.io>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
 
-On Tue, Jan 10, 2017 at 08:07:39AM +0100, Christian Theune wrote:
-> Hi,
+On Sun, Jan 08, 2017 at 10:10:02AM -0800, Darrick J. Wong wrote:
+> On Sun, Jan 08, 2017 at 11:10:00AM -0500, Brian Foster wrote:
+> > On Sun, Jan 08, 2017 at 11:36:47AM +0100, Christoph Hellwig wrote:
+> > > On Wed, Jan 04, 2017 at 06:01:05PM -0800, Darrick J. Wong wrote:
+> > > > Ok, sounds good.  I just sent out my first attempt at a pull request to Linus,
+> > > > so I'll queue this series for another pull req. after that.
+> > > 
+> > > I'll resend with a few minor updates based on the comments from Brian
+> > > in a few days, so this should be ready for -rc4.
+> > 
+> > So I just noticed that this series was merged into for-next (which iiuc
+> > is easily fixable, yes?).
 > 
-> As XFS is gaining CoW support I’d like to understand the
-> implementation on a specific aspect: we’re using CoW for making disk
-> image backups as image files in btrfs. This has proven prohibitive
-> once the chain of CoW reflinks grows too long and everything becomes
-> too fragmented. btrfs has improved in some places but the issue still
-> persists.
-
-As in making snapshots of a disk image via something like
-"cp --reflink=always a.img a.img.20170110" ?
-
-> We’re currently considering to move away from CoW filesystems for our
-> use case and implement a higher level strategy. I now wonder whether
-> XFS will have the same issue or whether the architecture is different
-> in a significant way that will avoid prohibitive performance
-> regressions on long CoW chains (think: hundreds to a few thousand).
-
-The primary strategies XFS uses to combat fragmentation are a
-combination of reusing the delayed allocation mechanism to defer CoW
-block allocation as long as possible in the hopes of being able to make
-larger requests; and implementing the "CoW extent size hint" (default 32
-blocks or 128K) which rounds the start and end of an allocation request
-to the nearest $cowextsize boundary.  So for example if you write to 32
-adjacent shared blocks in random order, they'll end up on disk with a
-single 128K extent, if possible.
-
-Note also that XFS only performs CoW if the block is shared, so if you
-write the same shared block in a file 20 times, the first write goes to
-a new block and the next 19 overwrite that new block.  There will not be
-another CoW unless you reflink the file again.
-
-> I would appreciate a pointer where to look at - I’m a coder but
-> following kernel code to understand architecture hasn’t been
-> successful/efficient for me in the past …
-
-You might try reading the huge comment blocks in fs/xfs/xfs_reflink.c.
-
---D
-
+> Yep.  for-next can be rebased.
 > 
-> Kind regards,
-> Christian
+> > Christoph already mentioned he was sending a new variant... but
+> > juuuuuust a note that not all of these patches had a reviewed-by yet
+> > either. ;) 
 > 
+> <nod> I'm aware; I'll be more patient next time. :)
+> 
+
+Thanks. At risk of stating the obvious, I'd much prefer we continue to
+follow the "at least one r-b requirement per patch" development model,
+even if that means something slips a release (not that this series is at
+such a risk). I'm certainly used to that by now... :P
+
+> TBH I was also curious to have the kbuild robot / linux-next pick up a
+> changeset that wasn't terribly likely to break anything else, just to
+> see how they run...
+> 
+
+Hmm, is this something that can be enabled locally (e.g., on posts to
+the list) without having to merge stuff prematurely?
+
+Brian
+
+> --D
+> 
+> > 
+> > Brian
+> > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
-> Christian Theune · ct@flyingcircus.io · +49 345 219401 0
-> Flying Circus Internet Operations GmbH · http://flyingcircus.io
-> Forsterstraße 29 · 06112 Halle (Saale) · Deutschland
-> HR Stendal HRB 21169 · Geschäftsführer: Christian. Theune, Christian. Zagrodnick
-> 
-
-
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
