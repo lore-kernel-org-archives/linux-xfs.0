@@ -1,32 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50622 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754655AbdAITxq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 14:53:46 -0500
+Received: from verein.lst.de ([213.95.11.211]:48005 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1164024AbdAIR4P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Jan 2017 12:56:15 -0500
+Date: Mon, 9 Jan 2017 18:56:13 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: minleft fixes V3
-Date: Mon,  9 Jan 2017 20:53:38 +0100
-Message-Id: <1483991622-2339-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 3/5] xfs: fix bogus minleft manipulations
+Message-ID: <20170109175613.GA2863@lst.de>
+References: <1482436822-31546-1-git-send-email-hch@lst.de> <1482436822-31546-4-git-send-email-hch@lst.de> <20170104181933.GC41989@bfoster.bfoster> <20170108103611.GC26451@lst.de> <20170108160935.GC62847@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170108160935.GC62847@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: eguan@redhat.com, darrick.wong@oracle.com, bfoster@redhat.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
 
-his is my attempt to fix the problems with rmap and reflink file system
-running out of space during delayed extent conversions.  It turns out
-the way minleft has been handled has always been bogus, but the rmap
-enablement made it even worse.
+On Sun, Jan 08, 2017 at 11:09:35AM -0500, Brian Foster wrote:
+> In this particular case, I think it's probably safer to defer the
+> removal of the entire bmbt_alloc_block() hunk to that audit that will
+> take into consideration the broader context. IOWs, take the same
+> approach in bmbt_alloc_block() as you have in xfs_bmap_btalloc().
 
-Changes since V2:
- - dropped "xfs: fix the alignment fallback in xfs_bmap_btalloc"
- - added a maxlen >= minlen assert
- - a few commit log improvements
-
-Changes since V1:
- - new patch to fix the noalign case in xfs_bmap_btalloc
- - new patch to fix xfs_alloc_set_aside
- - dropped the patch to increase the minleft value for bmap allocations,
-   we only need the current minimal values as we only allocate one
-   extent per call
- - minor style fixes per review of the last round
+Ok, will do.
