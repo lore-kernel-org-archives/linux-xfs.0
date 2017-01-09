@@ -1,59 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:60138 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:58452 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938664AbdAIPkP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:15 -0500
+        with ESMTP id S938513AbdAIPkB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:01 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 24/32] xfs: error out if trying to add attrs and anextents > 0
-Date: Mon,  9 Jan 2017 16:38:55 +0100
-Message-Id: <1483976343-661-25-git-send-email-hch@lst.de>
+Subject: [PATCH 19/32] xfs: handle cow fork in xfs_bmap_trace_exlist
+Date: Mon,  9 Jan 2017 16:38:50 +0100
+Message-Id: <1483976343-661-20-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Eric Sandeen <sandeen@sandeen.net>
 
-commit 0f352f8ee8412bd9d34fb2a6411241da61175c0e upstream.
+commit c44a1f22626c153976289e1cd67bdcdfefc16e1f upstream.
 
-We shouldn't assert if somehow we end up trying to add an attr fork to
-an inode that apparently already has attr extents because this is an
-indication of on-disk corruption.  Instead, return an error code to
-userspace.
+By inspection, xfs_bmap_trace_exlist isn't handling cow forks,
+and will trace the data fork instead.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Fix this by setting state appropriately if whichfork
+== XFS_COW_FORK.
+
+()___()
+< @ @ >
+ |   |
+ {o_o}
+  (|)
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_bmap.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a2a24fa..89d727b 100644
+index cfd1fdd..d4481d4 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1153,6 +1153,10 @@ xfs_bmap_add_attrfork(
- 		goto trans_cancel;
- 	if (XFS_IFORK_Q(ip))
- 		goto trans_cancel;
-+	if (ip->i_d.di_anextents != 0) {
-+		error = -EFSCORRUPTED;
-+		goto trans_cancel;
-+	}
- 	if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS) {
- 		/*
- 		 * For inodes coming from pre-6.2 filesystems.
-@@ -1160,7 +1164,6 @@ xfs_bmap_add_attrfork(
- 		ASSERT(ip->i_d.di_aformat == 0);
- 		ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
- 	}
--	ASSERT(ip->i_d.di_anextents == 0);
+@@ -518,7 +518,7 @@ void
+ xfs_bmap_trace_exlist(
+ 	xfs_inode_t	*ip,		/* incore inode pointer */
+ 	xfs_extnum_t	cnt,		/* count of entries in the list */
+-	int		whichfork,	/* data or attr fork */
++	int		whichfork,	/* data or attr or cow fork */
+ 	unsigned long	caller_ip)
+ {
+ 	xfs_extnum_t	idx;		/* extent record index */
+@@ -527,6 +527,8 @@ xfs_bmap_trace_exlist(
  
- 	xfs_trans_ijoin(tp, ip, 0);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	if (whichfork == XFS_ATTR_FORK)
+ 		state |= BMAP_ATTRFORK;
++	else if (whichfork == XFS_COW_FORK)
++		state |= BMAP_COWFORK;
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT(cnt == xfs_iext_count(ifp));
 -- 
 2.1.4
 
