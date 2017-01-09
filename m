@@ -1,101 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57912 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:33028 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938364AbdAIPju (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:50 -0500
+        with ESMTP id S938696AbdAIPka (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:30 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/32] xfs: use new extent lookup helpers xfs_file_iomap_begin_delay
-Date: Mon,  9 Jan 2017 16:38:46 +0100
-Message-Id: <1483976343-661-16-git-send-email-hch@lst.de>
+Subject: [PATCH 29/32] xfs: fix double-cleanup when CUI recovery fails
+Date: Mon,  9 Jan 2017 16:39:00 +0100
+Message-Id: <1483976343-661-30-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 656152e552e5cbe0c11ad261b524376217c2fb13 upstream.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-And only lookup the previous extent inside xfs_iomap_prealloc_size
-if we actually need it.
+commit 7a21272b088894070391a94fdd1c67014020fa1d upstream.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
+Dan Carpenter reported a double-free of rcur if _defer_finish fails
+while we're recovering CUI items.  Fix the error recovery to prevent
+this.
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_iomap.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_refcount_item.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index cc25892..e4bfde2 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -395,11 +395,12 @@ xfs_iomap_prealloc_size(
- 	struct xfs_inode	*ip,
- 	loff_t			offset,
- 	loff_t			count,
--	xfs_extnum_t		idx,
--	struct xfs_bmbt_irec	*prev)
-+	xfs_extnum_t		idx)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
- 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	struct xfs_bmbt_irec	prev;
- 	int			shift = 0;
- 	int64_t			freesp;
- 	xfs_fsblock_t		qblocks;
-@@ -419,8 +420,8 @@ xfs_iomap_prealloc_size(
- 	 */
- 	if ((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ||
- 	    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign) ||
--	    idx == 0 ||
--	    prev->br_startoff + prev->br_blockcount < offset_fsb)
-+	    !xfs_iext_get_extent(ifp, idx - 1, &prev) ||
-+	    prev.br_startoff + prev.br_blockcount < offset_fsb)
- 		return mp->m_writeio_blocks;
+diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+index fe86a66..6e4c744 100644
+--- a/fs/xfs/xfs_refcount_item.c
++++ b/fs/xfs/xfs_refcount_item.c
+@@ -526,13 +526,14 @@ xfs_cui_recover(
+ 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+ 	error = xfs_defer_finish(&tp, &dfops, NULL);
+ 	if (error)
+-		goto abort_error;
++		goto abort_defer;
+ 	set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
+ 	error = xfs_trans_commit(tp);
+ 	return error;
  
- 	/*
-@@ -439,8 +440,8 @@ xfs_iomap_prealloc_size(
- 	 * always extends to MAXEXTLEN rather than falling short due to things
- 	 * like stripe unit/width alignment of real extents.
- 	 */
--	if (prev->br_blockcount <= (MAXEXTLEN >> 1))
--		alloc_blocks = prev->br_blockcount << 1;
-+	if (prev.br_blockcount <= (MAXEXTLEN >> 1))
-+		alloc_blocks = prev.br_blockcount << 1;
- 	else
- 		alloc_blocks = XFS_B_TO_FSB(mp, offset);
- 	if (!alloc_blocks)
-@@ -538,7 +539,6 @@ xfs_file_iomap_begin_delay(
- 	xfs_fileoff_t		end_fsb, orig_end_fsb;
- 	int			error = 0, eof = 0;
- 	struct xfs_bmbt_irec	got;
--	struct xfs_bmbt_irec	prev;
- 	xfs_extnum_t		idx;
- 
- 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
-@@ -563,8 +563,7 @@ xfs_file_iomap_begin_delay(
- 			goto out_unlock;
- 	}
- 
--	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
--			&got, &prev);
-+	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
- 	if (!eof && got.br_startoff <= offset_fsb) {
- 		if (xfs_is_reflink_inode(ip)) {
- 			bool		shared;
-@@ -601,8 +600,7 @@ xfs_file_iomap_begin_delay(
- 	if (eof) {
- 		xfs_fsblock_t	prealloc_blocks;
- 
--		prealloc_blocks =
--			xfs_iomap_prealloc_size(ip, offset, count, idx, &prev);
-+		prealloc_blocks = xfs_iomap_prealloc_size(ip, offset, count, idx);
- 		if (prealloc_blocks) {
- 			xfs_extlen_t	align;
- 			xfs_off_t	end_offset;
+ abort_error:
+ 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
++abort_defer:
+ 	xfs_defer_cancel(&dfops);
+ 	xfs_trans_cancel(tp);
+ 	return error;
 -- 
 2.1.4
 
