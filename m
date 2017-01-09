@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33028 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:33150 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938696AbdAIPka (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:30 -0500
+        with ESMTP id S967974AbdAIPkd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:33 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 29/32] xfs: fix double-cleanup when CUI recovery fails
-Date: Mon,  9 Jan 2017 16:39:00 +0100
-Message-Id: <1483976343-661-30-git-send-email-hch@lst.de>
+Subject: [PATCH 30/32] xfs: use the actual AG length when reserving blocks
+Date: Mon,  9 Jan 2017 16:39:01 +0100
+Message-Id: <1483976343-661-31-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,38 +17,189 @@ Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 7a21272b088894070391a94fdd1c67014020fa1d upstream.
+commit 20e73b000bcded44a91b79429d8fa743247602ad upstream.
 
-Dan Carpenter reported a double-free of rcur if _defer_finish fails
-while we're recovering CUI items.  Fix the error recovery to prevent
-this.
+We need to use the actual AG length when making per-AG reservations,
+since we could otherwise end up reserving more blocks out of the last
+AG than there are actual blocks.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Complained-about-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_refcount_item.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_ag_resv.c        |  3 +++
+ fs/xfs/libxfs/xfs_refcount_btree.c |  9 ++++++---
+ fs/xfs/libxfs/xfs_refcount_btree.h |  3 ++-
+ fs/xfs/libxfs/xfs_rmap_btree.c     | 14 +++++++-------
+ fs/xfs/libxfs/xfs_rmap_btree.h     |  3 ++-
+ fs/xfs/xfs_fsops.c                 | 14 ++++++++++++++
+ 6 files changed, 34 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index fe86a66..6e4c744 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -526,13 +526,14 @@ xfs_cui_recover(
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
- 	error = xfs_defer_finish(&tp, &dfops, NULL);
- 	if (error)
--		goto abort_error;
-+		goto abort_defer;
- 	set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
- 	error = xfs_trans_commit(tp);
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index e5ebc37..d346d42 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -256,6 +256,9 @@ xfs_ag_resv_init(
+ 			goto out;
+ 	}
  
- abort_error:
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
-+abort_defer:
- 	xfs_defer_cancel(&dfops);
- 	xfs_trans_cancel(tp);
++	ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
++	       xfs_perag_resv(pag, XFS_AG_RESV_AGFL)->ar_reserved <=
++	       pag->pagf_freeblks + pag->pagf_flcount);
+ out:
  	return error;
+ }
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index 453bb27..2ba2169 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -408,13 +408,14 @@ xfs_refcountbt_calc_size(
+  */
+ xfs_extlen_t
+ xfs_refcountbt_max_size(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	xfs_agblock_t		agblocks)
+ {
+ 	/* Bail out if we're uninitialized, which can happen in mkfs. */
+ 	if (mp->m_refc_mxr[0] == 0)
+ 		return 0;
+ 
+-	return xfs_refcountbt_calc_size(mp, mp->m_sb.sb_agblocks);
++	return xfs_refcountbt_calc_size(mp, agblocks);
+ }
+ 
+ /*
+@@ -429,22 +430,24 @@ xfs_refcountbt_calc_reserves(
+ {
+ 	struct xfs_buf		*agbp;
+ 	struct xfs_agf		*agf;
++	xfs_agblock_t		agblocks;
+ 	xfs_extlen_t		tree_len;
+ 	int			error;
+ 
+ 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+ 		return 0;
+ 
+-	*ask += xfs_refcountbt_max_size(mp);
+ 
+ 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
+ 	if (error)
+ 		return error;
+ 
+ 	agf = XFS_BUF_TO_AGF(agbp);
++	agblocks = be32_to_cpu(agf->agf_length);
+ 	tree_len = be32_to_cpu(agf->agf_refcount_blocks);
+ 	xfs_buf_relse(agbp);
+ 
++	*ask += xfs_refcountbt_max_size(mp, agblocks);
+ 	*used += tree_len;
+ 
+ 	return error;
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
+index 3be7768..9db008b 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.h
++++ b/fs/xfs/libxfs/xfs_refcount_btree.h
+@@ -66,7 +66,8 @@ extern void xfs_refcountbt_compute_maxlevels(struct xfs_mount *mp);
+ 
+ extern xfs_extlen_t xfs_refcountbt_calc_size(struct xfs_mount *mp,
+ 		unsigned long long len);
+-extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp);
++extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp,
++		xfs_agblock_t agblocks);
+ 
+ extern int xfs_refcountbt_calc_reserves(struct xfs_mount *mp,
+ 		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 83e672f..33a28ef 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -549,13 +549,14 @@ xfs_rmapbt_calc_size(
+  */
+ xfs_extlen_t
+ xfs_rmapbt_max_size(
+-	struct xfs_mount	*mp)
++	struct xfs_mount	*mp,
++	xfs_agblock_t		agblocks)
+ {
+ 	/* Bail out if we're uninitialized, which can happen in mkfs. */
+ 	if (mp->m_rmap_mxr[0] == 0)
+ 		return 0;
+ 
+-	return xfs_rmapbt_calc_size(mp, mp->m_sb.sb_agblocks);
++	return xfs_rmapbt_calc_size(mp, agblocks);
+ }
+ 
+ /*
+@@ -570,25 +571,24 @@ xfs_rmapbt_calc_reserves(
+ {
+ 	struct xfs_buf		*agbp;
+ 	struct xfs_agf		*agf;
+-	xfs_extlen_t		pool_len;
++	xfs_agblock_t		agblocks;
+ 	xfs_extlen_t		tree_len;
+ 	int			error;
+ 
+ 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+ 		return 0;
+ 
+-	/* Reserve 1% of the AG or enough for 1 block per record. */
+-	pool_len = max(mp->m_sb.sb_agblocks / 100, xfs_rmapbt_max_size(mp));
+-	*ask += pool_len;
+-
+ 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
+ 	if (error)
+ 		return error;
+ 
+ 	agf = XFS_BUF_TO_AGF(agbp);
++	agblocks = be32_to_cpu(agf->agf_length);
+ 	tree_len = be32_to_cpu(agf->agf_rmap_blocks);
+ 	xfs_buf_relse(agbp);
+ 
++	/* Reserve 1% of the AG or enough for 1 block per record. */
++	*ask += max(agblocks / 100, xfs_rmapbt_max_size(mp, agblocks));
+ 	*used += tree_len;
+ 
+ 	return error;
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+index 2a9ac47..19c08e9 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.h
++++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+@@ -60,7 +60,8 @@ extern void xfs_rmapbt_compute_maxlevels(struct xfs_mount *mp);
+ 
+ extern xfs_extlen_t xfs_rmapbt_calc_size(struct xfs_mount *mp,
+ 		unsigned long long len);
+-extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp);
++extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp,
++		xfs_agblock_t agblocks);
+ 
+ extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp,
+ 		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 93d12fa..242e809 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -631,6 +631,20 @@ xfs_growfs_data_private(
+ 	xfs_set_low_space_thresholds(mp);
+ 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
+ 
++	/*
++	 * If we expanded the last AG, free the per-AG reservation
++	 * so we can reinitialize it with the new size.
++	 */
++	if (new) {
++		struct xfs_perag	*pag;
++
++		pag = xfs_perag_get(mp, agno);
++		error = xfs_ag_resv_free(pag);
++		xfs_perag_put(pag);
++		if (error)
++			goto out;
++	}
++
+ 	/* Reserve AG metadata blocks. */
+ 	error = xfs_fs_reserve_ag_blocks(mp);
+ 	if (error && error != -ENOSPC)
 -- 
 2.1.4
 
