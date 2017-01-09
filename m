@@ -1,441 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27116 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S969210AbdAIUzY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 15:55:24 -0500
-Date: Mon, 9 Jan 2017 12:55:18 -0800
+Received: from userp1040.oracle.com ([156.151.31.81]:21480 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S939425AbdAIVAF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 16:00:05 -0500
+Date: Mon, 9 Jan 2017 12:59:07 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 7/7] xfs/ext4: check negative inode size
-Message-ID: <20170109205518.GF14033@birch.djwong.org>
-References: <148357827617.7677.15595044775254927245.stgit@birch.djwong.org>
- <148357832063.7677.12994144585642711957.stgit@birch.djwong.org>
+Subject: Re: [PATCH 4/8] xfs: use memalloc_nofs_{save,restore} instead of
+ memalloc_noio*
+Message-ID: <20170109205907.GB14029@birch.djwong.org>
+References: <20170106141107.23953-1-mhocko@kernel.org>
+ <20170106141107.23953-5-mhocko@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <148357832063.7677.12994144585642711957.stgit@birch.djwong.org>
+In-Reply-To: <20170106141107.23953-5-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
-Craft a malicious filesystem image with a negative inode size,
-then try to trigger a kernel DoS by appending data to the file.
-Ideally this should trigger verifier errors instead of hanging.
+On Fri, Jan 06, 2017 at 03:11:03PM +0100, Michal Hocko wrote:
+> From: Michal Hocko <mhocko@suse.com>
+> 
+> kmem_zalloc_large and _xfs_buf_map_pages use memalloc_noio_{save,restore}
+> API to prevent from reclaim recursion into the fs because vmalloc can
+> invoke unconditional GFP_KERNEL allocations and these functions might be
+> called from the NOFS contexts. The memalloc_noio_save will enforce
+> GFP_NOIO context which is even weaker than GFP_NOFS and that seems to be
+> unnecessary. Let's use memalloc_nofs_{save,restore} instead as it should
+> provide exactly what we need here - implicit GFP_NOFS context.
+> 
+> Changes since v1
+> - s@memalloc_noio_restore@memalloc_nofs_restore@ in _xfs_buf_map_pages
+>   as per Brian Foster
+> 
+> Signed-off-by: Michal Hocko <mhocko@suse.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: use $DEBUGFS_PROG instead of debugfs; improve documentation
----
- tests/shared/400     |   75 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/400.out |    5 +++
- tests/shared/401     |   77 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/401.out |    5 +++
- tests/shared/group   |    2 +
- tests/xfs/400        |   75 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/400.out    |    5 +++
- tests/xfs/401        |   77 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/401.out    |    5 +++
- tests/xfs/group      |    2 +
- 10 files changed, 328 insertions(+)
- create mode 100755 tests/shared/400
- create mode 100644 tests/shared/400.out
- create mode 100755 tests/shared/401
- create mode 100644 tests/shared/401.out
- create mode 100755 tests/xfs/400
- create mode 100644 tests/xfs/400.out
- create mode 100755 tests/xfs/401
- create mode 100644 tests/xfs/401.out
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/tests/shared/400 b/tests/shared/400
-new file mode 100755
-index 0000000..2fca911
---- /dev/null
-+++ b/tests/shared/400
-@@ -0,0 +1,75 @@
-+#! /bin/bash
-+# FSQA Test No. 400
-+#
-+# Since loff_t is a signed type, it is invalid for a filesystem to load
-+# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-+# which means that we can trivially DoS the VFS by creating such a file
-+# and appending to it.  This causes an integer overflow in the routines
-+# underlying writeback, which results in the kernel locking up.
-+#
-+# So, create this malformed inode and try a buffered append to make
-+# sure we catch this situation.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+PIDS=""
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs ext2 ext3 ext4
-+_require_scratch_nocheck
-+_disable_dmesg_check
-+_require_command "$DEBUGFS_PROG"
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+_scratch_mkfs  >> $seqres.full 2>&1
-+_scratch_mount
-+
-+testdir=$SCRATCH_MNT
-+echo m > $testdir/a
-+
-+echo "Corrupt filesystem"
-+_scratch_unmount
-+$DEBUGFS_PROG -w -R "sif /a size -1" $SCRATCH_DEV >> $seqres.full 2>&1
-+
-+echo "Remount, try to append"
-+_scratch_mount
-+dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-+sync
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/shared/400.out b/tests/shared/400.out
-new file mode 100644
-index 0000000..ddf8a28
---- /dev/null
-+++ b/tests/shared/400.out
-@@ -0,0 +1,5 @@
-+QA output created by 400
-+Format and mount
-+Corrupt filesystem
-+Remount, try to append
-+Write did not succeed (ok).
-diff --git a/tests/shared/401 b/tests/shared/401
-new file mode 100755
-index 0000000..7b61cbb
---- /dev/null
-+++ b/tests/shared/401
-@@ -0,0 +1,77 @@
-+#! /bin/bash
-+# FSQA Test No. 401
-+#
-+# Since loff_t is a signed type, it is invalid for a filesystem to load
-+# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-+# which means that we can trivially DoS the VFS by creating such a file
-+# and appending to it.  This causes an integer overflow in the routines
-+# underlying writeback, which results in the kernel locking up.
-+#
-+# So, create this malformed inode and try a buffered dio append to make
-+# sure we catch this situation.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+PIDS=""
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs ext2 ext3 ext4
-+_require_scratch_nocheck
-+_disable_dmesg_check
-+_require_command "$DEBUGFS_PROG"
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+_scratch_mkfs  >> $seqres.full 2>&1
-+_scratch_mount
-+
-+testdir=$SCRATCH_MNT
-+echo m > $testdir/a
-+
-+echo "Corrupt filesystem"
-+_scratch_unmount
-+# Set the file size to the highest multiple of 512 below
-+# -1 so that we can perform a dio write.
-+$DEBUGFS_PROG -w -R "sif /a size 0xFFFFFFFFFFFFFE00" $SCRATCH_DEV >> $seqres.full 2>&1
-+
-+echo "Remount, try to append"
-+_scratch_mount
-+dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=direct,append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-+sync
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/shared/401.out b/tests/shared/401.out
-new file mode 100644
-index 0000000..0d45add
---- /dev/null
-+++ b/tests/shared/401.out
-@@ -0,0 +1,5 @@
-+QA output created by 401
-+Format and mount
-+Corrupt filesystem
-+Remount, try to append
-+Write did not succeed (ok).
-diff --git a/tests/shared/group b/tests/shared/group
-index 55bb594..64d2d2f 100644
---- a/tests/shared/group
-+++ b/tests/shared/group
-@@ -13,3 +13,5 @@
- 272 auto enospc rw
- 289 auto quick
- 298 auto trim
-+400 dangerous_fuzzers
-+401 dangerous_fuzzers
-diff --git a/tests/xfs/400 b/tests/xfs/400
-new file mode 100755
-index 0000000..fcaaa39
---- /dev/null
-+++ b/tests/xfs/400
-@@ -0,0 +1,75 @@
-+#! /bin/bash
-+# FSQA Test No. 400
-+#
-+# Since loff_t is a signed type, it is invalid for a filesystem to load
-+# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-+# which means that we can trivially DoS the VFS by creating such a file
-+# and appending to it.  This causes an integer overflow in the routines
-+# underlying writeback, which results in the kernel locking up.
-+#
-+# So, create this malformed inode and try a buffered append to make
-+# sure we catch this situation.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+PIDS=""
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_nocheck
-+_disable_dmesg_check
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+_scratch_mkfs  >> $seqres.full 2>&1
-+_scratch_mount
-+
-+testdir=$SCRATCH_MNT
-+echo m > $testdir/a
-+inum=$(stat -c "%i" $testdir/a)
-+
-+echo "Corrupt filesystem"
-+_scratch_unmount
-+_scratch_xfs_db -x -c "inode ${inum}" -c 'write core.size -- -1' >> $seqres.full
-+
-+echo "Remount, try to append"
-+_scratch_mount
-+dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-+sync
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/400.out b/tests/xfs/400.out
-new file mode 100644
-index 0000000..ddf8a28
---- /dev/null
-+++ b/tests/xfs/400.out
-@@ -0,0 +1,5 @@
-+QA output created by 400
-+Format and mount
-+Corrupt filesystem
-+Remount, try to append
-+Write did not succeed (ok).
-diff --git a/tests/xfs/401 b/tests/xfs/401
-new file mode 100755
-index 0000000..9e1c7ba
---- /dev/null
-+++ b/tests/xfs/401
-@@ -0,0 +1,77 @@
-+#! /bin/bash
-+# FSQA Test No. 401
-+#
-+# Since loff_t is a signed type, it is invalid for a filesystem to load
-+# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-+# which means that we can trivially DoS the VFS by creating such a file
-+# and appending to it.  This causes an integer overflow in the routines
-+# underlying writeback, which results in the kernel locking up.
-+#
-+# So, create this malformed inode and try a buffered dio append to make
-+# sure we catch this situation.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+PIDS=""
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scratch_nocheck
-+_disable_dmesg_check
-+
-+rm -f $seqres.full
-+
-+echo "Format and mount"
-+_scratch_mkfs  >> $seqres.full 2>&1
-+_scratch_mount
-+
-+testdir=$SCRATCH_MNT
-+echo m > $testdir/a
-+inum=$(stat -c "%i" $testdir/a)
-+
-+echo "Corrupt filesystem"
-+_scratch_unmount
-+# Set the file size to the highest multiple of 512 below
-+# -1 so that we can perform a dio write.
-+_scratch_xfs_db -x -c "inode ${inum}" -c 'write core.size -- -512' >> $seqres.full
-+
-+echo "Remount, try to append"
-+_scratch_mount
-+dd if=/dev/zero of=$testdir/a bs=512 count=1 oflag=direct,append conv=notrunc >> $seqres.full 2>&1 || echo "Write did not succeed (ok)."
-+sync
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/401.out b/tests/xfs/401.out
-new file mode 100644
-index 0000000..0d45add
---- /dev/null
-+++ b/tests/xfs/401.out
-@@ -0,0 +1,5 @@
-+QA output created by 401
-+Format and mount
-+Corrupt filesystem
-+Remount, try to append
-+Write did not succeed (ok).
-diff --git a/tests/xfs/group b/tests/xfs/group
-index c237b50..10ba27b 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -334,3 +334,5 @@
- 345 auto quick clone
- 346 auto quick clone
- 347 auto quick clone
-+400 dangerous_fuzzers
-+401 dangerous_fuzzers
+> ---
+>  fs/xfs/kmem.c    | 10 +++++-----
+>  fs/xfs/xfs_buf.c |  8 ++++----
+>  2 files changed, 9 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> index a76a05dae96b..d69ed5e76621 100644
+> --- a/fs/xfs/kmem.c
+> +++ b/fs/xfs/kmem.c
+> @@ -65,7 +65,7 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+>  void *
+>  kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+>  {
+> -	unsigned noio_flag = 0;
+> +	unsigned nofs_flag = 0;
+>  	void	*ptr;
+>  	gfp_t	lflags;
+>  
+> @@ -80,14 +80,14 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+>  	 * context via PF_MEMALLOC_NOIO to prevent memory reclaim re-entering
+>  	 * the filesystem here and potentially deadlocking.
+>  	 */
+> -	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+> -		noio_flag = memalloc_noio_save();
+> +	if (flags & KM_NOFS)
+> +		nofs_flag = memalloc_nofs_save();
+>  
+>  	lflags = kmem_flags_convert(flags);
+>  	ptr = __vmalloc(size, lflags | __GFP_HIGHMEM | __GFP_ZERO, PAGE_KERNEL);
+>  
+> -	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+> -		memalloc_noio_restore(noio_flag);
+> +	if (flags & KM_NOFS)
+> +		memalloc_nofs_restore(nofs_flag);
+>  
+>  	return ptr;
+>  }
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 7f0a01f7b592..8cb8dd4cdfd8 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -441,17 +441,17 @@ _xfs_buf_map_pages(
+>  		bp->b_addr = NULL;
+>  	} else {
+>  		int retried = 0;
+> -		unsigned noio_flag;
+> +		unsigned nofs_flag;
+>  
+>  		/*
+>  		 * vm_map_ram() will allocate auxillary structures (e.g.
+>  		 * pagetables) with GFP_KERNEL, yet we are likely to be under
+>  		 * GFP_NOFS context here. Hence we need to tell memory reclaim
+> -		 * that we are in such a context via PF_MEMALLOC_NOIO to prevent
+> +		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
+>  		 * memory reclaim re-entering the filesystem here and
+>  		 * potentially deadlocking.
+>  		 */
+> -		noio_flag = memalloc_noio_save();
+> +		nofs_flag = memalloc_nofs_save();
+>  		do {
+>  			bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
+>  						-1, PAGE_KERNEL);
+> @@ -459,7 +459,7 @@ _xfs_buf_map_pages(
+>  				break;
+>  			vm_unmap_aliases();
+>  		} while (retried++ <= 1);
+> -		memalloc_noio_restore(noio_flag);
+> +		memalloc_nofs_restore(nofs_flag);
+>  
+>  		if (!bp->b_addr)
+>  			return -ENOMEM;
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
