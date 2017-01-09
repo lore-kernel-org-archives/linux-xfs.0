@@ -1,129 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49522 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751968AbdA1T1Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 28 Jan 2017 14:27:16 -0500
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH] xfs: correct null checks and error processing in xfs_initialize_perag
-Date: Sat, 28 Jan 2017 13:19:57 -0600
-Message-Id: <20170128191957.13851-1-billodo@redhat.com>
-In-Reply-To: <20170120142642.21698-1-colin.king@canonical.com>
-References: <20170120142642.21698-1-colin.king@canonical.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:57108 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934298AbdAIPjc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:32 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 09/32] xfs: factor rmap btree size into the indlen calculations
+Date: Mon,  9 Jan 2017 16:38:40 +0100
+Message-Id: <1483976343-661-10-git-send-email-hch@lst.de>
+In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
+References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: stable@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
 
-If pag cannot be allocated, the current error exit path will trip
-a null pointer deference error when calling xfs_buf_hash_destroy
-with a null pag.  Fix this by adding a new error exit labels and
-jumping to those accordingly, avoiding the hash destroy and
-unnecessary kmem_free on pag.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-Up to three things need to be properly unwound:
+commit fd26a88093bab6529ea2de819114ca92dbd1d71d upstream.
 
-1) pag memory allocation
-2) xfs_buf_hash_init
-3) radix_tree_insert
+When we're estimating the amount of space it's going to take to satisfy
+a delalloc reservation, we need to include the space that we might need
+to grow the rmapbt.  This helps us to avoid running out of space later
+when _iomap_write_allocate needs more space than we reserved.  Eryu Guan
+observed this happening on generic/224 when sunit/swidth were set.
 
-For any given iteration through the loop, any of the above which
-succeed must be unwound for /this/ pag, and then all prior
-initialized pags must be unwound.
-
-Fixes CoverityScan CID#1397628 ("Dereference after null check")
-
-Reported-by: Colin Ian King <colin.king@canonical.com>
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+Reported-by: Eryu Guan <eguan@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_mount.c | 37 ++++++++++++++++++++++++++-----------
- 1 file changed, 26 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 9b9540d..b074d2a 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -190,6 +190,7 @@ xfs_initialize_perag(
- 	xfs_agnumber_t	first_initialised = 0;
- 	xfs_perag_t	*pag;
- 	int		error = -ENOMEM;
-+	bool		first_init_done = false;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 5c3c4dd..00188f5 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -49,6 +49,7 @@
+ #include "xfs_rmap.h"
+ #include "xfs_ag_resv.h"
+ #include "xfs_refcount.h"
++#include "xfs_rmap_btree.h"
  
- 	/*
- 	 * Walk the current per-ag tree so we don't try to initialise AGs
-@@ -202,22 +203,20 @@ xfs_initialize_perag(
- 			xfs_perag_put(pag);
- 			continue;
- 		}
--		if (!first_initialised)
--			first_initialised = index;
  
- 		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
- 		if (!pag)
--			goto out_unwind;
-+			goto out_unwind_new_pags;
- 		pag->pag_agno = index;
- 		pag->pag_mount = mp;
- 		spin_lock_init(&pag->pag_ici_lock);
- 		mutex_init(&pag->pag_ici_reclaim_lock);
- 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
- 		if (xfs_buf_hash_init(pag))
--			goto out_unwind;
-+			goto out_free_pag;
+ kmem_zone_t		*xfs_bmap_free_item_zone;
+@@ -190,8 +191,12 @@ xfs_bmap_worst_indlen(
+ 	int		maxrecs;	/* maximum record count at this level */
+ 	xfs_mount_t	*mp;		/* mount structure */
+ 	xfs_filblks_t	rval;		/* return value */
++	xfs_filblks_t   orig_len;
  
- 		if (radix_tree_preload(GFP_NOFS))
--			goto out_unwind;
-+			goto out_free_pag;
- 
- 		spin_lock(&mp->m_perag_lock);
- 		if (radix_tree_insert(&mp->m_perag_tree, index, pag)) {
-@@ -225,10 +224,15 @@ xfs_initialize_perag(
- 			spin_unlock(&mp->m_perag_lock);
- 			radix_tree_preload_end();
- 			error = -EEXIST;
--			goto out_unwind;
-+			goto out_hash_destroy;
- 		}
- 		spin_unlock(&mp->m_perag_lock);
- 		radix_tree_preload_end();
-+		/* a pag is fully initialized */
-+		if (!first_init_done) {
-+			first_initialised = index;
-+			first_init_done = true;
+ 	mp = ip->i_mount;
++
++	/* Calculate the worst-case size of the bmbt. */
++	orig_len = len;
+ 	maxrecs = mp->m_bmap_dmxr[0];
+ 	for (level = 0, rval = 0;
+ 	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
+@@ -199,12 +204,20 @@ xfs_bmap_worst_indlen(
+ 		len += maxrecs - 1;
+ 		do_div(len, maxrecs);
+ 		rval += len;
+-		if (len == 1)
+-			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
++		if (len == 1) {
++			rval += XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
+ 				level - 1;
++			break;
 +		}
+ 		if (level == 0)
+ 			maxrecs = mp->m_bmap_dmxr[1];
  	}
- 
- 	index = xfs_set_inode_alloc(mp, agcount);
-@@ -239,13 +243,24 @@ xfs_initialize_perag(
- 	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
- 	return 0;
- 
--out_unwind:
-+out_hash_destroy:
- 	xfs_buf_hash_destroy(pag);
-+out_free_pag:
- 	kmem_free(pag);
--	for (; index > first_initialised; index--) {
--		pag = radix_tree_delete(&mp->m_perag_tree, index);
--		xfs_buf_hash_destroy(pag);
--		kmem_free(pag);
-+out_unwind_new_pags:
-+	/* unwind any newly initialized pags */
-+	if (first_init_done) {
-+		index--;
-+		do {
-+			pag = radix_tree_delete(&mp->m_perag_tree, index);
-+			if (pag) {
-+				xfs_buf_hash_destroy(pag);
-+				kmem_free(pag);
-+			}
-+			if (!index)
-+				break;
-+			index--;
-+		} while (index >= first_initialised);
- 	}
- 	return error;
++
++	/* Calculate the worst-case size of the rmapbt. */
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		rval += 1 + xfs_rmapbt_calc_size(mp, orig_len) +
++				mp->m_rmap_maxlevels;
++
+ 	return rval;
  }
+ 
 -- 
-2.9.3
+2.1.4
 
