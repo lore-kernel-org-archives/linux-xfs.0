@@ -1,75 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:32884 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:33238 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938687AbdAIPk1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:27 -0500
+        with ESMTP id S938119AbdAIPkf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:35 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 28/32] xfs: use GPF_NOFS when allocating btree cursors
-Date: Mon,  9 Jan 2017 16:38:59 +0100
-Message-Id: <1483976343-661-29-git-send-email-hch@lst.de>
+Subject: [PATCH 31/32] xfs: fix crash and data corruption due to removal of busy COW extents
+Date: Mon,  9 Jan 2017 16:39:02 +0100
+Message-Id: <1483976343-661-32-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+commit a1b7a4dea6166cf46be895bce4aac67ea5160fe8 upstream.
 
-commit b24a978c377be5f14e798cb41238e66fe51aab2f upstream.
+There is a race window between write_cache_pages calling
+clear_page_dirty_for_io and XFS calling set_page_writeback, in which
+the mapping for an inode is tagged neither as dirty, nor as writeback.
 
-Use NOFS for allocating btree cursors, since they can be called
-under the ilock.
+If the COW shrinker hits in exactly that window we'll remove the delayed
+COW extents and writepages trying to write it back, which in release
+kernels will manifest as corruption of the bmap btree, and in debug
+kernels will trip the ASSERT about now calling xfs_bmapi_write with the
+COWFORK flag for holes.  A complex customer load manages to hit this
+window fairly reliably, probably by always having COW writeback in flight
+while the cow shrinker runs.
 
+This patch adds another check for having the I_DIRTY_PAGES flag set,
+which is still set during this race window.  While this fixes the problem
+I'm still not overly happy about the way the COW shrinker works as it
+still seems a bit fragile.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/libxfs/xfs_alloc_btree.c  | 2 +-
- fs/xfs/libxfs/xfs_bmap_btree.c   | 2 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_icache.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 5ba2dac..c06ec77 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -421,7 +421,7 @@ xfs_allocbt_init_cursor(
- 
- 	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
- 
--	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_SLEEP);
-+	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_NOFS);
- 
- 	cur->bc_tp = tp;
- 	cur->bc_mp = mp;
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 8007d2b..049fa59 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -796,7 +796,7 @@ xfs_bmbt_init_cursor(
- 	struct xfs_btree_cur	*cur;
- 	ASSERT(whichfork != XFS_COW_FORK);
- 
--	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_SLEEP);
-+	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_NOFS);
- 
- 	cur->bc_tp = tp;
- 	cur->bc_mp = mp;
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index eab68ae..6c6b959 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -357,7 +357,7 @@ xfs_inobt_init_cursor(
- 	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agbp);
- 	struct xfs_btree_cur	*cur;
- 
--	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_SLEEP);
-+	cur = kmem_zone_zalloc(xfs_btree_cur_zone, KM_NOFS);
- 
- 	cur->bc_tp = tp;
- 	cur->bc_mp = mp;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 9c3e5c6..29cc988 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1599,7 +1599,8 @@ xfs_inode_free_cowblocks(
+ 	 * If the mapping is dirty or under writeback we cannot touch the
+ 	 * CoW fork.  Leave it alone if we're in the midst of a directio.
+ 	 */
+-	if (mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
++	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
++	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
+ 	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
+ 	    atomic_read(&VFS_I(ip)->i_dio_count))
+ 		return 0;
 -- 
 2.1.4
 
