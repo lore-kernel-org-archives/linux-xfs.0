@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56494 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:56850 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757098AbdAIPjT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:19 -0500
+        with ESMTP id S1757427AbdAIPj1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:27 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/32] xfs: don't BUG() on mixed direct and mapped I/O
-Date: Mon,  9 Jan 2017 16:38:35 +0100
-Message-Id: <1483976343-661-5-git-send-email-hch@lst.de>
+Subject: [PATCH 07/32] xfs: fix unbalanced inode reclaim flush locking
+Date: Mon,  9 Jan 2017 16:38:38 +0100
+Message-Id: <1483976343-661-8-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,84 +17,150 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit 04197b341f23b908193308b8d63d17ff23232598 upstream.
+commit 98efe8af1c9ffac47e842b7a75ded903e2f028da upstream.
 
-We've had reports of generic/095 causing XFS to BUG() in
-__xfs_get_blocks() due to the existence of delalloc blocks on a
-direct I/O read. generic/095 issues a mix of various types of I/O,
-including direct and memory mapped I/O to a single file. This is
-clearly not supported behavior and is known to lead to such
-problems. E.g., the lack of exclusion between the direct I/O and
-write fault paths means that a write fault can allocate delalloc
-blocks in a region of a file that was previously a hole after the
-direct read has attempted to flush/inval the file range, but before
-it actually reads the block mapping. In turn, the direct read
-discovers a delalloc extent and cannot proceed.
+Filesystem shutdown testing on an older distro kernel has uncovered an
+imbalanced locking pattern for the inode flush lock in
+xfs_reclaim_inode(). Specifically, there is a double unlock sequence
+between the call to xfs_iflush_abort() and xfs_reclaim_inode() at the
+"reclaim:" label.
 
-While the appropriate solution here is to not mix direct and memory
-mapped I/O to the same regions of the same file, the current
-BUG_ON() behavior is probably overkill as it can crash the entire
-system.  Instead, localize the failure to the I/O in question by
-returning an error for a direct I/O that cannot be handled safely
-due to delalloc blocks. Be careful to allow the case of a direct
-write to post-eof delalloc blocks. This can occur due to speculative
-preallocation and is safe as post-eof blocks are not accompanied by
-dirty pages in pagecache (conversely, preallocation within eof must
-have been zeroed, and thus dirtied, before the inode size could have
-been increased beyond said blocks).
+This actually does not cause obvious problems on current kernels due to
+the current flush lock implementation. Older kernels use a counting
+based flush lock mechanism, however, which effectively breaks the lock
+indefinitely when an already unlocked flush lock is repeatedly unlocked.
+Though this only currently occurs on filesystem shutdown, it has
+reproduced the effect of elevating an fs shutdown to a system-wide crash
+or hang.
 
-Finally, provide an additional warning if a direct I/O write occurs
-while the file is memory mapped. This may not catch all problematic
-scenarios, but provides a hint that some known-to-be-problematic I/O
-methods are in use.
+As it turns out, the flush lock is not actually required for the reclaim
+logic in xfs_reclaim_inode() because by that time we have already cycled
+the flush lock once while holding ILOCK_EXCL. Therefore, remove the
+additional flush lock/unlock cycle around the 'reclaim:' label and
+update branches into this label to release the flush lock where
+appropriate. Add an assert to xfs_ifunlock() to help prevent future
+occurences of the same problem.
 
+Reported-by: Zorro Lang <zlang@redhat.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_aops.c | 22 ++++++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_icache.c | 27 ++++++++++++++-------------
+ fs/xfs/xfs_inode.h  | 11 ++++++-----
+ 2 files changed, 20 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 3e57a56..2693ba8 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1361,6 +1361,26 @@ __xfs_get_blocks(
- 	if (error)
- 		goto out_unlock;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 1b4861f..9c3e5c6 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -123,7 +123,6 @@ __xfs_inode_free(
+ {
+ 	/* asserts to verify all state is correct here */
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+-	ASSERT(!xfs_isiflocked(ip));
+ 	XFS_STATS_DEC(ip->i_mount, vn_active);
  
-+	/*
-+	 * The only time we can ever safely find delalloc blocks on direct I/O
-+	 * is a dio write to post-eof speculative preallocation. All other
-+	 * scenarios are indicative of a problem or misuse (such as mixing
-+	 * direct and mapped I/O).
-+	 *
-+	 * The file may be unmapped by the time we get here so we cannot
-+	 * reliably fail the I/O based on mapping. Instead, fail the I/O if this
-+	 * is a read or a write within eof. Otherwise, carry on but warn as a
-+	 * precuation if the file happens to be mapped.
-+	 */
-+	if (direct && imap.br_startblock == DELAYSTARTBLOCK) {
-+		if (!create || offset < i_size_read(VFS_I(ip))) {
-+			WARN_ON_ONCE(1);
-+			error = -EIO;
-+			goto out_unlock;
-+		}
-+		WARN_ON_ONCE(mapping_mapped(VFS_I(ip)->i_mapping));
-+	}
+ 	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
+@@ -133,6 +132,8 @@ void
+ xfs_inode_free(
+ 	struct xfs_inode	*ip)
+ {
++	ASSERT(!xfs_isiflocked(ip));
 +
- 	/* for DAX, we convert unwritten extents directly */
- 	if (create &&
- 	    (!nimaps ||
-@@ -1450,8 +1470,6 @@ __xfs_get_blocks(
- 	     (new || ISUNWRITTEN(&imap))))
- 		set_buffer_new(bh_result);
+ 	/*
+ 	 * Because we use RCU freeing we need to ensure the inode always
+ 	 * appears to be reclaimed with an invalid inode number when in the
+@@ -981,6 +982,7 @@ xfs_reclaim_inode(
  
--	BUG_ON(direct && imap.br_startblock == DELAYSTARTBLOCK);
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+ 		xfs_iunpin_wait(ip);
++		/* xfs_iflush_abort() drops the flush lock */
+ 		xfs_iflush_abort(ip, false);
+ 		goto reclaim;
+ 	}
+@@ -989,10 +991,10 @@ xfs_reclaim_inode(
+ 			goto out_ifunlock;
+ 		xfs_iunpin_wait(ip);
+ 	}
+-	if (xfs_iflags_test(ip, XFS_ISTALE))
+-		goto reclaim;
+-	if (xfs_inode_clean(ip))
++	if (xfs_iflags_test(ip, XFS_ISTALE) || xfs_inode_clean(ip)) {
++		xfs_ifunlock(ip);
+ 		goto reclaim;
++	}
+ 
+ 	/*
+ 	 * Never flush out dirty data during non-blocking reclaim, as it would
+@@ -1030,25 +1032,24 @@ xfs_reclaim_inode(
+ 		xfs_buf_relse(bp);
+ 	}
+ 
+-	xfs_iflock(ip);
+ reclaim:
++	ASSERT(!xfs_isiflocked(ip));
++
+ 	/*
+ 	 * Because we use RCU freeing we need to ensure the inode always appears
+ 	 * to be reclaimed with an invalid inode number when in the free state.
+-	 * We do this as early as possible under the ILOCK and flush lock so
+-	 * that xfs_iflush_cluster() can be guaranteed to detect races with us
+-	 * here. By doing this, we guarantee that once xfs_iflush_cluster has
+-	 * locked both the XFS_ILOCK and the flush lock that it will see either
+-	 * a valid, flushable inode that will serialise correctly against the
+-	 * locks below, or it will see a clean (and invalid) inode that it can
+-	 * skip.
++	 * We do this as early as possible under the ILOCK so that
++	 * xfs_iflush_cluster() can be guaranteed to detect races with us here.
++	 * By doing this, we guarantee that once xfs_iflush_cluster has locked
++	 * XFS_ILOCK that it will see either a valid, flushable inode that will
++	 * serialise correctly, or it will see a clean (and invalid) inode that
++	 * it can skip.
+ 	 */
+ 	spin_lock(&ip->i_flags_lock);
+ 	ip->i_flags = XFS_IRECLAIM;
+ 	ip->i_ino = 0;
+ 	spin_unlock(&ip->i_flags_lock);
+ 
+-	xfs_ifunlock(ip);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+ 	XFS_STATS_INC(ip->i_mount, xs_ig_reclaims);
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index f14c1de..71e8a81 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -246,6 +246,11 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+  * Synchronize processes attempting to flush the in-core inode back to disk.
+  */
+ 
++static inline int xfs_isiflocked(struct xfs_inode *ip)
++{
++	return xfs_iflags_test(ip, XFS_IFLOCK);
++}
++
+ extern void __xfs_iflock(struct xfs_inode *ip);
+ 
+ static inline int xfs_iflock_nowait(struct xfs_inode *ip)
+@@ -261,16 +266,12 @@ static inline void xfs_iflock(struct xfs_inode *ip)
+ 
+ static inline void xfs_ifunlock(struct xfs_inode *ip)
+ {
++	ASSERT(xfs_isiflocked(ip));
+ 	xfs_iflags_clear(ip, XFS_IFLOCK);
+ 	smp_mb();
+ 	wake_up_bit(&ip->i_flags, __XFS_IFLOCK_BIT);
+ }
+ 
+-static inline int xfs_isiflocked(struct xfs_inode *ip)
+-{
+-	return xfs_iflags_test(ip, XFS_IFLOCK);
+-}
 -
- 	return 0;
- 
- out_unlock:
+ /*
+  * Flags for inode locking.
+  * Bit ranges:	1<<1  - 1<<16-1 -- iolock/ilock modes (bitfield)
 -- 
 2.1.4
 
