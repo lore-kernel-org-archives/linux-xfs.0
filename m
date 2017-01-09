@@ -1,52 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:55464 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750714AbdAXPKB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jan 2017 10:10:01 -0500
-Date: Tue, 24 Jan 2017 16:09:59 +0100
+Received: from bombadil.infradead.org ([198.137.202.9]:50992 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S969914AbdAITx5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 14:53:57 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/3] xfs: go straight to real allocations for direct
-        I/O COW writes
-Message-ID: <20170124150959.GA27705@lst.de>
-References: <1480971924-4864-1-git-send-email-hch@lst.de> <1480971924-4864-3-git-send-email-hch@lst.de> <20161207190008.GC23106@bfoster.bfoster> <20161207193709.GA27479@lst.de> <20161207194634.GE23106@bfoster.bfoster> <20170124083732.GA17818@lst.de> <20170124135044.GA60234@bfoster.bfoster> <20170124135937.GA25885@lst.de> <20170124150222.GD60234@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170124150222.GD60234@bfoster.bfoster>
+Subject: [PATCH 4/4] xfs: don't rely on ->total in xfs_alloc_space_available
+Date: Mon,  9 Jan 2017 20:53:42 +0100
+Message-Id: <1483991622-2339-5-git-send-email-hch@lst.de>
+In-Reply-To: <1483991622-2339-1-git-send-email-hch@lst.de>
+References: <1483991622-2339-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: linux-xfs@vger.kernel.org
+Cc: eguan@redhat.com, darrick.wong@oracle.com, bfoster@redhat.com
 
-On Tue, Jan 24, 2017 at 10:02:22AM -0500, Brian Foster wrote:
-> Ok, well then I'm probably not going to be able to follow the details
-> well enough to try and provide constructive feedback without seeing the
-> code. Looking back, my comments were generally about the tradeoff of
-> bypassing the extent size hint mechanism that has been built into
-> reflink to avoid cow fragmention.
+->total is a bit of an odd parameter passed down to the low-level
+allocator all the way from the high-level callers.  It's supposed to
+contain the maximum number of blocks to be allocated for the whole
+transaction [1].
 
-Ok - really very little change here - only the call to the extsize
-alignment in xfs_bmap_btalloc reinstated and the according reservation
-changes in the caller.
+But in xfs_iomap_write_allocate we only convert existing delayed
+allocations and thus only have a minimal block reservation for the
+current transaction, so xfs_alloc_space_available can't use it for
+the allocation decisions.  Use the maximum of args->total and the
+calculated block requirement to make a decision.  We probably should
+get rid of args->total eventually and instead apply ->minleft more
+broadly, but that will require some extensive changes all over.
 
-Note that with the previously posted series there is no change in
-handling the cowextsize hint for real on-disk allocations.  While
-the current code rounds down based on the cowextsize for creating
-the delayed extent we will never convert the alignment before the
-write start to a real extent - it will just get cleaned up later
-at inode eviction time or using the timer.
+[1] which creates lots of confusion as most callers don't decrement it
+once doing a first allocation.  But that's for a separate series.
 
-> Without seeing the code, perhaps we need to pull up the cow extent size
-> hint mechanism from the bmapi layer to something similar to how
-> xfs_iomap_direct_write() handles the traditional extent size hints..?
-> That may allow us to more intelligently consider the current state
-> across the data and cow forks in such cases (to not preallocate over
-> existing blocks, for example, without having to kill off the extent size
-> hint entirely).
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-We could.  On the other hand I'd love to get the current series in
-first as the only thing it change in behavior is not allocating
-additional delayed extent space that never gets used, and not writing
-data twice if it's sub-blocksize, all of which seem like a clear
-improvement.  And it's also the base for my pending DAX reflink support.
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index f2e7eb6..9f06a21 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -1995,7 +1995,7 @@ xfs_alloc_space_available(
+ 	int			flags)
+ {
+ 	struct xfs_perag	*pag = args->pag;
+-	xfs_extlen_t		longest;
++	xfs_extlen_t		alloc_len, longest;
+ 	xfs_extlen_t		reservation; /* blocks that are still reserved */
+ 	int			available;
+ 
+@@ -2005,15 +2005,16 @@ xfs_alloc_space_available(
+ 	reservation = xfs_ag_resv_needed(pag, args->resv);
+ 
+ 	/* do we have enough contiguous free space for the allocation? */
++	alloc_len = args->minlen + (args->alignment - 1) + args->minalignslop;
+ 	longest = xfs_alloc_longest_free_extent(args->mp, pag, min_free,
+ 			reservation);
+-	if ((args->minlen + args->alignment + args->minalignslop - 1) > longest)
++	if (longest < alloc_len)
+ 		return false;
+ 
+ 	/* do we have enough free space remaining for the allocation? */
+ 	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
+ 			  reservation - min_free - args->minleft);
+-	if (available < (int)args->total)
++	if (available < (int)max(args->total, alloc_len))
+ 		return false;
+ 
+ 	/*
+-- 
+2.1.4
+
