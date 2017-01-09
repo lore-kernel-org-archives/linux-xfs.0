@@ -1,49 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:44555 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932168AbdAIUgp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 15:36:45 -0500
-Date: Mon, 9 Jan 2017 12:36:41 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/7] dedupe: fix consistent error message prefixes for
- dedupe tests
-Message-ID: <20170109203641.GC14033@birch.djwong.org>
-References: <148357827617.7677.15595044775254927245.stgit@birch.djwong.org>
- <148357831442.7677.16850160926032292098.stgit@birch.djwong.org>
- <20170109092600.GB1859@eguan.usersys.redhat.com>
+Received: from verein.lst.de ([213.95.11.211]:46851 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1031333AbdAIPeT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Jan 2017 10:34:19 -0500
+Date: Mon, 9 Jan 2017 16:34:15 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: minleft fixes V2
+Message-ID: <20170109153415.GA27197@lst.de>
+References: <1482436822-31546-1-git-send-email-hch@lst.de> <20170105012159.GS1859@eguan.usersys.redhat.com> <20170105020105.GC17846@birch.djwong.org> <20170108103647.GD26451@lst.de> <20170108160959.GD62847@bfoster.bfoster> <20170108181002.GA3732@birch.djwong.org> <20170109152205.GA22368@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170109092600.GB1859@eguan.usersys.redhat.com>
+In-Reply-To: <20170109152205.GA22368@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
 
-On Mon, Jan 09, 2017 at 05:26:00PM +0800, Eryu Guan wrote:
-> On Wed, Jan 04, 2017 at 05:05:14PM -0800, Darrick J. Wong wrote:
-> > Since we're fixing the xfs_io dedupe command to consistently
-> > print the dedupe ioctl name on error, fix the tests too.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Seems you need to rebase against current master, I just pushed my patch
-> out on Sunday with your Reviewed-by :)
-> 
-> 1300cbc generic/158,304: filter dedupe error message
-> 
-> And take use the new _filter_dedupe_error()? So both old and new version
-> of xfs_io pass the tests.
+On Mon, Jan 09, 2017 at 10:22:06AM -0500, Brian Foster wrote:
+> Hmm, is this something that can be enabled locally (e.g., on posts to
+> the list) without having to merge stuff prematurely?
 
-Ok, will do.
-
---D
-
-> 
-> Thanks,
-> Eryu
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Any linux developer can add their repos to the kbuild bot.  I usually
+push my non-trivial patchset to one of my repos covered by it before
+sending them out.
