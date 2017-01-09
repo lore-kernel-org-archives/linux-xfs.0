@@ -1,109 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57786 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:58768 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938182AbdAIPjr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:47 -0500
+        with ESMTP id S938588AbdAIPkE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:40:04 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/32] xfs: clean up cow fork reservation and tag inodes correctly
-Date: Mon,  9 Jan 2017 16:38:45 +0100
-Message-Id: <1483976343-661-15-git-send-email-hch@lst.de>
+Subject: [PATCH 20/32] xfs: forbid AG btrees with level == 0
+Date: Mon,  9 Jan 2017 16:38:51 +0100
+Message-Id: <1483976343-661-21-git-send-email-hch@lst.de>
 In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 References: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 0260d8ff5f76617e3a55a1c471383ecb4404c3ad upstream.
+commit d2a047f31e86941fa896e0e3271536d50aba415e upstream.
 
-COW fork reservation is implemented via delayed allocation. The code is
-modeled after the traditional delalloc allocation code, but is slightly
-different in terms of how preallocation occurs. Rather than post-eof
-speculative preallocation, COW fork preallocation is implemented via a
-COW extent size hint that is designed to minimize fragmentation as a
-reflinked file is split over time.
+There is no such thing as a zero-level AG btree since even a single-node
+zero-records btree has one level.  Btree cursor constructors read
+cur_nlevels straight from disk and then access things like
+cur_bufs[cur_nlevels - 1] which is /really/ bad if cur_nlevels is zero!
+Therefore, strengthen the verifiers to prevent this possibility.
 
-xfs_reflink_reserve_cow() still uses logic that is oriented towards
-dealing with post-eof speculative preallocation, however, and is stale
-or not necessarily correct. First, the EOF alignment to the COW extent
-size hint is implemented in xfs_bmapi_reserve_delalloc() (which does so
-correctly by aligning the start and end offsets) and so is not necessary
-in xfs_reflink_reserve_cow(). The backoff and retry logic on ENOSPC is
-also ineffective for the same reason, as xfs_bmapi_reserve_delalloc()
-will simply perform the same allocation request on the retry. Finally,
-since the COW extent size hint aligns the start and end offset of the
-range to allocate, the end_fsb != orig_end_fsb logic is not sufficient.
-Indeed, if a write request happens to end on an aligned offset, it is
-possible that we do not tag the inode for COW preallocation even though
-xfs_bmapi_reserve_delalloc() may have preallocated at the start offset.
-
-Kill the unnecessary, duplicate code in xfs_reflink_reserve_cow().
-Remove the inode tag logic as well since xfs_bmapi_reserve_delalloc()
-has been updated to tag the inode correctly.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_reflink.c | 29 +++--------------------------
- 1 file changed, 3 insertions(+), 26 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c  | 10 +++++++---
+ fs/xfs/libxfs/xfs_ialloc.c |  9 ++++++++-
+ 2 files changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 7a30bff..4d3f74e 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -245,11 +245,9 @@ xfs_reflink_reserve_cow(
- {
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	struct xfs_bmbt_irec	got;
--	xfs_fileoff_t		end_fsb, orig_end_fsb;
- 	int			error = 0;
- 	bool			eof = false, trimmed;
- 	xfs_extnum_t		idx;
--	xfs_extlen_t		align;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index effb64c..5050056 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2455,12 +2455,15 @@ xfs_agf_verify(
+ 	      be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp)))
+ 		return false;
+ 
+-	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) > XFS_BTREE_MAXLEVELS ||
++	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) < 1 ||
++	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) < 1 ||
++	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) > XFS_BTREE_MAXLEVELS ||
+ 	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) > XFS_BTREE_MAXLEVELS)
+ 		return false;
+ 
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb) &&
+-	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) > XFS_BTREE_MAXLEVELS)
++	    (be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) < 1 ||
++	     be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) > XFS_BTREE_MAXLEVELS))
+ 		return false;
  
  	/*
- 	 * Search the COW fork extent list first.  This serves two purposes:
-@@ -287,33 +285,12 @@ xfs_reflink_reserve_cow(
- 	if (error)
- 		return error;
+@@ -2477,7 +2480,8 @@ xfs_agf_verify(
+ 		return false;
  
--	end_fsb = orig_end_fsb = imap->br_startoff + imap->br_blockcount;
--
--	align = xfs_eof_alignment(ip, xfs_get_cowextsz_hint(ip));
--	if (align)
--		end_fsb = roundup_64(end_fsb, align);
--
--retry:
- 	error = xfs_bmapi_reserve_delalloc(ip, XFS_COW_FORK, imap->br_startoff,
--			end_fsb - imap->br_startoff, 0, &got, &idx, eof);
--	switch (error) {
--	case 0:
--		break;
--	case -ENOSPC:
--	case -EDQUOT:
--		/* retry without any preallocation */
-+			imap->br_blockcount, 0, &got, &idx, eof);
-+	if (error == -ENOSPC || error == -EDQUOT)
- 		trace_xfs_reflink_cow_enospc(ip, imap);
--		if (end_fsb != orig_end_fsb) {
--			end_fsb = orig_end_fsb;
--			goto retry;
--		}
--		/*FALLTHRU*/
--	default:
-+	if (error)
- 		return error;
--	}
--
--	if (end_fsb != orig_end_fsb)
--		xfs_inode_set_cowblocks_tag(ip);
+ 	if (xfs_sb_version_hasreflink(&mp->m_sb) &&
+-	    be32_to_cpu(agf->agf_refcount_level) > XFS_BTREE_MAXLEVELS)
++	    (be32_to_cpu(agf->agf_refcount_level) < 1 ||
++	     be32_to_cpu(agf->agf_refcount_level) > XFS_BTREE_MAXLEVELS))
+ 		return false;
  
- 	trace_xfs_reflink_cow_alloc(ip, &got);
- 	return 0;
+ 	return true;;
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index c482b97..d45c037 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2510,8 +2510,15 @@ xfs_agi_verify(
+ 	if (!XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)))
+ 		return false;
+ 
+-	if (be32_to_cpu(agi->agi_level) > XFS_BTREE_MAXLEVELS)
++	if (be32_to_cpu(agi->agi_level) < 1 ||
++	    be32_to_cpu(agi->agi_level) > XFS_BTREE_MAXLEVELS)
+ 		return false;
++
++	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
++	    (be32_to_cpu(agi->agi_free_level) < 1 ||
++	     be32_to_cpu(agi->agi_free_level) > XFS_BTREE_MAXLEVELS))
++		return false;
++
+ 	/*
+ 	 * during growfs operations, the perag is not fully initialised,
+ 	 * so we can't use it for any useful checking. growfs ensures we can't
 -- 
 2.1.4
 
