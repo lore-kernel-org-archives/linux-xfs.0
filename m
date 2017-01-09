@@ -1,95 +1,218 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53008 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932802AbdAIOZl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Jan 2017 09:25:41 -0500
-Date: Mon, 9 Jan 2017 15:25:36 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 4/8] xfs: use memalloc_nofs_{save,restore} instead of
- memalloc_noio*
-Message-ID: <20170109142536.GK7495@dhcp22.suse.cz>
-References: <20170106141107.23953-1-mhocko@kernel.org>
- <20170106141107.23953-5-mhocko@kernel.org>
- <18f9363f-144d-0bfd-5116-08d5f4648869@suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <18f9363f-144d-0bfd-5116-08d5f4648869@suse.cz>
+Received: from bombadil.infradead.org ([198.137.202.9]:50900 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S969914AbdAITxy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 14:53:54 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/4] xfs: adjust allocation length in xfs_alloc_space_available
+Date: Mon,  9 Jan 2017 20:53:41 +0100
+Message-Id: <1483991622-2339-4-git-send-email-hch@lst.de>
+In-Reply-To: <1483991622-2339-1-git-send-email-hch@lst.de>
+References: <1483991622-2339-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: eguan@redhat.com, darrick.wong@oracle.com, bfoster@redhat.com
 
-On Mon 09-01-17 15:08:27, Vlastimil Babka wrote:
-> On 01/06/2017 03:11 PM, Michal Hocko wrote:
-> > From: Michal Hocko <mhocko@suse.com>
-> > 
-> > kmem_zalloc_large and _xfs_buf_map_pages use memalloc_noio_{save,restore}
-> > API to prevent from reclaim recursion into the fs because vmalloc can
-> > invoke unconditional GFP_KERNEL allocations and these functions might be
-> > called from the NOFS contexts. The memalloc_noio_save will enforce
-> > GFP_NOIO context which is even weaker than GFP_NOFS and that seems to be
-> > unnecessary. Let's use memalloc_nofs_{save,restore} instead as it should
-> > provide exactly what we need here - implicit GFP_NOFS context.
-> > 
-> > Changes since v1
-> > - s@memalloc_noio_restore@memalloc_nofs_restore@ in _xfs_buf_map_pages
-> >   as per Brian Foster
-> > 
-> > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> 
-> Not a xfs expert, but seems correct.
-> 
-> Acked-by: Vlastimil Babka <vbabka@suse.cz>
+We must decide in xfs_alloc_fix_freelist if we can perform an
+allocation from a given AG is possible or not based on the available
+space, and should not fail the allocation past that point on a
+healthy file system.
 
-Thanks!
+But currently we have two additional places that second-guess
+xfs_alloc_fix_freelist: xfs_alloc_ag_vextent tries to adjust the
+maxlen parameter to remove the reservation before doing the
+allocation (but ignores the various minium freespace requirements),
+and xfs_alloc_fix_minleft tries to fix up the allocated length
+after we've found an extent, but ignores the reservations and also
+doesn't take the AGFL into account (and thus fails allocations
+for not matching minlen in some cases).
 
-> 
-> Nit below:
-> 
-> > ---
-> >  fs/xfs/kmem.c    | 10 +++++-----
-> >  fs/xfs/xfs_buf.c |  8 ++++----
-> >  2 files changed, 9 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> > index a76a05dae96b..d69ed5e76621 100644
-> > --- a/fs/xfs/kmem.c
-> > +++ b/fs/xfs/kmem.c
-> > @@ -65,7 +65,7 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
-> >  void *
-> >  kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
-> >  {
-> > -	unsigned noio_flag = 0;
-> > +	unsigned nofs_flag = 0;
-> >  	void	*ptr;
-> >  	gfp_t	lflags;
-> >  
-> > @@ -80,14 +80,14 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
-> >  	 * context via PF_MEMALLOC_NOIO to prevent memory reclaim re-entering
-> >  	 * the filesystem here and potentially deadlocking.
-> 
-> The comment above is now largely obsolete, or minimally should be
-> changed to PF_MEMALLOC_NOFS?
+Remove all these later fixups and just correct the maxlen argument
+inside xfs_alloc_fix_freelist once we have the AGF buffer locked.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index d69ed5e76621..0c9f94f41b6c 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -77,7 +77,7 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
- 	 * __vmalloc() will allocate data pages and auxillary structures (e.g.
- 	 * pagetables) with GFP_KERNEL, yet we may be under GFP_NOFS context
- 	 * here. Hence we need to tell memory reclaim that we are in such a
--	 * context via PF_MEMALLOC_NOIO to prevent memory reclaim re-entering
-+	 * context via PF_MEMALLOC_NOFS to prevent memory reclaim re-entering
- 	 * the filesystem here and potentially deadlocking.
+ fs/xfs/libxfs/xfs_alloc.c | 81 ++++++++++-------------------------------------
+ fs/xfs/libxfs/xfs_alloc.h |  2 +-
+ 2 files changed, 18 insertions(+), 65 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index fe92570..f2e7eb6 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -362,36 +362,12 @@ xfs_alloc_fix_len(
+ 		return;
+ 	ASSERT(rlen >= args->minlen && rlen <= args->maxlen);
+ 	ASSERT(rlen % args->prod == args->mod);
++	ASSERT(args->pag->pagf_freeblks + args->pag->pagf_flcount >=
++		rlen + args->minleft);
+ 	args->len = rlen;
+ }
+ 
+ /*
+- * Fix up length if there is too little space left in the a.g.
+- * Return 1 if ok, 0 if too little, should give up.
+- */
+-STATIC int
+-xfs_alloc_fix_minleft(
+-	xfs_alloc_arg_t	*args)		/* allocation argument structure */
+-{
+-	xfs_agf_t	*agf;		/* a.g. freelist header */
+-	int		diff;		/* free space difference */
+-
+-	if (args->minleft == 0)
+-		return 1;
+-	agf = XFS_BUF_TO_AGF(args->agbp);
+-	diff = be32_to_cpu(agf->agf_freeblks)
+-		- args->len - args->minleft;
+-	if (diff >= 0)
+-		return 1;
+-	args->len += diff;		/* shrink the allocated space */
+-	/* casts to (int) catch length underflows */
+-	if ((int)args->len >= (int)args->minlen)
+-		return 1;
+-	args->agbno = NULLAGBLOCK;
+-	return 0;
+-}
+-
+-/*
+  * Update the two btrees, logically removing from freespace the extent
+  * starting at rbno, rlen blocks.  The extent is contained within the
+  * actual (current) free extent fbno for flen blocks.
+@@ -686,8 +662,6 @@ xfs_alloc_ag_vextent(
+ 	xfs_alloc_arg_t	*args)	/* argument structure for allocation */
+ {
+ 	int		error=0;
+-	xfs_extlen_t	reservation;
+-	xfs_extlen_t	oldmax;
+ 
+ 	ASSERT(args->minlen > 0);
+ 	ASSERT(args->maxlen > 0);
+@@ -696,20 +670,6 @@ xfs_alloc_ag_vextent(
+ 	ASSERT(args->alignment > 0);
+ 
+ 	/*
+-	 * Clamp maxlen to the amount of free space minus any reservations
+-	 * that have been made.
+-	 */
+-	oldmax = args->maxlen;
+-	reservation = xfs_ag_resv_needed(args->pag, args->resv);
+-	if (args->maxlen > args->pag->pagf_freeblks - reservation)
+-		args->maxlen = args->pag->pagf_freeblks - reservation;
+-	if (args->maxlen == 0) {
+-		args->agbno = NULLAGBLOCK;
+-		args->maxlen = oldmax;
+-		return 0;
+-	}
+-
+-	/*
+ 	 * Branch to correct routine based on the type.
  	 */
- 	if (flags & KM_NOFS)
-
-I will fold it into the original patch.
-
-Thanks!
+ 	args->wasfromfl = 0;
+@@ -728,8 +688,6 @@ xfs_alloc_ag_vextent(
+ 		/* NOTREACHED */
+ 	}
+ 
+-	args->maxlen = oldmax;
+-
+ 	if (error || args->agbno == NULLAGBLOCK)
+ 		return error;
+ 
+@@ -838,9 +796,6 @@ xfs_alloc_ag_vextent_exact(
+ 	args->len = XFS_AGBLOCK_MIN(tend, args->agbno + args->maxlen)
+ 						- args->agbno;
+ 	xfs_alloc_fix_len(args);
+-	if (!xfs_alloc_fix_minleft(args))
+-		goto not_found;
+-
+ 	ASSERT(args->agbno + args->len <= tend);
+ 
+ 	/*
+@@ -1146,12 +1101,7 @@ xfs_alloc_ag_vextent_near(
+ 		XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
+ 		ASSERT(ltbno + ltlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
+ 		args->len = blen;
+-		if (!xfs_alloc_fix_minleft(args)) {
+-			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+-			trace_xfs_alloc_near_nominleft(args);
+-			return 0;
+-		}
+-		blen = args->len;
++
+ 		/*
+ 		 * We are allocating starting at bnew for blen blocks.
+ 		 */
+@@ -1343,12 +1293,6 @@ xfs_alloc_ag_vextent_near(
+ 	 */
+ 	args->len = XFS_EXTLEN_MIN(ltlena, args->maxlen);
+ 	xfs_alloc_fix_len(args);
+-	if (!xfs_alloc_fix_minleft(args)) {
+-		trace_xfs_alloc_near_nominleft(args);
+-		xfs_btree_del_cursor(bno_cur_lt, XFS_BTREE_NOERROR);
+-		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+-		return 0;
+-	}
+ 	rlen = args->len;
+ 	(void)xfs_alloc_compute_diff(args->agbno, rlen, args->alignment,
+ 				     args->datatype, ltbnoa, ltlena, &ltnew);
+@@ -1550,8 +1494,6 @@ xfs_alloc_ag_vextent_size(
+ 	}
+ 	xfs_alloc_fix_len(args);
+ 
+-	if (!xfs_alloc_fix_minleft(args))
+-		goto out_nominleft;
+ 	rlen = args->len;
+ 	XFS_WANT_CORRUPTED_GOTO(args->mp, rlen <= flen, error0);
+ 	/*
+@@ -2070,10 +2012,20 @@ xfs_alloc_space_available(
+ 
+ 	/* do we have enough free space remaining for the allocation? */
+ 	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
+-			  reservation - min_free - args->total);
+-	if (available < (int)args->minleft || available <= 0)
++			  reservation - min_free - args->minleft);
++	if (available < (int)args->total)
+ 		return false;
+ 
++	/*
++	 * Clamp maxlen to the amount of free space available for the actual
++	 * extent allocation.
++	 */
++	if (available < (int)args->maxlen && !(flags & XFS_ALLOC_FLAG_CHECK)) {
++		args->maxlen = available;
++		ASSERT(args->maxlen > 0);
++		ASSERT(args->maxlen >= args->minlen);
++	}
++
+ 	return true;
+ }
+ 
+@@ -2119,7 +2071,8 @@ xfs_alloc_fix_freelist(
+ 	}
+ 
+ 	need = xfs_alloc_min_freelist(mp, pag);
+-	if (!xfs_alloc_space_available(args, need, flags))
++	if (!xfs_alloc_space_available(args, need, flags |
++			XFS_ALLOC_FLAG_CHECK))
+ 		goto out_agbp_relse;
+ 
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 7c404a6..1d0f48a 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -56,7 +56,7 @@ typedef unsigned int xfs_alloctype_t;
+ #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
+ #define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
+ #define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
+-
++#define	XFS_ALLOC_FLAG_CHECK	0x00000010  /* test only, don't modify args */
+ 
+ /*
+  * Argument structure for xfs_alloc routines.
 -- 
-Michal Hocko
-SUSE Labs
+2.1.4
+
