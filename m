@@ -1,154 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42142 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57324 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751754AbdAIUAE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Jan 2017 15:00:04 -0500
-Date: Mon, 9 Jan 2017 15:00:03 -0500
+        id S1751931AbdAIPnt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Jan 2017 10:43:49 -0500
+Date: Mon, 9 Jan 2017 10:43:48 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/4] xfs: fix bogus minleft manipulations
-Message-ID: <20170109200002.GG22368@bfoster.bfoster>
-References: <1483991622-2339-1-git-send-email-hch@lst.de>
- <1483991622-2339-3-git-send-email-hch@lst.de>
+Subject: Re: minleft fixes V2
+Message-ID: <20170109154347.GC22368@bfoster.bfoster>
+References: <1482436822-31546-1-git-send-email-hch@lst.de>
+ <20170105012159.GS1859@eguan.usersys.redhat.com>
+ <20170105020105.GC17846@birch.djwong.org>
+ <20170108103647.GD26451@lst.de>
+ <20170108160959.GD62847@bfoster.bfoster>
+ <20170108181002.GA3732@birch.djwong.org>
+ <20170109152205.GA22368@bfoster.bfoster>
+ <20170109153415.GA27197@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1483991622-2339-3-git-send-email-hch@lst.de>
+In-Reply-To: <20170109153415.GA27197@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
 
-On Mon, Jan 09, 2017 at 08:53:40PM +0100, Christoph Hellwig wrote:
-> We can't just set minleft to 0 when we're low on space - that's exactly
-> what we need minleft for: to protect space in the AG for btree block
-> allocations when we are low on free space.
+On Mon, Jan 09, 2017 at 04:34:15PM +0100, Christoph Hellwig wrote:
+> On Mon, Jan 09, 2017 at 10:22:06AM -0500, Brian Foster wrote:
+> > Hmm, is this something that can be enabled locally (e.g., on posts to
+> > the list) without having to merge stuff prematurely?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> Any linux developer can add their repos to the kbuild bot.  I usually
+> push my non-trivial patchset to one of my repos covered by it before
+> sending them out.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Interesting, thanks. Though I guess that depends on having a publicly
+accessible repo.. I suppose we could also define a for-kbuild or
+for-testing branch or some such, but that's up to Darrick...
 
->  fs/xfs/libxfs/xfs_alloc.c      | 24 +++++++-----------------
->  fs/xfs/libxfs/xfs_bmap.c       |  3 ---
->  fs/xfs/libxfs/xfs_bmap_btree.c |  3 +--
->  3 files changed, 8 insertions(+), 22 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 0a46f84..fe92570 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2635,12 +2635,10 @@ xfs_alloc_vextent(
->  	xfs_agblock_t	agsize;	/* allocation group size */
->  	int		error;
->  	int		flags;	/* XFS_ALLOC_FLAG_... locking flags */
-> -	xfs_extlen_t	minleft;/* minimum left value, temp copy */
->  	xfs_mount_t	*mp;	/* mount structure pointer */
->  	xfs_agnumber_t	sagno;	/* starting allocation group number */
->  	xfs_alloctype_t	type;	/* input allocation type */
->  	int		bump_rotor = 0;
-> -	int		no_min = 0;
->  	xfs_agnumber_t	rotorstep = xfs_rotorstep; /* inode32 agf stepper */
->  
->  	mp = args->mp;
-> @@ -2669,7 +2667,6 @@ xfs_alloc_vextent(
->  		trace_xfs_alloc_vextent_badargs(args);
->  		return 0;
->  	}
-> -	minleft = args->minleft;
->  
->  	switch (type) {
->  	case XFS_ALLOCTYPE_THIS_AG:
-> @@ -2680,9 +2677,7 @@ xfs_alloc_vextent(
->  		 */
->  		args->agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
->  		args->pag = xfs_perag_get(mp, args->agno);
-> -		args->minleft = 0;
->  		error = xfs_alloc_fix_freelist(args, 0);
-> -		args->minleft = minleft;
->  		if (error) {
->  			trace_xfs_alloc_vextent_nofix(args);
->  			goto error0;
-> @@ -2747,9 +2742,7 @@ xfs_alloc_vextent(
->  		 */
->  		for (;;) {
->  			args->pag = xfs_perag_get(mp, args->agno);
-> -			if (no_min) args->minleft = 0;
->  			error = xfs_alloc_fix_freelist(args, flags);
-> -			args->minleft = minleft;
->  			if (error) {
->  				trace_xfs_alloc_vextent_nofix(args);
->  				goto error0;
-> @@ -2789,20 +2782,17 @@ xfs_alloc_vextent(
->  			 * or switch to non-trylock mode.
->  			 */
->  			if (args->agno == sagno) {
-> -				if (no_min == 1) {
-> +				if (flags == 0) {
->  					args->agbno = NULLAGBLOCK;
->  					trace_xfs_alloc_vextent_allfailed(args);
->  					break;
->  				}
-> -				if (flags == 0) {
-> -					no_min = 1;
-> -				} else {
-> -					flags = 0;
-> -					if (type == XFS_ALLOCTYPE_START_BNO) {
-> -						args->agbno = XFS_FSB_TO_AGBNO(mp,
-> -							args->fsbno);
-> -						args->type = XFS_ALLOCTYPE_NEAR_BNO;
-> -					}
-> +
-> +				flags = 0;
-> +				if (type == XFS_ALLOCTYPE_START_BNO) {
-> +					args->agbno = XFS_FSB_TO_AGBNO(mp,
-> +						args->fsbno);
-> +					args->type = XFS_ALLOCTYPE_NEAR_BNO;
->  				}
->  			}
->  			xfs_perag_put(args->pag);
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 2760bc3..44773c9 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3812,7 +3812,6 @@ xfs_bmap_btalloc(
->  		args.fsbno = 0;
->  		args.type = XFS_ALLOCTYPE_FIRST_AG;
->  		args.total = ap->minlen;
-> -		args.minleft = 0;
->  		if ((error = xfs_alloc_vextent(&args)))
->  			return error;
->  		ap->dfops->dop_low = true;
-> @@ -4344,8 +4343,6 @@ xfs_bmapi_allocate(
->  	if (error)
->  		return error;
->  
-> -	if (bma->dfops->dop_low)
-> -		bma->minleft = 0;
->  	if (bma->cur)
->  		bma->cur->bc_private.b.firstblock = *bma->firstblock;
->  	if (bma->blkno == NULLFSBLOCK)
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> index d6330c2..d9be241 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> @@ -502,12 +502,11 @@ xfs_bmbt_alloc_block(
->  	if (args.fsbno == NULLFSBLOCK && args.minleft) {
->  		/*
->  		 * Could not find an AG with enough free space to satisfy
-> -		 * a full btree split.  Try again without minleft and if
-> +		 * a full btree split.  Try again and if
->  		 * successful activate the lowspace algorithm.
->  		 */
->  		args.fsbno = 0;
->  		args.type = XFS_ALLOCTYPE_FIRST_AG;
-> -		args.minleft = 0;
->  		error = xfs_alloc_vextent(&args);
->  		if (error)
->  			goto error0;
-> -- 
-> 2.1.4
-> 
+Brian
+
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
