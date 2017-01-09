@@ -1,26 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:56068 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:50622 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754704AbdAIPjI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 10:39:08 -0500
+        with ESMTP id S1754655AbdAITxq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 14:53:46 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: 4.9-stable updates for XFS
-Date: Mon,  9 Jan 2017 16:38:31 +0100
-Message-Id: <1483976343-661-1-git-send-email-hch@lst.de>
+Subject: minleft fixes V3
+Date: Mon,  9 Jan 2017 20:53:38 +0100
+Message-Id: <1483991622-2339-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: eguan@redhat.com, darrick.wong@oracle.com, bfoster@redhat.com
 
-Hi all,
+his is my attempt to fix the problems with rmap and reflink file system
+running out of space during delayed extent conversions.  It turns out
+the way minleft has been handled has always been bogus, but the rmap
+enablement made it even worse.
 
-below are backports from 4.10-rc3 for XFS.  I've selected all clear
-bugfixes for reported bugs, and added about a handful of small
-infrastructure backports so that we can take the fixes as is instead of
-having to redo them in a different way than upstream.
+Changes since V2:
+ - dropped "xfs: fix the alignment fallback in xfs_bmap_btalloc"
+ - added a maxlen >= minlen assert
+ - a few commit log improvements
 
-These have passed xfstests on top of Linux 4.9.2.  Even if some of the 
-patches might apply to older stable trees please do not backport them 
-unless someone volunteers to QA them first.
-
+Changes since V1:
+ - new patch to fix the noalign case in xfs_bmap_btalloc
+ - new patch to fix xfs_alloc_set_aside
+ - dropped the patch to increase the minleft value for bmap allocations,
+   we only need the current minimal values as we only allocate one
+   extent per call
+ - minor style fixes per review of the last round
