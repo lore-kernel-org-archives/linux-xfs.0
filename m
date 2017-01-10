@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8942 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:10338 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754567AbdAJVwv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Jan 2017 16:52:51 -0500
+        id S1754391AbdAJVwj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Jan 2017 16:52:39 -0500
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v4 5/7] dax: add tracepoints to dax_pmd_insert_mapping()
-Date: Tue, 10 Jan 2017 14:52:20 -0700
-Message-Id: <1484085142-2297-6-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v4 1/7] tracing: add __print_flags_u64()
+Date: Tue, 10 Jan 2017 14:52:16 -0700
+Message-Id: <1484085142-2297-2-git-send-email-ross.zwisler@linux.intel.com>
 In-Reply-To: <1484085142-2297-1-git-send-email-ross.zwisler@linux.intel.com>
 References: <1484085142-2297-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,157 +15,125 @@ List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Add tracepoints to dax_pmd_insert_mapping(), following the same logging
-conventions as the tracepoints in dax_iomap_pmd_fault().
+Add __print_flags_u64() and the helper trace_print_flags_seq_u64() in the
+same spirit as __print_symbolic_u64() and trace_print_symbols_seq_u64().
+These functions allow us to print symbols associated with flags that are 64
+bits wide even on 32 bit machines.
 
-Here is an example PMD fault showing the new tracepoints:
+These will be used by the DAX code so that we can print the flags set in a
+pfn_t such as PFN_SG_CHAIN, PFN_SG_LAST, PFN_DEV and PFN_MAP.
 
-big-1504  [001] ....   326.960743: xfs_filemap_pmd_fault: dev 259:0 ino
-0x1003
+Without this new function I was getting errors like the following when
+compiling for i386:
 
-big-1504  [001] ....   326.960753: dax_pmd_fault: dev 259:0 ino 0x1003
-shared WRITE|ALLOW_RETRY|KILLABLE|USER address 0x10505000 vm_start
-0x10200000 vm_end 0x10700000 pgoff 0x200 max_pgoff 0x1400
-
-big-1504  [001] ....   326.960981: dax_pmd_insert_mapping: dev 259:0 ino
-0x1003 shared write address 0x10505000 length 0x200000 pfn 0x100600 DEV|MAP
-radix_entry 0xc000e
-
-big-1504  [001] ....   326.960986: dax_pmd_fault_done: dev 259:0 ino 0x1003
-shared WRITE|ALLOW_RETRY|KILLABLE|USER address 0x10505000 vm_start
-0x10200000 vm_end 0x10700000 pgoff 0x200 max_pgoff 0x1400 NOPAGE
+./include/linux/pfn_t.h:13:22: warning: large integer implicitly truncated
+to unsigned type [-Woverflow]
+ #define PFN_SG_CHAIN (1ULL << (BITS_PER_LONG_LONG - 1))
+  ^
 
 Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Acked-by: Steven Rostedt <rostedt@goodmis.org>
+Reviewed-by: Steven Rostedt <rostedt@goodmis.org>
 ---
- fs/dax.c                      | 12 +++++++---
- include/linux/pfn_t.h         |  6 +++++
- include/trace/events/fs_dax.h | 51 +++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 66 insertions(+), 3 deletions(-)
+ include/linux/trace_events.h |  4 ++++
+ include/trace/trace_events.h | 11 +++++++++++
+ kernel/trace/trace_output.c  | 38 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 53 insertions(+)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 199a7e7..4671530 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1254,15 +1254,16 @@ static int dax_pmd_insert_mapping(struct vm_area_struct *vma, pmd_t *pmd,
+diff --git a/include/linux/trace_events.h b/include/linux/trace_events.h
+index be00761..db2c3ba 100644
+--- a/include/linux/trace_events.h
++++ b/include/linux/trace_events.h
+@@ -23,6 +23,10 @@ const char *trace_print_symbols_seq(struct trace_seq *p, unsigned long val,
+ 				    const struct trace_print_flags *symbol_array);
+ 
+ #if BITS_PER_LONG == 32
++const char *trace_print_flags_seq_u64(struct trace_seq *p, const char *delim,
++		      unsigned long long flags,
++		      const struct trace_print_flags_u64 *flag_array);
++
+ const char *trace_print_symbols_seq_u64(struct trace_seq *p,
+ 					unsigned long long val,
+ 					const struct trace_print_flags_u64
+diff --git a/include/trace/trace_events.h b/include/trace/trace_events.h
+index 467e12f..c6e9f72 100644
+--- a/include/trace/trace_events.h
++++ b/include/trace/trace_events.h
+@@ -283,8 +283,16 @@ TRACE_MAKE_SYSTEM_STR();
+ 		trace_print_symbols_seq(p, value, symbols);		\
+ 	})
+ 
++#undef __print_flags_u64
+ #undef __print_symbolic_u64
+ #if BITS_PER_LONG == 32
++#define __print_flags_u64(flag, delim, flag_array...)			\
++	({								\
++		static const struct trace_print_flags_u64 __flags[] =	\
++			{ flag_array, { -1, NULL } };			\
++		trace_print_flags_seq_u64(p, delim, flag, __flags);	\
++	})
++
+ #define __print_symbolic_u64(value, symbol_array...)			\
+ 	({								\
+ 		static const struct trace_print_flags_u64 symbols[] =	\
+@@ -292,6 +300,9 @@ TRACE_MAKE_SYSTEM_STR();
+ 		trace_print_symbols_seq_u64(p, value, symbols);	\
+ 	})
+ #else
++#define __print_flags_u64(flag, delim, flag_array...)			\
++			__print_flags(flag, delim, flag_array)
++
+ #define __print_symbolic_u64(value, symbol_array...)			\
+ 			__print_symbolic(value, symbol_array)
+ #endif
+diff --git a/kernel/trace/trace_output.c b/kernel/trace/trace_output.c
+index 5d33a73..5204485 100644
+--- a/kernel/trace/trace_output.c
++++ b/kernel/trace/trace_output.c
+@@ -124,6 +124,44 @@ EXPORT_SYMBOL(trace_print_symbols_seq);
+ 
+ #if BITS_PER_LONG == 32
+ const char *
++trace_print_flags_seq_u64(struct trace_seq *p, const char *delim,
++		      unsigned long long flags,
++		      const struct trace_print_flags_u64 *flag_array)
++{
++	unsigned long long mask;
++	const char *str;
++	const char *ret = trace_seq_buffer_ptr(p);
++	int i, first = 1;
++
++	for (i = 0;  flag_array[i].name && flags; i++) {
++
++		mask = flag_array[i].mask;
++		if ((flags & mask) != mask)
++			continue;
++
++		str = flag_array[i].name;
++		flags &= ~mask;
++		if (!first && delim)
++			trace_seq_puts(p, delim);
++		else
++			first = 0;
++		trace_seq_puts(p, str);
++	}
++
++	/* check for left over flags */
++	if (flags) {
++		if (!first && delim)
++			trace_seq_puts(p, delim);
++		trace_seq_printf(p, "0x%llx", flags);
++	}
++
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
++EXPORT_SYMBOL(trace_print_flags_seq_u64);
++
++const char *
+ trace_print_symbols_seq_u64(struct trace_seq *p, unsigned long long val,
+ 			 const struct trace_print_flags_u64 *symbol_array)
  {
- 	struct address_space *mapping = vma->vm_file->f_mapping;
- 	struct block_device *bdev = iomap->bdev;
-+	struct inode *inode = mapping->host;
- 	struct blk_dax_ctl dax = {
- 		.sector = dax_iomap_sector(iomap, pos),
- 		.size = PMD_SIZE,
- 	};
- 	long length = dax_map_atomic(bdev, &dax);
--	void *ret;
-+	void *ret = NULL;
- 
- 	if (length < 0) /* dax_map_atomic() failed */
--		return VM_FAULT_FALLBACK;
-+		goto fallback;
- 	if (length < PMD_SIZE)
- 		goto unmap_fallback;
- 	if (pfn_t_to_pfn(dax.pfn) & PG_PMD_COLOUR)
-@@ -1275,13 +1276,18 @@ static int dax_pmd_insert_mapping(struct vm_area_struct *vma, pmd_t *pmd,
- 	ret = dax_insert_mapping_entry(mapping, vmf, *entryp, dax.sector,
- 			RADIX_DAX_PMD);
- 	if (IS_ERR(ret))
--		return VM_FAULT_FALLBACK;
-+		goto fallback;
- 	*entryp = ret;
- 
-+	trace_dax_pmd_insert_mapping(inode, vma, address, write, length,
-+			dax.pfn, ret);
- 	return vmf_insert_pfn_pmd(vma, address, pmd, dax.pfn, write);
- 
-  unmap_fallback:
- 	dax_unmap_atomic(bdev, &dax);
-+fallback:
-+	trace_dax_pmd_insert_mapping_fallback(inode, vma, address, write,
-+			length, dax.pfn, ret);
- 	return VM_FAULT_FALLBACK;
- }
- 
-diff --git a/include/linux/pfn_t.h b/include/linux/pfn_t.h
-index a3d90b9..033fc7b 100644
---- a/include/linux/pfn_t.h
-+++ b/include/linux/pfn_t.h
-@@ -15,6 +15,12 @@
- #define PFN_DEV (1ULL << (BITS_PER_LONG_LONG - 3))
- #define PFN_MAP (1ULL << (BITS_PER_LONG_LONG - 4))
- 
-+#define PFN_FLAGS_TRACE \
-+	{ PFN_SG_CHAIN,	"SG_CHAIN" }, \
-+	{ PFN_SG_LAST,	"SG_LAST" }, \
-+	{ PFN_DEV,	"DEV" }, \
-+	{ PFN_MAP,	"MAP" }
-+
- static inline pfn_t __pfn_to_pfn_t(unsigned long pfn, u64 flags)
- {
- 	pfn_t pfn_t = { .val = pfn | (flags & PFN_FLAGS_MASK), };
-diff --git a/include/trace/events/fs_dax.h b/include/trace/events/fs_dax.h
-index 43f1263..c3b0aae 100644
---- a/include/trace/events/fs_dax.h
-+++ b/include/trace/events/fs_dax.h
-@@ -104,6 +104,57 @@ DEFINE_EVENT(dax_pmd_load_hole_class, name, \
- DEFINE_PMD_LOAD_HOLE_EVENT(dax_pmd_load_hole);
- DEFINE_PMD_LOAD_HOLE_EVENT(dax_pmd_load_hole_fallback);
- 
-+DECLARE_EVENT_CLASS(dax_pmd_insert_mapping_class,
-+	TP_PROTO(struct inode *inode, struct vm_area_struct *vma,
-+		unsigned long address, int write, long length, pfn_t pfn,
-+		void *radix_entry),
-+	TP_ARGS(inode, vma, address, write, length, pfn, radix_entry),
-+	TP_STRUCT__entry(
-+		__field(unsigned long, ino)
-+		__field(unsigned long, vm_flags)
-+		__field(unsigned long, address)
-+		__field(long, length)
-+		__field(u64, pfn_val)
-+		__field(void *, radix_entry)
-+		__field(dev_t, dev)
-+		__field(int, write)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = inode->i_ino;
-+		__entry->vm_flags = vma->vm_flags;
-+		__entry->address = address;
-+		__entry->write = write;
-+		__entry->length = length;
-+		__entry->pfn_val = pfn.val;
-+		__entry->radix_entry = radix_entry;
-+	),
-+	TP_printk("dev %d:%d ino %#lx %s %s address %#lx length %#lx "
-+			"pfn %#llx %s radix_entry %#lx",
-+		MAJOR(__entry->dev),
-+		MINOR(__entry->dev),
-+		__entry->ino,
-+		__entry->vm_flags & VM_SHARED ? "shared" : "private",
-+		__entry->write ? "write" : "read",
-+		__entry->address,
-+		__entry->length,
-+		__entry->pfn_val & ~PFN_FLAGS_MASK,
-+		__print_flags_u64(__entry->pfn_val & PFN_FLAGS_MASK, "|",
-+			PFN_FLAGS_TRACE),
-+		(unsigned long)__entry->radix_entry
-+	)
-+)
-+
-+#define DEFINE_PMD_INSERT_MAPPING_EVENT(name) \
-+DEFINE_EVENT(dax_pmd_insert_mapping_class, name, \
-+	TP_PROTO(struct inode *inode, struct vm_area_struct *vma, \
-+		unsigned long address, int write, long length, pfn_t pfn, \
-+		void *radix_entry), \
-+	TP_ARGS(inode, vma, address, write, length, pfn, radix_entry))
-+
-+DEFINE_PMD_INSERT_MAPPING_EVENT(dax_pmd_insert_mapping);
-+DEFINE_PMD_INSERT_MAPPING_EVENT(dax_pmd_insert_mapping_fallback);
-+
- #endif /* _TRACE_FS_DAX_H */
- 
- /* This part must be outside protection */
 -- 
 2.7.4
 
