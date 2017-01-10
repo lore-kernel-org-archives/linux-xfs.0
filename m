@@ -1,154 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38423 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965285AbdAKIHz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Jan 2017 03:07:55 -0500
-Subject: Re: [PATCH] xfs: Timely free truncated dirty pages
-References: <20170110101745.4841-1-jack@suse.cz>
-From: Vlastimil Babka <vbabka@suse.cz>
-Message-ID: <7ecf901b-ecbd-3914-25c3-1f6f6faf3264@suse.cz>
-Date: Wed, 11 Jan 2017 09:07:51 +0100
+Received: from mail.linuxfoundation.org ([140.211.169.12]:34832 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S939746AbdAJNwf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 08:52:35 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4.9 187/206] xfs: use new extent lookup helpers xfs_file_iomap_begin_delay
+Date: Tue, 10 Jan 2017 14:37:50 +0100
+Message-Id: <20170110131511.571184471@linuxfoundation.org>
+In-Reply-To: <20170110131502.767555407@linuxfoundation.org>
+References: <20170110131502.767555407@linuxfoundation.org>
 MIME-Version: 1.0
-In-Reply-To: <20170110101745.4841-1-jack@suse.cz>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Petr Tuma <petr.tuma@d3s.mff.cuni.cz>, Brian Foster <bfoster@redhat.com>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-xfs@vger.kernel.org, Dave Chinner" <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>Dave Chinner <david@fromorbit.com>
 
-On 01/10/2017 11:17 AM, Jan Kara wrote:
-> Commit 99579ccec4e2 "xfs: skip dirty pages in ->releasepage()" started
-> to skip dirty pages in xfs_vm_releasepage() which also has the effect
-> that if a dirty page is truncated, it does not get freed by
-> block_invalidatepage() and is lingering in LRU list waiting for reclaim.
-> So a simple loop like:
-> 
-> while true; do
-> 	dd if=/dev/zero of=file bs=1M count=100
-> 	rm file
-> done
-> 
-> will keep using more and more memory until we hit low watermarks and
-> start pagecache reclaim which will eventually reclaim also the truncate
-> pages. Keeping these truncated (and thus never usable) pages in memory
-> is just a waste of memory, is unnecessarily stressing page cache
-> reclaim, and is also confusing users thinking they are running out of
-> memory.
+4.9-stable review patch.  If anyone has any objections, please let me know.
 
-Hi,
-
-So the impact is even worse than that, as it's the kernel that is
-actually confused, while the user still gets the impression of memory
-being available.
-According to the reporter, this bug has manifested as anonymous mmap()
-returning with ENOMEM in their workload (some benchmark), which does not
-happen anymore after switching from xfs to ext4.
-
-Here are the relevant /proc/meminfo counters from a system that is
-experiencing the bug (but hasn't exhausted all memory and hit ENOMEM yet):
+------------------
 
 
-MemTotal:       65862388 kB
-MemFree:         6882888 kB
-MemAvailable:   54829584 kB
-Buffers:            2248 kB
-Cached:          1937376 kB
-SwapCached:            0 kB
-Active:         14969280 kB
-Inactive:       42491396 kB
-Active(anon):   10034824 kB
-Inactive(anon):     1420 kB
-Active(file):    4934456 kB
-Inactive(file): 42489976 kB
-Unevictable:           0 kB
-Mlocked:               0 kB
-SwapTotal:        511996 kB
-SwapFree:         511996 kB
-Dirty:              1452 kB
-Writeback:             0 kB
-AnonPages:      10034556 kB
-Mapped:           143956 kB
-Shmem:              1836 kB
-...
+commit 656152e552e5cbe0c11ad261b524376217c2fb13 upstream.
 
-MemAvailable suggests that most of memory (except anonymous mmaps) is
-still available, i.e. free or reclaimable. But there's a large
-discrepancy between "Cached", which is based on the NR_FILE_PAGES
-counter, and [In]Active(file), which reflects NR_[IN]ACTIVE_FILE
-counters. So the truncated pages are not counted towards page cache
-anymore, but are still accounted as LRU pages, as they are placed on the
-LRU lists waiting for reclaim.
+And only lookup the previous extent inside xfs_iomap_prealloc_size
+if we actually need it.
 
-Now MemAvailable is based on NR_FREE_PAGES and NR_[IN]ACTIVE_FILE (I
-actually wonder why the value is so high here, it should consider only
-half of the file LRU's as available, according to the comment there...
-oh, I see, there's a math error there, I'll report that separately...).
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/xfs/xfs_iomap.c |   20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-And AFAICS, the ENOMEM results of mmap() comes from
-__vm_enough_memory(), which in OVERCOMMIT_GUESS mode considers as
-available memory (called 'free' there) the sum of NR_FREE_PAGES, and
-NR_FILE_PAGES.
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -395,11 +395,12 @@ xfs_iomap_prealloc_size(
+ 	struct xfs_inode	*ip,
+ 	loff_t			offset,
+ 	loff_t			count,
+-	xfs_extnum_t		idx,
+-	struct xfs_bmbt_irec	*prev)
++	xfs_extnum_t		idx)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+ 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	struct xfs_bmbt_irec	prev;
+ 	int			shift = 0;
+ 	int64_t			freesp;
+ 	xfs_fsblock_t		qblocks;
+@@ -419,8 +420,8 @@ xfs_iomap_prealloc_size(
+ 	 */
+ 	if ((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ||
+ 	    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign) ||
+-	    idx == 0 ||
+-	    prev->br_startoff + prev->br_blockcount < offset_fsb)
++	    !xfs_iext_get_extent(ifp, idx - 1, &prev) ||
++	    prev.br_startoff + prev.br_blockcount < offset_fsb)
+ 		return mp->m_writeio_blocks;
+ 
+ 	/*
+@@ -439,8 +440,8 @@ xfs_iomap_prealloc_size(
+ 	 * always extends to MAXEXTLEN rather than falling short due to things
+ 	 * like stripe unit/width alignment of real extents.
+ 	 */
+-	if (prev->br_blockcount <= (MAXEXTLEN >> 1))
+-		alloc_blocks = prev->br_blockcount << 1;
++	if (prev.br_blockcount <= (MAXEXTLEN >> 1))
++		alloc_blocks = prev.br_blockcount << 1;
+ 	else
+ 		alloc_blocks = XFS_B_TO_FSB(mp, offset);
+ 	if (!alloc_blocks)
+@@ -538,7 +539,6 @@ xfs_file_iomap_begin_delay(
+ 	xfs_fileoff_t		end_fsb, orig_end_fsb;
+ 	int			error = 0, eof = 0;
+ 	struct xfs_bmbt_irec	got;
+-	struct xfs_bmbt_irec	prev;
+ 	xfs_extnum_t		idx;
+ 
+ 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+@@ -563,8 +563,7 @@ xfs_file_iomap_begin_delay(
+ 			goto out_unlock;
+ 	}
+ 
+-	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
+-			&got, &prev);
++	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
+ 	if (!eof && got.br_startoff <= offset_fsb) {
+ 		if (xfs_is_reflink_inode(ip)) {
+ 			bool		shared;
+@@ -601,8 +600,7 @@ xfs_file_iomap_begin_delay(
+ 	if (eof) {
+ 		xfs_fsblock_t	prealloc_blocks;
+ 
+-		prealloc_blocks =
+-			xfs_iomap_prealloc_size(ip, offset, count, idx, &prev);
++		prealloc_blocks = xfs_iomap_prealloc_size(ip, offset, count, idx);
+ 		if (prealloc_blocks) {
+ 			xfs_extlen_t	align;
+ 			xfs_off_t	end_offset;
 
-So this would explain the ENOMEM, and how this bug is a problem for
-workloads that truncate/remove files on xfs, and at the same time rely
-on anonymous mmap(). In that case, these mmaps can apparently start
-failing if there's no other source of sufficient memory pressure to let
-reclaim get rid of the truncated pages on LRU. This should be serious
-enough for a stable backport IMHO.
-
-Thanks,
-Vlastimil
-
-> So instead of just skipping dirty pages in xfs_vm_releasepage(), return
-> to old behavior of skipping them only if they have delalloc or unwritten
-> buffers and fix the spurious warnings by warning only if the page is
-> clean.
-> 
-> CC: Brian Foster <bfoster@redhat.com>
-> CC: Vlastimil Babka <vbabka@suse.cz>
-> Reported-by: Petr Tůma <petr.tuma@d3s.mff.cuni.cz>
-> Fixes: 99579ccec4e271c3d4d4e7c946058766812afdab
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/xfs/xfs_aops.c | 19 +++++++++----------
->  1 file changed, 9 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 0f56fcd3a5d5..670d38ff7dc7 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1150,21 +1150,20 @@ xfs_vm_releasepage(
->  	 * the dirty bit cleared. Thus, it can send actual dirty pages to
->  	 * ->releasepage() via shrink_active_list(). Conversely,
->  	 * block_invalidatepage() can send pages that are still marked dirty
-> -	 * but otherwise have invalidated buffers.
-> -	 *
-> -	 * We've historically freed buffers on the latter. Instead, quietly
-> -	 * filter out all dirty pages to avoid spurious buffer state warnings.
-> -	 * This can likely be removed once shrink_active_list() is fixed.
-> +	 * but otherwise have invalidated buffers. So we warn only if the page
-> +	 * is clean to avoid spurious warnings when called from
-> +	 * shrink_active_list() for a dirty page.
->  	 */
-> -	if (PageDirty(page))
-> -		return 0;
-> -
->  	xfs_count_page_state(page, &delalloc, &unwritten);
->  
-> -	if (WARN_ON_ONCE(delalloc))
-> +	if (delalloc) {
-> +		WARN_ON_ONCE(!PageDirty(page));
->  		return 0;
-> -	if (WARN_ON_ONCE(unwritten))
-> +	}
-> +	if (unwritten) {
-> +		WARN_ON_ONCE(!PageDirty(page));
->  		return 0;
-> +	}
->  
->  	return try_to_free_buffers(page);
->  }
-> 
 
