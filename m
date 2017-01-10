@@ -1,82 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([59.151.112.132]:24716 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754150AbdAKCqC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 21:46:02 -0500
-Subject: Re: Generic/389 xfs_io segfault on btrfs and ext4
-References: <ca7ae533-8d7f-9783-1900-bdfb17d6a32c@cn.fujitsu.com>
- <d5116871-0bb3-46b0-c9e3-def74bd57967@sandeen.net>
-From: Qu Wenruo <quwenruo@cn.fujitsu.com>
-Message-ID: <5c56afcd-13b0-d3b3-e18c-0b902691d8f4@cn.fujitsu.com>
-Date: Wed, 11 Jan 2017 10:45:52 +0800
-MIME-Version: 1.0
-In-Reply-To: <d5116871-0bb3-46b0-c9e3-def74bd57967@sandeen.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:34079 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S939184AbdAJPjg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 10:39:36 -0500
+Received: by mail-wj0-f196.google.com with SMTP id qs7so50331779wjc.1
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 07:39:36 -0800 (PST)
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v7 4/6] xfs: replace xfs_mode_to_ftype table with switch statement
+Date: Tue, 10 Jan 2017 17:39:15 +0200
+Message-Id: <1484062757-12433-5-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1484062757-12433-1-git-send-email-amir73il@gmail.com>
+References: <1484062757-12433-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Eryu Guan <eguan@redhat.com>, agruenba@redhat.com, btrfs <linux-btrfs@vger.kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
+The size of the xfs_mode_to_ftype[] conversion table
+was too small to handle an invalid value of mode=S_IFMT.
 
+Instead of fixing the table size, replace the conversion table
+with a conversion helper that uses a switch statement.
 
-At 01/11/2017 10:40 AM, Eric Sandeen wrote:
-> On 1/10/17 8:08 PM, Qu Wenruo wrote:
->> Hi, Andreas and Eryu,
->>
->> I found test case generic/389 fails on btrfs and ext4, and it fails with xfs_io segfault.
->
-> Details, please?
->
-> Works ok here:
->
-> # ./check  generic/389
-> FSTYP         -- ext4
-> PLATFORM      -- Linux/x86_64 bp-05 4.9.0-rc1+
-> MKFS_OPTIONS  -- /dev/sdb2
-> MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:nfs_t:s0 /dev/sdb2 /mnt/scratch
->
-> generic/389 1s ... 1s
-> Ran: generic/389
-> Passed all 1 tests
->
-> # rpm -q xfsprogs
-> xfsprogs-4.9.0-1.el6.x86_64
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/xfs/libxfs/xfs_dir2.c | 36 ++++++++++++++++++++++--------------
+ fs/xfs/libxfs/xfs_dir2.h |  5 ++---
+ fs/xfs/xfs_iops.c        |  2 +-
+ 3 files changed, 25 insertions(+), 18 deletions(-)
 
-OK, that's the problem.
-
-My repo only provides old xfsprogs, which xfsprogs-4.5.0-2.fc25.x86_64.
-
->
-> What version of kernel and xfsprogs were you testing, and what was the segfault?
-
-Kernel is mainline v4.10-rc1.
-No debuginfo installed, so no backtrace, but since there is so many
-
-So the problem is the old xfsprogs, I'll update or compile xfsprogs.
-Thanks for your kind info.
-
-Thanks,
-Qu
-
->
-> Thanks,
-> -Eric
->
->> So it seems to be a bug in xfsprogs, but I'm already using the latest release from Fedora.
->>
->> Is this a known bug?
->>
->> Thanks,
->> Qu
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
-
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 4f7913f..eb64f38 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -36,21 +36,29 @@
+ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+ 
+ /*
+- * @mode, if set, indicates that the type field needs to be set up.
+- * This uses the transformation from file mode to DT_* as defined in linux/fs.h
+- * for file type specification. This will be propagated into the directory
+- * structure if appropriate for the given operation and filesystem config.
++ * Convert inode mode to directory entry filetype
+  */
+-const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
+-	[0]			= XFS_DIR3_FT_UNKNOWN,
+-	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
+-	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
+-	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
+-	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
+-	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
+-	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
+-	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
+-};
++const unsigned char xfs_mode_to_ftype(int mode)
++{
++	switch (mode & S_IFMT) {
++	case S_IFREG:
++		return XFS_DIR3_FT_REG_FILE;
++	case S_IFDIR:
++		return XFS_DIR3_FT_DIR;
++	case S_IFCHR:
++		return XFS_DIR3_FT_CHRDEV;
++	case S_IFBLK:
++		return XFS_DIR3_FT_BLKDEV;
++	case S_IFIFO:
++		return XFS_DIR3_FT_FIFO;
++	case S_IFSOCK:
++		return XFS_DIR3_FT_SOCK;
++	case S_IFLNK:
++		return XFS_DIR3_FT_SYMLINK;
++	default:
++		return XFS_DIR3_FT_UNKNOWN;
++	}
++}
+ 
+ /*
+  * ASCII case-insensitive (ie. A-Z) support for directories that was
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 72df0dc..d4b77ab 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -35,10 +35,9 @@ struct xfs_dir2_data_unused;
+ extern struct xfs_name	xfs_name_dotdot;
+ 
+ /*
+- * directory filetype conversion tables.
++ * Convert inode mode to directory entry filetype
+  */
+-#define S_SHIFT 12
+-extern const unsigned char xfs_mode_to_ftype[];
++extern const unsigned char xfs_mode_to_ftype(int mode);
+ 
+ /*
+  * directory operations vector for encode/decode routines
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 308bebb..821f08d 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -103,7 +103,7 @@ xfs_dentry_to_name(
+ {
+ 	namep->name = dentry->d_name.name;
+ 	namep->len = dentry->d_name.len;
+-	namep->type = xfs_mode_to_ftype[(mode & S_IFMT) >> S_SHIFT];
++	namep->type = xfs_mode_to_ftype(mode);
+ }
+ 
+ STATIC void
+-- 
+2.7.4
 
