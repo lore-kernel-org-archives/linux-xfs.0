@@ -1,64 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43174 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:47203 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754260AbdAJAIH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 19:08:07 -0500
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v0A0862w001314
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 00:08:06 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v0A086OU013724
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 00:08:06 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v0A083R1025967
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 00:08:04 GMT
-Date: Mon, 9 Jan 2017 16:08:02 -0800
+        with ESMTP id S942556AbdAJAV7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 19:21:59 -0500
+Date: Mon, 9 Jan 2017 16:21:53 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-linux: xfs-4.10-misc-fixes-7 updated to 84a4620c
-Message-ID: <20170110000802.GF14038@birch.djwong.org>
+Subject: Re: 4.9-stable updates for XFS
+Message-ID: <20170110002153.GG14038@birch.djwong.org>
+References: <1483976343-661-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <1483976343-661-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Hi folks,
+On Mon, Jan 09, 2017 at 04:38:31PM +0100, Christoph Hellwig wrote:
+> Hi all,
+> 
+> below are backports from 4.10-rc3 for XFS.  I've selected all clear
+> bugfixes for reported bugs, and added about a handful of small
+> infrastructure backports so that we can take the fixes as is instead of
+> having to redo them in a different way than upstream.
+> 
+> These have passed xfstests on top of Linux 4.9.2.  Even if some of the 
+> patches might apply to older stable trees please do not backport them 
+> unless someone volunteers to QA them first.
 
-The xfs-4.10-misc-fixes-7 branch of the xfs-linux repository at:
+FWIW the list looks reasonable to me.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+--D
 
-has just been updated.  I'll get this into -next to clean up the
-mess there.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the xfs-4.10-misc-fixes-7 branch is commit:
-
-84a4620c xfs: don't print warnings when xfs_log_force fails
-
-New Commits:
-
-Christoph Hellwig (5):
-      [5149fd3] xfs: bump up reserved blocks in xfs_alloc_set_aside
-      [255c516] xfs: fix bogus minleft manipulations
-      [54fee13] xfs: adjust allocation length in xfs_alloc_space_available
-      [12ef830] xfs: don't rely on ->total in xfs_alloc_space_available
-      [84a4620c] xfs: don't print warnings when xfs_log_force fails
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_alloc.c      | 115 ++++++++++-------------------------------
- fs/xfs/libxfs/xfs_alloc.h      |   2 +-
- fs/xfs/libxfs/xfs_bmap.c       |   3 --
- fs/xfs/libxfs/xfs_bmap_btree.c |   3 +-
- fs/xfs/xfs_log.c               |  12 +----
- 5 files changed, 32 insertions(+), 103 deletions(-)
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
