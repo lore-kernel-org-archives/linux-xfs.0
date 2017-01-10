@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:34784 "EHLO
+Received: from mail.linuxfoundation.org ([140.211.169.12]:34748 "EHLO
         mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1765996AbdAJNwT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 08:52:19 -0500
+        with ESMTP id S1756226AbdAJNwJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 08:52:09 -0500
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 183/206] xfs: remove prev argument to xfs_bmapi_reserve_delalloc
-Date: Tue, 10 Jan 2017 14:37:46 +0100
-Message-Id: <20170110131511.361119026@linuxfoundation.org>
+Subject: [PATCH 4.9 180/206] xfs: new inode extent list lookup helpers
+Date: Tue, 10 Jan 2017 14:37:43 +0100
+Message-Id: <20170110131511.210519624@linuxfoundation.org>
 In-Reply-To: <20170110131502.767555407@linuxfoundation.org>
 References: <20170110131502.767555407@linuxfoundation.org>
 MIME-Version: 1.0
@@ -22,10 +22,20 @@ Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-xfs@vger.kernel.org,
 ------------------
 
 
-commit 65c5f419788d623a0410eca1866134f5e4628594 upstream.
+commit 93533c7855c3c78c8a900cac65c8d669bb14935d upstream.
 
-We can easily lookup the previous extent for the cases where we need it,
-which saves the callers from looking it up for us later in the series.
+xfs_iext_lookup_extent looks up a single extent at the passed in offset,
+and returns the extent covering the area, or the one behind it in case
+of a hole, as well as the index of the returned extent in arguments,
+as well as a simple bool as return value that is set to false if no
+extent could be found because the offset is behind EOF.  It is a simpler
+replacement for xfs_bmap_search_extent that leaves looking up the rarely
+needed previous extent to the caller and has a nicer calling convention.
+
+xfs_iext_get_extent is a helper for iterating over the extent list,
+it takes an extent index as input, and returns the extent at that index
+in it's expanded form in an argument if it exists.  The actual return
+value is a bool whether the index is valid or not.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
@@ -33,70 +43,76 @@ Signed-off-by: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c |    8 ++++++--
- fs/xfs/libxfs/xfs_bmap.h |    3 +--
- fs/xfs/xfs_iomap.c       |    3 +--
- fs/xfs/xfs_reflink.c     |    2 +-
- 4 files changed, 9 insertions(+), 7 deletions(-)
+ fs/xfs/libxfs/xfs_inode_fork.c |   46 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_inode_fork.h |    6 +++++
+ 2 files changed, 52 insertions(+)
 
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4250,7 +4250,6 @@ xfs_bmapi_reserve_delalloc(
- 	xfs_fileoff_t		aoff,
- 	xfs_filblks_t		len,
- 	struct xfs_bmbt_irec	*got,
--	struct xfs_bmbt_irec	*prev,
- 	xfs_extnum_t		*lastx,
- 	int			eof)
- {
-@@ -4272,7 +4271,12 @@ xfs_bmapi_reserve_delalloc(
- 	else
- 		extsz = xfs_get_extsz_hint(ip);
- 	if (extsz) {
--		error = xfs_bmap_extsize_align(mp, got, prev, extsz, rt, eof,
-+		struct xfs_bmbt_irec	prev;
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -2003,3 +2003,49 @@ xfs_ifork_init_cow(
+ 	ip->i_cformat = XFS_DINODE_FMT_EXTENTS;
+ 	ip->i_cnextents = 0;
+ }
 +
-+		if (!xfs_iext_get_extent(ifp, *lastx - 1, &prev))
-+			prev.br_startoff = NULLFILEOFF;
++/*
++ * Lookup the extent covering bno.
++ *
++ * If there is an extent covering bno return the extent index, and store the
++ * expanded extent structure in *gotp, and the extent index in *idx.
++ * If there is no extent covering bno, but there is an extent after it (e.g.
++ * it lies in a hole) return that extent in *gotp and its index in *idx
++ * instead.
++ * If bno is beyond the last extent return false, and return the index after
++ * the last valid index in *idxp.
++ */
++bool
++xfs_iext_lookup_extent(
++	struct xfs_inode	*ip,
++	struct xfs_ifork	*ifp,
++	xfs_fileoff_t		bno,
++	xfs_extnum_t		*idxp,
++	struct xfs_bmbt_irec	*gotp)
++{
++	struct xfs_bmbt_rec_host *ep;
 +
-+		error = xfs_bmap_extsize_align(mp, got, &prev, extsz, rt, eof,
- 					       1, 0, &aoff, &alen);
- 		ASSERT(!error);
- 	}
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -243,8 +243,7 @@ struct xfs_bmbt_rec_host *
- 		struct xfs_bmbt_irec *gotp, struct xfs_bmbt_irec *prevp);
- int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
- 		xfs_fileoff_t aoff, xfs_filblks_t len,
--		struct xfs_bmbt_irec *got, struct xfs_bmbt_irec *prev,
--		xfs_extnum_t *lastx, int eof);
-+		struct xfs_bmbt_irec *got, xfs_extnum_t *lastx, int eof);
++	XFS_STATS_INC(ip->i_mount, xs_look_exlist);
++
++	ep = xfs_iext_bno_to_ext(ifp, bno, idxp);
++	if (!ep)
++		return false;
++	xfs_bmbt_get_all(ep, gotp);
++	return true;
++}
++
++/*
++ * Return true if there is an extent at index idx, and return the expanded
++ * extent structure at idx in that case.  Else return false.
++ */
++bool
++xfs_iext_get_extent(
++	struct xfs_ifork	*ifp,
++	xfs_extnum_t		idx,
++	struct xfs_bmbt_irec	*gotp)
++{
++	if (idx < 0 || idx >= xfs_iext_count(ifp))
++		return false;
++	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, idx), gotp);
++	return true;
++}
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -182,6 +182,12 @@ void		xfs_iext_irec_compact_pages(struct
+ void		xfs_iext_irec_compact_full(struct xfs_ifork *);
+ void		xfs_iext_irec_update_extoffs(struct xfs_ifork *, int, int);
  
- enum xfs_bmap_intent_type {
- 	XFS_BMAP_MAP = 1,
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -622,8 +622,7 @@ xfs_file_iomap_begin_delay(
++bool		xfs_iext_lookup_extent(struct xfs_inode *ip,
++			struct xfs_ifork *ifp, xfs_fileoff_t bno,
++			xfs_extnum_t *idxp, struct xfs_bmbt_irec *gotp);
++bool		xfs_iext_get_extent(struct xfs_ifork *ifp, xfs_extnum_t idx,
++			struct xfs_bmbt_irec *gotp);
++
+ extern struct kmem_zone	*xfs_ifork_zone;
  
- retry:
- 	error = xfs_bmapi_reserve_delalloc(ip, XFS_DATA_FORK, offset_fsb,
--			end_fsb - offset_fsb, &got,
--			&prev, &idx, eof);
-+			end_fsb - offset_fsb, &got, &idx, eof);
- 	switch (error) {
- 	case 0:
- 		break;
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -293,7 +293,7 @@ xfs_reflink_reserve_cow(
- 
- retry:
- 	error = xfs_bmapi_reserve_delalloc(ip, XFS_COW_FORK, imap->br_startoff,
--			end_fsb - imap->br_startoff, &got, &prev, &idx, eof);
-+			end_fsb - imap->br_startoff, &got, &idx, eof);
- 	switch (error) {
- 	case 0:
- 		break;
+ extern void xfs_ifork_init_cow(struct xfs_inode *ip);
 
 
