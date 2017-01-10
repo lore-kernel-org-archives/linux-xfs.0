@@ -1,73 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35465 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936994AbdAJPjb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 10:39:31 -0500
-Received: by mail-wm0-f66.google.com with SMTP id l2so30686200wml.2
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 07:39:30 -0800 (PST)
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v7 0/6] xfs: fixes for malformed on-disk i_mode
-Date: Tue, 10 Jan 2017 17:39:11 +0200
-Message-Id: <1484062757-12433-1-git-send-email-amir73il@gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:37622 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751521AbdAJW3V (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 17:29:21 -0500
+Date: Tue, 10 Jan 2017 14:29:12 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH] xfs_db: sanitize geometry on load
+Message-ID: <20170110222912.GM14038@birch.djwong.org>
+References: <20170110194249.GK14038@birch.djwong.org>
+ <73a62730-59a9-cad4-ca33-f054e544459b@sandeen.net>
+ <20170110212721.GL14038@birch.djwong.org>
+ <c4127369-3be4-bb80-daf5-1548fd07df48@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c4127369-3be4-bb80-daf5-1548fd07df48@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-Darrick,
+On Tue, Jan 10, 2017 at 03:34:05PM -0600, Eric Sandeen wrote:
+> On 1/10/17 3:27 PM, Darrick J. Wong wrote:
+> >> What about sanitizing only the agcount, and saying something like:
+> >>
+> >> xfs_db: device fsfile AG count is insane.  Initializing only first $X
+> >>
+> >> (where $X is based on your heuristics)
+> > I feel like "Initializing" could be misinterpreted as formatting the
+> > disk.  How about:
+> > 
+> > xfs_db: device fsfile AG count is insane.  Reading only the first $X AGs.
+> 
+> Sure.  (I'm not sure what the implications are - it's more than just
+> "Oh, we didn't read it" right?  It'll have implications for use if
+> more AGs really exist?)
 
-This is 7th revision of the fixes for malformed on-disk i_mode.
+I don't think there are.  AFAICT we don't ever write the m_sb values
+back to disk; the only commands capable of writing (blocktrash, write,
+fuzz) deal with buffers directly.  There's a side effect that things
+like metadump will only dump the first $X AGs worth of metadata, but
+right now it'll simply OOM and crash.
 
-Patches 1-3 are simple cleanups, some already reviewed and
-one (patch 2) was suggested by you.
+--D
 
-Patch 4 replaces xfs_mode_to_ftype table with switch statement
-per Christoph's suggestion.
-
-Patches 5-6 use the new conversion helper to sanity test mode
-loaded from disk and export the error to the user.
-
-Tested with generic/401 with -n ftype=0|1.
-Tested with new xfs/348 test with -n ftype=0|1.
-
-Amir.
-
-v7:
-- Replaced xfs_mode_to_ftype table with switch statement
-- Reordered patches so reviewed trivial patches are first
-- Added Reviewed-by Christoph to first 2 patches
-- Added cleanup patch for xfs_dir2.h
-- Added sanity checks for invalid mode in more places
-
-v6:
-- Added Reviewed-by Brian for patch 1
-- Added patch to address new xfs/348 failures
-- Added patch to fix ASSERT() likely
-
-v5:
-- remove wrong argument about on-disk malformed mode from commit message
-- address Brian's review comments
-
-v4:
-- independent fix patch for xfs
-
-
-Amir Goldstein (6):
-  xfs: make the ASSERT() condition likely
-  xfs: sanity check directory inode di_size
-  xfs: add missing include dependencies to xfs_dir2.h
-  xfs: replace xfs_mode_to_ftype table with switch statement
-  xfs: sanity check inode mode when creating new dentry
-  xfs: sanity check inode di_mode
-
- fs/xfs/libxfs/xfs_dir2.c      | 40 ++++++++++++++++++++++-------------
- fs/xfs/libxfs/xfs_dir2.h      |  8 ++++---
- fs/xfs/libxfs/xfs_inode_buf.c | 10 +++++++--
- fs/xfs/xfs_iops.c             | 49 ++++++++++++++++++++++++++++++++++---------
- fs/xfs/xfs_linux.h            |  6 +++---
- 5 files changed, 80 insertions(+), 33 deletions(-)
-
--- 
-2.7.4
-
+> 
+> -Eric
+> 
+> > ?
+> > 
+> > --D
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
