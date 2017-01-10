@@ -1,52 +1,205 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31168 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:32836 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941389AbdAIVSb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 16:18:31 -0500
-Date: Mon, 9 Jan 2017 13:17:49 -0800
+        with ESMTP id S1757251AbdAJXdE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 18:33:04 -0500
+Date: Tue, 10 Jan 2017 15:32:52 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v6 1/3] xfs: fix the size of xfs_mode_to_ftype table
-Message-ID: <20170109211749.GC14038@birch.djwong.org>
-References: <1483967189-27313-1-git-send-email-amir73il@gmail.com>
- <1483967189-27313-2-git-send-email-amir73il@gmail.com>
- <20170109155158.GA19396@infradead.org>
- <CAOQ4uxi4AWSN89MtZH6f0B9aC_AMmC6bxbUCAh9LMU4G+Z9U1A@mail.gmail.com>
+Subject: Re: [PATCH 5/9] common/fuzzy: move fuzzing helper functions here
+Message-ID: <20170110233252.GH14033@birch.djwong.org>
+References: <148357902056.10436.12795484251467155460.stgit@birch.djwong.org>
+ <148357905253.10436.560781214557366417.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi4AWSN89MtZH6f0B9aC_AMmC6bxbUCAh9LMU4G+Z9U1A@mail.gmail.com>
+In-Reply-To: <148357905253.10436.560781214557366417.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: eguan@redhat.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Jan 09, 2017 at 07:21:25PM +0200, Amir Goldstein wrote:
-> On Mon, Jan 9, 2017 at 5:51 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> > On Mon, Jan 09, 2017 at 03:06:27PM +0200, Amir Goldstein wrote:
-> >> Fix the size of the xfs_mode_to_ftype conversion table,
-> >> which was too small to handle an invalid value of mode=S_IFMT.
-> >>
-> >> Use a convenience macro S_DT(mode) to convert from
-> >> mode to dirent file type and change the name of the table
-> >> to xfs_dtype_to_ftype to correctly describe its index values.
-> >
-> > This looks like an awful lot of magic.  Would a switch statement
-> > generate so much worse code?
+On Wed, Jan 04, 2017 at 05:17:32PM -0800, Darrick J. Wong wrote:
+> Move some fuzzing helper functions into a new common/fuzzy file.
+> We'll add a lot more fuzzing helpers in subsequent patches.
 > 
-> I doubt it really matters that much, so it's down to a matter of taste.
-> I personally like the existing map table better than switch if anyone cares ;-)
-> but I think that the strongest argument in favor of the existing code
-> is that it works, so no reason to change it.
-> IMHO, this minor fix and cleanup do not justify switching the code over to
-> switch statement.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/fuzzy    |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  common/populate |   35 -----------------------
+>  tests/ext4/006  |    1 +
+>  tests/xfs/083   |    1 +
+>  4 files changed, 85 insertions(+), 35 deletions(-)
+>  create mode 100644 common/fuzzy
+> 
+> 
+> diff --git a/common/fuzzy b/common/fuzzy
+> new file mode 100644
+> index 0000000..1cc1d5e
+> --- /dev/null
+> +++ b/common/fuzzy
+> @@ -0,0 +1,83 @@
+> +##/bin/bash
+> +
+> +# Routines for fuzzing and scrubbing a filesystem.
+> +#
+> +#-----------------------------------------------------------------------
+> +#  Copyright (c) 2017 Oracle.  All Rights Reserved.
+> +#  This program is free software; you can redistribute it and/or modify
+> +#  it under the terms of the GNU General Public License as published by
+> +#  the Free Software Foundation; either version 2 of the License, or
+> +#  (at your option) any later version.
+> +#
+> +#  This program is distributed in the hope that it will be useful,
+> +#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +#  GNU General Public License for more details.
+> +#
+> +#  You should have received a copy of the GNU General Public License
+> +#  along with this program; if not, write to the Free Software
+> +#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+> +#  USA
+> +#
+> +#  Contact information: Silicon Graphics, Inc., 1500 Crittenden Lane,
+> +#  Mountain View, CA 94043, USA, or: http://www.sgi.com
 
-I can't feed a garbage index to a switch statement and have it fly
-off the end of an array; plus we can throw asserts in a default: case.
+SGI isn't on Crittenden Lane anymore -- the site has been taken over by some
+flashy startup company, so this should go away.
 
 --D
 
+> +#-----------------------------------------------------------------------
+> +
+> +# Modify various files after a fuzzing operation
+> +_scratch_fuzz_modify() {
+> +	nr="$1"
+> +
+> +	test -z "${nr}" && nr=50000
+> +	echo "+++ touch ${nr} files"
+> +	blk_sz=$(stat -f -c '%s' ${SCRATCH_MNT})
+> +	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${blk_sz}" "/tmp/afile" > /dev/null
+> +	date="$(date)"
+> +	find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
+> +		setfattr -n "user.date" -v "${date}" "$f"
+> +		cat "/tmp/afile" >> "$f"
+> +		mv "$f" "$f.longer"
+> +	done
+> +	sync
+> +	rm -rf "/tmp/afile"
+> +
+> +	echo "+++ create files"
+> +	mkdir -p "${SCRATCH_MNT}/test.moo"
+> +	$XFS_IO_PROG -f -c 'pwrite -S 0x80 0 65536' "${SCRATCH_MNT}/test.moo/urk"
+> +	sync
+> +
+> +	echo "+++ remove files"
+> +	rm -rf "${SCRATCH_MNT}/test.moo"
+> +}
+> +
+> +# Try to access files after fuzzing
+> +_scratch_fuzz_test() {
+> +	echo "+++ ls -laR" >> $seqres.full
+> +	ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
+> +
+> +	echo "+++ cat files" >> $seqres.full
+> +	(find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
+> +}
+> +
+> +# Do we have an online scrub program?
+> +_require_scrub() {
+> +	case "${FSTYP}" in
+> +	"xfs"|"ext4")
+> +		test -x $XFS_SCRUB_PROG || _notrun "xfs_scrub not found"
+> +		;;
+> +	*)
+> +		_notrun "No online scrub program for ${FSTYP}."
+> +		;;
+> +	esac
+> +}
+> +
+> +# Scrub the scratch filesystem metadata (online)
+> +_scratch_scrub() {
+> +	case "${FSTYP}" in
+> +	"xfs"|"ext4"|"ext3"|"ext2")
+> +		$XFS_SCRUB_PROG -d -T -v "$@" $SCRATCH_MNT
+> +		;;
+> +	*)
+> +		_fail "No online scrub program for ${FSTYP}."
+> +		;;
+> +	esac
+> +}
+> diff --git a/common/populate b/common/populate
+> index 5808bc9..f012173 100644
+> --- a/common/populate
+> +++ b/common/populate
+> @@ -606,41 +606,6 @@ _scratch_populate() {
+>  	esac
+>  }
+>  
+> -# Modify various files after a fuzzing operation
+> -_scratch_fuzz_modify() {
+> -	nr="$1"
+> -
+> -	test -z "${nr}" && nr=50000
+> -	echo "+++ touch ${nr} files"
+> -	blk_sz=$(stat -f -c '%s' ${SCRATCH_MNT})
+> -	$XFS_IO_PROG -f -c "pwrite -S 0x63 0 ${blk_sz}" "/tmp/afile" > /dev/null
+> -	date="$(date)"
+> -	find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
+> -		setfattr -n "user.date" -v "${date}" "$f"
+> -		cat "/tmp/afile" >> "$f"
+> -		mv "$f" "$f.longer"
+> -	done
+> -	sync
+> -	rm -rf "/tmp/afile"
+> -
+> -	echo "+++ create files"
+> -	mkdir -p "${SCRATCH_MNT}/test.moo"
+> -	$XFS_IO_PROG -f -c 'pwrite -S 0x80 0 65536' "${SCRATCH_MNT}/test.moo/urk"
+> -	sync
+> -
+> -	echo "+++ remove files"
+> -	rm -rf "${SCRATCH_MNT}/test.moo"
+> -}
+> -
+> -# Try to access files after fuzzing
+> -_scratch_fuzz_test() {
+> -	echo "+++ ls -laR" >> $seqres.full
+> -	ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
+> -
+> -	echo "+++ cat files" >> $seqres.full
+> -	(find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
+> -}
+> -
+>  # Fill a file system by repeatedly creating files in the given folder
+>  # starting with the given file size.  Files are reduced in size when
+>  # they can no longer fit until no more files can be created.
+> diff --git a/tests/ext4/006 b/tests/ext4/006
+> index 9662f50..bb9b7e5 100755
+> --- a/tests/ext4/006
+> +++ b/tests/ext4/006
+> @@ -43,6 +43,7 @@ _cleanup()
+>  . ./common/filter
+>  . ./common/attr
+>  . ./common/populate
+> +. ./common/fuzzy
+>  
+>  if [ ! -x "$(which e2fuzz)" ]; then
+>  	_notrun "Couldn't find e2fuzz"
+> diff --git a/tests/xfs/083 b/tests/xfs/083
+> index 39bd75f..e2b5f82 100755
+> --- a/tests/xfs/083
+> +++ b/tests/xfs/083
+> @@ -43,6 +43,7 @@ _cleanup()
+>  . ./common/filter
+>  . ./common/attr
+>  . ./common/populate
+> +. ./common/fuzzy
+>  
+>  # real QA test starts here
+>  _supported_fs xfs
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
