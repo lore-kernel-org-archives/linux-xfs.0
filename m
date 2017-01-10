@@ -1,67 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from mga09.intel.com ([134.134.136.24]:10338 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754400AbdAJVwh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Jan 2017 16:52:37 -0500
+        id S1754400AbdAJVwl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Jan 2017 16:52:41 -0500
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v4 0/7] DAX tracepoints, mm argument simplification
-Date: Tue, 10 Jan 2017 14:52:15 -0700
-Message-Id: <1484085142-2297-1-git-send-email-ross.zwisler@linux.intel.com>
+Subject: [PATCH v4 3/7] dax: update MAINTAINERS entries for FS DAX
+Date: Tue, 10 Jan 2017 14:52:18 -0700
+Message-Id: <1484085142-2297-4-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <1484085142-2297-1-git-send-email-ross.zwisler@linux.intel.com>
+References: <1484085142-2297-1-git-send-email-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Andrew,
+Add the new include/trace/events/fs_dax.h tracepoint header, the existing
+include/linux/dax.h header, update Matthew's email address and add myself
+as a maintainer for filesystem DAX.
 
-This contains both my DAX tracepoint code and Dave Jiang's MM argument
-simplifications.  Dave's code was written with my tracepoint code as a
-baseline, so it seemed simplest to keep them together in a single series.
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Suggested-by: Matthew Wilcox <mawilcox@microsoft.com>
+---
+ MAINTAINERS | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-This series is based on the v4.10-rc3-mmots-2017-01-09-17-08 snapshot.  A
-working tree can be found here:
-
-https://git.kernel.org/cgit/linux/kernel/git/zwisler/linux.git/log/?h=mmots_dax_tracepoint
-
-Changes from the previous versions of these patches:
- - Combined Dave's code and mine into a single series.
- - Resolved some minor merge conflics in Dave's patches so they could be
-   applied to the latest mmots snapshot.
- - Added Reviewed-by and Acked-by tags to patches as appropriate.
-
-My goal for this series is to get it merged for v4.11.
-
-Thanks,
-- Ross
-
-Dave Jiang (2):
-  mm, dax: make pmd_fault() and friends to be the same as fault()
-  mm, dax: move pmd_fault() to take only vmf parameter
-
-Ross Zwisler (5):
-  tracing: add __print_flags_u64()
-  dax: add tracepoint infrastructure, PMD tracing
-  dax: update MAINTAINERS entries for FS DAX
-  dax: add tracepoints to dax_pmd_load_hole()
-  dax: add tracepoints to dax_pmd_insert_mapping()
-
- MAINTAINERS                   |   5 +-
- drivers/dax/dax.c             |  26 ++++---
- fs/dax.c                      | 114 ++++++++++++++++--------------
- fs/ext4/file.c                |  13 ++--
- fs/xfs/xfs_file.c             |  15 ++--
- include/linux/dax.h           |   6 +-
- include/linux/mm.h            |  28 +++++++-
- include/linux/pfn_t.h         |   6 ++
- include/linux/trace_events.h  |   4 ++
- include/trace/events/fs_dax.h | 156 ++++++++++++++++++++++++++++++++++++++++++
- include/trace/trace_events.h  |  11 +++
- kernel/trace/trace_output.c   |  38 ++++++++++
- mm/memory.c                   |  11 ++-
- 13 files changed, 338 insertions(+), 95 deletions(-)
- create mode 100644 include/trace/events/fs_dax.h
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index c13a4f6..9fb35d7 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3909,10 +3909,13 @@ S:	Maintained
+ F:	drivers/i2c/busses/i2c-diolan-u2c.c
+ 
+ DIRECT ACCESS (DAX)
+-M:	Matthew Wilcox <willy@linux.intel.com>
++M:	Matthew Wilcox <mawilcox@microsoft.com>
++M:	Ross Zwisler <ross.zwisler@linux.intel.com>
+ L:	linux-fsdevel@vger.kernel.org
+ S:	Supported
+ F:	fs/dax.c
++F:	include/linux/dax.h
++F:	include/trace/events/fs_dax.h
+ 
+ DIRECTORY NOTIFICATION (DNOTIFY)
+ M:	Eric Paris <eparis@parisplace.org>
 -- 
 2.7.4
 
