@@ -1,63 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([59.151.112.132]:38562 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752292AbdAKDAn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 22:00:43 -0500
-Subject: Re: Generic/389 xfs_io segfault on btrfs and ext4
-References: <ca7ae533-8d7f-9783-1900-bdfb17d6a32c@cn.fujitsu.com>
- <d5116871-0bb3-46b0-c9e3-def74bd57967@sandeen.net>
- <5c56afcd-13b0-d3b3-e18c-0b902691d8f4@cn.fujitsu.com>
- <c5ea839d-1962-e363-d83b-936328f985df@redhat.com>
-From: Qu Wenruo <quwenruo@cn.fujitsu.com>
-Message-ID: <8e1e082b-11c0-e597-cd38-744938537c2e@cn.fujitsu.com>
-Date: Wed, 11 Jan 2017 11:00:29 +0800
+Received: from userp1040.oracle.com ([156.151.31.81]:43174 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754260AbdAJAIH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 19:08:07 -0500
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v0A0862w001314
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 00:08:06 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v0A086OU013724
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 00:08:06 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v0A083R1025967
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 00:08:04 GMT
+Date: Mon, 9 Jan 2017 16:08:02 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [ANNOUNCE] xfs-linux: xfs-4.10-misc-fixes-7 updated to 84a4620c
+Message-ID: <20170110000802.GF14038@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <c5ea839d-1962-e363-d83b-936328f985df@redhat.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Eryu Guan <eguan@redhat.com>, agruenba@redhat.com, btrfs <linux-btrfs@vger.kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+
+Hi folks,
+
+The xfs-4.10-misc-fixes-7 branch of the xfs-linux repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.  I'll get this into -next to clean up the
+mess there.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the xfs-4.10-misc-fixes-7 branch is commit:
+
+84a4620c xfs: don't print warnings when xfs_log_force fails
+
+New Commits:
+
+Christoph Hellwig (5):
+      [5149fd3] xfs: bump up reserved blocks in xfs_alloc_set_aside
+      [255c516] xfs: fix bogus minleft manipulations
+      [54fee13] xfs: adjust allocation length in xfs_alloc_space_available
+      [12ef830] xfs: don't rely on ->total in xfs_alloc_space_available
+      [84a4620c] xfs: don't print warnings when xfs_log_force fails
 
 
+Code Diffstat:
 
-At 01/11/2017 10:53 AM, Eric Sandeen wrote:
-> On 1/10/17 8:45 PM, Qu Wenruo wrote:
->>
->>
->> At 01/11/2017 10:40 AM, Eric Sandeen wrote:
->
-> ...
->
->>> What version of kernel and xfsprogs were you testing, and what was the segfault?
->>
->> Kernel is mainline v4.10-rc1.
->> No debuginfo installed, so no backtrace, but since there is so many
->>
->> So the problem is the old xfsprogs, I'll update or compile xfsprogs.
->> Thanks for your kind info.
->
-> Just FWIW, I always have latest xfsprogs in rawhide, but I don't usually push
-> to other fedoras.
->
-> It should be easy to grab
-> https://kojipkgs.fedoraproject.org/packages/xfsprogs/4.9.0/1.fc26/src/xfsprogs-4.9.0-1.fc26.src.rpm
-> and rebuild & install.
-
-Thanks for the info.
-
-I have already compiled latest version and it works perfectly.
-
-BTW, just wonder if or when Fedora will do rolling release, which should 
-avoid such problem.
-
-Thanks,
-Qu
->
-> -Eric
->
->
->
-
-
+ fs/xfs/libxfs/xfs_alloc.c      | 115 ++++++++++-------------------------------
+ fs/xfs/libxfs/xfs_alloc.h      |   2 +-
+ fs/xfs/libxfs/xfs_bmap.c       |   3 --
+ fs/xfs/libxfs/xfs_bmap_btree.c |   3 +-
+ fs/xfs/xfs_log.c               |  12 +----
+ 5 files changed, 32 insertions(+), 103 deletions(-)
