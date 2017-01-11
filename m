@@ -1,168 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21308 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750827AbdALUmZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Jan 2017 15:42:25 -0500
-Date: Thu, 12 Jan 2017 12:41:42 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 4/5] xfs_db: sanitize geometry on load
-Message-ID: <20170112204142.GA14038@birch.djwong.org>
-References: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
- <148419041340.32674.2646685552269275817.stgit@birch.djwong.org>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33371 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759547AbdAKO2o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 09:28:44 -0500
+Received: by mail-oi0-f65.google.com with SMTP id j15so22090036oih.0
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 06:28:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <148419041340.32674.2646685552269275817.stgit@birch.djwong.org>
+In-Reply-To: <1dec16e5-66ea-1876-1105-2219b6f1c17c@sandeen.net>
+References: <20170110194249.GK14038@birch.djwong.org> <CAOQ4uxggOoFJ_KR40XX2hU+bSr9zqXu9y_7HWqVxTfQ6ETC4hA@mail.gmail.com>
+ <CAOQ4uxj+H4ZAXkPgob5ANJW=BDBzj6P2nKbb3aE9w1igGmcRfw@mail.gmail.com> <1dec16e5-66ea-1876-1105-2219b6f1c17c@sandeen.net>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 11 Jan 2017 16:28:43 +0200
+Message-ID: <CAOQ4uxh2WZ4XQKEu6Rb82XSu5MuH+Yt7bCEwRZy48TQAM8Y_WA@mail.gmail.com>
+Subject: Re: [RFC PATCH] xfs_db: sanitize geometry on load
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-xfs_db doesn't check the filesystem geometry when it's mounting, which
-means that garbage agcount values can cause OOMs when we try to allocate
-all the per-AG incore metadata.  If we see geometry that looks
-suspicious, try to derive the actual AG geometry to avoid crashing the
-system.  This should help with xfs/1301 fuzzing.
+On Wed, Jan 11, 2017 at 4:09 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 1/11/17 4:01 AM, Amir Goldstein wrote:
+>> Now I am hitting these xfs_db crashes during xfs/1316, which are apparently not
+>> related to OOM killer. I have seen them last run as well but dmesg is quiet now.
+>
+> Please install debug bits and get a proper coredump, or try valgrind,
+> to get a real backtrace here so we can see what's going on...
+>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: Only modify sb_ag{blocks,count} if they seem insane -- use local
-variables to avoid screwing up the rest of the metadata.
----
- db/init.c |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 87 insertions(+), 10 deletions(-)
+Since this is the second run where I am getting the same core dumps
+(and they happen many times during xfs/1316 I doubt that this is not
+reproducible on any system.
 
-diff --git a/db/init.c b/db/init.c
-index ec1e274..db133d7 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -51,13 +51,96 @@ usage(void)
- 	exit(1);
- }
- 
-+/* Try to load an AG's superblock, no verifiers. */
-+static bool
-+load_sb(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	struct xfs_sb		*sbp)
-+{
-+	struct xfs_buf		*bp;
-+
-+	bp = libxfs_readbuf(mp->m_ddev_targp,
-+			    XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-+			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
-+
-+	if (!bp || bp->b_error)
-+		return false;
-+
-+	/* copy SB from buffer to in-core, converting architecture as we go */
-+	libxfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
-+	libxfs_putbuf(bp);
-+	libxfs_purgebuf(bp);
-+
-+	return true;
-+}
-+
-+/* If the geometry doesn't look sane, try to figure out the real geometry. */
-+static void
-+sanitize_geometry(
-+	struct xfs_mount	*mp,
-+	struct xfs_sb		*sbp)
-+{
-+	struct xfs_sb		sb;
-+	unsigned int		blocklog;
-+	unsigned int		blocksize;
-+	unsigned int		agblocks;
-+	unsigned long long	dblocks;
-+
-+	/* If the geometry looks ok, we're done. */
-+	if (sbp->sb_blocklog >= XFS_MIN_BLOCKSIZE_LOG &&
-+	    sbp->sb_blocklog <= XFS_MAX_BLOCKSIZE_LOG &&
-+	    sbp->sb_blocksize == (1 << sbp->sb_blocklog) &&
-+	    sbp->sb_dblocks * sbp->sb_blocksize <= x.dsize * x.dbsize &&
-+	    sbp->sb_dblocks <= XFS_MAX_DBLOCKS(sbp) &&
-+	    sbp->sb_dblocks >= XFS_MIN_DBLOCKS(sbp))
-+		return;
-+
-+	/* Check blocklog and blocksize */
-+	blocklog = sbp->sb_blocklog;
-+	blocksize = sbp->sb_blocksize;
-+	if (blocklog < XFS_MIN_BLOCKSIZE_LOG ||
-+	    blocklog > XFS_MAX_BLOCKSIZE_LOG)
-+		blocklog = libxfs_log2_roundup(blocksize);
-+	if (blocksize != (1 << blocklog))
-+		blocksize = (1 << blocksize);
-+
-+	/* Clamp dblocks to the size of the device. */
-+	dblocks = sbp->sb_dblocks;
-+	if (dblocks > x.dsize * x.dbsize / blocksize)
-+		dblocks = x.dsize * x.dbsize / blocksize;
-+
-+	/* See if agblocks helps us find a superblock. */
-+	mp->m_blkbb_log = blocklog - BBSHIFT;
-+	if (sbp->sb_agblocks > 0 && sbp->sb_agblocks <= MAXEXTNUM &&
-+	    load_sb(mp, 1, &sb) && sb.sb_magicnum == XFS_SB_MAGIC) {
-+		sbp->sb_agcount = dblocks / sbp->sb_agblocks;
-+		goto out;
-+	}
-+
-+	/* See if agcount helps us find a superblock. */
-+	agblocks = sbp->sb_agblocks;
-+	sbp->sb_agblocks = dblocks / sbp->sb_agcount;
-+	if (sbp->sb_agblocks > 0 && sbp->sb_agblocks <= MAXEXTNUM &&
-+	    load_sb(mp, 1, &sb) && sb.sb_magicnum == XFS_SB_MAGIC) {
-+		goto out;
-+	}
-+
-+	/* Both are nuts, assume 1 AG. */
-+	sbp->sb_agblocks = agblocks;
-+	sbp->sb_agcount = 1;
-+out:
-+	fprintf(stderr,
-+		_("%s: device %s AG count is insane.  Limiting reads to the first %u AGs.\n"),
-+		progname, fsdevice, sbp->sb_agcount);
-+}
-+
- void
- init(
- 	int		argc,
- 	char		**argv)
- {
- 	struct xfs_sb	*sbp;
--	struct xfs_buf	*bp;
- 	int		c;
- 
- 	setlocale(LC_ALL, "");
-@@ -124,20 +207,12 @@ init(
- 	 */
- 	memset(&xmount, 0, sizeof(struct xfs_mount));
- 	libxfs_buftarg_init(&xmount, x.ddev, x.logdev, x.rtdev);
--	bp = libxfs_readbuf(xmount.m_ddev_targp, XFS_SB_DADDR,
--			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
--
--	if (!bp || bp->b_error) {
-+	if (!load_sb(&xmount, 0, &xmount.m_sb)) {
- 		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
- 			"bytes)\n"), progname, fsdevice);
- 		exit(1);
- 	}
- 
--	/* copy SB from buffer to in-core, converting architecture as we go */
--	libxfs_sb_from_disk(&xmount.m_sb, XFS_BUF_TO_SBP(bp));
--	libxfs_putbuf(bp);
--	libxfs_purgebuf(bp);
--
- 	sbp = &xmount.m_sb;
- 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
- 		fprintf(stderr, _("%s: %s is not a valid XFS filesystem (unexpected SB magic number 0x%08x)\n"),
-@@ -148,6 +223,8 @@ init(
- 		}
- 	}
- 
-+	sanitize_geometry(&xmount, sbp);
-+
- 	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
- 			  LIBXFS_MOUNT_DEBUGGER);
- 	if (!mp) {
+Anyway, scrub tests are still running and will be running for a while,
+so I can re-run 1316 tomorrow to get the coredump.
+Is there a standard configure/make way to install the xfsprogs debug binaries?
