@@ -1,201 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:35084 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758301AbdAJNxv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 08:53:51 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 202/206] xfs: use the actual AG length when reserving blocks
-Date: Tue, 10 Jan 2017 14:38:05 +0100
-Message-Id: <20170110131512.359843124@linuxfoundation.org>
-In-Reply-To: <20170110131502.767555407@linuxfoundation.org>
-References: <20170110131502.767555407@linuxfoundation.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42212 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751152AbdAKHug (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 02:50:36 -0500
+Date: Tue, 10 Jan 2017 23:50:27 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v7 5/6] xfs: sanity check inode mode when creating new
+ dentry
+Message-ID: <20170111075027.GR14038@birch.djwong.org>
+References: <1484062757-12433-1-git-send-email-amir73il@gmail.com>
+ <1484062757-12433-6-git-send-email-amir73il@gmail.com>
+ <20170110231550.GO14038@birch.djwong.org>
+ <CAOQ4uxjcasRkSK0f5OpY5Qtc0iB6uxP5e=XWytSyQM5ni6m2Ow@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxjcasRkSK0f5OpY5Qtc0iB6uxP5e=XWytSyQM5ni6m2Ow@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+On Wed, Jan 11, 2017 at 07:08:57AM +0200, Amir Goldstein wrote:
+> On Wed, Jan 11, 2017 at 1:15 AM, Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+> > On Tue, Jan 10, 2017 at 05:39:16PM +0200, Amir Goldstein wrote:
+> >> The helper xfs_dentry_to_name() is used by 2 different
+> >> classes of callers: Callers that pass zero mode and don't care
+> >> about the returned name.type field and Callers that pass
+> >> non zero mode and do care about the name.type field.
+> >>
+> >> Change xfs_dentry_to_name() to not take the mode argument and
+> >> change the call sites of the first class to not pass the mode
+> >> argument.
+> >>
+> >> Create a new helper xfs_dentry_mode_to_name() which does pass
+> >> the mode argument and returns -EFSCORRUPTED if mode is invalid.
+> >> Callers that translate non zero mode to on-disk file type now
+> >> check the return value and will export the error to user instead
+> >> of staging an invalid file type to be written to directory entry.
+> >>
+> >> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> >> ---
+> ...
+> >>
+> >>       mode = S_IFLNK |
+> >>               (irix_symlink_mode ? 0777 & ~current_umask() : S_IRWXUGO);
+> >> -     xfs_dentry_to_name(&name, dentry, mode);
+> >> +     error = xfs_dentry_mode_to_name(&name, dentry, mode);
+> >> +     ASSERT(error == 0);
+> >
+> > Why not the usual 'if (error) goto out;' here?
+> >
+> 
+> Because mode here is not coming from disk, nor from user input,
+> so an error from converting S_IFLNK would be a programming bug.
+> We could also ignore the return value in this case, let me know if you
+> prefer that.
 
-------------------
+Nah, it's just eyebrow-raising since it's a deviation from the usual
+paradigm.
 
+> BTW, process question. Do you need me to re-send patched with
+> your Reviewed-by, or will you add those when applying?
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+In general I plan to pull the most recent patch mail and add whatever
+tags come in as replies, so if you resend a patch please add the tags
+yourself.
 
-commit 20e73b000bcded44a91b79429d8fa743247602ad upstream.
+--D
 
-We need to use the actual AG length when making per-AG reservations,
-since we could otherwise end up reserving more blocks out of the last
-AG than there are actual blocks.
-
-Complained-about-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- fs/xfs/libxfs/xfs_ag_resv.c        |    3 +++
- fs/xfs/libxfs/xfs_refcount_btree.c |    9 ++++++---
- fs/xfs/libxfs/xfs_refcount_btree.h |    3 ++-
- fs/xfs/libxfs/xfs_rmap_btree.c     |   14 +++++++-------
- fs/xfs/libxfs/xfs_rmap_btree.h     |    3 ++-
- fs/xfs/xfs_fsops.c                 |   14 ++++++++++++++
- 6 files changed, 34 insertions(+), 12 deletions(-)
-
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -256,6 +256,9 @@ xfs_ag_resv_init(
- 			goto out;
- 	}
- 
-+	ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
-+	       xfs_perag_resv(pag, XFS_AG_RESV_AGFL)->ar_reserved <=
-+	       pag->pagf_freeblks + pag->pagf_flcount);
- out:
- 	return error;
- }
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -408,13 +408,14 @@ xfs_refcountbt_calc_size(
-  */
- xfs_extlen_t
- xfs_refcountbt_max_size(
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	xfs_agblock_t		agblocks)
- {
- 	/* Bail out if we're uninitialized, which can happen in mkfs. */
- 	if (mp->m_refc_mxr[0] == 0)
- 		return 0;
- 
--	return xfs_refcountbt_calc_size(mp, mp->m_sb.sb_agblocks);
-+	return xfs_refcountbt_calc_size(mp, agblocks);
- }
- 
- /*
-@@ -429,22 +430,24 @@ xfs_refcountbt_calc_reserves(
- {
- 	struct xfs_buf		*agbp;
- 	struct xfs_agf		*agf;
-+	xfs_agblock_t		agblocks;
- 	xfs_extlen_t		tree_len;
- 	int			error;
- 
- 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
- 		return 0;
- 
--	*ask += xfs_refcountbt_max_size(mp);
- 
- 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
- 	if (error)
- 		return error;
- 
- 	agf = XFS_BUF_TO_AGF(agbp);
-+	agblocks = be32_to_cpu(agf->agf_length);
- 	tree_len = be32_to_cpu(agf->agf_refcount_blocks);
- 	xfs_buf_relse(agbp);
- 
-+	*ask += xfs_refcountbt_max_size(mp, agblocks);
- 	*used += tree_len;
- 
- 	return error;
---- a/fs/xfs/libxfs/xfs_refcount_btree.h
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.h
-@@ -66,7 +66,8 @@ extern void xfs_refcountbt_compute_maxle
- 
- extern xfs_extlen_t xfs_refcountbt_calc_size(struct xfs_mount *mp,
- 		unsigned long long len);
--extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp);
-+extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp,
-+		xfs_agblock_t agblocks);
- 
- extern int xfs_refcountbt_calc_reserves(struct xfs_mount *mp,
- 		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -549,13 +549,14 @@ xfs_rmapbt_calc_size(
-  */
- xfs_extlen_t
- xfs_rmapbt_max_size(
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	xfs_agblock_t		agblocks)
- {
- 	/* Bail out if we're uninitialized, which can happen in mkfs. */
- 	if (mp->m_rmap_mxr[0] == 0)
- 		return 0;
- 
--	return xfs_rmapbt_calc_size(mp, mp->m_sb.sb_agblocks);
-+	return xfs_rmapbt_calc_size(mp, agblocks);
- }
- 
- /*
-@@ -570,25 +571,24 @@ xfs_rmapbt_calc_reserves(
- {
- 	struct xfs_buf		*agbp;
- 	struct xfs_agf		*agf;
--	xfs_extlen_t		pool_len;
-+	xfs_agblock_t		agblocks;
- 	xfs_extlen_t		tree_len;
- 	int			error;
- 
- 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
- 		return 0;
- 
--	/* Reserve 1% of the AG or enough for 1 block per record. */
--	pool_len = max(mp->m_sb.sb_agblocks / 100, xfs_rmapbt_max_size(mp));
--	*ask += pool_len;
--
- 	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
- 	if (error)
- 		return error;
- 
- 	agf = XFS_BUF_TO_AGF(agbp);
-+	agblocks = be32_to_cpu(agf->agf_length);
- 	tree_len = be32_to_cpu(agf->agf_rmap_blocks);
- 	xfs_buf_relse(agbp);
- 
-+	/* Reserve 1% of the AG or enough for 1 block per record. */
-+	*ask += max(agblocks / 100, xfs_rmapbt_max_size(mp, agblocks));
- 	*used += tree_len;
- 
- 	return error;
---- a/fs/xfs/libxfs/xfs_rmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-@@ -60,7 +60,8 @@ extern void xfs_rmapbt_compute_maxlevels
- 
- extern xfs_extlen_t xfs_rmapbt_calc_size(struct xfs_mount *mp,
- 		unsigned long long len);
--extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp);
-+extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp,
-+		xfs_agblock_t agblocks);
- 
- extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp,
- 		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -631,6 +631,20 @@ xfs_growfs_data_private(
- 	xfs_set_low_space_thresholds(mp);
- 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
- 
-+	/*
-+	 * If we expanded the last AG, free the per-AG reservation
-+	 * so we can reinitialize it with the new size.
-+	 */
-+	if (new) {
-+		struct xfs_perag	*pag;
-+
-+		pag = xfs_perag_get(mp, agno);
-+		error = xfs_ag_resv_free(pag);
-+		xfs_perag_put(pag);
-+		if (error)
-+			goto out;
-+	}
-+
- 	/* Reserve AG metadata blocks. */
- 	error = xfs_fs_reserve_ag_blocks(mp);
- 	if (error && error != -ENOSPC)
-
-
+> 
+> Thanks,
+> Amir.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
