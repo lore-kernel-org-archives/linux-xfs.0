@@ -1,110 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55694 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750808AbdANDvW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Jan 2017 22:51:22 -0500
-Subject: Re: [PATCH v3 4/5] xfs_db: sanitize geometry on load
-References: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
- <148419041340.32674.2646685552269275817.stgit@birch.djwong.org>
- <20170113003201.GC14038@birch.djwong.org>
- <20170113133542.GB22013@bfoster.bfoster>
- <b071967b-e67b-2280-156c-9a5aeaa5d40c@redhat.com>
- <20170114034449.GA29191@bfoster.bfoster>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <d4731c23-e721-faad-9937-8256840012bb@redhat.com>
-Date: Fri, 13 Jan 2017 21:51:20 -0600
+Received: from aserp1050.oracle.com ([141.146.126.70]:21673 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759053AbdAKRyS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 12:54:18 -0500
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v0BHrna8018877
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 17:53:49 GMT
+Date: Wed, 11 Jan 2017 09:52:11 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: Reading about CoW architecture / Performance Limits
+Message-ID: <20170111175211.GU14038@birch.djwong.org>
+References: <BC894F29-47E7-47A3-93FB-3E4EEE1DCDD5@flyingcircus.io>
+ <20170110074524.GI14038@birch.djwong.org>
+ <C97BB12C-3C30-493B-BE9A-9E8C7CB5D1A4@flyingcircus.io>
+ <9713E613-6953-4AD3-89B1-C0EF639E771C@flyingcircus.io>
+ <20170111080544.GB5883@birch.djwong.org>
+ <20170111091011.GA29454@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20170114034449.GA29191@bfoster.bfoster>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170111091011.GA29454@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Christian Theune <ct@flyingcircus.io>, linux-xfs@vger.kernel.org
 
-On 1/13/17 9:44 PM, Brian Foster wrote:
-> On Fri, Jan 13, 2017 at 08:25:47PM -0600, Eric Sandeen wrote:
->> On 1/13/17 7:35 AM, Brian Foster wrote:
->>>> +		fprintf(stderr,
->>>> +_("%s: device %s AG count is insane, but could be %u.  Limiting reads to AG 0.\n"),
->>>> +			progname, fsdevice, dblocks / sbp->sb_agblocks);
->>>> +	} else {
->>>> +		fprintf(stderr,
->>>> +_("%s: device %s AG count is insane.  Limiting reads to AG 0.\n"),
->>>> +			progname, fsdevice);
->>>> +	}
->>> For reasons like the above, I think xfs_db shouldn't be in the business
->>> of repair like validation (xfs_check notwithstanding). That said,
->>> dropping into a fixed single AG mode seems less risky than trying to
->>> surmise a valid geometry. I'd get rid of the "this might be your
->>> agcount" messaging entirely though and just replace it with something
->>> that explicitly states the filesystem is corrupted, the runtime geometry
->>> is invalid and that the user should probably run xfs_repair before doing
->>> anything.
->>
->> So keep in mind that xfs_db is for people with super xfs powers. (*)
->>
->> I wouldn't suggest repair, I'd start with 1 ag to avoid the OOM, state 
->> that clearly, and punt the problem to the admin with no other specific
->> suggestions.
->>
->>> I still like the idea of the single AG mode thing as a command line flag
->>> rather than default behavior because it requires user acknowledgement,
->>> but this is a debug tool after all, so I'll defer to Eric on that. I do
->>> think that if we create this kind of invalid runtime mode, this should
->>> be split into two patches. First, a bugfix patch for the core OOM
->>> problem (i.e., detect a wacky superblock and exit). Second, replace the
->>> exit with the single AG runtime mode thing.
->>
->> Well, the problem with a flag, I think, is that you might have already
->> unwittingly OOMed your box to find out that you need it.
->> Rebooting to try again with a flag sucks.
->>
+On Wed, Jan 11, 2017 at 01:10:11AM -0800, Christoph Hellwig wrote:
+> On Wed, Jan 11, 2017 at 12:05:44AM -0800, Darrick J. Wong wrote:
+> > > 3. There appears to be code that allows retroactively creating CoW for
+> > > two files that existed separately before. Is that (planned to be)
+> > > exposed to userland?
+> > 
+> > No plans for that at the moment.  There used to be a debugging knob, but
+> > it was ripped out before upstreaming the code.
 > 
-> I don't see how that is relevant. I'm not suggesting a
-> --please-don't-oom-in-case-of-corruption flag. :) As mentioned
-> previously, I think the bug fix here is a simple patch to detect the
-> bogus superblock and exit gracefully rather than go off the rails and
-> end up OOM killed.
+> I think he's asking for the dedup ioctl, which is supported.
 
-sorry, misunderstood the 
-"idea of the single AG mode thing as a command line flag" idea, I guess.
- 
-> From there the OOM is irrelevant and we can optionally enhance xfs_db to
-> try and allow it to run in such situations. To be honest, I'm perfectly
-> happy for xfs_db to exit gracefully in this situation and to leave it at
-> that. I think the majority of cases where this problem occurs, the next
-> logical step is to run xfs_repair. I suggested the flag approach more
-> because I think it's more appropriate to do things like fabricate fs
-> geometry behind a flag rather than by default. The larger point is that
-> if we want this kind of enhancement, it should probably be driven more
-> by a use case than an unfortunate (and probably rare) bug. I don't see
-> why we need to complicate the bug fix with the fancy enhancement.
+Ah, that could be the case.  If you were asking about deduplication,
+then yes, XFS supports that too.  duperemove supports XFS since August.
+Some of the newer dedup tools that also want the space map (bees) might
+support XFS once we get GETFSMAP working.
 
-*nod*  ok, I had understood the flag idea backwards-ly I guess.
+--D
 
-I do think that mere mortal invocations via xfs_admin need to be
-handled in this "ignore agcount" case, though...
-
--Eric
- 
-> Brian
-> 
->> (*) unless you are invoking it via xfs_admin.sh, dammit.  We sure wouldn't
->> want xfs_admin to exit happily, having updated only one AG.  Dammit!
->>
->> Perhaps it should set exitcode, and then xfs_admin could do something
->> like:
->>
->> 	xfs_db -c quit $DEV
->>
->> first, and check that db is able to initialize sanely before using it again
->> to perform normal admin functions.
->>
->> -Eric
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
