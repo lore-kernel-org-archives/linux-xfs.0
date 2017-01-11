@@ -1,135 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35718 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:50346 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1765703AbdAKRyS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Jan 2017 12:54:18 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3BA9B4E4FC
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 17:54:11 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v0BHsAj8008692
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 12:54:10 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 2/5] xfs: logically separate iomap range from allocation range
-Date: Wed, 11 Jan 2017 12:54:06 -0500
-Message-Id: <1484157249-464-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1484157249-464-1-git-send-email-bfoster@redhat.com>
-References: <1484157249-464-1-git-send-email-bfoster@redhat.com>
+        id S1753689AbdAKQXt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Jan 2017 11:23:49 -0500
+Subject: Re: [PATCH v3] xfsprogs: replace xfs_mode_to_ftype table with switch
+ statement
+References: <1484116217-7594-1-git-send-email-amir73il@gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d1fbdb06-ae8a-d2db-cd02-bb5f06e7edfc@sandeen.net>
+Date: Wed, 11 Jan 2017 10:23:46 -0600
+MIME-Version: 1.0
+In-Reply-To: <1484116217-7594-1-git-send-email-amir73il@gmail.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-xfs_file_iomap_begin_delay() uses the got variable for the extent
-returned by the in-core extent list lookup, the allocated extent
-returned by xfs_bmapi_reserve_delalloc() and the extent mapped to the
-iomap data structure for the caller.
+On 1/11/17 12:30 AM, Amir Goldstein wrote:
+> The size of the xfs_mode_to_ftype[] conversion table
+> was too small to handle an invalid value of mode=S_IFMT.
+> 
+> Instead of fixing the table size, replace the conversion table
+> with a conversion helper that uses a switch statement.
+> 
+> Suggested-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  libxfs/xfs_dir2.c    | 36 ++++++++++++++++++++++--------------
+>  libxfs/xfs_dir2.h    |  5 ++---
+>  repair/dino_chunks.c |  6 +-----
+>  repair/phase6.c      |  2 +-
+>  4 files changed, 26 insertions(+), 23 deletions(-)
+> 
+> Eric,
+> 
+> This is a matching patch to the one that got Reviewed-by Darrick for kernel.
+> 
+> Tested xfs_repair with the new xfs/348 test with -n ftype=0|1.
 
-This is fine for current usage, but doesn't work for COW fork
-reservation. In that case, the extent returned by
-xfs_bmapi_reserve_delalloc() is the COW reservation and not the extent
-to be mapped to the iomap. Instead, the shared data fork extent should
-be trimmed appropriately and mapped to the iomap.
+Thanks, I'll pull this in after Darrick commits it to the kernel.
 
-To prepare *_begin_delay() to support COW fork reservation, add a new
-imap variable to separately track the data fork extent (for iomap) from
-the extent returned from the lookup. The latter extent may refer to
-either the data or COW fork in the future.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_iomap.c | 33 +++++++++++++++++++++------------
- 1 file changed, 21 insertions(+), 12 deletions(-)
-
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index ec86262..8791ed5 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -536,6 +536,7 @@ xfs_iomap_search_extents(
- 	struct xfs_inode	*ip,
- 	xfs_fileoff_t		offset_fsb,
- 	xfs_fileoff_t		end_fsb,
-+	struct xfs_bmbt_irec	*imap,		/* for iomap mapping */
- 	int			*eof,
- 	int			*idx,
- 	struct xfs_bmbt_irec	*got,
-@@ -546,15 +547,21 @@ xfs_iomap_search_extents(
+-Eric
  
- 	*found = false;
- 
--	*eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, idx, got);
--	if (*eof || got->br_startoff > offset_fsb)
-+	/*
-+	 * Look up a preexisting extent directly into imap. Set got for the
-+	 * bmapi delalloc call if nothing is found.
-+	 */
-+	*eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, idx, imap);
-+	if (*eof || imap->br_startoff > offset_fsb) {
-+		*got = *imap;
- 		return 0;
-+	}
- 
- 	if (xfs_is_reflink_inode(ip)) {
- 		bool		shared;
- 
--		xfs_trim_extent(got, offset_fsb, end_fsb - offset_fsb);
--		error = xfs_reflink_reserve_cow(ip, got, &shared);
-+		xfs_trim_extent(imap, offset_fsb, end_fsb - offset_fsb);
-+		error = xfs_reflink_reserve_cow(ip, imap, &shared);
- 		if (error)
- 			return error;
- 	}
-@@ -580,6 +587,7 @@ xfs_file_iomap_begin_delay(
- 	xfs_fileoff_t		maxbytes_fsb =
- 		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
- 	int			error = 0, eof = 0;
-+	struct xfs_bmbt_irec	imap;
- 	struct xfs_bmbt_irec	got;
- 	xfs_extnum_t		idx;
- 	xfs_fsblock_t		prealloc_blocks = 0;
-@@ -614,12 +622,12 @@ xfs_file_iomap_begin_delay(
- 	 * Search for preexisting extents. If an existing data extent is shared,
- 	 * this will perform COW fork reservation.
- 	 */
--	error = xfs_iomap_search_extents(ip, offset_fsb, end_fsb, &eof, &idx,
--					 &got, &found);
-+	error = xfs_iomap_search_extents(ip, offset_fsb, end_fsb, &imap, &eof,
-+					 &idx, &got, &found);
- 	if (error)
- 		goto out_unlock;
- 	if (found) {
--		trace_xfs_iomap_found(ip, offset, count, 0, &got);
-+		trace_xfs_iomap_found(ip, offset, count, 0, &imap);
- 		goto done;
- 	}
- 
-@@ -680,17 +688,18 @@ xfs_file_iomap_begin_delay(
- 	}
- 
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
-+	imap = got;
- done:
--	if (isnullstartblock(got.br_startblock))
--		got.br_startblock = DELAYSTARTBLOCK;
-+	if (isnullstartblock(imap.br_startblock))
-+		imap.br_startblock = DELAYSTARTBLOCK;
- 
--	if (!got.br_startblock) {
--		error = xfs_alert_fsblock_zero(ip, &got);
-+	if (!imap.br_startblock) {
-+		error = xfs_alert_fsblock_zero(ip, &imap);
- 		if (error)
- 			goto out_unlock;
- 	}
- 
--	xfs_bmbt_to_iomap(ip, iomap, &got);
-+	xfs_bmbt_to_iomap(ip, iomap, &imap);
- 
- out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--- 
-2.7.4
-
+> Amir.
+> 
+> v3:
+> - Replaced xfs_mode_to_ftype table with switch statement
+> 
+> v2:
+> - remove wrong argument about on-disk malformed mode from commit message
+> - address Brian's review comments
+> - test with new xfs/348
+> 
+> v1:
+> - fix patch for xfsprogs derived from kernel patch
+> 
+> diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
+> index 4180a93..257a99b 100644
+> --- a/libxfs/xfs_dir2.c
+> +++ b/libxfs/xfs_dir2.c
+> @@ -34,21 +34,29 @@
+>  struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+>  
+>  /*
+> - * @mode, if set, indicates that the type field needs to be set up.
+> - * This uses the transformation from file mode to DT_* as defined in linux/fs.h
+> - * for file type specification. This will be propagated into the directory
+> - * structure if appropriate for the given operation and filesystem config.
+> + * Convert inode mode to directory entry filetype
+>   */
+> -const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
+> -	[0]			= XFS_DIR3_FT_UNKNOWN,
+> -	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
+> -	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
+> -	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
+> -	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
+> -	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
+> -	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
+> -	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
+> -};
+> +const unsigned char xfs_mode_to_ftype(int mode)
+> +{
+> +	switch (mode & S_IFMT) {
+> +	case S_IFREG:
+> +		return XFS_DIR3_FT_REG_FILE;
+> +	case S_IFDIR:
+> +		return XFS_DIR3_FT_DIR;
+> +	case S_IFCHR:
+> +		return XFS_DIR3_FT_CHRDEV;
+> +	case S_IFBLK:
+> +		return XFS_DIR3_FT_BLKDEV;
+> +	case S_IFIFO:
+> +		return XFS_DIR3_FT_FIFO;
+> +	case S_IFSOCK:
+> +		return XFS_DIR3_FT_SOCK;
+> +	case S_IFLNK:
+> +		return XFS_DIR3_FT_SYMLINK;
+> +	default:
+> +		return XFS_DIR3_FT_UNKNOWN;
+> +	}
+> +}
+>  
+>  /*
+>   * ASCII case-insensitive (ie. A-Z) support for directories that was
+> diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
+> index 89b9e24..ea20c12 100644
+> --- a/libxfs/xfs_dir2.h
+> +++ b/libxfs/xfs_dir2.h
+> @@ -32,10 +32,9 @@ struct xfs_dir2_data_unused;
+>  extern struct xfs_name	xfs_name_dotdot;
+>  
+>  /*
+> - * directory filetype conversion tables.
+> + * Convert inode mode to directory entry filetype
+>   */
+> -#define S_SHIFT 12
+> -extern const unsigned char xfs_mode_to_ftype[];
+> +extern const unsigned char xfs_mode_to_ftype(int mode);
+>  
+>  /*
+>   * directory operations vector for encode/decode routines
+> diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+> index 4db9512..a3909ac 100644
+> --- a/repair/dino_chunks.c
+> +++ b/repair/dino_chunks.c
+> @@ -826,8 +826,6 @@ next_readbuf:
+>  		 * we do now, this is where to start.
+>  		 */
+>  		if (is_used)  {
+> -			__uint16_t	di_mode;
+> -
+>  			if (is_inode_free(ino_rec, irec_offset))  {
+>  				if (verbose || no_modify)  {
+>  					do_warn(
+> @@ -846,10 +844,8 @@ next_readbuf:
+>  			 * store the on-disk file type for comparing in
+>  			 * phase 6.
+>  			 */
+> -			di_mode = be16_to_cpu(dino->di_mode);
+> -			di_mode = (di_mode & S_IFMT) >> S_SHIFT;
+>  			set_inode_ftype(ino_rec, irec_offset,
+> -					xfs_mode_to_ftype[di_mode]);
+> +				xfs_mode_to_ftype(be16_to_cpu(dino->di_mode)));
+>  
+>  			/*
+>  			 * store on-disk nlink count for comparing in phase 7
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 06eed16..c492dd9 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -1082,7 +1082,7 @@ mv_orphanage(
+>  	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
+>  		do_error(_("%d - couldn't iget disconnected inode\n"), err);
+>  
+> -	xname.type = xfs_mode_to_ftype[(VFS_I(ino_p)->i_mode & S_IFMT)>>S_SHIFT];
+> +	xname.type = xfs_mode_to_ftype(VFS_I(ino_p)->i_mode);
+>  
+>  	if (isa_dir)  {
+>  		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, orphanage_ino),
+> 
