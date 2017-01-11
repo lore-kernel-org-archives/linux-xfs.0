@@ -1,62 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51548 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933132AbdAJEwe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 23:52:34 -0500
-Date: Mon, 9 Jan 2017 20:52:29 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 7/7] xfs/ext4: check negative inode size
-Message-ID: <20170110045229.GD3732@birch.djwong.org>
-References: <148357827617.7677.15595044775254927245.stgit@birch.djwong.org>
- <148357832063.7677.12994144585642711957.stgit@birch.djwong.org>
- <20170109205518.GF14033@birch.djwong.org>
- <20170110044023.GK1859@eguan.usersys.redhat.com>
+Received: from cn.fujitsu.com ([59.151.112.132]:24716 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754150AbdAKCqC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 21:46:02 -0500
+Subject: Re: Generic/389 xfs_io segfault on btrfs and ext4
+References: <ca7ae533-8d7f-9783-1900-bdfb17d6a32c@cn.fujitsu.com>
+ <d5116871-0bb3-46b0-c9e3-def74bd57967@sandeen.net>
+From: Qu Wenruo <quwenruo@cn.fujitsu.com>
+Message-ID: <5c56afcd-13b0-d3b3-e18c-0b902691d8f4@cn.fujitsu.com>
+Date: Wed, 11 Jan 2017 10:45:52 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170110044023.GK1859@eguan.usersys.redhat.com>
+In-Reply-To: <d5116871-0bb3-46b0-c9e3-def74bd57967@sandeen.net>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, Eryu Guan <eguan@redhat.com>, agruenba@redhat.com, btrfs <linux-btrfs@vger.kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Jan 10, 2017 at 12:40:23PM +0800, Eryu Guan wrote:
-> On Mon, Jan 09, 2017 at 12:55:18PM -0800, Darrick J. Wong wrote:
-> > Craft a malicious filesystem image with a negative inode size,
-> > then try to trigger a kernel DoS by appending data to the file.
-> > Ideally this should trigger verifier errors instead of hanging.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> > v2: use $DEBUGFS_PROG instead of debugfs; improve documentation
-> 
-> Thanks for all the updated patches! I fixed a minor typo locally and
-> committed.
-> 
-> > diff --git a/tests/shared/401 b/tests/shared/401
-> > new file mode 100755
-> > index 0000000..7b61cbb
-> > --- /dev/null
-> > +++ b/tests/shared/401
-> > @@ -0,0 +1,77 @@
-> > +#! /bin/bash
-> > +# FSQA Test No. 401
-> > +#
-> > +# Since loff_t is a signed type, it is invalid for a filesystem to load
-> > +# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-> > +# which means that we can trivially DoS the VFS by creating such a file
-> > +# and appending to it.  This causes an integer overflow in the routines
-> > +# underlying writeback, which results in the kernel locking up.
-> > +#
-> > +# So, create this malformed inode and try a buffered dio append to make
->                                                ^^^^^^^^
-> I removed the "buffered" here and from xfs/401.
 
-D'oh!!!  Thanks for fixing that.
 
---D
+At 01/11/2017 10:40 AM, Eric Sandeen wrote:
+> On 1/10/17 8:08 PM, Qu Wenruo wrote:
+>> Hi, Andreas and Eryu,
+>>
+>> I found test case generic/389 fails on btrfs and ext4, and it fails with xfs_io segfault.
+>
+> Details, please?
+>
+> Works ok here:
+>
+> # ./check  generic/389
+> FSTYP         -- ext4
+> PLATFORM      -- Linux/x86_64 bp-05 4.9.0-rc1+
+> MKFS_OPTIONS  -- /dev/sdb2
+> MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:nfs_t:s0 /dev/sdb2 /mnt/scratch
+>
+> generic/389 1s ... 1s
+> Ran: generic/389
+> Passed all 1 tests
+>
+> # rpm -q xfsprogs
+> xfsprogs-4.9.0-1.el6.x86_64
 
-> 
+OK, that's the problem.
+
+My repo only provides old xfsprogs, which xfsprogs-4.5.0-2.fc25.x86_64.
+
+>
+> What version of kernel and xfsprogs were you testing, and what was the segfault?
+
+Kernel is mainline v4.10-rc1.
+No debuginfo installed, so no backtrace, but since there is so many
+
+So the problem is the old xfsprogs, I'll update or compile xfsprogs.
+Thanks for your kind info.
+
+Thanks,
+Qu
+
+>
 > Thanks,
-> Eryu
+> -Eric
+>
+>> So it seems to be a bug in xfsprogs, but I'm already using the latest release from Fedora.
+>>
+>> Is this a known bug?
+>>
+>> Thanks,
+>> Qu
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+
+
