@@ -1,58 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37622 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751521AbdAJW3V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 17:29:21 -0500
-Date: Tue, 10 Jan 2017 14:29:12 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH] xfs_db: sanitize geometry on load
-Message-ID: <20170110222912.GM14038@birch.djwong.org>
-References: <20170110194249.GK14038@birch.djwong.org>
- <73a62730-59a9-cad4-ca33-f054e544459b@sandeen.net>
- <20170110212721.GL14038@birch.djwong.org>
- <c4127369-3be4-bb80-daf5-1548fd07df48@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c4127369-3be4-bb80-daf5-1548fd07df48@sandeen.net>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34983 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933746AbdAKIYf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 03:24:35 -0500
+Received: by mail-wm0-f67.google.com with SMTP id l2so35346556wml.2
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 00:24:35 -0800 (PST)
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v8 4/6] xfs: replace xfs_mode_to_ftype table with switch statement
+Date: Wed, 11 Jan 2017 10:24:08 +0200
+Message-Id: <1484123050-11064-5-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
+References: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Tue, Jan 10, 2017 at 03:34:05PM -0600, Eric Sandeen wrote:
-> On 1/10/17 3:27 PM, Darrick J. Wong wrote:
-> >> What about sanitizing only the agcount, and saying something like:
-> >>
-> >> xfs_db: device fsfile AG count is insane.  Initializing only first $X
-> >>
-> >> (where $X is based on your heuristics)
-> > I feel like "Initializing" could be misinterpreted as formatting the
-> > disk.  How about:
-> > 
-> > xfs_db: device fsfile AG count is insane.  Reading only the first $X AGs.
-> 
-> Sure.  (I'm not sure what the implications are - it's more than just
-> "Oh, we didn't read it" right?  It'll have implications for use if
-> more AGs really exist?)
+The size of the xfs_mode_to_ftype[] conversion table
+was too small to handle an invalid value of mode=S_IFMT.
 
-I don't think there are.  AFAICT we don't ever write the m_sb values
-back to disk; the only commands capable of writing (blocktrash, write,
-fuzz) deal with buffers directly.  There's a side effect that things
-like metadump will only dump the first $X AGs worth of metadata, but
-right now it'll simply OOM and crash.
+Instead of fixing the table size, replace the conversion table
+with a conversion helper that uses a switch statement.
 
---D
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/xfs/libxfs/xfs_dir2.c | 36 ++++++++++++++++++++++--------------
+ fs/xfs/libxfs/xfs_dir2.h |  5 ++---
+ fs/xfs/xfs_iops.c        |  2 +-
+ 3 files changed, 25 insertions(+), 18 deletions(-)
 
-> 
-> -Eric
-> 
-> > ?
-> > 
-> > --D
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 4f7913f..eb64f38 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -36,21 +36,29 @@
+ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+ 
+ /*
+- * @mode, if set, indicates that the type field needs to be set up.
+- * This uses the transformation from file mode to DT_* as defined in linux/fs.h
+- * for file type specification. This will be propagated into the directory
+- * structure if appropriate for the given operation and filesystem config.
++ * Convert inode mode to directory entry filetype
+  */
+-const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
+-	[0]			= XFS_DIR3_FT_UNKNOWN,
+-	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
+-	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
+-	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
+-	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
+-	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
+-	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
+-	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
+-};
++const unsigned char xfs_mode_to_ftype(int mode)
++{
++	switch (mode & S_IFMT) {
++	case S_IFREG:
++		return XFS_DIR3_FT_REG_FILE;
++	case S_IFDIR:
++		return XFS_DIR3_FT_DIR;
++	case S_IFCHR:
++		return XFS_DIR3_FT_CHRDEV;
++	case S_IFBLK:
++		return XFS_DIR3_FT_BLKDEV;
++	case S_IFIFO:
++		return XFS_DIR3_FT_FIFO;
++	case S_IFSOCK:
++		return XFS_DIR3_FT_SOCK;
++	case S_IFLNK:
++		return XFS_DIR3_FT_SYMLINK;
++	default:
++		return XFS_DIR3_FT_UNKNOWN;
++	}
++}
+ 
+ /*
+  * ASCII case-insensitive (ie. A-Z) support for directories that was
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 72df0dc..d4b77ab 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -35,10 +35,9 @@ struct xfs_dir2_data_unused;
+ extern struct xfs_name	xfs_name_dotdot;
+ 
+ /*
+- * directory filetype conversion tables.
++ * Convert inode mode to directory entry filetype
+  */
+-#define S_SHIFT 12
+-extern const unsigned char xfs_mode_to_ftype[];
++extern const unsigned char xfs_mode_to_ftype(int mode);
+ 
+ /*
+  * directory operations vector for encode/decode routines
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 308bebb..821f08d 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -103,7 +103,7 @@ xfs_dentry_to_name(
+ {
+ 	namep->name = dentry->d_name.name;
+ 	namep->len = dentry->d_name.len;
+-	namep->type = xfs_mode_to_ftype[(mode & S_IFMT) >> S_SHIFT];
++	namep->type = xfs_mode_to_ftype(mode);
+ }
+ 
+ STATIC void
+-- 
+2.7.4
+
