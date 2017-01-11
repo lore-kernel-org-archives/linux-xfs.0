@@ -1,51 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wj0-f195.google.com ([209.85.210.195]:35232 "EHLO
-        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S939184AbdAJPjj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 10:39:39 -0500
-Received: by mail-wj0-f195.google.com with SMTP id ey1so8844041wjd.2
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 07:39:38 -0800 (PST)
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v7 6/6] xfs: sanity check inode di_mode
-Date: Tue, 10 Jan 2017 17:39:17 +0200
-Message-Id: <1484062757-12433-7-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1484062757-12433-1-git-send-email-amir73il@gmail.com>
-References: <1484062757-12433-1-git-send-email-amir73il@gmail.com>
+Received: from sandeen.net ([63.231.237.45]:48782 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752669AbdAKDB3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Jan 2017 22:01:29 -0500
+Subject: Re: Generic/389 xfs_io segfault on btrfs and ext4
+References: <ca7ae533-8d7f-9783-1900-bdfb17d6a32c@cn.fujitsu.com>
+ <d5116871-0bb3-46b0-c9e3-def74bd57967@sandeen.net>
+ <5c56afcd-13b0-d3b3-e18c-0b902691d8f4@cn.fujitsu.com>
+ <c5ea839d-1962-e363-d83b-936328f985df@redhat.com>
+ <8e1e082b-11c0-e597-cd38-744938537c2e@cn.fujitsu.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c2bfb9eb-ad3b-bf04-9b8e-108b3a1a7ce8@sandeen.net>
+Date: Tue, 10 Jan 2017 21:01:28 -0600
+MIME-Version: 1.0
+In-Reply-To: <8e1e082b-11c0-e597-cd38-744938537c2e@cn.fujitsu.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Qu Wenruo <quwenruo@cn.fujitsu.com>, Eric Sandeen <sandeen@redhat.com>, Eryu Guan <eguan@redhat.com>, agruenba@redhat.com, btrfs <linux-btrfs@vger.kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Check for invalid file type in xfs_dinode_verify()
-and fail to load the inode structure from disk.
+On 1/10/17 9:00 PM, Qu Wenruo wrote:
+> 
+> 
+> At 01/11/2017 10:53 AM, Eric Sandeen wrote:
+>> On 1/10/17 8:45 PM, Qu Wenruo wrote:
+>>>
+>>>
+>>> At 01/11/2017 10:40 AM, Eric Sandeen wrote:
+>>
+>> ...
+>>
+>>>> What version of kernel and xfsprogs were you testing, and what was the segfault?
+>>>
+>>> Kernel is mainline v4.10-rc1.
+>>> No debuginfo installed, so no backtrace, but since there is so many
+>>>
+>>> So the problem is the old xfsprogs, I'll update or compile xfsprogs.
+>>> Thanks for your kind info.
+>>
+>> Just FWIW, I always have latest xfsprogs in rawhide, but I don't usually push
+>> to other fedoras.
+>>
+>> It should be easy to grab
+>> https://kojipkgs.fedoraproject.org/packages/xfsprogs/4.9.0/1.fc26/src/xfsprogs-4.9.0-1.fc26.src.rpm
+>> and rebuild & install.
+> 
+> Thanks for the info.
+> 
+> I have already compiled latest version and it works perfectly.
+> 
+> BTW, just wonder if or when Fedora will do rolling release, which should avoid such problem.
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/xfs/libxfs/xfs_inode_buf.c | 3 +++
- 1 file changed, 3 insertions(+)
+You can always run rawhide.  :)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 0091ac3..d93f9d9 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -29,6 +29,7 @@
- #include "xfs_icache.h"
- #include "xfs_trans.h"
- #include "xfs_ialloc.h"
-+#include "xfs_dir2.h"
- 
- /*
-  * Check that none of the inode's in the buffer have a next
-@@ -398,6 +399,8 @@ xfs_dinode_verify(
- 		return false;
- 
- 	mode = be16_to_cpu(dip->di_mode);
-+	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
-+		return false;
- 
- 	/* No zero-length symlinks/dirs. */
- 	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
--- 
-2.7.4
-
+-Eric
