@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35896 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S939187AbdAJPjh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 10:39:37 -0500
-Received: by mail-wm0-f66.google.com with SMTP id r126so10293732wmr.3
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 07:39:37 -0800 (PST)
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33720 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936356AbdAKIYh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 03:24:37 -0500
+Received: by mail-wm0-f65.google.com with SMTP id r144so26434428wme.0
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 00:24:36 -0800 (PST)
 From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v7 5/6] xfs: sanity check inode mode when creating new dentry
-Date: Tue, 10 Jan 2017 17:39:16 +0200
-Message-Id: <1484062757-12433-6-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1484062757-12433-1-git-send-email-amir73il@gmail.com>
-References: <1484062757-12433-1-git-send-email-amir73il@gmail.com>
+Subject: [PATCH v8 5/6] xfs: sanity check inode mode when creating new dentry
+Date: Wed, 11 Jan 2017 10:24:09 +0200
+Message-Id: <1484123050-11064-6-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
+References: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -34,11 +34,11 @@ of staging an invalid file type to be written to directory entry.
 
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/xfs_iops.c | 47 ++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 38 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_iops.c | 48 +++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 39 insertions(+), 9 deletions(-)
 
 diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 821f08d..ef38d0f 100644
+index 821f08d..22c1615 100644
 --- a/fs/xfs/xfs_iops.c
 +++ b/fs/xfs/xfs_iops.c
 @@ -98,12 +98,27 @@ xfs_init_security(
@@ -130,17 +130,18 @@ index 821f08d..ef38d0f 100644
  
  	error = xfs_remove(XFS_I(dir), &name, XFS_I(d_inode(dentry)));
  	if (error)
-@@ -359,7 +380,8 @@ xfs_vn_symlink(
+@@ -359,7 +380,9 @@ xfs_vn_symlink(
  
  	mode = S_IFLNK |
  		(irix_symlink_mode ? 0777 & ~current_umask() : S_IRWXUGO);
 -	xfs_dentry_to_name(&name, dentry, mode);
 +	error = xfs_dentry_mode_to_name(&name, dentry, mode);
-+	ASSERT(error == 0);
++	if (unlikely(error))
++		goto out;
  
  	error = xfs_symlink(XFS_I(dir), &name, symname, mode, &cip);
  	if (unlikely(error))
-@@ -395,6 +417,7 @@ xfs_vn_rename(
+@@ -395,6 +418,7 @@ xfs_vn_rename(
  {
  	struct inode	*new_inode = d_inode(ndentry);
  	int		omode = 0;
@@ -148,7 +149,7 @@ index 821f08d..ef38d0f 100644
  	struct xfs_name	oname;
  	struct xfs_name	nname;
  
-@@ -405,8 +428,14 @@ xfs_vn_rename(
+@@ -405,8 +429,14 @@ xfs_vn_rename(
  	if (flags & RENAME_EXCHANGE)
  		omode = d_inode(ndentry)->i_mode;
  
