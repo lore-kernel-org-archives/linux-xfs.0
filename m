@@ -1,83 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35856 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:37748 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750819AbdALTGa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Jan 2017 14:06:30 -0500
-Date: Thu, 12 Jan 2017 13:06:26 -0600
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH 2/3] build: add .tar.xz target
-Message-ID: <20170112190626.GB17868@redhat.com>
-References: <056383cb-cf7e-3880-aecf-d97d5516a60f@sandeen.net>
- <d8bdc1f2-af99-f7fd-659b-45f7ebf36efb@sandeen.net>
+        id S966768AbdAKNrn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Jan 2017 08:47:43 -0500
+Subject: Re: [PATCH] xfs_repair: update the manual content about xfs_repair
+ exit status
+References: <1484111908-12558-1-git-send-email-zlang@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9c965d34-9242-394a-490d-9825ac3ff918@sandeen.net>
+Date: Wed, 11 Jan 2017 07:47:41 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d8bdc1f2-af99-f7fd-659b-45f7ebf36efb@sandeen.net>
+In-Reply-To: <1484111908-12558-1-git-send-email-zlang@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
 
-On Thu, Jan 12, 2017 at 11:14:52AM -0600, Eric Sandeen wrote:
-> kup generates .xz files, and Fedora RPMs now use that.
-> It'd be nice to have a handy target to generate .xz
-> files locally, so hack that in.
+
+
+On 1/10/17 11:18 PM, Zorro Lang wrote:
+> The man 8 xfs_repair said "xfs_repair run without the -n option will
+> always return a status code of 0". That's not correct.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
-
+> xfs_repair will return 2 if it finds a fs log which needs to be
+> replayed or cleared, 1 if runtime error is encountered, and 0 for
+> all other cases.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 > ---
 > 
-> I imagine there's a prettier way with wildcards or
-> templates or whatnot, but my Make is rusty.
+> Hi,
 > 
->  Makefile | 10 ++++++++--
+> This patch has been stayed in my local xfsprogs repo for a long
+> time. So I'm sending it out again :)
+
+Yep, sorry about that.  Last comment on it was that the sentence
+had become a run-on sentence ...
+
+How about:
+
+.B xfs_repair
+run without the -n option will always return a status code of 0 if it
+runs without problems, regardless of whether filesystem corruption was
+detected.  If an unexpected runtime error is encountered, it will return
+a status code of 1, and xfs_repair should be restarted.  If a dirty
+log is encountered which prevents it from continuing, it will return a
+status code of 2.
+
+(I think that the right place to document mount/unmount and/or -L is
+/not/ in the status code docs - if we need that info, it should go
+elsewhere.)
+
+-eric
+
+> Thanks,
+> Zorro
+> 
+>  man/man8/xfs_repair.8 | 10 ++++++++--
 >  1 file changed, 8 insertions(+), 2 deletions(-)
 > 
-> diff --git a/Makefile b/Makefile
-> index 84dc62c..6e45733 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -26,18 +26,19 @@ endif
->  
->  SRCDIR = $(PKG_NAME)-$(PKG_VERSION)
->  SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
-> +SRCTARXZ = $(PKG_NAME)-$(PKG_VERSION).tar.xz
->  
->  CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
->  LSRCFILES = configure.ac release.sh README VERSION $(CONFIGURE)
->  SRCTARINC = m4/libtool.m4 m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
->             m4/ltversion.m4 po/xfsprogs.pot .gitcensus $(CONFIGURE)
->  LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
-> -	conftest* built .census install.* install-dev.* *.gz \
-> +	conftest* built .census install.* install-dev.* *.gz *.xz \
->  	autom4te.cache/* libtool include/builddefs include/platform_defs.h
->  
->  ifeq ($(HAVE_BUILDDEFS), yes)
->  LDIRDIRT = $(SRCDIR)
-> -LDIRT += $(SRCTAR)
-> +LDIRT += $(SRCTAR) $(SRCTARXZ)
->  endif
->  
->  # header install rules to populate include/xfs correctly
-> @@ -165,6 +166,11 @@ $(SRCTAR) : default $(SRCTARINC) .gitcensus
->  	   `cat .gitcensus` $(SRCTARINC)
->  	echo Wrote: $@
->  
-> +$(SRCTARXZ) : default $(SRCTARINC) .gitcensus
-> +	$(Q)$(TAR) --transform "s,^,$(SRCDIR)/," -Jcf $(SRCDIR).tar.xz  \
-> +	   `cat .gitcensus` $(SRCTARINC)
-> +	echo Wrote: $@
-> +
->  .gitcensus: $(_FORCE)
->  	$(Q)if test -d .git; then \
->  	  git ls-files > .gitcensus && echo "new .gitcensus"; \
-> -- 
-> 1.8.3.1
+> diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
+> index 1b4d9e3..314f2c2 100644
+> --- a/man/man8/xfs_repair.8
+> +++ b/man/man8/xfs_repair.8
+> @@ -504,12 +504,18 @@ that is known to be free. The entry is therefore invalid and is deleted.
+>  This message refers to a large directory.
+>  If the directory were small, the message would read "junking entry ...".
+>  .SH EXIT STATUS
+> +.TP
+>  .B xfs_repair \-n
+> -(no modify node)
+> +(no modify mode)
+>  will return a status of 1 if filesystem corruption was detected and
+>  0 if no filesystem corruption was detected.
+> +.TP
+>  .B xfs_repair
+> -run without the \-n option will always return a status code of 0.
+> +run without the \-n option will return a status code of 2 if it finds a
+> +filesystem log which needs to be replayed (by a mount/umount cycle) or
+> +cleared (by -L option), 1 if a runtime error is encountered, filesystem
+> +may be even more broken than before, so repair needs to be run again,
+> +and 0 in all other cases, whether or not filesystem corruption was detected.
+>  .SH BUGS
+>  The filesystem to be checked and repaired must have been
+>  unmounted cleanly using normal system administration procedures
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
