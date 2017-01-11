@@ -1,55 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57590 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:47100 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932900AbdAJEkZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Jan 2017 23:40:25 -0500
-Date: Tue, 10 Jan 2017 12:40:23 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2 7/7] xfs/ext4: check negative inode size
-Message-ID: <20170110044023.GK1859@eguan.usersys.redhat.com>
-References: <148357827617.7677.15595044775254927245.stgit@birch.djwong.org>
- <148357832063.7677.12994144585642711957.stgit@birch.djwong.org>
- <20170109205518.GF14033@birch.djwong.org>
+        id S1750953AbdAKCk7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Jan 2017 21:40:59 -0500
+Subject: Re: Generic/389 xfs_io segfault on btrfs and ext4
+References: <ca7ae533-8d7f-9783-1900-bdfb17d6a32c@cn.fujitsu.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d5116871-0bb3-46b0-c9e3-def74bd57967@sandeen.net>
+Date: Tue, 10 Jan 2017 20:40:57 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170109205518.GF14033@birch.djwong.org>
+In-Reply-To: <ca7ae533-8d7f-9783-1900-bdfb17d6a32c@cn.fujitsu.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Qu Wenruo <quwenruo@cn.fujitsu.com>, Eryu Guan <eguan@redhat.com>, agruenba@redhat.com, btrfs <linux-btrfs@vger.kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Jan 09, 2017 at 12:55:18PM -0800, Darrick J. Wong wrote:
-> Craft a malicious filesystem image with a negative inode size,
-> then try to trigger a kernel DoS by appending data to the file.
-> Ideally this should trigger verifier errors instead of hanging.
+On 1/10/17 8:08 PM, Qu Wenruo wrote:
+> Hi, Andreas and Eryu,
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: use $DEBUGFS_PROG instead of debugfs; improve documentation
+> I found test case generic/389 fails on btrfs and ext4, and it fails with xfs_io segfault.
 
-Thanks for all the updated patches! I fixed a minor typo locally and
-committed.
+Details, please?
 
-> diff --git a/tests/shared/401 b/tests/shared/401
-> new file mode 100755
-> index 0000000..7b61cbb
-> --- /dev/null
-> +++ b/tests/shared/401
-> @@ -0,0 +1,77 @@
-> +#! /bin/bash
-> +# FSQA Test No. 401
-> +#
-> +# Since loff_t is a signed type, it is invalid for a filesystem to load
-> +# an inode with i_size = -1ULL.  Unfortunately, nobody checks this,
-> +# which means that we can trivially DoS the VFS by creating such a file
-> +# and appending to it.  This causes an integer overflow in the routines
-> +# underlying writeback, which results in the kernel locking up.
-> +#
-> +# So, create this malformed inode and try a buffered dio append to make
-                                               ^^^^^^^^
-I removed the "buffered" here and from xfs/401.
+Works ok here:
+
+# ./check  generic/389
+FSTYP         -- ext4
+PLATFORM      -- Linux/x86_64 bp-05 4.9.0-rc1+
+MKFS_OPTIONS  -- /dev/sdb2
+MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:nfs_t:s0 /dev/sdb2 /mnt/scratch
+
+generic/389 1s ... 1s
+Ran: generic/389
+Passed all 1 tests
+
+# rpm -q xfsprogs
+xfsprogs-4.9.0-1.el6.x86_64
+
+What version of kernel and xfsprogs were you testing, and what was the segfault?
 
 Thanks,
-Eryu
+-Eric
+ 
+> So it seems to be a bug in xfsprogs, but I'm already using the latest release from Fedora.
+> 
+> Is this a known bug?
+> 
+> Thanks,
+> Qu
+> 
+> 
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
