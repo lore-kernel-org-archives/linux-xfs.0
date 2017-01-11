@@ -1,143 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59028 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59866 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750719AbdALFBE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Jan 2017 00:01:04 -0500
-Date: Thu, 12 Jan 2017 13:00:14 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH] xfs_repair: update the manual content about xfs_repair
- exit status
-Message-ID: <20170112050014.GC14383@dhcp12-143.nay.redhat.com>
-References: <1484111908-12558-1-git-send-email-zlang@redhat.com>
- <9c965d34-9242-394a-490d-9825ac3ff918@sandeen.net>
- <20170111174530.GT14038@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170111174530.GT14038@birch.djwong.org>
+        id S1765126AbdAKRyS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Jan 2017 12:54:18 -0500
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1DEBDC05683F
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 17:54:11 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v0BHsAhB027368
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 12:54:10 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 1/5] xfs: refactor iomap delalloc existing extent search into helper
+Date: Wed, 11 Jan 2017 12:54:05 -0500
+Message-Id: <1484157249-464-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1484157249-464-1-git-send-email-bfoster@redhat.com>
+References: <1484157249-464-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Jan 11, 2017 at 09:45:30AM -0800, Darrick J. Wong wrote:
-> On Wed, Jan 11, 2017 at 07:47:41AM -0600, Eric Sandeen wrote:
-> > 
-> > 
-> > On 1/10/17 11:18 PM, Zorro Lang wrote:
-> > > The man 8 xfs_repair said "xfs_repair run without the -n option will
-> > > always return a status code of 0". That's not correct.
-> > > 
-> > > xfs_repair will return 2 if it finds a fs log which needs to be
-> > > replayed or cleared, 1 if runtime error is encountered, and 0 for
-> > > all other cases.
-> > > 
-> > > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > > ---
-> > > 
-> > > Hi,
-> > > 
-> > > This patch has been stayed in my local xfsprogs repo for a long
-> > > time. So I'm sending it out again :)
-> > 
-> > Yep, sorry about that.  Last comment on it was that the sentence
-> > had become a run-on sentence ...
-> > 
-> > How about:
-> > 
-> > .B xfs_repair
-> > run without the -n option will always return a status code of 0 if it
-> > runs without problems, regardless of whether filesystem corruption was
-> > detected.  If an unexpected runtime error is encountered, it will return
-> > a status code of 1, and xfs_repair should be restarted.  If a dirty
-> > log is encountered which prevents it from continuing, it will return a
-> > status code of 2.
-> > 
-> > (I think that the right place to document mount/unmount and/or -L is
-> > /not/ in the status code docs - if we need that info, it should go
-> > elsewhere.)
-> 
-> We sort of mumble about needing to mount and umount to clear a dirty log
-> in the BUGS section, but I think we should just add a section about
-> dirty logs and what to do with them, then link to it from the status
-> code section and the -L option section.
-> 
-> "DIRTY LOGS
-> 
-> "Due to the design of the XFS log, a dirty log can only be replayed on a
-> machine having the same CPU architecture as the machine which was
-> writing to the log.  xfs_repair cannot replay a dirty log and will
-> return a status code of 2 when it detects a dirty log.
-> 
-> "In this situation, the log can be replayed by mounting and immediately
-> unmounting the filesystem on the same class of machine that crashed.
-> Please make sure that the machine's hardware is reliable before
-> replaying to avoid compounding the problems.
-> 
-> "If mounting fails, the log can be erased by running xfs_repair with
-> the -L option.  All metadata updates in progress at the time of the
-> crash will be lost, which may cause significant filesystem damage.  This
-> should only be used as a last resort."
+In preparation for reuse of the existing delayed allocation code for COW
+reservation, factor out the part of xfs_file_iomap_begin_delay()
+responsible for existing extent lookup into a new helper. This patch
+does not change behavior.
 
-Ah, this's what I said on my last email. If we use 'dirty log' directly,
-maybe we should explain what's dirty log and how to deal with it simply :)
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_iomap.c | 72 ++++++++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 57 insertions(+), 15 deletions(-)
 
-I think there's no the best way to describe something in doc, so I'd
-like to follow the maintainer's preference :)
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 0d14742..ec86262 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -522,6 +522,48 @@ xfs_iomap_prealloc_size(
+ 	return alloc_blocks;
+ }
+ 
++/*
++ * Prepare to handle delayed allocation based on whether extents exist in the
++ * inode data and COW forks. If an existing data extent is shared, determine
++ * whether COW fork reservation is necessary.
++ *
++ * The 'found' parameter indicates whether a writable mapping was found. If the
++ * mapping is shared, a COW reservation is performed for the corresponding
++ * range.
++ */
++static int
++xfs_iomap_search_extents(
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		offset_fsb,
++	xfs_fileoff_t		end_fsb,
++	int			*eof,
++	int			*idx,
++	struct xfs_bmbt_irec	*got,
++	bool			*found)		/* found usable extent */
++{
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	int			error = 0;
++
++	*found = false;
++
++	*eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, idx, got);
++	if (*eof || got->br_startoff > offset_fsb)
++		return 0;
++
++	if (xfs_is_reflink_inode(ip)) {
++		bool		shared;
++
++		xfs_trim_extent(got, offset_fsb, end_fsb - offset_fsb);
++		error = xfs_reflink_reserve_cow(ip, got, &shared);
++		if (error)
++			return error;
++	}
++
++	*found = true;
++
++	return error;
++}
++
+ static int
+ xfs_file_iomap_begin_delay(
+ 	struct inode		*inode,
+@@ -533,18 +575,22 @@ xfs_file_iomap_begin_delay(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+-	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	xfs_fileoff_t		offset_fsb;
++	xfs_fileoff_t		end_fsb;
+ 	xfs_fileoff_t		maxbytes_fsb =
+ 		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+-	xfs_fileoff_t		end_fsb;
+ 	int			error = 0, eof = 0;
+ 	struct xfs_bmbt_irec	got;
+ 	xfs_extnum_t		idx;
+ 	xfs_fsblock_t		prealloc_blocks = 0;
++	bool			found;
+ 
+ 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+ 	ASSERT(!xfs_get_extsz_hint(ip));
+ 
++	offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
++
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 
+ 	if (unlikely(XFS_TEST_ERROR(
+@@ -564,19 +610,15 @@ xfs_file_iomap_begin_delay(
+ 			goto out_unlock;
+ 	}
+ 
+-	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
+-	if (!eof && got.br_startoff <= offset_fsb) {
+-		if (xfs_is_reflink_inode(ip)) {
+-			bool		shared;
+-
+-			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
+-					maxbytes_fsb);
+-			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
+-			error = xfs_reflink_reserve_cow(ip, &got, &shared);
+-			if (error)
+-				goto out_unlock;
+-		}
+-
++	/*
++	 * Search for preexisting extents. If an existing data extent is shared,
++	 * this will perform COW fork reservation.
++	 */
++	error = xfs_iomap_search_extents(ip, offset_fsb, end_fsb, &eof, &idx,
++					 &got, &found);
++	if (error)
++		goto out_unlock;
++	if (found) {
+ 		trace_xfs_iomap_found(ip, offset, count, 0, &got);
+ 		goto done;
+ 	}
+-- 
+2.7.4
 
-Thanks,
-Zorro
-
-> 
-> (If you decide to add that paragraph,
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>)
-> 
-> Though I wonder why don't just fix the endianness issues with the log,
-> and teach xfs_repair how to replay them...
-> 
-> --D
-> 
-> > 
-> > -eric
-> > 
-> > > Thanks,
-> > > Zorro
-> > > 
-> > >  man/man8/xfs_repair.8 | 10 ++++++++--
-> > >  1 file changed, 8 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
-> > > index 1b4d9e3..314f2c2 100644
-> > > --- a/man/man8/xfs_repair.8
-> > > +++ b/man/man8/xfs_repair.8
-> > > @@ -504,12 +504,18 @@ that is known to be free. The entry is therefore invalid and is deleted.
-> > >  This message refers to a large directory.
-> > >  If the directory were small, the message would read "junking entry ...".
-> > >  .SH EXIT STATUS
-> > > +.TP
-> > >  .B xfs_repair \-n
-> > > -(no modify node)
-> > > +(no modify mode)
-> > >  will return a status of 1 if filesystem corruption was detected and
-> > >  0 if no filesystem corruption was detected.
-> > > +.TP
-> > >  .B xfs_repair
-> > > -run without the \-n option will always return a status code of 0.
-> > > +run without the \-n option will return a status code of 2 if it finds a
-> > > +filesystem log which needs to be replayed (by a mount/umount cycle) or
-> > > +cleared (by -L option), 1 if a runtime error is encountered, filesystem
-> > > +may be even more broken than before, so repair needs to be run again,
-> > > +and 0 in all other cases, whether or not filesystem corruption was detected.
-> > >  .SH BUGS
-> > >  The filesystem to be checked and repaired must have been
-> > >  unmounted cleanly using normal system administration procedures
-> > > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
