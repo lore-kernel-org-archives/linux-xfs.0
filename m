@@ -1,49 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:10338 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754400AbdAJVwl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Jan 2017 16:52:41 -0500
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v4 3/7] dax: update MAINTAINERS entries for FS DAX
-Date: Tue, 10 Jan 2017 14:52:18 -0700
-Message-Id: <1484085142-2297-4-git-send-email-ross.zwisler@linux.intel.com>
-In-Reply-To: <1484085142-2297-1-git-send-email-ross.zwisler@linux.intel.com>
-References: <1484085142-2297-1-git-send-email-ross.zwisler@linux.intel.com>
+Received: from cn.fujitsu.com ([59.151.112.132]:38562 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752292AbdAKDAn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 22:00:43 -0500
+Subject: Re: Generic/389 xfs_io segfault on btrfs and ext4
+References: <ca7ae533-8d7f-9783-1900-bdfb17d6a32c@cn.fujitsu.com>
+ <d5116871-0bb3-46b0-c9e3-def74bd57967@sandeen.net>
+ <5c56afcd-13b0-d3b3-e18c-0b902691d8f4@cn.fujitsu.com>
+ <c5ea839d-1962-e363-d83b-936328f985df@redhat.com>
+From: Qu Wenruo <quwenruo@cn.fujitsu.com>
+Message-ID: <8e1e082b-11c0-e597-cd38-744938537c2e@cn.fujitsu.com>
+Date: Wed, 11 Jan 2017 11:00:29 +0800
+MIME-Version: 1.0
+In-Reply-To: <c5ea839d-1962-e363-d83b-936328f985df@redhat.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Theodore Ts'o <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Ingo Molnar <mingo@redhat.com>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, Steven Rostedt <rostedt@goodmis.org>, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Eryu Guan <eguan@redhat.com>, agruenba@redhat.com, btrfs <linux-btrfs@vger.kernel.org>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Add the new include/trace/events/fs_dax.h tracepoint header, the existing
-include/linux/dax.h header, update Matthew's email address and add myself
-as a maintainer for filesystem DAX.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Suggested-by: Matthew Wilcox <mawilcox@microsoft.com>
----
- MAINTAINERS | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c13a4f6..9fb35d7 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3909,10 +3909,13 @@ S:	Maintained
- F:	drivers/i2c/busses/i2c-diolan-u2c.c
- 
- DIRECT ACCESS (DAX)
--M:	Matthew Wilcox <willy@linux.intel.com>
-+M:	Matthew Wilcox <mawilcox@microsoft.com>
-+M:	Ross Zwisler <ross.zwisler@linux.intel.com>
- L:	linux-fsdevel@vger.kernel.org
- S:	Supported
- F:	fs/dax.c
-+F:	include/linux/dax.h
-+F:	include/trace/events/fs_dax.h
- 
- DIRECTORY NOTIFICATION (DNOTIFY)
- M:	Eric Paris <eparis@parisplace.org>
--- 
-2.7.4
+At 01/11/2017 10:53 AM, Eric Sandeen wrote:
+> On 1/10/17 8:45 PM, Qu Wenruo wrote:
+>>
+>>
+>> At 01/11/2017 10:40 AM, Eric Sandeen wrote:
+>
+> ...
+>
+>>> What version of kernel and xfsprogs were you testing, and what was the segfault?
+>>
+>> Kernel is mainline v4.10-rc1.
+>> No debuginfo installed, so no backtrace, but since there is so many
+>>
+>> So the problem is the old xfsprogs, I'll update or compile xfsprogs.
+>> Thanks for your kind info.
+>
+> Just FWIW, I always have latest xfsprogs in rawhide, but I don't usually push
+> to other fedoras.
+>
+> It should be easy to grab
+> https://kojipkgs.fedoraproject.org/packages/xfsprogs/4.9.0/1.fc26/src/xfsprogs-4.9.0-1.fc26.src.rpm
+> and rebuild & install.
+
+Thanks for the info.
+
+I have already compiled latest version and it works perfectly.
+
+BTW, just wonder if or when Fedora will do rolling release, which should 
+avoid such problem.
+
+Thanks,
+Qu
+>
+> -Eric
+>
+>
+>
+
 
