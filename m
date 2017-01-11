@@ -1,164 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38915 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751086AbdALULB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Jan 2017 15:11:01 -0500
-Date: Thu, 12 Jan 2017 12:10:55 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v4 00/47] xfs: online scrub/repair support
-Message-ID: <20170112201055.GD5883@birch.djwong.org>
-References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
- <CAOQ4uxhhOqhsZwrncsfUmra9nLGKpF2mFGp35BuiPyucWkN1yw@mail.gmail.com>
- <20170109211540.GB14038@birch.djwong.org>
- <20170110075444.GL1859@eguan.usersys.redhat.com>
- <CAOQ4uxis3RwHSaTVqxmH0dNFLU4fVc0CtL2bCcsDgyMyaAfTRA@mail.gmail.com>
- <CAOQ4uxiFg18fVh3RFr-Y1-XRmV82dTxc5r05QH8OFYpv2=juvg@mail.gmail.com>
- <CAOQ4uxhTPt7t4-4MmQwogy+d4mgyG+=MX=12NX8R4V-hGR1q0w@mail.gmail.com>
+Received: from verein.lst.de ([213.95.11.211]:34136 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936409AbdAKIjB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Jan 2017 03:39:01 -0500
+Date: Wed, 11 Jan 2017 09:38:59 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v8 4/6] xfs: replace xfs_mode_to_ftype table with
+        switch statement
+Message-ID: <20170111083859.GB6744@lst.de>
+References: <1484123050-11064-1-git-send-email-amir73il@gmail.com> <1484123050-11064-5-git-send-email-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxhTPt7t4-4MmQwogy+d4mgyG+=MX=12NX8R4V-hGR1q0w@mail.gmail.com>
+In-Reply-To: <1484123050-11064-5-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Thu, Jan 12, 2017 at 07:18:05PM +0200, Amir Goldstein wrote:
-> On Tue, Jan 10, 2017 at 10:42 AM, Amir Goldstein <amir73il@gmail.com> wrote:
-> > On Tue, Jan 10, 2017 at 10:13 AM, Amir Goldstein <amir73il@gmail.com> wrote:
-> >> On Tue, Jan 10, 2017 at 9:54 AM, Eryu Guan <eguan@redhat.com> wrote:
-> >>> On Mon, Jan 09, 2017 at 01:15:40PM -0800, Darrick J. Wong wrote:
-> ...
-> >>>>
-> >>>> All the tests?  The full dmesg output would be useful to narrow it down to
-> >>>> a specific xfstest number, field name, and fuzz verb.  I'm running them
-> >>>
-> >>
-> >> In my case, yes, most of the test (51 out of 65) failed due to
-> >> some sort of crash, but the entire system is so unstable due to all the OOM
-> >> killing that the entire dmesg output is a big mess.
-> >>
-> >> I'll rerun only 1301 to send my logs.
-> >>
-> >>
-> >
-> > See attached:
-> >
-> > 1. full results of first run of ./check -g dangerous_scrub,scrub
-> >     with TEST_XFS_SCRUB=1
-> >
-> > 2. dmesg from the same run (51 out of 65 failed)
-> >
-> > 3. dmesg from rerun of few selected tests without TEST_XFS_SCRUB=1
-> >     (all tests failed)
+On Wed, Jan 11, 2017 at 10:24:08AM +0200, Amir Goldstein wrote:
+> The size of the xfs_mode_to_ftype[] conversion table
+> was too small to handle an invalid value of mode=S_IFMT.
 > 
-> Darrick,
+> Instead of fixing the table size, replace the conversion table
+> with a conversion helper that uses a switch statement.
 > 
-> Before I am heading home for the weekend, here is another dump of test results
-> from re-running 1301 and 1316.
-> 
-> The changes I had to make in order to get to these results are:
-> 
-> 1. Apply your patch for geometry sanity check to xfs_db/xfs_repair
-> 75581a8 xfs_db: sanitize geometry on load
-> 2efc292 xfs_scrub: create a script to scrub all xfs filesystems
-> 
-> 2. Apply my patch to common/fuzzy
-> 0bf843b fuzzy: use xfs_db -c to execute commands
-> 1377e1e xfs: fuzz every field of every structure
-> 
-> 3. Convert ASSERT() with XFS_DEBUG=y to asswarn(), because fuzzing
-> keeps tripping the kernel over with ASSERTS (see attached dmesg logs)
-> 
-> In the attached results, both tests get ASSERTs (see *.dmesg).
-> In test 1301, xfs_repair gets several SIGSEGV and SIGPFE (see 1301.full)
-> and xfs_db gets several SIGFPE (see 1301.out.bad).
-> 
-> This is a sample backtrace from SIGPFE in xfs_repair:
+> Suggested-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 
-The xfs_repair problems I think stem from trying to use the fubar'd AG0
-superblock instead of giving up on it and searching for another sb.  Try
-the patch "xfs_repair: strengthen geometry checks" to see if the repair
-crashes go away.
+Looks fine,
 
-As for xfs_db, yeah, bonkers geometry can make it explode... not clear
-what we realistically can do about that; second-guessing the geometry
-hasn't proven popular.
-
---D
-
-> Core was generated by `/sbin/xfs_repair -n /dev/mapper/storage-scratch'.
-> Program terminated with signal SIGFPE, Arithmetic exception.
-> #0  0x0000000000434053 in libxfs_mount (mp=mp@entry=0x7ffd5e9cdd50,
-> sb=sb@entry=0x7ffd5e9cdc40, dev=64514, logdev=<optimized out>,
-> rtdev=<optimized out>, flags=flags@entry=0) at init.c:702
-> 702                     mp->m_maxicount = ((mp->m_maxicount /
-> mp->m_ialloc_blks) *
-> (gdb) bt
-> #0  0x0000000000434053 in libxfs_mount (mp=mp@entry=0x7ffd5e9cdd50,
-> sb=sb@entry=0x7ffd5e9cdc40, dev=64514, logdev=<optimized out>,
-> rtdev=<optimized out>, flags=flags@entry=0) at init.c:702
-> #1  0x0000000000403758 in main (argc=<optimized out>, argv=<optimized
-> out>) at xfs_repair.c:724
-> (gdb) p mp->m_ialloc_blks
-> $1 = 0
-> (gdb)
-> 
-> Here is another from SIGSEGV in xfs_repair:
-> 
-> Core was generated by `/sbin/xfs_repair -n /dev/mapper/storage-scratch'.
-> Program terminated with signal SIGSEGV, Segmentation fault.
-> #0  xfs_inode_buf_verify (bp=0x7fe02400d410, readahead=false) at
-> xfs_inode_buf.c:102
-> 102                     di_ok = dip->di_magic ==
-> cpu_to_be16(XFS_DINODE_MAGIC) &&
-> [Current thread is 1 (Thread 0x7fe042d18700 (LWP 22284))]
-> (gdb) bt
-> #0  xfs_inode_buf_verify (bp=0x7fe02400d410, readahead=false) at
-> xfs_inode_buf.c:102
-> #1  0x0000000000436b53 in libxfs_readbuf_verify
-> (bp=bp@entry=0x7fe02400d410, ops=<optimized out>) at rdwr.c:966
-> #2  0x0000000000426d6d in pf_read_inode_dirs (bp=0x7fe02400d410,
-> args=0xcdcaf0) at prefetch.c:402
-> #3  pf_batch_read (args=args@entry=0xcdcaf0,
-> which=which@entry=PF_PRIMARY, buf=buf@entry=0x7fe03c026400) at
-> prefetch.c:599
-> #4  0x000000000042705c in pf_io_worker (param=0xcdcaf0) at prefetch.c:661
-> #5  0x00007fe052ee06fa in start_thread (arg=0x7fe042d18700) at
-> pthread_create.c:333
-> #6  0x00007fe0529d5b5d in clone () at
-> ../sysdeps/unix/sysv/linux/x86_64/clone.S:109
-> (gdb) p dip
-> $1 = (xfs_dinode_t *) 0x7fe02420d600
-> (gdb) p mp
-> $2 = (struct xfs_mount *) 0x7ffca0f3dd80
-> (gdb)
-> 
-> And here is one from SIGPFE in xfs_db, which is similar to the xfs_repair one:
-> 
-> Core was generated by `/usr/sbin/xfs_db -F -i -p xfs_check -c check
-> /dev/mapper/storage-scratch'.
-> Program terminated with signal SIGFPE, Arithmetic exception.
-> #0  0x0000000000426a63 in libxfs_mount (mp=mp@entry=0x6af480 <xmount>,
-> sb=sb@entry=0x6af480 <xmount>, dev=64514, logdev=<optimized out>,
-> rtdev=<optimized out>, flags=flags@entry=1) at init.c:702
-> 702                     mp->m_maxicount = ((mp->m_maxicount /
-> mp->m_ialloc_blks) *
-> (gdb) bt
-> #0  0x0000000000426a63 in libxfs_mount (mp=mp@entry=0x6af480 <xmount>,
-> sb=sb@entry=0x6af480 <xmount>, dev=64514, logdev=<optimized out>,
-> rtdev=<optimized out>, flags=flags@entry=1) at init.c:702
-> #1  0x0000000000418233 in init (argc=<optimized out>,
-> argv=argv@entry=0x7ffd0a100058) at init.c:222
-> #2  0x0000000000404fd7 in main (argc=<optimized out>,
-> argv=0x7ffd0a100058) at init.c:267
-> (gdb) p mp->m_ialloc_blks
-> $1 = 0
-> (gdb)
-> 
-> Hope this will help you narrow down the suspects.
-> 
-> Amir.
-
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
