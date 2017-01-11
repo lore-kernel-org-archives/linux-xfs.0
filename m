@@ -1,215 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38508 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750781AbdALXU2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Jan 2017 18:20:28 -0500
-Subject: Re: [PATCH v2 4/5] xfs_db: sanitize geometry on load
-References: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
- <148419041340.32674.2646685552269275817.stgit@birch.djwong.org>
- <20170112204142.GA14038@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1ea9b931-28c9-de1c-f7ff-874053d4ac35@sandeen.net>
-Date: Thu, 12 Jan 2017 17:20:26 -0600
-MIME-Version: 1.0
-In-Reply-To: <20170112204142.GA14038@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:36512 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751042AbdAKGae (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 01:30:34 -0500
+Received: by mail-wj0-f196.google.com with SMTP id dh1so9252043wjb.3
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 22:30:33 -0800 (PST)
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v3] xfsprogs: replace xfs_mode_to_ftype table with switch statement
+Date: Wed, 11 Jan 2017 08:30:17 +0200
+Message-Id: <1484116217-7594-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On 1/12/17 2:41 PM, Darrick J. Wong wrote:
-> xfs_db doesn't check the filesystem geometry when it's mounting, which
-> means that garbage agcount values can cause OOMs when we try to allocate
-> all the per-AG incore metadata.  If we see geometry that looks
-> suspicious, try to derive the actual AG geometry to avoid crashing the
-> system.  This should help with xfs/1301 fuzzing.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: Only modify sb_ag{blocks,count} if they seem insane -- use local
-> variables to avoid screwing up the rest of the metadata.
+The size of the xfs_mode_to_ftype[] conversion table
+was too small to handle an invalid value of mode=S_IFMT.
 
-Ok, I like this a bit better.  More comments, though.  Sorry, will
-try to do a better full review in future to avoid the iteration :(
-Below ...
+Instead of fixing the table size, replace the conversion table
+with a conversion helper that uses a switch statement.
 
-> ---
->  db/init.c |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++++------
->  1 file changed, 87 insertions(+), 10 deletions(-)
-> 
-> diff --git a/db/init.c b/db/init.c
-> index ec1e274..db133d7 100644
-> --- a/db/init.c
-> +++ b/db/init.c
-> @@ -51,13 +51,96 @@ usage(void)
->  	exit(1);
->  }
->  
-> +/* Try to load an AG's superblock, no verifiers. */
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ libxfs/xfs_dir2.c    | 36 ++++++++++++++++++++++--------------
+ libxfs/xfs_dir2.h    |  5 ++---
+ repair/dino_chunks.c |  6 +-----
+ repair/phase6.c      |  2 +-
+ 4 files changed, 26 insertions(+), 23 deletions(-)
 
-/* ... for the given agno ... */
+Eric,
 
-> +static bool
-> +load_sb(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno,
-> +	struct xfs_sb		*sbp)
-> +{
-> +	struct xfs_buf		*bp;
-> +
-> +	bp = libxfs_readbuf(mp->m_ddev_targp,
-> +			    XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-> +			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
-> +
-> +	if (!bp || bp->b_error)
-> +		return false;
-> +
-> +	/* copy SB from buffer to in-core, converting architecture as we go */
-> +	libxfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
-> +	libxfs_putbuf(bp);
-> +	libxfs_purgebuf(bp);
-> +
-> +	return true;
-> +}
-> +
-> +/* If the geometry doesn't look sane, try to figure out the real geometry. */
-> +static void
-> +sanitize_geometry(
-Probably now:
+This is a matching patch to the one that got Reviewed-by Darrick for kernel.
 
-+/*
-+ * If the agcount doesn't look sane, try to figure out the real agcount.
-+ * A wildly too-large agcount may OOM in libxfs_initialize_perag
-+ */
-+static void
-+sanitize_agcount(
+Tested xfs_repair with the new xfs/348 test with -n ftype=0|1.
 
-> +	struct xfs_mount	*mp,
-> +	struct xfs_sb		*sbp)
-> +{
-> +	struct xfs_sb		sb;
-> +	unsigned int		blocklog;
-> +	unsigned int		blocksize;
-> +	unsigned int		agblocks;
-> +	unsigned long long	dblocks;
-> +
-> +	/* If the geometry looks ok, we're done. */
-> +	if (sbp->sb_blocklog >= XFS_MIN_BLOCKSIZE_LOG &&
-> +	    sbp->sb_blocklog <= XFS_MAX_BLOCKSIZE_LOG &&
-> +	    sbp->sb_blocksize == (1 << sbp->sb_blocklog) &&
-> +	    sbp->sb_dblocks * sbp->sb_blocksize <= x.dsize * x.dbsize &&
-> +	    sbp->sb_dblocks <= XFS_MAX_DBLOCKS(sbp) &&
-> +	    sbp->sb_dblocks >= XFS_MIN_DBLOCKS(sbp))
-> +		return;
-> +
-> +	/* Check blocklog and blocksize */
-> +	blocklog = sbp->sb_blocklog;
-> +	blocksize = sbp->sb_blocksize;
-> +	if (blocklog < XFS_MIN_BLOCKSIZE_LOG ||
-> +	    blocklog > XFS_MAX_BLOCKSIZE_LOG)
-> +		blocklog = libxfs_log2_roundup(blocksize);
-> +	if (blocksize != (1 << blocklog))
-> +		blocksize = (1 << blocksize);
-> +
-> +	/* Clamp dblocks to the size of the device. */
-> +	dblocks = sbp->sb_dblocks;
-> +	if (dblocks > x.dsize * x.dbsize / blocksize)
-> +		dblocks = x.dsize * x.dbsize / blocksize;
+Amir.
 
-ok now in theory blocksize & dblocks are as good a guess as we can
-get...
+v3:
+- Replaced xfs_mode_to_ftype table with switch statement
 
-> +
-> +	/* See if agblocks helps us find a superblock. */
-> +	mp->m_blkbb_log = blocklog - BBSHIFT;
-> +	if (sbp->sb_agblocks > 0 && sbp->sb_agblocks <= MAXEXTNUM &&
-> +	    load_sb(mp, 1, &sb) && sb.sb_magicnum == XFS_SB_MAGIC) {
+v2:
+- remove wrong argument about on-disk malformed mode from commit message
+- address Brian's review comments
+- test with new xfs/348
 
-load_sb translates the one we found into &sb....
+v1:
+- fix patch for xfsprogs derived from kernel patch
 
-> +		sbp->sb_agcount = dblocks / sbp->sb_agblocks;
+diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
+index 4180a93..257a99b 100644
+--- a/libxfs/xfs_dir2.c
++++ b/libxfs/xfs_dir2.c
+@@ -34,21 +34,29 @@
+ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+ 
+ /*
+- * @mode, if set, indicates that the type field needs to be set up.
+- * This uses the transformation from file mode to DT_* as defined in linux/fs.h
+- * for file type specification. This will be propagated into the directory
+- * structure if appropriate for the given operation and filesystem config.
++ * Convert inode mode to directory entry filetype
+  */
+-const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
+-	[0]			= XFS_DIR3_FT_UNKNOWN,
+-	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
+-	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
+-	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
+-	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
+-	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
+-	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
+-	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
+-};
++const unsigned char xfs_mode_to_ftype(int mode)
++{
++	switch (mode & S_IFMT) {
++	case S_IFREG:
++		return XFS_DIR3_FT_REG_FILE;
++	case S_IFDIR:
++		return XFS_DIR3_FT_DIR;
++	case S_IFCHR:
++		return XFS_DIR3_FT_CHRDEV;
++	case S_IFBLK:
++		return XFS_DIR3_FT_BLKDEV;
++	case S_IFIFO:
++		return XFS_DIR3_FT_FIFO;
++	case S_IFSOCK:
++		return XFS_DIR3_FT_SOCK;
++	case S_IFLNK:
++		return XFS_DIR3_FT_SYMLINK;
++	default:
++		return XFS_DIR3_FT_UNKNOWN;
++	}
++}
+ 
+ /*
+  * ASCII case-insensitive (ie. A-Z) support for directories that was
+diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
+index 89b9e24..ea20c12 100644
+--- a/libxfs/xfs_dir2.h
++++ b/libxfs/xfs_dir2.h
+@@ -32,10 +32,9 @@ struct xfs_dir2_data_unused;
+ extern struct xfs_name	xfs_name_dotdot;
+ 
+ /*
+- * directory filetype conversion tables.
++ * Convert inode mode to directory entry filetype
+  */
+-#define S_SHIFT 12
+-extern const unsigned char xfs_mode_to_ftype[];
++extern const unsigned char xfs_mode_to_ftype(int mode);
+ 
+ /*
+  * directory operations vector for encode/decode routines
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index 4db9512..a3909ac 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -826,8 +826,6 @@ next_readbuf:
+ 		 * we do now, this is where to start.
+ 		 */
+ 		if (is_used)  {
+-			__uint16_t	di_mode;
+-
+ 			if (is_inode_free(ino_rec, irec_offset))  {
+ 				if (verbose || no_modify)  {
+ 					do_warn(
+@@ -846,10 +844,8 @@ next_readbuf:
+ 			 * store the on-disk file type for comparing in
+ 			 * phase 6.
+ 			 */
+-			di_mode = be16_to_cpu(dino->di_mode);
+-			di_mode = (di_mode & S_IFMT) >> S_SHIFT;
+ 			set_inode_ftype(ino_rec, irec_offset,
+-					xfs_mode_to_ftype[di_mode]);
++				xfs_mode_to_ftype(be16_to_cpu(dino->di_mode)));
+ 
+ 			/*
+ 			 * store on-disk nlink count for comparing in phase 7
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 06eed16..c492dd9 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1082,7 +1082,7 @@ mv_orphanage(
+ 	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
+ 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
+ 
+-	xname.type = xfs_mode_to_ftype[(VFS_I(ino_p)->i_mode & S_IFMT)>>S_SHIFT];
++	xname.type = xfs_mode_to_ftype(VFS_I(ino_p)->i_mode);
+ 
+ 	if (isa_dir)  {
+ 		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, orphanage_ino),
+-- 
+2.7.4
 
-wouldn't it make more sense to just assign from sb->sb_agcount?
-But who's to say the 2nd one isn't corrupt in the same way?
-Grump.
-
-> +		goto out;
-> +	}
-> +
-> +	/* See if agcount helps us find a superblock. */
-
-Wait I thought agcount problems is why we're here in
-the first place.  What's this for?
-
-> +	agblocks = sbp->sb_agblocks;
-> +	sbp->sb_agblocks = dblocks / sbp->sb_agcount;
-> +	if (sbp->sb_agblocks > 0 && sbp->sb_agblocks <= MAXEXTNUM &&
-> +	    load_sb(mp, 1, &sb) && sb.sb_magicnum == XFS_SB_MAGIC) {
-> +		goto out;
-> +	}
-> +
-> +	/* Both are nuts, assume 1 AG. */
-> +	sbp->sb_agblocks = agblocks;
-> +	sbp->sb_agcount = 1;
-
-I'd almost rather just jump here and let the admin sort it out...
-
-But let me play with this a little mmkay?
-
--Eric
-
-> +out:
-> +	fprintf(stderr,
-> +		_("%s: device %s AG count is insane.  Limiting reads to the first %u AGs.\n"),
-> +		progname, fsdevice, sbp->sb_agcount);
-> +}
-> +
->  void
->  init(
->  	int		argc,
->  	char		**argv)
->  {
->  	struct xfs_sb	*sbp;
-> -	struct xfs_buf	*bp;
->  	int		c;
->  
->  	setlocale(LC_ALL, "");
-> @@ -124,20 +207,12 @@ init(
->  	 */
->  	memset(&xmount, 0, sizeof(struct xfs_mount));
->  	libxfs_buftarg_init(&xmount, x.ddev, x.logdev, x.rtdev);
-> -	bp = libxfs_readbuf(xmount.m_ddev_targp, XFS_SB_DADDR,
-> -			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
-> -
-> -	if (!bp || bp->b_error) {
-> +	if (!load_sb(&xmount, 0, &xmount.m_sb)) {
->  		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
->  			"bytes)\n"), progname, fsdevice);
->  		exit(1);
->  	}
->  
-> -	/* copy SB from buffer to in-core, converting architecture as we go */
-> -	libxfs_sb_from_disk(&xmount.m_sb, XFS_BUF_TO_SBP(bp));
-> -	libxfs_putbuf(bp);
-> -	libxfs_purgebuf(bp);
-> -
->  	sbp = &xmount.m_sb;
->  	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
->  		fprintf(stderr, _("%s: %s is not a valid XFS filesystem (unexpected SB magic number 0x%08x)\n"),
-> @@ -148,6 +223,8 @@ init(
->  		}
->  	}
->  
-> +	sanitize_geometry(&xmount, sbp);
-> +
->  	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
->  			  LIBXFS_MOUNT_DEBUGGER);
->  	if (!mp) {
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
