@@ -1,62 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:34605 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750956AbdAHUKh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2017 15:10:37 -0500
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v08K8Vcw008998
-        for <linux-xfs@vger.kernel.org>; Sun, 8 Jan 2017 15:10:37 -0500
-Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 27unkea8fp-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Sun, 08 Jan 2017 15:10:36 -0500
-Received: from localhost
-        by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-        Mon, 9 Jan 2017 06:10:34 +1000
-Subject: Re: xfs:  commit 6552321831dc "xfs: remove i_iolock and use i_rwsem
- in the VFS inode instead"  change causes hang
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-Date: Sun, 08 Jan 2017 15:10:28 -0500
-In-Reply-To: <20170108192634.GM1555@ZenIV.linux.org.uk>
-References: <1483886924.8189.81.camel@linux.vnet.ibm.com>
-         <20170108145200.GA29570@lst.de>
-         <1483898365.2542.13.camel@HansenPartnership.com>
-         <20170108181856.GA781@lst.de>
-         <1483901848.2542.27.camel@HansenPartnership.com>
-         <20170108190955.GA1489@lst.de> <20170108192634.GM1555@ZenIV.linux.org.uk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Message-Id: <1483906228.2956.59.camel@linux.vnet.ibm.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34122 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933704AbdAKIYi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 03:24:38 -0500
+Received: by mail-wm0-f65.google.com with SMTP id c85so35008049wmi.1
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 00:24:37 -0800 (PST)
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v8 6/6] xfs: sanity check inode di_mode
+Date: Wed, 11 Jan 2017 10:24:10 +0200
+Message-Id: <1484123050-11064-7-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
+References: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Sun, 2017-01-08 at 19:26 +0000, Al Viro wrote:
-> On Sun, Jan 08, 2017 at 08:09:55PM +0100, Christoph Hellwig wrote:
-> 
-> > No.  We need an ->ima_measure file_operation, guts of process_measurement
-> > turned into a library function that the FS can call after taking fs-specific
-> > locks.  And maybe also a small wrapper around it that takes ilock and
-> > can be used directly for file systems not needing special locking.
-> 
-> Incidentally, it had been literally years since the problems with their
-> pathname handling had been brought up and we *still* have got no answer.
+Check for invalid file type in xfs_dinode_verify()
+and fail to load the inode structure from disk.
 
-> In the current tree, ima_d_path() is quite capable of returning
-> path->dentry->d_name.name.  Which gets used by subsequent code,
-> even though there is no warranty whatsoever that it won't be
-> pointing to freed memory by the time the caller of ima_d_path()
-> gets it.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/xfs/libxfs/xfs_inode_buf.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-The pathname/filename is being used in the measurement list and for
-audit logging.  It's currently using d_absolute_path() to get the full
-pathname, but falls back to using the dentry->d_name.name on failure.
-Ok, so instead of returning the dentry->d_name.name, we should make a
-copy it, assuming the error isn't memory related.
-
-Mimi
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 0091ac3..d93f9d9 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -29,6 +29,7 @@
+ #include "xfs_icache.h"
+ #include "xfs_trans.h"
+ #include "xfs_ialloc.h"
++#include "xfs_dir2.h"
+ 
+ /*
+  * Check that none of the inode's in the buffer have a next
+@@ -398,6 +399,8 @@ xfs_dinode_verify(
+ 		return false;
+ 
+ 	mode = be16_to_cpu(dip->di_mode);
++	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
++		return false;
+ 
+ 	/* No zero-length symlinks/dirs. */
+ 	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
+-- 
+2.7.4
 
