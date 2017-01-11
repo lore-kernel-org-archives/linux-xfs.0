@@ -1,100 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38444 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56628 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965798AbdAKMDe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Jan 2017 07:03:34 -0500
-Date: Wed, 11 Jan 2017 07:03:33 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: Timely free truncated dirty pages
-Message-ID: <20170111120333.GA62104@bfoster.bfoster>
-References: <20170111090019.16837-1-jack@suse.cz>
+        id S1755221AbdAKJIw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Jan 2017 04:08:52 -0500
+Date: Wed, 11 Jan 2017 17:08:51 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2 0/3] xfs/348: test handling of malformed inode mode
+Message-ID: <20170111090851.GR1859@eguan.usersys.redhat.com>
+References: <1482689376-23553-1-git-send-email-amir73il@gmail.com>
+ <20170103055256.GK1859@eguan.usersys.redhat.com>
+ <CAOQ4uxhJUPUsPjLg6kX4X7VMwE2DqzL_cNmEU3aEfo-37MH4bA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20170111090019.16837-1-jack@suse.cz>
+In-Reply-To: <CAOQ4uxhJUPUsPjLg6kX4X7VMwE2DqzL_cNmEU3aEfo-37MH4bA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Petr Tuma <petr.tuma@d3s.mff.cuni.cz>, stable@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, fstests <fstests@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-On Wed, Jan 11, 2017 at 10:00:19AM +0100, Jan Kara wrote:
-> Commit 99579ccec4e2 "xfs: skip dirty pages in ->releasepage()" started
-> to skip dirty pages in xfs_vm_releasepage() which also has the effect
-> that if a dirty page is truncated, it does not get freed by
-> block_invalidatepage() and is lingering in LRU list waiting for reclaim.
-> So a simple loop like:
+On Wed, Jan 11, 2017 at 08:45:34AM +0200, Amir Goldstein wrote:
+> On Tue, Jan 3, 2017 at 7:52 AM, Eryu Guan <eguan@redhat.com> wrote:
+> > On Sun, Dec 25, 2016 at 08:09:33PM +0200, Amir Goldstein wrote:
+> >> Eryu,
+> >>
+> >> I beefed up the initial test sent earlier today with more checks
+> >> on mounted fs.
+> >>
+> >> The original patch testing only xfs_repair remains patch 1 in this series.
+> >>
+> >> Patch 2 adds fstat tests on mounted fs, which are safe on my test system.
+> >>
+> >> Patch 3 is explosive. It exposes an XFS assert, but I left a "safety pin"
+> >> that needs to be commented out to reproduce the assert.
+> >
+> > My kenrel config doesn't turn DEBUG on, so I don't see a kernel crash :)
+> >
+> > I can push this test out after the fix lands in upstream, then I think
+> > there's no need to leave a switch in the test.
+> >
+> > Otherwise tests look good to me. But I'd like to have Darrick to review
+> > too, as he had written many fuzzer tests and suggested this test :)
+> >
 > 
-> while true; do
-> 	dd if=/dev/zero of=file bs=1M count=100
-> 	rm file
-> done
+> Eryu,
 > 
-> will keep using more and more memory until we hit low watermarks and
-> start pagecache reclaim which will eventually reclaim also the truncate
-> pages. Keeping these truncated (and thus never usable) pages in memory
-> is just a waste of memory, is unnecessarily stressing page cache
-> reclaim, and reportedly also leads to anonymous mmap(2) returning ENOMEM
-> prematurely.
+> Darrick has actually reviewed patch 1 v1 and gave only minor comments,
+> which I addressed in v3.
 > 
-> So instead of just skipping dirty pages in xfs_vm_releasepage(), return
-> to old behavior of skipping them only if they have delalloc or unwritten
-> buffers and fix the spurious warnings by warning only if the page is
-> clean.
-> 
-> CC: stable@vger.kernel.org
-> CC: Brian Foster <bfoster@redhat.com>
-> CC: Vlastimil Babka <vbabka@suse.cz>
-> Reported-by: Petr Tůma <petr.tuma@d3s.mff.cuni.cz>
-> Fixes: 99579ccec4e271c3d4d4e7c946058766812afdab
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
+> So how about merging patch 1 (v3) (sanity of xfs_repair) and leave patches 2-3
+> for later?
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Yeah, I was thinking about this too, will give it a quick test and queue
+it up if there's no issues found. Sorry I'm a bit late reviewing these
+patches, I was busy with other work these days.
 
->  fs/xfs/xfs_aops.c | 19 +++++++++++--------
->  1 file changed, 11 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 0f56fcd3a5d5..631e7c0e0a29 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1152,19 +1152,22 @@ xfs_vm_releasepage(
->  	 * block_invalidatepage() can send pages that are still marked dirty
->  	 * but otherwise have invalidated buffers.
->  	 *
-> -	 * We've historically freed buffers on the latter. Instead, quietly
-> -	 * filter out all dirty pages to avoid spurious buffer state warnings.
-> -	 * This can likely be removed once shrink_active_list() is fixed.
-> +	 * We want to release the latter to avoid unnecessary buildup of the
-> +	 * LRU, skip the former and warn if we've left any lingering
-> +	 * delalloc/unwritten buffers on clean pages. Skip pages with delalloc
-> +	 * or unwritten buffers and warn if the page is not dirty. Otherwise
-> +	 * try to release the buffers.
->  	 */
-> -	if (PageDirty(page))
-> -		return 0;
-> -
->  	xfs_count_page_state(page, &delalloc, &unwritten);
->  
-> -	if (WARN_ON_ONCE(delalloc))
-> +	if (delalloc) {
-> +		WARN_ON_ONCE(!PageDirty(page));
->  		return 0;
-> -	if (WARN_ON_ONCE(unwritten))
-> +	}
-> +	if (unwritten) {
-> +		WARN_ON_ONCE(!PageDirty(page));
->  		return 0;
-> +	}
->  
->  	return try_to_free_buffers(page);
->  }
-> -- 
-> 2.10.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Eryu
