@@ -1,162 +1,196 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21824 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750705AbdAWVbP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jan 2017 16:31:15 -0500
-Date: Mon, 23 Jan 2017 13:31:08 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v6 1/5] xfs_db: sanitize geometry on load
-Message-ID: <20170123213108.GD31202@birch.djwong.org>
-References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
- <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:59868 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1765680AbdAKRyS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Jan 2017 12:54:18 -0500
+Received: from smtp.corp.redhat.com (int-mx16.intmail.prod.int.phx2.redhat.com [10.5.11.28])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 35FA6C008AE5
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 17:54:11 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 068942DB52
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 17:54:10 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 3/5] xfs: reuse iomap delalloc code for COW fork reservation
+Date: Wed, 11 Jan 2017 12:54:07 -0500
+Message-Id: <1484157249-464-4-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1484157249-464-1-git-send-email-bfoster@redhat.com>
+References: <1484157249-464-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-xfs_db doesn't check the filesystem geometry when it's mounting, which
-means that garbage agcount values can cause OOMs when we try to allocate
-all the per-AG incore metadata.  If we see geometry that looks
-suspicious, limit agcount to 1 so that we avoid OOM.  This should help
-with xfs/1301 fuzzing.
+COW fork reservation (delayed allocation) is implemented in
+xfs_reflink_reserve_cow() and is generally based on the traditional data
+fork delalloc logic in xfs_file_iomap_begin_delay(). In preparation for
+further changes to implement more aggressive COW fork preallocation,
+refactor the COW reservation code to reuse xfs_file_iomap_begin_delay()
+for data fork allocation as well as COW fork reservation. This patch
+does not change behavior.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
-v2: Only modify sb_ag{blocks,count} if they seem insane -- use local
-variables to avoid screwing up the rest of the metadata.
-v3: Suggest a possible agcount value, but always restrict to 1 AG.
-v4: Remove the suggested agcount value and make sure we can't exit
-the program with an exitcode of zero.
-v5: remove global variables and unnecessary parameters
-v6: remove dead code, fix comments
----
- db/init.c |   71 +++++++++++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 59 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_iomap.c | 74 ++++++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 55 insertions(+), 19 deletions(-)
 
-diff --git a/db/init.c b/db/init.c
-index ec1e274..6ebe6b7 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -51,13 +51,63 @@ usage(void)
- 	exit(1);
- }
- 
-+/* Try to load a superblock for the given agno, no verifiers. */
-+static bool
-+load_sb(
-+	struct xfs_mount	*mp,
-+	struct xfs_sb		*sbp)
-+{
-+	struct xfs_buf		*bp;
-+
-+	bp = libxfs_readbuf(mp->m_ddev_targp, XFS_SB_DADDR,
-+			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
-+
-+	if (!bp || bp->b_error)
-+		return false;
-+
-+	/* copy SB from buffer to in-core, converting architecture as we go */
-+	libxfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
-+	libxfs_putbuf(bp);
-+	libxfs_purgebuf(bp);
-+
-+	return true;
-+}
-+
-+/*
-+ * If the agcount doesn't look sane, pretend agcount = 1 to avoid
-+ * OOMing libxfs_initialize_perag.  Returns true if the geometry looked
-+ * sane.
-+ */
-+static bool
-+sanitize_agcount(
-+	struct xfs_mount	*mp,
-+	struct xfs_sb		*sbp)
-+{
-+	/* If the geometry looks ok, we're done. */
-+	if (sbp->sb_blocklog >= XFS_MIN_BLOCKSIZE_LOG &&
-+	    sbp->sb_blocklog <= XFS_MAX_BLOCKSIZE_LOG &&
-+	    sbp->sb_blocksize == (1 << sbp->sb_blocklog) &&
-+	    sbp->sb_dblocks * sbp->sb_blocksize <= x.dsize * x.dbsize &&
-+	    sbp->sb_dblocks <= XFS_MAX_DBLOCKS(sbp) &&
-+	    sbp->sb_dblocks >= XFS_MIN_DBLOCKS(sbp))
-+		return true;
-+
-+	/* Assume 1 AG to avoid OOM. */
-+	fprintf(stderr,
-+_("%s: device %s AG count is insane.  Limiting reads to AG 0.\n"),
-+		progname, fsdevice);
-+	sbp->sb_agcount = 1;
-+
-+	return false;
-+}
-+
- void
- init(
- 	int		argc,
--	char		**argv)
-+	char		**argv,
-+	bool		*insane_agcount)
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 8791ed5..19b7eb0 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -527,9 +527,8 @@ xfs_iomap_prealloc_size(
+  * inode data and COW forks. If an existing data extent is shared, determine
+  * whether COW fork reservation is necessary.
+  *
+- * The 'found' parameter indicates whether a writable mapping was found. If the
+- * mapping is shared, a COW reservation is performed for the corresponding
+- * range.
++ * The 'found' parameter indicates whether a writable mapping was found. If a
++ * shared mapping exists, found is set only if COW reservation exists as well.
+  */
+ static int
+ xfs_iomap_search_extents(
+@@ -540,12 +539,14 @@ xfs_iomap_search_extents(
+ 	int			*eof,
+ 	int			*idx,
+ 	struct xfs_bmbt_irec	*got,
++	bool			*shared,
+ 	bool			*found)		/* found usable extent */
  {
- 	struct xfs_sb	*sbp;
--	struct xfs_buf	*bp;
- 	int		c;
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+ 	int			error = 0;
++	bool			trimmed;
  
- 	setlocale(LC_ALL, "");
-@@ -124,20 +174,12 @@ init(
- 	 */
- 	memset(&xmount, 0, sizeof(struct xfs_mount));
- 	libxfs_buftarg_init(&xmount, x.ddev, x.logdev, x.rtdev);
--	bp = libxfs_readbuf(xmount.m_ddev_targp, XFS_SB_DADDR,
--			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
+-	*found = false;
++	*shared = *found = false;
+ 
+ 	/*
+ 	 * Look up a preexisting extent directly into imap. Set got for the
+@@ -556,17 +557,37 @@ xfs_iomap_search_extents(
+ 		*got = *imap;
+ 		return 0;
+ 	}
++	if (!xfs_is_reflink_inode(ip)) {
++		*found = true;
++		return 0;
++	}
+ 
+-	if (xfs_is_reflink_inode(ip)) {
+-		bool		shared;
 -
--	if (!bp || bp->b_error) {
-+	if (!load_sb(&xmount, &xmount.m_sb)) {
- 		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
- 			"bytes)\n"), progname, fsdevice);
- 		exit(1);
+-		xfs_trim_extent(imap, offset_fsb, end_fsb - offset_fsb);
+-		error = xfs_reflink_reserve_cow(ip, imap, &shared);
+-		if (error)
+-			return error;
++	/*
++	 * Found a data extent but we don't know if it is shared. If an extent
++	 * exists in the cow fork, assume that it is. Use got for this lookup as
++	 * imap must retain the data mapping.
++	 */
++	xfs_trim_extent(imap, offset_fsb, end_fsb - offset_fsb);
++	ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
++	*eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, idx, got);
++	if (!*eof && got->br_startoff <= imap->br_startoff) {
++		trace_xfs_reflink_cow_found(ip, got);
++		xfs_trim_extent(imap, got->br_startoff, got->br_blockcount);
++		*found = true;
++		return 0;
  	}
  
--	/* copy SB from buffer to in-core, converting architecture as we go */
--	libxfs_sb_from_disk(&xmount.m_sb, XFS_BUF_TO_SBP(bp));
--	libxfs_putbuf(bp);
--	libxfs_purgebuf(bp);
--
- 	sbp = &xmount.m_sb;
- 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
- 		fprintf(stderr, _("%s: %s is not a valid XFS filesystem (unexpected SB magic number 0x%08x)\n"),
-@@ -148,6 +190,8 @@ init(
- 		}
- 	}
+-	*found = true;
++	/*
++	 * There is no existing cow fork extent. We have to explicitly check if
++	 * the data extent is shared to determine whether COW fork reservation
++	 * is required to map the data extent. Trim the mapping to the next
++	 * (un)shared boundary at the same time.
++	 */
++	error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
++	if (error)
++		return error;
++	if (!*shared)
++		*found = true;
  
-+	*insane_agcount = !sanitize_agcount(&xmount, sbp);
-+
- 	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
- 			  LIBXFS_MOUNT_DEBUGGER);
- 	if (!mp) {
-@@ -190,10 +234,11 @@ main(
- 	int	c, i, done = 0;
- 	char	*input;
- 	char	**v;
-+	bool	insane_agcount;
- 	int	start_iocur_sp;
- 
- 	pushfile(stdin);
--	init(argc, argv);
-+	init(argc, argv, &insane_agcount);
- 	start_iocur_sp = iocur_sp;
- 
- 	for (i = 0; !done && i < ncmdline; i++) {
-@@ -230,5 +275,7 @@ main(
- 		libxfs_device_close(x.logdev);
- 	if (x.rtdev)
- 		libxfs_device_close(x.rtdev);
-+	if (insane_agcount && exitcode == 0)
-+		exitcode = 1;
- 	return exitcode;
+ 	return error;
  }
+@@ -587,11 +608,13 @@ xfs_file_iomap_begin_delay(
+ 	xfs_fileoff_t		maxbytes_fsb =
+ 		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+ 	int			error = 0, eof = 0;
++	int			fork = XFS_DATA_FORK;
+ 	struct xfs_bmbt_irec	imap;
+ 	struct xfs_bmbt_irec	got;
+ 	xfs_extnum_t		idx;
+ 	xfs_fsblock_t		prealloc_blocks = 0;
+ 	bool			found;
++	bool			shared;
+ 
+ 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+ 	ASSERT(!xfs_get_extsz_hint(ip));
+@@ -620,16 +643,20 @@ xfs_file_iomap_begin_delay(
+ 
+ 	/*
+ 	 * Search for preexisting extents. If an existing data extent is shared,
+-	 * this will perform COW fork reservation.
++	 * switch to the COW fork for COW reservation.
+ 	 */
+ 	error = xfs_iomap_search_extents(ip, offset_fsb, end_fsb, &imap, &eof,
+-					 &idx, &got, &found);
++					 &idx, &got, &shared, &found);
+ 	if (error)
+ 		goto out_unlock;
+ 	if (found) {
+ 		trace_xfs_iomap_found(ip, offset, count, 0, &imap);
+ 		goto done;
+ 	}
++	if (shared) {
++		end_fsb = imap.br_startoff + imap.br_blockcount;
++		fork = XFS_COW_FORK;
++	}
+ 
+ 	error = xfs_qm_dqattach_locked(ip, 0);
+ 	if (error)
+@@ -645,9 +672,10 @@ xfs_file_iomap_begin_delay(
+ 	 * the lower level functions are updated.
+ 	 */
+ 	count = min_t(loff_t, count, 1024 * PAGE_SIZE);
+-	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
++	end_fsb = min(end_fsb, XFS_B_TO_FSB(mp, offset + count));
++	xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
+ 
+-	if (eof) {
++	if (eof && fork == XFS_DATA_FORK) {
+ 		prealloc_blocks = xfs_iomap_prealloc_size(ip, offset, count, idx);
+ 		if (prealloc_blocks) {
+ 			xfs_extlen_t	align;
+@@ -669,7 +697,7 @@ xfs_file_iomap_begin_delay(
+ 	}
+ 
+ retry:
+-	error = xfs_bmapi_reserve_delalloc(ip, XFS_DATA_FORK, offset_fsb,
++	error = xfs_bmapi_reserve_delalloc(ip, fork, offset_fsb,
+ 			end_fsb - offset_fsb, prealloc_blocks, &got, &idx, eof);
+ 	switch (error) {
+ 	case 0:
+@@ -687,8 +715,16 @@ xfs_file_iomap_begin_delay(
+ 		goto out_unlock;
+ 	}
+ 
+-	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
+-	imap = got;
++	/*
++	 * For the data fork, the iomap mapping is simply the extent that was
++	 * returned from the delalloc request. Otherwise, use imap as it refers
++	 * to the data fork but is trimmed according to the shared state.
++	 */
++	if (fork == XFS_DATA_FORK) {
++		trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
++		imap = got;
++	} else
++		trace_xfs_reflink_cow_alloc(ip, &got);
+ done:
+ 	if (isnullstartblock(imap.br_startblock))
+ 		imap.br_startblock = DELAYSTARTBLOCK;
+-- 
+2.7.4
+
