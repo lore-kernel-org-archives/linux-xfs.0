@@ -1,111 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37167 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933957AbdAKH7w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 02:59:52 -0500
-Date: Tue, 10 Jan 2017 23:59:37 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Reading about CoW architecture / Performance Limits
-Message-ID: <20170111075937.GA5883@birch.djwong.org>
-References: <BC894F29-47E7-47A3-93FB-3E4EEE1DCDD5@flyingcircus.io>
- <20170110074524.GI14038@birch.djwong.org>
- <C97BB12C-3C30-493B-BE9A-9E8C7CB5D1A4@flyingcircus.io>
+Received: from mx2.suse.de ([195.135.220.15]:38423 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965285AbdAKIHz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Jan 2017 03:07:55 -0500
+Subject: Re: [PATCH] xfs: Timely free truncated dirty pages
+References: <20170110101745.4841-1-jack@suse.cz>
+From: Vlastimil Babka <vbabka@suse.cz>
+Message-ID: <7ecf901b-ecbd-3914-25c3-1f6f6faf3264@suse.cz>
+Date: Wed, 11 Jan 2017 09:07:51 +0100
 MIME-Version: 1.0
+In-Reply-To: <20170110101745.4841-1-jack@suse.cz>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <C97BB12C-3C30-493B-BE9A-9E8C7CB5D1A4@flyingcircus.io>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christian Theune <ct@flyingcircus.io>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Petr Tuma <petr.tuma@d3s.mff.cuni.cz>, Brian Foster <bfoster@redhat.com>
 
-On Tue, Jan 10, 2017 at 11:54:23AM +0100, Christian Theune wrote:
-> Hi,
+On 01/10/2017 11:17 AM, Jan Kara wrote:
+> Commit 99579ccec4e2 "xfs: skip dirty pages in ->releasepage()" started
+> to skip dirty pages in xfs_vm_releasepage() which also has the effect
+> that if a dirty page is truncated, it does not get freed by
+> block_invalidatepage() and is lingering in LRU list waiting for reclaim.
+> So a simple loop like:
 > 
-> > On 10 Jan 2017, at 08:45, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > 
-> > As in making snapshots of a disk image via something like
-> > "cp --reflink=always a.img a.img.20170110” ?
+> while true; do
+> 	dd if=/dev/zero of=file bs=1M count=100
+> 	rm file
+> done
 > 
-> Yes. Or rather in our case:
-> 
-> cp —reflink=always a-20170109.img a-20170110.img
-> 
-> and then go to the live storage and retrieve the changes from its
-> 20170109 snapshot to the 20170110 snapshot and write them into the
-> reflink-copied a-201701010.img
-> 
-> Once a backup expires we just delete the file. This perpetuates based
-> on the backup schema.
+> will keep using more and more memory until we hit low watermarks and
+> start pagecache reclaim which will eventually reclaim also the truncate
+> pages. Keeping these truncated (and thus never usable) pages in memory
+> is just a waste of memory, is unnecessarily stressing page cache
+> reclaim, and is also confusing users thinking they are running out of
+> memory.
 
-<nod>
+Hi,
 
-> >> We’re currently considering to move away from CoW filesystems for our
-> >> use case and implement a higher level strategy. I now wonder whether
-> >> XFS will have the same issue or whether the architecture is different
-> >> in a significant way that will avoid prohibitive performance
-> >> regressions on long CoW chains (think: hundreds to a few thousand).
-> > 
-> > The primary strategies XFS uses to combat fragmentation are a
-> > combination of reusing the delayed allocation mechanism to defer CoW
-> > block allocation as long as possible in the hopes of being able to make
-> > larger requests; and implementing the "CoW extent size hint" (default 32
-> > blocks or 128K) which rounds the start and end of an allocation request
-> > to the nearest $cowextsize boundary.  So for example if you write to 32
-> > adjacent shared blocks in random order, they'll end up on disk with a
-> > single 128K extent, if possible.
+So the impact is even worse than that, as it's the kernel that is
+actually confused, while the user still gets the impression of memory
+being available.
+According to the reporter, this bug has manifested as anonymous mmap()
+returning with ENOMEM in their workload (some benchmark), which does not
+happen anymore after switching from xfs to ext4.
+
+Here are the relevant /proc/meminfo counters from a system that is
+experiencing the bug (but hasn't exhausted all memory and hit ENOMEM yet):
+
+
+MemTotal:       65862388 kB
+MemFree:         6882888 kB
+MemAvailable:   54829584 kB
+Buffers:            2248 kB
+Cached:          1937376 kB
+SwapCached:            0 kB
+Active:         14969280 kB
+Inactive:       42491396 kB
+Active(anon):   10034824 kB
+Inactive(anon):     1420 kB
+Active(file):    4934456 kB
+Inactive(file): 42489976 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:        511996 kB
+SwapFree:         511996 kB
+Dirty:              1452 kB
+Writeback:             0 kB
+AnonPages:      10034556 kB
+Mapped:           143956 kB
+Shmem:              1836 kB
+...
+
+MemAvailable suggests that most of memory (except anonymous mmaps) is
+still available, i.e. free or reclaimable. But there's a large
+discrepancy between "Cached", which is based on the NR_FILE_PAGES
+counter, and [In]Active(file), which reflects NR_[IN]ACTIVE_FILE
+counters. So the truncated pages are not counted towards page cache
+anymore, but are still accounted as LRU pages, as they are placed on the
+LRU lists waiting for reclaim.
+
+Now MemAvailable is based on NR_FREE_PAGES and NR_[IN]ACTIVE_FILE (I
+actually wonder why the value is so high here, it should consider only
+half of the file LRU's as available, according to the comment there...
+oh, I see, there's a math error there, I'll report that separately...).
+
+And AFAICS, the ENOMEM results of mmap() comes from
+__vm_enough_memory(), which in OVERCOMMIT_GUESS mode considers as
+available memory (called 'free' there) the sum of NR_FREE_PAGES, and
+NR_FILE_PAGES.
+
+So this would explain the ENOMEM, and how this bug is a problem for
+workloads that truncate/remove files on xfs, and at the same time rely
+on anonymous mmap(). In that case, these mmaps can apparently start
+failing if there's no other source of sufficient memory pressure to let
+reclaim get rid of the truncated pages on LRU. This should be serious
+enough for a stable backport IMHO.
+
+Thanks,
+Vlastimil
+
+> So instead of just skipping dirty pages in xfs_vm_releasepage(), return
+> to old behavior of skipping them only if they have delalloc or unwritten
+> buffers and fix the spurious warnings by warning only if the page is
+> clean.
 > 
-> Ah. In our case even larger extends might make sense, like 4MiB or such.
-
-Perhaps.  You're only likely to see benefits if you actually write
-4MB chunks.
-
-> > Note also that XFS only performs CoW if the block is shared, so if you
-> > write the same shared block in a file 20 times, the first write goes to
-> > a new block and the next 19 overwrite that new block.  There will not be
-> > another CoW unless you reflink the file again.
+> CC: Brian Foster <bfoster@redhat.com>
+> CC: Vlastimil Babka <vbabka@suse.cz>
+> Reported-by: Petr Tůma <petr.tuma@d3s.mff.cuni.cz>
+> Fixes: 99579ccec4e271c3d4d4e7c946058766812afdab
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/xfs/xfs_aops.c | 19 +++++++++----------
+>  1 file changed, 9 insertions(+), 10 deletions(-)
 > 
-> Actually every snapshot will be written exactly once, so depending on
-> the workload larger extents might cause higher overhead (or will the
-> hint + deferred still make smaller extents if only a small piece was
-> changed?) if the overwrite ratio is small.
-
-It'll make smaller extents if only a small piece gets changed.  We don't
-try any tricks like preemptively CoWing non-dirty data to reduce
-fragmentation.
-
-> We definitely write all changes that exist sequentially (and skip the
-> non-changed areas).
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 0f56fcd3a5d5..670d38ff7dc7 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1150,21 +1150,20 @@ xfs_vm_releasepage(
+>  	 * the dirty bit cleared. Thus, it can send actual dirty pages to
+>  	 * ->releasepage() via shrink_active_list(). Conversely,
+>  	 * block_invalidatepage() can send pages that are still marked dirty
+> -	 * but otherwise have invalidated buffers.
+> -	 *
+> -	 * We've historically freed buffers on the latter. Instead, quietly
+> -	 * filter out all dirty pages to avoid spurious buffer state warnings.
+> -	 * This can likely be removed once shrink_active_list() is fixed.
+> +	 * but otherwise have invalidated buffers. So we warn only if the page
+> +	 * is clean to avoid spurious warnings when called from
+> +	 * shrink_active_list() for a dirty page.
+>  	 */
+> -	if (PageDirty(page))
+> -		return 0;
+> -
+>  	xfs_count_page_state(page, &delalloc, &unwritten);
+>  
+> -	if (WARN_ON_ONCE(delalloc))
+> +	if (delalloc) {
+> +		WARN_ON_ONCE(!PageDirty(page));
+>  		return 0;
+> -	if (WARN_ON_ONCE(unwritten))
+> +	}
+> +	if (unwritten) {
+> +		WARN_ON_ONCE(!PageDirty(page));
+>  		return 0;
+> +	}
+>  
+>  	return try_to_free_buffers(page);
+>  }
 > 
-> In our schema a new reflink would be created either every hour or
-> every day. For hourly backups that’s a bit less than 9k “reflink
-> generations” per year. For long running instances this can be in the
-> range of 5-6 years for us easily.
-
-~60,000, that will be interesting.  Haven't gotten that high in normal
-usage, though a couple of the xfstests shoot for sharing the same block
-1 million times to see how well the FS responds.
-
---D
-
-> >> I would appreciate a pointer where to look at - I’m a coder but
-> >> following kernel code to understand architecture hasn’t been
-> >> successful/efficient for me in the past …
-> > 
-> > You might try reading the huge comment blocks in fs/xfs/xfs_reflink.c.
-> 
-> Great, thanks! I admit not having looked there myself as I didn’t
-> expect it. Lesson learned!
-> 
-> Christian
-> 
-> --
-> Christian Theune · ct@flyingcircus.io · +49 345 219401 0
-> Flying Circus Internet Operations GmbH · http://flyingcircus.io
-> Forsterstraße 29 · 06112 Halle (Saale) · Deutschland
-> HR Stendal HRB 21169 · Geschäftsführer: Christian. Theune, Christian. Zagrodnick
-> 
-
 
