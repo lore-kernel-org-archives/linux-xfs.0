@@ -1,69 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49980 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750892AbdAXWxA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jan 2017 17:53:00 -0500
-Subject: [PATCH v7 1/5] xfs_db: sanitize agcount on load
-References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
- <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
- <20170123213108.GD31202@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6ad3798a-c3f5-fd8f-ab05-62c0f878290c@sandeen.net>
-Date: Tue, 24 Jan 2017 16:52:59 -0600
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:32771 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753803AbdAKIei (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 03:34:38 -0500
+Received: by mail-oi0-f65.google.com with SMTP id j15so20794813oih.0
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 00:34:37 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20170123213108.GD31202@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170110194249.GK14038@birch.djwong.org>
+References: <20170110194249.GK14038@birch.djwong.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 11 Jan 2017 10:34:36 +0200
+Message-ID: <CAOQ4uxggOoFJ_KR40XX2hU+bSr9zqXu9y_7HWqVxTfQ6ETC4hA@mail.gmail.com>
+Subject: Re: [RFC PATCH] xfs_db: sanitize geometry on load
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-Before we get into libxfs_initialize_perag and try to blindly
-allocate a perag struct for every (possibly corrupted number of)
-AGs, see if we can read the last one.  If not, assume it's corrupt,
-and load only the first AG.
+On Tue, Jan 10, 2017 at 9:42 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> xfs_db doesn't check the filesystem geometry when it's mounting, which
+> means that garbage agcount values can cause OOMs when we try to allocate
+> all the per-AG incore metadata.  If we see geometry that looks
+> suspicious, try to derive the actual AG geometry to avoid crashing the
+> system.  This should help with xfs/1301 fuzzing.
+>
+> Also fix up xfs_repair to use the min/max dblocks macros.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Do this only for an arbitrarily high-ish agcount, so that normal-ish
-geometry on a possibly truncated file or device will still do
-its best to make all readable AGs available.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/libxfs/init.c b/libxfs/init.c
-index a08575a..ca5101e 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -817,6 +817,28 @@ libxfs_mount(
- 			return NULL;
- 	}
- 
-+	/*
-+	 * libxfs_initialize_perag will allocate a perag structure for each AG.
-+	 * If agcount is corrupted and insanely high, this will OOM the box.
-+	 * If the agount seems (arbitrarily) high, try to read what would be
-+	 * the last AG, and if that fails, just read the first one and let
-+	 * the user know what happened.
-+	 */
-+	if (sbp->sb_agcount > 10000) {
-+		error = xfs_read_agf(mp, NULL, sbp->sb_agcount - 1, 0, &bp);
-+		if (error) {
-+			fprintf(stderr, _("%s: read of AG %d failed\n"),
-+						progname, sbp->sb_agcount);
-+			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
-+				return NULL;
-+			fprintf(stderr, _("%s: limiting reads to AG 0\n"),
-+								progname);
-+			sbp->sb_agcount = 1;
-+		}
-+		if (bp)
-+			libxfs_putbuf(bp);
-+	}
-+
- 	error = libxfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
- 	if (error) {
- 		fprintf(stderr, _("%s: perag init failed\n"),
+Test machine is back to health with this patch, but some test are failing due
+to the new error messages.
+I guess its no surprise to you.
 
 
+xfs/1300 5s ... 5s
+xfs/1301         - output mismatch (see
+/home/amir/src/xfstests-dev/results//xfs/1301.out.bad)
+    --- tests/xfs/1301.out      2017-01-08 15:35:07.647897359 +0200
+    +++ /home/amir/src/xfstests-dev/results//xfs/1301.out.bad
+2017-01-11 09:58:10.981678272 +0200
+    @@ -1,4 +1,61 @@
+     QA output created by 1301
+     Format and populate
+     Fuzz superblock
+    +xfs_db: device /dev/mapper/storage-scratch AG geometry is insane.
+Using agcount=4.
+    +SB sanity check failed
+    +Metadata corruption detected at xfs_sb block 0x0/0x200
+    +xfs_db: device /dev/mapper/storage-scratch AG geometry is insane.
+Using agcount=4.
+    ...
+    (Run 'diff -u tests/xfs/1301.out
+/home/amir/src/xfstests-dev/results//xfs/1301.out.bad'  to see the
+entire diff)
+_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
+inconsistent (c) (see
+/home/amir/src/xfstests-dev/results//xfs/1301.full)
+_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
+inconsistent (r) (see
+/home/amir/src/xfstests-dev/results//xfs/1301.full)
+xfs/1302         - output mismatch (see
+/home/amir/src/xfstests-dev/results//xfs/1302.out.bad)
+    --- tests/xfs/1302.out      2017-01-08 15:35:07.647897359 +0200
+    +++ /home/amir/src/xfstests-dev/results//xfs/1302.out.bad
+2017-01-11 10:05:16.710031113 +0200
+    @@ -1,4 +1,26 @@
+     QA output created by 1302
+     Format and populate
+     Fuzz AGF
+    +Metadata corruption detected at xfs_agf block 0x1/0x200
+    +xfs_db: cannot init perag data (117). Continuing anyway.
+    +Metadata corruption detected at xfs_agf block 0x1/0x200
+    +xfs_db: cannot init perag data (117). Continuing anyway.
+    ...
+    (Run 'diff -u tests/xfs/1302.out
+/home/amir/src/xfstests-dev/results//xfs/1302.out.bad'  to see the
+entire diff)
+_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
+inconsistent (c) (see
+/home/amir/src/xfstests-dev/results//xfs/1302.full)
+xfs/1303 132s ... 130s
+_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
+inconsistent (c) (see
+/home/amir/src/xfstests-dev/results//xfs/1303.full)
+_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
+inconsistent (r) (see
+/home/amir/src/xfstests-dev/results//xfs/1303.full)
+xfs/1304         - output mismatch (see
+/home/amir/src/xfstests-dev/results//xfs/1304.out.bad)
+    --- tests/xfs/1304.out      2017-01-08 15:35:07.647897359 +0200
+    +++ /home/amir/src/xfstests-dev/results//xfs/1304.out.bad
+2017-01-11 10:12:26.506167776 +0200
+    @@ -1,4 +1,12 @@
+     QA output created by 1304
+     Format and populate
+     Fuzz AGI
+    +Metadata corruption detected at xfs_agi block 0x2/0x200
+    +xfs_db: cannot init perag data (117). Continuing anyway.
+    +Metadata corruption detected at xfs_agi block 0x2/0x200
+    +xfs_db: cannot init perag data (117). Continuing anyway.
+    ...
+    (Run 'diff -u tests/xfs/1304.out
+/home/amir/src/xfstests-dev/results//xfs/1304.out.bad'  to see the
+entire diff)
+_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
+inconsistent (c) (see
+/home/amir/src/xfstests-dev/results//xfs/1304.full)
+_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
+inconsistent (r) (see
+/home/amir/src/xfstests-dev/results//xfs/1304.full)
+xfs/1305 224s ... 218s
+_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
+inconsistent (c) (see
+/home/amir/src/xfstests-dev/results//xfs/1305.full)
+_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
+inconsistent (r) (see
+/home/amir/src/xfstests-dev/results//xfs/1305.full)
+xfs/1306 239s ... 234s
