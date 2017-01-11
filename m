@@ -1,81 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:38119 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750998AbdAPMpq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jan 2017 07:45:46 -0500
-Received: by mail-it0-f54.google.com with SMTP id c7so20672175itd.1
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2017 04:45:46 -0800 (PST)
+Received: from mx2.suse.de ([195.135.220.15]:44071 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755341AbdAKJAe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 11 Jan 2017 04:00:34 -0500
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH v2] xfs: Timely free truncated dirty pages
+Date: Wed, 11 Jan 2017 10:00:19 +0100
+Message-Id: <20170111090019.16837-1-jack@suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <20170113174331.GG23576@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
- <1481117249-21273-18-git-send-email-jtulak@redhat.com> <20170113174331.GG23576@redhat.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Mon, 16 Jan 2017 13:45:25 +0100
-Message-ID: <CACj3i70vG_DgPXbUXv+Wg+fV_WTnyJiNTtvRLep2KcbWPsvgjQ@mail.gmail.com>
-Subject: Re: [PATCH 17/22] mkfs: use old variables as pointers to the new opts
- struct values
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill O'Donnell <billodo@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Petr Tuma <petr.tuma@d3s.mff.cuni.cz>, Jan Kara <jack@suse.cz>, stable@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Vlastimil Babka <vbabka@suse.cz>
 
-On Fri, Jan 13, 2017 at 6:43 PM, Bill O'Donnell <billodo@redhat.com> wrote:
-> On Wed, Dec 07, 2016 at 02:27:24PM +0100, Jan Tulak wrote:
->> We need to have the values inside of the opts structure to validate it.
->> To avoid duplicity and to prevent issues with using a wrong type from
->> values union (e.g trating an int option as long long), keep the old
->> variables like agcount, dsunit, ... and just turn them into pointers
->> to the various opts fields.
->>
->> However, at this moment, do not touch fields in other structures.
->> If some option saves the value into the xi or fsx structure, then
->> simply copy the value at the end of option parsing.
->>
->> This might be changed in future if there is a nice way how to do it.
->>
->> Signed-off-by: Jan Tulak <jtulak@redhat.com>
->> ---
->>  mkfs/xfs_mkfs.c | 771 ++++++++++++++++++++++++++++++--------------------------
->>  1 file changed, 418 insertions(+), 353 deletions(-)
->>
->> [snip]
->>
->> @@ -2003,6 +2004,10 @@ check_all_opts(struct opt_params *opts)
->>       }
->>  }
->>
->> +/* TODO we might loose some numbers here, if they are unsigned and bigger than
->> + * long long max value. So it might be worth to transform this... (think
->> + * __uint64_t)
->> + */
->
-> OK, so is this "might" be recommended or should we go ahead and prevent it in this
-> implementation? ;)
->
+Commit 99579ccec4e2 "xfs: skip dirty pages in ->releasepage()" started
+to skip dirty pages in xfs_vm_releasepage() which also has the effect
+that if a dirty page is truncated, it does not get freed by
+block_invalidatepage() and is lingering in LRU list waiting for reclaim.
+So a simple loop like:
 
-What we are hitting here is similar to the saving the values in the
-opts struct. In one case, we can have UINT64_MAX value, in another, it
-could be LLONG_MIN. I think that at this moment, it is a bit
-theoretical issue as limits of XFS should kick in sooner, but still,
-it would be nice to fix it. However, the only way I can see is to
-change the return type from long long to something like the union
-u_value introduced in this patchset.
+while true; do
+	dd if=/dev/zero of=file bs=1M count=100
+	rm file
+done
 
-I'm still a bit afraid that this thing with multiple types in union
-will bite me later, so I kept it here as a TODO for now. Now as I
-write this, I realised that maybe the getnum function can be turned
-into multiple ones: getnum_int, getnum_uint... as only the last few
-lines are really doing the conversion and would differ... Mm... I will
-need to think his a bit. Any comments from you?
+will keep using more and more memory until we hit low watermarks and
+start pagecache reclaim which will eventually reclaim also the truncate
+pages. Keeping these truncated (and thus never usable) pages in memory
+is just a waste of memory, is unnecessarily stressing page cache
+reclaim, and reportedly also leads to anonymous mmap(2) returning ENOMEM
+prematurely.
 
+So instead of just skipping dirty pages in xfs_vm_releasepage(), return
+to old behavior of skipping them only if they have delalloc or unwritten
+buffers and fix the spurious warnings by warning only if the page is
+clean.
 
-And thanks for you going through the patchset.
+CC: stable@vger.kernel.org
+CC: Brian Foster <bfoster@redhat.com>
+CC: Vlastimil Babka <vbabka@suse.cz>
+Reported-by: Petr Tůma <petr.tuma@d3s.mff.cuni.cz>
+Fixes: 99579ccec4e271c3d4d4e7c946058766812afdab
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_aops.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-Cheers,
-Jan
-
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 0f56fcd3a5d5..631e7c0e0a29 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1152,19 +1152,22 @@ xfs_vm_releasepage(
+ 	 * block_invalidatepage() can send pages that are still marked dirty
+ 	 * but otherwise have invalidated buffers.
+ 	 *
+-	 * We've historically freed buffers on the latter. Instead, quietly
+-	 * filter out all dirty pages to avoid spurious buffer state warnings.
+-	 * This can likely be removed once shrink_active_list() is fixed.
++	 * We want to release the latter to avoid unnecessary buildup of the
++	 * LRU, skip the former and warn if we've left any lingering
++	 * delalloc/unwritten buffers on clean pages. Skip pages with delalloc
++	 * or unwritten buffers and warn if the page is not dirty. Otherwise
++	 * try to release the buffers.
+ 	 */
+-	if (PageDirty(page))
+-		return 0;
+-
+ 	xfs_count_page_state(page, &delalloc, &unwritten);
+ 
+-	if (WARN_ON_ONCE(delalloc))
++	if (delalloc) {
++		WARN_ON_ONCE(!PageDirty(page));
+ 		return 0;
+-	if (WARN_ON_ONCE(unwritten))
++	}
++	if (unwritten) {
++		WARN_ON_ONCE(!PageDirty(page));
+ 		return 0;
++	}
+ 
+ 	return try_to_free_buffers(page);
+ }
 -- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+2.10.2
+
