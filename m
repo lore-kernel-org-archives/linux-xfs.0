@@ -1,107 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:34832 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S939746AbdAJNwf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 08:52:35 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 187/206] xfs: use new extent lookup helpers xfs_file_iomap_begin_delay
-Date: Tue, 10 Jan 2017 14:37:50 +0100
-Message-Id: <20170110131511.571184471@linuxfoundation.org>
-In-Reply-To: <20170110131502.767555407@linuxfoundation.org>
-References: <20170110131502.767555407@linuxfoundation.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:47632 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752955AbdAKIFv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 03:05:51 -0500
+Date: Wed, 11 Jan 2017 00:05:44 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: Reading about CoW architecture / Performance Limits
+Message-ID: <20170111080544.GB5883@birch.djwong.org>
+References: <BC894F29-47E7-47A3-93FB-3E4EEE1DCDD5@flyingcircus.io>
+ <20170110074524.GI14038@birch.djwong.org>
+ <C97BB12C-3C30-493B-BE9A-9E8C7CB5D1A4@flyingcircus.io>
+ <9713E613-6953-4AD3-89B1-C0EF639E771C@flyingcircus.io>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9713E613-6953-4AD3-89B1-C0EF639E771C@flyingcircus.io>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-xfs@vger.kernel.org, Dave Chinner" <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>Dave Chinner <david@fromorbit.com>
+To: Christian Theune <ct@flyingcircus.io>
+Cc: linux-xfs@vger.kernel.org
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+On Tue, Jan 10, 2017 at 12:08:39PM +0100, Christian Theune wrote:
+> Hi,
+> 
+> > On 10 Jan 2017, at 11:54, Christian Theune <ct@flyingcircus.io> wrote:
+> > 
+> > Hi,
+> > 
+> >> On 10 Jan 2017, at 08:45, Darrick J. Wong <darrick.wong@oracle.com <mailto:darrick.wong@oracle.com>> wrote:
+> >> 
+> > 
+> >> You might try reading the huge comment blocks in fs/xfs/xfs_reflink.c.
+> > 
+> > Great, thanks! I admit not having looked there myself as I didn’t expect it. Lesson learned!
+> 
+> having read the code I think I understood three things:
+> 
+> 1. As you said, fragmentation may become an issue if the block
+> allocation doesn’t manage to keep things together. This depends on the
+> actual traffic patterns. (And probably free space?) I guess for long
+> running environments regular/continuous reorganization would make
+> sense?
 
-------------------
+It could, but keep in mind that xfs_fsr will break reflinks.
 
+> 2. There is no data structure that introduces an additional
+> “generational” penalty for CoW upon CoW upon CoW … ?
 
-commit 656152e552e5cbe0c11ad261b524376217c2fb13 upstream.
+Nothing in reflink itself should do that.  The (also experimental)
+reverse mapping feature will slowly consume space storing all the
+backrefs, though there isn't any special overhead for shared stuff.
+Reverse mappings are (at the moment) only useful for online metadata
+reconstruction.
 
-And only lookup the previous extent inside xfs_iomap_prealloc_size
-if we actually need it.
+> 3. There appears to be code that allows retroactively creating CoW for
+> two files that existed separately before. Is that (planned to be)
+> exposed to userland?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- fs/xfs/xfs_iomap.c |   20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+No plans for that at the moment.  There used to be a debugging knob, but
+it was ripped out before upstreaming the code.
 
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -395,11 +395,12 @@ xfs_iomap_prealloc_size(
- 	struct xfs_inode	*ip,
- 	loff_t			offset,
- 	loff_t			count,
--	xfs_extnum_t		idx,
--	struct xfs_bmbt_irec	*prev)
-+	xfs_extnum_t		idx)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
- 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	struct xfs_bmbt_irec	prev;
- 	int			shift = 0;
- 	int64_t			freesp;
- 	xfs_fsblock_t		qblocks;
-@@ -419,8 +420,8 @@ xfs_iomap_prealloc_size(
- 	 */
- 	if ((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ||
- 	    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign) ||
--	    idx == 0 ||
--	    prev->br_startoff + prev->br_blockcount < offset_fsb)
-+	    !xfs_iext_get_extent(ifp, idx - 1, &prev) ||
-+	    prev.br_startoff + prev.br_blockcount < offset_fsb)
- 		return mp->m_writeio_blocks;
- 
- 	/*
-@@ -439,8 +440,8 @@ xfs_iomap_prealloc_size(
- 	 * always extends to MAXEXTLEN rather than falling short due to things
- 	 * like stripe unit/width alignment of real extents.
- 	 */
--	if (prev->br_blockcount <= (MAXEXTLEN >> 1))
--		alloc_blocks = prev->br_blockcount << 1;
-+	if (prev.br_blockcount <= (MAXEXTLEN >> 1))
-+		alloc_blocks = prev.br_blockcount << 1;
- 	else
- 		alloc_blocks = XFS_B_TO_FSB(mp, offset);
- 	if (!alloc_blocks)
-@@ -538,7 +539,6 @@ xfs_file_iomap_begin_delay(
- 	xfs_fileoff_t		end_fsb, orig_end_fsb;
- 	int			error = 0, eof = 0;
- 	struct xfs_bmbt_irec	got;
--	struct xfs_bmbt_irec	prev;
- 	xfs_extnum_t		idx;
- 
- 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
-@@ -563,8 +563,7 @@ xfs_file_iomap_begin_delay(
- 			goto out_unlock;
- 	}
- 
--	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
--			&got, &prev);
-+	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
- 	if (!eof && got.br_startoff <= offset_fsb) {
- 		if (xfs_is_reflink_inode(ip)) {
- 			bool		shared;
-@@ -601,8 +600,7 @@ xfs_file_iomap_begin_delay(
- 	if (eof) {
- 		xfs_fsblock_t	prealloc_blocks;
- 
--		prealloc_blocks =
--			xfs_iomap_prealloc_size(ip, offset, count, idx, &prev);
-+		prealloc_blocks = xfs_iomap_prealloc_size(ip, offset, count, idx);
- 		if (prealloc_blocks) {
- 			xfs_extlen_t	align;
- 			xfs_off_t	end_offset;
+--D
+
+> 
+> Cheers,
+> Christian
+> 
+> --
+> Christian Theune · ct@flyingcircus.io · +49 345 219401 0
+> Flying Circus Internet Operations GmbH · http://flyingcircus.io
+> Forsterstraße 29 · 06112 Halle (Saale) · Deutschland
+> HR Stendal HRB 21169 · Geschäftsführer: Christian. Theune, Christian. Zagrodnick
+> 
 
 
