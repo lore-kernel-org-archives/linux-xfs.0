@@ -1,62 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56362 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936059AbdADOeG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Jan 2017 09:34:06 -0500
-Date: Wed, 4 Jan 2017 09:34:05 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/5] xfs: fix the alignment fallback in xfs_bmap_btalloc
-Message-ID: <20170104143405.GB41989@bfoster.bfoster>
-References: <1482436822-31546-1-git-send-email-hch@lst.de>
- <1482436822-31546-3-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1482436822-31546-3-git-send-email-hch@lst.de>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34064 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933746AbdAKIYe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 03:24:34 -0500
+Received: by mail-wm0-f65.google.com with SMTP id c85so35007777wmi.1
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 00:24:33 -0800 (PST)
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v8 3/6] xfs: add missing include dependencies to xfs_dir2.h
+Date: Wed, 11 Jan 2017 10:24:07 +0200
+Message-Id: <1484123050-11064-4-git-send-email-amir73il@gmail.com>
+In-Reply-To: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
+References: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, eguan@redhat.com, darrick.wong@oracle.com
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Thu, Dec 22, 2016 at 09:00:19PM +0100, Christoph Hellwig wrote:
-> The way the alignment field is used the minimum possible alignment is 1.
-> By setting it to 0 we'll mess up calculations that rely on this.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 2760bc3..19c05e9 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3796,7 +3796,7 @@ xfs_bmap_btalloc(
->  		 */
->  		args.type = atype;
->  		args.fsbno = ap->blkno;
-> -		args.alignment = 0;
-> +		args.alignment = 1;
+xfs_dir2.h dereferences some data types in inline functions
+and fails to include those type definitions, e.g.:
+xfs_dir2_data_aoff_t, struct xfs_da_geometry.
 
-Ok, but we have the following near the top of xfs_alloc_vextent():
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/xfs/libxfs/xfs_dir2.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-        if (args->alignment == 0)
-                args->alignment = 1;
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 0197590..72df0dc 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -18,6 +18,9 @@
+ #ifndef __XFS_DIR2_H__
+ #define __XFS_DIR2_H__
+ 
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++
+ struct xfs_defer_ops;
+ struct xfs_da_args;
+ struct xfs_inode;
+-- 
+2.7.4
 
-... so I'm not sure the commit log description is accurate. That aside:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-Brian
-
->  		if ((error = xfs_alloc_vextent(&args)))
->  			return error;
->  	}
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
