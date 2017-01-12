@@ -1,65 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57912 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:35856 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750698AbdALFes (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Jan 2017 00:34:48 -0500
-Date: Wed, 11 Jan 2017 21:34:45 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: updates for 4.10-rc4
-Message-ID: <20170112053445.GC5883@birch.djwong.org>
+        id S1750819AbdALTGa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Jan 2017 14:06:30 -0500
+Date: Thu, 12 Jan 2017 13:06:26 -0600
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH 2/3] build: add .tar.xz target
+Message-ID: <20170112190626.GB17868@redhat.com>
+References: <056383cb-cf7e-3880-aecf-d97d5516a60f@sandeen.net>
+ <d8bdc1f2-af99-f7fd-659b-45f7ebf36efb@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <d8bdc1f2-af99-f7fd-659b-45f7ebf36efb@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <david@fromorbit.com>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-[Resend from the correct email account...<sigh> sorry for the noise]
+On Thu, Jan 12, 2017 at 11:14:52AM -0600, Eric Sandeen wrote:
+> kup generates .xz files, and Fedora RPMs now use that.
+> It'd be nice to have a handy target to generate .xz
+> files locally, so hack that in.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Hi Linus,
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-As promised last week, here's some stability fixes from Christoph and
-Jan Kara.  I think they fall within the guidelines for non-merge window
-patches.  Could you please pull the changes?
-
---Darrick
-
-The following changes since commit a121103c922847ba5010819a3f250f1f7fc84ab8:
-
-  Linux 4.10-rc3 (2017-01-08 14:18:17 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-for-linus-4.10-rc4-1
-
-for you to fetch changes up to 0a417b8dc1f10b03e8f558b8a831f07ec4c23795:
-
-  xfs: Timely free truncated dirty pages (2017-01-11 10:20:04 -0800)
-
-----------------------------------------------------------------
-Contained in this update:
-- Fix free space request handling when low on disk space
-- Remove redundant log failure error messages
-- Free truncate dirty pages instead of letting them build up forever
-
-----------------------------------------------------------------
-Christoph Hellwig (5):
-      xfs: bump up reserved blocks in xfs_alloc_set_aside
-      xfs: fix bogus minleft manipulations
-      xfs: adjust allocation length in xfs_alloc_space_available
-      xfs: don't rely on ->total in xfs_alloc_space_available
-      xfs: don't print warnings when xfs_log_force fails
-
-Jan Kara (1):
-      xfs: Timely free truncated dirty pages
-
- fs/xfs/libxfs/xfs_alloc.c      | 115 ++++++++++-------------------------------
- fs/xfs/libxfs/xfs_alloc.h      |   2 +-
- fs/xfs/libxfs/xfs_bmap.c       |   3 --
- fs/xfs/libxfs/xfs_bmap_btree.c |   3 +-
- fs/xfs/xfs_aops.c              |  19 ++++---
- fs/xfs/xfs_log.c               |  12 +----
- 6 files changed, 43 insertions(+), 111 deletions(-)
-
+> ---
+> 
+> I imagine there's a prettier way with wildcards or
+> templates or whatnot, but my Make is rusty.
+> 
+>  Makefile | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Makefile b/Makefile
+> index 84dc62c..6e45733 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -26,18 +26,19 @@ endif
+>  
+>  SRCDIR = $(PKG_NAME)-$(PKG_VERSION)
+>  SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
+> +SRCTARXZ = $(PKG_NAME)-$(PKG_VERSION).tar.xz
+>  
+>  CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
+>  LSRCFILES = configure.ac release.sh README VERSION $(CONFIGURE)
+>  SRCTARINC = m4/libtool.m4 m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
+>             m4/ltversion.m4 po/xfsprogs.pot .gitcensus $(CONFIGURE)
+>  LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
+> -	conftest* built .census install.* install-dev.* *.gz \
+> +	conftest* built .census install.* install-dev.* *.gz *.xz \
+>  	autom4te.cache/* libtool include/builddefs include/platform_defs.h
+>  
+>  ifeq ($(HAVE_BUILDDEFS), yes)
+>  LDIRDIRT = $(SRCDIR)
+> -LDIRT += $(SRCTAR)
+> +LDIRT += $(SRCTAR) $(SRCTARXZ)
+>  endif
+>  
+>  # header install rules to populate include/xfs correctly
+> @@ -165,6 +166,11 @@ $(SRCTAR) : default $(SRCTARINC) .gitcensus
+>  	   `cat .gitcensus` $(SRCTARINC)
+>  	echo Wrote: $@
+>  
+> +$(SRCTARXZ) : default $(SRCTARINC) .gitcensus
+> +	$(Q)$(TAR) --transform "s,^,$(SRCDIR)/," -Jcf $(SRCDIR).tar.xz  \
+> +	   `cat .gitcensus` $(SRCTARINC)
+> +	echo Wrote: $@
+> +
+>  .gitcensus: $(_FORCE)
+>  	$(Q)if test -d .git; then \
+>  	  git ls-files > .gitcensus && echo "new .gitcensus"; \
+> -- 
+> 1.8.3.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
