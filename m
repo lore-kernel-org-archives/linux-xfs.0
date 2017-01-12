@@ -1,102 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48056 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759138AbdADTmE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Jan 2017 14:42:04 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfsdump: handle bind mount targets
-Message-ID: <2334e0d3-dde7-eb4b-2bf5-bd0457cf5912@redhat.com>
-Date: Wed, 4 Jan 2017 13:42:02 -0600
+Received: from userp1040.oracle.com ([156.151.31.81]:39743 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751020AbdALDGp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 22:06:45 -0500
+Subject: [PATCH 2/5] xfs_io: fix some documentation problems
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 11 Jan 2017 19:06:41 -0800
+Message-ID: <148419040105.32674.7685382394930891385.stgit@birch.djwong.org>
+In-Reply-To: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
+References: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Jason L Tibbitts III <tibbs@math.uh.edu>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Today, xfsdump looks at the mount point it was handed, gets
-the inode of that directory, and assumes that it is the
-filesystem's root inode.
+Describe the numberless (i.e. "reflink the whole file") behavior
+in the xfs_io help system and since the clone/dedupe ioctls were
+promoted to the VFS before XFS reflink landed, mention those in
+the manpage.
 
-This doesn't work if we have bind-mounted a subdirectory
-somewhere, and point xfsdump at that.  The inode number retrieved
-is not the filesystem's root inode number, and because this
-goes into the dump header and gets checked on restore, things
-go badly when the root inode found in the dump does not match
-the root inode in the dump header:
-
-# mkfs.xfs -dfile,name=fsfile,size=16g
-# mkdir mnt
-# mount -o loop fsfile mnt
-# mkdir -p mnt/dir
-# mkdir -p mnt2/dir
-# mount -o bind mnt/dir mnt2/dir
-# xfsdump -v trace -J -F -l 0 -  `pwd`/mnt2/dir | xfsdump/restore/xfsrestore -v trace -t - 
-...
-xfsrestore: tree.c:759: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth' failed.
-#
-
-Fix this by using bulkstat to get the first valid inode in the filesystem.
-Compare this to the inode number of the mounted directory, and if they
-differ, issue a notice that this may be a bind mount (which means that
-more than just the tree under the mount will be dumped; the whole
-filesystem is dumped by default).
-
-Reported-by: Jason L Tibbitts III <tibbs@math.uh.edu>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ io/reflink.c      |    4 ++--
+ man/man8/xfs_io.8 |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-This passes xfstests dump group, FWIW, as well as the
-testcase above (which probably should get turned into a test)
 
-diff --git a/dump/content.c b/dump/content.c
-index 1e86292..5a3c02f 100644
---- a/dump/content.c
-+++ b/dump/content.c
-@@ -1381,10 +1381,17 @@ baseuuidbypass:
- 	}
+diff --git a/io/reflink.c b/io/reflink.c
+index d26cbdd..41cb884 100644
+--- a/io/reflink.c
++++ b/io/reflink.c
+@@ -306,9 +306,9 @@ reflink_init(void)
+ 	reflink_cmd.argmax = -1;
+ 	reflink_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+ 	reflink_cmd.args =
+-_("infile src_off dst_off len");
++_("infile [src_off dst_off len]");
+ 	reflink_cmd.oneline =
+-		_("reflinks a number of bytes at a specified offset");
++		_("reflinks an entire file, or a number of bytes at a specified offset");
+ 	reflink_cmd.help = reflink_help;
  
- 	/* figure out the ino for the root directory of the fs
--	 * and get its xfs_bstat_t for inomap_build()
-+	 * and get its xfs_bstat_t for inomap_build().  This could
-+	 * be a bind mount; don't ask for the mount point inode,
-+	 * find the actual lowest inode number in the filesystem.
- 	 */
- 	{
- 		stat64_t rootstat;
-+		xfs_ino_t lastino = 0;
-+		int ocount = 0;
-+		xfs_fsop_bulkreq_t bulkreq;
-+
-+		/* Get the inode of the mount point */
- 		rval = fstat64( sc_fsfd, &rootstat );
- 		if ( rval ) {
- 			mlog( MLOG_NORMAL, _(
-@@ -1396,11 +1403,21 @@ baseuuidbypass:
- 			( xfs_bstat_t * )calloc( 1, sizeof( xfs_bstat_t ));
- 		assert( sc_rootxfsstatp );
- 
--		if ( bigstat_one( sc_fsfd, rootstat.st_ino, sc_rootxfsstatp) < 0 ) {
-+		/* Get the first valid (i.e. root) inode in this fs */
-+		bulkreq.lastip = (__u64 *)&lastino;
-+		bulkreq.icount = 1;
-+		bulkreq.ubuffer = sc_rootxfsstatp;
-+		bulkreq.ocount = &ocount;
-+		if (ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT, &bulkreq) < 0) {
- 			mlog( MLOG_ERROR,
- 			      _("failed to get bulkstat information for root inode\n"));
- 			return BOOL_FALSE;
- 		}
-+
-+		if (sc_rootxfsstatp->bs_ino != rootstat.st_ino)
-+			mlog ( MLOG_NORMAL | MLOG_NOTE,
-+			       _("root ino %lld differs from mount dir ino %lld, bind mount?\n"),
-+			         sc_rootxfsstatp->bs_ino, rootstat.st_ino);
- 	}
- 	
- 	/* alloc a file system handle, to be used with the jdm_open()
-
-
+ 	add_command(&reflink_cmd);
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 885df7f..f1da472 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -530,7 +530,7 @@ both data and holes are displayed together or performing a recusively display.
+ .TP
+ .BI "reflink  [ \-C ] [ \-q ] src_file [src_offset dst_offset length]"
+ On filesystems that support the
+-.B XFS_IOC_CLONE_RANGE
++.B FICLONERANGE
+ or
+ .B BTRFS_IOC_CLONE_RANGE
+ ioctls, map
+@@ -560,7 +560,7 @@ Do not print timing statistics at all.
+ .TP
+ .BI "dedupe  [ \-C ] [ \-q ] src_file src_offset dst_offset length"
+ On filesystems that support the
+-.B XFS_IOC_FILE_EXTENT_SAME
++.B FIDEDUPERANGE
+ or
+ .B BTRFS_IOC_FILE_EXTENT_SAME
+ ioctls, map
 
