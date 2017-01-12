@@ -1,624 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47870 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750903AbdAMR44 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Jan 2017 12:56:56 -0500
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 469D680F6D
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Jan 2017 17:56:47 +0000 (UTC)
-Date: Fri, 13 Jan 2017 11:56:43 -0600
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH 04/22] mkfs: change conflicts array into a table capable
- of cross-option addressing
-Message-ID: <20170113175643.GH23576@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
- <1481117249-21273-5-git-send-email-jtulak@redhat.com>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36655 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750932AbdALICA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Jan 2017 03:02:00 -0500
+Received: by mail-oi0-f67.google.com with SMTP id u143so1756771oif.3
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2017 00:01:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1481117249-21273-5-git-send-email-jtulak@redhat.com>
+In-Reply-To: <20170111173227.GS14038@birch.djwong.org>
+References: <20170110194249.GK14038@birch.djwong.org> <CAOQ4uxggOoFJ_KR40XX2hU+bSr9zqXu9y_7HWqVxTfQ6ETC4hA@mail.gmail.com>
+ <CAOQ4uxj+H4ZAXkPgob5ANJW=BDBzj6P2nKbb3aE9w1igGmcRfw@mail.gmail.com> <20170111173227.GS14038@birch.djwong.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 12 Jan 2017 10:01:54 +0200
+Message-ID: <CAOQ4uxhGrREM54VdnOMct9CZTcNeMZz6CxYgNdbVvJn5J80KLg@mail.gmail.com>
+Subject: Re: [RFC PATCH] xfs_db: sanitize geometry on load
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-On Wed, Dec 07, 2016 at 02:27:11PM +0100, Jan Tulak wrote:
-> Change subopt_param.conflicts from array of integers into array of structures.
-> This prepares the ground for more universal conflict detection in future
-> patches.
-> 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+On Wed, Jan 11, 2017 at 7:32 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Wed, Jan 11, 2017 at 12:01:22PM +0200, Amir Goldstein wrote:
+>> On Wed, Jan 11, 2017 at 10:34 AM, Amir Goldstein <amir73il@gmail.com> wrote:
+>> > On Tue, Jan 10, 2017 at 9:42 PM, Darrick J. Wong
+>> > <darrick.wong@oracle.com> wrote:
+>> >> xfs_db doesn't check the filesystem geometry when it's mounting, which
+>> >> means that garbage agcount values can cause OOMs when we try to allocate
+>> >> all the per-AG incore metadata.  If we see geometry that looks
+>> >> suspicious, try to derive the actual AG geometry to avoid crashing the
+>> >> system.  This should help with xfs/1301 fuzzing.
+>> >>
+>> >> Also fix up xfs_repair to use the min/max dblocks macros.
+>> >>
+>> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>> >
+>> > Test machine is back to health with this patch, but some test are failing due
+>> > to the new error messages.
+>> > I guess its no surprise to you.
+>> >
+>> >
+>> > xfs/1300 5s ... 5s
+>> > xfs/1301         - output mismatch (see
+>> > /home/amir/src/xfstests-dev/results//xfs/1301.out.bad)
+>> >     --- tests/xfs/1301.out      2017-01-08 15:35:07.647897359 +0200
+>> >     +++ /home/amir/src/xfstests-dev/results//xfs/1301.out.bad
+>> > 2017-01-11 09:58:10.981678272 +0200
+>> >     @@ -1,4 +1,61 @@
+>> >      QA output created by 1301
+>> >      Format and populate
+>> >      Fuzz superblock
+>> >     +xfs_db: device /dev/mapper/storage-scratch AG geometry is insane.
+>> > Using agcount=4.
+>> >     +SB sanity check failed
+>> >     +Metadata corruption detected at xfs_sb block 0x0/0x200
+>> >     +xfs_db: device /dev/mapper/storage-scratch AG geometry is insane.
+>> > Using agcount=4.
+>> >     ...
+>> >     (Run 'diff -u tests/xfs/1301.out
+>> > /home/amir/src/xfstests-dev/results//xfs/1301.out.bad'  to see the
+>
+> Uh.... this is odd, all that stuff should go into 1301.full.
+>
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Darrick,
 
-> ---
->  mkfs/xfs_mkfs.c | 243 ++++++++++++++++++++++++++++++--------------------------
->  1 file changed, 129 insertions(+), 114 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index edcfdc0..b47cdae 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -93,8 +93,16 @@ unsigned int		sectorsize;
->   *
->   *   conflicts MANDATORY
->   *     If your subopt is in a conflict with some other option, specify it.
-> - *     Accepts the .index values of the conflicting subopts and the last
-> - *     member of this list has to be LAST_CONFLICT.
-> + *     Accepts the .index values of the conflicting subopt as .opt (e.g. OPT_D)
-> + *     and .subopt (e.g. D_FILE). If .test_values is true, then the conflict
-> + *     is raised only when the "remote" suboption .value is equal to
-> + *     .invalid_value field and the "current" suboption has .value equal to
-> + *     .at_value.
-> + *     If .test_values is false, a conflict is raised when the suboption appears
-> + *     on the CLI, no matter its value. The field .message contains an optional
-> + *     explanatory string for the user. This string can't be translated here,
-> + *     so it has to be enveloped with _() when printed.
-> + *     The last member of this list has to be {LAST_CONFLICT}.
->   *
->   *   minval, maxval OPTIONAL
->   *     These options are used for automatic range check and they have to be
-> @@ -133,7 +141,14 @@ struct opt_params {
->  		bool		str_seen;
->  		bool		convert;
->  		bool		is_power_2;
-> -		int		conflicts[MAX_CONFLICTS];
-> +		struct subopt_conflict {
-> +			int		opt;
-> +			int		subopt;
-> +			bool		test_values;
-> +			long long	invalid_value;
-> +			long long	at_value;
-> +			const char	*message;
-> +		} 		conflicts [MAX_CONFLICTS];
->  		long long	minval;
->  		long long	maxval;
->  		long long	defaultval;
-> @@ -153,8 +168,8 @@ struct opt_params {
->  		},
->  		.subopt_params = {
->  			{ .index = B_LOG,
-> -			  .conflicts = { B_SIZE,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_B, B_SIZE, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = XFS_MIN_BLOCKSIZE_LOG,
->  			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
-> @@ -162,8 +177,8 @@ struct opt_params {
->  			{ .index = B_SIZE,
->  			  .convert = true,
->  			  .is_power_2 = true,
-> -			  .conflicts = { B_LOG,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_B, B_LOG, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = XFS_MIN_BLOCKSIZE,
->  			  .maxval = XFS_MAX_BLOCKSIZE,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
-> @@ -209,84 +224,84 @@ struct opt_params {
->  		},
->  		.subopt_params = {
->  			{ .index = D_AGCOUNT,
-> -			  .conflicts = { D_AGSIZE,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_D, D_AGSIZE, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 1,
->  			  .maxval = XFS_MAX_AGNUMBER,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = D_FILE,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
->  			},
->  			{ .index = D_NAME,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = D_SIZE,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .minval = XFS_AG_MIN_BYTES,
->  			  .maxval = LLONG_MAX,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = D_SUNIT,
-> -			  .conflicts = { D_NOALIGN,
-> -					 D_SU,
-> -					 D_SW,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
-> +					 {OPT_D, D_SU, false, 0, 0},
-> +					 {OPT_D, D_SW, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = UINT_MAX,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = D_SWIDTH,
-> -			  .conflicts = { D_NOALIGN,
-> -					 D_SU,
-> -					 D_SW,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
-> +					 {OPT_D, D_SU, false, 0, 0},
-> +					 {OPT_D, D_SW, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = UINT_MAX,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = D_AGSIZE,
-> -			  .conflicts = { D_AGCOUNT,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_D, D_AGCOUNT, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .minval = XFS_AG_MIN_BYTES,
->  			  .maxval = XFS_AG_MAX_BYTES,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = D_SU,
-> -			  .conflicts = { D_NOALIGN,
-> -					 D_SUNIT,
-> -					 D_SWIDTH,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
-> +					 {OPT_D, D_SUNIT, false, 0, 0},
-> +					 {OPT_D, D_SWIDTH, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .minval = 0,
->  			  .maxval = UINT_MAX,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = D_SW,
-> -			  .conflicts = { D_NOALIGN,
-> -					 D_SUNIT,
-> -					 D_SWIDTH,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
-> +					 {OPT_D, D_SUNIT, false, 0, 0},
-> +					 {OPT_D, D_SWIDTH, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = UINT_MAX,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = D_SECTLOG,
-> -			  .conflicts = { D_SECTSIZE,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_D, D_SECTSIZE, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = XFS_MIN_SECTORSIZE_LOG,
->  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = D_SECTSIZE,
-> -			  .conflicts = { D_SECTLOG,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_D, D_SECTLOG, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .is_power_2 = true,
->  			  .minval = XFS_MIN_SECTORSIZE,
-> @@ -294,29 +309,29 @@ struct opt_params {
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = D_NOALIGN,
-> -			  .conflicts = { D_SU,
-> -					 D_SW,
-> -					 D_SUNIT,
-> -					 D_SWIDTH,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_D, D_SU, false, 0, 0},
-> +					 {OPT_D, D_SW, false, 0, 0},
-> +					 {OPT_D, D_SUNIT, false, 0, 0},
-> +					 {OPT_D, D_SWIDTH, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
->  			},
->  			{ .index = D_RTINHERIT,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 1,
->  			  .maxval = 1,
->  			  .defaultval = 1,
->  			},
->  			{ .index = D_PROJINHERIT,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = UINT_MAX,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = D_EXTSZINHERIT,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = UINT_MAX,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
-> @@ -348,57 +363,57 @@ struct opt_params {
->  		},
->  		.subopt_params = {
->  			{ .index = I_ALIGN,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
->  			},
->  			{ .index = I_LOG,
-> -			  .conflicts = { I_PERBLOCK,
-> -					 I_SIZE,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_I, I_PERBLOCK, false, 0, 0},
-> +					 {OPT_I, I_SIZE, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = XFS_DINODE_MIN_LOG,
->  			  .maxval = XFS_DINODE_MAX_LOG,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = I_MAXPCT,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 100,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = I_PERBLOCK,
-> -			  .conflicts = { I_LOG,
-> -					 I_SIZE,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_I, I_LOG, false, 0, 0},
-> +					 {OPT_I, I_SIZE, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .is_power_2 = true,
->  			  .minval = XFS_MIN_INODE_PERBLOCK,
->  			  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = I_SIZE,
-> -			  .conflicts = { I_PERBLOCK,
-> -					 I_LOG,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_I, I_PERBLOCK, false, 0, 0},
-> +					 {OPT_I, I_LOG, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .is_power_2 = true,
->  			  .minval = XFS_DINODE_MIN_SIZE,
->  			  .maxval = XFS_DINODE_MAX_SIZE,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = I_ATTR,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 2,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = I_PROJID32BIT,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
->  			},
->  			{ .index = I_SPINODES,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
-> @@ -438,64 +453,64 @@ struct opt_params {
->  		},
->  		.subopt_params = {
->  			{ .index = L_AGNUM,
-> -			  .conflicts = { L_DEV,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_L, L_DEV, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = UINT_MAX,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = L_INTERNAL,
-> -			  .conflicts = { L_FILE,
-> -					 L_DEV,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_L, L_FILE, false, 0, 0},
-> +					 {OPT_L, L_DEV, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
->  			},
->  			{ .index = L_SIZE,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
->  			  .maxval = XFS_MAX_LOG_BYTES,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = L_VERSION,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 1,
->  			  .maxval = 2,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = L_SUNIT,
-> -			  .conflicts = { L_SU,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_L, L_SU, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 1,
->  			  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = L_SU,
-> -			  .conflicts = { L_SUNIT,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_L, L_SUNIT, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .minval = BBTOB(1),
->  			  .maxval = XLOG_MAX_RECORD_BSIZE,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = L_DEV,
-> -			  .conflicts = { L_AGNUM,
-> -					 L_INTERNAL,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_L, L_AGNUM, false, 0, 0},
-> +					 {OPT_L, L_INTERNAL, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = L_SECTLOG,
-> -			  .conflicts = { L_SECTSIZE,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_L, L_SECTSIZE, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = XFS_MIN_SECTORSIZE_LOG,
->  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = L_SECTSIZE,
-> -			  .conflicts = { L_SECTLOG,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_L, L_SECTLOG, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .is_power_2 = true,
->  			  .minval = XFS_MIN_SECTORSIZE,
-> @@ -503,20 +518,20 @@ struct opt_params {
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = L_FILE,
-> -			  .conflicts = { L_INTERNAL,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_L, L_INTERNAL, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
->  			},
->  			{ .index = L_NAME,
-> -			  .conflicts = { L_AGNUM,
-> -					 L_INTERNAL,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_L, L_AGNUM, false, 0, 0},
-> +					 {OPT_L, L_INTERNAL, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = L_LAZYSBCNTR,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
-> @@ -540,15 +555,15 @@ struct opt_params {
->  		},
->  		.subopt_params = {
->  			{ .index = N_LOG,
-> -			  .conflicts = { N_SIZE,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_N, N_SIZE, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = XFS_MIN_REC_DIRSIZE,
->  			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = N_SIZE,
-> -			  .conflicts = { N_LOG,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_N, N_LOG, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .is_power_2 = true,
->  			  .minval = 1 << XFS_MIN_REC_DIRSIZE,
-> @@ -556,13 +571,13 @@ struct opt_params {
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = N_VERSION,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 2,
->  			  .maxval = 2,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = N_FTYPE,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
-> @@ -590,38 +605,38 @@ struct opt_params {
->  		},
->  		.subopt_params = {
->  			{ .index = R_EXTSIZE,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .minval = XFS_MIN_RTEXTSIZE,
->  			  .maxval = XFS_MAX_RTEXTSIZE,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = R_SIZE,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .minval = 0,
->  			  .maxval = LLONG_MAX,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = R_DEV,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = R_FILE,
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			},
->  			{ .index = R_NAME,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = R_NOALIGN,
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			},
->  		},
->  	},
-> @@ -642,25 +657,25 @@ struct opt_params {
->  		},
->  		.subopt_params = {
->  			{ .index = S_LOG,
-> -			  .conflicts = { S_SIZE,
-> -					 S_SECTSIZE,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_S, S_SIZE, false, 0, 0},
-> +					 {OPT_S, S_SECTSIZE, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = XFS_MIN_SECTORSIZE_LOG,
->  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = S_SECTLOG,
-> -			  .conflicts = { S_SIZE,
-> -					 S_SECTSIZE,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_S, S_SIZE, false, 0, 0},
-> +					 {OPT_S, S_SECTSIZE, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .minval = XFS_MIN_SECTORSIZE_LOG,
->  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = S_SIZE,
-> -			  .conflicts = { S_LOG,
-> -					 S_SECTLOG,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_S, S_LOG, false, 0, 0},
-> +					 {OPT_S, S_SECTLOG, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .is_power_2 = true,
->  			  .minval = XFS_MIN_SECTORSIZE,
-> @@ -668,9 +683,9 @@ struct opt_params {
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = S_SECTSIZE,
-> -			  .conflicts = { S_LOG,
-> -					 S_SECTLOG,
-> -					 LAST_CONFLICT },
-> +			  .conflicts = { {OPT_S, S_LOG, false, 0, 0},
-> +					 {OPT_S, S_SECTLOG, false, 0, 0},
-> +					 {LAST_CONFLICT} },
->  			  .convert = true,
->  			  .is_power_2 = true,
->  			  .minval = XFS_MIN_SECTORSIZE,
-> @@ -698,29 +713,29 @@ struct opt_params {
->  		},
->  		.subopt_params = {
->  			{ .index = M_CRC,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
->  			},
->  			{ .index = M_FINOBT,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
->  			},
->  			{ .index = M_UUID,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = M_RMAPBT,
-> -			.conflicts = { LAST_CONFLICT },
-> +			.conflicts = { {LAST_CONFLICT} },
->  			.minval = 0,
->  			.maxval = 1,
->  			.defaultval = 0,
->  			},
->  			{ .index = M_REFLINK,
-> -			  .conflicts = { LAST_CONFLICT },
-> +			  .conflicts = { {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 0,
-> @@ -1330,14 +1345,14 @@ check_opt(
->  
->  	/* check for conflicts with the option */
->  	for (i = 0; i < MAX_CONFLICTS; i++) {
-> -		int conflict_opt = sp->conflicts[i];
-> +		struct subopt_conflict conflict_opt = sp->conflicts[i];
->  
-> -		if (conflict_opt == LAST_CONFLICT)
-> +		if (conflict_opt.opt == LAST_CONFLICT)
->  			break;
-> -		if (opts->subopt_params[conflict_opt].seen ||
-> -		    opts->subopt_params[conflict_opt].str_seen)
-> +		if (opts->subopt_params[conflict_opt.subopt].seen ||
-> +		    opts->subopt_params[conflict_opt.subopt].str_seen)
->  			conflict(opts->name, (char **)opts->subopts,
-> -				 conflict_opt, index);
-> +				 conflict_opt.subopt, index);
->  	}
->  }
->  
-> -- 
-> 2.8.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I see that you went down the problematic path of redirecting input to
+interactive xfs_db shell.
+
+I say problematic, because I went down that path with xfs_io when
+I wrote test overlay/016, because xfs_io -c "open foo" was broken:
+http://www.spinics.net/lists/fstests/msg04526.html
+
+What I found out is that on some systems, the "xfs_io>" echo appears
+in output and on some systems it does not. It is not related to xfs_io
+itself, but to something else in the environment, presumably, the shell
+or the terminal?
+I was running the same test with same version of xfs_io on
+debian Jessie inside kvm-xfstests and on Ubuntu 16.04 (ssh+tmux)
+and got different results.
+
+Can you rearrange all the fuzzy helpers to use xfs_db -c instead of
+redirecting stdin to xfs_db?
+
+Regarding xfs/1301, all output from xfs_db should go to 1301.full, so
+the existence of the "xfs_db>" prompt is probably not important, but
+perhaps there are other factors in play which cause stderr from xfs_db
+to get to 1301.out.bad on my system.
+I must say that I looked to see where in xfs/1301 or in common/fuzzy
+you redirect stderr to stdout and didn't find it.
+Please enlighten me.
+
+Amir.
