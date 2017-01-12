@@ -1,103 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39550 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:43222 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757558AbdAKOJc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Jan 2017 09:09:32 -0500
-Subject: Re: [RFC PATCH] xfs_db: sanitize geometry on load
-References: <20170110194249.GK14038@birch.djwong.org>
- <CAOQ4uxggOoFJ_KR40XX2hU+bSr9zqXu9y_7HWqVxTfQ6ETC4hA@mail.gmail.com>
- <CAOQ4uxj+H4ZAXkPgob5ANJW=BDBzj6P2nKbb3aE9w1igGmcRfw@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1dec16e5-66ea-1876-1105-2219b6f1c17c@sandeen.net>
-Date: Wed, 11 Jan 2017 08:09:30 -0600
+        id S1751032AbdALTIa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Jan 2017 14:08:30 -0500
+Date: Thu, 12 Jan 2017 13:08:22 -0600
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH 3/3] libxfs-apply: minor improvements
+Message-ID: <20170112190822.GA27976@redhat.com>
+References: <056383cb-cf7e-3880-aecf-d97d5516a60f@sandeen.net>
+ <7f6aba51-3b6d-0ba2-57b8-344bc7fc32b7@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxj+H4ZAXkPgob5ANJW=BDBzj6P2nKbb3aE9w1igGmcRfw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7f6aba51-3b6d-0ba2-57b8-344bc7fc32b7@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 1/11/17 4:01 AM, Amir Goldstein wrote:
-> Now I am hitting these xfs_db crashes during xfs/1316, which are apparently not
-> related to OOM killer. I have seen them last run as well but dmesg is quiet now.
+On Thu, Jan 12, 2017 at 11:15:52AM -0600, Eric Sandeen wrote:
+> Three quick improvements to libxfs-apply:
+> 
+> - Skip already-cross-merged commits, based on the
+>   "Source XXX commit" line in the commitlog.
+> 
+> - Be clearer about which patch failed if it does
+> 
+> - Clean up guilt better after a failed application
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Please install debug bits and get a proper coredump, or try valgrind,
-to get a real backtrace here so we can see what's going on...
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-Thanks,
--Eric
- 
-> xfs/1316        *** Error in `/usr/sbin/xfs_db': free(): invalid
-> pointer: 0x00007f9dbf036b78 ***
-> ======= Backtrace: =========
-> /lib/x86_64-linux-gnu/libc.so.6(+0x77725)[0x7f9dbecea725]
-> /lib/x86_64-linux-gnu/libc.so.6(+0x7ff4a)[0x7f9dbecf2f4a]
-> /lib/x86_64-linux-gnu/libc.so.6(cfree+0x4c)[0x7f9dbecf6abc]
-> /usr/sbin/xfs_db[0x414961]
-> /usr/sbin/xfs_db[0x4154de]
-> /usr/sbin/xfs_db[0x420d38]
-> /usr/sbin/xfs_db[0x420926]
-> /usr/sbin/xfs_db[0x405125]
-> /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf0)[0x7f9dbec93830]
-> /usr/sbin/xfs_db[0x405179]
-> ======= Memory map: ========
-> 00400000-0049e000 r-xp 00000000 08:01 15995842
->   /usr/sbin/xfs_db
-> 0069d000-0069e000 r--p 0009d000 08:01 15995842
->   /usr/sbin/xfs_db
-> 0069e000-006a1000 rw-p 0009e000 08:01 15995842
->   /usr/sbin/xfs_db
-> 006a1000-006b0000 rw-p 00000000 00:00 0
-> 0119e000-011e0000 rw-p 00000000 00:00 0                                  [heap]
-> 7f9db8000000-7f9db8021000 rw-p 00000000 00:00 0
-> 7f9db8021000-7f9dbc000000 ---p 00000000 00:00 0
-> 7f9dbea5d000-7f9dbea73000 r-xp 00000000 08:01 6033829
->   /lib/x86_64-linux-gnu/libgcc_s.so.1
-> 7f9dbea73000-7f9dbec72000 ---p 00016000 08:01 6033829
->   /lib/x86_64-linux-gnu/libgcc_s.so.1
-> 7f9dbec72000-7f9dbec73000 rw-p 00015000 08:01 6033829
->   /lib/x86_64-linux-gnu/libgcc_s.so.1
-> 7f9dbec73000-7f9dbee33000 r-xp 00000000 08:01 6033791
->   /lib/x86_64-linux-gnu/libc-2.23.so
-> 7f9dbee33000-7f9dbf032000 ---p 001c0000 08:01 6033791
->   /lib/x86_64-linux-gnu/libc-2.23.so
-> 7f9dbf032000-7f9dbf036000 r--p 001bf000 08:01 6033791
->   /lib/x86_64-linux-gnu/libc-2.23.so
-> 7f9dbf036000-7f9dbf038000 rw-p 001c3000 08:01 6033791
->   /lib/x86_64-linux-gnu/libc-2.23.so
-> 7f9dbf038000-7f9dbf03c000 rw-p 00000000 00:00 0
-> 7f9dbf03c000-7f9dbf054000 r-xp 00000000 08:01 6033937
->   /lib/x86_64-linux-gnu/libpthread-2.23.so
-> 7f9dbf054000-7f9dbf253000 ---p 00018000 08:01 6033937
->   /lib/x86_64-linux-gnu/libpthread-2.23.so
-> 7f9dbf253000-7f9dbf254000 r--p 00017000 08:01 6033937
->   /lib/x86_64-linux-gnu/libpthread-2.23.so
-> 7f9dbf254000-7f9dbf255000 rw-p 00018000 08:01 6033937
->   /lib/x86_64-linux-gnu/libpthread-2.23.so
-> 7f9dbf255000-7f9dbf259000 rw-p 00000000 00:00 0
-> 7f9dbf259000-7f9dbf25d000 r-xp 00000000 08:01 6033975
->   /lib/x86_64-linux-gnu/libuuid.so.1.3.0
-> 7f9dbf25d000-7f9dbf45c000 ---p 00004000 08:01 6033975
->   /lib/x86_64-linux-gnu/libuuid.so.1.3.0
-> 7f9dbf45c000-7f9dbf45d000 r--p 00003000 08:01 6033975
->   /lib/x86_64-linux-gnu/libuuid.so.1.3.0
-> 7f9dbf45d000-7f9dbf45e000 rw-p 00004000 08:01 6033975
->   /lib/x86_64-linux-gnu/libuuid.so.1.3.0
-> 7f9dbf45e000-7f9dbf484000 r-xp 00000000 08:01 6033763
->   /lib/x86_64-linux-gnu/ld-2.23.so
-> 7f9dbf667000-7f9dbf66b000 rw-p 00000000 00:00 0
-> 7f9dbf680000-7f9dbf683000 rw-p 00000000 00:00 0
-> 7f9dbf683000-7f9dbf684000 r--p 00025000 08:01 6033763
->   /lib/x86_64-linux-gnu/ld-2.23.so
-> 7f9dbf684000-7f9dbf685000 rw-p 00026000 08:01 6033763
->   /lib/x86_64-linux-gnu/ld-2.23.so
-> 7f9dbf685000-7f9dbf686000 rw-p 00000000 00:00 0
-> 7ffdde2cb000-7ffdde2ed000 rw-p 00000000 00:00 0                          [stack]
-> 7ffdde366000-7ffdde368000 r--p 00000000 00:00 0                          [vvar]
-> 7ffdde368000-7ffdde36a000 r-xp 00000000 00:00 0                          [vdso]
-> ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0
->   [vsyscall]
-> *** Error in `/usr/sbin/xfs_db': free(): invalid pointer: 0x00007f202b108b78 ***
+> ---
+>  tools/libxfs-apply | 14 ++++++++++++--
+>  1 file changed, 12 insertions(+), 2 deletions(-)
+> 
+> diff --git a/tools/libxfs-apply b/tools/libxfs-apply
+> index 5cf0879..e7d7e0a 100755
+> --- a/tools/libxfs-apply
+> +++ b/tools/libxfs-apply
+> @@ -288,6 +288,7 @@ apply_patch()
+>  	local _current_commit=$3
+>  	local _new_patch=`mktemp`
+>  	local _source="kernel"
+> +	local _target="xfsprogs"
+>  
+>  	# filter just the libxfs parts of the patch
+>  	if [ $SOURCE == "xfsprogs" ]; then
+> @@ -301,6 +302,7 @@ apply_patch()
+>  
+>  		filter_kernel_patch $_patch > $_new_patch
+>  		_source="xfsprogs"
+> +		_target="kernel"
+>  	elif [ $SOURCE == "kernel" ]; then
+>  
+>  		[ -n "$VERBOSE" ] || lsdiff $_patch | grep -q "[ab]/fs/xfs/libxfs/"
+> @@ -315,6 +317,13 @@ apply_patch()
+>  		fail "Unknown source repo type: $SOURCE"
+>  	fi
+>  
+> +	grep -q "Source $_target commit: " $_patch
+> +	if [ "$?" -eq "0" ]; then
+> +		echo "$_patch_name already synced up"
+> +		echo "$_skipping commit $_current_commit"
+> +		return
+> +	fi
+> +
+>  	# now munge the header to be in the correct format.
+>  	fixup_header_format $_source $_new_patch > $_new_patch.2
+>  
+> @@ -338,14 +347,15 @@ apply_patch()
+>  		if [ $? -eq 0 ]; then
+>  			guilt refresh
+>  		else
+> -			echo "Guilt push failed!"
+> +			echo "Guilt push of $_current_commit $_patch_name failed!"
+>  			read -r -p "Skip or Fail [s|F]? " response
+>  			if [ -z "$response" -o "$response" != "s" ]; then
+>  				echo "Force push patch, fix and refresh."
+>  				echo "Restart from commit $_current_commit"
+>  				fail "Manual cleanup required!"
+>  			else
+> -				echo "Skipping. Manual series file cleanup needed!"
+> +				echo "Skipping."
+> +				guilt delete -f $_patch_name
+>  			fi
+>  		fi
+>  	elif [ $STGIT -eq 1 ]; then
+> -- 
+> 1.8.3.1
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
