@@ -1,157 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wj0-f196.google.com ([209.85.210.196]:36512 "EHLO
-        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751042AbdAKGae (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 01:30:34 -0500
-Received: by mail-wj0-f196.google.com with SMTP id dh1so9252043wjb.3
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2017 22:30:33 -0800 (PST)
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v3] xfsprogs: replace xfs_mode_to_ftype table with switch statement
-Date: Wed, 11 Jan 2017 08:30:17 +0200
-Message-Id: <1484116217-7594-1-git-send-email-amir73il@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45858 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750731AbdALPix (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Jan 2017 10:38:53 -0500
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4E20721722
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2017 15:38:54 +0000 (UTC)
+Date: Thu, 12 Jan 2017 10:38:52 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] [WIP] Propagate error state from buffers to the objects
+ attached
+Message-ID: <20170112153852.GF14085@bfoster.bfoster>
+References: <20170112142209.23458-1-cmaiolino@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170112142209.23458-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-The size of the xfs_mode_to_ftype[] conversion table
-was too small to handle an invalid value of mode=S_IFMT.
+On Thu, Jan 12, 2017 at 03:22:09PM +0100, Carlos Maiolino wrote:
+> Hi folks,
+> 
+> this is a new version of my possible fix to the error propagation model plus the
+> fix to the locked AIL items, both things are merged together since I'm using the
+> fix to the locked items to test the error propagation model, I'll split them
+> between different patches and also include dquot fixes when we agree that I'm on
+> the right path.
+> 
+> This new version adds Brian's suggestion to use a new flag for the xfs_log_item
+> instead of a callback. and uses the flag into xfs_inode_item_push, to resubmit
+> the buffer or not.
+> 
+> Also, the logic about when to set the flag has been moved into
+> xfs_buf_iodone_callback_error, so we only check that after the last buffer
+> resubmission.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+>  fs/xfs/xfs_buf_item.c   |  6 ++++++
+>  fs/xfs/xfs_inode_item.c | 33 +++++++++++++++++++++++++++++++--
+>  fs/xfs/xfs_trans.h      |  4 +++-
+>  3 files changed, 40 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 2975cb2..16896d5 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -1123,6 +1123,12 @@ xfs_buf_iodone_callback_error(
+>  	/* still a transient error, higher layers will retry */
+>  	xfs_buf_ioerror(bp, 0);
+>  	xfs_buf_relse(bp);
+> +
+> +	/*
+> +	 * Notify log item that the buffer has been failed so it can be retried
+> +	 * later if needed
+> +	 */
+> +	lip->li_flags |= XFS_LI_FAILED;
 
-Instead of fixing the table size, replace the conversion table
-with a conversion helper that uses a switch statement.
+Looks like the right idea to me. We might want to set this before we
+release the buffer though. Perhaps move it a few lines up and combine
+this comment with the "transient error" comment above..?
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
- libxfs/xfs_dir2.c    | 36 ++++++++++++++++++++++--------------
- libxfs/xfs_dir2.h    |  5 ++---
- repair/dino_chunks.c |  6 +-----
- repair/phase6.c      |  2 +-
- 4 files changed, 26 insertions(+), 23 deletions(-)
+>  	return true;
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index d90e781..308aa27 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -517,8 +517,37 @@ xfs_inode_item_push(
+>  	 * the AIL.
+>  	 */
+>  	if (!xfs_iflock_nowait(ip)) {
+> -		rval = XFS_ITEM_FLUSHING;
+> -		goto out_unlock;
+> +		int error;
+> +		struct xfs_dinode *dip;
+> +
+> +		/* Buffer carrying this item has been failed, we must resubmit
+> +		 * the buffer or the item will be locked forever
+> +		 */
 
-Eric,
+I'd suggest to reference the flush lock specifically, in particular how
+it's locked once and remains so until the flushed content makes it to
+disk (across I/O failures and retries if necessary).
 
-This is a matching patch to the one that got Reviewed-by Darrick for kernel.
+Note that the comment above the 'if (!xfs_iflock_nowait())' above will
+probably need an update as well.
 
-Tested xfs_repair with the new xfs/348 test with -n ftype=0|1.
+> +		if (lip->li_flags & XFS_LI_FAILED) {
+> +			printk("#### ITEM BUFFER FAILED PREVIOUSLY, inode: %llu\n",
+> +			       ip->i_ino);
+> +			error = xfs_imap_to_bp(ip->i_mount, NULL, &ip->i_imap,
+> +					       &dip, &bp, XBF_TRYLOCK, 0);
+> +
+> +			if (error) {
+> +				rval = XFS_ITEM_FLUSHING;
+> +				goto out_unlock;
+> +			}
+> +
+> +			if (!(bp->b_flags & XBF_WRITE_FAIL)) {
+> +				rval = XFS_ITEM_FLUSHING;
+> +				xfs_buf_relse(bp);
+> +				goto out_unlock;
+> +			}
+> +
+> +			if (!xfs_buf_delwri_queue(bp, buffer_list)) {
+> +				printk("#### QUEUEING AGAIN\n");
+> +				rval = XFS_ITEM_FLUSHING;
+> +			}
+> +
 
-Amir.
+We need to clear the LI_FAILED state once we've queued it for retry. We
+may also want to do the same for all other LI_FAILED log items attached
+to the buffer so we don't lock the buffer a bunch of times. For
+example, add a helper to walk the log items and clear the failure flag.
+(That could be a separate patch in the series though).
 
-v3:
-- Replaced xfs_mode_to_ftype table with switch statement
+Those things aside this looks like it's on the right track to me. Thanks
+Carlos.
 
-v2:
-- remove wrong argument about on-disk malformed mode from commit message
-- address Brian's review comments
-- test with new xfs/348
+Brian
 
-v1:
-- fix patch for xfsprogs derived from kernel patch
-
-diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-index 4180a93..257a99b 100644
---- a/libxfs/xfs_dir2.c
-+++ b/libxfs/xfs_dir2.c
-@@ -34,21 +34,29 @@
- struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
- 
- /*
-- * @mode, if set, indicates that the type field needs to be set up.
-- * This uses the transformation from file mode to DT_* as defined in linux/fs.h
-- * for file type specification. This will be propagated into the directory
-- * structure if appropriate for the given operation and filesystem config.
-+ * Convert inode mode to directory entry filetype
-  */
--const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
--	[0]			= XFS_DIR3_FT_UNKNOWN,
--	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
--	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
--	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
--	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
--	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
--	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
--	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
--};
-+const unsigned char xfs_mode_to_ftype(int mode)
-+{
-+	switch (mode & S_IFMT) {
-+	case S_IFREG:
-+		return XFS_DIR3_FT_REG_FILE;
-+	case S_IFDIR:
-+		return XFS_DIR3_FT_DIR;
-+	case S_IFCHR:
-+		return XFS_DIR3_FT_CHRDEV;
-+	case S_IFBLK:
-+		return XFS_DIR3_FT_BLKDEV;
-+	case S_IFIFO:
-+		return XFS_DIR3_FT_FIFO;
-+	case S_IFSOCK:
-+		return XFS_DIR3_FT_SOCK;
-+	case S_IFLNK:
-+		return XFS_DIR3_FT_SYMLINK;
-+	default:
-+		return XFS_DIR3_FT_UNKNOWN;
-+	}
-+}
- 
- /*
-  * ASCII case-insensitive (ie. A-Z) support for directories that was
-diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-index 89b9e24..ea20c12 100644
---- a/libxfs/xfs_dir2.h
-+++ b/libxfs/xfs_dir2.h
-@@ -32,10 +32,9 @@ struct xfs_dir2_data_unused;
- extern struct xfs_name	xfs_name_dotdot;
- 
- /*
-- * directory filetype conversion tables.
-+ * Convert inode mode to directory entry filetype
-  */
--#define S_SHIFT 12
--extern const unsigned char xfs_mode_to_ftype[];
-+extern const unsigned char xfs_mode_to_ftype(int mode);
- 
- /*
-  * directory operations vector for encode/decode routines
-diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-index 4db9512..a3909ac 100644
---- a/repair/dino_chunks.c
-+++ b/repair/dino_chunks.c
-@@ -826,8 +826,6 @@ next_readbuf:
- 		 * we do now, this is where to start.
- 		 */
- 		if (is_used)  {
--			__uint16_t	di_mode;
--
- 			if (is_inode_free(ino_rec, irec_offset))  {
- 				if (verbose || no_modify)  {
- 					do_warn(
-@@ -846,10 +844,8 @@ next_readbuf:
- 			 * store the on-disk file type for comparing in
- 			 * phase 6.
- 			 */
--			di_mode = be16_to_cpu(dino->di_mode);
--			di_mode = (di_mode & S_IFMT) >> S_SHIFT;
- 			set_inode_ftype(ino_rec, irec_offset,
--					xfs_mode_to_ftype[di_mode]);
-+				xfs_mode_to_ftype(be16_to_cpu(dino->di_mode)));
- 
- 			/*
- 			 * store on-disk nlink count for comparing in phase 7
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 06eed16..c492dd9 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1082,7 +1082,7 @@ mv_orphanage(
- 	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
- 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
- 
--	xname.type = xfs_mode_to_ftype[(VFS_I(ino_p)->i_mode & S_IFMT)>>S_SHIFT];
-+	xname.type = xfs_mode_to_ftype(VFS_I(ino_p)->i_mode);
- 
- 	if (isa_dir)  {
- 		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, orphanage_ino),
--- 
-2.7.4
-
+> +			xfs_buf_relse(bp);
+> +			goto out_unlock;
+> +		}
+>  	}
+>  
+>  	ASSERT(iip->ili_fields != 0 || XFS_FORCED_SHUTDOWN(ip->i_mount));
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index 61b7fbd..d62d174 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -66,10 +66,12 @@ typedef struct xfs_log_item {
+>  
+>  #define	XFS_LI_IN_AIL	0x1
+>  #define XFS_LI_ABORTED	0x2
+> +#define	XFS_LI_FAILED	0x3
+>  
+>  #define XFS_LI_FLAGS \
+>  	{ XFS_LI_IN_AIL,	"IN_AIL" }, \
+> -	{ XFS_LI_ABORTED,	"ABORTED" }
+> +	{ XFS_LI_ABORTED,	"ABORTED"}, \
+> +	{ XFS_LI_FAILED,	"FAILED" }
+>  
+>  struct xfs_item_ops {
+>  	void (*iop_size)(xfs_log_item_t *, int *, int *);
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
