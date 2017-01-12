@@ -1,95 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36655 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750932AbdALICA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Jan 2017 03:02:00 -0500
-Received: by mail-oi0-f67.google.com with SMTP id u143so1756771oif.3
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2017 00:01:55 -0800 (PST)
+Received: from sandeen.net ([63.231.237.45]:37930 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751098AbdALMwG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Jan 2017 07:52:06 -0500
+Subject: Re: [PATCH 0/6] xfs_io: fix up command iteration
+References: <20161207034724.1613-1-david@fromorbit.com>
+ <CAOQ4uxivcaKy6X3i41Tjh25Uy_UpnvXgJUKY8fpZ3r5REm6BPw@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <58adfc4f-8904-0ea6-7429-f9566e0340ec@sandeen.net>
+Date: Thu, 12 Jan 2017 06:52:03 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170111173227.GS14038@birch.djwong.org>
-References: <20170110194249.GK14038@birch.djwong.org> <CAOQ4uxggOoFJ_KR40XX2hU+bSr9zqXu9y_7HWqVxTfQ6ETC4hA@mail.gmail.com>
- <CAOQ4uxj+H4ZAXkPgob5ANJW=BDBzj6P2nKbb3aE9w1igGmcRfw@mail.gmail.com> <20170111173227.GS14038@birch.djwong.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 12 Jan 2017 10:01:54 +0200
-Message-ID: <CAOQ4uxhGrREM54VdnOMct9CZTcNeMZz6CxYgNdbVvJn5J80KLg@mail.gmail.com>
-Subject: Re: [RFC PATCH] xfs_db: sanitize geometry on load
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAOQ4uxivcaKy6X3i41Tjh25Uy_UpnvXgJUKY8fpZ3r5REm6BPw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>
 
-On Wed, Jan 11, 2017 at 7:32 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Wed, Jan 11, 2017 at 12:01:22PM +0200, Amir Goldstein wrote:
->> On Wed, Jan 11, 2017 at 10:34 AM, Amir Goldstein <amir73il@gmail.com> wrote:
->> > On Tue, Jan 10, 2017 at 9:42 PM, Darrick J. Wong
->> > <darrick.wong@oracle.com> wrote:
->> >> xfs_db doesn't check the filesystem geometry when it's mounting, which
->> >> means that garbage agcount values can cause OOMs when we try to allocate
->> >> all the per-AG incore metadata.  If we see geometry that looks
->> >> suspicious, try to derive the actual AG geometry to avoid crashing the
->> >> system.  This should help with xfs/1301 fuzzing.
->> >>
->> >> Also fix up xfs_repair to use the min/max dblocks macros.
->> >>
->> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->> >
->> > Test machine is back to health with this patch, but some test are failing due
->> > to the new error messages.
->> > I guess its no surprise to you.
->> >
->> >
->> > xfs/1300 5s ... 5s
->> > xfs/1301         - output mismatch (see
->> > /home/amir/src/xfstests-dev/results//xfs/1301.out.bad)
->> >     --- tests/xfs/1301.out      2017-01-08 15:35:07.647897359 +0200
->> >     +++ /home/amir/src/xfstests-dev/results//xfs/1301.out.bad
->> > 2017-01-11 09:58:10.981678272 +0200
->> >     @@ -1,4 +1,61 @@
->> >      QA output created by 1301
->> >      Format and populate
->> >      Fuzz superblock
->> >     +xfs_db: device /dev/mapper/storage-scratch AG geometry is insane.
->> > Using agcount=4.
->> >     +SB sanity check failed
->> >     +Metadata corruption detected at xfs_sb block 0x0/0x200
->> >     +xfs_db: device /dev/mapper/storage-scratch AG geometry is insane.
->> > Using agcount=4.
->> >     ...
->> >     (Run 'diff -u tests/xfs/1301.out
->> > /home/amir/src/xfstests-dev/results//xfs/1301.out.bad'  to see the
->
-> Uh.... this is odd, all that stuff should go into 1301.full.
->
+On 1/11/17 11:14 PM, Amir Goldstein wrote:
+> On Wed, Dec 7, 2016 at 5:47 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> Hi folks,
+>>
+>> Here are teh changes I've put together to address the command
+>> iteration problems that xfs_io is demonstrating. I described the
+>> history that lead us to the current problems here:
+>>
+>> https://www.spinics.net/lists/fstests/msg04572.html
+>>
+>> This series cleans up the libxcmd command code and fixes the xfs_io
+>> problems without completely removing the existing iteration
+>> behaviour.
+>>
+>> The first three patches address the "args_command" abstraction,
+>> renaming it to a "command iterator" abstraction and clean up the
+>> command loop implementation to make it easier to follow. It is now
+>> clear that the the command loop has an external command iterator
+>> control function, and it has a clean and clear mechanism for the
+>> external commands to prevent iteration from occurring
+>> (CMD_FLAG_ONESHOT).
+>>
+>> The fourth patch cleans up a recent change made to the xfs_quota
+>> interface to support foreign filesystems - it still needs to be abel
+>> to run the help and quit commands regardless of other state. The
+>> same requirement exists for xfs_io, it just implemented the command
+>> check that allowed them to be run differently. This patch
+>> centralises that by marking libxcmd functions as "library" functions
+>> and skips the application provided command checking altogether.
+>> Hence the apps no longer need to handle these cases at all.
+>>
+>> The fifth patch makes all the xfs_io commands that shouldn't iterate
+>> the file table one-shot only commands. This avoids all the nasty
+>> problems with commands like open that end up completely filling
+>> the open file table with thousands of filedescriptors pointing to
+>> the same file. THis makes those commands usable and predictable.
+>>
+>> Finally, the last patch adds CLI support for running xfs_io commands
+>> as one-shot commands rather than iterating commands. This is useful
+>> for being able to set up multiple files and operate on them as a
+>> whole or individually as necessary. This patch also documents in the
+>> man page that some commands may iterate all open files and that the
+>> new "-C" command option can be used to avoid problems arising from
+>> this historical behaviour.
+>>
+>> -Dave.
+>>
+> 
+> Eric,
+> 
+> I wanted to make sure that this work by Dave is on your radar for next.
+> Please note that most of the patches got Reviewed-by Christoph on v1,
+> but Dave did not add the tag on v2 posting.
 
-Darrick,
+Yes, it's in my queue.
 
-I see that you went down the problematic path of redirecting input to
-interactive xfs_db shell.
+I wanted to do the libxfs sync first, then add the bits outside that.
 
-I say problematic, because I went down that path with xfs_io when
-I wrote test overlay/016, because xfs_io -c "open foo" was broken:
-http://www.spinics.net/lists/fstests/msg04526.html
-
-What I found out is that on some systems, the "xfs_io>" echo appears
-in output and on some systems it does not. It is not related to xfs_io
-itself, but to something else in the environment, presumably, the shell
-or the terminal?
-I was running the same test with same version of xfs_io on
-debian Jessie inside kvm-xfstests and on Ubuntu 16.04 (ssh+tmux)
-and got different results.
-
-Can you rearrange all the fuzzy helpers to use xfs_db -c instead of
-redirecting stdin to xfs_db?
-
-Regarding xfs/1301, all output from xfs_db should go to 1301.full, so
-the existence of the "xfs_db>" prompt is probably not important, but
-perhaps there are other factors in play which cause stderr from xfs_db
-to get to 1301.out.bad on my system.
-I must say that I looked to see where in xfs/1301 or in common/fuzzy
-you redirect stderr to stdout and didn't find it.
-Please enlighten me.
-
-Amir.
+Thanks,
+-Eric
+ 
+> Thanks,
+> Amir.
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
