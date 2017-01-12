@@ -1,162 +1,245 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51299 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751066AbdAMHCV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Jan 2017 02:02:21 -0500
-Date: Thu, 12 Jan 2017 23:02:14 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH] xfs_db: sanitize geometry on load
-Message-ID: <20170113070214.GE14038@birch.djwong.org>
-References: <20170110194249.GK14038@birch.djwong.org>
- <CAOQ4uxggOoFJ_KR40XX2hU+bSr9zqXu9y_7HWqVxTfQ6ETC4hA@mail.gmail.com>
- <CAOQ4uxj+H4ZAXkPgob5ANJW=BDBzj6P2nKbb3aE9w1igGmcRfw@mail.gmail.com>
- <20170111173227.GS14038@birch.djwong.org>
- <CAOQ4uxhGrREM54VdnOMct9CZTcNeMZz6CxYgNdbVvJn5J80KLg@mail.gmail.com>
- <20170113010614.GD14038@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:47952 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750823AbdALPJt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Jan 2017 10:09:49 -0500
+Date: Thu, 12 Jan 2017 10:09:48 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/5] xfs_db: sanitize geometry on load
+Message-ID: <20170112150948.GE14085@bfoster.bfoster>
+References: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
+ <148419041340.32674.2646685552269275817.stgit@birch.djwong.org>
+ <81d0d5a9-6a8c-376a-133e-68dc589ec08c@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170113010614.GD14038@birch.djwong.org>
+In-Reply-To: <81d0d5a9-6a8c-376a-133e-68dc589ec08c@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Thu, Jan 12, 2017 at 05:06:14PM -0800, Darrick J. Wong wrote:
-> On Thu, Jan 12, 2017 at 10:01:54AM +0200, Amir Goldstein wrote:
-> > On Wed, Jan 11, 2017 at 7:32 PM, Darrick J. Wong
-> > <darrick.wong@oracle.com> wrote:
-> > > On Wed, Jan 11, 2017 at 12:01:22PM +0200, Amir Goldstein wrote:
-> > >> On Wed, Jan 11, 2017 at 10:34 AM, Amir Goldstein <amir73il@gmail.com> wrote:
-> > >> > On Tue, Jan 10, 2017 at 9:42 PM, Darrick J. Wong
-> > >> > <darrick.wong@oracle.com> wrote:
-> > >> >> xfs_db doesn't check the filesystem geometry when it's mounting, which
-> > >> >> means that garbage agcount values can cause OOMs when we try to allocate
-> > >> >> all the per-AG incore metadata.  If we see geometry that looks
-> > >> >> suspicious, try to derive the actual AG geometry to avoid crashing the
-> > >> >> system.  This should help with xfs/1301 fuzzing.
-> > >> >>
-> > >> >> Also fix up xfs_repair to use the min/max dblocks macros.
-> > >> >>
-> > >> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > >> >
-> > >> > Test machine is back to health with this patch, but some test are failing due
-> > >> > to the new error messages.
-> > >> > I guess its no surprise to you.
-> > >> >
-> > >> >
-> > >> > xfs/1300 5s ... 5s
-> > >> > xfs/1301         - output mismatch (see
-> > >> > /home/amir/src/xfstests-dev/results//xfs/1301.out.bad)
-> > >> >     --- tests/xfs/1301.out      2017-01-08 15:35:07.647897359 +0200
-> > >> >     +++ /home/amir/src/xfstests-dev/results//xfs/1301.out.bad
-> > >> > 2017-01-11 09:58:10.981678272 +0200
-> > >> >     @@ -1,4 +1,61 @@
-> > >> >      QA output created by 1301
-> > >> >      Format and populate
-> > >> >      Fuzz superblock
-> > >> >     +xfs_db: device /dev/mapper/storage-scratch AG geometry is insane.
-> > >> > Using agcount=4.
-> > >> >     +SB sanity check failed
-> > >> >     +Metadata corruption detected at xfs_sb block 0x0/0x200
-> > >> >     +xfs_db: device /dev/mapper/storage-scratch AG geometry is insane.
-> > >> > Using agcount=4.
-
-Pah, what a dunce I am!  I think I figured out the cause of this.  The
-inner loop of _scratch_xfs_fuzz_metadata is created by calling xfs_db on
-the scratch filesystem to enumerate the available fuzz verbs.  This is
-bad because sb 0 could be trashed (it certainly is in 1301) and crash
-the debugger... and it's also unnecessary since the verb list doesn't
-change.
-
-I'll change the double loop to precompute the field and verb list and
-use the precomputed value, saving us a potentially fraught call to
-xfs_db for every field.
-
-This also fixes the problem wherein xfs_repair fails to fix some field
-in the superblock and the whole test suddenly stops working because the
-scratch fs is toast.
-
---D
-
-> > >> >     ...
-> > >> >     (Run 'diff -u tests/xfs/1301.out
-> > >> > /home/amir/src/xfstests-dev/results//xfs/1301.out.bad'  to see the
-> > >
-> > > Uh.... this is odd, all that stuff should go into 1301.full.
-> > >
+On Thu, Jan 12, 2017 at 08:34:50AM -0600, Eric Sandeen wrote:
+> On 1/11/17 9:06 PM, Darrick J. Wong wrote:
+> > xfs_db doesn't check the filesystem geometry when it's mounting, which
+> > means that garbage agcount values can cause OOMs when we try to allocate
+> > all the per-AG incore metadata.  If we see geometry that looks
+> > suspicious, try to derive the actual AG geometry to avoid crashing the
+> > system.  This should help with xfs/1301 fuzzing.
 > > 
-> > Darrick,
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  db/init.c |   91 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-------
+> >  1 file changed, 81 insertions(+), 10 deletions(-)
 > > 
-> > I see that you went down the problematic path of redirecting input to
-> > interactive xfs_db shell.
 > > 
-> > I say problematic, because I went down that path with xfs_io when
-> > I wrote test overlay/016, because xfs_io -c "open foo" was broken:
-> > http://www.spinics.net/lists/fstests/msg04526.html
-> >
-> > What I found out is that on some systems, the "xfs_io>" echo appears
-> > in output and on some systems it does not. It is not related to xfs_io
-> > itself, but to something else in the environment, presumably, the shell
-> > or the terminal?
-> > I was running the same test with same version of xfs_io on
-> > debian Jessie inside kvm-xfstests and on Ubuntu 16.04 (ssh+tmux)
-> > and got different results.
+> > diff --git a/db/init.c b/db/init.c
+> > index ec1e274..a394728 100644
+> > --- a/db/init.c
+> > +++ b/db/init.c
+> > @@ -51,13 +51,90 @@ usage(void)
+> >  	exit(1);
+> >  }
+> >  
+> > +/* Try to load an AG's superblock, no verifiers. */
+> > +static bool
+> > +load_sb(
+> > +	struct xfs_mount	*mp,
+> > +	xfs_agnumber_t		agno,
+> > +	struct xfs_sb		*sbp)
+> > +{
+> > +	struct xfs_buf		*bp;
+> > +
+> > +	bp = libxfs_readbuf(mp->m_ddev_targp,
+> > +			    XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+> > +			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
+> > +
+> > +	if (!bp || bp->b_error)
+> > +		return false;
+> > +
+> > +	/* copy SB from buffer to in-core, converting architecture as we go */
+> > +	libxfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
+> > +	libxfs_putbuf(bp);
+> > +	libxfs_purgebuf(bp);
+> > +
+> > +	return true;
+> > +}
+> > +
+> > +/* If the geometry doesn't look sane, try to figure out the real geometry. */
+> > +static void
+> > +sanitize_geometry(
+> > +	struct xfs_mount	*mp,
+> > +	struct xfs_sb		*sbp)
+> > +{
+> > +	struct xfs_sb		sb;
+> > +	xfs_agblock_t		agblocks;
+> > +
+> > +	/* If the geometry looks ok, we're done. */
+> > +	if (sbp->sb_blocklog >= XFS_MIN_BLOCKSIZE_LOG &&
+> > +	    sbp->sb_blocklog <= XFS_MAX_BLOCKSIZE_LOG &&
+> > +	    sbp->sb_blocksize == (1 << sbp->sb_blocklog) &&
+> > +	    sbp->sb_dblocks * sbp->sb_blocksize <= x.dsize * x.dbsize &&
+> > +	    sbp->sb_dblocks <= XFS_MAX_DBLOCKS(sbp) &&
+> > +	    sbp->sb_dblocks >= XFS_MIN_DBLOCKS(sbp))
+> > +		return;
+> > +
+> > +	/* Check blocklog and blocksize */
+> > +	if (sbp->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG ||
+> > +	    sbp->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG)
+> > +		sbp->sb_blocklog = libxfs_log2_roundup(sbp->sb_blocksize);
+
+What if blocksize is bogus?
+
+> > +	if (sbp->sb_blocksize != (1 << sbp->sb_blocklog))
+> > +		sbp->sb_blocksize = (1 << sbp->sb_blocksize);
 > 
-> I get the feeling this could be related to readline -- on my systems I
-> build with libreadline6-dev installed and configure picks it up.  ISTR
-> if configure doesn't find a libreadline xfs_db'll do things a little
-> differently wrt printing the prompt... and that might be why you see
-> stray "xfs_db>" and I don't.  Or maybe you're linking against a
-> different version, or... ugh, what a mess.
+
+Do you mean (1 << sbp->sb_blocklog) here?
+
+> I'm really uneasy with having xfs_db ignore on-disk values and go
+> forward after deciding that it "knows better" and modifying what it
+> read from disk for fundamental geometry values.
 > 
-> > Can you rearrange all the fuzzy helpers to use xfs_db -c instead of
-> > redirecting stdin to xfs_db?
+
+I agree in principle. If I'm using xfs_db, I'd want it to navigate
+primarily based on what's on disk. If what is on disk means the
+application cannot sanely/safely initialize all of its data structures
+and thus limits navigation ability, then so be it.
+
+I guess I'm not clear on if/why we'd need xfs_db to stumble along in a
+case where the superblock is hosed enough to cause this kind of problem.
+Why wouldn't we just tell the user to run xfs_repair and exit, for
+example?
+
+> For agcount, I get it - if we can't even /load/ the FS because we OOM,
+> then this debugging tool is of no use.  Partial initialization with a lower
+> agcount, if clearly stated to the user, seems reasonable.
 > 
-> I changed the tests to dump commands to a file and run:
+> But modifying the primary geometry in other ways, such as changing the
+> blocksize or blocklog or dblocks ... I'm just not comfortable with doing
+> that here in service to avoiding that OOM, which is related /only/ to
+> agcount.
 > 
-> _scratch_xfs_db -c "source $seqres.cmd"
+> Many other db functions use these values; modifying the behavior of
+> a low-level debugger by silently "knowing better" than what's on disk
+> based on educated guesses does not sit well with me.
 > 
-> but then discovered that the source command is just plain broken when
-> invoked via -c, so I fixed that.  Then I noticed that you changed
-> common/fuzzy to use a bash array and sent the patch to me, and now I'm
-> wondering if that's a better solution than making tempfiles everywhere.
+> I suppose other alternatives might be things like:
 > 
-> > Regarding xfs/1301, all output from xfs_db should go to 1301.full, so
-> > the existence of the "xfs_db>" prompt is probably not important, but
-> > perhaps there are other factors in play which cause stderr from xfs_db
-> > to get to 1301.out.bad on my system.
-> > I must say that I looked to see where in xfs/1301 or in common/fuzzy
-> > you redirect stderr to stdout and didn't find it.
+> Add an option to read a backup super, instead of the primary
+> Add an option to limit the agcount regardless of what's on disk
 > 
-> /me is confused; there should be a bunch of places where stderr gets
-> redirected to stdout.
+> I guess both of those have the downside of only knowing this should
+> be done /after/ you've OOMed the box on the first try...
 > 
-> $ grep '2>' common/fuzzy -n
-> 32:     find "${SCRATCH_MNT}/" -type f 2> /dev/null | head -n "${nr}" | while read f; do
-> 52:     ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
-> 55:     (find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
-> 180:    newval="$(_scratch_xfs_get_metadata_field "${key}" "$@" 2> /dev/null)"
-> 191:    while _scratch_unmount 2>/dev/null; do sleep 0.2; done
-> 227:    _scratch_mount 2>&1
-> 231:            _scratch_scrub -n -a 1 -e continue 2>&1
-> 239:                    _scratch_scrub -y 2>&1
-> 253:            _repair_scratch_fs 2>&1
-> 261:        _scratch_xfs_repair -n 2>&1
-> 268:    _scratch_mount 2>&1
-> 271:            _scratch_scrub -e continue 2>&1
-> 278:            _scratch_fuzz_modify 100 2>&1
-> 286:    _scratch_xfs_repair -n 2>&1
-> 298:    _scratch_mkfs_xfs >/dev/null 2>&1
+
+These seem like reasonable options if we can detect the off the rails
+superblock and exit. Then the user can try more aggressive options as
+appropriate. The first seems like a reasonable option. The second seems
+like it requires a bit more detail about the supposed corruption and
+might not be as generically useful.
+
+Other options might be to scan for a valid superblock a la xfs_repair or
+just not initialize format data structures such that we enter a crippled
+mode where only raw block access is supported. Either of those might
+still not be worth the extra effort beyond just exiting though..? I'm
+guessing most of the code probably assumes/expects that things are
+initialized one way or another, valid or otherwise..
+
+Brian
+
+> I suppose the other option is to make an educated guess about insane
+> agcount, but without modifying any other superblock buffer values.
 > 
-> Sorry this has been such a mess. :/
+> And hell at that point maybe just default to 1 ag, to give the admin
+> a chance to fix it, and restart xfs_db.  "Insane AG count.  Limiting
+> to 1 AG, please fix and restart xfs_db."
 > 
-> --D
+> Last thought - how does this "fix it up" heuristic affect xfs_check?
 > 
-> > Please enlighten me.
+> -Eric
+> 
+> > +
+> > +	/* Clamp dblocks to the size of the device. */
+> > +	if (sbp->sb_dblocks > x.dsize * x.dbsize / sbp->sb_blocksize)
+> > +		sbp->sb_dblocks = x.dsize * x.dbsize / sbp->sb_blocksize;
+> > +
+> > +	/* See if agblocks helps us find a superblock. */
+> > +	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+> > +	if (load_sb(mp, 1, &sb) && sb.sb_magicnum == XFS_SB_MAGIC) {
+> > +		sbp->sb_agcount = sbp->sb_dblocks / sbp->sb_agblocks;
+> > +		goto out;
+> > +	}
+> > +
+> > +	/* See if agcount helps us find a superblock. */
+> > +	agblocks = sbp->sb_agblocks;
+> > +	sbp->sb_agblocks = sbp->sb_dblocks / sbp->sb_agcount;
+> > +	if (sbp->sb_agblocks != 0 &&
+> > +	    load_sb(mp, 1, &sb) &&
+> > +	    sb.sb_magicnum == XFS_SB_MAGIC) {
+> > +		goto out;
+> > +	}
+> 
+> 
+> 
+> > +
+> > +	/* Both are nuts, assume 1 AG. */
+> > +	sbp->sb_agblocks = agblocks;
+> > +	sbp->sb_agcount = 1;
+> > +out:
+> > +	fprintf(stderr,
+> > +		_("%s: device %s AG count is insane.  Limiting reads to the first %u AGs.\n"),
+> > +		progname, fsdevice, sbp->sb_agcount);
+> > +}
+> > +
+> >  void
+> >  init(
+> >  	int		argc,
+> >  	char		**argv)
+> >  {
+> >  	struct xfs_sb	*sbp;
+> > -	struct xfs_buf	*bp;
+> >  	int		c;
+> >  
+> >  	setlocale(LC_ALL, "");
+> > @@ -124,20 +201,12 @@ init(
+> >  	 */
+> >  	memset(&xmount, 0, sizeof(struct xfs_mount));
+> >  	libxfs_buftarg_init(&xmount, x.ddev, x.logdev, x.rtdev);
+> > -	bp = libxfs_readbuf(xmount.m_ddev_targp, XFS_SB_DADDR,
+> > -			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
+> > -
+> > -	if (!bp || bp->b_error) {
+> > +	if (!load_sb(&xmount, 0, &xmount.m_sb)) {
+> >  		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
+> >  			"bytes)\n"), progname, fsdevice);
+> >  		exit(1);
+> >  	}
+> >  
+> > -	/* copy SB from buffer to in-core, converting architecture as we go */
+> > -	libxfs_sb_from_disk(&xmount.m_sb, XFS_BUF_TO_SBP(bp));
+> > -	libxfs_putbuf(bp);
+> > -	libxfs_purgebuf(bp);
+> > -
+> >  	sbp = &xmount.m_sb;
+> >  	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
+> >  		fprintf(stderr, _("%s: %s is not a valid XFS filesystem (unexpected SB magic number 0x%08x)\n"),
+> > @@ -148,6 +217,8 @@ init(
+> >  		}
+> >  	}
+> >  
+> > +	sanitize_geometry(&xmount, sbp);
+> > +
+> >  	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
+> >  			  LIBXFS_MOUNT_DEBUGGER);
+> >  	if (!mp) {
 > > 
-> > Amir.
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
