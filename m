@@ -1,134 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:36641 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751306AbdAPNpd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jan 2017 08:45:33 -0500
-Received: by mail-lf0-f66.google.com with SMTP id h65so12651414lfi.3
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2017 05:45:32 -0800 (PST)
-Date: Mon, 16 Jan 2017 14:45:28 +0100
-From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
-Subject: Re: [RFC] libxfs: cross-compile fixes
-Message-ID: <20170116144528.47389cb3@gmail.com>
-In-Reply-To: <704667b9-d8d4-974b-6be7-aef2ef275b12@sandeen.net>
-References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
-        <1473493051-12838-1-git-send-email-ralph.sennhauser@gmail.com>
-        <704667b9-d8d4-974b-6be7-aef2ef275b12@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:50868 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751105AbdALPqm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Jan 2017 10:46:42 -0500
+Received: from smtp.corp.redhat.com (int-mx16.intmail.prod.int.phx2.redhat.com [10.5.11.28])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4B96E6DDED
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2017 15:46:43 +0000 (UTC)
+Date: Thu, 12 Jan 2017 09:46:39 -0600
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [RFC PATCH 00/22] mkfs.xfs: Make stronger conflict checks
+Message-ID: <20170112154639.GA21037@redhat.com>
+References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Jan Tulak <jtulak@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Sun, 15 Jan 2017 14:32:00 -0600
-Eric Sandeen <sandeen@sandeen.net> wrote:
-
-> On 9/10/16 2:37 AM, Ralph Sennhauser wrote:
-> > ---
-> > 
-> > Based on the earlier discussion this seems to be the preferred way
-> > of handling things.
-> > 
-> > Should I split it into 3 patches?
-> > Do you want something different to happen when cross-compiling?  
+On Wed, Dec 07, 2016 at 02:27:07PM +0100, Jan Tulak wrote:
+> Hi guys,
 > 
-> Hi Ralph -
-> 
-> I just merged a patch to for-next to address cross-compiling;
-> it was on the list prior to this one.
-> 
-> Can you confirm that it resolves your issues?
+> this set is a follow-up of some old discussions and further attempts to untangle
+> the spaghetti in options parsing. In short, this patchset allows to define
+> cross-option conflicts and makes the conflicts detection more robust.
 
-Hi Eric,
-
-I compile tested 4.9.0 with 0a71e38396304b4d1215ba0b51cd6ce8e33eb40d on
-top. Cross-compiling is fixed for me with this leaving only the d_namlen
-issue with musl for which you already reviewed a patch from me. If that
-gets addressed I can use vanilla xfsprogs.
-
-Thanks
-Ralph
+concept seems good. I'll review the patches.
 
 > 
-> Thanks,
-> -Eric
->  
-> > Cheers
-> > Ralph
-> > 
-> > ---
-> >  configure.ac         |  3 +++
-> >  include/builddefs.in |  1 +
-> >  libxfs/Makefile      | 10 ++++++++--
-> >  3 files changed, 12 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/configure.ac b/configure.ac
-> > index 79053e5..89334d6 100644
-> > --- a/configure.ac
-> > +++ b/configure.ac
-> > @@ -10,11 +10,14 @@ AC_PROG_LIBTOOL
-> >  
-> >  AC_PROG_CC
-> >  if test $cross_compiling = no; then
-> > +  CROSS_COMPILING=no
-> >    BUILD_CC="$CC"
-> >    AC_SUBST(BUILD_CC)
-> >  else
-> > +  CROSS_COMPILING=yes
-> >    AC_CHECK_PROGS(BUILD_CC, gcc cc)
-> >  fi
-> > +AC_SUBST(CROSS_COMPILING)
-> >  
-> >  AC_ARG_ENABLE(shared,
-> >  [ --enable-shared=[yes/no] Enable use of shared libraries
-> > [default=yes]],, diff --git a/include/builddefs.in
-> > b/include/builddefs.in index 7153d7a..0c4ce36 100644
-> > --- a/include/builddefs.in
-> > +++ b/include/builddefs.in
-> > @@ -26,6 +26,7 @@ MALLOCLIB = @malloc_lib@
-> >  LOADERFLAGS = @LDFLAGS@
-> >  LTLDFLAGS = @LDFLAGS@
-> >  CFLAGS = @CFLAGS@
-> > +CROSS_COMPILING = @CROSS_COMPILING@
-> >  
-> >  LIBRT = @librt@
-> >  LIBUUID = @libuuid@
-> > diff --git a/libxfs/Makefile b/libxfs/Makefile
-> > index 62608bd..ad492e5 100644
-> > --- a/libxfs/Makefile
-> > +++ b/libxfs/Makefile
-> > @@ -114,11 +114,15 @@ DEBUG = -DNDEBUG
-> >  
-> >  LDIRT = gen_crc32table crc32table.h crc32selftest
-> >  
-> > +ifeq ($(CROSS_COMPILING),no)
-> > +BUILD_CFLAGS:=$(CFLAGS)
-> > +endif
-> > +
-> >  default: crc32selftest ltdepend $(LTLIBRARY)
-> >  
-> >  crc32table.h: gen_crc32table.c
-> >  	@echo "    [CC]     gen_crc32table"
-> > -	$(Q) $(BUILD_CC) $(CFLAGS) -o gen_crc32table $<
-> > +	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
-> >  	@echo "    [GENERATE] $@"
-> >  	$(Q) ./gen_crc32table > crc32table.h
-> >  
-> > @@ -128,9 +132,11 @@ crc32table.h: gen_crc32table.c
-> >  # busted CRC calculation at build time and hence avoid putting bad
-> > CRCs down on # disk.
-> >  crc32selftest: gen_crc32table.c crc32table.h crc32.c
-> > +ifeq ($(CROSS_COMPILING),no)
-> >  	@echo "    [TEST]    CRC32"
-> > -	$(Q) $(BUILD_CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o
-> > $@
-> > +	$(Q) $(CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
-> >  	$(Q) ./$@
-> > +endif
-> >  
-> >  # set up include/xfs header directory
-> >  include $(BUILDRULES)
-> >   
-
+> Until now, we had the ability to define conflicts within one option (e.g. -d
+> sunit/su), but things like -i attr=1 -m crc=1 conflict had to be watched for on
+> case by case basis somewhere in the code. Now, when even those situations are
+> handled by the same code, it is enough to just add a new entry into a table of
+> options. Thus, a reduced chance for an error and easier adding of new cases.
+> 
+> One of the biggest changes in this set is that user input is now stored in
+> directly in the opts table defining allowed range and the like, and variables
+> in the main() of mkfs.xfs are now just aliases/pointers. This allows as to do
+> conditional checks based on actual values, not only on occurence of an option.
+> 
+> (A technical note here is that not every value can be saved in a single place
+> like this. Some values are already stored in a table or structure and I wanted
+> to avoid modifying anything outside of xfs_mkfs.c.)
+> 
+> I tested it with full xfstests suit and the only failed tests I saw are because
+> some ambiguity in arguments parsing was removed. E.g. sometimes it was possible
+> to specify size in blocks without stating the blocksize first, even if manpage
+> explicitly requires -b or -s to be used before.
+> 
+> I already submitted part of this patchset as RFC before, but as I got no reply,
+> I tried to finish it before submitting again. So, this set works as it is. I
+> still have some questions, but they can be answered with "let's keep it as it
+> is."
+> 
+> Number one is simple: What values can use block/sector sizes as user input?
+> There is an inconsistency or ambiguity between manual page and the code. Look
+> at man page for -d agsize.
+> 
+> 	agsize=value
+> 		This is an alternative to using the  agcount  subop‐
+> 		tion.  The  value is the desired size of the alloca‐
+> 		tion group expressed in bytes (usually using  the  m
+> 		                     ^^^^^^^^
+> 		or  g  suffixes).   This value must be a multiple of
+> 		[ ... ]
+> 
+> 
+> The option -d agsize explicitly states that it accepts size in bytes, in a
+> similar tone to the one used for describe allowed values for -s/-b size:
+> 
+> 	value in bytes with size=value
+> 	      ^^^^^^^^
+> 
+> However, -d agsize=1234s input was accepted as valid until now. Is the manual
+> page misleading, or are the options where b/s suffix is forbidden are
+> block/sector size definitions? I decided to err on the compatibility side and
+> kept the current behaviour - only blocksize or sectorsize can't be stated in
+> blocks and sectors, but it can be easily changed.
+> 
+> I will send an update for xfstests once I know what behaviour is correct.
+> 
+> 
+> The other question about this patchset is: As we are saving all the values in
+> the opt_params table, and the values have different types, I thought it
+> necessary to not use a single data type for everything and created an union
+> field (could be easily changed to struct, that would not change anything
+> important). Do you see any non-adressed issue with this approach? Is there
+> another way how to solve the problem?
+> 
+> If nothing else, numbers and strings can't be easily saved in a single
+> variable. Also, as we are using shift operations, any type conversions
+> (like storing everything in long long type) could cause trouble. This is one of
+> the reasons why I'm changed the variables in main() to pointers. This allows
+> for simple and easy access to the correct union field, so unless one is adding
+> a new option, there should be no need to remember the correct date type. If the
+> pointer assignment is done correctly, then GCC will watch for type mismatch.
+> 
+> I really couldn't find out better solution, but see for yourself, this change
+> is done in "mkfs: Change all value fields in opt structures into unions"
+> and "mkfs: use old variables as pointers to the new opts struct values".
+> 
+> 
+> So, I think this is all I wanted to cover in the cover letter. :-)
+> I will be glad for any comments or bugs you find out.
+> 
+> Thanks for your time,
+> 
+> Jan
+> 
+> 
+> Jan Tulak (22):
+>   mkfs: remove intermediate getstr followed by getnum
+>   mkfs: merge tables for opts parsing into one table
+>   mkfs: extend opt_params with a value field
+>   mkfs: change conflicts array into a table capable of cross-option
+>     addressing
+>   mkfs: add a check for conflicting values
+>   mkfs: add cross-section conflict checks
+>   mkfs: Move opts related #define to one place
+>   mkfs: move conflicts into the table
+>   mkfs: change conflict checks to utilize the new conflict structure
+>   mkfs: change when to mark an option as seen
+>   mkfs: add test_default_value into conflict struct
+>   mkfs: expand conflicts declarations to named declaration
+>   mkfs: remove zeroed items from conflicts declaration
+>   mkfs: rename defaultval to flagval in opts
+>   mkfs: replace SUBOPT_NEEDS_VAL for a flag
+>   mkfs: Change all value fields in opt structures into unions
+>   mkfs: use old variables as pointers to the new opts struct values
+>   mkfs: prevent sector/blocksize to be specified as a number of blocks
+>   mkfs: subopt flags should be saved as bool
+>   mkfs: move uuid empty string test to getstr()
+>   mkfs: remove duplicit checks
+>   mkfs: prevent multiple specifications of a single option
+> 
+>  mkfs/xfs_mkfs.c | 2952 +++++++++++++++++++++++++++++++++++--------------------
+>  1 file changed, 1864 insertions(+), 1088 deletions(-)
+> 
+> -- 
+> 2.8.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
