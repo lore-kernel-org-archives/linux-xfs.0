@@ -1,67 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49378 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:33906 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750780AbdAZEOS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Jan 2017 23:14:18 -0500
-Subject: Re: [PATCH v2] xfs: clear _XBF_PAGES from buffers when readahead page
- allocation fails
-References: <20170126035330.GU9134@birch.djwong.org>
+        id S1750812AbdALRRX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Jan 2017 12:17:23 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 8A2595CCE4A
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2017 11:15:07 -0600 (CST)
+Subject: [PATCH 3/3] libxfs-apply: minor improvements
+References: <056383cb-cf7e-3880-aecf-d97d5516a60f@sandeen.net>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c1361fc7-a16d-0aa0-2fdd-973ea1949cd0@sandeen.net>
-Date: Wed, 25 Jan 2017 22:14:17 -0600
+Message-ID: <7f6aba51-3b6d-0ba2-57b8-344bc7fc32b7@sandeen.net>
+Date: Thu, 12 Jan 2017 11:15:52 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170126035330.GU9134@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <056383cb-cf7e-3880-aecf-d97d5516a60f@sandeen.net>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 1/25/17 9:53 PM, Darrick J. Wong wrote:
-> If we try to allocate memory pages to back an xfs_buf that we're trying
-> to read, it's possible that we'll be so short on memory that the page
-> allocation fails.  For a blocking read we'll just wait, but for
-> readahead we simply dump all the pages we've collected so far.
-> 
-> Unfortunately, after dumping the pages we neglect to clear the
-> _XBF_PAGES state, which means that the subsequent call to xfs_buf_free
-> thinks that b_pages still points to pages we own.  It then double-frees
-> the b_pages pages.
-> 
-> This results in screaming about negative page refcounts from the memory
-> manager, which xfs oughtn't be triggering.  To reproduce this case,
-> mount a filesystem where the size of the inodes far outweighs the
-> availalble memory (a ~500M inode filesystem on a VM with 300MB memory
-> did the trick here) and run bulkstat in parallel with other memory
-> eating processes to put a huge load on the system.  The "check summary"
-> phase of xfs_scrub also works for this purpose.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Three quick improvements to libxfs-apply:
 
-Thanks for the updated changelog, looks good.
+- Skip already-cross-merged commits, based on the
+  "Source XXX commit" line in the commitlog.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+- Be clearer about which patch failed if it does
 
-> ---
->  fs/xfs/xfs_buf.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 7f0a01f..ac3b4db 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -422,6 +422,7 @@ xfs_buf_allocate_memory(
->  out_free_pages:
->  	for (i = 0; i < bp->b_page_count; i++)
->  		__free_page(bp->b_pages[i]);
-> +	bp->b_flags &= ~_XBF_PAGES;
->  	return error;
->  }
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+- Clean up guilt better after a failed application
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ tools/libxfs-apply | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/tools/libxfs-apply b/tools/libxfs-apply
+index 5cf0879..e7d7e0a 100755
+--- a/tools/libxfs-apply
++++ b/tools/libxfs-apply
+@@ -288,6 +288,7 @@ apply_patch()
+ 	local _current_commit=$3
+ 	local _new_patch=`mktemp`
+ 	local _source="kernel"
++	local _target="xfsprogs"
+ 
+ 	# filter just the libxfs parts of the patch
+ 	if [ $SOURCE == "xfsprogs" ]; then
+@@ -301,6 +302,7 @@ apply_patch()
+ 
+ 		filter_kernel_patch $_patch > $_new_patch
+ 		_source="xfsprogs"
++		_target="kernel"
+ 	elif [ $SOURCE == "kernel" ]; then
+ 
+ 		[ -n "$VERBOSE" ] || lsdiff $_patch | grep -q "[ab]/fs/xfs/libxfs/"
+@@ -315,6 +317,13 @@ apply_patch()
+ 		fail "Unknown source repo type: $SOURCE"
+ 	fi
+ 
++	grep -q "Source $_target commit: " $_patch
++	if [ "$?" -eq "0" ]; then
++		echo "$_patch_name already synced up"
++		echo "$_skipping commit $_current_commit"
++		return
++	fi
++
+ 	# now munge the header to be in the correct format.
+ 	fixup_header_format $_source $_new_patch > $_new_patch.2
+ 
+@@ -338,14 +347,15 @@ apply_patch()
+ 		if [ $? -eq 0 ]; then
+ 			guilt refresh
+ 		else
+-			echo "Guilt push failed!"
++			echo "Guilt push of $_current_commit $_patch_name failed!"
+ 			read -r -p "Skip or Fail [s|F]? " response
+ 			if [ -z "$response" -o "$response" != "s" ]; then
+ 				echo "Force push patch, fix and refresh."
+ 				echo "Restart from commit $_current_commit"
+ 				fail "Manual cleanup required!"
+ 			else
+-				echo "Skipping. Manual series file cleanup needed!"
++				echo "Skipping."
++				guilt delete -f $_patch_name
+ 			fi
+ 		fi
+ 	elif [ $STGIT -eq 1 ]; then
+-- 
+1.8.3.1
+
+
