@@ -1,214 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:21204 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753035AbdATUHf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 15:07:35 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v0KK7Uag018687
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2017 20:07:30 GMT
-Date: Fri, 20 Jan 2017 12:06:23 -0800
+Received: from userp1040.oracle.com ([156.151.31.81]:38915 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751086AbdALULB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Jan 2017 15:11:01 -0500
+Date: Thu, 12 Jan 2017 12:10:55 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/5] xfs_repair: strengthen geometry checks
-Message-ID: <20170120200623.GE12985@birch.djwong.org>
-References: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
- <148419041963.32674.9938209133184119040.stgit@birch.djwong.org>
- <0b7d6af0-d0f0-ee5c-d613-54e03e42fc9e@sandeen.net>
+Subject: Re: [PATCH v4 00/47] xfs: online scrub/repair support
+Message-ID: <20170112201055.GD5883@birch.djwong.org>
+References: <148374934333.30431.11042523766304087227.stgit@birch.djwong.org>
+ <CAOQ4uxhhOqhsZwrncsfUmra9nLGKpF2mFGp35BuiPyucWkN1yw@mail.gmail.com>
+ <20170109211540.GB14038@birch.djwong.org>
+ <20170110075444.GL1859@eguan.usersys.redhat.com>
+ <CAOQ4uxis3RwHSaTVqxmH0dNFLU4fVc0CtL2bCcsDgyMyaAfTRA@mail.gmail.com>
+ <CAOQ4uxiFg18fVh3RFr-Y1-XRmV82dTxc5r05QH8OFYpv2=juvg@mail.gmail.com>
+ <CAOQ4uxhTPt7t4-4MmQwogy+d4mgyG+=MX=12NX8R4V-hGR1q0w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0b7d6af0-d0f0-ee5c-d613-54e03e42fc9e@sandeen.net>
+In-Reply-To: <CAOQ4uxhTPt7t4-4MmQwogy+d4mgyG+=MX=12NX8R4V-hGR1q0w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-On Fri, Jan 13, 2017 at 08:13:17PM -0600, Eric Sandeen wrote:
-> On 1/11/17 9:06 PM, Darrick J. Wong wrote:
-> > In xfs_repair, the inodelog, sectlog, and dirblklog values are read
-> > directly into the xfs_mount structure without any sanity checking by the
-> > verifier.  This results in xfs_repair segfaulting when those fields have
-> > ridiculously high values because the pointer arithmetic runs us off the
-> > end of the metadata buffers.  Therefore, reject the superblock if these
-> > values are garbage and try to find one of the other ones.
-> > 
-> > Also clean up the dblocks checking to use the relevant macros and remove
-> > a bogus ASSERT that crashes repair when sunit is set but swidth isn't.
-> > 
-> > The superblock field fuzzer (xfs/1301) triggers all these segfaults.
+On Thu, Jan 12, 2017 at 07:18:05PM +0200, Amir Goldstein wrote:
+> On Tue, Jan 10, 2017 at 10:42 AM, Amir Goldstein <amir73il@gmail.com> wrote:
+> > On Tue, Jan 10, 2017 at 10:13 AM, Amir Goldstein <amir73il@gmail.com> wrote:
+> >> On Tue, Jan 10, 2017 at 9:54 AM, Eryu Guan <eguan@redhat.com> wrote:
+> >>> On Mon, Jan 09, 2017 at 01:15:40PM -0800, Darrick J. Wong wrote:
+> ...
+> >>>>
+> >>>> All the tests?  The full dmesg output would be useful to narrow it down to
+> >>>> a specific xfstest number, field name, and fuzz verb.  I'm running them
+> >>>
+> >>
+> >> In my case, yes, most of the test (51 out of 65) failed due to
+> >> some sort of crash, but the entire system is so unstable due to all the OOM
+> >> killing that the entire dmesg output is a big mess.
+> >>
+> >> I'll rerun only 1301 to send my logs.
+> >>
+> >>
+> >
+> > See attached:
+> >
+> > 1. full results of first run of ./check -g dangerous_scrub,scrub
+> >     with TEST_XFS_SCRUB=1
+> >
+> > 2. dmesg from the same run (51 out of 65 failed)
+> >
+> > 3. dmesg from rerun of few selected tests without TEST_XFS_SCRUB=1
+> >     (all tests failed)
 > 
-> ok, thinking out loud below.  Mostly fine but question at the end.
+> Darrick,
 > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  repair/sb.c         |   19 ++++++++++++++-----
-> >  repair/xfs_repair.c |    5 ++++-
-> >  2 files changed, 18 insertions(+), 6 deletions(-)
-> > 
-> > 
-> > diff --git a/repair/sb.c b/repair/sb.c
-> > index 004702c..d784420 100644
-> > --- a/repair/sb.c
-> > +++ b/repair/sb.c
-> > @@ -395,21 +395,26 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
-> >  	/* sanity check ag count, size fields against data size field */
-> >  
-> >  	if (sb->sb_dblocks == 0 ||
-> > -		sb->sb_dblocks >
-> > -			((__uint64_t)sb->sb_agcount * sb->sb_agblocks) ||
-> > -		sb->sb_dblocks <
-> > -			((__uint64_t)(sb->sb_agcount - 1) * sb->sb_agblocks
-> > -			+ XFS_MIN_AG_BLOCKS))
-> > +		sb->sb_dblocks > XFS_MAX_DBLOCKS(sb) ||
-> > +		sb->sb_dblocks < XFS_MIN_DBLOCKS(sb))
+> Before I am heading home for the weekend, here is another dump of test results
+> from re-running 1301 and 1316.
 > 
-> Ok so this is just proper macro replacement, all good.
+> The changes I had to make in order to get to these results are:
 > 
-> >  		return(XR_BAD_FS_SIZE_DATA);
-> >  
-> >  	if (sb->sb_agblklog != (__uint8_t)libxfs_log2_roundup(sb->sb_agblocks))
-> >  		return(XR_BAD_FS_SIZE_DATA);
-> >  
-> > +	if (sb->sb_inodelog < XFS_DINODE_MIN_LOG ||
-> > +		sb->sb_inodelog > XFS_DINODE_MAX_LOG ||
-> > +		sb->sb_inodelog != libxfs_log2_roundup(sb->sb_inodesize))
-> > +		return XR_BAD_INO_SIZE_DATA;
-> > +
+> 1. Apply your patch for geometry sanity check to xfs_db/xfs_repair
+> 75581a8 xfs_db: sanitize geometry on load
+> 2efc292 xfs_scrub: create a script to scrub all xfs filesystems
 > 
-> missing parentheses on the return.  (I kid!)
+> 2. Apply my patch to common/fuzzy
+> 0bf843b fuzzy: use xfs_db -c to execute commands
+> 1377e1e xfs: fuzz every field of every structure
+> 
+> 3. Convert ASSERT() with XFS_DEBUG=y to asswarn(), because fuzzing
+> keeps tripping the kernel over with ASSERTS (see attached dmesg logs)
+> 
+> In the attached results, both tests get ASSERTs (see *.dmesg).
+> In test 1301, xfs_repair gets several SIGSEGV and SIGPFE (see 1301.full)
+> and xfs_db gets several SIGFPE (see 1301.out.bad).
+> 
+> This is a sample backtrace from SIGPFE in xfs_repair:
 
-:P
+The xfs_repair problems I think stem from trying to use the fubar'd AG0
+superblock instead of giving up on it and searching for another sb.  Try
+the patch "xfs_repair: strengthen geometry checks" to see if the repair
+crashes go away.
 
-> Ok, we haven't checked out inodesize yet, so if it's wrong, the above
-> might return XR_BAD_INO_SIZE_DATA even if sb_inodelog is ok.
-> I suppose that's fine.
-> 
-> hm at some point I wonder if this should more closely match
-> xfs_mount_validate_sb (or vice versa)
-> 
-> That function does:
-> 
->             sbp->sb_inodesize != (1 << sbp->sb_inodelog)                ||
-> 
-> which is the reverse I guess.
-> 
-> >  	if (sb->sb_inodesize < XFS_DINODE_MIN_SIZE ||
-> >  		sb->sb_inodesize > XFS_DINODE_MAX_SIZE ||
-> >  		sb->sb_inopblock != howmany(sb->sb_blocksize,sb->sb_inodesize))
-> >  		return(XR_BAD_INO_SIZE_DATA);
-> 
-> Ok, this doesn't cross-check inodesize vs. inodelog, but I guess that's
-> already done above.
-> 
-> > +	if (sb->sb_blocklog - sb->sb_inodelog != sb->sb_inopblog)
-> > +		return XR_BAD_INO_SIZE_DATA;
-> > +
-> 
-> oh yeah that too.
-> 
-> I do kind of wonder if we shouldn't just match that mount code more
-> closely, and just do
-> 
-> if (sbp->sb_inodesize < XFS_DINODE_MIN_SIZE                     ||
->     sbp->sb_inodesize > XFS_DINODE_MAX_SIZE                     ||
->     sbp->sb_inodelog < XFS_DINODE_MIN_LOG                       ||
->     sbp->sb_inodelog > XFS_DINODE_MAX_LOG                       ||
->     sbp->sb_inodesize != (1 << sbp->sb_inodelog)                ||
->     sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE                    ||
->     sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
->     (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog))
-> 	return XR_BAD_INO_SIZE_DATA;
-
-Ick, yes, I'll just replace all that with this.
-
-> >  	if (xfs_sb_version_hassector(sb))  {
-> >  
-> >  		/* check to make sure log sector is legal 2^N, 9 <= N <= 15 */
-> > @@ -494,6 +499,10 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
-> >  			return(XR_BAD_SB_WIDTH);
-> >  	}
-> >  
-> > +	/* Directory block log */
-> > +	if (sb->sb_dirblklog > XFS_MAX_BLOCKSIZE_LOG)
-> > +		return XR_BAD_FS_SIZE_DATA;
-> > +
-> 
-> OK anyway, if any of this fails we go and take a vote from secondaries,
-> should be fine.
-> 
-> >  	return(XR_OK);
-> >  }
-> >  
-> > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> > index 5c79fd9..8d4be83 100644
-> > --- a/repair/xfs_repair.c
-> > +++ b/repair/xfs_repair.c
-> > @@ -621,7 +621,10 @@ is_multidisk_filesystem(
-> >  	if (!sbp->sb_unit)
-> >  		return false;
-> >  
-> > -	ASSERT(sbp->sb_width);
-> > +	/* Stripe unit but no stripe width?  Something's funny here... */
-> > +	if (!sbp->sb_width)
-> > +		return false;
-> > +
-> 
-> verify_sb did already sanitize this...
-> 
->         /*
->          * verify stripe alignment fields if present
->          */
->         if (xfs_sb_version_hasdalign(sb)) {
->                 if ((!sb->sb_unit && sb->sb_width) ||
->                     (sb->sb_unit && sb->sb_agblocks % sb->sb_unit))
->                         return(XR_BAD_SB_UNIT);
->                 if ((sb->sb_unit && !sb->sb_width) ||
->                     (sb->sb_width && sb->sb_unit && sb->sb_width % sb->sb_unit))
->                         return(XR_BAD_SB_WIDTH);
->         }
-> 
-> so we do this when we start up:
-> 
-> main
->     get_sb
->         verify_sb
->     ...
->     is_multidisk_filesystem
-> 
-> by then it should have been ok, what path did you hit this on?
-> 
-> Seems like we shouldn't be making decisions about "is multidisk"
-> here, we should be saying "bad superblock" somewhere earlier, no?
-> 
-> I mean, bailing with false is fine I /guess/ but I think the ASSERT
-> implies that we should have already verified that both or none
-> are set...
-
-Start with a filesystem with sunit = swidth = 0 and !hasdalign.
-
-# xfs_db -x -c 'sb 0' -c 'fuzz -d sb_unit random' /dev/XXX
-
-Note that we /don't/ turn on XFS_SB_VERSION_DALIGNBIT here, so the
-verify_sb check doesn't reject the sb.  But then is_multidisk_filesystem
-fails to look for hasdalign and just goes ahead and uses sunit/swidth,
-triggering the assert.
+As for xfs_db, yeah, bonkers geometry can make it explode... not clear
+what we realistically can do about that; second-guessing the geometry
+hasn't proven popular.
 
 --D
 
+> Core was generated by `/sbin/xfs_repair -n /dev/mapper/storage-scratch'.
+> Program terminated with signal SIGFPE, Arithmetic exception.
+> #0  0x0000000000434053 in libxfs_mount (mp=mp@entry=0x7ffd5e9cdd50,
+> sb=sb@entry=0x7ffd5e9cdc40, dev=64514, logdev=<optimized out>,
+> rtdev=<optimized out>, flags=flags@entry=0) at init.c:702
+> 702                     mp->m_maxicount = ((mp->m_maxicount /
+> mp->m_ialloc_blks) *
+> (gdb) bt
+> #0  0x0000000000434053 in libxfs_mount (mp=mp@entry=0x7ffd5e9cdd50,
+> sb=sb@entry=0x7ffd5e9cdc40, dev=64514, logdev=<optimized out>,
+> rtdev=<optimized out>, flags=flags@entry=0) at init.c:702
+> #1  0x0000000000403758 in main (argc=<optimized out>, argv=<optimized
+> out>) at xfs_repair.c:724
+> (gdb) p mp->m_ialloc_blks
+> $1 = 0
+> (gdb)
 > 
-> -Eric
+> Here is another from SIGSEGV in xfs_repair:
 > 
-> >  	return true;
-> >  }
-> >  
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Core was generated by `/sbin/xfs_repair -n /dev/mapper/storage-scratch'.
+> Program terminated with signal SIGSEGV, Segmentation fault.
+> #0  xfs_inode_buf_verify (bp=0x7fe02400d410, readahead=false) at
+> xfs_inode_buf.c:102
+> 102                     di_ok = dip->di_magic ==
+> cpu_to_be16(XFS_DINODE_MAGIC) &&
+> [Current thread is 1 (Thread 0x7fe042d18700 (LWP 22284))]
+> (gdb) bt
+> #0  xfs_inode_buf_verify (bp=0x7fe02400d410, readahead=false) at
+> xfs_inode_buf.c:102
+> #1  0x0000000000436b53 in libxfs_readbuf_verify
+> (bp=bp@entry=0x7fe02400d410, ops=<optimized out>) at rdwr.c:966
+> #2  0x0000000000426d6d in pf_read_inode_dirs (bp=0x7fe02400d410,
+> args=0xcdcaf0) at prefetch.c:402
+> #3  pf_batch_read (args=args@entry=0xcdcaf0,
+> which=which@entry=PF_PRIMARY, buf=buf@entry=0x7fe03c026400) at
+> prefetch.c:599
+> #4  0x000000000042705c in pf_io_worker (param=0xcdcaf0) at prefetch.c:661
+> #5  0x00007fe052ee06fa in start_thread (arg=0x7fe042d18700) at
+> pthread_create.c:333
+> #6  0x00007fe0529d5b5d in clone () at
+> ../sysdeps/unix/sysv/linux/x86_64/clone.S:109
+> (gdb) p dip
+> $1 = (xfs_dinode_t *) 0x7fe02420d600
+> (gdb) p mp
+> $2 = (struct xfs_mount *) 0x7ffca0f3dd80
+> (gdb)
+> 
+> And here is one from SIGPFE in xfs_db, which is similar to the xfs_repair one:
+> 
+> Core was generated by `/usr/sbin/xfs_db -F -i -p xfs_check -c check
+> /dev/mapper/storage-scratch'.
+> Program terminated with signal SIGFPE, Arithmetic exception.
+> #0  0x0000000000426a63 in libxfs_mount (mp=mp@entry=0x6af480 <xmount>,
+> sb=sb@entry=0x6af480 <xmount>, dev=64514, logdev=<optimized out>,
+> rtdev=<optimized out>, flags=flags@entry=1) at init.c:702
+> 702                     mp->m_maxicount = ((mp->m_maxicount /
+> mp->m_ialloc_blks) *
+> (gdb) bt
+> #0  0x0000000000426a63 in libxfs_mount (mp=mp@entry=0x6af480 <xmount>,
+> sb=sb@entry=0x6af480 <xmount>, dev=64514, logdev=<optimized out>,
+> rtdev=<optimized out>, flags=flags@entry=1) at init.c:702
+> #1  0x0000000000418233 in init (argc=<optimized out>,
+> argv=argv@entry=0x7ffd0a100058) at init.c:222
+> #2  0x0000000000404fd7 in main (argc=<optimized out>,
+> argv=0x7ffd0a100058) at init.c:267
+> (gdb) p mp->m_ialloc_blks
+> $1 = 0
+> (gdb)
+> 
+> Hope this will help you narrow down the suspects.
+> 
+> Amir.
+
+
