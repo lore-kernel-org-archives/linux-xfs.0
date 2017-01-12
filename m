@@ -1,489 +1,613 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36407 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750769AbdALN6E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Jan 2017 08:58:04 -0500
-Received: by mail-oi0-f65.google.com with SMTP id u143so2895638oif.3
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2017 05:57:23 -0800 (PST)
+Received: from mail-io0-f177.google.com ([209.85.223.177]:36265 "EHLO
+        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750862AbdALRqL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Jan 2017 12:46:11 -0500
+Received: by mail-io0-f177.google.com with SMTP id j13so24209872iod.3
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2017 09:46:11 -0800 (PST)
+Subject: Re: [PATCH 1/3] Update licenses in COPYING file
+References: <056383cb-cf7e-3880-aecf-d97d5516a60f@sandeen.net>
+ <80ca41bc-ca18-8615-0452-33c1f33342ee@sandeen.net>
+From: Alex Elder <elder@ieee.org>
+Message-ID: <363dfd12-5e9e-1149-0d7e-f51740e3d6d3@ieee.org>
+Date: Thu, 12 Jan 2017 11:46:08 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170111173227.GS14038@birch.djwong.org>
-References: <20170110194249.GK14038@birch.djwong.org> <CAOQ4uxggOoFJ_KR40XX2hU+bSr9zqXu9y_7HWqVxTfQ6ETC4hA@mail.gmail.com>
- <CAOQ4uxj+H4ZAXkPgob5ANJW=BDBzj6P2nKbb3aE9w1igGmcRfw@mail.gmail.com> <20170111173227.GS14038@birch.djwong.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 12 Jan 2017 15:57:21 +0200
-Message-ID: <CAOQ4uxhc50WvRgDUzzCjOjJECa9QnmQ_yGeucu+692YRt2j6ew@mail.gmail.com>
-Subject: Re: [RFC PATCH] xfs_db: sanitize geometry on load
-Content-Type: multipart/mixed; boundary=001a113d7532a9f9b60545e618bd
+In-Reply-To: <80ca41bc-ca18-8615-0452-33c1f33342ee@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
 
---001a113d7532a9f9b60545e618bd
-Content-Type: text/plain; charset=UTF-8
+On 01/12/2017 11:13 AM, Eric Sandeen wrote:
+> doc/COPYING was a mess, it included old versions of licenses
+> and included the GPLv2 license twice.  Update licenses,
+> URLs, and eliminate duplicate info.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-On Wed, Jan 11, 2017 at 7:32 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Wed, Jan 11, 2017 at 12:01:22PM +0200, Amir Goldstein wrote:
-...
->> Now I am hitting these xfs_db crashes during xfs/1316, which are apparently not
->> related to OOM killer. I have seen them last run as well but dmesg is quiet now.
->>
->> xfs/1316        *** Error in `/usr/sbin/xfs_db': free(): invalid
->> pointer: 0x00007f9dbf036b78 ***
->> ======= Backtrace: =========
->> /lib/x86_64-linux-gnu/libc.so.6(+0x77725)[0x7f9dbecea725]
->> /lib/x86_64-linux-gnu/libc.so.6(+0x7ff4a)[0x7f9dbecf2f4a]
->> /lib/x86_64-linux-gnu/libc.so.6(cfree+0x4c)[0x7f9dbecf6abc]
->> /usr/sbin/xfs_db[0x414961]
->> /usr/sbin/xfs_db[0x4154de]
->> /usr/sbin/xfs_db[0x420d38]
->> /usr/sbin/xfs_db[0x420926]
->> /usr/sbin/xfs_db[0x405125]
->> /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf0)[0x7f9dbec93830]
->> /usr/sbin/xfs_db[0x405179]
->
-> Ok well I definitely don't see /this/ happening.  I gather you built
-> xfsprogs with the insane geometry patch; if so, against what git commit?
-> And, did the binary get installed as /usr/sbin/xfs_db, or is this just
-> the system xfs_db?
->
+You might consider using SPDX for identifying the
+license that applies.
 
-The story with xfs/1316 is that _scratch_xfs_get_metadata_field is broken
-for some reason related to feeding stdin to xfs_db and the following line ends
-up with empty inode_ver:
-inode_ver=$(_scratch_xfs_get_metadata_field "core.version" "inode ${inum}")
-and it's all down hill from there
+This is for LGPL 2.1 (but it does not incorporate the "or later"
+statement that's found here).
+  https://spdx.org/licenses/LGPL-2.1.html
+Here's GPL 2.0:
+  https://spdx.org/licenses/GPL-2.0.html
 
-I fixed _scratch_xfs_get_metadata_field and friends to use xfs_db -c
-(see attached fuzzy.patch)
-and then I got this assertion when running xfs/1316:
-(attached full results and dmesg upto the assert)
+					-Alex
 
-Jan 12 15:40:23 c800p-fstests kernel: [338446.829922] XFS: Assertion
-failed: i + num_recs <= room, file:
-/home/amir/src/linux/fs/xfs/libxfs/xfs_bmap.c, line: 1331
-Jan 12 15:40:23 c800p-fstests kernel: [338446.829948] ------------[
-cut here ]------------
-Jan 12 15:40:23 c800p-fstests kernel: [338446.829978] kernel BUG at
-/home/amir/src/linux/fs/xfs/xfs_message.c:113!
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830006] invalid opcode:
-0000 [#1] SMP
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830023] Modules linked
-in: btrfs xor raid6_pq ufs qnx4 hfsplus hfs minix ntfs msdos jfs xfs
-dm_thin_pool dm_persistent_data dm_bio_prison dm_snapshot dm_bufio
-dm_flakey libcrc32c pl2303 usbserial snd_hda_codec_hdmi
-snd_hda_codec_realtek snd_hda_codec_generic snd_hda_intel
-snd_hda_codec snd_hda_core intel_rapl snd_pcm x86_pkg_temp_thermal
-intel_powerclamp coretemp snd_hwdep crct10dif_pclmul crc32_pclmul
-snd_seq_midi aesni_intel snd_seq_midi_event aes_x86_64 snd_rawmidi
-crypto_simd cryptd snd_seq glue_helper snd_timer snd_seq_device
-serio_raw snd soundcore mei_me lpc_ich ie31200_edac shpchp mei
-edac_core mac_hid parport_pc ppdev lp parport autofs4 i915
-i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt
-fb_sys_fops drm psmouse ahci libahci r8169 mii video [last unloaded:
-xfs]
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830311] CPU: 2 PID: 3784
-Comm: xfs_scrub Not tainted 4.10.0-rc2+ #14
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830338] Hardware name:
-Gigabyte Technology Co., Ltd. To be filled by O.E.M./B75N, BIOS F3
-10/23/2012
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830374] task:
-ffff8e2d4bd8cf80 task.stack: ffffa1334dac8000
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830447] RIP:
-0010:assfail+0x20/0x30 [xfs]
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830466] RSP:
-0018:ffffa1334dacb838 EFLAGS: 00010246
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830489] RAX:
-0000000000000000 RBX: ffff8e2ac1bac000 RCX: 0000000000000000
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830518] RDX:
-00000000ffffffc0 RSI: 000000000000000a RDI: ffffffffc0854a65
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830545] RBP:
-ffffa1334dacb838 R08: 0000000000000000 R09: 0000000000000000
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830573] R10:
-000000000000000a R11: f000000000000000 R12: 0000000000000082
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830602] R13:
-000000000000007f R14: ffff8e2b57031488 R15: ffff8e2a7e34f838
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830630] FS:
-00007fcb89489700(0000) GS:ffff8e2d4e800000(0000)
-knlGS:0000000000000000
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830662] CS:  0010 DS:
-0000 ES: 0000 CR0: 0000000080050033
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830686] CR2:
-00007fcb8bdfac60 CR3: 0000000276993000 CR4: 00000000001406e0
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830714] Call Trace:
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830756]
-xfs_bmap_read_extents+0x403/0x500 [xfs]
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830810]
-xfs_iread_extents+0x99/0x180 [xfs]
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830862]
-xfs_bmap_count_blocks+0x1f7/0x240 [xfs]
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830921]
-xfs_scrub_inode+0x717/0x12e0 [xfs]
-Jan 12 15:40:23 c800p-fstests kernel: [338446.830978]  ?
-__xfs_scrub_setup_inode+0x2c0/0x2c0 [xfs]
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831035]
-xfs_scrub_metadata+0x381/0xa20 [xfs]
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831090]  ?
-xfs_scrub_setup_inode+0x20/0x20 [xfs]
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831147]
-xfs_ioc_scrub_metadata+0x6d/0xd0 [xfs]
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831201]
-xfs_file_ioctl+0xa3e/0xe20 [xfs]
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831222]  ?
-__lock_acquire+0x27f/0x14b0
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831242]  ?
-mntput_no_expire+0x5/0x3f0
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831260]  ? sched_clock+0x9/0x10
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831277]  ?
-sched_clock_cpu+0xa1/0xb0
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831295]  ? __fget+0xf5/0x200
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831311]  do_vfs_ioctl+0xa4/0x710
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831328]  ? __fget+0x114/0x200
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831344]  ? __fget+0x5/0x200
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831360]  SyS_ioctl+0x79/0x90
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831377]
-entry_SYSCALL_64_fastpath+0x23/0xc6
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831397] RIP: 0033:0x7fcb8bd89687
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831413] RSP:
-002b:00007fcb89486538 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831443] RAX:
-ffffffffffffffda RBX: 0000000000000001 RCX: 00007fcb8bd89687
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831471] RDX:
-00007fcb89486670 RSI: 00000000c040583c RDI: 0000000000000003
-Jan 12 15:40:23 c800p-fstests kernel: [338446.831499] RBP:
-0000000001a2c2a0 R08: 0000000000000000 R09: 0000000000000010
-Jan 12 15:40:23 c800p-fstests kernel: [338446.832426] R10:
-0000000000000006 R11: 0000000000000246 R12: 00007fff8f118e10
-Jan 12 15:40:23 c800p-fstests kernel: [338446.833353] R13:
-0000000000000000 R14: 00007fcb89486700 R15: 00007fcb894869f0
-Jan 12 15:40:23 c800p-fstests kernel: [338446.834281] Code: 00 66 2e
-0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 c7 c6
-00 3b 86 c0 48 89 fa 31 ff 48 89 e5 e8 b0 f8 ff ff <0f> 0b 0f 1f 40 00
-66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00
-Jan 12 15:40:23 c800p-fstests kernel: [338446.836229] RIP:
-assfail+0x20/0x30 [xfs] RSP: ffffa1334dacb838
-Jan 12 15:40:23 c800p-fstests kernel: [338446.840623] ---[ end trace
-a5349c4247bd4fe3 ]---
+> ---
+>  doc/COPYING | 418 +++++-------------------------------------------------------
+>  1 file changed, 34 insertions(+), 384 deletions(-)
+> 
+> diff --git a/doc/COPYING b/doc/COPYING
+> index 1ae1a90..9596820 100644
+> --- a/doc/COPYING
+> +++ b/doc/COPYING
+> @@ -4,11 +4,11 @@ The library named "libhandle" and some specific header files (including
+>  All other components are licensed under the GNU General Public License.
+>  
+>  ----------------------------------------------------------------------
+> -
+> -<http://www.fsf.org/copyleft/lesser.txt>
+>  
+> -		  GNU LESSER GENERAL PUBLIC LICENSE
+> -		       Version 2.1, February 1999
+> +<https://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt>
+> +
+> +                  GNU LESSER GENERAL PUBLIC LICENSE
+> +                       Version 2.1, February 1999
+>  
+>   Copyright (C) 1991, 1999 Free Software Foundation, Inc.
+>   51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+> @@ -19,7 +19,7 @@ All other components are licensed under the GNU General Public License.
+>   as the successor of the GNU Library Public License, version 2, hence
+>   the version number 2.1.]
+>  
+> -			    Preamble
+> +                            Preamble
+>  
+>    The licenses for most software are designed to take away your
+>  freedom to share and change it.  By contrast, the GNU General Public
+> @@ -120,8 +120,12 @@ modification follow.  Pay close attention to the difference between a
+>  "work based on the library" and a "work that uses the library".  The
+>  former contains code derived from the library, whereas the latter must
+>  be combined with the library in order to run.
+> -
+> -		  GNU LESSER GENERAL PUBLIC LICENSE
+> +
+> +----------------------------------------------------------------------
+> +
+> +<https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt>
+> +
+> +                  GNU LESSER GENERAL PUBLIC LICENSE
+>     TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+>  
+>    0. This License Agreement applies to any software library or other
+> @@ -155,7 +159,7 @@ such a program is covered only if its contents constitute a work based
+>  on the Library (independent of the use of the Library in a tool for
+>  writing it).  Whether that is true depends on what the Library does
+>  and what the program that uses the Library does.
+> -  
+> +
+>    1. You may copy and distribute verbatim copies of the Library's
+>  complete source code as you receive it, in any medium, provided that
+>  you conspicuously and appropriately publish on each copy an
+> @@ -441,7 +445,7 @@ decision will be guided by the two goals of preserving the free status
+>  of all derivatives of our free software and of promoting the sharing
+>  and reuse of software generally.
+>  
+> -			    NO WARRANTY
+> +                            NO WARRANTY
+>  
+>    15. BECAUSE THE LIBRARY IS LICENSED FREE OF CHARGE, THERE IS NO
+>  WARRANTY FOR THE LIBRARY, TO THE EXTENT PERMITTED BY APPLICABLE LAW.
+> @@ -464,7 +468,7 @@ FAILURE OF THE LIBRARY TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+>  SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+>  DAMAGES.
+>  
+> -		     END OF TERMS AND CONDITIONS
+> +                     END OF TERMS AND CONDITIONS
+>  
+>             How to Apply These Terms to Your New Libraries
+>  
+> @@ -485,7 +489,7 @@ convey the exclusion of warranty; and each file should have at least the
+>      This library is free software; you can redistribute it and/or
+>      modify it under the terms of the GNU Lesser General Public
+>      License as published by the Free Software Foundation; either
+> -    version 2 of the License, or (at your option) any later version.
+> +    version 2.1 of the License, or (at your option) any later version.
+>  
+>      This library is distributed in the hope that it will be useful,
+>      but WITHOUT ANY WARRANTY; without even the implied warranty of
+> @@ -494,7 +498,7 @@ convey the exclusion of warranty; and each file should have at least the
+>  
+>      You should have received a copy of the GNU Lesser General Public
+>      License along with this library; if not, write to the Free Software
+> -    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+> +    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+>  
+>  Also add information on how to contact you by electronic and paper mail.
+>  
+> @@ -509,21 +513,15 @@ necessary.  Here is a sample; alter the names:
+>    Ty Coon, President of Vice
+>  
+>  That's all there is to it!
+> -
+> -
+> -----------------------------------------------------------------------
+> -
+> -<http://www.fsf.org/copyleft/gpl.txt>
+> -
+> -		    GNU GENERAL PUBLIC LICENSE
+> -		       Version 2, June 1991
+> +                    GNU GENERAL PUBLIC LICENSE
+> +                       Version 2, June 1991
+>  
+>   Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
+>   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+>   Everyone is permitted to copy and distribute verbatim copies
+>   of this license document, but changing it is not allowed.
+>  
+> -			    Preamble
+> +                            Preamble
+>  
+>    The licenses for most software are designed to take away your
+>  freedom to share and change it.  By contrast, the GNU General Public
+> @@ -532,7 +530,7 @@ software--to make sure the software is free for all its users.  This
+>  General Public License applies to most of the Free Software
+>  Foundation's software and to any other program whose authors commit to
+>  using it.  (Some other Free Software Foundation software is covered by
+> -the GNU Library General Public License instead.)  You can apply it to
+> +the GNU Lesser General Public License instead.)  You can apply it to
+>  your programs, too.
+>  
+>    When we speak of free software, we are referring to freedom, not
+> @@ -572,353 +570,8 @@ patent must be licensed for everyone's free use or not licensed at all.
+>  
+>    The precise terms and conditions for copying, distribution and
+>  modification follow.
+> -
+> -		    GNU GENERAL PUBLIC LICENSE
+> -   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+>  
+> -  0. This License applies to any program or other work which contains
+> -a notice placed by the copyright holder saying it may be distributed
+> -under the terms of this General Public License.  The "Program", below,
+> -refers to any such program or work, and a "work based on the Program"
+> -means either the Program or any derivative work under copyright law:
+> -that is to say, a work containing the Program or a portion of it,
+> -either verbatim or with modifications and/or translated into another
+> -language.  (Hereinafter, translation is included without limitation in
+> -the term "modification".)  Each licensee is addressed as "you".
+> -
+> -Activities other than copying, distribution and modification are not
+> -covered by this License; they are outside its scope.  The act of
+> -running the Program is not restricted, and the output from the Program
+> -is covered only if its contents constitute a work based on the
+> -Program (independent of having been made by running the Program).
+> -Whether that is true depends on what the Program does.
+> -
+> -  1. You may copy and distribute verbatim copies of the Program's
+> -source code as you receive it, in any medium, provided that you
+> -conspicuously and appropriately publish on each copy an appropriate
+> -copyright notice and disclaimer of warranty; keep intact all the
+> -notices that refer to this License and to the absence of any warranty;
+> -and give any other recipients of the Program a copy of this License
+> -along with the Program.
+> -
+> -You may charge a fee for the physical act of transferring a copy, and
+> -you may at your option offer warranty protection in exchange for a fee.
+> -
+> -  2. You may modify your copy or copies of the Program or any portion
+> -of it, thus forming a work based on the Program, and copy and
+> -distribute such modifications or work under the terms of Section 1
+> -above, provided that you also meet all of these conditions:
+> -
+> -    a) You must cause the modified files to carry prominent notices
+> -    stating that you changed the files and the date of any change.
+> -
+> -    b) You must cause any work that you distribute or publish, that in
+> -    whole or in part contains or is derived from the Program or any
+> -    part thereof, to be licensed as a whole at no charge to all third
+> -    parties under the terms of this License.
+> -
+> -    c) If the modified program normally reads commands interactively
+> -    when run, you must cause it, when started running for such
+> -    interactive use in the most ordinary way, to print or display an
+> -    announcement including an appropriate copyright notice and a
+> -    notice that there is no warranty (or else, saying that you provide
+> -    a warranty) and that users may redistribute the program under
+> -    these conditions, and telling the user how to view a copy of this
+> -    License.  (Exception: if the Program itself is interactive but
+> -    does not normally print such an announcement, your work based on
+> -    the Program is not required to print an announcement.)
+> -
+> -These requirements apply to the modified work as a whole.  If
+> -identifiable sections of that work are not derived from the Program,
+> -and can be reasonably considered independent and separate works in
+> -themselves, then this License, and its terms, do not apply to those
+> -sections when you distribute them as separate works.  But when you
+> -distribute the same sections as part of a whole which is a work based
+> -on the Program, the distribution of the whole must be on the terms of
+> -this License, whose permissions for other licensees extend to the
+> -entire whole, and thus to each and every part regardless of who wrote it.
+> -
+> -Thus, it is not the intent of this section to claim rights or contest
+> -your rights to work written entirely by you; rather, the intent is to
+> -exercise the right to control the distribution of derivative or
+> -collective works based on the Program.
+> -
+> -In addition, mere aggregation of another work not based on the Program
+> -with the Program (or with a work based on the Program) on a volume of
+> -a storage or distribution medium does not bring the other work under
+> -the scope of this License.
+> -
+> -  3. You may copy and distribute the Program (or a work based on it,
+> -under Section 2) in object code or executable form under the terms of
+> -Sections 1 and 2 above provided that you also do one of the following:
+> -
+> -    a) Accompany it with the complete corresponding machine-readable
+> -    source code, which must be distributed under the terms of Sections
+> -    1 and 2 above on a medium customarily used for software interchange; or,
+> -
+> -    b) Accompany it with a written offer, valid for at least three
+> -    years, to give any third party, for a charge no more than your
+> -    cost of physically performing source distribution, a complete
+> -    machine-readable copy of the corresponding source code, to be
+> -    distributed under the terms of Sections 1 and 2 above on a medium
+> -    customarily used for software interchange; or,
+> -
+> -    c) Accompany it with the information you received as to the offer
+> -    to distribute corresponding source code.  (This alternative is
+> -    allowed only for noncommercial distribution and only if you
+> -    received the program in object code or executable form with such
+> -    an offer, in accord with Subsection b above.)
+> -
+> -The source code for a work means the preferred form of the work for
+> -making modifications to it.  For an executable work, complete source
+> -code means all the source code for all modules it contains, plus any
+> -associated interface definition files, plus the scripts used to
+> -control compilation and installation of the executable.  However, as a
+> -special exception, the source code distributed need not include
+> -anything that is normally distributed (in either source or binary
+> -form) with the major components (compiler, kernel, and so on) of the
+> -operating system on which the executable runs, unless that component
+> -itself accompanies the executable.
+> -
+> -If distribution of executable or object code is made by offering
+> -access to copy from a designated place, then offering equivalent
+> -access to copy the source code from the same place counts as
+> -distribution of the source code, even though third parties are not
+> -compelled to copy the source along with the object code.
+> -
+> -  4. You may not copy, modify, sublicense, or distribute the Program
+> -except as expressly provided under this License.  Any attempt
+> -otherwise to copy, modify, sublicense or distribute the Program is
+> -void, and will automatically terminate your rights under this License.
+> -However, parties who have received copies, or rights, from you under
+> -this License will not have their licenses terminated so long as such
+> -parties remain in full compliance.
+> -
+> -  5. You are not required to accept this License, since you have not
+> -signed it.  However, nothing else grants you permission to modify or
+> -distribute the Program or its derivative works.  These actions are
+> -prohibited by law if you do not accept this License.  Therefore, by
+> -modifying or distributing the Program (or any work based on the
+> -Program), you indicate your acceptance of this License to do so, and
+> -all its terms and conditions for copying, distributing or modifying
+> -the Program or works based on it.
+> -
+> -  6. Each time you redistribute the Program (or any work based on the
+> -Program), the recipient automatically receives a license from the
+> -original licensor to copy, distribute or modify the Program subject to
+> -these terms and conditions.  You may not impose any further
+> -restrictions on the recipients' exercise of the rights granted herein.
+> -You are not responsible for enforcing compliance by third parties to
+> -this License.
+> -
+> -  7. If, as a consequence of a court judgment or allegation of patent
+> -infringement or for any other reason (not limited to patent issues),
+> -conditions are imposed on you (whether by court order, agreement or
+> -otherwise) that contradict the conditions of this License, they do not
+> -excuse you from the conditions of this License.  If you cannot
+> -distribute so as to satisfy simultaneously your obligations under this
+> -License and any other pertinent obligations, then as a consequence you
+> -may not distribute the Program at all.  For example, if a patent
+> -license would not permit royalty-free redistribution of the Program by
+> -all those who receive copies directly or indirectly through you, then
+> -the only way you could satisfy both it and this License would be to
+> -refrain entirely from distribution of the Program.
+> -
+> -If any portion of this section is held invalid or unenforceable under
+> -any particular circumstance, the balance of the section is intended to
+> -apply and the section as a whole is intended to apply in other
+> -circumstances.
+> -
+> -It is not the purpose of this section to induce you to infringe any
+> -patents or other property right claims or to contest validity of any
+> -such claims; this section has the sole purpose of protecting the
+> -integrity of the free software distribution system, which is
+> -implemented by public license practices.  Many people have made
+> -generous contributions to the wide range of software distributed
+> -through that system in reliance on consistent application of that
+> -system; it is up to the author/donor to decide if he or she is willing
+> -to distribute software through any other system and a licensee cannot
+> -impose that choice.
+> -
+> -This section is intended to make thoroughly clear what is believed to
+> -be a consequence of the rest of this License.
+> -
+> -  8. If the distribution and/or use of the Program is restricted in
+> -certain countries either by patents or by copyrighted interfaces, the
+> -original copyright holder who places the Program under this License
+> -may add an explicit geographical distribution limitation excluding
+> -those countries, so that distribution is permitted only in or among
+> -countries not thus excluded.  In such case, this License incorporates
+> -the limitation as if written in the body of this License.
+> -
+> -  9. The Free Software Foundation may publish revised and/or new versions
+> -of the General Public License from time to time.  Such new versions will
+> -be similar in spirit to the present version, but may differ in detail to
+> -address new problems or concerns.
+> -
+> -Each version is given a distinguishing version number.  If the Program
+> -specifies a version number of this License which applies to it and "any
+> -later version", you have the option of following the terms and conditions
+> -either of that version or of any later version published by the Free
+> -Software Foundation.  If the Program does not specify a version number of
+> -this License, you may choose any version ever published by the Free Software
+> -Foundation.
+> -
+> -  10. If you wish to incorporate parts of the Program into other free
+> -programs whose distribution conditions are different, write to the author
+> -to ask for permission.  For software which is copyrighted by the Free
+> -Software Foundation, write to the Free Software Foundation; we sometimes
+> -make exceptions for this.  Our decision will be guided by the two goals
+> -of preserving the free status of all derivatives of our free software and
+> -of promoting the sharing and reuse of software generally.
+> -
+> -			    NO WARRANTY
+> -
+> -  11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+> -FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN
+> -OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+> -PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED
+> -OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+> -MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS
+> -TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE
+> -PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,
+> -REPAIR OR CORRECTION.
+> -
+> -  12. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+> -WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+> -REDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,
+> -INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING
+> -OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED
+> -TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY
+> -YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER
+> -PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE
+> -POSSIBILITY OF SUCH DAMAGES.
+> -
+> -		     END OF TERMS AND CONDITIONS
+> -
+> -	    How to Apply These Terms to Your New Programs
+> -
+> -  If you develop a new program, and you want it to be of the greatest
+> -possible use to the public, the best way to achieve this is to make it
+> -free software which everyone can redistribute and change under these terms.
+> -
+> -  To do so, attach the following notices to the program.  It is safest
+> -to attach them to the start of each source file to most effectively
+> -convey the exclusion of warranty; and each file should have at least
+> -the "copyright" line and a pointer to where the full notice is found.
+> -
+> -    <one line to give the program's name and a brief idea of what it does.>
+> -    Copyright (C) 19yy  <name of author>
+> -
+> -    This program is free software; you can redistribute it and/or modify
+> -    it under the terms of the GNU General Public License as published by
+> -    the Free Software Foundation; either version 2 of the License, or
+> -    (at your option) any later version.
+> -
+> -    This program is distributed in the hope that it will be useful,
+> -    but WITHOUT ANY WARRANTY; without even the implied warranty of
+> -    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> -    GNU General Public License for more details.
+> -
+> -    You should have received a copy of the GNU General Public License
+> -    along with this program; if not, write to the Free Software
+> -    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+> -
+> -
+> -Also add information on how to contact you by electronic and paper mail.
+> -
+> -If the program is interactive, make it output a short notice like this
+> -when it starts in an interactive mode:
+> -
+> -    Gnomovision version 69, Copyright (C) 19yy name of author
+> -    Gnomovision comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+> -    This is free software, and you are welcome to redistribute it
+> -    under certain conditions; type `show c' for details.
+> -
+> -The hypothetical commands `show w' and `show c' should show the appropriate
+> -parts of the General Public License.  Of course, the commands you use may
+> -be called something other than `show w' and `show c'; they could even be
+> -mouse-clicks or menu items--whatever suits your program.
+> -
+> -You should also get your employer (if you work as a programmer) or your
+> -school, if any, to sign a "copyright disclaimer" for the program, if
+> -necessary.  Here is a sample; alter the names:
+> -
+> -  Yoyodyne, Inc., hereby disclaims all copyright interest in the program
+> -  `Gnomovision' (which makes passes at compilers) written by James Hacker.
+> -
+> -  <signature of Ty Coon>, 1 April 1989
+> -  Ty Coon, President of Vice
+> -
+> -This General Public License does not permit incorporating your program into
+> -proprietary programs.  If your program is a subroutine library, you may
+> -consider it more useful to permit linking proprietary applications with the
+> -library.  If this is what you want to do, use the GNU Library General
+> -Public License instead of this License.
+> -
+> -----------------------------------------------------------------------
+> -
+> -<http://www.fsf.org/copyleft/gpl.txt>
+> -
+> -		    GNU GENERAL PUBLIC LICENSE
+> -		       Version 2, June 1991
+> -
+> - Copyright (C) 1989, 1991 Free Software Foundation, Inc.
+> -                       59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+> - Everyone is permitted to copy and distribute verbatim copies
+> - of this license document, but changing it is not allowed.
+> -
+> -			    Preamble
+> -
+> -  The licenses for most software are designed to take away your
+> -freedom to share and change it.  By contrast, the GNU General Public
+> -License is intended to guarantee your freedom to share and change free
+> -software--to make sure the software is free for all its users.  This
+> -General Public License applies to most of the Free Software
+> -Foundation's software and to any other program whose authors commit to
+> -using it.  (Some other Free Software Foundation software is covered by
+> -the GNU Library General Public License instead.)  You can apply it to
+> -your programs, too.
+> -
+> -  When we speak of free software, we are referring to freedom, not
+> -price.  Our General Public Licenses are designed to make sure that you
+> -have the freedom to distribute copies of free software (and charge for
+> -this service if you wish), that you receive source code or can get it
+> -if you want it, that you can change the software or use pieces of it
+> -in new free programs; and that you know you can do these things.
+> -
+> -  To protect your rights, we need to make restrictions that forbid
+> -anyone to deny you these rights or to ask you to surrender the rights.
+> -These restrictions translate to certain responsibilities for you if you
+> -distribute copies of the software, or if you modify it.
+> -
+> -  For example, if you distribute copies of such a program, whether
+> -gratis or for a fee, you must give the recipients all the rights that
+> -you have.  You must make sure that they, too, receive or can get the
+> -source code.  And you must show them these terms so they know their
+> -rights.
+> -
+> -  We protect your rights with two steps: (1) copyright the software, and
+> -(2) offer you this license which gives you legal permission to copy,
+> -distribute and/or modify the software.
+> -
+> -  Also, for each author's protection and ours, we want to make certain
+> -that everyone understands that there is no warranty for this free
+> -software.  If the software is modified by someone else and passed on, we
+> -want its recipients to know that what they have is not the original, so
+> -that any problems introduced by others will not reflect on the original
+> -authors' reputations.
+> -
+> -  Finally, any free program is threatened constantly by software
+> -patents.  We wish to avoid the danger that redistributors of a free
+> -program will individually obtain patent licenses, in effect making the
+> -program proprietary.  To prevent this, we have made it clear that any
+> -patent must be licensed for everyone's free use or not licensed at all.
+> -
+> -  The precise terms and conditions for copying, distribution and
+> -modification follow.
+> -
+> -		    GNU GENERAL PUBLIC LICENSE
+> +                    GNU GENERAL PUBLIC LICENSE
+>     TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+>  
+>    0. This License applies to any program or other work which contains
+> @@ -972,7 +625,7 @@ above, provided that you also meet all of these conditions:
+>      License.  (Exception: if the Program itself is interactive but
+>      does not normally print such an announcement, your work based on
+>      the Program is not required to print an announcement.)
+> -
+> +
+>  These requirements apply to the modified work as a whole.  If
+>  identifiable sections of that work are not derived from the Program,
+>  and can be reasonably considered independent and separate works in
+> @@ -1030,7 +683,7 @@ access to copy from a designated place, then offering equivalent
+>  access to copy the source code from the same place counts as
+>  distribution of the source code, even though third parties are not
+>  compelled to copy the source along with the object code.
+> -
+> +
+>    4. You may not copy, modify, sublicense, or distribute the Program
+>  except as expressly provided under this License.  Any attempt
+>  otherwise to copy, modify, sublicense or distribute the Program is
+> @@ -1087,7 +740,7 @@ impose that choice.
+>  
+>  This section is intended to make thoroughly clear what is believed to
+>  be a consequence of the rest of this License.
+> -
+> +
+>    8. If the distribution and/or use of the Program is restricted in
+>  certain countries either by patents or by copyrighted interfaces, the
+>  original copyright holder who places the Program under this License
+> @@ -1117,7 +770,7 @@ make exceptions for this.  Our decision will be guided by the two goals
+>  of preserving the free status of all derivatives of our free software and
+>  of promoting the sharing and reuse of software generally.
+>  
+> -			    NO WARRANTY
+> +                            NO WARRANTY
+>  
+>    11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+>  FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN
+> @@ -1139,9 +792,9 @@ YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER
+>  PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE
+>  POSSIBILITY OF SUCH DAMAGES.
+>  
+> -		     END OF TERMS AND CONDITIONS
+> -
+> -	    How to Apply These Terms to Your New Programs
+> +                     END OF TERMS AND CONDITIONS
+> +
+> +            How to Apply These Terms to Your New Programs
+>  
+>    If you develop a new program, and you want it to be of the greatest
+>  possible use to the public, the best way to achieve this is to make it
+> @@ -1153,7 +806,7 @@ convey the exclusion of warranty; and each file should have at least
+>  the "copyright" line and a pointer to where the full notice is found.
+>  
+>      <one line to give the program's name and a brief idea of what it does.>
+> -    Copyright (C) 19yy  <name of author>
+> +    Copyright (C) <year>  <name of author>
+>  
+>      This program is free software; you can redistribute it and/or modify
+>      it under the terms of the GNU General Public License as published by
+> @@ -1165,17 +818,16 @@ the "copyright" line and a pointer to where the full notice is found.
+>      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>      GNU General Public License for more details.
+>  
+> -    You should have received a copy of the GNU General Public License
+> -    along with this program; if not, write to the Free Software
+> -    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+> -
+> +    You should have received a copy of the GNU General Public License along
+> +    with this program; if not, write to the Free Software Foundation, Inc.,
+> +    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+>  
+>  Also add information on how to contact you by electronic and paper mail.
+>  
+>  If the program is interactive, make it output a short notice like this
+>  when it starts in an interactive mode:
+>  
+> -    Gnomovision version 69, Copyright (C) 19yy name of author
+> +    Gnomovision version 69, Copyright (C) year name of author
+>      Gnomovision comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+>      This is free software, and you are welcome to redistribute it
+>      under certain conditions; type `show c' for details.
+> @@ -1198,7 +850,5 @@ necessary.  Here is a sample; alter the names:
+>  This General Public License does not permit incorporating your program into
+>  proprietary programs.  If your program is a subroutine library, you may
+>  consider it more useful to permit linking proprietary applications with the
+> -library.  If this is what you want to do, use the GNU Library General
+> +library.  If this is what you want to do, use the GNU Lesser General
+>  Public License instead of this License.
+> -
+> -----------------------------------------------------------------------
+> 
 
---001a113d7532a9f9b60545e618bd
-Content-Type: text/x-patch; charset=US-ASCII; name="fuzzy.patch"
-Content-Disposition: attachment; filename="fuzzy.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ixufuesw0
-
-ZGlmZiAtLWdpdCBhL2NvbW1vbi9mdXp6eSBiL2NvbW1vbi9mdXp6eQppbmRleCBkOTcwNzEwLi5m
-ZGQ0NWM4IDEwMDY0NAotLS0gYS9jb21tb24vZnV6enkKKysrIGIvY29tbW9uL2Z1enp5CkBAIC0x
-MTYsMTAgKzExNiwxMSBAQCBfc2NyYXRjaF94ZnNfbGlzdF9tZXRhZGF0YV9maWVsZHMoKSB7CiAJ
-CXJldHVybjsKIAlmaQogCi0JKGZvciBhcmcgaW4gIiRAIjsgZG8KLQkJZWNobyAiJHthcmd9Igor
-CWxvY2FsIGNtZHM9KCkKKwlmb3IgYXJnIGluICIkQCI7IGRvCisJCWNtZHMrPSgiLWMiICIke2Fy
-Z30iKQogCWRvbmUKLQllY2hvICJwcmludCIpIHwgX3NjcmF0Y2hfeGZzX2RiIHwgX19maWx0ZXJf
-eGZzX2RiX3ByaW50X2ZpZWxkcyAiJHtmaWx0ZXJ9IgorCV9zY3JhdGNoX3hmc19kYiAiJHtjbWRz
-W0BdfSIgLWMgcHJpbnQgfCBfX2ZpbHRlcl94ZnNfZGJfcHJpbnRfZmllbGRzICIke2ZpbHRlcn0i
-CiB9CiAKICMgR2V0IGEgbWV0YWRhdGEgZmllbGQKQEAgLTEzMCwxMCArMTMxLDExIEBAIF9zY3Jh
-dGNoX3hmc19nZXRfbWV0YWRhdGFfZmllbGQoKSB7CiAJc2hpZnQKIAogCWdyZXBfa2V5PSIkKGVj
-aG8gIiR7a2V5fSIgfCB0ciAnW10oKScgJy4uLi4nKSIKLQkoZm9yIGFyZyBpbiAiJEAiOyBkbwot
-CQllY2hvICIke2FyZ30iCisJbG9jYWwgY21kcz0oKQorCWZvciBhcmcgaW4gIiRAIjsgZG8KKwkJ
-Y21kcys9KCItYyIgIiR7YXJnfSIpCiAJZG9uZQotCWVjaG8gInByaW50ICR7a2V5fSIpIHwgX3Nj
-cmF0Y2hfeGZzX2RiIHwgZ3JlcCAiXiR7Z3JlcF9rZXl9IiB8IFwKKwlfc2NyYXRjaF94ZnNfZGIg
-IiR7Y21kc1tAXX0iIC1jICJwcmludCAke2tleX0iIHwgZ3JlcCAiXiR7Z3JlcF9rZXl9IiB8IFwK
-IAkJc2VkIC1lICdzL14uKiA9IC8vZycKIH0KIApAQCAtMTQ1LDEwICsxNDcsMTEgQEAgX3NjcmF0
-Y2hfeGZzX3NldF9tZXRhZGF0YV9maWVsZCgpIHsKIAlrZXk9IiQxIgogCXZhbHVlPSIkMiIKIAlz
-aGlmdDsgc2hpZnQKLQkoZm9yIGFyZyBpbiAiJEAiOyBkbwotCQllY2hvICIke2FyZ30iCisJbG9j
-YWwgY21kcz0oKQorCWZvciBhcmcgaW4gIiRAIjsgZG8KKwkJY21kcys9KCItYyIgIiR7YXJnfSIp
-CiAJZG9uZQotCWVjaG8gIndyaXRlIC1kICR7a2V5fSAke3ZhbHVlfSIpIHwgX3NjcmF0Y2hfeGZz
-X2RiIC14CisJX3NjcmF0Y2hfeGZzX2RiIC14ICIke2NtZHNbQF19IiAtYyAid3JpdGUgLWQgJHtr
-ZXl9ICR7dmFsdWV9IgogCWVjaG8KIH0KIApAQCAtMTY3LDEwICsxNzAsMTEgQEAgX3NjcmF0Y2hf
-eGZzX2Z1enpfbWV0YWRhdGFfZmllbGQoKSB7CiAJCWZ1enpfYXJnPSItZCIKIAlmaQogCW9sZHZh
-bD0iJChfc2NyYXRjaF94ZnNfZ2V0X21ldGFkYXRhX2ZpZWxkICIke2tleX0iICIkQCIpIgotCShm
-b3IgYXJnIGluICIkQCI7IGRvCi0JCWVjaG8gIiR7YXJnfSIKKwlsb2NhbCBjbWRzPSgpCisJZm9y
-IGFyZyBpbiAiJEAiOyBkbworCQljbWRzKz0oIi1jIiAiJHthcmd9IikKIAlkb25lCi0JZWNobyAi
-ZnV6eiAke2Z1enpfYXJnfSAke2tleX0gJHt2YWx1ZX0iKSB8IF9zY3JhdGNoX3hmc19kYiAteAor
-CV9zY3JhdGNoX3hmc19kYiAteCAiJHtjbWRzW0BdfSIgLWMgImZ1enogJHtmdXp6X2FyZ30gJHtr
-ZXl9ICR7dmFsdWV9IgogCWVjaG8KIAluZXd2YWw9IiQoX3NjcmF0Y2hfeGZzX2dldF9tZXRhZGF0
-YV9maWVsZCAiJHtrZXl9IiAiJEAiIDI+IC9kZXYvbnVsbCkiCiAJaWYgWyAiJHtvbGR2YWx9IiA9
-ICIke25ld3ZhbH0iIF07IHRoZW4K
---001a113d7532a9f9b60545e618bd
-Content-Type: application/x-gzip; name="1316.dmesg.gz"
-Content-Disposition: attachment; filename="1316.dmesg.gz"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ixufuet61
-
-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
---001a113d7532a9f9b60545e618bd
-Content-Type: application/x-gzip; name="1316.full.gz"
-Content-Disposition: attachment; filename="1316.full.gz"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ixufusav2
-
-H4sICN6Kd1gAAzEzMTYuZnVsbADs3V1v28aaB/Dr1acgzl5sgqQ0540vLs5FW5wURZHtQU93bxaL
-Qn5EO4RlyUtSSdxPv0NSEkmblB7ZVCRZ/14EqWYkDUmRf004z08fkng6yZwvsXOfzu/nWezkc+d6
-8ddfzmI2idNLJ5nNJ7EjIt8ZTyaps1Du1d1V7t7nafY/4n9Hd+ObhEbT+HM8Hc0Wd2lMmf2/6zxL
-rkZpcvOp/MvVbD6aZrPRYpFMRvMvszgdUUqjorN9DTfLx2k+v75uP3A1ndPt+qHy/2i+mOXrh+Kv
-eTzLr6fjm9E750Mx5HIwzt+dv+J0Hmejv/f8N/phOp1/SWY31YbOrx2ap+niPo8nzmScj50vSf7J
-uZnPJ85Pv/80Wr2qN7Lv80f6UOwhGuf0yck/xU6cpvN09O6d89tsmsxiJ6N0cTW6uJvlF/avRbfL
-6rGr4g2/XmfOdTKNs4csj++qNyoem6TJ5zh1R//8NLaHQFw6H5LZpNnzJp7fxXn64D566UVWvKy2
-Q0njsT2QdmzluzVe6mN8N7ejXmTx5NIRSt5eKBkE/q3zRujbCyGi27fvnTy5iy8dx3M9eVH86ZV/
-iqx+mV8ufrt0lBSu+TX50X4s3hcdfnTmi/x9/XA+z1vPcOww4+Jd3ehj8uNFtn6e/Wv5zLqlfqq8
-dH76FNOt7ZzH6Ww8deymj4sj445++NkRTra4j9PyE3Hp/HZvh578Nc6T+cxJMsd+hu1Hbhq7zhu7
-Y/9M5pRPXXLKY2OMflu8gnzxK6iXvcJ6OzccG1Mcm7B1bIRpHBs/q1+mPDaBKz4+OTLLB1s7tz4u
-2ndV93GpW+qnqkvnXzSeOePptLosZO7ol/XloTxzyh1iz8P7S+f3+H6cpJkzTmMnjf9vkaTxpHOH
-6Ojtow/1H/O5fY3ZQ3VyZd8746t5mtsPun1+9elePld4nvf4yWL5LOfaXi3sOzr/NbsrrhvO2J5R
-6WJWnG9/puXg3NFu54YI6/0vvGy03O26a7fr1W6v97aK+s6CuqV4xvoqU42yvMw0LgX2Slls/Oo8
-c76zjXbTis2z15Dk+qHx2XTd1YVA2n7VxWJ9Vk3nNyNn+d935UWzeKh4Sv1oVhzwxptfp3Gc3Y8p
-Lt+vCgd7uLP2s8pd76Tzeb7sQp8Ws9vVx6jskDrx2F5Cf/i54/2Kl6ZpPE4de+m1QWQ399Zem6dJ
-lj96IxtaFGeZczuzsbL8UJZPtzvAvsfd8u0nSUZzu3Me2s8e38zm5YX94/L6sgqC4jyexHlMRSSM
-8/IjU8Te8vPtfbUfvIvyz5c992o8WYbWvzueHWsjbd+Ur2m34fat03i6kuWT1o2tJ43KnRZPGo88
-2Vjx9CH59CHVsY9n8Zfpw3pXrt4lqz9i2nam8sJdHN7J4n6a2JyMq5E/OnBZnBcntLO4b3SsEr08
-zkVv+5EpD2u15fZLQR6/twN0vPf1ztjeJ2D0ibb30YLRRzH6GEYfxpg1Y8yGMWbDGLNhjNkwxmwY
-Y/YZY/YZY/YZY/YZY/YZYw4YYw4YYw4YYw4YYw4YYw4ZYw4ZYw4ZYw4ZYw4ZY44YY44YY44YY44Y
-Y44YYxYeY9DCY4xaeIxhC48xbuFxBi44AxecgQvOwAVn4IIzcMkZuOQMXHIGLjkDl5yBK87AFWfg
-ijNwTjQKTjYKTjgKTjoKTjwKTj4KTkAKTkIKTkQKTkYKTkgKTkoKTkwKTk4KTlAKTlIKTlQKTlYK
-TlgKTloKTlwKTl4KTmAKTmIKTmQKTmYKTmgKTmoKTmwKTm4KTnAKTnJKTnJKTnJKTnJKTnJKTnJK
-TnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJK
-TnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJKTnJK
-TnJKTnJKTnJKTnJKTnJKTnJKTnIqTnIqTnIqTnIqTnIqTnIqTnIqTnIqTnIqTnIqTnIqTnIqTnIq
-TnIqTnIqTnIqTnIqTnIqTnIq1j/HcpJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJT
-cZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJTcZJT
-c5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JT
-s+5ksm5lsu5lsm5msu5mcpJTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JT
-c5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5JTc5LTcJLTcJLTcJLTcJLTcJLTcJLTcJLT
-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
-CfZLt1WCs88sYSV45WOdqQT/Byhit2gCeAQA
---001a113d7532a9f9b60545e618bd--
