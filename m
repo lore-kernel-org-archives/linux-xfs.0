@@ -1,96 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:35706 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937409AbdAKNjr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 08:39:47 -0500
-From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH] xfs_logprint: handle the log split of inode item correctly
-Date: Wed, 11 Jan 2017 21:38:58 +0800
-Message-ID: <1484141938-4195-1-git-send-email-houtao1@huawei.com>
+Received: from mail.kernel.org ([198.145.29.136]:57912 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750698AbdALFes (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Jan 2017 00:34:48 -0500
+Date: Wed, 11 Jan 2017 21:34:45 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: updates for 4.10-rc4
+Message-ID: <20170112053445.GC5883@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: sandeen@sandeen.net
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <david@fromorbit.com>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>
 
-It is possible that the data fork or the attribute fork
-of an inode will be splitted to the next log record, so
-we need to check the count of available operations
-in the log record and calculate the count of skipped
-operations properly.
+[Resend from the correct email account...<sigh> sorry for the noise]
 
-Signed-off-by: Hou Tao <houtao1@huawei.com>
----
- logprint/log_misc.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+Hi Linus,
 
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index a0f1766..20f0f89 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -524,6 +524,7 @@ xlog_print_trans_inode(
-     xfs_inode_log_format_t *f;
-     int			   mode;
-     int			   size;
-+    int			   printed_ops;
- 
-     /*
-      * print inode type header region
-@@ -572,13 +573,6 @@ xlog_print_trans_inode(
-     xlog_print_trans_inode_core(&dino);
-     *ptr += xfs_log_dinode_size(dino.di_version);
- 
--    if (*i == num_ops-1 && f->ilf_size == 3)  {
--	return 1;
--    }
--
--    /* does anything come next */
--    op_head = (xlog_op_header_t *)*ptr;
--
-     switch (f->ilf_fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
-     case XFS_ILOG_DEV:
- 	printf(_("DEV inode: no extra region\n"));
-@@ -595,7 +589,13 @@ xlog_print_trans_inode(
-     ASSERT(f->ilf_size <= 4);
-     ASSERT((f->ilf_size == 3) || (f->ilf_fields & XFS_ILOG_AFORK));
- 
-+    /* does anything come next */
-+    printed_ops = 2;
-+    op_head = (xlog_op_header_t *)*ptr;
-+
-     if (f->ilf_fields & XFS_ILOG_DFORK) {
-+		if (*i == num_ops-1)
-+		return f->ilf_size-printed_ops;
- 	    (*i)++;
- 	    xlog_print_op_header(op_head, *i, ptr);
- 
-@@ -618,11 +618,14 @@ xlog_print_trans_inode(
- 
- 	    *ptr += be32_to_cpu(op_head->oh_len);
- 	    if (op_head->oh_flags & XLOG_CONTINUE_TRANS)
--		return 1;
-+		return f->ilf_size-printed_ops;
- 	    op_head = (xlog_op_header_t *)*ptr;
-+		printed_ops++;
-     }
- 
-     if (f->ilf_fields & XFS_ILOG_AFORK) {
-+		if (*i == num_ops-1)
-+		return f->ilf_size-printed_ops;
- 	    (*i)++;
- 	    xlog_print_op_header(op_head, *i, ptr);
- 
-@@ -644,7 +647,7 @@ xlog_print_trans_inode(
- 	    }
- 	    *ptr += be32_to_cpu(op_head->oh_len);
- 	    if (op_head->oh_flags & XLOG_CONTINUE_TRANS)
--		return 1;
-+		return f->ilf_size-printed_ops;
-     }
- 
-     return 0;
--- 
-2.5.0
+As promised last week, here's some stability fixes from Christoph and
+Jan Kara.  I think they fall within the guidelines for non-merge window
+patches.  Could you please pull the changes?
+
+--Darrick
+
+The following changes since commit a121103c922847ba5010819a3f250f1f7fc84ab8:
+
+  Linux 4.10-rc3 (2017-01-08 14:18:17 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-for-linus-4.10-rc4-1
+
+for you to fetch changes up to 0a417b8dc1f10b03e8f558b8a831f07ec4c23795:
+
+  xfs: Timely free truncated dirty pages (2017-01-11 10:20:04 -0800)
+
+----------------------------------------------------------------
+Contained in this update:
+- Fix free space request handling when low on disk space
+- Remove redundant log failure error messages
+- Free truncate dirty pages instead of letting them build up forever
+
+----------------------------------------------------------------
+Christoph Hellwig (5):
+      xfs: bump up reserved blocks in xfs_alloc_set_aside
+      xfs: fix bogus minleft manipulations
+      xfs: adjust allocation length in xfs_alloc_space_available
+      xfs: don't rely on ->total in xfs_alloc_space_available
+      xfs: don't print warnings when xfs_log_force fails
+
+Jan Kara (1):
+      xfs: Timely free truncated dirty pages
+
+ fs/xfs/libxfs/xfs_alloc.c      | 115 ++++++++++-------------------------------
+ fs/xfs/libxfs/xfs_alloc.h      |   2 +-
+ fs/xfs/libxfs/xfs_bmap.c       |   3 --
+ fs/xfs/libxfs/xfs_bmap_btree.c |   3 +-
+ fs/xfs/xfs_aops.c              |  19 ++++---
+ fs/xfs/xfs_log.c               |  12 +----
+ 6 files changed, 43 insertions(+), 111 deletions(-)
 
