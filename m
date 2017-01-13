@@ -1,198 +1,332 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:34706 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751057AbdAQUpz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2017 15:45:55 -0500
-Received: by mail-io0-f194.google.com with SMTP id c80so17084716iod.1
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Jan 2017 12:45:41 -0800 (PST)
-Content-Type: multipart/signed; boundary="Apple-Mail=_207AD98F-949F-426F-A53D-974DEFA0A1C9"; protocol="application/pgp-signature"; micalg=pgp-sha256
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Subject: Re: [LSF/MM TOPIC] online filesystem repair
-From: Andreas Dilger <adilger@dilger.ca>
-In-Reply-To: <20170117062453.GJ14038@birch.djwong.org>
-Date: Tue, 17 Jan 2017 13:45:34 -0700
-Message-Id: <A24A05C0-5749-4181-AB46-CDDFE1E6E5E1@dilger.ca>
-References: <20170114075452.GJ14033@birch.djwong.org> <1484524890.27533.16.camel@dubeyko.com> <20170117062453.GJ14038@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48106 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751084AbdAMVTD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Jan 2017 16:19:03 -0500
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A004367BB8
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Jan 2017 21:19:03 +0000 (UTC)
+Date: Fri, 13 Jan 2017 15:19:00 -0600
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH 07/22] mkfs: Move opts related #define to one place
+Message-ID: <20170113211900.GB4176@redhat.com>
+References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+ <1481117249-21273-8-git-send-email-jtulak@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1481117249-21273-8-git-send-email-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Viacheslav Dubeyko <slava@dubeyko.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, Vyacheslav.Dubeyko@wdc.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
+On Wed, Dec 07, 2016 at 02:27:14PM +0100, Jan Tulak wrote:
+> Takes all the "#define M_CRC x" from struct opt_params declaration and moves
+> them into a single place before the struct. This is because we need to
+> cross-link conflicts and we can't link -l version to -m crc if M_CRC is defined
+> after the conflict section.
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
---Apple-Mail=_207AD98F-949F-426F-A53D-974DEFA0A1C9
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=iso-8859-1
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-On Jan 16, 2017, at 11:24 PM, Darrick J. Wong <darrick.wong@oracle.com> =
-wrote:
->=20
-> On Sun, Jan 15, 2017 at 04:01:30PM -0800, Viacheslav Dubeyko wrote:
->> On Fri, 2017-01-13 at 23:54 -0800, Darrick J. Wong wrote:
->>> Hi,
->>>=20
->>> I've been working on implementing online metadata scrubbing and
->>> repair
->>> in XFS.  Most of the code is self contained inside XFS, but there's =
-a
->>> small amount of interaction with the VFS freezer code that has to
->>> happen
->>> in order to shut down the filesystem to rebuild the extent backref
->>> records.  It might be interesting to discuss the (fairly slight)
->>> requirements upon the VFS to support repairs, and/or have a BoF to
->>> discuss how to build an online checker if any of the other
->>> filesystems
->>> are interested in this.
->>>=20
->>=20
->> How do you imagine a generic way to support repairs for different =
-file
->> systems? =46rom one point of view, to have generic way of the online =
-file
->> system repairing could be the really great subsystem.
->=20
-> I don't, sadly.  There's not even a way to /check/ all fs metadata in =
-a
-> "generic" manner -- we can use the standard VFS interfaces to read
-> all metadata, but this is fraught.  Even if we assume the fs can spot
-> check obviously garbage values, that's still not the appropriate place
-> for a full scan.
->=20
->> But, from another point of view, every file system has own
->> architecture, own set of metadata and own way to do fsck
->> check/recovering.
->=20
-> Yes, and this wouldn't change.  The particular mechanism of fixing a
-> piece of metadata will always be fs-dependent, but the thing that I'm
-> interested in discussing is how do we avoid having these kinds of =
-things
-> interact badly with the VFS?
->=20
->> As far as I can judge, there are significant amount of research
->> efforts in this direction (Recon [1], [2], for example).
->=20
-> Yes, I remember Recon.  I appreciated the insight that while it's
-> impossible to block everything for a full scan, it /is/ possible to
-> check a single object and its relation to other metadata items.  The =
-xfs
-> scrubber also takes an incremental approach to verifying a filesystem;
-> we'll lock each metadata object and verify that its relationships with
-> the other metadata make sense.  So long as we aren't bombarding the fs
-> with heavy metadata update workloads, of course.
-
-It is worthwhile to note that Lustre has a distributed online filesystem
-checker (LFSCK) that works in a similar incremental manner, checking the
-status of each object w.r.t. other objects it is related to.  This can
-be done reasonably well because there is extra Lustre metadata that has
-backpointers from data objects to inodes and from inodes to the parent
-directory (including hard links).
-
-That said, we depend on the local filesystem to be internally =
-consistent,
-and LFSCK is only verifying/repairing Lustre-specific metadata that
-describes cross-server object relationships.
-
-Cheers, Andreas
-
-> On the repair side of things xfs added reverse-mapping records, which
-> the repair code uses to regenerate damaged primary metadata.  After we
-> land inode parent pointers we'll be able to do the same =
-reconstructions
-> that we can now do for block allocations...
->=20
-> ...but there are some sticky problems with repairing the reverse
-> mappings.  The normal locking order for that part of xfs is sb_writers
-> -> inode -> ag header -> rmap btree blocks, but to repair we have to
-> freeze the filesystem against writes so that we can scan all the =
-inodes.
->=20
->> But we still haven't any real general online file system repair
->> subsystem in the Linux kernel.
->=20
-> I think the ocfs2 developers have encoded some ability to repair
-> metadata over the past year, though it seems limited to fixing some
-> parts of inodes.  btrfs stores duplicate copies and restores when
-> necessary, I think.  Unfortunately, fixing disk corruption is =
-something
-> that's not easily genericized, which means that I don't think we'll =
-ever
-> achieve a general subsystem.
->=20
-> But we could at least figure out what in the VFS has to change (if
-> anything) to support this type of usage.
->=20
->> Do you have some new insight? What's difference of your
->> vision? If we have online file system repair subsystem then how file
->> system driver will need to interact with the goal to make internal
->> repairing?
->=20
-> It's pretty much all private xfs userspace ioctls[1] with a driver
-> program[2].
->=20
-> --D
->=20
-> [1] =
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=3D=
-djwong-devel
-> [2] =
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?=
-h=3Ddjwong-devel
->=20
->>=20
->> Thanks,
->> Vyacheslav Dubeyko.
->>=20
->> [1] =
-http://www.eecg.toronto.edu/~ashvin/publications/recon-fs-consistency-runt=
-ime.pdf
->> [2] =
-https://www.researchgate.net/publication/269300836_Managing_the_file_syste=
-m_from_the_kernel
->>=20
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" =
-in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---
+>  mkfs/xfs_mkfs.c | 138 ++++++++++++++++++++++++++++++--------------------------
+>  1 file changed, 74 insertions(+), 64 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index e46b55c..2122d1c 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -48,6 +48,80 @@ unsigned int		sectorsize;
+>  #define MAX_CONFLICTS	8
+>  #define LAST_CONFLICT	(-1)
+>  
+> +#define OPT_B		0
+> +#define B_LOG		0
+> +#define B_SIZE		1
+> +
+> +#define OPT_D		1
+> +#define D_AGCOUNT	0
+> +#define D_FILE		1
+> +#define D_NAME		2
+> +#define D_SIZE		3
+> +#define D_SUNIT 	4
+> +#define D_SWIDTH	5
+> +#define D_AGSIZE	6
+> +#define D_SU		7
+> +#define D_SW		8
+> +#define D_SECTLOG	9
+> +#define D_SECTSIZE	10
+> +#define D_NOALIGN	11
+> +#define D_RTINHERIT	12
+> +#define D_PROJINHERIT	13
+> +#define D_EXTSZINHERIT	14
+> +
+> +
+> +#define OPT_I		2
+> +#define I_ALIGN 	0
+> +#define I_LOG		1
+> +#define I_MAXPCT	2
+> +#define I_PERBLOCK	3
+> +#define I_SIZE		4
+> +#define I_ATTR		5
+> +#define I_PROJID32BIT	6
+> +#define I_SPINODES	7
+> +
+> +#define OPT_L		3
+> +#define L_AGNUM 	0
+> +#define L_INTERNAL	1
+> +#define L_SIZE		2
+> +#define L_VERSION	3
+> +#define L_SUNIT 	4
+> +#define L_SU		5
+> +#define L_DEV		6
+> +#define L_SECTLOG	7
+> +#define L_SECTSIZE	8
+> +#define L_FILE		9
+> +#define L_NAME		10
+> +#define L_LAZYSBCNTR	11
+> +
+> +
+> +#define OPT_N		4
+> +#define N_LOG		0
+> +#define N_SIZE		1
+> +#define N_VERSION	2
+> +#define N_FTYPE 	3
+> +
+> +#define OPT_R		5
+> +#define R_EXTSIZE	0
+> +#define R_SIZE		1
+> +#define R_DEV		2
+> +#define R_FILE		3
+> +#define R_NAME		4
+> +#define R_NOALIGN	5
+> +
+> +#define OPT_S		6
+> +#define S_LOG		0
+> +#define S_SECTLOG	1
+> +#define S_SIZE		2
+> +#define S_SECTSIZE	3
+> +
+> +#define OPT_M		7
+> +#define M_CRC		0
+> +#define M_FINOBT	1
+> +#define M_UUID		2
+> +#define M_RMAPBT	3
+> +#define M_REFLINK	4
+> +
+>  /*
+>   * Table for parsing mkfs parameters.
+>   *
+> @@ -155,14 +229,11 @@ struct opt_params {
+>  		long long	value;
+>  	}		subopt_params[MAX_SUBOPTS];
+>  } opts[MAX_OPTS] = {
+> -#define OPT_B	0
+>  	{
+>  		.index = OPT_B,
+>  		.name = 'b',
+>  		.subopts = {
+> -#define	B_LOG		0
+>  			"log",
+> -#define	B_SIZE		1
+>  			"size",
+>  			NULL
+>  		},
+> @@ -185,40 +256,24 @@ struct opt_params {
+>  			},
+>  		},
+>  	},
+> -#define OPT_D	1
+>  	{
+>  		.index = OPT_D,
+>  		.name = 'd',
+>  		.subopts = {
+> -	#define	D_AGCOUNT	0
+>  			"agcount",
+> -	#define	D_FILE		1
+>  			"file",
+> -	#define	D_NAME		2
+>  			"name",
+> -	#define	D_SIZE		3
+>  			"size",
+> -	#define D_SUNIT		4
+>  			"sunit",
+> -	#define D_SWIDTH	5
+>  			"swidth",
+> -	#define D_AGSIZE	6
+>  			"agsize",
+> -	#define D_SU		7
+>  			"su",
+> -	#define D_SW		8
+>  			"sw",
+> -	#define D_SECTLOG	9
+>  			"sectlog",
+> -	#define D_SECTSIZE	10
+>  			"sectsize",
+> -	#define D_NOALIGN	11
+>  			"noalign",
+> -	#define D_RTINHERIT	12
+>  			"rtinherit",
+> -	#define D_PROJINHERIT	13
+>  			"projinherit",
+> -	#define D_EXTSZINHERIT	14
+>  			"extszinherit",
+>  			NULL
+>  		},
+> @@ -338,26 +393,17 @@ struct opt_params {
+>  			},
+>  		},
+>  	},
+> -#define OPT_I	2
+>  	{
+>  		.index = OPT_I,
+>  		.name = 'i',
+>  		.subopts = {
+> -#define	I_ALIGN		0
+>  			"align",
+> -#define	I_LOG		1
+>  			"log",
+> -#define	I_MAXPCT	2
+>  			"maxpct",
+> -#define	I_PERBLOCK	3
+>  			"perblock",
+> -#define	I_SIZE		4
+>  			"size",
+> -#define	I_ATTR		5
+>  			"attr",
+> -#define	I_PROJID32BIT	6
+>  			"projid32bit",
+> -#define I_SPINODES	7
+>  			"sparse",
+>  			NULL
+>  		},
+> @@ -420,34 +466,21 @@ struct opt_params {
+>  			},
+>  		},
+>  	},
+> -#define OPT_L	3
+>  	{
+>  		.index = OPT_L,
+>  		.name = 'l',
+>  		.subopts = {
+> -	#define	L_AGNUM		0
+>  			"agnum",
+> -	#define	L_INTERNAL	1
+>  			"internal",
+> -	#define	L_SIZE		2
+>  			"size",
+> -	#define L_VERSION	3
+>  			"version",
+> -	#define L_SUNIT		4
+>  			"sunit",
+> -	#define L_SU		5
+>  			"su",
+> -	#define L_DEV		6
+>  			"logdev",
+> -	#define	L_SECTLOG	7
+>  			"sectlog",
+> -	#define	L_SECTSIZE	8
+>  			"sectsize",
+> -	#define	L_FILE		9
+>  			"file",
+> -	#define	L_NAME		10
+>  			"name",
+> -	#define	L_LAZYSBCNTR	11
+>  			"lazy-count",
+>  			NULL
+>  		},
+> @@ -538,18 +571,13 @@ struct opt_params {
+>  			},
+>  		},
+>  	},
+> -#define OPT_N	4
+>  	{
+>  		.index = OPT_N,
+>  		.name = 'n',
+>  		.subopts = {
+> -	#define	N_LOG		0
+>  			"log",
+> -	#define	N_SIZE		1
+>  			"size",
+> -	#define	N_VERSION	2
+>  			"version",
+> -	#define	N_FTYPE		3
+>  			"ftype",
+>  		NULL,
+>  		},
+> @@ -584,22 +612,15 @@ struct opt_params {
+>  			},
+>  		},
+>  	},
+> -#define OPT_R	5
+>  	{
+>  		.index = OPT_R,
+>  		.name = 'r',
+>  		.subopts = {
+> -	#define	R_EXTSIZE	0
+>  			"extsize",
+> -	#define	R_SIZE		1
+>  			"size",
+> -	#define	R_DEV		2
+>  			"rtdev",
+> -	#define	R_FILE		3
+>  			"file",
+> -	#define	R_NAME		4
+>  			"name",
+> -	#define R_NOALIGN	5
+>  			"noalign",
+>  			NULL
+>  		},
+> @@ -640,18 +661,13 @@ struct opt_params {
+>  			},
+>  		},
+>  	},
+> -#define OPT_S	6
+>  	{
+>  		.index = OPT_S,
+>  		.name = 's',
+>  		.subopts = {
+> -	#define	S_LOG		0
+>  			"log",
+> -	#define	S_SECTLOG	1
+>  			"sectlog",
+> -	#define	S_SIZE		2
+>  			"size",
+> -	#define	S_SECTSIZE	3
+>  			"sectsize",
+>  			NULL
+>  		},
+> @@ -694,20 +710,14 @@ struct opt_params {
+>  			},
+>  		},
+>  	},
+> -#define OPT_M	7
+>  	{
+>  		.index = OPT_M,
+>  		.name = 'm',
+>  		.subopts = {
+> -	#define	M_CRC		0
+>  			"crc",
+> -	#define M_FINOBT	1
+>  			"finobt",
+> -	#define M_UUID		2
+>  			"uuid",
+> -	#define M_RMAPBT	3
+>  			"rmapbt",
+> -	#define M_REFLINK	4
+>  			"reflink",
+>  			NULL
+>  		},
+> -- 
+> 2.8.1
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe =
-linux-fsdevel" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-Cheers, Andreas
-
-
-
-
-
-
---Apple-Mail=_207AD98F-949F-426F-A53D-974DEFA0A1C9
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIVAwUBWH6CcHKl2rkXzB/gAQiiqBAAlxhwIhLuiZqaaT/d/uOgQvIqFgwdl/Ku
-hfj8Gfjcp0TJ8dyKCvX3tY3EkyiD52TpeDoli4qtnRwJ9j0grvP17rmggjLazwWz
-l4gCrb1nDmyBPzoXY1vuqexLrdXI7aahnfbvvI0WoTK1am3VR+wFOLoWPl2KZ3IV
-+h6/+eMaPQGJKuZwymS92uvacxC3YkFLOvqRbnyHMbxqr5vtpgQkoWWuNErplqI5
-cjPekozHRazRE6s3dPtA/15ink3b7AwVgoNH10LB+nq+O9XjRK4Wgt6HcRnNkfb1
-KvN03Bojm89GosjR9re8pFGLix++XhJjPkM2TURqfkC078NvGcXnvdQJtxAonLDO
-39KQ1+JW5+szDztIuUB8L7M8822/CukdpZZAQCHl+SvaMOEcaY3FMaRJJ6ScuNIa
-9C+fH/g6qYug9UXFvaf+LAWCnRwK1hfZf7VMrxJmYr21It4kzwriRsuqgUAFls6k
-Mkt24EzIMaRCnQ6dg+77bF06qGNaKmYN4yoNUIKvRYQAVRLn43LyxnObIYy+mebH
-0pBrtW3ZYEfzbITwENl38gmdPc023yIbE/6ToeLuo3jP+1h/fwImAA60X+E89Qdw
-8s5KoihBLEKv/YxI/4+bjtFC0RGI29VNJdGVoxDfhD2dcxfDS/nAI6MPkBQREIay
-9CEZvXizmaE=
-=0iTx
------END PGP SIGNATURE-----
-
---Apple-Mail=_207AD98F-949F-426F-A53D-974DEFA0A1C9--
