@@ -1,62 +1,514 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54873 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:60718 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750741AbdAQIYa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Jan 2017 03:24:30 -0500
-Date: Tue, 17 Jan 2017 09:24:26 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
-Message-ID: <20170117082425.GD19699@dhcp22.suse.cz>
-References: <20170106141107.23953-1-mhocko@kernel.org>
- <20170106141107.23953-9-mhocko@kernel.org>
- <20170117025607.frrcdbduthhutrzj@thunk.org>
+        id S1751013AbdAMVVn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Jan 2017 16:21:43 -0500
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2C95661B96
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Jan 2017 21:21:44 +0000 (UTC)
+Date: Fri, 13 Jan 2017 15:21:40 -0600
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH 11/22] mkfs: add test_default_value into conflict struct
+Message-ID: <20170113212139.GE4176@redhat.com>
+References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+ <1481117249-21273-12-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170117025607.frrcdbduthhutrzj@thunk.org>
+In-Reply-To: <1481117249-21273-12-git-send-email-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon 16-01-17 21:56:07, Theodore Ts'o wrote:
-> On Fri, Jan 06, 2017 at 03:11:07PM +0100, Michal Hocko wrote:
-> > From: Michal Hocko <mhocko@suse.com>
-> > 
-> > This reverts commit 216553c4b7f3e3e2beb4981cddca9b2027523928. Now that
-> > the transaction context uses memalloc_nofs_save and all allocations
-> > within the this context inherit GFP_NOFS automatically, there is no
-> > reason to mark specific allocations explicitly.
-> > 
-> > This patch should not introduce any functional change. The main point
-> > of this change is to reduce explicit GFP_NOFS usage inside ext4 code
-> > to make the review of the remaining usage easier.
-> > 
-> > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> > Reviewed-by: Jan Kara <jack@suse.cz>
+On Wed, Dec 07, 2016 at 02:27:18PM +0100, Jan Tulak wrote:
+> Add a flag signalising that a subopt can be conflicting with
+> default value of another option.
 > 
-> Changes in the jbd2 layer aren't going to guarantee that
-> memalloc_nofs_save() will be executed if we are running ext4 without a
-> journal (aka in no journal mode).  And this is a *very* common
-> configuration; it's how ext4 is used inside Google in our production
-> servers.
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-OK, I wasn't aware of that.
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-> So that means the earlier patches will probably need to be changed so
-> the nOFS scope is done in the ext4_journal_{start,stop} functions in
-> fs/ext4/ext4_jbd2.c.
-
-I could definitely appreciated some help here. The call paths are rather
-complex and I am not familiar with the code enough. On of the biggest
-problem I have currently is that there doesn't seem to be an easy place
-to store the old allocation context. The original patch had it inside
-the journal handle. I was thinking about putting it into superblock but
-ext4_journal_stop doesn't seem to have access to the sb if there is no
-handle. Now, if ext4_journal_start is never called from a nested context
-then this is not a big deal but there are just too many caller to
-check...
--- 
-Michal Hocko
-SUSE Labs
+> ---
+>  mkfs/xfs_mkfs.c | 156 +++++++++++++++++++++++++++++---------------------------
+>  1 file changed, 80 insertions(+), 76 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index b3625ed..58cc24a 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -172,6 +172,8 @@ unsigned int		sectorsize;
+>   *     on the CLI, no matter its value. The field .message contains an optional
+>   *     explanatory string for the user. This string can't be translated here,
+>   *     so it has to be enveloped with _() when printed.
+> + *     The .test_default_value is used when .test_values is true, and extends
+> + *     the check also for default values.
+>   *     The last member of this list has to be {LAST_CONFLICT}.
+>   *
+>   *   minval, maxval OPTIONAL
+> @@ -214,6 +216,7 @@ struct opt_params {
+>  			int		opt;
+>  			int		subopt;
+>  			bool		test_values;
+> +			bool		test_default_value;
+>  			long long	invalid_value;
+>  			long long	at_value;
+>  			const char	*message;
+> @@ -234,7 +237,7 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = B_LOG,
+> -			  .conflicts = { {OPT_B, B_SIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_B, B_SIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_BLOCKSIZE_LOG,
+>  			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+> @@ -243,7 +246,7 @@ struct opt_params {
+>  			{ .index = B_SIZE,
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> -			  .conflicts = { {OPT_B, B_LOG, false, 0, 0},
+> +			  .conflicts = { {OPT_B, B_LOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_BLOCKSIZE,
+>  			  .maxval = XFS_MAX_BLOCKSIZE,
+> @@ -274,7 +277,7 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = D_AGCOUNT,
+> -			  .conflicts = { {OPT_D, D_AGSIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_AGSIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 1,
+>  			  .maxval = XFS_MAX_AGNUMBER,
+> @@ -298,25 +301,25 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SUNIT,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
+> -					 {OPT_D, D_SU, false, 0, 0},
+> -					 {OPT_D, D_SW, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> +					 {OPT_D, D_SU, false, false, 0, 0},
+> +					 {OPT_D, D_SW, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SWIDTH,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
+> -					 {OPT_D, D_SU, false, 0, 0},
+> -					 {OPT_D, D_SW, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> +					 {OPT_D, D_SU, false, false, 0, 0},
+> +					 {OPT_D, D_SW, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_AGSIZE,
+> -			  .conflicts = { {OPT_D, D_AGCOUNT, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_AGCOUNT, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .minval = XFS_AG_MIN_BYTES,
+> @@ -324,9 +327,9 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SU,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
+> -					 {OPT_D, D_SUNIT, false, 0, 0},
+> -					 {OPT_D, D_SWIDTH, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> +					 {OPT_D, D_SUNIT, false, false, 0, 0},
+> +					 {OPT_D, D_SWIDTH, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .minval = 0,
+> @@ -334,23 +337,23 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SW,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
+> -					 {OPT_D, D_SUNIT, false, 0, 0},
+> -					 {OPT_D, D_SWIDTH, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> +					 {OPT_D, D_SUNIT, false, false, 0, 0},
+> +					 {OPT_D, D_SWIDTH, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SECTLOG,
+> -			  .conflicts = { {OPT_D, D_SECTSIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_SECTSIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SECTSIZE,
+> -			  .conflicts = { {OPT_D, D_SECTLOG, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_SECTLOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -359,10 +362,10 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_NOALIGN,
+> -			  .conflicts = { {OPT_D, D_SU, false, 0, 0},
+> -					 {OPT_D, D_SW, false, 0, 0},
+> -					 {OPT_D, D_SUNIT, false, 0, 0},
+> -					 {OPT_D, D_SWIDTH, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_SU, false, false, 0, 0},
+> +					 {OPT_D, D_SW, false, false, 0, 0},
+> +					 {OPT_D, D_SUNIT, false, false, 0, 0},
+> +					 {OPT_D, D_SWIDTH, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = 1,
+> @@ -404,7 +407,7 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = I_ALIGN,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 1, 0,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 0,
+>  		"Inodes always aligned for CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -412,8 +415,8 @@ struct opt_params {
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = I_LOG,
+> -			  .conflicts = { {OPT_I, I_PERBLOCK, false, 0, 0},
+> -					 {OPT_I, I_SIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_I, I_PERBLOCK, false, false, 0, 0},
+> +					 {OPT_I, I_SIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_DINODE_MIN_LOG,
+>  			  .maxval = XFS_DINODE_MAX_LOG,
+> @@ -426,8 +429,8 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_PERBLOCK,
+> -			  .conflicts = { {OPT_I, I_LOG, false, 0, 0},
+> -					 {OPT_I, I_SIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_I, I_LOG, false, false, 0, 0},
+> +					 {OPT_I, I_SIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .is_power_2 = true,
+>  			  .minval = XFS_MIN_INODE_PERBLOCK,
+> @@ -435,8 +438,8 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_SIZE,
+> -			  .conflicts = { {OPT_I, I_PERBLOCK, false, 0, 0},
+> -					 {OPT_I, I_LOG, false, 0, 0},
+> +			  .conflicts = { {OPT_I, I_PERBLOCK, false, false, 0, 0},
+> +					 {OPT_I, I_LOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .is_power_2 = true,
+>  			  .minval = XFS_DINODE_MIN_SIZE,
+> @@ -444,7 +447,7 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_ATTR,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 1, 1,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 1,
+>  		"V2 attribute format always enabled on CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -452,7 +455,7 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_PROJID32BIT,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 1, 0,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 0,
+>  		"32 bit Project IDs always enabled on CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  
+> @@ -461,7 +464,7 @@ struct opt_params {
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = I_SPINODES,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 0, 1,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+>  		"Sparse inodes not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -490,15 +493,15 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = L_AGNUM,
+> -			  .conflicts = { {OPT_L, L_DEV, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_DEV, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_INTERNAL,
+> -			  .conflicts = { {OPT_L, L_FILE, false, 0, 0},
+> -					 {OPT_L, L_DEV, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_FILE, false, false, 0, 0},
+> +					 {OPT_L, L_DEV, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = 1,
+> @@ -512,7 +515,7 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_VERSION,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 1, 1,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 1,
+>  				"V2 logs are required for CRC enabled filesystems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 1,
+> @@ -520,14 +523,14 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SUNIT,
+> -			  .conflicts = { {OPT_L, L_SU, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_SU, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 1,
+>  			  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SU,
+> -			  .conflicts = { {OPT_L, L_SUNIT, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_SUNIT, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .minval = BBTOB(1),
+> @@ -535,20 +538,20 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_DEV,
+> -			  .conflicts = { {OPT_L, L_AGNUM, false, 0, 0},
+> -					 {OPT_L, L_INTERNAL, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_AGNUM, false, false, 0, 0},
+> +					 {OPT_L, L_INTERNAL, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SECTLOG,
+> -			  .conflicts = { {OPT_L, L_SECTSIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_SECTSIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SECTSIZE,
+> -			  .conflicts = { {OPT_L, L_SECTLOG, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_SECTLOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -557,20 +560,20 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_FILE,
+> -			  .conflicts = { {OPT_L, L_INTERNAL, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_INTERNAL, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = 1,
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = L_NAME,
+> -			  .conflicts = { {OPT_L, L_AGNUM, false, 0, 0},
+> -					 {OPT_L, L_INTERNAL, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_AGNUM, false, false, 0, 0},
+> +					 {OPT_L, L_INTERNAL, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_LAZYSBCNTR,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 1, 0,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 0,
+>  		"Lazy superblock counted always enabled for CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -591,14 +594,14 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = N_LOG,
+> -			  .conflicts = { {OPT_N, N_SIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_N, N_SIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_REC_DIRSIZE,
+>  			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = N_SIZE,
+> -			  .conflicts = { {OPT_N, N_LOG, false, 0, 0},
+> +			  .conflicts = { {OPT_N, N_LOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -613,7 +616,7 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = N_FTYPE,
+> -			  .conflicts = {  {OPT_M, M_CRC, true, 1, 0,
+> +			  .conflicts = {  {OPT_M, M_CRC, true, true, 1, 0,
+>  		"Cannot disable ftype with crcs enabled."},
+>  					  {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -650,7 +653,7 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = R_DEV,
+> -			  .conflicts = { {OPT_M, M_RMAPBT, false, 0, 0,
+> +			  .conflicts = { {OPT_M, M_RMAPBT, false, true, 0, 0,
+>  		"rmapbt not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+> @@ -662,7 +665,7 @@ struct opt_params {
+>  			  .conflicts = { {LAST_CONFLICT} },
+>  			},
+>  			{ .index = R_NAME,
+> -			  .conflicts = { {OPT_M, M_RMAPBT, false, 0, 0,
+> +			  .conflicts = { {OPT_M, M_RMAPBT, false, true, 0, 0,
+>  		"rmapbt not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+> @@ -687,24 +690,24 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = S_LOG,
+> -			  .conflicts = { {OPT_S, S_SIZE, false, 0, 0},
+> -					 {OPT_S, S_SECTSIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_S, S_SIZE, false, false, 0, 0},
+> +					 {OPT_S, S_SECTSIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = S_SECTLOG,
+> -			  .conflicts = { {OPT_S, S_SIZE, false, 0, 0},
+> -					 {OPT_S, S_SECTSIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_S, S_SIZE, false, false, 0, 0},
+> +					 {OPT_S, S_SECTSIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = S_SIZE,
+> -			  .conflicts = { {OPT_S, S_LOG, false, 0, 0},
+> -					 {OPT_S, S_SECTLOG, false, 0, 0},
+> +			  .conflicts = { {OPT_S, S_LOG, false, false, 0, 0},
+> +					 {OPT_S, S_SECTLOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -713,8 +716,8 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = S_SECTSIZE,
+> -			  .conflicts = { {OPT_S, S_LOG, false, 0, 0},
+> -					 {OPT_S, S_SECTLOG, false, 0, 0},
+> +			  .conflicts = { {OPT_S, S_LOG, false, false, 0, 0},
+> +					 {OPT_S, S_SECTLOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -737,25 +740,25 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = M_CRC,
+> -			  .conflicts = { {OPT_L, L_VERSION, true, 1, 1,
+> +			  .conflicts = { {OPT_L, L_VERSION, true, true, 1, 1,
+>  		"V2 logs are required for CRC enabled filesystems."},
+> -					 {OPT_I, I_ALIGN, true, 0, 1,
+> +					 {OPT_I, I_ALIGN, false, true, 0, 1,
+>  		"Inodes always aligned for CRC enabled filesytems."},
+> -					 {OPT_I, I_PROJID32BIT, true, 0, 1,
+> +					 {OPT_I, I_PROJID32BIT, true, true, 0, 1,
+>  		"32 bit Project IDs always enabled on CRC enabled filesytems."},
+> -					 {OPT_I, I_ATTR, true, 1, 1,
+> +					 {OPT_I, I_ATTR, true, true, 1, 1,
+>  		"V2 attribute format always enabled on CRC enabled filesytems."},
+> -					 {OPT_L, L_LAZYSBCNTR, true, 0, 1,
+> +					 {OPT_L, L_LAZYSBCNTR, true, true, 0, 1,
+>  		"Lazy superblock counted always enabled for CRC enabled filesytems."},
+> -					 {OPT_M, M_FINOBT, true, 1, 0,
+> +					 {OPT_M, M_FINOBT, true, true, 1, 0,
+>  		"Finobt not supported without CRC support."},
+> -					 {OPT_M, M_RMAPBT, true, 1, 0,
+> +					 {OPT_M, M_RMAPBT, true, true, 1, 0,
+>  		"rmapbt not supported without CRC support."},
+> -					 {OPT_M, M_REFLINK, true, 1, 0,
+> +					 {OPT_M, M_REFLINK, true, true, 1, 0,
+>  		"reflink not supported without CRC support."},
+> -					 {OPT_I, I_SPINODES, true, 1, 0,
+> +					 {OPT_I, I_SPINODES, true, true, 1, 0,
+>  		"Sparse inodes not supported without CRC support."},
+> -					 {OPT_N, N_FTYPE, true, 0, 1,
+> +					 {OPT_N, N_FTYPE, true, true, 0, 1,
+>  		"Cannot disable ftype with crcs enabled."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -763,8 +766,8 @@ struct opt_params {
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = M_FINOBT,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 0, 1,
+> -		"Finobt not supported without CRC support\n"},
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+> +		"Finobt not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = 1,
+> @@ -775,11 +778,11 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = M_RMAPBT,
+> -			.conflicts = { {OPT_M, M_CRC, true, 0, 1,
+> +			.conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+>  		"rmapbt not supported without CRC support."},
+> -					{OPT_R, R_NAME, false, 0, 0,
+> +					{OPT_R, R_NAME, false, true, 0, 0,
+>  		"rmapbt not supported with realtime devices."},
+> -					{OPT_R, R_DEV, false, 0, 0,
+> +					{OPT_R, R_DEV, false, true, 0, 0,
+>  		"rmapbt not supported with realtime devices."},
+>  				       {LAST_CONFLICT} },
+>  			.minval = 0,
+> @@ -787,7 +790,7 @@ struct opt_params {
+>  			.defaultval = 0,
+>  			},
+>  			{ .index = M_REFLINK,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 0, 1,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+>  		"reflink not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -1417,7 +1420,8 @@ check_subopt_value(
+>  			break;
+>  		if (!conflict_opt.test_values)
+>  			break;
+> -		if (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen &&
+> +		if ( (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen ||
+> +		      conflict_opt.test_default_value) &&
+>  		    opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].value
+>  				== conflict_opt.invalid_value &&
+>  		    value == conflict_opt.at_value) {
+> -- 
+> 2.8.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
