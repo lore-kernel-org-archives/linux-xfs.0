@@ -1,38 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59772 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750914AbdAMDdP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Jan 2017 22:33:15 -0500
-Subject: Re: [PATCH] xfs_logprint: handle the log split of inode item
- correctly
-References: <1484141938-4195-1-git-send-email-houtao1@huawei.com>
- <20170112133411.GC14085@bfoster.bfoster>
- <50e8cc9c-a941-4e16-449c-2b667f282eed@sandeen.net>
- <cd390269-7e43-72e6-05f1-6d90b5022639@huawei.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f0d6e0b2-0dc2-c5a2-7efc-3e383d1faf32@sandeen.net>
-Date: Thu, 12 Jan 2017 21:32:51 -0600
+Received: from bombadil.infradead.org ([198.137.202.9]:46778 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751099AbdAMHdQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Jan 2017 02:33:16 -0500
+Date: Thu, 12 Jan 2017 23:33:15 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: fix eofblocks race with file extending async dio
+ writes
+Message-ID: <20170113073315.GA30685@infradead.org>
+References: <1484156571-65403-1-git-send-email-bfoster@redhat.com>
+ <20170112135603.GD5756@infradead.org>
+ <20170112140559.GD14085@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <cd390269-7e43-72e6-05f1-6d90b5022639@huawei.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170112140559.GD14085@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hou Tao <houtao1@huawei.com>, Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On 1/12/17 9:28 PM, Hou Tao wrote:
-> The existing code mixes the usage of 4 spaces and tab, and there is no
-> indentation for the statement under conditionals.
+On Thu, Jan 12, 2017 at 09:05:59AM -0500, Brian Foster wrote:
+> !need_iolock means the iolock is already held. I guess the name is kind
+> of confusing. !need_iolock doesn't mean that the lock is unnecessary, it
+> just means that we're calling from a context where it's already held.
+> See the xfs_icache_free_eofblocks() call from
+> xfs_file_buffered_aio_write() for reference.
+> 
+> I suppose I could add an ASSERT(xfs_isilocked()) after that block to
+> better document that..
 
-At least on my terminal, 
+Yeah.  In fact I'd prefer to kill that parameter at all, it's horrible.
+Instead we should always expect the lock and assert that it's held,
+and have the two current need_iolock = false callers take it manually.
 
-# grep -A1 -w if logprint/log_misc.c
+This will increase lock hold times a bit for the current need_iolock
+callers, but the most important one, xfs_release already does a
+previous unlocked xfs_can_free_eofblocks check, and
+xfs_inode_free_eofblocks is only called it the inode is tagged, so this
+should not be an issue (and if it is a xfs_can_free_eofblocks call
+comes to rescue).
 
-shows every if statement with some form of indentation below it.
-Whether it's 4 spaces or a tab, doesn't matter too much to me,
-because it's mixed in the file.
-
-Thanks,
--Eric
+Btw, there is a comment incorrectly referring to xfs_free_eofblocks
+in xfs_inode_free_cowblocks while we're at it.
