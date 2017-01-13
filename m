@@ -1,46 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:46778 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751099AbdAMHdQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Jan 2017 02:33:16 -0500
-Date: Thu, 12 Jan 2017 23:33:15 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix eofblocks race with file extending async dio
- writes
-Message-ID: <20170113073315.GA30685@infradead.org>
-References: <1484156571-65403-1-git-send-email-bfoster@redhat.com>
- <20170112135603.GD5756@infradead.org>
- <20170112140559.GD14085@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:51354 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751771AbdAMPtm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Jan 2017 10:49:42 -0500
+Date: Fri, 13 Jan 2017 10:49:41 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs_logprint: handle log operation split of inode
+ item correctly
+Message-ID: <20170113154941.GG22013@bfoster.bfoster>
+References: <1484305530-19129-1-git-send-email-houtao1@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170112140559.GD14085@bfoster.bfoster>
+In-Reply-To: <1484305530-19129-1-git-send-email-houtao1@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Hou Tao <houtao1@huawei.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Thu, Jan 12, 2017 at 09:05:59AM -0500, Brian Foster wrote:
-> !need_iolock means the iolock is already held. I guess the name is kind
-> of confusing. !need_iolock doesn't mean that the lock is unnecessary, it
-> just means that we're calling from a context where it's already held.
-> See the xfs_icache_free_eofblocks() call from
-> xfs_file_buffered_aio_write() for reference.
+On Fri, Jan 13, 2017 at 07:05:30PM +0800, Hou Tao wrote:
+> If the data/attr fork log operations of an inode log item are splitted to
+> the next log record, xfs_logprint doesn't check the remaining log operations
+> in current log record and still tries to print these log operations which
+> don't exist in the log record. The content of these log operations will be
+> incorrect, or worse xfs_logprint will trigger a segment-fault and exit.
 > 
-> I suppose I could add an ASSERT(xfs_isilocked()) after that block to
-> better document that..
+> xfs_logprint also doesn't calculate the count of the splitted log operations
+> correctly. It just returns 1 when the current log operation is splitted to
+> the next log record. It needs to consider the log operations behind.
+> 
+> Signed-off-by: Hou Tao <houtao1@huawei.com>
+> ---
 
-Yeah.  In fact I'd prefer to kill that parameter at all, it's horrible.
-Instead we should always expect the lock and assert that it's held,
-and have the two current need_iolock = false callers take it manually.
+A couple minor things..
 
-This will increase lock hold times a bit for the current need_iolock
-callers, but the most important one, xfs_release already does a
-previous unlocked xfs_can_free_eofblocks check, and
-xfs_inode_free_eofblocks is only called it the inode is tagged, so this
-should not be an issue (and if it is a xfs_can_free_eofblocks call
-comes to rescue).
+First, could you please update the commit log as noted in my last reply
+to v1?
 
-Btw, there is a comment incorrectly referring to xfs_free_eofblocks
-in xfs_inode_free_cowblocks while we're at it.
+>  logprint/log_misc.c | 28 +++++++++++++++++-----------
+>  1 file changed, 17 insertions(+), 11 deletions(-)
+> 
+> v2:
+> - rewrite the commit message to clarify the patch
+> - use "skip_count" suggested by Brian Foster
+> - fix the indentation
+> 
+> v1: http://www.spinics.net/lists/linux-xfs/msg03430.html
+> 
+> diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+> index a0f1766..4fa0ce1 100644
+> --- a/logprint/log_misc.c
+> +++ b/logprint/log_misc.c
+...
+> @@ -644,7 +649,8 @@ xlog_print_trans_inode(
+>  	    }
+>  	    *ptr += be32_to_cpu(op_head->oh_len);
+>  	    if (op_head->oh_flags & XLOG_CONTINUE_TRANS)
+> -		return 1;
+> +	        return skip_count;
+> +	    skip_count--;
+>      }
+>  
+>      return 0;
+
+Could we ASSERT(skip_count == 0) before we return here?
+
+Otherwise this looks Ok to me.
+
+Brian
+
+> -- 
+> 2.5.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
