@@ -1,55 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49708 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:60384 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750884AbdAQHzL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Jan 2017 02:55:11 -0500
-Date: Tue, 17 Jan 2017 08:54:51 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 7/8] Revert "ext4: avoid deadlocks in the writeback path
- by using sb_getblk_gfp"
-Message-ID: <20170117075450.GC19699@dhcp22.suse.cz>
-References: <20170106141107.23953-1-mhocko@kernel.org>
- <20170106141107.23953-8-mhocko@kernel.org>
- <20170117030118.727jqyamjhojzajb@thunk.org>
+        id S1751104AbdAMVU7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Jan 2017 16:20:59 -0500
+Received: from smtp.corp.redhat.com (int-mx16.intmail.prod.int.phx2.redhat.com [10.5.11.28])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 646F361BA4
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Jan 2017 21:21:00 +0000 (UTC)
+Date: Fri, 13 Jan 2017 15:20:57 -0600
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH 10/22] mkfs: change when to mark an option as seen
+Message-ID: <20170113212057.GD4176@redhat.com>
+References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+ <1481117249-21273-11-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170117030118.727jqyamjhojzajb@thunk.org>
+In-Reply-To: <1481117249-21273-11-git-send-email-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon 16-01-17 22:01:18, Theodore Ts'o wrote:
-> On Fri, Jan 06, 2017 at 03:11:06PM +0100, Michal Hocko wrote:
-> > From: Michal Hocko <mhocko@suse.com>
-> > 
-> > This reverts commit c45653c341f5c8a0ce19c8f0ad4678640849cb86 because
-> > sb_getblk_gfp is not really needed as
-> > sb_getblk
-> >   __getblk_gfp
-> >     __getblk_slow
-> >       grow_buffers
-> >         grow_dev_page
-> > 	  gfp_mask = mapping_gfp_constraint(inode->i_mapping, ~__GFP_FS) | gfp
-> > 
-> > so __GFP_FS is cleared unconditionally and therefore the above commit
-> > didn't have any real effect in fact.
-> > 
-> > This patch should not introduce any functional change. The main point
-> > of this change is to reduce explicit GFP_NOFS usage inside ext4 code to
-> > make the review of the remaining usage easier.
-> > 
-> > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> > Reviewed-by: Jan Kara <jack@suse.cz>
+On Wed, Dec 07, 2016 at 02:27:17PM +0100, Jan Tulak wrote:
+> Make the check for seen option more useful for new conflict detection
+> by moving it's logic to new place - we are no longer doing the
+> respecification as before.
 > 
-> If I'm not mistaken, this patch is not dependent on any of the other
-> patches in this series (and the other patches are not dependent on
-> this one).  Hence, I could take this patch via the ext4 tree, correct?
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-Yes, that is correct
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
--- 
-Michal Hocko
-SUSE Labs
+> ---
+>  mkfs/xfs_mkfs.c | 40 +++++++++++-----------------------------
+>  1 file changed, 11 insertions(+), 29 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index d11fad6..b3625ed 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -152,10 +152,6 @@ unsigned int		sectorsize;
+>   *     Do not set this flag when definning a subopt. It is used to remeber that
+>   *     this subopt was already seen, for example for conflicts detection.
+>   *
+> - *   str_seen INTERNAL
+> - *     Do not set. It is used internally for respecification, when some options
+> - *     has to be parsed twice - at first as a string, then later as a number.
+> - *
+>   *   convert OPTIONAL
+>   *     A flag signalling whether the user-given value can use suffixes.
+>   *     If you want to allow the use of user-friendly values like 13k, 42G,
+> @@ -212,7 +208,6 @@ struct opt_params {
+>  	struct subopt_param {
+>  		int		index;
+>  		bool		seen;
+> -		bool		str_seen;
+>  		bool		convert;
+>  		bool		is_power_2;
+>  		struct subopt_conflict {
+> @@ -1375,7 +1370,7 @@ static void
+>  check_subopt_conflicts(
+>  	struct opt_params	*opt,
+>  	int			index,
+> -	bool			str_seen)
+> +	bool			seen)
+>  {
+>  	struct subopt_param	*sp = &opt->subopt_params[index];
+>  	int			i;
+> @@ -1387,23 +1382,6 @@ check_subopt_conflicts(
+>  		reqval(opt->name, (char **)opt->subopts, index);
+>  	}
+>  
+> -	/*
+> -	 * Check for respecification of the option. This is more complex than it
+> -	 * seems because some options are parsed twice - once as a string during
+> -	 * input parsing, then later the string is passed to getnum for
+> -	 * conversion into a number and bounds checking. Hence the two variables
+> -	 * used to track the different uses based on the @str parameter passed
+> -	 * to us.
+> -	 */
+> -	if (!str_seen) {
+> -		if (sp->seen)
+> -			respec(opt->name, (char **)opt->subopts, index);
+> -		sp->seen = true;
+> -	} else {
+> -		if (sp->str_seen)
+> -			respec(opt->name, (char **)opt->subopts, index);
+> -		sp->str_seen = true;
+> -	}
+>  
+>  	/* check for conflicts with the option */
+>  	for (i = 0; i < MAX_CONFLICTS; i++) {
+> @@ -1413,8 +1391,7 @@ check_subopt_conflicts(
+>  			break;
+>  		if (conflict_opt.test_values)
+>  			break;
+> -		if (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen ||
+> -		    opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].str_seen) {
+> +		if (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen) {
+>  			conflict_struct(opt, sp, &conflict_opt);
+>  		}
+>  	}
+> @@ -1440,8 +1417,7 @@ check_subopt_value(
+>  			break;
+>  		if (!conflict_opt.test_values)
+>  			break;
+> -		if ((opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen ||
+> -		     opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].str_seen) &&
+> +		if (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen &&
+>  		    opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].value
+>  				== conflict_opt.invalid_value &&
+>  		    value == conflict_opt.at_value) {
+> @@ -1462,7 +1438,11 @@ check_opt(
+>  	int index;
+>  	struct opt_params *opt = &opts[opti];
+>  	for (index = 0; index < MAX_SUBOPTS; index++) {
+> +		if (opt->subopts[index] == NULL)
+> +			break;
+>  		struct subopt_param *sp = &opt->subopt_params[index];
+> +		if (!sp->seen)
+> +			continue;
+>  		check_subopt_conflicts(opt, index, false);
+>  		check_subopt_value(opt, index, sp->value);
+>  	}
+> @@ -1489,9 +1469,12 @@ getnum(
+>  	if (!str || *str == '\0') {
+>  		if (sp->defaultval == SUBOPT_NEEDS_VAL)
+>  			reqval(opts->name, (char **)opts->subopts, index);
+> +		sp->seen = true;
+>  		return sp->defaultval;
+>  	}
+>  
+> +	sp->seen = true;
+> +
+>  	if (sp->minval == 0 && sp->maxval == 0) {
+>  		fprintf(stderr,
+>  			_("Option -%c %s has undefined minval/maxval."
+> @@ -1540,11 +1523,10 @@ getstr(
+>  	struct opt_params	*opts,
+>  	int			index)
+>  {
+> -	check_subopt(opts, index, true);
+> -
+>  	/* empty strings for string options are not valid */
+>  	if (!str || *str == '\0')
+>  		reqval(opts->name, (char **)opts->subopts, index);
+> +	opts->subopt_params[index].seen = true;
+>  	return str;
+>  }
+>  
+> -- 
+> 2.8.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
