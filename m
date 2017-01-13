@@ -1,71 +1,952 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36271 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:59848 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751166AbdAQEjm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Jan 2017 23:39:42 -0500
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id DFFA6AC88
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Jan 2017 04:39:40 +0000 (UTC)
-From: jeffm@suse.com
-Subject: [PATCH 2/3] xfs_repair: add prefetch trace calls to debug thread creation failures
-Date: Mon, 16 Jan 2017 23:39:32 -0500
-Message-Id: <1484627973-11535-3-git-send-email-jeffm@suse.com>
-In-Reply-To: <1484627973-11535-1-git-send-email-jeffm@suse.com>
-References: <1484627973-11535-1-git-send-email-jeffm@suse.com>
+        id S1751252AbdAMRVL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Jan 2017 12:21:11 -0500
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 7934361BA4
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Jan 2017 17:21:12 +0000 (UTC)
+Date: Fri, 13 Jan 2017 11:21:08 -0600
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH 12/22] mkfs: expand conflicts declarations to named
+ declaration
+Message-ID: <20170113172108.GE23576@redhat.com>
+References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+ <1481117249-21273-13-git-send-email-jtulak@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1481117249-21273-13-git-send-email-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jeff Mahoney <jeffm@suse.com>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Jeff Mahoney <jeffm@suse.com>
+On Wed, Dec 07, 2016 at 02:27:19PM +0100, Jan Tulak wrote:
+> As we are adding more fields, change from positional to named declarations.
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-When debugging prefetch failures, it's useful to have thread creation
-failure messages that are output as warnings on stderr in the trace
-log as well.  It's also helpful to see when an AG gets queued behind
-another one rather than having the thread started directly, which
-has a separate trace line.
+minor whitespace issues.
 
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
----
- repair/prefetch.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 044fab2..37d60d6 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -703,6 +703,8 @@ pf_queuing_worker(
- 		if (err != 0) {
- 			do_warn(_("failed to create prefetch thread: %s\n"),
- 				strerror(err));
-+			pftrace("failed to create prefetch thread for AG %d: %s",
-+				args->agno, strerror(err));
- 			args->io_threads[i] = 0;
- 			if (i == 0) {
- 				pf_start_processing(args);
-@@ -817,6 +819,8 @@ pf_create_prefetch_thread(
- 	if (err != 0) {
- 		do_warn(_("failed to create prefetch thread: %s\n"),
- 			strerror(err));
-+		pftrace("failed to create prefetch thread for AG %d: %s",
-+			args->agno, strerror(err));
- 		args->queuing_thread = 0;
- 		cleanup_inode_prefetch(args);
- 	}
-@@ -882,8 +886,11 @@ start_inode_prefetch(
- 		if (prev_args->prefetch_done) {
- 			if (!pf_create_prefetch_thread(args))
- 				args = NULL;
--		} else
-+		} else {
- 			prev_args->next_args = args;
-+			pftrace("queued AG %d after AG %d",
-+				args->agno, prev_args->agno);
-+		}
- 		pthread_mutex_unlock(&prev_args->lock);
- 	}
- 
--- 
-2.7.1
+> ---
+>  mkfs/xfs_mkfs.c | 594 +++++++++++++++++++++++++++++++++++++++++++++++++-------
+>  1 file changed, 519 insertions(+), 75 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 58cc24a..b0e5d75 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -220,7 +220,7 @@ struct opt_params {
+>  			long long	invalid_value;
+>  			long long	at_value;
+>  			const char	*message;
+> -		} 		conflicts [MAX_CONFLICTS];
+> +		}		conflicts [MAX_CONFLICTS];
+>  		long long	minval;
+>  		long long	maxval;
+>  		long long	defaultval;
+> @@ -237,7 +237,13 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = B_LOG,
+> -			  .conflicts = { {OPT_B, B_SIZE, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_B,
+> +					  .subopt = B_SIZE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_BLOCKSIZE_LOG,
+>  			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+> @@ -246,7 +252,13 @@ struct opt_params {
+>  			{ .index = B_SIZE,
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> -			  .conflicts = { {OPT_B, B_LOG, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_B,
+> +					  .subopt = B_LOG,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_BLOCKSIZE,
+>  			  .maxval = XFS_MAX_BLOCKSIZE,
+> @@ -277,7 +289,13 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = D_AGCOUNT,
+> -			  .conflicts = { {OPT_D, D_AGSIZE, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_D,
+> +					  .subopt = D_AGSIZE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 1,
+>  			  .maxval = XFS_MAX_AGNUMBER,
+> @@ -301,25 +319,67 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SUNIT,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> -					 {OPT_D, D_SU, false, false, 0, 0},
+> -					 {OPT_D, D_SW, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_D,
+> +					  .subopt = D_NOALIGN,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_D,
+> +					  .subopt = D_SU,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_D,
+> +					  .subopt = D_SW,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SWIDTH,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> -					 {OPT_D, D_SU, false, false, 0, 0},
+> -					 {OPT_D, D_SW, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_D,
+> +					  .subopt = D_NOALIGN,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_D,
+> +					  .subopt = D_SU,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_D,
+> +					  .subopt = D_SW,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_AGSIZE,
+> -			  .conflicts = { {OPT_D, D_AGCOUNT, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_D,
+> +					  .subopt = D_AGCOUNT,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .minval = XFS_AG_MIN_BYTES,
+> @@ -327,9 +387,27 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SU,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> -					 {OPT_D, D_SUNIT, false, false, 0, 0},
+> -					 {OPT_D, D_SWIDTH, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_D,
+> +					  .subopt = D_NOALIGN,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_D,
+> +					  .subopt = D_SUNIT,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_D,
+> +					  .subopt = D_SWIDTH,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .minval = 0,
+> @@ -337,23 +415,53 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SW,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> -					 {OPT_D, D_SUNIT, false, false, 0, 0},
+> -					 {OPT_D, D_SWIDTH, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_D,
+> +					  .subopt = D_NOALIGN,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_D,
+> +					  .subopt = D_SUNIT,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_D,
+> +					  .subopt = D_SWIDTH,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SECTLOG,
+> -			  .conflicts = { {OPT_D, D_SECTSIZE, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_D,
+> +					  .subopt = D_SECTSIZE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SECTSIZE,
+> -			  .conflicts = { {OPT_D, D_SECTLOG, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_D,
+> +					  .subopt = D_SECTLOG,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -362,10 +470,34 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_NOALIGN,
+> -			  .conflicts = { {OPT_D, D_SU, false, false, 0, 0},
+> -					 {OPT_D, D_SW, false, false, 0, 0},
+> -					 {OPT_D, D_SUNIT, false, false, 0, 0},
+> -					 {OPT_D, D_SWIDTH, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_D,
+> +					  .subopt = D_SU,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_D,
+> +					  .subopt = D_SW,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_D,
+> +					  .subopt = D_SUNIT,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_D,
+> +					  .subopt = D_SWIDTH,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = 1,
+> @@ -407,7 +539,13 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = I_ALIGN,
+> -			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 0,
+> +			  .conflicts = { {.opt = OPT_M,
+> +					  .subopt = M_CRC,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 0,
+> +					  .message = \
+>  		"Inodes always aligned for CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -415,8 +553,20 @@ struct opt_params {
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = I_LOG,
+> -			  .conflicts = { {OPT_I, I_PERBLOCK, false, false, 0, 0},
+> -					 {OPT_I, I_SIZE, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_I,
+> +					  .subopt = I_PERBLOCK,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_I,
+> +					  .subopt = I_SIZE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_DINODE_MIN_LOG,
+>  			  .maxval = XFS_DINODE_MAX_LOG,
+> @@ -429,8 +579,20 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_PERBLOCK,
+> -			  .conflicts = { {OPT_I, I_LOG, false, false, 0, 0},
+> -					 {OPT_I, I_SIZE, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_I,
+> +					  .subopt = I_LOG,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_I,
+> +					  .subopt = I_SIZE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .is_power_2 = true,
+>  			  .minval = XFS_MIN_INODE_PERBLOCK,
+> @@ -438,8 +600,20 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_SIZE,
+> -			  .conflicts = { {OPT_I, I_PERBLOCK, false, false, 0, 0},
+> -					 {OPT_I, I_LOG, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_I,
+> +					  .subopt = I_PERBLOCK,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_I,
+> +					  .subopt = I_LOG,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .is_power_2 = true,
+>  			  .minval = XFS_DINODE_MIN_SIZE,
+> @@ -447,7 +621,13 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_ATTR,
+> -			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 1,
+> +			  .conflicts = { {.opt = OPT_M,
+> +					  .subopt = M_CRC,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 1,
+> +					  .message = \
+>  		"V2 attribute format always enabled on CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -455,7 +635,13 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_PROJID32BIT,
+> -			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 0,
+> +			  .conflicts = { {.opt = OPT_M,
+> +					  .subopt = M_CRC,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 0,
+> +					  .message = \
+>  		"32 bit Project IDs always enabled on CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  
+> @@ -464,7 +650,13 @@ struct opt_params {
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = I_SPINODES,
+> -			  .conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+> +			  .conflicts = { {.opt = OPT_M,
+> +					  .subopt = M_CRC,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 0,
+> +					  .at_value = 1,
+> +					  .message = \
+>  		"Sparse inodes not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -493,15 +685,33 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = L_AGNUM,
+> -			  .conflicts = { {OPT_L, L_DEV, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_L,
+> +					  .subopt = L_DEV,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_INTERNAL,
+> -			  .conflicts = { {OPT_L, L_FILE, false, false, 0, 0},
+> -					 {OPT_L, L_DEV, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_L,
+> +					  .subopt = L_FILE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_L,
+> +					  .subopt = L_DEV,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = 1,
+> @@ -515,7 +725,13 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_VERSION,
+> -			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 1,
+> +			  .conflicts = {{.opt = OPT_M,
+> +					  .subopt = M_CRC,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 1,
+> +					  .message =
+>  				"V2 logs are required for CRC enabled filesystems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 1,
+> @@ -523,14 +739,26 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SUNIT,
+> -			  .conflicts = { {OPT_L, L_SU, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_L,
+> +					  .subopt = L_SU,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 1,
+>  			  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SU,
+> -			  .conflicts = { {OPT_L, L_SUNIT, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_L,
+> +					  .subopt = L_SUNIT,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .minval = BBTOB(1),
+> @@ -538,20 +766,44 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_DEV,
+> -			  .conflicts = { {OPT_L, L_AGNUM, false, false, 0, 0},
+> -					 {OPT_L, L_INTERNAL, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_L,
+> +					  .subopt = L_AGNUM,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_L,
+> +					  .subopt = L_INTERNAL,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SECTLOG,
+> -			  .conflicts = { {OPT_L, L_SECTSIZE, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_L,
+> +					  .subopt = L_SECTSIZE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SECTSIZE,
+> -			  .conflicts = { {OPT_L, L_SECTLOG, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_L,
+> +					  .subopt = L_SECTLOG,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -560,20 +812,44 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_FILE,
+> -			  .conflicts = { {OPT_L, L_INTERNAL, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_L,
+> +					  .subopt = L_INTERNAL,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = 1,
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = L_NAME,
+> -			  .conflicts = { {OPT_L, L_AGNUM, false, false, 0, 0},
+> -					 {OPT_L, L_INTERNAL, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_L,
+> +					  .subopt = L_AGNUM,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_L,
+> +					  .subopt = L_INTERNAL,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_LAZYSBCNTR,
+> -			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 0,
+> +			  .conflicts = { {.opt = OPT_M,
+> +					  .subopt = M_CRC,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 0,
+> +					  .message =
+>  		"Lazy superblock counted always enabled for CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -594,14 +870,26 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = N_LOG,
+> -			  .conflicts = { {OPT_N, N_SIZE, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_N,
+> +					  .subopt = N_SIZE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_REC_DIRSIZE,
+>  			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = N_SIZE,
+> -			  .conflicts = { {OPT_N, N_LOG, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_N,
+> +					  .subopt = N_LOG,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -616,7 +904,13 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = N_FTYPE,
+> -			  .conflicts = {  {OPT_M, M_CRC, true, true, 1, 0,
+> +			  .conflicts = {  {.opt = OPT_M,
+> +					  .subopt = M_CRC,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 0,
+> +					  .message =
+>  		"Cannot disable ftype with crcs enabled."},
+>  					  {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -653,7 +947,13 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = R_DEV,
+> -			  .conflicts = { {OPT_M, M_RMAPBT, false, true, 0, 0,
+> +			  .conflicts = { {.opt = OPT_M,
+> +				  	  .subopt = M_RMAPBT,
 
+whitespace issue above ^^^
+
+> +					  .test_values = false,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0,
+> +					  .message =
+>  		"rmapbt not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+> @@ -665,7 +965,13 @@ struct opt_params {
+>  			  .conflicts = { {LAST_CONFLICT} },
+>  			},
+>  			{ .index = R_NAME,
+> -			  .conflicts = { {OPT_M, M_RMAPBT, false, true, 0, 0,
+> +			  .conflicts = { {.opt = OPT_M,
+> +				  	  .subopt = M_RMAPBT,
+
+whitespace issue above ^^^
+
+> +					  .test_values = false,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0,
+> +					  .message =
+>  		"rmapbt not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+> @@ -690,24 +996,60 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = S_LOG,
+> -			  .conflicts = { {OPT_S, S_SIZE, false, false, 0, 0},
+> -					 {OPT_S, S_SECTSIZE, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_S,
+> +					  .subopt = S_SIZE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_S,
+> +					  .subopt = S_SECTSIZE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = S_SECTLOG,
+> -			  .conflicts = { {OPT_S, S_SIZE, false, false, 0, 0},
+> -					 {OPT_S, S_SECTSIZE, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_S,
+> +					  .subopt = S_SIZE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_S,
+> +					  .subopt = S_SECTSIZE,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = S_SIZE,
+> -			  .conflicts = { {OPT_S, S_LOG, false, false, 0, 0},
+> -					 {OPT_S, S_SECTLOG, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_S,
+> +					  .subopt = S_LOG,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_S,
+> +					  .subopt = S_SECTLOG,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -716,8 +1058,20 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = S_SECTSIZE,
+> -			  .conflicts = { {OPT_S, S_LOG, false, false, 0, 0},
+> -					 {OPT_S, S_SECTLOG, false, false, 0, 0},
+> +			  .conflicts = { {.opt = OPT_S,
+> +					  .subopt = S_LOG,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+> +					 {.opt = OPT_S,
+> +					  .subopt = S_SECTLOG,
+> +					  .test_values = false,
+> +					  .test_default_value = false,
+> +					  .invalid_value = 0,
+> +					  .at_value = 0
+> +					 },
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -740,25 +1094,85 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = M_CRC,
+> -			  .conflicts = { {OPT_L, L_VERSION, true, true, 1, 1,
+> +			  .conflicts = { {.opt = OPT_L,
+> +					  .subopt = L_VERSION,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 1,
+> +					  .message =
+>  		"V2 logs are required for CRC enabled filesystems."},
+> -					 {OPT_I, I_ALIGN, false, true, 0, 1,
+> +					 {.opt = OPT_I,
+> +					  .subopt = I_ALIGN,
+> +					  .test_values = false,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 0,
+> +					  .at_value = 1,
+> +					  .message =
+>  		"Inodes always aligned for CRC enabled filesytems."},
+> -					 {OPT_I, I_PROJID32BIT, true, true, 0, 1,
+> +					 {.opt = OPT_I,
+> +					  .subopt = I_PROJID32BIT,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 0,
+> +					  .at_value = 1,
+> +					  .message =
+>  		"32 bit Project IDs always enabled on CRC enabled filesytems."},
+> -					 {OPT_I, I_ATTR, true, true, 1, 1,
+> +					 {.opt = OPT_I,
+> +					  .subopt = I_ATTR,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 1,
+> +					  .message =
+>  		"V2 attribute format always enabled on CRC enabled filesytems."},
+> -					 {OPT_L, L_LAZYSBCNTR, true, true, 0, 1,
+> +					 {.opt = OPT_L,
+> +					  .subopt = L_LAZYSBCNTR,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 0,
+> +					  .at_value = 1,
+> +					  .message =
+>  		"Lazy superblock counted always enabled for CRC enabled filesytems."},
+> -					 {OPT_M, M_FINOBT, true, true, 1, 0,
+> +					 {.opt = OPT_M,
+> +					  .subopt = M_FINOBT,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 0,
+> +					  .message =
+>  		"Finobt not supported without CRC support."},
+> -					 {OPT_M, M_RMAPBT, true, true, 1, 0,
+> +					 {.opt = OPT_M,
+> +				  	  .subopt = M_RMAPBT,
+
+minor whitespace issue above ^^^
+
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 0,
+> +					  .message =
+>  		"rmapbt not supported without CRC support."},
+> -					 {OPT_M, M_REFLINK, true, true, 1, 0,
+> +					 {.opt = OPT_M,
+> +				  	  .subopt = M_REFLINK,
+
+minor whitespace issue above ^^^
+
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 0,
+> +					  .message =
+>  		"reflink not supported without CRC support."},
+> -					 {OPT_I, I_SPINODES, true, true, 1, 0,
+> +					 {.opt = OPT_I,
+> +					  .subopt = I_SPINODES,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 1,
+> +					  .at_value = 0,
+> +					  .message =
+>  		"Sparse inodes not supported without CRC support."},
+> -					 {OPT_N, N_FTYPE, true, true, 0, 1,
+> +					 {.opt = OPT_N,
+> +					  .subopt = N_FTYPE,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 0,
+> +					  .at_value = 1,
+> +					  .message =
+>  		"Cannot disable ftype with crcs enabled."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -766,7 +1180,13 @@ struct opt_params {
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = M_FINOBT,
+> -			  .conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+> +			  .conflicts = { {.opt = OPT_M,
+> +					  .subopt = M_CRC,
+> +					  .test_values = true,
+> +					  .test_default_value = true,
+> +					  .invalid_value = 0,
+> +					  .at_value = 1,
+> +					  .message =
+>  		"Finobt not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -778,11 +1198,29 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = M_RMAPBT,
+> -			.conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+> +			.conflicts = { {.opt = OPT_M,
+> +					.subopt = M_CRC,
+> +					.test_values = true,
+> +					.test_default_value = true,
+> +					.invalid_value = 0,
+> +					.at_value = 1,
+> +					.message =
+>  		"rmapbt not supported without CRC support."},
+> -					{OPT_R, R_NAME, false, true, 0, 0,
+> +					{.opt = OPT_R,
+> +					 .subopt = R_NAME,
+> +					 .test_values = false,
+> +					 .test_default_value = true,
+> +					 .invalid_value = 0,
+> +					 .at_value = 0,
+> +					 .message =
+>  		"rmapbt not supported with realtime devices."},
+> -					{OPT_R, R_DEV, false, true, 0, 0,
+> +					{.opt = OPT_R,
+> +					 .subopt = R_DEV,
+> +					 .test_values = false,
+> +					 .test_default_value = true,
+> +					 .invalid_value = 0,
+> +					 .at_value = 0,
+> +					 .message =
+>  		"rmapbt not supported with realtime devices."},
+>  				       {LAST_CONFLICT} },
+>  			.minval = 0,
+> @@ -790,7 +1228,13 @@ struct opt_params {
+>  			.defaultval = 0,
+>  			},
+>  			{ .index = M_REFLINK,
+> -			  .conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+> +			.conflicts = { {.opt = OPT_M,
+> +					.subopt = M_CRC,
+> +					.test_values = true,
+> +					.test_default_value = true,
+> +					.invalid_value = 0,
+> +					.at_value = 1,
+> +					.message =
+>  		"reflink not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> -- 
+> 2.8.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
