@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47198 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:58778 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750720AbdALOew (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Jan 2017 09:34:52 -0500
-Subject: Re: [PATCH 4/5] xfs_db: sanitize geometry on load
+        id S1751002AbdANCNT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Jan 2017 21:13:19 -0500
+Subject: Re: [PATCH 5/5] xfs_repair: strengthen geometry checks
 References: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
- <148419041340.32674.2646685552269275817.stgit@birch.djwong.org>
+ <148419041963.32674.9938209133184119040.stgit@birch.djwong.org>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <81d0d5a9-6a8c-376a-133e-68dc589ec08c@sandeen.net>
-Date: Thu, 12 Jan 2017 08:34:50 -0600
+Message-ID: <0b7d6af0-d0f0-ee5c-d613-54e03e42fc9e@sandeen.net>
+Date: Fri, 13 Jan 2017 20:13:17 -0600
 MIME-Version: 1.0
-In-Reply-To: <148419041340.32674.2646685552269275817.stgit@birch.djwong.org>
+In-Reply-To: <148419041963.32674.9938209133184119040.stgit@birch.djwong.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -20,185 +20,166 @@ To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
 On 1/11/17 9:06 PM, Darrick J. Wong wrote:
-> xfs_db doesn't check the filesystem geometry when it's mounting, which
-> means that garbage agcount values can cause OOMs when we try to allocate
-> all the per-AG incore metadata.  If we see geometry that looks
-> suspicious, try to derive the actual AG geometry to avoid crashing the
-> system.  This should help with xfs/1301 fuzzing.
+> In xfs_repair, the inodelog, sectlog, and dirblklog values are read
+> directly into the xfs_mount structure without any sanity checking by the
+> verifier.  This results in xfs_repair segfaulting when those fields have
+> ridiculously high values because the pointer arithmetic runs us off the
+> end of the metadata buffers.  Therefore, reject the superblock if these
+> values are garbage and try to find one of the other ones.
 > 
+> Also clean up the dblocks checking to use the relevant macros and remove
+> a bogus ASSERT that crashes repair when sunit is set but swidth isn't.
+> 
+> The superblock field fuzzer (xfs/1301) triggers all these segfaults.
+
+ok, thinking out loud below.  Mostly fine but question at the end.
+
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  db/init.c |   91 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 81 insertions(+), 10 deletions(-)
+>  repair/sb.c         |   19 ++++++++++++++-----
+>  repair/xfs_repair.c |    5 ++++-
+>  2 files changed, 18 insertions(+), 6 deletions(-)
 > 
 > 
-> diff --git a/db/init.c b/db/init.c
-> index ec1e274..a394728 100644
-> --- a/db/init.c
-> +++ b/db/init.c
-> @@ -51,13 +51,90 @@ usage(void)
->  	exit(1);
+> diff --git a/repair/sb.c b/repair/sb.c
+> index 004702c..d784420 100644
+> --- a/repair/sb.c
+> +++ b/repair/sb.c
+> @@ -395,21 +395,26 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
+>  	/* sanity check ag count, size fields against data size field */
+>  
+>  	if (sb->sb_dblocks == 0 ||
+> -		sb->sb_dblocks >
+> -			((__uint64_t)sb->sb_agcount * sb->sb_agblocks) ||
+> -		sb->sb_dblocks <
+> -			((__uint64_t)(sb->sb_agcount - 1) * sb->sb_agblocks
+> -			+ XFS_MIN_AG_BLOCKS))
+> +		sb->sb_dblocks > XFS_MAX_DBLOCKS(sb) ||
+> +		sb->sb_dblocks < XFS_MIN_DBLOCKS(sb))
+
+Ok so this is just proper macro replacement, all good.
+
+>  		return(XR_BAD_FS_SIZE_DATA);
+>  
+>  	if (sb->sb_agblklog != (__uint8_t)libxfs_log2_roundup(sb->sb_agblocks))
+>  		return(XR_BAD_FS_SIZE_DATA);
+>  
+> +	if (sb->sb_inodelog < XFS_DINODE_MIN_LOG ||
+> +		sb->sb_inodelog > XFS_DINODE_MAX_LOG ||
+> +		sb->sb_inodelog != libxfs_log2_roundup(sb->sb_inodesize))
+> +		return XR_BAD_INO_SIZE_DATA;
+> +
+
+missing parentheses on the return.  (I kid!)
+
+Ok, we haven't checked out inodesize yet, so if it's wrong, the above
+might return XR_BAD_INO_SIZE_DATA even if sb_inodelog is ok.
+I suppose that's fine.
+
+hm at some point I wonder if this should more closely match
+xfs_mount_validate_sb (or vice versa)
+
+That function does:
+
+            sbp->sb_inodesize != (1 << sbp->sb_inodelog)                ||
+
+which is the reverse I guess.
+
+>  	if (sb->sb_inodesize < XFS_DINODE_MIN_SIZE ||
+>  		sb->sb_inodesize > XFS_DINODE_MAX_SIZE ||
+>  		sb->sb_inopblock != howmany(sb->sb_blocksize,sb->sb_inodesize))
+>  		return(XR_BAD_INO_SIZE_DATA);
+
+Ok, this doesn't cross-check inodesize vs. inodelog, but I guess that's
+already done above.
+
+> +	if (sb->sb_blocklog - sb->sb_inodelog != sb->sb_inopblog)
+> +		return XR_BAD_INO_SIZE_DATA;
+> +
+
+oh yeah that too.
+
+I do kind of wonder if we shouldn't just match that mount code more
+closely, and just do
+
+if (sbp->sb_inodesize < XFS_DINODE_MIN_SIZE                     ||
+    sbp->sb_inodesize > XFS_DINODE_MAX_SIZE                     ||
+    sbp->sb_inodelog < XFS_DINODE_MIN_LOG                       ||
+    sbp->sb_inodelog > XFS_DINODE_MAX_LOG                       ||
+    sbp->sb_inodesize != (1 << sbp->sb_inodelog)                ||
+    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE                    ||
+    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
+    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog))
+	return XR_BAD_INO_SIZE_DATA;
+
+>  	if (xfs_sb_version_hassector(sb))  {
+>  
+>  		/* check to make sure log sector is legal 2^N, 9 <= N <= 15 */
+> @@ -494,6 +499,10 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
+>  			return(XR_BAD_SB_WIDTH);
+>  	}
+>  
+> +	/* Directory block log */
+> +	if (sb->sb_dirblklog > XFS_MAX_BLOCKSIZE_LOG)
+> +		return XR_BAD_FS_SIZE_DATA;
+> +
+
+OK anyway, if any of this fails we go and take a vote from secondaries,
+should be fine.
+
+>  	return(XR_OK);
 >  }
 >  
-> +/* Try to load an AG's superblock, no verifiers. */
-> +static bool
-> +load_sb(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno,
-> +	struct xfs_sb		*sbp)
-> +{
-> +	struct xfs_buf		*bp;
-> +
-> +	bp = libxfs_readbuf(mp->m_ddev_targp,
-> +			    XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-> +			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
-> +
-> +	if (!bp || bp->b_error)
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index 5c79fd9..8d4be83 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -621,7 +621,10 @@ is_multidisk_filesystem(
+>  	if (!sbp->sb_unit)
+>  		return false;
+>  
+> -	ASSERT(sbp->sb_width);
+> +	/* Stripe unit but no stripe width?  Something's funny here... */
+> +	if (!sbp->sb_width)
 > +		return false;
 > +
-> +	/* copy SB from buffer to in-core, converting architecture as we go */
-> +	libxfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
-> +	libxfs_putbuf(bp);
-> +	libxfs_purgebuf(bp);
-> +
-> +	return true;
-> +}
-> +
-> +/* If the geometry doesn't look sane, try to figure out the real geometry. */
-> +static void
-> +sanitize_geometry(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_sb		*sbp)
-> +{
-> +	struct xfs_sb		sb;
-> +	xfs_agblock_t		agblocks;
-> +
-> +	/* If the geometry looks ok, we're done. */
-> +	if (sbp->sb_blocklog >= XFS_MIN_BLOCKSIZE_LOG &&
-> +	    sbp->sb_blocklog <= XFS_MAX_BLOCKSIZE_LOG &&
-> +	    sbp->sb_blocksize == (1 << sbp->sb_blocklog) &&
-> +	    sbp->sb_dblocks * sbp->sb_blocksize <= x.dsize * x.dbsize &&
-> +	    sbp->sb_dblocks <= XFS_MAX_DBLOCKS(sbp) &&
-> +	    sbp->sb_dblocks >= XFS_MIN_DBLOCKS(sbp))
-> +		return;
-> +
-> +	/* Check blocklog and blocksize */
-> +	if (sbp->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG ||
-> +	    sbp->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG)
-> +		sbp->sb_blocklog = libxfs_log2_roundup(sbp->sb_blocksize);
-> +	if (sbp->sb_blocksize != (1 << sbp->sb_blocklog))
-> +		sbp->sb_blocksize = (1 << sbp->sb_blocksize);
 
-I'm really uneasy with having xfs_db ignore on-disk values and go
-forward after deciding that it "knows better" and modifying what it
-read from disk for fundamental geometry values.
+verify_sb did already sanitize this...
 
-For agcount, I get it - if we can't even /load/ the FS because we OOM,
-then this debugging tool is of no use.  Partial initialization with a lower
-agcount, if clearly stated to the user, seems reasonable.
+        /*
+         * verify stripe alignment fields if present
+         */
+        if (xfs_sb_version_hasdalign(sb)) {
+                if ((!sb->sb_unit && sb->sb_width) ||
+                    (sb->sb_unit && sb->sb_agblocks % sb->sb_unit))
+                        return(XR_BAD_SB_UNIT);
+                if ((sb->sb_unit && !sb->sb_width) ||
+                    (sb->sb_width && sb->sb_unit && sb->sb_width % sb->sb_unit))
+                        return(XR_BAD_SB_WIDTH);
+        }
 
-But modifying the primary geometry in other ways, such as changing the
-blocksize or blocklog or dblocks ... I'm just not comfortable with doing
-that here in service to avoiding that OOM, which is related /only/ to
-agcount.
+so we do this when we start up:
 
-Many other db functions use these values; modifying the behavior of
-a low-level debugger by silently "knowing better" than what's on disk
-based on educated guesses does not sit well with me.
+main
+    get_sb
+        verify_sb
+    ...
+    is_multidisk_filesystem
 
-I suppose other alternatives might be things like:
+by then it should have been ok, what path did you hit this on?
 
-Add an option to read a backup super, instead of the primary
-Add an option to limit the agcount regardless of what's on disk
+Seems like we shouldn't be making decisions about "is multidisk"
+here, we should be saying "bad superblock" somewhere earlier, no?
 
-I guess both of those have the downside of only knowing this should
-be done /after/ you've OOMed the box on the first try...
-
-I suppose the other option is to make an educated guess about insane
-agcount, but without modifying any other superblock buffer values.
-
-And hell at that point maybe just default to 1 ag, to give the admin
-a chance to fix it, and restart xfs_db.  "Insane AG count.  Limiting
-to 1 AG, please fix and restart xfs_db."
-
-Last thought - how does this "fix it up" heuristic affect xfs_check?
+I mean, bailing with false is fine I /guess/ but I think the ASSERT
+implies that we should have already verified that both or none
+are set...
 
 -Eric
 
-> +
-> +	/* Clamp dblocks to the size of the device. */
-> +	if (sbp->sb_dblocks > x.dsize * x.dbsize / sbp->sb_blocksize)
-> +		sbp->sb_dblocks = x.dsize * x.dbsize / sbp->sb_blocksize;
-> +
-> +	/* See if agblocks helps us find a superblock. */
-> +	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
-> +	if (load_sb(mp, 1, &sb) && sb.sb_magicnum == XFS_SB_MAGIC) {
-> +		sbp->sb_agcount = sbp->sb_dblocks / sbp->sb_agblocks;
-> +		goto out;
-> +	}
-> +
-> +	/* See if agcount helps us find a superblock. */
-> +	agblocks = sbp->sb_agblocks;
-> +	sbp->sb_agblocks = sbp->sb_dblocks / sbp->sb_agcount;
-> +	if (sbp->sb_agblocks != 0 &&
-> +	    load_sb(mp, 1, &sb) &&
-> +	    sb.sb_magicnum == XFS_SB_MAGIC) {
-> +		goto out;
-> +	}
-
-
-
-> +
-> +	/* Both are nuts, assume 1 AG. */
-> +	sbp->sb_agblocks = agblocks;
-> +	sbp->sb_agcount = 1;
-> +out:
-> +	fprintf(stderr,
-> +		_("%s: device %s AG count is insane.  Limiting reads to the first %u AGs.\n"),
-> +		progname, fsdevice, sbp->sb_agcount);
-> +}
-> +
->  void
->  init(
->  	int		argc,
->  	char		**argv)
->  {
->  	struct xfs_sb	*sbp;
-> -	struct xfs_buf	*bp;
->  	int		c;
+>  	return true;
+>  }
 >  
->  	setlocale(LC_ALL, "");
-> @@ -124,20 +201,12 @@ init(
->  	 */
->  	memset(&xmount, 0, sizeof(struct xfs_mount));
->  	libxfs_buftarg_init(&xmount, x.ddev, x.logdev, x.rtdev);
-> -	bp = libxfs_readbuf(xmount.m_ddev_targp, XFS_SB_DADDR,
-> -			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
-> -
-> -	if (!bp || bp->b_error) {
-> +	if (!load_sb(&xmount, 0, &xmount.m_sb)) {
->  		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
->  			"bytes)\n"), progname, fsdevice);
->  		exit(1);
->  	}
->  
-> -	/* copy SB from buffer to in-core, converting architecture as we go */
-> -	libxfs_sb_from_disk(&xmount.m_sb, XFS_BUF_TO_SBP(bp));
-> -	libxfs_putbuf(bp);
-> -	libxfs_purgebuf(bp);
-> -
->  	sbp = &xmount.m_sb;
->  	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
->  		fprintf(stderr, _("%s: %s is not a valid XFS filesystem (unexpected SB magic number 0x%08x)\n"),
-> @@ -148,6 +217,8 @@ init(
->  		}
->  	}
->  
-> +	sanitize_geometry(&xmount, sbp);
-> +
->  	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
->  			  LIBXFS_MOUNT_DEBUGGER);
->  	if (!mp) {
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
