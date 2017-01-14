@@ -1,40 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:21206 "EHLO
-        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751278AbdANH6o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jan 2017 02:58:44 -0500
-Date: Fri, 13 Jan 2017 23:06:00 -0800
+Received: from userp1040.oracle.com ([156.151.31.81]:46906 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751278AbdANHzA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jan 2017 02:55:00 -0500
+Date: Fri, 13 Jan 2017 23:54:52 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [LSF/MM ATTEND] XFS, VFS, pmem, and ext4 topics
-Message-ID: <20170114070600.GF5883@birch.djwong.org>
+Subject: [LSF/MM TOPIC] online filesystem repair
+Message-ID: <20170114075452.GJ14033@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
+To: lsf-pc@lists.linux-foundation.org, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
 Hi,
 
-I'd like to attend LSF/MM again this year to participate in the
-discussions around XFS, VFS, pmem, and possibly ext4.  I'm interested in
-talking to the pmem developers about integrating DAX with CoW and
-stabilizing DAX support within existing filesystems.  I also want to
-talk about online scrubbing and filesystem repair in XFS[1] with an eye
-towards some of the less savory interactions it has with the VFS to
-quiesce userland interactions.
+I've been working on implementing online metadata scrubbing and repair
+in XFS.  Most of the code is self contained inside XFS, but there's a
+small amount of interaction with the VFS freezer code that has to happen
+in order to shut down the filesystem to rebuild the extent backref
+records.  It might be interesting to discuss the (fairly slight)
+requirements upon the VFS to support repairs, and/or have a BoF to
+discuss how to build an online checker if any of the other filesystems
+are interested in this.
 
-If there's a session about the fsync and IO errors; or VFS file and
-directory encryption I'd probably attend that as well.  Since I'm the
-XFS maintainer now I'd also appreciate the chance to organize an XFS BOF
-with the other developers.
-
-If there's time I'll also catch up with the ext4 developers to see what
-they're working on.
+Concurrent with development of online scrubbing, I've also been working
+on a fuzz test suite for xfstests that fuzzes every field of every
+metadata object on the filesystem and then tries to crash the kernel,
+the offline repair tool (xfs_repair), or the online repair tool
+(xfs_scrub).  I could talk about that as kind of a follow up to last
+year's AFL presentation, and what kinds of bugs it's uncovered.
 
 --D
-
-[1] I'd also chat with the ocfs2 developers about their implementation
-if any of them attend.
