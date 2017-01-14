@@ -1,70 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50420 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:49556 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750741AbdAQPSZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Jan 2017 10:18:25 -0500
-Date: Tue, 17 Jan 2017 16:18:17 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
-Message-ID: <20170117151817.GR19699@dhcp22.suse.cz>
-References: <20170106141107.23953-1-mhocko@kernel.org>
- <20170106141107.23953-9-mhocko@kernel.org>
- <20170117025607.frrcdbduthhutrzj@thunk.org>
- <20170117082425.GD19699@dhcp22.suse.cz>
+        id S1750801AbdANMxr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 14 Jan 2017 07:53:47 -0500
+Date: Sat, 14 Jan 2017 07:53:46 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v3 4/5] xfs_db: sanitize geometry on load
+Message-ID: <20170114125346.GA31018@bfoster.bfoster>
+References: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
+ <148419041340.32674.2646685552269275817.stgit@birch.djwong.org>
+ <20170113003201.GC14038@birch.djwong.org>
+ <20170113133542.GB22013@bfoster.bfoster>
+ <b071967b-e67b-2280-156c-9a5aeaa5d40c@redhat.com>
+ <20170114034449.GA29191@bfoster.bfoster>
+ <d4731c23-e721-faad-9937-8256840012bb@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170117082425.GD19699@dhcp22.suse.cz>
+In-Reply-To: <d4731c23-e721-faad-9937-8256840012bb@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Tue 17-01-17 09:24:25, Michal Hocko wrote:
-> On Mon 16-01-17 21:56:07, Theodore Ts'o wrote:
-> > On Fri, Jan 06, 2017 at 03:11:07PM +0100, Michal Hocko wrote:
-> > > From: Michal Hocko <mhocko@suse.com>
-> > > 
-> > > This reverts commit 216553c4b7f3e3e2beb4981cddca9b2027523928. Now that
-> > > the transaction context uses memalloc_nofs_save and all allocations
-> > > within the this context inherit GFP_NOFS automatically, there is no
-> > > reason to mark specific allocations explicitly.
-> > > 
-> > > This patch should not introduce any functional change. The main point
-> > > of this change is to reduce explicit GFP_NOFS usage inside ext4 code
-> > > to make the review of the remaining usage easier.
-> > > 
-> > > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> > > Reviewed-by: Jan Kara <jack@suse.cz>
+On Fri, Jan 13, 2017 at 09:51:20PM -0600, Eric Sandeen wrote:
+> On 1/13/17 9:44 PM, Brian Foster wrote:
+> > On Fri, Jan 13, 2017 at 08:25:47PM -0600, Eric Sandeen wrote:
+> >> On 1/13/17 7:35 AM, Brian Foster wrote:
+> >>>> +		fprintf(stderr,
+> >>>> +_("%s: device %s AG count is insane, but could be %u.  Limiting reads to AG 0.\n"),
+> >>>> +			progname, fsdevice, dblocks / sbp->sb_agblocks);
+> >>>> +	} else {
+> >>>> +		fprintf(stderr,
+> >>>> +_("%s: device %s AG count is insane.  Limiting reads to AG 0.\n"),
+> >>>> +			progname, fsdevice);
+> >>>> +	}
+> >>> For reasons like the above, I think xfs_db shouldn't be in the business
+> >>> of repair like validation (xfs_check notwithstanding). That said,
+> >>> dropping into a fixed single AG mode seems less risky than trying to
+> >>> surmise a valid geometry. I'd get rid of the "this might be your
+> >>> agcount" messaging entirely though and just replace it with something
+> >>> that explicitly states the filesystem is corrupted, the runtime geometry
+> >>> is invalid and that the user should probably run xfs_repair before doing
+> >>> anything.
+> >>
+> >> So keep in mind that xfs_db is for people with super xfs powers. (*)
+> >>
+> >> I wouldn't suggest repair, I'd start with 1 ag to avoid the OOM, state 
+> >> that clearly, and punt the problem to the admin with no other specific
+> >> suggestions.
+> >>
+> >>> I still like the idea of the single AG mode thing as a command line flag
+> >>> rather than default behavior because it requires user acknowledgement,
+> >>> but this is a debug tool after all, so I'll defer to Eric on that. I do
+> >>> think that if we create this kind of invalid runtime mode, this should
+> >>> be split into two patches. First, a bugfix patch for the core OOM
+> >>> problem (i.e., detect a wacky superblock and exit). Second, replace the
+> >>> exit with the single AG runtime mode thing.
+> >>
+> >> Well, the problem with a flag, I think, is that you might have already
+> >> unwittingly OOMed your box to find out that you need it.
+> >> Rebooting to try again with a flag sucks.
+> >>
 > > 
-> > Changes in the jbd2 layer aren't going to guarantee that
-> > memalloc_nofs_save() will be executed if we are running ext4 without a
-> > journal (aka in no journal mode).  And this is a *very* common
-> > configuration; it's how ext4 is used inside Google in our production
-> > servers.
+> > I don't see how that is relevant. I'm not suggesting a
+> > --please-don't-oom-in-case-of-corruption flag. :) As mentioned
+> > previously, I think the bug fix here is a simple patch to detect the
+> > bogus superblock and exit gracefully rather than go off the rails and
+> > end up OOM killed.
 > 
-> OK, I wasn't aware of that.
+> sorry, misunderstood the 
+> "idea of the single AG mode thing as a command line flag" idea, I guess.
+>  
+> > From there the OOM is irrelevant and we can optionally enhance xfs_db to
+> > try and allow it to run in such situations. To be honest, I'm perfectly
+> > happy for xfs_db to exit gracefully in this situation and to leave it at
+> > that. I think the majority of cases where this problem occurs, the next
+> > logical step is to run xfs_repair. I suggested the flag approach more
+> > because I think it's more appropriate to do things like fabricate fs
+> > geometry behind a flag rather than by default. The larger point is that
+> > if we want this kind of enhancement, it should probably be driven more
+> > by a use case than an unfortunate (and probably rare) bug. I don't see
+> > why we need to complicate the bug fix with the fancy enhancement.
 > 
-> > So that means the earlier patches will probably need to be changed so
-> > the nOFS scope is done in the ext4_journal_{start,stop} functions in
-> > fs/ext4/ext4_jbd2.c.
+> *nod*  ok, I had understood the flag idea backwards-ly I guess.
 > 
-> I could definitely appreciated some help here. The call paths are rather
-> complex and I am not familiar with the code enough. On of the biggest
-> problem I have currently is that there doesn't seem to be an easy place
-> to store the old allocation context. 
+> I do think that mere mortal invocations via xfs_admin need to be
+> handled in this "ignore agcount" case, though...
+> 
 
-OK, so I've been staring into the code and AFAIU current->journal_info
-can contain my stored information. I could either hijack part of the
-word as the ref counting is only consuming low 12b. But that looks too
-ugly to live. Or I can allocate some placeholder.
+We're talking about invocations intended to modify things (i.e., version
+flags, fs uuid, etc.), right? If so, wouldn't we want those things to
+fail if the superblock is busted?
 
-But before going to play with that I am really wondering whether we need
-all this with no journal at all. AFAIU what Jack told me it is the
-journal lock(s) which is the biggest problem from the reclaim recursion
-point of view. What would cause a deadlock in no journal mode?
+Brian
 
--- 
-Michal Hocko
-SUSE Labs
+> -Eric
+>  
+> > Brian
+> > 
+> >> (*) unless you are invoking it via xfs_admin.sh, dammit.  We sure wouldn't
+> >> want xfs_admin to exit happily, having updated only one AG.  Dammit!
+> >>
+> >> Perhaps it should set exitcode, and then xfs_admin could do something
+> >> like:
+> >>
+> >> 	xfs_db -c quit $DEV
+> >>
+> >> first, and check that db is able to initialize sanely before using it again
+> >> to perform normal admin functions.
+> >>
+> >> -Eric
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
