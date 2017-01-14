@@ -1,145 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59866 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1765126AbdAKRyS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Jan 2017 12:54:18 -0500
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1DEBDC05683F
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 17:54:11 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v0BHsAhB027368
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 12:54:10 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 1/5] xfs: refactor iomap delalloc existing extent search into helper
-Date: Wed, 11 Jan 2017 12:54:05 -0500
-Message-Id: <1484157249-464-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1484157249-464-1-git-send-email-bfoster@redhat.com>
-References: <1484157249-464-1-git-send-email-bfoster@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:47160 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751278AbdANH6Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jan 2017 02:58:24 -0500
+Date: Fri, 13 Jan 2017 23:58:18 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [LSF/MM ATTEND] XFS, VFS, pmem, and ext4 topics
+Message-ID: <20170114075818.GK14033@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org, darrick.wong@oracle.com
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
 
-In preparation for reuse of the existing delayed allocation code for COW
-reservation, factor out the part of xfs_file_iomap_begin_delay()
-responsible for existing extent lookup into a new helper. This patch
-does not change behavior.
+[Resend?  I got some weird smtp blowblack...]
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_iomap.c | 72 ++++++++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 57 insertions(+), 15 deletions(-)
+Hi,
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 0d14742..ec86262 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -522,6 +522,48 @@ xfs_iomap_prealloc_size(
- 	return alloc_blocks;
- }
- 
-+/*
-+ * Prepare to handle delayed allocation based on whether extents exist in the
-+ * inode data and COW forks. If an existing data extent is shared, determine
-+ * whether COW fork reservation is necessary.
-+ *
-+ * The 'found' parameter indicates whether a writable mapping was found. If the
-+ * mapping is shared, a COW reservation is performed for the corresponding
-+ * range.
-+ */
-+static int
-+xfs_iomap_search_extents(
-+	struct xfs_inode	*ip,
-+	xfs_fileoff_t		offset_fsb,
-+	xfs_fileoff_t		end_fsb,
-+	int			*eof,
-+	int			*idx,
-+	struct xfs_bmbt_irec	*got,
-+	bool			*found)		/* found usable extent */
-+{
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	int			error = 0;
-+
-+	*found = false;
-+
-+	*eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, idx, got);
-+	if (*eof || got->br_startoff > offset_fsb)
-+		return 0;
-+
-+	if (xfs_is_reflink_inode(ip)) {
-+		bool		shared;
-+
-+		xfs_trim_extent(got, offset_fsb, end_fsb - offset_fsb);
-+		error = xfs_reflink_reserve_cow(ip, got, &shared);
-+		if (error)
-+			return error;
-+	}
-+
-+	*found = true;
-+
-+	return error;
-+}
-+
- static int
- xfs_file_iomap_begin_delay(
- 	struct inode		*inode,
-@@ -533,18 +575,22 @@ xfs_file_iomap_begin_delay(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
--	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	xfs_fileoff_t		offset_fsb;
-+	xfs_fileoff_t		end_fsb;
- 	xfs_fileoff_t		maxbytes_fsb =
- 		XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
--	xfs_fileoff_t		end_fsb;
- 	int			error = 0, eof = 0;
- 	struct xfs_bmbt_irec	got;
- 	xfs_extnum_t		idx;
- 	xfs_fsblock_t		prealloc_blocks = 0;
-+	bool			found;
- 
- 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
- 	ASSERT(!xfs_get_extsz_hint(ip));
- 
-+	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+	end_fsb = min(XFS_B_TO_FSB(mp, offset + count), maxbytes_fsb);
-+
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 
- 	if (unlikely(XFS_TEST_ERROR(
-@@ -564,19 +610,15 @@ xfs_file_iomap_begin_delay(
- 			goto out_unlock;
- 	}
- 
--	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
--	if (!eof && got.br_startoff <= offset_fsb) {
--		if (xfs_is_reflink_inode(ip)) {
--			bool		shared;
--
--			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
--					maxbytes_fsb);
--			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
--			error = xfs_reflink_reserve_cow(ip, &got, &shared);
--			if (error)
--				goto out_unlock;
--		}
--
-+	/*
-+	 * Search for preexisting extents. If an existing data extent is shared,
-+	 * this will perform COW fork reservation.
-+	 */
-+	error = xfs_iomap_search_extents(ip, offset_fsb, end_fsb, &eof, &idx,
-+					 &got, &found);
-+	if (error)
-+		goto out_unlock;
-+	if (found) {
- 		trace_xfs_iomap_found(ip, offset, count, 0, &got);
- 		goto done;
- 	}
--- 
-2.7.4
+I'd like to attend LSF/MM again this year to participate in the
+discussions around XFS, VFS, pmem, and possibly ext4.  I'm interested in
+talking to the pmem developers about integrating DAX with CoW and
+stabilizing DAX support within existing filesystems.  I also want to
+talk about online scrubbing and filesystem repair in XFS[1] with an eye
+towards some of the less savory interactions it has with the VFS to
+quiesce userland interactions.
 
+If there's a session about the fsync and IO errors; or VFS file and
+directory encryption I'd probably attend that as well.  Since I'm the
+XFS maintainer now I'd also appreciate the chance to organize an XFS BOF
+with the other developers.
+
+If there's time I'll also catch up with the ext4 developers to see what
+they're working on.
+
+--D
+
+[1] I'd also chat with the ocfs2 developers about their implementation
+if any of them attend.
