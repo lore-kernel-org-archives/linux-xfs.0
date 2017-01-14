@@ -1,164 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50346 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:55694 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753689AbdAKQXt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Jan 2017 11:23:49 -0500
-Subject: Re: [PATCH v3] xfsprogs: replace xfs_mode_to_ftype table with switch
- statement
-References: <1484116217-7594-1-git-send-email-amir73il@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d1fbdb06-ae8a-d2db-cd02-bb5f06e7edfc@sandeen.net>
-Date: Wed, 11 Jan 2017 10:23:46 -0600
+        id S1750808AbdANDvW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Jan 2017 22:51:22 -0500
+Subject: Re: [PATCH v3 4/5] xfs_db: sanitize geometry on load
+References: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
+ <148419041340.32674.2646685552269275817.stgit@birch.djwong.org>
+ <20170113003201.GC14038@birch.djwong.org>
+ <20170113133542.GB22013@bfoster.bfoster>
+ <b071967b-e67b-2280-156c-9a5aeaa5d40c@redhat.com>
+ <20170114034449.GA29191@bfoster.bfoster>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <d4731c23-e721-faad-9937-8256840012bb@redhat.com>
+Date: Fri, 13 Jan 2017 21:51:20 -0600
 MIME-Version: 1.0
-In-Reply-To: <1484116217-7594-1-git-send-email-amir73il@gmail.com>
+In-Reply-To: <20170114034449.GA29191@bfoster.bfoster>
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On 1/11/17 12:30 AM, Amir Goldstein wrote:
-> The size of the xfs_mode_to_ftype[] conversion table
-> was too small to handle an invalid value of mode=S_IFMT.
+On 1/13/17 9:44 PM, Brian Foster wrote:
+> On Fri, Jan 13, 2017 at 08:25:47PM -0600, Eric Sandeen wrote:
+>> On 1/13/17 7:35 AM, Brian Foster wrote:
+>>>> +		fprintf(stderr,
+>>>> +_("%s: device %s AG count is insane, but could be %u.  Limiting reads to AG 0.\n"),
+>>>> +			progname, fsdevice, dblocks / sbp->sb_agblocks);
+>>>> +	} else {
+>>>> +		fprintf(stderr,
+>>>> +_("%s: device %s AG count is insane.  Limiting reads to AG 0.\n"),
+>>>> +			progname, fsdevice);
+>>>> +	}
+>>> For reasons like the above, I think xfs_db shouldn't be in the business
+>>> of repair like validation (xfs_check notwithstanding). That said,
+>>> dropping into a fixed single AG mode seems less risky than trying to
+>>> surmise a valid geometry. I'd get rid of the "this might be your
+>>> agcount" messaging entirely though and just replace it with something
+>>> that explicitly states the filesystem is corrupted, the runtime geometry
+>>> is invalid and that the user should probably run xfs_repair before doing
+>>> anything.
+>>
+>> So keep in mind that xfs_db is for people with super xfs powers. (*)
+>>
+>> I wouldn't suggest repair, I'd start with 1 ag to avoid the OOM, state 
+>> that clearly, and punt the problem to the admin with no other specific
+>> suggestions.
+>>
+>>> I still like the idea of the single AG mode thing as a command line flag
+>>> rather than default behavior because it requires user acknowledgement,
+>>> but this is a debug tool after all, so I'll defer to Eric on that. I do
+>>> think that if we create this kind of invalid runtime mode, this should
+>>> be split into two patches. First, a bugfix patch for the core OOM
+>>> problem (i.e., detect a wacky superblock and exit). Second, replace the
+>>> exit with the single AG runtime mode thing.
+>>
+>> Well, the problem with a flag, I think, is that you might have already
+>> unwittingly OOMed your box to find out that you need it.
+>> Rebooting to try again with a flag sucks.
+>>
 > 
-> Instead of fixing the table size, replace the conversion table
-> with a conversion helper that uses a switch statement.
-> 
-> Suggested-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->  libxfs/xfs_dir2.c    | 36 ++++++++++++++++++++++--------------
->  libxfs/xfs_dir2.h    |  5 ++---
->  repair/dino_chunks.c |  6 +-----
->  repair/phase6.c      |  2 +-
->  4 files changed, 26 insertions(+), 23 deletions(-)
-> 
-> Eric,
-> 
-> This is a matching patch to the one that got Reviewed-by Darrick for kernel.
-> 
-> Tested xfs_repair with the new xfs/348 test with -n ftype=0|1.
+> I don't see how that is relevant. I'm not suggesting a
+> --please-don't-oom-in-case-of-corruption flag. :) As mentioned
+> previously, I think the bug fix here is a simple patch to detect the
+> bogus superblock and exit gracefully rather than go off the rails and
+> end up OOM killed.
 
-Thanks, I'll pull this in after Darrick commits it to the kernel.
+sorry, misunderstood the 
+"idea of the single AG mode thing as a command line flag" idea, I guess.
+ 
+> From there the OOM is irrelevant and we can optionally enhance xfs_db to
+> try and allow it to run in such situations. To be honest, I'm perfectly
+> happy for xfs_db to exit gracefully in this situation and to leave it at
+> that. I think the majority of cases where this problem occurs, the next
+> logical step is to run xfs_repair. I suggested the flag approach more
+> because I think it's more appropriate to do things like fabricate fs
+> geometry behind a flag rather than by default. The larger point is that
+> if we want this kind of enhancement, it should probably be driven more
+> by a use case than an unfortunate (and probably rare) bug. I don't see
+> why we need to complicate the bug fix with the fancy enhancement.
+
+*nod*  ok, I had understood the flag idea backwards-ly I guess.
+
+I do think that mere mortal invocations via xfs_admin need to be
+handled in this "ignore agcount" case, though...
 
 -Eric
  
-> Amir.
+> Brian
 > 
-> v3:
-> - Replaced xfs_mode_to_ftype table with switch statement
-> 
-> v2:
-> - remove wrong argument about on-disk malformed mode from commit message
-> - address Brian's review comments
-> - test with new xfs/348
-> 
-> v1:
-> - fix patch for xfsprogs derived from kernel patch
-> 
-> diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-> index 4180a93..257a99b 100644
-> --- a/libxfs/xfs_dir2.c
-> +++ b/libxfs/xfs_dir2.c
-> @@ -34,21 +34,29 @@
->  struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
->  
->  /*
-> - * @mode, if set, indicates that the type field needs to be set up.
-> - * This uses the transformation from file mode to DT_* as defined in linux/fs.h
-> - * for file type specification. This will be propagated into the directory
-> - * structure if appropriate for the given operation and filesystem config.
-> + * Convert inode mode to directory entry filetype
->   */
-> -const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
-> -	[0]			= XFS_DIR3_FT_UNKNOWN,
-> -	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
-> -	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
-> -	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
-> -	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
-> -	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
-> -	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
-> -	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
-> -};
-> +const unsigned char xfs_mode_to_ftype(int mode)
-> +{
-> +	switch (mode & S_IFMT) {
-> +	case S_IFREG:
-> +		return XFS_DIR3_FT_REG_FILE;
-> +	case S_IFDIR:
-> +		return XFS_DIR3_FT_DIR;
-> +	case S_IFCHR:
-> +		return XFS_DIR3_FT_CHRDEV;
-> +	case S_IFBLK:
-> +		return XFS_DIR3_FT_BLKDEV;
-> +	case S_IFIFO:
-> +		return XFS_DIR3_FT_FIFO;
-> +	case S_IFSOCK:
-> +		return XFS_DIR3_FT_SOCK;
-> +	case S_IFLNK:
-> +		return XFS_DIR3_FT_SYMLINK;
-> +	default:
-> +		return XFS_DIR3_FT_UNKNOWN;
-> +	}
-> +}
->  
->  /*
->   * ASCII case-insensitive (ie. A-Z) support for directories that was
-> diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-> index 89b9e24..ea20c12 100644
-> --- a/libxfs/xfs_dir2.h
-> +++ b/libxfs/xfs_dir2.h
-> @@ -32,10 +32,9 @@ struct xfs_dir2_data_unused;
->  extern struct xfs_name	xfs_name_dotdot;
->  
->  /*
-> - * directory filetype conversion tables.
-> + * Convert inode mode to directory entry filetype
->   */
-> -#define S_SHIFT 12
-> -extern const unsigned char xfs_mode_to_ftype[];
-> +extern const unsigned char xfs_mode_to_ftype(int mode);
->  
->  /*
->   * directory operations vector for encode/decode routines
-> diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-> index 4db9512..a3909ac 100644
-> --- a/repair/dino_chunks.c
-> +++ b/repair/dino_chunks.c
-> @@ -826,8 +826,6 @@ next_readbuf:
->  		 * we do now, this is where to start.
->  		 */
->  		if (is_used)  {
-> -			__uint16_t	di_mode;
-> -
->  			if (is_inode_free(ino_rec, irec_offset))  {
->  				if (verbose || no_modify)  {
->  					do_warn(
-> @@ -846,10 +844,8 @@ next_readbuf:
->  			 * store the on-disk file type for comparing in
->  			 * phase 6.
->  			 */
-> -			di_mode = be16_to_cpu(dino->di_mode);
-> -			di_mode = (di_mode & S_IFMT) >> S_SHIFT;
->  			set_inode_ftype(ino_rec, irec_offset,
-> -					xfs_mode_to_ftype[di_mode]);
-> +				xfs_mode_to_ftype(be16_to_cpu(dino->di_mode)));
->  
->  			/*
->  			 * store on-disk nlink count for comparing in phase 7
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index 06eed16..c492dd9 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -1082,7 +1082,7 @@ mv_orphanage(
->  	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
->  		do_error(_("%d - couldn't iget disconnected inode\n"), err);
->  
-> -	xname.type = xfs_mode_to_ftype[(VFS_I(ino_p)->i_mode & S_IFMT)>>S_SHIFT];
-> +	xname.type = xfs_mode_to_ftype(VFS_I(ino_p)->i_mode);
->  
->  	if (isa_dir)  {
->  		irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, orphanage_ino),
-> 
+>> (*) unless you are invoking it via xfs_admin.sh, dammit.  We sure wouldn't
+>> want xfs_admin to exit happily, having updated only one AG.  Dammit!
+>>
+>> Perhaps it should set exitcode, and then xfs_admin could do something
+>> like:
+>>
+>> 	xfs_db -c quit $DEV
+>>
+>> first, and check that db is able to initialize sanely before using it again
+>> to perform normal admin functions.
+>>
+>> -Eric
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
