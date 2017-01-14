@@ -1,176 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36200 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60736 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750932AbdAQNoW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Jan 2017 08:44:22 -0500
-Date: Tue, 17 Jan 2017 08:44:21 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: fix COW writeback race
-Message-ID: <20170117134421.GB12426@bfoster.bfoster>
-References: <1484639331-2137-1-git-send-email-hch@lst.de>
+        id S1751083AbdANCfE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Jan 2017 21:35:04 -0500
+Subject: Re: [PATCH v3 4/5] xfs_db: sanitize geometry on load
+References: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
+ <148419041340.32674.2646685552269275817.stgit@birch.djwong.org>
+ <20170113003201.GC14038@birch.djwong.org>
+ <20170113133542.GB22013@bfoster.bfoster>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <b071967b-e67b-2280-156c-9a5aeaa5d40c@redhat.com>
+Date: Fri, 13 Jan 2017 20:25:47 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1484639331-2137-1-git-send-email-hch@lst.de>
+In-Reply-To: <20170113133542.GB22013@bfoster.bfoster>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 17, 2017 at 08:48:51AM +0100, Christoph Hellwig wrote:
-> Due to the way how xfs_iomap_write_allocate tries to convert the whole
-> found extents from delalloc to real space we can run into a race
-> condition with multiple threads doing writes to this same extent.
-> For the non-COW case that is harmless as the only thing that can happen
-> is that we call xfs_bmapi_write on an extent that has already been
-> converted to a real allocation.  For COW writes where we move the extent
-> from the COW to the data fork after I/O completion the race is, however,
-> not quite as harmless.  In the worst case we are now calling
-> xfs_bmapi_write on a region that contains hole in the COW work, which
-> will trip up an assert in debug builds or lead to file system corruption
-> in non-debug builds.  This seems to be reproducible with workloads of
-> small O_DSYNC write, although so far I've not managed to come up with
-> a with an isolated reproducer.
-> 
+On 1/13/17 7:35 AM, Brian Foster wrote:
+>> +		fprintf(stderr,
+>> +_("%s: device %s AG count is insane, but could be %u.  Limiting reads to AG 0.\n"),
+>> +			progname, fsdevice, dblocks / sbp->sb_agblocks);
+>> +	} else {
+>> +		fprintf(stderr,
+>> +_("%s: device %s AG count is insane.  Limiting reads to AG 0.\n"),
+>> +			progname, fsdevice);
+>> +	}
+> For reasons like the above, I think xfs_db shouldn't be in the business
+> of repair like validation (xfs_check notwithstanding). That said,
+> dropping into a fixed single AG mode seems less risky than trying to
+> surmise a valid geometry. I'd get rid of the "this might be your
+> agcount" messaging entirely though and just replace it with something
+> that explicitly states the filesystem is corrupted, the runtime geometry
+> is invalid and that the user should probably run xfs_repair before doing
+> anything.
 
-Any reason we don't try to address the core race rather than shake up
-the affected code to accommodate it? I ask for a couple reasons: 1.) I'm
-not quite following the specific race from the description and 2.) I
-considered doing the exact same thing at first for the eofblocks i_size
-issue, but more digging rooted out the problem in the eofblocks code.
-This one may not be as straightforward a fix, of course... (but if not,
-the commit log should probably explain why).
+So keep in mind that xfs_db is for people with super xfs powers. (*)
 
-> The fix for the issue is relatively simple:  tell xfs_bmapi_write
-> that we are only asked to convert delayed allocations and skip holes
-> in that case.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 41 +++++++++++++++++++++++++++++------------
->  fs/xfs/libxfs/xfs_bmap.h |  6 +++++-
->  fs/xfs/xfs_iomap.c       |  2 +-
->  3 files changed, 35 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 44773c9..ceae779 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4514,8 +4514,6 @@ xfs_bmapi_write(
->  	int			n;		/* current extent index */
->  	xfs_fileoff_t		obno;		/* old block number (offset) */
->  	int			whichfork;	/* data or attr fork */
-> -	char			inhole;		/* current location is hole in file */
-> -	char			wasdelay;	/* old extent was delayed */
->  
->  #ifdef DEBUG
->  	xfs_fileoff_t		orig_bno;	/* original block number value */
-> @@ -4603,22 +4601,41 @@ xfs_bmapi_write(
->  	bma.firstblock = firstblock;
->  
->  	while (bno < end && n < *nmap) {
-> -		inhole = eof || bma.got.br_startoff > bno;
-> -		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
-> +		bool			need_alloc = false, wasdelay = false;
->  
-> -		/*
-> -		 * Make sure we only reflink into a hole.
-> -		 */
-> -		if (flags & XFS_BMAPI_REMAP)
-> -			ASSERT(inhole);
-> -		if (flags & XFS_BMAPI_COWFORK)
-> -			ASSERT(!inhole);
-> +		/* in hole or beyoned EOF? */
-> +		if (eof || bma.got.br_startoff > bno) {
-> +			if (flags & XFS_BMAPI_DELALLOC) {
-> +				/*
-> +				 * For the COW fork we can reasonably get a
-> +				 * request for converting an extent that races
-> +				 * with other threads already having converted
-> +				 * part of it, as there converting COW to
-> +				 * regular blocks is not protected using the
-> +				 * IOLOCK.
-> +				 */
-> +				ASSERT(flags & XFS_BMAPI_COWFORK);
-> +				if (!(flags & XFS_BMAPI_COWFORK)) {
-> +					error = -EIO;
-> +					goto error0;
-> +				}
+I wouldn't suggest repair, I'd start with 1 ag to avoid the OOM, state 
+that clearly, and punt the problem to the admin with no other specific
+suggestions.
 
-What happens in this case if eof is true? It looks like got could be
-bogus, yet we still carry on using it in the post-allocation part of the
-loop. The fact that the allocation code breaks out of the loop if
-allocation doesn't occur is a bit of a red flag that the post-allocation
-code may very well expect to always have an allocated mapping.
+> I still like the idea of the single AG mode thing as a command line flag
+> rather than default behavior because it requires user acknowledgement,
+> but this is a debug tool after all, so I'll defer to Eric on that. I do
+> think that if we create this kind of invalid runtime mode, this should
+> be split into two patches. First, a bugfix patch for the core OOM
+> problem (i.e., detect a wacky superblock and exit). Second, replace the
+> exit with the single AG runtime mode thing.
 
-That aside... if we do want to do something like this, I wonder whether
-it's more cleanly handled by the caller.
+Well, the problem with a flag, I think, is that you might have already
+unwittingly OOMed your box to find out that you need it.
+Rebooting to try again with a flag sucks.
 
-Brian
+(*) unless you are invoking it via xfs_admin.sh, dammit.  We sure wouldn't
+want xfs_admin to exit happily, having updated only one AG.  Dammit!
 
-> +			} else {
-> +				need_alloc = true;
-> +			}
-> +		} else {
-> +			/*
-> +			 * Make sure we only reflink into a hole.
-> +			 */
-> +			ASSERT(!(flags & XFS_BMAPI_REMAP));
-> +			if (isnullstartblock(bma.got.br_startblock))
-> +				wasdelay = true;
-> +		}
->  
->  		/*
->  		 * First, deal with the hole before the allocated space
->  		 * that we found, if any.
->  		 */
-> -		if (inhole || wasdelay) {
-> +		if (need_alloc || wasdelay) {
->  			bma.eof = eof;
->  			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
->  			bma.wasdel = wasdelay;
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index cecd094..cdef87d 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -110,6 +110,9 @@ struct xfs_extent_free_item
->  /* Map something in the CoW fork. */
->  #define XFS_BMAPI_COWFORK	0x200
->  
-> +/* Only convert delalloc space, don't allocate entirely new extents */
-> +#define XFS_BMAPI_DELALLOC	0x400
-> +
->  #define XFS_BMAPI_FLAGS \
->  	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
->  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-> @@ -120,7 +123,8 @@ struct xfs_extent_free_item
->  	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
->  	{ XFS_BMAPI_ZERO,	"ZERO" }, \
->  	{ XFS_BMAPI_REMAP,	"REMAP" }, \
-> -	{ XFS_BMAPI_COWFORK,	"COWFORK" }
-> +	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
-> +	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }
->  
->  
->  static inline int xfs_bmapi_aflag(int w)
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index ca137b7..7ee8629 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -795,7 +795,7 @@ xfs_iomap_write_allocate(
->  	xfs_trans_t	*tp;
->  	int		nimaps;
->  	int		error = 0;
-> -	int		flags = 0;
-> +	int		flags = XFS_BMAPI_DELALLOC;
->  	int		nres;
->  
->  	if (whichfork == XFS_COW_FORK)
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Perhaps it should set exitcode, and then xfs_admin could do something
+like:
+
+	xfs_db -c quit $DEV
+
+first, and check that db is able to initialize sanely before using it again
+to perform normal admin functions.
+
+-Eric
