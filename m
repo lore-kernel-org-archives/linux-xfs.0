@@ -1,78 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23883 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750759AbdAaVkj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2017 16:40:39 -0500
-Date: Tue, 31 Jan 2017 13:40:07 -0800
+Received: from userp1040.oracle.com ([156.151.31.81]:37892 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751292AbdANG2g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jan 2017 01:28:36 -0500
+Date: Fri, 13 Jan 2017 22:28:10 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/7] xfs: fix toctou race when locking an inode to access
- the data map
-Message-ID: <20170131214007.GI9134@birch.djwong.org>
-References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
- <148582219035.12293.12084220786527965512.stgit@birch.djwong.org>
- <20170131132658.GA17386@infradead.org>
- <20170131194520.GG9134@birch.djwong.org>
+Subject: Re: [PATCH v8 2/6] xfs: sanity check directory inode di_size
+Message-ID: <20170114062810.GG14038@birch.djwong.org>
+References: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
+ <1484123050-11064-3-git-send-email-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170131194520.GG9134@birch.djwong.org>
+In-Reply-To: <1484123050-11064-3-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Tue, Jan 31, 2017 at 11:45:20AM -0800, Darrick J. Wong wrote:
-> On Tue, Jan 31, 2017 at 05:26:58AM -0800, Christoph Hellwig wrote:
-> > On Mon, Jan 30, 2017 at 04:23:10PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > We use di_format and if_flags to decide whether we're grabbing the ilock
-> > > in btree mode (btree extents not loaded) or shared mode (anything else),
-> > > but the state of those fields can be changed by other threads that are
-> > > also trying to load the btree extents -- IFEXTENTS gets set before the
-> > > _bmap_read_extents call and cleared if it fails.  Therefore, once we've
-> > > grabbed the shared ilock we have to re-check the fields to see if we
-> > > actually need to upgrade to the exclusive ilock in order to try loading
-> > > the extents.
-> > > 
-> > > Without this patch, we trigger ilock assert failures when a bunch of
-> > > threads try to access a btree format directory with a corrupt bmbt root
-> > > and corrupt the incore data structures, leading to a crash.
-> > 
-> > I see the problem here, but I really don't like the fix.  Instead
-> > I'd much rather check for a new flag that tells that the extent list
-> > hasn't been read, which can only be cleared under the exclusive
-> > ilock.  That way we shouldn't need any additional relocking or
-> > checks.
+On Wed, Jan 11, 2017 at 10:24:06AM +0200, Amir Goldstein wrote:
+> This changes fixes an assertion hit when fuzzing on-disk
+> i_mode values.
 > 
-> I'm confused --
+> The easy case to fix is when changing an empty file
+> i_mode to S_IFDIR. In this case, xfs_dinode_verify()
+> detects an illegal zero size for directory and fails
+> to load the inode structure from disk.
 > 
-> I thought XFS_IFEXTENTS means "extents have been read", which is the
-> inverse of the flag you propose.  AFAICT the bit is only ever set (or
-> cleared) with ILOCK_EXCL held, so the problem here is that we're
-> performing an unlocked read of if_flags prior to actually taking the
-> lock that we need.
+> For the case of non empty file whose i_mode is changed
+> to S_IFDIR, the ASSERT() statement in xfs_dir2_isblock()
+> is replaced with return -EFSCORRUPTED, to avoid interacting
+> with corrupted jusk also when XFS_DEBUG is disabled.
 > 
-> On the other hand, I /think/ it's the case that none of the functions
-> called in _iread_extents actually cares about IFEXTENTS being set, so
-> perhaps an alternative could be to avoid setting the bit until we've
-> successfully read in all the bmbt records?
+> Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  fs/xfs/libxfs/xfs_dir2.c      | 3 ++-
+>  fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++--
+>  2 files changed, 7 insertions(+), 3 deletions(-)
 > 
-> I'll try that out and report back.
+> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+> index c58d72c..4f7913f 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.c
+> +++ b/fs/xfs/libxfs/xfs_dir2.c
+> @@ -631,7 +631,8 @@ xfs_dir2_isblock(
+>  	if ((rval = xfs_bmap_last_offset(args->dp, &last, XFS_DATA_FORK)))
+>  		return rval;
+>  	rval = XFS_FSB_TO_B(args->dp->i_mount, last) == args->geo->blksize;
+> -	ASSERT(rval == 0 || args->dp->i_d.di_size == args->geo->blksize);
+> +	if (rval != 0 && args->dp->i_d.di_size != args->geo->blksize)
+> +		return -EFSCORRUPTED;
+>  	*vp = rval;
+>  	return 0;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index dd483e2..0091ac3 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -386,6 +386,7 @@ xfs_dinode_verify(
+>  	xfs_ino_t		ino,
+>  	struct xfs_dinode	*dip)
+>  {
+> +	uint16_t		mode;
+>  	uint16_t		flags;
+>  	uint64_t		flags2;
+>  
+> @@ -396,8 +397,10 @@ xfs_dinode_verify(
+>  	if (be64_to_cpu(dip->di_size) & (1ULL << 63))
+>  		return false;
+>  
+> -	/* No zero-length symlinks. */
+> -	if (S_ISLNK(be16_to_cpu(dip->di_mode)) && dip->di_size == 0)
+> +	mode = be16_to_cpu(dip->di_mode);
+> +
+> +	/* No zero-length symlinks/dirs. */
+> +	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
 
-Seems to work, will send a revised patch.
+Drat, I just hit this with the fuzzer tests, so I'll pull this in
+for rc5.  Good work! :)
 
 --D
 
+>  		return false;
+>  
+>  	/* only version 3 or greater inodes are extensively verified here */
+> -- 
+> 2.7.4
 > 
-> --D
-> 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
