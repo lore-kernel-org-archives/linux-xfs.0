@@ -1,98 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:35090 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751118AbdAQOhX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Jan 2017 09:37:23 -0500
-Date: Tue, 17 Jan 2017 15:37:21 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2] xfs: fix COW writeback race
-Message-ID: <20170117143721.GA32641@lst.de>
-References: <1484639331-2137-1-git-send-email-hch@lst.de> <20170117134421.GB12426@bfoster.bfoster>
+Received: from aserp1040.oracle.com ([141.146.126.69]:35556 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751103AbdANGWa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jan 2017 01:22:30 -0500
+Date: Fri, 13 Jan 2017 22:22:10 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH, RFC] xfs: use per-AG reservations for the finobt
+Message-ID: <20170114062210.GF14038@birch.djwong.org>
+References: <1483107598-6779-1-git-send-email-hch@lst.de>
+ <20170103192426.GA14031@birch.djwong.org>
+ <20170113174300.GA6418@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170117134421.GB12426@bfoster.bfoster>
+In-Reply-To: <20170113174300.GA6418@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-On Tue, Jan 17, 2017 at 08:44:21AM -0500, Brian Foster wrote:
-> Any reason we don't try to address the core race rather than shake up
-> the affected code to accommodate it?
+On Fri, Jan 13, 2017 at 06:43:00PM +0100, Christoph Hellwig wrote:
+> On Tue, Jan 03, 2017 at 11:24:26AM -0800, Darrick J. Wong wrote:
+> > ...and so here we calculate the number of blocks needed to store the
+> > maximum number of finobt records possible for an AG.  IIRC, each *inobt
+> > record refers to a single chunk of 64 inodes (or at least a theoretical
+> > chunk in the spinodes=1 case), so I think we can reduce the reservation
+> > to...
+> > 
+> > nr = m_sb.sb_agblocks * m_sb.sb_inopblock / XFS_INODES_PER_CHUNK;
+> > return xfs_inobt_calc_size(mp, nr);
+> > 
+> > ...right?
+> 
+> Yes, that should reduce the reservation quite a bit.
+> 
+> > This requires us to traverse all the blocks in the finobt at mount time,
+> > which isn't necessarily quick.  For refcount/rmap we cache the number of
+> > tree blocks in the AGF to speed this up... but it was easy to sneak that
+> > into the disk format. :)
+> 
+> But for finobt it's too late to do that without another incompatible
+> feature flag.
 
-I think there are two aspects to the whole thing.  One is the way
-xfs_bmapi_write currently works is fundamentally wrong - if the
-caller only needs a conversion from delalloc to real space trying
-to allocate space is always wrong and we should catch it early.
-The second is if we should do the eager conversion of the whole
-found extent for either the data and/or the COW fork.
+Agree.
 
-> I ask for a couple reasons: 1.) I'm
-> not quite following the specific race from the description and 2.) I
-> considered doing the exact same thing at first for the eofblocks i_size
-> issue, but more digging rooted out the problem in the eofblocks code.
-> This one may not be as straightforward a fix, of course... (but if not,
-> the commit log should probably explain why).
+> > For finobt I wonder if one could defer the block counting work to a
+> > separate thread if the AG has enough free blocks to cover, say, 10x the
+> > maximum reservation?  Though that could be racy and maybe finobts are
+> > small enough that the impact on mount time is low anyway?
+> 
+> Usually they are small.  And if they aren't - well that's life.
+> 
+> I don't think anync counting for a reservation is a good idea.  If we
+> see a problem with the time needed to count in practice we'll have to
+> keep a count an introduce a feature flag.
 
-My hope was that the long commit message explained the issue, but
-I guess I need to go into even more details.
+Yeah, that seems less tricky to get right.
 
-The writeback code (both COW and real) works like this
+> > There's also the unsolved problem of what happens if we mount and find
+> > agf_freeblks < (sum(ask) - sum(used)) -- right now we eat that state and
+> > hope that we don't later ENOSPC and crash.
+> 
+> Yes.  Which is exactly the situation we would have without this
+> patch anyway..
+> 
+> > But as for retroactively adding AG reservations for an existing tree, I
+> > guess we'll have to come up with a strategy for dealing with
+> > insufficient free blocks.  I suppose one could try to use xfs_fsr to
+> > move large contiguous extents to a less full AG, if there are any...
+> 
+> Eww.  We could just fall back to the old code before this patch,
+> which would then eventually shut down..
 
-take ilock
-read in an extent at offset O
-drop ilock
+For now I'm tempted just to xfs_info a warning that some AG is low on
+space and this could potentially cause the fs to go down.  It's not like
+we currently have the ability to silently move data out of an AG to
+spread the load more evenly.
 
-if extent is delalloc:
-  while !done with the whole extent
-    take ilock
-    convert partial extent to a real allocation
-    drop ilock
+--D
 
-But if multiple threads are doing writeback on pages next to
-each other another thread might have already converted parts
-of all of the extent found in the beginning to a real allocation.
-That on it's own is not a problem because xfs_bmapi_write
-handles a call to allocate an already real allocation as a no-op.
-But with the COW code moving real extents from the COW fork to
-the data fork after I/O completion this can become a problem,
-because we now might not only have delalloc or real extents in
-the area covered by extent returned from the inital xfs_bmapi_read
-call, but also a hole in the COW work.  At which point it blows up.
-
-As for why we're doing the eager conversion:  at least for the data
-fork this was initentional to get better allocation patterns, I
-remember a discussion with Dave on that a long time ago.  Maybe we
-shouldn't do it for the COW for to avoid these sorts of races, but
-then again without xfs_bmapi_write being stupid the race is harmless.
-
-> What happens in this case if eof is true? It looks like got could be
-> bogus, yet we still carry on using it in the post-allocation part of the
-> loop.
-
-For an initial EOF lookup it could indeed be bogus.  To properly
-work it would need something like the trick xfs_bmapi_read uses
-for this case.
-
-> The fact that the allocation code breaks out of the loop if
-> allocation doesn't occur is a bit of a red flag that the post-allocation
-> code may very well expect to always have an allocated mapping.
-
-The post-allocation cleanup code bust handle xfs_bmapi_allocate
-returning an error before doing anything, and because of that it's
-full of conditionals for everything that could or could not have
-happened.
-
-> That aside... if we do want to do something like this, I wonder whether
-> it's more cleanly handled by the caller.
-
-I don't see how it could be done in the caller - the caller wants
-the bmap code to convert a delayed allocation and not allocate
-entirely new blocks.  The best way to do so is to tell the bmapi
-code not do allocate new blocks.  Now if you mean splitting up
-xfs_bmapi_write into different functions for allocating real blocks,
-converting delalloc blocks or just flipping the unwritten bit: that's
-something I'd like to look into - the current interface is just
-too confusing.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
