@@ -1,82 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34049 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933862AbdAKIYd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 03:24:33 -0500
-Received: by mail-wm0-f68.google.com with SMTP id c85so35007685wmi.1
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 00:24:32 -0800 (PST)
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v8 2/6] xfs: sanity check directory inode di_size
-Date: Wed, 11 Jan 2017 10:24:06 +0200
-Message-Id: <1484123050-11064-3-git-send-email-amir73il@gmail.com>
-In-Reply-To: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
-References: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:49454 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750802AbdANOdT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jan 2017 09:33:19 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: fix COW writeback race
+Date: Sat, 14 Jan 2017 15:33:13 +0100
+Message-Id: <1484404393-6413-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-This changes fixes an assertion hit when fuzzing on-disk
-i_mode values.
+Due to the way how xfs_iomap_write_allocate tries to convert the whole
+found extents from delalloc to real space we can run into a race
+condition with multiple threads doing writes to this same extent.
+For the non-COW case that is harmless as the only thing that can happen
+is that we call xfs_bmapi_write on an extent that has already been
+converted to a real allocation.  For COW writes where we move the extent
+from the COW to the data fork after I/O completion the race is, however,
+not quite as harmless.  In the worst case we are now calling
+xfs_bmapi_write on a region that contains hole in the COW work, which
+will trip up an assert in debug builds or lead to file system corruption
+in non-debug builds.  This seems to be reproducible with workloads of
+small O_DSYNC write, although so far I've not managed to come up with
+a with an isolated reproducer.
 
-The easy case to fix is when changing an empty file
-i_mode to S_IFDIR. In this case, xfs_dinode_verify()
-detects an illegal zero size for directory and fails
-to load the inode structure from disk.
+The fix for the issue is relatively simple:  tell xfs_bmapi_write
+that we are only asked to convert delayed allocations and skip holes
+in that case.
 
-For the case of non empty file whose i_mode is changed
-to S_IFDIR, the ASSERT() statement in xfs_dir2_isblock()
-is replaced with return -EFSCORRUPTED, to avoid interacting
-with corrupted jusk also when XFS_DEBUG is disabled.
-
-Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_dir2.c      | 3 ++-
- fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++--
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 41 +++++++++++++++++++++++++++++------------
+ fs/xfs/libxfs/xfs_bmap.h |  3 +++
+ fs/xfs/xfs_iomap.c       |  2 +-
+ 3 files changed, 33 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index c58d72c..4f7913f 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -631,7 +631,8 @@ xfs_dir2_isblock(
- 	if ((rval = xfs_bmap_last_offset(args->dp, &last, XFS_DATA_FORK)))
- 		return rval;
- 	rval = XFS_FSB_TO_B(args->dp->i_mount, last) == args->geo->blksize;
--	ASSERT(rval == 0 || args->dp->i_d.di_size == args->geo->blksize);
-+	if (rval != 0 && args->dp->i_d.di_size != args->geo->blksize)
-+		return -EFSCORRUPTED;
- 	*vp = rval;
- 	return 0;
- }
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index dd483e2..0091ac3 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -386,6 +386,7 @@ xfs_dinode_verify(
- 	xfs_ino_t		ino,
- 	struct xfs_dinode	*dip)
- {
-+	uint16_t		mode;
- 	uint16_t		flags;
- 	uint64_t		flags2;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 44773c9..ceae779 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4514,8 +4514,6 @@ xfs_bmapi_write(
+ 	int			n;		/* current extent index */
+ 	xfs_fileoff_t		obno;		/* old block number (offset) */
+ 	int			whichfork;	/* data or attr fork */
+-	char			inhole;		/* current location is hole in file */
+-	char			wasdelay;	/* old extent was delayed */
  
-@@ -396,8 +397,10 @@ xfs_dinode_verify(
- 	if (be64_to_cpu(dip->di_size) & (1ULL << 63))
- 		return false;
+ #ifdef DEBUG
+ 	xfs_fileoff_t		orig_bno;	/* original block number value */
+@@ -4603,22 +4601,41 @@ xfs_bmapi_write(
+ 	bma.firstblock = firstblock;
  
--	/* No zero-length symlinks. */
--	if (S_ISLNK(be16_to_cpu(dip->di_mode)) && dip->di_size == 0)
-+	mode = be16_to_cpu(dip->di_mode);
+ 	while (bno < end && n < *nmap) {
+-		inhole = eof || bma.got.br_startoff > bno;
+-		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
++		bool			need_alloc = false, wasdelay = false;
+ 
+-		/*
+-		 * Make sure we only reflink into a hole.
+-		 */
+-		if (flags & XFS_BMAPI_REMAP)
+-			ASSERT(inhole);
+-		if (flags & XFS_BMAPI_COWFORK)
+-			ASSERT(!inhole);
++		/* in hole or beyoned EOF? */
++		if (eof || bma.got.br_startoff > bno) {
++			if (flags & XFS_BMAPI_DELALLOC) {
++				/*
++				 * For the COW fork we can reasonably get a
++				 * request for converting an extent that races
++				 * with other threads already having converted
++				 * part of it, as there converting COW to
++				 * regular blocks is not protected using the
++				 * IOLOCK.
++				 */
++				ASSERT(flags & XFS_BMAPI_COWFORK);
++				if (!(flags & XFS_BMAPI_COWFORK)) {
++					error = -EIO;
++					goto error0;
++				}
++			} else {
++				need_alloc = true;
++			}
++		} else {
++			/*
++			 * Make sure we only reflink into a hole.
++			 */
++			ASSERT(!(flags & XFS_BMAPI_REMAP));
++			if (isnullstartblock(bma.got.br_startblock))
++				wasdelay = true;
++		}
+ 
+ 		/*
+ 		 * First, deal with the hole before the allocated space
+ 		 * that we found, if any.
+ 		 */
+-		if (inhole || wasdelay) {
++		if (need_alloc || wasdelay) {
+ 			bma.eof = eof;
+ 			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
+ 			bma.wasdel = wasdelay;
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index cecd094..8f805a7 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -110,6 +110,9 @@ struct xfs_extent_free_item
+ /* Map something in the CoW fork. */
+ #define XFS_BMAPI_COWFORK	0x200
+ 
++/* Only convert delalloc space, don't allocate entirely new extents */
++#define XFS_BMAPI_DELALLOC	0x400
 +
-+	/* No zero-length symlinks/dirs. */
-+	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
- 		return false;
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index ca137b7..7ee8629 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -795,7 +795,7 @@ xfs_iomap_write_allocate(
+ 	xfs_trans_t	*tp;
+ 	int		nimaps;
+ 	int		error = 0;
+-	int		flags = 0;
++	int		flags = XFS_BMAPI_DELALLOC;
+ 	int		nres;
  
- 	/* only version 3 or greater inodes are extensively verified here */
+ 	if (whichfork == XFS_COW_FORK)
 -- 
-2.7.4
+2.1.4
 
