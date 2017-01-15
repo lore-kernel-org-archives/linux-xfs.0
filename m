@@ -1,89 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44071 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755341AbdAKJAe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Jan 2017 04:00:34 -0500
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH v2] xfs: Timely free truncated dirty pages
-Date: Wed, 11 Jan 2017 10:00:19 +0100
-Message-Id: <20170111090019.16837-1-jack@suse.cz>
+Received: from buxtehude.debian.org ([209.87.16.39]:52422 "EHLO
+        buxtehude.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751200AbdAOSPK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Jan 2017 13:15:10 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: owner@bugs.debian.org (Debian Bug Tracking System)
+Subject: Bug#822369: marked as done (xfsprogs: FTBFS: error: redefinition
+ of 'struct fsxattr')
+Message-ID: <handler.822369.D822369.14845039381399.ackdone@bugs.debian.org>
+References: <20170115181203.hre34x37wsalbrnu@localhost>
+ <20160423210831.GA19384@jirafa.cyrius.com>
+Date: Sun, 15 Jan 2017 18:15:05 +0000
+Content-Type: multipart/mixed; boundary="----------=_1484504105-2219-0"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Petr Tuma <petr.tuma@d3s.mff.cuni.cz>, Jan Kara <jack@suse.cz>, stable@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Vlastimil Babka <vbabka@suse.cz>
+To: Adrian Bunk <bunk@debian.org>
 
-Commit 99579ccec4e2 "xfs: skip dirty pages in ->releasepage()" started
-to skip dirty pages in xfs_vm_releasepage() which also has the effect
-that if a dirty page is truncated, it does not get freed by
-block_invalidatepage() and is lingering in LRU list waiting for reclaim.
-So a simple loop like:
+This is a multi-part message in MIME format...
 
-while true; do
-	dd if=/dev/zero of=file bs=1M count=100
-	rm file
-done
+------------=_1484504105-2219-0
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
 
-will keep using more and more memory until we hit low watermarks and
-start pagecache reclaim which will eventually reclaim also the truncate
-pages. Keeping these truncated (and thus never usable) pages in memory
-is just a waste of memory, is unnecessarily stressing page cache
-reclaim, and reportedly also leads to anonymous mmap(2) returning ENOMEM
-prematurely.
+Your message dated Sun, 15 Jan 2017 20:12:03 +0200
+with message-id <20170115181203.hre34x37wsalbrnu@localhost>
+and subject line 4.9.0 builds
+has caused the Debian Bug report #822369,
+regarding xfsprogs: FTBFS: error: redefinition of 'struct fsxattr'
+to be marked as done.
 
-So instead of just skipping dirty pages in xfs_vm_releasepage(), return
-to old behavior of skipping them only if they have delalloc or unwritten
-buffers and fix the spurious warnings by warning only if the page is
-clean.
+This means that you claim that the problem has been dealt with.
+If this is not the case it is now your responsibility to reopen the
+Bug report if necessary, and/or fix the problem forthwith.
 
-CC: stable@vger.kernel.org
-CC: Brian Foster <bfoster@redhat.com>
-CC: Vlastimil Babka <vbabka@suse.cz>
-Reported-by: Petr Tůma <petr.tuma@d3s.mff.cuni.cz>
-Fixes: 99579ccec4e271c3d4d4e7c946058766812afdab
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_aops.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+(NB: If you are a system administrator and have no idea what this
+message is talking about, this may indicate a serious mail system
+misconfiguration somewhere. Please contact owner@bugs.debian.org
+immediately.)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 0f56fcd3a5d5..631e7c0e0a29 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1152,19 +1152,22 @@ xfs_vm_releasepage(
- 	 * block_invalidatepage() can send pages that are still marked dirty
- 	 * but otherwise have invalidated buffers.
- 	 *
--	 * We've historically freed buffers on the latter. Instead, quietly
--	 * filter out all dirty pages to avoid spurious buffer state warnings.
--	 * This can likely be removed once shrink_active_list() is fixed.
-+	 * We want to release the latter to avoid unnecessary buildup of the
-+	 * LRU, skip the former and warn if we've left any lingering
-+	 * delalloc/unwritten buffers on clean pages. Skip pages with delalloc
-+	 * or unwritten buffers and warn if the page is not dirty. Otherwise
-+	 * try to release the buffers.
- 	 */
--	if (PageDirty(page))
--		return 0;
--
- 	xfs_count_page_state(page, &delalloc, &unwritten);
- 
--	if (WARN_ON_ONCE(delalloc))
-+	if (delalloc) {
-+		WARN_ON_ONCE(!PageDirty(page));
- 		return 0;
--	if (WARN_ON_ONCE(unwritten))
-+	}
-+	if (unwritten) {
-+		WARN_ON_ONCE(!PageDirty(page));
- 		return 0;
-+	}
- 
- 	return try_to_free_buffers(page);
- }
+
+--=20
+822369: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D822369
+Debian Bug Tracking System
+Contact owner@bugs.debian.org with problems
+
+------------=_1484504105-2219-0
+Content-Type: message/rfc822
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+
+Received: (at submit) by bugs.debian.org; 23 Apr 2016 21:08:40 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.0-bugs.debian.org_2005_01_02
+	(2014-02-07) on buxtehude.debian.org
+X-Spam-Level: 
+X-Spam-Status: No, score=-9.0 required=4.0 tests=BAYES_00,DIGITS_LETTERS,
+	HAS_PACKAGE,RCVD_IN_DNSWL_NONE,RCVD_IN_MSPIKE_H4,RCVD_IN_MSPIKE_WL
+	autolearn=ham autolearn_force=no version=3.4.0-bugs.debian.org_2005_01_02
+X-Spam-Bayes: score:0.0000 Tokens: new, 17; hammy, 122; neutral, 23; spammy,
+	0. spammytokens: hammytokens:0.000-+--H*UA:2014-03-12,
+	0.000-+--H*u:2014-03-12, 0.000-+--H*u:1.5.23, 0.000-+--H*UA:1.5.23,
+	0.000-+--michlmayr
+Return-path: <tbm@hpe.com>
+Received: from g1t6213.austin.hp.com ([15.73.96.121])
+	by buxtehude.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.84_2)
+	(envelope-from <tbm@hpe.com>)
+	id 1au4nA-0007vj-GM
+	for submit@bugs.debian.org; Sat, 23 Apr 2016 21:08:40 +0000
+Received: from g1t6217.austin.hpicorp.net (g1t6217.austin.hpicorp.net [15.67.1.144])
+	by g1t6213.austin.hp.com (Postfix) with ESMTP id AC8DD99
+	for <submit@bugs.debian.org>; Sat, 23 Apr 2016 21:08:33 +0000 (UTC)
+Received: from loric-alpo.cyrius.com (ospra0.fc.hp.com [16.79.38.117])
+	by g1t6217.austin.hpicorp.net (Postfix) with ESMTP id 7A8525F
+	for <submit@bugs.debian.org>; Sat, 23 Apr 2016 21:08:33 +0000 (UTC)
+Received: by loric-alpo.cyrius.com (Postfix, from userid 1000)
+	id E4973690AC; Sat, 23 Apr 2016 23:08:31 +0200 (CEST)
+Date: Sat, 23 Apr 2016 14:08:31 -0700
+From: Martin Michlmayr <tbm@hpe.com>
+To: submit@bugs.debian.org
+Subject: xfsprogs: FTBFS: error: redefinition of 'struct fsxattr'
+Message-ID: <20160423210831.GA19384@jirafa.cyrius.com>
+References: <20160423205226.67773120316@dl580gen9-02.hlinux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20160423205226.67773120316@dl580gen9-02.hlinux>
+User-Agent: Mutt/1.5.23 (2014-03-12)
+Delivered-To: submit@bugs.debian.org
+
+Package: xfsprogs
+Version: 4.3.0+nmu1
+Severity: serious
+
+This package fails to build in unstable:
+
+> sbuild (Debian sbuild) 0.68.0 (15 Jan 2016) on dl580gen9-02.hlinux
+...
+>     [CC]     fiemap.o
+> In file included from ../include/xfs.h:58:0,
+>                  from io.h:19,
+>                  from fiemap.c:24:
+> ../include/xfs/xfs_fs.h:42:8: error: redefinition of 'struct fsxattr'
+>  struct fsxattr {
+>         ^
+> In file included from fiemap.c:22:0:
+> /usr/include/linux/fs.h:155:8: note: originally defined here
+>  struct fsxattr {
+>         ^
+> ../include/buildrules:59: recipe for target 'fiemap.o' failed
+> make[3]: *** [fiemap.o] Error 1
+> include/buildrules:35: recipe for target 'io' failed
+
 -- 
-2.10.2
+Martin Michlmayr
+Linux for HPE Helion, Hewlett Packard Enterprise
 
+------------=_1484504105-2219-0
+Content-Type: message/rfc822
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+
+Received: (at 822369-done) by bugs.debian.org; 15 Jan 2017 18:12:18 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.0-bugs.debian.org_2005_01_02
+	(2014-02-07) on buxtehude.debian.org
+X-Spam-Level: 
+X-Spam-Status: No, score=-7.0 required=4.0 tests=BAYES_00,FROMDEVELOPER,
+	VERSION autolearn=ham autolearn_force=no
+	version=3.4.0-bugs.debian.org_2005_01_02
+X-Spam-Bayes: score:0.0000 Tokens: new, 12; hammy, 95; neutral, 33; spammy, 0.
+	spammytokens: hammytokens:0.000-+--sk:buildd., 0.000-+--UD:buildd.debian.org,
+	0.000-+--buildddebianorg, 0.000-+--buildd.debian.org, 0.000-+--H*UA:NeoMutt
+Return-path: <bunk@debian.org>
+Received: from mail.stusta.mhn.de ([2001:4ca0:200:3:200:5efe:8d54:4505])
+	by buxtehude.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.84_2)
+	(envelope-from <bunk@debian.org>)
+	id 1cSpHu-0000MI-30
+	for 822369-done@bugs.debian.org; Sun, 15 Jan 2017 18:12:18 +0000
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.stusta.mhn.de (Postfix) with ESMTPSA id 3v1kwb5qXhz1y
+	for <822369-done@bugs.debian.org>; Sun, 15 Jan 2017 19:12:15 +0100 (CET)
+Date: Sun, 15 Jan 2017 20:12:03 +0200
+From: Adrian Bunk <bunk@debian.org>
+To: 822369-done@bugs.debian.org
+Subject: 4.9.0 builds
+Message-ID: <20170115181203.hre34x37wsalbrnu@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+User-Agent: NeoMutt/ (1.7.0)
+
+Version: 4.9.0
+
+Version 4.9.0 built successfully on the autobuilders:
+  https://buildd.debian.org/status/package.php?p=xfsprogs
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+------------=_1484504105-2219-0--
