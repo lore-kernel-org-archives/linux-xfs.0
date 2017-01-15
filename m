@@ -1,37 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46906 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751278AbdANHzA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jan 2017 02:55:00 -0500
-Date: Fri, 13 Jan 2017 23:54:52 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [LSF/MM TOPIC] online filesystem repair
-Message-ID: <20170114075452.GJ14033@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:34788 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751206AbdAOT0r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 15 Jan 2017 14:26:47 -0500
+Subject: Re: Memory allocation stuck in xfs_reclaim_inodes_ag
+References: <CAF9twL7UHoD45JZyZ=Rsb=aMV=NzQrGecaT+QmWtT=q0fm6XRw@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <79a3e068-ac5c-6dbf-ae54-8d1a9818fcb6@sandeen.net>
+Date: Sun, 15 Jan 2017 13:26:45 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <CAF9twL7UHoD45JZyZ=Rsb=aMV=NzQrGecaT+QmWtT=q0fm6XRw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: lsf-pc@lists.linux-foundation.org, darrick.wong@oracle.com
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Thorvald Natvig <thorvald@medallia.com>, linux-xfs@vger.kernel.org
+Cc: Kjetil Joergensen <kjetil@medallia.com>
 
-Hi,
+On 1/14/17 3:25 PM, Thorvald Natvig wrote:
+> Hi,
+> 
+> We've run into a somewhat unexpected condition. Under high memory
+> pressure and high I/O write pressure on slow media, when doing network
+> calls, we have a call chain that looks like:
+> 
+> .. -> tcp_recvmsg -> .. -> do_page_fault -> .. ->
+> __alloc_pages_slowpath -> try_to_free_pages -> .. -> shrink_slab ->
+> super_cache_scan -> xfs_fs_free_cached_objects ->
+> xfs_reclaim_inodes_nr -> xfs_reclaim_inodes_ag -> mutex_lock ->
+> __mutex_lock_slowpath
+> 
+> And it stays stuck there. This causes the network traffic to stall,
+> which causes applications (in this case Ceph OSDs) to fail basic
+> health checks.
 
-I've been working on implementing online metadata scrubbing and repair
-in XFS.  Most of the code is self contained inside XFS, but there's a
-small amount of interaction with the VFS freezer code that has to happen
-in order to shut down the filesystem to rebuild the extent backref
-records.  It might be interesting to discuss the (fairly slight)
-requirements upon the VFS to support repairs, and/or have a BoF to
-discuss how to build an online checker if any of the other filesystems
-are interested in this.
+You might also want to take a look at the thread:
 
-Concurrent with development of online scrubbing, I've also been working
-on a fuzz test suite for xfstests that fuzzes every field of every
-metadata object on the filesystem and then tries to crash the kernel,
-the offline repair tool (xfs_repair), or the online repair tool
-(xfs_scrub).  I could talk about that as kind of a follow up to last
-year's AFL presentation, and what kinds of bugs it's uncovered.
+[PATCH RFC] xfs: drop SYNC_WAIT from xfs_reclaim_inodes_ag during slab reclaim
 
---D
+from this past mid-october, and also dave's patch sent mid-november
+in that same thread.
+
+(I need to re-read it too).
+
+-Eric
+
+> This particular call-chain is due to the end of xfs_reclaim_inodes_ag,
+> which has the code:
+> 
+>       if (skipped && (flags & SYNC_WAIT) && *nr_to_scan > 0) {
+>                 trylock = 0;
+>                 goto restart;
+>         }
+> 
+> The code first tries to release with trylock on the mutex, but it it
+> fails to release sufficient number of items, and there were groups
+> that it failed to lock, it tries again with blocking locks.
+> If another kernel thread holds the mutexes for any reason (such as
+> currently flushing the group), we essentially make kernel memory
+> allocation wait for disc I/O.
+> 
+> On this particular system, we have 30 other XFS filesystems also
+> mounted, and there's also a lot of non-XFS caches that could be
+> reclaimed to meet this memory request. There's about 100GB of other
+> caches that could be released, so why block?
+> 
+> We've worked around this with the following probe:
+> 
+> probe module("xfs").function("xfs_reclaim_inodes_ag").call {
+>        printf ("%s -> %s: %d %s [%s]\n", thread_indent(0),
+> probefunc(), kernel_int($nr_to_scan),kernel_string($mp->m_fsname),
+> $$parms)
+>        print_backtrace()
+>        $flags = $flags & 2
+> }
+> 
+> In other words, remove the SYNC_WAIT flag to the call. This causes the
+> slab shrinker to move on to the next candidate for releasing. So far,
+> this seems to fix all the problems we've seen. The probe could
+> probably be improved to only do this for the callchain that reaches
+> xfs_reclaim_inodes_ag from shrink_slab.
+> 
+> Is there a better way to fix this problem?
+> 
+> - Thorvald
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
