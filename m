@@ -1,153 +1,185 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18833 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750803AbdAQCGm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jan 2017 21:06:42 -0500
-Date: Mon, 16 Jan 2017 18:06:33 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix COW writeback race
-Message-ID: <20170117020633.GI14038@birch.djwong.org>
-References: <1484404393-6413-1-git-send-email-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:59916 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751200AbdAOSxo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 15 Jan 2017 13:53:44 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 25CBA628EDA
+        for <linux-xfs@vger.kernel.org>; Sun, 15 Jan 2017 12:52:53 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: for-next updated to 29043c6
+Message-ID: <e65b56ac-7e4f-8e0b-e891-a6c7cc3ee82f@sandeen.net>
+Date: Sun, 15 Jan 2017 12:53:36 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1484404393-6413-1-git-send-email-hch@lst.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="5tUH3ApNbQA9sRIN4lWgME5KUAsoLHM04"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sat, Jan 14, 2017 at 03:33:13PM +0100, Christoph Hellwig wrote:
-> Due to the way how xfs_iomap_write_allocate tries to convert the whole
-> found extents from delalloc to real space we can run into a race
-> condition with multiple threads doing writes to this same extent.
-> For the non-COW case that is harmless as the only thing that can happen
-> is that we call xfs_bmapi_write on an extent that has already been
-> converted to a real allocation.  For COW writes where we move the extent
-> from the COW to the data fork after I/O completion the race is, however,
-> not quite as harmless.  In the worst case we are now calling
-> xfs_bmapi_write on a region that contains hole in the COW work, which
-> will trip up an assert in debug builds or lead to file system corruption
-> in non-debug builds.  This seems to be reproducible with workloads of
-> small O_DSYNC write, although so far I've not managed to come up with
-> a with an isolated reproducer.
-> 
-> The fix for the issue is relatively simple:  tell xfs_bmapi_write
-> that we are only asked to convert delayed allocations and skip holes
-> in that case.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 41 +++++++++++++++++++++++++++++------------
->  fs/xfs/libxfs/xfs_bmap.h |  3 +++
->  fs/xfs/xfs_iomap.c       |  2 +-
->  3 files changed, 33 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 44773c9..ceae779 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4514,8 +4514,6 @@ xfs_bmapi_write(
->  	int			n;		/* current extent index */
->  	xfs_fileoff_t		obno;		/* old block number (offset) */
->  	int			whichfork;	/* data or attr fork */
-> -	char			inhole;		/* current location is hole in file */
-> -	char			wasdelay;	/* old extent was delayed */
->  
->  #ifdef DEBUG
->  	xfs_fileoff_t		orig_bno;	/* original block number value */
-> @@ -4603,22 +4601,41 @@ xfs_bmapi_write(
->  	bma.firstblock = firstblock;
->  
->  	while (bno < end && n < *nmap) {
-> -		inhole = eof || bma.got.br_startoff > bno;
-> -		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
-> +		bool			need_alloc = false, wasdelay = false;
->  
-> -		/*
-> -		 * Make sure we only reflink into a hole.
-> -		 */
-> -		if (flags & XFS_BMAPI_REMAP)
-> -			ASSERT(inhole);
-> -		if (flags & XFS_BMAPI_COWFORK)
-> -			ASSERT(!inhole);
-> +		/* in hole or beyoned EOF? */
-> +		if (eof || bma.got.br_startoff > bno) {
-> +			if (flags & XFS_BMAPI_DELALLOC) {
-> +				/*
-> +				 * For the COW fork we can reasonably get a
-> +				 * request for converting an extent that races
-> +				 * with other threads already having converted
-> +				 * part of it, as there converting COW to
-> +				 * regular blocks is not protected using the
-> +				 * IOLOCK.
-> +				 */
-> +				ASSERT(flags & XFS_BMAPI_COWFORK);
-> +				if (!(flags & XFS_BMAPI_COWFORK)) {
-> +					error = -EIO;
-> +					goto error0;
-> +				}
-> +			} else {
-> +				need_alloc = true;
-> +			}
-> +		} else {
-> +			/*
-> +			 * Make sure we only reflink into a hole.
-> +			 */
-> +			ASSERT(!(flags & XFS_BMAPI_REMAP));
-> +			if (isnullstartblock(bma.got.br_startblock))
-> +				wasdelay = true;
-> +		}
->  
->  		/*
->  		 * First, deal with the hole before the allocated space
->  		 * that we found, if any.
->  		 */
-> -		if (inhole || wasdelay) {
-> +		if (need_alloc || wasdelay) {
->  			bma.eof = eof;
->  			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
->  			bma.wasdel = wasdelay;
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index cecd094..8f805a7 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -110,6 +110,9 @@ struct xfs_extent_free_item
->  /* Map something in the CoW fork. */
->  #define XFS_BMAPI_COWFORK	0x200
->  
-> +/* Only convert delalloc space, don't allocate entirely new extents */
-> +#define XFS_BMAPI_DELALLOC	0x400
-> +
->  #define XFS_BMAPI_FLAGS \
->  	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
->  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--5tUH3ApNbQA9sRIN4lWgME5KUAsoLHM04
+Content-Type: multipart/mixed; boundary="XsBT7AReOOO4c0nEMEEEvtCB8TgrkQbwF";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <e65b56ac-7e4f-8e0b-e891-a6c7cc3ee82f@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: for-next updated to 29043c6
 
-XFS_BMAPI_FLAGS needs an entry for XFS_BMAPI_DELALLOC so that tracing
-continues to work properly.
+--XsBT7AReOOO4c0nEMEEEvtCB8TgrkQbwF
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Other than that this patch seems ok to me...
+Hi folks,
 
---D
+The xfsprogs repository at:
 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index ca137b7..7ee8629 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -795,7 +795,7 @@ xfs_iomap_write_allocate(
->  	xfs_trans_t	*tp;
->  	int		nimaps;
->  	int		error = 0;
-> -	int		flags = 0;
-> +	int		flags = XFS_BMAPI_DELALLOC;
->  	int		nres;
->  
->  	if (whichfork == XFS_COW_FORK)
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+This is a largish collection of various fixes, enhancements, and
+updates.  After a little soak time, I'll merge this plus the
+libxfs/ changes currently in for-next to master.  Any testing and/or
+bug reports are most welcome.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the for-next branch is commit:
+
+29043c6 xfs_repair: update the manual content about xfs_repair exit statu=
+s
+
+New Commits:
+
+Anna Schumaker (1):
+      [4314180] xfs_io: Improvements to copy_range return code handling
+
+Darrick J. Wong (4):
+      [2ca36c2] xfs_io: prefix dedupe command error messages consistently=
+
+      [0bd6599] xfs_io: fix the minimum arguments to the reflink command
+      [c327e1f] xfs_io: fix some documentation problems
+      [9fcc120] xfs_repair.8: document dirty log conditions
+
+Dave Chinner (6):
+      [7a9b731] libxcmd: check CMD_FLAG_GLOBAL inside args_command()
+      [ef346a2] libxcmd: rename args_command to command_iterator
+      [d6ac046] libxcmd: merge command() and iterate_command()
+      [92058d2] libxcmd: don't check generic library commands
+      [16bf046] xfs_io: make various commands one-shot only
+      [58a1899] libxcmd: add non-iterating user commands
+
+Deepa Dinamani (1):
+      [8211d1b] xfs_io: implement 'utimes' command
+
+Eric Biggers (2):
+      [06e7a37] xfs_io.8: remove duplicate .TP commands
+      [0cf66b0] xfs_io: implement 'set_encpolicy' and 'get_encpolicy' com=
+mands
+
+Eric Sandeen (5):
+      [3c84c54] xfs_logprint: di_gen is unsigned
+      [5e303e2] xfsprogs: fix a couple 32-bit build warnings
+      [11613dd] Update licenses in COPYING file
+      [1f31bd2] build: add tar.xz target
+      [1162297] libxfs-apply: minor improvements
+
+Gwendal Grignou (1):
+      [0a71e38] build: Allow compiling xfsprogs in a cross compile enviro=
+nment
+
+Jan Engelhardt (2):
+      [30a0fce] build: resolve autoheader warning
+      [8432255] build: add missing AC_PROG_INSTALL
+
+Ralph Sennhauser (1):
+      [2b86cff] xfs_io: fix building with musl
+
+Zirong Lang (1):
+      [29043c6] xfs_repair: update the manual content about xfs_repair ex=
+it status
+
+
+Code Diffstat:
+
+ Makefile                 |  10 +-
+ configure.ac             |  21 ++-
+ doc/COPYING              | 414 ++++-------------------------------------=
+------
+ include/builddefs.in     |   6 +-
+ include/command.h        |  13 +-
+ include/input.h          |   1 +
+ io/Makefile              |   6 +-
+ io/copy_file_range.c     |   5 +-
+ io/encrypt.c             | 302 ++++++++++++++++++++++++++++++++++
+ io/file.c                |   4 +-
+ io/freeze.c              |   4 +-
+ io/getrusage.c           |   3 +-
+ io/imap.c                |   2 +-
+ io/init.c                |  29 ++--
+ io/inject.c              |   2 +-
+ io/io.h                  |   2 +
+ io/link.c                |   2 +-
+ io/mmap.c                |   7 +-
+ io/open.c                |   7 +-
+ io/readdir.c             |  11 +-
+ io/reflink.c             |  14 +-
+ io/resblks.c             |   2 +-
+ io/shutdown.c            |   2 +-
+ io/sync.c                |   3 +-
+ io/utimes.c              |  81 ++++++++++
+ libxcmd/command.c        | 159 ++++++++++++------
+ libxcmd/help.c           |   2 +-
+ libxcmd/input.c          |  22 +++
+ libxcmd/quit.c           |   2 +-
+ libxfs/Makefile          |   4 +-
+ logprint/log_print_all.c |   2 +-
+ m4/package_types.m4      |   1 +
+ man/man8/xfs_io.8        |  86 ++++++++--
+ man/man8/xfs_repair.8    |  35 +++-
+ quota/init.c             |  13 +-
+ quota/init.h             |   2 -
+ quota/path.c             |   4 +-
+ quota/report.c           |   2 +-
+ tools/libxfs-apply       |  14 +-
+ 39 files changed, 779 insertions(+), 522 deletions(-)
+ create mode 100644 io/encrypt.c
+ create mode 100755 io/utimes.c
+
+
+
+--XsBT7AReOOO4c0nEMEEEvtCB8TgrkQbwF--
+
+--5tUH3ApNbQA9sRIN4lWgME5KUAsoLHM04
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJYe8U3AAoJECCuFpLhPd7g64IP/jO3KMj4vK/UALEpmJL1MiUh
+tFEs08e4f7jfy/xr9nhSVZ0kML0hFQlvw7qbiW0xGbbD0RKMdFVgww/WLvI7TPQo
+SWddXqLv+F/F/FMztnZ27EJH4nQPLTOogJ5tvEQidKzg9yLfj9IyWk2yVgTivE15
+eYfG6HHZSC0mygcWWB/128Z4JI9tjOLw3SdQItk5qYSJrDfs1yMcU9yCWeSaC0cp
+lbKngrpQg3FX58g99sAVS9aLdbeG92aXm6vvVIgrd+rqypp/uGE8qqPDpmVOKnl+
+QOKENPR8L3CZsMfz8n7p06Xl3DkIEUeS9AlMtbqGyRktAH7cChpc+/TU7mVUdthC
+03mLe0BwQWNgNWnoKGEGNZYCmMMqJgd3IPCmdxjudge5xX2xfsGFJjN1b5zlA5EU
+qFFf8cuGdd9aIPjzwYZZlKpm77a95ohU4vXi2vCrqWscoK4JAtvc9qSqL6CV5IOK
+YbuSxwCN/pMamKeQ82rIISDWPxmuvhrOzAV9i1+BdmaGPV66HX+6wpAC/jByRmCo
+NEm/vxMJucOn/x3vzRMKCy6pa5kZsqjuBzZOuuzbyNEpLU4VmR6CBGU0yK4KY2j/
+L7y+6UWkQl6E9HeZl8xscNvpleord1lRW39qlhv1A91mjejEwYI2MLsy2DALaFwJ
+kfGCaVSjOzKrZ32I9TVx
+=Fjpu
+-----END PGP SIGNATURE-----
+
+--5tUH3ApNbQA9sRIN4lWgME5KUAsoLHM04--
