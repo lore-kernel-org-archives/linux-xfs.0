@@ -1,54 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:37473 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751350AbdAAINN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Jan 2017 03:13:13 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: fix crash and data corruption due to removal of busy COW extents
-Date: Sun,  1 Jan 2017 11:13:06 +0300
-Message-Id: <1483258387-5548-1-git-send-email-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:45444 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750863AbdAPQ07 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Jan 2017 11:26:59 -0500
+Date: Mon, 16 Jan 2017 11:26:58 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 0/5] xfs: basic cow fork speculative preallocation
+Message-ID: <20170116162658.GC6302@bfoster.bfoster>
+References: <1484157249-464-1-git-send-email-bfoster@redhat.com>
+ <20170113171342.GC27605@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170113171342.GC27605@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-There is a race window between write_cache_pages calling
-clear_page_dirty_for_io and XFS calling set_page_writeback, in which
-the mapping for an inode is tagged neither as dirty, nor as writeback.
+On Fri, Jan 13, 2017 at 09:13:42AM -0800, Christoph Hellwig wrote:
+> On Wed, Jan 11, 2017 at 12:54:04PM -0500, Brian Foster wrote:
+> > Hi all,
+> > 
+> > Here's v2 of the cow fork speculative prealloc patches. No major changes
+> > here, as outlined below. Thoughts on any of this?
+> 
+> Any results?  Better performance, less extents for certain workloads?
 
-If the COW shrinker hits in exactly that window we'll remove the delayed
-COW extents and writepages trying to write it back, which in release
-kernels will manifest as corruption of the bmap btree, and in debug
-kernels will trip the ASSERT about now calling xfs_bmapi_write with the
-COWFORK flag for holes.  A complex customer load manages to hit this
-window fairly reliably, probably by always having COW writeback in flight
-while the cow shrinker runs.
+Sorry, I neglected to pull that forward from the rfc. That discussion is
+here:
 
-This patch adds another check for having the I_DIRTY_PAGES flag set,
-which is still set during this race window.  While this fixes the problem
-I'm still not overly happy about the way the COW shrinker works as it
-still seems a bit fragile.
+http://www.spinics.net/lists/linux-xfs/msg02152.html
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_icache.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+I should probably repeat some of this testing at this point, but the
+general result is a reduction in extent count for parallel cow fork
+allocator workloads. E.g., attempting to address the same problem of
+parallel data fork allocators competing for contiguous space, resolved
+by traditional speculative preallocation.
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index f295049..2d5a63a 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1593,7 +1593,8 @@ xfs_inode_free_cowblocks(
- 	 * If the mapping is dirty or under writeback we cannot touch the
- 	 * CoW fork.  Leave it alone if we're in the midst of a directio.
- 	 */
--	if (mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
-+	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
-+	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
- 	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
- 	    atomic_read(&VFS_I(ip)->i_dio_count))
- 		return 0;
--- 
-2.1.4
+I was also kind of thinking about whether this could work around the
+need to have a default cowextsz hint at all, allowing that feature to be
+used more like the traditional extent size hint as well. This is
+distinctly more aggressive for use cases like large vm image files,
+however. At the same time, the idea is to make it transparent enough
+that it shouldn't really affect the user (i.e., via throttling,
+background and on demand reclaim, also just like normal preallocation).
 
+Brian
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
