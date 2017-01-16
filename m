@@ -1,55 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44176 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:35474 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750855AbdAPOmr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Jan 2017 09:42:47 -0500
-Subject: Re: [RFC] libxfs: cross-compile fixes
-References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
- <1473493051-12838-1-git-send-email-ralph.sennhauser@gmail.com>
- <704667b9-d8d4-974b-6be7-aef2ef275b12@sandeen.net>
- <20170116144528.47389cb3@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e788cd17-a40e-b847-0a54-c7f0d549b923@sandeen.net>
-Date: Mon, 16 Jan 2017 08:42:46 -0600
+        id S1751242AbdAPQ0C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Jan 2017 11:26:02 -0500
+Date: Mon, 16 Jan 2017 11:26:01 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 3/5] xfs: reuse iomap delalloc code for COW fork
+ reservation
+Message-ID: <20170116162601.GB6302@bfoster.bfoster>
+References: <1484157249-464-1-git-send-email-bfoster@redhat.com>
+ <1484157249-464-4-git-send-email-bfoster@redhat.com>
+ <20170113171312.GB27605@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20170116144528.47389cb3@gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170113171312.GB27605@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
 
-On 1/16/17 7:45 AM, Ralph Sennhauser wrote:
-> On Sun, 15 Jan 2017 14:32:00 -0600
-> Eric Sandeen <sandeen@sandeen.net> wrote:
+On Fri, Jan 13, 2017 at 09:13:12AM -0800, Christoph Hellwig wrote:
+> On Wed, Jan 11, 2017 at 12:54:07PM -0500, Brian Foster wrote:
+> > COW fork reservation (delayed allocation) is implemented in
+> > xfs_reflink_reserve_cow() and is generally based on the traditional data
+> > fork delalloc logic in xfs_file_iomap_begin_delay(). In preparation for
+> > further changes to implement more aggressive COW fork preallocation,
+> > refactor the COW reservation code to reuse xfs_file_iomap_begin_delay()
+> > for data fork allocation as well as COW fork reservation. This patch
+> > does not change behavior.
 > 
->> On 9/10/16 2:37 AM, Ralph Sennhauser wrote:
->>> ---
->>>
->>> Based on the earlier discussion this seems to be the preferred way
->>> of handling things.
->>>
->>> Should I split it into 3 patches?
->>> Do you want something different to happen when cross-compiling?  
->>
->> Hi Ralph -
->>
->> I just merged a patch to for-next to address cross-compiling;
->> it was on the list prior to this one.
->>
->> Can you confirm that it resolves your issues?
+> I'm still trying to understand the point of patches 1-3:  there is no
+> functionality, but a lot of new code is added to reuse some other code.
 > 
-> Hi Eric,
-> 
-> I compile tested 4.9.0 with 0a71e38396304b4d1215ba0b51cd6ce8e33eb40d on
-> top. Cross-compiling is fixed for me with this leaving only the d_namlen
-> issue with musl for which you already reviewed a patch from me. If that
-> gets addressed I can use vanilla xfsprogs.
 
-Hi Ralph, that should have been merged as well.  Check out the for-next
-branch of the git tree.
+IMO, patches 1-3 stand on their own as cleanup/refactor patches,
+regardless of whether we want the actual speculative preallocation patch
+(in current form or at all). xfs_reflink_reserve_cow() is mostly a
+copy&paste of _iomap_begin_delay() operating on the cow fork rather than
+the data fork, so technically we really shouldn't have a need for a
+feature specific helper. Duplication aside, I also find the code a bit
+confusing to follow in that we have to traverse through several
+functions in "do nothing" cases such as non-shared blocks of a reflinked
+file.
 
-Thanks,
--Eric
+I would have preferred that code get factored into _begin_delay() from
+the start, but it was too late for that by the time I grokked it and
+there are also other callers from which prealloc may or may not be
+appropriate (and that is why this patch by itself is not sufficient to
+kill off _reserve_cow()). That said, we might be able to refactor the
+allocation part of both functions such that we can replace the feature
+specific helper with a common generic one. IOWs, these patches make it
+so I don't have to further duplicate the prealloc stuff between
+_write_begin() and _reserve_cow() and in the long term, I think this
+helps facilitate further consolidation of duplicate code.
+
+> How would patch 5 look like without that "reuse"?
+
+I suppose we'd copy&paste more of begin_delay() into the reflink
+specific helper (e.g., the prealloc bits). Then perhaps add a param to
+control whether to perform preallocation.
+
+Brian
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
