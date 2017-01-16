@@ -1,103 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39849 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751020AbdALDHD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 22:07:03 -0500
-Subject: [PATCH 5/5] xfs_repair: strengthen geometry checks
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 11 Jan 2017 19:06:59 -0800
-Message-ID: <148419041963.32674.9938209133184119040.stgit@birch.djwong.org>
-In-Reply-To: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
-References: <148419038856.32674.6479634718673149751.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:59334 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750831AbdAPOSG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Jan 2017 09:18:06 -0500
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 04BC48123D
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2017 14:18:07 +0000 (UTC)
+Date: Mon, 16 Jan 2017 08:18:03 -0600
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH 22/22] mkfs: prevent multiple specifications of a single
+ option
+Message-ID: <20170116141803.GH13191@redhat.com>
+References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+ <1481117249-21273-23-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1481117249-21273-23-git-send-email-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
+To: Jan Tulak <jtulak@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-In xfs_repair, the inodelog, sectlog, and dirblklog values are read
-directly into the xfs_mount structure without any sanity checking by the
-verifier.  This results in xfs_repair segfaulting when those fields have
-ridiculously high values because the pointer arithmetic runs us off the
-end of the metadata buffers.  Therefore, reject the superblock if these
-values are garbage and try to find one of the other ones.
+On Wed, Dec 07, 2016 at 02:27:29PM +0100, Jan Tulak wrote:
+> Because things like -l size=40M,size=50M are clearly wrong and should
+> not pass. However, in two cases, we do not know if the option is a
+> string or number - thus the few more lines with can_respec flag.
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-Also clean up the dblocks checking to use the relevant macros and remove
-a bogus ASSERT that crashes repair when sunit is set but swidth isn't.
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-The superblock field fuzzer (xfs/1301) triggers all these segfaults.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- repair/sb.c         |   19 ++++++++++++++-----
- repair/xfs_repair.c |    5 ++++-
- 2 files changed, 18 insertions(+), 6 deletions(-)
-
-
-diff --git a/repair/sb.c b/repair/sb.c
-index 004702c..d784420 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -395,21 +395,26 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
- 	/* sanity check ag count, size fields against data size field */
- 
- 	if (sb->sb_dblocks == 0 ||
--		sb->sb_dblocks >
--			((__uint64_t)sb->sb_agcount * sb->sb_agblocks) ||
--		sb->sb_dblocks <
--			((__uint64_t)(sb->sb_agcount - 1) * sb->sb_agblocks
--			+ XFS_MIN_AG_BLOCKS))
-+		sb->sb_dblocks > XFS_MAX_DBLOCKS(sb) ||
-+		sb->sb_dblocks < XFS_MIN_DBLOCKS(sb))
- 		return(XR_BAD_FS_SIZE_DATA);
- 
- 	if (sb->sb_agblklog != (__uint8_t)libxfs_log2_roundup(sb->sb_agblocks))
- 		return(XR_BAD_FS_SIZE_DATA);
- 
-+	if (sb->sb_inodelog < XFS_DINODE_MIN_LOG ||
-+		sb->sb_inodelog > XFS_DINODE_MAX_LOG ||
-+		sb->sb_inodelog != libxfs_log2_roundup(sb->sb_inodesize))
-+		return XR_BAD_INO_SIZE_DATA;
-+
- 	if (sb->sb_inodesize < XFS_DINODE_MIN_SIZE ||
- 		sb->sb_inodesize > XFS_DINODE_MAX_SIZE ||
- 		sb->sb_inopblock != howmany(sb->sb_blocksize,sb->sb_inodesize))
- 		return(XR_BAD_INO_SIZE_DATA);
- 
-+	if (sb->sb_blocklog - sb->sb_inodelog != sb->sb_inopblog)
-+		return XR_BAD_INO_SIZE_DATA;
-+
- 	if (xfs_sb_version_hassector(sb))  {
- 
- 		/* check to make sure log sector is legal 2^N, 9 <= N <= 15 */
-@@ -494,6 +499,10 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
- 			return(XR_BAD_SB_WIDTH);
- 	}
- 
-+	/* Directory block log */
-+	if (sb->sb_dirblklog > XFS_MAX_BLOCKSIZE_LOG)
-+		return XR_BAD_FS_SIZE_DATA;
-+
- 	return(XR_OK);
- }
- 
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 5c79fd9..8d4be83 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -621,7 +621,10 @@ is_multidisk_filesystem(
- 	if (!sbp->sb_unit)
- 		return false;
- 
--	ASSERT(sbp->sb_width);
-+	/* Stripe unit but no stripe width?  Something's funny here... */
-+	if (!sbp->sb_width)
-+		return false;
-+
- 	return true;
- }
- 
-
+> ---
+>  mkfs/xfs_mkfs.c | 29 +++++++++++++++++++++++++++++
+>  1 file changed, 29 insertions(+)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index cd0eb20..7fe743a 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -432,6 +432,10 @@ test_uvalue_num(enum e_type a_type, union u_value a, long long b) {
+>   *     Set to true if, when user specifies the option, she has to specify
+>   *     a value too. That is, if needs_val is true, then it is not possible to
+>   *     use the subopt as a flag.
+> + *
+> + *   can_respec OPTIONAL
+> + *     If true, then there can come one getnum() after a getstr() call for this
+> + *     option.
+>   */
+>  struct opt_params {
+>  	int		index;
+> @@ -458,6 +462,7 @@ struct opt_params {
+>  		union u_value value;
+>  		enum e_type 	type;
+>  		bool		needs_val;
+> +		bool		can_respec;
+>  	}		subopt_params[MAX_SUBOPTS];
+>  } opts[MAX_OPTS] = {
+>  	{
+> @@ -877,6 +882,7 @@ struct opt_params {
+>  			  .maxval.i = 2,
+>  			  .needs_val = true,
+>  			  .type = INT,
+> +			  .can_respec = true,
+>  			},
+>  			{ .index = L_SUNIT,
+>  			  .conflicts = { {.opt = OPT_L,
+> @@ -1009,6 +1015,7 @@ struct opt_params {
+>  			  .maxval.i = 2,
+>  			  .needs_val = true,
+>  			  .type = INT,
+> +			  .can_respec = true,
+>  			},
+>  			{ .index = N_FTYPE,
+>  			  .conflicts = {  {.opt = OPT_M,
+> @@ -2017,6 +2024,22 @@ getnum(
+>  	struct subopt_param	*sp = &opts->subopt_params[index];
+>  	long long		c;
+>  
+> +	if (sp->seen){
+> +		/* If the option has respec flag, it is possible to do ONE
+> +		 * getnum call even with sp->seen == 1. Do this by disabling
+> +		 * the respec flag - this time we can continue, but if getnum
+> +		 * gets called once more, we will fail.
+> +		 */
+> +		if (sp->can_respec){
+> +			sp->can_respec = false;
+> +		} else {
+> +			fprintf(stderr,
+> +			_("You can't use an option multiple times: -%c %s\n"),
+> +			  opts->name, opts->subopts[index]);
+> +			usage();
+> +		}
+> +	}
+> +
+>  	/* empty strings might just return a default value */
+>  	if (!str || *str == '\0') {
+>  		if (sp->needs_val)
+> @@ -2123,6 +2146,12 @@ getstr(
+>  	/* empty strings for string options are not valid */
+>  	if (!str || *str == '\0')
+>  		reqval(opts->name, (char **)opts->subopts, index);
+> +	if (opts->subopt_params[index].seen){
+> +		fprintf(stderr,
+> +		_("You can't use an option multiple times: -%c %s\n"),
+> +		  opts->name, opts->subopts[index]);
+> +		usage();
+> +	}
+>  	opts->subopt_params[index].seen = true;
+>  	return str;
+>  }
+> -- 
+> 2.8.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
