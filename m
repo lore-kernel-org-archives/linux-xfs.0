@@ -1,67 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58235 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:40850 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751023AbdAMRnC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Jan 2017 12:43:02 -0500
-Date: Fri, 13 Jan 2017 18:43:00 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH, RFC] xfs: use per-AG reservations for the finobt
-Message-ID: <20170113174300.GA6418@lst.de>
-References: <1483107598-6779-1-git-send-email-hch@lst.de> <20170103192426.GA14031@birch.djwong.org>
+        id S1750831AbdAPOR3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Jan 2017 09:17:29 -0500
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id BD00D7F77E
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2017 14:17:30 +0000 (UTC)
+Date: Mon, 16 Jan 2017 08:17:27 -0600
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: [PATCH 21/22] mkfs: remove duplicit checks
+Message-ID: <20170116141727.GG13191@redhat.com>
+References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+ <1481117249-21273-22-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170103192426.GA14031@birch.djwong.org>
+In-Reply-To: <1481117249-21273-22-git-send-email-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 03, 2017 at 11:24:26AM -0800, Darrick J. Wong wrote:
-> ...and so here we calculate the number of blocks needed to store the
-> maximum number of finobt records possible for an AG.  IIRC, each *inobt
-> record refers to a single chunk of 64 inodes (or at least a theoretical
-> chunk in the spinodes=1 case), so I think we can reduce the reservation
-> to...
+On Wed, Dec 07, 2016 at 02:27:28PM +0100, Jan Tulak wrote:
+> Remove old checks that are now done by the conflicts table.
 > 
-> nr = m_sb.sb_agblocks * m_sb.sb_inopblock / XFS_INODES_PER_CHUNK;
-> return xfs_inobt_calc_size(mp, nr);
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+
+> ---
+>  mkfs/xfs_mkfs.c | 20 --------------------
+>  1 file changed, 20 deletions(-)
 > 
-> ...right?
-
-Yes, that should reduce the reservation quite a bit.
-
-> This requires us to traverse all the blocks in the finobt at mount time,
-> which isn't necessarily quick.  For refcount/rmap we cache the number of
-> tree blocks in the AGF to speed this up... but it was easy to sneak that
-> into the disk format. :)
-
-But for finobt it's too late to do that without another incompatible
-feature flag.
-
-> For finobt I wonder if one could defer the block counting work to a
-> separate thread if the AG has enough free blocks to cover, say, 10x the
-> maximum reservation?  Though that could be racy and maybe finobts are
-> small enough that the impact on mount time is low anyway?
-
-Usually they are small.  And if they aren't - well that's life.
-
-I don't think anync counting for a reservation is a good idea.  If we
-see a problem with the time needed to count in practice we'll have to
-keep a count an introduce a feature flag.
-
-> There's also the unsolved problem of what happens if we mount and find
-> agf_freeblks < (sum(ask) - sum(used)) -- right now we eat that state and
-> hope that we don't later ENOSPC and crash.
-
-Yes.  Which is exactly the situation we would have without this
-patch anyway..
-
-> But as for retroactively adding AG reservations for an existing tree, I
-> guess we'll have to come up with a strategy for dealing with
-> insufficient free blocks.  I suppose one could try to use xfs_fsr to
-> move large contiguous extents to a less full AG, if there are any...
-
-Eww.  We could just fall back to the old code before this patch,
-which would then eventually shut down..
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 9c1ad11..cd0eb20 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2760,26 +2760,6 @@ main(
+>  		*blocklog = XFS_DFL_BLOCKSIZE_LOG;
+>  		*blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG;
+>  	}
+> -	if (*blocksize < XFS_MIN_BLOCKSIZE || *blocksize > XFS_MAX_BLOCKSIZE) {
+> -		fprintf(stderr, _("illegal block size %d\n"), *blocksize);
+> -		usage();
+> -	}
+> -	if (sb_feat.crcs_enabled && *blocksize < XFS_MIN_CRC_BLOCKSIZE) {
+> -		fprintf(stderr,
+> -_("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
+> -			XFS_MIN_CRC_BLOCKSIZE);
+> -		usage();
+> -	}
+> -
+> -	/*
+> -	 * If user explicitly stated -m crc=1 -n ftype=0, an error was already
+> -	 * issued. But if -n ftype=0 was stated alone, then it is a conflict
+> -	 * with a default value for crc enabled and has to be detected here.
+> -	 */
+> -	if (sb_feat.crcs_enabled && !sb_feat.dirftype) {
+> -		fprintf(stderr, _("cannot disable ftype with crcs enabled\n"));
+> -		usage();
+> -	}
+>  	if (!slflag && !ssflag) {
+>  		sectorlog = XFS_MIN_SECTORSIZE_LOG;
+>  		sectorsize = XFS_MIN_SECTORSIZE;
+> -- 
+> 2.8.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
