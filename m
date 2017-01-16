@@ -1,79 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40118 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750840AbdAPOPg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Jan 2017 09:15:36 -0500
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 083218553F
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2017 14:15:37 +0000 (UTC)
-Date: Mon, 16 Jan 2017 08:15:33 -0600
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH 18/22] mkfs: prevent sector/blocksize to be specified as
- a number of blocks
-Message-ID: <20170116141533.GD13191@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
- <1481117249-21273-19-git-send-email-jtulak@redhat.com>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:34856 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751363AbdAPOvE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jan 2017 09:51:04 -0500
+Received: by mail-lf0-f65.google.com with SMTP id v186so12937474lfa.2
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2017 06:51:03 -0800 (PST)
+Date: Mon, 16 Jan 2017 15:50:59 +0100
+From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+Subject: Re: [RFC] libxfs: cross-compile fixes
+Message-ID: <20170116155059.76537d79@gmail.com>
+In-Reply-To: <e788cd17-a40e-b847-0a54-c7f0d549b923@sandeen.net>
+References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+        <1473493051-12838-1-git-send-email-ralph.sennhauser@gmail.com>
+        <704667b9-d8d4-974b-6be7-aef2ef275b12@sandeen.net>
+        <20170116144528.47389cb3@gmail.com>
+        <e788cd17-a40e-b847-0a54-c7f0d549b923@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1481117249-21273-19-git-send-email-jtulak@redhat.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Dec 07, 2016 at 02:27:25PM +0100, Jan Tulak wrote:
-> Documentation states that the options blocked in this patch accepts the
-> size only in bytes. So prevent blocksize or sectorsize to be specified as
-> a number of blocks or sectors.
-> 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+On Mon, 16 Jan 2017 08:42:46 -0600
+Eric Sandeen <sandeen@sandeen.net> wrote:
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+> On 1/16/17 7:45 AM, Ralph Sennhauser wrote:
+> > On Sun, 15 Jan 2017 14:32:00 -0600
+> > Eric Sandeen <sandeen@sandeen.net> wrote:
+> >   
+> >> On 9/10/16 2:37 AM, Ralph Sennhauser wrote:  
+> >>> ---
+> >>>
+> >>> Based on the earlier discussion this seems to be the preferred way
+> >>> of handling things.
+> >>>
+> >>> Should I split it into 3 patches?
+> >>> Do you want something different to happen when
+> >>> cross-compiling?    
+> >>
+> >> Hi Ralph -
+> >>
+> >> I just merged a patch to for-next to address cross-compiling;
+> >> it was on the list prior to this one.
+> >>
+> >> Can you confirm that it resolves your issues?  
+> > 
+> > Hi Eric,
+> > 
+> > I compile tested 4.9.0 with
+> > 0a71e38396304b4d1215ba0b51cd6ce8e33eb40d on top. Cross-compiling is
+> > fixed for me with this leaving only the d_namlen issue with musl
+> > for which you already reviewed a patch from me. If that gets
+> > addressed I can use vanilla xfsprogs.  
+> 
+> Hi Ralph, that should have been merged as well.  Check out the
+> for-next branch of the git tree.
 
-> ---
->  mkfs/xfs_mkfs.c | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
+How did I miss that ... :)
+
+Thanks
+Ralph
+
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index d55eb9a..e8fd49b 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2041,6 +2041,27 @@ getnum(
->  		}
->  	}
->  
-> +	/* Prevent things like specifying blocksize as a number of blocks. */
-> +	if (opts->index == OPT_B || opts->index == OPT_S ||
-> +		(opts->index == OPT_L && (index == L_SECTLOG ||
-> +			index == L_SECTSIZE)) ||
-> +		(opts->index == OPT_N && (index == N_SIZE)) ||
-> +		(opts->index == OPT_D && (index == D_SECTLOG ||
-> +			index == D_SECTSIZE))
-> +
-> +		) {
-> +		switch (str[strlen(str)-1]) {
-> +		case 'b':
-> +		case 's':
-> +			fprintf(stderr,
-> +				_("You can't set a sector or block size in "
-> +				  "number of blocks or sectors (-%c %s).\n"),
-> +				opts->name, opts->subopts[index]);
-> +			exit(1);
-> +		}
-> +
-> +	}
-> +
->  	sp->seen = true;
->  
->  	if (test_uvalue_num(sp->type, sp->minval, 0) &&
-> -- 
-> 2.8.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks,
+> -Eric
+
