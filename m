@@ -1,139 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60834 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:58960 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751063AbdAMRI6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Jan 2017 12:08:58 -0500
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B18AD6A6D0
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Jan 2017 17:08:16 +0000 (UTC)
-Date: Fri, 13 Jan 2017 11:08:13 -0600
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH 09/22] mkfs: change conflict checks to utilize the new
- conflict structure
-Message-ID: <20170113170813.GD23576@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
- <1481117249-21273-10-git-send-email-jtulak@redhat.com>
+        id S1750964AbdAPXNf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Jan 2017 18:13:35 -0500
+Subject: Re: [PATCH 0/3] xfs: reduce boilerplate around xfs_btree_init_block
+References: <670e1f09-754d-4171-0a73-f918956eba2d@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8686ca71-8133-1b53-d59e-979da8510372@sandeen.net>
+Date: Mon, 16 Jan 2017 17:13:34 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1481117249-21273-10-git-send-email-jtulak@redhat.com>
+In-Reply-To: <670e1f09-754d-4171-0a73-f918956eba2d@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Dec 07, 2016 at 02:27:16PM +0100, Jan Tulak wrote:
-> Bring the conflicts detection up to date with conflicts declaration.
+On 12/22/16 11:41 AM, Eric Sandeen wrote:
+> We have this pattern all over the kernel & userspace:
 > 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-
-There's a missing definition for check_subopt()
-FWIW, I see the call gets removed in patch10.
-
-> ---
->  mkfs/xfs_mkfs.c | 37 +++++++++++++++++++++++++++++++------
->  1 file changed, 31 insertions(+), 6 deletions(-)
+>                 if (xfs_sb_version_hascrc(&mp->m_sb))
+>                         xfs_btree_init_block(mp, bp, XFS_ABTB_CRC_MAGIC, 0, 1,
+>                                                 agno, XFS_BTREE_CRC_BLOCKS);
+>                 else
+>                         xfs_btree_init_block(mp, bp, XFS_ABTB_MAGIC, 0, 1,
+>                                                 agno, 0);
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 30618ff..d11fad6 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -1372,7 +1372,7 @@ illegal_option(
->   * Check for conflicts and option respecification.
->   */
->  static void
-> -check_opt(
-> +check_subopt_conflicts(
->  	struct opt_params	*opt,
->  	int			index,
->  	bool			str_seen)
-> @@ -1424,7 +1424,7 @@ check_opt(
->   * Check for conflict values between options.
->   */
->  static void
-> -check_opt_value(
-> +check_subopt_value(
->  	struct opt_params	*opt,
->  	int			index,
->  	long long 		value)
-> @@ -1450,6 +1450,32 @@ check_opt_value(
->  	}
->  }
->  
-> +/**
-> + * Go through entire opt_params table and check every option for valid values
-> + * and for conflicts.
-> + */
-> +static void
-> +check_opt(
-> +	struct opt_params *opts,
-> +	int opti)
-> +{
-> +	int index;
-> +	struct opt_params *opt = &opts[opti];
-> +	for (index = 0; index < MAX_SUBOPTS; index++) {
-> +		struct subopt_param *sp = &opt->subopt_params[index];
-> +		check_subopt_conflicts(opt, index, false);
-> +		check_subopt_value(opt, index, sp->value);
-> +	}
-> +}
-> +static void
-> +check_all_opts(struct opt_params *opts)
-> +{
-> +	int opti;
-> +	for (opti = 0; opti < MAX_OPTS; opti++) {
-> +		check_opt(opts, opti);
-> +	}
-> +}
-> +
->  static long long
->  getnum(
->  	const char		*str,
-> @@ -1459,7 +1485,6 @@ getnum(
->  	struct subopt_param	*sp = &opts->subopt_params[index];
->  	long long		c;
->  
-> -	check_opt(opts, index, false);
->  	/* empty strings might just return a default value */
->  	if (!str || *str == '\0') {
->  		if (sp->defaultval == SUBOPT_NEEDS_VAL)
-> @@ -1493,8 +1518,6 @@ getnum(
->  			illegal_option(str, opts, index, NULL);
->  	}
->  
-> -	check_opt_value(opts, index, c);
-> -
->  	/* Validity check the result. */
->  	if (c < sp->minval)
->  		illegal_option(str, opts, index, _("value is too small"));
-> @@ -1517,7 +1540,7 @@ getstr(
->  	struct opt_params	*opts,
->  	int			index)
->  {
-> -	check_opt(opts, index, true);
-> +	check_subopt(opts, index, true);
+> The last flag (XFS_BTREE_CRC_BLOCKS) can be gleaned from
+> the features on the superblock via mp just as the if/else does,
+> so no need to pass that in from the caller.  That's patch 1.
 
-check_subopt is undefined. ^^^
+Ping on this series?
 
->  
->  	/* empty strings for string options are not valid */
->  	if (!str || *str == '\0')
-> @@ -2213,6 +2236,8 @@ main(
->  	} else
->  		dfile = xi.dname;
->  
-> +	check_all_opts(opts);
-> +
->  	/*
->  	 * Blocksize and sectorsize first, other things depend on them
->  	 * For RAID4/5/6 we want to align sector size and block size,
-> -- 
-> 2.8.1
+Thanks,
+-Eric
+
+> Then the difference is simply CRC vs not-CRC magic.  This can also
+> be determined inside the called function by passing in a btree number,
+> and looking up the proper magic in the xfs_magics array.
 > 
+> patch2 makes xfs_btree_magic() more generic, taking a 
+> crc flag & btnum, instead of just a cursor.
+> 
+> patch3 then makes use of xfs_btree_magic in the block init routine
+> to determine the proper magic.
+> 
+> With those changes, the if/else can go away, and we can simply call:
+> 
+> xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, agno, 0);
+> 
+> and let the lower function sort out crc vs. no crc differences
+> by itself.
+> 
+> It's not a huge reduction in code, but it reduces a lot of the
+> boilerplate, particularly in growfs code.  This may also make it
+> slightly easier to factor the growfs tree init code into a loop
+> (not sure about that, yet) and/or to move mkfs & growfs tree init
+> code into a libxfs/ call.
+> 
+>  libxfs/xfs_bmap.c       |   19 ++++---------------
+>  libxfs/xfs_bmap_btree.c |   10 ++--------
+>  libxfs/xfs_btree.c      |   34 +++++++++++++++++++++-------------
+>  libxfs/xfs_btree.h      |    4 ++--
+>  libxfs/xfs_types.h      |    2 ++
+>  xfs_fsops.c             |   39 +++++++++------------------------------
+>  6 files changed, 40 insertions(+), 68 deletions(-)
+> 
+> -Eric
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
