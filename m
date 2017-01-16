@@ -1,75 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56016 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1161066AbdAIPWH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Jan 2017 10:22:07 -0500
-Date: Mon, 9 Jan 2017 10:22:06 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: minleft fixes V2
-Message-ID: <20170109152205.GA22368@bfoster.bfoster>
-References: <1482436822-31546-1-git-send-email-hch@lst.de>
- <20170105012159.GS1859@eguan.usersys.redhat.com>
- <20170105020105.GC17846@birch.djwong.org>
- <20170108103647.GD26451@lst.de>
- <20170108160959.GD62847@bfoster.bfoster>
- <20170108181002.GA3732@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170108181002.GA3732@birch.djwong.org>
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:36090 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751122AbdAPABh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Jan 2017 19:01:37 -0500
+Received: by mail-pf0-f172.google.com with SMTP id 189so48548136pfu.3
+        for <linux-xfs@vger.kernel.org>; Sun, 15 Jan 2017 16:01:36 -0800 (PST)
+Message-ID: <1484524890.27533.16.camel@dubeyko.com>
+Subject: Re: [LSF/MM TOPIC] online filesystem repair
+From: Viacheslav Dubeyko <slava@dubeyko.com>
+Date: Sun, 15 Jan 2017 16:01:30 -0800
+In-Reply-To: <20170114075452.GJ14033@birch.djwong.org>
+References: <20170114075452.GJ14033@birch.djwong.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, lsf-pc@lists.linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, Vyacheslav.Dubeyko@wdc.com
 
-On Sun, Jan 08, 2017 at 10:10:02AM -0800, Darrick J. Wong wrote:
-> On Sun, Jan 08, 2017 at 11:10:00AM -0500, Brian Foster wrote:
-> > On Sun, Jan 08, 2017 at 11:36:47AM +0100, Christoph Hellwig wrote:
-> > > On Wed, Jan 04, 2017 at 06:01:05PM -0800, Darrick J. Wong wrote:
-> > > > Ok, sounds good.  I just sent out my first attempt at a pull request to Linus,
-> > > > so I'll queue this series for another pull req. after that.
-> > > 
-> > > I'll resend with a few minor updates based on the comments from Brian
-> > > in a few days, so this should be ready for -rc4.
-> > 
-> > So I just noticed that this series was merged into for-next (which iiuc
-> > is easily fixable, yes?).
+On Fri, 2017-01-13 at 23:54 -0800, Darrick J. Wong wrote:
+> Hi,
 > 
-> Yep.  for-next can be rebased.
-> 
-> > Christoph already mentioned he was sending a new variant... but
-> > juuuuuust a note that not all of these patches had a reviewed-by yet
-> > either. ;) 
-> 
-> <nod> I'm aware; I'll be more patient next time. :)
+> I've been working on implementing online metadata scrubbing and
+> repair
+> in XFS.  Most of the code is self contained inside XFS, but there's a
+> small amount of interaction with the VFS freezer code that has to
+> happen
+> in order to shut down the filesystem to rebuild the extent backref
+> records.  It might be interesting to discuss the (fairly slight)
+> requirements upon the VFS to support repairs, and/or have a BoF to
+> discuss how to build an online checker if any of the other
+> filesystems
+> are interested in this.
 > 
 
-Thanks. At risk of stating the obvious, I'd much prefer we continue to
-follow the "at least one r-b requirement per patch" development model,
-even if that means something slips a release (not that this series is at
-such a risk). I'm certainly used to that by now... :P
+How do you imagine a generic way to support repairs for different file
+systems? From one point of view, to have generic way of the online file
+system repairing could be the really great subsystem. But, from another
+point of view, every file system has own architecture, own set of
+metadata and own way to do fsck check/recovering. As far as I can
+judge, there are significant amount of research efforts in this
+direction (Recon [1], [2], for example). But we still haven't any real
+general online file system repair subsystem in the Linux kernel. Do you
+have some new insight? What's difference of your vision? If we have
+online file system repair subsystem then how file system driver will
+need to interact with the goal to make internal repairing?
 
-> TBH I was also curious to have the kbuild robot / linux-next pick up a
-> changeset that wasn't terribly likely to break anything else, just to
-> see how they run...
-> 
+Thanks,
+Vyacheslav Dubeyko.
 
-Hmm, is this something that can be enabled locally (e.g., on posts to
-the list) without having to merge stuff prematurely?
+[1] http://www.eecg.toronto.edu/~ashvin/publications/recon-fs-consistency-runtime.pdf
+[2] https://www.researchgate.net/publication/269300836_Managing_the_file_system_from_the_kernel
 
-Brian
-
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
