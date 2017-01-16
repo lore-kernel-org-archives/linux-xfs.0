@@ -1,169 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56392 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47638 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751005AbdAPOQT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Jan 2017 09:16:19 -0500
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 756B468CB
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2017 14:16:20 +0000 (UTC)
-Date: Mon, 16 Jan 2017 08:16:16 -0600
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH 19/22] mkfs: subopt flags should be saved as bool
-Message-ID: <20170116141616.GE13191@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
- <1481117249-21273-20-git-send-email-jtulak@redhat.com>
+        id S1750855AbdAPTE6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Jan 2017 14:04:58 -0500
+Date: Mon, 16 Jan 2017 14:04:57 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 3/5] xfs: reuse iomap delalloc code for COW fork
+ reservation
+Message-ID: <20170116190456.GD6302@bfoster.bfoster>
+References: <1484157249-464-1-git-send-email-bfoster@redhat.com>
+ <1484157249-464-4-git-send-email-bfoster@redhat.com>
+ <20170113171312.GB27605@infradead.org>
+ <20170116162601.GB6302@bfoster.bfoster>
+ <20170116173730.GA11796@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1481117249-21273-20-git-send-email-jtulak@redhat.com>
+In-Reply-To: <20170116173730.GA11796@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Dec 07, 2016 at 02:27:26PM +0100, Jan Tulak wrote:
-> Flag suboptions are not united in what data type they use internally.
-> Unify them as boolean.
+On Mon, Jan 16, 2017 at 09:37:30AM -0800, Christoph Hellwig wrote:
+> On Mon, Jan 16, 2017 at 11:26:01AM -0500, Brian Foster wrote:
+> > IMO, patches 1-3 stand on their own as cleanup/refactor patches,
+> > regardless of whether we want the actual speculative preallocation patch
+> > (in current form or at all). xfs_reflink_reserve_cow() is mostly a
+> > copy&paste of _iomap_begin_delay() operating on the cow fork rather than
+> > the data fork, so technically we really shouldn't have a need for a
+> > feature specific helper. Duplication aside, I also find the code a bit
+> > confusing to follow in that we have to traverse through several
+> > functions in "do nothing" cases such as non-shared blocks of a reflinked
+> > file.
 > 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> I'm usually not a fan of refactor patches that adds lots of new code
+> without adding functionality.  In terms of readability I'm obviously
+> biasses having written a lot of the code, but I find the new code
+> much harder to read.
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Ok, we disagree on whether the refactoring stands on its own. I'm not
+quite sure which part you dislike (note that the iomap_search_extents()
+part was based on your suggestion from the rfc). Either way, this series
+does add functionality too. :)
 
-> ---
->  mkfs/xfs_mkfs.c | 52 ++++++++++++++++++++++++++--------------------------
->  1 file changed, 26 insertions(+), 26 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index e8fd49b..9e726f7 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -664,10 +664,10 @@ struct opt_params {
->  			},
->  			{ .index = D_RTINHERIT,
->  			  .conflicts = { {LAST_CONFLICT} },
-> -			  .minval.u = 1,
-> -			  .maxval.u = 1,
-> -			  .flagval.u = 1,
-> -			  .type = UINT,
-> +			  .minval.b = false,
-> +			  .maxval.b = true,
-> +			  .flagval.b = true,
-> +			  .type = BOOL,
->  			},
->  			{ .index = D_PROJINHERIT,
->  			  .conflicts = { {LAST_CONFLICT} },
-> @@ -804,10 +804,10 @@ struct opt_params {
->  					  .message = \
->  		"Sparse inodes not supported without CRC support."},
->  					 {LAST_CONFLICT} },
-> -			  .minval.i = 0,
-> -			  .maxval.i = 1,
-> -			  .flagval.i = 1,
-> -			  .type = INT,
-> +			  .minval.b = false,
-> +			  .maxval.b = true,
-> +			  .flagval.b = true,
-> +			  .type = BOOL,
->  			},
->  		},
->  	},
-> @@ -937,10 +937,10 @@ struct opt_params {
->  					  .subopt = L_INTERNAL,
->  					 },
->  					 {LAST_CONFLICT} },
-> -			  .minval.i = 0,
-> -			  .maxval.i = 1,
-> -			  .flagval.i = 1,
-> -			  .type = INT,
-> +			  .minval.b = false,
-> +			  .maxval.b = true,
-> +			  .flagval.b = true,
-> +			  .type = BOOL,
->  			},
->  			{ .index = L_NAME,
->  			  .conflicts = { {.opt = OPT_L,
-> @@ -1070,10 +1070,10 @@ struct opt_params {
->  			  .type = STRING,
->  			},
->  			{ .index = R_FILE,
-> -			  .minval.i = 0,
-> -			  .maxval.i = 1,
-> -			  .flagval.i = 1,
-> -			  .type = INT,
-> +			  .minval.b = false,
-> +			  .maxval.b = true,
-> +			  .flagval.b = true,
-> +			  .type = BOOL,
->  			  .conflicts = { {LAST_CONFLICT} },
->  			},
->  			{ .index = R_NAME,
-> @@ -1090,10 +1090,10 @@ struct opt_params {
->  			  .type = STRING,
->  			},
->  			{ .index = R_NOALIGN,
-> -			  .minval.i = 0,
-> -			  .maxval.i = 1,
-> -			  .flagval.i = 1,
-> -			  .type = INT,
-> +			  .minval.b = false,
-> +			  .maxval.b = true,
-> +			  .flagval.b = true,
-> +			  .type = BOOL,
->  			  .conflicts = { {LAST_CONFLICT} },
->  			},
->  		},
-> @@ -2193,7 +2193,7 @@ main(
->  	xfs_extlen_t		nbmblocks;
->  	int			nlflag;
->  	int			*nodsflag;
-> -	int			*norsflag;
-> +	bool			*norsflag;
->  	xfs_alloc_rec_t		*nrec;
->  	int			nsflag;
->  	int			nvflag;
-> @@ -2256,7 +2256,7 @@ main(
->  	dsu = &opts[OPT_D].subopt_params[D_SU].value.i;
->  	dsw = &opts[OPT_D].subopt_params[D_SW].value.i;
->  	nodsflag = &opts[OPT_D].subopt_params[D_NOALIGN].value.i;
-> -	norsflag = &opts[OPT_R].subopt_params[R_NOALIGN].value.i;
-> +	norsflag = &opts[OPT_R].subopt_params[R_NOALIGN].value.b;
->  	logagno = &opts[OPT_L].subopt_params[L_AGNUM].value.u;
->  	lsu = &opts[OPT_L].subopt_params[L_SU].value.i;
->  	lsunit = &opts[OPT_L].subopt_params[L_SUNIT].value.i;
-> @@ -2391,7 +2391,7 @@ main(
->  					if (c)
->  						fsx.fsx_xflags |=
->  							XFS_DIFLAG_RTINHERIT;
-> -					opts[OPT_D].subopt_params[D_RTINHERIT].value.u = c;
-> +					opts[OPT_D].subopt_params[D_RTINHERIT].value.b = c;
->  					break;
->  				case D_PROJINHERIT:
->  					fsx.fsx_projid = getnum(value, &opts[OPT_D],
-> @@ -2727,15 +2727,15 @@ main(
->  	opts[OPT_D].subopt_params[D_FILE].value.i  = xi.disfile;
->  	opts[OPT_D].subopt_params[D_PROJINHERIT].value.u = fsx.fsx_projid;
->  	opts[OPT_D].subopt_params[D_EXTSZINHERIT].value.u = fsx.fsx_extsize;
-> -	opts[OPT_L].subopt_params[L_FILE].value.i = xi.lisfile;
-> +	opts[OPT_L].subopt_params[L_FILE].value.b = xi.lisfile;
->  	opts[OPT_L].subopt_params[L_VERSION].value.i = sb_feat.log_version;
->  	opts[OPT_L].subopt_params[L_LAZYSBCNTR].value.b = sb_feat.lazy_sb_counters;
->  	opts[OPT_I].subopt_params[I_ATTR].value.i = sb_feat.attr_version ;
->  	opts[OPT_I].subopt_params[I_PROJID32BIT].value.b = !sb_feat.projid16bit ;
-> -	opts[OPT_I].subopt_params[I_SPINODES].value.i = sb_feat.spinodes ;
-> +	opts[OPT_I].subopt_params[I_SPINODES].value.b = sb_feat.spinodes ;
->  	opts[OPT_M].subopt_params[M_FINOBT].value.i = sb_feat.finobt ;
->  	opts[OPT_M].subopt_params[M_RMAPBT].value.b = sb_feat.rmapbt ;
-> -	opts[OPT_R].subopt_params[R_FILE].value.i = xi.risfile ;
-> +	opts[OPT_R].subopt_params[R_FILE].value.b = xi.risfile ;
->  	opts[OPT_R].subopt_params[R_NAME].value.s = xi.rtname;
->  	opts[OPT_R].subopt_params[R_DEV].value.s = xi.rtname;
->  	opts[OPT_S].subopt_params[S_LOG].value.u = sectorsize;
-> -- 
-> 2.8.1
-> 
+I'm not that concerned with getting the refactor in by itself if there
+is disagreement. I just didn't want to continue to have two delalloc
+write paths that differ only by the target fork (and with this series,
+initial prealloc size). So, any thoughts on the mechanism itself, or how
+you'd envision it look if not as implemented here?
+
+Brian
+
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
