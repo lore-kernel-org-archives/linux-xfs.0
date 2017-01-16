@@ -1,59 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47638 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750855AbdAPTE6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Jan 2017 14:04:58 -0500
-Date: Mon, 16 Jan 2017 14:04:57 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 3/5] xfs: reuse iomap delalloc code for COW fork
- reservation
-Message-ID: <20170116190456.GD6302@bfoster.bfoster>
-References: <1484157249-464-1-git-send-email-bfoster@redhat.com>
- <1484157249-464-4-git-send-email-bfoster@redhat.com>
- <20170113171312.GB27605@infradead.org>
- <20170116162601.GB6302@bfoster.bfoster>
- <20170116173730.GA11796@infradead.org>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:36641 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751306AbdAPNpd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jan 2017 08:45:33 -0500
+Received: by mail-lf0-f66.google.com with SMTP id h65so12651414lfi.3
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2017 05:45:32 -0800 (PST)
+Date: Mon, 16 Jan 2017 14:45:28 +0100
+From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+Subject: Re: [RFC] libxfs: cross-compile fixes
+Message-ID: <20170116144528.47389cb3@gmail.com>
+In-Reply-To: <704667b9-d8d4-974b-6be7-aef2ef275b12@sandeen.net>
+References: <1473241376-10922-1-git-send-email-ralph.sennhauser@gmail.com>
+        <1473493051-12838-1-git-send-email-ralph.sennhauser@gmail.com>
+        <704667b9-d8d4-974b-6be7-aef2ef275b12@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170116173730.GA11796@infradead.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jan 16, 2017 at 09:37:30AM -0800, Christoph Hellwig wrote:
-> On Mon, Jan 16, 2017 at 11:26:01AM -0500, Brian Foster wrote:
-> > IMO, patches 1-3 stand on their own as cleanup/refactor patches,
-> > regardless of whether we want the actual speculative preallocation patch
-> > (in current form or at all). xfs_reflink_reserve_cow() is mostly a
-> > copy&paste of _iomap_begin_delay() operating on the cow fork rather than
-> > the data fork, so technically we really shouldn't have a need for a
-> > feature specific helper. Duplication aside, I also find the code a bit
-> > confusing to follow in that we have to traverse through several
-> > functions in "do nothing" cases such as non-shared blocks of a reflinked
-> > file.
+On Sun, 15 Jan 2017 14:32:00 -0600
+Eric Sandeen <sandeen@sandeen.net> wrote:
+
+> On 9/10/16 2:37 AM, Ralph Sennhauser wrote:
+> > ---
+> > 
+> > Based on the earlier discussion this seems to be the preferred way
+> > of handling things.
+> > 
+> > Should I split it into 3 patches?
+> > Do you want something different to happen when cross-compiling?  
 > 
-> I'm usually not a fan of refactor patches that adds lots of new code
-> without adding functionality.  In terms of readability I'm obviously
-> biasses having written a lot of the code, but I find the new code
-> much harder to read.
+> Hi Ralph -
+> 
+> I just merged a patch to for-next to address cross-compiling;
+> it was on the list prior to this one.
+> 
+> Can you confirm that it resolves your issues?
 
-Ok, we disagree on whether the refactoring stands on its own. I'm not
-quite sure which part you dislike (note that the iomap_search_extents()
-part was based on your suggestion from the rfc). Either way, this series
-does add functionality too. :)
+Hi Eric,
 
-I'm not that concerned with getting the refactor in by itself if there
-is disagreement. I just didn't want to continue to have two delalloc
-write paths that differ only by the target fork (and with this series,
-initial prealloc size). So, any thoughts on the mechanism itself, or how
-you'd envision it look if not as implemented here?
+I compile tested 4.9.0 with 0a71e38396304b4d1215ba0b51cd6ce8e33eb40d on
+top. Cross-compiling is fixed for me with this leaving only the d_namlen
+issue with musl for which you already reviewed a patch from me. If that
+gets addressed I can use vanilla xfsprogs.
 
-Brian
+Thanks
+Ralph
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Thanks,
+> -Eric
+>  
+> > Cheers
+> > Ralph
+> > 
+> > ---
+> >  configure.ac         |  3 +++
+> >  include/builddefs.in |  1 +
+> >  libxfs/Makefile      | 10 ++++++++--
+> >  3 files changed, 12 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/configure.ac b/configure.ac
+> > index 79053e5..89334d6 100644
+> > --- a/configure.ac
+> > +++ b/configure.ac
+> > @@ -10,11 +10,14 @@ AC_PROG_LIBTOOL
+> >  
+> >  AC_PROG_CC
+> >  if test $cross_compiling = no; then
+> > +  CROSS_COMPILING=no
+> >    BUILD_CC="$CC"
+> >    AC_SUBST(BUILD_CC)
+> >  else
+> > +  CROSS_COMPILING=yes
+> >    AC_CHECK_PROGS(BUILD_CC, gcc cc)
+> >  fi
+> > +AC_SUBST(CROSS_COMPILING)
+> >  
+> >  AC_ARG_ENABLE(shared,
+> >  [ --enable-shared=[yes/no] Enable use of shared libraries
+> > [default=yes]],, diff --git a/include/builddefs.in
+> > b/include/builddefs.in index 7153d7a..0c4ce36 100644
+> > --- a/include/builddefs.in
+> > +++ b/include/builddefs.in
+> > @@ -26,6 +26,7 @@ MALLOCLIB = @malloc_lib@
+> >  LOADERFLAGS = @LDFLAGS@
+> >  LTLDFLAGS = @LDFLAGS@
+> >  CFLAGS = @CFLAGS@
+> > +CROSS_COMPILING = @CROSS_COMPILING@
+> >  
+> >  LIBRT = @librt@
+> >  LIBUUID = @libuuid@
+> > diff --git a/libxfs/Makefile b/libxfs/Makefile
+> > index 62608bd..ad492e5 100644
+> > --- a/libxfs/Makefile
+> > +++ b/libxfs/Makefile
+> > @@ -114,11 +114,15 @@ DEBUG = -DNDEBUG
+> >  
+> >  LDIRT = gen_crc32table crc32table.h crc32selftest
+> >  
+> > +ifeq ($(CROSS_COMPILING),no)
+> > +BUILD_CFLAGS:=$(CFLAGS)
+> > +endif
+> > +
+> >  default: crc32selftest ltdepend $(LTLIBRARY)
+> >  
+> >  crc32table.h: gen_crc32table.c
+> >  	@echo "    [CC]     gen_crc32table"
+> > -	$(Q) $(BUILD_CC) $(CFLAGS) -o gen_crc32table $<
+> > +	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -o gen_crc32table $<
+> >  	@echo "    [GENERATE] $@"
+> >  	$(Q) ./gen_crc32table > crc32table.h
+> >  
+> > @@ -128,9 +132,11 @@ crc32table.h: gen_crc32table.c
+> >  # busted CRC calculation at build time and hence avoid putting bad
+> > CRCs down on # disk.
+> >  crc32selftest: gen_crc32table.c crc32table.h crc32.c
+> > +ifeq ($(CROSS_COMPILING),no)
+> >  	@echo "    [TEST]    CRC32"
+> > -	$(Q) $(BUILD_CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o
+> > $@
+> > +	$(Q) $(CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
+> >  	$(Q) ./$@
+> > +endif
+> >  
+> >  # set up include/xfs header directory
+> >  include $(BUILDRULES)
+> >   
+
