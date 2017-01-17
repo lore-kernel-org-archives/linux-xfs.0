@@ -1,195 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37886 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752481AbdATXdw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Jan 2017 18:33:52 -0500
-Subject: Re: [PATCH 1/5] xfs_db: sanitize geometry on load
-References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
- <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <86cd1f7f-f433-997b-8bbc-94e4c72a860f@redhat.com>
-Date: Fri, 20 Jan 2017 17:33:50 -0600
+Received: from aserp1050.oracle.com ([141.146.126.70]:42079 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750863AbdAQVyC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2017 16:54:02 -0500
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v0HK3e4K029106
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Jan 2017 20:03:43 GMT
+Date: Tue, 17 Jan 2017 12:02:32 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] xfs: fix COW writeback race
+Message-ID: <20170117200232.GA4780@birch.djwong.org>
+References: <1484639331-2137-1-git-send-email-hch@lst.de>
+ <20170117134421.GB12426@bfoster.bfoster>
+ <20170117143721.GA32641@lst.de>
+ <20170117171449.GC12426@bfoster.bfoster>
+ <20170117183900.GG5883@birch.djwong.org>
+ <20170117185833.GD12426@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170117185833.GD12426@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On 1/20/17 2:25 PM, Darrick J. Wong wrote:
-> xfs_db doesn't check the filesystem geometry when it's mounting, which
-> means that garbage agcount values can cause OOMs when we try to allocate
-> all the per-AG incore metadata.  If we see geometry that looks
-> suspicious, try to derive the actual AG geometry to avoid crashing the
-> system.  This should help with xfs/1301 fuzzing.
+On Tue, Jan 17, 2017 at 01:58:34PM -0500, Brian Foster wrote:
+> On Tue, Jan 17, 2017 at 10:39:00AM -0800, Darrick J. Wong wrote:
+> > On Tue, Jan 17, 2017 at 12:14:51PM -0500, Brian Foster wrote:
+> > > On Tue, Jan 17, 2017 at 03:37:21PM +0100, Christoph Hellwig wrote:
+> > > > On Tue, Jan 17, 2017 at 08:44:21AM -0500, Brian Foster wrote:
+> > > > > Any reason we don't try to address the core race rather than shake up
+> > > > > the affected code to accommodate it?
+> > > > 
+> > > > I think there are two aspects to the whole thing.  One is the way
+> > > > xfs_bmapi_write currently works is fundamentally wrong - if the
+> > > > caller only needs a conversion from delalloc to real space trying
+> > > > to allocate space is always wrong and we should catch it early.
+> > > > The second is if we should do the eager conversion of the whole
+> > > > found extent for either the data and/or the COW fork.
+> > > > 
+> > > 
+> > > Makes sense. I agree that the former is probably the right thing to do,
+> > > it just seems more like an error check than a solution for a race. The
+> > > second is probably a bigger question, as I assume we do that to request
+> > > as large allocations as possible.
+> > 
+> > I'm under the impression that yes, we do #2 to maximize request sizes.
+> > AFAICT this patch preserves that behavior and gets rid of the behavior
+> > where cow delalloc conversion creates real extents where there
+> > previously were holes.
+> > 
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: Only modify sb_ag{blocks,count} if they seem insane -- use local
-> variables to avoid screwing up the rest of the metadata.
-> v3: Suggest a possible agcount value, but always restrict to 1 AG.
-> v4: Remove the suggested agcount value and make sure we can't exit
-> the program with an exitcode of zero.
+> Yeah, Christoph is just pointing out how that behavior contributes to
+> the race. I'm not suggesting that this patch changes that. Rather, I'm
+> agreeing that we probably don't want to go the route of changing that to
+> address this issue.
 
-ok, but insane_agcount doesn't need to be global... 
+Oh.  So am I.  I think we're /all/ in agreement then. :)
 
-> ---
->  db/init.c |   84 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 74 insertions(+), 10 deletions(-)
+> > > > > I ask for a couple reasons: 1.) I'm
+> > > > > not quite following the specific race from the description and 2.) I
+> > > > > considered doing the exact same thing at first for the eofblocks i_size
+> > > > > issue, but more digging rooted out the problem in the eofblocks code.
+> > > > > This one may not be as straightforward a fix, of course... (but if not,
+> > > > > the commit log should probably explain why).
+> > > > 
+> > > > My hope was that the long commit message explained the issue, but
+> > > > I guess I need to go into even more details.
+> > > > 
+> > > > The writeback code (both COW and real) works like this
+> > > > 
+> > > > take ilock
+> > > > read in an extent at offset O
+> > > > drop ilock
+> > > > 
+> > > > if extent is delalloc:
+> > > >   while !done with the whole extent
+> > > >     take ilock
+> > > >     convert partial extent to a real allocation
+> > > >     drop ilock
+> > > > 
+> > > > But if multiple threads are doing writeback on pages next to
+> > > > each other another thread might have already converted parts
+> > > > of all of the extent found in the beginning to a real allocation.
+> > > > That on it's own is not a problem because xfs_bmapi_write
+> > > > handles a call to allocate an already real allocation as a no-op.
+> > > > But with the COW code moving real extents from the COW fork to
+> > > > the data fork after I/O completion this can become a problem,
+> > > > because we now might not only have delalloc or real extents in
+> > > > the area covered by extent returned from the inital xfs_bmapi_read
+> > > > call, but also a hole in the COW work.  At which point it blows up.
+> > > > 
+> > > 
+> > > Got it, thanks. So all of the writeback stuff is protected via
+> > > page/buffer locks, and even if we still had those locks, it doesn't
+> > > matter because the same extent is obviously covered by many page/buffer
+> > > objects.
+> > > 
+> > > > As for why we're doing the eager conversion:  at least for the data
+> > > > fork this was initentional to get better allocation patterns, I
+> > > > remember a discussion with Dave on that a long time ago.  Maybe we
+> > > > shouldn't do it for the COW for to avoid these sorts of races, but
+> > > > then again without xfs_bmapi_write being stupid the race is harmless.
+> > > > 
+> > > 
+> > > Yeah, and doing otherwise may break the assumption that larger delallocs
+> > > produce larger physical allocs (re: cowextsz hint and potentially
+> > > preallocation).
+> > 
+> > Yep.
+> > 
+> > > > > What happens in this case if eof is true? It looks like got could be
+> > > > > bogus, yet we still carry on using it in the post-allocation part of the
+> > > > > loop.
+> > > > 
+> > > > For an initial EOF lookup it could indeed be bogus.  To properly
+> > > > work it would need something like the trick xfs_bmapi_read uses
+> > > > for this case.
+> > > > 
+> > > 
+> > > That seems reasonable so long as we skip the parts of the loop that are
+> > > expecting a real (non-hole) startblock.
+> > > 
+> > > > > The fact that the allocation code breaks out of the loop if
+> > > > > allocation doesn't occur is a bit of a red flag that the post-allocation
+> > > > > code may very well expect to always have an allocated mapping.
+> > > > 
+> > > > The post-allocation cleanup code bust handle xfs_bmapi_allocate
+> > > > returning an error before doing anything, and because of that it's
+> > > > full of conditionals for everything that could or could not have
+> > > > happened.
+> > > > 
+> > > 
+> > > We have the following in the need_alloc block:
+> > > 
+> > >                         error = xfs_bmapi_allocate(&bma);
+> > >                         if (error)
+> > >                                 goto error0;
+> > >                         if (bma.blkno == NULLFSBLOCK)
+> > >                                 break;
+> > > 
+> > > ... which breaks out of the loop on error or allocation failure. The
+> > > first call after that block is xfs_bmapi_trim_map(), which uses got
+> > > without any consideration for holes that I can see.
+> > 
+> > Wait, what?  The break gets us out of the while loop, not the
+> > "if (inhole || wasdelay)" clause that precedes the _trim_map.
+> > 
+> > The while loop ends at "*nmap = n", correct?  So the NULLFSBLOCK case
+> > shouldn't be calling _trim_map with uninitialized got.
+> > 
 > 
+> Precisely. As it stands, this shouldn't happen. With this patch,
+> however, it is now possible to get down to _trim_map() with a completely
+> uninitialized got. E.g., consider the first iteration of the loop if eof
+> is true (which means got is invalid) and XFS_BMAPI_DELALLOC is set.
 > 
-> diff --git a/db/init.c b/db/init.c
-> index ec1e274..e60ac66 100644
-> --- a/db/init.c
-> +++ b/db/init.c
-> @@ -41,6 +41,7 @@ struct xfs_mount	*mp;
->  struct xlog		xlog;
->  libxfs_init_t		x;
->  xfs_agnumber_t		cur_agno = NULLAGNUMBER;
-> +static bool		insane_agcount;
+> (I suspect the whole 'if (xyz) { do_error_checks() }' pattern somewhat
+> obfuscates this..)
 
-Not a fan of the global.  Can you make it local, and then
-do something like this:
+Aha, yes, I see it now.  Thanks for having a sharper pair of eyes! :)
 
-if (sanitize_agount(&xmount, sbp))
-	insane_agount = true;
+--D
 
->  static void
->  usage(void)
-> @@ -51,13 +52,80 @@ usage(void)
->  	exit(1);
->  }
->  
-> +/* Try to load a superblock for the given agno, no verifiers. */
-> +static bool
-> +load_sb(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno,
-> +	struct xfs_sb		*sbp)
-
-Now this is always called with agno == 0, so is there any point
-to the arg?  Eh, I guess it's fine.
-
-I can fix up the insane_agcount thing on the way in if you like.
-
--Eric
-
-> +{
-> +	struct xfs_buf		*bp;
-> +
-> +	bp = libxfs_readbuf(mp->m_ddev_targp,
-> +			    XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-> +			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
-> +
-> +	if (!bp || bp->b_error)
-> +		return false;
-> +
-> +	/* copy SB from buffer to in-core, converting architecture as we go */
-> +	libxfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
-> +	libxfs_putbuf(bp);
-> +	libxfs_purgebuf(bp);
-> +
-> +	return true;
-> +}
-> +
-> +/*
-> + * If the agcount doesn't look sane, suggest a real agcount to the user,
-> + * and pretend agcount = 1 to avoid OOMing libxfs_initialize_perag.
-> + */
-> +static void
-> +sanitize_geometry(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_sb		*sbp)
-> +{
-> +	unsigned int		blocklog;
-> +	unsigned int		blocksize;
-> +	unsigned long long	dblocks;
-> +
-> +	/* If the geometry looks ok, we're done. */
-> +	if (sbp->sb_blocklog >= XFS_MIN_BLOCKSIZE_LOG &&
-> +	    sbp->sb_blocklog <= XFS_MAX_BLOCKSIZE_LOG &&
-> +	    sbp->sb_blocksize == (1 << sbp->sb_blocklog) &&
-> +	    sbp->sb_dblocks * sbp->sb_blocksize <= x.dsize * x.dbsize &&
-> +	    sbp->sb_dblocks <= XFS_MAX_DBLOCKS(sbp) &&
-> +	    sbp->sb_dblocks >= XFS_MIN_DBLOCKS(sbp))
-> +		return;
-> +
-> +	/* Check blocklog and blocksize */
-> +	blocklog = sbp->sb_blocklog;
-> +	blocksize = sbp->sb_blocksize;
-> +	if (blocklog < XFS_MIN_BLOCKSIZE_LOG ||
-> +	    blocklog > XFS_MAX_BLOCKSIZE_LOG)
-> +		blocklog = libxfs_log2_roundup(blocksize);
-> +	if (blocksize != (1 << blocklog))
-> +		blocksize = (1 << blocksize);
-> +
-> +	/* Clamp dblocks to the size of the device. */
-> +	dblocks = sbp->sb_dblocks;
-> +	if (dblocks > x.dsize * x.dbsize / blocksize)
-> +		dblocks = x.dsize * x.dbsize / blocksize;
-> +
-> +	/* Assume 1 AG to avoid OOM. */
-> +	fprintf(stderr,
-> +_("%s: device %s AG count is insane.  Limiting reads to AG 0.\n"),
-> +		progname, fsdevice);
-> +	sbp->sb_agcount = 1;
-> +	insane_agcount = true;
-
-
-
-> +}
-> +
->  void
->  init(
->  	int		argc,
->  	char		**argv)
->  {
->  	struct xfs_sb	*sbp;
-> -	struct xfs_buf	*bp;
->  	int		c;
->  
->  	setlocale(LC_ALL, "");
-> @@ -124,20 +192,12 @@ init(
->  	 */
->  	memset(&xmount, 0, sizeof(struct xfs_mount));
->  	libxfs_buftarg_init(&xmount, x.ddev, x.logdev, x.rtdev);
-> -	bp = libxfs_readbuf(xmount.m_ddev_targp, XFS_SB_DADDR,
-> -			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
-> -
-> -	if (!bp || bp->b_error) {
-> +	if (!load_sb(&xmount, 0, &xmount.m_sb)) {
->  		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
->  			"bytes)\n"), progname, fsdevice);
->  		exit(1);
->  	}
->  
-> -	/* copy SB from buffer to in-core, converting architecture as we go */
-> -	libxfs_sb_from_disk(&xmount.m_sb, XFS_BUF_TO_SBP(bp));
-> -	libxfs_putbuf(bp);
-> -	libxfs_purgebuf(bp);
-> -
->  	sbp = &xmount.m_sb;
->  	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
->  		fprintf(stderr, _("%s: %s is not a valid XFS filesystem (unexpected SB magic number 0x%08x)\n"),
-> @@ -148,6 +208,8 @@ init(
->  		}
->  	}
->  
-> +	sanitize_geometry(&xmount, sbp);
-> +
->  	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
->  			  LIBXFS_MOUNT_DEBUGGER);
->  	if (!mp) {
-> @@ -230,5 +292,7 @@ main(
->  		libxfs_device_close(x.logdev);
->  	if (x.rtdev)
->  		libxfs_device_close(x.rtdev);
-> +	if (insane_agcount && exitcode == 0)
-> +		exitcode = 1;
->  	return exitcode;
->  }
 > 
-
+> Brian
+> 
+> > > > > That aside... if we do want to do something like this, I wonder whether
+> > > > > it's more cleanly handled by the caller.
+> > > > 
+> > > > I don't see how it could be done in the caller - the caller wants
+> > > > the bmap code to convert a delayed allocation and not allocate
+> > > > entirely new blocks.  The best way to do so is to tell the bmapi
+> > > > code not do allocate new blocks.  Now if you mean splitting up
+> > > > xfs_bmapi_write into different functions for allocating real blocks,
+> > > > converting delalloc blocks or just flipping the unwritten bit: that's
+> > > > something I'd like to look into - the current interface is just
+> > > > too confusing.
+> > > 
+> > > Things like the above had me thinking it might be more clear to
+> > > explicitly read the extent and check for delalloc in the caller while
+> > > under the appropriate lock (and if XFS_COW_FORK). That's kind of what I
+> > > was alluding to above wrt to closing the race. That's just an idea,
+> > > however, and doesn't necessarily improve the error handling in the way
+> > > that this patch does (to avoid the transaction overrun). Given that, I'm
+> > > not against what this patch is currently doing so long as we fix up the
+> > > rest of the loop. Your idea of xfs_bmapi_convert() or some such sounds
+> > > like a nice potential cleanup at some point too.
+> > 
+> > I'd wondered when I was writing all the cow code if it would make the
+> > code easier to understand if the _bmapi_write was split into different
+> > frontend wrappers of the underlying implementation.  It's a little weird
+> > that for a remapping you have to stuff the new physical block in a
+> > _fsblock_t and pass that in as a pointer argument.
+> > 
+> > --D
+> > 
+> > > 
+> > > Brian
+> > > 
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
