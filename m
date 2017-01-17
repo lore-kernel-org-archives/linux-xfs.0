@@ -1,53 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:35229 "EHLO
-        mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751150AbdAPMmx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jan 2017 07:42:53 -0500
-Received: by mail-io0-f181.google.com with SMTP id j18so90597691ioe.2
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2017 04:42:52 -0800 (PST)
+Received: from userp1040.oracle.com ([156.151.31.81]:18833 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750803AbdAQCGm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jan 2017 21:06:42 -0500
+Date: Mon, 16 Jan 2017 18:06:33 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix COW writeback race
+Message-ID: <20170117020633.GI14038@birch.djwong.org>
+References: <1484404393-6413-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170113170813.GD23576@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
- <1481117249-21273-10-git-send-email-jtulak@redhat.com> <20170113170813.GD23576@redhat.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Mon, 16 Jan 2017 13:42:31 +0100
-Message-ID: <CACj3i73VEHJtk-GC-B2vNZC27xZRovPY9cy1RUEJ9ZNFPpgJZQ@mail.gmail.com>
-Subject: Re: [PATCH 09/22] mkfs: change conflict checks to utilize the new
- conflict structure
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1484404393-6413-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill O'Donnell <billodo@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 13, 2017 at 6:08 PM, Bill O'Donnell <billodo@redhat.com> wrote:
-> On Wed, Dec 07, 2016 at 02:27:16PM +0100, Jan Tulak wrote:
->> Bring the conflicts detection up to date with conflicts declaration.
->>
->> Signed-off-by: Jan Tulak <jtulak@redhat.com>
->
-> There's a missing definition for check_subopt()
-> FWIW, I see the call gets removed in patch10.
->
->> ---
->>  mkfs/xfs_mkfs.c | 37 +++++++++++++++++++++++++++++++------
->>  1 file changed, 31 insertions(+), 6 deletions(-)
->>
->> [snip...]
->>
->> @@ -1517,7 +1540,7 @@ getstr(
->>       struct opt_params       *opts,
->>       int                     index)
->>  {
->> -     check_opt(opts, index, true);
->> +     check_subopt(opts, index, true);
->
-> check_subopt is undefined. ^^^
+On Sat, Jan 14, 2017 at 03:33:13PM +0100, Christoph Hellwig wrote:
+> Due to the way how xfs_iomap_write_allocate tries to convert the whole
+> found extents from delalloc to real space we can run into a race
+> condition with multiple threads doing writes to this same extent.
+> For the non-COW case that is harmless as the only thing that can happen
+> is that we call xfs_bmapi_write on an extent that has already been
+> converted to a real allocation.  For COW writes where we move the extent
+> from the COW to the data fork after I/O completion the race is, however,
+> not quite as harmless.  In the worst case we are now calling
+> xfs_bmapi_write on a region that contains hole in the COW work, which
+> will trip up an assert in debug builds or lead to file system corruption
+> in non-debug builds.  This seems to be reproducible with workloads of
+> small O_DSYNC write, although so far I've not managed to come up with
+> a with an isolated reproducer.
+> 
+> The fix for the issue is relatively simple:  tell xfs_bmapi_write
+> that we are only asked to convert delayed allocations and skip holes
+> in that case.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 41 +++++++++++++++++++++++++++++------------
+>  fs/xfs/libxfs/xfs_bmap.h |  3 +++
+>  fs/xfs/xfs_iomap.c       |  2 +-
+>  3 files changed, 33 insertions(+), 13 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 44773c9..ceae779 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4514,8 +4514,6 @@ xfs_bmapi_write(
+>  	int			n;		/* current extent index */
+>  	xfs_fileoff_t		obno;		/* old block number (offset) */
+>  	int			whichfork;	/* data or attr fork */
+> -	char			inhole;		/* current location is hole in file */
+> -	char			wasdelay;	/* old extent was delayed */
+>  
+>  #ifdef DEBUG
+>  	xfs_fileoff_t		orig_bno;	/* original block number value */
+> @@ -4603,22 +4601,41 @@ xfs_bmapi_write(
+>  	bma.firstblock = firstblock;
+>  
+>  	while (bno < end && n < *nmap) {
+> -		inhole = eof || bma.got.br_startoff > bno;
+> -		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
+> +		bool			need_alloc = false, wasdelay = false;
+>  
+> -		/*
+> -		 * Make sure we only reflink into a hole.
+> -		 */
+> -		if (flags & XFS_BMAPI_REMAP)
+> -			ASSERT(inhole);
+> -		if (flags & XFS_BMAPI_COWFORK)
+> -			ASSERT(!inhole);
+> +		/* in hole or beyoned EOF? */
+> +		if (eof || bma.got.br_startoff > bno) {
+> +			if (flags & XFS_BMAPI_DELALLOC) {
+> +				/*
+> +				 * For the COW fork we can reasonably get a
+> +				 * request for converting an extent that races
+> +				 * with other threads already having converted
+> +				 * part of it, as there converting COW to
+> +				 * regular blocks is not protected using the
+> +				 * IOLOCK.
+> +				 */
+> +				ASSERT(flags & XFS_BMAPI_COWFORK);
+> +				if (!(flags & XFS_BMAPI_COWFORK)) {
+> +					error = -EIO;
+> +					goto error0;
+> +				}
+> +			} else {
+> +				need_alloc = true;
+> +			}
+> +		} else {
+> +			/*
+> +			 * Make sure we only reflink into a hole.
+> +			 */
+> +			ASSERT(!(flags & XFS_BMAPI_REMAP));
+> +			if (isnullstartblock(bma.got.br_startblock))
+> +				wasdelay = true;
+> +		}
+>  
+>  		/*
+>  		 * First, deal with the hole before the allocated space
+>  		 * that we found, if any.
+>  		 */
+> -		if (inhole || wasdelay) {
+> +		if (need_alloc || wasdelay) {
+>  			bma.eof = eof;
+>  			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
+>  			bma.wasdel = wasdelay;
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index cecd094..8f805a7 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -110,6 +110,9 @@ struct xfs_extent_free_item
+>  /* Map something in the CoW fork. */
+>  #define XFS_BMAPI_COWFORK	0x200
+>  
+> +/* Only convert delalloc space, don't allocate entirely new extents */
+> +#define XFS_BMAPI_DELALLOC	0x400
+> +
+>  #define XFS_BMAPI_FLAGS \
+>  	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+>  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
 
-Should be renamed to check_subopt_conflicts here, even if it is
-deleted in the next patch.
+XFS_BMAPI_FLAGS needs an entry for XFS_BMAPI_DELALLOC so that tracing
+continues to work properly.
 
--- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+Other than that this patch seems ok to me...
+
+--D
+
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index ca137b7..7ee8629 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -795,7 +795,7 @@ xfs_iomap_write_allocate(
+>  	xfs_trans_t	*tp;
+>  	int		nimaps;
+>  	int		error = 0;
+> -	int		flags = 0;
+> +	int		flags = XFS_BMAPI_DELALLOC;
+>  	int		nres;
+>  
+>  	if (whichfork == XFS_COW_FORK)
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
