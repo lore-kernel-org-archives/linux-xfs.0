@@ -1,141 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48716 "EHLO mx1.redhat.com"
+Received: from imap.thunk.org ([74.207.234.97]:51260 "EHLO imap.thunk.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750965AbdAMR6z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Jan 2017 12:58:55 -0500
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E2CEF80F6D
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Jan 2017 17:58:55 +0000 (UTC)
-Date: Fri, 13 Jan 2017 11:58:52 -0600
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH 05/22] mkfs: add a check for conflicting values
-Message-ID: <20170113175852.GI23576@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
- <1481117249-21273-6-git-send-email-jtulak@redhat.com>
+        id S1750826AbdAQC5d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Jan 2017 21:57:33 -0500
+Date: Mon, 16 Jan 2017 21:56:07 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
+Message-ID: <20170117025607.frrcdbduthhutrzj@thunk.org>
+References: <20170106141107.23953-1-mhocko@kernel.org>
+ <20170106141107.23953-9-mhocko@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1481117249-21273-6-git-send-email-jtulak@redhat.com>
+In-Reply-To: <20170106141107.23953-9-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
 
-On Wed, Dec 07, 2016 at 02:27:12PM +0100, Jan Tulak wrote:
-> Add a check that reports a conflict only when subopts are mixed with specific values.
+On Fri, Jan 06, 2017 at 03:11:07PM +0100, Michal Hocko wrote:
+> From: Michal Hocko <mhocko@suse.com>
 > 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> This reverts commit 216553c4b7f3e3e2beb4981cddca9b2027523928. Now that
+> the transaction context uses memalloc_nofs_save and all allocations
+> within the this context inherit GFP_NOFS automatically, there is no
+> reason to mark specific allocations explicitly.
+> 
+> This patch should not introduce any functional change. The main point
+> of this change is to reduce explicit GFP_NOFS usage inside ext4 code
+> to make the review of the remaining usage easier.
+> 
+> Signed-off-by: Michal Hocko <mhocko@suse.com>
+> Reviewed-by: Jan Kara <jack@suse.cz>
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Changes in the jbd2 layer aren't going to guarantee that
+memalloc_nofs_save() will be executed if we are running ext4 without a
+journal (aka in no journal mode).  And this is a *very* common
+configuration; it's how ext4 is used inside Google in our production
+servers.
 
-> ---
->  mkfs/xfs_mkfs.c | 52 ++++++++++++++++++++++++++++++++++++++++++++--------
->  1 file changed, 44 insertions(+), 8 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index b47cdae..3bb9f09 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -1311,18 +1311,18 @@ illegal_option(
->   */
->  static void
->  check_opt(
-> -	struct opt_params	*opts,
-> +	struct opt_params	*opt,
->  	int			index,
->  	bool			str_seen)
->  {
-> -	struct subopt_param	*sp = &opts->subopt_params[index];
-> +	struct subopt_param	*sp = &opt->subopt_params[index];
->  	int			i;
->  
->  	if (sp->index != index) {
->  		fprintf(stderr,
->  	("Developer screwed up option parsing (%d/%d)! Please report!\n"),
->  			sp->index, index);
-> -		reqval(opts->name, (char **)opts->subopts, index);
-> +		reqval(opt->name, (char **)opt->subopts, index);
->  	}
->  
->  	/*
-> @@ -1335,11 +1335,11 @@ check_opt(
->  	 */
->  	if (!str_seen) {
->  		if (sp->seen)
-> -			respec(opts->name, (char **)opts->subopts, index);
-> +			respec(opt->name, (char **)opt->subopts, index);
->  		sp->seen = true;
->  	} else {
->  		if (sp->str_seen)
-> -			respec(opts->name, (char **)opts->subopts, index);
-> +			respec(opt->name, (char **)opt->subopts, index);
->  		sp->str_seen = true;
->  	}
->  
-> @@ -1349,10 +1349,44 @@ check_opt(
->  
->  		if (conflict_opt.opt == LAST_CONFLICT)
->  			break;
-> -		if (opts->subopt_params[conflict_opt.subopt].seen ||
-> -		    opts->subopt_params[conflict_opt.subopt].str_seen)
-> -			conflict(opts->name, (char **)opts->subopts,
-> +		if (conflict_opt.test_values)
-> +			break;
-> +		if (opt->subopt_params[conflict_opt.subopt].seen ||
-> +		    opt->subopt_params[conflict_opt.subopt].str_seen) {
-> +			conflict(opt->name, (char **)opt->subopts,
->  				 conflict_opt.subopt, index);
-> +		}
-> +	}
-> +}
-> +
-> +/*
-> + * Check for conflict values between options.
-> + */
-> +static void
-> +check_opt_value(
-> +	struct opt_params	*opt,
-> +	int			index,
-> +	long long 		value)
-> +{
-> +	struct subopt_param	*sp = &opt->subopt_params[index];
-> +	int			i;
-> +
-> +	/* check for conflicts with the option */
-> +	for (i = 0; i < MAX_CONFLICTS; i++) {
-> +		struct subopt_conflict conflict_opt = sp->conflicts[i];
-> +
-> +		if (conflict_opt.opt == LAST_CONFLICT)
-> +			break;
-> +		if (!conflict_opt.test_values)
-> +			break;
-> +		if ((opt->subopt_params[conflict_opt.subopt].seen ||
-> +				    opt->subopt_params[conflict_opt.subopt].str_seen) &&
-> +		    opt->subopt_params[conflict_opt.subopt].value
-> +				== conflict_opt.invalid_value &&
-> +		    value == conflict_opt.at_value) {
-> +			conflict(opt->name, (char **)opt->subopts,
-> +				 conflict_opt.subopt, index);
-> +		}
->  	}
->  }
->  
-> @@ -1399,6 +1433,8 @@ getnum(
->  			illegal_option(str, opts, index, NULL);
->  	}
->  
-> +	check_opt_value(opts, index, c);
-> +
->  	/* Validity check the result. */
->  	if (c < sp->minval)
->  		illegal_option(str, opts, index, _("value is too small"));
-> -- 
-> 2.8.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So that means the earlier patches will probably need to be changed so
+the nOFS scope is done in the ext4_journal_{start,stop} functions in
+fs/ext4/ext4_jbd2.c.
+
+					- Ted
