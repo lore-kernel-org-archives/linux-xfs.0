@@ -1,115 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39201 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750896AbdAXVXI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jan 2017 16:23:08 -0500
-Date: Tue, 24 Jan 2017 13:21:55 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: do not call xfs_buf_hash_destroy on a NULL pag
-Message-ID: <20170124212155.GE9134@birch.djwong.org>
-References: <20170120142642.21698-1-colin.king@canonical.com>
- <20170124210848.26179-1-billodo@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170124210848.26179-1-billodo@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:45306 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdAQHsz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2017 02:48:55 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v2] xfs: fix COW writeback race
+Date: Tue, 17 Jan 2017 08:48:51 +0100
+Message-Id: <1484639331-2137-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill O'Donnell <billodo@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-You might want to cc the maintainer. ;)
+Due to the way how xfs_iomap_write_allocate tries to convert the whole
+found extents from delalloc to real space we can run into a race
+condition with multiple threads doing writes to this same extent.
+For the non-COW case that is harmless as the only thing that can happen
+is that we call xfs_bmapi_write on an extent that has already been
+converted to a real allocation.  For COW writes where we move the extent
+from the COW to the data fork after I/O completion the race is, however,
+not quite as harmless.  In the worst case we are now calling
+xfs_bmapi_write on a region that contains hole in the COW work, which
+will trip up an assert in debug builds or lead to file system corruption
+in non-debug builds.  This seems to be reproducible with workloads of
+small O_DSYNC write, although so far I've not managed to come up with
+a with an isolated reproducer.
 
-On Tue, Jan 24, 2017 at 03:08:48PM -0600, Bill O'Donnell wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> If pag cannot be allocated, the current error exit path will trip
-> a null pointer deference error when calling xfs_buf_hash_destroy
-> with a null pag.  Fix this by adding a new error exit lable and
-> jumping to this, avoiding the hash destroy and unnecessary kmem_free
-> on pag.
-> 
-> Fixes CoverityScan CID#1397628 ("Dereference after null check")
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> 
-> ------------
-> v2: correct error exit in xfs_initialize_perag() to properly unwind
->     pags if error encountered.
-> 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> ---
->  fs/xfs/xfs_mount.c | 15 +++++++++------
->  1 file changed, 9 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 9b9540d..67bb6f2 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -187,9 +187,10 @@ xfs_initialize_perag(
->  	xfs_agnumber_t	*maxagi)
->  {
->  	xfs_agnumber_t	index;
-> -	xfs_agnumber_t	first_initialised = 0;
-> +	xfs_agnumber_t	last_valid_agindex = 0;
->  	xfs_perag_t	*pag;
->  	int		error = -ENOMEM;
-> +	int		i;
->  
->  	/*
->  	 * Walk the current per-ag tree so we don't try to initialise AGs
-> @@ -197,17 +198,16 @@ xfs_initialize_perag(
->  	 * AGs we don't find ready for initialisation.
->  	 */
->  	for (index = 0; index < agcount; index++) {
-> +		last_valid_agindex = index;
->  		pag = xfs_perag_get(mp, index);
->  		if (pag) {
->  			xfs_perag_put(pag);
->  			continue;
->  		}
-> -		if (!first_initialised)
-> -			first_initialised = index;
->  
->  		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
->  		if (!pag)
-> -			goto out_unwind;
-> +			goto out_unwind_pags;
->  		pag->pag_agno = index;
->  		pag->pag_mount = mp;
->  		spin_lock_init(&pag->pag_ici_lock);
-> @@ -242,8 +242,11 @@ xfs_initialize_perag(
->  out_unwind:
->  	xfs_buf_hash_destroy(pag);
->  	kmem_free(pag);
-> -	for (; index > first_initialised; index--) {
-> -		pag = radix_tree_delete(&mp->m_perag_tree, index);
-> +out_unwind_pags:
-> +	for (i = last_valid_agindex; i >= 0; i--) {
+The fix for the issue is relatively simple:  tell xfs_bmapi_write
+that we are only asked to convert delayed allocations and skip holes
+in that case.
 
-xfs_initialize_perag can be called towards the end of a growfs operation
-to initialize the perag structures for the new AGs.  If the
-initialization fails, we want to roll back to the number of AGs we had
-before, which means that we cannot delete the perag structures for the
-not-recently-created AGs.  That (I think) was what first_initialised was
-trying to do (though it does't do that correctly in the case that we're
-mounting).
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 41 +++++++++++++++++++++++++++++------------
+ fs/xfs/libxfs/xfs_bmap.h |  6 +++++-
+ fs/xfs/xfs_iomap.c       |  2 +-
+ 3 files changed, 35 insertions(+), 14 deletions(-)
 
-Also, you could start the loop with "index - 1", right?
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 44773c9..ceae779 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4514,8 +4514,6 @@ xfs_bmapi_write(
+ 	int			n;		/* current extent index */
+ 	xfs_fileoff_t		obno;		/* old block number (offset) */
+ 	int			whichfork;	/* data or attr fork */
+-	char			inhole;		/* current location is hole in file */
+-	char			wasdelay;	/* old extent was delayed */
+ 
+ #ifdef DEBUG
+ 	xfs_fileoff_t		orig_bno;	/* original block number value */
+@@ -4603,22 +4601,41 @@ xfs_bmapi_write(
+ 	bma.firstblock = firstblock;
+ 
+ 	while (bno < end && n < *nmap) {
+-		inhole = eof || bma.got.br_startoff > bno;
+-		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
++		bool			need_alloc = false, wasdelay = false;
+ 
+-		/*
+-		 * Make sure we only reflink into a hole.
+-		 */
+-		if (flags & XFS_BMAPI_REMAP)
+-			ASSERT(inhole);
+-		if (flags & XFS_BMAPI_COWFORK)
+-			ASSERT(!inhole);
++		/* in hole or beyoned EOF? */
++		if (eof || bma.got.br_startoff > bno) {
++			if (flags & XFS_BMAPI_DELALLOC) {
++				/*
++				 * For the COW fork we can reasonably get a
++				 * request for converting an extent that races
++				 * with other threads already having converted
++				 * part of it, as there converting COW to
++				 * regular blocks is not protected using the
++				 * IOLOCK.
++				 */
++				ASSERT(flags & XFS_BMAPI_COWFORK);
++				if (!(flags & XFS_BMAPI_COWFORK)) {
++					error = -EIO;
++					goto error0;
++				}
++			} else {
++				need_alloc = true;
++			}
++		} else {
++			/*
++			 * Make sure we only reflink into a hole.
++			 */
++			ASSERT(!(flags & XFS_BMAPI_REMAP));
++			if (isnullstartblock(bma.got.br_startblock))
++				wasdelay = true;
++		}
+ 
+ 		/*
+ 		 * First, deal with the hole before the allocated space
+ 		 * that we found, if any.
+ 		 */
+-		if (inhole || wasdelay) {
++		if (need_alloc || wasdelay) {
+ 			bma.eof = eof;
+ 			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
+ 			bma.wasdel = wasdelay;
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index cecd094..cdef87d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -110,6 +110,9 @@ struct xfs_extent_free_item
+ /* Map something in the CoW fork. */
+ #define XFS_BMAPI_COWFORK	0x200
+ 
++/* Only convert delalloc space, don't allocate entirely new extents */
++#define XFS_BMAPI_DELALLOC	0x400
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -120,7 +123,8 @@ struct xfs_extent_free_item
+ 	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
+ 	{ XFS_BMAPI_ZERO,	"ZERO" }, \
+ 	{ XFS_BMAPI_REMAP,	"REMAP" }, \
+-	{ XFS_BMAPI_COWFORK,	"COWFORK" }
++	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
++	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }
+ 
+ 
+ static inline int xfs_bmapi_aflag(int w)
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index ca137b7..7ee8629 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -795,7 +795,7 @@ xfs_iomap_write_allocate(
+ 	xfs_trans_t	*tp;
+ 	int		nimaps;
+ 	int		error = 0;
+-	int		flags = 0;
++	int		flags = XFS_BMAPI_DELALLOC;
+ 	int		nres;
+ 
+ 	if (whichfork == XFS_COW_FORK)
+-- 
+2.1.4
 
---D
-
-> +		pag = radix_tree_delete(&mp->m_perag_tree, (xfs_agnumber_t)i);
-> +		if (!pag)
-> +			break;
->  		xfs_buf_hash_destroy(pag);
->  		kmem_free(pag);
->  	}
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
