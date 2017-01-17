@@ -1,135 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49454 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750802AbdANOdT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jan 2017 09:33:19 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: fix COW writeback race
-Date: Sat, 14 Jan 2017 15:33:13 +0100
-Message-Id: <1484404393-6413-1-git-send-email-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:50420 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750741AbdAQPSZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Jan 2017 10:18:25 -0500
+Date: Tue, 17 Jan 2017 16:18:17 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
+Message-ID: <20170117151817.GR19699@dhcp22.suse.cz>
+References: <20170106141107.23953-1-mhocko@kernel.org>
+ <20170106141107.23953-9-mhocko@kernel.org>
+ <20170117025607.frrcdbduthhutrzj@thunk.org>
+ <20170117082425.GD19699@dhcp22.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170117082425.GD19699@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-Due to the way how xfs_iomap_write_allocate tries to convert the whole
-found extents from delalloc to real space we can run into a race
-condition with multiple threads doing writes to this same extent.
-For the non-COW case that is harmless as the only thing that can happen
-is that we call xfs_bmapi_write on an extent that has already been
-converted to a real allocation.  For COW writes where we move the extent
-from the COW to the data fork after I/O completion the race is, however,
-not quite as harmless.  In the worst case we are now calling
-xfs_bmapi_write on a region that contains hole in the COW work, which
-will trip up an assert in debug builds or lead to file system corruption
-in non-debug builds.  This seems to be reproducible with workloads of
-small O_DSYNC write, although so far I've not managed to come up with
-a with an isolated reproducer.
+On Tue 17-01-17 09:24:25, Michal Hocko wrote:
+> On Mon 16-01-17 21:56:07, Theodore Ts'o wrote:
+> > On Fri, Jan 06, 2017 at 03:11:07PM +0100, Michal Hocko wrote:
+> > > From: Michal Hocko <mhocko@suse.com>
+> > > 
+> > > This reverts commit 216553c4b7f3e3e2beb4981cddca9b2027523928. Now that
+> > > the transaction context uses memalloc_nofs_save and all allocations
+> > > within the this context inherit GFP_NOFS automatically, there is no
+> > > reason to mark specific allocations explicitly.
+> > > 
+> > > This patch should not introduce any functional change. The main point
+> > > of this change is to reduce explicit GFP_NOFS usage inside ext4 code
+> > > to make the review of the remaining usage easier.
+> > > 
+> > > Signed-off-by: Michal Hocko <mhocko@suse.com>
+> > > Reviewed-by: Jan Kara <jack@suse.cz>
+> > 
+> > Changes in the jbd2 layer aren't going to guarantee that
+> > memalloc_nofs_save() will be executed if we are running ext4 without a
+> > journal (aka in no journal mode).  And this is a *very* common
+> > configuration; it's how ext4 is used inside Google in our production
+> > servers.
+> 
+> OK, I wasn't aware of that.
+> 
+> > So that means the earlier patches will probably need to be changed so
+> > the nOFS scope is done in the ext4_journal_{start,stop} functions in
+> > fs/ext4/ext4_jbd2.c.
+> 
+> I could definitely appreciated some help here. The call paths are rather
+> complex and I am not familiar with the code enough. On of the biggest
+> problem I have currently is that there doesn't seem to be an easy place
+> to store the old allocation context. 
 
-The fix for the issue is relatively simple:  tell xfs_bmapi_write
-that we are only asked to convert delayed allocations and skip holes
-in that case.
+OK, so I've been staring into the code and AFAIU current->journal_info
+can contain my stored information. I could either hijack part of the
+word as the ref counting is only consuming low 12b. But that looks too
+ugly to live. Or I can allocate some placeholder.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 41 +++++++++++++++++++++++++++++------------
- fs/xfs/libxfs/xfs_bmap.h |  3 +++
- fs/xfs/xfs_iomap.c       |  2 +-
- 3 files changed, 33 insertions(+), 13 deletions(-)
+But before going to play with that I am really wondering whether we need
+all this with no journal at all. AFAIU what Jack told me it is the
+journal lock(s) which is the biggest problem from the reclaim recursion
+point of view. What would cause a deadlock in no journal mode?
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 44773c9..ceae779 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4514,8 +4514,6 @@ xfs_bmapi_write(
- 	int			n;		/* current extent index */
- 	xfs_fileoff_t		obno;		/* old block number (offset) */
- 	int			whichfork;	/* data or attr fork */
--	char			inhole;		/* current location is hole in file */
--	char			wasdelay;	/* old extent was delayed */
- 
- #ifdef DEBUG
- 	xfs_fileoff_t		orig_bno;	/* original block number value */
-@@ -4603,22 +4601,41 @@ xfs_bmapi_write(
- 	bma.firstblock = firstblock;
- 
- 	while (bno < end && n < *nmap) {
--		inhole = eof || bma.got.br_startoff > bno;
--		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
-+		bool			need_alloc = false, wasdelay = false;
- 
--		/*
--		 * Make sure we only reflink into a hole.
--		 */
--		if (flags & XFS_BMAPI_REMAP)
--			ASSERT(inhole);
--		if (flags & XFS_BMAPI_COWFORK)
--			ASSERT(!inhole);
-+		/* in hole or beyoned EOF? */
-+		if (eof || bma.got.br_startoff > bno) {
-+			if (flags & XFS_BMAPI_DELALLOC) {
-+				/*
-+				 * For the COW fork we can reasonably get a
-+				 * request for converting an extent that races
-+				 * with other threads already having converted
-+				 * part of it, as there converting COW to
-+				 * regular blocks is not protected using the
-+				 * IOLOCK.
-+				 */
-+				ASSERT(flags & XFS_BMAPI_COWFORK);
-+				if (!(flags & XFS_BMAPI_COWFORK)) {
-+					error = -EIO;
-+					goto error0;
-+				}
-+			} else {
-+				need_alloc = true;
-+			}
-+		} else {
-+			/*
-+			 * Make sure we only reflink into a hole.
-+			 */
-+			ASSERT(!(flags & XFS_BMAPI_REMAP));
-+			if (isnullstartblock(bma.got.br_startblock))
-+				wasdelay = true;
-+		}
- 
- 		/*
- 		 * First, deal with the hole before the allocated space
- 		 * that we found, if any.
- 		 */
--		if (inhole || wasdelay) {
-+		if (need_alloc || wasdelay) {
- 			bma.eof = eof;
- 			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
- 			bma.wasdel = wasdelay;
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index cecd094..8f805a7 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -110,6 +110,9 @@ struct xfs_extent_free_item
- /* Map something in the CoW fork. */
- #define XFS_BMAPI_COWFORK	0x200
- 
-+/* Only convert delalloc space, don't allocate entirely new extents */
-+#define XFS_BMAPI_DELALLOC	0x400
-+
- #define XFS_BMAPI_FLAGS \
- 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
- 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index ca137b7..7ee8629 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -795,7 +795,7 @@ xfs_iomap_write_allocate(
- 	xfs_trans_t	*tp;
- 	int		nimaps;
- 	int		error = 0;
--	int		flags = 0;
-+	int		flags = XFS_BMAPI_DELALLOC;
- 	int		nres;
- 
- 	if (whichfork == XFS_COW_FORK)
 -- 
-2.1.4
-
+Michal Hocko
+SUSE Labs
