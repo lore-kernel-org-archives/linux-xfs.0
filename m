@@ -1,120 +1,174 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59334 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36200 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750831AbdAPOSG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Jan 2017 09:18:06 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 04BC48123D
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2017 14:18:07 +0000 (UTC)
-Date: Mon, 16 Jan 2017 08:18:03 -0600
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH 22/22] mkfs: prevent multiple specifications of a single
- option
-Message-ID: <20170116141803.GH13191@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
- <1481117249-21273-23-git-send-email-jtulak@redhat.com>
+        id S1750932AbdAQNoW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Jan 2017 08:44:22 -0500
+Date: Tue, 17 Jan 2017 08:44:21 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: fix COW writeback race
+Message-ID: <20170117134421.GB12426@bfoster.bfoster>
+References: <1484639331-2137-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1481117249-21273-23-git-send-email-jtulak@redhat.com>
+In-Reply-To: <1484639331-2137-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Wed, Dec 07, 2016 at 02:27:29PM +0100, Jan Tulak wrote:
-> Because things like -l size=40M,size=50M are clearly wrong and should
-> not pass. However, in two cases, we do not know if the option is a
-> string or number - thus the few more lines with can_respec flag.
+On Tue, Jan 17, 2017 at 08:48:51AM +0100, Christoph Hellwig wrote:
+> Due to the way how xfs_iomap_write_allocate tries to convert the whole
+> found extents from delalloc to real space we can run into a race
+> condition with multiple threads doing writes to this same extent.
+> For the non-COW case that is harmless as the only thing that can happen
+> is that we call xfs_bmapi_write on an extent that has already been
+> converted to a real allocation.  For COW writes where we move the extent
+> from the COW to the data fork after I/O completion the race is, however,
+> not quite as harmless.  In the worst case we are now calling
+> xfs_bmapi_write on a region that contains hole in the COW work, which
+> will trip up an assert in debug builds or lead to file system corruption
+> in non-debug builds.  This seems to be reproducible with workloads of
+> small O_DSYNC write, although so far I've not managed to come up with
+> a with an isolated reproducer.
 > 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Any reason we don't try to address the core race rather than shake up
+the affected code to accommodate it? I ask for a couple reasons: 1.) I'm
+not quite following the specific race from the description and 2.) I
+considered doing the exact same thing at first for the eofblocks i_size
+issue, but more digging rooted out the problem in the eofblocks code.
+This one may not be as straightforward a fix, of course... (but if not,
+the commit log should probably explain why).
 
+> The fix for the issue is relatively simple:  tell xfs_bmapi_write
+> that we are only asked to convert delayed allocations and skip holes
+> in that case.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  mkfs/xfs_mkfs.c | 29 +++++++++++++++++++++++++++++
->  1 file changed, 29 insertions(+)
+>  fs/xfs/libxfs/xfs_bmap.c | 41 +++++++++++++++++++++++++++++------------
+>  fs/xfs/libxfs/xfs_bmap.h |  6 +++++-
+>  fs/xfs/xfs_iomap.c       |  2 +-
+>  3 files changed, 35 insertions(+), 14 deletions(-)
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index cd0eb20..7fe743a 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -432,6 +432,10 @@ test_uvalue_num(enum e_type a_type, union u_value a, long long b) {
->   *     Set to true if, when user specifies the option, she has to specify
->   *     a value too. That is, if needs_val is true, then it is not possible to
->   *     use the subopt as a flag.
-> + *
-> + *   can_respec OPTIONAL
-> + *     If true, then there can come one getnum() after a getstr() call for this
-> + *     option.
->   */
->  struct opt_params {
->  	int		index;
-> @@ -458,6 +462,7 @@ struct opt_params {
->  		union u_value value;
->  		enum e_type 	type;
->  		bool		needs_val;
-> +		bool		can_respec;
->  	}		subopt_params[MAX_SUBOPTS];
->  } opts[MAX_OPTS] = {
->  	{
-> @@ -877,6 +882,7 @@ struct opt_params {
->  			  .maxval.i = 2,
->  			  .needs_val = true,
->  			  .type = INT,
-> +			  .can_respec = true,
->  			},
->  			{ .index = L_SUNIT,
->  			  .conflicts = { {.opt = OPT_L,
-> @@ -1009,6 +1015,7 @@ struct opt_params {
->  			  .maxval.i = 2,
->  			  .needs_val = true,
->  			  .type = INT,
-> +			  .can_respec = true,
->  			},
->  			{ .index = N_FTYPE,
->  			  .conflicts = {  {.opt = OPT_M,
-> @@ -2017,6 +2024,22 @@ getnum(
->  	struct subopt_param	*sp = &opts->subopt_params[index];
->  	long long		c;
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 44773c9..ceae779 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4514,8 +4514,6 @@ xfs_bmapi_write(
+>  	int			n;		/* current extent index */
+>  	xfs_fileoff_t		obno;		/* old block number (offset) */
+>  	int			whichfork;	/* data or attr fork */
+> -	char			inhole;		/* current location is hole in file */
+> -	char			wasdelay;	/* old extent was delayed */
 >  
-> +	if (sp->seen){
-> +		/* If the option has respec flag, it is possible to do ONE
-> +		 * getnum call even with sp->seen == 1. Do this by disabling
-> +		 * the respec flag - this time we can continue, but if getnum
-> +		 * gets called once more, we will fail.
-> +		 */
-> +		if (sp->can_respec){
-> +			sp->can_respec = false;
+>  #ifdef DEBUG
+>  	xfs_fileoff_t		orig_bno;	/* original block number value */
+> @@ -4603,22 +4601,41 @@ xfs_bmapi_write(
+>  	bma.firstblock = firstblock;
+>  
+>  	while (bno < end && n < *nmap) {
+> -		inhole = eof || bma.got.br_startoff > bno;
+> -		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
+> +		bool			need_alloc = false, wasdelay = false;
+>  
+> -		/*
+> -		 * Make sure we only reflink into a hole.
+> -		 */
+> -		if (flags & XFS_BMAPI_REMAP)
+> -			ASSERT(inhole);
+> -		if (flags & XFS_BMAPI_COWFORK)
+> -			ASSERT(!inhole);
+> +		/* in hole or beyoned EOF? */
+> +		if (eof || bma.got.br_startoff > bno) {
+> +			if (flags & XFS_BMAPI_DELALLOC) {
+> +				/*
+> +				 * For the COW fork we can reasonably get a
+> +				 * request for converting an extent that races
+> +				 * with other threads already having converted
+> +				 * part of it, as there converting COW to
+> +				 * regular blocks is not protected using the
+> +				 * IOLOCK.
+> +				 */
+> +				ASSERT(flags & XFS_BMAPI_COWFORK);
+> +				if (!(flags & XFS_BMAPI_COWFORK)) {
+> +					error = -EIO;
+> +					goto error0;
+> +				}
+
+What happens in this case if eof is true? It looks like got could be
+bogus, yet we still carry on using it in the post-allocation part of the
+loop. The fact that the allocation code breaks out of the loop if
+allocation doesn't occur is a bit of a red flag that the post-allocation
+code may very well expect to always have an allocated mapping.
+
+That aside... if we do want to do something like this, I wonder whether
+it's more cleanly handled by the caller.
+
+Brian
+
+> +			} else {
+> +				need_alloc = true;
+> +			}
 > +		} else {
-> +			fprintf(stderr,
-> +			_("You can't use an option multiple times: -%c %s\n"),
-> +			  opts->name, opts->subopts[index]);
-> +			usage();
+> +			/*
+> +			 * Make sure we only reflink into a hole.
+> +			 */
+> +			ASSERT(!(flags & XFS_BMAPI_REMAP));
+> +			if (isnullstartblock(bma.got.br_startblock))
+> +				wasdelay = true;
 > +		}
-> +	}
+>  
+>  		/*
+>  		 * First, deal with the hole before the allocated space
+>  		 * that we found, if any.
+>  		 */
+> -		if (inhole || wasdelay) {
+> +		if (need_alloc || wasdelay) {
+>  			bma.eof = eof;
+>  			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
+>  			bma.wasdel = wasdelay;
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index cecd094..cdef87d 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -110,6 +110,9 @@ struct xfs_extent_free_item
+>  /* Map something in the CoW fork. */
+>  #define XFS_BMAPI_COWFORK	0x200
+>  
+> +/* Only convert delalloc space, don't allocate entirely new extents */
+> +#define XFS_BMAPI_DELALLOC	0x400
 > +
->  	/* empty strings might just return a default value */
->  	if (!str || *str == '\0') {
->  		if (sp->needs_val)
-> @@ -2123,6 +2146,12 @@ getstr(
->  	/* empty strings for string options are not valid */
->  	if (!str || *str == '\0')
->  		reqval(opts->name, (char **)opts->subopts, index);
-> +	if (opts->subopt_params[index].seen){
-> +		fprintf(stderr,
-> +		_("You can't use an option multiple times: -%c %s\n"),
-> +		  opts->name, opts->subopts[index]);
-> +		usage();
-> +	}
->  	opts->subopt_params[index].seen = true;
->  	return str;
->  }
+>  #define XFS_BMAPI_FLAGS \
+>  	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+>  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+> @@ -120,7 +123,8 @@ struct xfs_extent_free_item
+>  	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
+>  	{ XFS_BMAPI_ZERO,	"ZERO" }, \
+>  	{ XFS_BMAPI_REMAP,	"REMAP" }, \
+> -	{ XFS_BMAPI_COWFORK,	"COWFORK" }
+> +	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
+> +	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }
+>  
+>  
+>  static inline int xfs_bmapi_aflag(int w)
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index ca137b7..7ee8629 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -795,7 +795,7 @@ xfs_iomap_write_allocate(
+>  	xfs_trans_t	*tp;
+>  	int		nimaps;
+>  	int		error = 0;
+> -	int		flags = 0;
+> +	int		flags = XFS_BMAPI_DELALLOC;
+>  	int		nres;
+>  
+>  	if (whichfork == XFS_COW_FORK)
 > -- 
-> 2.8.1
+> 2.1.4
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
