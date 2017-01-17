@@ -1,137 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59056 "EHLO sandeen.net"
+Received: from mx2.suse.de ([195.135.220.15]:49708 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750986AbdAZAU4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Jan 2017 19:20:56 -0500
-Subject: Re: [PATCH] xfs: fix bmv_count confusion
-References: <20170125195854.GP9134@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <390ab2d8-b97b-50c0-968c-9825ca86c0c9@sandeen.net>
-Date: Wed, 25 Jan 2017 18:20:54 -0600
+        id S1750884AbdAQHzL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Jan 2017 02:55:11 -0500
+Date: Tue, 17 Jan 2017 08:54:51 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 7/8] Revert "ext4: avoid deadlocks in the writeback path
+ by using sb_getblk_gfp"
+Message-ID: <20170117075450.GC19699@dhcp22.suse.cz>
+References: <20170106141107.23953-1-mhocko@kernel.org>
+ <20170106141107.23953-8-mhocko@kernel.org>
+ <20170117030118.727jqyamjhojzajb@thunk.org>
 MIME-Version: 1.0
-In-Reply-To: <20170125195854.GP9134@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170117030118.727jqyamjhojzajb@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-On 1/25/17 1:58 PM, Darrick J. Wong wrote:
-> In a bmapx call, bmv_count is the total size of the array, including the
-> zeroth element that userspace uses to supply the search key.  The output
-> array starts at offset 1 so that we can set up the user for the next
-> invocationn.  Therefore, we must ensure that cur_ext (which indexes the
-> output array) never exceeds bmv_count-1, not bmv_count.  Failure to do
-> this causes heap corruption in bmapx callers such as xfs_io and
-> xfs_scrub when the formatter overflows the array.  xfs/348 can reproduce
-> this problem.
-
-Ok, well, this worked until f86f40379 :)  nexleft (number extents
-left) used to keep an accurate count and break when done.  That
-loop condition is getting a bit insane, but *shrug* for now.
-
-It would be worth making the commit log more clear that the problem
-currently exists only for shared extents (right?)
-
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_bmap_util.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+On Mon 16-01-17 22:01:18, Theodore Ts'o wrote:
+> On Fri, Jan 06, 2017 at 03:11:06PM +0100, Michal Hocko wrote:
+> > From: Michal Hocko <mhocko@suse.com>
+> > 
+> > This reverts commit c45653c341f5c8a0ce19c8f0ad4678640849cb86 because
+> > sb_getblk_gfp is not really needed as
+> > sb_getblk
+> >   __getblk_gfp
+> >     __getblk_slow
+> >       grow_buffers
+> >         grow_dev_page
+> > 	  gfp_mask = mapping_gfp_constraint(inode->i_mapping, ~__GFP_FS) | gfp
+> > 
+> > so __GFP_FS is cleared unconditionally and therefore the above commit
+> > didn't have any real effect in fact.
+> > 
+> > This patch should not introduce any functional change. The main point
+> > of this change is to reduce explicit GFP_NOFS usage inside ext4 code to
+> > make the review of the remaining usage easier.
+> > 
+> > Signed-off-by: Michal Hocko <mhocko@suse.com>
+> > Reviewed-by: Jan Kara <jack@suse.cz>
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index b9abce5..883e55f 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -698,7 +698,7 @@ xfs_getbmap(
->  		ASSERT(nmap <= subnex);
->  
->  		for (i = 0; i < nmap && nexleft && bmv->bmv_length &&
-> -				cur_ext < bmv->bmv_count; i++) {
-> +				cur_ext < bmv->bmv_count - 1; i++) {
+> If I'm not mistaken, this patch is not dependent on any of the other
+> patches in this series (and the other patches are not dependent on
+> this one).  Hence, I could take this patch via the ext4 tree, correct?
 
-ok, so the cur_ext vs. bmv_count test was added w/ the above commit.
+Yes, that is correct
 
->  			out[cur_ext].bmv_oflags = 0;
->  			if (map[i].br_state == XFS_EXT_UNWRITTEN)
->  				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
-> @@ -769,7 +769,7 @@ xfs_getbmap(
->  			cur_ext++;
->  		}
->  	} while (nmap && nexleft && bmv->bmv_length &&
-> -		 cur_ext < bmv->bmv_count);
-> +		 cur_ext < bmv->bmv_count - 1);
-
-at the bottom of the loop we have:
-
-                        if (inject_map.br_startblock != NULLFSBLOCK) {
-                                map[i] = inject_map;
-                                i--;
-                        } else
-                                nexleft--;
-                        bmv->bmv_entries++;
-
-nexleft used to be our "should we stop" counter, if we have extents
-left, keep going, if not, stop.  It was initialized in a roundabout
-way from bmv->bmv_count - 1;, via the "nex" variable.
-
-So nexleft started out as the maximum times through the loop,
-but now you're resetting i, advancing the cur_ext anyway,
-going through the loop again, but not decrementing nexleft.
-
-If you revert the loop condition to:
-
-               for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
-
-and set the end of the loop nextent handling to:
-
-                       nexleft--;
-                       if (inject_map.br_startblock != NULLFSBLOCK) {
-                               map[i] = inject_map;
-                               i--;
-                       }
-
-does that not fix it?  i.e.:
-
-
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index b9abce5..95dd839 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -697,8 +697,7 @@
- 			goto out_free_map;
- 		ASSERT(nmap <= subnex);
- 
--		for (i = 0; i < nmap && nexleft && bmv->bmv_length &&
--				cur_ext < bmv->bmv_count; i++) {
-+		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
- 			out[cur_ext].bmv_oflags = 0;
- 			if (map[i].br_state == XFS_EXT_UNWRITTEN)
- 				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
-@@ -760,11 +759,11 @@
- 				continue;
- 			}
- 
-+			nexleft--;
- 			if (inject_map.br_startblock != NULLFSBLOCK) {
- 				map[i] = inject_map;
- 				i--;
--			} else
--				nexleft--;
-+			}
- 			bmv->bmv_entries++;
- 			cur_ext++;
- 		}
-
-
-
-
->   out_free_map:
->  	kmem_free(map);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-- 
+Michal Hocko
+SUSE Labs
