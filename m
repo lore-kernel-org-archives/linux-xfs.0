@@ -1,156 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39898 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:36274 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750865AbdAPUOw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Jan 2017 15:14:52 -0500
-Received: from smtp.corp.redhat.com (int-mx16.intmail.prod.int.phx2.redhat.com [10.5.11.28])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D47DA7F7A4
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2017 20:14:52 +0000 (UTC)
-Date: Mon, 16 Jan 2017 14:14:49 -0600
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [RFC PATCH 00/22] mkfs.xfs: Make stronger conflict checks
-Message-ID: <20170116201449.GA25117@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
+        id S1751152AbdAQEjn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Jan 2017 23:39:43 -0500
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id B78FBACE4
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Jan 2017 04:39:41 +0000 (UTC)
+From: jeffm@suse.com
+Subject: [PATCH 3/3] xfs_repair: fix thread creation failure recovery
+Date: Mon, 16 Jan 2017 23:39:33 -0500
+Message-Id: <1484627973-11535-4-git-send-email-jeffm@suse.com>
+In-Reply-To: <1484627973-11535-1-git-send-email-jeffm@suse.com>
+References: <1484627973-11535-1-git-send-email-jeffm@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Jeff Mahoney <jeffm@suse.com>
 
-I ran the patchset through the paces of xfstest -g quick.
-Looks good, with the exception of one regression (xfs/191-input-validation).
+From: Jeff Mahoney <jeffm@suse.com>
 
-Cheers-
-Bill
+When pf_create_prefetch_thread fails, it tears down the args struct
+and frees it.  This causes a use-after-free in prefetch_ag_range, which
+then passes the now-invalid pointer to start_inode_prefetch.  The struct
+is only freed when the queuing thread can't be started.  When we can't
+start even one worker thread, we mark the args ready for processing and
+allow it to proceed single-threaded.  Unfortunately, this only marks
+the current args ready for processing and since we return immediately,
+the call to pf_create_prefetch_thread at the end of pf_queuing_worker
+never gets called and we wait forever for prefetch to start on the
+next AG.
 
+This patch factors out the cleanup into a new pf_skip_prefetch_thread
+that is called when we fail to create either the queuing thread or
+the first of the workers.  It marks the args ready for processing, marks
+it done so start_inode_prefetch doesn't add another AG to the list, and
+tries to start a new thread for the next AG in the list.  We also clear
+->next_args and check for it in cleanup_inode_prefetch so this condition
+is easier to catch should it arise again.
 
-On Wed, Dec 07, 2016 at 02:27:07PM +0100, Jan Tulak wrote:
-> Hi guys,
-> 
-> this set is a follow-up of some old discussions and further attempts to untangle
-> the spaghetti in options parsing. In short, this patchset allows to define
-> cross-option conflicts and makes the conflicts detection more robust.
-> 
-> Until now, we had the ability to define conflicts within one option (e.g. -d
-> sunit/su), but things like -i attr=1 -m crc=1 conflict had to be watched for on
-> case by case basis somewhere in the code. Now, when even those situations are
-> handled by the same code, it is enough to just add a new entry into a table of
-> options. Thus, a reduced chance for an error and easier adding of new cases.
-> 
-> One of the biggest changes in this set is that user input is now stored in
-> directly in the opts table defining allowed range and the like, and variables
-> in the main() of mkfs.xfs are now just aliases/pointers. This allows as to do
-> conditional checks based on actual values, not only on occurence of an option.
-> 
-> (A technical note here is that not every value can be saved in a single place
-> like this. Some values are already stored in a table or structure and I wanted
-> to avoid modifying anything outside of xfs_mkfs.c.)
-> 
-> I tested it with full xfstests suit and the only failed tests I saw are because
-> some ambiguity in arguments parsing was removed. E.g. sometimes it was possible
-> to specify size in blocks without stating the blocksize first, even if manpage
-> explicitly requires -b or -s to be used before.
-> 
-> I already submitted part of this patchset as RFC before, but as I got no reply,
-> I tried to finish it before submitting again. So, this set works as it is. I
-> still have some questions, but they can be answered with "let's keep it as it
-> is."
-> 
-> Number one is simple: What values can use block/sector sizes as user input?
-> There is an inconsistency or ambiguity between manual page and the code. Look
-> at man page for -d agsize.
-> 
-> 	agsize=value
-> 		This is an alternative to using the  agcount  subop‐
-> 		tion.  The  value is the desired size of the alloca‐
-> 		tion group expressed in bytes (usually using  the  m
-> 		                     ^^^^^^^^
-> 		or  g  suffixes).   This value must be a multiple of
-> 		[ ... ]
-> 
-> 
-> The option -d agsize explicitly states that it accepts size in bytes, in a
-> similar tone to the one used for describe allowed values for -s/-b size:
-> 
-> 	value in bytes with size=value
-> 	      ^^^^^^^^
-> 
-> However, -d agsize=1234s input was accepted as valid until now. Is the manual
-> page misleading, or are the options where b/s suffix is forbidden are
-> block/sector size definitions? I decided to err on the compatibility side and
-> kept the current behaviour - only blocksize or sectorsize can't be stated in
-> blocks and sectors, but it can be easily changed.
-> 
-> I will send an update for xfstests once I know what behaviour is correct.
-> 
-> 
-> The other question about this patchset is: As we are saving all the values in
-> the opt_params table, and the values have different types, I thought it
-> necessary to not use a single data type for everything and created an union
-> field (could be easily changed to struct, that would not change anything
-> important). Do you see any non-adressed issue with this approach? Is there
-> another way how to solve the problem?
-> 
-> If nothing else, numbers and strings can't be easily saved in a single
-> variable. Also, as we are using shift operations, any type conversions
-> (like storing everything in long long type) could cause trouble. This is one of
-> the reasons why I'm changed the variables in main() to pointers. This allows
-> for simple and easy access to the correct union field, so unless one is adding
-> a new option, there should be no need to remember the correct date type. If the
-> pointer assignment is done correctly, then GCC will watch for type mismatch.
-> 
-> I really couldn't find out better solution, but see for yourself, this change
-> is done in "mkfs: Change all value fields in opt structures into unions"
-> and "mkfs: use old variables as pointers to the new opts struct values".
-> 
-> 
-> So, I think this is all I wanted to cover in the cover letter. :-)
-> I will be glad for any comments or bugs you find out.
-> 
-> Thanks for your time,
-> 
-> Jan
-> 
-> 
-> Jan Tulak (22):
->   mkfs: remove intermediate getstr followed by getnum
->   mkfs: merge tables for opts parsing into one table
->   mkfs: extend opt_params with a value field
->   mkfs: change conflicts array into a table capable of cross-option
->     addressing
->   mkfs: add a check for conflicting values
->   mkfs: add cross-section conflict checks
->   mkfs: Move opts related #define to one place
->   mkfs: move conflicts into the table
->   mkfs: change conflict checks to utilize the new conflict structure
->   mkfs: change when to mark an option as seen
->   mkfs: add test_default_value into conflict struct
->   mkfs: expand conflicts declarations to named declaration
->   mkfs: remove zeroed items from conflicts declaration
->   mkfs: rename defaultval to flagval in opts
->   mkfs: replace SUBOPT_NEEDS_VAL for a flag
->   mkfs: Change all value fields in opt structures into unions
->   mkfs: use old variables as pointers to the new opts struct values
->   mkfs: prevent sector/blocksize to be specified as a number of blocks
->   mkfs: subopt flags should be saved as bool
->   mkfs: move uuid empty string test to getstr()
->   mkfs: remove duplicit checks
->   mkfs: prevent multiple specifications of a single option
-> 
->  mkfs/xfs_mkfs.c | 2952 +++++++++++++++++++++++++++++++++++--------------------
->  1 file changed, 1864 insertions(+), 1088 deletions(-)
-> 
-> -- 
-> 2.8.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+---
+ repair/prefetch.c | 38 ++++++++++++++++++++++++++++++++------
+ 1 file changed, 32 insertions(+), 6 deletions(-)
+
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 37d60d6..4c74b6e 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -679,11 +679,32 @@ static int
+ pf_create_prefetch_thread(
+ 	prefetch_args_t		*args);
+ 
++/*
++ * If we fail to create the queuing thread or can't create even one
++ * prefetch thread, we need to let processing continue without it.
++ */
++static void
++pf_skip_prefetch_thread(prefetch_args_t *args)
++{
++	prefetch_args_t *next;
++
++	pthread_mutex_lock(&args->lock);
++	args->prefetch_done = 1;
++	pf_start_processing(args);
++	next = args->next_args;
++	args->next_args = NULL;
++	pthread_mutex_unlock(&args->lock);
++
++	if (next)
++		pf_create_prefetch_thread(next);
++}
++
+ static void *
+ pf_queuing_worker(
+ 	void			*param)
+ {
+ 	prefetch_args_t		*args = param;
++	prefetch_args_t		*next_args;
+ 	int			num_inos;
+ 	ino_tree_node_t		*irec;
+ 	ino_tree_node_t		*cur_irec;
+@@ -707,7 +728,7 @@ pf_queuing_worker(
+ 				args->agno, strerror(err));
+ 			args->io_threads[i] = 0;
+ 			if (i == 0) {
+-				pf_start_processing(args);
++				pf_skip_prefetch_thread(args);
+ 				return NULL;
+ 			}
+ 			/*
+@@ -798,11 +819,13 @@ pf_queuing_worker(
+ 	ASSERT(btree_is_empty(args->io_queue));
+ 
+ 	args->prefetch_done = 1;
+-	if (args->next_args)
+-		pf_create_prefetch_thread(args->next_args);
+-
++	next_args = args->next_args;
++	args->next_args = NULL;
+ 	pthread_mutex_unlock(&args->lock);
+ 
++	if (next_args)
++		pf_create_prefetch_thread(next_args);
++
+ 	return NULL;
+ }
+ 
+@@ -822,7 +845,7 @@ pf_create_prefetch_thread(
+ 		pftrace("failed to create prefetch thread for AG %d: %s",
+ 			args->agno, strerror(err));
+ 		args->queuing_thread = 0;
+-		cleanup_inode_prefetch(args);
++		pf_skip_prefetch_thread(args);
+ 	}
+ 
+ 	return err == 0;
+@@ -884,14 +907,15 @@ start_inode_prefetch(
+ 	} else {
+ 		pthread_mutex_lock(&prev_args->lock);
+ 		if (prev_args->prefetch_done) {
++			pthread_mutex_unlock(&prev_args->lock);
+ 			if (!pf_create_prefetch_thread(args))
+ 				args = NULL;
+ 		} else {
+ 			prev_args->next_args = args;
+ 			pftrace("queued AG %d after AG %d",
+ 				args->agno, prev_args->agno);
++			pthread_mutex_unlock(&prev_args->lock);
+ 		}
+-		pthread_mutex_unlock(&prev_args->lock);
+ 	}
+ 
+ 	return args;
+@@ -1066,6 +1090,8 @@ cleanup_inode_prefetch(
+ 
+ 	pftrace("AG %d prefetch done", args->agno);
+ 
++	ASSERT(args->next_args == NULL);
++
+ 	pthread_mutex_destroy(&args->lock);
+ 	pthread_cond_destroy(&args->start_reading);
+ 	pthread_cond_destroy(&args->start_processing);
+-- 
+2.7.1
+
