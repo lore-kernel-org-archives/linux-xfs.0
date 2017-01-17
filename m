@@ -1,162 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52626 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750709AbdAWXrV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Jan 2017 18:47:21 -0500
-Subject: Re: [PATCH 3/5] xfs_repair: strengthen geometry checks
-References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
- <148494393485.5256.16822617236354659766.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <0ed43e2f-2e9a-e53b-0770-1b50fee4b697@sandeen.net>
-Date: Mon, 23 Jan 2017 17:47:20 -0600
-MIME-Version: 1.0
-In-Reply-To: <148494393485.5256.16822617236354659766.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Received: from mail-io0-f194.google.com ([209.85.223.194]:34879 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751045AbdAQVEK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2017 16:04:10 -0500
+Received: by mail-io0-f194.google.com with SMTP id m98so17109334iod.2
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Jan 2017 13:04:10 -0800 (PST)
+Content-Type: multipart/signed; boundary="Apple-Mail=_3F1B0F1C-EDE1-486B-8DD2-6D2F9C267C7A"; protocol="application/pgp-signature"; micalg=pgp-sha256
+Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
+Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
+From: Andreas Dilger <adilger@dilger.ca>
+In-Reply-To: <20170117155916.dcizr65bwa6behe7@thunk.org>
+Date: Tue, 17 Jan 2017 14:04:03 -0700
+Message-Id: <7EC66AC2-1900-4328-A408-65079616A518@dilger.ca>
+References: <20170106141107.23953-1-mhocko@kernel.org> <20170106141107.23953-9-mhocko@kernel.org> <20170117025607.frrcdbduthhutrzj@thunk.org> <20170117082425.GD19699@dhcp22.suse.cz> <20170117151817.GR19699@dhcp22.suse.cz> <20170117155916.dcizr65bwa6behe7@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Michal Hocko <mhocko@kernel.org>, Jan Kara <jack@suse.cz>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-On 1/20/17 2:25 PM, Darrick J. Wong wrote:
-> In xfs_repair, the inodelog, sectlog, and dirblklog values are read
-> directly into the xfs_mount structure without any sanity checking by the
-> verifier.  This results in xfs_repair segfaulting when those fields have
-> ridiculously high values because the pointer arithmetic runs us off the
-> end of the metadata buffers.  Therefore, reject the superblock if these
-> values are garbage and try to find one of the other ones.
+
+--Apple-Mail=_3F1B0F1C-EDE1-486B-8DD2-6D2F9C267C7A
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii
+
+On Jan 17, 2017, at 8:59 AM, Theodore Ts'o <tytso@mit.edu> wrote:
 > 
-> Also clean up the dblocks checking to use the relevant macros and remove
-> a bogus ASSERT that crashes repair when sunit is set but swidth isn't.
-
-( ... no ASSERT is removed in this patch ...)
-
-> The superblock field fuzzer (xfs/1301) triggers all these segfaults.
+> On Tue, Jan 17, 2017 at 04:18:17PM +0100, Michal Hocko wrote:
+>> 
+>> OK, so I've been staring into the code and AFAIU current->journal_info
+>> can contain my stored information. I could either hijack part of the
+>> word as the ref counting is only consuming low 12b. But that looks too
+>> ugly to live. Or I can allocate some placeholder.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: make the inode geometry more consistent with the kernel sb verifier,
-> and prevent an ASSERT if the fs is !dalign but sunit != 0.
-> ---
->  repair/sb.c         |   24 +++++++++++++++---------
->  repair/xfs_repair.c |    4 ++++
->  2 files changed, 19 insertions(+), 9 deletions(-)
+> Yeah, I was looking at something similar.  Can you guarantee that the
+> context will only take one or two bits?  (Looks like it only needs one
+> bit ATM, even though at the moment you're storing the whole GFP mask,
+> correct?)
 > 
+>> But before going to play with that I am really wondering whether we need
+>> all this with no journal at all. AFAIU what Jack told me it is the
+>> journal lock(s) which is the biggest problem from the reclaim recursion
+>> point of view. What would cause a deadlock in no journal mode?
 > 
-> diff --git a/repair/sb.c b/repair/sb.c
-> index 004702c..06b034d 100644
-> --- a/repair/sb.c
-> +++ b/repair/sb.c
-> @@ -395,20 +395,22 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
->  	/* sanity check ag count, size fields against data size field */
->  
->  	if (sb->sb_dblocks == 0 ||
-> -		sb->sb_dblocks >
-> -			((__uint64_t)sb->sb_agcount * sb->sb_agblocks) ||
-> -		sb->sb_dblocks <
-> -			((__uint64_t)(sb->sb_agcount - 1) * sb->sb_agblocks
-> -			+ XFS_MIN_AG_BLOCKS))
-> +		sb->sb_dblocks > XFS_MAX_DBLOCKS(sb) ||
-> +		sb->sb_dblocks < XFS_MIN_DBLOCKS(sb))
+> We still have the original problem for why we need GFP_NOFS even in
+> ext2.  If we are in a writeback path, and we need to allocate memory,
+> we don't want to recurse back into the file system's writeback path.
+> Certainly not for the same inode, and while we could make it work if
+> the mm was writing back another inode, or another superblock, there
+> are also stack depth considerations that would make this be a bad
+> idea.  So we do need to be able to assert GFP_NOFS even in no journal
+> mode, and for any file system including ext2, for that matter.
+> 
+> Because of the fact that we're going to have to play games with
+> current->journal_info, maybe this is something that I should take
+> responsibility for, and to go through the the ext4 tree after the main
+> patch series go through?  Maybe you could use xfs and ext2 as sample
+> (simple) implementations?
+> 
+> My only ask is that the memalloc nofs context be a well defined N
+> bits, where N < 16, and I'll find some place to put them (probably
+> journal_info).
 
-Ok, again this just uses macros in place of open coding, cool.
+I think Dave was suggesting that the NOFS context allow a pointer to
+an arbitrary struct, so that it is possible to dereference this in
+the filesystem itself to determine if the recursion is safe or not.
+That way, ext2 could store an inode pointer (if that is what it cares
+about) and verify that writeback is not recursing on the same inode,
+and XFS can store something different.  It would also need to store
+some additional info (e.g. fstype or superblock pointer) so that it
+can determine how to interpret the NOFS context pointer.
 
->  		return(XR_BAD_FS_SIZE_DATA);
->  
->  	if (sb->sb_agblklog != (__uint8_t)libxfs_log2_roundup(sb->sb_agblocks))
->  		return(XR_BAD_FS_SIZE_DATA);
->  
-> -	if (sb->sb_inodesize < XFS_DINODE_MIN_SIZE ||
-> -		sb->sb_inodesize > XFS_DINODE_MAX_SIZE ||
-> -		sb->sb_inopblock != howmany(sb->sb_blocksize,sb->sb_inodesize))
-> -		return(XR_BAD_INO_SIZE_DATA);
-> +	if (sb->sb_inodesize < XFS_DINODE_MIN_SIZE                     ||
-> +	    sb->sb_inodesize > XFS_DINODE_MAX_SIZE                     ||
-> +	    sb->sb_inodelog < XFS_DINODE_MIN_LOG                       ||
-> +	    sb->sb_inodelog > XFS_DINODE_MAX_LOG                       ||
-> +	    sb->sb_inodesize != (1 << sb->sb_inodelog)                 ||
-> +	    sb->sb_logsunit > XLOG_MAX_RECORD_BSIZE                    ||
-> +	    sb->sb_inopblock != howmany(sb->sb_blocksize, sb->sb_inodesize) ||
-> +	    (sb->sb_blocklog - sb->sb_inodelog != sb->sb_inopblog))
-> +		return XR_BAD_INO_SIZE_DATA;
+I think it makes sense to add a couple of void * pointers to the task
+struct along with journal_info and leave it up to the filesystem to
+determine how to use them.
 
-This adds more checks: inodelog, logsunit, and blocklog tests, also cool.
-  
->  	if (xfs_sb_version_hassector(sb))  {
->  
-> @@ -494,6 +496,10 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
->  			return(XR_BAD_SB_WIDTH);
->  	}
->  
-> +	/* Directory block log */
-> +	if (sb->sb_dirblklog > XFS_MAX_BLOCKSIZE_LOG)
-> +		return XR_BAD_FS_SIZE_DATA;
-> +
-
-Sorry for not catching this before, but -
-
-Hm, FS_SIZE_DATA ("inconsistent filesystem geometry information") doesn't
-seem quite right for this case, it's used for AG problems elsewhere.
-
-I ... guess a new XR_BAD_DIR_SIZE_DATA or something might be a good idea.
-It's only informative, but may as well be correctly informative.
-
->  	return(XR_OK);
->  }
->  
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 5c79fd9..622d569 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -614,6 +614,10 @@ is_multidisk_filesystem(
->  	if (sbp->sb_agcount >= XFS_MULTIDISK_AGCOUNT)
->  		return true;
-
-And now for something completely different :)
-
-> +	/* sunit/swidth are only useful if fs supports dalign. */
-> +	if (!xfs_sb_version_hasdalign(sbp))
-> +		return false;
-
-I'm still bothered that this is a bit of a special snowflake here.
-Why isn't this part of superblock sanity checking?  Thinking
-it through...
-
-Outcomes for various correct/incorrect sets of values:
-
-has_dalign	sb_unit	set	sb_width set
-0		0		0		OK
-0		0		1		invalid [1]
-0		1		0		ASSERT (earlier)
-0		1		1		invalid [1]
-1		0		0		OK (huh?)
-1		0		1		invalid [2]
-1		1		0		invalid [2]
-1		1		1		OK
+Cheers, Andreas
 
 
-[1] invalid in secondary_sb_whack (!?), fixes by zeroing both
-[2] invalid in verify_sb, fixes by using secondaries
 
-Ok, so this ASSERT is going off because verify_sb didn't
-catch it or care, even though a later secondary_sb_whack()
-does catch it and fixes it, but we have this ASSERT in between
-the two.
 
-At the end of the day, what is_multidisk_filesystem() returns
-doesn't impact correctness at all, just performance of xfs_repair.
 
-The ASSERT was essentially coding superblock consistency checks
-into this performance-tweaking function.  :/
 
-So I guess the question is: If the superblock stripe geometry
-is inconsistent by the time we get to is_multidisk_filesystem(),
-what should we do?
+--Apple-Mail=_3F1B0F1C-EDE1-486B-8DD2-6D2F9C267C7A
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP using GPGMail
 
-1) catch it earlier in verify_sb, and copy from backup?
-2) keep that as it is, but only return true here if all 3 are set?
-3) return true for some subset of fields set, even if inconsistent,
-   as this does? :)
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
 
--Eric
+iQIVAwUBWH6GxHKl2rkXzB/gAQjNAg//X7dQe441ccMxqgZo937oDQfWTdQE7K0C
+0LY7hCYYgZWF8uK33zFzNl4WUSPYZKpyLKqAR8nSE05Pf7MH/2GZHZeuQSr9rgqP
+VSKYOGGdvrNVDnHSjyNfDYd7q+/GWGtrTG/h7UlQNMYa5xJ9UE+Hyrj0pMMIrF3I
+4SzFnFlJ8X9+Zlrnyir6CjZ5R0GQySwpMZRu2ocs0ngkaWuMedQNCjkIjnBM5FdQ
+4o18h7m8upGt8bGrN6YaQtxnyAb6UpnW0IS/YFf/Doyeof0LLojqOzvgdawF2L5w
+5vcKJMbRsiQuel0OM9yHJstlmxqkR+R4xK8CyLAwgplmSij9dZozbsYhCooD8m47
+BTraN+QVgV7jN8k37S2l24zy2Ra4H94ashJ2SuSc+hWd4LCDMMbRpF9C3c36QnPh
+jpX7eCjatMlbx7YwxDjW+HDWzUJa8bEjUXHfHSMzuHtSB4KiMI/i1VoBQeMbyy5a
+bAG+07c4zaOWEyeP1R26i+/Yz5XOAQk8DHHeeTUq/p4Syc+V7VY3wzKQvvvmr3Bz
+EdsPYvl2DnADHMQPuQCslPa35hwnW/qAO0QLOYgNnjlFpu+Ed9sWLaxU9ICfjvlE
+6LrqSixflqRfAmMQlTZuLlzj63EPC4qhvvBB9uLFRis7Yio4sIb6aMx1b/1mp5S+
+d/BgBQjHlFM=
+=1v+V
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_3F1B0F1C-EDE1-486B-8DD2-6D2F9C267C7A--
