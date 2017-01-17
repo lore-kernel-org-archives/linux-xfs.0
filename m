@@ -1,152 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51566 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:49742 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750933AbdAQRQS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Jan 2017 12:16:18 -0500
-Date: Tue, 17 Jan 2017 12:14:51 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: fix COW writeback race
-Message-ID: <20170117171449.GC12426@bfoster.bfoster>
-References: <1484639331-2137-1-git-send-email-hch@lst.de>
- <20170117134421.GB12426@bfoster.bfoster>
- <20170117143721.GA32641@lst.de>
+        id S1751186AbdAQR3g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Jan 2017 12:29:36 -0500
+Date: Tue, 17 Jan 2017 18:29:25 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
+Message-ID: <20170117172925.GA2486@quack2.suse.cz>
+References: <20170106141107.23953-1-mhocko@kernel.org>
+ <20170106141107.23953-9-mhocko@kernel.org>
+ <20170117025607.frrcdbduthhutrzj@thunk.org>
+ <20170117082425.GD19699@dhcp22.suse.cz>
+ <20170117151817.GR19699@dhcp22.suse.cz>
+ <20170117155916.dcizr65bwa6behe7@thunk.org>
+ <20170117161618.GT19699@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170117143721.GA32641@lst.de>
+In-Reply-To: <20170117161618.GT19699@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, Jan 17, 2017 at 03:37:21PM +0100, Christoph Hellwig wrote:
-> On Tue, Jan 17, 2017 at 08:44:21AM -0500, Brian Foster wrote:
-> > Any reason we don't try to address the core race rather than shake up
-> > the affected code to accommodate it?
+On Tue 17-01-17 17:16:19, Michal Hocko wrote:
+> > > But before going to play with that I am really wondering whether we need
+> > > all this with no journal at all. AFAIU what Jack told me it is the
+> > > journal lock(s) which is the biggest problem from the reclaim recursion
+> > > point of view. What would cause a deadlock in no journal mode?
+> > 
+> > We still have the original problem for why we need GFP_NOFS even in
+> > ext2.  If we are in a writeback path, and we need to allocate memory,
+> > we don't want to recurse back into the file system's writeback path.
 > 
-> I think there are two aspects to the whole thing.  One is the way
-> xfs_bmapi_write currently works is fundamentally wrong - if the
-> caller only needs a conversion from delalloc to real space trying
-> to allocate space is always wrong and we should catch it early.
-> The second is if we should do the eager conversion of the whole
-> found extent for either the data and/or the COW fork.
-> 
+> But we do not enter the writeback path from the direct reclaim. Or do
+> you mean something other than pageout()'s mapping->a_ops->writepage?
+> There is only try_to_release_page where we get back to the filesystems
+> but I do not see any NOFS protection in ext4_releasepage.
 
-Makes sense. I agree that the former is probably the right thing to do,
-it just seems more like an error check than a solution for a race. The
-second is probably a bigger question, as I assume we do that to request
-as large allocations as possible.
+Maybe to expand a bit: These days, direct reclaim can call ->releasepage()
+callback, ->evict_inode() callback (and only for inodes with i_nlink > 0),
+shrinkers. That's it. So the recursion possibilities are rather more limited
+than they used to be several years ago and we likely do not need as much
+GFP_NOFS protection as we used to.
 
-> > I ask for a couple reasons: 1.) I'm
-> > not quite following the specific race from the description and 2.) I
-> > considered doing the exact same thing at first for the eofblocks i_size
-> > issue, but more digging rooted out the problem in the eofblocks code.
-> > This one may not be as straightforward a fix, of course... (but if not,
-> > the commit log should probably explain why).
-> 
-> My hope was that the long commit message explained the issue, but
-> I guess I need to go into even more details.
-> 
-> The writeback code (both COW and real) works like this
-> 
-> take ilock
-> read in an extent at offset O
-> drop ilock
-> 
-> if extent is delalloc:
->   while !done with the whole extent
->     take ilock
->     convert partial extent to a real allocation
->     drop ilock
-> 
-> But if multiple threads are doing writeback on pages next to
-> each other another thread might have already converted parts
-> of all of the extent found in the beginning to a real allocation.
-> That on it's own is not a problem because xfs_bmapi_write
-> handles a call to allocate an already real allocation as a no-op.
-> But with the COW code moving real extents from the COW fork to
-> the data fork after I/O completion this can become a problem,
-> because we now might not only have delalloc or real extents in
-> the area covered by extent returned from the inital xfs_bmapi_read
-> call, but also a hole in the COW work.  At which point it blows up.
-> 
-
-Got it, thanks. So all of the writeback stuff is protected via
-page/buffer locks, and even if we still had those locks, it doesn't
-matter because the same extent is obviously covered by many page/buffer
-objects.
-
-> As for why we're doing the eager conversion:  at least for the data
-> fork this was initentional to get better allocation patterns, I
-> remember a discussion with Dave on that a long time ago.  Maybe we
-> shouldn't do it for the COW for to avoid these sorts of races, but
-> then again without xfs_bmapi_write being stupid the race is harmless.
-> 
-
-Yeah, and doing otherwise may break the assumption that larger delallocs
-produce larger physical allocs (re: cowextsz hint and potentially
-preallocation).
-
-> > What happens in this case if eof is true? It looks like got could be
-> > bogus, yet we still carry on using it in the post-allocation part of the
-> > loop.
-> 
-> For an initial EOF lookup it could indeed be bogus.  To properly
-> work it would need something like the trick xfs_bmapi_read uses
-> for this case.
-> 
-
-That seems reasonable so long as we skip the parts of the loop that are
-expecting a real (non-hole) startblock.
-
-> > The fact that the allocation code breaks out of the loop if
-> > allocation doesn't occur is a bit of a red flag that the post-allocation
-> > code may very well expect to always have an allocated mapping.
-> 
-> The post-allocation cleanup code bust handle xfs_bmapi_allocate
-> returning an error before doing anything, and because of that it's
-> full of conditionals for everything that could or could not have
-> happened.
-> 
-
-We have the following in the need_alloc block:
-
-                        error = xfs_bmapi_allocate(&bma);
-                        if (error)
-                                goto error0;
-                        if (bma.blkno == NULLFSBLOCK)
-                                break;
-
-... which breaks out of the loop on error or allocation failure. The
-first call after that block is xfs_bmapi_trim_map(), which uses got
-without any consideration for holes that I can see.
-
-> > That aside... if we do want to do something like this, I wonder whether
-> > it's more cleanly handled by the caller.
-> 
-> I don't see how it could be done in the caller - the caller wants
-> the bmap code to convert a delayed allocation and not allocate
-> entirely new blocks.  The best way to do so is to tell the bmapi
-> code not do allocate new blocks.  Now if you mean splitting up
-> xfs_bmapi_write into different functions for allocating real blocks,
-> converting delalloc blocks or just flipping the unwritten bit: that's
-> something I'd like to look into - the current interface is just
-> too confusing.
-
-Things like the above had me thinking it might be more clear to
-explicitly read the extent and check for delalloc in the caller while
-under the appropriate lock (and if XFS_COW_FORK). That's kind of what I
-was alluding to above wrt to closing the race. That's just an idea,
-however, and doesn't necessarily improve the error handling in the way
-that this patch does (to avoid the transaction overrun). Given that, I'm
-not against what this patch is currently doing so long as we fix up the
-rest of the loop. Your idea of xfs_bmapi_convert() or some such sounds
-like a nice potential cleanup at some point too.
-
-Brian
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
