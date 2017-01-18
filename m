@@ -1,74 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50992 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S969914AbdAITx5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2017 14:53:57 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/4] xfs: don't rely on ->total in xfs_alloc_space_available
-Date: Mon,  9 Jan 2017 20:53:42 +0100
-Message-Id: <1483991622-2339-5-git-send-email-hch@lst.de>
-In-Reply-To: <1483991622-2339-1-git-send-email-hch@lst.de>
-References: <1483991622-2339-1-git-send-email-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:52013 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751272AbdARIcd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Jan 2017 03:32:33 -0500
+Date: Wed, 18 Jan 2017 09:29:10 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
+Message-ID: <20170118082910.GD7015@dhcp22.suse.cz>
+References: <20170106141107.23953-1-mhocko@kernel.org>
+ <20170106141107.23953-9-mhocko@kernel.org>
+ <20170117025607.frrcdbduthhutrzj@thunk.org>
+ <20170117082425.GD19699@dhcp22.suse.cz>
+ <20170117151817.GR19699@dhcp22.suse.cz>
+ <20170117155916.dcizr65bwa6behe7@thunk.org>
+ <7EC66AC2-1900-4328-A408-65079616A518@dilger.ca>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7EC66AC2-1900-4328-A408-65079616A518@dilger.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: eguan@redhat.com, darrick.wong@oracle.com, bfoster@redhat.com
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-->total is a bit of an odd parameter passed down to the low-level
-allocator all the way from the high-level callers.  It's supposed to
-contain the maximum number of blocks to be allocated for the whole
-transaction [1].
+On Tue 17-01-17 14:04:03, Andreas Dilger wrote:
+> On Jan 17, 2017, at 8:59 AM, Theodore Ts'o <tytso@mit.edu> wrote:
+> > 
+> > On Tue, Jan 17, 2017 at 04:18:17PM +0100, Michal Hocko wrote:
+> >> 
+> >> OK, so I've been staring into the code and AFAIU current->journal_info
+> >> can contain my stored information. I could either hijack part of the
+> >> word as the ref counting is only consuming low 12b. But that looks too
+> >> ugly to live. Or I can allocate some placeholder.
+> > 
+> > Yeah, I was looking at something similar.  Can you guarantee that the
+> > context will only take one or two bits?  (Looks like it only needs one
+> > bit ATM, even though at the moment you're storing the whole GFP mask,
+> > correct?)
+> > 
+> >> But before going to play with that I am really wondering whether we need
+> >> all this with no journal at all. AFAIU what Jack told me it is the
+> >> journal lock(s) which is the biggest problem from the reclaim recursion
+> >> point of view. What would cause a deadlock in no journal mode?
+> > 
+> > We still have the original problem for why we need GFP_NOFS even in
+> > ext2.  If we are in a writeback path, and we need to allocate memory,
+> > we don't want to recurse back into the file system's writeback path.
+> > Certainly not for the same inode, and while we could make it work if
+> > the mm was writing back another inode, or another superblock, there
+> > are also stack depth considerations that would make this be a bad
+> > idea.  So we do need to be able to assert GFP_NOFS even in no journal
+> > mode, and for any file system including ext2, for that matter.
+> > 
+> > Because of the fact that we're going to have to play games with
+> > current->journal_info, maybe this is something that I should take
+> > responsibility for, and to go through the the ext4 tree after the main
+> > patch series go through?  Maybe you could use xfs and ext2 as sample
+> > (simple) implementations?
+> > 
+> > My only ask is that the memalloc nofs context be a well defined N
+> > bits, where N < 16, and I'll find some place to put them (probably
+> > journal_info).
+> 
+> I think Dave was suggesting that the NOFS context allow a pointer to
+> an arbitrary struct, so that it is possible to dereference this in
+> the filesystem itself to determine if the recursion is safe or not.
 
-But in xfs_iomap_write_allocate we only convert existing delayed
-allocations and thus only have a minimal block reservation for the
-current transaction, so xfs_alloc_space_available can't use it for
-the allocation decisions.  Use the maximum of args->total and the
-calculated block requirement to make a decision.  We probably should
-get rid of args->total eventually and instead apply ->minleft more
-broadly, but that will require some extensive changes all over.
-
-[1] which creates lots of confusion as most callers don't decrement it
-once doing a first allocation.  But that's for a separate series.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index f2e7eb6..9f06a21 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1995,7 +1995,7 @@ xfs_alloc_space_available(
- 	int			flags)
- {
- 	struct xfs_perag	*pag = args->pag;
--	xfs_extlen_t		longest;
-+	xfs_extlen_t		alloc_len, longest;
- 	xfs_extlen_t		reservation; /* blocks that are still reserved */
- 	int			available;
- 
-@@ -2005,15 +2005,16 @@ xfs_alloc_space_available(
- 	reservation = xfs_ag_resv_needed(pag, args->resv);
- 
- 	/* do we have enough contiguous free space for the allocation? */
-+	alloc_len = args->minlen + (args->alignment - 1) + args->minalignslop;
- 	longest = xfs_alloc_longest_free_extent(args->mp, pag, min_free,
- 			reservation);
--	if ((args->minlen + args->alignment + args->minalignslop - 1) > longest)
-+	if (longest < alloc_len)
- 		return false;
- 
- 	/* do we have enough free space remaining for the allocation? */
- 	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
- 			  reservation - min_free - args->minleft);
--	if (available < (int)args->total)
-+	if (available < (int)max(args->total, alloc_len))
- 		return false;
- 
- 	/*
+Yes, but can we start with a simpler approach first? Even this approach
+takes quite some time to be used.
 -- 
-2.1.4
-
+Michal Hocko
+SUSE Labs
