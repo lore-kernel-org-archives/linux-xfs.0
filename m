@@ -1,56 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:34674 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752155AbdATO1v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 09:27:51 -0500
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] xfs: do not call xfs_buf_hash_destroy on a NULL pag
-Date: Fri, 20 Jan 2017 14:26:42 +0000
-Message-Id: <20170120142642.21698-1-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Received: from mx1.redhat.com ([209.132.183.28]:60426 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750741AbdASHnT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Jan 2017 02:43:19 -0500
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 6AD24C04BD3C
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Jan 2017 07:35:23 +0000 (UTC)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfs_io: add DAX and CoW extent-size flags to chattr manpage
+Date: Thu, 19 Jan 2017 15:35:11 +0800
+Message-Id: <20170119073511.11590-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Eryu Guan <eguan@redhat.com>
 
-From: Colin Ian King <colin.king@canonical.com>
+Manpage is not updated after adding set/clear DAX and CoW
+extent-size flags support to xfs_io.
 
-If pag cannot be allocated, the current error exit path will trip
-a null pointer deference error when calling xfs_buf_hash_destroy
-with a null pag.  Fix this by adding a new error exit lable and
-jumping to this, avoiding the hash destroy and unnecessary kmem_free
-on pag.
-
-Fixes CoverityScan CID#1397628 ("Dereference after null check")
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- fs/xfs/xfs_mount.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ man/man8/xfs_io.8 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 9b9540d..4e66cd19 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -207,7 +207,7 @@ xfs_initialize_perag(
- 
- 		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
- 		if (!pag)
--			goto out_unwind;
-+			goto out_unwind_pags;
- 		pag->pag_agno = index;
- 		pag->pag_mount = mp;
- 		spin_lock_init(&pag->pag_ici_lock);
-@@ -242,6 +242,7 @@ xfs_initialize_perag(
- out_unwind:
- 	xfs_buf_hash_destroy(pag);
- 	kmem_free(pag);
-+out_unwind_pags:
- 	for (; index > first_initialised; index--) {
- 		pag = radix_tree_delete(&mp->m_perag_tree, index);
- 		xfs_buf_hash_destroy(pag);
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 885df7f..fccddcf 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -798,7 +798,7 @@ can be used to restrict the output to directories only).
+ This is a depth first descent, it does not follow symlinks and
+ it also does not cross mount points.
+ .TP
+-.BR chattr " [ " \-R " | " \-D " ] [ " + / \-riasAdtPneEfS " ]"
++.BR chattr " [ " \-R " | " \-D " ] [ " + / \-riasAdtPneEfSxC " ]"
+ Change extended inode flags on the currently open file. The
+ .B \-R
+ and
 -- 
-2.10.2
+2.9.3
 
