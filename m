@@ -1,104 +1,226 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:32941 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752041AbdAFOTG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2017 09:19:06 -0500
+Received: from mx2.suse.de ([195.135.220.15]:49619 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750922AbdASIkD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Jan 2017 03:40:03 -0500
+Date: Thu, 19 Jan 2017 09:39:56 +0100
 From: Michal Hocko <mhocko@kernel.org>
-Subject: [DEBUG PATCH 2/2] silent warnings which we cannot do anything about
-Date: Fri,  6 Jan 2017 15:18:45 +0100
-Message-Id: <20170106141845.24362-3-mhocko@kernel.org>
-In-Reply-To: <20170106141845.24362-1-mhocko@kernel.org>
+Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
+Message-ID: <20170119083956.GE30786@dhcp22.suse.cz>
 References: <20170106141107.23953-1-mhocko@kernel.org>
- <20170106141845.24362-1-mhocko@kernel.org>
+ <20170106141107.23953-9-mhocko@kernel.org>
+ <20170117025607.frrcdbduthhutrzj@thunk.org>
+ <20170117082425.GD19699@dhcp22.suse.cz>
+ <20170117151817.GR19699@dhcp22.suse.cz>
+ <20170117155916.dcizr65bwa6behe7@thunk.org>
+ <20170117161618.GT19699@dhcp22.suse.cz>
+ <20170117172925.GA2486@quack2.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170117172925.GA2486@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Theodore Ts'o <tytso@mit.edu>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-From: Michal Hocko <mhocko@suse.com>
+On Tue 17-01-17 18:29:25, Jan Kara wrote:
+> On Tue 17-01-17 17:16:19, Michal Hocko wrote:
+> > > > But before going to play with that I am really wondering whether we need
+> > > > all this with no journal at all. AFAIU what Jack told me it is the
+> > > > journal lock(s) which is the biggest problem from the reclaim recursion
+> > > > point of view. What would cause a deadlock in no journal mode?
+> > > 
+> > > We still have the original problem for why we need GFP_NOFS even in
+> > > ext2.  If we are in a writeback path, and we need to allocate memory,
+> > > we don't want to recurse back into the file system's writeback path.
+> > 
+> > But we do not enter the writeback path from the direct reclaim. Or do
+> > you mean something other than pageout()'s mapping->a_ops->writepage?
+> > There is only try_to_release_page where we get back to the filesystems
+> > but I do not see any NOFS protection in ext4_releasepage.
+> 
+> Maybe to expand a bit: These days, direct reclaim can call ->releasepage()
+> callback, ->evict_inode() callback (and only for inodes with i_nlink > 0),
+> shrinkers. That's it. So the recursion possibilities are rather more limited
+> than they used to be several years ago and we likely do not need as much
+> GFP_NOFS protection as we used to.
 
-THIS PATCH IS FOR TESTING ONLY AND NOT MEANT TO HIT LINUS TREE
+Thanks for making my remark more clear Jack! I would just want to add
+that I was playing with the patch below (it is basically
+GFP_NOFS->GFP_KERNEL for all allocations which trigger warning from the
+debugging patch which means they are called from within transaction) and
+it didn't hit the lockdep when running xfstests both with or without the
+enabled journal.
 
-There are some code paths used by all the filesystems which we cannot
-change to drop the GFP_NOFS, yet they generate a lot of warnings.
-Provide {disable,enable}_scope_gfp_check to silence those.
-alloc_page_buffers and grow_dev_page are silenced right away.
+So am I still missing something or the nojournal mode is safe and the
+current series is OK wrt. ext*?
 
-Signed-off-by: Michal Hocko <mhocko@suse.com>
+The following patch in its current form is WIP and needs a proper review
+before I post it.
 ---
- fs/buffer.c           |  4 ++++
- include/linux/sched.h | 11 +++++++++++
- mm/page_alloc.c       |  3 +++
- 3 files changed, 18 insertions(+)
+ fs/ext4/inode.c       |  4 ++--
+ fs/ext4/mballoc.c     | 14 +++++++-------
+ fs/ext4/xattr.c       |  2 +-
+ fs/jbd2/journal.c     |  4 ++--
+ fs/jbd2/revoke.c      |  2 +-
+ fs/jbd2/transaction.c |  2 +-
+ 6 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 28484b3ebc98..dbe529e7881b 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -873,7 +873,9 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
- 	head = NULL;
- 	offset = PAGE_SIZE;
- 	while ((offset -= size) >= 0) {
-+		disable_scope_gfp_check();
- 		bh = alloc_buffer_head(GFP_NOFS);
-+		enable_scope_gfp_check();
- 		if (!bh)
- 			goto no_grow;
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index b7d141c3b810..841cb8c4cb5e 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -2085,7 +2085,7 @@ static int ext4_writepage(struct page *page,
+ 		return __ext4_journalled_writepage(page, len);
  
-@@ -1003,7 +1005,9 @@ grow_dev_page(struct block_device *bdev, sector_t block,
- 	 */
- 	gfp_mask |= __GFP_NOFAIL;
+ 	ext4_io_submit_init(&io_submit, wbc);
+-	io_submit.io_end = ext4_init_io_end(inode, GFP_NOFS);
++	io_submit.io_end = ext4_init_io_end(inode, GFP_KERNEL);
+ 	if (!io_submit.io_end) {
+ 		redirty_page_for_writepage(wbc, page);
+ 		unlock_page(page);
+@@ -3794,7 +3794,7 @@ static int __ext4_block_zero_page_range(handle_t *handle,
+ 	int err = 0;
  
-+	disable_scope_gfp_check();
- 	page = find_or_create_page(inode->i_mapping, index, gfp_mask);
-+	enable_scope_gfp_check();
+ 	page = find_or_create_page(mapping, from >> PAGE_SHIFT,
+-				   mapping_gfp_constraint(mapping, ~__GFP_FS));
++				   mapping_gfp_mask(mapping));
  	if (!page)
- 		return ret;
+ 		return -ENOMEM;
  
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 59428926e989..f60294732ed5 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1988,6 +1988,7 @@ struct task_struct {
- 	/* A live task holds one reference. */
- 	atomic_t stack_refcount;
- #endif
-+	bool disable_scope_gfp_warn;
- 	unsigned long nofs_caller;
- 	unsigned long noio_caller;
- /* CPU-specific state of this task */
-@@ -2390,6 +2391,16 @@ static inline unsigned int __memalloc_nofs_save(unsigned long caller)
- 	return flags;
+diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
+index d9fd184b049e..67b97cd6e3d6 100644
+--- a/fs/ext4/mballoc.c
++++ b/fs/ext4/mballoc.c
+@@ -1251,7 +1251,7 @@ ext4_mb_load_buddy_gfp(struct super_block *sb, ext4_group_t group,
+ static int ext4_mb_load_buddy(struct super_block *sb, ext4_group_t group,
+ 			      struct ext4_buddy *e4b)
+ {
+-	return ext4_mb_load_buddy_gfp(sb, group, e4b, GFP_NOFS);
++	return ext4_mb_load_buddy_gfp(sb, group, e4b, GFP_KERNEL);
  }
  
-+static inline void disable_scope_gfp_check(void)
-+{
-+	current->disable_scope_gfp_warn = true;
-+}
-+
-+static inline void enable_scope_gfp_check(void)
-+{
-+	current->disable_scope_gfp_warn = false;
-+}
-+
- #define memalloc_nofs_save()	__memalloc_nofs_save(_RET_IP_)
+ static void ext4_mb_unload_buddy(struct ext4_buddy *e4b)
+@@ -2054,7 +2054,7 @@ static int ext4_mb_good_group(struct ext4_allocation_context *ac,
  
- static inline void memalloc_nofs_restore(unsigned int flags)
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 87a2bb5262b2..5405278bd733 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -3762,6 +3762,9 @@ void debug_scope_gfp_context(gfp_t gfp_mask)
- 	if (!(gfp_mask & __GFP_DIRECT_RECLAIM))
- 		return;
+ 	/* We only do this if the grp has never been initialized */
+ 	if (unlikely(EXT4_MB_GRP_NEED_INIT(grp))) {
+-		int ret = ext4_mb_init_group(ac->ac_sb, group, GFP_NOFS);
++		int ret = ext4_mb_init_group(ac->ac_sb, group, GFP_KERNEL);
+ 		if (ret)
+ 			return ret;
+ 	}
+@@ -3600,7 +3600,7 @@ ext4_mb_new_inode_pa(struct ext4_allocation_context *ac)
+ 	BUG_ON(ac->ac_status != AC_STATUS_FOUND);
+ 	BUG_ON(!S_ISREG(ac->ac_inode->i_mode));
  
-+	if (current->disable_scope_gfp_warn)
-+		return;
-+
- 	if (current->flags & PF_MEMALLOC_NOIO)
- 		restrict_mask = __GFP_IO;
- 	else if ((current->flags & PF_MEMALLOC_NOFS) && (gfp_mask & __GFP_IO))
+-	pa = kmem_cache_alloc(ext4_pspace_cachep, GFP_NOFS);
++	pa = kmem_cache_alloc(ext4_pspace_cachep, GFP_KERNEL);
+ 	if (pa == NULL)
+ 		return -ENOMEM;
+ 
+@@ -3694,7 +3694,7 @@ ext4_mb_new_group_pa(struct ext4_allocation_context *ac)
+ 	BUG_ON(!S_ISREG(ac->ac_inode->i_mode));
+ 
+ 	BUG_ON(ext4_pspace_cachep == NULL);
+-	pa = kmem_cache_alloc(ext4_pspace_cachep, GFP_NOFS);
++	pa = kmem_cache_alloc(ext4_pspace_cachep, GFP_KERNEL);
+ 	if (pa == NULL)
+ 		return -ENOMEM;
+ 
+@@ -4479,7 +4479,7 @@ ext4_fsblk_t ext4_mb_new_blocks(handle_t *handle,
+ 		}
+ 	}
+ 
+-	ac = kmem_cache_zalloc(ext4_ac_cachep, GFP_NOFS);
++	ac = kmem_cache_zalloc(ext4_ac_cachep, GFP_KERNEL);
+ 	if (!ac) {
+ 		ar->len = 0;
+ 		*errp = -ENOMEM;
+@@ -4813,7 +4813,7 @@ void ext4_free_blocks(handle_t *handle, struct inode *inode,
+ 
+ 	/* __GFP_NOFAIL: retry infinitely, ignore TIF_MEMDIE and memcg limit. */
+ 	err = ext4_mb_load_buddy_gfp(sb, block_group, &e4b,
+-				     GFP_NOFS|__GFP_NOFAIL);
++				     GFP_KERNEL|__GFP_NOFAIL);
+ 	if (err)
+ 		goto error_return;
+ 
+@@ -4832,7 +4832,7 @@ void ext4_free_blocks(handle_t *handle, struct inode *inode,
+ 		 * to fail.
+ 		 */
+ 		new_entry = kmem_cache_alloc(ext4_free_data_cachep,
+-				GFP_NOFS|__GFP_NOFAIL);
++				GFP_KERNEL|__GFP_NOFAIL);
+ 		new_entry->efd_start_cluster = bit;
+ 		new_entry->efd_group = block_group;
+ 		new_entry->efd_count = count_clusters;
+diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c
+index 172317462238..f68e8c87f9f2 100644
+--- a/fs/ext4/xattr.c
++++ b/fs/ext4/xattr.c
+@@ -1650,7 +1650,7 @@ ext4_xattr_cache_insert(struct mb_cache *ext4_mb_cache, struct buffer_head *bh)
+ 		       EXT4_XATTR_REFCOUNT_MAX;
+ 	int error;
+ 
+-	error = mb_cache_entry_create(ext4_mb_cache, GFP_NOFS, hash,
++	error = mb_cache_entry_create(ext4_mb_cache, GFP_KERNEL, hash,
+ 				      bh->b_blocknr, reusable);
+ 	if (error) {
+ 		if (error == -EBUSY)
+diff --git a/fs/jbd2/journal.c b/fs/jbd2/journal.c
+index 3a449150f834..bd29daa975a5 100644
+--- a/fs/jbd2/journal.c
++++ b/fs/jbd2/journal.c
+@@ -379,7 +379,7 @@ int jbd2_journal_write_metadata_buffer(transaction_t *transaction,
+ 	 */
+ 	J_ASSERT_BH(bh_in, buffer_jbddirty(bh_in));
+ 
+-	new_bh = alloc_buffer_head(GFP_NOFS|__GFP_NOFAIL);
++	new_bh = alloc_buffer_head(GFP_KERNEL|__GFP_NOFAIL);
+ 
+ 	/* keep subsequent assertions sane */
+ 	atomic_set(&new_bh->b_count, 1);
+@@ -2375,7 +2375,7 @@ static struct journal_head *journal_alloc_journal_head(void)
+ #ifdef CONFIG_JBD2_DEBUG
+ 	atomic_inc(&nr_journal_heads);
+ #endif
+-	ret = kmem_cache_zalloc(jbd2_journal_head_cache, GFP_NOFS);
++	ret = kmem_cache_zalloc(jbd2_journal_head_cache, GFP_KERNEL);
+ 	if (!ret) {
+ 		jbd_debug(1, "out of memory for journal_head\n");
+ 		pr_notice_ratelimited("ENOMEM in %s, retrying.\n", __func__);
+diff --git a/fs/jbd2/revoke.c b/fs/jbd2/revoke.c
+index cfc38b552118..c9c347468c5b 100644
+--- a/fs/jbd2/revoke.c
++++ b/fs/jbd2/revoke.c
+@@ -141,7 +141,7 @@ static int insert_revoke_hash(journal_t *journal, unsigned long long blocknr,
+ {
+ 	struct list_head *hash_list;
+ 	struct jbd2_revoke_record_s *record;
+-	gfp_t gfp_mask = GFP_NOFS;
++	gfp_t gfp_mask = GFP_KERNEL;
+ 
+ 	if (journal_oom_retry)
+ 		gfp_mask |= __GFP_NOFAIL;
+diff --git a/fs/jbd2/transaction.c b/fs/jbd2/transaction.c
+index 35a5d3d76182..a7e50eb330a8 100644
+--- a/fs/jbd2/transaction.c
++++ b/fs/jbd2/transaction.c
+@@ -974,7 +974,7 @@ do_get_write_access(handle_t *handle, struct journal_head *jh,
+ 			JBUFFER_TRACE(jh, "allocate memory for buffer");
+ 			jbd_unlock_bh_state(bh);
+ 			frozen_buffer = jbd2_alloc(jh2bh(jh)->b_size,
+-						   GFP_NOFS | __GFP_NOFAIL);
++						   GFP_KERNEL | __GFP_NOFAIL);
+ 			goto repeat;
+ 		}
+ 		jh->b_frozen_data = frozen_buffer;
 -- 
 2.11.0
 
+-- 
+Michal Hocko
+SUSE Labs
