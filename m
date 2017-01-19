@@ -1,54 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.161.193]:35755 "EHLO
-        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750957AbdAWVcx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jan 2017 16:32:53 -0500
-Received: by mail-yw0-f193.google.com with SMTP id 17so18820676ywk.2
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Jan 2017 13:32:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20170123135348.GA25320@infradead.org>
-References: <8a562e13-6d86-d9ef-de22-f71d5aa79b60@jlbond.com>
- <dbcc14e5-73e7-4ba0-22d2-646d3e466927@sandeen.net> <20170123135048.GB33287@bfoster.bfoster>
- <20170123135348.GA25320@infradead.org>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Mon, 23 Jan 2017 14:25:17 -0700
-Message-ID: <CAJCQCtQnH1PgUf=9gJT=5UpZ8SCGqvN-1rAvO3HLq9nQJkF+eA@mail.gmail.com>
-Subject: Re: XFS issues with NVMe SSD
-Content-Type: text/plain; charset=UTF-8
+Received: from imslp-west.kjsl.com ([65.50.211.133]:35350 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S1753161AbdASPP4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Jan 2017 10:15:56 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v3] xfs: fix COW writeback race
+Date: Thu, 19 Jan 2017 15:51:12 +0100
+Message-Id: <1484837472-14368-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Bond Masuda <bond.masuda@jlbond.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-On Mon, Jan 23, 2017 at 6:53 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Mon, Jan 23, 2017 at 08:50:48AM -0500, Brian Foster wrote:
->> Since this is limited hardware (I don't have access to such hardware, at
->> least), it might also be helpful to see if you can isolate the problem
->> from a full distro install. For example, can you format such a device
->> external to the rootfs, mount, copy some stuff and reproduce the
->> corruption after some sequence of unmount/remount/reboot operations?
->
-> I have plenty of NVMe hardware, although none of them is Intel and I've
-> never seen corruption like that.  I also don't run Fedora, though :)
->
-> Does anyone know if the Fedora installer does a fstrim run or something
-> similar?  I remember that most Intel NVMe devices had some pretty severe
-> deallocate (aka discard on NVMe) bugs.  A firmware update might be a
-> good start in that case.
+Due to the way how xfs_iomap_write_allocate tries to convert the whole
+found extents from delalloc to real space we can run into a race
+condition with multiple threads doing writes to this same extent.
+For the non-COW case that is harmless as the only thing that can happen
+is that we call xfs_bmapi_write on an extent that has already been
+converted to a real allocation.  For COW writes where we move the extent
+from the COW to the data fork after I/O completion the race is, however,
+not quite as harmless.  In the worst case we are now calling
+xfs_bmapi_write on a region that contains hole in the COW work, which
+will trip up an assert in debug builds or lead to file system corruption
+in non-debug builds.  This seems to be reproducible with workloads of
+small O_DSYNC write, although so far I've not managed to come up with
+a with an isolated reproducer.
 
-The installer doesn't do fstrim or blkdiscard before installation; but
-on my SSDs at least mkfs.xfs and mkfs.btrfs result in trim. So one
-possible test would be to manually mkfs with -k, and then if it's a
-live media installation, install manually from the booted live
-environment with:
+The fix for the issue is relatively simple:  tell xfs_bmapi_write
+that we are only asked to convert delayed allocations and skip holes
+in that case.
 
-rsync -pogAXtlHrDx --exclude /dev/ --exclude /proc/ --exclude /sys/
---exclude /run/ --exclude /boot/*rescue* --exclude /etc/machine-id
-/run/install/source/ /mnt/sysimage
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 44 ++++++++++++++++++++++++++++++++------------
+ fs/xfs/libxfs/xfs_bmap.h |  6 +++++-
+ fs/xfs/xfs_iomap.c       |  2 +-
+ 3 files changed, 38 insertions(+), 14 deletions(-)
 
-
-
-
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 44773c9..ab82dd4 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4514,8 +4514,6 @@ xfs_bmapi_write(
+ 	int			n;		/* current extent index */
+ 	xfs_fileoff_t		obno;		/* old block number (offset) */
+ 	int			whichfork;	/* data or attr fork */
+-	char			inhole;		/* current location is hole in file */
+-	char			wasdelay;	/* old extent was delayed */
+ 
+ #ifdef DEBUG
+ 	xfs_fileoff_t		orig_bno;	/* original block number value */
+@@ -4603,22 +4601,44 @@ xfs_bmapi_write(
+ 	bma.firstblock = firstblock;
+ 
+ 	while (bno < end && n < *nmap) {
+-		inhole = eof || bma.got.br_startoff > bno;
+-		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
++		bool			need_alloc = false, wasdelay = false;
+ 
+-		/*
+-		 * Make sure we only reflink into a hole.
+-		 */
+-		if (flags & XFS_BMAPI_REMAP)
+-			ASSERT(inhole);
+-		if (flags & XFS_BMAPI_COWFORK)
+-			ASSERT(!inhole);
++		/* in hole or beyoned EOF? */
++		if (eof || bma.got.br_startoff > bno) {
++			if (flags & XFS_BMAPI_DELALLOC) {
++				/*
++				 * For the COW fork we can reasonably get a
++				 * request for converting an extent that races
++				 * with other threads already having converted
++				 * part of it, as there converting COW to
++				 * regular blocks is not protected using the
++				 * IOLOCK.
++				 */
++				ASSERT(flags & XFS_BMAPI_COWFORK);
++				if (!(flags & XFS_BMAPI_COWFORK)) {
++					error = -EIO;
++					goto error0;
++				}
++
++				if (eof || bno >= end)
++					break;
++			} else {
++				need_alloc = true;
++			}
++		} else {
++			/*
++			 * Make sure we only reflink into a hole.
++			 */
++			ASSERT(!(flags & XFS_BMAPI_REMAP));
++			if (isnullstartblock(bma.got.br_startblock))
++				wasdelay = true;
++		}
+ 
+ 		/*
+ 		 * First, deal with the hole before the allocated space
+ 		 * that we found, if any.
+ 		 */
+-		if (inhole || wasdelay) {
++		if (need_alloc || wasdelay) {
+ 			bma.eof = eof;
+ 			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
+ 			bma.wasdel = wasdelay;
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index cecd094..cdef87d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -110,6 +110,9 @@ struct xfs_extent_free_item
+ /* Map something in the CoW fork. */
+ #define XFS_BMAPI_COWFORK	0x200
+ 
++/* Only convert delalloc space, don't allocate entirely new extents */
++#define XFS_BMAPI_DELALLOC	0x400
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -120,7 +123,8 @@ struct xfs_extent_free_item
+ 	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
+ 	{ XFS_BMAPI_ZERO,	"ZERO" }, \
+ 	{ XFS_BMAPI_REMAP,	"REMAP" }, \
+-	{ XFS_BMAPI_COWFORK,	"COWFORK" }
++	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
++	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }
+ 
+ 
+ static inline int xfs_bmapi_aflag(int w)
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index ca137b7..7ee8629 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -795,7 +795,7 @@ xfs_iomap_write_allocate(
+ 	xfs_trans_t	*tp;
+ 	int		nimaps;
+ 	int		error = 0;
+-	int		flags = 0;
++	int		flags = XFS_BMAPI_DELALLOC;
+ 	int		nres;
+ 
+ 	if (whichfork == XFS_COW_FORK)
 -- 
-Chris Murphy
+2.1.4
+
