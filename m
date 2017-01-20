@@ -1,51 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49742 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751186AbdAQR3g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Jan 2017 12:29:36 -0500
-Date: Tue, 17 Jan 2017 18:29:25 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
-Message-ID: <20170117172925.GA2486@quack2.suse.cz>
-References: <20170106141107.23953-1-mhocko@kernel.org>
- <20170106141107.23953-9-mhocko@kernel.org>
- <20170117025607.frrcdbduthhutrzj@thunk.org>
- <20170117082425.GD19699@dhcp22.suse.cz>
- <20170117151817.GR19699@dhcp22.suse.cz>
- <20170117155916.dcizr65bwa6behe7@thunk.org>
- <20170117161618.GT19699@dhcp22.suse.cz>
+Received: from userp1050.oracle.com ([156.151.31.82]:32629 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752239AbdATWx2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 17:53:28 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v0KMr1J9030266
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2017 22:53:01 GMT
+Date: Fri, 20 Jan 2017 14:51:53 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/5] xfs_repair: zero shared_vn
+Message-ID: <20170120225153.GG12985@birch.djwong.org>
+References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+ <148494394162.5256.166843220095123974.stgit@birch.djwong.org>
+ <933788b7-2156-357e-029d-03294bf8f5bf@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170117161618.GT19699@dhcp22.suse.cz>
+In-Reply-To: <933788b7-2156-357e-029d-03294bf8f5bf@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue 17-01-17 17:16:19, Michal Hocko wrote:
-> > > But before going to play with that I am really wondering whether we need
-> > > all this with no journal at all. AFAIU what Jack told me it is the
-> > > journal lock(s) which is the biggest problem from the reclaim recursion
-> > > point of view. What would cause a deadlock in no journal mode?
-> > 
-> > We still have the original problem for why we need GFP_NOFS even in
-> > ext2.  If we are in a writeback path, and we need to allocate memory,
-> > we don't want to recurse back into the file system's writeback path.
+On Fri, Jan 20, 2017 at 04:20:27PM -0600, Eric Sandeen wrote:
+> On 1/20/17 2:25 PM, Darrick J. Wong wrote:
+> > Since shared_vn always has to be zero, zero it at the end of repair.
 > 
-> But we do not enter the writeback path from the direct reclaim. Or do
-> you mean something other than pageout()'s mapping->a_ops->writepage?
-> There is only try_to_release_page where we get back to the filesystems
-> but I do not see any NOFS protection in ext4_releasepage.
+> If it's not, shouldn't it be properly warned, fixed, exit-code
+> set, etc?
 
-Maybe to expand a bit: These days, direct reclaim can call ->releasepage()
-callback, ->evict_inode() callback (and only for inodes with i_nlink > 0),
-shrinkers. That's it. So the recursion possibilities are rather more limited
-than they used to be several years ago and we likely do not need as much
-GFP_NOFS protection as we used to.
+Yeah, you're right, that's what we have phase 1 for.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+--D
+
+> 
+> -Eric
+>  
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  repair/xfs_repair.c |    3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > 
+> > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> > index 622d569..ecfa6b4 100644
+> > --- a/repair/xfs_repair.c
+> > +++ b/repair/xfs_repair.c
+> > @@ -1050,6 +1050,9 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
+> >  			be32_to_cpu(dsb->sb_unit), be32_to_cpu(dsb->sb_width));
+> >  	}
+> >  
+> > +	/* shared_vn is always zero. */
+> > +	dsb->sb_shared_vn = 0;
+> > +
+> >  	libxfs_writebuf(sbp, 0);
+> >  
+> >  	/*
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
