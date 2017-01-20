@@ -1,165 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35722 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45706 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751719AbdATL5M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Jan 2017 06:57:12 -0500
-Date: Fri, 20 Jan 2017 06:57:11 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3] xfs: fix COW writeback race
-Message-ID: <20170120115711.GA7220@bfoster.bfoster>
-References: <1484837472-14368-1-git-send-email-hch@lst.de>
+        id S1751719AbdATLzS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Jan 2017 06:55:18 -0500
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 50EE24E4CF
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2017 11:55:19 +0000 (UTC)
+Received: from localhost (dhcp-12-128.nay.redhat.com [10.66.12.128])
+        by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v0KBtI65023128
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2017 06:55:18 -0500
+Date: Fri, 20 Jan 2017 19:55:17 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: XFS warning at fs/iomap.c:768 iomap_dio_actor
+Message-ID: <20170120115517.GW1859@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1484837472-14368-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jan 19, 2017 at 03:51:12PM +0100, Christoph Hellwig wrote:
-> Due to the way how xfs_iomap_write_allocate tries to convert the whole
-> found extents from delalloc to real space we can run into a race
-> condition with multiple threads doing writes to this same extent.
-> For the non-COW case that is harmless as the only thing that can happen
-> is that we call xfs_bmapi_write on an extent that has already been
-> converted to a real allocation.  For COW writes where we move the extent
-> from the COW to the data fork after I/O completion the race is, however,
-> not quite as harmless.  In the worst case we are now calling
-> xfs_bmapi_write on a region that contains hole in the COW work, which
-> will trip up an assert in debug builds or lead to file system corruption
-> in non-debug builds.  This seems to be reproducible with workloads of
-> small O_DSYNC write, although so far I've not managed to come up with
-> a with an isolated reproducer.
-> 
-> The fix for the issue is relatively simple:  tell xfs_bmapi_write
-> that we are only asked to convert delayed allocations and skip holes
-> in that case.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 44 ++++++++++++++++++++++++++++++++------------
->  fs/xfs/libxfs/xfs_bmap.h |  6 +++++-
->  fs/xfs/xfs_iomap.c       |  2 +-
->  3 files changed, 38 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 44773c9..ab82dd4 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4514,8 +4514,6 @@ xfs_bmapi_write(
->  	int			n;		/* current extent index */
->  	xfs_fileoff_t		obno;		/* old block number (offset) */
->  	int			whichfork;	/* data or attr fork */
-> -	char			inhole;		/* current location is hole in file */
-> -	char			wasdelay;	/* old extent was delayed */
->  
->  #ifdef DEBUG
->  	xfs_fileoff_t		orig_bno;	/* original block number value */
-> @@ -4603,22 +4601,44 @@ xfs_bmapi_write(
->  	bma.firstblock = firstblock;
->  
->  	while (bno < end && n < *nmap) {
-> -		inhole = eof || bma.got.br_startoff > bno;
-> -		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
-> +		bool			need_alloc = false, wasdelay = false;
->  
-> -		/*
-> -		 * Make sure we only reflink into a hole.
-> -		 */
-> -		if (flags & XFS_BMAPI_REMAP)
-> -			ASSERT(inhole);
-> -		if (flags & XFS_BMAPI_COWFORK)
-> -			ASSERT(!inhole);
-> +		/* in hole or beyoned EOF? */
+Hi all,
 
-Typo:			      beyond
+I've seen the warning in subject a few times while testing XFS with
+xfstests, with different test configs, different arches, and multiple
+tests could trigger the warning, e.g. generic/269 generic/388 xfs/297.
 
-Otherwise looks good:
+Today I reproduced it manually by running xfs/297 in a loop on one of my
+test hosts, the warning usueally fires within 30 iterations for me.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Below is detailed host info and dmesg log. If you need more info please
+let me know.
 
-> +		if (eof || bma.got.br_startoff > bno) {
-> +			if (flags & XFS_BMAPI_DELALLOC) {
-> +				/*
-> +				 * For the COW fork we can reasonably get a
-> +				 * request for converting an extent that races
-> +				 * with other threads already having converted
-> +				 * part of it, as there converting COW to
-> +				 * regular blocks is not protected using the
-> +				 * IOLOCK.
-> +				 */
-> +				ASSERT(flags & XFS_BMAPI_COWFORK);
-> +				if (!(flags & XFS_BMAPI_COWFORK)) {
-> +					error = -EIO;
-> +					goto error0;
-> +				}
-> +
-> +				if (eof || bno >= end)
-> +					break;
-> +			} else {
-> +				need_alloc = true;
-> +			}
-> +		} else {
-> +			/*
-> +			 * Make sure we only reflink into a hole.
-> +			 */
-> +			ASSERT(!(flags & XFS_BMAPI_REMAP));
-> +			if (isnullstartblock(bma.got.br_startblock))
-> +				wasdelay = true;
-> +		}
->  
->  		/*
->  		 * First, deal with the hole before the allocated space
->  		 * that we found, if any.
->  		 */
-> -		if (inhole || wasdelay) {
-> +		if (need_alloc || wasdelay) {
->  			bma.eof = eof;
->  			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
->  			bma.wasdel = wasdelay;
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index cecd094..cdef87d 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -110,6 +110,9 @@ struct xfs_extent_free_item
->  /* Map something in the CoW fork. */
->  #define XFS_BMAPI_COWFORK	0x200
->  
-> +/* Only convert delalloc space, don't allocate entirely new extents */
-> +#define XFS_BMAPI_DELALLOC	0x400
-> +
->  #define XFS_BMAPI_FLAGS \
->  	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
->  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-> @@ -120,7 +123,8 @@ struct xfs_extent_free_item
->  	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
->  	{ XFS_BMAPI_ZERO,	"ZERO" }, \
->  	{ XFS_BMAPI_REMAP,	"REMAP" }, \
-> -	{ XFS_BMAPI_COWFORK,	"COWFORK" }
-> +	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
-> +	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }
->  
->  
->  static inline int xfs_bmapi_aflag(int w)
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index ca137b7..7ee8629 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -795,7 +795,7 @@ xfs_iomap_write_allocate(
->  	xfs_trans_t	*tp;
->  	int		nimaps;
->  	int		error = 0;
-> -	int		flags = 0;
-> +	int		flags = XFS_BMAPI_DELALLOC;
->  	int		nres;
->  
->  	if (whichfork == XFS_COW_FORK)
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Eryu
+
+MKFS_OPTIONS="-m crc=1 -b size=4k"
+MOUNT_OPTIONS not set
+
+xfs_info $SCRATCH_MNT after test
+[root@hp-dl360g9-15 xfstests]# xfs_info /mnt/scratch
+meta-data=/dev/mapper/systemvg-testlv2 isize=512    agcount=16, agsize=245760 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=3932160, imaxpct=25
+         =                       sunit=64     swidth=768 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=5120, version=2
+         =                       sectsz=512   sunit=64 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+[root@hp-dl360g9-15 xfstests]# uname -a
+Linux hp-dl360g9-15 4.10.0-rc4 #18 SMP Wed Jan 18 11:39:05 CST 2017 x86_64 x86_64 x86_64 GNU/Linux
+[root@hp-dl360g9-15 xfstests]# free -m
+              total        used        free      shared  buff/cache   available
+Mem:          64305         305       61774           9        2225       63369
+Swap:         16379           0       16379
+[root@hp-dl360g9-15 xfstests]# lscpu
+Architecture:          x86_64
+CPU op-mode(s):        32-bit, 64-bit
+Byte Order:            Little Endian
+CPU(s):                16
+On-line CPU(s) list:   0-15
+Thread(s) per core:    1
+Core(s) per socket:    8
+Socket(s):             2
+NUMA node(s):          2
+Vendor ID:             GenuineIntel
+CPU family:            6
+Model:                 63
+Model name:            Intel(R) Xeon(R) CPU E5-2630 v3 @ 2.40GHz
+Stepping:              2
+CPU MHz:               2400.000
+BogoMIPS:              4801.69
+Virtualization:        VT-x
+L1d cache:             32K
+L1i cache:             32K
+L2 cache:              256K
+L3 cache:              20480K
+NUMA node0 CPU(s):     0-3,8-11
+NUMA node1 CPU(s):     4-7,12-15
+
+dmesg
+[ 3484.480115] run fstests xfs/297 at 2017-01-20 15:08:20
+[ 3484.886396] XFS (dm-5): Unmounting Filesystem
+[ 3488.139739] XFS (dm-5): Mounting V5 Filesystem
+[ 3488.308905] XFS (dm-5): Ending clean mount
+[ 3620.466136] ------------[ cut here ]------------
+[ 3620.490181] WARNING: CPU: 0 PID: 1302 at fs/iomap.c:768 iomap_dio_actor+0x39e/0x3b0
+[ 3620.529312] Modules linked in: brd xt_CHECKSUM ipt_MASQUERADE nf_nat_masquerade_ipv4 tun ip6t_rpfilter ipt_REJECT nf_reject_ipv4 ip6t_REJECT nf_reject_ipv6 xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_security iptable_raw ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter intel_rapl sb_edac edac_core x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul ghash_clmulni_intel pcbc ipmi_ssif aesni_intel crypto_simd ipmi_si glue_helper iTCO_wdt cryptd sg iTCO_vendor_support ipmi_devintf hpilo hpwdt pcspkr ipmi_msghandler
+[ 3620.851354]  shpchp ioatdma pcc_cpufreq i2c_i801 lpc_ich wmi acpi_power_meter acpi_cpufreq dca nfsd auth_rpcgss nfs_acl lockd grace sunrpc ip_tables xfs libcrc32c mgag200 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops sd_mod ttm tg3 uas drm ptp usb_storage crc32c_intel serio_raw hpsa pps_core i2c_core fjes scsi_transport_sas dm_mirror dm_region_hash dm_log dm_mod
+[ 3621.009180] CPU: 0 PID: 1302 Comm: fsstress Not tainted 4.10.0-rc4 #18
+[ 3621.041709] Hardware name: HP ProLiant DL360 Gen9, BIOS P89 05/06/2015
+[ 3621.071020] Call Trace:
+[ 3621.081930]  dump_stack+0x63/0x87
+[ 3621.096754]  __warn+0xd1/0xf0
+[ 3621.109991]  warn_slowpath_null+0x1d/0x20
+[ 3621.128045]  iomap_dio_actor+0x39e/0x3b0
+[ 3621.145575]  ? iomap_dio_zero+0x110/0x110
+[ 3621.163733]  iomap_apply+0xb3/0x130
+[ 3621.179539]  iomap_dio_rw+0x216/0x3c0
+[ 3621.195961]  ? iomap_dio_zero+0x110/0x110
+[ 3621.214328]  xfs_file_dio_aio_read+0x6e/0xf0 [xfs]
+[ 3621.235734]  xfs_file_read_iter+0xab/0xc0 [xfs]
+[ 3621.255995]  __vfs_read+0xe0/0x150
+[ 3621.271168]  vfs_read+0x8c/0x130
+[ 3621.286163]  SyS_read+0x55/0xc0
+[ 3621.300614]  do_syscall_64+0x67/0x180
+[ 3621.317058]  entry_SYSCALL64_slow_path+0x25/0x25
+[ 3621.337701] RIP: 0033:0x7fde7df47480
+[ 3621.353725] RSP: 002b:00007ffdc025a108 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+[ 3621.387617] RAX: ffffffffffffffda RBX: 0000000000000059 RCX: 00007fde7df47480
+[ 3621.419714] RDX: 0000000000019600 RSI: 00007fde78000e00 RDI: 0000000000000003
+[ 3621.451452] RBP: 0000000000000003 R08: 0000000000000000 R09: 0000000000019830
+[ 3621.483487] R10: 000000000000007a R11: 0000000000000246 R12: 0000000000019600
+[ 3621.518697] R13: 0000000000363200 R14: 00007fde78000e00 R15: 0000000000000000
+[ 3621.553276] ---[ end trace 2e994b2d00c5ff37 ]---
+[ 3639.346520] XFS (dm-5): Unmounting Filesystem
+[ 3650.234532] XFS (dm-5): Mounting V5 Filesystem
+[ 3650.370766] XFS (dm-5): Ending clean mount
+[ 3650.465012] XFS (dm-4): Unmounting Filesystem
+[ 3650.577045] XFS (dm-5): Unmounting Filesystem
