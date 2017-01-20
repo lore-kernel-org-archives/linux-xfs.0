@@ -1,73 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17339 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751979AbdARUzW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2017 15:55:22 -0500
-Date: Wed, 18 Jan 2017 12:55:12 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix xfs_mode_to_ftype() prototype
-Message-ID: <20170118205512.GA12985@birch.djwong.org>
-References: <20170118151353.1544332-1-arnd@arndb.de>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36792 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751840AbdATK6Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 05:58:25 -0500
+Received: by mail-oi0-f65.google.com with SMTP id u143so5223322oif.3
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2017 02:58:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170118151353.1544332-1-arnd@arndb.de>
+In-Reply-To: <d1fbdb06-ae8a-d2db-cd02-bb5f06e7edfc@sandeen.net>
+References: <1484116217-7594-1-git-send-email-amir73il@gmail.com> <d1fbdb06-ae8a-d2db-cd02-bb5f06e7edfc@sandeen.net>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 20 Jan 2017 12:58:24 +0200
+Message-ID: <CAOQ4uxjbYZh8Wr28kJiUX6bnTn-bxgApKOA7qxwrbDA=Y31sVg@mail.gmail.com>
+Subject: Re: [PATCH v3] xfsprogs: replace xfs_mode_to_ftype table with switch statement
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Brian Foster <bfoster@redhat.com>, Amir Goldstein <amir73il@gmail.com>, linux-kernel@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Wed, Jan 18, 2017 at 04:12:58PM +0100, Arnd Bergmann wrote:
-> A harmless warning just got introduced:
-> 
-> fs/xfs/libxfs/xfs_dir2.h:40:8: error: type qualifiers ignored on function return type [-Werror=ignored-qualifiers]
-> 
-> Removing the 'const' modifier avoids the warning and has no
-> other effect.
-> 
-> Fixes: 1fc4d33fed12 ("xfs: replace xfs_mode_to_ftype table with switch statement")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+On Wed, Jan 11, 2017 at 6:23 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 1/11/17 12:30 AM, Amir Goldstein wrote:
+>> The size of the xfs_mode_to_ftype[] conversion table
+>> was too small to handle an invalid value of mode=S_IFMT.
+>>
+>> Instead of fixing the table size, replace the conversion table
+>> with a conversion helper that uses a switch statement.
+>>
+>> Suggested-by: Christoph Hellwig <hch@lst.de>
+>> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+>> ---
+>>  libxfs/xfs_dir2.c    | 36 ++++++++++++++++++++++--------------
+>>  libxfs/xfs_dir2.h    |  5 ++---
+>>  repair/dino_chunks.c |  6 +-----
+>>  repair/phase6.c      |  2 +-
+>>  4 files changed, 26 insertions(+), 23 deletions(-)
+>>
+>> Eric,
+>>
+>> This is a matching patch to the one that got Reviewed-by Darrick for kernel.
+>>
+>> Tested xfs_repair with the new xfs/348 test with -n ftype=0|1.
+>
+> Thanks, I'll pull this in after Darrick commits it to the kernel.
+>
 
-Applied, thanks.
-
---D
-
-> ---
->  fs/xfs/libxfs/xfs_dir2.c | 2 +-
->  fs/xfs/libxfs/xfs_dir2.h | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index eb64f3884d3d..2f389d366e93 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -38,7 +38,7 @@ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
->  /*
->   * Convert inode mode to directory entry filetype
->   */
-> -const unsigned char xfs_mode_to_ftype(int mode)
-> +unsigned char xfs_mode_to_ftype(int mode)
->  {
->  	switch (mode & S_IFMT) {
->  	case S_IFREG:
-> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-> index d4b77ab37a98..d6e6d9d16f6c 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.h
-> +++ b/fs/xfs/libxfs/xfs_dir2.h
-> @@ -37,7 +37,7 @@ extern struct xfs_name	xfs_name_dotdot;
->  /*
->   * Convert inode mode to directory entry filetype
->   */
-> -extern const unsigned char xfs_mode_to_ftype(int mode);
-> +extern unsigned char xfs_mode_to_ftype(int mode);
->  
->  /*
->   * directory operations vector for encode/decode routines
-> -- 
-> 2.9.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+FYI, commit is in kernel and xfstest xfs/348 which sanity tests
+xfs_repair with this change
+is already merged as well.
