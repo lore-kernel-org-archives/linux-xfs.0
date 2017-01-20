@@ -1,24 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:22346 "EHLO
-        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753131AbdATQgp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 11:36:45 -0500
-Date: Fri, 20 Jan 2017 08:34:51 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from sandeen.net ([63.231.237.45]:52084 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753160AbdATT0O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Jan 2017 14:26:14 -0500
 Subject: Re: [PATCH] xfs: do not call xfs_buf_hash_destroy on a NULL pag
-Message-ID: <20170120163451.GD12985@birch.djwong.org>
 References: <20170120142642.21698-1-colin.king@canonical.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <113b0890-ef1f-0a27-34c1-95785a4d1d17@sandeen.net>
+Date: Fri, 20 Jan 2017 13:26:12 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 In-Reply-To: <20170120142642.21698-1-colin.king@canonical.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Colin King <colin.king@canonical.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Colin King <colin.king@canonical.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Jan 20, 2017 at 02:26:42PM +0000, Colin King wrote:
+On 1/20/17 8:26 AM, Colin King wrote:
 > From: Colin Ian King <colin.king@canonical.com>
 > 
 > If pag cannot be allocated, the current error exit path will trip
@@ -31,11 +30,7 @@ On Fri, Jan 20, 2017 at 02:26:42PM +0000, Colin King wrote:
 > 
 > Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Applied, thanks.
-
---D
+Hm, I think this leaves the code with issues.
 
 > ---
 >  fs/xfs/xfs_mount.c | 3 ++-
@@ -51,6 +46,14 @@ Applied, thanks.
 >  		if (!pag)
 > -			goto out_unwind;
 > +			goto out_unwind_pags;
+
+So let's say we got to index == 3 at the top of the loop, and
+this fails.
+
+We succeeded in initializing 0, 1, and 2, but 3 failed.
+
+So we go to out_unwind_pags with index == 3...
+
 >  		pag->pag_agno = index;
 >  		pag->pag_mount = mp;
 >  		spin_lock_init(&pag->pag_ici_lock);
@@ -59,13 +62,35 @@ Applied, thanks.
 >  	xfs_buf_hash_destroy(pag);
 >  	kmem_free(pag);
 > +out_unwind_pags:
+
+... where index == 3, and:
+
 >  	for (; index > first_initialised; index--) {
 >  		pag = radix_tree_delete(&mp->m_perag_tree, index);
+
+this should fail, because it never got inserted, and...
+
 >  		xfs_buf_hash_destroy(pag);
-> -- 
-> 2.10.2
+
+this still tries to destroy a NULL pag, no?
+
+There also seems to be an existing issue w/the code where ag 0 is
+never torn down in the error case, because first_initialized doesn't
+stay set to 0:
+
+                if (!first_initialised)
+                        first_initialised = index;
+
+And we don't even tear down ag 1, because:
+
+>  	for (; index > first_initialised; index--) {
+>  		pag = radix_tree_delete(&mp->m_perag_tree, index);
+
+when the loop reaches the first initialized AG, it stops.
+
+So we seem to always leak at least 2 if we managed to get far enough
+to initialize them.
+
+-Eric
+
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
