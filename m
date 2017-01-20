@@ -1,148 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imslp-west.kjsl.com ([65.50.211.133]:35350 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-        with ESMTP id S1753161AbdASPP4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Jan 2017 10:15:56 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3] xfs: fix COW writeback race
-Date: Thu, 19 Jan 2017 15:51:12 +0100
-Message-Id: <1484837472-14368-1-git-send-email-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:29243 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753217AbdATUZe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 15:25:34 -0500
+Subject: [PATCH 2/5] xfs_db: fix the 'source' command when passed as a -c
+ option
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 20 Jan 2017 12:25:28 -0800
+Message-ID: <148494392855.5256.2805905613919243845.stgit@birch.djwong.org>
+In-Reply-To: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Due to the way how xfs_iomap_write_allocate tries to convert the whole
-found extents from delalloc to real space we can run into a race
-condition with multiple threads doing writes to this same extent.
-For the non-COW case that is harmless as the only thing that can happen
-is that we call xfs_bmapi_write on an extent that has already been
-converted to a real allocation.  For COW writes where we move the extent
-from the COW to the data fork after I/O completion the race is, however,
-not quite as harmless.  In the worst case we are now calling
-xfs_bmapi_write on a region that contains hole in the COW work, which
-will trip up an assert in debug builds or lead to file system corruption
-in non-debug builds.  This seems to be reproducible with workloads of
-small O_DSYNC write, although so far I've not managed to come up with
-a with an isolated reproducer.
+The 'source' command is supposed to read commands out of a file and
+execute them.  This works great when done from an interactive command
+line, but it doesn't work at all when invoked from the command line
+because we never actually do anything with the opened file.
 
-The fix for the issue is relatively simple:  tell xfs_bmapi_write
-that we are only asked to convert delayed allocations and skip holes
-in that case.
+So don't load stdin into the input stack when we're only executing
+command line options, and use that to decide if source_f is executing
+from the command line so that we can actually run the input loop.  We'll
+use this for the per-field fuzzing xfstests.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 44 ++++++++++++++++++++++++++++++++------------
- fs/xfs/libxfs/xfs_bmap.h |  6 +++++-
- fs/xfs/xfs_iomap.c       |  2 +-
- 3 files changed, 38 insertions(+), 14 deletions(-)
+ db/init.c  |    2 +-
+ db/input.c |   29 +++++++++++++++++++++++++++--
+ 2 files changed, 28 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 44773c9..ab82dd4 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4514,8 +4514,6 @@ xfs_bmapi_write(
- 	int			n;		/* current extent index */
- 	xfs_fileoff_t		obno;		/* old block number (offset) */
- 	int			whichfork;	/* data or attr fork */
--	char			inhole;		/* current location is hole in file */
--	char			wasdelay;	/* old extent was delayed */
+
+diff --git a/db/init.c b/db/init.c
+index e60ac66..46af024 100644
+--- a/db/init.c
++++ b/db/init.c
+@@ -254,7 +254,6 @@ main(
+ 	char	**v;
+ 	int	start_iocur_sp;
  
- #ifdef DEBUG
- 	xfs_fileoff_t		orig_bno;	/* original block number value */
-@@ -4603,22 +4601,44 @@ xfs_bmapi_write(
- 	bma.firstblock = firstblock;
+-	pushfile(stdin);
+ 	init(argc, argv);
+ 	start_iocur_sp = iocur_sp;
  
- 	while (bno < end && n < *nmap) {
--		inhole = eof || bma.got.br_startoff > bno;
--		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
-+		bool			need_alloc = false, wasdelay = false;
+@@ -269,6 +268,7 @@ main(
+ 		goto close_devices;
+ 	}
  
--		/*
--		 * Make sure we only reflink into a hole.
--		 */
--		if (flags & XFS_BMAPI_REMAP)
--			ASSERT(inhole);
--		if (flags & XFS_BMAPI_COWFORK)
--			ASSERT(!inhole);
-+		/* in hole or beyoned EOF? */
-+		if (eof || bma.got.br_startoff > bno) {
-+			if (flags & XFS_BMAPI_DELALLOC) {
-+				/*
-+				 * For the COW fork we can reasonably get a
-+				 * request for converting an extent that races
-+				 * with other threads already having converted
-+				 * part of it, as there converting COW to
-+				 * regular blocks is not protected using the
-+				 * IOLOCK.
-+				 */
-+				ASSERT(flags & XFS_BMAPI_COWFORK);
-+				if (!(flags & XFS_BMAPI_COWFORK)) {
-+					error = -EIO;
-+					goto error0;
-+				}
++	pushfile(stdin);
+ 	while (!done) {
+ 		if ((input = fetchline()) == NULL)
+ 			break;
+diff --git a/db/input.c b/db/input.c
+index 8f65190..7b12c97 100644
+--- a/db/input.c
++++ b/db/input.c
+@@ -145,6 +145,12 @@ get_prompt(void)
+ 	return prompt;
+ }
+ 
++static bool
++interactive_input(void)
++{
++	return inputstacksize == 1 && inputstack[0] == stdin;
++}
 +
-+				if (eof || bno >= end)
-+					break;
-+			} else {
-+				need_alloc = true;
-+			}
-+		} else {
-+			/*
-+			 * Make sure we only reflink into a hole.
-+			 */
-+			ASSERT(!(flags & XFS_BMAPI_REMAP));
-+			if (isnullstartblock(bma.got.br_startblock))
-+				wasdelay = true;
-+		}
+ static char *
+ fetchline_internal(void)
+ {
+@@ -156,7 +162,9 @@ fetchline_internal(void)
  
- 		/*
- 		 * First, deal with the hole before the allocated space
- 		 * that we found, if any.
- 		 */
--		if (inhole || wasdelay) {
-+		if (need_alloc || wasdelay) {
- 			bma.eof = eof;
- 			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
- 			bma.wasdel = wasdelay;
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index cecd094..cdef87d 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -110,6 +110,9 @@ struct xfs_extent_free_item
- /* Map something in the CoW fork. */
- #define XFS_BMAPI_COWFORK	0x200
+ 	rval = NULL;
+ 	for (rlen = iscont = 0; ; ) {
+-		if (inputstacksize == 1) {
++		if (curinput == NULL)
++			return NULL;
++		if (interactive_input()) {
+ 			if (iscont)
+ 				dbprintf("... ");
+ 			else
+@@ -183,7 +191,8 @@ fetchline_internal(void)
+ 		    (len = strlen(buf)) == 0) {
+ 			popfile();
+ 			if (curinput == NULL) {
+-				dbprintf("\n");
++				if (interactive_input())
++					dbprintf("\n");
+ 				return NULL;
+ 			}
+ 			iscont = 0;
+@@ -314,12 +323,28 @@ source_f(
+ 	char	**argv)
+ {
+ 	FILE	*f;
++	int	c, done = 0;
++	char	*input;
++	char	**v;
  
-+/* Only convert delalloc space, don't allocate entirely new extents */
-+#define XFS_BMAPI_DELALLOC	0x400
+ 	f = fopen(argv[1], "r");
+ 	if (f == NULL)
+ 		dbprintf(_("can't open %s\n"), argv[0]);
+ 	else
+ 		pushfile(f);
 +
- #define XFS_BMAPI_FLAGS \
- 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
- 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-@@ -120,7 +123,8 @@ struct xfs_extent_free_item
- 	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
- 	{ XFS_BMAPI_ZERO,	"ZERO" }, \
- 	{ XFS_BMAPI_REMAP,	"REMAP" }, \
--	{ XFS_BMAPI_COWFORK,	"COWFORK" }
-+	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
-+	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }
++	/* If this isn't an interactive shell, run the commands now. */
++	if (inputstacksize == 0 || inputstack[0] == stdin)
++		return 0;
++	while (!done) {
++		if ((input = fetchline_internal()) == NULL)
++			break;
++		v = breakline(input, &c);
++		if (c)
++			done = command(c, v);
++		doneline(input, v);
++	}
++
+ 	return 0;
+ }
  
- 
- static inline int xfs_bmapi_aflag(int w)
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index ca137b7..7ee8629 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -795,7 +795,7 @@ xfs_iomap_write_allocate(
- 	xfs_trans_t	*tp;
- 	int		nimaps;
- 	int		error = 0;
--	int		flags = 0;
-+	int		flags = XFS_BMAPI_DELALLOC;
- 	int		nres;
- 
- 	if (whichfork == XFS_COW_FORK)
--- 
-2.1.4
 
