@@ -1,232 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24893 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751043AbdAUIB2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:01:28 -0500
-Subject: [PATCH 11/55] xfs: have getfsmap fall back to the freesp btrees
- when rmap is not present
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 21 Jan 2017 00:01:26 -0800
-Message-ID: <148498568598.15323.2310542685404874799.stgit@birch.djwong.org>
-In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
-References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:34674 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752155AbdATO1v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 09:27:51 -0500
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] xfs: do not call xfs_buf_hash_destroy on a NULL pag
+Date: Fri, 20 Jan 2017 14:26:42 +0000
+Message-Id: <20170120142642.21698-1-colin.king@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-If the reverse-mapping btree isn't available, fall back to the
-free space btrees to provide partial reverse mapping information.
-The online scrub tool can make use of even partial information to
-speed up the data block scan.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+If pag cannot be allocated, the current error exit path will trip
+a null pointer deference error when calling xfs_buf_hash_destroy
+with a null pag.  Fix this by adding a new error exit lable and
+jumping to this, avoiding the hash destroy and unnecessary kmem_free
+on pag.
+
+Fixes CoverityScan CID#1397628 ("Dereference after null check")
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- fs/xfs/xfs_fsmap.c |  153 +++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 150 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_mount.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index d729581..4e364f8 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -39,6 +39,7 @@
- #include "xfs_fsmap.h"
- #include "xfs_refcount.h"
- #include "xfs_refcount_btree.h"
-+#include "xfs_alloc_btree.h"
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 9b9540d..4e66cd19 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -207,7 +207,7 @@ xfs_initialize_perag(
  
- /* Convert an xfs_fsmap to an fsmap. */
- void
-@@ -125,6 +126,7 @@ xfs_fsmap_owner_from_rmap(
- 	case XFS_RMAP_OWN_INODES:
- 	case XFS_RMAP_OWN_REFC:
- 	case XFS_RMAP_OWN_COW:
-+	case XFS_RMAP_OWN_NULL:	/* "free" */
- 		fmr->fmr_owner = rm->rm_owner;
- 		return 0;
- 	default:
-@@ -396,6 +398,31 @@ xfs_getfsmap_rtdev_helper(
- 	return xfs_getfsmap_helper(mp, info, rec, rec_daddr);
- }
- 
-+/* Transform a bnobt irec into a fsmap */
-+STATIC int
-+xfs_getfsmap_datadev_bnobt_helper(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_alloc_rec_incore	*rec,
-+	void				*priv)
-+{
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	struct xfs_getfsmap_info	*info = priv;
-+	struct xfs_rmap_irec		irec;
-+	xfs_fsblock_t			fsb;
-+	xfs_daddr_t			rec_daddr;
-+
-+	fsb = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno, rec->ar_startblock);
-+	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb);
-+
-+	irec.rm_startblock = rec->ar_startblock;
-+	irec.rm_blockcount = rec->ar_blockcount;
-+	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
-+	irec.rm_offset = 0;
-+	irec.rm_flags = 0;
-+
-+	return xfs_getfsmap_helper(mp, info, &irec, rec_daddr);
-+}
-+
- /* Set rmap flags based on the getfsmap flags */
- static void
- xfs_getfsmap_set_irec_flags(
-@@ -583,6 +610,125 @@ xfs_getfsmap_datadev(
- 	return error;
- }
- 
-+/* Execute a getfsmap query against the regular data device's bnobt. */
-+STATIC int
-+xfs_getfsmap_datadev_bnobt(
-+	struct xfs_trans		*tp,
-+	struct xfs_fsmap		*keys,
-+	struct xfs_getfsmap_info	*info)
-+{
-+	struct xfs_mount		*mp = tp->t_mountp;
-+	struct xfs_btree_cur		*bt_cur = NULL;
-+	struct xfs_fsmap		*dkey_low;
-+	struct xfs_fsmap		*dkey_high;
-+	struct xfs_alloc_rec_incore	alow;
-+	struct xfs_alloc_rec_incore	ahigh;
-+	xfs_fsblock_t			start_fsb;
-+	xfs_fsblock_t			end_fsb;
-+	xfs_agnumber_t			start_ag;
-+	xfs_agnumber_t			end_ag;
-+	xfs_daddr_t			eofs;
-+	int				error = 0;
-+
-+	dkey_low = keys;
-+	dkey_high = keys + 1;
-+	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-+	if (dkey_low->fmr_physical >= eofs)
-+		return 0;
-+	if (dkey_high->fmr_physical >= eofs)
-+		dkey_high->fmr_physical = eofs - 1;
-+	start_fsb = XFS_DADDR_TO_FSB(mp, dkey_low->fmr_physical);
-+	end_fsb = XFS_DADDR_TO_FSB(mp, dkey_high->fmr_physical);
-+
-+	/* Set up search keys */
-+	info->low.rm_startblock = XFS_FSB_TO_AGBNO(mp, start_fsb);
-+	info->low.rm_offset = XFS_BB_TO_FSBT(mp, dkey_low->fmr_offset);
-+	error = xfs_fsmap_owner_to_rmap(dkey_low, &info->low);
-+	if (error)
-+		return error;
-+	info->low.rm_blockcount = 0;
-+	xfs_getfsmap_set_irec_flags(&info->low, dkey_low);
-+
-+	info->high.rm_startblock = -1U;
-+	info->high.rm_owner = ULLONG_MAX;
-+	info->high.rm_offset = ULLONG_MAX;
-+	info->high.rm_blockcount = 0;
-+	info->high.rm_flags = XFS_RMAP_KEY_FLAGS | XFS_RMAP_REC_FLAGS;
-+
-+	info->missing_owner = FMR_OWN_UNKNOWN;
-+
-+	start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
-+	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
-+
-+	/* Query each AG */
-+	for (info->agno = start_ag; info->agno <= end_ag; info->agno++) {
-+		if (info->agno == end_ag) {
-+			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
-+					end_fsb);
-+			info->high.rm_offset = XFS_BB_TO_FSBT(mp,
-+					dkey_high->fmr_offset);
-+			error = xfs_fsmap_owner_to_rmap(dkey_high, &info->high);
-+			if (error)
-+				goto err;
-+			xfs_getfsmap_set_irec_flags(&info->high, dkey_high);
-+		}
-+
-+		if (bt_cur) {
-+			xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
-+			bt_cur = NULL;
-+			info->agf_bp = NULL;
-+		}
-+
-+		error = xfs_alloc_read_agf(mp, tp, info->agno, 0,
-+				&info->agf_bp);
-+		if (error)
-+			goto err;
-+
-+		trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
-+				info->low.rm_startblock,
-+				info->low.rm_blockcount,
-+				info->low.rm_owner,
-+				info->low.rm_offset);
-+
-+		trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
-+				info->high.rm_startblock,
-+				info->high.rm_blockcount,
-+				info->high.rm_owner,
-+				info->high.rm_offset);
-+
-+		bt_cur = xfs_allocbt_init_cursor(mp, tp, info->agf_bp,
-+				info->agno, XFS_BTNUM_BNO);
-+		alow.ar_startblock = info->low.rm_startblock;
-+		ahigh.ar_startblock = info->high.rm_startblock;
-+		error = xfs_alloc_query_range(bt_cur, &alow, &ahigh,
-+				xfs_getfsmap_datadev_bnobt_helper, info);
-+		if (error)
-+			goto err;
-+
-+		if (info->agno == start_ag) {
-+			info->low.rm_startblock = 0;
-+			info->low.rm_owner = 0;
-+			info->low.rm_offset = 0;
-+			info->low.rm_flags = 0;
-+		}
-+	}
-+
-+	/* Report any free space at the end of the AG */
-+	info->last = true;
-+	error = xfs_getfsmap_datadev_bnobt_helper(bt_cur, &ahigh, info);
-+	if (error)
-+		goto err;
-+
-+err:
-+	if (bt_cur)
-+		xfs_btree_del_cursor(bt_cur, error < 0 ? XFS_BTREE_ERROR :
-+							 XFS_BTREE_NOERROR);
-+	if (info->agf_bp)
-+		info->agf_bp = NULL;
-+
-+	return error;
-+}
-+
- /* Do we recognize the device? */
- STATIC bool
- xfs_getfsmap_is_valid_device(
-@@ -651,8 +797,6 @@ xfs_getfsmap(
- 	int				i;
- 	int				error = 0;
- 
--	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
--		return -EOPNOTSUPP;
- 	if (head->fmh_iflags & ~FMH_IF_VALID)
- 		return -EINVAL;
- 	rkey_low = head->fmh_keys;
-@@ -666,7 +810,10 @@ xfs_getfsmap(
- 	/* Set up our device handlers. */
- 	memset(handlers, 0, sizeof(handlers));
- 	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
--	handlers[0].fn = xfs_getfsmap_datadev;
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		handlers[0].fn = xfs_getfsmap_datadev;
-+	else
-+		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
- 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
- 		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
- 		handlers[1].fn = xfs_getfsmap_logdev;
+ 		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
+ 		if (!pag)
+-			goto out_unwind;
++			goto out_unwind_pags;
+ 		pag->pag_agno = index;
+ 		pag->pag_mount = mp;
+ 		spin_lock_init(&pag->pag_ici_lock);
+@@ -242,6 +242,7 @@ xfs_initialize_perag(
+ out_unwind:
+ 	xfs_buf_hash_destroy(pag);
+ 	kmem_free(pag);
++out_unwind_pags:
+ 	for (; index > first_initialised; index--) {
+ 		pag = radix_tree_delete(&mp->m_perag_tree, index);
+ 		xfs_buf_hash_destroy(pag);
+-- 
+2.10.2
 
