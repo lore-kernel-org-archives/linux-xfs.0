@@ -1,58 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:56220 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751441AbdARPOR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2017 10:14:17 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] xfs: fix xfs_mode_to_ftype() prototype
-Date: Wed, 18 Jan 2017 16:12:58 +0100
-Message-Id: <20170118151353.1544332-1-arnd@arndb.de>
+Received: from sandeen.net ([63.231.237.45]:38232 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751954AbdATWUz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Jan 2017 17:20:55 -0500
+Subject: Re: [PATCH 4/5] xfs_repair: zero shared_vn
+References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+ <148494394162.5256.166843220095123974.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <933788b7-2156-357e-029d-03294bf8f5bf@sandeen.net>
+Date: Fri, 20 Jan 2017 16:20:27 -0600
+MIME-Version: 1.0
+In-Reply-To: <148494394162.5256.166843220095123974.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Brian Foster <bfoster@redhat.com>, Amir Goldstein <amir73il@gmail.com>, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-A harmless warning just got introduced:
+On 1/20/17 2:25 PM, Darrick J. Wong wrote:
+> Since shared_vn always has to be zero, zero it at the end of repair.
 
-fs/xfs/libxfs/xfs_dir2.h:40:8: error: type qualifiers ignored on function return type [-Werror=ignored-qualifiers]
+If it's not, shouldn't it be properly warned, fixed, exit-code
+set, etc?
 
-Removing the 'const' modifier avoids the warning and has no
-other effect.
-
-Fixes: 1fc4d33fed12 ("xfs: replace xfs_mode_to_ftype table with switch statement")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- fs/xfs/libxfs/xfs_dir2.c | 2 +-
- fs/xfs/libxfs/xfs_dir2.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index eb64f3884d3d..2f389d366e93 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -38,7 +38,7 @@ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
- /*
-  * Convert inode mode to directory entry filetype
-  */
--const unsigned char xfs_mode_to_ftype(int mode)
-+unsigned char xfs_mode_to_ftype(int mode)
- {
- 	switch (mode & S_IFMT) {
- 	case S_IFREG:
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index d4b77ab37a98..d6e6d9d16f6c 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -37,7 +37,7 @@ extern struct xfs_name	xfs_name_dotdot;
- /*
-  * Convert inode mode to directory entry filetype
-  */
--extern const unsigned char xfs_mode_to_ftype(int mode);
-+extern unsigned char xfs_mode_to_ftype(int mode);
+-Eric
  
- /*
-  * directory operations vector for encode/decode routines
--- 
-2.9.0
-
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  repair/xfs_repair.c |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> 
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index 622d569..ecfa6b4 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -1050,6 +1050,9 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
+>  			be32_to_cpu(dsb->sb_unit), be32_to_cpu(dsb->sb_width));
+>  	}
+>  
+> +	/* shared_vn is always zero. */
+> +	dsb->sb_shared_vn = 0;
+> +
+>  	libxfs_writebuf(sbp, 0);
+>  
+>  	/*
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
