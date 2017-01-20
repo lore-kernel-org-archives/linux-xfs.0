@@ -1,112 +1,195 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:34879 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751045AbdAQVEK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2017 16:04:10 -0500
-Received: by mail-io0-f194.google.com with SMTP id m98so17109334iod.2
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Jan 2017 13:04:10 -0800 (PST)
-Content-Type: multipart/signed; boundary="Apple-Mail=_3F1B0F1C-EDE1-486B-8DD2-6D2F9C267C7A"; protocol="application/pgp-signature"; micalg=pgp-sha256
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
-From: Andreas Dilger <adilger@dilger.ca>
-In-Reply-To: <20170117155916.dcizr65bwa6behe7@thunk.org>
-Date: Tue, 17 Jan 2017 14:04:03 -0700
-Message-Id: <7EC66AC2-1900-4328-A408-65079616A518@dilger.ca>
-References: <20170106141107.23953-1-mhocko@kernel.org> <20170106141107.23953-9-mhocko@kernel.org> <20170117025607.frrcdbduthhutrzj@thunk.org> <20170117082425.GD19699@dhcp22.suse.cz> <20170117151817.GR19699@dhcp22.suse.cz> <20170117155916.dcizr65bwa6behe7@thunk.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37886 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752481AbdATXdw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Jan 2017 18:33:52 -0500
+Subject: Re: [PATCH 1/5] xfs_db: sanitize geometry on load
+References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+ <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <86cd1f7f-f433-997b-8bbc-94e4c72a860f@redhat.com>
+Date: Fri, 20 Jan 2017 17:33:50 -0600
+MIME-Version: 1.0
+In-Reply-To: <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Michal Hocko <mhocko@kernel.org>, Jan Kara <jack@suse.cz>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-
---Apple-Mail=_3F1B0F1C-EDE1-486B-8DD2-6D2F9C267C7A
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=us-ascii
-
-On Jan 17, 2017, at 8:59 AM, Theodore Ts'o <tytso@mit.edu> wrote:
+On 1/20/17 2:25 PM, Darrick J. Wong wrote:
+> xfs_db doesn't check the filesystem geometry when it's mounting, which
+> means that garbage agcount values can cause OOMs when we try to allocate
+> all the per-AG incore metadata.  If we see geometry that looks
+> suspicious, try to derive the actual AG geometry to avoid crashing the
+> system.  This should help with xfs/1301 fuzzing.
 > 
-> On Tue, Jan 17, 2017 at 04:18:17PM +0100, Michal Hocko wrote:
->> 
->> OK, so I've been staring into the code and AFAIU current->journal_info
->> can contain my stored information. I could either hijack part of the
->> word as the ref counting is only consuming low 12b. But that looks too
->> ugly to live. Or I can allocate some placeholder.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: Only modify sb_ag{blocks,count} if they seem insane -- use local
+> variables to avoid screwing up the rest of the metadata.
+> v3: Suggest a possible agcount value, but always restrict to 1 AG.
+> v4: Remove the suggested agcount value and make sure we can't exit
+> the program with an exitcode of zero.
+
+ok, but insane_agcount doesn't need to be global... 
+
+> ---
+>  db/init.c |   84 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-------
+>  1 file changed, 74 insertions(+), 10 deletions(-)
 > 
-> Yeah, I was looking at something similar.  Can you guarantee that the
-> context will only take one or two bits?  (Looks like it only needs one
-> bit ATM, even though at the moment you're storing the whole GFP mask,
-> correct?)
 > 
->> But before going to play with that I am really wondering whether we need
->> all this with no journal at all. AFAIU what Jack told me it is the
->> journal lock(s) which is the biggest problem from the reclaim recursion
->> point of view. What would cause a deadlock in no journal mode?
+> diff --git a/db/init.c b/db/init.c
+> index ec1e274..e60ac66 100644
+> --- a/db/init.c
+> +++ b/db/init.c
+> @@ -41,6 +41,7 @@ struct xfs_mount	*mp;
+>  struct xlog		xlog;
+>  libxfs_init_t		x;
+>  xfs_agnumber_t		cur_agno = NULLAGNUMBER;
+> +static bool		insane_agcount;
+
+Not a fan of the global.  Can you make it local, and then
+do something like this:
+
+if (sanitize_agount(&xmount, sbp))
+	insane_agount = true;
+
+>  static void
+>  usage(void)
+> @@ -51,13 +52,80 @@ usage(void)
+>  	exit(1);
+>  }
+>  
+> +/* Try to load a superblock for the given agno, no verifiers. */
+> +static bool
+> +load_sb(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno,
+> +	struct xfs_sb		*sbp)
+
+Now this is always called with agno == 0, so is there any point
+to the arg?  Eh, I guess it's fine.
+
+I can fix up the insane_agcount thing on the way in if you like.
+
+-Eric
+
+> +{
+> +	struct xfs_buf		*bp;
+> +
+> +	bp = libxfs_readbuf(mp->m_ddev_targp,
+> +			    XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+> +			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
+> +
+> +	if (!bp || bp->b_error)
+> +		return false;
+> +
+> +	/* copy SB from buffer to in-core, converting architecture as we go */
+> +	libxfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
+> +	libxfs_putbuf(bp);
+> +	libxfs_purgebuf(bp);
+> +
+> +	return true;
+> +}
+> +
+> +/*
+> + * If the agcount doesn't look sane, suggest a real agcount to the user,
+> + * and pretend agcount = 1 to avoid OOMing libxfs_initialize_perag.
+> + */
+> +static void
+> +sanitize_geometry(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_sb		*sbp)
+> +{
+> +	unsigned int		blocklog;
+> +	unsigned int		blocksize;
+> +	unsigned long long	dblocks;
+> +
+> +	/* If the geometry looks ok, we're done. */
+> +	if (sbp->sb_blocklog >= XFS_MIN_BLOCKSIZE_LOG &&
+> +	    sbp->sb_blocklog <= XFS_MAX_BLOCKSIZE_LOG &&
+> +	    sbp->sb_blocksize == (1 << sbp->sb_blocklog) &&
+> +	    sbp->sb_dblocks * sbp->sb_blocksize <= x.dsize * x.dbsize &&
+> +	    sbp->sb_dblocks <= XFS_MAX_DBLOCKS(sbp) &&
+> +	    sbp->sb_dblocks >= XFS_MIN_DBLOCKS(sbp))
+> +		return;
+> +
+> +	/* Check blocklog and blocksize */
+> +	blocklog = sbp->sb_blocklog;
+> +	blocksize = sbp->sb_blocksize;
+> +	if (blocklog < XFS_MIN_BLOCKSIZE_LOG ||
+> +	    blocklog > XFS_MAX_BLOCKSIZE_LOG)
+> +		blocklog = libxfs_log2_roundup(blocksize);
+> +	if (blocksize != (1 << blocklog))
+> +		blocksize = (1 << blocksize);
+> +
+> +	/* Clamp dblocks to the size of the device. */
+> +	dblocks = sbp->sb_dblocks;
+> +	if (dblocks > x.dsize * x.dbsize / blocksize)
+> +		dblocks = x.dsize * x.dbsize / blocksize;
+> +
+> +	/* Assume 1 AG to avoid OOM. */
+> +	fprintf(stderr,
+> +_("%s: device %s AG count is insane.  Limiting reads to AG 0.\n"),
+> +		progname, fsdevice);
+> +	sbp->sb_agcount = 1;
+> +	insane_agcount = true;
+
+
+
+> +}
+> +
+>  void
+>  init(
+>  	int		argc,
+>  	char		**argv)
+>  {
+>  	struct xfs_sb	*sbp;
+> -	struct xfs_buf	*bp;
+>  	int		c;
+>  
+>  	setlocale(LC_ALL, "");
+> @@ -124,20 +192,12 @@ init(
+>  	 */
+>  	memset(&xmount, 0, sizeof(struct xfs_mount));
+>  	libxfs_buftarg_init(&xmount, x.ddev, x.logdev, x.rtdev);
+> -	bp = libxfs_readbuf(xmount.m_ddev_targp, XFS_SB_DADDR,
+> -			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
+> -
+> -	if (!bp || bp->b_error) {
+> +	if (!load_sb(&xmount, 0, &xmount.m_sb)) {
+>  		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
+>  			"bytes)\n"), progname, fsdevice);
+>  		exit(1);
+>  	}
+>  
+> -	/* copy SB from buffer to in-core, converting architecture as we go */
+> -	libxfs_sb_from_disk(&xmount.m_sb, XFS_BUF_TO_SBP(bp));
+> -	libxfs_putbuf(bp);
+> -	libxfs_purgebuf(bp);
+> -
+>  	sbp = &xmount.m_sb;
+>  	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
+>  		fprintf(stderr, _("%s: %s is not a valid XFS filesystem (unexpected SB magic number 0x%08x)\n"),
+> @@ -148,6 +208,8 @@ init(
+>  		}
+>  	}
+>  
+> +	sanitize_geometry(&xmount, sbp);
+> +
+>  	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
+>  			  LIBXFS_MOUNT_DEBUGGER);
+>  	if (!mp) {
+> @@ -230,5 +292,7 @@ main(
+>  		libxfs_device_close(x.logdev);
+>  	if (x.rtdev)
+>  		libxfs_device_close(x.rtdev);
+> +	if (insane_agcount && exitcode == 0)
+> +		exitcode = 1;
+>  	return exitcode;
+>  }
 > 
-> We still have the original problem for why we need GFP_NOFS even in
-> ext2.  If we are in a writeback path, and we need to allocate memory,
-> we don't want to recurse back into the file system's writeback path.
-> Certainly not for the same inode, and while we could make it work if
-> the mm was writing back another inode, or another superblock, there
-> are also stack depth considerations that would make this be a bad
-> idea.  So we do need to be able to assert GFP_NOFS even in no journal
-> mode, and for any file system including ext2, for that matter.
-> 
-> Because of the fact that we're going to have to play games with
-> current->journal_info, maybe this is something that I should take
-> responsibility for, and to go through the the ext4 tree after the main
-> patch series go through?  Maybe you could use xfs and ext2 as sample
-> (simple) implementations?
-> 
-> My only ask is that the memalloc nofs context be a well defined N
-> bits, where N < 16, and I'll find some place to put them (probably
-> journal_info).
 
-I think Dave was suggesting that the NOFS context allow a pointer to
-an arbitrary struct, so that it is possible to dereference this in
-the filesystem itself to determine if the recursion is safe or not.
-That way, ext2 could store an inode pointer (if that is what it cares
-about) and verify that writeback is not recursing on the same inode,
-and XFS can store something different.  It would also need to store
-some additional info (e.g. fstype or superblock pointer) so that it
-can determine how to interpret the NOFS context pointer.
-
-I think it makes sense to add a couple of void * pointers to the task
-struct along with journal_info and leave it up to the filesystem to
-determine how to use them.
-
-Cheers, Andreas
-
-
-
-
-
-
---Apple-Mail=_3F1B0F1C-EDE1-486B-8DD2-6D2F9C267C7A
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIVAwUBWH6GxHKl2rkXzB/gAQjNAg//X7dQe441ccMxqgZo937oDQfWTdQE7K0C
-0LY7hCYYgZWF8uK33zFzNl4WUSPYZKpyLKqAR8nSE05Pf7MH/2GZHZeuQSr9rgqP
-VSKYOGGdvrNVDnHSjyNfDYd7q+/GWGtrTG/h7UlQNMYa5xJ9UE+Hyrj0pMMIrF3I
-4SzFnFlJ8X9+Zlrnyir6CjZ5R0GQySwpMZRu2ocs0ngkaWuMedQNCjkIjnBM5FdQ
-4o18h7m8upGt8bGrN6YaQtxnyAb6UpnW0IS/YFf/Doyeof0LLojqOzvgdawF2L5w
-5vcKJMbRsiQuel0OM9yHJstlmxqkR+R4xK8CyLAwgplmSij9dZozbsYhCooD8m47
-BTraN+QVgV7jN8k37S2l24zy2Ra4H94ashJ2SuSc+hWd4LCDMMbRpF9C3c36QnPh
-jpX7eCjatMlbx7YwxDjW+HDWzUJa8bEjUXHfHSMzuHtSB4KiMI/i1VoBQeMbyy5a
-bAG+07c4zaOWEyeP1R26i+/Yz5XOAQk8DHHeeTUq/p4Syc+V7VY3wzKQvvvmr3Bz
-EdsPYvl2DnADHMQPuQCslPa35hwnW/qAO0QLOYgNnjlFpu+Ed9sWLaxU9ICfjvlE
-6LrqSixflqRfAmMQlTZuLlzj63EPC4qhvvBB9uLFRis7Yio4sIb6aMx1b/1mp5S+
-d/BgBQjHlFM=
-=1v+V
------END PGP SIGNATURE-----
-
---Apple-Mail=_3F1B0F1C-EDE1-486B-8DD2-6D2F9C267C7A--
