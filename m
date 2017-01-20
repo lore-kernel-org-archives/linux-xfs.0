@@ -1,49 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32658 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752000AbdAUAJh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 19:09:37 -0500
-Date: Fri, 20 Jan 2017 16:09:25 -0800
+Received: from userp1040.oracle.com ([156.151.31.81]:29391 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753383AbdATU0U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 15:26:20 -0500
+Subject: [PATCH 5/5] xfs_repair: trash dirattr btrees that cycle to the root
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v3 4/5] xfs_repair: zero shared_vn
-Message-ID: <20170121000925.GJ12985@birch.djwong.org>
+Date: Fri, 20 Jan 2017 12:25:47 -0800
+Message-ID: <148494394775.5256.15878832693432189642.stgit@birch.djwong.org>
+In-Reply-To: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
 References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
- <148494394162.5256.166843220095123974.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <148494394162.5256.166843220095123974.stgit@birch.djwong.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Since shared_vn always has to be zero, zero it at the start of repair.
+If xfs_repair detects a dir/attr btree that cycles back to the root, the
+tree should be cleared and/or rebuilt instead of simply aborting the
+repair program.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: reset shared_vn in phase 1 and tell the user about it, per sandeen
-v3: more suggestions by sandeen to make the new code more consistent
----
- repair/phase1.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ repair/attr_repair.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/repair/phase1.c b/repair/phase1.c
-index 126d0b3..9799883 100644
---- a/repair/phase1.c
-+++ b/repair/phase1.c
-@@ -138,6 +138,13 @@ _("Cannot disable lazy-counters on V5 fs\n"));
- 		}
- 	}
+
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index b855a10..37a821b 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -763,7 +763,12 @@ process_leaf_attr_level(xfs_mount_t	*mp,
+ 		 * 0 is the root block and no block
+ 		 * pointer can point to the root block of the btree
+ 		 */
+-		ASSERT(da_bno != 0);
++		if (da_bno == 0) {
++			do_warn(
++	_("btree cycle detected in attribute fork for inode %" PRIu64 "\n"),
++				ino);
++			goto error_out;
++		}
  
-+	/* shared_vn should be zero */
-+	if (sb->sb_shared_vn) {
-+		do_warn(_("resetting shared_vn to zero\n"));
-+		sb->sb_shared_vn = 0;
-+		primary_sb_modified = 1;
-+	}
-+
- 	if (primary_sb_modified)  {
- 		if (!no_modify)  {
- 			do_warn(_("writing modified primary superblock\n"));
+ 		if (dev_bno == NULLFSBLOCK) {
+ 			do_warn(
+
