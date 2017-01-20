@@ -1,36 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54562 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750703AbdAWNxw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jan 2017 08:53:52 -0500
-Date: Mon, 23 Jan 2017 05:53:48 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS issues with NVMe SSD
-Message-ID: <20170123135348.GA25320@infradead.org>
-References: <8a562e13-6d86-d9ef-de22-f71d5aa79b60@jlbond.com>
- <dbcc14e5-73e7-4ba0-22d2-646d3e466927@sandeen.net>
- <20170123135048.GB33287@bfoster.bfoster>
+Received: from youngberry.canonical.com ([91.189.89.112]:40581 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751201AbdATXFw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 18:05:52 -0500
+Subject: Re: [PATCH] xfs: do not call xfs_buf_hash_destroy on a NULL pag
+References: <20170120142642.21698-1-colin.king@canonical.com>
+ <113b0890-ef1f-0a27-34c1-95785a4d1d17@sandeen.net>
+ <20170120204703.GF12985@birch.djwong.org>
+From: Colin Ian King <colin.king@canonical.com>
+Message-ID: <58fd1fec-1439-71fc-c482-06c4ba0a4695@canonical.com>
+Date: Fri, 20 Jan 2017 23:04:42 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170123135048.GB33287@bfoster.bfoster>
+In-Reply-To: <20170120204703.GF12985@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Bond Masuda <bond.masuda@jlbond.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jan 23, 2017 at 08:50:48AM -0500, Brian Foster wrote:
-> Since this is limited hardware (I don't have access to such hardware, at
-> least), it might also be helpful to see if you can isolate the problem
-> from a full distro install. For example, can you format such a device
-> external to the rootfs, mount, copy some stuff and reproduce the
-> corruption after some sequence of unmount/remount/reboot operations?
+On 20/01/17 20:47, Darrick J. Wong wrote:
+> On Fri, Jan 20, 2017 at 01:26:12PM -0600, Eric Sandeen wrote:
+>> On 1/20/17 8:26 AM, Colin King wrote:
+>>> From: Colin Ian King <colin.king@canonical.com>
+>>>
+>>> If pag cannot be allocated, the current error exit path will trip
+>>> a null pointer deference error when calling xfs_buf_hash_destroy
+>>> with a null pag.  Fix this by adding a new error exit lable and
+>>> jumping to this, avoiding the hash destroy and unnecessary kmem_free
+>>> on pag.
+>>>
+>>> Fixes CoverityScan CID#1397628 ("Dereference after null check")
+>>>
+>>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+>>
+>> Hm, I think this leaves the code with issues.
+>>
+>>> ---
+>>>  fs/xfs/xfs_mount.c | 3 ++-
+>>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+>>> index 9b9540d..4e66cd19 100644
+>>> --- a/fs/xfs/xfs_mount.c
+>>> +++ b/fs/xfs/xfs_mount.c
+>>> @@ -207,7 +207,7 @@ xfs_initialize_perag(
+>>>  
+>>>  		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
+>>>  		if (!pag)
+>>> -			goto out_unwind;
+>>> +			goto out_unwind_pags;
+>>
+>> So let's say we got to index == 3 at the top of the loop, and
+>> this fails.
+>>
+>> We succeeded in initializing 0, 1, and 2, but 3 failed.
+>>
+>> So we go to out_unwind_pags with index == 3...
+>>
+>>>  		pag->pag_agno = index;
+>>>  		pag->pag_mount = mp;
+>>>  		spin_lock_init(&pag->pag_ici_lock);
+>>> @@ -242,6 +242,7 @@ xfs_initialize_perag(
+>>>  out_unwind:
+>>>  	xfs_buf_hash_destroy(pag);
+>>>  	kmem_free(pag);
+>>> +out_unwind_pags:
+>>
+>> ... where index == 3, and:
+>>
+>>>  	for (; index > first_initialised; index--) {
+>>>  		pag = radix_tree_delete(&mp->m_perag_tree, index);
+>>
+>> this should fail, because it never got inserted, and...
+>>
+>>>  		xfs_buf_hash_destroy(pag);
+>>
+>> this still tries to destroy a NULL pag, no?
+>>
+>> There also seems to be an existing issue w/the code where ag 0 is
+>> never torn down in the error case, because first_initialized doesn't
+>> stay set to 0:
+>>
+>>                 if (!first_initialised)
+>>                         first_initialised = index;
+>>
+>> And we don't even tear down ag 1, because:
+>>
+>>>  	for (; index > first_initialised; index--) {
+>>>  		pag = radix_tree_delete(&mp->m_perag_tree, index);
+>>
+>> when the loop reaches the first initialized AG, it stops.
+>>
+>> So we seem to always leak at least 2 if we managed to get far enough
+>> to initialize them.
+> 
+> Ugh, yeah, the the whole error exit from that function is fubar...
+> Anyone want to clean this up?
 
-I have plenty of NVMe hardware, although none of them is Intel and I've
-never seen corruption like that.  I also don't run Fedora, though :)
+I may step back on this if somebody else wants to fix this up properly.
 
-Does anyone know if the Fedora installer does a fstrim run or something
-similar?  I remember that most Intel NVMe devices had some pretty severe
-deallocate (aka discard on NVMe) bugs.  A firmware update might be a
-good start in that case.
+> 
+> --D
+> 
+>>
+>> -Eric
+>>
+>>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
