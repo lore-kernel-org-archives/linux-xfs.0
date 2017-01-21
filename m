@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20655 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:20683 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751233AbdAUIKB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:10:01 -0500
-Subject: [PATCH 16/17] xfs_scrub: add tweaks for specific non-XFS filesystems
+        with ESMTP id S1751233AbdAUIKH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:10:07 -0500
+Subject: [PATCH 17/17] xfs_scrub: create a script to scrub all xfs
+ filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 21 Jan 2017 00:09:55 -0800
-Message-ID: <148498619548.16675.16698351042982497415.stgit@birch.djwong.org>
+Date: Sat, 21 Jan 2017 00:10:01 -0800
+Message-ID: <148498620194.16675.3628760402065040502.stgit@birch.djwong.org>
 In-Reply-To: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 References: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,250 +19,255 @@ List-Id: xfs
 To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Though xfs_scrub is primarily meant to perform online scrubbing of XFS
-filesystems, it is mostly capable of scrubbing other types.  Some FSes
-need some tweaks, so provide them here.
+Create an xfs_scrub_all command to find all XFS filesystems
+and run an online scrub against them all.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile  |    2 -
- scrub/non_xfs.c |  185 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/scrub.c   |    3 +
- scrub/scrub.h   |    3 +
- 4 files changed, 192 insertions(+), 1 deletion(-)
- create mode 100644 scrub/non_xfs.c
+ debian/control           |    3 +
+ debian/rules             |    1 
+ man/man8/xfs_scrub_all.8 |   32 +++++++++++
+ scrub/Makefile           |   11 +++-
+ scrub/xfs_scrub_all.in   |  133 ++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 176 insertions(+), 4 deletions(-)
+ create mode 100644 man/man8/xfs_scrub_all.8
+ create mode 100644 scrub/xfs_scrub_all.in
 
 
+diff --git a/debian/control b/debian/control
+index ad81662..d7c0316 100644
+--- a/debian/control
++++ b/debian/control
+@@ -3,12 +3,13 @@ Section: admin
+ Priority: optional
+ Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+-Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev
++Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, dh-python
+ Standards-Version: 3.9.1
+ Homepage: http://xfs.org/
+ 
+ Package: xfsprogs
+ Depends: ${shlibs:Depends}, ${misc:Depends}
++Recommends: ${python3:Depends}, util-linux
+ Provides: fsck-backend
+ Suggests: xfsdump, acl, attr, quota
+ Breaks: xfsdump (<< 3.0.0)
+diff --git a/debian/rules b/debian/rules
+index c673380..a870944 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -76,6 +76,7 @@ binary-arch: checkroot built
+ 	$(pkgdi)  $(MAKE) -C debian install-d-i
+ 	$(pkgme)  $(MAKE) dist
+ 	rmdir debian/xfslibs-dev/usr/share/doc/xfsprogs
++	dh_python3
+ 	dh_installdocs
+ 	dh_installchangelogs
+ 	dh_strip
+diff --git a/man/man8/xfs_scrub_all.8 b/man/man8/xfs_scrub_all.8
+new file mode 100644
+index 0000000..5e1420b
+--- /dev/null
++++ b/man/man8/xfs_scrub_all.8
+@@ -0,0 +1,32 @@
++.TH xfs_scrub_all 8
++.SH NAME
++xfs_scrub_all \- scrub all mounted XFS filesystems
++.SH SYNOPSIS
++.B xfs_scrub_all
++.SH DESCRIPTION
++.B xfs_scrub_all
++attempts to read and check all the metadata on all mounted XFS filesystems.
++The online scrub is performed via the
++.B xfs_scrub
++tool, either by running it directly or by using systemd to start it
++in a restricted fashion.
++Mounted filesystems are mapped to physical storage devices so that scrub
++operations can be run in parallel so long as no two scrubbers access
++the same device simultaneously.
++.SH EXIT CODE
++The exit code returned by
++.B xfs_scrub_all
++is the sum of the following conditions:
++.br
++\	0\	\-\ No errors
++.br
++\	4\	\-\ File system errors left uncorrected
++.br
++\	8\	\-\ Operational error
++.br
++\	16\	\-\ Usage or syntax error
++.TP
++These are the same error codes returned by xfs_scrub.
++.br
++.SH SEE ALSO
++.BR xfs_scrub (8).
 diff --git a/scrub/Makefile b/scrub/Makefile
-index d5d58de..42994ba 100644
+index 42994ba..d7cea17 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -13,7 +13,7 @@ INSTALL_SCRUB = install-scrub
+@@ -36,15 +36,20 @@ ifeq ($(HAVE_SYNCFS),yes)
+ LCFLAGS += -DHAVE_SYNCFS
  endif
  
- HFILES = scrub.h ../repair/threads.h read_verify.h iocmd.h xfs_ioctl.h
--CFILES = ../repair/avl64.c disk.c bitmap.c generic.c iocmd.c \
-+CFILES = ../repair/avl64.c disk.c bitmap.c generic.c iocmd.c non_xfs.c \
- 	 read_verify.c scrub.c ../repair/threads.c xfs.c xfs_ioctl.c
+-default: depend $(LTCOMMAND)
++default: depend $(LTCOMMAND) xfs_scrub_all
++
++xfs_scrub_all: xfs_scrub_all.in
++	$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" < $< > $@
++	chmod a+x $@
  
- LLDLIBS += $(LIBBLKID) $(LIBXFS) $(LIBXCMD) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) $(LIBHANDLE)
-diff --git a/scrub/non_xfs.c b/scrub/non_xfs.c
+ include $(BUILDRULES)
+ 
+-install: default $(INSTALL_SCRUB)
++install: $(INSTALL_SCRUB)
+ 
+-install-scrub:
++install-scrub: default
+ 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
++	$(INSTALL) -m 755 xfs_scrub_all $(PKG_ROOT_SBIN_DIR)
+ 
+ install-dev:
+ 
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
 new file mode 100644
-index 0000000..aec9837
+index 0000000..d0a7825
 --- /dev/null
-+++ b/scrub/non_xfs.c
-@@ -0,0 +1,185 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "libxfs.h"
-+#include <dirent.h>
-+#include <sys/statvfs.h>
-+#include <sys/types.h>
-+#include <sys/wait.h>
-+#include "disk.h"
-+#include "scrub.h"
++++ b/scrub/xfs_scrub_all.in
+@@ -0,0 +1,133 @@
++#!/usr/bin/env python3
 +
-+/* Stub scrubbers for non-XFS filesystems. */
++# Run online scrubbers in parallel, but avoid thrashing.
++#
++# Copyright (C) 2017 Oracle.  All rights reserved.
++#
++# Author: Darrick J. Wong <darrick.wong@oracle.com>
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License
++# as published by the Free Software Foundation; either version 2
++# of the License, or (at your option) any later version.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 +
-+/* Read the btrfs geometry. */
-+static bool
-+btrfs_scan_fs(
-+	struct scrub_ctx		*ctx)
-+{
-+	/*
-+	 * btrfs is a volume manager, so we can't get meaningful block numbers
-+	 * out of FIEMAP/FIBMAP.  It also checksums data, so raw device access
-+	 * for file verify is impossible.  btrfs also supports reflink.
-+	 */
-+	ctx->quirks |= SCRUB_QUIRK_SHARED_BLOCKS;
-+	disk_close(&ctx->datadev);
-+	return generic_scan_fs(ctx);
-+}
++import subprocess
++import json
++import threading
++import time
++import sys
 +
-+/* Scrub all disk blocks using the btrfs scrub command. */
-+static bool
-+btrfs_scan_blocks(
-+	struct scrub_ctx		*ctx)
-+{
-+	pid_t				pid;
-+	pid_t				rpid;
-+	char				*args[] = {"btrfs", "scrub", "start",
-+						   "-B", "-f", "-q",
-+						   ctx->mntpoint, NULL, NULL};
-+	int				status;
-+	int				err;
++SUPPORTED_FS = set(['xfs', 'ext4', 'ext3', 'ext2'])
++retcode = 0
++terminate = False
 +
-+	if (ctx->mode == SCRUB_MODE_DRY_RUN) {
-+		args[6] = "-n";
-+		args[7] = ctx->mntpoint;
-+	}
++def find_mounts():
++	'''Map mountpoints to physical disks.'''
 +
-+	pid = fork();
-+	if (pid < 0)
-+		str_errno(ctx, ctx->mntpoint);
-+	else if (pid == 0) {
-+		status = execvp(args[0], args);
-+		exit(255);
-+	} else {
-+		rpid = waitpid(pid, &status, 0);
-+		while (rpid >= 0 && rpid != pid && !WIFEXITED(status) &&
-+				!WIFSIGNALED(status)) {
-+			rpid = waitpid(pid, &status, 0);
-+		}
-+		if (rpid < 0)
-+			str_errno(ctx, ctx->mntpoint);
-+		else if (WIFSIGNALED(status))
-+			str_error(ctx, ctx->mntpoint,
-+_("btrfs scrub died, signal %d"),
-+					WTERMSIG(status));
-+		else if (WIFEXITED(status)) {
-+			err = WEXITSTATUS(status);
-+			if (err == 0)
-+				return true;
-+			else if (err == 255)
-+				str_error(ctx, ctx->mntpoint,
-+_("btrfs scrub failed to run."));
-+			else
-+				str_error(ctx, ctx->mntpoint,
-+_("btrfs scrub signalled corruption, error %d"),
-+						err);
-+		}
-+	}
++	fs = {}
++	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
++	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
++	result.wait()
++	if result.returncode != 0:
++		return fs
++	sarray = [x.decode('utf-8') for x in result.stdout.readlines()]
++	output = ' '.join(sarray)
++	bdevdata = json.loads(output)
++	for bdev in bdevdata['blockdevices']:
++		if bdev['type'] == 'disk':
++			lastdisk = bdev['kname']
++		elif bdev['fstype'] is not None and bdev['fstype'] in SUPPORTED_FS:
++			mnt = bdev['mountpoint']
++			if mnt is not None:
++				if mnt in fs:
++					fs[mnt].add(lastdisk)
++				else:
++					fs[mnt] = set([lastdisk])
++	return fs
 +
-+	return true;
-+}
++def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
++	'''Run a scrub process.'''
++	global retcode, terminate
 +
-+/* btrfs profile */
-+struct scrub_ops btrfs_scrub_ops = {
-+	.name			= "btrfs",
-+	.cleanup		= generic_cleanup,
-+	.scan_fs		= btrfs_scan_fs,
-+	.scan_inodes		= generic_scan_inodes,
-+	.check_dir		= generic_check_dir,
-+	.check_inode		= generic_check_inode,
-+	.scan_extents		= generic_scan_extents,
-+	.scan_xattrs		= generic_scan_xattrs,
-+	.scan_special_xattrs	= generic_scan_special_xattrs,
-+	.scan_metadata		= generic_scan_metadata,
-+	.check_summary		= generic_check_summary,
-+	.read_file		= read_verify_file,
-+	.scan_blocks		= btrfs_scan_blocks,
-+	.scan_fs_tree		= generic_scan_fs_tree,
-+	.preen_fs		= generic_preen_fs,
-+};
++	print("Scrubbing %s..." % mnt)
 +
-+/*
-+ * Generic FS scanner for filesystems that support shared blocks.
-+ */
-+static bool
-+scan_fs_shared_blocks(
-+	struct scrub_ctx		*ctx)
-+{
-+	ctx->quirks |= SCRUB_QUIRK_SHARED_BLOCKS;
-+	return generic_scan_fs(ctx);
-+}
++	# Invoke xfs_scrub manually
++	if not terminate:
++		cmd=['@sbindir@/xfs_scrub', '-dTvn', mnt]
++		try:
++			proc = subprocess.Popen(cmd)
++			fn = lambda: proc.terminate()
++			killfuncs.add(fn)
++			proc.wait()
++			try:
++				killfuncs.remove(fn)
++			except:
++				pass
++			print("Scrubbing %s done, (err=%d)" % (mnt, proc.returncode))
++			retcode |= proc.returncode
++		except:
++			print("Unable to start scrub tool.")
 +
-+/* shared block filesystem profiles */
-+struct scrub_ops shared_block_fs_scrub_ops = {
-+	.name			= "shared block generic",
-+	.aliases		= "ocfs2\0",
-+	.cleanup		= generic_cleanup,
-+	.scan_fs		= scan_fs_shared_blocks,
-+	.scan_inodes		= generic_scan_inodes,
-+	.check_dir		= generic_check_dir,
-+	.check_inode		= generic_check_inode,
-+	.scan_extents		= generic_scan_extents,
-+	.scan_xattrs		= generic_scan_xattrs,
-+	.scan_special_xattrs	= generic_scan_special_xattrs,
-+	.scan_metadata		= generic_scan_metadata,
-+	.check_summary		= generic_check_summary,
-+	.read_file		= read_verify_file,
-+	.scan_blocks		= generic_scan_blocks,
-+	.scan_fs_tree		= generic_scan_fs_tree,
-+	.preen_fs		= generic_preen_fs,
-+};
++	running_devs -= mntdevs
++	cond.acquire()
++	cond.notify()
++	cond.release()
 +
-+/*
-+ * Generic FS scan for filesystems that don't present stable inode numbers
-+ * between the directory entry and the stat buffer.
-+ */
-+static bool
-+scan_fs_unstable_inum(
-+	struct scrub_ctx		*ctx)
-+{
-+	/*
-+	 * HFS+ implements hard links by creating a special hidden file
-+	 * that redirects to the real file, so the inode numbers reported
-+	 * in the dirent and the fstat buffers don't necessarily match.
-+	 *
-+	 * iso9660/vfat don't have stable dirent -> inode numbers.
-+	 */
-+	ctx->quirks |= SCRUB_QUIRK_UNSTABLE_INUM;
-+	return generic_scan_fs(ctx);
-+}
++def main():
++	'''Find mounts, schedule scrub runs.'''
++	def thr(mnt, devs):
++		a = (mnt, cond, running_devs, devs, killfuncs)
++		thr = threading.Thread(target = run_scrub, args = a)
++		thr.start()
++	global retcode, terminate
 +
-+/* unstable inum filesystem profile */
-+struct scrub_ops unstable_inum_fs_scrub_ops = {
-+	.name			= "unstable inum generic",
-+	.aliases		= "hfsplus\0iso9660\0vfat\0",
-+	.cleanup		= generic_cleanup,
-+	.scan_fs		= scan_fs_unstable_inum,
-+	.scan_inodes		= generic_scan_inodes,
-+	.check_dir		= generic_check_dir,
-+	.check_inode		= generic_check_inode,
-+	.scan_extents		= generic_scan_extents,
-+	.scan_xattrs		= generic_scan_xattrs,
-+	.scan_special_xattrs	= generic_scan_special_xattrs,
-+	.scan_metadata		= generic_scan_metadata,
-+	.check_summary		= generic_check_summary,
-+	.read_file		= read_verify_file,
-+	.scan_blocks		= generic_scan_blocks,
-+	.scan_fs_tree		= generic_scan_fs_tree,
-+	.preen_fs		= generic_preen_fs,
-+};
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 1dcca66..bfcc1c2 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -309,6 +309,9 @@ __record_preen(
-  */
- static struct scrub_ops *scrub_impl[] = {
- 	&xfs_scrub_ops,
-+	&btrfs_scrub_ops,
-+	&shared_block_fs_scrub_ops,
-+	&unstable_inum_fs_scrub_ops,
- 	NULL
- };
- 
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index e2376a5..8b23e7f 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -152,6 +152,9 @@ debug_tweak_on(
- 
- extern struct scrub_ops	generic_scrub_ops;
- extern struct scrub_ops	xfs_scrub_ops;
-+extern struct scrub_ops	btrfs_scrub_ops;
-+extern struct scrub_ops	shared_block_fs_scrub_ops;
-+extern struct scrub_ops	unstable_inum_fs_scrub_ops;
- 
- /* Generic implementations of the ops functions */
- bool generic_cleanup(struct scrub_ctx *ctx);
++	fs = find_mounts()
++
++	# Schedule scrub jobs...
++	running_devs = set()
++	killfuncs = set()
++	cond = threading.Condition()
++	while len(fs) > 0:
++		if len(running_devs) == 0:
++			mnt, devs = fs.popitem()
++			running_devs.update(devs)
++			thr(mnt, devs)
++		poppers = set()
++		for mnt in fs:
++			devs = fs[mnt]
++			can_run = True
++			for dev in devs:
++				if dev in running_devs:
++					can_run = False
++					break
++			if can_run:
++				running_devs.update(devs)
++				poppers.add(mnt)
++				thr(mnt, devs)
++		for p in poppers:
++			fs.pop(p)
++		cond.acquire()
++		try:
++			cond.wait()
++		except KeyboardInterrupt:
++			terminate = True
++			print("Terminating...")
++			while len(killfuncs) > 0:
++				fn = killfuncs.pop()
++				fn()
++			fs = []
++		cond.release()
++
++	sys.exit(retcode)
++
++if __name__ == '__main__':
++	main()
 
