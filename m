@@ -1,48 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39100 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:32658 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750714AbdAWVMv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jan 2017 16:12:51 -0500
-Date: Mon, 23 Jan 2017 13:12:21 -0800
+        with ESMTP id S1752000AbdAUAJh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 19:09:37 -0500
+Date: Fri, 20 Jan 2017 16:09:25 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: reset ag_max_usable when retrying failed per-ag
- reservation init
-Message-ID: <20170123211221.GB31202@birch.djwong.org>
+Subject: [PATCH v3 4/5] xfs_repair: zero shared_vn
+Message-ID: <20170121000925.GJ12985@birch.djwong.org>
+References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+ <148494394162.5256.166843220095123974.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <148494394162.5256.166843220095123974.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-It's possible for the per-AG reservation initialization to return ENOSPC
-when fdblocks says there isn't free space.  This is a valid state for
-the reservation tracker since subsequent extent freeing activity will
-simply be captured by the reservation mechanism, but if we subsequently
-retry a failed initialization, we need to undo the changes we made to
-ag_max_usable prior to recreating the reservation.
+Since shared_vn always has to be zero, zero it at the start of repair.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_ag_resv.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+v2: reset shared_vn in phase 1 and tell the user about it, per sandeen
+v3: more suggestions by sandeen to make the new code more consistent
+---
+ repair/phase1.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index 4773c1e..1bdd091 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -202,6 +202,12 @@ __xfs_ag_resv_init(
- 	struct xfs_ag_resv		*resv;
- 	int				error;
+diff --git a/repair/phase1.c b/repair/phase1.c
+index 126d0b3..9799883 100644
+--- a/repair/phase1.c
++++ b/repair/phase1.c
+@@ -138,6 +138,13 @@ _("Cannot disable lazy-counters on V5 fs\n"));
+ 		}
+ 	}
  
-+	/*
-+	 * We have to reset ag_max_usable prior to retrying a failed
-+	 * initialization with a smaller request.
-+	 */
-+	mp->m_ag_max_usable += resv->ar_asked;
++	/* shared_vn should be zero */
++	if (sb->sb_shared_vn) {
++		do_warn(_("resetting shared_vn to zero\n"));
++		sb->sb_shared_vn = 0;
++		primary_sb_modified = 1;
++	}
 +
- 	resv = xfs_perag_resv(pag, type);
- 	if (used > ask)
- 		ask = used;
+ 	if (primary_sb_modified)  {
+ 		if (!no_modify)  {
+ 			do_warn(_("writing modified primary superblock\n"));
