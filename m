@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19738 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750886AbdAUIDu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:03:50 -0500
-Subject: [PATCH 31/55] xfs: scrub realtime bitmap/summary
+Received: from userp1040.oracle.com ([156.151.31.81]:25229 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750886AbdAUIDz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:03:55 -0500
+Subject: [PATCH 32/55] xfs: set up cross-referencing helpers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 21 Jan 2017 00:03:44 -0800
-Message-ID: <148498582471.15323.5968216416559835021.stgit@birch.djwong.org>
+Date: Sat, 21 Jan 2017 00:03:51 -0800
+Message-ID: <148498583106.15323.15748962703310410970.stgit@birch.djwong.org>
 In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,308 +18,550 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Perform simple tests of the realtime bitmap and summary.
+Create some helper functions that we'll use later to cross reference
+metadata with other metadata.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile              |    5 ++
- fs/xfs/libxfs/xfs_format.h   |    5 ++
- fs/xfs/libxfs/xfs_fs.h       |    4 +
- fs/xfs/libxfs/xfs_rtbitmap.c |    2 -
- fs/xfs/scrub/agheader.c      |    1 
- fs/xfs/scrub/common.c        |    7 ++
- fs/xfs/scrub/common.h        |    6 ++
- fs/xfs/scrub/rtbitmap.c      |  131 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_rtalloc.h         |    3 +
- fs/xfs/xfs_trace.h           |    4 +
- 10 files changed, 165 insertions(+), 3 deletions(-)
- create mode 100644 fs/xfs/scrub/rtbitmap.c
+ fs/xfs/scrub/btree.c  |  102 +++++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/scrub/btree.h  |   47 +++++++++++++++++++----
+ fs/xfs/scrub/common.c |   63 +++++++++++++++++++++++++-----
+ fs/xfs/scrub/common.h |   84 ++++++++++++++++++++++++++++++++++------
+ 4 files changed, 261 insertions(+), 35 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 5035ee0..a22b027 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -118,6 +118,11 @@ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
- 				   rmap.o \
- 				   symlink.o \
- 				   )
-+ifeq ($(CONFIG_XFS_DEBUG)$(CONFIG_XFS_RT),yy)
-+xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
-+				   rtbitmap.o \
-+				   )
-+endif
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index 06607de..9ea0fbe 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -112,7 +112,8 @@ xfs_scrub_btree_ok(
+ 	bool				fs_ok,
+ 	const char			*check,
+ 	const char			*func,
+-	int				line)
++	int				line,
++	bool				xref)
+ {
+ 	char				bt_ptr[24];
+ 	char				bt_type[48];
+@@ -121,7 +122,7 @@ xfs_scrub_btree_ok(
+ 	if (fs_ok)
+ 		return fs_ok;
  
- # low-level transaction/log code
- xfs-y				+= xfs_log.o \
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 301effc..cb00017 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -315,6 +315,11 @@ static inline bool xfs_sb_good_version(struct xfs_sb *sbp)
- 	return false;
+-	sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
++	sc->sm->sm_flags |= CORRUPT_FLAG(xref);
+ 	xfs_scrub_btree_format(cur, level, bt_type, 48, bt_ptr, 24, &fsbno);
+ 
+ 	trace_xfs_scrub_btree_error(cur->bc_mp, bt_type, bt_ptr,
+@@ -139,7 +140,8 @@ xfs_scrub_btree_op_ok(
+ 	int				level,
+ 	int				*error,
+ 	const char			*func,
+-	int				line)
++	int				line,
++	bool				xref)
+ {
+ 	char				bt_ptr[24];
+ 	char				bt_type[48];
+@@ -153,7 +155,7 @@ xfs_scrub_btree_op_ok(
+ 	return xfs_scrub_op_ok(sc,
+ 			XFS_FSB_TO_AGNO(cur->bc_mp, fsbno),
+ 			XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno),
+-			bt_type, error, func, line);
++			bt_type, error, func, line, xref);
  }
  
-+static inline bool xfs_sb_version_hasrealtime(struct xfs_sb *sbp)
-+{
-+	return sbp->sb_rblocks > 0;
-+}
-+
  /*
-  * Detect a mismatched features2 field.  Older kernels read/wrote
-  * this into the wrong slot, so to be safe we keep them in sync.
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 5484c26..bcb3a69 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -592,7 +592,9 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_DIR	15	/* directory */
- #define XFS_SCRUB_TYPE_XATTR	16	/* extended attribute */
- #define XFS_SCRUB_TYPE_SYMLINK	17	/* symbolic link */
--#define XFS_SCRUB_TYPE_MAX	17
-+#define XFS_SCRUB_TYPE_RTBITMAP	18	/* realtime bitmap */
-+#define XFS_SCRUB_TYPE_RTSUM	19	/* realtime summary */
-+#define XFS_SCRUB_TYPE_MAX	19
+@@ -494,6 +496,84 @@ xfs_scrub_btree_sblock_check_siblings(
+ 	return error;
+ }
  
- #define XFS_SCRUB_FLAG_REPAIR	0x01	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x02	/* o: needs repair */
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index ea45584..f4b68c0 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -70,7 +70,7 @@ const struct xfs_buf_ops xfs_rtbuf_ops = {
-  * Get a buffer for the bitmap or summary file block specified.
-  * The buffer is returned read and locked.
-  */
--static int
-+int
- xfs_rtbuf_get(
- 	xfs_mount_t	*mp,		/* file system mount structure */
- 	xfs_trans_t	*tp,		/* transaction pointer */
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index f3bbd89..374157f 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -248,6 +248,7 @@ xfs_scrub_superblock(
- 	XFS_SCRUB_SB_FEAT(metauuid);
- 	XFS_SCRUB_SB_FEAT(rmapbt);
- 	XFS_SCRUB_SB_FEAT(reflink);
-+	XFS_SCRUB_SB_FEAT(realtime);
- #undef XFS_SCRUB_SB_FEAT
- 
- #define XFS_SCRUB_SB_FEAT_PREEN(fn) \
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 0b55933..b7ac141 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -690,6 +690,13 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 	{xfs_scrub_setup_inode, xfs_scrub_directory, NULL, NULL},
- 	{xfs_scrub_setup_inode_xattr, xfs_scrub_xattr, NULL, NULL},
- 	{xfs_scrub_setup_inode_symlink, xfs_scrub_symlink, NULL, NULL},
-+#ifdef CONFIG_XFS_RT
-+	{xfs_scrub_setup_rt, xfs_scrub_rtbitmap, NULL, xfs_sb_version_hasrealtime},
-+	{xfs_scrub_setup_rt, xfs_scrub_rtsummary, NULL, xfs_sb_version_hasrealtime},
-+#else
-+	{NULL, NULL, NULL, NULL},
-+	{NULL, NULL, NULL, NULL},
-+#endif
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 123dc1d..8dc68b9 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -235,6 +235,10 @@ int xfs_scrub_setup_inode_symlink(struct xfs_scrub_context *sc,
- 				  struct xfs_inode *ip,
- 				  struct xfs_scrub_metadata *sm,
- 				  bool retry_deadlocked);
-+int xfs_scrub_setup_rt(struct xfs_scrub_context *sc,
-+		       struct xfs_inode *ip,
-+		       struct xfs_scrub_metadata *sm,
-+		       bool retry_deadlocked);
- 
- /* Metadata scrubbers */
- 
-@@ -255,5 +259,7 @@ int xfs_scrub_bmap_cow(struct xfs_scrub_context *sc);
- int xfs_scrub_directory(struct xfs_scrub_context *sc);
- int xfs_scrub_xattr(struct xfs_scrub_context *sc);
- int xfs_scrub_symlink(struct xfs_scrub_context *sc);
-+int xfs_scrub_rtbitmap(struct xfs_scrub_context *sc);
-+int xfs_scrub_rtsummary(struct xfs_scrub_context *sc);
- 
- #endif	/* __XFS_REPAIR_COMMON_H__ */
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-new file mode 100644
-index 0000000..2a5a546f
---- /dev/null
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -0,0 +1,131 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trace.h"
-+#include "xfs_sb.h"
-+#include "xfs_alloc.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_inode.h"
-+#include "scrub/common.h"
++struct check_owner {
++	struct list_head	list;
++	xfs_fsblock_t		fsb;
++};
 +
-+/* Set us up with the realtime metadata locked. */
-+int
-+xfs_scrub_setup_rt(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip,
-+	struct xfs_scrub_metadata	*sm,
-+	bool				retry_deadlocked)
++/*
++ * Make sure this btree block isn't in the free list and that there's
++ * an rmap record for it.
++ */
++STATIC int
++xfs_scrub_btree_check_block_owner(
++	struct xfs_scrub_btree		*bs,
++	xfs_fsblock_t			fsb)
 +{
-+	struct xfs_mount		*mp = ip->i_mount;
-+	int				lockmode;
++	struct xfs_scrub_ag		sa;
++	struct xfs_scrub_ag		*psa;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			bno;
 +	int				error = 0;
 +
-+	if (sm->sm_agno || sm->sm_ino || sm->sm_gen)
-+		return -EINVAL;
++	agno = XFS_FSB_TO_AGNO(bs->cur->bc_mp, fsb);
++	bno = XFS_FSB_TO_AGBNO(bs->cur->bc_mp, fsb);
 +
-+	error = xfs_scrub_setup(sc, ip, sm, retry_deadlocked);
++	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
++		if (!xfs_scrub_ag_can_lock(bs->sc, agno))
++			return -EDEADLOCK;
++		error = xfs_scrub_ag_init(bs->sc, agno, &sa);
++		if (error)
++			return error;
++		psa = &sa;
++	} else
++		psa = &bs->sc->sa;
++
++	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS)
++		xfs_scrub_ag_free(&sa);
++
++	return error;
++}
++
++/* Check the owner of a btree block. */
++STATIC int
++xfs_scrub_btree_check_owner(
++	struct xfs_scrub_btree		*bs,
++	struct xfs_buf			*bp)
++{
++	struct xfs_btree_cur		*cur = bs->cur;
++	struct check_owner		*co;
++	xfs_fsblock_t			fsbno;
++	xfs_agnumber_t			agno;
++
++	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) && bp == NULL)
++		return 0;
++
++	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
++	agno = XFS_FSB_TO_AGNO(cur->bc_mp, fsbno);
++
++	/* Turn back if we could deadlock. */
++	if ((bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) &&
++	    !xfs_scrub_ag_can_lock(bs->sc, agno))
++		return -EDEADLOCK;
++
++	/*
++	 * We want to cross-reference each btree block with the bnobt
++	 * and the rmapbt.  We cannot cross-reference the bnobt or
++	 * rmapbt while scanning the bnobt or rmapbt, respectively,
++	 * because that would trash the cursor state.  Therefore, save
++	 * the block numbers for later scanning.
++	 */
++	if (cur->bc_btnum == XFS_BTNUM_BNO || cur->bc_btnum == XFS_BTNUM_RMAP) {
++		co = kmem_alloc(sizeof(struct check_owner), KM_SLEEP | KM_NOFS);
++		co->fsb = fsbno;
++		list_add_tail(&co->list, &bs->to_check);
++		return 0;
++	}
++
++	return xfs_scrub_btree_check_block_owner(bs, fsbno);
++}
++
+ /* Grab and scrub a btree block. */
+ STATIC int
+ xfs_scrub_btree_block(
+@@ -514,6 +594,10 @@ xfs_scrub_btree_block(
+ 	if (error)
+ 		return error;
+ 
++	error = xfs_scrub_btree_check_owner(bs, *pbp);
 +	if (error)
 +		return error;
 +
-+	lockmode = XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP;
-+	xfs_ilock(mp->m_rbmip, lockmode);
-+	xfs_trans_ijoin(sc->tp, mp->m_rbmip, lockmode);
-+
-+	return 0;
-+}
-+
-+/* Realtime bitmap. */
-+
-+#define XFS_SCRUB_RTBITMAP_CHECK(fs_ok) \
-+	XFS_SCRUB_CHECK(sc, bp, "rtbitmap", fs_ok);
-+#define XFS_SCRUB_RTBITMAP_OP_ERROR_GOTO(error, label) \
-+	XFS_SCRUB_OP_ERROR_GOTO(sc, 0, 0, "rtbitmap", error, label)
-+/* Scrub the realtime bitmap. */
-+int
-+xfs_scrub_rtbitmap(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_mount		*mp = sc->tp->t_mountp;
-+	struct xfs_buf			*bp = NULL;
-+	xfs_rtblock_t			rtstart;
-+	xfs_rtblock_t			rtend = 0;
-+	xfs_rtblock_t			block;
-+	xfs_rtblock_t			rem;
-+	int				is_free = 0;
-+	int				error = 0;
-+	int				err2 = 0;
-+
-+	/* Iterate the bitmap, looking for discrepancies. */
-+	rtstart = 0;
-+	rem = mp->m_sb.sb_rblocks;
-+	while (rem) {
-+		if (xfs_scrub_should_terminate(&error))
-+			break;
-+
-+		/* Is the first block free? */
-+		err2 = xfs_rtcheck_range(mp, sc->tp, rtstart, 1, 1, &rtend,
-+				&is_free);
-+		XFS_SCRUB_RTBITMAP_OP_ERROR_GOTO(&err2, out);
-+
-+		/* How long does the extent go for? */
-+		err2 = xfs_rtfind_forw(mp, sc->tp, rtstart,
-+				mp->m_sb.sb_rblocks - 1, &rtend);
-+		XFS_SCRUB_RTBITMAP_OP_ERROR_GOTO(&err2, out);
-+
-+		/* Find the buffer for error reporting. */
-+		block = XFS_BITTOBLOCK(mp, rtstart);
-+		err2 = xfs_rtbuf_get(mp, sc->tp, block, 0, &bp);
-+		XFS_SCRUB_RTBITMAP_OP_ERROR_GOTO(&err2, out);
-+		XFS_SCRUB_RTBITMAP_CHECK(rtend >= rtstart);
-+
-+		xfs_trans_brelse(sc->tp, bp);
-+		bp = NULL;
-+		rem -= rtend - rtstart + 1;
-+		rtstart = rtend + 1;
+ 	return bs->check_siblings_fn(bs, *pblock);
+ }
+ 
+@@ -539,6 +623,8 @@ xfs_scrub_btree(
+ 	struct xfs_btree_block		*block;
+ 	int				level;
+ 	struct xfs_buf			*bp;
++	struct check_owner		*co;
++	struct check_owner		*n;
+ 	int				i;
+ 	int				error = 0;
+ 
+@@ -653,6 +739,14 @@ xfs_scrub_btree(
+ 		}
+ 	}
+ 
++	/* Process deferred owner checks on btree blocks. */
++	list_for_each_entry_safe(co, n, &bs.to_check, list) {
++		if (!error)
++			error = xfs_scrub_btree_check_block_owner(&bs, co->fsb);
++		list_del(&co->list);
++		kmem_free(co);
 +	}
 +
-+out:
-+	if (bp)
-+		xfs_trans_brelse(sc->tp, bp);
-+	if (!error && err2)
-+		error = err2;
-+	return error;
-+}
-+#undef XFS_SCRUB_RTBITMAP_OP_ERROR_GOTO
-+#undef XFS_SCRUB_RTBITMAP_CHECK
-+
-+/* Scrub the realtime summary. */
-+int
-+xfs_scrub_rtsummary(
-+	struct xfs_scrub_context	*sc)
+ out_badcursor:
+ 	return error;
+ }
+diff --git a/fs/xfs/scrub/btree.h b/fs/xfs/scrub/btree.h
+index 75e89b1..d8c8186 100644
+--- a/fs/xfs/scrub/btree.h
++++ b/fs/xfs/scrub/btree.h
+@@ -27,41 +27,72 @@ extern const char * const btree_types[];
+ /* Check for btree corruption. */
+ bool xfs_scrub_btree_ok(struct xfs_scrub_context *sc,
+ 			struct xfs_btree_cur *cur, int level, bool fs_ok,
+-			const char *check, const char *func, int line);
++			const char *check, const char *func, int line,
++			bool xref);
+ 
+ /* Check for btree operation errors. */
+ bool xfs_scrub_btree_op_ok(struct xfs_scrub_context *sc,
+ 			   struct xfs_btree_cur *cur, int level, int *error,
+-			   const char *func, int line);
++			   const char *func, int line, bool xref);
+ 
+ #define XFS_SCRUB_BTREC_CHECK(bs, fs_ok) \
+ 	xfs_scrub_btree_ok((bs)->sc, (bs)->cur, 0, (fs_ok), #fs_ok, \
+-			__func__, __LINE__)
++			__func__, __LINE__, false)
+ #define XFS_SCRUB_BTREC_GOTO(bs, fs_ok, label) \
+ 	do { \
+ 		if (!xfs_scrub_btree_ok((bs)->sc, (bs)->cur, 0, (fs_ok), \
+-				#fs_ok, __func__, __LINE__)) \
++				#fs_ok, __func__, __LINE__, false)) \
+ 			goto label; \
+ 	} while (0)
+ #define XFS_SCRUB_BTREC_OP_ERROR_GOTO(bs, error, label) \
+ 	do { \
+ 		if (!xfs_scrub_btree_op_ok((bs)->sc, (bs)->cur, 0, \
+-				(error), __func__, __LINE__)) \
++				(error), __func__, __LINE__, false)) \
+ 			goto label; \
+ 	} while (0)
+ #define XFS_SCRUB_BTKEY_CHECK(bs, level, fs_ok) \
+ 	xfs_scrub_btree_ok((bs)->sc, (bs)->cur, (level), (fs_ok), #fs_ok, \
+-			__func__, __LINE__)
++			__func__, __LINE__, false)
+ #define XFS_SCRUB_BTKEY_GOTO(bs, level, fs_ok, label) \
+ 	do { \
+ 		if (!xfs_scrub_btree_ok((bs)->sc, (bs)->cur, (level), (fs_ok), \
+-				#fs_ok, __func__, __LINE__)) \
++				#fs_ok, __func__, __LINE__, false)) \
+ 			goto label; \
+ 	} while (0)
+ #define XFS_SCRUB_BTKEY_OP_ERROR_GOTO(bs, level, error, label) \
+ 	do { \
+ 		if (!xfs_scrub_btree_op_ok((bs)->sc, (bs)->cur, (level), \
+-				(error), __func__, __LINE__)) \
++				(error), __func__, __LINE__, false)) \
++			goto label; \
++	} while (0)
++#define XFS_SCRUB_BTREC_XCHECK(bs, fs_ok) \
++	xfs_scrub_btree_ok((bs)->sc, (bs)->cur, 0, (fs_ok), #fs_ok, \
++			__func__, __LINE__, true)
++#define XFS_SCRUB_BTREC_XGOTO(bs, fs_ok, label) \
++	do { \
++		if (!xfs_scrub_btree_ok((bs)->sc, (bs)->cur, 0, (fs_ok), \
++				#fs_ok, __func__, __LINE__, true)) \
++			goto label; \
++	} while (0)
++#define XFS_SCRUB_BTREC_OP_ERROR_XGOTO(bs, error, label) \
++	do { \
++		if (!xfs_scrub_btree_op_ok((bs)->sc, (bs)->cur, 0, \
++				(error), __func__, __LINE__, true)) \
++			goto label; \
++	} while (0)
++#define XFS_SCRUB_BTKEY_XCHECK(bs, level, fs_ok) \
++	xfs_scrub_btree_ok((bs)->sc, (bs)->cur, (level), (fs_ok), #fs_ok, \
++			__func__, __LINE__, true)
++#define XFS_SCRUB_BTKEY_XGOTO(bs, level, fs_ok, label) \
++	do { \
++		if (!xfs_scrub_btree_ok((bs)->sc, (bs)->cur, (level), (fs_ok), \
++				#fs_ok, __func__, __LINE__, true)) \
++			goto label; \
++	} while (0)
++#define XFS_SCRUB_BTKEY_OP_ERROR_XGOTO(bs, level, error, label) \
++	do { \
++		if (!xfs_scrub_btree_op_ok((bs)->sc, (bs)->cur, (level), \
++				(error), __func__, __LINE__, true)) \
+ 			goto label; \
+ 	} while (0)
+ 
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index b7ac141..1c20006 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -119,7 +119,8 @@ xfs_scrub_op_ok(
+ 	const char			*type,
+ 	int				*error,
+ 	const char			*func,
+-	int				line)
++	int				line,
++	bool				xref)
+ {
+ 	struct xfs_mount		*mp = sc->tp->t_mountp;
+ 
+@@ -128,7 +129,7 @@ xfs_scrub_op_ok(
+ 
+ 	trace_xfs_scrub_op_error(mp, agno, bno, type, *error, func, line);
+ 	if (*error == -EFSBADCRC || *error == -EFSCORRUPTED) {
+-		sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
++		sc->sm->sm_flags |= CORRUPT_FLAG(xref);
+ 		*error = 0;
+ 	}
+ 	return false;
+@@ -143,7 +144,8 @@ xfs_scrub_file_op_ok(
+ 	const char			*type,
+ 	int				*error,
+ 	const char			*func,
+-	int				line)
++	int				line,
++	bool				xref)
+ {
+ 	if (*error == 0)
+ 		return true;
+@@ -151,7 +153,7 @@ xfs_scrub_file_op_ok(
+ 	trace_xfs_scrub_file_op_error(sc->ip, whichfork, offset, type, *error,
+ 			func, line);
+ 	if (*error == -EFSBADCRC || *error == -EFSCORRUPTED) {
+-		sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
++		sc->sm->sm_flags |= CORRUPT_FLAG(xref);
+ 		*error = 0;
+ 	}
+ 	return false;
+@@ -194,7 +196,8 @@ xfs_scrub_block_ok(
+ 	bool				fs_ok,
+ 	const char			*check,
+ 	const char			*func,
+-	int				line)
++	int				line,
++	bool				xref)
+ {
+ 	struct xfs_mount		*mp = sc->tp->t_mountp;
+ 	xfs_fsblock_t			fsbno;
+@@ -208,7 +211,7 @@ xfs_scrub_block_ok(
+ 	agno = XFS_FSB_TO_AGNO(mp, fsbno);
+ 	bno = XFS_FSB_TO_AGBNO(mp, fsbno);
+ 
+-	sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
++	sc->sm->sm_flags |= CORRUPT_FLAG(xref);
+ 	trace_xfs_scrub_block_error(mp, agno, bno, type, check, func, line);
+ 	return fs_ok;
+ }
+@@ -223,7 +226,8 @@ xfs_scrub_ino_ok(
+ 	bool				fs_ok,
+ 	const char			*check,
+ 	const char			*func,
+-	int				line)
++	int				line,
++	bool				xref)
+ {
+ 	struct xfs_inode		*ip = sc->ip;
+ 	struct xfs_mount		*mp = sc->tp->t_mountp;
+@@ -243,7 +247,7 @@ xfs_scrub_ino_ok(
+ 		bno = XFS_INO_TO_AGINO(mp, ip->i_ino);
+ 	}
+ 
+-	sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
++	sc->sm->sm_flags |= CORRUPT_FLAG(xref);
+ 	trace_xfs_scrub_ino_error(mp, ino, agno, bno, type, check, func, line);
+ 	return fs_ok;
+ }
+@@ -293,12 +297,13 @@ xfs_scrub_data_ok(
+ 	bool				fs_ok,
+ 	const char			*check,
+ 	const char			*func,
+-	int				line)
++	int				line,
++	bool				xref)
+ {
+ 	if (fs_ok)
+ 		return fs_ok;
+ 
+-	sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
++	sc->sm->sm_flags |= CORRUPT_FLAG(xref);
+ 	trace_xfs_scrub_data_error(sc->ip, whichfork, offset, type, check,
+ 			func, line);
+ 	return fs_ok;
+@@ -533,6 +538,44 @@ xfs_scrub_ag_lock_all(
+ 	return error;
+ }
+ 
++/*
++ * Predicate that decides if we need to evaluate the cross-reference check.
++ * If there was an error accessing the cross-reference btree, just delete
++ * the cursor and skip the check.
++ */
++bool
++__xfs_scrub_should_xref(
++	struct xfs_scrub_context	*sc,
++	int				error,
++	struct xfs_btree_cur		**curpp,
++	const char			*func,
++	int				line)
 +{
-+	/* XXX: implement this some day */
-+	return -ENOENT;
++	struct xfs_mount		*mp = sc->tp->t_mountp;
++
++	/* If not a btree cross-reference, just check the error code. */
++	if (curpp == NULL) {
++		if (error == 0)
++			return true;
++		trace_xfs_scrub_xref_error(mp, "unknown", error, func, line);
++		return false;
++	}
++
++	ASSERT(*curpp != NULL);
++	/* If no error or we've already given up on xref, just bail out. */
++	if (error == 0 || *curpp == NULL)
++		return true;
++
++	/* xref error, delete cursor and bail out. */
++	sc->sm->sm_flags |= XFS_SCRUB_FLAG_XFAIL;
++	trace_xfs_scrub_xref_error(mp, btree_types[(*curpp)->bc_btnum],
++			error, func, line);
++	xfs_btree_del_cursor(*curpp, XFS_BTREE_ERROR);
++	*curpp = NULL;
++
++	return false;
 +}
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index f798a3e..3036349 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -98,6 +98,8 @@ xfs_growfs_rt(
- /*
-  * From xfs_rtbitmap.c
-  */
-+int xfs_rtbuf_get(struct xfs_mount *mp, struct xfs_trans *tp,
-+		  xfs_rtblock_t block, int issum, struct xfs_buf **bpp);
- int xfs_rtcheck_range(struct xfs_mount *mp, struct xfs_trans *tp,
- 		      xfs_rtblock_t start, xfs_extlen_t len, int val,
- 		      xfs_rtblock_t *new, int *stat);
-@@ -128,6 +130,7 @@ int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
- # define xfs_growfs_rt(mp,in)                           (ENOSYS)
- # define xfs_rtcheck_range(...)                         (ENOSYS)
- # define xfs_rtfind_forw(...)                           (ENOSYS)
-+# define xfs_rtbuf_get(m,t,b,i,p)                       (ENOSYS)
- static inline int		/* error */
- xfs_rtmount_init(
- 	xfs_mount_t	*mp)	/* file system mount structure */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 87fd942..c52e3a5 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3370,7 +3370,9 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_BMBTC,		"bmapbtc" }, \
- 	{ XFS_SCRUB_TYPE_DIR,		"dir" }, \
- 	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }, \
--	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }
-+	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }, \
-+	{ XFS_SCRUB_TYPE_RTBITMAP,	"rtbitmap" }, \
-+	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, int type, xfs_agnumber_t agno,
- 		 xfs_ino_t inum, unsigned int gen, unsigned int flags,
++
+ /* Dummy scrubber */
+ 
+ STATIC int
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 8dc68b9..4704b38 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -100,25 +100,44 @@ xfs_scrub_trans_alloc(
+ 	return xfs_trans_alloc_empty(mp, tpp);
+ }
+ 
++static inline __u32
++CORRUPT_FLAG(
++	bool				xref)
++{
++	return xref ? XFS_SCRUB_FLAG_XCORRUPT : XFS_SCRUB_FLAG_CORRUPT;
++}
++
+ /* Check for operational errors. */
+ bool xfs_scrub_op_ok(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+ 		     xfs_agblock_t bno, const char *type, int *error,
+-		     const char	*func, int line);
++		     const char	*func, int line, bool xref);
+ #define XFS_SCRUB_OP_ERROR_GOTO(sc, agno, bno, type, error, label) \
+ 	do { \
+ 		if (!xfs_scrub_op_ok((sc), (agno), (bno), (type), \
+-				(error), __func__, __LINE__)) \
++				(error), __func__, __LINE__, false)) \
++			goto label; \
++	} while (0)
++#define XFS_SCRUB_OP_ERROR_XGOTO(sc, agno, bno, type, error, label) \
++	do { \
++		if (!xfs_scrub_op_ok((sc), (agno), (bno), (type), \
++				(error), __func__, __LINE__, true)) \
+ 			goto label; \
+ 	} while (0)
+ 
+ /* Check for operational errors for a file offset. */
+ bool xfs_scrub_file_op_ok(struct xfs_scrub_context *sc, int whichfork,
+ 			  xfs_fileoff_t offset, const char *type,
+-			  int *error, const char *func, int line);
++			  int *error, const char *func, int line, bool xref);
+ #define XFS_SCRUB_FILE_OP_ERROR_GOTO(sc, which, off, type, error, label) \
+ 	do { \
+ 		if (!xfs_scrub_file_op_ok((sc), (which), (off), (type), \
+-				(error), __func__, __LINE__)) \
++				(error), __func__, __LINE__, false)) \
++			goto label; \
++	} while (0)
++#define XFS_SCRUB_FILE_OP_ERROR_XGOTO(sc, which, off, type, error, label) \
++	do { \
++		if (!xfs_scrub_file_op_ok((sc), (which), (off), (type), \
++				(error), __func__, __LINE__, true)) \
+ 			goto label; \
+ 	} while (0)
+ 
+@@ -141,44 +160,83 @@ bool xfs_scrub_ino_preen(struct xfs_scrub_context *sc, struct xfs_buf *bp,
+ /* Check for metadata block corruption. */
+ bool xfs_scrub_block_ok(struct xfs_scrub_context *sc, struct xfs_buf *bp,
+ 			const char *type, bool fs_ok, const char *check,
+-			const char *func, int line);
++			const char *func, int line, bool xref);
+ #define XFS_SCRUB_CHECK(sc, bp, type, fs_ok) \
+ 	xfs_scrub_block_ok((sc), (bp), (type), (fs_ok), #fs_ok, \
+-			__func__, __LINE__)
++			__func__, __LINE__, false)
+ #define XFS_SCRUB_GOTO(sc, bp, type, fs_ok, label) \
+ 	do { \
+ 		if (!xfs_scrub_block_ok((sc), (bp), (type), (fs_ok), \
+-				#fs_ok, __func__, __LINE__)) \
++				#fs_ok, __func__, __LINE__, false)) \
++			goto label; \
++	} while (0)
++#define XFS_SCRUB_XCHECK(sc, bp, type, fs_ok) \
++	xfs_scrub_block_ok((sc), (bp), (type), (fs_ok), #fs_ok, \
++			__func__, __LINE__, true)
++#define XFS_SCRUB_XGOTO(sc, bp, type, fs_ok, label) \
++	do { \
++		if (!xfs_scrub_block_ok((sc), (bp), (type), (fs_ok), \
++				#fs_ok, __func__, __LINE__, true)) \
+ 			goto label; \
+ 	} while (0)
+ 
+ /* Check for inode metadata corruption. */
+ bool xfs_scrub_ino_ok(struct xfs_scrub_context *sc, xfs_ino_t ino,
+ 		      struct xfs_buf *bp, const char *type, bool fs_ok,
+-		      const char *check, const char *func, int line);
++		      const char *check, const char *func, int line,
++		      bool xref);
+ #define XFS_SCRUB_INO_CHECK(sc, ino, bp, type, fs_ok) \
+ 	xfs_scrub_ino_ok((sc), (ino), (bp), (type), (fs_ok), #fs_ok, \
+-			__func__, __LINE__)
++			__func__, __LINE__, false)
+ #define XFS_SCRUB_INO_GOTO(sc, ino, bp, type, fs_ok, label) \
+ 	do { \
+ 		if (!xfs_scrub_ino_ok((sc), (ino), (bp), (type), (fs_ok), \
+-				#fs_ok, __func__, __LINE__)) \
++				#fs_ok, __func__, __LINE__, false)) \
++			goto label; \
++	} while(0)
++#define XFS_SCRUB_INO_XCHECK(sc, ino, bp, type, fs_ok) \
++	xfs_scrub_ino_ok((sc), (ino), (bp), (type), (fs_ok), #fs_ok, \
++			__func__, __LINE__, true)
++#define XFS_SCRUB_INO_XGOTO(sc, ino, bp, type, fs_ok, label) \
++	do { \
++		if (!xfs_scrub_ino_ok((sc), (ino), (bp), (type), (fs_ok), \
++				#fs_ok, __func__, __LINE__, true)) \
+ 			goto label; \
+ 	} while(0)
+ 
+ /* Check for file data block corruption. */
+ bool xfs_scrub_data_ok(struct xfs_scrub_context *sc, int whichfork,
+ 		       xfs_fileoff_t offset, const char *type, bool fs_ok,
+-		       const char *check, const char *func, int line);
++		       const char *check, const char *func, int line,
++		       bool xref);
+ #define XFS_SCRUB_DATA_CHECK(sc, whichfork, offset, type, fs_ok) \
+ 	xfs_scrub_data_ok((sc), (whichfork), (offset), (type), (fs_ok), \
+-			#fs_ok, __func__, __LINE__)
++			#fs_ok, __func__, __LINE__, false)
+ #define XFS_SCRUB_DATA_GOTO(sc, whichfork, offset, type, fs_ok, label) \
+ 	do { \
+ 		if (!xfs_scrub_data_ok((sc), (whichfork), (offset), \
+-				(type), (fs_ok), #fs_ok, __func__, __LINE__)) \
++				(type), (fs_ok), #fs_ok, __func__, __LINE__, \
++				false)) \
+ 			goto label; \
+ 	} while(0)
++#define XFS_SCRUB_DATA_XCHECK(sc, whichfork, offset, type, fs_ok) \
++	xfs_scrub_data_ok((sc), (whichfork), (offset), (type), (fs_ok), \
++			#fs_ok, __func__, __LINE__, true)
++#define XFS_SCRUB_DATA_XGOTO(sc, whichfork, offset, type, fs_ok, label) \
++	do { \
++		if (!xfs_scrub_data_ok((sc), (whichfork), (offset), \
++				(type), (fs_ok), #fs_ok, __func__, __LINE__, \
++				true)) \
++			goto label; \
++	} while(0)
++
++bool __xfs_scrub_should_xref(struct xfs_scrub_context *sc, int error,
++			     struct xfs_btree_cur **curpp, const char *func,
++			     int line);
++#define xfs_scrub_should_xref(sc, error, curpp) \
++	__xfs_scrub_should_xref((sc), (error), (curpp), __func__, __LINE__)
++#define xfs_scrub_btree_should_xref(bs, error, curpp) \
++	__xfs_scrub_should_xref((bs)->sc, (error), (curpp), __func__, __LINE__)
+ 
+ bool xfs_scrub_ag_can_lock(struct xfs_scrub_context *sc, xfs_agnumber_t agno);
+ int xfs_scrub_ag_lock_all(struct xfs_scrub_context *sc);
 
