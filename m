@@ -1,87 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42188 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751125AbdATXIj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Jan 2017 18:08:39 -0500
-Subject: Re: [PATCH v2 4/5] xfs_repair: zero shared_vn
-References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
- <148494394162.5256.166843220095123974.stgit@birch.djwong.org>
- <20170120225251.GH12985@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9307d194-d679-20c6-e83c-ac7fb38e467e@sandeen.net>
-Date: Fri, 20 Jan 2017 17:08:37 -0600
+Received: from aserp1040.oracle.com ([141.146.126.69]:19364 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750932AbdAUIBl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:01:41 -0500
+Subject: [PATCH 13/55] xfs: query the per-AG reservation counters
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sat, 21 Jan 2017 00:01:38 -0800
+Message-ID: <148498569831.15323.6578249794248927699.stgit@birch.djwong.org>
+In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
+References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170120225251.GH12985@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On 1/20/17 4:52 PM, Darrick J. Wong wrote:
-> Since shared_vn always has to be zero, zero it at the end of repair.
-                                                 ^^^^^^^^^^^^^^^^^^^^
+Establish an ioctl for userspace to query the original and current
+per-AG reservation counts.  This will be used by xfs_scrub to
+check that the vfs counters are at least somewhat sane.
 
-Or at the beginning ;)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_fs.h |   10 ++++++++++
+ fs/xfs/xfs_fsops.c     |   29 +++++++++++++++++++++++++++++
+ fs/xfs/xfs_fsops.h     |    2 ++
+ fs/xfs/xfs_ioctl.c     |   16 ++++++++++++++++
+ fs/xfs/xfs_ioctl32.c   |    1 +
+ 5 files changed, 58 insertions(+)
 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: reset shared_vn in phase 1 and tell the user about it, per sandeen
-> ---
->  repair/phase1.c |   11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/repair/phase1.c b/repair/phase1.c
-> index 126d0b3..ee5d3d7 100644
-> --- a/repair/phase1.c
-> +++ b/repair/phase1.c
-> @@ -138,6 +138,17 @@ _("Cannot disable lazy-counters on V5 fs\n"));
->  		}
->  	}
->  
-> +	/* shared_vn should be zero */
-> +	if (sb->sb_shared_vn) {
-> +		if (!no_modify)  {
-> +			do_warn(_("resetting shared_vn to zero\n"));
-> +			sb->sb_shared_vn = 0;
-> +			primary_sb_modified = 1;
-> +		} else  {
-> +			do_warn(_("would reset shared_vn to zero\n"));
-> +		}
-> +	}
-> +
 
-No other test has the if/else on no modify, they simply say what the problem
-is, "correcting" etc, but at the /end/ it says whether or not it's written out:
-
-        if (primary_sb_modified)  {
-                if (!no_modify)  {
-                        do_warn(_("writing modified primary superblock\n"));
-                        write_primary_sb(sb, sb->sb_sectsize);
-                } else  {
-                        do_warn(_("would write modified primary superblock\n"));
-                }
-        }
-
-So I think just something like:
-
-+	if (sb->sb_shared_vn) {
-+		do_warn(_("superblock has invalid shared_vn, resetting\n"));
-+		sb->sb_shared_vn = 0;
-+		primary_sb_modified = 1;
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index e62996f..10aa908 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -555,6 +555,15 @@ typedef struct xfs_swapext
+ #define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
+ 
+ /*
++ * AG reserved block counters
++ */
++struct xfs_fsop_ag_resblks {
++	__u64 resblks;		/* blocks reserved now */
++	__u64 resblks_orig;	/* blocks reserved at mount time */
++	__u64 reserved[2];
++};
++
++/*
+  * ioctl limits
+  */
+ #ifdef XATTR_LIST_MAX
+@@ -629,6 +638,7 @@ typedef struct xfs_swapext
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
++#define XFS_IOC_GET_AG_RESBLKS	     _IOR ('X', 126, struct xfs_fsop_ag_resblks)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ 
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 242e809..70b50f2 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -44,6 +44,7 @@
+ #include "xfs_filestream.h"
+ #include "xfs_rmap.h"
+ #include "xfs_ag_resv.h"
++#include "xfs_fs.h"
+ 
+ /*
+  * File system operations
+@@ -1067,3 +1068,31 @@ xfs_fs_unreserve_ag_blocks(
+ 
+ 	return error;
+ }
++
++/* Query the per-AG reservations to see how many blocks we have reserved. */
++int
++xfs_fs_get_ag_reserve_blocks(
++	struct xfs_mount		*mp,
++	struct xfs_fsop_ag_resblks	*out)
++{
++	struct xfs_ag_resv		*r;
++	struct xfs_perag		*pag;
++	xfs_agnumber_t			agno;
++
++	out->resblks = 0;
++	out->resblks_orig = 0;
++	out->reserved[0] = out->reserved[1] = 0;
++
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		pag = xfs_perag_get(mp, agno);
++		r = xfs_perag_resv(pag, XFS_AG_RESV_METADATA);
++		out->resblks += r->ar_reserved;
++		out->resblks_orig += r->ar_asked;
++		r = xfs_perag_resv(pag, XFS_AG_RESV_AGFL);
++		out->resblks += r->ar_reserved;
++		out->resblks_orig += r->ar_asked;
++		xfs_perag_put(pag);
 +	}
++
++	return 0;
++}
+diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+index f349158..91609ae 100644
+--- a/fs/xfs/xfs_fsops.h
++++ b/fs/xfs/xfs_fsops.h
+@@ -25,6 +25,8 @@ extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
+ extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
+ 				xfs_fsop_resblks_t *outval);
+ extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
++extern int xfs_fs_get_ag_reserve_blocks(struct xfs_mount *mp,
++		struct xfs_fsop_ag_resblks *out);
+ 
+ extern int xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
+ extern int xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index d39da5d..347f726 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1993,6 +1993,22 @@ xfs_file_ioctl(
+ 		return 0;
+ 	}
+ 
++	case XFS_IOC_GET_AG_RESBLKS: {
++		struct xfs_fsop_ag_resblks	out;
++
++		if (!capable(CAP_SYS_ADMIN))
++			return -EPERM;
++
++		error = xfs_fs_get_ag_reserve_blocks(mp, &out);
++		if (error)
++			return error;
++
++		if (copy_to_user(arg, &out, sizeof(out)))
++			return -EFAULT;
++
++		return 0;
++	}
++
+ 	case XFS_IOC_FSGROWFSDATA: {
+ 		xfs_growfs_data_t in;
+ 
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 5ba41b7..da479e9 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -555,6 +555,7 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_ERROR_INJECTION:
+ 	case XFS_IOC_ERROR_CLEARALL:
+ 	case XFS_IOC_GETFSMAP:
++	case XFS_IOC_GET_AG_RESBLKS:
+ 		return xfs_file_ioctl(filp, cmd, p);
+ #ifndef BROKEN_X86_ALIGNMENT
+ 	/* These are handled fine if no alignment issues */
 
-would suffice.
-
--Eric
-
->  	if (primary_sb_modified)  {
->  		if (!no_modify)  {
->  			do_warn(_("writing modified primary superblock\n"));
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
