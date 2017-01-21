@@ -1,43 +1,277 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29342 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753222AbdATU0U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2017 15:26:20 -0500
-Subject: [PATCH 4/5] xfs_repair: zero shared_vn
+Received: from aserp1040.oracle.com ([141.146.126.69]:19201 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750964AbdAUIA4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:00:56 -0500
+Subject: [PATCH 06/55] xfs: plumb in needed functions for range querying of
+ the freespace btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 20 Jan 2017 12:25:41 -0800
-Message-ID: <148494394162.5256.166843220095123974.stgit@birch.djwong.org>
-In-Reply-To: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
-References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+Date: Sat, 21 Jan 2017 00:00:53 -0800
+Message-ID: <148498565302.15323.14603493072378543836.stgit@birch.djwong.org>
+In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
+References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Since shared_vn always has to be zero, zero it at the end of repair.
+Plumb in the pieces (init_high_key, diff_two_keys) necessary to call
+query_range on the free space btrees.  Remove the debugging asserts
+so that we can make queries starting from block 0.
+
+While we're at it, merge the redundant "if (btnum ==" hunks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/xfs_repair.c |    3 +++
- 1 file changed, 3 insertions(+)
+ fs/xfs/libxfs/xfs_alloc_btree.c |  162 +++++++++++++++++++++++++++++----------
+ 1 file changed, 119 insertions(+), 43 deletions(-)
 
 
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 622d569..ecfa6b4 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -1050,6 +1050,9 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
- 			be32_to_cpu(dsb->sb_unit), be32_to_cpu(dsb->sb_width));
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index efb467b..ba3ec9c 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -205,19 +205,28 @@ xfs_allocbt_init_key_from_rec(
+ 	union xfs_btree_key	*key,
+ 	union xfs_btree_rec	*rec)
+ {
+-	ASSERT(rec->alloc.ar_startblock != 0);
+-
+ 	key->alloc.ar_startblock = rec->alloc.ar_startblock;
+ 	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
+ }
+ 
+ STATIC void
++xfs_bnobt_init_high_key_from_rec(
++	union xfs_btree_key	*key,
++	union xfs_btree_rec	*rec)
++{
++	__u32			x;
++
++	x = be32_to_cpu(rec->alloc.ar_startblock);
++	x += be32_to_cpu(rec->alloc.ar_blockcount) - 1;
++	key->alloc.ar_startblock = cpu_to_be32(x);
++	key->alloc.ar_blockcount = 0;
++}
++
++STATIC void
+ xfs_allocbt_init_rec_from_cur(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_rec	*rec)
+ {
+-	ASSERT(cur->bc_rec.a.ar_startblock != 0);
+-
+ 	rec->alloc.ar_startblock = cpu_to_be32(cur->bc_rec.a.ar_startblock);
+ 	rec->alloc.ar_blockcount = cpu_to_be32(cur->bc_rec.a.ar_blockcount);
+ }
+@@ -236,18 +245,24 @@ xfs_allocbt_init_ptr_from_cur(
+ }
+ 
+ STATIC __int64_t
+-xfs_allocbt_key_diff(
++xfs_bnobt_key_diff(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*key)
+ {
+ 	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
+ 	xfs_alloc_key_t		*kp = &key->alloc;
+-	__int64_t		diff;
+ 
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return (__int64_t)be32_to_cpu(kp->ar_startblock) -
+-				rec->ar_startblock;
+-	}
++	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
++}
++
++STATIC __int64_t
++xfs_cntbt_key_diff(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*key)
++{
++	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
++	xfs_alloc_key_t		*kp = &key->alloc;
++	__int64_t		diff;
+ 
+ 	diff = (__int64_t)be32_to_cpu(kp->ar_blockcount) - rec->ar_blockcount;
+ 	if (diff)
+@@ -256,6 +271,33 @@ xfs_allocbt_key_diff(
+ 	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
+ }
+ 
++STATIC __int64_t
++xfs_bnobt_diff_two_keys(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	return (__int64_t)be32_to_cpu(k1->alloc.ar_startblock) -
++			  be32_to_cpu(k2->alloc.ar_startblock);
++}
++
++STATIC __int64_t
++xfs_cntbt_diff_two_keys(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	__int64_t		diff;
++
++	diff =  be32_to_cpu(k1->alloc.ar_blockcount) -
++		be32_to_cpu(k2->alloc.ar_blockcount);
++	if (diff)
++		return diff;
++
++	return  be32_to_cpu(k1->alloc.ar_startblock) -
++		be32_to_cpu(k2->alloc.ar_startblock);
++}
++
+ static bool
+ xfs_allocbt_verify(
+ 	struct xfs_buf		*bp)
+@@ -346,44 +388,78 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
+ 
+ #if defined(DEBUG) || defined(XFS_WARN)
+ STATIC int
+-xfs_allocbt_keys_inorder(
++xfs_bnobt_keys_inorder(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*k1,
+ 	union xfs_btree_key	*k2)
+ {
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return be32_to_cpu(k1->alloc.ar_startblock) <
+-		       be32_to_cpu(k2->alloc.ar_startblock);
+-	} else {
+-		return be32_to_cpu(k1->alloc.ar_blockcount) <
+-			be32_to_cpu(k2->alloc.ar_blockcount) ||
+-			(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
+-			 be32_to_cpu(k1->alloc.ar_startblock) <
+-			 be32_to_cpu(k2->alloc.ar_startblock));
+-	}
++	return be32_to_cpu(k1->alloc.ar_startblock) <
++	       be32_to_cpu(k2->alloc.ar_startblock);
+ }
+ 
+ STATIC int
+-xfs_allocbt_recs_inorder(
++xfs_bnobt_recs_inorder(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_rec	*r1,
+ 	union xfs_btree_rec	*r2)
+ {
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return be32_to_cpu(r1->alloc.ar_startblock) +
+-			be32_to_cpu(r1->alloc.ar_blockcount) <=
+-			be32_to_cpu(r2->alloc.ar_startblock);
+-	} else {
+-		return be32_to_cpu(r1->alloc.ar_blockcount) <
+-			be32_to_cpu(r2->alloc.ar_blockcount) ||
+-			(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
+-			 be32_to_cpu(r1->alloc.ar_startblock) <
+-			 be32_to_cpu(r2->alloc.ar_startblock));
+-	}
++	return be32_to_cpu(r1->alloc.ar_startblock) +
++		be32_to_cpu(r1->alloc.ar_blockcount) <=
++		be32_to_cpu(r2->alloc.ar_startblock);
++}
++
++STATIC int
++xfs_cntbt_keys_inorder(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	return be32_to_cpu(k1->alloc.ar_blockcount) <
++		be32_to_cpu(k2->alloc.ar_blockcount) ||
++		(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
++		 be32_to_cpu(k1->alloc.ar_startblock) <
++		 be32_to_cpu(k2->alloc.ar_startblock));
++}
++
++STATIC int
++xfs_cntbt_recs_inorder(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_rec	*r1,
++	union xfs_btree_rec	*r2)
++{
++	return be32_to_cpu(r1->alloc.ar_blockcount) <
++		be32_to_cpu(r2->alloc.ar_blockcount) ||
++		(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
++		 be32_to_cpu(r1->alloc.ar_startblock) <
++		 be32_to_cpu(r2->alloc.ar_startblock));
+ }
+-#endif	/* DEBUG */
++#endif /* DEBUG */
++
++static const struct xfs_btree_ops xfs_bnobt_ops = {
++	.rec_len		= sizeof(xfs_alloc_rec_t),
++	.key_len		= sizeof(xfs_alloc_key_t),
++
++	.dup_cursor		= xfs_allocbt_dup_cursor,
++	.set_root		= xfs_allocbt_set_root,
++	.alloc_block		= xfs_allocbt_alloc_block,
++	.free_block		= xfs_allocbt_free_block,
++	.update_lastrec		= xfs_allocbt_update_lastrec,
++	.get_minrecs		= xfs_allocbt_get_minrecs,
++	.get_maxrecs		= xfs_allocbt_get_maxrecs,
++	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
++	.init_high_key_from_rec	= xfs_bnobt_init_high_key_from_rec,
++	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
++	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
++	.key_diff		= xfs_bnobt_key_diff,
++	.buf_ops		= &xfs_allocbt_buf_ops,
++	.diff_two_keys		= xfs_bnobt_diff_two_keys,
++#if defined(DEBUG) || defined(XFS_WARN)
++	.keys_inorder		= xfs_bnobt_keys_inorder,
++	.recs_inorder		= xfs_bnobt_recs_inorder,
++#endif
++};
+ 
+-static const struct xfs_btree_ops xfs_allocbt_ops = {
++static const struct xfs_btree_ops xfs_cntbt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 	.key_len		= sizeof(xfs_alloc_key_t),
+ 
+@@ -397,11 +473,12 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
+ 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
+ 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+-	.key_diff		= xfs_allocbt_key_diff,
++	.key_diff		= xfs_cntbt_key_diff,
+ 	.buf_ops		= &xfs_allocbt_buf_ops,
++	.diff_two_keys		= xfs_cntbt_diff_two_keys,
+ #if defined(DEBUG) || defined(XFS_WARN)
+-	.keys_inorder		= xfs_allocbt_keys_inorder,
+-	.recs_inorder		= xfs_allocbt_recs_inorder,
++	.keys_inorder		= xfs_cntbt_keys_inorder,
++	.recs_inorder		= xfs_cntbt_recs_inorder,
+ #endif
+ };
+ 
+@@ -427,16 +504,15 @@ xfs_allocbt_init_cursor(
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = btnum;
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+-	cur->bc_ops = &xfs_allocbt_ops;
+-	if (btnum == XFS_BTNUM_BNO)
+-		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
+-	else
+-		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
+ 
+ 	if (btnum == XFS_BTNUM_CNT) {
++		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
++		cur->bc_ops = &xfs_cntbt_ops;
+ 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
+ 		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
+ 	} else {
++		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
++		cur->bc_ops = &xfs_bnobt_ops;
+ 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
  	}
  
-+	/* shared_vn is always zero. */
-+	dsb->sb_shared_vn = 0;
-+
- 	libxfs_writebuf(sbp, 0);
- 
- 	/*
 
