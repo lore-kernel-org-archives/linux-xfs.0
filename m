@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25194 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750886AbdAUIDm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:03:42 -0500
-Subject: [PATCH 30/55] xfs: scrub symbolic links
+Received: from aserp1040.oracle.com ([141.146.126.69]:19738 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750886AbdAUIDu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:03:50 -0500
+Subject: [PATCH 31/55] xfs: scrub realtime bitmap/summary
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 21 Jan 2017 00:03:38 -0800
-Message-ID: <148498581836.15323.1917083539546274542.stgit@birch.djwong.org>
+Date: Sat, 21 Jan 2017 00:03:44 -0800
+Message-ID: <148498582471.15323.5968216416559835021.stgit@birch.djwong.org>
 In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,86 +18,143 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Create the infrastructure to scrub symbolic link data.
+Perform simple tests of the realtime bitmap and summary.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile        |    1 
- fs/xfs/libxfs/xfs_fs.h |    3 +
- fs/xfs/scrub/common.c  |    1 
- fs/xfs/scrub/common.h  |    5 ++
- fs/xfs/scrub/symlink.c |  107 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trace.h     |    3 +
- 6 files changed, 118 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/symlink.c
+ fs/xfs/Makefile              |    5 ++
+ fs/xfs/libxfs/xfs_format.h   |    5 ++
+ fs/xfs/libxfs/xfs_fs.h       |    4 +
+ fs/xfs/libxfs/xfs_rtbitmap.c |    2 -
+ fs/xfs/scrub/agheader.c      |    1 
+ fs/xfs/scrub/common.c        |    7 ++
+ fs/xfs/scrub/common.h        |    6 ++
+ fs/xfs/scrub/rtbitmap.c      |  131 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_rtalloc.h         |    3 +
+ fs/xfs/xfs_trace.h           |    4 +
+ 10 files changed, 165 insertions(+), 3 deletions(-)
+ create mode 100644 fs/xfs/scrub/rtbitmap.c
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index d723ebc..5035ee0 100644
+index 5035ee0..a22b027 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -116,6 +116,7 @@ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
- 				   inode.o \
- 				   refcount.o \
+@@ -118,6 +118,11 @@ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
  				   rmap.o \
-+				   symlink.o \
+ 				   symlink.o \
  				   )
++ifeq ($(CONFIG_XFS_DEBUG)$(CONFIG_XFS_RT),yy)
++xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
++				   rtbitmap.o \
++				   )
++endif
  
  # low-level transaction/log code
+ xfs-y				+= xfs_log.o \
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 301effc..cb00017 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -315,6 +315,11 @@ static inline bool xfs_sb_good_version(struct xfs_sb *sbp)
+ 	return false;
+ }
+ 
++static inline bool xfs_sb_version_hasrealtime(struct xfs_sb *sbp)
++{
++	return sbp->sb_rblocks > 0;
++}
++
+ /*
+  * Detect a mismatched features2 field.  Older kernels read/wrote
+  * this into the wrong slot, so to be safe we keep them in sync.
 diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 6d5bfbd..5484c26 100644
+index 5484c26..bcb3a69 100644
 --- a/fs/xfs/libxfs/xfs_fs.h
 +++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -591,7 +591,8 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
+@@ -592,7 +592,9 @@ struct xfs_scrub_metadata {
  #define XFS_SCRUB_TYPE_DIR	15	/* directory */
  #define XFS_SCRUB_TYPE_XATTR	16	/* extended attribute */
--#define XFS_SCRUB_TYPE_MAX	16
-+#define XFS_SCRUB_TYPE_SYMLINK	17	/* symbolic link */
-+#define XFS_SCRUB_TYPE_MAX	17
+ #define XFS_SCRUB_TYPE_SYMLINK	17	/* symbolic link */
+-#define XFS_SCRUB_TYPE_MAX	17
++#define XFS_SCRUB_TYPE_RTBITMAP	18	/* realtime bitmap */
++#define XFS_SCRUB_TYPE_RTSUM	19	/* realtime summary */
++#define XFS_SCRUB_TYPE_MAX	19
  
  #define XFS_SCRUB_FLAG_REPAIR	0x01	/* i: repair this metadata */
  #define XFS_SCRUB_FLAG_CORRUPT	0x02	/* o: needs repair */
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index ea45584..f4b68c0 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -70,7 +70,7 @@ const struct xfs_buf_ops xfs_rtbuf_ops = {
+  * Get a buffer for the bitmap or summary file block specified.
+  * The buffer is returned read and locked.
+  */
+-static int
++int
+ xfs_rtbuf_get(
+ 	xfs_mount_t	*mp,		/* file system mount structure */
+ 	xfs_trans_t	*tp,		/* transaction pointer */
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index f3bbd89..374157f 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -248,6 +248,7 @@ xfs_scrub_superblock(
+ 	XFS_SCRUB_SB_FEAT(metauuid);
+ 	XFS_SCRUB_SB_FEAT(rmapbt);
+ 	XFS_SCRUB_SB_FEAT(reflink);
++	XFS_SCRUB_SB_FEAT(realtime);
+ #undef XFS_SCRUB_SB_FEAT
+ 
+ #define XFS_SCRUB_SB_FEAT_PREEN(fn) \
 diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index b68dd74..0b55933 100644
+index 0b55933..b7ac141 100644
 --- a/fs/xfs/scrub/common.c
 +++ b/fs/xfs/scrub/common.c
-@@ -689,6 +689,7 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 	{xfs_scrub_setup_inode_bmap, xfs_scrub_bmap_cow, NULL, NULL},
+@@ -690,6 +690,13 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
  	{xfs_scrub_setup_inode, xfs_scrub_directory, NULL, NULL},
  	{xfs_scrub_setup_inode_xattr, xfs_scrub_xattr, NULL, NULL},
-+	{xfs_scrub_setup_inode_symlink, xfs_scrub_symlink, NULL, NULL},
+ 	{xfs_scrub_setup_inode_symlink, xfs_scrub_symlink, NULL, NULL},
++#ifdef CONFIG_XFS_RT
++	{xfs_scrub_setup_rt, xfs_scrub_rtbitmap, NULL, xfs_sb_version_hasrealtime},
++	{xfs_scrub_setup_rt, xfs_scrub_rtsummary, NULL, xfs_sb_version_hasrealtime},
++#else
++	{NULL, NULL, NULL, NULL},
++	{NULL, NULL, NULL, NULL},
++#endif
  };
  
  /* Dispatch metadata scrubbing. */
 diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 0f3ffd7..123dc1d 100644
+index 123dc1d..8dc68b9 100644
 --- a/fs/xfs/scrub/common.h
 +++ b/fs/xfs/scrub/common.h
-@@ -231,6 +231,10 @@ int xfs_scrub_setup_inode_xattr(struct xfs_scrub_context *sc,
- 				struct xfs_inode *ip,
- 				struct xfs_scrub_metadata *sm,
- 				bool retry_deadlocked);
-+int xfs_scrub_setup_inode_symlink(struct xfs_scrub_context *sc,
-+				  struct xfs_inode *ip,
-+				  struct xfs_scrub_metadata *sm,
-+				  bool retry_deadlocked);
+@@ -235,6 +235,10 @@ int xfs_scrub_setup_inode_symlink(struct xfs_scrub_context *sc,
+ 				  struct xfs_inode *ip,
+ 				  struct xfs_scrub_metadata *sm,
+ 				  bool retry_deadlocked);
++int xfs_scrub_setup_rt(struct xfs_scrub_context *sc,
++		       struct xfs_inode *ip,
++		       struct xfs_scrub_metadata *sm,
++		       bool retry_deadlocked);
  
  /* Metadata scrubbers */
  
-@@ -250,5 +254,6 @@ int xfs_scrub_bmap_attr(struct xfs_scrub_context *sc);
- int xfs_scrub_bmap_cow(struct xfs_scrub_context *sc);
+@@ -255,5 +259,7 @@ int xfs_scrub_bmap_cow(struct xfs_scrub_context *sc);
  int xfs_scrub_directory(struct xfs_scrub_context *sc);
  int xfs_scrub_xattr(struct xfs_scrub_context *sc);
-+int xfs_scrub_symlink(struct xfs_scrub_context *sc);
+ int xfs_scrub_symlink(struct xfs_scrub_context *sc);
++int xfs_scrub_rtbitmap(struct xfs_scrub_context *sc);
++int xfs_scrub_rtsummary(struct xfs_scrub_context *sc);
  
  #endif	/* __XFS_REPAIR_COMMON_H__ */
-diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
+diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
 new file mode 100644
-index 0000000..80a1e70
+index 0000000..2a5a546f
 --- /dev/null
-+++ b/fs/xfs/scrub/symlink.c
-@@ -0,0 +1,107 @@
++++ b/fs/xfs/scrub/rtbitmap.c
+@@ -0,0 +1,131 @@
 +/*
 + * Copyright (C) 2017 Oracle.  All Rights Reserved.
 + *
@@ -130,92 +187,138 @@ index 0000000..80a1e70
 +#include "xfs_trans.h"
 +#include "xfs_trace.h"
 +#include "xfs_sb.h"
++#include "xfs_alloc.h"
++#include "xfs_rtalloc.h"
 +#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_symlink.h"
 +#include "scrub/common.h"
 +
-+/* Set us up with an inode and a buffer for reading symlink targets. */
++/* Set us up with the realtime metadata locked. */
 +int
-+xfs_scrub_setup_inode_symlink(
++xfs_scrub_setup_rt(
 +	struct xfs_scrub_context	*sc,
 +	struct xfs_inode		*ip,
 +	struct xfs_scrub_metadata	*sm,
 +	bool				retry_deadlocked)
 +{
-+	void				*buf;
-+	int				error;
++	struct xfs_mount		*mp = ip->i_mount;
++	int				lockmode;
++	int				error = 0;
 +
-+	/* Allocate the buffer without the inode lock held. */
-+	buf = kmem_zalloc_large(MAXPATHLEN + 1, KM_SLEEP);
-+	if (!buf)
-+		return -ENOMEM;
++	if (sm->sm_agno || sm->sm_ino || sm->sm_gen)
++		return -EINVAL;
 +
-+	error = xfs_scrub_setup_inode(sc, ip, sm, retry_deadlocked);
-+	if (error) {
-+		kmem_free(buf);
++	error = xfs_scrub_setup(sc, ip, sm, retry_deadlocked);
++	if (error)
 +		return error;
-+	}
 +
-+	sc->buf = buf;
++	lockmode = XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP;
++	xfs_ilock(mp->m_rbmip, lockmode);
++	xfs_trans_ijoin(sc->tp, mp->m_rbmip, lockmode);
++
 +	return 0;
 +}
 +
-+/* Symbolic links. */
++/* Realtime bitmap. */
 +
-+#define XFS_SCRUB_SYMLINK_CHECK(fs_ok) \
-+	XFS_SCRUB_INO_CHECK(sc, ip->i_ino, NULL, "symlink", fs_ok)
-+#define XFS_SCRUB_SYMLINK_GOTO(fs_ok, label) \
-+	XFS_SCRUB_INO_GOTO(sc, ip->i_ino, NULL, "symlink", fs_ok, label)
++#define XFS_SCRUB_RTBITMAP_CHECK(fs_ok) \
++	XFS_SCRUB_CHECK(sc, bp, "rtbitmap", fs_ok);
++#define XFS_SCRUB_RTBITMAP_OP_ERROR_GOTO(error, label) \
++	XFS_SCRUB_OP_ERROR_GOTO(sc, 0, 0, "rtbitmap", error, label)
++/* Scrub the realtime bitmap. */
 +int
-+xfs_scrub_symlink(
++xfs_scrub_rtbitmap(
 +	struct xfs_scrub_context	*sc)
 +{
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_ifork		*ifp;
-+	loff_t				len;
++	struct xfs_mount		*mp = sc->tp->t_mountp;
++	struct xfs_buf			*bp = NULL;
++	xfs_rtblock_t			rtstart;
++	xfs_rtblock_t			rtend = 0;
++	xfs_rtblock_t			block;
++	xfs_rtblock_t			rem;
++	int				is_free = 0;
 +	int				error = 0;
++	int				err2 = 0;
 +
-+	if (!S_ISLNK(VFS_I(ip)->i_mode))
-+		return -ENOENT;
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	len = ip->i_d.di_size;
++	/* Iterate the bitmap, looking for discrepancies. */
++	rtstart = 0;
++	rem = mp->m_sb.sb_rblocks;
++	while (rem) {
++		if (xfs_scrub_should_terminate(&error))
++			break;
 +
-+	/* Plausible size? */
-+	XFS_SCRUB_SYMLINK_GOTO(len <= MAXPATHLEN, out);
++		/* Is the first block free? */
++		err2 = xfs_rtcheck_range(mp, sc->tp, rtstart, 1, 1, &rtend,
++				&is_free);
++		XFS_SCRUB_RTBITMAP_OP_ERROR_GOTO(&err2, out);
 +
-+	/* Inline symlink? */
-+	if (ifp->if_flags & XFS_IFINLINE) {
-+		XFS_SCRUB_SYMLINK_GOTO(len > 0, out);
-+		XFS_SCRUB_SYMLINK_CHECK(len <= XFS_IFORK_DSIZE(ip));
-+		XFS_SCRUB_SYMLINK_CHECK(len <= strnlen(ifp->if_u1.if_data,
-+				XFS_IFORK_DSIZE(ip)));
-+		goto out;
++		/* How long does the extent go for? */
++		err2 = xfs_rtfind_forw(mp, sc->tp, rtstart,
++				mp->m_sb.sb_rblocks - 1, &rtend);
++		XFS_SCRUB_RTBITMAP_OP_ERROR_GOTO(&err2, out);
++
++		/* Find the buffer for error reporting. */
++		block = XFS_BITTOBLOCK(mp, rtstart);
++		err2 = xfs_rtbuf_get(mp, sc->tp, block, 0, &bp);
++		XFS_SCRUB_RTBITMAP_OP_ERROR_GOTO(&err2, out);
++		XFS_SCRUB_RTBITMAP_CHECK(rtend >= rtstart);
++
++		xfs_trans_brelse(sc->tp, bp);
++		bp = NULL;
++		rem -= rtend - rtstart + 1;
++		rtstart = rtend + 1;
 +	}
 +
-+	/* Remote symlink; must read. */
-+	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL);
-+	error = xfs_readlink(sc->ip, sc->buf);
-+	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
-+	XFS_SCRUB_FILE_OP_ERROR_GOTO(sc, XFS_DATA_FORK, 0, "symlink",
-+			&error, out);
-+	XFS_SCRUB_SYMLINK_CHECK(len <= strnlen(sc->buf, MAXPATHLEN));
 +out:
++	if (bp)
++		xfs_trans_brelse(sc->tp, bp);
++	if (!error && err2)
++		error = err2;
 +	return error;
 +}
-+#undef XFS_SCRUB_SYMLINK_GOTO
-+#undef XFS_SCRUB_SYMLINK_CHECK
++#undef XFS_SCRUB_RTBITMAP_OP_ERROR_GOTO
++#undef XFS_SCRUB_RTBITMAP_CHECK
++
++/* Scrub the realtime summary. */
++int
++xfs_scrub_rtsummary(
++	struct xfs_scrub_context	*sc)
++{
++	/* XXX: implement this some day */
++	return -ENOENT;
++}
+diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+index f798a3e..3036349 100644
+--- a/fs/xfs/xfs_rtalloc.h
++++ b/fs/xfs/xfs_rtalloc.h
+@@ -98,6 +98,8 @@ xfs_growfs_rt(
+ /*
+  * From xfs_rtbitmap.c
+  */
++int xfs_rtbuf_get(struct xfs_mount *mp, struct xfs_trans *tp,
++		  xfs_rtblock_t block, int issum, struct xfs_buf **bpp);
+ int xfs_rtcheck_range(struct xfs_mount *mp, struct xfs_trans *tp,
+ 		      xfs_rtblock_t start, xfs_extlen_t len, int val,
+ 		      xfs_rtblock_t *new, int *stat);
+@@ -128,6 +130,7 @@ int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
+ # define xfs_growfs_rt(mp,in)                           (ENOSYS)
+ # define xfs_rtcheck_range(...)                         (ENOSYS)
+ # define xfs_rtfind_forw(...)                           (ENOSYS)
++# define xfs_rtbuf_get(m,t,b,i,p)                       (ENOSYS)
+ static inline int		/* error */
+ xfs_rtmount_init(
+ 	xfs_mount_t	*mp)	/* file system mount structure */
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 760552d..87fd942 100644
+index 87fd942..c52e3a5 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -3369,7 +3369,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_BMBTA,		"bmapbta" }, \
+@@ -3370,7 +3370,9 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
  	{ XFS_SCRUB_TYPE_BMBTC,		"bmapbtc" }, \
  	{ XFS_SCRUB_TYPE_DIR,		"dir" }, \
--	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }
-+	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }, \
-+	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }
+ 	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }, \
+-	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }
++	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }, \
++	{ XFS_SCRUB_TYPE_RTBITMAP,	"rtbitmap" }, \
++	{ XFS_SCRUB_TYPE_RTSUM,		"rtsummary" }
  DECLARE_EVENT_CLASS(xfs_scrub_class,
  	TP_PROTO(struct xfs_inode *ip, int type, xfs_agnumber_t agno,
  		 xfs_ino_t inum, unsigned int gen, unsigned int flags,
