@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19929 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751045AbdAUIEu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:04:50 -0500
-Subject: [PATCH 41/55] xfs: shut off scrub-related error and corruption
- messages
+Received: from userp1040.oracle.com ([156.151.31.81]:25382 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751045AbdAUIE4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:04:56 -0500
+Subject: [PATCH 42/55] xfs: create tracepoints for online repair
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 21 Jan 2017 00:04:47 -0800
-Message-ID: <148498588779.15323.4547967509692752204.stgit@birch.djwong.org>
+Date: Sat, 21 Jan 2017 00:04:53 -0800
+Message-ID: <148498589388.15323.12139501208489949461.stgit@birch.djwong.org>
 In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -19,117 +18,170 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-While we're scrubbing and repairing, silence errors and corruption
-messages to avoid flooding the logs.
+These tracepoints will be used to debug the online repair routines.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/common.c |    3 +++
- fs/xfs/xfs_buf.c      |    3 +++
- fs/xfs/xfs_error.c    |    9 +++++++++
- fs/xfs/xfs_mount.h    |    1 +
- fs/xfs/xfs_super.c    |    1 +
- 5 files changed, 17 insertions(+)
+ fs/xfs/xfs_trace.h |  147 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 147 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 1c20006..b0d0ed2 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -790,6 +790,8 @@ xfs_scrub_metadata(
- 		warned = true;
- 	}
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index c52e3a5..becdb7a 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3742,6 +3742,153 @@ DEFINE_SCRUB_AG_LOCK_EVENT(xfs_scrub_ag_can_lock);
+ DEFINE_SCRUB_AG_LOCK_EVENT(xfs_scrub_ag_may_deadlock);
+ DEFINE_SCRUB_AG_LOCK_EVENT(xfs_scrub_ag_lock_all);
  
-+	atomic_inc(&mp->m_scrubbers);
++/* repair tracepoints */
++DEFINE_SCRUB_EVENT(xfs_repair_attempt);
++DEFINE_SCRUB_EVENT(xfs_repair_done);
++DEFINE_BUSY_EVENT(xfs_repair_free_or_unmap_extent);
++DEFINE_BUSY_EVENT(xfs_repair_collect_btree_extent);
++TRACE_EVENT(xfs_repair_init_btblock,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
++		 uint32_t magic),
++	TP_ARGS(mp, agno, agbno, magic),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(uint32_t, magic)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->magic = magic;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u magic 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->agbno, __entry->magic)
++)
++TRACE_EVENT(xfs_repair_find_ag_btree_roots_helper,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
++		 uint32_t magic, uint16_t level),
++	TP_ARGS(mp, agno, agbno, magic, level),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(uint32_t, magic)
++		__field(uint16_t, level)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->magic = magic;
++		__entry->level = level;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u magic 0x%x level %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->agbno, __entry->magic, __entry->level)
++)
++TRACE_EVENT(xfs_repair_calc_ag_resblks,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agino_t icount, xfs_agblock_t aglen, xfs_agblock_t freelen,
++		 xfs_agblock_t usedlen),
++	TP_ARGS(mp, agno, icount, aglen, freelen, usedlen),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, icount)
++		__field(xfs_agblock_t, aglen)
++		__field(xfs_agblock_t, freelen)
++		__field(xfs_agblock_t, usedlen)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->icount = icount;
++		__entry->aglen = aglen;
++		__entry->freelen = freelen;
++		__entry->usedlen = usedlen;
++	),
++	TP_printk("dev %d:%d agno %d icount %u aglen %u freelen %u usedlen %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->icount, __entry->aglen, __entry->freelen,
++		  __entry->usedlen)
++)
++TRACE_EVENT(xfs_repair_calc_ag_resblks_btsize,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t bnobt_sz, xfs_agblock_t inobt_sz,
++		 xfs_agblock_t rmapbt_sz, xfs_agblock_t refcbt_sz),
++	TP_ARGS(mp, agno, bnobt_sz, inobt_sz, rmapbt_sz, refcbt_sz),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bnobt_sz)
++		__field(xfs_agblock_t, inobt_sz)
++		__field(xfs_agblock_t, rmapbt_sz)
++		__field(xfs_agblock_t, refcbt_sz)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->bnobt_sz = bnobt_sz;
++		__entry->inobt_sz = inobt_sz;
++		__entry->rmapbt_sz = rmapbt_sz;
++		__entry->refcbt_sz = refcbt_sz;
++	),
++	TP_printk("dev %d:%d agno %d bno %u ino %u rmap %u refcount %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->bnobt_sz, __entry->inobt_sz, __entry->rmapbt_sz,
++		  __entry->refcbt_sz)
++)
++TRACE_EVENT(xfs_repair_reset_counters,
++	TP_PROTO(struct xfs_mount *mp),
++	TP_ARGS(mp),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++	),
++	TP_printk("dev %d:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev))
++)
 +
- retry_op:
- 	/* Set up for the operation. */
- 	error = fns->setup(&sc, ip, sm, deadlocked);
-@@ -813,6 +815,7 @@ xfs_scrub_metadata(
- out_teardown:
- 	error = xfs_scrub_teardown(&sc, ip, error);
- out:
-+	atomic_dec(&mp->m_scrubbers);
- 	trace_xfs_scrub_done(ip, sm->sm_type, sm->sm_agno, sm->sm_ino,
- 			sm->sm_gen, sm->sm_flags, error);
- 	return error;
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 7f0a01f..e8d2108 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -41,6 +41,7 @@
- #include "xfs_mount.h"
- #include "xfs_trace.h"
- #include "xfs_log.h"
-+#include "xfs_error.h"
- 
- static kmem_zone_t *xfs_buf_zone;
- 
-@@ -561,6 +562,8 @@ _xfs_buf_find(
- 	 */
- 	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
- 	if (cmap.bm_bn < 0 || cmap.bm_bn >= eofs) {
-+		if (atomic_read(&btp->bt_mount->m_scrubbers) > 0)
-+			return NULL;
- 		/*
- 		 * XXX (dgc): we should really be returning -EFSCORRUPTED here,
- 		 * but none of the higher level infrastructure supports
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index ed7ee4e..955c4cc 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -132,6 +132,9 @@ xfs_error_report(
- 	int			linenum,
- 	void			*ra)
- {
-+	if (atomic_read(&mp->m_scrubbers) > 0)
-+		return;
++DEFINE_BUSY_EVENT(xfs_repair_agfl_insert);
++DEFINE_RMAPBT_EVENT(xfs_repair_alloc_extent_fn);
++DEFINE_RMAPBT_EVENT(xfs_repair_ialloc_extent_fn);
++TRACE_EVENT(xfs_repair_ialloc_insert,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agino_t startino, uint16_t holemask, uint8_t count,
++		 uint8_t freecount, uint64_t freemask),
++	TP_ARGS(mp, agno, startino, holemask, count, freecount, freemask),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, startino)
++		__field(uint16_t, holemask)
++		__field(uint8_t, count)
++		__field(uint8_t, freecount)
++		__field(uint64_t, freemask)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startino = startino;
++		__entry->holemask = holemask;
++		__entry->count = count;
++		__entry->freecount = freecount;
++		__entry->freemask = freemask;
++	),
++	TP_printk("dev %d:%d agno %d startino %u holemask 0x%x count %u freecount %u freemask 0x%llx",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->startino, __entry->holemask, __entry->count,
++		  __entry->freecount, __entry->freemask)
++)
++DEFINE_RMAPBT_EVENT(xfs_repair_rmap_extent_fn);
++DEFINE_REFCOUNT_EXTENT_EVENT(xfs_repair_refcount_extent_fn);
++DEFINE_RMAPBT_EVENT(xfs_repair_bmap_extent_fn);
 +
- 	if (level <= xfs_error_level) {
- 		xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
- 		"Internal error %s at line %d of file %s.  Caller %pS",
-@@ -151,6 +154,9 @@ xfs_corruption_error(
- 	int			linenum,
- 	void			*ra)
- {
-+	if (atomic_read(&mp->m_scrubbers) > 0)
-+		return;
-+
- 	if (level <= xfs_error_level)
- 		xfs_hex_dump(p, 64);
- 	xfs_error_report(tag, level, mp, filename, linenum, ra);
-@@ -167,6 +173,9 @@ xfs_verifier_error(
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ #endif /* _TRACE_XFS_H */
  
-+	if (atomic_read(&mp->m_scrubbers) > 0)
-+		return;
-+
- 	xfs_alert(mp, "Metadata %s detected at %pF, %s block 0x%llx",
- 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
- 		  __return_address, bp->b_ops->name, bp->b_bn);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 84f7852..3883757 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -205,6 +205,7 @@ typedef struct xfs_mount {
- 	 */
- 	bool			m_fail_writes;
- #endif
-+	atomic_t		m_scrubbers;	/* # of active scrub processes */
- } xfs_mount_t;
- 
- /*
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index eecbaac..950d268 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1538,6 +1538,7 @@ xfs_fs_fill_super(
- 	spin_lock_init(&mp->m_sb_lock);
- 	mutex_init(&mp->m_growlock);
- 	atomic_set(&mp->m_active_trans, 0);
-+	atomic_set(&mp->m_scrubbers, 0);
- 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
- 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
- 	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
+ #undef TRACE_INCLUDE_PATH
 
