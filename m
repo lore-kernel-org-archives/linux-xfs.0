@@ -1,98 +1,232 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49595 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751970AbdASLd7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Jan 2017 06:33:59 -0500
-Date: Thu, 19 Jan 2017 10:44:05 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
-Message-ID: <20170119094405.GK30786@dhcp22.suse.cz>
-References: <20170106141107.23953-1-mhocko@kernel.org>
- <20170106141107.23953-9-mhocko@kernel.org>
- <20170117025607.frrcdbduthhutrzj@thunk.org>
- <20170117082425.GD19699@dhcp22.suse.cz>
- <20170117151817.GR19699@dhcp22.suse.cz>
- <20170117155916.dcizr65bwa6behe7@thunk.org>
- <20170117161618.GT19699@dhcp22.suse.cz>
- <20170117172925.GA2486@quack2.suse.cz>
- <20170119083956.GE30786@dhcp22.suse.cz>
- <20170119092236.GC2565@quack2.suse.cz>
+Received: from userp1040.oracle.com ([156.151.31.81]:24893 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751043AbdAUIB2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:01:28 -0500
+Subject: [PATCH 11/55] xfs: have getfsmap fall back to the freesp btrees
+ when rmap is not present
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sat, 21 Jan 2017 00:01:26 -0800
+Message-ID: <148498568598.15323.2310542685404874799.stgit@birch.djwong.org>
+In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
+References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170119092236.GC2565@quack2.suse.cz>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Theodore Ts'o <tytso@mit.edu>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Thu 19-01-17 10:22:36, Jan Kara wrote:
-> On Thu 19-01-17 09:39:56, Michal Hocko wrote:
-> > On Tue 17-01-17 18:29:25, Jan Kara wrote:
-> > > On Tue 17-01-17 17:16:19, Michal Hocko wrote:
-> > > > > > But before going to play with that I am really wondering whether we need
-> > > > > > all this with no journal at all. AFAIU what Jack told me it is the
-> > > > > > journal lock(s) which is the biggest problem from the reclaim recursion
-> > > > > > point of view. What would cause a deadlock in no journal mode?
-> > > > > 
-> > > > > We still have the original problem for why we need GFP_NOFS even in
-> > > > > ext2.  If we are in a writeback path, and we need to allocate memory,
-> > > > > we don't want to recurse back into the file system's writeback path.
-> > > > 
-> > > > But we do not enter the writeback path from the direct reclaim. Or do
-> > > > you mean something other than pageout()'s mapping->a_ops->writepage?
-> > > > There is only try_to_release_page where we get back to the filesystems
-> > > > but I do not see any NOFS protection in ext4_releasepage.
-> > > 
-> > > Maybe to expand a bit: These days, direct reclaim can call ->releasepage()
-> > > callback, ->evict_inode() callback (and only for inodes with i_nlink > 0),
-> > > shrinkers. That's it. So the recursion possibilities are rather more limited
-> > > than they used to be several years ago and we likely do not need as much
-> > > GFP_NOFS protection as we used to.
-> > 
-> > Thanks for making my remark more clear Jack! I would just want to add
-> > that I was playing with the patch below (it is basically
-> > GFP_NOFS->GFP_KERNEL for all allocations which trigger warning from the
-> > debugging patch which means they are called from within transaction) and
-> > it didn't hit the lockdep when running xfstests both with or without the
-> > enabled journal.
-> > 
-> > So am I still missing something or the nojournal mode is safe and the
-> > current series is OK wrt. ext*?
-> 
-> I'm convinced the current series is OK, only real life will tell us whether
-> we missed something or not ;)
+If the reverse-mapping btree isn't available, fall back to the
+free space btrees to provide partial reverse mapping information.
+The online scrub tool can make use of even partial information to
+speed up the data block scan.
 
-I would like to extend the changelog of "jbd2: mark the transaction
-context with the scope GFP_NOFS context".
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_fsmap.c |  153 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 150 insertions(+), 3 deletions(-)
 
-"
-Please note that setups without journal do not suffer from potential
-recursion problems and so they do not need the scope protection because
-neither ->releasepage nor ->evict_inode (which are the only fs entry
-points from the direct reclaim) can reenter a locked context which is
-doing the allocation currently.
-"
+
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index d729581..4e364f8 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -39,6 +39,7 @@
+ #include "xfs_fsmap.h"
+ #include "xfs_refcount.h"
+ #include "xfs_refcount_btree.h"
++#include "xfs_alloc_btree.h"
  
-> > The following patch in its current form is WIP and needs a proper review
-> > before I post it.
-> 
-> So jbd2 changes look confusing (although technically correct) to me - we
-> *always* should run in NOFS context in those place so having GFP_KERNEL
-> there looks like it is unnecessarily hiding what is going on. So in those
-> places I'd prefer to keep GFP_NOFS or somehow else make it very clear these
-> allocations are expected to be GFP_NOFS (and assert that). Otherwise the
-> changes look good to me.
+ /* Convert an xfs_fsmap to an fsmap. */
+ void
+@@ -125,6 +126,7 @@ xfs_fsmap_owner_from_rmap(
+ 	case XFS_RMAP_OWN_INODES:
+ 	case XFS_RMAP_OWN_REFC:
+ 	case XFS_RMAP_OWN_COW:
++	case XFS_RMAP_OWN_NULL:	/* "free" */
+ 		fmr->fmr_owner = rm->rm_owner;
+ 		return 0;
+ 	default:
+@@ -396,6 +398,31 @@ xfs_getfsmap_rtdev_helper(
+ 	return xfs_getfsmap_helper(mp, info, rec, rec_daddr);
+ }
+ 
++/* Transform a bnobt irec into a fsmap */
++STATIC int
++xfs_getfsmap_datadev_bnobt_helper(
++	struct xfs_btree_cur		*cur,
++	struct xfs_alloc_rec_incore	*rec,
++	void				*priv)
++{
++	struct xfs_mount		*mp = cur->bc_mp;
++	struct xfs_getfsmap_info	*info = priv;
++	struct xfs_rmap_irec		irec;
++	xfs_fsblock_t			fsb;
++	xfs_daddr_t			rec_daddr;
++
++	fsb = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno, rec->ar_startblock);
++	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb);
++
++	irec.rm_startblock = rec->ar_startblock;
++	irec.rm_blockcount = rec->ar_blockcount;
++	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
++	irec.rm_offset = 0;
++	irec.rm_flags = 0;
++
++	return xfs_getfsmap_helper(mp, info, &irec, rec_daddr);
++}
++
+ /* Set rmap flags based on the getfsmap flags */
+ static void
+ xfs_getfsmap_set_irec_flags(
+@@ -583,6 +610,125 @@ xfs_getfsmap_datadev(
+ 	return error;
+ }
+ 
++/* Execute a getfsmap query against the regular data device's bnobt. */
++STATIC int
++xfs_getfsmap_datadev_bnobt(
++	struct xfs_trans		*tp,
++	struct xfs_fsmap		*keys,
++	struct xfs_getfsmap_info	*info)
++{
++	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_btree_cur		*bt_cur = NULL;
++	struct xfs_fsmap		*dkey_low;
++	struct xfs_fsmap		*dkey_high;
++	struct xfs_alloc_rec_incore	alow;
++	struct xfs_alloc_rec_incore	ahigh;
++	xfs_fsblock_t			start_fsb;
++	xfs_fsblock_t			end_fsb;
++	xfs_agnumber_t			start_ag;
++	xfs_agnumber_t			end_ag;
++	xfs_daddr_t			eofs;
++	int				error = 0;
++
++	dkey_low = keys;
++	dkey_high = keys + 1;
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
++	if (dkey_low->fmr_physical >= eofs)
++		return 0;
++	if (dkey_high->fmr_physical >= eofs)
++		dkey_high->fmr_physical = eofs - 1;
++	start_fsb = XFS_DADDR_TO_FSB(mp, dkey_low->fmr_physical);
++	end_fsb = XFS_DADDR_TO_FSB(mp, dkey_high->fmr_physical);
++
++	/* Set up search keys */
++	info->low.rm_startblock = XFS_FSB_TO_AGBNO(mp, start_fsb);
++	info->low.rm_offset = XFS_BB_TO_FSBT(mp, dkey_low->fmr_offset);
++	error = xfs_fsmap_owner_to_rmap(dkey_low, &info->low);
++	if (error)
++		return error;
++	info->low.rm_blockcount = 0;
++	xfs_getfsmap_set_irec_flags(&info->low, dkey_low);
++
++	info->high.rm_startblock = -1U;
++	info->high.rm_owner = ULLONG_MAX;
++	info->high.rm_offset = ULLONG_MAX;
++	info->high.rm_blockcount = 0;
++	info->high.rm_flags = XFS_RMAP_KEY_FLAGS | XFS_RMAP_REC_FLAGS;
++
++	info->missing_owner = FMR_OWN_UNKNOWN;
++
++	start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
++	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
++
++	/* Query each AG */
++	for (info->agno = start_ag; info->agno <= end_ag; info->agno++) {
++		if (info->agno == end_ag) {
++			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
++					end_fsb);
++			info->high.rm_offset = XFS_BB_TO_FSBT(mp,
++					dkey_high->fmr_offset);
++			error = xfs_fsmap_owner_to_rmap(dkey_high, &info->high);
++			if (error)
++				goto err;
++			xfs_getfsmap_set_irec_flags(&info->high, dkey_high);
++		}
++
++		if (bt_cur) {
++			xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
++			bt_cur = NULL;
++			info->agf_bp = NULL;
++		}
++
++		error = xfs_alloc_read_agf(mp, tp, info->agno, 0,
++				&info->agf_bp);
++		if (error)
++			goto err;
++
++		trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
++				info->low.rm_startblock,
++				info->low.rm_blockcount,
++				info->low.rm_owner,
++				info->low.rm_offset);
++
++		trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
++				info->high.rm_startblock,
++				info->high.rm_blockcount,
++				info->high.rm_owner,
++				info->high.rm_offset);
++
++		bt_cur = xfs_allocbt_init_cursor(mp, tp, info->agf_bp,
++				info->agno, XFS_BTNUM_BNO);
++		alow.ar_startblock = info->low.rm_startblock;
++		ahigh.ar_startblock = info->high.rm_startblock;
++		error = xfs_alloc_query_range(bt_cur, &alow, &ahigh,
++				xfs_getfsmap_datadev_bnobt_helper, info);
++		if (error)
++			goto err;
++
++		if (info->agno == start_ag) {
++			info->low.rm_startblock = 0;
++			info->low.rm_owner = 0;
++			info->low.rm_offset = 0;
++			info->low.rm_flags = 0;
++		}
++	}
++
++	/* Report any free space at the end of the AG */
++	info->last = true;
++	error = xfs_getfsmap_datadev_bnobt_helper(bt_cur, &ahigh, info);
++	if (error)
++		goto err;
++
++err:
++	if (bt_cur)
++		xfs_btree_del_cursor(bt_cur, error < 0 ? XFS_BTREE_ERROR :
++							 XFS_BTREE_NOERROR);
++	if (info->agf_bp)
++		info->agf_bp = NULL;
++
++	return error;
++}
++
+ /* Do we recognize the device? */
+ STATIC bool
+ xfs_getfsmap_is_valid_device(
+@@ -651,8 +797,6 @@ xfs_getfsmap(
+ 	int				i;
+ 	int				error = 0;
+ 
+-	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+-		return -EOPNOTSUPP;
+ 	if (head->fmh_iflags & ~FMH_IF_VALID)
+ 		return -EINVAL;
+ 	rkey_low = head->fmh_keys;
+@@ -666,7 +810,10 @@ xfs_getfsmap(
+ 	/* Set up our device handlers. */
+ 	memset(handlers, 0, sizeof(handlers));
+ 	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
+-	handlers[0].fn = xfs_getfsmap_datadev;
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		handlers[0].fn = xfs_getfsmap_datadev;
++	else
++		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
+ 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+ 		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
+ 		handlers[1].fn = xfs_getfsmap_logdev;
 
-I would really like to get rid most of NOFS direct usage and only
-dictate it via the scope API otherwise I suspect we will just grow more
-users and end up in the same situation as we are now currently over time.
-In principle only the context which changes the reclaim reentrancy policy
-should care about NOFS and everybody else should just pretend nothing
-like that exists. There might be few exceptions of course, I am not yet
-sure whether jbd2 is that case. But I am not proposing this change yet
-(thanks for checking anyway)...
--- 
-Michal Hocko
-SUSE Labs
