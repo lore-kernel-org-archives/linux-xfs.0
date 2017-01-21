@@ -1,52 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:42529 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751859AbdARIx2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Jan 2017 03:53:28 -0500
-Date: Wed, 18 Jan 2017 09:45:23 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2] xfs: fix COW writeback race
-Message-ID: <20170118084522.GA23660@lst.de>
-References: <1484639331-2137-1-git-send-email-hch@lst.de> <20170117134421.GB12426@bfoster.bfoster> <20170117143721.GA32641@lst.de> <20170117171449.GC12426@bfoster.bfoster>
+Received: from userp1040.oracle.com ([156.151.31.81]:24733 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750817AbdAUIAo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:00:44 -0500
+Subject: [PATCH 04/55] xfs: check for obviously bad level values in the bmbt
+ root
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sat, 21 Jan 2017 00:00:40 -0800
+Message-ID: <148498564058.15323.13908390753786561753.stgit@birch.djwong.org>
+In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
+References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170117171449.GC12426@bfoster.bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Tue, Jan 17, 2017 at 12:14:51PM -0500, Brian Foster wrote:
-> Got it, thanks. So all of the writeback stuff is protected via
-> page/buffer locks, and even if we still had those locks, it doesn't
-> matter because the same extent is obviously covered by many page/buffer
-> objects.
+We can't handle a bmbt that's taller than BTREE_MAXLEVELS, and there's
+no such thing as a zero-level bmbt (for that we have extents format),
+so if we see this, send back an error code.
 
-Yes.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-> Yeah, and doing otherwise may break the assumption that larger delallocs
-> produce larger physical allocs (re: cowextsz hint and potentially
-> preallocation).
 
-Yes - especially for the COW case this might be very important.
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 222e103..84b3e51 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -26,6 +26,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_trans.h"
+ #include "xfs_inode_item.h"
++#include "xfs_btree.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_bmap.h"
+ #include "xfs_error.h"
+@@ -429,11 +430,13 @@ xfs_iformat_btree(
+ 	/* REFERENCED */
+ 	int			nrecs;
+ 	int			size;
++	int			level;
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	dfp = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
+ 	size = XFS_BMAP_BROOT_SPACE(mp, dfp);
+ 	nrecs = be16_to_cpu(dfp->bb_numrecs);
++	level = be16_to_cpu(dfp->bb_level);
+ 
+ 	/*
+ 	 * blow out if -- fork has less extents than can fit in
+@@ -446,7 +449,8 @@ xfs_iformat_btree(
+ 					XFS_IFORK_MAXEXT(ip, whichfork) ||
+ 		     XFS_BMDR_SPACE_CALC(nrecs) >
+ 					XFS_DFORK_SIZE(dip, mp, whichfork) ||
+-		     XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks)) {
++		     XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks) ||
++		     level == 0 || level > XFS_BTREE_MAXLEVELS) {
+ 		xfs_warn(mp, "corrupt inode %Lu (btree).",
+ 					(unsigned long long) ip->i_ino);
+ 		XFS_CORRUPTION_ERROR("xfs_iformat_btree", XFS_ERRLEVEL_LOW,
 
-> That seems reasonable so long as we skip the parts of the loop that are
-> expecting a real (non-hole) startblock.
-
-Agreed.
-
-> Things like the above had me thinking it might be more clear to
-> explicitly read the extent and check for delalloc in the caller while
-> under the appropriate lock (and if XFS_COW_FORK). That's kind of what I
-> was alluding to above wrt to closing the race. That's just an idea,
-> however, and doesn't necessarily improve the error handling in the way
-> that this patch does (to avoid the transaction overrun). Given that, I'm
-> not against what this patch is currently doing so long as we fix up the
-> rest of the loop. Your idea of xfs_bmapi_convert() or some such sounds
-> like a nice potential cleanup at some point too.
-
-I don't like that idea because it just means even more extent lookups.
-xfs_bmapi_write has to read in the extents anyway, so instead of doing
-another read under the same lock we'd better reuse this one.
