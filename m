@@ -1,58 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57666 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753239AbdATUeB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Jan 2017 15:34:01 -0500
-Subject: Re: [PATCH v3] xfsprogs: replace xfs_mode_to_ftype table with switch
- statement
-References: <1484116217-7594-1-git-send-email-amir73il@gmail.com>
- <d1fbdb06-ae8a-d2db-cd02-bb5f06e7edfc@sandeen.net>
- <CAOQ4uxjbYZh8Wr28kJiUX6bnTn-bxgApKOA7qxwrbDA=Y31sVg@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <62671831-e226-bcd9-8367-a3cbe3ca1e01@sandeen.net>
-Date: Fri, 20 Jan 2017 14:33:58 -0600
+Received: from aserp1040.oracle.com ([141.146.126.69]:19115 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750922AbdAUIAh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:00:37 -0500
+Subject: [PATCH 03/55] xfs: filter out obviously bad btree pointers
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sat, 21 Jan 2017 00:00:34 -0800
+Message-ID: <148498563444.15323.4070127412874713378.stgit@birch.djwong.org>
+In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
+References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxjbYZh8Wr28kJiUX6bnTn-bxgApKOA7qxwrbDA=Y31sVg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On 1/20/17 4:58 AM, Amir Goldstein wrote:
-> On Wed, Jan 11, 2017 at 6:23 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> On 1/11/17 12:30 AM, Amir Goldstein wrote:
->>> The size of the xfs_mode_to_ftype[] conversion table
->>> was too small to handle an invalid value of mode=S_IFMT.
->>>
->>> Instead of fixing the table size, replace the conversion table
->>> with a conversion helper that uses a switch statement.
->>>
->>> Suggested-by: Christoph Hellwig <hch@lst.de>
->>> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->>> ---
->>>  libxfs/xfs_dir2.c    | 36 ++++++++++++++++++++++--------------
->>>  libxfs/xfs_dir2.h    |  5 ++---
->>>  repair/dino_chunks.c |  6 +-----
->>>  repair/phase6.c      |  2 +-
->>>  4 files changed, 26 insertions(+), 23 deletions(-)
->>>
->>> Eric,
->>>
->>> This is a matching patch to the one that got Reviewed-by Darrick for kernel.
->>>
->>> Tested xfs_repair with the new xfs/348 test with -n ftype=0|1.
->>
->> Thanks, I'll pull this in after Darrick commits it to the kernel.
->>
-> 
-> FYI, commit is in kernel and xfstest xfs/348 which sanity tests
-> xfs_repair with this change
-> is already merged as well.
+Don't let anybody load an obviously bad btree pointer.  Since the values
+come from disk, we must return an error, not just ASSERT.
 
-Yep, merged & testing now.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c  |    4 +---
+ fs/xfs/libxfs/xfs_btree.c |    3 ++-
+ fs/xfs/libxfs/xfs_btree.h |    2 +-
+ 3 files changed, 4 insertions(+), 5 deletions(-)
 
-Thanks,
--Eric
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 44773c9..3ac13be 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1291,9 +1291,7 @@ xfs_bmap_read_extents(
+ 	ASSERT(level > 0);
+ 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+ 	bno = be64_to_cpu(*pp);
+-	ASSERT(bno != NULLFSBLOCK);
+-	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
+-	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
++
+ 	/*
+ 	 * Go down the tree until leaf level is reached, following the first
+ 	 * pointer (leftmost) at each level.
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 21e6a6a..2849d3f 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -810,7 +810,8 @@ xfs_btree_read_bufl(
+ 	xfs_daddr_t		d;		/* real disk block address */
+ 	int			error;
+ 
+-	ASSERT(fsbno != NULLFSBLOCK);
++	if (!XFS_FSB_SANITY_CHECK(mp, fsbno))
++		return -EFSCORRUPTED;
+ 	d = XFS_FSB_TO_DADDR(mp, fsbno);
+ 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
+ 				   mp->m_bsize, lock, &bp, ops);
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index b69b947..33a8f86 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -456,7 +456,7 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+ #define	XFS_FILBLKS_MAX(a,b)	max_t(xfs_filblks_t, (a), (b))
+ 
+ #define	XFS_FSB_SANITY_CHECK(mp,fsb)	\
+-	(XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
++	(fsb && XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
+ 		XFS_FSB_TO_AGBNO(mp, fsb) < mp->m_sb.sb_agblocks)
+ 
+ /*
+
