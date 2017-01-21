@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20489 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:20496 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751169AbdAUIIn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:08:43 -0500
-Subject: [PATCH 05/17] spaceman: AG state control
+        with ESMTP id S1751169AbdAUIIt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:08:49 -0500
+Subject: [PATCH 06/17] spaceman: Free space mapping command
 From: Dave Chinner <dchinner@redhat.com>
-Date: Sat, 21 Jan 2017 00:08:36 -0800
-Message-ID: <148498611676.16675.16955329166090889514.stgit@birch.djwong.org>
+Date: Sat, 21 Jan 2017 00:08:44 -0800
+Message-ID: <148498612475.16675.15548431500033433051.stgit@birch.djwong.org>
 In-Reply-To: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 References: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,40 +18,143 @@ List-Id: xfs
 To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Add support for a new allocation group state control ioctl. This
-allows control of various AG parameters, such as whether inode
-allocation is allowed in the AG, metadata preference, whether new
-allocations are allowed, etc. This requires a new ioctl.
+Add freespace mapping tool modelled on the xfs_db freesp command.
+The advantage of this command over xfs_db is that it can be done
+online and is coherent with concurrent modifications to the
+filesystem.
+
+This requires the kernel to support the XFS_IOC_GETFSMAP ioctl to map
+free space indexes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[darrick: port from FIEMAPFS to GETFSMAP]
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- spaceman/Makefile |    2 
- spaceman/ag.c     |  221 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 222 insertions(+), 1 deletion(-)
- create mode 100644 spaceman/ag.c
+ spaceman/Makefile   |   15 ++
+ spaceman/ag.c       |    1 
+ spaceman/file.c     |   18 ++-
+ spaceman/freesp.c   |  367 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ spaceman/init.c     |    9 +
+ spaceman/prealloc.c |    1 
+ spaceman/space.h    |   12 +-
+ spaceman/trim.c     |    1 
+ 8 files changed, 416 insertions(+), 8 deletions(-)
+ create mode 100644 spaceman/freesp.c
 
 
 diff --git a/spaceman/Makefile b/spaceman/Makefile
-index b1f1136..08709b3 100644
+index 08709b3..1370601 100644
 --- a/spaceman/Makefile
 +++ b/spaceman/Makefile
-@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+@@ -7,8 +7,12 @@ include $(TOPDIR)/include/builddefs
+ 
  LTCOMMAND = xfs_spaceman
  HFILES = init.h space.h
- CFILES = init.c \
--	file.c prealloc.c trim.c
-+	ag.c file.c prealloc.c trim.c
+-CFILES = init.c \
+-	ag.c file.c prealloc.c trim.c
++CFILES = ag.c \
++	 file.c \
++	 init.c \
++	 prealloc.c \
++	 trim.c
++
  
  LLDLIBS = $(LIBXCMD)
  LTDEPENDENCIES = $(LIBXCMD)
+@@ -22,6 +26,13 @@ ifeq ($(ENABLE_EDITLINE),yes)
+ LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+ endif
+ 
++ifeq ($(HAVE_FIEMAP),yes)
++CFILES += freesp.c
++LCFLAGS += -DHAVE_FIEMAP
++else
++LSRCFILES += freesp.c
++endif
++
+ default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
 diff --git a/spaceman/ag.c b/spaceman/ag.c
-new file mode 100644
-index 0000000..567fe7a
---- /dev/null
+index 567fe7a..18ae8a4 100644
+--- a/spaceman/ag.c
 +++ b/spaceman/ag.c
-@@ -0,0 +1,221 @@
+@@ -21,6 +21,7 @@
+ #include "command.h"
+ #include "input.h"
+ #include "init.h"
++#include "path.h"
+ #include "space.h"
+ 
+ #ifndef XFS_IOC_AGCONTROL
+diff --git a/spaceman/file.c b/spaceman/file.c
+index d7ab05b..1f00236 100644
+--- a/spaceman/file.c
++++ b/spaceman/file.c
+@@ -22,6 +22,7 @@
+ #include "command.h"
+ #include "input.h"
+ #include "init.h"
++#include "path.h"
+ #include "space.h"
+ 
+ static cmdinfo_t print_cmd;
+@@ -69,8 +70,10 @@ openfile(
+ 	char		*path,
+ 	xfs_fsop_geom_t	*geom,
+ 	int		flags,
+-	mode_t		mode)
++	mode_t		mode,
++	struct fs_path	*fs_path)
+ {
++	struct fs_path	*fsp;
+ 	int		fd;
+ 
+ 	fd = open(path, flags, mode);
+@@ -95,6 +98,15 @@ openfile(
+ 		close(fd);
+ 		return -1;
+ 	}
++
++	if (fs_path) {
++		fsp = fs_table_lookup(path, FS_MOUNT_POINT);
++		if (!fsp) {
++			fprintf(stderr, _("Unable to find XFS information."));
++			return -1;
++		}
++		*fs_path = *fsp;
++	}
+ 	return fd;
+ }
+ 
+@@ -103,7 +115,8 @@ addfile(
+ 	char		*name,
+ 	int		fd,
+ 	xfs_fsop_geom_t	*geometry,
+-	int		flags)
++	int		flags,
++	struct fs_path	*fs_path)
+ {
+ 	char		*filename;
+ 
+@@ -131,6 +144,7 @@ addfile(
+ 	file->flags = flags;
+ 	file->name = filename;
+ 	file->geom = *geometry;
++	file->fs_path = *fs_path;
+ 	return 0;
+ }
+ 
+diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+new file mode 100644
+index 0000000..ffe2fdb
+--- /dev/null
++++ b/spaceman/freesp.c
+@@ -0,0 +1,367 @@
 +/*
++ * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
 + * Copyright (c) 2012 Red Hat, Inc.
++ * Copyright (c) 2017 Oracle.
 + * All Rights Reserved.
 + *
 + * This program is free software; you can redistribute it and/or
@@ -69,206 +172,459 @@ index 0000000..567fe7a
 + */
 +
 +#include "libxfs.h"
-+#include <linux/dqblk_xfs.h>
++#include <linux/fiemap.h>
 +#include "command.h"
-+#include "input.h"
 +#include "init.h"
++#include "path.h"
 +#include "space.h"
 +
-+#ifndef XFS_IOC_AGCONTROL
-+#define XFS_IOC_AGCONTROL _IOWR ('X', 60, struct xfs_agcontrol)
++typedef struct histent
++{
++	int		low;
++	int		high;
++	long long	count;
++	long long	blocks;
++} histent_t;
 +
-+#define XFS_AGCONTROL_VERSION		1
-+struct xfs_agcontrol {
-+	__u32		version;
-+	__u32		flags;
-+	__u32		agno;
-+	__u32		state;
-+	__u64		pad[8];
-+};
++static int		agcount;
++static xfs_agnumber_t	*aglist;
++static int		dumpflag;
++static int		equalsize;
++static histent_t	*hist;
++static int		histcount;
++static int		multsize;
++static int		seen1;
++static int		summaryflag;
++static bool		rtflag;
++static long long	totblocks;
++static long long	totexts;
 +
-+/* control flags */
-+#define XFS_AGCONTROL_GETAGFSTATE	(1 << 0)	/* get AGF state */
-+#define XFS_AGCONTROL_SETAGFSTATE	(1 << 1)	/* set AGF state */
-+#define XFS_AGCONTROL_GETAGISTATE	(1 << 2)	/* get AGI state */
-+#define XFS_AGCONTROL_SETAGISTATE	(1 << 3)	/* set AGI state */
++static cmdinfo_t freesp_cmd;
 +
-+/* state flags */
++static void
++addhistent(
++	int	h)
++{
++	hist = realloc(hist, (histcount + 1) * sizeof(*hist));
++	if (h == 0)
++		h = 1;
++	hist[histcount].low = h;
++	hist[histcount].count = hist[histcount].blocks = 0;
++	histcount++;
++	if (h == 1)
++		seen1 = 1;
++}
++
++static void
++addtohist(
++	xfs_agnumber_t	agno,
++	xfs_agblock_t	agbno,
++	off64_t		len)
++{
++	int		i;
++
++	if (dumpflag)
++		printf("%8d %8d %8Zu\n", agno, agbno, len);
++	totexts++;
++	totblocks += len;
++	for (i = 0; i < histcount; i++) {
++		if (hist[i].high >= len) {
++			hist[i].count++;
++			hist[i].blocks += len;
++			break;
++		}
++	}
++}
++
++static int
++hcmp(
++	const void	*a,
++	const void	*b)
++{
++	return ((histent_t *)a)->low - ((histent_t *)b)->low;
++}
++
++static void
++histinit(
++	int	maxlen)
++{
++	int	i;
++
++	if (equalsize) {
++		for (i = 1; i < maxlen; i += equalsize)
++			addhistent(i);
++	} else if (multsize) {
++		for (i = 1; i < maxlen; i *= multsize)
++			addhistent(i);
++	} else {
++		if (!seen1)
++			addhistent(1);
++		qsort(hist, histcount, sizeof(*hist), hcmp);
++	}
++	for (i = 0; i < histcount; i++) {
++		if (i < histcount - 1)
++			hist[i].high = hist[i + 1].low - 1;
++		else
++			hist[i].high = maxlen;
++	}
++}
++
++static void
++printhist(void)
++{
++	int	i;
++
++	printf("%7s %7s %7s %7s %6s\n",
++		_("from"), _("to"), _("extents"), _("blocks"), _("pct"));
++	for (i = 0; i < histcount; i++) {
++		if (hist[i].count)
++			printf("%7d %7d %7lld %7lld %6.2f\n", hist[i].low,
++				hist[i].high, hist[i].count, hist[i].blocks,
++				hist[i].blocks * 100.0 / totblocks);
++	}
++}
++
++static int
++inaglist(
++	xfs_agnumber_t	agno)
++{
++	int		i;
++
++	if (agcount == 0)
++		return 1;
++	for (i = 0; i < agcount; i++)
++		if (aglist[i] == agno)
++			return 1;
++	return 0;
++}
++
++#define NR_EXTENTS 128
++
++static void
++scan_ag(
++	xfs_agnumber_t		agno)
++{
++	struct fsmap_head	*fsmap;
++	struct fsmap		*extent;
++	struct fsmap		*l, *h;
++	struct fsmap		*p;
++	off64_t			blocksize = file->geom.blocksize;
++	off64_t			bperag;
++	off64_t			aglen;
++	xfs_agblock_t		agbno;
++	int			ret;
++	int			i;
++
++	bperag = (off64_t)file->geom.agblocks * blocksize;
++
++	fsmap = malloc(fsmap_sizeof(NR_EXTENTS));
++	if (!fsmap) {
++		fprintf(stderr, _("%s: fsmap malloc failed.\n"), progname);
++		exitcode = 1;
++		return;
++	}
++
++	memset(fsmap, 0, sizeof(*fsmap));
++	fsmap->fmh_count = NR_EXTENTS;
++	l = fsmap->fmh_keys;
++	h = fsmap->fmh_keys + 1;
++	if (agno != NULLAGNUMBER) {
++		l->fmr_physical = agno * bperag;
++		h->fmr_physical = ((agno + 1) * bperag) - 1;
++		l->fmr_device = h->fmr_device = file->fs_path.fs_datadev;
++	} else {
++		l->fmr_physical = 0;
++		h->fmr_physical = ULLONG_MAX;
++		l->fmr_device = h->fmr_device = file->fs_path.fs_rtdev;
++	}
++	h->fmr_owner = ULLONG_MAX;
++	h->fmr_flags = UINT_MAX;
++	h->fmr_offset = ULLONG_MAX;
++
++	while (true) {
++		ret = xfsctl(file->name, file->fd, XFS_IOC_GETFSMAP, fsmap);
++		if (ret < 0) {
++			fprintf(stderr, "%s: ioctl(XFS_IOC_GETFSMAP) [\"%s\"]: "
++				"%s\n", progname, file->name, strerror(errno));
++			free(fsmap);
++			exitcode = 1;
++			return;
++		}
++
++		/* No more extents to map, exit */
++		if (!fsmap->fmh_entries)
++			break;
++
++		for (i = 0, extent = fsmap->fmh_recs;
++		     i < fsmap->fmh_entries;
++		     i++, extent++) {
++			if (!(extent->fmr_flags & FMR_OF_SPECIAL_OWNER) ||
++			    extent->fmr_owner != FMR_OWN_FREE)
++				continue;
++			agbno = (extent->fmr_physical - (bperag * agno)) /
++								blocksize;
++			aglen = extent->fmr_length / blocksize;
++
++			addtohist(agno, agbno, aglen);
++		}
++
++		p = &fsmap->fmh_recs[fsmap->fmh_entries - 1];
++		if (p->fmr_flags & FMR_OF_LAST)
++			break;
++
++		fsmap->fmh_keys[0] = *p;
++	}
++}
++static void
++aglistadd(
++	char	*a)
++{
++	aglist = realloc(aglist, (agcount + 1) * sizeof(*aglist));
++	aglist[agcount] = (xfs_agnumber_t)atoi(a);
++	agcount++;
++}
++
++static int
++init(
++	int		argc,
++	char		**argv)
++{
++	int		c;
++	int		speced = 0;
++
++	agcount = dumpflag = equalsize = multsize = optind = 0;
++	histcount = seen1 = summaryflag = 0;
++	totblocks = totexts = 0;
++	aglist = NULL;
++	hist = NULL;
++	rtflag = false;
++	while ((c = getopt(argc, argv, "a:bde:h:m:rs")) != EOF) {
++		switch (c) {
++		case 'a':
++			aglistadd(optarg);
++			break;
++		case 'b':
++			if (speced)
++				return 0;
++			multsize = 2;
++			speced = 1;
++			break;
++		case 'd':
++			dumpflag = 1;
++			break;
++		case 'e':
++			if (speced)
++				return 0;
++			equalsize = atoi(optarg);
++			speced = 1;
++			break;
++		case 'h':
++			if (speced && !histcount)
++				return 0;
++			addhistent(atoi(optarg));
++			speced = 1;
++			break;
++		case 'm':
++			if (speced)
++				return 0;
++			multsize = atoi(optarg);
++			speced = 1;
++			break;
++		case 'r':
++			rtflag = true;
++			break;
++		case 's':
++			summaryflag = 1;
++			break;
++		case '?':
++			return 0;
++		}
++	}
++	if (optind != argc)
++		return 0;
++	if (!speced)
++		multsize = 2;
++	histinit(file->geom.agblocks);
++	return 1;
++}
 +
 +/*
-+ * inode and allocation states are split. AGF and AGI online state will move in
-+ * sync as it is really a whole AG state. No allocation flags imply no new
-+ * allocations, but inodes and extents can be removed. Readonly means no
-+ * modification (alloc or free) is allowed. This is to allow different
-+ * operations to be performed. e.g. emptying an AG in preparation for a shrink
-+ * require NOALLOC state, but an AG that has a corrupted freespace btree might
-+ * be switched to READONLY until the freespace tree is rebuilt. An AGF/AGI in
-+ * this corrupt/ro state will set the relevant corruption flag in the state
-+ * field....
++ * Report on freespace usage in xfs filesystem.
 + */
-+#define XFS_AGFSTATE_ONLINE		(1 << 0)	/* AGF online */
-+#define XFS_AGFSTATE_NOALLOC		(1 << 1)	/* No new allocation */
-+#define XFS_AGFSTATE_READONLY		(1 << 2)	/* AGF is immutable */
-+#define XFS_AGFSTATE_METADATA		(1 << 3)	/* metadata preferred */
-+#define XFS_AGFSTATE_CORRUPT_BNO	(1 << 4)	/* bno freespace corrupt */
-+#define XFS_AGFSTATE_CORRUPT_CNT	(1 << 5)	/* cnt freespace corrupt */
-+#define XFS_AGFSTATE_CORRUPT_AGFL	(1 << 6)	/* AGFL freespace corrupt */
++static int
++freesp_f(
++	int		argc,
++	char		**argv)
++{
++	xfs_agnumber_t	agno;
 +
-+#define XFS_AGISTATE_ONLINE		(1 << 0)	/* AGI online */
-+#define XFS_AGISTATE_NOALLOC		(1 << 1)	/* No new allocation */
-+#define XFS_AGISTATE_READONLY		(1 << 2)	/* AGI is immutable */
-+#define XFS_AGISTATE_CORRUPT_TREE	(1 << 2)	/* AGI btree corrupt */
++	if (!init(argc, argv))
++		return 0;
++	if (rtflag)
++		scan_ag(NULLAGNUMBER);
++	for (agno = 0; !rtflag && agno < file->geom.agcount; agno++)  {
++		if (inaglist(agno))
++			scan_ag(agno);
++	}
++	if (histcount)
++		printhist();
++	if (summaryflag) {
++		printf(_("total free extents %lld\n"), totexts);
++		printf(_("total free blocks %lld\n"), totblocks);
++		printf(_("average free extent size %g\n"),
++			(double)totblocks / (double)totexts);
++	}
++	if (aglist)
++		free(aglist);
++	if (hist)
++		free(hist);
++	return 0;
++}
 +
++static void
++freesp_help(void)
++{
++	printf(_(
++"\n"
++"Examine filesystem free space\n"
++"\n"
++"Options: [-bcds] [-a agno] [-e bsize] [-h h1]... [-m bmult]\n"
++"\n"
++" -b -- binary histogram bin size\n"
++" -d -- debug output\n"
++" -r -- display realtime device free space information\n"
++" -s -- emit freespace summary information\n"
++" -a agno -- scan only the given AG agno\n"
++" -e bsize -- use fixed histogram bin size of bsize\n"
++" -h h1 -- use custom histogram bin size of h1. Multiple specifications allowed.\n"
++" -m bmult -- use histogram bin size multiplier of bmult\n"
++"\n"));
++
++}
++
++void
++freesp_init(void)
++{
++	freesp_cmd.name = "freesp";
++	freesp_cmd.altname = "fsp";
++	freesp_cmd.cfunc = freesp_f;
++	freesp_cmd.argmin = 0;
++	freesp_cmd.argmax = -1;
++	freesp_cmd.args = "[-bcds] [-a agno] [-e bsize] [-h h1]... [-m bmult]\n";
++	freesp_cmd.flags = CMD_FLAG_ONESHOT;
++	freesp_cmd.oneline = _("Examine filesystem free space");
++	freesp_cmd.help = freesp_help;
++
++	add_command(&freesp_cmd);
++}
++
+diff --git a/spaceman/init.c b/spaceman/init.c
+index 87ef27c..aef09dc 100644
+--- a/spaceman/init.c
++++ b/spaceman/init.c
+@@ -20,6 +20,7 @@
+ #include "command.h"
+ #include "input.h"
+ #include "init.h"
++#include "path.h"
+ #include "space.h"
+ 
+ char	*progname;
+@@ -38,6 +39,7 @@ static void
+ init_commands(void)
+ {
+ 	file_init();
++	freesp_init();
+ 	help_init();
+ 	prealloc_init();
+ 	quit_init();
+@@ -71,12 +73,14 @@ init(
+ 	int		c, flags = 0;
+ 	mode_t		mode = 0600;
+ 	xfs_fsop_geom_t	geometry = { 0 };
++	struct fs_path	fsp;
+ 
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+ 	bindtextdomain(PACKAGE, LOCALEDIR);
+ 	textdomain(PACKAGE);
+ 
++	fs_table_initialise(0, NULL, 0, NULL);
+ 	while ((c = getopt(argc, argv, "c:V")) != EOF) {
+ 		switch (c) {
+ 		case 'c':
+@@ -94,13 +98,14 @@ init(
+ 		usage();
+ 
+ 	while (optind < argc) {
+-		if ((c = openfile(argv[optind], &geometry, flags, mode)) < 0)
++		c = openfile(argv[optind], &geometry, flags, mode, &fsp);
++		if (c < 0)
+ 			exit(1);
+ 		if (!platform_test_xfs_fd(c)) {
+ 			printf(_("Not an XFS filesystem!\n"));
+ 			exit(1);
+ 		}
+-		if (addfile(argv[optind], c, &geometry, flags) < 0)
++		if (addfile(argv[optind], c, &geometry, flags, &fsp) < 0)
+ 			exit(1);
+ 		optind++;
+ 	}
+diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
+index 645b772..ac7130c 100644
+--- a/spaceman/prealloc.c
++++ b/spaceman/prealloc.c
+@@ -20,6 +20,7 @@
+ #include "command.h"
+ #include "input.h"
+ #include "init.h"
++#include "path.h"
+ #include "space.h"
+ 
+ #ifndef XFS_IOC_FREE_EOFBLOCKS
+diff --git a/spaceman/space.h b/spaceman/space.h
+index 0ae3116..872905d 100644
+--- a/spaceman/space.h
++++ b/spaceman/space.h
+@@ -21,6 +21,7 @@ typedef struct fileio {
+ 	int		flags;		/* flags describing file state */
+ 	char		*name;		/* file name at time of open */
+ 	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
++	struct fs_path	fs_path;	/* XFS path information */
+ } fileio_t;
+ 
+ extern fileio_t		*filetable;	/* open file table */
+@@ -28,11 +29,18 @@ extern int		filecount;	/* number of open files */
+ extern fileio_t		*file;		/* active file in file table */
+ extern int filelist_f(void);
+ 
+-extern int	openfile(char *, xfs_fsop_geom_t *, int, mode_t);
+-extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
++extern int	openfile(char *, xfs_fsop_geom_t *, int, mode_t,
++			 struct fs_path *);
++extern int	addfile(char *, int , xfs_fsop_geom_t *, int, struct fs_path *);
+ 
+ extern void	file_init(void);
+ extern void	help_init(void);
+ extern void	prealloc_init(void);
+ extern void	quit_init(void);
+ extern void	trim_init(void);
++
++#ifdef HAVE_FIEMAP
++extern void	freesp_init(void);
++#else
++static inline void freesp_init(void) {};
 +#endif
-+
-+static cmdinfo_t agfctl_cmd;
-+static cmdinfo_t agictl_cmd;
-+
-+static int
-+agfctl_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	struct xfs_agcontrol agctl = {0};
-+	xfs_agnumber_t	agno;
-+	int		gflag = 0;
-+	int		c;
-+
-+	while ((c = getopt(argc, argv, "gs")) != EOF) {
-+		switch (c) {
-+		case 'g':
-+			gflag = 1;
-+			break;
-+		default:
-+			return command_usage(&agfctl_cmd);
-+		}
-+	}
-+	if (optind != argc - 1)
-+		return command_usage(&agfctl_cmd);
-+
-+	agno = atoi(argv[optind]);
-+	if (agno >= file->geom.agcount) {
-+		fprintf(stderr, _("%s: agno %d out of range (max %d)\n"),
-+			progname, agno, file->geom.agcount);
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	agctl.version = XFS_AGCONTROL_VERSION;
-+	agctl.agno = agno;
-+	if (gflag)
-+		agctl.flags = XFS_AGCONTROL_GETAGFSTATE;
-+
-+	if (xfsctl(file->name, file->fd, XFS_IOC_AGCONTROL, &agctl) < 0) {
-+		fprintf(stderr, _("%s: XFS_IOC_AGCONTROL on %s: %s\n"),
-+			progname, file->name, strerror(errno));
-+	}
-+	return 0;
-+}
-+
-+static void
-+agfctl_help(void)
-+{
-+	printf(_(
-+"\n"
-+"AGF state control\n"
-+"\n"
-+"Options: [-g] agno\n"
-+"\n"
-+" -g -- get state\n"
-+" agno -- AG to operate on\n"
-+"\n"));
-+
-+}
-+
-+void
-+agfctl_init(void)
-+{
-+	agfctl_cmd.name = "agfctl";
-+	agfctl_cmd.altname = "agfctl";
-+	agfctl_cmd.cfunc = agfctl_f;
-+	agfctl_cmd.argmin = 2;
-+	agfctl_cmd.argmax = -1;
-+	agfctl_cmd.args = "agno\n";
-+	agfctl_cmd.flags = CMD_FLAG_ONESHOT;
-+	agfctl_cmd.oneline = _("AGF state control");
-+	agfctl_cmd.help = agfctl_help;
-+
-+	add_command(&agfctl_cmd);
-+}
-+
-+static int
-+agictl_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	struct xfs_agcontrol agctl = {0};
-+	xfs_agnumber_t	agno;
-+	int		gflag = 0;
-+	int		c;
-+
-+	while ((c = getopt(argc, argv, "gs")) != EOF) {
-+		switch (c) {
-+		case 'g':
-+			gflag = 1;
-+			break;
-+		default:
-+			return command_usage(&agictl_cmd);
-+		}
-+	}
-+	if (optind != argc - 1)
-+		return command_usage(&agictl_cmd);
-+
-+	agno = atoi(argv[optind]);
-+	if (agno >= file->geom.agcount) {
-+		fprintf(stderr, _("%s: agno %d out of range (max %d)\n"),
-+			progname, agno, file->geom.agcount);
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	agctl.version = XFS_AGCONTROL_VERSION;
-+	agctl.agno = agno;
-+	if (gflag)
-+		agctl.flags = XFS_AGCONTROL_GETAGISTATE;
-+
-+	if (xfsctl(file->name, file->fd, XFS_IOC_AGCONTROL, &agctl) < 0) {
-+		fprintf(stderr, _("%s: XFS_IOC_AGCONTROL on %s: %s\n"),
-+			progname, file->name, strerror(errno));
-+		exitcode = 1;
-+		return 0;
-+	}
-+	return 0;
-+}
-+
-+static void
-+agictl_help(void)
-+{
-+	printf(_(
-+"\n"
-+"AGI state control\n"
-+"\n"
-+"Options: [-g] agno\n"
-+"\n"
-+" -g -- get state\n"
-+" agno -- AG to operate on\n"
-+"\n"));
-+
-+}
-+
-+void
-+agictl_init(void)
-+{
-+	agictl_cmd.name = "agictl";
-+	agictl_cmd.altname = "agictl";
-+	agictl_cmd.cfunc = agictl_f;
-+	agictl_cmd.argmin = 2;
-+	agictl_cmd.argmax = -1;
-+	agictl_cmd.args = "agno\n";
-+	agictl_cmd.flags = CMD_FLAG_ONESHOT;
-+	agictl_cmd.oneline = _("AGI state control");
-+	agictl_cmd.help = agictl_help;
-+
-+	add_command(&agictl_cmd);
-+}
+diff --git a/spaceman/trim.c b/spaceman/trim.c
+index 9bf6565..d1e5d82 100644
+--- a/spaceman/trim.c
++++ b/spaceman/trim.c
+@@ -20,6 +20,7 @@
+ #include <linux/fs.h>
+ #include "command.h"
+ #include "init.h"
++#include "path.h"
+ #include "space.h"
+ #include "input.h"
+ 
 
