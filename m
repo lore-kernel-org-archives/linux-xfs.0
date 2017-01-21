@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20449 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:20489 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751169AbdAUIIf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:08:35 -0500
-Subject: [PATCH 04/17] spaceman: add new speculative prealloc control
+        with ESMTP id S1751169AbdAUIIn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:08:43 -0500
+Subject: [PATCH 05/17] spaceman: AG state control
 From: Dave Chinner <dchinner@redhat.com>
-Date: Sat, 21 Jan 2017 00:08:30 -0800
-Message-ID: <148498611049.16675.18221879786245783993.stgit@birch.djwong.org>
+Date: Sat, 21 Jan 2017 00:08:36 -0800
+Message-ID: <148498611676.16675.16955329166090889514.stgit@birch.djwong.org>
 In-Reply-To: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 References: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,50 +18,38 @@ List-Id: xfs
 To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Add an control interface for purging speculative
-preallocation via the new ioctls.
+Add support for a new allocation group state control ioctl. This
+allows control of various AG parameters, such as whether inode
+allocation is allowed in the AG, metadata preference, whether new
+allocations are allowed, etc. This requires a new ioctl.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- spaceman/Makefile   |    2 -
- spaceman/init.c     |    1 
- spaceman/prealloc.c |  135 +++++++++++++++++++++++++++++++++++++++++++++++++++
- spaceman/space.h    |    1 
- 4 files changed, 138 insertions(+), 1 deletion(-)
- create mode 100644 spaceman/prealloc.c
+ spaceman/Makefile |    2 
+ spaceman/ag.c     |  221 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 222 insertions(+), 1 deletion(-)
+ create mode 100644 spaceman/ag.c
 
 
 diff --git a/spaceman/Makefile b/spaceman/Makefile
-index 9fb9142..b1f1136 100644
+index b1f1136..08709b3 100644
 --- a/spaceman/Makefile
 +++ b/spaceman/Makefile
 @@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
  LTCOMMAND = xfs_spaceman
  HFILES = init.h space.h
  CFILES = init.c \
--	file.c trim.c
-+	file.c prealloc.c trim.c
+-	file.c prealloc.c trim.c
++	ag.c file.c prealloc.c trim.c
  
  LLDLIBS = $(LIBXCMD)
  LTDEPENDENCIES = $(LIBXCMD)
-diff --git a/spaceman/init.c b/spaceman/init.c
-index 8eb4cc7..87ef27c 100644
---- a/spaceman/init.c
-+++ b/spaceman/init.c
-@@ -39,6 +39,7 @@ init_commands(void)
- {
- 	file_init();
- 	help_init();
-+	prealloc_init();
- 	quit_init();
- 	trim_init();
- }
-diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
+diff --git a/spaceman/ag.c b/spaceman/ag.c
 new file mode 100644
-index 0000000..645b772
+index 0000000..567fe7a
 --- /dev/null
-+++ b/spaceman/prealloc.c
-@@ -0,0 +1,135 @@
++++ b/spaceman/ag.c
+@@ -0,0 +1,221 @@
 +/*
 + * Copyright (c) 2012 Red Hat, Inc.
 + * All Rights Reserved.
@@ -81,131 +69,206 @@ index 0000000..645b772
 + */
 +
 +#include "libxfs.h"
++#include <linux/dqblk_xfs.h>
 +#include "command.h"
 +#include "input.h"
 +#include "init.h"
 +#include "space.h"
 +
-+#ifndef XFS_IOC_FREE_EOFBLOCKS
-+#define XFS_IOC_FREE_EOFBLOCKS _IOR ('X', 58, struct xfs_eofblocks)
++#ifndef XFS_IOC_AGCONTROL
++#define XFS_IOC_AGCONTROL _IOWR ('X', 60, struct xfs_agcontrol)
 +
-+#define XFS_EOFBLOCKS_VERSION           1
-+struct xfs_fs_eofblocks {
-+	__u32		eof_version;
-+	__u32		eof_flags;
-+	uid_t		eof_uid;
-+	gid_t		eof_gid;
-+	prid_t		eof_prid;
-+	__u32		pad32;
-+	__u64		eof_min_file_size;
-+	__u64		pad64[12];
++#define XFS_AGCONTROL_VERSION		1
++struct xfs_agcontrol {
++	__u32		version;
++	__u32		flags;
++	__u32		agno;
++	__u32		state;
++	__u64		pad[8];
 +};
 +
-+/* eof_flags values */
-+#define XFS_EOF_FLAGS_SYNC		(1 << 0) /* sync/wait mode scan */
-+#define XFS_EOF_FLAGS_UID		(1 << 1) /* filter by uid */
-+#define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
-+#define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
-+#define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
++/* control flags */
++#define XFS_AGCONTROL_GETAGFSTATE	(1 << 0)	/* get AGF state */
++#define XFS_AGCONTROL_SETAGFSTATE	(1 << 1)	/* set AGF state */
++#define XFS_AGCONTROL_GETAGISTATE	(1 << 2)	/* get AGI state */
++#define XFS_AGCONTROL_SETAGISTATE	(1 << 3)	/* set AGI state */
++
++/* state flags */
++
++/*
++ * inode and allocation states are split. AGF and AGI online state will move in
++ * sync as it is really a whole AG state. No allocation flags imply no new
++ * allocations, but inodes and extents can be removed. Readonly means no
++ * modification (alloc or free) is allowed. This is to allow different
++ * operations to be performed. e.g. emptying an AG in preparation for a shrink
++ * require NOALLOC state, but an AG that has a corrupted freespace btree might
++ * be switched to READONLY until the freespace tree is rebuilt. An AGF/AGI in
++ * this corrupt/ro state will set the relevant corruption flag in the state
++ * field....
++ */
++#define XFS_AGFSTATE_ONLINE		(1 << 0)	/* AGF online */
++#define XFS_AGFSTATE_NOALLOC		(1 << 1)	/* No new allocation */
++#define XFS_AGFSTATE_READONLY		(1 << 2)	/* AGF is immutable */
++#define XFS_AGFSTATE_METADATA		(1 << 3)	/* metadata preferred */
++#define XFS_AGFSTATE_CORRUPT_BNO	(1 << 4)	/* bno freespace corrupt */
++#define XFS_AGFSTATE_CORRUPT_CNT	(1 << 5)	/* cnt freespace corrupt */
++#define XFS_AGFSTATE_CORRUPT_AGFL	(1 << 6)	/* AGFL freespace corrupt */
++
++#define XFS_AGISTATE_ONLINE		(1 << 0)	/* AGI online */
++#define XFS_AGISTATE_NOALLOC		(1 << 1)	/* No new allocation */
++#define XFS_AGISTATE_READONLY		(1 << 2)	/* AGI is immutable */
++#define XFS_AGISTATE_CORRUPT_TREE	(1 << 2)	/* AGI btree corrupt */
 +
 +#endif
 +
-+static cmdinfo_t prealloc_cmd;
++static cmdinfo_t agfctl_cmd;
++static cmdinfo_t agictl_cmd;
 +
-+/*
-+ * Control preallocation amounts.
-+ */
 +static int
-+prealloc_f(
-+	int	argc,
-+	char	**argv)
++agfctl_f(
++	int		argc,
++	char		**argv)
 +{
-+	struct xfs_fs_eofblocks eofb = {0};
-+	int	c;
++	struct xfs_agcontrol agctl = {0};
++	xfs_agnumber_t	agno;
++	int		gflag = 0;
++	int		c;
 +
-+	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
-+
-+	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
++	while ((c = getopt(argc, argv, "gs")) != EOF) {
 +		switch (c) {
 +		case 'g':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
-+			eofb.eof_gid = atoi(optarg);
++			gflag = 1;
 +			break;
-+		case 'u':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
-+			eofb.eof_uid = atoi(optarg);
-+			break;
-+		case 'p':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
-+			eofb.eof_prid = atoi(optarg);
-+			break;
-+		case 's':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
-+			break;
-+		case 'm':
-+			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
-+			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
-+							file->geom.sectsize,
-+							optarg);
-+			break;
-+		case '?':
 +		default:
-+			return command_usage(&prealloc_cmd);
++			return command_usage(&agfctl_cmd);
 +		}
 +	}
-+	if (optind != argc)
-+		return command_usage(&prealloc_cmd);
++	if (optind != argc - 1)
++		return command_usage(&agfctl_cmd);
 +
-+	if (xfsctl(file->name, file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
-+		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
++	agno = atoi(argv[optind]);
++	if (agno >= file->geom.agcount) {
++		fprintf(stderr, _("%s: agno %d out of range (max %d)\n"),
++			progname, agno, file->geom.agcount);
++		exitcode = 1;
++		return 0;
++	}
++
++	agctl.version = XFS_AGCONTROL_VERSION;
++	agctl.agno = agno;
++	if (gflag)
++		agctl.flags = XFS_AGCONTROL_GETAGFSTATE;
++
++	if (xfsctl(file->name, file->fd, XFS_IOC_AGCONTROL, &agctl) < 0) {
++		fprintf(stderr, _("%s: XFS_IOC_AGCONTROL on %s: %s\n"),
 +			progname, file->name, strerror(errno));
 +	}
 +	return 0;
 +}
 +
 +static void
-+prealloc_help(void)
++agfctl_help(void)
 +{
 +	printf(_(
 +"\n"
-+"Control speculative preallocation\n"
++"AGF state control\n"
 +"\n"
-+"Options: [-s] [-ugp id] [-m minlen]\n"
++"Options: [-g] agno\n"
 +"\n"
-+" -s -- synchronous flush - wait for flush to complete\n"
-+" -u uid -- remove prealloc on files matching user <uid>\n"
-+" -g gid -- remove prealloc on files matching group <gid>\n"
-+" -p prid -- remove prealloc on files matching project <prid>\n"
-+" -m minlen -- only consider files larger than <minlen>\n"
++" -g -- get state\n"
++" agno -- AG to operate on\n"
 +"\n"));
 +
 +}
 +
 +void
-+prealloc_init(void)
++agfctl_init(void)
 +{
-+	prealloc_cmd.name = "prealloc";
-+	prealloc_cmd.altname = "prealloc";
-+	prealloc_cmd.cfunc = prealloc_f;
-+	prealloc_cmd.argmin = 1;
-+	prealloc_cmd.argmax = -1;
-+	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]\n";
-+	prealloc_cmd.flags = CMD_FLAG_ONESHOT;
-+	prealloc_cmd.oneline = _("Control specualtive preallocation");
-+	prealloc_cmd.help = prealloc_help;
++	agfctl_cmd.name = "agfctl";
++	agfctl_cmd.altname = "agfctl";
++	agfctl_cmd.cfunc = agfctl_f;
++	agfctl_cmd.argmin = 2;
++	agfctl_cmd.argmax = -1;
++	agfctl_cmd.args = "agno\n";
++	agfctl_cmd.flags = CMD_FLAG_ONESHOT;
++	agfctl_cmd.oneline = _("AGF state control");
++	agfctl_cmd.help = agfctl_help;
 +
-+	add_command(&prealloc_cmd);
++	add_command(&agfctl_cmd);
 +}
 +
-diff --git a/spaceman/space.h b/spaceman/space.h
-index 7b4f034..0ae3116 100644
---- a/spaceman/space.h
-+++ b/spaceman/space.h
-@@ -33,5 +33,6 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
- 
- extern void	file_init(void);
- extern void	help_init(void);
-+extern void	prealloc_init(void);
- extern void	quit_init(void);
- extern void	trim_init(void);
++static int
++agictl_f(
++	int		argc,
++	char		**argv)
++{
++	struct xfs_agcontrol agctl = {0};
++	xfs_agnumber_t	agno;
++	int		gflag = 0;
++	int		c;
++
++	while ((c = getopt(argc, argv, "gs")) != EOF) {
++		switch (c) {
++		case 'g':
++			gflag = 1;
++			break;
++		default:
++			return command_usage(&agictl_cmd);
++		}
++	}
++	if (optind != argc - 1)
++		return command_usage(&agictl_cmd);
++
++	agno = atoi(argv[optind]);
++	if (agno >= file->geom.agcount) {
++		fprintf(stderr, _("%s: agno %d out of range (max %d)\n"),
++			progname, agno, file->geom.agcount);
++		exitcode = 1;
++		return 0;
++	}
++
++	agctl.version = XFS_AGCONTROL_VERSION;
++	agctl.agno = agno;
++	if (gflag)
++		agctl.flags = XFS_AGCONTROL_GETAGISTATE;
++
++	if (xfsctl(file->name, file->fd, XFS_IOC_AGCONTROL, &agctl) < 0) {
++		fprintf(stderr, _("%s: XFS_IOC_AGCONTROL on %s: %s\n"),
++			progname, file->name, strerror(errno));
++		exitcode = 1;
++		return 0;
++	}
++	return 0;
++}
++
++static void
++agictl_help(void)
++{
++	printf(_(
++"\n"
++"AGI state control\n"
++"\n"
++"Options: [-g] agno\n"
++"\n"
++" -g -- get state\n"
++" agno -- AG to operate on\n"
++"\n"));
++
++}
++
++void
++agictl_init(void)
++{
++	agictl_cmd.name = "agictl";
++	agictl_cmd.altname = "agictl";
++	agictl_cmd.cfunc = agictl_f;
++	agictl_cmd.argmin = 2;
++	agictl_cmd.argmax = -1;
++	agictl_cmd.args = "agno\n";
++	agictl_cmd.flags = CMD_FLAG_ONESHOT;
++	agictl_cmd.oneline = _("AGI state control");
++	agictl_cmd.help = agictl_help;
++
++	add_command(&agictl_cmd);
++}
 
