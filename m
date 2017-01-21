@@ -1,127 +1,847 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:33743 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:26014 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934300AbdAKRpi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 12:45:38 -0500
-Date: Wed, 11 Jan 2017 09:45:30 -0800
+        with ESMTP id S1751137AbdAUIJQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:09:16 -0500
+Subject: [PATCH 09/17] xfs_db: introduce fuzz command
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_repair: update the manual content about xfs_repair
- exit status
-Message-ID: <20170111174530.GT14038@birch.djwong.org>
-References: <1484111908-12558-1-git-send-email-zlang@redhat.com>
- <9c965d34-9242-394a-490d-9825ac3ff918@sandeen.net>
+Date: Sat, 21 Jan 2017 00:09:09 -0800
+Message-ID: <148498614970.16675.13773024118867518517.stgit@birch.djwong.org>
+In-Reply-To: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
+References: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9c965d34-9242-394a-490d-9825ac3ff918@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Wed, Jan 11, 2017 at 07:47:41AM -0600, Eric Sandeen wrote:
-> 
-> 
-> On 1/10/17 11:18 PM, Zorro Lang wrote:
-> > The man 8 xfs_repair said "xfs_repair run without the -n option will
-> > always return a status code of 0". That's not correct.
-> > 
-> > xfs_repair will return 2 if it finds a fs log which needs to be
-> > replayed or cleared, 1 if runtime error is encountered, and 0 for
-> > all other cases.
-> > 
-> > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > ---
-> > 
-> > Hi,
-> > 
-> > This patch has been stayed in my local xfsprogs repo for a long
-> > time. So I'm sending it out again :)
-> 
-> Yep, sorry about that.  Last comment on it was that the sentence
-> had become a run-on sentence ...
-> 
-> How about:
-> 
-> .B xfs_repair
-> run without the -n option will always return a status code of 0 if it
-> runs without problems, regardless of whether filesystem corruption was
-> detected.  If an unexpected runtime error is encountered, it will return
-> a status code of 1, and xfs_repair should be restarted.  If a dirty
-> log is encountered which prevents it from continuing, it will return a
-> status code of 2.
-> 
-> (I think that the right place to document mount/unmount and/or -L is
-> /not/ in the status code docs - if we need that info, it should go
-> elsewhere.)
+Introduce a new 'fuzz' command to write creative values into
+disk structure fields.
 
-We sort of mumble about needing to mount and umount to clear a dirty log
-in the BUGS section, but I think we should just add a section about
-dirty logs and what to do with them, then link to it from the status
-code section and the -L option section.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/Makefile       |    3 
+ db/bit.c          |   17 +-
+ db/bit.h          |    5 -
+ db/command.c      |    2 
+ db/fuzz.c         |  461 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/fuzz.h         |   21 ++
+ db/io.c           |    9 +
+ db/io.h           |    1 
+ db/type.c         |   44 ++++-
+ db/type.h         |    1 
+ man/man8/xfs_db.8 |   55 ++++++
+ 11 files changed, 598 insertions(+), 21 deletions(-)
+ create mode 100644 db/fuzz.c
+ create mode 100644 db/fuzz.h
 
-"DIRTY LOGS
 
-"Due to the design of the XFS log, a dirty log can only be replayed on a
-machine having the same CPU architecture as the machine which was
-writing to the log.  xfs_repair cannot replay a dirty log and will
-return a status code of 2 when it detects a dirty log.
+diff --git a/db/Makefile b/db/Makefile
+index cdc0b99..feeacf6 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -12,7 +12,8 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+ 	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
+ 	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
+ 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+-	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h
++	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
++	fuzz.h
+ CFILES = $(HFILES:.h=.c)
+ LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+ 
+diff --git a/db/bit.c b/db/bit.c
+index 24872bf..3fcb085 100644
+--- a/db/bit.c
++++ b/db/bit.c
+@@ -19,13 +19,8 @@
+ #include "libxfs.h"
+ #include "bit.h"
+ 
+-#undef setbit	/* defined in param.h on Linux */
+-
+-static int	getbit(char *ptr, int bit);
+-static void	setbit(char *ptr, int bit, int val);
+-
+-static int
+-getbit(
++int
++getbit_l(
+ 	char	*ptr,
+ 	int	bit)
+ {
+@@ -39,8 +34,8 @@ getbit(
+ 	return (*ptr & mask) >> shift;
+ }
+ 
+-static void
+-setbit(
++void
++setbit_l(
+ 	char *ptr,
+ 	int  bit,
+ 	int  val)
+@@ -106,7 +101,7 @@ getbitval(
+ 
+ 
+ 	for (i = 0, rval = 0LL; i < nbits; i++) {
+-		if (getbit(p, bit + i)) {
++		if (getbit_l(p, bit + i)) {
+ 			/* If the last bit is on and we care about sign
+ 			 * bits and we don't have a full 64 bit
+ 			 * container, turn all bits on between the
+@@ -162,7 +157,7 @@ setbitval(
+ 
+ 	if (bitoff % NBBY || nbits % NBBY) {
+ 		for (bit = 0; bit < nbits; bit++)
+-			setbit(out, bit + bitoff, getbit(in, bit));
++			setbit_l(out, bit + bitoff, getbit_l(in, bit));
+ 	} else
+ 		memcpy(out + byteize(bitoff), in, byteize(nbits));
+ }
+diff --git a/db/bit.h b/db/bit.h
+index 80ba24c..4506679 100644
+--- a/db/bit.h
++++ b/db/bit.h
+@@ -21,9 +21,12 @@
+ #define	bitszof(x,y)	bitize(szof(x,y))
+ #define	byteize(s)	((s) / NBBY)
+ #define	bitoffs(s)	((s) % NBBY)
++#define	byteize_up(s)	(((s) + NBBY - 1) / NBBY)
+ 
+ #define	BVUNSIGNED	0
+ #define	BVSIGNED	1
+ 
+ extern __int64_t	getbitval(void *obj, int bitoff, int nbits, int flags);
+-extern void             setbitval(void *obuf, int bitoff, int nbits, void *ibuf);
++extern void		setbitval(void *obuf, int bitoff, int nbits, void *ibuf);
++extern int		getbit_l(char *ptr, int bit);
++extern void		setbit_l(char *ptr, int bit, int val);
+diff --git a/db/command.c b/db/command.c
+index 3d7cfd7..0eb4944 100644
+--- a/db/command.c
++++ b/db/command.c
+@@ -51,6 +51,7 @@
+ #include "dquot.h"
+ #include "fsmap.h"
+ #include "crc.h"
++#include "fuzz.h"
+ 
+ cmdinfo_t	*cmdtab;
+ int		ncmds;
+@@ -146,4 +147,5 @@ init_commands(void)
+ 	type_init();
+ 	write_init();
+ 	dquot_init();
++	fuzz_init();
+ }
+diff --git a/db/fuzz.c b/db/fuzz.c
+new file mode 100644
+index 0000000..061ecd1
+--- /dev/null
++++ b/db/fuzz.c
+@@ -0,0 +1,461 @@
++/*
++ * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include "libxfs.h"
++#include <ctype.h>
++#include <time.h>
++#include "bit.h"
++#include "block.h"
++#include "command.h"
++#include "type.h"
++#include "faddr.h"
++#include "fprint.h"
++#include "field.h"
++#include "flist.h"
++#include "io.h"
++#include "init.h"
++#include "output.h"
++#include "print.h"
++#include "write.h"
++#include "malloc.h"
++
++static int	fuzz_f(int argc, char **argv);
++static void     fuzz_help(void);
++
++static const cmdinfo_t	fuzz_cmd =
++	{ "fuzz", NULL, fuzz_f, 0, -1, 0, N_("[-c] [-d] field fuzzcmd..."),
++	  N_("fuzz values on disk"), fuzz_help };
++
++void
++fuzz_init(void)
++{
++	if (!expert_mode)
++		return;
++
++	add_command(&fuzz_cmd);
++	srand48(clock());
++}
++
++static void
++fuzz_help(void)
++{
++	dbprintf(_(
++"\n"
++" The 'fuzz' command fuzzes fields in any on-disk data structure.  For\n"
++" block fuzzing, see the 'blocktrash' or 'write' commands."
++"\n"
++" Examples:\n"
++"  Struct mode: 'fuzz core.uid zeroes'    - set an inode uid field to 0.\n"
++"               'fuzz crc ones'           - set a crc filed to all ones.\n"
++"               'fuzz bno[11] firstbit'   - set the high bit of a block array.\n"
++"               'fuzz keys[5].startblock add'    - increase a btree key value.\n"
++"               'fuzz uuid random'        - randomize the superblock uuid.\n"
++"\n"
++" In data mode type 'fuzz' by itself for a list of specific commands.\n\n"
++" Specifying the -c option will allow writes of invalid (corrupt) data with\n"
++" an invalid CRC. Specifying the -d option will allow writes of invalid data,\n"
++" but still recalculate the CRC so we are forced to check and detect the\n"
++" invalid data appropriately.\n\n"
++));
++
++}
++
++static int
++fuzz_f(
++	int		argc,
++	char		**argv)
++{
++	pfunc_t	pf;
++	extern char *progname;
++	int c;
++	bool corrupt = false;	/* Allow write of bad data w/ invalid CRC */
++	bool invalid_data = false; /* Allow write of bad data w/ valid CRC */
++	struct xfs_buf_ops local_ops;
++	const struct xfs_buf_ops *stashed_ops = NULL;
++
++	if (x.isreadonly & LIBXFS_ISREADONLY) {
++		dbprintf(_("%s started in read only mode, fuzzing disabled\n"),
++			progname);
++		return 0;
++	}
++
++	if (cur_typ == NULL) {
++		dbprintf(_("no current type\n"));
++		return 0;
++	}
++
++	pf = cur_typ->pfunc;
++	if (pf == NULL) {
++		dbprintf(_("no handler function for type %s, fuzz unsupported.\n"),
++			 cur_typ->name);
++		return 0;
++	}
++
++	while ((c = getopt(argc, argv, "cd")) != EOF) {
++		switch (c) {
++		case 'c':
++			corrupt = true;
++			break;
++		case 'd':
++			invalid_data = true;
++			break;
++		default:
++			dbprintf(_("bad option for fuzz command\n"));
++			return 0;
++		}
++	}
++
++	if (corrupt && invalid_data) {
++		dbprintf(_("Cannot specify both -c and -d options\n"));
++		return 0;
++	}
++
++	if (invalid_data && iocur_top->typ->crc_off == TYP_F_NO_CRC_OFF &&
++			!iocur_top->ino_buf) {
++		dbprintf(_("Cannot recalculate CRCs on this type of object\n"));
++		return 0;
++	}
++
++	argc -= optind;
++	argv += optind;
++
++	/*
++	 * If the buffer has no verifier or we are using standard verifier
++	 * paths, then just fuzz it and return
++	 */
++	if (!iocur_top->bp->b_ops ||
++	    !(corrupt || invalid_data)) {
++		(*pf)(DB_FUZZ, cur_typ->fields, argc, argv);
++		return 0;
++	}
++
++
++	/* Temporarily remove write verifier to write bad data */
++	stashed_ops = iocur_top->bp->b_ops;
++	local_ops.verify_read = stashed_ops->verify_read;
++	iocur_top->bp->b_ops = &local_ops;
++
++	if (corrupt) {
++		local_ops.verify_write = xfs_dummy_verify;
++		dbprintf(_("Allowing fuzz of corrupted data and bad CRC\n"));
++	} else if (iocur_top->ino_buf) {
++		local_ops.verify_write = xfs_verify_recalc_inode_crc;
++		dbprintf(_("Allowing fuzz of corrupted inode with good CRC\n"));
++	} else { /* invalid data */
++		local_ops.verify_write = xfs_verify_recalc_crc;
++		dbprintf(_("Allowing fuzz of corrupted data with good CRC\n"));
++	}
++
++	(*pf)(DB_FUZZ, cur_typ->fields, argc, argv);
++
++	iocur_top->bp->b_ops = stashed_ops;
++
++	return 0;
++}
++
++/* Write zeroes to the field */
++static bool
++fuzz_zeroes(
++	void		*buf,
++	int		bitoff,
++	int		nbits)
++{
++	char		*out = buf;
++	int		bit;
++
++	if (bitoff % NBBY || nbits % NBBY) {
++		for (bit = 0; bit < nbits; bit++)
++			setbit_l(out, bit + bitoff, 0);
++	} else
++		memset(out + byteize(bitoff), 0, byteize(nbits));
++	return true;
++}
++
++/* Write ones to the field */
++static bool
++fuzz_ones(
++	void		*buf,
++	int		bitoff,
++	int		nbits)
++{
++	char		*out = buf;
++	int		bit;
++
++	if (bitoff % NBBY || nbits % NBBY) {
++		for (bit = 0; bit < nbits; bit++)
++			setbit_l(out, bit + bitoff, 1);
++	} else
++		memset(out + byteize(bitoff), 0xFF, byteize(nbits));
++	return true;
++}
++
++/* Flip the high bit in the (presumably big-endian) field */
++static bool
++fuzz_firstbit(
++	void		*buf,
++	int		bitoff,
++	int		nbits)
++{
++	setbit_l((char *)buf, bitoff, !getbit_l((char *)buf, bitoff));
++	return true;
++}
++
++/* Flip the low bit in the (presumably big-endian) field */
++static bool
++fuzz_lastbit(
++	void		*buf,
++	int		bitoff,
++	int		nbits)
++{
++	setbit_l((char *)buf, bitoff + nbits - 1,
++			!getbit_l((char *)buf, bitoff));
++	return true;
++}
++
++/* Flip the middle bit in the (presumably big-endian) field */
++static bool
++fuzz_middlebit(
++	void		*buf,
++	int		bitoff,
++	int		nbits)
++{
++	setbit_l((char *)buf, bitoff + nbits / 2,
++			!getbit_l((char *)buf, bitoff));
++	return true;
++}
++
++/* Format and shift a number into a buffer for setbitval. */
++static char *
++format_number(
++	uint64_t	val,
++	__be64		*out,
++	int		bit_length)
++{
++	int		offset;
++	char		*rbuf = (char *)out;
++
++	/*
++	 * If the length of the field is not a multiple of a byte, push
++	 * the bits up in the field, so the most signicant field bit is
++	 * the most significant bit in the byte:
++	 *
++	 * before:
++	 * val  |----|----|----|----|----|--MM|mmmm|llll|
++	 * after
++	 * val  |----|----|----|----|----|MMmm|mmll|ll00|
++	 */
++	offset = bit_length % NBBY;
++	if (offset)
++		val <<= (NBBY - offset);
++
++	/*
++	 * convert to big endian and copy into the array
++	 * rbuf |----|----|----|----|----|MMmm|mmll|ll00|
++	 */
++	*out = cpu_to_be64(val);
++
++	/*
++	 * Align the array to point to the field in the array.
++	 *  rbuf  = |MMmm|mmll|ll00|
++	 */
++	offset = sizeof(__be64) - 1 - ((bit_length - 1) / sizeof(__be64));
++	return rbuf + offset;
++}
++
++/* Increase the value by some small prime number. */
++static bool
++fuzz_add(
++	void		*buf,
++	int		bitoff,
++	int		nbits)
++{
++	uint64_t	val;
++	__be64		out;
++	char		*b;
++
++	if (nbits > 64)
++		return false;
++
++	val = getbitval(buf, bitoff, nbits, BVUNSIGNED);
++	val += (nbits > 8 ? 2017 : 137);
++	b = format_number(val, &out, nbits);
++	setbitval(buf, bitoff, nbits, b);
++
++	return true;
++}
++
++/* Decrease the value by some small prime number. */
++static bool
++fuzz_sub(
++	void		*buf,
++	int		bitoff,
++	int		nbits)
++{
++	uint64_t	val;
++	__be64		out;
++	char		*b;
++
++	if (nbits > 64)
++		return false;
++
++	val = getbitval(buf, bitoff, nbits, BVUNSIGNED);
++	val -= (nbits > 8 ? 2017 : 137);
++	b = format_number(val, &out, nbits);
++	setbitval(buf, bitoff, nbits, b);
++
++	return true;
++}
++
++/* Randomize the field. */
++static bool
++fuzz_random(
++	void		*buf,
++	int		bitoff,
++	int		nbits)
++{
++	int		i, bytes;
++	char		*b, *rbuf;
++
++	bytes = byteize_up(nbits);
++	rbuf = b = malloc(bytes);
++	if (!b) {
++		perror("fuzz_random");
++		return false;
++	}
++
++	for (i = 0; i < bytes; i++)
++		*b++ = (char)lrand48();
++
++	setbitval(buf, bitoff, nbits, rbuf);
++	free(rbuf);
++
++	return true;
++}
++
++struct fuzzcmd {
++	const char	*verb;
++	bool		(*fn)(void *buf, int bitoff, int nbits);
++};
++
++/* Keep these verbs in sync with enum fuzzcmds. */
++static struct fuzzcmd fuzzverbs[] = {
++	{"zeroes",		fuzz_zeroes},
++	{"ones",		fuzz_ones},
++	{"firstbit",		fuzz_firstbit},
++	{"middlebit",		fuzz_middlebit},
++	{"lastbit",		fuzz_lastbit},
++	{"add",			fuzz_add},
++	{"sub",			fuzz_sub},
++	{"random",		fuzz_random},
++	{NULL,			NULL},
++};
++
++/* ARGSUSED */
++void
++fuzz_struct(
++	const field_t	*fields,
++	int		argc,
++	char		**argv)
++{
++	const ftattr_t	*fa;
++	flist_t		*fl;
++	flist_t		*sfl;
++	int		bit_length;
++	struct fuzzcmd	*fc;
++	bool		success;
++	int		parentoffset;
++
++	if (argc != 2) {
++		dbprintf(_("Usage: fuzz fieldname verb\n"));
++		dbprintf("Verbs: %s", fuzzverbs->verb);
++		for (fc = fuzzverbs + 1; fc->verb != NULL; fc++)
++			dbprintf(", %s", fc->verb);
++		dbprintf(".\n");
++		return;
++	}
++
++	fl = flist_scan(argv[0]);
++	if (!fl) {
++		dbprintf(_("unable to parse '%s'.\n"), argv[0]);
++		return;
++	}
++
++	/* Find our fuzz verb */
++	for (fc = fuzzverbs; fc->verb != NULL; fc++)
++		if (!strcmp(fc->verb, argv[1]))
++			break;
++	if (fc->fn == NULL) {
++		dbprintf(_("Unknown fuzz command '%s'.\n"), argv[1]);
++		return;
++	}
++
++	/* if we're a root field type, go down 1 layer to get field list */
++	if (fields->name[0] == '\0') {
++		fa = &ftattrtab[fields->ftyp];
++		ASSERT(fa->ftyp == fields->ftyp);
++		fields = fa->subfld;
++	}
++
++	/* run down the field list and set offsets into the data */
++	if (!flist_parse(fields, fl, iocur_top->data, 0)) {
++		flist_free(fl);
++		dbprintf(_("parsing error\n"));
++		return;
++	}
++
++	sfl = fl;
++	parentoffset = 0;
++	while (sfl->child) {
++		parentoffset = sfl->offset;
++		sfl = sfl->child;
++	}
++
++	/*
++	 * For structures, fsize * fcount tells us the size of the region we are
++	 * modifying, which is usually a single structure member and is pointed
++	 * to by the last child in the list.
++	 *
++	 * However, if the base structure is an array and we have a direct index
++	 * into the array (e.g. write bno[5]) then we are returned a single
++	 * flist object with the offset pointing directly at the location we
++	 * need to modify. The length of the object we are modifying is then
++	 * determined by the size of the individual array entry (fsize) and the
++	 * indexes defined in the object, not the overall size of the array
++	 * (which is what fcount returns).
++	 */
++	bit_length = fsize(sfl->fld, iocur_top->data, parentoffset, 0);
++	if (sfl->fld->flags & FLD_ARRAY)
++		bit_length *= sfl->high - sfl->low + 1;
++	else
++		bit_length *= fcount(sfl->fld, iocur_top->data, parentoffset);
++
++	/* Fuzz the value */
++	success = fc->fn(iocur_top->data, sfl->offset, bit_length);
++	if (!success) {
++		dbprintf(_("unable to fuzz field '%s'\n"), argv[0]);
++		flist_free(fl);
++		return;
++	}
++
++	/* Write the fuzzed value back */
++	write_cur();
++
++	flist_print(fl);
++	print_flist(fl);
++	flist_free(fl);
++}
+diff --git a/db/fuzz.h b/db/fuzz.h
+new file mode 100644
+index 0000000..c203eb5
+--- /dev/null
++++ b/db/fuzz.h
+@@ -0,0 +1,21 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++extern void	fuzz_init(void);
++extern void	fuzz_struct(const field_t *fields, int argc, char **argv);
+diff --git a/db/io.c b/db/io.c
+index f398195..1f316d8 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -465,6 +465,15 @@ xfs_dummy_verify(
+ }
+ 
+ void
++xfs_verify_recalc_inode_crc(
++	struct xfs_buf *bp)
++{
++	ASSERT(iocur_top->ino_buf);
++	libxfs_dinode_calc_crc(mp, iocur_top->data);
++	iocur_top->ino_crc_ok = 1;
++}
++
++void
+ xfs_verify_recalc_crc(
+ 	struct xfs_buf *bp)
+ {
+diff --git a/db/io.h b/db/io.h
+index c69e9ce..12d96c2 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -64,6 +64,7 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
+ extern void     ring_add(void);
+ extern void	set_iocur_type(const struct typ *t);
+ extern void	xfs_dummy_verify(struct xfs_buf *bp);
++extern void	xfs_verify_recalc_inode_crc(struct xfs_buf *bp);
+ extern void	xfs_verify_recalc_crc(struct xfs_buf *bp);
+ 
+ /*
+diff --git a/db/type.c b/db/type.c
+index 10fa54e..adab10a 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -39,6 +39,7 @@
+ #include "dir2.h"
+ #include "text.h"
+ #include "symlink.h"
++#include "fuzz.h"
+ 
+ static const typ_t	*findtyp(char *name);
+ static int		type_f(int argc, char **argv);
+@@ -254,10 +255,17 @@ handle_struct(
+ 	int           argc,
+ 	char          **argv)
+ {
+-	if (action == DB_WRITE)
++	switch (action) {
++	case DB_FUZZ:
++		fuzz_struct(fields, argc, argv);
++		break;
++	case DB_WRITE:
+ 		write_struct(fields, argc, argv);
+-	else
++		break;
++	case DB_READ:
+ 		print_struct(fields, argc, argv);
++		break;
++	}
+ }
+ 
+ void
+@@ -267,10 +275,17 @@ handle_string(
+ 	int           argc,
+ 	char          **argv)
+ {
+-	if (action == DB_WRITE)
++	switch (action) {
++	case DB_WRITE:
+ 		write_string(fields, argc, argv);
+-	else
++		break;
++	case DB_READ:
+ 		print_string(fields, argc, argv);
++		break;
++	case DB_FUZZ:
++		dbprintf(_("string fuzzing not supported.\n"));
++		break;
++	}
+ }
+ 
+ void
+@@ -280,10 +295,17 @@ handle_block(
+ 	int           argc,
+ 	char          **argv)
+ {
+-	if (action == DB_WRITE)
++	switch (action) {
++	case DB_WRITE:
+ 		write_block(fields, argc, argv);
+-	else
++		break;
++	case DB_READ:
+ 		print_block(fields, argc, argv);
++		break;
++	case DB_FUZZ:
++		dbprintf(_("use 'blocktrash' or 'write' to fuzz a block.\n"));
++		break;
++	}
+ }
+ 
+ void
+@@ -293,6 +315,14 @@ handle_text(
+ 	int           argc,
+ 	char          **argv)
+ {
+-	if (action != DB_WRITE)
++	switch (action) {
++	case DB_FUZZ:
++		/* fall through */
++	case DB_WRITE:
++		dbprintf(_("text writing/fuzzing not supported.\n"));
++		break;
++	case DB_READ:
+ 		print_text(fields, argc, argv);
++		break;
++	}
+ }
+diff --git a/db/type.h b/db/type.h
+index 87ff107..a50d705 100644
+--- a/db/type.h
++++ b/db/type.h
+@@ -30,6 +30,7 @@ typedef enum typnm
+ 	TYP_TEXT, TYP_FINOBT, TYP_NONE
+ } typnm_t;
+ 
++#define DB_FUZZ  2
+ #define DB_WRITE 1
+ #define DB_READ  0
+ 
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 460d89d..55e0629 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -594,6 +594,55 @@ in units of 512-byte blocks, no matter what the filesystem's block size is.
+ .BI "The optional " start " and " end " arguments can be used to constrain
+ the output to a particular range of disk blocks.
+ .TP
++.BI "fuzz [\-c] [\-d] " "field action"
++Write garbage into a specific structure field on disk.
++Expert mode must be enabled to use this command.
++The operation happens immediately; there is no buffering.
++.IP
++The fuzz command can take the following
++.IR action "s"
++against a field:
++.RS 1.0i
++.TP 0.4i
++.B zeroes
++Clears all bits in the field.
++.TP 0.4i
++.B ones
++Sets all bits in the field.
++.TP 0.4i
++.B firstbit
++Flips the first bit in the field.
++For a scalar value, this is the highest bit.
++.TP 0.4i
++.B middlebit
++Flips the middle bit in the field.
++.TP 0.4i
++.B lastbit
++Flips the last bit in the field.
++For a scalar value, this is the lowest bit.
++.TP 0.4i
++.B add
++Adds a small value to a scalar field.
++.TP 0.4i
++.B sub
++Subtracts a small value from a scalar field.
++.TP 0.4i
++.B random
++Randomizes the contents of the field.
++.RE
++.IP
++The following switches affect the write behavior:
++.RS 1.0i
++.TP 0.4i
++.B \-c
++Skip write verifiers and CRC recalculation; allows invalid data to be written
++to disk.
++.TP 0.4i
++.B \-d
++Skip write verifiers but perform CRC recalculation; allows invalid data to be
++written to disk to test detection of invalid data.
++.RE
++.TP
+ .BI hash " string
+ Prints the hash value of
+ .I string
+@@ -755,7 +804,7 @@ and
+ bits respectively, and their string equivalent reported
+ (but no modifications are made).
+ .TP
+-.BI "write [\-c] [" "field value" "] ..."
++.BI "write [\-c] [\-d] [" "field value" "] ..."
+ Write a value to disk.
+ Specific fields can be set in structures (struct mode),
+ or a block can be set to data values (data mode),
+@@ -778,6 +827,10 @@ with no arguments gives more information on the allowed commands.
+ .B \-c
+ Skip write verifiers and CRC recalculation; allows invalid data to be written
+ to disk.
++.TP 0.4i
++.B \-d
++Skip write verifiers but perform CRC recalculation; allows invalid data to be
++written to disk to test detection of invalid data.
+ .RE
+ .SH TYPES
+ This section gives the fields in each structure type and their meanings.
 
-"In this situation, the log can be replayed by mounting and immediately
-unmounting the filesystem on the same class of machine that crashed.
-Please make sure that the machine's hardware is reliable before
-replaying to avoid compounding the problems.
-
-"If mounting fails, the log can be erased by running xfs_repair with
-the -L option.  All metadata updates in progress at the time of the
-crash will be lost, which may cause significant filesystem damage.  This
-should only be used as a last resort."
-
-(If you decide to add that paragraph,
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>)
-
-Though I wonder why don't just fix the endianness issues with the log,
-and teach xfs_repair how to replay them...
-
---D
-
-> 
-> -eric
-> 
-> > Thanks,
-> > Zorro
-> > 
-> >  man/man8/xfs_repair.8 | 10 ++++++++--
-> >  1 file changed, 8 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
-> > index 1b4d9e3..314f2c2 100644
-> > --- a/man/man8/xfs_repair.8
-> > +++ b/man/man8/xfs_repair.8
-> > @@ -504,12 +504,18 @@ that is known to be free. The entry is therefore invalid and is deleted.
-> >  This message refers to a large directory.
-> >  If the directory were small, the message would read "junking entry ...".
-> >  .SH EXIT STATUS
-> > +.TP
-> >  .B xfs_repair \-n
-> > -(no modify node)
-> > +(no modify mode)
-> >  will return a status of 1 if filesystem corruption was detected and
-> >  0 if no filesystem corruption was detected.
-> > +.TP
-> >  .B xfs_repair
-> > -run without the \-n option will always return a status code of 0.
-> > +run without the \-n option will return a status code of 2 if it finds a
-> > +filesystem log which needs to be replayed (by a mount/umount cycle) or
-> > +cleared (by -L option), 1 if a runtime error is encountered, filesystem
-> > +may be even more broken than before, so repair needs to be run again,
-> > +and 0 in all other cases, whether or not filesystem corruption was detected.
-> >  .SH BUGS
-> >  The filesystem to be checked and repaired must have been
-> >  unmounted cleanly using normal system administration procedures
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
