@@ -1,193 +1,218 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34294 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750948AbdAWUC0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Jan 2017 15:02:26 -0500
-Subject: Re: [PATCH v5 1/5] xfs_db: sanitize geometry on load
-References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
- <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
- <20170121001505.GK12985@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <fd36237d-f45d-b8a3-dba4-e918a3aac649@sandeen.net>
-Date: Mon, 23 Jan 2017 14:02:07 -0600
+Received: from aserp1040.oracle.com ([141.146.126.69]:19338 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750888AbdAUIBf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:01:35 -0500
+Subject: [PATCH 12/55] xfs: getfsmap should fall back to rtbitmap when
+ rtrmapbt not present
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sat, 21 Jan 2017 00:01:32 -0800
+Message-ID: <148498569216.15323.10718959099721377354.stgit@birch.djwong.org>
+In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
+References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170121001505.GK12985@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On 1/20/17 6:15 PM, Darrick J. Wong wrote:
-> xfs_db doesn't check the filesystem geometry when it's mounting, which
-> means that garbage agcount values can cause OOMs when we try to allocate
-> all the per-AG incore metadata.  If we see geometry that looks
-> suspicious, try to derive the actual AG geometry to avoid crashing the
-> system.  This should help with xfs/1301 fuzzing.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Use the realtime bitmap to return freespace information when the
+rtrmapbt isn't present.  Note that the rtrmapbt fsmap implementation
+will show up later with the rtrmapbt patchset.
 
-If it's ok with you I'll modify a comment (no suggestion of proper
-agcount is made) and rename sanitize_geometry to sanitize_agcount
-or something like that - otherwise,
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_fsmap.c   |  133 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_rtalloc.h |    2 +
+ 2 files changed, 135 insertions(+)
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-> ---
-> v2: Only modify sb_ag{blocks,count} if they seem insane -- use local
-> variables to avoid screwing up the rest of the metadata.
-> v3: Suggest a possible agcount value, but always restrict to 1 AG.
-> v4: Remove the suggested agcount value and make sure we can't exit
-> the program with an exitcode of zero.
-> v5: remove global variables and unnecessary parameters
-> ---
->  db/init.c |   89 +++++++++++++++++++++++++++++++++++++++++++++++++++++--------
->  1 file changed, 77 insertions(+), 12 deletions(-)
-> 
-> diff --git a/db/init.c b/db/init.c
-> index ec1e274..0c684a5 100644
-> --- a/db/init.c
-> +++ b/db/init.c
-> @@ -51,13 +51,81 @@ usage(void)
->  	exit(1);
->  }
->  
-> +/* Try to load a superblock for the given agno, no verifiers. */
-> +static bool
-> +load_sb(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_sb		*sbp)
-> +{
-> +	struct xfs_buf		*bp;
-> +
-> +	bp = libxfs_readbuf(mp->m_ddev_targp, XFS_SB_DADDR,
-> +			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
-> +
-> +	if (!bp || bp->b_error)
-> +		return false;
-> +
-> +	/* copy SB from buffer to in-core, converting architecture as we go */
-> +	libxfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
-> +	libxfs_putbuf(bp);
-> +	libxfs_purgebuf(bp);
-> +
-> +	return true;
-> +}
-> +
-> +/*
-> + * If the agcount doesn't look sane, suggest a real agcount to the user,
-> + * and pretend agcount = 1 to avoid OOMing libxfs_initialize_perag.
-> + * Returns true if the geometry was sane.
-> + */
-> +static bool
-> +sanitize_geometry(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_sb		*sbp)
-> +{
-> +	unsigned int		blocklog;
-> +	unsigned int		blocksize;
-> +	unsigned long long	dblocks;
-> +
-> +	/* If the geometry looks ok, we're done. */
-> +	if (sbp->sb_blocklog >= XFS_MIN_BLOCKSIZE_LOG &&
-> +	    sbp->sb_blocklog <= XFS_MAX_BLOCKSIZE_LOG &&
-> +	    sbp->sb_blocksize == (1 << sbp->sb_blocklog) &&
-> +	    sbp->sb_dblocks * sbp->sb_blocksize <= x.dsize * x.dbsize &&
-> +	    sbp->sb_dblocks <= XFS_MAX_DBLOCKS(sbp) &&
-> +	    sbp->sb_dblocks >= XFS_MIN_DBLOCKS(sbp))
-> +		return true;
-> +
-> +	/* Check blocklog and blocksize */
-> +	blocklog = sbp->sb_blocklog;
-> +	blocksize = sbp->sb_blocksize;
-> +	if (blocklog < XFS_MIN_BLOCKSIZE_LOG ||
-> +	    blocklog > XFS_MAX_BLOCKSIZE_LOG)
-> +		blocklog = libxfs_log2_roundup(blocksize);
-> +	if (blocksize != (1 << blocklog))
-> +		blocksize = (1 << blocksize);
-> +
-> +	/* Clamp dblocks to the size of the device. */
-> +	dblocks = sbp->sb_dblocks;
-> +	if (dblocks > x.dsize * x.dbsize / blocksize)
-> +		dblocks = x.dsize * x.dbsize / blocksize;
-> +
-> +	/* Assume 1 AG to avoid OOM. */
-> +	fprintf(stderr,
-> +_("%s: device %s AG count is insane.  Limiting reads to AG 0.\n"),
-> +		progname, fsdevice);
-> +	sbp->sb_agcount = 1;
-> +
-> +	return false;
-> +}
-> +
->  void
->  init(
->  	int		argc,
-> -	char		**argv)
-> +	char		**argv,
-> +	bool		*insane_agcount)
->  {
->  	struct xfs_sb	*sbp;
-> -	struct xfs_buf	*bp;
->  	int		c;
->  
->  	setlocale(LC_ALL, "");
-> @@ -124,20 +192,12 @@ init(
->  	 */
->  	memset(&xmount, 0, sizeof(struct xfs_mount));
->  	libxfs_buftarg_init(&xmount, x.ddev, x.logdev, x.rtdev);
-> -	bp = libxfs_readbuf(xmount.m_ddev_targp, XFS_SB_DADDR,
-> -			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
-> -
-> -	if (!bp || bp->b_error) {
-> +	if (!load_sb(&xmount, &xmount.m_sb)) {
->  		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
->  			"bytes)\n"), progname, fsdevice);
->  		exit(1);
->  	}
->  
-> -	/* copy SB from buffer to in-core, converting architecture as we go */
-> -	libxfs_sb_from_disk(&xmount.m_sb, XFS_BUF_TO_SBP(bp));
-> -	libxfs_putbuf(bp);
-> -	libxfs_purgebuf(bp);
-> -
->  	sbp = &xmount.m_sb;
->  	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
->  		fprintf(stderr, _("%s: %s is not a valid XFS filesystem (unexpected SB magic number 0x%08x)\n"),
-> @@ -148,6 +208,8 @@ init(
->  		}
->  	}
->  
-> +	*insane_agcount = !sanitize_geometry(&xmount, sbp);
-> +
->  	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
->  			  LIBXFS_MOUNT_DEBUGGER);
->  	if (!mp) {
-> @@ -190,10 +252,11 @@ main(
->  	int	c, i, done = 0;
->  	char	*input;
->  	char	**v;
-> +	bool	insane_agcount;
->  	int	start_iocur_sp;
->  
->  	pushfile(stdin);
-> -	init(argc, argv);
-> +	init(argc, argv, &insane_agcount);
->  	start_iocur_sp = iocur_sp;
->  
->  	for (i = 0; !done && i < ncmdline; i++) {
-> @@ -230,5 +293,7 @@ main(
->  		libxfs_device_close(x.logdev);
->  	if (x.rtdev)
->  		libxfs_device_close(x.rtdev);
-> +	if (insane_agcount && exitcode == 0)
-> +		exitcode = 1;
->  	return exitcode;
->  }
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 4e364f8..ba5544b 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -40,6 +40,7 @@
+ #include "xfs_refcount.h"
+ #include "xfs_refcount_btree.h"
+ #include "xfs_alloc_btree.h"
++#include "xfs_rtalloc.h"
+ 
+ /* Convert an xfs_fsmap to an fsmap. */
+ void
+@@ -398,6 +399,29 @@ xfs_getfsmap_rtdev_helper(
+ 	return xfs_getfsmap_helper(mp, info, rec, rec_daddr);
+ }
+ 
++/* Transform a rtbitmap "record" into a fsmap */
++STATIC int
++xfs_getfsmap_rtdev_rtbitmap_helper(
++	struct xfs_mount		*mp,
++	xfs_rtblock_t			start,
++	xfs_rtblock_t			end,
++	void				*priv)
++{
++	struct xfs_getfsmap_info	*info = priv;
++	struct xfs_rmap_irec		irec;
++	xfs_daddr_t			rec_daddr;
++
++	rec_daddr = XFS_FSB_TO_BB(mp, start);
++
++	irec.rm_startblock = start;
++	irec.rm_blockcount = end - start + 1;
++	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
++	irec.rm_offset = 0;
++	irec.rm_flags = 0;
++
++	return xfs_getfsmap_helper(mp, info, &irec, rec_daddr);
++}
++
+ /* Transform a bnobt irec into a fsmap */
+ STATIC int
+ xfs_getfsmap_datadev_bnobt_helper(
+@@ -496,6 +520,108 @@ xfs_getfsmap_logdev(
+ 	return xfs_getfsmap_rtdev_helper(&cur, &rmap, info);
+ }
+ 
++/* Execute a getfsmap query against the realtime data device (rtbitmap). */
++STATIC int
++xfs_getfsmap_rtdev_rtbitmap(
++	struct xfs_trans		*tp,
++	struct xfs_fsmap		*keys,
++	struct xfs_getfsmap_info	*info)
++{
++	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_fsmap		*dkey_low;
++	struct xfs_fsmap		*dkey_high;
++	xfs_fsblock_t			start_fsb;
++	xfs_fsblock_t			end_fsb;
++	xfs_rtblock_t			rtstart;
++	xfs_rtblock_t			rtend;
++	xfs_rtblock_t			rem;
++	xfs_daddr_t			eofs;
++	int				is_free;
++	int				error = 0;
++
++	dkey_low = keys;
++	dkey_high = keys + 1;
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
++	if (dkey_low->fmr_physical >= eofs)
++		return 0;
++	if (dkey_high->fmr_physical >= eofs)
++		dkey_high->fmr_physical = eofs - 1;
++	start_fsb = XFS_BB_TO_FSBT(mp, dkey_low->fmr_physical);
++	end_fsb = XFS_BB_TO_FSB(mp, dkey_high->fmr_physical);
++
++	/* Set up search keys */
++	info->low.rm_startblock = start_fsb;
++	error = xfs_fsmap_owner_to_rmap(dkey_low, &info->low);
++	if (error)
++		return error;
++	info->low.rm_offset = XFS_BB_TO_FSBT(mp, dkey_low->fmr_offset);
++	info->low.rm_blockcount = 0;
++	xfs_getfsmap_set_irec_flags(&info->low, dkey_low);
++
++	info->high.rm_startblock = end_fsb;
++	error = xfs_fsmap_owner_to_rmap(dkey_high, &info->high);
++	if (error)
++		return error;
++	info->high.rm_offset = XFS_BB_TO_FSBT(mp, dkey_high->fmr_offset);
++	info->high.rm_blockcount = 0;
++	xfs_getfsmap_set_irec_flags(&info->high, dkey_high);
++
++	info->missing_owner = FMR_OWN_UNKNOWN;
++
++	trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
++			info->low.rm_startblock,
++			info->low.rm_blockcount,
++			info->low.rm_owner,
++			info->low.rm_offset);
++
++	trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
++			info->high.rm_startblock,
++			info->high.rm_blockcount,
++			info->high.rm_owner,
++			info->high.rm_offset);
++
++	xfs_ilock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
++
++	/* Iterate the bitmap, looking for discrepancies. */
++	rtstart = 0;
++	rem = mp->m_sb.sb_rblocks;
++	while (rem) {
++		/* Is the first block free? */
++		error = xfs_rtcheck_range(mp, tp, rtstart, 1, 1, &rtend,
++				&is_free);
++		if (error)
++			goto out_unlock;
++
++		/* How long does the extent go for? */
++		error = xfs_rtfind_forw(mp, tp, rtstart,
++				mp->m_sb.sb_rblocks - 1, &rtend);
++		if (error)
++			goto out_unlock;
++
++		if (is_free) {
++			error = xfs_getfsmap_rtdev_rtbitmap_helper(mp,
++					rtstart, rtend, info);
++			if (error)
++				goto out_unlock;
++		}
++
++		rem -= rtend - rtstart + 1;
++		rtstart = rtend + 1;
++	}
++
++out_unlock:
++	xfs_iunlock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
++
++	/* Report any free space at the end of the rtdev */
++	info->last = true;
++	error = xfs_getfsmap_rtdev_rtbitmap_helper(mp, end_fsb, 0, info);
++	if (error)
++		goto err;
++
++err:
++	return error;
++}
++
+ /* Execute a getfsmap query against the regular data device. */
+ STATIC int
+ xfs_getfsmap_datadev(
+@@ -741,6 +867,9 @@ xfs_getfsmap_is_valid_device(
+ 	if (mp->m_logdev_targp &&
+ 	    fm->fmr_device == new_encode_dev(mp->m_logdev_targp->bt_dev))
+ 		return true;
++	if (mp->m_rtdev_targp &&
++	    fm->fmr_device == new_encode_dev(mp->m_rtdev_targp->bt_dev))
++		return true;
+ 	return false;
+ }
+ 
+@@ -818,6 +947,10 @@ xfs_getfsmap(
+ 		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
+ 		handlers[1].fn = xfs_getfsmap_logdev;
+ 	}
++	if (mp->m_rtdev_targp) {
++		handlers[2].dev = new_encode_dev(mp->m_rtdev_targp->bt_dev);
++		handlers[2].fn = xfs_getfsmap_rtdev_rtbitmap;
++	}
+ 
+ 	xfs_sort(handlers, XFS_GETFSMAP_DEVS, sizeof(struct xfs_getfsmap_dev),
+ 			xfs_getfsmap_dev_compare);
+diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+index 355dd9e..f798a3e 100644
+--- a/fs/xfs/xfs_rtalloc.h
++++ b/fs/xfs/xfs_rtalloc.h
+@@ -126,6 +126,8 @@ int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
+ # define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
+ # define xfs_rtpick_extent(m,t,l,rb)                    (ENOSYS)
+ # define xfs_growfs_rt(mp,in)                           (ENOSYS)
++# define xfs_rtcheck_range(...)                         (ENOSYS)
++# define xfs_rtfind_forw(...)                           (ENOSYS)
+ static inline int		/* error */
+ xfs_rtmount_init(
+ 	xfs_mount_t	*mp)	/* file system mount structure */
+
