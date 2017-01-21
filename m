@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20600 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751137AbdAUIJ1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:09:27 -0500
-Subject: [PATCH 11/17] xfs_db: write / fuzz bad values into dir/attr blocks
- with good CRCs
+Received: from userp1040.oracle.com ([156.151.31.81]:26073 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751050AbdAUIJg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:09:36 -0500
+Subject: [PATCH 12/17] xfs_io: provide an interface to the scrub ioctls
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 21 Jan 2017 00:09:23 -0800
-Message-ID: <148498616298.16675.4390303097211367276.stgit@birch.djwong.org>
+Date: Sat, 21 Jan 2017 00:09:29 -0800
+Message-ID: <148498616931.16675.3359362451280245733.stgit@birch.djwong.org>
 In-Reply-To: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 References: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -19,216 +18,437 @@ List-Id: xfs
 To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Extend typ_t to (optionally) store a pointer to a function to calculate
-the CRC of the block, provide functions to do this for the dir3 and
-attr3 types, and then wire up the fuzz and write commands so that we can
-effectively fuzz directory and extended attribute block fields.
+Create a new xfs_io command to call the new XFS metadata scrub ioctl.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/attr.c  |   32 ++++++++++++++++++++++++++++++++
- db/attr.h  |    1 +
- db/dir2.c  |   37 +++++++++++++++++++++++++++++++++++++
- db/dir2.h  |    1 +
- db/fuzz.c  |    3 +++
- db/type.c  |    8 ++++----
- db/type.h  |    2 ++
- db/write.c |    3 +++
- 8 files changed, 83 insertions(+), 4 deletions(-)
+ io/Makefile       |    2 
+ io/init.c         |    2 
+ io/inject.c       |    4 -
+ io/io.h           |    2 
+ io/scrub.c        |  330 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_io.8 |   20 +++
+ 6 files changed, 358 insertions(+), 2 deletions(-)
+ create mode 100644 io/scrub.c
 
 
-diff --git a/db/attr.c b/db/attr.c
-index 0fffbc2..5a97925 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -582,6 +582,38 @@ const struct field	attr3_remote_crc_flds[] = {
- 	{ NULL }
- };
+diff --git a/io/Makefile b/io/Makefile
+index fd07596..383f5cb 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -11,7 +11,7 @@ HFILES = init.h io.h
+ CFILES = init.c \
+ 	attr.c bmap.c cowextsize.c encrypt.c file.c freeze.c fsmap.c fsync.c \
+ 	getrusage.c imap.c link.c mmap.c open.c parent.c pread.c prealloc.c \
+-	pwrite.c reflink.c seek.c shutdown.c sync.c truncate.c utimes.c
++	pwrite.c reflink.c scrub.c seek.c shutdown.c sync.c truncate.c utimes.c
  
-+/* Set the CRC. */
-+void
-+xfs_attr3_set_crc(
-+	struct xfs_buf		*bp)
+ LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
+diff --git a/io/init.c b/io/init.c
+index 1532149..bef6f62 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -83,7 +83,9 @@ init_commands(void)
+ 	quit_init();
+ 	readdir_init();
+ 	reflink_init();
++	repair_init();
+ 	resblks_init();
++	scrub_init();
+ 	seek_init();
+ 	sendfile_init();
+ 	shutdown_init();
+diff --git a/io/inject.c b/io/inject.c
+index 25c7021..91b5fd7 100644
+--- a/io/inject.c
++++ b/io/inject.c
+@@ -86,7 +86,9 @@ error_tag(char *name)
+ 		{ XFS_ERRTAG_BMAP_FINISH_ONE,		"bmap_finish_one" },
+ #define XFS_ERRTAG_AG_RESV_CRITICAL			27
+ 		{ XFS_ERRTAG_AG_RESV_CRITICAL,		"ag_resv_critical" },
+-#define XFS_ERRTAG_MAX                                  28
++#define XFS_ERRTAG_FORCE_REPAIR				28
++		{ XFS_ERRTAG_FORCE_REPAIR,		"force_repair" },
++#define XFS_ERRTAG_MAX                                  29
+ 		{ XFS_ERRTAG_MAX,			NULL }
+ 	};
+ 	int	count;
+diff --git a/io/io.h b/io/io.h
+index c7100c9..3dd6296 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -178,3 +178,5 @@ extern void		readdir_init(void);
+ extern void		reflink_init(void);
+ 
+ extern void		cowextsize_init(void);
++extern void		scrub_init(void);
++extern void		repair_init(void);
+diff --git a/io/scrub.c b/io/scrub.c
+new file mode 100644
+index 0000000..caa965e
+--- /dev/null
++++ b/io/scrub.c
+@@ -0,0 +1,330 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include <sys/uio.h>
++#include <xfs/xfs.h>
++#include "command.h"
++#include "input.h"
++#include "init.h"
++#include "path.h"
++#include "io.h"
++
++static struct cmdinfo scrub_cmd;
++static struct cmdinfo repair_cmd;
++
++/* Type info and names for the scrub types. */
++enum scrub_type {
++	ST_NONE,	/* disabled */
++	ST_PERAG,	/* per-AG metadata */
++	ST_FS,		/* per-FS metadata */
++	ST_INODE,	/* per-inode metadata */
++};
++
++/* These must correspond with XFS_SCRUB_TYPE_ */
++struct scrub_descr {
++	const char	*name;
++	enum scrub_type	type;
++};
++
++static const struct scrub_descr scrubbers[] = {
++	{"dummy",	ST_NONE},
++	{"sb",		ST_PERAG},
++	{"agf",		ST_PERAG},
++	{"agfl",	ST_PERAG},
++	{"agi",		ST_PERAG},
++	{"bnobt",	ST_PERAG},
++	{"cntbt",	ST_PERAG},
++	{"inobt",	ST_PERAG},
++	{"finobt",	ST_PERAG},
++	{"rmapbt",	ST_PERAG},
++	{"refcountbt",	ST_PERAG},
++	{"inode",	ST_INODE},
++	{"bmapbtd",	ST_INODE},
++	{"bmapbta",	ST_INODE},
++	{"bmapbtc",	ST_INODE},
++	{"directory",	ST_INODE},
++	{"xattr",	ST_INODE},
++	{"symlink",	ST_INODE},
++	{"rtbitmap",	ST_FS},
++	{"rtsummary",	ST_FS},
++	{NULL,		ST_NONE},
++};
++
++static void
++scrub_help(void)
 +{
-+	__be32			magic32;
-+	__be16			magic16;
++	const struct scrub_descr	*d;
 +
-+	magic32 = *(__be32 *)bp->b_addr;
-+	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
-+
-+	switch (magic16) {
-+	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF);
-+		return;
-+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
-+		return;
-+	default:
-+		break;
-+	}
-+
-+	switch (magic32) {
-+	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_ATTR3_RMT_CRC_OFF);
-+		return;
-+	default:
-+		dbprintf(_("Unknown attribute buffer type!\n"));
-+		break;
-+	}
++	printf(_("\n\
++ Scrubs a piece of XFS filesystem metadata.  The first argument is the type\n\
++ of metadata to examine.  Allocation group number(s) can be specified to\n\
++ restrict the scrub operation to a subset of allocation groups.\n\
++ Certain metadata types do not take AG numbers.\n\
++\n\
++ Example:\n\
++ 'scrub inobt 3' - scrub the inode btree in AG 3.\n\
++ 'scrub bmapbtd 128 13525' - scrubs the extent map of inode 128 gen 13525.\n\
++\n\
++ Known metadata scrub types are:"));
++	for (d = scrubbers; d->name; d++)
++		printf(" %s", d->name);
++	printf("\n");
 +}
 +
- /*
-  * Special read verifier for attribute buffers. Detect the magic number
-  * appropriately and set the correct verifier and call it.
-diff --git a/db/attr.h b/db/attr.h
-index d7bb579..9ea7429 100644
---- a/db/attr.h
-+++ b/db/attr.h
-@@ -34,5 +34,6 @@ extern const field_t	attr3_remote_crc_flds[];
- 
- extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
- extern int	attr_size(void *obj, int startoff, int idx);
-+extern void	xfs_attr3_set_crc(struct xfs_buf *bp);
- 
- extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
-diff --git a/db/dir2.c b/db/dir2.c
-index 533f705..3e21a7b 100644
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -981,6 +981,43 @@ const field_t	da3_node_hdr_flds[] = {
- 	{ NULL }
- };
- 
-+/* Set the CRC. */
-+void
-+xfs_dir3_set_crc(
-+	struct xfs_buf		*bp)
++static void
++scrub_ioctl(
++	int				fd,
++	int				type,
++	uint64_t			control,
++	uint32_t			control2)
 +{
-+	__be32			magic32;
-+	__be16			magic16;
++	struct xfs_scrub_metadata	meta;
++	const struct scrub_descr	*sc;
++	int				error;
 +
-+	magic32 = *(__be32 *)bp->b_addr;
-+	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
-+
-+	switch (magic32) {
-+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
-+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_DIR3_DATA_CRC_OFF);
-+		return;
-+	case cpu_to_be32(XFS_DIR3_FREE_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_DIR3_FREE_CRC_OFF);
-+		return;
-+	default:
++	sc = &scrubbers[type];
++	memset(&meta, 0, sizeof(meta));
++	meta.sm_type = type;
++	switch (sc->type) {
++	case ST_PERAG:
++		meta.sm_agno = control;
++		break;
++	case ST_INODE:
++		meta.sm_ino = control;
++		meta.sm_gen = control2;
++		break;
++	case ST_NONE:
++	case ST_FS:
++		/* no control parameters */
 +		break;
 +	}
++	meta.sm_flags = 0;
 +
-+	switch (magic16) {
-+	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
-+	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
-+		return;
-+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
-+		return;
-+	default:
-+		dbprintf(_("Unknown directory buffer type! %x %x\n"), magic32, magic16);
-+		break;
-+	}
++	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
++	if (error)
++		perror("scrub");
++	if (meta.sm_flags & XFS_SCRUB_FLAG_CORRUPT)
++		printf(_("Corruption detected.\n"));
++	if (meta.sm_flags & XFS_SCRUB_FLAG_PREEN)
++		printf(_("Optimization possible.\n"));
++	if (meta.sm_flags & XFS_SCRUB_FLAG_XFAIL)
++		printf(_("Cross-referencing failed.\n"));
++	if (meta.sm_flags & XFS_SCRUB_FLAG_XCORRUPT)
++		printf(_("Corruption detected during cross-referencing.\n"));
 +}
 +
- /*
-  * Special read verifier for directory buffers. Detect the magic number
-  * appropriately and set the correct verifier and call it.
-diff --git a/db/dir2.h b/db/dir2.h
-index 0c2a62e..1b87cd2 100644
---- a/db/dir2.h
-+++ b/db/dir2.h
-@@ -60,5 +60,6 @@ static inline uint8_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
++static int
++parse_args(
++	int				argc,
++	char				**argv,
++	struct cmdinfo			*cmdinfo,
++	void				(*fn)(int, int, uint64_t, uint32_t))
++{
++	char				*p;
++	int				type = -1;
++	int				i, c;
++	uint64_t			control = 0;
++	uint32_t			control2 = 0;
++	const struct scrub_descr	*d = NULL;
++
++	while ((c = getopt(argc, argv, "")) != EOF) {
++		switch (c) {
++		default:
++			return command_usage(cmdinfo);
++		}
++	}
++	if (optind > argc - 1)
++		return command_usage(cmdinfo);
++
++	for (i = 0, d = scrubbers; d->name; i++, d++) {
++		if (strcmp(d->name, argv[optind]) == 0) {
++			type = i;
++			break;
++		}
++	}
++	optind++;
++
++	if (type < 0)
++		return command_usage(cmdinfo);
++
++	switch (d->type) {
++	case ST_INODE:
++		if (optind == argc) {
++			control = 0;
++			control2 = 0;
++		} else if (optind == argc - 2) {
++			control = strtoull(argv[optind], &p, 0);
++			if (*p != '\0') {
++				fprintf(stderr,
++					_("Bad inode number %s.\n"), argv[i]);
++				return 0;
++			}
++			control2 = strtoul(argv[optind + 1], &p, 0);
++			if (*p != '\0') {
++				fprintf(stderr,
++					_("Bad generation number %s.\n"), argv[i]);
++				return 0;
++			}
++		} else {
++			fprintf(stderr,
++				_("Must specify inode number and generation.\n"));
++			return 0;
++		}
++		break;
++	case ST_PERAG:
++	case ST_NONE:
++		if (optind != argc - 1) {
++			fprintf(stderr,
++				_("Must specify AG number.\n"));
++			return 0;
++		}
++		control = strtoul(argv[optind], &p, 0);
++		if (*p != '\0') {
++			fprintf(stderr,
++				_("Bad AG number %s.\n"), argv[i]);
++			return 0;
++		}
++		break;
++	default:
++		if (optind != argc) {
++			fprintf(stderr,
++				_("No parameters allowed.\n"));
++			return 0;
++		}
++	}
++	fn(file->fd, type, control, control2);
++
++	return 0;
++}
++
++static int
++scrub_f(
++	int				argc,
++	char				**argv)
++{
++	return parse_args(argc, argv, &scrub_cmd, scrub_ioctl);
++}
++
++void
++scrub_init(void)
++{
++	scrub_cmd.name = "scrub";
++	scrub_cmd.altname = "sc";
++	scrub_cmd.cfunc = scrub_f;
++	scrub_cmd.argmin = 1;
++	scrub_cmd.argmax = -1;
++	scrub_cmd.flags = CMD_NOMAP_OK;
++	scrub_cmd.args =
++_("type [agno...]");
++	scrub_cmd.oneline =
++		_("scrubs filesystem metadata");
++	scrub_cmd.help = scrub_help;
++
++	add_command(&scrub_cmd);
++}
++
++static void
++repair_help(void)
++{
++	const struct scrub_descr	*d;
++
++	printf(_("\n\
++ Repairs a piece of XFS filesystem metadata.  The first argument is the type\n\
++ of metadata to examine.  Allocation group number(s) can be specified to\n\
++ restrict the scrub operation to a subset of allocation groups.\n\
++ Certain metadata types do not take AG numbers.\n\
++\n\
++ Example:\n\
++ 'repair inobt 3 5 7' - repairs the inode btree in groups 3, 5, and 7.\n\
++\n\
++ Known metadata repairs types are:"));
++	for (d = scrubbers; d->name; d++)
++		printf(" %s", d->name);
++	printf("\n");
++}
++
++static void
++repair_ioctl(
++	int				fd,
++	int				type,
++	uint64_t			control,
++	uint32_t			control2)
++{
++	struct xfs_scrub_metadata	meta;
++	const struct scrub_descr	*sc;
++	int				error;
++
++	sc = &scrubbers[type];
++	memset(&meta, 0, sizeof(meta));
++	meta.sm_type = type;
++	switch (sc->type) {
++	case ST_PERAG:
++		meta.sm_agno = control;
++		break;
++	case ST_INODE:
++		meta.sm_ino = control;
++		meta.sm_gen = control2;
++		break;
++	case ST_NONE:
++	case ST_FS:
++		/* no control parameters */
++		break;
++	}
++	meta.sm_flags = XFS_SCRUB_FLAG_REPAIR;
++
++	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
++	if (error)
++		perror("scrub");
++	if (meta.sm_flags & XFS_SCRUB_FLAG_CORRUPT)
++		printf(_("Corruption remains.\n"));
++	if (meta.sm_flags & XFS_SCRUB_FLAG_PREEN)
++		printf(_("Optimization possible.\n"));
++	if (meta.sm_flags & XFS_SCRUB_FLAG_XFAIL)
++		printf(_("Cross-referencing failed.\n"));
++	if (meta.sm_flags & XFS_SCRUB_FLAG_XCORRUPT)
++		printf(_("Corruption still detected during cross-referencing.\n"));
++}
++
++static int
++repair_f(
++	int				argc,
++	char				**argv)
++{
++	return parse_args(argc, argv, &repair_cmd, repair_ioctl);
++}
++
++void
++repair_init(void)
++{
++	if (!expert)
++		return;
++	repair_cmd.name = "repair";
++	repair_cmd.altname = "fix";
++	repair_cmd.cfunc = repair_f;
++	repair_cmd.argmin = 1;
++	repair_cmd.argmax = -1;
++	repair_cmd.flags = CMD_NOMAP_OK;
++	repair_cmd.args =
++_("type [agno...]");
++	repair_cmd.oneline =
++		_("repairs filesystem metadata");
++	repair_cmd.help = repair_help;
++
++	add_command(&repair_cmd);
++}
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 479c39b..64f66b9 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -998,6 +998,26 @@ version of policy structure (numeric)
+ .BR get_encpolicy
+ On filesystems that support encryption, display the encryption policy of the
+ current file.
++.TP
++.BI "scrub " type " [ " agnumber... " | " "ino" " " "gen" " ]"
++Scrub internal XFS filesystem metadata.  The
++.BI type
++parameter specifies which type of metadata to scrub.
++For AG metadata, AG numbers can optionally be specified to restrict the
++scrub operation to a particular set of allocation groups.
++By default, all allocation groups are scrubbed.
++For file metadata, the scrub is applied to the open file unless the
++inode number and generation number are specified.
++.TP
++.BI "repair " type " [ " agnumber... " | " "ino" " " "gen" " ]"
++Repair internal XFS filesystem metadata.  The
++.BI type
++parameter specifies which type of metadata to repair.
++For AG metadata, AG numbers can optionally be specified to restrict the
++repair operation to a particular set of allocation groups.
++By default, all allocation groups are repaired.
++For file metadata, the repair is applied to the open file unless the
++inode number and generation number are specified.
  
- extern int	dir2_data_union_size(void *obj, int startoff, int idx);
- extern int	dir2_size(void *obj, int startoff, int idx);
-+extern void	xfs_dir3_set_crc(struct xfs_buf *bp);
- 
- extern const struct xfs_buf_ops xfs_dir3_db_buf_ops;
-diff --git a/db/fuzz.c b/db/fuzz.c
-index 061ecd1..f294331 100644
---- a/db/fuzz.c
-+++ b/db/fuzz.c
-@@ -156,6 +156,9 @@ fuzz_f(
- 	} else if (iocur_top->ino_buf) {
- 		local_ops.verify_write = xfs_verify_recalc_inode_crc;
- 		dbprintf(_("Allowing fuzz of corrupted inode with good CRC\n"));
-+	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
-+		local_ops.verify_write = iocur_top->typ->set_crc;
-+		dbprintf(_("Allowing fuzz of corrupted data with good CRC\n"));
- 	} else { /* invalid data */
- 		local_ops.verify_write = xfs_verify_recalc_crc;
- 		dbprintf(_("Allowing fuzz of corrupted data with good CRC\n"));
-diff --git a/db/type.c b/db/type.c
-index adab10a..740adc0 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -88,7 +88,7 @@ static const typ_t	__typtab_crc[] = {
- 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops,
- 		XFS_AGI_CRC_OFF },
- 	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
--		&xfs_attr3_db_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_attr3_db_buf_ops, TYP_F_CRC_FUNC, xfs_attr3_set_crc },
- 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
- 		&xfs_bmbt_buf_ops, XFS_BTREE_LBLOCK_CRC_OFF },
- 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
-@@ -103,7 +103,7 @@ static const typ_t	__typtab_crc[] = {
- 		&xfs_refcountbt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
- 	{ TYP_DATA, "data", handle_block, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
--		&xfs_dir3_db_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
- 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
- 		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
- 	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
-@@ -132,7 +132,7 @@ static const typ_t	__typtab_spcrc[] = {
- 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops ,
- 		XFS_AGI_CRC_OFF },
- 	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
--		&xfs_attr3_db_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_attr3_db_buf_ops, TYP_F_CRC_FUNC, xfs_attr3_set_crc },
- 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
- 		&xfs_bmbt_buf_ops, XFS_BTREE_LBLOCK_CRC_OFF },
- 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
-@@ -147,7 +147,7 @@ static const typ_t	__typtab_spcrc[] = {
- 		&xfs_refcountbt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
- 	{ TYP_DATA, "data", handle_block, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
--		&xfs_dir3_db_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
- 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
- 		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
- 	{ TYP_INOBT, "inobt", handle_struct, inobt_spcrc_hfld,
-diff --git a/db/type.h b/db/type.h
-index a50d705..3971975 100644
---- a/db/type.h
-+++ b/db/type.h
-@@ -46,6 +46,8 @@ typedef struct typ
- 	const struct xfs_buf_ops *bops;
- 	unsigned long		crc_off;
- #define TYP_F_NO_CRC_OFF	(-1UL)
-+#define TYP_F_CRC_FUNC		(-2UL)
-+	void			(*set_crc)(struct xfs_buf *);
- } typ_t;
- extern const typ_t	*typtab, *cur_typ;
- 
-diff --git a/db/write.c b/db/write.c
-index 5c83874..ea87b40 100644
---- a/db/write.c
-+++ b/db/write.c
-@@ -164,6 +164,9 @@ write_f(
- 	if (corrupt) {
- 		local_ops.verify_write = xfs_dummy_verify;
- 		dbprintf(_("Allowing write of corrupted data and bad CRC\n"));
-+	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
-+		local_ops.verify_write = iocur_top->typ->set_crc;
-+		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
- 	} else { /* invalid data */
- 		local_ops.verify_write = xfs_verify_recalc_crc;
- 		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
+ .SH SEE ALSO
+ .BR mkfs.xfs (8),
 
