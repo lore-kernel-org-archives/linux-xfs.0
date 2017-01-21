@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25278 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:25287 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750949AbdAUIEL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:04:11 -0500
-Subject: [PATCH 34/55] xfs: cross-reference bnobt records with cntbt
+        with ESMTP id S1751185AbdAUIEN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:04:13 -0500
+Subject: [PATCH 35/55] xfs: cross-reference extents with AG header
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 21 Jan 2017 00:04:04 -0800
-Message-ID: <148498584409.15323.9830970768437520282.stgit@birch.djwong.org>
+Date: Sat, 21 Jan 2017 00:04:10 -0800
+Message-ID: <148498585019.15323.3694054602205136620.stgit@birch.djwong.org>
 In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,144 +18,154 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Scrub should make sure that each bnobt record has a corresponding
-cntbt record.
+Ensure that none of the AG btree records overlap the AG sb/agf/agfl/agi
+headers except for the XFS_RMAP_OWN_FS rmap.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c |    2 +-
- fs/xfs/libxfs/xfs_alloc.h |    7 +++++++
- fs/xfs/scrub/agheader.c   |   20 ++++++++++++++++++++
- fs/xfs/scrub/alloc.c      |   31 +++++++++++++++++++++++++++++++
- 4 files changed, 59 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/agheader.c |   27 +++++++++++++++++++++++++++
+ fs/xfs/scrub/alloc.c    |    4 ++++
+ fs/xfs/scrub/bmap.c     |    5 +++++
+ fs/xfs/scrub/common.h   |    2 ++
+ fs/xfs/scrub/ialloc.c   |    4 ++++
+ fs/xfs/scrub/refcount.c |    4 ++++
+ fs/xfs/scrub/rmap.c     |    5 +++++
+ 7 files changed, 51 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 2c471bb..24227cd 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -166,7 +166,7 @@ xfs_alloc_lookup_ge(
-  * Lookup the first record less than or equal to [bno, len]
-  * in the btree given by cur.
-  */
--static int				/* error */
-+int					/* error */
- xfs_alloc_lookup_le(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
- 	xfs_agblock_t		bno,	/* starting block of extent */
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index c24fe03..0f75db4 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -202,6 +202,13 @@ xfs_free_extent(
- 	enum xfs_ag_resv_type	type);	/* block reservation type */
- 
- int				/* error */
-+xfs_alloc_lookup_le(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	xfs_agblock_t		bno,	/* starting block of extent */
-+	xfs_extlen_t		len,	/* length of extent */
-+	int			*stat);	/* success/failure */
-+
-+int				/* error */
- xfs_alloc_lookup_ge(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
- 	xfs_agblock_t		bno,	/* starting block of extent */
 diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index eda4abd..d05a403 100644
+index d05a403..e5af267 100644
 --- a/fs/xfs/scrub/agheader.c
 +++ b/fs/xfs/scrub/agheader.c
-@@ -330,6 +330,7 @@ xfs_scrub_agf(
- 	xfs_agblock_t			fl_count;
- 	xfs_extlen_t			blocks;
- 	bool				is_freesp;
-+	int				have;
- 	int				level;
- 	int				error = 0;
- 	int				err2;
-@@ -429,6 +430,25 @@ xfs_scrub_agf(
- 	}
- skip_bnobt:
- 
-+	/* Cross-reference with the cntbt. */
-+	if (psa->cnt_cur) {
-+		err2 = xfs_alloc_lookup_le(psa->cnt_cur, 0, -1U, &have);
-+		if (!xfs_scrub_should_xref(sc, err2, &psa->cnt_cur))
-+			goto skip_cntbt;
-+		if (!have) {
-+			XFS_SCRUB_AGF_XCHECK(agf->agf_freeblks ==
-+					be32_to_cpu(0));
-+			goto skip_cntbt;
-+		}
-+		err2 = xfs_alloc_get_rec(psa->cnt_cur, &agbno, &blocks, &have);
-+		if (!xfs_scrub_should_xref(sc, err2, &psa->cnt_cur))
-+			goto skip_cntbt;
-+		XFS_SCRUB_AGF_XCHECK(have);
-+		XFS_SCRUB_AGF_XCHECK(!have ||
-+				blocks == be32_to_cpu(agf->agf_longest));
-+	}
-+skip_cntbt:
-+
- out:
- 	return error;
+@@ -115,6 +115,30 @@ xfs_scrub_walk_agfl(
+ 	return 0;
  }
+ 
++/* Does this AG extent cover the AG headers? */
++bool
++xfs_scrub_extent_covers_ag_head(
++	struct xfs_mount	*mp,
++	xfs_agblock_t		agbno,
++	xfs_extlen_t		len)
++{
++	xfs_agblock_t		bno;
++
++	bno = XFS_SB_BLOCK(mp);
++	if (bno >= agbno && bno < agbno + len)
++		return true;
++	bno = XFS_AGF_BLOCK(mp);
++	if (bno >= agbno && bno < agbno + len)
++		return true;
++	bno = XFS_AGFL_BLOCK(mp);
++	if (bno >= agbno && bno < agbno + len)
++		return true;
++	bno = XFS_AGI_BLOCK(mp);
++	if (bno >= agbno && bno < agbno + len)
++		return true;
++	return false;
++}
++
+ /* Superblock */
+ 
+ #define XFS_SCRUB_SB_CHECK(fs_ok) \
+@@ -485,6 +509,9 @@ xfs_scrub_agfl_block(
+ 	XFS_SCRUB_AGFL_CHECK(agbno < mp->m_sb.sb_agblocks);
+ 	XFS_SCRUB_AGFL_CHECK(agbno < sagfl->eoag);
+ 
++	/* Cross-reference with the AG headers. */
++	XFS_SCRUB_AGFL_XCHECK(!xfs_scrub_extent_covers_ag_head(mp, agbno, 1));
++
+ 	/* Cross-reference with the bnobt. */
+ 	if (sc->sa.bno_cur) {
+ 		err2 = xfs_alloc_has_record(sc->sa.bno_cur, agbno,
 diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index 2edf85d..770e82c 100644
+index 770e82c..af5565e 100644
 --- a/fs/xfs/scrub/alloc.c
 +++ b/fs/xfs/scrub/alloc.c
-@@ -31,6 +31,7 @@
- #include "xfs_trace.h"
- #include "xfs_sb.h"
- #include "xfs_rmap.h"
-+#include "xfs_alloc.h"
- #include "scrub/common.h"
- #include "scrub/btree.h"
+@@ -91,6 +91,10 @@ xfs_scrub_allocbt_helper(
+ 	if (error)
+ 		goto out;
  
-@@ -65,9 +66,15 @@ xfs_scrub_allocbt_helper(
- {
- 	struct xfs_mount		*mp = bs->cur->bc_mp;
- 	struct xfs_agf			*agf;
-+	struct xfs_btree_cur		**xcur;
-+	struct xfs_scrub_ag		*psa;
-+	xfs_agblock_t			fbno;
- 	xfs_agblock_t			bno;
-+	xfs_extlen_t			flen;
- 	xfs_extlen_t			len;
-+	int				has_otherrec;
- 	int				error = 0;
-+	int				err2;
- 
- 	bno = be32_to_cpu(rec->alloc.ar_startblock);
- 	len = be32_to_cpu(rec->alloc.ar_blockcount);
-@@ -81,6 +88,30 @@ xfs_scrub_allocbt_helper(
- 	XFS_SCRUB_BTREC_CHECK(bs, (unsigned long long)bno + len <=
- 			be32_to_cpu(agf->agf_length));
- 
-+	if (error)
-+		goto out;
++	/* Cross-reference with the AG headers. */
++	XFS_SCRUB_BTREC_XCHECK(bs,
++			!xfs_scrub_extent_covers_ag_head(mp, bno, len));
 +
-+	psa = &bs->sc->sa;
-+	/*
-+	 * Ensure there's a corresponding cntbt/bnobt record matching
-+	 * this bnobt/cntbt record, respectively.
-+	 */
-+	xcur = bs->cur == psa->bno_cur ? &psa->cnt_cur : &psa->bno_cur;
-+	if (*xcur) {
-+		err2 = xfs_alloc_lookup_le(*xcur, bno, len, &has_otherrec);
-+		if (xfs_scrub_btree_should_xref(bs, err2, xcur)) {
-+			XFS_SCRUB_BTREC_XGOTO(bs, has_otherrec, out);
-+			err2 = xfs_alloc_get_rec(*xcur, &fbno, &flen,
-+					&has_otherrec);
-+			if (xfs_scrub_btree_should_xref(bs, err2, xcur)) {
-+				XFS_SCRUB_BTREC_XGOTO(bs, has_otherrec, out);
-+				XFS_SCRUB_BTREC_XCHECK(bs, fbno == bno);
-+				XFS_SCRUB_BTREC_XCHECK(bs, flen == len);
-+			}
-+		}
-+	}
-+
-+out:
- 	return error;
- }
+ 	psa = &bs->sc->sa;
+ 	/*
+ 	 * Ensure there's a corresponding cntbt/bnobt record matching
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 0f860ea..ac27852 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -147,6 +147,11 @@ xfs_scrub_bmap_extent(
+ 		XFS_SCRUB_BMAP_OP_ERROR_XGOTO(out);
+ 	}
  
++	/* Cross-reference with the AG headers. */
++	if (!info->is_rt)
++		XFS_SCRUB_BMAP_XCHECK(!xfs_scrub_extent_covers_ag_head(mp,
++				bno, irec->br_blockcount));
++
+ 	/* Cross-reference with the bnobt. */
+ 	if (sa.bno_cur) {
+ 		err2 = xfs_alloc_has_record(sa.bno_cur, bno,
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 4704b38..11c04d5 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -256,6 +256,8 @@ int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
+ 			int (*fn)(struct xfs_scrub_context *, xfs_agblock_t bno,
+ 				  void *),
+ 			void *priv);
++bool xfs_scrub_extent_covers_ag_head(struct xfs_mount *mp, xfs_agblock_t agbno,
++				     xfs_extlen_t len);
+ 
+ /* Setup functions */
+ 
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 69d9e77..e96e500 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -108,6 +108,10 @@ xfs_scrub_iallocbt_chunk(
+ 		goto out;
+ 	}
+ 
++	/* Cross-reference with the AG headers. */
++	XFS_SCRUB_BTREC_XCHECK(bs,
++			!xfs_scrub_extent_covers_ag_head(mp, bno, len));
++
+ 	psa = &bs->sc->sa;
+ 	/* Cross-reference with the bnobt. */
+ 	if (psa->bno_cur) {
+diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+index b371a58..76b1e22 100644
+--- a/fs/xfs/scrub/refcount.c
++++ b/fs/xfs/scrub/refcount.c
+@@ -76,6 +76,10 @@ xfs_scrub_refcountbt_helper(
+ 	if (error)
+ 		goto out;
+ 
++	/* Cross-reference with the AG headers. */
++	XFS_SCRUB_BTREC_XCHECK(bs, !xfs_scrub_extent_covers_ag_head(mp,
++			irec.rc_startblock, irec.rc_blockcount));
++
+ 	psa = &bs->sc->sa;
+ 	/* Cross-reference with the bnobt. */
+ 	if (psa->bno_cur) {
+diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
+index f92ddad..d536704 100644
+--- a/fs/xfs/scrub/rmap.c
++++ b/fs/xfs/scrub/rmap.c
+@@ -106,6 +106,11 @@ xfs_scrub_rmapbt_helper(
+ 	if (error)
+ 		goto out;
+ 
++	/* Cross-reference with the AG headers. */
++	XFS_SCRUB_BTREC_XCHECK(bs, irec.rm_owner == XFS_RMAP_OWN_FS ||
++			!xfs_scrub_extent_covers_ag_head(mp, irec.rm_startblock,
++				irec.rm_blockcount));
++
+ 	psa = &bs->sc->sa;
+ 	/* Cross-reference with the bnobt. */
+ 	if (psa->bno_cur) {
 
