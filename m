@@ -1,110 +1,458 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46977 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750770AbdAVFB0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Jan 2017 00:01:26 -0500
-Date: Sat, 21 Jan 2017 21:01:18 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v5 0/9] xfstests: online scrub/repair support
-Message-ID: <20170122050118.GL12985@birch.djwong.org>
-References: <148498621936.17109.4249711513404036449.stgit@birch.djwong.org>
- <CAOQ4uxgDPEQiC72-o7yt0P6o2xdVTb6kQNxoePOzYWRbCCXxKw@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:25911 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751039AbdAUIIX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:08:23 -0500
+Subject: [PATCH 02/17] xfsprogs: Space management tool
+From: Dave Chinner <dchinner@redhat.com>
+Date: Sat, 21 Jan 2017 00:08:17 -0800
+Message-ID: <148498609772.16675.551393252011136759.stgit@birch.djwong.org>
+In-Reply-To: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
+References: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgDPEQiC72-o7yt0P6o2xdVTb6kQNxoePOzYWRbCCXxKw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Sat, Jan 21, 2017 at 09:38:23PM +0200, Amir Goldstein wrote:
-> On Sat, Jan 21, 2017 at 10:10 AM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> > Hi all,
-> >
-> > This is the fifth revision of a patchset that adds to XFS userland tools
-> > support for online metadata scrubbing and repair.
-> >
-> > The new patches in this series do three things: first, they expand the
-> > filesystem populate commands inside xfstests to be able to create all
-> > types of XFS metadata.  Second, they create a bunch of xfs_db wrapper
-> > functions to iterate all fields present in a given metadata object and
-> > fuzz them in various ways.  Finally, for each metadata object type there
-> > is a separate test that iteratively fuzzes all fields of that object and
-> > runs it through the mount/scrub/repair loop to see what happens.
-> >
-> > If you're going to start using this mess, you probably ought to just
-> > pull from my github trees for kernel[1], xfsprogs[2], and xfstests[3].
-> > The kernel patches in the git trees should apply to 4.10-rc4; xfsprogs
-> > patches to for-next; and xfstest to master.
-> >
-> > The patches have survived all auto group xfstests both with scrub-only
-> > mode and also a special debugging mode to xfs_scrub that forces it to
-> > rebuild the metadata structures even if they're not damaged.
-> >
-> 
-> Darrick,
-> 
-> xfs/1301 hogs every time at the same point in the test
-> after Fuzz dirblklog = middlebit, those are the last words in dmesg:
-> Log size 12800 blocks too small, minimum size is 23646 blocks
-> XFS (dm-2): AAIEEE! Log failed size checks. Abort!
-> XFS (dm-2): log mount failed
+xfs_spaceman is intended as a diagnostic and control tool for space
+management operations within XFS. Operations like examining free
+space, managing allocation policies, issuing block discards on free
+space, etc.
 
-Yeah.... there's some oddball problems in xfs_repair where directory
-related corruption causes it to misread directory free space so when it
-goes to add "unlinked" inodes to lost+found the process goes totally
-nuts and/or deadlocks on buffers.  I haven't had a chance to figure out
-what's causing /this/ particular problem, though..... :(
+The tool is modelled on the xfs_io interface, allowing both
+interactive and command line control of the tool, enabling it to be
+used in scripts and automated management tools.
 
---D
-
-> 
-> Then xfs_repair stays at 100% (waited >10 min).
-> This is the backtrace from xfs_repair:
-> 
-> libxfs_trans_log_buf (tp=<optimized out>, bp=bp@entry=0x9d7200,
-> first=first@entry=65272, last=last@entry=65275) at trans.c:385
-> 385             xfs_buf_item_log(bip, first, last);
-> (gdb) bt
-> #0  libxfs_trans_log_buf (tp=<optimized out>, bp=bp@entry=0x9d7200,
-> first=first@entry=65272, last=last@entry=65275) at trans.c:385
-> #1  0x000000000045c28d in xfs_dir2_data_log_unused
-> (args=args@entry=0xa1fe00, bp=0x9d7200, dup=dup@entry=0xadacf8) at
-> xfs_dir2_data.c:712
-> #2  0x000000000045b3d2 in xfs_dir2_sf_to_block
-> (args=args@entry=0xa1fe00) at xfs_dir2_block.c:1209
-> #3  0x0000000000462b84 in xfs_dir2_sf_addname
-> (args=args@entry=0xa1fe00) at xfs_dir2_sf.c:339
-> #4  0x00000000004594e8 in libxfs_dir_createname (tp=0x9e31b0,
-> dp=0x9d6e60, name=name@entry=0x7ffe5fff3690, inum=inum@entry=161,
-> first=first@entry=0x7ffe5fff3688, dfops=dfops@entry=0x7ffe5fff36a0,
->     total=1848) at xfs_dir2.c:297
-> #5  0x000000000042259e in mv_orphanage (mp=mp@entry=0x7ffe5fff4b30,
-> ino=ino@entry=161, isa_dir=0) at phase6.c:1205
-> #6  0x0000000000423ed4 in check_for_orphaned_inodes (irec=<optimized
-> out>, agno=<optimized out>, mp=<optimized out>) at phase6.c:3105
-> #7  phase6 (mp=mp@entry=0x7ffe5fff4b30) at phase6.c:3284
-> #8  0x0000000000403b5d in main (argc=<optimized out>, argv=<optimized
-> out>) at xfs_repair.c:947
-> 
-> 
-> Attached 1301.full and dmesg from 2 runs.
-> 
-> Using to following branch tips:
-> 
-> xfstests:
-> 949963c xfs: actually record per-field fuzzing online repair output
-> xfsprogs:
-> 3dd963c xfs_scrub: create a script to scrub all xfs filesystems
-> kernel:
-> fbcd13f xfs: avoid mount-time deadlock in CoW extent recovery
-> 
-> Will let it run through the night see what happens...
-> 
-> Amir.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ Makefile          |    3 +
+ spaceman/Makefile |   34 ++++++++++++
+ spaceman/file.c   |  149 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ spaceman/init.c   |  119 ++++++++++++++++++++++++++++++++++++++++++
+ spaceman/init.h   |   23 ++++++++
+ spaceman/space.h  |   36 +++++++++++++
+ 6 files changed, 363 insertions(+), 1 deletion(-)
+ create mode 100644 spaceman/Makefile
+ create mode 100644 spaceman/file.c
+ create mode 100644 spaceman/init.c
+ create mode 100644 spaceman/init.h
+ create mode 100644 spaceman/space.h
 
 
+diff --git a/Makefile b/Makefile
+index 6e45733..3a4872a 100644
+--- a/Makefile
++++ b/Makefile
+@@ -47,7 +47,7 @@ HDR_SUBDIRS = include libxfs
+ DLIB_SUBDIRS = libxlog libxcmd libhandle
+ LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
+ TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
+-		mdrestore repair rtcp m4 man doc debian
++		mdrestore repair rtcp m4 man doc debian spaceman
+ 
+ ifneq ("$(PKG_PLATFORM)","darwin")
+ TOOL_SUBDIRS += fsr
+@@ -88,6 +88,7 @@ quota: libxcmd
+ repair: libxlog libxcmd
+ copy: libxlog
+ mkfs: libxcmd
++spaceman: libxcmd
+ 
+ ifeq ($(HAVE_BUILDDEFS), yes)
+ include $(BUILDRULES)
+diff --git a/spaceman/Makefile b/spaceman/Makefile
+new file mode 100644
+index 0000000..ff8d23e
+--- /dev/null
++++ b/spaceman/Makefile
+@@ -0,0 +1,34 @@
++#
++# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
++#
++
++TOPDIR = ..
++include $(TOPDIR)/include/builddefs
++
++LTCOMMAND = xfs_spaceman
++HFILES = init.h space.h
++CFILES = init.c \
++	file.c
++
++LLDLIBS = $(LIBXCMD)
++LTDEPENDENCIES = $(LIBXCMD)
++LLDFLAGS = -static
++
++ifeq ($(ENABLE_READLINE),yes)
++LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
++endif
++
++ifeq ($(ENABLE_EDITLINE),yes)
++LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
++endif
++
++default: depend $(LTCOMMAND)
++
++include $(BUILDRULES)
++
++install: default
++	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
++	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
++install-dev:
++
++-include .dep
+diff --git a/spaceman/file.c b/spaceman/file.c
+new file mode 100644
+index 0000000..d7ab05b
+--- /dev/null
++++ b/spaceman/file.c
+@@ -0,0 +1,149 @@
++/*
++ * Copyright (c) 2004-2005 Silicon Graphics, Inc.
++ * Copyright (c) 2012 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include "libxfs.h"
++#include <sys/mman.h>
++#include "command.h"
++#include "input.h"
++#include "init.h"
++#include "space.h"
++
++static cmdinfo_t print_cmd;
++
++fileio_t	*filetable;
++int		filecount;
++fileio_t	*file;
++
++static void
++print_fileio(
++	fileio_t	*file,
++	int		index,
++	int		braces)
++{
++	printf(_("%c%03d%c %-14s (%s,%s,%s%s%s)\n"),
++		braces? '[' : ' ', index, braces? ']' : ' ', file->name,
++		file->flags & O_SYNC ? _("sync") : _("non-sync"),
++		file->flags & O_DIRECT ? _("direct") : _("non-direct"),
++		file->flags & O_RDONLY ? _("read-only") : _("read-write"),
++		file->flags & O_APPEND ? _(",append-only") : "",
++		file->flags & O_NONBLOCK ? _(",non-block") : "");
++}
++
++int
++filelist_f(void)
++{
++	int		i;
++
++	for (i = 0; i < filecount; i++)
++		print_fileio(&filetable[i], i, &filetable[i] == file);
++	return 0;
++}
++
++static int
++print_f(
++	int		argc,
++	char		**argv)
++{
++	filelist_f();
++	return 0;
++}
++
++int
++openfile(
++	char		*path,
++	xfs_fsop_geom_t	*geom,
++	int		flags,
++	mode_t		mode)
++{
++	int		fd;
++
++	fd = open(path, flags, mode);
++	if (fd < 0) {
++		if ((errno == EISDIR) && (flags & O_RDWR)) {
++			/* make it as if we asked for O_RDONLY & try again */
++			flags &= ~O_RDWR;
++			flags |= O_RDONLY;
++			fd = open(path, flags, mode);
++			if (fd < 0) {
++				perror(path);
++				return -1;
++			}
++		} else {
++			perror(path);
++			return -1;
++		}
++	}
++
++	if (xfsctl(path, fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
++		perror("XFS_IOC_FSGEOMETRY");
++		close(fd);
++		return -1;
++	}
++	return fd;
++}
++
++int
++addfile(
++	char		*name,
++	int		fd,
++	xfs_fsop_geom_t	*geometry,
++	int		flags)
++{
++	char		*filename;
++
++	filename = strdup(name);
++	if (!filename) {
++		perror("strdup");
++		close(fd);
++		return -1;
++	}
++
++	/* Extend the table of currently open files */
++	filetable = (fileio_t *)realloc(filetable,	/* growing */
++					++filecount * sizeof(fileio_t));
++	if (!filetable) {
++		perror("realloc");
++		filecount = 0;
++		free(filename);
++		close(fd);
++		return -1;
++	}
++
++	/* Finally, make this the new active open file */
++	file = &filetable[filecount - 1];
++	file->fd = fd;
++	file->flags = flags;
++	file->name = filename;
++	file->geom = *geometry;
++	return 0;
++}
++
++void
++file_init(void)
++{
++	print_cmd.name = "print";
++	print_cmd.altname = "p";
++	print_cmd.cfunc = print_f;
++	print_cmd.argmin = 0;
++	print_cmd.argmax = 0;
++	print_cmd.flags = CMD_FLAG_ONESHOT;
++	print_cmd.oneline = _("list current open files");
++
++	add_command(&print_cmd);
++}
+diff --git a/spaceman/init.c b/spaceman/init.c
+new file mode 100644
+index 0000000..ebe3b5a
+--- /dev/null
++++ b/spaceman/init.c
+@@ -0,0 +1,119 @@
++/*
++ * Copyright (c) 2012 Red Hat, Inc
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include "libxfs.h"
++#include "command.h"
++#include "input.h"
++#include "init.h"
++#include "space.h"
++
++char	*progname;
++int	exitcode;
++
++void
++usage(void)
++{
++	fprintf(stderr,
++		_("Usage: %s [-c cmd] file\n"),
++		progname);
++	exit(1);
++}
++
++static void
++init_commands(void)
++{
++	file_init();
++	help_init();
++	quit_init();
++}
++
++static int
++init_args_command(
++	int	index)
++{
++	if (index >= filecount)
++		return 0;
++	file = &filetable[index++];
++	return index;
++}
++
++static int
++init_check_command(
++	const cmdinfo_t	*ct)
++{
++	if (!(ct->flags & CMD_FLAG_ONESHOT))
++		return 0;
++	return 1;
++}
++
++void
++init(
++	int		argc,
++	char		**argv)
++{
++	int		c, flags = 0;
++	mode_t		mode = 0600;
++	xfs_fsop_geom_t	geometry = { 0 };
++
++	progname = basename(argv[0]);
++	setlocale(LC_ALL, "");
++	bindtextdomain(PACKAGE, LOCALEDIR);
++	textdomain(PACKAGE);
++
++	while ((c = getopt(argc, argv, "c:V")) != EOF) {
++		switch (c) {
++		case 'c':
++			add_user_command(optarg);
++			break;
++		case 'V':
++			printf(_("%s version %s\n"), progname, VERSION);
++			exit(0);
++		default:
++			usage();
++		}
++	}
++
++	if (optind == argc)
++		usage();
++
++	while (optind < argc) {
++		if ((c = openfile(argv[optind], &geometry, flags, mode)) < 0)
++			exit(1);
++		if (!platform_test_xfs_fd(c)) {
++			printf(_("Not an XFS filesystem!\n"));
++			exit(1);
++		}
++		if (addfile(argv[optind], c, &geometry, flags) < 0)
++			exit(1);
++		optind++;
++	}
++
++	init_commands();
++	add_command_iterator(init_args_command);
++	add_check_command(init_check_command);
++}
++
++int
++main(
++	int	argc,
++	char	**argv)
++{
++	init(argc, argv);
++	command_loop();
++	return exitcode;
++}
+diff --git a/spaceman/init.h b/spaceman/init.h
+new file mode 100644
+index 0000000..165e4f5
+--- /dev/null
++++ b/spaceman/init.h
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (c) 2012 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++extern char	*progname;
++extern int	exitcode;
++
++#define min(a,b)	(((a)<(b))?(a):(b))
++#define max(a,b)	(((a)>(b))?(a):(b))
+diff --git a/spaceman/space.h b/spaceman/space.h
+new file mode 100644
+index 0000000..6e1bc52
+--- /dev/null
++++ b/spaceman/space.h
+@@ -0,0 +1,36 @@
++/*
++ * Copyright (c) 2012 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++typedef struct fileio {
++	int		fd;		/* open file descriptor */
++	int		flags;		/* flags describing file state */
++	char		*name;		/* file name at time of open */
++	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
++} fileio_t;
++
++extern fileio_t		*filetable;	/* open file table */
++extern int		filecount;	/* number of open files */
++extern fileio_t		*file;		/* active file in file table */
++extern int filelist_f(void);
++
++extern int	openfile(char *, xfs_fsop_geom_t *, int, mode_t);
++extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
++
++extern void	file_init(void);
++extern void	help_init(void);
++extern void	quit_init(void);
 
