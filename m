@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20567 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:20600 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751137AbdAUIJV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:09:21 -0500
-Subject: [PATCH 10/17] xfs_db: print attribute remote value blocks
+        with ESMTP id S1751137AbdAUIJ1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:09:27 -0500
+Subject: [PATCH 11/17] xfs_db: write / fuzz bad values into dir/attr blocks
+ with good CRCs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 21 Jan 2017 00:09:16 -0800
-Message-ID: <148498615684.16675.17467009141986397730.stgit@birch.djwong.org>
+Date: Sat, 21 Jan 2017 00:09:23 -0800
+Message-ID: <148498616298.16675.4390303097211367276.stgit@birch.djwong.org>
 In-Reply-To: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 References: <148498608472.16675.14848042961636871812.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -18,158 +19,216 @@ List-Id: xfs
 To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Teach xfs_db how to print the contents of xattr remote value blocks.
+Extend typ_t to (optionally) store a pointer to a function to calculate
+the CRC of the block, provide functions to do this for the dir3 and
+attr3 types, and then wire up the fuzz and write commands so that we can
+effectively fuzz directory and extended attribute block fields.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/attr.c  |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/attr.c  |   32 ++++++++++++++++++++++++++++++++
  db/attr.h  |    1 +
- db/field.c |    3 +++
- db/field.h |    1 +
- 4 files changed, 64 insertions(+)
+ db/dir2.c  |   37 +++++++++++++++++++++++++++++++++++++
+ db/dir2.h  |    1 +
+ db/fuzz.c  |    3 +++
+ db/type.c  |    8 ++++----
+ db/type.h  |    2 ++
+ db/write.c |    3 +++
+ 8 files changed, 83 insertions(+), 4 deletions(-)
 
 
 diff --git a/db/attr.c b/db/attr.c
-index e26ac67..0fffbc2 100644
+index 0fffbc2..5a97925 100644
 --- a/db/attr.c
 +++ b/db/attr.c
-@@ -41,6 +41,9 @@ static int	attr_leaf_nvlist_offset(void *obj, int startoff, int idx);
- static int	attr_node_btree_count(void *obj, int startoff);
- static int	attr_node_hdr_count(void *obj, int startoff);
- 
-+static int	attr_remote_count(void *obj, int startoff);
-+static int	attr3_remote_count(void *obj, int startoff);
-+
- const field_t	attr_hfld[] = {
- 	{ "", FLDT_ATTR, OI(0), C1, 0, TYP_NONE },
- 	{ NULL }
-@@ -53,6 +56,7 @@ const field_t	attr_flds[] = {
- 	  FLD_COUNT, TYP_NONE },
- 	{ "hdr", FLDT_ATTR_NODE_HDR, OI(NOFF(hdr)), attr_node_hdr_count,
- 	  FLD_COUNT, TYP_NONE },
-+	{ "data", FLDT_CHARNS, OI(0), attr_remote_count, FLD_COUNT, TYP_NONE },
- 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(LOFF(entries)),
- 	  attr_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
- 	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(NOFF(__btree)), attr_node_btree_count,
-@@ -197,6 +201,33 @@ attr3_leaf_hdr_count(
- 	return be16_to_cpu(leaf->hdr.info.hdr.magic) == XFS_ATTR3_LEAF_MAGIC;
- }
- 
-+static int
-+attr_remote_count(
-+	void		*obj,
-+	int		startoff)
-+{
-+	if (attr_leaf_hdr_count(obj, startoff) == 0 &&
-+	    attr_node_hdr_count(obj, startoff) == 0)
-+		return mp->m_sb.sb_blocksize;
-+	return 0;
-+}
-+
-+static int
-+attr3_remote_count(
-+	void		*obj,
-+	int		startoff)
-+{
-+	struct xfs_attr3_rmt_hdr	*hdr = obj;
-+
-+	ASSERT(startoff == 0);
-+
-+	if (hdr->rm_magic != cpu_to_be32(XFS_ATTR3_RMT_MAGIC))
-+		return 0;
-+	if (be32_to_cpu(hdr->rm_bytes) + sizeof(*hdr) > mp->m_sb.sb_blocksize)
-+		return mp->m_sb.sb_blocksize - sizeof(*hdr);
-+	return be32_to_cpu(hdr->rm_bytes);
-+}
-+
- typedef int (*attr_leaf_entry_walk_f)(struct xfs_attr_leafblock *,
- 				      struct xfs_attr_leaf_entry *, int);
- static int
-@@ -477,6 +508,17 @@ attr3_node_hdr_count(
- 	return be16_to_cpu(node->hdr.info.hdr.magic) == XFS_DA3_NODE_MAGIC;
- }
- 
-+static int
-+attr3_remote_hdr_count(
-+	void			*obj,
-+	int			startoff)
-+{
-+	struct xfs_attr3_rmt_hdr	*node = obj;
-+
-+	ASSERT(startoff == 0);
-+	return be32_to_cpu(node->rm_magic) == XFS_ATTR3_RMT_MAGIC;
-+}
-+
- int
- attr_size(
- 	void	*obj,
-@@ -501,6 +543,8 @@ const field_t	attr3_flds[] = {
- 	  FLD_COUNT, TYP_NONE },
- 	{ "hdr", FLDT_DA3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
- 	  FLD_COUNT, TYP_NONE },
-+	{ "hdr", FLDT_ATTR3_REMOTE_HDR, OI(0), attr3_remote_hdr_count,
-+	  FLD_COUNT, TYP_NONE },
- 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(L3OFF(entries)),
- 	  attr3_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
- 	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(N3OFF(__btree)),
-@@ -523,6 +567,21 @@ const field_t	attr3_leaf_hdr_flds[] = {
+@@ -582,6 +582,38 @@ const struct field	attr3_remote_crc_flds[] = {
  	{ NULL }
  };
  
-+#define	RM3OFF(f)	bitize(offsetof(struct xfs_attr3_rmt_hdr, rm_ ## f))
-+const struct field	attr3_remote_crc_flds[] = {
-+	{ "magic", FLDT_UINT32X, OI(RM3OFF(magic)), C1, 0, TYP_NONE },
-+	{ "offset", FLDT_UINT32D, OI(RM3OFF(offset)), C1, 0, TYP_NONE },
-+	{ "bytes", FLDT_UINT32D, OI(RM3OFF(bytes)), C1, 0, TYP_NONE },
-+	{ "crc", FLDT_CRC, OI(RM3OFF(crc)), C1, 0, TYP_NONE },
-+	{ "uuid", FLDT_UUID, OI(RM3OFF(uuid)), C1, 0, TYP_NONE },
-+	{ "owner", FLDT_INO, OI(RM3OFF(owner)), C1, 0, TYP_NONE },
-+	{ "bno", FLDT_DFSBNO, OI(RM3OFF(blkno)), C1, 0, TYP_BMAPBTD },
-+	{ "lsn", FLDT_UINT64X, OI(RM3OFF(lsn)), C1, 0, TYP_NONE },
-+	{ "data", FLDT_CHARNS, OI(bitize(sizeof(struct xfs_attr3_rmt_hdr))),
-+		attr3_remote_count, FLD_COUNT, TYP_NONE },
-+	{ NULL }
-+};
++/* Set the CRC. */
++void
++xfs_attr3_set_crc(
++	struct xfs_buf		*bp)
++{
++	__be32			magic32;
++	__be16			magic16;
++
++	magic32 = *(__be32 *)bp->b_addr;
++	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
++
++	switch (magic16) {
++	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF);
++		return;
++	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
++		return;
++	default:
++		break;
++	}
++
++	switch (magic32) {
++	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_ATTR3_RMT_CRC_OFF);
++		return;
++	default:
++		dbprintf(_("Unknown attribute buffer type!\n"));
++		break;
++	}
++}
 +
  /*
   * Special read verifier for attribute buffers. Detect the magic number
   * appropriately and set the correct verifier and call it.
 diff --git a/db/attr.h b/db/attr.h
-index bc3431f..d7bb579 100644
+index d7bb579..9ea7429 100644
 --- a/db/attr.h
 +++ b/db/attr.h
-@@ -30,6 +30,7 @@ extern const field_t	attr3_flds[];
- extern const field_t	attr3_hfld[];
- extern const field_t	attr3_leaf_hdr_flds[];
- extern const field_t	attr3_node_hdr_flds[];
-+extern const field_t	attr3_remote_crc_flds[];
+@@ -34,5 +34,6 @@ extern const field_t	attr3_remote_crc_flds[];
  
  extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
  extern int	attr_size(void *obj, int startoff, int idx);
-diff --git a/db/field.c b/db/field.c
-index 1968dd5..e8bbbe3 100644
---- a/db/field.c
-+++ b/db/field.c
-@@ -97,6 +97,9 @@ const ftattr_t	ftattrtab[] = {
- 	{ FLDT_ATTR3_NODE_HDR, "attr3_node_hdr", NULL,
- 	  (char *)da3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
- 	  0, NULL, da3_node_hdr_flds },
-+	{ FLDT_ATTR3_REMOTE_HDR, "attr3_remote_hdr", NULL,
-+	  (char *)attr3_remote_crc_flds, attr_size, FTARG_SIZE, NULL,
-+	  attr3_remote_crc_flds },
++extern void	xfs_attr3_set_crc(struct xfs_buf *bp);
  
- 	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
- 	  FTARG_SIZE, NULL, bmapbta_flds },
-diff --git a/db/field.h b/db/field.h
-index 53616f1..e5a943b 100644
---- a/db/field.h
-+++ b/db/field.h
-@@ -46,6 +46,7 @@ typedef enum fldt	{
- 	FLDT_ATTR3,
- 	FLDT_ATTR3_LEAF_HDR,
- 	FLDT_ATTR3_NODE_HDR,
-+	FLDT_ATTR3_REMOTE_HDR,
+ extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
+diff --git a/db/dir2.c b/db/dir2.c
+index 533f705..3e21a7b 100644
+--- a/db/dir2.c
++++ b/db/dir2.c
+@@ -981,6 +981,43 @@ const field_t	da3_node_hdr_flds[] = {
+ 	{ NULL }
+ };
  
- 	FLDT_BMAPBTA,
- 	FLDT_BMAPBTA_CRC,
++/* Set the CRC. */
++void
++xfs_dir3_set_crc(
++	struct xfs_buf		*bp)
++{
++	__be32			magic32;
++	__be16			magic16;
++
++	magic32 = *(__be32 *)bp->b_addr;
++	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
++
++	switch (magic32) {
++	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
++	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_DIR3_DATA_CRC_OFF);
++		return;
++	case cpu_to_be32(XFS_DIR3_FREE_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_DIR3_FREE_CRC_OFF);
++		return;
++	default:
++		break;
++	}
++
++	switch (magic16) {
++	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
++	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
++		return;
++	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++		xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
++		return;
++	default:
++		dbprintf(_("Unknown directory buffer type! %x %x\n"), magic32, magic16);
++		break;
++	}
++}
++
+ /*
+  * Special read verifier for directory buffers. Detect the magic number
+  * appropriately and set the correct verifier and call it.
+diff --git a/db/dir2.h b/db/dir2.h
+index 0c2a62e..1b87cd2 100644
+--- a/db/dir2.h
++++ b/db/dir2.h
+@@ -60,5 +60,6 @@ static inline uint8_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
+ 
+ extern int	dir2_data_union_size(void *obj, int startoff, int idx);
+ extern int	dir2_size(void *obj, int startoff, int idx);
++extern void	xfs_dir3_set_crc(struct xfs_buf *bp);
+ 
+ extern const struct xfs_buf_ops xfs_dir3_db_buf_ops;
+diff --git a/db/fuzz.c b/db/fuzz.c
+index 061ecd1..f294331 100644
+--- a/db/fuzz.c
++++ b/db/fuzz.c
+@@ -156,6 +156,9 @@ fuzz_f(
+ 	} else if (iocur_top->ino_buf) {
+ 		local_ops.verify_write = xfs_verify_recalc_inode_crc;
+ 		dbprintf(_("Allowing fuzz of corrupted inode with good CRC\n"));
++	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
++		local_ops.verify_write = iocur_top->typ->set_crc;
++		dbprintf(_("Allowing fuzz of corrupted data with good CRC\n"));
+ 	} else { /* invalid data */
+ 		local_ops.verify_write = xfs_verify_recalc_crc;
+ 		dbprintf(_("Allowing fuzz of corrupted data with good CRC\n"));
+diff --git a/db/type.c b/db/type.c
+index adab10a..740adc0 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -88,7 +88,7 @@ static const typ_t	__typtab_crc[] = {
+ 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops,
+ 		XFS_AGI_CRC_OFF },
+ 	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
+-		&xfs_attr3_db_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_attr3_db_buf_ops, TYP_F_CRC_FUNC, xfs_attr3_set_crc },
+ 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+ 		&xfs_bmbt_buf_ops, XFS_BTREE_LBLOCK_CRC_OFF },
+ 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
+@@ -103,7 +103,7 @@ static const typ_t	__typtab_crc[] = {
+ 		&xfs_refcountbt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
+ 	{ TYP_DATA, "data", handle_block, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
+-		&xfs_dir3_db_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
+ 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
+ 		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
+ 	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
+@@ -132,7 +132,7 @@ static const typ_t	__typtab_spcrc[] = {
+ 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops ,
+ 		XFS_AGI_CRC_OFF },
+ 	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
+-		&xfs_attr3_db_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_attr3_db_buf_ops, TYP_F_CRC_FUNC, xfs_attr3_set_crc },
+ 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
+ 		&xfs_bmbt_buf_ops, XFS_BTREE_LBLOCK_CRC_OFF },
+ 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
+@@ -147,7 +147,7 @@ static const typ_t	__typtab_spcrc[] = {
+ 		&xfs_refcountbt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
+ 	{ TYP_DATA, "data", handle_block, NULL, NULL, TYP_F_NO_CRC_OFF },
+ 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
+-		&xfs_dir3_db_buf_ops, TYP_F_NO_CRC_OFF },
++		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
+ 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
+ 		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
+ 	{ TYP_INOBT, "inobt", handle_struct, inobt_spcrc_hfld,
+diff --git a/db/type.h b/db/type.h
+index a50d705..3971975 100644
+--- a/db/type.h
++++ b/db/type.h
+@@ -46,6 +46,8 @@ typedef struct typ
+ 	const struct xfs_buf_ops *bops;
+ 	unsigned long		crc_off;
+ #define TYP_F_NO_CRC_OFF	(-1UL)
++#define TYP_F_CRC_FUNC		(-2UL)
++	void			(*set_crc)(struct xfs_buf *);
+ } typ_t;
+ extern const typ_t	*typtab, *cur_typ;
+ 
+diff --git a/db/write.c b/db/write.c
+index 5c83874..ea87b40 100644
+--- a/db/write.c
++++ b/db/write.c
+@@ -164,6 +164,9 @@ write_f(
+ 	if (corrupt) {
+ 		local_ops.verify_write = xfs_dummy_verify;
+ 		dbprintf(_("Allowing write of corrupted data and bad CRC\n"));
++	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
++		local_ops.verify_write = iocur_top->typ->set_crc;
++		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
+ 	} else { /* invalid data */
+ 		local_ops.verify_write = xfs_verify_recalc_crc;
+ 		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
 
