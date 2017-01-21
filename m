@@ -1,199 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:14420 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752629AbdASNdl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Jan 2017 08:33:41 -0500
-From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH v3] xfs_logprint: handle log operation split of inode item correctly
-Date: Thu, 19 Jan 2017 21:32:47 +0800
-Message-ID: <1484832767-39865-1-git-send-email-houtao1@huawei.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:19178 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750952AbdAUIAt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2017 03:00:49 -0500
+Subject: [PATCH 05/55] xfs: verify free block header fields
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sat, 21 Jan 2017 00:00:46 -0800
+Message-ID: <148498564682.15323.5965188010659165314.stgit@birch.djwong.org>
+In-Reply-To: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
+References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: sandeen@sandeen.net, bfoster@redhat.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-If an inode log item has 4 log operations, and the 4th operation
-(attr fork op) is splitted to the next log record due to the size
-limitation of log record, xfs_logprint doesn't check whether or not
-the 4th operation is in the current log record and print invalid data.
+Perform basic sanity checking of the directory free block header
+fields so that we avoid hanging the system on invalid data.
 
-xfs_logprint also needs to calculate the count of splitted log
-operations correctly instead of just returning 1.
+(Granted that just means that now we shutdown on directory write,
+but that seems better than hanging...)
 
-The following is the output before patch applied:
-============================================================================
-cycle: 120  version: 2      lsn: 120,11014  tail_lsn: 120,427
-length of Log Record: 32256 prev offset: 10984      num ops: 243
-......
-h_size: 32768
-----------------------------------------------------------------------------
-Oper (0): tid: 2db4353b  len: 0  clientid: TRANS  flags: START
-......
-----------------------------------------------------------------------------
-Oper (240): tid: 2db4353b  len: 56  clientid: TRANS  flags: none
-INODE: #regs: 4   ino: 0x200a4bf  flags: 0x45   dsize: 64
-        blkno: 10506832  len: 16  boff: 7936
-Oper (241): tid: 2db4353b  len: 96  clientid: TRANS  flags: none
-INODE CORE
-......
-Oper (242): tid: 2db4353b  len: 64  clientid: TRANS  flags: none
-EXTENTS inode data
-Oper (243): tid: 150000  len: 83886080  clientid: ERROR  flags: none
-LOCAL attr data
-============================================================================
-cycle: 120  version: 2      lsn: 120,11078  tail_lsn: 120,427
-length of Log Record: 3584  prev offset: 11014      num ops: 44
-......
-h_size: 32768
-----------------------------------------------------------------------------
-Oper (0): tid: 2db4353b  len: 52  clientid: TRANS  flags: none
-----------------------------------------------------------------------------
-Oper (1): tid: 2db4353b  len: 56  clientid: TRANS  flags: none
-INODE: #regs: 3   ino: 0x100047b  flags: 0x5   dsize: 64
-......
-----------------------------------------------------------------------------
-
-The following is the output after patch applied:
-============================================================================
-cycle: 120	version: 2		lsn: 120,11014	tail_lsn: 120,427
-length of Log Record: 32256	prev offset: 10984		num ops: 243
-......
-h_size: 32768
-----------------------------------------------------------------------------
-Oper (0): tid: 2db4353b  len: 0  clientid: TRANS  flags: START
-......
-----------------------------------------------------------------------------
-Oper (240): tid: 2db4353b  len: 56  clientid: TRANS  flags: none
-INODE: #regs: 4   ino: 0x200a4bf  flags: 0x45   dsize: 64
-        blkno: 10506832  len: 16  boff: 7936
-Oper (241): tid: 2db4353b  len: 96  clientid: TRANS  flags: none
-INODE CORE
-......
-Oper (242): tid: 2db4353b  len: 64  clientid: TRANS  flags: none
-EXTENTS inode data
-============================================================================
-cycle: 120	version: 2		lsn: 120,11078	tail_lsn: 120,427
-length of Log Record: 3584	prev offset: 11014		num ops: 44
-......
-h_size: 32768
-----------------------------------------------------------------------------
-Oper (0): tid: 2db4353b  len: 52  clientid: TRANS  flags: none
-Left over region from split log item
-----------------------------------------------------------------------------
-Oper (1): tid: 2db4353b  len: 56  clientid: TRANS  flags: none
-INODE: #regs: 3   ino: 0x100047b  flags: 0x5   dsize: 64
-......
-----------------------------------------------------------------------------
-
-Signed-off-by: Hou Tao <houtao1@huawei.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- logprint/log_misc.c | 30 +++++++++++++++++++-----------
- 1 file changed, 19 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_dir2_node.c |   49 +++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 47 insertions(+), 2 deletions(-)
 
-v3:
-- update commit log description as suggested by Brian Foster
-- add ASSERT(skip_count == 0) as suggested by Brian Foster
 
-v2: https://www.spinics.net/lists/linux-xfs/msg03500.html
-- rewrite the commit message to clarify the patch
-- use "skip_count" suggested by Brian Foster
-- fix the indentation
-
-v1: http://www.spinics.net/lists/linux-xfs/msg03430.html
-
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index a0f1766..0dfcfd1 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -524,6 +524,7 @@ xlog_print_trans_inode(
-     xfs_inode_log_format_t *f;
-     int			   mode;
-     int			   size;
-+    int			   skip_count;
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 75a5574..6f04e40 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -155,6 +155,42 @@ const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
+ 	.verify_write = xfs_dir3_free_write_verify,
+ };
  
-     /*
-      * print inode type header region
-@@ -555,15 +556,17 @@ xlog_print_trans_inode(
- 	return f->ilf_size;
-     }
- 
-+    skip_count = f->ilf_size-1;
++/* Everything ok in the free block header? */
++static bool
++xfs_dir3_free_header_check(
++	struct xfs_inode	*dp,
++	xfs_dablk_t		fbno,
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = dp->i_mount;
++	unsigned int		firstdb;
++	int			maxbests;
 +
-     if (*i >= num_ops)			/* end of LR */
--	    return f->ilf_size-1;
-+	    return skip_count;
- 
-     /* core inode comes 2nd */
-     op_head = (xlog_op_header_t *)*ptr;
-     xlog_print_op_header(op_head, *i, ptr);
- 
-     if (op_head->oh_flags & XLOG_CONTINUE_TRANS)  {
--	return f->ilf_size-1;
-+        return skip_count;
-     }
- 
-     memmove(&dino, *ptr, sizeof(dino));
-@@ -571,13 +574,7 @@ xlog_print_trans_inode(
-     size = (int)dino.di_size;
-     xlog_print_trans_inode_core(&dino);
-     *ptr += xfs_log_dinode_size(dino.di_version);
--
--    if (*i == num_ops-1 && f->ilf_size == 3)  {
--	return 1;
--    }
--
--    /* does anything come next */
--    op_head = (xlog_op_header_t *)*ptr;
-+    skip_count--;
- 
-     switch (f->ilf_fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
-     case XFS_ILOG_DEV:
-@@ -595,7 +592,12 @@ xlog_print_trans_inode(
-     ASSERT(f->ilf_size <= 4);
-     ASSERT((f->ilf_size == 3) || (f->ilf_fields & XFS_ILOG_AFORK));
- 
-+    /* does anything come next */
-+    op_head = (xlog_op_header_t *)*ptr;
++	maxbests = dp->d_ops->free_max_bests(mp->m_dir_geo);
++	firstdb = (fbno - xfs_dir2_byte_to_db(mp->m_dir_geo,
++					      XFS_DIR2_FREE_OFFSET)) *
++			maxbests;
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		struct xfs_dir3_free_hdr *hdr3 = bp->b_addr;
 +
-     if (f->ilf_fields & XFS_ILOG_DFORK) {
-+	    if (*i == num_ops-1)
-+	        return skip_count;
- 	    (*i)++;
- 	    xlog_print_op_header(op_head, *i, ptr);
- 
-@@ -618,11 +620,14 @@ xlog_print_trans_inode(
- 
- 	    *ptr += be32_to_cpu(op_head->oh_len);
- 	    if (op_head->oh_flags & XLOG_CONTINUE_TRANS)
--		return 1;
-+	        return skip_count;
- 	    op_head = (xlog_op_header_t *)*ptr;
-+	    skip_count--;
-     }
- 
-     if (f->ilf_fields & XFS_ILOG_AFORK) {
-+	    if (*i == num_ops-1)
-+	        return skip_count;
- 	    (*i)++;
- 	    xlog_print_op_header(op_head, *i, ptr);
- 
-@@ -644,9 +649,12 @@ xlog_print_trans_inode(
- 	    }
- 	    *ptr += be32_to_cpu(op_head->oh_len);
- 	    if (op_head->oh_flags & XLOG_CONTINUE_TRANS)
--		return 1;
-+	        return skip_count;
-+	    skip_count--;
-     }
- 
-+    ASSERT(skip_count == 0);
++		if (be32_to_cpu(hdr3->firstdb) != firstdb)
++			return false;
++		if (be32_to_cpu(hdr3->nvalid) > maxbests)
++			return false;
++		if (be32_to_cpu(hdr3->nvalid) < be32_to_cpu(hdr3->nused))
++			return false;
++	} else {
++		struct xfs_dir2_free_hdr *hdr = bp->b_addr;
 +
-     return 0;
- }	/* xlog_print_trans_inode */
++		if (be32_to_cpu(hdr->firstdb) != firstdb)
++			return false;
++		if (be32_to_cpu(hdr->nvalid) > maxbests)
++			return false;
++		if (be32_to_cpu(hdr->nvalid) < be32_to_cpu(hdr->nused))
++			return false;
++	}
++	return true;
++}
  
--- 
-2.5.0
+ static int
+ __xfs_dir3_free_read(
+@@ -168,11 +204,20 @@ __xfs_dir3_free_read(
+ 
+ 	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+ 				XFS_DATA_FORK, &xfs_dir3_free_buf_ops);
++	if (err || !(*bpp))
++		return err;
++
++	/* Check things that we can't do in the verifier. */
++	if (!xfs_dir3_free_header_check(dp, fbno, *bpp)) {
++		xfs_trans_brelse(tp, *bpp);
++		return -EFSCORRUPTED;
++	}
+ 
+ 	/* try read returns without an error or *bpp if it lands in a hole */
+-	if (!err && tp && *bpp)
++	if (tp)
+ 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_FREE_BUF);
+-	return err;
++
++	return 0;
+ }
+ 
+ int
 
