@@ -1,39 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail2.jlbond.com ([68.15.28.130]:52781 "EHLO mail.jlbond.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750889AbdAVBwv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 21 Jan 2017 20:52:51 -0500
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by mail.jlbond.com (Postfix) with ESMTP id 000907A30D
-        for <linux-xfs@vger.kernel.org>; Sat, 21 Jan 2017 17:20:53 -0800 (PST)
-Received: from mail.jlbond.com ([127.0.0.1])
-        by localhost (mail.jlbond.com [127.0.0.1]) (amavisd-new, port 10024)
-        with LMTP id su+o6Gye5NrX for <linux-xfs@vger.kernel.org>;
-        Sat, 21 Jan 2017 17:20:53 -0800 (PST)
-Received: from [192.168.0.111] (firewall.bbky.org [192.168.0.1])
-        by mail.jlbond.com (Postfix) with ESMTP id BFDDF79763
-        for <linux-xfs@vger.kernel.org>; Sat, 21 Jan 2017 17:20:53 -0800 (PST)
-From: Bond Masuda <bond.masuda@jlbond.com>
-Subject: XFS issues with NVMe SSD
-Message-ID: <8a562e13-6d86-d9ef-de22-f71d5aa79b60@jlbond.com>
-Date: Sat, 21 Jan 2017 17:20:53 -0800
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:51534 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751337AbdAWWGr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jan 2017 17:06:47 -0500
+Date: Tue, 24 Jan 2017 09:06:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Quota-enabled XFS hangs during mount
+Message-ID: <20170123220643.GA316@dastard>
+References: <e26e98c9-d183-acde-0ebd-8e285d0ae03c@zoner.cz>
+ <20161101215803.GA14023@dastard>
+ <cad65166-6d77-3c6f-151b-5970b1b6fc85@zoner.cz>
+ <20161103013153.GH9920@dastard>
+ <7993e9b8-6eb8-6a0d-aa72-01346cca1b63@zoner.cz>
+ <20161103204049.GA28177@dastard>
+ <43ca55d0-6762-d54f-5ba9-a83f9c1988f6@zoner.cz>
+ <20170123134452.GA33287@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170123134452.GA33287@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Martin Svec <martin.svec@zoner.cz>, linux-xfs@vger.kernel.org
 
-Hi linux-xfs list:
+On Mon, Jan 23, 2017 at 08:44:52AM -0500, Brian Foster wrote:
+> On Mon, Jan 23, 2017 at 10:44:20AM +0100, Martin Svec wrote:
+> > Hello Dave,
+> > 
+> > Any updates on this? It's a bit annoying to workaround the bug by increasing RAM just because of the
+> > initial quotacheck.
+> > 
+> 
+> Note that Dave is away on a bit of an extended vacation[1]. It looks
+> like he was in the process of fishing through the code to spot any
+> potential problems related to quotacheck+reclaim. I see you've cc'd him
+> directly so we'll see if we get a response wrt to if he got anywhere
+> with that...
 
-I've been having XFS file system corruption issues when used with Intel 
-NVMe SSD in Fedora 25 Linux as reported here:
+No, I didn't.
 
-https://bugzilla.redhat.com/show_bug.cgi?id=1402533
+Cheers,
 
-I don't know if this is XFS issue or not, but ext4 on the same Intel 
-NVMe SSD doesn't appear to be a problem. Are linux/xfs devs already 
-aware of the problem?
-
-Bond
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
