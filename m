@@ -1,145 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:45306 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751007AbdAQHsz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2017 02:48:55 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2] xfs: fix COW writeback race
-Date: Tue, 17 Jan 2017 08:48:51 +0100
-Message-Id: <1484639331-2137-1-git-send-email-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:34294 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750948AbdAWUC0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jan 2017 15:02:26 -0500
+Subject: Re: [PATCH v5 1/5] xfs_db: sanitize geometry on load
+References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+ <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
+ <20170121001505.GK12985@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <fd36237d-f45d-b8a3-dba4-e918a3aac649@sandeen.net>
+Date: Mon, 23 Jan 2017 14:02:07 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170121001505.GK12985@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-Due to the way how xfs_iomap_write_allocate tries to convert the whole
-found extents from delalloc to real space we can run into a race
-condition with multiple threads doing writes to this same extent.
-For the non-COW case that is harmless as the only thing that can happen
-is that we call xfs_bmapi_write on an extent that has already been
-converted to a real allocation.  For COW writes where we move the extent
-from the COW to the data fork after I/O completion the race is, however,
-not quite as harmless.  In the worst case we are now calling
-xfs_bmapi_write on a region that contains hole in the COW work, which
-will trip up an assert in debug builds or lead to file system corruption
-in non-debug builds.  This seems to be reproducible with workloads of
-small O_DSYNC write, although so far I've not managed to come up with
-a with an isolated reproducer.
+On 1/20/17 6:15 PM, Darrick J. Wong wrote:
+> xfs_db doesn't check the filesystem geometry when it's mounting, which
+> means that garbage agcount values can cause OOMs when we try to allocate
+> all the per-AG incore metadata.  If we see geometry that looks
+> suspicious, try to derive the actual AG geometry to avoid crashing the
+> system.  This should help with xfs/1301 fuzzing.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-The fix for the issue is relatively simple:  tell xfs_bmapi_write
-that we are only asked to convert delayed allocations and skip holes
-in that case.
+If it's ok with you I'll modify a comment (no suggestion of proper
+agcount is made) and rename sanitize_geometry to sanitize_agcount
+or something like that - otherwise,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 41 +++++++++++++++++++++++++++++------------
- fs/xfs/libxfs/xfs_bmap.h |  6 +++++-
- fs/xfs/xfs_iomap.c       |  2 +-
- 3 files changed, 35 insertions(+), 14 deletions(-)
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 44773c9..ceae779 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4514,8 +4514,6 @@ xfs_bmapi_write(
- 	int			n;		/* current extent index */
- 	xfs_fileoff_t		obno;		/* old block number (offset) */
- 	int			whichfork;	/* data or attr fork */
--	char			inhole;		/* current location is hole in file */
--	char			wasdelay;	/* old extent was delayed */
- 
- #ifdef DEBUG
- 	xfs_fileoff_t		orig_bno;	/* original block number value */
-@@ -4603,22 +4601,41 @@ xfs_bmapi_write(
- 	bma.firstblock = firstblock;
- 
- 	while (bno < end && n < *nmap) {
--		inhole = eof || bma.got.br_startoff > bno;
--		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
-+		bool			need_alloc = false, wasdelay = false;
- 
--		/*
--		 * Make sure we only reflink into a hole.
--		 */
--		if (flags & XFS_BMAPI_REMAP)
--			ASSERT(inhole);
--		if (flags & XFS_BMAPI_COWFORK)
--			ASSERT(!inhole);
-+		/* in hole or beyoned EOF? */
-+		if (eof || bma.got.br_startoff > bno) {
-+			if (flags & XFS_BMAPI_DELALLOC) {
-+				/*
-+				 * For the COW fork we can reasonably get a
-+				 * request for converting an extent that races
-+				 * with other threads already having converted
-+				 * part of it, as there converting COW to
-+				 * regular blocks is not protected using the
-+				 * IOLOCK.
-+				 */
-+				ASSERT(flags & XFS_BMAPI_COWFORK);
-+				if (!(flags & XFS_BMAPI_COWFORK)) {
-+					error = -EIO;
-+					goto error0;
-+				}
-+			} else {
-+				need_alloc = true;
-+			}
-+		} else {
-+			/*
-+			 * Make sure we only reflink into a hole.
-+			 */
-+			ASSERT(!(flags & XFS_BMAPI_REMAP));
-+			if (isnullstartblock(bma.got.br_startblock))
-+				wasdelay = true;
-+		}
- 
- 		/*
- 		 * First, deal with the hole before the allocated space
- 		 * that we found, if any.
- 		 */
--		if (inhole || wasdelay) {
-+		if (need_alloc || wasdelay) {
- 			bma.eof = eof;
- 			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
- 			bma.wasdel = wasdelay;
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index cecd094..cdef87d 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -110,6 +110,9 @@ struct xfs_extent_free_item
- /* Map something in the CoW fork. */
- #define XFS_BMAPI_COWFORK	0x200
- 
-+/* Only convert delalloc space, don't allocate entirely new extents */
-+#define XFS_BMAPI_DELALLOC	0x400
-+
- #define XFS_BMAPI_FLAGS \
- 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
- 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
-@@ -120,7 +123,8 @@ struct xfs_extent_free_item
- 	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
- 	{ XFS_BMAPI_ZERO,	"ZERO" }, \
- 	{ XFS_BMAPI_REMAP,	"REMAP" }, \
--	{ XFS_BMAPI_COWFORK,	"COWFORK" }
-+	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
-+	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }
- 
- 
- static inline int xfs_bmapi_aflag(int w)
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index ca137b7..7ee8629 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -795,7 +795,7 @@ xfs_iomap_write_allocate(
- 	xfs_trans_t	*tp;
- 	int		nimaps;
- 	int		error = 0;
--	int		flags = 0;
-+	int		flags = XFS_BMAPI_DELALLOC;
- 	int		nres;
- 
- 	if (whichfork == XFS_COW_FORK)
--- 
-2.1.4
-
+> ---
+> v2: Only modify sb_ag{blocks,count} if they seem insane -- use local
+> variables to avoid screwing up the rest of the metadata.
+> v3: Suggest a possible agcount value, but always restrict to 1 AG.
+> v4: Remove the suggested agcount value and make sure we can't exit
+> the program with an exitcode of zero.
+> v5: remove global variables and unnecessary parameters
+> ---
+>  db/init.c |   89 +++++++++++++++++++++++++++++++++++++++++++++++++++++--------
+>  1 file changed, 77 insertions(+), 12 deletions(-)
+> 
+> diff --git a/db/init.c b/db/init.c
+> index ec1e274..0c684a5 100644
+> --- a/db/init.c
+> +++ b/db/init.c
+> @@ -51,13 +51,81 @@ usage(void)
+>  	exit(1);
+>  }
+>  
+> +/* Try to load a superblock for the given agno, no verifiers. */
+> +static bool
+> +load_sb(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_sb		*sbp)
+> +{
+> +	struct xfs_buf		*bp;
+> +
+> +	bp = libxfs_readbuf(mp->m_ddev_targp, XFS_SB_DADDR,
+> +			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
+> +
+> +	if (!bp || bp->b_error)
+> +		return false;
+> +
+> +	/* copy SB from buffer to in-core, converting architecture as we go */
+> +	libxfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
+> +	libxfs_putbuf(bp);
+> +	libxfs_purgebuf(bp);
+> +
+> +	return true;
+> +}
+> +
+> +/*
+> + * If the agcount doesn't look sane, suggest a real agcount to the user,
+> + * and pretend agcount = 1 to avoid OOMing libxfs_initialize_perag.
+> + * Returns true if the geometry was sane.
+> + */
+> +static bool
+> +sanitize_geometry(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_sb		*sbp)
+> +{
+> +	unsigned int		blocklog;
+> +	unsigned int		blocksize;
+> +	unsigned long long	dblocks;
+> +
+> +	/* If the geometry looks ok, we're done. */
+> +	if (sbp->sb_blocklog >= XFS_MIN_BLOCKSIZE_LOG &&
+> +	    sbp->sb_blocklog <= XFS_MAX_BLOCKSIZE_LOG &&
+> +	    sbp->sb_blocksize == (1 << sbp->sb_blocklog) &&
+> +	    sbp->sb_dblocks * sbp->sb_blocksize <= x.dsize * x.dbsize &&
+> +	    sbp->sb_dblocks <= XFS_MAX_DBLOCKS(sbp) &&
+> +	    sbp->sb_dblocks >= XFS_MIN_DBLOCKS(sbp))
+> +		return true;
+> +
+> +	/* Check blocklog and blocksize */
+> +	blocklog = sbp->sb_blocklog;
+> +	blocksize = sbp->sb_blocksize;
+> +	if (blocklog < XFS_MIN_BLOCKSIZE_LOG ||
+> +	    blocklog > XFS_MAX_BLOCKSIZE_LOG)
+> +		blocklog = libxfs_log2_roundup(blocksize);
+> +	if (blocksize != (1 << blocklog))
+> +		blocksize = (1 << blocksize);
+> +
+> +	/* Clamp dblocks to the size of the device. */
+> +	dblocks = sbp->sb_dblocks;
+> +	if (dblocks > x.dsize * x.dbsize / blocksize)
+> +		dblocks = x.dsize * x.dbsize / blocksize;
+> +
+> +	/* Assume 1 AG to avoid OOM. */
+> +	fprintf(stderr,
+> +_("%s: device %s AG count is insane.  Limiting reads to AG 0.\n"),
+> +		progname, fsdevice);
+> +	sbp->sb_agcount = 1;
+> +
+> +	return false;
+> +}
+> +
+>  void
+>  init(
+>  	int		argc,
+> -	char		**argv)
+> +	char		**argv,
+> +	bool		*insane_agcount)
+>  {
+>  	struct xfs_sb	*sbp;
+> -	struct xfs_buf	*bp;
+>  	int		c;
+>  
+>  	setlocale(LC_ALL, "");
+> @@ -124,20 +192,12 @@ init(
+>  	 */
+>  	memset(&xmount, 0, sizeof(struct xfs_mount));
+>  	libxfs_buftarg_init(&xmount, x.ddev, x.logdev, x.rtdev);
+> -	bp = libxfs_readbuf(xmount.m_ddev_targp, XFS_SB_DADDR,
+> -			    1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT), 0, NULL);
+> -
+> -	if (!bp || bp->b_error) {
+> +	if (!load_sb(&xmount, &xmount.m_sb)) {
+>  		fprintf(stderr, _("%s: %s is invalid (cannot read first 512 "
+>  			"bytes)\n"), progname, fsdevice);
+>  		exit(1);
+>  	}
+>  
+> -	/* copy SB from buffer to in-core, converting architecture as we go */
+> -	libxfs_sb_from_disk(&xmount.m_sb, XFS_BUF_TO_SBP(bp));
+> -	libxfs_putbuf(bp);
+> -	libxfs_purgebuf(bp);
+> -
+>  	sbp = &xmount.m_sb;
+>  	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
+>  		fprintf(stderr, _("%s: %s is not a valid XFS filesystem (unexpected SB magic number 0x%08x)\n"),
+> @@ -148,6 +208,8 @@ init(
+>  		}
+>  	}
+>  
+> +	*insane_agcount = !sanitize_geometry(&xmount, sbp);
+> +
+>  	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
+>  			  LIBXFS_MOUNT_DEBUGGER);
+>  	if (!mp) {
+> @@ -190,10 +252,11 @@ main(
+>  	int	c, i, done = 0;
+>  	char	*input;
+>  	char	**v;
+> +	bool	insane_agcount;
+>  	int	start_iocur_sp;
+>  
+>  	pushfile(stdin);
+> -	init(argc, argv);
+> +	init(argc, argv, &insane_agcount);
+>  	start_iocur_sp = iocur_sp;
+>  
+>  	for (i = 0; !done && i < ncmdline; i++) {
+> @@ -230,5 +293,7 @@ main(
+>  		libxfs_device_close(x.logdev);
+>  	if (x.rtdev)
+>  		libxfs_device_close(x.rtdev);
+> +	if (insane_agcount && exitcode == 0)
+> +		exitcode = 1;
+>  	return exitcode;
+>  }
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
