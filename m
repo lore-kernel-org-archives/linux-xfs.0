@@ -1,272 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47884 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:19703 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750715AbdAXUuY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jan 2017 15:50:24 -0500
-Date: Tue, 24 Jan 2017 15:50:23 -0500
+        id S1750784AbdAWNoy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jan 2017 08:44:54 -0500
+Date: Mon, 23 Jan 2017 08:44:52 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v5 00/55] xfs: online scrub/repair support
-Message-ID: <20170124205023.GI60234@bfoster.bfoster>
-References: <148498561504.15323.8531512066874274553.stgit@birch.djwong.org>
- <20170124170811.GG60234@bfoster.bfoster>
- <20170124193719.GK4780@birch.djwong.org>
+Subject: Re: Quota-enabled XFS hangs during mount
+Message-ID: <20170123134452.GA33287@bfoster.bfoster>
+References: <e26e98c9-d183-acde-0ebd-8e285d0ae03c@zoner.cz>
+ <20161101215803.GA14023@dastard>
+ <cad65166-6d77-3c6f-151b-5970b1b6fc85@zoner.cz>
+ <20161103013153.GH9920@dastard>
+ <7993e9b8-6eb8-6a0d-aa72-01346cca1b63@zoner.cz>
+ <20161103204049.GA28177@dastard>
+ <43ca55d0-6762-d54f-5ba9-a83f9c1988f6@zoner.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170124193719.GK4780@birch.djwong.org>
+In-Reply-To: <43ca55d0-6762-d54f-5ba9-a83f9c1988f6@zoner.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Martin Svec <martin.svec@zoner.cz>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Tue, Jan 24, 2017 at 11:37:19AM -0800, Darrick J. Wong wrote:
-> On Tue, Jan 24, 2017 at 12:08:12PM -0500, Brian Foster wrote:
-> > Trimmed CC to XFS.
-> > 
-> > On Sat, Jan 21, 2017 at 12:00:15AM -0800, Darrick J. Wong wrote:
-> > > Hi all,
-> > > 
-> > > This is the fifth revision of a patchset that adds to XFS kernel support
-> > > for online metadata scrubbing and repair.  There aren't any on-disk
-> > > format changes.  Changes since v4 include numerous bug fixes, somewhat
-> > > more aggressive log flushing so that on-disk metadata, and the ability
-> > > to distinguish between metadata that's obviously corrupt and metadata
-> > > that merely fails cross-referencing checks in the status that is sent
-> > > back to userspace.  I have also begun using it to check all my
-> > > development workstations, which has been useful for flushing out more
-> > > bugs.
-> > > 
-> > 
-> > Hi Darrick,
-> > 
-> > Sorry I haven't got to looking into this yet.. I have kind of a
-> > logistical suggestion if I may...
-> > 
-> > Can we reduce and repost this in the smallest possible "mergeable
-> > units?" I ask because, at least for me, this kind of huge patchset tends
-> > to continuously get pushed down my todo list because the size of it
-> > suggests I'm going to need to set aside a decent amount of time to grok
-> > the whole thing, test it, etc.
-> > 
-> > We obviously lose quite a bit of (already limited) review throughput
-> > (and expertise) without Dave around. I think this would be easier for us
+On Mon, Jan 23, 2017 at 10:44:20AM +0100, Martin Svec wrote:
+> Hello Dave,
 > 
-> Yeah.  I've been reviewing my own patches, but when I encounter things
-> I simply stuff them into the patches directly.  I'm also fairly sure
-> that R-v-b'ing my own patches doesn't carry much weight. ;)
+> Any updates on this? It's a bit annoying to workaround the bug by increasing RAM just because of the
+> initial quotacheck.
 > 
 
-Heh. :P That's better than nothing I suppose, but yeah, a self r-b is
-probably to be avoided. At least I don't recall a point where we had to
-resort to that in the recent past (a better question for Dave). On the
-flip side, I think it has been naturally taking longer to get things
-reviewed and merged irrespective of Dave's vacation.
+Note that Dave is away on a bit of an extended vacation[1]. It looks
+like he was in the process of fishing through the code to spot any
+potential problems related to quotacheck+reclaim. I see you've cc'd him
+directly so we'll see if we get a response wrt to if he got anywhere
+with that...
 
-> > to digest from a review perspective if we could do so in smaller chunks.
-> > For example, and just going by some of the patch titles:
-> > 
-> > - Some of the patches look like they are standalone bugfixes. If so, a
-> >   collection of those could be put into a single series, reviewed and
-> >   merged probably fairly quickly.
-> > - getfsmap looks like a standalone ioctl()..? That seems like something
-> >   that could also be reviewed and merged incrementally.
-> 
-> Originally the only consumer of getfsmap was the scrub tool itself,
-> though spaceman is now the second (real) user of it.
-> 
-> (The GET_AG_RESBLKS ioctl retrieves the per-ag reservation counters so
-> that scrub can compare what the fs reports for block/inode counts
-> against what it scrubbed, for the purpose of evaluating just how much of
-> the fs it found.)
-> 
-> > - Getting into the scrub stuff, could we separate scrubbing and online
-> >   repair into incremental series?
-> 
-> Yes, I could split these into (approximately) these kernel series:
-> 
-> 1) The usual random fixes (5 patches)
-> 2) GETFSMAP and GET_AG_RESBLKS (8)
-> 3) Basic scrub (19)
-> 4) Scrub cross-references (9)
-> 5) Repair (13)
-> 
+Skimming back through this thread, it looks like we have an issue where
+quota check is not quite reliable in the event of reclaim, and you
+appear to be reproducing this due to a probably unique combination of
+large inode count and low memory.
 
-That looks much more approachable. :)
-
-> Beyond that, there's still:
-> 
-> 6) Root btrees in inodes (3)
-> 7) rt reverse-mapping (13)
-> 
-> and for xfsprogs, that translates into (excluding libxfs-apply stuff):
-> 
-> 8) The usual random fixes (none at the moment)
-> 9) getfsmap & spaceman (8)
-> 10) scrub (9)
-> 11) rtrmapbt (14)
-> 
-> FWIW patches 1-5 are (1) and patches 6-13 are (2) in this patch series,
-> if anyone /does/ have review bandwidth for 4.11.  The rest I'll defer
-> to 4.12 or beyond.
-> 
-> > A nice side effect of that is we don't have to repost the entire thing
-> > if we haven't made progress on the next particular dependency. ;)
-> > 
-> > That aside, in general I think that the whole patchbomb thing kind of
-> > jams up the review process for the associated patches. IMO, better to
-> > feed the list in digestable chunks such that we can try to make
-> > continuous progress (even if that progress is slow) as opposed to trying
-> > to get the whole thing in at once. I think the latter kind of depends on
-> > having somebody like Dave around who can digest and review the whole
-> > thing much more quickly. Just my .02 though.. thoughts?
-> 
-> My reasoning for the patchbombs is that I don't like the idea of sending
-> out an incomplete subset of a feature or features that don't yet have a
-> downstream consumer.  I've a couple of worries here -- one is that we
-> review and merge, say (2), but later on we discover while reviewing (5)
-> something that really should have gotten changed in (2), but now it's
-> going to be a PITA to change it.  There's less risk of that since the
-> scrub ioctl will be hidden to non-developers for a while yet, so at
-> least we don't need to worry about userspace ABI compatibility.  The
-> other worry of mine is that we partially merge the kernel scrub (say (2)
-> without (3)) and then xfs_scrub's test cases start exploding because the
-> kernel scrubber is still half-brained, and in come a flood of bug
-> reports.
-> 
-
-Understood, and fair point. For things like the ioctl(), IMO it's good
-enough that we have a clear use case and the userspace code available
-for reference and/or testing. Whether it's posted in the same series or
-not, we have to review it for generality regardless because it is a
-userspace interface (I actually think it's better to make it stand on
-its own). The difference is just that the consumer or dependent code can
-be sent out separately or just made available in a git tree for the
-purposes of reviewing/testing that portion of the functionality.
-
-For other "mid-feature" checkpoints, I think it's a matter of logically
-considering a feature in its most basic/minimal form and considering the
-follow on bits as enhancements, even if that means the v1 that's been
-merged is not yet something useful to an end user. I think what you've
-laid out above in terms of 1.) basic informative scrub 2.) enhanced
-cross checking support (assuming I understand what that means :P) and
-3.) online repair sounds like a perfect application of that iterative
-model to me. If we have to change something in 1. because of new
-requirements introduced in 3., well then, I don't see how that differs
-from anything else we do as software developers, really. :P
-
-> On the other hand, reviewers are critical which means overwhelming them
-> is also to be avoided.  I recognize that seeing "[PATCH 77/85]" just
-> makes the whole process seem all the more overwhelming, so perhaps it's
-> sufficient just to send separate sets of ~15 or so patches?  I'll also
-> dedicate more time to reviewing (outside the kernel patches) both to
-> slow myself down and to increase the supply of review time.
-> 
-
-Right, thanks. I think so, as long as the patch series are logical
-checkpoints as opposed to arbitrary split-ups (the latter probably being
-confusing and ineffective). E.g., I'm more asking for smaller logical
-units than patch counts necessarily.
-
-> In the longer term, AFAICT there are six or so regulars I see on the
-> list and/or irc.  I think it'll be difficult to do this but frankly I
-> think we need to find a way to encourage a few more participants.
-> 
-
-Yep. I don't have a good answer for that one, unfortunately. Perhaps
-that's something we all should discuss at LSF.
+Is my understanding correct that you've reproduced this on more recent
+kernels than the original report? If so and we don't hear back from Dave
+in a reasonable time, it might be useful to provide a metadump of the fs
+if possible. That would allow us to restore in a similar low RAM vm
+configuration, trigger quota check and try to reproduce directly...
 
 Brian
 
-> --D
+[1] http://www.spinics.net/lists/linux-xfs/msg02836.html
+
+> Thank you,
+> Martin
 > 
-> > 
-> > Brian
-> > 
-> > > Online scrub/repair support consists of four major pieces -- first, an
-> > > ioctl that maps physical extents to their owners; second, various
-> > > in-kernel metadata scrubbing ioctls to examine metadata records and
-> > > cross-reference them with other filesystem metadata; third, an in-kernel
-> > > mechanism for rebuilding damaged metadata objects and btrees; and
-> > > fourth, a userspace component to initiate kernel scrubbing, walk all
-> > > inodes and the directory tree, scrub data extents, and ask the kernel to
-> > > repair anything that is broken.
-> > > 
-> > > This new utility, xfs_scrub, is separate from the existing offline
-> > > xfs_repair tool.  Scrub has three main modes of operation -- in its most
-> > > powerful mode, it iterates all XFS metadata and asks the kernel to check
-> > > the metadata and repair it if necessary.  The second most powerful mode
-> > > can use certain VFS methods and XFS ioctls (BULKSTAT, GETBMAP, and
-> > > GETFSMAP) to check as much metadata as it reasonably can from userspace.
-> > > It cannot repair anything.  The least powerful mode uses only VFS
-> > > functions to access as much of the directory/file/xattr graph as
-> > > possible.  It has no mechanism to check internal metadata and also
-> > > cannot repair anything.  This is good enough for scrubbing non-XFS
-> > > filesystems, but the primary goal is first-class XFS support.
-> > > 
-> > > As usual, the first patches in this series are bug fixes for problems
-> > > discovered while running the code through rigorous fuzz testing.
-> > > 
-> > > The next few patches in this series implements the GETFSMAP ioctl that
-> > > maps a device number and physical extent either to filesystem metadata
-> > > or to a range of file blocks.  The initial implementation uses the
-> > > reverse-mapping B+tree to supply the mapping information, however a
-> > > fallback implementation based on the free space btrees is also provided.
-> > > The flexibility of having both implementations is important when it
-> > > comes to the userspace tool -- even without the owner/offset data, we
-> > > still have enough information to set up a read verification.  There's
-> > > also a patch to enable xfs_scrub to query the per-AG block reservations
-> > > so that the summary counters can be sanity-checked.
-> > > 
-> > > The next big chunk of patches implement in-kernel scrubbing.  This is
-> > > implemented as a new ioctl.  Pass in a metadata type and control data
-> > > such as an AG number or inode (when applicable); the kernel will examine
-> > > each record in that metadata structure looking for obvious logical
-> > > errors.  External corruption should be discoverable via the checksum
-> > > embedded in each (v5) filesystem metadata block.  When applicable, the
-> > > metadata record will be cross-referenced with the other metadata
-> > > structures to look for discrepancies.  Should any errors be found, an
-> > > error code is returned to userspace, which in the old days would require
-> > > the administrator to take the filesystem offline and repair it.  I've
-> > > hidden the new online scrubber behind CONFIG_XFS_DEBUG to keep it
-> > > disabled by default.
-> > > 
-> > > Last comes the online *repair* functionality, which largely uses the
-> > > redundancy between the new reverse-mapping feature introduced in 4.8 and
-> > > the existing storage space records (bno, cnt, ino, fino, and bmap) to
-> > > reconstruct primary metadata from the secondary, or secondary metadata
-> > > from the primaries.  That's right, we can regrow (some) of the XFS
-> > > metadata even if parts of the filesystem go bad!  Should the kernel
-> > > succeed, it is not necessary to take the filesystem offline for repair.
-> > > 
-> > > Finally, there's a patch that uses one of the new scrub features to
-> > > prevent mount-time deadlocks if the refcountbt is corrupt.
-> > > 
-> > > If you're going to start using this mess, you probably ought to just
-> > > pull from my github trees.  The kernel patches[1] should apply against
-> > > 4.10-rc4.  xfsprogs[2] and xfstests[3] can be found in their usual
-> > > places.
-> > > 
-> > > The patches have survived all of the new tests in [3] that try to fuzz
-> > > every field in every data structure on disk, which has shaken out
-> > > several bugs in the scrubber and in other parts of XFS.
-> > > 
-> > > This is an extraordinary way to eat your data.  Enjoy! 
-> > > Comments and questions are, as always, welcome.
-> > > 
-> > > --D
-> > > 
-> > > [1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-> > > [2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-> > > [3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Dne 3.11.2016 v 21:40 Dave Chinner napsal(a):
+> > On Thu, Nov 03, 2016 at 01:04:39PM +0100, Martin Svec wrote:
+> >> Dne 3.11.2016 v 2:31 Dave Chinner napsal(a):
+> >>> On Wed, Nov 02, 2016 at 05:31:00PM +0100, Martin Svec wrote:
+> >>>>> How many inodes? How much RAM?
+> >>>> orthosie:~# df -i
+> >>>> Filesystem        Inodes   IUsed     IFree IUse% Mounted on
+> >>>> /dev/sdd1      173746096 5214637 168531459    4% /www
+> >>>>
+> >>>> The virtual machine has 2 virtual cores and 2 GB RAM. None of it is a bottleneck, I think.
+> >>> Even though you think this is irrelevant and not important, it
+> >>> actually points me directly at a potential vector and a reason as to
+> >>> why this is not a comonly seen problem.
+> >>>
+> >>> i.e. 5.2 million inodes with only 2GB RAM is enough to cause memory
+> >>> pressure during a quotacheck. inode buffers alone will require
+> >>> a minimum of 1.5GB RAM over the course of the quotacheck, and memory
+> >>> reclaim will iterate cached dquots and try to flush them, thereby
+> >>> exercising the flush lock /before/ the quotacheck scan completion
+> >>> dquot writeback tries to take it.
+> >>>
+> >>> Now I need to go read code....
+> >> Yes, that makes sense, I didn't know that quotacheck requires all inodes to be loaded in memory at
+> >> the same time.
+> > It doesn't require all inodes to be loaded into memory. Indeed, the
+> > /inodes/ don't get cached during a quotacheck. What does get cached
+> > is the metadata buffers that are traversed - th eproblem comes when
+> > the caches are being reclaimed....
+> >
+> >> I temporarily increased virtual machine's RAM to 3GB and the
+> >> problem is gone! Setting RAM back to 2GB reproducibly causes the
+> >> quotacheck to freeze again, 1GB of RAM results in OOM... So you're
+> >> right that the flush deadlock is triggered by a memory pressure.
+> > Good to know.
+> >
+> >> Sorry, I forgot to attach sysrq-w output to the previous response. Here it is:
+> > <snip>
+> >
+> > ok, nothing else apparently stuck, so this is likely a leaked lock
+> > or completion.
+> >
+> > Ok, I'll keep looking.
+> >
+> > Cheers,
+> >
+> > Dave.
+> 
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
