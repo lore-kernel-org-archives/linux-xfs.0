@@ -1,34 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39274 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:33528 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751031AbdAXNxI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jan 2017 08:53:08 -0500
-Date: Tue, 24 Jan 2017 08:52:57 -0500
-From: Brian Foster <bfoster@redhat.com>
+        id S1750908AbdAWTw5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jan 2017 14:52:57 -0500
 Subject: Re: XFS developers meeting at Vault?
-Message-ID: <20170124135257.GB60234@bfoster.bfoster>
 References: <20170123174432.GA22900@lst.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <4c88922f-ee1a-40bf-8015-793a129baadf@sandeen.net>
+Date: Mon, 23 Jan 2017 13:52:56 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 In-Reply-To: <20170123174432.GA22900@lst.de>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Mon, Jan 23, 2017 at 06:44:32PM +0100, Christoph Hellwig wrote:
+On 1/23/17 11:44 AM, Christoph Hellwig wrote:
 > Hi all,
 > 
 > are enough of your around for LSM/MM and Vault to have a little
 > meeting?  If so I'll try to arrange a room for us.
 
-I'm expecting to be around. Sounds like a nice idea to me as well.
+I'll be there, and game, though there's a small chance that a conflict
+will arise and I may have to miss it.
 
-Brian
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Eric
