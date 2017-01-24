@@ -1,96 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33102 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:49980 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751134AbdAXPCX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jan 2017 10:02:23 -0500
-Date: Tue, 24 Jan 2017 10:02:22 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: go straight to real allocations for direct I/O
- COW writes
-Message-ID: <20170124150222.GD60234@bfoster.bfoster>
-References: <1480971924-4864-1-git-send-email-hch@lst.de>
- <1480971924-4864-3-git-send-email-hch@lst.de>
- <20161207190008.GC23106@bfoster.bfoster>
- <20161207193709.GA27479@lst.de>
- <20161207194634.GE23106@bfoster.bfoster>
- <20170124083732.GA17818@lst.de>
- <20170124135044.GA60234@bfoster.bfoster>
- <20170124135937.GA25885@lst.de>
+        id S1750892AbdAXWxA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Jan 2017 17:53:00 -0500
+Subject: [PATCH v7 1/5] xfs_db: sanitize agcount on load
+References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+ <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
+ <20170123213108.GD31202@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6ad3798a-c3f5-fd8f-ab05-62c0f878290c@sandeen.net>
+Date: Tue, 24 Jan 2017 16:52:59 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170124135937.GA25885@lst.de>
+In-Reply-To: <20170123213108.GD31202@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 24, 2017 at 02:59:37PM +0100, Christoph Hellwig wrote:
-> On Tue, Jan 24, 2017 at 08:50:45AM -0500, Brian Foster wrote:
-> > Is this reproducible on the current tree or only with this patch series?
-> 
-> It's only reproducible with the series modified to your review comments.
-> 
+Before we get into libxfs_initialize_perag and try to blindly
+allocate a perag struct for every (possibly corrupted number of)
+AGs, see if we can read the last one.  If not, assume it's corrupt,
+and load only the first AG.
 
-Ok, well then I'm probably not going to be able to follow the details
-well enough to try and provide constructive feedback without seeing the
-code. Looking back, my comments were generally about the tradeoff of
-bypassing the extent size hint mechanism that has been built into
-reflink to avoid cow fragmention.
+Do this only for an arbitrarily high-ish agcount, so that normal-ish
+geometry on a possibly truncated file or device will still do
+its best to make all readable AGs available.
 
-> > Also, shouldn't the end_io handler only remap the range of the write,
-> > regardless of whether the initial allocation ended up preallocating over
-> > holes or purely a shared range?
-> 
-> The end_io handler is caller for the whole size of the write.  That's
-> mostly because we don't have an object corresponding to a write_begin
-> call.
-> 
-> > Perhaps what you are saying here is that we have a single dio write that
-> > spans wider than a shared data fork extent..?
-> 
-> Yes.
-> 
-> > In that case, we iterate
-> > the range in xfs_reflink_reserve_cow(). We'd skip the start of the range
-> > that is a hole in the data fork, but as you say, the
-> > xfs_bmapi_reserve_delalloc() call for the part of the I/O on the shared
-> > extent can widen the COW fork allocation to before the extent in the
-> > data fork, possibly to before the start of the I/O. (Thus we end up
-> > allocating COW blocks over the hole anyways...).
-> 
-> The problem is the following.
-> 
-> We have a file with the following layout
-> 
-> 
-> HHHHHHHHHHHHDDDDDDDDDDDDDD
-> 
-> where H is hole and D is data.  The H to D boundary is not aligned
-> to the cowextsize.
-> 
-> The direct I/O code now does a first pass allocating an extent for
-> H and copies data to it.  Then in the next step it goes on to D
-> and unshares it.  It then enlarges the extent into the end of the
-> previously H range. It does however not copy data into H again,
-> as the iomap iterator is past it.  The ->end_io routine however
-> is called for the hole range, and will move the just allocated
-> rounding before H back into the data fork, replacing the valid data
-> writtent just before.
-> 
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Without seeing the code, perhaps we need to pull up the cow extent size
-hint mechanism from the bmapi layer to something similar to how
-xfs_iomap_direct_write() handles the traditional extent size hints..?
-That may allow us to more intelligently consider the current state
-across the data and cow forks in such cases (to not preallocate over
-existing blocks, for example, without having to kill off the extent size
-hint entirely).
+diff --git a/libxfs/init.c b/libxfs/init.c
+index a08575a..ca5101e 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -817,6 +817,28 @@ libxfs_mount(
+ 			return NULL;
+ 	}
+ 
++	/*
++	 * libxfs_initialize_perag will allocate a perag structure for each AG.
++	 * If agcount is corrupted and insanely high, this will OOM the box.
++	 * If the agount seems (arbitrarily) high, try to read what would be
++	 * the last AG, and if that fails, just read the first one and let
++	 * the user know what happened.
++	 */
++	if (sbp->sb_agcount > 10000) {
++		error = xfs_read_agf(mp, NULL, sbp->sb_agcount - 1, 0, &bp);
++		if (error) {
++			fprintf(stderr, _("%s: read of AG %d failed\n"),
++						progname, sbp->sb_agcount);
++			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
++				return NULL;
++			fprintf(stderr, _("%s: limiting reads to AG 0\n"),
++								progname);
++			sbp->sb_agcount = 1;
++		}
++		if (bp)
++			libxfs_putbuf(bp);
++	}
++
+ 	error = libxfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
+ 	if (error) {
+ 		fprintf(stderr, _("%s: perag init failed\n"),
 
-Brian
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
