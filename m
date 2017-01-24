@@ -1,65 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:45244 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751013AbdAMRFp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Jan 2017 12:05:45 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs/004: account for XFS reservations changes in 4.10-rc
-Date: Fri, 13 Jan 2017 18:05:40 +0100
-Message-Id: <1484327140-13654-1-git-send-email-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:39520 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750721AbdAXDDi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jan 2017 22:03:38 -0500
+Subject: Re: [PATCH 5/5] xfs_repair: trash dirattr btrees that cycle to the
+ root
+References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+ <148494394775.5256.15878832693432189642.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d7b15061-e95b-c09c-234d-6ae22d50bac4@sandeen.net>
+Date: Mon, 23 Jan 2017 21:03:34 -0600
+MIME-Version: 1.0
+In-Reply-To: <148494394775.5256.15878832693432189642.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-And drop support for some really old kernels to clean things up.
+On 1/20/17 2:25 PM, Darrick J. Wong wrote:
+> If xfs_repair detects a dir/attr btree that cycles back to the root, the
+> tree should be cleared and/or rebuilt instead of simply aborting the
+> repair program.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- tests/xfs/004 | 23 ++++++-----------------
- 1 file changed, 6 insertions(+), 17 deletions(-)
+So, while this seems ok, so:
 
-diff --git a/tests/xfs/004 b/tests/xfs/004
-index 09da2fe..bbc1aee 100755
---- a/tests/xfs/004
-+++ b/tests/xfs/004
-@@ -83,29 +83,18 @@ eval `$XFS_IO_PROG -x -c resblks $SCRATCH_MNT 2>&1 \
- echo "resblks gave: resblks=$resblks" >>$seqres.full
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+you can take this or leave it:
+
+It'd be a bit nicer to just test da_bno outside the loop, I think;
+the whole loop is
+
+	do {
+....
+        } while (da_bno != 0);
+
+so the only way da_bno can be zero here is if we entered the loop this way
+after:
+
+        da_bno = da_cursor->level[0].bno;
+
+prior to entering it the first time:
+
+        ino = da_cursor->ino;
+        prev_bno = 0;
+
+        do {
  
- # check the 'blocks' field from freesp command is OK
--# since 2.6.18, df does not report the 4 blocks per AG that cannot
--# be allocated, hence we check for that exact mismatch.
--# since ~2.6.22, reserved blocks are used by default and df does
--# not report them, hence check for an exact mismatch.
-+#  - starting with Linux 4.10-rc the bmbt split reservation moved to be per-AG
- perl -ne '
--	BEGIN	{ $avail ='$avail' * 512;
-+	BEGIN	{ $avail ='$avail' * 512 + ('$resblks' * '$dbsize');
- 		  $answer="(no xfs_db free blocks line?)" }
- 	/free blocks (\d+)$/	|| next;
- 	$freesp = $1 * '$dbsize';
--	if ($freesp == $avail) {
-+	if ($freesp == $avail + ('$agcount') * '$dbsize' * 8) {
-+		$answer = "yes";
-+	} elsif ($freesp == $avail + (('$agcount' + 1) * '$dbsize' * 4)) {
- 		$answer = "yes";
- 	} else {
--		$avail = $avail + (('$agcount' + 1) * '$dbsize' * 4);
--		if ($freesp == $avail) {
--			$answer = "yes";
--		} else {
--			$avail = $avail + ('$resblks' * '$dbsize');
--			if ($freesp == $avail) {
--				$answer = "yes";
--			} else {
--				$answer = "no ($freesp != $avail)";
--			}
--		}
-+		$answer = "no ($freesp != $avail)";
- 	}
- 	END	{ print "$answer\n" }
- 	' <$tmp.xfs_db >$tmp.ans
--- 
-2.1.4
+-Eric
 
+> ---
+>  repair/attr_repair.c |    7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+> index b855a10..37a821b 100644
+> --- a/repair/attr_repair.c
+> +++ b/repair/attr_repair.c
+> @@ -763,7 +763,12 @@ process_leaf_attr_level(xfs_mount_t	*mp,
+>  		 * 0 is the root block and no block
+>  		 * pointer can point to the root block of the btree
+>  		 */
+> -		ASSERT(da_bno != 0);
+> +		if (da_bno == 0) {
+> +			do_warn(
+> +	_("btree cycle detected in attribute fork for inode %" PRIu64 "\n"),
+> +				ino);
+> +			goto error_out;
+> +		}
+>  
+>  		if (dev_bno == NULLFSBLOCK) {
+>  			do_warn(
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
