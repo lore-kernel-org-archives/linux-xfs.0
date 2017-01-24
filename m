@@ -1,66 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:33421 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751137AbdAYFBQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2017 00:01:16 -0500
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0P4wpG3034958
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 00:01:15 -0500
-Received: from e28smtp09.in.ibm.com (e28smtp09.in.ibm.com [125.16.236.9])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2865sk5pfj-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 00:01:15 -0500
-Received: from localhost
-        by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 25 Jan 2017 10:31:12 +0530
-Received: from d28relay08.in.ibm.com (d28relay08.in.ibm.com [9.184.220.159])
-        by d28dlp02.in.ibm.com (Postfix) with ESMTP id BEDC93940060
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 10:31:10 +0530 (IST)
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-        by d28relay08.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v0P50HL515859958
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 10:30:17 +0530
-Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
-        by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v0P519Tc012940
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 10:31:10 +0530
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: Re: [PATCH] tools/find-api-violations: fix fs -> fsr in the directory list
-Date: Wed, 25 Jan 2017 10:31:07 +0530
-In-Reply-To: <20170124172210.GC9134@birch.djwong.org>
-References: <20170124172210.GC9134@birch.djwong.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:25805 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750820AbdAXS1Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jan 2017 13:27:25 -0500
+Date: Tue, 24 Jan 2017 10:27:17 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] xfs: use per-AG reservations for the finobt
+Message-ID: <20170124182717.GD9134@birch.djwong.org>
+References: <1485194742-23185-1-git-send-email-hch@lst.de>
+ <20170124140649.GC60234@bfoster.bfoster>
+ <20170124144937.GA27261@lst.de>
+ <20170124161917.GF60234@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <1560023.HPyvzjyxDL@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170124161917.GF60234@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Tuesday, January 24, 2017 09:22:10 AM Darrick J. Wong wrote:
-> Fix a stupid typo in the original commit.
+On Tue, Jan 24, 2017 at 11:19:18AM -0500, Brian Foster wrote:
+> On Tue, Jan 24, 2017 at 03:49:37PM +0100, Christoph Hellwig wrote:
+> > On Tue, Jan 24, 2017 at 09:06:49AM -0500, Brian Foster wrote:
+> > > Darrick called out in the previous version that this requires traversal
+> > > of the entire tree at mount time. Do you have any test results on what
+> > > kind of worst case mount delays we could be looking at here?
+> > 
+> > Even with pretty horribly fragmented file systems I've not seen
+> > major delays.  But I don't have a setup with a lot of actual disks
+> > but mostly SSDs these days, so this might not statistically significant.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tools/find-api-violations.sh |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/tools/find-api-violations.sh b/tools/find-api-violations.sh
-> index 7937749..b4b8de5 100755
-> --- a/tools/find-api-violations.sh
-> +++ b/tools/find-api-violations.sh
-> @@ -6,7 +6,7 @@
-> 
->  # NOTE: This script doesn't look for API violations in function parameters.
-> 
-> -tool_dirs="copy db estimate fs fsck fsr growfs io mdrestore mkfs quota repair rtcp"
-> +tool_dirs="copy db estimate fsr fsck fsr growfs io mdrestore mkfs quota repair rtcp"
->
-                               
-fsr is already part of the list. With this patch, we now have a duplicate
-entry. Or, Am I missing something very obvious?
+> Heh, I might have some systems with slow storage around. ;P It may take
+> a little time to populate a large enough fs with inodes though..
 
--- 
-chandan
+<anecdote>
 
+So on this laptop, we have:
+
+$ df -i /storage/; df /storage/
+Filesystem                     Inodes IUsed IFree IUse% Mounted on
+/dev/mapper/birch_disk-storage   466M  1.8M  464M    1% /storage
+Filesystem                      Size  Used Avail Use% Mounted on
+/dev/mapper/birch_disk-storage  931G  525G  407G  57% /storage
+
+$ sudo xfs_io -c 'fsmap -v -n 1024' . | grep 'inode btree' | \
+	awk '{moo[$6] += $8}END{for (x=0;x<=255;x++) if (x in moo) print x, moo[x]}'
+0	144
+1	160
+2	152
+3	136
+4	152
+5	152
+6	168
+7	152
+
+So on average we have ~160 sectors (or about 20 blocks) of inobt/finobt
+in each of 8 AGs.
+
+</anecdote>
+
+--D
+
+> 
+> Brian
+> 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
