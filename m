@@ -1,49 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58113 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:57948 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750713AbdAXUI5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jan 2017 15:08:57 -0500
-Date: Tue, 24 Jan 2017 21:08:55 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/3] xfs: go straight to real allocations for direct
-        I/O COW writes
-Message-ID: <20170124200855.GA1385@lst.de>
-References: <20161207193709.GA27479@lst.de> <20161207194634.GE23106@bfoster.bfoster> <20170124083732.GA17818@lst.de> <20170124135044.GA60234@bfoster.bfoster> <20170124135937.GA25885@lst.de> <20170124150222.GD60234@bfoster.bfoster> <20170124150959.GA27705@lst.de> <20170124161719.GE60234@bfoster.bfoster> <20170124162156.GA29361@lst.de> <20170124174318.GH60234@bfoster.bfoster>
+        id S1750822AbdAXPFD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Jan 2017 10:05:03 -0500
+Date: Tue, 24 Jan 2017 09:04:57 -0600
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH] xfs: do not call xfs_buf_hash_destroy on a NULL pag
+Message-ID: <20170124150457.GA17008@redhat.com>
+References: <20170120142642.21698-1-colin.king@canonical.com>
+ <113b0890-ef1f-0a27-34c1-95785a4d1d17@sandeen.net>
+ <20170120204703.GF12985@birch.djwong.org>
+ <58fd1fec-1439-71fc-c482-06c4ba0a4695@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170124174318.GH60234@bfoster.bfoster>
+In-Reply-To: <58fd1fec-1439-71fc-c482-06c4ba0a4695@canonical.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Colin Ian King <colin.king@canonical.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jan 24, 2017 at 12:43:18PM -0500, Brian Foster wrote:
-> Hmm, that's not what I'm seeing (not that it really matters, but I'm
-> curious if I'm missing something):
+On Fri, Jan 20, 2017 at 11:04:42PM +0000, Colin Ian King wrote:
+> On 20/01/17 20:47, Darrick J. Wong wrote:
+> > On Fri, Jan 20, 2017 at 01:26:12PM -0600, Eric Sandeen wrote:
+> >> On 1/20/17 8:26 AM, Colin King wrote:
+> >>> From: Colin Ian King <colin.king@canonical.com>
+> >>>
+> >>> If pag cannot be allocated, the current error exit path will trip
+> >>> a null pointer deference error when calling xfs_buf_hash_destroy
+> >>> with a null pag.  Fix this by adding a new error exit lable and
+> >>> jumping to this, avoiding the hash destroy and unnecessary kmem_free
+> >>> on pag.
+> >>>
+> >>> Fixes CoverityScan CID#1397628 ("Dereference after null check")
+> >>>
+> >>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> >>
+> >> Hm, I think this leaves the code with issues.
+> >>
+> >>> ---
+> >>>  fs/xfs/xfs_mount.c | 3 ++-
+> >>>  1 file changed, 2 insertions(+), 1 deletion(-)
+> >>>
+> >>> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> >>> index 9b9540d..4e66cd19 100644
+> >>> --- a/fs/xfs/xfs_mount.c
+> >>> +++ b/fs/xfs/xfs_mount.c
+> >>> @@ -207,7 +207,7 @@ xfs_initialize_perag(
+> >>>  
+> >>>  		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
+> >>>  		if (!pag)
+> >>> -			goto out_unwind;
+> >>> +			goto out_unwind_pags;
+> >>
+> >> So let's say we got to index == 3 at the top of the loop, and
+> >> this fails.
+> >>
+> >> We succeeded in initializing 0, 1, and 2, but 3 failed.
+> >>
+> >> So we go to out_unwind_pags with index == 3...
+> >>
+> >>>  		pag->pag_agno = index;
+> >>>  		pag->pag_mount = mp;
+> >>>  		spin_lock_init(&pag->pag_ici_lock);
+> >>> @@ -242,6 +242,7 @@ xfs_initialize_perag(
+> >>>  out_unwind:
+> >>>  	xfs_buf_hash_destroy(pag);
+> >>>  	kmem_free(pag);
+> >>> +out_unwind_pags:
+> >>
+> >> ... where index == 3, and:
+> >>
+> >>>  	for (; index > first_initialised; index--) {
+> >>>  		pag = radix_tree_delete(&mp->m_perag_tree, index);
+> >>
+> >> this should fail, because it never got inserted, and...
+> >>
+> >>>  		xfs_buf_hash_destroy(pag);
+> >>
+> >> this still tries to destroy a NULL pag, no?
+> >>
+> >> There also seems to be an existing issue w/the code where ag 0 is
+> >> never torn down in the error case, because first_initialized doesn't
+> >> stay set to 0:
+> >>
+> >>                 if (!first_initialised)
+> >>                         first_initialised = index;
+> >>
+> >> And we don't even tear down ag 1, because:
+> >>
+> >>>  	for (; index > first_initialised; index--) {
+> >>>  		pag = radix_tree_delete(&mp->m_perag_tree, index);
+> >>
+> >> when the loop reaches the first initialized AG, it stops.
+> >>
+> >> So we seem to always leak at least 2 if we managed to get far enough
+> >> to initialize them.
+> > 
+> > Ugh, yeah, the the whole error exit from that function is fubar...
+> > Anyone want to clean this up?
+> 
+> I may step back on this if somebody else wants to fix this up properly.
 
-Yeah, I can reproduce this on mainline.  Turns out the it was done
-by the align call in xfs_bmap_btalloc that even my before run had
-removed.
+I'll take it.
+-Bill
 
-Took me some time to spin my head around this.
 
-Btw, I think we have a nasty race in the current DIO code that might
-expose stale data, but this is just the same kind of head spinning
-exercise for now:
-
-Thread 1 writes a range from B to c
-
-                    B --------- C
-
-a little later thread 2 writes from A to B
-
-        A --------- B
-
-but the code preallocates beyond B into the range where thread
-1 has just written, but ->end_io hasn't been called yet.
-But once ->end_io is called thread 2 has already allocated
-up to the extent size hint into the write range of thread 1,
-so the end_io handler will splice the unintialized blocks from
-that preallocation back into the file right after B.
+> 
+> > 
+> > --D
+> > 
+> >>
+> >> -Eric
+> >>
+> >>>
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
