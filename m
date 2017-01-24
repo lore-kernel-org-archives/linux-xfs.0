@@ -1,122 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:32771 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753803AbdAKIei (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2017 03:34:38 -0500
-Received: by mail-oi0-f65.google.com with SMTP id j15so20794813oih.0
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2017 00:34:37 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:34610 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750738AbdAXRnT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Jan 2017 12:43:19 -0500
+Date: Tue, 24 Jan 2017 12:43:18 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/3] xfs: go straight to real allocations for direct I/O
+ COW writes
+Message-ID: <20170124174318.GH60234@bfoster.bfoster>
+References: <20161207190008.GC23106@bfoster.bfoster>
+ <20161207193709.GA27479@lst.de>
+ <20161207194634.GE23106@bfoster.bfoster>
+ <20170124083732.GA17818@lst.de>
+ <20170124135044.GA60234@bfoster.bfoster>
+ <20170124135937.GA25885@lst.de>
+ <20170124150222.GD60234@bfoster.bfoster>
+ <20170124150959.GA27705@lst.de>
+ <20170124161719.GE60234@bfoster.bfoster>
+ <20170124162156.GA29361@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170110194249.GK14038@birch.djwong.org>
-References: <20170110194249.GK14038@birch.djwong.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 11 Jan 2017 10:34:36 +0200
-Message-ID: <CAOQ4uxggOoFJ_KR40XX2hU+bSr9zqXu9y_7HWqVxTfQ6ETC4hA@mail.gmail.com>
-Subject: Re: [RFC PATCH] xfs_db: sanitize geometry on load
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170124162156.GA29361@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Tue, Jan 10, 2017 at 9:42 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> xfs_db doesn't check the filesystem geometry when it's mounting, which
-> means that garbage agcount values can cause OOMs when we try to allocate
-> all the per-AG incore metadata.  If we see geometry that looks
-> suspicious, try to derive the actual AG geometry to avoid crashing the
-> system.  This should help with xfs/1301 fuzzing.
->
-> Also fix up xfs_repair to use the min/max dblocks macros.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 24, 2017 at 05:21:56PM +0100, Christoph Hellwig wrote:
+> On Tue, Jan 24, 2017 at 11:17:20AM -0500, Brian Foster wrote:
+> > I thought that while not necessarily guaranteed, generally the entire
+> > extent gets converted from delalloc to real blocks.
+> 
+> For buffered I/O that's the case.  See the discussion on my recent
+> xfs_bmapi_write patch.
+> 
 
-Test machine is back to health with this patch, but some test are failing due
-to the new error messages.
-I guess its no surprise to you.
+Yeah, that's the behavior I would have expected...
 
+> > IIRC, that's what
+> > I've seen in the past when looking into the cow fork with bmap. After
+> > all, isn't that the point of the extent size hint? Allocate wider than
+> > the write to accommodate potential subsequent writes into a more
+> > contiguous range.
+> 
+> Well, for direct I/O that's not what the current code does.  Implementing
+> it might be useful, but I'm not sure how much the front alignment is
+> going to help in usual worksloads - you'd need a backwards write or
+> random writes that happen to look almost backwards for it to make
+> a difference.  I suspect most of them time we'd just allocate blocks to
+> reclaim them again a little later.
 
-xfs/1300 5s ... 5s
-xfs/1301         - output mismatch (see
-/home/amir/src/xfstests-dev/results//xfs/1301.out.bad)
-    --- tests/xfs/1301.out      2017-01-08 15:35:07.647897359 +0200
-    +++ /home/amir/src/xfstests-dev/results//xfs/1301.out.bad
-2017-01-11 09:58:10.981678272 +0200
-    @@ -1,4 +1,61 @@
-     QA output created by 1301
-     Format and populate
-     Fuzz superblock
-    +xfs_db: device /dev/mapper/storage-scratch AG geometry is insane.
-Using agcount=4.
-    +SB sanity check failed
-    +Metadata corruption detected at xfs_sb block 0x0/0x200
-    +xfs_db: device /dev/mapper/storage-scratch AG geometry is insane.
-Using agcount=4.
-    ...
-    (Run 'diff -u tests/xfs/1301.out
-/home/amir/src/xfstests-dev/results//xfs/1301.out.bad'  to see the
-entire diff)
-_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
-inconsistent (c) (see
-/home/amir/src/xfstests-dev/results//xfs/1301.full)
-_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
-inconsistent (r) (see
-/home/amir/src/xfstests-dev/results//xfs/1301.full)
-xfs/1302         - output mismatch (see
-/home/amir/src/xfstests-dev/results//xfs/1302.out.bad)
-    --- tests/xfs/1302.out      2017-01-08 15:35:07.647897359 +0200
-    +++ /home/amir/src/xfstests-dev/results//xfs/1302.out.bad
-2017-01-11 10:05:16.710031113 +0200
-    @@ -1,4 +1,26 @@
-     QA output created by 1302
-     Format and populate
-     Fuzz AGF
-    +Metadata corruption detected at xfs_agf block 0x1/0x200
-    +xfs_db: cannot init perag data (117). Continuing anyway.
-    +Metadata corruption detected at xfs_agf block 0x1/0x200
-    +xfs_db: cannot init perag data (117). Continuing anyway.
-    ...
-    (Run 'diff -u tests/xfs/1302.out
-/home/amir/src/xfstests-dev/results//xfs/1302.out.bad'  to see the
-entire diff)
-_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
-inconsistent (c) (see
-/home/amir/src/xfstests-dev/results//xfs/1302.full)
-xfs/1303 132s ... 130s
-_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
-inconsistent (c) (see
-/home/amir/src/xfstests-dev/results//xfs/1303.full)
-_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
-inconsistent (r) (see
-/home/amir/src/xfstests-dev/results//xfs/1303.full)
-xfs/1304         - output mismatch (see
-/home/amir/src/xfstests-dev/results//xfs/1304.out.bad)
-    --- tests/xfs/1304.out      2017-01-08 15:35:07.647897359 +0200
-    +++ /home/amir/src/xfstests-dev/results//xfs/1304.out.bad
-2017-01-11 10:12:26.506167776 +0200
-    @@ -1,4 +1,12 @@
-     QA output created by 1304
-     Format and populate
-     Fuzz AGI
-    +Metadata corruption detected at xfs_agi block 0x2/0x200
-    +xfs_db: cannot init perag data (117). Continuing anyway.
-    +Metadata corruption detected at xfs_agi block 0x2/0x200
-    +xfs_db: cannot init perag data (117). Continuing anyway.
-    ...
-    (Run 'diff -u tests/xfs/1304.out
-/home/amir/src/xfstests-dev/results//xfs/1304.out.bad'  to see the
-entire diff)
-_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
-inconsistent (c) (see
-/home/amir/src/xfstests-dev/results//xfs/1304.full)
-_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
-inconsistent (r) (see
-/home/amir/src/xfstests-dev/results//xfs/1304.full)
-xfs/1305 224s ... 218s
-_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
-inconsistent (c) (see
-/home/amir/src/xfstests-dev/results//xfs/1305.full)
-_check_xfs_filesystem: filesystem on /dev/mapper/storage-scratch is
-inconsistent (r) (see
-/home/amir/src/xfstests-dev/results//xfs/1305.full)
-xfs/1306 239s ... 234s
+Hmm, that's not what I'm seeing (not that it really matters, but I'm
+curious if I'm missing something):
+
+# xfs_io -d -c "bmap -v" -c "pwrite 8k 4k" -c "bmap -v" -c "bmap -cv" ./file
+./file:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+   0: [0..15]:         80..95            0 (80..95)            16 100000
+   1: [16..2047]:      160..2191         0 (160..2191)       2032 100000
+wrote 4096/4096 bytes at offset 8192
+4 KiB, 1 ops; 0.0000 sec (12.440 MiB/sec and 3184.7134 ops/sec)
+./file:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+   0: [0..15]:         80..95            0 (80..95)            16 100000
+   1: [16..23]:        2208..2215        0 (2208..2215)         8
+   2: [24..2047]:      168..2191         0 (168..2191)       2024 100000
+./file:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+   0: [0..15]:         2192..2207        0 (2192..2207)        16
+   1: [16..23]:        hole                                     8
+   2: [24..255]:       2216..2447        0 (2216..2447)       232
+   3: [256..2047]:     hole                                  1792
+
+That's on a fairly recent for-next on a fully reflinked file. It looks
+to me that the cow fork extent is fully allocated immediately
+(otherwise, I'm not sure what else would have converted it).
+
+Brian
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
