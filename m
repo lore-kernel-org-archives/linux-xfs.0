@@ -1,70 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39153 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751231AbdAYFmW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2017 00:42:22 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0P5fAXW021762
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 00:42:16 -0500
-Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 286dq3qyf8-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 00:42:16 -0500
-Received: from localhost
-        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 25 Jan 2017 15:42:14 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-        by d23dlp03.au.ibm.com (Postfix) with ESMTP id 103953578053
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 16:42:12 +1100 (EST)
-Received: from d23av05.au.ibm.com (d23av05.au.ibm.com [9.190.234.119])
-        by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v0P5g3XI26214604
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 16:42:11 +1100
-Received: from d23av05.au.ibm.com (localhost [127.0.0.1])
-        by d23av05.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v0P5fd19029094
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 16:41:39 +1100
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2] tools/find-api-violations: fix missing dirs in the directory list
-Date: Wed, 25 Jan 2017 11:11:20 +0530
-In-Reply-To: <20170125052852.GK9134@birch.djwong.org>
-References: <20170125052852.GK9134@birch.djwong.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:29121 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750716AbdAXRCo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jan 2017 12:02:44 -0500
+Date: Tue, 24 Jan 2017 09:02:10 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: xfs/122 failure for a while
+Message-ID: <20170124170210.GA9134@birch.djwong.org>
+References: <20170124094054.GA8536@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <2357002.pCcJ9JlUn9@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170124094054.GA8536@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Tuesday, January 24, 2017 09:28:52 PM Darrick J. Wong wrote:
-> Fix a stupid typo in the original commit.
+On Tue, Jan 24, 2017 at 01:40:54AM -0800, Christoph Hellwig wrote:
+> xfs/122 has been failing for me for a while with this error:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tools/find-api-violations.sh |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> -sizeof(xfs_dsb_t) = 272
+> +sizeof(xfs_dsb_t) = 264
 > 
-> diff --git a/tools/find-api-violations.sh b/tools/find-api-violations.sh
-> index 7937749..c2be4c5 100755
-> --- a/tools/find-api-violations.sh
-> +++ b/tools/find-api-violations.sh
-> @@ -6,7 +6,7 @@
+> That 272 numbers comes from:
 > 
->  # NOTE: This script doesn't look for API violations in function parameters.
-> 
-> -tool_dirs="copy db estimate fs fsck fsr growfs io mdrestore mkfs quota repair rtcp"
-> +tool_dirs="copy db estimate fsck fsr growfs io logprint mdrestore mkfs quota repair rtcp"
-> 
->  # Calls to xfs_* functions in libxfs/*.c without the libxfs_ prefix
->  find_possible_api_calls() {
-> 
+> 908ce96f ("xfs/122: add the realtime rmapbt inode and btree fields"),
+> which don't seem to be features that made it into the kernel and
+> xfsprogs so far.
 
-Looks good to me,
+Yeah... the realtime rmapbt tests got sucked into xfstests back when I
+thought we were closer to landing that feature.  Then I decided to let
+it sit on the backburner behind online scrub so that the disk format
+could stay the same for longer.
 
-Reviewed-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+I've wondered for a while if it would make sense to special-case
+xfs_dsb_t not to complain about a smaller value (because if features
+start falling off the kernel you're likely to notice) but arranging
+the parsing for all that made my head hurt.
 
--- 
-chandan
+For now I'll just set it back to 264.
 
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
