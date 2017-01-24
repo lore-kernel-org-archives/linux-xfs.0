@@ -1,90 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32202 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751004AbdAYAJm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jan 2017 19:09:42 -0500
-Date: Tue, 24 Jan 2017 16:09:34 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/3] xfs: go straight to real allocations for direct I/O
- COW writes
-Message-ID: <20170125000934.GG9134@birch.djwong.org>
-References: <20161207194634.GE23106@bfoster.bfoster>
- <20170124083732.GA17818@lst.de>
- <20170124135044.GA60234@bfoster.bfoster>
- <20170124135937.GA25885@lst.de>
- <20170124150222.GD60234@bfoster.bfoster>
- <20170124150959.GA27705@lst.de>
- <20170124161719.GE60234@bfoster.bfoster>
- <20170124162156.GA29361@lst.de>
- <20170124174318.GH60234@bfoster.bfoster>
- <20170124200855.GA1385@lst.de>
+Received: from sandeen.net ([63.231.237.45]:55872 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750712AbdAXAa3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jan 2017 19:30:29 -0500
+Subject: Re: [PATCH 3/5] xfs_repair: strengthen geometry checks
+References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+ <148494393485.5256.16822617236354659766.stgit@birch.djwong.org>
+ <0ed43e2f-2e9a-e53b-0770-1b50fee4b697@sandeen.net>
+ <20170124001304.GF31202@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c6aba747-4c98-845a-9be6-a993d5ee88d5@sandeen.net>
+Date: Mon, 23 Jan 2017 18:29:56 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170124200855.GA1385@lst.de>
+In-Reply-To: <20170124001304.GF31202@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue, Jan 24, 2017 at 09:08:55PM +0100, Christoph Hellwig wrote:
-> On Tue, Jan 24, 2017 at 12:43:18PM -0500, Brian Foster wrote:
-> > Hmm, that's not what I'm seeing (not that it really matters, but I'm
-> > curious if I'm missing something):
-> 
-> Yeah, I can reproduce this on mainline.  Turns out the it was done
-> by the align call in xfs_bmap_btalloc that even my before run had
-> removed.
-> 
-> Took me some time to spin my head around this.
-> 
-> Btw, I think we have a nasty race in the current DIO code that might
-> expose stale data, but this is just the same kind of head spinning
-> exercise for now:
-> 
-> Thread 1 writes a range from B to c
-> 
->                     B --------- C
+On 1/23/17 6:13 PM, Darrick J. Wong wrote:
+>> So I guess the question is: If the superblock stripe geometry
+>> is inconsistent by the time we get to is_multidisk_filesystem(),
+>> what should we do?
+>>
+>> 1) catch it earlier in verify_sb, and copy from backup?
+>> 2) keep that as it is, but only return true here if all 3 are set?
+> I'm ok with running in slow mode if the stripe data seems garbage.
+> TBH I'd prefer to have as few asserts in the repair program as possible,
+> particularly since this is a performance optimization.
 
-          A --------- B --------- C
-               ^           ^
-               d           e
+yeah.
 
-I'm assuming B-C has no shared blocks, d-B has shared blocks, and that
-both d & e are cowextsize boundaries.
+> return xfs_sb_version_hasdalign(sbp) && sbp->sb_unit && sbp->s_width;
 
-> a little later thread 2 writes from A to B
-> 
->         A --------- B
-> but the code preallocates beyond B into the range where thread
-> 1 has just written, but ->end_io hasn't been called yet.
-> But once ->end_io is called thread 2 has already allocated
-> up to the extent size hint into the write range of thread 1,
-> so the end_io handler will splice the unintialized blocks from
-> that preallocation back into the file right after B.
+Backing up, I guess it's really not all that important in this
+function, as long as we don't ASSERT.  I was actually going to suggest
+returning true if all 3 were set, yes.
 
-I think you're right about there being a dio race here.  I'm not sure
-what the solution here is -- certainly we could disregard the cowextsize
-hint, though that has a fragmentation cost that we already know about.
+It just seems that this all should have been consistent by the time
+we get here, having already gone through superblock verification
+routines.
 
-We could also change the dio write setup to extend the range that it
-checks for shared blocks up and down to the nearest cowextsize boundary
-and set up the delalloc reservations in the cow fork as necessary.  If
-our thread2 comes along then it'll find the reservations already set
-up for a cow so that we avoid the situation where B-C changes between
-iomap_begin and dio_write_end_io does the wrong thing.  That's more in
-the spirit of cowextsize since we'd promote future writes to CoW.
-However it's more wasteful of blocks since we have no idea if those
-future writes are ever actually going to happen, and it also adds more
-bmap records if we don't use all of the reservation.
+Might make sense to add it, but I guess that may as well be another
+patch.
 
-Ugh, my head hurts, I'm going to go for a walk to ponder this some more,
-and to try to work out whether the buffered path is all right.
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Eric
