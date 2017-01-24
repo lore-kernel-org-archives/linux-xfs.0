@@ -1,647 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:51974 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S942120AbdAHJu4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2017 04:50:56 -0500
-Received: from [185.37.136.66] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cQA7r-00012T-BK
-        for linux-xfs@vger.kernel.org; Sun, 08 Jan 2017 09:50:55 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] remove irix support
-Date: Sun,  8 Jan 2017 10:50:52 +0100
-Message-Id: <1483869052-10621-1-git-send-email-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:39201 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750896AbdAXVXI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jan 2017 16:23:08 -0500
+Date: Tue, 24 Jan 2017 13:21:55 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] xfs: do not call xfs_buf_hash_destroy on a NULL pag
+Message-ID: <20170124212155.GE9134@birch.djwong.org>
+References: <20170120142642.21698-1-colin.king@canonical.com>
+ <20170124210848.26179-1-billodo@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170124210848.26179-1-billodo@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-The port of the opensource xfsprogs to IRIX always was secondary to the
-"real" tools in the IRIX tree.  IRIX has effectively been EOLed, and
-dropping support for it will allow cleaning up various things in the XFS
-tree where IRIX was oddly different from the other ports.  E.g. that the
-xfsctl function needs a path and a fd, something we could replace with
-just documenting to use ioctl in the future, or various ifdefs in the
-headers shared with the kernel for structures provided by native headers
-in IRIX.
+You might want to cc the maintainer. ;)
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- doc/INSTALL          |  44 -----
- include/Makefile     |   2 +-
- include/builddefs.in |   4 -
- include/irix.h       | 491 ---------------------------------------------------
- include/xfs.h        |   2 -
- io/open.c            |   4 -
- 6 files changed, 1 insertion(+), 546 deletions(-)
- delete mode 100644 include/irix.h
+On Tue, Jan 24, 2017 at 03:08:48PM -0600, Bill O'Donnell wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> If pag cannot be allocated, the current error exit path will trip
+> a null pointer deference error when calling xfs_buf_hash_destroy
+> with a null pag.  Fix this by adding a new error exit lable and
+> jumping to this, avoiding the hash destroy and unnecessary kmem_free
+> on pag.
+> 
+> Fixes CoverityScan CID#1397628 ("Dereference after null check")
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> 
+> ------------
+> v2: correct error exit in xfs_initialize_perag() to properly unwind
+>     pags if error encountered.
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+>  fs/xfs/xfs_mount.c | 15 +++++++++------
+>  1 file changed, 9 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 9b9540d..67bb6f2 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -187,9 +187,10 @@ xfs_initialize_perag(
+>  	xfs_agnumber_t	*maxagi)
+>  {
+>  	xfs_agnumber_t	index;
+> -	xfs_agnumber_t	first_initialised = 0;
+> +	xfs_agnumber_t	last_valid_agindex = 0;
+>  	xfs_perag_t	*pag;
+>  	int		error = -ENOMEM;
+> +	int		i;
+>  
+>  	/*
+>  	 * Walk the current per-ag tree so we don't try to initialise AGs
+> @@ -197,17 +198,16 @@ xfs_initialize_perag(
+>  	 * AGs we don't find ready for initialisation.
+>  	 */
+>  	for (index = 0; index < agcount; index++) {
+> +		last_valid_agindex = index;
+>  		pag = xfs_perag_get(mp, index);
+>  		if (pag) {
+>  			xfs_perag_put(pag);
+>  			continue;
+>  		}
+> -		if (!first_initialised)
+> -			first_initialised = index;
+>  
+>  		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
+>  		if (!pag)
+> -			goto out_unwind;
+> +			goto out_unwind_pags;
+>  		pag->pag_agno = index;
+>  		pag->pag_mount = mp;
+>  		spin_lock_init(&pag->pag_ici_lock);
+> @@ -242,8 +242,11 @@ xfs_initialize_perag(
+>  out_unwind:
+>  	xfs_buf_hash_destroy(pag);
+>  	kmem_free(pag);
+> -	for (; index > first_initialised; index--) {
+> -		pag = radix_tree_delete(&mp->m_perag_tree, index);
+> +out_unwind_pags:
+> +	for (i = last_valid_agindex; i >= 0; i--) {
 
-diff --git a/doc/INSTALL b/doc/INSTALL
-index 0879612..f667628 100644
---- a/doc/INSTALL
-+++ b/doc/INSTALL
-@@ -100,47 +100,3 @@ Mac OS X Instructions
- 	# make install
- 	[and optionally, for the development libraries and headers]
- 	# make install-dev
--
--
--IRIX Instructions
--=================
--
--0. Note: building this package on IRIX is mainly useful for the
--   XFS developers who want to run purify on some of the tools.
--   Most tools are not functional due to incomplete support for
--   the syssgi and fcntl interfaces that XFS provides and which
--   these tools make extensive use of.
--
--1. Configure, build and install the package
--
--   The xfsprogs package uses autoconf/configure and expects a GNU build
--   environment which can be obtained by installing a number of freeware
--   packages (gcc, autoconf, libtool, gmake).
--
--   Even though IRIX provides a set of UUID functions via libc, you
--   still need to have built and installed the UUID library which is
--   provided by the e2fsprogs source package.  This is because some
--   difficult to resolve differences exist between the UUID functions
--   and data types, which makes co-existence of these more trouble
--   than its worth at the moment.  Follow the instructions above for
--   building and installing libuuid.
--
--   Building xfsprogs:
--
--	[firstly set these environment variables to these values]
--	INSTALL_GROUP=sys
--	CC=/usr/freeware/bin/gcc
--	TAR=/usr/freeware/bin/tar
--	MAKE=/usr/freeware/bin/gmake
--	LIBTOOL=/usr/freeware/bin/libtool
--	MSGFMT=/usr/freeware/bin/msgfmt
--	MSGMERGE=/usr/freeware/bin/msgmerge
--	XGETTEXT=/usr/freeware/bin/xgettext
--
--	$ make
--	$ su root
--	# make install
--	[and optionally, for the development libraries and headers]
--	# make install-dev
--
--
-diff --git a/include/Makefile b/include/Makefile
-index 36a9741..6077507 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -52,7 +52,7 @@ HFILES = handle.h \
- 	xqm.h \
- 	xfs_arch.h
- 
--PHFILES = darwin.h freebsd.h irix.h linux.h gnukfreebsd.h
-+PHFILES = darwin.h freebsd.h linux.h gnukfreebsd.h
- LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).h//g")
- LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules install-sh
- LSRCFILES += $(DKHFILES) $(LIBHFILES)
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 5219071..9ff86e0 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -128,10 +128,6 @@ ifeq ($(PKG_PLATFORM),darwin)
- PCFLAGS = $(GCCFLAGS)
- DEPENDFLAGS = -D__APPLE__ -D_DARWIN_FEATURE_64_BIT_INODE
- endif
--ifeq ($(PKG_PLATFORM),irix)
--PLDLIBS = -ldisk -lgen
--DEPENDFLAGS = -D__sgi__
--endif
- ifeq ($(PKG_PLATFORM),freebsd)
- PLDLIBS = -L/usr/local/lib -lintl
- PCFLAGS = -I/usr/local/include $(GCCFLAGS)
-diff --git a/include/irix.h b/include/irix.h
-deleted file mode 100644
-index 23f8b77..0000000
---- a/include/irix.h
-+++ /dev/null
-@@ -1,491 +0,0 @@
--/*
-- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU Lesser General Public License
-- * as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU Lesser General Public License for more details.
-- *
-- * You should have received a copy of the GNU Lesser General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_IRIX_H__
--#define __XFS_IRIX_H__
--
--#include <stdlib.h>
--#include <unistd.h>
--#include <libgen.h>
--#include <values.h>
--#include <strings.h>
--#include <inttypes.h>
--#include <limits.h>
--#include <fcntl.h>
--#include <sys/stat.h>
--#include <sys/uuid.h>
--#include <sys/param.h>
--#include <sys/ioctl.h>
--#include <sys/types.h>
--#include <sys/statfs.h>
--#include <sys/statvfs.h>
--#include <sys/syssgi.h>
--#include <sys/sysmacros.h>
--#include <sys/fs/xfs_fsops.h>
--#include <sys/fs/xfs_itable.h>
--#include <mntent.h>
--
--#define __int8_t	char
--#define __int16_t	short
--#define __uint8_t	unsigned char
--#define __uint16_t	unsigned short
--
--typedef unsigned char		__u8;
--typedef signed char		__s8;
--typedef unsigned short		__u16;
--typedef signed short		__s16;
--typedef unsigned int		__u32;
--typedef signed int		__s32;
--typedef unsigned long long int	__u64;
--typedef signed long long int	__s64;
--
--typedef off_t		xfs_off_t;
--typedef __int64_t	xfs_ino_t;
--typedef __int32_t	xfs_dev_t;
--typedef __int64_t	xfs_daddr_t;
--typedef __u32		xfs_nlink_t;
--
--#define xfs_flock64	flock64
--#define xfs_flock64_t	struct flock64
--
--#define EFSBADCRC	991	/* Bad CRC detected */
--
--typedef struct xfs_error_injection {
--	__int32_t	fd;
--	__int32_t	errtag;
--} xfs_error_injection_t;
--
--/* --- xfs_fsop_*req - request data structures --- */
--
--typedef struct xfs_fsop_bulkreq {
--	ino64_t	*lastip;
--	__int32_t	icount;
--	xfs_bstat_t	*ubuffer;
--	__int32_t	*ocount;
--} xfs_fsop_bulkreq_t;
--
--typedef struct xfs_fsop_handlereq {
--	__u32		fd;		/* fd for FD_TO_HANDLE		*/
--	void		*path;		/* user pathname		*/
--	__u32		oflags;		/* open flags			*/
--	void		*ihandle;	/* user supplied handle		*/
--	__u32		ihandlen;	/* user supplied length		*/
--	void		*ohandle;	/* user buffer for handle	*/
--	__u32		*ohandlen;	/* user buffer length		*/
--} xfs_fsop_handlereq_t;
--
--typedef struct xfs_fsop_setdm_handlereq {
--	struct xfs_fsop_handlereq	hreq;	/* handle information	*/
--	struct fsdmidata		*data;	/* DMAPI data	*/
--} xfs_fsop_setdm_handlereq_t;
--
--typedef struct xfs_attrlist_cursor {
--	__u32		opaque[4];
--} xfs_attrlist_cursor_t;
--
--typedef struct xfs_fsop_attrlist_handlereq {
--	struct xfs_fsop_handlereq	hreq; /* handle interface structure */
--	struct xfs_attrlist_cursor	pos; /* opaque cookie, list offset */
--	__u32				flags;	/* which namespace to use */
--	__u32				buflen;	/* length of buffer supplied */
--	void				*buffer;	/* returned names */
--} xfs_fsop_attrlist_handlereq_t;
--
--typedef struct xfs_fsop_getparents_handlereq {
--	struct xfs_fsop_handlereq	hreq; /* handle interface structure */
--	struct xfs_attrlist_cursor	pos; /* opaque cookie, list offset */
--	__u32				buflen;	/* length of buffer supplied */
--	void				*buffer; /* returned data */
--	__u32				*ocount; /* return number of links */
--	__u32				*omore; /* return whether more to come */
--} xfs_fsop_getparents_handlereq_t;
--
--typedef struct xfs_attr_multiop {
--	__u32		am_opcode;
--	__s32		am_error;
--	void		*am_attrname;
--	void		*am_attrvalue;
--	__u32		am_length;
--	__u32		am_flags;
--} xfs_attr_multiop_t;
--
--typedef struct xfs_fsop_attrmulti_handlereq {
--	struct xfs_fsop_handlereq	hreq; /* handle interface structure */
--	__u32				opcount;/* count of following multiop */
--	struct xfs_attr_multiop		*ops; /* attr_multi data */
--} xfs_fsop_attrmulti_handlereq_t;
--
--/* start doing packed stuctures here */
--#define HAVE_FORMAT32	1
--#pragma pack 1
--typedef struct xfs_inode_log_format_32 {
--	__u16			ilf_type;	/* inode log item type */
--	__u16			ilf_size;	/* size of this item */
--	__u32			ilf_fields;	/* flags for fields logged */
--	__u16			ilf_asize;	/* size of attr d/ext/root */
--	__u16			ilf_dsize;	/* size of data/ext/root */
--	__u64			ilf_ino;	/* inode number */
--	union {
--		__u32		ilfu_rdev;	/* rdev value for dev inode*/
--		uuid_t		ilfu_uuid;	/* mount point value */
--	} ilf_u;
--	__s64			ilf_blkno;	/* blkno of inode buffer */
--	__s32			ilf_len;	/* len of inode buffer */
--	__s32			ilf_boffset;	/* off of inode in buffer */
--} xfs_inode_log_format_32_t;
--
--typedef struct xfs_extent_32 {
--	__u64	ext_start;
--	__u32	ext_len;
--} xfs_extent_32_t;
--
--typedef struct xfs_efi_log_format_32 {
--	__u16			efi_type;	/* efi log item type */
--	__u16			efi_size;	/* size of this item */
--	__u32			efi_nextents;	/* # extents to free */
--	__u64			efi_id;		/* efi identifier */
--	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
--} xfs_efi_log_format_32_t;
--
--typedef struct xfs_efd_log_format_32 {
--	__u16			efd_type;	/* efd log item type */
--	__u16			efd_size;	/* size of this item */
--	__u32			efd_nextents;	/* # of extents freed */
--	__u64			efd_efi_id;	/* id of corresponding efi */
--	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
--} xfs_efd_log_format_32_t;
--
--#pragma pack 0
--/* end of packed stuctures */
--
--#include <sys/endian.h>
--#define __BYTE_ORDER	BYTE_ORDER
--#define __BIG_ENDIAN	BIG_ENDIAN
--#define __LITTLE_ENDIAN	LITTLE_ENDIAN
--
--/* Map some gcc macros for the MipsPRO compiler */
--#ifndef __GNUC__
--#define __builtin_constant_p(x)	(0)
--#define __FUNCTION__	"XFS"
--#define __sgi__		__sgi
--#define __inline__	__inline
--#define inline		__inline
--#endif
--
--/*ARGSUSED*/
--static __inline__ int xfsctl(const char *path, int fd, int cmd, void *arg)
--{
--	if (cmd >= 0 && cmd < XFS_FSOPS_COUNT) {
--		/*
--		 * We have a problem in that xfsctl takes 1 arg but
--		 * some sgi xfs ops take an input arg and/or an output arg
--		 * So have to special case the ops to decide if xfsctl arg
--		 * is an input or an output argument.
--		 */
--		if (cmd == XFS_FS_GOINGDOWN)
--			return syssgi(SGI_XFS_FSOPERATIONS, fd, cmd, arg, 0);
--		return syssgi(SGI_XFS_FSOPERATIONS, fd, cmd, 0, arg);
--	}
--	switch (cmd) {
--		case SGI_FS_INUMBERS:
--		case SGI_FS_BULKSTAT:
--			return syssgi(cmd, fd,
--					((xfs_fsop_bulkreq_t*)arg)->lastip,
--					((xfs_fsop_bulkreq_t*)arg)->icount,
--					((xfs_fsop_bulkreq_t*)arg)->ubuffer,
--					((xfs_fsop_bulkreq_t*)arg)->ocount);
--		case SGI_FS_BULKSTAT_SINGLE:
--			return syssgi(SGI_FS_BULKSTAT_SINGLE, fd,
--					((xfs_fsop_bulkreq_t*)arg)->lastip,
--					((xfs_fsop_bulkreq_t*)arg)->ubuffer);
--		case SGI_XFS_INJECT_ERROR:
--			return syssgi(SGI_XFS_INJECT_ERROR,
--					((xfs_error_injection_t*)arg)->errtag,
--					fd);
--		case SGI_XFS_CLEARALL_ERROR:
--			return syssgi(SGI_XFS_CLEARALL_ERROR, fd);
--		case SGI_PATH_TO_HANDLE:
--		case SGI_PATH_TO_FSHANDLE:
--			return syssgi(cmd,
--					((xfs_fsop_handlereq_t*)arg)->path,
--					((xfs_fsop_handlereq_t*)arg)->ohandle,
--					((xfs_fsop_handlereq_t*)arg)->ohandlen);
--		case SGI_FD_TO_HANDLE:
--			return syssgi(cmd,
--					((xfs_fsop_handlereq_t*)arg)->fd,
--					((xfs_fsop_handlereq_t*)arg)->ohandle,
--					((xfs_fsop_handlereq_t*)arg)->ohandlen);
--		case SGI_OPEN_BY_HANDLE:
--			return syssgi(cmd,
--					((xfs_fsop_handlereq_t*)arg)->ihandle,
--					((xfs_fsop_handlereq_t*)arg)->ihandlen,
--					((xfs_fsop_handlereq_t*)arg)->oflags);
--		case SGI_READLINK_BY_HANDLE:
--			return syssgi(cmd,
--					((xfs_fsop_handlereq_t*)arg)->ihandle,
--					((xfs_fsop_handlereq_t*)arg)->ihandlen,
--					((xfs_fsop_handlereq_t*)arg)->ohandle,
--					((xfs_fsop_handlereq_t*)arg)->ohandlen);
--		case SGI_ATTR_LIST_BY_HANDLE:
--			return syssgi(cmd,
--					((xfs_fsop_attrlist_handlereq_t*)arg)->hreq.ihandle,
--					((xfs_fsop_attrlist_handlereq_t*)arg)->hreq.ihandlen,
--					((xfs_fsop_attrlist_handlereq_t*)arg)->buffer,
--					((xfs_fsop_attrlist_handlereq_t*)arg)->buflen,
--					((xfs_fsop_attrlist_handlereq_t*)arg)->flags,
--					&(((xfs_fsop_attrlist_handlereq_t*)arg)->pos));
--		case SGI_XFS_GETPARENTS:
--		case SGI_XFS_GETPARENTPATHS:
--			return syssgi(cmd,
--					((xfs_fsop_getparents_handlereq_t*)arg)->hreq.ihandle,
--					((xfs_fsop_getparents_handlereq_t*)arg)->hreq.ihandlen,
--					((xfs_fsop_getparents_handlereq_t*)arg)->buffer,
--					((xfs_fsop_getparents_handlereq_t*)arg)->buflen,
--					&(((xfs_fsop_getparents_handlereq_t*)arg)->pos),
--					((xfs_fsop_getparents_handlereq_t*)arg)->ocount,
--					((xfs_fsop_getparents_handlereq_t*)arg)->omore);
--		case SGI_ATTR_MULTI_BY_HANDLE:
--			return syssgi(cmd,
--					((xfs_fsop_attrmulti_handlereq_t*)arg)->hreq.ihandle,
--					((xfs_fsop_attrmulti_handlereq_t*)arg)->hreq.ihandlen,
--					((xfs_fsop_attrmulti_handlereq_t*)arg)->ops,
--					((xfs_fsop_attrmulti_handlereq_t*)arg)->opcount,
--					((xfs_fsop_attrmulti_handlereq_t*)arg)->hreq.oflags);
--		case SGI_FSSETDM_BY_HANDLE:
--			return syssgi(cmd,
--					((xfs_fsop_setdm_handlereq_t*)arg)->hreq.ihandle,
--					((xfs_fsop_setdm_handlereq_t*)arg)->hreq.ihandlen,
--					((xfs_fsop_setdm_handlereq_t*)arg)->data);
--	}
--	return fcntl(fd, cmd, arg);
--}
--
--static __inline__ int platform_test_xfs_fd(int fd)
--{
--	struct statvfs sbuf;
--	if (fstatvfs(fd, &sbuf) < 0)
--		return 0;
--	return strncmp(sbuf.f_basetype, "xfs", 4) == 0;
--}
--
--static __inline__ int platform_test_xfs_path(const char *path)
--{
--	struct statvfs sbuf;
--	if (statvfs(path, &sbuf) < 0)
--		return 0;
--	return strncmp(sbuf.f_basetype, "xfs", 4) == 0;
--}
--
--static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
--{
--	return fstatfs(fd, buf, sizeof(struct statfs), 0);
--}
--
--static __inline__ void platform_getoptreset(void)
--{
--	getoptreset();
--}
--
--static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
--{
--	__uint32_t status;
--	return uuid_compare(uu1, uu2, &status);
--}
--
--static __inline__ void platform_uuid_unparse(uuid_t *uu, char *buffer)
--{
--	__uint32_t status;
--	char *s;
--	uuid_to_string(uu, &s, &status);
--	if (status == uuid_s_ok)
--		strcpy(buffer, s);
--	else buffer[0] = '\0';
--	free(s);
--}
--
--static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
--{
--	__uint32_t status;
--	uuid_from_string(buffer, uu, &status);
--	return (status == uuid_s_ok);
--}
--
--static __inline__ int platform_uuid_is_null(uuid_t *uu)
--{
--	uint status;
--	return uuid_is_nil(uu, &status);
--}
--
--static __inline__ void platform_uuid_generate(uuid_t *uu)
--{
--	__uint32_t status;
--	uuid_create(uu, &status);
--}
--
--static __inline__ void platform_uuid_clear(uuid_t *uu)
--{
--	__uint32_t status;
--	uuid_create_nil(uu, &status);
--}
--
--static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
--{
--	memcpy(dst, src, sizeof(uuid_t));
--}
--
--static __inline__ int
--platform_discard_blocks(int fd, uint64_t start, uint64_t len)
--{
--	return 0;
--}
--
--static __inline__ char * strsep(char **s, const char *ct)
--{
--	char *sbegin = *s, *end;
--
--	if (!sbegin)
--		return NULL;
--	end = strpbrk(sbegin, ct);
--	if (end)
--		*end++ = '\0';
--	*s = end;
--	return sbegin;
--}
--
--#define HAVE_DIOATTR	1
--#define HAVE_FSXATTR	1
--#define HAVE_GETBMAP	1
--#define HAVE_GETBMAPX	1
--#define HAVE_FSDMIDATA	1
--#define HAVE_FID	1
--#define HAVE_IOCMACROS	1
--#define HAVE_BBMACROS	1
--
--#define __XFS_FS_H__	1
--
--#define XFS_IOC_DIOINFO			F_DIOINFO
--#define XFS_IOC_ALLOCSP64		F_ALLOCSP64
--#define XFS_IOC_FREESP64		F_FREESP64
--#define XFS_IOC_GETBMAP			F_GETBMAP
--#define XFS_IOC_FSSETDM			F_FSSETDM
--#define XFS_IOC_RESVSP			F_RESVSP
--#define XFS_IOC_RESVSP64		F_RESVSP64
--#define XFS_IOC_UNRESVSP		F_UNRESVSP
--#define XFS_IOC_UNRESVSP64		F_UNRESVSP64
--#define XFS_IOC_GETBMAPA		F_GETBMAPA
--#define XFS_IOC_FSGETXATTRA		F_FSGETXATTRA
--#define XFS_IOC_GETBMAPX		F_GETBMAPX
--
--#define XFS_IOC_FSGEOMETRY_V1		XFS_FS_GEOMETRY
--#define XFS_IOC_FSBULKSTAT		SGI_FS_BULKSTAT
--#define XFS_IOC_FSBULKSTAT_SINGLE	SGI_FS_BULKSTAT_SINGLE
--#define XFS_IOC_FSINUMBERS		SGI_FS_INUMBERS
--#define XFS_IOC_PATH_TO_FSHANDLE	SGI_PATH_TO_FSHANDLE
--#define XFS_IOC_PATH_TO_HANDLE		SGI_PATH_TO_HANDLE
--#define XFS_IOC_FD_TO_HANDLE		SGI_FD_TO_HANDLE
--#define XFS_IOC_OPEN_BY_HANDLE		SGI_OPEN_BY_HANDLE
--#define XFS_IOC_READLINK_BY_HANDLE	SGI_READLINK_BY_HANDLE
--#define XFS_IOC_SWAPEXT			/* TODO */
--#define XFS_IOC_FSGROWFSDATA		XFS_GROWFS_DATA
--#define XFS_IOC_FSGROWFSLOG		XFS_GROWFS_LOG
--#define XFS_IOC_FSGROWFSRT		XFS_GROWFS_RT
--#define XFS_IOC_FSCOUNTS		XFS_FS_COUNTS
--#define XFS_IOC_SET_RESBLKS		XFS_SET_RESBLKS
--#define XFS_IOC_GET_RESBLKS		XFS_GET_RESBLKS
--#define XFS_IOC_ERROR_INJECTION		SGI_XFS_INJECT_ERROR
--#define XFS_IOC_ERROR_CLEARALL		SGI_XFS_CLEARALL_ERROR
--#define XFS_IOC_FREEZE			XFS_FS_FREEZE
--#define XFS_IOC_THAW			XFS_FS_THAW
--#define XFS_IOC_FSSETDM_BY_HANDLE	SGI_FSSETDM_BY_HANDLE
--#define XFS_IOC_ATTRLIST_BY_HANDLE	SGI_ATTR_LIST_BY_HANDLE
--#define XFS_IOC_ATTRMULTI_BY_HANDLE	SGI_ATTR_MULTI_BY_HANDLE
--#define XFS_IOC_FSGEOMETRY		XFS_FS_GEOMETRY
--#define XFS_IOC_GOINGDOWN		XFS_FS_GOINGDOWN
--#define XFS_IOC_GETPARENTS		SGI_XFS_GETPARENTS
--#define XFS_IOC_GETPARENTPATHS		SGI_XFS_GETPARENTPATHS
--
--#define	_AIOCB64_T_DEFINED		1
--
--/* check whether we have to define FS_IOC_FS[GS]ETXATTR ourselves */
--#ifndef HAVE_FSXATTR
--struct fsxattr {
--	__u32		fsx_xflags;	/* xflags field value (get/set) */
--	__u32		fsx_extsize;	/* extsize field value (get/set)*/
--	__u32		fsx_nextents;	/* nextents field value (get)	*/
--	__u32		fsx_projid;	/* project identifier (get/set) */
--	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
--	unsigned char	fsx_pad[8];
--};
--
--/*
-- * Flags for the fsx_xflags field
-- */
--#define FS_XFLAG_REALTIME	0x00000001	/* data in realtime volume */
--#define FS_XFLAG_PREALLOC	0x00000002	/* preallocated file extents */
--#define FS_XFLAG_IMMUTABLE	0x00000008	/* file cannot be modified */
--#define FS_XFLAG_APPEND		0x00000010	/* all writes append */
--#define FS_XFLAG_SYNC		0x00000020	/* all writes synchronous */
--#define FS_XFLAG_NOATIME	0x00000040	/* do not update access time */
--#define FS_XFLAG_NODUMP		0x00000080	/* do not include in backups */
--#define FS_XFLAG_RTINHERIT	0x00000100	/* create with rt bit set */
--#define FS_XFLAG_PROJINHERIT	0x00000200	/* create with parents projid */
--#define FS_XFLAG_NOSYMLINKS	0x00000400	/* disallow symlink creation */
--#define FS_XFLAG_EXTSIZE	0x00000800	/* extent size allocator hint */
--#define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
--#define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
--#define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
--#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
--#define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
--
--#define FS_IOC_FSGETXATTR		F_FSGETXATTR
--#define FS_IOC_FSSETXATTR		F_FSSETXATTR
--
--#endif
--
--#ifndef FS_XFLAG_COWEXTSIZE
--#define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
--#endif
--
--/**
-- * Abstraction of mountpoints.
-- */
--struct mntent_cursor {
--	FILE *mtabp;
--};
--
--static inline int platform_mntent_open(struct mntent_cursor * cursor, char *mtab)
--{
--	cursor->mtabp = setmntent(mtab, "r");
--	if (!cursor->mtabp) {
--		fprintf(stderr, "Error: cannot read %s\n", mtab);
--		return 1;
--	}
--	return 0;
--}
--
--static inline struct mntent * platform_mntent_next(struct mntent_cursor * cursor)
--{
--	return getmntent(cursor->mtabp);
--}
--
--static inline void platform_mntent_close(struct mntent_cursor * cursor)
--{
--	endmntent(cursor->mtabp);
--}
--
--
--#endif	/* __XFS_IRIX_H__ */
-diff --git a/include/xfs.h b/include/xfs.h
-index e1d2c1c..9f0f11b 100644
---- a/include/xfs.h
-+++ b/include/xfs.h
-@@ -41,8 +41,6 @@
- #include <xfs/gnukfreebsd.h>
- #elif defined(__APPLE__)
- #include <xfs/darwin.h>
--#elif defined(__sgi__) || defined(__sgi)
--#include <xfs/irix.h>
- #else
- # error unknown platform... have fun porting!
- #endif
-diff --git a/io/open.c b/io/open.c
-index 722d0f9..95704a4 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -712,11 +712,7 @@ statfs_f(
- 	} else {
- 		printf(_("statfs.f_bsize = %lld\n"), (long long) st.f_bsize);
- 		printf(_("statfs.f_blocks = %lld\n"), (long long) st.f_blocks);
--#if defined(__sgi__)
--		printf(_("statfs.f_frsize = %lld\n"), (long long) st.f_frsize);
--#else
- 		printf(_("statfs.f_bavail = %lld\n"), (long long) st.f_bavail);
--#endif
- 		printf(_("statfs.f_files = %lld\n"), (long long) st.f_files);
- 		printf(_("statfs.f_ffree = %lld\n"), (long long) st.f_ffree);
- 	}
--- 
-2.1.4
+xfs_initialize_perag can be called towards the end of a growfs operation
+to initialize the perag structures for the new AGs.  If the
+initialization fails, we want to roll back to the number of AGs we had
+before, which means that we cannot delete the perag structures for the
+not-recently-created AGs.  That (I think) was what first_initialised was
+trying to do (though it does't do that correctly in the case that we're
+mounting).
 
+Also, you could start the loop with "index - 1", right?
+
+--D
+
+> +		pag = radix_tree_delete(&mp->m_perag_tree, (xfs_agnumber_t)i);
+> +		if (!pag)
+> +			break;
+>  		xfs_buf_hash_destroy(pag);
+>  		kmem_free(pag);
+>  	}
+> -- 
+> 2.9.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
