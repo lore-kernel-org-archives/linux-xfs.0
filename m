@@ -1,30 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:42546 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751990AbdAaNmw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2017 08:42:52 -0500
-Date: Tue, 31 Jan 2017 05:42:51 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/7] xfs: verify free block header fields
-Message-ID: <20170131134251.GB10866@infradead.org>
-References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
- <148582222091.12293.17492997585015211348.stgit@birch.djwong.org>
+Received: from verein.lst.de ([213.95.11.211]:54830 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750708AbdAXOCs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Jan 2017 09:02:48 -0500
+Date: Tue, 24 Jan 2017 15:02:47 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2] xfs: use per-AG reservations for the finobt
+Message-ID: <20170124140247.GA26149@lst.de>
+References: <1485194742-23185-1-git-send-email-hch@lst.de> <20170123192847.GM12985@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <148582222091.12293.17492997585015211348.stgit@birch.djwong.org>
+In-Reply-To: <20170123192847.GM12985@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-Looks fine,
+On Mon, Jan 23, 2017 at 11:28:47AM -0800, Darrick J. Wong wrote:
+> I also want to warn more loudly about AGs that don't actually have
+> enough space to handle the reservation.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > +			xfs_warn(mp,
+> > +"Per-AG reservation for finobt failed.  File System may run out of space.\n");
+> > +			mp->m_inotbt_nores = true;
+> > +		}
 
-Minor nitpick below:
-
-> +	if (err || !(*bpp))
-
-no need for the inner braces.
+Any suggestion for a better warning than this one?  Except for this
+bit I'm ready to resend the series.
