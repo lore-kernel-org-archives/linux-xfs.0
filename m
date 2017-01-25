@@ -1,71 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.vlasiu.net ([91.223.50.125]:40158 "EHLO mail.vlasiu.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750795AbdAXIXf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jan 2017 03:23:35 -0500
-Date: Tue, 24 Jan 2017 10:14:01 +0200 (EET)
-From: Gabriel VLASIU <gabriel@vlasiu.net>
-Subject: Re: XFS issues with NVMe SSD
-In-Reply-To: <8af51363-bcb3-5830-7531-4417ffb099fd@jlbond.com>
-Message-ID: <alpine.LRH.2.20.14.1701241000001.20409@mail.vlasiu.net>
-References: <8a562e13-6d86-d9ef-de22-f71d5aa79b60@jlbond.com> <dbcc14e5-73e7-4ba0-22d2-646d3e466927@sandeen.net> <20170123135048.GB33287@bfoster.bfoster> <20170123135348.GA25320@infradead.org> <CAJCQCtQnH1PgUf=9gJT=5UpZ8SCGqvN-1rAvO3HLq9nQJkF+eA@mail.gmail.com>
- <325e2a40-0ba6-a973-8ca4-933e44b075a9@sandeen.net> <CAJCQCtQ-Ud7cqtX6ub_h+bPmp6qKpOYZMaZCvgbT60G=0QBZGg@mail.gmail.com> <8af51363-bcb3-5830-7531-4417ffb099fd@jlbond.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:43066 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750962AbdAYAWE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jan 2017 19:22:04 -0500
+Date: Tue, 24 Jan 2017 16:21:57 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v7 1/5] xfs_db: sanitize agcount on load
+Message-ID: <20170125002157.GH9134@birch.djwong.org>
+References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
+ <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
+ <20170123213108.GD31202@birch.djwong.org>
+ <6ad3798a-c3f5-fd8f-ab05-62c0f878290c@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6ad3798a-c3f5-fd8f-ab05-62c0f878290c@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bond Masuda <bond.masuda@jlbond.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+On Tue, Jan 24, 2017 at 04:52:59PM -0600, Eric Sandeen wrote:
+> Before we get into libxfs_initialize_perag and try to blindly
+> allocate a perag struct for every (possibly corrupted number of)
+> AGs, see if we can read the last one.  If not, assume it's corrupt,
+> and load only the first AG.
+> 
+> Do this only for an arbitrarily high-ish agcount, so that normal-ish
+> geometry on a possibly truncated file or device will still do
+> its best to make all readable AGs available.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index a08575a..ca5101e 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -817,6 +817,28 @@ libxfs_mount(
+>  			return NULL;
+>  	}
+>  
+> +	/*
+> +	 * libxfs_initialize_perag will allocate a perag structure for each AG.
+> +	 * If agcount is corrupted and insanely high, this will OOM the box.
+> +	 * If the agount seems (arbitrarily) high, try to read what would be
+> +	 * the last AG, and if that fails, just read the first one and let
+> +	 * the user know what happened.
+> +	 */
+> +	if (sbp->sb_agcount > 10000) {
 
-On Mon, 23 Jan 2017, Bond Masuda wrote:
+10,000 isn't all that high -- that's only 960K worth of perag structs.
+Also,
 
-> There are only 2 people I know of that have run into this issue, including
-> myself.
-Well, no. I have the same problem about a week ago.
+<create 200gb /dev/mapper/moo>
 
-Intel 6000p (INTEL SSDPEKKF256G7).
-RHEL 7 (actually CentOS 7), kernel 3.10.0-514.
+# mkfs.xfs -f -b size=4096 -d agsize=4096b /dev/mapper/moo
+meta-data=/dev/mapper/moo        isize=512    agcount=12800, agsize=4096 blks
 
-I had the root partition on raid 5 for many, many years. I decided to 
-switch to nvme ssd for root fs. I copied the content of / partition on 
-ssd, made the required changes to fstab and grub, put selinux in 
-permissive mode. Reboot. Everything was fine. Touch /.autorelabel, reboot 
-again. Everything worked up to relabel point during the boot. Errors. 
-Instructed-me to run fsck. Reboot with the old root fs. xfs.fsck was not 
-been able to do anything on the ssd partition. In the end, I formatted the 
-nvme partition with ext4 and seems to works.
+Ok, admittedly I'm trolling here.  Maybe a better limit would be
+1,000,000 AGs?  That's at least 2TB with the minimum AG size, and 100MB
+of RAM.
 
-Maybe a selinux problem with xfs again? I don't know.
+(Really I'd say 10 million but I've been brainwashed by the people
+fscking 16TB filesystems on embedded arm boxen with 256M of RAM...)
 
+> +		error = xfs_read_agf(mp, NULL, sbp->sb_agcount - 1, 0, &bp);
+> +		if (error) {
 
-Sincerely,
-Gabriel
+__read_buf sends back -EIO for any zero-byte pread, including reads past
+the end of the device, which makes a media error looks the same as a
+too-small device.  Also, if the AGF is present but garbage then we'll
+get -EFSCORRUPTED here, right?
 
-- -- 
+I think I like the idea of computing the AGF location and comparing to
+the device size to guess that our geometry is crazy.
 
-// Gabriel VLASIU
-//
-// OpenGPG-KeyID      : 44952F15
-// OpenGPG-Fingerprint: 4AC5 7C26 2FE9 02DA 4906  24B2 D32B 7ED7 4495 2F15
-// OpenGPG-URL        : http://www.vlasiu.net/public.key
+--D
 
------BEGIN PGP SIGNATURE-----
-
-iQIbBAEBCgAGBQJYhwzJAAoJENMrftdElS8VEkQP90a6bW8keyLc31ctNFJ/wgcC
-DsXuw9SbG9zI62I5TvJVBDU5wVstZX/C70edbrNPDOqRJSNRCbDorJ3AuPhZ6wBm
-PfjNXu/Dz4j1CRQBt0cbQ4bGP0U1FgTlMbt5QqNcAwSlXOZ44QIe7uGMbKoiW84S
-pfqr1x+FolMPRUMWrNAI0+Yml0gOMmKg7fNpdEkRnB4NfAveD8zaKh2wrDCkglDn
-EaoixjQpkj6mVLmCzkMRs6afb90ycEcZCN0+BB/rC2TOQ+YKAWgqppDhf9enB4CF
-7rFaUNrjZ4M22S8sA60D/SvnF76XS9hvABlmn81p378qQiiVsG+uW+a7vkYQjz4I
-WL0HLWhJdy5HPCgQ4eo36TpTzlMOsMkHaV6aJLH+biRFQo/mxIBgqvr4Fd3oEQMT
-+28DqTbAWCZDIG7o8d+tKuU72Cse3rUa2QbhSN5YwzVi4RZOSP56NJvVmXBPq5+6
-vplvOPSF7zDIon7ik7J4IHjfg/5dy6JKevx3QekO7vW/0Aeh7GLI3qfzzxuAW8Ww
-MjELXSrcFnhFRG/2YxZavlZCtXjYxr6AuaxQT22OWfz9fvulPZWrLPA2G/pDpNzW
-njYg5MR2dGaHtq5kg23t2KjpCI/2FxCD/nd3/loeZLXzVrZKeWSRPO8ckxD083+K
-cmSHlv8gdk/e6fCr+54=
-=dzNp
------END PGP SIGNATURE-----
+> +			fprintf(stderr, _("%s: read of AG %d failed\n"),
+> +						progname, sbp->sb_agcount);
+> +			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
+> +				return NULL;
+> +			fprintf(stderr, _("%s: limiting reads to AG 0\n"),
+> +								progname);
+> +			sbp->sb_agcount = 1;
+> +		}
+> +		if (bp)
+> +			libxfs_putbuf(bp);
+> +	}
+> +
+>  	error = libxfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
+>  	if (error) {
+>  		fprintf(stderr, _("%s: perag init failed\n"),
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
