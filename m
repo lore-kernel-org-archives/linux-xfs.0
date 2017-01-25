@@ -1,125 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57072 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34596 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750784AbdA0Blx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Jan 2017 20:41:53 -0500
-Date: Fri, 27 Jan 2017 09:41:46 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v5 0/9] xfstests: online scrub/repair support
-Message-ID: <20170127014146.GQ1859@eguan.usersys.redhat.com>
-References: <148498621936.17109.4249711513404036449.stgit@birch.djwong.org>
- <20170126050838.GN1859@eguan.usersys.redhat.com>
- <20170126064434.GD2584@birch.djwong.org>
- <20170126072638.GP1859@eguan.usersys.redhat.com>
- <20170126075323.GE2584@birch.djwong.org>
+        id S1750723AbdAYOwR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Jan 2017 09:52:17 -0500
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8C8817F36F
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 14:52:17 +0000 (UTC)
+Date: Wed, 25 Jan 2017 09:52:16 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [BUG] xfs/305 hangs 4.10-rc4 kernel
+Message-ID: <20170125145215.GC28388@bfoster.bfoster>
+References: <20170125063943.GF1859@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170126075323.GE2584@birch.djwong.org>
+In-Reply-To: <20170125063943.GF1859@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jan 25, 2017 at 11:53:23PM -0800, Darrick J. Wong wrote:
-
-> > > Sure.  I will never enable them in any of the heavily used groups, so
-> > > that should be fine.  Though I do have a request -- the 13xx numbers are
-> > > set up so that if test (1300+x) fuzzes object X and tries to xfs_repair
-> > > it, then test (1340+x) fuzzes the same X but tries to xfs_scrub it.
-> > > Could you interweave them when you renumber the tests?
-> > 
-> > Perhaps that explains why there's no 1336-1340 :)
+On Wed, Jan 25, 2017 at 02:39:43PM +0800, Eryu Guan wrote:
+> Hi all,
 > 
-> Yep.
+> I hit another test hang triggered by running xfs/305 in a loop, it
+> usually reproduces within 50 iterations. It also involves disabling
+> quota, which looks similar to the generic/232 hang[1]. Perhaps they
+> share the same root cause?
 > 
-> > > 
-> > > e.g. 1302 -> 510, 1342 -> 511, 1303 -> 512, 1343 -> 513?
-> > > 
-> > > That'll help me to keep together the repair & scrub fuzz tests.
-> > 
-> > Sure, I'll renumber the tests and let you review first before pushing
-> > them to upstream.
+> [333853.198159] xfs_quota       D    0 13880  13441 0x00000080
+> [333853.227479] Call Trace:
+> [333853.239429]  __schedule+0x21c/0x6b0
+> [333853.255410]  schedule+0x36/0x80
+> [333853.269932]  schedule_timeout+0x1d1/0x3a0
+> [333853.288354]  ? lock_timer_base+0xa0/0xa0
+> [333853.306296]  ? xfs_qm_need_dqattach+0x80/0x80 [xfs]
+> [333853.329015]  schedule_timeout_uninterruptible+0x1f/0x30
+> [333853.353344]  xfs_qm_dquot_walk.isra.10+0x172/0x190 [xfs]
+> [333853.377747]  xfs_qm_dqpurge_all+0x5c/0x80 [xfs]
+> [333853.398433]  xfs_qm_scall_quotaoff+0x127/0x380 [xfs]
+> [333853.421062]  xfs_quota_disable+0x3d/0x50 [xfs]
+> [333853.441319]  SyS_quotactl+0x391/0x850
+> [333853.458143]  ? __audit_syscall_entry+0xaf/0x100
+> [333853.478903]  ? syscall_trace_enter+0x1d0/0x2b0
+> [333853.499262]  ? __audit_syscall_exit+0x209/0x290
+> [333853.519938]  do_syscall_64+0x67/0x180
+> [333853.536771]  entry_SYSCALL64_slow_path+0x25/0x25
+> [333853.558105] RIP: 0033:0x7f95be064fea
+> [333853.574521] RSP: 002b:00007ffc988b6348 EFLAGS: 00000206 ORIG_RAX: 00000000000000b3
+> [333853.608922] RAX: ffffffffffffffda RBX: 0000000000000004 RCX: 00007f95be064fea
+> [333853.641478] RDX: 0000000000000000 RSI: 00000000027bb2f0 RDI: 0000000000580201
+> [333853.674091] RBP: 00000000027bb320 R08: 00007ffc988b635c R09: 0000000000000001
+> [333853.706913] R10: 00007ffc988b635c R11: 0000000000000206 R12: 00000000027bb2d0
+> [333853.744953] R13: 00000000027ba0a0 R14: 0000000000000000 R15: 00000000027ba080
 > 
-> Ok, thanks!  I really appreciate it!
+> I've seen this hang on multiple test hosts with different test configs,
+> e.g. xfs_2k_crc xfs_4k_reflink. I also tried with 4.9 kernel, but I kept
+> hitting the BUG_ON that this kernel commit[2] fixed in 4.10-rc kernel.
+> 
 
-This is what it's like after renumbering, I'm going to fold it to patch
-9/9 if you think it's OK.
+Interesting... I'm not sure this is necessarily locked up given the call
+to schedule_timeout(). That suggests we could be in the
+xfs_qm_dquot_walk()->delay() call and possibly spinning on skipped
+entries. It looks like the only way we skip an entry is if it is already
+being freed or has a reference count. The only other dquot free path
+looks like the shrinker, but that doesn't appear in the blocked task
+list at all. We do have a dqread call, but that path hasn't even added
+the dquot to the radix tree yet.
+
+> I attached full sysrq-w output. If you need more info please let me
+> know.
+>
+
+It looks like pretty much everything is hung up on log reservation,
+including writeback, which is more indicative of a potential log
+reservation problem. xfsaild appears to be alive, however (a
+schedule_timeout() in that path suggests the thread is working to push
+log items and free up log space), so maybe something else is going on.
+It might be interesting to see if we can tell if we're spinning
+somewhere by enabling tracepoints once in this state. Also, have you
+checked for any unexpected syslog messages when this occurs?
+
+I may try to reproduce once I have a server available...
+
+Brian
+
+> Thanks,
+> Eryu
+> 
+> [1] http://www.spinics.net/lists/linux-xfs/msg03596.html
+> [2] 04197b3 xfs: don't BUG() on mixed direct and mapped I/O
 
 
-Moved "xfs/1300" to "xfs/349"
-
-Moved "xfs/1301" to "xfs/350".
-Moved "xfs/1302" to "xfs/352".
-Moved "xfs/1303" to "xfs/354".
-Moved "xfs/1304" to "xfs/356".
-Moved "xfs/1305" to "xfs/358".
-Moved "xfs/1306" to "xfs/360".
-Moved "xfs/1307" to "xfs/362".
-Moved "xfs/1308" to "xfs/364".
-Moved "xfs/1309" to "xfs/366".
-Moved "xfs/1310" to "xfs/368".
-Moved "xfs/1311" to "xfs/370".
-Moved "xfs/1312" to "xfs/372".
-Moved "xfs/1313" to "xfs/374".
-Moved "xfs/1314" to "xfs/376".
-Moved "xfs/1315" to "xfs/378".
-Moved "xfs/1316" to "xfs/380".
-Moved "xfs/1317" to "xfs/382".
-Moved "xfs/1318" to "xfs/384".
-Moved "xfs/1319" to "xfs/386".
-Moved "xfs/1320" to "xfs/388".
-Moved "xfs/1321" to "xfs/390".
-Moved "xfs/1322" to "xfs/392".
-Moved "xfs/1323" to "xfs/394".
-Moved "xfs/1324" to "xfs/396".
-Moved "xfs/1325" to "xfs/398".
-Moved "xfs/1326" to "xfs/400".
-Moved "xfs/1327" to "xfs/402".
-Moved "xfs/1328" to "xfs/404".
-Moved "xfs/1329" to "xfs/406".
-Moved "xfs/1330" to "xfs/408".
-Moved "xfs/1331" to "xfs/410".
-Moved "xfs/1332" to "xfs/412".
-Moved "xfs/1333" to "xfs/414".
-Moved "xfs/1334" to "xfs/416".
-Moved "xfs/1335" to "xfs/418".
-
-Moved "xfs/1341" to "xfs/351".
-Moved "xfs/1342" to "xfs/353".
-Moved "xfs/1343" to "xfs/355".
-Moved "xfs/1344" to "xfs/357".
-Moved "xfs/1345" to "xfs/359".
-Moved "xfs/1346" to "xfs/361".
-Moved "xfs/1347" to "xfs/363".
-Moved "xfs/1348" to "xfs/365".
-Moved "xfs/1349" to "xfs/367".
-Moved "xfs/1350" to "xfs/369".
-Moved "xfs/1351" to "xfs/371".
-Moved "xfs/1352" to "xfs/373".
-Moved "xfs/1353" to "xfs/375".
-Moved "xfs/1354" to "xfs/377".
-Moved "xfs/1355" to "xfs/379".
-Moved "xfs/1356" to "xfs/381".
-Moved "xfs/1357" to "xfs/383".
-Moved "xfs/1358" to "xfs/385".
-Moved "xfs/1359" to "xfs/387".
-Moved "xfs/1360" to "xfs/389".
-Moved "xfs/1361" to "xfs/391".
-Moved "xfs/1362" to "xfs/393".
-Moved "xfs/1363" to "xfs/395".
-Moved "xfs/1364" to "xfs/397".
-Moved "xfs/1365" to "xfs/399".
-Moved "xfs/1366" to "xfs/401".
-Moved "xfs/1367" to "xfs/403".
-Moved "xfs/1368" to "xfs/405".
-Moved "xfs/1369" to "xfs/407".
-Moved "xfs/1370" to "xfs/409".
-Moved "xfs/1371" to "xfs/411".
-Moved "xfs/1372" to "xfs/413".
-Moved "xfs/1373" to "xfs/415".
-Moved "xfs/1374" to "xfs/417".
-
-Thanks,
-Eryu
