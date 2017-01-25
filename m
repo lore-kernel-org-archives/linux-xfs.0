@@ -1,50 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41993 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751937AbdAXArB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jan 2017 19:47:01 -0500
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v0O0kwP2017857
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Jan 2017 00:46:59 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v0O0kw24029706
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Jan 2017 00:46:58 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v0O0kucu014675
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Jan 2017 00:46:57 GMT
-Date: Mon, 23 Jan 2017 16:46:55 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: verify dirblocklog correctly
-Message-ID: <20170124004655.GG31202@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:56288 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751703AbdAYWLa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Jan 2017 17:11:30 -0500
+Date: Wed, 25 Jan 2017 16:11:27 -0600
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: Re: XFS developers meeting at Vault?
+Message-ID: <20170125221127.GA28272@redhat.com>
+References: <20170123174432.GA22900@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20170123174432.GA22900@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-sb_dirblklog is added to sb_blocklog to compute the directory block size
-in bytes.  Therefore, we must compare the sum of both those values
-against XFS_MAX_BLOCKSIZE_LOG, not just dirblklog.
+On Mon, Jan 23, 2017 at 06:44:32PM +0100, Christoph Hellwig wrote:
+> Hi all,
+> 
+> are enough of your around for LSM/MM and Vault to have a little
+> meeting?  If so I'll try to arrange a room for us.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_sb.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I'll be there.
+-Bill
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 2580262..584ec89 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -242,7 +242,7 @@ xfs_mount_validate_sb(
- 	    sbp->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG			||
- 	    sbp->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG			||
- 	    sbp->sb_blocksize != (1 << sbp->sb_blocklog)		||
--	    sbp->sb_dirblklog > XFS_MAX_BLOCKSIZE_LOG			||
-+	    sbp->sb_dirblklog + sbp->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG ||
- 	    sbp->sb_inodesize < XFS_DINODE_MIN_SIZE			||
- 	    sbp->sb_inodesize > XFS_DINODE_MAX_SIZE			||
- 	    sbp->sb_inodelog < XFS_DINODE_MIN_LOG			||
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
