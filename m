@@ -1,30 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58842 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754945AbdA0PIY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Jan 2017 10:08:24 -0500
-Date: Fri, 27 Jan 2017 15:59:30 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/2] xfs: use per-AG reservations for the finobt
-Message-ID: <20170127145930.GA14983@lst.de>
-References: <1485335667-22435-1-git-send-email-hch@lst.de> <1485335667-22435-3-git-send-email-hch@lst.de> <c4b1428d-6861-5290-d108-043ecbfeb1b1@sandeen.net>
+Received: from userp1040.oracle.com ([156.151.31.81]:48904 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751016AbdAYQZf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2017 11:25:35 -0500
+Date: Wed, 25 Jan 2017 08:24:30 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] [RFC] xfs: work around unlikely() profiler glitch
+Message-ID: <20170125162430.GN9134@birch.djwong.org>
+References: <20170125140821.2677725-1-arnd@arndb.de>
+ <20170125150929.GA19906@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c4b1428d-6861-5290-d108-043ecbfeb1b1@sandeen.net>
+In-Reply-To: <20170125150929.GA19906@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@lst.de>, darrick.wong@oracle.com, bfoster@redhat.com, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, Nicolas Pitre <nico@linaro.org>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>
 
-On Thu, Jan 26, 2017 at 11:08:00PM -0600, Eric Sandeen wrote:
-> This seems to cause regressions for me, at least on generic/108, xfs/004
+On Wed, Jan 25, 2017 at 07:09:29AM -0800, Christoph Hellwig wrote:
+> On Wed, Jan 25, 2017 at 03:08:10PM +0100, Arnd Bergmann wrote:
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index d22f7930eb75..dca3ddd737d4 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -3629,7 +3629,7 @@ xfs_bmap_btalloc(
+> >  		align = xfs_get_cowextsz_hint(ap->ip);
+> >  	else if (xfs_alloc_is_userdata(ap->datatype))
+> >  		align = xfs_get_extsz_hint(ap->ip);
+> > -	if (unlikely(align)) {
+> > +	if (unlikely_notrace(align)) {
+> >  		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+> >  						align, 0, ap->eof, 0, ap->conv,
+> >  						&ap->offset, &ap->length);
+> 
+> The unlikely calls on align in xfs_bmap_btalloc should simply be
+> removed.  They aren't actually unlikely for many workloads.  I have
+> a patch in my queue that I can expedite based on your report.
 
-xfs/004 isn't really broken, it just needs a change every time we
-tune some reservations.   I've been pondering to just drop that
-sub-check.
+I was thinking exactly the same thing.  Since it breaks the build
+somewhere, can you send a oneliner patch so I can roll it into the rc6
+fixes?
 
-I can't run generic/108 as it requires a modular scsi_debug, and
-none of my test setups uses modular kernels, so I'm curious on how
-that could get broken by this change.
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
