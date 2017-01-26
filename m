@@ -1,100 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:19884 "EHLO mga11.intel.com"
+Received: from sandeen.net ([63.231.237.45]:41952 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752840AbdAZRKN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Jan 2017 12:10:13 -0500
-Subject: [PATCH v2 0/3] 1G transparent hugepage support for device dax
-From: Dave Jiang <dave.jiang@intel.com>
-Date: Thu, 26 Jan 2017 10:09:41 -0700
-Message-ID: <148545012634.17912.13951763606410303827.stgit@djiang5-desk3.ch.intel.com>
+        id S1753210AbdAZU2Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Jan 2017 15:28:25 -0500
+Subject: Re: [PATCH v3] xfs: do not call xfs_buf_hash_destroy on a NULL pag
+References: <20170120142642.21698-1-colin.king@canonical.com>
+ <20170125190443.20929-1-billodo@redhat.com>
+ <2be6ef17-9664-fdfc-49d0-eebca1b14be5@sandeen.net>
+ <20170126185532.GA13375@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3a16ed69-fb7c-da77-82de-bbeb29431ed0@sandeen.net>
+Date: Thu, 26 Jan 2017 14:27:51 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20170126185532.GA13375@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: akpm@linux-foundation.org
-Cc: dave.hansen@linux.intel.com, mawilcox@microsoft.com, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, vbabka@suse.cz, jack@suse.com, dan.j.williams@intel.com, linux-ext4@vger.kernel.org, ross.zwisler@linux.intel.com, kirill.shutemov@linux.intel.com
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-The following series implements support for 1G trasparent hugepage on
-x86 for device dax. The bulk of the code was written by Mathew Wilcox
-a while back supporting transparent 1G hugepage for fs DAX. I have
-forward ported the relevant bits to 4.10-rc. The current submission has
-only the necessary code to support device DAX.
+On 1/26/17 12:55 PM, Bill O'Donnell wrote:
+>>> @@ -242,8 +245,11 @@ xfs_initialize_perag(
+>>>  out_unwind:
+>>>  	xfs_buf_hash_destroy(pag);
+>>>  	kmem_free(pag);
+>>> -	for (; index > first_initialised; index--) {
+>>> -		pag = radix_tree_delete(&mp->m_perag_tree, index);
+>>> +out_unwind_pags:
+>>> +	for (i = index; i >= first_initialised; i--) {
+>>> +		pag = radix_tree_delete(&mp->m_perag_tree, (xfs_agnumber_t)i);
+>> (don't make i an int if it's really supposed to be an xfs_agnumber_t,
+>> which is unsigned)
+> It might be wrong, but I used an int in order to handle the case where
+> first_initialized==0, and a decrement of an unsigned would roll over
+> instead of going negative (so i >= first_initialized would be true again).
 
-Comments from Dan Williams:
-So the motivation and intended user of this functionality mirrors the
-motivation and users of 1GB page support in hugetlbfs. Given expected
-capacities of persistent memory devices an in-memory database may want
-to reduce tlb pressure beyond what they can already achieve with 2MB
-mappings of a device-dax file. We have customer feedback to that
-effect as Willy mentioned in his previous version of these patches
-[1].
+Oh, urgh.  I see.
 
-[1]: https://lkml.org/lkml/2016/1/31/52
+OTOH AG count is unsigned, so if you have index > 2147483648 AGs,
+your "i >= first" will fail because i will be negative in /that/
+comparison.
 
+Ok, how about something like:
 
-Comments from Nilesh @ Oracle:
+out_unwind_pags:
+	/* start unwinding at previous index */
+	index--;
+        do {
+                /* uninitialize pag at this index */
+		index--;
+        } while (index && index >= first_initialised);
 
-There are applications which have a process model; and if you assume 10,000
-processes attempting to mmap all the 6TB memory available on a server;
-we are looking at the following:
+-Eric
 
-processes         : 10,000
-memory            :    6TB
-pte @ 4k page size: 8 bytes / 4K of memory * #processes = 6TB / 4k * 8 * 10000 = 1.5GB * 80000 = 120,000GB
-pmd @ 2M page size: 120,000 / 512 = ~240GB
-pud @ 1G page size: 240GB / 512 = ~480MB
-
-As you can see with 2M pages, this system will use up an
-exorbitant amount of DRAM to hold the page tables; but the 1G
-pages finally brings it down to a reasonable level.
-Memory sizes will keep increasing; so this number will keep
-increasing.
-
-An argument can be made to convert the applications from process
-model to thread model, but in the real world that may not be
-always practical.
-Hopefully this helps explain the use case where this is valuable.
-
-v2: Fixup build issues from 0-day build.
-
----
-
-Dave Jiang (1):
-      dax: Support for transparent PUD pages for device DAX
-
-Matthew Wilcox (2):
-      mm,fs,dax: Change ->pmd_fault to ->huge_fault
-      mm,x86: Add support for PUD-sized transparent hugepages
-
-
- arch/Kconfig                          |    3 
- arch/x86/Kconfig                      |    1 
- arch/x86/include/asm/paravirt.h       |   11 +
- arch/x86/include/asm/paravirt_types.h |    2 
- arch/x86/include/asm/pgtable-2level.h |   17 ++
- arch/x86/include/asm/pgtable-3level.h |   24 +++
- arch/x86/include/asm/pgtable.h        |  140 +++++++++++++++++++
- arch/x86/include/asm/pgtable_64.h     |   15 ++
- arch/x86/kernel/paravirt.c            |    1 
- arch/x86/mm/pgtable.c                 |   31 ++++
- drivers/dax/dax.c                     |   82 ++++++++---
- fs/dax.c                              |   43 ++++--
- fs/ext2/file.c                        |    2 
- fs/ext4/file.c                        |    6 -
- fs/xfs/xfs_file.c                     |   10 +
- fs/xfs/xfs_trace.h                    |    2 
- include/asm-generic/pgtable.h         |   80 ++++++++++-
- include/asm-generic/tlb.h             |   14 ++
- include/linux/dax.h                   |    6 -
- include/linux/huge_mm.h               |   83 ++++++++++-
- include/linux/mm.h                    |   40 +++++
- include/linux/mmu_notifier.h          |   14 ++
- include/linux/pfn_t.h                 |   12 ++
- mm/gup.c                              |    7 +
- mm/huge_memory.c                      |  249 +++++++++++++++++++++++++++++++++
- mm/memory.c                           |  102 ++++++++++++--
- mm/pagewalk.c                         |   20 +++
- mm/pgtable-generic.c                  |   14 ++
- 28 files changed, 956 insertions(+), 75 deletions(-)
