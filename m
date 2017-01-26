@@ -1,70 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51654 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750802AbdAXURC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jan 2017 15:17:02 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/2] xfs: only update mount/resv fields on success in __xfs_ag_resv_init
-Date: Tue, 24 Jan 2017 21:16:19 +0100
-Message-Id: <1485288980-17075-2-git-send-email-hch@lst.de>
-In-Reply-To: <1485288980-17075-1-git-send-email-hch@lst.de>
-References: <1485288980-17075-1-git-send-email-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:39904 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752470AbdAZCaH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Jan 2017 21:30:07 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_repair: Fix uninit var in process_leaf_attr_level
+Message-ID: <fe6cd162-4f2a-d470-f8ea-8a028a649212@redhat.com>
+Date: Wed, 25 Jan 2017 20:30:05 -0600
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: bfoster@redhat.com, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-Try to reserve the blocks first and only then update the fields in
-or hanging off the mount structure.  This way we can call __xfs_ag_resv_init
-again after a previous failure.
+My unreviewed maintainer adjustment on the way in gets a
+brown paper bag.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ag_resv.c | 23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index d346d42..94234bf 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -200,22 +200,27 @@ __xfs_ag_resv_init(
- 	struct xfs_mount		*mp = pag->pag_mount;
- 	struct xfs_ag_resv		*resv;
- 	int				error;
-+	xfs_extlen_t			reserved;
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 158e31a..9ec2231 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -753,6 +753,7 @@ process_leaf_attr_level(xfs_mount_t	*mp,
+ 	struct xfs_attr3_icleaf_hdr leafhdr;
  
--	resv = xfs_perag_resv(pag, type);
- 	if (used > ask)
- 		ask = used;
--	resv->ar_asked = ask;
--	resv->ar_reserved = resv->ar_orig_reserved = ask - used;
--	mp->m_ag_max_usable -= ask;
-+	reserved = ask - used;
+ 	da_bno = da_cursor->level[0].bno;
++	ino = da_cursor->ino;
+ 	/*
+ 	 * 0 is the root block and no block
+ 	 * pointer can point to the root block of the btree
+@@ -764,7 +765,6 @@ process_leaf_attr_level(xfs_mount_t	*mp,
+ 		goto error_out;
+ 	}
  
--	trace_xfs_ag_resv_init(pag, type, ask);
--
--	error = xfs_mod_fdblocks(mp, -(int64_t)resv->ar_reserved, true);
--	if (error)
-+	error = xfs_mod_fdblocks(mp, -(int64_t)reserved, true);
-+	if (error) {
- 		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
- 				error, _RET_IP_);
-+		return error;
-+	}
+-	ino = da_cursor->ino;
+ 	prev_bno = 0;
  
--	return error;
-+	mp->m_ag_max_usable -= ask;
-+
-+	resv = xfs_perag_resv(pag, type);
-+	resv->ar_asked = ask;
-+	resv->ar_reserved = resv->ar_orig_reserved = reserved;
-+
-+	trace_xfs_ag_resv_init(pag, type, ask);
-+	return 0;
- }
- 
- /* Create a per-AG block reservation. */
--- 
-2.1.4
+ 	do {
 
