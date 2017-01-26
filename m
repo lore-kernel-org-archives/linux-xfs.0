@@ -1,332 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48106 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:59056 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751084AbdAMVTD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:19:03 -0500
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A004367BB8
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Jan 2017 21:19:03 +0000 (UTC)
-Date: Fri, 13 Jan 2017 15:19:00 -0600
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: Re: [PATCH 07/22] mkfs: Move opts related #define to one place
-Message-ID: <20170113211900.GB4176@redhat.com>
-References: <1481117249-21273-1-git-send-email-jtulak@redhat.com>
- <1481117249-21273-8-git-send-email-jtulak@redhat.com>
+        id S1750986AbdAZAU4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Jan 2017 19:20:56 -0500
+Subject: Re: [PATCH] xfs: fix bmv_count confusion
+References: <20170125195854.GP9134@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <390ab2d8-b97b-50c0-968c-9825ca86c0c9@sandeen.net>
+Date: Wed, 25 Jan 2017 18:20:54 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1481117249-21273-8-git-send-email-jtulak@redhat.com>
+In-Reply-To: <20170125195854.GP9134@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Dec 07, 2016 at 02:27:14PM +0100, Jan Tulak wrote:
-> Takes all the "#define M_CRC x" from struct opt_params declaration and moves
-> them into a single place before the struct. This is because we need to
-> cross-link conflicts and we can't link -l version to -m crc if M_CRC is defined
-> after the conflict section.
-> 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+On 1/25/17 1:58 PM, Darrick J. Wong wrote:
+> In a bmapx call, bmv_count is the total size of the array, including the
+> zeroth element that userspace uses to supply the search key.  The output
+> array starts at offset 1 so that we can set up the user for the next
+> invocationn.  Therefore, we must ensure that cur_ext (which indexes the
+> output array) never exceeds bmv_count-1, not bmv_count.  Failure to do
+> this causes heap corruption in bmapx callers such as xfs_io and
+> xfs_scrub when the formatter overflows the array.  xfs/348 can reproduce
+> this problem.
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Ok, well, this worked until f86f40379 :)  nexleft (number extents
+left) used to keep an accurate count and break when done.  That
+loop condition is getting a bit insane, but *shrug* for now.
 
+It would be worth making the commit log more clear that the problem
+currently exists only for shared extents (right?)
+
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  mkfs/xfs_mkfs.c | 138 ++++++++++++++++++++++++++++++--------------------------
->  1 file changed, 74 insertions(+), 64 deletions(-)
+>  fs/xfs/xfs_bmap_util.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index e46b55c..2122d1c 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -48,6 +48,80 @@ unsigned int		sectorsize;
->  #define MAX_CONFLICTS	8
->  #define LAST_CONFLICT	(-1)
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index b9abce5..883e55f 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -698,7 +698,7 @@ xfs_getbmap(
+>  		ASSERT(nmap <= subnex);
 >  
-> +#define OPT_B		0
-> +#define B_LOG		0
-> +#define B_SIZE		1
-> +
-> +#define OPT_D		1
-> +#define D_AGCOUNT	0
-> +#define D_FILE		1
-> +#define D_NAME		2
-> +#define D_SIZE		3
-> +#define D_SUNIT 	4
-> +#define D_SWIDTH	5
-> +#define D_AGSIZE	6
-> +#define D_SU		7
-> +#define D_SW		8
-> +#define D_SECTLOG	9
-> +#define D_SECTSIZE	10
-> +#define D_NOALIGN	11
-> +#define D_RTINHERIT	12
-> +#define D_PROJINHERIT	13
-> +#define D_EXTSZINHERIT	14
-> +
-> +
-> +#define OPT_I		2
-> +#define I_ALIGN 	0
-> +#define I_LOG		1
-> +#define I_MAXPCT	2
-> +#define I_PERBLOCK	3
-> +#define I_SIZE		4
-> +#define I_ATTR		5
-> +#define I_PROJID32BIT	6
-> +#define I_SPINODES	7
-> +
-> +#define OPT_L		3
-> +#define L_AGNUM 	0
-> +#define L_INTERNAL	1
-> +#define L_SIZE		2
-> +#define L_VERSION	3
-> +#define L_SUNIT 	4
-> +#define L_SU		5
-> +#define L_DEV		6
-> +#define L_SECTLOG	7
-> +#define L_SECTSIZE	8
-> +#define L_FILE		9
-> +#define L_NAME		10
-> +#define L_LAZYSBCNTR	11
-> +
-> +
-> +#define OPT_N		4
-> +#define N_LOG		0
-> +#define N_SIZE		1
-> +#define N_VERSION	2
-> +#define N_FTYPE 	3
-> +
-> +#define OPT_R		5
-> +#define R_EXTSIZE	0
-> +#define R_SIZE		1
-> +#define R_DEV		2
-> +#define R_FILE		3
-> +#define R_NAME		4
-> +#define R_NOALIGN	5
-> +
-> +#define OPT_S		6
-> +#define S_LOG		0
-> +#define S_SECTLOG	1
-> +#define S_SIZE		2
-> +#define S_SECTSIZE	3
-> +
-> +#define OPT_M		7
-> +#define M_CRC		0
-> +#define M_FINOBT	1
-> +#define M_UUID		2
-> +#define M_RMAPBT	3
-> +#define M_REFLINK	4
-> +
->  /*
->   * Table for parsing mkfs parameters.
->   *
-> @@ -155,14 +229,11 @@ struct opt_params {
->  		long long	value;
->  	}		subopt_params[MAX_SUBOPTS];
->  } opts[MAX_OPTS] = {
-> -#define OPT_B	0
->  	{
->  		.index = OPT_B,
->  		.name = 'b',
->  		.subopts = {
-> -#define	B_LOG		0
->  			"log",
-> -#define	B_SIZE		1
->  			"size",
->  			NULL
->  		},
-> @@ -185,40 +256,24 @@ struct opt_params {
->  			},
->  		},
->  	},
-> -#define OPT_D	1
->  	{
->  		.index = OPT_D,
->  		.name = 'd',
->  		.subopts = {
-> -	#define	D_AGCOUNT	0
->  			"agcount",
-> -	#define	D_FILE		1
->  			"file",
-> -	#define	D_NAME		2
->  			"name",
-> -	#define	D_SIZE		3
->  			"size",
-> -	#define D_SUNIT		4
->  			"sunit",
-> -	#define D_SWIDTH	5
->  			"swidth",
-> -	#define D_AGSIZE	6
->  			"agsize",
-> -	#define D_SU		7
->  			"su",
-> -	#define D_SW		8
->  			"sw",
-> -	#define D_SECTLOG	9
->  			"sectlog",
-> -	#define D_SECTSIZE	10
->  			"sectsize",
-> -	#define D_NOALIGN	11
->  			"noalign",
-> -	#define D_RTINHERIT	12
->  			"rtinherit",
-> -	#define D_PROJINHERIT	13
->  			"projinherit",
-> -	#define D_EXTSZINHERIT	14
->  			"extszinherit",
->  			NULL
->  		},
-> @@ -338,26 +393,17 @@ struct opt_params {
->  			},
->  		},
->  	},
-> -#define OPT_I	2
->  	{
->  		.index = OPT_I,
->  		.name = 'i',
->  		.subopts = {
-> -#define	I_ALIGN		0
->  			"align",
-> -#define	I_LOG		1
->  			"log",
-> -#define	I_MAXPCT	2
->  			"maxpct",
-> -#define	I_PERBLOCK	3
->  			"perblock",
-> -#define	I_SIZE		4
->  			"size",
-> -#define	I_ATTR		5
->  			"attr",
-> -#define	I_PROJID32BIT	6
->  			"projid32bit",
-> -#define I_SPINODES	7
->  			"sparse",
->  			NULL
->  		},
-> @@ -420,34 +466,21 @@ struct opt_params {
->  			},
->  		},
->  	},
-> -#define OPT_L	3
->  	{
->  		.index = OPT_L,
->  		.name = 'l',
->  		.subopts = {
-> -	#define	L_AGNUM		0
->  			"agnum",
-> -	#define	L_INTERNAL	1
->  			"internal",
-> -	#define	L_SIZE		2
->  			"size",
-> -	#define L_VERSION	3
->  			"version",
-> -	#define L_SUNIT		4
->  			"sunit",
-> -	#define L_SU		5
->  			"su",
-> -	#define L_DEV		6
->  			"logdev",
-> -	#define	L_SECTLOG	7
->  			"sectlog",
-> -	#define	L_SECTSIZE	8
->  			"sectsize",
-> -	#define	L_FILE		9
->  			"file",
-> -	#define	L_NAME		10
->  			"name",
-> -	#define	L_LAZYSBCNTR	11
->  			"lazy-count",
->  			NULL
->  		},
-> @@ -538,18 +571,13 @@ struct opt_params {
->  			},
->  		},
->  	},
-> -#define OPT_N	4
->  	{
->  		.index = OPT_N,
->  		.name = 'n',
->  		.subopts = {
-> -	#define	N_LOG		0
->  			"log",
-> -	#define	N_SIZE		1
->  			"size",
-> -	#define	N_VERSION	2
->  			"version",
-> -	#define	N_FTYPE		3
->  			"ftype",
->  		NULL,
->  		},
-> @@ -584,22 +612,15 @@ struct opt_params {
->  			},
->  		},
->  	},
-> -#define OPT_R	5
->  	{
->  		.index = OPT_R,
->  		.name = 'r',
->  		.subopts = {
-> -	#define	R_EXTSIZE	0
->  			"extsize",
-> -	#define	R_SIZE		1
->  			"size",
-> -	#define	R_DEV		2
->  			"rtdev",
-> -	#define	R_FILE		3
->  			"file",
-> -	#define	R_NAME		4
->  			"name",
-> -	#define R_NOALIGN	5
->  			"noalign",
->  			NULL
->  		},
-> @@ -640,18 +661,13 @@ struct opt_params {
->  			},
->  		},
->  	},
-> -#define OPT_S	6
->  	{
->  		.index = OPT_S,
->  		.name = 's',
->  		.subopts = {
-> -	#define	S_LOG		0
->  			"log",
-> -	#define	S_SECTLOG	1
->  			"sectlog",
-> -	#define	S_SIZE		2
->  			"size",
-> -	#define	S_SECTSIZE	3
->  			"sectsize",
->  			NULL
->  		},
-> @@ -694,20 +710,14 @@ struct opt_params {
->  			},
->  		},
->  	},
-> -#define OPT_M	7
->  	{
->  		.index = OPT_M,
->  		.name = 'm',
->  		.subopts = {
-> -	#define	M_CRC		0
->  			"crc",
-> -	#define M_FINOBT	1
->  			"finobt",
-> -	#define M_UUID		2
->  			"uuid",
-> -	#define M_RMAPBT	3
->  			"rmapbt",
-> -	#define M_REFLINK	4
->  			"reflink",
->  			NULL
->  		},
-> -- 
-> 2.8.1
-> 
+>  		for (i = 0; i < nmap && nexleft && bmv->bmv_length &&
+> -				cur_ext < bmv->bmv_count; i++) {
+> +				cur_ext < bmv->bmv_count - 1; i++) {
+
+ok, so the cur_ext vs. bmv_count test was added w/ the above commit.
+
+>  			out[cur_ext].bmv_oflags = 0;
+>  			if (map[i].br_state == XFS_EXT_UNWRITTEN)
+>  				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
+> @@ -769,7 +769,7 @@ xfs_getbmap(
+>  			cur_ext++;
+>  		}
+>  	} while (nmap && nexleft && bmv->bmv_length &&
+> -		 cur_ext < bmv->bmv_count);
+> +		 cur_ext < bmv->bmv_count - 1);
+
+at the bottom of the loop we have:
+
+                        if (inject_map.br_startblock != NULLFSBLOCK) {
+                                map[i] = inject_map;
+                                i--;
+                        } else
+                                nexleft--;
+                        bmv->bmv_entries++;
+
+nexleft used to be our "should we stop" counter, if we have extents
+left, keep going, if not, stop.  It was initialized in a roundabout
+way from bmv->bmv_count - 1;, via the "nex" variable.
+
+So nexleft started out as the maximum times through the loop,
+but now you're resetting i, advancing the cur_ext anyway,
+going through the loop again, but not decrementing nexleft.
+
+If you revert the loop condition to:
+
+               for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
+
+and set the end of the loop nextent handling to:
+
+                       nexleft--;
+                       if (inject_map.br_startblock != NULLFSBLOCK) {
+                               map[i] = inject_map;
+                               i--;
+                       }
+
+does that not fix it?  i.e.:
+
+
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index b9abce5..95dd839 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -697,8 +697,7 @@
+ 			goto out_free_map;
+ 		ASSERT(nmap <= subnex);
+ 
+-		for (i = 0; i < nmap && nexleft && bmv->bmv_length &&
+-				cur_ext < bmv->bmv_count; i++) {
++		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
+ 			out[cur_ext].bmv_oflags = 0;
+ 			if (map[i].br_state == XFS_EXT_UNWRITTEN)
+ 				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
+@@ -760,11 +759,11 @@
+ 				continue;
+ 			}
+ 
++			nexleft--;
+ 			if (inject_map.br_startblock != NULLFSBLOCK) {
+ 				map[i] = inject_map;
+ 				i--;
+-			} else
+-				nexleft--;
++			}
+ 			bmv->bmv_entries++;
+ 			cur_ext++;
+ 		}
+
+
+
+
+>   out_free_map:
+>  	kmem_free(map);
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
