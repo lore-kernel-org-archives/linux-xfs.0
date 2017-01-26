@@ -1,45 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51674 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:45778 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932793AbdA0R0r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Jan 2017 12:26:47 -0500
-Subject: Re: [PATCH 2/2] xfs: use per-AG reservations for the finobt
-References: <1485335667-22435-1-git-send-email-hch@lst.de>
- <1485335667-22435-3-git-send-email-hch@lst.de>
- <c4b1428d-6861-5290-d108-043ecbfeb1b1@sandeen.net>
- <20170127145930.GA14983@lst.de>
- <96908d89-882a-e1b9-5283-3c9502fdface@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <3ca70fec-5af6-6ef3-4bfd-ae00d6efe719@sandeen.net>
-Date: Fri, 27 Jan 2017 11:26:46 -0600
+        id S1752723AbdAZFIl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Jan 2017 00:08:41 -0500
+Date: Thu, 26 Jan 2017 13:08:38 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v5 0/9] xfstests: online scrub/repair support
+Message-ID: <20170126050838.GN1859@eguan.usersys.redhat.com>
+References: <148498621936.17109.4249711513404036449.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <96908d89-882a-e1b9-5283-3c9502fdface@sandeen.net>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <148498621936.17109.4249711513404036449.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: darrick.wong@oracle.com, bfoster@redhat.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On 1/27/17 9:43 AM, Eric Sandeen wrote:
+On Sat, Jan 21, 2017 at 12:10:19AM -0800, Darrick J. Wong wrote:
+> Hi all,
+> 
+> This is the fifth revision of a patchset that adds to XFS userland tools
+> support for online metadata scrubbing and repair.
+> 
+> The new patches in this series do three things: first, they expand the
+> filesystem populate commands inside xfstests to be able to create all
+> types of XFS metadata.  Second, they create a bunch of xfs_db wrapper
+> functions to iterate all fields present in a given metadata object and
+> fuzz them in various ways.  Finally, for each metadata object type there
+> is a separate test that iteratively fuzzes all fields of that object and
+> runs it through the mount/scrub/repair loop to see what happens.
+> 
+> If you're going to start using this mess, you probably ought to just
+> pull from my github trees for kernel[1], xfsprogs[2], and xfstests[3].
 
-> I'll keep looking to be sure it's legit.  It didn't really make sense
-> to me either, but ... yup, i'm seeing it.  the fsync error doesn't
-> come through as expected.  I'll keep looking into it.
+Are your github trees synced with kernel.org trees? Seems so, and I did
+my tests with your kernel.org trees.
 
-Ok finally had time to actually look.  generic/108 is doing IO
-across a stripe and failing one disk; it seems that the reservations
-have moved the IO pattern in such a way that the fsync'd IO
-does not hit the disk that failed, so the fsync succeeds.
+> The kernel patches in the git trees should apply to 4.10-rc4; xfsprogs
+> patches to for-next; and xfstest to master.
+> 
+> The patches have survived all auto group xfstests both with scrub-only
+> mode and also a special debugging mode to xfs_scrub that forces it to
+> rebuild the metadata structures even if they're not damaged.
 
-If I bump up the write prior to the fsync frmo 6M to 8M, it fails
-again as expected.
+I have trouble finishing running all the tests so far, the tests need
+long time to run and in some tests xfs_repair or xfs_scrub are just
+spinning there, sometimes I can kill them to make test continue,
+sometimes I can't (e.g. xfs/1312, I tried to kill the xfs_scrub process,
+but it became <defunc>).
 
-So I'm not quite sure how a 6M write on a 4M stripe device
-doesn't hit the failing device, but a larger IO makes the test
-fail again - so I'll chalk this up to a problematic assumption
-in the test, not a problem with the patch.
+And in most tests I have run, I see such failures:
+
+    +scrub didn't fail with length = ones.
+    +scrub didn't fail with length = firstbit.
+    +scrub didn't fail with length = middlebit.
+    +scrub didn't fail with length = lastbit.
+    ....
+
+Not sure if that's expected?
+
+I also hit xfs_scrub and xfs_repair double free bug in xfs/1312 (perhaps
+that's why I can't kill it).
+
+OTOH, all these failures/issues seem like kernel or userspace bug, I
+went through all the patches and new tests and I didn't find anything
+wrong obviously. So I think it's fine to merge them in this week's
+update. Unless you have a second thought?
 
 Thanks,
--Eric
+Eryu
