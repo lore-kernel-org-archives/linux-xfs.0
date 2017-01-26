@@ -1,145 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27670 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752173AbdAZB1k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2017 20:27:40 -0500
-Date: Wed, 25 Jan 2017 17:27:32 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v10 1/5] xfs_db: sanitize agcount on load
-Message-ID: <20170126012732.GQ9134@birch.djwong.org>
-References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
- <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
- <20170123213108.GD31202@birch.djwong.org>
- <6ad3798a-c3f5-fd8f-ab05-62c0f878290c@sandeen.net>
- <17bbf8d4-39f7-a542-6c9d-3cd96e865ddf@sandeen.net>
- <886473a5-c0ff-a5b7-38bc-13d4d5d13c3c@sandeen.net>
- <e8855324-a91e-60c0-26c2-40b437b78696@sandeen.net>
+Received: from sandeen.net ([63.231.237.45]:44416 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752878AbdAZU65 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Jan 2017 15:58:57 -0500
+Subject: Re: [PATCH] xfs: prevent quotacheck from overloading inode lru
+References: <1485458805-44477-1-git-send-email-bfoster@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <53648a32-5927-e453-7a24-838951f2f4eb@sandeen.net>
+Date: Thu, 26 Jan 2017 14:58:32 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e8855324-a91e-60c0-26c2-40b437b78696@sandeen.net>
+In-Reply-To: <1485458805-44477-1-git-send-email-bfoster@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Cc: Martin Svec <martin.svec@zoner.cz>, stable@vger.kernel.org
 
-On Wed, Jan 25, 2017 at 07:17:56PM -0600, Eric Sandeen wrote:
-> Before we get into libxfs_initialize_perag and try to blindly
-> allocate a perag struct for every (possibly corrupted number of)
-> AGs, see if we can read the last one.  If not, assume it's corrupt,
-> and load only the first AG.
+On 1/26/17 1:26 PM, Brian Foster wrote:
+> Quotacheck runs at mount time in situations where quota accounting must
+> be recalculated. In doing so, it uses bulkstat to visit every inode in
+> the filesystem. Historically, every inode processed during quotacheck
+> was released and immediately tagged for reclaim because quotacheck runs
+> before the superblock is marked active by the VFS. In other words,
+> the final iput() lead to an immediate ->destroy_inode() call, which
+> allowed the XFS background reclaim worker to start reclaiming inodes.
 > 
-> Do this only for an arbitrarily high-ish agcount, so that normal-ish
-> geometry on a possibly truncated file or device will still do
-> its best to make all readable AGs available.
+> Commit 17c12bcd3 ("xfs: when replaying bmap operations, don't let
+> unlinked inodes get reaped") marks the XFS superblock active sooner as
+> part of the mount process to support caching inodes processed during log
+> recovery. This occurs before quotacheck and thus means all inodes
+> processed by quotacheck are inserted to the LRU on release.  The
+> s_umount lock is held until the mount has completed and thus prevents
+> the shrinkers from operating on the sb. This means that quotacheck can
+> excessively populate the inode LRU and lead to OOM conditions on systems
+> without sufficient RAM.
 > 
-> Set xfs_db's exitcode to 1 if this happens.
+> Update the quotacheck bulkstat handler to set XFS_IGET_DONTCACHE on
+> inodes processed by quotacheck. This causes ->drop_inode() to return 1
+> and in turn causes iput_final() to evict the inode. This preserves the
+> original quotacheck behavior and prevents it from overloading the LRU
+> and running out of memory.
 > 
-> Also teach metadump to detect this and exit appropriately if
-> truncated, as it resets exitcode to 0 for its own purposes internally.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> CC: stable@vger.kernel.org # v4.9
+> Reported-by: Martin Svec <martin.svec@zoner.cz>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Makes sense, thanks for digging into this!
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
+>  fs/xfs/xfs_qm.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> v1->v6: Tale of woe.
-> v7: blow it all up
-> v8: use bare libxfs_readbuf so verifiers don't matter,
->     "ours goes to 1 million!"
-> v9: Fix printf format, exit metadump with error if things look wonky.
-> v10: set exitcode to 1 in init().
-> 
-> diff --git a/db/init.c b/db/init.c
-> index ec1e274..59fc3e0 100644
-> --- a/db/init.c
-> +++ b/db/init.c
-> @@ -58,6 +58,7 @@ init(
->  {
->  	struct xfs_sb	*sbp;
->  	struct xfs_buf	*bp;
-> +	unsigned int	agcount;
->  	int		c;
->  
->  	setlocale(LC_ALL, "");
-> @@ -148,6 +149,7 @@ init(
->  		}
->  	}
->  
-> +	agcount = sbp->sb_agcount;
->  	mp = libxfs_mount(&xmount, sbp, x.ddev, x.logdev, x.rtdev,
->  			  LIBXFS_MOUNT_DEBUGGER);
->  	if (!mp) {
-> @@ -159,6 +161,10 @@ init(
->  	mp->m_log = &xlog;
->  	blkbb = 1 << mp->m_blkbb_log;
->  
-> +	/* Did we limit a broken agcount in libxfs_mount? */
-> +	if (sbp->sb_agcount != agcount)
-> +		exitcode = 1;
-> +
->  	/*
->  	 * xfs_check needs corrected incore superblock values
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 45e50ea..b669b12 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -1177,7 +1177,8 @@ xfs_qm_dqusage_adjust(
+>  	 * the case in all other instances. It's OK that we do this because
+>  	 * quotacheck is done only at mount time.
 >  	 */
-> diff --git a/db/metadump.c b/db/metadump.c
-> index 1ba6b38..38519f1 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -2760,6 +2760,16 @@ metadump_f(
->  		return 0;
->  	}
->  
-> +	/*
-> +	 * on load, we sanity-checked agcount and possibly set to 1
-> +	 * if it was corrupted and large.
-> +	 */
-> +	if (mp->m_sb.sb_agcount == 1 &&
-> +	    XFS_MAX_DBLOCKS(&mp->m_sb) < mp->m_sb.sb_dblocks) {
-> +		print_warning("truncated agcount, giving up");
-> +		return 0;
-> +	}
-> +
->  	while ((c = getopt(argc, argv, "aegm:ow")) != EOF) {
->  		switch (c) {
->  			case 'a':
-> diff --git a/libxfs/init.c b/libxfs/init.c
-> index a08575a..85e0d15 100644
-> --- a/libxfs/init.c
-> +++ b/libxfs/init.c
-> @@ -817,6 +817,29 @@ libxfs_mount(
->  			return NULL;
->  	}
->  
-> +	/*
-> +	 * libxfs_initialize_perag will allocate a perag structure for each ag.
-> +	 * If agcount is corrupted and insanely high, this will OOM the box.
-> +	 * If the agount seems (arbitrarily) high, try to read what would be
-> +	 * the last AG, and if that fails for a relatively high agcount, just
-> +	 * read the first one and let the user know to check the geometry.
-> +	 */
-> +	if (sbp->sb_agcount > 1000000) {
-> +		bp = libxfs_readbuf(mp->m_dev,
-> +				XFS_AG_DADDR(mp, sbp->sb_agcount - 1, 0), 1,
-> +				!(flags & LIBXFS_MOUNT_DEBUGGER), NULL);
-> +		if (bp->b_error) {
-> +			fprintf(stderr, _("%s: read of AG %u failed\n"),
-> +						progname, sbp->sb_agcount);
-> +			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
-> +				return NULL;
-> +			fprintf(stderr, _("%s: limiting reads to AG 0\n"),
-> +								progname);
-> +			sbp->sb_agcount = 1;
-> +		}
-> +		libxfs_putbuf(bp);
-> +	}
-> +
->  	error = libxfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
+> -	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_EXCL, &ip);
+> +	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, XFS_ILOCK_EXCL,
+> +			 &ip);
 >  	if (error) {
->  		fprintf(stderr, _("%s: perag init failed\n"),
+>  		*res = BULKSTAT_RV_NOTHING;
+>  		return error;
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
