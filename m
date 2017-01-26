@@ -1,51 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48267 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752453AbdAZCd4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2017 21:33:56 -0500
-Date: Wed, 25 Jan 2017 18:33:52 -0800
+Received: from aserp1040.oracle.com ([141.146.126.69]:50774 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752453AbdAZDLS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2017 22:11:18 -0500
+Date: Wed, 25 Jan 2017 19:11:14 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_repair: Fix uninit var in process_leaf_attr_level
-Message-ID: <20170126023352.GB2584@birch.djwong.org>
-References: <fe6cd162-4f2a-d470-f8ea-8a028a649212@redhat.com>
+Subject: [PATCH] xfs: fix bmv_count confusion w/ shared extents
+Message-ID: <20170126031114.GS9134@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fe6cd162-4f2a-d470-f8ea-8a028a649212@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jan 25, 2017 at 08:30:05PM -0600, Eric Sandeen wrote:
-> My unreviewed maintainer adjustment on the way in gets a
-> brown paper bag.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+In a bmapx call, bmv_count is the total size of the array, including the
+zeroth element that userspace uses to supply the search key.  The output
+array starts at offset 1 so that we can set up the user for the next
+invocation.  Since we now can split an extent into multiple bmap records
+due to shared/unshared status, we have to be careful that we don't
+overflow the output array.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+In the original patch f86f403794b ("xfs: teach get_bmapx about shared
+extents and the CoW fork") I used cur_ext (the output index) to check
+for overflows, albeit with an off-by-one error.  Since nexleft describes
+the number of unfilled slots in the output, we can rip all that out and
+use nexleft for the check directly.
 
-> ---
-> 
-> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-> index 158e31a..9ec2231 100644
-> --- a/repair/attr_repair.c
-> +++ b/repair/attr_repair.c
-> @@ -753,6 +753,7 @@ process_leaf_attr_level(xfs_mount_t	*mp,
->  	struct xfs_attr3_icleaf_hdr leafhdr;
->  
->  	da_bno = da_cursor->level[0].bno;
-> +	ino = da_cursor->ino;
->  	/*
->  	 * 0 is the root block and no block
->  	 * pointer can point to the root block of the btree
-> @@ -764,7 +765,6 @@ process_leaf_attr_level(xfs_mount_t	*mp,
->  		goto error_out;
->  	}
->  
-> -	ino = da_cursor->ino;
->  	prev_bno = 0;
->  
->  	do {
-> 
+Failure to do this causes heap corruption in bmapx callers such as
+xfs_io and xfs_scrub.  xfs/328 can reproduce this problem.
+
+Suggested-by: Eric Sandeen <sandeen@sandeen.net>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: simplify the loop accounting to use nexleft for the output checks
+---
+ fs/xfs/xfs_bmap_util.c |   10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index b9abce5..fc6bdaf 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -697,8 +697,7 @@ xfs_getbmap(
+ 			goto out_free_map;
+ 		ASSERT(nmap <= subnex);
+ 
+-		for (i = 0; i < nmap && nexleft && bmv->bmv_length &&
+-				cur_ext < bmv->bmv_count; i++) {
++		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
+ 			out[cur_ext].bmv_oflags = 0;
+ 			if (map[i].br_state == XFS_EXT_UNWRITTEN)
+ 				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
+@@ -760,16 +759,15 @@ xfs_getbmap(
+ 				continue;
+ 			}
+ 
++			nexleft--;
+ 			if (inject_map.br_startblock != NULLFSBLOCK) {
+ 				map[i] = inject_map;
+ 				i--;
+-			} else
+-				nexleft--;
++			}
+ 			bmv->bmv_entries++;
+ 			cur_ext++;
+ 		}
+-	} while (nmap && nexleft && bmv->bmv_length &&
+-		 cur_ext < bmv->bmv_count);
++	} while (nmap && nexleft && bmv->bmv_length);
+ 
+  out_free_map:
+ 	kmem_free(map);
