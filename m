@@ -1,100 +1,196 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34342 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751788AbdAZBFW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Jan 2017 20:05:22 -0500
-Subject: [PATCH v9 1/5] xfs_db: sanitize agcount on load
-References: <148494391629.5256.3328772079712970611.stgit@birch.djwong.org>
- <148494392247.5256.10692618169002348643.stgit@birch.djwong.org>
- <20170123213108.GD31202@birch.djwong.org>
- <6ad3798a-c3f5-fd8f-ab05-62c0f878290c@sandeen.net>
- <17bbf8d4-39f7-a542-6c9d-3cd96e865ddf@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <886473a5-c0ff-a5b7-38bc-13d4d5d13c3c@sandeen.net>
-Date: Wed, 25 Jan 2017 19:05:20 -0600
+Received: from userp1050.oracle.com ([156.151.31.82]:40967 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751089AbdA1AdF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Jan 2017 19:33:05 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v0RNIYq2010232
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Jan 2017 23:18:34 GMT
+Date: Fri, 27 Jan 2017 15:17:27 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: Quota-enabled XFS hangs during mount
+Message-ID: <20170127231727.GB9134@birch.djwong.org>
+References: <43ca55d0-6762-d54f-5ba9-a83f9c1988f6@zoner.cz>
+ <20170123134452.GA33287@bfoster.bfoster>
+ <5b41d19b-1a0d-2b74-a633-30a5f6d2f14a@zoner.cz>
+ <20170125221739.GA33995@bfoster.bfoster>
+ <30d56003-a517-f6f0-d188-d0ada5a9fbb7@zoner.cz>
+ <20170126191254.GB39683@bfoster.bfoster>
+ <27c2f5aa-517d-22b5-b55f-f0ceb277e9a3@zoner.cz>
+ <20170127170734.GA49571@bfoster.bfoster>
+ <5dc542b4-1fc7-2b67-0911-76914edf725e@zoner.cz>
+ <87e40a9f-751a-b9ac-8558-3556625b76c5@zoner.cz>
 MIME-Version: 1.0
-In-Reply-To: <17bbf8d4-39f7-a542-6c9d-3cd96e865ddf@sandeen.net>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87e40a9f-751a-b9ac-8558-3556625b76c5@zoner.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Martin Svec <martin.svec@zoner.cz>
+Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-Before we get into libxfs_initialize_perag and try to blindly
-allocate a perag struct for every (possibly corrupted number of)
-AGs, see if we can read the last one.  If not, assume it's corrupt,
-and load only the first AG.
+On Fri, Jan 27, 2017 at 10:00:43PM +0100, Martin Svec wrote:
+> Dne 27.1.2017 v 21:49 Martin Svec napsal(a):
+> > Dne 27.1.2017 v 18:07 Brian Foster napsal(a):
+> >> On Fri, Jan 27, 2017 at 02:06:45PM +0100, Martin Svec wrote:
+> >>> Dne 26.1.2017 v 20:12 Brian Foster napsal(a):
+> >>>> On Thu, Jan 26, 2017 at 06:46:42PM +0100, Martin Svec wrote:
+> >>>>> Hello,
+> >>>>>
+> >>>>> Dne 25.1.2017 v 23:17 Brian Foster napsal(a):
+> >>>>>> On Tue, Jan 24, 2017 at 02:17:36PM +0100, Martin Svec wrote:
+> >>>>>>> Hello,
+> >>>>>>>
+> >>>>>>> Dne 23.1.2017 v 14:44 Brian Foster napsal(a):
+> >>>>>>>> On Mon, Jan 23, 2017 at 10:44:20AM +0100, Martin Svec wrote:
+> >>>>>>>>> Hello Dave,
+> >>>>>>>>>
+> >>>>>>>>> Any updates on this? It's a bit annoying to workaround the bug by increasing RAM just because of the
+> >>>>>>>>> initial quotacheck.
+> >>>>>>>>>
+> >>>>>>>> Note that Dave is away on a bit of an extended vacation[1]. It looks
+> >>>>>>>> like he was in the process of fishing through the code to spot any
+> >>>>>>>> potential problems related to quotacheck+reclaim. I see you've cc'd him
+> >>>>>>>> directly so we'll see if we get a response wrt to if he got anywhere
+> >>>>>>>> with that...
+> >>>>>>>>
+> >>>>>>>> Skimming back through this thread, it looks like we have an issue where
+> >>>>>>>> quota check is not quite reliable in the event of reclaim, and you
+> >>>>>>>> appear to be reproducing this due to a probably unique combination of
+> >>>>>>>> large inode count and low memory.
+> >>>>>>>>
+> >>>>>>>> Is my understanding correct that you've reproduced this on more recent
+> >>>>>>>> kernels than the original report? 
+> >>>>>>> Yes, I repeated the tests using 4.9.3 kernel on another VM where we hit this issue.
+> >>>>>>>
+> >>>>>>> Configuration:
+> >>>>>>> * vSphere 5.5 virtual machine, 2 vCPUs, virtual disks residing on iSCSI VMFS datastore
+> >>>>>>> * Debian Jessie 64 bit webserver, vanilla kernel 4.9.3
+> >>>>>>> * 180 GB XFS data disk mounted as /www
+> >>>>>>>
+> >>>>>>> Quotacheck behavior depends on assigned RAM:
+> >>>>>>> * 2 or less GiB: mount /www leads to a storm of OOM kills including shell, ttys etc., so the system
+> >>>>>>> becomes unusable.
+> >>>>>>> * 3 GiB: mount /www task hangs in the same way as I reported in earlier in this thread.
+> >>>>>>> * 4 or more GiB: mount /www succeeds.
+> >>>>>>>
+> >>>>>> I was able to reproduce the quotacheck OOM situation on latest kernels.
+> >>>>>> This problem actually looks like a regression as of commit 17c12bcd3
+> >>>>>> ("xfs: when replaying bmap operations, don't let unlinked inodes get
+> >>>>>> reaped"), but I don't think that patch is the core problem. That patch
+> >>>>>> pulled up setting MS_ACTIVE on the superblock from after XFS runs
+> >>>>>> quotacheck to before it (for other reasons), which has a side effect of
+> >>>>>> causing inodes to be placed onto the lru once they are released. Before
+> >>>>>> this change, all inodes were immediately marked for reclaim once
+> >>>>>> released from quotacheck because the superblock had not been set active.
+> >>>>>>
+> >>>>>> The problem here is first that quotacheck issues a bulkstat and thus
+> >>>>>> grabs and releases every inode in the fs. The quotacheck occurs at mount
+> >>>>>> time, which means we still hold the s_umount lock and thus the shrinker
+> >>>>>> cannot run even though it is registered. Therefore, we basically just
+> >>>>>> populate the lru until we've consumed too much memory and blow up.
+> >>>>>>
+> >>>>>> I think the solution here is to preserve the quotacheck behavior prior
+> >>>>>> to commit 17c12bcd3 via something like the following:
+> >>>>>>
+> >>>>>> --- a/fs/xfs/xfs_qm.c
+> >>>>>> +++ b/fs/xfs/xfs_qm.c
+> >>>>>> @@ -1177,7 +1177,7 @@ xfs_qm_dqusage_adjust(
+> >>>>>>  	 * the case in all other instances. It's OK that we do this because
+> >>>>>>  	 * quotacheck is done only at mount time.
+> >>>>>>  	 */
+> >>>>>> -	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_EXCL, &ip);
+> >>>>>> +	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, XFS_ILOCK_EXCL, &ip);
+> >>>>>>  	if (error) {
+> >>>>>>  		*res = BULKSTAT_RV_NOTHING;
+> >>>>>>  		return error;
+> >>>>>>
+> >>>>>> ... which allows quotacheck to run as normal in my quick tests. Could
+> >>>>>> you try this on your more recent kernel tests and see whether you still
+> >>>>>> reproduce any problems?
+> >>>>> The above patch fixes OOM issues and reduces overall memory consumption during quotacheck. However,
+> >>>>> it does not fix the original xfs_qm_flush_one() freezing. I'm still able to reproduce it with 1 GB
+> >>>>> of RAM or lower. Tested with 4.9.5 kernel.
+> >>>>>
+> >>>> Ok, thanks. I'll get that fix posted shortly.
+> >>>>
+> >>>> I hadn't tried reducing RAM any further. I dropped my vm down to 1GB and
+> >>>> I don't reproduce a hang. If I drop to 512MB, the mount actually crashes
+> >>>> due to what looks like the problem that djwong just fixed[1].
+> >>>>
+> >>>> With that one liner applied, it does look like I've hit a mount hang in
+> >>>> the quotacheck path. Note that I'm also running into OOM issues again
+> >>>> though, probably due to legitimately not having enough RAM for this vm.
+> >>>> Anyways, I'll see if I can dig anything out of that...
+> >>>>
+> >>>> FWIW, this is all on the latest for-next (4.10.0-rc5).
+> >>>>
+> >>>> [1] http://www.spinics.net/lists/linux-xfs/msg03869.html
+> >>>>
+> >>>>> If it makes sense to you, I can rsync the whole filesystem to a new XFS volume and repeat the tests.
+> >>>>> At least, that could tell us if the problem depends on a particular state of on-disk metadata
+> >>>>> structures or it's a general property of the given filesystem tree.
+> >>>>>
+> >>>> That couldn't hurt, thanks.
+> >>>>
+> >>> Well, after rsync to a fresh non-resized XFS volume, I still hit the mount hang with 1GB RAM.
+> >>>
+> >> The problem looks like a race between dquot reclaim and quotacheck. The
+> >> high level sequence of events is as follows:
+> >>
+> >>  - During quotacheck, xfs_qm_dqiterate() walks the physical dquot
+> >>    buffers and queues them to the delwri queue.
+> >>  - Next, kswapd kicks in and attempts to reclaim a dquot that is backed
+> >>    by a buffer on the quotacheck delwri queue. xfs_qm_dquot_isolate()
+> >>    acquires the flush lock and attempts to queue to the reclaim delwri
+> >>    queue. This silently fails because the buffer is already queued.
+> >>
+> >>    From this point forward, the dquot flush lock is not going to be
+> >>    released until the buffer is submitted for I/O and completed via
+> >>    quotacheck.
+> >>  - Quotacheck continues on to the xfs_qm_flush_one() pass, hits the
+> >>    dquot in question and waits on the flush lock to issue the flush of
+> >>    the recalculated values. *deadlock*
+> >>
+> >> There are at least a few ways to deal with this. We could do something
+> >> granular to fix up the reclaim path to check whether the buffer is
+> >> already queued or something of that nature before we actually invoke the
+> >> flush. I think this is effectively pointless, however, because the first
+> >> part of quotacheck walks and queues all physical dquot buffers anyways.
+> >>
+> >> In other words, I think dquot reclaim during quotacheck should probably
+> >> be bypassed. Given that, we could either adjust when the shrinker is
+> >> registered until after quotacheck or set a flag somewhere to cause dquot
+> >> reclaim to back out when quotacheck is running. I opted for something
+> >> like the latter. Care to test the appended patch?
+> >>
+> >> Note that I think this does mean that you could still have low memory
+> >> issues if you happen to have a lot of quotas defined..
+> >>
+> > Looks good, no more hangs with 1 GB. Thank you, Brian.
+> >
+> > If I further reduce RAM to 512 MB, mount succeeds too but multiple "BUG: Bad page state in process
+> > mount" errors are reported. Is it one of the expected low memory issues?
+> >
+> > Martin
+> >
+> Well, reading back through this thread, this might be related to patch [1] which I didn't apply to
+> 4.9.5. I'll retry it next week.
+> 
+> [1] http://www.spinics.net/lists/linux-xfs/msg03869.html
 
-Do this only for an arbitrarily high-ish agcount, so that normal-ish
-geometry on a possibly truncated file or device will still do
-its best to make all readable AGs available.
+Yes, it is. :)
 
-Teach metadump to detect this and exit appropriately if truncated.
+--D
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-v1->v6: Tale of woe.
-v7: blow it all up
-v8: use bare libxfs_readbuf so verifiers don't matter,
-    "ours goes to 1 million!"
-v9: Fix printf format, exit metadump with error if things look wonky.
-
-diff --git a/db/metadump.c b/db/metadump.c
-index 1ba6b38..d307771 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -2760,6 +2760,16 @@ metadump_f(
- 		return 0;
- 	}
- 
-+	/*
-+	 * on load, we sanity-checked agcount and possibly set to 1
-+	 * if it was corrupted and large.
-+	 */
-+	if (mp->m_sb.sb_agcount == 1 &&
-+	    XFS_MAX_DBLOCKS(&mp->m_sb) < mp->m_sb.sb_dblocks) {
-+		print_warning("truncated agcount, giving up");
-+		return 0;
-+	}
-+
- 	while ((c = getopt(argc, argv, "aegm:ow")) != EOF) {
- 		switch (c) {
- 			case 'a':
-diff --git a/libxfs/init.c b/libxfs/init.c
-index a08575a..85e0d15 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -817,6 +817,29 @@ libxfs_mount(
- 			return NULL;
- 	}
- 
-+	/*
-+	 * libxfs_initialize_perag will allocate a perag structure for each ag.
-+	 * If agcount is corrupted and insanely high, this will OOM the box.
-+	 * If the agount seems (arbitrarily) high, try to read what would be
-+	 * the last AG, and if that fails for a relatively high agcount, just
-+	 * read the first one and let the user know to check the geometry.
-+	 */
-+	if (sbp->sb_agcount > 1000000) {
-+		bp = libxfs_readbuf(mp->m_dev,
-+				XFS_AG_DADDR(mp, sbp->sb_agcount - 1, 0), 1,
-+				!(flags & LIBXFS_MOUNT_DEBUGGER), NULL);
-+		if (bp->b_error) {
-+			fprintf(stderr, _("%s: read of AG %u failed\n"),
-+						progname, sbp->sb_agcount);
-+			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
-+				return NULL;
-+			fprintf(stderr, _("%s: limiting reads to AG 0\n"),
-+								progname);
-+			sbp->sb_agcount = 1;
-+		}
-+		libxfs_putbuf(bp);
-+	}
-+
- 	error = libxfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
- 	if (error) {
- 		fprintf(stderr, _("%s: perag init failed\n"),
-
+> 
+> Martin
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
