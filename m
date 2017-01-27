@@ -1,94 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44762 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:37178 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751386AbdAYMoM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Jan 2017 07:44:12 -0500
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 509703A76B5
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 12:44:13 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v0PCiDEs020242
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2017 07:44:13 -0500
-Date: Wed, 25 Jan 2017 07:44:12 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: remove racy hasattr check from attr ops
-Message-ID: <20170125124411.GA28388@bfoster.bfoster>
-References: <1483975378-23483-1-git-send-email-bfoster@redhat.com>
+        id S1754801AbdA0Jhl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Jan 2017 04:37:41 -0500
+Date: Fri, 27 Jan 2017 10:37:35 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
+Message-ID: <20170127093735.GB4143@dhcp22.suse.cz>
+References: <20170117082425.GD19699@dhcp22.suse.cz>
+ <20170117151817.GR19699@dhcp22.suse.cz>
+ <20170117155916.dcizr65bwa6behe7@thunk.org>
+ <20170117161618.GT19699@dhcp22.suse.cz>
+ <20170117172925.GA2486@quack2.suse.cz>
+ <20170119083956.GE30786@dhcp22.suse.cz>
+ <20170119092236.GC2565@quack2.suse.cz>
+ <20170119094405.GK30786@dhcp22.suse.cz>
+ <20170126074455.GC8456@dhcp22.suse.cz>
+ <20170127061318.xd2qxashbl4dajez@thunk.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1483975378-23483-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20170127061318.xd2qxashbl4dajez@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-On Mon, Jan 09, 2017 at 10:22:58AM -0500, Brian Foster wrote:
-> xfs_attr_[get|remove]() have unlocked attribute fork checks to optimize
-> away a lock cycle in cases where the fork does not exist or is otherwise
-> empty. This check is not safe, however, because an attribute fork short
-> form to extent format conversion includes a transient state that causes
-> the xfs_inode_hasattr() check to fail. Specifically,
-> xfs_attr_shortform_to_leaf() creates an empty extent format attribute
-> fork and then adds the existing shortform attributes to it.
+On Fri 27-01-17 01:13:18, Theodore Ts'o wrote:
+> On Thu, Jan 26, 2017 at 08:44:55AM +0100, Michal Hocko wrote:
+> > > > I'm convinced the current series is OK, only real life will tell us whether
+> > > > we missed something or not ;)
+> > > 
+> > > I would like to extend the changelog of "jbd2: mark the transaction
+> > > context with the scope GFP_NOFS context".
+> > > 
+> > > "
+> > > Please note that setups without journal do not suffer from potential
+> > > recursion problems and so they do not need the scope protection because
+> > > neither ->releasepage nor ->evict_inode (which are the only fs entry
+> > > points from the direct reclaim) can reenter a locked context which is
+> > > doing the allocation currently.
+> > > "
+> > 
+> > Could you comment on this Ted, please?
 > 
-> This means that lookup of an existing xattr can spuriously return
-> -ENOATTR when racing against a setxattr that causes the associated
-> format conversion. This was originally reproduced by an untar on a
-> particularly configured glusterfs volume, but can also be reproduced on
-> demand with properly crafted xattr requests.
+> I guess....   so there still is one way this could screw us, and it's this reason for GFP_NOFS:
 > 
-> The format conversion occurs under the exclusive ilock. xfs_attr_get()
-> and xfs_attr_remove() already have the proper locking and checks further
-> down in the functions to handle this situation correctly. Drop the
-> unlocked checks to avoid the spurious failure and rely on the existing
-> logic.
+>         - to prevent from stack overflows during the reclaim because
+> 	          the allocation is performed from a deep context already
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
+> The writepages call stack can be pretty deep.  (Especially if we're
+> using ext4 in no journal mode over, say, iSCSI.)
 > 
+> How much stack space can get consumed by a reclaim?
 
-Ping. Any chance of getting this one in soonish?
+./scripts/stackusage with allyesconfig says:
 
-Brian
+./mm/page_alloc.c:3745  __alloc_pages_nodemask  264     static
+./mm/page_alloc.c:3531  __alloc_pages_slowpath  520     static
+./mm/vmscan.c:2946      try_to_free_pages       216     static
+./mm/vmscan.c:2753      do_try_to_free_pages    304     static
+./mm/vmscan.c:2517      shrink_node     	352     static
+./mm/vmscan.c:2317      shrink_node_memcg       560     static
+./mm/vmscan.c:1692      shrink_inactive_list    688     static
+./mm/vmscan.c:908       shrink_page_list        608     static
 
-> v2:
-> - Fix up xfs_attr_remove() as well.
-> v1: https://patchwork.kernel.org/patch/9501675/
-> 
->  fs/xfs/libxfs/xfs_attr.c | 6 ------
->  1 file changed, 6 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index af1ecb1..6622d46 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -131,9 +131,6 @@ xfs_attr_get(
->  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
->  		return -EIO;
->  
-> -	if (!xfs_inode_hasattr(ip))
-> -		return -ENOATTR;
-> -
->  	error = xfs_attr_args_init(&args, ip, name, flags);
->  	if (error)
->  		return error;
-> @@ -392,9 +389,6 @@ xfs_attr_remove(
->  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
->  		return -EIO;
->  
-> -	if (!xfs_inode_hasattr(dp))
-> -		return -ENOATTR;
-> -
->  	error = xfs_attr_args_init(&args, dp, name, flags);
->  	if (error)
->  		return error;
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So this would be 3512 for the standard LRUs reclaim whether we have
+GFP_FS or not. shrink_page_list can recurse to releasepage but there is
+no NOFS protection there so it doesn't make much sense to check this
+path. So we are left with the slab shrinkers path
+
+./mm/page_alloc.c:3745  __alloc_pages_nodemask  264     static
+./mm/page_alloc.c:3531  __alloc_pages_slowpath  520     static
+./mm/vmscan.c:2946      try_to_free_pages       216     static
+./mm/vmscan.c:2753      do_try_to_free_pages    304     static
+./mm/vmscan.c:2517      shrink_node     	352     static
+./mm/vmscan.c:427       shrink_slab     	336     static
+./fs/super.c:56 	super_cache_scan        104     static << here we have the NOFS protection
+./fs/dcache.c:1089      prune_dcache_sb 	152     static
+./fs/dcache.c:939       shrink_dentry_list      96      static
+./fs/dcache.c:509       __dentry_kill   	72      static
+./fs/dcache.c:323       dentry_unlink_inode     64      static
+./fs/inode.c:1527       iput    		80      static
+./fs/inode.c:532        evict   		72      static
+
+This is where the fs specific callbacks play role and I am not sure
+which paths can pass through for ext4 in the nojournal mode and how much
+of the stack this can eat. But currently we are at +536 wrt. NOFS
+context. This is quite a lot but still much less (2632 vs. 3512) than
+the regular reclaim. So there is quite some stack space to eat... I am
+wondering whether we have to really treat nojournal mode any special
+just because of the stack usage?
+
+If this ever turn out to be a problem and with the vmapped stacks we
+have good chances to get a proper stack traces on a potential overflow
+we can add the scope API around the problematic code path with the
+explanation why it is needed.
+
+Does that make sense to you?
+
+Thanks!
+-- 
+Michal Hocko
+SUSE Labs
