@@ -1,164 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58408 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753013AbdA0CwW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Jan 2017 21:52:22 -0500
-Received: from smtp.corp.redhat.com (int-mx16.intmail.prod.int.phx2.redhat.com [10.5.11.28])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id CB03880491
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Jan 2017 02:52:22 +0000 (UTC)
-Date: Fri, 27 Jan 2017 10:52:19 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [BUG] xfs/305 hangs 4.10-rc4 kernel
-Message-ID: <20170127025219.GR1859@eguan.usersys.redhat.com>
-References: <20170125063943.GF1859@eguan.usersys.redhat.com>
- <20170125145215.GC28388@bfoster.bfoster>
- <20170126032950.GM1859@eguan.usersys.redhat.com>
- <20170126184427.GA39683@bfoster.bfoster>
+Received: from corp-mailer.zoner.com ([217.198.120.77]:45039 "EHLO
+        corp-mailer.zoner.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754777AbdA0NGs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Jan 2017 08:06:48 -0500
+Subject: Re: Quota-enabled XFS hangs during mount
+References: <20161101215803.GA14023@dastard>
+ <cad65166-6d77-3c6f-151b-5970b1b6fc85@zoner.cz>
+ <20161103013153.GH9920@dastard>
+ <7993e9b8-6eb8-6a0d-aa72-01346cca1b63@zoner.cz>
+ <20161103204049.GA28177@dastard>
+ <43ca55d0-6762-d54f-5ba9-a83f9c1988f6@zoner.cz>
+ <20170123134452.GA33287@bfoster.bfoster>
+ <5b41d19b-1a0d-2b74-a633-30a5f6d2f14a@zoner.cz>
+ <20170125221739.GA33995@bfoster.bfoster>
+ <30d56003-a517-f6f0-d188-d0ada5a9fbb7@zoner.cz>
+ <20170126191254.GB39683@bfoster.bfoster>
+From: Martin Svec <martin.svec@zoner.cz>
+Message-ID: <27c2f5aa-517d-22b5-b55f-f0ceb277e9a3@zoner.cz>
+Date: Fri, 27 Jan 2017 14:06:45 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170126184427.GA39683@bfoster.bfoster>
+In-Reply-To: <20170126191254.GB39683@bfoster.bfoster>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Thu, Jan 26, 2017 at 01:44:28PM -0500, Brian Foster wrote:
-> On Thu, Jan 26, 2017 at 11:29:50AM +0800, Eryu Guan wrote:
-> > On Wed, Jan 25, 2017 at 09:52:16AM -0500, Brian Foster wrote:
-> > > On Wed, Jan 25, 2017 at 02:39:43PM +0800, Eryu Guan wrote:
-> > > > Hi all,
-> > > > 
-> > > > I hit another test hang triggered by running xfs/305 in a loop, it
-> > > > usually reproduces within 50 iterations. It also involves disabling
-> > > > quota, which looks similar to the generic/232 hang[1]. Perhaps they
-> > > > share the same root cause?
-> > > > 
-> > > > [333853.198159] xfs_quota       D    0 13880  13441 0x00000080
-> > > > [333853.227479] Call Trace:
-> > > > [333853.239429]  __schedule+0x21c/0x6b0
-> > > > [333853.255410]  schedule+0x36/0x80
-> > > > [333853.269932]  schedule_timeout+0x1d1/0x3a0
-> > > > [333853.288354]  ? lock_timer_base+0xa0/0xa0
-> > > > [333853.306296]  ? xfs_qm_need_dqattach+0x80/0x80 [xfs]
-> > > > [333853.329015]  schedule_timeout_uninterruptible+0x1f/0x30
-> > > > [333853.353344]  xfs_qm_dquot_walk.isra.10+0x172/0x190 [xfs]
-> > > > [333853.377747]  xfs_qm_dqpurge_all+0x5c/0x80 [xfs]
-> > > > [333853.398433]  xfs_qm_scall_quotaoff+0x127/0x380 [xfs]
-> > > > [333853.421062]  xfs_quota_disable+0x3d/0x50 [xfs]
-> > > > [333853.441319]  SyS_quotactl+0x391/0x850
-> > > > [333853.458143]  ? __audit_syscall_entry+0xaf/0x100
-> > > > [333853.478903]  ? syscall_trace_enter+0x1d0/0x2b0
-> > > > [333853.499262]  ? __audit_syscall_exit+0x209/0x290
-> > > > [333853.519938]  do_syscall_64+0x67/0x180
-> > > > [333853.536771]  entry_SYSCALL64_slow_path+0x25/0x25
-> > > > [333853.558105] RIP: 0033:0x7f95be064fea
-> > > > [333853.574521] RSP: 002b:00007ffc988b6348 EFLAGS: 00000206 ORIG_RAX: 00000000000000b3
-> > > > [333853.608922] RAX: ffffffffffffffda RBX: 0000000000000004 RCX: 00007f95be064fea
-> > > > [333853.641478] RDX: 0000000000000000 RSI: 00000000027bb2f0 RDI: 0000000000580201
-> > > > [333853.674091] RBP: 00000000027bb320 R08: 00007ffc988b635c R09: 0000000000000001
-> > > > [333853.706913] R10: 00007ffc988b635c R11: 0000000000000206 R12: 00000000027bb2d0
-> > > > [333853.744953] R13: 00000000027ba0a0 R14: 0000000000000000 R15: 00000000027ba080
-> > > > 
-> > > > I've seen this hang on multiple test hosts with different test configs,
-> > > > e.g. xfs_2k_crc xfs_4k_reflink. I also tried with 4.9 kernel, but I kept
-> > > > hitting the BUG_ON that this kernel commit[2] fixed in 4.10-rc kernel.
-> > > > 
-> > > 
-> > > Interesting... I'm not sure this is necessarily locked up given the call
-> > > to schedule_timeout(). That suggests we could be in the
-> > > xfs_qm_dquot_walk()->delay() call and possibly spinning on skipped
-> > > entries. It looks like the only way we skip an entry is if it is already
-> > > being freed or has a reference count. The only other dquot free path
-> > > looks like the shrinker, but that doesn't appear in the blocked task
-> > > list at all. We do have a dqread call, but that path hasn't even added
-> > > the dquot to the radix tree yet.
-> > > 
-> > > > I attached full sysrq-w output. If you need more info please let me
-> > > > know.
-> > > >
-> > > 
-> > > It looks like pretty much everything is hung up on log reservation,
-> > > including writeback, which is more indicative of a potential log
-> > > reservation problem. xfsaild appears to be alive, however (a
-> > > schedule_timeout() in that path suggests the thread is working to push
-> > > log items and free up log space), so maybe something else is going on.
-> > > It might be interesting to see if we can tell if we're spinning
-> > > somewhere by enabling tracepoints once in this state. Also, have you
-> > > checked for any unexpected syslog messages when this occurs?
-> > 
-> > There's nothing interesting in dmesg with stock 4.10-rc4 kernel, but if
-> > I test with Darrick's xfs-linux tree for-next branch (which has a few
-> > patches on top of 4.10-rc4), I can see this message:
-> > 
-> > XFS (dm-5): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
-> > 
-> > But I can see this message in every xfs/305 iteration, and other tests
-> > too. I attached dmesg log prior to sysrq-w output, gathered from
-> > "for-next" kernel.
-> > 
-> > I also attached trace log while we're in this state (also from
-> > "for-next" kernel):
-> > 
-> > cd /mnt/ext4
-> > trace-cmd record -e xfs_*
-> > sleep 10
-> > trace-cmd report > log
-> > 
-> 
-> Thanks Eryu. The only thing in the AIL is the XFS_LI_QUOTAOFF log item.
-> This item is hardcoded to the locked state because it does not really
-> exist on disk (i.e., it cannot be pushed). Rather, it looks like it is
-> released upon commit of an accompanying quotaoff_end log item that is
-> committed after most of the quotaoff work is completed, including the
-> purge that you're actually stuck on. The purpose of this appears to be
-> to allow log recovery to deal with the possibility of dquots being
-> logged after the initial quotaoff transaction. This mechanism
-> effectively pins the tail of the log with the quotaoff start log item to
-> ensure log recovery sees it before any subsequent dquot modifications if
-> we happen to crash at some point in the middle of those operations.
-> 
-> What this means is that there is only a fixed amount of physical log
-> space between the time the quotaoff start is logged and until the
-> quotaoff completes. If we consume the log space before the quotaoff
-> completes, we basically deadlock the fs. Indeed, while I haven't been
-> able to reproduce via xfs/305 alone, I can manufacture this problem by
-> inserting a long enough sleep after the qutoaoff start item is logged.
-> The parallel fsstress' then chew up the log and the fs ends up stuck.
-> 
-> So I think this is the state you get into, but the root cause is still
-> not totally clear. It could just be the workload, but it seems a little
-> crazy to wrap the log before the purge completes since it doesn't log
-> anything itself. Then again, it looks like the xfs/305 workload can chew
-> up the log in 30-45s on my 10g scratch dev, so probably not out of the
-> realm of possibility.
-> 
-> I am wondering about the possibility of something else getting stuck
-> that stalls the dqpurge and then causes the fs-wide deadlock via domino
-> effect. Could you provide the xfs_info of your scratch device? Also, if
+Dne 26.1.2017 v 20:12 Brian Foster napsal(a):
+> On Thu, Jan 26, 2017 at 06:46:42PM +0100, Martin Svec wrote:
+>> Hello,
+>>
+>> Dne 25.1.2017 v 23:17 Brian Foster napsal(a):
+>>> On Tue, Jan 24, 2017 at 02:17:36PM +0100, Martin Svec wrote:
+>>>> Hello,
+>>>>
+>>>> Dne 23.1.2017 v 14:44 Brian Foster napsal(a):
+>>>>> On Mon, Jan 23, 2017 at 10:44:20AM +0100, Martin Svec wrote:
+>>>>>> Hello Dave,
+>>>>>>
+>>>>>> Any updates on this? It's a bit annoying to workaround the bug by increasing RAM just because of the
+>>>>>> initial quotacheck.
+>>>>>>
+>>>>> Note that Dave is away on a bit of an extended vacation[1]. It looks
+>>>>> like he was in the process of fishing through the code to spot any
+>>>>> potential problems related to quotacheck+reclaim. I see you've cc'd him
+>>>>> directly so we'll see if we get a response wrt to if he got anywhere
+>>>>> with that...
+>>>>>
+>>>>> Skimming back through this thread, it looks like we have an issue where
+>>>>> quota check is not quite reliable in the event of reclaim, and you
+>>>>> appear to be reproducing this due to a probably unique combination of
+>>>>> large inode count and low memory.
+>>>>>
+>>>>> Is my understanding correct that you've reproduced this on more recent
+>>>>> kernels than the original report? 
+>>>> Yes, I repeated the tests using 4.9.3 kernel on another VM where we hit this issue.
+>>>>
+>>>> Configuration:
+>>>> * vSphere 5.5 virtual machine, 2 vCPUs, virtual disks residing on iSCSI VMFS datastore
+>>>> * Debian Jessie 64 bit webserver, vanilla kernel 4.9.3
+>>>> * 180 GB XFS data disk mounted as /www
+>>>>
+>>>> Quotacheck behavior depends on assigned RAM:
+>>>> * 2 or less GiB: mount /www leads to a storm of OOM kills including shell, ttys etc., so the system
+>>>> becomes unusable.
+>>>> * 3 GiB: mount /www task hangs in the same way as I reported in earlier in this thread.
+>>>> * 4 or more GiB: mount /www succeeds.
+>>>>
+>>> I was able to reproduce the quotacheck OOM situation on latest kernels.
+>>> This problem actually looks like a regression as of commit 17c12bcd3
+>>> ("xfs: when replaying bmap operations, don't let unlinked inodes get
+>>> reaped"), but I don't think that patch is the core problem. That patch
+>>> pulled up setting MS_ACTIVE on the superblock from after XFS runs
+>>> quotacheck to before it (for other reasons), which has a side effect of
+>>> causing inodes to be placed onto the lru once they are released. Before
+>>> this change, all inodes were immediately marked for reclaim once
+>>> released from quotacheck because the superblock had not been set active.
+>>>
+>>> The problem here is first that quotacheck issues a bulkstat and thus
+>>> grabs and releases every inode in the fs. The quotacheck occurs at mount
+>>> time, which means we still hold the s_umount lock and thus the shrinker
+>>> cannot run even though it is registered. Therefore, we basically just
+>>> populate the lru until we've consumed too much memory and blow up.
+>>>
+>>> I think the solution here is to preserve the quotacheck behavior prior
+>>> to commit 17c12bcd3 via something like the following:
+>>>
+>>> --- a/fs/xfs/xfs_qm.c
+>>> +++ b/fs/xfs/xfs_qm.c
+>>> @@ -1177,7 +1177,7 @@ xfs_qm_dqusage_adjust(
+>>>  	 * the case in all other instances. It's OK that we do this because
+>>>  	 * quotacheck is done only at mount time.
+>>>  	 */
+>>> -	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_EXCL, &ip);
+>>> +	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, XFS_ILOCK_EXCL, &ip);
+>>>  	if (error) {
+>>>  		*res = BULKSTAT_RV_NOTHING;
+>>>  		return error;
+>>>
+>>> ... which allows quotacheck to run as normal in my quick tests. Could
+>>> you try this on your more recent kernel tests and see whether you still
+>>> reproduce any problems?
+>> The above patch fixes OOM issues and reduces overall memory consumption during quotacheck. However,
+>> it does not fix the original xfs_qm_flush_one() freezing. I'm still able to reproduce it with 1 GB
+>> of RAM or lower. Tested with 4.9.5 kernel.
+>>
+> Ok, thanks. I'll get that fix posted shortly.
+>
+> I hadn't tried reducing RAM any further. I dropped my vm down to 1GB and
+> I don't reproduce a hang. If I drop to 512MB, the mount actually crashes
+> due to what looks like the problem that djwong just fixed[1].
+>
+> With that one liner applied, it does look like I've hit a mount hang in
+> the quotacheck path. Note that I'm also running into OOM issues again
+> though, probably due to legitimately not having enough RAM for this vm.
+> Anyways, I'll see if I can dig anything out of that...
+>
+> FWIW, this is all on the latest for-next (4.10.0-rc5).
+>
+> [1] http://www.spinics.net/lists/linux-xfs/msg03869.html
+>
+>> If it makes sense to you, I can rsync the whole filesystem to a new XFS volume and repeat the tests.
+>> At least, that could tell us if the problem depends on a particular state of on-disk metadata
+>> structures or it's a general property of the given filesystem tree.
+>>
+> That couldn't hurt, thanks.
+>
 
-# xfs_info /mnt/testarea/scratch/
-meta-data=/dev/mapper/systemvg-testlv2 isize=512    agcount=16, agsize=245696 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1 spinodes=0 rmapbt=1
-         =                       reflink=1
-data     =                       bsize=4096   blocks=3931136, imaxpct=25
-         =                       sunit=64     swidth=192 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal               bsize=4096   blocks=7680, version=2
-         =                       sectsz=512   sunit=64 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+Well, after rsync to a fresh non-resized XFS volume, I still hit the mount hang with 1GB RAM.
 
-> you could make a system available that is able to reproduce this
-> reliably enough, that might make it easier to analyze what's going on...
+Martin
 
-I do have a system that could reproduce the hang reliably, but not so
-efficiently, it usually reproduces around 30 minutes by running xfs/305
-in a loop. It's a RH internal test host, I can provide you the address
-and password if you think it's useful.
-
-Thanks,
-Eryu
