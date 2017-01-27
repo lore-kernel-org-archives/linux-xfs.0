@@ -1,98 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23605 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751701AbdAYPza (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2017 10:55:30 -0500
-Date: Wed, 25 Jan 2017 07:55:26 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: remove racy hasattr check from attr ops
-Message-ID: <20170125155526.GL9134@birch.djwong.org>
-References: <1483975378-23483-1-git-send-email-bfoster@redhat.com>
- <20170125124411.GA28388@bfoster.bfoster>
+Received: from verein.lst.de ([213.95.11.211]:58842 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754945AbdA0PIY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Jan 2017 10:08:24 -0500
+Date: Fri, 27 Jan 2017 15:59:30 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/2] xfs: use per-AG reservations for the finobt
+Message-ID: <20170127145930.GA14983@lst.de>
+References: <1485335667-22435-1-git-send-email-hch@lst.de> <1485335667-22435-3-git-send-email-hch@lst.de> <c4b1428d-6861-5290-d108-043ecbfeb1b1@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170125124411.GA28388@bfoster.bfoster>
+In-Reply-To: <c4b1428d-6861-5290-d108-043ecbfeb1b1@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@lst.de>, darrick.wong@oracle.com, bfoster@redhat.com, linux-xfs@vger.kernel.org
 
-On Wed, Jan 25, 2017 at 07:44:12AM -0500, Brian Foster wrote:
-> On Mon, Jan 09, 2017 at 10:22:58AM -0500, Brian Foster wrote:
-> > xfs_attr_[get|remove]() have unlocked attribute fork checks to optimize
-> > away a lock cycle in cases where the fork does not exist or is otherwise
-> > empty. This check is not safe, however, because an attribute fork short
-> > form to extent format conversion includes a transient state that causes
-> > the xfs_inode_hasattr() check to fail. Specifically,
-> > xfs_attr_shortform_to_leaf() creates an empty extent format attribute
-> > fork and then adds the existing shortform attributes to it.
-> > 
-> > This means that lookup of an existing xattr can spuriously return
-> > -ENOATTR when racing against a setxattr that causes the associated
-> > format conversion. This was originally reproduced by an untar on a
-> > particularly configured glusterfs volume, but can also be reproduced on
-> > demand with properly crafted xattr requests.
-> > 
-> > The format conversion occurs under the exclusive ilock. xfs_attr_get()
-> > and xfs_attr_remove() already have the proper locking and checks further
-> > down in the functions to handle this situation correctly. Drop the
-> > unlocked checks to avoid the spurious failure and rely on the existing
-> > logic.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> 
-> Ping. Any chance of getting this one in soonish?
+On Thu, Jan 26, 2017 at 11:08:00PM -0600, Eric Sandeen wrote:
+> This seems to cause regressions for me, at least on generic/108, xfs/004
 
-Yep, I'm queueing it up for -rc6.  Sorry for the delay.
+xfs/004 isn't really broken, it just needs a change every time we
+tune some reservations.   I've been pondering to just drop that
+sub-check.
 
---D
-
-> 
-> Brian
-> 
-> > v2:
-> > - Fix up xfs_attr_remove() as well.
-> > v1: https://patchwork.kernel.org/patch/9501675/
-> > 
-> >  fs/xfs/libxfs/xfs_attr.c | 6 ------
-> >  1 file changed, 6 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index af1ecb1..6622d46 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -131,9 +131,6 @@ xfs_attr_get(
-> >  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-> >  		return -EIO;
-> >  
-> > -	if (!xfs_inode_hasattr(ip))
-> > -		return -ENOATTR;
-> > -
-> >  	error = xfs_attr_args_init(&args, ip, name, flags);
-> >  	if (error)
-> >  		return error;
-> > @@ -392,9 +389,6 @@ xfs_attr_remove(
-> >  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
-> >  		return -EIO;
-> >  
-> > -	if (!xfs_inode_hasattr(dp))
-> > -		return -ENOATTR;
-> > -
-> >  	error = xfs_attr_args_init(&args, dp, name, flags);
-> >  	if (error)
-> >  		return error;
-> > -- 
-> > 2.7.4
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I can't run generic/108 as it requires a modular scsi_debug, and
+none of my test setups uses modular kernels, so I'm curious on how
+that could get broken by this change.
