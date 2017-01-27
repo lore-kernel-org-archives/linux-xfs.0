@@ -1,76 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50774 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752453AbdAZDLS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2017 22:11:18 -0500
-Date: Wed, 25 Jan 2017 19:11:14 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: fix bmv_count confusion w/ shared extents
-Message-ID: <20170126031114.GS9134@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46638 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754239AbdA0IMO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Jan 2017 03:12:14 -0500
+Date: Fri, 27 Jan 2017 16:12:11 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 5/9] common/fuzzy: move fuzzing helper functions here
+Message-ID: <20170127081211.GS1859@eguan.usersys.redhat.com>
+References: <148498621936.17109.4249711513404036449.stgit@birch.djwong.org>
+ <148498625060.17109.11461581002141350060.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <148498625060.17109.11461581002141350060.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-In a bmapx call, bmv_count is the total size of the array, including the
-zeroth element that userspace uses to supply the search key.  The output
-array starts at offset 1 so that we can set up the user for the next
-invocation.  Since we now can split an extent into multiple bmap records
-due to shared/unshared status, we have to be careful that we don't
-overflow the output array.
+On Sat, Jan 21, 2017 at 12:10:50AM -0800, Darrick J. Wong wrote:
+> Move some fuzzing helper functions into a new common/fuzzy file.
+> We'll add a lot more fuzzing helpers in subsequent patches.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/fuzzy    |   80 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  common/populate |   35 ------------------------
+>  tests/ext4/006  |    1 +
+>  tests/xfs/083   |    1 +
+>  4 files changed, 82 insertions(+), 35 deletions(-)
+>  create mode 100644 common/fuzzy
+> 
+> 
+> diff --git a/common/fuzzy b/common/fuzzy
+> new file mode 100644
+> index 0000000..d4f8274
+> --- /dev/null
+> +++ b/common/fuzzy
+> @@ -0,0 +1,80 @@
+...
+> +# Try to access files after fuzzing
+> +_scratch_fuzz_test() {
+> +	echo "+++ ls -laR" >> $seqres.full
+> +	ls -laR "${SCRATCH_MNT}/test.1/" >/dev/null 2>&1
+> +
+> +	echo "+++ cat files" >> $seqres.full
+> +	(find "${SCRATCH_MNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat) >/dev/null 2>&1
+> +}
+> +
+> +# Do we have an online scrub program?
+> +_require_scrub() {
+> +	case "${FSTYP}" in
+> +	"xfs"|"ext4")
+> +		test -x $XFS_SCRUB_PROG || _notrun "xfs_scrub not found"
 
-In the original patch f86f403794b ("xfs: teach get_bmapx about shared
-extents and the CoW fork") I used cur_ext (the output index) to check
-for overflows, albeit with an off-by-one error.  Since nexleft describes
-the number of unfilled slots in the output, we can rip all that out and
-use nexleft for the check directly.
+In my release testing I found ext4/023 (moved from ext4/1300) failed due
+to lack of xfs_scrub, because "test -x " returns true, (but "test -x ''"
+doesn't), so I add quotes around $XFS_SCRUB_PROG and fold the update
+into this patch.
 
-Failure to do this causes heap corruption in bmapx callers such as
-xfs_io and xfs_scrub.  xfs/328 can reproduce this problem.
-
-Suggested-by: Eric Sandeen <sandeen@sandeen.net>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: simplify the loop accounting to use nexleft for the output checks
----
- fs/xfs/xfs_bmap_util.c |   10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index b9abce5..fc6bdaf 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -697,8 +697,7 @@ xfs_getbmap(
- 			goto out_free_map;
- 		ASSERT(nmap <= subnex);
- 
--		for (i = 0; i < nmap && nexleft && bmv->bmv_length &&
--				cur_ext < bmv->bmv_count; i++) {
-+		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
- 			out[cur_ext].bmv_oflags = 0;
- 			if (map[i].br_state == XFS_EXT_UNWRITTEN)
- 				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
-@@ -760,16 +759,15 @@ xfs_getbmap(
- 				continue;
- 			}
- 
-+			nexleft--;
- 			if (inject_map.br_startblock != NULLFSBLOCK) {
- 				map[i] = inject_map;
- 				i--;
--			} else
--				nexleft--;
-+			}
- 			bmv->bmv_entries++;
- 			cur_ext++;
- 		}
--	} while (nmap && nexleft && bmv->bmv_length &&
--		 cur_ext < bmv->bmv_count);
-+	} while (nmap && nexleft && bmv->bmv_length);
- 
-  out_free_map:
- 	kmem_free(map);
+Thanks,
+Eryu
