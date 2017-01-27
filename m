@@ -1,139 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56776 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57072 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752666AbdAZTNM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Jan 2017 14:13:12 -0500
-Date: Thu, 26 Jan 2017 14:12:54 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Quota-enabled XFS hangs during mount
-Message-ID: <20170126191254.GB39683@bfoster.bfoster>
-References: <20161101215803.GA14023@dastard>
- <cad65166-6d77-3c6f-151b-5970b1b6fc85@zoner.cz>
- <20161103013153.GH9920@dastard>
- <7993e9b8-6eb8-6a0d-aa72-01346cca1b63@zoner.cz>
- <20161103204049.GA28177@dastard>
- <43ca55d0-6762-d54f-5ba9-a83f9c1988f6@zoner.cz>
- <20170123134452.GA33287@bfoster.bfoster>
- <5b41d19b-1a0d-2b74-a633-30a5f6d2f14a@zoner.cz>
- <20170125221739.GA33995@bfoster.bfoster>
- <30d56003-a517-f6f0-d188-d0ada5a9fbb7@zoner.cz>
+        id S1750784AbdA0Blx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Jan 2017 20:41:53 -0500
+Date: Fri, 27 Jan 2017 09:41:46 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v5 0/9] xfstests: online scrub/repair support
+Message-ID: <20170127014146.GQ1859@eguan.usersys.redhat.com>
+References: <148498621936.17109.4249711513404036449.stgit@birch.djwong.org>
+ <20170126050838.GN1859@eguan.usersys.redhat.com>
+ <20170126064434.GD2584@birch.djwong.org>
+ <20170126072638.GP1859@eguan.usersys.redhat.com>
+ <20170126075323.GE2584@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <30d56003-a517-f6f0-d188-d0ada5a9fbb7@zoner.cz>
+In-Reply-To: <20170126075323.GE2584@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Martin Svec <martin.svec@zoner.cz>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Jan 26, 2017 at 06:46:42PM +0100, Martin Svec wrote:
-> Hello,
+On Wed, Jan 25, 2017 at 11:53:23PM -0800, Darrick J. Wong wrote:
+
+> > > Sure.  I will never enable them in any of the heavily used groups, so
+> > > that should be fine.  Though I do have a request -- the 13xx numbers are
+> > > set up so that if test (1300+x) fuzzes object X and tries to xfs_repair
+> > > it, then test (1340+x) fuzzes the same X but tries to xfs_scrub it.
+> > > Could you interweave them when you renumber the tests?
+> > 
+> > Perhaps that explains why there's no 1336-1340 :)
 > 
-> Dne 25.1.2017 v 23:17 Brian Foster napsal(a):
-> > On Tue, Jan 24, 2017 at 02:17:36PM +0100, Martin Svec wrote:
-> >> Hello,
-> >>
-> >> Dne 23.1.2017 v 14:44 Brian Foster napsal(a):
-> >>> On Mon, Jan 23, 2017 at 10:44:20AM +0100, Martin Svec wrote:
-> >>>> Hello Dave,
-> >>>>
-> >>>> Any updates on this? It's a bit annoying to workaround the bug by increasing RAM just because of the
-> >>>> initial quotacheck.
-> >>>>
-> >>> Note that Dave is away on a bit of an extended vacation[1]. It looks
-> >>> like he was in the process of fishing through the code to spot any
-> >>> potential problems related to quotacheck+reclaim. I see you've cc'd him
-> >>> directly so we'll see if we get a response wrt to if he got anywhere
-> >>> with that...
-> >>>
-> >>> Skimming back through this thread, it looks like we have an issue where
-> >>> quota check is not quite reliable in the event of reclaim, and you
-> >>> appear to be reproducing this due to a probably unique combination of
-> >>> large inode count and low memory.
-> >>>
-> >>> Is my understanding correct that you've reproduced this on more recent
-> >>> kernels than the original report? 
-> >> Yes, I repeated the tests using 4.9.3 kernel on another VM where we hit this issue.
-> >>
-> >> Configuration:
-> >> * vSphere 5.5 virtual machine, 2 vCPUs, virtual disks residing on iSCSI VMFS datastore
-> >> * Debian Jessie 64 bit webserver, vanilla kernel 4.9.3
-> >> * 180 GB XFS data disk mounted as /www
-> >>
-> >> Quotacheck behavior depends on assigned RAM:
-> >> * 2 or less GiB: mount /www leads to a storm of OOM kills including shell, ttys etc., so the system
-> >> becomes unusable.
-> >> * 3 GiB: mount /www task hangs in the same way as I reported in earlier in this thread.
-> >> * 4 or more GiB: mount /www succeeds.
-> >>
-> > I was able to reproduce the quotacheck OOM situation on latest kernels.
-> > This problem actually looks like a regression as of commit 17c12bcd3
-> > ("xfs: when replaying bmap operations, don't let unlinked inodes get
-> > reaped"), but I don't think that patch is the core problem. That patch
-> > pulled up setting MS_ACTIVE on the superblock from after XFS runs
-> > quotacheck to before it (for other reasons), which has a side effect of
-> > causing inodes to be placed onto the lru once they are released. Before
-> > this change, all inodes were immediately marked for reclaim once
-> > released from quotacheck because the superblock had not been set active.
-> >
-> > The problem here is first that quotacheck issues a bulkstat and thus
-> > grabs and releases every inode in the fs. The quotacheck occurs at mount
-> > time, which means we still hold the s_umount lock and thus the shrinker
-> > cannot run even though it is registered. Therefore, we basically just
-> > populate the lru until we've consumed too much memory and blow up.
-> >
-> > I think the solution here is to preserve the quotacheck behavior prior
-> > to commit 17c12bcd3 via something like the following:
-> >
-> > --- a/fs/xfs/xfs_qm.c
-> > +++ b/fs/xfs/xfs_qm.c
-> > @@ -1177,7 +1177,7 @@ xfs_qm_dqusage_adjust(
-> >  	 * the case in all other instances. It's OK that we do this because
-> >  	 * quotacheck is done only at mount time.
-> >  	 */
-> > -	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_EXCL, &ip);
-> > +	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, XFS_ILOCK_EXCL, &ip);
-> >  	if (error) {
-> >  		*res = BULKSTAT_RV_NOTHING;
-> >  		return error;
-> >
-> > ... which allows quotacheck to run as normal in my quick tests. Could
-> > you try this on your more recent kernel tests and see whether you still
-> > reproduce any problems?
+> Yep.
 > 
-> The above patch fixes OOM issues and reduces overall memory consumption during quotacheck. However,
-> it does not fix the original xfs_qm_flush_one() freezing. I'm still able to reproduce it with 1 GB
-> of RAM or lower. Tested with 4.9.5 kernel.
+> > > 
+> > > e.g. 1302 -> 510, 1342 -> 511, 1303 -> 512, 1343 -> 513?
+> > > 
+> > > That'll help me to keep together the repair & scrub fuzz tests.
+> > 
+> > Sure, I'll renumber the tests and let you review first before pushing
+> > them to upstream.
 > 
+> Ok, thanks!  I really appreciate it!
 
-Ok, thanks. I'll get that fix posted shortly.
+This is what it's like after renumbering, I'm going to fold it to patch
+9/9 if you think it's OK.
 
-I hadn't tried reducing RAM any further. I dropped my vm down to 1GB and
-I don't reproduce a hang. If I drop to 512MB, the mount actually crashes
-due to what looks like the problem that djwong just fixed[1].
 
-With that one liner applied, it does look like I've hit a mount hang in
-the quotacheck path. Note that I'm also running into OOM issues again
-though, probably due to legitimately not having enough RAM for this vm.
-Anyways, I'll see if I can dig anything out of that...
+Moved "xfs/1300" to "xfs/349"
 
-FWIW, this is all on the latest for-next (4.10.0-rc5).
+Moved "xfs/1301" to "xfs/350".
+Moved "xfs/1302" to "xfs/352".
+Moved "xfs/1303" to "xfs/354".
+Moved "xfs/1304" to "xfs/356".
+Moved "xfs/1305" to "xfs/358".
+Moved "xfs/1306" to "xfs/360".
+Moved "xfs/1307" to "xfs/362".
+Moved "xfs/1308" to "xfs/364".
+Moved "xfs/1309" to "xfs/366".
+Moved "xfs/1310" to "xfs/368".
+Moved "xfs/1311" to "xfs/370".
+Moved "xfs/1312" to "xfs/372".
+Moved "xfs/1313" to "xfs/374".
+Moved "xfs/1314" to "xfs/376".
+Moved "xfs/1315" to "xfs/378".
+Moved "xfs/1316" to "xfs/380".
+Moved "xfs/1317" to "xfs/382".
+Moved "xfs/1318" to "xfs/384".
+Moved "xfs/1319" to "xfs/386".
+Moved "xfs/1320" to "xfs/388".
+Moved "xfs/1321" to "xfs/390".
+Moved "xfs/1322" to "xfs/392".
+Moved "xfs/1323" to "xfs/394".
+Moved "xfs/1324" to "xfs/396".
+Moved "xfs/1325" to "xfs/398".
+Moved "xfs/1326" to "xfs/400".
+Moved "xfs/1327" to "xfs/402".
+Moved "xfs/1328" to "xfs/404".
+Moved "xfs/1329" to "xfs/406".
+Moved "xfs/1330" to "xfs/408".
+Moved "xfs/1331" to "xfs/410".
+Moved "xfs/1332" to "xfs/412".
+Moved "xfs/1333" to "xfs/414".
+Moved "xfs/1334" to "xfs/416".
+Moved "xfs/1335" to "xfs/418".
 
-[1] http://www.spinics.net/lists/linux-xfs/msg03869.html
+Moved "xfs/1341" to "xfs/351".
+Moved "xfs/1342" to "xfs/353".
+Moved "xfs/1343" to "xfs/355".
+Moved "xfs/1344" to "xfs/357".
+Moved "xfs/1345" to "xfs/359".
+Moved "xfs/1346" to "xfs/361".
+Moved "xfs/1347" to "xfs/363".
+Moved "xfs/1348" to "xfs/365".
+Moved "xfs/1349" to "xfs/367".
+Moved "xfs/1350" to "xfs/369".
+Moved "xfs/1351" to "xfs/371".
+Moved "xfs/1352" to "xfs/373".
+Moved "xfs/1353" to "xfs/375".
+Moved "xfs/1354" to "xfs/377".
+Moved "xfs/1355" to "xfs/379".
+Moved "xfs/1356" to "xfs/381".
+Moved "xfs/1357" to "xfs/383".
+Moved "xfs/1358" to "xfs/385".
+Moved "xfs/1359" to "xfs/387".
+Moved "xfs/1360" to "xfs/389".
+Moved "xfs/1361" to "xfs/391".
+Moved "xfs/1362" to "xfs/393".
+Moved "xfs/1363" to "xfs/395".
+Moved "xfs/1364" to "xfs/397".
+Moved "xfs/1365" to "xfs/399".
+Moved "xfs/1366" to "xfs/401".
+Moved "xfs/1367" to "xfs/403".
+Moved "xfs/1368" to "xfs/405".
+Moved "xfs/1369" to "xfs/407".
+Moved "xfs/1370" to "xfs/409".
+Moved "xfs/1371" to "xfs/411".
+Moved "xfs/1372" to "xfs/413".
+Moved "xfs/1373" to "xfs/415".
+Moved "xfs/1374" to "xfs/417".
 
-> If it makes sense to you, I can rsync the whole filesystem to a new XFS volume and repeat the tests.
-> At least, that could tell us if the problem depends on a particular state of on-disk metadata
-> structures or it's a general property of the given filesystem tree.
-> 
-
-That couldn't hurt, thanks.
-
-Brian
-
-> Martin
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Eryu
