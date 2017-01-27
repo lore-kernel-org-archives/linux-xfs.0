@@ -1,48 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:3305 "EHLO mga04.intel.com"
+Received: from sandeen.net ([63.231.237.45]:43376 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752217AbdAZWvn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Jan 2017 17:51:43 -0500
-Subject: Re: [PATCH v2 2/3] mm, x86: Add support for PUD-sized transparent
- hugepages
-References: <148545012634.17912.13951763606410303827.stgit@djiang5-desk3.ch.intel.com>
- <148545059381.17912.8602162635537598445.stgit@djiang5-desk3.ch.intel.com>
- <20170126143854.9694811975f4c0945aba58b9@linux-foundation.org>
-From: Dave Jiang <dave.jiang@intel.com>
-Message-ID: <94209678-bb55-2085-9cc8-f47bdf754ea4@intel.com>
-Date: Thu, 26 Jan 2017 15:46:27 -0700
+        id S933204AbdA0Pnt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Jan 2017 10:43:49 -0500
+Subject: Re: [PATCH 2/2] xfs: use per-AG reservations for the finobt
+References: <1485335667-22435-1-git-send-email-hch@lst.de>
+ <1485335667-22435-3-git-send-email-hch@lst.de>
+ <c4b1428d-6861-5290-d108-043ecbfeb1b1@sandeen.net>
+ <20170127145930.GA14983@lst.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <96908d89-882a-e1b9-5283-3c9502fdface@sandeen.net>
+Date: Fri, 27 Jan 2017 09:43:45 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170126143854.9694811975f4c0945aba58b9@linux-foundation.org>
+In-Reply-To: <20170127145930.GA14983@lst.de>
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: dave.hansen@linux.intel.com, mawilcox@microsoft.com, linux-nvdimm@ml01.01.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, vbabka@suse.cz, jack@suse.com, dan.j.williams@intel.com, linux-ext4@vger.kernel.org, ross.zwisler@linux.intel.com, kirill.shutemov@linux.intel.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: darrick.wong@oracle.com, bfoster@redhat.com, linux-xfs@vger.kernel.org
 
-On 01/26/2017 03:38 PM, Andrew Morton wrote:
-> On Thu, 26 Jan 2017 10:09:53 -0700 Dave Jiang <dave.jiang@intel.com> wrote:
+On 1/27/17 8:59 AM, Christoph Hellwig wrote:
+> On Thu, Jan 26, 2017 at 11:08:00PM -0600, Eric Sandeen wrote:
+>> This seems to cause regressions for me, at least on generic/108, xfs/004
 > 
->> The current transparent hugepage code only supports PMDs.  This patch
->> adds support for transparent use of PUDs with DAX.  It does not include
->> support for anonymous pages. x86 support code also added.
->>
->> Most of this patch simply parallels the work that was done for huge PMDs.
->> The only major difference is how the new ->pud_entry method in mm_walk
->> works.  The ->pmd_entry method replaces the ->pte_entry method, whereas
->> the ->pud_entry method works along with either ->pmd_entry or ->pte_entry.
->> The pagewalk code takes care of locking the PUD before calling ->pud_walk,
->> so handlers do not need to worry whether the PUD is stable.
-> 
-> The patch adds a lot of new BUG()s and BG_ON()s.  We'll get in trouble
-> if any of those triggers.  Please recheck everything and decide if we
-> really really need them.  It's far better to drop a WARN and to back
-> out and recover in some fashion.
-> 
+> xfs/004 isn't really broken, it just needs a change every time we
+> tune some reservations.   I've been pondering to just drop that
+> sub-check.
 
-So I believe all the BUG() and BUG_ON() are replicated the same way that
-the existing PMD support functions do with the same behavior. If we want
-them to be different then we probably need to examine if the PMD code
-(or maybe the PTE ones as well) need to be different also. I'm open to
-suggestions from the experts on the cc list though.
+Ok yeah, I realized that this morning, sorry for the noise.
+ 
+> I can't run generic/108 as it requires a modular scsi_debug, and
+> none of my test setups uses modular kernels, so I'm curious on how
+> that could get broken by this change.
+
+I'll keep looking to be sure it's legit.  It didn't really make sense
+to me either, but ... yup, i'm seeing it.  the fsync error doesn't
+come through as expected.  I'll keep looking into it.
+
+oh, btw:
+
+>     Note that this could increase mount times with large finobt trees.  In
+>     an ideal world we would have added a field for the number of finobt
+>     fields to the AGI, similar to what we did for the refcount blocks.
+>     We should do add it next time we rev the AGI or AGF format by adding
+>     new fields.
+
+maybe should stick a comment in there as a reminder? :)
+
+-Eric
