@@ -1,72 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44416 "EHLO sandeen.net"
+Received: from verein.lst.de ([213.95.11.211]:59934 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752878AbdAZU65 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Jan 2017 15:58:57 -0500
-Subject: Re: [PATCH] xfs: prevent quotacheck from overloading inode lru
-References: <1485458805-44477-1-git-send-email-bfoster@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <53648a32-5927-e453-7a24-838951f2f4eb@sandeen.net>
-Date: Thu, 26 Jan 2017 14:58:32 -0600
+        id S932676AbdA0RtH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Jan 2017 12:49:07 -0500
+Date: Fri, 27 Jan 2017 18:48:20 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/3] xfs: go straight to real allocations for direct
+        I/O COW writes
+Message-ID: <20170127174820.GA18919@lst.de>
+References: <20170124135044.GA60234@bfoster.bfoster> <20170124135937.GA25885@lst.de> <20170124150222.GD60234@bfoster.bfoster> <20170124150959.GA27705@lst.de> <20170124161719.GE60234@bfoster.bfoster> <20170124162156.GA29361@lst.de> <20170124174318.GH60234@bfoster.bfoster> <20170124200855.GA1385@lst.de> <20170125000934.GG9134@birch.djwong.org> <20170127174447.GZ9134@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <1485458805-44477-1-git-send-email-bfoster@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170127174447.GZ9134@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Cc: Martin Svec <martin.svec@zoner.cz>, stable@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On 1/26/17 1:26 PM, Brian Foster wrote:
-> Quotacheck runs at mount time in situations where quota accounting must
-> be recalculated. In doing so, it uses bulkstat to visit every inode in
-> the filesystem. Historically, every inode processed during quotacheck
-> was released and immediately tagged for reclaim because quotacheck runs
-> before the superblock is marked active by the VFS. In other words,
-> the final iput() lead to an immediate ->destroy_inode() call, which
-> allowed the XFS background reclaim worker to start reclaiming inodes.
-> 
-> Commit 17c12bcd3 ("xfs: when replaying bmap operations, don't let
-> unlinked inodes get reaped") marks the XFS superblock active sooner as
-> part of the mount process to support caching inodes processed during log
-> recovery. This occurs before quotacheck and thus means all inodes
-> processed by quotacheck are inserted to the LRU on release.  The
-> s_umount lock is held until the mount has completed and thus prevents
-> the shrinkers from operating on the sb. This means that quotacheck can
-> excessively populate the inode LRU and lead to OOM conditions on systems
-> without sufficient RAM.
-> 
-> Update the quotacheck bulkstat handler to set XFS_IGET_DONTCACHE on
-> inodes processed by quotacheck. This causes ->drop_inode() to return 1
-> and in turn causes iput_final() to evict the inode. This preserves the
-> original quotacheck behavior and prevents it from overloading the LRU
-> and running out of memory.
-> 
-> CC: stable@vger.kernel.org # v4.9
-> Reported-by: Martin Svec <martin.svec@zoner.cz>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+On Fri, Jan 27, 2017 at 09:44:47AM -0800, Darrick J. Wong wrote:
+> I think I came up with a better idea overnight: take advantage of the
+> unwritten bit.  Currently, all extents in the cow fork are either
+> delalloc or normal extents.  When we allocate the blocks to fill a cow
+> extent, we'll flag the extent as unwritten.  When we go to write the
+> data to disk, we convert the unwritten extent to a real extent, and the
+> post-write remap (since it only takes a file offset and length) will
+> be changed to remap only real, written extents into the data fork.
 
-Makes sense, thanks for digging into this!
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  fs/xfs/xfs_qm.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 45e50ea..b669b12 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -1177,7 +1177,8 @@ xfs_qm_dqusage_adjust(
->  	 * the case in all other instances. It's OK that we do this because
->  	 * quotacheck is done only at mount time.
->  	 */
-> -	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_EXCL, &ip);
-> +	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, XFS_ILOCK_EXCL,
-> +			 &ip);
->  	if (error) {
->  		*res = BULKSTAT_RV_NOTHING;
->  		return error;
-> 
+That sounds like a possibility.  My other idea was to force COW all
+direct I/O writes, that way we can't have a mismatch between extents
+in the data and the COW fork.  But so far this is just an idea..
