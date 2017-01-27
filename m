@@ -1,107 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17595 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752130AbdAZW56 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Jan 2017 17:57:58 -0500
-Date: Thu, 26 Jan 2017 14:57:14 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v100] xfs: fix bmv_count confusion w/ shared extents
-Message-ID: <20170126225714.GX9134@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55702 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932902AbdA0RIy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Jan 2017 12:08:54 -0500
+Date: Fri, 27 Jan 2017 12:07:34 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Quota-enabled XFS hangs during mount
+Message-ID: <20170127170734.GA49571@bfoster.bfoster>
+References: <20161103013153.GH9920@dastard>
+ <7993e9b8-6eb8-6a0d-aa72-01346cca1b63@zoner.cz>
+ <20161103204049.GA28177@dastard>
+ <43ca55d0-6762-d54f-5ba9-a83f9c1988f6@zoner.cz>
+ <20170123134452.GA33287@bfoster.bfoster>
+ <5b41d19b-1a0d-2b74-a633-30a5f6d2f14a@zoner.cz>
+ <20170125221739.GA33995@bfoster.bfoster>
+ <30d56003-a517-f6f0-d188-d0ada5a9fbb7@zoner.cz>
+ <20170126191254.GB39683@bfoster.bfoster>
+ <27c2f5aa-517d-22b5-b55f-f0ceb277e9a3@zoner.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <27c2f5aa-517d-22b5-b55f-f0ceb277e9a3@zoner.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Martin Svec <martin.svec@zoner.cz>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-In a bmapx call, bmv_count is the total size of the array, including the
-zeroth element that userspace uses to supply the search key.  The output
-array starts at offset 1 so that we can set up the user for the next
-invocation.  Since we now can split an extent into multiple bmap records
-due to shared/unshared status, we have to be careful that we don't
-overflow the output array.
+On Fri, Jan 27, 2017 at 02:06:45PM +0100, Martin Svec wrote:
+> Dne 26.1.2017 v 20:12 Brian Foster napsal(a):
+> > On Thu, Jan 26, 2017 at 06:46:42PM +0100, Martin Svec wrote:
+> >> Hello,
+> >>
+> >> Dne 25.1.2017 v 23:17 Brian Foster napsal(a):
+> >>> On Tue, Jan 24, 2017 at 02:17:36PM +0100, Martin Svec wrote:
+> >>>> Hello,
+> >>>>
+> >>>> Dne 23.1.2017 v 14:44 Brian Foster napsal(a):
+> >>>>> On Mon, Jan 23, 2017 at 10:44:20AM +0100, Martin Svec wrote:
+> >>>>>> Hello Dave,
+> >>>>>>
+> >>>>>> Any updates on this? It's a bit annoying to workaround the bug by increasing RAM just because of the
+> >>>>>> initial quotacheck.
+> >>>>>>
+> >>>>> Note that Dave is away on a bit of an extended vacation[1]. It looks
+> >>>>> like he was in the process of fishing through the code to spot any
+> >>>>> potential problems related to quotacheck+reclaim. I see you've cc'd him
+> >>>>> directly so we'll see if we get a response wrt to if he got anywhere
+> >>>>> with that...
+> >>>>>
+> >>>>> Skimming back through this thread, it looks like we have an issue where
+> >>>>> quota check is not quite reliable in the event of reclaim, and you
+> >>>>> appear to be reproducing this due to a probably unique combination of
+> >>>>> large inode count and low memory.
+> >>>>>
+> >>>>> Is my understanding correct that you've reproduced this on more recent
+> >>>>> kernels than the original report? 
+> >>>> Yes, I repeated the tests using 4.9.3 kernel on another VM where we hit this issue.
+> >>>>
+> >>>> Configuration:
+> >>>> * vSphere 5.5 virtual machine, 2 vCPUs, virtual disks residing on iSCSI VMFS datastore
+> >>>> * Debian Jessie 64 bit webserver, vanilla kernel 4.9.3
+> >>>> * 180 GB XFS data disk mounted as /www
+> >>>>
+> >>>> Quotacheck behavior depends on assigned RAM:
+> >>>> * 2 or less GiB: mount /www leads to a storm of OOM kills including shell, ttys etc., so the system
+> >>>> becomes unusable.
+> >>>> * 3 GiB: mount /www task hangs in the same way as I reported in earlier in this thread.
+> >>>> * 4 or more GiB: mount /www succeeds.
+> >>>>
+> >>> I was able to reproduce the quotacheck OOM situation on latest kernels.
+> >>> This problem actually looks like a regression as of commit 17c12bcd3
+> >>> ("xfs: when replaying bmap operations, don't let unlinked inodes get
+> >>> reaped"), but I don't think that patch is the core problem. That patch
+> >>> pulled up setting MS_ACTIVE on the superblock from after XFS runs
+> >>> quotacheck to before it (for other reasons), which has a side effect of
+> >>> causing inodes to be placed onto the lru once they are released. Before
+> >>> this change, all inodes were immediately marked for reclaim once
+> >>> released from quotacheck because the superblock had not been set active.
+> >>>
+> >>> The problem here is first that quotacheck issues a bulkstat and thus
+> >>> grabs and releases every inode in the fs. The quotacheck occurs at mount
+> >>> time, which means we still hold the s_umount lock and thus the shrinker
+> >>> cannot run even though it is registered. Therefore, we basically just
+> >>> populate the lru until we've consumed too much memory and blow up.
+> >>>
+> >>> I think the solution here is to preserve the quotacheck behavior prior
+> >>> to commit 17c12bcd3 via something like the following:
+> >>>
+> >>> --- a/fs/xfs/xfs_qm.c
+> >>> +++ b/fs/xfs/xfs_qm.c
+> >>> @@ -1177,7 +1177,7 @@ xfs_qm_dqusage_adjust(
+> >>>  	 * the case in all other instances. It's OK that we do this because
+> >>>  	 * quotacheck is done only at mount time.
+> >>>  	 */
+> >>> -	error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_EXCL, &ip);
+> >>> +	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, XFS_ILOCK_EXCL, &ip);
+> >>>  	if (error) {
+> >>>  		*res = BULKSTAT_RV_NOTHING;
+> >>>  		return error;
+> >>>
+> >>> ... which allows quotacheck to run as normal in my quick tests. Could
+> >>> you try this on your more recent kernel tests and see whether you still
+> >>> reproduce any problems?
+> >> The above patch fixes OOM issues and reduces overall memory consumption during quotacheck. However,
+> >> it does not fix the original xfs_qm_flush_one() freezing. I'm still able to reproduce it with 1 GB
+> >> of RAM or lower. Tested with 4.9.5 kernel.
+> >>
+> > Ok, thanks. I'll get that fix posted shortly.
+> >
+> > I hadn't tried reducing RAM any further. I dropped my vm down to 1GB and
+> > I don't reproduce a hang. If I drop to 512MB, the mount actually crashes
+> > due to what looks like the problem that djwong just fixed[1].
+> >
+> > With that one liner applied, it does look like I've hit a mount hang in
+> > the quotacheck path. Note that I'm also running into OOM issues again
+> > though, probably due to legitimately not having enough RAM for this vm.
+> > Anyways, I'll see if I can dig anything out of that...
+> >
+> > FWIW, this is all on the latest for-next (4.10.0-rc5).
+> >
+> > [1] http://www.spinics.net/lists/linux-xfs/msg03869.html
+> >
+> >> If it makes sense to you, I can rsync the whole filesystem to a new XFS volume and repeat the tests.
+> >> At least, that could tell us if the problem depends on a particular state of on-disk metadata
+> >> structures or it's a general property of the given filesystem tree.
+> >>
+> > That couldn't hurt, thanks.
+> >
+> 
+> Well, after rsync to a fresh non-resized XFS volume, I still hit the mount hang with 1GB RAM.
+> 
 
-In the original patch f86f403794b ("xfs: teach get_bmapx about shared
-extents and the CoW fork") I used cur_ext (the output index) to check
-for overflows, albeit with an off-by-one error.  Since nexleft is no
-longer useful, we can rip all that out and use cur_ext (the output array
-index) for the overflow check directly.
+The problem looks like a race between dquot reclaim and quotacheck. The
+high level sequence of events is as follows:
 
-Failure to do this causes heap corruption in bmapx callers such as
-xfs_io and xfs_scrub.  xfs/328 can reproduce this problem.
+ - During quotacheck, xfs_qm_dqiterate() walks the physical dquot
+   buffers and queues them to the delwri queue.
+ - Next, kswapd kicks in and attempts to reclaim a dquot that is backed
+   by a buffer on the quotacheck delwri queue. xfs_qm_dquot_isolate()
+   acquires the flush lock and attempts to queue to the reclaim delwri
+   queue. This silently fails because the buffer is already queued.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_bmap_util.c |   28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
+   From this point forward, the dquot flush lock is not going to be
+   released until the buffer is submitted for I/O and completed via
+   quotacheck.
+ - Quotacheck continues on to the xfs_qm_flush_one() pass, hits the
+   dquot in question and waits on the flush lock to issue the flush of
+   the recalculated values. *deadlock*
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index b9abce5..c141791 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -528,7 +528,6 @@ xfs_getbmap(
- 	xfs_bmbt_irec_t		*map;		/* buffer for user's data */
- 	xfs_mount_t		*mp;		/* file system mount point */
- 	int			nex;		/* # of user extents can do */
--	int			nexleft;	/* # of user extents left */
- 	int			subnex;		/* # of bmapi's can do */
- 	int			nmap;		/* number of map entries */
- 	struct getbmapx		*out;		/* output structure */
-@@ -686,10 +685,8 @@ xfs_getbmap(
- 		goto out_free_map;
- 	}
+There are at least a few ways to deal with this. We could do something
+granular to fix up the reclaim path to check whether the buffer is
+already queued or something of that nature before we actually invoke the
+flush. I think this is effectively pointless, however, because the first
+part of quotacheck walks and queues all physical dquot buffers anyways.
+
+In other words, I think dquot reclaim during quotacheck should probably
+be bypassed. Given that, we could either adjust when the shrinker is
+registered until after quotacheck or set a flag somewhere to cause dquot
+reclaim to back out when quotacheck is running. I opted for something
+like the latter. Care to test the appended patch?
+
+Note that I think this does mean that you could still have low memory
+issues if you happen to have a lot of quotas defined..
+
+Brian
+
+---8<---
+
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index b669b12..4e472ca 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -527,6 +527,8 @@ xfs_qm_shrink_scan(
  
--	nexleft = nex;
--
- 	do {
--		nmap = (nexleft > subnex) ? subnex : nexleft;
-+		nmap = (nex > subnex) ? subnex : nex;
- 		error = xfs_bmapi_read(ip, XFS_BB_TO_FSBT(mp, bmv->bmv_offset),
- 				       XFS_BB_TO_FSB(mp, bmv->bmv_length),
- 				       map, &nmap, bmapi_flags);
-@@ -697,8 +694,8 @@ xfs_getbmap(
- 			goto out_free_map;
- 		ASSERT(nmap <= subnex);
+ 	if ((sc->gfp_mask & (__GFP_FS|__GFP_DIRECT_RECLAIM)) != (__GFP_FS|__GFP_DIRECT_RECLAIM))
+ 		return 0;
++	if (qi->qi_quotacheck)
++		return 0;
  
--		for (i = 0; i < nmap && nexleft && bmv->bmv_length &&
--				cur_ext < bmv->bmv_count; i++) {
-+		for (i = 0; i < nmap && bmv->bmv_length &&
-+				cur_ext < bmv->bmv_count - 1; i++) {
- 			out[cur_ext].bmv_oflags = 0;
- 			if (map[i].br_state == XFS_EXT_UNWRITTEN)
- 				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
-@@ -760,16 +757,27 @@ xfs_getbmap(
- 				continue;
- 			}
+ 	INIT_LIST_HEAD(&isol.buffers);
+ 	INIT_LIST_HEAD(&isol.dispose);
+@@ -623,6 +625,7 @@ xfs_qm_init_quotainfo(
+ 	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
+ 	INIT_RADIX_TREE(&qinf->qi_pquota_tree, GFP_NOFS);
+ 	mutex_init(&qinf->qi_tree_lock);
++	qinf->qi_quotacheck = false;
  
-+			/*
-+			 * In order to report shared extents accurately,
-+			 * we report each distinct shared/unshared part
-+			 * of a single bmbt record using multiple bmap
-+			 * extents.  To make that happen, we iterate the
-+			 * same map array item multiple times, each
-+			 * time trimming out the subextent that we just
-+			 * reported.
-+			 *
-+			 * Because of this, we must check the out array
-+			 * index (cur_ext) directly against bmv_count-1
-+			 * to avoid overflows.
-+			 */
- 			if (inject_map.br_startblock != NULLFSBLOCK) {
- 				map[i] = inject_map;
- 				i--;
--			} else
--				nexleft--;
-+			}
- 			bmv->bmv_entries++;
- 			cur_ext++;
- 		}
--	} while (nmap && nexleft && bmv->bmv_length &&
--		 cur_ext < bmv->bmv_count);
-+	} while (nmap && bmv->bmv_length && cur_ext < bmv->bmv_count - 1);
+ 	/* mutex used to serialize quotaoffs */
+ 	mutex_init(&qinf->qi_quotaofflock);
+@@ -1295,6 +1298,7 @@ xfs_qm_quotacheck(
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
  
-  out_free_map:
- 	kmem_free(map);
+ 	xfs_notice(mp, "Quotacheck needed: Please wait.");
++	mp->m_quotainfo->qi_quotacheck = true;
+ 
+ 	/*
+ 	 * First we go thru all the dquots on disk, USR and GRP/PRJ, and reset
+@@ -1384,6 +1388,8 @@ xfs_qm_quotacheck(
+ 	mp->m_qflags |= flags;
+ 
+  error_return:
++	mp->m_quotainfo->qi_quotacheck = false;
++
+ 	while (!list_empty(&buffer_list)) {
+ 		struct xfs_buf *bp =
+ 			list_first_entry(&buffer_list, struct xfs_buf, b_list);
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 2975a82..d5a443d 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -89,6 +89,7 @@ typedef struct xfs_quotainfo {
+ 	struct xfs_def_quota	qi_grp_default;
+ 	struct xfs_def_quota	qi_prj_default;
+ 	struct shrinker  qi_shrinker;
++	bool			qi_quotacheck;	/* quotacheck is running */
+ } xfs_quotainfo_t;
+ 
+ static inline struct radix_tree_root *
