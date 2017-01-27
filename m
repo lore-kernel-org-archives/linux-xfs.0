@@ -1,54 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28741 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750780AbdAZDxe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2017 22:53:34 -0500
-Date: Wed, 25 Jan 2017 19:53:30 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] xfs: clear _XBF_PAGES from buffers when readahead page
- allocation fails
-Message-ID: <20170126035330.GU9134@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:51674 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932793AbdA0R0r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Jan 2017 12:26:47 -0500
+Subject: Re: [PATCH 2/2] xfs: use per-AG reservations for the finobt
+References: <1485335667-22435-1-git-send-email-hch@lst.de>
+ <1485335667-22435-3-git-send-email-hch@lst.de>
+ <c4b1428d-6861-5290-d108-043ecbfeb1b1@sandeen.net>
+ <20170127145930.GA14983@lst.de>
+ <96908d89-882a-e1b9-5283-3c9502fdface@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3ca70fec-5af6-6ef3-4bfd-ae00d6efe719@sandeen.net>
+Date: Fri, 27 Jan 2017 11:26:46 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <96908d89-882a-e1b9-5283-3c9502fdface@sandeen.net>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: darrick.wong@oracle.com, bfoster@redhat.com, linux-xfs@vger.kernel.org
 
-If we try to allocate memory pages to back an xfs_buf that we're trying
-to read, it's possible that we'll be so short on memory that the page
-allocation fails.  For a blocking read we'll just wait, but for
-readahead we simply dump all the pages we've collected so far.
+On 1/27/17 9:43 AM, Eric Sandeen wrote:
 
-Unfortunately, after dumping the pages we neglect to clear the
-_XBF_PAGES state, which means that the subsequent call to xfs_buf_free
-thinks that b_pages still points to pages we own.  It then double-frees
-the b_pages pages.
+> I'll keep looking to be sure it's legit.  It didn't really make sense
+> to me either, but ... yup, i'm seeing it.  the fsync error doesn't
+> come through as expected.  I'll keep looking into it.
 
-This results in screaming about negative page refcounts from the memory
-manager, which xfs oughtn't be triggering.  To reproduce this case,
-mount a filesystem where the size of the inodes far outweighs the
-availalble memory (a ~500M inode filesystem on a VM with 300MB memory
-did the trick here) and run bulkstat in parallel with other memory
-eating processes to put a huge load on the system.  The "check summary"
-phase of xfs_scrub also works for this purpose.
+Ok finally had time to actually look.  generic/108 is doing IO
+across a stripe and failing one disk; it seems that the reservations
+have moved the IO pattern in such a way that the fsync'd IO
+does not hit the disk that failed, so the fsync succeeds.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_buf.c |    1 +
- 1 file changed, 1 insertion(+)
+If I bump up the write prior to the fsync frmo 6M to 8M, it fails
+again as expected.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 7f0a01f..ac3b4db 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -422,6 +422,7 @@ xfs_buf_allocate_memory(
- out_free_pages:
- 	for (i = 0; i < bp->b_page_count; i++)
- 		__free_page(bp->b_pages[i]);
-+	bp->b_flags &= ~_XBF_PAGES;
- 	return error;
- }
- 
+So I'm not quite sure how a 6M write on a 4M stripe device
+doesn't hit the failing device, but a larger IO makes the test
+fail again - so I'll chalk this up to a problematic assumption
+in the test, not a problem with the patch.
+
+Thanks,
+-Eric
