@@ -1,303 +1,274 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47213 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750914AbdBAChS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2017 21:37:18 -0500
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v112ZgfO007693
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Feb 2017 02:35:42 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v112ZfId022135
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Feb 2017 02:35:42 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v112ZdCp000833
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Feb 2017 02:35:40 GMT
-Date: Tue, 31 Jan 2017 18:35:38 -0800
+Received: from aserp1050.oracle.com ([141.146.126.70]:43163 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751876AbdA1UcZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Jan 2017 15:32:25 -0500
+Date: Sat, 28 Jan 2017 12:30:12 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 6/7] xfs: allow unwritten extents in the CoW fork
-Message-ID: <20170201023538.GL9134@birch.djwong.org>
-References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
- <148582222694.12293.16267279056432234212.stgit@birch.djwong.org>
+Subject: Re: [PATCH 1/3] xfs/263: don't hardcode inode numbers in output
+Message-ID: <20170128203012.GQ14033@birch.djwong.org>
+References: <148562509264.30594.7506967863745489318.stgit@birch.djwong.org>
+ <7df1dabe-3832-ffa7-cb80-07ee602bd455@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <148582222694.12293.16267279056432234212.stgit@birch.djwong.org>
+In-Reply-To: <7df1dabe-3832-ffa7-cb80-07ee602bd455@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-In the data fork, we only allow extents to perform the following state
-transitions:
+On Sat, Jan 28, 2017 at 12:10:56PM -0600, Eric Sandeen wrote:
+> On 1/28/17 11:38 AM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Since we can't control the inode number assignments when creating files,
+> > don't hardcode them in the golden output.
+> 
+> what numbers are you seeing?
+> 
+> The inode numbers aren't important for the test, but I don't want to
+> gloss over something unexpected.
 
-delay -> real <-> unwritten
+I consistently see 131+64 = 195 and things like that.
 
-There's no way to move directly from a delalloc reservation to an
-/unwritten/ allocated extent.  However, for the CoW fork we want to be
-able to do the following to each extent:
+--D
 
-delalloc -> unwritten -> written -> remapped to data fork
-
-This will help us to avoid a race in the speculative CoW preallocation
-code between a first thread that is allocating a CoW extent and a second
-thread that is remapping part of a file after a write.  In order to do
-this, however, we need two things: first, we have to be able to
-transition from da to unwritten, and second the function that converts
-between real and unwritten has to be made aware of the cow fork.  Do
-both of those things.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: Converting unwritten CoW fork extents to real extents doesn't
-change anything on disk, so we don't actually need a transaction to
-perform the conversion.
----
- fs/xfs/libxfs/xfs_bmap.c |   80 +++++++++++++++++++++++++++++-----------------
- 1 file changed, 50 insertions(+), 30 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index d79c66d..5b626a4 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1861,6 +1861,7 @@ xfs_bmap_add_extent_delay_real(
- 		 */
- 		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
- 		xfs_bmbt_set_startblock(ep, new->br_startblock);
-+		xfs_bmbt_set_state(ep, new->br_state);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
- 
- 		(*nextents)++;
-@@ -2199,6 +2200,7 @@ STATIC int				/* error */
- xfs_bmap_add_extent_unwritten_real(
- 	struct xfs_trans	*tp,
- 	xfs_inode_t		*ip,	/* incore inode pointer */
-+	int			whichfork,
- 	xfs_extnum_t		*idx,	/* extent number to update/insert */
- 	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
- 	xfs_bmbt_irec_t		*new,	/* new data to add to file extents */
-@@ -2218,12 +2220,14 @@ xfs_bmap_add_extent_unwritten_real(
- 					/* left is 0, right is 1, prev is 2 */
- 	int			rval=0;	/* return value (logging flags) */
- 	int			state = 0;/* state bits, accessed thru macros */
--	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_mount	*mp = ip->i_mount;
- 
- 	*logflagsp = 0;
- 
- 	cur = *curp;
--	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
-+	if (whichfork == XFS_COW_FORK)
-+		state |= BMAP_COWFORK;
- 
- 	ASSERT(*idx >= 0);
- 	ASSERT(*idx <= xfs_iext_count(ifp));
-@@ -2282,7 +2286,7 @@ xfs_bmap_add_extent_unwritten_real(
- 	 * Don't set contiguous if the combined extent would be too large.
- 	 * Also check for all-three-contiguous being too large.
- 	 */
--	if (*idx < xfs_iext_count(&ip->i_df) - 1) {
-+	if (*idx < xfs_iext_count(ifp) - 1) {
- 		state |= BMAP_RIGHT_VALID;
- 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx + 1), &RIGHT);
- 		if (isnullstartblock(RIGHT.br_startblock))
-@@ -2322,7 +2326,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		xfs_iext_remove(ip, *idx + 1, 2, state);
--		ip->i_d.di_nextents -= 2;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) - 2);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2365,7 +2370,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		xfs_iext_remove(ip, *idx + 1, 1, state);
--		ip->i_d.di_nextents--;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2400,7 +2406,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		xfs_bmbt_set_state(ep, newext);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 		xfs_iext_remove(ip, *idx + 1, 1, state);
--		ip->i_d.di_nextents--;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2512,7 +2519,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		xfs_iext_insert(ip, *idx, 1, new, state);
--		ip->i_d.di_nextents++;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2590,7 +2598,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		++*idx;
- 		xfs_iext_insert(ip, *idx, 1, new, state);
- 
--		ip->i_d.di_nextents++;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2638,7 +2647,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		++*idx;
- 		xfs_iext_insert(ip, *idx, 2, &r[0], state);
- 
--		ip->i_d.di_nextents += 2;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) + 2);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2692,17 +2702,17 @@ xfs_bmap_add_extent_unwritten_real(
- 	}
- 
- 	/* update reverse mappings */
--	error = xfs_rmap_convert_extent(mp, dfops, ip, XFS_DATA_FORK, new);
-+	error = xfs_rmap_convert_extent(mp, dfops, ip, whichfork, new);
- 	if (error)
- 		goto done;
- 
- 	/* convert to a btree if necessary */
--	if (xfs_bmap_needs_btree(ip, XFS_DATA_FORK)) {
-+	if (xfs_bmap_needs_btree(ip, whichfork)) {
- 		int	tmp_logflags;	/* partial log flag return val */
- 
- 		ASSERT(cur == NULL);
- 		error = xfs_bmap_extents_to_btree(tp, ip, first, dfops, &cur,
--				0, &tmp_logflags, XFS_DATA_FORK);
-+				0, &tmp_logflags, whichfork);
- 		*logflagsp |= tmp_logflags;
- 		if (error)
- 			goto done;
-@@ -2714,7 +2724,7 @@ xfs_bmap_add_extent_unwritten_real(
- 		*curp = cur;
- 	}
- 
--	xfs_bmap_check_leaf_extents(*curp, ip, XFS_DATA_FORK);
-+	xfs_bmap_check_leaf_extents(*curp, ip, whichfork);
- done:
- 	*logflagsp |= rval;
- 	return error;
-@@ -4365,10 +4375,16 @@ xfs_bmapi_allocate(
- 	bma->got.br_state = XFS_EXT_NORM;
- 
- 	/*
--	 * A wasdelay extent has been initialized, so shouldn't be flagged
--	 * as unwritten.
-+	 * In the data fork, a wasdelay extent has been initialized, so
-+	 * shouldn't be flagged as unwritten.
-+	 *
-+	 * For the cow fork, however, we convert delalloc reservations
-+	 * (extents allocated for speculative preallocation) to
-+	 * allocated unwritten extents, and only convert the unwritten
-+	 * extents to real extents when we're about to write the data.
- 	 */
--	if (!bma->wasdel && (bma->flags & XFS_BMAPI_PREALLOC) &&
-+	if ((!bma->wasdel || (bma->flags & XFS_BMAPI_COWFORK)) &&
-+	    (bma->flags & XFS_BMAPI_PREALLOC) &&
- 	    xfs_sb_version_hasextflgbit(&mp->m_sb))
- 		bma->got.br_state = XFS_EXT_UNWRITTEN;
- 
-@@ -4419,8 +4435,6 @@ xfs_bmapi_convert_unwritten(
- 			(XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT))
- 		return 0;
- 
--	ASSERT(whichfork != XFS_COW_FORK);
--
- 	/*
- 	 * Modify (by adding) the state flag, if writing.
- 	 */
-@@ -4445,8 +4459,8 @@ xfs_bmapi_convert_unwritten(
- 			return error;
- 	}
- 
--	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, &bma->idx,
--			&bma->cur, mval, bma->firstblock, bma->dfops,
-+	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, whichfork,
-+			&bma->idx, &bma->cur, mval, bma->firstblock, bma->dfops,
- 			&tmp_logflags);
- 	/*
- 	 * Log the inode core unconditionally in the unwritten extent conversion
-@@ -4455,8 +4469,12 @@ xfs_bmapi_convert_unwritten(
- 	 * in the transaction for the sake of fsync(), even if nothing has
- 	 * changed, because fsync() will not force the log for this transaction
- 	 * unless it sees the inode pinned.
-+	 *
-+	 * Note: If we're only converting cow fork extents, there aren't
-+	 * any on-disk updates to make, so we don't need to log anything.
- 	 */
--	bma->logflags |= tmp_logflags | XFS_ILOG_CORE;
-+	if (whichfork != XFS_COW_FORK)
-+		bma->logflags |= tmp_logflags | XFS_ILOG_CORE;
- 	if (error)
- 		return error;
- 
-@@ -4530,15 +4548,15 @@ xfs_bmapi_write(
- 	ASSERT(*nmap >= 1);
- 	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
- 	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
--	ASSERT(tp != NULL);
-+	ASSERT(tp != NULL ||
-+	       (flags & (XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK)) ==
-+			(XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK));
- 	ASSERT(len > 0);
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(!(flags & XFS_BMAPI_REMAP) || whichfork == XFS_DATA_FORK);
- 	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || !(flags & XFS_BMAPI_REMAP));
- 	ASSERT(!(flags & XFS_BMAPI_CONVERT) || !(flags & XFS_BMAPI_REMAP));
--	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || whichfork != XFS_COW_FORK);
--	ASSERT(!(flags & XFS_BMAPI_CONVERT) || whichfork != XFS_COW_FORK);
- 
- 	/* zeroing is for currently only for data extents, not metadata */
- 	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
-@@ -5553,8 +5571,8 @@ __xfs_bunmapi(
- 			}
- 			del.br_state = XFS_EXT_UNWRITTEN;
- 			error = xfs_bmap_add_extent_unwritten_real(tp, ip,
--					&lastx, &cur, &del, firstblock, dfops,
--					&logflags);
-+					whichfork, &lastx, &cur, &del,
-+					firstblock, dfops, &logflags);
- 			if (error)
- 				goto error0;
- 			goto nodelete;
-@@ -5607,8 +5625,9 @@ __xfs_bunmapi(
- 				prev.br_state = XFS_EXT_UNWRITTEN;
- 				lastx--;
- 				error = xfs_bmap_add_extent_unwritten_real(tp,
--						ip, &lastx, &cur, &prev,
--						firstblock, dfops, &logflags);
-+						ip, whichfork, &lastx, &cur,
-+						&prev, firstblock, dfops,
-+						&logflags);
- 				if (error)
- 					goto error0;
- 				goto nodelete;
-@@ -5616,8 +5635,9 @@ __xfs_bunmapi(
- 				ASSERT(del.br_state == XFS_EXT_NORM);
- 				del.br_state = XFS_EXT_UNWRITTEN;
- 				error = xfs_bmap_add_extent_unwritten_real(tp,
--						ip, &lastx, &cur, &del,
--						firstblock, dfops, &logflags);
-+						ip, whichfork, &lastx, &cur,
-+						&del, firstblock, dfops,
-+						&logflags);
- 				if (error)
- 					goto error0;
- 				goto nodelete;
+> # Control size to control inode numbers
+> $MKFS_XFS_PROG -f -m crc=0 -n ftype=0 -d size=512m $SCRATCH_DEV >>$seqres.full
+> 
+> -Eric
+> 
+>  
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  tests/xfs/263     |    6 +++++-
+> >  tests/xfs/263.out |   52 ++++++++++++++++++++++++++--------------------------
+> >  2 files changed, 31 insertions(+), 27 deletions(-)
+> > 
+> > 
+> > diff --git a/tests/xfs/263 b/tests/xfs/263
+> > index 1dc47ae..7aebf90 100755
+> > --- a/tests/xfs/263
+> > +++ b/tests/xfs/263
+> > @@ -71,6 +71,10 @@ function option_string()
+> >  	echo $OPT
+> >  }
+> >  
+> > +filter_quota_state() {
+> > +	sed -e 's/Inode: #[0-9]\+/Inode #XXX/g' | _filter_scratch
+> > +}
+> > +
+> >  function test_all_state()
+> >  {
+> >  	for I in `seq 0 7`; do
+> > @@ -79,7 +83,7 @@ function test_all_state()
+> >  		# Some combinations won't mount on V4 supers (grp + prj)
+> >  		_qmount_option "$OPTIONS"
+> >  		_scratch_mount &>> $seqres.full || continue
+> > -		$XFS_QUOTA_PROG -x -c "state" $SCRATCH_MNT | _filter_scratch
+> > +		$XFS_QUOTA_PROG -x -c "state" $SCRATCH_MNT | filter_quota_state
+> >  		_scratch_unmount
+> >  	done
+> >  }
+> > diff --git a/tests/xfs/263.out b/tests/xfs/263.out
+> > index 70454dd..531d45d 100644
+> > --- a/tests/xfs/263.out
+> > +++ b/tests/xfs/263.out
+> > @@ -5,7 +5,7 @@ QA output created by 263
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #131 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > @@ -21,11 +21,11 @@ Realtime Blocks grace time: [7 days]
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > -  Inode: #131 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #132 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > @@ -37,11 +37,11 @@ Realtime Blocks grace time: [7 days]
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #131 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #132 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > @@ -53,7 +53,7 @@ Realtime Blocks grace time: [7 days]
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > -  Inode: #131 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > @@ -61,7 +61,7 @@ Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #132 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Blocks grace time: [7 days]
+> >  Inodes grace time: [7 days]
+> >  Realtime Blocks grace time: [7 days]
+> > @@ -69,7 +69,7 @@ Realtime Blocks grace time: [7 days]
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #131 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > @@ -77,7 +77,7 @@ Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #132 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Blocks grace time: [7 days]
+> >  Inodes grace time: [7 days]
+> >  Realtime Blocks grace time: [7 days]
+> > @@ -89,7 +89,7 @@ Realtime Blocks grace time: [7 days]
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #99 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > @@ -105,11 +105,11 @@ Realtime Blocks grace time: [7 days]
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > -  Inode: #99 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #100 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > @@ -121,11 +121,11 @@ Realtime Blocks grace time: [7 days]
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #99 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #100 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > @@ -137,15 +137,15 @@ Realtime Blocks grace time: [7 days]
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > -  Inode: #99 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > -  Inode: #100 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #101 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Blocks grace time: [7 days]
+> >  Inodes grace time: [7 days]
+> >  Realtime Blocks grace time: [7 days]
+> > @@ -153,15 +153,15 @@ Realtime Blocks grace time: [7 days]
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #99 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > -  Inode: #100 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #101 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Blocks grace time: [7 days]
+> >  Inodes grace time: [7 days]
+> >  Realtime Blocks grace time: [7 days]
+> > @@ -169,15 +169,15 @@ Realtime Blocks grace time: [7 days]
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: OFF
+> >    Enforcement: OFF
+> > -  Inode: #99 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #100 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #101 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Blocks grace time: [7 days]
+> >  Inodes grace time: [7 days]
+> >  Realtime Blocks grace time: [7 days]
+> > @@ -185,15 +185,15 @@ Realtime Blocks grace time: [7 days]
+> >  User quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #99 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #100 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
+> >    Accounting: ON
+> >    Enforcement: ON
+> > -  Inode: #101 (1 blocks, 1 extents)
+> > +  Inode #XXX (1 blocks, 1 extents)
+> >  Blocks grace time: [7 days]
+> >  Inodes grace time: [7 days]
+> >  Realtime Blocks grace time: [7 days]
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
