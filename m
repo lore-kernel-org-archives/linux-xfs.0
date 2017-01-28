@@ -1,95 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37892 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751292AbdANG2g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jan 2017 01:28:36 -0500
-Date: Fri, 13 Jan 2017 22:28:10 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v8 2/6] xfs: sanity check directory inode di_size
-Message-ID: <20170114062810.GG14038@birch.djwong.org>
-References: <1484123050-11064-1-git-send-email-amir73il@gmail.com>
- <1484123050-11064-3-git-send-email-amir73il@gmail.com>
+Received: from lang.hm ([66.167.227.134]:59557 "EHLO bifrost.lang.hm"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750814AbdA1Iht (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 28 Jan 2017 03:37:49 -0500
+Date: Sat, 28 Jan 2017 00:17:04 -0800 (PST)
+From: David Lang <david@lang.hm>
+Subject: Re: [Cluster-devel] [PATCH 8/8] Revert "ext4: fix wrong gfp type
+ under transaction"
+In-Reply-To: <20170128073215.GA19424@infradead.org>
+Message-ID: <nycvar.QRO.7.75.62.1701280016010.6590@qynat-yncgbc>
+References: <20170117155916.dcizr65bwa6behe7@thunk.org> <20170117161618.GT19699@dhcp22.suse.cz> <20170117172925.GA2486@quack2.suse.cz> <20170119083956.GE30786@dhcp22.suse.cz> <20170119092236.GC2565@quack2.suse.cz> <20170119094405.GK30786@dhcp22.suse.cz>
+ <20170126074455.GC8456@dhcp22.suse.cz> <20170127061318.xd2qxashbl4dajez@thunk.org> <20170127093735.GB4143@dhcp22.suse.cz> <20170127164042.2o3bnyopihcb224g@thunk.org> <20170128073215.GA19424@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1484123050-11064-3-git-send-email-amir73il@gmail.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Theodore Ts'o <tytso@mit.edu>, Michal Hocko <mhocko@kernel.org>, Jan Kara <jack@suse.cz>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, Jan 11, 2017 at 10:24:06AM +0200, Amir Goldstein wrote:
-> This changes fixes an assertion hit when fuzzing on-disk
-> i_mode values.
-> 
-> The easy case to fix is when changing an empty file
-> i_mode to S_IFDIR. In this case, xfs_dinode_verify()
-> detects an illegal zero size for directory and fails
-> to load the inode structure from disk.
-> 
-> For the case of non empty file whose i_mode is changed
-> to S_IFDIR, the ASSERT() statement in xfs_dir2_isblock()
-> is replaced with return -EFSCORRUPTED, to avoid interacting
-> with corrupted jusk also when XFS_DEBUG is disabled.
-> 
-> Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
->  fs/xfs/libxfs/xfs_dir2.c      | 3 ++-
->  fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++--
->  2 files changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index c58d72c..4f7913f 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -631,7 +631,8 @@ xfs_dir2_isblock(
->  	if ((rval = xfs_bmap_last_offset(args->dp, &last, XFS_DATA_FORK)))
->  		return rval;
->  	rval = XFS_FSB_TO_B(args->dp->i_mount, last) == args->geo->blksize;
-> -	ASSERT(rval == 0 || args->dp->i_d.di_size == args->geo->blksize);
-> +	if (rval != 0 && args->dp->i_d.di_size != args->geo->blksize)
-> +		return -EFSCORRUPTED;
->  	*vp = rval;
->  	return 0;
->  }
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index dd483e2..0091ac3 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -386,6 +386,7 @@ xfs_dinode_verify(
->  	xfs_ino_t		ino,
->  	struct xfs_dinode	*dip)
->  {
-> +	uint16_t		mode;
->  	uint16_t		flags;
->  	uint64_t		flags2;
->  
-> @@ -396,8 +397,10 @@ xfs_dinode_verify(
->  	if (be64_to_cpu(dip->di_size) & (1ULL << 63))
->  		return false;
->  
-> -	/* No zero-length symlinks. */
-> -	if (S_ISLNK(be16_to_cpu(dip->di_mode)) && dip->di_size == 0)
-> +	mode = be16_to_cpu(dip->di_mode);
-> +
-> +	/* No zero-length symlinks/dirs. */
-> +	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
+On Fri, 27 Jan 2017, Christoph Hellwig wrote:
 
-Drat, I just hit this with the fuzzer tests, so I'll pull this in
-for rc5.  Good work! :)
+> On Fri, Jan 27, 2017 at 11:40:42AM -0500, Theodore Ts'o wrote:
+>> The reason why I'm nervous is that nojournal mode is not a common
+>> configuration, and "wait until production systems start failing" is
+>> not a strategy that I or many SRE-types find.... comforting.
+>
+> What does SRE stand for?
 
---D
+Site Reliability Engineer, a mix of operations and engineering (DevOps++)
 
->  		return false;
->  
->  	/* only version 3 or greater inodes are extensively verified here */
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+David Lang
