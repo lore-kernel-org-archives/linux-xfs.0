@@ -1,47 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:33765 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750917AbdBAEwo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2017 23:52:44 -0500
-Received: by mail-pg0-f68.google.com with SMTP id 194so32998621pgd.0
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jan 2017 20:52:43 -0800 (PST)
-From: Eric Biggers <ebiggers3@gmail.com>
-Subject: [PATCH] Fix building xfsprogs on 32-bit platforms (again)
-Date: Tue, 31 Jan 2017 20:51:44 -0800
-Message-Id: <20170201045144.29488-1-ebiggers3@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49522 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751968AbdA1T1Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 28 Jan 2017 14:27:16 -0500
+From: "Bill O'Donnell" <billodo@redhat.com>
+Subject: [PATCH] xfs: correct null checks and error processing in xfs_initialize_perag
+Date: Sat, 28 Jan 2017 13:19:57 -0600
+Message-Id: <20170128191957.13851-1-billodo@redhat.com>
+In-Reply-To: <20170120142642.21698-1-colin.king@canonical.com>
+References: <20170120142642.21698-1-colin.king@canonical.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Gwendal Grignou <gwendal@chromium.org>, Felix Janda <felix.janda@posteo.de>, Eric Biggers <ebiggers@google.com>
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-From: Eric Biggers <ebiggers@google.com>
+If pag cannot be allocated, the current error exit path will trip
+a null pointer deference error when calling xfs_buf_hash_destroy
+with a null pag.  Fix this by adding a new error exit labels and
+jumping to those accordingly, avoiding the hash destroy and
+unnecessary kmem_free on pag.
 
-Building xfsprogs on 32-bit platforms was broken again by the recent
-split of BUILD_CFLAGS from CFLAGS.  -D_FILE_OFFSET_BITS=64 was not added
-to BUILD_CFLAGS, but in fact BUILD_CFLAGS is used to compile
-crc32selftest, which includes xfs.h and therefore requires this
-declaration.  Fix this by adding -D_FILE_OFFSET_BITS=64 to BUILD_CFLAGS.
+Up to three things need to be properly unwound:
 
-Fixes: 0a71e3839630 ("build: Allow compiling xfsprogs in a cross compile environment")
-Signed-off-by: Eric Biggers <ebiggers@google.com>
+1) pag memory allocation
+2) xfs_buf_hash_init
+3) radix_tree_insert
+
+For any given iteration through the loop, any of the above which
+succeed must be unwound for /this/ pag, and then all prior
+initialized pags must be unwound.
+
+Fixes CoverityScan CID#1397628 ("Dereference after null check")
+
+Reported-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 ---
- include/builddefs.in | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_mount.c | 37 ++++++++++++++++++++++++++-----------
+ 1 file changed, 26 insertions(+), 11 deletions(-)
 
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 612b547d..6554e421 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -26,7 +26,7 @@ MALLOCLIB = @malloc_lib@
- LOADERFLAGS = @LDFLAGS@
- LTLDFLAGS = @LDFLAGS@
- CFLAGS = @CFLAGS@ -D_FILE_OFFSET_BITS=64
--BUILD_CFLAGS = @BUILD_CFLAGS@
-+BUILD_CFLAGS = @BUILD_CFLAGS@ -D_FILE_OFFSET_BITS=64
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 9b9540d..b074d2a 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -190,6 +190,7 @@ xfs_initialize_perag(
+ 	xfs_agnumber_t	first_initialised = 0;
+ 	xfs_perag_t	*pag;
+ 	int		error = -ENOMEM;
++	bool		first_init_done = false;
  
- LIBRT = @librt@
- LIBUUID = @libuuid@
+ 	/*
+ 	 * Walk the current per-ag tree so we don't try to initialise AGs
+@@ -202,22 +203,20 @@ xfs_initialize_perag(
+ 			xfs_perag_put(pag);
+ 			continue;
+ 		}
+-		if (!first_initialised)
+-			first_initialised = index;
+ 
+ 		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
+ 		if (!pag)
+-			goto out_unwind;
++			goto out_unwind_new_pags;
+ 		pag->pag_agno = index;
+ 		pag->pag_mount = mp;
+ 		spin_lock_init(&pag->pag_ici_lock);
+ 		mutex_init(&pag->pag_ici_reclaim_lock);
+ 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+ 		if (xfs_buf_hash_init(pag))
+-			goto out_unwind;
++			goto out_free_pag;
+ 
+ 		if (radix_tree_preload(GFP_NOFS))
+-			goto out_unwind;
++			goto out_free_pag;
+ 
+ 		spin_lock(&mp->m_perag_lock);
+ 		if (radix_tree_insert(&mp->m_perag_tree, index, pag)) {
+@@ -225,10 +224,15 @@ xfs_initialize_perag(
+ 			spin_unlock(&mp->m_perag_lock);
+ 			radix_tree_preload_end();
+ 			error = -EEXIST;
+-			goto out_unwind;
++			goto out_hash_destroy;
+ 		}
+ 		spin_unlock(&mp->m_perag_lock);
+ 		radix_tree_preload_end();
++		/* a pag is fully initialized */
++		if (!first_init_done) {
++			first_initialised = index;
++			first_init_done = true;
++		}
+ 	}
+ 
+ 	index = xfs_set_inode_alloc(mp, agcount);
+@@ -239,13 +243,24 @@ xfs_initialize_perag(
+ 	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+ 	return 0;
+ 
+-out_unwind:
++out_hash_destroy:
+ 	xfs_buf_hash_destroy(pag);
++out_free_pag:
+ 	kmem_free(pag);
+-	for (; index > first_initialised; index--) {
+-		pag = radix_tree_delete(&mp->m_perag_tree, index);
+-		xfs_buf_hash_destroy(pag);
+-		kmem_free(pag);
++out_unwind_new_pags:
++	/* unwind any newly initialized pags */
++	if (first_init_done) {
++		index--;
++		do {
++			pag = radix_tree_delete(&mp->m_perag_tree, index);
++			if (pag) {
++				xfs_buf_hash_destroy(pag);
++				kmem_free(pag);
++			}
++			if (!index)
++				break;
++			index--;
++		} while (index >= first_initialised);
+ 	}
+ 	return error;
+ }
 -- 
-2.11.0
+2.9.3
 
