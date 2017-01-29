@@ -1,75 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:16958 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751846AbdA1Wsu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Jan 2017 17:48:50 -0500
-Date: Sun, 29 Jan 2017 09:42:42 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Quota-enabled XFS hangs during mount
-Message-ID: <20170128224242.GD316@dastard>
-References: <7993e9b8-6eb8-6a0d-aa72-01346cca1b63@zoner.cz>
- <20161103204049.GA28177@dastard>
- <43ca55d0-6762-d54f-5ba9-a83f9c1988f6@zoner.cz>
- <20170123134452.GA33287@bfoster.bfoster>
- <5b41d19b-1a0d-2b74-a633-30a5f6d2f14a@zoner.cz>
- <20170125221739.GA33995@bfoster.bfoster>
- <30d56003-a517-f6f0-d188-d0ada5a9fbb7@zoner.cz>
- <20170126191254.GB39683@bfoster.bfoster>
- <27c2f5aa-517d-22b5-b55f-f0ceb277e9a3@zoner.cz>
- <20170127170734.GA49571@bfoster.bfoster>
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:35635 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751838AbdA2TxB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Jan 2017 14:53:01 -0500
+Received: by mail-wm0-f51.google.com with SMTP id b65so5152008wmf.0
+        for <linux-xfs@vger.kernel.org>; Sun, 29 Jan 2017 11:52:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170127170734.GA49571@bfoster.bfoster>
+From: Patrick Dung <mpatdung@gmail.com>
+Date: Mon, 30 Jan 2017 03:45:27 +0800
+Message-ID: <CAEtPA0AOfhTGM76vhLHDiQbXyHywbypk5hOLhq=AWvwVAQPO3g@mail.gmail.com>
+Subject: WARNING: CPU: 11 PID: 7966 at fs/xfs/libxfs/xfs_bmap.c:5408
+ xfs_bmap_del_extent+0xdc8/0xe80 [xfs] and having a call trace
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Martin Svec <martin.svec@zoner.cz>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jan 27, 2017 at 12:07:34PM -0500, Brian Foster wrote:
-> The problem looks like a race between dquot reclaim and quotacheck. The
-> high level sequence of events is as follows:
-> 
->  - During quotacheck, xfs_qm_dqiterate() walks the physical dquot
->    buffers and queues them to the delwri queue.
->  - Next, kswapd kicks in and attempts to reclaim a dquot that is backed
->    by a buffer on the quotacheck delwri queue. xfs_qm_dquot_isolate()
->    acquires the flush lock and attempts to queue to the reclaim delwri
->    queue. This silently fails because the buffer is already queued.
-> 
->    From this point forward, the dquot flush lock is not going to be
->    released until the buffer is submitted for I/O and completed via
->    quotacheck.
->  - Quotacheck continues on to the xfs_qm_flush_one() pass, hits the
->    dquot in question and waits on the flush lock to issue the flush of
->    the recalculated values. *deadlock*
-> 
-> There are at least a few ways to deal with this. We could do something
-> granular to fix up the reclaim path to check whether the buffer is
-> already queued or something of that nature before we actually invoke the
-> flush. I think this is effectively pointless, however, because the first
-> part of quotacheck walks and queues all physical dquot buffers anyways.
-> 
-> In other words, I think dquot reclaim during quotacheck should probably
-> be bypassed.
-....
+Hello
 
-> Note that I think this does mean that you could still have low memory
-> issues if you happen to have a lot of quotas defined..
+I have encounter this warning message twice in recently.
+Do you know what is it about?
 
-Hmmm..... Really needs fixing.
+[39331.103938] ------------[ cut here ]------------
+[39331.104014] WARNING: CPU: 11 PID: 7966 at
+fs/xfs/libxfs/xfs_bmap.c:5408 xfs_bmap_del_extent+0xdc8/0xe80 [xfs]
+[39331.104122] CPU: 11 PID: 7966 Comm: cp Tainted: G           OE
+4.9.3-200.fc25.x86_64 #1
+[39331.104127]  ffff9ddbb7ba3ab8 ffffffff843f3ddd 0000000000000000
+0000000000000000
+[39331.104132]  ffff9ddbb7ba3af8 ffffffff840a202b 00001520b7ba3ca8
+ffff900c5a598400
+[39331.104136]  ffff9ddbb7ba3ca0 0000000000001cc0 0000000000000000
+0000000000000000
+[39331.104140] Call Trace:
+[39331.104150]  [<ffffffff843f3ddd>] dump_stack+0x63/0x86
+[39331.104154]  [<ffffffff840a202b>] __warn+0xcb/0xf0
+[39331.104158]  [<ffffffff840a215d>] warn_slowpath_null+0x1d/0x20
+[39331.104198]  [<ffffffffc0ba9018>] xfs_bmap_del_extent+0xdc8/0xe80 [xfs]
+[39331.104237]  [<ffffffffc0bad3bd>] __xfs_bunmapi+0x5bd/0xb90 [xfs]
+[39331.104274]  [<ffffffffc0bad9bb>] xfs_bunmapi+0x2b/0x40 [xfs]
+[39331.104320]  [<ffffffffc0be3056>] xfs_free_file_space+0x256/0x300 [xfs]
+[39331.104366]  [<ffffffffc0bea79a>] xfs_file_fallocate+0x18a/0x3b0 [xfs]
+[39331.104370]  [<ffffffff84256077>] vfs_fallocate+0x157/0x220
+[39331.104373]  [<ffffffff84256e88>] SyS_fallocate+0x48/0x80
+[39331.104376]  [<ffffffff842591a7>] ? SyS_lseek+0x87/0xb0
+[39331.104383]  [<ffffffff8481bbf7>] entry_SYSCALL_64_fastpath+0x1a/0xa9
+[39331.104386] ---[ end trace 964857cd95d3bbff ]---
 
-I think submitting the buffer list after xfs_qm_dqiterate() and
-waiting for completion will avoid this problem.
-
-However, I suspect reclaim can still race with flushing, so we need
-to detect "stuck" dquots, submit the delwri buffer queue and wait,
-then flush the dquot again.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks.
+Patrick
