@@ -1,58 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41605 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:51256 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752099AbdA3I0X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Jan 2017 03:26:23 -0500
-Date: Mon, 30 Jan 2017 09:12:10 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
-Message-ID: <20170130081210.GD8443@dhcp22.suse.cz>
-References: <20170117155916.dcizr65bwa6behe7@thunk.org>
- <20170117161618.GT19699@dhcp22.suse.cz>
- <20170117172925.GA2486@quack2.suse.cz>
- <20170119083956.GE30786@dhcp22.suse.cz>
- <20170119092236.GC2565@quack2.suse.cz>
- <20170119094405.GK30786@dhcp22.suse.cz>
- <20170126074455.GC8456@dhcp22.suse.cz>
- <20170127061318.xd2qxashbl4dajez@thunk.org>
- <20170127093735.GB4143@dhcp22.suse.cz>
- <20170127164042.2o3bnyopihcb224g@thunk.org>
+        id S1753459AbdA3OHX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jan 2017 09:07:23 -0500
+Date: Mon, 30 Jan 2017 09:05:35 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: WARNING: CPU: 11 PID: 7966 at fs/xfs/libxfs/xfs_bmap.c:5408
+ xfs_bmap_del_extent+0xdc8/0xe80 [xfs] and having a call trace
+Message-ID: <20170130140535.GA7136@bfoster.bfoster>
+References: <CAEtPA0AOfhTGM76vhLHDiQbXyHywbypk5hOLhq=AWvwVAQPO3g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170127164042.2o3bnyopihcb224g@thunk.org>
+In-Reply-To: <CAEtPA0AOfhTGM76vhLHDiQbXyHywbypk5hOLhq=AWvwVAQPO3g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: Patrick Dung <mpatdung@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri 27-01-17 11:40:42, Theodore Ts'o wrote:
-> On Fri, Jan 27, 2017 at 10:37:35AM +0100, Michal Hocko wrote:
-> > If this ever turn out to be a problem and with the vmapped stacks we
-> > have good chances to get a proper stack traces on a potential overflow
-> > we can add the scope API around the problematic code path with the
-> > explanation why it is needed.
+On Mon, Jan 30, 2017 at 03:45:27AM +0800, Patrick Dung wrote:
+> Hello
 > 
-> Yeah, or maybe we can automate it?  Can the reclaim code check how
-> much stack space is left and do the right thing automatically?
+> I have encounter this warning message twice in recently.
+> Do you know what is it about?
+> 
+> [39331.103938] ------------[ cut here ]------------
+> [39331.104014] WARNING: CPU: 11 PID: 7966 at
+> fs/xfs/libxfs/xfs_bmap.c:5408 xfs_bmap_del_extent+0xdc8/0xe80 [xfs]
+> [39331.104122] CPU: 11 PID: 7966 Comm: cp Tainted: G           OE
+> 4.9.3-200.fc25.x86_64 #1
 
-I am not sure how to do that. Checking for some magic value sounds quite
-fragile to me. It also sounds a bit strange to focus only on the reclaim
-while other code paths might suffer from the same problem.
+This warning is related to the extra blocks that are stashed away with
+delayed allocation extents to cover bmap btree insertion. When a
+delalloc extent is created, a particularly sized block reservation is
+stashed along with it to help cover bmapbt block allocation when the
+extent is converted to real blocks and inserted to the on-disk btree.
 
-What is actually the deepest possible call chain from the slab reclaim
-where I stopped? I have tried to follow that path but hit the callback
-wall quite early.
- 
-> The reason why I'm nervous is that nojournal mode is not a common
-> configuration, and "wait until production systems start failing" is
-> not a strategy that I or many SRE-types find.... comforting.
+If the delalloc extent is modified before it is ultimately converted, if
+a hole is punched (as the stack below shows) and it is split in two for
+example, then the existing reservation must be shared across the two
+extents. This warning fires when we encounter a situation where we're
+left with a delalloc extent with zero reserved blocks.
 
-I understand that but I would be much more happier if we did the
-decision based on the actual data rather than a fear something would
-break down.
+This is not a catastrophic error in and of itself as not every bmbt
+insertion requires bmbt block allocation. It is not expected nor ideal
+however. The warning exists so we have notification that there is still
+an allocation pattern (and I have a suspicion from reviewing the code)
+that leads to this risky state and we can try to address it. The stack
+suggests a cp is freeing up space... can you describe what exactly you
+are doing when this tends to occur? A quick look at coreutils source
+suggests that cp calls fallocate() to punch a hole and explicitly work
+around XFS preallocation when copying sparse files. Given that, it
+wouldn't surprise me if copying a particular source file tends to
+reproduce this more than others.
 
--- 
-Michal Hocko
-SUSE Labs
+Also note that this is a WARN_ON_ONCE(), which means once it fires
+you'll have to reboot before it will reproduce.
+
+Brian
+
+> [39331.104127]  ffff9ddbb7ba3ab8 ffffffff843f3ddd 0000000000000000
+> 0000000000000000
+> [39331.104132]  ffff9ddbb7ba3af8 ffffffff840a202b 00001520b7ba3ca8
+> ffff900c5a598400
+> [39331.104136]  ffff9ddbb7ba3ca0 0000000000001cc0 0000000000000000
+> 0000000000000000
+> [39331.104140] Call Trace:
+> [39331.104150]  [<ffffffff843f3ddd>] dump_stack+0x63/0x86
+> [39331.104154]  [<ffffffff840a202b>] __warn+0xcb/0xf0
+> [39331.104158]  [<ffffffff840a215d>] warn_slowpath_null+0x1d/0x20
+> [39331.104198]  [<ffffffffc0ba9018>] xfs_bmap_del_extent+0xdc8/0xe80 [xfs]
+> [39331.104237]  [<ffffffffc0bad3bd>] __xfs_bunmapi+0x5bd/0xb90 [xfs]
+> [39331.104274]  [<ffffffffc0bad9bb>] xfs_bunmapi+0x2b/0x40 [xfs]
+> [39331.104320]  [<ffffffffc0be3056>] xfs_free_file_space+0x256/0x300 [xfs]
+> [39331.104366]  [<ffffffffc0bea79a>] xfs_file_fallocate+0x18a/0x3b0 [xfs]
+> [39331.104370]  [<ffffffff84256077>] vfs_fallocate+0x157/0x220
+> [39331.104373]  [<ffffffff84256e88>] SyS_fallocate+0x48/0x80
+> [39331.104376]  [<ffffffff842591a7>] ? SyS_lseek+0x87/0xb0
+> [39331.104383]  [<ffffffff8481bbf7>] entry_SYSCALL_64_fastpath+0x1a/0xa9
+> [39331.104386] ---[ end trace 964857cd95d3bbff ]---
+> 
+> Thanks.
+> Patrick
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
