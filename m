@@ -1,125 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:38040 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932113AbdA3PQ2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jan 2017 10:16:28 -0500
-Received: by mail-wm0-f43.google.com with SMTP id r141so37237756wmg.1
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Jan 2017 07:15:45 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:44328 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753658AbdA3PbD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jan 2017 10:31:03 -0500
+Date: Mon, 30 Jan 2017 10:31:01 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Quota-enabled XFS hangs during mount
+Message-ID: <20170130153100.GA8737@bfoster.bfoster>
+References: <20161103204049.GA28177@dastard>
+ <43ca55d0-6762-d54f-5ba9-a83f9c1988f6@zoner.cz>
+ <20170123134452.GA33287@bfoster.bfoster>
+ <5b41d19b-1a0d-2b74-a633-30a5f6d2f14a@zoner.cz>
+ <20170125221739.GA33995@bfoster.bfoster>
+ <30d56003-a517-f6f0-d188-d0ada5a9fbb7@zoner.cz>
+ <20170126191254.GB39683@bfoster.bfoster>
+ <27c2f5aa-517d-22b5-b55f-f0ceb277e9a3@zoner.cz>
+ <20170127170734.GA49571@bfoster.bfoster>
+ <20170128224242.GD316@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20170130140535.GA7136@bfoster.bfoster>
-References: <CAEtPA0AOfhTGM76vhLHDiQbXyHywbypk5hOLhq=AWvwVAQPO3g@mail.gmail.com>
- <20170130140535.GA7136@bfoster.bfoster>
-From: Patrick Dung <mpatdung@gmail.com>
-Date: Mon, 30 Jan 2017 23:07:58 +0800
-Message-ID: <CAEtPA0DG+D+_+FFKhNa_XKTwcWcphQA8WVCDrzMueajNjQRRrg@mail.gmail.com>
-Subject: Re: WARNING: CPU: 11 PID: 7966 at fs/xfs/libxfs/xfs_bmap.c:5408
- xfs_bmap_del_extent+0xdc8/0xe80 [xfs] and having a call trace
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170128224242.GD316@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Martin Svec <martin.svec@zoner.cz>, linux-xfs@vger.kernel.org
 
-Hi Brian,
+On Sun, Jan 29, 2017 at 09:42:42AM +1100, Dave Chinner wrote:
+> On Fri, Jan 27, 2017 at 12:07:34PM -0500, Brian Foster wrote:
+> > The problem looks like a race between dquot reclaim and quotacheck. The
+> > high level sequence of events is as follows:
+> > 
+> >  - During quotacheck, xfs_qm_dqiterate() walks the physical dquot
+> >    buffers and queues them to the delwri queue.
+> >  - Next, kswapd kicks in and attempts to reclaim a dquot that is backed
+> >    by a buffer on the quotacheck delwri queue. xfs_qm_dquot_isolate()
+> >    acquires the flush lock and attempts to queue to the reclaim delwri
+> >    queue. This silently fails because the buffer is already queued.
+> > 
+> >    From this point forward, the dquot flush lock is not going to be
+> >    released until the buffer is submitted for I/O and completed via
+> >    quotacheck.
+> >  - Quotacheck continues on to the xfs_qm_flush_one() pass, hits the
+> >    dquot in question and waits on the flush lock to issue the flush of
+> >    the recalculated values. *deadlock*
+> > 
+> > There are at least a few ways to deal with this. We could do something
+> > granular to fix up the reclaim path to check whether the buffer is
+> > already queued or something of that nature before we actually invoke the
+> > flush. I think this is effectively pointless, however, because the first
+> > part of quotacheck walks and queues all physical dquot buffers anyways.
+> > 
+> > In other words, I think dquot reclaim during quotacheck should probably
+> > be bypassed.
+> ....
+> 
+> > Note that I think this does mean that you could still have low memory
+> > issues if you happen to have a lot of quotas defined..
+> 
+> Hmmm..... Really needs fixing.
+> 
 
-Resent in plain text mode.
-The mailing list could not accept email in html format.
+Perhaps...
 
-For your information:
+> I think submitting the buffer list after xfs_qm_dqiterate() and
+> waiting for completion will avoid this problem.
+> 
 
-1) The cp command was issued at '2017-01-30 03:02:49'
-$ cp --sparse=always -rp 'source' 'destination'
-I was copying a 55GB folder including two vmare images from a ext4
-file system to a XFS file system
+Yeah. I don't _think_ there are correctness issues since this is at
+mount time and thus we don't have the risk of something else dirtying
+and flushing a dquot before quotacheck has updated the dquots. The
+tradeoff here just seems to be performance. We're now going to write all
+of the dquot buffers twice in the common cause to handle the uncommon
+low memory case.
 
-$ stat disk1.vmdk
-  File: 'disk1.vmdk'
-  Size: 50465865728     Blocks: 97561480   IO Block: 262144 regular file
+It's also worth noting that 1.) I haven't actually investigated how many
+dquots would need to exist vs. how little RAM before this becomes a
+problem in practice and 2.) we still build up a delwri queue of all the
+buffers and despite that there will always be fewer buffers than dquots,
+there's nothing to suggest that won't ever pose a problem before the
+dquots do if memory is limited enough.
 
-$ stat disk2.vmdk
-  File: 'disk2.vmdk'
-  Size: 3825795072      Blocks: 7470568    IO Block: 262144 regular file
+The flip side is that this a pretty minor change code wise..
 
-By looking at the number of blocks reported by command stat, those
-files should be sparse files.
+> However, I suspect reclaim can still race with flushing, so we need
+> to detect "stuck" dquots, submit the delwri buffer queue and wait,
+> then flush the dquot again.
+> 
 
-2) kernel log at:
-Jan 30 03:03:05 home kernel: [39331.104014] WARNING: CPU: 11 PID: 7966
-at fs/xfs/libxfs/xfs_bmap.c:5408 xfs_bmap_del_extent+0xdc8/0xe80 [xfs]
+How so? The first phase of quotacheck resets the dquot buffers and
+populates buffer_list. If we submit the queue at that point, we've now
+dropped all references to buffers from quotacheck. The next phase of
+quotacheck, xfs_qm_dqusage_adjust(), will acquire and dirty the
+associated dquots as we bulkstat each inode in the fs.
 
-3) The mount options for XFS is:
-defaults,relatime,logbufs=8,logbsize=262144,largeio
+The prospective difference here is that the dquots can now be flushed
+asynchronously by reclaim as this occurs. So quotacheck dirties a dquot,
+reclaim kicks in and flushes it, but is now able to actually complete
+the flush by adding it to the reclaim delwri queue and submitting the
+I/O. If the dqusage_adjust() walk now encounters the dquot again, it may
+very well have to allocate and dirty the dquot again (and/or re-read the
+dquot buf?) if it has been reclaimed since. I think the risk here is
+that we end up thrashing and send I/Os for every per-inode change to a
+dquot.
 
-Thanks,
-Patrick
+Finally, we get to the xfs_qm_flush_one() walk to flush every dquot that
+has been dirtied. If reclaim races at this point, reclaim and
+flush_one() should contend on the dquot lock and one or the other be
+allowed to flush and queue the buffer. If reclaim wins the race, we may
+end up waiting on reclaim I/O in quotacheck, however, due to the
+xfs_dqflock() call (perhaps that could be converted to a nowait() lock
+and skipped on failure).
 
-On Mon, Jan 30, 2017 at 10:05 PM, Brian Foster <bfoster@redhat.com> wrote:
-> On Mon, Jan 30, 2017 at 03:45:27AM +0800, Patrick Dung wrote:
->> Hello
->>
->> I have encounter this warning message twice in recently.
->> Do you know what is it about?
->>
->> [39331.103938] ------------[ cut here ]------------
->> [39331.104014] WARNING: CPU: 11 PID: 7966 at
->> fs/xfs/libxfs/xfs_bmap.c:5408 xfs_bmap_del_extent+0xdc8/0xe80 [xfs]
->> [39331.104122] CPU: 11 PID: 7966 Comm: cp Tainted: G           OE
->> 4.9.3-200.fc25.x86_64 #1
->
-> This warning is related to the extra blocks that are stashed away with
-> delayed allocation extents to cover bmap btree insertion. When a
-> delalloc extent is created, a particularly sized block reservation is
-> stashed along with it to help cover bmapbt block allocation when the
-> extent is converted to real blocks and inserted to the on-disk btree.
->
-> If the delalloc extent is modified before it is ultimately converted, if
-> a hole is punched (as the stack below shows) and it is split in two for
-> example, then the existing reservation must be shared across the two
-> extents. This warning fires when we encounter a situation where we're
-> left with a delalloc extent with zero reserved blocks.
->
-> This is not a catastrophic error in and of itself as not every bmbt
-> insertion requires bmbt block allocation. It is not expected nor ideal
-> however. The warning exists so we have notification that there is still
-> an allocation pattern (and I have a suspicion from reviewing the code)
-> that leads to this risky state and we can try to address it. The stack
-> suggests a cp is freeing up space... can you describe what exactly you
-> are doing when this tends to occur? A quick look at coreutils source
-> suggests that cp calls fallocate() to punch a hole and explicitly work
-> around XFS preallocation when copying sparse files. Given that, it
-> wouldn't surprise me if copying a particular source file tends to
-> reproduce this more than others.
->
-> Also note that this is a WARN_ON_ONCE(), which means once it fires
-> you'll have to reboot before it will reproduce.
->
-> Brian
->
->> [39331.104127]  ffff9ddbb7ba3ab8 ffffffff843f3ddd 0000000000000000
->> 0000000000000000
->> [39331.104132]  ffff9ddbb7ba3af8 ffffffff840a202b 00001520b7ba3ca8
->> ffff900c5a598400
->> [39331.104136]  ffff9ddbb7ba3ca0 0000000000001cc0 0000000000000000
->> 0000000000000000
->> [39331.104140] Call Trace:
->> [39331.104150]  [<ffffffff843f3ddd>] dump_stack+0x63/0x86
->> [39331.104154]  [<ffffffff840a202b>] __warn+0xcb/0xf0
->> [39331.104158]  [<ffffffff840a215d>] warn_slowpath_null+0x1d/0x20
->> [39331.104198]  [<ffffffffc0ba9018>] xfs_bmap_del_extent+0xdc8/0xe80 [xfs]
->> [39331.104237]  [<ffffffffc0bad3bd>] __xfs_bunmapi+0x5bd/0xb90 [xfs]
->> [39331.104274]  [<ffffffffc0bad9bb>] xfs_bunmapi+0x2b/0x40 [xfs]
->> [39331.104320]  [<ffffffffc0be3056>] xfs_free_file_space+0x256/0x300 [xfs]
->> [39331.104366]  [<ffffffffc0bea79a>] xfs_file_fallocate+0x18a/0x3b0 [xfs]
->> [39331.104370]  [<ffffffff84256077>] vfs_fallocate+0x157/0x220
->> [39331.104373]  [<ffffffff84256e88>] SyS_fallocate+0x48/0x80
->> [39331.104376]  [<ffffffff842591a7>] ? SyS_lseek+0x87/0xb0
->> [39331.104383]  [<ffffffff8481bbf7>] entry_SYSCALL_64_fastpath+0x1a/0xa9
->> [39331.104386] ---[ end trace 964857cd95d3bbff ]---
->>
->> Thanks.
->> Patrick
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I don't think there is a deadlock there, unless I am missing something.
+But given that all of this reclaim behavior was enabled purely by
+accident and the report in this case is caused by improper serialization
+as opposed to a low memory issue that actually depends on (and thus
+stresses) a functional reclaim, I'm not convinced this is the right fix
+for this problem. Thoughts?
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
