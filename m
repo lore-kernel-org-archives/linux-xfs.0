@@ -1,68 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20438 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751608AbdAaTpz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2017 14:45:55 -0500
-Date: Tue, 31 Jan 2017 11:45:20 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/7] xfs: fix toctou race when locking an inode to access
- the data map
-Message-ID: <20170131194520.GG9134@birch.djwong.org>
-References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
- <148582219035.12293.12084220786527965512.stgit@birch.djwong.org>
- <20170131132658.GA17386@infradead.org>
+Received: from mx2.suse.de ([195.135.220.15]:41605 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752099AbdA3I0X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jan 2017 03:26:23 -0500
+Date: Mon, 30 Jan 2017 09:12:10 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
+Message-ID: <20170130081210.GD8443@dhcp22.suse.cz>
+References: <20170117155916.dcizr65bwa6behe7@thunk.org>
+ <20170117161618.GT19699@dhcp22.suse.cz>
+ <20170117172925.GA2486@quack2.suse.cz>
+ <20170119083956.GE30786@dhcp22.suse.cz>
+ <20170119092236.GC2565@quack2.suse.cz>
+ <20170119094405.GK30786@dhcp22.suse.cz>
+ <20170126074455.GC8456@dhcp22.suse.cz>
+ <20170127061318.xd2qxashbl4dajez@thunk.org>
+ <20170127093735.GB4143@dhcp22.suse.cz>
+ <20170127164042.2o3bnyopihcb224g@thunk.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170131132658.GA17386@infradead.org>
+In-Reply-To: <20170127164042.2o3bnyopihcb224g@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 05:26:58AM -0800, Christoph Hellwig wrote:
-> On Mon, Jan 30, 2017 at 04:23:10PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > We use di_format and if_flags to decide whether we're grabbing the ilock
-> > in btree mode (btree extents not loaded) or shared mode (anything else),
-> > but the state of those fields can be changed by other threads that are
-> > also trying to load the btree extents -- IFEXTENTS gets set before the
-> > _bmap_read_extents call and cleared if it fails.  Therefore, once we've
-> > grabbed the shared ilock we have to re-check the fields to see if we
-> > actually need to upgrade to the exclusive ilock in order to try loading
-> > the extents.
-> > 
-> > Without this patch, we trigger ilock assert failures when a bunch of
-> > threads try to access a btree format directory with a corrupt bmbt root
-> > and corrupt the incore data structures, leading to a crash.
+On Fri 27-01-17 11:40:42, Theodore Ts'o wrote:
+> On Fri, Jan 27, 2017 at 10:37:35AM +0100, Michal Hocko wrote:
+> > If this ever turn out to be a problem and with the vmapped stacks we
+> > have good chances to get a proper stack traces on a potential overflow
+> > we can add the scope API around the problematic code path with the
+> > explanation why it is needed.
 > 
-> I see the problem here, but I really don't like the fix.  Instead
-> I'd much rather check for a new flag that tells that the extent list
-> hasn't been read, which can only be cleared under the exclusive
-> ilock.  That way we shouldn't need any additional relocking or
-> checks.
+> Yeah, or maybe we can automate it?  Can the reclaim code check how
+> much stack space is left and do the right thing automatically?
 
-I'm confused --
+I am not sure how to do that. Checking for some magic value sounds quite
+fragile to me. It also sounds a bit strange to focus only on the reclaim
+while other code paths might suffer from the same problem.
 
-I thought XFS_IFEXTENTS means "extents have been read", which is the
-inverse of the flag you propose.  AFAICT the bit is only ever set (or
-cleared) with ILOCK_EXCL held, so the problem here is that we're
-performing an unlocked read of if_flags prior to actually taking the
-lock that we need.
+What is actually the deepest possible call chain from the slab reclaim
+where I stopped? I have tried to follow that path but hit the callback
+wall quite early.
+ 
+> The reason why I'm nervous is that nojournal mode is not a common
+> configuration, and "wait until production systems start failing" is
+> not a strategy that I or many SRE-types find.... comforting.
 
-On the other hand, I /think/ it's the case that none of the functions
-called in _iread_extents actually cares about IFEXTENTS being set, so
-perhaps an alternative could be to avoid setting the bit until we've
-successfully read in all the bmbt records?
+I understand that but I would be much more happier if we did the
+decision based on the actual data rather than a fear something would
+break down.
 
-I'll try that out and report back.
-
---D
-
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Michal Hocko
+SUSE Labs
