@@ -1,63 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:17872 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751011AbdBABad (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2017 20:30:33 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v111U4tp026661
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Feb 2017 01:30:04 GMT
-Date: Tue, 31 Jan 2017 17:28:29 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/7] xfs: mark speculative prealloc CoW fork extents
- unwritten
-Message-ID: <20170201012829.GJ9134@birch.djwong.org>
-References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
- <148582223303.12293.11053073799262731296.stgit@birch.djwong.org>
- <20170131134135.GA10866@infradead.org>
- <20170131191120.GF9134@birch.djwong.org>
+Received: from mga01.intel.com ([192.55.52.88]:40557 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754240AbdA3VxL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jan 2017 16:53:11 -0500
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH] ext4: Remove unused function ext4_dax_huge_fault()
+Date: Mon, 30 Jan 2017 14:52:52 -0700
+Message-Id: <1485813172-7284-1-git-send-email-ross.zwisler@linux.intel.com>
+In-Reply-To: <148545058784.17912.6353162518188733642.stgit@djiang5-desk3.ch.intel.com>
+References: <148545058784.17912.6353162518188733642.stgit@djiang5-desk3.ch.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170131191120.GF9134@birch.djwong.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, dave.hansen@linux.intel.com, mawilcox@microsoft.com, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, vbabka@suse.cz, jack@suse.com, dan.j.williams@intel.com, linux-ext4@vger.kernel.org, kirill.shutemov@linux.intel.com, Dave Jiang <dave.jiang@intel.com>
 
-On Tue, Jan 31, 2017 at 11:11:20AM -0800, Darrick J. Wong wrote:
-> On Tue, Jan 31, 2017 at 05:41:35AM -0800, Christoph Hellwig wrote:
-> > Hi Darrick,
-> > 
-> > from a quick look the code looks reasonable, but I'm worried about
-> > yet another set of transactions that modify all extents again.
-> > 
-> > Do you have any measurements of the overhead?  I'll see if I
-> > can prototype my always COW idea to see how the approaches compare.
-> 
-> The overhead should be pretty low -- since the cow fork never goes to
-> disk, the only thing we end up logging is the inode core (because the
-> conversion function logs it unconditionally), and I'm not even sure
-> that's necessary since we're performing a pure conversion of blocks that
-> are already allocated.
-> 
-> In any case I didn't see any noticeable impact on performance other
-> than the extra CPU overhead.
+ext4_dax_pmd_fault() was renamed to ext4_dax_huge_fault() in this commit:
 
-Reading a little closer, we don't actually change anything in the
-on-disk inode, so we can get rid of transaction altogether.
+commit 7e90fc0f8785 ("mm,fs,dax: change ->pmd_fault to ->huge_fault")
 
---D
+However, the vm_operations_struct ops table for ext4 was modified in that
+commit so that .huge_fault called ext4_dax_fault(), not
+ext4_dax_huge_fault().  This is actually fine, though, since as of that
+commit ext4_dax_fault() and ext4_dax_huge_fault() are identical, both
+eventually calling dax_iomap_fault().
 
-> 
-> --D
-> 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So, instead of changing the opts table to have .huge_fault call
+ext4_dax_huge_fault(), just leave it calling ext4_dax_fault() and remove
+the unused function.
+
+This fix also quiets the following compilation warning:
+
+/ext4/file.c:279:1: warning: ‘ext4_dax_huge_fault’ defined but not used [-Wunused-function]
+ ext4_dax_huge_fault(struct vm_fault *vmf)
+
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Fixes: 7e90fc0f8785 ("mm,fs,dax: change ->pmd_fault to ->huge_fault")
+Cc: Dave Jiang <dave.jiang@intel.com>
+---
+Feel free to squash with 7e90fc0f8785 if that's best.
+
+The commit ID of the original patch comes from mmots/master which is
+currently at v4.10-rc5-mmots-2017-01-26-15-49.
+---
+ fs/ext4/file.c | 21 ---------------------
+ 1 file changed, 21 deletions(-)
+
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index ed22d20..51d7155 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -275,27 +275,6 @@ static int ext4_dax_fault(struct vm_fault *vmf)
+ 	return result;
+ }
+ 
+-static int
+-ext4_dax_huge_fault(struct vm_fault *vmf)
+-{
+-	int result;
+-	struct inode *inode = file_inode(vmf->vma->vm_file);
+-	struct super_block *sb = inode->i_sb;
+-	bool write = vmf->flags & FAULT_FLAG_WRITE;
+-
+-	if (write) {
+-		sb_start_pagefault(sb);
+-		file_update_time(vmf->vma->vm_file);
+-	}
+-	down_read(&EXT4_I(inode)->i_mmap_sem);
+-	result = dax_iomap_fault(vmf, &ext4_iomap_ops);
+-	up_read(&EXT4_I(inode)->i_mmap_sem);
+-	if (write)
+-		sb_end_pagefault(sb);
+-
+-	return result;
+-}
+-
+ /*
+  * Handle write fault for VM_MIXEDMAP mappings. Similarly to ext4_dax_fault()
+  * handler we check for races agaist truncate. Note that since we cycle through
+-- 
+2.7.4
+
