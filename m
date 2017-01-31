@@ -1,82 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:43442 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753464AbdAaAR3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Jan 2017 19:17:29 -0500
-Subject: Re: [PATCH v2 1/3] mm,fs,dax: Change ->pmd_fault to ->huge_fault
-References: <148545012634.17912.13951763606410303827.stgit@djiang5-desk3.ch.intel.com>
- <148545058784.17912.6353162518188733642.stgit@djiang5-desk3.ch.intel.com>
- <20170130234321.GA26702@linux.intel.com>
-From: Dave Jiang <dave.jiang@intel.com>
-Message-ID: <79fcc6fe-77c5-7145-cf24-4a04df482803@intel.com>
-Date: Mon, 30 Jan 2017 17:15:40 -0700
+Received: from userp1050.oracle.com ([156.151.31.82]:21332 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751997AbdAaUKk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2017 15:10:40 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v0VKANhk016380
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jan 2017 20:10:23 GMT
+Date: Tue, 31 Jan 2017 12:09:18 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/7] xfs: filter out obviously bad btree pointers
+Message-ID: <20170131200918.GH9134@birch.djwong.org>
+References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
+ <148582220244.12293.9617058284483534384.stgit@birch.djwong.org>
+ <eabf5bb2-124e-5af9-5dbb-380bc85d8b13@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20170130234321.GA26702@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <eabf5bb2-124e-5af9-5dbb-380bc85d8b13@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: akpm@linux-foundation.org, dave.hansen@linux.intel.com, mawilcox@microsoft.com, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, vbabka@suse.cz, jack@suse.com, dan.j.williams@intel.com, linux-ext4@vger.kernel.org, kirill.shutemov@linux.intel.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On 01/30/2017 04:43 PM, Ross Zwisler wrote:
-> On Thu, Jan 26, 2017 at 10:09:47AM -0700, Dave Jiang wrote:
->> In preparation for adding the ability to handle PUD pages, convert
->> ->pmd_fault to ->huge_fault.  The vm_fault structure is extended to
->> include a union of the different page table pointers that may be needed,
->> and three flag bits are reserved to indicate which type of pointer is in
->> the union.
->>
->> [DJ: Forward ported to 4.10-rc]
->>
->> Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
->> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+On Mon, Jan 30, 2017 at 10:39:05PM -0600, Eric Sandeen wrote:
+> On 1/30/17 6:23 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Don't let anybody load an obviously bad btree pointer.  Since the values
+> > come from disk, we must return an error, not just ASSERT.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c  |    4 +---
+> >  fs/xfs/libxfs/xfs_btree.c |    3 ++-
+> >  fs/xfs/libxfs/xfs_btree.h |    2 +-
+> >  3 files changed, 4 insertions(+), 5 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index bfc00de..443cb10 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -1291,9 +1291,7 @@ xfs_bmap_read_extents(
+> >  	ASSERT(level > 0);
+> >  	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+> >  	bno = be64_to_cpu(*pp);
+> > -	ASSERT(bno != NULLFSBLOCK);
+> > -	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
+> > -	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
+> > +
 > 
-> Hey Dave,
-> 
-> Running xfstests generic/030 with XFS + DAX gives me the following kernel BUG,
-> which I bisected to this commit:
-> 
-> [  370.086205] ------------[ cut here ]------------
-> [  370.087182] kernel BUG at arch/x86/mm/fault.c:1038!
-> [  370.088336] invalid opcode: 0000 [#3] PREEMPT SMP
-> [  370.089073] Modules linked in: dax_pmem nd_pmem dax nd_btt nd_e820 libnvdimm
-> [  370.090212] CPU: 0 PID: 12415 Comm: xfs_io Tainted: G      D         4.10.0-rc5-mm1-00202-g7e90fc0 #10
-> [  370.091648] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.9.1-1.fc24 04/01/2014
-> [  370.092946] task: ffff8800ac4f8000 task.stack: ffffc9001148c000
-> [  370.093769] RIP: 0010:mm_fault_error+0x15e/0x190
-> [  370.094410] RSP: 0000:ffffc9001148fe60 EFLAGS: 00010246
-> [  370.095135] RAX: 0000000000000000 RBX: 0000000000000006 RCX: ffff8800ac4f8000
-> [  370.096107] RDX: 00007f111c8e6400 RSI: 0000000000000006 RDI: ffffc9001148ff58
-> [  370.097087] RBP: ffffc9001148fe88 R08: 0000000000000000 R09: ffff880510bd3300
-> [  370.098072] R10: ffff8800ac4f8000 R11: 0000000000000000 R12: 00007f111c8e6400
-> [  370.099057] R13: 00007f111c8e6400 R14: ffff880510bd3300 R15: 0000000000000055
-> [  370.100135] FS:  00007f111d95e700(0000) GS:ffff880514800000(0000) knlGS:0000000000000000
-> [  370.101238] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  370.102021] CR2: 00007f111c8e6400 CR3: 00000000add00000 CR4: 00000000001406f0
-> [  370.103189] Call Trace:
-> [  370.103537]  __do_page_fault+0x54e/0x590
-> [  370.104090]  trace_do_page_fault+0x58/0x2c0
-> [  370.104675]  do_async_page_fault+0x2c/0x90
-> [  370.105342]  async_page_fault+0x28/0x30
-> [  370.106044] RIP: 0033:0x405e9a
-> [  370.106470] RSP: 002b:00007fffb7f30590 EFLAGS: 00010287
-> [  370.107185] RAX: 00000000004e6400 RBX: 0000000000000057 RCX: 00000000004e7000
-> [  370.108155] RDX: 00007f111c400000 RSI: 00000000004e7000 RDI: 0000000001c35080
-> [  370.109157] RBP: 00000000004e6400 R08: 0000000000000014 R09: 1999999999999999
-> [  370.110158] R10: 00007f111d2dc200 R11: 0000000000000000 R12: 0000000001c32fc0
-> [  370.111165] R13: 0000000000000000 R14: 0000000000000c00 R15: 0000000000000005
-> [  370.112171] Code: 07 00 00 00 e8 a4 ee ff ff e9 11 ff ff ff 4c 89 ea 48 89 de 45 31 c0 31 c9 e8 8f f7 ff ff 48 83 c4 08 5b 41 5c 41 5d 41 5e 5d c3 <0f> 0b 41 8b 94 24 80 04 00 00 49 8d b4 24 b0 06 00 00 4c 89 e9 
-> [  370.114823] RIP: mm_fault_error+0x15e/0x190 RSP: ffffc9001148fe60
-> [  370.115722] ---[ end trace 2ce10d930638254d ]---
-> 
-> 
-> Can you let me know if you can reproduce this?
+> fwiw there's an assignment of bno = NULLFSBLOCK just before here,
+> which is never used and overwritten in this hunk.
+> Could probably clean that up here too.
 
-I reproduced. Will debug.
+Yes, that could go too.
 
+> >  	/*
+> >  	 * Go down the tree until leaf level is reached, following the first
+> >  	 * pointer (leftmost) at each level.
+> > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> > index 21e6a6a..2849d3f 100644
+> > --- a/fs/xfs/libxfs/xfs_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_btree.c
+> > @@ -810,7 +810,8 @@ xfs_btree_read_bufl(
+> >  	xfs_daddr_t		d;		/* real disk block address */
+> >  	int			error;
+> >  
+> > -	ASSERT(fsbno != NULLFSBLOCK);
+> > +	if (!XFS_FSB_SANITY_CHECK(mp, fsbno))
+> > +		return -EFSCORRUPTED;
 > 
-> Thanks,
-> - Ross
+> This does away with the NULLFSBLOCK checks though, right?
 > 
+> #define NULLFSBLOCK     ((xfs_fsblock_t)-1)
+> 
+> which is also used as an in-memory condition, so I'm not sure
+> it should be added to XFS_FSB_SANITY_CHECK.
+
+[reiterating our irc conversation]
+
+It shouldn't, since XFS_FSB_TO_AGNO(mp, NULLFSBLOCK) ought to produce
+NULLAGNUMBER, which will still fail the check.
+
+> IOWs some asserts about it are really code flow asserts, though
+> it also shouldn't be read from disk.
+
+xfs_btree_read_bufl is called by xfs_bmap_check_leaf_extents, which is
+the verifier of the on-disk data.
+
+--D
+
+> >  	d = XFS_FSB_TO_DADDR(mp, fsbno);
+> >  	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
+> >  				   mp->m_bsize, lock, &bp, ops);
+> > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> > index b69b947..33a8f86 100644
+> > --- a/fs/xfs/libxfs/xfs_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_btree.h
+> > @@ -456,7 +456,7 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+> >  #define	XFS_FILBLKS_MAX(a,b)	max_t(xfs_filblks_t, (a), (b))
+> >  
+> >  #define	XFS_FSB_SANITY_CHECK(mp,fsb)	\
+> > -	(XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
+> > +	(fsb && XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
+> >  		XFS_FSB_TO_AGBNO(mp, fsb) < mp->m_sb.sb_agblocks)
+> >  
+> >  /*
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
