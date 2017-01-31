@@ -1,47 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:41635 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751825AbdAaTLr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2017 14:11:47 -0500
-Date: Tue, 31 Jan 2017 11:11:20 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/7] xfs: mark speculative prealloc CoW fork extents
- unwritten
-Message-ID: <20170131191120.GF9134@birch.djwong.org>
-References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
- <148582223303.12293.11053073799262731296.stgit@birch.djwong.org>
- <20170131134135.GA10866@infradead.org>
+Received: from mail.webx.cz ([109.123.222.201]:36937 "EHLO mail.webx.cz"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750872AbdAaINf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Jan 2017 03:13:35 -0500
+From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
+Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
+Date: Tue, 31 Jan 2017 09:03:02 +0100
+Message-ID: <2761160.nkKuazU1Dh@libor-nb>
+In-Reply-To: <a6e607fc-9a54-a372-7ffa-bfdef58b3dc0@sandeen.net>
+References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com> <2626665.Hsx8YazNWY@libor-nb> <a6e607fc-9a54-a372-7ffa-bfdef58b3dc0@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170131134135.GA10866@infradead.org>
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 05:41:35AM -0800, Christoph Hellwig wrote:
-> Hi Darrick,
-> 
-> from a quick look the code looks reasonable, but I'm worried about
-> yet another set of transactions that modify all extents again.
-> 
-> Do you have any measurements of the overhead?  I'll see if I
-> can prototype my always COW idea to see how the approaches compare.
+Hello,
+sorry for late reply. It didn't crash since than and i forgot and moved on to another tasks.
 
-The overhead should be pretty low -- since the cow fork never goes to
-disk, the only thing we end up logging is the inode core (because the
-conversion function logs it unconditionally), and I'm not even sure
-that's necessary since we're performing a pure conversion of blocks that
-are already allocated.
+Yesterday it crashed on one of machines (running 4.8.11)
+-------------------------
+Jan 30 07:18:13 vps2 kernel: [5881831.379547] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x12f63f40
+Jan 30 07:18:13 vps2 kernel: [5881831.381721] XFS (dm-2): Unmount and run xfs_repair
+Jan 30 07:18:13 vps2 kernel: [5881831.382750] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
+Jan 30 07:18:13 vps2 kernel: [5881831.387810] XFS (dm-2): metadata I/O error: block 0x12f63f40 ("xfs_trans_read_buf_map") error 117 numblks 8
+Jan 30 07:26:02 vps2 kernel: [5882300.524528] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x12645ef8
+Jan 30 07:26:02 vps2 kernel: [5882300.525993] XFS (dm-2): Unmount and run xfs_repair
+Jan 30 07:26:02 vps2 kernel: [5882300.526539] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
+Jan 30 07:26:02 vps2 kernel: [5882300.529224] XFS (dm-2): metadata I/O error: block 0x12645ef8 ("xfs_trans_read_buf_map") error 117 numblks 8
+Jan 30 10:00:27 vps2 kernel: [5891564.682483] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_write_verify+0xe8/0x100 [xfs], xfs_attr3_leaf block 0x127b5578
+Jan 30 10:00:27 vps2 kernel: [5891564.683962] XFS (dm-2): Unmount and run xfs_repair
+Jan 30 10:00:27 vps2 kernel: [5891564.684536] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
+Jan 30 10:00:27 vps2 kernel: [5891564.687223] XFS (dm-2): xfs_do_force_shutdown(0x8) called from line 1250 of file /build/linux-lVEVrl/linux-4.7.8/fs/xfs/xfs_buf.c.  Return address = 0xffffffffc06747f2
+Jan 30 10:00:27 vps2 kernel: [5891564.687230] XFS (dm-2): Corruption of in-memory data detected.  Shutting down filesystem
+Jan 30 10:00:27 vps2 kernel: [5891564.687778] XFS (dm-2): Please umount the filesystem and rectify the problem(s)
 
-In any case I didn't see any noticeable impact on performance other
-than the extra CPU overhead.
+and later 
+Jan 30 21:10:31 vps2 kernel: [39747.917831] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x24c17ba8
+Jan 30 21:10:31 vps2 kernel: [39747.918130] XFS (dm-2): metadata I/O error: block 0x24c17ba8 ("xfs_trans_read_buf_map") error 117 numblks 8
+-------------------------
 
---D
+I have scheduled repair on today, all these blocks were repaired using xfsprogs 4.9.0
+Kernel is now 4.8.15
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-------------------------
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+Metadata corruption detected at xfs_attr3_leaf block 0x12645ef8/0x1000
+bad attribute count 0 in attr block 0, inode 1074268922
+problem with attribute contents in inode 1074268922
+clearing inode 1074268922 attributes
+correcting nblocks for inode 1074268922, was 1 - counted 0
+Metadata corruption detected at xfs_attr3_leaf block 0x127b5578/0x1000
+bad attribute count 0 in attr block 0, inode 1077334032
+problem with attribute contents in inode 1077334032
+clearing inode 1077334032 attributes
+correcting nblocks for inode 1077334032, was 1 - counted 0
+Metadata corruption detected at xfs_attr3_leaf block 0x12f63f40/0x1000
+bad attribute count 0 in attr block 0, inode 1093437859
+problem with attribute contents in inode 1093437859
+clearing inode 1093437859 attributes
+correcting nblocks for inode 1093437859, was 1 - counted 0
+        - agno = 2
+Metadata corruption detected at xfs_attr3_leaf block 0x24c17ba8/0x1000
+bad attribute count 0 in attr block 0, inode 2147673775
+problem with attribute contents in inode 2147673775
+clearing inode 2147673775 attributes
+correcting nblocks for inode 2147673775, was 1 - counted 0
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 1
+bad attribute format 1 in inode 1074268922, resetting value
+bad attribute format 1 in inode 1077334032, resetting value
+bad attribute format 1 in inode 1093437859, resetting value
+        - agno = 2
+bad attribute format 1 in inode 2147673775, resetting value
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+done
+-------------------------
+
+Thank you very much for patch, it has done it's work
+
+Libor
+
