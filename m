@@ -1,80 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:21735 "EHLO
-        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751096AbdA0Tqs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Jan 2017 14:46:48 -0500
-Date: Fri, 27 Jan 2017 11:43:41 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [GIT PULL] xfs: updates for 4.10-rc6
-Message-ID: <20170127194341.GA9134@birch.djwong.org>
-References: <20170119234147.GM14033@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:51544 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752864AbdAaDMK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jan 2017 22:12:10 -0500
+Subject: Re: [PATCH 1/7] xfs: fix toctou race when locking an inode to access
+ the data map
+References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
+ <148582219035.12293.12084220786527965512.stgit@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <f8b63827-e2f3-c906-6d7f-628330cb9eb2@sandeen.net>
+Date: Mon, 30 Jan 2017 21:01:58 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170119234147.GM14033@birch.djwong.org>
+In-Reply-To: <148582219035.12293.12084220786527965512.stgit@birch.djwong.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dave Chinner <david@fromorbit.com>, Andrew Morton <akpm@linux-foundation.org>, "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi Linus,
+On 1/30/17 6:23 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> We use di_format and if_flags to decide whether we're grabbing the ilock
+> in btree mode (btree extents not loaded) or shared mode (anything else),
+> but the state of those fields can be changed by other threads that are
+> also trying to load the btree extents -- IFEXTENTS gets set before the
+> _bmap_read_extents call and cleared if it fails.  Therefore, once we've
+> grabbed the shared ilock we have to re-check the fields to see if we
+> actually need to upgrade to the exclusive ilock in order to try loading
+> the extents.
+> 
+> Without this patch, we trigger ilock assert failures when a bunch of
+> threads try to access a btree format directory with a corrupt bmbt root
+> and corrupt the incore data structures, leading to a crash.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I have some more fixes this week -- better input validation, corruption
-avoidance, build fixes, memory leak fixes, and a couple from Christoph
-to avoid an ENOSPC failure.  Could you please pull the changes?
+I'm a little surprised this hasn't been hit before, TBH.
 
---Darrick
+Seems right -
 
-The following changes since commit 7a308bb3016f57e5be11a677d15b821536419d36:
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-  Linux 4.10-rc5 (2017-01-22 12:54:15 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-for-linus-4.10-rc6-5
-
-for you to fetch changes up to e0d76fa4475ef2cf4b52d18588b8ce95153d021b:
-
-  xfs: prevent quotacheck from overloading inode lru (2017-01-27 09:32:30 -0800)
-
-----------------------------------------------------------------
-Contained in this update:
-- Fix race conditions in the CoW code
-- Fix some incorrect input validation checks
-- Avoid crashing fs by running out of space when freeing inodes
-- Fix toctou race wrt whether or not an inode has an attr
-- Fix build error on arm
-- Fix page refcount corruption when readahead fails
-- Don't corrupt userspace in the bmap ioctl
-
-----------------------------------------------------------------
-Brian Foster (2):
-      xfs: remove racy hasattr check from attr ops
-      xfs: prevent quotacheck from overloading inode lru
-
-Christoph Hellwig (4):
-      xfs: fix COW writeback race
-      xfs: only update mount/resv fields on success in __xfs_ag_resv_init
-      xfs: use per-AG reservations for the finobt
-      xfs: extsize hints are not unlikely in xfs_bmap_btalloc
-
-Darrick J. Wong (3):
-      xfs: verify dirblocklog correctly
-      xfs: clear _XBF_PAGES from buffers when readahead page
-      xfs: fix bmv_count confusion w/ shared extents
-
- fs/xfs/libxfs/xfs_ag_resv.c      | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++---------------
- fs/xfs/libxfs/xfs_attr.c         |  6 ------
- fs/xfs/libxfs/xfs_bmap.c         | 48 ++++++++++++++++++++++++++++++++++--------------
- fs/xfs/libxfs/xfs_bmap.h         |  6 +++++-
- fs/xfs/libxfs/xfs_ialloc_btree.c | 90 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- fs/xfs/libxfs/xfs_ialloc_btree.h |  3 +++
- fs/xfs/libxfs/xfs_sb.c           |  2 +-
- fs/xfs/xfs_bmap_util.c           | 28 ++++++++++++++++++----------
- fs/xfs/xfs_buf.c                 |  1 +
- fs/xfs/xfs_inode.c               | 23 ++++++++++++-----------
- fs/xfs/xfs_iomap.c               |  2 +-
- fs/xfs/xfs_mount.h               |  1 +
- fs/xfs/xfs_qm.c                  |  3 ++-
- 13 files changed, 220 insertions(+), 63 deletions(-)
+> ---
+>  fs/xfs/xfs_inode.c |   12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index de32f0f..7d7206c 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -125,6 +125,18 @@ xfs_ilock_data_map_shared(
+>  	    (ip->i_df.if_flags & XFS_IFEXTENTS) == 0)
+>  		lock_mode = XFS_ILOCK_EXCL;
+>  	xfs_ilock(ip, lock_mode);
+> +	/*
+> +	 * We can change if_flags under ilock if we try to read the
+> +	 * extents and fail.  Since we hadn't grabbed the ilock at check
+> +	 * time, we have to re-check and upgrade the lock now.
+> +	 */
+> +	if (lock_mode == XFS_ILOCK_SHARED &&
+> +	    ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
+> +	    (ip->i_df.if_flags & XFS_IFEXTENTS) == 0) {
+> +		xfs_iunlock(ip, lock_mode);
+> +		lock_mode = XFS_ILOCK_EXCL;
+> +		xfs_ilock(ip, lock_mode);
+> +	}
+>  	return lock_mode;
+>  }
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
