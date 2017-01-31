@@ -1,52 +1,397 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:35635 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751838AbdA2TxB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Jan 2017 14:53:01 -0500
-Received: by mail-wm0-f51.google.com with SMTP id b65so5152008wmf.0
-        for <linux-xfs@vger.kernel.org>; Sun, 29 Jan 2017 11:52:54 -0800 (PST)
+Received: from userp1040.oracle.com ([156.151.31.81]:46789 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752915AbdAaAXz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jan 2017 19:23:55 -0500
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v0V0Ns0M011272
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jan 2017 00:23:54 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v0V0NsPQ011412
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jan 2017 00:23:54 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v0V0Nsk1002163
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jan 2017 00:23:54 GMT
+Subject: [PATCH 7/7] xfs: mark speculative prealloc CoW fork extents
+ unwritten
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 30 Jan 2017 16:23:53 -0800
+Message-ID: <148582223303.12293.11053073799262731296.stgit@birch.djwong.org>
+In-Reply-To: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
+References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
 MIME-Version: 1.0
-From: Patrick Dung <mpatdung@gmail.com>
-Date: Mon, 30 Jan 2017 03:45:27 +0800
-Message-ID: <CAEtPA0AOfhTGM76vhLHDiQbXyHywbypk5hOLhq=AWvwVAQPO3g@mail.gmail.com>
-Subject: WARNING: CPU: 11 PID: 7966 at fs/xfs/libxfs/xfs_bmap.c:5408
- xfs_bmap_del_extent+0xdc8/0xe80 [xfs] and having a call trace
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hello
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I have encounter this warning message twice in recently.
-Do you know what is it about?
+Christoph Hellwig pointed out that there's a potentially nasty race when
+performing simultaneous nearby directio cow writes:
 
-[39331.103938] ------------[ cut here ]------------
-[39331.104014] WARNING: CPU: 11 PID: 7966 at
-fs/xfs/libxfs/xfs_bmap.c:5408 xfs_bmap_del_extent+0xdc8/0xe80 [xfs]
-[39331.104122] CPU: 11 PID: 7966 Comm: cp Tainted: G           OE
-4.9.3-200.fc25.x86_64 #1
-[39331.104127]  ffff9ddbb7ba3ab8 ffffffff843f3ddd 0000000000000000
-0000000000000000
-[39331.104132]  ffff9ddbb7ba3af8 ffffffff840a202b 00001520b7ba3ca8
-ffff900c5a598400
-[39331.104136]  ffff9ddbb7ba3ca0 0000000000001cc0 0000000000000000
-0000000000000000
-[39331.104140] Call Trace:
-[39331.104150]  [<ffffffff843f3ddd>] dump_stack+0x63/0x86
-[39331.104154]  [<ffffffff840a202b>] __warn+0xcb/0xf0
-[39331.104158]  [<ffffffff840a215d>] warn_slowpath_null+0x1d/0x20
-[39331.104198]  [<ffffffffc0ba9018>] xfs_bmap_del_extent+0xdc8/0xe80 [xfs]
-[39331.104237]  [<ffffffffc0bad3bd>] __xfs_bunmapi+0x5bd/0xb90 [xfs]
-[39331.104274]  [<ffffffffc0bad9bb>] xfs_bunmapi+0x2b/0x40 [xfs]
-[39331.104320]  [<ffffffffc0be3056>] xfs_free_file_space+0x256/0x300 [xfs]
-[39331.104366]  [<ffffffffc0bea79a>] xfs_file_fallocate+0x18a/0x3b0 [xfs]
-[39331.104370]  [<ffffffff84256077>] vfs_fallocate+0x157/0x220
-[39331.104373]  [<ffffffff84256e88>] SyS_fallocate+0x48/0x80
-[39331.104376]  [<ffffffff842591a7>] ? SyS_lseek+0x87/0xb0
-[39331.104383]  [<ffffffff8481bbf7>] entry_SYSCALL_64_fastpath+0x1a/0xa9
-[39331.104386] ---[ end trace 964857cd95d3bbff ]---
+"Thread 1 writes a range from B to c
 
-Thanks.
-Patrick
+"                    B --------- C
+                           p
+
+"a little later thread 2 writes from A to B
+
+"        A --------- B
+               p
+
+[editor's note: the 'p' denote cowextsize boundaries, which I added to
+make this more clear]
+
+"but the code preallocates beyond B into the range where thread
+"1 has just written, but ->end_io hasn't been called yet.
+"But once ->end_io is called thread 2 has already allocated
+"up to the extent size hint into the write range of thread 1,
+"so the end_io handler will splice the unintialized blocks from
+"that preallocation back into the file right after B."
+
+We can avoid this race by ensuring that thread 1 cannot accidentally
+remap the blocks that thread 2 allocated (as part of speculative
+preallocation) as part of t2's write preparation in t1's end_io handler.
+The way we make this happen is by taking advantage of the unwritten
+extent flag as an intermediate step.
+
+Recall that when we begin the process of writing data to shared blocks,
+we create a delayed allocation extent in the CoW fork:
+
+D: --RRRRRRSSSRRRRRRRR---
+C: ------DDDDDDD---------
+
+When a thread prepares to CoW some dirty data out to disk, it will now
+convert the delalloc reservation into an /unwritten/ allocated extent in
+the cow fork.  The da conversion code tries to opportunistically
+allocate as much of a (speculatively prealloc'd) extent as possible, so
+we may end up allocating a larger extent than we're actually writing
+out:
+
+D: --RRRRRRSSSRRRRRRRR---
+U: ------UUUUUUU---------
+
+Next, we convert only the part of the extent that we're actively
+planning to write to normal (i.e. not unwritten) status:
+
+D: --RRRRRRSSSRRRRRRRR---
+U: ------UURRUUU---------
+
+If the write succeeds, the end_cow function will now scan the relevant
+range of the CoW fork for real extents and remap only the real extents
+into the data fork:
+
+D: --RRRRRRRRSRRRRRRRR---
+U: ------UU--UUU---------
+
+This ensures that we never obliterate valid data fork extents with
+unwritten blocks from the CoW fork.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_aops.c    |    6 ++
+ fs/xfs/xfs_iomap.c   |    2 -
+ fs/xfs/xfs_reflink.c |  140 ++++++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_reflink.h |    2 +
+ fs/xfs/xfs_trace.h   |    8 ++-
+ 5 files changed, 148 insertions(+), 10 deletions(-)
+
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 631e7c0..1ff9df7 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -481,6 +481,12 @@ xfs_submit_ioend(
+ 	struct xfs_ioend	*ioend,
+ 	int			status)
+ {
++	/* Convert CoW extents to regular */
++	if (!status && ioend->io_type == XFS_IO_COW) {
++		status = xfs_reflink_convert_cow(XFS_I(ioend->io_inode),
++				ioend->io_offset, ioend->io_size);
++	}
++
+ 	/* Reserve log space if we might write beyond the on-disk inode size. */
+ 	if (!status &&
+ 	    ioend->io_type != XFS_IO_UNWRITTEN &&
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 1aa3abd..767208f 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -685,7 +685,7 @@ xfs_iomap_write_allocate(
+ 	int		nres;
+ 
+ 	if (whichfork == XFS_COW_FORK)
+-		flags |= XFS_BMAPI_COWFORK;
++		flags |= XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC;
+ 
+ 	/*
+ 	 * Make sure that the dquots are there.
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 07593a3..df042d7 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -82,11 +82,22 @@
+  * mappings are a reservation against the free space in the filesystem;
+  * adjacent mappings can also be combined into fewer larger mappings.
+  *
++ * As an optimization, the CoW extent size hint (cowextsz) creates
++ * outsized aligned delalloc reservations in the hope of landing out of
++ * order nearby CoW writes in a single extent on disk, thereby reducing
++ * fragmentation and improving future performance.
++ *
++ * D: --RRRRRRSSSRRRRRRRR--- (data fork)
++ * C: ------DDDDDDD--------- (CoW fork)
++ *
+  * When dirty pages are being written out (typically in writepage), the
+- * delalloc reservations are converted into real mappings by allocating
+- * blocks and replacing the delalloc mapping with real ones.  A delalloc
+- * mapping can be replaced by several real ones if the free space is
+- * fragmented.
++ * delalloc reservations are converted into unwritten mappings by
++ * allocating blocks and replacing the delalloc mapping with real ones.
++ * A delalloc mapping can be replaced by several unwritten ones if the
++ * free space is fragmented.
++ *
++ * D: --RRRRRRSSSRRRRRRRR---
++ * C: ------UUUUUUU---------
+  *
+  * We want to adapt the delalloc mechanism for copy-on-write, since the
+  * write paths are similar.  The first two steps (creating the reservation
+@@ -101,13 +112,29 @@
+  * Block-aligned directio writes will use the same mechanism as buffered
+  * writes.
+  *
++ * Just prior to submitting the actual disk write requests, we convert
++ * the extents representing the range of the file actually being written
++ * (as opposed to extra pieces created for the cowextsize hint) to real
++ * extents.  This will become important in the next step:
++ *
++ * D: --RRRRRRSSSRRRRRRRR---
++ * C: ------UUrrUUU---------
++ *
+  * CoW remapping must be done after the data block write completes,
+  * because we don't want to destroy the old data fork map until we're sure
+  * the new block has been written.  Since the new mappings are kept in a
+  * separate fork, we can simply iterate these mappings to find the ones
+  * that cover the file blocks that we just CoW'd.  For each extent, simply
+  * unmap the corresponding range in the data fork, map the new range into
+- * the data fork, and remove the extent from the CoW fork.
++ * the data fork, and remove the extent from the CoW fork.  Because of
++ * the presence of the cowextsize hint, however, we must be careful
++ * only to remap the blocks that we've actually written out --  we must
++ * never remap delalloc reservations nor CoW staging blocks that have
++ * yet to be written.  This corresponds exactly to the real extents in
++ * the CoW fork:
++ *
++ * D: --RRRRRRrrSRRRRRRRR---
++ * C: ------UU--UUU---------
+  *
+  * Since the remapping operation can be applied to an arbitrary file
+  * range, we record the need for the remap step as a flag in the ioend
+@@ -296,6 +323,89 @@ xfs_reflink_reserve_cow(
+ 	return 0;
+ }
+ 
++/* Convert part of an unwritten CoW extent to a real one. */
++STATIC int
++__xfs_reflink_convert_cow(
++	struct xfs_trans		*tp,
++	struct xfs_inode		*ip,
++	struct xfs_bmbt_irec		*imap,
++	xfs_fileoff_t			offset_fsb,
++	xfs_filblks_t			count_fsb,
++	struct xfs_defer_ops		*dfops)
++{
++	struct xfs_bmbt_irec		irec = *imap;
++	xfs_fsblock_t			first_block;
++	int				nimaps = 1;
++
++	xfs_trim_extent(&irec, offset_fsb, count_fsb);
++	trace_xfs_reflink_convert_cow(ip, &irec);
++	if (irec.br_blockcount == 0)
++		return 0;
++	return xfs_bmapi_write(tp, ip, irec.br_startoff, irec.br_blockcount,
++			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT, &first_block,
++			0, &irec, &nimaps, dfops);
++}
++
++/* Convert all of the unwritten CoW extents in a file's range to real ones. */
++int
++xfs_reflink_convert_cow(
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	xfs_off_t		count)
++{
++	struct xfs_bmbt_irec	got;
++	struct xfs_defer_ops	dfops;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
++	struct xfs_trans	*tp;
++	xfs_fsblock_t		first_block;
++	xfs_fileoff_t		offset_fsb;
++	xfs_fileoff_t		end_fsb;
++	xfs_extnum_t		idx;
++	bool			found;
++	int			error;
++
++	offset_fsb = XFS_B_TO_FSBT(mp, offset);
++	end_fsb = XFS_B_TO_FSB(mp, offset + count);
++
++	/* Grab transaction. */
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0, 0, &tp);
++	if (error)
++		return error;
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, 0);
++	xfs_defer_init(&dfops, &first_block);
++
++	/* Convert all the extents to real from unwritten. */
++	for (found = xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
++	     found && got.br_startoff < end_fsb;
++	     found = xfs_iext_get_extent(ifp, ++idx, &got)) {
++		if (got.br_state == XFS_EXT_NORM)
++			continue;
++		error = __xfs_reflink_convert_cow(tp, ip, &got, offset_fsb,
++				end_fsb - offset_fsb, &dfops);
++		if (error)
++			goto err;
++	}
++
++	/* Finish up. */
++	error = xfs_defer_finish(&tp, &dfops, NULL);
++	if (error)
++		goto out_trans_cancel;
++
++	error = xfs_trans_commit(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return error;
++
++err:
++	xfs_defer_cancel(&dfops);
++out_trans_cancel:
++	xfs_trans_cancel(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return error;
++}
++
+ /* Allocate all CoW reservations covering a range of blocks in a file. */
+ static int
+ __xfs_reflink_allocate_cow(
+@@ -328,6 +438,7 @@ __xfs_reflink_allocate_cow(
+ 		goto out_unlock;
+ 	ASSERT(nimaps == 1);
+ 
++	/* Make sure there's a CoW reservation for it. */
+ 	error = xfs_reflink_reserve_cow(ip, &imap, &shared);
+ 	if (error)
+ 		goto out_trans_cancel;
+@@ -337,14 +448,16 @@ __xfs_reflink_allocate_cow(
+ 		goto out_trans_cancel;
+ 	}
+ 
++	/* Allocate the entire reservation as unwritten blocks. */
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 	error = xfs_bmapi_write(tp, ip, imap.br_startoff, imap.br_blockcount,
+-			XFS_BMAPI_COWFORK, &first_block,
++			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, &first_block,
+ 			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK),
+ 			&imap, &nimaps, &dfops);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
++	/* Finish up. */
+ 	error = xfs_defer_finish(&tp, &dfops, NULL);
+ 	if (error)
+ 		goto out_trans_cancel;
+@@ -389,10 +502,13 @@ xfs_reflink_allocate_cow_range(
+ 		if (error) {
+ 			trace_xfs_reflink_allocate_cow_range_error(ip, error,
+ 					_RET_IP_);
+-			break;
++			goto out;
+ 		}
+ 	}
+ 
++	/* Convert the CoW extents to regular. */
++	error = xfs_reflink_convert_cow(ip, offset, count);
++out:
+ 	return error;
+ }
+ 
+@@ -641,6 +757,16 @@ xfs_reflink_end_cow(
+ 
+ 		ASSERT(!isnullstartblock(got.br_startblock));
+ 
++		/*
++		 * Don't remap unwritten extents; these are
++		 * speculatively preallocated CoW extents that have been
++		 * allocated but have not yet been involved in a write.
++		 */
++		if (got.br_state == XFS_EXT_UNWRITTEN) {
++			idx--;
++			goto next_extent;
++		}
++
+ 		/* Unmap the old blocks in the data fork. */
+ 		xfs_defer_init(&dfops, &firstfsb);
+ 		rlen = del.br_blockcount;
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index aa6a4d6..1583c47 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -30,6 +30,8 @@ extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
+ 		struct xfs_bmbt_irec *imap, bool *shared);
+ extern int xfs_reflink_allocate_cow_range(struct xfs_inode *ip,
+ 		xfs_off_t offset, xfs_off_t count);
++extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
++		xfs_off_t count);
+ extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
+ 		struct xfs_bmbt_irec *imap);
+ extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 69c5bcd..d3d11905 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3089,6 +3089,7 @@ DECLARE_EVENT_CLASS(xfs_inode_irec_class,
+ 		__field(xfs_fileoff_t, lblk)
+ 		__field(xfs_extlen_t, len)
+ 		__field(xfs_fsblock_t, pblk)
++		__field(int, state)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+@@ -3096,13 +3097,15 @@ DECLARE_EVENT_CLASS(xfs_inode_irec_class,
+ 		__entry->lblk = irec->br_startoff;
+ 		__entry->len = irec->br_blockcount;
+ 		__entry->pblk = irec->br_startblock;
++		__entry->state = irec->br_state;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx lblk 0x%llx len 0x%x pblk %llu",
++	TP_printk("dev %d:%d ino 0x%llx lblk 0x%llx len 0x%x pblk %llu st %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->lblk,
+ 		  __entry->len,
+-		  __entry->pblk)
++		  __entry->pblk,
++		  __entry->state)
+ );
+ #define DEFINE_INODE_IREC_EVENT(name) \
+ DEFINE_EVENT(xfs_inode_irec_class, name, \
+@@ -3242,6 +3245,7 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_around_shared);
+ DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_alloc);
+ DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_found);
+ DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_enospc);
++DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
+ 
+ DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
+ DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
+
