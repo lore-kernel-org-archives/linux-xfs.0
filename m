@@ -1,29 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37875 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:41344 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750845AbdAaHda (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2017 02:33:30 -0500
-Date: Mon, 30 Jan 2017 23:31:47 -0800
+        with ESMTP id S1752140AbdAaNtY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2017 08:49:24 -0500
+Date: Tue, 31 Jan 2017 05:29:57 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs: clear _XBF_PAGES from buffers when readahead
- page allocation fails
-Message-ID: <20170131073147.GA4463@infradead.org>
-References: <20170126035330.GU9134@birch.djwong.org>
- <20170128225517.GE316@dastard>
- <20170130233557.GA6442@birch.djwong.org>
- <20170130234415.GC9134@birch.djwong.org>
+Subject: Re: [PATCH 2/7] xfs: fail _dir_open when readahead fails
+Message-ID: <20170131132957.GB17386@infradead.org>
+References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
+ <148582219640.12293.12536546233357325085.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170130234415.GC9134@birch.djwong.org>
+In-Reply-To: <148582219640.12293.12536546233357325085.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jan 30, 2017 at 03:44:15PM -0800, Darrick J. Wong wrote:
-> Actually -- Christoph, are you planning to send another batch of XFS
-> fixes for 4.9?
+There is an xfs missing in the subject, I think..
 
-Yes, it is on my todo list for this week.
+On Mon, Jan 30, 2017 at 04:23:16PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> When we open a directory, we try to readahead block 0 of the directory
+> on the assumption that we're going to need it soon.  If the bmbt is
+> corrupt, the directory will never be usable and the readahead fails
+> immediately, so we might as well prevent the directory from being opened
+> at all.  This prevents a subsequent read or modify operation from
+> hitting it and taking the fs offline.
+
+I think this looks fine, but the patch description is a bit odd -
+we don't actually check for failures for the actual read-ahead, just
+for the block mapping, which I guess is what you need anyway.
+
+So with a slight update to the patch descriptions:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
