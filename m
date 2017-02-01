@@ -1,26 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43545 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750863AbdBAOsC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2017 09:48:02 -0500
-Date: Wed, 1 Feb 2017 06:48:01 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 1/7] xfs: fix toctou race when locking an inode to
- access the data map
-Message-ID: <20170201144801.GA27071@infradead.org>
-References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
- <148582219035.12293.12084220786527965512.stgit@birch.djwong.org>
- <20170201023454.GK9134@birch.djwong.org>
+Received: from mail-it0-f47.google.com ([209.85.214.47]:35001 "EHLO
+        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753005AbdBASxo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2017 13:53:44 -0500
+Received: by mail-it0-f47.google.com with SMTP id 203so23474830ith.0
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Feb 2017 10:53:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170201023454.GK9134@birch.djwong.org>
+From: Patrick Dung <mpatdung@gmail.com>
+Date: Thu, 2 Feb 2017 02:53:42 +0800
+Message-ID: <CAEtPA0BOdAHjtoRrrX3Ha6iHe4VXOUxNe7KPaEdJM=8yYstQMA@mail.gmail.com>
+Subject: I had an occasion that XFS is not able to fully detect or recover
+ from severe file system corruption
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Looks good,
+Hi guys,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+The problem happened in last year. I do not have the corrupted file
+system now. But I would like to discuss it. Any comment is welcomed.
+
+I was using Fedora 24. I had an XFS file system in an hard drive. I
+had used some kind of  SSD write back caching on top of the hard
+drive.
+
+Somehow the SSD was removed and when the system is rebooted, the XFS
+file system could not be mounted.
+
+I run xfs_repair, it reported some files are corrupted. It had
+completed the repair of file system and some files were corrupted.
+Then I could mount the filesystem. I started using the existing files
+that did not have corruption. After sometime, the file system stopped
+again because it detected XFS file system is corrupted.
+
+Then I run xfs_repair again and it found additional files were still corrupted.
+
+So I have a question if xfs_repair is able to fully detect all files
+that are corrupted by running xfs_repair only once.
+
+Best regards,
+Patrick
