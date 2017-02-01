@@ -1,264 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57700 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751720AbdA1SLD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 28 Jan 2017 13:11:03 -0500
-Subject: Re: [PATCH 1/3] xfs/263: don't hardcode inode numbers in output
-References: <148562509264.30594.7506967863745489318.stgit@birch.djwong.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7df1dabe-3832-ffa7-cb80-07ee602bd455@sandeen.net>
-Date: Sat, 28 Jan 2017 12:10:56 -0600
+Received: from userp1040.oracle.com ([156.151.31.81]:46997 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750796AbdBACfU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2017 21:35:20 -0500
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v112YuYl007032
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Feb 2017 02:34:56 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v112Yt1k013875
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Feb 2017 02:34:55 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v112Ytt9023890
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Feb 2017 02:34:55 GMT
+Date: Tue, 31 Jan 2017 18:34:54 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 1/7] xfs: fix toctou race when locking an inode to access
+ the data map
+Message-ID: <20170201023454.GK9134@birch.djwong.org>
+References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
+ <148582219035.12293.12084220786527965512.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <148562509264.30594.7506967863745489318.stgit@birch.djwong.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <148582219035.12293.12084220786527965512.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 1/28/17 11:38 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Since we can't control the inode number assignments when creating files,
-> don't hardcode them in the golden output.
+We use di_format and if_flags to decide whether we're grabbing the ilock
+in btree mode (btree extents not loaded) or shared mode (anything else),
+but the state of those fields can be changed by other threads that are
+also trying to load the btree extents -- IFEXTENTS gets set before the
+_bmap_read_extents call and cleared if it fails.
 
-what numbers are you seeing?
+We don't actually need to have IFEXTENTS set until after the bmbt
+records are successfully loaded and validated, which will fix the race
+between multiple threads trying to read the same directory.  The next
+patch strengthens directory bmbt validation by refusing to open the
+directory if reading the bmbt to start directory readahead fails.
 
-The inode numbers aren't important for the test, but I don't want to
-gloss over something unexpected.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-# Control size to control inode numbers
-$MKFS_XFS_PROG -f -m crc=0 -n ftype=0 -d size=512m $SCRATCH_DEV >>$seqres.full
-
--Eric
-
- 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/xfs/263     |    6 +++++-
->  tests/xfs/263.out |   52 ++++++++++++++++++++++++++--------------------------
->  2 files changed, 31 insertions(+), 27 deletions(-)
-> 
-> 
-> diff --git a/tests/xfs/263 b/tests/xfs/263
-> index 1dc47ae..7aebf90 100755
-> --- a/tests/xfs/263
-> +++ b/tests/xfs/263
-> @@ -71,6 +71,10 @@ function option_string()
->  	echo $OPT
->  }
->  
-> +filter_quota_state() {
-> +	sed -e 's/Inode: #[0-9]\+/Inode #XXX/g' | _filter_scratch
-> +}
-> +
->  function test_all_state()
->  {
->  	for I in `seq 0 7`; do
-> @@ -79,7 +83,7 @@ function test_all_state()
->  		# Some combinations won't mount on V4 supers (grp + prj)
->  		_qmount_option "$OPTIONS"
->  		_scratch_mount &>> $seqres.full || continue
-> -		$XFS_QUOTA_PROG -x -c "state" $SCRATCH_MNT | _filter_scratch
-> +		$XFS_QUOTA_PROG -x -c "state" $SCRATCH_MNT | filter_quota_state
->  		_scratch_unmount
->  	done
->  }
-> diff --git a/tests/xfs/263.out b/tests/xfs/263.out
-> index 70454dd..531d45d 100644
-> --- a/tests/xfs/263.out
-> +++ b/tests/xfs/263.out
-> @@ -5,7 +5,7 @@ QA output created by 263
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #131 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> @@ -21,11 +21,11 @@ Realtime Blocks grace time: [7 days]
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> -  Inode: #131 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #132 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> @@ -37,11 +37,11 @@ Realtime Blocks grace time: [7 days]
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #131 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #132 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> @@ -53,7 +53,7 @@ Realtime Blocks grace time: [7 days]
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> -  Inode: #131 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> @@ -61,7 +61,7 @@ Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #132 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Blocks grace time: [7 days]
->  Inodes grace time: [7 days]
->  Realtime Blocks grace time: [7 days]
-> @@ -69,7 +69,7 @@ Realtime Blocks grace time: [7 days]
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #131 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> @@ -77,7 +77,7 @@ Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #132 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Blocks grace time: [7 days]
->  Inodes grace time: [7 days]
->  Realtime Blocks grace time: [7 days]
-> @@ -89,7 +89,7 @@ Realtime Blocks grace time: [7 days]
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #99 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> @@ -105,11 +105,11 @@ Realtime Blocks grace time: [7 days]
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> -  Inode: #99 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #100 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> @@ -121,11 +121,11 @@ Realtime Blocks grace time: [7 days]
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #99 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #100 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> @@ -137,15 +137,15 @@ Realtime Blocks grace time: [7 days]
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> -  Inode: #99 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> -  Inode: #100 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #101 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Blocks grace time: [7 days]
->  Inodes grace time: [7 days]
->  Realtime Blocks grace time: [7 days]
-> @@ -153,15 +153,15 @@ Realtime Blocks grace time: [7 days]
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #99 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> -  Inode: #100 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #101 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Blocks grace time: [7 days]
->  Inodes grace time: [7 days]
->  Realtime Blocks grace time: [7 days]
-> @@ -169,15 +169,15 @@ Realtime Blocks grace time: [7 days]
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: OFF
->    Enforcement: OFF
-> -  Inode: #99 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #100 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #101 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Blocks grace time: [7 days]
->  Inodes grace time: [7 days]
->  Realtime Blocks grace time: [7 days]
-> @@ -185,15 +185,15 @@ Realtime Blocks grace time: [7 days]
->  User quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #99 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Group quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #100 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Project quota state on SCRATCH_MNT (SCRATCH_DEV)
->    Accounting: ON
->    Enforcement: ON
-> -  Inode: #101 (1 blocks, 1 extents)
-> +  Inode #XXX (1 blocks, 1 extents)
->  Blocks grace time: [7 days]
->  Inodes grace time: [7 days]
->  Realtime Blocks grace time: [7 days]
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 222e103..421341f 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -497,15 +497,14 @@ xfs_iread_extents(
+ 	 * We know that the size is valid (it's checked in iformat_btree)
+ 	 */
+ 	ifp->if_bytes = ifp->if_real_bytes = 0;
+-	ifp->if_flags |= XFS_IFEXTENTS;
+ 	xfs_iext_add(ifp, 0, nextents);
+ 	error = xfs_bmap_read_extents(tp, ip, whichfork);
+ 	if (error) {
+ 		xfs_iext_destroy(ifp);
+-		ifp->if_flags &= ~XFS_IFEXTENTS;
+ 		return error;
+ 	}
+ 	xfs_validate_extents(ifp, nextents, XFS_EXTFMT_INODE(ip));
++	ifp->if_flags |= XFS_IFEXTENTS;
+ 	return 0;
+ }
+ /*
