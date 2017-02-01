@@ -1,92 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44254 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:43545 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750984AbdBAVmv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2017 16:42:51 -0500
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cZ2fy-0003mz-3v
-        for linux-xfs@vger.kernel.org; Wed, 01 Feb 2017 21:42:50 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/4] xfs: introduce xfs_aligned_fsb_count
-Date: Wed,  1 Feb 2017 22:42:37 +0100
-Message-Id: <1485985359-971-3-git-send-email-hch@lst.de>
-In-Reply-To: <1485985359-971-1-git-send-email-hch@lst.de>
-References: <1485985359-971-1-git-send-email-hch@lst.de>
+        with ESMTP id S1750863AbdBAOsC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2017 09:48:02 -0500
+Date: Wed, 1 Feb 2017 06:48:01 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 1/7] xfs: fix toctou race when locking an inode to
+ access the data map
+Message-ID: <20170201144801.GA27071@infradead.org>
+References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
+ <148582219035.12293.12084220786527965512.stgit@birch.djwong.org>
+ <20170201023454.GK9134@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170201023454.GK9134@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Factor a helper to calculate the extent-size aligned block out of the
-iomap code, so that it can be reused by the upcoming reflink dio code.
+Looks good,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_iomap.c | 11 ++---------
- fs/xfs/xfs_iomap.h | 20 ++++++++++++++++++++
- 2 files changed, 22 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index d17aa3b..9d811eb 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -162,7 +162,7 @@ xfs_iomap_write_direct(
- 	xfs_fileoff_t	last_fsb;
- 	xfs_filblks_t	count_fsb, resaligned;
- 	xfs_fsblock_t	firstfsb;
--	xfs_extlen_t	extsz, temp;
-+	xfs_extlen_t	extsz;
- 	int		nimaps;
- 	int		quota_flag;
- 	int		rt;
-@@ -203,14 +203,7 @@ xfs_iomap_write_direct(
- 	}
- 	count_fsb = last_fsb - offset_fsb;
- 	ASSERT(count_fsb > 0);
--
--	resaligned = count_fsb;
--	if (unlikely(extsz)) {
--		if ((temp = do_mod(offset_fsb, extsz)))
--			resaligned += temp;
--		if ((temp = do_mod(resaligned, extsz)))
--			resaligned += extsz - temp;
--	}
-+	resaligned = xfs_aligned_fsb_count(offset_fsb, count_fsb, extsz);
- 
- 	if (unlikely(rt)) {
- 		resrtextents = qblocks = resaligned;
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index 6d45cf0..1fef4a5 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -33,6 +33,26 @@ void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
- 		struct xfs_bmbt_irec *);
- xfs_extlen_t xfs_eof_alignment(struct xfs_inode *ip, xfs_extlen_t extsize);
- 
-+static inline xfs_filblks_t
-+xfs_aligned_fsb_count(
-+	xfs_fileoff_t		offset_fsb,
-+	xfs_filblks_t		count_fsb,
-+	xfs_extlen_t		extsz)
-+{
-+	if (extsz) {
-+		xfs_extlen_t	align;
-+
-+		align = do_mod(offset_fsb, extsz);
-+		if (align)
-+			count_fsb += align;
-+		align = do_mod(count_fsb, extsz);
-+		if (align)
-+			count_fsb += extsz - align;
-+	}
-+
-+	return count_fsb;
-+}
-+
- extern struct iomap_ops xfs_iomap_ops;
- extern struct iomap_ops xfs_xattr_iomap_ops;
- 
--- 
-2.1.4
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
