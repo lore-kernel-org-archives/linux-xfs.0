@@ -1,65 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31532 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751811AbdBBRpy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 12:45:54 -0500
-Date: Thu, 2 Feb 2017 09:45:47 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: update ctime and mtime on clone destinatation inodes
-Message-ID: <20170202174547.GN9134@birch.djwong.org>
-References: <20170202162456.20574-1-hch@lst.de>
+Received: from b.ns.miles-group.at ([95.130.255.144]:44723 "EHLO radon.swed.at"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752735AbdBAXMS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Feb 2017 18:12:18 -0500
+Subject: Re: xfsprogs build broken on armv7l
+References: <8cbc97e0-de81-658c-d6b6-b7d65b9f83c6@nod.at>
+ <8b29ebc8-203b-5a6c-8428-fa835e647d5c@sandeen.net>
+From: Richard Weinberger <richard@nod.at>
+Message-ID: <a123dfb3-45ac-9671-9940-7311ebde309a@nod.at>
+Date: Thu, 2 Feb 2017 00:12:13 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170202162456.20574-1-hch@lst.de>
+In-Reply-To: <8b29ebc8-203b-5a6c-8428-fa835e647d5c@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, gwendal@chromium.org
+Cc: "vapier@gentoo.org" <vapier@gentoo.org>, hch@lst.de, David Oberhollenzer <goliath@sigma-star.at>, David Gstir <david@sigma-star.at>
 
-On Thu, Feb 02, 2017 at 05:24:56PM +0100, Christoph Hellwig wrote:
-> We're changing both metadata and data, so we need to update the
-> timestamps.   This follows existing btrfs behavior.
+Eric,
 
-/me wonders, should the mtime change if we're deduping?  We're
-definitely changing metadata, but we shouldn't be making any
-user-visible changes to the file data.
-
---D
-
+Am 01.02.2017 um 23:31 schrieb Eric Sandeen:
+> On 2/1/17 4:19 PM, Richard Weinberger wrote:
+>> Hi!
+>>
+>> On my armv7 box, current xfsprogs fail to build:
+>>     [TEST]    CRC32
+>> In file included from crc32.c:37:0:
+>> ../include/xfs.h:53:12: error: size of array ‘xfs_assert_largefile’ is too large
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_reflink.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+> neat ;)
 > 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index d5a2cf2b469b..8877e6f5e35d 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -967,9 +967,6 @@ xfs_reflink_update_dest(
->  	struct xfs_trans	*tp;
->  	int			error;
->  
-> -	if (newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
-> -		return 0;
-> -
->  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
->  	if (error)
->  		goto out_error;
-> @@ -988,6 +985,7 @@ xfs_reflink_update_dest(
->  		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
->  	}
->  
-> +	xfs_trans_ichgtime(tp, dest, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
->  	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
->  
->  	error = xfs_trans_commit(tp);
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Does this fix it?
+
+Yes, it does. :-)
+
+Thanks,
+//richard
