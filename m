@@ -1,71 +1,623 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36757 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753198AbdBASgW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2017 13:36:22 -0500
-Date: Wed, 1 Feb 2017 10:36:21 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 7/7] xfs: mark speculative prealloc CoW fork extents
- unwritten
-Message-ID: <20170201183621.GA2118@infradead.org>
-References: <148582218411.12293.806854574193653038.stgit@birch.djwong.org>
- <148582223303.12293.11053073799262731296.stgit@birch.djwong.org>
- <20170201023617.GM9134@birch.djwong.org>
+Received: from mail-io0-f177.google.com ([209.85.223.177]:36474 "EHLO
+        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752965AbdBASbJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2017 13:31:09 -0500
+Received: by mail-io0-f177.google.com with SMTP id j13so163135553iod.3
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Feb 2017 10:31:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170201023617.GM9134@birch.djwong.org>
+In-Reply-To: <20170131141000.GB15487@bfoster.bfoster>
+References: <CAEtPA0AOfhTGM76vhLHDiQbXyHywbypk5hOLhq=AWvwVAQPO3g@mail.gmail.com>
+ <20170130140535.GA7136@bfoster.bfoster> <CAEtPA0DG+D+_+FFKhNa_XKTwcWcphQA8WVCDrzMueajNjQRRrg@mail.gmail.com>
+ <20170130154326.GB8737@bfoster.bfoster> <CAEtPA0DmVfY2yvQ3uujgfWOmg08uZ4nP_CjoMAXJa07wdSR57Q@mail.gmail.com>
+ <20170131141000.GB15487@bfoster.bfoster>
+From: Patrick Dung <mpatdung@gmail.com>
+Date: Thu, 2 Feb 2017 02:31:02 +0800
+Message-ID: <CAEtPA0BU2tKHvLY=Bqgk3CSu_Vh==DOeQ=Q8zSQdmwfL2_NdgQ@mail.gmail.com>
+Subject: Re: WARNING: CPU: 11 PID: 7966 at fs/xfs/libxfs/xfs_bmap.c:5408
+ xfs_bmap_del_extent+0xdc8/0xe80 [xfs] and having a call trace
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-Looks fine (and tests fine):
+Thanks for the info, Brian.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+For the smaller vmdk file, I just created it several months ago.
+It was is a default setting when it is created. (a thin provisioned
+vmware image file)
+I think KVM/qemu thin provisioned/sparse vm images file may also have
+this problem.
 
-But a few style nitpicks below:
+Best regards,
+Patrick
 
-
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> +	xfs_fileoff_t		offset_fsb;
-> +	xfs_fileoff_t		end_fsb;
-> +	xfs_extnum_t		idx;
-> +	bool			found;
-> +	int			error;
-> +
-> +	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +	end_fsb = XFS_B_TO_FSB(mp, offset + count);
-
-Move these into the lines with the variable declarations, please.
-
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +
-> +	/* Convert all the extents to real from unwritten. */
-> +	for (found = xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
-> +	     found && got.br_startoff < end_fsb;
-> +	     found = xfs_iext_get_extent(ifp, ++idx, &got)) {
-> +		if (got.br_state == XFS_EXT_NORM)
-> +			continue;
-> +		error = __xfs_reflink_convert_cow(ip, &got, offset_fsb,
-> +				end_fsb - offset_fsb, &dfops);
-
-Move the state check into __xfs_reflink_convert_cow and rename that
-to xfs_reflink_convert_cow_extent?
-
-> @@ -389,10 +479,13 @@ xfs_reflink_allocate_cow_range(
->  		if (error) {
->  			trace_xfs_reflink_allocate_cow_range_error(ip, error,
->  					_RET_IP_);
-> -			break;
-> +			goto out;
->  		}
->  	}
->  
-> +	/* Convert the CoW extents to regular. */
-> +	error = xfs_reflink_convert_cow(ip, offset, count);
-> +out:
->  	return error;
-
-No need for the goto here really, justt return the error directly.
+On Tue, Jan 31, 2017 at 10:10 PM, Brian Foster <bfoster@redhat.com> wrote:
+> On Tue, Jan 31, 2017 at 12:16:27AM +0800, Patrick Dung wrote:
+>> 1. I had upgraded to kernel 4.9.5 now
+>> I just reproduce the call trace again by doing the cp on the smaller vmd=
+k file.
+>>
+> ...
+>>
+>> After that I did not reboot, I am not able to reproduce the same error
+>> message when doing cp.
+>>
+>> 2. When I check my log, it also have problem in kernel 4.8.14:
+> ...
+>>
+>> 3. The output for xfs_io is long, please find the output in the attached=
+ file.
+>>
+>
+> Thanks. I created an image similar to the smaller file and was able to
+> reproduce. As expected, we have an extent that is split into two via
+> hole punch where the worst case indlen for one is notably larger than
+> the other:
+>
+>   cp-15971 [007] .... 64558.722353: xfs_bmap_pre_update: dev 253:3 ino 0x=
+63 state  idx 5 offset 143 block 4503599627241525 count 524273 flag 0 calle=
+r xfs_bmap_del_extent [xfs]
+>   cp-15971 [007] .... 64558.722374: xfs_bmap_del_extent: 5247: worst_indl=
+en 2101
+>   cp-15971 [007] .... 64558.722376: xfs_bmap_del_extent: 5323: da_old 210=
+1 temp 2101 temp2 762
+>   cp-15971 [007] .... 64558.722377: xfs_bmap_del_extent: 5333: temp 1784 =
+temp2 445 stolen 128
+>   cp-15971 [007] .... 64558.722379: xfs_bmap_post_update: dev 253:3 ino 0=
+x63 state  idx 5 offset 143 block 4503599627241208 count 334784 flag 0 call=
+er xfs_bmap_del_extent [xfs]
+>
+>   cp-15971 [007] .... 64559.497025: xfs_bmap_pre_update: dev 253:3 ino 0x=
+63 state  idx 6 offset 335055 block 4503599627239869 count 189361 flag 0 ca=
+ller xfs_bmap_del_extent [xfs]
+>   cp-15971 [007] .... 64559.497045: xfs_bmap_del_extent: 5247: worst_indl=
+en 762
+>   cp-15971 [007] .... 64559.497047: xfs_bmap_del_extent: 5323: da_old 445=
+ temp 762 temp2 161
+>   cp-15971 [007] .... 64559.497048: xfs_bmap_del_extent: 5333: temp 509 t=
+emp2 0 stolen 64
+>   cp-15971 [007] .... 64559.497049: xfs_bmap_post_update: dev 253:3 ino 0=
+x63 state  idx 6 offset 335055 block 4503599627239933 count 150016 flag 0 c=
+aller xfs_bmap_del_extent [xfs]
+>
+> The first hunk splits an extent with the expected number of indlen
+> blocks into two where both are underreserved. The second hunk splits the
+> second extent further such that the delta between the required
+> reservation of both extents (762 + 161) and what is actually available
+> (445 + 64) is larger than the requirement for the second extent (161).
+> This means that xfs_bmap_split_indlen() is going to drain the indlen of
+> the second extent before it is able to honor the available reservation.
+>
+> I think this kind of thing is always going to be possible under the
+> current implementation, when large enough extents are created and then
+> recursively split up enough times. Note that the fact that this is
+> speculative preallocation contributes to the problem by preventing the
+> hole punch from converting these post-eof delalloc extents to real
+> extents and consuming (or freeing) the reservation. This is probably why
+> this is more reproducible via cp as opposed to our explicit write/hole
+> punch tests.
+>
+> I think an appropriate fix here is to fix up the split_indlen()
+> algorithm to implement the same kind of fair distribution it provides
+> across first level splits to splits where the original extent is already
+> underreserved. It's far more risky IMO to have an extent with zero
+> indlen blocks than one that is underreserved with respect to the worst
+> case. I'll cook something up and post once I have it tested..
+>
+> Brian
+>
+>> Thanks,
+>> Patrick
+>>
+>> On Mon, Jan 30, 2017 at 11:43 PM, Brian Foster <bfoster@redhat.com> wrot=
+e:
+>> > On Mon, Jan 30, 2017 at 11:07:58PM +0800, Patrick Dung wrote:
+>> >> Hi Brian,
+>> >>
+>> >> Resent in plain text mode.
+>> >> The mailing list could not accept email in html format.
+>> >>
+>> >> For your information:
+>> >>
+>> >> 1) The cp command was issued at '2017-01-30 03:02:49'
+>> >> $ cp --sparse=3Dalways -rp 'source' 'destination'
+>> >> I was copying a 55GB folder including two vmare images from a ext4
+>> >> file system to a XFS file system
+>> >>
+>> >> $ stat disk1.vmdk
+>> >>   File: 'disk1.vmdk'
+>> >>   Size: 50465865728     Blocks: 97561480   IO Block: 262144 regular f=
+ile
+>> >>
+>> >> $ stat disk2.vmdk
+>> >>   File: 'disk2.vmdk'
+>> >>   Size: 3825795072      Blocks: 7470568    IO Block: 262144 regular f=
+ile
+>> >>
+>> >> By looking at the number of blocks reported by command stat, those
+>> >> files should be sparse files.
+>> >>
+>> >
+>> > Thanks. This should only happen once per-copy. Was this run and
+>> > reproduced multiple times across reboots?
+>> >
+>> > While sparse, it does look like those images are mostly allocated. Cou=
+ld
+>> > you provide the fiemap info for both (e.g., 'xfs_io -c "fiemap -v"
+>> > <file>')?
+>> >
+>> > Brian
+>> >
+>> >> 2) kernel log at:
+>> >> Jan 30 03:03:05 home kernel: [39331.104014] WARNING: CPU: 11 PID: 796=
+6
+>> >> at fs/xfs/libxfs/xfs_bmap.c:5408 xfs_bmap_del_extent+0xdc8/0xe80 [xfs=
+]
+>> >>
+>> >> 3) The mount options for XFS is:
+>> >> defaults,relatime,logbufs=3D8,logbsize=3D262144,largeio
+>> >>
+>> >> Thanks,
+>> >> Patrick
+>> >>
+>> >> On Mon, Jan 30, 2017 at 10:05 PM, Brian Foster <bfoster@redhat.com> w=
+rote:
+>> >> > On Mon, Jan 30, 2017 at 03:45:27AM +0800, Patrick Dung wrote:
+>> >> >> Hello
+>> >> >>
+>> >> >> I have encounter this warning message twice in recently.
+>> >> >> Do you know what is it about?
+>> >> >>
+>> >> >> [39331.103938] ------------[ cut here ]------------
+>> >> >> [39331.104014] WARNING: CPU: 11 PID: 7966 at
+>> >> >> fs/xfs/libxfs/xfs_bmap.c:5408 xfs_bmap_del_extent+0xdc8/0xe80 [xfs=
+]
+>> >> >> [39331.104122] CPU: 11 PID: 7966 Comm: cp Tainted: G           OE
+>> >> >> 4.9.3-200.fc25.x86_64 #1
+>> >> >
+>> >> > This warning is related to the extra blocks that are stashed away w=
+ith
+>> >> > delayed allocation extents to cover bmap btree insertion. When a
+>> >> > delalloc extent is created, a particularly sized block reservation =
+is
+>> >> > stashed along with it to help cover bmapbt block allocation when th=
+e
+>> >> > extent is converted to real blocks and inserted to the on-disk btre=
+e.
+>> >> >
+>> >> > If the delalloc extent is modified before it is ultimately converte=
+d, if
+>> >> > a hole is punched (as the stack below shows) and it is split in two=
+ for
+>> >> > example, then the existing reservation must be shared across the tw=
+o
+>> >> > extents. This warning fires when we encounter a situation where we'=
+re
+>> >> > left with a delalloc extent with zero reserved blocks.
+>> >> >
+>> >> > This is not a catastrophic error in and of itself as not every bmbt
+>> >> > insertion requires bmbt block allocation. It is not expected nor id=
+eal
+>> >> > however. The warning exists so we have notification that there is s=
+till
+>> >> > an allocation pattern (and I have a suspicion from reviewing the co=
+de)
+>> >> > that leads to this risky state and we can try to address it. The st=
+ack
+>> >> > suggests a cp is freeing up space... can you describe what exactly =
+you
+>> >> > are doing when this tends to occur? A quick look at coreutils sourc=
+e
+>> >> > suggests that cp calls fallocate() to punch a hole and explicitly w=
+ork
+>> >> > around XFS preallocation when copying sparse files. Given that, it
+>> >> > wouldn't surprise me if copying a particular source file tends to
+>> >> > reproduce this more than others.
+>> >> >
+>> >> > Also note that this is a WARN_ON_ONCE(), which means once it fires
+>> >> > you'll have to reboot before it will reproduce.
+>> >> >
+>> >> > Brian
+>> >> >
+>> >> >> [39331.104127]  ffff9ddbb7ba3ab8 ffffffff843f3ddd 0000000000000000
+>> >> >> 0000000000000000
+>> >> >> [39331.104132]  ffff9ddbb7ba3af8 ffffffff840a202b 00001520b7ba3ca8
+>> >> >> ffff900c5a598400
+>> >> >> [39331.104136]  ffff9ddbb7ba3ca0 0000000000001cc0 0000000000000000
+>> >> >> 0000000000000000
+>> >> >> [39331.104140] Call Trace:
+>> >> >> [39331.104150]  [<ffffffff843f3ddd>] dump_stack+0x63/0x86
+>> >> >> [39331.104154]  [<ffffffff840a202b>] __warn+0xcb/0xf0
+>> >> >> [39331.104158]  [<ffffffff840a215d>] warn_slowpath_null+0x1d/0x20
+>> >> >> [39331.104198]  [<ffffffffc0ba9018>] xfs_bmap_del_extent+0xdc8/0xe=
+80 [xfs]
+>> >> >> [39331.104237]  [<ffffffffc0bad3bd>] __xfs_bunmapi+0x5bd/0xb90 [xf=
+s]
+>> >> >> [39331.104274]  [<ffffffffc0bad9bb>] xfs_bunmapi+0x2b/0x40 [xfs]
+>> >> >> [39331.104320]  [<ffffffffc0be3056>] xfs_free_file_space+0x256/0x3=
+00 [xfs]
+>> >> >> [39331.104366]  [<ffffffffc0bea79a>] xfs_file_fallocate+0x18a/0x3b=
+0 [xfs]
+>> >> >> [39331.104370]  [<ffffffff84256077>] vfs_fallocate+0x157/0x220
+>> >> >> [39331.104373]  [<ffffffff84256e88>] SyS_fallocate+0x48/0x80
+>> >> >> [39331.104376]  [<ffffffff842591a7>] ? SyS_lseek+0x87/0xb0
+>> >> >> [39331.104383]  [<ffffffff8481bbf7>] entry_SYSCALL_64_fastpath+0x1=
+a/0xa9
+>> >> >> [39331.104386] ---[ end trace 964857cd95d3bbff ]---
+>> >> >>
+>> >> >> Thanks.
+>> >> >> Patrick
+>> >> >> --
+>> >> >> To unsubscribe from this list: send the line "unsubscribe linux-xf=
+s" in
+>> >> >> the body of a message to majordomo@vger.kernel.org
+>> >> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> >> --
+>> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" =
+in
+>> >> the body of a message to majordomo@vger.kernel.org
+>> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>> =EF=BB=BF# xfs_io -c "fiemap -v" disk1.vmdk
+>> dis1.vmdk:
+>>  EXT: FILE-OFFSET        BLOCK-RANGE              TOTAL FLAGS
+>>    0: [0..511]:          1050143864..1050144375     512   0x0
+>>    1: [512..2047]:       hole                      1536
+>>    2: [2048..7167]:      1053279976..1053285095    5120   0x0
+>>    3: [7168..8703]:      hole                      1536
+>>    4: [8704..9727]:      1053286632..1053287655    1024   0x0
+>>    5: [9728..21503]:     hole                     11776
+>>    6: [21504..59391]:    1053299432..1053337319   37888   0x0
+>>    7: [59392..62975]:    hole                      3584
+>>    8: [62976..93183]:    1053340904..1053371111   30208   0x0
+>>    9: [93184..94207]:    hole                      1024
+>>   10: [94208..95231]:    1053372136..1053373159    1024   0x0
+>>   11: [95232..95743]:    hole                       512
+>>   12: [95744..98815]:    1053373672..1053376743    3072   0x0
+>>   13: [98816..112127]:   hole                     13312
+>>   14: [112128..113151]:  1053376744..1053377767    1024   0x0
+>>   15: [113152..113663]:  hole                       512
+>>   16: [113664..118271]:  1053378280..1053382887    4608   0x0
+>>   17: [118272..118783]:  hole                       512
+>>   18: [118784..119807]:  1053383400..1053384423    1024   0x0
+>>   19: [119808..120831]:  hole                      1024
+>>   20: [120832..123903]:  1053385448..1053388519    3072   0x0
+>>   21: [123904..206335]:  hole                     82432
+>>   22: [206336..207359]:  1053388520..1053389543    1024   0x0
+>>   23: [207360..283135]:  hole                     75776
+>>   24: [283136..283647]:  1053389544..1053390055     512   0x0
+>>   25: [283648..615935]:  hole                    332288
+>>   26: [615936..1587711]: 1121183712..1122155487  971776   0x0
+>>   27: [1587712..1588223]: hole                       512
+>>   28: [1588224..1638911]: 1122156000..1122206687   50688   0x0
+>>   29: [1638912..1640959]: hole                      2048
+>>   30: [1640960..1641983]: 1122208736..1122209759    1024   0x0
+>>   31: [1641984..1642495]: hole                       512
+>>   32: [1642496..1915391]: 1122210272..1122483167  272896   0x0
+>>   33: [1915392..1916415]: hole                      1024
+>>   34: [1916416..2077695]: 1122484192..1122645471  161280   0x0
+>>   35: [2077696..2079743]: hole                      2048
+>>   36: [2079744..2180607]: 1122647520..1122748383  100864   0x0
+>>   37: [2180608..2181119]: hole                       512
+>>   38: [2181120..2705919]: 1122748896..1123273695  524800   0x0
+>>   39: [2705920..2708991]: hole                      3072
+>>   40: [2708992..2776063]: 1123276768..1123343839   67072   0x0
+>>   41: [2776064..2777599]: hole                      1536
+>>   42: [2777600..3314687]: 1123345376..1123882463  537088   0x0
+>>   43: [3314688..3315199]: hole                       512
+>>   44: [3315200..3315711]: 1123882976..1123883487     512   0x0
+>>   45: [3315712..3316223]: hole                       512
+>>   46: [3316224..3317759]: 1123884000..1123885535    1536   0x0
+>>   47: [3317760..3318271]: hole                       512
+>>   48: [3318272..3318783]: 1123886048..1123886559     512   0x0
+>>   49: [3318784..3319807]: hole                      1024
+>>   50: [3319808..3454975]: 1123887584..1124022751  135168   0x0
+>>   51: [3454976..3458047]: hole                      3072
+>>   52: [3458048..4977151]: 1124025824..1125544927 1519104   0x0
+>>   53: [4977152..4977663]: hole                       512
+>>   54: [4977664..4995071]: 1125545440..1125562847   17408   0x0
+>>   55: [4995072..4996607]: hole                      1536
+>>   56: [4996608..6269951]: 1125564384..1126837727 1273344   0x0
+>>   57: [6269952..6270463]: hole                       512
+>>   58: [6270464..6275583]: 1126838240..1126843359    5120   0x0
+>>   59: [6275584..6295039]: hole                     19456
+>>   60: [6295040..6426623]: 1126862816..1126994399  131584   0x0
+>>   61: [6426624..6429695]: hole                      3072
+>>   62: [6429696..6572031]: 1126997472..1127139807  142336   0x0
+>>   63: [6572032..6579199]: hole                      7168
+>>   64: [6579200..6580223]: 1127139808..1127140831    1024   0x0
+>>   65: [6580224..6581759]: hole                      1536
+>>   66: [6581760..7496191]: 1127142368..1128056799  914432   0x0
+>>   67: [7496192..7496703]: hole                       512
+>>   68: [7496704..8169471]: 1128057312..1128730079  672768   0x0
+>>   69: [8169472..8170495]: hole                      1024
+>>   70: [8170496..8521215]: 1128731104..1129081823  350720   0x0
+>>   71: [8521216..8522239]: hole                      1024
+>>   72: [8522240..8763391]: 1129082848..1129323999  241152   0x0
+>>   73: [8763392..8763903]: hole                       512
+>>   74: [8763904..9417727]: 1129324512..1129978335  653824   0x0
+>>   75: [9417728..9420799]: hole                      3072
+>>   76: [9420800..9446399]: 1129981408..1130007007   25600   0x0
+>>   77: [9446400..9447423]: hole                      1024
+>>   78: [9447424..11557887]: 1130008032..1132118495 2110464   0x0
+>>   79: [11557888..11558399]: hole                       512
+>>   80: [11558400..11603967]: 1132119008..1132164575   45568   0x0
+>>   81: [11603968..11604479]: hole                       512
+>>   82: [11604480..11607551]: 1132165088..1132168159    3072   0x0
+>>   83: [11607552..11609599]: hole                      2048
+>>   84: [11609600..13382655]: 1132170208..1133943263 1773056   0x0
+>>   85: [13382656..13383167]: hole                       512
+>>   86: [13383168..16280063]: 1133943776..1136840671 2896896   0x0
+>>   87: [16280064..16280575]: hole                       512
+>>   88: [16280576..16674815]: 1136841184..1137235423  394240   0x0
+>>   89: [16674816..16676351]: hole                      1536
+>>   90: [16676352..16965631]: 1137236960..1137526239  289280   0x0
+>>   91: [16965632..16966655]: hole                      1024
+>>   92: [16966656..16969215]: 1137527264..1137529823    2560   0x0
+>>   93: [16969216..16970239]: hole                      1024
+>>   94: [16970240..16971775]: 1137530848..1137532383    1536   0x0
+>>   95: [16971776..16973311]: hole                      1536
+>>   96: [16973312..16975871]: 1137533920..1137536479    2560   0x0
+>>   97: [16975872..16976895]: hole                      1024
+>>   98: [16976896..16979967]: 1137537504..1137540575    3072   0x0
+>>   99: [16979968..16980991]: hole                      1024
+>>  100: [16980992..17009663]: 1137541600..1137570271   28672   0x0
+>>  101: [17009664..17011199]: hole                      1536
+>>  102: [17011200..17017855]: 1137571808..1137578463    6656   0x0
+>>  103: [17017856..17019391]: hole                      1536
+>>  104: [17019392..17023487]: 1137580000..1137584095    4096   0x0
+>>  105: [17023488..17024511]: hole                      1024
+>>  106: [17024512..17056255]: 1137585120..1137616863   31744   0x0
+>>  107: [17056256..17057791]: hole                      1536
+>>  108: [17057792..17059839]: 1137618400..1137620447    2048   0x0
+>>  109: [17059840..17061375]: hole                      1536
+>>  110: [17061376..17062911]: 1137621984..1137623519    1536   0x0
+>>  111: [17062912..17064447]: hole                      1536
+>>  112: [17064448..17066495]: 1137625056..1137627103    2048   0x0
+>>  113: [17066496..17068031]: hole                      1536
+>>  114: [17068032..17070591]: 1137628640..1137631199    2560   0x0
+>>  115: [17070592..17072127]: hole                      1536
+>>  116: [17072128..17100799]: 1137632736..1137661407   28672   0x0
+>>  117: [17100800..17101823]: hole                      1024
+>>  118: [17101824..17108991]: 1137662432..1137669599    7168   0x0
+>>  119: [17108992..17110015]: hole                      1024
+>>  120: [17110016..17114111]: 1137670624..1137674719    4096   0x0
+>>  121: [17114112..17115647]: hole                      1536
+>>  122: [17115648..17930751]: 1137676256..1138491359  815104   0x0
+>>  123: [17930752..17931775]: hole                      1024
+>>  124: [17931776..17932799]: 1138492384..1138493407    1024   0x0
+>>  125: [17932800..17947647]: hole                     14848
+>>  126: [17947648..18446335]: 1138508256..1139006943  498688   0x0
+>>  127: [18446336..18446847]: hole                       512
+>>  128: [18446848..18448383]: 1139007456..1139008991    1536   0x0
+>>  129: [18448384..18448895]: hole                       512
+>>  130: [18448896..18775551]: 1139009504..1139336159  326656   0x0
+>>  131: [18775552..18776063]: hole                       512
+>>  132: [18776064..18786815]: 1139336672..1139347423   10752   0x0
+>>  133: [18786816..18787327]: hole                       512
+>>  134: [18787328..19220991]: 1139347936..1139781599  433664   0x0
+>>  135: [19220992..19221503]: hole                       512
+>>  136: [19221504..19317759]: 1139782112..1139878367   96256   0x0
+>>  137: [19317760..19321343]: hole                      3584
+>>  138: [19321344..19453439]: 1139881952..1140014047  132096   0x0
+>>  139: [19453440..19453951]: hole                       512
+>>  140: [19453952..19520511]: 1140014560..1140081119   66560   0x0
+>>  141: [19520512..19521023]: hole                       512
+>>  142: [19521024..19810303]: 1140081632..1140370911  289280   0x0
+>>  143: [19810304..19810815]: hole                       512
+>>  144: [19810816..19834879]: 1140371424..1140395487   24064   0x0
+>>  145: [19834880..19835391]: hole                       512
+>>  146: [19835392..19974655]: 1140396000..1140535263  139264   0x0
+>>  147: [19974656..19975167]: hole                       512
+>>  148: [19975168..20068351]: 1140535776..1140628959   93184   0x0
+>>  149: [20068352..20068863]: hole                       512
+>>  150: [20068864..20730367]: 1140629472..1141290975  661504   0x0
+>>  151: [20730368..20731391]: hole                      1024
+>>  152: [20731392..20950015]: 1141292000..1141510623  218624   0x0
+>>  153: [20950016..20950527]: hole                       512
+>>  154: [20950528..21046271]: 1141511136..1141606879   95744   0x0
+>>  155: [21046272..21046783]: hole                       512
+>>  156: [21046784..21412351]: 1141607392..1141972959  365568   0x0
+>>  157: [21412352..21412863]: hole                       512
+>>  158: [21412864..21487615]: 1141973472..1142048223   74752   0x0
+>>  159: [21487616..21488127]: hole                       512
+>>  160: [21488128..21499903]: 1142048736..1142060511   11776   0x0
+>>  161: [21499904..21500415]: hole                       512
+>>  162: [21500416..21576191]: 1142061024..1142136799   75776   0x0
+>>  163: [21576192..21576703]: hole                       512
+>>  164: [21576704..22129663]: 1142137312..1142690271  552960   0x0
+>>  165: [22129664..22130175]: hole                       512
+>>  166: [22130176..22726655]: 1142690784..1143287263  596480   0x0
+>>  167: [22726656..22727167]: hole                       512
+>>  168: [22727168..22737407]: 1143287776..1143298015   10240   0x0
+>>  169: [22737408..22737919]: hole                       512
+>>  170: [22737920..22889047]: 1143298528..1143449655  151128   0x0
+>>  171: [22889048..22889983]: hole                       936
+>>  172: [22889984..23717887]: 1143450592..1144278495  827904   0x0
+>>  173: [23717888..23718399]: hole                       512
+>>  174: [23718400..23718911]: 1144279008..1144279519     512   0x0
+>>  175: [23718912..23719423]: hole                       512
+>>  176: [23719424..23719935]: 1144280032..1144280543     512   0x0
+>>  177: [23719936..23720447]: hole                       512
+>>  178: [23720448..23720959]: 1144281056..1144281567     512   0x0
+>>  179: [23720960..23721471]: hole                       512
+>>  180: [23721472..23721983]: 1144282080..1144282591     512   0x0
+>>  181: [23721984..23722495]: hole                       512
+>>  182: [23722496..23723007]: 1144283104..1144283615     512   0x0
+>>  183: [23723008..23723519]: hole                       512
+>>  184: [23723520..23776255]: 1144284128..1144336863   52736   0x0
+>>  185: [23776256..23776767]: hole                       512
+>>  186: [23776768..23906303]: 1144337376..1144466911  129536   0x0
+>>  187: [23906304..23907839]: hole                      1536
+>>  188: [23907840..24909311]: 1144468448..1145469919 1001472   0x0
+>>  189: [24909312..24912895]: hole                      3584
+>>  190: [24912896..25517055]: 1145473504..1146077663  604160   0x0
+>>  191: [25517056..25517567]: hole                       512
+>>  192: [25517568..27249151]: 1146078176..1147809759 1731584   0x0
+>>  193: [27249152..27250687]: hole                      1536
+>>  194: [27250688..27976191]: 1255777168..1256502671  725504   0x0
+>>  195: [27976192..27976703]: hole                       512
+>>  196: [27976704..28846591]: 1256503184..1257373071  869888   0x0
+>>  197: [28846592..28847103]: hole                       512
+>>  198: [28847104..30213631]: 1257373584..1258740111 1366528   0x0
+>>  199: [30213632..30561791]: 1527971360..1528319519  348160   0x0
+>>  200: [30561792..30563327]: hole                      1536
+>>  201: [30563328..30646783]: 1528321056..1528404511   83456   0x0
+>>  202: [30646784..30648319]: hole                      1536
+>>  203: [30648320..30949887]: 1528406048..1528707615  301568   0x0
+>>  204: [30949888..30950911]: hole                      1024
+>>  205: [30950912..31876607]: 1536943712..1537869407  925696   0x0
+>>  206: [31876608..31877119]: hole                       512
+>>  207: [31877120..32035839]: 1537869920..1538028639  158720   0x0
+>>  208: [32035840..32036351]: hole                       512
+>>  209: [32036352..32038911]: 1538029152..1538031711    2560   0x0
+>>  210: [32038912..32051199]: hole                     12288
+>>  211: [32051200..33149439]: 1538044000..1539142239 1098240   0x0
+>>  212: [33149440..33149951]: hole                       512
+>>  213: [33149952..33152511]: 1539142752..1539145311    2560   0x0
+>>  214: [33152512..33153023]: hole                       512
+>>  215: [33153024..33574399]: 1539145824..1539567199  421376   0x0
+>>  216: [33574400..33574911]: hole                       512
+>>  217: [33574912..33880575]: 1539567712..1539873375  305664   0x0
+>>  218: [33880576..33881087]: hole                       512
+>>  219: [33881088..33881599]: 1539873888..1539874399     512   0x0
+>>  220: [33881600..33882111]: hole                       512
+>>  221: [33882112..35149311]: 1539874912..1541142111 1267200   0x0
+>>  222: [35149312..35150847]: hole                      1536
+>>  223: [35150848..35222015]: 1541143648..1541214815   71168   0x0
+>>  224: [35222016..35224575]: hole                      2560
+>>  225: [35224576..36104703]: 1541217376..1542097503  880128   0x0
+>>  226: [36104704..36105215]: hole                       512
+>>  227: [36105216..38680063]: 1542098016..1544672863 2574848   0x0
+>>  228: [38680064..38680575]: hole                       512
+>>  229: [38680576..39073791]: 1544673376..1545066591  393216   0x0
+>>  230: [39073792..39074815]: hole                      1024
+>>  231: [39074816..39279615]: 1545067616..1545272415  204800   0x0
+>>  232: [39279616..39281151]: hole                      1536
+>>  233: [39281152..39755263]: 1545273952..1545748063  474112   0x0
+>>  234: [39755264..39755775]: hole                       512
+>>  235: [39755776..39841791]: 1545748576..1545834591   86016   0x0
+>>  236: [39841792..39842303]: hole                       512
+>>  237: [39842304..39950847]: 1545835104..1545943647  108544   0x0
+>>  238: [39950848..39951359]: hole                       512
+>>  239: [39951360..40153599]: 1545944160..1546146399  202240   0x0
+>>  240: [40153600..40154111]: hole                       512
+>>  241: [40154112..40155647]: 1546146912..1546148447    1536   0x0
+>>  242: [40155648..40156159]: hole                       512
+>>  243: [40156160..40638975]: 1546148960..1546631775  482816   0x0
+>>  244: [40638976..40639487]: hole                       512
+>>  245: [40639488..42035199]: 1546632288..1548027999 1395712   0x0
+>>  246: [42035200..42267647]: hole                    232448
+>>  247: [42267648..42768895]: 1548260448..1548761695  501248   0x0
+>>  248: [42768896..42769407]: hole                       512
+>>  249: [42769408..43847679]: 1548762208..1549840479 1078272   0x0
+>>  250: [43847680..43848191]: hole                       512
+>>  251: [43848192..49161215]: 1555150336..1560463359 5313024   0x0
+>>  252: [49161216..49161727]: hole                       512
+>>  253: [49161728..50155519]: 1560463872..1561457663  993792   0x0
+>>  254: [50155520..50158079]: hole                      2560
+>>  255: [50158080..53785599]: 1561460224..1565087743 3627520   0x0
+>>  256: [53785600..53792767]: hole                      7168
+>>  257: [53792768..53894143]: 1647416720..1647518095  101376   0x0
+>>  258: [53894144..53894655]: hole                       512
+>>  259: [53894656..53927423]: 1647518608..1647551375   32768   0x0
+>>  260: [53927424..53931007]: hole                      3584
+>>  261: [53931008..54220799]: 1647554960..1647844751  289792   0x0
+>>  262: [54220800..54222335]: hole                      1536
+>>  263: [54222336..54240767]: 1647846288..1647864719   18432   0x0
+>>  264: [54240768..54242303]: hole                      1536
+>>  265: [54242304..56899583]: 1647866256..1650523535 2657280   0x0
+>>  266: [56899584..56901631]: hole                      2048
+>>  267: [56901632..57228799]: 1650525584..1650852751  327168   0x0
+>>  268: [57228800..57229311]: hole                       512
+>>  269: [57229312..57231359]: 1650853264..1650855311    2048   0x0
+>>  270: [57231360..57232383]: hole                      1024
+>>  271: [57232384..60652031]: 1650856336..1654275983 3419648   0x0
+>>  272: [60652032..60653567]: hole                      1536
+>>  273: [60653568..62283263]: 1654277520..1655907215 1629696   0x0
+>>  274: [62283264..62283775]: hole                       512
+>>  275: [62283776..62284287]: 1655907728..1655908239     512   0x0
+>>  276: [62284288..62284799]: hole                       512
+>>  277: [62284800..62285311]: 1655908752..1655909263     512   0x0
+>>  278: [62285312..62285823]: hole                       512
+>>  279: [62285824..62326271]: 1655909776..1655950223   40448   0x0
+>>  280: [62326272..62326783]: hole                       512
+>>  281: [62326784..62327295]: 1655950736..1655951247     512   0x0
+>>  282: [62327296..62327807]: hole                       512
+>>  283: [62327808..62328319]: 1655951760..1655952271     512   0x0
+>>  284: [62328320..62328831]: hole                       512
+>>  285: [62328832..62329855]: 1655952784..1655953807    1024   0x0
+>>  286: [62329856..62344191]: hole                     14336
+>>  287: [62344192..63342591]: 1655968144..1656966543  998400   0x0
+>>  288: [63342592..63343103]: hole                       512
+>>  289: [63343104..64867327]: 1656967056..1658491279 1524224   0x0
+>>  290: [64867328..64867839]: hole                       512
+>>  291: [64867840..65309695]: 1658491792..1658933647  441856   0x0
+>>  292: [65309696..65311231]: hole                      1536
+>>  293: [65311232..66819071]: 1658935184..1660443023 1507840   0x0
+>>  294: [66819072..66819583]: hole                       512
+>>  295: [66819584..70855679]: 1660443536..1664479631 4036096   0x0
+>>  296: [70855680..70857215]: hole                      1536
+>>  297: [70857216..71413759]: 1664481168..1665037711  556544   0x0
+>>  298: [71413760..71415295]: hole                      1536
+>>  299: [71415296..73234431]: 1665039248..1666858383 1819136   0x0
+>>  300: [73234432..73235967]: hole                      1536
+>>  301: [73235968..73295871]: 1666859920..1666919823   59904   0x0
+>>  302: [73295872..73297407]: hole                      1536
+>>  303: [73297408..76191743]: 1666921360..1669815695 2894336   0x0
+>>  304: [76191744..76200959]: hole                      9216
+>>  305: [76200960..82762239]: 1669824912..1676386191 6561280   0x0
+>>  306: [82762240..82763263]: hole                      1024
+>>  307: [82763264..82786303]: 1676387216..1676410255   23040   0x0
+>>  308: [82786304..82787839]: hole                      1536
+>>  309: [82787840..82791423]: 1676411792..1676415375    3584   0x0
+>>  310: [82791424..82792959]: hole                      1536
+>>  311: [82792960..82793983]: 1676416912..1676417935    1024   0x0
+>>  312: [82793984..82795519]: hole                      1536
+>>  313: [82795520..82796031]: 1676419472..1676419983     512   0x0
+>>  314: [82796032..82797567]: hole                      1536
+>>  315: [82797568..82804735]: 1676421520..1676428687    7168   0x0
+>>  316: [82804736..82807807]: hole                      3072
+>>  317: [82807808..82819583]: 1676431760..1676443535   11776   0x0
+>>  318: [82819584..82821119]: hole                      1536
+>>  319: [82821120..82829823]: 1676445072..1676453775    8704   0x0
+>>  320: [82829824..82831359]: hole                      1536
+>>  321: [82831360..82843647]: 1676455312..1676467599   12288   0x0
+>>  322: [82843648..82845183]: hole                      1536
+>>  323: [82845184..82845695]: 1676469136..1676469647     512   0x0
+>>  324: [82845696..82847231]: hole                      1536
+>>  325: [82847232..97640959]: 1676471184..1691264911 14793728   0x0
+>>  326: [97640960..97648639]: hole                      7680
+>>  327: [97648640..97786879]: 1691272592..1691410831  138240   0x0
+>>  328: [97786880..97787391]: hole                       512
+>>  329: [97787392..97944575]: 1691411344..1691568527  157184   0x0
+>>  330: [97944576..97946111]: hole                      1536
+>>  331: [97946112..98564095]: 1691570064..1692188047  617984   0x0
+>>  332: [98564096..98565631]: hole                      1536
+>>  333: [98565632..98566143]: 1692189584..1692190095     512   0x1
+>>
+>> # xfs_io -c "fiemap -v" disk2.vmdk
+>> disk2.vmdk
+>>  EXT: FILE-OFFSET        BLOCK-RANGE              TOTAL FLAGS
+>>    0: [0..159]:          1050144384..1050144543     160   0x0
+>>    1: [160..167]:        hole                         8
+>>    2: [168..511]:        1050144552..1050144895     344   0x0
+>>    3: [512..527]:        hole                        16
+>>    4: [528..671]:        1050144912..1050145055     144   0x0
+>>    5: [672..679]:        hole                         8
+>>    6: [680..1023]:       1050145064..1050145407     344   0x0
+>>    7: [1024..1039]:      hole                        16
+>>    8: [1040..1047]:      1050145424..1050145431       8   0x0
+>>    9: [1048..1143]:      hole                        96
+>>   10: [1144..263167]:    1053390336..1053652359  262024   0x0
+>>   11: [263168..2679415]: 1147809792..1150226039 2416248   0x0
+>>   12: [2679416..2680439]: hole                      1024
+>>   13: [2680440..3880567]: 1150227064..1151427191 1200128   0x0
+>>   14: [3880568..3881079]: hole                       512
+>>   15: [3881080..7472247]: 1151427704..1155018871 3591168   0x1
+>>   16: [7472248..7472255]: hole                         8
+>
