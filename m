@@ -1,65 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56221 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:43086 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752175AbdB1O6E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 09:58:04 -0500
+        with ESMTP id S1750984AbdBAVmr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2017 16:42:47 -0500
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1cZ2fu-0003dW-I1
+        for linux-xfs@vger.kernel.org; Wed, 01 Feb 2017 21:42:47 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/12] nvme: export the atomic write limit
-Date: Tue, 28 Feb 2017 06:57:37 -0800
-Message-Id: <20170228145737.19016-13-hch@lst.de>
-In-Reply-To: <20170228145737.19016-1-hch@lst.de>
-References: <20170228145737.19016-1-hch@lst.de>
+Subject: [PATCH 1/4] xfs: reject all unaligned direct writes to reflinked files
+Date: Wed,  1 Feb 2017 22:42:36 +0100
+Message-Id: <1485985359-971-2-git-send-email-hch@lst.de>
+In-Reply-To: <1485985359-971-1-git-send-email-hch@lst.de>
+References: <1485985359-971-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+
+We currently fall back from direct to buffered writes if we detect a
+remaining shared extent in the iomap_begin callback.  But by the time
+iomap_begin is called for the potentially unaligned end block we might
+have already written most of the data to disk, which we'd now write
+again using buffered I/O.  To avoid this reject all writes to reflinked
+files before starting I/O so that we are guaranteed to only write the
+data once.
+
+The alternative would be to unshare the unaligned start and/or end block
+before doing the I/O. I think that's doable, and will actually be
+required to support reflinks on DAX file system.  But it will take a
+little more time and I'd rather get rid of the double write ASAP.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- drivers/nvme/host/core.c | 10 ++++++++++
- drivers/nvme/host/nvme.h |  1 +
- 2 files changed, 11 insertions(+)
+ fs/xfs/xfs_file.c  |  7 +++++++
+ fs/xfs/xfs_iomap.c | 12 +-----------
+ 2 files changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 8a3c3e32a704..e86d07589f18 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -926,6 +926,15 @@ static void __nvme_revalidate_disk(struct gendisk *disk, struct nvme_id_ns *id)
- 	ns->pi_type = pi_type;
- 	blk_queue_logical_block_size(ns->queue, bs);
- 
-+	/*
-+	 * Advertisze the maximum atomic write size.  Don't bother with the
-+	 * per-namespace values due to their alignment constraints.
-+	 */
-+	if (ns->ctrl->awupf > 1) {
-+		blk_queue_max_atomic_write_sectors(ns->queue,
-+			(ns->ctrl->awupf + 1) << (ns->lba_shift - 9));
-+	}
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index bbb9eb6..06236bf 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -527,6 +527,13 @@ xfs_file_dio_aio_write(
+ 	if ((iocb->ki_pos & mp->m_blockmask) ||
+ 	    ((iocb->ki_pos + count) & mp->m_blockmask)) {
+ 		unaligned_io = 1;
 +
- 	if (ns->ms && !blk_get_integrity(disk) && !ns->ext)
- 		nvme_init_integrity(ns);
- 	if (ns->ms && !(ns->ms == 8 && ns->pi_type) && !blk_get_integrity(disk))
-@@ -1232,6 +1241,7 @@ int nvme_init_identify(struct nvme_ctrl *ctrl)
++		/*
++		 * We can't properly handle unaligned direct I/O to reflink
++		 * files yet, as we can't unshare a partial block.
++		 */
++		if (xfs_is_reflink_inode(ip))
++			return -EREMCHG;
+ 		iolock = XFS_IOLOCK_EXCL;
+ 	} else {
+ 		iolock = XFS_IOLOCK_SHARED;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 767208f..d17aa3b 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1026,17 +1026,7 @@ xfs_file_iomap_begin(
+ 		if (error)
+ 			goto out_unlock;
  
- 	ctrl->vid = le16_to_cpu(id->vid);
- 	ctrl->oncs = le16_to_cpup(&id->oncs);
-+	ctrl->awupf = le16_to_cpu(id->awupf);
- 	atomic_set(&ctrl->abort_limit, id->acl + 1);
- 	ctrl->vwc = id->vwc;
- 	ctrl->cntlid = le16_to_cpup(&id->cntlid);
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index aead6d08ed2c..020ffd6f7863 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -143,6 +143,7 @@ struct nvme_ctrl {
- 	u32 vs;
- 	u32 sgls;
- 	u16 kas;
-+	u16 awupf;
- 	unsigned int kato;
- 	bool subsystem;
- 	unsigned long quirks;
+-		/*
+-		 * We're here because we're trying to do a directio write to a
+-		 * region that isn't aligned to a filesystem block.  If the
+-		 * extent is shared, fall back to buffered mode to handle the
+-		 * RMW.
+-		 */
+-		if (!(flags & IOMAP_REPORT) && shared) {
+-			trace_xfs_reflink_bounce_dio_write(ip, &imap);
+-			error = -EREMCHG;
+-			goto out_unlock;
+-		}
++		ASSERT((flags & IOMAP_REPORT) || !shared);
+ 	}
+ 
+ 	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
 -- 
-2.11.0
+2.1.4
 
