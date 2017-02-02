@@ -1,51 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58795 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751308AbdBBQZr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 11:25:47 -0500
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cZKBv-0005zW-0s
-        for linux-xfs@vger.kernel.org; Thu, 02 Feb 2017 16:24:59 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: update ctime and mtime on clone destinatation inodes
-Date: Thu,  2 Feb 2017 17:24:56 +0100
-Message-Id: <20170202162456.20574-1-hch@lst.de>
+Received: from mail-ot0-f175.google.com ([74.125.82.175]:34664 "EHLO
+        mail-ot0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751377AbdBBQqK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 11:46:10 -0500
+Received: by mail-ot0-f175.google.com with SMTP id f9so16131600otd.1
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Feb 2017 08:46:10 -0800 (PST)
+MIME-Version: 1.0
+From: fuser ct1 <fuserct1@gmail.com>
+Date: Thu, 2 Feb 2017 16:46:09 +0000
+Message-ID: <CAL8yqihyYEaCEzWJLqAKsw1BBOQDm-AYR2dCUeN-X-449jCwzQ@mail.gmail.com>
+Subject: Safe XFS limits (100TB+)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-We're changing both metadata and data, so we need to update the
-timestamps.   This follows existing btrfs behavior.
+Hello list.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_reflink.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Despite searching I couldn't find guidance, or many use cases, regarding
+XFS beyond 100TB.
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index d5a2cf2b469b..8877e6f5e35d 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -967,9 +967,6 @@ xfs_reflink_update_dest(
- 	struct xfs_trans	*tp;
- 	int			error;
- 
--	if (newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
--		return 0;
--
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
- 	if (error)
- 		goto out_error;
-@@ -988,6 +985,7 @@ xfs_reflink_update_dest(
- 		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 	}
- 
-+	xfs_trans_ichgtime(tp, dest, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
- 
- 	error = xfs_trans_commit(tp);
--- 
-2.11.0
+Of course the filesystem limits are way beyond this, but I was looking for
+real world experiences...
 
+Specifically I'm wondering about the sanity of using XFS with a couple of
+144TB block devices (my system will have two 22x8TB R60 in a 44 bay JBOD).
+My storage is used for video editing/post production.
+
+* Has anybody here tried?
+* What is the likelihood of xfs_repair/check finishing if I ever needed to
+run it?
+* Am I nuts?
+
+I know that beyond a certain point I should be looking at a scale out
+option, but the level of complexity and cost goes up considerably.
+
+More info:
+=======
+
+Previously I had an 80TB usable (96TB raw) with an LSI MegaRAID 9361
+controller. This worked very nicely and was FAST. I was careful to choose
+the inode64 fstab mount option. The OS was Debian Jessie, which has
+XFSPROGS version 3.2.1.
+
+Thanks in advance and sorry if this is not the right list.
