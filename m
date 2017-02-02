@@ -1,60 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45333 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752309AbdBBRev (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Feb 2017 12:34:51 -0500
-Subject: Re: 4.9-stable updates for XFS
-References: <1486022171-8076-1-git-send-email-hch@lst.de>
- <e2f39f4b-b906-5b66-56a3-0cd42fa7a309@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <af6be1f1-693d-f0ae-4bc6-4e301951bfcc@sandeen.net>
-Date: Thu, 2 Feb 2017 11:34:50 -0600
+Received: from aserp1040.oracle.com ([141.146.126.69]:31532 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751811AbdBBRpy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 12:45:54 -0500
+Date: Thu, 2 Feb 2017 09:45:47 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: update ctime and mtime on clone destinatation inodes
+Message-ID: <20170202174547.GN9134@birch.djwong.org>
+References: <20170202162456.20574-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <e2f39f4b-b906-5b66-56a3-0cd42fa7a309@sandeen.net>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170202162456.20574-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On 2/2/17 10:00 AM, Eric Sandeen wrote:
-> On 2/2/17 1:55 AM, Christoph Hellwig wrote:
->> Hi all,
->>
->> below are backports up to 4.10-rc6 for XFS.  I've selected all clear
->> bugfixes for reported bugs.  I've skipped the finobt space reservation
->> patch for now - I think it is stable material, but I want it to settle
->> a bit more first.
+On Thu, Feb 02, 2017 at 05:24:56PM +0100, Christoph Hellwig wrote:
+> We're changing both metadata and data, so we need to update the
+> timestamps.   This follows existing btrfs behavior.
+
+/me wonders, should the mtime change if we're deduping?  We're
+definitely changing metadata, but we shouldn't be making any
+user-visible changes to the file data.
+
+--D
+
 > 
-> fwiw, the finobt space reservation thing also seems to be doing something
-> odd with allocation on striped storage, unless I'm missing something.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_reflink.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
 > 
-> If I stick an xfs_bmap -v into generic/108 after we write the initial
-> file, we find that it's not stripe aligned with that patch in place,
-> which seems unexpected.  I haven't yet worked out why, was first trying
-> to sort out that lvm error propagation problem...
-
-Ok, I guess this may not be a big deal.  Because this is a small filesystem
-in the test, and striped, we end up with small AGs:
-
-meta-data=/dev/mapper/vg_108-lv_108 isize=512    agcount=9, agsize=7168 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
-data     =                       bsize=4096   blocks=63488, imaxpct=25
-         =                       sunit=1024   swidth=2048 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =/dev/sdb3              bsize=4096   blocks=32768, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-each only 7168 blocks, or about 28M.
-
-We try to do a 16M write, and xfs would like that to be stripe aligned.
-I'm not quite sure why it's failing, but for a larger filesystem things
-do come out aligned again.  I'll keep digging but I don't think there's
-any fundamental problem here, this is a weird, small filesystem.
-
--Eric
-
-
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index d5a2cf2b469b..8877e6f5e35d 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -967,9 +967,6 @@ xfs_reflink_update_dest(
+>  	struct xfs_trans	*tp;
+>  	int			error;
+>  
+> -	if (newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
+> -		return 0;
+> -
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
+>  	if (error)
+>  		goto out_error;
+> @@ -988,6 +985,7 @@ xfs_reflink_update_dest(
+>  		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+>  	}
+>  
+> +	xfs_trans_ichgtime(tp, dest, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+>  	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
+>  
+>  	error = xfs_trans_commit(tp);
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
