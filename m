@@ -1,66 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f53.google.com ([209.85.213.53]:36015 "EHLO
-        mail-vk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932402AbdBVLzx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Feb 2017 06:55:53 -0500
-Received: by mail-vk0-f53.google.com with SMTP id t8so120233vke.3
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Feb 2017 03:55:52 -0800 (PST)
+Received: from mail.webx.cz ([109.123.222.201]:47602 "EHLO mail.webx.cz"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750881AbdBBIfi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Feb 2017 03:35:38 -0500
+From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
+Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
+Date: Thu, 02 Feb 2017 09:35:34 +0100
+Message-ID: <371530044.aY76b0UHp3@libor-nb>
+In-Reply-To: <8a918652-f073-6c6e-0926-5a3b3f02e691@sandeen.net>
+References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com> <3965431.22NzgsWbJj@libor-nb> <8a918652-f073-6c6e-0926-5a3b3f02e691@sandeen.net>
 MIME-Version: 1.0
-From: Vaibhaw Pandey <vaibhaw@scalegrid.io>
-Date: Wed, 22 Feb 2017 17:25:51 +0530
-Message-ID: <CADWLRhrkA6pa_OeddSf281Lr+53JyEp5dxaHc+KTJPRLShWvkQ@mail.gmail.com>
-Subject: Consider these for the XFS FAQ wiki
-Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Hey,
+Hi,
 
-I had recently run into the ext4 auto_da_alloc delayed allocation type
-behavior with XFS i.e. replace by rename leaving an empty file behind.
-It took me forever to debug it cause I couldn't find answers to some
-simple questions right away.
+On středa 1. února 2017 16:49:49 CET Eric Sandeen wrote:
+> On 2/1/17 6:48 AM, Libor Klepáč wrote:
+> > Hello,
+> > we tried also on vps1 reported here in bottom of email
+> > https://www.spinics.net/lists/linux-xfs/msg01728.html
+> > and vps3 from this email
+> > https://www.spinics.net/lists/linux-xfs/msg02672.html
+> > 
+> > Both came clean. Does it mean, that corruption was really only in memory 
+> > and did not made it to disks?
+> 
+> The point of the xfs_repair patch was to fix the problem
+> on-disk.
+Yes, i understand that
 
-You guys are the experts but I would like to suggest adding some
-questions (& answers) to the XFS FAQ doc for the clueless folks like
-me.
+> 
+> I'm not sure what steps your machines have been through, so I
+> can't really speak to their situation, but assuming the repairs
+> below were with the patch in place, it appears that they are
+> clean now.
+> 
+Ok, seems fair ;)
 
-I would suggest the following questions:
-
-0. Does XFS support a mount option equivalent to ext4's auto_da_alloc?
-i.e. Does XFS have the workarounds to support the replace by truncate
-and replace by rename?
-Ans:
-Answered exactly in http://oss.sgi.com/archives/xfs/2015-12/msg00553.html
-
-1. Does XFS support a mount option equivalent to ext4's commit? i.e.
-How do I control how often does XFS sync to disk? Or Does XFS never
-sync to disk until a sync/fsync is called?
-
-Ans:
-Answered here: http://article.gmane.org/gmane.comp.file-systems.xfs.general/53376
-Reproducing from source:
-<snip>
-By and large, buffered IO in a filesystem is flushed out by the vm,
-due to either age or memory pressure.  The filesystem then responds
-to these requests by the VM, writing data as requested.
-
-You can read all about it in
-https://www.kernel.org/doc/Documentation/sysctl/vm.txt See
-dirty_expire_centisecs and dirty_writeback_centisecs - flushers wake
-up every 30s and push on data more than 5s old, by default.
-</snip>
-
-2. What is the maximum size of the XFS journal?
-Ans: Not sure. But this is the closest answer I could find:
-https://serverfault.com/questions/367973/xfs-maximum-log-size-sw-raid-10-mdadm-sles-11-sp1
-I could read through the code and find a better answer in case you
-folks wouldn't have the time.
-
-
-Lemme know what you think.
+> -Eric
 
 Thanks,
-Vaibhaw
+Libor
+
