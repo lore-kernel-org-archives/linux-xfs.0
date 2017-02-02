@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:41827 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:59861 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750926AbdBBH4q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:56:46 -0500
+        with ESMTP id S1751041AbdBBH4u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:56:50 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/19] xfs: add missing include dependencies to xfs_dir2.h
-Date: Thu,  2 Feb 2017 08:56:00 +0100
-Message-Id: <1486022171-8076-9-git-send-email-hch@lst.de>
+Subject: [PATCH 09/19] xfs: replace xfs_mode_to_ftype table with switch statement
+Date: Thu,  2 Feb 2017 08:56:01 +0100
+Message-Id: <1486022171-8076-10-git-send-email-hch@lst.de>
 In-Reply-To: <1486022171-8076-1-git-send-email-hch@lst.de>
 References: <1486022171-8076-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,34 +17,103 @@ Cc: linux-xfs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, "Darrick J. 
 
 From: Amir Goldstein <amir73il@gmail.com>
 
-commit b597dd5373a1ccc08218665dc8417433b1c09550 upstream.
+commit 1fc4d33fed124fb182e8e6c214e973a29389ae83.
 
-xfs_dir2.h dereferences some data types in inline functions
-and fails to include those type definitions, e.g.:
-xfs_dir2_data_aoff_t, struct xfs_da_geometry.
+The size of the xfs_mode_to_ftype[] conversion table
+was too small to handle an invalid value of mode=S_IFMT.
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Instead of fixing the table size, replace the conversion table
+with a conversion helper that uses a switch statement.
+
+Suggested-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_dir2.h | 3 +++
- 1 file changed, 3 insertions(+)
+ fs/xfs/libxfs/xfs_dir2.c | 36 ++++++++++++++++++++++--------------
+ fs/xfs/libxfs/xfs_dir2.h |  5 ++---
+ fs/xfs/xfs_iops.c        |  2 +-
+ 3 files changed, 25 insertions(+), 18 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index ec326d2..1a978bd 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -36,21 +36,29 @@
+ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+ 
+ /*
+- * @mode, if set, indicates that the type field needs to be set up.
+- * This uses the transformation from file mode to DT_* as defined in linux/fs.h
+- * for file type specification. This will be propagated into the directory
+- * structure if appropriate for the given operation and filesystem config.
++ * Convert inode mode to directory entry filetype
+  */
+-const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
+-	[0]			= XFS_DIR3_FT_UNKNOWN,
+-	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
+-	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
+-	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
+-	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
+-	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
+-	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
+-	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
+-};
++const unsigned char xfs_mode_to_ftype(int mode)
++{
++	switch (mode & S_IFMT) {
++	case S_IFREG:
++		return XFS_DIR3_FT_REG_FILE;
++	case S_IFDIR:
++		return XFS_DIR3_FT_DIR;
++	case S_IFCHR:
++		return XFS_DIR3_FT_CHRDEV;
++	case S_IFBLK:
++		return XFS_DIR3_FT_BLKDEV;
++	case S_IFIFO:
++		return XFS_DIR3_FT_FIFO;
++	case S_IFSOCK:
++		return XFS_DIR3_FT_SOCK;
++	case S_IFLNK:
++		return XFS_DIR3_FT_SYMLINK;
++	default:
++		return XFS_DIR3_FT_UNKNOWN;
++	}
++}
+ 
+ /*
+  * ASCII case-insensitive (ie. A-Z) support for directories that was
 diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index becc926..6a3fe31 100644
+index 6a3fe31..0051a34 100644
 --- a/fs/xfs/libxfs/xfs_dir2.h
 +++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -18,6 +18,9 @@
- #ifndef __XFS_DIR2_H__
- #define __XFS_DIR2_H__
+@@ -35,10 +35,9 @@ struct xfs_dir2_data_unused;
+ extern struct xfs_name	xfs_name_dotdot;
  
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+
- struct xfs_defer_ops;
- struct xfs_da_args;
- struct xfs_inode;
+ /*
+- * directory filetype conversion tables.
++ * Convert inode mode to directory entry filetype
+  */
+-#define S_SHIFT 12
+-extern const unsigned char xfs_mode_to_ftype[];
++extern const unsigned char xfs_mode_to_ftype(int mode);
+ 
+ /*
+  * directory operations vector for encode/decode routines
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 405a65c..1abe719 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -103,7 +103,7 @@ xfs_dentry_to_name(
+ {
+ 	namep->name = dentry->d_name.name;
+ 	namep->len = dentry->d_name.len;
+-	namep->type = xfs_mode_to_ftype[(mode & S_IFMT) >> S_SHIFT];
++	namep->type = xfs_mode_to_ftype(mode);
+ }
+ 
+ STATIC void
 -- 
 2.1.4
 
