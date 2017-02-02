@@ -1,48 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44027 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:34938 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751018AbdBBH5M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:57:12 -0500
+        with ESMTP id S1751018AbdBBH5Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:57:16 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/19] xfs: verify dirblocklog correctly
-Date: Thu,  2 Feb 2017 08:56:07 +0100
-Message-Id: <1486022171-8076-16-git-send-email-hch@lst.de>
+Subject: [PATCH 16/19] xfs: remove racy hasattr check from attr ops
+Date: Thu,  2 Feb 2017 08:56:08 +0100
+Message-Id: <1486022171-8076-17-git-send-email-hch@lst.de>
 In-Reply-To: <1486022171-8076-1-git-send-email-hch@lst.de>
 References: <1486022171-8076-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit 83d230eb5c638949350f4761acdfc0af5cb1bc00 upstream.
+commit 5a93790d4e2df73e30c965ec6e49be82fc3ccfce upstream.
 
-sb_dirblklog is added to sb_blocklog to compute the directory block size
-in bytes.  Therefore, we must compare the sum of both those values
-against XFS_MAX_BLOCKSIZE_LOG, not just dirblklog.
+xfs_attr_[get|remove]() have unlocked attribute fork checks to optimize
+away a lock cycle in cases where the fork does not exist or is otherwise
+empty. This check is not safe, however, because an attribute fork short
+form to extent format conversion includes a transient state that causes
+the xfs_inode_hasattr() check to fail. Specifically,
+xfs_attr_shortform_to_leaf() creates an empty extent format attribute
+fork and then adds the existing shortform attributes to it.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+This means that lookup of an existing xattr can spuriously return
+-ENOATTR when racing against a setxattr that causes the associated
+format conversion. This was originally reproduced by an untar on a
+particularly configured glusterfs volume, but can also be reproduced on
+demand with properly crafted xattr requests.
+
+The format conversion occurs under the exclusive ilock. xfs_attr_get()
+and xfs_attr_remove() already have the proper locking and checks further
+down in the functions to handle this situation correctly. Drop the
+unlocked checks to avoid the spurious failure and rely on the existing
+logic.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_sb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_attr.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 2580262..584ec89 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -242,7 +242,7 @@ xfs_mount_validate_sb(
- 	    sbp->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG			||
- 	    sbp->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG			||
- 	    sbp->sb_blocksize != (1 << sbp->sb_blocklog)		||
--	    sbp->sb_dirblklog > XFS_MAX_BLOCKSIZE_LOG			||
-+	    sbp->sb_dirblklog + sbp->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG ||
- 	    sbp->sb_inodesize < XFS_DINODE_MIN_SIZE			||
- 	    sbp->sb_inodesize > XFS_DINODE_MAX_SIZE			||
- 	    sbp->sb_inodelog < XFS_DINODE_MIN_LOG			||
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index af1ecb1..6622d46 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -131,9 +131,6 @@ xfs_attr_get(
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
+ 
+-	if (!xfs_inode_hasattr(ip))
+-		return -ENOATTR;
+-
+ 	error = xfs_attr_args_init(&args, ip, name, flags);
+ 	if (error)
+ 		return error;
+@@ -392,9 +389,6 @@ xfs_attr_remove(
+ 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+ 		return -EIO;
+ 
+-	if (!xfs_inode_hasattr(dp))
+-		return -ENOATTR;
+-
+ 	error = xfs_attr_args_init(&args, dp, name, flags);
+ 	if (error)
+ 		return error;
 -- 
 2.1.4
 
