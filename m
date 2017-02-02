@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39909 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:47875 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750939AbdBBH4x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:56:53 -0500
+        with ESMTP id S1751052AbdBBH45 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:56:57 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/19] xfs: sanity check inode mode when creating new dentry
-Date: Thu,  2 Feb 2017 08:56:02 +0100
-Message-Id: <1486022171-8076-11-git-send-email-hch@lst.de>
+Subject: [PATCH 11/19] xfs: sanity check inode di_mode
+Date: Thu,  2 Feb 2017 08:56:03 +0100
+Message-Id: <1486022171-8076-12-git-send-email-hch@lst.de>
 In-Reply-To: <1486022171-8076-1-git-send-email-hch@lst.de>
 References: <1486022171-8076-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,160 +17,41 @@ Cc: linux-xfs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, "Darrick J. 
 
 From: Amir Goldstein <amir73il@gmail.com>
 
-commit fab8eef86c814c3dd46bc5d760b6e4a53d5fc5a6 upstream.
+commit a324cbf10a3c67aaa10c9f47f7b5801562925bc2 upstream.
 
-The helper xfs_dentry_to_name() is used by 2 different
-classes of callers: Callers that pass zero mode and don't care
-about the returned name.type field and Callers that pass
-non zero mode and do care about the name.type field.
+Check for invalid file type in xfs_dinode_verify()
+and fail to load the inode structure from disk.
 
-Change xfs_dentry_to_name() to not take the mode argument and
-change the call sites of the first class to not pass the mode
-argument.
-
-Create a new helper xfs_dentry_mode_to_name() which does pass
-the mode argument and returns -EFSCORRUPTED if mode is invalid.
-Callers that translate non zero mode to on-disk file type now
-check the return value and will export the error to user instead
-of staging an invalid file type to be written to directory entry.
-
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_iops.c | 48 +++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 39 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 1abe719..f5e0f60 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -98,12 +98,27 @@ xfs_init_security(
- static void
- xfs_dentry_to_name(
- 	struct xfs_name	*namep,
-+	struct dentry	*dentry)
-+{
-+	namep->name = dentry->d_name.name;
-+	namep->len = dentry->d_name.len;
-+	namep->type = XFS_DIR3_FT_UNKNOWN;
-+}
-+
-+static int
-+xfs_dentry_mode_to_name(
-+	struct xfs_name	*namep,
- 	struct dentry	*dentry,
- 	int		mode)
- {
- 	namep->name = dentry->d_name.name;
- 	namep->len = dentry->d_name.len;
- 	namep->type = xfs_mode_to_ftype(mode);
-+
-+	if (unlikely(namep->type == XFS_DIR3_FT_UNKNOWN))
-+		return -EFSCORRUPTED;
-+
-+	return 0;
- }
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 977245d..37ee7f0 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -29,6 +29,7 @@
+ #include "xfs_icache.h"
+ #include "xfs_trans.h"
+ #include "xfs_ialloc.h"
++#include "xfs_dir2.h"
  
- STATIC void
-@@ -119,7 +134,7 @@ xfs_cleanup_inode(
- 	 * xfs_init_security we must back out.
- 	 * ENOSPC can hit here, among other things.
- 	 */
--	xfs_dentry_to_name(&teardown, dentry, 0);
-+	xfs_dentry_to_name(&teardown, dentry);
+ /*
+  * Check that none of the inode's in the buffer have a next
+@@ -398,6 +399,8 @@ xfs_dinode_verify(
+ 		return false;
  
- 	xfs_remove(XFS_I(dir), &teardown, XFS_I(inode));
- }
-@@ -154,8 +169,12 @@ xfs_generic_create(
- 	if (error)
- 		return error;
+ 	mode = be16_to_cpu(dip->di_mode);
++	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
++		return false;
  
-+	/* Verify mode is valid also for tmpfile case */
-+	error = xfs_dentry_mode_to_name(&name, dentry, mode);
-+	if (unlikely(error))
-+		goto out_free_acl;
-+
- 	if (!tmpfile) {
--		xfs_dentry_to_name(&name, dentry, mode);
- 		error = xfs_create(XFS_I(dir), &name, mode, rdev, &ip);
- 	} else {
- 		error = xfs_create_tmpfile(XFS_I(dir), dentry, mode, &ip);
-@@ -248,7 +267,7 @@ xfs_vn_lookup(
- 	if (dentry->d_name.len >= MAXNAMELEN)
- 		return ERR_PTR(-ENAMETOOLONG);
- 
--	xfs_dentry_to_name(&name, dentry, 0);
-+	xfs_dentry_to_name(&name, dentry);
- 	error = xfs_lookup(XFS_I(dir), &name, &cip, NULL);
- 	if (unlikely(error)) {
- 		if (unlikely(error != -ENOENT))
-@@ -275,7 +294,7 @@ xfs_vn_ci_lookup(
- 	if (dentry->d_name.len >= MAXNAMELEN)
- 		return ERR_PTR(-ENAMETOOLONG);
- 
--	xfs_dentry_to_name(&xname, dentry, 0);
-+	xfs_dentry_to_name(&xname, dentry);
- 	error = xfs_lookup(XFS_I(dir), &xname, &ip, &ci_name);
- 	if (unlikely(error)) {
- 		if (unlikely(error != -ENOENT))
-@@ -310,7 +329,9 @@ xfs_vn_link(
- 	struct xfs_name	name;
- 	int		error;
- 
--	xfs_dentry_to_name(&name, dentry, inode->i_mode);
-+	error = xfs_dentry_mode_to_name(&name, dentry, inode->i_mode);
-+	if (unlikely(error))
-+		return error;
- 
- 	error = xfs_link(XFS_I(dir), XFS_I(inode), &name);
- 	if (unlikely(error))
-@@ -329,7 +350,7 @@ xfs_vn_unlink(
- 	struct xfs_name	name;
- 	int		error;
- 
--	xfs_dentry_to_name(&name, dentry, 0);
-+	xfs_dentry_to_name(&name, dentry);
- 
- 	error = xfs_remove(XFS_I(dir), &name, XFS_I(d_inode(dentry)));
- 	if (error)
-@@ -359,7 +380,9 @@ xfs_vn_symlink(
- 
- 	mode = S_IFLNK |
- 		(irix_symlink_mode ? 0777 & ~current_umask() : S_IRWXUGO);
--	xfs_dentry_to_name(&name, dentry, mode);
-+	error = xfs_dentry_mode_to_name(&name, dentry, mode);
-+	if (unlikely(error))
-+		goto out;
- 
- 	error = xfs_symlink(XFS_I(dir), &name, symname, mode, &cip);
- 	if (unlikely(error))
-@@ -395,6 +418,7 @@ xfs_vn_rename(
- {
- 	struct inode	*new_inode = d_inode(ndentry);
- 	int		omode = 0;
-+	int		error;
- 	struct xfs_name	oname;
- 	struct xfs_name	nname;
- 
-@@ -405,8 +429,14 @@ xfs_vn_rename(
- 	if (flags & RENAME_EXCHANGE)
- 		omode = d_inode(ndentry)->i_mode;
- 
--	xfs_dentry_to_name(&oname, odentry, omode);
--	xfs_dentry_to_name(&nname, ndentry, d_inode(odentry)->i_mode);
-+	error = xfs_dentry_mode_to_name(&oname, odentry, omode);
-+	if (omode && unlikely(error))
-+		return error;
-+
-+	error = xfs_dentry_mode_to_name(&nname, ndentry,
-+					d_inode(odentry)->i_mode);
-+	if (unlikely(error))
-+		return error;
- 
- 	return xfs_rename(XFS_I(odir), &oname, XFS_I(d_inode(odentry)),
- 			  XFS_I(ndir), &nname,
+ 	/* No zero-length symlinks/dirs. */
+ 	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
 -- 
 2.1.4
 
