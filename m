@@ -1,121 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39368 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751661AbdBCSIr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 13:08:47 -0500
-Date: Fri, 3 Feb 2017 10:08:26 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: update ctime and mtime on clone destinatation
- inodes
-Message-ID: <20170203180826.GA31044@birch.djwong.org>
-References: <20170203095715.7955-1-hch@lst.de>
- <20170203174541.GS9134@birch.djwong.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49648 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751153AbdBBSkm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 13:40:42 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4.9 34/51] xfs: fix bogus minleft manipulations
+Date: Thu,  2 Feb 2017 19:37:53 +0100
+Message-Id: <20170202183346.884891783@linuxfoundation.org>
+In-Reply-To: <20170202183345.067336143@linuxfoundation.org>
+References: <20170202183345.067336143@linuxfoundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170203174541.GS9134@birch.djwong.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, amir73il@gmail.com
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>
 
-On Fri, Feb 03, 2017 at 09:45:41AM -0800, Darrick J. Wong wrote:
-> [cc amir since he piped up about the v1 patch]
-> 
-> On Fri, Feb 03, 2017 at 10:57:15AM +0100, Christoph Hellwig wrote:
-> > We're changing both metadata and data, so we need to update the
-> > timestamps for clone operations.  Dedupe on the other hand does
-> > not change file data, and only changes invisible metadata so the
-> > timestamps should not be updated.
-> > 
-> > This follows existing btrfs behavior.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/xfs_reflink.c | 13 ++++++++++---
-> >  1 file changed, 10 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index d5a2cf2b469b..199ce0100bc6 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -961,13 +961,15 @@ STATIC int
-> >  xfs_reflink_update_dest(
-> >  	struct xfs_inode	*dest,
-> >  	xfs_off_t		newlen,
-> > -	xfs_extlen_t		cowextsize)
-> > +	xfs_extlen_t		cowextsize,
-> > +	bool			is_dedupe)
-> >  {
-> >  	struct xfs_mount	*mp = dest->i_mount;
-> >  	struct xfs_trans	*tp;
-> >  	int			error;
-> >  
-> > -	if (newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
-> > +	if (is_dedupe &&
-> > +	    newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0 && is_dedupe)
-> >  		return 0;
-> 
-> Redundant is_dedupe tests here.
-> 
-> I also wonder if we really /want/ to emulate the existing btrfs
-> behavior, which seems to be:
-> 
-> reflink: update mtime & ctime
-> dedupe: do not update mtime or ctime
-> 
-> In particular, dedupe changes the inode metadata, which should qualify
-> for a ctime update, right?
+4.9-stable review patch.  If anyone has any objections, please let me know.
 
-OTOH, /me fishes out the discussion between mfasheh & zygo where they
-discuss changing btrfs to avoid [cm]time updates on dedupe:
+------------------
 
-https://patchwork.kernel.org/patch/6683161/
+From: Christoph Hellwig <hch@lst.de>
 
-So... <shrug> I'm willing to preserve the 'dedupe doesn't update
-timestamps' behavior even though we're definitely changing di_nextents
-(and possibly di_cowextsize).
+commit 255c516278175a6dc7037d1406307f35237d8688 upstream.
 
-(Though, you may note, I didn't write any code to update the timestamps
-in the original patches, so clearly I'm not all that passionate either
-way. :P)
+We can't just set minleft to 0 when we're low on space - that's exactly
+what we need minleft for: to protect space in the AG for btree block
+allocations when we are low on free space.
 
---D
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/xfs/libxfs/xfs_alloc.c      |   24 +++++++-----------------
+ fs/xfs/libxfs/xfs_bmap.c       |    3 ---
+ fs/xfs/libxfs/xfs_bmap_btree.c |    3 +--
+ 3 files changed, 8 insertions(+), 22 deletions(-)
 
-> 
-> --D
-> 
-> >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-> > @@ -988,6 +990,10 @@ xfs_reflink_update_dest(
-> >  		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
-> >  	}
-> >  
-> > +	if (!is_dedupe) {
-> > +		xfs_trans_ichgtime(tp, dest,
-> > +				   XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> > +	}
-> >  	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
-> >  
-> >  	error = xfs_trans_commit(tp);
-> > @@ -1301,7 +1307,8 @@ xfs_reflink_remap_range(
-> >  	    !(dest->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
-> >  		cowextsize = src->i_d.di_cowextsize;
-> >  
-> > -	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize);
-> > +	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize,
-> > +			is_dedupe);
-> >  
-> >  out_unlock:
-> >  	xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
-> > -- 
-> > 2.11.0
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2635,12 +2635,10 @@ xfs_alloc_vextent(
+ 	xfs_agblock_t	agsize;	/* allocation group size */
+ 	int		error;
+ 	int		flags;	/* XFS_ALLOC_FLAG_... locking flags */
+-	xfs_extlen_t	minleft;/* minimum left value, temp copy */
+ 	xfs_mount_t	*mp;	/* mount structure pointer */
+ 	xfs_agnumber_t	sagno;	/* starting allocation group number */
+ 	xfs_alloctype_t	type;	/* input allocation type */
+ 	int		bump_rotor = 0;
+-	int		no_min = 0;
+ 	xfs_agnumber_t	rotorstep = xfs_rotorstep; /* inode32 agf stepper */
+ 
+ 	mp = args->mp;
+@@ -2669,7 +2667,6 @@ xfs_alloc_vextent(
+ 		trace_xfs_alloc_vextent_badargs(args);
+ 		return 0;
+ 	}
+-	minleft = args->minleft;
+ 
+ 	switch (type) {
+ 	case XFS_ALLOCTYPE_THIS_AG:
+@@ -2680,9 +2677,7 @@ xfs_alloc_vextent(
+ 		 */
+ 		args->agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
+ 		args->pag = xfs_perag_get(mp, args->agno);
+-		args->minleft = 0;
+ 		error = xfs_alloc_fix_freelist(args, 0);
+-		args->minleft = minleft;
+ 		if (error) {
+ 			trace_xfs_alloc_vextent_nofix(args);
+ 			goto error0;
+@@ -2747,9 +2742,7 @@ xfs_alloc_vextent(
+ 		 */
+ 		for (;;) {
+ 			args->pag = xfs_perag_get(mp, args->agno);
+-			if (no_min) args->minleft = 0;
+ 			error = xfs_alloc_fix_freelist(args, flags);
+-			args->minleft = minleft;
+ 			if (error) {
+ 				trace_xfs_alloc_vextent_nofix(args);
+ 				goto error0;
+@@ -2789,20 +2782,17 @@ xfs_alloc_vextent(
+ 			 * or switch to non-trylock mode.
+ 			 */
+ 			if (args->agno == sagno) {
+-				if (no_min == 1) {
++				if (flags == 0) {
+ 					args->agbno = NULLAGBLOCK;
+ 					trace_xfs_alloc_vextent_allfailed(args);
+ 					break;
+ 				}
+-				if (flags == 0) {
+-					no_min = 1;
+-				} else {
+-					flags = 0;
+-					if (type == XFS_ALLOCTYPE_START_BNO) {
+-						args->agbno = XFS_FSB_TO_AGBNO(mp,
+-							args->fsbno);
+-						args->type = XFS_ALLOCTYPE_NEAR_BNO;
+-					}
++
++				flags = 0;
++				if (type == XFS_ALLOCTYPE_START_BNO) {
++					args->agbno = XFS_FSB_TO_AGBNO(mp,
++						args->fsbno);
++					args->type = XFS_ALLOCTYPE_NEAR_BNO;
+ 				}
+ 			}
+ 			xfs_perag_put(args->pag);
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3903,7 +3903,6 @@ xfs_bmap_btalloc(
+ 		args.fsbno = 0;
+ 		args.type = XFS_ALLOCTYPE_FIRST_AG;
+ 		args.total = ap->minlen;
+-		args.minleft = 0;
+ 		if ((error = xfs_alloc_vextent(&args)))
+ 			return error;
+ 		ap->dfops->dop_low = true;
+@@ -4437,8 +4436,6 @@ xfs_bmapi_allocate(
+ 	if (error)
+ 		return error;
+ 
+-	if (bma->dfops->dop_low)
+-		bma->minleft = 0;
+ 	if (bma->cur)
+ 		bma->cur->bc_private.b.firstblock = *bma->firstblock;
+ 	if (bma->blkno == NULLFSBLOCK)
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -502,12 +502,11 @@ try_another_ag:
+ 	if (args.fsbno == NULLFSBLOCK && args.minleft) {
+ 		/*
+ 		 * Could not find an AG with enough free space to satisfy
+-		 * a full btree split.  Try again without minleft and if
++		 * a full btree split.  Try again and if
+ 		 * successful activate the lowspace algorithm.
+ 		 */
+ 		args.fsbno = 0;
+ 		args.type = XFS_ALLOCTYPE_FIRST_AG;
+-		args.minleft = 0;
+ 		error = xfs_alloc_vextent(&args);
+ 		if (error)
+ 			goto error0;
+
+
