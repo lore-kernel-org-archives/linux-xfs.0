@@ -1,76 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34938 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:35773 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751018AbdBBH5Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:57:16 -0500
+        with ESMTP id S1751018AbdBBH5U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:57:20 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/19] xfs: remove racy hasattr check from attr ops
-Date: Thu,  2 Feb 2017 08:56:08 +0100
-Message-Id: <1486022171-8076-17-git-send-email-hch@lst.de>
+Subject: [PATCH 17/19] xfs: extsize hints are not unlikely in xfs_bmap_btalloc
+Date: Thu,  2 Feb 2017 08:56:09 +0100
+Message-Id: <1486022171-8076-18-git-send-email-hch@lst.de>
 In-Reply-To: <1486022171-8076-1-git-send-email-hch@lst.de>
 References: <1486022171-8076-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+commit 493611ebd62673f39e2f52c2561182c558a21cb6 upstream.
 
-commit 5a93790d4e2df73e30c965ec6e49be82fc3ccfce upstream.
+With COW files they are the hotpath, just like for files with the
+extent size hint attribute.  We really shouldn't micro-manage anything
+but failure cases with unlikely.
 
-xfs_attr_[get|remove]() have unlocked attribute fork checks to optimize
-away a lock cycle in cases where the fork does not exist or is otherwise
-empty. This check is not safe, however, because an attribute fork short
-form to extent format conversion includes a transient state that causes
-the xfs_inode_hasattr() check to fail. Specifically,
-xfs_attr_shortform_to_leaf() creates an empty extent format attribute
-fork and then adds the existing shortform attributes to it.
+Additionally Arnd Bergmann recently reported that one of these two
+unlikely annotations causes link failures together with an upcoming
+kernel instrumentation patch, so let's get rid of it ASAP.
 
-This means that lookup of an existing xattr can spuriously return
--ENOATTR when racing against a setxattr that causes the associated
-format conversion. This was originally reproduced by an untar on a
-particularly configured glusterfs volume, but can also be reproduced on
-demand with properly crafted xattr requests.
-
-The format conversion occurs under the exclusive ilock. xfs_attr_get()
-and xfs_attr_remove() already have the proper locking and checks further
-down in the functions to handle this situation correctly. Drop the
-unlocked checks to avoid the spurious failure and rely on the existing
-logic.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Arnd Bergmann <arnd@arndb.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c | 6 ------
- 1 file changed, 6 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index af1ecb1..6622d46 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -131,9 +131,6 @@ xfs_attr_get(
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
- 		return -EIO;
- 
--	if (!xfs_inode_hasattr(ip))
--		return -ENOATTR;
--
- 	error = xfs_attr_args_init(&args, ip, name, flags);
- 	if (error)
- 		return error;
-@@ -392,9 +389,6 @@ xfs_attr_remove(
- 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
- 		return -EIO;
- 
--	if (!xfs_inode_hasattr(dp))
--		return -ENOATTR;
--
- 	error = xfs_attr_args_init(&args, dp, name, flags);
- 	if (error)
- 		return error;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index fbb60d3..f52fd63 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3720,7 +3720,7 @@ xfs_bmap_btalloc(
+ 		align = xfs_get_cowextsz_hint(ap->ip);
+ 	else if (xfs_alloc_is_userdata(ap->datatype))
+ 		align = xfs_get_extsz_hint(ap->ip);
+-	if (unlikely(align)) {
++	if (align) {
+ 		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+ 						align, 0, ap->eof, 0, ap->conv,
+ 						&ap->offset, &ap->length);
+@@ -3792,7 +3792,7 @@ xfs_bmap_btalloc(
+ 		args.minlen = ap->minlen;
+ 	}
+ 	/* apply extent size hints if obtained earlier */
+-	if (unlikely(align)) {
++	if (align) {
+ 		args.prod = align;
+ 		if ((args.mod = (xfs_extlen_t)do_mod(ap->offset, args.prod)))
+ 			args.mod = (xfs_extlen_t)(args.prod - args.mod);
 -- 
 2.1.4
 
