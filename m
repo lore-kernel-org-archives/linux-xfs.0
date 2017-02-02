@@ -1,58 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48310 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752942AbdBITgm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Feb 2017 14:36:42 -0500
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8D5967F771
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2017 19:34:55 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v19JYt1C027236
-        for <linux-xfs@vger.kernel.org>; Thu, 9 Feb 2017 14:34:55 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 0/4] buffered write and indlen fixes
-Date: Thu,  9 Feb 2017 14:34:49 -0500
-Message-Id: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49342 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752710AbdBBSjv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 13:39:51 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4.9 37/51] xfs: dont print warnings when xfs_log_force fails
+Date: Thu,  2 Feb 2017 19:37:56 +0100
+Message-Id: <20170202183347.043226331@linuxfoundation.org>
+In-Reply-To: <20170202183345.067336143@linuxfoundation.org>
+References: <20170202183345.067336143@linuxfoundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>
 
-Hi all,
+4.9-stable review patch.  If anyone has any objections, please let me know.
 
-This is v2 of the indlen split fixup series. The indlen patches are
-mostly the same except for changes to use do_div() rather than built-in
-division, which causes problems on 32-bit arches.
+------------------
 
-Patches 1-2 are new and facilitate testing. Patch 1 fixes a couple
-issues in buffered write failure handling that I ran into. Patch 2
-reintroduces the "fail writes" mechanism as a "drop writes" mechanism to
-re-enable the ability to test the indlen code from userspace. I will
-follow up with xfstests patches shortly that use this mechanism to
-reproduce both issues fixed by patches 3 and 4. Thoughts, reviews,
-flames appreciated.
+From: Christoph Hellwig <hch@lst.de>
 
-Brian
+commit 84a4620cfe97c9d57e39b2369bfb77faff55063d upstream.
 
-v2:
-- Use do_div() to fix 32-bit builds.
-- Prepend patches 1-2 to re-enable indlen testing from xfstests.
-v1: http://www.spinics.net/lists/linux-xfs/msg04083.html
+There are only two reasons for xfs_log_force / xfs_log_force_lsn to fail:
+one is an I/O error, for which xlog_bdstrat already logs a warning, and
+the second is an already shutdown log due to a previous I/O errors.  In
+the latter case we'll already have a previous indication for the actual
+error, but the large stream of misleading warnings from xfs_log_force
+will probably scroll it out of the message buffer.
 
-Brian Foster (4):
-  xfs: clear delalloc and cache on buffered write failure
-  xfs: resurrect debug mode drop buffered writes mechanism
-  xfs: handle indlen shortage on delalloc extent merge
-  xfs: split indlen reservations fairly when under reserved
+Simply removing the warnings thus makes the XFS log reporting significantly
+better.
 
- fs/xfs/libxfs/xfs_bmap.c | 70 +++++++++++++++++++++++++++++++++---------------
- fs/xfs/xfs_iomap.c       |  9 +++++++
- fs/xfs/xfs_mount.h       | 15 ++++++-----
- fs/xfs/xfs_sysfs.c       | 14 +++++-----
- 4 files changed, 73 insertions(+), 35 deletions(-)
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/xfs/xfs_log.c |   12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
--- 
-2.7.4
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3324,12 +3324,8 @@ xfs_log_force(
+ 	xfs_mount_t	*mp,
+ 	uint		flags)
+ {
+-	int	error;
+-
+ 	trace_xfs_log_force(mp, 0, _RET_IP_);
+-	error = _xfs_log_force(mp, flags, NULL);
+-	if (error)
+-		xfs_warn(mp, "%s: error %d returned.", __func__, error);
++	_xfs_log_force(mp, flags, NULL);
+ }
+ 
+ /*
+@@ -3473,12 +3469,8 @@ xfs_log_force_lsn(
+ 	xfs_lsn_t	lsn,
+ 	uint		flags)
+ {
+-	int	error;
+-
+ 	trace_xfs_log_force(mp, lsn, _RET_IP_);
+-	error = _xfs_log_force_lsn(mp, lsn, flags, NULL);
+-	if (error)
+-		xfs_warn(mp, "%s: error %d returned.", __func__, error);
++	_xfs_log_force_lsn(mp, lsn, flags, NULL);
+ }
+ 
+ /*
+
 
