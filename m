@@ -1,60 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50429 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:52002 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751061AbdBBH5B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:57:01 -0500
+        with ESMTP id S1750926AbdBBH5F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:57:05 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/19] xfs: don't wrap ID in xfs_dq_get_next_id
-Date: Thu,  2 Feb 2017 08:56:04 +0100
-Message-Id: <1486022171-8076-13-git-send-email-hch@lst.de>
+Subject: [PATCH 13/19] xfs: fix xfs_mode_to_ftype() prototype
+Date: Thu,  2 Feb 2017 08:56:05 +0100
+Message-Id: <1486022171-8076-14-git-send-email-hch@lst.de>
 In-Reply-To: <1486022171-8076-1-git-send-email-hch@lst.de>
 References: <1486022171-8076-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Eric Sandeen <sandeen@redhat.com>
+From: Arnd Bergmann <arnd@arndb.de>
 
-commit 657bdfb7f5e68ca5e2ed009ab473c429b0d6af85 upstream.
+commit fd29f7af75b7adf250beccffa63746c6a88e2b74 upstream.
 
-The GETNEXTQOTA ioctl takes whatever ID is sent in,
-and looks for the next active quota for an user
-equal or higher to that ID.
+A harmless warning just got introduced:
 
-But if we are at the maximum ID and then ask for the "next"
-one, we may wrap back to zero.  In this case, userspace
-may loop forever, because it will start querying again
-at zero.
+fs/xfs/libxfs/xfs_dir2.h:40:8: error: type qualifiers ignored on function return type [-Werror=ignored-qualifiers]
 
-We'll fix this in userspace as well, but for the kernel,
-return -ENOENT if we ask for the next quota ID
-past UINT_MAX so the caller knows to stop.
+Removing the 'const' modifier avoids the warning and has no
+other effect.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Fixes: 1fc4d33fed12 ("xfs: replace xfs_mode_to_ftype table with switch statement")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_dquot.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ fs/xfs/libxfs/xfs_dir2.c | 2 +-
+ fs/xfs/libxfs/xfs_dir2.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 7a30b8f..9d06cc3 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -710,6 +710,10 @@ xfs_dq_get_next_id(
- 	/* Simple advance */
- 	next_id = *id + 1;
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 1a978bd..7825d78 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -38,7 +38,7 @@ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+ /*
+  * Convert inode mode to directory entry filetype
+  */
+-const unsigned char xfs_mode_to_ftype(int mode)
++unsigned char xfs_mode_to_ftype(int mode)
+ {
+ 	switch (mode & S_IFMT) {
+ 	case S_IFREG:
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 0051a34..ae0d55b 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -37,7 +37,7 @@ extern struct xfs_name	xfs_name_dotdot;
+ /*
+  * Convert inode mode to directory entry filetype
+  */
+-extern const unsigned char xfs_mode_to_ftype(int mode);
++extern unsigned char xfs_mode_to_ftype(int mode);
  
-+	/* If we'd wrap past the max ID, stop */
-+	if (next_id < *id)
-+		return -ENOENT;
-+
- 	/* If new ID is within the current chunk, advancing it sufficed */
- 	if (next_id % mp->m_quotainfo->qi_dqperchunk) {
- 		*id = next_id;
+ /*
+  * directory operations vector for encode/decode routines
 -- 
 2.1.4
 
