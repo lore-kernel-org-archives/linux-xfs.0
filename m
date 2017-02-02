@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49472 "EHLO
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49488 "EHLO
         mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752367AbdBBSkZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 13:40:25 -0500
+        with ESMTP id S1751789AbdBBSkV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 13:40:21 -0500
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 49/51] xfs: extsize hints are not unlikely in xfs_bmap_btalloc
-Date: Thu,  2 Feb 2017 19:38:08 +0100
-Message-Id: <20170202183347.736858223@linuxfoundation.org>
+Subject: [PATCH 4.9 51/51] xfs: fix bmv_count confusion w/ shared extents
+Date: Thu,  2 Feb 2017 19:38:10 +0100
+Message-Id: <20170202183347.839401883@linuxfoundation.org>
 In-Reply-To: <20170202183345.067336143@linuxfoundation.org>
 References: <20170202183345.067336143@linuxfoundation.org>
 MIME-Version: 1.0
@@ -15,52 +15,104 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Arnd Bergmann <arnd@arndb.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
 
 4.9-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
-From: Christoph Hellwig <hch@lst.de>
 
-commit 493611ebd62673f39e2f52c2561182c558a21cb6 upstream.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-With COW files they are the hotpath, just like for files with the
-extent size hint attribute.  We really shouldn't micro-manage anything
-but failure cases with unlikely.
+commit c364b6d0b6cda1cd5d9ab689489adda3e82529aa upstream.
 
-Additionally Arnd Bergmann recently reported that one of these two
-unlikely annotations causes link failures together with an upcoming
-kernel instrumentation patch, so let's get rid of it ASAP.
+In a bmapx call, bmv_count is the total size of the array, including the
+zeroth element that userspace uses to supply the search key.  The output
+array starts at offset 1 so that we can set up the user for the next
+invocation.  Since we now can split an extent into multiple bmap records
+due to shared/unshared status, we have to be careful that we don't
+overflow the output array.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+In the original patch f86f403794b ("xfs: teach get_bmapx about shared
+extents and the CoW fork") I used cur_ext (the output index) to check
+for overflows, albeit with an off-by-one error.  Since nexleft no longer
+describes the number of unfilled slots in the output, we can rip all
+that out and use cur_ext for the overflow check directly.
+
+Failure to do this causes heap corruption in bmapx callers such as
+xfs_io and xfs_scrub.  xfs/328 can reproduce this problem.
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_bmap_util.c |   28 ++++++++++++++++++----------
+ 1 file changed, 18 insertions(+), 10 deletions(-)
 
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3720,7 +3720,7 @@ xfs_bmap_btalloc(
- 		align = xfs_get_cowextsz_hint(ap->ip);
- 	else if (xfs_alloc_is_userdata(ap->datatype))
- 		align = xfs_get_extsz_hint(ap->ip);
--	if (unlikely(align)) {
-+	if (align) {
- 		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
- 						align, 0, ap->eof, 0, ap->conv,
- 						&ap->offset, &ap->length);
-@@ -3792,7 +3792,7 @@ xfs_bmap_btalloc(
- 		args.minlen = ap->minlen;
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -528,7 +528,6 @@ xfs_getbmap(
+ 	xfs_bmbt_irec_t		*map;		/* buffer for user's data */
+ 	xfs_mount_t		*mp;		/* file system mount point */
+ 	int			nex;		/* # of user extents can do */
+-	int			nexleft;	/* # of user extents left */
+ 	int			subnex;		/* # of bmapi's can do */
+ 	int			nmap;		/* number of map entries */
+ 	struct getbmapx		*out;		/* output structure */
+@@ -686,10 +685,8 @@ xfs_getbmap(
+ 		goto out_free_map;
  	}
- 	/* apply extent size hints if obtained earlier */
--	if (unlikely(align)) {
-+	if (align) {
- 		args.prod = align;
- 		if ((args.mod = (xfs_extlen_t)do_mod(ap->offset, args.prod)))
- 			args.mod = (xfs_extlen_t)(args.prod - args.mod);
+ 
+-	nexleft = nex;
+-
+ 	do {
+-		nmap = (nexleft > subnex) ? subnex : nexleft;
++		nmap = (nex> subnex) ? subnex : nex;
+ 		error = xfs_bmapi_read(ip, XFS_BB_TO_FSBT(mp, bmv->bmv_offset),
+ 				       XFS_BB_TO_FSB(mp, bmv->bmv_length),
+ 				       map, &nmap, bmapi_flags);
+@@ -697,8 +694,8 @@ xfs_getbmap(
+ 			goto out_free_map;
+ 		ASSERT(nmap <= subnex);
+ 
+-		for (i = 0; i < nmap && nexleft && bmv->bmv_length &&
+-				cur_ext < bmv->bmv_count; i++) {
++		for (i = 0; i < nmap && bmv->bmv_length &&
++				cur_ext < bmv->bmv_count - 1; i++) {
+ 			out[cur_ext].bmv_oflags = 0;
+ 			if (map[i].br_state == XFS_EXT_UNWRITTEN)
+ 				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
+@@ -760,16 +757,27 @@ xfs_getbmap(
+ 				continue;
+ 			}
+ 
++			/*
++			 * In order to report shared extents accurately,
++			 * we report each distinct shared/unshared part
++			 * of a single bmbt record using multiple bmap
++			 * extents.  To make that happen, we iterate the
++			 * same map array item multiple times, each
++			 * time trimming out the subextent that we just
++			 * reported.
++			 *
++			 * Because of this, we must check the out array
++			 * index (cur_ext) directly against bmv_count-1
++			 * to avoid overflows.
++			 */
+ 			if (inject_map.br_startblock != NULLFSBLOCK) {
+ 				map[i] = inject_map;
+ 				i--;
+-			} else
+-				nexleft--;
++			}
+ 			bmv->bmv_entries++;
+ 			cur_ext++;
+ 		}
+-	} while (nmap && nexleft && bmv->bmv_length &&
+-		 cur_ext < bmv->bmv_count);
++	} while (nmap && bmv->bmv_length && cur_ext < bmv->bmv_count - 1);
+ 
+  out_free_map:
+ 	kmem_free(map);
 
 
