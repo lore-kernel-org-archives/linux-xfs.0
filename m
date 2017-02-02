@@ -1,225 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49324 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751342AbdBBSja (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 13:39:30 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 35/51] xfs: adjust allocation length in xfs_alloc_space_available
-Date: Thu,  2 Feb 2017 19:37:54 +0100
-Message-Id: <20170202183346.949607842@linuxfoundation.org>
-In-Reply-To: <20170202183345.067336143@linuxfoundation.org>
-References: <20170202183345.067336143@linuxfoundation.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43215 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751585AbdBBW4g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 17:56:36 -0500
+Date: Thu, 2 Feb 2017 14:56:29 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/4] xfs: introduce xfs_aligned_fsb_count
+Message-ID: <20170202225629.GO9134@birch.djwong.org>
+References: <1485985359-971-1-git-send-email-hch@lst.de>
+ <1485985359-971-3-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1485985359-971-3-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+On Wed, Feb 01, 2017 at 10:42:37PM +0100, Christoph Hellwig wrote:
+> Factor a helper to calculate the extent-size aligned block out of the
+> iomap code, so that it can be reused by the upcoming reflink dio code.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-------------------
+Looks like a reasonable enough code replacement, so:
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-From: Christoph Hellwig <hch@lst.de>
+--D
 
-commit 54fee133ad59c87ab01dd84ab3e9397134b32acb upstream.
-
-We must decide in xfs_alloc_fix_freelist if we can perform an
-allocation from a given AG is possible or not based on the available
-space, and should not fail the allocation past that point on a
-healthy file system.
-
-But currently we have two additional places that second-guess
-xfs_alloc_fix_freelist: xfs_alloc_ag_vextent tries to adjust the
-maxlen parameter to remove the reservation before doing the
-allocation (but ignores the various minium freespace requirements),
-and xfs_alloc_fix_minleft tries to fix up the allocated length
-after we've found an extent, but ignores the reservations and also
-doesn't take the AGFL into account (and thus fails allocations
-for not matching minlen in some cases).
-
-Remove all these later fixups and just correct the maxlen argument
-inside xfs_alloc_fix_freelist once we have the AGF buffer locked.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- fs/xfs/libxfs/xfs_alloc.c |   81 +++++++++-------------------------------------
- fs/xfs/libxfs/xfs_alloc.h |    2 -
- 2 files changed, 18 insertions(+), 65 deletions(-)
-
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -362,36 +362,12 @@ xfs_alloc_fix_len(
- 		return;
- 	ASSERT(rlen >= args->minlen && rlen <= args->maxlen);
- 	ASSERT(rlen % args->prod == args->mod);
-+	ASSERT(args->pag->pagf_freeblks + args->pag->pagf_flcount >=
-+		rlen + args->minleft);
- 	args->len = rlen;
- }
- 
- /*
-- * Fix up length if there is too little space left in the a.g.
-- * Return 1 if ok, 0 if too little, should give up.
-- */
--STATIC int
--xfs_alloc_fix_minleft(
--	xfs_alloc_arg_t	*args)		/* allocation argument structure */
--{
--	xfs_agf_t	*agf;		/* a.g. freelist header */
--	int		diff;		/* free space difference */
--
--	if (args->minleft == 0)
--		return 1;
--	agf = XFS_BUF_TO_AGF(args->agbp);
--	diff = be32_to_cpu(agf->agf_freeblks)
--		- args->len - args->minleft;
--	if (diff >= 0)
--		return 1;
--	args->len += diff;		/* shrink the allocated space */
--	/* casts to (int) catch length underflows */
--	if ((int)args->len >= (int)args->minlen)
--		return 1;
--	args->agbno = NULLAGBLOCK;
--	return 0;
--}
--
--/*
-  * Update the two btrees, logically removing from freespace the extent
-  * starting at rbno, rlen blocks.  The extent is contained within the
-  * actual (current) free extent fbno for flen blocks.
-@@ -686,8 +662,6 @@ xfs_alloc_ag_vextent(
- 	xfs_alloc_arg_t	*args)	/* argument structure for allocation */
- {
- 	int		error=0;
--	xfs_extlen_t	reservation;
--	xfs_extlen_t	oldmax;
- 
- 	ASSERT(args->minlen > 0);
- 	ASSERT(args->maxlen > 0);
-@@ -696,20 +670,6 @@ xfs_alloc_ag_vextent(
- 	ASSERT(args->alignment > 0);
- 
- 	/*
--	 * Clamp maxlen to the amount of free space minus any reservations
--	 * that have been made.
--	 */
--	oldmax = args->maxlen;
--	reservation = xfs_ag_resv_needed(args->pag, args->resv);
--	if (args->maxlen > args->pag->pagf_freeblks - reservation)
--		args->maxlen = args->pag->pagf_freeblks - reservation;
--	if (args->maxlen == 0) {
--		args->agbno = NULLAGBLOCK;
--		args->maxlen = oldmax;
--		return 0;
--	}
--
--	/*
- 	 * Branch to correct routine based on the type.
- 	 */
- 	args->wasfromfl = 0;
-@@ -728,8 +688,6 @@ xfs_alloc_ag_vextent(
- 		/* NOTREACHED */
- 	}
- 
--	args->maxlen = oldmax;
--
- 	if (error || args->agbno == NULLAGBLOCK)
- 		return error;
- 
-@@ -838,9 +796,6 @@ xfs_alloc_ag_vextent_exact(
- 	args->len = XFS_AGBLOCK_MIN(tend, args->agbno + args->maxlen)
- 						- args->agbno;
- 	xfs_alloc_fix_len(args);
--	if (!xfs_alloc_fix_minleft(args))
--		goto not_found;
--
- 	ASSERT(args->agbno + args->len <= tend);
- 
- 	/*
-@@ -1146,12 +1101,7 @@ restart:
- 		XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
- 		ASSERT(ltbno + ltlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
- 		args->len = blen;
--		if (!xfs_alloc_fix_minleft(args)) {
--			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
--			trace_xfs_alloc_near_nominleft(args);
--			return 0;
--		}
--		blen = args->len;
-+
- 		/*
- 		 * We are allocating starting at bnew for blen blocks.
- 		 */
-@@ -1343,12 +1293,6 @@ restart:
- 	 */
- 	args->len = XFS_EXTLEN_MIN(ltlena, args->maxlen);
- 	xfs_alloc_fix_len(args);
--	if (!xfs_alloc_fix_minleft(args)) {
--		trace_xfs_alloc_near_nominleft(args);
--		xfs_btree_del_cursor(bno_cur_lt, XFS_BTREE_NOERROR);
--		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
--		return 0;
--	}
- 	rlen = args->len;
- 	(void)xfs_alloc_compute_diff(args->agbno, rlen, args->alignment,
- 				     args->datatype, ltbnoa, ltlena, &ltnew);
-@@ -1550,8 +1494,6 @@ restart:
- 	}
- 	xfs_alloc_fix_len(args);
- 
--	if (!xfs_alloc_fix_minleft(args))
--		goto out_nominleft;
- 	rlen = args->len;
- 	XFS_WANT_CORRUPTED_GOTO(args->mp, rlen <= flen, error0);
- 	/*
-@@ -2070,10 +2012,20 @@ xfs_alloc_space_available(
- 
- 	/* do we have enough free space remaining for the allocation? */
- 	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
--			  reservation - min_free - args->total);
--	if (available < (int)args->minleft || available <= 0)
-+			  reservation - min_free - args->minleft);
-+	if (available < (int)args->total)
- 		return false;
- 
-+	/*
-+	 * Clamp maxlen to the amount of free space available for the actual
-+	 * extent allocation.
-+	 */
-+	if (available < (int)args->maxlen && !(flags & XFS_ALLOC_FLAG_CHECK)) {
-+		args->maxlen = available;
-+		ASSERT(args->maxlen > 0);
-+		ASSERT(args->maxlen >= args->minlen);
-+	}
-+
- 	return true;
- }
- 
-@@ -2119,7 +2071,8 @@ xfs_alloc_fix_freelist(
- 	}
- 
- 	need = xfs_alloc_min_freelist(mp, pag);
--	if (!xfs_alloc_space_available(args, need, flags))
-+	if (!xfs_alloc_space_available(args, need, flags |
-+			XFS_ALLOC_FLAG_CHECK))
- 		goto out_agbp_relse;
- 
- 	/*
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -56,7 +56,7 @@ typedef unsigned int xfs_alloctype_t;
- #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
- #define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
- #define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
--
-+#define	XFS_ALLOC_FLAG_CHECK	0x00000010  /* test only, don't modify args */
- 
- /*
-  * Argument structure for xfs_alloc routines.
-
-
+> ---
+>  fs/xfs/xfs_iomap.c | 11 ++---------
+>  fs/xfs/xfs_iomap.h | 20 ++++++++++++++++++++
+>  2 files changed, 22 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index d17aa3b..9d811eb 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -162,7 +162,7 @@ xfs_iomap_write_direct(
+>  	xfs_fileoff_t	last_fsb;
+>  	xfs_filblks_t	count_fsb, resaligned;
+>  	xfs_fsblock_t	firstfsb;
+> -	xfs_extlen_t	extsz, temp;
+> +	xfs_extlen_t	extsz;
+>  	int		nimaps;
+>  	int		quota_flag;
+>  	int		rt;
+> @@ -203,14 +203,7 @@ xfs_iomap_write_direct(
+>  	}
+>  	count_fsb = last_fsb - offset_fsb;
+>  	ASSERT(count_fsb > 0);
+> -
+> -	resaligned = count_fsb;
+> -	if (unlikely(extsz)) {
+> -		if ((temp = do_mod(offset_fsb, extsz)))
+> -			resaligned += temp;
+> -		if ((temp = do_mod(resaligned, extsz)))
+> -			resaligned += extsz - temp;
+> -	}
+> +	resaligned = xfs_aligned_fsb_count(offset_fsb, count_fsb, extsz);
+>  
+>  	if (unlikely(rt)) {
+>  		resrtextents = qblocks = resaligned;
+> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+> index 6d45cf0..1fef4a5 100644
+> --- a/fs/xfs/xfs_iomap.h
+> +++ b/fs/xfs/xfs_iomap.h
+> @@ -33,6 +33,26 @@ void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
+>  		struct xfs_bmbt_irec *);
+>  xfs_extlen_t xfs_eof_alignment(struct xfs_inode *ip, xfs_extlen_t extsize);
+>  
+> +static inline xfs_filblks_t
+> +xfs_aligned_fsb_count(
+> +	xfs_fileoff_t		offset_fsb,
+> +	xfs_filblks_t		count_fsb,
+> +	xfs_extlen_t		extsz)
+> +{
+> +	if (extsz) {
+> +		xfs_extlen_t	align;
+> +
+> +		align = do_mod(offset_fsb, extsz);
+> +		if (align)
+> +			count_fsb += align;
+> +		align = do_mod(count_fsb, extsz);
+> +		if (align)
+> +			count_fsb += extsz - align;
+> +	}
+> +
+> +	return count_fsb;
+> +}
+> +
+>  extern struct iomap_ops xfs_iomap_ops;
+>  extern struct iomap_ops xfs_xattr_iomap_ops;
+>  
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
