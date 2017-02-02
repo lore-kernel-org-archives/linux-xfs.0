@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36239 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:56574 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750858AbdBBH5Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:57:24 -0500
+        with ESMTP id S1751046AbdBBH51 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:57:27 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/19] xfs: clear _XBF_PAGES from buffers when readahead page
-Date: Thu,  2 Feb 2017 08:56:10 +0100
-Message-Id: <1486022171-8076-19-git-send-email-hch@lst.de>
+Subject: [PATCH 19/19] xfs: fix bmv_count confusion w/ shared extents
+Date: Thu,  2 Feb 2017 08:56:11 +0100
+Message-Id: <1486022171-8076-20-git-send-email-hch@lst.de>
 In-Reply-To: <1486022171-8076-1-git-send-email-hch@lst.de>
 References: <1486022171-8076-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,44 +17,97 @@ Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 2aa6ba7b5ad3189cc27f14540aa2f57f0ed8df4b upstream.
+commit c364b6d0b6cda1cd5d9ab689489adda3e82529aa upstream.
 
-If we try to allocate memory pages to back an xfs_buf that we're trying
-to read, it's possible that we'll be so short on memory that the page
-allocation fails.  For a blocking read we'll just wait, but for
-readahead we simply dump all the pages we've collected so far.
+In a bmapx call, bmv_count is the total size of the array, including the
+zeroth element that userspace uses to supply the search key.  The output
+array starts at offset 1 so that we can set up the user for the next
+invocation.  Since we now can split an extent into multiple bmap records
+due to shared/unshared status, we have to be careful that we don't
+overflow the output array.
 
-Unfortunately, after dumping the pages we neglect to clear the
-_XBF_PAGES state, which means that the subsequent call to xfs_buf_free
-thinks that b_pages still points to pages we own.  It then double-frees
-the b_pages pages.
+In the original patch f86f403794b ("xfs: teach get_bmapx about shared
+extents and the CoW fork") I used cur_ext (the output index) to check
+for overflows, albeit with an off-by-one error.  Since nexleft no longer
+describes the number of unfilled slots in the output, we can rip all
+that out and use cur_ext for the overflow check directly.
 
-This results in screaming about negative page refcounts from the memory
-manager, which xfs oughtn't be triggering.  To reproduce this case,
-mount a filesystem where the size of the inodes far outweighs the
-availalble memory (a ~500M inode filesystem on a VM with 300MB memory
-did the trick here) and run bulkstat in parallel with other memory
-eating processes to put a huge load on the system.  The "check summary"
-phase of xfs_scrub also works for this purpose.
+Failure to do this causes heap corruption in bmapx callers such as
+xfs_io and xfs_scrub.  xfs/328 can reproduce this problem.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/xfs_bmap_util.c | 28 ++++++++++++++++++----------
+ 1 file changed, 18 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index b5b9bff..d7a67d7 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -423,6 +423,7 @@ xfs_buf_allocate_memory(
- out_free_pages:
- 	for (i = 0; i < bp->b_page_count; i++)
- 		__free_page(bp->b_pages[i]);
-+	bp->b_flags &= ~_XBF_PAGES;
- 	return error;
- }
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 0670a8b..efb8ccd 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -528,7 +528,6 @@ xfs_getbmap(
+ 	xfs_bmbt_irec_t		*map;		/* buffer for user's data */
+ 	xfs_mount_t		*mp;		/* file system mount point */
+ 	int			nex;		/* # of user extents can do */
+-	int			nexleft;	/* # of user extents left */
+ 	int			subnex;		/* # of bmapi's can do */
+ 	int			nmap;		/* number of map entries */
+ 	struct getbmapx		*out;		/* output structure */
+@@ -686,10 +685,8 @@ xfs_getbmap(
+ 		goto out_free_map;
+ 	}
  
+-	nexleft = nex;
+-
+ 	do {
+-		nmap = (nexleft > subnex) ? subnex : nexleft;
++		nmap = (nex> subnex) ? subnex : nex;
+ 		error = xfs_bmapi_read(ip, XFS_BB_TO_FSBT(mp, bmv->bmv_offset),
+ 				       XFS_BB_TO_FSB(mp, bmv->bmv_length),
+ 				       map, &nmap, bmapi_flags);
+@@ -697,8 +694,8 @@ xfs_getbmap(
+ 			goto out_free_map;
+ 		ASSERT(nmap <= subnex);
+ 
+-		for (i = 0; i < nmap && nexleft && bmv->bmv_length &&
+-				cur_ext < bmv->bmv_count; i++) {
++		for (i = 0; i < nmap && bmv->bmv_length &&
++				cur_ext < bmv->bmv_count - 1; i++) {
+ 			out[cur_ext].bmv_oflags = 0;
+ 			if (map[i].br_state == XFS_EXT_UNWRITTEN)
+ 				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
+@@ -760,16 +757,27 @@ xfs_getbmap(
+ 				continue;
+ 			}
+ 
++			/*
++			 * In order to report shared extents accurately,
++			 * we report each distinct shared/unshared part
++			 * of a single bmbt record using multiple bmap
++			 * extents.  To make that happen, we iterate the
++			 * same map array item multiple times, each
++			 * time trimming out the subextent that we just
++			 * reported.
++			 *
++			 * Because of this, we must check the out array
++			 * index (cur_ext) directly against bmv_count-1
++			 * to avoid overflows.
++			 */
+ 			if (inject_map.br_startblock != NULLFSBLOCK) {
+ 				map[i] = inject_map;
+ 				i--;
+-			} else
+-				nexleft--;
++			}
+ 			bmv->bmv_entries++;
+ 			cur_ext++;
+ 		}
+-	} while (nmap && nexleft && bmv->bmv_length &&
+-		 cur_ext < bmv->bmv_count);
++	} while (nmap && bmv->bmv_length && cur_ext < bmv->bmv_count - 1);
+ 
+  out_free_map:
+ 	kmem_free(map);
 -- 
 2.1.4
 
