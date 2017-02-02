@@ -1,36 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57913 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750920AbdBAOtm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2017 09:49:42 -0500
-Date: Wed, 1 Feb 2017 06:49:35 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: error propagation problem on xfs over dm stripe
-Message-ID: <20170201144935.GB27071@infradead.org>
-References: <b44b5dc2-eac0-cd40-6de8-b615cb4dece8@sandeen.net>
- <20170201074249.GA22669@infradead.org>
- <20170201143351.GA18848@redhat.com>
+Received: from mail1.g1.pair.com ([66.39.3.162]:16514 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750878AbdBBSVt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Feb 2017 13:21:49 -0500
+Date: Thu, 2 Feb 2017 19:16:27 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Safe XFS limits (100TB+)
+Message-ID: <20170202191627.42c50e67@harpe.intellique.com>
+In-Reply-To: <CAL8yqihyYEaCEzWJLqAKsw1BBOQDm-AYR2dCUeN-X-449jCwzQ@mail.gmail.com>
+References: <CAL8yqihyYEaCEzWJLqAKsw1BBOQDm-AYR2dCUeN-X-449jCwzQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170201143351.GA18848@redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/AOaSbFz7lCyOhUpOOczQljH"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>, dm-devel@redhat.com
+To: fuser ct1 <fuserct1@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Feb 01, 2017 at 09:33:51AM -0500, Mike Snitzer wrote:
-> > FYI, what we do both in the XFS buffer cache and the new direct I/O
-> > code is to use a
-> > 
-> > 	        cmpxchg(&dio->error, 0, ret);
-> > 
-> > in a similar situation, which should work here, too.
-> 
-> What is the benefit?  Faster than the conditional?
+--Sig_/AOaSbFz7lCyOhUpOOczQljH
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-In the cases where I added the code the concern is that multiple
-bio completions could race updating the flag, cmpxchg is a good
-protection against that.  I'll need to take a look at the dm
-case Eric reported in more detail to comment on it, though.
+Le Thu, 2 Feb 2017 16:46:09 +0000
+fuser ct1 <fuserct1@gmail.com> =C3=A9crivait:
+
+> Hello list.
+>=20
+> Despite searching I couldn't find guidance, or many use cases,
+> regarding XFS beyond 100TB.
+>=20
+> Of course the filesystem limits are way beyond this, but I was
+> looking for real world experiences...
+
+I manage and support several hosts I built and set up, some running for
+many years, with very large XFS volumes.
+Recent XFS volumes with XFS v5 seem to promise even more robustness,
+thanks to metadata checksums.
+
+Currently in use under heavy load machines with the following usable
+volumes, almost all of them using RAID 60 (21 to 28 drives x 2 or x3):
+
+1 490 TB volume
+3 390 TB volumes
+1 240 TB volume=20
+2 180 TB volumes=20
+5 160 TB volumes=20
+11 120 TB volumes
+4 90 TB volumes
+14 77 TB volumes
+many, many 50 and 40 TB volumes.
+
+2x22 disks Raid 60 is perfectly OK, as long as you're using good disks.
+I only use HGST, and have a failure rate so low I don't even bother
+tracking it precisely anymore (like 2 or 3 failures a year among the
+couple thousands disks listed above).=20
+
+Use recent xfs progs and kernel, use xfs v5 if possible. Don't forget
+proper optimisations (use noop scheduler, enlarge nr_requests and
+read_ahead_kb a lot) for high sequential throughput (video is all about
+sequential throughput) and you should be happy and safe.
+
+xfs_repair on a filled fast 100 TB volume only needs 15 minutes or so.
+And it was after a very, very bad power event (someone connected a
+studio light to the UPS and brought everything down literally in
+flames).
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/AOaSbFz7lCyOhUpOOczQljH
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAliTd3wACgkQX3jQXNUicVbf6ACglOffk/IojbQ1PHvtNwlnePrh
+MQQAn213DNiMUAmkIdl8r08pRHr2QxyJ
+=7Qex
+-----END PGP SIGNATURE-----
+
+--Sig_/AOaSbFz7lCyOhUpOOczQljH--
