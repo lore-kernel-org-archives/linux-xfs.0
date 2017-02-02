@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34437 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:43344 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750977AbdBBH4c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:56:32 -0500
+        with ESMTP id S1751014AbdBBH4f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:56:35 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/19] xfs: don't rely on ->total in xfs_alloc_space_available
-Date: Thu,  2 Feb 2017 08:55:56 +0100
-Message-Id: <1486022171-8076-5-git-send-email-hch@lst.de>
+Subject: [PATCH 05/19] xfs: don't print warnings when xfs_log_force fails
+Date: Thu,  2 Feb 2017 08:55:57 +0100
+Message-Id: <1486022171-8076-6-git-send-email-hch@lst.de>
 In-Reply-To: <1486022171-8076-1-git-send-email-hch@lst.de>
 References: <1486022171-8076-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,63 +15,57 @@ List-Id: xfs
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 12ef830198b0d71668eb9b59f9ba69d32951a48a upstream.
+commit 84a4620cfe97c9d57e39b2369bfb77faff55063d upstream.
 
-->total is a bit of an odd parameter passed down to the low-level
-allocator all the way from the high-level callers.  It's supposed to
-contain the maximum number of blocks to be allocated for the whole
-transaction [1].
+There are only two reasons for xfs_log_force / xfs_log_force_lsn to fail:
+one is an I/O error, for which xlog_bdstrat already logs a warning, and
+the second is an already shutdown log due to a previous I/O errors.  In
+the latter case we'll already have a previous indication for the actual
+error, but the large stream of misleading warnings from xfs_log_force
+will probably scroll it out of the message buffer.
 
-But in xfs_iomap_write_allocate we only convert existing delayed
-allocations and thus only have a minimal block reservation for the
-current transaction, so xfs_alloc_space_available can't use it for
-the allocation decisions.  Use the maximum of args->total and the
-calculated block requirement to make a decision.  We probably should
-get rid of args->total eventually and instead apply ->minleft more
-broadly, but that will require some extensive changes all over.
-
-[1] which creates lots of confusion as most callers don't decrement it
-once doing a first allocation.  But that's for a separate series.
+Simply removing the warnings thus makes the XFS log reporting significantly
+better.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_log.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index f2e7eb6..9f06a21 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1995,7 +1995,7 @@ xfs_alloc_space_available(
- 	int			flags)
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 3b74fa0..4017aa9 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3324,12 +3324,8 @@ xfs_log_force(
+ 	xfs_mount_t	*mp,
+ 	uint		flags)
  {
- 	struct xfs_perag	*pag = args->pag;
--	xfs_extlen_t		longest;
-+	xfs_extlen_t		alloc_len, longest;
- 	xfs_extlen_t		reservation; /* blocks that are still reserved */
- 	int			available;
+-	int	error;
+-
+ 	trace_xfs_log_force(mp, 0, _RET_IP_);
+-	error = _xfs_log_force(mp, flags, NULL);
+-	if (error)
+-		xfs_warn(mp, "%s: error %d returned.", __func__, error);
++	_xfs_log_force(mp, flags, NULL);
+ }
  
-@@ -2005,15 +2005,16 @@ xfs_alloc_space_available(
- 	reservation = xfs_ag_resv_needed(pag, args->resv);
+ /*
+@@ -3473,12 +3469,8 @@ xfs_log_force_lsn(
+ 	xfs_lsn_t	lsn,
+ 	uint		flags)
+ {
+-	int	error;
+-
+ 	trace_xfs_log_force(mp, lsn, _RET_IP_);
+-	error = _xfs_log_force_lsn(mp, lsn, flags, NULL);
+-	if (error)
+-		xfs_warn(mp, "%s: error %d returned.", __func__, error);
++	_xfs_log_force_lsn(mp, lsn, flags, NULL);
+ }
  
- 	/* do we have enough contiguous free space for the allocation? */
-+	alloc_len = args->minlen + (args->alignment - 1) + args->minalignslop;
- 	longest = xfs_alloc_longest_free_extent(args->mp, pag, min_free,
- 			reservation);
--	if ((args->minlen + args->alignment + args->minalignslop - 1) > longest)
-+	if (longest < alloc_len)
- 		return false;
- 
- 	/* do we have enough free space remaining for the allocation? */
- 	available = (int)(pag->pagf_freeblks + pag->pagf_flcount -
- 			  reservation - min_free - args->minleft);
--	if (available < (int)args->total)
-+	if (available < (int)max(args->total, alloc_len))
- 		return false;
- 
- 	/*
+ /*
 -- 
 2.1.4
 
