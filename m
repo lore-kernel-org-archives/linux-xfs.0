@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34732 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:55505 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750898AbdBBH4U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:56:20 -0500
+        with ESMTP id S1750926AbdBBH4Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:56:24 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/19] xfs: bump up reserved blocks in xfs_alloc_set_aside
-Date: Thu,  2 Feb 2017 08:55:53 +0100
-Message-Id: <1486022171-8076-2-git-send-email-hch@lst.de>
+Subject: [PATCH 02/19] xfs: fix bogus minleft manipulations
+Date: Thu,  2 Feb 2017 08:55:54 +0100
+Message-Id: <1486022171-8076-3-git-send-email-hch@lst.de>
 In-Reply-To: <1486022171-8076-1-git-send-email-hch@lst.de>
 References: <1486022171-8076-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,39 +15,133 @@ List-Id: xfs
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 5149fd327f16e393c1d04fa5325ab072c32472bf upstream.
+commit 255c516278175a6dc7037d1406307f35237d8688 upstream.
 
-Setting aside 4 blocks globally for bmbt splits isn't all that useful,
-as different threads can allocate space in parallel.  Bump it to 4
-blocks per AG to allow each thread that is currently doing an
-allocation to dip into it separately.  Without that we may no have
-enough reserved blocks if there are enough parallel transactions
-in an almost out space file system that all run into bmap btree
-splits.
+We can't just set minleft to 0 when we're low on space - that's exactly
+what we need minleft for: to protect space in the AG for btree block
+allocations when we are low on free space.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c      | 24 +++++++-----------------
+ fs/xfs/libxfs/xfs_bmap.c       |  3 ---
+ fs/xfs/libxfs/xfs_bmap_btree.c |  3 +--
+ 3 files changed, 8 insertions(+), 22 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 5050056..0a46f84 100644
+index 0a46f84..fe92570 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -95,10 +95,7 @@ unsigned int
- xfs_alloc_set_aside(
- 	struct xfs_mount	*mp)
- {
--	unsigned int		blocks;
--
--	blocks = 4 + (mp->m_sb.sb_agcount * XFS_ALLOC_AGFL_RESERVE);
--	return blocks;
-+	return mp->m_sb.sb_agcount * (XFS_ALLOC_AGFL_RESERVE + 4);
- }
+@@ -2635,12 +2635,10 @@ xfs_alloc_vextent(
+ 	xfs_agblock_t	agsize;	/* allocation group size */
+ 	int		error;
+ 	int		flags;	/* XFS_ALLOC_FLAG_... locking flags */
+-	xfs_extlen_t	minleft;/* minimum left value, temp copy */
+ 	xfs_mount_t	*mp;	/* mount structure pointer */
+ 	xfs_agnumber_t	sagno;	/* starting allocation group number */
+ 	xfs_alloctype_t	type;	/* input allocation type */
+ 	int		bump_rotor = 0;
+-	int		no_min = 0;
+ 	xfs_agnumber_t	rotorstep = xfs_rotorstep; /* inode32 agf stepper */
  
- /*
+ 	mp = args->mp;
+@@ -2669,7 +2667,6 @@ xfs_alloc_vextent(
+ 		trace_xfs_alloc_vextent_badargs(args);
+ 		return 0;
+ 	}
+-	minleft = args->minleft;
+ 
+ 	switch (type) {
+ 	case XFS_ALLOCTYPE_THIS_AG:
+@@ -2680,9 +2677,7 @@ xfs_alloc_vextent(
+ 		 */
+ 		args->agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
+ 		args->pag = xfs_perag_get(mp, args->agno);
+-		args->minleft = 0;
+ 		error = xfs_alloc_fix_freelist(args, 0);
+-		args->minleft = minleft;
+ 		if (error) {
+ 			trace_xfs_alloc_vextent_nofix(args);
+ 			goto error0;
+@@ -2747,9 +2742,7 @@ xfs_alloc_vextent(
+ 		 */
+ 		for (;;) {
+ 			args->pag = xfs_perag_get(mp, args->agno);
+-			if (no_min) args->minleft = 0;
+ 			error = xfs_alloc_fix_freelist(args, flags);
+-			args->minleft = minleft;
+ 			if (error) {
+ 				trace_xfs_alloc_vextent_nofix(args);
+ 				goto error0;
+@@ -2789,20 +2782,17 @@ xfs_alloc_vextent(
+ 			 * or switch to non-trylock mode.
+ 			 */
+ 			if (args->agno == sagno) {
+-				if (no_min == 1) {
++				if (flags == 0) {
+ 					args->agbno = NULLAGBLOCK;
+ 					trace_xfs_alloc_vextent_allfailed(args);
+ 					break;
+ 				}
+-				if (flags == 0) {
+-					no_min = 1;
+-				} else {
+-					flags = 0;
+-					if (type == XFS_ALLOCTYPE_START_BNO) {
+-						args->agbno = XFS_FSB_TO_AGBNO(mp,
+-							args->fsbno);
+-						args->type = XFS_ALLOCTYPE_NEAR_BNO;
+-					}
++
++				flags = 0;
++				if (type == XFS_ALLOCTYPE_START_BNO) {
++					args->agbno = XFS_FSB_TO_AGBNO(mp,
++						args->fsbno);
++					args->type = XFS_ALLOCTYPE_NEAR_BNO;
+ 				}
+ 			}
+ 			xfs_perag_put(args->pag);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 89d727b..52dc5c1 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3903,7 +3903,6 @@ xfs_bmap_btalloc(
+ 		args.fsbno = 0;
+ 		args.type = XFS_ALLOCTYPE_FIRST_AG;
+ 		args.total = ap->minlen;
+-		args.minleft = 0;
+ 		if ((error = xfs_alloc_vextent(&args)))
+ 			return error;
+ 		ap->dfops->dop_low = true;
+@@ -4437,8 +4436,6 @@ xfs_bmapi_allocate(
+ 	if (error)
+ 		return error;
+ 
+-	if (bma->dfops->dop_low)
+-		bma->minleft = 0;
+ 	if (bma->cur)
+ 		bma->cur->bc_private.b.firstblock = *bma->firstblock;
+ 	if (bma->blkno == NULLFSBLOCK)
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 049fa59..f76c169 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -502,12 +502,11 @@ xfs_bmbt_alloc_block(
+ 	if (args.fsbno == NULLFSBLOCK && args.minleft) {
+ 		/*
+ 		 * Could not find an AG with enough free space to satisfy
+-		 * a full btree split.  Try again without minleft and if
++		 * a full btree split.  Try again and if
+ 		 * successful activate the lowspace algorithm.
+ 		 */
+ 		args.fsbno = 0;
+ 		args.type = XFS_ALLOCTYPE_FIRST_AG;
+-		args.minleft = 0;
+ 		error = xfs_alloc_vextent(&args);
+ 		if (error)
+ 			goto error0;
 -- 
 2.1.4
 
