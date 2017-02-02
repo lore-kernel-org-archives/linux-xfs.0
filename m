@@ -1,57 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47875 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:50429 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751052AbdBBH45 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:56:57 -0500
+        with ESMTP id S1751061AbdBBH5B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:57:01 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/19] xfs: sanity check inode di_mode
-Date: Thu,  2 Feb 2017 08:56:03 +0100
-Message-Id: <1486022171-8076-12-git-send-email-hch@lst.de>
+Subject: [PATCH 12/19] xfs: don't wrap ID in xfs_dq_get_next_id
+Date: Thu,  2 Feb 2017 08:56:04 +0100
+Message-Id: <1486022171-8076-13-git-send-email-hch@lst.de>
 In-Reply-To: <1486022171-8076-1-git-send-email-hch@lst.de>
 References: <1486022171-8076-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Amir Goldstein <amir73il@gmail.com>
+From: Eric Sandeen <sandeen@redhat.com>
 
-commit a324cbf10a3c67aaa10c9f47f7b5801562925bc2 upstream.
+commit 657bdfb7f5e68ca5e2ed009ab473c429b0d6af85 upstream.
 
-Check for invalid file type in xfs_dinode_verify()
-and fail to load the inode structure from disk.
+The GETNEXTQOTA ioctl takes whatever ID is sent in,
+and looks for the next active quota for an user
+equal or higher to that ID.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+But if we are at the maximum ID and then ask for the "next"
+one, we may wrap back to zero.  In this case, userspace
+may loop forever, because it will start querying again
+at zero.
+
+We'll fix this in userspace as well, but for the kernel,
+return -ENOENT if we ask for the next quota ID
+past UINT_MAX so the caller knows to stop.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c | 3 +++
- 1 file changed, 3 insertions(+)
+ fs/xfs/xfs_dquot.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 977245d..37ee7f0 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -29,6 +29,7 @@
- #include "xfs_icache.h"
- #include "xfs_trans.h"
- #include "xfs_ialloc.h"
-+#include "xfs_dir2.h"
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 7a30b8f..9d06cc3 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -710,6 +710,10 @@ xfs_dq_get_next_id(
+ 	/* Simple advance */
+ 	next_id = *id + 1;
  
- /*
-  * Check that none of the inode's in the buffer have a next
-@@ -398,6 +399,8 @@ xfs_dinode_verify(
- 		return false;
- 
- 	mode = be16_to_cpu(dip->di_mode);
-+	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
-+		return false;
- 
- 	/* No zero-length symlinks/dirs. */
- 	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
++	/* If we'd wrap past the max ID, stop */
++	if (next_id < *id)
++		return -ENOENT;
++
+ 	/* If new ID is within the current chunk, advancing it sufficed */
+ 	if (next_id % mp->m_quotainfo->qi_dqperchunk) {
+ 		*id = next_id;
 -- 
 2.1.4
 
