@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35773 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:36239 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751018AbdBBH5U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:57:20 -0500
+        with ESMTP id S1750858AbdBBH5Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 02:57:24 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 17/19] xfs: extsize hints are not unlikely in xfs_bmap_btalloc
-Date: Thu,  2 Feb 2017 08:56:09 +0100
-Message-Id: <1486022171-8076-18-git-send-email-hch@lst.de>
+Subject: [PATCH 18/19] xfs: clear _XBF_PAGES from buffers when readahead page
+Date: Thu,  2 Feb 2017 08:56:10 +0100
+Message-Id: <1486022171-8076-19-git-send-email-hch@lst.de>
 In-Reply-To: <1486022171-8076-1-git-send-email-hch@lst.de>
 References: <1486022171-8076-1-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,46 +15,46 @@ List-Id: xfs
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 493611ebd62673f39e2f52c2561182c558a21cb6 upstream.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-With COW files they are the hotpath, just like for files with the
-extent size hint attribute.  We really shouldn't micro-manage anything
-but failure cases with unlikely.
+commit 2aa6ba7b5ad3189cc27f14540aa2f57f0ed8df4b upstream.
 
-Additionally Arnd Bergmann recently reported that one of these two
-unlikely annotations causes link failures together with an upcoming
-kernel instrumentation patch, so let's get rid of it ASAP.
+If we try to allocate memory pages to back an xfs_buf that we're trying
+to read, it's possible that we'll be so short on memory that the page
+allocation fails.  For a blocking read we'll just wait, but for
+readahead we simply dump all the pages we've collected so far.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Unfortunately, after dumping the pages we neglect to clear the
+_XBF_PAGES state, which means that the subsequent call to xfs_buf_free
+thinks that b_pages still points to pages we own.  It then double-frees
+the b_pages pages.
+
+This results in screaming about negative page refcounts from the memory
+manager, which xfs oughtn't be triggering.  To reproduce this case,
+mount a filesystem where the size of the inodes far outweighs the
+availalble memory (a ~500M inode filesystem on a VM with 300MB memory
+did the trick here) and run bulkstat in parallel with other memory
+eating processes to put a huge load on the system.  The "check summary"
+phase of xfs_scrub also works for this purpose.
+
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_buf.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index fbb60d3..f52fd63 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3720,7 +3720,7 @@ xfs_bmap_btalloc(
- 		align = xfs_get_cowextsz_hint(ap->ip);
- 	else if (xfs_alloc_is_userdata(ap->datatype))
- 		align = xfs_get_extsz_hint(ap->ip);
--	if (unlikely(align)) {
-+	if (align) {
- 		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
- 						align, 0, ap->eof, 0, ap->conv,
- 						&ap->offset, &ap->length);
-@@ -3792,7 +3792,7 @@ xfs_bmap_btalloc(
- 		args.minlen = ap->minlen;
- 	}
- 	/* apply extent size hints if obtained earlier */
--	if (unlikely(align)) {
-+	if (align) {
- 		args.prod = align;
- 		if ((args.mod = (xfs_extlen_t)do_mod(ap->offset, args.prod)))
- 			args.mod = (xfs_extlen_t)(args.prod - args.mod);
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index b5b9bff..d7a67d7 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -423,6 +423,7 @@ xfs_buf_allocate_memory(
+ out_free_pages:
+ 	for (i = 0; i < bp->b_page_count; i++)
+ 		__free_page(bp->b_pages[i]);
++	bp->b_flags &= ~_XBF_PAGES;
+ 	return error;
+ }
+ 
 -- 
 2.1.4
 
