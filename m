@@ -1,47 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f175.google.com ([74.125.82.175]:34664 "EHLO
-        mail-ot0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751377AbdBBQqK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 11:46:10 -0500
-Received: by mail-ot0-f175.google.com with SMTP id f9so16131600otd.1
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Feb 2017 08:46:10 -0800 (PST)
+Received: from aserp1040.oracle.com ([141.146.126.69]:24058 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751064AbdBCRrJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 12:47:09 -0500
+Date: Fri, 3 Feb 2017 09:46:50 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3] xfs/263: don't hardcode inode numbers in output
+Message-ID: <20170203174650.GT9134@birch.djwong.org>
+References: <148562509264.30594.7506967863745489318.stgit@birch.djwong.org>
+ <7df1dabe-3832-ffa7-cb80-07ee602bd455@sandeen.net>
+ <20170128203012.GQ14033@birch.djwong.org>
+ <20170203064230.GA1859@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-From: fuser ct1 <fuserct1@gmail.com>
-Date: Thu, 2 Feb 2017 16:46:09 +0000
-Message-ID: <CAL8yqihyYEaCEzWJLqAKsw1BBOQDm-AYR2dCUeN-X-449jCwzQ@mail.gmail.com>
-Subject: Safe XFS limits (100TB+)
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170203064230.GA1859@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Hello list.
+On Fri, Feb 03, 2017 at 02:42:30PM +0800, Eryu Guan wrote:
+> On Sat, Jan 28, 2017 at 12:30:12PM -0800, Darrick J. Wong wrote:
+> > On Sat, Jan 28, 2017 at 12:10:56PM -0600, Eric Sandeen wrote:
+> > > On 1/28/17 11:38 AM, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Since we can't control the inode number assignments when creating files,
+> > > > don't hardcode them in the golden output.
+> > > 
+> > > what numbers are you seeing?
+> > > 
+> > > The inode numbers aren't important for the test, but I don't want to
+> > > gloss over something unexpected.
+> > 
+> > I consistently see 131+64 = 195 and things like that.
+> 
+> I occasionally see 195/6 inode numbers too, I suspect it has something
+> to do with 4k-sector disks. Test failed if I point SCRATCH_DEV to a
+> 4k-sector scsi_debug device, and test passed after applying this patch.
 
-Despite searching I couldn't find guidance, or many use cases, regarding
-XFS beyond 100TB.
+Aha!  I do have 4k-sector disks underlying the VMs that fail.  Yes,
+that's the key.
 
-Of course the filesystem limits are way beyond this, but I was looking for
-real world experiences...
+--D
 
-Specifically I'm wondering about the sanity of using XFS with a couple of
-144TB block devices (my system will have two 22x8TB R60 in a 44 bay JBOD).
-My storage is used for video editing/post production.
-
-* Has anybody here tried?
-* What is the likelihood of xfs_repair/check finishing if I ever needed to
-run it?
-* Am I nuts?
-
-I know that beyond a certain point I should be looking at a scale out
-option, but the level of complexity and cost goes up considerably.
-
-More info:
-=======
-
-Previously I had an 80TB usable (96TB raw) with an LSI MegaRAID 9361
-controller. This worked very nicely and was FAST. I was careful to choose
-the inode64 fstab mount option. The OS was Debian Jessie, which has
-XFSPROGS version 3.2.1.
-
-Thanks in advance and sorry if this is not the right list.
+> 
+> Thanks,
+> Eryu
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
