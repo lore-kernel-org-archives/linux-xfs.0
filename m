@@ -1,87 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43719 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751111AbdBHTY3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Feb 2017 14:24:29 -0500
-Date: Wed, 8 Feb 2017 11:23:12 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: WARN_ON_ONCE() during generic/270
-Message-ID: <20170208192312.GC32032@birch.djwong.org>
-References: <20170208191156.GA19071@linux.intel.com>
+Received: from mail-ot0-f178.google.com ([74.125.82.178]:33957 "EHLO
+        mail-ot0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752331AbdBCVrH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 16:47:07 -0500
+Received: by mail-ot0-f178.google.com with SMTP id f9so24309079otd.1
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Feb 2017 13:47:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170208191156.GA19071@linux.intel.com>
+In-Reply-To: <148615748258.43180.1690152053774975329.stgit@djiang5-desk3.ch.intel.com>
+References: <148615748258.43180.1690152053774975329.stgit@djiang5-desk3.ch.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 3 Feb 2017 13:47:06 -0800
+Message-ID: <CAPcyv4g4NBzE9B+-=uZD38NUd4HurCJUYDnOow7CZGppuJs8FQ@mail.gmail.com>
+Subject: Re: [PATCH] mm: replace FAULT_FLAG_SIZE with parameter to huge_fault
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@ml01.01.org, xfs <linux-xfs@vger.kernel.org>
+To: Dave Jiang <dave.jiang@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Hansen <dave.hansen@linux.intel.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Jan Kara <jack@suse.com>, linux-ext4 <linux-ext4@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Vlastimil Babka <vbabka@suse.cz>
 
-> To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com
+On Fri, Feb 3, 2017 at 1:31 PM, Dave Jiang <dave.jiang@intel.com> wrote:
+> Since the introduction of FAULT_FLAG_SIZE to the vm_fault flag, it has
+> been somewhat painful with getting the flags set and removed at the
+> correct locations. More than one kernel oops was introduced due to
+> difficulties of getting the placement correctly. Removing the flag
+> values and introducing an input parameter to huge_fault that indicates
+> the size of the page entry. This makes the code easier to trace and
+> should avoid the issues we see with the fault flags where removal of the
+> flag was necessary in the fallback paths.
+>
+> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 
-[list moved; cc'ing linux-xfs@vger.kernel.org]
+Tested-by: Dan Williams <dan.j.williams@intel.com>
 
-On Wed, Feb 08, 2017 at 12:11:56PM -0700, Ross Zwisler wrote:
-> I hit the following WARN_ON_ONCE() during generic/270 with xfs (passed through
-> kasan_symbolize.py):
-> 
->   run fstests generic/270 at 2017-02-08 10:56:07
->   XFS (pmem0p2): Unmounting Filesystem
->   XFS (pmem0p2): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
->   XFS (pmem0p2): Mounting V5 Filesystem
->   XFS (pmem0p2): Ending clean mount
->   XFS (pmem0p2): Quotacheck needed: Please wait.
->   XFS (pmem0p2): Quotacheck: Done.
->   XFS (pmem0p2): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
+This fixes a crash I can produce with the existing ndctl unit tests
+[1] on next-20170202.  Now to go extend the tests to go after the PUD
+case...
 
-What does xfs_info say about this fs?  I guess we're not trying to use
-rmap here, so there's less metadata to shove through the log.
-
-I'm also wondering which file are we trying to insert-range on, and
-what its bmap looks like?
-
---D
-
->   ------------[ cut here ]------------
->   WARNING: CPU: 7 PID: 23652 at fs/xfs/libxfs/xfs_bmap.c:5981[<      none      >] xfs_bmse_shift_one+0x3da/0x4c0 fs/xfs/libxfs/xfs_bmap.c:5981
->   Modules linked in: dax_pmem nd_pmem dax nd_btt nd_e820 libnvdimm
->   CPU: 4 PID: 23652 Comm: 23288.fsstress. Not tainted 4.10.0-rc7-00065-g926af627 #1
->   Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.9.1-1.fc24 04/01/2014
->   Call Trace:
->   [<     inline     >] __dump_stack lib/dump_stack.c:15
->   [<      none      >] dump_stack+0x86/0xc3 lib/dump_stack.c:51
->   [<      none      >] __warn+0xcb/0xf0 kernel/panic.c:547
->   [<      none      >] warn_slowpath_null+0x1d/0x20 kernel/panic.c:582
->   [<      none      >] xfs_bmse_shift_one+0x3da/0x4c0 fs/xfs/libxfs/xfs_bmap.c:5981
->   [<      none      >] xfs_bmap_shift_extents+0x305/0x490 fs/xfs/libxfs/xfs_bmap.c:6144
->   [<      none      >] xfs_shift_file_space+0x25f/0x320 fs/xfs/xfs_bmap_util.c:1475
->   [<      none      >] xfs_insert_file_space+0x5a/0x180 fs/xfs/xfs_bmap_util.c:1548
->   [<      none      >] xfs_file_fallocate+0x34c/0x3b0 fs/xfs/xfs_file.c:844
->    ?[<      none      >] rcu_sync_lockdep_assert+0x2f/0x60 kernel/rcu/sync.c:68
->   [<      none      >] vfs_fallocate+0x15a/0x230 fs/open.c:320
->   [<     inline     >] SYSC_fallocate fs/open.c:343
->   [<      none      >] SyS_fallocate+0x48/0x80 fs/open.c:337
->   [<      none      >] entry_SYSCALL_64_fastpath+0x1f/0xc2 /home/rzwisler/project/linux/arch/x86/entry/entry_64.S:204
->   RIP: 0033:0x7f34dc4ff0ca
->   RSP: 002b:00007ffcffa58058 EFLAGS: 00000246 ORIG_RAX: 000000000000011d
->   RAX: ffffffffffffffda RBX: 0000000000000166 RCX: 00007f34dc4ff0ca
->   RDX: 00000000000ba000 RSI: 0000000000000020 RDI: 0000000000000003
->   RBP: 0000000000000003 R08: 000000000000007b R09: 00007ffcffa5807c
->   R10: 00000000000bc000 R11: 0000000000000246 R12: 00007f34d8000de0
->   R13: 00000000ffffffff R14: 000000000000af4a R15: 0000000000000000
->   ---[ end trace e24f5d4cbfc216f6 ]---
-> 
-> This trace is with the current linux/master:
-> 
-> commit 926af6273fc6 ("Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net")
-> 
-> though I initially his this issue with a v4.9 kernel.  My test setup is a pair
-> of PMEM ramdisks made with the memmap command line parameter, and my
-> test filesystem is mounted with DAX.
-> 
-> This can be reproduced pretty easily by just running generic/270 in a
-> loop.
-> 
-> Thanks,
-> - Ross
+[1]: https://github.com/pmem/ndctl
