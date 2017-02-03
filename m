@@ -1,83 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:26246 "EHLO
         ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752540AbdBCWgf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 17:36:35 -0500
-Date: Sat, 4 Feb 2017 09:31:27 +1100
+        by vger.kernel.org with ESMTP id S1752540AbdBCWge (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 17:36:34 -0500
+Date: Sat, 4 Feb 2017 09:36:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Suspend fails when xfs is involved?
-Message-ID: <20170203223127.GC32761@dastard>
-References: <20170203010401.GR9134@birch.djwong.org>
+Subject: Re: [PATCH] xfs: reset b_first_retry_time when clear the retry
+ status of xfs_buf_t
+Message-ID: <20170203223630.GD32761@dastard>
+References: <1486112905-38025-1-git-send-email-houtao1@huawei.com>
+ <20170203203258.GA3580@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170203010401.GR9134@birch.djwong.org>
+In-Reply-To: <20170203203258.GA3580@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+Cc: Hou Tao <houtao1@huawei.com>, linux-xfs@vger.kernel.org, cmaiolino@redhat.com, sandeen@redhat.com
 
-On Thu, Feb 02, 2017 at 05:04:01PM -0800, Darrick J. Wong wrote:
-> Hi list,
+On Fri, Feb 03, 2017 at 12:32:58PM -0800, Darrick J. Wong wrote:
+> On Fri, Feb 03, 2017 at 05:08:25PM +0800, Hou Tao wrote:
+> > After successful IO or permanent error, b_first_retry_time also
+> > needs to be cleared, else the invalid first retry time will be
+> > used by the next retry check.
+> > 
+> > Signed-off-by: Hou Tao <houtao1@huawei.com>
+> > ---
+> >  fs/xfs/xfs_buf_item.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> > index 2975cb2..0306168 100644
+> > --- a/fs/xfs/xfs_buf_item.c
+> > +++ b/fs/xfs/xfs_buf_item.c
+> > @@ -1162,6 +1162,7 @@ xfs_buf_iodone_callbacks(
+> >  	 */
+> >  	bp->b_last_error = 0;
+> >  	bp->b_retries = 0;
+> > +	bp->b_first_retry_time = 0;
 > 
-> So I've noticed that my laptop consistently fails to suspend with:
-> 
-> [1183625.726800] atkbd serio0: Unknown key pressed (translated set 2, code 0xd8 on isa0060/serio0).
-> [1183625.726804] atkbd serio0: Use 'setkeycodes e058 <keycode>' to make it known.
-> [1183625.727492] atkbd serio0: Unknown key released (translated set 2, code 0xd8 on isa0060/serio0).
-> [1183625.727497] atkbd serio0: Use 'setkeycodes e058 <keycode>' to make it known.
-> [1183626.203928] e1000e: enp0s25 NIC Link is Down
-> [1183626.422720] PM: Syncing filesystems ... done.
-> [1183626.450348] Freezing user space processes ... (elapsed 0.002 seconds) done.
-> [1183626.452995] Freezing remaining freezable tasks ... 
-> [1183632.657243] atkbd serio0: Unknown key pressed (translated set 2, code 0xd9 on isa0060/serio0).
-> [1183632.657247] atkbd serio0: Use 'setkeycodes e059 <keycode>' to make it known.
-> [1183632.657814] atkbd serio0: Unknown key released (translated set 2, code 0xd9 on isa0060/serio0).
-> [1183632.657817] atkbd serio0: Use 'setkeycodes e059 <keycode>' to make it known.
-> [1183646.459310] Freezing of tasks failed after 20.006 seconds (1 tasks refusing to freeze, wq_busy=0):
-> [1183646.459348] xfsaild/dm-1    D    0  1767      2 0x00000000
+> Looks ok, will try to queue it up as an rc7 fix.
 
-Yes, this can happen because suspend thinks that "sync" is
-sufficient to quiesce a filesystem into an idle state. 
+It's not a critical bug, nor is it a regression introduced in
+4.10-rc1, so IMO it's not a -rc7 candidate fix. Just add it in the
+for-next queue and mark it for stable. It'll still get to most users
+at pretty much the same time via the stable trees...
 
-> [1183646.459366] Call Trace:
-> [1183646.459386]  [<ffffffffb5a43b8d>] schedule+0x3d/0x90
-> [1183646.459390]  [<ffffffffb5a47339>] schedule_timeout+0x239/0x420
-> [1183646.459401]  [<ffffffffb5a450e6>] wait_for_completion+0xa6/0x120
-> [1183646.459460]  [<ffffffffb539ba0f>] xfs_buf_submit_wait+0x7f/0x280
-> [1183646.459466]  [<ffffffffb539bc33>] _xfs_buf_read+0x23/0x30
-> [1183646.459470]  [<ffffffffb539bd64>] xfs_buf_read_map+0x124/0x1b0
-> [1183646.459473]  [<ffffffffb53eb270>] xfs_trans_read_buf_map+0x110/0x370
-> [1183646.459478]  [<ffffffffb538417e>] xfs_imap_to_bp+0x6e/0xe0
-> [1183646.459481]  [<ffffffffb53b3883>] xfs_iflush+0xd3/0x230
-> [1183646.459486]  [<ffffffffb53e0ab4>] xfs_inode_item_push+0xf4/0x150
-> [1183646.459489]  [<ffffffffb53e9cdf>] xfsaild+0x2df/0x740
-> [1183646.459500]  [<ffffffffb51101f9>] kthread+0xd9/0xf0
+Cheers,
 
-That's inode writeback when the underlying inode buffer has been
-reclaimed before the dirty cached inode has been written. So the
-xfsaild is doing read/modify/write cycles to write back dirty
-inodes. i.e. you're running in active memory reclaim conditions
-prior to suspend...
-
-> ISTR Dave or someone grumbling about this being some artifact of the log
-> trying to read in some buffer or other as part of flushing the log prior
-> to suspend, but the io completion ends up tied to a workqueue that's
-> already been put to sleep, so xfs gets stuck forever.
-
-Yup, suspend is just completely fucked, has been for more than 10
-years. It needs to freeze filesystems so they are quiesced sanely,
-not left to run while random parts of the kernel infrastructure they
-rely on are shut down behind the filesystem's back.
-
-> Look familiar to anyone before I try to debug this tomorrow?
-
-See this as a recent starting point.
-
-https://lwn.net/Articles/705269/
-
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
