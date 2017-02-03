@@ -1,159 +1,229 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28976 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751931AbdBBXu1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 18:50:27 -0500
-Subject: [PATCH 2/2] ext4: support the FSGEOMETRY ioctl, similar to xfs
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 02 Feb 2017 15:50:18 -0800
-Message-ID: <148607941809.553.9317109635430337778.stgit@birch.djwong.org>
-In-Reply-To: <148607940546.553.277589646408670724.stgit@birch.djwong.org>
-References: <148607940546.553.277589646408670724.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54170 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751123AbdBCPWo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Feb 2017 10:22:44 -0500
+Date: Fri, 3 Feb 2017 10:22:33 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/4] xfs: improve handling of busy extents in the
+ low-level allocator
+Message-ID: <20170203152233.GC45388@bfoster.bfoster>
+References: <1485715421-17182-1-git-send-email-hch@lst.de>
+ <1485715421-17182-3-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1485715421-17182-3-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: tytso@mit.edu, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sun, Jan 29, 2017 at 07:43:39PM +0100, Christoph Hellwig wrote:
+> Currently we force the log and simply try again if we hit a busy extent,
+> but especially with online discard enabled it might take a while after
+> the log force for the busy extents to disappear, and we might have
+> already completed our second pass.
+> 
+> So instead we add a new waitqueue and a generation counter to the pag
+> structure so that we can do wakeups once we've removed busy extents,
+> and we replace the single retry with an unconditional one - after
+> all we hold the AGF buffer lock, so no other allocations or frees
+> can be racing with us in this AG.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 93 +++++++++++++++++++++++---------------------
+>  fs/xfs/xfs_extent_busy.c  | 98 ++++++++++++++++++++++++++++++++++-------------
+>  fs/xfs/xfs_extent_busy.h  |  8 +++-
+>  fs/xfs/xfs_mount.c        |  1 +
+>  fs/xfs/xfs_mount.h        |  2 +
+>  5 files changed, 129 insertions(+), 73 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 9f06a21..fe98fbc 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+...
+> @@ -1183,8 +1194,8 @@ xfs_alloc_ag_vextent_near(
+>  			if ((error = xfs_alloc_get_rec(bno_cur_lt, &ltbno, &ltlen, &i)))
+>  				goto error0;
+>  			XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
+> -			xfs_alloc_compute_aligned(args, ltbno, ltlen,
+> -						  &ltbnoa, &ltlena);
+> +			busy |= xfs_alloc_compute_aligned(args, ltbno, ltlen,
+> +					&ltbnoa, &ltlena, &busy_gen);
+>  			if (ltlena >= args->minlen && ltbnoa >= args->min_agbno)
+>  				break;
+>  			if ((error = xfs_btree_decrement(bno_cur_lt, 0, &i)))
+> @@ -1199,8 +1210,8 @@ xfs_alloc_ag_vextent_near(
+>  			if ((error = xfs_alloc_get_rec(bno_cur_gt, &gtbno, &gtlen, &i)))
+>  				goto error0;
+>  			XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
+> -			xfs_alloc_compute_aligned(args, gtbno, gtlen,
+> -						  &gtbnoa, &gtlena);
+> +			busy |= xfs_alloc_compute_aligned(args, gtbno, gtlen,
+> +					&gtbnoa, &gtlena, &busy_gen);
 
-Add an ioctl to report the geometry of a mounted filesystem.  The
-structure is designed to be close enough to XFS's that we'll be able to
-leverage the new GETFSMAP functionality in xfsprogs.
+Not a big deal, but perhaps in the above two cases where we're
+traversing the bnobt, just track the max busy gen and use that being set
+non-zero to trigger (hopefully) fewer flushes rather than being subject
+to whatever the last value was? Then we don't have to do the 'busy |=
+..' thing either. That doesn't cover the overflow case, but that should
+be rare and we still have the retry.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/ext4/ext4.h  |   35 +++++++++++++++++++++++++++++++++++
- fs/ext4/ioctl.c |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 89 insertions(+)
+>  			if (gtlena >= args->minlen && gtbnoa <= args->max_agbno)
+>  				break;
+>  			if ((error = xfs_btree_increment(bno_cur_gt, 0, &i)))
+...
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index 29c2f99..8251359 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+> @@ -334,14 +334,18 @@ xfs_extent_busy_reuse(
+>   * subset of the extent that is not busy.  If *rlen is smaller than
+>   * args->minlen no suitable extent could be found, and the higher level
+>   * code needs to force out the log and retry the allocation.
+> + *
+> + * Return the current discard generation for the AG if the file system
+> + * has online discard enabled.  This value can be used to wait for
+> + * the trimmed extent to become fully available if the AG is running out
+> + * of space.
+>   */
+> -void
+> +bool
+>  xfs_extent_busy_trim(
+>  	struct xfs_alloc_arg	*args,
+> -	xfs_agblock_t		bno,
+> -	xfs_extlen_t		len,
+> -	xfs_agblock_t		*rbno,
+> -	xfs_extlen_t		*rlen)
+> +	xfs_agblock_t		*bno,
+> +	xfs_extlen_t		*len,
+> +	unsigned		*busy_gen)
+>  {
+>  	xfs_agblock_t		fbno;
+>  	xfs_extlen_t		flen;
+> @@ -351,8 +355,8 @@ xfs_extent_busy_trim(
+>  
+>  	spin_lock(&args->pag->pagb_lock);
+>  restart:
+> -	fbno = bno;
+> -	flen = len;
+> +	fbno = *bno;
+> +	flen = *len;
+>  	rbp = args->pag->pagb_tree.rb_node;
+>  	while (rbp && flen >= args->minlen) {
+>  		struct xfs_extent_busy *busyp =
+> @@ -504,24 +508,25 @@ xfs_extent_busy_trim(
+>  
+>  		flen = fend - fbno;
+>  	}
+> +out:
+>  	spin_unlock(&args->pag->pagb_lock);
+>  
+> -	if (fbno != bno || flen != len) {
+> -		trace_xfs_extent_busy_trim(args->mp, args->agno, bno, len,
+> +	if (fbno != *bno || flen != *len) {
+> +		trace_xfs_extent_busy_trim(args->mp, args->agno, *bno, *len,
+>  					  fbno, flen);
+> +		*bno = fbno;
+> +		*len = flen;
+> +		*busy_gen = args->pag->pagb_gen;
+> +		return true;
 
+We've already dropped pagb_lock by the time we grab pagb_gen. What
+prevents this from racing with a flush and pagb_gen bump and returning a
+gen value that might not have any associated busy extents?
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 3123e49..aee207a 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -706,6 +706,40 @@ fsmap_sizeof(
- #define FMR_OWN_INODES		(-7ULL)	/* inodes */
- #define FMR_OWN_DEFECTIVE	(-10ULL) /* bad blocks */
- 
-+/* ext4fs geometry.  Most of the fields are the same as the XFS version. */
-+struct ext4_fsop_geom {
-+	__u32		blocksize;	/* filesystem (data) block size */
-+	__u32		inodecount;	/* inode count			*/
-+	__u32		agblocks;	/* fsblocks in an AG		*/
-+	__u32		agcount;	/* number of allocation groups	*/
-+	__u32		logblocks;	/* fsblocks in the log		*/
-+	__u32		resvblocks;	/* number of reserved blocks	*/
-+	__u32		inodesize;	/* inode size in bytes		*/
-+	__u32		agiblocks;	/* inode blocks per AG		*/
-+	__u64		datablocks;	/* fsblocks in data subvolume	*/
-+	__u64		resv64[3];
-+	unsigned char	uuid[16];	/* unique id of the filesystem	*/
-+	__u32		sunit;		/* stripe unit, fsblocks	*/
-+	__u32		swidth;		/* stripe width, fsblocks	*/
-+	__s32		version;	/* structure version		*/
-+	__u32		flags;		/* superblock version flags	*/
-+	__u32		resv32[4];
-+};
-+
-+#define EXT4_FSOP_GEOM_VERSION	0
-+
-+#define EXT4_FSOP_GEOM_FLAGS_ATTR	0x00001	/* attributes in use	 */
-+#define EXT4_FSOP_GEOM_FLAGS_NLINK	0x00002	/* 32-bit nlink values	 */
-+#define EXT4_FSOP_GEOM_FLAGS_QUOTA	0x00004	/* quotas enabled	 */
-+#define EXT4_FSOP_GEOM_FLAGS_PROJQ	0x00008	/* project quotas	 */
-+#define EXT4_FSOP_GEOM_FLAGS_METACRC	0x00010	/* metadata checksums	 */
-+#define EXT4_FSOP_GEOM_FLAGS_FTYPE	0x00020	/* inode directory types */
-+#define EXT4_FSOP_GEOM_FLAGS_64BIT	0x00040	/* 64-bit support	 */
-+#define EXT4_FSOP_GEOM_FLAGS_INLINEDATA	0x00080	/* inline data		 */
-+#define EXT4_FSOP_GEOM_FLAGS_ENCRYPT	0x00100	/* encrypted files	 */
-+#define EXT4_FSOP_GEOM_FLAGS_LARGEDIR	0x00200	/* large directories	 */
-+#define EXT4_FSOP_GEOM_FLAGS_BIGALLOC	0x00400	/* bigalloc		 */
-+
- /*
-  * ioctl commands
-  */
-@@ -731,6 +765,7 @@ fsmap_sizeof(
- #define EXT4_IOC_GET_ENCRYPTION_PWSALT	FS_IOC_GET_ENCRYPTION_PWSALT
- #define EXT4_IOC_GET_ENCRYPTION_POLICY	FS_IOC_GET_ENCRYPTION_POLICY
- #define EXT4_IOC_GETFSMAP		_IOWR('X', 59, struct fsmap_head)
-+#define EXT4_IOC_FSGEOMETRY		_IOR ('f', 19, struct ext4_fsop_geom)
- 
- #ifndef FS_IOC_FSGETXATTR
- /* Until the uapi changes get merged for project quota... */
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index d367269..4087805 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -546,6 +546,58 @@ ext4_ioc_getfsmap(
- 	return 0;
- }
- 
-+static int
-+ext4_ioc_fsgeometry(
-+	struct super_block	*sb,
-+	void			__user *arg)
-+{
-+	struct ext4_sb_info	*sbi = EXT4_SB(sb);
-+	journal_t		*journal = sbi->s_journal;
-+	struct ext4_fsop_geom	geom;
-+
-+	memset(&geom, 0, sizeof(geom));
-+	geom.version = EXT4_FSOP_GEOM_VERSION;
-+	geom.blocksize = EXT4_BLOCK_SIZE(sb);
-+	geom.inodecount = le32_to_cpu(sbi->s_es->s_inodes_count);
-+	geom.agblocks = EXT4_BLOCKS_PER_GROUP(sb);
-+	geom.agcount = sbi->s_groups_count;
-+	geom.logblocks = journal ? journal->j_maxlen : 0;
-+	geom.resvblocks = ext4_r_blocks_count(sbi->s_es);
-+	geom.inodesize = EXT4_INODE_SIZE(sb);
-+	geom.agiblocks = sbi->s_itb_per_group;
-+	geom.datablocks = ext4_blocks_count(sbi->s_es);
-+	memcpy(geom.uuid, sbi->s_es->s_uuid, sizeof(sbi->s_es->s_uuid));
-+	geom.sunit = le16_to_cpu(sbi->s_es->s_raid_stride);
-+	geom.swidth = le16_to_cpu(sbi->s_es->s_raid_stripe_width);
-+	geom.flags = 0;
-+	if (ext4_has_feature_xattr(sb))
-+		geom.flags |= EXT4_FSOP_GEOM_FLAGS_ATTR;
-+	if (ext4_has_feature_dir_nlink(sb))
-+		geom.flags |= EXT4_FSOP_GEOM_FLAGS_NLINK;
-+	if (ext4_has_feature_quota(sb))
-+		geom.flags |= EXT4_FSOP_GEOM_FLAGS_QUOTA;
-+	if (ext4_has_feature_project(sb))
-+		geom.flags |= EXT4_FSOP_GEOM_FLAGS_PROJQ;
-+	if (ext4_has_metadata_csum(sb))
-+		geom.flags |= EXT4_FSOP_GEOM_FLAGS_METACRC;
-+	if (ext4_has_feature_filetype(sb))
-+		geom.flags |= EXT4_FSOP_GEOM_FLAGS_FTYPE;
-+	if (ext4_has_feature_64bit(sb))
-+		geom.flags |= EXT4_FSOP_GEOM_FLAGS_64BIT;
-+	if (ext4_has_feature_inline_data(sb))
-+		geom.flags |= EXT4_FSOP_GEOM_FLAGS_INLINEDATA;
-+	if (ext4_has_feature_encrypt(sb))
-+		geom.flags |= EXT4_FSOP_GEOM_FLAGS_ENCRYPT;
-+	if (ext4_has_feature_largedir(sb))
-+		geom.flags |= EXT4_FSOP_GEOM_FLAGS_LARGEDIR;
-+	if (ext4_has_feature_bigalloc(sb))
-+		geom.flags |= EXT4_FSOP_GEOM_FLAGS_BIGALLOC;
-+
-+	if (copy_to_user(arg, &geom, sizeof(geom)))
-+		return -EFAULT;
-+	return 0;
-+}
-+
- long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- {
- 	struct inode *inode = file_inode(filp);
-@@ -556,6 +608,8 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 	ext4_debug("cmd = %u, arg = %lu\n", cmd, arg);
- 
- 	switch (cmd) {
-+	case EXT4_IOC_FSGEOMETRY:
-+		return ext4_ioc_fsgeometry(sb, (void __user *)arg);
- 	case EXT4_IOC_GETFSMAP:
- 		return ext4_ioc_getfsmap(sb, (void __user *)arg);
- 	case EXT4_IOC_GETFLAGS:
+>  	}
+> -	*rbno = fbno;
+> -	*rlen = flen;
+> -	return;
+> +	return false;
+>  fail:
+>  	/*
+>  	 * Return a zero extent length as failure indications.  All callers
+>  	 * re-check if the trimmed extent satisfies the minlen requirement.
+>  	 */
+> -	spin_unlock(&args->pag->pagb_lock);
+> -	trace_xfs_extent_busy_trim(args->mp, args->agno, bno, len, fbno, 0);
+> -	*rbno = fbno;
+> -	*rlen = 0;
+> +	flen = 0;
+> +	goto out;
+>  }
+>  
+>  STATIC void
+...
+> @@ -554,29 +574,53 @@ xfs_extent_busy_clear(
+...
+> +/*
+> + * Flush out all busy extents for this AG.
+> + */
+> +void
+> +xfs_extent_busy_flush(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_perag	*pag,
+> +	unsigned		busy_gen)
+> +{
+> +	DEFINE_WAIT		(wait);
+> +	int			log_flushed = 0, error;
+> +
+> +	trace_xfs_log_force(mp, 0, _THIS_IP_);
+> +	error = _xfs_log_force(mp, XFS_LOG_SYNC, &log_flushed);
+> +	if (error)
+> +		return;
+> +
+> +	while (busy_gen == READ_ONCE(pag->pagb_gen)) {
+> +		prepare_to_wait(&pag->pagb_wait, &wait, TASK_KILLABLE);
+> +		schedule();
+>  	}
+> +	finish_wait(&pag->pagb_wait, &wait);
 
+This seems racy. Shouldn't this do something like:
+
+	do {
+		prepare_to_wait();
+		if (busy_gen != pagb_gen)
+			break;
+		schedule();
+		finish_wait();
+	} while (1);
+	finish_wait();
+
+... to make sure we don't lose a wakeup between setting the task state
+and actually scheduling out?
+
+>  }
+>  
+>  /*
+...
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 7f351f7..7363499 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -384,6 +384,8 @@ typedef struct xfs_perag {
+>  	xfs_agino_t	pagl_rightrec;
+>  	spinlock_t	pagb_lock;	/* lock for pagb_tree */
+>  	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
+> +	unsigned int	pagb_gen;
+> +	wait_queue_head_t pagb_wait;
+
+Can we add some comments here similar to the other fields? Also, how
+about slightly more informative names... pagb_discard_[gen|wait], or
+pagb_busy_*?
+
+Brian
+
+>  
+>  	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
+>  
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
