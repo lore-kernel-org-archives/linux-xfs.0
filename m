@@ -1,82 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36250 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:54234 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752781AbdBAWbl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Feb 2017 17:31:41 -0500
-Subject: Re: xfsprogs build broken on armv7l
-References: <8cbc97e0-de81-658c-d6b6-b7d65b9f83c6@nod.at>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8b29ebc8-203b-5a6c-8428-fa835e647d5c@sandeen.net>
-Date: Wed, 1 Feb 2017 16:31:38 -0600
+        id S1751123AbdBCPWs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Feb 2017 10:22:48 -0500
+Date: Fri, 3 Feb 2017 10:22:42 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/4] xfs: improve busy extent sorting
+Message-ID: <20170203152242.GD45388@bfoster.bfoster>
+References: <1485715421-17182-1-git-send-email-hch@lst.de>
+ <1485715421-17182-4-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <8cbc97e0-de81-658c-d6b6-b7d65b9f83c6@nod.at>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1485715421-17182-4-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Weinberger <richard@nod.at>, linux-xfs@vger.kernel.org, gwendal@chromium.org
-Cc: "vapier@gentoo.org" <vapier@gentoo.org>, hch@lst.de, David Oberhollenzer <goliath@sigma-star.at>, David Gstir <david@sigma-star.at>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On 2/1/17 4:19 PM, Richard Weinberger wrote:
-> Hi!
+On Sun, Jan 29, 2017 at 07:43:40PM +0100, Christoph Hellwig wrote:
+> Sort busy extents by the full block number instead of just the AGNO so
+> that we can issue consecutive discard requests that the block layer could
+> merge (although we'll need additional block layer fixes for fast devices).
 > 
-> On my armv7 box, current xfsprogs fail to build:
->     [TEST]    CRC32
-> In file included from crc32.c:37:0:
-> ../include/xfs.h:53:12: error: size of array ‘xfs_assert_largefile’ is too large
-
-neat ;)
-
-Does this fix it?
-
-
-
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 94d25fc..4d6bb2d 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -26,7 +26,7 @@ MALLOCLIB = @malloc_lib@
- LOADERFLAGS = @LDFLAGS@
- LTLDFLAGS = @LDFLAGS@
- CFLAGS = @CFLAGS@ -D_FILE_OFFSET_BITS=64
--BUILD_CFLAGS = @BUILD_CFLAGS@
-+BUILD_CFLAGS = @BUILD_CFLAGS@ -D_FILE_OFFSET_BITS=64
- 
- LIBRT = @librt@
- LIBUUID = @libuuid@
-
-
-
-
-
-> First bad commit is:
-> commit 0a71e38396304b4d1215ba0b51cd6ce8e33eb40d
-> Author: Gwendal Grignou <gwendal@chromium.org>
-> Date:   Thu Jan 12 14:12:29 2017 -0600
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_extent_busy.c | 12 ++++++++----
+>  1 file changed, 8 insertions(+), 4 deletions(-)
 > 
->     build: Allow compiling xfsprogs in a cross compile environment
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index 8251359..d64dd4c 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+> @@ -629,9 +629,13 @@ xfs_extent_busy_flush(
+>  int
+>  xfs_extent_busy_ag_cmp(
+>  	void			*priv,
+> -	struct list_head	*a,
+> -	struct list_head	*b)
+> +	struct list_head	*l1,
+> +	struct list_head	*l2)
+>  {
+> -	return container_of(a, struct xfs_extent_busy, list)->agno -
+> -		container_of(b, struct xfs_extent_busy, list)->agno;
+> +	struct xfs_extent_busy	*b1 =
+> +		container_of(l1, struct xfs_extent_busy, list);
+> +	struct xfs_extent_busy	*b2 =
+> +		container_of(l2, struct xfs_extent_busy, list);
+> +
+> +	return b1->agno - b2->agno || b1->bno - b2->bno;
+
+When will this ever return negative?
+
+Brian
+
+>  }
+> -- 
+> 2.1.4
 > 
->     Without this patch, we are using the same compiler and options for the host
->     compiler (BUILD_CC) and the target compiler (CC), and we would get error
->     messages at compilation:
->     x86_64-pc-linux-gnu-gcc -O2 -O2 -pipe -march=armv7-a -mtune=cortex-a15 ...
->     x86_64-pc-linux-gnu-gcc.real: error: unrecognized command line option
->     '-mfpu=neon'
->     '-mfloat-abi=hard'
->     '-clang-syntax'
->     '-mfpu=neon'
->     '-mfloat-abi=hard'
->     '-clang-syntax'
-> 
->     Add BUILD_CC and BUILD_CFLAGS as precious variables to allow setting it up
->     from the ebuild.
-> 
->     Signed-off-by: Gwendal Grignou <gwendal@chromium.org>
->     Reviewed-by: Mike Frysinger <vapier@gentoo.org>
->     Reviewed-by: Christoph Hellwig <hch@lst.de>
->     Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> 
-> Thanks,
-> //richard
-> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
