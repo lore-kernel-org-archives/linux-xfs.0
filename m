@@ -1,122 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60012 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752836AbdBGQyF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Feb 2017 11:54:05 -0500
-From: "Bill O'Donnell" <billodo@redhat.com>
-Subject: [PATCH v3] xfs: correct null checks and error processing in xfs_initialize_perag
-Date: Tue,  7 Feb 2017 10:54:03 -0600
-Message-Id: <20170207165403.11543-1-billodo@redhat.com>
-In-Reply-To: <20170128191957.13851-1-billodo@redhat.com>
-References: <20170128191957.13851-1-billodo@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:47461 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752441AbdBCWCR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 17:02:17 -0500
+Date: Fri, 3 Feb 2017 14:02:08 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] xfs: split indlen reservations fairly when under
+ reserved
+Message-ID: <20170203220208.GB3580@birch.djwong.org>
+References: <1486146865-47286-1-git-send-email-bfoster@redhat.com>
+ <1486146865-47286-3-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1486146865-47286-3-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Patrick Dung <mpatdung@gmail.com>
 
-If pag cannot be allocated, the current error exit path will trip
-a null pointer deference error when calling xfs_buf_hash_destroy
-with a null pag.  Fix this by adding a new error exit labels and
-jumping to those accordingly, avoiding the hash destroy and
-unnecessary kmem_free on pag.
+On Fri, Feb 03, 2017 at 01:34:25PM -0500, Brian Foster wrote:
+> Certain workoads that punch holes into speculative preallocation can
+> cause delalloc indirect reservation splits when the delalloc extent is
+> split in two. If further splits occur, an already short-handed extent
+> can be split into two in a manner that leaves zero indirect blocks for
+> one of the two new extents. This occurs because the shortage is large
+> enough that the xfs_bmap_split_indlen() algorithm completely drains the
+> requested indlen of one of the extents before it honors the existing
+> reservation.
 
-Up to three things need to be properly unwound:
+This looks ok from a "try to avoid the superbadness of ending up with
+zero indlen blocks" point of view, but I've been wondering -- how does
+punching holes in da reservations result in the reservations being
+shorthanded?
 
-1) pag memory allocation
-2) xfs_buf_hash_init
-3) radix_tree_insert
+Is the situation here something like: we create a reservation with
+indlen=14 blocks, punch a one-block hole, and now we have two
+reservations each wanting indlen=8 so now we're under-reserved?
 
-For any given iteration through the loop, any of the above which
-succeed must be unwound for /this/ pag, and then all prior
-initialized pags must be unwound.
+If so, is there a way to fix that?
 
-Fixes CoverityScan CID#1397628 ("Dereference after null check")
+> This ultimately results in a warning from xfs_bmap_del_extent(). This
+> has been observed during file copies of large, sparse files using 'cp
+> --sparse=always.'
 
-Reported-by: Colin Ian King <colin.king@canonical.com>
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
-v3: correct indexing error in out_unwind_new_pags loop, 
-    avoiding destruction of valid pags. Exit loop if !pag.
-v2: correct jump to out_hash_destroy for case where hash is initialized.
-    use NULLAGNUMBER to simplify first_initialised loop logic.
+Is there a test case to reproduce this?  I ran this patch through the
+auto group with no ill effects but I've never seen that assert trigger
+while running xfstests so it's harder to tell that the fix is actually
+working.
 
- fs/xfs/xfs_mount.c | 24 +++++++++++++++---------
- 1 file changed, 15 insertions(+), 9 deletions(-)
+> To avoid this problem, update xfs_bmap_split_indlen() to explicitly
+> apply the reservation shortage fairly between both extents. This smooths
+> out the overall indlen shortage and defers the situation where we end up
+> with a delalloc extent with zero indlen reservation to extreme
+> circumstances.
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 9b9540d..1f1e4ae 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -187,7 +187,7 @@ xfs_initialize_perag(
- 	xfs_agnumber_t	*maxagi)
- {
- 	xfs_agnumber_t	index;
--	xfs_agnumber_t	first_initialised = 0;
-+	xfs_agnumber_t	first_initialised = NULLAGNUMBER;
- 	xfs_perag_t	*pag;
- 	int		error = -ENOMEM;
- 
-@@ -202,22 +202,20 @@ xfs_initialize_perag(
- 			xfs_perag_put(pag);
- 			continue;
- 		}
--		if (!first_initialised)
--			first_initialised = index;
- 
- 		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
- 		if (!pag)
--			goto out_unwind;
-+			goto out_unwind_new_pags;
- 		pag->pag_agno = index;
- 		pag->pag_mount = mp;
- 		spin_lock_init(&pag->pag_ici_lock);
- 		mutex_init(&pag->pag_ici_reclaim_lock);
- 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
- 		if (xfs_buf_hash_init(pag))
--			goto out_unwind;
-+			goto out_free_pag;
- 
- 		if (radix_tree_preload(GFP_NOFS))
--			goto out_unwind;
-+			goto out_hash_destroy;
- 
- 		spin_lock(&mp->m_perag_lock);
- 		if (radix_tree_insert(&mp->m_perag_tree, index, pag)) {
-@@ -225,10 +223,13 @@ xfs_initialize_perag(
- 			spin_unlock(&mp->m_perag_lock);
- 			radix_tree_preload_end();
- 			error = -EEXIST;
--			goto out_unwind;
-+			goto out_hash_destroy;
- 		}
- 		spin_unlock(&mp->m_perag_lock);
- 		radix_tree_preload_end();
-+		/* first new pag is fully initialized */
-+		if (first_initialised == NULLAGNUMBER)
-+			first_initialised = index;
- 	}
- 
- 	index = xfs_set_inode_alloc(mp, agcount);
-@@ -239,11 +240,16 @@ xfs_initialize_perag(
- 	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
- 	return 0;
- 
--out_unwind:
-+out_hash_destroy:
- 	xfs_buf_hash_destroy(pag);
-+out_free_pag:
- 	kmem_free(pag);
--	for (; index > first_initialised; index--) {
-+out_unwind_new_pags:
-+	/* unwind any prior newly initialized pags */
-+	for (index = first_initialised; index < agcount; index++) {
- 		pag = radix_tree_delete(&mp->m_perag_tree, index);
-+		if (!pag)
-+			break;
- 		xfs_buf_hash_destroy(pag);
- 		kmem_free(pag);
- 	}
--- 
-2.9.3
+Could you elaborate on what are 'extreme circumstances' here?
 
+(FWIW I'm not opposed to the two patches, but my curiosity isn't yet
+satisfied.)
+
+--D
+
+> Reported-by: Patrick Dung <mpatdung@gmail.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 58 +++++++++++++++++++++++++++++++++---------------
+>  1 file changed, 40 insertions(+), 18 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index d2e48ed..4ca4606 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4790,34 +4790,56 @@ xfs_bmap_split_indlen(
+>  	xfs_filblks_t			len2 = *indlen2;
+>  	xfs_filblks_t			nres = len1 + len2; /* new total res. */
+>  	xfs_filblks_t			stolen = 0;
+> +	xfs_filblks_t			resfactor;
+>  
+>  	/*
+>  	 * Steal as many blocks as we can to try and satisfy the worst case
+>  	 * indlen for both new extents.
+>  	 */
+> -	while (nres > ores && avail) {
+> -		nres--;
+> -		avail--;
+> -		stolen++;
+> -	}
+> +	if (ores < nres && avail)
+> +		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
+> +	ores += stolen;
+> +
+> +	 /* nothing else to do if we've satisfied the new reservation */
+> +	if (ores >= nres)
+> +		return stolen;
+> +
+> +	/*
+> +	 * We can't meet the total required reservation for the two extents.
+> +	 * Calculate the percent of the overall shortage between both extents
+> +	 * and apply this percentage to each of the requested indlen values.
+> +	 * This distributes the shortage fairly and reduces the chances that one
+> +	 * of the two extents is left with nothing when extents are repeatedly
+> +	 * split.
+> +	 */
+> +	resfactor = (ores * 100) / nres;
+> +	len1 = resfactor * len1 / 100;
+> +	len2 = resfactor * len2 / 100;
+> +	ASSERT(len1 + len2 <= ores);
+> +	ASSERT(len1 < *indlen1 && len2 < *indlen2);
+>  
+>  	/*
+> -	 * The only blocks available are those reserved for the original
+> -	 * extent and what we can steal from the extent being removed.
+> -	 * If this still isn't enough to satisfy the combined
+> -	 * requirements for the two new extents, skim blocks off of each
+> -	 * of the new reservations until they match what is available.
+> +	 * Hand out the remainder to each extent. If one of the two reservations
+> +	 * is zero, we want to make sure that one gets a block first. The loop
+> +	 * below starts with len1, so hand len2 a block right off the bat if it
+> +	 * is zero.
+>  	 */
+> -	while (nres > ores) {
+> -		if (len1) {
+> -			len1--;
+> -			nres--;
+> +	ores -= (len1 + len2);
+> +	ASSERT((*indlen1 - len1) + (*indlen2 - len2) >= ores);
+> +	if (ores && !len2 && *indlen2) {
+> +		len2++;
+> +		ores--;
+> +	}
+> +	while (ores) {
+> +		if (len1 < *indlen1) {
+> +			len1++;
+> +			ores--;
+>  		}
+> -		if (nres == ores)
+> +		if (!ores)
+>  			break;
+> -		if (len2) {
+> -			len2--;
+> -			nres--;
+> +		if (len2 < *indlen2) {
+> +			len2++;
+> +			ores--;
+>  		}
+>  	}
+>  
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
