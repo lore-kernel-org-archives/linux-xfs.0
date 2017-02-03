@@ -1,103 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24471 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752093AbdBFTxE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2017 14:53:04 -0500
-Date: Mon, 6 Feb 2017 11:51:11 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/6] xfs: use memalloc_nofs_{save,restore} instead of
- memalloc_noio*
-Message-ID: <20170206195111.GH3580@birch.djwong.org>
-References: <20170206140718.16222-1-mhocko@kernel.org>
- <20170206140718.16222-5-mhocko@kernel.org>
- <20170206153923.GL2267@bombadil.infradead.org>
- <20170206174415.GA20731@dhcp22.suse.cz>
- <20170206183237.GE3580@birch.djwong.org>
- <20170206184743.GB20731@dhcp22.suse.cz>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:26246 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752540AbdBCWgf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 17:36:35 -0500
+Date: Sat, 4 Feb 2017 09:31:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Suspend fails when xfs is involved?
+Message-ID: <20170203223127.GC32761@dastard>
+References: <20170203010401.GR9134@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170206184743.GB20731@dhcp22.suse.cz>
+In-Reply-To: <20170203010401.GR9134@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Matthew Wilcox <willy@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Feb 06, 2017 at 07:47:43PM +0100, Michal Hocko wrote:
-> On Mon 06-02-17 10:32:37, Darrick J. Wong wrote:
-> > On Mon, Feb 06, 2017 at 06:44:15PM +0100, Michal Hocko wrote:
-> > > On Mon 06-02-17 07:39:23, Matthew Wilcox wrote:
-> > > > On Mon, Feb 06, 2017 at 03:07:16PM +0100, Michal Hocko wrote:
-> > > > > +++ b/fs/xfs/xfs_buf.c
-> > > > > @@ -442,17 +442,17 @@ _xfs_buf_map_pages(
-> > > > >  		bp->b_addr = NULL;
-> > > > >  	} else {
-> > > > >  		int retried = 0;
-> > > > > -		unsigned noio_flag;
-> > > > > +		unsigned nofs_flag;
-> > > > >  
-> > > > >  		/*
-> > > > >  		 * vm_map_ram() will allocate auxillary structures (e.g.
-> > > > >  		 * pagetables) with GFP_KERNEL, yet we are likely to be under
-> > > > >  		 * GFP_NOFS context here. Hence we need to tell memory reclaim
-> > > > > -		 * that we are in such a context via PF_MEMALLOC_NOIO to prevent
-> > > > > +		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
-> > > > >  		 * memory reclaim re-entering the filesystem here and
-> > > > >  		 * potentially deadlocking.
-> > > > >  		 */
-> > > > 
-> > > > This comment feels out of date ... how about:
-> > > 
-> > > which part is out of date?
-> > > 
-> > > > 
-> > > > 		/*
-> > > > 		 * vm_map_ram will allocate auxiliary structures (eg page
-> > > > 		 * tables) with GFP_KERNEL.  If that tries to reclaim memory
-> > > > 		 * by calling back into this filesystem, we may deadlock.
-> > > > 		 * Prevent that by setting the NOFS flag.
-> > > > 		 */
-> > > 
-> > > dunno, the previous wording seems clear enough to me. Maybe little bit
-> > > more chatty than yours but I am not sure this is worth changing.
-> > 
-> > I prefer to keep the "...yet we are likely to be under GFP_NOFS..."
-> > wording of the old comment because it captures the uncertainty of
-> > whether or not we actually are already under NOFS.  If someone actually
-> > has audited this code well enough to know for sure then yes let's change
-> > the comment, but I haven't gone that far.
+On Thu, Feb 02, 2017 at 05:04:01PM -0800, Darrick J. Wong wrote:
+> Hi list,
+> 
+> So I've noticed that my laptop consistently fails to suspend with:
+> 
+> [1183625.726800] atkbd serio0: Unknown key pressed (translated set 2, code 0xd8 on isa0060/serio0).
+> [1183625.726804] atkbd serio0: Use 'setkeycodes e058 <keycode>' to make it known.
+> [1183625.727492] atkbd serio0: Unknown key released (translated set 2, code 0xd8 on isa0060/serio0).
+> [1183625.727497] atkbd serio0: Use 'setkeycodes e058 <keycode>' to make it known.
+> [1183626.203928] e1000e: enp0s25 NIC Link is Down
+> [1183626.422720] PM: Syncing filesystems ... done.
+> [1183626.450348] Freezing user space processes ... (elapsed 0.002 seconds) done.
+> [1183626.452995] Freezing remaining freezable tasks ... 
+> [1183632.657243] atkbd serio0: Unknown key pressed (translated set 2, code 0xd9 on isa0060/serio0).
+> [1183632.657247] atkbd serio0: Use 'setkeycodes e059 <keycode>' to make it known.
+> [1183632.657814] atkbd serio0: Unknown key released (translated set 2, code 0xd9 on isa0060/serio0).
+> [1183632.657817] atkbd serio0: Use 'setkeycodes e059 <keycode>' to make it known.
+> [1183646.459310] Freezing of tasks failed after 20.006 seconds (1 tasks refusing to freeze, wq_busy=0):
+> [1183646.459348] xfsaild/dm-1    D    0  1767      2 0x00000000
 
-Ugh, /me hands himself another cup of coffee...
+Yes, this can happen because suspend thinks that "sync" is
+sufficient to quiesce a filesystem into an idle state. 
 
-Somehow I mixed up _xfs_buf_map_pages and kmem_zalloc_large in this
-discussion.  Probably because they have similar code snippets with very
-similar comments to two totally different parts of xfs.
+> [1183646.459366] Call Trace:
+> [1183646.459386]  [<ffffffffb5a43b8d>] schedule+0x3d/0x90
+> [1183646.459390]  [<ffffffffb5a47339>] schedule_timeout+0x239/0x420
+> [1183646.459401]  [<ffffffffb5a450e6>] wait_for_completion+0xa6/0x120
+> [1183646.459460]  [<ffffffffb539ba0f>] xfs_buf_submit_wait+0x7f/0x280
+> [1183646.459466]  [<ffffffffb539bc33>] _xfs_buf_read+0x23/0x30
+> [1183646.459470]  [<ffffffffb539bd64>] xfs_buf_read_map+0x124/0x1b0
+> [1183646.459473]  [<ffffffffb53eb270>] xfs_trans_read_buf_map+0x110/0x370
+> [1183646.459478]  [<ffffffffb538417e>] xfs_imap_to_bp+0x6e/0xe0
+> [1183646.459481]  [<ffffffffb53b3883>] xfs_iflush+0xd3/0x230
+> [1183646.459486]  [<ffffffffb53e0ab4>] xfs_inode_item_push+0xf4/0x150
+> [1183646.459489]  [<ffffffffb53e9cdf>] xfsaild+0x2df/0x740
+> [1183646.459500]  [<ffffffffb51101f9>] kthread+0xd9/0xf0
 
-The _xfs_buf_map_pages can be called inside or outside of
-transaction context, so I think we still have to memalloc_nofs_save for
-that to avoid the lockdep complaints and deadlocks referenced in the
-commit that added all that (to _xfs_buf_map_pages) in the first place.
-ae687e58b3 ("xfs: use NOIO contexts for vm_map_ram")
+That's inode writeback when the underlying inode buffer has been
+reclaimed before the dirty cached inode has been written. So the
+xfsaild is doing read/modify/write cycles to write back dirty
+inodes. i.e. you're running in active memory reclaim conditions
+prior to suspend...
 
-My comments about kmem_zalloc_large still stand, even though the part
-of the patch you two were discussing was the _xfs_buf_map_pages.  I
-probably should have clarified that I think both functions actually
-/are/ doing the right thing wrt calling (or not calling)
-memalloc_nofs_save().
+> ISTR Dave or someone grumbling about this being some artifact of the log
+> trying to read in some buffer or other as part of flushing the log prior
+> to suspend, but the io completion ends up tied to a workqueue that's
+> already been put to sleep, so xfs gets stuck forever.
 
-> I believe we can drop the memalloc_nofs_save then as well because either
-> we are called from a potentially dangerous context and thus we are in
-> the nofs scope we we do not need the protection at all.
+Yup, suspend is just completely fucked, has been for more than 10
+years. It needs to freeze filesystems so they are quiesced sanely,
+not left to run while random parts of the kernel infrastructure they
+rely on are shut down behind the filesystem's back.
 
-Uh, now that I've muddied up the waters, which part are you referring to?
+> Look familiar to anyone before I try to debug this tomorrow?
 
---D
+See this as a recent starting point.
 
-> -- 
-> Michal Hocko
-> SUSE Labs
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+https://lwn.net/Articles/705269/
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
