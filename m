@@ -1,65 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49480 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751825AbdBBSkX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 13:40:23 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 50/51] xfs: clear _XBF_PAGES from buffers when readahead page
-Date: Thu,  2 Feb 2017 19:38:09 +0100
-Message-Id: <20170202183347.783000235@linuxfoundation.org>
-In-Reply-To: <20170202183345.067336143@linuxfoundation.org>
-References: <20170202183345.067336143@linuxfoundation.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44880 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751124AbdBCRYG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Feb 2017 12:24:06 -0500
+Date: Fri, 3 Feb 2017 12:24:04 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH 1/2] mm, vmscan: account the number of isolated pages
+ per zone
+Message-ID: <20170203172403.GG45388@bfoster.bfoster>
+References: <20170125130014.GO32377@dhcp22.suse.cz>
+ <20170127144906.GB4148@dhcp22.suse.cz>
+ <201701290027.AFB30799.FVtFLOOOJMSHQF@I-love.SAKURA.ne.jp>
+ <20170130085546.GF8443@dhcp22.suse.cz>
+ <20170202101415.GE22806@dhcp22.suse.cz>
+ <201702031957.AGH86961.MLtOQVFOSHJFFO@I-love.SAKURA.ne.jp>
+ <20170203145009.GB19325@dhcp22.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170203145009.GB19325@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, david@fromorbit.com, dchinner@redhat.com, hch@lst.de, mgorman@suse.de, viro@ZenIV.linux.org.uk, linux-mm@kvack.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+On Fri, Feb 03, 2017 at 03:50:09PM +0100, Michal Hocko wrote:
+> [Let's CC more xfs people]
+> 
+> On Fri 03-02-17 19:57:39, Tetsuo Handa wrote:
+> [...]
+> > (1) I got an assertion failure.
+> 
+> I suspect this is a result of
+> http://lkml.kernel.org/r/20170201092706.9966-2-mhocko@kernel.org
+> I have no idea what the assert means though.
+> 
+> > 
+> > [  969.626518] Killed process 6262 (oom-write) total-vm:2166856kB, anon-rss:1128732kB, file-rss:4kB, shmem-rss:0kB
+> > [  969.958307] oom_reaper: reaped process 6262 (oom-write), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB
+> > [  972.114644] XFS: Assertion failed: oldlen > newlen, file: fs/xfs/libxfs/xfs_bmap.c, line: 2867
 
-------------------
+Indirect block reservation underrun on delayed allocation extent merge.
+These are extra blocks are used for the inode bmap btree when a delalloc
+extent is converted to physical blocks. We're in a case where we expect
+to only ever free excess blocks due to a merge of extents with
+independent reservations, but a situation occurs where we actually need
+blocks and hence the assert fails. This can occur if an extent is merged
+with one that has a reservation less than the expected worst case
+reservation for its size (due to previous extent splits due to hole
+punches, for example). Therefore, I think the core expectation that
+xfs_bmap_add_extent_hole_delay() will always have enough blocks
+pre-reserved is invalid.
 
+Can you describe the workload that reproduces this? FWIW, I think the
+way xfs_bmap_add_extent_hole_delay() currently works is likely broken
+and have a couple patches to fix up indlen reservation that I haven't
+posted yet. The diff that deals with this particular bit is appended.
+Care to give that a try?
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Brian
 
-commit 2aa6ba7b5ad3189cc27f14540aa2f57f0ed8df4b upstream.
+> > [  972.125085] ------------[ cut here ]------------
+> > [  972.129261] WARNING: CPU: 0 PID: 6280 at fs/xfs/xfs_message.c:105 asswarn+0x33/0x40 [xfs]
+> > [  972.136146] Modules linked in: nf_conntrack_netbios_ns nf_conntrack_broadcast ip6t_rpfilter ipt_REJECT nf_reject_ipv4 ip6t_REJECT nf_reject_ipv6 xt_conntrack coretemp crct10dif_pclmul ppdev crc32_pclmul ghash_clmulni_intel ip_set nfnetlink ebtable_nat aesni_intel crypto_simd cryptd ebtable_broute glue_helper vmw_balloon bridge stp llc ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 pcspkr nf_nat_ipv6 ip6table_mangle ip6table_raw iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_raw ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter sg parport_pc parport shpchp i2c_piix4 vmw_vsock_vmci_transport vsock vmw_vmci ip_tables xfs libcrc32c sr_mod cdrom ata_generic sd_mod pata_acpi crc32c_intel serio_raw vmwgfx drm_kms_helper syscopyarea sysfillrect
+> > [  972.163630]  sysimgblt fb_sys_fops ttm drm ata_piix ahci libahci mptspi scsi_transport_spi mptscsih e1000 libata i2c_core mptbase
+> > [  972.172535] CPU: 0 PID: 6280 Comm: write Not tainted 4.10.0-rc6-next-20170202 #498
+> > [  972.175126] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 07/02/2015
+> > [  972.178381] Call Trace:
+...
 
-If we try to allocate memory pages to back an xfs_buf that we're trying
-to read, it's possible that we'll be so short on memory that the page
-allocation fails.  For a blocking read we'll just wait, but for
-readahead we simply dump all the pages we've collected so far.
+---8<---
 
-Unfortunately, after dumping the pages we neglect to clear the
-_XBF_PAGES state, which means that the subsequent call to xfs_buf_free
-thinks that b_pages still points to pages we own.  It then double-frees
-the b_pages pages.
-
-This results in screaming about negative page refcounts from the memory
-manager, which xfs oughtn't be triggering.  To reproduce this case,
-mount a filesystem where the size of the inodes far outweighs the
-availalble memory (a ~500M inode filesystem on a VM with 300MB memory
-did the trick here) and run bulkstat in parallel with other memory
-eating processes to put a huge load on the system.  The "check summary"
-phase of xfs_scrub also works for this purpose.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- fs/xfs/xfs_buf.c |    1 +
- 1 file changed, 1 insertion(+)
-
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -423,6 +423,7 @@ retry:
- out_free_pages:
- 	for (i = 0; i < bp->b_page_count; i++)
- 		__free_page(bp->b_pages[i]);
-+	bp->b_flags &= ~_XBF_PAGES;
- 	return error;
- }
- 
-
-
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index bfc00de..d2e48ed 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2809,7 +2809,8 @@ xfs_bmap_add_extent_hole_delay(
+ 		oldlen = startblockval(left.br_startblock) +
+ 			startblockval(new->br_startblock) +
+ 			startblockval(right.br_startblock);
+-		newlen = xfs_bmap_worst_indlen(ip, temp);
++		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
++					 oldlen);
+ 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
+ 			nullstartblock((int)newlen));
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+@@ -2830,7 +2831,8 @@ xfs_bmap_add_extent_hole_delay(
+ 		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx), temp);
+ 		oldlen = startblockval(left.br_startblock) +
+ 			startblockval(new->br_startblock);
+-		newlen = xfs_bmap_worst_indlen(ip, temp);
++		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
++					 oldlen);
+ 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
+ 			nullstartblock((int)newlen));
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+@@ -2846,7 +2848,8 @@ xfs_bmap_add_extent_hole_delay(
+ 		temp = new->br_blockcount + right.br_blockcount;
+ 		oldlen = startblockval(new->br_startblock) +
+ 			startblockval(right.br_startblock);
+-		newlen = xfs_bmap_worst_indlen(ip, temp);
++		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
++					 oldlen);
+ 		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
+ 			new->br_startoff,
+ 			nullstartblock((int)newlen), temp, right.br_state);
