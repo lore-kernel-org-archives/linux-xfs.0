@@ -1,76 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53539 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752941AbdBCJ5V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 04:57:21 -0500
-Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cZacK-0007j3-7s
-        for linux-xfs@vger.kernel.org; Fri, 03 Feb 2017 09:57:20 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2] xfs: update ctime and mtime on clone destinatation inodes
-Date: Fri,  3 Feb 2017 10:57:15 +0100
-Message-Id: <20170203095715.7955-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:34861 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753399AbdBCOuT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Feb 2017 09:50:19 -0500
+Date: Fri, 3 Feb 2017 15:50:09 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [RFC PATCH 1/2] mm, vmscan: account the number of isolated pages
+ per zone
+Message-ID: <20170203145009.GB19325@dhcp22.suse.cz>
+References: <20170125130014.GO32377@dhcp22.suse.cz>
+ <20170127144906.GB4148@dhcp22.suse.cz>
+ <201701290027.AFB30799.FVtFLOOOJMSHQF@I-love.SAKURA.ne.jp>
+ <20170130085546.GF8443@dhcp22.suse.cz>
+ <20170202101415.GE22806@dhcp22.suse.cz>
+ <201702031957.AGH86961.MLtOQVFOSHJFFO@I-love.SAKURA.ne.jp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <201702031957.AGH86961.MLtOQVFOSHJFFO@I-love.SAKURA.ne.jp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: david@fromorbit.com, dchinner@redhat.com, hch@lst.de, mgorman@suse.de, viro@ZenIV.linux.org.uk, linux-mm@kvack.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-We're changing both metadata and data, so we need to update the
-timestamps for clone operations.  Dedupe on the other hand does
-not change file data, and only changes invisible metadata so the
-timestamps should not be updated.
+[Let's CC more xfs people]
 
-This follows existing btrfs behavior.
+On Fri 03-02-17 19:57:39, Tetsuo Handa wrote:
+[...]
+> (1) I got an assertion failure.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_reflink.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+I suspect this is a result of
+http://lkml.kernel.org/r/20170201092706.9966-2-mhocko@kernel.org
+I have no idea what the assert means though.
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index d5a2cf2b469b..199ce0100bc6 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -961,13 +961,15 @@ STATIC int
- xfs_reflink_update_dest(
- 	struct xfs_inode	*dest,
- 	xfs_off_t		newlen,
--	xfs_extlen_t		cowextsize)
-+	xfs_extlen_t		cowextsize,
-+	bool			is_dedupe)
- {
- 	struct xfs_mount	*mp = dest->i_mount;
- 	struct xfs_trans	*tp;
- 	int			error;
- 
--	if (newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
-+	if (is_dedupe &&
-+	    newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0 && is_dedupe)
- 		return 0;
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-@@ -988,6 +990,10 @@ xfs_reflink_update_dest(
- 		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 	}
- 
-+	if (!is_dedupe) {
-+		xfs_trans_ichgtime(tp, dest,
-+				   XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	}
- 	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
- 
- 	error = xfs_trans_commit(tp);
-@@ -1301,7 +1307,8 @@ xfs_reflink_remap_range(
- 	    !(dest->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
- 		cowextsize = src->i_d.di_cowextsize;
- 
--	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize);
-+	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize,
-+			is_dedupe);
- 
- out_unlock:
- 	xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
+> 
+> [  969.626518] Killed process 6262 (oom-write) total-vm:2166856kB, anon-rss:1128732kB, file-rss:4kB, shmem-rss:0kB
+> [  969.958307] oom_reaper: reaped process 6262 (oom-write), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB
+> [  972.114644] XFS: Assertion failed: oldlen > newlen, file: fs/xfs/libxfs/xfs_bmap.c, line: 2867
+> [  972.125085] ------------[ cut here ]------------
+> [  972.129261] WARNING: CPU: 0 PID: 6280 at fs/xfs/xfs_message.c:105 asswarn+0x33/0x40 [xfs]
+> [  972.136146] Modules linked in: nf_conntrack_netbios_ns nf_conntrack_broadcast ip6t_rpfilter ipt_REJECT nf_reject_ipv4 ip6t_REJECT nf_reject_ipv6 xt_conntrack coretemp crct10dif_pclmul ppdev crc32_pclmul ghash_clmulni_intel ip_set nfnetlink ebtable_nat aesni_intel crypto_simd cryptd ebtable_broute glue_helper vmw_balloon bridge stp llc ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 pcspkr nf_nat_ipv6 ip6table_mangle ip6table_raw iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_raw ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter sg parport_pc parport shpchp i2c_piix4 vmw_vsock_vmci_transport vsock vmw_vmci ip_tables xfs libcrc32c sr_mod cdrom ata_generic sd_mod pata_acpi crc32c_intel serio_raw vmwgfx drm_kms_helper syscopyarea sysfillrect
+> [  972.163630]  sysimgblt fb_sys_fops ttm drm ata_piix ahci libahci mptspi scsi_transport_spi mptscsih e1000 libata i2c_core mptbase
+> [  972.172535] CPU: 0 PID: 6280 Comm: write Not tainted 4.10.0-rc6-next-20170202 #498
+> [  972.175126] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 07/02/2015
+> [  972.178381] Call Trace:
+> [  972.180003]  dump_stack+0x85/0xc9
+> [  972.181682]  __warn+0xd1/0xf0
+> [  972.183374]  warn_slowpath_null+0x1d/0x20
+> [  972.185223]  asswarn+0x33/0x40 [xfs]
+> [  972.186950]  xfs_bmap_add_extent_hole_delay+0xb7f/0xdf0 [xfs]
+> [  972.189055]  xfs_bmapi_reserve_delalloc+0x297/0x440 [xfs]
+> [  972.191263]  ? xfs_ilock+0x1c9/0x360 [xfs]
+> [  972.193414]  xfs_file_iomap_begin+0x880/0x1140 [xfs]
+> [  972.195300]  ? iomap_write_end+0x80/0x80
+> [  972.196980]  iomap_apply+0x6c/0x130
+> [  972.198539]  iomap_file_buffered_write+0x68/0xa0
+> [  972.200316]  ? iomap_write_end+0x80/0x80
+> [  972.201950]  xfs_file_buffered_aio_write+0x132/0x390 [xfs]
+> [  972.203868]  ? _raw_spin_unlock+0x27/0x40
+> [  972.205470]  xfs_file_write_iter+0x90/0x130 [xfs]
+> [  972.207167]  __vfs_write+0xe5/0x140
+> [  972.208752]  vfs_write+0xc7/0x1f0
+> [  972.210233]  ? syscall_trace_enter+0x1d0/0x380
+> [  972.211809]  SyS_write+0x58/0xc0
+> [  972.213166]  do_int80_syscall_32+0x6c/0x1f0
+> [  972.214676]  entry_INT80_compat+0x38/0x50
+> [  972.216168] RIP: 0023:0x8048076
+> [  972.217494] RSP: 002b:00000000ff997020 EFLAGS: 00000202 ORIG_RAX: 0000000000000004
+> [  972.219635] RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 0000000008048000
+> [  972.221679] RDX: 0000000000001000 RSI: 0000000000000000 RDI: 0000000000000000
+> [  972.223774] RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
+> [  972.225905] R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+> [  972.227946] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+> [  972.230064] ---[ end trace d498098daec56c11 ]---
+> [  984.210890] vmtoolsd invoked oom-killer: gfp_mask=0x14201ca(GFP_HIGHUSER_MOVABLE|__GFP_COLD), nodemask=(null),  order=0, oom_score_adj=0
+> [  984.224191] vmtoolsd cpuset=/ mems_allowed=0
+> [  984.231022] CPU: 0 PID: 689 Comm: vmtoolsd Tainted: G        W       4.10.0-rc6-next-20170202 #498
 -- 
-2.11.0
-
+Michal Hocko
+SUSE Labs
