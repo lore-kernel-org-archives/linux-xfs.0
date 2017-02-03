@@ -1,27 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:36657 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751573AbdBFUz5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Feb 2017 15:55:57 -0500
-Date: Mon, 6 Feb 2017 21:55:50 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: reflink direct I/O improvements V3
-Message-ID: <20170206205550.GA3337@lst.de>
-References: <20170206074738.13978-1-hch@lst.de> <20170206184139.GF3580@birch.djwong.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:42690 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752855AbdBCXRM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 18:17:12 -0500
+Date: Fri, 3 Feb 2017 15:17:00 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: reset b_first_retry_time when clear the retry
+ status of xfs_buf_t
+Message-ID: <20170203231700.GC3580@birch.djwong.org>
+References: <1486112905-38025-1-git-send-email-houtao1@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170206184139.GF3580@birch.djwong.org>
+In-Reply-To: <1486112905-38025-1-git-send-email-houtao1@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Hou Tao <houtao1@huawei.com>
+Cc: linux-xfs@vger.kernel.org, cmaiolino@redhat.com, sandeen@redhat.com
 
-On Mon, Feb 06, 2017 at 10:41:39AM -0800, Darrick J. Wong wrote:
-> I think "xfs: reject all unaligned direct writes to reflinked files" is
-> missing from this patchset?  If so, you can send it as a reply to the
-> cover letter email.
+On Fri, Feb 03, 2017 at 05:08:25PM +0800, Hou Tao wrote:
+> After successful IO or permanent error, b_first_retry_time also
+> needs to be cleared, else the invalid first retry time will be
+> used by the next retry check.
+> 
+> Signed-off-by: Hou Tao <houtao1@huawei.com>
+> ---
+>  fs/xfs/xfs_buf_item.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 2975cb2..0306168 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -1162,6 +1162,7 @@ xfs_buf_iodone_callbacks(
+>  	 */
+>  	bp->b_last_error = 0;
+>  	bp->b_retries = 0;
+> +	bp->b_first_retry_time = 0;
 
-I sent it out separately as I have no idea how to use git-send-email
-to reply to an existing thread.
+By the way, is there a testcase for this?  It looks like it shouldn't be
+hard to generate a test that sets a timeout and interleaves temporary
+failure and success.
+
+--D
+
+>  
+>  	xfs_buf_do_callbacks(bp);
+>  	bp->b_fspriv = NULL;
+> -- 
+> 2.5.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
