@@ -1,97 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44024 "EHLO mx2.suse.de"
+Received: from mga04.intel.com ([192.55.52.120]:14517 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752091AbdBFVSG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Feb 2017 16:18:06 -0500
-Date: Mon, 6 Feb 2017 22:18:00 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 4/6] xfs: use memalloc_nofs_{save,restore} instead of
- memalloc_noio*
-Message-ID: <20170206211759.GC20731@dhcp22.suse.cz>
-References: <20170206140718.16222-1-mhocko@kernel.org>
- <20170206140718.16222-5-mhocko@kernel.org>
- <20170206153923.GL2267@bombadil.infradead.org>
- <20170206174415.GA20731@dhcp22.suse.cz>
- <20170206183237.GE3580@birch.djwong.org>
- <20170206184743.GB20731@dhcp22.suse.cz>
- <20170206195111.GH3580@birch.djwong.org>
+        id S1752961AbdBCXZ4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Feb 2017 18:25:56 -0500
+Subject: Re: [PATCH] mm: replace FAULT_FLAG_SIZE with parameter to huge_fault
+References: <201702040648.oOjnlEcm%fengguang.wu@intel.com>
+From: Dave Jiang <dave.jiang@intel.com>
+Message-ID: <2020f442-8e77-cf14-a6b1-b4b00d0da80b@intel.com>
+Date: Fri, 3 Feb 2017 16:25:53 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170206195111.GH3580@birch.djwong.org>
+In-Reply-To: <201702040648.oOjnlEcm%fengguang.wu@intel.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Matthew Wilcox <willy@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, akpm@linux-foundation.org, mawilcox@microsoft.com, linux-nvdimm@lists.01.org, dave.hansen@linux.intel.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, kirill.shutemov@linux.intel.com, jack@suse.com, dan.j.williams@intel.com, linux-ext4@vger.kernel.org, ross.zwisler@linux.intel.com, vbabka@suse.cz
 
-On Mon 06-02-17 11:51:11, Darrick J. Wong wrote:
-> On Mon, Feb 06, 2017 at 07:47:43PM +0100, Michal Hocko wrote:
-> > On Mon 06-02-17 10:32:37, Darrick J. Wong wrote:
-> > > On Mon, Feb 06, 2017 at 06:44:15PM +0100, Michal Hocko wrote:
-> > > > On Mon 06-02-17 07:39:23, Matthew Wilcox wrote:
-> > > > > On Mon, Feb 06, 2017 at 03:07:16PM +0100, Michal Hocko wrote:
-> > > > > > +++ b/fs/xfs/xfs_buf.c
-> > > > > > @@ -442,17 +442,17 @@ _xfs_buf_map_pages(
-> > > > > >  		bp->b_addr = NULL;
-> > > > > >  	} else {
-> > > > > >  		int retried = 0;
-> > > > > > -		unsigned noio_flag;
-> > > > > > +		unsigned nofs_flag;
-> > > > > >  
-> > > > > >  		/*
-> > > > > >  		 * vm_map_ram() will allocate auxillary structures (e.g.
-> > > > > >  		 * pagetables) with GFP_KERNEL, yet we are likely to be under
-> > > > > >  		 * GFP_NOFS context here. Hence we need to tell memory reclaim
-> > > > > > -		 * that we are in such a context via PF_MEMALLOC_NOIO to prevent
-> > > > > > +		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
-> > > > > >  		 * memory reclaim re-entering the filesystem here and
-> > > > > >  		 * potentially deadlocking.
-> > > > > >  		 */
-> > > > > 
-> > > > > This comment feels out of date ... how about:
-> > > > 
-> > > > which part is out of date?
-> > > > 
-> > > > > 
-> > > > > 		/*
-> > > > > 		 * vm_map_ram will allocate auxiliary structures (eg page
-> > > > > 		 * tables) with GFP_KERNEL.  If that tries to reclaim memory
-> > > > > 		 * by calling back into this filesystem, we may deadlock.
-> > > > > 		 * Prevent that by setting the NOFS flag.
-> > > > > 		 */
-> > > > 
-> > > > dunno, the previous wording seems clear enough to me. Maybe little bit
-> > > > more chatty than yours but I am not sure this is worth changing.
-> > > 
-> > > I prefer to keep the "...yet we are likely to be under GFP_NOFS..."
-> > > wording of the old comment because it captures the uncertainty of
-> > > whether or not we actually are already under NOFS.  If someone actually
-> > > has audited this code well enough to know for sure then yes let's change
-> > > the comment, but I haven't gone that far.
+On 02/03/2017 03:56 PM, kbuild test robot wrote:
+> Hi Dave,
 > 
-> Ugh, /me hands himself another cup of coffee...
-> 
-> Somehow I mixed up _xfs_buf_map_pages and kmem_zalloc_large in this
-> discussion.  Probably because they have similar code snippets with very
-> similar comments to two totally different parts of xfs.
-> 
-> The _xfs_buf_map_pages can be called inside or outside of
-> transaction context, so I think we still have to memalloc_nofs_save for
-> that to avoid the lockdep complaints and deadlocks referenced in the
-> commit that added all that (to _xfs_buf_map_pages) in the first place.
-> ae687e58b3 ("xfs: use NOIO contexts for vm_map_ram")
+> [auto build test ERROR on mmotm/master]
+> [cannot apply to linus/master linux/master v4.10-rc6 next-20170203]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-Yes, and that memalloc_nofs_save would start with the transaction
-context so this (_xfs_buf_map_pages) call would be already covered so
-additional memalloc_nofs_save would be unnecessary. Right now I am not
-sure whether this is always the case so I have kept this "just to be
-sure" measure. Checking that would be in the next step when I would like
-to remove other KM_NOFS usage so that we would always rely on the scope
-inside the transaction or other potentially dangerous (e.g. from the
-stack usage POV and who knows what else) contexts.
+This one is a bit odd. I just pulled mmotm tree master branch and built
+with the attached .config and it passed for me (and I don't see this
+commit in the master branch). I also built linux-next with this patch on
+top and it also passes with attached .config. Looking at the err log
+below it seems the code has a mix of partial from before and after the
+patch. I'm rather confused about it....
 
-Does that make more sense now?
--- 
-Michal Hocko
-SUSE Labs
+
+> 
+> url:    https://github.com/0day-ci/linux/commits/Dave-Jiang/mm-replace-FAULT_FLAG_SIZE-with-parameter-to-huge_fault/20170204-053548
+> base:   git://git.cmpxchg.org/linux-mmotm.git master
+> config: i386-randconfig-x004-201705 (attached as .config)
+> compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
+> reproduce:
+>         # save the attached .config to linux build tree
+>         make ARCH=i386 
+> 
+> All errors (new ones prefixed by >>):
+> 
+>>> fs/ext4/file.c:280:1: error: conflicting types for 'ext4_dax_huge_fault'
+>     ext4_dax_huge_fault(struct vm_fault *vmf)
+>     ^~~~~~~~~~~~~~~~~~~
+>    fs/ext4/file.c:258:12: note: previous definition of 'ext4_dax_huge_fault' was here
+>     static int ext4_dax_huge_fault(struct vm_fault *vmf,
+>                ^~~~~~~~~~~~~~~~~~~
+>    fs/ext4/file.c: In function 'ext4_dax_huge_fault':
+>>> fs/ext4/file.c:292:32: error: incompatible type for argument 2 of 'dax_iomap_fault'
+>      result = dax_iomap_fault(vmf, &ext4_iomap_ops);
+>                                    ^
+>    In file included from fs/ext4/file.c:25:0:
+>    include/linux/dax.h:41:5: note: expected 'enum page_entry_size' but argument is of type 'struct iomap_ops *'
+>     int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+>         ^~~~~~~~~~~~~~~
+>>> fs/ext4/file.c:292:11: error: too few arguments to function 'dax_iomap_fault'
+>      result = dax_iomap_fault(vmf, &ext4_iomap_ops);
+>               ^~~~~~~~~~~~~~~
+>    In file included from fs/ext4/file.c:25:0:
+>    include/linux/dax.h:41:5: note: declared here
+>     int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+>         ^~~~~~~~~~~~~~~
+>    fs/ext4/file.c: In function 'ext4_dax_fault':
+>>> fs/ext4/file.c:302:9: error: too many arguments to function 'ext4_dax_huge_fault'
+>      return ext4_dax_huge_fault(vmf, PE_SIZE_PTE);
+>             ^~~~~~~~~~~~~~~~~~~
+>    fs/ext4/file.c:280:1: note: declared here
+>     ext4_dax_huge_fault(struct vm_fault *vmf)
+>     ^~~~~~~~~~~~~~~~~~~
+>    fs/ext4/file.c: At top level:
+>>> fs/ext4/file.c:337:16: error: initialization from incompatible pointer type [-Werror=incompatible-pointer-types]
+>      .huge_fault = ext4_dax_huge_fault,
+>                    ^~~~~~~~~~~~~~~~~~~
+>    fs/ext4/file.c:337:16: note: (near initialization for 'ext4_dax_vm_ops.huge_fault')
+>    fs/ext4/file.c:258:12: warning: 'ext4_dax_huge_fault' defined but not used [-Wunused-function]
+>     static int ext4_dax_huge_fault(struct vm_fault *vmf,
+>                ^~~~~~~~~~~~~~~~~~~
+>    cc1: some warnings being treated as errors
+> 
+> vim +/ext4_dax_huge_fault +280 fs/ext4/file.c
+> 
+> 01a33b4ac Matthew Wilcox 2015-09-08  274  		sb_end_pagefault(sb);
+> 01a33b4ac Matthew Wilcox 2015-09-08  275  
+> 01a33b4ac Matthew Wilcox 2015-09-08  276  	return result;
+> 923ae0ff9 Ross Zwisler   2015-02-16  277  }
+> 923ae0ff9 Ross Zwisler   2015-02-16  278  
+> c6da0697e Dave Jiang     2017-02-02  279  static int
+> 30599588c Dave Jiang     2017-02-02 @280  ext4_dax_huge_fault(struct vm_fault *vmf)
+> 11bd1a9ec Matthew Wilcox 2015-09-08  281  {
+> 01a33b4ac Matthew Wilcox 2015-09-08  282  	int result;
+> e6ae40ec2 Dave Jiang     2017-02-02  283  	struct inode *inode = file_inode(vmf->vma->vm_file);
+> 01a33b4ac Matthew Wilcox 2015-09-08  284  	struct super_block *sb = inode->i_sb;
+> c6da0697e Dave Jiang     2017-02-02  285  	bool write = vmf->flags & FAULT_FLAG_WRITE;
+> 01a33b4ac Matthew Wilcox 2015-09-08  286  
+> 01a33b4ac Matthew Wilcox 2015-09-08  287  	if (write) {
+> 01a33b4ac Matthew Wilcox 2015-09-08  288  		sb_start_pagefault(sb);
+> e6ae40ec2 Dave Jiang     2017-02-02  289  		file_update_time(vmf->vma->vm_file);
+> 1db175428 Jan Kara       2016-10-21  290  	}
+> ea3d7209c Jan Kara       2015-12-07  291  	down_read(&EXT4_I(inode)->i_mmap_sem);
+> 30599588c Dave Jiang     2017-02-02 @292  	result = dax_iomap_fault(vmf, &ext4_iomap_ops);
+> ea3d7209c Jan Kara       2015-12-07  293  	up_read(&EXT4_I(inode)->i_mmap_sem);
+> 1db175428 Jan Kara       2016-10-21  294  	if (write)
+> 01a33b4ac Matthew Wilcox 2015-09-08  295  		sb_end_pagefault(sb);
+> 01a33b4ac Matthew Wilcox 2015-09-08  296  
+> 01a33b4ac Matthew Wilcox 2015-09-08  297  	return result;
+> 11bd1a9ec Matthew Wilcox 2015-09-08  298  }
+> 11bd1a9ec Matthew Wilcox 2015-09-08  299  
+> 22711acc4 Dave Jiang     2017-02-03  300  static int ext4_dax_fault(struct vm_fault *vmf)
+> 22711acc4 Dave Jiang     2017-02-03  301  {
+> 22711acc4 Dave Jiang     2017-02-03 @302  	return ext4_dax_huge_fault(vmf, PE_SIZE_PTE);
+> 22711acc4 Dave Jiang     2017-02-03  303  }
+> 22711acc4 Dave Jiang     2017-02-03  304  
+> ea3d7209c Jan Kara       2015-12-07  305  /*
+> 1e9d180ba Ross Zwisler   2016-02-27  306   * Handle write fault for VM_MIXEDMAP mappings. Similarly to ext4_dax_fault()
+> ea3d7209c Jan Kara       2015-12-07  307   * handler we check for races agaist truncate. Note that since we cycle through
+> ea3d7209c Jan Kara       2015-12-07  308   * i_mmap_sem, we are sure that also any hole punching that began before we
+> ea3d7209c Jan Kara       2015-12-07  309   * were called is finished by now and so if it included part of the file we
+> ea3d7209c Jan Kara       2015-12-07  310   * are working on, our pte will get unmapped and the check for pte_same() in
+> ea3d7209c Jan Kara       2015-12-07  311   * wp_pfn_shared() fails. Thus fault gets retried and things work out as
+> ea3d7209c Jan Kara       2015-12-07  312   * desired.
+> ea3d7209c Jan Kara       2015-12-07  313   */
+> 1ebf3e0da Dave Jiang     2017-02-02  314  static int ext4_dax_pfn_mkwrite(struct vm_fault *vmf)
+> ea3d7209c Jan Kara       2015-12-07  315  {
+> 1ebf3e0da Dave Jiang     2017-02-02  316  	struct inode *inode = file_inode(vmf->vma->vm_file);
+> ea3d7209c Jan Kara       2015-12-07  317  	struct super_block *sb = inode->i_sb;
+> ea3d7209c Jan Kara       2015-12-07  318  	loff_t size;
+> d5be7a03b Ross Zwisler   2016-01-22  319  	int ret;
+> ea3d7209c Jan Kara       2015-12-07  320  
+> ea3d7209c Jan Kara       2015-12-07  321  	sb_start_pagefault(sb);
+> 1ebf3e0da Dave Jiang     2017-02-02  322  	file_update_time(vmf->vma->vm_file);
+> ea3d7209c Jan Kara       2015-12-07  323  	down_read(&EXT4_I(inode)->i_mmap_sem);
+> ea3d7209c Jan Kara       2015-12-07  324  	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
+> ea3d7209c Jan Kara       2015-12-07  325  	if (vmf->pgoff >= size)
+> ea3d7209c Jan Kara       2015-12-07  326  		ret = VM_FAULT_SIGBUS;
+> d5be7a03b Ross Zwisler   2016-01-22  327  	else
+> 1ebf3e0da Dave Jiang     2017-02-02  328  		ret = dax_pfn_mkwrite(vmf);
+> ea3d7209c Jan Kara       2015-12-07  329  	up_read(&EXT4_I(inode)->i_mmap_sem);
+> ea3d7209c Jan Kara       2015-12-07  330  	sb_end_pagefault(sb);
+> ea3d7209c Jan Kara       2015-12-07  331  
+> ea3d7209c Jan Kara       2015-12-07  332  	return ret;
+> 923ae0ff9 Ross Zwisler   2015-02-16  333  }
+> 923ae0ff9 Ross Zwisler   2015-02-16  334  
+> 923ae0ff9 Ross Zwisler   2015-02-16  335  static const struct vm_operations_struct ext4_dax_vm_ops = {
+> 923ae0ff9 Ross Zwisler   2015-02-16  336  	.fault		= ext4_dax_fault,
+> 22711acc4 Dave Jiang     2017-02-03 @337  	.huge_fault	= ext4_dax_huge_fault,
+> 1e9d180ba Ross Zwisler   2016-02-27  338  	.page_mkwrite	= ext4_dax_fault,
+> ea3d7209c Jan Kara       2015-12-07  339  	.pfn_mkwrite	= ext4_dax_pfn_mkwrite,
+> 923ae0ff9 Ross Zwisler   2015-02-16  340  };
+> 
+> :::::: The code at line 280 was first introduced by commit
+> :::::: 30599588c9eaccc211d383c9974a3a88dfa6e7d5 mm,fs,dax: change ->pmd_fault to ->huge_fault
+> 
+> :::::: TO: Dave Jiang <dave.jiang@intel.com>
+> :::::: CC: Johannes Weiner <hannes@cmpxchg.org>
+> 
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> 
