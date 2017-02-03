@@ -1,38 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:33364 "EHLO
-        mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753086AbdBCX04 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 18:26:56 -0500
-Received: by mail-oi0-f44.google.com with SMTP id w204so19956393oiw.0
-        for <linux-xfs@vger.kernel.org>; Fri, 03 Feb 2017 15:26:56 -0800 (PST)
+Received: from sandeen.net ([63.231.237.45]:48766 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752268AbdBCW5d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Feb 2017 17:57:33 -0500
+Subject: Re: [PATCH] xfs: correct null checks and error processing in
+ xfs_initialize_perag
+References: <20170120142642.21698-1-colin.king@canonical.com>
+ <20170128191957.13851-1-billodo@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <253f0f36-2a6e-8c2b-a4bf-c1526c356016@sandeen.net>
+Date: Fri, 3 Feb 2017 16:57:31 -0600
 MIME-Version: 1.0
-In-Reply-To: <2020f442-8e77-cf14-a6b1-b4b00d0da80b@intel.com>
-References: <201702040648.oOjnlEcm%fengguang.wu@intel.com> <2020f442-8e77-cf14-a6b1-b4b00d0da80b@intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 3 Feb 2017 15:26:55 -0800
-Message-ID: <CAPcyv4hmswhXsnS9q1Ut76f3-a2h5Hx7XYkS1iNyak8wG9VuEw@mail.gmail.com>
-Subject: Re: [PATCH] mm: replace FAULT_FLAG_SIZE with parameter to huge_fault
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20170128191957.13851-1-billodo@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Jiang <dave.jiang@intel.com>
-Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Hansen <dave.hansen@linux.intel.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Jan Kara <jack@suse.com>, linux-ext4 <linux-ext4@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Vlastimil Babka <vbabka@suse.cz>
+To: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-On Fri, Feb 3, 2017 at 3:25 PM, Dave Jiang <dave.jiang@intel.com> wrote:
-> On 02/03/2017 03:56 PM, kbuild test robot wrote:
->> Hi Dave,
->>
->> [auto build test ERROR on mmotm/master]
->> [cannot apply to linus/master linux/master v4.10-rc6 next-20170203]
->> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
->
-> This one is a bit odd. I just pulled mmotm tree master branch and built
-> with the attached .config and it passed for me (and I don't see this
-> commit in the master branch). I also built linux-next with this patch on
-> top and it also passes with attached .config. Looking at the err log
-> below it seems the code has a mix of partial from before and after the
-> patch. I'm rather confused about it....
+On 1/28/17 1:19 PM, Bill O'Donnell wrote:
+> If pag cannot be allocated, the current error exit path will trip
+> a null pointer deference error when calling xfs_buf_hash_destroy
+> with a null pag.  Fix this by adding a new error exit labels and
+> jumping to those accordingly, avoiding the hash destroy and
+> unnecessary kmem_free on pag.
+> 
+> Up to three things need to be properly unwound:
+> 
+> 1) pag memory allocation
+> 2) xfs_buf_hash_init
+> 3) radix_tree_insert
+> 
+> For any given iteration through the loop, any of the above which
+> succeed must be unwound for /this/ pag, and then all prior
+> initialized pags must be unwound.
+> 
+> Fixes CoverityScan CID#1397628 ("Dereference after null check")
+> 
+> Reported-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+>  fs/xfs/xfs_mount.c | 37 ++++++++++++++++++++++++++-----------
+>  1 file changed, 26 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 9b9540d..b074d2a 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -190,6 +190,7 @@ xfs_initialize_perag(
+>  	xfs_agnumber_t	first_initialised = 0;
+>  	xfs_perag_t	*pag;
+>  	int		error = -ENOMEM;
+> +	bool		first_init_done = false;
+>  
+>  	/*
+>  	 * Walk the current per-ag tree so we don't try to initialise AGs
+> @@ -202,22 +203,20 @@ xfs_initialize_perag(
+>  			xfs_perag_put(pag);
+>  			continue;
+>  		}
+> -		if (!first_initialised)
+> -			first_initialised = index;
+>  
+>  		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
+>  		if (!pag)
+> -			goto out_unwind;
+> +			goto out_unwind_new_pags;
+>  		pag->pag_agno = index;
+>  		pag->pag_mount = mp;
+>  		spin_lock_init(&pag->pag_ici_lock);
+>  		mutex_init(&pag->pag_ici_reclaim_lock);
+>  		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+>  		if (xfs_buf_hash_init(pag))
+> -			goto out_unwind;
+> +			goto out_free_pag;
 
-This is a false positive. It tried to build it against latest mainline
-instead of linux-next.
+now the hash is initialized
+ 
+>  		if (radix_tree_preload(GFP_NOFS))
+> -			goto out_unwind;
+> +			goto out_free_pag;
+
+but we doesn't destroy it if we fail here and goto out_free_pag
+ 
+>  		spin_lock(&mp->m_perag_lock);
+>  		if (radix_tree_insert(&mp->m_perag_tree, index, pag)) {
+> @@ -225,10 +224,15 @@ xfs_initialize_perag(
+>  			spin_unlock(&mp->m_perag_lock);
+>  			radix_tree_preload_end();
+>  			error = -EEXIST;
+> -			goto out_unwind;
+> +			goto out_hash_destroy;
+>  		}
+>  		spin_unlock(&mp->m_perag_lock);
+>  		radix_tree_preload_end();
+> +		/* a pag is fully initialized */
+> +		if (!first_init_done) {
+> +			first_initialised = index;
+> +			first_init_done = true;
+> +		}
+>  	}
+>  
+>  	index = xfs_set_inode_alloc(mp, agcount);
+> @@ -239,13 +243,24 @@ xfs_initialize_perag(
+>  	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+>  	return 0;
+>  
+> -out_unwind:
+> +out_hash_destroy:
+>  	xfs_buf_hash_destroy(pag);
+> +out_free_pag:
+>  	kmem_free(pag);
+> -	for (; index > first_initialised; index--) {
+> -		pag = radix_tree_delete(&mp->m_perag_tree, index);
+> -		xfs_buf_hash_destroy(pag);
+> -		kmem_free(pag);
+> +out_unwind_new_pags:
+> +	/* unwind any newly initialized pags */
+> +	if (first_init_done) {
+> +		index--;
+> +		do {
+> +			pag = radix_tree_delete(&mp->m_perag_tree, index);
+> +			if (pag) {
+
+I think that if this has all been done right keeping careful
+track of what was last initialized, there is no need to test
+if (pag).  If you'd like to use if (pag) in lieu of some of the
+other controls that's fine too, but I don't really see a reason
+for both.
+
+Just a style thing I guess, take it or leave it.
+
+-Eric
+
+> +				xfs_buf_hash_destroy(pag);
+> +				kmem_free(pag);
+> +			}
+> +			if (!index)
+> +				break;
+> +			index--;
+> +		} while (index >= first_initialised);
+
+>  	}
+>  	return error;
+>  }
+> 
