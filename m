@@ -1,167 +1,177 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp08.acens.net ([86.109.99.132]:19583 "EHLO smtp.movistar.es"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751726AbdBCCZA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Feb 2017 21:25:00 -0500
-Received: from minas-tirith.valinor (88.17.75.124) by smtp.movistar.es (8.6.122.03) (authenticated as robin.listas2)
-        id 58733CC201FAC054 for linux-xfs@vger.kernel.org; Fri, 3 Feb 2017 02:18:51 +0000
-Received: from minas-tirith.valinor (localhost [127.0.0.1])
-        by minas-tirith.valinor (Postfix) with ESMTP id 8202618813D
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Feb 2017 03:18:41 +0100 (CET)
-Subject: Re: Suspend fails when xfs is involved?
-References: <20170203010401.GR9134@birch.djwong.org>
-From: "Carlos E. R." <robin.listas@telefonica.net>
-Message-ID: <2724fe21-4924-536b-352e-0abfb4d033a0@telefonica.net>
-Date: Fri, 3 Feb 2017 03:18:34 +0100
+Received: from mx1.redhat.com ([209.132.183.28]:55458 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750891AbdBCQWo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Feb 2017 11:22:44 -0500
+Date: Fri, 3 Feb 2017 11:22:43 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/4] xfs: improve handling of busy extents in the
+ low-level allocator
+Message-ID: <20170203162243.GF45388@bfoster.bfoster>
+References: <1485715421-17182-1-git-send-email-hch@lst.de>
+ <1485715421-17182-3-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170203010401.GR9134@birch.djwong.org>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="r9R7AjHWOmBIe91qmNx6h194DH6cJRGu3"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1485715421-17182-3-git-send-email-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---r9R7AjHWOmBIe91qmNx6h194DH6cJRGu3
-Content-Type: multipart/mixed; boundary="isxPmo6VxNhqdWOEFwC7Mqul4TNBJnowu";
- protected-headers="v1"
-From: "Carlos E. R." <robin.listas@telefonica.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <2724fe21-4924-536b-352e-0abfb4d033a0@telefonica.net>
-Subject: Re: Suspend fails when xfs is involved?
-References: <20170203010401.GR9134@birch.djwong.org>
-In-Reply-To: <20170203010401.GR9134@birch.djwong.org>
+On Sun, Jan 29, 2017 at 07:43:39PM +0100, Christoph Hellwig wrote:
+> Currently we force the log and simply try again if we hit a busy extent,
+> but especially with online discard enabled it might take a while after
+> the log force for the busy extents to disappear, and we might have
+> already completed our second pass.
+> 
+> So instead we add a new waitqueue and a generation counter to the pag
+> structure so that we can do wakeups once we've removed busy extents,
+> and we replace the single retry with an unconditional one - after
+> all we hold the AGF buffer lock, so no other allocations or frees
+> can be racing with us in this AG.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 93 +++++++++++++++++++++++---------------------
+>  fs/xfs/xfs_extent_busy.c  | 98 ++++++++++++++++++++++++++++++++++-------------
+>  fs/xfs/xfs_extent_busy.h  |  8 +++-
+>  fs/xfs/xfs_mount.c        |  1 +
+>  fs/xfs/xfs_mount.h        |  2 +
+>  5 files changed, 129 insertions(+), 73 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index 29c2f99..8251359 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+...
+> @@ -554,29 +574,53 @@ xfs_extent_busy_clear(
+>  	struct xfs_extent_busy	*busyp, *n;
+>  	struct xfs_perag	*pag = NULL;
+>  	xfs_agnumber_t		agno = NULLAGNUMBER;
+> +	bool			wakeup = false;
+>  
+>  	list_for_each_entry_safe(busyp, n, list, list) {
+>  		if (busyp->agno != agno) {
+> -			if (pag) {
+> -				spin_unlock(&pag->pagb_lock);
+> -				xfs_perag_put(pag);
+> -			}
+> -			pag = xfs_perag_get(mp, busyp->agno);
+> -			spin_lock(&pag->pagb_lock);
+> +			if (pag)
+> +				xfs_extent_busy_put_pag(pag, wakeup);
+>  			agno = busyp->agno;
+> +			pag = xfs_perag_get(mp, agno);
+> +			spin_lock(&pag->pagb_lock);
+> +			wakeup = false;
+>  		}
+>  
+>  		if (do_discard && busyp->length &&
+> -		    !(busyp->flags & XFS_EXTENT_BUSY_SKIP_DISCARD))
+> +		    !(busyp->flags & XFS_EXTENT_BUSY_SKIP_DISCARD)) {
+>  			busyp->flags = XFS_EXTENT_BUSY_DISCARDED;
+> -		else
+> +		} else {
+>  			xfs_extent_busy_clear_one(mp, pag, busyp);
+> +			wakeup = true;
+> +		}
 
---isxPmo6VxNhqdWOEFwC7Mqul4TNBJnowu
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
+I didn't catch this until looking through everything after the next
+patch, but I think there's a problem with the wakeup here as well. If we
+have a busy extent with XFS_EXTENT_BUSY_SKIP_DISCARD set, we immediately
+issue a wake from the first xfs_extent_busy_clear() in the cil committed
+handler, regardless of whether !SKIP_DISCARD extents exist as well
+under the current gen value. I think that means we'd get a premature
+wake any time a busy_list has at least one of each type..?
 
-On 2017-02-03 02:04, Darrick J. Wong wrote:
-> Hi list,
->=20
-> So I've noticed that my laptop consistently fails to suspend with:
->=20
+Brian
 
-> [1183646.459310] Freezing of tasks failed after 20.006 seconds (1 tasks=
- refusing to freeze, wq_busy=3D0):
-> [1183646.459348] xfsaild/dm-1    D    0  1767      2 0x00000000
-
-I see what to me seem similar events on my desktop machine, occasionally,=
- but a second attempt succeeds; it is a different function, but xfs is in=
-volved:
-
-<0.6> 2017-01-14 19:50:38 Telcontar kernel - - - [748246.597459] PM: Sync=
-ing filesystems ... done.
-<0.6> 2017-01-14 19:50:38 Telcontar kernel - - - [748247.261177] Freezing=
- user space processes ... (elapsed 0.002 seconds) done.
-<0.7> 2017-01-14 19:50:38 Telcontar kernel - - - [748247.263791] PM: Mark=
-ing nosave pages: [mem 0x00000000-0x00000fff]
-<0.7> 2017-01-14 19:50:38 Telcontar kernel - - - [748247.263797] PM: Mark=
-ing nosave pages: [mem 0x0009f000-0x000fffff]
-<0.7> 2017-01-14 19:50:38 Telcontar kernel - - - [748247.263800] PM: Mark=
-ing nosave pages: [mem 0xbff90000-0xffffffff]
-<0.7> 2017-01-14 19:50:38 Telcontar kernel - - - [748247.264421] PM: Basi=
-c memory bitmaps created
-<0.6> 2017-01-14 19:50:38 Telcontar kernel - - - [748247.264453] PM: Prea=
-llocating image memory... done (allocated 822838 pages)
-<0.6> 2017-01-14 19:50:38 Telcontar kernel - - - [748249.186840] PM: Allo=
-cated 3291352 kbytes in 1.92 seconds (1714.24 MB/s)
-<0.6> 2017-01-14 19:50:38 Telcontar kernel - - - [748249.186841] Freezing=
- remaining freezable tasks ...=20
-<0.3> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.189941] Freezing=
- of tasks failed after 20.003 seconds (1 tasks refusing to freeze, wq_bus=
-y=3D0):
-<0.6> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.189944] kswapd0 =
-        D ffff88023fd95c40     0    44      2 0x00000000
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.189948]  ffff880=
-235ed3848 ffff88017ee58340 ffff880235eccbc0 ffff880235ed4000
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.189952]  ffff880=
-235eccbc0 ffff8801fa1a2498 ffff8800ba8c5340 ffff8801fa1a23c0
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.189956]  ffff880=
-235ed3860 ffffffff8160680c 7fffffffffffffff ffff880235ed3908
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.189959] Call Tra=
-ce:
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.189970]  [<fffff=
-fff8160680c>] schedule+0x3c/0x90
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.189975]  [<fffff=
-fff816095fa>] schedule_timeout+0x25a/0x2f0
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.189978]  [<fffff=
-fff816071f6>] wait_for_completion+0xc6/0x140
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190019]  [<fffff=
-fffa0edef9c>] xfs_buf_submit_wait+0x7c/0x250 [xfs]
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190051]  [<fffff=
-fffa0edf2b1>] xfs_buf_read_map+0x111/0x1a0 [xfs]
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190075]  [<fffff=
-fffa0f0c6ed>] xfs_trans_read_buf_map+0xfd/0x330 [xfs]
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190097]  [<fffff=
-fffa0ed1aae>] xfs_imap_to_bp+0x5e/0xd0 [xfs]
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190120]  [<fffff=
-fffa0ef3e0d>] xfs_iflush+0xcd/0x230 [xfs]
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190142]  [<fffff=
-fffa0ee7653>] xfs_reclaim_inode+0x53/0x370 [xfs]
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190164]  [<fffff=
-fffa0ee7b69>] xfs_reclaim_inodes_ag+0x1f9/0x2f0 [xfs]
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190186]  [<fffff=
-fffa0ee8871>] xfs_reclaim_inodes_nr+0x31/0x40 [xfs]
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190191]  [<fffff=
-fff81208a36>] super_cache_scan+0x176/0x180
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190195]  [<fffff=
-fff8119cb35>] shrink_slab.part.40+0x205/0x3e0
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190199]  [<fffff=
-fff811a1368>] shrink_zone+0x268/0x280
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190202]  [<fffff=
-fff811a2433>] kswapd+0x4a3/0x960
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190206]  [<fffff=
-fff8109d308>] kthread+0xc8/0xe0
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.190209]  [<fffff=
-fff8160ac8f>] ret_from_fork+0x3f/0x70
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.191726] DWARF2 u=
-nwinder stuck at ret_from_fork+0x3f/0x70
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.191727]=20
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.191728] Leftover=
- inexact backtrace:
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.191728]=20
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.191730]  [<fffff=
-fff8109d240>] ? kthread_park+0x50/0x50
-<0.4> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.191774]=20
-<0.6> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.192073] Restarti=
-ng kernel threads ... done.
-<0.7> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.298537] PM: Basi=
-c memory bitmaps freed
-<0.6> 2017-01-14 19:50:38 Telcontar kernel - - - [748269.300160] Restarti=
-ng tasks ... done.
-
-
-The kernel was 4.4.36-8-default #1 SMP Fri Dec 9
-Distribution is openSUSE Leap 42.2
-
-I have not reported this yet in Bugzilla, but seeing this post I thought =
-I might as well tell.
-You will know better than me what to make of it.
-
---=20
-Cheers / Saludos,
-              =20
-		Carlos E. R.
-
-  (from 42.2 x86_64 "Malachite" (Minas Tirith))
-
-
---isxPmo6VxNhqdWOEFwC7Mqul4TNBJnowu--
-
---r9R7AjHWOmBIe91qmNx6h194DH6cJRGu3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAliT6IEACgkQja8UbcUWM1ycdgD+LHQYcCM9LFpzpasmRx/H9hV8
-NznmKlxN7DFrO8+or1cA/A1rJtfmHKGXvO6h25EPCyGVIunCNBKHdjjtMMboXvqC
-=1CtJ
------END PGP SIGNATURE-----
-
---r9R7AjHWOmBIe91qmNx6h194DH6cJRGu3--
+>  	}
+>  
+> -	if (pag) {
+> -		spin_unlock(&pag->pagb_lock);
+> -		xfs_perag_put(pag);
+> +	if (pag)
+> +		xfs_extent_busy_put_pag(pag, wakeup);
+> +}
+> +
+> +/*
+> + * Flush out all busy extents for this AG.
+> + */
+> +void
+> +xfs_extent_busy_flush(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_perag	*pag,
+> +	unsigned		busy_gen)
+> +{
+> +	DEFINE_WAIT		(wait);
+> +	int			log_flushed = 0, error;
+> +
+> +	trace_xfs_log_force(mp, 0, _THIS_IP_);
+> +	error = _xfs_log_force(mp, XFS_LOG_SYNC, &log_flushed);
+> +	if (error)
+> +		return;
+> +
+> +	while (busy_gen == READ_ONCE(pag->pagb_gen)) {
+> +		prepare_to_wait(&pag->pagb_wait, &wait, TASK_KILLABLE);
+> +		schedule();
+>  	}
+> +	finish_wait(&pag->pagb_wait, &wait);
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
+> index bfff284..bcb99463 100644
+> --- a/fs/xfs/xfs_extent_busy.h
+> +++ b/fs/xfs/xfs_extent_busy.h
+> @@ -58,9 +58,13 @@ void
+>  xfs_extent_busy_reuse(struct xfs_mount *mp, xfs_agnumber_t agno,
+>  	xfs_agblock_t fbno, xfs_extlen_t flen, bool userdata);
+>  
+> +bool
+> +xfs_extent_busy_trim(struct xfs_alloc_arg *args, xfs_agblock_t *bno,
+> +		xfs_extlen_t *len, unsigned *busy_gen);
+> +
+>  void
+> -xfs_extent_busy_trim(struct xfs_alloc_arg *args, xfs_agblock_t bno,
+> -	xfs_extlen_t len, xfs_agblock_t *rbno, xfs_extlen_t *rlen);
+> +xfs_extent_busy_flush(struct xfs_mount *mp, struct xfs_perag *pag,
+> +	unsigned discards);
+>  
+>  int
+>  xfs_extent_busy_ag_cmp(void *priv, struct list_head *a, struct list_head *b);
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 9b9540d..4e9feb1 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -215,6 +215,7 @@ xfs_initialize_perag(
+>  		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+>  		if (xfs_buf_hash_init(pag))
+>  			goto out_unwind;
+> +		init_waitqueue_head(&pag->pagb_wait);
+>  
+>  		if (radix_tree_preload(GFP_NOFS))
+>  			goto out_unwind;
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 7f351f7..7363499 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -384,6 +384,8 @@ typedef struct xfs_perag {
+>  	xfs_agino_t	pagl_rightrec;
+>  	spinlock_t	pagb_lock;	/* lock for pagb_tree */
+>  	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
+> +	unsigned int	pagb_gen;
+> +	wait_queue_head_t pagb_wait;
+>  
+>  	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
+>  
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
