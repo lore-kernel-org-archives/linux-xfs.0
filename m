@@ -1,77 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49342 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752710AbdBBSjv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 13:39:51 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 37/51] xfs: dont print warnings when xfs_log_force fails
-Date: Thu,  2 Feb 2017 19:37:56 +0100
-Message-Id: <20170202183347.043226331@linuxfoundation.org>
-In-Reply-To: <20170202183345.067336143@linuxfoundation.org>
-References: <20170202183345.067336143@linuxfoundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:38482 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751578AbdBCSe0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Feb 2017 13:34:26 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 0/2] divide indirect blocks fairly on delalloc extent split
+Date: Fri,  3 Feb 2017 13:34:23 -0500
+Message-Id: <1486146865-47286-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: Patrick Dung <mpatdung@gmail.com>
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+Hi all,
 
-------------------
+These are a couple fixes for dealing with delalloc indlen reservations
+that happen to be less than the worst case res as calculated by
+xfs_bmap_worst_indlen().
 
-From: Christoph Hellwig <hch@lst.de>
+Patch 1 prevents an unexpected in-core allocation and assert failure in
+the delalloc extent merge case. Patch 2 reworks xfs_bmap_split_indlen()
+to more fairly divide indlen blocks when an extent is split and the
+existing reservation is not sufficient. The current scheme doesn't
+properly deal with extents that are already under-reserved and can lead
+to indlen == 0 cases fairly easily.
 
-commit 84a4620cfe97c9d57e39b2369bfb77faff55063d upstream.
+The latter issue was reported by Patrick[1] and reproduced simply by
+copying a large sparse vdisk image using 'cp --sparse=always.' These
+patches survive xfstests with and without rmapbt without regression.
 
-There are only two reasons for xfs_log_force / xfs_log_force_lsn to fail:
-one is an I/O error, for which xlog_bdstrat already logs a warning, and
-the second is an already shutdown log due to a previous I/O errors.  In
-the latter case we'll already have a previous indication for the actual
-error, but the large stream of misleading warnings from xfs_log_force
-will probably scroll it out of the message buffer.
+Brian
 
-Simply removing the warnings thus makes the XFS log reporting significantly
-better.
+[1] http://www.spinics.net/lists/linux-xfs/msg03935.html
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- fs/xfs/xfs_log.c |   12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+Brian Foster (2):
+  xfs: handle indlen shortage on delalloc extent merge
+  xfs: split indlen reservations fairly when under reserved
 
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3324,12 +3324,8 @@ xfs_log_force(
- 	xfs_mount_t	*mp,
- 	uint		flags)
- {
--	int	error;
--
- 	trace_xfs_log_force(mp, 0, _RET_IP_);
--	error = _xfs_log_force(mp, flags, NULL);
--	if (error)
--		xfs_warn(mp, "%s: error %d returned.", __func__, error);
-+	_xfs_log_force(mp, flags, NULL);
- }
- 
- /*
-@@ -3473,12 +3469,8 @@ xfs_log_force_lsn(
- 	xfs_lsn_t	lsn,
- 	uint		flags)
- {
--	int	error;
--
- 	trace_xfs_log_force(mp, lsn, _RET_IP_);
--	error = _xfs_log_force_lsn(mp, lsn, flags, NULL);
--	if (error)
--		xfs_warn(mp, "%s: error %d returned.", __func__, error);
-+	_xfs_log_force_lsn(mp, lsn, flags, NULL);
- }
- 
- /*
+ fs/xfs/libxfs/xfs_bmap.c | 67 +++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 46 insertions(+), 21 deletions(-)
 
+-- 
+2.7.4
 
