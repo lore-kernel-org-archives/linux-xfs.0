@@ -1,55 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55462 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752121AbdBBPy6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Feb 2017 10:54:58 -0500
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8149780F94
-        for <linux-xfs@vger.kernel.org>; Thu,  2 Feb 2017 15:54:58 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v12FsvYT030136
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-        for <linux-xfs@vger.kernel.org>; Thu, 2 Feb 2017 10:54:58 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_metadump: ignore attr leaf with 0 entries
-Message-ID: <7481b076-dbc6-ddaa-4e3f-9a1bc2b94e26@redhat.com>
-Date: Thu, 2 Feb 2017 09:54:56 -0600
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:33897 "EHLO
+        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752825AbdBDAAv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 19:00:51 -0500
+Received: by mail-oi0-f47.google.com with SMTP id s203so20220246oie.1
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Feb 2017 16:00:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CAPcyv4hmswhXsnS9q1Ut76f3-a2h5Hx7XYkS1iNyak8wG9VuEw@mail.gmail.com>
+References: <201702040648.oOjnlEcm%fengguang.wu@intel.com> <2020f442-8e77-cf14-a6b1-b4b00d0da80b@intel.com>
+ <CAPcyv4hmswhXsnS9q1Ut76f3-a2h5Hx7XYkS1iNyak8wG9VuEw@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 3 Feb 2017 16:00:49 -0800
+Message-ID: <CAPcyv4hVqxedr9sEigw0Xsr_SoMAnvPrmPNOrX7QYNuCz=DRQA@mail.gmail.com>
+Subject: Re: [PATCH] mm: replace FAULT_FLAG_SIZE with parameter to huge_fault
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Jiang <dave.jiang@intel.com>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Hansen <dave.hansen@linux.intel.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Jan Kara <jack@suse.com>, linux-ext4 <linux-ext4@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Vlastimil Babka <vbabka@suse.cz>
 
-Another in the ongoing saga of attribute leaves with zero
-entries; in this case, if we try to metadump an inode with
-a zero-entries attribute leaf, the zeroing code will go off
-the rails and segfault at:
+On Fri, Feb 3, 2017 at 3:26 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Fri, Feb 3, 2017 at 3:25 PM, Dave Jiang <dave.jiang@intel.com> wrote:
+>> On 02/03/2017 03:56 PM, kbuild test robot wrote:
+>>> Hi Dave,
+>>>
+>>> [auto build test ERROR on mmotm/master]
+>>> [cannot apply to linus/master linux/master v4.10-rc6 next-20170203]
+>>> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+>>
+>> This one is a bit odd. I just pulled mmotm tree master branch and built
+>> with the attached .config and it passed for me (and I don't see this
+>> commit in the master branch). I also built linux-next with this patch on
+>> top and it also passes with attached .config. Looking at the err log
+>> below it seems the code has a mix of partial from before and after the
+>> patch. I'm rather confused about it....
+>
+> This is a false positive. It tried to build it against latest mainline
+> instead of linux-next.
 
-                memset(&entries[nentries], 0,
-                       first_name - (char *)&entries[nentries]);
+On second look it seems I ended up with a duplicate
+ext4_huge_dax_fault after "git am" when I apply this on top of
+next-20170202.  The following fixes it up for me and tests fine:
 
-because first_name is null, and we try to memset a large
-(negative) number.
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index f8f4f6d068e5..e8ab46efc4f9 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -276,27 +276,6 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
+        return result;
+ }
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/db/metadump.c b/db/metadump.c
-index 38519f1..66952f6 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1654,7 +1654,8 @@ process_attr_block(
- 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &hdr, leaf);
- 
- 	nentries = hdr.count;
--	if (nentries * sizeof(xfs_attr_leaf_entry_t) +
-+	if (nentries == 0 ||
-+	    nentries * sizeof(xfs_attr_leaf_entry_t) +
- 			xfs_attr3_leaf_hdr_size(leaf) >
- 				XFS_ATTR3_RMT_BUF_SPACE(mp, bs)) {
- 		if (show_warnings)
-
+-static int
+-ext4_dax_huge_fault(struct vm_fault *vmf)
+-{
+-       int result;
+-       struct inode *inode = file_inode(vmf->vma->vm_file);
+-       struct super_block *sb = inode->i_sb;
+-       bool write = vmf->flags & FAULT_FLAG_WRITE;
+-
+-       if (write) {
+-               sb_start_pagefault(sb);
+-               file_update_time(vmf->vma->vm_file);
+-       }
+-       down_read(&EXT4_I(inode)->i_mmap_sem);
+-       result = dax_iomap_fault(vmf, &ext4_iomap_ops);
+-       up_read(&EXT4_I(inode)->i_mmap_sem);
+-       if (write)
+-               sb_end_pagefault(sb);
+-
+-       return result;
+-}
+-
+ static int ext4_dax_fault(struct vm_fault *vmf)
+ {
+        return ext4_dax_huge_fault(vmf, PE_SIZE_PTE);
