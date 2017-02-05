@@ -1,52 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46142 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751909AbdBFQnT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Feb 2017 11:43:19 -0500
-Date: Mon, 6 Feb 2017 11:43:18 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/4] xfs: don't fail xfs_extent_busy allocation
-Message-ID: <20170206164318.GF57865@bfoster.bfoster>
-References: <1485715421-17182-1-git-send-email-hch@lst.de>
- <1485715421-17182-2-git-send-email-hch@lst.de>
- <20170203152052.GB45388@bfoster.bfoster>
- <20170204095040.GA18472@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170204095040.GA18472@lst.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:36790 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751488AbdBERLp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Feb 2017 12:11:45 -0500
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1caQLn-0003DR-Nx
+        for linux-xfs@vger.kernel.org; Sun, 05 Feb 2017 17:11:44 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: improve busy extent handling and add async discard support V2
+Date: Sun,  5 Feb 2017 18:11:37 +0100
+Message-Id: <20170205171141.6066-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Sat, Feb 04, 2017 at 10:50:40AM +0100, Christoph Hellwig wrote:
-> On Fri, Feb 03, 2017 at 10:20:52AM -0500, Brian Foster wrote:
-> > On Sun, Jan 29, 2017 at 07:43:38PM +0100, Christoph Hellwig wrote:
-> > > We don't just need the structure to track busy extents which can be
-> > > avoided with a synchronous transaction, but also to keep track of
-> > > pending discard.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > 
-> > Looks fine, though I wonder if we should create a kmem_cache similar to
-> > all of the other log item structures and whatnot...
-> 
-> Using the isolation of a slab cache for such a short lived structure
-> seems counter productive.
+This series improves the busy extent handling so hat we don't break
+the guarantee of being able to complete an allocation after fixing
+the freelist, and once this is sorted out adds support for submitting
+discard requests without blocking the log commit handler, which
+significantly stresses the busy extent handling.
 
-I was thinking more about the repeated allocation/free of said
-structures than lifetime, particularly since we've converted an
-opportunistic allocation to a required/sleeping one.
-
-Just a thought though.. looking again, should we have KM_NOFS here as
-well?
-
-Brian
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Changes since V1:
+ - address various feedback from Brian
