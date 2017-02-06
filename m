@@ -1,41 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40394 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:58594 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751038AbdBFIvq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Feb 2017 03:51:46 -0500
-Date: Mon, 6 Feb 2017 09:51:33 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] mm: replace FAULT_FLAG_SIZE with parameter to huge_fault
-Message-ID: <20170206085133.GB4004@quack2.suse.cz>
-References: <148615748258.43180.1690152053774975329.stgit@djiang5-desk3.ch.intel.com>
+        id S1751699AbdBFQrv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Feb 2017 11:47:51 -0500
+Date: Mon, 6 Feb 2017 11:47:50 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/4] xfs: improve handling of busy extents in the
+ low-level allocator
+Message-ID: <20170206164750.GG57865@bfoster.bfoster>
+References: <1485715421-17182-1-git-send-email-hch@lst.de>
+ <1485715421-17182-3-git-send-email-hch@lst.de>
+ <20170203162243.GF45388@bfoster.bfoster>
+ <20170204095606.GC18472@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <148615748258.43180.1690152053774975329.stgit@djiang5-desk3.ch.intel.com>
+In-Reply-To: <20170204095606.GC18472@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Jiang <dave.jiang@intel.com>
-Cc: akpm@linux-foundation.org, mawilcox@microsoft.com, linux-nvdimm@lists.01.org, dave.hansen@linux.intel.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, kirill.shutemov@linux.intel.com, jack@suse.com, dan.j.williams@intel.com, linux-ext4@vger.kernel.org, ross.zwisler@linux.intel.com, vbabka@suse.cz
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri 03-02-17 14:31:22, Dave Jiang wrote:
-> Since the introduction of FAULT_FLAG_SIZE to the vm_fault flag, it has
-> been somewhat painful with getting the flags set and removed at the
-> correct locations. More than one kernel oops was introduced due to
-> difficulties of getting the placement correctly. Removing the flag
-> values and introducing an input parameter to huge_fault that indicates
-> the size of the page entry. This makes the code easier to trace and
-> should avoid the issues we see with the fault flags where removal of the
-> flag was necessary in the fallback paths.
+On Sat, Feb 04, 2017 at 10:56:06AM +0100, Christoph Hellwig wrote:
+> On Fri, Feb 03, 2017 at 11:22:43AM -0500, Brian Foster wrote:
+> > I didn't catch this until looking through everything after the next
+> > patch, but I think there's a problem with the wakeup here as well. If we
+> > have a busy extent with XFS_EXTENT_BUSY_SKIP_DISCARD set, we immediately
+> > issue a wake from the first xfs_extent_busy_clear() in the cil committed
+> > handler, regardless of whether !SKIP_DISCARD extents exist as well
+> > under the current gen value. I think that means we'd get a premature
+> > wake any time a busy_list has at least one of each type..?
 > 
-> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+> We'll need to wake as soon as a previously busy extent in the AG
+> becomes available, and that includes  XFS_EXTENT_BUSY_SKIP_DISCARD
+> ones.  Otherwise e.g. a transaction only containing
+> XFS_EXTENT_BUSY_SKIP_DISCARD will never wake at all.
+> 
 
-Yeah, the code looks less error-prone this way. I like it. You can add:
+Hmm, Ok. I suppose that isn't a problem so long as we don't ever wait
+for a particular extent based on a particular generation number. The
+current code is just retrying allocations and whatnot, so is probably
+safe.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+That said, that limitation should be noted somewhere. Can we add a
+comment in xfs_extent_busy_clear() right above the hunk where we do the
+SKIP_DISCARD wake? E.g., something that points out the gen number for
+any particular extent could be bumped in such a situation.. (or
+something along those lines)?
 
+Brian
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
