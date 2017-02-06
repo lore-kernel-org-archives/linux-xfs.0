@@ -1,157 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47461 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752441AbdBCWCR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 17:02:17 -0500
-Date: Fri, 3 Feb 2017 14:02:08 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: split indlen reservations fairly when under
- reserved
-Message-ID: <20170203220208.GB3580@birch.djwong.org>
-References: <1486146865-47286-1-git-send-email-bfoster@redhat.com>
- <1486146865-47286-3-git-send-email-bfoster@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:59248 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751989AbdBFOfg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Feb 2017 09:35:36 -0500
+Date: Mon, 6 Feb 2017 09:35:33 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH 1/2] mm, vmscan: account the number of isolated pages
+ per zone
+Message-ID: <20170206143533.GC57865@bfoster.bfoster>
+References: <20170130085546.GF8443@dhcp22.suse.cz>
+ <20170202101415.GE22806@dhcp22.suse.cz>
+ <201702031957.AGH86961.MLtOQVFOSHJFFO@I-love.SAKURA.ne.jp>
+ <20170203145009.GB19325@dhcp22.suse.cz>
+ <20170203172403.GG45388@bfoster.bfoster>
+ <201702061529.ABC60444.FFFJOOHLVQSMtO@I-love.SAKURA.ne.jp>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1486146865-47286-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <201702061529.ABC60444.FFFJOOHLVQSMtO@I-love.SAKURA.ne.jp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Patrick Dung <mpatdung@gmail.com>
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: mhocko@kernel.org, david@fromorbit.com, dchinner@redhat.com, hch@lst.de, mgorman@suse.de, viro@ZenIV.linux.org.uk, linux-mm@kvack.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-On Fri, Feb 03, 2017 at 01:34:25PM -0500, Brian Foster wrote:
-> Certain workoads that punch holes into speculative preallocation can
-> cause delalloc indirect reservation splits when the delalloc extent is
-> split in two. If further splits occur, an already short-handed extent
-> can be split into two in a manner that leaves zero indirect blocks for
-> one of the two new extents. This occurs because the shortage is large
-> enough that the xfs_bmap_split_indlen() algorithm completely drains the
-> requested indlen of one of the extents before it honors the existing
-> reservation.
-
-This looks ok from a "try to avoid the superbadness of ending up with
-zero indlen blocks" point of view, but I've been wondering -- how does
-punching holes in da reservations result in the reservations being
-shorthanded?
-
-Is the situation here something like: we create a reservation with
-indlen=14 blocks, punch a one-block hole, and now we have two
-reservations each wanting indlen=8 so now we're under-reserved?
-
-If so, is there a way to fix that?
-
-> This ultimately results in a warning from xfs_bmap_del_extent(). This
-> has been observed during file copies of large, sparse files using 'cp
-> --sparse=always.'
-
-Is there a test case to reproduce this?  I ran this patch through the
-auto group with no ill effects but I've never seen that assert trigger
-while running xfstests so it's harder to tell that the fix is actually
-working.
-
-> To avoid this problem, update xfs_bmap_split_indlen() to explicitly
-> apply the reservation shortage fairly between both extents. This smooths
-> out the overall indlen shortage and defers the situation where we end up
-> with a delalloc extent with zero indlen reservation to extreme
-> circumstances.
-
-Could you elaborate on what are 'extreme circumstances' here?
-
-(FWIW I'm not opposed to the two patches, but my curiosity isn't yet
-satisfied.)
-
---D
-
-> Reported-by: Patrick Dung <mpatdung@gmail.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 58 +++++++++++++++++++++++++++++++++---------------
->  1 file changed, 40 insertions(+), 18 deletions(-)
+On Mon, Feb 06, 2017 at 03:29:24PM +0900, Tetsuo Handa wrote:
+> Brian Foster wrote:
+> > On Fri, Feb 03, 2017 at 03:50:09PM +0100, Michal Hocko wrote:
+> > > [Let's CC more xfs people]
+> > > 
+> > > On Fri 03-02-17 19:57:39, Tetsuo Handa wrote:
+> > > [...]
+> > > > (1) I got an assertion failure.
+> > > 
+> > > I suspect this is a result of
+> > > http://lkml.kernel.org/r/20170201092706.9966-2-mhocko@kernel.org
+> > > I have no idea what the assert means though.
+> > > 
+> > > > 
+> > > > [  969.626518] Killed process 6262 (oom-write) total-vm:2166856kB, anon-rss:1128732kB, file-rss:4kB, shmem-rss:0kB
+> > > > [  969.958307] oom_reaper: reaped process 6262 (oom-write), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB
+> > > > [  972.114644] XFS: Assertion failed: oldlen > newlen, file: fs/xfs/libxfs/xfs_bmap.c, line: 2867
+> > 
+> > Indirect block reservation underrun on delayed allocation extent merge.
+> > These are extra blocks are used for the inode bmap btree when a delalloc
+> > extent is converted to physical blocks. We're in a case where we expect
+> > to only ever free excess blocks due to a merge of extents with
+> > independent reservations, but a situation occurs where we actually need
+> > blocks and hence the assert fails. This can occur if an extent is merged
+> > with one that has a reservation less than the expected worst case
+> > reservation for its size (due to previous extent splits due to hole
+> > punches, for example). Therefore, I think the core expectation that
+> > xfs_bmap_add_extent_hole_delay() will always have enough blocks
+> > pre-reserved is invalid.
+> > 
+> > Can you describe the workload that reproduces this? FWIW, I think the
+> > way xfs_bmap_add_extent_hole_delay() currently works is likely broken
+> > and have a couple patches to fix up indlen reservation that I haven't
+> > posted yet. The diff that deals with this particular bit is appended.
+> > Care to give that a try?
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index d2e48ed..4ca4606 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4790,34 +4790,56 @@ xfs_bmap_split_indlen(
->  	xfs_filblks_t			len2 = *indlen2;
->  	xfs_filblks_t			nres = len1 + len2; /* new total res. */
->  	xfs_filblks_t			stolen = 0;
-> +	xfs_filblks_t			resfactor;
->  
->  	/*
->  	 * Steal as many blocks as we can to try and satisfy the worst case
->  	 * indlen for both new extents.
->  	 */
-> -	while (nres > ores && avail) {
-> -		nres--;
-> -		avail--;
-> -		stolen++;
-> -	}
-> +	if (ores < nres && avail)
-> +		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
-> +	ores += stolen;
-> +
-> +	 /* nothing else to do if we've satisfied the new reservation */
-> +	if (ores >= nres)
-> +		return stolen;
-> +
-> +	/*
-> +	 * We can't meet the total required reservation for the two extents.
-> +	 * Calculate the percent of the overall shortage between both extents
-> +	 * and apply this percentage to each of the requested indlen values.
-> +	 * This distributes the shortage fairly and reduces the chances that one
-> +	 * of the two extents is left with nothing when extents are repeatedly
-> +	 * split.
-> +	 */
-> +	resfactor = (ores * 100) / nres;
-> +	len1 = resfactor * len1 / 100;
-> +	len2 = resfactor * len2 / 100;
-> +	ASSERT(len1 + len2 <= ores);
-> +	ASSERT(len1 < *indlen1 && len2 < *indlen2);
->  
->  	/*
-> -	 * The only blocks available are those reserved for the original
-> -	 * extent and what we can steal from the extent being removed.
-> -	 * If this still isn't enough to satisfy the combined
-> -	 * requirements for the two new extents, skim blocks off of each
-> -	 * of the new reservations until they match what is available.
-> +	 * Hand out the remainder to each extent. If one of the two reservations
-> +	 * is zero, we want to make sure that one gets a block first. The loop
-> +	 * below starts with len1, so hand len2 a block right off the bat if it
-> +	 * is zero.
->  	 */
-> -	while (nres > ores) {
-> -		if (len1) {
-> -			len1--;
-> -			nres--;
-> +	ores -= (len1 + len2);
-> +	ASSERT((*indlen1 - len1) + (*indlen2 - len2) >= ores);
-> +	if (ores && !len2 && *indlen2) {
-> +		len2++;
-> +		ores--;
-> +	}
-> +	while (ores) {
-> +		if (len1 < *indlen1) {
-> +			len1++;
-> +			ores--;
->  		}
-> -		if (nres == ores)
-> +		if (!ores)
->  			break;
-> -		if (len2) {
-> -			len2--;
-> -			nres--;
-> +		if (len2 < *indlen2) {
-> +			len2++;
-> +			ores--;
->  		}
->  	}
->  
-> -- 
-> 2.7.4
+> The workload is to write to a single file on XFS from 10 processes demonstrated at
+> http://lkml.kernel.org/r/201512052133.IAE00551.LSOQFtMFFVOHOJ@I-love.SAKURA.ne.jp
+> using "while :; do ./oom-write; done" loop on a VM with 4CPUs / 2048MB RAM.
+> With this XFS_FILBLKS_MIN() change applied, I no longer hit assertion failures.
 > 
+
+Thanks for testing. Well, that's an interesting workload. I couldn't
+reproduce on a few quick tries in a similarly configured vm.
+
+Normally I'd expect to see this kind of thing on a hole punching
+workload or dealing with large, sparse files that make use of
+speculative preallocation (post-eof blocks allocated in anticipation of
+file extending writes). I'm wondering if what is happening here is that
+the appending writes and file closes due to oom kills are generating
+speculative preallocs and prealloc truncates, respectively, and that
+causes prealloc extents at the eof boundary to be split up and then
+re-merged by surviving appending writers.
+
+/tmp/file _is_ on an XFS filesystem in your test, correct? If so and if
+you still have the output file from a test that reproduced, could you
+get the 'xfs_io -c "fiemap -v" <file>' output?
+
+I suppose another possibility is that prealloc occurs, write failure(s)
+leads to extent splits via unmapping the target range of the write, and
+then surviving writers generate the warning on a delalloc extent merge..
+
+Brian
+
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
