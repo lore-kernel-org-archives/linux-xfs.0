@@ -1,220 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47826 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:58485 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752165AbdBFPed (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Feb 2017 10:34:33 -0500
-Date: Mon, 6 Feb 2017 10:34:32 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: split indlen reservations fairly when under
- reserved
-Message-ID: <20170206153432.GD57865@bfoster.bfoster>
-References: <1486146865-47286-1-git-send-email-bfoster@redhat.com>
- <1486146865-47286-3-git-send-email-bfoster@redhat.com>
- <20170203220208.GB3580@birch.djwong.org>
+        id S1751121AbdBFRoW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Feb 2017 12:44:22 -0500
+Date: Mon, 6 Feb 2017 18:44:15 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 4/6] xfs: use memalloc_nofs_{save,restore} instead of
+ memalloc_noio*
+Message-ID: <20170206174415.GA20731@dhcp22.suse.cz>
+References: <20170206140718.16222-1-mhocko@kernel.org>
+ <20170206140718.16222-5-mhocko@kernel.org>
+ <20170206153923.GL2267@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170203220208.GB3580@birch.djwong.org>
+In-Reply-To: <20170206153923.GL2267@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Patrick Dung <mpatdung@gmail.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-On Fri, Feb 03, 2017 at 02:02:08PM -0800, Darrick J. Wong wrote:
-> On Fri, Feb 03, 2017 at 01:34:25PM -0500, Brian Foster wrote:
-> > Certain workoads that punch holes into speculative preallocation can
-> > cause delalloc indirect reservation splits when the delalloc extent is
-> > split in two. If further splits occur, an already short-handed extent
-> > can be split into two in a manner that leaves zero indirect blocks for
-> > one of the two new extents. This occurs because the shortage is large
-> > enough that the xfs_bmap_split_indlen() algorithm completely drains the
-> > requested indlen of one of the extents before it honors the existing
-> > reservation.
-> 
-> This looks ok from a "try to avoid the superbadness of ending up with
-> zero indlen blocks" point of view, but I've been wondering -- how does
-> punching holes in da reservations result in the reservations being
-> shorthanded?
-> 
-> Is the situation here something like: we create a reservation with
-> indlen=14 blocks, punch a one-block hole, and now we have two
-> reservations each wanting indlen=8 so now we're under-reserved?
-> 
-
-Yeah, basically. xfstests test generic/033 historically was intended to
-stress this mechanism. Since then, most of the situations that induce
-this behavior from normal userspace activity have been mitigated by
-pagecache flush. Doing so before hole punch, for example, converts the
-extent and consumes/releases the indlen as necessary before the hole
-punch actually takes place.
-
-> If so, is there a way to fix that?
-> 
-
-There are probably varying approaches here. Off the top of my head, we
-could allocate more blocks up front, perhaps try to replenish under
-reservations dynamically (which the code currently does, albeit
-accidentally and with risk of not handling allocation failure).
-
-My reasoning for taking this approach is as follows:
-
-- While we've seen the assert/warning issues calling out the situation
-  of not having indlen blocks, I've yet to see (that I recall :P) a
-  report of this actually becoming a problem at extent conversion time.
-- The current ability to reproduce this kind of problem has already been
-  reduced from hole punches and whatnot to strange interactions with
-  preallocation.
-
-I'm open to other options, but given the above, I'm hesitant to add more
-code/complexity for something that as of yet hasn't manifested as a
-critical problem. The intent was to tweak the existing mechanism to be a
-bit more fair, though I had to change the code more than I originally
-wanted to to accomplish that.
-
-> > This ultimately results in a warning from xfs_bmap_del_extent(). This
-> > has been observed during file copies of large, sparse files using 'cp
-> > --sparse=always.'
-> 
-> Is there a test case to reproduce this?  I ran this patch through the
-> auto group with no ill effects but I've never seen that assert trigger
-> while running xfstests so it's harder to tell that the fix is actually
-> working.
-> 
-
-I've only been able to reproduce with Patrick's image file. generic/033
-tests the hole punch workload, but as noted above, that has been
-mitigated through other means and won't create this situation. Perhaps
-generic/033 with a hacked up kernel to bypass the cache flush might
-reproduce this condition..
-
-Actually, looking back.. I see we added a write failure mechanism to XFS
-in commit 801cc4e1 ("xfs: debug mode forced buffered write failure")
-that was designed to maintain the ability to test this. I also have an
-xfstests patch in my tree that updates generic/033 to use said
-mechanism. It was originally posted for reference along with the kernel
-patch, but appears to have been dropped on the floor since then.
-
-It looks like the write failure mechanism has since been lobotomized,
-probably by the iomap rework. I'll try to resurrect that and the test
-update and see if it helps reproduce this particular problem.
-
-> > To avoid this problem, update xfs_bmap_split_indlen() to explicitly
-> > apply the reservation shortage fairly between both extents. This smooths
-> > out the overall indlen shortage and defers the situation where we end up
-> > with a delalloc extent with zero indlen reservation to extreme
-> > circumstances.
-> 
-> Could you elaborate on what are 'extreme circumstances' here?
-> 
-
-"Rare circumstances" might be better phrasing here. I _think_ that with
-a moderately improved algorithm, it can be made notably more difficult
-to reproduce this condition via interactions with preallocation or
-anything else that qualifies as a "common" workload. As noted above, it
-looks like we had to resort to error injection in the past to
-sufficiently test this..
-
-Brian
-
-> (FWIW I'm not opposed to the two patches, but my curiosity isn't yet
-> satisfied.)
-> 
-> --D
-> 
-> > Reported-by: Patrick Dung <mpatdung@gmail.com>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c | 58 +++++++++++++++++++++++++++++++++---------------
-> >  1 file changed, 40 insertions(+), 18 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index d2e48ed..4ca4606 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -4790,34 +4790,56 @@ xfs_bmap_split_indlen(
-> >  	xfs_filblks_t			len2 = *indlen2;
-> >  	xfs_filblks_t			nres = len1 + len2; /* new total res. */
-> >  	xfs_filblks_t			stolen = 0;
-> > +	xfs_filblks_t			resfactor;
+On Mon 06-02-17 07:39:23, Matthew Wilcox wrote:
+> On Mon, Feb 06, 2017 at 03:07:16PM +0100, Michal Hocko wrote:
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -442,17 +442,17 @@ _xfs_buf_map_pages(
+> >  		bp->b_addr = NULL;
+> >  	} else {
+> >  		int retried = 0;
+> > -		unsigned noio_flag;
+> > +		unsigned nofs_flag;
 > >  
-> >  	/*
-> >  	 * Steal as many blocks as we can to try and satisfy the worst case
-> >  	 * indlen for both new extents.
-> >  	 */
-> > -	while (nres > ores && avail) {
-> > -		nres--;
-> > -		avail--;
-> > -		stolen++;
-> > -	}
-> > +	if (ores < nres && avail)
-> > +		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
-> > +	ores += stolen;
-> > +
-> > +	 /* nothing else to do if we've satisfied the new reservation */
-> > +	if (ores >= nres)
-> > +		return stolen;
-> > +
-> > +	/*
-> > +	 * We can't meet the total required reservation for the two extents.
-> > +	 * Calculate the percent of the overall shortage between both extents
-> > +	 * and apply this percentage to each of the requested indlen values.
-> > +	 * This distributes the shortage fairly and reduces the chances that one
-> > +	 * of the two extents is left with nothing when extents are repeatedly
-> > +	 * split.
-> > +	 */
-> > +	resfactor = (ores * 100) / nres;
-> > +	len1 = resfactor * len1 / 100;
-> > +	len2 = resfactor * len2 / 100;
-> > +	ASSERT(len1 + len2 <= ores);
-> > +	ASSERT(len1 < *indlen1 && len2 < *indlen2);
-> >  
-> >  	/*
-> > -	 * The only blocks available are those reserved for the original
-> > -	 * extent and what we can steal from the extent being removed.
-> > -	 * If this still isn't enough to satisfy the combined
-> > -	 * requirements for the two new extents, skim blocks off of each
-> > -	 * of the new reservations until they match what is available.
-> > +	 * Hand out the remainder to each extent. If one of the two reservations
-> > +	 * is zero, we want to make sure that one gets a block first. The loop
-> > +	 * below starts with len1, so hand len2 a block right off the bat if it
-> > +	 * is zero.
-> >  	 */
-> > -	while (nres > ores) {
-> > -		if (len1) {
-> > -			len1--;
-> > -			nres--;
-> > +	ores -= (len1 + len2);
-> > +	ASSERT((*indlen1 - len1) + (*indlen2 - len2) >= ores);
-> > +	if (ores && !len2 && *indlen2) {
-> > +		len2++;
-> > +		ores--;
-> > +	}
-> > +	while (ores) {
-> > +		if (len1 < *indlen1) {
-> > +			len1++;
-> > +			ores--;
-> >  		}
-> > -		if (nres == ores)
-> > +		if (!ores)
-> >  			break;
-> > -		if (len2) {
-> > -			len2--;
-> > -			nres--;
-> > +		if (len2 < *indlen2) {
-> > +			len2++;
-> > +			ores--;
-> >  		}
-> >  	}
-> >  
-> > -- 
-> > 2.7.4
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >  		/*
+> >  		 * vm_map_ram() will allocate auxillary structures (e.g.
+> >  		 * pagetables) with GFP_KERNEL, yet we are likely to be under
+> >  		 * GFP_NOFS context here. Hence we need to tell memory reclaim
+> > -		 * that we are in such a context via PF_MEMALLOC_NOIO to prevent
+> > +		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
+> >  		 * memory reclaim re-entering the filesystem here and
+> >  		 * potentially deadlocking.
+> >  		 */
+> 
+> This comment feels out of date ... how about:
+
+which part is out of date?
+
+> 
+> 		/*
+> 		 * vm_map_ram will allocate auxiliary structures (eg page
+> 		 * tables) with GFP_KERNEL.  If that tries to reclaim memory
+> 		 * by calling back into this filesystem, we may deadlock.
+> 		 * Prevent that by setting the NOFS flag.
+> 		 */
+
+dunno, the previous wording seems clear enough to me. Maybe little bit
+more chatty than yours but I am not sure this is worth changing.
+
+> 
+> > -		noio_flag = memalloc_noio_save();
+> > +		nofs_flag = memalloc_nofs_save();
+> >  		do {
+> >  			bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
+> >  						-1, PAGE_KERNEL);
+> 
+> Also, I think it shows that this is the wrong place in XFS to be calling
+> memalloc_nofs_save().  I'm not arguing against including this patch;
+> it's a step towards where we want to be.  I also don't know XFS well
+> enough to know where to set that flag ;-)  Presumably when we start a
+> transaction ... ?
+
+Yes that is what I would like to achieve longterm. And the reason why I
+didn't want to mimic this pattern in kvmalloc as some have suggested.
+It just takes much more time to get there from the past experience and
+we should really start somewhere.
+-- 
+Michal Hocko
+SUSE Labs
