@@ -1,95 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:34962 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753266AbdBGKZM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Feb 2017 05:25:12 -0500
-Received: by mail-io0-f195.google.com with SMTP id m98so12380222iod.2
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Feb 2017 02:25:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20170207090439.nlcbwknpyrsuacl7@eorzea.usersys.redhat.com>
-References: <CAEtPA0BOdAHjtoRrrX3Ha6iHe4VXOUxNe7KPaEdJM=8yYstQMA@mail.gmail.com>
- <68f4911f-a55a-c21c-1eb0-91c81187c774@sandeen.net> <CAEtPA0AbqHKn1-RZiN1g8xHJ8wmZrjXiL40BWVRzn1xzZ2x0EA@mail.gmail.com>
- <20170207090439.nlcbwknpyrsuacl7@eorzea.usersys.redhat.com>
-From: Patrick Dung <mpatdung@gmail.com>
-Date: Tue, 7 Feb 2017 18:25:11 +0800
-Message-ID: <CAEtPA0Ao+eWjODrS8R4f5rhKt2f9dVpO_U1RE-ZAigHQpZynXA@mail.gmail.com>
-Subject: Re: I had an occasion that XFS is not able to fully detect or recover
- from severe file system corruption
-Content-Type: text/plain; charset=UTF-8
+Received: from bombadil.infradead.org ([65.50.211.133]:48507 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751517AbdBFUzU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2017 15:55:20 -0500
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1caqJe-0008LW-T4
+        for linux-xfs@vger.kernel.org; Mon, 06 Feb 2017 20:55:16 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: reject all unaligned direct writes to reflinked files
+Date: Mon,  6 Feb 2017 21:55:11 +0100
+Message-Id: <20170206205511.31373-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Patrick Dung <mpatdung@gmail.com>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-It should be Fedora 23 (not Fedora 24). xfsprogs version should be 4.5.0.
+We currently fall back from direct to buffered writes if we detect a
+remaining shared extent in the iomap_begin callback.  But by the time
+iomap_begin is called for the potentially unaligned end block we might
+have already written most of the data to disk, which we'd now write
+again using buffered I/O.  To avoid this reject all writes to reflinked
+files before starting I/O so that we are guaranteed to only write the
+data once.
 
-The re-corruption issue happened about six hours after the first pass
-of xfs_repair was completed.
+The alternative would be to unshare the unaligned start and/or end block
+before doing the I/O. I think that's doable, and will actually be
+required to support reflinks on DAX file system.  But it will take a
+little more time and I'd rather get rid of the double write ASAP.
 
-Anyway I would file bug report if encounter this again.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_file.c  |  9 +++++++++
+ fs/xfs/xfs_iomap.c | 12 +-----------
+ fs/xfs/xfs_trace.h |  2 +-
+ 3 files changed, 11 insertions(+), 12 deletions(-)
 
-Best regards,
-Patrick
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index bbb9eb6811b2..b1f74f1d0b5f 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -527,6 +527,15 @@ xfs_file_dio_aio_write(
+ 	if ((iocb->ki_pos & mp->m_blockmask) ||
+ 	    ((iocb->ki_pos + count) & mp->m_blockmask)) {
+ 		unaligned_io = 1;
++
++		/*
++		 * We can't properly handle unaligned direct I/O to reflink
++		 * files yet, as we can't unshare a partial block.
++		 */
++		if (xfs_is_reflink_inode(ip)) {
++			trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos, count);
++			return -EREMCHG;
++		}
+ 		iolock = XFS_IOLOCK_EXCL;
+ 	} else {
+ 		iolock = XFS_IOLOCK_SHARED;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 767208fdceb5..d17aa3b9c6a5 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1026,17 +1026,7 @@ xfs_file_iomap_begin(
+ 		if (error)
+ 			goto out_unlock;
+ 
+-		/*
+-		 * We're here because we're trying to do a directio write to a
+-		 * region that isn't aligned to a filesystem block.  If the
+-		 * extent is shared, fall back to buffered mode to handle the
+-		 * RMW.
+-		 */
+-		if (!(flags & IOMAP_REPORT) && shared) {
+-			trace_xfs_reflink_bounce_dio_write(ip, &imap);
+-			error = -EREMCHG;
+-			goto out_unlock;
+-		}
++		ASSERT((flags & IOMAP_REPORT) || !shared);
+ 	}
+ 
+ 	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index d3d11905c55c..375c5e030e5b 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3250,7 +3250,7 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
+ DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
+ DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
+ 
+-DEFINE_INODE_IREC_EVENT(xfs_reflink_bounce_dio_write);
++DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
+ DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
+ DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
+ 
+-- 
+2.11.0
 
-On Tue, Feb 7, 2017 at 5:04 PM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
-> On Thu, Feb 02, 2017 at 04:17:36AM +0800, Patrick Dung wrote:
->> > It's also possible that the filesystem somehow got re-corrupted between
->> the runs.
->>
->> For my case, the write back SSD caching device was removed permanently.
->> Somehow the xfs_repair did not fix all problems after the first pass.
->
-> Just because the SSD caching device was not re-attached to the system, it
-> doesn't mean the filesystem couldn't have been corrupted again, which is most
-> likely the case, but it would be a nice idea if you check the xfsprogs version
-> you used on the first and second time, just to make sure there were no known
-> bugs on that that might have caused this.
->
-> Cheers.
->
->>
->> Best regards,
->> Patrick
->>
->> On Thu, Feb 2, 2017 at 3:58 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> > On 2/1/17 12:53 PM, Patrick Dung wrote:
->> >> Hi guys,
->> >>
->> >> The problem happened in last year. I do not have the corrupted file
->> >> system now. But I would like to discuss it. Any comment is welcomed.
->> >>
->> >> I was using Fedora 24. I had an XFS file system in an hard drive. I
->> >> had used some kind of  SSD write back caching on top of the hard
->> >> drive.
->> >>
->> >> Somehow the SSD was removed and when the system is rebooted, the XFS
->> >> file system could not be mounted.
->> >>
->> >> I run xfs_repair, it reported some files are corrupted. It had
->> >> completed the repair of file system and some files were corrupted.
->> >> Then I could mount the filesystem. I started using the existing files
->> >> that did not have corruption. After sometime, the file system stopped
->> >> again because it detected XFS file system is corrupted.
->> >>
->> >> Then I run xfs_repair again and it found additional files were still corrupted.
->> >>
->> >> So I have a question if xfs_repair is able to fully detect all files
->> >> that are corrupted by running xfs_repair only once.
->> >
->> > Yes, xfs_repair is intended to fix everything on the first pass.  Rarely,
->> > there are bugs when it does not.
->> >
->> > It's also possible that the filesystem somehow got re-corrupted between
->> > the runs.
->> >
->> > -Eric
->> >
->> >> Best regards,
->> >> Patrick
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> Carlos
