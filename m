@@ -1,256 +1,194 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52618 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:35828 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751751AbdBERL6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Feb 2017 12:11:58 -0500
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        with ESMTP id S1751002AbdBFHr4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2017 02:47:56 -0500
+Received: from 212095007106.public.telering.at ([212.95.7.106] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1caQM1-0003Ep-Au
-        for linux-xfs@vger.kernel.org; Sun, 05 Feb 2017 17:11:57 +0000
+        id 1cae1j-00043n-LX
+        for linux-xfs@vger.kernel.org; Mon, 06 Feb 2017 07:47:56 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/4] xfs: don't block the log commit handler for discards
-Date: Sun,  5 Feb 2017 18:11:41 +0100
-Message-Id: <20170205171141.6066-5-hch@lst.de>
-In-Reply-To: <20170205171141.6066-1-hch@lst.de>
-References: <20170205171141.6066-1-hch@lst.de>
+Subject: [PATCH 3/4] xfs: go straight to real allocations for direct I/O COW writes
+Date: Mon,  6 Feb 2017 08:47:37 +0100
+Message-Id: <20170206074738.13978-4-hch@lst.de>
+In-Reply-To: <20170206074738.13978-1-hch@lst.de>
+References: <20170206074738.13978-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Instead we submit the discard requests and use another workqueue to
-release the extents from the extent busy list.
+When we allocate COW fork blocks for direct I/O writes we currently first
+create a delayed allocation, and then convert it to a real allocation
+once we've got the delayed one.
+
+As there is no good reason for that this patch instead makes use call
+xfs_bmapi_write from the COW allocation path.  The only interesting bits
+are a few tweaks the low-level allocator to allow for this, most notably
+the need to remove the call to xfs_bmap_extsize_align for the cowextsize
+in xfs_bmap_btalloc - for the existing convert case it's a no-op, but
+for the direct allocation case it would blow up our block reservation
+way beyond what we reserved for the transaction.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_discard.c  | 29 ------------------
- fs/xfs/xfs_discard.h  |  1 -
- fs/xfs/xfs_log_cil.c  | 84 ++++++++++++++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_log_priv.h |  1 +
- fs/xfs/xfs_mount.c    |  1 +
- fs/xfs/xfs_super.c    |  8 +++++
- fs/xfs/xfs_super.h    |  2 ++
- 7 files changed, 88 insertions(+), 38 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c |  3 +-
+ fs/xfs/xfs_reflink.c     | 94 +++++++++++++++++++++++++++++++++---------------
+ 2 files changed, 68 insertions(+), 29 deletions(-)
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 4ff499aa7338..d796ffac7296 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -208,32 +208,3 @@ xfs_ioc_trim(
- 		return -EFAULT;
- 	return 0;
- }
--
--int
--xfs_discard_extents(
--	struct xfs_mount	*mp,
--	struct list_head	*list)
--{
--	struct xfs_extent_busy	*busyp;
--	int			error = 0;
--
--	list_for_each_entry(busyp, list, list) {
--		trace_xfs_discard_extent(mp, busyp->agno, busyp->bno,
--					 busyp->length);
--
--		error = blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
--				XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno),
--				XFS_FSB_TO_BB(mp, busyp->length),
--				GFP_NOFS, 0);
--		if (error && error != -EOPNOTSUPP) {
--			xfs_info(mp,
--	 "discard failed for extent [0x%llx,%u], error %d",
--				 (unsigned long long)busyp->bno,
--				 busyp->length,
--				 error);
--			return error;
--		}
--	}
--
--	return 0;
--}
-diff --git a/fs/xfs/xfs_discard.h b/fs/xfs/xfs_discard.h
-index 344879aea646..0f070f9e44e1 100644
---- a/fs/xfs/xfs_discard.h
-+++ b/fs/xfs/xfs_discard.h
-@@ -5,6 +5,5 @@ struct fstrim_range;
- struct list_head;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 1566e9d9fd7d..2b4ad8442ec0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2909,13 +2909,14 @@ xfs_bmap_add_extent_hole_real(
+ 	ASSERT(!isnullstartblock(new->br_startblock));
+ 	ASSERT(!bma->cur ||
+ 	       !(bma->cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
+-	ASSERT(whichfork != XFS_COW_FORK);
  
- extern int	xfs_ioc_trim(struct xfs_mount *, struct fstrim_range __user *);
--extern int	xfs_discard_extents(struct xfs_mount *, struct list_head *);
+ 	XFS_STATS_INC(mp, xs_add_exlist);
  
- #endif /* XFS_DISCARD_H */
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index a4ab192e1792..82f1cbcc4de1 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -30,6 +30,9 @@
- #include "xfs_trans_priv.h"
- #include "xfs_log.h"
- #include "xfs_log_priv.h"
-+#include "xfs_trace.h"
-+
-+struct workqueue_struct *xfs_discard_wq;
- 
- /*
-  * Allocate a new ticket. Failing to get a new ticket makes it really hard to
-@@ -491,6 +494,75 @@ xlog_cil_free_logvec(
- 	}
- }
- 
-+static void
-+xlog_discard_endio_work(
-+	struct work_struct	*work)
-+{
-+	struct xfs_cil_ctx	*ctx =
-+		container_of(work, struct xfs_cil_ctx, discard_endio_work);
-+	struct xfs_mount	*mp = ctx->cil->xc_log->l_mp;
-+
-+	xfs_extent_busy_clear(mp, &ctx->busy_extents, false);
-+	kmem_free(ctx);
-+}
-+
-+/*
-+ * Queue up the actual completion to a thread to avoid IRQ-safe locking for
-+ * pagb_lock.  Note that we need a unbounded workqueue, otherwise we might
-+ * get the execution delayed up to 30 seconds for weird reasons.
-+ */
-+static void
-+xlog_discard_endio(
-+	struct bio		*bio)
-+{
-+	struct xfs_cil_ctx	*ctx = bio->bi_private;
-+
-+	INIT_WORK(&ctx->discard_endio_work, xlog_discard_endio_work);
-+	queue_work(xfs_discard_wq, &ctx->discard_endio_work);
-+}
-+
-+static void
-+xlog_discard_busy_extents(
-+	struct xfs_mount	*mp,
-+	struct xfs_cil_ctx	*ctx)
-+{
-+	struct list_head	*list = &ctx->busy_extents;
-+	struct xfs_extent_busy	*busyp;
-+	struct bio		*bio = NULL;
-+	struct blk_plug		plug;
-+	int			error = 0;
-+
-+	ASSERT(mp->m_flags & XFS_MOUNT_DISCARD);
-+
-+	blk_start_plug(&plug);
-+	list_for_each_entry(busyp, list, list) {
-+		trace_xfs_discard_extent(mp, busyp->agno, busyp->bno,
-+					 busyp->length);
-+
-+		error = __blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
-+				XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno),
-+				XFS_FSB_TO_BB(mp, busyp->length),
-+				GFP_NOFS, 0, &bio);
-+		if (error && error != -EOPNOTSUPP) {
-+			xfs_info(mp,
-+	 "discard failed for extent [0x%llx,%u], error %d",
-+				 (unsigned long long)busyp->bno,
-+				 busyp->length,
-+				 error);
-+			break;
-+		}
-+	}
-+
-+	if (bio) {
-+		bio->bi_private = ctx;
-+		bio->bi_end_io = xlog_discard_endio;
-+		submit_bio(bio);
-+	} else {
-+		xlog_discard_endio_work(&ctx->discard_endio_work);
-+	}
-+	blk_finish_plug(&plug);
-+}
-+
- /*
-  * Mark all items committed and clear busy extents. We free the log vector
-  * chains in a separate pass so that we unpin the log items as quickly as
-@@ -525,14 +597,10 @@ xlog_cil_committed(
- 
- 	xlog_cil_free_logvec(ctx->lv_chain);
- 
--	if (!list_empty(&ctx->busy_extents)) {
--		ASSERT(mp->m_flags & XFS_MOUNT_DISCARD);
--
--		xfs_discard_extents(mp, &ctx->busy_extents);
--		xfs_extent_busy_clear(mp, &ctx->busy_extents, false);
--	}
--
--	kmem_free(ctx);
-+	if (!list_empty(&ctx->busy_extents))
-+		xlog_discard_busy_extents(mp, ctx);
-+	else
-+		kmem_free(ctx);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 2b6eec52178e..c2604a5366f2 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -257,6 +257,7 @@ struct xfs_cil_ctx {
- 	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
- 	struct xfs_log_callback	log_cb;		/* completion callback hook. */
- 	struct list_head	committing;	/* ctx committing list */
-+	struct work_struct	discard_endio_work;
- };
- 
- /*
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 4e9feb1dc15d..16dcd8cc9de4 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1072,6 +1072,7 @@ xfs_unmountfs(
- 	 * need to force the log first.
- 	 */
- 	xfs_log_force(mp, XFS_LOG_SYNC);
-+	flush_workqueue(xfs_discard_wq);
+ 	state = 0;
+ 	if (whichfork == XFS_ATTR_FORK)
+ 		state |= BMAP_ATTRFORK;
++	if (whichfork == XFS_COW_FORK)
++		state |= BMAP_COWFORK;
  
  	/*
- 	 * We now need to tell the world we are unmounting. This will allow
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index d894ed027e30..ca05fb05b3ba 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1957,12 +1957,20 @@ xfs_init_workqueues(void)
- 	if (!xfs_alloc_wq)
- 		return -ENOMEM;
- 
-+	xfs_discard_wq = alloc_workqueue("xfsdiscard", WQ_UNBOUND, 0);
-+	if (!xfs_discard_wq)
-+		goto out_free_alloc_wq;
-+
- 	return 0;
-+out_free_alloc_wq:
-+	destroy_workqueue(xfs_alloc_wq);
-+	return -ENOMEM;
- }
- 
- STATIC void
- xfs_destroy_workqueues(void)
+ 	 * Check and set flags if this segment has a left neighbor.
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index e6b8af91e9a4..e577f54beb2f 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -390,62 +390,100 @@ __xfs_reflink_allocate_cow(
+ 	xfs_fileoff_t		end_fsb)
  {
-+	destroy_workqueue(xfs_discard_wq);
- 	destroy_workqueue(xfs_alloc_wq);
- }
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_bmbt_irec	imap;
++	struct xfs_bmbt_irec	imap, got;
+ 	struct xfs_defer_ops	dfops;
+ 	struct xfs_trans	*tp;
+ 	xfs_fsblock_t		first_block;
+-	int			nimaps = 1, error;
+-	bool			shared;
++	int			nimaps, error, lockmode;
++	bool			shared, trimmed;
++	xfs_filblks_t		resaligned;
++	xfs_extlen_t		resblks;
++	xfs_extnum_t		idx;
  
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index b6418abd85ad..5f2f32408011 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -73,6 +73,8 @@ extern const struct quotactl_ops xfs_quotactl_operations;
+-	xfs_defer_init(&dfops, &first_block);
++	resaligned = xfs_aligned_fsb_count(*offset_fsb, end_fsb - *offset_fsb,
++			xfs_get_cowextsz_hint(ip));
++	resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
  
- extern void xfs_reinit_percpu_counters(struct xfs_mount *mp);
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 0, 0,
+-			XFS_TRANS_RESERVE, &tp);
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
+ 	if (error)
+ 		return error;
  
-+extern struct workqueue_struct *xfs_discard_wq;
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	lockmode = XFS_ILOCK_EXCL;
++	xfs_ilock(ip, lockmode);
+ 
+-	/* Read extent from the source file. */
+-	nimaps = 1;
+-	error = xfs_bmapi_read(ip, *offset_fsb, end_fsb - *offset_fsb,
+-			&imap, &nimaps, 0);
+-	if (error)
+-		goto out_unlock;
+-	ASSERT(nimaps == 1);
++	/*
++	 * Even if the extent is not shared we might have a preallocation for
++	 * it in the COW fork.  If so use it.
++	 */
++	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, *offset_fsb, &idx, &got) &&
++	    got.br_startoff <= *offset_fsb) {
++		/* If we have a real allocation in the COW fork we're done. */
++		if (!isnullstartblock(got.br_startblock)) {
++			xfs_trim_extent(&got, *offset_fsb,
++					end_fsb - *offset_fsb);
++			*offset_fsb = got.br_startoff + got.br_blockcount;
++			goto out_trans_cancel;
++		}
++	} else {
++		nimaps = 1;
++		error = xfs_bmapi_read(ip, *offset_fsb, end_fsb - *offset_fsb,
++				&imap, &nimaps, 0);
++		if (error)
++			goto out_trans_cancel;
++		ASSERT(nimaps == 1);
 +
- #define XFS_M(sb)		((struct xfs_mount *)((sb)->s_fs_info))
++		/* Trim the mapping to the nearest shared extent boundary. */
++		error = xfs_reflink_trim_around_shared(ip, &imap, &shared,
++				&trimmed);
++		if (error)
++			goto out_trans_cancel;
++
++		if (!shared) {
++			*offset_fsb = imap.br_startoff + imap.br_blockcount;
++			goto out_trans_cancel;
++		}
  
- #endif	/* __XFS_SUPER_H__ */
+-	/* Make sure there's a CoW reservation for it. */
+-	error = xfs_reflink_reserve_cow(ip, &imap, &shared);
++		*offset_fsb = imap.br_startoff;
++		end_fsb = imap.br_startoff + imap.br_blockcount;
++	}
++
++	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
++			XFS_QMOPT_RES_REGBLKS);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	if (!shared) {
+-		*offset_fsb = imap.br_startoff + imap.br_blockcount;
+-		goto out_trans_cancel;
+-	}
++	xfs_trans_ijoin(tp, ip, 0);
++
++	xfs_defer_init(&dfops, &first_block);
++	nimaps = 1;
+ 
+ 	/* Allocate the entire reservation as unwritten blocks. */
+-	xfs_trans_ijoin(tp, ip, 0);
+-	error = xfs_bmapi_write(tp, ip, imap.br_startoff, imap.br_blockcount,
++	error = xfs_bmapi_write(tp, ip, *offset_fsb, end_fsb - *offset_fsb,
+ 			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, &first_block,
+-			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK),
+-			&imap, &nimaps, &dfops);
++			resblks, &imap, &nimaps, &dfops);
+ 	if (error)
+-		goto out_trans_cancel;
++		goto out_bmap_cancel;
+ 
+ 	/* Finish up. */
+ 	error = xfs_defer_finish(&tp, &dfops, NULL);
+ 	if (error)
+-		goto out_trans_cancel;
++		goto out_bmap_cancel;
+ 
+ 	error = xfs_trans_commit(tp);
++	if (error)
++		goto out_unlock;
+ 
+ 	*offset_fsb = imap.br_startoff + imap.br_blockcount;
++
+ out_unlock:
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_iunlock(ip, lockmode);
+ 	return error;
+-out_trans_cancel:
++
++out_bmap_cancel:
+ 	xfs_defer_cancel(&dfops);
++	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
++			XFS_QMOPT_RES_REGBLKS);
++out_trans_cancel:
+ 	xfs_trans_cancel(tp);
+ 	goto out_unlock;
+ }
 -- 
 2.11.0
 
