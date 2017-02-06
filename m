@@ -1,75 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53082 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750962AbdBFHrw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2017 02:47:52 -0500
-Received: from 212095007106.public.telering.at ([212.95.7.106] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cae1f-00043e-BD
-        for linux-xfs@vger.kernel.org; Mon, 06 Feb 2017 07:47:52 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/4] xfs: return the converted extent in __xfs_reflink_convert_cow
-Date: Mon,  6 Feb 2017 08:47:36 +0100
-Message-Id: <20170206074738.13978-3-hch@lst.de>
-In-Reply-To: <20170206074738.13978-1-hch@lst.de>
-References: <20170206074738.13978-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:47826 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752165AbdBFPed (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Feb 2017 10:34:33 -0500
+Date: Mon, 6 Feb 2017 10:34:32 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: split indlen reservations fairly when under
+ reserved
+Message-ID: <20170206153432.GD57865@bfoster.bfoster>
+References: <1486146865-47286-1-git-send-email-bfoster@redhat.com>
+ <1486146865-47286-3-git-send-email-bfoster@redhat.com>
+ <20170203220208.GB3580@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170203220208.GB3580@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Patrick Dung <mpatdung@gmail.com>
 
-We'll need it for the direct I/O code.  Also rename the function to
-xfs_reflink_convert_cow_extent to describe it a bit better.
+On Fri, Feb 03, 2017 at 02:02:08PM -0800, Darrick J. Wong wrote:
+> On Fri, Feb 03, 2017 at 01:34:25PM -0500, Brian Foster wrote:
+> > Certain workoads that punch holes into speculative preallocation can
+> > cause delalloc indirect reservation splits when the delalloc extent is
+> > split in two. If further splits occur, an already short-handed extent
+> > can be split into two in a manner that leaves zero indirect blocks for
+> > one of the two new extents. This occurs because the shortage is large
+> > enough that the xfs_bmap_split_indlen() algorithm completely drains the
+> > requested indlen of one of the extents before it honors the existing
+> > reservation.
+> 
+> This looks ok from a "try to avoid the superbadness of ending up with
+> zero indlen blocks" point of view, but I've been wondering -- how does
+> punching holes in da reservations result in the reservations being
+> shorthanded?
+> 
+> Is the situation here something like: we create a reservation with
+> indlen=14 blocks, punch a one-block hole, and now we have two
+> reservations each wanting indlen=8 so now we're under-reserved?
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_reflink.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+Yeah, basically. xfstests test generic/033 historically was intended to
+stress this mechanism. Since then, most of the situations that induce
+this behavior from normal userspace activity have been mitigated by
+pagecache flush. Doing so before hole punch, for example, converts the
+extent and consumes/releases the indlen as necessary before the hole
+punch actually takes place.
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index ae9ba9b6d48f..e6b8af91e9a4 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -325,24 +325,23 @@ xfs_reflink_reserve_cow(
- 
- /* Convert part of an unwritten CoW extent to a real one. */
- STATIC int
--__xfs_reflink_convert_cow(
-+xfs_reflink_convert_cow_extent(
- 	struct xfs_inode		*ip,
- 	struct xfs_bmbt_irec		*imap,
- 	xfs_fileoff_t			offset_fsb,
- 	xfs_filblks_t			count_fsb,
- 	struct xfs_defer_ops		*dfops)
- {
--	struct xfs_bmbt_irec		irec = *imap;
- 	xfs_fsblock_t			first_block;
- 	int				nimaps = 1;
- 
--	xfs_trim_extent(&irec, offset_fsb, count_fsb);
--	trace_xfs_reflink_convert_cow(ip, &irec);
--	if (irec.br_blockcount == 0)
-+	xfs_trim_extent(imap, offset_fsb, count_fsb);
-+	trace_xfs_reflink_convert_cow(ip, imap);
-+	if (imap->br_blockcount == 0)
- 		return 0;
--	return xfs_bmapi_write(NULL, ip, irec.br_startoff, irec.br_blockcount,
-+	return xfs_bmapi_write(NULL, ip, imap->br_startoff, imap->br_blockcount,
- 			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT, &first_block,
--			0, &irec, &nimaps, dfops);
-+			0, imap, &nimaps, dfops);
- }
- 
- /* Convert all of the unwritten CoW extents in a file's range to real ones. */
-@@ -372,7 +371,7 @@ xfs_reflink_convert_cow(
- 	     found = xfs_iext_get_extent(ifp, ++idx, &got)) {
- 		if (got.br_state == XFS_EXT_NORM)
- 			continue;
--		error = __xfs_reflink_convert_cow(ip, &got, offset_fsb,
-+		error = xfs_reflink_convert_cow_extent(ip, &got, offset_fsb,
- 				end_fsb - offset_fsb, &dfops);
- 		if (error)
- 			break;
--- 
-2.11.0
+> If so, is there a way to fix that?
+> 
 
+There are probably varying approaches here. Off the top of my head, we
+could allocate more blocks up front, perhaps try to replenish under
+reservations dynamically (which the code currently does, albeit
+accidentally and with risk of not handling allocation failure).
+
+My reasoning for taking this approach is as follows:
+
+- While we've seen the assert/warning issues calling out the situation
+  of not having indlen blocks, I've yet to see (that I recall :P) a
+  report of this actually becoming a problem at extent conversion time.
+- The current ability to reproduce this kind of problem has already been
+  reduced from hole punches and whatnot to strange interactions with
+  preallocation.
+
+I'm open to other options, but given the above, I'm hesitant to add more
+code/complexity for something that as of yet hasn't manifested as a
+critical problem. The intent was to tweak the existing mechanism to be a
+bit more fair, though I had to change the code more than I originally
+wanted to to accomplish that.
+
+> > This ultimately results in a warning from xfs_bmap_del_extent(). This
+> > has been observed during file copies of large, sparse files using 'cp
+> > --sparse=always.'
+> 
+> Is there a test case to reproduce this?  I ran this patch through the
+> auto group with no ill effects but I've never seen that assert trigger
+> while running xfstests so it's harder to tell that the fix is actually
+> working.
+> 
+
+I've only been able to reproduce with Patrick's image file. generic/033
+tests the hole punch workload, but as noted above, that has been
+mitigated through other means and won't create this situation. Perhaps
+generic/033 with a hacked up kernel to bypass the cache flush might
+reproduce this condition..
+
+Actually, looking back.. I see we added a write failure mechanism to XFS
+in commit 801cc4e1 ("xfs: debug mode forced buffered write failure")
+that was designed to maintain the ability to test this. I also have an
+xfstests patch in my tree that updates generic/033 to use said
+mechanism. It was originally posted for reference along with the kernel
+patch, but appears to have been dropped on the floor since then.
+
+It looks like the write failure mechanism has since been lobotomized,
+probably by the iomap rework. I'll try to resurrect that and the test
+update and see if it helps reproduce this particular problem.
+
+> > To avoid this problem, update xfs_bmap_split_indlen() to explicitly
+> > apply the reservation shortage fairly between both extents. This smooths
+> > out the overall indlen shortage and defers the situation where we end up
+> > with a delalloc extent with zero indlen reservation to extreme
+> > circumstances.
+> 
+> Could you elaborate on what are 'extreme circumstances' here?
+> 
+
+"Rare circumstances" might be better phrasing here. I _think_ that with
+a moderately improved algorithm, it can be made notably more difficult
+to reproduce this condition via interactions with preallocation or
+anything else that qualifies as a "common" workload. As noted above, it
+looks like we had to resort to error injection in the past to
+sufficiently test this..
+
+Brian
+
+> (FWIW I'm not opposed to the two patches, but my curiosity isn't yet
+> satisfied.)
+> 
+> --D
+> 
+> > Reported-by: Patrick Dung <mpatdung@gmail.com>
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c | 58 +++++++++++++++++++++++++++++++++---------------
+> >  1 file changed, 40 insertions(+), 18 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index d2e48ed..4ca4606 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -4790,34 +4790,56 @@ xfs_bmap_split_indlen(
+> >  	xfs_filblks_t			len2 = *indlen2;
+> >  	xfs_filblks_t			nres = len1 + len2; /* new total res. */
+> >  	xfs_filblks_t			stolen = 0;
+> > +	xfs_filblks_t			resfactor;
+> >  
+> >  	/*
+> >  	 * Steal as many blocks as we can to try and satisfy the worst case
+> >  	 * indlen for both new extents.
+> >  	 */
+> > -	while (nres > ores && avail) {
+> > -		nres--;
+> > -		avail--;
+> > -		stolen++;
+> > -	}
+> > +	if (ores < nres && avail)
+> > +		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
+> > +	ores += stolen;
+> > +
+> > +	 /* nothing else to do if we've satisfied the new reservation */
+> > +	if (ores >= nres)
+> > +		return stolen;
+> > +
+> > +	/*
+> > +	 * We can't meet the total required reservation for the two extents.
+> > +	 * Calculate the percent of the overall shortage between both extents
+> > +	 * and apply this percentage to each of the requested indlen values.
+> > +	 * This distributes the shortage fairly and reduces the chances that one
+> > +	 * of the two extents is left with nothing when extents are repeatedly
+> > +	 * split.
+> > +	 */
+> > +	resfactor = (ores * 100) / nres;
+> > +	len1 = resfactor * len1 / 100;
+> > +	len2 = resfactor * len2 / 100;
+> > +	ASSERT(len1 + len2 <= ores);
+> > +	ASSERT(len1 < *indlen1 && len2 < *indlen2);
+> >  
+> >  	/*
+> > -	 * The only blocks available are those reserved for the original
+> > -	 * extent and what we can steal from the extent being removed.
+> > -	 * If this still isn't enough to satisfy the combined
+> > -	 * requirements for the two new extents, skim blocks off of each
+> > -	 * of the new reservations until they match what is available.
+> > +	 * Hand out the remainder to each extent. If one of the two reservations
+> > +	 * is zero, we want to make sure that one gets a block first. The loop
+> > +	 * below starts with len1, so hand len2 a block right off the bat if it
+> > +	 * is zero.
+> >  	 */
+> > -	while (nres > ores) {
+> > -		if (len1) {
+> > -			len1--;
+> > -			nres--;
+> > +	ores -= (len1 + len2);
+> > +	ASSERT((*indlen1 - len1) + (*indlen2 - len2) >= ores);
+> > +	if (ores && !len2 && *indlen2) {
+> > +		len2++;
+> > +		ores--;
+> > +	}
+> > +	while (ores) {
+> > +		if (len1 < *indlen1) {
+> > +			len1++;
+> > +			ores--;
+> >  		}
+> > -		if (nres == ores)
+> > +		if (!ores)
+> >  			break;
+> > -		if (len2) {
+> > -			len2--;
+> > -			nres--;
+> > +		if (len2 < *indlen2) {
+> > +			len2++;
+> > +			ores--;
+> >  		}
+> >  	}
+> >  
+> > -- 
+> > 2.7.4
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
