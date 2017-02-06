@@ -1,40 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42560 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751882AbdBFNRR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Feb 2017 08:17:17 -0500
-Date: Mon, 6 Feb 2017 08:17:11 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS developers meeting at Vault?
-Message-ID: <20170206131711.GB57865@bfoster.bfoster>
-References: <20170123174432.GA22900@lst.de>
- <20170206124053.c5jh6cieebnhnixy@eorzea.usersys.redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:24471 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752093AbdBFTxE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2017 14:53:04 -0500
+Date: Mon, 6 Feb 2017 11:51:11 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/6] xfs: use memalloc_nofs_{save,restore} instead of
+ memalloc_noio*
+Message-ID: <20170206195111.GH3580@birch.djwong.org>
+References: <20170206140718.16222-1-mhocko@kernel.org>
+ <20170206140718.16222-5-mhocko@kernel.org>
+ <20170206153923.GL2267@bombadil.infradead.org>
+ <20170206174415.GA20731@dhcp22.suse.cz>
+ <20170206183237.GE3580@birch.djwong.org>
+ <20170206184743.GB20731@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170206124053.c5jh6cieebnhnixy@eorzea.usersys.redhat.com>
+In-Reply-To: <20170206184743.GB20731@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Matthew Wilcox <willy@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-On Mon, Feb 06, 2017 at 01:40:53PM +0100, Carlos Maiolino wrote:
-> Late answer, I was on vacation.
-> 
+On Mon, Feb 06, 2017 at 07:47:43PM +0100, Michal Hocko wrote:
+> On Mon 06-02-17 10:32:37, Darrick J. Wong wrote:
+> > On Mon, Feb 06, 2017 at 06:44:15PM +0100, Michal Hocko wrote:
+> > > On Mon 06-02-17 07:39:23, Matthew Wilcox wrote:
+> > > > On Mon, Feb 06, 2017 at 03:07:16PM +0100, Michal Hocko wrote:
+> > > > > +++ b/fs/xfs/xfs_buf.c
+> > > > > @@ -442,17 +442,17 @@ _xfs_buf_map_pages(
+> > > > >  		bp->b_addr = NULL;
+> > > > >  	} else {
+> > > > >  		int retried = 0;
+> > > > > -		unsigned noio_flag;
+> > > > > +		unsigned nofs_flag;
+> > > > >  
+> > > > >  		/*
+> > > > >  		 * vm_map_ram() will allocate auxillary structures (e.g.
+> > > > >  		 * pagetables) with GFP_KERNEL, yet we are likely to be under
+> > > > >  		 * GFP_NOFS context here. Hence we need to tell memory reclaim
+> > > > > -		 * that we are in such a context via PF_MEMALLOC_NOIO to prevent
+> > > > > +		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
+> > > > >  		 * memory reclaim re-entering the filesystem here and
+> > > > >  		 * potentially deadlocking.
+> > > > >  		 */
+> > > > 
+> > > > This comment feels out of date ... how about:
+> > > 
+> > > which part is out of date?
+> > > 
+> > > > 
+> > > > 		/*
+> > > > 		 * vm_map_ram will allocate auxiliary structures (eg page
+> > > > 		 * tables) with GFP_KERNEL.  If that tries to reclaim memory
+> > > > 		 * by calling back into this filesystem, we may deadlock.
+> > > > 		 * Prevent that by setting the NOFS flag.
+> > > > 		 */
+> > > 
+> > > dunno, the previous wording seems clear enough to me. Maybe little bit
+> > > more chatty than yours but I am not sure this is worth changing.
 > > 
-> > are enough of your around for LSM/MM and Vault to have a little
-> > meeting?  If so I'll try to arrange a room for us.
-> 
-> I won't be there unfortunately, would be great to see everybody in a XFS mtg. 
-> 
+> > I prefer to keep the "...yet we are likely to be under GFP_NOFS..."
+> > wording of the old comment because it captures the uncertainty of
+> > whether or not we actually are already under NOFS.  If someone actually
+> > has audited this code well enough to know for sure then yes let's change
+> > the comment, but I haven't gone that far.
 
-I'm not going to be at LSF either. I should still be around for Vault,
-fwiw.
+Ugh, /me hands himself another cup of coffee...
 
-Brian
+Somehow I mixed up _xfs_buf_map_pages and kmem_zalloc_large in this
+discussion.  Probably because they have similar code snippets with very
+similar comments to two totally different parts of xfs.
+
+The _xfs_buf_map_pages can be called inside or outside of
+transaction context, so I think we still have to memalloc_nofs_save for
+that to avoid the lockdep complaints and deadlocks referenced in the
+commit that added all that (to _xfs_buf_map_pages) in the first place.
+ae687e58b3 ("xfs: use NOIO contexts for vm_map_ram")
+
+My comments about kmem_zalloc_large still stand, even though the part
+of the patch you two were discussing was the _xfs_buf_map_pages.  I
+probably should have clarified that I think both functions actually
+/are/ doing the right thing wrt calling (or not calling)
+memalloc_nofs_save().
+
+> I believe we can drop the memalloc_nofs_save then as well because either
+> we are called from a potentially dangerous context and thus we are in
+> the nofs scope we we do not need the protection at all.
+
+Uh, now that I've muddied up the waters, which part are you referring to?
+
+--D
 
 > -- 
-> Carlos
+> Michal Hocko
+> SUSE Labs
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
