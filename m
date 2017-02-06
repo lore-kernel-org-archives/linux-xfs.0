@@ -1,57 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42690 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752855AbdBCXRM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2017 18:17:12 -0500
-Date: Fri, 3 Feb 2017 15:17:00 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: reset b_first_retry_time when clear the retry
- status of xfs_buf_t
-Message-ID: <20170203231700.GC3580@birch.djwong.org>
-References: <1486112905-38025-1-git-send-email-houtao1@huawei.com>
+Received: from mx2.suse.de ([195.135.220.15]:44008 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752674AbdBFOmZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Feb 2017 09:42:25 -0500
+Date: Mon, 6 Feb 2017 15:42:22 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [RFC PATCH 1/2] mm, vmscan: account the number of isolated pages
+ per zone
+Message-ID: <20170206144221.GE10298@dhcp22.suse.cz>
+References: <20170130085546.GF8443@dhcp22.suse.cz>
+ <20170202101415.GE22806@dhcp22.suse.cz>
+ <201702031957.AGH86961.MLtOQVFOSHJFFO@I-love.SAKURA.ne.jp>
+ <20170203145009.GB19325@dhcp22.suse.cz>
+ <20170203172403.GG45388@bfoster.bfoster>
+ <201702061529.ABC60444.FFFJOOHLVQSMtO@I-love.SAKURA.ne.jp>
+ <20170206143533.GC57865@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1486112905-38025-1-git-send-email-houtao1@huawei.com>
+In-Reply-To: <20170206143533.GC57865@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hou Tao <houtao1@huawei.com>
-Cc: linux-xfs@vger.kernel.org, cmaiolino@redhat.com, sandeen@redhat.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, david@fromorbit.com, dchinner@redhat.com, hch@lst.de, mgorman@suse.de, viro@ZenIV.linux.org.uk, linux-mm@kvack.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-On Fri, Feb 03, 2017 at 05:08:25PM +0800, Hou Tao wrote:
-> After successful IO or permanent error, b_first_retry_time also
-> needs to be cleared, else the invalid first retry time will be
-> used by the next retry check.
+On Mon 06-02-17 09:35:33, Brian Foster wrote:
+> On Mon, Feb 06, 2017 at 03:29:24PM +0900, Tetsuo Handa wrote:
+> > Brian Foster wrote:
+> > > On Fri, Feb 03, 2017 at 03:50:09PM +0100, Michal Hocko wrote:
+> > > > [Let's CC more xfs people]
+> > > > 
+> > > > On Fri 03-02-17 19:57:39, Tetsuo Handa wrote:
+> > > > [...]
+> > > > > (1) I got an assertion failure.
+> > > > 
+> > > > I suspect this is a result of
+> > > > http://lkml.kernel.org/r/20170201092706.9966-2-mhocko@kernel.org
+> > > > I have no idea what the assert means though.
+> > > > 
+> > > > > 
+> > > > > [  969.626518] Killed process 6262 (oom-write) total-vm:2166856kB, anon-rss:1128732kB, file-rss:4kB, shmem-rss:0kB
+> > > > > [  969.958307] oom_reaper: reaped process 6262 (oom-write), now anon-rss:0kB, file-rss:0kB, shmem-rss:0kB
+> > > > > [  972.114644] XFS: Assertion failed: oldlen > newlen, file: fs/xfs/libxfs/xfs_bmap.c, line: 2867
+> > > 
+> > > Indirect block reservation underrun on delayed allocation extent merge.
+> > > These are extra blocks are used for the inode bmap btree when a delalloc
+> > > extent is converted to physical blocks. We're in a case where we expect
+> > > to only ever free excess blocks due to a merge of extents with
+> > > independent reservations, but a situation occurs where we actually need
+> > > blocks and hence the assert fails. This can occur if an extent is merged
+> > > with one that has a reservation less than the expected worst case
+> > > reservation for its size (due to previous extent splits due to hole
+> > > punches, for example). Therefore, I think the core expectation that
+> > > xfs_bmap_add_extent_hole_delay() will always have enough blocks
+> > > pre-reserved is invalid.
+> > > 
+> > > Can you describe the workload that reproduces this? FWIW, I think the
+> > > way xfs_bmap_add_extent_hole_delay() currently works is likely broken
+> > > and have a couple patches to fix up indlen reservation that I haven't
+> > > posted yet. The diff that deals with this particular bit is appended.
+> > > Care to give that a try?
+> > 
+> > The workload is to write to a single file on XFS from 10 processes demonstrated at
+> > http://lkml.kernel.org/r/201512052133.IAE00551.LSOQFtMFFVOHOJ@I-love.SAKURA.ne.jp
+> > using "while :; do ./oom-write; done" loop on a VM with 4CPUs / 2048MB RAM.
+> > With this XFS_FILBLKS_MIN() change applied, I no longer hit assertion failures.
+> > 
 > 
-> Signed-off-by: Hou Tao <houtao1@huawei.com>
-> ---
->  fs/xfs/xfs_buf_item.c | 1 +
->  1 file changed, 1 insertion(+)
+> Thanks for testing. Well, that's an interesting workload. I couldn't
+> reproduce on a few quick tries in a similarly configured vm.
 > 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 2975cb2..0306168 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -1162,6 +1162,7 @@ xfs_buf_iodone_callbacks(
->  	 */
->  	bp->b_last_error = 0;
->  	bp->b_retries = 0;
-> +	bp->b_first_retry_time = 0;
+> Normally I'd expect to see this kind of thing on a hole punching
+> workload or dealing with large, sparse files that make use of
+> speculative preallocation (post-eof blocks allocated in anticipation of
+> file extending writes). I'm wondering if what is happening here is that
+> the appending writes and file closes due to oom kills are generating
+> speculative preallocs and prealloc truncates, respectively, and that
+> causes prealloc extents at the eof boundary to be split up and then
+> re-merged by surviving appending writers.
 
-By the way, is there a testcase for this?  It looks like it shouldn't be
-hard to generate a test that sets a timeout and interleaves temporary
-failure and success.
+Can those preallocs be affected by
+http://lkml.kernel.org/r/20170201092706.9966-2-mhocko@kernel.org ?
 
---D
-
->  
->  	xfs_buf_do_callbacks(bp);
->  	bp->b_fspriv = NULL;
-> -- 
-> 2.5.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Michal Hocko
+SUSE Labs
