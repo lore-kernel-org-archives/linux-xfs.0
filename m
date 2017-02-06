@@ -1,35 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:50077 "EHLO newverein.lst.de"
+Received: from mx2.suse.de ([195.135.220.15]:43336 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752035AbdBCUNo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 Feb 2017 15:13:44 -0500
-Date: Fri, 3 Feb 2017 21:13:42 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2] xfs: update ctime and mtime on clone destinatation
-        inodes
-Message-ID: <20170203201342.GA8047@lst.de>
-References: <20170203095715.7955-1-hch@lst.de> <20170203174541.GS9134@birch.djwong.org>
+        id S1751395AbdBFOe4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Feb 2017 09:34:56 -0500
+Date: Mon, 6 Feb 2017 15:34:50 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 1/6] lockdep: allow to disable reclaim lockup detection
+Message-ID: <20170206143449.GD10298@dhcp22.suse.cz>
+References: <20170206140718.16222-1-mhocko@kernel.org>
+ <20170206140718.16222-2-mhocko@kernel.org>
+ <20170206142641.GG2267@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170203174541.GS9134@birch.djwong.org>
+In-Reply-To: <20170206142641.GG2267@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, amir73il@gmail.com
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
 
-On Fri, Feb 03, 2017 at 09:45:41AM -0800, Darrick J. Wong wrote:
-> Redundant is_dedupe tests here.
+On Mon 06-02-17 06:26:41, Matthew Wilcox wrote:
+> On Mon, Feb 06, 2017 at 03:07:13PM +0100, Michal Hocko wrote:
+> > While we are at it also make sure that the radix tree doesn't
+> > accidentaly override tags stored in the upper part of the gfp_mask.
 > 
-> I also wonder if we really /want/ to emulate the existing btrfs
-> behavior, which seems to be:
+> > diff --git a/lib/radix-tree.c b/lib/radix-tree.c
+> > index 9dc093d5ef39..7550be09f9d6 100644
+> > --- a/lib/radix-tree.c
+> > +++ b/lib/radix-tree.c
+> > @@ -2274,6 +2274,8 @@ static int radix_tree_cpu_dead(unsigned int cpu)
+> >  void __init radix_tree_init(void)
+> >  {
+> >  	int ret;
+> > +
+> > +	BUILD_BUG_ON(RADIX_TREE_MAX_TAGS + __GFP_BITS_SHIFT > 32);
+> >  	radix_tree_node_cachep = kmem_cache_create("radix_tree_node",
+> >  			sizeof(struct radix_tree_node), 0,
+> >  			SLAB_PANIC | SLAB_RECLAIM_ACCOUNT,
 > 
-> reflink: update mtime & ctime
-> dedupe: do not update mtime or ctime
-> 
-> In particular, dedupe changes the inode metadata, which should qualify
-> for a ctime update, right?
+> That's going to have a conceptual conflict with some patches I have
+> in flight.  I'll take this part through my radix tree patch collection.
 
-That depends on your metadata definition.  For Posix it's basically just
-about stat data, and that doesn't change with dedupe.
+This part is not needed for the patch, strictly speaking but I wanted to
+make the code more future proof.
+
+-- 
+Michal Hocko
+SUSE Labs
