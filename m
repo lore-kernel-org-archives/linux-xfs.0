@@ -1,44 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:26888 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751121AbdBFRzx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Feb 2017 12:55:53 -0500
-Subject: [PATCH] mm,x86: native_pud_clear missing on i386 build
-From: Dave Jiang <dave.jiang@intel.com>
-Date: Mon, 06 Feb 2017 10:55:52 -0700
-Message-ID: <148640375195.69754.3315433724330910314.stgit@djiang5-desk3.ch.intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:19396 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751694AbdBGBOm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2017 20:14:42 -0500
+Date: Mon, 6 Feb 2017 17:14:32 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] xfs: handle indlen shortage on delalloc extent merge
+Message-ID: <20170207011432.GB12378@birch.djwong.org>
+References: <1486146865-47286-1-git-send-email-bfoster@redhat.com>
+ <1486146865-47286-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1486146865-47286-2-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: akpm@linux-foundation.org
-Cc: mawilcox@microsoft.com, linux-nvdimm@lists.01.org, dave.hansen@linux.intel.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, kirill.shutemov@linux.intel.com, jack@suse.com, dan.j.williams@intel.com, linux-ext4@vger.kernel.org, ross.zwisler@linux.intel.com, vbabka@suse.cz
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Patrick Dung <mpatdung@gmail.com>
 
-Missing dummy function native_pud_clear() for 32bit x86 build caught
-by 0-day build.
+On Fri, Feb 03, 2017 at 01:34:24PM -0500, Brian Foster wrote:
+> When a delalloc extent is created, it can be merged with pre-existing,
+> contiguous, delalloc extents. When this occurs,
+> xfs_bmap_add_extent_hole_delay() merges the extents along with the
+> associated indirect block reservations. The expectation here is that the
+> combined worst case indlen reservation is always less than or equal to
+> the indlen reservation for the individual extents.
+> 
+> This is not always the case, however, as existing extents can less than
+> the expected indlen reservation if the extent was previously split due
+> to a hole punch. If a new extent merges with such an extent, the total
+> indlen requirement may be larger than the sum of the indlen reservations
+> held by both extents.
+> 
+> xfs_bmap_add_extent_hole_delay() assumes that the worst case indlen
+> reservation is always available and assigns it to the merged extent
+> without consideration for the indlen held by the pre-existing extent. As
+> a result, the subsequent xfs_mod_fdblocks() call can attempt an
+> unintentional allocation rather than a free (indicated by an ASSERT()
+> failure). Further, if the allocation happens to fail in this context,
+> the failure goes unhandled and creates a filesystem wide block
+> accounting inconsistency.
+> 
+> Fix xfs_bmap_add_extent_hole_delay() to function as designed. Cap the
+> indlen reservation assigned to the merged extent to the sum of the
+> indlen reservations held by each of the individual extents.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Fix: a10a1701 mm, x86: add support for PUD-sized transparent hugepages
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
----
- arch/x86/include/asm/pgtable-3level.h |    4 ++++
- 1 file changed, 4 insertions(+)
+--D
 
-diff --git a/arch/x86/include/asm/pgtable-3level.h b/arch/x86/include/asm/pgtable-3level.h
-index be759ff..50d35e3 100644
---- a/arch/x86/include/asm/pgtable-3level.h
-+++ b/arch/x86/include/asm/pgtable-3level.h
-@@ -121,6 +121,10 @@ static inline void native_pmd_clear(pmd_t *pmd)
- 	*(tmp + 1) = 0;
- }
- 
-+static inline void native_pud_clear(pud_t *pudp)
-+{
-+}
-+
- static inline void pud_clear(pud_t *pudp)
- {
- 	set_pud(pudp, __pud(0));
-
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index bfc00de..d2e48ed 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -2809,7 +2809,8 @@ xfs_bmap_add_extent_hole_delay(
+>  		oldlen = startblockval(left.br_startblock) +
+>  			startblockval(new->br_startblock) +
+>  			startblockval(right.br_startblock);
+> -		newlen = xfs_bmap_worst_indlen(ip, temp);
+> +		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> +					 oldlen);
+>  		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
+>  			nullstartblock((int)newlen));
+>  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+> @@ -2830,7 +2831,8 @@ xfs_bmap_add_extent_hole_delay(
+>  		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx), temp);
+>  		oldlen = startblockval(left.br_startblock) +
+>  			startblockval(new->br_startblock);
+> -		newlen = xfs_bmap_worst_indlen(ip, temp);
+> +		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> +					 oldlen);
+>  		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
+>  			nullstartblock((int)newlen));
+>  		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+> @@ -2846,7 +2848,8 @@ xfs_bmap_add_extent_hole_delay(
+>  		temp = new->br_blockcount + right.br_blockcount;
+>  		oldlen = startblockval(new->br_startblock) +
+>  			startblockval(right.br_startblock);
+> -		newlen = xfs_bmap_worst_indlen(ip, temp);
+> +		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
+> +					 oldlen);
+>  		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
+>  			new->br_startoff,
+>  			nullstartblock((int)newlen), temp, right.br_state);
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
