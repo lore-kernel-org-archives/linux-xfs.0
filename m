@@ -1,80 +1,369 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36738 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751635AbdBPDyd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Feb 2017 22:54:33 -0500
-Subject: Re: [PATCH] xfs_metadump: ignore attr leaf with 0 entries
-References: <7481b076-dbc6-ddaa-4e3f-9a1bc2b94e26@redhat.com>
- <20170216033158.GH6813@birch.djwong.org>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <0e533d51-2746-7297-94c7-fef5bcc6b6f9@redhat.com>
-Date: Wed, 15 Feb 2017 21:54:30 -0600
+Received: from aserp1040.oracle.com ([141.146.126.69]:33796 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751694AbdBGBly (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2017 20:41:54 -0500
+Date: Mon, 6 Feb 2017 17:41:49 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/4] xfs: allocate direct I/O COW blocks in iomap_begin
+Message-ID: <20170207014149.GE12378@birch.djwong.org>
+References: <20170206074738.13978-1-hch@lst.de>
+ <20170206074738.13978-5-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170216033158.GH6813@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170206074738.13978-5-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On 2/15/17 9:31 PM, Darrick J. Wong wrote:
-> On Thu, Feb 02, 2017 at 09:54:56AM -0600, Eric Sandeen wrote:
->> Another in the ongoing saga of attribute leaves with zero
->> entries; in this case, if we try to metadump an inode with
->> a zero-entries attribute leaf, the zeroing code will go off
->> the rails and segfault at:
->>
->>                 memset(&entries[nentries], 0,
->>                        first_name - (char *)&entries[nentries]);
->>
->> because first_name is null, and we try to memset a large
->> (negative) number.
+On Mon, Feb 06, 2017 at 08:47:38AM +0100, Christoph Hellwig wrote:
+> Instead of preallocating all the required COW blocks in the high-level
+> write code do it inside the iomap code, like we do for all other I/O.
 > 
-> So what /does/ get metadumped in the !nentries case?  
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Um, nothing, because it segfaults?
+Ok, got all the pieces together and they look ok to me.
 
-Oh you mean AFTER the patch.  :P
+I ran this through the dio reflink tests and they pass now.
 
-> Is it the block
-> header and whatever else happens to be on disk?  I guess that's useful
-> for diagnostic purposes, since we don't know what's really "stale" when
-> the block is obviously bad.  (I was eyeing zero_stale_data but then
-> convinced myself it was fine to just exit.)
+I'm going to run this series (and all the other stuff I've collected for
+4.11) overnight and if nothing screams then you can consider this series:
 
-Hm, probably worth finding out what reall does happen for this block,
-but i'll go ahead & commit this for now just to avoid the segfault.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+--D
 
-thanks,
--Eric
- 
-> --D
+> ---
+>  fs/xfs/xfs_file.c    |   8 ---
+>  fs/xfs/xfs_iomap.c   |  31 +++++------
+>  fs/xfs/xfs_reflink.c | 144 +++++++++++++++++++--------------------------------
+>  fs/xfs/xfs_reflink.h |   4 +-
+>  fs/xfs/xfs_trace.h   |   2 -
+>  5 files changed, 66 insertions(+), 123 deletions(-)
 > 
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/db/metadump.c b/db/metadump.c
->> index 38519f1..66952f6 100644
->> --- a/db/metadump.c
->> +++ b/db/metadump.c
->> @@ -1654,7 +1654,8 @@ process_attr_block(
->>  	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &hdr, leaf);
->>  
->>  	nentries = hdr.count;
->> -	if (nentries * sizeof(xfs_attr_leaf_entry_t) +
->> +	if (nentries == 0 ||
->> +	    nentries * sizeof(xfs_attr_leaf_entry_t) +
->>  			xfs_attr3_leaf_hdr_size(leaf) >
->>  				XFS_ATTR3_RMT_BUF_SPACE(mp, bs)) {
->>  		if (show_warnings)
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index b1f74f1d0b5f..1ff32d34514f 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -561,14 +561,6 @@ xfs_file_dio_aio_write(
+>  	}
+>  
+>  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
+> -
+> -	/* If this is a block-aligned directio CoW, remap immediately. */
+> -	if (xfs_is_reflink_inode(ip) && !unaligned_io) {
+> -		ret = xfs_reflink_allocate_cow_range(ip, iocb->ki_pos, count);
+> -		if (ret)
+> -			goto out;
+> -	}
+> -
+>  	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
+>  out:
+>  	xfs_iunlock(ip, iolock);
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 9d811eb1a416..0978a5f0b50c 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -995,37 +995,31 @@ xfs_file_iomap_begin(
+>  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+>  	end_fsb = XFS_B_TO_FSB(mp, offset + length);
+>  
+> -	if (xfs_is_reflink_inode(ip) &&
+> -	    (flags & IOMAP_WRITE) && (flags & IOMAP_DIRECT)) {
+> -		shared = xfs_reflink_find_cow_mapping(ip, offset, &imap);
+> -		if (shared) {
+> -			xfs_iunlock(ip, lockmode);
+> -			goto alloc_done;
+> -		}
+> -		ASSERT(!isnullstartblock(imap.br_startblock));
+> -	}
+> -
+>  	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+>  			       &nimaps, 0);
+>  	if (error)
+>  		goto out_unlock;
+>  
+> -	if ((flags & IOMAP_REPORT) ||
+> -	    (xfs_is_reflink_inode(ip) &&
+> -	     (flags & IOMAP_WRITE) && (flags & IOMAP_DIRECT))) {
+> +	if (flags & IOMAP_REPORT) {
+>  		/* Trim the mapping to the nearest shared extent boundary. */
+>  		error = xfs_reflink_trim_around_shared(ip, &imap, &shared,
+>  				&trimmed);
+>  		if (error)
+>  			goto out_unlock;
+> -
+> -		ASSERT((flags & IOMAP_REPORT) || !shared);
+>  	}
+>  
+>  	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
+> -		error = xfs_reflink_reserve_cow(ip, &imap, &shared);
+> -		if (error)
+> -			goto out_unlock;
+> +		if (flags & IOMAP_DIRECT) {
+> +			/* may drop and re-acquire the ilock */
+> +			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
+> +					&lockmode);
+> +			if (error)
+> +				goto out_unlock;
+> +		} else {
+> +			error = xfs_reflink_reserve_cow(ip, &imap, &shared);
+> +			if (error)
+> +				goto out_unlock;
+> +		}
+>  
+>  		end_fsb = imap.br_startoff + imap.br_blockcount;
+>  		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
+> @@ -1054,7 +1048,6 @@ xfs_file_iomap_begin(
+>  		if (error)
+>  			return error;
+>  
+> -alloc_done:
+>  		iomap->flags = IOMAP_F_NEW;
+>  		trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
+>  	} else {
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index e577f54beb2f..68d0fbdd0929 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -383,74 +383,75 @@ xfs_reflink_convert_cow(
+>  }
+>  
+>  /* Allocate all CoW reservations covering a range of blocks in a file. */
+> -static int
+> -__xfs_reflink_allocate_cow(
+> +int
+> +xfs_reflink_allocate_cow(
+>  	struct xfs_inode	*ip,
+> -	xfs_fileoff_t		*offset_fsb,
+> -	xfs_fileoff_t		end_fsb)
+> +	struct xfs_bmbt_irec	*imap,
+> +	bool			*shared,
+> +	uint			*lockmode)
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+> -	struct xfs_bmbt_irec	imap, got;
+> +	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+> +	xfs_filblks_t		count_fsb = imap->br_blockcount;
+> +	struct xfs_bmbt_irec	got;
+>  	struct xfs_defer_ops	dfops;
+> -	struct xfs_trans	*tp;
+> +	struct xfs_trans	*tp = NULL;
+>  	xfs_fsblock_t		first_block;
+> -	int			nimaps, error, lockmode;
+> -	bool			shared, trimmed;
+> +	int			nimaps, error = 0;
+> +	bool			trimmed;
+>  	xfs_filblks_t		resaligned;
+> -	xfs_extlen_t		resblks;
+> +	xfs_extlen_t		resblks = 0;
+>  	xfs_extnum_t		idx;
+>  
+> -	resaligned = xfs_aligned_fsb_count(*offset_fsb, end_fsb - *offset_fsb,
+> -			xfs_get_cowextsz_hint(ip));
+> -	resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
+> -
+> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
+> -	if (error)
+> -		return error;
+> -
+> -	lockmode = XFS_ILOCK_EXCL;
+> -	xfs_ilock(ip, lockmode);
+> +retry:
+> +	ASSERT(xfs_is_reflink_inode(ip));
+> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
+>  
+>  	/*
+>  	 * Even if the extent is not shared we might have a preallocation for
+>  	 * it in the COW fork.  If so use it.
+>  	 */
+> -	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, *offset_fsb, &idx, &got) &&
+> -	    got.br_startoff <= *offset_fsb) {
+> +	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &idx, &got) &&
+> +	    got.br_startoff <= offset_fsb) {
+> +		*shared = true;
+> +
+>  		/* If we have a real allocation in the COW fork we're done. */
+>  		if (!isnullstartblock(got.br_startblock)) {
+> -			xfs_trim_extent(&got, *offset_fsb,
+> -					end_fsb - *offset_fsb);
+> -			*offset_fsb = got.br_startoff + got.br_blockcount;
+> -			goto out_trans_cancel;
+> +			xfs_trim_extent(&got, offset_fsb, count_fsb);
+> +			*imap = got;
+> +			goto convert;
+>  		}
+> +
+> +		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
+>  	} else {
+> -		nimaps = 1;
+> -		error = xfs_bmapi_read(ip, *offset_fsb, end_fsb - *offset_fsb,
+> -				&imap, &nimaps, 0);
+> -		if (error)
+> -			goto out_trans_cancel;
+> -		ASSERT(nimaps == 1);
+> +		error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
+> +		if (error || !*shared)
+> +			goto out;
+> +	}
+>  
+> -		/* Trim the mapping to the nearest shared extent boundary. */
+> -		error = xfs_reflink_trim_around_shared(ip, &imap, &shared,
+> -				&trimmed);
+> -		if (error)
+> -			goto out_trans_cancel;
+> +	if (!tp) {
+> +		resaligned = xfs_aligned_fsb_count(imap->br_startoff,
+> +			imap->br_blockcount, xfs_get_cowextsz_hint(ip));
+> +		resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
+>  
+> -		if (!shared) {
+> -			*offset_fsb = imap.br_startoff + imap.br_blockcount;
+> -			goto out_trans_cancel;
+> -		}
+> +		xfs_iunlock(ip, *lockmode);
+> +		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
+> +		*lockmode = XFS_ILOCK_EXCL;
+> +		xfs_ilock(ip, *lockmode);
+> +
+> +		if (error)
+> +			return error;
+>  
+> -		*offset_fsb = imap.br_startoff;
+> -		end_fsb = imap.br_startoff + imap.br_blockcount;
+> +		error = xfs_qm_dqattach_locked(ip, 0);
+> +		if (error)
+> +			goto out;
+> +		goto retry;
+>  	}
+>  
+>  	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
+>  			XFS_QMOPT_RES_REGBLKS);
+>  	if (error)
+> -		goto out_trans_cancel;
+> +		goto out;
+>  
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+> @@ -458,9 +459,9 @@ __xfs_reflink_allocate_cow(
+>  	nimaps = 1;
+>  
+>  	/* Allocate the entire reservation as unwritten blocks. */
+> -	error = xfs_bmapi_write(tp, ip, *offset_fsb, end_fsb - *offset_fsb,
+> +	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
+>  			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, &first_block,
+> -			resblks, &imap, &nimaps, &dfops);
+> +			resblks, imap, &nimaps, &dfops);
+>  	if (error)
+>  		goto out_bmap_cancel;
+>  
+> @@ -471,58 +472,17 @@ __xfs_reflink_allocate_cow(
+>  
+>  	error = xfs_trans_commit(tp);
+>  	if (error)
+> -		goto out_unlock;
+> -
+> -	*offset_fsb = imap.br_startoff + imap.br_blockcount;
+> -
+> -out_unlock:
+> -	xfs_iunlock(ip, lockmode);
+> -	return error;
+> -
+> +		return error;
+> +convert:
+> +	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb,
+> +			&dfops);
+>  out_bmap_cancel:
+>  	xfs_defer_cancel(&dfops);
+>  	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
+>  			XFS_QMOPT_RES_REGBLKS);
+> -out_trans_cancel:
+> -	xfs_trans_cancel(tp);
+> -	goto out_unlock;
+> -}
+> -
+> -/* Allocate all CoW reservations covering a part of a file. */
+> -int
+> -xfs_reflink_allocate_cow_range(
+> -	struct xfs_inode	*ip,
+> -	xfs_off_t		offset,
+> -	xfs_off_t		count)
+> -{
+> -	struct xfs_mount	*mp = ip->i_mount;
+> -	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> -	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
+> -	int			error;
+> -
+> -	ASSERT(xfs_is_reflink_inode(ip));
+> -
+> -	trace_xfs_reflink_allocate_cow_range(ip, offset, count);
+> -
+> -	/*
+> -	 * Make sure that the dquots are there.
+> -	 */
+> -	error = xfs_qm_dqattach(ip, 0);
+> -	if (error)
+> -		return error;
+> -
+> -	while (offset_fsb < end_fsb) {
+> -		error = __xfs_reflink_allocate_cow(ip, &offset_fsb, end_fsb);
+> -		if (error) {
+> -			trace_xfs_reflink_allocate_cow_range_error(ip, error,
+> -					_RET_IP_);
+> -			goto out;
+> -		}
+> -	}
+> -
+> -	/* Convert the CoW extents to regular. */
+> -	error = xfs_reflink_convert_cow(ip, offset, count);
+>  out:
+> +	if (tp)
+> +		xfs_trans_cancel(tp);
+>  	return error;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index 1583c4727cb1..33ac9b8db683 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -28,8 +28,8 @@ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+>  
+>  extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
+>  		struct xfs_bmbt_irec *imap, bool *shared);
+> -extern int xfs_reflink_allocate_cow_range(struct xfs_inode *ip,
+> -		xfs_off_t offset, xfs_off_t count);
+> +extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
+> +		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
+>  extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
+>  		xfs_off_t count);
+>  extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 375c5e030e5b..32bad7bff840 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3248,7 +3248,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_enospc);
+>  DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
+>  
+>  DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
+> -DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
+>  
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
+>  DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
+> @@ -3258,7 +3257,6 @@ DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
+>  DEFINE_INODE_IREC_EVENT(xfs_reflink_cow_remap);
+>  
+> -DEFINE_INODE_ERROR_EVENT(xfs_reflink_allocate_cow_range_error);
+>  DEFINE_INODE_ERROR_EVENT(xfs_reflink_cancel_cow_range_error);
+>  DEFINE_INODE_ERROR_EVENT(xfs_reflink_end_cow_error);
+>  
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
