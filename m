@@ -1,98 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48507 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751517AbdBFUzU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2017 15:55:20 -0500
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1caqJe-0008LW-T4
-        for linux-xfs@vger.kernel.org; Mon, 06 Feb 2017 20:55:16 +0000
+Received: from verein.lst.de ([213.95.11.211]:41288 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754697AbdBGPpi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Feb 2017 10:45:38 -0500
+Date: Tue, 7 Feb 2017 16:45:32 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: reject all unaligned direct writes to reflinked files
-Date: Mon,  6 Feb 2017 21:55:11 +0100
-Message-Id: <20170206205511.31373-1-hch@lst.de>
+Subject: Re: [PATCH 2/4] xfs: improve handling of busy extents in the
+        low-level allocator
+Message-ID: <20170207154532.GA22426@lst.de>
+References: <1485715421-17182-1-git-send-email-hch@lst.de> <1485715421-17182-3-git-send-email-hch@lst.de> <20170203162243.GF45388@bfoster.bfoster> <20170204095606.GC18472@lst.de> <20170206164750.GG57865@bfoster.bfoster> <20170207094332.GD15267@lst.de> <20170207131354.GA7512@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170207131354.GA7512@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-We currently fall back from direct to buffered writes if we detect a
-remaining shared extent in the iomap_begin callback.  But by the time
-iomap_begin is called for the potentially unaligned end block we might
-have already written most of the data to disk, which we'd now write
-again using buffered I/O.  To avoid this reject all writes to reflinked
-files before starting I/O so that we are guaranteed to only write the
-data once.
+On Tue, Feb 07, 2017 at 08:13:54AM -0500, Brian Foster wrote:
+> If discard is not enabled, the behavior is straightforward in that a
+> busy_gen returned for a particular extent is triggered when that extent
+> is made unbusy. A retry call to xfs_extent_busy_[trim|flush]() is never
+> necessary. If discard is enabled, the pagb_gen returned for a particular
+> extent is triggered when one of the busy extents in the list is made
+> unbusy. It might be the extent I passed to xfs_extent_busy_trim(), it
+> might not. I have to retry the call to know for sure.
 
-The alternative would be to unshare the unaligned start and/or end block
-before doing the I/O. I think that's doable, and will actually be
-required to support reflinks on DAX file system.  But it will take a
-little more time and I'd rather get rid of the double write ASAP.
+pagb_gen is always incremented when _a_ busy extent is freed.
+Without online discard this does indeed only happen once per
+log commit / AG.  With discards it could happen twice, but this
+difference in semantics shouldn't really matter.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_file.c  |  9 +++++++++
- fs/xfs/xfs_iomap.c | 12 +-----------
- fs/xfs/xfs_trace.h |  2 +-
- 3 files changed, 11 insertions(+), 12 deletions(-)
+> I think it's pretty straightforward how easy that may be to misuse in
+> the future. My concern is that somebody down the road adds code to trim
+> a particular extent, waits on the pagb_gen, doesn't retry and thus
+> introduces a very subtle bug into the code.
+> 
+> I can pretty much guarantee after a month or so I'm going to forget all
+> about this constraint, never mind longer than that. Hence, I'm asking
+> for a brief comment to clarify how pagb_gen actually works. The more I
+> think about it, I think above xfs_busy_extent_trim() is the right place
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index bbb9eb6811b2..b1f74f1d0b5f 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -527,6 +527,15 @@ xfs_file_dio_aio_write(
- 	if ((iocb->ki_pos & mp->m_blockmask) ||
- 	    ((iocb->ki_pos + count) & mp->m_blockmask)) {
- 		unaligned_io = 1;
-+
-+		/*
-+		 * We can't properly handle unaligned direct I/O to reflink
-+		 * files yet, as we can't unshare a partial block.
-+		 */
-+		if (xfs_is_reflink_inode(ip)) {
-+			trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos, count);
-+			return -EREMCHG;
-+		}
- 		iolock = XFS_IOLOCK_EXCL;
- 	} else {
- 		iolock = XFS_IOLOCK_SHARED;
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 767208fdceb5..d17aa3b9c6a5 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1026,17 +1026,7 @@ xfs_file_iomap_begin(
- 		if (error)
- 			goto out_unlock;
- 
--		/*
--		 * We're here because we're trying to do a directio write to a
--		 * region that isn't aligned to a filesystem block.  If the
--		 * extent is shared, fall back to buffered mode to handle the
--		 * RMW.
--		 */
--		if (!(flags & IOMAP_REPORT) && shared) {
--			trace_xfs_reflink_bounce_dio_write(ip, &imap);
--			error = -EREMCHG;
--			goto out_unlock;
--		}
-+		ASSERT((flags & IOMAP_REPORT) || !shared);
- 	}
- 
- 	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index d3d11905c55c..375c5e030e5b 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3250,7 +3250,7 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
- DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
- DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
- 
--DEFINE_INODE_IREC_EVENT(xfs_reflink_bounce_dio_write);
-+DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
- DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
- 
--- 
-2.11.0
+>
+> since that is where we introduce/return the gen, we have a comment
+> update there already, and it apparently already mistakenly refers to
+> online discard. How about we update it to something like the following?
 
+Sure, I'll add it.
