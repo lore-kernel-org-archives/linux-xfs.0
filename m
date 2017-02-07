@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41920 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932311AbdBGU5D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Feb 2017 15:57:03 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:26591 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932373AbdBGU7T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Feb 2017 15:59:19 -0500
+Date: Tue, 7 Feb 2017 12:59:13 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH v3] xfs: correct null checks and error processing in
  xfs_initialize_perag
+Message-ID: <20170207205913.GF12378@birch.djwong.org>
 References: <20170128191957.13851-1-billodo@redhat.com>
  <20170207165403.11543-1-billodo@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7064f670-812e-20de-ccc7-a188658e58e8@sandeen.net>
-Date: Tue, 7 Feb 2017 14:49:52 -0600
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20170207165403.11543-1-billodo@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: Bill O'Donnell <billodo@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 2/7/17 10:54 AM, Bill O'Donnell wrote:
+On Tue, Feb 07, 2017 at 10:54:03AM -0600, Bill O'Donnell wrote:
 > If pag cannot be allocated, the current error exit path will trip
 > a null pointer deference error when calling xfs_buf_hash_destroy
 > with a null pag.  Fix this by adding a new error exit labels and
@@ -42,9 +42,10 @@ On 2/7/17 10:54 AM, Bill O'Donnell wrote:
 > Reported-by: Colin Ian King <colin.king@canonical.com>
 > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 
-Yeah, this looks good to me, thanks.
+Will pick up for 4.11,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+--D
 
 > ---
 > v3: correct indexing error in out_unwind_new_pags loop, 
@@ -128,4 +129,10 @@ Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 >  		xfs_buf_hash_destroy(pag);
 >  		kmem_free(pag);
 >  	}
+> -- 
+> 2.9.3
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
