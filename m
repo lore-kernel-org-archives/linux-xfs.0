@@ -1,143 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45288 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49526 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753604AbdBMPeI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Feb 2017 10:34:08 -0500
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v28 18/21] vfs: Add richacl permission checking
-Date: Mon, 13 Feb 2017 16:32:34 +0100
-Message-Id: <1486999957-2381-19-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
-References: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
+        id S1754642AbdBGNNz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Feb 2017 08:13:55 -0500
+Date: Tue, 7 Feb 2017 08:13:54 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/4] xfs: improve handling of busy extents in the
+ low-level allocator
+Message-ID: <20170207131354.GA7512@bfoster.bfoster>
+References: <1485715421-17182-1-git-send-email-hch@lst.de>
+ <1485715421-17182-3-git-send-email-hch@lst.de>
+ <20170203162243.GF45388@bfoster.bfoster>
+ <20170204095606.GC18472@lst.de>
+ <20170206164750.GG57865@bfoster.bfoster>
+ <20170207094332.GD15267@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170207094332.GD15267@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Jeff Layton <jlayton@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-Hook the richacl permission checking function into the vfs.
+On Tue, Feb 07, 2017 at 10:43:32AM +0100, Christoph Hellwig wrote:
+> On Mon, Feb 06, 2017 at 11:47:50AM -0500, Brian Foster wrote:
+> > That said, that limitation should be noted somewhere. Can we add a
+> > comment in xfs_extent_busy_clear() right above the hunk where we do the
+> > SKIP_DISCARD wake? E.g., something that points out the gen number for
+> > any particular extent could be bumped in such a situation.. (or
+> > something along those lines)?
+> 
+> I could add a comment, but given that the tree tracks busy extents
+> and is not in any way specific to discard I think it's more confusing
+> than not having it.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Jeff Layton <jlayton@redhat.com>
----
- fs/namei.c   | 70 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- fs/richacl.c |  4 ++--
- 2 files changed, 70 insertions(+), 4 deletions(-)
+The tree is generic to busy extents, sure. The behavior of the
+generation number definitely changes depending on whether discards are
+enabled or not.
 
-diff --git a/fs/namei.c b/fs/namei.c
-index 4b53754..7ea153b 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -34,6 +34,7 @@
- #include <linux/device_cgroup.h>
- #include <linux/fs_struct.h>
- #include <linux/posix_acl.h>
-+#include <linux/richacl.h>
- #include <linux/hash.h>
- #include <linux/bitops.h>
- #include <linux/init_task.h>
-@@ -257,7 +258,43 @@ void putname(struct filename *name)
- 		__putname(name);
- }
- 
--static int check_acl(struct inode *inode, int mask)
-+static int check_richacl(struct inode *inode, int mask)
-+{
-+#ifdef CONFIG_FS_RICHACL
-+	if (mask & MAY_NOT_BLOCK) {
-+		struct base_acl *base_acl;
-+
-+		base_acl = rcu_dereference(inode->i_acl);
-+		if (!base_acl)
-+			goto no_acl;
-+		/* no ->get_richacl() calls in RCU mode... */
-+		if (is_uncached_acl(base_acl))
-+			return -ECHILD;
-+		return richacl_permission(inode, richacl(base_acl),
-+					  mask & ~MAY_NOT_BLOCK);
-+	} else {
-+		struct richacl *acl;
-+
-+		acl = get_richacl(inode);
-+		if (IS_ERR(acl))
-+			return PTR_ERR(acl);
-+		if (acl) {
-+			int error = richacl_permission(inode, acl, mask);
-+			richacl_put(acl);
-+			return error;
-+		}
-+	}
-+no_acl:
-+#endif
-+	if (mask & (MAY_DELETE_SELF | MAY_TAKE_OWNERSHIP |
-+		    MAY_CHMOD | MAY_SET_TIMES)) {
-+		/* File permission bits cannot grant this. */
-+		return -EACCES;
-+	}
-+	return -EAGAIN;
-+}
-+
-+static int check_posix_acl(struct inode *inode, int mask)
- {
- #ifdef CONFIG_FS_POSIX_ACL
- 	if (mask & MAY_NOT_BLOCK) {
-@@ -295,11 +332,40 @@ static int acl_permission_check(struct inode *inode, int mask)
- {
- 	unsigned int mode = inode->i_mode;
- 
-+	/*
-+	 * With POSIX ACLs, the (mode & S_IRWXU) bits exactly match the owner
-+	 * permissions, and we can skip checking posix acls for the owner.
-+	 * With richacls, the owner may be granted fewer permissions than the
-+	 * mode bits seem to suggest (for example, append but not write), and
-+	 * we always need to check the richacl.
-+	 */
-+
-+	if (IS_RICHACL(inode)) {
-+		int error;
-+
-+		/*
-+		 * The combination of MAY_DELETE_CHILD and MAY_DELETE_SELF
-+		 * indicates that that we want to check for delete permission
-+		 * in a directory assuming that we have MAY_DELETE_SELF access
-+		 * on the victim.  We don't require MAY_DELETE_CHILD permission
-+		 * on the directory, but we do require LSM permission, the
-+		 * immutability checks, etc.
-+		 */
-+		if ((mask & MAY_DELETE_CHILD) && (mask & MAY_DELETE_SELF)) {
-+			mask &= ~(MAY_DELETE_CHILD | MAY_DELETE_SELF);
-+			if (!(mask & (MAY_CREATE_FILE | MAY_CREATE_DIR)))
-+				mask &= ~MAY_WRITE;
-+		}
-+
-+		error = check_richacl(inode, mask);
-+		if (error != -EAGAIN)
-+			return error;
-+	}
- 	if (likely(uid_eq(current_fsuid(), inode->i_uid)))
- 		mode >>= 6;
- 	else {
- 		if (IS_POSIXACL(inode) && (mode & S_IRWXG)) {
--			int error = check_acl(inode, mask);
-+			int error = check_posix_acl(inode, mask);
- 			if (error != -EAGAIN)
- 				return error;
- 		}
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 1945691..416d57c 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -293,8 +293,8 @@ richacl_permission(struct inode *inode, const struct richacl *acl,
- 	} else {
- 		/*
- 		 * When the acl is not masked, there is no need to determine if
--		 * the process is in the group class and we can break out
--		 * earlier of the loop below.
-+		 * the process is in the group class and we can earlier break
-+		 * out of the loop below.
- 		 */
- 		in_owner_or_group_class = 1;
- 	}
--- 
-2.7.4
+If discard is not enabled, the behavior is straightforward in that a
+busy_gen returned for a particular extent is triggered when that extent
+is made unbusy. A retry call to xfs_extent_busy_[trim|flush]() is never
+necessary. If discard is enabled, the pagb_gen returned for a particular
+extent is triggered when one of the busy extents in the list is made
+unbusy. It might be the extent I passed to xfs_extent_busy_trim(), it
+might not. I have to retry the call to know for sure.
 
+I think it's pretty straightforward how easy that may be to misuse in
+the future. My concern is that somebody down the road adds code to trim
+a particular extent, waits on the pagb_gen, doesn't retry and thus
+introduces a very subtle bug into the code.
+
+I can pretty much guarantee after a month or so I'm going to forget all
+about this constraint, never mind longer than that. Hence, I'm asking
+for a brief comment to clarify how pagb_gen actually works. The more I
+think about it, I think above xfs_busy_extent_trim() is the right place
+since that is where we introduce/return the gen, we have a comment
+update there already, and it apparently already mistakenly refers to
+online discard. How about we update it to something like the following?
+
+/*
+ * ...
+ *
+ * Return the current busy generation for the AG if the extent is busy. This
+ * value can be used to wait for at least one of the currently busy extents to
+ * be cleared. Note that the busy list is not guaranteed to be empty after the
+ * gen is woken. The state of a specific extent must always be confirmed with
+ * another call to xfs_extent_busy_trim() before it can be used.
+ */
+
+Brian
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
