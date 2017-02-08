@@ -1,97 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:42664 "EHLO mga01.intel.com"
+Received: from sandeen.net ([63.231.237.45]:42364 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750994AbdBIEgU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Feb 2017 23:36:20 -0500
-Date: Thu, 9 Feb 2017 12:34:43 +0800
-From: Ye Xiaolong <xiaolong.ye@intel.com>
-Subject: Re: [kbuild-all] [PATCH] mm: replace FAULT_FLAG_SIZE with parameter
- to huge_fault
-Message-ID: <20170209043443.GB13723@yexl-desktop>
-References: <201702040648.oOjnlEcm%fengguang.wu@intel.com>
- <2020f442-8e77-cf14-a6b1-b4b00d0da80b@intel.com>
- <CAPcyv4hmswhXsnS9q1Ut76f3-a2h5Hx7XYkS1iNyak8wG9VuEw@mail.gmail.com>
- <CAPcyv4hVqxedr9sEigw0Xsr_SoMAnvPrmPNOrX7QYNuCz=DRQA@mail.gmail.com>
- <86962573-01b7-4ce7-182e-7a77f183cf0e@intel.com>
+        id S1751094AbdBHCbn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Feb 2017 21:31:43 -0500
+Subject: Re: [PATCH] xfs: during log recovery, destroy the unlinked inodes
+ even for read-only mount
+References: <1481014847-22242-1-git-send-email-houtao1@huawei.com>
+ <20161207063009.GH4326@dastard>
+ <ad2d0226-3901-735e-e640-af03ce348baf@sandeen.net>
+ <504078b4-68ea-eb3c-231f-9d840f1e8687@huawei.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <f4577e5e-e775-673b-c2a9-d36cb245377e@sandeen.net>
+Date: Tue, 7 Feb 2017 20:31:41 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <86962573-01b7-4ce7-182e-7a77f183cf0e@intel.com>
+In-Reply-To: <504078b4-68ea-eb3c-231f-9d840f1e8687@huawei.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Jiang <dave.jiang@intel.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, kbuild test robot <lkp@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Vlastimil Babka <vbabka@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, kbuild-all@01.org, Jan Kara <jack@suse.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Hou Tao <houtao1@huawei.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 02/03, Dave Jiang wrote:
->On 02/03/2017 05:00 PM, Dan Williams wrote:
->> On Fri, Feb 3, 2017 at 3:26 PM, Dan Williams <dan.j.williams@intel.com> wrote:
->>> On Fri, Feb 3, 2017 at 3:25 PM, Dave Jiang <dave.jiang@intel.com> wrote:
->>>> On 02/03/2017 03:56 PM, kbuild test robot wrote:
->>>>> Hi Dave,
->>>>>
->>>>> [auto build test ERROR on mmotm/master]
->>>>> [cannot apply to linus/master linux/master v4.10-rc6 next-20170203]
->>>>> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
->>>>
->>>> This one is a bit odd. I just pulled mmotm tree master branch and built
->>>> with the attached .config and it passed for me (and I don't see this
->>>> commit in the master branch). I also built linux-next with this patch on
->>>> top and it also passes with attached .config. Looking at the err log
->>>> below it seems the code has a mix of partial from before and after the
->>>> patch. I'm rather confused about it....
->>>
->>> This is a false positive. It tried to build it against latest mainline
->>> instead of linux-next.
->> 
->> On second look it seems I ended up with a duplicate
->> ext4_huge_dax_fault after "git am" when I apply this on top of
->> next-20170202.  The following fixes it up for me and tests fine:
->
->I think it's missing this patch from Ross
->http://marc.info/?l=linux-mm&m=148581319303697&w=2
 
-Yes, 0day applied the patch on top of mmotm/master when this fix commit 0c4044b3f
-("ext4: Remove unused function ext4_dax_huge_fault()") hasn't been merged.
 
-Thanks,
-Xiaolong
->
->> 
->> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
->> index f8f4f6d068e5..e8ab46efc4f9 100644
->> --- a/fs/ext4/file.c
->> +++ b/fs/ext4/file.c
->> @@ -276,27 +276,6 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
->>         return result;
->>  }
->> 
->> -static int
->> -ext4_dax_huge_fault(struct vm_fault *vmf)
->> -{
->> -       int result;
->> -       struct inode *inode = file_inode(vmf->vma->vm_file);
->> -       struct super_block *sb = inode->i_sb;
->> -       bool write = vmf->flags & FAULT_FLAG_WRITE;
->> -
->> -       if (write) {
->> -               sb_start_pagefault(sb);
->> -               file_update_time(vmf->vma->vm_file);
->> -       }
->> -       down_read(&EXT4_I(inode)->i_mmap_sem);
->> -       result = dax_iomap_fault(vmf, &ext4_iomap_ops);
->> -       up_read(&EXT4_I(inode)->i_mmap_sem);
->> -       if (write)
->> -               sb_end_pagefault(sb);
->> -
->> -       return result;
->> -}
->> -
->>  static int ext4_dax_fault(struct vm_fault *vmf)
->>  {
->>         return ext4_dax_huge_fault(vmf, PE_SIZE_PTE);
->> 
->_______________________________________________
->kbuild-all mailing list
->kbuild-all@lists.01.org
->https://lists.01.org/mailman/listinfo/kbuild-all
+On 12/15/16 5:36 AM, Hou Tao wrote:
+>>> I was talking to Eric about this larger "recovery on read-only
+>>> mount" problem last week on IRC - I can't find it my logs right now,
+>>> but IIRC I'd suggested that we should always run xfs_mountfs()
+>>> in read-write mount if the underlying device can be written to,
+>>> and then once that is complete do a rw->ro transition exactly as we
+>>> do for a remount,ro operation.
+>>
+>> Yeah, I have a larger patchset to try to handle this and other
+>> related processing that wasn't happening on ro mounts.  I got
+>> derailed because my regression test for it ran into all kinds
+>> of unexpected new & unrelated bugs.  So I haven't sent it yet...
+>>
+>> There were lots of little bits here and there stemming, I think,
+>> from old Irix code that didn't do /any/ device IO on a ro mount.
+>>
+>> -Eric
+> It's glad to hear that you have nearly completed the ro mount patchset,
+> so I will stop reworking on this problem.
+> 
+> During the rework, I found two puzzling XFS_MOUNT_RDONLY checkings
+> at xfs_release(...) and xfs_inactive(...). In my opinion these check
+> should be done at VFS instead of the specific filesystem, so why
+> these XFS_MOUNT_RDONLY checkings there are ? Could we move the
+> needed check to VFS just like the things sb_prepare_remount_readonly()
+> have done ?
+
+Getting back to this - the reason for your original patch, I think,
+was that things like log recovery can get into this code without going
+through the vfs at all, so I think vfs checks are not always sufficient.
+
+That said, there probably are some XFS_MOUNT_RDONLY checks which are
+redundant.
+
+-Eric
+
+> Tao
+> 
