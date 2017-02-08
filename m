@@ -1,46 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52614 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:54323 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753118AbdBIUiA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Feb 2017 15:38:00 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/3] xfs: restore and enhance xfs indlen test
-Date: Thu,  9 Feb 2017 14:43:41 -0500
-Message-Id: <1486669424-45274-1-git-send-email-bfoster@redhat.com>
+        id S1752899AbdBHI4C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Feb 2017 03:56:02 -0500
+Date: Wed, 8 Feb 2017 09:41:56 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] mm: replace FAULT_FLAG_SIZE with parameter to huge_fault
+Message-ID: <20170208084156.GD26317@quack2.suse.cz>
+References: <148615748258.43180.1690152053774975329.stgit@djiang5-desk3.ch.intel.com>
+ <20170206143648.GA461@infradead.org>
+ <CAPcyv4jHYR2-_SgD7a6ab5vWigYsDoSb7FZdTchP8Xg+BF-2yg@mail.gmail.com>
+ <20170206172731.GA17515@infradead.org>
+ <CAPcyv4hiwWebCT=qPccKqaQKAHydMYsg9+=pYh=SPkNzakLc1A@mail.gmail.com>
+ <20170207084411.GA527@node.shutemov.name>
+ <CAPcyv4h1LvbEqBi=F=BTtLrHHOvAH3MU2OBDs444-dzwNyupFQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4h1LvbEqBi=F=BTtLrHHOvAH3MU2OBDs444-dzwNyupFQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Kirill A. Shutemov" <kirill@shutemov.name>, Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dave Hansen <dave.hansen@linux.intel.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, Vlastimil Babka <vbabka@suse.cz>, Jan Kara <jack@suse.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4 <linux-ext4@vger.kernel.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-Hi all,
+On Tue 07-02-17 08:56:56, Dan Williams wrote:
+> On Tue, Feb 7, 2017 at 12:44 AM, Kirill A. Shutemov
+> <kirill@shutemov.name> wrote:
+> > On Mon, Feb 06, 2017 at 09:30:22AM -0800, Dan Williams wrote:
+> >> On Mon, Feb 6, 2017 at 9:27 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> >> > On Mon, Feb 06, 2017 at 08:24:48AM -0800, Dan Williams wrote:
+> >> >> > Also can be use this opportunity
+> >> >> > to fold ->huge_fault into ->fault?
+> >
+> > BTW, for tmpfs we already use ->fault for both small and huge pages.
+> > If ->fault returned THP, core mm look if it's possible to map the page as
+> > huge in this particular VMA (due to size/alignment). If yes mm maps the
+> > page with PMD, if not fallback to PTE.
+> >
+> > I think it would be nice to do the same for DAX: filesystem provides core
+> > mm with largest page this part of file can be mapped with (base aligned
+> > address + lenght for DAX) and core mm sort out the rest.
+> 
+> For DAX we would need plumb pfn_t into the core mm so that we have the
+> PFN_DEV and PFN_MAP flags beyond the raw pfn.
 
-This series is associated with the "buffered write and indlen fixes"
-series recently posted to the XFS list. These patches move the original
-test to the XFS directory as it now depends on an XFS-specific
-mechanism, restore the effectiveness of the original test, and finally
-enhance the test to reproduce the newly identified problems fixed by the
-kernel patches. Thoughts, reviews, flames appreciated.
+So we can pass necessary information through struct vm_fault rather easily.
+However due to DAX locking we cannot really "return" pfn for generic code
+to install (we need to unlock radix tree locks after modifying page
+tables). So if we want generic code to handle PFNs what needs to be done is
+to teach finish_fault() to handle pfn_t which is passed to it and install
+it in page tables.
 
-Brian
+Long term we could transition all page fault handlers (at least the
+non-trivial ones) to using finish_fault() which would IMO make the code
+flow easier to follow and export less of MM internals into drivers. However
+there's so many fault handlers that I didn't have a good motivation to do
+that yet.
 
-Brian Foster (3):
-  xfstests: move generic indlen reservation test to xfs dir
-  tests/xfs: update indlen res. test to use fail writes mechanism
-  tests/xfs: update indlen res. test to include larger write pattern
-
- tests/generic/033     |  84 --------------------------------------
- tests/generic/033.out |   4 --
- tests/generic/group   |   1 -
- tests/xfs/289         | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/289.out     |   2 +
- tests/xfs/group       |   1 +
- 6 files changed, 112 insertions(+), 89 deletions(-)
- delete mode 100755 tests/generic/033
- delete mode 100644 tests/generic/033.out
- create mode 100755 tests/xfs/289
- create mode 100644 tests/xfs/289.out
-
+								Honza
 -- 
-2.7.4
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
