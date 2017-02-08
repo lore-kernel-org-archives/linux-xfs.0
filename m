@@ -1,51 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41288 "EHLO newverein.lst.de"
+Received: from sandeen.net ([63.231.237.45]:45692 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754697AbdBGPpi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Feb 2017 10:45:38 -0500
-Date: Tue, 7 Feb 2017 16:45:32 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/4] xfs: improve handling of busy extents in the
-        low-level allocator
-Message-ID: <20170207154532.GA22426@lst.de>
-References: <1485715421-17182-1-git-send-email-hch@lst.de> <1485715421-17182-3-git-send-email-hch@lst.de> <20170203162243.GF45388@bfoster.bfoster> <20170204095606.GC18472@lst.de> <20170206164750.GG57865@bfoster.bfoster> <20170207094332.GD15267@lst.de> <20170207131354.GA7512@bfoster.bfoster>
+        id S1750946AbdBHT6T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Feb 2017 14:58:19 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 8295D747820
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Feb 2017 13:47:53 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsdump: master updated to 25195eb
+Message-ID: <6013e914-5134-51b1-32c2-9ef793fa00de@sandeen.net>
+Date: Wed, 8 Feb 2017 13:47:45 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170207131354.GA7512@bfoster.bfoster>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="NjUDX6x21uAGqrx5S3lmaCd8INnIF1JhK"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Feb 07, 2017 at 08:13:54AM -0500, Brian Foster wrote:
-> If discard is not enabled, the behavior is straightforward in that a
-> busy_gen returned for a particular extent is triggered when that extent
-> is made unbusy. A retry call to xfs_extent_busy_[trim|flush]() is never
-> necessary. If discard is enabled, the pagb_gen returned for a particular
-> extent is triggered when one of the busy extents in the list is made
-> unbusy. It might be the extent I passed to xfs_extent_busy_trim(), it
-> might not. I have to retry the call to know for sure.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--NjUDX6x21uAGqrx5S3lmaCd8INnIF1JhK
+Content-Type: multipart/mixed; boundary="8N4vQ3Ahqiogpt8ipt37QUbMFFEDpGgqt";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <6013e914-5134-51b1-32c2-9ef793fa00de@sandeen.net>
+Subject: [ANNOUNCE] xfsdump: master updated to 25195eb
 
-pagb_gen is always incremented when _a_ busy extent is freed.
-Without online discard this does indeed only happen once per
-log commit / AG.  With discards it could happen twice, but this
-difference in semantics shouldn't really matter.
+--8N4vQ3Ahqiogpt8ipt37QUbMFFEDpGgqt
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-> I think it's pretty straightforward how easy that may be to misuse in
-> the future. My concern is that somebody down the road adds code to trim
-> a particular extent, waits on the pagb_gen, doesn't retry and thus
-> introduces a very subtle bug into the code.
-> 
-> I can pretty much guarantee after a month or so I'm going to forget all
-> about this constraint, never mind longer than that. Hence, I'm asking
-> for a brief comment to clarify how pagb_gen actually works. The more I
-> think about it, I think above xfs_busy_extent_trim() is the right place
+Hi folks,
 
->
-> since that is where we introduce/return the gen, we have a comment
-> update there already, and it apparently already mistakenly refers to
-> online discard. How about we update it to something like the following?
+The xfsdump repository at:
 
-Sure, I'll add it.
+	git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+25195eb xfsdump: handle bind mount targets
+
+New Commits:
+
+Eric Sandeen (1):
+      [25195eb] xfsdump: handle bind mount targets
+
+
+Code Diffstat:
+
+ dump/content.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+
+--8N4vQ3Ahqiogpt8ipt37QUbMFFEDpGgqt--
+
+--NjUDX6x21uAGqrx5S3lmaCd8INnIF1JhK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJYm3XpAAoJECCuFpLhPd7g+PcP/1KFtG8lHsPG1SrGvY21t9Ql
+R0F4oUWMVXxJ/FsBAicKiLOwVEi1GuKZH+b6ktndhqTqkN2xTrqA80Ld6x6cum3N
+d9Pt1xKybcyVPgYmJqqOMnwEta8JRXFd978M5+dimnD16BwkSNTuVjcNJy3rHg+p
+Po7i7UNfrN4MbcJL70LlZPSaf3Jb7cKG0r+eMdkTXRHzb6Pgy/W/h73pWtjaIFfr
+FPAa9jl863+fqk/uZNB26vLAGESmDUyNyDh1pIDIOsETYCgXg7szBKx/hQP31Eix
+XxZTtAey4ceCZAcWmNtbx+c/HTxllIxPFPxRrGErEGjwqVaurXogw/NdDB5n5qbt
+SLQ+kjps8r1THuSTYGa9BGcOd/qNcpUeKohJ7S38f8BqR19GIMpj+ovZNSvP41yH
+4yMpi5BNzzywaTYAAYSjLChohDIGggNkTxygy120YWzCJ+8X1I0TcIJSpXKI/pDh
+TlPe1eaFLBoAZ/AbQjPtp/UqVEucR8/9eFBkuJHrkgDLyQ1zSJnt+KbHhj51PaS3
+8m2qiSIVeDoNV1eWrPFh7x9Es3s+hAsb4Rbxxs+zwyIn5IlY7tnyQsX510vt8H5D
++sNi57Yve38b3sBTfUWgUlQc/mYFLtrgre6WI9LNwf1HAaxhSIPTpZ1wX59rVQ5d
+dDeEJtTNtuFmzRw4VIqI
+=PZ6S
+-----END PGP SIGNATURE-----
+
+--NjUDX6x21uAGqrx5S3lmaCd8INnIF1JhK--
