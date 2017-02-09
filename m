@@ -1,92 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45692 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750946AbdBHT6T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Feb 2017 14:58:19 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 8295D747820
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Feb 2017 13:47:53 -0600 (CST)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsdump: master updated to 25195eb
-Message-ID: <6013e914-5134-51b1-32c2-9ef793fa00de@sandeen.net>
-Date: Wed, 8 Feb 2017 13:47:45 -0600
+Received: from aserp1050.oracle.com ([141.146.126.70]:45845 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751777AbdBIJ5P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Feb 2017 04:57:15 -0500
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v197sWiX011619
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 9 Feb 2017 07:54:32 GMT
+Date: Wed, 8 Feb 2017 23:53:22 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/4] xfs: allocate direct I/O COW blocks in iomap_begin
+Message-ID: <20170209075322.GA6824@birch.djwong.org>
+References: <20170206074738.13978-1-hch@lst.de>
+ <20170206074738.13978-5-hch@lst.de>
+ <20170207014149.GE12378@birch.djwong.org>
+ <20170209072107.GA6134@lst.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="NjUDX6x21uAGqrx5S3lmaCd8INnIF1JhK"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170209072107.GA6134@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---NjUDX6x21uAGqrx5S3lmaCd8INnIF1JhK
-Content-Type: multipart/mixed; boundary="8N4vQ3Ahqiogpt8ipt37QUbMFFEDpGgqt";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <6013e914-5134-51b1-32c2-9ef793fa00de@sandeen.net>
-Subject: [ANNOUNCE] xfsdump: master updated to 25195eb
+On Thu, Feb 09, 2017 at 08:21:07AM +0100, Christoph Hellwig wrote:
+> On Mon, Feb 06, 2017 at 05:41:49PM -0800, Darrick J. Wong wrote:
+> > I'm going to run this series (and all the other stuff I've collected for
+> > 4.11) overnight and if nothing screams then you can consider this series:
+> 
+> Can you push your tree out?  I'd like to verify what made it before
+> heading off for a long weekend tonight. I'm especially curious if
+> the discard work made it.
 
---8N4vQ3Ahqiogpt8ipt37QUbMFFEDpGgqt
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+It's very late tonight, so all the shiny polish is missing, but here's
+what's in my tree for 4.11 right now:
+https://git.kernel.org/cgit/fs/xfs/xfs-linux.git/log/?h=xfs-4.11-merge-20170208
 
-Hi folks,
+Testing isn't done yet, but xfs/222 seems to be blowing up at
+ASSERT(!rwsem_is_locked(&inode->i_rwsem)) in xfs_super.c fairly
+consistently with blocksize=1k.  I haven't been able to reproduce it
+quickly (i.e. without running the whole test suite) so I can't tell if
+that's a side effect of something else blowing up or what.  generic/300
+seems to blow up periodically and then blows the same assert on umount,
+also in the 1k case.  xfs/348 fuzzes the fs, causes "kernel memory
+exposure!" BUGs and then asserts with the same i_rwsem thing.
+ 
+The all-defaults 4k blocksize test runs w/ regular disk and pmem all
+finished without any new fireworks, though.
 
-The xfsdump repository at:
+(You'll note I didn't merge the duplicate "xfs: improve handling of busy
+extents in the low-level allocator"; if you want that done, please let me
+know.)
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the master branch is commit:
-
-25195eb xfsdump: handle bind mount targets
-
-New Commits:
-
-Eric Sandeen (1):
-      [25195eb] xfsdump: handle bind mount targets
-
-
-Code Diffstat:
-
- dump/content.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
-
-
---8N4vQ3Ahqiogpt8ipt37QUbMFFEDpGgqt--
-
---NjUDX6x21uAGqrx5S3lmaCd8INnIF1JhK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJYm3XpAAoJECCuFpLhPd7g+PcP/1KFtG8lHsPG1SrGvY21t9Ql
-R0F4oUWMVXxJ/FsBAicKiLOwVEi1GuKZH+b6ktndhqTqkN2xTrqA80Ld6x6cum3N
-d9Pt1xKybcyVPgYmJqqOMnwEta8JRXFd978M5+dimnD16BwkSNTuVjcNJy3rHg+p
-Po7i7UNfrN4MbcJL70LlZPSaf3Jb7cKG0r+eMdkTXRHzb6Pgy/W/h73pWtjaIFfr
-FPAa9jl863+fqk/uZNB26vLAGESmDUyNyDh1pIDIOsETYCgXg7szBKx/hQP31Eix
-XxZTtAey4ceCZAcWmNtbx+c/HTxllIxPFPxRrGErEGjwqVaurXogw/NdDB5n5qbt
-SLQ+kjps8r1THuSTYGa9BGcOd/qNcpUeKohJ7S38f8BqR19GIMpj+ovZNSvP41yH
-4yMpi5BNzzywaTYAAYSjLChohDIGggNkTxygy120YWzCJ+8X1I0TcIJSpXKI/pDh
-TlPe1eaFLBoAZ/AbQjPtp/UqVEucR8/9eFBkuJHrkgDLyQ1zSJnt+KbHhj51PaS3
-8m2qiSIVeDoNV1eWrPFh7x9Es3s+hAsb4Rbxxs+zwyIn5IlY7tnyQsX510vt8H5D
-+sNi57Yve38b3sBTfUWgUlQc/mYFLtrgre6WI9LNwf1HAaxhSIPTpZ1wX59rVQ5d
-dDeEJtTNtuFmzRw4VIqI
-=PZ6S
------END PGP SIGNATURE-----
-
---NjUDX6x21uAGqrx5S3lmaCd8INnIF1JhK--
+--D
