@@ -1,118 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49488 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751789AbdBBSkV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2017 13:40:21 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 51/51] xfs: fix bmv_count confusion w/ shared extents
-Date: Thu,  2 Feb 2017 19:38:10 +0100
-Message-Id: <20170202183347.839401883@linuxfoundation.org>
-In-Reply-To: <20170202183345.067336143@linuxfoundation.org>
-References: <20170202183345.067336143@linuxfoundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:48310 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752942AbdBITgm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Feb 2017 14:36:42 -0500
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8D5967F771
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2017 19:34:55 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v19JYt1C027236
+        for <linux-xfs@vger.kernel.org>; Thu, 9 Feb 2017 14:34:55 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 0/4] buffered write and indlen fixes
+Date: Thu,  9 Feb 2017 14:34:49 -0500
+Message-Id: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+Hi all,
 
-------------------
+This is v2 of the indlen split fixup series. The indlen patches are
+mostly the same except for changes to use do_div() rather than built-in
+division, which causes problems on 32-bit arches.
 
+Patches 1-2 are new and facilitate testing. Patch 1 fixes a couple
+issues in buffered write failure handling that I ran into. Patch 2
+reintroduces the "fail writes" mechanism as a "drop writes" mechanism to
+re-enable the ability to test the indlen code from userspace. I will
+follow up with xfstests patches shortly that use this mechanism to
+reproduce both issues fixed by patches 3 and 4. Thoughts, reviews,
+flames appreciated.
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Brian
 
-commit c364b6d0b6cda1cd5d9ab689489adda3e82529aa upstream.
+v2:
+- Use do_div() to fix 32-bit builds.
+- Prepend patches 1-2 to re-enable indlen testing from xfstests.
+v1: http://www.spinics.net/lists/linux-xfs/msg04083.html
 
-In a bmapx call, bmv_count is the total size of the array, including the
-zeroth element that userspace uses to supply the search key.  The output
-array starts at offset 1 so that we can set up the user for the next
-invocation.  Since we now can split an extent into multiple bmap records
-due to shared/unshared status, we have to be careful that we don't
-overflow the output array.
+Brian Foster (4):
+  xfs: clear delalloc and cache on buffered write failure
+  xfs: resurrect debug mode drop buffered writes mechanism
+  xfs: handle indlen shortage on delalloc extent merge
+  xfs: split indlen reservations fairly when under reserved
 
-In the original patch f86f403794b ("xfs: teach get_bmapx about shared
-extents and the CoW fork") I used cur_ext (the output index) to check
-for overflows, albeit with an off-by-one error.  Since nexleft no longer
-describes the number of unfilled slots in the output, we can rip all
-that out and use cur_ext for the overflow check directly.
+ fs/xfs/libxfs/xfs_bmap.c | 70 +++++++++++++++++++++++++++++++++---------------
+ fs/xfs/xfs_iomap.c       |  9 +++++++
+ fs/xfs/xfs_mount.h       | 15 ++++++-----
+ fs/xfs/xfs_sysfs.c       | 14 +++++-----
+ 4 files changed, 73 insertions(+), 35 deletions(-)
 
-Failure to do this causes heap corruption in bmapx callers such as
-xfs_io and xfs_scrub.  xfs/328 can reproduce this problem.
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- fs/xfs/xfs_bmap_util.c |   28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
-
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -528,7 +528,6 @@ xfs_getbmap(
- 	xfs_bmbt_irec_t		*map;		/* buffer for user's data */
- 	xfs_mount_t		*mp;		/* file system mount point */
- 	int			nex;		/* # of user extents can do */
--	int			nexleft;	/* # of user extents left */
- 	int			subnex;		/* # of bmapi's can do */
- 	int			nmap;		/* number of map entries */
- 	struct getbmapx		*out;		/* output structure */
-@@ -686,10 +685,8 @@ xfs_getbmap(
- 		goto out_free_map;
- 	}
- 
--	nexleft = nex;
--
- 	do {
--		nmap = (nexleft > subnex) ? subnex : nexleft;
-+		nmap = (nex> subnex) ? subnex : nex;
- 		error = xfs_bmapi_read(ip, XFS_BB_TO_FSBT(mp, bmv->bmv_offset),
- 				       XFS_BB_TO_FSB(mp, bmv->bmv_length),
- 				       map, &nmap, bmapi_flags);
-@@ -697,8 +694,8 @@ xfs_getbmap(
- 			goto out_free_map;
- 		ASSERT(nmap <= subnex);
- 
--		for (i = 0; i < nmap && nexleft && bmv->bmv_length &&
--				cur_ext < bmv->bmv_count; i++) {
-+		for (i = 0; i < nmap && bmv->bmv_length &&
-+				cur_ext < bmv->bmv_count - 1; i++) {
- 			out[cur_ext].bmv_oflags = 0;
- 			if (map[i].br_state == XFS_EXT_UNWRITTEN)
- 				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
-@@ -760,16 +757,27 @@ xfs_getbmap(
- 				continue;
- 			}
- 
-+			/*
-+			 * In order to report shared extents accurately,
-+			 * we report each distinct shared/unshared part
-+			 * of a single bmbt record using multiple bmap
-+			 * extents.  To make that happen, we iterate the
-+			 * same map array item multiple times, each
-+			 * time trimming out the subextent that we just
-+			 * reported.
-+			 *
-+			 * Because of this, we must check the out array
-+			 * index (cur_ext) directly against bmv_count-1
-+			 * to avoid overflows.
-+			 */
- 			if (inject_map.br_startblock != NULLFSBLOCK) {
- 				map[i] = inject_map;
- 				i--;
--			} else
--				nexleft--;
-+			}
- 			bmv->bmv_entries++;
- 			cur_ext++;
- 		}
--	} while (nmap && nexleft && bmv->bmv_length &&
--		 cur_ext < bmv->bmv_count);
-+	} while (nmap && bmv->bmv_length && cur_ext < bmv->bmv_count - 1);
- 
-  out_free_map:
- 	kmem_free(map);
-
+-- 
+2.7.4
 
