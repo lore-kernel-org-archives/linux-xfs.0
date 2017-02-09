@@ -1,206 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48350 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52616 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753047AbdBMPdn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Feb 2017 10:33:43 -0500
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v28 14/21] richacl: Create-time inheritance
-Date: Mon, 13 Feb 2017 16:32:30 +0100
-Message-Id: <1486999957-2381-15-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
-References: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
+        id S1752921AbdBIUiA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Feb 2017 15:38:00 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 2/3] tests/xfs: update indlen res. test to use fail writes mechanism
+Date: Thu,  9 Feb 2017 14:43:43 -0500
+Message-Id: <1486669424-45274-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1486669424-45274-1-git-send-email-bfoster@redhat.com>
+References: <1486669424-45274-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-When a new file is created, it can inherit an acl from its parent
-directory; this is similar to how default acls work in POSIX ACLs.
+This test originally used zero range operations to reproduce problematic
+indirect delalloc reservations on XFS. Zero range has since been updated
+to include a pagecache flush before it updates extents, which means
+delalloc extents are converted to real extents and indlen reservations
+are drained before extents are modified. As a result, zero range is no
+longer an effective tool to reproduce the original problem.
 
-As with POSIX ACLs, if a file inherits an acl from its parent directory,
-the intersection between the create mode and the permissions granted by
-the inherited acl determines the file masks and file permission bits,
-and the umask is ignored.
+Instead, a debug mode failure injection mechanism has been added to XFS
+to cause dropped writes and trigger the delalloc extent hole punch
+behavior required to reproduce this problem. Update the test to use this
+new mechanism.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Jeff Layton <jlayton@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/richacl.c            | 151 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/richacl.h |   2 +
- 2 files changed, 153 insertions(+)
+ tests/xfs/289     | 28 +++++++++++++++++++---------
+ tests/xfs/289.out |  4 +---
+ tests/xfs/group   |  2 +-
+ 3 files changed, 21 insertions(+), 13 deletions(-)
 
-diff --git a/fs/richacl.c b/fs/richacl.c
-index 1022983..8051181 100644
---- a/fs/richacl.c
-+++ b/fs/richacl.c
-@@ -716,3 +716,154 @@ richacl_equiv_mode(const struct richacl *acl, umode_t *mode_p)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(richacl_equiv_mode);
-+
-+static inline bool
-+ace_inherits_to_directory(const struct richace *ace)
-+{
-+	if (ace->e_flags & RICHACE_DIRECTORY_INHERIT_ACE)
-+		return true;
-+	if ((ace->e_flags & RICHACE_FILE_INHERIT_ACE) &&
-+	    !(ace->e_flags & RICHACE_NO_PROPAGATE_INHERIT_ACE))
-+		return true;
-+	return false;
-+}
-+
-+/**
-+ * richacl_inherit  -  compute the inherited acl of a new file
-+ * @dir_acl:	acl of the containing directory
-+ * @isdir:	inherit by a directory or non-directory?
-+ *
-+ * A directory can have acl entries which files and/or directories created
-+ * inside the directory will inherit.  This function computes the acl for such
-+ * a new file.  If there is no inheritable acl, it will return %NULL.
-+ */
-+struct richacl *
-+richacl_inherit(const struct richacl *dir_acl, int isdir)
-+{
-+	const struct richace *dir_ace;
-+	struct richacl *acl = NULL;
-+	struct richace *ace;
-+	int count = 0;
-+
-+	if (isdir) {
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!ace_inherits_to_directory(dir_ace))
-+				continue;
-+			count++;
-+		}
-+		if (!count)
-+			return NULL;
-+		acl = richacl_alloc(count, GFP_KERNEL);
-+		if (!acl)
-+			return ERR_PTR(-ENOMEM);
-+		ace = acl->a_entries;
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!ace_inherits_to_directory(dir_ace))
-+				continue;
-+			richace_copy(ace, dir_ace);
-+			if (dir_ace->e_flags & RICHACE_NO_PROPAGATE_INHERIT_ACE)
-+				ace->e_flags &= ~RICHACE_INHERITANCE_FLAGS;
-+			else if (dir_ace->e_flags & RICHACE_DIRECTORY_INHERIT_ACE)
-+				ace->e_flags &= ~RICHACE_INHERIT_ONLY_ACE;
-+			else
-+				ace->e_flags |= RICHACE_INHERIT_ONLY_ACE;
-+			ace++;
-+		}
-+	} else {
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!(dir_ace->e_flags & RICHACE_FILE_INHERIT_ACE))
-+				continue;
-+			count++;
-+		}
-+		if (!count)
-+			return NULL;
-+		acl = richacl_alloc(count, GFP_KERNEL);
-+		if (!acl)
-+			return ERR_PTR(-ENOMEM);
-+		ace = acl->a_entries;
-+		richacl_for_each_entry(dir_ace, dir_acl) {
-+			if (!(dir_ace->e_flags & RICHACE_FILE_INHERIT_ACE))
-+				continue;
-+			richace_copy(ace, dir_ace);
-+			ace->e_flags &= ~RICHACE_INHERITANCE_FLAGS;
-+			/*
-+			 * RICHACE_DELETE_CHILD is meaningless for
-+			 * non-directories, so clear it.
-+			 */
-+			ace->e_mask &= ~RICHACE_DELETE_CHILD;
-+			ace++;
-+		}
-+	}
-+
-+	return acl;
-+}
-+
-+/*
-+ * richacl_inherit_inode  -  compute inherited acl and file mode
-+ * @dir_acl:	acl of the containing directory
-+ * @mode_p:	mode of the new inode
-+ *
-+ * The file permission bits in @mode_p must be set to the create mode by the
-+ * caller.
-+ *
-+ * If there is an inheritable acl, the maximum permissions that the acl grants
-+ * are computed and the file masks of the new acl are set accordingly.
-+ */
-+static struct richacl *
-+richacl_inherit_inode(const struct richacl *dir_acl, umode_t *mode_p)
-+{
-+	struct richacl *acl;
-+	umode_t mode = *mode_p;
-+
-+	acl = richacl_inherit(dir_acl, S_ISDIR(mode));
-+	if (acl) {
-+		if (richacl_equiv_mode(acl, &mode) == 0) {
-+			*mode_p &= mode;
-+			richacl_put(acl);
-+			acl = NULL;
-+		} else {
-+			richacl_compute_max_masks(acl);
-+			/*
-+			 * Ensure that the acl will not grant any permissions
-+			 * beyond the create mode.
-+			 */
-+			acl->a_flags |= RICHACL_MASKED;
-+			acl->a_owner_mask &=
-+				richacl_mode_to_mask(mode >> 6);
-+			acl->a_group_mask &=
-+				richacl_mode_to_mask(mode >> 3);
-+			acl->a_other_mask &=
-+				richacl_mode_to_mask(mode);
-+		}
-+	} else
-+		*mode_p &= ~current_umask();
-+
-+	return acl;
-+}
-+
-+/**
-+ * richacl_create  -  filesystem create helper
-+ * @mode_p:	mode of the new inode
-+ * @dir:	containing directory
-+ *
-+ * Compute the inherited acl for a new inode.  If there is no acl to inherit,
-+ * apply the umask.  Use when creating a new inode on a richacl enabled file
-+ * system.
-+ */
-+struct richacl *richacl_create(umode_t *mode_p, struct inode *dir)
-+{
-+	struct richacl *dir_acl, *acl = NULL;
-+
-+	if (S_ISLNK(*mode_p))
-+		return NULL;
-+	dir_acl = get_richacl(dir);
-+	if (dir_acl) {
-+		if (IS_ERR(dir_acl))
-+			return dir_acl;
-+		acl = richacl_inherit_inode(dir_acl, mode_p);
-+		richacl_put(dir_acl);
-+	} else
-+		*mode_p &= ~current_umask();
-+	return acl;
-+}
-+EXPORT_SYMBOL_GPL(richacl_create);
-diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index a865f37..6354ef0 100644
---- a/include/linux/richacl.h
-+++ b/include/linux/richacl.h
-@@ -191,5 +191,7 @@ extern int richacl_permission(struct inode *, const struct richacl *, int);
- extern void richacl_compute_max_masks(struct richacl *);
- extern int richacl_chmod(struct inode *, umode_t);
- extern int richacl_equiv_mode(const struct richacl *, umode_t *);
-+extern struct richacl *richacl_inherit(const struct richacl *, int);
-+extern struct richacl *richacl_create(umode_t *, struct inode *);
+diff --git a/tests/xfs/289 b/tests/xfs/289
+index 33cf060..3aa53b9 100755
+--- a/tests/xfs/289
++++ b/tests/xfs/289
+@@ -44,6 +44,7 @@ _cleanup()
  
- #endif /* __RICHACL_H */
+ # get standard environment, filters and checks
+ . ./common/rc
++. ./common/punch
+ 
+ # real QA test starts here
+ rm -f $seqres.full
+@@ -52,33 +53,42 @@ rm -f $seqres.full
+ _supported_fs generic
+ _supported_os Linux
+ _require_scratch
+-_require_xfs_io_command "fzero"
++_require_xfs_sysfs $(_short_dev $TEST_DEV)/drop_writes
+ 
+ _scratch_mkfs >/dev/null 2>&1
+ _scratch_mount
+ 
++sdev=$(_short_dev $SCRATCH_DEV)
+ file=$SCRATCH_MNT/file.$seq
+ bytes=$((64 * 1024))
+ 
+ # create sequential delayed allocation
+ $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
+ 
+-# Zero every other 4k range to split the larger delalloc extent into many more
+-# smaller extents. Use zero instead of hole punch because the former does not
+-# force writeback (and hence delalloc conversion). It can simply discard
+-# delalloc blocks and convert the ranges to unwritten.
++# Enable write drops. All buffered writes are dropped from this point on.
++echo 1 > /sys/fs/xfs/$sdev/drop_writes
++
++# Write every other 4k range to split the larger delalloc extent into many more
++# smaller extents. Use pwrite because with write failures enabled, all
++# preexisting delalloc blocks in the range of the I/O are tossed without
++# discretion. This allows manipulation of the delalloc extent without conversion
++# to real blocks (and thus releasing the indirect reservation).
+ endoff=$((bytes - 4096))
+ for i in $(seq 0 8192 $endoff); do
+-	$XFS_IO_PROG -c "fzero -k $i 4k" $file >> $seqres.full 2>&1
++	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
+ done
+ 
+-# now zero the opposite set to remove remaining delalloc extents
++# now pwrite the opposite set to remove remaining delalloc extents
+ for i in $(seq 4096 8192 $endoff); do
+-	$XFS_IO_PROG -c "fzero -k $i 4k" $file >> $seqres.full 2>&1
++	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
+ done
+ 
++echo 0 > /sys/fs/xfs/$sdev/drop_writes
++
++echo "Silence is golden."
++
+ _scratch_cycle_mount
+-hexdump $file
++$XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
+ 
+ status=0
+ exit
+diff --git a/tests/xfs/289.out b/tests/xfs/289.out
+index bdcf195..72e60f9 100644
+--- a/tests/xfs/289.out
++++ b/tests/xfs/289.out
+@@ -1,4 +1,2 @@
+ QA output created by 289
+-0000000 0000 0000 0000 0000 0000 0000 0000 0000
+-*
+-0010000
++Silence is golden.
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 5c1ba16..7c188fe 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -280,7 +280,7 @@
+ 283 dump ioctl auto quick
+ 284 auto quick dump copy db mkfs repair
+ 287 auto dump quota quick
+-289 auto quick rw zero
++289 auto quick rw
+ 290 auto rw prealloc quick ioctl zero
+ 291 auto repair
+ 292 auto mkfs quick
 -- 
 2.7.4
 
