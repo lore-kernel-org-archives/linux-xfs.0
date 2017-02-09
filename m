@@ -1,57 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39664 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:42664 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750950AbdBFNOg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Feb 2017 08:14:36 -0500
-Date: Mon, 6 Feb 2017 08:14:35 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs wrongly report ENOSPACE
-Message-ID: <20170206131435.GA57865@bfoster.bfoster>
-References: <58986E06.5050500@xtaotech.com>
+        id S1750994AbdBIEgU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Feb 2017 23:36:20 -0500
+Date: Thu, 9 Feb 2017 12:34:43 +0800
+From: Ye Xiaolong <xiaolong.ye@intel.com>
+Subject: Re: [kbuild-all] [PATCH] mm: replace FAULT_FLAG_SIZE with parameter
+ to huge_fault
+Message-ID: <20170209043443.GB13723@yexl-desktop>
+References: <201702040648.oOjnlEcm%fengguang.wu@intel.com>
+ <2020f442-8e77-cf14-a6b1-b4b00d0da80b@intel.com>
+ <CAPcyv4hmswhXsnS9q1Ut76f3-a2h5Hx7XYkS1iNyak8wG9VuEw@mail.gmail.com>
+ <CAPcyv4hVqxedr9sEigw0Xsr_SoMAnvPrmPNOrX7QYNuCz=DRQA@mail.gmail.com>
+ <86962573-01b7-4ce7-182e-7a77f183cf0e@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <58986E06.5050500@xtaotech.com>
+In-Reply-To: <86962573-01b7-4ce7-182e-7a77f183cf0e@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "peng.hse" <peng.hse@xtaotech.com>
-Cc: djwong@kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Dave Jiang <dave.jiang@intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, kbuild test robot <lkp@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Vlastimil Babka <vbabka@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-xfs@vger.kernel.org, Linux MM <linux-mm@kvack.org>, kbuild-all@01.org, Jan Kara <jack@suse.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-Please use the XFS list, updated cc.
+On 02/03, Dave Jiang wrote:
+>On 02/03/2017 05:00 PM, Dan Williams wrote:
+>> On Fri, Feb 3, 2017 at 3:26 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+>>> On Fri, Feb 3, 2017 at 3:25 PM, Dave Jiang <dave.jiang@intel.com> wrote:
+>>>> On 02/03/2017 03:56 PM, kbuild test robot wrote:
+>>>>> Hi Dave,
+>>>>>
+>>>>> [auto build test ERROR on mmotm/master]
+>>>>> [cannot apply to linus/master linux/master v4.10-rc6 next-20170203]
+>>>>> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+>>>>
+>>>> This one is a bit odd. I just pulled mmotm tree master branch and built
+>>>> with the attached .config and it passed for me (and I don't see this
+>>>> commit in the master branch). I also built linux-next with this patch on
+>>>> top and it also passes with attached .config. Looking at the err log
+>>>> below it seems the code has a mix of partial from before and after the
+>>>> patch. I'm rather confused about it....
+>>>
+>>> This is a false positive. It tried to build it against latest mainline
+>>> instead of linux-next.
+>> 
+>> On second look it seems I ended up with a duplicate
+>> ext4_huge_dax_fault after "git am" when I apply this on top of
+>> next-20170202.  The following fixes it up for me and tests fine:
+>
+>I think it's missing this patch from Ross
+>http://marc.info/?l=linux-mm&m=148581319303697&w=2
 
-On Mon, Feb 06, 2017 at 08:37:26PM +0800, peng.hse wrote:
-> Hi DJ and xfs developers,
-> 
-> i am ceph developer, build the OSD on top of the xfs mount point. the kernel
-> xfs module i used was build from the 4.9.8 kernel release from
-> kernel.org, that includes your recent changes in Dec, 2016.
-> 
-> recently, i found our cluster will get faulted due to the xfs mount wrongly
-> report there is no space to create the new file as
->  " No space left on device ", but apparently the xfs mount point only be
-> around 50% full.
-> 
-> i used the systemtap to narrow it down the the function xfs_ialloc_ag_select
-> which reports no free ag selected, the problem seems
-> still exist, not sure your recent patches will fix it or not.
-> 
-> i am very glad to provide more info if your like to assist you to identify
-> the problem.
+Yes, 0day applied the patch on top of mmotm/master when this fix commit 0c4044b3f
+("ext4: Remove unused function ext4_dax_huge_fault()") hasn't been merged.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-In this case, please at least provide the output from 'df -i <mnt>,'
-'xfs_info <mnt>' and 'xfs_db -c "freesp -s" <dev>.'
-
-Chances are that this is caused by free space fragmentation. This means
-that while there might be plenty of free space, there isn't a contiguous
-free extent large enough to allocate an inode chunk. We've seen this
-kind of thing before with Ceph and it can be exacerbated by the use of
-large inodes. Potential workarounds may be to use the default inode size
-and/or enable the use of sparse inodes ('mkfs.xfs -i sparse <dev>').
-
-Another possible cause is that you've simply hit the maximum inode
-allocation limit (see the xfs_growfs manpage and the '-m' option)...
-
-Brian
+Thanks,
+Xiaolong
+>
+>> 
+>> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+>> index f8f4f6d068e5..e8ab46efc4f9 100644
+>> --- a/fs/ext4/file.c
+>> +++ b/fs/ext4/file.c
+>> @@ -276,27 +276,6 @@ static int ext4_dax_huge_fault(struct vm_fault *vmf,
+>>         return result;
+>>  }
+>> 
+>> -static int
+>> -ext4_dax_huge_fault(struct vm_fault *vmf)
+>> -{
+>> -       int result;
+>> -       struct inode *inode = file_inode(vmf->vma->vm_file);
+>> -       struct super_block *sb = inode->i_sb;
+>> -       bool write = vmf->flags & FAULT_FLAG_WRITE;
+>> -
+>> -       if (write) {
+>> -               sb_start_pagefault(sb);
+>> -               file_update_time(vmf->vma->vm_file);
+>> -       }
+>> -       down_read(&EXT4_I(inode)->i_mmap_sem);
+>> -       result = dax_iomap_fault(vmf, &ext4_iomap_ops);
+>> -       up_read(&EXT4_I(inode)->i_mmap_sem);
+>> -       if (write)
+>> -               sb_end_pagefault(sb);
+>> -
+>> -       return result;
+>> -}
+>> -
+>>  static int ext4_dax_fault(struct vm_fault *vmf)
+>>  {
+>>         return ext4_dax_huge_fault(vmf, PE_SIZE_PTE);
+>> 
+>_______________________________________________
+>kbuild-all mailing list
+>kbuild-all@lists.01.org
+>https://lists.01.org/mailman/listinfo/kbuild-all
