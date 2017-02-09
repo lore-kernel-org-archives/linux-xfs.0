@@ -1,59 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32838 "EHLO mx2.suse.de"
+Received: from verein.lst.de ([213.95.11.211]:50950 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750994AbdBJHOr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 Feb 2017 02:14:47 -0500
-Date: Fri, 10 Feb 2017 08:14:18 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [BUG 4.10-rc7] sb_fdblocks inconsistency in xfs/297 test
-Message-ID: <20170210071418.GC9346@dhcp22.suse.cz>
-References: <20170210035348.GA7075@eguan.usersys.redhat.com>
+        id S1751604AbdBIIXf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Feb 2017 03:23:35 -0500
+Date: Thu, 9 Feb 2017 09:00:11 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 4/4] xfs: allocate direct I/O COW blocks in iomap_begin
+Message-ID: <20170209080011.GA6628@lst.de>
+References: <20170206074738.13978-1-hch@lst.de> <20170206074738.13978-5-hch@lst.de> <20170207014149.GE12378@birch.djwong.org> <20170209072107.GA6134@lst.de> <20170209075322.GA6824@birch.djwong.org> <20170209075841.GA6578@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170210035348.GA7075@eguan.usersys.redhat.com>
+In-Reply-To: <20170209075841.GA6578@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Fri 10-02-17 11:53:48, Eryu Guan wrote:
-> Hi,
+On Thu, Feb 09, 2017 at 08:58:41AM +0100, Christoph Hellwig wrote:
+> I'll take a look at the umount assert while you're asleep.  348 is
+> a pretty new test, so I doubt it's a regrewssion.
 > 
-> I was testing 4.10-rc7 kernel and noticed that xfs_repair reported XFS
-> corruption after fstests xfs/297 test. This didn't happen with 4.10-rc6
-> kernel, and git bisect pointed the first bad commit to
+> > (You'll note I didn't merge the duplicate "xfs: improve handling of busy
+> > extents in the low-level allocator"; if you want that done, please let me
+> > know.)
 > 
-> commit d1908f52557b3230fbd63c0429f3b4b748bf2b6d
-> Author: Michal Hocko <mhocko@suse.com>
-> Date:   Fri Feb 3 13:13:26 2017 -0800
-> 
->     fs: break out of iomap_file_buffered_write on fatal signals
-> 
->     Tetsuo has noticed that an OOM stress test which performs large write
->     requests can cause the full memory reserves depletion.  He has tracked
->     this down to the following path
-> ....
-> 
-> It's the sb_fdblocks field reports inconsistency:
-> ...
-> Phase 2 - using internal log   
->         - zero log...
->         - scan filesystem freespace and inode maps...
-> sb_fdblocks 3367765, counted 3367863
->         - 11:37:41: scanning filesystem freespace - 16 of 16 allocation groups done
->         - found root inode chunk
-> ...
-> 
-> And it can be reproduced almost 100% with all XFS test configurations
-> (e.g. xfs_4k xfs_2k_reflink), on all test hosts I tried (so I didn't
-> bother pasting my detailed test and host configs, if more info is needed
-> please let me know).
+> Yes, it should be folded into the first patch of that name and descriptions.
+> It contains the fixups that Brian requested.
 
-The patch can lead to short writes when the task is killed. Was there
-any OOM killer triggered during the test? If not who is killing the
-task? I will try to reproduce later today.
--- 
-Michal Hocko
-SUSE Labs
+Actually the tree seems to have both now that I'm actually reading
+through it.  But if you happen to rebase again please fold the second
+into the first.
