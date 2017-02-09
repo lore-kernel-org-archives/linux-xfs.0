@@ -1,325 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45162 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40594 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753524AbdBMPdq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Feb 2017 10:33:46 -0500
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v28 16/21] richacl: xattr mapping functions
-Date: Mon, 13 Feb 2017 16:32:32 +0100
-Message-Id: <1486999957-2381-17-git-send-email-agruenba@redhat.com>
-In-Reply-To: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
-References: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
+        id S1752979AbdBIURu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Feb 2017 15:17:50 -0500
+Received: from smtp.corp.redhat.com (int-mx16.intmail.prod.int.phx2.redhat.com [10.5.11.28])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8F4E33710D6
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2017 19:34:55 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6E37D9776F
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2017 19:34:55 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/4] xfs: clear delalloc and cache on buffered write failure
+Date: Thu,  9 Feb 2017 14:34:50 -0500
+Message-Id: <1486668893-44633-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
+References: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Map between "system.richacl" xattrs and the in-kernel representation.
+The buffered write failure handling code in
+xfs_file_iomap_end_delalloc() has a couple minor problems. First, if
+written == 0, start_fsb is not rounded down and it fails to kill off a
+delalloc block if the start offset is block unaligned. This results in a
+lingering delalloc block and broken delalloc block accounting detected
+at unmount time. Fix this by rounding down start_fsb in the unlikely
+event that written == 0.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Jeff Layton <jlayton@redhat.com>
+Second, it is possible for a failed overwrite of a delalloc extent to
+leave dirty pagecache around over a hole in the file. This is because is
+possible to hit ->iomap_end() on write failure before the iomap code has
+attempted to allocate pagecache, and thus has no need to clean it up. If
+the targeted delalloc extent was successfully written by a previous
+write, however, then it does still have dirty pages when ->iomap_end()
+punches out the underlying blocks. This ultimately results in writeback
+over a hole. To fix this problem, unconditionally punch out the
+pagecache from XFS before the associated delalloc range.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/Makefile                        |   2 +-
- fs/richacl_xattr.c                 | 161 +++++++++++++++++++++++++++++++++++++
- include/linux/richacl_xattr.h      |  29 +++++++
- include/uapi/linux/Kbuild          |   1 +
- include/uapi/linux/richacl_xattr.h |  44 ++++++++++
- include/uapi/linux/xattr.h         |   2 +
- 6 files changed, 238 insertions(+), 1 deletion(-)
- create mode 100644 fs/richacl_xattr.c
- create mode 100644 include/linux/richacl_xattr.h
- create mode 100644 include/uapi/linux/richacl_xattr.h
+ fs/xfs/xfs_iomap.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/fs/Makefile b/fs/Makefile
-index 262b09c..1e46418 100644
---- a/fs/Makefile
-+++ b/fs/Makefile
-@@ -50,7 +50,7 @@ obj-$(CONFIG_SYSCTL)		+= drop_caches.o
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 1aa3abd..faa13c8 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1103,6 +1103,8 @@ xfs_file_iomap_end_delalloc(
+ 	int			error = 0;
  
- obj-$(CONFIG_FHANDLE)		+= fhandle.o
- obj-$(CONFIG_FS_IOMAP)		+= iomap.o
--obj-$(CONFIG_FS_RICHACL)	+= richacl.o
-+obj-$(CONFIG_FS_RICHACL)	+= richacl.o richacl_xattr.o
+ 	start_fsb = XFS_B_TO_FSB(mp, offset + written);
++	if (unlikely(!written))
++		start_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
  
- obj-y				+= quota/
- 
-diff --git a/fs/richacl_xattr.c b/fs/richacl_xattr.c
-new file mode 100644
-index 0000000..dc1ad36
---- /dev/null
-+++ b/fs/richacl_xattr.c
-@@ -0,0 +1,161 @@
-+/*
-+ * Copyright (C) 2006, 2010  Novell, Inc.
-+ * Copyright (C) 2015  Red Hat, Inc.
-+ * Written by Andreas Gruenbacher <agruenba@redhat.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License as published by the
-+ * Free Software Foundation; either version 2, or (at your option) any
-+ * later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
+ 	/*
+@@ -1114,6 +1116,9 @@ xfs_file_iomap_end_delalloc(
+ 	 * blocks in the range, they are ours.
+ 	 */
+ 	if (start_fsb < end_fsb) {
++		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
++					 XFS_FSB_TO_B(mp, end_fsb) - 1);
 +
-+#include <linux/sched.h>
-+#include <linux/fs.h>
-+#include <linux/slab.h>
-+#include <linux/module.h>
-+#include <linux/richacl_xattr.h>
-+
-+/**
-+ * richacl_from_xattr  -  convert a richacl xattr into the in-memory representation
-+ */
-+struct richacl *
-+richacl_from_xattr(struct user_namespace *user_ns,
-+		   const void *value, size_t size, int invalid_error)
-+{
-+	const struct richacl_xattr *xattr_acl = value;
-+	const struct richace_xattr *xattr_ace = (void *)(xattr_acl + 1);
-+	struct richacl *acl;
-+	struct richace *ace;
-+	int count;
-+
-+	if (size < sizeof(*xattr_acl) ||
-+	    xattr_acl->a_version != RICHACL_XATTR_VERSION ||
-+	    (xattr_acl->a_flags & ~RICHACL_VALID_FLAGS))
-+		goto invalid;
-+	size -= sizeof(*xattr_acl);
-+	count = le16_to_cpu(xattr_acl->a_count);
-+	if (count > RICHACL_XATTR_MAX_COUNT)
-+		goto invalid;
-+	if (size != count * sizeof(*xattr_ace))
-+		goto invalid;
-+
-+	acl = richacl_alloc(count, GFP_NOFS);
-+	if (!acl)
-+		return ERR_PTR(-ENOMEM);
-+
-+	acl->a_flags = xattr_acl->a_flags;
-+	acl->a_owner_mask = le32_to_cpu(xattr_acl->a_owner_mask);
-+	if (acl->a_owner_mask & ~RICHACE_VALID_MASK)
-+		goto put_invalid;
-+	acl->a_group_mask = le32_to_cpu(xattr_acl->a_group_mask);
-+	if (acl->a_group_mask & ~RICHACE_VALID_MASK)
-+		goto put_invalid;
-+	acl->a_other_mask = le32_to_cpu(xattr_acl->a_other_mask);
-+	if (acl->a_other_mask & ~RICHACE_VALID_MASK)
-+		goto put_invalid;
-+
-+	richacl_for_each_entry(ace, acl) {
-+		ace->e_type  = le16_to_cpu(xattr_ace->e_type);
-+		ace->e_flags = le16_to_cpu(xattr_ace->e_flags);
-+		ace->e_mask  = le32_to_cpu(xattr_ace->e_mask);
-+
-+		if (ace->e_flags & ~RICHACE_VALID_FLAGS)
-+			goto put_invalid;
-+		if (ace->e_flags & RICHACE_SPECIAL_WHO) {
-+			ace->e_id.special = le32_to_cpu(xattr_ace->e_id);
-+			if (ace->e_id.special > RICHACE_EVERYONE_SPECIAL_ID)
-+				goto put_invalid;
-+		} else if (ace->e_flags & RICHACE_IDENTIFIER_GROUP) {
-+			u32 id = le32_to_cpu(xattr_ace->e_id);
-+
-+			ace->e_id.gid = make_kgid(user_ns, id);
-+			if (!gid_valid(ace->e_id.gid))
-+				goto put_invalid;
-+		} else {
-+			u32 id = le32_to_cpu(xattr_ace->e_id);
-+
-+			ace->e_id.uid = make_kuid(user_ns, id);
-+			if (!uid_valid(ace->e_id.uid))
-+				goto put_invalid;
-+		}
-+		if (ace->e_type > RICHACE_ACCESS_DENIED_ACE_TYPE ||
-+		    (ace->e_mask & ~RICHACE_VALID_MASK))
-+			goto put_invalid;
-+
-+		xattr_ace++;
-+	}
-+
-+	return acl;
-+
-+put_invalid:
-+	richacl_put(acl);
-+invalid:
-+	return ERR_PTR(invalid_error);
-+}
-+EXPORT_SYMBOL_GPL(richacl_from_xattr);
-+
-+/**
-+ * richacl_xattr_size  -  compute the size of the xattr representation of @acl
-+ */
-+size_t
-+richacl_xattr_size(const struct richacl *acl)
-+{
-+	size_t size = sizeof(struct richacl_xattr);
-+
-+	size += sizeof(struct richace_xattr) * acl->a_count;
-+	return size;
-+}
-+EXPORT_SYMBOL_GPL(richacl_xattr_size);
-+
-+/**
-+ * richacl_to_xattr  -  convert @acl into its xattr representation
-+ * @acl:	the richacl to convert
-+ * @buffer:	buffer for the result
-+ * @size:	size of @buffer
-+ */
-+int
-+richacl_to_xattr(struct user_namespace *user_ns,
-+		 const struct richacl *acl, void *buffer, size_t size)
-+{
-+	struct richacl_xattr *xattr_acl = buffer;
-+	struct richace_xattr *xattr_ace;
-+	const struct richace *ace;
-+	size_t real_size;
-+
-+	real_size = richacl_xattr_size(acl);
-+	if (!buffer)
-+		return real_size;
-+	if (real_size > size)
-+		return -ERANGE;
-+
-+	xattr_acl->a_version = RICHACL_XATTR_VERSION;
-+	xattr_acl->a_flags = acl->a_flags;
-+	xattr_acl->a_count = cpu_to_le16(acl->a_count);
-+
-+	xattr_acl->a_owner_mask = cpu_to_le32(acl->a_owner_mask);
-+	xattr_acl->a_group_mask = cpu_to_le32(acl->a_group_mask);
-+	xattr_acl->a_other_mask = cpu_to_le32(acl->a_other_mask);
-+
-+	xattr_ace = (void *)(xattr_acl + 1);
-+	richacl_for_each_entry(ace, acl) {
-+		xattr_ace->e_type = cpu_to_le16(ace->e_type);
-+		xattr_ace->e_flags = cpu_to_le16(ace->e_flags);
-+		xattr_ace->e_mask = cpu_to_le32(ace->e_mask);
-+		if (ace->e_flags & RICHACE_SPECIAL_WHO)
-+			xattr_ace->e_id = cpu_to_le32(ace->e_id.special);
-+		else if (ace->e_flags & RICHACE_IDENTIFIER_GROUP)
-+			xattr_ace->e_id =
-+				cpu_to_le32(from_kgid(user_ns, ace->e_id.gid));
-+		else
-+			xattr_ace->e_id =
-+				cpu_to_le32(from_kuid(user_ns, ace->e_id.uid));
-+		xattr_ace++;
-+	}
-+	return real_size;
-+}
-+EXPORT_SYMBOL_GPL(richacl_to_xattr);
-diff --git a/include/linux/richacl_xattr.h b/include/linux/richacl_xattr.h
-new file mode 100644
-index 0000000..0efa14b
---- /dev/null
-+++ b/include/linux/richacl_xattr.h
-@@ -0,0 +1,29 @@
-+/*
-+ * Copyright (C) 2006, 2010  Novell, Inc.
-+ * Copyright (C) 2015  Red Hat, Inc.
-+ * Written by Andreas Gruenbacher <agruenba@redhat.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License as published by the
-+ * Free Software Foundation; either version 2, or (at your option) any
-+ * later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+
-+#ifndef __RICHACL_XATTR_H
-+#define __RICHACL_XATTR_H
-+
-+#include <uapi/linux/richacl_xattr.h>
-+#include <linux/richacl.h>
-+
-+extern struct richacl *richacl_from_xattr(struct user_namespace *, const void *,
-+					  size_t, int);
-+extern size_t richacl_xattr_size(const struct richacl *);
-+extern int richacl_to_xattr(struct user_namespace *, const struct richacl *,
-+			    void *, size_t);
-+
-+#endif /* __RICHACL_XATTR_H */
-diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
-index 1927e69..4ed26c5 100644
---- a/include/uapi/linux/Kbuild
-+++ b/include/uapi/linux/Kbuild
-@@ -364,6 +364,7 @@ header-y += reiserfs_fs.h
- header-y += reiserfs_xattr.h
- header-y += resource.h
- header-y += richacl.h
-+header-y += richacl_xattr.h
- header-y += rfkill.h
- header-y += rio_cm_cdev.h
- header-y += rio_mport_cdev.h
-diff --git a/include/uapi/linux/richacl_xattr.h b/include/uapi/linux/richacl_xattr.h
-new file mode 100644
-index 0000000..20da204
---- /dev/null
-+++ b/include/uapi/linux/richacl_xattr.h
-@@ -0,0 +1,44 @@
-+/*
-+ * Copyright (C) 2006, 2010  Novell, Inc.
-+ * Copyright (C) 2015  Red Hat, Inc.
-+ * Written by Andreas Gruenbacher <agruenba@redhat.com>
-+ *
-+ * This file is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU Lesser General Public
-+ * License as published by the Free Software Foundation; either
-+ * version 2.1 of the License, or (at your option) any later version.
-+ *
-+ * This file is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * Lesser General Public License for more details.
-+ */
-+
-+#ifndef __UAPI_RICHACL_XATTR_H
-+#define __UAPI_RICHACL_XATTR_H
-+
-+#include <linux/types.h>
-+#include <linux/limits.h>
-+
-+struct richace_xattr {
-+	__le16	e_type;
-+	__le16	e_flags;
-+	__le32	e_mask;
-+	__le32	e_id;
-+};
-+
-+struct richacl_xattr {
-+	__u8	a_version;
-+	__u8	a_flags;
-+	__le16	a_count;
-+	__le32	a_owner_mask;
-+	__le32	a_group_mask;
-+	__le32	a_other_mask;
-+};
-+
-+#define RICHACL_XATTR_VERSION 0
-+#define RICHACL_XATTR_MAX_COUNT \
-+	((XATTR_SIZE_MAX - sizeof(struct richacl_xattr)) / \
-+	 sizeof(struct richace_xattr))
-+
-+#endif  /* __UAPI_RICHACL_XATTR_H */
-diff --git a/include/uapi/linux/xattr.h b/include/uapi/linux/xattr.h
-index 1590c49..1996903 100644
---- a/include/uapi/linux/xattr.h
-+++ b/include/uapi/linux/xattr.h
-@@ -73,5 +73,7 @@
- #define XATTR_POSIX_ACL_DEFAULT  "posix_acl_default"
- #define XATTR_NAME_POSIX_ACL_DEFAULT XATTR_SYSTEM_PREFIX XATTR_POSIX_ACL_DEFAULT
- 
-+#define XATTR_RICHACL "richacl"
-+#define XATTR_NAME_RICHACL XATTR_SYSTEM_PREFIX XATTR_RICHACL
- 
- #endif /* _UAPI_LINUX_XATTR_H */
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+ 					       end_fsb - start_fsb);
 -- 
 2.7.4
 
