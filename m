@@ -1,92 +1,266 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36496 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35738 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753756AbdBIUMs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Feb 2017 15:12:48 -0500
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A9A32F11D2
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2017 19:34:55 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v19JYtda012441
-        for <linux-xfs@vger.kernel.org>; Thu, 9 Feb 2017 14:34:55 -0500
+        id S1753124AbdBIUiA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Feb 2017 15:38:00 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 3/4] xfs: handle indlen shortage on delalloc extent merge
-Date: Thu,  9 Feb 2017 14:34:52 -0500
-Message-Id: <1486668893-44633-4-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
-References: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 1/3] xfstests: move generic indlen reservation test to xfs dir
+Date: Thu,  9 Feb 2017 14:43:42 -0500
+Message-Id: <1486669424-45274-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1486669424-45274-1-git-send-email-bfoster@redhat.com>
+References: <1486669424-45274-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-When a delalloc extent is created, it can be merged with pre-existing,
-contiguous, delalloc extents. When this occurs,
-xfs_bmap_add_extent_hole_delay() merges the extents along with the
-associated indirect block reservations. The expectation here is that the
-combined worst case indlen reservation is always less than or equal to
-the indlen reservation for the individual extents.
+This test was originally designed to reproduce the split indlen
+reservation depletion problem in XFS. It was included as a generic test
+simply because it had no hard dependencies on XFS or associated tools.
 
-This is not always the case, however, as existing extents can less than
-the expected indlen reservation if the extent was previously split due
-to a hole punch. If a new extent merges with such an extent, the total
-indlen requirement may be larger than the sum of the indlen reservations
-held by both extents.
-
-xfs_bmap_add_extent_hole_delay() assumes that the worst case indlen
-reservation is always available and assigns it to the merged extent
-without consideration for the indlen held by the pre-existing extent. As
-a result, the subsequent xfs_mod_fdblocks() call can attempt an
-unintentional allocation rather than a free (indicated by an ASSERT()
-failure). Further, if the allocation happens to fail in this context,
-the failure goes unhandled and creates a filesystem wide block
-accounting inconsistency.
-
-Fix xfs_bmap_add_extent_hole_delay() to function as designed. Cap the
-indlen reservation assigned to the merged extent to the sum of the
-indlen reservations held by each of the individual extents.
+This test is no longer effective in its current form. Fixing it requires
+use of XFS specific mechanisms. Therefore, move the test to the XFS
+specific test directory. No other changes are made in this patch.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ tests/generic/033     | 84 ---------------------------------------------------
+ tests/generic/033.out |  4 ---
+ tests/generic/group   |  1 -
+ tests/xfs/289         | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/289.out     |  4 +++
+ tests/xfs/group       |  1 +
+ 6 files changed, 89 insertions(+), 89 deletions(-)
+ delete mode 100755 tests/generic/033
+ delete mode 100644 tests/generic/033.out
+ create mode 100755 tests/xfs/289
+ create mode 100644 tests/xfs/289.out
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index deee1db..49edea4 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2809,7 +2809,8 @@ xfs_bmap_add_extent_hole_delay(
- 		oldlen = startblockval(left.br_startblock) +
- 			startblockval(new->br_startblock) +
- 			startblockval(right.br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
- 			nullstartblock((int)newlen));
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-@@ -2830,7 +2831,8 @@ xfs_bmap_add_extent_hole_delay(
- 		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx), temp);
- 		oldlen = startblockval(left.br_startblock) +
- 			startblockval(new->br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
- 			nullstartblock((int)newlen));
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-@@ -2846,7 +2848,8 @@ xfs_bmap_add_extent_hole_delay(
- 		temp = new->br_blockcount + right.br_blockcount;
- 		oldlen = startblockval(new->br_startblock) +
- 			startblockval(right.br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
- 			new->br_startoff,
- 			nullstartblock((int)newlen), temp, right.br_state);
+diff --git a/tests/generic/033 b/tests/generic/033
+deleted file mode 100755
+index 4f8bb92..0000000
+--- a/tests/generic/033
++++ /dev/null
+@@ -1,84 +0,0 @@
+-#! /bin/bash
+-# FS QA Test No. 033
+-#
+-# This test stresses indirect block reservation for delayed allocation extents.
+-# XFS reserves extra blocks for deferred allocation of delalloc extents. These
+-# reserved blocks can be divided among more extents than anticipated if the
+-# original extent for which the blocks were reserved is split into multiple
+-# delalloc extents. If this scenario repeats, eventually some extents are left
+-# without any indirect block reservation whatsoever. This leads to assert
+-# failures and possibly other problems in XFS.
+-#
+-#-----------------------------------------------------------------------
+-# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#-----------------------------------------------------------------------
+-#
+-
+-seq=`basename $0`
+-seqres=$RESULT_DIR/$seq
+-echo "QA output created by $seq"
+-
+-here=`pwd`
+-tmp=/tmp/$$
+-status=1	# failure is the default!
+-trap "_cleanup; exit \$status" 0 1 2 3 15
+-
+-_cleanup()
+-{
+-	cd /
+-	rm -f $tmp.*
+-}
+-
+-# get standard environment, filters and checks
+-. ./common/rc
+-
+-# real QA test starts here
+-rm -f $seqres.full
+-
+-# Modify as appropriate.
+-_supported_fs generic
+-_supported_os Linux
+-_require_scratch
+-_require_xfs_io_command "fzero"
+-
+-_scratch_mkfs >/dev/null 2>&1
+-_scratch_mount
+-
+-file=$SCRATCH_MNT/file.$seq
+-bytes=$((64 * 1024))
+-
+-# create sequential delayed allocation
+-$XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
+-
+-# Zero every other 4k range to split the larger delalloc extent into many more
+-# smaller extents. Use zero instead of hole punch because the former does not
+-# force writeback (and hence delalloc conversion). It can simply discard
+-# delalloc blocks and convert the ranges to unwritten.
+-endoff=$((bytes - 4096))
+-for i in $(seq 0 8192 $endoff); do
+-	$XFS_IO_PROG -c "fzero -k $i 4k" $file >> $seqres.full 2>&1
+-done
+-
+-# now zero the opposite set to remove remaining delalloc extents
+-for i in $(seq 4096 8192 $endoff); do
+-	$XFS_IO_PROG -c "fzero -k $i 4k" $file >> $seqres.full 2>&1
+-done
+-
+-_scratch_cycle_mount
+-hexdump $file
+-
+-status=0
+-exit
+diff --git a/tests/generic/033.out b/tests/generic/033.out
+deleted file mode 100644
+index 419d831..0000000
+--- a/tests/generic/033.out
++++ /dev/null
+@@ -1,4 +0,0 @@
+-QA output created by 033
+-0000000 0000 0000 0000 0000 0000 0000 0000 0000
+-*
+-0010000
+diff --git a/tests/generic/group b/tests/generic/group
+index d0bc47d..98d57f3 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -35,7 +35,6 @@
+ 030 auto quick rw
+ 031 auto quick prealloc rw collapse
+ 032 auto quick rw
+-033 auto quick rw zero
+ 034 auto quick metadata log
+ 035 auto quick
+ 036 auto aio rw stress
+diff --git a/tests/xfs/289 b/tests/xfs/289
+new file mode 100755
+index 0000000..33cf060
+--- /dev/null
++++ b/tests/xfs/289
+@@ -0,0 +1,84 @@
++#! /bin/bash
++# FS QA Test No. 289
++#
++# This test stresses indirect block reservation for delayed allocation extents.
++# XFS reserves extra blocks for deferred allocation of delalloc extents. These
++# reserved blocks can be divided among more extents than anticipated if the
++# original extent for which the blocks were reserved is split into multiple
++# delalloc extents. If this scenario repeats, eventually some extents are left
++# without any indirect block reservation whatsoever. This leads to assert
++# failures and possibly other problems in XFS.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++
++# real QA test starts here
++rm -f $seqres.full
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_require_xfs_io_command "fzero"
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++file=$SCRATCH_MNT/file.$seq
++bytes=$((64 * 1024))
++
++# create sequential delayed allocation
++$XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
++
++# Zero every other 4k range to split the larger delalloc extent into many more
++# smaller extents. Use zero instead of hole punch because the former does not
++# force writeback (and hence delalloc conversion). It can simply discard
++# delalloc blocks and convert the ranges to unwritten.
++endoff=$((bytes - 4096))
++for i in $(seq 0 8192 $endoff); do
++	$XFS_IO_PROG -c "fzero -k $i 4k" $file >> $seqres.full 2>&1
++done
++
++# now zero the opposite set to remove remaining delalloc extents
++for i in $(seq 4096 8192 $endoff); do
++	$XFS_IO_PROG -c "fzero -k $i 4k" $file >> $seqres.full 2>&1
++done
++
++_scratch_cycle_mount
++hexdump $file
++
++status=0
++exit
+diff --git a/tests/xfs/289.out b/tests/xfs/289.out
+new file mode 100644
+index 0000000..bdcf195
+--- /dev/null
++++ b/tests/xfs/289.out
+@@ -0,0 +1,4 @@
++QA output created by 289
++0000000 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0010000
+diff --git a/tests/xfs/group b/tests/xfs/group
+index e2dfae2..5c1ba16 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -280,6 +280,7 @@
+ 283 dump ioctl auto quick
+ 284 auto quick dump copy db mkfs repair
+ 287 auto dump quota quick
++289 auto quick rw zero
+ 290 auto rw prealloc quick ioctl zero
+ 291 auto repair
+ 292 auto mkfs quick
 -- 
 2.7.4
 
