@@ -1,35 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:53456 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:38342 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752748AbdBIRXZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Feb 2017 12:23:25 -0500
-Date: Thu, 9 Feb 2017 18:22:16 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 4/4] xfs: allocate direct I/O COW blocks in iomap_begin
-Message-ID: <20170209172216.GA5382@lst.de>
-References: <20170206074738.13978-1-hch@lst.de> <20170206074738.13978-5-hch@lst.de> <20170207014149.GE12378@birch.djwong.org> <20170209072107.GA6134@lst.de> <20170209075322.GA6824@birch.djwong.org> <20170209075841.GA6578@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170209075841.GA6578@lst.de>
+        id S932109AbdBIUMu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Feb 2017 15:12:50 -0500
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C32F0338854
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2017 19:34:55 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v19JYtHC024473
+        for <linux-xfs@vger.kernel.org>; Thu, 9 Feb 2017 14:34:55 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 4/4] xfs: split indlen reservations fairly when under reserved
+Date: Thu,  9 Feb 2017 14:34:53 -0500
+Message-Id: <1486668893-44633-5-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
+References: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Feb 09, 2017 at 08:58:41AM +0100, Christoph Hellwig wrote:
-> On Wed, Feb 08, 2017 at 11:53:22PM -0800, Darrick J. Wong wrote:
-> > Testing isn't done yet, but xfs/222 seems to be blowing up at
-> > ASSERT(!rwsem_is_locked(&inode->i_rwsem)) in xfs_super.c fairly
-> > consistently with blocksize=1k.  I haven't been able to reproduce it
-> > quickly (i.e. without running the whole test suite) so I can't tell if
-> > that's a side effect of something else blowing up or what.  generic/300
-> > seems to blow up periodically and then blows the same assert on umount,
-> > also in the 1k case.  xfs/348 fuzzes the fs, causes "kernel memory
-> > exposure!" BUGs and then asserts with the same i_rwsem thing.
-> 
-> I'll take a look at the umount assert while you're asleep.  348 is
-> a pretty new test, so I doubt it's a regrewssion.
+Certain workoads that punch holes into speculative preallocation can
+cause delalloc indirect reservation splits when the delalloc extent is
+split in two. If further splits occur, an already short-handed extent
+can be split into two in a manner that leaves zero indirect blocks for
+one of the two new extents. This occurs because the shortage is large
+enough that the xfs_bmap_split_indlen() algorithm completely drains the
+requested indlen of one of the extents before it honors the existing
+reservation.
 
-I could not reproduce the issue here.
+This ultimately results in a warning from xfs_bmap_del_extent(). This
+has been observed during file copies of large, sparse files using 'cp
+--sparse=always.'
+
+To avoid this problem, update xfs_bmap_split_indlen() to explicitly
+apply the reservation shortage fairly between both extents. This smooths
+out the overall indlen shortage and defers the situation where we end up
+with a delalloc extent with zero indlen reservation to extreme
+circumstances.
+
+Reported-by: Patrick Dung <mpatdung@gmail.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 61 ++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 43 insertions(+), 18 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 49edea4..e27b9ee 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4790,6 +4790,7 @@ xfs_bmap_split_indlen(
+ 	xfs_filblks_t			len2 = *indlen2;
+ 	xfs_filblks_t			nres = len1 + len2; /* new total res. */
+ 	xfs_filblks_t			stolen = 0;
++	xfs_filblks_t			resfactor;
+ 
+ 	trace_printk("%d: ores %llu len1 %llu len2 %llu\n", __LINE__, ores, len1, len2);
+ 
+@@ -4797,29 +4798,53 @@ xfs_bmap_split_indlen(
+ 	 * Steal as many blocks as we can to try and satisfy the worst case
+ 	 * indlen for both new extents.
+ 	 */
+-	while (nres > ores && avail) {
+-		nres--;
+-		avail--;
+-		stolen++;
+-	}
++	if (ores < nres && avail)
++		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
++	ores += stolen;
++
++	 /* nothing else to do if we've satisfied the new reservation */
++	if (ores >= nres)
++		return stolen;
++
++	/*
++	 * We can't meet the total required reservation for the two extents.
++	 * Calculate the percent of the overall shortage between both extents
++	 * and apply this percentage to each of the requested indlen values.
++	 * This distributes the shortage fairly and reduces the chances that one
++	 * of the two extents is left with nothing when extents are repeatedly
++	 * split.
++	 */
++	resfactor = (ores * 100);
++	do_div(resfactor, nres);
++	len1 *= resfactor;
++	do_div(len1, 100);
++	len2 *= resfactor;
++	do_div(len2, 100);
++	ASSERT(len1 + len2 <= ores);
++	ASSERT(len1 < *indlen1 && len2 < *indlen2);
+ 
+ 	/*
+-	 * The only blocks available are those reserved for the original
+-	 * extent and what we can steal from the extent being removed.
+-	 * If this still isn't enough to satisfy the combined
+-	 * requirements for the two new extents, skim blocks off of each
+-	 * of the new reservations until they match what is available.
++	 * Hand out the remainder to each extent. If one of the two reservations
++	 * is zero, we want to make sure that one gets a block first. The loop
++	 * below starts with len1, so hand len2 a block right off the bat if it
++	 * is zero.
+ 	 */
+-	while (nres > ores) {
+-		if (len1) {
+-			len1--;
+-			nres--;
++	ores -= (len1 + len2);
++	ASSERT((*indlen1 - len1) + (*indlen2 - len2) >= ores);
++	if (ores && !len2 && *indlen2) {
++		len2++;
++		ores--;
++	}
++	while (ores) {
++		if (len1 < *indlen1) {
++			len1++;
++			ores--;
+ 		}
+-		if (nres == ores)
++		if (!ores)
+ 			break;
+-		if (len2) {
+-			len2--;
+-			nres--;
++		if (len2 < *indlen2) {
++			len2++;
++			ores--;
+ 		}
+ 	}
+ 
+-- 
+2.7.4
+
