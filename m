@@ -1,73 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40594 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:35759 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752979AbdBIURu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Feb 2017 15:17:50 -0500
-Received: from smtp.corp.redhat.com (int-mx16.intmail.prod.int.phx2.redhat.com [10.5.11.28])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8F4E33710D6
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2017 19:34:55 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6E37D9776F
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2017 19:34:55 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/4] xfs: clear delalloc and cache on buffered write failure
-Date: Thu,  9 Feb 2017 14:34:50 -0500
-Message-Id: <1486668893-44633-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
-References: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
+        id S1751852AbdBJICn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 Feb 2017 03:02:43 -0500
+Date: Fri, 10 Feb 2017 09:02:10 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [BUG 4.10-rc7] sb_fdblocks inconsistency in xfs/297 test
+Message-ID: <20170210080210.GC10893@dhcp22.suse.cz>
+References: <20170210035348.GA7075@eguan.usersys.redhat.com>
+ <20170210071418.GC9346@dhcp22.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170210071418.GC9346@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-The buffered write failure handling code in
-xfs_file_iomap_end_delalloc() has a couple minor problems. First, if
-written == 0, start_fsb is not rounded down and it fails to kill off a
-delalloc block if the start offset is block unaligned. This results in a
-lingering delalloc block and broken delalloc block accounting detected
-at unmount time. Fix this by rounding down start_fsb in the unlikely
-event that written == 0.
+On Fri 10-02-17 08:14:18, Michal Hocko wrote:
+> On Fri 10-02-17 11:53:48, Eryu Guan wrote:
+> > Hi,
+> > 
+> > I was testing 4.10-rc7 kernel and noticed that xfs_repair reported XFS
+> > corruption after fstests xfs/297 test. This didn't happen with 4.10-rc6
+> > kernel, and git bisect pointed the first bad commit to
+> > 
+> > commit d1908f52557b3230fbd63c0429f3b4b748bf2b6d
+> > Author: Michal Hocko <mhocko@suse.com>
+> > Date:   Fri Feb 3 13:13:26 2017 -0800
+> > 
+> >     fs: break out of iomap_file_buffered_write on fatal signals
+> > 
+> >     Tetsuo has noticed that an OOM stress test which performs large write
+> >     requests can cause the full memory reserves depletion.  He has tracked
+> >     this down to the following path
+> > ....
+> > 
+> > It's the sb_fdblocks field reports inconsistency:
+> > ...
+> > Phase 2 - using internal log   
+> >         - zero log...
+> >         - scan filesystem freespace and inode maps...
+> > sb_fdblocks 3367765, counted 3367863
+> >         - 11:37:41: scanning filesystem freespace - 16 of 16 allocation groups done
+> >         - found root inode chunk
+> > ...
+> > 
+> > And it can be reproduced almost 100% with all XFS test configurations
+> > (e.g. xfs_4k xfs_2k_reflink), on all test hosts I tried (so I didn't
+> > bother pasting my detailed test and host configs, if more info is needed
+> > please let me know).
+> 
+> The patch can lead to short writes when the task is killed. Was there
+> any OOM killer triggered during the test? If not who is killing the
+> task? I will try to reproduce later today.
 
-Second, it is possible for a failed overwrite of a delalloc extent to
-leave dirty pagecache around over a hole in the file. This is because is
-possible to hit ->iomap_end() on write failure before the iomap code has
-attempted to allocate pagecache, and thus has no need to clean it up. If
-the targeted delalloc extent was successfully written by a previous
-write, however, then it does still have dirty pages when ->iomap_end()
-punches out the underlying blocks. This ultimately results in writeback
-over a hole. To fix this problem, unconditionally punch out the
-pagecache from XFS before the associated delalloc range.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_iomap.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 1aa3abd..faa13c8 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1103,6 +1103,8 @@ xfs_file_iomap_end_delalloc(
- 	int			error = 0;
- 
- 	start_fsb = XFS_B_TO_FSB(mp, offset + written);
-+	if (unlikely(!written))
-+		start_fsb = XFS_B_TO_FSBT(mp, offset);
- 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
- 
- 	/*
-@@ -1114,6 +1116,9 @@ xfs_file_iomap_end_delalloc(
- 	 * blocks in the range, they are ours.
- 	 */
- 	if (start_fsb < end_fsb) {
-+		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
-+					 XFS_FSB_TO_B(mp, end_fsb) - 1);
-+
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
- 					       end_fsb - start_fsb);
+I have checked both tests and they are killing the test but none of them
+seems to be using SIGKILL. The patch should make a difference only for
+fatal signal (aka SIGKILL). Is there any other part that can do SIGKILL
+except for the OOM killer?
 -- 
-2.7.4
-
+Michal Hocko
+SUSE Labs
