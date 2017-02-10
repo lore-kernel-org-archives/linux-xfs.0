@@ -1,65 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:35094 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756358AbdAJNxt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2017 08:53:49 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.9 203/206] xfs: fix crash and data corruption due to removal of busy COW extents
-Date: Tue, 10 Jan 2017 14:38:06 +0100
-Message-Id: <20170110131512.400028188@linuxfoundation.org>
-In-Reply-To: <20170110131502.767555407@linuxfoundation.org>
-References: <20170110131502.767555407@linuxfoundation.org>
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:38005 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753433AbdBJVHH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2017 16:07:07 -0500
+Date: Fri, 10 Feb 2017 22:06:38 +0100
+From: Greg KH <greg@kroah.com>
+Subject: Re: Inclusion of a3916e528b917851a4 ("xfs: fix broken multi-fsb
+ buffer logging") in 4.4-stable
+Message-ID: <20170210210638.GB26049@kroah.com>
+References: <24b4d9c7-6fd3-3e90-a614-92f79ecc3b81@suse.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <24b4d9c7-6fd3-3e90-a614-92f79ecc3b81@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, stable@vger.kernel.org, sandeen@redhat.com, bfoster@redhat.com
 
-4.9-stable review patch.  If anyone has any objections, please let me know.
+On Thu, Feb 09, 2017 at 02:22:05PM +0200, Nikolay Borisov wrote:
+> Hello,
+> 
+> 
+> I'd like to ask for a3916e528b917851a4 ("xfs: fix broken multi-fsb
+> buffer logging") to be included into at least the stable 4.4 branch.
+> I've confirmed that it causes a kernel crash on xfs/306 test. It applies
+> cleanly to 4.4.47, it's likely that it needs to be backported to older
+> releases as well but I'd defer this call to Eric or Brian as they know
+> the code more intimately.
 
-------------------
+Any reason you didn't include the XFS maintainer and mailing list in
+this request?
 
+Now cc:ed...
 
-commit a1b7a4dea6166cf46be895bce4aac67ea5160fe8 upstream.
-
-There is a race window between write_cache_pages calling
-clear_page_dirty_for_io and XFS calling set_page_writeback, in which
-the mapping for an inode is tagged neither as dirty, nor as writeback.
-
-If the COW shrinker hits in exactly that window we'll remove the delayed
-COW extents and writepages trying to write it back, which in release
-kernels will manifest as corruption of the bmap btree, and in debug
-kernels will trip the ASSERT about now calling xfs_bmapi_write with the
-COWFORK flag for holes.  A complex customer load manages to hit this
-window fairly reliably, probably by always having COW writeback in flight
-while the cow shrinker runs.
-
-This patch adds another check for having the I_DIRTY_PAGES flag set,
-which is still set during this race window.  While this fixes the problem
-I'm still not overly happy about the way the COW shrinker works as it
-still seems a bit fragile.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- fs/xfs/xfs_icache.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1599,7 +1599,8 @@ xfs_inode_free_cowblocks(
- 	 * If the mapping is dirty or under writeback we cannot touch the
- 	 * CoW fork.  Leave it alone if we're in the midst of a directio.
- 	 */
--	if (mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
-+	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
-+	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
- 	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
- 	    atomic_read(&VFS_I(ip)->i_dio_count))
- 		return 0;
-
-
+greg k-h
