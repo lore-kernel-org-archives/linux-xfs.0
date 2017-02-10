@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:57247 "EHLO ozlabs.org"
+Received: from ozlabs.org ([103.22.144.67]:34343 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751026AbdBJGp1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 Feb 2017 01:45:27 -0500
-Date: Fri, 10 Feb 2017 17:45:05 +1100
+        id S1750966AbdBJHOr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 Feb 2017 02:14:47 -0500
+Date: Fri, 10 Feb 2017 18:07:33 +1100
 From: Stephen Rothwell <sfr@canb.auug.org.au>
 Subject: linux-next: manual merge of the akpm-current tree with the xfs tree
-Message-ID: <20170210174505.03a1aacc@canb.auug.org.au>
+Message-ID: <20170210180733.670c80b1@canb.auug.org.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
@@ -20,7 +20,7 @@ Hi Andrew,
 
 Today's linux-next merge of the akpm-current tree got a conflict in:
 
-  fs/iomap.c
+  include/linux/iomap.h
 
 between commit:
 
@@ -43,22 +43,32 @@ complex conflicts.
 Cheers,
 Stephen Rothwell
 
-diff --cc fs/iomap.c
-index d89f70bbb952,ccba165bed49..000000000000
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@@ -445,11 -445,10 +445,10 @@@ iomap_page_mkwrite_actor(struct inode *
-  	return length;
-  }
+diff --cc include/linux/iomap.h
+index 891459caa278,857e440af9d5..000000000000
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@@ -72,17 -72,16 +72,16 @@@ struct iomap_ops 
+  };
   
+  ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+ -		struct iomap_ops *ops);
+ +		const struct iomap_ops *ops);
+  int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
+ -		struct iomap_ops *ops);
+ +		const struct iomap_ops *ops);
+  int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+ -		bool *did_zero, struct iomap_ops *ops);
+ +		bool *did_zero, const struct iomap_ops *ops);
+  int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+ -		struct iomap_ops *ops);
+ -int iomap_page_mkwrite(struct vm_fault *vmf, struct iomap_ops *ops);
+ +		const struct iomap_ops *ops);
 - int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
-- 		const struct iomap_ops *ops)
- -int iomap_page_mkwrite(struct vm_fault *vmf, struct iomap_ops *ops)
-++int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
-  {
-  	struct page *page = vmf->page;
-- 	struct inode *inode = file_inode(vma->vm_file);
-+ 	struct inode *inode = file_inode(vmf->vma->vm_file);
-  	unsigned long length;
-  	loff_t offset, size;
-  	ssize_t ret;
+- 		const struct iomap_ops *ops);
+++int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops);
+  int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ -		loff_t start, loff_t len, struct iomap_ops *ops);
+ +		loff_t start, loff_t len, const struct iomap_ops *ops);
+  
+  /*
+   * Flags for direct I/O ->end_io:
