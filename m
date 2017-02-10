@@ -1,66 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35759 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:47382 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751852AbdBJICn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 Feb 2017 03:02:43 -0500
-Date: Fri, 10 Feb 2017 09:02:10 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [BUG 4.10-rc7] sb_fdblocks inconsistency in xfs/297 test
-Message-ID: <20170210080210.GC10893@dhcp22.suse.cz>
-References: <20170210035348.GA7075@eguan.usersys.redhat.com>
- <20170210071418.GC9346@dhcp22.suse.cz>
+        id S1752129AbdBJN6g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 Feb 2017 08:58:36 -0500
+Date: Fri, 10 Feb 2017 08:58:30 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 0/3] xfs: restore and enhance xfs indlen test
+Message-ID: <20170210135830.GA3155@bfoster.bfoster>
+References: <1486669424-45274-1-git-send-email-bfoster@redhat.com>
+ <20170210071519.GB21408@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170210071418.GC9346@dhcp22.suse.cz>
+In-Reply-To: <20170210071519.GB21408@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri 10-02-17 08:14:18, Michal Hocko wrote:
-> On Fri 10-02-17 11:53:48, Eryu Guan wrote:
-> > Hi,
+On Fri, Feb 10, 2017 at 03:15:19PM +0800, Eryu Guan wrote:
+> On Thu, Feb 09, 2017 at 02:43:41PM -0500, Brian Foster wrote:
+> > Hi all,
 > > 
-> > I was testing 4.10-rc7 kernel and noticed that xfs_repair reported XFS
-> > corruption after fstests xfs/297 test. This didn't happen with 4.10-rc6
-> > kernel, and git bisect pointed the first bad commit to
-> > 
-> > commit d1908f52557b3230fbd63c0429f3b4b748bf2b6d
-> > Author: Michal Hocko <mhocko@suse.com>
-> > Date:   Fri Feb 3 13:13:26 2017 -0800
-> > 
-> >     fs: break out of iomap_file_buffered_write on fatal signals
-> > 
-> >     Tetsuo has noticed that an OOM stress test which performs large write
-> >     requests can cause the full memory reserves depletion.  He has tracked
-> >     this down to the following path
-> > ....
-> > 
-> > It's the sb_fdblocks field reports inconsistency:
-> > ...
-> > Phase 2 - using internal log   
-> >         - zero log...
-> >         - scan filesystem freespace and inode maps...
-> > sb_fdblocks 3367765, counted 3367863
-> >         - 11:37:41: scanning filesystem freespace - 16 of 16 allocation groups done
-> >         - found root inode chunk
-> > ...
-> > 
-> > And it can be reproduced almost 100% with all XFS test configurations
-> > (e.g. xfs_4k xfs_2k_reflink), on all test hosts I tried (so I didn't
-> > bother pasting my detailed test and host configs, if more info is needed
-> > please let me know).
+> > This series is associated with the "buffered write and indlen fixes"
+> > series recently posted to the XFS list. These patches move the original
+> > test to the XFS directory as it now depends on an XFS-specific
+> > mechanism, restore the effectiveness of the original test, and finally
+> > enhance the test to reproduce the newly identified problems fixed by the
+> > kernel patches. Thoughts, reviews, flames appreciated.
 > 
-> The patch can lead to short writes when the task is killed. Was there
-> any OOM killer triggered during the test? If not who is killing the
-> task? I will try to reproduce later today.
+> I think it's still worth keeping the original fzero tests in generic, as
+> a generic function/regression test, though it's not effective to
+> reproduce the original bug. And maybe it's still working and effective
+> on some distro kernels? How about just adding a new test for XFS?
+> 
 
-I have checked both tests and they are killing the test but none of them
-seems to be using SIGKILL. The patch should make a difference only for
-fatal signal (aka SIGKILL). Is there any other part that can do SIGKILL
-except for the OOM killer?
--- 
-Michal Hocko
-SUSE Labs
+Sure, in that case I guess I can just copy generic/033 rather than move
+it and then squash these down into a single patch. Any other comments on
+the resulting test before I post an update?
+
+Brian
+
+> Thanks,
+> Eryu
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
