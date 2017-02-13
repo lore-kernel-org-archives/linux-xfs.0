@@ -1,98 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60317 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:45288 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750738AbdBKGfe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 11 Feb 2017 01:35:34 -0500
-Date: Sat, 11 Feb 2017 07:33:08 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [BUG 4.10-rc7] sb_fdblocks inconsistency in xfs/297 test
-Message-ID: <20170211063308.GA30713@dhcp22.suse.cz>
-References: <20170210035348.GA7075@eguan.usersys.redhat.com>
- <20170210071418.GC9346@dhcp22.suse.cz>
- <20170210080210.GC10893@dhcp22.suse.cz>
- <20170210093131.GH10893@dhcp22.suse.cz>
- <20170211060204.GA24562@eguan.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170211060204.GA24562@eguan.usersys.redhat.com>
+        id S1753604AbdBMPeI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Feb 2017 10:34:08 -0500
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v28 18/21] vfs: Add richacl permission checking
+Date: Mon, 13 Feb 2017 16:32:34 +0100
+Message-Id: <1486999957-2381-19-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
+References: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org, Jeff Layton <jlayton@redhat.com>
 
-On Sat 11-02-17 14:02:04, Eryu Guan wrote:
-> On Fri, Feb 10, 2017 at 10:31:31AM +0100, Michal Hocko wrote:
-> > [CC Christoph]
-> > 
-> > On Fri 10-02-17 09:02:10, Michal Hocko wrote:
-> > > On Fri 10-02-17 08:14:18, Michal Hocko wrote:
-> > > > On Fri 10-02-17 11:53:48, Eryu Guan wrote:
-> > > > > Hi,
-> > > > > 
-> > > > > I was testing 4.10-rc7 kernel and noticed that xfs_repair reported XFS
-> > > > > corruption after fstests xfs/297 test. This didn't happen with 4.10-rc6
-> > > > > kernel, and git bisect pointed the first bad commit to
-> > > > > 
-> > > > > commit d1908f52557b3230fbd63c0429f3b4b748bf2b6d
-> > > > > Author: Michal Hocko <mhocko@suse.com>
-> > > > > Date:   Fri Feb 3 13:13:26 2017 -0800
-> > > > > 
-> > > > >     fs: break out of iomap_file_buffered_write on fatal signals
-> > > > > 
-> > > > >     Tetsuo has noticed that an OOM stress test which performs large write
-> > > > >     requests can cause the full memory reserves depletion.  He has tracked
-> > > > >     this down to the following path
-> > > > > ....
-> > > > > 
-> > > > > It's the sb_fdblocks field reports inconsistency:
-> > > > > ...
-> > > > > Phase 2 - using internal log   
-> > > > >         - zero log...
-> > > > >         - scan filesystem freespace and inode maps...
-> > > > > sb_fdblocks 3367765, counted 3367863
-> > > > >         - 11:37:41: scanning filesystem freespace - 16 of 16 allocation groups done
-> > > > >         - found root inode chunk
-> > > > > ...
-> > > > > 
-> > > > > And it can be reproduced almost 100% with all XFS test configurations
-> > > > > (e.g. xfs_4k xfs_2k_reflink), on all test hosts I tried (so I didn't
-> > > > > bother pasting my detailed test and host configs, if more info is needed
-> > > > > please let me know).
-> > > > 
-> > > > The patch can lead to short writes when the task is killed. Was there
-> > > > any OOM killer triggered during the test? If not who is killing the
-> > > > task? I will try to reproduce later today.
-> > > 
-> > > I have checked both tests and they are killing the test but none of them
-> > > seems to be using SIGKILL. The patch should make a difference only for
-> > > fatal signal (aka SIGKILL). Is there any other part that can do SIGKILL
-> > > except for the OOM killer?
-> 
-> No, I'm not aware of any other part in fstests harness could send
-> SIGKILL.
+Hook the richacl permission checking function into the vfs.
 
-hmm, maybe this is a result of the group_exit which sends SIGKILL to
-other threads (zap_other_threads)
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Jeff Layton <jlayton@redhat.com>
+---
+ fs/namei.c   | 70 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ fs/richacl.c |  4 ++--
+ 2 files changed, 70 insertions(+), 4 deletions(-)
+
+diff --git a/fs/namei.c b/fs/namei.c
+index 4b53754..7ea153b 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -34,6 +34,7 @@
+ #include <linux/device_cgroup.h>
+ #include <linux/fs_struct.h>
+ #include <linux/posix_acl.h>
++#include <linux/richacl.h>
+ #include <linux/hash.h>
+ #include <linux/bitops.h>
+ #include <linux/init_task.h>
+@@ -257,7 +258,43 @@ void putname(struct filename *name)
+ 		__putname(name);
+ }
  
-[...]
-> > So somebody had to send SIGKILL to fsstress. Anyway, I am wondering
-> > whether this is really a regression. xfs_file_buffered_aio_write used to
-> > call generic_perform_write which does the same thing.
-> 
-> Maybe it just uncovered some existing bug?
-
-maybe
-
-> Anyway, a reliable reproduced filesystem metadata inconsistency does
-> smell like a bug.
-
-definitely! Unfortunately I am going to disappear for week. Will be back
-on 20th. Anyway, I believe iomap_file_buffered_write and its callers
-_should_ be able to handle short reads. EINTR is not the only way how
-can this happen. ENOMEM would be another.
-
+-static int check_acl(struct inode *inode, int mask)
++static int check_richacl(struct inode *inode, int mask)
++{
++#ifdef CONFIG_FS_RICHACL
++	if (mask & MAY_NOT_BLOCK) {
++		struct base_acl *base_acl;
++
++		base_acl = rcu_dereference(inode->i_acl);
++		if (!base_acl)
++			goto no_acl;
++		/* no ->get_richacl() calls in RCU mode... */
++		if (is_uncached_acl(base_acl))
++			return -ECHILD;
++		return richacl_permission(inode, richacl(base_acl),
++					  mask & ~MAY_NOT_BLOCK);
++	} else {
++		struct richacl *acl;
++
++		acl = get_richacl(inode);
++		if (IS_ERR(acl))
++			return PTR_ERR(acl);
++		if (acl) {
++			int error = richacl_permission(inode, acl, mask);
++			richacl_put(acl);
++			return error;
++		}
++	}
++no_acl:
++#endif
++	if (mask & (MAY_DELETE_SELF | MAY_TAKE_OWNERSHIP |
++		    MAY_CHMOD | MAY_SET_TIMES)) {
++		/* File permission bits cannot grant this. */
++		return -EACCES;
++	}
++	return -EAGAIN;
++}
++
++static int check_posix_acl(struct inode *inode, int mask)
+ {
+ #ifdef CONFIG_FS_POSIX_ACL
+ 	if (mask & MAY_NOT_BLOCK) {
+@@ -295,11 +332,40 @@ static int acl_permission_check(struct inode *inode, int mask)
+ {
+ 	unsigned int mode = inode->i_mode;
+ 
++	/*
++	 * With POSIX ACLs, the (mode & S_IRWXU) bits exactly match the owner
++	 * permissions, and we can skip checking posix acls for the owner.
++	 * With richacls, the owner may be granted fewer permissions than the
++	 * mode bits seem to suggest (for example, append but not write), and
++	 * we always need to check the richacl.
++	 */
++
++	if (IS_RICHACL(inode)) {
++		int error;
++
++		/*
++		 * The combination of MAY_DELETE_CHILD and MAY_DELETE_SELF
++		 * indicates that that we want to check for delete permission
++		 * in a directory assuming that we have MAY_DELETE_SELF access
++		 * on the victim.  We don't require MAY_DELETE_CHILD permission
++		 * on the directory, but we do require LSM permission, the
++		 * immutability checks, etc.
++		 */
++		if ((mask & MAY_DELETE_CHILD) && (mask & MAY_DELETE_SELF)) {
++			mask &= ~(MAY_DELETE_CHILD | MAY_DELETE_SELF);
++			if (!(mask & (MAY_CREATE_FILE | MAY_CREATE_DIR)))
++				mask &= ~MAY_WRITE;
++		}
++
++		error = check_richacl(inode, mask);
++		if (error != -EAGAIN)
++			return error;
++	}
+ 	if (likely(uid_eq(current_fsuid(), inode->i_uid)))
+ 		mode >>= 6;
+ 	else {
+ 		if (IS_POSIXACL(inode) && (mode & S_IRWXG)) {
+-			int error = check_acl(inode, mask);
++			int error = check_posix_acl(inode, mask);
+ 			if (error != -EAGAIN)
+ 				return error;
+ 		}
+diff --git a/fs/richacl.c b/fs/richacl.c
+index 1945691..416d57c 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -293,8 +293,8 @@ richacl_permission(struct inode *inode, const struct richacl *acl,
+ 	} else {
+ 		/*
+ 		 * When the acl is not masked, there is no need to determine if
+-		 * the process is in the group class and we can break out
+-		 * earlier of the loop below.
++		 * the process is in the group class and we can earlier break
++		 * out of the loop below.
+ 		 */
+ 		in_owner_or_group_class = 1;
+ 	}
 -- 
-Michal Hocko
-SUSE Labs
+2.7.4
+
