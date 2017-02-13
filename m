@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44826 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47250 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750943AbdBMPdU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Feb 2017 10:33:20 -0500
+        id S1753397AbdBMPdV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Feb 2017 10:33:21 -0500
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Subject: [PATCH v28 08/21] richacl: Compute maximum file masks from an acl
-Date: Mon, 13 Feb 2017 16:32:24 +0100
-Message-Id: <1486999957-2381-9-git-send-email-agruenba@redhat.com>
+Subject: [PATCH v28 07/21] richacl: Permission check algorithm
+Date: Mon, 13 Feb 2017 16:32:23 +0100
+Message-Id: <1486999957-2381-8-git-send-email-agruenba@redhat.com>
 In-Reply-To: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
 References: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,200 +15,164 @@ List-Id: xfs
 To: Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 
-Compute upper bound owner, group, and other file masks with as few
-permissions as possible without denying any permissions that the NFSv4
-acl in a richacl grants.
-
-This algorithm is used when a file inherits an acl at create time and
-when an acl is set via a mechanism that does not provide file masks
-(such as setting an acl via nfsd).  When user-space sets an acl via
-setxattr, the extended attribute already includes the file masks.
-
-Setting an acl also sets the file mode permission bits: they are
-determined by the file masks; see richacl_masks_to_mode().
+A richacl roughly grants a requested access if the NFSv4 acl in the
+richacl grants the requested permissions according to the NFSv4
+permission check algorithm and the file mask that applies to the process
+includes the requested permissions.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@fieldses.org>
 Reviewed-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/richacl.c            | 157 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/richacl.c            | 128 ++++++++++++++++++++++++++++++++++++++++++++++++
  include/linux/richacl.h |   1 +
- 2 files changed, 158 insertions(+)
+ 2 files changed, 129 insertions(+)
 
 diff --git a/fs/richacl.c b/fs/richacl.c
-index b7e96d0..0443090 100644
+index 2072cf4..b7e96d0 100644
 --- a/fs/richacl.c
 +++ b/fs/richacl.c
-@@ -303,3 +303,160 @@ richacl_permission(struct inode *inode, const struct richacl *acl,
- 	return denied ? -EACCES : 0;
+@@ -175,3 +175,131 @@ richacl_want_to_mask(unsigned int want)
+ 		mask |= RICHACE_WRITE_DATA;
+ 	return mask;
  }
- EXPORT_SYMBOL_GPL(richacl_permission);
-+
-+/*
-+ * Note: functions like richacl_allowed_to_who(), richacl_group_class_allowed(),
-+ * and richacl_compute_max_masks() iterate through the entire acl in reverse
-+ * order as an optimization.
-+ *
-+ * In the standard algorithm, aces are considered in forward order.  When a
-+ * process matches an ace, the permissions in the ace are either allowed or
-+ * denied depending on the ace type.  Once a permission has been allowed or
-+ * denied, it is no longer considered in further aces.
-+ *
-+ * By iterating through the acl in reverse order, we can compute the same
-+ * result without having to keep track of which permissions have been allowed
-+ * and denied already.
-+ */
 +
 +/**
-+ * richacl_allowed_to_who  -  permissions allowed to a specific who value
++ * richacl_permission  -  richacl permission check algorithm
++ * @inode:	inode to check
++ * @acl:	rich acl of the inode
++ * @want:	requested access (MAY_* flags)
 + *
-+ * Compute the maximum mask values allowed to a specific who value, taking
-+ * everyone@ aces into account.
++ * Checks if the current process is granted @want flags in @acl.
 + */
-+static unsigned int richacl_allowed_to_who(struct richacl *acl,
-+					   struct richace *who)
++int
++richacl_permission(struct inode *inode, const struct richacl *acl,
++		   int want)
 +{
-+	struct richace *ace;
-+	unsigned int allowed = 0;
-+
-+	richacl_for_each_entry_reverse(ace, acl) {
-+		if (richace_is_inherit_only(ace))
-+			continue;
-+		if (richace_is_same_identifier(ace, who) ||
-+		    richace_is_everyone(ace)) {
-+			if (richace_is_allow(ace))
-+				allowed |= ace->e_mask;
-+			else if (richace_is_deny(ace))
-+				allowed &= ~ace->e_mask;
-+		}
-+	}
-+	return allowed;
-+}
-+
-+/**
-+ * richacl_group_class_allowed  -  maximum permissions of the group class
-+ *
-+ * Compute the maximum mask values allowed to a process in the group class
-+ * (i.e., a process which is not the owner but is in the owning group or
-+ * matches a user or group acl entry).  This includes permissions granted or
-+ * denied by everyone@ aces.
-+ *
-+ * See richacl_compute_max_masks().
-+ */
-+static unsigned int richacl_group_class_allowed(struct richacl *acl)
-+{
-+	struct richace *ace;
-+	unsigned int everyone_allowed = 0, group_class_allowed = 0;
-+	int had_group_ace = 0;
-+
-+	richacl_for_each_entry_reverse(ace, acl) {
-+		if (richace_is_inherit_only(ace) ||
-+		    richace_is_owner(ace))
-+			continue;
-+
-+		if (richace_is_everyone(ace)) {
-+			if (richace_is_allow(ace))
-+				everyone_allowed |= ace->e_mask;
-+			else if (richace_is_deny(ace))
-+				everyone_allowed &= ~ace->e_mask;
-+		} else {
-+			group_class_allowed |=
-+				richacl_allowed_to_who(acl, ace);
-+
-+			if (richace_is_group(ace))
-+				had_group_ace = 1;
-+		}
-+	}
-+	/*
-+	 * If the acl doesn't contain any group@ aces, richacl_allowed_to_who()
-+	 * wasn't called for the owning group.  We could make that call now, but
-+	 * we already know the result (everyone_allowed).
-+	 */
-+	if (!had_group_ace)
-+		group_class_allowed |= everyone_allowed;
-+	return group_class_allowed;
-+}
-+
-+/**
-+ * richacl_compute_max_masks  -  compute upper bound masks
-+ *
-+ * Computes upper bound owner, group, and other masks so that none of the
-+ * permissions allowed by the acl are disabled.
-+ *
-+ * We don't make assumptions about who the owner is so that the owner can
-+ * change with no effect on the file masks or file mode permission bits; this
-+ * means that we must assume that all entries can match the owner.
-+ */
-+void richacl_compute_max_masks(struct richacl *acl)
-+{
-+	unsigned int gmask = ~0;
-+	struct richace *ace;
++	const struct richace *ace;
++	unsigned int mask = richacl_want_to_mask(want);
++	unsigned int requested = mask, denied = 0;
++	int in_owning_group = in_group_p(inode->i_gid);
++	int in_owner_or_group_class = in_owning_group;
 +
 +	/*
-+	 * @gmask contains all permissions which the group class is ever
-+	 * allowed.  We use it to avoid adding permissions to the group mask
-+	 * from everyone@ allow aces which the group class is always denied
-+	 * through other aces.  For example, the following acl would otherwise
-+	 * result in a group mask of rw:
-+	 *
-+	 *	group@:w::deny
-+	 *	everyone@:rw::allow
-+	 *
-+	 * Avoid computing @gmask for acls which do not include any group class
-+	 * deny aces: in such acls, the group class is never denied any
-+	 * permissions from everyone@ allow aces, and the group class cannot
-+	 * have fewer permissions than the other class.
++	 * A process is
++	 *   - in the owner file class if it owns the file,
++	 *   - in the group file class if it is in the file's owning group or
++	 *     it matches any of the user or group entries, and
++	 *   - in the other file class otherwise.
++	 * The file class is only relevant for determining which file mask to
++	 * apply, which only happens for masked acls.
 +	 */
++	if (acl->a_flags & RICHACL_MASKED) {
++		if ((acl->a_flags & RICHACL_WRITE_THROUGH) &&
++		    uid_eq(current_fsuid(), inode->i_uid)) {
++			denied = requested & ~acl->a_owner_mask;
++			goto out;
++		}
++	} else {
++		/*
++		 * When the acl is not masked, there is no need to determine if
++		 * the process is in the group class and we can break out
++		 * earlier of the loop below.
++		 */
++		in_owner_or_group_class = 1;
++	}
 +
-+restart:
-+	acl->a_owner_mask = 0;
-+	acl->a_group_mask = 0;
-+	acl->a_other_mask = 0;
++	/*
++	 * Check if the acl grants the requested access and determine which
++	 * file class the process is in.
++	 */
++	richacl_for_each_entry(ace, acl) {
++		unsigned int ace_mask = ace->e_mask;
 +
-+	richacl_for_each_entry_reverse(ace, acl) {
 +		if (richace_is_inherit_only(ace))
 +			continue;
-+
 +		if (richace_is_owner(ace)) {
-+			if (richace_is_allow(ace))
-+				acl->a_owner_mask |= ace->e_mask;
-+			else if (richace_is_deny(ace))
-+				acl->a_owner_mask &= ~ace->e_mask;
-+		} else if (richace_is_everyone(ace)) {
-+			if (richace_is_allow(ace)) {
-+				acl->a_owner_mask |= ace->e_mask;
-+				acl->a_group_mask |= ace->e_mask & gmask;
-+				acl->a_other_mask |= ace->e_mask;
-+			} else if (richace_is_deny(ace)) {
-+				acl->a_owner_mask &= ~ace->e_mask;
-+				acl->a_group_mask &= ~ace->e_mask;
-+				acl->a_other_mask &= ~ace->e_mask;
-+			}
-+		} else {
-+			if (richace_is_allow(ace)) {
-+				acl->a_owner_mask |= ace->e_mask & gmask;
-+				acl->a_group_mask |= ace->e_mask & gmask;
-+			} else if (richace_is_deny(ace) && gmask == ~0) {
-+				gmask = richacl_group_class_allowed(acl);
-+				if (likely(gmask != ~0))
-+					/* should always be true */
-+					goto restart;
-+			}
++			if (!uid_eq(current_fsuid(), inode->i_uid))
++				continue;
++			goto entry_matches_owner;
++		} else if (richace_is_group(ace)) {
++			if (!in_owning_group)
++				continue;
++		} else if (richace_is_unix_user(ace)) {
++			if (!uid_eq(current_fsuid(), ace->e_id.uid))
++				continue;
++			if (uid_eq(current_fsuid(), inode->i_uid))
++				goto entry_matches_owner;
++		} else if (richace_is_unix_group(ace)) {
++			if (!in_group_p(ace->e_id.gid))
++				continue;
++		} else
++			goto entry_matches_everyone;
++
++		/*
++		 * Apply the group file mask to entries other than owner@ and
++		 * everyone@ or user entries matching the owner.  This ensures
++		 * that we grant the same permissions as the acl computed by
++		 * richacl_apply_masks().
++		 *
++		 * Without this restriction, the following richacl would grant
++		 * rw access to processes which are both the owner and in the
++		 * owning group, but not to other users in the owning group,
++		 * which could not be represented without masks:
++		 *
++		 *  owner:rw::mask
++		 *  group@:rw::allow
++		 */
++		if ((acl->a_flags & RICHACL_MASKED) && richace_is_allow(ace))
++			ace_mask &= acl->a_group_mask;
++
++entry_matches_owner:
++		/* The process is in the owner or group file class. */
++		in_owner_or_group_class = 1;
++
++entry_matches_everyone:
++		/* Check which mask flags the ACE allows or denies. */
++		if (richace_is_deny(ace))
++			denied |= ace_mask & mask;
++		mask &= ~ace_mask;
++
++		/*
++		 * Keep going until we know which file class
++		 * the process is in.
++		 */
++		if (!mask && in_owner_or_group_class)
++			break;
++	}
++	denied |= mask;
++
++	if (acl->a_flags & RICHACL_MASKED) {
++		/*
++		 * The file class a process is in determines which file mask
++		 * applies.  Check if that file mask also grants the requested
++		 * access.
++		 */
++		if (uid_eq(current_fsuid(), inode->i_uid))
++			denied |= requested & ~acl->a_owner_mask;
++		else if (in_owner_or_group_class)
++			denied |= requested & ~acl->a_group_mask;
++		else {
++			if (acl->a_flags & RICHACL_WRITE_THROUGH)
++				denied = requested & ~acl->a_other_mask;
++			else
++				denied |= requested & ~acl->a_other_mask;
 +		}
 +	}
 +
-+	acl->a_flags &= ~(RICHACL_WRITE_THROUGH | RICHACL_MASKED);
++out:
++	return denied ? -EACCES : 0;
 +}
-+EXPORT_SYMBOL_GPL(richacl_compute_max_masks);
++EXPORT_SYMBOL_GPL(richacl_permission);
 diff --git a/include/linux/richacl.h b/include/linux/richacl.h
-index beeec35..700888b 100644
+index 70923f8..beeec35 100644
 --- a/include/linux/richacl.h
 +++ b/include/linux/richacl.h
-@@ -178,5 +178,6 @@ extern void richace_copy(struct richace *, const struct richace *);
+@@ -177,5 +177,6 @@ extern struct richacl *richacl_clone(const struct richacl *, gfp_t);
+ extern void richace_copy(struct richace *, const struct richace *);
  extern int richacl_masks_to_mode(const struct richacl *);
  extern unsigned int richacl_mode_to_mask(umode_t);
- extern int richacl_permission(struct inode *, const struct richacl *, int);
-+extern void richacl_compute_max_masks(struct richacl *);
++extern int richacl_permission(struct inode *, const struct richacl *, int);
  
  #endif /* __RICHACL_H */
 -- 
