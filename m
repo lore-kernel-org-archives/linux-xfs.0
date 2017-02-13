@@ -1,78 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60396 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43476 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752859AbdBPHmg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Feb 2017 02:42:36 -0500
-Date: Thu, 16 Feb 2017 15:42:34 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 0/5] xfs: quota deadlock fixes
-Message-ID: <20170216074234.GV24562@eguan.usersys.redhat.com>
-References: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
+        id S1752976AbdBMPde (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Feb 2017 10:33:34 -0500
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v28 13/21] richacl: Check if an acl is equivalent to a file mode
+Date: Mon, 13 Feb 2017 16:32:29 +0100
+Message-Id: <1486999957-2381-14-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
+References: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 
-On Wed, Feb 15, 2017 at 10:40:42AM -0500, Brian Foster wrote:
-> Hi all,
-> 
-> This is a collection of several quota related deadlock fixes for
-> problems that have been reported to the list recently.
-> 
-> Patch 1 fixes the low memory quotacheck problem reported by Martin[1].
-> Dave is CC'd as he had comments on this particular thread that started a
-> discussion, but I hadn't heard anything back since my last response.
-> 
-> Patch 2 fixes a separate problem I ran into while attempting to
-> reproduce Eryu's xfs/305 hang report[2]. 
-> 
-> Patches 3-5 fix the actual problem reported by Eryu, which is a quotaoff
-> deadlock reproduced by xfs/305.
-> 
-> Further details are included in the individual commit log descriptions.
-> Thoughts, reviews, flames appreciated.
-> 
-> Eryu,
-> 
-> I've run several hundred iterations of this on your reproducer system
-> without reproducing the hang. I have reproduced a reset overnight but
-> still haven't been able to grab a stack trace from that occurrence (I'll
-> try again today/tonight with better console logging). I suspect this is
-> a separate problem (possibly just an ASSERT() failure as this is a DEBUG
-> kernel), but I'd appreciate any testing you can run against these
-> patches to verify.
+ACLs are considered equivalent to file modes if they only consist of
+owner@, group@, and everyone@ entries, the owner@ permissions do not
+depend on whether the owner is a member in the owning group, and no
+inheritance flags are set.  This test is used to avoid storing richacls
+if the acl can be computed from the file permission bits.
 
-Sure, I'll give them a test and report back once I got results. Thanks
-for looking into it!
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/richacl.c            | 104 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/richacl.h |   1 +
+ 2 files changed, 105 insertions(+)
 
-Eryu
+diff --git a/fs/richacl.c b/fs/richacl.c
+index a199245..1022983 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -612,3 +612,107 @@ richacl_chmod(struct inode *inode, umode_t mode)
+ 	return retval;
+ }
+ EXPORT_SYMBOL(richacl_chmod);
++
++/**
++ * richacl_equiv_mode  -  compute the mode equivalent of @acl
++ *
++ * An acl is considered equivalent to a file mode if it only consists of
++ * owner@, group@, and everyone@ entries and the owner@ permissions do not
++ * depend on whether the owner is a member in the owning group.
++ */
++int
++richacl_equiv_mode(const struct richacl *acl, umode_t *mode_p)
++{
++	umode_t mode = *mode_p;
++
++	/*
++	 * The RICHACE_DELETE_CHILD flag is meaningless for non-directories, so
++	 * we ignore it.
++	 */
++	unsigned int x = S_ISDIR(mode) ? 0 : RICHACE_DELETE_CHILD;
++	struct {
++		unsigned int allowed;
++		unsigned int defined;  /* allowed or denied */
++	} owner = {
++		.defined = RICHACE_POSIX_ALWAYS_ALLOWED |
++			   RICHACE_POSIX_OWNER_ALLOWED  | x,
++	}, group = {
++		.defined = RICHACE_POSIX_ALWAYS_ALLOWED | x,
++	}, everyone = {
++		.defined = RICHACE_POSIX_ALWAYS_ALLOWED | x,
++	};
++	const struct richace *ace;
++
++	if (acl->a_flags & ~(RICHACL_WRITE_THROUGH | RICHACL_MASKED))
++		return -1;
++
++	richacl_for_each_entry(ace, acl) {
++		if (ace->e_flags & ~RICHACE_SPECIAL_WHO)
++			return -1;
++
++		if (richace_is_owner(ace) || richace_is_everyone(ace)) {
++			x = ace->e_mask & ~owner.defined;
++			if (richace_is_allow(ace)) {
++				unsigned int group_denied =
++					group.defined & ~group.allowed;
++
++				if (x & group_denied)
++					return -1;
++				owner.allowed |= x;
++			} else /* if (richace_is_deny(ace)) */ {
++				if (x & group.allowed)
++					return -1;
++			}
++			owner.defined |= x;
++
++			if (richace_is_everyone(ace)) {
++				x = ace->e_mask;
++				if (richace_is_allow(ace)) {
++					group.allowed |=
++						x & ~group.defined;
++					everyone.allowed |=
++						x & ~everyone.defined;
++				}
++				group.defined |= x;
++				everyone.defined |= x;
++			}
++		} else if (richace_is_group(ace)) {
++			x = ace->e_mask & ~group.defined;
++			if (richace_is_allow(ace))
++				group.allowed |= x;
++			group.defined |= x;
++		} else
++			return -1;
++	}
++
++	if (group.allowed & ~owner.defined)
++		return -1;
++
++	if (acl->a_flags & RICHACL_MASKED) {
++		if (acl->a_flags & RICHACL_WRITE_THROUGH) {
++			owner.allowed = acl->a_owner_mask;
++			everyone.allowed = acl->a_other_mask;
++		} else {
++			owner.allowed &= acl->a_owner_mask;
++			everyone.allowed &= acl->a_other_mask;
++		}
++		group.allowed &= acl->a_group_mask;
++	}
++
++	mode = (mode & ~S_IRWXUGO) |
++	       (richacl_mask_to_mode(owner.allowed) << 6) |
++	       (richacl_mask_to_mode(group.allowed) << 3) |
++		richacl_mask_to_mode(everyone.allowed);
++
++	/* Mask flags we can ignore */
++	x = S_ISDIR(mode) ? 0 : RICHACE_DELETE_CHILD;
++
++	if (((richacl_mode_to_mask(mode >> 6) ^ owner.allowed)    & ~x) ||
++	    ((richacl_mode_to_mask(mode >> 3) ^ group.allowed)    & ~x) ||
++	    ((richacl_mode_to_mask(mode)      ^ everyone.allowed) & ~x))
++		return -1;
++
++	*mode_p = mode;
++	return 0;
++}
++EXPORT_SYMBOL_GPL(richacl_equiv_mode);
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index 3cd5e53..a865f37 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -190,5 +190,6 @@ extern unsigned int richacl_mode_to_mask(umode_t);
+ extern int richacl_permission(struct inode *, const struct richacl *, int);
+ extern void richacl_compute_max_masks(struct richacl *);
+ extern int richacl_chmod(struct inode *, umode_t);
++extern int richacl_equiv_mode(const struct richacl *, umode_t *);
+ 
+ #endif /* __RICHACL_H */
+-- 
+2.7.4
 
-> 
-> Brian
-> 
-> [1] http://www.spinics.net/lists/linux-xfs/msg01901.html
-> [2] http://www.spinics.net/lists/linux-xfs/msg03835.html
-> 
-> Brian Foster (5):
->   xfs: bypass dquot reclaim to avoid quotacheck deadlock
->   xfs: allocate quotaoff transactions up front to avoid log deadlock
->   xfs: support ability to wait on new inodes
->   xfs: update ag iterator to support wait on new inodes
->   xfs: wait on new inodes during quotaoff dquot release
-> 
->  fs/xfs/xfs_icache.c      | 58 ++++++++++++++++++++++++++++++++++++++++--------
->  fs/xfs/xfs_icache.h      |  8 +++++++
->  fs/xfs/xfs_inode.h       |  4 +++-
->  fs/xfs/xfs_qm.c          | 11 +++++++++
->  fs/xfs/xfs_qm.h          |  1 +
->  fs/xfs/xfs_qm_syscalls.c | 45 +++++++++++++++++++++----------------
->  6 files changed, 98 insertions(+), 29 deletions(-)
-> 
-> -- 
-> 2.7.4
-> 
