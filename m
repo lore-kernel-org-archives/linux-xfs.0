@@ -1,72 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33084 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41204 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752697AbdBIUiA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Feb 2017 15:38:00 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 3/3] tests/xfs: update indlen res. test to include larger write pattern
-Date: Thu,  9 Feb 2017 14:43:44 -0500
-Message-Id: <1486669424-45274-4-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1486669424-45274-1-git-send-email-bfoster@redhat.com>
-References: <1486669424-45274-1-git-send-email-bfoster@redhat.com>
+        id S1753454AbdBMPdk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Feb 2017 10:33:40 -0500
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v28 12/21] richacl: Update the file masks in chmod()
+Date: Mon, 13 Feb 2017 16:32:28 +0100
+Message-Id: <1486999957-2381-13-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
+References: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 
-The indirect blocks reservation test originally reproduced a problem
-with smaller delalloc extents being split into separate extents with
-insufficient indlen blocks. This was ultimately resolved by allowing to
-borrow blocks from the freed extent.
+Doing a chmod() sets the file mode, which includes the file permission
+bits.  When a file has a richacl, the permissions that the richacl
+grants need to be limited to what the new file permission bits allow.
 
-Since then, similar problems have been reproduced when larger delalloc
-extents are repeatedly split and merged with new writes. These repeated
-splits exposed a problem in the old indlen reservation split algorithm
-when dealing with extents that are already under-reserved from previous
-splits. This resulted in unfair distribution of existing reservation and
-fairly large delalloc extents without any indlen reservation whatsoever.
+This is done by setting the file masks in the richacl to what the file
+permission bits map to.  The richacl access check algorithm takes the
+file masks into account, which ensures that the richacl cannot grant too
+many permissions.
 
-Enhance the original indlen reservation test to include a pattern that
-reproduces this behavior.
+It is possible to explicitly add permissions to the file masks which go
+beyond what the file permission bits can grant (like the
+RICHACE_WRITE_ACL permission).  The POSIX.1 standard calls this an
+alternate file access control mechanism.  A subsequent chmod() would
+ensure that those permissions are disabled again.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Acked-by: Jeff Layton <jlayton@redhat.com>
 ---
- tests/xfs/289 | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ fs/richacl.c            | 71 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/richacl.h |  1 +
+ 2 files changed, 72 insertions(+)
 
-diff --git a/tests/xfs/289 b/tests/xfs/289
-index 3aa53b9..5839a24 100755
---- a/tests/xfs/289
-+++ b/tests/xfs/289
-@@ -85,10 +85,25 @@ done
- 
- echo 0 > /sys/fs/xfs/$sdev/drop_writes
- 
--echo "Silence is golden."
--
- _scratch_cycle_mount
- $XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
- 
-+# Now test a buffered write workload with larger extents. Write a 100m extent,
-+# split it at the 3/4 mark, then write another 100m extent that is contiguous
-+# with the 1/4 portion of the split extent. Repeat several times. This pattern
-+# is known to prematurely exhaust indirect reservations and cause warnings and
-+# assert failures.
-+rm -f $file
-+for offset in $(seq 0 100 500); do
-+	$XFS_IO_PROG -fc "pwrite ${offset}m 100m" $file >> $seqres.full 2>&1
+diff --git a/fs/richacl.c b/fs/richacl.c
+index 731c468..a199245 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -541,3 +541,74 @@ void richacl_compute_max_masks(struct richacl *acl)
+ 	acl->a_flags &= ~(RICHACL_WRITE_THROUGH | RICHACL_MASKED);
+ }
+ EXPORT_SYMBOL_GPL(richacl_compute_max_masks);
 +
-+	punchoffset=$((offset + 75))
-+	echo 1 > /sys/fs/xfs/$sdev/drop_writes
-+	$XFS_IO_PROG -c "pwrite ${punchoffset}m 4k" $file >> $seqres.full 2>&1
-+	echo 0 > /sys/fs/xfs/$sdev/drop_writes
-+done
++/**
++ * __richacl_chmod  -  update the file masks to reflect the new mode
++ * @acl:	access control list
++ * @mode:	new file permission bits including the file type
++ *
++ * Return a copy of @acl where the file masks have been replaced by the file
++ * masks corresponding to the file permission bits in @mode, or returns @acl
++ * itself if the file masks are already up to date.  Takes over a reference
++ * to @acl.
++ */
++static struct richacl *
++__richacl_chmod(struct richacl *acl, umode_t mode)
++{
++	unsigned int x = S_ISDIR(mode) ? 0 : RICHACE_DELETE_CHILD;
++	unsigned int owner_mask, group_mask, other_mask;
++	struct richacl *clone;
 +
-+echo "Silence is golden."
++	owner_mask = richacl_mode_to_mask(mode >> 6) & ~x;
++	group_mask = richacl_mode_to_mask(mode >> 3) & ~x;
++	other_mask = richacl_mode_to_mask(mode)      & ~x;
 +
- status=0
- exit
++	if (acl->a_owner_mask == owner_mask &&
++	    acl->a_group_mask == group_mask &&
++	    acl->a_other_mask == other_mask &&
++	    (acl->a_flags & RICHACL_MASKED) &&
++	    (acl->a_flags & RICHACL_WRITE_THROUGH))
++		return acl;
++
++	clone = richacl_clone(acl, GFP_KERNEL);
++	richacl_put(acl);
++	if (!clone)
++		return ERR_PTR(-ENOMEM);
++
++	clone->a_flags |= (RICHACL_WRITE_THROUGH | RICHACL_MASKED);
++	clone->a_owner_mask = owner_mask;
++	clone->a_group_mask = group_mask;
++	clone->a_other_mask = other_mask;
++
++	return clone;
++}
++
++/**
++ * richacl_chmod  -  filesystem chmod helper
++ * @inode:	inode whose file permission bits to change
++ * @mode:	new file permission bits including the file type
++ *
++ * Helper for filesystems to use to perform a chmod on the richacl of an inode.
++ */
++int
++richacl_chmod(struct inode *inode, umode_t mode)
++{
++	struct richacl *acl;
++	int retval;
++
++	if (S_ISLNK(mode))
++		return -EOPNOTSUPP;
++	if (!inode->i_op->set_richacl)
++		return -EOPNOTSUPP;
++	acl = get_richacl(inode);
++	if (IS_ERR_OR_NULL(acl))
++		return PTR_ERR(acl);
++	acl = __richacl_chmod(acl, mode);
++	if (IS_ERR(acl))
++		return PTR_ERR(acl);
++	retval = inode->i_op->set_richacl(inode, acl);
++	richacl_put(acl);
++
++	return retval;
++}
++EXPORT_SYMBOL(richacl_chmod);
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index 207fe06..3cd5e53 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -189,5 +189,6 @@ extern int richacl_masks_to_mode(const struct richacl *);
+ extern unsigned int richacl_mode_to_mask(umode_t);
+ extern int richacl_permission(struct inode *, const struct richacl *, int);
+ extern void richacl_compute_max_masks(struct richacl *);
++extern int richacl_chmod(struct inode *, umode_t);
+ 
+ #endif /* __RICHACL_H */
 -- 
 2.7.4
 
