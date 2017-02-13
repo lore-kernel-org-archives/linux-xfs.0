@@ -1,157 +1,194 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51602 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54780 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753024AbdBIU2h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Feb 2017 15:28:37 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B39B1A4521
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2017 19:34:55 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v19JYtVt024469
-        for <linux-xfs@vger.kernel.org>; Thu, 9 Feb 2017 14:34:55 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/4] xfs: resurrect debug mode drop buffered writes mechanism
-Date: Thu,  9 Feb 2017 14:34:51 -0500
-Message-Id: <1486668893-44633-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
-References: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
+        id S1753209AbdBMPdm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Feb 2017 10:33:42 -0500
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v28 15/21] richacl: Automatic Inheritance
+Date: Mon, 13 Feb 2017 16:32:31 +0100
+Message-Id: <1486999957-2381-16-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
+References: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 
-A debug mode write failure mechanism was introduced to XFS in commit
-801cc4e17a ("xfs: debug mode forced buffered write failure") to
-facilitate targeted testing of delalloc indirect reservation management
-from userspace. This code was subsequently rendered ineffective by the
-move to iomap based buffered writes in commit 68a9f5e700 ("xfs:
-implement iomap based buffered write path"). This likely went unnoticed
-because the associated userspace code had not made it into xfstests.
+Automatic Inheritance (AI) allows changes to the acl of a directory to
+propagate down to children.
 
-Resurrect this mechanism to facilitate effective indlen reservation
-testing from xfstests. The move to iomap based buffered writes relocated
-the hook this mechanism needs to return write failure from XFS to
-generic code. The failure trigger must remain in XFS. Given that
-limitation, convert this from a write failure mechanism to one that
-simply drops writes without returning failure to userspace. Rename all
-"fail_writes" references to "drop_writes" to illustrate the point. This
-is more hacky than preferred, but still triggers the XFS error handling
-behavior required to drive the indlen tests. This is only available in
-DEBUG mode and for testing purposes only.
+This is mostly implemented in user space: when a process changes the
+permissions of a directory and Automatic Inheritance is enabled for that
+directory, the process must propagate those changes to all children,
+recursively.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+The kernel enables this by keeping track of which permissions have been
+inherited at create time.  In addition, it makes sure that permission
+propagation is turned off when the permissions are set explicitly (for
+example, upon create or chmod).
+
+Automatic Inheritance works as follows:
+
+ - When the RICHACL_AUTO_INHERIT flag in the acl of a file or directory
+   is not set, the file or directory is not affected by AI.
+
+ - When the RICHACL_AUTO_INHERIT flag in the acl of a directory is set
+   and a file or subdirectory is created in that directory, the
+   inherited acl will have the RICHACL_AUTO_INHERIT flag set, and all
+   inherited aces will have the RICHACE_INHERITED_ACE flag set.  This
+   allows user space to distinguish between aces which have been
+   inherited and aces which have been explicitly added.
+
+ - When the RICHACL_PROTECTED acl flag in the acl of a file or directory
+   is set, AI will not modify the acl.  This does not affect propagation
+   of permissions from the file to its children (if the file is a
+   directory).
+
+Linux does not have a way of creating files or directories without setting the
+file permission bits, so all files created inside a directory with
+RICHACL_AUTO_INHERIT set will have the RICHACL_PROTECTED flag set.  This
+effectively disables Automatic Inheritance.
+
+Protocols which support creating files without specifying permissions can
+explicitly clear the RICHACL_PROTECTED flag after creating a file and reset the
+file masks to "undo" applying the create mode; see richacl_compute_max_masks().
+They should set the RICHACL_DEFAULTED flag.  (A mechanism that would allow to
+indicate to the kernel to ignore the create mode in the first place when there
+are inherited permissions would be nice to have.)
+
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/xfs/xfs_iomap.c |  4 ++++
- fs/xfs/xfs_mount.h | 15 ++++++++-------
- fs/xfs/xfs_sysfs.c | 14 +++++++-------
- 3 files changed, 19 insertions(+), 14 deletions(-)
+ fs/richacl.c                 | 20 +++++++++++++++++++-
+ include/linux/richacl.h      | 12 ++++++++++++
+ include/uapi/linux/richacl.h | 11 ++++++++++-
+ 3 files changed, 41 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index faa13c8..8c7447e 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1102,6 +1102,10 @@ xfs_file_iomap_end_delalloc(
- 	xfs_fileoff_t		end_fsb;
- 	int			error = 0;
+diff --git a/fs/richacl.c b/fs/richacl.c
+index 8051181..4edce8b 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -567,7 +567,8 @@ __richacl_chmod(struct richacl *acl, umode_t mode)
+ 	    acl->a_group_mask == group_mask &&
+ 	    acl->a_other_mask == other_mask &&
+ 	    (acl->a_flags & RICHACL_MASKED) &&
+-	    (acl->a_flags & RICHACL_WRITE_THROUGH))
++	    (acl->a_flags & RICHACL_WRITE_THROUGH) &&
++	    (!richacl_is_auto_inherit(acl) || richacl_is_protected(acl)))
+ 		return acl;
  
-+	/* behave as if the write failed if drop writes is enabled */
-+	if (xfs_mp_drop_writes(mp))
-+		written = 0;
+ 	clone = richacl_clone(acl, GFP_KERNEL);
+@@ -579,6 +580,8 @@ __richacl_chmod(struct richacl *acl, umode_t mode)
+ 	clone->a_owner_mask = owner_mask;
+ 	clone->a_group_mask = group_mask;
+ 	clone->a_other_mask = other_mask;
++	if (richacl_is_auto_inherit(clone))
++		clone->a_flags |= RICHACL_PROTECTED;
+ 
+ 	return clone;
+ }
+@@ -794,6 +797,14 @@ richacl_inherit(const struct richacl *dir_acl, int isdir)
+ 			ace++;
+ 		}
+ 	}
++	if (richacl_is_auto_inherit(dir_acl)) {
++		acl->a_flags = RICHACL_AUTO_INHERIT;
++		richacl_for_each_entry(ace, acl)
++			ace->e_flags |= RICHACE_INHERITED_ACE;
++	} else {
++		richacl_for_each_entry(ace, acl)
++			ace->e_flags &= ~RICHACE_INHERITED_ACE;
++	}
+ 
+ 	return acl;
+ }
+@@ -822,6 +833,13 @@ richacl_inherit_inode(const struct richacl *dir_acl, umode_t *mode_p)
+ 			richacl_put(acl);
+ 			acl = NULL;
+ 		} else {
++			/*
++			 * We need to set RICHACL_PROTECTED because we are
++			 * doing an implicit chmod
++			 */
++			if (richacl_is_auto_inherit(acl))
++				acl->a_flags |= RICHACL_PROTECTED;
 +
- 	start_fsb = XFS_B_TO_FSB(mp, offset + written);
- 	if (unlikely(!written))
- 		start_fsb = XFS_B_TO_FSBT(mp, offset);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 7f351f7..8f92b2e 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -200,11 +200,12 @@ typedef struct xfs_mount {
- 	/*
- 	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
- 	 * block killing in the event of failed writes. When enabled, all
--	 * buffered writes are forced to fail. All delalloc blocks in the range
--	 * of the write (including pre-existing delalloc blocks!) are tossed as
--	 * part of the write failure error handling sequence.
-+	 * buffered writes are silenty dropped and handled as if they failed.
-+	 * All delalloc blocks in the range of the write (including pre-existing
-+	 * delalloc blocks!) are tossed as part of the write failure error
-+	 * handling sequence.
- 	 */
--	bool			m_fail_writes;
-+	bool			m_drop_writes;
- #endif
- } xfs_mount_t;
+ 			richacl_compute_max_masks(acl);
+ 			/*
+ 			 * Ensure that the acl will not grant any permissions
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index 6354ef0..737513b 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -81,6 +81,18 @@ extern void set_cached_richacl(struct inode *, struct richacl *);
+ extern void forget_cached_richacl(struct inode *);
+ extern struct richacl *get_richacl(struct inode *);
  
-@@ -325,13 +326,13 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
++static inline int
++richacl_is_auto_inherit(const struct richacl *acl)
++{
++	return acl->a_flags & RICHACL_AUTO_INHERIT;
++}
++
++static inline int
++richacl_is_protected(const struct richacl *acl)
++{
++	return acl->a_flags & RICHACL_PROTECTED;
++}
++
+ /**
+  * richace_is_owner  -  check if @ace is an OWNER@ entry
+  */
+diff --git a/include/uapi/linux/richacl.h b/include/uapi/linux/richacl.h
+index 1ed48ac..8849a53 100644
+--- a/include/uapi/linux/richacl.h
++++ b/include/uapi/linux/richacl.h
+@@ -18,6 +18,9 @@
+ #define __UAPI_RICHACL_H
  
- #ifdef DEBUG
- static inline bool
--xfs_mp_fail_writes(struct xfs_mount *mp)
-+xfs_mp_drop_writes(struct xfs_mount *mp)
- {
--	return mp->m_fail_writes;
-+	return mp->m_drop_writes;
- }
- #else
- static inline bool
--xfs_mp_fail_writes(struct xfs_mount *mp)
-+xfs_mp_drop_writes(struct xfs_mount *mp)
- {
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index de6195e..80ac15f 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -93,7 +93,7 @@ to_mp(struct kobject *kobject)
- #ifdef DEBUG
+ /* a_flags values */
++#define RICHACL_AUTO_INHERIT			0x01
++#define RICHACL_PROTECTED			0x02
++#define RICHACL_DEFAULTED			0x04
+ #define RICHACL_WRITE_THROUGH			0x40
+ #define RICHACL_MASKED				0x80
  
- STATIC ssize_t
--fail_writes_store(
-+drop_writes_store(
- 	struct kobject		*kobject,
- 	const char		*buf,
- 	size_t			count)
-@@ -107,9 +107,9 @@ fail_writes_store(
- 		return ret;
+@@ -31,6 +34,7 @@
+ #define RICHACE_NO_PROPAGATE_INHERIT_ACE	0x0004
+ #define RICHACE_INHERIT_ONLY_ACE		0x0008
+ #define RICHACE_IDENTIFIER_GROUP		0x0040
++#define RICHACE_INHERITED_ACE			0x0080
+ #define RICHACE_SPECIAL_WHO			0x4000
  
- 	if (val == 1)
--		mp->m_fail_writes = true;
-+		mp->m_drop_writes = true;
- 	else if (val == 0)
--		mp->m_fail_writes = false;
-+		mp->m_drop_writes = false;
- 	else
- 		return -EINVAL;
+ /* e_mask bitflags */
+@@ -60,6 +64,9 @@
+ #define RICHACE_EVERYONE_SPECIAL_ID		2
  
-@@ -117,21 +117,21 @@ fail_writes_store(
- }
+ #define RICHACL_VALID_FLAGS (					\
++	RICHACL_AUTO_INHERIT |					\
++	RICHACL_PROTECTED |					\
++	RICHACL_DEFAULTED |					\
+ 	RICHACL_WRITE_THROUGH |					\
+ 	RICHACL_MASKED )
  
- STATIC ssize_t
--fail_writes_show(
-+drop_writes_show(
- 	struct kobject		*kobject,
- 	char			*buf)
- {
- 	struct xfs_mount	*mp = to_mp(kobject);
+@@ -69,13 +76,15 @@
+ 	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
+ 	RICHACE_INHERIT_ONLY_ACE |				\
+ 	RICHACE_IDENTIFIER_GROUP |				\
++	RICHACE_INHERITED_ACE |					\
+ 	RICHACE_SPECIAL_WHO )
  
--	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_fail_writes ? 1 : 0);
-+	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_drop_writes ? 1 : 0);
- }
--XFS_SYSFS_ATTR_RW(fail_writes);
-+XFS_SYSFS_ATTR_RW(drop_writes);
+ #define RICHACE_INHERITANCE_FLAGS (				\
+ 	RICHACE_FILE_INHERIT_ACE |				\
+ 	RICHACE_DIRECTORY_INHERIT_ACE |				\
+ 	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
+-	RICHACE_INHERIT_ONLY_ACE )
++	RICHACE_INHERIT_ONLY_ACE |				\
++	RICHACE_INHERITED_ACE )
  
- #endif /* DEBUG */
- 
- static struct attribute *xfs_mp_attrs[] = {
- #ifdef DEBUG
--	ATTR_LIST(fail_writes),
-+	ATTR_LIST(drop_writes),
- #endif
- 	NULL,
- };
+ /* Valid RICHACE_* flags for directories and non-directories */
+ #define RICHACE_VALID_MASK (					\
 -- 
 2.7.4
 
