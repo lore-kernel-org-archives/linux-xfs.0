@@ -1,113 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52386 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:60658 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751291AbdB1X7y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Feb 2017 18:59:54 -0500
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 5/8] nowait aio: return on congested block device
-Date: Tue, 28 Feb 2017 17:36:07 -0600
-Message-Id: <20170228233610.25456-6-rgoldwyn@suse.de>
-In-Reply-To: <20170228233610.25456-1-rgoldwyn@suse.de>
-References: <20170228233610.25456-1-rgoldwyn@suse.de>
+        id S1751679AbdBMQnJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Feb 2017 11:43:09 -0500
+Received: from smtp.corp.redhat.com (int-mx16.intmail.prod.int.phx2.redhat.com [10.5.11.28])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 480A981127
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Feb 2017 16:43:09 +0000 (UTC)
+Date: Mon, 13 Feb 2017 11:43:07 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [BUG] xfs/305 hangs 4.10-rc4 kernel
+Message-ID: <20170213164307.GA25568@bfoster.bfoster>
+References: <20170125063943.GF1859@eguan.usersys.redhat.com>
+ <20170125145215.GC28388@bfoster.bfoster>
+ <20170126032950.GM1859@eguan.usersys.redhat.com>
+ <20170126184427.GA39683@bfoster.bfoster>
+ <20170127025219.GR1859@eguan.usersys.redhat.com>
+ <20170130181224.GC8737@bfoster.bfoster>
+ <20170130215952.GA11230@bfoster.bfoster>
+ <20170204114700.GH1859@eguan.usersys.redhat.com>
+ <20170206175908.GI57865@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170206175908.GI57865@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: jack@suse.com
-Cc: hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Mon, Feb 06, 2017 at 12:59:08PM -0500, Brian Foster wrote:
+> On Sat, Feb 04, 2017 at 07:47:00PM +0800, Eryu Guan wrote:
+> > On Mon, Jan 30, 2017 at 04:59:52PM -0500, Brian Foster wrote:
+> > > 
+> > > I reproduced an xfs_wait_buftarg() unmount hang once that looks like a
+> > > separate issue (occurs after the test, long after quotaoff has
+> > > completed). I haven't reproduced that one again nor the original hang in
+> > > 100+ iterations so far. Care to give the following a whirl in your
+> > > environment? Thanks.
+> > 
+> > I applied your test patch on top of 4.10-rc4 stock kernel and hit
+> > xfs/305 hang at 82nd iteration. I attached the dmesg and sysrq-w log.
+> > You can login the same RH internal test host if that's helpful, I left
+> > the host running in the hang state.
+> > 
+> 
+> Ok, that's not too surprising. It does look like we are in some kind of
+> live lock situation. xfs_quota is spinning on the dqpurge and two or
+> three fsstress workers are spinning on xfs_iget() retries via bulkstat.
+> 
+> I'm going to hard reboot this box and try to restart this test with some
+> customized tracepoints to try and get more data..
+> 
 
-A new flag BIO_NOWAIT is introduced to identify bio's
-orignating from iocb with IOCB_NOWAIT. This flag indicates
-to return immediately if a request cannot be made instead
-of retrying.
+I managed to get enough data to manufacture the problem locally. It
+looks like quotaoff is racy with respect to inode allocation.
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- block/blk-core.c          | 13 +++++++++++--
- fs/direct-io.c            | 11 +++++++++--
- include/linux/blk_types.h |  1 +
- 3 files changed, 21 insertions(+), 4 deletions(-)
+The latter can allocate an inode, populate the incore data structures,
+etc. and set i_flags to XFS_INEW until the inode is fully populated. If
+inode allocation races with quotaoff such that the alloc doesn't yet see
+the quota off state and thus grabs a new dquot reference, it's possible
+for the subsequent xfs_qm_dqrele_all_inodes() scan from the quota off
+path to simply skip the associated inode because of its XFS_INEW state.
+The associated ->i_[ugp]dquot is thus never released and the dqpurge
+spins indefinitely.
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 61ba08c..e5cfc50 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1258,6 +1258,11 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- 	if (!IS_ERR(rq))
- 		return rq;
- 
-+	if (bio_flagged(bio, BIO_NOWAIT)) {
-+		blk_put_rl(rl);
-+		return ERR_PTR(-EAGAIN);
-+	}
-+
- 	if (!gfpflags_allow_blocking(gfp_mask) || unlikely(blk_queue_dying(q))) {
- 		blk_put_rl(rl);
- 		return rq;
-@@ -2018,7 +2023,7 @@ blk_qc_t generic_make_request(struct bio *bio)
- 	do {
- 		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
- 
--		if (likely(blk_queue_enter(q, false) == 0)) {
-+		if (likely(blk_queue_enter(q, bio_flagged(bio, BIO_NOWAIT)) == 0)) {
- 			ret = q->make_request_fn(q, bio);
- 
- 			blk_queue_exit(q);
-@@ -2027,7 +2032,11 @@ blk_qc_t generic_make_request(struct bio *bio)
- 		} else {
- 			struct bio *bio_next = bio_list_pop(current->bio_list);
- 
--			bio_io_error(bio);
-+			if (unlikely(bio_flagged(bio, BIO_NOWAIT))) {
-+				bio->bi_error = -EAGAIN;
-+				bio_endio(bio);
-+			} else
-+				bio_io_error(bio);
- 			bio = bio_next;
- 		}
- 	} while (bio);
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index c87bae4..2973df0 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -386,6 +386,9 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
- 	else
- 		bio->bi_end_io = dio_bio_end_io;
- 
-+	if (dio->iocb->ki_flags & IOCB_NOWAIT)
-+		bio_set_flag(bio, BIO_NOWAIT);
-+
- 	sdio->bio = bio;
- 	sdio->logical_offset_in_bio = sdio->cur_page_fs_offset;
- }
-@@ -480,8 +483,12 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
- 	unsigned i;
- 	int err;
- 
--	if (bio->bi_error)
--		dio->io_error = -EIO;
-+	if (bio->bi_error) {
-+		if (bio_flagged(bio, BIO_NOWAIT))
-+			dio->io_error = bio->bi_error;
-+		else
-+			dio->io_error = -EIO;
-+	}
- 
- 	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty) {
- 		err = bio->bi_error;
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 519ea2c..1d77e9b 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -102,6 +102,7 @@ struct bio {
- #define BIO_REFFED	8	/* bio has elevated ->bi_cnt */
- #define BIO_THROTTLED	9	/* This bio has already been subjected to
- 				 * throttling rules. Don't do it again. */
-+#define BIO_NOWAIT	10	/* don't block over blk device congestion */
- 
- /*
-  * Flags starting here get preserved by bio_reset() - this includes
--- 
-2.10.2
+I reproduce this locally by running quotaoff during an artificial delay
+in xfs_finish_inode_setup() right before XFS_INEW is cleared. The least
+intrusive way I can think of dealing with this is to account XFS_INEW
+inodes as "skipped" inodes during the ag walk (for dqrele_all_inodes()
+only) and restart the scan until they are completed.
 
+Brian
+
+> Brian
+> 
+> > Thanks,
+> > Eryu
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
