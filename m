@@ -1,230 +1,309 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19468 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751387AbdBOUVg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2017 15:21:36 -0500
-Date: Wed, 15 Feb 2017 12:20:30 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: don't reserve blocks for right shift transactions
-Message-ID: <20170215202030.GB28933@birch.djwong.org>
-References: <1487171128-5335-1-git-send-email-bfoster@redhat.com>
- <20170215180955.GG6813@birch.djwong.org>
- <20170215191530.GC62565@bfoster.bfoster>
- <20170215193637.GA28933@birch.djwong.org>
- <20170215200154.GD62565@bfoster.bfoster>
+Received: from bombadil.infradead.org ([65.50.211.133]:35262 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752562AbdBMTni (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Feb 2017 14:43:38 -0500
+Date: Mon, 13 Feb 2017 11:43:37 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfs: fix inode uid/gid initialization
+Message-ID: <20170213194337.GA9852@infradead.org>
+References: <1487008001.3125.41.camel@HansenPartnership.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170215200154.GD62565@bfoster.bfoster>
+In-Reply-To: <1487008001.3125.41.camel@HansenPartnership.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>, Seth Forshee <seth.forshee@canonical.com>
 
-On Wed, Feb 15, 2017 at 03:01:54PM -0500, Brian Foster wrote:
-> On Wed, Feb 15, 2017 at 11:36:37AM -0800, Darrick J. Wong wrote:
-> > On Wed, Feb 15, 2017 at 02:15:30PM -0500, Brian Foster wrote:
-> > > On Wed, Feb 15, 2017 at 10:09:55AM -0800, Darrick J. Wong wrote:
-> > > > On Wed, Feb 15, 2017 at 10:05:28AM -0500, Brian Foster wrote:
-> > > > > The block reservation for the transaction allocated in
-> > > > > xfs_shift_file_space() is an artifact of the original collapse range
-> > > > > support. It exists to handle the case where a collapse range occurs,
-> > > > > the initial extent is left shifted into a location that forms a
-> > > > > contiguous boundary with the previous extent and thus the extents
-> > > > > are merged. This code was subsequently refactored and reused for
-> > > > > insert range (right shift) support.
-> > > > > 
-> > > > > If an insert range occurs under low free space conditions, the
-> > > > > extent at the starting offset is split before the first shift
-> > > > > transaction is allocated. If the block reservation fails, this
-> > > > > leaves separate, but contiguous extents around in the inode. While
-> > > > > not a fatal problem, this is unexpected and will flag a warning on
-> > > > > subsequent insert range operations on the inode. This problem has
-> > > > > been reproduce intermittently by generic/270 running against a
-> > > > > ramdisk device.
-> > > > > 
-> > > > > Since right shift does not create new extent boundaries in the
-> > > > > inode, a block reservation for extent merge is unnecessary. Update
-> > > > > xfs_shift_file_space() to conditionally reserve fs blocks for left
-> > > > > shift transactions only. This avoids the warning reproduced by
-> > > > > generic/270.
-> > > > > 
-> > > > > Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > > ---
-> > > > >  fs/xfs/xfs_bmap_util.c | 20 ++++++++++----------
-> > > > >  1 file changed, 10 insertions(+), 10 deletions(-)
-> > > > > 
-> > > > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > > > > index 7c3bfaf..6be5f26 100644
-> > > > > --- a/fs/xfs/xfs_bmap_util.c
-> > > > > +++ b/fs/xfs/xfs_bmap_util.c
-> > > > > @@ -1385,10 +1385,16 @@ xfs_shift_file_space(
-> > > > >  	xfs_fileoff_t		stop_fsb;
-> > > > >  	xfs_fileoff_t		next_fsb;
-> > > > >  	xfs_fileoff_t		shift_fsb;
-> > > > > +	uint			resblks;
-> > > > >  
-> > > > >  	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
-> > > > >  
-> > > > >  	if (direction == SHIFT_LEFT) {
-> > > > > +		/*
-> > > > > +		 * Reserve blocks to cover potential extent merges after left
-> > > > > +		 * shift operations.
-> > > > > +		 */
-> > > > > +		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
-> > > > >  		next_fsb = XFS_B_TO_FSB(mp, offset + len);
-> > > > >  		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
-> > > > >  	} else {
-> > > > > @@ -1396,6 +1402,7 @@ xfs_shift_file_space(
-> > > > >  		 * If right shift, delegate the work of initialization of
-> > > > >  		 * next_fsb to xfs_bmap_shift_extent as it has ilock held.
-> > > > >  		 */
-> > > > > +		resblks = 0;
-> > > > 
-> > > > Hmmmm.  I am convinced that this patch removes the most likely cause of
-> > > > _trans_alloc failure, and therefore makes the g/270 failures go away.
-> > > > 
-> > > > However, I worry that if we split the extent and _trans_alloc fails for
-> > > > some other reason (e.g. ENOMEM) then we'll still end up two adjacent
-> > > > bmap extents that should be combined.  Granted, the only solution that I
-> > > > can think of is very complicated (create a redo log item, link
-> > > > everything together with the deferred ops mechanism, thereby making
-> > > > right shift an atomic operation) for something that's unlikely to
-> > > > happen(?) during an operation that might not be all that frequent
-> > > > anyway.  I'm also not sure about the implications of adjacent mergeable
-> > > > bmaps -- I think we can handle it, but it's not like I've researched
-> > > > this thoroughly.
-> > > > 
-> > > > <shrug> Thoughts?
-> > > > 
-> > > 
-> > > Yeah, this isn't a pure fix given the way the code is organized. I think
-> > > I meant to point that out in the commit log; that technically this state
-> > > is still possible, but probably not as likely to occur. I also
-> > > considered killing off the warning, but it still seems useful to me for
-> > > similar reasons. (Effectively, the motivation for this patch is really
-> > > just to shut the test up. :).
-> > 
-> > :)
-> > 
-> > I tossed the patch on the 4.11 pile and we'll see if a quick round
-> > of testing turns anything up.
-> > 
-> 
-> Thanks.
-> 
-> > > I considered error handling just enough to realize that there wasn't a
-> > > simple solution. Given that this change seemed correct regardless, I
-> > > figured this works for now and we can revisit if this remains a problem
-> > > in practice.
-> > > 
-> > > Beyond that... an atomic rewrite using the deferred ops stuff seems like
-> > > a reasonable approach technically, but probably should be more motivated
-> > > by the broader fact that afaict any of the collapse/insert range
-> > > operations can fail midway through the overall operation and leave the
-> > > file in a halfway shifted state with respect to the original request.
-> > 
-> > Yep.
-> > 
-> > > Would deferred ops address that problem (e.g., what if a subsequent
-> > > transaction allocation failed in that model, after one or more extents
-> > > had already been shifted)?
-> > 
-> > Yep, that's exactly what deferred ops do -- it queues up a large
-> > operation, logs an intent for the whole operation, and re-logs
-> > successively smaller intent items as we incrementally finish little
-> > pieces of the big operation.  If something happens midway through, we go
-> > offline so that later on journal recovery will know exactly where we
-> > left off and can restart the operation.
-> > 
-> 
-> So is part of the tradeoff for the atomicity of the deferred ops model
-> that any failure midway through becomes a shutdown event as opposed to a
-> potential userspace error return (notwithstanding cancellation of a
-> dirty transaction, which is always a shutdown)?
+On Mon, Feb 13, 2017 at 09:46:41AM -0800, James Bottomley wrote:
+> I was debugging a creation failure using a vfs shifting patch set and
+> discovered that xfs itself doesn't actually respect the superblock
+> namespace in a couple of places (these showed up as files with the
+> wrong ownership in my tests).
 
-Yes, since we've started updating metadata but haven't finished, which
-implies that the fs is inconsistent.  It was designed this way to avoid
-the situation where a bmbt update commits but its corresponding rmap
-update fails in between transactions, so now the metadata are
-inconsistent.
+Can you submit your test case to xfstests?  I would be good to have
+testing for this in the regular test runs.
 
-For extent shifting the justification for shutting down is more tenuous
-because the fs isn't inconsistent; we simply have a file operation that
-failed midway through and fallocate doesn't tell userspace which part
-of the operation actually did succeed so that it can react accordingly.
-If, say, we manage to move one or two extents in a sparse file then
-it may be very hard to tell which extents did /not/ get moved.
+> The fix is to convert xfs away from hand
+> rolling inode_init_owner() and to use the i_uid/gid_read/write
+> functions.
 
-> > (This is a little dangerous -- if large operation fails because of
-> > corrupted metadata then recovery will never succeed, forcing the user to
-> > zero the log and see what xfs_repair will do...)
-> > 
-> 
-> Indeed.
+What about the various quota users of xfs_kuid_to_uid/gid in
+the create / symlink path?  I suspect they should be handle the same.
 
-Some day if xfs ever grows the ability to roll back transactions we
-might be able to avoid some of this...
+Also with your patch the di_uid/gid fields should probably just
+go away as they are pointless now.  Something like the patch below,
+although it still doesn't take care of the quota issues pointed out
+above.
 
-> 
-> Brian
-> 
-> > If we ever /do/ redesign the code to use defer ops then we'll also have
-> > to set a log incompat feature flag because right now we only ever use
-> > the bmap defer ops if rmap or reflink are enabled.
-> > 
-> > > Then again, I _thought_ that all came up when the collapse range stuff
-> > > was originally posted and wasn't considered a major problem to the users
-> > > (either that or we didn't have a straightforward approach to make the
-> > > whole thing atomic at the time) because ultimately the operation can be
-> > > retried or the original state recovered from userspace...
-> > 
-> > Userspace can try to figure out where things went wrong and restart the
-> > operation, but if they don't then we get left in this weird state with
-> > adjacent bmaps.  There wasn't a straightforward way to create an atomic
-> > compound operation until deferred ops came along in 4.8.
-> > 
-> > --D
-> > 
-> > > 
-> > > Brian
-> > > 
-> > > > --D
-> > > > 
-> > > > >  		next_fsb = NULLFSBLOCK;
-> > > > >  		stop_fsb = XFS_B_TO_FSB(mp, offset);
-> > > > >  	}
-> > > > > @@ -1437,21 +1444,14 @@ xfs_shift_file_space(
-> > > > >  	}
-> > > > >  
-> > > > >  	while (!error && !done) {
-> > > > > -		/*
-> > > > > -		 * We would need to reserve permanent block for transaction.
-> > > > > -		 * This will come into picture when after shifting extent into
-> > > > > -		 * hole we found that adjacent extents can be merged which
-> > > > > -		 * may lead to freeing of a block during record update.
-> > > > > -		 */
-> > > > > -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
-> > > > > -				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
-> > > > > +		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
-> > > > > +					&tp);
-> > > > >  		if (error)
-> > > > >  			break;
-> > > > >  
-> > > > >  		xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > > > >  		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
-> > > > > -				ip->i_gdquot, ip->i_pdquot,
-> > > > > -				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
-> > > > > +				ip->i_gdquot, ip->i_pdquot, resblks, 0,
-> > > > >  				XFS_QMOPT_RES_REGBLKS);
-> > > > >  		if (error)
-> > > > >  			goto out_trans_cancel;
-> > > > > -- 
-> > > > > 2.7.4
-> > > > > 
-> > > > > --
-> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index d93f9d918cfc..dfe9b02a62bd 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -233,8 +233,8 @@ xfs_inode_from_disk(
+ 	}
+ 
+ 	to->di_format = from->di_format;
+-	to->di_uid = be32_to_cpu(from->di_uid);
+-	to->di_gid = be32_to_cpu(from->di_gid);
++	i_uid_write(inode, be32_to_cpu(from->di_uid));
++	i_gid_write(inode, be32_to_cpu(from->di_gid));
+ 	to->di_flushiter = be16_to_cpu(from->di_flushiter);
+ 
+ 	/*
+@@ -286,8 +286,8 @@ xfs_inode_to_disk(
+ 
+ 	to->di_version = from->di_version;
+ 	to->di_format = from->di_format;
+-	to->di_uid = cpu_to_be32(from->di_uid);
+-	to->di_gid = cpu_to_be32(from->di_gid);
++	to->di_uid = cpu_to_be32(i_uid_read(inode));
++	to->di_gid = cpu_to_be32(i_gid_read(inode));
+ 	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
+ 	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
+ 
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+index 6848a0afbce7..a4c5502351c4 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -31,8 +31,6 @@ struct xfs_icdinode {
+ 	__int8_t	di_version;	/* inode version */
+ 	__int8_t	di_format;	/* format of di_c data */
+ 	__uint16_t	di_flushiter;	/* incremented on flush */
+-	__uint32_t	di_uid;		/* owner's user id */
+-	__uint32_t	di_gid;		/* owner's group id */
+ 	__uint16_t	di_projid_lo;	/* lower part of owner's project id */
+ 	__uint16_t	di_projid_hi;	/* higher part of owner's project id */
+ 	xfs_fsize_t	di_size;	/* number of bytes in file */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index de32f0fe47c8..3b0b09a6b15d 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -814,18 +814,10 @@ xfs_ialloc(
+ 	if (ip->i_d.di_version == 1)
+ 		ip->i_d.di_version = 2;
+ 
+-	inode->i_mode = mode;
++	inode_init_owner(inode, pip ? VFS_I(pip) : NULL, mode);
+ 	set_nlink(inode, nlink);
+-	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
+-	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
+ 	xfs_set_projid(ip, prid);
+ 
+-	if (pip && XFS_INHERIT_GID(pip)) {
+-		ip->i_d.di_gid = pip->i_d.di_gid;
+-		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
+-			inode->i_mode |= S_ISGID;
+-	}
+-
+ 	/*
+ 	 * If the group ID of the new file does not match the effective group
+ 	 * ID or one of the supplementary group IDs, the S_ISGID bit is cleared
+@@ -833,7 +825,7 @@ xfs_ialloc(
+ 	 */
+ 	if ((irix_sgid_inherit) &&
+ 	    (inode->i_mode & S_ISGID) &&
+-	    (!in_group_p(xfs_gid_to_kgid(ip->i_d.di_gid))))
++	    (!in_group_p(inode->i_gid)))
+ 		inode->i_mode &= ~S_ISGID;
+ 
+ 	ip->i_d.di_size = 0;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index d90e7811ccdd..ed9529e3babf 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -335,8 +335,8 @@ xfs_inode_to_log_dinode(
+ 
+ 	to->di_version = from->di_version;
+ 	to->di_format = from->di_format;
+-	to->di_uid = from->di_uid;
+-	to->di_gid = from->di_gid;
++	to->di_uid = i_uid_read(inode);
++	to->di_gid = i_gid_read(inode);
+ 	to->di_projid_lo = from->di_projid_lo;
+ 	to->di_projid_hi = from->di_projid_hi;
+ 
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index c67cfb451fd3..92bb1317536a 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1333,8 +1333,8 @@ xfs_ioctl_setattr(
+ 	 * because the i_*dquot fields will get updated anyway.
+ 	 */
+ 	if (XFS_IS_QUOTA_ON(mp)) {
+-		code = xfs_qm_vop_dqalloc(ip, ip->i_d.di_uid,
+-					 ip->i_d.di_gid, fa->fsx_projid,
++		code = xfs_qm_vop_dqalloc(ip, i_uid_read(VFS_I(ip)),
++					 i_gid_read(VFS_I(ip)), fa->fsx_projid,
+ 					 XFS_QMOPT_PQUOTA, &udqp, NULL, &pdqp);
+ 		if (code)
+ 			return code;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 22c16155f1b4..c3807a7ae466 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -643,8 +643,8 @@ xfs_setattr_nonsize(
+ 		 */
+ 		ASSERT(udqp == NULL);
+ 		ASSERT(gdqp == NULL);
+-		error = xfs_qm_vop_dqalloc(ip, xfs_kuid_to_uid(uid),
+-					   xfs_kgid_to_gid(gid),
++		error = xfs_qm_vop_dqalloc(ip, from_kuid(inode->i_sb->s_user_ns, uid),
++					   from_kgid(inode->i_sb->s_user_ns, gid),
+ 					   xfs_get_projid(ip),
+ 					   qflags, &udqp, &gdqp, NULL);
+ 		if (error)
+@@ -714,8 +714,8 @@ xfs_setattr_nonsize(
+ 				olddquot1 = xfs_qm_vop_chown(tp, ip,
+ 							&ip->i_udquot, udqp);
+ 			}
+-			ip->i_d.di_uid = xfs_kuid_to_uid(uid);
+ 			inode->i_uid = uid;
++
+ 		}
+ 		if (!gid_eq(igid, gid)) {
+ 			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_GQUOTA_ON(mp)) {
+@@ -726,7 +726,6 @@ xfs_setattr_nonsize(
+ 				olddquot2 = xfs_qm_vop_chown(tp, ip,
+ 							&ip->i_gdquot, gdqp);
+ 			}
+-			ip->i_d.di_gid = xfs_kgid_to_gid(gid);
+ 			inode->i_gid = gid;
+ 		}
+ 	}
+@@ -1213,9 +1212,6 @@ xfs_setup_inode(
+ 	/* make the inode look hashed for the writeback code */
+ 	hlist_add_fake(&inode->i_hash);
+ 
+-	inode->i_uid    = xfs_uid_to_kuid(ip->i_d.di_uid);
+-	inode->i_gid    = xfs_gid_to_kgid(ip->i_d.di_gid);
+-
+ 	switch (inode->i_mode & S_IFMT) {
+ 	case S_IFBLK:
+ 	case S_IFCHR:
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 66e881790c17..bcfc7f38e8e2 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -88,8 +88,8 @@ xfs_bulkstat_one_int(
+ 	buf->bs_projid_lo = dic->di_projid_lo;
+ 	buf->bs_projid_hi = dic->di_projid_hi;
+ 	buf->bs_ino = ino;
+-	buf->bs_uid = dic->di_uid;
+-	buf->bs_gid = dic->di_gid;
++	buf->bs_uid = i_uid_read(inode);
++	buf->bs_gid = i_gid_read(inode);
+ 	buf->bs_size = dic->di_size;
+ 
+ 	buf->bs_nlink = inode->i_nlink;
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index b669b123287b..0f3692123267 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -341,18 +341,18 @@ xfs_qm_dqattach_locked(
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 
+ 	if (XFS_IS_UQUOTA_ON(mp) && !ip->i_udquot) {
+-		error = xfs_qm_dqattach_one(ip, ip->i_d.di_uid, XFS_DQ_USER,
+-						flags & XFS_QMOPT_DQALLOC,
+-						&ip->i_udquot);
++		error = xfs_qm_dqattach_one(ip, i_uid_read(VFS_I(ip)),
++				XFS_DQ_USER, flags & XFS_QMOPT_DQALLOC,
++				&ip->i_udquot);
+ 		if (error)
+ 			goto done;
+ 		ASSERT(ip->i_udquot);
+ 	}
+ 
+ 	if (XFS_IS_GQUOTA_ON(mp) && !ip->i_gdquot) {
+-		error = xfs_qm_dqattach_one(ip, ip->i_d.di_gid, XFS_DQ_GROUP,
+-						flags & XFS_QMOPT_DQALLOC,
+-						&ip->i_gdquot);
++		error = xfs_qm_dqattach_one(ip, i_gid_read(VFS_I(ip)),
++				XFS_DQ_GROUP, flags & XFS_QMOPT_DQALLOC,
++				&ip->i_gdquot);
+ 		if (error)
+ 			goto done;
+ 		ASSERT(ip->i_gdquot);
+@@ -1210,14 +1210,14 @@ xfs_qm_dqusage_adjust(
+ 	 * and quotaoffs don't race. (Quotachecks happen at mount time only).
+ 	 */
+ 	if (XFS_IS_UQUOTA_ON(mp)) {
+-		error = xfs_qm_quotacheck_dqadjust(ip, ip->i_d.di_uid,
++		error = xfs_qm_quotacheck_dqadjust(ip, i_uid_read(VFS_I(ip)),
+ 						   XFS_DQ_USER, nblks, rtblks);
+ 		if (error)
+ 			goto error0;
+ 	}
+ 
+ 	if (XFS_IS_GQUOTA_ON(mp)) {
+-		error = xfs_qm_quotacheck_dqadjust(ip, ip->i_d.di_gid,
++		error = xfs_qm_quotacheck_dqadjust(ip, i_gid_read(VFS_I(ip)),
+ 						   XFS_DQ_GROUP, nblks, rtblks);
+ 		if (error)
+ 			goto error0;
+@@ -1650,7 +1650,7 @@ xfs_qm_vop_dqalloc(
+ 	xfs_ilock(ip, lockflags);
+ 
+ 	if ((flags & XFS_QMOPT_INHERIT) && XFS_INHERIT_GID(ip))
+-		gid = ip->i_d.di_gid;
++		gid = i_gid_read(VFS_I(ip));
+ 
+ 	/*
+ 	 * Attach the dquot(s) to this inode, doing a dquot allocation
+@@ -1665,7 +1665,7 @@ xfs_qm_vop_dqalloc(
+ 	}
+ 
+ 	if ((flags & XFS_QMOPT_UQUOTA) && XFS_IS_UQUOTA_ON(mp)) {
+-		if (ip->i_d.di_uid != uid) {
++		if (i_uid_read(VFS_I(ip)) != uid) {
+ 			/*
+ 			 * What we need is the dquot that has this uid, and
+ 			 * if we send the inode to dqget, the uid of the inode
+@@ -1701,7 +1701,7 @@ xfs_qm_vop_dqalloc(
+ 		}
+ 	}
+ 	if ((flags & XFS_QMOPT_GQUOTA) && XFS_IS_GQUOTA_ON(mp)) {
+-		if (ip->i_d.di_gid != gid) {
++		if (i_gid_read(VFS_I(ip)) != gid) {
+ 			xfs_iunlock(ip, lockflags);
+ 			error = xfs_qm_dqget(mp, NULL, gid,
+ 						 XFS_DQ_GROUP,
+@@ -1835,7 +1835,7 @@ xfs_qm_vop_chown_reserve(
+ 			XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS;
+ 
+ 	if (XFS_IS_UQUOTA_ON(mp) && udqp &&
+-	    ip->i_d.di_uid != be32_to_cpu(udqp->q_core.d_id)) {
++	    i_uid_read(VFS_I(ip)) != be32_to_cpu(udqp->q_core.d_id)) {
+ 		udq_delblks = udqp;
+ 		/*
+ 		 * If there are delayed allocation blocks, then we have to
+@@ -1848,7 +1848,7 @@ xfs_qm_vop_chown_reserve(
+ 		}
+ 	}
+ 	if (XFS_IS_GQUOTA_ON(ip->i_mount) && gdqp &&
+-	    ip->i_d.di_gid != be32_to_cpu(gdqp->q_core.d_id)) {
++	    i_gid_read(VFS_I(ip)) != be32_to_cpu(gdqp->q_core.d_id)) {
+ 		gdq_delblks = gdqp;
+ 		if (delblks) {
+ 			ASSERT(ip->i_gdquot);
+@@ -1945,14 +1945,14 @@ xfs_qm_vop_create_dqattach(
+ 
+ 	if (udqp && XFS_IS_UQUOTA_ON(mp)) {
+ 		ASSERT(ip->i_udquot == NULL);
+-		ASSERT(ip->i_d.di_uid == be32_to_cpu(udqp->q_core.d_id));
++		ASSERT(i_uid_read(VFS_I(ip)) == be32_to_cpu(udqp->q_core.d_id));
+ 
+ 		ip->i_udquot = xfs_qm_dqhold(udqp);
+ 		xfs_trans_mod_dquot(tp, udqp, XFS_TRANS_DQ_ICOUNT, 1);
+ 	}
+ 	if (gdqp && XFS_IS_GQUOTA_ON(mp)) {
+ 		ASSERT(ip->i_gdquot == NULL);
+-		ASSERT(ip->i_d.di_gid == be32_to_cpu(gdqp->q_core.d_id));
++		ASSERT(i_uid_read(VFS_I(ip)) == be32_to_cpu(gdqp->q_core.d_id));
+ 		ip->i_gdquot = xfs_qm_dqhold(gdqp);
+ 		xfs_trans_mod_dquot(tp, gdqp, XFS_TRANS_DQ_ICOUNT, 1);
+ 	}
