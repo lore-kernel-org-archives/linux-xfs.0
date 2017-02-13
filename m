@@ -1,124 +1,325 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49656 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45162 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752639AbdBIRTf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Feb 2017 12:19:35 -0500
-Date: Thu, 9 Feb 2017 12:19:29 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: WARN_ON_ONCE() during generic/270
-Message-ID: <20170209171928.GC22182@bfoster.bfoster>
-References: <20170208191156.GA19071@linux.intel.com>
- <20170208192312.GC32032@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170208192312.GC32032@birch.djwong.org>
+        id S1753524AbdBMPdq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Feb 2017 10:33:46 -0500
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v28 16/21] richacl: xattr mapping functions
+Date: Mon, 13 Feb 2017 16:32:32 +0100
+Message-Id: <1486999957-2381-17-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
+References: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, linux-nvdimm@ml01.01.org, xfs <linux-xfs@vger.kernel.org>
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 
-On Wed, Feb 08, 2017 at 11:23:12AM -0800, Darrick J. Wong wrote:
-> > To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs@oss.sgi.com
-> 
-> [list moved; cc'ing linux-xfs@vger.kernel.org]
-> 
-> On Wed, Feb 08, 2017 at 12:11:56PM -0700, Ross Zwisler wrote:
-> > I hit the following WARN_ON_ONCE() during generic/270 with xfs (passed through
-> > kasan_symbolize.py):
-> > 
-> >   run fstests generic/270 at 2017-02-08 10:56:07
-> >   XFS (pmem0p2): Unmounting Filesystem
-> >   XFS (pmem0p2): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
-> >   XFS (pmem0p2): Mounting V5 Filesystem
-> >   XFS (pmem0p2): Ending clean mount
-> >   XFS (pmem0p2): Quotacheck needed: Please wait.
-> >   XFS (pmem0p2): Quotacheck: Done.
-> >   XFS (pmem0p2): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
-> 
-> What does xfs_info say about this fs?  I guess we're not trying to use
-> rmap here, so there's less metadata to shove through the log.
-> 
-> I'm also wondering which file are we trying to insert-range on, and
-> what its bmap looks like?
-> 
+Map between "system.richacl" xattrs and the in-kernel representation.
 
-I reproduced this with a generic ramdisk (no DAX) and managed to get an
-ino via a tracepoint and a resulting bmap:
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/Makefile                        |   2 +-
+ fs/richacl_xattr.c                 | 161 +++++++++++++++++++++++++++++++++++++
+ include/linux/richacl_xattr.h      |  29 +++++++
+ include/uapi/linux/Kbuild          |   1 +
+ include/uapi/linux/richacl_xattr.h |  44 ++++++++++
+ include/uapi/linux/xattr.h         |   2 +
+ 6 files changed, 238 insertions(+), 1 deletion(-)
+ create mode 100644 fs/richacl_xattr.c
+ create mode 100644 include/linux/richacl_xattr.h
+ create mode 100644 include/uapi/linux/richacl_xattr.h
 
-# xfs_io -c "fiemap -v" /mnt/fsstress.19801/p6f/d3/d3be/d4f9/f684
-/mnt/fsstress.19801/p6f/d3/d3be/d4f9/f684:
- EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
-   0: [0..239]:        hole               240
-   1: [240..391]:      794920..795071     152   0x0
-   2: [392..871]:      hole               480
-   3: [872..903]:      795072..795103      32   0x0
-   4: [904..975]:      795104..795175      72   0x1
-   5: [976..1780]:     hole               805
+diff --git a/fs/Makefile b/fs/Makefile
+index 262b09c..1e46418 100644
+--- a/fs/Makefile
++++ b/fs/Makefile
+@@ -50,7 +50,7 @@ obj-$(CONFIG_SYSCTL)		+= drop_caches.o
+ 
+ obj-$(CONFIG_FHANDLE)		+= fhandle.o
+ obj-$(CONFIG_FS_IOMAP)		+= iomap.o
+-obj-$(CONFIG_FS_RICHACL)	+= richacl.o
++obj-$(CONFIG_FS_RICHACL)	+= richacl.o richacl_xattr.o
+ 
+ obj-y				+= quota/
+ 
+diff --git a/fs/richacl_xattr.c b/fs/richacl_xattr.c
+new file mode 100644
+index 0000000..dc1ad36
+--- /dev/null
++++ b/fs/richacl_xattr.c
+@@ -0,0 +1,161 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2, or (at your option) any
++ * later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#include <linux/sched.h>
++#include <linux/fs.h>
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/richacl_xattr.h>
++
++/**
++ * richacl_from_xattr  -  convert a richacl xattr into the in-memory representation
++ */
++struct richacl *
++richacl_from_xattr(struct user_namespace *user_ns,
++		   const void *value, size_t size, int invalid_error)
++{
++	const struct richacl_xattr *xattr_acl = value;
++	const struct richace_xattr *xattr_ace = (void *)(xattr_acl + 1);
++	struct richacl *acl;
++	struct richace *ace;
++	int count;
++
++	if (size < sizeof(*xattr_acl) ||
++	    xattr_acl->a_version != RICHACL_XATTR_VERSION ||
++	    (xattr_acl->a_flags & ~RICHACL_VALID_FLAGS))
++		goto invalid;
++	size -= sizeof(*xattr_acl);
++	count = le16_to_cpu(xattr_acl->a_count);
++	if (count > RICHACL_XATTR_MAX_COUNT)
++		goto invalid;
++	if (size != count * sizeof(*xattr_ace))
++		goto invalid;
++
++	acl = richacl_alloc(count, GFP_NOFS);
++	if (!acl)
++		return ERR_PTR(-ENOMEM);
++
++	acl->a_flags = xattr_acl->a_flags;
++	acl->a_owner_mask = le32_to_cpu(xattr_acl->a_owner_mask);
++	if (acl->a_owner_mask & ~RICHACE_VALID_MASK)
++		goto put_invalid;
++	acl->a_group_mask = le32_to_cpu(xattr_acl->a_group_mask);
++	if (acl->a_group_mask & ~RICHACE_VALID_MASK)
++		goto put_invalid;
++	acl->a_other_mask = le32_to_cpu(xattr_acl->a_other_mask);
++	if (acl->a_other_mask & ~RICHACE_VALID_MASK)
++		goto put_invalid;
++
++	richacl_for_each_entry(ace, acl) {
++		ace->e_type  = le16_to_cpu(xattr_ace->e_type);
++		ace->e_flags = le16_to_cpu(xattr_ace->e_flags);
++		ace->e_mask  = le32_to_cpu(xattr_ace->e_mask);
++
++		if (ace->e_flags & ~RICHACE_VALID_FLAGS)
++			goto put_invalid;
++		if (ace->e_flags & RICHACE_SPECIAL_WHO) {
++			ace->e_id.special = le32_to_cpu(xattr_ace->e_id);
++			if (ace->e_id.special > RICHACE_EVERYONE_SPECIAL_ID)
++				goto put_invalid;
++		} else if (ace->e_flags & RICHACE_IDENTIFIER_GROUP) {
++			u32 id = le32_to_cpu(xattr_ace->e_id);
++
++			ace->e_id.gid = make_kgid(user_ns, id);
++			if (!gid_valid(ace->e_id.gid))
++				goto put_invalid;
++		} else {
++			u32 id = le32_to_cpu(xattr_ace->e_id);
++
++			ace->e_id.uid = make_kuid(user_ns, id);
++			if (!uid_valid(ace->e_id.uid))
++				goto put_invalid;
++		}
++		if (ace->e_type > RICHACE_ACCESS_DENIED_ACE_TYPE ||
++		    (ace->e_mask & ~RICHACE_VALID_MASK))
++			goto put_invalid;
++
++		xattr_ace++;
++	}
++
++	return acl;
++
++put_invalid:
++	richacl_put(acl);
++invalid:
++	return ERR_PTR(invalid_error);
++}
++EXPORT_SYMBOL_GPL(richacl_from_xattr);
++
++/**
++ * richacl_xattr_size  -  compute the size of the xattr representation of @acl
++ */
++size_t
++richacl_xattr_size(const struct richacl *acl)
++{
++	size_t size = sizeof(struct richacl_xattr);
++
++	size += sizeof(struct richace_xattr) * acl->a_count;
++	return size;
++}
++EXPORT_SYMBOL_GPL(richacl_xattr_size);
++
++/**
++ * richacl_to_xattr  -  convert @acl into its xattr representation
++ * @acl:	the richacl to convert
++ * @buffer:	buffer for the result
++ * @size:	size of @buffer
++ */
++int
++richacl_to_xattr(struct user_namespace *user_ns,
++		 const struct richacl *acl, void *buffer, size_t size)
++{
++	struct richacl_xattr *xattr_acl = buffer;
++	struct richace_xattr *xattr_ace;
++	const struct richace *ace;
++	size_t real_size;
++
++	real_size = richacl_xattr_size(acl);
++	if (!buffer)
++		return real_size;
++	if (real_size > size)
++		return -ERANGE;
++
++	xattr_acl->a_version = RICHACL_XATTR_VERSION;
++	xattr_acl->a_flags = acl->a_flags;
++	xattr_acl->a_count = cpu_to_le16(acl->a_count);
++
++	xattr_acl->a_owner_mask = cpu_to_le32(acl->a_owner_mask);
++	xattr_acl->a_group_mask = cpu_to_le32(acl->a_group_mask);
++	xattr_acl->a_other_mask = cpu_to_le32(acl->a_other_mask);
++
++	xattr_ace = (void *)(xattr_acl + 1);
++	richacl_for_each_entry(ace, acl) {
++		xattr_ace->e_type = cpu_to_le16(ace->e_type);
++		xattr_ace->e_flags = cpu_to_le16(ace->e_flags);
++		xattr_ace->e_mask = cpu_to_le32(ace->e_mask);
++		if (ace->e_flags & RICHACE_SPECIAL_WHO)
++			xattr_ace->e_id = cpu_to_le32(ace->e_id.special);
++		else if (ace->e_flags & RICHACE_IDENTIFIER_GROUP)
++			xattr_ace->e_id =
++				cpu_to_le32(from_kgid(user_ns, ace->e_id.gid));
++		else
++			xattr_ace->e_id =
++				cpu_to_le32(from_kuid(user_ns, ace->e_id.uid));
++		xattr_ace++;
++	}
++	return real_size;
++}
++EXPORT_SYMBOL_GPL(richacl_to_xattr);
+diff --git a/include/linux/richacl_xattr.h b/include/linux/richacl_xattr.h
+new file mode 100644
+index 0000000..0efa14b
+--- /dev/null
++++ b/include/linux/richacl_xattr.h
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2, or (at your option) any
++ * later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#ifndef __RICHACL_XATTR_H
++#define __RICHACL_XATTR_H
++
++#include <uapi/linux/richacl_xattr.h>
++#include <linux/richacl.h>
++
++extern struct richacl *richacl_from_xattr(struct user_namespace *, const void *,
++					  size_t, int);
++extern size_t richacl_xattr_size(const struct richacl *);
++extern int richacl_to_xattr(struct user_namespace *, const struct richacl *,
++			    void *, size_t);
++
++#endif /* __RICHACL_XATTR_H */
+diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
+index 1927e69..4ed26c5 100644
+--- a/include/uapi/linux/Kbuild
++++ b/include/uapi/linux/Kbuild
+@@ -364,6 +364,7 @@ header-y += reiserfs_fs.h
+ header-y += reiserfs_xattr.h
+ header-y += resource.h
+ header-y += richacl.h
++header-y += richacl_xattr.h
+ header-y += rfkill.h
+ header-y += rio_cm_cdev.h
+ header-y += rio_mport_cdev.h
+diff --git a/include/uapi/linux/richacl_xattr.h b/include/uapi/linux/richacl_xattr.h
+new file mode 100644
+index 0000000..20da204
+--- /dev/null
++++ b/include/uapi/linux/richacl_xattr.h
+@@ -0,0 +1,44 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This file is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This file is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ */
++
++#ifndef __UAPI_RICHACL_XATTR_H
++#define __UAPI_RICHACL_XATTR_H
++
++#include <linux/types.h>
++#include <linux/limits.h>
++
++struct richace_xattr {
++	__le16	e_type;
++	__le16	e_flags;
++	__le32	e_mask;
++	__le32	e_id;
++};
++
++struct richacl_xattr {
++	__u8	a_version;
++	__u8	a_flags;
++	__le16	a_count;
++	__le32	a_owner_mask;
++	__le32	a_group_mask;
++	__le32	a_other_mask;
++};
++
++#define RICHACL_XATTR_VERSION 0
++#define RICHACL_XATTR_MAX_COUNT \
++	((XATTR_SIZE_MAX - sizeof(struct richacl_xattr)) / \
++	 sizeof(struct richace_xattr))
++
++#endif  /* __UAPI_RICHACL_XATTR_H */
+diff --git a/include/uapi/linux/xattr.h b/include/uapi/linux/xattr.h
+index 1590c49..1996903 100644
+--- a/include/uapi/linux/xattr.h
++++ b/include/uapi/linux/xattr.h
+@@ -73,5 +73,7 @@
+ #define XATTR_POSIX_ACL_DEFAULT  "posix_acl_default"
+ #define XATTR_NAME_POSIX_ACL_DEFAULT XATTR_SYSTEM_PREFIX XATTR_POSIX_ACL_DEFAULT
+ 
++#define XATTR_RICHACL "richacl"
++#define XATTR_NAME_RICHACL XATTR_SYSTEM_PREFIX XATTR_RICHACL
+ 
+ #endif /* _UAPI_LINUX_XATTR_H */
+-- 
+2.7.4
 
-Note that this the post-shift bmap. The warning is complaining that
-extents 3 and 4 are contiguous and thus can be merged. This is
-unexpected on "insert space" (right shift) because, IIRC, we aren't
-creating any new extent boundaries that didn't previously exist (as
-opposed to collapse, which starts by punching a hole and connecting
-bordering extents).
-
-This isn't really a functional problem, more flagging an
-unexpected/non-optimal but presumably still correct state. It may be the
-case that the assumption of never having separate but contiguous extents
-is not valid and the fix is to simply kill off the warning (perhaps
-being at or near ENOSPC is a factor here). It's probably worth some
-investigation to determine why this occurs for sure, however, just in
-case we have a problem somewhere else...
-
-Brian
-
-> --D
-> 
-> >   ------------[ cut here ]------------
-> >   WARNING: CPU: 7 PID: 23652 at fs/xfs/libxfs/xfs_bmap.c:5981[<      none      >] xfs_bmse_shift_one+0x3da/0x4c0 fs/xfs/libxfs/xfs_bmap.c:5981
-> >   Modules linked in: dax_pmem nd_pmem dax nd_btt nd_e820 libnvdimm
-> >   CPU: 4 PID: 23652 Comm: 23288.fsstress. Not tainted 4.10.0-rc7-00065-g926af627 #1
-> >   Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.9.1-1.fc24 04/01/2014
-> >   Call Trace:
-> >   [<     inline     >] __dump_stack lib/dump_stack.c:15
-> >   [<      none      >] dump_stack+0x86/0xc3 lib/dump_stack.c:51
-> >   [<      none      >] __warn+0xcb/0xf0 kernel/panic.c:547
-> >   [<      none      >] warn_slowpath_null+0x1d/0x20 kernel/panic.c:582
-> >   [<      none      >] xfs_bmse_shift_one+0x3da/0x4c0 fs/xfs/libxfs/xfs_bmap.c:5981
-> >   [<      none      >] xfs_bmap_shift_extents+0x305/0x490 fs/xfs/libxfs/xfs_bmap.c:6144
-> >   [<      none      >] xfs_shift_file_space+0x25f/0x320 fs/xfs/xfs_bmap_util.c:1475
-> >   [<      none      >] xfs_insert_file_space+0x5a/0x180 fs/xfs/xfs_bmap_util.c:1548
-> >   [<      none      >] xfs_file_fallocate+0x34c/0x3b0 fs/xfs/xfs_file.c:844
-> >    ?[<      none      >] rcu_sync_lockdep_assert+0x2f/0x60 kernel/rcu/sync.c:68
-> >   [<      none      >] vfs_fallocate+0x15a/0x230 fs/open.c:320
-> >   [<     inline     >] SYSC_fallocate fs/open.c:343
-> >   [<      none      >] SyS_fallocate+0x48/0x80 fs/open.c:337
-> >   [<      none      >] entry_SYSCALL_64_fastpath+0x1f/0xc2 /home/rzwisler/project/linux/arch/x86/entry/entry_64.S:204
-> >   RIP: 0033:0x7f34dc4ff0ca
-> >   RSP: 002b:00007ffcffa58058 EFLAGS: 00000246 ORIG_RAX: 000000000000011d
-> >   RAX: ffffffffffffffda RBX: 0000000000000166 RCX: 00007f34dc4ff0ca
-> >   RDX: 00000000000ba000 RSI: 0000000000000020 RDI: 0000000000000003
-> >   RBP: 0000000000000003 R08: 000000000000007b R09: 00007ffcffa5807c
-> >   R10: 00000000000bc000 R11: 0000000000000246 R12: 00007f34d8000de0
-> >   R13: 00000000ffffffff R14: 000000000000af4a R15: 0000000000000000
-> >   ---[ end trace e24f5d4cbfc216f6 ]---
-> > 
-> > This trace is with the current linux/master:
-> > 
-> > commit 926af6273fc6 ("Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net")
-> > 
-> > though I initially his this issue with a v4.9 kernel.  My test setup is a pair
-> > of PMEM ramdisks made with the memmap command line parameter, and my
-> > test filesystem is mounted with DAX.
-> > 
-> > This can be reproduced pretty easily by just running generic/270 in a
-> > loop.
-> > 
-> > Thanks,
-> > - Ross
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
