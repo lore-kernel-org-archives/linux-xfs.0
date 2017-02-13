@@ -1,42 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:39598 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:54098 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753284AbdBGJuv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Feb 2017 04:50:51 -0500
-Date: Tue, 7 Feb 2017 10:50:49 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 4/4] xfs: don't block the log commit handler for
-        discards
-Message-ID: <20170207095049.GA15588@lst.de>
-References: <1485715421-17182-1-git-send-email-hch@lst.de> <1485715421-17182-5-git-send-email-hch@lst.de> <20170203162237.GE45388@bfoster.bfoster> <20170204095954.GE18472@lst.de> <20170206164924.GH57865@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170206164924.GH57865@bfoster.bfoster>
+        id S1753219AbdBMPcn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Feb 2017 10:32:43 -0500
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v28 00/21] Richacls (Core and Ext4)
+Date: Mon, 13 Feb 2017 16:32:16 +0100
+Message-Id: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Miklos Szeredi <mszeredi@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 
-On Mon, Feb 06, 2017 at 11:49:24AM -0500, Brian Foster wrote:
-> > Can you explain in which contex you mean this?  I'm a bit lost on this
-> > comment unfortunately.
-> 
-> Sorry.. what I'm concerned about is waiting on in-flight discards during
-> unmount. The current discard code issues the discards synchronously and
-> so the log force is sufficient to drain in-flight I/O before we start
-> breaking down core data structures in the unmount path that would be
-> referenced by end_io handlers and such.
-> 
-> With this change, the log force can return with discards still in
-> flight. In fact, a subsequent flush of the workqueue is not sufficient
-> since there's no guarantee the work item has been queued by that point
-> either. If we don't have unmount serialization against in-flight I/Os,
-> this can lead to unmount crashes (see the I/O accounting infrastructure
-> added in commit 9c7504aa7 for an example of this problem with async
-> buffer I/Os). Am I missing something that protects us from this problem
-> here?
+Here is another update of the richacl patches.  Changes since the last posting
+(https://lwn.net/Articles/703199/):
 
-No, you're right.  We should have a xfs_extent_busy_flush_all call
-in the unmount path.  I'll resend the series again with that added.
+ * Fix permission checking for file exchange (i.e., renameat2 with the
+   RENAME_EXCHANGE flag): in some cases, the MAY_CREATE_FILE and MAY_CREATE_DIR
+   permissions were swapped.
+
+   This should have been caught by the test suite but wasn't.  Meanwhile the
+   test suite is fixed as well.
+
+ * When deleting a file and we have MAY_DELETE_SELF permission on the file, we
+   don't require MAY_DELETE_CHILD permission on the containing directory.
+   However, we must still call inode_permission with MAY_WRITE in mask for
+   checks beyond file permission bits or ACLs, such as LSM.
+
+
+Many thanks to Miklos for the previous patch review.
+
+
+The complete patch queue is available here:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/agruen/linux-richacl.git \
+	richacl-2017-02-13
+
+
+The richacl user-space utilitites, man pages, and test suite are available
+here:
+
+  https://github.com/andreas-gruenbacher/richacl
+
+
+Changes to other user-space packages for richacl:
+
+  https://github.com/andreas-gruenbacher/coreutils
+  https://github.com/andreas-gruenbacher/e2fsprogs
+  https://github.com/andreas-gruenbacher/samba
+  https://github.com/andreas-gruenbacher/xfsprogs-dev
+  https://github.com/andreas-gruenbacher/nfs-utils
+
+
+Please see the richacl homepage for more information:
+
+  http://www.bestbits.at/richacl/
+
+
+Thanks,
+Andreas
+
+Andreas Gruenbacher (19):
+  vfs: Add IS_ACL() and IS_RICHACL() tests
+  vfs: Add MAY_CREATE_FILE and MAY_CREATE_DIR permission flags
+  vfs: Add MAY_DELETE_SELF and MAY_DELETE_CHILD permission flags
+  vfs: Add permission flags for setting file attributes
+  richacl: In-memory representation and helper functions
+  richacl: Permission mapping functions
+  richacl: Permission check algorithm
+  richacl: Compute maximum file masks from an acl
+  vfs: Cache base_acl objects in inodes
+  vfs: Add get_richacl and set_richacl inode operations
+  vfs: Cache richacl in struct inode
+  richacl: Update the file masks in chmod()
+  richacl: Check if an acl is equivalent to a file mode
+  richacl: Create-time inheritance
+  richacl: Automatic Inheritance
+  richacl: xattr mapping functions
+  richacl: Add richacl xattr handler
+  vfs: Add richacl permission checking
+  vfs: Move check_posix_acl and check_richacl out of fs/namei.c
+
+Aneesh Kumar K.V (2):
+  ext4: Add richacl support
+  ext4: Add richacl feature flag
+
+ fs/9p/acl.c                        |   8 +-
+ fs/Kconfig                         |   3 +
+ fs/Makefile                        |   1 +
+ fs/attr.c                          |  79 +++-
+ fs/ext4/Kconfig                    |  11 +
+ fs/ext4/Makefile                   |   1 +
+ fs/ext4/ext4.h                     |   7 +-
+ fs/ext4/file.c                     |   3 +
+ fs/ext4/ialloc.c                   |  11 +-
+ fs/ext4/inode.c                    |   4 +-
+ fs/ext4/namei.c                    |   5 +
+ fs/ext4/richacl.c                  | 134 ++++++
+ fs/ext4/richacl.h                  |  40 ++
+ fs/ext4/super.c                    |  48 +-
+ fs/ext4/xattr.c                    |   7 +
+ fs/f2fs/acl.c                      |   4 +-
+ fs/inode.c                         |  43 +-
+ fs/jffs2/acl.c                     |   6 +-
+ fs/namei.c                         | 150 +++---
+ fs/nfs/nfs3acl.c                   |  14 +-
+ fs/posix_acl.c                     |  97 ++--
+ fs/richacl.c                       | 937 +++++++++++++++++++++++++++++++++++++
+ fs/richacl_xattr.c                 | 222 +++++++++
+ include/linux/acl.h                |  15 +
+ include/linux/fs.h                 |  58 ++-
+ include/linux/posix_acl.h          |  24 +-
+ include/linux/richacl.h            | 218 +++++++++
+ include/linux/richacl_xattr.h      |  31 ++
+ include/uapi/linux/Kbuild          |   2 +
+ include/uapi/linux/fs.h            |   3 +-
+ include/uapi/linux/richacl.h       | 152 ++++++
+ include/uapi/linux/richacl_xattr.h |  44 ++
+ include/uapi/linux/xattr.h         |   2 +
+ 33 files changed, 2216 insertions(+), 168 deletions(-)
+ create mode 100644 fs/ext4/richacl.c
+ create mode 100644 fs/ext4/richacl.h
+ create mode 100644 fs/richacl.c
+ create mode 100644 fs/richacl_xattr.c
+ create mode 100644 include/linux/acl.h
+ create mode 100644 include/linux/richacl.h
+ create mode 100644 include/linux/richacl_xattr.h
+ create mode 100644 include/uapi/linux/richacl.h
+ create mode 100644 include/uapi/linux/richacl_xattr.h
+
+-- 
+2.7.4
+
