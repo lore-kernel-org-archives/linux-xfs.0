@@ -1,163 +1,434 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:52041 "EHLO ozlabs.org"
+Received: from mx1.redhat.com ([209.132.183.28]:44486 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751035AbdBJGw1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 10 Feb 2017 01:52:27 -0500
-Date: Fri, 10 Feb 2017 17:41:00 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: manual merge of the akpm-current tree with the xfs tree
-Message-ID: <20170210174100.0524b8d7@canb.auug.org.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        id S1753219AbdBMPdD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Feb 2017 10:33:03 -0500
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v28 05/21] richacl: In-memory representation and helper functions
+Date: Mon, 13 Feb 2017 16:32:21 +0100
+Message-Id: <1486999957-2381-6-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
+References: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Jiang <dave.jiang@intel.com>
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 
-Hi Andrew,
+A richacl consists of an NFSv4 acl and an owner, group, and other mask.
+These three masks correspond to the owner, group, and other file
+permission bits, but they contain NFSv4 permissions instead of POSIX
+permissions.
 
-Today's linux-next merge of the akpm-current tree got a conflict in:
+Each entry in the NFSv4 acl applies to the file owner (OWNER@), the
+owning group (GROUP@), everyone (EVERYONE@), or to a specific uid or
+gid.
 
-  fs/dax.c
+As in the standard POSIX file permission model, each process is the
+owner, group, or other file class.  A richacl grants a requested access
+only if the NFSv4 acl in the richacl grants the access (according to the
+NFSv4 permission check algorithm), and the file mask that applies to the
+process includes the requested permissions.
 
-between commit:
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: J. Bruce Fields <bfields@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/Makefile                  |   1 +
+ fs/richacl.c                 |  65 ++++++++++++++++
+ include/linux/richacl.h      | 179 +++++++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/Kbuild    |   1 +
+ include/uapi/linux/richacl.h |  99 ++++++++++++++++++++++++
+ 5 files changed, 345 insertions(+)
+ create mode 100644 fs/richacl.c
+ create mode 100644 include/linux/richacl.h
+ create mode 100644 include/uapi/linux/richacl.h
 
-  8ff6daa17b6a ("iomap: constify struct iomap_ops")
-
-from the xfs tree and commit:
-
-  5dce5c335124 ("mm,fs,dax: change ->pmd_fault to ->huge_fault")
-
-from the akpm-current tree.
-
-I fixed it up (see below) and can carry the fix as necessary. This
-is now fixed as far as linux-next is concerned, but any non trivial
-conflicts should be mentioned to your upstream maintainer when your tree
-is submitted for merging.  You may also want to consider cooperating
-with the maintainer of the conflicting tree to minimise any particularly
-complex conflicts.
-
+diff --git a/fs/Makefile b/fs/Makefile
+index 7bbaca9..262b09c 100644
+--- a/fs/Makefile
++++ b/fs/Makefile
+@@ -50,6 +50,7 @@ obj-$(CONFIG_SYSCTL)		+= drop_caches.o
+ 
+ obj-$(CONFIG_FHANDLE)		+= fhandle.o
+ obj-$(CONFIG_FS_IOMAP)		+= iomap.o
++obj-$(CONFIG_FS_RICHACL)	+= richacl.o
+ 
+ obj-y				+= quota/
+ 
+diff --git a/fs/richacl.c b/fs/richacl.c
+new file mode 100644
+index 0000000..bcc6591
+--- /dev/null
++++ b/fs/richacl.c
+@@ -0,0 +1,65 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2, or (at your option) any
++ * later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#include <linux/sched.h>
++#include <linux/module.h>
++#include <linux/fs.h>
++#include <linux/slab.h>
++#include <linux/richacl.h>
++
++/**
++ * richacl_alloc  -  allocate a richacl
++ * @count:	number of entries
++ */
++struct richacl *
++richacl_alloc(int count, gfp_t gfp)
++{
++	size_t size = sizeof(struct richacl) + count * sizeof(struct richace);
++	struct richacl *acl = kzalloc(size, gfp);
++
++	if (acl) {
++		atomic_set(&acl->a_refcount, 1);
++		acl->a_count = count;
++	}
++	return acl;
++}
++EXPORT_SYMBOL_GPL(richacl_alloc);
++
++/**
++ * richacl_clone  -  create a copy of a richacl
++ */
++struct richacl *
++richacl_clone(const struct richacl *acl, gfp_t gfp)
++{
++	int count = acl->a_count;
++	size_t size = sizeof(struct richacl) + count * sizeof(struct richace);
++	struct richacl *dup = kmalloc(size, gfp);
++
++	if (dup) {
++		memcpy(dup, acl, size);
++		atomic_set(&dup->a_refcount, 1);
++	}
++	return dup;
++}
++
++/**
++ * richace_copy  -  copy an acl entry
++ */
++void
++richace_copy(struct richace *to, const struct richace *from)
++{
++	memcpy(to, from, sizeof(struct richace));
++}
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+new file mode 100644
+index 0000000..edb8480
+--- /dev/null
++++ b/include/linux/richacl.h
+@@ -0,0 +1,179 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2, or (at your option) any
++ * later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#ifndef __RICHACL_H
++#define __RICHACL_H
++
++#include <uapi/linux/richacl.h>
++
++struct richace {
++	unsigned short	e_type;
++	unsigned short	e_flags;
++	unsigned int	e_mask;
++	union {
++		kuid_t		uid;
++		kgid_t		gid;
++		unsigned int	special;
++	} e_id;
++};
++
++struct richacl {
++	atomic_t	a_refcount;
++	unsigned int	a_owner_mask;
++	unsigned int	a_group_mask;
++	unsigned int	a_other_mask;
++	unsigned short	a_count;
++	unsigned short	a_flags;
++	struct richace	a_entries[0];
++};
++
++#define richacl_for_each_entry(_ace, _acl)			\
++	for (_ace = (_acl)->a_entries;				\
++	     _ace != (_acl)->a_entries + (_acl)->a_count;	\
++	     _ace++)
++
++#define richacl_for_each_entry_reverse(_ace, _acl)		\
++	for (_ace = (_acl)->a_entries + (_acl)->a_count - 1;	\
++	     _ace != (_acl)->a_entries - 1;			\
++	     _ace--)
++
++/**
++ * richacl_get  -  grab another reference to a richacl handle
++ */
++static inline struct richacl *
++richacl_get(struct richacl *acl)
++{
++	if (acl)
++		atomic_inc(&acl->a_refcount);
++	return acl;
++}
++
++/**
++ * richacl_put  -  free a richacl handle
++ */
++static inline void
++richacl_put(struct richacl *acl)
++{
++	if (acl && atomic_dec_and_test(&acl->a_refcount))
++		kfree(acl);
++}
++
++/**
++ * richace_is_owner  -  check if @ace is an OWNER@ entry
++ */
++static inline bool
++richace_is_owner(const struct richace *ace)
++{
++	return (ace->e_flags & RICHACE_SPECIAL_WHO) &&
++	       ace->e_id.special == RICHACE_OWNER_SPECIAL_ID;
++}
++
++/**
++ * richace_is_group  -  check if @ace is a GROUP@ entry
++ */
++static inline bool
++richace_is_group(const struct richace *ace)
++{
++	return (ace->e_flags & RICHACE_SPECIAL_WHO) &&
++	       ace->e_id.special == RICHACE_GROUP_SPECIAL_ID;
++}
++
++/**
++ * richace_is_everyone  -  check if @ace is an EVERYONE@ entry
++ */
++static inline bool
++richace_is_everyone(const struct richace *ace)
++{
++	return (ace->e_flags & RICHACE_SPECIAL_WHO) &&
++	       ace->e_id.special == RICHACE_EVERYONE_SPECIAL_ID;
++}
++
++/**
++ * richace_is_unix_user  -  check if @ace applies to a specific user
++ */
++static inline bool
++richace_is_unix_user(const struct richace *ace)
++{
++	return !(ace->e_flags & RICHACE_SPECIAL_WHO) &&
++	       !(ace->e_flags & RICHACE_IDENTIFIER_GROUP);
++}
++
++/**
++ * richace_is_unix_group  -  check if @ace applies to a specific group
++ */
++static inline bool
++richace_is_unix_group(const struct richace *ace)
++{
++	return !(ace->e_flags & RICHACE_SPECIAL_WHO) &&
++	       (ace->e_flags & RICHACE_IDENTIFIER_GROUP);
++}
++
++/**
++ * richace_is_inherit_only  -  check if @ace is for inheritance only
++ *
++ * ACEs with the %RICHACE_INHERIT_ONLY_ACE flag set have no effect during
++ * permission checking.
++ */
++static inline bool
++richace_is_inherit_only(const struct richace *ace)
++{
++	return ace->e_flags & RICHACE_INHERIT_ONLY_ACE;
++}
++
++/**
++ * richace_is_inheritable  -  check if @ace is inheritable
++ */
++static inline bool
++richace_is_inheritable(const struct richace *ace)
++{
++	return ace->e_flags & (RICHACE_FILE_INHERIT_ACE |
++			       RICHACE_DIRECTORY_INHERIT_ACE);
++}
++
++/**
++ * richace_is_allow  -  check if @ace is an %ALLOW type entry
++ */
++static inline bool
++richace_is_allow(const struct richace *ace)
++{
++	return ace->e_type == RICHACE_ACCESS_ALLOWED_ACE_TYPE;
++}
++
++/**
++ * richace_is_deny  -  check if @ace is a %DENY type entry
++ */
++static inline bool
++richace_is_deny(const struct richace *ace)
++{
++	return ace->e_type == RICHACE_ACCESS_DENIED_ACE_TYPE;
++}
++
++/**
++ * richace_is_same_identifier  -  are both identifiers the same?
++ */
++static inline bool
++richace_is_same_identifier(const struct richace *a, const struct richace *b)
++{
++	return !((a->e_flags ^ b->e_flags) &
++		 (RICHACE_SPECIAL_WHO | RICHACE_IDENTIFIER_GROUP)) &&
++	       !memcmp(&a->e_id, &b->e_id, sizeof(a->e_id));
++}
++
++extern struct richacl *richacl_alloc(int, gfp_t);
++extern struct richacl *richacl_clone(const struct richacl *, gfp_t);
++extern void richace_copy(struct richace *, const struct richace *);
++
++#endif /* __RICHACL_H */
+diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
+index f330ba4..1927e69 100644
+--- a/include/uapi/linux/Kbuild
++++ b/include/uapi/linux/Kbuild
+@@ -363,6 +363,7 @@ header-y += reboot.h
+ header-y += reiserfs_fs.h
+ header-y += reiserfs_xattr.h
+ header-y += resource.h
++header-y += richacl.h
+ header-y += rfkill.h
+ header-y += rio_cm_cdev.h
+ header-y += rio_mport_cdev.h
+diff --git a/include/uapi/linux/richacl.h b/include/uapi/linux/richacl.h
+new file mode 100644
+index 0000000..08856f8
+--- /dev/null
++++ b/include/uapi/linux/richacl.h
+@@ -0,0 +1,99 @@
++/*
++ * Copyright (C) 2006, 2010  Novell, Inc.
++ * Copyright (C) 2015  Red Hat, Inc.
++ * Written by Andreas Gruenbacher <agruenba@redhat.com>
++ *
++ * This file is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This file is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ */
++
++#ifndef __UAPI_RICHACL_H
++#define __UAPI_RICHACL_H
++
++/* a_flags values */
++#define RICHACL_WRITE_THROUGH			0x40
++#define RICHACL_MASKED				0x80
++
++/* e_type values */
++#define RICHACE_ACCESS_ALLOWED_ACE_TYPE		0x0000
++#define RICHACE_ACCESS_DENIED_ACE_TYPE		0x0001
++
++/* e_flags bitflags */
++#define RICHACE_FILE_INHERIT_ACE		0x0001
++#define RICHACE_DIRECTORY_INHERIT_ACE		0x0002
++#define RICHACE_NO_PROPAGATE_INHERIT_ACE	0x0004
++#define RICHACE_INHERIT_ONLY_ACE		0x0008
++#define RICHACE_IDENTIFIER_GROUP		0x0040
++#define RICHACE_SPECIAL_WHO			0x4000
++
++/* e_mask bitflags */
++#define RICHACE_READ_DATA			0x00000001
++#define RICHACE_LIST_DIRECTORY			0x00000001
++#define RICHACE_WRITE_DATA			0x00000002
++#define RICHACE_ADD_FILE			0x00000002
++#define RICHACE_APPEND_DATA			0x00000004
++#define RICHACE_ADD_SUBDIRECTORY		0x00000004
++#define RICHACE_READ_NAMED_ATTRS		0x00000008
++#define RICHACE_WRITE_NAMED_ATTRS		0x00000010
++#define RICHACE_EXECUTE				0x00000020
++#define RICHACE_DELETE_CHILD			0x00000040
++#define RICHACE_READ_ATTRIBUTES			0x00000080
++#define RICHACE_WRITE_ATTRIBUTES		0x00000100
++#define RICHACE_WRITE_RETENTION			0x00000200
++#define RICHACE_WRITE_RETENTION_HOLD		0x00000400
++#define RICHACE_DELETE				0x00010000
++#define RICHACE_READ_ACL			0x00020000
++#define RICHACE_WRITE_ACL			0x00040000
++#define RICHACE_WRITE_OWNER			0x00080000
++#define RICHACE_SYNCHRONIZE			0x00100000
++
++/* e_id values */
++#define RICHACE_OWNER_SPECIAL_ID		0
++#define RICHACE_GROUP_SPECIAL_ID		1
++#define RICHACE_EVERYONE_SPECIAL_ID		2
++
++#define RICHACL_VALID_FLAGS (					\
++	RICHACL_WRITE_THROUGH |					\
++	RICHACL_MASKED )
++
++#define RICHACE_VALID_FLAGS (					\
++	RICHACE_FILE_INHERIT_ACE |				\
++	RICHACE_DIRECTORY_INHERIT_ACE |				\
++	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
++	RICHACE_INHERIT_ONLY_ACE |				\
++	RICHACE_IDENTIFIER_GROUP |				\
++	RICHACE_SPECIAL_WHO )
++
++#define RICHACE_INHERITANCE_FLAGS (				\
++	RICHACE_FILE_INHERIT_ACE |				\
++	RICHACE_DIRECTORY_INHERIT_ACE |				\
++	RICHACE_NO_PROPAGATE_INHERIT_ACE |			\
++	RICHACE_INHERIT_ONLY_ACE )
++
++/* Valid RICHACE_* flags for directories and non-directories */
++#define RICHACE_VALID_MASK (					\
++	RICHACE_READ_DATA | RICHACE_LIST_DIRECTORY |		\
++	RICHACE_WRITE_DATA | RICHACE_ADD_FILE |			\
++	RICHACE_APPEND_DATA | RICHACE_ADD_SUBDIRECTORY |	\
++	RICHACE_READ_NAMED_ATTRS |				\
++	RICHACE_WRITE_NAMED_ATTRS |				\
++	RICHACE_EXECUTE |					\
++	RICHACE_DELETE_CHILD |					\
++	RICHACE_READ_ATTRIBUTES |				\
++	RICHACE_WRITE_ATTRIBUTES |				\
++	RICHACE_WRITE_RETENTION |				\
++	RICHACE_WRITE_RETENTION_HOLD |				\
++	RICHACE_DELETE |					\
++	RICHACE_READ_ACL |					\
++	RICHACE_WRITE_ACL |					\
++	RICHACE_WRITE_OWNER |					\
++	RICHACE_SYNCHRONIZE )
++
++#endif /* __UAPI_RICHACL_H */
 -- 
-Cheers,
-Stephen Rothwell
+2.7.4
 
-diff --cc fs/dax.c
-index 99b5b4458a78,97b8ecbed1c4..000000000000
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@@ -1116,20 -1114,9 +1118,9 @@@ static int dax_fault_return(int error
-  	return VM_FAULT_SIGBUS;
-  }
-  
-- /**
--  * dax_iomap_fault - handle a page fault on a DAX file
--  * @vma: The virtual memory area where the fault occurred
--  * @vmf: The description of the fault
--  * @ops: iomap ops passed from the file system
--  *
--  * When a page fault occurs, filesystems may call this helper in their fault
--  * or mkwrite handler for DAX files. Assumes the caller has done all the
--  * necessary locking for the page fault to proceed successfully.
--  */
-- int dax_iomap_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
-- 			const struct iomap_ops *ops)
- -static int dax_iomap_pte_fault(struct vm_fault *vmf, struct iomap_ops *ops)
-++static int dax_iomap_pte_fault(struct vm_fault *vmf, const struct iomap_ops *ops)
-  {
-- 	struct address_space *mapping = vma->vm_file->f_mapping;
-+ 	struct address_space *mapping = vmf->vma->vm_file->f_mapping;
-  	struct inode *inode = mapping->host;
-  	unsigned long vaddr = vmf->address;
-  	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
-@@@ -1309,28 -1300,33 +1304,33 @@@ static int dax_pmd_load_hole(struct vm_
-  	ret = dax_insert_mapping_entry(mapping, vmf, *entryp, 0,
-  			RADIX_DAX_PMD | RADIX_DAX_HZP);
-  	if (IS_ERR(ret))
-- 		return VM_FAULT_FALLBACK;
-+ 		goto fallback;
-  	*entryp = ret;
-  
-- 	ptl = pmd_lock(vma->vm_mm, pmd);
-- 	if (!pmd_none(*pmd)) {
-+ 	ptl = pmd_lock(vmf->vma->vm_mm, vmf->pmd);
-+ 	if (!pmd_none(*(vmf->pmd))) {
-  		spin_unlock(ptl);
-- 		return VM_FAULT_FALLBACK;
-+ 		goto fallback;
-  	}
-  
-- 	pmd_entry = mk_pmd(zero_page, vma->vm_page_prot);
-+ 	pmd_entry = mk_pmd(zero_page, vmf->vma->vm_page_prot);
-  	pmd_entry = pmd_mkhuge(pmd_entry);
-- 	set_pmd_at(vma->vm_mm, pmd_addr, pmd, pmd_entry);
-+ 	set_pmd_at(vmf->vma->vm_mm, pmd_addr, vmf->pmd, pmd_entry);
-  	spin_unlock(ptl);
-+ 	trace_dax_pmd_load_hole(inode, vmf, zero_page, ret);
-  	return VM_FAULT_NOPAGE;
-+ 
-+ fallback:
-+ 	trace_dax_pmd_load_hole_fallback(inode, vmf, zero_page, ret);
-+ 	return VM_FAULT_FALLBACK;
-  }
-  
-- int dax_iomap_pmd_fault(struct vm_area_struct *vma, unsigned long address,
-- 		pmd_t *pmd, unsigned int flags, const struct iomap_ops *ops)
- -static int dax_iomap_pmd_fault(struct vm_fault *vmf, struct iomap_ops *ops)
-++static int dax_iomap_pmd_fault(struct vm_fault *vmf, const struct iomap_ops *ops)
-  {
-+ 	struct vm_area_struct *vma = vmf->vma;
-  	struct address_space *mapping = vma->vm_file->f_mapping;
-- 	unsigned long pmd_addr = address & PMD_MASK;
-- 	bool write = flags & FAULT_FLAG_WRITE;
-+ 	unsigned long pmd_addr = vmf->address & PMD_MASK;
-+ 	bool write = vmf->flags & FAULT_FLAG_WRITE;
-  	unsigned int iomap_flags = (write ? IOMAP_WRITE : 0) | IOMAP_FAULT;
-  	struct inode *inode = mapping->host;
-  	int result = VM_FAULT_FALLBACK;
-@@@ -1429,10 -1422,40 +1426,40 @@@
-  	}
-   fallback:
-  	if (result == VM_FAULT_FALLBACK) {
-- 		split_huge_pmd(vma, pmd, address);
-+ 		split_huge_pmd(vma, vmf->pmd, vmf->address);
-  		count_vm_event(THP_FAULT_FALLBACK);
-  	}
-+ out:
-+ 	trace_dax_pmd_fault_done(inode, vmf, max_pgoff, result);
-  	return result;
-  }
-- EXPORT_SYMBOL_GPL(dax_iomap_pmd_fault);
-+ #else
- -static int dax_iomap_pmd_fault(struct vm_fault *vmf, struct iomap_ops *ops)
-++static int dax_iomap_pmd_fault(struct vm_fault *vmf, const struct iomap_ops *ops)
-+ {
-+ 	return VM_FAULT_FALLBACK;
-+ }
-  #endif /* CONFIG_FS_DAX_PMD */
-+ 
-+ /**
-+  * dax_iomap_fault - handle a page fault on a DAX file
-+  * @vmf: The description of the fault
-+  * @ops: iomap ops passed from the file system
-+  *
-+  * When a page fault occurs, filesystems may call this helper in
-+  * their fault handler for DAX files. dax_iomap_fault() assumes the caller
-+  * has done all the necessary locking for page fault to proceed
-+  * successfully.
-+  */
-+ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
- -		struct iomap_ops *ops)
-++		const struct iomap_ops *ops)
-+ {
-+ 	switch (pe_size) {
-+ 	case PE_SIZE_PTE:
-+ 		return dax_iomap_pte_fault(vmf, ops);
-+ 	case PE_SIZE_PMD:
-+ 		return dax_iomap_pmd_fault(vmf, ops);
-+ 	default:
-+ 		return VM_FAULT_FALLBACK;
-+ 	}
-+ }
-+ EXPORT_SYMBOL_GPL(dax_iomap_fault);
