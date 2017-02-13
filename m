@@ -1,63 +1,206 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:45380 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753414AbdBJQZ2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2017 11:25:28 -0500
-Date: Fri, 10 Feb 2017 08:25:23 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/3] xfs: restore and enhance xfs indlen test
-Message-ID: <20170210162523.GB6813@birch.djwong.org>
-References: <1486669424-45274-1-git-send-email-bfoster@redhat.com>
- <20170210071519.GB21408@eguan.usersys.redhat.com>
- <20170210135830.GA3155@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170210135830.GA3155@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:48350 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753047AbdBMPdn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Feb 2017 10:33:43 -0500
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH v28 14/21] richacl: Create-time inheritance
+Date: Mon, 13 Feb 2017 16:32:30 +0100
+Message-Id: <1486999957-2381-15-git-send-email-agruenba@redhat.com>
+In-Reply-To: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
+References: <1486999957-2381-1-git-send-email-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eryu Guan <eguan@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Dave Chinner <david@fromorbit.com>, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-api@vger.kernel.org
 
-On Fri, Feb 10, 2017 at 08:58:30AM -0500, Brian Foster wrote:
-> On Fri, Feb 10, 2017 at 03:15:19PM +0800, Eryu Guan wrote:
-> > On Thu, Feb 09, 2017 at 02:43:41PM -0500, Brian Foster wrote:
-> > > Hi all,
-> > > 
-> > > This series is associated with the "buffered write and indlen fixes"
-> > > series recently posted to the XFS list. These patches move the original
-> > > test to the XFS directory as it now depends on an XFS-specific
-> > > mechanism, restore the effectiveness of the original test, and finally
-> > > enhance the test to reproduce the newly identified problems fixed by the
-> > > kernel patches. Thoughts, reviews, flames appreciated.
-> > 
-> > I think it's still worth keeping the original fzero tests in generic, as
-> > a generic function/regression test, though it's not effective to
-> > reproduce the original bug. And maybe it's still working and effective
-> > on some distro kernels? How about just adding a new test for XFS?
-> > 
-> 
-> Sure, in that case I guess I can just copy generic/033 rather than move
-> it and then squash these down into a single patch. Any other comments on
-> the resulting test before I post an update?
+When a new file is created, it can inherit an acl from its parent
+directory; this is similar to how default acls work in POSIX ACLs.
 
-/me thinks the new test ought to _notrun if the fail_writes file doesn't
-show up... that said /me is sorta braindead after a lot of travel
-yesterday and could've missed it already being there. :(
+As with POSIX ACLs, if a file inherits an acl from its parent directory,
+the intersection between the create mode and the permissions granted by
+the inherited acl determines the file masks and file permission bits,
+and the umask is ignored.
 
---D
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/richacl.c            | 151 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/richacl.h |   2 +
+ 2 files changed, 153 insertions(+)
 
-> 
-> Brian
-> 
-> > Thanks,
-> > Eryu
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/richacl.c b/fs/richacl.c
+index 1022983..8051181 100644
+--- a/fs/richacl.c
++++ b/fs/richacl.c
+@@ -716,3 +716,154 @@ richacl_equiv_mode(const struct richacl *acl, umode_t *mode_p)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(richacl_equiv_mode);
++
++static inline bool
++ace_inherits_to_directory(const struct richace *ace)
++{
++	if (ace->e_flags & RICHACE_DIRECTORY_INHERIT_ACE)
++		return true;
++	if ((ace->e_flags & RICHACE_FILE_INHERIT_ACE) &&
++	    !(ace->e_flags & RICHACE_NO_PROPAGATE_INHERIT_ACE))
++		return true;
++	return false;
++}
++
++/**
++ * richacl_inherit  -  compute the inherited acl of a new file
++ * @dir_acl:	acl of the containing directory
++ * @isdir:	inherit by a directory or non-directory?
++ *
++ * A directory can have acl entries which files and/or directories created
++ * inside the directory will inherit.  This function computes the acl for such
++ * a new file.  If there is no inheritable acl, it will return %NULL.
++ */
++struct richacl *
++richacl_inherit(const struct richacl *dir_acl, int isdir)
++{
++	const struct richace *dir_ace;
++	struct richacl *acl = NULL;
++	struct richace *ace;
++	int count = 0;
++
++	if (isdir) {
++		richacl_for_each_entry(dir_ace, dir_acl) {
++			if (!ace_inherits_to_directory(dir_ace))
++				continue;
++			count++;
++		}
++		if (!count)
++			return NULL;
++		acl = richacl_alloc(count, GFP_KERNEL);
++		if (!acl)
++			return ERR_PTR(-ENOMEM);
++		ace = acl->a_entries;
++		richacl_for_each_entry(dir_ace, dir_acl) {
++			if (!ace_inherits_to_directory(dir_ace))
++				continue;
++			richace_copy(ace, dir_ace);
++			if (dir_ace->e_flags & RICHACE_NO_PROPAGATE_INHERIT_ACE)
++				ace->e_flags &= ~RICHACE_INHERITANCE_FLAGS;
++			else if (dir_ace->e_flags & RICHACE_DIRECTORY_INHERIT_ACE)
++				ace->e_flags &= ~RICHACE_INHERIT_ONLY_ACE;
++			else
++				ace->e_flags |= RICHACE_INHERIT_ONLY_ACE;
++			ace++;
++		}
++	} else {
++		richacl_for_each_entry(dir_ace, dir_acl) {
++			if (!(dir_ace->e_flags & RICHACE_FILE_INHERIT_ACE))
++				continue;
++			count++;
++		}
++		if (!count)
++			return NULL;
++		acl = richacl_alloc(count, GFP_KERNEL);
++		if (!acl)
++			return ERR_PTR(-ENOMEM);
++		ace = acl->a_entries;
++		richacl_for_each_entry(dir_ace, dir_acl) {
++			if (!(dir_ace->e_flags & RICHACE_FILE_INHERIT_ACE))
++				continue;
++			richace_copy(ace, dir_ace);
++			ace->e_flags &= ~RICHACE_INHERITANCE_FLAGS;
++			/*
++			 * RICHACE_DELETE_CHILD is meaningless for
++			 * non-directories, so clear it.
++			 */
++			ace->e_mask &= ~RICHACE_DELETE_CHILD;
++			ace++;
++		}
++	}
++
++	return acl;
++}
++
++/*
++ * richacl_inherit_inode  -  compute inherited acl and file mode
++ * @dir_acl:	acl of the containing directory
++ * @mode_p:	mode of the new inode
++ *
++ * The file permission bits in @mode_p must be set to the create mode by the
++ * caller.
++ *
++ * If there is an inheritable acl, the maximum permissions that the acl grants
++ * are computed and the file masks of the new acl are set accordingly.
++ */
++static struct richacl *
++richacl_inherit_inode(const struct richacl *dir_acl, umode_t *mode_p)
++{
++	struct richacl *acl;
++	umode_t mode = *mode_p;
++
++	acl = richacl_inherit(dir_acl, S_ISDIR(mode));
++	if (acl) {
++		if (richacl_equiv_mode(acl, &mode) == 0) {
++			*mode_p &= mode;
++			richacl_put(acl);
++			acl = NULL;
++		} else {
++			richacl_compute_max_masks(acl);
++			/*
++			 * Ensure that the acl will not grant any permissions
++			 * beyond the create mode.
++			 */
++			acl->a_flags |= RICHACL_MASKED;
++			acl->a_owner_mask &=
++				richacl_mode_to_mask(mode >> 6);
++			acl->a_group_mask &=
++				richacl_mode_to_mask(mode >> 3);
++			acl->a_other_mask &=
++				richacl_mode_to_mask(mode);
++		}
++	} else
++		*mode_p &= ~current_umask();
++
++	return acl;
++}
++
++/**
++ * richacl_create  -  filesystem create helper
++ * @mode_p:	mode of the new inode
++ * @dir:	containing directory
++ *
++ * Compute the inherited acl for a new inode.  If there is no acl to inherit,
++ * apply the umask.  Use when creating a new inode on a richacl enabled file
++ * system.
++ */
++struct richacl *richacl_create(umode_t *mode_p, struct inode *dir)
++{
++	struct richacl *dir_acl, *acl = NULL;
++
++	if (S_ISLNK(*mode_p))
++		return NULL;
++	dir_acl = get_richacl(dir);
++	if (dir_acl) {
++		if (IS_ERR(dir_acl))
++			return dir_acl;
++		acl = richacl_inherit_inode(dir_acl, mode_p);
++		richacl_put(dir_acl);
++	} else
++		*mode_p &= ~current_umask();
++	return acl;
++}
++EXPORT_SYMBOL_GPL(richacl_create);
+diff --git a/include/linux/richacl.h b/include/linux/richacl.h
+index a865f37..6354ef0 100644
+--- a/include/linux/richacl.h
++++ b/include/linux/richacl.h
+@@ -191,5 +191,7 @@ extern int richacl_permission(struct inode *, const struct richacl *, int);
+ extern void richacl_compute_max_masks(struct richacl *);
+ extern int richacl_chmod(struct inode *, umode_t);
+ extern int richacl_equiv_mode(const struct richacl *, umode_t *);
++extern struct richacl *richacl_inherit(const struct richacl *, int);
++extern struct richacl *richacl_create(umode_t *, struct inode *);
+ 
+ #endif /* __RICHACL_H */
+-- 
+2.7.4
+
