@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54100 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35766 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752597AbdBNNDP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1752611AbdBNNDP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Tue, 14 Feb 2017 08:03:15 -0500
 Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C087FC00E0BB
+        by mx1.redhat.com (Postfix) with ESMTPS id C437C7E9DF
         for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 13:03:10 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v1ED3Acn020232
+        by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v1ED3Ag6020230
         for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 08:03:10 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 3/4] xfs: handle indlen shortage on delalloc extent merge
-Date: Tue, 14 Feb 2017 08:03:08 -0500
-Message-Id: <1487077389-5626-4-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 2/4] xfs: resurrect debug mode drop buffered writes mechanism
+Date: Tue, 14 Feb 2017 08:03:07 -0500
+Message-Id: <1487077389-5626-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1487077389-5626-1-git-send-email-bfoster@redhat.com>
 References: <1487077389-5626-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,71 +22,136 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-When a delalloc extent is created, it can be merged with pre-existing,
-contiguous, delalloc extents. When this occurs,
-xfs_bmap_add_extent_hole_delay() merges the extents along with the
-associated indirect block reservations. The expectation here is that the
-combined worst case indlen reservation is always less than or equal to
-the indlen reservation for the individual extents.
+A debug mode write failure mechanism was introduced to XFS in commit
+801cc4e17a ("xfs: debug mode forced buffered write failure") to
+facilitate targeted testing of delalloc indirect reservation management
+from userspace. This code was subsequently rendered ineffective by the
+move to iomap based buffered writes in commit 68a9f5e700 ("xfs:
+implement iomap based buffered write path"). This likely went unnoticed
+because the associated userspace code had not made it into xfstests.
 
-This is not always the case, however, as existing extents can less than
-the expected indlen reservation if the extent was previously split due
-to a hole punch. If a new extent merges with such an extent, the total
-indlen requirement may be larger than the sum of the indlen reservations
-held by both extents.
-
-xfs_bmap_add_extent_hole_delay() assumes that the worst case indlen
-reservation is always available and assigns it to the merged extent
-without consideration for the indlen held by the pre-existing extent. As
-a result, the subsequent xfs_mod_fdblocks() call can attempt an
-unintentional allocation rather than a free (indicated by an ASSERT()
-failure). Further, if the allocation happens to fail in this context,
-the failure goes unhandled and creates a filesystem wide block
-accounting inconsistency.
-
-Fix xfs_bmap_add_extent_hole_delay() to function as designed. Cap the
-indlen reservation assigned to the merged extent to the sum of the
-indlen reservations held by each of the individual extents.
+Resurrect this mechanism to facilitate effective indlen reservation
+testing from xfstests. The move to iomap based buffered writes relocated
+the hook this mechanism needs to return write failure from XFS to
+generic code. The failure trigger must remain in XFS. Given that
+limitation, convert this from a write failure mechanism to one that
+simply drops writes without returning failure to userspace. Rename all
+"fail_writes" references to "drop_writes" to illustrate the point. This
+is more hacky than preferred, but still triggers the XFS error handling
+behavior required to drive the indlen tests. This is only available in
+DEBUG mode and for testing purposes only.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_iomap.c |  4 ++++
+ fs/xfs/xfs_mount.h | 15 ++++++++-------
+ fs/xfs/xfs_sysfs.c | 14 +++++++-------
+ 3 files changed, 19 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 1cee514..73c9546 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2805,7 +2805,8 @@ xfs_bmap_add_extent_hole_delay(
- 		oldlen = startblockval(left.br_startblock) +
- 			startblockval(new->br_startblock) +
- 			startblockval(right.br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
- 			nullstartblock((int)newlen));
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-@@ -2826,7 +2827,8 @@ xfs_bmap_add_extent_hole_delay(
- 		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx), temp);
- 		oldlen = startblockval(left.br_startblock) +
- 			startblockval(new->br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
- 			nullstartblock((int)newlen));
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-@@ -2842,7 +2844,8 @@ xfs_bmap_add_extent_hole_delay(
- 		temp = new->br_blockcount + right.br_blockcount;
- 		oldlen = startblockval(new->br_startblock) +
- 			startblockval(right.br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
- 			new->br_startoff,
- 			nullstartblock((int)newlen), temp, right.br_state);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index e2fbed4..01e8780 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1078,6 +1078,10 @@ xfs_file_iomap_end_delalloc(
+ 	xfs_fileoff_t		end_fsb;
+ 	int			error = 0;
+ 
++	/* behave as if the write failed if drop writes is enabled */
++	if (xfs_mp_drop_writes(mp))
++		written = 0;
++
+ 	start_fsb = XFS_B_TO_FSB(mp, offset + written);
+ 	if (unlikely(!written))
+ 		start_fsb = XFS_B_TO_FSBT(mp, offset);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 20e2981..6db6fd6 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -200,11 +200,12 @@ typedef struct xfs_mount {
+ 	/*
+ 	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
+ 	 * block killing in the event of failed writes. When enabled, all
+-	 * buffered writes are forced to fail. All delalloc blocks in the range
+-	 * of the write (including pre-existing delalloc blocks!) are tossed as
+-	 * part of the write failure error handling sequence.
++	 * buffered writes are silenty dropped and handled as if they failed.
++	 * All delalloc blocks in the range of the write (including pre-existing
++	 * delalloc blocks!) are tossed as part of the write failure error
++	 * handling sequence.
+ 	 */
+-	bool			m_fail_writes;
++	bool			m_drop_writes;
+ #endif
+ } xfs_mount_t;
+ 
+@@ -325,13 +326,13 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
+ 
+ #ifdef DEBUG
+ static inline bool
+-xfs_mp_fail_writes(struct xfs_mount *mp)
++xfs_mp_drop_writes(struct xfs_mount *mp)
+ {
+-	return mp->m_fail_writes;
++	return mp->m_drop_writes;
+ }
+ #else
+ static inline bool
+-xfs_mp_fail_writes(struct xfs_mount *mp)
++xfs_mp_drop_writes(struct xfs_mount *mp)
+ {
+ 	return 0;
+ }
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index de6195e..80ac15f 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -93,7 +93,7 @@ to_mp(struct kobject *kobject)
+ #ifdef DEBUG
+ 
+ STATIC ssize_t
+-fail_writes_store(
++drop_writes_store(
+ 	struct kobject		*kobject,
+ 	const char		*buf,
+ 	size_t			count)
+@@ -107,9 +107,9 @@ fail_writes_store(
+ 		return ret;
+ 
+ 	if (val == 1)
+-		mp->m_fail_writes = true;
++		mp->m_drop_writes = true;
+ 	else if (val == 0)
+-		mp->m_fail_writes = false;
++		mp->m_drop_writes = false;
+ 	else
+ 		return -EINVAL;
+ 
+@@ -117,21 +117,21 @@ fail_writes_store(
+ }
+ 
+ STATIC ssize_t
+-fail_writes_show(
++drop_writes_show(
+ 	struct kobject		*kobject,
+ 	char			*buf)
+ {
+ 	struct xfs_mount	*mp = to_mp(kobject);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_fail_writes ? 1 : 0);
++	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_drop_writes ? 1 : 0);
+ }
+-XFS_SYSFS_ATTR_RW(fail_writes);
++XFS_SYSFS_ATTR_RW(drop_writes);
+ 
+ #endif /* DEBUG */
+ 
+ static struct attribute *xfs_mp_attrs[] = {
+ #ifdef DEBUG
+-	ATTR_LIST(fail_writes),
++	ATTR_LIST(drop_writes),
+ #endif
+ 	NULL,
+ };
 -- 
 2.7.4
 
