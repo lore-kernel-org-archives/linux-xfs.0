@@ -1,58 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f47.google.com ([209.85.213.47]:33631 "EHLO
-        mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750732AbdBOFNP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2017 00:13:15 -0500
-Received: by mail-vk0-f47.google.com with SMTP id k127so92841848vke.0
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 21:13:15 -0800 (PST)
-MIME-Version: 1.0
-From: Vaibhaw Pandey <vaibhaw@scalegrid.io>
-Date: Wed, 15 Feb 2017 10:43:14 +0530
-Message-ID: <CADWLRhrhPD9sPpXPFPx8BvsjwDc4nJFasTC8bRr+5rd3c48xxg@mail.gmail.com>
-Subject: XFS doesn't auto mount on boot when /etc/fstab entry has fs type set
- to auto
-Content-Type: text/plain; charset=UTF-8
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43136 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751370AbdBNG2o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 01:28:44 -0500
+Message-ID: <1487053720.3125.73.camel@HansenPartnership.com>
+Subject: [PATCH 1/2] fs: add inode helpers for fsuid and fsgid
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Mon, 13 Feb 2017 22:28:40 -0800
+In-Reply-To: <1487053651.3125.72.camel@HansenPartnership.com>
+References: <1487008001.3125.41.camel@HansenPartnership.com>
+         <20170213194337.GA9852@infradead.org> <20170213213416.GA15349@dastard>
+         <20170214060809.GA21114@infradead.org>
+         <1487053651.3125.72.camel@HansenPartnership.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>, Seth Forshee <seth.forshee@canonical.com>
 
-Hi,
+Now that we have two different views of filesystem ids (the filesystem
+view and the kernel view), we have a problem in that
+current_fsuid/fsgid() return the kernel view but are sometimes used in
+filesystem code where the filesystem view shoud be used.  This patch
+introduces helpers to produce the filesystem view of current fsuid and
+fsgid.
 
-Needed guidance.
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-I am trying to move my EC2 machine deployment code to start creating
-XFS volumes as opposed to ext4 volumes like it used to. An issue I
-have run into is that the XFS volume doesn't get mounted automatically
-on reboot with the /etc/fstab entry which used to work fine for ext4.
-A manual mount later works perfectly.
-
-Version:
-$ uname -a
-Linux ip-172-31-39-239 4.4.44-39.55.amzn1.x86_64 #1 SMP Mon Jan 30
-18:15:53 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
-sudo cat /etc/fstab
-#
-LABEL=/     /           ext4    defaults,noatime  1   1
-tmpfs       /dev/shm    tmpfs   defaults        0   0
-devpts      /dev/pts    devpts  gid=5,mode=620  0   0
-sysfs       /sys        sysfs   defaults        0   0
-proc        /proc       proc    defaults        0   0
-/dev/sdb /redis_data auto noatime,noexec,nodiratime 0 0
-$ df -T /redis_data/
-Filesystem     Type 1K-blocks  Used Available Use% Mounted on
-/dev/xvdb      xfs    5232640 32940   5199700   1% /redis_data
-
-However if I change the /etc/fstab directive to:
-
-/dev/sdb /redis_data xfs noatime,noexec,nodiratime 0 0
-
-the auto mount starts working fine. Now this isn't a major problem
-since the functionality ultimately works. But I would certainly like
-to have the flexibility to avoid hard coding the fs type in the code
-that generates these fstab entries.
-
-Any pointers or help is much appreciated. :)
-
-Thanks,
-Vaibhaw
+diff --git a/include/linux/cred.h b/include/linux/cred.h
+index f0e70a1..18e9c41 100644
+--- a/include/linux/cred.h
++++ b/include/linux/cred.h
+@@ -399,4 +399,9 @@ do {						\
+ 	*(_fsgid) = __cred->fsgid;		\
+ } while(0)
+ 
++/* return the current id in the filesystem view */
++#define i_fsuid(i) from_kuid((i)->i_sb->s_user_ns, current_fsuid())
++#define i_fsgid(i) from_kgid((i)->i_sb->s_user_ns, current_fsgid())
++
++
+ #endif /* _LINUX_CRED_H */
