@@ -1,103 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f51.google.com ([209.85.213.51]:36663 "EHLO
-        mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750982AbdBPL2u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 06:28:50 -0500
-Received: by mail-vk0-f51.google.com with SMTP id t8so8342230vke.3
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 03:28:50 -0800 (PST)
+Received: from bombadil.infradead.org ([65.50.211.133]:34069 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751933AbdBNHn1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 02:43:27 -0500
+Date: Mon, 13 Feb 2017 23:43:26 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 6/7] nonblocking aio: xfs
+Message-ID: <20170214074326.GA20629@infradead.org>
+References: <20170214024603.9563-1-rgoldwyn@suse.de>
+ <20170214024603.9563-7-rgoldwyn@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <20170216085744.ahpphwbqh6o3rp3o@eorzea.usersys.redhat.com>
-References: <CADWLRhrhPD9sPpXPFPx8BvsjwDc4nJFasTC8bRr+5rd3c48xxg@mail.gmail.com>
- <20170215122745.nmwkmcqo23ecfr53@eorzea.usersys.redhat.com>
- <CADWLRhoFdQUS-XjLj5R3JxjBnkXLN-TAjqCMBZDJWW36SOkWFw@mail.gmail.com>
- <CADWLRhpnnjCV=vigJPBAzJi8d5YLkgUXd=dn_iBakVic1UAPvw@mail.gmail.com> <20170216085744.ahpphwbqh6o3rp3o@eorzea.usersys.redhat.com>
-From: Vaibhaw Pandey <vaibhaw@scalegrid.io>
-Date: Thu, 16 Feb 2017 16:58:48 +0530
-Message-ID: <CADWLRhrK04FNDC3t1rYvBMJdQ-0muhrG+dp4gd+nggs4WTVsxA@mail.gmail.com>
-Subject: Re: XFS doesn't auto mount on boot when /etc/fstab entry has fs type
- set to auto
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170214024603.9563-7-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org
 
-Thanks Carlos! :)
+On Mon, Feb 13, 2017 at 08:46:02PM -0600, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-I will check with the Amazon Linux guys. There flavour of GNU/Linux
-seems to be based off RHEL but they have woefully inadequate
-documentation about everything. They seem to be using upstart as the
-startup daemon but the logs are nowhere to be found. Will talk to them
-about both adding XFS to /etc/filesysems and where do they logs from
-system boot time end up.
+Please Cc the while series to all lists, otherwiwe it's impossible
+to review the thing.
 
-Thanks again,
-Vaibhaw
+> 
+> If IOCB_NONBLOCKING is set:
+> 	+ Check if writing beyond end of file, if yes return EAGAIN
+> 	- check if writing to a hole which does not have allocated
+> 	  file blocks.
+> 	- Check if i_rwsem is immediately lockable in xfs_rw_ilock()
 
-On Thu, Feb 16, 2017 at 2:27 PM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
-> Hi,
->
-> On Thu, Feb 16, 2017 at 12:42:43PM +0530, Vaibhaw Pandey wrote:
->> Sorry to chime in again but I was wondering if it makes sense to just
->> add "xfs" to /etc/filesystems during installation of the package
->> itself? It is visible in the /proc/filesystems once it is installed
->> anyways. I have posed this question to the xfs@oss.sgi.com mailing
->> list as well.
->>
-> Just FYI, xfs@oss.sgi.org is no more, we have moved to vger, so, no one will
-> actually reply you there, always use linux-xfs@vger.kernel.org
->
-> Regarding your question, that is still a question not for XFS, /etc/filesystems
-> file doesn't belong to any xfs package, so we can't touch it, setting
-> /etc/filesystems is responsibility for another software, which, I *think* is
-> distro dependent.
->
-> Maybe it don't take too long by now, once many distros started to use XFS as
-> their default FS, but that might be a good idea to open a bug against the distro
-> you are using.
->
->> On Thu, Feb 16, 2017 at 8:37 AM, Vaibhaw Pandey <vaibhaw@scalegrid.io> wrote:
->> > Carlos,
->> >
->> > Thanks a lot for replying. :)
->> >
->> > I should have read the mount man page more carefully: By adding "xfs"
->> > to /etc/filesystems, the /etc/fstab entry even with an auto started
->> > working fine.
->> >
->
-> Particularly I have never thought about adding something there because I always
-> use 'xfs' in fstab.
->
->> > blkid always had an entry for the volume in question but that didn't
->> > make a difference in this case:
->> > $ sudo blkid
->> > /dev/xvda1: LABEL="/" UUID="ebbf1f1c-fb71-40aa-93a3-056b455e5127" TYPE="ext4"
->> > /dev/xvdb: UUID="bf4be26c-1c1c-40fc-b5cf-b9048dcc61b6" TYPE="xfs"
->> >
->> >
->> >> Anyway, if you have the logs from your system when it tries to mount the
->> >> partition maybe it give us some clue of what is happening.
->> >
->> > It was the complete lack of logs in dmesg or /var/log/messages about a
->> > failure to mount is what confused me on why this was failing.
->
-> These logs won't appear in dmesg, this is the kernel log, what you should look
-> for is for `mount` logs. You are using systemd I suspect, if I am correct, you
-> will see such logs using `journalctl` command.
->
->> > successful mount logs but an unsuccessful one doesn't. I think I will
->> > ask a mount expert for help on this.
->> >
->
-> Hope it have helped,
->
-> Cheers
-> --
-> Carlos
+Why the + vs - above? 
 
+> -static inline void
+> +static inline int
+>  xfs_rw_ilock(
 
+This function has been removed a while ago.
 
--- 
-Member of Technical Staff | ScaleGrid.io | @_vaibhaw | LinkedIn | Google+
-Read my latest blog post: I Get To Know the Redis Database: Iterating Over Keys
+>  
+> +	if (iocb->ki_flags & IOCB_NONBLOCKING) {
+> +		struct xfs_bmbt_irec	imap;
+> +		xfs_fileoff_t           offset_fsb, end_fsb;
+> +		int			nimaps = 1, ret = 0;
+> +		end_fsb = XFS_B_TO_FSB(ip->i_mount, iocb->ki_pos + count);
+> +		if (XFS_B_TO_FSB(ip->i_mount, i_size_read(inode)) < end_fsb)
+> +			return -EAGAIN;
+
+Bogus check, XFS supports async write beyond EOF if the space is
+preallocated.
+
+> +		/* Check if it is an unallocated hole */
+> +		offset_fsb = XFS_B_TO_FSBT(ip->i_mount, iocb->ki_pos);
+> +
+> +		ret = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+> +				&nimaps, 0);
+> +		if (ret)
+> +			return ret;
+> +		if (!nimaps || imap.br_startblock == HOLESTARTBLOCK)
+> +			return -EAGAIN;
+
+This would need the ilock.  But extent list lookups are expensive,
+so please don't add another one here.  Just return when we hit the
+first unallocated extent in xfs_bmapi_write - either a short write or
+-EAGAIN if nothing has been written.
+
+>  	error = xfs_break_layouts(inode, iolock, true);
+>  	if (error)
+>  		return error;
+
+Additionally this can drop the iolock, so you might get a new
+hole after it.
