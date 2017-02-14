@@ -1,126 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52616 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752921AbdBIUiA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Feb 2017 15:38:00 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/3] tests/xfs: update indlen res. test to use fail writes mechanism
-Date: Thu,  9 Feb 2017 14:43:43 -0500
-Message-Id: <1486669424-45274-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1486669424-45274-1-git-send-email-bfoster@redhat.com>
-References: <1486669424-45274-1-git-send-email-bfoster@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:16978 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750756AbdBNGyi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 01:54:38 -0500
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v1E6sbXp022878
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 06:54:38 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v1E6sa5O010011
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 06:54:37 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v1E6saJg003021
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 06:54:36 GMT
+Date: Mon, 13 Feb 2017 22:54:35 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [bug report] xfs: mark speculative prealloc CoW fork extents
+ unwritten
+Message-ID: <20170214065435.GD6813@birch.djwong.org>
+References: <20170213190343.GA11256@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170213190343.GA11256@mwanda>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-This test originally used zero range operations to reproduce problematic
-indirect delalloc reservations on XFS. Zero range has since been updated
-to include a pagecache flush before it updates extents, which means
-delalloc extents are converted to real extents and indlen reservations
-are drained before extents are modified. As a result, zero range is no
-longer an effective tool to reproduce the original problem.
+On Mon, Feb 13, 2017 at 10:03:43PM +0300, Dan Carpenter wrote:
+> Hello Darrick J. Wong,
+> 
+> The patch 5eda43000064: "xfs: mark speculative prealloc CoW fork
+> extents unwritten" from Feb 2, 2017, leads to the following static
+> checker warning:
+> 
+> 	fs/xfs/xfs_reflink.c:381 xfs_reflink_convert_cow()
+> 	error: uninitialized symbol 'error'.
+> 
+> fs/xfs/xfs_reflink.c
+>    350  /* Convert all of the unwritten CoW extents in a file's range to real ones. */
+>    351  int
+>    352  xfs_reflink_convert_cow(
+>    353          struct xfs_inode        *ip,
+>    354          xfs_off_t               offset,
+>    355          xfs_off_t               count)
+>    356  {
+>    357          struct xfs_bmbt_irec    got;
+>    358          struct xfs_defer_ops    dfops;
+>    359          struct xfs_mount        *mp = ip->i_mount;
+>    360          struct xfs_ifork        *ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+>    361          xfs_fileoff_t           offset_fsb = XFS_B_TO_FSBT(mp, offset);
+>    362          xfs_fileoff_t           end_fsb = XFS_B_TO_FSB(mp, offset + count);
+>    363          xfs_extnum_t            idx;
+>    364          bool                    found;
+>    365          int                     error;
+>                                         ^^^^^
+>    366  
+>    367          xfs_ilock(ip, XFS_ILOCK_EXCL);
+>    368  
+>    369          /* Convert all the extents to real from unwritten. */
+>    370          for (found = xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
+>                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> What if found fails on the first iteration through the loop?
 
-Instead, a debug mode failure injection mechanism has been added to XFS
-to cause dropped writes and trigger the delalloc extent hole punch
-behavior required to reproduce this problem. Update the test to use this
-new mechanism.
+Oops, that's a bug, will send patch.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- tests/xfs/289     | 28 +++++++++++++++++++---------
- tests/xfs/289.out |  4 +---
- tests/xfs/group   |  2 +-
- 3 files changed, 21 insertions(+), 13 deletions(-)
+--D
 
-diff --git a/tests/xfs/289 b/tests/xfs/289
-index 33cf060..3aa53b9 100755
---- a/tests/xfs/289
-+++ b/tests/xfs/289
-@@ -44,6 +44,7 @@ _cleanup()
- 
- # get standard environment, filters and checks
- . ./common/rc
-+. ./common/punch
- 
- # real QA test starts here
- rm -f $seqres.full
-@@ -52,33 +53,42 @@ rm -f $seqres.full
- _supported_fs generic
- _supported_os Linux
- _require_scratch
--_require_xfs_io_command "fzero"
-+_require_xfs_sysfs $(_short_dev $TEST_DEV)/drop_writes
- 
- _scratch_mkfs >/dev/null 2>&1
- _scratch_mount
- 
-+sdev=$(_short_dev $SCRATCH_DEV)
- file=$SCRATCH_MNT/file.$seq
- bytes=$((64 * 1024))
- 
- # create sequential delayed allocation
- $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
- 
--# Zero every other 4k range to split the larger delalloc extent into many more
--# smaller extents. Use zero instead of hole punch because the former does not
--# force writeback (and hence delalloc conversion). It can simply discard
--# delalloc blocks and convert the ranges to unwritten.
-+# Enable write drops. All buffered writes are dropped from this point on.
-+echo 1 > /sys/fs/xfs/$sdev/drop_writes
-+
-+# Write every other 4k range to split the larger delalloc extent into many more
-+# smaller extents. Use pwrite because with write failures enabled, all
-+# preexisting delalloc blocks in the range of the I/O are tossed without
-+# discretion. This allows manipulation of the delalloc extent without conversion
-+# to real blocks (and thus releasing the indirect reservation).
- endoff=$((bytes - 4096))
- for i in $(seq 0 8192 $endoff); do
--	$XFS_IO_PROG -c "fzero -k $i 4k" $file >> $seqres.full 2>&1
-+	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
- done
- 
--# now zero the opposite set to remove remaining delalloc extents
-+# now pwrite the opposite set to remove remaining delalloc extents
- for i in $(seq 4096 8192 $endoff); do
--	$XFS_IO_PROG -c "fzero -k $i 4k" $file >> $seqres.full 2>&1
-+	$XFS_IO_PROG -c "pwrite $i 4k" $file >> $seqres.full 2>&1
- done
- 
-+echo 0 > /sys/fs/xfs/$sdev/drop_writes
-+
-+echo "Silence is golden."
-+
- _scratch_cycle_mount
--hexdump $file
-+$XFS_IO_PROG -c 'bmap -vp' $file | _filter_bmap
- 
- status=0
- exit
-diff --git a/tests/xfs/289.out b/tests/xfs/289.out
-index bdcf195..72e60f9 100644
---- a/tests/xfs/289.out
-+++ b/tests/xfs/289.out
-@@ -1,4 +1,2 @@
- QA output created by 289
--0000000 0000 0000 0000 0000 0000 0000 0000 0000
--*
--0010000
-+Silence is golden.
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 5c1ba16..7c188fe 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -280,7 +280,7 @@
- 283 dump ioctl auto quick
- 284 auto quick dump copy db mkfs repair
- 287 auto dump quota quick
--289 auto quick rw zero
-+289 auto quick rw
- 290 auto rw prealloc quick ioctl zero
- 291 auto repair
- 292 auto mkfs quick
--- 
-2.7.4
-
+> 
+>    371               found && got.br_startoff < end_fsb;
+>    372               found = xfs_iext_get_extent(ifp, ++idx, &got)) {
+>    373                  error = xfs_reflink_convert_cow_extent(ip, &got, offset_fsb,
+>    374                                  end_fsb - offset_fsb, &dfops);
+>    375                  if (error)
+>    376                          break;
+>    377          }
+>    378  
+>    379          /* Finish up. */
+>    380          xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>    381          return error;
+>                 ^^^^^^^^^^^^
+>    382  }
+> 
+> regards,
+> dan carpenter
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
