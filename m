@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35766 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60418 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752611AbdBNNDP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Feb 2017 08:03:15 -0500
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+        id S1752616AbdBNNDU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Feb 2017 08:03:20 -0500
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C437C7E9DF
+        by mx1.redhat.com (Postfix) with ESMTPS id DCF5661D25
         for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 13:03:10 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v1ED3Ag6020230
+        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v1ED3A5m030979
         for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 08:03:10 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/4] xfs: resurrect debug mode drop buffered writes mechanism
-Date: Tue, 14 Feb 2017 08:03:07 -0500
-Message-Id: <1487077389-5626-3-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 4/4] xfs: split indlen reservations fairly when under reserved
+Date: Tue, 14 Feb 2017 08:03:09 -0500
+Message-Id: <1487077389-5626-5-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1487077389-5626-1-git-send-email-bfoster@redhat.com>
 References: <1487077389-5626-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,136 +22,114 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-A debug mode write failure mechanism was introduced to XFS in commit
-801cc4e17a ("xfs: debug mode forced buffered write failure") to
-facilitate targeted testing of delalloc indirect reservation management
-from userspace. This code was subsequently rendered ineffective by the
-move to iomap based buffered writes in commit 68a9f5e700 ("xfs:
-implement iomap based buffered write path"). This likely went unnoticed
-because the associated userspace code had not made it into xfstests.
+Certain workoads that punch holes into speculative preallocation can
+cause delalloc indirect reservation splits when the delalloc extent is
+split in two. If further splits occur, an already short-handed extent
+can be split into two in a manner that leaves zero indirect blocks for
+one of the two new extents. This occurs because the shortage is large
+enough that the xfs_bmap_split_indlen() algorithm completely drains the
+requested indlen of one of the extents before it honors the existing
+reservation.
 
-Resurrect this mechanism to facilitate effective indlen reservation
-testing from xfstests. The move to iomap based buffered writes relocated
-the hook this mechanism needs to return write failure from XFS to
-generic code. The failure trigger must remain in XFS. Given that
-limitation, convert this from a write failure mechanism to one that
-simply drops writes without returning failure to userspace. Rename all
-"fail_writes" references to "drop_writes" to illustrate the point. This
-is more hacky than preferred, but still triggers the XFS error handling
-behavior required to drive the indlen tests. This is only available in
-DEBUG mode and for testing purposes only.
+This ultimately results in a warning from xfs_bmap_del_extent(). This
+has been observed during file copies of large, sparse files using 'cp
+--sparse=always.'
 
+To avoid this problem, update xfs_bmap_split_indlen() to explicitly
+apply the reservation shortage fairly between both extents. This smooths
+out the overall indlen shortage and defers the situation where we end up
+with a delalloc extent with zero indlen reservation to extreme
+circumstances.
+
+Reported-by: Patrick Dung <mpatdung@gmail.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_iomap.c |  4 ++++
- fs/xfs/xfs_mount.h | 15 ++++++++-------
- fs/xfs/xfs_sysfs.c | 14 +++++++-------
- 3 files changed, 19 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 61 ++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 43 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index e2fbed4..01e8780 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1078,6 +1078,10 @@ xfs_file_iomap_end_delalloc(
- 	xfs_fileoff_t		end_fsb;
- 	int			error = 0;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 73c9546..2ae55db 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4795,34 +4795,59 @@ xfs_bmap_split_indlen(
+ 	xfs_filblks_t			len2 = *indlen2;
+ 	xfs_filblks_t			nres = len1 + len2; /* new total res. */
+ 	xfs_filblks_t			stolen = 0;
++	xfs_filblks_t			resfactor;
  
-+	/* behave as if the write failed if drop writes is enabled */
-+	if (xfs_mp_drop_writes(mp))
-+		written = 0;
-+
- 	start_fsb = XFS_B_TO_FSB(mp, offset + written);
- 	if (unlikely(!written))
- 		start_fsb = XFS_B_TO_FSBT(mp, offset);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 20e2981..6db6fd6 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -200,11 +200,12 @@ typedef struct xfs_mount {
  	/*
- 	 * DEBUG mode instrumentation to test and/or trigger delayed allocation
- 	 * block killing in the event of failed writes. When enabled, all
--	 * buffered writes are forced to fail. All delalloc blocks in the range
--	 * of the write (including pre-existing delalloc blocks!) are tossed as
--	 * part of the write failure error handling sequence.
-+	 * buffered writes are silenty dropped and handled as if they failed.
-+	 * All delalloc blocks in the range of the write (including pre-existing
-+	 * delalloc blocks!) are tossed as part of the write failure error
-+	 * handling sequence.
+ 	 * Steal as many blocks as we can to try and satisfy the worst case
+ 	 * indlen for both new extents.
  	 */
--	bool			m_fail_writes;
-+	bool			m_drop_writes;
- #endif
- } xfs_mount_t;
+-	while (nres > ores && avail) {
+-		nres--;
+-		avail--;
+-		stolen++;
+-	}
++	if (ores < nres && avail)
++		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
++	ores += stolen;
++
++	 /* nothing else to do if we've satisfied the new reservation */
++	if (ores >= nres)
++		return stolen;
++
++	/*
++	 * We can't meet the total required reservation for the two extents.
++	 * Calculate the percent of the overall shortage between both extents
++	 * and apply this percentage to each of the requested indlen values.
++	 * This distributes the shortage fairly and reduces the chances that one
++	 * of the two extents is left with nothing when extents are repeatedly
++	 * split.
++	 */
++	resfactor = (ores * 100);
++	do_div(resfactor, nres);
++	len1 *= resfactor;
++	do_div(len1, 100);
++	len2 *= resfactor;
++	do_div(len2, 100);
++	ASSERT(len1 + len2 <= ores);
++	ASSERT(len1 < *indlen1 && len2 < *indlen2);
  
-@@ -325,13 +326,13 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
+ 	/*
+-	 * The only blocks available are those reserved for the original
+-	 * extent and what we can steal from the extent being removed.
+-	 * If this still isn't enough to satisfy the combined
+-	 * requirements for the two new extents, skim blocks off of each
+-	 * of the new reservations until they match what is available.
++	 * Hand out the remainder to each extent. If one of the two reservations
++	 * is zero, we want to make sure that one gets a block first. The loop
++	 * below starts with len1, so hand len2 a block right off the bat if it
++	 * is zero.
+ 	 */
+-	while (nres > ores) {
+-		if (len1) {
+-			len1--;
+-			nres--;
++	ores -= (len1 + len2);
++	ASSERT((*indlen1 - len1) + (*indlen2 - len2) >= ores);
++	if (ores && !len2 && *indlen2) {
++		len2++;
++		ores--;
++	}
++	while (ores) {
++		if (len1 < *indlen1) {
++			len1++;
++			ores--;
+ 		}
+-		if (nres == ores)
++		if (!ores)
+ 			break;
+-		if (len2) {
+-			len2--;
+-			nres--;
++		if (len2 < *indlen2) {
++			len2++;
++			ores--;
+ 		}
+ 	}
  
- #ifdef DEBUG
- static inline bool
--xfs_mp_fail_writes(struct xfs_mount *mp)
-+xfs_mp_drop_writes(struct xfs_mount *mp)
- {
--	return mp->m_fail_writes;
-+	return mp->m_drop_writes;
- }
- #else
- static inline bool
--xfs_mp_fail_writes(struct xfs_mount *mp)
-+xfs_mp_drop_writes(struct xfs_mount *mp)
- {
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index de6195e..80ac15f 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -93,7 +93,7 @@ to_mp(struct kobject *kobject)
- #ifdef DEBUG
- 
- STATIC ssize_t
--fail_writes_store(
-+drop_writes_store(
- 	struct kobject		*kobject,
- 	const char		*buf,
- 	size_t			count)
-@@ -107,9 +107,9 @@ fail_writes_store(
- 		return ret;
- 
- 	if (val == 1)
--		mp->m_fail_writes = true;
-+		mp->m_drop_writes = true;
- 	else if (val == 0)
--		mp->m_fail_writes = false;
-+		mp->m_drop_writes = false;
- 	else
- 		return -EINVAL;
- 
-@@ -117,21 +117,21 @@ fail_writes_store(
- }
- 
- STATIC ssize_t
--fail_writes_show(
-+drop_writes_show(
- 	struct kobject		*kobject,
- 	char			*buf)
- {
- 	struct xfs_mount	*mp = to_mp(kobject);
- 
--	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_fail_writes ? 1 : 0);
-+	return snprintf(buf, PAGE_SIZE, "%d\n", mp->m_drop_writes ? 1 : 0);
- }
--XFS_SYSFS_ATTR_RW(fail_writes);
-+XFS_SYSFS_ATTR_RW(drop_writes);
- 
- #endif /* DEBUG */
- 
- static struct attribute *xfs_mp_attrs[] = {
- #ifdef DEBUG
--	ATTR_LIST(fail_writes),
-+	ATTR_LIST(drop_writes),
- #endif
- 	NULL,
- };
 -- 
 2.7.4
 
