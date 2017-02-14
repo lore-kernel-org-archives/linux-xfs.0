@@ -1,93 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33355 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932975AbdBPVKj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 16:10:39 -0500
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1ceTK1-0003bk-P2
-        for linux-xfs@vger.kernel.org; Thu, 16 Feb 2017 21:10:38 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: tune down agno asserts in the bmap code
-Date: Thu, 16 Feb 2017 22:10:35 +0100
-Message-Id: <20170216211035.4206-1-hch@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:49362 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752339AbdBNGpn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 01:45:43 -0500
+Date: Mon, 13 Feb 2017 22:44:48 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/7] nonblocking aio: xfs
+Message-ID: <20170214064448.GA6808@birch.djwong.org>
+References: <20170214024603.9563-1-rgoldwyn@suse.de>
+ <20170214024603.9563-7-rgoldwyn@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170214024603.9563-7-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org
 
-In various places we currently assert that xfs_bmap_btalloc allocates
-from the same as the firstblock value passed in, unless it's either
-NULLAGNO or the dop_low flag is set.  But the reflink code does not
-fully follow this convention as it passes in firstblock purely as
-a hint for the allocator without actually having previous allocations
-in the transaction, and without having a minleft check on the current
-AG, leading to the assert firing on a very full and heavily used
-file system.  As even the reflink code only allocates from equal or
-higher AGs for now we can simply the check to always allow for equal
-or higher AGs.
+On Mon, Feb 13, 2017 at 08:46:02PM -0600, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Note that we need to eventually split the two meanings of the firstblock
-value.  At that point we can also allow the reflink code to allocate
-from any AG instead of limiting it in any way.
+Send the whole patchset to linux-xfs, please.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 22 ++++++----------------
- 1 file changed, 6 insertions(+), 16 deletions(-)
+> If IOCB_NONBLOCKING is set:
+> 	+ Check if writing beyond end of file, if yes return EAGAIN
+> 	- check if writing to a hole which does not have allocated
+> 	  file blocks.
+> 	- Check if i_rwsem is immediately lockable in xfs_rw_ilock()
+> 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> ---
+>  fs/xfs/xfs_file.c  | 36 ++++++++++++++++++++++++++++++++----
+>  fs/xfs/xfs_inode.h |  2 ++
+>  2 files changed, 34 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 9a5d64b..42f055f 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -51,14 +51,20 @@ static const struct vm_operations_struct xfs_file_vm_ops;
+>   * Locking primitives for read and write IO paths to ensure we consistently use
+>   * and order the inode->i_mutex, ip->i_lock and ip->i_iolock.
+>   */
+> -static inline void
+> +static inline int
+>  xfs_rw_ilock(
+>  	struct xfs_inode	*ip,
+>  	int			type)
+>  {
+> -	if (type & XFS_IOLOCK_EXCL)
+> -		inode_lock(VFS_I(ip));
+> +	if (type & XFS_IOLOCK_EXCL) {
+> +		if ((type & XFS_IOLOCK_NONBLOCKING) &&
+> +				!inode_trylock(VFS_I(ip)))
+> +			return -EAGAIN;
+> +		else
+> +			inode_lock(VFS_I(ip));
+> +	}
+>  	xfs_ilock(ip, type);
+> +	return 0;
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index bfc00de5c6f1..2e79f4cc9a8e 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -804,9 +804,7 @@ xfs_bmap_extents_to_btree(
- 	 */
- 	ASSERT(args.fsbno != NULLFSBLOCK);
- 	ASSERT(*firstblock == NULLFSBLOCK ||
--	       args.agno == XFS_FSB_TO_AGNO(mp, *firstblock) ||
--	       (dfops->dop_low &&
--		args.agno > XFS_FSB_TO_AGNO(mp, *firstblock)));
-+	       args.agno >= XFS_FSB_TO_AGNO(mp, *firstblock));
- 	*firstblock = cur->bc_private.b.firstblock = args.fsbno;
- 	cur->bc_private.b.allocated++;
- 	ip->i_d.di_nblocks++;
-@@ -3822,17 +3820,13 @@ xfs_bmap_btalloc(
- 		 * the first block that was allocated.
- 		 */
- 		ASSERT(*ap->firstblock == NULLFSBLOCK ||
--		       XFS_FSB_TO_AGNO(mp, *ap->firstblock) ==
--		       XFS_FSB_TO_AGNO(mp, args.fsbno) ||
--		       (ap->dfops->dop_low &&
--			XFS_FSB_TO_AGNO(mp, *ap->firstblock) <
--			XFS_FSB_TO_AGNO(mp, args.fsbno)));
-+		       XFS_FSB_TO_AGNO(mp, *ap->firstblock) <=
-+		       XFS_FSB_TO_AGNO(mp, args.fsbno));
- 
- 		ap->blkno = args.fsbno;
- 		if (*ap->firstblock == NULLFSBLOCK)
- 			*ap->firstblock = args.fsbno;
--		ASSERT(nullfb || fb_agno == args.agno ||
--		       (ap->dfops->dop_low && fb_agno < args.agno));
-+		ASSERT(nullfb || fb_agno <= args.agno);
- 		ap->length = args.len;
- 		if (!(ap->flags & XFS_BMAPI_COWFORK))
- 			ap->ip->i_d.di_nblocks += args.len;
-@@ -4746,13 +4740,9 @@ xfs_bmapi_write(
- 	if (bma.cur) {
- 		if (!error) {
- 			ASSERT(*firstblock == NULLFSBLOCK ||
--			       XFS_FSB_TO_AGNO(mp, *firstblock) ==
-+			       XFS_FSB_TO_AGNO(mp, *firstblock) <=
- 			       XFS_FSB_TO_AGNO(mp,
--				       bma.cur->bc_private.b.firstblock) ||
--			       (dfops->dop_low &&
--				XFS_FSB_TO_AGNO(mp, *firstblock) <
--				XFS_FSB_TO_AGNO(mp,
--					bma.cur->bc_private.b.firstblock)));
-+				       bma.cur->bc_private.b.firstblock));
- 			*firstblock = bma.cur->bc_private.b.firstblock;
- 		}
- 		xfs_btree_del_cursor(bma.cur,
--- 
-2.11.0
+This function went away in 4.10-rc1.
 
+>  }
+>  
+>  static inline void
+> @@ -418,6 +424,24 @@ xfs_file_aio_write_checks(
+>  	if (error <= 0)
+>  		return error;
+>  
+> +	if (iocb->ki_flags & IOCB_NONBLOCKING) {
+> +		struct xfs_bmbt_irec	imap;
+> +		xfs_fileoff_t           offset_fsb, end_fsb;
+> +		int			nimaps = 1, ret = 0;
+> +		end_fsb = XFS_B_TO_FSB(ip->i_mount, iocb->ki_pos + count);
+> +		if (XFS_B_TO_FSB(ip->i_mount, i_size_read(inode)) < end_fsb)
+> +			return -EAGAIN;
+> +		/* Check if it is an unallocated hole */
+> +		offset_fsb = XFS_B_TO_FSBT(ip->i_mount, iocb->ki_pos);
+> +
+> +		ret = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+> +				&nimaps, 0);
+
+You need to hold the ilock to call _bmapi_read, and I don't think
+it's held here.  Did you CONFIG_XFS_DEBUG=y?
+
+> +		if (ret)
+> +			return ret;
+> +		if (!nimaps || imap.br_startblock == HOLESTARTBLOCK)
+> +			return -EAGAIN;
+> +	}
+> +
+>  	error = xfs_break_layouts(inode, iolock, true);
+>  	if (error)
+>  		return error;
+> @@ -555,11 +579,15 @@ xfs_file_dio_aio_write(
+>  	    ((iocb->ki_pos + count) & mp->m_blockmask)) {
+>  		unaligned_io = 1;
+>  		iolock = XFS_IOLOCK_EXCL;
+> +		if (iocb->ki_flags & IOCB_NONBLOCKING)
+> +			iolock |= XFS_IOLOCK_NONBLOCKING;
+>  	} else {
+>  		iolock = XFS_IOLOCK_SHARED;
+>  	}
+>  
+> -	xfs_rw_ilock(ip, iolock);
+> +	ret = xfs_rw_ilock(ip, iolock);
+> +	if (ret)
+> +		return ret;
+>  
+>  	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+>  	if (ret)
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 71e8a81..1a2d5eb 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -283,6 +283,7 @@ static inline void xfs_ifunlock(struct xfs_inode *ip)
+>  #define	XFS_ILOCK_SHARED	(1<<3)
+>  #define	XFS_MMAPLOCK_EXCL	(1<<4)
+>  #define	XFS_MMAPLOCK_SHARED	(1<<5)
+> +#define	XFS_IOLOCK_NONBLOCKING	(1<<6)
+
+What is the expected behavior if this is passed directly to xfs_ilock?
+
+--D
+
+>  
+>  #define XFS_LOCK_MASK		(XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED \
+>  				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED \
+> @@ -291,6 +292,7 @@ static inline void xfs_ifunlock(struct xfs_inode *ip)
+>  #define XFS_LOCK_FLAGS \
+>  	{ XFS_IOLOCK_EXCL,	"IOLOCK_EXCL" }, \
+>  	{ XFS_IOLOCK_SHARED,	"IOLOCK_SHARED" }, \
+> +	{ XFS_IOLOCK_NONBLOCKING,	"IOLOCK_NONBLOCKING" }, \
+>  	{ XFS_ILOCK_EXCL,	"ILOCK_EXCL" }, \
+>  	{ XFS_ILOCK_SHARED,	"ILOCK_SHARED" }, \
+>  	{ XFS_MMAPLOCK_EXCL,	"MMAPLOCK_EXCL" }, \
+> -- 
+> 2.10.2
+> 
