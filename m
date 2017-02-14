@@ -1,50 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16868 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750756AbdBNGyV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 01:54:21 -0500
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v1E6sJpg022680
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 06:54:20 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v1E6sJWQ009651
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 06:54:19 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v1E6sIBF002903
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 06:54:19 GMT
-Date: Mon, 13 Feb 2017 22:54:17 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: fix uninitialized variable in _reflink_convert_cow
-Message-ID: <20170214065417.GC6813@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from mout.kundenserver.de ([212.227.126.134]:55281 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754030AbdBNRI4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 12:08:56 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] xfs: fix len comparison in xfs_extent_busy_trim
+Date: Tue, 14 Feb 2017 18:08:30 +0100
+Message-Id: <20170214170836.2705798-1-arnd@arndb.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: dan.carpenter@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Arnd Bergmann <arnd@arndb.de>, Dave Chinner <dchinner@redhat.com>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org
 
-Fix an uninitialized variable.
+The length is now passed by reference, so the assertion has to be updated
+to match the other changes, as pointed out by this W=1 warning:
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+fs/xfs/xfs_extent_busy.c: In function 'xfs_extent_busy_trim':
+fs/xfs/xfs_extent_busy.c:356:13: error: ordered comparison of pointer with integer zero [-Werror=extra]
+
+Fixes: ebf55872616c ("xfs: improve handling of busy extents in the low-level allocator")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- fs/xfs/xfs_reflink.c |    2 +-
+ fs/xfs/xfs_extent_busy.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 2f3d2d5..da6d08f 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -362,7 +362,7 @@ xfs_reflink_convert_cow(
- 	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
- 	xfs_extnum_t		idx;
- 	bool			found;
--	int			error;
-+	int			error = 0;
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index ab062610234e..77760dbf0242 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -353,7 +353,7 @@ xfs_extent_busy_trim(
+ 	struct rb_node		*rbp;
+ 	bool			ret = false;
  
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	ASSERT(len > 0);
++	ASSERT(*len > 0);
  
+ 	spin_lock(&args->pag->pagb_lock);
+ restart:
+-- 
+2.9.0
+
