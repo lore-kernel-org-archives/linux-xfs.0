@@ -1,70 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56898 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750930AbdBNIMp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Feb 2017 03:12:45 -0500
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com (int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D61014DD58
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 08:12:45 +0000 (UTC)
-Date: Tue, 14 Feb 2017 16:12:44 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 4/4] xfs: split indlen reservations fairly when under
- reserved
-Message-ID: <20170214081244.GM24562@eguan.usersys.redhat.com>
-References: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
- <1486668893-44633-5-git-send-email-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1486668893-44633-5-git-send-email-bfoster@redhat.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43158 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751635AbdBNG37 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 01:29:59 -0500
+Message-ID: <1487053797.3125.75.camel@HansenPartnership.com>
+Subject: [PATCH 2/2] xfs: fix inode uid/gid initialization
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Mon, 13 Feb 2017 22:29:57 -0800
+In-Reply-To: <1487053651.3125.72.camel@HansenPartnership.com>
+References: <1487008001.3125.41.camel@HansenPartnership.com>
+         <20170213194337.GA9852@infradead.org> <20170213213416.GA15349@dastard>
+         <20170214060809.GA21114@infradead.org>
+         <1487053651.3125.72.camel@HansenPartnership.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, "Eric W. Biederman" <ebiederm@xmission.com>, Seth Forshee <seth.forshee@canonical.com>
 
-On Thu, Feb 09, 2017 at 02:34:53PM -0500, Brian Foster wrote:
-> Certain workoads that punch holes into speculative preallocation can
-> cause delalloc indirect reservation splits when the delalloc extent is
-> split in two. If further splits occur, an already short-handed extent
-> can be split into two in a manner that leaves zero indirect blocks for
-> one of the two new extents. This occurs because the shortage is large
-> enough that the xfs_bmap_split_indlen() algorithm completely drains the
-> requested indlen of one of the extents before it honors the existing
-> reservation.
-> 
-> This ultimately results in a warning from xfs_bmap_del_extent(). This
-> has been observed during file copies of large, sparse files using 'cp
-> --sparse=always.'
-> 
-> To avoid this problem, update xfs_bmap_split_indlen() to explicitly
-> apply the reservation shortage fairly between both extents. This smooths
-> out the overall indlen shortage and defers the situation where we end up
-> with a delalloc extent with zero indlen reservation to extreme
-> circumstances.
-> 
-> Reported-by: Patrick Dung <mpatdung@gmail.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 61 ++++++++++++++++++++++++++++++++++--------------
->  1 file changed, 43 insertions(+), 18 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 49edea4..e27b9ee 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4790,6 +4790,7 @@ xfs_bmap_split_indlen(
->  	xfs_filblks_t			len2 = *indlen2;
->  	xfs_filblks_t			nres = len1 + len2; /* new total res. */
->  	xfs_filblks_t			stolen = 0;
-> +	xfs_filblks_t			resfactor;
->  
->  	trace_printk("%d: ores %llu len1 %llu len2 %llu\n", __LINE__, ores, len1, len2);
+I was debugging a creation failure using a vfs shifting patch set and
+discovered that xfs itself doesn't actually respect the superblock
+namespace in a couple of places (these showed up as files with the
+wrong ownership in my tests).  The fix is to convert xfs away from hand
+rolling inode_init_owner() and to use the i_uid/gid_read/write
+functions.
 
-Is this line a leftover from debug code? Patch doesn't apply with this
-line on top of 4.10-rc8 kernel.
+The rule should be that we use the i_uid/gid_read/write() functions
+when converting to or from the filesystem id_uid and id_gid view.
 
-Thanks,
-Eryu
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index de32f0f..291a3ac 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -814,10 +814,10 @@ xfs_ialloc(
+ 	if (ip->i_d.di_version == 1)
+ 		ip->i_d.di_version = 2;
+ 
+-	inode->i_mode = mode;
++	inode_init_owner(inode, pip ? VFS_I(pip) : NULL, mode);
+ 	set_nlink(inode, nlink);
+-	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
+-	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
++	ip->i_d.di_uid = i_uid_read(inode);
++	ip->i_d.di_gid = i_gid_read(inode);
+ 	xfs_set_projid(ip, prid);
+ 
+ 	if (pip && XFS_INHERIT_GID(pip)) {
+@@ -1172,10 +1172,9 @@ xfs_create(
+ 	/*
+ 	 * Make sure that we have allocated dquot(s) on disk.
+ 	 */
+-	error = xfs_qm_vop_dqalloc(dp, xfs_kuid_to_uid(current_fsuid()),
+-					xfs_kgid_to_gid(current_fsgid()), prid,
+-					XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+-					&udqp, &gdqp, &pdqp);
++	error = xfs_qm_vop_dqalloc(dp, i_fsuid(VFS_I(dp)), i_fsgid(VFS_I(dp)),
++				   prid, XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
++				   &udqp, &gdqp, &pdqp);
+ 	if (error)
+ 		return error;
+ 
+@@ -1347,10 +1346,9 @@ xfs_create_tmpfile(
+ 	/*
+ 	 * Make sure that we have allocated dquot(s) on disk.
+ 	 */
+-	error = xfs_qm_vop_dqalloc(dp, xfs_kuid_to_uid(current_fsuid()),
+-				xfs_kgid_to_gid(current_fsgid()), prid,
+-				XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+-				&udqp, &gdqp, &pdqp);
++	error = xfs_qm_vop_dqalloc(dp, i_fsuid(VFS_I(dp)), i_fsgid(VFS_I(dp)),
++				   prid, XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
++				   &udqp, &gdqp, &pdqp);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 22c1615..306766d 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -643,8 +643,8 @@ xfs_setattr_nonsize(
+ 		 */
+ 		ASSERT(udqp == NULL);
+ 		ASSERT(gdqp == NULL);
+-		error = xfs_qm_vop_dqalloc(ip, xfs_kuid_to_uid(uid),
+-					   xfs_kgid_to_gid(gid),
++		error = xfs_qm_vop_dqalloc(ip, from_kuid(inode->i_sb->s_user_ns, uid),
++					   from_kgid(inode->i_sb->s_user_ns, gid),
+ 					   xfs_get_projid(ip),
+ 					   qflags, &udqp, &gdqp, NULL);
+ 		if (error)
+@@ -714,8 +714,9 @@ xfs_setattr_nonsize(
+ 				olddquot1 = xfs_qm_vop_chown(tp, ip,
+ 							&ip->i_udquot, udqp);
+ 			}
+-			ip->i_d.di_uid = xfs_kuid_to_uid(uid);
+ 			inode->i_uid = uid;
++			ip->i_d.di_uid = i_uid_read(inode);
++
+ 		}
+ 		if (!gid_eq(igid, gid)) {
+ 			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_GQUOTA_ON(mp)) {
+@@ -726,8 +727,8 @@ xfs_setattr_nonsize(
+ 				olddquot2 = xfs_qm_vop_chown(tp, ip,
+ 							&ip->i_gdquot, gdqp);
+ 			}
+-			ip->i_d.di_gid = xfs_kgid_to_gid(gid);
+ 			inode->i_gid = gid;
++			ip->i_d.di_gid = i_gid_read(inode);
+ 		}
+ 	}
+ 
+@@ -1213,8 +1214,8 @@ xfs_setup_inode(
+ 	/* make the inode look hashed for the writeback code */
+ 	hlist_add_fake(&inode->i_hash);
+ 
+-	inode->i_uid    = xfs_uid_to_kuid(ip->i_d.di_uid);
+-	inode->i_gid    = xfs_gid_to_kgid(ip->i_d.di_gid);
++	i_uid_write(inode, ip->i_d.di_uid);
++	i_gid_write(inode, ip->i_d.di_gid);
+ 
+ 	switch (inode->i_mode & S_IFMT) {
+ 	case S_IFBLK:
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index f2cb45e..49278e1 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -211,11 +211,9 @@ xfs_symlink(
+ 	/*
+ 	 * Make sure that we have allocated dquot(s) on disk.
+ 	 */
+-	error = xfs_qm_vop_dqalloc(dp,
+-			xfs_kuid_to_uid(current_fsuid()),
+-			xfs_kgid_to_gid(current_fsgid()), prid,
+-			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+-			&udqp, &gdqp, &pdqp);
++	error = xfs_qm_vop_dqalloc(dp, i_fsuid(VFS_I(dp)), i_fsgid(VFS_I(dp)),
++				   prid, XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
++				   &udqp, &gdqp, &pdqp);
+ 	if (error)
+ 		return error;
+ 
