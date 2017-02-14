@@ -1,59 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58836 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:55942 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751421AbdBPD3h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Feb 2017 22:29:37 -0500
-Subject: Re: [PATCH] xfs: do not unconditionally enable hasalign feature on V5
- filesystems
-References: <1487174254-9002-1-git-send-email-chandan@linux.vnet.ibm.com>
- <7dd96d6b-ccb5-105f-18aa-207e1c28c625@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5443d317-838b-4d93-b513-15b9c18cb019@sandeen.net>
-Date: Wed, 15 Feb 2017 21:29:35 -0600
+        id S1752758AbdBNM4I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Feb 2017 07:56:08 -0500
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E416461D28
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 12:56:08 +0000 (UTC)
+Date: Tue, 14 Feb 2017 07:56:08 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/4] xfs: split indlen reservations fairly when under
+ reserved
+Message-ID: <20170214125607.GA3223@bfoster.bfoster>
+References: <1486668893-44633-1-git-send-email-bfoster@redhat.com>
+ <1486668893-44633-5-git-send-email-bfoster@redhat.com>
+ <20170214081244.GM24562@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <7dd96d6b-ccb5-105f-18aa-207e1c28c625@sandeen.net>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170214081244.GM24562@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 2/15/17 10:13 AM, Eric Sandeen wrote:
-> Hm, the intent of the _haslign() function is to say that V5 must always
-> imply the "alignbit" - i.e. we don't want to grow an infinite feature
-> matrix, and by the time you get to V5 supers, there are many things which
-> cannot be turned on or off, such as this feature.
+On Tue, Feb 14, 2017 at 04:12:44PM +0800, Eryu Guan wrote:
+> On Thu, Feb 09, 2017 at 02:34:53PM -0500, Brian Foster wrote:
+> > Certain workoads that punch holes into speculative preallocation can
+> > cause delalloc indirect reservation splits when the delalloc extent is
+> > split in two. If further splits occur, an already short-handed extent
+> > can be split into two in a manner that leaves zero indirect blocks for
+> > one of the two new extents. This occurs because the shortage is large
+> > enough that the xfs_bmap_split_indlen() algorithm completely drains the
+> > requested indlen of one of the extents before it honors the existing
+> > reservation.
+> > 
+> > This ultimately results in a warning from xfs_bmap_del_extent(). This
+> > has been observed during file copies of large, sparse files using 'cp
+> > --sparse=always.'
+> > 
+> > To avoid this problem, update xfs_bmap_split_indlen() to explicitly
+> > apply the reservation shortage fairly between both extents. This smooths
+> > out the overall indlen shortage and defers the situation where we end up
+> > with a delalloc extent with zero indlen reservation to extreme
+> > circumstances.
+> > 
+> > Reported-by: Patrick Dung <mpatdung@gmail.com>
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c | 61 ++++++++++++++++++++++++++++++++++--------------
+> >  1 file changed, 43 insertions(+), 18 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 49edea4..e27b9ee 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -4790,6 +4790,7 @@ xfs_bmap_split_indlen(
+> >  	xfs_filblks_t			len2 = *indlen2;
+> >  	xfs_filblks_t			nres = len1 + len2; /* new total res. */
+> >  	xfs_filblks_t			stolen = 0;
+> > +	xfs_filblks_t			resfactor;
+> >  
+> >  	trace_printk("%d: ores %llu len1 %llu len2 %llu\n", __LINE__, ores, len1, len2);
+> 
+> Is this line a leftover from debug code? Patch doesn't apply with this
+> line on top of 4.10-rc8 kernel.
+> 
 
-I'm rethinking this a bit; while my question may have uncovered
-another real bug, I think maybe your patch /is/ ok.
+Oops.. looks like I forgot to pull that stuff out of my branch. I'll
+post a new set with it removed.
 
-While the intent /was/ to ensure that some features are not optional
-on V5 filesystems, the mkfs code itself might end up turning off inode
-alignment for sufficiently large filesystem blocks and sufficiently
-small inode sizes.  The reality is, for sufficiently large fs blocks,
-every new inode chunk allocation is aligned, because it is sub-block
-sized.  And so there is nothing uniquely "aligned" about any allocation.
+Brian
 
-i.e. on v4 superblocks, the right combination of inode size & fs block
-size will turn off the alignment feature, even if the user did not
-request it.
-
-So for v5 supers, it does seem odd to report the presence of the
-alignment feature even when the flag is not set in the superblock
-due to the geometry details.
-
-This goes way back to:
-
- 04a1e6c5b xfs: add CRC checks to the superblock
-
-which doesn't really explain why the xfs_sb_version_hasalign got
-changed.
-
-Anyway; it probably makes sense to do a targeted fix to resolve
-the issue you've run into, but we might want to take a broader
-look at when the alignment feature (and feature flag) gets set
-and reported, to make sure that it is all consistent and as expected.
-
--Eric
+> Thanks,
+> Eryu
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
