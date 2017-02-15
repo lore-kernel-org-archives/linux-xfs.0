@@ -1,61 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out03.mta.xmission.com ([166.70.13.233]:50416 "EHLO
-        out03.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751348AbdBOCdl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 21:33:41 -0500
-From: ebiederm@xmission.com (Eric W. Biederman)
-References: <1487008001.3125.41.camel@HansenPartnership.com>
-        <20170213194337.GA9852@infradead.org> <20170213213416.GA15349@dastard>
-        <20170214060809.GA21114@infradead.org>
-        <1487053651.3125.72.camel@HansenPartnership.com>
-        <1487053720.3125.73.camel@HansenPartnership.com>
-        <87lgt9mcyv.fsf@xmission.com>
-        <1487088593.3133.23.camel@HansenPartnership.com>
-Date: Wed, 15 Feb 2017 15:29:05 +1300
-In-Reply-To: <1487088593.3133.23.camel@HansenPartnership.com> (James
-        Bottomley's message of "Tue, 14 Feb 2017 08:09:53 -0800")
-Message-ID: <87y3x8dw5q.fsf@xmission.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47011 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752161AbdBORhi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2017 12:37:38 -0500
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1FHXmVr058756
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2017 12:37:38 -0500
+Received: from e23smtp05.au.ibm.com (e23smtp05.au.ibm.com [202.81.31.147])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 28mq9gcsk5-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2017 12:37:37 -0500
+Received: from localhost
+        by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Thu, 16 Feb 2017 03:37:35 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+        by d23dlp03.au.ibm.com (Postfix) with ESMTP id B95913578057
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 04:37:32 +1100 (EST)
+Received: from d23av06.au.ibm.com (d23av06.au.ibm.com [9.190.235.151])
+        by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v1FHbON027656276
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 04:37:32 +1100
+Received: from d23av06.au.ibm.com (localhost [127.0.0.1])
+        by d23av06.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v1FHb01J016503
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 04:37:00 +1100
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: Re: [PATCH] xfs: do not unconditionally enable hasalign feature on V5 filesystems
+Date: Wed, 15 Feb 2017 23:06:41 +0530
+In-Reply-To: <20b8b2b4-9586-1300-2591-f90c67a401e3@sandeen.net>
+References: <1487174254-9002-1-git-send-email-chandan@linux.vnet.ibm.com> <7dd96d6b-ccb5-105f-18aa-207e1c28c625@sandeen.net> <20b8b2b4-9586-1300-2591-f90c67a401e3@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain
-Subject: Re: [PATCH 1/2] fs: add inode helpers for fsuid and fsgid
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <3208255.yebvhpfuCU@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+On Wednesday, February 15, 2017 11:03:11 AM Eric Sandeen wrote:
+> On 2/15/17 10:13 AM, Eric Sandeen wrote:
+> >> The root cause of the problem is due to the fact that
+> >> xfs_sb_version_hasalign() returns true when we are working on a V5
+> >> filesystem. Due to this args.minalignslop (in xfs_ialloc_ag_alloc())
+> >> gets the unsigned equivalent of -1 assigned to it. This later causes
+> >> alloc_len in xfs_alloc_space_available() to have a value of 0. In such a
+> >> scenario when args.total is also 0, the assert statement
+> >> "ASSERT(args->maxlen > 0);" fails.
+> > Hm, the intent of the _haslign() function is to say that V5 must always
+> > imply the "alignbit" - i.e. we don't want to grow an infinite feature
+> > matrix, and by the time you get to V5 supers, there are many things which
+> > cannot be turned on or off, such as this feature.
+> > 
+> > So what happens here... xfs_ialloc_ag_alloc does:
+> > 
+> > args.minalignslop = xfs_ialloc_cluster_alignment(args.mp) - 1;
+> > 
+> > so you're saying that cluster_alignment comes out as 0?
+> > 
+> > That function is checking _hasalign:
+> > 
+> > static inline int
+> > xfs_ialloc_cluster_alignment(
+> >         struct xfs_mount        *mp)
+> > {
+> >         if (xfs_sb_version_hasalign(&mp->m_sb) &&
+> >             mp->m_sb.sb_inoalignmt >=
+> >                         XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
+> >                 return mp->m_sb.sb_inoalignmt;
+> >         return 1;
+> > }
+> > 
+> > So are you saying that this function returns 0?  That would imply that
+> > sb_inoalignmt and m_inode_cluster_size are both zero, yes?  Is this
+> > what you see?
+> 
+> Sorry, I guess that means XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size)) is
+> zero; inode cluster size is 8192 in this case I think, and that is in fact
+> 0 filesystem blocks when computed with this macro.
 
-> On Tue, 2017-02-14 at 20:46 +1300, Eric W. Biederman wrote:
->> James Bottomley <James.Bottomley@HansenPartnership.com> writes:
->> 
->> > Now that we have two different views of filesystem ids (the 
->> > filesystem view and the kernel view), we have a problem in that
->> > current_fsuid/fsgid() return the kernel view but are sometimes used 
->> > in filesystem code where the filesystem view shoud be used.  This
->> > patch introduces helpers to produce the filesystem view of current 
->> > fsuid and fsgid.
->> 
->> If I am reading this right what we are seeing is that xfs explicitly
->> opted out of type safety with predictable results.   Accidentally
->> confusing kuids and uids, which is potentially security issue.
->> 
->> All of that said where are you getting sb->s_user_ns != &init_user_ns
->> for an xfs filesystem?
+Yes, sb_inoalignmt is indeed 0 because of the following code from
+main() in xfsprogs/mkfs/xfs_mkfs.c,
 
-James please answer this question:
+	if (sb_feat.inode_align) {
+		int	cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
+		if (sb_feat.crcs_enabled)
+			cluster_size *= isize / XFS_DINODE_MIN_SIZE;
+		sbp->sb_inoalignmt = cluster_size >> blocklog;
+		sb_feat.inode_align = sbp->sb_inoalignmt != 0;
+	}
 
- Where are you getting sb->s_user_ns != &init_user_ns for an xfs filesystem?
+And XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size)) returns 0 as well. Hence the
+condition (xfs_sb_version_hasalign(&mp->m_sb) && mp->m_sb.sb_inoalignmt >=
+XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size)) evaluates to true.
 
-None of this matters if sb->s_user_ns == &init_user_ns.
+> 
+> I need to think about this a little bit to convince myself that the inode
+> alignment bit really /should/ be off for a filesystem of this geometry, vs
+> changing the macro to recognize the case.
+> 
+> -Eric
+> 
 
-This is signification because only xfs keeps any in-core data structure
-in it's on-disk encoding.  So this problem is xfs specific.   So
-understanding how you are getting xfs to have sb->s_user_ns !=
-&init_user_ns is important for discussing which direction we go with
-helper functions here.
+-- 
+chandan
 
-xfs with sb->s_user_ns == &init_user_ns is perfectly fine and as such no
-fixes are needed.
-
-Eric
