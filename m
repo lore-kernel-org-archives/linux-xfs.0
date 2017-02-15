@@ -1,113 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f44.google.com ([209.85.213.44]:35771 "EHLO
-        mail-vk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752803AbdBPDHi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2017 22:07:38 -0500
-Received: by mail-vk0-f44.google.com with SMTP id x75so3037578vke.2
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2017 19:07:33 -0800 (PST)
+Received: from out03.mta.xmission.com ([166.70.13.233]:50416 "EHLO
+        out03.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751348AbdBOCdl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 21:33:41 -0500
+From: ebiederm@xmission.com (Eric W. Biederman)
+References: <1487008001.3125.41.camel@HansenPartnership.com>
+        <20170213194337.GA9852@infradead.org> <20170213213416.GA15349@dastard>
+        <20170214060809.GA21114@infradead.org>
+        <1487053651.3125.72.camel@HansenPartnership.com>
+        <1487053720.3125.73.camel@HansenPartnership.com>
+        <87lgt9mcyv.fsf@xmission.com>
+        <1487088593.3133.23.camel@HansenPartnership.com>
+Date: Wed, 15 Feb 2017 15:29:05 +1300
+In-Reply-To: <1487088593.3133.23.camel@HansenPartnership.com> (James
+        Bottomley's message of "Tue, 14 Feb 2017 08:09:53 -0800")
+Message-ID: <87y3x8dw5q.fsf@xmission.com>
 MIME-Version: 1.0
-In-Reply-To: <20170215122745.nmwkmcqo23ecfr53@eorzea.usersys.redhat.com>
-References: <CADWLRhrhPD9sPpXPFPx8BvsjwDc4nJFasTC8bRr+5rd3c48xxg@mail.gmail.com>
- <20170215122745.nmwkmcqo23ecfr53@eorzea.usersys.redhat.com>
-From: Vaibhaw Pandey <vaibhaw@scalegrid.io>
-Date: Thu, 16 Feb 2017 08:37:21 +0530
-Message-ID: <CADWLRhoFdQUS-XjLj5R3JxjBnkXLN-TAjqCMBZDJWW36SOkWFw@mail.gmail.com>
-Subject: Re: XFS doesn't auto mount on boot when /etc/fstab entry has fs type
- set to auto
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+Subject: Re: [PATCH 1/2] fs: add inode helpers for fsuid and fsgid
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
 
-Carlos,
+James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-Thanks a lot for replying. :)
+> On Tue, 2017-02-14 at 20:46 +1300, Eric W. Biederman wrote:
+>> James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+>> 
+>> > Now that we have two different views of filesystem ids (the 
+>> > filesystem view and the kernel view), we have a problem in that
+>> > current_fsuid/fsgid() return the kernel view but are sometimes used 
+>> > in filesystem code where the filesystem view shoud be used.  This
+>> > patch introduces helpers to produce the filesystem view of current 
+>> > fsuid and fsgid.
+>> 
+>> If I am reading this right what we are seeing is that xfs explicitly
+>> opted out of type safety with predictable results.   Accidentally
+>> confusing kuids and uids, which is potentially security issue.
+>> 
+>> All of that said where are you getting sb->s_user_ns != &init_user_ns
+>> for an xfs filesystem?
 
-I should have read the mount man page more carefully: By adding "xfs"
-to /etc/filesystems, the /etc/fstab entry even with an auto started
-working fine.
+James please answer this question:
 
-blkid always had an entry for the volume in question but that didn't
-make a difference in this case:
-$ sudo blkid
-/dev/xvda1: LABEL="/" UUID="ebbf1f1c-fb71-40aa-93a3-056b455e5127" TYPE="ext4"
-/dev/xvdb: UUID="bf4be26c-1c1c-40fc-b5cf-b9048dcc61b6" TYPE="xfs"
+ Where are you getting sb->s_user_ns != &init_user_ns for an xfs filesystem?
 
+None of this matters if sb->s_user_ns == &init_user_ns.
 
-> Anyway, if you have the logs from your system when it tries to mount the
-> partition maybe it give us some clue of what is happening.
+This is signification because only xfs keeps any in-core data structure
+in it's on-disk encoding.  So this problem is xfs specific.   So
+understanding how you are getting xfs to have sb->s_user_ns !=
+&init_user_ns is important for discussing which direction we go with
+helper functions here.
 
-It was the complete lack of logs in dmesg or /var/log/messages about a
-failure to mount is what confused me on why this was failing. A
-successful mount logs but an unsuccessful one doesn't. I think I will
-ask a mount expert for help on this.
+xfs with sb->s_user_ns == &init_user_ns is perfectly fine and as such no
+fixes are needed.
 
-Thanks again,
-Vaibhaw
-
-On Wed, Feb 15, 2017 at 5:57 PM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
-> Hi,
->
->> LABEL=/     /           ext4    defaults,noatime  1   1
->> tmpfs       /dev/shm    tmpfs   defaults        0   0
->> devpts      /dev/pts    devpts  gid=5,mode=620  0   0
->> sysfs       /sys        sysfs   defaults        0   0
->> proc        /proc       proc    defaults        0   0
->> /dev/sdb /redis_data auto noatime,noexec,nodiratime 0 0
->> $ df -T /redis_data/
->> Filesystem     Type 1K-blocks  Used Available Use% Mounted on
->> /dev/xvdb      xfs    5232640 32940   5199700   1% /redis_data
->>
->> However if I change the /etc/fstab directive to:
->>
->> /dev/sdb /redis_data xfs noatime,noexec,nodiratime 0 0
->>
->> the auto mount starts working fine. Now this isn't a major problem
->> since the functionality ultimately works. But I would certainly like
->> to have the flexibility to avoid hard coding the fs type in the code
->> that generates these fstab entries.
->>
->
-> I believe this is not a question for us, but for whatever software you are using
-> to mount your partitions, systemd, unit, init, whatever. It also might be a
-> problem with `mount` command, but if you say you can mount it normally after the
-> system is live, it looks not to be the case.
->
-> XFS doesn't control who and how it reads the entries in fstab.
->
-> As stated in `mount` manpage:
->
-> "If no -t option is given, or if the auto type is specified, mount will try  to
-> guess  the  desired  type.   Mount  uses  the  blkid  library for guessing the
-> filesystem type; if that does not turn up anything that looks familiar,  mount
-> will  try  to  read  the  file  /etc/filesystems,  or, if that
-> does not exist, /proc/filesystems.  All of the filesystem types listed there
-> will be  tried, except  for  those  that  are labeled "nodev" (e.g. devpts, proc
-> and nfs). If /etc/filesystems  ends  in  a  line  with  a  single  *,   mount
-> will   read /proc/filesystems  afterwards.   While  trying,  all  filesystem
-> types will be mounted with the mount option silent."
->
->
-> Anyway, if you have the logs from your system when it tries to mount the
-> partition maybe it give us some clue of what is happening.
->
-> Cheers
->
->> Any pointers or help is much appreciated. :)
->>
->> Thanks,
->> Vaibhaw
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> Carlos
-
-
-
--- 
-Member of Technical Staff | ScaleGrid.io | @_vaibhaw | LinkedIn | Google+
-Read my latest blog post: I Get To Know the Redis Database: Iterating Over Keys
+Eric
