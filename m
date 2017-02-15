@@ -1,63 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35180 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751328AbdBOPks (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Feb 2017 10:40:48 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 5/5] xfs: wait on new inodes during quotaoff dquot release
-Date: Wed, 15 Feb 2017 10:40:47 -0500
-Message-Id: <1487173247-5965-6-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
-References: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:51316 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751022AbdBOP6D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2017 10:58:03 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1FFs97X041526
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2017 10:58:02 -0500
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 28mq9qg5h6-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2017 10:58:02 -0500
+Received: from localhost
+        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 15 Feb 2017 08:58:00 -0700
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH] xfs: do not unconditionally enable hasalign feature on V5 filesystems
+Date: Wed, 15 Feb 2017 21:27:34 +0530
+Message-Id: <1487174254-9002-1-git-send-email-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, darrick.wong@oracle.com, sandeen@sandeen.net
 
-The quotaoff operation has a race with inode allocation that results
-in a livelock. An inode allocation that occurs before the quota
-status flags are updated acquires the appropriate dquots for the
-inode via xfs_qm_vop_dqalloc(). It then inserts the XFS_INEW inode
-into the perag radix tree, sometime later attaches the dquots to the
-inode and finally clears the XFS_INEW flag. Quotaoff expects to
-release the dquots from all inodes in the filesystem via
-xfs_qm_dqrele_all_inodes(). This invokes the AG inode iterator,
-which skips inodes in the XFS_INEW state because they are not fully
-constructed. If the scan occurs after dquots have been attached to
-an inode, but before XFS_INEW is cleared, the newly allocated inode
-will continue to hold a reference to the applicable dquots. When
-quotaoff invokes xfs_qm_dqpurge_all(), the reference count of those
-dquot(s) remain elevated and the dqpurge scan spins indefinitely.
+On a ppc64 system, executing generic/256 test with 32k block size gives
+the following call trace,
 
-To address this problem, update the xfs_qm_dqrele_all_inodes() scan
-to wait on inodes marked on the XFS_INEW state. We wait on the
-inodes explicitly rather than skip and retry to avoid continuous
-retry loops due to a parallel inode allocation workload. Since
-quotaoff updates the quota state flags and uses a synchronous
-transaction before the dqrele scan, and dquots are attached to
-inodes after radix tree insertion iff quota is enabled, one INEW
-waiting pass through the AG guarantees that the scan has processed
-all inodes that could possibly hold dquot references.
+XFS: Assertion failed: args->maxlen > 0, file: /root/repos/linux/fs/xfs/libxfs/xfs_alloc.c, line: 2026
 
-Reported-by: Eryu Guan <eguan@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+kernel BUG at /root/repos/linux/fs/xfs/xfs_message.c:113!
+Oops: Exception in kernel mode, sig: 5 [#1]
+SMP NR_CPUS=2048
+DEBUG_PAGEALLOC
+NUMA
+pSeries
+Modules linked in:
+CPU: 2 PID: 19361 Comm: mkdir Not tainted 4.10.0-rc5 #58
+task: c000000102606d80 task.stack: c0000001026b8000
+NIP: c0000000004ef798 LR: c0000000004ef798 CTR: c00000000082b290
+REGS: c0000001026bb090 TRAP: 0700   Not tainted  (4.10.0-rc5)
+MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>
+CR: 28004428  XER: 00000000
+CFAR: c0000000004ef180 SOFTE: 1
+GPR00: c0000000004ef798 c0000001026bb310 c000000001157300 ffffffffffffffea
+GPR04: 000000000000000a c0000001026bb130 0000000000000000 ffffffffffffffc0
+GPR08: 00000000000000d1 0000000000000021 00000000ffffffd1 c000000000dd4990
+GPR12: 0000000022004444 c00000000fe00800 0000000020000000 0000000000000000
+GPR16: 0000000000000000 0000000043a606fc 0000000043a76c08 0000000043a1b3d0
+GPR20: 000001002a35cd60 c0000001026bbb80 0000000000000000 0000000000000001
+GPR24: 0000000000000240 0000000000000004 c00000062dc55000 0000000000000000
+GPR28: 0000000000000004 c00000062ecd9200 0000000000000000 c0000001026bb6c0
+NIP [c0000000004ef798] .assfail+0x28/0x30
+LR [c0000000004ef798] .assfail+0x28/0x30
+Call Trace:
+[c0000001026bb310] [c0000000004ef798] .assfail+0x28/0x30 (unreliable)
+[c0000001026bb380] [c000000000455d74] .xfs_alloc_space_available+0x194/0x1b0
+[c0000001026bb410] [c00000000045b914] .xfs_alloc_fix_freelist+0x144/0x480
+[c0000001026bb580] [c00000000045c368] .xfs_alloc_vextent+0x698/0xa90
+[c0000001026bb650] [c0000000004a6200] .xfs_ialloc_ag_alloc+0x170/0x820
+[c0000001026bb7c0] [c0000000004a9098] .xfs_dialloc+0x158/0x320
+[c0000001026bb8a0] [c0000000004e628c] .xfs_ialloc+0x7c/0x610
+[c0000001026bb990] [c0000000004e8138] .xfs_dir_ialloc+0xa8/0x2f0
+[c0000001026bbaa0] [c0000000004e8814] .xfs_create+0x494/0x790
+[c0000001026bbbf0] [c0000000004e5ebc] .xfs_generic_create+0x2bc/0x410
+[c0000001026bbce0] [c0000000002b4a34] .vfs_mkdir+0x154/0x230
+[c0000001026bbd70] [c0000000002bc444] .SyS_mkdirat+0x94/0x120
+[c0000001026bbe30] [c00000000000b760] system_call+0x38/0xfc
+Instruction dump:
+4e800020 60000000 7c0802a6 7c862378 3c82ffca 7ca72b78 38841c18 7c651b78
+38600000 f8010010 f821ff91 4bfff94d <0fe00000> 60000000 7c0802a6 7c892378
+
+The root cause of the problem is due to the fact that
+xfs_sb_version_hasalign() returns true when we are working on a V5
+filesystem. Due to this args.minalignslop (in xfs_ialloc_ag_alloc())
+gets the unsigned equivalent of -1 assigned to it. This later causes
+alloc_len in xfs_alloc_space_available() to have a value of 0. In such a
+scenario when args.total is also 0, the assert statement
+"ASSERT(args->maxlen > 0);" fails.
+
+This commit fixes the bug by checking for the existance of
+XFS_SB_VERSION_ALIGNBIT bit in xfs_sb->sb_versionnum field even on V5
+filesystems.
+
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 ---
- fs/xfs/xfs_qm_syscalls.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+PS: From what I could understand from other code paths,
+xfs_alloc_arg->total must be set to the sum of space required by the
+current code path and the space already reserved in the current
+transaction. Please let me know if my understanding is
+incorrect. Also, In the code path listed in the above call trace we
+have xfs_alloc_arg->total set to 0 which probably isn't correct
+either.
 
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index dbb6802..40b7c3f 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -765,5 +765,6 @@ xfs_qm_dqrele_all_inodes(
- 	uint		 flags)
+ fs/xfs/libxfs/xfs_format.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 6b7579e..57a5264 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -346,8 +346,7 @@ static inline void xfs_sb_version_addquota(struct xfs_sb *sbp)
+ 
+ static inline bool xfs_sb_version_hasalign(struct xfs_sb *sbp)
  {
- 	ASSERT(mp->m_quotainfo);
--	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, NULL);
-+	xfs_inode_ag_iterator_flags(mp, xfs_dqrele_inode, flags, NULL,
-+				    XFS_AGITER_INEW_WAIT);
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
+-		(sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT));
++	return (sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT);
  }
+ 
+ static inline bool xfs_sb_version_hasdalign(struct xfs_sb *sbp)
 -- 
-2.7.4
+2.5.5
 
