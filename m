@@ -1,66 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49246 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750999AbdBOPks (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Feb 2017 10:40:48 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/5] xfs: quota deadlock fixes
-Date: Wed, 15 Feb 2017 10:40:42 -0500
-Message-Id: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:26628 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751318AbdBOCRs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 21:17:48 -0500
+Date: Tue, 14 Feb 2017 18:17:34 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix len comparison in xfs_extent_busy_trim
+Message-ID: <20170215021734.GA9303@birch.djwong.org>
+References: <20170214170836.2705798-1-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170214170836.2705798-1-arnd@arndb.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>, Dave Chinner <david@fromorbit.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org
 
-Hi all,
+On Tue, Feb 14, 2017 at 06:08:30PM +0100, Arnd Bergmann wrote:
+> The length is now passed by reference, so the assertion has to be updated
+> to match the other changes, as pointed out by this W=1 warning:
+> 
+> fs/xfs/xfs_extent_busy.c: In function 'xfs_extent_busy_trim':
+> fs/xfs/xfs_extent_busy.c:356:13: error: ordered comparison of pointer with integer zero [-Werror=extra]
+> 
+> Fixes: ebf55872616c ("xfs: improve handling of busy extents in the low-level allocator")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-This is a collection of several quota related deadlock fixes for
-problems that have been reported to the list recently.
+Thanks, applied (4.11).
 
-Patch 1 fixes the low memory quotacheck problem reported by Martin[1].
-Dave is CC'd as he had comments on this particular thread that started a
-discussion, but I hadn't heard anything back since my last response.
+--D
 
-Patch 2 fixes a separate problem I ran into while attempting to
-reproduce Eryu's xfs/305 hang report[2]. 
-
-Patches 3-5 fix the actual problem reported by Eryu, which is a quotaoff
-deadlock reproduced by xfs/305.
-
-Further details are included in the individual commit log descriptions.
-Thoughts, reviews, flames appreciated.
-
-Eryu,
-
-I've run several hundred iterations of this on your reproducer system
-without reproducing the hang. I have reproduced a reset overnight but
-still haven't been able to grab a stack trace from that occurrence (I'll
-try again today/tonight with better console logging). I suspect this is
-a separate problem (possibly just an ASSERT() failure as this is a DEBUG
-kernel), but I'd appreciate any testing you can run against these
-patches to verify.
-
-Brian
-
-[1] http://www.spinics.net/lists/linux-xfs/msg01901.html
-[2] http://www.spinics.net/lists/linux-xfs/msg03835.html
-
-Brian Foster (5):
-  xfs: bypass dquot reclaim to avoid quotacheck deadlock
-  xfs: allocate quotaoff transactions up front to avoid log deadlock
-  xfs: support ability to wait on new inodes
-  xfs: update ag iterator to support wait on new inodes
-  xfs: wait on new inodes during quotaoff dquot release
-
- fs/xfs/xfs_icache.c      | 58 ++++++++++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_icache.h      |  8 +++++++
- fs/xfs/xfs_inode.h       |  4 +++-
- fs/xfs/xfs_qm.c          | 11 +++++++++
- fs/xfs/xfs_qm.h          |  1 +
- fs/xfs/xfs_qm_syscalls.c | 45 +++++++++++++++++++++----------------
- 6 files changed, 98 insertions(+), 29 deletions(-)
-
--- 
-2.7.4
-
+> ---
+>  fs/xfs/xfs_extent_busy.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index ab062610234e..77760dbf0242 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+> @@ -353,7 +353,7 @@ xfs_extent_busy_trim(
+>  	struct rb_node		*rbp;
+>  	bool			ret = false;
+>  
+> -	ASSERT(len > 0);
+> +	ASSERT(*len > 0);
+>  
+>  	spin_lock(&args->pag->pagb_lock);
+>  restart:
+> -- 
+> 2.9.0
+> 
