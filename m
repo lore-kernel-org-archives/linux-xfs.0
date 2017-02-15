@@ -1,96 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39348 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751623AbdBMRqt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Feb 2017 12:46:49 -0500
-Message-ID: <1487008001.3125.41.camel@HansenPartnership.com>
-Subject: xfs: fix inode uid/gid initialization
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date: Mon, 13 Feb 2017 09:46:41 -0800
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from sandeen.net ([63.231.237.45]:58954 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751505AbdBORDM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Feb 2017 12:03:12 -0500
+Subject: Re: [PATCH] xfs: do not unconditionally enable hasalign feature on V5
+ filesystems
+References: <1487174254-9002-1-git-send-email-chandan@linux.vnet.ibm.com>
+ <7dd96d6b-ccb5-105f-18aa-207e1c28c625@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <20b8b2b4-9586-1300-2591-f90c67a401e3@sandeen.net>
+Date: Wed, 15 Feb 2017 11:03:11 -0600
+MIME-Version: 1.0
+In-Reply-To: <7dd96d6b-ccb5-105f-18aa-207e1c28c625@sandeen.net>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Seth Forshee <seth.forshee@canonical.com>
+To: Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-I was debugging a creation failure using a vfs shifting patch set and
-discovered that xfs itself doesn't actually respect the superblock
-namespace in a couple of places (these showed up as files with the
-wrong ownership in my tests).  The fix is to convert xfs away from hand
-rolling inode_init_owner() and to use the i_uid/gid_read/write
-functions.
+On 2/15/17 10:13 AM, Eric Sandeen wrote:
+>> The root cause of the problem is due to the fact that
+>> xfs_sb_version_hasalign() returns true when we are working on a V5
+>> filesystem. Due to this args.minalignslop (in xfs_ialloc_ag_alloc())
+>> gets the unsigned equivalent of -1 assigned to it. This later causes
+>> alloc_len in xfs_alloc_space_available() to have a value of 0. In such a
+>> scenario when args.total is also 0, the assert statement
+>> "ASSERT(args->maxlen > 0);" fails.
+> Hm, the intent of the _haslign() function is to say that V5 must always
+> imply the "alignbit" - i.e. we don't want to grow an infinite feature
+> matrix, and by the time you get to V5 supers, there are many things which
+> cannot be turned on or off, such as this feature.
+> 
+> So what happens here... xfs_ialloc_ag_alloc does:
+> 
+> args.minalignslop = xfs_ialloc_cluster_alignment(args.mp) - 1;
+> 
+> so you're saying that cluster_alignment comes out as 0?
+> 
+> That function is checking _hasalign:
+> 
+> static inline int
+> xfs_ialloc_cluster_alignment(
+>         struct xfs_mount        *mp)
+> {
+>         if (xfs_sb_version_hasalign(&mp->m_sb) &&
+>             mp->m_sb.sb_inoalignmt >=
+>                         XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
+>                 return mp->m_sb.sb_inoalignmt;
+>         return 1;
+> }
+> 
+> So are you saying that this function returns 0?  That would imply that
+> sb_inoalignmt and m_inode_cluster_size are both zero, yes?  Is this
+> what you see?
 
-The rule should be that we use the i_uid/gid_read/write() functions
-when converting to or from the filesystem id_uid and id_gid view.
+Sorry, I guess that means XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size)) is
+zero; inode cluster size is 8192 in this case I think, and that is in fact
+0 filesystem blocks when computed with this macro.
 
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+I need to think about this a little bit to convince myself that the inode
+alignment bit really /should/ be off for a filesystem of this geometry, vs
+changing the macro to recognize the case.
 
----
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index de32f0f..1b0d97e 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -814,10 +814,10 @@ xfs_ialloc(
- 	if (ip->i_d.di_version == 1)
- 		ip->i_d.di_version = 2;
- 
--	inode->i_mode = mode;
-+	inode_init_owner(inode, pip ? VFS_I(pip) : NULL, mode);
- 	set_nlink(inode, nlink);
--	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
--	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
-+	ip->i_d.di_uid = i_uid_read(inode);
-+	ip->i_d.di_gid = i_gid_read(inode);
- 	xfs_set_projid(ip, prid);
- 
- 	if (pip && XFS_INHERIT_GID(pip)) {
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 22c1615..306766d 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -643,8 +643,8 @@ xfs_setattr_nonsize(
- 		 */
- 		ASSERT(udqp == NULL);
- 		ASSERT(gdqp == NULL);
--		error = xfs_qm_vop_dqalloc(ip, xfs_kuid_to_uid(uid),
--					   xfs_kgid_to_gid(gid),
-+		error = xfs_qm_vop_dqalloc(ip, from_kuid(inode->i_sb->s_user_ns, uid),
-+					   from_kgid(inode->i_sb->s_user_ns, gid),
- 					   xfs_get_projid(ip),
- 					   qflags, &udqp, &gdqp, NULL);
- 		if (error)
-@@ -714,8 +714,9 @@ xfs_setattr_nonsize(
- 				olddquot1 = xfs_qm_vop_chown(tp, ip,
- 							&ip->i_udquot, udqp);
- 			}
--			ip->i_d.di_uid = xfs_kuid_to_uid(uid);
- 			inode->i_uid = uid;
-+			ip->i_d.di_uid = i_uid_read(inode);
-+
- 		}
- 		if (!gid_eq(igid, gid)) {
- 			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_GQUOTA_ON(mp)) {
-@@ -726,8 +727,8 @@ xfs_setattr_nonsize(
- 				olddquot2 = xfs_qm_vop_chown(tp, ip,
- 							&ip->i_gdquot, gdqp);
- 			}
--			ip->i_d.di_gid = xfs_kgid_to_gid(gid);
- 			inode->i_gid = gid;
-+			ip->i_d.di_gid = i_gid_read(inode);
- 		}
- 	}
- 
-@@ -1213,8 +1214,8 @@ xfs_setup_inode(
- 	/* make the inode look hashed for the writeback code */
- 	hlist_add_fake(&inode->i_hash);
- 
--	inode->i_uid    = xfs_uid_to_kuid(ip->i_d.di_uid);
--	inode->i_gid    = xfs_gid_to_kgid(ip->i_d.di_gid);
-+	i_uid_write(inode, ip->i_d.di_uid);
-+	i_gid_write(inode, ip->i_d.di_gid);
- 
- 	switch (inode->i_mode & S_IFMT) {
- 	case S_IFBLK:
+-Eric
