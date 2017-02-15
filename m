@@ -1,47 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:53390 "EHLO mga11.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:35940 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750791AbdBOUbJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Feb 2017 15:31:09 -0500
-Subject: [PATCH] mm,x86: fix SMP x86 32bit build for native_pud_clear()
-From: Dave Jiang <dave.jiang@intel.com>
-Date: Wed, 15 Feb 2017 13:31:08 -0700
-Message-ID: <148719066814.31111.3239231168815337012.stgit@djiang5-desk3.ch.intel.com>
+        id S1751318AbdBOQLn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Feb 2017 11:11:43 -0500
+Subject: Re: [PATCH 6/7] nonblocking aio: xfs
+References: <20170214024603.9563-1-rgoldwyn@suse.de>
+ <20170214024603.9563-7-rgoldwyn@suse.de>
+ <20170214074326.GA20629@infradead.org>
+ <9859c328-263a-e4eb-22f6-20cdda821654@suse.de>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Message-ID: <be95fe38-ddbe-427e-df7f-7b54fe3b02a6@suse.de>
+Date: Wed, 15 Feb 2017 10:11:38 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <9859c328-263a-e4eb-22f6-20cdda821654@suse.de>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: akpm@linux-foundation.org
-Cc: keescook@google.com, mawilcox@microsoft.com, linux-nvdimm@lists.01.org, dave.hansen@linux.intel.com, linux-xfs@vger.kernel.org, linux-mm@kvack.org, kirill.shutemov@linux.intel.com, jack@suse.com, dan.j.williams@intel.com, linux-ext4@vger.kernel.org, ross.zwisler@linux.intel.com, vbabka@suse.cz, alexander.kapshuk@gmail.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org
 
-The fix introduced by e4decc90 to fix the UP case for 32bit x86, however
-that broke the SMP case that was working previously. Add ifdef so the dummy
-function only show up for 32bit UP case only.
 
-Fix: e4decc90 mm,x86: native_pud_clear missing on i386 build
 
-Reported-by: Alexander Kapshuk <alexander.kapshuk@gmail.com>
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
----
- arch/x86/include/asm/pgtable-3level.h |    2 ++
- 1 file changed, 2 insertions(+)
+On 02/15/2017 09:30 AM, Goldwyn Rodrigues wrote:
+> 
+> 
+> On 02/14/2017 01:43 AM, Christoph Hellwig wrote:
+>> On Mon, Feb 13, 2017 at 08:46:02PM -0600, Goldwyn Rodrigues wrote:
+>>> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+>>
+>> Please Cc the while series to all lists, otherwiwe it's impossible
+>> to review the thing.
+>>
+>>>
+>>> If IOCB_NONBLOCKING is set:
+>>> 	+ Check if writing beyond end of file, if yes return EAGAIN
+>>> 	- check if writing to a hole which does not have allocated
+>>> 	  file blocks.
+>>> 	- Check if i_rwsem is immediately lockable in xfs_rw_ilock()
+>>
+>> Why the + vs - above? 
+> 
+> A mistake. It does not mean anything besides bullets.
+> 
+>>
+>>> -static inline void
+>>> +static inline int
+>>>  xfs_rw_ilock(
+>>
+>> This function has been removed a while ago.
+> 
+> And thanks for putting in xfs_ilock_nowait(). This can't be done in a
+> cleaner way. I was very skeptical of adding yet another flag.
+> 
+>>
+>>>  
+>>> +	if (iocb->ki_flags & IOCB_NONBLOCKING) {
+>>> +		struct xfs_bmbt_irec	imap;
+>>> +		xfs_fileoff_t           offset_fsb, end_fsb;
+>>> +		int			nimaps = 1, ret = 0;
+>>> +		end_fsb = XFS_B_TO_FSB(ip->i_mount, iocb->ki_pos + count);
+>>> +		if (XFS_B_TO_FSB(ip->i_mount, i_size_read(inode)) < end_fsb)
+>>> +			return -EAGAIN;
+>>
+>> Bogus check, XFS supports async write beyond EOF if the space is
+>> preallocated.
+> 
+> I assume this will be covered by xfs_bmapi_write().
+> 
+>>
+>>> +		/* Check if it is an unallocated hole */
+>>> +		offset_fsb = XFS_B_TO_FSBT(ip->i_mount, iocb->ki_pos);
+>>> +
+>>> +		ret = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
+>>> +				&nimaps, 0);
+>>> +		if (ret)
+>>> +			return ret;
+>>> +		if (!nimaps || imap.br_startblock == HOLESTARTBLOCK)
+>>> +			return -EAGAIN;
+>>
+>> This would need the ilock.  But extent list lookups are expensive,
+>> so please don't add another one here.  Just return when we hit the
+>> first unallocated extent in xfs_bmapi_write - either a short write or
+>> -EAGAIN if nothing has been written.
+> 
+> So in xfs_bmapi_write (and referring to), I would need a new flag, say
+> XFS_BMAPI_NOALLOC which would bail to error0, setting error=-EAGAIN if
+> need_alloc or was_delay is set. This flag XFS_BMAPI_NOALLOC is set in
+> xfs_iomap_write_direct(). I did not understand short writes. Where can I
+> get a short write?
+> 
+> If I understand correctly, we do add the flag.
 
-diff --git a/arch/x86/include/asm/pgtable-3level.h b/arch/x86/include/asm/pgtable-3level.h
-index 50d35e3..8f50fb3 100644
---- a/arch/x86/include/asm/pgtable-3level.h
-+++ b/arch/x86/include/asm/pgtable-3level.h
-@@ -121,9 +121,11 @@ static inline void native_pmd_clear(pmd_t *pmd)
- 	*(tmp + 1) = 0;
- }
- 
-+#ifndef CONFIG_SMP
- static inline void native_pud_clear(pud_t *pudp)
- {
- }
-+#endif
- 
- static inline void pud_clear(pud_t *pudp)
- {
+Replying to myself to correct myself.
 
+On reading a bit more, I figured that we perform
+xfs_file_iomap_begin->xfs_iomap_write_direct. At this point we have
+already performed xfs_bmapi_read(). So, a check in xfs_file_iomap_begin
+should be good enough. So, the flag required would be with iomap flags,
+say IOMAP_NONBLOCKING. IOW, we don't need to go all the way to
+xfs_bmap_write() and return when imap.br_startblock == HOLESTARTBLOCK.
+
+> 
+>>
+>>>  	error = xfs_break_layouts(inode, iolock, true);
+>>>  	if (error)
+>>>  		return error;
+>>
+>> Additionally this can drop the iolock, so you might get a new
+>> hole after it.
+>>
+> 
+
+-- 
+Goldwyn
