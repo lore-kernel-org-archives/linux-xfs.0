@@ -1,81 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33560 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751611AbdBMTEC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Feb 2017 14:04:02 -0500
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v1DJ41Ej016810
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Feb 2017 19:04:02 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v1DJ41oZ007404
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Feb 2017 19:04:01 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v1DJ40Wk015484
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Feb 2017 19:04:01 GMT
-Date: Mon, 13 Feb 2017 22:03:43 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug report] xfs: mark speculative prealloc CoW fork extents
- unwritten
-Message-ID: <20170213190343.GA11256@mwanda>
+Received: from mx1.redhat.com ([209.132.183.28]:46346 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751067AbdBOTPc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Feb 2017 14:15:32 -0500
+Date: Wed, 15 Feb 2017 14:15:30 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: don't reserve blocks for right shift transactions
+Message-ID: <20170215191530.GC62565@bfoster.bfoster>
+References: <1487171128-5335-1-git-send-email-bfoster@redhat.com>
+ <20170215180955.GG6813@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20170215180955.GG6813@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Hello Darrick J. Wong,
+On Wed, Feb 15, 2017 at 10:09:55AM -0800, Darrick J. Wong wrote:
+> On Wed, Feb 15, 2017 at 10:05:28AM -0500, Brian Foster wrote:
+> > The block reservation for the transaction allocated in
+> > xfs_shift_file_space() is an artifact of the original collapse range
+> > support. It exists to handle the case where a collapse range occurs,
+> > the initial extent is left shifted into a location that forms a
+> > contiguous boundary with the previous extent and thus the extents
+> > are merged. This code was subsequently refactored and reused for
+> > insert range (right shift) support.
+> > 
+> > If an insert range occurs under low free space conditions, the
+> > extent at the starting offset is split before the first shift
+> > transaction is allocated. If the block reservation fails, this
+> > leaves separate, but contiguous extents around in the inode. While
+> > not a fatal problem, this is unexpected and will flag a warning on
+> > subsequent insert range operations on the inode. This problem has
+> > been reproduce intermittently by generic/270 running against a
+> > ramdisk device.
+> > 
+> > Since right shift does not create new extent boundaries in the
+> > inode, a block reservation for extent merge is unnecessary. Update
+> > xfs_shift_file_space() to conditionally reserve fs blocks for left
+> > shift transactions only. This avoids the warning reproduced by
+> > generic/270.
+> > 
+> > Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/xfs_bmap_util.c | 20 ++++++++++----------
+> >  1 file changed, 10 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > index 7c3bfaf..6be5f26 100644
+> > --- a/fs/xfs/xfs_bmap_util.c
+> > +++ b/fs/xfs/xfs_bmap_util.c
+> > @@ -1385,10 +1385,16 @@ xfs_shift_file_space(
+> >  	xfs_fileoff_t		stop_fsb;
+> >  	xfs_fileoff_t		next_fsb;
+> >  	xfs_fileoff_t		shift_fsb;
+> > +	uint			resblks;
+> >  
+> >  	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
+> >  
+> >  	if (direction == SHIFT_LEFT) {
+> > +		/*
+> > +		 * Reserve blocks to cover potential extent merges after left
+> > +		 * shift operations.
+> > +		 */
+> > +		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+> >  		next_fsb = XFS_B_TO_FSB(mp, offset + len);
+> >  		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
+> >  	} else {
+> > @@ -1396,6 +1402,7 @@ xfs_shift_file_space(
+> >  		 * If right shift, delegate the work of initialization of
+> >  		 * next_fsb to xfs_bmap_shift_extent as it has ilock held.
+> >  		 */
+> > +		resblks = 0;
+> 
+> Hmmmm.  I am convinced that this patch removes the most likely cause of
+> _trans_alloc failure, and therefore makes the g/270 failures go away.
+> 
+> However, I worry that if we split the extent and _trans_alloc fails for
+> some other reason (e.g. ENOMEM) then we'll still end up two adjacent
+> bmap extents that should be combined.  Granted, the only solution that I
+> can think of is very complicated (create a redo log item, link
+> everything together with the deferred ops mechanism, thereby making
+> right shift an atomic operation) for something that's unlikely to
+> happen(?) during an operation that might not be all that frequent
+> anyway.  I'm also not sure about the implications of adjacent mergeable
+> bmaps -- I think we can handle it, but it's not like I've researched
+> this thoroughly.
+> 
+> <shrug> Thoughts?
+> 
 
-The patch 5eda43000064: "xfs: mark speculative prealloc CoW fork
-extents unwritten" from Feb 2, 2017, leads to the following static
-checker warning:
+Yeah, this isn't a pure fix given the way the code is organized. I think
+I meant to point that out in the commit log; that technically this state
+is still possible, but probably not as likely to occur. I also
+considered killing off the warning, but it still seems useful to me for
+similar reasons. (Effectively, the motivation for this patch is really
+just to shut the test up. :).
 
-	fs/xfs/xfs_reflink.c:381 xfs_reflink_convert_cow()
-	error: uninitialized symbol 'error'.
+I considered error handling just enough to realize that there wasn't a
+simple solution. Given that this change seemed correct regardless, I
+figured this works for now and we can revisit if this remains a problem
+in practice.
 
-fs/xfs/xfs_reflink.c
-   350  /* Convert all of the unwritten CoW extents in a file's range to real ones. */
-   351  int
-   352  xfs_reflink_convert_cow(
-   353          struct xfs_inode        *ip,
-   354          xfs_off_t               offset,
-   355          xfs_off_t               count)
-   356  {
-   357          struct xfs_bmbt_irec    got;
-   358          struct xfs_defer_ops    dfops;
-   359          struct xfs_mount        *mp = ip->i_mount;
-   360          struct xfs_ifork        *ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-   361          xfs_fileoff_t           offset_fsb = XFS_B_TO_FSBT(mp, offset);
-   362          xfs_fileoff_t           end_fsb = XFS_B_TO_FSB(mp, offset + count);
-   363          xfs_extnum_t            idx;
-   364          bool                    found;
-   365          int                     error;
-                                        ^^^^^
-   366  
-   367          xfs_ilock(ip, XFS_ILOCK_EXCL);
-   368  
-   369          /* Convert all the extents to real from unwritten. */
-   370          for (found = xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-What if found fails on the first iteration through the loop?
+Beyond that... an atomic rewrite using the deferred ops stuff seems like
+a reasonable approach technically, but probably should be more motivated
+by the broader fact that afaict any of the collapse/insert range
+operations can fail midway through the overall operation and leave the
+file in a halfway shifted state with respect to the original request.
+Would deferred ops address that problem (e.g., what if a subsequent
+transaction allocation failed in that model, after one or more extents
+had already been shifted)?
 
-   371               found && got.br_startoff < end_fsb;
-   372               found = xfs_iext_get_extent(ifp, ++idx, &got)) {
-   373                  error = xfs_reflink_convert_cow_extent(ip, &got, offset_fsb,
-   374                                  end_fsb - offset_fsb, &dfops);
-   375                  if (error)
-   376                          break;
-   377          }
-   378  
-   379          /* Finish up. */
-   380          xfs_iunlock(ip, XFS_ILOCK_EXCL);
-   381          return error;
-                ^^^^^^^^^^^^
-   382  }
+Then again, I _thought_ that all came up when the collapse range stuff
+was originally posted and wasn't considered a major problem to the users
+(either that or we didn't have a straightforward approach to make the
+whole thing atomic at the time) because ultimately the operation can be
+retried or the original state recovered from userspace...
 
-regards,
-dan carpenter
+Brian
+
+> --D
+> 
+> >  		next_fsb = NULLFSBLOCK;
+> >  		stop_fsb = XFS_B_TO_FSB(mp, offset);
+> >  	}
+> > @@ -1437,21 +1444,14 @@ xfs_shift_file_space(
+> >  	}
+> >  
+> >  	while (!error && !done) {
+> > -		/*
+> > -		 * We would need to reserve permanent block for transaction.
+> > -		 * This will come into picture when after shifting extent into
+> > -		 * hole we found that adjacent extents can be merged which
+> > -		 * may lead to freeing of a block during record update.
+> > -		 */
+> > -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
+> > -				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
+> > +		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
+> > +					&tp);
+> >  		if (error)
+> >  			break;
+> >  
+> >  		xfs_ilock(ip, XFS_ILOCK_EXCL);
+> >  		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
+> > -				ip->i_gdquot, ip->i_pdquot,
+> > -				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
+> > +				ip->i_gdquot, ip->i_pdquot, resblks, 0,
+> >  				XFS_QMOPT_RES_REGBLKS);
+> >  		if (error)
+> >  			goto out_trans_cancel;
+> > -- 
+> > 2.7.4
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
