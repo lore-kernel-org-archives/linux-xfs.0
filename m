@@ -1,115 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:51316 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751022AbdBOP6D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2017 10:58:03 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1FFs97X041526
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2017 10:58:02 -0500
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 28mq9qg5h6-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2017 10:58:02 -0500
-Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 15 Feb 2017 08:58:00 -0700
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH] xfs: do not unconditionally enable hasalign feature on V5 filesystems
-Date: Wed, 15 Feb 2017 21:27:34 +0530
-Message-Id: <1487174254-9002-1-git-send-email-chandan@linux.vnet.ibm.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:17800 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750767AbdBOSKB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2017 13:10:01 -0500
+Date: Wed, 15 Feb 2017 10:09:55 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: don't reserve blocks for right shift transactions
+Message-ID: <20170215180955.GG6813@birch.djwong.org>
+References: <1487171128-5335-1-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1487171128-5335-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, darrick.wong@oracle.com, sandeen@sandeen.net
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
 
-On a ppc64 system, executing generic/256 test with 32k block size gives
-the following call trace,
+On Wed, Feb 15, 2017 at 10:05:28AM -0500, Brian Foster wrote:
+> The block reservation for the transaction allocated in
+> xfs_shift_file_space() is an artifact of the original collapse range
+> support. It exists to handle the case where a collapse range occurs,
+> the initial extent is left shifted into a location that forms a
+> contiguous boundary with the previous extent and thus the extents
+> are merged. This code was subsequently refactored and reused for
+> insert range (right shift) support.
+> 
+> If an insert range occurs under low free space conditions, the
+> extent at the starting offset is split before the first shift
+> transaction is allocated. If the block reservation fails, this
+> leaves separate, but contiguous extents around in the inode. While
+> not a fatal problem, this is unexpected and will flag a warning on
+> subsequent insert range operations on the inode. This problem has
+> been reproduce intermittently by generic/270 running against a
+> ramdisk device.
+> 
+> Since right shift does not create new extent boundaries in the
+> inode, a block reservation for extent merge is unnecessary. Update
+> xfs_shift_file_space() to conditionally reserve fs blocks for left
+> shift transactions only. This avoids the warning reproduced by
+> generic/270.
+> 
+> Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_bmap_util.c | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 7c3bfaf..6be5f26 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1385,10 +1385,16 @@ xfs_shift_file_space(
+>  	xfs_fileoff_t		stop_fsb;
+>  	xfs_fileoff_t		next_fsb;
+>  	xfs_fileoff_t		shift_fsb;
+> +	uint			resblks;
+>  
+>  	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
+>  
+>  	if (direction == SHIFT_LEFT) {
+> +		/*
+> +		 * Reserve blocks to cover potential extent merges after left
+> +		 * shift operations.
+> +		 */
+> +		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+>  		next_fsb = XFS_B_TO_FSB(mp, offset + len);
+>  		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
+>  	} else {
+> @@ -1396,6 +1402,7 @@ xfs_shift_file_space(
+>  		 * If right shift, delegate the work of initialization of
+>  		 * next_fsb to xfs_bmap_shift_extent as it has ilock held.
+>  		 */
+> +		resblks = 0;
 
-XFS: Assertion failed: args->maxlen > 0, file: /root/repos/linux/fs/xfs/libxfs/xfs_alloc.c, line: 2026
+Hmmmm.  I am convinced that this patch removes the most likely cause of
+_trans_alloc failure, and therefore makes the g/270 failures go away.
 
-kernel BUG at /root/repos/linux/fs/xfs/xfs_message.c:113!
-Oops: Exception in kernel mode, sig: 5 [#1]
-SMP NR_CPUS=2048
-DEBUG_PAGEALLOC
-NUMA
-pSeries
-Modules linked in:
-CPU: 2 PID: 19361 Comm: mkdir Not tainted 4.10.0-rc5 #58
-task: c000000102606d80 task.stack: c0000001026b8000
-NIP: c0000000004ef798 LR: c0000000004ef798 CTR: c00000000082b290
-REGS: c0000001026bb090 TRAP: 0700   Not tainted  (4.10.0-rc5)
-MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>
-CR: 28004428  XER: 00000000
-CFAR: c0000000004ef180 SOFTE: 1
-GPR00: c0000000004ef798 c0000001026bb310 c000000001157300 ffffffffffffffea
-GPR04: 000000000000000a c0000001026bb130 0000000000000000 ffffffffffffffc0
-GPR08: 00000000000000d1 0000000000000021 00000000ffffffd1 c000000000dd4990
-GPR12: 0000000022004444 c00000000fe00800 0000000020000000 0000000000000000
-GPR16: 0000000000000000 0000000043a606fc 0000000043a76c08 0000000043a1b3d0
-GPR20: 000001002a35cd60 c0000001026bbb80 0000000000000000 0000000000000001
-GPR24: 0000000000000240 0000000000000004 c00000062dc55000 0000000000000000
-GPR28: 0000000000000004 c00000062ecd9200 0000000000000000 c0000001026bb6c0
-NIP [c0000000004ef798] .assfail+0x28/0x30
-LR [c0000000004ef798] .assfail+0x28/0x30
-Call Trace:
-[c0000001026bb310] [c0000000004ef798] .assfail+0x28/0x30 (unreliable)
-[c0000001026bb380] [c000000000455d74] .xfs_alloc_space_available+0x194/0x1b0
-[c0000001026bb410] [c00000000045b914] .xfs_alloc_fix_freelist+0x144/0x480
-[c0000001026bb580] [c00000000045c368] .xfs_alloc_vextent+0x698/0xa90
-[c0000001026bb650] [c0000000004a6200] .xfs_ialloc_ag_alloc+0x170/0x820
-[c0000001026bb7c0] [c0000000004a9098] .xfs_dialloc+0x158/0x320
-[c0000001026bb8a0] [c0000000004e628c] .xfs_ialloc+0x7c/0x610
-[c0000001026bb990] [c0000000004e8138] .xfs_dir_ialloc+0xa8/0x2f0
-[c0000001026bbaa0] [c0000000004e8814] .xfs_create+0x494/0x790
-[c0000001026bbbf0] [c0000000004e5ebc] .xfs_generic_create+0x2bc/0x410
-[c0000001026bbce0] [c0000000002b4a34] .vfs_mkdir+0x154/0x230
-[c0000001026bbd70] [c0000000002bc444] .SyS_mkdirat+0x94/0x120
-[c0000001026bbe30] [c00000000000b760] system_call+0x38/0xfc
-Instruction dump:
-4e800020 60000000 7c0802a6 7c862378 3c82ffca 7ca72b78 38841c18 7c651b78
-38600000 f8010010 f821ff91 4bfff94d <0fe00000> 60000000 7c0802a6 7c892378
+However, I worry that if we split the extent and _trans_alloc fails for
+some other reason (e.g. ENOMEM) then we'll still end up two adjacent
+bmap extents that should be combined.  Granted, the only solution that I
+can think of is very complicated (create a redo log item, link
+everything together with the deferred ops mechanism, thereby making
+right shift an atomic operation) for something that's unlikely to
+happen(?) during an operation that might not be all that frequent
+anyway.  I'm also not sure about the implications of adjacent mergeable
+bmaps -- I think we can handle it, but it's not like I've researched
+this thoroughly.
 
-The root cause of the problem is due to the fact that
-xfs_sb_version_hasalign() returns true when we are working on a V5
-filesystem. Due to this args.minalignslop (in xfs_ialloc_ag_alloc())
-gets the unsigned equivalent of -1 assigned to it. This later causes
-alloc_len in xfs_alloc_space_available() to have a value of 0. In such a
-scenario when args.total is also 0, the assert statement
-"ASSERT(args->maxlen > 0);" fails.
+<shrug> Thoughts?
 
-This commit fixes the bug by checking for the existance of
-XFS_SB_VERSION_ALIGNBIT bit in xfs_sb->sb_versionnum field even on V5
-filesystems.
+--D
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
-PS: From what I could understand from other code paths,
-xfs_alloc_arg->total must be set to the sum of space required by the
-current code path and the space already reserved in the current
-transaction. Please let me know if my understanding is
-incorrect. Also, In the code path listed in the above call trace we
-have xfs_alloc_arg->total set to 0 which probably isn't correct
-either.
-
- fs/xfs/libxfs/xfs_format.h | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 6b7579e..57a5264 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -346,8 +346,7 @@ static inline void xfs_sb_version_addquota(struct xfs_sb *sbp)
- 
- static inline bool xfs_sb_version_hasalign(struct xfs_sb *sbp)
- {
--	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
--		(sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT));
-+	return (sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT);
- }
- 
- static inline bool xfs_sb_version_hasdalign(struct xfs_sb *sbp)
--- 
-2.5.5
-
+>  		next_fsb = NULLFSBLOCK;
+>  		stop_fsb = XFS_B_TO_FSB(mp, offset);
+>  	}
+> @@ -1437,21 +1444,14 @@ xfs_shift_file_space(
+>  	}
+>  
+>  	while (!error && !done) {
+> -		/*
+> -		 * We would need to reserve permanent block for transaction.
+> -		 * This will come into picture when after shifting extent into
+> -		 * hole we found that adjacent extents can be merged which
+> -		 * may lead to freeing of a block during record update.
+> -		 */
+> -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
+> -				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
+> +		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
+> +					&tp);
+>  		if (error)
+>  			break;
+>  
+>  		xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
+> -				ip->i_gdquot, ip->i_pdquot,
+> -				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
+> +				ip->i_gdquot, ip->i_pdquot, resblks, 0,
+>  				XFS_QMOPT_RES_REGBLKS);
+>  		if (error)
+>  			goto out_trans_cancel;
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
