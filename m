@@ -1,49 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37430 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752746AbdBNNDP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Feb 2017 08:03:15 -0500
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9DC3C8047F
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 13:03:10 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v1ED3AlV032391
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 08:03:10 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 0/4] buffered write and indlen fixes
-Date: Tue, 14 Feb 2017 08:03:05 -0500
-Message-Id: <1487077389-5626-1-git-send-email-bfoster@redhat.com>
+Received: from mail-vk0-f47.google.com ([209.85.213.47]:33631 "EHLO
+        mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750732AbdBOFNP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2017 00:13:15 -0500
+Received: by mail-vk0-f47.google.com with SMTP id k127so92841848vke.0
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2017 21:13:15 -0800 (PST)
+MIME-Version: 1.0
+From: Vaibhaw Pandey <vaibhaw@scalegrid.io>
+Date: Wed, 15 Feb 2017 10:43:14 +0530
+Message-ID: <CADWLRhrhPD9sPpXPFPx8BvsjwDc4nJFasTC8bRr+5rd3c48xxg@mail.gmail.com>
+Subject: XFS doesn't auto mount on boot when /etc/fstab entry has fs type set
+ to auto
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This is just a small update to rebase onto for-next with all previous
-debug artifacts removed. No code changes.
+Hi,
 
-Brian
+Needed guidance.
 
-v3:
-- Rebase to a clean for-next branch.
-v2: http://www.spinics.net/lists/linux-xfs/msg04215.html
-- Use do_div() to fix 32-bit builds.
-- Prepend patches 1-2 to re-enable indlen testing from xfstests.
-v1: http://www.spinics.net/lists/linux-xfs/msg04083.html
+I am trying to move my EC2 machine deployment code to start creating
+XFS volumes as opposed to ext4 volumes like it used to. An issue I
+have run into is that the XFS volume doesn't get mounted automatically
+on reboot with the /etc/fstab entry which used to work fine for ext4.
+A manual mount later works perfectly.
 
-Brian Foster (4):
-  xfs: clear delalloc and cache on buffered write failure
-  xfs: resurrect debug mode drop buffered writes mechanism
-  xfs: handle indlen shortage on delalloc extent merge
-  xfs: split indlen reservations fairly when under reserved
+Version:
+$ uname -a
+Linux ip-172-31-39-239 4.4.44-39.55.amzn1.x86_64 #1 SMP Mon Jan 30
+18:15:53 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
+sudo cat /etc/fstab
+#
+LABEL=/     /           ext4    defaults,noatime  1   1
+tmpfs       /dev/shm    tmpfs   defaults        0   0
+devpts      /dev/pts    devpts  gid=5,mode=620  0   0
+sysfs       /sys        sysfs   defaults        0   0
+proc        /proc       proc    defaults        0   0
+/dev/sdb /redis_data auto noatime,noexec,nodiratime 0 0
+$ df -T /redis_data/
+Filesystem     Type 1K-blocks  Used Available Use% Mounted on
+/dev/xvdb      xfs    5232640 32940   5199700   1% /redis_data
 
- fs/xfs/libxfs/xfs_bmap.c | 70 +++++++++++++++++++++++++++++++++---------------
- fs/xfs/xfs_iomap.c       |  9 +++++++
- fs/xfs/xfs_mount.h       | 15 ++++++-----
- fs/xfs/xfs_sysfs.c       | 14 +++++-----
- 4 files changed, 73 insertions(+), 35 deletions(-)
+However if I change the /etc/fstab directive to:
 
--- 
-2.7.4
+/dev/sdb /redis_data xfs noatime,noexec,nodiratime 0 0
 
+the auto mount starts working fine. Now this isn't a major problem
+since the functionality ultimately works. But I would certainly like
+to have the flexibility to avoid hard coding the fs type in the code
+that generates these fstab entries.
+
+Any pointers or help is much appreciated. :)
+
+Thanks,
+Vaibhaw
