@@ -1,79 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36420 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49246 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751478AbdBOM1s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Feb 2017 07:27:48 -0500
-Date: Wed, 15 Feb 2017 13:27:45 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: XFS doesn't auto mount on boot when /etc/fstab entry has fs type
- set to auto
-Message-ID: <20170215122745.nmwkmcqo23ecfr53@eorzea.usersys.redhat.com>
-References: <CADWLRhrhPD9sPpXPFPx8BvsjwDc4nJFasTC8bRr+5rd3c48xxg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CADWLRhrhPD9sPpXPFPx8BvsjwDc4nJFasTC8bRr+5rd3c48xxg@mail.gmail.com>
+        id S1750999AbdBOPks (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Feb 2017 10:40:48 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 0/5] xfs: quota deadlock fixes
+Date: Wed, 15 Feb 2017 10:40:42 -0500
+Message-Id: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vaibhaw Pandey <vaibhaw@scalegrid.io>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Eryu Guan <eguan@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-Hi,
+Hi all,
 
-> LABEL=/     /           ext4    defaults,noatime  1   1
-> tmpfs       /dev/shm    tmpfs   defaults        0   0
-> devpts      /dev/pts    devpts  gid=5,mode=620  0   0
-> sysfs       /sys        sysfs   defaults        0   0
-> proc        /proc       proc    defaults        0   0
-> /dev/sdb /redis_data auto noatime,noexec,nodiratime 0 0
-> $ df -T /redis_data/
-> Filesystem     Type 1K-blocks  Used Available Use% Mounted on
-> /dev/xvdb      xfs    5232640 32940   5199700   1% /redis_data
-> 
-> However if I change the /etc/fstab directive to:
-> 
-> /dev/sdb /redis_data xfs noatime,noexec,nodiratime 0 0
-> 
-> the auto mount starts working fine. Now this isn't a major problem
-> since the functionality ultimately works. But I would certainly like
-> to have the flexibility to avoid hard coding the fs type in the code
-> that generates these fstab entries.
-> 
+This is a collection of several quota related deadlock fixes for
+problems that have been reported to the list recently.
 
-I believe this is not a question for us, but for whatever software you are using
-to mount your partitions, systemd, unit, init, whatever. It also might be a
-problem with `mount` command, but if you say you can mount it normally after the
-system is live, it looks not to be the case.
+Patch 1 fixes the low memory quotacheck problem reported by Martin[1].
+Dave is CC'd as he had comments on this particular thread that started a
+discussion, but I hadn't heard anything back since my last response.
 
-XFS doesn't control who and how it reads the entries in fstab.
+Patch 2 fixes a separate problem I ran into while attempting to
+reproduce Eryu's xfs/305 hang report[2]. 
 
-As stated in `mount` manpage:
+Patches 3-5 fix the actual problem reported by Eryu, which is a quotaoff
+deadlock reproduced by xfs/305.
 
-"If no -t option is given, or if the auto type is specified, mount will try  to
-guess  the  desired  type.   Mount  uses  the  blkid  library for guessing the
-filesystem type; if that does not turn up anything that looks familiar,  mount
-will  try  to  read  the  file  /etc/filesystems,  or, if that
-does not exist, /proc/filesystems.  All of the filesystem types listed there 
-will be  tried, except  for  those  that  are labeled "nodev" (e.g. devpts, proc
-and nfs). If /etc/filesystems  ends  in  a  line  with  a  single  *,   mount
-will   read /proc/filesystems  afterwards.   While  trying,  all  filesystem
-types will be mounted with the mount option silent."
+Further details are included in the individual commit log descriptions.
+Thoughts, reviews, flames appreciated.
 
+Eryu,
 
-Anyway, if you have the logs from your system when it tries to mount the
-partition maybe it give us some clue of what is happening.
+I've run several hundred iterations of this on your reproducer system
+without reproducing the hang. I have reproduced a reset overnight but
+still haven't been able to grab a stack trace from that occurrence (I'll
+try again today/tonight with better console logging). I suspect this is
+a separate problem (possibly just an ASSERT() failure as this is a DEBUG
+kernel), but I'd appreciate any testing you can run against these
+patches to verify.
 
-Cheers
- 
-> Any pointers or help is much appreciated. :)
-> 
-> Thanks,
-> Vaibhaw
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Brian
+
+[1] http://www.spinics.net/lists/linux-xfs/msg01901.html
+[2] http://www.spinics.net/lists/linux-xfs/msg03835.html
+
+Brian Foster (5):
+  xfs: bypass dquot reclaim to avoid quotacheck deadlock
+  xfs: allocate quotaoff transactions up front to avoid log deadlock
+  xfs: support ability to wait on new inodes
+  xfs: update ag iterator to support wait on new inodes
+  xfs: wait on new inodes during quotaoff dquot release
+
+ fs/xfs/xfs_icache.c      | 58 ++++++++++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_icache.h      |  8 +++++++
+ fs/xfs/xfs_inode.h       |  4 +++-
+ fs/xfs/xfs_qm.c          | 11 +++++++++
+ fs/xfs/xfs_qm.h          |  1 +
+ fs/xfs/xfs_qm_syscalls.c | 45 +++++++++++++++++++++----------------
+ 6 files changed, 98 insertions(+), 29 deletions(-)
 
 -- 
-Carlos
+2.7.4
+
