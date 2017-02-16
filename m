@@ -1,126 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f45.google.com ([209.85.213.45]:35621 "EHLO
-        mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750720AbdBPHMo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 02:12:44 -0500
-Received: by mail-vk0-f45.google.com with SMTP id x75so5228838vke.2
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2017 23:12:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CADWLRhoFdQUS-XjLj5R3JxjBnkXLN-TAjqCMBZDJWW36SOkWFw@mail.gmail.com>
-References: <CADWLRhrhPD9sPpXPFPx8BvsjwDc4nJFasTC8bRr+5rd3c48xxg@mail.gmail.com>
- <20170215122745.nmwkmcqo23ecfr53@eorzea.usersys.redhat.com> <CADWLRhoFdQUS-XjLj5R3JxjBnkXLN-TAjqCMBZDJWW36SOkWFw@mail.gmail.com>
-From: Vaibhaw Pandey <vaibhaw@scalegrid.io>
-Date: Thu, 16 Feb 2017 12:42:43 +0530
-Message-ID: <CADWLRhpnnjCV=vigJPBAzJi8d5YLkgUXd=dn_iBakVic1UAPvw@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36028 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752649AbdBPI5q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Feb 2017 03:57:46 -0500
+Date: Thu, 16 Feb 2017 09:57:44 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
 Subject: Re: XFS doesn't auto mount on boot when /etc/fstab entry has fs type
  set to auto
-Content-Type: text/plain; charset=UTF-8
+Message-ID: <20170216085744.ahpphwbqh6o3rp3o@eorzea.usersys.redhat.com>
+References: <CADWLRhrhPD9sPpXPFPx8BvsjwDc4nJFasTC8bRr+5rd3c48xxg@mail.gmail.com>
+ <20170215122745.nmwkmcqo23ecfr53@eorzea.usersys.redhat.com>
+ <CADWLRhoFdQUS-XjLj5R3JxjBnkXLN-TAjqCMBZDJWW36SOkWFw@mail.gmail.com>
+ <CADWLRhpnnjCV=vigJPBAzJi8d5YLkgUXd=dn_iBakVic1UAPvw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CADWLRhpnnjCV=vigJPBAzJi8d5YLkgUXd=dn_iBakVic1UAPvw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Vaibhaw Pandey <vaibhaw@scalegrid.io>
+Cc: linux-xfs@vger.kernel.org
 
-Sorry to chime in again but I was wondering if it makes sense to just
-add "xfs" to /etc/filesystems during installation of the package
-itself? It is visible in the /proc/filesystems once it is installed
-anyways. I have posed this question to the xfs@oss.sgi.com mailing
-list as well.
+Hi,
 
-On Thu, Feb 16, 2017 at 8:37 AM, Vaibhaw Pandey <vaibhaw@scalegrid.io> wrote:
-> Carlos,
+On Thu, Feb 16, 2017 at 12:42:43PM +0530, Vaibhaw Pandey wrote:
+> Sorry to chime in again but I was wondering if it makes sense to just
+> add "xfs" to /etc/filesystems during installation of the package
+> itself? It is visible in the /proc/filesystems once it is installed
+> anyways. I have posed this question to the xfs@oss.sgi.com mailing
+> list as well.
 >
-> Thanks a lot for replying. :)
->
-> I should have read the mount man page more carefully: By adding "xfs"
-> to /etc/filesystems, the /etc/fstab entry even with an auto started
-> working fine.
->
-> blkid always had an entry for the volume in question but that didn't
-> make a difference in this case:
-> $ sudo blkid
-> /dev/xvda1: LABEL="/" UUID="ebbf1f1c-fb71-40aa-93a3-056b455e5127" TYPE="ext4"
-> /dev/xvdb: UUID="bf4be26c-1c1c-40fc-b5cf-b9048dcc61b6" TYPE="xfs"
->
->
->> Anyway, if you have the logs from your system when it tries to mount the
->> partition maybe it give us some clue of what is happening.
->
-> It was the complete lack of logs in dmesg or /var/log/messages about a
-> failure to mount is what confused me on why this was failing. A
-> successful mount logs but an unsuccessful one doesn't. I think I will
-> ask a mount expert for help on this.
->
-> Thanks again,
-> Vaibhaw
->
-> On Wed, Feb 15, 2017 at 5:57 PM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
->> Hi,
->>
->>> LABEL=/     /           ext4    defaults,noatime  1   1
->>> tmpfs       /dev/shm    tmpfs   defaults        0   0
->>> devpts      /dev/pts    devpts  gid=5,mode=620  0   0
->>> sysfs       /sys        sysfs   defaults        0   0
->>> proc        /proc       proc    defaults        0   0
->>> /dev/sdb /redis_data auto noatime,noexec,nodiratime 0 0
->>> $ df -T /redis_data/
->>> Filesystem     Type 1K-blocks  Used Available Use% Mounted on
->>> /dev/xvdb      xfs    5232640 32940   5199700   1% /redis_data
->>>
->>> However if I change the /etc/fstab directive to:
->>>
->>> /dev/sdb /redis_data xfs noatime,noexec,nodiratime 0 0
->>>
->>> the auto mount starts working fine. Now this isn't a major problem
->>> since the functionality ultimately works. But I would certainly like
->>> to have the flexibility to avoid hard coding the fs type in the code
->>> that generates these fstab entries.
->>>
->>
->> I believe this is not a question for us, but for whatever software you are using
->> to mount your partitions, systemd, unit, init, whatever. It also might be a
->> problem with `mount` command, but if you say you can mount it normally after the
->> system is live, it looks not to be the case.
->>
->> XFS doesn't control who and how it reads the entries in fstab.
->>
->> As stated in `mount` manpage:
->>
->> "If no -t option is given, or if the auto type is specified, mount will try  to
->> guess  the  desired  type.   Mount  uses  the  blkid  library for guessing the
->> filesystem type; if that does not turn up anything that looks familiar,  mount
->> will  try  to  read  the  file  /etc/filesystems,  or, if that
->> does not exist, /proc/filesystems.  All of the filesystem types listed there
->> will be  tried, except  for  those  that  are labeled "nodev" (e.g. devpts, proc
->> and nfs). If /etc/filesystems  ends  in  a  line  with  a  single  *,   mount
->> will   read /proc/filesystems  afterwards.   While  trying,  all  filesystem
->> types will be mounted with the mount option silent."
->>
->>
->> Anyway, if you have the logs from your system when it tries to mount the
->> partition maybe it give us some clue of what is happening.
->>
->> Cheers
->>
->>> Any pointers or help is much appreciated. :)
->>>
->>> Thanks,
->>> Vaibhaw
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> --
->> Carlos
->
->
->
-> --
-> Member of Technical Staff | ScaleGrid.io | @_vaibhaw | LinkedIn | Google+
-> Read my latest blog post: I Get To Know the Redis Database: Iterating Over Keys
+Just FYI, xfs@oss.sgi.org is no more, we have moved to vger, so, no one will
+actually reply you there, always use linux-xfs@vger.kernel.org
 
+Regarding your question, that is still a question not for XFS, /etc/filesystems
+file doesn't belong to any xfs package, so we can't touch it, setting
+/etc/filesystems is responsibility for another software, which, I *think* is
+distro dependent.
+ 
+Maybe it don't take too long by now, once many distros started to use XFS as
+their default FS, but that might be a good idea to open a bug against the distro
+you are using.
 
+> On Thu, Feb 16, 2017 at 8:37 AM, Vaibhaw Pandey <vaibhaw@scalegrid.io> wrote:
+> > Carlos,
+> >
+> > Thanks a lot for replying. :)
+> >
+> > I should have read the mount man page more carefully: By adding "xfs"
+> > to /etc/filesystems, the /etc/fstab entry even with an auto started
+> > working fine.
+> >
 
+Particularly I have never thought about adding something there because I always
+use 'xfs' in fstab.
+
+> > blkid always had an entry for the volume in question but that didn't
+> > make a difference in this case:
+> > $ sudo blkid
+> > /dev/xvda1: LABEL="/" UUID="ebbf1f1c-fb71-40aa-93a3-056b455e5127" TYPE="ext4"
+> > /dev/xvdb: UUID="bf4be26c-1c1c-40fc-b5cf-b9048dcc61b6" TYPE="xfs"
+> >
+> >
+> >> Anyway, if you have the logs from your system when it tries to mount the
+> >> partition maybe it give us some clue of what is happening.
+> >
+> > It was the complete lack of logs in dmesg or /var/log/messages about a
+> > failure to mount is what confused me on why this was failing.
+
+These logs won't appear in dmesg, this is the kernel log, what you should look
+for is for `mount` logs. You are using systemd I suspect, if I am correct, you
+will see such logs using `journalctl` command.
+
+> > successful mount logs but an unsuccessful one doesn't. I think I will
+> > ask a mount expert for help on this.
+> >
+
+Hope it have helped,
+
+Cheers
 -- 
-Member of Technical Staff | ScaleGrid.io | @_vaibhaw | LinkedIn | Google+
-Read my latest blog post: I Get To Know the Redis Database: Iterating Over Keys
+Carlos
