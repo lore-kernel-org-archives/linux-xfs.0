@@ -1,38 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:33260 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752848AbdBUOrk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Feb 2017 09:47:40 -0500
-Date: Tue, 21 Feb 2017 15:47:16 +0100
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] xfs: clear delalloc and cache on buffered write failure
-Message-ID: <20170221144716.GA988@kroah.com>
-References: <1487684787-5004-1-git-send-email-bfoster@redhat.com>
- <20170221135639.GA26768@kroah.com>
- <20170221144000.GA3516@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54208 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932585AbdBPRUg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Feb 2017 12:20:36 -0500
+Date: Thu, 16 Feb 2017 12:20:34 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [Bug 192981] New: page allocation stalls
+Message-ID: <20170216172034.GC11750@bfoster.bfoster>
+References: <bug-192981-27@https.bugzilla.kernel.org/>
+ <20170123135111.13ac3e47110de10a4bd503ef@linux-foundation.org>
+ <8f450abd-4e05-92d3-2533-72b05fea2012@beget.ru>
+ <20170215160538.GA62565@bfoster.bfoster>
+ <a055abbf-a471-d111-9491-dc5b00208228@beget.ru>
+ <20170215180859.GB62565@bfoster.bfoster>
+ <07ee50bc-8220-dda8-07f9-369758603df9@beget.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170221144000.GA3516@infradead.org>
+In-Reply-To: <07ee50bc-8220-dda8-07f9-369758603df9@beget.ru>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Brian Foster <bfoster@redhat.com>, stable@vger.kernel.org, linux-xfs@vger.kernel.org, Michal Hocko <mhocko@kernel.org>
+To: Alexander Polakov <apolyakov@beget.ru>
+Cc: linux-mm@kvack.org, linux-xfs@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org, Dave Chinner <david@fromorbit.com>
 
-On Tue, Feb 21, 2017 at 06:40:00AM -0800, Christoph Hellwig wrote:
-> On Tue, Feb 21, 2017 at 02:56:39PM +0100, Greg KH wrote:
-> > For XFS patches, I need an explicit ack from the maintainer before
-> > applying them, as per their instructions in the past...
+On Thu, Feb 16, 2017 at 01:56:30PM +0300, Alexander Polakov wrote:
+> On 02/15/2017 09:09 PM, Brian Foster wrote:
+> > Ah, Ok. It sounds like this allows the reclaim thread to carry on into
+> > other shrinkers and free up memory that way, perhaps. This sounds kind
+> > of similar to the issue brought up previously here[1], but not quite the
+> > same in that instead of backing off of locking to allow other shrinkers
+> > to progress, we back off of memory allocations required to free up
+> > inodes (memory).
+> > 
+> > In theory, I think something analogous to a trylock for inode to buffer
+> > mappings that are no longer cached (or more specifically, cannot
+> > currently be allocated) may work around this, but it's not immediately
+> > clear to me whether that's a proper fix (it's also probably not a
+> > trivial change either). I'm still kind of curious why we end up with
+> > dirty inodes with reclaimed buffers. If this problem repeats, is it
+> > always with a similar stack (i.e., reclaim -> xfs_iflush() ->
+> > xfs_imap_to_bp())?
 > 
-> Brian is one of the most active XFS contributors, you can trust him :)
+> Looks like it is.
+> 
+> > How many independent filesystems are you running this workload against?
+> 
+> storage9 : ~ [0] # mount|grep storage|grep xfs|wc -l
+> 15
+> storage9 : ~ [0] # mount|grep storage|grep ext4|wc -l
+> 44
+> 
 
-Heh, ok, but I have been yelled at before for xfs stuff, so I'm a bit
-skitish...
+So a decent number of fs', more ext4 than XFS. Are the XFS fs' all of
+similar size/geometry? If so, can you send representative xfs_info
+output for the fs'?
 
-I'll queue this up for the next release, after this one that just
-started a few hours ago.
+I'm reading back through that reclaim thread[1] and it appears this
+indeed is not a straightforward issue. It sounds like the summary is
+Chris hit the same general behavior you have and is helped by bypassing
+the synchronous nature of the shrinker. This allows other shrinkers to
+proceed, but this is not a general solution because other workloads
+depend on the synchronous shrinker behavior to throttle direct reclaim.
+I can't say I understand all of the details and architecture of how/why
+that is the case.
 
-thanks,
+FWIW, it sounds like the first order problem is that we generally don't
+want to find/flush dirty inodes from reclaim. A couple things that might
+help avoid this situation are more aggressive
+/proc/sys/fs/xfs/xfssyncd_centisecs tuning or perhaps considering a
+smaller log size would cause more tail pushing pressure on the AIL
+instead of pressure originating from memory reclaim. The latter might
+not be so convenient if this is an already populated backup server,
+though.
 
-greg k-h
+Beyond that, there's Chris' patch, another patch that Dave proposed[2],
+and obviously your hack here to defer inode reclaim entirely to the
+workqueue (I've CC'd Dave since it sounds like he might have been
+working on this further..). Unfortunately, it sounds like [1] or your
+hack aren't things we can pull into mainline for the time being until
+the broader reclaim queueing/throttling mechanism is in place. I suppose
+we might be able to revisit [2] if it actually does enough to prevent
+this problem...
+
+[1] http://www.spinics.net/lists/linux-xfs/msg01541.html
+[2] http://www.spinics.net/lists/linux-xfs/msg02212.html
+
+Brian
+
+> > Can you describe the workload in more detail?
+> 
+> This is a backup server, we're running rsync. At night our production
+> servers rsync their files to this server (a lot of small files).
+> 
+> > ...
+> > > > The bz shows you have non-default vm settings such as
+> > > > 'vm.vfs_cache_pressure = 200.' My understanding is that prefers
+> > > > aggressive inode reclaim, yet the code workaround here is to bypass XFS
+> > > > inode reclaim. Out of curiousity, have you reproduced this problem using
+> > > > the default vfs_cache_pressure value (or if so, possibly moving it in
+> > > > the other direction)?
+> > > 
+> > > Yes, we've tried that, it had about 0 influence.
+> > > 
+> > 
+> > Which.. with what values? And by zero influence, do you simply mean the
+> > stall still occurred or you have some other measurement of slab sizes or
+> > some such that are unaffected?
+> 
+> Unfortunately I don't have slab statistics at hand. Stalls and following OOM
+> situation still occured with this setting at 100.
+> 
+> -- 
+> Alexander Polakov | system software engineer | https://beget.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
