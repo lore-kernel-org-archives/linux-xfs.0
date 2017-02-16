@@ -1,75 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34069 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751933AbdBNHn1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 02:43:27 -0500
-Date: Mon, 13 Feb 2017 23:43:26 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/7] nonblocking aio: xfs
-Message-ID: <20170214074326.GA20629@infradead.org>
-References: <20170214024603.9563-1-rgoldwyn@suse.de>
- <20170214024603.9563-7-rgoldwyn@suse.de>
+Received: from sandeen.net ([63.231.237.45]:34682 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751635AbdBPEPS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Feb 2017 23:15:18 -0500
+Received: from Liberator.local (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id A56BB2A6A
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2017 22:15:17 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: v4.10.0-rc1 released
+Message-ID: <a9d5dc78-f707-5d8e-d08d-62e85237b195@sandeen.net>
+Date: Wed, 15 Feb 2017 22:15:09 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170214024603.9563-7-rgoldwyn@suse.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="TGnCiWiOXgoqMKxgPfEDPrGFJ30vdph0V"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Feb 13, 2017 at 08:46:02PM -0600, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--TGnCiWiOXgoqMKxgPfEDPrGFJ30vdph0V
+Content-Type: multipart/mixed; boundary="wfCw80ELNqhrtiLw41mIRa4i2s4XpDQV6";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <a9d5dc78-f707-5d8e-d08d-62e85237b195@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: v4.10.0-rc1 released
 
-Please Cc the while series to all lists, otherwiwe it's impossible
-to review the thing.
+--wfCw80ELNqhrtiLw41mIRa4i2s4XpDQV6
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> If IOCB_NONBLOCKING is set:
-> 	+ Check if writing beyond end of file, if yes return EAGAIN
-> 	- check if writing to a hole which does not have allocated
-> 	  file blocks.
-> 	- Check if i_rwsem is immediately lockable in xfs_rw_ilock()
+Hi folks,
 
-Why the + vs - above? 
+The master branch of the xfsprogs repository at:
 
-> -static inline void
-> +static inline int
->  xfs_rw_ilock(
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-This function has been removed a while ago.
+has just been updated and tagged with v4.10.0-rc1.
 
->  
-> +	if (iocb->ki_flags & IOCB_NONBLOCKING) {
-> +		struct xfs_bmbt_irec	imap;
-> +		xfs_fileoff_t           offset_fsb, end_fsb;
-> +		int			nimaps = 1, ret = 0;
-> +		end_fsb = XFS_B_TO_FSB(ip->i_mount, iocb->ki_pos + count);
-> +		if (XFS_B_TO_FSB(ip->i_mount, i_size_read(inode)) < end_fsb)
-> +			return -EAGAIN;
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
-Bogus check, XFS supports async write beyond EOF if the space is
-preallocated.
+The new head of the master branch is commit:
 
-> +		/* Check if it is an unallocated hole */
-> +		offset_fsb = XFS_B_TO_FSBT(ip->i_mount, iocb->ki_pos);
-> +
-> +		ret = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
-> +				&nimaps, 0);
-> +		if (ret)
-> +			return ret;
-> +		if (!nimaps || imap.br_startblock == HOLESTARTBLOCK)
-> +			return -EAGAIN;
+5956291 xfs_metadump: ignore attr leaf with 0 entries
 
-This would need the ilock.  But extent list lookups are expensive,
-so please don't add another one here.  Just return when we hit the
-first unallocated extent in xfs_bmapi_write - either a short write or
--EAGAIN if nothing has been written.
+New Commits:
 
->  	error = xfs_break_layouts(inode, iolock, true);
->  	if (error)
->  		return error;
+Arnd Bergmann (1):
+      [5b1caea] xfs: fix xfs_mode_to_ftype() prototype
 
-Additionally this can drop the iolock, so you might get a new
-hole after it.
+Brian Foster (1):
+      [4be4441] xfs: remove racy hasattr check from attr ops
+
+Christoph Hellwig (4):
+      [7075a23] xfs: fix COW writeback race
+      [2ffa676] xfs: only update mount/resv fields on success in __xfs_ag=
+_resv_init
+      [74e502a] xfs: use per-AG reservations for the finobt
+      [3f5dd6c] xfs: extsize hints are not unlikely in xfs_bmap_btalloc
+
+Darrick J. Wong (2):
+      [2e6fca2] xfs: verify dirblocklog correctly
+      [ce24180] libxfs: sync up FSGETXATTR names and definitions with the=
+ kernel
+
+Eric Biggers (1):
+      [c4cd257] xfsprogs: Fix building xfsprogs on 32-bit platforms (agai=
+n)
+
+Eric Sandeen (2):
+      [3eafb26] xfs_repair: Fix uninit var in process_leaf_attr_level
+      [5956291] xfs_metadump: ignore attr leaf with 0 entries
+
+
+Code Diffstat:
+
+ db/metadump.c             |  3 ++-
+ include/builddefs.in      |  2 +-
+ include/xfs_mount.h       |  1 +
+ io/cowextsize.c           |  6 +++---
+ libxfs/xfs_ag_resv.c      | 70 +++++++++++++++++++++++++++++++++++++++++=
+++++++++++++++---------------
+ libxfs/xfs_attr.c         |  6 ------
+ libxfs/xfs_bmap.c         | 48 ++++++++++++++++++++++++++++++++++-------=
+-------
+ libxfs/xfs_bmap.h         |  6 +++++-
+ libxfs/xfs_dir2.c         |  2 +-
+ libxfs/xfs_dir2.h         |  2 +-
+ libxfs/xfs_fs.h           |  5 ++---
+ libxfs/xfs_ialloc_btree.c | 90 +++++++++++++++++++++++++++++++++++++++++=
+++++++++++++++++++++++++++++++++++++++++++++++---
+ libxfs/xfs_ialloc_btree.h |  3 +++
+ libxfs/xfs_sb.c           |  2 +-
+ repair/attr_repair.c      |  2 +-
+ 15 files changed, 197 insertions(+), 51 deletions(-)
+
+
+--wfCw80ELNqhrtiLw41mIRa4i2s4XpDQV6--
+
+--TGnCiWiOXgoqMKxgPfEDPrGFJ30vdph0V
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJYpSdVAAoJECCuFpLhPd7gWaoP/2PYViQV8xWCzTWAoR6bzw3j
+wBsbgkxOKsZ26W9u2GQr2jH+ejc4HfCylfPaXYmADCS4EfViLf/hy20ZnREdczAj
+Nva66y4heJcLEDRW06Fsy41xcG3HADr/NuzE+ruk1wo3CZhWZ6VrZtmWy73rYkHX
+aYDjLAuLKeih1efLW/sw/0e+dGmMT1jW+Gp4P00LsM5FZy+1eQhgChqolNkPlt+/
+Ikh3VSYsjywv3TBc71Bu85B8Y98F98AQ2n3AQVOguVXgINs1W0TNhU+webaiANaZ
+6UeBWNfN+nuzCG56MO2YSTM2O4bYfkMpPBTZ1wZbJxXyqr+8TJr6VyqqLGrDhjEq
+EFDjzTRUACJ3Bwqe97g/LFgeVT/kc1Ui7ADx5wjo5wKYquQXH9CaS3cZM6ubaZjw
+D6dIRSfc2h4fcZy8u3tTXtn+pOyzpqOPYr2Wj3/ecUyVFuxf3DCg6JiXRgQ75RLY
+HhQ5VuFUSxNAC/4I+ZjB2vEAOiL1g0GNjWz1vD7ZMgnkIxpIx+tJPl11hEVSz64E
+/PLQ6qKuwGpTMpIadckiS+yHOCL/DdfuBN0O1iHEdaNCHvxCwZ+9e6jiXTB2u+jd
+RjwPp4v1TRhsUEtuQagICUDsjowERThBMvjoMPHzfWp/8tD8Q/2P5eclyEeqDQ2m
+Ii9MJkcF67TtCS/BNMyy
+=Volo
+-----END PGP SIGNATURE-----
+
+--TGnCiWiOXgoqMKxgPfEDPrGFJ30vdph0V--
