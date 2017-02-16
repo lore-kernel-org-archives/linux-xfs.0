@@ -1,76 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34316 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:58836 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751338AbdBOWxZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Feb 2017 17:53:25 -0500
+        id S1751421AbdBPD3h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Feb 2017 22:29:37 -0500
 Subject: Re: [PATCH] xfs: do not unconditionally enable hasalign feature on V5
  filesystems
 References: <1487174254-9002-1-git-send-email-chandan@linux.vnet.ibm.com>
  <7dd96d6b-ccb5-105f-18aa-207e1c28c625@sandeen.net>
- <20b8b2b4-9586-1300-2591-f90c67a401e3@sandeen.net>
- <20170215171602.GF6813@birch.djwong.org>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <614e457a-fdf5-5741-a8cd-f161660acc9f@sandeen.net>
-Date: Wed, 15 Feb 2017 16:53:22 -0600
+Message-ID: <5443d317-838b-4d93-b513-15b9c18cb019@sandeen.net>
+Date: Wed, 15 Feb 2017 21:29:35 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170215171602.GF6813@birch.djwong.org>
+In-Reply-To: <7dd96d6b-ccb5-105f-18aa-207e1c28c625@sandeen.net>
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org
+To: Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-On 2/15/17 11:16 AM, Darrick J. Wong wrote:
-> On Wed, Feb 15, 2017 at 11:03:11AM -0600, Eric Sandeen wrote:
->> On 2/15/17 10:13 AM, Eric Sandeen wrote:
+On 2/15/17 10:13 AM, Eric Sandeen wrote:
+> Hm, the intent of the _haslign() function is to say that V5 must always
+> imply the "alignbit" - i.e. we don't want to grow an infinite feature
+> matrix, and by the time you get to V5 supers, there are many things which
+> cannot be turned on or off, such as this feature.
 
-...
+I'm rethinking this a bit; while my question may have uncovered
+another real bug, I think maybe your patch /is/ ok.
 
->> Sorry, I guess that means XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size)) is
->> zero; inode cluster size is 8192 in this case I think, and that is in fact
->> 0 filesystem blocks when computed with this macro.
->>
->> I need to think about this a little bit to convince myself that the inode
->> alignment bit really /should/ be off for a filesystem of this geometry, vs
->> changing the macro to recognize the case.
-> 
-> Why isn't that XFS_B_TO_FSBT instead a call to xfs_icluster_size_fsb()?
-> That function is used elsewhere to compute the number of fsblocks
-> backing an inode cluster, which seems like what we need here to figure
-> out whether inoalignmt makes sense w.r.t. the size of an inode cluster.
+While the intent /was/ to ensure that some features are not optional
+on V5 filesystems, the mkfs code itself might end up turning off inode
+alignment for sufficiently large filesystem blocks and sufficiently
+small inode sizes.  The reality is, for sufficiently large fs blocks,
+every new inode chunk allocation is aligned, because it is sub-block
+sized.  And so there is nothing uniquely "aligned" about any allocation.
 
-Hm, I think this needs some care.  There are several places that use
-XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size), see xfs_ialloc_cluster_alignment()
-for example, and the sparse inode check in mount code:
+i.e. on v4 superblocks, the right combination of inode size & fs block
+size will turn off the alignment feature, even if the user did not
+request it.
 
-        if (xfs_sb_version_hassparseinodes(&mp->m_sb) &&
-            mp->m_sb.sb_spino_align !=
-                        XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size)) {
-                xfs_warn(mp,
-        "Sparse inode block alignment (%u) must match cluster size (%llu).",
-                         mp->m_sb.sb_spino_align,
-                         XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size));
-                error = -EINVAL;
-                goto out_remove_uuid;
-        }
+So for v5 supers, it does seem odd to report the presence of the
+alignment feature even when the flag is not set in the superblock
+due to the geometry details.
 
-This probably fails in your usecase as well, no?
+This goes way back to:
+
+ 04a1e6c5b xfs: add CRC checks to the superblock
+
+which doesn't really explain why the xfs_sb_version_hasalign got
+changed.
+
+Anyway; it probably makes sense to do a targeted fix to resolve
+the issue you've run into, but we might want to take a broader
+look at when the alignment feature (and feature flag) gets set
+and reported, to make sure that it is all consistent and as expected.
 
 -Eric
-
-
-> --D
-> 
->>
->> -Eric
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
