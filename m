@@ -1,103 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:55923 "EHLO
-        out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754996AbdBQBUQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 20:20:16 -0500
-From: ebiederm@xmission.com (Eric W. Biederman)
-References: <1487008001.3125.41.camel@HansenPartnership.com>
-        <20170213194337.GA9852@infradead.org> <20170213213416.GA15349@dastard>
-        <20170214060809.GA21114@infradead.org>
-        <1487053651.3125.72.camel@HansenPartnership.com>
-        <1487053720.3125.73.camel@HansenPartnership.com>
-        <87lgt9mcyv.fsf@xmission.com>
-        <1487088593.3133.23.camel@HansenPartnership.com>
-        <87y3x8dw5q.fsf@xmission.com>
-        <1487259786.2944.10.camel@HansenPartnership.com>
-Date: Fri, 17 Feb 2017 14:15:38 +1300
-In-Reply-To: <1487259786.2944.10.camel@HansenPartnership.com> (James
-        Bottomley's message of "Thu, 16 Feb 2017 07:43:06 -0800")
-Message-ID: <87tw7tbosl.fsf@xmission.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:32837 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754386AbdBPMXF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 07:23:05 -0500
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1GCJO5n013343
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 07:23:04 -0500
+Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 28n6rcd7h2-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 07:23:03 -0500
+Received: from localhost
+        by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Thu, 16 Feb 2017 22:23:01 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+        by d23dlp03.au.ibm.com (Postfix) with ESMTP id C1B603578052
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 23:22:57 +1100 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+        by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v1GCMnEJ34930710
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 23:22:57 +1100
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+        by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v1GCMPTA017392
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 23:22:25 +1100
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: Re: [PATCH] xfs: do not unconditionally enable hasalign feature on V5 filesystems
+Date: Thu, 16 Feb 2017 17:52:06 +0530
+In-Reply-To: <5443d317-838b-4d93-b513-15b9c18cb019@sandeen.net>
+References: <1487174254-9002-1-git-send-email-chandan@linux.vnet.ibm.com> <7dd96d6b-ccb5-105f-18aa-207e1c28c625@sandeen.net> <5443d317-838b-4d93-b513-15b9c18cb019@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain
-Subject: Re: [PATCH 1/2] fs: add inode helpers for fsuid and fsgid
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <2023843.7By95Kpbey@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+On Wednesday, February 15, 2017 09:29:35 PM Eric Sandeen wrote:
+> On 2/15/17 10:13 AM, Eric Sandeen wrote:
+> > Hm, the intent of the _haslign() function is to say that V5 must always
+> > imply the "alignbit" - i.e. we don't want to grow an infinite feature
+> > matrix, and by the time you get to V5 supers, there are many things which
+> > cannot be turned on or off, such as this feature.
+> 
+> I'm rethinking this a bit; while my question may have uncovered
+> another real bug, I think maybe your patch /is/ ok.
+> 
+> While the intent /was/ to ensure that some features are not optional
+> on V5 filesystems, the mkfs code itself might end up turning off inode
+> alignment for sufficiently large filesystem blocks and sufficiently
+> small inode sizes.  The reality is, for sufficiently large fs blocks,
+> every new inode chunk allocation is aligned, because it is sub-block
+> sized.  And so there is nothing uniquely "aligned" about any allocation.
+> 
+> i.e. on v4 superblocks, the right combination of inode size & fs block
+> size will turn off the alignment feature, even if the user did not
+> request it.
+> 
+> So for v5 supers, it does seem odd to report the presence of the
+> alignment feature even when the flag is not set in the superblock
+> due to the geometry details.
+> 
+> This goes way back to:
+> 
+>  04a1e6c5b xfs: add CRC checks to the superblock
+> 
+> which doesn't really explain why the xfs_sb_version_hasalign got
+> changed.
+> 
+> Anyway; it probably makes sense to do a targeted fix to resolve
+> the issue you've run into, but we might want to take a broader
+> look at when the alignment feature (and feature flag) gets set
+> and reported, to make sure that it is all consistent and as expected.
+> 
 
-> On Wed, 2017-02-15 at 15:29 +1300, Eric W. Biederman wrote:
->> James Bottomley <James.Bottomley@HansenPartnership.com> writes:
->> 
->> > On Tue, 2017-02-14 at 20:46 +1300, Eric W. Biederman wrote:
->> > > James Bottomley <James.Bottomley@HansenPartnership.com> writes:
->> > > 
->> > > > Now that we have two different views of filesystem ids (the 
->> > > > filesystem view and the kernel view), we have a problem in that
->> > > > current_fsuid/fsgid() return the kernel view but are sometimes
->> > > > used 
->> > > > in filesystem code where the filesystem view shoud be used. 
->> > > >  This
->> > > > patch introduces helpers to produce the filesystem view of
->> > > > current 
->> > > > fsuid and fsgid.
->> > > 
->> > > If I am reading this right what we are seeing is that xfs
->> > > explicitly
->> > > opted out of type safety with predictable results.   Accidentally
->> > > confusing kuids and uids, which is potentially security issue.
->> > > 
->> > > All of that said where are you getting sb->s_user_ns !=
->> > > &init_user_ns
->> > > for an xfs filesystem?
->> 
->> James please answer this question:
->> 
->>  Where are you getting sb->s_user_ns != &init_user_ns for an xfs
->> filesystem?
->
-> I'm playing with a patch that allows host admin to set up an
-> unprivileged container for a guest to use.  One of the extensions is to
-> allow anything possessing capability(CAP_SYS_ADMIN) to make s_user_ns
-> follow mnt_ns->user_ns for new mounts (as an option).  The idea was to
-> see if root could set up an id shifted container with just the current
-> s_user_ns infrastructure.
->
->> None of this matters if sb->s_user_ns == &init_user_ns.
->> 
->> This is signification because only xfs keeps any in-core data 
->> structure in it's on-disk encoding.  So this problem is xfs specific.
->>    So understanding how you are getting xfs to have sb->s_user_ns !=
->> &init_user_ns is important for discussing which direction we go with
->> helper functions here.
->> 
->> xfs with sb->s_user_ns == &init_user_ns is perfectly fine and as such 
->> no fixes are needed.
->
-> So what you're saying is that unless the unprivileged container could
-> mount the filesystem itself (i.e. only those possessing the
-> FS_USERNS_MOUNT flag) the filesystems are going to be full of problems
-> like this.  I suppose whether it's worthwhile trying to fix them all
-> depends on whether the ability of the administrator to set up an id
-> shifted container is useful or not.
+Right. I will post the new patch (one that uses xfs_icluster_size_fsb()
+instead of XFS_B_TO_FSBT()) and then look at the rest of the alignment feature
+usages. Thanks for your guidance.
 
-Yes.  Setting s_user_ns and expecting everything to work with a
-review/test cycle of the filesystem to shake out any rough edges is
-likely to be problematic.  For historical reasons I actually expect xfs
-is especially bad in this regard.  So in practice I would definitely
-start a feature like that with another filesystem.
-
-I would be happy to have a FS_S_USER_NS flag to say all that is well,
-and the filesystem supports s_user_ns != &init_user_ns.  The bar is much
-lower if a trusted user with CAP_SYS_ADMIN is mounting the filesystem
-than if an unprivileged user is mounting the filesystem.  As we don't
-have to worry about specially crafted malicious filesystem images.
-
-In practice I think I would have passed in the user namespace via a file
-descriptor to mount rather than inheriting it from the mount namespace
-(more flexibility for roughly the same amount of code).
-
-Eric
+-- 
+chandan
 
