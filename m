@@ -1,199 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50331 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751294AbdBOPks (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Feb 2017 10:40:48 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 4/5] xfs: update ag iterator to support wait on new inodes
-Date: Wed, 15 Feb 2017 10:40:46 -0500
-Message-Id: <1487173247-5965-5-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
-References: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:36565 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932740AbdBPUVm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 15:21:42 -0500
+Date: Thu, 16 Feb 2017 12:21:41 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 6/7] nonblocking aio: xfs
+Message-ID: <20170216202141.GA18385@infradead.org>
+References: <20170214024603.9563-1-rgoldwyn@suse.de>
+ <20170214024603.9563-7-rgoldwyn@suse.de>
+ <20170214074326.GA20629@infradead.org>
+ <9859c328-263a-e4eb-22f6-20cdda821654@suse.de>
+ <be95fe38-ddbe-427e-df7f-7b54fe3b02a6@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <be95fe38-ddbe-427e-df7f-7b54fe3b02a6@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Eryu Guan <eguan@redhat.com>, Dave Chinner <david@fromorbit.com>
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-xfs@vger.kernel.org
 
-The AG inode iterator currently skips new inodes as such inodes are
-inserted into the inode radix tree before they are fully
-constructed. Certain contexts require the ability to wait on the
-construction of new inodes, however. The fs-wide dquot release from
-the quotaoff sequence is an example of this.
+On Wed, Feb 15, 2017 at 10:11:38AM -0600, Goldwyn Rodrigues wrote:
+> > I did not understand short writes. Where can I
+> > get a short write?
 
-Update the AG inode iterator to support the ability to wait on
-inodes flagged with XFS_INEW upon request. Create a new
-xfs_inode_ag_iterator_flags() interface and support a set of
-iteration flags to modify the iteration behavior. When the
-XFS_AGITER_INEW_WAIT flag is set, include XFS_INEW flags in the
-radix tree inode lookup and wait on them before the callback is
-executed.
+If you have a write request of N bytes, and you've already wrіtten
+M of them you return M from the *write system call instead of -EAGAIN.
+This is standard practice on e.g. sockets.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_icache.c | 53 +++++++++++++++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_icache.h |  8 ++++++++
- 2 files changed, 53 insertions(+), 8 deletions(-)
+> > 
+> > If I understand correctly, we do add the flag.
+> 
+> Replying to myself to correct myself.
+> 
+> On reading a bit more, I figured that we perform
+> xfs_file_iomap_begin->xfs_iomap_write_direct. At this point we have
+> already performed xfs_bmapi_read(). So, a check in xfs_file_iomap_begin
+> should be good enough. So, the flag required would be with iomap flags,
+> say IOMAP_NONBLOCKING. IOW, we don't need to go all the way to
+> xfs_bmap_write() and return when imap.br_startblock == HOLESTARTBLOCK.
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index bb55fd7..cb45a70 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -262,6 +262,22 @@ xfs_inode_clear_reclaim_tag(
- 	xfs_perag_clear_reclaim_tag(pag);
- }
- 
-+static void
-+xfs_inew_wait(
-+	struct xfs_inode	*ip)
-+{
-+	wait_queue_head_t *wq = bit_waitqueue(&ip->i_flags, __XFS_INEW_BIT);
-+	DEFINE_WAIT_BIT(wait, &ip->i_flags, __XFS_INEW_BIT);
-+
-+	do {
-+		prepare_to_wait(wq, &wait.wait, TASK_UNINTERRUPTIBLE);
-+		if (!xfs_iflags_test(ip, XFS_INEW))
-+			break;
-+		schedule();
-+	} while (true);
-+	finish_wait(wq, &wait.wait);
-+}
-+
- /*
-  * When we recycle a reclaimable inode, we need to re-initialise the VFS inode
-  * part of the structure. This is made more complex by the fact we store
-@@ -626,9 +642,11 @@ xfs_iget(
- 
- STATIC int
- xfs_inode_ag_walk_grab(
--	struct xfs_inode	*ip)
-+	struct xfs_inode	*ip,
-+	int			flags)
- {
- 	struct inode		*inode = VFS_I(ip);
-+	bool			newinos = !!(flags & XFS_AGITER_INEW_WAIT);
- 
- 	ASSERT(rcu_read_lock_held());
- 
-@@ -646,7 +664,8 @@ xfs_inode_ag_walk_grab(
- 		goto out_unlock_noent;
- 
- 	/* avoid new or reclaimable inodes. Leave for reclaim code to flush */
--	if (__xfs_iflags_test(ip, XFS_INEW | XFS_IRECLAIMABLE | XFS_IRECLAIM))
-+	if ((!newinos && __xfs_iflags_test(ip, XFS_INEW)) ||
-+	    __xfs_iflags_test(ip, XFS_IRECLAIMABLE | XFS_IRECLAIM))
- 		goto out_unlock_noent;
- 	spin_unlock(&ip->i_flags_lock);
- 
-@@ -674,7 +693,8 @@ xfs_inode_ag_walk(
- 					   void *args),
- 	int			flags,
- 	void			*args,
--	int			tag)
-+	int			tag,
-+	int			iter_flags)
- {
- 	uint32_t		first_index;
- 	int			last_error = 0;
-@@ -716,7 +736,7 @@ xfs_inode_ag_walk(
- 		for (i = 0; i < nr_found; i++) {
- 			struct xfs_inode *ip = batch[i];
- 
--			if (done || xfs_inode_ag_walk_grab(ip))
-+			if (done || xfs_inode_ag_walk_grab(ip, iter_flags))
- 				batch[i] = NULL;
- 
- 			/*
-@@ -744,6 +764,9 @@ xfs_inode_ag_walk(
- 		for (i = 0; i < nr_found; i++) {
- 			if (!batch[i])
- 				continue;
-+			if ((iter_flags & XFS_AGITER_INEW_WAIT) &&
-+			    xfs_iflags_test(batch[i], XFS_INEW))
-+				xfs_inew_wait(batch[i]);
- 			error = execute(batch[i], flags, args);
- 			IRELE(batch[i]);
- 			if (error == -EAGAIN) {
-@@ -823,12 +846,13 @@ xfs_cowblocks_worker(
- }
- 
- int
--xfs_inode_ag_iterator(
-+xfs_inode_ag_iterator_flags(
- 	struct xfs_mount	*mp,
- 	int			(*execute)(struct xfs_inode *ip, int flags,
- 					   void *args),
- 	int			flags,
--	void			*args)
-+	void			*args,
-+	int			iter_flags)
- {
- 	struct xfs_perag	*pag;
- 	int			error = 0;
-@@ -838,7 +862,8 @@ xfs_inode_ag_iterator(
- 	ag = 0;
- 	while ((pag = xfs_perag_get(mp, ag))) {
- 		ag = pag->pag_agno + 1;
--		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, -1);
-+		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, -1,
-+					  iter_flags);
- 		xfs_perag_put(pag);
- 		if (error) {
- 			last_error = error;
-@@ -850,6 +875,17 @@ xfs_inode_ag_iterator(
- }
- 
- int
-+xfs_inode_ag_iterator(
-+	struct xfs_mount	*mp,
-+	int			(*execute)(struct xfs_inode *ip, int flags,
-+					   void *args),
-+	int			flags,
-+	void			*args)
-+{
-+	return xfs_inode_ag_iterator_flags(mp, execute, flags, args, 0);
-+}
-+
-+int
- xfs_inode_ag_iterator_tag(
- 	struct xfs_mount	*mp,
- 	int			(*execute)(struct xfs_inode *ip, int flags,
-@@ -866,7 +902,8 @@ xfs_inode_ag_iterator_tag(
- 	ag = 0;
- 	while ((pag = xfs_perag_get_tag(mp, ag, tag))) {
- 		ag = pag->pag_agno + 1;
--		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, tag);
-+		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, tag,
-+					  0);
- 		xfs_perag_put(pag);
- 		if (error) {
- 			last_error = error;
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 8a7c849..9183f77 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -48,6 +48,11 @@ struct xfs_eofblocks {
- #define XFS_IGET_UNTRUSTED	0x2
- #define XFS_IGET_DONTCACHE	0x4
- 
-+/*
-+ * flags for AG inode iterator
-+ */
-+#define XFS_AGITER_INEW_WAIT	0x1	/* wait on new inodes */
-+
- int xfs_iget(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t ino,
- 	     uint flags, uint lock_flags, xfs_inode_t **ipp);
- 
-@@ -79,6 +84,9 @@ void xfs_cowblocks_worker(struct work_struct *);
- int xfs_inode_ag_iterator(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, int flags, void *args),
- 	int flags, void *args);
-+int xfs_inode_ag_iterator_flags(struct xfs_mount *mp,
-+	int (*execute)(struct xfs_inode *ip, int flags, void *args),
-+	int flags, void *args, int iter_flags);
- int xfs_inode_ag_iterator_tag(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, int flags, void *args),
- 	int flags, void *args, int tag);
--- 
-2.7.4
-
+Yes, except that reflinked files with shared extents will also need
+some additional special casing - for those xfs_bmapi_read can return
+an allocated extent, but we might still have to perform a block
+allocation for a write.
