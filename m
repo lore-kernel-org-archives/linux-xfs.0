@@ -1,84 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33728 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932277AbdBPPnK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 10:43:10 -0500
-Message-ID: <1487259786.2944.10.camel@HansenPartnership.com>
-Subject: Re: [PATCH 1/2] fs: add inode helpers for fsuid and fsgid
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date: Thu, 16 Feb 2017 07:43:06 -0800
-In-Reply-To: <87y3x8dw5q.fsf@xmission.com>
-References: <1487008001.3125.41.camel@HansenPartnership.com>
-         <20170213194337.GA9852@infradead.org> <20170213213416.GA15349@dastard>
-         <20170214060809.GA21114@infradead.org>
-         <1487053651.3125.72.camel@HansenPartnership.com>
-         <1487053720.3125.73.camel@HansenPartnership.com>
-         <87lgt9mcyv.fsf@xmission.com>
-         <1487088593.3133.23.camel@HansenPartnership.com>
-         <87y3x8dw5q.fsf@xmission.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from mail-vk0-f45.google.com ([209.85.213.45]:35621 "EHLO
+        mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750720AbdBPHMo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 02:12:44 -0500
+Received: by mail-vk0-f45.google.com with SMTP id x75so5228838vke.2
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2017 23:12:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CADWLRhoFdQUS-XjLj5R3JxjBnkXLN-TAjqCMBZDJWW36SOkWFw@mail.gmail.com>
+References: <CADWLRhrhPD9sPpXPFPx8BvsjwDc4nJFasTC8bRr+5rd3c48xxg@mail.gmail.com>
+ <20170215122745.nmwkmcqo23ecfr53@eorzea.usersys.redhat.com> <CADWLRhoFdQUS-XjLj5R3JxjBnkXLN-TAjqCMBZDJWW36SOkWFw@mail.gmail.com>
+From: Vaibhaw Pandey <vaibhaw@scalegrid.io>
+Date: Thu, 16 Feb 2017 12:42:43 +0530
+Message-ID: <CADWLRhpnnjCV=vigJPBAzJi8d5YLkgUXd=dn_iBakVic1UAPvw@mail.gmail.com>
+Subject: Re: XFS doesn't auto mount on boot when /etc/fstab entry has fs type
+ set to auto
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
+To: linux-xfs@vger.kernel.org
 
-On Wed, 2017-02-15 at 15:29 +1300, Eric W. Biederman wrote:
-> James Bottomley <James.Bottomley@HansenPartnership.com> writes:
-> 
-> > On Tue, 2017-02-14 at 20:46 +1300, Eric W. Biederman wrote:
-> > > James Bottomley <James.Bottomley@HansenPartnership.com> writes:
-> > > 
-> > > > Now that we have two different views of filesystem ids (the 
-> > > > filesystem view and the kernel view), we have a problem in that
-> > > > current_fsuid/fsgid() return the kernel view but are sometimes
-> > > > used 
-> > > > in filesystem code where the filesystem view shoud be used. 
-> > > >  This
-> > > > patch introduces helpers to produce the filesystem view of
-> > > > current 
-> > > > fsuid and fsgid.
-> > > 
-> > > If I am reading this right what we are seeing is that xfs
-> > > explicitly
-> > > opted out of type safety with predictable results.   Accidentally
-> > > confusing kuids and uids, which is potentially security issue.
-> > > 
-> > > All of that said where are you getting sb->s_user_ns !=
-> > > &init_user_ns
-> > > for an xfs filesystem?
-> 
-> James please answer this question:
-> 
->  Where are you getting sb->s_user_ns != &init_user_ns for an xfs
-> filesystem?
+Sorry to chime in again but I was wondering if it makes sense to just
+add "xfs" to /etc/filesystems during installation of the package
+itself? It is visible in the /proc/filesystems once it is installed
+anyways. I have posed this question to the xfs@oss.sgi.com mailing
+list as well.
 
-I'm playing with a patch that allows host admin to set up an
-unprivileged container for a guest to use.  One of the extensions is to
-allow anything possessing capability(CAP_SYS_ADMIN) to make s_user_ns
-follow mnt_ns->user_ns for new mounts (as an option).  The idea was to
-see if root could set up an id shifted container with just the current
-s_user_ns infrastructure.
+On Thu, Feb 16, 2017 at 8:37 AM, Vaibhaw Pandey <vaibhaw@scalegrid.io> wrote:
+> Carlos,
+>
+> Thanks a lot for replying. :)
+>
+> I should have read the mount man page more carefully: By adding "xfs"
+> to /etc/filesystems, the /etc/fstab entry even with an auto started
+> working fine.
+>
+> blkid always had an entry for the volume in question but that didn't
+> make a difference in this case:
+> $ sudo blkid
+> /dev/xvda1: LABEL="/" UUID="ebbf1f1c-fb71-40aa-93a3-056b455e5127" TYPE="ext4"
+> /dev/xvdb: UUID="bf4be26c-1c1c-40fc-b5cf-b9048dcc61b6" TYPE="xfs"
+>
+>
+>> Anyway, if you have the logs from your system when it tries to mount the
+>> partition maybe it give us some clue of what is happening.
+>
+> It was the complete lack of logs in dmesg or /var/log/messages about a
+> failure to mount is what confused me on why this was failing. A
+> successful mount logs but an unsuccessful one doesn't. I think I will
+> ask a mount expert for help on this.
+>
+> Thanks again,
+> Vaibhaw
+>
+> On Wed, Feb 15, 2017 at 5:57 PM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
+>> Hi,
+>>
+>>> LABEL=/     /           ext4    defaults,noatime  1   1
+>>> tmpfs       /dev/shm    tmpfs   defaults        0   0
+>>> devpts      /dev/pts    devpts  gid=5,mode=620  0   0
+>>> sysfs       /sys        sysfs   defaults        0   0
+>>> proc        /proc       proc    defaults        0   0
+>>> /dev/sdb /redis_data auto noatime,noexec,nodiratime 0 0
+>>> $ df -T /redis_data/
+>>> Filesystem     Type 1K-blocks  Used Available Use% Mounted on
+>>> /dev/xvdb      xfs    5232640 32940   5199700   1% /redis_data
+>>>
+>>> However if I change the /etc/fstab directive to:
+>>>
+>>> /dev/sdb /redis_data xfs noatime,noexec,nodiratime 0 0
+>>>
+>>> the auto mount starts working fine. Now this isn't a major problem
+>>> since the functionality ultimately works. But I would certainly like
+>>> to have the flexibility to avoid hard coding the fs type in the code
+>>> that generates these fstab entries.
+>>>
+>>
+>> I believe this is not a question for us, but for whatever software you are using
+>> to mount your partitions, systemd, unit, init, whatever. It also might be a
+>> problem with `mount` command, but if you say you can mount it normally after the
+>> system is live, it looks not to be the case.
+>>
+>> XFS doesn't control who and how it reads the entries in fstab.
+>>
+>> As stated in `mount` manpage:
+>>
+>> "If no -t option is given, or if the auto type is specified, mount will try  to
+>> guess  the  desired  type.   Mount  uses  the  blkid  library for guessing the
+>> filesystem type; if that does not turn up anything that looks familiar,  mount
+>> will  try  to  read  the  file  /etc/filesystems,  or, if that
+>> does not exist, /proc/filesystems.  All of the filesystem types listed there
+>> will be  tried, except  for  those  that  are labeled "nodev" (e.g. devpts, proc
+>> and nfs). If /etc/filesystems  ends  in  a  line  with  a  single  *,   mount
+>> will   read /proc/filesystems  afterwards.   While  trying,  all  filesystem
+>> types will be mounted with the mount option silent."
+>>
+>>
+>> Anyway, if you have the logs from your system when it tries to mount the
+>> partition maybe it give us some clue of what is happening.
+>>
+>> Cheers
+>>
+>>> Any pointers or help is much appreciated. :)
+>>>
+>>> Thanks,
+>>> Vaibhaw
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> --
+>> Carlos
+>
+>
+>
+> --
+> Member of Technical Staff | ScaleGrid.io | @_vaibhaw | LinkedIn | Google+
+> Read my latest blog post: I Get To Know the Redis Database: Iterating Over Keys
 
-> None of this matters if sb->s_user_ns == &init_user_ns.
-> 
-> This is signification because only xfs keeps any in-core data 
-> structure in it's on-disk encoding.  So this problem is xfs specific.
->    So understanding how you are getting xfs to have sb->s_user_ns !=
-> &init_user_ns is important for discussing which direction we go with
-> helper functions here.
-> 
-> xfs with sb->s_user_ns == &init_user_ns is perfectly fine and as such 
-> no fixes are needed.
 
-So what you're saying is that unless the unprivileged container could
-mount the filesystem itself (i.e. only those possessing the
-FS_USERNS_MOUNT flag) the filesystems are going to be full of problems
-like this.  I suppose whether it's worthwhile trying to fix them all
-depends on whether the ability of the administrator to set up an id
-shifted container is useful or not.
 
-James
-
+-- 
+Member of Technical Staff | ScaleGrid.io | @_vaibhaw | LinkedIn | Google+
+Read my latest blog post: I Get To Know the Redis Database: Iterating Over Keys
