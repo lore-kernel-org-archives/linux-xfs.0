@@ -1,140 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54550 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750905AbdBOQNR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Feb 2017 11:13:17 -0500
-Subject: Re: [PATCH] xfs: do not unconditionally enable hasalign feature on V5
- filesystems
-References: <1487174254-9002-1-git-send-email-chandan@linux.vnet.ibm.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7dd96d6b-ccb5-105f-18aa-207e1c28c625@sandeen.net>
-Date: Wed, 15 Feb 2017 10:13:15 -0600
+Received: from mail-vk0-f44.google.com ([209.85.213.44]:35771 "EHLO
+        mail-vk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752803AbdBPDHi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2017 22:07:38 -0500
+Received: by mail-vk0-f44.google.com with SMTP id x75so3037578vke.2
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2017 19:07:33 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1487174254-9002-1-git-send-email-chandan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170215122745.nmwkmcqo23ecfr53@eorzea.usersys.redhat.com>
+References: <CADWLRhrhPD9sPpXPFPx8BvsjwDc4nJFasTC8bRr+5rd3c48xxg@mail.gmail.com>
+ <20170215122745.nmwkmcqo23ecfr53@eorzea.usersys.redhat.com>
+From: Vaibhaw Pandey <vaibhaw@scalegrid.io>
+Date: Thu, 16 Feb 2017 08:37:21 +0530
+Message-ID: <CADWLRhoFdQUS-XjLj5R3JxjBnkXLN-TAjqCMBZDJWW36SOkWFw@mail.gmail.com>
+Subject: Re: XFS doesn't auto mount on boot when /etc/fstab entry has fs type
+ set to auto
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: linux-xfs@vger.kernel.org
 
-On 2/15/17 9:57 AM, Chandan Rajendra wrote:
-> On a ppc64 system, executing generic/256 test with 32k block size gives
-> the following call trace,
-> 
-> XFS: Assertion failed: args->maxlen > 0, file: /root/repos/linux/fs/xfs/libxfs/xfs_alloc.c, line: 2026
-> 
-> kernel BUG at /root/repos/linux/fs/xfs/xfs_message.c:113!
-> Oops: Exception in kernel mode, sig: 5 [#1]
-> SMP NR_CPUS=2048
-> DEBUG_PAGEALLOC
-> NUMA
-> pSeries
-> Modules linked in:
-> CPU: 2 PID: 19361 Comm: mkdir Not tainted 4.10.0-rc5 #58
-> task: c000000102606d80 task.stack: c0000001026b8000
-> NIP: c0000000004ef798 LR: c0000000004ef798 CTR: c00000000082b290
-> REGS: c0000001026bb090 TRAP: 0700   Not tainted  (4.10.0-rc5)
-> MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>
-> CR: 28004428  XER: 00000000
-> CFAR: c0000000004ef180 SOFTE: 1
-> GPR00: c0000000004ef798 c0000001026bb310 c000000001157300 ffffffffffffffea
-> GPR04: 000000000000000a c0000001026bb130 0000000000000000 ffffffffffffffc0
-> GPR08: 00000000000000d1 0000000000000021 00000000ffffffd1 c000000000dd4990
-> GPR12: 0000000022004444 c00000000fe00800 0000000020000000 0000000000000000
-> GPR16: 0000000000000000 0000000043a606fc 0000000043a76c08 0000000043a1b3d0
-> GPR20: 000001002a35cd60 c0000001026bbb80 0000000000000000 0000000000000001
-> GPR24: 0000000000000240 0000000000000004 c00000062dc55000 0000000000000000
-> GPR28: 0000000000000004 c00000062ecd9200 0000000000000000 c0000001026bb6c0
-> NIP [c0000000004ef798] .assfail+0x28/0x30
-> LR [c0000000004ef798] .assfail+0x28/0x30
-> Call Trace:
-> [c0000001026bb310] [c0000000004ef798] .assfail+0x28/0x30 (unreliable)
-> [c0000001026bb380] [c000000000455d74] .xfs_alloc_space_available+0x194/0x1b0
-> [c0000001026bb410] [c00000000045b914] .xfs_alloc_fix_freelist+0x144/0x480
-> [c0000001026bb580] [c00000000045c368] .xfs_alloc_vextent+0x698/0xa90
-> [c0000001026bb650] [c0000000004a6200] .xfs_ialloc_ag_alloc+0x170/0x820
-> [c0000001026bb7c0] [c0000000004a9098] .xfs_dialloc+0x158/0x320
-> [c0000001026bb8a0] [c0000000004e628c] .xfs_ialloc+0x7c/0x610
-> [c0000001026bb990] [c0000000004e8138] .xfs_dir_ialloc+0xa8/0x2f0
-> [c0000001026bbaa0] [c0000000004e8814] .xfs_create+0x494/0x790
-> [c0000001026bbbf0] [c0000000004e5ebc] .xfs_generic_create+0x2bc/0x410
-> [c0000001026bbce0] [c0000000002b4a34] .vfs_mkdir+0x154/0x230
-> [c0000001026bbd70] [c0000000002bc444] .SyS_mkdirat+0x94/0x120
-> [c0000001026bbe30] [c00000000000b760] system_call+0x38/0xfc
-> Instruction dump:
-> 4e800020 60000000 7c0802a6 7c862378 3c82ffca 7ca72b78 38841c18 7c651b78
-> 38600000 f8010010 f821ff91 4bfff94d <0fe00000> 60000000 7c0802a6 7c892378
-> 
-> The root cause of the problem is due to the fact that
-> xfs_sb_version_hasalign() returns true when we are working on a V5
-> filesystem. Due to this args.minalignslop (in xfs_ialloc_ag_alloc())
-> gets the unsigned equivalent of -1 assigned to it. This later causes
-> alloc_len in xfs_alloc_space_available() to have a value of 0. In such a
-> scenario when args.total is also 0, the assert statement
-> "ASSERT(args->maxlen > 0);" fails.
+Carlos,
 
-Hm, the intent of the _haslign() function is to say that V5 must always
-imply the "alignbit" - i.e. we don't want to grow an infinite feature
-matrix, and by the time you get to V5 supers, there are many things which
-cannot be turned on or off, such as this feature.
+Thanks a lot for replying. :)
 
-So what happens here... xfs_ialloc_ag_alloc does:
+I should have read the mount man page more carefully: By adding "xfs"
+to /etc/filesystems, the /etc/fstab entry even with an auto started
+working fine.
 
-args.minalignslop = xfs_ialloc_cluster_alignment(args.mp) - 1;
-
-so you're saying that cluster_alignment comes out as 0?
-
-That function is checking _hasalign:
-
-static inline int
-xfs_ialloc_cluster_alignment(
-        struct xfs_mount        *mp)
-{
-        if (xfs_sb_version_hasalign(&mp->m_sb) &&
-            mp->m_sb.sb_inoalignmt >=
-                        XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
-                return mp->m_sb.sb_inoalignmt;
-        return 1;
-}
-
-So are you saying that this function returns 0?  That would imply that
-sb_inoalignmt and m_inode_cluster_size are both zero, yes?  Is this
-what you see?
+blkid always had an entry for the volume in question but that didn't
+make a difference in this case:
+$ sudo blkid
+/dev/xvda1: LABEL="/" UUID="ebbf1f1c-fb71-40aa-93a3-056b455e5127" TYPE="ext4"
+/dev/xvdb: UUID="bf4be26c-1c1c-40fc-b5cf-b9048dcc61b6" TYPE="xfs"
 
 
--Eric
+> Anyway, if you have the logs from your system when it tries to mount the
+> partition maybe it give us some clue of what is happening.
 
-> This commit fixes the bug by checking for the existance of
-> XFS_SB_VERSION_ALIGNBIT bit in xfs_sb->sb_versionnum field even on V5
-> filesystems.
-> 
-> Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-> ---
-> PS: From what I could understand from other code paths,
-> xfs_alloc_arg->total must be set to the sum of space required by the
-> current code path and the space already reserved in the current
-> transaction. Please let me know if my understanding is
-> incorrect. Also, In the code path listed in the above call trace we
-> have xfs_alloc_arg->total set to 0 which probably isn't correct
-> either.
-> 
->  fs/xfs/libxfs/xfs_format.h | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 6b7579e..57a5264 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -346,8 +346,7 @@ static inline void xfs_sb_version_addquota(struct xfs_sb *sbp)
->  
->  static inline bool xfs_sb_version_hasalign(struct xfs_sb *sbp)
->  {
-> -	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
-> -		(sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT));
-> +	return (sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT);
->  }
->  
->  static inline bool xfs_sb_version_hasdalign(struct xfs_sb *sbp)
-> 
+It was the complete lack of logs in dmesg or /var/log/messages about a
+failure to mount is what confused me on why this was failing. A
+successful mount logs but an unsuccessful one doesn't. I think I will
+ask a mount expert for help on this.
+
+Thanks again,
+Vaibhaw
+
+On Wed, Feb 15, 2017 at 5:57 PM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
+> Hi,
+>
+>> LABEL=/     /           ext4    defaults,noatime  1   1
+>> tmpfs       /dev/shm    tmpfs   defaults        0   0
+>> devpts      /dev/pts    devpts  gid=5,mode=620  0   0
+>> sysfs       /sys        sysfs   defaults        0   0
+>> proc        /proc       proc    defaults        0   0
+>> /dev/sdb /redis_data auto noatime,noexec,nodiratime 0 0
+>> $ df -T /redis_data/
+>> Filesystem     Type 1K-blocks  Used Available Use% Mounted on
+>> /dev/xvdb      xfs    5232640 32940   5199700   1% /redis_data
+>>
+>> However if I change the /etc/fstab directive to:
+>>
+>> /dev/sdb /redis_data xfs noatime,noexec,nodiratime 0 0
+>>
+>> the auto mount starts working fine. Now this isn't a major problem
+>> since the functionality ultimately works. But I would certainly like
+>> to have the flexibility to avoid hard coding the fs type in the code
+>> that generates these fstab entries.
+>>
+>
+> I believe this is not a question for us, but for whatever software you are using
+> to mount your partitions, systemd, unit, init, whatever. It also might be a
+> problem with `mount` command, but if you say you can mount it normally after the
+> system is live, it looks not to be the case.
+>
+> XFS doesn't control who and how it reads the entries in fstab.
+>
+> As stated in `mount` manpage:
+>
+> "If no -t option is given, or if the auto type is specified, mount will try  to
+> guess  the  desired  type.   Mount  uses  the  blkid  library for guessing the
+> filesystem type; if that does not turn up anything that looks familiar,  mount
+> will  try  to  read  the  file  /etc/filesystems,  or, if that
+> does not exist, /proc/filesystems.  All of the filesystem types listed there
+> will be  tried, except  for  those  that  are labeled "nodev" (e.g. devpts, proc
+> and nfs). If /etc/filesystems  ends  in  a  line  with  a  single  *,   mount
+> will   read /proc/filesystems  afterwards.   While  trying,  all  filesystem
+> types will be mounted with the mount option silent."
+>
+>
+> Anyway, if you have the logs from your system when it tries to mount the
+> partition maybe it give us some clue of what is happening.
+>
+> Cheers
+>
+>> Any pointers or help is much appreciated. :)
+>>
+>> Thanks,
+>> Vaibhaw
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> --
+> Carlos
+
+
+
+-- 
+Member of Technical Staff | ScaleGrid.io | @_vaibhaw | LinkedIn | Google+
+Read my latest blog post: I Get To Know the Redis Database: Iterating Over Keys
