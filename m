@@ -1,124 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34216 "EHLO mx2.suse.de"
+Received: from sandeen.net ([63.231.237.45]:54694 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750943AbdBNCqm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Feb 2017 21:46:42 -0500
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 6/7] nonblocking aio: xfs
-Date: Mon, 13 Feb 2017 20:46:02 -0600
-Message-Id: <20170214024603.9563-7-rgoldwyn@suse.de>
-In-Reply-To: <20170214024603.9563-1-rgoldwyn@suse.de>
-References: <20170214024603.9563-1-rgoldwyn@suse.de>
+        id S1751732AbdBPCnK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Feb 2017 21:43:10 -0500
+Subject: Re: [PATCH] libxfs: sync up FSGETXATTR names and definitions with the
+ kernel
+References: <20170207010447.GJ3580@birch.djwong.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e5b709f9-42c3-430b-a62b-8600f5706a04@sandeen.net>
+Date: Wed, 15 Feb 2017 20:43:08 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170207010447.GJ3580@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.cz, Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On 2/6/17 7:04 PM, Darrick J. Wong wrote:
+> The rest of xfsprogs uses FS_XFLAG values for FSGETXATTR as defined in
+> the kernel, so we should do the same in io/cowextsize.c.  Also, move the
+> XFS_IOC_FSGETXATTR definition to the same part of xfs_fs.h as the
+> kernel.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-If IOCB_NONBLOCKING is set:
-	+ Check if writing beyond end of file, if yes return EAGAIN
-	- check if writing to a hole which does not have allocated
-	  file blocks.
-	- Check if i_rwsem is immediately lockable in xfs_rw_ilock()
+Beauty.
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- fs/xfs/xfs_file.c  | 36 ++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_inode.h |  2 ++
- 2 files changed, 34 insertions(+), 4 deletions(-)
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 9a5d64b..42f055f 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -51,14 +51,20 @@ static const struct vm_operations_struct xfs_file_vm_ops;
-  * Locking primitives for read and write IO paths to ensure we consistently use
-  * and order the inode->i_mutex, ip->i_lock and ip->i_iolock.
-  */
--static inline void
-+static inline int
- xfs_rw_ilock(
- 	struct xfs_inode	*ip,
- 	int			type)
- {
--	if (type & XFS_IOLOCK_EXCL)
--		inode_lock(VFS_I(ip));
-+	if (type & XFS_IOLOCK_EXCL) {
-+		if ((type & XFS_IOLOCK_NONBLOCKING) &&
-+				!inode_trylock(VFS_I(ip)))
-+			return -EAGAIN;
-+		else
-+			inode_lock(VFS_I(ip));
-+	}
- 	xfs_ilock(ip, type);
-+	return 0;
- }
- 
- static inline void
-@@ -418,6 +424,24 @@ xfs_file_aio_write_checks(
- 	if (error <= 0)
- 		return error;
- 
-+	if (iocb->ki_flags & IOCB_NONBLOCKING) {
-+		struct xfs_bmbt_irec	imap;
-+		xfs_fileoff_t           offset_fsb, end_fsb;
-+		int			nimaps = 1, ret = 0;
-+		end_fsb = XFS_B_TO_FSB(ip->i_mount, iocb->ki_pos + count);
-+		if (XFS_B_TO_FSB(ip->i_mount, i_size_read(inode)) < end_fsb)
-+			return -EAGAIN;
-+		/* Check if it is an unallocated hole */
-+		offset_fsb = XFS_B_TO_FSBT(ip->i_mount, iocb->ki_pos);
-+
-+		ret = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
-+				&nimaps, 0);
-+		if (ret)
-+			return ret;
-+		if (!nimaps || imap.br_startblock == HOLESTARTBLOCK)
-+			return -EAGAIN;
-+	}
-+
- 	error = xfs_break_layouts(inode, iolock, true);
- 	if (error)
- 		return error;
-@@ -555,11 +579,15 @@ xfs_file_dio_aio_write(
- 	    ((iocb->ki_pos + count) & mp->m_blockmask)) {
- 		unaligned_io = 1;
- 		iolock = XFS_IOLOCK_EXCL;
-+		if (iocb->ki_flags & IOCB_NONBLOCKING)
-+			iolock |= XFS_IOLOCK_NONBLOCKING;
- 	} else {
- 		iolock = XFS_IOLOCK_SHARED;
- 	}
- 
--	xfs_rw_ilock(ip, iolock);
-+	ret = xfs_rw_ilock(ip, iolock);
-+	if (ret)
-+		return ret;
- 
- 	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
- 	if (ret)
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 71e8a81..1a2d5eb 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -283,6 +283,7 @@ static inline void xfs_ifunlock(struct xfs_inode *ip)
- #define	XFS_ILOCK_SHARED	(1<<3)
- #define	XFS_MMAPLOCK_EXCL	(1<<4)
- #define	XFS_MMAPLOCK_SHARED	(1<<5)
-+#define	XFS_IOLOCK_NONBLOCKING	(1<<6)
- 
- #define XFS_LOCK_MASK		(XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED \
- 				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED \
-@@ -291,6 +292,7 @@ static inline void xfs_ifunlock(struct xfs_inode *ip)
- #define XFS_LOCK_FLAGS \
- 	{ XFS_IOLOCK_EXCL,	"IOLOCK_EXCL" }, \
- 	{ XFS_IOLOCK_SHARED,	"IOLOCK_SHARED" }, \
-+	{ XFS_IOLOCK_NONBLOCKING,	"IOLOCK_NONBLOCKING" }, \
- 	{ XFS_ILOCK_EXCL,	"ILOCK_EXCL" }, \
- 	{ XFS_ILOCK_SHARED,	"ILOCK_SHARED" }, \
- 	{ XFS_MMAPLOCK_EXCL,	"MMAPLOCK_EXCL" }, \
--- 
-2.10.2
-
+> ---
+>  io/cowextsize.c |    6 +++---
+>  libxfs/xfs_fs.h |    5 ++---
+>  2 files changed, 5 insertions(+), 6 deletions(-)
+> 
+> diff --git a/io/cowextsize.c b/io/cowextsize.c
+> index b4a1c2e..c4cd6de 100644
+> --- a/io/cowextsize.c
+> +++ b/io/cowextsize.c
+> @@ -50,7 +50,7 @@ get_cowextsize(const char *path, int fd)
+>  {
+>  	struct fsxattr	fsx;
+>  
+> -	if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+> +	if ((xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
+>  		printf("%s: XFS_IOC_FSGETXATTR %s: %s\n",
+>  			progname, path, strerror(errno));
+>  		return 0;
+> @@ -69,7 +69,7 @@ set_cowextsize(const char *path, int fd, long extsz)
+>  		perror("fstat64");
+>  		return 0;
+>  	}
+> -	if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
+> +	if ((xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
+>  		printf("%s: XFS_IOC_FSGETXATTR %s: %s\n",
+>  			progname, path, strerror(errno));
+>  		return 0;
+> @@ -83,7 +83,7 @@ set_cowextsize(const char *path, int fd, long extsz)
+>  	}
+>  	fsx.fsx_cowextsize = extsz;
+>  
+> -	if ((xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx)) < 0) {
+> +	if ((xfsctl(path, fd, FS_IOC_FSSETXATTR, &fsx)) < 0) {
+>  		printf("%s: XFS_IOC_FSSETXATTR %s: %s\n",
+>  			progname, path, strerror(errno));
+>  		return 0;
+> diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+> index b828853..157e280 100644
+> --- a/libxfs/xfs_fs.h
+> +++ b/libxfs/xfs_fs.h
+> @@ -56,9 +56,6 @@ struct dioattr {
+>  #define	XFS_XFLAG_FILESTREAM	FS_XFLAG_FILESTREAM
+>  #define	XFS_XFLAG_HASATTR	FS_XFLAG_HASATTR
+>  
+> -#define XFS_IOC_FSGETXATTR	FS_IOC_FSGETXATTR
+> -#define XFS_IOC_FSSETXATTR	FS_IOC_FSSETXATTR
+> -
+>  /*
+>   * Structure for XFS_IOC_GETBMAP.
+>   * On input, fill in bmv_offset and bmv_length of the first structure
+> @@ -508,6 +505,8 @@ typedef struct xfs_swapext
+>  #define XFS_IOC_ALLOCSP		_IOW ('X', 10, struct xfs_flock64)
+>  #define XFS_IOC_FREESP		_IOW ('X', 11, struct xfs_flock64)
+>  #define XFS_IOC_DIOINFO		_IOR ('X', 30, struct dioattr)
+> +#define XFS_IOC_FSGETXATTR	FS_IOC_FSGETXATTR
+> +#define XFS_IOC_FSSETXATTR	FS_IOC_FSSETXATTR
+>  #define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
+>  #define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
+>  #define XFS_IOC_GETBMAP		_IOWR('X', 38, struct getbmap)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
