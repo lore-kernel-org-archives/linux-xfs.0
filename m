@@ -1,84 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36028 "EHLO mx1.redhat.com"
+Received: from mga14.intel.com ([192.55.52.115]:28534 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752649AbdBPI5q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Feb 2017 03:57:46 -0500
-Date: Thu, 16 Feb 2017 09:57:44 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: XFS doesn't auto mount on boot when /etc/fstab entry has fs type
- set to auto
-Message-ID: <20170216085744.ahpphwbqh6o3rp3o@eorzea.usersys.redhat.com>
-References: <CADWLRhrhPD9sPpXPFPx8BvsjwDc4nJFasTC8bRr+5rd3c48xxg@mail.gmail.com>
- <20170215122745.nmwkmcqo23ecfr53@eorzea.usersys.redhat.com>
- <CADWLRhoFdQUS-XjLj5R3JxjBnkXLN-TAjqCMBZDJWW36SOkWFw@mail.gmail.com>
- <CADWLRhpnnjCV=vigJPBAzJi8d5YLkgUXd=dn_iBakVic1UAPvw@mail.gmail.com>
+        id S932421AbdBPQ1x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Feb 2017 11:27:53 -0500
+Subject: Re: [PATCH] mm,x86: fix SMP x86 32bit build for native_pud_clear()
+References: <148719066814.31111.3239231168815337012.stgit@djiang5-desk3.ch.intel.com>
+ <68216ac2-e194-30fa-9dcb-2020e8953bf5@linux.intel.com>
+From: Dave Jiang <dave.jiang@intel.com>
+Message-ID: <7280edbc-ba2b-2b72-680a-9408a8e764b9@intel.com>
+Date: Thu, 16 Feb 2017 09:27:52 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CADWLRhpnnjCV=vigJPBAzJi8d5YLkgUXd=dn_iBakVic1UAPvw@mail.gmail.com>
+In-Reply-To: <68216ac2-e194-30fa-9dcb-2020e8953bf5@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vaibhaw Pandey <vaibhaw@scalegrid.io>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Hansen <dave.hansen@linux.intel.com>, akpm@linux-foundation.org
+Cc: keescook@google.com, mawilcox@microsoft.com, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, kirill.shutemov@linux.intel.com, jack@suse.com, dan.j.williams@intel.com, linux-ext4@vger.kernel.org, ross.zwisler@linux.intel.com, vbabka@suse.cz, alexander.kapshuk@gmail.com
 
-Hi,
 
-On Thu, Feb 16, 2017 at 12:42:43PM +0530, Vaibhaw Pandey wrote:
-> Sorry to chime in again but I was wondering if it makes sense to just
-> add "xfs" to /etc/filesystems during installation of the package
-> itself? It is visible in the /proc/filesystems once it is installed
-> anyways. I have posed this question to the xfs@oss.sgi.com mailing
-> list as well.
->
-Just FYI, xfs@oss.sgi.org is no more, we have moved to vger, so, no one will
-actually reply you there, always use linux-xfs@vger.kernel.org
 
-Regarding your question, that is still a question not for XFS, /etc/filesystems
-file doesn't belong to any xfs package, so we can't touch it, setting
-/etc/filesystems is responsibility for another software, which, I *think* is
-distro dependent.
- 
-Maybe it don't take too long by now, once many distros started to use XFS as
-their default FS, but that might be a good idea to open a bug against the distro
-you are using.
+On 02/16/2017 08:42 AM, Dave Hansen wrote:
+> On 02/15/2017 12:31 PM, Dave Jiang wrote:
+>> The fix introduced by e4decc90 to fix the UP case for 32bit x86, however
+>> that broke the SMP case that was working previously. Add ifdef so the dummy
+>> function only show up for 32bit UP case only.
+> 
+> Could you elaborate a bit on how it broke things?
 
-> On Thu, Feb 16, 2017 at 8:37 AM, Vaibhaw Pandey <vaibhaw@scalegrid.io> wrote:
-> > Carlos,
-> >
-> > Thanks a lot for replying. :)
-> >
-> > I should have read the mount man page more carefully: By adding "xfs"
-> > to /etc/filesystems, the /etc/fstab entry even with an auto started
-> > working fine.
-> >
+So originally 0-day build found that commit a10a1701 (mm, x86: add
+support for PUD-sized transparent hugepages) is breaking 32bit x86 UP
+config because native_pud_clear() was missing to satisfy
+arch/x86/include/asm/pgtable.h. I added a dummy function to satisfy that
+with commit e4decc90 (mm,x86: native_pud_clear missing on i386 build).
+However in the process of doing that, I broke the 32bit x86 SMP config
+that was working before.
 
-Particularly I have never thought about adding something there because I always
-use 'xfs' in fstab.
-
-> > blkid always had an entry for the volume in question but that didn't
-> > make a difference in this case:
-> > $ sudo blkid
-> > /dev/xvda1: LABEL="/" UUID="ebbf1f1c-fb71-40aa-93a3-056b455e5127" TYPE="ext4"
-> > /dev/xvdb: UUID="bf4be26c-1c1c-40fc-b5cf-b9048dcc61b6" TYPE="xfs"
-> >
-> >
-> >> Anyway, if you have the logs from your system when it tries to mount the
-> >> partition maybe it give us some clue of what is happening.
-> >
-> > It was the complete lack of logs in dmesg or /var/log/messages about a
-> > failure to mount is what confused me on why this was failing.
-
-These logs won't appear in dmesg, this is the kernel log, what you should look
-for is for `mount` logs. You are using systemd I suspect, if I am correct, you
-will see such logs using `journalctl` command.
-
-> > successful mount logs but an unsuccessful one doesn't. I think I will
-> > ask a mount expert for help on this.
-> >
-
-Hope it have helped,
-
-Cheers
--- 
-Carlos
+> 
+>> Fix: e4decc90 mm,x86: native_pud_clear missing on i386 build
+> 
+> Which tree is that in, btw?
+> 
+linux-next-20170214 I believe
