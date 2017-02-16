@@ -1,113 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59014 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752571AbdBUOfK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:35:10 -0500
-Date: Tue, 21 Feb 2017 09:35:09 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/8] xfs: provide a query_range function for freespace
- btrees
-Message-ID: <20170221143509.GC3207@bfoster.bfoster>
-References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
- <148738065667.29384.10238083345504563010.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <148738065667.29384.10238083345504563010.stgit@birch.djwong.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33728 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932277AbdBPPnK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 10:43:10 -0500
+Message-ID: <1487259786.2944.10.camel@HansenPartnership.com>
+Subject: Re: [PATCH 1/2] fs: add inode helpers for fsuid and fsgid
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Thu, 16 Feb 2017 07:43:06 -0800
+In-Reply-To: <87y3x8dw5q.fsf@xmission.com>
+References: <1487008001.3125.41.camel@HansenPartnership.com>
+         <20170213194337.GA9852@infradead.org> <20170213213416.GA15349@dastard>
+         <20170214060809.GA21114@infradead.org>
+         <1487053651.3125.72.camel@HansenPartnership.com>
+         <1487053720.3125.73.camel@HansenPartnership.com>
+         <87lgt9mcyv.fsf@xmission.com>
+         <1487088593.3133.23.camel@HansenPartnership.com>
+         <87y3x8dw5q.fsf@xmission.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
 
-On Fri, Feb 17, 2017 at 05:17:36PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, 2017-02-15 at 15:29 +1300, Eric W. Biederman wrote:
+> James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 > 
-> Implement a query_range function for the bnobt and cntbt.  This will
-> be used for getfsmap fallback if there is no rmapbt and by the online
-> scrub and repair code.
+> > On Tue, 2017-02-14 at 20:46 +1300, Eric W. Biederman wrote:
+> > > James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+> > > 
+> > > > Now that we have two different views of filesystem ids (the 
+> > > > filesystem view and the kernel view), we have a problem in that
+> > > > current_fsuid/fsgid() return the kernel view but are sometimes
+> > > > used 
+> > > > in filesystem code where the filesystem view shoud be used. 
+> > > >  This
+> > > > patch introduces helpers to produce the filesystem view of
+> > > > current 
+> > > > fsuid and fsgid.
+> > > 
+> > > If I am reading this right what we are seeing is that xfs
+> > > explicitly
+> > > opted out of type safety with predictable results.   Accidentally
+> > > confusing kuids and uids, which is potentially security issue.
+> > > 
+> > > All of that said where are you getting sb->s_user_ns !=
+> > > &init_user_ns
+> > > for an xfs filesystem?
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> James please answer this question:
+> 
+>  Where are you getting sb->s_user_ns != &init_user_ns for an xfs
+> filesystem?
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+I'm playing with a patch that allows host admin to set up an
+unprivileged container for a guest to use.  One of the extensions is to
+allow anything possessing capability(CAP_SYS_ADMIN) to make s_user_ns
+follow mnt_ns->user_ns for new mounts (as an option).  The idea was to
+see if root could set up an id shifted container with just the current
+s_user_ns infrastructure.
 
->  fs/xfs/libxfs/xfs_alloc.c |   42 ++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_alloc.h |   10 ++++++++++
->  2 files changed, 52 insertions(+)
+> None of this matters if sb->s_user_ns == &init_user_ns.
 > 
+> This is signification because only xfs keeps any in-core data 
+> structure in it's on-disk encoding.  So this problem is xfs specific.
+>    So understanding how you are getting xfs to have sb->s_user_ns !=
+> &init_user_ns is important for discussing which direction we go with
+> helper functions here.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 9f06a21..526df17 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2875,3 +2875,45 @@ xfs_free_extent(
->  	xfs_trans_brelse(tp, agbp);
->  	return error;
->  }
-> +
-> +struct xfs_alloc_query_range_info {
-> +	xfs_alloc_query_range_fn	fn;
-> +	void				*priv;
-> +};
-> +
-> +/* Format btree record and pass to our callback. */
-> +STATIC int
-> +xfs_alloc_query_range_helper(
-> +	struct xfs_btree_cur		*cur,
-> +	union xfs_btree_rec		*rec,
-> +	void				*priv)
-> +{
-> +	struct xfs_alloc_query_range_info	*query = priv;
-> +	struct xfs_alloc_rec_incore		irec;
-> +
-> +	irec.ar_startblock = be32_to_cpu(rec->alloc.ar_startblock);
-> +	irec.ar_blockcount = be32_to_cpu(rec->alloc.ar_blockcount);
-> +	return query->fn(cur, &irec, query->priv);
-> +}
-> +
-> +/* Find all free space within a given range of blocks. */
-> +int
-> +xfs_alloc_query_range(
-> +	struct xfs_btree_cur			*cur,
-> +	struct xfs_alloc_rec_incore		*low_rec,
-> +	struct xfs_alloc_rec_incore		*high_rec,
-> +	xfs_alloc_query_range_fn		fn,
-> +	void					*priv)
-> +{
-> +	union xfs_btree_irec			low_brec;
-> +	union xfs_btree_irec			high_brec;
-> +	struct xfs_alloc_query_range_info	query;
-> +
-> +	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
-> +	low_brec.a = *low_rec;
-> +	high_brec.a = *high_rec;
-> +	query.priv = priv;
-> +	query.fn = fn;
-> +	return xfs_btree_query_range(cur, &low_brec, &high_brec,
-> +			xfs_alloc_query_range_helper, &query);
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 1d0f48a..f534998 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -223,4 +223,14 @@ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
->  
->  xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
->  
-> +typedef int (*xfs_alloc_query_range_fn)(
-> +	struct xfs_btree_cur		*cur,
-> +	struct xfs_alloc_rec_incore	*rec,
-> +	void				*priv);
-> +
-> +int xfs_alloc_query_range(struct xfs_btree_cur *cur,
-> +		struct xfs_alloc_rec_incore *low_rec,
-> +		struct xfs_alloc_rec_incore *high_rec,
-> +		xfs_alloc_query_range_fn fn, void *priv);
-> +
->  #endif	/* __XFS_ALLOC_H__ */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> xfs with sb->s_user_ns == &init_user_ns is perfectly fine and as such 
+> no fixes are needed.
+
+So what you're saying is that unless the unprivileged container could
+mount the filesystem itself (i.e. only those possessing the
+FS_USERNS_MOUNT flag) the filesystems are going to be full of problems
+like this.  I suppose whether it's worthwhile trying to fix them all
+depends on whether the ability of the administrator to set up an id
+shifted container is useful or not.
+
+James
+
