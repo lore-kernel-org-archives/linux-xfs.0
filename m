@@ -1,85 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52452 "EHLO mx1.redhat.com"
+Received: from mga04.intel.com ([192.55.52.120]:27077 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752574AbdBUNq1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Feb 2017 08:46:27 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: clear delalloc and cache on buffered write failure
-Date: Tue, 21 Feb 2017 08:46:27 -0500
-Message-Id: <1487684787-5004-1-git-send-email-bfoster@redhat.com>
+        id S932224AbdBPPmy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Feb 2017 10:42:54 -0500
+Subject: Re: [PATCH] mm,x86: fix SMP x86 32bit build for native_pud_clear()
+References: <148719066814.31111.3239231168815337012.stgit@djiang5-desk3.ch.intel.com>
+From: Dave Hansen <dave.hansen@linux.intel.com>
+Message-ID: <68216ac2-e194-30fa-9dcb-2020e8953bf5@linux.intel.com>
+Date: Thu, 16 Feb 2017 07:42:34 -0800
+MIME-Version: 1.0
+In-Reply-To: <148719066814.31111.3239231168815337012.stgit@djiang5-desk3.ch.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Michal Hocko <mhocko@kernel.org>
+To: Dave Jiang <dave.jiang@intel.com>, akpm@linux-foundation.org
+Cc: keescook@google.com, mawilcox@microsoft.com, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, kirill.shutemov@linux.intel.com, jack@suse.com, dan.j.williams@intel.com, linux-ext4@vger.kernel.org, ross.zwisler@linux.intel.com, vbabka@suse.cz, alexander.kapshuk@gmail.com
 
-commit fa7f138ac4c70dc00519c124cf7cd4862a0a5b0e upstream.
+On 02/15/2017 12:31 PM, Dave Jiang wrote:
+> The fix introduced by e4decc90 to fix the UP case for 32bit x86, however
+> that broke the SMP case that was working previously. Add ifdef so the dummy
+> function only show up for 32bit UP case only.
 
-The buffered write failure handling code in
-xfs_file_iomap_end_delalloc() has a couple minor problems. First, if
-written == 0, start_fsb is not rounded down and it fails to kill off a
-delalloc block if the start offset is block unaligned. This results in a
-lingering delalloc block and broken delalloc block accounting detected
-at unmount time. Fix this by rounding down start_fsb in the unlikely
-event that written == 0.
+Could you elaborate a bit on how it broke things?
 
-Second, it is possible for a failed overwrite of a delalloc extent to
-leave dirty pagecache around over a hole in the file. This is because is
-possible to hit ->iomap_end() on write failure before the iomap code has
-attempted to allocate pagecache, and thus has no need to clean it up. If
-the targeted delalloc extent was successfully written by a previous
-write, however, then it does still have dirty pages when ->iomap_end()
-punches out the underlying blocks. This ultimately results in writeback
-over a hole. To fix this problem, unconditionally punch out the
-pagecache from XFS before the associated delalloc range.
+> Fix: e4decc90 mm,x86: native_pud_clear missing on i386 build
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-CC: stable@vger.kernel.org # v4.8+
----
-
-This is for stable... it fixes a latent regression exposed by
-d1908f52557b ("fs: break out of iomap_file_buffered_write on fatal
-signals"), which is to be backported to 4.8+ stable kernels.
-
-Brian
-
- fs/xfs/xfs_iomap.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 2af0dda..fe3562b 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1064,7 +1064,15 @@ xfs_file_iomap_end_delalloc(
- 	xfs_fileoff_t		end_fsb;
- 	int			error = 0;
- 
--	start_fsb = XFS_B_TO_FSB(mp, offset + written);
-+	/*
-+	 * start_fsb refers to the first unused block after a short write. If
-+	 * nothing was written, round offset down to point at the first block in
-+	 * the range.
-+	 */
-+	if (unlikely(!written))
-+		start_fsb = XFS_B_TO_FSBT(mp, offset);
-+	else
-+		start_fsb = XFS_B_TO_FSB(mp, offset + written);
- 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
- 
- 	/*
-@@ -1076,6 +1084,9 @@ xfs_file_iomap_end_delalloc(
- 	 * blocks in the range, they are ours.
- 	 */
- 	if (start_fsb < end_fsb) {
-+		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
-+					 XFS_FSB_TO_B(mp, end_fsb) - 1);
-+
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
- 					       end_fsb - start_fsb);
--- 
-2.7.4
-
+Which tree is that in, btw?
