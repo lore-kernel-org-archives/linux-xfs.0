@@ -1,85 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:32837 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754386AbdBPMXF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 07:23:05 -0500
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1GCJO5n013343
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 07:23:04 -0500
-Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 28n6rcd7h2-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 07:23:03 -0500
-Received: from localhost
-        by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Thu, 16 Feb 2017 22:23:01 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-        by d23dlp03.au.ibm.com (Postfix) with ESMTP id C1B603578052
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 23:22:57 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-        by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v1GCMnEJ34930710
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 23:22:57 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-        by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v1GCMPTA017392
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 23:22:25 +1100
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: Re: [PATCH] xfs: do not unconditionally enable hasalign feature on V5 filesystems
-Date: Thu, 16 Feb 2017 17:52:06 +0530
-In-Reply-To: <5443d317-838b-4d93-b513-15b9c18cb019@sandeen.net>
-References: <1487174254-9002-1-git-send-email-chandan@linux.vnet.ibm.com> <7dd96d6b-ccb5-105f-18aa-207e1c28c625@sandeen.net> <5443d317-838b-4d93-b513-15b9c18cb019@sandeen.net>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:38303 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750824AbdBQX6y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 18:58:54 -0500
+Date: Sat, 18 Feb 2017 10:52:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Bug 192981] New: page allocation stalls
+Message-ID: <20170217235245.GE15349@dastard>
+References: <bug-192981-27@https.bugzilla.kernel.org/>
+ <20170123135111.13ac3e47110de10a4bd503ef@linux-foundation.org>
+ <8f450abd-4e05-92d3-2533-72b05fea2012@beget.ru>
+ <20170215160538.GA62565@bfoster.bfoster>
+ <a055abbf-a471-d111-9491-dc5b00208228@beget.ru>
+ <20170215180859.GB62565@bfoster.bfoster>
+ <07ee50bc-8220-dda8-07f9-369758603df9@beget.ru>
+ <20170216172034.GC11750@bfoster.bfoster>
+ <20170216222129.GB15349@dastard>
+ <20170217190500.GC20429@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <2023843.7By95Kpbey@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170217190500.GC20429@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Alexander Polakov <apolyakov@beget.ru>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org
 
-On Wednesday, February 15, 2017 09:29:35 PM Eric Sandeen wrote:
-> On 2/15/17 10:13 AM, Eric Sandeen wrote:
-> > Hm, the intent of the _haslign() function is to say that V5 must always
-> > imply the "alignbit" - i.e. we don't want to grow an infinite feature
-> > matrix, and by the time you get to V5 supers, there are many things which
-> > cannot be turned on or off, such as this feature.
+On Fri, Feb 17, 2017 at 02:05:00PM -0500, Brian Foster wrote:
+> On Fri, Feb 17, 2017 at 09:21:29AM +1100, Dave Chinner wrote:
+> > On Thu, Feb 16, 2017 at 12:20:34PM -0500, Brian Foster wrote:
+> > > A couple things that might
+> > > help avoid this situation are more aggressive
+> > > /proc/sys/fs/xfs/xfssyncd_centisecs tuning or perhaps considering a
+> > > smaller log size would cause more tail pushing pressure on the AIL
+> > > instead of pressure originating from memory reclaim. The latter might
+> > > not be so convenient if this is an already populated backup server,
+> > > though.
+> > > 
+> > > Beyond that, there's Chris' patch, another patch that Dave proposed[2],
+> > > and obviously your hack here to defer inode reclaim entirely to the
+> > > workqueue (I've CC'd Dave since it sounds like he might have been
+> > > working on this further..).
+> > 
+> > I was working on a more solid set of changes, but every time I
+> > updated the kernel tree I used as my base for development, the
+> > baseline kernel reclaim behaviour would change. I'd isolate the
+> > behavioural change, upgrade to the kernel that contained the fix,
+> > and then trip over some new whacky behaviour that made no sense. I
+> > spent more time in this loop than actually trying to fix the XFS
+> > problem - chasing a moving target makes finding the root cause of
+> > the reclaim stalls just about impossible. 
+> > 
+> > Brian, I can send you what I have but it's really just a bag of
+> > bolts at this point because I was never able to validate that any of
+> > the patches made a measurable improvement to reclaim behaviour under
+> > any workload I ran.....
+> > 
 > 
-> I'm rethinking this a bit; while my question may have uncovered
-> another real bug, I think maybe your patch /is/ ok.
-> 
-> While the intent /was/ to ensure that some features are not optional
-> on V5 filesystems, the mkfs code itself might end up turning off inode
-> alignment for sufficiently large filesystem blocks and sufficiently
-> small inode sizes.  The reality is, for sufficiently large fs blocks,
-> every new inode chunk allocation is aligned, because it is sub-block
-> sized.  And so there is nothing uniquely "aligned" about any allocation.
-> 
-> i.e. on v4 superblocks, the right combination of inode size & fs block
-> size will turn off the alignment feature, even if the user did not
-> request it.
-> 
-> So for v5 supers, it does seem odd to report the presence of the
-> alignment feature even when the flag is not set in the superblock
-> due to the geometry details.
-> 
-> This goes way back to:
-> 
->  04a1e6c5b xfs: add CRC checks to the superblock
-> 
-> which doesn't really explain why the xfs_sb_version_hasalign got
-> changed.
-> 
-> Anyway; it probably makes sense to do a targeted fix to resolve
-> the issue you've run into, but we might want to take a broader
-> look at when the alignment feature (and feature flag) gets set
-> and reported, to make sure that it is all consistent and as expected.
-> 
+> Sure, I'm curious to see what direction this goes in. I would think
+> anything that provides a backoff to other shrinkers would help this
+> particular workload where many different filesystems are active. FWIW,
+> I'd probably also need more details about what workloads you're testing
+> and how you're measuring improvements and whatnot to try and take any of
+> that stuff any farther (particularly how you verify the problems with
+> dropping blocking behavior entirely), though..
 
-Right. I will post the new patch (one that uses xfs_icluster_size_fsb()
-instead of XFS_B_TO_FSBT()) and then look at the rest of the alignment feature
-usages. Thanks for your guidance.
+Ok, I'll send you a copy...
+
+> > FWIW, the major problem with removing the blocking in inode reclaim
+> > is the ease with which you can then trigger the OOM killer from
+> > userspace.  The high level memory reclaim algorithms break down when
+> > there are hundreds of direct reclaim processes hammering on reclaim
+> > and reclaim stops making progress because it's skipping dirty
+> > objects.  Direct reclaim ends up insufficiently throttled, so rather
+> > than blocking it winds up reclaim priority and then declares OOM
+> > because reclaim runs out of retries before sufficient memory has
+> > been freed.
+> > 
+> 
+> I'd need to spend some time in the shrinker code to grok this, but if
+> there's such a priority, would switching blocking behavior based on
+> priority provide a way to mitigate this problem from within the
+> shrinker? For example, provide non-blocking behavior on the lowest
+> priority to kick off flushing and allow progress into other shrinkers,
+> otherwise we flush and wait if the priority is elevated..?
+
+I tried that - exporting the priority to the shrink_control and so
+on. The system either behaved the same (i.e. stalled on reclaim) or
+randomly fell into a screaming pile of OOM killer rage-death. There
+was no in-between reliable state...
+
+> IOW, it sounds like the problem in this case is that we subject the rest
+> of the allocation infrastructure to delays in configurations where we
+> are one of N potential shrinkers with reclaimable objects, because we
+> have to deal with this situation where our one shrinker actually is the
+> main/primary choke point for multiple allocator -> direct reclaimers.
+
+Yup. The mm reclaim design sucks ass because if we use purely
+non-blocking reclaim techniques in the shrinkers we have no way of
+throttling allocation demand to the rate at which shrinkers can
+reclaim objects and we end up with gross cache imbalances under
+memory pressure.
+
+> I'm wondering if some kind of severity parameter managed by the shrinker
+> infra would help us distinguish between those scenarios (even if it were
+> a dumb LOW/HIGH priority param, where LOW allows for one pass through
+> all of the shrinkers to kick off I/O and whatnot before any one of them
+> should actually block on locks or I/O). Then again, I'm just handwaving
+> as I'm only just familiarizing with the context and problem.
+
+Tried that, too. :( Several different ways over the past few years.
+Remember that we also have the non-blocking background reclaim
+thread - even triggering that immediately on reclaim doesn't
+prevent stalls, and my last patchset specifically excluded it
+from concurrency control so it always ran immediately on reclaim
+
+Hmmm - I just had a thought.
+
+Perhaps all we need to do is remove direct reclaim from the
+shrinker. i.e. make the background reclaimer run on a ticket based
+queuing system similar to the log reservations...
+
+For non-blocking reclaim (i.e.  kswapd), we just queue the ticket
+and return immediately, saying we've done the scan. 
+
+For blocking reclaim, we take a ticket with the blocking scan count
+on it and wait in the wakeup queue.  As background reclaim runs, it
+decrements the lead ticket scan count. When it hits zero, wake up
+the head of the wait queue. When the background thread has no
+pending reclaim tickets or has nothing left to scan/reclaim (i.e.
+goes idle), wake everyone....
+
+This means waiting is ordered, it doesn't matter where in the fs we
+reclaim from, direct reclaim itself doesn't get stuck waiting for
+IO/transactions/log flushing, concurrency is managed by how we
+process the ticket queue, and when we have lots of direct reclaim
+demand then the background thread just keeps running as optimally as
+possible and kswapd is never blocked...
+
+> (I also see no priority in struct shrink_control, so I guess that's an
+> internal reclaim thing as it is.)
+
+Yup, I had to promote it all the way through from the struct
+scan_control -> priority field.
+
+Cheers,
+
+Dave.
 
 -- 
-chandan
-
+Dave Chinner
+david@fromorbit.com
