@@ -1,112 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:17107 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754386AbdBQBFg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 20:05:36 -0500
-Date: Thu, 16 Feb 2017 17:05:28 -0800
+Received: from userp1040.oracle.com ([156.151.31.81]:42811 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753785AbdBQBL1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 20:11:27 -0500
+Date: Thu, 16 Feb 2017 17:11:17 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: remove XFS_ALLOCTYPE_ANY_AG and
- XFS_ALLOCTYPE_START_AG
-Message-ID: <20170217010528.GJ6813@birch.djwong.org>
-References: <20170216212110.4370-1-hch@lst.de>
- <20170216212110.4370-3-hch@lst.de>
+Subject: Re: [PATCH] xfs: tune down agno asserts in the bmap code
+Message-ID: <20170217011117.GK6813@birch.djwong.org>
+References: <20170216211035.4206-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170216212110.4370-3-hch@lst.de>
+In-Reply-To: <20170216211035.4206-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Feb 16, 2017 at 10:21:10PM +0100, Christoph Hellwig wrote:
-> XFS_ALLOCTYPE_ANY_AG  was only used for the RT allocator and is unused now,
-> and XFS_ALLOCTYPE_START_AG has been unused for a while.
-> 
+On Thu, Feb 16, 2017 at 10:10:35PM +0100, Christoph Hellwig wrote:
+> In various places we currently assert that xfs_bmap_btalloc allocates
+> from the same as the firstblock value passed in, unless it's either
+> NULLAGNO or the dop_low flag is set.  But the reflink code does not
+> fully follow this convention as it passes in firstblock purely as
+> a hint for the allocator without actually having previous allocations
 
-Looks ok,
+Are you referring to BMAPI_REMAP?  In that case *firstblock isn't a
+hint, it's the new physical location of the extent.
+
+> in the transaction, and without having a minleft check on the current
+> AG, leading to the assert firing on a very full and heavily used
+> file system.  As even the reflink code only allocates from equal or
+> higher AGs for now we can simply the check to always allow for equal
+> or higher AGs.
+> 
+> Note that we need to eventually split the two meanings of the firstblock
+> value.  At that point we can also allow the reflink code to allocate
+> from any AG instead of limiting it in any way.
+
+...but you're correct that we probably ought to disambiguate the two.
+
+For now,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I'm wondering for sake of historical context, has XFS ever used these?
+By the way, was it your intent to push this series into 4.11?
 
 --D
 
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/libxfs/xfs_alloc.c | 16 ++--------------
->  fs/xfs/libxfs/xfs_alloc.h |  4 ----
->  2 files changed, 2 insertions(+), 18 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 22 ++++++----------------
+>  1 file changed, 6 insertions(+), 16 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index fe98fbc4adf1..369adcc18c02 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2664,21 +2664,11 @@ xfs_alloc_vextent(
->  		args->agbno = XFS_FSB_TO_AGBNO(mp, args->fsbno);
->  		args->type = XFS_ALLOCTYPE_NEAR_BNO;
->  		/* FALLTHROUGH */
-> -	case XFS_ALLOCTYPE_ANY_AG:
-> -	case XFS_ALLOCTYPE_START_AG:
->  	case XFS_ALLOCTYPE_FIRST_AG:
->  		/*
->  		 * Rotate through the allocation groups looking for a winner.
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index bfc00de5c6f1..2e79f4cc9a8e 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -804,9 +804,7 @@ xfs_bmap_extents_to_btree(
+>  	 */
+>  	ASSERT(args.fsbno != NULLFSBLOCK);
+>  	ASSERT(*firstblock == NULLFSBLOCK ||
+> -	       args.agno == XFS_FSB_TO_AGNO(mp, *firstblock) ||
+> -	       (dfops->dop_low &&
+> -		args.agno > XFS_FSB_TO_AGNO(mp, *firstblock)));
+> +	       args.agno >= XFS_FSB_TO_AGNO(mp, *firstblock));
+>  	*firstblock = cur->bc_private.b.firstblock = args.fsbno;
+>  	cur->bc_private.b.allocated++;
+>  	ip->i_d.di_nblocks++;
+> @@ -3822,17 +3820,13 @@ xfs_bmap_btalloc(
+>  		 * the first block that was allocated.
 >  		 */
-> -		if (type == XFS_ALLOCTYPE_ANY_AG) {
-> -			/*
-> -			 * Start with the last place we left off.
-> -			 */
-> -			args->agno = sagno = (mp->m_agfrotor / rotorstep) %
-> -					mp->m_sb.sb_agcount;
-> -			args->type = XFS_ALLOCTYPE_THIS_AG;
-> -			flags = XFS_ALLOC_FLAG_TRYLOCK;
-> -		} else if (type == XFS_ALLOCTYPE_FIRST_AG) {
-> +		if (type == XFS_ALLOCTYPE_FIRST_AG) {
->  			/*
->  			 * Start with allocation group given by bno.
->  			 */
-> @@ -2687,8 +2677,6 @@ xfs_alloc_vextent(
->  			sagno = 0;
->  			flags = 0;
->  		} else {
-> -			if (type == XFS_ALLOCTYPE_START_AG)
-> -				args->type = XFS_ALLOCTYPE_THIS_AG;
->  			/*
->  			 * Start with the given allocation group.
->  			 */
-> @@ -2756,7 +2744,7 @@ xfs_alloc_vextent(
->  			}
->  			xfs_perag_put(args->pag);
->  		}
-> -		if (bump_rotor || (type == XFS_ALLOCTYPE_ANY_AG)) {
-> +		if (bump_rotor) {
->  			if (args->agno == sagno)
->  				mp->m_agfrotor = (mp->m_agfrotor + 1) %
->  					(mp->m_sb.sb_agcount * rotorstep);
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 1d0f48a501a3..2a8d0fa6fbbe 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -29,9 +29,7 @@ extern struct workqueue_struct *xfs_alloc_wq;
->  /*
->   * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
->   */
-> -#define XFS_ALLOCTYPE_ANY_AG	0x01	/* allocate anywhere, use rotor */
->  #define XFS_ALLOCTYPE_FIRST_AG	0x02	/* ... start at ag 0 */
-> -#define XFS_ALLOCTYPE_START_AG	0x04	/* anywhere, start in this a.g. */
->  #define XFS_ALLOCTYPE_THIS_AG	0x08	/* anywhere in this a.g. */
->  #define XFS_ALLOCTYPE_START_BNO	0x10	/* near this block else anywhere */
->  #define XFS_ALLOCTYPE_NEAR_BNO	0x20	/* in this a.g. and near this block */
-> @@ -41,9 +39,7 @@ extern struct workqueue_struct *xfs_alloc_wq;
->  typedef unsigned int xfs_alloctype_t;
+>  		ASSERT(*ap->firstblock == NULLFSBLOCK ||
+> -		       XFS_FSB_TO_AGNO(mp, *ap->firstblock) ==
+> -		       XFS_FSB_TO_AGNO(mp, args.fsbno) ||
+> -		       (ap->dfops->dop_low &&
+> -			XFS_FSB_TO_AGNO(mp, *ap->firstblock) <
+> -			XFS_FSB_TO_AGNO(mp, args.fsbno)));
+> +		       XFS_FSB_TO_AGNO(mp, *ap->firstblock) <=
+> +		       XFS_FSB_TO_AGNO(mp, args.fsbno));
 >  
->  #define XFS_ALLOC_TYPES \
-> -	{ XFS_ALLOCTYPE_ANY_AG,		"ANY_AG" }, \
->  	{ XFS_ALLOCTYPE_FIRST_AG,	"FIRST_AG" }, \
-> -	{ XFS_ALLOCTYPE_START_AG,	"START_AG" }, \
->  	{ XFS_ALLOCTYPE_THIS_AG,	"THIS_AG" }, \
->  	{ XFS_ALLOCTYPE_START_BNO,	"START_BNO" }, \
->  	{ XFS_ALLOCTYPE_NEAR_BNO,	"NEAR_BNO" }, \
+>  		ap->blkno = args.fsbno;
+>  		if (*ap->firstblock == NULLFSBLOCK)
+>  			*ap->firstblock = args.fsbno;
+> -		ASSERT(nullfb || fb_agno == args.agno ||
+> -		       (ap->dfops->dop_low && fb_agno < args.agno));
+> +		ASSERT(nullfb || fb_agno <= args.agno);
+>  		ap->length = args.len;
+>  		if (!(ap->flags & XFS_BMAPI_COWFORK))
+>  			ap->ip->i_d.di_nblocks += args.len;
+> @@ -4746,13 +4740,9 @@ xfs_bmapi_write(
+>  	if (bma.cur) {
+>  		if (!error) {
+>  			ASSERT(*firstblock == NULLFSBLOCK ||
+> -			       XFS_FSB_TO_AGNO(mp, *firstblock) ==
+> +			       XFS_FSB_TO_AGNO(mp, *firstblock) <=
+>  			       XFS_FSB_TO_AGNO(mp,
+> -				       bma.cur->bc_private.b.firstblock) ||
+> -			       (dfops->dop_low &&
+> -				XFS_FSB_TO_AGNO(mp, *firstblock) <
+> -				XFS_FSB_TO_AGNO(mp,
+> -					bma.cur->bc_private.b.firstblock)));
+> +				       bma.cur->bc_private.b.firstblock));
+>  			*firstblock = bma.cur->bc_private.b.firstblock;
+>  		}
+>  		xfs_btree_del_cursor(bma.cur,
 > -- 
 > 2.11.0
 > 
