@@ -1,108 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56140 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755252AbdBPM6G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2017 07:58:06 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1GCsgZW110488
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 07:57:50 -0500
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 28n7mfvk5j-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2017 07:57:49 -0500
-Received: from localhost
-        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Thu, 16 Feb 2017 05:57:49 -0700
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH] xfs: Use xfs_icluster_size_fsb() to calculate inode chunk alignment
-Date: Thu, 16 Feb 2017 18:27:32 +0530
-Message-Id: <1487249852-27104-1-git-send-email-chandan@linux.vnet.ibm.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:19425 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S964821AbdBQXPm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 18:15:42 -0500
+Date: Sat, 18 Feb 2017 10:12:15 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/5] xfs: bypass dquot reclaim to avoid quotacheck
+ deadlock
+Message-ID: <20170217231215.GD15349@dastard>
+References: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
+ <1487173247-5965-2-git-send-email-bfoster@redhat.com>
+ <20170216223705.GC15349@dastard>
+ <20170217183009.GB20429@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170217183009.GB20429@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, darrick.wong@oracle.com, sandeen@sandeen.net
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-On a ppc64 system, executing generic/256 test with 32k block size gives the following call trace,
+On Fri, Feb 17, 2017 at 01:30:09PM -0500, Brian Foster wrote:
+> On Fri, Feb 17, 2017 at 09:37:05AM +1100, Dave Chinner wrote:
+> > On Wed, Feb 15, 2017 at 10:40:43AM -0500, Brian Foster wrote:
+> > > Reclaim during quotacheck can lead to deadlocks on the dquot flush lock:
+> > > 
+> > >  - Quotacheck populates a local delwri queue with the physical dquot
+> > >    buffers.
+> > >  - Quotacheck performs the xfs_qm_dqusage_adjust() bulkstat and dirties
+> > >    all of the dquots.
+> > >  - Reclaim kicks in and attempts to flush a dquot whose buffer is
+> > >    already queud on the quotacheck queue. The flush succeeds but
+> > >    queueing to the reclaim delwri queue fails as the backing buffer is
+> > >    already queued. The flush unlock is now deferred to I/O completion of
+> > >    the buffer from the quotacheck queue.
+> > >  - Quotacheck proceeds to the xfs_qm_flush_one() walk which requires the
+> > >    flush lock to update the backing buffers with the in-core
+> > >    recalculated values. This deadlocks as the flush lock was acquired by
+> > >    reclaim but the buffer never submitted for I/O as it already resided
+> > >    on the quotacheck queue.
+> > > 
+> > > This is reproduced by running quotacheck on a filesystem with a couple
+> > > million inodes in low memory (512MB-1GB) situations.
+> > > 
+> > > Quotacheck first resets and collects the physical dquot buffers in a
+> > > delwri queue. Then, it traverses the filesystem inodes via bulkstat,
+> > > updates the in-core dquots, flushes the corrected dquots to the backing
+> > > buffers and finally submits the delwri queue for I/O. Since the backing
+> > > buffers are queued across the entire quotacheck operation, dquot reclaim
+> > > cannot possibly complete a dquot flush before quotacheck completes.
+> > > Therefore, dquot reclaim provides no real value during quotacheck.
+> > 
+> > Which is an OOM vector on systems with lots of dquots and low memory
+> > at mount time. Turning off dquot reclaim doesn't change that.
+> > 
+> 
+> It's not intended to. The inefficient design of quotacheck wrt to memory
+> usage is a separate problem. AFAICT, that problem goes back as far as my
+> git tree does (2.6.xx).
+> 
+> Looking back through the git history, this deadlock appears to be a
+> regression as of commit 43ff2122e6 ("xfs: on-stack delayed write buffer
+> lists") in 2012, which replaced a trylock/push sequence from the
+> quotacheck flush walk with a synchronous flush lock.
 
-XFS: Assertion failed: args->maxlen > 0, file: /root/repos/linux/fs/xfs/libxfs/xfs_alloc.c, line: 2026
+Right - that's the commit that changed the code to what it is now.
+That's what I implied needs fixing....
 
-kernel BUG at /root/repos/linux/fs/xfs/xfs_message.c:113!
-Oops: Exception in kernel mode, sig: 5 [#1]
-SMP NR_CPUS=2048
-DEBUG_PAGEALLOC
-NUMA
-pSeries
-Modules linked in:
-CPU: 2 PID: 19361 Comm: mkdir Not tainted 4.10.0-rc5 #58
-task: c000000102606d80 task.stack: c0000001026b8000
-NIP: c0000000004ef798 LR: c0000000004ef798 CTR: c00000000082b290
-REGS: c0000001026bb090 TRAP: 0700   Not tainted  (4.10.0-rc5)
-MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>
-CR: 28004428  XER: 00000000
-CFAR: c0000000004ef180 SOFTE: 1
-GPR00: c0000000004ef798 c0000001026bb310 c000000001157300 ffffffffffffffea
-GPR04: 000000000000000a c0000001026bb130 0000000000000000 ffffffffffffffc0
-GPR08: 00000000000000d1 0000000000000021 00000000ffffffd1 c000000000dd4990
-GPR12: 0000000022004444 c00000000fe00800 0000000020000000 0000000000000000
-GPR16: 0000000000000000 0000000043a606fc 0000000043a76c08 0000000043a1b3d0
-GPR20: 000001002a35cd60 c0000001026bbb80 0000000000000000 0000000000000001
-GPR24: 0000000000000240 0000000000000004 c00000062dc55000 0000000000000000
-GPR28: 0000000000000004 c00000062ecd9200 0000000000000000 c0000001026bb6c0
-NIP [c0000000004ef798] .assfail+0x28/0x30
-LR [c0000000004ef798] .assfail+0x28/0x30
-Call Trace:
-[c0000001026bb310] [c0000000004ef798] .assfail+0x28/0x30 (unreliable)
-[c0000001026bb380] [c000000000455d74] .xfs_alloc_space_available+0x194/0x1b0
-[c0000001026bb410] [c00000000045b914] .xfs_alloc_fix_freelist+0x144/0x480
-[c0000001026bb580] [c00000000045c368] .xfs_alloc_vextent+0x698/0xa90
-[c0000001026bb650] [c0000000004a6200] .xfs_ialloc_ag_alloc+0x170/0x820
-[c0000001026bb7c0] [c0000000004a9098] .xfs_dialloc+0x158/0x320
-[c0000001026bb8a0] [c0000000004e628c] .xfs_ialloc+0x7c/0x610
-[c0000001026bb990] [c0000000004e8138] .xfs_dir_ialloc+0xa8/0x2f0
-[c0000001026bbaa0] [c0000000004e8814] .xfs_create+0x494/0x790
-[c0000001026bbbf0] [c0000000004e5ebc] .xfs_generic_create+0x2bc/0x410
-[c0000001026bbce0] [c0000000002b4a34] .vfs_mkdir+0x154/0x230
-[c0000001026bbd70] [c0000000002bc444] .SyS_mkdirat+0x94/0x120
-[c0000001026bbe30] [c00000000000b760] system_call+0x38/0xfc
-Instruction dump:
-4e800020 60000000 7c0802a6 7c862378 3c82ffca 7ca72b78 38841c18 7c651b78
-38600000 f8010010 f821ff91 4bfff94d <0fe00000> 60000000 7c0802a6 7c892378
+> > Address the root cause - the buffer list is never flushed and so
+> > pins the memory quotacheck requires, so we need to flush the buffer
+> > list more often.  We also need to submit the buffer list before the
+> > flush walks begin, thereby unlocking all the dquots before doing the
+> > flush walk and avoiding the deadlock.
+> > 
+> 
+> I acknowledge that this patch doesn't address the root problem, but
+> neither does this proposal. The root cause is not that quotacheck uses
+> too much memory, it's that the serialization between quotacheck and
+> dquot reclaim is bogus.
+> 
+> For example, if we drop the buffer list being held across the adjust and
+> flush walks, we do indeed unpin the buffers and dquots for memory
+> reclaim, particularly during the dqadjust bulkstat. The flush walk then
+> still has to cycle the flush lock of every dquot to guarantee we wait on
+> dquots being flushed by reclaim (otherwise we risk corruption with the
+> xfs_qm_flush_one() logic is it is today). The same deadlock vector still
+> exists, albeit with a smaller window, if reclaim happens to flush a
+> dquot that is backed by a buffer that has already been queued by the
+> flush walk. AFAICT, the only requirements for this to occur are a couple
+> of dquots on a single backing buffer and some memory pressure from
+> somewhere, so the local memory usage is irrelevant.
 
-When block size is larger than inode cluster size, the call to
-XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
-would have set xfs_sb->sb_inoalignmt to 0. This causes
-xfs_ialloc_cluster_alignment() to return 0.  Due to this
-args.minalignslop (in xfs_ialloc_ag_alloc()) gets the unsigned
-equivalent of -1 assigned to it. This later causes alloc_len in
-xfs_alloc_space_available() to have a value of 0. In such a scenario
-when args.total is also 0, the assert statement "ASSERT(args->maxlen >
-0);" fails.
+Except that the window is *tiny* because the dquots are walked in
+order and so all the dquots are processed in ascending order. This
+means all the dquots in a buffer are flushed sequentially, and each
+dquot lookup resets the reclaim reference count count on the dquot
+buffer. Hence it is extremely unlikely that a dquot buffer will be
+reclaimed while it is partially flushed during the flush walk.
 
-This commit fixes the bug by replacing the call to XFS_B_TO_FSBT() in
-xfs_ialloc_cluster_alignment() with a call to xfs_icluster_size_fsb().
+> I'm specifically trying to address the deadlock problem here. If we
+> don't want to bypass reclaim, the other options I see are to rework the
+> logic on the reclaim side to check the buffer state before we flush the
+> dquot, or push on the buffer from the quotacheck side like we used to
+> before the commit above.
 
-Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- fs/xfs/libxfs/xfs_ialloc.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+The latter is effectively what flushing the buffer list before the
+flush walk is run does.
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index f272abf..d41ade5 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -51,8 +51,7 @@ xfs_ialloc_cluster_alignment(
- 	struct xfs_mount	*mp)
- {
- 	if (xfs_sb_version_hasalign(&mp->m_sb) &&
--	    mp->m_sb.sb_inoalignmt >=
--			XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
-+	    mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
- 		return mp->m_sb.sb_inoalignmt;
- 	return 1;
- }
+Cheers,
+
+Dave.
 -- 
-2.5.5
-
+Dave Chinner
+david@fromorbit.com
