@@ -1,149 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20309 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934159AbdBQQVD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 11:21:03 -0500
-Date: Fri, 17 Feb 2017 08:20:56 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: simplify xfs_rtallocate_extent
-Message-ID: <20170217162056.GL6813@birch.djwong.org>
-References: <20170217124911.11669-1-hch@lst.de>
- <20170217124911.11669-2-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170217124911.11669-2-hch@lst.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44592 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934122AbdBQRMb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 12:12:31 -0500
+Message-ID: <1487351548.4351.13.camel@HansenPartnership.com>
+Subject: Re: [PATCH 1/2] fs: add inode helpers for fsuid and fsgid
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Fri, 17 Feb 2017 09:12:28 -0800
+In-Reply-To: <87tw7tbosl.fsf@xmission.com>
+References: <1487008001.3125.41.camel@HansenPartnership.com>
+         <20170213194337.GA9852@infradead.org> <20170213213416.GA15349@dastard>
+         <20170214060809.GA21114@infradead.org>
+         <1487053651.3125.72.camel@HansenPartnership.com>
+         <1487053720.3125.73.camel@HansenPartnership.com>
+         <87lgt9mcyv.fsf@xmission.com>
+         <1487088593.3133.23.camel@HansenPartnership.com>
+         <87y3x8dw5q.fsf@xmission.com>
+         <1487259786.2944.10.camel@HansenPartnership.com>
+         <87tw7tbosl.fsf@xmission.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Seth Forshee <seth.forshee@canonical.com>
 
-On Fri, Feb 17, 2017 at 01:49:10PM +0100, Christoph Hellwig wrote:
-> We can deduce the allocation type from the bno argument, and do the
-> return without prod much simpler internally.
+On Fri, 2017-02-17 at 14:15 +1300, Eric W. Biederman wrote:
+> James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-(Sending it out for 4.11 testing now...)
-
---D
-
-> ---
->  fs/xfs/xfs_bmap_util.c | 13 ++++---------
->  fs/xfs/xfs_rtalloc.c   | 24 ++++++++----------------
->  fs/xfs/xfs_rtalloc.h   |  1 -
->  3 files changed, 12 insertions(+), 26 deletions(-)
+> > On Wed, 2017-02-15 at 15:29 +1300, Eric W. Biederman wrote:
+> > > James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+> > > 
+> > > > On Tue, 2017-02-14 at 20:46 +1300, Eric W. Biederman wrote:
+> > > > > James Bottomley <James.Bottomley@HansenPartnership.com>
+> > > > > writes:
+> > > > > 
+> > > > > > Now that we have two different views of filesystem ids (the
+> > > > > > filesystem view and the kernel view), we have a problem in 
+> > > > > > that current_fsuid/fsgid() return the kernel view but are
+> > > > > > sometimes used in filesystem code where the filesystem view 
+> > > > > > shoud be used.  This patch introduces helpers to produce 
+> > > > > > the filesystem view of current fsuid and fsgid.
+> > > > > 
+> > > > > If I am reading this right what we are seeing is that xfs
+> > > > > explicitly opted out of type safety with predictable results.
+> > > > >  Accidentally confusing kuids and uids, which is potentially 
+> > > > > security issue.
+> > > > > 
+> > > > > All of that said where are you getting sb->s_user_ns !=
+> > > > > &init_user_ns for an xfs filesystem?
+> > > 
+> > > James please answer this question:
+> > > 
+> > >  Where are you getting sb->s_user_ns != &init_user_ns for an xfs
+> > > filesystem?
+> > 
+> > I'm playing with a patch that allows host admin to set up an
+> > unprivileged container for a guest to use.  One of the extensions 
+> > is to allow anything possessing capability(CAP_SYS_ADMIN) to make
+> > s_user_ns follow mnt_ns->user_ns for new mounts (as an option). 
+> >  The idea was to see if root could set up an id shifted container 
+> > with just the current s_user_ns infrastructure.
+> > 
+> > > None of this matters if sb->s_user_ns == &init_user_ns.
+> > > 
+> > > This is signification because only xfs keeps any in-core data 
+> > > structure in it's on-disk encoding.  So this problem is xfs
+> > > specific.
+> > >    So understanding how you are getting xfs to have sb->s_user_ns 
+> > > != &init_user_ns is important for discussing which direction we 
+> > > go with helper functions here.
+> > > 
+> > > xfs with sb->s_user_ns == &init_user_ns is perfectly fine and as 
+> > > such no fixes are needed.
+> > 
+> > So what you're saying is that unless the unprivileged container 
+> > could mount the filesystem itself (i.e. only those possessing the
+> > FS_USERNS_MOUNT flag) the filesystems are going to be full of 
+> > problems like this.  I suppose whether it's worthwhile trying to 
+> > fix them all depends on whether the ability of the administrator to 
+> > set up an id shifted container is useful or not.
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index c1417919ab0a..890094d2a493 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -88,7 +88,6 @@ int
->  xfs_bmap_rtalloc(
->  	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
->  {
-> -	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
->  	int		error;		/* error return value */
->  	xfs_mount_t	*mp;		/* mount point structure */
->  	xfs_extlen_t	prod = 0;	/* product factor for allocators */
-> @@ -155,18 +154,14 @@ xfs_bmap_rtalloc(
->  	/*
->  	 * Realtime allocation, done through xfs_rtallocate_extent.
->  	 */
-> -	atype = ap->blkno == 0 ?  XFS_ALLOCTYPE_ANY_AG : XFS_ALLOCTYPE_NEAR_BNO;
->  	do_div(ap->blkno, mp->m_sb.sb_rextsize);
->  	rtb = ap->blkno;
->  	ap->length = ralen;
-> -	if ((error = xfs_rtallocate_extent(ap->tp, ap->blkno, 1, ap->length,
-> -				&ralen, atype, ap->wasdel, prod, &rtb)))
-> -		return error;
-> -	if (rtb == NULLFSBLOCK && prod > 1 &&
-> -	    (error = xfs_rtallocate_extent(ap->tp, ap->blkno, 1,
-> -					   ap->length, &ralen, atype,
-> -					   ap->wasdel, 1, &rtb)))
-> +	error = xfs_rtallocate_extent(ap->tp, ap->blkno, 1, ap->length,
-> +				&ralen, ap->wasdel, prod, &rtb);
-> +	if (error)
->  		return error;
-> +
->  	ap->blkno = rtb;
->  	if (ap->blkno != NULLFSBLOCK) {
->  		ap->blkno *= mp->m_sb.sb_rextsize;
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index 802bcc326d9f..c57aa7f18087 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1093,7 +1093,6 @@ xfs_rtallocate_extent(
->  	xfs_extlen_t	minlen,		/* minimum length to allocate */
->  	xfs_extlen_t	maxlen,		/* maximum length to allocate */
->  	xfs_extlen_t	*len,		/* out: actual length allocated */
-> -	xfs_alloctype_t	type,		/* allocation type XFS_ALLOCTYPE... */
->  	int		wasdel,		/* was a delayed allocation extent */
->  	xfs_extlen_t	prod,		/* extent product factor */
->  	xfs_rtblock_t	*rtblock)	/* out: start block allocated */
-> @@ -1123,27 +1122,16 @@ xfs_rtallocate_extent(
->  		}
->  	}
->  
-> +retry:
->  	sumbp = NULL;
-> -	/*
-> -	 * Allocate by size, or near another block, or exactly at some block.
-> -	 */
-> -	switch (type) {
-> -	case XFS_ALLOCTYPE_ANY_AG:
-> +	if (bno == 0) {
->  		error = xfs_rtallocate_extent_size(mp, tp, minlen, maxlen, len,
->  				&sumbp,	&sb, prod, &r);
-> -		break;
-> -	case XFS_ALLOCTYPE_NEAR_BNO:
-> +	} else {
->  		error = xfs_rtallocate_extent_near(mp, tp, bno, minlen, maxlen,
->  				len, &sumbp, &sb, prod, &r);
-> -		break;
-> -	case XFS_ALLOCTYPE_THIS_BNO:
-> -		error = xfs_rtallocate_extent_exact(mp, tp, bno, minlen, maxlen,
-> -				len, &sumbp, &sb, prod, &r);
-> -		break;
-> -	default:
-> -		error = -EIO;
-> -		ASSERT(0);
->  	}
-> +
->  	if (error)
->  		return error;
->  
-> @@ -1158,7 +1146,11 @@ xfs_rtallocate_extent(
->  			xfs_trans_mod_sb(tp, XFS_TRANS_SB_RES_FREXTENTS, -slen);
->  		else
->  			xfs_trans_mod_sb(tp, XFS_TRANS_SB_FREXTENTS, -slen);
-> +	} else if (prod > 1) {
-> +		prod = 1;
-> +		goto retry;
->  	}
-> +
->  	*rtblock = r;
->  	return 0;
->  }
-> diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-> index 355dd9e1cb64..18c8e821a0e4 100644
-> --- a/fs/xfs/xfs_rtalloc.h
-> +++ b/fs/xfs/xfs_rtalloc.h
-> @@ -40,7 +40,6 @@ xfs_rtallocate_extent(
->  	xfs_extlen_t		minlen,	/* minimum length to allocate */
->  	xfs_extlen_t		maxlen,	/* maximum length to allocate */
->  	xfs_extlen_t		*len,	/* out: actual length allocated */
-> -	xfs_alloctype_t		type,	/* allocation type XFS_ALLOCTYPE... */
->  	int			wasdel,	/* was a delayed allocation extent */
->  	xfs_extlen_t		prod,	/* extent product factor */
->  	xfs_rtblock_t		*rtblock); /* out: start block allocated */
-> -- 
-> 2.11.0
+> Yes.  Setting s_user_ns and expecting everything to work with a
+> review/test cycle of the filesystem to shake out any rough edges is
+> likely to be problematic.  For historical reasons I actually expect 
+> xfs is especially bad in this regard.  So in practice I would 
+> definitely start a feature like that with another filesystem.
+
+It's a pragmatic choice: xfs is the filesystem on my current laptop.  I
+know xfs was once very problematic for the user namespace, but having
+looked through the code several times, the namespace shifts are now
+nicely abstracted and easy to identify, so I don't anticipate any extra
+difficulty today.
+
+> I would be happy to have a FS_S_USER_NS flag to say all that is well,
+> and the filesystem supports s_user_ns != &init_user_ns.  The bar is 
+> much lower if a trusted user with CAP_SYS_ADMIN is mounting the 
+> filesystem than if an unprivileged user is mounting the filesystem. 
+>  As we don't have to worry about specially crafted malicious
+> filesystem images.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> In practice I think I would have passed in the user namespace via a 
+> file descriptor to mount rather than inheriting it from the mount
+> namespace (more flexibility for roughly the same amount of code).
+
+I agree on this, but lets leave the implementation details on the side
+for a while and examine the "should we do this?" question.
+
+I can see two reasons why we might need to have this functionality
+
+   1. Orchestration system use case: the orchestration system wants to
+      build an unprivileged container root from an image file or overlay
+      (I think this covers docker).
+   2. USB (or other) device insertion redirected to container.  In this
+      case, we'd like the mount on insertion to follow the container
+      user_ns.
+
+The reason I could see not bothering with this is that it doesn't fix
+the shift on a subtree issue and fixing that gives a system which can
+also be used to solve both cases above.
+
+James
+
