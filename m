@@ -1,181 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41438 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57392 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752571AbdBUOfP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Feb 2017 09:35:15 -0500
-Date: Tue, 21 Feb 2017 09:35:15 -0500
+        id S934144AbdBQSkO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Feb 2017 13:40:14 -0500
+Date: Fri, 17 Feb 2017 13:30:09 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/8] xfs: create a function to query all records in a
- btree
-Message-ID: <20170221143514.GD3207@bfoster.bfoster>
-References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
- <148738066286.29384.6059407136436797506.stgit@birch.djwong.org>
+Subject: Re: [PATCH 1/5] xfs: bypass dquot reclaim to avoid quotacheck
+ deadlock
+Message-ID: <20170217183009.GB20429@bfoster.bfoster>
+References: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
+ <1487173247-5965-2-git-send-email-bfoster@redhat.com>
+ <20170216223705.GC15349@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <148738066286.29384.6059407136436797506.stgit@birch.djwong.org>
+In-Reply-To: <20170216223705.GC15349@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
 
-On Fri, Feb 17, 2017 at 05:17:42PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Feb 17, 2017 at 09:37:05AM +1100, Dave Chinner wrote:
+> On Wed, Feb 15, 2017 at 10:40:43AM -0500, Brian Foster wrote:
+> > Reclaim during quotacheck can lead to deadlocks on the dquot flush lock:
+> > 
+> >  - Quotacheck populates a local delwri queue with the physical dquot
+> >    buffers.
+> >  - Quotacheck performs the xfs_qm_dqusage_adjust() bulkstat and dirties
+> >    all of the dquots.
+> >  - Reclaim kicks in and attempts to flush a dquot whose buffer is
+> >    already queud on the quotacheck queue. The flush succeeds but
+> >    queueing to the reclaim delwri queue fails as the backing buffer is
+> >    already queued. The flush unlock is now deferred to I/O completion of
+> >    the buffer from the quotacheck queue.
+> >  - Quotacheck proceeds to the xfs_qm_flush_one() walk which requires the
+> >    flush lock to update the backing buffers with the in-core
+> >    recalculated values. This deadlocks as the flush lock was acquired by
+> >    reclaim but the buffer never submitted for I/O as it already resided
+> >    on the quotacheck queue.
+> > 
+> > This is reproduced by running quotacheck on a filesystem with a couple
+> > million inodes in low memory (512MB-1GB) situations.
+> > 
+> > Quotacheck first resets and collects the physical dquot buffers in a
+> > delwri queue. Then, it traverses the filesystem inodes via bulkstat,
+> > updates the in-core dquots, flushes the corrected dquots to the backing
+> > buffers and finally submits the delwri queue for I/O. Since the backing
+> > buffers are queued across the entire quotacheck operation, dquot reclaim
+> > cannot possibly complete a dquot flush before quotacheck completes.
+> > Therefore, dquot reclaim provides no real value during quotacheck.
 > 
-> Create a helper function that will query all records in a btree.
-> This will be used by the online repair functions to examine every
-> record in a btree to rebuild a second btree.
+> Which is an OOM vector on systems with lots of dquots and low memory
+> at mount time. Turning off dquot reclaim doesn't change that.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+It's not intended to. The inefficient design of quotacheck wrt to memory
+usage is a separate problem. AFAICT, that problem goes back as far as my
+git tree does (2.6.xx).
 
->  fs/xfs/libxfs/xfs_alloc.c |   15 +++++++++++++++
->  fs/xfs/libxfs/xfs_alloc.h |    2 ++
->  fs/xfs/libxfs/xfs_btree.c |   15 +++++++++++++++
->  fs/xfs/libxfs/xfs_btree.h |    2 ++
->  fs/xfs/libxfs/xfs_rmap.c  |   28 +++++++++++++++++++++-------
->  fs/xfs/libxfs/xfs_rmap.h  |    2 ++
->  6 files changed, 57 insertions(+), 7 deletions(-)
+Looking back through the git history, this deadlock appears to be a
+regression as of commit 43ff2122e6 ("xfs: on-stack delayed write buffer
+lists") in 2012, which replaced a trylock/push sequence from the
+quotacheck flush walk with a synchronous flush lock.
+
+> Address the root cause - the buffer list is never flushed and so
+> pins the memory quotacheck requires, so we need to flush the buffer
+> list more often.  We also need to submit the buffer list before the
+> flush walks begin, thereby unlocking all the dquots before doing the
+> flush walk and avoiding the deadlock.
 > 
+
+I acknowledge that this patch doesn't address the root problem, but
+neither does this proposal. The root cause is not that quotacheck uses
+too much memory, it's that the serialization between quotacheck and
+dquot reclaim is bogus.
+
+For example, if we drop the buffer list being held across the adjust and
+flush walks, we do indeed unpin the buffers and dquots for memory
+reclaim, particularly during the dqadjust bulkstat. The flush walk then
+still has to cycle the flush lock of every dquot to guarantee we wait on
+dquots being flushed by reclaim (otherwise we risk corruption with the
+xfs_qm_flush_one() logic is it is today). The same deadlock vector still
+exists, albeit with a smaller window, if reclaim happens to flush a
+dquot that is backed by a buffer that has already been queued by the
+flush walk. AFAICT, the only requirements for this to occur are a couple
+of dquots on a single backing buffer and some memory pressure from
+somewhere, so the local memory usage is irrelevant.
+
+I'm specifically trying to address the deadlock problem here. If we
+don't want to bypass reclaim, the other options I see are to rework the
+logic on the reclaim side to check the buffer state before we flush the
+dquot, or push on the buffer from the quotacheck side like we used to
+before the commit above. I think the latter may be more robust as it
+isolates the logic to quotacheck. The risk there is that we're open to
+pushing buffers off the reclaim list, but that might be fine so long as
+we have the buffer lock.
+
+I'm open to other ideas of course, but so far "flushing the buffer list
+more often" isn't clear enough to suggest it actually solves the locking
+problem... I'll put a quotacheck rework on my todo list as well, but
+that's something I'll have to get to separately (but I'm happy to help
+if anybody else wants to jump on that sooner.. ;).
+
+Brian
+
+> -Dave.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 526df17..ba15f30 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2917,3 +2917,18 @@ xfs_alloc_query_range(
->  	return xfs_btree_query_range(cur, &low_brec, &high_brec,
->  			xfs_alloc_query_range_helper, &query);
->  }
-> +
-> +/* Find all free space records. */
-> +int
-> +xfs_alloc_query_all(
-> +	struct xfs_btree_cur			*cur,
-> +	xfs_alloc_query_range_fn		fn,
-> +	void					*priv)
-> +{
-> +	struct xfs_alloc_query_range_info	query;
-> +
-> +	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
-> +	query.priv = priv;
-> +	query.fn = fn;
-> +	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index f534998..a2101de 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -232,5 +232,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
->  		struct xfs_alloc_rec_incore *low_rec,
->  		struct xfs_alloc_rec_incore *high_rec,
->  		xfs_alloc_query_range_fn fn, void *priv);
-> +int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
-> +		void *priv);
->  
->  #endif	/* __XFS_ALLOC_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 2849d3f..ca94b87 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -4823,6 +4823,21 @@ xfs_btree_query_range(
->  			fn, priv);
->  }
->  
-> +/* Query a btree for all records. */
-> +int
-> +xfs_btree_query_all(
-> +	struct xfs_btree_cur		*cur,
-> +	xfs_btree_query_range_fn	fn,
-> +	void				*priv)
-> +{
-> +	union xfs_btree_irec		low_rec;
-> +	union xfs_btree_irec		high_rec;
-> +
-> +	memset(&low_rec, 0, sizeof(low_rec));
-> +	memset(&high_rec, 0xFF, sizeof(high_rec));
-> +	return xfs_btree_query_range(cur, &low_rec, &high_rec, fn, priv);
-> +}
-> +
->  /*
->   * Calculate the number of blocks needed to store a given number of records
->   * in a short-format (per-AG metadata) btree.
-> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> index 33a8f86..5114055 100644
-> --- a/fs/xfs/libxfs/xfs_btree.h
-> +++ b/fs/xfs/libxfs/xfs_btree.h
-> @@ -494,6 +494,8 @@ typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
->  int xfs_btree_query_range(struct xfs_btree_cur *cur,
->  		union xfs_btree_irec *low_rec, union xfs_btree_irec *high_rec,
->  		xfs_btree_query_range_fn fn, void *priv);
-> +int xfs_btree_query_all(struct xfs_btree_cur *cur, xfs_btree_query_range_fn fn,
-> +		void *priv);
->  
->  typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
->  		void *data);
-> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> index 3a8cc71..3840556 100644
-> --- a/fs/xfs/libxfs/xfs_rmap.c
-> +++ b/fs/xfs/libxfs/xfs_rmap.c
-> @@ -2001,14 +2001,14 @@ xfs_rmap_query_range_helper(
->  /* Find all rmaps between two keys. */
->  int
->  xfs_rmap_query_range(
-> -	struct xfs_btree_cur		*cur,
-> -	struct xfs_rmap_irec		*low_rec,
-> -	struct xfs_rmap_irec		*high_rec,
-> -	xfs_rmap_query_range_fn	fn,
-> -	void				*priv)
-> +	struct xfs_btree_cur			*cur,
-> +	struct xfs_rmap_irec			*low_rec,
-> +	struct xfs_rmap_irec			*high_rec,
-> +	xfs_rmap_query_range_fn			fn,
-> +	void					*priv)
->  {
-> -	union xfs_btree_irec		low_brec;
-> -	union xfs_btree_irec		high_brec;
-> +	union xfs_btree_irec			low_brec;
-> +	union xfs_btree_irec			high_brec;
->  	struct xfs_rmap_query_range_info	query;
->  
->  	low_brec.r = *low_rec;
-> @@ -2019,6 +2019,20 @@ xfs_rmap_query_range(
->  			xfs_rmap_query_range_helper, &query);
->  }
->  
-> +/* Find all rmaps. */
-> +int
-> +xfs_rmap_query_all(
-> +	struct xfs_btree_cur			*cur,
-> +	xfs_rmap_query_range_fn			fn,
-> +	void					*priv)
-> +{
-> +	struct xfs_rmap_query_range_info	query;
-> +
-> +	query.priv = priv;
-> +	query.fn = fn;
-> +	return xfs_btree_query_all(cur, xfs_rmap_query_range_helper, &query);
-> +}
-> +
->  /* Clean up after calling xfs_rmap_finish_one. */
->  void
->  xfs_rmap_finish_one_cleanup(
-> diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-> index 7899305..faf2c1a 100644
-> --- a/fs/xfs/libxfs/xfs_rmap.h
-> +++ b/fs/xfs/libxfs/xfs_rmap.h
-> @@ -162,6 +162,8 @@ typedef int (*xfs_rmap_query_range_fn)(
->  int xfs_rmap_query_range(struct xfs_btree_cur *cur,
->  		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
->  		xfs_rmap_query_range_fn fn, void *priv);
-> +int xfs_rmap_query_all(struct xfs_btree_cur *cur, xfs_rmap_query_range_fn fn,
-> +		void *priv);
->  
->  enum xfs_rmap_intent_type {
->  	XFS_RMAP_MAP,
-> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
