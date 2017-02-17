@@ -1,143 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49362 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752339AbdBNGpn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2017 01:45:43 -0500
-Date: Mon, 13 Feb 2017 22:44:48 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/7] nonblocking aio: xfs
-Message-ID: <20170214064448.GA6808@birch.djwong.org>
-References: <20170214024603.9563-1-rgoldwyn@suse.de>
- <20170214024603.9563-7-rgoldwyn@suse.de>
+Received: from sandeen.net ([63.231.237.45]:41622 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964788AbdBQXJM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Feb 2017 18:09:12 -0500
+Subject: Re: [PATCH] xfs: Use xfs_icluster_size_fsb() to calculate inode chunk
+ alignment
+References: <1487249852-27104-1-git-send-email-chandan@linux.vnet.ibm.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <da275566-2899-e289-2d12-6bb080c1c2ff@sandeen.net>
+Date: Fri, 17 Feb 2017 17:09:10 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170214024603.9563-7-rgoldwyn@suse.de>
+In-Reply-To: <1487249852-27104-1-git-send-email-chandan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.cz, Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org
+To: Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-On Mon, Feb 13, 2017 at 08:46:02PM -0600, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-
-Send the whole patchset to linux-xfs, please.
-
-> If IOCB_NONBLOCKING is set:
-> 	+ Check if writing beyond end of file, if yes return EAGAIN
-> 	- check if writing to a hole which does not have allocated
-> 	  file blocks.
-> 	- Check if i_rwsem is immediately lockable in xfs_rw_ilock()
+On 2/16/17 6:57 AM, Chandan Rajendra wrote:
+> On a ppc64 system, executing generic/256 test with 32k block size gives the following call trace,
 > 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> XFS: Assertion failed: args->maxlen > 0, file: /root/repos/linux/fs/xfs/libxfs/xfs_alloc.c, line: 2026
+
+The fix for the assert seems fine as far as it goes, but again,
+I think we need to look into i.e. how m_inalign_mask gets set,
+and whether that's a problem for this case as well.
+
+I think it may be working by accident, but a little digging
+is in order.
+
+-Eric
+
+> kernel BUG at /root/repos/linux/fs/xfs/xfs_message.c:113!
+> Oops: Exception in kernel mode, sig: 5 [#1]
+> SMP NR_CPUS=2048
+> DEBUG_PAGEALLOC
+> NUMA
+> pSeries
+> Modules linked in:
+> CPU: 2 PID: 19361 Comm: mkdir Not tainted 4.10.0-rc5 #58
+> task: c000000102606d80 task.stack: c0000001026b8000
+> NIP: c0000000004ef798 LR: c0000000004ef798 CTR: c00000000082b290
+> REGS: c0000001026bb090 TRAP: 0700   Not tainted  (4.10.0-rc5)
+> MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>
+> CR: 28004428  XER: 00000000
+> CFAR: c0000000004ef180 SOFTE: 1
+> GPR00: c0000000004ef798 c0000001026bb310 c000000001157300 ffffffffffffffea
+> GPR04: 000000000000000a c0000001026bb130 0000000000000000 ffffffffffffffc0
+> GPR08: 00000000000000d1 0000000000000021 00000000ffffffd1 c000000000dd4990
+> GPR12: 0000000022004444 c00000000fe00800 0000000020000000 0000000000000000
+> GPR16: 0000000000000000 0000000043a606fc 0000000043a76c08 0000000043a1b3d0
+> GPR20: 000001002a35cd60 c0000001026bbb80 0000000000000000 0000000000000001
+> GPR24: 0000000000000240 0000000000000004 c00000062dc55000 0000000000000000
+> GPR28: 0000000000000004 c00000062ecd9200 0000000000000000 c0000001026bb6c0
+> NIP [c0000000004ef798] .assfail+0x28/0x30
+> LR [c0000000004ef798] .assfail+0x28/0x30
+> Call Trace:
+> [c0000001026bb310] [c0000000004ef798] .assfail+0x28/0x30 (unreliable)
+> [c0000001026bb380] [c000000000455d74] .xfs_alloc_space_available+0x194/0x1b0
+> [c0000001026bb410] [c00000000045b914] .xfs_alloc_fix_freelist+0x144/0x480
+> [c0000001026bb580] [c00000000045c368] .xfs_alloc_vextent+0x698/0xa90
+> [c0000001026bb650] [c0000000004a6200] .xfs_ialloc_ag_alloc+0x170/0x820
+> [c0000001026bb7c0] [c0000000004a9098] .xfs_dialloc+0x158/0x320
+> [c0000001026bb8a0] [c0000000004e628c] .xfs_ialloc+0x7c/0x610
+> [c0000001026bb990] [c0000000004e8138] .xfs_dir_ialloc+0xa8/0x2f0
+> [c0000001026bbaa0] [c0000000004e8814] .xfs_create+0x494/0x790
+> [c0000001026bbbf0] [c0000000004e5ebc] .xfs_generic_create+0x2bc/0x410
+> [c0000001026bbce0] [c0000000002b4a34] .vfs_mkdir+0x154/0x230
+> [c0000001026bbd70] [c0000000002bc444] .SyS_mkdirat+0x94/0x120
+> [c0000001026bbe30] [c00000000000b760] system_call+0x38/0xfc
+> Instruction dump:
+> 4e800020 60000000 7c0802a6 7c862378 3c82ffca 7ca72b78 38841c18 7c651b78
+> 38600000 f8010010 f821ff91 4bfff94d <0fe00000> 60000000 7c0802a6 7c892378
+> 
+> When block size is larger than inode cluster size, the call to
+> XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
+> would have set xfs_sb->sb_inoalignmt to 0. This causes
+> xfs_ialloc_cluster_alignment() to return 0.  Due to this
+> args.minalignslop (in xfs_ialloc_ag_alloc()) gets the unsigned
+> equivalent of -1 assigned to it. This later causes alloc_len in
+> xfs_alloc_space_available() to have a value of 0. In such a scenario
+> when args.total is also 0, the assert statement "ASSERT(args->maxlen >
+> 0);" fails.
+> 
+> This commit fixes the bug by replacing the call to XFS_B_TO_FSBT() in
+> xfs_ialloc_cluster_alignment() with a call to xfs_icluster_size_fsb().
+> 
+> Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 > ---
->  fs/xfs/xfs_file.c  | 36 ++++++++++++++++++++++++++++++++----
->  fs/xfs/xfs_inode.h |  2 ++
->  2 files changed, 34 insertions(+), 4 deletions(-)
+>  fs/xfs/libxfs/xfs_ialloc.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 9a5d64b..42f055f 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -51,14 +51,20 @@ static const struct vm_operations_struct xfs_file_vm_ops;
->   * Locking primitives for read and write IO paths to ensure we consistently use
->   * and order the inode->i_mutex, ip->i_lock and ip->i_iolock.
->   */
-> -static inline void
-> +static inline int
->  xfs_rw_ilock(
->  	struct xfs_inode	*ip,
->  	int			type)
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index f272abf..d41ade5 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -51,8 +51,7 @@ xfs_ialloc_cluster_alignment(
+>  	struct xfs_mount	*mp)
 >  {
-> -	if (type & XFS_IOLOCK_EXCL)
-> -		inode_lock(VFS_I(ip));
-> +	if (type & XFS_IOLOCK_EXCL) {
-> +		if ((type & XFS_IOLOCK_NONBLOCKING) &&
-> +				!inode_trylock(VFS_I(ip)))
-> +			return -EAGAIN;
-> +		else
-> +			inode_lock(VFS_I(ip));
-> +	}
->  	xfs_ilock(ip, type);
-> +	return 0;
-
-This function went away in 4.10-rc1.
-
+>  	if (xfs_sb_version_hasalign(&mp->m_sb) &&
+> -	    mp->m_sb.sb_inoalignmt >=
+> -			XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
+> +	    mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
+>  		return mp->m_sb.sb_inoalignmt;
+>  	return 1;
 >  }
->  
->  static inline void
-> @@ -418,6 +424,24 @@ xfs_file_aio_write_checks(
->  	if (error <= 0)
->  		return error;
->  
-> +	if (iocb->ki_flags & IOCB_NONBLOCKING) {
-> +		struct xfs_bmbt_irec	imap;
-> +		xfs_fileoff_t           offset_fsb, end_fsb;
-> +		int			nimaps = 1, ret = 0;
-> +		end_fsb = XFS_B_TO_FSB(ip->i_mount, iocb->ki_pos + count);
-> +		if (XFS_B_TO_FSB(ip->i_mount, i_size_read(inode)) < end_fsb)
-> +			return -EAGAIN;
-> +		/* Check if it is an unallocated hole */
-> +		offset_fsb = XFS_B_TO_FSBT(ip->i_mount, iocb->ki_pos);
-> +
-> +		ret = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
-> +				&nimaps, 0);
-
-You need to hold the ilock to call _bmapi_read, and I don't think
-it's held here.  Did you CONFIG_XFS_DEBUG=y?
-
-> +		if (ret)
-> +			return ret;
-> +		if (!nimaps || imap.br_startblock == HOLESTARTBLOCK)
-> +			return -EAGAIN;
-> +	}
-> +
->  	error = xfs_break_layouts(inode, iolock, true);
->  	if (error)
->  		return error;
-> @@ -555,11 +579,15 @@ xfs_file_dio_aio_write(
->  	    ((iocb->ki_pos + count) & mp->m_blockmask)) {
->  		unaligned_io = 1;
->  		iolock = XFS_IOLOCK_EXCL;
-> +		if (iocb->ki_flags & IOCB_NONBLOCKING)
-> +			iolock |= XFS_IOLOCK_NONBLOCKING;
->  	} else {
->  		iolock = XFS_IOLOCK_SHARED;
->  	}
->  
-> -	xfs_rw_ilock(ip, iolock);
-> +	ret = xfs_rw_ilock(ip, iolock);
-> +	if (ret)
-> +		return ret;
->  
->  	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
->  	if (ret)
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 71e8a81..1a2d5eb 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -283,6 +283,7 @@ static inline void xfs_ifunlock(struct xfs_inode *ip)
->  #define	XFS_ILOCK_SHARED	(1<<3)
->  #define	XFS_MMAPLOCK_EXCL	(1<<4)
->  #define	XFS_MMAPLOCK_SHARED	(1<<5)
-> +#define	XFS_IOLOCK_NONBLOCKING	(1<<6)
-
-What is the expected behavior if this is passed directly to xfs_ilock?
-
---D
-
->  
->  #define XFS_LOCK_MASK		(XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED \
->  				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED \
-> @@ -291,6 +292,7 @@ static inline void xfs_ifunlock(struct xfs_inode *ip)
->  #define XFS_LOCK_FLAGS \
->  	{ XFS_IOLOCK_EXCL,	"IOLOCK_EXCL" }, \
->  	{ XFS_IOLOCK_SHARED,	"IOLOCK_SHARED" }, \
-> +	{ XFS_IOLOCK_NONBLOCKING,	"IOLOCK_NONBLOCKING" }, \
->  	{ XFS_ILOCK_EXCL,	"ILOCK_EXCL" }, \
->  	{ XFS_ILOCK_SHARED,	"ILOCK_SHARED" }, \
->  	{ XFS_MMAPLOCK_EXCL,	"MMAPLOCK_EXCL" }, \
-> -- 
-> 2.10.2
 > 
