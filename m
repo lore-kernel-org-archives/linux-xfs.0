@@ -1,163 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40398 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751813AbdB0Iax (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Feb 2017 03:30:53 -0500
-Received: from smtp.corp.redhat.com (int-mx16.intmail.prod.int.phx2.redhat.com [10.5.11.28])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id AC421C04B950
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Feb 2017 08:29:15 +0000 (UTC)
-Date: Mon, 27 Feb 2017 09:29:11 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfsprogs: remove unused libxfs helper #defines
-Message-ID: <20170227082911.ju26lclipmw4xm7n@eorzea.usersys.redhat.com>
-References: <78814f34-15b8-9d72-7b25-377478e9c564@redhat.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:56451 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750855AbdBQX6K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 18:58:10 -0500
+Date: Sat, 18 Feb 2017 10:58:06 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Bug 192981] New: page allocation stalls
+Message-ID: <20170217235806.GF15349@dastard>
+References: <bug-192981-27@https.bugzilla.kernel.org/>
+ <20170123135111.13ac3e47110de10a4bd503ef@linux-foundation.org>
+ <8f450abd-4e05-92d3-2533-72b05fea2012@beget.ru>
+ <20170215160538.GA62565@bfoster.bfoster>
+ <a055abbf-a471-d111-9491-dc5b00208228@beget.ru>
+ <20170215180859.GB62565@bfoster.bfoster>
+ <07ee50bc-8220-dda8-07f9-369758603df9@beget.ru>
+ <20170216172034.GC11750@bfoster.bfoster>
+ <20170216222129.GB15349@dastard>
+ <077aa22b-7d84-c1cc-3ae6-1d67f762d291@I-love.SAKURA.ne.jp>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <78814f34-15b8-9d72-7b25-377478e9c564@redhat.com>
+In-Reply-To: <077aa22b-7d84-c1cc-3ae6-1d67f762d291@I-love.SAKURA.ne.jp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: Brian Foster <bfoster@redhat.com>, Alexander Polakov <apolyakov@beget.ru>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org
 
-On Sun, Feb 26, 2017 at 10:39:54PM -0600, Eric Sandeen wrote:
-> There are several #defines which aren't used anywhere
-> in either xfsprogs or the kernel, so remove them from the
-> libxfs/libxfs_priv.h helper file.
+On Fri, Feb 17, 2017 at 08:11:09PM +0900, Tetsuo Handa wrote:
+> On 2017/02/17 7:21, Dave Chinner wrote:
+> > FWIW, the major problem with removing the blocking in inode reclaim
+> > is the ease with which you can then trigger the OOM killer from
+> > userspace.  The high level memory reclaim algorithms break down when
+> > there are hundreds of direct reclaim processes hammering on reclaim
+> > and reclaim stops making progress because it's skipping dirty
+> > objects.  Direct reclaim ends up insufficiently throttled, so rather
+> > than blocking it winds up reclaim priority and then declares OOM
+> > because reclaim runs out of retries before sufficient memory has
+> > been freed.
+> > 
+> > That, right now, looks to be an unsolvable problem without a major
+> > rework of direct reclaim.  I've pretty much given up on ever getting
+> > the unbound direct reclaim concurrency problem that is causing us
+> > these problems fixed, so we are left to handle it in the subsystem
+> > shrinkers as best we can. That leaves us with an unfortunate choice: 
+> > 
+> > 	a) throttle excessive concurrency in the shrinker to prevent
+> > 	   IO breakdown, thereby causing reclaim latency bubbles
+> > 	   under load but having a stable, reliable system; or
+> > 	b) optimise for minimal reclaim latency and risk userspace
+> > 	   memory demand triggering the OOM killer whenever there
+> > 	   are lots of dirty inodes in the system.
+> > 
+> > Quite frankly, there's only one choice we can make in this
+> > situation: reliability is always more important than performance.
 > 
-> This does leave a few (currently) unused defines in place
-> if they are still used in the kernel, in the hope that future
-> libxfs changes might Just Work.
-> 
+> Is it possible to get rid of direct reclaim and let allocating thread
+> wait on queue? I wished such change in context of __GFP_KILLABLE at
+> http://lkml.kernel.org/r/201702012049.BAG95379.VJFFOHMStLQFOO@I-love.SAKURA.ne.jp .
 
-Looks fine, you can add:
+Yup, that's similar to what I've been suggesting - offloading the
+direct reclaim slowpath to a limited set of kswapd-like workers
+and blocking the allocating processes until there is either memory
+for them or OOM is declared...
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Cheers,
 
-Thanks for this cleanup :)
-
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
->  libxfs_priv.h |   38 +-------------------------------------
->  1 file changed, 1 insertion(+), 37 deletions(-)
-> 
-> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> index 14ae788..ccc732f 100644
-> --- a/libxfs/libxfs_priv.h
-> +++ b/libxfs/libxfs_priv.h
-> @@ -103,8 +103,6 @@ extern char    *progname;
->  #define ATTR_KERNOTIME			0
->  #define ATTR_KERNOVAL			0
->  
-> -#define IHOLD(ip)			((void) 0)
-> -
->  #define XFS_IGET_CREATE			0x1
->  #define XFS_IGET_UNTRUSTED		0x2
->  
-> @@ -128,16 +126,12 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
->  	cmn_err(CE_ALERT, "%s: XFS_ERROR_REPORT", (e));  \
->  } while (0)
->  
-> -#define XFS_QM_DQATTACH(mp,ip,flags)	0
->  #define XFS_ERRLEVEL_LOW		1
->  #define XFS_FORCED_SHUTDOWN(mp)		0
->  #define XFS_ILOCK_EXCL			0
->  #define XFS_STATS_INC(mp, count)	do { (mp) = (mp); } while (0)
->  #define XFS_STATS_DEC(mp, count, x)	do { (mp) = (mp); } while (0)
->  #define XFS_STATS_ADD(mp, count, x)	do { (mp) = (mp); } while (0)
-> -#define XFS_TRANS_MOD_DQUOT_BYINO(mp,tp,ip,field,delta)	do { } while (0)
-> -#define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
-> -#define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
->  #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
->  #define XFS_WANT_CORRUPTED_GOTO(mp, expr, l)				\
->  {									\
-> @@ -308,20 +302,11 @@ roundup_64(__uint64_t x, __uint32_t y)
->  }
->  
->  /* buffer management */
-> -#define XFS_BUF_LOCK			0
-> -#define XFS_BUF_TRYLOCK			0
-> -#define XBF_LOCK			XFS_BUF_LOCK
-> -#define XBF_TRYLOCK			XFS_BUF_TRYLOCK
-> -#define XBF_DONT_BLOCK			0
-> +#define XBF_TRYLOCK			0
->  #define XBF_UNMAPPED			0
->  #define XBF_DONE			0
-> -#define XFS_BUF_GETERROR(bp)		0
-> -#define XFS_BUF_DONE(bp)		((bp)->b_flags |= LIBXFS_B_UPTODATE)
-> -#define XFS_BUF_ISDONE(bp)		((bp)->b_flags & LIBXFS_B_UPTODATE)
->  #define xfs_buf_stale(bp)		((bp)->b_flags |= LIBXFS_B_STALE)
->  #define XFS_BUF_UNDELAYWRITE(bp)	((bp)->b_flags &= ~LIBXFS_B_DIRTY)
-> -#define XFS_BUF_SET_VTYPE(a,b)		((void) 0)
-> -#define XFS_BUF_SET_VTYPE_REF(a,b,c)	((void) 0)
->  #define XFS_BUF_SET_BDSTRAT_FUNC(a,b)	((void) 0)
->  
->  /* avoid gcc warning */
-> @@ -353,7 +338,6 @@ roundup_64(__uint64_t x, __uint32_t y)
->  #define XFS_MOUNT_RDONLY		0	/* ignored in userspace */
->  
->  
-> -#define xfs_trans_get_block_res(tp)	1
->  #define xfs_trans_set_sync(tp)		((void) 0)
->  #define xfs_trans_ordered_buf(tp, bp)	((void) 0)
->  #define	xfs_trans_agblocks_delta(tp, d)
-> @@ -373,26 +357,13 @@ roundup_64(__uint64_t x, __uint32_t y)
->  	__d = __d; /* no set-but-unused warning */	\
->  })
->  #define xfs_buf_readahead_map(a,b,c,ops)	((void) 0)	/* no readahead */
-> -#define xfs_buftrace(x,y)			((void) 0)	/* debug only */
->  
-> -#define xfs_cmn_err(tag,level,mp,fmt,args...)	cmn_err(level,fmt, ## args)
->  #define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
->  #define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
->  #define xfs_alert_tag(mp,tag,fmt,args...)	cmn_err(CE_ALERT,fmt, ## args)
->  
-> -#define xfs_dir2_trace_args(where, args)		((void) 0)
-> -#define xfs_dir2_trace_args_b(where, args, bp)		((void) 0)
-> -#define xfs_dir2_trace_args_bb(where, args, lbp, dbp)	((void) 0)
-> -#define xfs_dir2_trace_args_bibii(where, args, bs, ss, bd, sd, c) ((void) 0)
-> -#define xfs_dir2_trace_args_db(where, args, db, bp)	((void) 0)
-> -#define xfs_dir2_trace_args_i(where, args, i)		((void) 0)
-> -#define xfs_dir2_trace_args_s(where, args, s)		((void) 0)
-> -#define xfs_dir2_trace_args_sb(where, args, s, bp)	((void) 0)
->  #define xfs_sort					qsort
->  
-> -#define xfs_icsb_reinit_counters(mp)			do { } while (0)
-> -#define xfs_initialize_perag_icache(pag)		((void) 0)
-> -
->  #define xfs_ilock(ip,mode)				((void) 0)
->  #define xfs_ilock_nowait(ip,mode)			((void) 0)
->  #define xfs_ilock_demote(ip,mode)			((void) 0)
-> @@ -402,7 +373,6 @@ roundup_64(__uint64_t x, __uint32_t y)
->  	typeof(mode) __mode = mode;				\
->  	__mode = __mode; /* no set-but-unused warning */	\
->  })
-> -#define __xfs_flock(ip)					((void) 0)
->  
->  /* space allocation */
->  #define xfs_extent_busy_reuse(mp,ag,bno,len,user)	((void) 0)
-> @@ -417,12 +387,6 @@ do { \
->  	*(len) = (flen); \
->  } while (0)
->  
-> -/* avoid unused variable warning */
-> -#define xfs_alloc_busy_insert(tp,ag,b,len)	({	\
-> -	xfs_agnumber_t __foo = ag;			\
-> -	__foo = 0;					\
-> -})
-> -
->  #define xfs_rotorstep				1
->  #define xfs_bmap_rtalloc(a)			(-ENOSYS)
->  #define xfs_get_extsz_hint(ip)			(0)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Dave.
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
