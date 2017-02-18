@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41769 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752338AbdBRBRr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 20:17:47 -0500
-Subject: [PATCH 4/8] xfs: create a function to query all records in a btree
+Received: from userp1040.oracle.com ([156.151.31.81]:32820 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752483AbdBRBSF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 20:18:05 -0500
+Subject: [PATCH 6/8] xfs: have getfsmap fall back to the freesp btrees when
+ rmap is not present
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 17 Feb 2017 17:17:42 -0800
-Message-ID: <148738066286.29384.6059407136436797506.stgit@birch.djwong.org>
+Date: Fri, 17 Feb 2017 17:17:55 -0800
+Message-ID: <148738067544.29384.3138548741798927323.stgit@birch.djwong.org>
 In-Reply-To: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
 References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -20,153 +21,216 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.ke
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a helper function that will query all records in a btree.
-This will be used by the online repair functions to examine every
-record in a btree to rebuild a second btree.
+If the reverse-mapping btree isn't available, fall back to the
+free space btrees to provide partial reverse mapping information.
+The online scrub tool can make use of even partial information to
+speed up the data block scan.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   15 +++++++++++++++
- fs/xfs/libxfs/xfs_alloc.h |    2 ++
- fs/xfs/libxfs/xfs_btree.c |   15 +++++++++++++++
- fs/xfs/libxfs/xfs_btree.h |    2 ++
- fs/xfs/libxfs/xfs_rmap.c  |   28 +++++++++++++++++++++-------
- fs/xfs/libxfs/xfs_rmap.h  |    2 ++
- 6 files changed, 57 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_fsmap.c |  155 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 152 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 526df17..ba15f30 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2917,3 +2917,18 @@ xfs_alloc_query_range(
- 	return xfs_btree_query_range(cur, &low_brec, &high_brec,
- 			xfs_alloc_query_range_helper, &query);
- }
-+
-+/* Find all free space records. */
-+int
-+xfs_alloc_query_all(
-+	struct xfs_btree_cur			*cur,
-+	xfs_alloc_query_range_fn		fn,
-+	void					*priv)
-+{
-+	struct xfs_alloc_query_range_info	query;
-+
-+	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
-+	query.priv = priv;
-+	query.fn = fn;
-+	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
-+}
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index f534998..a2101de 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -232,5 +232,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
- 		struct xfs_alloc_rec_incore *low_rec,
- 		struct xfs_alloc_rec_incore *high_rec,
- 		xfs_alloc_query_range_fn fn, void *priv);
-+int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
-+		void *priv);
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 09d6b92..82e44a9 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -40,6 +40,7 @@
+ #include "xfs_fsmap.h"
+ #include "xfs_refcount.h"
+ #include "xfs_refcount_btree.h"
++#include "xfs_alloc_btree.h"
  
- #endif	/* __XFS_ALLOC_H__ */
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 2849d3f..ca94b87 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4823,6 +4823,21 @@ xfs_btree_query_range(
- 			fn, priv);
+ /* Convert an xfs_fsmap to an fsmap. */
+ void
+@@ -158,6 +159,9 @@ xfs_fsmap_owner_from_rmap(
+ 	case XFS_RMAP_OWN_COW:
+ 		fmr->fmr_owner = XFS_FMR_OWN_COW;
+ 		break;
++	case XFS_RMAP_OWN_NULL:	/* "free" */
++		fmr->fmr_owner = XFS_FMR_OWN_FREE;
++		break;
+ 	default:
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -433,6 +437,31 @@ xfs_getfsmap_rtdev_helper(
+ 	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
  }
  
-+/* Query a btree for all records. */
-+int
-+xfs_btree_query_all(
++/* Transform a bnobt irec into a fsmap */
++STATIC int
++xfs_getfsmap_datadev_bnobt_helper(
 +	struct xfs_btree_cur		*cur,
-+	xfs_btree_query_range_fn	fn,
++	struct xfs_alloc_rec_incore	*rec,
 +	void				*priv)
 +{
-+	union xfs_btree_irec		low_rec;
-+	union xfs_btree_irec		high_rec;
++	struct xfs_mount		*mp = cur->bc_mp;
++	struct xfs_getfsmap_info	*info = priv;
++	struct xfs_rmap_irec		irec;
++	xfs_fsblock_t			fsb;
++	xfs_daddr_t			rec_daddr;
 +
-+	memset(&low_rec, 0, sizeof(low_rec));
-+	memset(&high_rec, 0xFF, sizeof(high_rec));
-+	return xfs_btree_query_range(cur, &low_rec, &high_rec, fn, priv);
++	fsb = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno, rec->ar_startblock);
++	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb);
++
++	irec.rm_startblock = rec->ar_startblock;
++	irec.rm_blockcount = rec->ar_blockcount;
++	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
++	irec.rm_offset = 0;
++	irec.rm_flags = 0;
++
++	return xfs_getfsmap_helper(cur->bc_tp, info, &irec, rec_daddr);
 +}
 +
- /*
-  * Calculate the number of blocks needed to store a given number of records
-  * in a short-format (per-AG metadata) btree.
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 33a8f86..5114055 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -494,6 +494,8 @@ typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
- int xfs_btree_query_range(struct xfs_btree_cur *cur,
- 		union xfs_btree_irec *low_rec, union xfs_btree_irec *high_rec,
- 		xfs_btree_query_range_fn fn, void *priv);
-+int xfs_btree_query_all(struct xfs_btree_cur *cur, xfs_btree_query_range_fn fn,
-+		void *priv);
- 
- typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
- 		void *data);
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 3a8cc71..3840556 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -2001,14 +2001,14 @@ xfs_rmap_query_range_helper(
- /* Find all rmaps between two keys. */
- int
- xfs_rmap_query_range(
--	struct xfs_btree_cur		*cur,
--	struct xfs_rmap_irec		*low_rec,
--	struct xfs_rmap_irec		*high_rec,
--	xfs_rmap_query_range_fn	fn,
--	void				*priv)
-+	struct xfs_btree_cur			*cur,
-+	struct xfs_rmap_irec			*low_rec,
-+	struct xfs_rmap_irec			*high_rec,
-+	xfs_rmap_query_range_fn			fn,
-+	void					*priv)
- {
--	union xfs_btree_irec		low_brec;
--	union xfs_btree_irec		high_brec;
-+	union xfs_btree_irec			low_brec;
-+	union xfs_btree_irec			high_brec;
- 	struct xfs_rmap_query_range_info	query;
- 
- 	low_brec.r = *low_rec;
-@@ -2019,6 +2019,20 @@ xfs_rmap_query_range(
- 			xfs_rmap_query_range_helper, &query);
+ /* Set rmap flags based on the getfsmap flags */
+ static void
+ xfs_getfsmap_set_irec_flags(
+@@ -621,6 +650,125 @@ xfs_getfsmap_datadev(
+ 	return error;
  }
  
-+/* Find all rmaps. */
-+int
-+xfs_rmap_query_all(
-+	struct xfs_btree_cur			*cur,
-+	xfs_rmap_query_range_fn			fn,
-+	void					*priv)
++/* Execute a getfsmap query against the regular data device's bnobt. */
++STATIC int
++xfs_getfsmap_datadev_bnobt(
++	struct xfs_trans		*tp,
++	struct xfs_fsmap		*keys,
++	struct xfs_getfsmap_info	*info)
 +{
-+	struct xfs_rmap_query_range_info	query;
++	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_btree_cur		*bt_cur = NULL;
++	struct xfs_fsmap		*dkey_low;
++	struct xfs_fsmap		*dkey_high;
++	struct xfs_alloc_rec_incore	alow;
++	struct xfs_alloc_rec_incore	ahigh;
++	xfs_fsblock_t			start_fsb;
++	xfs_fsblock_t			end_fsb;
++	xfs_agnumber_t			start_ag;
++	xfs_agnumber_t			end_ag;
++	xfs_daddr_t			eofs;
++	int				error = 0;
 +
-+	query.priv = priv;
-+	query.fn = fn;
-+	return xfs_btree_query_all(cur, xfs_rmap_query_range_helper, &query);
++	dkey_low = keys;
++	dkey_high = keys + 1;
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
++	if (dkey_low->fmr_physical >= eofs)
++		return 0;
++	if (dkey_high->fmr_physical >= eofs)
++		dkey_high->fmr_physical = eofs - 1;
++	start_fsb = XFS_DADDR_TO_FSB(mp, dkey_low->fmr_physical);
++	end_fsb = XFS_DADDR_TO_FSB(mp, dkey_high->fmr_physical);
++
++	/* Set up search keys */
++	info->low.rm_startblock = XFS_FSB_TO_AGBNO(mp, start_fsb);
++	info->low.rm_offset = XFS_BB_TO_FSBT(mp, dkey_low->fmr_offset);
++	error = xfs_fsmap_owner_to_rmap(dkey_low, &info->low);
++	if (error)
++		return error;
++	info->low.rm_blockcount = 0;
++	xfs_getfsmap_set_irec_flags(&info->low, dkey_low);
++
++	info->high.rm_startblock = -1U;
++	info->high.rm_owner = ULLONG_MAX;
++	info->high.rm_offset = ULLONG_MAX;
++	info->high.rm_blockcount = 0;
++	info->high.rm_flags = XFS_RMAP_KEY_FLAGS | XFS_RMAP_REC_FLAGS;
++
++	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
++
++	start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
++	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
++
++	/* Query each AG */
++	for (info->agno = start_ag; info->agno <= end_ag; info->agno++) {
++		if (info->agno == end_ag) {
++			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
++					end_fsb);
++			info->high.rm_offset = XFS_BB_TO_FSBT(mp,
++					dkey_high->fmr_offset);
++			error = xfs_fsmap_owner_to_rmap(dkey_high, &info->high);
++			if (error)
++				goto err;
++			xfs_getfsmap_set_irec_flags(&info->high, dkey_high);
++		}
++
++		if (bt_cur) {
++			xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
++			bt_cur = NULL;
++			info->agf_bp = NULL;
++		}
++
++		error = xfs_alloc_read_agf(mp, tp, info->agno, 0,
++				&info->agf_bp);
++		if (error)
++			goto err;
++
++		trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
++				info->low.rm_startblock,
++				info->low.rm_blockcount,
++				info->low.rm_owner,
++				info->low.rm_offset);
++
++		trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
++				info->high.rm_startblock,
++				info->high.rm_blockcount,
++				info->high.rm_owner,
++				info->high.rm_offset);
++
++		bt_cur = xfs_allocbt_init_cursor(mp, tp, info->agf_bp,
++				info->agno, XFS_BTNUM_BNO);
++		alow.ar_startblock = info->low.rm_startblock;
++		ahigh.ar_startblock = info->high.rm_startblock;
++		error = xfs_alloc_query_range(bt_cur, &alow, &ahigh,
++				xfs_getfsmap_datadev_bnobt_helper, info);
++		if (error)
++			goto err;
++
++		if (info->agno == start_ag) {
++			info->low.rm_startblock = 0;
++			info->low.rm_owner = 0;
++			info->low.rm_offset = 0;
++			info->low.rm_flags = 0;
++		}
++	}
++
++	/* Report any free space at the end of the AG */
++	info->last = true;
++	error = xfs_getfsmap_datadev_bnobt_helper(bt_cur, &ahigh, info);
++	if (error)
++		goto err;
++
++err:
++	if (bt_cur)
++		xfs_btree_del_cursor(bt_cur, error < 0 ? XFS_BTREE_ERROR :
++							 XFS_BTREE_NOERROR);
++	if (info->agf_bp)
++		info->agf_bp = NULL;
++
++	return error;
 +}
 +
- /* Clean up after calling xfs_rmap_finish_one. */
- void
- xfs_rmap_finish_one_cleanup(
-diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-index 7899305..faf2c1a 100644
---- a/fs/xfs/libxfs/xfs_rmap.h
-+++ b/fs/xfs/libxfs/xfs_rmap.h
-@@ -162,6 +162,8 @@ typedef int (*xfs_rmap_query_range_fn)(
- int xfs_rmap_query_range(struct xfs_btree_cur *cur,
- 		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
- 		xfs_rmap_query_range_fn fn, void *priv);
-+int xfs_rmap_query_all(struct xfs_btree_cur *cur, xfs_rmap_query_range_fn fn,
-+		void *priv);
+ /* Do we recognize the device? */
+ STATIC bool
+ xfs_getfsmap_is_valid_device(
+@@ -689,8 +837,6 @@ xfs_getfsmap(
+ 	int				i;
+ 	int				error = 0;
  
- enum xfs_rmap_intent_type {
- 	XFS_RMAP_MAP,
+-	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+-		return -EOPNOTSUPP;
+ 	if (head->fmh_iflags & ~FMH_IF_VALID)
+ 		return -EINVAL;
+ 	rkey_low = head->fmh_keys;
+@@ -704,7 +850,10 @@ xfs_getfsmap(
+ 	/* Set up our device handlers. */
+ 	memset(handlers, 0, sizeof(handlers));
+ 	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
+-	handlers[0].fn = xfs_getfsmap_datadev;
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		handlers[0].fn = xfs_getfsmap_datadev;
++	else
++		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
+ 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+ 		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
+ 		handlers[1].fn = xfs_getfsmap_logdev;
 
