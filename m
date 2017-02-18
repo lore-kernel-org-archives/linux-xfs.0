@@ -1,154 +1,172 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:38303 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750824AbdBQX6y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 18:58:54 -0500
-Date: Sat, 18 Feb 2017 10:52:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Bug 192981] New: page allocation stalls
-Message-ID: <20170217235245.GE15349@dastard>
-References: <bug-192981-27@https.bugzilla.kernel.org/>
- <20170123135111.13ac3e47110de10a4bd503ef@linux-foundation.org>
- <8f450abd-4e05-92d3-2533-72b05fea2012@beget.ru>
- <20170215160538.GA62565@bfoster.bfoster>
- <a055abbf-a471-d111-9491-dc5b00208228@beget.ru>
- <20170215180859.GB62565@bfoster.bfoster>
- <07ee50bc-8220-dda8-07f9-369758603df9@beget.ru>
- <20170216172034.GC11750@bfoster.bfoster>
- <20170216222129.GB15349@dastard>
- <20170217190500.GC20429@bfoster.bfoster>
+Received: from aserp1040.oracle.com ([141.146.126.69]:41769 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752338AbdBRBRr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 20:17:47 -0500
+Subject: [PATCH 4/8] xfs: create a function to query all records in a btree
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 17 Feb 2017 17:17:42 -0800
+Message-ID: <148738066286.29384.6059407136436797506.stgit@birch.djwong.org>
+In-Reply-To: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
+References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170217190500.GC20429@bfoster.bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Alexander Polakov <apolyakov@beget.ru>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Fri, Feb 17, 2017 at 02:05:00PM -0500, Brian Foster wrote:
-> On Fri, Feb 17, 2017 at 09:21:29AM +1100, Dave Chinner wrote:
-> > On Thu, Feb 16, 2017 at 12:20:34PM -0500, Brian Foster wrote:
-> > > A couple things that might
-> > > help avoid this situation are more aggressive
-> > > /proc/sys/fs/xfs/xfssyncd_centisecs tuning or perhaps considering a
-> > > smaller log size would cause more tail pushing pressure on the AIL
-> > > instead of pressure originating from memory reclaim. The latter might
-> > > not be so convenient if this is an already populated backup server,
-> > > though.
-> > > 
-> > > Beyond that, there's Chris' patch, another patch that Dave proposed[2],
-> > > and obviously your hack here to defer inode reclaim entirely to the
-> > > workqueue (I've CC'd Dave since it sounds like he might have been
-> > > working on this further..).
-> > 
-> > I was working on a more solid set of changes, but every time I
-> > updated the kernel tree I used as my base for development, the
-> > baseline kernel reclaim behaviour would change. I'd isolate the
-> > behavioural change, upgrade to the kernel that contained the fix,
-> > and then trip over some new whacky behaviour that made no sense. I
-> > spent more time in this loop than actually trying to fix the XFS
-> > problem - chasing a moving target makes finding the root cause of
-> > the reclaim stalls just about impossible. 
-> > 
-> > Brian, I can send you what I have but it's really just a bag of
-> > bolts at this point because I was never able to validate that any of
-> > the patches made a measurable improvement to reclaim behaviour under
-> > any workload I ran.....
-> > 
-> 
-> Sure, I'm curious to see what direction this goes in. I would think
-> anything that provides a backoff to other shrinkers would help this
-> particular workload where many different filesystems are active. FWIW,
-> I'd probably also need more details about what workloads you're testing
-> and how you're measuring improvements and whatnot to try and take any of
-> that stuff any farther (particularly how you verify the problems with
-> dropping blocking behavior entirely), though..
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok, I'll send you a copy...
+Create a helper function that will query all records in a btree.
+This will be used by the online repair functions to examine every
+record in a btree to rebuild a second btree.
 
-> > FWIW, the major problem with removing the blocking in inode reclaim
-> > is the ease with which you can then trigger the OOM killer from
-> > userspace.  The high level memory reclaim algorithms break down when
-> > there are hundreds of direct reclaim processes hammering on reclaim
-> > and reclaim stops making progress because it's skipping dirty
-> > objects.  Direct reclaim ends up insufficiently throttled, so rather
-> > than blocking it winds up reclaim priority and then declares OOM
-> > because reclaim runs out of retries before sufficient memory has
-> > been freed.
-> > 
-> 
-> I'd need to spend some time in the shrinker code to grok this, but if
-> there's such a priority, would switching blocking behavior based on
-> priority provide a way to mitigate this problem from within the
-> shrinker? For example, provide non-blocking behavior on the lowest
-> priority to kick off flushing and allow progress into other shrinkers,
-> otherwise we flush and wait if the priority is elevated..?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c |   15 +++++++++++++++
+ fs/xfs/libxfs/xfs_alloc.h |    2 ++
+ fs/xfs/libxfs/xfs_btree.c |   15 +++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h |    2 ++
+ fs/xfs/libxfs/xfs_rmap.c  |   28 +++++++++++++++++++++-------
+ fs/xfs/libxfs/xfs_rmap.h  |    2 ++
+ 6 files changed, 57 insertions(+), 7 deletions(-)
 
-I tried that - exporting the priority to the shrink_control and so
-on. The system either behaved the same (i.e. stalled on reclaim) or
-randomly fell into a screaming pile of OOM killer rage-death. There
-was no in-between reliable state...
 
-> IOW, it sounds like the problem in this case is that we subject the rest
-> of the allocation infrastructure to delays in configurations where we
-> are one of N potential shrinkers with reclaimable objects, because we
-> have to deal with this situation where our one shrinker actually is the
-> main/primary choke point for multiple allocator -> direct reclaimers.
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 526df17..ba15f30 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2917,3 +2917,18 @@ xfs_alloc_query_range(
+ 	return xfs_btree_query_range(cur, &low_brec, &high_brec,
+ 			xfs_alloc_query_range_helper, &query);
+ }
++
++/* Find all free space records. */
++int
++xfs_alloc_query_all(
++	struct xfs_btree_cur			*cur,
++	xfs_alloc_query_range_fn		fn,
++	void					*priv)
++{
++	struct xfs_alloc_query_range_info	query;
++
++	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
++}
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index f534998..a2101de 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -232,5 +232,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
+ 		struct xfs_alloc_rec_incore *low_rec,
+ 		struct xfs_alloc_rec_incore *high_rec,
+ 		xfs_alloc_query_range_fn fn, void *priv);
++int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
++		void *priv);
+ 
+ #endif	/* __XFS_ALLOC_H__ */
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 2849d3f..ca94b87 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4823,6 +4823,21 @@ xfs_btree_query_range(
+ 			fn, priv);
+ }
+ 
++/* Query a btree for all records. */
++int
++xfs_btree_query_all(
++	struct xfs_btree_cur		*cur,
++	xfs_btree_query_range_fn	fn,
++	void				*priv)
++{
++	union xfs_btree_irec		low_rec;
++	union xfs_btree_irec		high_rec;
++
++	memset(&low_rec, 0, sizeof(low_rec));
++	memset(&high_rec, 0xFF, sizeof(high_rec));
++	return xfs_btree_query_range(cur, &low_rec, &high_rec, fn, priv);
++}
++
+ /*
+  * Calculate the number of blocks needed to store a given number of records
+  * in a short-format (per-AG metadata) btree.
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 33a8f86..5114055 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -494,6 +494,8 @@ typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
+ int xfs_btree_query_range(struct xfs_btree_cur *cur,
+ 		union xfs_btree_irec *low_rec, union xfs_btree_irec *high_rec,
+ 		xfs_btree_query_range_fn fn, void *priv);
++int xfs_btree_query_all(struct xfs_btree_cur *cur, xfs_btree_query_range_fn fn,
++		void *priv);
+ 
+ typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
+ 		void *data);
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 3a8cc71..3840556 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2001,14 +2001,14 @@ xfs_rmap_query_range_helper(
+ /* Find all rmaps between two keys. */
+ int
+ xfs_rmap_query_range(
+-	struct xfs_btree_cur		*cur,
+-	struct xfs_rmap_irec		*low_rec,
+-	struct xfs_rmap_irec		*high_rec,
+-	xfs_rmap_query_range_fn	fn,
+-	void				*priv)
++	struct xfs_btree_cur			*cur,
++	struct xfs_rmap_irec			*low_rec,
++	struct xfs_rmap_irec			*high_rec,
++	xfs_rmap_query_range_fn			fn,
++	void					*priv)
+ {
+-	union xfs_btree_irec		low_brec;
+-	union xfs_btree_irec		high_brec;
++	union xfs_btree_irec			low_brec;
++	union xfs_btree_irec			high_brec;
+ 	struct xfs_rmap_query_range_info	query;
+ 
+ 	low_brec.r = *low_rec;
+@@ -2019,6 +2019,20 @@ xfs_rmap_query_range(
+ 			xfs_rmap_query_range_helper, &query);
+ }
+ 
++/* Find all rmaps. */
++int
++xfs_rmap_query_all(
++	struct xfs_btree_cur			*cur,
++	xfs_rmap_query_range_fn			fn,
++	void					*priv)
++{
++	struct xfs_rmap_query_range_info	query;
++
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_all(cur, xfs_rmap_query_range_helper, &query);
++}
++
+ /* Clean up after calling xfs_rmap_finish_one. */
+ void
+ xfs_rmap_finish_one_cleanup(
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 7899305..faf2c1a 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -162,6 +162,8 @@ typedef int (*xfs_rmap_query_range_fn)(
+ int xfs_rmap_query_range(struct xfs_btree_cur *cur,
+ 		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
+ 		xfs_rmap_query_range_fn fn, void *priv);
++int xfs_rmap_query_all(struct xfs_btree_cur *cur, xfs_rmap_query_range_fn fn,
++		void *priv);
+ 
+ enum xfs_rmap_intent_type {
+ 	XFS_RMAP_MAP,
 
-Yup. The mm reclaim design sucks ass because if we use purely
-non-blocking reclaim techniques in the shrinkers we have no way of
-throttling allocation demand to the rate at which shrinkers can
-reclaim objects and we end up with gross cache imbalances under
-memory pressure.
-
-> I'm wondering if some kind of severity parameter managed by the shrinker
-> infra would help us distinguish between those scenarios (even if it were
-> a dumb LOW/HIGH priority param, where LOW allows for one pass through
-> all of the shrinkers to kick off I/O and whatnot before any one of them
-> should actually block on locks or I/O). Then again, I'm just handwaving
-> as I'm only just familiarizing with the context and problem.
-
-Tried that, too. :( Several different ways over the past few years.
-Remember that we also have the non-blocking background reclaim
-thread - even triggering that immediately on reclaim doesn't
-prevent stalls, and my last patchset specifically excluded it
-from concurrency control so it always ran immediately on reclaim
-
-Hmmm - I just had a thought.
-
-Perhaps all we need to do is remove direct reclaim from the
-shrinker. i.e. make the background reclaimer run on a ticket based
-queuing system similar to the log reservations...
-
-For non-blocking reclaim (i.e.  kswapd), we just queue the ticket
-and return immediately, saying we've done the scan. 
-
-For blocking reclaim, we take a ticket with the blocking scan count
-on it and wait in the wakeup queue.  As background reclaim runs, it
-decrements the lead ticket scan count. When it hits zero, wake up
-the head of the wait queue. When the background thread has no
-pending reclaim tickets or has nothing left to scan/reclaim (i.e.
-goes idle), wake everyone....
-
-This means waiting is ordered, it doesn't matter where in the fs we
-reclaim from, direct reclaim itself doesn't get stuck waiting for
-IO/transactions/log flushing, concurrency is managed by how we
-process the ticket queue, and when we have lots of direct reclaim
-demand then the background thread just keeps running as optimally as
-possible and kswapd is never blocked...
-
-> (I also see no priority in struct shrink_control, so I guess that's an
-> internal reclaim thing as it is.)
-
-Yup, I had to promote it all the way through from the struct
-scan_control -> priority field.
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
