@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41741 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752390AbdBRBRl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 20:17:41 -0500
-Subject: [PATCH 2/8] xfs: plumb in needed functions for range querying of
- the freespace btrees
+Received: from userp1040.oracle.com ([156.151.31.81]:32833 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752744AbdBRBSG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 20:18:06 -0500
+Subject: [PATCH 7/8] xfs: getfsmap should fall back to rtbitmap when
+ rtrmapbt not present
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 17 Feb 2017 17:17:30 -0800
-Message-ID: <148738065038.29384.2269477924958641169.stgit@birch.djwong.org>
+Date: Fri, 17 Feb 2017 17:18:01 -0800
+Message-ID: <148738068173.29384.8537043380781053681.stgit@birch.djwong.org>
 In-Reply-To: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
 References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -21,259 +21,201 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.ke
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Plumb in the pieces (init_high_key, diff_two_keys) necessary to call
-query_range on the free space btrees.  Remove the debugging asserts
-so that we can make queries starting from block 0.
-
-While we're at it, merge the redundant "if (btnum ==" hunks.
+Use the realtime bitmap to return freespace information when the
+rtrmapbt isn't present.  Note that the rtrmapbt fsmap implementation
+will show up later with the rtrmapbt patchset.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc_btree.c |  162 +++++++++++++++++++++++++++++----------
- 1 file changed, 119 insertions(+), 43 deletions(-)
+ fs/xfs/xfs_fsmap.c   |  134 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_rtalloc.h |    2 +
+ 2 files changed, 136 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index efb467b..ba3ec9c 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -205,19 +205,28 @@ xfs_allocbt_init_key_from_rec(
- 	union xfs_btree_key	*key,
- 	union xfs_btree_rec	*rec)
- {
--	ASSERT(rec->alloc.ar_startblock != 0);
--
- 	key->alloc.ar_startblock = rec->alloc.ar_startblock;
- 	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 82e44a9..e769322 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -41,6 +41,7 @@
+ #include "xfs_refcount.h"
+ #include "xfs_refcount_btree.h"
+ #include "xfs_alloc_btree.h"
++#include "xfs_rtalloc.h"
+ 
+ /* Convert an xfs_fsmap to an fsmap. */
+ void
+@@ -437,6 +438,30 @@ xfs_getfsmap_rtdev_helper(
+ 	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
  }
  
- STATIC void
-+xfs_bnobt_init_high_key_from_rec(
-+	union xfs_btree_key	*key,
-+	union xfs_btree_rec	*rec)
-+{
-+	__u32			x;
-+
-+	x = be32_to_cpu(rec->alloc.ar_startblock);
-+	x += be32_to_cpu(rec->alloc.ar_blockcount) - 1;
-+	key->alloc.ar_startblock = cpu_to_be32(x);
-+	key->alloc.ar_blockcount = 0;
-+}
-+
-+STATIC void
- xfs_allocbt_init_rec_from_cur(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_rec	*rec)
- {
--	ASSERT(cur->bc_rec.a.ar_startblock != 0);
--
- 	rec->alloc.ar_startblock = cpu_to_be32(cur->bc_rec.a.ar_startblock);
- 	rec->alloc.ar_blockcount = cpu_to_be32(cur->bc_rec.a.ar_blockcount);
- }
-@@ -236,18 +245,24 @@ xfs_allocbt_init_ptr_from_cur(
- }
- 
- STATIC __int64_t
--xfs_allocbt_key_diff(
-+xfs_bnobt_key_diff(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_key	*key)
- {
- 	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
- 	xfs_alloc_key_t		*kp = &key->alloc;
--	__int64_t		diff;
- 
--	if (cur->bc_btnum == XFS_BTNUM_BNO) {
--		return (__int64_t)be32_to_cpu(kp->ar_startblock) -
--				rec->ar_startblock;
--	}
-+	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
-+}
-+
-+STATIC __int64_t
-+xfs_cntbt_key_diff(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*key)
-+{
-+	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
-+	xfs_alloc_key_t		*kp = &key->alloc;
-+	__int64_t		diff;
- 
- 	diff = (__int64_t)be32_to_cpu(kp->ar_blockcount) - rec->ar_blockcount;
- 	if (diff)
-@@ -256,6 +271,33 @@ xfs_allocbt_key_diff(
- 	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
- }
- 
-+STATIC __int64_t
-+xfs_bnobt_diff_two_keys(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	return (__int64_t)be32_to_cpu(k1->alloc.ar_startblock) -
-+			  be32_to_cpu(k2->alloc.ar_startblock);
-+}
-+
-+STATIC __int64_t
-+xfs_cntbt_diff_two_keys(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	__int64_t		diff;
-+
-+	diff =  be32_to_cpu(k1->alloc.ar_blockcount) -
-+		be32_to_cpu(k2->alloc.ar_blockcount);
-+	if (diff)
-+		return diff;
-+
-+	return  be32_to_cpu(k1->alloc.ar_startblock) -
-+		be32_to_cpu(k2->alloc.ar_startblock);
-+}
-+
- static bool
- xfs_allocbt_verify(
- 	struct xfs_buf		*bp)
-@@ -346,44 +388,78 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
- 
- #if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
--xfs_allocbt_keys_inorder(
-+xfs_bnobt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_key	*k1,
- 	union xfs_btree_key	*k2)
- {
--	if (cur->bc_btnum == XFS_BTNUM_BNO) {
--		return be32_to_cpu(k1->alloc.ar_startblock) <
--		       be32_to_cpu(k2->alloc.ar_startblock);
--	} else {
--		return be32_to_cpu(k1->alloc.ar_blockcount) <
--			be32_to_cpu(k2->alloc.ar_blockcount) ||
--			(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
--			 be32_to_cpu(k1->alloc.ar_startblock) <
--			 be32_to_cpu(k2->alloc.ar_startblock));
--	}
-+	return be32_to_cpu(k1->alloc.ar_startblock) <
-+	       be32_to_cpu(k2->alloc.ar_startblock);
- }
- 
- STATIC int
--xfs_allocbt_recs_inorder(
-+xfs_bnobt_recs_inorder(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_rec	*r1,
- 	union xfs_btree_rec	*r2)
- {
--	if (cur->bc_btnum == XFS_BTNUM_BNO) {
--		return be32_to_cpu(r1->alloc.ar_startblock) +
--			be32_to_cpu(r1->alloc.ar_blockcount) <=
--			be32_to_cpu(r2->alloc.ar_startblock);
--	} else {
--		return be32_to_cpu(r1->alloc.ar_blockcount) <
--			be32_to_cpu(r2->alloc.ar_blockcount) ||
--			(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
--			 be32_to_cpu(r1->alloc.ar_startblock) <
--			 be32_to_cpu(r2->alloc.ar_startblock));
--	}
-+	return be32_to_cpu(r1->alloc.ar_startblock) +
-+		be32_to_cpu(r1->alloc.ar_blockcount) <=
-+		be32_to_cpu(r2->alloc.ar_startblock);
-+}
-+
++/* Transform a rtbitmap "record" into a fsmap */
 +STATIC int
-+xfs_cntbt_keys_inorder(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
++xfs_getfsmap_rtdev_rtbitmap_helper(
++	struct xfs_trans		*tp,
++	xfs_rtblock_t			start,
++	xfs_rtblock_t			end,
++	void				*priv)
 +{
-+	return be32_to_cpu(k1->alloc.ar_blockcount) <
-+		be32_to_cpu(k2->alloc.ar_blockcount) ||
-+		(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
-+		 be32_to_cpu(k1->alloc.ar_startblock) <
-+		 be32_to_cpu(k2->alloc.ar_startblock));
++	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_getfsmap_info	*info = priv;
++	struct xfs_rmap_irec		irec;
++	xfs_daddr_t			rec_daddr;
++
++	rec_daddr = XFS_FSB_TO_BB(mp, start);
++
++	irec.rm_startblock = start;
++	irec.rm_blockcount = end - start + 1;
++	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
++	irec.rm_offset = 0;
++	irec.rm_flags = 0;
++
++	return xfs_getfsmap_helper(tp, info, &irec, rec_daddr);
 +}
 +
-+STATIC int
-+xfs_cntbt_recs_inorder(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*r1,
-+	union xfs_btree_rec	*r2)
-+{
-+	return be32_to_cpu(r1->alloc.ar_blockcount) <
-+		be32_to_cpu(r2->alloc.ar_blockcount) ||
-+		(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
-+		 be32_to_cpu(r1->alloc.ar_startblock) <
-+		 be32_to_cpu(r2->alloc.ar_startblock));
+ /* Transform a bnobt irec into a fsmap */
+ STATIC int
+ xfs_getfsmap_datadev_bnobt_helper(
+@@ -536,6 +561,108 @@ xfs_getfsmap_logdev(
+ 	return xfs_getfsmap_rtdev_helper(&cur, &rmap, info);
  }
--#endif	/* DEBUG */
-+#endif /* DEBUG */
+ 
++/* Execute a getfsmap query against the realtime data device (rtbitmap). */
++STATIC int
++xfs_getfsmap_rtdev_rtbitmap(
++	struct xfs_trans		*tp,
++	struct xfs_fsmap		*keys,
++	struct xfs_getfsmap_info	*info)
++{
++	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_fsmap		*dkey_low;
++	struct xfs_fsmap		*dkey_high;
++	xfs_fsblock_t			start_fsb;
++	xfs_fsblock_t			end_fsb;
++	xfs_rtblock_t			rtstart;
++	xfs_rtblock_t			rtend;
++	xfs_rtblock_t			rem;
++	xfs_daddr_t			eofs;
++	int				is_free;
++	int				error = 0;
 +
-+static const struct xfs_btree_ops xfs_bnobt_ops = {
-+	.rec_len		= sizeof(xfs_alloc_rec_t),
-+	.key_len		= sizeof(xfs_alloc_key_t),
++	dkey_low = keys;
++	dkey_high = keys + 1;
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
++	if (dkey_low->fmr_physical >= eofs)
++		return 0;
++	if (dkey_high->fmr_physical >= eofs)
++		dkey_high->fmr_physical = eofs - 1;
++	start_fsb = XFS_BB_TO_FSBT(mp, dkey_low->fmr_physical);
++	end_fsb = XFS_BB_TO_FSB(mp, dkey_high->fmr_physical);
 +
-+	.dup_cursor		= xfs_allocbt_dup_cursor,
-+	.set_root		= xfs_allocbt_set_root,
-+	.alloc_block		= xfs_allocbt_alloc_block,
-+	.free_block		= xfs_allocbt_free_block,
-+	.update_lastrec		= xfs_allocbt_update_lastrec,
-+	.get_minrecs		= xfs_allocbt_get_minrecs,
-+	.get_maxrecs		= xfs_allocbt_get_maxrecs,
-+	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
-+	.init_high_key_from_rec	= xfs_bnobt_init_high_key_from_rec,
-+	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
-+	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
-+	.key_diff		= xfs_bnobt_key_diff,
-+	.buf_ops		= &xfs_allocbt_buf_ops,
-+	.diff_two_keys		= xfs_bnobt_diff_two_keys,
-+#if defined(DEBUG) || defined(XFS_WARN)
-+	.keys_inorder		= xfs_bnobt_keys_inorder,
-+	.recs_inorder		= xfs_bnobt_recs_inorder,
-+#endif
-+};
++	/* Set up search keys */
++	info->low.rm_startblock = start_fsb;
++	error = xfs_fsmap_owner_to_rmap(dkey_low, &info->low);
++	if (error)
++		return error;
++	info->low.rm_offset = XFS_BB_TO_FSBT(mp, dkey_low->fmr_offset);
++	info->low.rm_blockcount = 0;
++	xfs_getfsmap_set_irec_flags(&info->low, dkey_low);
++
++	info->high.rm_startblock = end_fsb;
++	error = xfs_fsmap_owner_to_rmap(dkey_high, &info->high);
++	if (error)
++		return error;
++	info->high.rm_offset = XFS_BB_TO_FSBT(mp, dkey_high->fmr_offset);
++	info->high.rm_blockcount = 0;
++	xfs_getfsmap_set_irec_flags(&info->high, dkey_high);
++
++	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
++
++	trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
++			info->low.rm_startblock,
++			info->low.rm_blockcount,
++			info->low.rm_owner,
++			info->low.rm_offset);
++
++	trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
++			info->high.rm_startblock,
++			info->high.rm_blockcount,
++			info->high.rm_owner,
++			info->high.rm_offset);
++
++	xfs_ilock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
++
++	/* Iterate the bitmap, looking for discrepancies. */
++	rtstart = 0;
++	rem = mp->m_sb.sb_rblocks;
++	while (rem) {
++		/* Is the first block free? */
++		error = xfs_rtcheck_range(mp, tp, rtstart, 1, 1, &rtend,
++				&is_free);
++		if (error)
++			goto out_unlock;
++
++		/* How long does the extent go for? */
++		error = xfs_rtfind_forw(mp, tp, rtstart,
++				mp->m_sb.sb_rblocks - 1, &rtend);
++		if (error)
++			goto out_unlock;
++
++		if (is_free) {
++			error = xfs_getfsmap_rtdev_rtbitmap_helper(tp,
++					rtstart, rtend, info);
++			if (error)
++				goto out_unlock;
++		}
++
++		rem -= rtend - rtstart + 1;
++		rtstart = rtend + 1;
++	}
++
++out_unlock:
++	xfs_iunlock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
++
++	/* Report any free space at the end of the rtdev */
++	info->last = true;
++	error = xfs_getfsmap_rtdev_rtbitmap_helper(tp, end_fsb, 0, info);
++	if (error)
++		goto err;
++
++err:
++	return error;
++}
++
+ /* Execute a getfsmap query against the regular data device. */
+ STATIC int
+ xfs_getfsmap_datadev(
+@@ -781,6 +908,9 @@ xfs_getfsmap_is_valid_device(
+ 	if (mp->m_logdev_targp &&
+ 	    fm->fmr_device == new_encode_dev(mp->m_logdev_targp->bt_dev))
+ 		return true;
++	if (mp->m_rtdev_targp &&
++	    fm->fmr_device == new_encode_dev(mp->m_rtdev_targp->bt_dev))
++		return true;
+ 	return false;
+ }
  
--static const struct xfs_btree_ops xfs_allocbt_ops = {
-+static const struct xfs_btree_ops xfs_cntbt_ops = {
- 	.rec_len		= sizeof(xfs_alloc_rec_t),
- 	.key_len		= sizeof(xfs_alloc_key_t),
- 
-@@ -397,11 +473,12 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
- 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
- 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
--	.key_diff		= xfs_allocbt_key_diff,
-+	.key_diff		= xfs_cntbt_key_diff,
- 	.buf_ops		= &xfs_allocbt_buf_ops,
-+	.diff_two_keys		= xfs_cntbt_diff_two_keys,
- #if defined(DEBUG) || defined(XFS_WARN)
--	.keys_inorder		= xfs_allocbt_keys_inorder,
--	.recs_inorder		= xfs_allocbt_recs_inorder,
-+	.keys_inorder		= xfs_cntbt_keys_inorder,
-+	.recs_inorder		= xfs_cntbt_recs_inorder,
- #endif
- };
- 
-@@ -427,16 +504,15 @@ xfs_allocbt_init_cursor(
- 	cur->bc_mp = mp;
- 	cur->bc_btnum = btnum;
- 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
--	cur->bc_ops = &xfs_allocbt_ops;
--	if (btnum == XFS_BTNUM_BNO)
--		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
--	else
--		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
- 
- 	if (btnum == XFS_BTNUM_CNT) {
-+		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
-+		cur->bc_ops = &xfs_cntbt_ops;
- 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
- 		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
- 	} else {
-+		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
-+		cur->bc_ops = &xfs_bnobt_ops;
- 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
+@@ -858,6 +988,10 @@ xfs_getfsmap(
+ 		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
+ 		handlers[1].fn = xfs_getfsmap_logdev;
  	}
++	if (mp->m_rtdev_targp) {
++		handlers[2].dev = new_encode_dev(mp->m_rtdev_targp->bt_dev);
++		handlers[2].fn = xfs_getfsmap_rtdev_rtbitmap;
++	}
  
+ 	xfs_sort(handlers, XFS_GETFSMAP_DEVS, sizeof(struct xfs_getfsmap_dev),
+ 			xfs_getfsmap_dev_compare);
+diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+index 355dd9e..f798a3e 100644
+--- a/fs/xfs/xfs_rtalloc.h
++++ b/fs/xfs/xfs_rtalloc.h
+@@ -126,6 +126,8 @@ int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
+ # define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
+ # define xfs_rtpick_extent(m,t,l,rb)                    (ENOSYS)
+ # define xfs_growfs_rt(mp,in)                           (ENOSYS)
++# define xfs_rtcheck_range(...)                         (ENOSYS)
++# define xfs_rtfind_forw(...)                           (ENOSYS)
+ static inline int		/* error */
+ xfs_rtmount_init(
+ 	xfs_mount_t	*mp)	/* file system mount structure */
 
