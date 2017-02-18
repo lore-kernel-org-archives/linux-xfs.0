@@ -1,1220 +1,599 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32805 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752338AbdBRBRy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 20:17:54 -0500
-Subject: [PATCH 5/8] xfs: introduce the XFS_IOC_GETFSMAP ioctl
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 17 Feb 2017 17:17:49 -0800
-Message-ID: <148738066907.29384.8419135817879528959.stgit@birch.djwong.org>
-In-Reply-To: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
-References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
+Received: from mga06.intel.com ([134.134.136.31]:16274 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752446AbdBRCmc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Feb 2017 21:42:32 -0500
+Date: Sat, 18 Feb 2017 10:47:19 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+Subject: [xfs-linux:xfs-4.11-merge 38/39] fs/xfs/xfs_bmap_util.c:161:35:
+ error: macro "xfs_rtallocate_extent" requires 9 arguments, but only 8 given
+Message-ID: <201702181018.SEkBmT5z%fengguang.wu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="jI8keyz6grp/JLjh"
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: kbuild-all@01.org, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Introduce a new ioctl that uses the reverse mapping btree to return
-information about the physical layout of the filesystem.
+--jI8keyz6grp/JLjh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+tree:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-4.11-merge
+head:   c7016e9a73f1f8a8a21a8fdfc84f556fb8f14583
+commit: ec48023e05afbd7e04269306b814bcaf86e1e047 [38/39] xfs: simplify xfs_rtallocate_extent
+config: i386-randconfig-x006-201707 (attached as .config)
+compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
+reproduce:
+        git checkout ec48023e05afbd7e04269306b814bcaf86e1e047
+        # save the attached .config to linux build tree
+        make ARCH=i386 
+
+All errors (new ones prefixed by >>):
+
+   fs/xfs/xfs_bmap_util.c: In function 'xfs_bmap_rtalloc':
+>> fs/xfs/xfs_bmap_util.c:161:35: error: macro "xfs_rtallocate_extent" requires 9 arguments, but only 8 given
+        &ralen, ap->wasdel, prod, &rtb);
+                                      ^
+>> fs/xfs/xfs_bmap_util.c:160:10: error: 'xfs_rtallocate_extent' undeclared (first use in this function)
+     error = xfs_rtallocate_extent(ap->tp, ap->blkno, 1, ap->length,
+             ^~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/xfs_bmap_util.c:160:10: note: each undeclared identifier is reported only once for each function it appears in
+
+vim +/xfs_rtallocate_extent +161 fs/xfs/xfs_bmap_util.c
+
+   154		/*
+   155		 * Realtime allocation, done through xfs_rtallocate_extent.
+   156		 */
+   157		do_div(ap->blkno, mp->m_sb.sb_rextsize);
+   158		rtb = ap->blkno;
+   159		ap->length = ralen;
+ > 160		error = xfs_rtallocate_extent(ap->tp, ap->blkno, 1, ap->length,
+ > 161					&ralen, ap->wasdel, prod, &rtb);
+   162		if (error)
+   163			return error;
+   164	
+
 ---
- fs/xfs/Makefile        |    1 
- fs/xfs/libxfs/xfs_fs.h |   13 +
- fs/xfs/xfs_fsmap.c     |  782 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_fsmap.h     |   51 +++
- fs/xfs/xfs_ioctl.c     |  103 ++++++
- fs/xfs/xfs_ioctl32.c   |    2 
- fs/xfs/xfs_trace.h     |   85 +++++
- fs/xfs/xfs_trans.c     |   22 +
- fs/xfs/xfs_trans.h     |    2 
- 9 files changed, 1061 insertions(+)
- create mode 100644 fs/xfs/xfs_fsmap.c
- create mode 100644 fs/xfs/xfs_fsmap.h
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
+--jI8keyz6grp/JLjh
+Content-Type: application/gzip
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index c7515d4..0e7ee30 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -80,6 +80,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_extent_busy.o \
- 				   xfs_file.o \
- 				   xfs_filestream.o \
-+				   xfs_fsmap.o \
- 				   xfs_fsops.o \
- 				   xfs_globals.o \
- 				   xfs_icache.o \
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index b72dc82..095bdf0 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -92,6 +92,18 @@ struct getbmapx {
- #define BMV_OF_LAST		0x4	/* segment is the last in the file */
- #define BMV_OF_SHARED		0x8	/* segment shared with another file */
- 
-+/*	fmr_owner special values for FS_IOC_GETFSMAP */
-+#define XFS_FMR_OWN_FREE	FMR_OWN_FREE      /* free space */
-+#define XFS_FMR_OWN_UNKNOWN	FMR_OWN_UNKNOWN   /* unknown owner */
-+#define XFS_FMR_OWN_FS		FMR_OWNER('X', 1) /* static fs metadata */
-+#define XFS_FMR_OWN_LOG		FMR_OWNER('X', 2) /* journalling log */
-+#define XFS_FMR_OWN_AG		FMR_OWNER('X', 3) /* per-AG metadata */
-+#define XFS_FMR_OWN_INOBT	FMR_OWNER('X', 4) /* inode btree blocks */
-+#define XFS_FMR_OWN_INODES	FMR_OWNER('X', 5) /* inodes */
-+#define XFS_FMR_OWN_REFC	FMR_OWNER('X', 6) /* refcount tree */
-+#define XFS_FMR_OWN_COW		FMR_OWNER('X', 7) /* cow staging */
-+#define XFS_FMR_OWN_DEFECTIVE	FMR_OWNER('X', 8) /* bad blocks */
-+
- /*
-  * Structure for XFS_IOC_FSSETDM.
-  * For use by backup and restore programs to set the XFS on-disk inode
-@@ -502,6 +514,7 @@ typedef struct xfs_swapext
- #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
- #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
-+/*	XFS_IOC_GETFSMAP ------ hoisted 59         */
- 
- /*
-  * ioctl commands that replace IRIX syssgi()'s
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-new file mode 100644
-index 0000000..09d6b92
---- /dev/null
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -0,0 +1,782 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_sb.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_inode.h"
-+#include "xfs_trans.h"
-+#include "xfs_error.h"
-+#include "xfs_btree.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_trace.h"
-+#include "xfs_log.h"
-+#include "xfs_rmap.h"
-+#include "xfs_alloc.h"
-+#include "xfs_bit.h"
-+#include <linux/fsmap.h>
-+#include "xfs_fsmap.h"
-+#include "xfs_refcount.h"
-+#include "xfs_refcount_btree.h"
-+
-+/* Convert an xfs_fsmap to an fsmap. */
-+void
-+xfs_fsmap_from_internal(
-+	struct fsmap		*dest,
-+	struct xfs_fsmap	*src)
-+{
-+	dest->fmr_device = src->fmr_device;
-+	dest->fmr_flags = src->fmr_flags;
-+	dest->fmr_physical = BBTOB(src->fmr_physical);
-+	dest->fmr_owner = src->fmr_owner;
-+	dest->fmr_offset = BBTOB(src->fmr_offset);
-+	dest->fmr_length = BBTOB(src->fmr_length);
-+	dest->fmr_reserved[0] = 0;
-+	dest->fmr_reserved[1] = 0;
-+	dest->fmr_reserved[2] = 0;
-+}
-+
-+/* Convert an fsmap to an xfs_fsmap. */
-+void
-+xfs_fsmap_to_internal(
-+	struct xfs_fsmap	*dest,
-+	struct fsmap		*src)
-+{
-+	dest->fmr_device = src->fmr_device;
-+	dest->fmr_flags = src->fmr_flags;
-+	dest->fmr_physical = BTOBBT(src->fmr_physical);
-+	dest->fmr_owner = src->fmr_owner;
-+	dest->fmr_offset = BTOBBT(src->fmr_offset);
-+	dest->fmr_length = BTOBBT(src->fmr_length);
-+}
-+
-+/* Convert an fsmap owner into an rmapbt owner. */
-+static int
-+xfs_fsmap_owner_to_rmap(
-+	struct xfs_fsmap	*fmr,
-+	struct xfs_rmap_irec	*rm)
-+{
-+	if (!(fmr->fmr_flags & FMR_OF_SPECIAL_OWNER)) {
-+		rm->rm_owner = fmr->fmr_owner;
-+		return 0;
-+	}
-+
-+	switch (fmr->fmr_owner) {
-+	case 0:			/* "lowest owner id possible" */
-+	case -1ULL:		/* "highest owner id possible" */
-+		rm->rm_owner = 0;
-+		break;
-+	case XFS_FMR_OWN_FREE:
-+		rm->rm_owner = XFS_RMAP_OWN_NULL;
-+		break;
-+	case XFS_FMR_OWN_UNKNOWN:
-+		rm->rm_owner = XFS_RMAP_OWN_UNKNOWN;
-+		break;
-+	case XFS_FMR_OWN_FS:
-+		rm->rm_owner = XFS_RMAP_OWN_FS;
-+		break;
-+	case XFS_FMR_OWN_LOG:
-+		rm->rm_owner = XFS_RMAP_OWN_LOG;
-+		break;
-+	case XFS_FMR_OWN_AG:
-+		rm->rm_owner = XFS_RMAP_OWN_AG;
-+		break;
-+	case XFS_FMR_OWN_INOBT:
-+		rm->rm_owner = XFS_RMAP_OWN_INOBT;
-+		break;
-+	case XFS_FMR_OWN_INODES:
-+		rm->rm_owner = XFS_RMAP_OWN_INODES;
-+		break;
-+	case XFS_FMR_OWN_REFC:
-+		rm->rm_owner = XFS_RMAP_OWN_REFC;
-+		break;
-+	case XFS_FMR_OWN_COW:
-+		rm->rm_owner = XFS_RMAP_OWN_COW;
-+		break;
-+	case XFS_FMR_OWN_DEFECTIVE:	/* not implemented */
-+		/* fall through */
-+	default:
-+		return -EINVAL;
-+	}
-+	return 0;
-+}
-+
-+/* Convert an rmapbt owner into an fsmap owner. */
-+static int
-+xfs_fsmap_owner_from_rmap(
-+	struct xfs_rmap_irec	*rm,
-+	struct xfs_fsmap	*fmr)
-+{
-+	fmr->fmr_flags = 0;
-+	if (!XFS_RMAP_NON_INODE_OWNER(rm->rm_owner)) {
-+		fmr->fmr_owner = rm->rm_owner;
-+		return 0;
-+	}
-+	fmr->fmr_flags |= FMR_OF_SPECIAL_OWNER;
-+
-+	switch (rm->rm_owner) {
-+	case XFS_RMAP_OWN_FS:
-+		fmr->fmr_owner = XFS_FMR_OWN_FS;
-+		break;
-+	case XFS_RMAP_OWN_LOG:
-+		fmr->fmr_owner = XFS_FMR_OWN_LOG;
-+		break;
-+	case XFS_RMAP_OWN_AG:
-+		fmr->fmr_owner = XFS_FMR_OWN_AG;
-+		break;
-+	case XFS_RMAP_OWN_INOBT:
-+		fmr->fmr_owner = XFS_FMR_OWN_INOBT;
-+		break;
-+	case XFS_RMAP_OWN_INODES:
-+		fmr->fmr_owner = XFS_FMR_OWN_INODES;
-+		break;
-+	case XFS_RMAP_OWN_REFC:
-+		fmr->fmr_owner = XFS_FMR_OWN_REFC;
-+		break;
-+	case XFS_RMAP_OWN_COW:
-+		fmr->fmr_owner = XFS_FMR_OWN_COW;
-+		break;
-+	default:
-+		return -EFSCORRUPTED;
-+	}
-+	return 0;
-+}
-+
-+/* getfsmap query state */
-+struct xfs_getfsmap_info {
-+	struct xfs_fsmap_head	*head;
-+	struct xfs_fsmap	*rkey_low;	/* lowest key */
-+	xfs_fsmap_format_t	formatter;	/* formatting fn */
-+	void			*format_arg;	/* format buffer */
-+	bool			last;		/* last extent? */
-+	xfs_daddr_t		next_daddr;	/* next daddr we expect */
-+	u32			dev;		/* device id */
-+	u64			missing_owner;	/* owner of holes */
-+
-+	xfs_agnumber_t		agno;		/* AG number, if applicable */
-+	struct xfs_buf		*agf_bp;	/* AGF, for refcount queries */
-+	struct xfs_rmap_irec	low;		/* low rmap key */
-+	struct xfs_rmap_irec	high;		/* high rmap key */
-+};
-+
-+/* Associate a device with a getfsmap handler. */
-+struct xfs_getfsmap_dev {
-+	u32			dev;
-+	int			(*fn)(struct xfs_trans *tp,
-+				      struct xfs_fsmap *keys,
-+				      struct xfs_getfsmap_info *info);
-+};
-+
-+/* Compare two getfsmap device handlers. */
-+static int
-+xfs_getfsmap_dev_compare(
-+	const void			*p1,
-+	const void			*p2)
-+{
-+	const struct xfs_getfsmap_dev	*d1 = p1;
-+	const struct xfs_getfsmap_dev	*d2 = p2;
-+
-+	return d1->dev - d2->dev;
-+}
-+
-+/* Compare a record against our starting point */
-+static bool
-+xfs_getfsmap_rec_before_low_key(
-+	struct xfs_getfsmap_info	*info,
-+	struct xfs_rmap_irec		*rec)
-+{
-+	uint64_t			x, y;
-+
-+	if (rec->rm_startblock < info->low.rm_startblock)
-+		return true;
-+	if (rec->rm_startblock > info->low.rm_startblock)
-+		return false;
-+
-+	if (rec->rm_owner < info->low.rm_owner)
-+		return true;
-+	if (rec->rm_owner > info->low.rm_owner)
-+		return false;
-+
-+	x = xfs_rmap_irec_offset_pack(rec);
-+	y = xfs_rmap_irec_offset_pack(&info->low);
-+	if (x < y)
-+		return true;
-+	return false;
-+}
-+
-+/* Decide if this mapping is shared. */
-+STATIC int
-+xfs_getfsmap_is_shared(
-+	struct xfs_trans		*tp,
-+	struct xfs_getfsmap_info	*info,
-+	struct xfs_rmap_irec		*rec,
-+	bool				*stat)
-+{
-+	struct xfs_mount		*mp = tp->t_mountp;
-+	struct xfs_btree_cur		*cur;
-+	xfs_agblock_t			fbno;
-+	xfs_extlen_t			flen;
-+	int				error;
-+
-+	*stat = false;
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-+		return 0;
-+	/* rt files will have agno set to NULLAGNUMBER */
-+	if (info->agno == NULLAGNUMBER)
-+		return 0;
-+
-+	/* Are there any shared blocks here? */
-+	flen = 0;
-+	cur = xfs_refcountbt_init_cursor(mp, tp, info->agf_bp,
-+			info->agno, NULL);
-+
-+	error = xfs_refcount_find_shared(cur, rec->rm_startblock,
-+			rec->rm_blockcount, &fbno, &flen, false);
-+
-+	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-+	if (error)
-+		return error;
-+
-+	*stat = flen > 0;
-+	return 0;
-+}
-+
-+/*
-+ * Format a reverse mapping for getfsmap, having translated rm_startblock
-+ * into the appropriate daddr units.
-+ */
-+STATIC int
-+xfs_getfsmap_helper(
-+	struct xfs_trans		*tp,
-+	struct xfs_getfsmap_info	*info,
-+	struct xfs_rmap_irec		*rec,
-+	xfs_daddr_t			rec_daddr)
-+{
-+	struct xfs_fsmap		fmr;
-+	struct xfs_mount		*mp = tp->t_mountp;
-+	xfs_daddr_t			key_end;
-+	bool				shared;
-+	int				error;
-+
-+	if (fatal_signal_pending(current))
-+		return -EAGAIN;
-+
-+	/*
-+	 * Filter out records that start before our startpoint, if the
-+	 * caller requested that.
-+	 */
-+	if (xfs_getfsmap_rec_before_low_key(info, rec)) {
-+		rec_daddr += XFS_FSB_TO_BB(mp, rec->rm_blockcount);
-+		if (info->next_daddr < rec_daddr)
-+			info->next_daddr = rec_daddr;
-+		return XFS_BTREE_QUERY_RANGE_CONTINUE;
-+	}
-+
-+	/*
-+	 * If the caller passed in a length with the low record and
-+	 * the record represents a file data extent, we incremented
-+	 * the offset in the low key by the length in the hopes of
-+	 * finding reverse mappings for the physical blocks we just
-+	 * saw.  We did /not/ increment next_daddr by the length
-+	 * because the range query would not be able to find shared
-+	 * extents within the same physical block range.
-+	 *
-+	 * However, the extent we've been fed could have a startblock
-+	 * past the passed-in low record.  If this is the case,
-+	 * advance next_daddr to the end of the passed-in low record
-+	 * so we don't report the extent prior to this extent as
-+	 * free.
-+	 */
-+	key_end = info->rkey_low->fmr_physical + info->rkey_low->fmr_length;
-+	if (info->dev == info->rkey_low->fmr_device &&
-+	    info->next_daddr < key_end && rec_daddr >= key_end)
-+		info->next_daddr = key_end;
-+
-+	/* Are we just counting mappings? */
-+	if (info->head->fmh_count == 0) {
-+		if (rec_daddr > info->next_daddr)
-+			info->head->fmh_entries++;
-+
-+		if (info->last)
-+			return XFS_BTREE_QUERY_RANGE_CONTINUE;
-+
-+		info->head->fmh_entries++;
-+
-+		rec_daddr += XFS_FSB_TO_BB(mp, rec->rm_blockcount);
-+		if (info->next_daddr < rec_daddr)
-+			info->next_daddr = rec_daddr;
-+		return XFS_BTREE_QUERY_RANGE_CONTINUE;
-+	}
-+
-+	/*
-+	 * If the record starts past the last physical block we saw,
-+	 * then we've found some free space.  Report that too.
-+	 */
-+	if (rec_daddr > info->next_daddr) {
-+		if (info->head->fmh_entries >= info->head->fmh_count)
-+			return XFS_BTREE_QUERY_RANGE_ABORT;
-+
-+		trace_xfs_fsmap_mapping(mp, info->dev, info->agno,
-+				XFS_DADDR_TO_FSB(mp, info->next_daddr),
-+				XFS_DADDR_TO_FSB(mp, rec_daddr -
-+						info->next_daddr),
-+				info->missing_owner, 0);
-+
-+		fmr.fmr_device = info->dev;
-+		fmr.fmr_physical = info->next_daddr;
-+		fmr.fmr_owner = info->missing_owner;
-+		fmr.fmr_offset = 0;
-+		fmr.fmr_length = rec_daddr - info->next_daddr;
-+		fmr.fmr_flags = FMR_OF_SPECIAL_OWNER;
-+		error = info->formatter(&fmr, info->format_arg);
-+		if (error)
-+			return error;
-+		info->head->fmh_entries++;
-+	}
-+
-+	if (info->last)
-+		goto out;
-+
-+	/* Fill out the extent we found */
-+	if (info->head->fmh_entries >= info->head->fmh_count)
-+		return XFS_BTREE_QUERY_RANGE_ABORT;
-+
-+	trace_xfs_fsmap_mapping(mp, info->dev, info->agno,
-+			rec->rm_startblock, rec->rm_blockcount, rec->rm_owner,
-+			rec->rm_offset);
-+
-+	fmr.fmr_device = info->dev;
-+	fmr.fmr_physical = rec_daddr;
-+	error = xfs_fsmap_owner_from_rmap(rec, &fmr);
-+	if (error)
-+		return error;
-+	fmr.fmr_offset = XFS_FSB_TO_BB(mp, rec->rm_offset);
-+	fmr.fmr_length = XFS_FSB_TO_BB(mp, rec->rm_blockcount);
-+	if (rec->rm_flags & XFS_RMAP_UNWRITTEN)
-+		fmr.fmr_flags |= FMR_OF_PREALLOC;
-+	if (rec->rm_flags & XFS_RMAP_ATTR_FORK)
-+		fmr.fmr_flags |= FMR_OF_ATTR_FORK;
-+	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK)
-+		fmr.fmr_flags |= FMR_OF_EXTENT_MAP;
-+	if (fmr.fmr_flags == 0) {
-+		error = xfs_getfsmap_is_shared(tp, info, rec, &shared);
-+		if (error)
-+			return error;
-+		if (shared)
-+			fmr.fmr_flags |= FMR_OF_SHARED;
-+	}
-+	error = info->formatter(&fmr, info->format_arg);
-+	if (error)
-+		return error;
-+	info->head->fmh_entries++;
-+
-+out:
-+	rec_daddr += XFS_FSB_TO_BB(mp, rec->rm_blockcount);
-+	if (info->next_daddr < rec_daddr)
-+		info->next_daddr = rec_daddr;
-+	return XFS_BTREE_QUERY_RANGE_CONTINUE;
-+}
-+
-+/* Transform a rmapbt irec into a fsmap */
-+STATIC int
-+xfs_getfsmap_datadev_helper(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	struct xfs_getfsmap_info	*info = priv;
-+	xfs_fsblock_t			fsb;
-+	xfs_daddr_t			rec_daddr;
-+
-+	fsb = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno, rec->rm_startblock);
-+	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb);
-+
-+	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
-+}
-+
-+/* Transform a absolute-startblock rmap (rtdev, logdev) into a fsmap */
-+STATIC int
-+xfs_getfsmap_rtdev_helper(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	struct xfs_getfsmap_info	*info = priv;
-+	xfs_daddr_t			rec_daddr;
-+
-+	rec_daddr = XFS_FSB_TO_BB(mp, rec->rm_startblock);
-+
-+	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
-+}
-+
-+/* Set rmap flags based on the getfsmap flags */
-+static void
-+xfs_getfsmap_set_irec_flags(
-+	struct xfs_rmap_irec	*irec,
-+	struct xfs_fsmap	*fmr)
-+{
-+	irec->rm_flags = 0;
-+	if (fmr->fmr_flags & FMR_OF_ATTR_FORK)
-+		irec->rm_flags |= XFS_RMAP_ATTR_FORK;
-+	if (fmr->fmr_flags & FMR_OF_EXTENT_MAP)
-+		irec->rm_flags |= XFS_RMAP_BMBT_BLOCK;
-+	if (fmr->fmr_flags & FMR_OF_PREALLOC)
-+		irec->rm_flags |= XFS_RMAP_UNWRITTEN;
-+}
-+
-+/* Execute a getfsmap query against the log device. */
-+STATIC int
-+xfs_getfsmap_logdev(
-+	struct xfs_trans		*tp,
-+	struct xfs_fsmap		*keys,
-+	struct xfs_getfsmap_info	*info)
-+{
-+	struct xfs_mount		*mp = tp->t_mountp;
-+	struct xfs_fsmap		*dkey_low = keys;
-+	struct xfs_btree_cur		cur;
-+	struct xfs_rmap_irec		rmap;
-+	int				error;
-+
-+	/* Set up search keys */
-+	info->low.rm_startblock = XFS_BB_TO_FSBT(mp, dkey_low->fmr_physical);
-+	info->low.rm_offset = XFS_BB_TO_FSBT(mp, dkey_low->fmr_offset);
-+	error = xfs_fsmap_owner_to_rmap(keys, &info->low);
-+	if (error)
-+		return error;
-+	info->low.rm_blockcount = 0;
-+	xfs_getfsmap_set_irec_flags(&info->low, dkey_low);
-+
-+	error = xfs_fsmap_owner_to_rmap(keys + 1, &info->high);
-+	if (error)
-+		return error;
-+	info->high.rm_startblock = -1U;
-+	info->high.rm_owner = ULLONG_MAX;
-+	info->high.rm_offset = ULLONG_MAX;
-+	info->high.rm_blockcount = 0;
-+	info->high.rm_flags = XFS_RMAP_KEY_FLAGS | XFS_RMAP_REC_FLAGS;
-+	info->missing_owner = XFS_FMR_OWN_FREE;
-+
-+	trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
-+			info->low.rm_startblock,
-+			info->low.rm_blockcount,
-+			info->low.rm_owner,
-+			info->low.rm_offset);
-+
-+	trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
-+			info->high.rm_startblock,
-+			info->high.rm_blockcount,
-+			info->high.rm_owner,
-+			info->high.rm_offset);
-+
-+
-+	if (dkey_low->fmr_physical > 0)
-+		return 0;
-+
-+	rmap.rm_startblock = 0;
-+	rmap.rm_blockcount = mp->m_sb.sb_logblocks;
-+	rmap.rm_owner = XFS_RMAP_OWN_LOG;
-+	rmap.rm_offset = 0;
-+	rmap.rm_flags = 0;
-+
-+	cur.bc_mp = mp;
-+	cur.bc_tp = tp;
-+	return xfs_getfsmap_rtdev_helper(&cur, &rmap, info);
-+}
-+
-+/* Execute a getfsmap query against the regular data device. */
-+STATIC int
-+xfs_getfsmap_datadev(
-+	struct xfs_trans		*tp,
-+	struct xfs_fsmap		*keys,
-+	struct xfs_getfsmap_info	*info)
-+{
-+	struct xfs_mount		*mp = tp->t_mountp;
-+	struct xfs_btree_cur		*bt_cur = NULL;
-+	struct xfs_fsmap		*dkey_low;
-+	struct xfs_fsmap		*dkey_high;
-+	xfs_fsblock_t			start_fsb;
-+	xfs_fsblock_t			end_fsb;
-+	xfs_agnumber_t			start_ag;
-+	xfs_agnumber_t			end_ag;
-+	xfs_daddr_t			eofs;
-+	int				error = 0;
-+
-+	dkey_low = keys;
-+	dkey_high = keys + 1;
-+	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-+	if (dkey_low->fmr_physical >= eofs)
-+		return 0;
-+	if (dkey_high->fmr_physical >= eofs)
-+		dkey_high->fmr_physical = eofs - 1;
-+	start_fsb = XFS_DADDR_TO_FSB(mp, dkey_low->fmr_physical);
-+	end_fsb = XFS_DADDR_TO_FSB(mp, dkey_high->fmr_physical);
-+
-+	/* Set up search keys */
-+	info->low.rm_startblock = XFS_FSB_TO_AGBNO(mp, start_fsb);
-+	info->low.rm_offset = XFS_BB_TO_FSBT(mp, dkey_low->fmr_offset);
-+	error = xfs_fsmap_owner_to_rmap(dkey_low, &info->low);
-+	if (error)
-+		return error;
-+	info->low.rm_blockcount = 0;
-+	xfs_getfsmap_set_irec_flags(&info->low, dkey_low);
-+
-+	info->high.rm_startblock = -1U;
-+	info->high.rm_owner = ULLONG_MAX;
-+	info->high.rm_offset = ULLONG_MAX;
-+	info->high.rm_blockcount = 0;
-+	info->high.rm_flags = XFS_RMAP_KEY_FLAGS | XFS_RMAP_REC_FLAGS;
-+	info->missing_owner = XFS_FMR_OWN_FREE;
-+
-+	start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
-+	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
-+
-+	/* Query each AG */
-+	for (info->agno = start_ag; info->agno <= end_ag; info->agno++) {
-+		if (info->agno == end_ag) {
-+			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
-+					end_fsb);
-+			info->high.rm_offset = XFS_BB_TO_FSBT(mp,
-+					dkey_high->fmr_offset);
-+			error = xfs_fsmap_owner_to_rmap(dkey_high, &info->high);
-+			if (error)
-+				goto err;
-+			xfs_getfsmap_set_irec_flags(&info->high, dkey_high);
-+		}
-+
-+		if (bt_cur) {
-+			xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
-+			bt_cur = NULL;
-+			info->agf_bp = NULL;
-+		}
-+
-+		error = xfs_alloc_read_agf(mp, tp, info->agno, 0,
-+				&info->agf_bp);
-+		if (error)
-+			goto err;
-+
-+		trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
-+				info->low.rm_startblock,
-+				info->low.rm_blockcount,
-+				info->low.rm_owner,
-+				info->low.rm_offset);
-+
-+		trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
-+				info->high.rm_startblock,
-+				info->high.rm_blockcount,
-+				info->high.rm_owner,
-+				info->high.rm_offset);
-+
-+		bt_cur = xfs_rmapbt_init_cursor(mp, tp, info->agf_bp,
-+				info->agno);
-+		error = xfs_rmap_query_range(bt_cur, &info->low, &info->high,
-+				xfs_getfsmap_datadev_helper, info);
-+		if (error)
-+			goto err;
-+
-+		if (info->agno == start_ag) {
-+			info->low.rm_startblock = 0;
-+			info->low.rm_owner = 0;
-+			info->low.rm_offset = 0;
-+			info->low.rm_flags = 0;
-+		}
-+	}
-+
-+	/* Report any free space at the end of the AG */
-+	info->last = true;
-+	error = xfs_getfsmap_datadev_helper(bt_cur, &info->high, info);
-+	if (error)
-+		goto err;
-+
-+err:
-+	if (bt_cur)
-+		xfs_btree_del_cursor(bt_cur, error < 0 ? XFS_BTREE_ERROR :
-+							 XFS_BTREE_NOERROR);
-+	if (info->agf_bp)
-+		info->agf_bp = NULL;
-+
-+	return error;
-+}
-+
-+/* Do we recognize the device? */
-+STATIC bool
-+xfs_getfsmap_is_valid_device(
-+	struct xfs_mount	*mp,
-+	struct xfs_fsmap	*fm)
-+{
-+	if (fm->fmr_device == 0 || fm->fmr_device == UINT_MAX ||
-+	    fm->fmr_device == new_encode_dev(mp->m_ddev_targp->bt_dev))
-+		return true;
-+	if (mp->m_logdev_targp &&
-+	    fm->fmr_device == new_encode_dev(mp->m_logdev_targp->bt_dev))
-+		return true;
-+	return false;
-+}
-+
-+/* Ensure that the low key is less than the high key. */
-+STATIC bool
-+xfs_getfsmap_check_keys(
-+	struct xfs_fsmap		*low_key,
-+	struct xfs_fsmap		*high_key)
-+{
-+	if (low_key->fmr_device > high_key->fmr_device)
-+		return false;
-+	if (low_key->fmr_device < high_key->fmr_device)
-+		return true;
-+
-+	if (low_key->fmr_physical > high_key->fmr_physical)
-+		return false;
-+	if (low_key->fmr_physical < high_key->fmr_physical)
-+		return true;
-+
-+	if (low_key->fmr_owner > high_key->fmr_owner)
-+		return false;
-+	if (low_key->fmr_owner < high_key->fmr_owner)
-+		return true;
-+
-+	if (low_key->fmr_offset > high_key->fmr_offset)
-+		return false;
-+	if (low_key->fmr_offset < high_key->fmr_offset)
-+		return true;
-+
-+	return false;
-+}
-+
-+#define XFS_GETFSMAP_DEVS	3
-+/*
-+ * Get filesystem's extents as described in head, and format for
-+ * output.  Calls formatter to fill the user's buffer until all
-+ * extents are mapped, until the passed-in head->fmh_count slots have
-+ * been filled, or until the formatter short-circuits the loop, if it
-+ * is tracking filled-in extents on its own.
-+ */
-+int
-+xfs_getfsmap(
-+	struct xfs_mount		*mp,
-+	struct xfs_fsmap_head		*head,
-+	xfs_fsmap_format_t		formatter,
-+	void				*arg)
-+{
-+	struct xfs_trans		*tp = NULL;
-+	struct xfs_fsmap		*rkey_low;	/* request keys */
-+	struct xfs_fsmap		*rkey_high;
-+	struct xfs_fsmap		dkeys[2];	/* per-dev keys */
-+	struct xfs_getfsmap_dev		handlers[XFS_GETFSMAP_DEVS];
-+	struct xfs_getfsmap_info	info = {0};
-+	int				i;
-+	int				error = 0;
-+
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return -EOPNOTSUPP;
-+	if (head->fmh_iflags & ~FMH_IF_VALID)
-+		return -EINVAL;
-+	rkey_low = head->fmh_keys;
-+	rkey_high = rkey_low + 1;
-+	if (!xfs_getfsmap_is_valid_device(mp, rkey_low) ||
-+	    !xfs_getfsmap_is_valid_device(mp, rkey_high))
-+		return -EINVAL;
-+
-+	head->fmh_entries = 0;
-+
-+	/* Set up our device handlers. */
-+	memset(handlers, 0, sizeof(handlers));
-+	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
-+	handlers[0].fn = xfs_getfsmap_datadev;
-+	if (mp->m_logdev_targp != mp->m_ddev_targp) {
-+		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
-+		handlers[1].fn = xfs_getfsmap_logdev;
-+	}
-+
-+	xfs_sort(handlers, XFS_GETFSMAP_DEVS, sizeof(struct xfs_getfsmap_dev),
-+			xfs_getfsmap_dev_compare);
-+
-+	/*
-+	 * Since we allow the user to copy the last mapping from a previous
-+	 * call into the low key slot, we have to advance the low key by
-+	 * whatever the reported length is.  If the offset field doesn't apply,
-+	 * move up the start block to the next extent and start over with the
-+	 * lowest owner/offset possible; otherwise it's file data, so move up
-+	 * the offset only.
-+	 */
-+	dkeys[0] = *rkey_low;
-+	if (dkeys[0].fmr_flags & (FMR_OF_SPECIAL_OWNER | FMR_OF_EXTENT_MAP)) {
-+		dkeys[0].fmr_physical += dkeys[0].fmr_length;
-+		dkeys[0].fmr_owner = 0;
-+		dkeys[0].fmr_offset = 0;
-+	} else
-+		dkeys[0].fmr_offset += dkeys[0].fmr_length;
-+	memset(&dkeys[1], 0xFF, sizeof(struct xfs_fsmap));
-+
-+	if (!xfs_getfsmap_check_keys(dkeys, rkey_high))
-+		return -EINVAL;
-+
-+	info.rkey_low = rkey_low;
-+	info.formatter = formatter;
-+	info.format_arg = arg;
-+	info.head = head;
-+
-+	/* For each device we support... */
-+	for (i = 0; i < XFS_GETFSMAP_DEVS; i++) {
-+		/* Is this device within the range the user asked for? */
-+		if (!handlers[i].fn)
-+			continue;
-+		if (rkey_low->fmr_device > handlers[i].dev)
-+			continue;
-+		if (rkey_high->fmr_device < handlers[i].dev)
-+			break;
-+
-+		/*
-+		 * If this device number matches the high key, we have
-+		 * to pass the high key to the handler to limit the
-+		 * query results.  If the device number exceeds the
-+		 * low key, zero out the low key so that we get
-+		 * everything from the beginning.
-+		 */
-+		if (handlers[i].dev == rkey_high->fmr_device)
-+			dkeys[1] = *rkey_high;
-+		if (handlers[i].dev > rkey_low->fmr_device)
-+			memset(&dkeys[0], 0, sizeof(struct xfs_fsmap));
-+
-+		error = xfs_trans_alloc_empty(mp, &tp);
-+		if (error)
-+			break;
-+
-+		info.next_daddr = dkeys[0].fmr_physical;
-+		info.dev = handlers[i].dev;
-+		info.last = false;
-+		info.agno = NULLAGNUMBER;
-+		error = handlers[i].fn(tp, dkeys, &info);
-+		if (error)
-+			break;
-+		xfs_trans_cancel(tp);
-+		tp = NULL;
-+	}
-+
-+	if (tp)
-+		xfs_trans_cancel(tp);
-+	head->fmh_oflags = FMH_OF_DEV_T;
-+	return error;
-+}
-diff --git a/fs/xfs/xfs_fsmap.h b/fs/xfs/xfs_fsmap.h
-new file mode 100644
-index 0000000..1943047
---- /dev/null
-+++ b/fs/xfs/xfs_fsmap.h
-@@ -0,0 +1,51 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef __XFS_FSMAP_H__
-+#define	__XFS_FSMAP_H__
-+
-+/* internal fsmap representation */
-+struct xfs_fsmap {
-+	dev_t		fmr_device;	/* device id */
-+	uint32_t	fmr_flags;	/* mapping flags */
-+	uint64_t	fmr_physical;	/* device offset of segment */
-+	uint64_t	fmr_owner;	/* owner id */
-+	xfs_fileoff_t	fmr_offset;	/* file offset of segment */
-+	xfs_filblks_t	fmr_length;	/* length of segment, blocks */
-+};
-+
-+struct xfs_fsmap_head {
-+	uint32_t	fmh_iflags;	/* control flags */
-+	uint32_t	fmh_oflags;	/* output flags */
-+	unsigned int	fmh_count;	/* # of entries in array incl. input */
-+	unsigned int	fmh_entries;	/* # of entries filled in (output). */
-+
-+	struct xfs_fsmap fmh_keys[2];	/* low and high keys */
-+};
-+
-+void xfs_fsmap_from_internal(struct fsmap *dest, struct xfs_fsmap *src);
-+void xfs_fsmap_to_internal(struct xfs_fsmap *dest, struct fsmap *src);
-+
-+/* fsmap to userspace formatter - copy to user & advance pointer */
-+typedef int (*xfs_fsmap_format_t)(struct xfs_fsmap *, void *);
-+
-+int xfs_getfsmap(struct xfs_mount *mp, struct xfs_fsmap_head *head,
-+		xfs_fsmap_format_t formatter, void *arg);
-+
-+#endif /* __XFS_FSMAP_H__ */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index c67cfb4..bbe1b58 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -41,6 +41,9 @@
- #include "xfs_trans.h"
- #include "xfs_pnfs.h"
- #include "xfs_acl.h"
-+#include "xfs_btree.h"
-+#include <linux/fsmap.h>
-+#include "xfs_fsmap.h"
- 
- #include <linux/capability.h>
- #include <linux/dcache.h>
-@@ -1607,6 +1610,103 @@ xfs_ioc_getbmapx(
- 	return 0;
- }
- 
-+struct getfsmap_info {
-+	struct xfs_mount	*mp;
-+	struct fsmap __user	*data;
-+	__u32			last_flags;
-+};
-+
-+STATIC int
-+xfs_getfsmap_format(struct xfs_fsmap *xfm, void *priv)
-+{
-+	struct getfsmap_info	*info = priv;
-+	struct fsmap		fm;
-+
-+	trace_xfs_getfsmap_mapping(info->mp, xfm->fmr_device, xfm->fmr_physical,
-+			xfm->fmr_length, xfm->fmr_owner, xfm->fmr_offset,
-+			xfm->fmr_flags);
-+
-+	info->last_flags = xfm->fmr_flags;
-+	xfs_fsmap_from_internal(&fm, xfm);
-+	if (copy_to_user(info->data, &fm, sizeof(struct fsmap)))
-+		return -EFAULT;
-+
-+	info->data++;
-+	return 0;
-+}
-+
-+STATIC int
-+xfs_ioc_getfsmap(
-+	struct xfs_inode	*ip,
-+	void			__user *arg)
-+{
-+	struct getfsmap_info	info;
-+	struct xfs_fsmap_head	xhead = {0};
-+	struct fsmap_head	head;
-+	bool			aborted = false;
-+	int			error;
-+
-+	if (copy_from_user(&head, arg, sizeof(struct fsmap_head)))
-+		return -EFAULT;
-+	if (head.fmh_reserved[0] || head.fmh_reserved[1] ||
-+	    head.fmh_reserved[2] || head.fmh_reserved[3] ||
-+	    head.fmh_reserved[4] || head.fmh_reserved[5] ||
-+	    head.fmh_keys[0].fmr_reserved[0] ||
-+	    head.fmh_keys[0].fmr_reserved[1] ||
-+	    head.fmh_keys[0].fmr_reserved[2] ||
-+	    head.fmh_keys[1].fmr_reserved[0] ||
-+	    head.fmh_keys[1].fmr_reserved[1] ||
-+	    head.fmh_keys[1].fmr_reserved[2])
-+		return -EINVAL;
-+
-+	xhead.fmh_iflags = head.fmh_iflags;
-+	xhead.fmh_count = head.fmh_count;
-+	xfs_fsmap_to_internal(&xhead.fmh_keys[0], &head.fmh_keys[0]);
-+	xfs_fsmap_to_internal(&xhead.fmh_keys[1], &head.fmh_keys[1]);
-+
-+	trace_xfs_getfsmap_low_key(ip->i_mount,
-+			xhead.fmh_keys[0].fmr_device,
-+			xhead.fmh_keys[0].fmr_physical,
-+			xhead.fmh_keys[0].fmr_length,
-+			xhead.fmh_keys[0].fmr_owner,
-+			xhead.fmh_keys[0].fmr_offset,
-+			xhead.fmh_keys[0].fmr_flags);
-+
-+	trace_xfs_getfsmap_high_key(ip->i_mount,
-+			xhead.fmh_keys[1].fmr_device,
-+			xhead.fmh_keys[1].fmr_physical,
-+			xhead.fmh_keys[1].fmr_length,
-+			xhead.fmh_keys[1].fmr_owner,
-+			xhead.fmh_keys[1].fmr_offset,
-+			xhead.fmh_keys[1].fmr_flags);
-+
-+	info.mp = ip->i_mount;
-+	info.data = ((__force struct fsmap_head *)arg)->fmh_recs;
-+	error = xfs_getfsmap(ip->i_mount, &xhead, xfs_getfsmap_format, &info);
-+	if (error == XFS_BTREE_QUERY_RANGE_ABORT) {
-+		error = 0;
-+		aborted = true;
-+	} else if (error)
-+		return error;
-+
-+	/* If we didn't abort, set the "last" flag in the last fmx */
-+	if (!aborted && xhead.fmh_entries) {
-+		info.data--;
-+		info.last_flags |= FMR_OF_LAST;
-+		if (copy_to_user(&info.data->fmr_flags, &info.last_flags,
-+				sizeof(info.last_flags)))
-+			return -EFAULT;
-+	}
-+
-+	/* copy back header */
-+	head.fmh_entries = xhead.fmh_entries;
-+	head.fmh_oflags = xhead.fmh_oflags;
-+	if (copy_to_user(arg, &head, sizeof(struct fsmap_head)))
-+		return -EFAULT;
-+
-+	return 0;
-+}
-+
- int
- xfs_ioc_swapext(
- 	xfs_swapext_t	*sxp)
-@@ -1787,6 +1887,9 @@ xfs_file_ioctl(
- 	case XFS_IOC_GETBMAPX:
- 		return xfs_ioc_getbmapx(ip, arg);
- 
-+	case FS_IOC_GETFSMAP:
-+		return xfs_ioc_getfsmap(ip, arg);
-+
- 	case XFS_IOC_FD_TO_HANDLE:
- 	case XFS_IOC_PATH_TO_HANDLE:
- 	case XFS_IOC_PATH_TO_FSHANDLE: {
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 7c49938..fa0bc4d 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -20,6 +20,7 @@
- #include <linux/mount.h>
- #include <linux/slab.h>
- #include <linux/uaccess.h>
-+#include <linux/fsmap.h>
- #include "xfs.h"
- #include "xfs_fs.h"
- #include "xfs_format.h"
-@@ -554,6 +555,7 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_GOINGDOWN:
- 	case XFS_IOC_ERROR_INJECTION:
- 	case XFS_IOC_ERROR_CLEARALL:
-+	case FS_IOC_GETFSMAP:
- 		return xfs_file_ioctl(filp, cmd, p);
- #ifndef BROKEN_X86_ALIGNMENT
- 	/* These are handled fine if no alignment issues */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index d3d11905..125d568 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3270,6 +3270,91 @@ DEFINE_INODE_IREC_EVENT(xfs_swap_extent_rmap_remap);
- DEFINE_INODE_IREC_EVENT(xfs_swap_extent_rmap_remap_piece);
- DEFINE_INODE_ERROR_EVENT(xfs_swap_extent_rmap_error);
- 
-+/* fsmap traces */
-+DECLARE_EVENT_CLASS(xfs_fsmap_class,
-+	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_agnumber_t agno,
-+		 xfs_fsblock_t bno, xfs_filblks_t len, __uint64_t owner,
-+		 __uint64_t offset),
-+	TP_ARGS(mp, keydev, agno, bno, len, owner, offset),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(dev_t, keydev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_fsblock_t, bno)
-+		__field(xfs_filblks_t, len)
-+		__field(__uint64_t, owner)
-+		__field(__uint64_t, offset)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->keydev = new_decode_dev(keydev);
-+		__entry->agno = agno;
-+		__entry->bno = bno;
-+		__entry->len = len;
-+		__entry->owner = owner;
-+		__entry->offset = offset;
-+	),
-+	TP_printk("dev %d:%d keydev %d:%d agno %u bno %llu len %llu owner %lld offset 0x%llx\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
-+		  __entry->agno,
-+		  __entry->bno,
-+		  __entry->len,
-+		  __entry->owner,
-+		  __entry->offset)
-+)
-+#define DEFINE_FSMAP_EVENT(name) \
-+DEFINE_EVENT(xfs_fsmap_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_agnumber_t agno, \
-+		 xfs_fsblock_t bno, xfs_filblks_t len, __uint64_t owner, \
-+		 __uint64_t offset), \
-+	TP_ARGS(mp, keydev, agno, bno, len, owner, offset))
-+DEFINE_FSMAP_EVENT(xfs_fsmap_low_key);
-+DEFINE_FSMAP_EVENT(xfs_fsmap_high_key);
-+DEFINE_FSMAP_EVENT(xfs_fsmap_mapping);
-+
-+DECLARE_EVENT_CLASS(xfs_getfsmap_class,
-+	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_daddr_t block,
-+		 xfs_daddr_t len, __uint64_t owner, __uint64_t offset,
-+		 __uint64_t flags),
-+	TP_ARGS(mp, keydev, block, len, owner, offset, flags),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(dev_t, keydev)
-+		__field(xfs_daddr_t, block)
-+		__field(xfs_daddr_t, len)
-+		__field(__uint64_t, owner)
-+		__field(__uint64_t, offset)
-+		__field(__uint64_t, flags)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->keydev = new_decode_dev(keydev);
-+		__entry->block = block;
-+		__entry->len = len;
-+		__entry->owner = owner;
-+		__entry->offset = offset;
-+		__entry->flags = flags;
-+	),
-+	TP_printk("dev %d:%d keydev %d:%d block %llu len %llu owner %lld offset %llu flags 0x%llx\n",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
-+		  __entry->block,
-+		  __entry->len,
-+		  __entry->owner,
-+		  __entry->offset,
-+		  __entry->flags)
-+)
-+#define DEFINE_GETFSMAP_EVENT(name) \
-+DEFINE_EVENT(xfs_getfsmap_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_daddr_t block, \
-+		 xfs_daddr_t len, __uint64_t owner, __uint64_t offset, \
-+		 __uint64_t flags), \
-+	TP_ARGS(mp, keydev, block, len, owner, offset, flags))
-+DEFINE_GETFSMAP_EVENT(xfs_getfsmap_low_key);
-+DEFINE_GETFSMAP_EVENT(xfs_getfsmap_high_key);
-+DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
-+
- #endif /* _TRACE_XFS_H */
- 
- #undef TRACE_INCLUDE_PATH
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 70f42ea..a280e12 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -263,6 +263,28 @@ xfs_trans_alloc(
- }
- 
- /*
-+ * Create an empty transaction with no reservation.  This is a defensive
-+ * mechanism for routines that query metadata without actually modifying
-+ * them -- if the metadata being queried is somehow cross-linked (think a
-+ * btree block pointer that points higher in the tree), we risk deadlock.
-+ * However, blocks grabbed as part of a transaction can be re-grabbed.
-+ * The verifiers will notice the corrupt block and the operation will fail
-+ * back to userspace without deadlocking.
-+ *
-+ * Note the zero-length reservation; this transaction MUST be cancelled
-+ * without any dirty data.
-+ */
-+int
-+xfs_trans_alloc_empty(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		**tpp)
-+{
-+	struct xfs_trans_res		resv = {0};
-+
-+	return xfs_trans_alloc(mp, &resv, 0, 0, XFS_TRANS_NO_WRITECOUNT, tpp);
-+}
-+
-+/*
-  * Record the indicated change to the given field for application
-  * to the file system's superblock when the transaction commits.
-  * For now, just store the change in the transaction structure.
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 61b7fbd..98024cb 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -159,6 +159,8 @@ typedef struct xfs_trans {
- int		xfs_trans_alloc(struct xfs_mount *mp, struct xfs_trans_res *resp,
- 			uint blocks, uint rtextents, uint flags,
- 			struct xfs_trans **tpp);
-+int		xfs_trans_alloc_empty(struct xfs_mount *mp,
-+			struct xfs_trans **tpp);
- void		xfs_trans_mod_sb(xfs_trans_t *, uint, int64_t);
- 
- struct xfs_buf	*xfs_trans_get_buf_map(struct xfs_trans *tp,
+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
 
+--jI8keyz6grp/JLjh--
