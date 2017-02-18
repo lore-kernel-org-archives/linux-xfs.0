@@ -1,38 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51841 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:32746 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751378AbdB0SwW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Feb 2017 13:52:22 -0500
-Date: Mon, 27 Feb 2017 10:50:45 -0800
+        with ESMTP id S1752338AbdBRBRl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 20:17:41 -0500
+Subject: [RFC PATCH v6 0/8] vfs/xfs/ext4: GETFSMAP support
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs_io: support shutdown command on foreign fses
-Message-ID: <20170227185045.GA5297@birch.djwong.org>
+Date: Fri, 17 Feb 2017 17:17:18 -0800
+Message-ID: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-Since f2fs and ext4 support the shutdown ioctl, enable them here.
+Hi all,
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- io/shutdown.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is an RFC patchset implementing the GETFSMAP ioctl that we
+discussed at LSFMM 2016[1].  GETFSMAP takes two search keys, which are
+defined as a tuple of (device, physical block, owner, file offset), and
+returns all known space mapping information for the given filesystem.
 
-diff --git a/io/shutdown.c b/io/shutdown.c
-index d9cd520..022a0e9 100644
---- a/io/shutdown.c
-+++ b/io/shutdown.c
-@@ -54,7 +54,7 @@ shutdown_init(void)
- 	shutdown_cmd.cfunc = shutdown_f;
- 	shutdown_cmd.argmin = 0;
- 	shutdown_cmd.argmax = 1;
--	shutdown_cmd.flags = CMD_NOMAP_OK | CMD_FLAG_ONESHOT;
-+	shutdown_cmd.flags = CMD_NOMAP_OK | CMD_FLAG_ONESHOT | CMD_FLAG_FOREIGN_OK;
- 	shutdown_cmd.args = _("[-f]");
- 	shutdown_cmd.oneline =
- 		_("shuts down the filesystem where the current file resides");
+The XFS implementation is fully complete for filesystems having the new
+reverse-mapping feature introduced in 4.8.  For legacy XFS filesystems
+and ext4, there is no reverse-mapping data and the returned extent
+information is restricted to listing "free", "unknown", or "metadata"
+owners.
+
+Space mapping information can be dumped via the xfs_io 'fsmap' command,
+and the upcoming xfs_spaceman utility analyzes the free extent data to
+produce free space fragmentations reports.  Further in the future, the
+xfs_scrub utility will use GETFSMAP to assist in data block read
+verification.
+
+Kernel source can be found in the git repo [2] and userspace utilities
+in the git repo[3].  The XFS patches have been hanging around in my
+repos for months accumulating fixes; the ext4 patches are newish.
+
+Note: This patchset is headed for 4.12 at the earliest.
+
+Questions?  Comments?
+
+--D
+
+[1] https://lwn.net/Articles/685978/
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
