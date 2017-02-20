@@ -1,191 +1,163 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44332 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44520 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751166AbdBRMzi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 18 Feb 2017 07:55:38 -0500
-Date: Sat, 18 Feb 2017 07:55:37 -0500
+        id S1751180AbdBTO7K (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 Feb 2017 09:59:10 -0500
+Date: Mon, 20 Feb 2017 09:58:19 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/5] xfs: bypass dquot reclaim to avoid quotacheck
- deadlock
-Message-ID: <20170218125536.GA25016@bfoster.bfoster>
-References: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
- <1487173247-5965-2-git-send-email-bfoster@redhat.com>
- <20170216223705.GC15349@dastard>
- <20170217183009.GB20429@bfoster.bfoster>
- <20170217231215.GD15349@dastard>
+Subject: Re: [BUG 4.10-rc7] sb_fdblocks inconsistency in xfs/297 test
+Message-ID: <20170220145819.GC32455@bfoster.bfoster>
+References: <20170210035348.GA7075@eguan.usersys.redhat.com>
+ <20170210071418.GC9346@dhcp22.suse.cz>
+ <20170210080210.GC10893@dhcp22.suse.cz>
+ <20170210093131.GH10893@dhcp22.suse.cz>
+ <20170220142521.GJ2431@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170217231215.GD15349@dastard>
+In-Reply-To: <20170220142521.GJ2431@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Sat, Feb 18, 2017 at 10:12:15AM +1100, Dave Chinner wrote:
-> On Fri, Feb 17, 2017 at 01:30:09PM -0500, Brian Foster wrote:
-> > On Fri, Feb 17, 2017 at 09:37:05AM +1100, Dave Chinner wrote:
-> > > On Wed, Feb 15, 2017 at 10:40:43AM -0500, Brian Foster wrote:
-> > > > Reclaim during quotacheck can lead to deadlocks on the dquot flush lock:
-> > > > 
-> > > >  - Quotacheck populates a local delwri queue with the physical dquot
-> > > >    buffers.
-> > > >  - Quotacheck performs the xfs_qm_dqusage_adjust() bulkstat and dirties
-> > > >    all of the dquots.
-> > > >  - Reclaim kicks in and attempts to flush a dquot whose buffer is
-> > > >    already queud on the quotacheck queue. The flush succeeds but
-> > > >    queueing to the reclaim delwri queue fails as the backing buffer is
-> > > >    already queued. The flush unlock is now deferred to I/O completion of
-> > > >    the buffer from the quotacheck queue.
-> > > >  - Quotacheck proceeds to the xfs_qm_flush_one() walk which requires the
-> > > >    flush lock to update the backing buffers with the in-core
-> > > >    recalculated values. This deadlocks as the flush lock was acquired by
-> > > >    reclaim but the buffer never submitted for I/O as it already resided
-> > > >    on the quotacheck queue.
-> > > > 
-> > > > This is reproduced by running quotacheck on a filesystem with a couple
-> > > > million inodes in low memory (512MB-1GB) situations.
-> > > > 
-> > > > Quotacheck first resets and collects the physical dquot buffers in a
-> > > > delwri queue. Then, it traverses the filesystem inodes via bulkstat,
-> > > > updates the in-core dquots, flushes the corrected dquots to the backing
-> > > > buffers and finally submits the delwri queue for I/O. Since the backing
-> > > > buffers are queued across the entire quotacheck operation, dquot reclaim
-> > > > cannot possibly complete a dquot flush before quotacheck completes.
-> > > > Therefore, dquot reclaim provides no real value during quotacheck.
-> > > 
-> > > Which is an OOM vector on systems with lots of dquots and low memory
-> > > at mount time. Turning off dquot reclaim doesn't change that.
-> > > 
-> > 
-> > It's not intended to. The inefficient design of quotacheck wrt to memory
-> > usage is a separate problem. AFAICT, that problem goes back as far as my
-> > git tree does (2.6.xx).
-> > 
-> > Looking back through the git history, this deadlock appears to be a
-> > regression as of commit 43ff2122e6 ("xfs: on-stack delayed write buffer
-> > lists") in 2012, which replaced a trylock/push sequence from the
-> > quotacheck flush walk with a synchronous flush lock.
-> 
-> Right - that's the commit that changed the code to what it is now.
-> That's what I implied needs fixing....
+On Mon, Feb 20, 2017 at 03:25:21PM +0100, Michal Hocko wrote:
+> I have discussed that shortly with Jack and he suspects that xfs
+> specific part of the iomap callbacks doesn't cancel reservations.
+> Let's CC more xfs people. The thread starts
+> http://lkml.kernel.org/r/20170210035348.GA7075@eguan.usersys.redhat.com
 > 
 
-Ok, but that commit has nothing to do with the design of quotacheck.
-
-> > > Address the root cause - the buffer list is never flushed and so
-> > > pins the memory quotacheck requires, so we need to flush the buffer
-> > > list more often.  We also need to submit the buffer list before the
-> > > flush walks begin, thereby unlocking all the dquots before doing the
-> > > flush walk and avoiding the deadlock.
-> > > 
-> > 
-> > I acknowledge that this patch doesn't address the root problem, but
-> > neither does this proposal. The root cause is not that quotacheck uses
-> > too much memory, it's that the serialization between quotacheck and
-> > dquot reclaim is bogus.
-> > 
-> > For example, if we drop the buffer list being held across the adjust and
-> > flush walks, we do indeed unpin the buffers and dquots for memory
-> > reclaim, particularly during the dqadjust bulkstat. The flush walk then
-> > still has to cycle the flush lock of every dquot to guarantee we wait on
-> > dquots being flushed by reclaim (otherwise we risk corruption with the
-> > xfs_qm_flush_one() logic is it is today). The same deadlock vector still
-> > exists, albeit with a smaller window, if reclaim happens to flush a
-> > dquot that is backed by a buffer that has already been queued by the
-> > flush walk. AFAICT, the only requirements for this to occur are a couple
-> > of dquots on a single backing buffer and some memory pressure from
-> > somewhere, so the local memory usage is irrelevant.
-> 
-> Except that the window is *tiny* because the dquots are walked in
-> order and so all the dquots are processed in ascending order. This
-> means all the dquots in a buffer are flushed sequentially, and each
-> dquot lookup resets the reclaim reference count count on the dquot
-> buffer. Hence it is extremely unlikely that a dquot buffer will be
-> reclaimed while it is partially flushed during the flush walk.
-> 
-
-At a high level, this fundamentally makes dquot reclaim safe during the
-dqadjust bulkstat. We are susceptible to the same exact problem during
-the flush walk... it is true that the race window is now reduced to the
-time spent processing dquots for a particular buffer at time. The logic
-used to explain away the race here doesn't make a lot of sense,
-however...
-
-First, the reference count on the underlying buffer is irrelevant
-because dquot reclaim is what causes the race. All dquot reference
-counts are zero when the flush walk begins. In other words, all in-core
-dquots are on the lru and thus subject to reclaim at this point in time.
-
-Second, the window is definitely not tiny. According to xfs_qm.h, we
-have 30 dquots per 4k block. The only way a flush via dquot reclaim does
-_not_ deadlock is if reclaim is first to flush a dquot of a particular
-buffer (such that it can queue the buffer). In most reclaim scans this
-may work fine, but if dquots are flushed in ascending order, that means
-if reclaim ever has to flush a dquot, it's pretty much caught up to the
-flush walk or will intersect eventually.
-
-Further, the flush walk code iterates 32 dquots at a time. That's
-effectively a qi_tree_lock cycle and radix tree lookup per dquot buffer.
-With thousands of dquots around in memory, I think that presents ample
-opportunity for reclaim to kick in and flush a dquot that's not the
-first to be flushed to its backing buffer. All it probably takes is for
-the tree lock cycle and the radix tree lookup for the next batch of 32
-dquots to occur before the end of a particular buffer to present an even
-bigger window for reclaim to kick in and flush one of the remaining
-dquots on that particular buffer. Again, that's going to occur for
-almost every dquot buffer.
-
-This is all kind of pointless analysis anyways because if the buffer
-list is submitted before the flush walk, the flush walk in its current
-form is not sufficient to serialize quotacheck against I/O completion of
-underlying dquot buffers. dquot reclaim can now flush and free any
-number of dquots for which quotacheck won't have any window into the
-state of the underlying buffer I/O. This probably means the
-xfs_qm_dquot_walk() (radix tree) based flush walk needs to be replaced
-with something that visits every dquot (or dquot buffer) in the fs,
-reallocating them if necessary (which adds more flush walk -> reclaim
-contention than we've considered above), in order to serialize against
-the underlying buffer. Either way, to just submit the buffer list before
-the flush walk and make no other changes to account for the lost buffer
-serialization is to break quotacheck.
-
-> > I'm specifically trying to address the deadlock problem here. If we
-> > don't want to bypass reclaim, the other options I see are to rework the
-> > logic on the reclaim side to check the buffer state before we flush the
-> > dquot, or push on the buffer from the quotacheck side like we used to
-> > before the commit above.
-> 
-> The latter is effectively what flushing the buffer list before the
-> flush walk is run does.
-> 
-
-The buffer push forcibly writes out the buffer for any dquot that is
-found flush locked during the quotacheck flush walk and waits on the
-flush lock again to serialize against the write and allow us to flush
-such dquots to the buffer without a deadlock. Flushing the buffer list
-before the flush walk doesn't protect us from deadlock once the flush
-walk actually begins, and creates new serialization problems with
-broader quotacheck that can cause corruption if not handled properly.
-
-I can try to put something together next week to resurrect the buffer
-push similar to as implemented historically prior to commit 43ff2122e6
-if you're Ok with that approach for the locking problem (or have some
-other suggestion that doesn't handwave away the serialization problem
-;)... Otherwise, I guess we can leave things as they are. I don't want
-to rely on things like indeterminate cache walk and reclaim ordering to
-try and justify whether a clear serialization problem is going to
-trigger or not in various high/low memory/dquot configurations. Even if
-it doesn't trigger right now, if we change something innocuous down the
-road like the dquot buffer size then all of this logic goes out the
-window and we have a "new" deadlock to track and down and resolve..
+Have you tried commit fa7f138 ("xfs: clear delalloc and cache on buffered
+write failure"), currently in for-next?
 
 Brian
 
-> Cheers,
+> On Fri 10-02-17 10:31:31, Michal Hocko wrote:
+> > [CC Christoph]
+> > 
+> > On Fri 10-02-17 09:02:10, Michal Hocko wrote:
+> > > On Fri 10-02-17 08:14:18, Michal Hocko wrote:
+> > > > On Fri 10-02-17 11:53:48, Eryu Guan wrote:
+> > > > > Hi,
+> > > > > 
+> > > > > I was testing 4.10-rc7 kernel and noticed that xfs_repair reported XFS
+> > > > > corruption after fstests xfs/297 test. This didn't happen with 4.10-rc6
+> > > > > kernel, and git bisect pointed the first bad commit to
+> > > > > 
+> > > > > commit d1908f52557b3230fbd63c0429f3b4b748bf2b6d
+> > > > > Author: Michal Hocko <mhocko@suse.com>
+> > > > > Date:   Fri Feb 3 13:13:26 2017 -0800
+> > > > > 
+> > > > >     fs: break out of iomap_file_buffered_write on fatal signals
+> > > > > 
+> > > > >     Tetsuo has noticed that an OOM stress test which performs large write
+> > > > >     requests can cause the full memory reserves depletion.  He has tracked
+> > > > >     this down to the following path
+> > > > > ....
+> > > > > 
+> > > > > It's the sb_fdblocks field reports inconsistency:
+> > > > > ...
+> > > > > Phase 2 - using internal log   
+> > > > >         - zero log...
+> > > > >         - scan filesystem freespace and inode maps...
+> > > > > sb_fdblocks 3367765, counted 3367863
+> > > > >         - 11:37:41: scanning filesystem freespace - 16 of 16 allocation groups done
+> > > > >         - found root inode chunk
+> > > > > ...
+> > > > > 
+> > > > > And it can be reproduced almost 100% with all XFS test configurations
+> > > > > (e.g. xfs_4k xfs_2k_reflink), on all test hosts I tried (so I didn't
+> > > > > bother pasting my detailed test and host configs, if more info is needed
+> > > > > please let me know).
+> > > > 
+> > > > The patch can lead to short writes when the task is killed. Was there
+> > > > any OOM killer triggered during the test? If not who is killing the
+> > > > task? I will try to reproduce later today.
+> > > 
+> > > I have checked both tests and they are killing the test but none of them
+> > > seems to be using SIGKILL. The patch should make a difference only for
+> > > fatal signal (aka SIGKILL). Is there any other part that can do SIGKILL
+> > > except for the OOM killer?
+> > 
+> > I have done
+> > diff --git a/fs/dax.c b/fs/dax.c
+> > index c45598b912e1..4de00ceaf73d 100644
+> > --- a/fs/dax.c
+> > +++ b/fs/dax.c
+> > @@ -1032,6 +1032,7 @@ dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> >  		ssize_t map_len;
+> >  
+> >  		if (fatal_signal_pending(current)) {
+> > +			WARN(1, "dax_iomap_actor\n");
+> >  			ret = -EINTR;
+> >  			break;
+> >  		}
+> > diff --git a/fs/iomap.c b/fs/iomap.c
+> > index a51cb4c07d4d..00019e2cdad3 100644
+> > --- a/fs/iomap.c
+> > +++ b/fs/iomap.c
+> > @@ -114,8 +114,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+> >  
+> >  	BUG_ON(pos + len > iomap->offset + iomap->length);
+> >  
+> > -	if (fatal_signal_pending(current))
+> > +	if (fatal_signal_pending(current)) {
+> > +		WARN(1, "iomap_write_begin\n");
+> >  		return -EINTR;
+> > +	}
+> >  
+> >  	page = grab_cache_page_write_begin(inode->i_mapping, index, flags);
+> >  	if (!page)
+> > 
+> > and it triggered
+> > [  135.055682] WARNING: CPU: 2 PID: 4894 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.087297] WARNING: CPU: 1 PID: 4899 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.150542] WARNING: CPU: 2 PID: 4857 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.153653] WARNING: CPU: 3 PID: 4889 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.154413] WARNING: CPU: 0 PID: 4929 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.154734] WARNING: CPU: 3 PID: 4934 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.162743] WARNING: CPU: 0 PID: 4813 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.163282] WARNING: CPU: 1 PID: 4891 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.163820] WARNING: CPU: 0 PID: 4932 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.169112] WARNING: CPU: 0 PID: 4923 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.182816] WARNING: CPU: 0 PID: 4892 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.321991] WARNING: CPU: 3 PID: 4872 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > 
+> > always from
+> > [  135.055682] WARNING: CPU: 2 PID: 4894 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
+> > [  135.057092] iomap_write_begin
+> > [  135.057556] Modules linked in: xfs libcrc32c
+> > [  135.058191] CPU: 2 PID: 4894 Comm: fsstress Tainted: G        W       4.10.0-rc6-test1-00149-gd1908f52557b-dirty #1064
+> > [  135.060349] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.1-1 04/01/2014
+> > [  135.060865] Call Trace:
+> > [  135.060865]  dump_stack+0x68/0x92
+> > [  135.060865]  __warn+0xc2/0xdd
+> > [  135.060865]  warn_slowpath_fmt+0x4b/0x53
+> > [  135.060865]  iomap_write_begin+0x72/0x12c
+> > [  135.060865]  iomap_write_actor+0x99/0x161
+> > [  135.060865]  iomap_apply+0x9e/0xec
+> > [  135.060865]  ? iomap_write_end+0x62/0x62
+> > [  135.060865]  iomap_file_buffered_write+0x5b/0x7f
+> > [  135.060865]  ? iomap_write_end+0x62/0x62
+> > [  135.060865]  xfs_file_buffered_aio_write+0x187/0x2b4 [xfs]
+> > [  135.060865]  xfs_file_write_iter+0x93/0x11c [xfs]
+> > [  135.060865]  __vfs_write+0xcc/0xf5
+> > [  135.060865]  vfs_write+0x100/0x1a9
+> > [  135.060865]  SyS_write+0x51/0x8e
+> > 
+> > So somebody had to send SIGKILL to fsstress. Anyway, I am wondering
+> > whether this is really a regression. xfs_file_buffered_aio_write used to
+> > call generic_perform_write which does the same thing.
+> > -- 
+> > Michal Hocko
+> > SUSE Labs
 > 
-> Dave.
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> Michal Hocko
+> SUSE Labs
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
