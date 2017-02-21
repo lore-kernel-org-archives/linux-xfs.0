@@ -1,102 +1,182 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45409 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933462AbdBQMtW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2017 07:49:22 -0500
-Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cehyT-0005MJ-0g
-        for linux-xfs@vger.kernel.org; Fri, 17 Feb 2017 12:49:21 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] xfs: remove XFS_ALLOCTYPE_ANY_AG and XFS_ALLOCTYPE_START_AG
-Date: Fri, 17 Feb 2017 13:49:11 +0100
-Message-Id: <20170217124911.11669-3-hch@lst.de>
-In-Reply-To: <20170217124911.11669-1-hch@lst.de>
-References: <20170217124911.11669-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:41438 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752571AbdBUOfP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Feb 2017 09:35:15 -0500
+Date: Tue, 21 Feb 2017 09:35:15 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/8] xfs: create a function to query all records in a
+ btree
+Message-ID: <20170221143514.GD3207@bfoster.bfoster>
+References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
+ <148738066286.29384.6059407136436797506.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <148738066286.29384.6059407136436797506.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-XFS_ALLOCTYPE_ANY_AG  was only used for the RT allocator and is unused
-now, and XFS_ALLOCTYPE_START_AG has been unused for a while.
+On Fri, Feb 17, 2017 at 05:17:42PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Create a helper function that will query all records in a btree.
+> This will be used by the online repair functions to examine every
+> record in a btree to rebuild a second btree.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 16 ++--------------
- fs/xfs/libxfs/xfs_alloc.h |  4 ----
- 2 files changed, 2 insertions(+), 18 deletions(-)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index fe98fbc4adf1..369adcc18c02 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2664,21 +2664,11 @@ xfs_alloc_vextent(
- 		args->agbno = XFS_FSB_TO_AGBNO(mp, args->fsbno);
- 		args->type = XFS_ALLOCTYPE_NEAR_BNO;
- 		/* FALLTHROUGH */
--	case XFS_ALLOCTYPE_ANY_AG:
--	case XFS_ALLOCTYPE_START_AG:
- 	case XFS_ALLOCTYPE_FIRST_AG:
- 		/*
- 		 * Rotate through the allocation groups looking for a winner.
- 		 */
--		if (type == XFS_ALLOCTYPE_ANY_AG) {
--			/*
--			 * Start with the last place we left off.
--			 */
--			args->agno = sagno = (mp->m_agfrotor / rotorstep) %
--					mp->m_sb.sb_agcount;
--			args->type = XFS_ALLOCTYPE_THIS_AG;
--			flags = XFS_ALLOC_FLAG_TRYLOCK;
--		} else if (type == XFS_ALLOCTYPE_FIRST_AG) {
-+		if (type == XFS_ALLOCTYPE_FIRST_AG) {
- 			/*
- 			 * Start with allocation group given by bno.
- 			 */
-@@ -2687,8 +2677,6 @@ xfs_alloc_vextent(
- 			sagno = 0;
- 			flags = 0;
- 		} else {
--			if (type == XFS_ALLOCTYPE_START_AG)
--				args->type = XFS_ALLOCTYPE_THIS_AG;
- 			/*
- 			 * Start with the given allocation group.
- 			 */
-@@ -2756,7 +2744,7 @@ xfs_alloc_vextent(
- 			}
- 			xfs_perag_put(args->pag);
- 		}
--		if (bump_rotor || (type == XFS_ALLOCTYPE_ANY_AG)) {
-+		if (bump_rotor) {
- 			if (args->agno == sagno)
- 				mp->m_agfrotor = (mp->m_agfrotor + 1) %
- 					(mp->m_sb.sb_agcount * rotorstep);
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 1d0f48a501a3..2a8d0fa6fbbe 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -29,9 +29,7 @@ extern struct workqueue_struct *xfs_alloc_wq;
- /*
-  * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
-  */
--#define XFS_ALLOCTYPE_ANY_AG	0x01	/* allocate anywhere, use rotor */
- #define XFS_ALLOCTYPE_FIRST_AG	0x02	/* ... start at ag 0 */
--#define XFS_ALLOCTYPE_START_AG	0x04	/* anywhere, start in this a.g. */
- #define XFS_ALLOCTYPE_THIS_AG	0x08	/* anywhere in this a.g. */
- #define XFS_ALLOCTYPE_START_BNO	0x10	/* near this block else anywhere */
- #define XFS_ALLOCTYPE_NEAR_BNO	0x20	/* in this a.g. and near this block */
-@@ -41,9 +39,7 @@ extern struct workqueue_struct *xfs_alloc_wq;
- typedef unsigned int xfs_alloctype_t;
- 
- #define XFS_ALLOC_TYPES \
--	{ XFS_ALLOCTYPE_ANY_AG,		"ANY_AG" }, \
- 	{ XFS_ALLOCTYPE_FIRST_AG,	"FIRST_AG" }, \
--	{ XFS_ALLOCTYPE_START_AG,	"START_AG" }, \
- 	{ XFS_ALLOCTYPE_THIS_AG,	"THIS_AG" }, \
- 	{ XFS_ALLOCTYPE_START_BNO,	"START_BNO" }, \
- 	{ XFS_ALLOCTYPE_NEAR_BNO,	"NEAR_BNO" }, \
--- 
-2.11.0
-
+>  fs/xfs/libxfs/xfs_alloc.c |   15 +++++++++++++++
+>  fs/xfs/libxfs/xfs_alloc.h |    2 ++
+>  fs/xfs/libxfs/xfs_btree.c |   15 +++++++++++++++
+>  fs/xfs/libxfs/xfs_btree.h |    2 ++
+>  fs/xfs/libxfs/xfs_rmap.c  |   28 +++++++++++++++++++++-------
+>  fs/xfs/libxfs/xfs_rmap.h  |    2 ++
+>  6 files changed, 57 insertions(+), 7 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 526df17..ba15f30 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2917,3 +2917,18 @@ xfs_alloc_query_range(
+>  	return xfs_btree_query_range(cur, &low_brec, &high_brec,
+>  			xfs_alloc_query_range_helper, &query);
+>  }
+> +
+> +/* Find all free space records. */
+> +int
+> +xfs_alloc_query_all(
+> +	struct xfs_btree_cur			*cur,
+> +	xfs_alloc_query_range_fn		fn,
+> +	void					*priv)
+> +{
+> +	struct xfs_alloc_query_range_info	query;
+> +
+> +	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
+> +	query.priv = priv;
+> +	query.fn = fn;
+> +	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index f534998..a2101de 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -232,5 +232,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
+>  		struct xfs_alloc_rec_incore *low_rec,
+>  		struct xfs_alloc_rec_incore *high_rec,
+>  		xfs_alloc_query_range_fn fn, void *priv);
+> +int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
+> +		void *priv);
+>  
+>  #endif	/* __XFS_ALLOC_H__ */
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 2849d3f..ca94b87 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -4823,6 +4823,21 @@ xfs_btree_query_range(
+>  			fn, priv);
+>  }
+>  
+> +/* Query a btree for all records. */
+> +int
+> +xfs_btree_query_all(
+> +	struct xfs_btree_cur		*cur,
+> +	xfs_btree_query_range_fn	fn,
+> +	void				*priv)
+> +{
+> +	union xfs_btree_irec		low_rec;
+> +	union xfs_btree_irec		high_rec;
+> +
+> +	memset(&low_rec, 0, sizeof(low_rec));
+> +	memset(&high_rec, 0xFF, sizeof(high_rec));
+> +	return xfs_btree_query_range(cur, &low_rec, &high_rec, fn, priv);
+> +}
+> +
+>  /*
+>   * Calculate the number of blocks needed to store a given number of records
+>   * in a short-format (per-AG metadata) btree.
+> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> index 33a8f86..5114055 100644
+> --- a/fs/xfs/libxfs/xfs_btree.h
+> +++ b/fs/xfs/libxfs/xfs_btree.h
+> @@ -494,6 +494,8 @@ typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
+>  int xfs_btree_query_range(struct xfs_btree_cur *cur,
+>  		union xfs_btree_irec *low_rec, union xfs_btree_irec *high_rec,
+>  		xfs_btree_query_range_fn fn, void *priv);
+> +int xfs_btree_query_all(struct xfs_btree_cur *cur, xfs_btree_query_range_fn fn,
+> +		void *priv);
+>  
+>  typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
+>  		void *data);
+> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> index 3a8cc71..3840556 100644
+> --- a/fs/xfs/libxfs/xfs_rmap.c
+> +++ b/fs/xfs/libxfs/xfs_rmap.c
+> @@ -2001,14 +2001,14 @@ xfs_rmap_query_range_helper(
+>  /* Find all rmaps between two keys. */
+>  int
+>  xfs_rmap_query_range(
+> -	struct xfs_btree_cur		*cur,
+> -	struct xfs_rmap_irec		*low_rec,
+> -	struct xfs_rmap_irec		*high_rec,
+> -	xfs_rmap_query_range_fn	fn,
+> -	void				*priv)
+> +	struct xfs_btree_cur			*cur,
+> +	struct xfs_rmap_irec			*low_rec,
+> +	struct xfs_rmap_irec			*high_rec,
+> +	xfs_rmap_query_range_fn			fn,
+> +	void					*priv)
+>  {
+> -	union xfs_btree_irec		low_brec;
+> -	union xfs_btree_irec		high_brec;
+> +	union xfs_btree_irec			low_brec;
+> +	union xfs_btree_irec			high_brec;
+>  	struct xfs_rmap_query_range_info	query;
+>  
+>  	low_brec.r = *low_rec;
+> @@ -2019,6 +2019,20 @@ xfs_rmap_query_range(
+>  			xfs_rmap_query_range_helper, &query);
+>  }
+>  
+> +/* Find all rmaps. */
+> +int
+> +xfs_rmap_query_all(
+> +	struct xfs_btree_cur			*cur,
+> +	xfs_rmap_query_range_fn			fn,
+> +	void					*priv)
+> +{
+> +	struct xfs_rmap_query_range_info	query;
+> +
+> +	query.priv = priv;
+> +	query.fn = fn;
+> +	return xfs_btree_query_all(cur, xfs_rmap_query_range_helper, &query);
+> +}
+> +
+>  /* Clean up after calling xfs_rmap_finish_one. */
+>  void
+>  xfs_rmap_finish_one_cleanup(
+> diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+> index 7899305..faf2c1a 100644
+> --- a/fs/xfs/libxfs/xfs_rmap.h
+> +++ b/fs/xfs/libxfs/xfs_rmap.h
+> @@ -162,6 +162,8 @@ typedef int (*xfs_rmap_query_range_fn)(
+>  int xfs_rmap_query_range(struct xfs_btree_cur *cur,
+>  		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
+>  		xfs_rmap_query_range_fn fn, void *priv);
+> +int xfs_rmap_query_all(struct xfs_btree_cur *cur, xfs_rmap_query_range_fn fn,
+> +		void *priv);
+>  
+>  enum xfs_rmap_intent_type {
+>  	XFS_RMAP_MAP,
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
