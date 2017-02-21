@@ -1,49 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41153 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751361AbdBUIOJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Feb 2017 03:14:09 -0500
-Date: Tue, 21 Feb 2017 09:13:46 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [BUG 4.10-rc7] sb_fdblocks inconsistency in xfs/297 test
-Message-ID: <20170221081345.GA15595@dhcp22.suse.cz>
-References: <20170210035348.GA7075@eguan.usersys.redhat.com>
- <20170210071418.GC9346@dhcp22.suse.cz>
- <20170210080210.GC10893@dhcp22.suse.cz>
- <20170210093131.GH10893@dhcp22.suse.cz>
- <20170220142521.GJ2431@dhcp22.suse.cz>
- <20170220145819.GC32455@bfoster.bfoster>
- <20170221041430.GN24562@eguan.usersys.redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:27080 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750928AbdBUBoE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Feb 2017 20:44:04 -0500
+Date: Mon, 20 Feb 2017 17:43:56 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: transaction reservations for deleting of shared extents
+Message-ID: <20170221014356.GA5844@birch.djwong.org>
+References: <20170220072945.GA17608@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170221041430.GN24562@eguan.usersys.redhat.com>
+In-Reply-To: <20170220072945.GA17608@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue 21-02-17 12:14:30, Eryu Guan wrote:
-> On Mon, Feb 20, 2017 at 09:58:19AM -0500, Brian Foster wrote:
-> > On Mon, Feb 20, 2017 at 03:25:21PM +0100, Michal Hocko wrote:
-> > > I have discussed that shortly with Jack and he suspects that xfs
-> > > specific part of the iomap callbacks doesn't cancel reservations.
-> > > Let's CC more xfs people. The thread starts
-> > > http://lkml.kernel.org/r/20170210035348.GA7075@eguan.usersys.redhat.com
-> > > 
-> > 
-> > Have you tried commit fa7f138 ("xfs: clear delalloc and cache on buffered
-> > write failure"), currently in for-next?
+On Mon, Feb 20, 2017 at 08:29:45AM +0100, Christoph Hellwig wrote:
+> Hi Darrick,
 > 
-> I cherry-picked this commit to 4.10-rc8 tree and xfs/297 xfs/305 all
-> passed for me without fs corruption. They used to fail for me reliably
-> with stock 4.10-rc8 kernel. Thanks all for looking at this!
+> I got a bug report about running out of log reservations when deleting
+> heavily reflinked files.
+> 
+> We're hitting the ASSERT(tp->t_ticket->t_curr_res >= len) in
+> xlog_cil_insert_items and it seems we are way above the reservation.
+> 
+> I started auditing the issue and it seems like we don't account for
+> the refcountbt adjustments at all in tr_itruncate.  Do you have any
+> back of the napking math around for what amount of log reservations
+> we should need for them?  Otherwise I'll need to wade through the
+> code and recreate that math.
 
-Brian, could you make sure that your commit gets to stable (at least) 4.8+
-because that is where d1908f52557b ("fs: break out of
-iomap_file_buffered_write on fatal signals") will be backported to.
+Hmmmm.  refcountbt updates should all be processed as deferred ops,
+which means that each logical update ("increase refcount of blocks
+3-300") should be getting its own transaction.
 
--- 
-Michal Hocko
-SUSE Labs
+The function xfs_refcount_still_have_space tries to guess when we're
+getting close to using up all the log reservation by assuming that each
+refcount update will eventually use 32 bytes of the transaction
+reservation, though it's hard to know precisely what the results of
+formatting the log items will be.
+
+When it thinks we're out of transaction space it'll signal a partial
+completion, which (should) cause the defer_ops mechanism to log an RUD
+and a new RUI, then roll the transaction and start again.  I speculate
+that my guess of 32 bytes per refcountbt update is not correct. :(
+
+Can you reproduce it easily?  IIRC xfs/140 should exercise some of this
+mechanism.
+
+--D
