@@ -1,59 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33072 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751010AbdB0FLO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Feb 2017 00:11:14 -0500
-Subject: Re: [PATCH] xfsdump: fix build on 32-bit platforms
-References: <d1f01b20-8272-80d8-df1c-0cb5c8f8aa70@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7fc75583-923a-3f73-aa74-487e87b8efba@sandeen.net>
-Date: Sun, 26 Feb 2017 23:01:22 -0600
+Received: from userp1040.oracle.com ([156.151.31.81]:31053 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932155AbdBUSFf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Feb 2017 13:05:35 -0500
+Date: Tue, 21 Feb 2017 10:05:25 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] include: don't collide __bitwise definitions in 4.10
+Message-ID: <20170221180525.GG5846@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <d1f01b20-8272-80d8-df1c-0cb5c8f8aa70@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>, Eric Biggers <ebiggers@google.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On 2/17/17 3:02 PM, Eric Sandeen wrote:
-> Now that xfsprogs requires anyone using the headers to
-> properly define 64-bit file access, xfsdump has stopped
-> building on 32-bit platforms.
-> 
-> I think this is all it needs; works for me here.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Linux 4.10 changed the definition of __bitwise in such a way that
+xfsprogs' definition is no longer a strict match for it.  This causes
+gcc to complain, so only #define it here if the system hasn't already
+done it for us.
 
-Ping?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ include/xfs_arch.h |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-(with the dearth of devel traffic for xfsdump, don't want this
-to get lost...)
-
-Thanks,
--Eric
-
-> ---
-> 
-> cc: Eric Biggers because he seems to enjoy this stuff :)
-> 
-> diff --git a/configure.ac b/configure.ac
-> index 7bb6f1d..8d78ed4 100644
-> --- a/configure.ac
-> +++ b/configure.ac
-> @@ -6,6 +6,8 @@ AC_CONFIG_SRCDIR([common/main.c])
->  AC_CONFIG_HEADER(include/config.h)
->  AC_PREFIX_DEFAULT(/usr)
->  
-> +AC_SYS_LARGEFILE
-> +
->  AC_PROG_LIBTOOL
->  
->  AC_ARG_ENABLE(shared,
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/include/xfs_arch.h b/include/xfs_arch.h
+index 6e3172c..12cd43e 100644
+--- a/include/xfs_arch.h
++++ b/include/xfs_arch.h
+@@ -25,10 +25,14 @@
+ #endif
+ 
+ #ifdef __CHECKER__
+-#define __bitwise		__attribute__((bitwise))
++# ifndef __bitwise
++#  define __bitwise		__attribute__((bitwise))
++# endif
+ #define __force			__attribute__((force))
+ #else
+-#define __bitwise
++# ifndef __bitwise
++#  define __bitwise
++# endif
+ #define __force
+ #endif
+ 
