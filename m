@@ -1,52 +1,73 @@
-Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227150254.uvfqyp5oz5afij2h@eorzea.usersys.redhat.com>
-Resent-To: sandeen@sandeen.net
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:35406 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751284AbdB0CNT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Feb 2017 21:13:19 -0500
-Received: by mail-pf0-f178.google.com with SMTP id j5so3354068pfb.2
-        for <linux-xfs@vger.kernel.org>; Sun, 26 Feb 2017 18:11:49 -0800 (PST)
-From: "Halsey Pian" <halsey.pian@gmail.com>
-References: 
-In-Reply-To: 
-Subject: With respect to XFS Bitmap flush to disk
-Date: Mon, 27 Feb 2017 10:11:44 +0800
-Message-ID: <004e01d2909e$d9ce1580$8d6a4080$@gmail.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42574 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753745AbdBUQdO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Feb 2017 11:33:14 -0500
+Date: Tue, 21 Feb 2017 08:33:02 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: clear delalloc and cache on buffered write failure
+Message-ID: <20170221163302.GA5846@birch.djwong.org>
+References: <1487684787-5004-1-git-send-email-bfoster@redhat.com>
+ <20170221135639.GA26768@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Language: zh-cn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170221135639.GA26768@kroah.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: halsey.pian@gmail.com
+To: Greg KH <greg@kroah.com>
+Cc: Brian Foster <bfoster@redhat.com>, stable@vger.kernel.org, linux-xfs@vger.kernel.org, Michal Hocko <mhocko@kernel.org>
 
-Dear All,
+On Tue, Feb 21, 2017 at 02:56:39PM +0100, Greg KH wrote:
+> On Tue, Feb 21, 2017 at 08:46:27AM -0500, Brian Foster wrote:
+> > commit fa7f138ac4c70dc00519c124cf7cd4862a0a5b0e upstream.
+> > 
+> > The buffered write failure handling code in
+> > xfs_file_iomap_end_delalloc() has a couple minor problems. First, if
+> > written == 0, start_fsb is not rounded down and it fails to kill off a
+> > delalloc block if the start offset is block unaligned. This results in a
+> > lingering delalloc block and broken delalloc block accounting detected
+> > at unmount time. Fix this by rounding down start_fsb in the unlikely
+> > event that written == 0.
+> > 
+> > Second, it is possible for a failed overwrite of a delalloc extent to
+> > leave dirty pagecache around over a hole in the file. This is because is
+> > possible to hit ->iomap_end() on write failure before the iomap code has
+> > attempted to allocate pagecache, and thus has no need to clean it up. If
+> > the targeted delalloc extent was successfully written by a previous
+> > write, however, then it does still have dirty pages when ->iomap_end()
+> > punches out the underlying blocks. This ultimately results in writeback
+> > over a hole. To fix this problem, unconditionally punch out the
+> > pagecache from XFS before the associated delalloc range.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > CC: stable@vger.kernel.org # v4.8+
+> > ---
+> > 
+> > This is for stable... it fixes a latent regression exposed by
+> > d1908f52557b ("fs: break out of iomap_file_buffered_write on fatal
+> > signals"), which is to be backported to 4.8+ stable kernels.
+> 
+> For XFS patches, I need an explicit ack from the maintainer before
+> applying them, as per their instructions in the past...
 
-Recently, I try to read analyze the bitmap of XFS file system, it seems =
-that I cannot read the latest bitmap from hard disk involving the XFS, =
-and cannot read the accurate info even after a long time. For example, i =
-cannot get the relevant bitmap info after I add/delete a big file =
-to/from XFS file system.
+"ACK", FWIW.
 
-I tried several solution, and find it out that I must execute xfs_freeze =
-for the XFS partition in CentOS7, and it seems that xfs_freeze =
-doesn=E2=80=99t work for XFS version included in Redhat6.5, I must =
-umount/mount the xfs, then I can get the latest bitmap info related to =
-the latest data located in disk.
+(XFS is slowly moving towards group maintainership amongst the most
+active contributors, or at least "don't lets dump all the responsibility
+on Dave" maintainership.)
 
-What  strategy does XFS use to cache/flush bitmap to hard disk?  How can =
-I get the accurate bitmap info especially for Redhat6 series Operating =
-System? Could you please give help on it?
+--D
 
-Thanks in advance! =E2=98=BA
-
-
-
-
-Halsey Pian=20
-
-
+> 
+> thanks,
+> 
+> greg k-h
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
