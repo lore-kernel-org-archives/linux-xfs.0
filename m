@@ -1,54 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27080 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750928AbdBUBoE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Feb 2017 20:44:04 -0500
-Date: Mon, 20 Feb 2017 17:43:56 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: transaction reservations for deleting of shared extents
-Message-ID: <20170221014356.GA5844@birch.djwong.org>
-References: <20170220072945.GA17608@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170220072945.GA17608@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:52452 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752574AbdBUNq1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Feb 2017 08:46:27 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: clear delalloc and cache on buffered write failure
+Date: Tue, 21 Feb 2017 08:46:27 -0500
+Message-Id: <1487684787-5004-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Michal Hocko <mhocko@kernel.org>
 
-On Mon, Feb 20, 2017 at 08:29:45AM +0100, Christoph Hellwig wrote:
-> Hi Darrick,
-> 
-> I got a bug report about running out of log reservations when deleting
-> heavily reflinked files.
-> 
-> We're hitting the ASSERT(tp->t_ticket->t_curr_res >= len) in
-> xlog_cil_insert_items and it seems we are way above the reservation.
-> 
-> I started auditing the issue and it seems like we don't account for
-> the refcountbt adjustments at all in tr_itruncate.  Do you have any
-> back of the napking math around for what amount of log reservations
-> we should need for them?  Otherwise I'll need to wade through the
-> code and recreate that math.
+commit fa7f138ac4c70dc00519c124cf7cd4862a0a5b0e upstream.
 
-Hmmmm.  refcountbt updates should all be processed as deferred ops,
-which means that each logical update ("increase refcount of blocks
-3-300") should be getting its own transaction.
+The buffered write failure handling code in
+xfs_file_iomap_end_delalloc() has a couple minor problems. First, if
+written == 0, start_fsb is not rounded down and it fails to kill off a
+delalloc block if the start offset is block unaligned. This results in a
+lingering delalloc block and broken delalloc block accounting detected
+at unmount time. Fix this by rounding down start_fsb in the unlikely
+event that written == 0.
 
-The function xfs_refcount_still_have_space tries to guess when we're
-getting close to using up all the log reservation by assuming that each
-refcount update will eventually use 32 bytes of the transaction
-reservation, though it's hard to know precisely what the results of
-formatting the log items will be.
+Second, it is possible for a failed overwrite of a delalloc extent to
+leave dirty pagecache around over a hole in the file. This is because is
+possible to hit ->iomap_end() on write failure before the iomap code has
+attempted to allocate pagecache, and thus has no need to clean it up. If
+the targeted delalloc extent was successfully written by a previous
+write, however, then it does still have dirty pages when ->iomap_end()
+punches out the underlying blocks. This ultimately results in writeback
+over a hole. To fix this problem, unconditionally punch out the
+pagecache from XFS before the associated delalloc range.
 
-When it thinks we're out of transaction space it'll signal a partial
-completion, which (should) cause the defer_ops mechanism to log an RUD
-and a new RUI, then roll the transaction and start again.  I speculate
-that my guess of 32 bytes per refcountbt update is not correct. :(
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+CC: stable@vger.kernel.org # v4.8+
+---
 
-Can you reproduce it easily?  IIRC xfs/140 should exercise some of this
-mechanism.
+This is for stable... it fixes a latent regression exposed by
+d1908f52557b ("fs: break out of iomap_file_buffered_write on fatal
+signals"), which is to be backported to 4.8+ stable kernels.
 
---D
+Brian
+
+ fs/xfs/xfs_iomap.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 2af0dda..fe3562b 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1064,7 +1064,15 @@ xfs_file_iomap_end_delalloc(
+ 	xfs_fileoff_t		end_fsb;
+ 	int			error = 0;
+ 
+-	start_fsb = XFS_B_TO_FSB(mp, offset + written);
++	/*
++	 * start_fsb refers to the first unused block after a short write. If
++	 * nothing was written, round offset down to point at the first block in
++	 * the range.
++	 */
++	if (unlikely(!written))
++		start_fsb = XFS_B_TO_FSBT(mp, offset);
++	else
++		start_fsb = XFS_B_TO_FSB(mp, offset + written);
+ 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
+ 
+ 	/*
+@@ -1076,6 +1084,9 @@ xfs_file_iomap_end_delalloc(
+ 	 * blocks in the range, they are ours.
+ 	 */
+ 	if (start_fsb < end_fsb) {
++		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
++					 XFS_FSB_TO_B(mp, end_fsb) - 1);
++
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+ 					       end_fsb - start_fsb);
+-- 
+2.7.4
+
