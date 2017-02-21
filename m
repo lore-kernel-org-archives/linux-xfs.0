@@ -1,59 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53988 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:36230 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753561AbdBUSQ0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Feb 2017 13:16:26 -0500
-Subject: Re: [PATCH] include: don't collide __bitwise definitions in 4.10
-References: <20170221180525.GG5846@birch.djwong.org>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <c9d0ac33-43df-1062-e71d-1df071dbba60@redhat.com>
-Date: Tue, 21 Feb 2017 12:16:24 -0600
+        id S1751637AbdBUJHt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Feb 2017 04:07:49 -0500
+Date: Tue, 21 Feb 2017 10:07:47 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: transaction reservations for deleting of shared extents
+Message-ID: <20170221090747.GA20840@lst.de>
+References: <20170220072945.GA17608@lst.de> <20170221014356.GA5844@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170221180525.GG5846@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170221014356.GA5844@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On 2/21/17 12:05 PM, Darrick J. Wong wrote:
-> Linux 4.10 changed the definition of __bitwise in such a way that
-> xfsprogs' definition is no longer a strict match for it.  This causes
-> gcc to complain, so only #define it here if the system hasn't already
-> done it for us.
+On Mon, Feb 20, 2017 at 05:43:56PM -0800, Darrick J. Wong wrote:
+> Hmmmm.  refcountbt updates should all be processed as deferred ops,
+> which means that each logical update ("increase refcount of blocks
+> 3-300") should be getting its own transaction.
+
+Yes, but we'd still need to figure out how much to allocate for that
+transaction.
+
+> The function xfs_refcount_still_have_space tries to guess when we're
+> getting close to using up all the log reservation by assuming that each
+> refcount update will eventually use 32 bytes of the transaction
+> reservation, though it's hard to know precisely what the results of
+> formatting the log items will be.
+
+I guess it's getting that estimate wrong.  It's also pretty weird
+and different from how we reserve space for transactions everywhere
+else in XFS..
+
+> When it thinks we're out of transaction space it'll signal a partial
+> completion, which (should) cause the defer_ops mechanism to log an RUD
+> and a new RUI, then roll the transaction and start again.  I speculate
+> that my guess of 32 bytes per refcountbt update is not correct. :(
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Can you reproduce it easily?  IIRC xfs/140 should exercise some of this
+> mechanism.
 
-Makes sense, thanks for catching this.
+I personally can't reproduce it easily, but there is a QA setup that
+reproduces it reliably, although it takes quite some time. I think I
+can send you the reproducer, but it might require the right hardware
+to hit the race, given that I can't actually reproduce it.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  include/xfs_arch.h |    8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
 > 
-> diff --git a/include/xfs_arch.h b/include/xfs_arch.h
-> index 6e3172c..12cd43e 100644
-> --- a/include/xfs_arch.h
-> +++ b/include/xfs_arch.h
-> @@ -25,10 +25,14 @@
->  #endif
->  
->  #ifdef __CHECKER__
-> -#define __bitwise		__attribute__((bitwise))
-> +# ifndef __bitwise
-> +#  define __bitwise		__attribute__((bitwise))
-> +# endif
->  #define __force			__attribute__((force))
->  #else
-> -#define __bitwise
-> +# ifndef __bitwise
-> +#  define __bitwise
-> +# endif
->  #define __force
->  #endif
->  
-> 
-
+> --D
+---end quoted text---
