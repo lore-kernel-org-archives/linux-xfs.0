@@ -1,23 +1,94 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37410 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751815AbdB0KCz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Feb 2017 05:02:55 -0500
-Date: Mon, 27 Feb 2017 00:45:03 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsdump: fix build on 32-bit platforms
-Message-ID: <20170227084503.GA22809@infradead.org>
-References: <d1f01b20-8272-80d8-df1c-0cb5c8f8aa70@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d1f01b20-8272-80d8-df1c-0cb5c8f8aa70@sandeen.net>
+Return-Path: <cmaiolino@redhat.com>
+Resent-Message-ID: <20170227145012.z3l577vbi4kfreez@eorzea.usersys.redhat.com>
+Resent-To: sandeen@sandeen.net
+Received: from mga02.intel.com ([134.134.136.20]:30014 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752374AbdBUPt1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Feb 2017 10:49:27 -0500
+From: Elena Reshetova <elena.reshetova@intel.com>
+Subject: [PATCH 5/7] fs, xfs: convert xlog_ticket.t_ref from atomic_t to refcount_t
+Date: Tue, 21 Feb 2017 17:49:05 +0200
+Message-Id: <1487692147-17066-6-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
+References: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Eric Biggers <ebiggers@google.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
 
-Looks fine:
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ fs/xfs/xfs_log.c      | 10 +++++-----
+ fs/xfs/xfs_log_priv.h |  4 +++-
+ 2 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index b1469f0..c127fa0 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3500,8 +3500,8 @@ void
+ xfs_log_ticket_put(
+ 	xlog_ticket_t	*ticket)
+ {
+-	ASSERT(atomic_read(&ticket->t_ref) > 0);
+-	if (atomic_dec_and_test(&ticket->t_ref))
++	ASSERT(refcount_read(&ticket->t_ref) > 0);
++	if (refcount_dec_and_test(&ticket->t_ref))
+ 		kmem_zone_free(xfs_log_ticket_zone, ticket);
+ }
+ 
+@@ -3509,8 +3509,8 @@ xlog_ticket_t *
+ xfs_log_ticket_get(
+ 	xlog_ticket_t	*ticket)
+ {
+-	ASSERT(atomic_read(&ticket->t_ref) > 0);
+-	atomic_inc(&ticket->t_ref);
++	ASSERT(refcount_read(&ticket->t_ref) > 0);
++	refcount_inc(&ticket->t_ref);
+ 	return ticket;
+ }
+ 
+@@ -3632,7 +3632,7 @@ xlog_ticket_alloc(
+ 
+ 	unit_res = xfs_log_calc_unit_res(log->l_mp, unit_bytes);
+ 
+-	atomic_set(&tic->t_ref, 1);
++	refcount_set(&tic->t_ref, 1);
+ 	tic->t_task		= current;
+ 	INIT_LIST_HEAD(&tic->t_queue);
+ 	tic->t_unit_res		= unit_res;
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index c2604a5..279afce 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -18,6 +18,8 @@
+ #ifndef	__XFS_LOG_PRIV_H__
+ #define __XFS_LOG_PRIV_H__
+ 
++#include <linux/refcount.h>
++
+ struct xfs_buf;
+ struct xlog;
+ struct xlog_ticket;
+@@ -168,7 +170,7 @@ typedef struct xlog_ticket {
+ 	struct list_head   t_queue;	 /* reserve/write queue */
+ 	struct task_struct *t_task;	 /* task that owns this ticket */
+ 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
+-	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
++	refcount_t	   t_ref;	 /* ticket reference count       : 4  */
+ 	int		   t_curr_res;	 /* current reservation in bytes : 4  */
+ 	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
+ 	char		   t_ocnt;	 /* original count		 : 1  */
+-- 
+2.7.4
+
