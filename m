@@ -1,90 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36452 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:41153 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754648AbdBPMBv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Feb 2017 07:01:51 -0500
-Date: Thu, 16 Feb 2017 07:01:50 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 0/5] xfs: quota deadlock fixes
-Message-ID: <20170216120150.GA11750@bfoster.bfoster>
-References: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
- <20170216074234.GV24562@eguan.usersys.redhat.com>
+        id S1751361AbdBUIOJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Feb 2017 03:14:09 -0500
+Date: Tue, 21 Feb 2017 09:13:46 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [BUG 4.10-rc7] sb_fdblocks inconsistency in xfs/297 test
+Message-ID: <20170221081345.GA15595@dhcp22.suse.cz>
+References: <20170210035348.GA7075@eguan.usersys.redhat.com>
+ <20170210071418.GC9346@dhcp22.suse.cz>
+ <20170210080210.GC10893@dhcp22.suse.cz>
+ <20170210093131.GH10893@dhcp22.suse.cz>
+ <20170220142521.GJ2431@dhcp22.suse.cz>
+ <20170220145819.GC32455@bfoster.bfoster>
+ <20170221041430.GN24562@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170216074234.GV24562@eguan.usersys.redhat.com>
+In-Reply-To: <20170221041430.GN24562@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Thu, Feb 16, 2017 at 03:42:34PM +0800, Eryu Guan wrote:
-> On Wed, Feb 15, 2017 at 10:40:42AM -0500, Brian Foster wrote:
-> > Hi all,
+On Tue 21-02-17 12:14:30, Eryu Guan wrote:
+> On Mon, Feb 20, 2017 at 09:58:19AM -0500, Brian Foster wrote:
+> > On Mon, Feb 20, 2017 at 03:25:21PM +0100, Michal Hocko wrote:
+> > > I have discussed that shortly with Jack and he suspects that xfs
+> > > specific part of the iomap callbacks doesn't cancel reservations.
+> > > Let's CC more xfs people. The thread starts
+> > > http://lkml.kernel.org/r/20170210035348.GA7075@eguan.usersys.redhat.com
+> > > 
 > > 
-> > This is a collection of several quota related deadlock fixes for
-> > problems that have been reported to the list recently.
-> > 
-> > Patch 1 fixes the low memory quotacheck problem reported by Martin[1].
-> > Dave is CC'd as he had comments on this particular thread that started a
-> > discussion, but I hadn't heard anything back since my last response.
-> > 
-> > Patch 2 fixes a separate problem I ran into while attempting to
-> > reproduce Eryu's xfs/305 hang report[2]. 
-> > 
-> > Patches 3-5 fix the actual problem reported by Eryu, which is a quotaoff
-> > deadlock reproduced by xfs/305.
-> > 
-> > Further details are included in the individual commit log descriptions.
-> > Thoughts, reviews, flames appreciated.
-> > 
-> > Eryu,
-> > 
-> > I've run several hundred iterations of this on your reproducer system
-> > without reproducing the hang. I have reproduced a reset overnight but
-> > still haven't been able to grab a stack trace from that occurrence (I'll
-> > try again today/tonight with better console logging). I suspect this is
-> > a separate problem (possibly just an ASSERT() failure as this is a DEBUG
-> > kernel), but I'd appreciate any testing you can run against these
-> > patches to verify.
+> > Have you tried commit fa7f138 ("xfs: clear delalloc and cache on buffered
+> > write failure"), currently in for-next?
 > 
-> Sure, I'll give them a test and report back once I got results. Thanks
-> for looking into it!
-> 
+> I cherry-picked this commit to 4.10-rc8 tree and xfs/297 xfs/305 all
+> passed for me without fs corruption. They used to fail for me reliably
+> with stock 4.10-rc8 kernel. Thanks all for looking at this!
 
-Thanks. The test I was running ran overnight again (over 1k iterations)
-without any problems. I'm logged off your server now..
+Brian, could you make sure that your commit gets to stable (at least) 4.8+
+because that is where d1908f52557b ("fs: break out of
+iomap_file_buffered_write on fatal signals") will be backported to.
 
-Brian
-
-> Eryu
-> 
-> > 
-> > Brian
-> > 
-> > [1] http://www.spinics.net/lists/linux-xfs/msg01901.html
-> > [2] http://www.spinics.net/lists/linux-xfs/msg03835.html
-> > 
-> > Brian Foster (5):
-> >   xfs: bypass dquot reclaim to avoid quotacheck deadlock
-> >   xfs: allocate quotaoff transactions up front to avoid log deadlock
-> >   xfs: support ability to wait on new inodes
-> >   xfs: update ag iterator to support wait on new inodes
-> >   xfs: wait on new inodes during quotaoff dquot release
-> > 
-> >  fs/xfs/xfs_icache.c      | 58 ++++++++++++++++++++++++++++++++++++++++--------
-> >  fs/xfs/xfs_icache.h      |  8 +++++++
-> >  fs/xfs/xfs_inode.h       |  4 +++-
-> >  fs/xfs/xfs_qm.c          | 11 +++++++++
-> >  fs/xfs/xfs_qm.h          |  1 +
-> >  fs/xfs/xfs_qm_syscalls.c | 45 +++++++++++++++++++++----------------
-> >  6 files changed, 98 insertions(+), 29 deletions(-)
-> > 
-> > -- 
-> > 2.7.4
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Michal Hocko
+SUSE Labs
