@@ -1,162 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44520 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56048 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751180AbdBTO7K (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Feb 2017 09:59:10 -0500
-Date: Mon, 20 Feb 2017 09:58:19 -0500
+        id S1752571AbdBUOfG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Feb 2017 09:35:06 -0500
+Date: Tue, 21 Feb 2017 09:35:04 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [BUG 4.10-rc7] sb_fdblocks inconsistency in xfs/297 test
-Message-ID: <20170220145819.GC32455@bfoster.bfoster>
-References: <20170210035348.GA7075@eguan.usersys.redhat.com>
- <20170210071418.GC9346@dhcp22.suse.cz>
- <20170210080210.GC10893@dhcp22.suse.cz>
- <20170210093131.GH10893@dhcp22.suse.cz>
- <20170220142521.GJ2431@dhcp22.suse.cz>
+Subject: Re: [PATCH 2/8] xfs: plumb in needed functions for range querying of
+ the freespace btrees
+Message-ID: <20170221143504.GB3207@bfoster.bfoster>
+References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
+ <148738065038.29384.2269477924958641169.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170220142521.GJ2431@dhcp22.suse.cz>
+In-Reply-To: <148738065038.29384.2269477924958641169.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Feb 20, 2017 at 03:25:21PM +0100, Michal Hocko wrote:
-> I have discussed that shortly with Jack and he suspects that xfs
-> specific part of the iomap callbacks doesn't cancel reservations.
-> Let's CC more xfs people. The thread starts
-> http://lkml.kernel.org/r/20170210035348.GA7075@eguan.usersys.redhat.com
+On Fri, Feb 17, 2017 at 05:17:30PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
+> Plumb in the pieces (init_high_key, diff_two_keys) necessary to call
+> query_range on the free space btrees.  Remove the debugging asserts
+> so that we can make queries starting from block 0.
+> 
+> While we're at it, merge the redundant "if (btnum ==" hunks.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc_btree.c |  162 +++++++++++++++++++++++++++++----------
+>  1 file changed, 119 insertions(+), 43 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+> index efb467b..ba3ec9c 100644
+> --- a/fs/xfs/libxfs/xfs_alloc_btree.c
+> +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+...
+> @@ -346,44 +388,78 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
+...
+> -static const struct xfs_btree_ops xfs_allocbt_ops = {
+> +static const struct xfs_btree_ops xfs_cntbt_ops = {
+>  	.rec_len		= sizeof(xfs_alloc_rec_t),
+>  	.key_len		= sizeof(xfs_alloc_key_t),
+>  
+> @@ -397,11 +473,12 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
+>  	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
+>  	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
+>  	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+> -	.key_diff		= xfs_allocbt_key_diff,
+> +	.key_diff		= xfs_cntbt_key_diff,
+>  	.buf_ops		= &xfs_allocbt_buf_ops,
+> +	.diff_two_keys		= xfs_cntbt_diff_two_keys,
 
-Have you tried commit fa7f138 ("xfs: clear delalloc and cache on buffered
-write failure"), currently in for-next?
+Any reason we add diff_two_keys() but not init_high_key_from_rec() for
+the cntbt? If so.. could you note the different requirements in the
+commit log?
 
 Brian
 
-> On Fri 10-02-17 10:31:31, Michal Hocko wrote:
-> > [CC Christoph]
-> > 
-> > On Fri 10-02-17 09:02:10, Michal Hocko wrote:
-> > > On Fri 10-02-17 08:14:18, Michal Hocko wrote:
-> > > > On Fri 10-02-17 11:53:48, Eryu Guan wrote:
-> > > > > Hi,
-> > > > > 
-> > > > > I was testing 4.10-rc7 kernel and noticed that xfs_repair reported XFS
-> > > > > corruption after fstests xfs/297 test. This didn't happen with 4.10-rc6
-> > > > > kernel, and git bisect pointed the first bad commit to
-> > > > > 
-> > > > > commit d1908f52557b3230fbd63c0429f3b4b748bf2b6d
-> > > > > Author: Michal Hocko <mhocko@suse.com>
-> > > > > Date:   Fri Feb 3 13:13:26 2017 -0800
-> > > > > 
-> > > > >     fs: break out of iomap_file_buffered_write on fatal signals
-> > > > > 
-> > > > >     Tetsuo has noticed that an OOM stress test which performs large write
-> > > > >     requests can cause the full memory reserves depletion.  He has tracked
-> > > > >     this down to the following path
-> > > > > ....
-> > > > > 
-> > > > > It's the sb_fdblocks field reports inconsistency:
-> > > > > ...
-> > > > > Phase 2 - using internal log   
-> > > > >         - zero log...
-> > > > >         - scan filesystem freespace and inode maps...
-> > > > > sb_fdblocks 3367765, counted 3367863
-> > > > >         - 11:37:41: scanning filesystem freespace - 16 of 16 allocation groups done
-> > > > >         - found root inode chunk
-> > > > > ...
-> > > > > 
-> > > > > And it can be reproduced almost 100% with all XFS test configurations
-> > > > > (e.g. xfs_4k xfs_2k_reflink), on all test hosts I tried (so I didn't
-> > > > > bother pasting my detailed test and host configs, if more info is needed
-> > > > > please let me know).
-> > > > 
-> > > > The patch can lead to short writes when the task is killed. Was there
-> > > > any OOM killer triggered during the test? If not who is killing the
-> > > > task? I will try to reproduce later today.
-> > > 
-> > > I have checked both tests and they are killing the test but none of them
-> > > seems to be using SIGKILL. The patch should make a difference only for
-> > > fatal signal (aka SIGKILL). Is there any other part that can do SIGKILL
-> > > except for the OOM killer?
-> > 
-> > I have done
-> > diff --git a/fs/dax.c b/fs/dax.c
-> > index c45598b912e1..4de00ceaf73d 100644
-> > --- a/fs/dax.c
-> > +++ b/fs/dax.c
-> > @@ -1032,6 +1032,7 @@ dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-> >  		ssize_t map_len;
-> >  
-> >  		if (fatal_signal_pending(current)) {
-> > +			WARN(1, "dax_iomap_actor\n");
-> >  			ret = -EINTR;
-> >  			break;
-> >  		}
-> > diff --git a/fs/iomap.c b/fs/iomap.c
-> > index a51cb4c07d4d..00019e2cdad3 100644
-> > --- a/fs/iomap.c
-> > +++ b/fs/iomap.c
-> > @@ -114,8 +114,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
-> >  
-> >  	BUG_ON(pos + len > iomap->offset + iomap->length);
-> >  
-> > -	if (fatal_signal_pending(current))
-> > +	if (fatal_signal_pending(current)) {
-> > +		WARN(1, "iomap_write_begin\n");
-> >  		return -EINTR;
-> > +	}
-> >  
-> >  	page = grab_cache_page_write_begin(inode->i_mapping, index, flags);
-> >  	if (!page)
-> > 
-> > and it triggered
-> > [  135.055682] WARNING: CPU: 2 PID: 4894 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.087297] WARNING: CPU: 1 PID: 4899 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.150542] WARNING: CPU: 2 PID: 4857 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.153653] WARNING: CPU: 3 PID: 4889 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.154413] WARNING: CPU: 0 PID: 4929 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.154734] WARNING: CPU: 3 PID: 4934 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.162743] WARNING: CPU: 0 PID: 4813 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.163282] WARNING: CPU: 1 PID: 4891 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.163820] WARNING: CPU: 0 PID: 4932 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.169112] WARNING: CPU: 0 PID: 4923 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.182816] WARNING: CPU: 0 PID: 4892 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.321991] WARNING: CPU: 3 PID: 4872 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > 
-> > always from
-> > [  135.055682] WARNING: CPU: 2 PID: 4894 at fs/iomap.c:118 iomap_write_begin+0x72/0x12c
-> > [  135.057092] iomap_write_begin
-> > [  135.057556] Modules linked in: xfs libcrc32c
-> > [  135.058191] CPU: 2 PID: 4894 Comm: fsstress Tainted: G        W       4.10.0-rc6-test1-00149-gd1908f52557b-dirty #1064
-> > [  135.060349] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.1-1 04/01/2014
-> > [  135.060865] Call Trace:
-> > [  135.060865]  dump_stack+0x68/0x92
-> > [  135.060865]  __warn+0xc2/0xdd
-> > [  135.060865]  warn_slowpath_fmt+0x4b/0x53
-> > [  135.060865]  iomap_write_begin+0x72/0x12c
-> > [  135.060865]  iomap_write_actor+0x99/0x161
-> > [  135.060865]  iomap_apply+0x9e/0xec
-> > [  135.060865]  ? iomap_write_end+0x62/0x62
-> > [  135.060865]  iomap_file_buffered_write+0x5b/0x7f
-> > [  135.060865]  ? iomap_write_end+0x62/0x62
-> > [  135.060865]  xfs_file_buffered_aio_write+0x187/0x2b4 [xfs]
-> > [  135.060865]  xfs_file_write_iter+0x93/0x11c [xfs]
-> > [  135.060865]  __vfs_write+0xcc/0xf5
-> > [  135.060865]  vfs_write+0x100/0x1a9
-> > [  135.060865]  SyS_write+0x51/0x8e
-> > 
-> > So somebody had to send SIGKILL to fsstress. Anyway, I am wondering
-> > whether this is really a regression. xfs_file_buffered_aio_write used to
-> > call generic_perform_write which does the same thing.
-> > -- 
-> > Michal Hocko
-> > SUSE Labs
+>  #if defined(DEBUG) || defined(XFS_WARN)
+> -	.keys_inorder		= xfs_allocbt_keys_inorder,
+> -	.recs_inorder		= xfs_allocbt_recs_inorder,
+> +	.keys_inorder		= xfs_cntbt_keys_inorder,
+> +	.recs_inorder		= xfs_cntbt_recs_inorder,
+>  #endif
+>  };
+>  
+> @@ -427,16 +504,15 @@ xfs_allocbt_init_cursor(
+>  	cur->bc_mp = mp;
+>  	cur->bc_btnum = btnum;
+>  	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+> -	cur->bc_ops = &xfs_allocbt_ops;
+> -	if (btnum == XFS_BTNUM_BNO)
+> -		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
+> -	else
+> -		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
+>  
+>  	if (btnum == XFS_BTNUM_CNT) {
+> +		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
+> +		cur->bc_ops = &xfs_cntbt_ops;
+>  		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
+>  		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
+>  	} else {
+> +		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
+> +		cur->bc_ops = &xfs_bnobt_ops;
+>  		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
+>  	}
+>  
 > 
-> -- 
-> Michal Hocko
-> SUSE Labs
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
