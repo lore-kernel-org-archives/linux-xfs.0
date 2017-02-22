@@ -1,298 +1,1345 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34974 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46670 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932801AbdBVPCO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Feb 2017 10:02:14 -0500
-Date: Wed, 22 Feb 2017 10:02:12 -0500
+        id S932684AbdBVPCt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 22 Feb 2017 10:02:49 -0500
+Date: Wed, 22 Feb 2017 10:02:47 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 2/8] xfs: plumb in needed functions for range querying
- of the freespace btrees
-Message-ID: <20170222150212.GA53025@bfoster.bfoster>
+Subject: Re: [PATCH 5/8] xfs: introduce the XFS_IOC_GETFSMAP ioctl
+Message-ID: <20170222150246.GB53025@bfoster.bfoster>
 References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
- <148738065038.29384.2269477924958641169.stgit@birch.djwong.org>
- <20170221173410.GF5846@birch.djwong.org>
+ <148738066907.29384.8419135817879528959.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170221173410.GF5846@birch.djwong.org>
+In-Reply-To: <148738066907.29384.8419135817879528959.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Feb 21, 2017 at 09:34:10AM -0800, Darrick J. Wong wrote:
-> Plumb in the pieces (init_high_key, diff_two_keys) necessary to call
-> query_range on the free space btrees.  Remove the debugging asserts
-> so that we can make queries starting from block 0.
+On Fri, Feb 17, 2017 at 05:17:49PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> While we're at it, merge the redundant "if (btnum ==" hunks.
+> Introduce a new ioctl that uses the reverse mapping btree to return
+> information about the physical layout of the filesystem.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Mostly looks good, though there's a decent amount of indirection here so
+I'll probably need another pass through it. Mostly minor comments, a
+couple potential issues and some questions..
 
-> v2: Add forgotten cntbt high key function.
-> ---
->  fs/xfs/libxfs/xfs_alloc_btree.c |  172 +++++++++++++++++++++++++++++----------
->  1 file changed, 129 insertions(+), 43 deletions(-)
+>  fs/xfs/Makefile        |    1 
+>  fs/xfs/libxfs/xfs_fs.h |   13 +
+>  fs/xfs/xfs_fsmap.c     |  782 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_fsmap.h     |   51 +++
+>  fs/xfs/xfs_ioctl.c     |  103 ++++++
+>  fs/xfs/xfs_ioctl32.c   |    2 
+>  fs/xfs/xfs_trace.h     |   85 +++++
+>  fs/xfs/xfs_trans.c     |   22 +
+>  fs/xfs/xfs_trans.h     |    2 
+>  9 files changed, 1061 insertions(+)
+>  create mode 100644 fs/xfs/xfs_fsmap.c
+>  create mode 100644 fs/xfs/xfs_fsmap.h
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-> index efb467b..e1fcfe7 100644
-> --- a/fs/xfs/libxfs/xfs_alloc_btree.c
-> +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-> @@ -205,19 +205,37 @@ xfs_allocbt_init_key_from_rec(
->  	union xfs_btree_key	*key,
->  	union xfs_btree_rec	*rec)
->  {
-> -	ASSERT(rec->alloc.ar_startblock != 0);
-> -
->  	key->alloc.ar_startblock = rec->alloc.ar_startblock;
->  	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
->  }
+> 
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index c7515d4..0e7ee30 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -80,6 +80,7 @@ xfs-y				+= xfs_aops.o \
+>  				   xfs_extent_busy.o \
+>  				   xfs_file.o \
+>  				   xfs_filestream.o \
+> +				   xfs_fsmap.o \
+>  				   xfs_fsops.o \
+>  				   xfs_globals.o \
+>  				   xfs_icache.o \
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index b72dc82..095bdf0 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -92,6 +92,18 @@ struct getbmapx {
+>  #define BMV_OF_LAST		0x4	/* segment is the last in the file */
+>  #define BMV_OF_SHARED		0x8	/* segment shared with another file */
 >  
->  STATIC void
-> +xfs_bnobt_init_high_key_from_rec(
-> +	union xfs_btree_key	*key,
-> +	union xfs_btree_rec	*rec)
-> +{
-> +	__u32			x;
+> +/*	fmr_owner special values for FS_IOC_GETFSMAP */
+> +#define XFS_FMR_OWN_FREE	FMR_OWN_FREE      /* free space */
+> +#define XFS_FMR_OWN_UNKNOWN	FMR_OWN_UNKNOWN   /* unknown owner */
+> +#define XFS_FMR_OWN_FS		FMR_OWNER('X', 1) /* static fs metadata */
+> +#define XFS_FMR_OWN_LOG		FMR_OWNER('X', 2) /* journalling log */
+> +#define XFS_FMR_OWN_AG		FMR_OWNER('X', 3) /* per-AG metadata */
+> +#define XFS_FMR_OWN_INOBT	FMR_OWNER('X', 4) /* inode btree blocks */
+> +#define XFS_FMR_OWN_INODES	FMR_OWNER('X', 5) /* inodes */
+> +#define XFS_FMR_OWN_REFC	FMR_OWNER('X', 6) /* refcount tree */
+> +#define XFS_FMR_OWN_COW		FMR_OWNER('X', 7) /* cow staging */
+> +#define XFS_FMR_OWN_DEFECTIVE	FMR_OWNER('X', 8) /* bad blocks */
 > +
-> +	x = be32_to_cpu(rec->alloc.ar_startblock);
-> +	x += be32_to_cpu(rec->alloc.ar_blockcount) - 1;
-> +	key->alloc.ar_startblock = cpu_to_be32(x);
-> +	key->alloc.ar_blockcount = 0;
+>  /*
+>   * Structure for XFS_IOC_FSSETDM.
+>   * For use by backup and restore programs to set the XFS on-disk inode
+> @@ -502,6 +514,7 @@ typedef struct xfs_swapext
+>  #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
+>  #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+>  #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
+> +/*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+>  
+>  /*
+>   * ioctl commands that replace IRIX syssgi()'s
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> new file mode 100644
+> index 0000000..09d6b92
+> --- /dev/null
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -0,0 +1,782 @@
+> +/*
+> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#include "xfs.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_format.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_defer.h"
+> +#include "xfs_inode.h"
+> +#include "xfs_trans.h"
+> +#include "xfs_error.h"
+> +#include "xfs_btree.h"
+> +#include "xfs_rmap_btree.h"
+> +#include "xfs_trace.h"
+> +#include "xfs_log.h"
+> +#include "xfs_rmap.h"
+> +#include "xfs_alloc.h"
+> +#include "xfs_bit.h"
+> +#include <linux/fsmap.h>
+> +#include "xfs_fsmap.h"
+> +#include "xfs_refcount.h"
+> +#include "xfs_refcount_btree.h"
+> +
+> +/* Convert an xfs_fsmap to an fsmap. */
+> +void
+> +xfs_fsmap_from_internal(
+> +	struct fsmap		*dest,
+> +	struct xfs_fsmap	*src)
+> +{
+> +	dest->fmr_device = src->fmr_device;
+> +	dest->fmr_flags = src->fmr_flags;
+> +	dest->fmr_physical = BBTOB(src->fmr_physical);
+> +	dest->fmr_owner = src->fmr_owner;
+> +	dest->fmr_offset = BBTOB(src->fmr_offset);
+> +	dest->fmr_length = BBTOB(src->fmr_length);
+> +	dest->fmr_reserved[0] = 0;
+> +	dest->fmr_reserved[1] = 0;
+> +	dest->fmr_reserved[2] = 0;
 > +}
 > +
-> +STATIC void
-> +xfs_cntbt_init_high_key_from_rec(
-> +	union xfs_btree_key	*key,
-> +	union xfs_btree_rec	*rec)
+> +/* Convert an fsmap to an xfs_fsmap. */
+> +void
+> +xfs_fsmap_to_internal(
+> +	struct xfs_fsmap	*dest,
+> +	struct fsmap		*src)
 > +{
-> +	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
-> +	key->alloc.ar_startblock = 0;
+> +	dest->fmr_device = src->fmr_device;
+> +	dest->fmr_flags = src->fmr_flags;
+> +	dest->fmr_physical = BTOBBT(src->fmr_physical);
+> +	dest->fmr_owner = src->fmr_owner;
+> +	dest->fmr_offset = BTOBBT(src->fmr_offset);
+> +	dest->fmr_length = BTOBBT(src->fmr_length);
 > +}
 > +
-> +STATIC void
->  xfs_allocbt_init_rec_from_cur(
->  	struct xfs_btree_cur	*cur,
->  	union xfs_btree_rec	*rec)
->  {
-> -	ASSERT(cur->bc_rec.a.ar_startblock != 0);
-> -
->  	rec->alloc.ar_startblock = cpu_to_be32(cur->bc_rec.a.ar_startblock);
->  	rec->alloc.ar_blockcount = cpu_to_be32(cur->bc_rec.a.ar_blockcount);
->  }
-> @@ -236,18 +254,24 @@ xfs_allocbt_init_ptr_from_cur(
->  }
->  
->  STATIC __int64_t
-> -xfs_allocbt_key_diff(
-> +xfs_bnobt_key_diff(
->  	struct xfs_btree_cur	*cur,
->  	union xfs_btree_key	*key)
->  {
->  	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
->  	xfs_alloc_key_t		*kp = &key->alloc;
-> -	__int64_t		diff;
->  
-> -	if (cur->bc_btnum == XFS_BTNUM_BNO) {
-> -		return (__int64_t)be32_to_cpu(kp->ar_startblock) -
-> -				rec->ar_startblock;
-> -	}
-> +	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
+> +/* Convert an fsmap owner into an rmapbt owner. */
+> +static int
+> +xfs_fsmap_owner_to_rmap(
+> +	struct xfs_fsmap	*fmr,
+> +	struct xfs_rmap_irec	*rm)
+
+I find the inconsistent semantics a little confusing here. E.g., the
+xfs_fsmap_[to|from]_*() helpers use consistent dest, src parameter
+ordering. Here we use the opposite. I don't care much which way we go,
+but could we use the same semantics between all of such helpers?
+
+> +{
+> +	if (!(fmr->fmr_flags & FMR_OF_SPECIAL_OWNER)) {
+> +		rm->rm_owner = fmr->fmr_owner;
+> +		return 0;
+> +	}
+> +
+> +	switch (fmr->fmr_owner) {
+> +	case 0:			/* "lowest owner id possible" */
+> +	case -1ULL:		/* "highest owner id possible" */
+> +		rm->rm_owner = 0;
+> +		break;
+> +	case XFS_FMR_OWN_FREE:
+> +		rm->rm_owner = XFS_RMAP_OWN_NULL;
+> +		break;
+> +	case XFS_FMR_OWN_UNKNOWN:
+> +		rm->rm_owner = XFS_RMAP_OWN_UNKNOWN;
+> +		break;
+> +	case XFS_FMR_OWN_FS:
+> +		rm->rm_owner = XFS_RMAP_OWN_FS;
+> +		break;
+> +	case XFS_FMR_OWN_LOG:
+> +		rm->rm_owner = XFS_RMAP_OWN_LOG;
+> +		break;
+> +	case XFS_FMR_OWN_AG:
+> +		rm->rm_owner = XFS_RMAP_OWN_AG;
+> +		break;
+> +	case XFS_FMR_OWN_INOBT:
+> +		rm->rm_owner = XFS_RMAP_OWN_INOBT;
+> +		break;
+> +	case XFS_FMR_OWN_INODES:
+> +		rm->rm_owner = XFS_RMAP_OWN_INODES;
+> +		break;
+> +	case XFS_FMR_OWN_REFC:
+> +		rm->rm_owner = XFS_RMAP_OWN_REFC;
+> +		break;
+> +	case XFS_FMR_OWN_COW:
+> +		rm->rm_owner = XFS_RMAP_OWN_COW;
+> +		break;
+> +	case XFS_FMR_OWN_DEFECTIVE:	/* not implemented */
+> +		/* fall through */
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +	return 0;
 > +}
 > +
-> +STATIC __int64_t
-> +xfs_cntbt_key_diff(
-> +	struct xfs_btree_cur	*cur,
-> +	union xfs_btree_key	*key)
+> +/* Convert an rmapbt owner into an fsmap owner. */
+> +static int
+> +xfs_fsmap_owner_from_rmap(
+> +	struct xfs_rmap_irec	*rm,
+> +	struct xfs_fsmap	*fmr)
 > +{
-> +	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
-> +	xfs_alloc_key_t		*kp = &key->alloc;
-> +	__int64_t		diff;
->  
->  	diff = (__int64_t)be32_to_cpu(kp->ar_blockcount) - rec->ar_blockcount;
->  	if (diff)
-> @@ -256,6 +280,33 @@ xfs_allocbt_key_diff(
->  	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
->  }
->  
-> +STATIC __int64_t
-> +xfs_bnobt_diff_two_keys(
-> +	struct xfs_btree_cur	*cur,
-> +	union xfs_btree_key	*k1,
-> +	union xfs_btree_key	*k2)
-> +{
-> +	return (__int64_t)be32_to_cpu(k1->alloc.ar_startblock) -
-> +			  be32_to_cpu(k2->alloc.ar_startblock);
+> +	fmr->fmr_flags = 0;
+> +	if (!XFS_RMAP_NON_INODE_OWNER(rm->rm_owner)) {
+> +		fmr->fmr_owner = rm->rm_owner;
+> +		return 0;
+> +	}
+> +	fmr->fmr_flags |= FMR_OF_SPECIAL_OWNER;
+> +
+> +	switch (rm->rm_owner) {
+> +	case XFS_RMAP_OWN_FS:
+> +		fmr->fmr_owner = XFS_FMR_OWN_FS;
+> +		break;
+> +	case XFS_RMAP_OWN_LOG:
+> +		fmr->fmr_owner = XFS_FMR_OWN_LOG;
+> +		break;
+> +	case XFS_RMAP_OWN_AG:
+> +		fmr->fmr_owner = XFS_FMR_OWN_AG;
+> +		break;
+> +	case XFS_RMAP_OWN_INOBT:
+> +		fmr->fmr_owner = XFS_FMR_OWN_INOBT;
+> +		break;
+> +	case XFS_RMAP_OWN_INODES:
+> +		fmr->fmr_owner = XFS_FMR_OWN_INODES;
+> +		break;
+> +	case XFS_RMAP_OWN_REFC:
+> +		fmr->fmr_owner = XFS_FMR_OWN_REFC;
+> +		break;
+> +	case XFS_RMAP_OWN_COW:
+> +		fmr->fmr_owner = XFS_FMR_OWN_COW;
+> +		break;
+> +	default:
+> +		return -EFSCORRUPTED;
+> +	}
+> +	return 0;
 > +}
 > +
-> +STATIC __int64_t
-> +xfs_cntbt_diff_two_keys(
-> +	struct xfs_btree_cur	*cur,
-> +	union xfs_btree_key	*k1,
-> +	union xfs_btree_key	*k2)
-> +{
-> +	__int64_t		diff;
+> +/* getfsmap query state */
+> +struct xfs_getfsmap_info {
+> +	struct xfs_fsmap_head	*head;
+> +	struct xfs_fsmap	*rkey_low;	/* lowest key */
+> +	xfs_fsmap_format_t	formatter;	/* formatting fn */
+> +	void			*format_arg;	/* format buffer */
+> +	bool			last;		/* last extent? */
+> +	xfs_daddr_t		next_daddr;	/* next daddr we expect */
+> +	u32			dev;		/* device id */
+> +	u64			missing_owner;	/* owner of holes */
 > +
-> +	diff =  be32_to_cpu(k1->alloc.ar_blockcount) -
-> +		be32_to_cpu(k2->alloc.ar_blockcount);
-> +	if (diff)
-> +		return diff;
-> +
-> +	return  be32_to_cpu(k1->alloc.ar_startblock) -
-> +		be32_to_cpu(k2->alloc.ar_startblock);
-> +}
-> +
->  static bool
->  xfs_allocbt_verify(
->  	struct xfs_buf		*bp)
-> @@ -346,44 +397,54 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
->  
->  #if defined(DEBUG) || defined(XFS_WARN)
->  STATIC int
-> -xfs_allocbt_keys_inorder(
-> +xfs_bnobt_keys_inorder(
->  	struct xfs_btree_cur	*cur,
->  	union xfs_btree_key	*k1,
->  	union xfs_btree_key	*k2)
->  {
-> -	if (cur->bc_btnum == XFS_BTNUM_BNO) {
-> -		return be32_to_cpu(k1->alloc.ar_startblock) <
-> -		       be32_to_cpu(k2->alloc.ar_startblock);
-> -	} else {
-> -		return be32_to_cpu(k1->alloc.ar_blockcount) <
-> -			be32_to_cpu(k2->alloc.ar_blockcount) ||
-> -			(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
-> -			 be32_to_cpu(k1->alloc.ar_startblock) <
-> -			 be32_to_cpu(k2->alloc.ar_startblock));
-> -	}
-> +	return be32_to_cpu(k1->alloc.ar_startblock) <
-> +	       be32_to_cpu(k2->alloc.ar_startblock);
->  }
->  
->  STATIC int
-> -xfs_allocbt_recs_inorder(
-> +xfs_bnobt_recs_inorder(
->  	struct xfs_btree_cur	*cur,
->  	union xfs_btree_rec	*r1,
->  	union xfs_btree_rec	*r2)
->  {
-> -	if (cur->bc_btnum == XFS_BTNUM_BNO) {
-> -		return be32_to_cpu(r1->alloc.ar_startblock) +
-> -			be32_to_cpu(r1->alloc.ar_blockcount) <=
-> -			be32_to_cpu(r2->alloc.ar_startblock);
-> -	} else {
-> -		return be32_to_cpu(r1->alloc.ar_blockcount) <
-> -			be32_to_cpu(r2->alloc.ar_blockcount) ||
-> -			(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
-> -			 be32_to_cpu(r1->alloc.ar_startblock) <
-> -			 be32_to_cpu(r2->alloc.ar_startblock));
-> -	}
-> +	return be32_to_cpu(r1->alloc.ar_startblock) +
-> +		be32_to_cpu(r1->alloc.ar_blockcount) <=
-> +		be32_to_cpu(r2->alloc.ar_startblock);
-> +}
-> +
-> +STATIC int
-> +xfs_cntbt_keys_inorder(
-> +	struct xfs_btree_cur	*cur,
-> +	union xfs_btree_key	*k1,
-> +	union xfs_btree_key	*k2)
-> +{
-> +	return be32_to_cpu(k1->alloc.ar_blockcount) <
-> +		be32_to_cpu(k2->alloc.ar_blockcount) ||
-> +		(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
-> +		 be32_to_cpu(k1->alloc.ar_startblock) <
-> +		 be32_to_cpu(k2->alloc.ar_startblock));
->  }
-> -#endif	/* DEBUG */
->  
-> -static const struct xfs_btree_ops xfs_allocbt_ops = {
-> +STATIC int
-> +xfs_cntbt_recs_inorder(
-> +	struct xfs_btree_cur	*cur,
-> +	union xfs_btree_rec	*r1,
-> +	union xfs_btree_rec	*r2)
-> +{
-> +	return be32_to_cpu(r1->alloc.ar_blockcount) <
-> +		be32_to_cpu(r2->alloc.ar_blockcount) ||
-> +		(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
-> +		 be32_to_cpu(r1->alloc.ar_startblock) <
-> +		 be32_to_cpu(r2->alloc.ar_startblock));
-> +}
-> +#endif /* DEBUG */
-> +
-> +static const struct xfs_btree_ops xfs_bnobt_ops = {
->  	.rec_len		= sizeof(xfs_alloc_rec_t),
->  	.key_len		= sizeof(xfs_alloc_key_t),
->  
-> @@ -395,13 +456,39 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
->  	.get_minrecs		= xfs_allocbt_get_minrecs,
->  	.get_maxrecs		= xfs_allocbt_get_maxrecs,
->  	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
-> +	.init_high_key_from_rec	= xfs_bnobt_init_high_key_from_rec,
->  	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
->  	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
-> -	.key_diff		= xfs_allocbt_key_diff,
-> +	.key_diff		= xfs_bnobt_key_diff,
->  	.buf_ops		= &xfs_allocbt_buf_ops,
-> +	.diff_two_keys		= xfs_bnobt_diff_two_keys,
->  #if defined(DEBUG) || defined(XFS_WARN)
-> -	.keys_inorder		= xfs_allocbt_keys_inorder,
-> -	.recs_inorder		= xfs_allocbt_recs_inorder,
-> +	.keys_inorder		= xfs_bnobt_keys_inorder,
-> +	.recs_inorder		= xfs_bnobt_recs_inorder,
-> +#endif
+> +	xfs_agnumber_t		agno;		/* AG number, if applicable */
+> +	struct xfs_buf		*agf_bp;	/* AGF, for refcount queries */
+> +	struct xfs_rmap_irec	low;		/* low rmap key */
+> +	struct xfs_rmap_irec	high;		/* high rmap key */
 > +};
 > +
-> +static const struct xfs_btree_ops xfs_cntbt_ops = {
-> +	.rec_len		= sizeof(xfs_alloc_rec_t),
-> +	.key_len		= sizeof(xfs_alloc_key_t),
+> +/* Associate a device with a getfsmap handler. */
+> +struct xfs_getfsmap_dev {
+> +	u32			dev;
+> +	int			(*fn)(struct xfs_trans *tp,
+> +				      struct xfs_fsmap *keys,
+> +				      struct xfs_getfsmap_info *info);
+> +};
 > +
-> +	.dup_cursor		= xfs_allocbt_dup_cursor,
-> +	.set_root		= xfs_allocbt_set_root,
-> +	.alloc_block		= xfs_allocbt_alloc_block,
-> +	.free_block		= xfs_allocbt_free_block,
-> +	.update_lastrec		= xfs_allocbt_update_lastrec,
-> +	.get_minrecs		= xfs_allocbt_get_minrecs,
-> +	.get_maxrecs		= xfs_allocbt_get_maxrecs,
-> +	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
-> +	.init_high_key_from_rec	= xfs_cntbt_init_high_key_from_rec,
-> +	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
-> +	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
-> +	.key_diff		= xfs_cntbt_key_diff,
-> +	.buf_ops		= &xfs_allocbt_buf_ops,
-> +	.diff_two_keys		= xfs_cntbt_diff_two_keys,
-> +#if defined(DEBUG) || defined(XFS_WARN)
-> +	.keys_inorder		= xfs_cntbt_keys_inorder,
-> +	.recs_inorder		= xfs_cntbt_recs_inorder,
->  #endif
->  };
+> +/* Compare two getfsmap device handlers. */
+> +static int
+> +xfs_getfsmap_dev_compare(
+> +	const void			*p1,
+> +	const void			*p2)
+> +{
+> +	const struct xfs_getfsmap_dev	*d1 = p1;
+> +	const struct xfs_getfsmap_dev	*d2 = p2;
+> +
+> +	return d1->dev - d2->dev;
+> +}
+> +
+> +/* Compare a record against our starting point */
+> +static bool
+> +xfs_getfsmap_rec_before_low_key(
+> +	struct xfs_getfsmap_info	*info,
+> +	struct xfs_rmap_irec		*rec)
+> +{
+> +	uint64_t			x, y;
+> +
+> +	if (rec->rm_startblock < info->low.rm_startblock)
+> +		return true;
+> +	if (rec->rm_startblock > info->low.rm_startblock)
+> +		return false;
+> +
+> +	if (rec->rm_owner < info->low.rm_owner)
+> +		return true;
+> +	if (rec->rm_owner > info->low.rm_owner)
+> +		return false;
+> +
+> +	x = xfs_rmap_irec_offset_pack(rec);
+> +	y = xfs_rmap_irec_offset_pack(&info->low);
+
+It looks like these functions incorporate flags bits into the offset. Is
+that intentional? If so.. comment?
+
+> +	if (x < y)
+> +		return true;
+> +	return false;
+> +}
+> +
+> +/* Decide if this mapping is shared. */
+> +STATIC int
+> +xfs_getfsmap_is_shared(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_getfsmap_info	*info,
+> +	struct xfs_rmap_irec		*rec,
+> +	bool				*stat)
+> +{
+> +	struct xfs_mount		*mp = tp->t_mountp;
+> +	struct xfs_btree_cur		*cur;
+> +	xfs_agblock_t			fbno;
+> +	xfs_extlen_t			flen;
+> +	int				error;
+> +
+> +	*stat = false;
+> +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+> +		return 0;
+> +	/* rt files will have agno set to NULLAGNUMBER */
+> +	if (info->agno == NULLAGNUMBER)
+> +		return 0;
+> +
+> +	/* Are there any shared blocks here? */
+> +	flen = 0;
+> +	cur = xfs_refcountbt_init_cursor(mp, tp, info->agf_bp,
+> +			info->agno, NULL);
+> +
+> +	error = xfs_refcount_find_shared(cur, rec->rm_startblock,
+> +			rec->rm_blockcount, &fbno, &flen, false);
+> +
+> +	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+> +	if (error)
+> +		return error;
+> +
+> +	*stat = flen > 0;
+> +	return 0;
+> +}
+> +
+> +/*
+> + * Format a reverse mapping for getfsmap, having translated rm_startblock
+> + * into the appropriate daddr units.
+> + */
+> +STATIC int
+> +xfs_getfsmap_helper(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_getfsmap_info	*info,
+> +	struct xfs_rmap_irec		*rec,
+> +	xfs_daddr_t			rec_daddr)
+> +{
+> +	struct xfs_fsmap		fmr;
+> +	struct xfs_mount		*mp = tp->t_mountp;
+> +	xfs_daddr_t			key_end;
+> +	bool				shared;
+> +	int				error;
+> +
+> +	if (fatal_signal_pending(current))
+> +		return -EAGAIN;
+> +
+
+I wonder if -EINTR is more appropriate here..?
+
+> +	/*
+> +	 * Filter out records that start before our startpoint, if the
+> +	 * caller requested that.
+> +	 */
+> +	if (xfs_getfsmap_rec_before_low_key(info, rec)) {
+> +		rec_daddr += XFS_FSB_TO_BB(mp, rec->rm_blockcount);
+> +		if (info->next_daddr < rec_daddr)
+> +			info->next_daddr = rec_daddr;
+> +		return XFS_BTREE_QUERY_RANGE_CONTINUE;
+> +	}
+> +
+> +	/*
+> +	 * If the caller passed in a length with the low record and
+> +	 * the record represents a file data extent, we incremented
+> +	 * the offset in the low key by the length in the hopes of
+> +	 * finding reverse mappings for the physical blocks we just
+> +	 * saw.  We did /not/ increment next_daddr by the length
+> +	 * because the range query would not be able to find shared
+> +	 * extents within the same physical block range.
+> +	 *
+> +	 * However, the extent we've been fed could have a startblock
+> +	 * past the passed-in low record.  If this is the case,
+> +	 * advance next_daddr to the end of the passed-in low record
+> +	 * so we don't report the extent prior to this extent as
+> +	 * free.
+> +	 */
+> +	key_end = info->rkey_low->fmr_physical + info->rkey_low->fmr_length;
+> +	if (info->dev == info->rkey_low->fmr_device &&
+> +	    info->next_daddr < key_end && rec_daddr >= key_end)
+> +		info->next_daddr = key_end;
+> +
+
+Hmm, so I think I follow what this is trying to do..
+
+In the case where we left off on a file mapping, we bump the offset of
+the passed in low key but next_daddr remains at the same physical block
+because we could have more mappings there. If we don't, however, and the
+next mapping occurs at a higher physical block, we need to make sure we
+don't map the previous range as free space. So we bump next_daddr here
+to make sure that if free space does exist, it shown to start at the end
+of the previous mapping. Yes?
+
+If I'm following that correctly, what about the case where we have
+bumped fmr_physical? It doesn't look like we've reset fmr_length, so
+couldn't this cause us to skip legitimate free space if for e.g. the
+current record is much farther ahead?
+
+> +	/* Are we just counting mappings? */
+> +	if (info->head->fmh_count == 0) {
+> +		if (rec_daddr > info->next_daddr)
+> +			info->head->fmh_entries++;
+> +
+> +		if (info->last)
+> +			return XFS_BTREE_QUERY_RANGE_CONTINUE;
+> +
+> +		info->head->fmh_entries++;
+> +
+> +		rec_daddr += XFS_FSB_TO_BB(mp, rec->rm_blockcount);
+> +		if (info->next_daddr < rec_daddr)
+> +			info->next_daddr = rec_daddr;
+> +		return XFS_BTREE_QUERY_RANGE_CONTINUE;
+> +	}
+> +
+> +	/*
+> +	 * If the record starts past the last physical block we saw,
+> +	 * then we've found some free space.  Report that too.
+> +	 */
+> +	if (rec_daddr > info->next_daddr) {
+> +		if (info->head->fmh_entries >= info->head->fmh_count)
+> +			return XFS_BTREE_QUERY_RANGE_ABORT;
+> +
+> +		trace_xfs_fsmap_mapping(mp, info->dev, info->agno,
+> +				XFS_DADDR_TO_FSB(mp, info->next_daddr),
+> +				XFS_DADDR_TO_FSB(mp, rec_daddr -
+> +						info->next_daddr),
+> +				info->missing_owner, 0);
+> +
+> +		fmr.fmr_device = info->dev;
+> +		fmr.fmr_physical = info->next_daddr;
+> +		fmr.fmr_owner = info->missing_owner;
+> +		fmr.fmr_offset = 0;
+> +		fmr.fmr_length = rec_daddr - info->next_daddr;
+> +		fmr.fmr_flags = FMR_OF_SPECIAL_OWNER;
+> +		error = info->formatter(&fmr, info->format_arg);
+> +		if (error)
+> +			return error;
+> +		info->head->fmh_entries++;
+> +	}
+> +
+> +	if (info->last)
+> +		goto out;
+> +
+> +	/* Fill out the extent we found */
+> +	if (info->head->fmh_entries >= info->head->fmh_count)
+> +		return XFS_BTREE_QUERY_RANGE_ABORT;
+> +
+> +	trace_xfs_fsmap_mapping(mp, info->dev, info->agno,
+> +			rec->rm_startblock, rec->rm_blockcount, rec->rm_owner,
+> +			rec->rm_offset);
+> +
+> +	fmr.fmr_device = info->dev;
+> +	fmr.fmr_physical = rec_daddr;
+> +	error = xfs_fsmap_owner_from_rmap(rec, &fmr);
+> +	if (error)
+> +		return error;
+> +	fmr.fmr_offset = XFS_FSB_TO_BB(mp, rec->rm_offset);
+> +	fmr.fmr_length = XFS_FSB_TO_BB(mp, rec->rm_blockcount);
+> +	if (rec->rm_flags & XFS_RMAP_UNWRITTEN)
+> +		fmr.fmr_flags |= FMR_OF_PREALLOC;
+> +	if (rec->rm_flags & XFS_RMAP_ATTR_FORK)
+> +		fmr.fmr_flags |= FMR_OF_ATTR_FORK;
+> +	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK)
+> +		fmr.fmr_flags |= FMR_OF_EXTENT_MAP;
+> +	if (fmr.fmr_flags == 0) {
+> +		error = xfs_getfsmap_is_shared(tp, info, rec, &shared);
+> +		if (error)
+> +			return error;
+> +		if (shared)
+> +			fmr.fmr_flags |= FMR_OF_SHARED;
+> +	}
+> +	error = info->formatter(&fmr, info->format_arg);
+> +	if (error)
+> +		return error;
+> +	info->head->fmh_entries++;
+> +
+> +out:
+> +	rec_daddr += XFS_FSB_TO_BB(mp, rec->rm_blockcount);
+> +	if (info->next_daddr < rec_daddr)
+> +		info->next_daddr = rec_daddr;
+> +	return XFS_BTREE_QUERY_RANGE_CONTINUE;
+> +}
+> +
+> +/* Transform a rmapbt irec into a fsmap */
+> +STATIC int
+> +xfs_getfsmap_datadev_helper(
+> +	struct xfs_btree_cur		*cur,
+> +	struct xfs_rmap_irec		*rec,
+> +	void				*priv)
+> +{
+> +	struct xfs_mount		*mp = cur->bc_mp;
+> +	struct xfs_getfsmap_info	*info = priv;
+> +	xfs_fsblock_t			fsb;
+> +	xfs_daddr_t			rec_daddr;
+> +
+> +	fsb = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno, rec->rm_startblock);
+> +	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb);
+> +
+> +	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
+> +}
+> +
+> +/* Transform a absolute-startblock rmap (rtdev, logdev) into a fsmap */
+> +STATIC int
+> +xfs_getfsmap_rtdev_helper(
+> +	struct xfs_btree_cur		*cur,
+> +	struct xfs_rmap_irec		*rec,
+> +	void				*priv)
+> +{
+> +	struct xfs_mount		*mp = cur->bc_mp;
+> +	struct xfs_getfsmap_info	*info = priv;
+> +	xfs_daddr_t			rec_daddr;
+> +
+> +	rec_daddr = XFS_FSB_TO_BB(mp, rec->rm_startblock);
+> +
+> +	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
+> +}
+> +
+> +/* Set rmap flags based on the getfsmap flags */
+> +static void
+> +xfs_getfsmap_set_irec_flags(
+> +	struct xfs_rmap_irec	*irec,
+> +	struct xfs_fsmap	*fmr)
+> +{
+> +	irec->rm_flags = 0;
+> +	if (fmr->fmr_flags & FMR_OF_ATTR_FORK)
+> +		irec->rm_flags |= XFS_RMAP_ATTR_FORK;
+> +	if (fmr->fmr_flags & FMR_OF_EXTENT_MAP)
+> +		irec->rm_flags |= XFS_RMAP_BMBT_BLOCK;
+> +	if (fmr->fmr_flags & FMR_OF_PREALLOC)
+> +		irec->rm_flags |= XFS_RMAP_UNWRITTEN;
+> +}
+> +
+> +/* Execute a getfsmap query against the log device. */
+> +STATIC int
+> +xfs_getfsmap_logdev(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_fsmap		*keys,
+> +	struct xfs_getfsmap_info	*info)
+> +{
+> +	struct xfs_mount		*mp = tp->t_mountp;
+> +	struct xfs_fsmap		*dkey_low = keys;
+> +	struct xfs_btree_cur		cur;
+> +	struct xfs_rmap_irec		rmap;
+> +	int				error;
+> +
+> +	/* Set up search keys */
+> +	info->low.rm_startblock = XFS_BB_TO_FSBT(mp, dkey_low->fmr_physical);
+> +	info->low.rm_offset = XFS_BB_TO_FSBT(mp, dkey_low->fmr_offset);
+> +	error = xfs_fsmap_owner_to_rmap(keys, &info->low);
+> +	if (error)
+> +		return error;
+> +	info->low.rm_blockcount = 0;
+> +	xfs_getfsmap_set_irec_flags(&info->low, dkey_low);
+> +
+> +	error = xfs_fsmap_owner_to_rmap(keys + 1, &info->high);
+> +	if (error)
+> +		return error;
+> +	info->high.rm_startblock = -1U;
+> +	info->high.rm_owner = ULLONG_MAX;
+> +	info->high.rm_offset = ULLONG_MAX;
+> +	info->high.rm_blockcount = 0;
+> +	info->high.rm_flags = XFS_RMAP_KEY_FLAGS | XFS_RMAP_REC_FLAGS;
+> +	info->missing_owner = XFS_FMR_OWN_FREE;
+> +
+> +	trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
+> +			info->low.rm_startblock,
+> +			info->low.rm_blockcount,
+> +			info->low.rm_owner,
+> +			info->low.rm_offset);
+> +
+> +	trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
+> +			info->high.rm_startblock,
+> +			info->high.rm_blockcount,
+> +			info->high.rm_owner,
+> +			info->high.rm_offset);
+> +
+> +
+> +	if (dkey_low->fmr_physical > 0)
+> +		return 0;
+> +
+
+A comment to point out we're fabricating an rmap record here would be
+nice. Also, (how) do we handle/report internal log blocks?
+
+> +	rmap.rm_startblock = 0;
+> +	rmap.rm_blockcount = mp->m_sb.sb_logblocks;
+> +	rmap.rm_owner = XFS_RMAP_OWN_LOG;
+> +	rmap.rm_offset = 0;
+> +	rmap.rm_flags = 0;
+> +
+> +	cur.bc_mp = mp;
+> +	cur.bc_tp = tp;
+> +	return xfs_getfsmap_rtdev_helper(&cur, &rmap, info);
+> +}
+> +
+> +/* Execute a getfsmap query against the regular data device. */
+> +STATIC int
+> +xfs_getfsmap_datadev(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_fsmap		*keys,
+> +	struct xfs_getfsmap_info	*info)
+> +{
+> +	struct xfs_mount		*mp = tp->t_mountp;
+> +	struct xfs_btree_cur		*bt_cur = NULL;
+> +	struct xfs_fsmap		*dkey_low;
+> +	struct xfs_fsmap		*dkey_high;
+> +	xfs_fsblock_t			start_fsb;
+> +	xfs_fsblock_t			end_fsb;
+> +	xfs_agnumber_t			start_ag;
+> +	xfs_agnumber_t			end_ag;
+> +	xfs_daddr_t			eofs;
+> +	int				error = 0;
+> +
+> +	dkey_low = keys;
+> +	dkey_high = keys + 1;
+> +	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+> +	if (dkey_low->fmr_physical >= eofs)
+> +		return 0;
+> +	if (dkey_high->fmr_physical >= eofs)
+> +		dkey_high->fmr_physical = eofs - 1;
+> +	start_fsb = XFS_DADDR_TO_FSB(mp, dkey_low->fmr_physical);
+> +	end_fsb = XFS_DADDR_TO_FSB(mp, dkey_high->fmr_physical);
+> +
+> +	/* Set up search keys */
+
+I think we could use slightly better comments here and below just to
+point out why we set low/high to these values. E.g., something like:
+
+/*
+ * Convert the fsmap low/high keys to AG based keys. Initialize low to
+ * the fsmap low key and max out the high key to the end of the AG.
+ */
+
+> +	info->low.rm_startblock = XFS_FSB_TO_AGBNO(mp, start_fsb);
+> +	info->low.rm_offset = XFS_BB_TO_FSBT(mp, dkey_low->fmr_offset);
+> +	error = xfs_fsmap_owner_to_rmap(dkey_low, &info->low);
+> +	if (error)
+> +		return error;
+> +	info->low.rm_blockcount = 0;
+> +	xfs_getfsmap_set_irec_flags(&info->low, dkey_low);
+> +
+> +	info->high.rm_startblock = -1U;
+> +	info->high.rm_owner = ULLONG_MAX;
+> +	info->high.rm_offset = ULLONG_MAX;
+> +	info->high.rm_blockcount = 0;
+> +	info->high.rm_flags = XFS_RMAP_KEY_FLAGS | XFS_RMAP_REC_FLAGS;
+> +	info->missing_owner = XFS_FMR_OWN_FREE;
+> +
+> +	start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
+> +	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
+> +
+> +	/* Query each AG */
+> +	for (info->agno = start_ag; info->agno <= end_ag; info->agno++) {
+
+/*
+ * Incorporate the fsmap high key for the last AG.
+ */
+
+> +		if (info->agno == end_ag) {
+> +			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
+> +					end_fsb);
+> +			info->high.rm_offset = XFS_BB_TO_FSBT(mp,
+> +					dkey_high->fmr_offset);
+> +			error = xfs_fsmap_owner_to_rmap(dkey_high, &info->high);
+> +			if (error)
+> +				goto err;
+> +			xfs_getfsmap_set_irec_flags(&info->high, dkey_high);
+> +		}
+> +
+> +		if (bt_cur) {
+> +			xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
+> +			bt_cur = NULL;
+> +			info->agf_bp = NULL;
+> +		}
+> +
+> +		error = xfs_alloc_read_agf(mp, tp, info->agno, 0,
+> +				&info->agf_bp);
+> +		if (error)
+> +			goto err;
+> +
+> +		trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
+> +				info->low.rm_startblock,
+> +				info->low.rm_blockcount,
+> +				info->low.rm_owner,
+> +				info->low.rm_offset);
+> +
+> +		trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
+> +				info->high.rm_startblock,
+> +				info->high.rm_blockcount,
+> +				info->high.rm_owner,
+> +				info->high.rm_offset);
+> +
+> +		bt_cur = xfs_rmapbt_init_cursor(mp, tp, info->agf_bp,
+> +				info->agno);
+> +		error = xfs_rmap_query_range(bt_cur, &info->low, &info->high,
+> +				xfs_getfsmap_datadev_helper, info);
+> +		if (error)
+> +			goto err;
+> +
+
+/*
+ * Reset the low key for the start of the next AG.
+ */
+
+> +		if (info->agno == start_ag) {
+> +			info->low.rm_startblock = 0;
+> +			info->low.rm_owner = 0;
+> +			info->low.rm_offset = 0;
+> +			info->low.rm_flags = 0;
+> +		}
+> +	}
+
+Do I follow this loop correctly in that we lock each AGF buffer as we
+progress through the fs, holding the locks until we've traversed the
+entire fs? If so, is that really necessary or can we release the
+previous previous buffer once we move on to the next AG? Not doing so
+seems like it makes this a very heavyweight operation...
+
+> +
+> +	/* Report any free space at the end of the AG */
+> +	info->last = true;
+> +	error = xfs_getfsmap_datadev_helper(bt_cur, &info->high, info);
+> +	if (error)
+> +		goto err;
+> +
+> +err:
+> +	if (bt_cur)
+> +		xfs_btree_del_cursor(bt_cur, error < 0 ? XFS_BTREE_ERROR :
+> +							 XFS_BTREE_NOERROR);
+> +	if (info->agf_bp)
+> +		info->agf_bp = NULL;
+> +
+> +	return error;
+> +}
+> +
+> +/* Do we recognize the device? */
+> +STATIC bool
+> +xfs_getfsmap_is_valid_device(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_fsmap	*fm)
+> +{
+> +	if (fm->fmr_device == 0 || fm->fmr_device == UINT_MAX ||
+> +	    fm->fmr_device == new_encode_dev(mp->m_ddev_targp->bt_dev))
+> +		return true;
+> +	if (mp->m_logdev_targp &&
+> +	    fm->fmr_device == new_encode_dev(mp->m_logdev_targp->bt_dev))
+> +		return true;
+> +	return false;
+> +}
+> +
+> +/* Ensure that the low key is less than the high key. */
+> +STATIC bool
+> +xfs_getfsmap_check_keys(
+> +	struct xfs_fsmap		*low_key,
+> +	struct xfs_fsmap		*high_key)
+> +{
+> +	if (low_key->fmr_device > high_key->fmr_device)
+> +		return false;
+> +	if (low_key->fmr_device < high_key->fmr_device)
+> +		return true;
+> +
+> +	if (low_key->fmr_physical > high_key->fmr_physical)
+> +		return false;
+> +	if (low_key->fmr_physical < high_key->fmr_physical)
+> +		return true;
+> +
+> +	if (low_key->fmr_owner > high_key->fmr_owner)
+> +		return false;
+> +	if (low_key->fmr_owner < high_key->fmr_owner)
+> +		return true;
+> +
+> +	if (low_key->fmr_offset > high_key->fmr_offset)
+> +		return false;
+> +	if (low_key->fmr_offset < high_key->fmr_offset)
+> +		return true;
+> +
+> +	return false;
+> +}
+> +
+> +#define XFS_GETFSMAP_DEVS	3
+
+Why 3 (looks like we use 2 below)?
+
+> +/*
+> + * Get filesystem's extents as described in head, and format for
+> + * output.  Calls formatter to fill the user's buffer until all
+> + * extents are mapped, until the passed-in head->fmh_count slots have
+> + * been filled, or until the formatter short-circuits the loop, if it
+> + * is tracking filled-in extents on its own.
+> + */
+> +int
+> +xfs_getfsmap(
+> +	struct xfs_mount		*mp,
+> +	struct xfs_fsmap_head		*head,
+> +	xfs_fsmap_format_t		formatter,
+> +	void				*arg)
+> +{
+> +	struct xfs_trans		*tp = NULL;
+> +	struct xfs_fsmap		*rkey_low;	/* request keys */
+> +	struct xfs_fsmap		*rkey_high;
+> +	struct xfs_fsmap		dkeys[2];	/* per-dev keys */
+> +	struct xfs_getfsmap_dev		handlers[XFS_GETFSMAP_DEVS];
+> +	struct xfs_getfsmap_info	info = {0};
+> +	int				i;
+> +	int				error = 0;
+> +
+> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> +		return -EOPNOTSUPP;
+> +	if (head->fmh_iflags & ~FMH_IF_VALID)
+> +		return -EINVAL;
+> +	rkey_low = head->fmh_keys;
+> +	rkey_high = rkey_low + 1;
+
+This is more clear IMO if we just use fmh_keys[0] and fmh_keys[1] (the
+same pattern exists in one or two other places as well..).
+
+> +	if (!xfs_getfsmap_is_valid_device(mp, rkey_low) ||
+> +	    !xfs_getfsmap_is_valid_device(mp, rkey_high))
+> +		return -EINVAL;
+> +
+> +	head->fmh_entries = 0;
+> +
+> +	/* Set up our device handlers. */
+> +	memset(handlers, 0, sizeof(handlers));
+> +	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
+> +	handlers[0].fn = xfs_getfsmap_datadev;
+> +	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+> +		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
+> +		handlers[1].fn = xfs_getfsmap_logdev;
+> +	}
+> +
+> +	xfs_sort(handlers, XFS_GETFSMAP_DEVS, sizeof(struct xfs_getfsmap_dev),
+> +			xfs_getfsmap_dev_compare);
+> +
+> +	/*
+> +	 * Since we allow the user to copy the last mapping from a previous
+> +	 * call into the low key slot, we have to advance the low key by
+> +	 * whatever the reported length is.  If the offset field doesn't apply,
+> +	 * move up the start block to the next extent and start over with the
+> +	 * lowest owner/offset possible; otherwise it's file data, so move up
+> +	 * the offset only.
+> +	 */
+> +	dkeys[0] = *rkey_low;
+> +	if (dkeys[0].fmr_flags & (FMR_OF_SPECIAL_OWNER | FMR_OF_EXTENT_MAP)) {
+> +		dkeys[0].fmr_physical += dkeys[0].fmr_length;
+> +		dkeys[0].fmr_owner = 0;
+> +		dkeys[0].fmr_offset = 0;
+
+Should these values already be zero in this case? 
+
+> +	} else
+> +		dkeys[0].fmr_offset += dkeys[0].fmr_length;
+> +	memset(&dkeys[1], 0xFF, sizeof(struct xfs_fsmap));
+
+Ok, it took me a bit to grok this hunk for some reason. I had to come
+back to it after reading deeper into the code. It could just be me, but
+something like the following comment helps me understand it a bit better
+(feel free to take it entirely, reword/update the existing comment or
+just ignore):
+
+/*
+ * To continue where we left off, we allow userspace to use the last
+ * mapping from a previous call as the low key of the next. This is
+ * identified by a non-zero length in the low key. We have to increment
+ * the low key in this scenario to ensure we don't return the same
+ * mapping again, and instead return the very next mapping.
+ *
+ * If the low key mapping refers to fs owned blocks, bump the physical
+ * offset as there can be no other mapping for the same physical block
+ * range. If the mapping refers to file data, however, the same physical
+ * blocks could be mapped to several other files/offsets. According to
+ * rmapbt record ordering, the minimal next possible record for the
+ * block range is the next starting offset in the same inode. Therefore,
+ * bump the file offset to continue the search appropriately.
+ */
+
+> +
+> +	if (!xfs_getfsmap_check_keys(dkeys, rkey_high))
+> +		return -EINVAL;
+> +
+> +	info.rkey_low = rkey_low;
+> +	info.formatter = formatter;
+> +	info.format_arg = arg;
+> +	info.head = head;
+> +
+> +	/* For each device we support... */
+> +	for (i = 0; i < XFS_GETFSMAP_DEVS; i++) {
+> +		/* Is this device within the range the user asked for? */
+> +		if (!handlers[i].fn)
+> +			continue;
+> +		if (rkey_low->fmr_device > handlers[i].dev)
+> +			continue;
+> +		if (rkey_high->fmr_device < handlers[i].dev)
+> +			break;
+> +
+> +		/*
+> +		 * If this device number matches the high key, we have
+> +		 * to pass the high key to the handler to limit the
+> +		 * query results.  If the device number exceeds the
+> +		 * low key, zero out the low key so that we get
+> +		 * everything from the beginning.
+> +		 */
+> +		if (handlers[i].dev == rkey_high->fmr_device)
+> +			dkeys[1] = *rkey_high;
+> +		if (handlers[i].dev > rkey_low->fmr_device)
+> +			memset(&dkeys[0], 0, sizeof(struct xfs_fsmap));
+> +
+> +		error = xfs_trans_alloc_empty(mp, &tp);
+> +		if (error)
+> +			break;
+> +
+> +		info.next_daddr = dkeys[0].fmr_physical;
+> +		info.dev = handlers[i].dev;
+> +		info.last = false;
+> +		info.agno = NULLAGNUMBER;
+> +		error = handlers[i].fn(tp, dkeys, &info);
+> +		if (error)
+> +			break;
+> +		xfs_trans_cancel(tp);
+> +		tp = NULL;
+> +	}
+> +
+> +	if (tp)
+> +		xfs_trans_cancel(tp);
+> +	head->fmh_oflags = FMH_OF_DEV_T;
+> +	return error;
+> +}
+> diff --git a/fs/xfs/xfs_fsmap.h b/fs/xfs/xfs_fsmap.h
+> new file mode 100644
+> index 0000000..1943047
+> --- /dev/null
+> +++ b/fs/xfs/xfs_fsmap.h
+> @@ -0,0 +1,51 @@
+> +/*
+> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#ifndef __XFS_FSMAP_H__
+> +#define	__XFS_FSMAP_H__
+> +
+> +/* internal fsmap representation */
+> +struct xfs_fsmap {
+> +	dev_t		fmr_device;	/* device id */
+> +	uint32_t	fmr_flags;	/* mapping flags */
+> +	uint64_t	fmr_physical;	/* device offset of segment */
+> +	uint64_t	fmr_owner;	/* owner id */
+> +	xfs_fileoff_t	fmr_offset;	/* file offset of segment */
+> +	xfs_filblks_t	fmr_length;	/* length of segment, blocks */
+> +};
+> +
+> +struct xfs_fsmap_head {
+> +	uint32_t	fmh_iflags;	/* control flags */
+> +	uint32_t	fmh_oflags;	/* output flags */
+> +	unsigned int	fmh_count;	/* # of entries in array incl. input */
+> +	unsigned int	fmh_entries;	/* # of entries filled in (output). */
+> +
+> +	struct xfs_fsmap fmh_keys[2];	/* low and high keys */
+> +};
+> +
+> +void xfs_fsmap_from_internal(struct fsmap *dest, struct xfs_fsmap *src);
+> +void xfs_fsmap_to_internal(struct xfs_fsmap *dest, struct fsmap *src);
+> +
+> +/* fsmap to userspace formatter - copy to user & advance pointer */
+> +typedef int (*xfs_fsmap_format_t)(struct xfs_fsmap *, void *);
+> +
+> +int xfs_getfsmap(struct xfs_mount *mp, struct xfs_fsmap_head *head,
+> +		xfs_fsmap_format_t formatter, void *arg);
+> +
+> +#endif /* __XFS_FSMAP_H__ */
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index c67cfb4..bbe1b58 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -41,6 +41,9 @@
+>  #include "xfs_trans.h"
+>  #include "xfs_pnfs.h"
+>  #include "xfs_acl.h"
+> +#include "xfs_btree.h"
+> +#include <linux/fsmap.h>
+> +#include "xfs_fsmap.h"
 >  
-> @@ -427,16 +514,15 @@ xfs_allocbt_init_cursor(
->  	cur->bc_mp = mp;
->  	cur->bc_btnum = btnum;
->  	cur->bc_blocklog = mp->m_sb.sb_blocklog;
-> -	cur->bc_ops = &xfs_allocbt_ops;
-> -	if (btnum == XFS_BTNUM_BNO)
-> -		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
-> -	else
-> -		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
+>  #include <linux/capability.h>
+>  #include <linux/dcache.h>
+> @@ -1607,6 +1610,103 @@ xfs_ioc_getbmapx(
+>  	return 0;
+>  }
 >  
->  	if (btnum == XFS_BTNUM_CNT) {
-> +		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
-> +		cur->bc_ops = &xfs_cntbt_ops;
->  		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
->  		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
->  	} else {
-> +		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
-> +		cur->bc_ops = &xfs_bnobt_ops;
->  		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
->  	}
+> +struct getfsmap_info {
+> +	struct xfs_mount	*mp;
+> +	struct fsmap __user	*data;
+> +	__u32			last_flags;
+> +};
+> +
+> +STATIC int
+> +xfs_getfsmap_format(struct xfs_fsmap *xfm, void *priv)
+> +{
+> +	struct getfsmap_info	*info = priv;
+> +	struct fsmap		fm;
+> +
+> +	trace_xfs_getfsmap_mapping(info->mp, xfm->fmr_device, xfm->fmr_physical,
+> +			xfm->fmr_length, xfm->fmr_owner, xfm->fmr_offset,
+> +			xfm->fmr_flags);
+> +
+> +	info->last_flags = xfm->fmr_flags;
+> +	xfs_fsmap_from_internal(&fm, xfm);
+> +	if (copy_to_user(info->data, &fm, sizeof(struct fsmap)))
+> +		return -EFAULT;
+> +
+> +	info->data++;
+> +	return 0;
+> +}
+> +
+> +STATIC int
+> +xfs_ioc_getfsmap(
+> +	struct xfs_inode	*ip,
+> +	void			__user *arg)
+> +{
+> +	struct getfsmap_info	info;
+> +	struct xfs_fsmap_head	xhead = {0};
+> +	struct fsmap_head	head;
+> +	bool			aborted = false;
+> +	int			error;
+> +
+> +	if (copy_from_user(&head, arg, sizeof(struct fsmap_head)))
+> +		return -EFAULT;
+> +	if (head.fmh_reserved[0] || head.fmh_reserved[1] ||
+> +	    head.fmh_reserved[2] || head.fmh_reserved[3] ||
+> +	    head.fmh_reserved[4] || head.fmh_reserved[5] ||
+> +	    head.fmh_keys[0].fmr_reserved[0] ||
+> +	    head.fmh_keys[0].fmr_reserved[1] ||
+> +	    head.fmh_keys[0].fmr_reserved[2] ||
+> +	    head.fmh_keys[1].fmr_reserved[0] ||
+> +	    head.fmh_keys[1].fmr_reserved[1] ||
+> +	    head.fmh_keys[1].fmr_reserved[2])
+> +		return -EINVAL;
+
+Probably better to use memchr_inv() here.
+
+> +
+> +	xhead.fmh_iflags = head.fmh_iflags;
+> +	xhead.fmh_count = head.fmh_count;
+> +	xfs_fsmap_to_internal(&xhead.fmh_keys[0], &head.fmh_keys[0]);
+> +	xfs_fsmap_to_internal(&xhead.fmh_keys[1], &head.fmh_keys[1]);
+> +
+> +	trace_xfs_getfsmap_low_key(ip->i_mount,
+> +			xhead.fmh_keys[0].fmr_device,
+> +			xhead.fmh_keys[0].fmr_physical,
+> +			xhead.fmh_keys[0].fmr_length,
+> +			xhead.fmh_keys[0].fmr_owner,
+> +			xhead.fmh_keys[0].fmr_offset,
+> +			xhead.fmh_keys[0].fmr_flags);
+> +
+> +	trace_xfs_getfsmap_high_key(ip->i_mount,
+> +			xhead.fmh_keys[1].fmr_device,
+> +			xhead.fmh_keys[1].fmr_physical,
+> +			xhead.fmh_keys[1].fmr_length,
+> +			xhead.fmh_keys[1].fmr_owner,
+> +			xhead.fmh_keys[1].fmr_offset,
+> +			xhead.fmh_keys[1].fmr_flags);
+> +
+
+Hmm.. could we combine these into one call that looks like:
+
+	trace_xfs_getfsmap(mp, &fmh_keys[0], &fmh_keys[1]);
+
+... and has the trace handler pull the relevant data out of the key
+structure (same comment for the similar trace_xfs_fsmap*())?
+
+> +	info.mp = ip->i_mount;
+> +	info.data = ((__force struct fsmap_head *)arg)->fmh_recs;
+> +	error = xfs_getfsmap(ip->i_mount, &xhead, xfs_getfsmap_format, &info);
+> +	if (error == XFS_BTREE_QUERY_RANGE_ABORT) {
+> +		error = 0;
+> +		aborted = true;
+> +	} else if (error)
+> +		return error;
+> +
+> +	/* If we didn't abort, set the "last" flag in the last fmx */
+> +	if (!aborted && xhead.fmh_entries) {
+> +		info.data--;
+> +		info.last_flags |= FMR_OF_LAST;
+
+Isn't this kind of implied by a short return? It looks like if a real
+error occurs at any point during the search, we just return the error. I
+guess there is still the case where the remaining mappings exactly match
+the number of entries in the data structure passed in and you'd have to
+make another call to identify EOF. If we do want the flag, I'm also
+wondering why we couldn't stuff it in oflags in the header. Is there
+some reason I'm not yet aware of why we want the LAST flag in the flags
+of the last entry?
+
+Brian
+
+> +		if (copy_to_user(&info.data->fmr_flags, &info.last_flags,
+> +				sizeof(info.last_flags)))
+> +			return -EFAULT;
+> +	}
+> +
+> +	/* copy back header */
+> +	head.fmh_entries = xhead.fmh_entries;
+> +	head.fmh_oflags = xhead.fmh_oflags;
+> +	if (copy_to_user(arg, &head, sizeof(struct fsmap_head)))
+> +		return -EFAULT;
+> +
+> +	return 0;
+> +}
+> +
+>  int
+>  xfs_ioc_swapext(
+>  	xfs_swapext_t	*sxp)
+> @@ -1787,6 +1887,9 @@ xfs_file_ioctl(
+>  	case XFS_IOC_GETBMAPX:
+>  		return xfs_ioc_getbmapx(ip, arg);
 >  
+> +	case FS_IOC_GETFSMAP:
+> +		return xfs_ioc_getfsmap(ip, arg);
+> +
+>  	case XFS_IOC_FD_TO_HANDLE:
+>  	case XFS_IOC_PATH_TO_HANDLE:
+>  	case XFS_IOC_PATH_TO_FSHANDLE: {
+> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+> index 7c49938..fa0bc4d 100644
+> --- a/fs/xfs/xfs_ioctl32.c
+> +++ b/fs/xfs/xfs_ioctl32.c
+> @@ -20,6 +20,7 @@
+>  #include <linux/mount.h>
+>  #include <linux/slab.h>
+>  #include <linux/uaccess.h>
+> +#include <linux/fsmap.h>
+>  #include "xfs.h"
+>  #include "xfs_fs.h"
+>  #include "xfs_format.h"
+> @@ -554,6 +555,7 @@ xfs_file_compat_ioctl(
+>  	case XFS_IOC_GOINGDOWN:
+>  	case XFS_IOC_ERROR_INJECTION:
+>  	case XFS_IOC_ERROR_CLEARALL:
+> +	case FS_IOC_GETFSMAP:
+>  		return xfs_file_ioctl(filp, cmd, p);
+>  #ifndef BROKEN_X86_ALIGNMENT
+>  	/* These are handled fine if no alignment issues */
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index d3d11905..125d568 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3270,6 +3270,91 @@ DEFINE_INODE_IREC_EVENT(xfs_swap_extent_rmap_remap);
+>  DEFINE_INODE_IREC_EVENT(xfs_swap_extent_rmap_remap_piece);
+>  DEFINE_INODE_ERROR_EVENT(xfs_swap_extent_rmap_error);
+>  
+> +/* fsmap traces */
+> +DECLARE_EVENT_CLASS(xfs_fsmap_class,
+> +	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_agnumber_t agno,
+> +		 xfs_fsblock_t bno, xfs_filblks_t len, __uint64_t owner,
+> +		 __uint64_t offset),
+> +	TP_ARGS(mp, keydev, agno, bno, len, owner, offset),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(dev_t, keydev)
+> +		__field(xfs_agnumber_t, agno)
+> +		__field(xfs_fsblock_t, bno)
+> +		__field(xfs_filblks_t, len)
+> +		__field(__uint64_t, owner)
+> +		__field(__uint64_t, offset)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = mp->m_super->s_dev;
+> +		__entry->keydev = new_decode_dev(keydev);
+> +		__entry->agno = agno;
+> +		__entry->bno = bno;
+> +		__entry->len = len;
+> +		__entry->owner = owner;
+> +		__entry->offset = offset;
+> +	),
+> +	TP_printk("dev %d:%d keydev %d:%d agno %u bno %llu len %llu owner %lld offset 0x%llx\n",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
+> +		  __entry->agno,
+> +		  __entry->bno,
+> +		  __entry->len,
+> +		  __entry->owner,
+> +		  __entry->offset)
+> +)
+> +#define DEFINE_FSMAP_EVENT(name) \
+> +DEFINE_EVENT(xfs_fsmap_class, name, \
+> +	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_agnumber_t agno, \
+> +		 xfs_fsblock_t bno, xfs_filblks_t len, __uint64_t owner, \
+> +		 __uint64_t offset), \
+> +	TP_ARGS(mp, keydev, agno, bno, len, owner, offset))
+> +DEFINE_FSMAP_EVENT(xfs_fsmap_low_key);
+> +DEFINE_FSMAP_EVENT(xfs_fsmap_high_key);
+> +DEFINE_FSMAP_EVENT(xfs_fsmap_mapping);
+> +
+> +DECLARE_EVENT_CLASS(xfs_getfsmap_class,
+> +	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_daddr_t block,
+> +		 xfs_daddr_t len, __uint64_t owner, __uint64_t offset,
+> +		 __uint64_t flags),
+> +	TP_ARGS(mp, keydev, block, len, owner, offset, flags),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(dev_t, keydev)
+> +		__field(xfs_daddr_t, block)
+> +		__field(xfs_daddr_t, len)
+> +		__field(__uint64_t, owner)
+> +		__field(__uint64_t, offset)
+> +		__field(__uint64_t, flags)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = mp->m_super->s_dev;
+> +		__entry->keydev = new_decode_dev(keydev);
+> +		__entry->block = block;
+> +		__entry->len = len;
+> +		__entry->owner = owner;
+> +		__entry->offset = offset;
+> +		__entry->flags = flags;
+> +	),
+> +	TP_printk("dev %d:%d keydev %d:%d block %llu len %llu owner %lld offset %llu flags 0x%llx\n",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  MAJOR(__entry->keydev), MINOR(__entry->keydev),
+> +		  __entry->block,
+> +		  __entry->len,
+> +		  __entry->owner,
+> +		  __entry->offset,
+> +		  __entry->flags)
+> +)
+> +#define DEFINE_GETFSMAP_EVENT(name) \
+> +DEFINE_EVENT(xfs_getfsmap_class, name, \
+> +	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_daddr_t block, \
+> +		 xfs_daddr_t len, __uint64_t owner, __uint64_t offset, \
+> +		 __uint64_t flags), \
+> +	TP_ARGS(mp, keydev, block, len, owner, offset, flags))
+> +DEFINE_GETFSMAP_EVENT(xfs_getfsmap_low_key);
+> +DEFINE_GETFSMAP_EVENT(xfs_getfsmap_high_key);
+> +DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
+> +
+>  #endif /* _TRACE_XFS_H */
+>  
+>  #undef TRACE_INCLUDE_PATH
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 70f42ea..a280e12 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -263,6 +263,28 @@ xfs_trans_alloc(
+>  }
+>  
+>  /*
+> + * Create an empty transaction with no reservation.  This is a defensive
+> + * mechanism for routines that query metadata without actually modifying
+> + * them -- if the metadata being queried is somehow cross-linked (think a
+> + * btree block pointer that points higher in the tree), we risk deadlock.
+> + * However, blocks grabbed as part of a transaction can be re-grabbed.
+> + * The verifiers will notice the corrupt block and the operation will fail
+> + * back to userspace without deadlocking.
+> + *
+> + * Note the zero-length reservation; this transaction MUST be cancelled
+> + * without any dirty data.
+> + */
+> +int
+> +xfs_trans_alloc_empty(
+> +	struct xfs_mount		*mp,
+> +	struct xfs_trans		**tpp)
+> +{
+> +	struct xfs_trans_res		resv = {0};
+> +
+> +	return xfs_trans_alloc(mp, &resv, 0, 0, XFS_TRANS_NO_WRITECOUNT, tpp);
+> +}
+> +
+> +/*
+>   * Record the indicated change to the given field for application
+>   * to the file system's superblock when the transaction commits.
+>   * For now, just store the change in the transaction structure.
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index 61b7fbd..98024cb 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -159,6 +159,8 @@ typedef struct xfs_trans {
+>  int		xfs_trans_alloc(struct xfs_mount *mp, struct xfs_trans_res *resp,
+>  			uint blocks, uint rtextents, uint flags,
+>  			struct xfs_trans **tpp);
+> +int		xfs_trans_alloc_empty(struct xfs_mount *mp,
+> +			struct xfs_trans **tpp);
+>  void		xfs_trans_mod_sb(xfs_trans_t *, uint, int64_t);
+>  
+>  struct xfs_buf	*xfs_trans_get_buf_map(struct xfs_trans *tp,
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
