@@ -1,114 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43406 "EHLO mx1.redhat.com"
+Received: from mga07.intel.com ([134.134.136.100]:38105 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932170AbdBVPgF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Feb 2017 10:36:05 -0500
-Date: Wed, 22 Feb 2017 10:35:25 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 0/5] xfs: quota deadlock fixes
-Message-ID: <20170222153525.GC53025@bfoster.bfoster>
-References: <1487173247-5965-1-git-send-email-bfoster@redhat.com>
- <20170217065315.GD24562@eguan.usersys.redhat.com>
- <20170217175454.GA20429@bfoster.bfoster>
- <20170220035256.GH24562@eguan.usersys.redhat.com>
- <20170220132535.GA32455@bfoster.bfoster>
+        id S934010AbdBVTNC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 22 Feb 2017 14:13:02 -0500
+Date: Wed, 22 Feb 2017 12:13:00 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: XFS kernel BUG during generic/270 with v4.10
+Message-ID: <20170222191300.GA29474@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170220132535.GA32455@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Mon, Feb 20, 2017 at 08:25:35AM -0500, Brian Foster wrote:
-> On Mon, Feb 20, 2017 at 11:52:56AM +0800, Eryu Guan wrote:
-> > On Fri, Feb 17, 2017 at 12:54:54PM -0500, Brian Foster wrote:
-> > > On Fri, Feb 17, 2017 at 02:53:15PM +0800, Eryu Guan wrote:
-> > > > On Wed, Feb 15, 2017 at 10:40:42AM -0500, Brian Foster wrote:
-> > > > > Hi all,
-> > > > > 
-> > > > > This is a collection of several quota related deadlock fixes for
-> > > > > problems that have been reported to the list recently.
-> > > > > 
-> > > > > Patch 1 fixes the low memory quotacheck problem reported by Martin[1].
-> > > > > Dave is CC'd as he had comments on this particular thread that started a
-> > > > > discussion, but I hadn't heard anything back since my last response.
-> > > > > 
-> > > > > Patch 2 fixes a separate problem I ran into while attempting to
-> > > > > reproduce Eryu's xfs/305 hang report[2]. 
-> > > > > 
-> > > > > Patches 3-5 fix the actual problem reported by Eryu, which is a quotaoff
-> > > > > deadlock reproduced by xfs/305.
-> > > > > 
-> > > > > Further details are included in the individual commit log descriptions.
-> > > > > Thoughts, reviews, flames appreciated.
-> > > > > 
-> > > > > Eryu,
-> > > > > 
-> > > > > I've run several hundred iterations of this on your reproducer system
-> > > > > without reproducing the hang. I have reproduced a reset overnight but
-> > > > > still haven't been able to grab a stack trace from that occurrence (I'll
-> > > > > try again today/tonight with better console logging). I suspect this is
-> > > > 
-> > > > I hit a NULL pointer dereference while testing your fix, I was running
-> > > > xfs/305 for 1000 iterations and host crashed at the 639th run. Not sure
-> > > > if it's the same issue you've met here. I posted dmesg log at the end of
-> > > > mail. I haven't tried to see if I can reproduce it on stock linus tree
-> > > > yet.
-> > > > 
-> > > 
-> > > Interesting, thanks. I don't know for sure because I didn't hit anything
-> > > on my second overnight run, but I wouldn't be surprised if it's the
-> > > same, particularly if you hit this again. This does look like an
-> > > independent problem to me, though. A kdump might be nice, if possible,
-> > > given the difficulty to reproduce...
-> > 
-> > Unfortunately, my second round of 1000 iteration run hit hang too, at
-> > the 824th loop.  Test configuration is all default, crc enabled XFS with
-> > 4k block size, no rmapbt no reflink no finobt no sparse inode.
-> > 
-> > I attached the dmesg log and sysrq-w output. I also left the host in the
-> > hang state, you can login and take a look if you have interest.
-> > 
-> 
-> Hmm, Ok thanks. This one looks more like the original problem.
-> Everything is waiting on log reservation, the AIL is spinning on the
-> locked quotaoff start log item, and the quotaoff purge sequence appears
-> to be spinning on a dquot.
-> 
-> Unfortunately, I can't tell why quotaoff is spinning. stap doesn't seem
-> to compile anything on this box after a quick try, so I'll probably have
-> to reinstall some of the debug code on top and (hopefully) reproduce.
-> I'm guessing it's a similar dquot reference count issue, but it may or
-> may not be the same since this one appears significantly harder to
-> reproduce than the original...
-> 
+By running generic/270 in a loop on an XFS filesystem mounted with DAX I'm
+able to reliably generate the following kernel bug after a few (~10)
+iterations (output passed through kasan_symbolize.py):
 
-I managed to reproduce with some of my old debug code. That code enabled
-a walk of the inode space in the fs to see if any inodes still held
-references to the dquot we're unable to purge. In this case, it looks
-like we have a group dquot with an elevated reference count, but no
-inode appears to have a reference to it. So somehow or another the
-reference count appears to be broken...
+run fstests generic/270 at 2017-02-22 12:01:05
+XFS (pmem0p2): Unmounting Filesystem
+XFS (pmem0p2): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
+XFS (pmem0p2): Mounting V5 Filesystem
+XFS (pmem0p2): Ending clean mount
+XFS (pmem0p2): Quotacheck needed: Please wait.
+XFS (pmem0p2): Quotacheck: Done.
+XFS (pmem0p2): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
+XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 965
+------------[ cut here ]------------
+kernel BUG at fs/xfs/xfs_message.c:113!
+invalid opcode: 0000 [#1] PREEMPT SMP
+Modules linked in: dax_pmem nd_pmem dax nd_btt nd_e820 libnvdimm
+CPU: 0 PID: 15817 Comm: 270 Tainted: G        W       4.10.0 #1
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.10.1-0-g8891697-prebuilt.qemu-project.org 04/01/2014
+task: ffff88050f988000 task.stack: ffffc9000393c000
+RIP: 0010:assfail+0x20/0x30
+RSP: 0018:ffffc9000393fb48 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: ffff8800aac34ce0 RCX: 0000000000000000
+RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff81ec6d80
+RBP: ffffc9000393fb48 R08: 0000000000000000 R09: 0000000000000000
+R10: 000000000000000a R11: f000000000000000 R12: ffff8800aac34a40
+R13: ffffffff81c55100 R14: ffffffff81f1c2fb R15: 000000000000009e
+FS:  00007f876cbf8b40(0000) GS:ffff880514800000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000055dc62780950 CR3: 000000050e587000 CR4: 00000000001406f0
+Call Trace:
+[<      none      >] xfs_fs_destroy_inode+0x283/0x350 fs/xfs/xfs_super.c:965
+[<      none      >] destroy_inode+0x3b/0x60 fs/inode.c:264
+[<      none      >] evict+0x139/0x1c0 fs/inode.c:570
+[<      none      >] dispose_list+0x56/0x80 fs/inode.c:588
+[<      none      >] prune_icache_sb+0x5a/0x80 fs/inode.c:775
+[<      none      >] super_cache_scan+0x14e/0x1a0 fs/super.c:102
+[<     inline     >] do_shrink_slab mm/vmscan.c:378
+[<      none      >] shrink_slab.part.39+0x216/0x620 mm/vmscan.c:481
+[<      none      >] shrink_slab+0x29/0x30 mm/vmscan.c:441
+[<      none      >] drop_slab_node+0x31/0x60 mm/vmscan.c:499
+[<      none      >] drop_slab+0x3f/0x70 mm/vmscan.c:510
+[<      none      >] drop_caches_sysctl_handler+0x71/0xc0 fs/drop_caches.c:58
+[<      none      >] proc_sys_call_handler+0xea/0x110 fs/proc/proc_sysctl.c:548
+[<      none      >] proc_sys_write+0x14/0x20 fs/proc/proc_sysctl.c:566
+[<      none      >] __vfs_write+0x37/0x160 fs/read_write.c:510
+ ?[<      none      >] rcu_sync_lockdep_assert+0x12/0x60 kernel/rcu/sync.c:68
+ ?[<     inline     >] percpu_down_read ./include/linux/percpu-rwsem.h:59
+ ?[<      none      >] __sb_start_write+0x10d/0x220 fs/super.c:1291
+ ?[<     inline     >] file_start_write ./include/linux/fs.h:2547
+ ?[<      none      >] vfs_write+0x19b/0x1f0 fs/read_write.c:559
+ ?[<      none      >] security_file_permission+0x3b/0xc0 security/security.c:776
+[<      none      >] vfs_write+0xcb/0x1f0 fs/read_write.c:560
+[<     inline     >] SYSC_write fs/read_write.c:607
+[<      none      >] SyS_write+0x58/0xc0 fs/read_write.c:599
+[<      none      >] entry_SYSCALL_64_fastpath+0x1f/0xc2 arch/x86/entry/entry_64.S:204
+RIP: 0033:0x7f876c2e1c30
+RSP: 002b:00007ffe6405c148 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007f876c5ab5e0 RCX: 00007f876c2e1c30
+RDX: 0000000000000002 RSI: 000055dc62780950 RDI: 0000000000000001
+RBP: 0000000000000001 R08: 00007f876c5ac740 R09: 00007f876cbf8b40
+R10: 0000000000000073 R11: 0000000000000246 R12: 000055dc62976b90
+R13: 0000000000000001 R14: 0000000000000000 R15: 0000000000000001
+Code: 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 c7 c6 b8 09 f1 81 48 89 fa 31 ff 48 89 e5 e8 b0 f8 ff ff <0f> 0b 0f 1f 40 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00
+RIP: assfail+0x20/0x30 RSP: ffffc9000393fb48
+---[ end trace 384d06985052f068 ]---
 
-I'm running again with more tracing to hopefully try and see if the
-refcounting goes awry somehow. So far I'm unable to reproduce in some
-~1200 iterations, but I'll leave it running. FWIW, I think this is
-enough to say that this problem is independent from the one addressed by
-the last few patches in this series (in which the dquot was legitimately
-held by an inode by the time we attempt the purge).
+Here's the xfstests run:
 
-Brian
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 alara 4.10.0
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem0p2
+MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem0p2 /mnt/xfstests_scratch
 
-> Brian
-> 
-> > Thanks,
-> > Eryu
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+generic/270 24s ..../check: line 596: 15817 Segmentation fault      ./$seq > $tmp.rawout 2>&1
+ [failed, exit status 139] - output mismatch (see /root/xfstests/results//generic/270.out.bad)
+    --- tests/generic/270.out	2016-10-21 15:31:10.568945780 -0600
+    +++ /root/xfstests/results//generic/270.out.bad	2017-02-22 12:01:29.272718284 -0700
+    @@ -3,6 +3,3 @@
+     Run fsstress
+     
+     Run dd writers in parallel
+    -Comparing user usage
+    -Comparing group usage
+    -Comparing filesystem consistency
+    ...
+    (Run 'diff -u tests/generic/270.out /root/xfstests/results//generic/270.out.bad'  to see the entire diff)
+
+This was done in my normal test setup, which is a pair of PMEM disks that
+enable DAX.
+
+Here are the versions of xfstests and xfsprogs that I'm using:
+
+xfstets: f438604 generic: test mmap io through DAX and non-DAX
+
+xfsprogs: xfs_admin version 4.9.0
+This is just the xfsprogs that comes packaged with Fedora 25.
+
+Thanks,
+- Ross
