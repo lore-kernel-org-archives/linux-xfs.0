@@ -1,75 +1,299 @@
-Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227145804.g3errmtqheghz6lx@eorzea.usersys.redhat.com>
-Resent-To: sandeen@sandeen.net
-Received: from mga09.intel.com ([134.134.136.24]:5755 "EHLO mga09.intel.com"
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34974 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750952AbdBWHuq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 23 Feb 2017 02:50:46 -0500
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-Subject: RE: [PATCH 1/7] fs, xfs: convert xfs_bui_log_item.bui_refcount from
- atomic_t to refcount_t
-Date: Thu, 23 Feb 2017 07:50:15 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C4F30B@IRSMSX102.ger.corp.intel.com>
-References: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
- <1487692147-17066-2-git-send-email-elena.reshetova@intel.com>
- <20170221225534.GB23007@dastard>
- <2236FBA76BA1254E88B949DDB74E612B41C4EB40@IRSMSX102.ger.corp.intel.com>
- <20170222220741.GC23007@dastard>
-In-Reply-To: <20170222220741.GC23007@dastard>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        id S932801AbdBVPCO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 22 Feb 2017 10:02:14 -0500
+Date: Wed, 22 Feb 2017 10:02:12 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 2/8] xfs: plumb in needed functions for range querying
+ of the freespace btrees
+Message-ID: <20170222150212.GA53025@bfoster.bfoster>
+References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
+ <148738065038.29384.2269477924958641169.stgit@birch.djwong.org>
+ <20170221173410.GF5846@birch.djwong.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170221173410.GF5846@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-> On Wed, Feb 22, 2017 at 11:20:31AM +0000, Reshetova, Elena wrote:
-> > > On Tue, Feb 21, 2017 at 05:49:01PM +0200, Elena Reshetova wrote:
-> > > > refcount_t type and corresponding API should be
-> > > > used instead of atomic_t when the variable is used as
-> > > > a reference counter. This allows to avoid accidental
-> > > > refcounter overflows that might lead to use-after-free
-> > > > situations.
-> > >
-> > > I'm missing something: how do you overflow a log item object
-> > > reference count?
-> >
-> > We are currently converting all reference counters present in kernel to a
-> safer refcount_t type.
+On Tue, Feb 21, 2017 at 09:34:10AM -0800, Darrick J. Wong wrote:
+> Plumb in the pieces (init_high_key, diff_two_keys) necessary to call
+> query_range on the free space btrees.  Remove the debugging asserts
+> so that we can make queries starting from block 0.
 > 
-> Yes, I see that you are taking anything that you *think* is an
-> object lifetime reference counter and changing it.
+> While we're at it, merge the redundant "if (btnum ==" hunks.
 > 
-> > Agreed, in some cases it might be easier or harder to actually create/trigger
-> an overflow, but since it can be caused even by a bug in the legitimate code
-> (current version or its future iterative), it is good idea to do "safe defaults" and
-> stop worrying about the problem.
-> >
-> > Do you have any reasons why it should not be converted?
-> 
-> It's core dirty metadata object code.  Any change to code in this
-> area needs to be gone over with a fine tooth comb, because bugs can
-> result in filesystem and/or journal corruption issues that may not
-> be noticed until a system crashes and log recovery fails and the
-> user loses their entire filesystem....
-> 
-> Hence the repeated comments about needing to actually test the code
-> you are changing.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Sure, we are now in the process of testing this run-time as was suggested using xfstests. 
-I will only repost this series after we done with testing and fix issues.
- 
-Best Regards,
-Elena.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-
+> v2: Add forgotten cntbt high key function.
+> ---
+>  fs/xfs/libxfs/xfs_alloc_btree.c |  172 +++++++++++++++++++++++++++++----------
+>  1 file changed, 129 insertions(+), 43 deletions(-)
 > 
-> Cheers,
-> 
-> Dave.
+> diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+> index efb467b..e1fcfe7 100644
+> --- a/fs/xfs/libxfs/xfs_alloc_btree.c
+> +++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+> @@ -205,19 +205,37 @@ xfs_allocbt_init_key_from_rec(
+>  	union xfs_btree_key	*key,
+>  	union xfs_btree_rec	*rec)
+>  {
+> -	ASSERT(rec->alloc.ar_startblock != 0);
+> -
+>  	key->alloc.ar_startblock = rec->alloc.ar_startblock;
+>  	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
+>  }
+>  
+>  STATIC void
+> +xfs_bnobt_init_high_key_from_rec(
+> +	union xfs_btree_key	*key,
+> +	union xfs_btree_rec	*rec)
+> +{
+> +	__u32			x;
+> +
+> +	x = be32_to_cpu(rec->alloc.ar_startblock);
+> +	x += be32_to_cpu(rec->alloc.ar_blockcount) - 1;
+> +	key->alloc.ar_startblock = cpu_to_be32(x);
+> +	key->alloc.ar_blockcount = 0;
+> +}
+> +
+> +STATIC void
+> +xfs_cntbt_init_high_key_from_rec(
+> +	union xfs_btree_key	*key,
+> +	union xfs_btree_rec	*rec)
+> +{
+> +	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
+> +	key->alloc.ar_startblock = 0;
+> +}
+> +
+> +STATIC void
+>  xfs_allocbt_init_rec_from_cur(
+>  	struct xfs_btree_cur	*cur,
+>  	union xfs_btree_rec	*rec)
+>  {
+> -	ASSERT(cur->bc_rec.a.ar_startblock != 0);
+> -
+>  	rec->alloc.ar_startblock = cpu_to_be32(cur->bc_rec.a.ar_startblock);
+>  	rec->alloc.ar_blockcount = cpu_to_be32(cur->bc_rec.a.ar_blockcount);
+>  }
+> @@ -236,18 +254,24 @@ xfs_allocbt_init_ptr_from_cur(
+>  }
+>  
+>  STATIC __int64_t
+> -xfs_allocbt_key_diff(
+> +xfs_bnobt_key_diff(
+>  	struct xfs_btree_cur	*cur,
+>  	union xfs_btree_key	*key)
+>  {
+>  	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
+>  	xfs_alloc_key_t		*kp = &key->alloc;
+> -	__int64_t		diff;
+>  
+> -	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+> -		return (__int64_t)be32_to_cpu(kp->ar_startblock) -
+> -				rec->ar_startblock;
+> -	}
+> +	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
+> +}
+> +
+> +STATIC __int64_t
+> +xfs_cntbt_key_diff(
+> +	struct xfs_btree_cur	*cur,
+> +	union xfs_btree_key	*key)
+> +{
+> +	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
+> +	xfs_alloc_key_t		*kp = &key->alloc;
+> +	__int64_t		diff;
+>  
+>  	diff = (__int64_t)be32_to_cpu(kp->ar_blockcount) - rec->ar_blockcount;
+>  	if (diff)
+> @@ -256,6 +280,33 @@ xfs_allocbt_key_diff(
+>  	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
+>  }
+>  
+> +STATIC __int64_t
+> +xfs_bnobt_diff_two_keys(
+> +	struct xfs_btree_cur	*cur,
+> +	union xfs_btree_key	*k1,
+> +	union xfs_btree_key	*k2)
+> +{
+> +	return (__int64_t)be32_to_cpu(k1->alloc.ar_startblock) -
+> +			  be32_to_cpu(k2->alloc.ar_startblock);
+> +}
+> +
+> +STATIC __int64_t
+> +xfs_cntbt_diff_two_keys(
+> +	struct xfs_btree_cur	*cur,
+> +	union xfs_btree_key	*k1,
+> +	union xfs_btree_key	*k2)
+> +{
+> +	__int64_t		diff;
+> +
+> +	diff =  be32_to_cpu(k1->alloc.ar_blockcount) -
+> +		be32_to_cpu(k2->alloc.ar_blockcount);
+> +	if (diff)
+> +		return diff;
+> +
+> +	return  be32_to_cpu(k1->alloc.ar_startblock) -
+> +		be32_to_cpu(k2->alloc.ar_startblock);
+> +}
+> +
+>  static bool
+>  xfs_allocbt_verify(
+>  	struct xfs_buf		*bp)
+> @@ -346,44 +397,54 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
+>  
+>  #if defined(DEBUG) || defined(XFS_WARN)
+>  STATIC int
+> -xfs_allocbt_keys_inorder(
+> +xfs_bnobt_keys_inorder(
+>  	struct xfs_btree_cur	*cur,
+>  	union xfs_btree_key	*k1,
+>  	union xfs_btree_key	*k2)
+>  {
+> -	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+> -		return be32_to_cpu(k1->alloc.ar_startblock) <
+> -		       be32_to_cpu(k2->alloc.ar_startblock);
+> -	} else {
+> -		return be32_to_cpu(k1->alloc.ar_blockcount) <
+> -			be32_to_cpu(k2->alloc.ar_blockcount) ||
+> -			(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
+> -			 be32_to_cpu(k1->alloc.ar_startblock) <
+> -			 be32_to_cpu(k2->alloc.ar_startblock));
+> -	}
+> +	return be32_to_cpu(k1->alloc.ar_startblock) <
+> +	       be32_to_cpu(k2->alloc.ar_startblock);
+>  }
+>  
+>  STATIC int
+> -xfs_allocbt_recs_inorder(
+> +xfs_bnobt_recs_inorder(
+>  	struct xfs_btree_cur	*cur,
+>  	union xfs_btree_rec	*r1,
+>  	union xfs_btree_rec	*r2)
+>  {
+> -	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+> -		return be32_to_cpu(r1->alloc.ar_startblock) +
+> -			be32_to_cpu(r1->alloc.ar_blockcount) <=
+> -			be32_to_cpu(r2->alloc.ar_startblock);
+> -	} else {
+> -		return be32_to_cpu(r1->alloc.ar_blockcount) <
+> -			be32_to_cpu(r2->alloc.ar_blockcount) ||
+> -			(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
+> -			 be32_to_cpu(r1->alloc.ar_startblock) <
+> -			 be32_to_cpu(r2->alloc.ar_startblock));
+> -	}
+> +	return be32_to_cpu(r1->alloc.ar_startblock) +
+> +		be32_to_cpu(r1->alloc.ar_blockcount) <=
+> +		be32_to_cpu(r2->alloc.ar_startblock);
+> +}
+> +
+> +STATIC int
+> +xfs_cntbt_keys_inorder(
+> +	struct xfs_btree_cur	*cur,
+> +	union xfs_btree_key	*k1,
+> +	union xfs_btree_key	*k2)
+> +{
+> +	return be32_to_cpu(k1->alloc.ar_blockcount) <
+> +		be32_to_cpu(k2->alloc.ar_blockcount) ||
+> +		(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
+> +		 be32_to_cpu(k1->alloc.ar_startblock) <
+> +		 be32_to_cpu(k2->alloc.ar_startblock));
+>  }
+> -#endif	/* DEBUG */
+>  
+> -static const struct xfs_btree_ops xfs_allocbt_ops = {
+> +STATIC int
+> +xfs_cntbt_recs_inorder(
+> +	struct xfs_btree_cur	*cur,
+> +	union xfs_btree_rec	*r1,
+> +	union xfs_btree_rec	*r2)
+> +{
+> +	return be32_to_cpu(r1->alloc.ar_blockcount) <
+> +		be32_to_cpu(r2->alloc.ar_blockcount) ||
+> +		(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
+> +		 be32_to_cpu(r1->alloc.ar_startblock) <
+> +		 be32_to_cpu(r2->alloc.ar_startblock));
+> +}
+> +#endif /* DEBUG */
+> +
+> +static const struct xfs_btree_ops xfs_bnobt_ops = {
+>  	.rec_len		= sizeof(xfs_alloc_rec_t),
+>  	.key_len		= sizeof(xfs_alloc_key_t),
+>  
+> @@ -395,13 +456,39 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
+>  	.get_minrecs		= xfs_allocbt_get_minrecs,
+>  	.get_maxrecs		= xfs_allocbt_get_maxrecs,
+>  	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
+> +	.init_high_key_from_rec	= xfs_bnobt_init_high_key_from_rec,
+>  	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
+>  	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+> -	.key_diff		= xfs_allocbt_key_diff,
+> +	.key_diff		= xfs_bnobt_key_diff,
+>  	.buf_ops		= &xfs_allocbt_buf_ops,
+> +	.diff_two_keys		= xfs_bnobt_diff_two_keys,
+>  #if defined(DEBUG) || defined(XFS_WARN)
+> -	.keys_inorder		= xfs_allocbt_keys_inorder,
+> -	.recs_inorder		= xfs_allocbt_recs_inorder,
+> +	.keys_inorder		= xfs_bnobt_keys_inorder,
+> +	.recs_inorder		= xfs_bnobt_recs_inorder,
+> +#endif
+> +};
+> +
+> +static const struct xfs_btree_ops xfs_cntbt_ops = {
+> +	.rec_len		= sizeof(xfs_alloc_rec_t),
+> +	.key_len		= sizeof(xfs_alloc_key_t),
+> +
+> +	.dup_cursor		= xfs_allocbt_dup_cursor,
+> +	.set_root		= xfs_allocbt_set_root,
+> +	.alloc_block		= xfs_allocbt_alloc_block,
+> +	.free_block		= xfs_allocbt_free_block,
+> +	.update_lastrec		= xfs_allocbt_update_lastrec,
+> +	.get_minrecs		= xfs_allocbt_get_minrecs,
+> +	.get_maxrecs		= xfs_allocbt_get_maxrecs,
+> +	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
+> +	.init_high_key_from_rec	= xfs_cntbt_init_high_key_from_rec,
+> +	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
+> +	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+> +	.key_diff		= xfs_cntbt_key_diff,
+> +	.buf_ops		= &xfs_allocbt_buf_ops,
+> +	.diff_two_keys		= xfs_cntbt_diff_two_keys,
+> +#if defined(DEBUG) || defined(XFS_WARN)
+> +	.keys_inorder		= xfs_cntbt_keys_inorder,
+> +	.recs_inorder		= xfs_cntbt_recs_inorder,
+>  #endif
+>  };
+>  
+> @@ -427,16 +514,15 @@ xfs_allocbt_init_cursor(
+>  	cur->bc_mp = mp;
+>  	cur->bc_btnum = btnum;
+>  	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+> -	cur->bc_ops = &xfs_allocbt_ops;
+> -	if (btnum == XFS_BTNUM_BNO)
+> -		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
+> -	else
+> -		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
+>  
+>  	if (btnum == XFS_BTNUM_CNT) {
+> +		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
+> +		cur->bc_ops = &xfs_cntbt_ops;
+>  		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
+>  		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
+>  	} else {
+> +		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
+> +		cur->bc_ops = &xfs_bnobt_ops;
+>  		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
+>  	}
+>  
 > --
-> Dave Chinner
-> david@fromorbit.com
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
