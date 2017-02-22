@@ -1,290 +1,106 @@
-Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227145908.wccdwxloc2asodxo@eorzea.usersys.redhat.com>
-Resent-To: sandeen@sandeen.net
-Received: from userp1040.oracle.com ([156.151.31.81]:18172 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751249AbdBXRt2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Feb 2017 12:49:28 -0500
-Date: Fri, 24 Feb 2017 09:48:52 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/8] xfs: have getfsmap fall back to the freesp btrees
- when rmap is not present
-Message-ID: <20170224174852.GK5846@birch.djwong.org>
-References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
- <148738067544.29384.3138548741798927323.stgit@birch.djwong.org>
- <20170224130449.GB59560@bfoster.bfoster>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mail-ua0-f170.google.com ([209.85.217.170]:35253 "EHLO
+        mail-ua0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932295AbdBVNJj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Feb 2017 08:09:39 -0500
+Received: by mail-ua0-f170.google.com with SMTP id 40so1270174uau.2
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Feb 2017 05:09:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170224130449.GB59560@bfoster.bfoster>
+In-Reply-To: <20170222130028.mrl6yimvwlj4zjid@eorzea.usersys.redhat.com>
+References: <CADWLRhrkA6pa_OeddSf281Lr+53JyEp5dxaHc+KTJPRLShWvkQ@mail.gmail.com>
+ <20170222130028.mrl6yimvwlj4zjid@eorzea.usersys.redhat.com>
+From: Vaibhaw Pandey <vaibhaw@scalegrid.io>
+Date: Wed, 22 Feb 2017 18:39:37 +0530
+Message-ID: <CADWLRhpwHqGawvXHX2KSJ9yCsqYcNbBGoStue1KKuMMFC7upqw@mail.gmail.com>
+Subject: Re: Consider these for the XFS FAQ wiki
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Vaibhaw Pandey <vaibhaw@scalegrid.io>, linux-xfs@vger.kernel.org
 
-On Fri, Feb 24, 2017 at 08:04:49AM -0500, Brian Foster wrote:
-> On Fri, Feb 17, 2017 at 05:17:55PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > If the reverse-mapping btree isn't available, fall back to the
-> > free space btrees to provide partial reverse mapping information.
-> > The online scrub tool can make use of even partial information to
-> > speed up the data block scan.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_fsmap.c |  155 +++++++++++++++++++++++++++++++++++++++++++++++++++-
-> >  1 file changed, 152 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> > index 09d6b92..82e44a9 100644
-> > --- a/fs/xfs/xfs_fsmap.c
-> > +++ b/fs/xfs/xfs_fsmap.c
-> > @@ -40,6 +40,7 @@
-> >  #include "xfs_fsmap.h"
-> >  #include "xfs_refcount.h"
-> >  #include "xfs_refcount_btree.h"
-> > +#include "xfs_alloc_btree.h"
-> >  
-> >  /* Convert an xfs_fsmap to an fsmap. */
-> >  void
-> > @@ -158,6 +159,9 @@ xfs_fsmap_owner_from_rmap(
-> >  	case XFS_RMAP_OWN_COW:
-> >  		fmr->fmr_owner = XFS_FMR_OWN_COW;
-> >  		break;
-> > +	case XFS_RMAP_OWN_NULL:	/* "free" */
-> > +		fmr->fmr_owner = XFS_FMR_OWN_FREE;
-> > +		break;
-> >  	default:
-> >  		return -EFSCORRUPTED;
-> >  	}
-> > @@ -433,6 +437,31 @@ xfs_getfsmap_rtdev_helper(
-> >  	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
-> >  }
-> >  
-> > +/* Transform a bnobt irec into a fsmap */
-> > +STATIC int
-> > +xfs_getfsmap_datadev_bnobt_helper(
-> > +	struct xfs_btree_cur		*cur,
-> > +	struct xfs_alloc_rec_incore	*rec,
-> > +	void				*priv)
-> > +{
-> > +	struct xfs_mount		*mp = cur->bc_mp;
-> > +	struct xfs_getfsmap_info	*info = priv;
-> > +	struct xfs_rmap_irec		irec;
-> > +	xfs_fsblock_t			fsb;
-> > +	xfs_daddr_t			rec_daddr;
-> > +
-> > +	fsb = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno, rec->ar_startblock);
-> > +	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb);
-> > +
-> > +	irec.rm_startblock = rec->ar_startblock;
-> > +	irec.rm_blockcount = rec->ar_blockcount;
-> > +	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
-> > +	irec.rm_offset = 0;
-> > +	irec.rm_flags = 0;
-> > +
-> 
-> Slightly confused... if we directly pass free space records to
-> xfs_getfsmap_helper(), won't it also assume the gaps between the records
-> are free space?
-> 
-> > +	return xfs_getfsmap_helper(cur->bc_tp, info, &irec, rec_daddr);
-> > +}
-> > +
-> >  /* Set rmap flags based on the getfsmap flags */
-> >  static void
-> >  xfs_getfsmap_set_irec_flags(
-> > @@ -621,6 +650,125 @@ xfs_getfsmap_datadev(
-> >  	return error;
-> >  }
-> >  
-> > +/* Execute a getfsmap query against the regular data device's bnobt. */
-> > +STATIC int
-> > +xfs_getfsmap_datadev_bnobt(
-> > +	struct xfs_trans		*tp,
-> > +	struct xfs_fsmap		*keys,
-> > +	struct xfs_getfsmap_info	*info)
-> > +{
-> > +	struct xfs_mount		*mp = tp->t_mountp;
-> > +	struct xfs_btree_cur		*bt_cur = NULL;
-> > +	struct xfs_fsmap		*dkey_low;
-> > +	struct xfs_fsmap		*dkey_high;
-> > +	struct xfs_alloc_rec_incore	alow;
-> > +	struct xfs_alloc_rec_incore	ahigh;
-> > +	xfs_fsblock_t			start_fsb;
-> > +	xfs_fsblock_t			end_fsb;
-> > +	xfs_agnumber_t			start_ag;
-> > +	xfs_agnumber_t			end_ag;
-> > +	xfs_daddr_t			eofs;
-> > +	int				error = 0;
-> > +
-> > +	dkey_low = keys;
-> > +	dkey_high = keys + 1;
-> > +	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-> > +	if (dkey_low->fmr_physical >= eofs)
-> > +		return 0;
-> > +	if (dkey_high->fmr_physical >= eofs)
-> > +		dkey_high->fmr_physical = eofs - 1;
-> > +	start_fsb = XFS_DADDR_TO_FSB(mp, dkey_low->fmr_physical);
-> > +	end_fsb = XFS_DADDR_TO_FSB(mp, dkey_high->fmr_physical);
-> > +
-> > +	/* Set up search keys */
-> > +	info->low.rm_startblock = XFS_FSB_TO_AGBNO(mp, start_fsb);
-> > +	info->low.rm_offset = XFS_BB_TO_FSBT(mp, dkey_low->fmr_offset);
-> > +	error = xfs_fsmap_owner_to_rmap(dkey_low, &info->low);
-> > +	if (error)
-> > +		return error;
-> > +	info->low.rm_blockcount = 0;
-> > +	xfs_getfsmap_set_irec_flags(&info->low, dkey_low);
-> > +
-> > +	info->high.rm_startblock = -1U;
-> > +	info->high.rm_owner = ULLONG_MAX;
-> > +	info->high.rm_offset = ULLONG_MAX;
-> > +	info->high.rm_blockcount = 0;
-> > +	info->high.rm_flags = XFS_RMAP_KEY_FLAGS | XFS_RMAP_REC_FLAGS;
-> > +
-> > +	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
-> > +
-> 
-> Ok, I see. We've swapped the meaning of the gaps in the record space to
-> allocated blocks with an unknown owner. Comment please :). Also, I
-> suppose the comments in xfs_getfsmap_helper() could be more discrete
-> about this as they currently explicitly say that gaps refer to free
-> space in one or two places.
+Carlos,
 
-Er... yeah.  My first reaction to this was "Oh, I should introduce
-info.missing_owner in the first patch" but apparently I already did but
-evidently forgot to update the comments. :(
+> Comparing XFS with EXT4 is not really the goal of xfs.org, and adding things
+> such as: ext4 do/don't do this, will just feed the filesystem war that
+> happens so often over internet, and most of us around here are tired of that. It
+> would just be another source (and official) of information  to feed such hot
+> and pointless discussions about it, I've seen even the simplest differences
+> being used as fuel for crappy discussions.
 
-So, just to be clear, xfs_getfsmap_helper notices gaps between the rmaps
-it's being fed, and emits synthesized fsmaps for the gaps that are owned
-by info.missing_owner.
+I should have probably phrased the questions better then. :) I do not
+much care about ext4 but wanted that general XFS behavior (journal
+size, replace-by-rename) and design choices (e.g. sync rate) that
+should be available for folks to find easily and authoritatively so
+that they don't spend too much time finding it. You folks, obviously,
+are the best judge.
 
-> > +	start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
-> > +	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
-> > +
-> > +	/* Query each AG */
-> > +	for (info->agno = start_ag; info->agno <= end_ag; info->agno++) {
-> > +		if (info->agno == end_ag) {
-> > +			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
-> > +					end_fsb);
-> > +			info->high.rm_offset = XFS_BB_TO_FSBT(mp,
-> > +					dkey_high->fmr_offset);
-> > +			error = xfs_fsmap_owner_to_rmap(dkey_high, &info->high);
-> > +			if (error)
-> > +				goto err;
-> > +			xfs_getfsmap_set_irec_flags(&info->high, dkey_high);
-> > +		}
-> > +
-> > +		if (bt_cur) {
-> > +			xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
-> > +			bt_cur = NULL;
-> > +			info->agf_bp = NULL;
-> > +		}
-> > +
-> > +		error = xfs_alloc_read_agf(mp, tp, info->agno, 0,
-> > +				&info->agf_bp);
-> > +		if (error)
-> > +			goto err;
-> > +
-> > +		trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
-> > +				info->low.rm_startblock,
-> > +				info->low.rm_blockcount,
-> > +				info->low.rm_owner,
-> > +				info->low.rm_offset);
-> > +
-> > +		trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
-> > +				info->high.rm_startblock,
-> > +				info->high.rm_blockcount,
-> > +				info->high.rm_owner,
-> > +				info->high.rm_offset);
-> > +
-> > +		bt_cur = xfs_allocbt_init_cursor(mp, tp, info->agf_bp,
-> > +				info->agno, XFS_BTNUM_BNO);
-> > +		alow.ar_startblock = info->low.rm_startblock;
-> > +		ahigh.ar_startblock = info->high.rm_startblock;
-> > +		error = xfs_alloc_query_range(bt_cur, &alow, &ahigh,
-> > +				xfs_getfsmap_datadev_bnobt_helper, info);
-> > +		if (error)
-> > +			goto err;
-> > +
-> > +		if (info->agno == start_ag) {
-> > +			info->low.rm_startblock = 0;
-> > +			info->low.rm_owner = 0;
-> > +			info->low.rm_offset = 0;
-> > +			info->low.rm_flags = 0;
-> > +		}
-> > +	}
-> > +
-> > +	/* Report any free space at the end of the AG */
-> > +	info->last = true;
-> > +	error = xfs_getfsmap_datadev_bnobt_helper(bt_cur, &ahigh, info);
-> > +	if (error)
-> > +		goto err;
-> > +
-> 
-> I guess the comment here is a little misleading too because we aren't
-> looking for more free space. Rather, any more allocated ranges beyond
-> the last free space record, right?
+Thanks,
+Vaibhaw
 
-Yes.  "Report any used space at the end of the AG"
 
-> FWIW, this handler overall looks quite similar to xfs_datadev_helper().
-> It might be interesting to see if the guts of the two could be combined
-> into an internal function (called by both _datadev() and
-> _datadev_bnobt() as wrappers) that has the unique bits passed to it
-> (i.e., cursor, missing owner).
-
-Hmm.  You're right, I bet they could be parameterized fairly easily.
-
---D
-
-> 
-> Brian
-> 
-> > +err:
-> > +	if (bt_cur)
-> > +		xfs_btree_del_cursor(bt_cur, error < 0 ? XFS_BTREE_ERROR :
-> > +							 XFS_BTREE_NOERROR);
-> > +	if (info->agf_bp)
-> > +		info->agf_bp = NULL;
-> > +
-> > +	return error;
-> > +}
-> > +
-> >  /* Do we recognize the device? */
-> >  STATIC bool
-> >  xfs_getfsmap_is_valid_device(
-> > @@ -689,8 +837,6 @@ xfs_getfsmap(
-> >  	int				i;
-> >  	int				error = 0;
-> >  
-> > -	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-> > -		return -EOPNOTSUPP;
-> >  	if (head->fmh_iflags & ~FMH_IF_VALID)
-> >  		return -EINVAL;
-> >  	rkey_low = head->fmh_keys;
-> > @@ -704,7 +850,10 @@ xfs_getfsmap(
-> >  	/* Set up our device handlers. */
-> >  	memset(handlers, 0, sizeof(handlers));
-> >  	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
-> > -	handlers[0].fn = xfs_getfsmap_datadev;
-> > +	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> > +		handlers[0].fn = xfs_getfsmap_datadev;
-> > +	else
-> > +		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
-> >  	if (mp->m_logdev_targp != mp->m_ddev_targp) {
-> >  		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
-> >  		handlers[1].fn = xfs_getfsmap_logdev;
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Wed, Feb 22, 2017 at 6:30 PM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
+> Hello,
+>
+>> I would suggest the following questions:
+>>
+>> 0. Does XFS support a mount option equivalent to ext4's auto_da_alloc?
+>> i.e. Does XFS have the workarounds to support the replace by truncate
+>> and replace by rename?
+>> Ans:
+>> Answered exactly in http://oss.sgi.com/archives/xfs/2015-12/msg00553.html
+>>
+>> 1. Does XFS support a mount option equivalent to ext4's commit? i.e.
+>> How do I control how often does XFS sync to disk? Or Does XFS never
+>> sync to disk until a sync/fsync is called?
+>>
+>> Ans:
+>> Answered here: http://article.gmane.org/gmane.comp.file-systems.xfs.general/53376
+>> Reproducing from source:
+>> <snip>
+>> By and large, buffered IO in a filesystem is flushed out by the vm,
+>> due to either age or memory pressure.  The filesystem then responds
+>> to these requests by the VM, writing data as requested.
+>>
+>> You can read all about it in
+>> https://www.kernel.org/doc/Documentation/sysctl/vm.txt See
+>> dirty_expire_centisecs and dirty_writeback_centisecs - flushers wake
+>> up every 30s and push on data more than 5s old, by default.
+>> </snip>
+>
+> Comparing XFS with EXT4 is not really the goal of xfs.org, and adding things
+> such as: ext4 do/don't do this, will just feed the filesystem war that
+> happens so often over internet, and most of us around here are tired of that. It
+> would just be another source (and official) of information  to feed such hot
+> and pointless discussions about it, I've seen even the simplest differences
+> being used as fuel for crappy discussions.
+>
+> Filesystems have different features and handle issues in different ways, in XFS
+> for example, there is no mount option to fix the sync-on-close-after-truncate,
+> such behavior is enforced, as mentioned in the thread pointed by you above,
+> IMHO, FAQ is not a place for bug fixes history, git log does that.
+>
+> I wouldn't object to have some information about sync-after-rename, but it still
+> is some extra fuel for such discussions (it it has already been before).
+>
+> Regarding the ext4's 'commit' option, as Eric said in the thread, it's VM
+> responsibility to request a flush to the filesystem, and this, to act as
+> requested, I wouldn't object to have something like: "xfs flushes buffered IO as
+> requested by the VM", but, still, it's buffered IO design, and XFS has no "for a
+> commit every X seconds" optiosn, so, still sounds pointless to me to have it in
+> a FAQ.
+>
+> Anyway, I am not the xfs.org maintainer, and this is just my opinion anyway :)
+> Everytime somebody says something about posting a filesystem comparison, my eyes
+> burns :)
+>>
+>> 2. What is the maximum size of the XFS journal?
+>> Ans: Not sure. But this is the closest answer I could find:
+>> https://serverfault.com/questions/367973/xfs-maximum-log-size-sw-raid-10-mdadm-sles-11-sp1
+>
+> This should go to mkfs.xfs manpage also :)
+>
+> Cheers.
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Carlos
