@@ -1,243 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56060 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751023AbdBUPtS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Feb 2017 10:49:18 -0500
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 2/7] fs, xfs: convert xfs_buf.b_hold and xfs_buf.b_lru_ref from atomic_t to refcount_t
-Date: Tue, 21 Feb 2017 17:49:02 +0200
-Message-Id: <1487692147-17066-3-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
-References: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
+Received: from mail-ua0-f171.google.com ([209.85.217.171]:35516 "EHLO
+        mail-ua0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932369AbdBVOwf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Feb 2017 09:52:35 -0500
+Received: by mail-ua0-f171.google.com with SMTP id 40so3176971uau.2
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Feb 2017 06:52:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <5222e5f0-feee-2416-c91a-af12775fafd2@sandeen.net>
+References: <CADWLRhrkA6pa_OeddSf281Lr+53JyEp5dxaHc+KTJPRLShWvkQ@mail.gmail.com>
+ <5222e5f0-feee-2416-c91a-af12775fafd2@sandeen.net>
+From: Vaibhaw Pandey <vaibhaw@scalegrid.io>
+Date: Wed, 22 Feb 2017 20:22:33 +0530
+Message-ID: <CADWLRhrKLMY0Hz+rWm5_0N2fXOm01MC9LM9TwLoZuM=ZwbPWhQ@mail.gmail.com>
+Subject: Re: Consider these for the XFS FAQ wiki
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+Thanks for replying Eric.
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- fs/xfs/xfs_buf.c   | 35 ++++++++++++++++++-----------------
- fs/xfs/xfs_buf.h   |  7 ++++---
- fs/xfs/xfs_trace.h |  8 ++++----
- 3 files changed, 26 insertions(+), 24 deletions(-)
+> So I'm curious - what happened, and how did you resolve it?
+Nothing really. The application in question is the Redis key value
+store. Reading through it's code is how I began to suspect rename as
+the potential problem. It does a fopen/write/fsync/rename sequence. I
+mailed Antirez (Redis's primary author) about it and meanwhile added a
+sync call in my code. :)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 8c7d01b..21a09c1 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -151,12 +151,12 @@ xfs_buf_stale(
- 	xfs_buf_ioacct_dec(bp);
- 
- 	spin_lock(&bp->b_lock);
--	atomic_set(&bp->b_lru_ref, 0);
-+	refcount_set(&bp->b_lru_ref, 0);
- 	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
- 	    (list_lru_del(&bp->b_target->bt_lru, &bp->b_lru)))
--		atomic_dec(&bp->b_hold);
-+		refcount_dec(&bp->b_hold);
- 
--	ASSERT(atomic_read(&bp->b_hold) >= 1);
-+	ASSERT(refcount_read(&bp->b_hold) >= 1);
- 	spin_unlock(&bp->b_lock);
- }
- 
-@@ -214,8 +214,8 @@ _xfs_buf_alloc(
- 	 */
- 	flags &= ~(XBF_UNMAPPED | XBF_TRYLOCK | XBF_ASYNC | XBF_READ_AHEAD);
- 
--	atomic_set(&bp->b_hold, 1);
--	atomic_set(&bp->b_lru_ref, 1);
-+	refcount_set(&bp->b_hold, 1);
-+	refcount_set(&bp->b_lru_ref, 1);
- 	init_completion(&bp->b_iowait);
- 	INIT_LIST_HEAD(&bp->b_lru);
- 	INIT_LIST_HEAD(&bp->b_list);
-@@ -581,7 +581,7 @@ _xfs_buf_find(
- 	bp = rhashtable_lookup_fast(&pag->pag_buf_hash, &cmap,
- 				    xfs_buf_hash_params);
- 	if (bp) {
--		atomic_inc(&bp->b_hold);
-+		refcount_inc(&bp->b_hold);
- 		goto found;
- 	}
- 
-@@ -940,7 +940,7 @@ xfs_buf_hold(
- 	xfs_buf_t		*bp)
- {
- 	trace_xfs_buf_hold(bp, _RET_IP_);
--	atomic_inc(&bp->b_hold);
-+	refcount_inc(&bp->b_hold);
- }
- 
- /*
-@@ -959,16 +959,16 @@ xfs_buf_rele(
- 
- 	if (!pag) {
- 		ASSERT(list_empty(&bp->b_lru));
--		if (atomic_dec_and_test(&bp->b_hold)) {
-+		if (refcount_dec_and_test(&bp->b_hold)) {
- 			xfs_buf_ioacct_dec(bp);
- 			xfs_buf_free(bp);
- 		}
- 		return;
- 	}
- 
--	ASSERT(atomic_read(&bp->b_hold) > 0);
-+	ASSERT(refcount_read(&bp->b_hold) > 0);
- 
--	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
-+	release = refcount_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
- 	spin_lock(&bp->b_lock);
- 	if (!release) {
- 		/*
-@@ -977,14 +977,14 @@ xfs_buf_rele(
- 		 * haven't acquired the pag lock, but the use of _XBF_IN_FLIGHT
- 		 * ensures the decrement occurs only once per-buf.
- 		 */
--		if ((atomic_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru))
-+		if ((refcount_read(&bp->b_hold) == 1) && !list_empty(&bp->b_lru))
- 			xfs_buf_ioacct_dec(bp);
- 		goto out_unlock;
- 	}
- 
- 	/* the last reference has been dropped ... */
- 	xfs_buf_ioacct_dec(bp);
--	if (!(bp->b_flags & XBF_STALE) && atomic_read(&bp->b_lru_ref)) {
-+	if (!(bp->b_flags & XBF_STALE) && refcount_read(&bp->b_lru_ref)) {
- 		/*
- 		 * If the buffer is added to the LRU take a new reference to the
- 		 * buffer for the LRU and clear the (now stale) dispose list
-@@ -992,7 +992,7 @@ xfs_buf_rele(
- 		 */
- 		if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
- 			bp->b_state &= ~XFS_BSTATE_DISPOSE;
--			atomic_inc(&bp->b_hold);
-+			refcount_inc(&bp->b_hold);
- 		}
- 		spin_unlock(&pag->pag_buf_lock);
- 	} else {
-@@ -1598,7 +1598,7 @@ xfs_buftarg_wait_rele(
- 	struct xfs_buf		*bp = container_of(item, struct xfs_buf, b_lru);
- 	struct list_head	*dispose = arg;
- 
--	if (atomic_read(&bp->b_hold) > 1) {
-+	if (refcount_read(&bp->b_hold) > 1) {
- 		/* need to wait, so skip it this pass */
- 		trace_xfs_buf_wait_buftarg(bp, _RET_IP_);
- 		return LRU_SKIP;
-@@ -1610,7 +1610,7 @@ xfs_buftarg_wait_rele(
- 	 * clear the LRU reference count so the buffer doesn't get
- 	 * ignored in xfs_buf_rele().
- 	 */
--	atomic_set(&bp->b_lru_ref, 0);
-+	refcount_set(&bp->b_lru_ref, 0);
- 	bp->b_state |= XFS_BSTATE_DISPOSE;
- 	list_lru_isolate_move(lru, item, dispose);
- 	spin_unlock(&bp->b_lock);
-@@ -1684,10 +1684,11 @@ xfs_buftarg_isolate(
- 	 * zero. If the value is already zero, we need to reclaim the
- 	 * buffer, otherwise it gets another trip through the LRU.
- 	 */
--	if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
-+	if (!refcount_read(&bp->b_lru_ref)) {
- 		spin_unlock(&bp->b_lock);
- 		return LRU_ROTATE;
- 	}
-+	refcount_dec_and_test(&bp->b_lru_ref);
- 
- 	bp->b_state |= XFS_BSTATE_DISPOSE;
- 	list_lru_isolate_move(lru, item, dispose);
-@@ -1854,7 +1855,7 @@ xfs_buf_delwri_queue(
- 	 */
- 	bp->b_flags |= _XBF_DELWRI_Q;
- 	if (list_empty(&bp->b_list)) {
--		atomic_inc(&bp->b_hold);
-+		refcount_inc(&bp->b_hold);
- 		list_add_tail(&bp->b_list, list);
- 	}
- 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 3c867e5..7373246 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -27,6 +27,7 @@
- #include <linux/buffer_head.h>
- #include <linux/uio.h>
- #include <linux/list_lru.h>
-+#include <linux/refcount.h>
- 
- /*
-  *	Base types
-@@ -153,8 +154,8 @@ typedef struct xfs_buf {
- 	struct rhash_head	b_rhash_head;	/* pag buffer hash node */
- 	xfs_daddr_t		b_bn;		/* block number of buffer */
- 	int			b_length;	/* size of buffer in BBs */
--	atomic_t		b_hold;		/* reference count */
--	atomic_t		b_lru_ref;	/* lru reclaim ref count */
-+	refcount_t		b_hold;		/* reference count */
-+	refcount_t		b_lru_ref;	/* lru reclaim ref count */
- 	xfs_buf_flags_t		b_flags;	/* status flags */
- 	struct semaphore	b_sema;		/* semaphore for lockables */
- 
-@@ -353,7 +354,7 @@ extern void xfs_buf_terminate(void);
- 
- static inline void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
- {
--	atomic_set(&bp->b_lru_ref, lru_ref);
-+	refcount_set(&bp->b_lru_ref, lru_ref);
- }
- 
- static inline int xfs_buf_ispinned(struct xfs_buf *bp)
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 383ac22..8fc98d5 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -326,7 +326,7 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
- 		__entry->dev = bp->b_target->bt_dev;
- 		__entry->bno = bp->b_bn;
- 		__entry->nblks = bp->b_length;
--		__entry->hold = atomic_read(&bp->b_hold);
-+		__entry->hold = refcount_read(&bp->b_hold);
- 		__entry->pincount = atomic_read(&bp->b_pin_count);
- 		__entry->lockval = bp->b_sema.count;
- 		__entry->flags = bp->b_flags;
-@@ -395,7 +395,7 @@ DECLARE_EVENT_CLASS(xfs_buf_flags_class,
- 		__entry->bno = bp->b_bn;
- 		__entry->buffer_length = BBTOB(bp->b_length);
- 		__entry->flags = flags;
--		__entry->hold = atomic_read(&bp->b_hold);
-+		__entry->hold = refcount_read(&bp->b_hold);
- 		__entry->pincount = atomic_read(&bp->b_pin_count);
- 		__entry->lockval = bp->b_sema.count;
- 		__entry->caller_ip = caller_ip;
-@@ -438,7 +438,7 @@ TRACE_EVENT(xfs_buf_ioerror,
- 		__entry->dev = bp->b_target->bt_dev;
- 		__entry->bno = bp->b_bn;
- 		__entry->buffer_length = BBTOB(bp->b_length);
--		__entry->hold = atomic_read(&bp->b_hold);
-+		__entry->hold = refcount_read(&bp->b_hold);
- 		__entry->pincount = atomic_read(&bp->b_pin_count);
- 		__entry->lockval = bp->b_sema.count;
- 		__entry->error = error;
-@@ -483,7 +483,7 @@ DECLARE_EVENT_CLASS(xfs_buf_item_class,
- 		__entry->buf_bno = bip->bli_buf->b_bn;
- 		__entry->buf_len = BBTOB(bip->bli_buf->b_length);
- 		__entry->buf_flags = bip->bli_buf->b_flags;
--		__entry->buf_hold = atomic_read(&bip->bli_buf->b_hold);
-+		__entry->buf_hold = refcount_read(&bip->bli_buf->b_hold);
- 		__entry->buf_pincount = atomic_read(&bip->bli_buf->b_pin_count);
- 		__entry->buf_lockval = bip->bli_buf->b_sema.count;
- 		__entry->li_desc = bip->bli_item.li_desc;
--- 
-2.7.4
+> I agree with Carlos that direct comparisons to other filesystems are
+> less useful, if nothing else because other filesystems may change.
+As I said, I probably shouldn't have framed the questions like that.
+But, IMHO, those are valid inquiries that people would make about XFS,
+even when not comparing it with filesystems they are familiar with. I
+was only trying to suggest what could be useful for other developers
+looking to understand enough XFS work with it confidently. The current
+XFS FAQ does seem to have gaps IMO. But you guys would know best on
+what should be documented. :)
 
+> which controls data flushing.  Some of this is filesystems 101; some of
+> it is specific to xfs...
+
+That is a rather important difference, thanks for pointing it out!
+Again, something that should be added to the FAQ. :)
+
+> ;) IOWs, why were you messing with the log size in the first place?  :)
+I wasn't at all :) We are a Database-as-a-Service startup and are
+looking to start deploying MongoDB on XFS for better performance. &
+understanding the sizing requirements and some level of internals is
+important for us.
+
+On Wed, Feb 22, 2017 at 7:11 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 2/22/17 5:55 AM, Vaibhaw Pandey wrote:
+>> Hey,
+>>
+>> I had recently run into the ext4 auto_da_alloc delayed allocation type
+>> behavior with XFS i.e. replace by rename leaving an empty file behind.
+>> It took me forever to debug it cause I couldn't find answers to some
+>> simple questions right away.
+>
+> So I'm curious - what happened, and how did you resolve it?
+>
+>> You guys are the experts but I would like to suggest adding some
+>> questions (& answers) to the XFS FAQ doc for the clueless folks like
+>> me.
+>>
+>> I would suggest the following questions:
+>>
+>> 0. Does XFS support a mount option equivalent to ext4's auto_da_alloc?
+>> i.e. Does XFS have the workarounds to support the replace by truncate
+>> and replace by rename?
+>> Ans:
+>> Answered exactly in http://oss.sgi.com/archives/xfs/2015-12/msg00553.html
+>
+> http://xfs.org/index.php/XFS_FAQ#Q:_Why_do_I_see_binary_NULLS_in_some_files_after_recovery_when_I_unplugged_the_power.3F'
+> alludes to this, but I suppose a better explanation of the existing
+> heuristic might be nice for those who want the details.  The "binary NULLs"
+> thing is ancient history.
+>
+> I agree with Carlos that direct comparisons to other filesystems are
+> less useful, if nothing else because other filesystems may change.
+>
+> Documenting what XFS does should be the goal of the FAQ.
+>
+>> 1. Does XFS support a mount option equivalent to ext4's commit? i.e.
+>> How do I control how often does XFS sync to disk? Or Does XFS never
+>> sync to disk until a sync/fsync is called?
+>
+> ext4's commit= doesn't control how often it "syncs to disk", exactly.
+> (that's a bit vague).
+>
+> It controls the journal commit time, which may or may not (depending on
+> other options) control data vs. metadata, etc.  Again, we'd need to
+> document ext4 in the faq before we started making comparisons to it.  :)
+>
+>> Ans:
+>> Answered here: http://article.gmane.org/gmane.comp.file-systems.xfs.general/53376
+>> Reproducing from source:
+>> <snip>
+>> By and large, buffered IO in a filesystem is flushed out by the vm,
+>> due to either age or memory pressure.  The filesystem then responds
+>> to these requests by the VM, writing data as requested.
+>
+> So that's about dirty data flushing, whereas ext4's commit= is more related
+> to metadata flushing, which may or may not lead to data flushing for some files.
+> We do document a sysctl:
+>
+>   fs.xfs.xfssyncd_centisecs     (Min: 100  Default: 3000  Max: 720000)
+>         The interval at which the filesystem flushes metadata
+>         out to disk and runs internal cache cleanup routines.
+>
+> which is different from:
+>
+>> You can read all about it in
+>> https://www.kernel.org/doc/Documentation/sysctl/vm.txt See
+>> dirty_expire_centisecs and dirty_writeback_centisecs - flushers wake
+>> up every 30s and push on data more than 5s old, by default.
+>> </snip>
+>
+> which controls data flushing.  Some of this is filesystems 101; some of
+> it is specific to xfs...
+>
+>> 2. What is the maximum size of the XFS journal?
+>> Ans: Not sure. But this is the closest answer I could find:
+>> https://serverfault.com/questions/367973/xfs-maximum-log-size-sw-raid-10-mdadm-sles-11-sp1
+>> I could read through the code and find a better answer in case you
+>> folks wouldn't have the time.
+>
+> As you can see from the URL there, the answer is "it's complicated"
+> and depends on filesystem geometry.  I think it's probably best answered by:
+>
+> http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E
+>
+> ;) IOWs, why were you messing with the log size in the first place?  :)
+>
+> -Eric
+>
+>
+>
+>>
+>> Lemme know what you think.
+>>
+>> Thanks,
+>> Vaibhaw
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
