@@ -1,104 +1,84 @@
-Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227145905.t3l3nxtxstsvugxv@eorzea.usersys.redhat.com>
-Resent-To: sandeen@sandeen.net
-Received: from mx1.redhat.com ([209.132.183.28]:45844 "EHLO mx1.redhat.com"
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41030 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751208AbdBXOaj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Feb 2017 09:30:39 -0500
-Date: Fri, 24 Feb 2017 09:30:37 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs_repair fails to recognize corruption reported by kernel -
- possible bug?
-Message-ID: <20170224143037.GD59560@bfoster.bfoster>
-References: <CADcJnz_TWkhhPVr7fmVHoZtjOkGDJxTqtcuz_Ef15rguUW3bdA@mail.gmail.com>
- <20170224123017.GA59560@bfoster.bfoster>
+        id S1754652AbdBVNAb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 22 Feb 2017 08:00:31 -0500
+Date: Wed, 22 Feb 2017 14:00:28 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: Consider these for the XFS FAQ wiki
+Message-ID: <20170222130028.mrl6yimvwlj4zjid@eorzea.usersys.redhat.com>
+References: <CADWLRhrkA6pa_OeddSf281Lr+53JyEp5dxaHc+KTJPRLShWvkQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170224123017.GA59560@bfoster.bfoster>
+In-Reply-To: <CADWLRhrkA6pa_OeddSf281Lr+53JyEp5dxaHc+KTJPRLShWvkQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mathias Troiden <mathias.troiden@gmail.com>
+To: Vaibhaw Pandey <vaibhaw@scalegrid.io>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Feb 24, 2017 at 07:30:18AM -0500, Brian Foster wrote:
-> On Thu, Feb 23, 2017 at 11:14:47PM +0300, Mathias Troiden wrote:
-> > Original topic: https://bbs.archlinux.org/viewtopic.php?pid=1692896
-> > 
-> > Hi list,
-> > 
-> > My system fails to start login manager with following messages in journal:
-> > 
-> > >kernel: ffff88040e8bc030: 58 67 db ca 2a 3a dd b8 00 00 00 00 00 00 00 00  Xg..*:..........
-> > >kernel: XFS (sda1): Internal error xfs_iread at line 514 of file fs/xfs/libxfs/xfs_inode_buf.c.  Caller xfs_iget+0x2b1/0x940 [xfs]
-> > >kernel: XFS (sda1): Corruption detected. Unmount and run xfs_repair
-> > >kernel: XFS (sda1): xfs_iread: validation failed for inode 34110192 failed
-> > >kernel: ffff88040e8bc000: 49 4e a1 ff 03 01 00 00 00 00 00 00 00 00 00 00  IN..............
-> > >kernel: ffff88040e8bc010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > >kernel: ffff88040e8bc020: 58 aa 04 b8 2e e3 65 3a 57 41 fe 12 00 00 00 00  X.....e:WA......
-> > >kernel: ffff88040e8bc030: 58 67 db ca 2a 3a dd b8 00 00 00 00 00 00 00 00  Xg..*:..........
-> > >kernel: XFS (sda1): Internal error xfs_iread at line 514 of file fs/xfs/libxfs/xfs_inode_buf.c.  Caller xfs_iget+0x2b1/0x940 [xfs]
-> > >kernel: XFS (sda1): Corruption detected. Unmount and run xfs_repair
-> > 
-> > 
-> > and subsequent core dump of the login manager.
-> > 
+Hello,
+
+> I would suggest the following questions:
 > 
-> What kernel and xfsprogs versions? Also, please provide 'xfs_info <mnt>'
-> output for the fs.
+> 0. Does XFS support a mount option equivalent to ext4's auto_da_alloc?
+> i.e. Does XFS have the workarounds to support the replace by truncate
+> and replace by rename?
+> Ans:
+> Answered exactly in http://oss.sgi.com/archives/xfs/2015-12/msg00553.html
 > 
-> From the output above, it looks like you could have a zero-sized
-> symlink, which triggers xfs_dinode_verify() failure. It's quite possible
-> I'm misreading the raw inode buffer output above too, however.. Did you
-> have any interesting "events" before this problem started to occur? For
-> example, a crash or hard reset, etc.?
+> 1. Does XFS support a mount option equivalent to ext4's commit? i.e.
+> How do I control how often does XFS sync to disk? Or Does XFS never
+> sync to disk until a sync/fsync is called?
 > 
-> Could you run 'find <mnt> -inum 34110192 -print' on the fs and report
-> the associated filename? You could try 'stat <file>' as well but I'm
-> guessing that's just going to report an error.
+> Ans:
+> Answered here: http://article.gmane.org/gmane.comp.file-systems.xfs.general/53376
+> Reproducing from source:
+> <snip>
+> By and large, buffered IO in a filesystem is flushed out by the vm,
+> due to either age or memory pressure.  The filesystem then responds
+> to these requests by the VM, writing data as requested.
 > 
-> Note that another way to get us details of the fs is to send an
-> xfs_metadump image. An md image skips all file data in the fs and
-> obfuscates metadata (such as filenames) such that no sensitive
-> information is shared. It simply provides a skeleton metadata image for
-> us to debug. To create an obfuscated metadump, run 'xfs_metadump -g
-> <dev> <outputimg>,' compress the resulting image file and send it along
-> (feel free to send directly) or upload it somewhere.
+> You can read all about it in
+> https://www.kernel.org/doc/Documentation/sysctl/vm.txt See
+> dirty_expire_centisecs and dirty_writeback_centisecs - flushers wake
+> up every 30s and push on data more than 5s old, by default.
+> </snip>
+
+Comparing XFS with EXT4 is not really the goal of xfs.org, and adding things
+such as: ext4 do/don't do this, will just feed the filesystem war that
+happens so often over internet, and most of us around here are tired of that. It
+would just be another source (and official) of information  to feed such hot
+and pointless discussions about it, I've seen even the simplest differences
+being used as fuel for crappy discussions.
+
+Filesystems have different features and handle issues in different ways, in XFS
+for example, there is no mount option to fix the sync-on-close-after-truncate,
+such behavior is enforced, as mentioned in the thread pointed by you above,
+IMHO, FAQ is not a place for bug fixes history, git log does that.
+
+I wouldn't object to have some information about sync-after-rename, but it still
+is some extra fuel for such discussions (it it has already been before).
+
+Regarding the ext4's 'commit' option, as Eric said in the thread, it's VM
+responsibility to request a flush to the filesystem, and this, to act as
+requested, I wouldn't object to have something like: "xfs flushes buffered IO as
+requested by the VM", but, still, it's buffered IO design, and XFS has no "for a
+commit every X seconds" optiosn, so, still sounds pointless to me to have it in
+a FAQ.
+
+Anyway, I am not the xfs.org maintainer, and this is just my opinion anyway :)
+Everytime somebody says something about posting a filesystem comparison, my eyes
+burns :)
 > 
+> 2. What is the maximum size of the XFS journal?
+> Ans: Not sure. But this is the closest answer I could find:
+> https://serverfault.com/questions/367973/xfs-maximum-log-size-sw-raid-10-mdadm-sles-11-sp1
 
-After looking at a metadump, this is indeed a zero-sized symlink. The
-immediate fix here is probably to allow xfs_repair to detect this
-situation and recover, which most likely means clearing out the inode.
+This should go to mkfs.xfs manpage also :)
 
-Unfortunately, it's not clear how we got into this situation in the
-first place. I'm still curious if you've had any crash or reset events
-that might have required log recovery recently..?
+Cheers.
 
-Regardless, you'll probably have to try something like the appended
-xfsprogs patch, which clears out the offending inode and means you'll
-have to recreate it manually to recover system functionality (Mathias
-has pointed out offline that the offending link is a standard
-/usr/lib/lib*.so symlink with a known target, so fortunately recovery
-should be simple).
-
-Brian
-
---- 8< ---
-
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 8d01409..d664f87 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -1385,6 +1385,11 @@ process_symlink(
- 		return(1);
- 	}
- 
-+	if (be64_to_cpu(dino->di_size) == 0) {
-+		do_warn(_("zero size symlink in inode %" PRIu64 "\n"), lino);
-+		return 1;
-+	}
-+
- 	/*
- 	 * have to check symlink component by component.
- 	 * get symlink contents into data area
+-- 
+Carlos
