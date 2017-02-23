@@ -1,103 +1,270 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41440 "EHLO mx1.redhat.com"
+Return-Path: <cmaiolino@redhat.com>
+Resent-Message-ID: <20170227145843.wflrggl2xsusytn2@eorzea.usersys.redhat.com>
+Resent-To: sandeen@sandeen.net
+Received: from mx1.redhat.com ([209.132.183.28]:34958 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752107AbdBUTZY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Feb 2017 14:25:24 -0500
-Date: Tue, 21 Feb 2017 14:25:23 -0500
+        id S1751392AbdBWXn2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 Feb 2017 18:43:28 -0500
+Date: Thu, 23 Feb 2017 18:43:01 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/7] fs, xfs: convert xfs_buf_log_item.bli_refcount from
- atomic_t to refcount_t
-Message-ID: <20170221192522.GE3207@bfoster.bfoster>
-References: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
- <1487692147-17066-4-git-send-email-elena.reshetova@intel.com>
- <20170221155922.GI6515@twins.programming.kicks-ass.net>
- <2236FBA76BA1254E88B949DDB74E612B41C4E32A@IRSMSX102.ger.corp.intel.com>
- <20170221170620.GD5846@birch.djwong.org>
+Subject: Re: [PATCH 5/8] xfs: introduce the XFS_IOC_GETFSMAP ioctl
+Message-ID: <20170223234301.GA57524@bfoster.bfoster>
+References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
+ <148738066907.29384.8419135817879528959.stgit@birch.djwong.org>
+ <20170222150246.GB53025@bfoster.bfoster>
+ <20170222211757.GH5846@birch.djwong.org>
+ <20170223144542.GA57349@bfoster.bfoster>
+ <20170223204405.GI5846@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170221170620.GD5846@birch.djwong.org>
+In-Reply-To: <20170223204405.GI5846@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Reshetova, Elena" <elena.reshetova@intel.com>, Peter Zijlstra <peterz@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Feb 21, 2017 at 09:06:20AM -0800, Darrick J. Wong wrote:
-> On Tue, Feb 21, 2017 at 04:06:30PM +0000, Reshetova, Elena wrote:
-> > > On Tue, Feb 21, 2017 at 05:49:03PM +0200, Elena Reshetova wrote:
-> > > > refcount_t type and corresponding API should be
-> > > > used instead of atomic_t when the variable is used as
-> > > > a reference counter. This allows to avoid accidental
-> > > > refcounter overflows that might lead to use-after-free
-> > > > situations.
+On Thu, Feb 23, 2017 at 12:44:05PM -0800, Darrick J. Wong wrote:
+> On Thu, Feb 23, 2017 at 09:45:43AM -0500, Brian Foster wrote:
+> > On Wed, Feb 22, 2017 at 01:17:57PM -0800, Darrick J. Wong wrote:
+> > > On Wed, Feb 22, 2017 at 10:02:47AM -0500, Brian Foster wrote:
+> > > > On Fri, Feb 17, 2017 at 05:17:49PM -0800, Darrick J. Wong wrote:
+> > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > 
+> > > > > Introduce a new ioctl that uses the reverse mapping btree to return
+> > > > > information about the physical layout of the filesystem.
+> > > > > 
+> > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > ---
+> > > > 
+...
+> > So the rmapbt query doesn't incorporate the full getfsmap key in the
+> > search and we thus we have to include finer grained filtering..? If so,
+> > I think this bit could be noted explicitly in the comment..
+> 
+> It's a funny quirk of how queries have to work when record keys contain
+> multiple overlapping ranges interacting with the current design of
+> query_range.
+> 
+> rmap tuple format is still (start, length, owner, offset).
+> 
+> Say you have the rmaps (24, 8, 128, 0) and (30, 10, 128, 8).  The low
+> key of the first rmap is (24, 128, 0) and the high key is (31, 128, 7).
+> That way you can query the rmapbt for start == 27 and it'll return the
+> above rmap.  _btree_query_range was designed to return any record
+> overlapping with any part of the interval, even if the record start or
+> record end themselves are not within the interval.
+> 
+> However, if you want to look for the next tuple after (24, 8, 128, 0)
+> you can't just tell it to search for (31...) because 31 > 30 and it'll
+> miss that second rmap.  You can however tell it to search (24, 128, 8)
+> and ignore any records if any part of the low key is not greater than
+> the low search key.
+> 
+> Theoretically, we could enhance query_range to take an operator so that
+> you could tell it to return any record overlapping with any part of the
+> interval so long as the start of the record is strictly greater than the
+> start of the query interval.
+> 
+> FWIW the comment for _btree_query_range says it returns all records
+> overlapping with the interval passed in.
+> 
+
+Gotcha, thanks.
+
+> > Also, I'm kind of wondering why we couldn't have just set next_daddr to
+> > 40 in the first place based on the low key. Is there some other corner
+> > case that breaks..?
+> 
+> Aha, looking through my notes, the original version also used next_daddr
+> (buggily) to decide if a record actually started before the bumped low
+> key so that it could ignore it.  Subsequent revisions created an
+> explicit test function (_getfsmap_rec_before_low_key) so you're right,
+> we can set next_daddr to 40 (fmh_keys[0]->fmr_physical + fmr_length) for
+> the first loop iteration and zero for subsequent iterations.  With that
+> the key_end business also goes away.
+> 
+
+Oh, Ok. That sounds like a nice cleanup then.
+
+> > > Assuming _getfsmap_helper is passed the same refcount rmap as before.
+> > > rec_daddr = 64, and when we get to line 318, key_end = 24 + 16.
 > > > 
-> > > Changelog forgets to mention if this was runtime tested..
+> > > The test is now:
+> > > if (devices match && 40 < 40 && 64 >= 40)
+> > > So we leave next_daddr at 40.
+> > > 
+> > > The correct output here is to synthesize an fsmap record for free space
+> > > between 40-64, and then to emit the refcount record at 64.
+> > > 
+> > > Third example: fmh_keys = [(8:0, 24, 16, 128, 0), (-1)] and next_daddr = 24
+> > > as before.  _getfsmap_helper again sees (8:0, 24, 16, 128, 0) and sets
+> > > next_daddr = 40.
+> > > 
+> > > This time, however, _getfsmap_helper is passed (8:0, 32, 8, 129, 0),
+> > > which is 8 sectors of inode 129's data at offset 0.  rec_daddr = 32,
+> > > key_end = 24 + 16 as before.
+> > > 
+> > > The test is now:
+> > > if (devices match && 40 < 40 && 32 >= 40)
+> > > So we again leave next_daddr at 40, then emit the fsmap for inode 129.
+> > > 
+...
+> > > > 
+> > > > Hmm.. could we combine these into one call that looks like:
+> > > > 
+> > > > 	trace_xfs_getfsmap(mp, &fmh_keys[0], &fmh_keys[1]);
+> > > > 
+> > > > ... and has the trace handler pull the relevant data out of the key
+> > > > structure (same comment for the similar trace_xfs_fsmap*())?
+> > > 
+> > > I'd prefer to leave it as-is, because passing struct xfs_fsmap into a
+> > > tracepoint requires every file that includes xfs_trace.h to also include
+> > > xfs_fsmap.h to get the structure definition.
+> > > 
 > > 
-> > It was boot-tested in the whole refcount_t changes pile, which is not very useful for fs anyway. 
-> > What's why we are sending this through maintainers to get through their tests. 
-> > I am sure that testing would be better than what we can do. 
+> > I think you can get around that with a structure declaration in
+> > xfs_trace.h, as the only code that actually requires the full definition
+> > is xfs_trace.c. If that works, that could at least reduce the tracepoint
+> > calls to a couple lines of code, even if we retain the independent
+> > low/high key tp's.
 > 
-> If you're going to go around making this many changes to XFS (or any
-> other filesystem), please run the changes through xfstests first.
-> Many fs projects (not just XFS) record their test cases there.
-> 
-> I think the kernel 0day build service is supposed to do that
-> automatically...
+> But then we'd have two definitions of the same structure, and anyone
+> touching xfs_fsmap would have to remember to update both.  I think it's
+> fine to pass pointers to core libxfs/*format.h structures directly into
+> tracepoints, but fsmap is on the periphery.
 > 
 
-Be sure to use CONFIG_XFS_DEBUG and/or CONFIG_XFS_WARN to capture any
-potential assert failures as well.
+No, it's just a declaration (not the full structure definition). I.e.,
+add 'struct xfs_fsmap;' to the list of similarly declared structures at
+the top of xfs_trace.h.
+
+See the appended diff for what I mean. It only changes one of the
+classes, but compiles clean for me (compile tested only)..
 
 Brian
 
-> --D
-> 
-> > 
-> > > 
-> > > 
-> > > > @@ -371,7 +371,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
-> > > >  	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
-> > > >  	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
-> > > >  	ASSERT(!(bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
-> > > > -	ASSERT(atomic_read(&bip->bli_refcount) > 0);
-> > > > +	ASSERT(refcount_read(&bip->bli_refcount) > 0);
-> > > >
-> > > >  	trace_xfs_trans_brelse(bip);
-> > > >
-> > > > @@ -419,7 +419,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
-> > > >  	/*
-> > > >  	 * Drop our reference to the buf log item.
-> > > >  	 */
-> > > > -	atomic_dec(&bip->bli_refcount);
-> > > > +	refcount_dec(&bip->bli_refcount);
-> > > >
-> > > >  	/*
-> > > >  	 * If the buf item is not tracking data in the log, then
-> > > > @@ -432,7 +432,7 @@ xfs_trans_brelse(xfs_trans_t	*tp,
-> > > >  /***
-> > > >  		ASSERT(bp->b_pincount == 0);
-> > > >  ***/
-> > > > -		ASSERT(atomic_read(&bip->bli_refcount) == 0);
-> > > > +		ASSERT(refcount_read(&bip->bli_refcount) == 0);
-> > > >  		ASSERT(!(bip->bli_item.li_flags & XFS_LI_IN_AIL));
-> > > >  		ASSERT(!(bip->bli_flags &
-> > > XFS_BLI_INODE_ALLOC_BUF));
-> > > >  		xfs_buf_item_relse(bp);
-> > > 
-> > > 
-> > > This for example looks dodgy.
-> > > 
-> > > That seems to suggest the atomic_dec() there can actually hit 0, which
-> > > _will_ generate a WARN.
-> > 
-> > True, but in some of this cases WARN might be ok, I think? As soon as functionality is not changed and object is not reused (by doing refcount_inc on it) anywhere later on. 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- 8< ---
+
+diff --git a/fs/xfs/xfs_fsmap.h b/fs/xfs/xfs_fsmap.h
+index 1943047..55f7c85 100644
+--- a/fs/xfs/xfs_fsmap.h
++++ b/fs/xfs/xfs_fsmap.h
+@@ -20,6 +20,8 @@
+ #ifndef __XFS_FSMAP_H__
+ #define	__XFS_FSMAP_H__
+ 
++struct fsmap;
++
+ /* internal fsmap representation */
+ struct xfs_fsmap {
+ 	dev_t		fmr_device;	/* device id */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index e1f3fbf..95f4923 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1622,9 +1622,7 @@ xfs_getfsmap_format(struct xfs_fsmap *xfm, void *priv)
+ 	struct getfsmap_info	*info = priv;
+ 	struct fsmap		fm;
+ 
+-	trace_xfs_getfsmap_mapping(info->mp, xfm->fmr_device, xfm->fmr_physical,
+-			xfm->fmr_length, xfm->fmr_owner, xfm->fmr_offset,
+-			xfm->fmr_flags);
++	trace_xfs_getfsmap_mapping(info->mp, xfm);
+ 
+ 	info->last_flags = xfm->fmr_flags;
+ 	xfs_fsmap_from_internal(&fm, xfm);
+@@ -1664,21 +1662,8 @@ xfs_ioc_getfsmap(
+ 	xfs_fsmap_to_internal(&xhead.fmh_keys[0], &head.fmh_keys[0]);
+ 	xfs_fsmap_to_internal(&xhead.fmh_keys[1], &head.fmh_keys[1]);
+ 
+-	trace_xfs_getfsmap_low_key(ip->i_mount,
+-			xhead.fmh_keys[0].fmr_device,
+-			xhead.fmh_keys[0].fmr_physical,
+-			xhead.fmh_keys[0].fmr_length,
+-			xhead.fmh_keys[0].fmr_owner,
+-			xhead.fmh_keys[0].fmr_offset,
+-			xhead.fmh_keys[0].fmr_flags);
+-
+-	trace_xfs_getfsmap_high_key(ip->i_mount,
+-			xhead.fmh_keys[1].fmr_device,
+-			xhead.fmh_keys[1].fmr_physical,
+-			xhead.fmh_keys[1].fmr_length,
+-			xhead.fmh_keys[1].fmr_owner,
+-			xhead.fmh_keys[1].fmr_offset,
+-			xhead.fmh_keys[1].fmr_flags);
++	trace_xfs_getfsmap_low_key(ip->i_mount, &xhead.fmh_keys[0]);
++	trace_xfs_getfsmap_high_key(ip->i_mount, &xhead.fmh_keys[1]);
+ 
+ 	info.mp = ip->i_mount;
+ 	info.data = ((__force struct fsmap_head *)arg)->fmh_recs;
+diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+index 7f17ae6..5d95fe3 100644
+--- a/fs/xfs/xfs_trace.c
++++ b/fs/xfs/xfs_trace.c
+@@ -47,6 +47,7 @@
+ #include "xfs_inode_item.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_filestream.h"
++#include "xfs_fsmap.h"
+ 
+ /*
+  * We include this last to have the helpers above available for the trace
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index dbfc4db..a8eaf34 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -40,6 +40,7 @@ struct xfs_inode_log_format;
+ struct xfs_bmbt_irec;
+ struct xfs_btree_cur;
+ struct xfs_refcount_irec;
++struct xfs_fsmap;
+ 
+ DECLARE_EVENT_CLASS(xfs_attr_list_class,
+ 	TP_PROTO(struct xfs_attr_list_context *ctx),
+@@ -3311,10 +3312,8 @@ DEFINE_FSMAP_EVENT(xfs_fsmap_high_key);
+ DEFINE_FSMAP_EVENT(xfs_fsmap_mapping);
+ 
+ DECLARE_EVENT_CLASS(xfs_getfsmap_class,
+-	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_daddr_t block,
+-		 xfs_daddr_t len, __uint64_t owner, __uint64_t offset,
+-		 __uint64_t flags),
+-	TP_ARGS(mp, keydev, block, len, owner, offset, flags),
++	TP_PROTO(struct xfs_mount *mp, struct xfs_fsmap *fsmap),
++	TP_ARGS(mp, fsmap),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(dev_t, keydev)
+@@ -3326,12 +3325,12 @@ DECLARE_EVENT_CLASS(xfs_getfsmap_class,
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = mp->m_super->s_dev;
+-		__entry->keydev = new_decode_dev(keydev);
+-		__entry->block = block;
+-		__entry->len = len;
+-		__entry->owner = owner;
+-		__entry->offset = offset;
+-		__entry->flags = flags;
++		__entry->keydev = new_decode_dev(fsmap->fmr_device);
++		__entry->block = fsmap->fmr_physical;
++		__entry->len = fsmap->fmr_length;
++		__entry->owner = fsmap->fmr_owner;
++		__entry->offset = fsmap->fmr_offset;
++		__entry->flags = fsmap->fmr_flags;
+ 	),
+ 	TP_printk("dev %d:%d keydev %d:%d block %llu len %llu owner %lld offset %llu flags 0x%llx\n",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -3344,10 +3343,8 @@ DECLARE_EVENT_CLASS(xfs_getfsmap_class,
+ )
+ #define DEFINE_GETFSMAP_EVENT(name) \
+ DEFINE_EVENT(xfs_getfsmap_class, name, \
+-	TP_PROTO(struct xfs_mount *mp, u32 keydev, xfs_daddr_t block, \
+-		 xfs_daddr_t len, __uint64_t owner, __uint64_t offset, \
+-		 __uint64_t flags), \
+-	TP_ARGS(mp, keydev, block, len, owner, offset, flags))
++	TP_PROTO(struct xfs_mount *mp, struct xfs_fsmap *fsmap), \
++	TP_ARGS(mp, fsmap))
+ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_low_key);
+ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_high_key);
+ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
