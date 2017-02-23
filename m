@@ -1,81 +1,70 @@
 Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227145009.5sizvyotpcc7nqqs@eorzea.usersys.redhat.com>
+Resent-Message-ID: <20170227145801.ryupq4xogid66fom@eorzea.usersys.redhat.com>
 Resent-To: sandeen@sandeen.net
-Received: from mga02.intel.com ([134.134.136.20]:56060 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752638AbdBUPt3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Feb 2017 10:49:29 -0500
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 4/7] fs, xfs: convert xfs_efi_log_item.efi_refcount from atomic_t to refcount_t
-Date: Tue, 21 Feb 2017 17:49:04 +0200
-Message-Id: <1487692147-17066-5-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
-References: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:42011 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751053AbdBWItx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Feb 2017 03:49:53 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1N6KAlZ101048
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Feb 2017 01:22:13 -0500
+Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 28sdf5wt85-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Feb 2017 01:22:13 -0500
+Received: from localhost
+        by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Thu, 23 Feb 2017 16:22:10 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+        by d23dlp03.au.ibm.com (Postfix) with ESMTP id A397C3578056
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Feb 2017 17:22:08 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+        by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v1N6M01W17563704
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Feb 2017 17:22:08 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+        by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v1N6LaL3029683
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Feb 2017 17:21:36 +1100
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: Clarification on inode alignment
+Date: Thu, 23 Feb 2017 11:51:12 +0530
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <1735943.rpnT4cuqyx@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: dchinner@redhat.com
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, "sandeen@sandeen.net" <sandeen@sandeen.net>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+Hi Dave,
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- fs/xfs/xfs_extfree_item.c | 4 ++--
- fs/xfs/xfs_extfree_item.h | 4 +++-
- 2 files changed, 5 insertions(+), 3 deletions(-)
+Last week, during a discussion on #xfs you stated that,
 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index d7bc149..4e0acf0 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -220,7 +220,7 @@ xfs_efi_init(
- 	efip->efi_format.efi_nextents = nextents;
- 	efip->efi_format.efi_id = (uintptr_t)(void *)efip;
- 	atomic_set(&efip->efi_next_extent, 0);
--	atomic_set(&efip->efi_refcount, 2);
-+	refcount_set(&efip->efi_refcount, 2);
- 
- 	return efip;
- }
-@@ -290,7 +290,7 @@ void
- xfs_efi_release(
- 	struct xfs_efi_log_item	*efip)
- {
--	if (atomic_dec_and_test(&efip->efi_refcount)) {
-+	if (refcount_dec_and_test(&efip->efi_refcount)) {
- 		xfs_trans_ail_remove(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_efi_item_free(efip);
- 	}
-diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
-index a32c794..e6da63d 100644
---- a/fs/xfs/xfs_extfree_item.h
-+++ b/fs/xfs/xfs_extfree_item.h
-@@ -18,6 +18,8 @@
- #ifndef	__XFS_EXTFREE_ITEM_H__
- #define	__XFS_EXTFREE_ITEM_H__
- 
-+#include <linux/refcount.h>
-+
- /* kernel only EFI/EFD definitions */
- 
- struct xfs_mount;
-@@ -64,7 +66,7 @@ struct kmem_zone;
-  */
- typedef struct xfs_efi_log_item {
- 	xfs_log_item_t		efi_item;
--	atomic_t		efi_refcount;
-+	refcount_t		efi_refcount;
- 	atomic_t		efi_next_extent;
- 	unsigned long		efi_flags;	/* misc flags */
- 	xfs_efi_log_format_t	efi_format;
+"inode alignment is necessary to avoid needing to do an inobt lookup to find
+the location of the inode every time we map an inode to disk".
+
+Also, The following statement appears at
+http://xfs.org/index.php/Improving_inode_Caching,
+
+"The main problem we have is that XFS uses inode chunk size and alignment to
+optimise inode number to disk location conversion. That is, the conversion
+becomes a single set of shifts and masks instead of an AGI btree lookup. This
+optimisation substantially reduces the CPU and I/O overhead of inode lookups,
+but it does limit our flexibility. If we break the alignment restriction,
+every lookup has to go back to a btree search. Hence we really want to avoid
+breaking chunk alignment and size rules."
+
+For the 4k block size scenario, I noticed that we have inode alignment of 4
+blocks. I did go through macros such as XFS_INO_TO_AGNO(),
+XFS_INO_TO_AGBNO() and XFS_INO_TO_OFFSET() which deal with extracting the
+components from an inode number.
+
+However I still don't understand how non-aligned inode clusters (64 inodes in
+a single cluster) would break the inode number to disk location
+arithmetic calculations. Could you please explain it?
+
 -- 
-2.7.4
+chandan
 
