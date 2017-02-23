@@ -1,173 +1,204 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:50692 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751468AbdB1Stq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 13:49:46 -0500
-Subject: [PATCH 4/9] xfs: create a function to query all records in a btree
+Return-Path: <cmaiolino@redhat.com>
+Resent-Message-ID: <20170227150146.23zraoizw22o42tl@eorzea.usersys.redhat.com>
+Resent-To: sandeen@sandeen.net
+Received: from userp1040.oracle.com ([156.151.31.81]:25760 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751053AbdBWHwm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Feb 2017 02:52:42 -0500
+Date: Wed, 22 Feb 2017 23:52:30 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 28 Feb 2017 10:46:15 -0800
-Message-ID: <148830757543.22089.15709147746335212075.stgit@birch.djwong.org>
-In-Reply-To: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
-References: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
+Subject: [PATCH] vfs: hoist {XFS,EXT4}_IOC_{GOING,SHUT}DOWN to the VFS
+Message-ID: <20170223075230.GB5837@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-ext4@vger.kernel.org
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@ZenIV.linux.org.uk>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Create a helper function that will query all records in a btree.
-This will be used by the online repair functions to examine every
-record in a btree to rebuild a second btree.
+ext4 and XFS expose the same shutdown ioctl with the same parameters,
+so let's hoist the whole mess into the vfs headers.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   15 +++++++++++++++
- fs/xfs/libxfs/xfs_alloc.h |    2 ++
- fs/xfs/libxfs/xfs_btree.c |   15 +++++++++++++++
- fs/xfs/libxfs/xfs_btree.h |    2 ++
- fs/xfs/libxfs/xfs_rmap.c  |   28 +++++++++++++++++++++-------
- fs/xfs/libxfs/xfs_rmap.h  |    2 ++
- 6 files changed, 57 insertions(+), 7 deletions(-)
+ fs/ext4/ext4.h          |   10 ----------
+ fs/ext4/ioctl.c         |   12 ++++++------
+ fs/xfs/libxfs/xfs_fs.h  |    9 +--------
+ fs/xfs/xfs_fsops.c      |    6 +++---
+ fs/xfs/xfs_ioctl.c      |    2 +-
+ fs/xfs/xfs_ioctl32.c    |    2 +-
+ include/uapi/linux/fs.h |    8 ++++++++
+ 7 files changed, 20 insertions(+), 29 deletions(-)
 
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 526df17..ba15f30 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2917,3 +2917,18 @@ xfs_alloc_query_range(
- 	return xfs_btree_query_range(cur, &low_brec, &high_brec,
- 			xfs_alloc_query_range_helper, &query);
- }
-+
-+/* Find all free space records. */
-+int
-+xfs_alloc_query_all(
-+	struct xfs_btree_cur			*cur,
-+	xfs_alloc_query_range_fn		fn,
-+	void					*priv)
-+{
-+	struct xfs_alloc_query_range_info	query;
-+
-+	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
-+	query.priv = priv;
-+	query.fn = fn;
-+	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
-+}
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index f534998..a2101de 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -232,5 +232,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
- 		struct xfs_alloc_rec_incore *low_rec,
- 		struct xfs_alloc_rec_incore *high_rec,
- 		xfs_alloc_query_range_fn fn, void *priv);
-+int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
-+		void *priv);
+diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+index cee23b6..b1b4f5b 100644
+--- a/fs/ext4/ext4.h
++++ b/fs/ext4/ext4.h
+@@ -683,16 +683,6 @@ struct fsxattr {
+ #define EXT4_IOC_FSGETXATTR		FS_IOC_FSGETXATTR
+ #define EXT4_IOC_FSSETXATTR		FS_IOC_FSSETXATTR
  
- #endif	/* __XFS_ALLOC_H__ */
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 2849d3f..ca94b87 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4823,6 +4823,21 @@ xfs_btree_query_range(
- 			fn, priv);
- }
- 
-+/* Query a btree for all records. */
-+int
-+xfs_btree_query_all(
-+	struct xfs_btree_cur		*cur,
-+	xfs_btree_query_range_fn	fn,
-+	void				*priv)
-+{
-+	union xfs_btree_irec		low_rec;
-+	union xfs_btree_irec		high_rec;
-+
-+	memset(&low_rec, 0, sizeof(low_rec));
-+	memset(&high_rec, 0xFF, sizeof(high_rec));
-+	return xfs_btree_query_range(cur, &low_rec, &high_rec, fn, priv);
-+}
-+
+-#define EXT4_IOC_SHUTDOWN _IOR ('X', 125, __u32)
+-
+-/*
+- * Flags for going down operation
+- */
+-#define EXT4_GOING_FLAGS_DEFAULT		0x0	/* going down */
+-#define EXT4_GOING_FLAGS_LOGFLUSH		0x1	/* flush log but not data */
+-#define EXT4_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
+-
+-
+ #if defined(__KERNEL__) && defined(CONFIG_COMPAT)
  /*
-  * Calculate the number of blocks needed to store a given number of records
-  * in a short-format (per-AG metadata) btree.
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 33a8f86..5114055 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -494,6 +494,8 @@ typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
- int xfs_btree_query_range(struct xfs_btree_cur *cur,
- 		union xfs_btree_irec *low_rec, union xfs_btree_irec *high_rec,
- 		xfs_btree_query_range_fn fn, void *priv);
-+int xfs_btree_query_all(struct xfs_btree_cur *cur, xfs_btree_query_range_fn fn,
-+		void *priv);
+  * ioctl commands in 32 bit emulation
+diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
+index a4273dd..2a6f8a6 100644
+--- a/fs/ext4/ioctl.c
++++ b/fs/ext4/ioctl.c
+@@ -454,7 +454,7 @@ int ext4_shutdown(struct super_block *sb, unsigned long arg)
+ 	if (get_user(flags, (__u32 __user *)arg))
+ 		return -EFAULT;
  
- typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
- 		void *data);
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 3a8cc71..3840556 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -2001,14 +2001,14 @@ xfs_rmap_query_range_helper(
- /* Find all rmaps between two keys. */
- int
- xfs_rmap_query_range(
--	struct xfs_btree_cur		*cur,
--	struct xfs_rmap_irec		*low_rec,
--	struct xfs_rmap_irec		*high_rec,
--	xfs_rmap_query_range_fn	fn,
--	void				*priv)
-+	struct xfs_btree_cur			*cur,
-+	struct xfs_rmap_irec			*low_rec,
-+	struct xfs_rmap_irec			*high_rec,
-+	xfs_rmap_query_range_fn			fn,
-+	void					*priv)
+-	if (flags > EXT4_GOING_FLAGS_NOLOGFLUSH)
++	if (flags > FS_SHUTDOWN_FLAGS_NOLOGFLUSH)
+ 		return -EINVAL;
+ 
+ 	if (ext4_forced_shutdown(sbi))
+@@ -463,19 +463,19 @@ int ext4_shutdown(struct super_block *sb, unsigned long arg)
+ 	ext4_msg(sb, KERN_ALERT, "shut down requested (%d)", flags);
+ 
+ 	switch (flags) {
+-	case EXT4_GOING_FLAGS_DEFAULT:
++	case FS_SHUTDOWN_FLAGS_DEFAULT:
+ 		freeze_bdev(sb->s_bdev);
+ 		set_bit(EXT4_FLAGS_SHUTDOWN, &sbi->s_ext4_flags);
+ 		thaw_bdev(sb->s_bdev, sb);
+ 		break;
+-	case EXT4_GOING_FLAGS_LOGFLUSH:
++	case FS_SHUTDOWN_FLAGS_LOGFLUSH:
+ 		set_bit(EXT4_FLAGS_SHUTDOWN, &sbi->s_ext4_flags);
+ 		if (sbi->s_journal && !is_journal_aborted(sbi->s_journal)) {
+ 			(void) ext4_force_commit(sb);
+ 			jbd2_journal_abort(sbi->s_journal, 0);
+ 		}
+ 		break;
+-	case EXT4_GOING_FLAGS_NOLOGFLUSH:
++	case FS_SHUTDOWN_FLAGS_NOLOGFLUSH:
+ 		set_bit(EXT4_FLAGS_SHUTDOWN, &sbi->s_ext4_flags);
+ 		if (sbi->s_journal && !is_journal_aborted(sbi->s_journal)) {
+ 			msleep(100);
+@@ -940,7 +940,7 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 
+ 		return 0;
+ 	}
+-	case EXT4_IOC_SHUTDOWN:
++	case FS_IOC_SHUTDOWN:
+ 		return ext4_shutdown(sb, arg);
+ 	default:
+ 		return -ENOTTY;
+@@ -1008,7 +1008,7 @@ long ext4_compat_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 	case EXT4_IOC_SET_ENCRYPTION_POLICY:
+ 	case EXT4_IOC_GET_ENCRYPTION_PWSALT:
+ 	case EXT4_IOC_GET_ENCRYPTION_POLICY:
+-	case EXT4_IOC_SHUTDOWN:
++	case FS_IOC_SHUTDOWN:
+ 		break;
+ 	default:
+ 		return -ENOIOCTLCMD;
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index b72dc82..d7773b3 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -454,13 +454,6 @@ typedef struct xfs_swapext
+ } xfs_swapext_t;
+ 
+ /*
+- * Flags for going down operation
+- */
+-#define XFS_FSOP_GOING_FLAGS_DEFAULT		0x0	/* going down */
+-#define XFS_FSOP_GOING_FLAGS_LOGFLUSH		0x1	/* flush log but not data */
+-#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
+-
+-/*
+  * ioctl limits
+  */
+ #ifdef XATTR_LIST_MAX
+@@ -533,7 +526,7 @@ typedef struct xfs_swapext
+ #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+-#define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
++/*	XFS_IOC_GOINGDOWN ---------- hoisted 125	 */
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ 
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 6ccaae9..3a0507e 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -907,7 +907,7 @@ xfs_fs_goingdown(
+ 	__uint32_t	inflags)
  {
--	union xfs_btree_irec		low_brec;
--	union xfs_btree_irec		high_brec;
-+	union xfs_btree_irec			low_brec;
-+	union xfs_btree_irec			high_brec;
- 	struct xfs_rmap_query_range_info	query;
+ 	switch (inflags) {
+-	case XFS_FSOP_GOING_FLAGS_DEFAULT: {
++	case FS_SHUTDOWN_FLAGS_DEFAULT: {
+ 		struct super_block *sb = freeze_bdev(mp->m_super->s_bdev);
  
- 	low_brec.r = *low_rec;
-@@ -2019,6 +2019,20 @@ xfs_rmap_query_range(
- 			xfs_rmap_query_range_helper, &query);
- }
+ 		if (sb && !IS_ERR(sb)) {
+@@ -917,10 +917,10 @@ xfs_fs_goingdown(
  
-+/* Find all rmaps. */
-+int
-+xfs_rmap_query_all(
-+	struct xfs_btree_cur			*cur,
-+	xfs_rmap_query_range_fn			fn,
-+	void					*priv)
-+{
-+	struct xfs_rmap_query_range_info	query;
+ 		break;
+ 	}
+-	case XFS_FSOP_GOING_FLAGS_LOGFLUSH:
++	case FS_SHUTDOWN_FLAGS_LOGFLUSH:
+ 		xfs_force_shutdown(mp, SHUTDOWN_FORCE_UMOUNT);
+ 		break;
+-	case XFS_FSOP_GOING_FLAGS_NOLOGFLUSH:
++	case FS_SHUTDOWN_FLAGS_NOLOGFLUSH:
+ 		xfs_force_shutdown(mp,
+ 				SHUTDOWN_FORCE_UMOUNT | SHUTDOWN_LOG_IO_ERROR);
+ 		break;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index cf1363db..859bdfe 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1931,7 +1931,7 @@ xfs_file_ioctl(
+ 		return error;
+ 	}
+ 
+-	case XFS_IOC_GOINGDOWN: {
++	case FS_IOC_SHUTDOWN: {
+ 		__uint32_t in;
+ 
+ 		if (!capable(CAP_SYS_ADMIN))
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 7c49938..f2c1af6 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -551,7 +551,7 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_SET_RESBLKS:
+ 	case XFS_IOC_GET_RESBLKS:
+ 	case XFS_IOC_FSGROWFSLOG:
+-	case XFS_IOC_GOINGDOWN:
++	case FS_IOC_SHUTDOWN:
+ 	case XFS_IOC_ERROR_INJECTION:
+ 	case XFS_IOC_ERROR_CLEARALL:
+ 		return xfs_file_ioctl(filp, cmd, p);
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 36da93f..1925c21 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -347,4 +347,12 @@ struct fscrypt_policy {
+ #define RWF_DSYNC			0x00000002 /* per-IO O_DSYNC */
+ #define RWF_SYNC			0x00000004 /* per-IO O_SYNC */
+ 
++/*
++ * Flags for fs shutdown operation
++ */
++#define FS_SHUTDOWN_FLAGS_DEFAULT	0x0	/* going down */
++#define FS_SHUTDOWN_FLAGS_LOGFLUSH	0x1	/* flush log but not data */
++#define FS_SHUTDOWN_FLAGS_NOLOGFLUSH	0x2	/* don't flush log or data */
++#define FS_IOC_SHUTDOWN			_IOR ('X', 125, __u32)
 +
-+	query.priv = priv;
-+	query.fn = fn;
-+	return xfs_btree_query_all(cur, xfs_rmap_query_range_helper, &query);
-+}
-+
- /* Clean up after calling xfs_rmap_finish_one. */
- void
- xfs_rmap_finish_one_cleanup(
-diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-index 7899305..faf2c1a 100644
---- a/fs/xfs/libxfs/xfs_rmap.h
-+++ b/fs/xfs/libxfs/xfs_rmap.h
-@@ -162,6 +162,8 @@ typedef int (*xfs_rmap_query_range_fn)(
- int xfs_rmap_query_range(struct xfs_btree_cur *cur,
- 		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
- 		xfs_rmap_query_range_fn fn, void *priv);
-+int xfs_rmap_query_all(struct xfs_btree_cur *cur, xfs_rmap_query_range_fn fn,
-+		void *priv);
- 
- enum xfs_rmap_intent_type {
- 	XFS_RMAP_MAP,
-
+ #endif /* _UAPI_LINUX_FS_H */
