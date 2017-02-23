@@ -1,67 +1,57 @@
 Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227150242.b2b57rjcmbjckjnf@eorzea.usersys.redhat.com>
+Resent-Message-ID: <20170227150216.yqkeh6a5fgvw573h@eorzea.usersys.redhat.com>
 Resent-To: sandeen@sandeen.net
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:33949 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752031AbdBZLPs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Feb 2017 06:15:48 -0500
-Received: by mail-wr0-f193.google.com with SMTP id m5so1200701wrm.1
-        for <linux-xfs@vger.kernel.org>; Sun, 26 Feb 2017 03:15:29 -0800 (PST)
-From: "Yann E. MORIN" <yann.morin.1998@free.fr>
-Subject: [PATCH] build: add EXTRALIBS to link with
-Date: Sun, 26 Feb 2017 12:15:22 +0100
-Message-Id: <1488107722-15022-1-git-send-email-yann.morin.1998@free.fr>
+Received: from mail-ot0-f177.google.com ([74.125.82.177]:34212 "EHLO
+        mail-ot0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751265AbdBWUOs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Feb 2017 15:14:48 -0500
+Received: by mail-ot0-f177.google.com with SMTP id x10so1474887otb.1
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Feb 2017 12:14:48 -0800 (PST)
+MIME-Version: 1.0
+From: Mathias Troiden <mathias.troiden@gmail.com>
+Date: Thu, 23 Feb 2017 23:14:47 +0300
+Message-ID: <CADcJnz_TWkhhPVr7fmVHoZtjOkGDJxTqtcuz_Ef15rguUW3bdA@mail.gmail.com>
+Subject: xfs_repair fails to recognize corruption reported by kernel -
+ possible bug?
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: "Yann E. MORIN" <yann.morin.1998@free.fr>, Waldemar Brodkorb <wbx@openadk.org>
 
-When doing a uClibc static build, the build fails to link:
-    http://autobuild.buildroot.org/results/503/50314716a9f72e8bb238e52e9dc342c68f7e0b8b/build-end.log
+Original topic: https://bbs.archlinux.org/viewtopic.php?pid=1692896
 
-The cause is due to:
-  - xfsprogs links dome programs with util-linux' libblkid
-  - util-linux' libblkid is linked to util-linux' libuuid
-  - util-linux' libuuid uses i18n functions when locales are enabled
-  - uClibc does not provide i18n functions
-  - i18n functions are provided by libintl from libintl from gettext
+Hi list,
 
-util-linux installs pkg-config files for thos two libs. However,
-xfsprogs does not use pkg-config to find libblkid or libuuid, thus it
-misses the Libs.private field from libuid.
+My system fails to start login manager with following messages in journal:
 
-In this case, it is necessary to pass LIBS=-lintl at configure time, so
-that configure correctly finds libblkid.
+>kernel: ffff88040e8bc030: 58 67 db ca 2a 3a dd b8 00 00 00 00 00 00 00 00  Xg..*:..........
+>kernel: XFS (sda1): Internal error xfs_iread at line 514 of file fs/xfs/libxfs/xfs_inode_buf.c.  Caller xfs_iget+0x2b1/0x940 [xfs]
+>kernel: XFS (sda1): Corruption detected. Unmount and run xfs_repair
+>kernel: XFS (sda1): xfs_iread: validation failed for inode 34110192 failed
+>kernel: ffff88040e8bc000: 49 4e a1 ff 03 01 00 00 00 00 00 00 00 00 00 00  IN..............
+>kernel: ffff88040e8bc010: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>kernel: ffff88040e8bc020: 58 aa 04 b8 2e e3 65 3a 57 41 fe 12 00 00 00 00  X.....e:WA......
+>kernel: ffff88040e8bc030: 58 67 db ca 2a 3a dd b8 00 00 00 00 00 00 00 00  Xg..*:..........
+>kernel: XFS (sda1): Internal error xfs_iread at line 514 of file fs/xfs/libxfs/xfs_inode_buf.c.  Caller xfs_iget+0x2b1/0x940 [xfs]
+>kernel: XFS (sda1): Corruption detected. Unmount and run xfs_repair
 
-Still, this is not enough, because the build will not use LIBS during
-the link phase.
 
-We fix that last bit by adding EXTRALIBS to the libraries to link with,
-so that it is possible to pass EXTRALIBS=-lintl at build time:
+and subsequent core dump of the login manager.
 
-    $ ./configure [...] LIBS=-lintl
-    $ make EXTRALIBS=-lintl
 
-Signed-off-by: "Yann E. MORIN" <yann.morin.1998@free.fr>
-Cc: Waldemar Brodkorb <wbx@openadk.org>
----
- include/buildmacros | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+However, neither 'xfs_repair -d' run from running system nor
+'xfs_repair -n' run from liveUSB recognized a problem i.e. returned
+output expected of clean FS.
 
-diff --git a/include/buildmacros b/include/buildmacros
-index a7c5d8a..dd62d80 100644
---- a/include/buildmacros
-+++ b/include/buildmacros
-@@ -11,7 +11,7 @@ BUILDRULES = $(TOPDIR)/include/buildrules
- 
- LDFLAGS += $(LOADERFLAGS) $(LLDFLAGS)
- LTLDFLAGS += $(LOADERFLAGS)
--LDLIBS = $(LLDLIBS) $(PLDLIBS) $(MALLOCLIB)
-+LDLIBS = $(LLDLIBS) $(PLDLIBS) $(MALLOCLIB) $(EXTRALIBS)
- 
- MAKEOPTS = --no-print-directory Q=$(Q)
- SRCFILES = Makefile $(HFILES) $(CFILES) $(LSRCFILES) $(LFILES) $(YFILES)
--- 
-2.7.4
+Memtester, 'find /mnt/ -type f -exec dd if={} of=/dev/null status=none
+\;', SMART test outputs are also clean.
 
+The issue I've encountered after logging into tty2 was that I couldn't
+start X - perhaps that's where the corruption occured:
+>sudo startx
+>zsh: command startx not found
+
+sda1 is my root partition.
+
+Mathias
