@@ -1,108 +1,309 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21850 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932133AbdBVLRY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Feb 2017 06:17:24 -0500
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-Subject: RE: [PATCH 1/7] fs, xfs: convert xfs_bui_log_item.bui_refcount from
- atomic_t to refcount_t
-Date: Wed, 22 Feb 2017 11:17:20 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C4EB27@IRSMSX102.ger.corp.intel.com>
-References: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
- <1487692147-17066-2-git-send-email-elena.reshetova@intel.com>
- <20170221163625.GB5846@birch.djwong.org>
-In-Reply-To: <20170221163625.GB5846@birch.djwong.org>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Return-Path: <cmaiolino@redhat.com>
+Resent-Message-ID: <20170227145916.pavz24veuedzagl5@eorzea.usersys.redhat.com>
+Resent-To: sandeen@sandeen.net
+Received: from userp1050.oracle.com ([156.151.31.82]:33026 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751372AbdBXXZ1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Feb 2017 18:25:27 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v1OMYxi2028198
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Feb 2017 22:34:59 GMT
+Date: Fri, 24 Feb 2017 14:33:52 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/8] xfs: have getfsmap fall back to the freesp btrees
+ when rmap is not present
+Message-ID: <20170224223352.GM5846@birch.djwong.org>
+References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
+ <148738067544.29384.3138548741798927323.stgit@birch.djwong.org>
+ <20170224130449.GB59560@bfoster.bfoster>
+ <20170224174852.GK5846@birch.djwong.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170224174852.GK5846@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-> On Tue, Feb 21, 2017 at 05:49:01PM +0200, Elena Reshetova wrote:
-> > refcount_t type and corresponding API should be
-> > used instead of atomic_t when the variable is used as
-> > a reference counter. This allows to avoid accidental
-> > refcounter overflows that might lead to use-after-free
-> > situations.
-> >
-> > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > Signed-off-by: David Windsor <dwindsor@gmail.com>
-> > ---
-> >  fs/xfs/xfs_bmap_item.c | 4 ++--
-> >  fs/xfs/xfs_bmap_item.h | 4 +++-
-> >  2 files changed, 5 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> > index 9bf57c7..33104ad 100644
-> > --- a/fs/xfs/xfs_bmap_item.c
-> > +++ b/fs/xfs/xfs_bmap_item.c
-> > @@ -199,7 +199,7 @@ xfs_bui_init(
-> >  	buip->bui_format.bui_nextents =
-> XFS_BUI_MAX_FAST_EXTENTS;
-> >  	buip->bui_format.bui_id = (uintptr_t)(void *)buip;
-> >  	atomic_set(&buip->bui_next_extent, 0);
-> > -	atomic_set(&buip->bui_refcount, 2);
-> > +	refcount_set(&buip->bui_refcount, 2);
-> >
-> >  	return buip;
-> >  }
-> > @@ -215,7 +215,7 @@ void
-> >  xfs_bui_release(
-> >  	struct xfs_bui_log_item	*buip)
-> >  {
-> > -	if (atomic_dec_and_test(&buip->bui_refcount)) {
-> > +	if (refcount_dec_and_test(&buip->bui_refcount)) {
-> >  		xfs_trans_ail_remove(&buip->bui_item,
-> SHUTDOWN_LOG_IO_ERROR);
-> >  		xfs_bui_item_free(buip);
-> >  	}
-> > diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
-> > index c867daa..988a6ae 100644
-> > --- a/fs/xfs/xfs_bmap_item.h
-> > +++ b/fs/xfs/xfs_bmap_item.h
-> > @@ -20,6 +20,8 @@
-> >  #ifndef	__XFS_BMAP_ITEM_H__
-> >  #define	__XFS_BMAP_ITEM_H__
-> >
-> > +#include <linux/refcount.h>
+On Fri, Feb 24, 2017 at 09:48:52AM -0800, Darrick J. Wong wrote:
+> On Fri, Feb 24, 2017 at 08:04:49AM -0500, Brian Foster wrote:
+> > On Fri, Feb 17, 2017 at 05:17:55PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > If the reverse-mapping btree isn't available, fall back to the
+> > > free space btrees to provide partial reverse mapping information.
+> > > The online scrub tool can make use of even partial information to
+> > > speed up the data block scan.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/xfs_fsmap.c |  155 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+> > >  1 file changed, 152 insertions(+), 3 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> > > index 09d6b92..82e44a9 100644
+> > > --- a/fs/xfs/xfs_fsmap.c
+> > > +++ b/fs/xfs/xfs_fsmap.c
+> > > @@ -40,6 +40,7 @@
+> > >  #include "xfs_fsmap.h"
+> > >  #include "xfs_refcount.h"
+> > >  #include "xfs_refcount_btree.h"
+> > > +#include "xfs_alloc_btree.h"
+> > >  
+> > >  /* Convert an xfs_fsmap to an fsmap. */
+> > >  void
+> > > @@ -158,6 +159,9 @@ xfs_fsmap_owner_from_rmap(
+> > >  	case XFS_RMAP_OWN_COW:
+> > >  		fmr->fmr_owner = XFS_FMR_OWN_COW;
+> > >  		break;
+> > > +	case XFS_RMAP_OWN_NULL:	/* "free" */
+> > > +		fmr->fmr_owner = XFS_FMR_OWN_FREE;
+> > > +		break;
+> > >  	default:
+> > >  		return -EFSCORRUPTED;
+> > >  	}
+> > > @@ -433,6 +437,31 @@ xfs_getfsmap_rtdev_helper(
+> > >  	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
+> > >  }
+> > >  
+> > > +/* Transform a bnobt irec into a fsmap */
+> > > +STATIC int
+> > > +xfs_getfsmap_datadev_bnobt_helper(
+> > > +	struct xfs_btree_cur		*cur,
+> > > +	struct xfs_alloc_rec_incore	*rec,
+> > > +	void				*priv)
+> > > +{
+> > > +	struct xfs_mount		*mp = cur->bc_mp;
+> > > +	struct xfs_getfsmap_info	*info = priv;
+> > > +	struct xfs_rmap_irec		irec;
+> > > +	xfs_fsblock_t			fsb;
+> > > +	xfs_daddr_t			rec_daddr;
+> > > +
+> > > +	fsb = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno, rec->ar_startblock);
+> > > +	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb);
+> > > +
+> > > +	irec.rm_startblock = rec->ar_startblock;
+> > > +	irec.rm_blockcount = rec->ar_blockcount;
+> > > +	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
+> > > +	irec.rm_offset = 0;
+> > > +	irec.rm_flags = 0;
+> > > +
+> > 
+> > Slightly confused... if we directly pass free space records to
+> > xfs_getfsmap_helper(), won't it also assume the gaps between the records
+> > are free space?
+> > 
+> > > +	return xfs_getfsmap_helper(cur->bc_tp, info, &irec, rec_daddr);
+> > > +}
+> > > +
+> > >  /* Set rmap flags based on the getfsmap flags */
+> > >  static void
+> > >  xfs_getfsmap_set_irec_flags(
+> > > @@ -621,6 +650,125 @@ xfs_getfsmap_datadev(
+> > >  	return error;
+> > >  }
+> > >  
+> > > +/* Execute a getfsmap query against the regular data device's bnobt. */
+> > > +STATIC int
+> > > +xfs_getfsmap_datadev_bnobt(
+> > > +	struct xfs_trans		*tp,
+> > > +	struct xfs_fsmap		*keys,
+> > > +	struct xfs_getfsmap_info	*info)
+> > > +{
+> > > +	struct xfs_mount		*mp = tp->t_mountp;
+> > > +	struct xfs_btree_cur		*bt_cur = NULL;
+> > > +	struct xfs_fsmap		*dkey_low;
+> > > +	struct xfs_fsmap		*dkey_high;
+> > > +	struct xfs_alloc_rec_incore	alow;
+> > > +	struct xfs_alloc_rec_incore	ahigh;
+> > > +	xfs_fsblock_t			start_fsb;
+> > > +	xfs_fsblock_t			end_fsb;
+> > > +	xfs_agnumber_t			start_ag;
+> > > +	xfs_agnumber_t			end_ag;
+> > > +	xfs_daddr_t			eofs;
+> > > +	int				error = 0;
+> > > +
+> > > +	dkey_low = keys;
+> > > +	dkey_high = keys + 1;
+> > > +	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+> > > +	if (dkey_low->fmr_physical >= eofs)
+> > > +		return 0;
+> > > +	if (dkey_high->fmr_physical >= eofs)
+> > > +		dkey_high->fmr_physical = eofs - 1;
+> > > +	start_fsb = XFS_DADDR_TO_FSB(mp, dkey_low->fmr_physical);
+> > > +	end_fsb = XFS_DADDR_TO_FSB(mp, dkey_high->fmr_physical);
+> > > +
+> > > +	/* Set up search keys */
+> > > +	info->low.rm_startblock = XFS_FSB_TO_AGBNO(mp, start_fsb);
+> > > +	info->low.rm_offset = XFS_BB_TO_FSBT(mp, dkey_low->fmr_offset);
+> > > +	error = xfs_fsmap_owner_to_rmap(dkey_low, &info->low);
+> > > +	if (error)
+> > > +		return error;
+> > > +	info->low.rm_blockcount = 0;
+> > > +	xfs_getfsmap_set_irec_flags(&info->low, dkey_low);
+> > > +
+> > > +	info->high.rm_startblock = -1U;
+> > > +	info->high.rm_owner = ULLONG_MAX;
+> > > +	info->high.rm_offset = ULLONG_MAX;
+> > > +	info->high.rm_blockcount = 0;
+> > > +	info->high.rm_flags = XFS_RMAP_KEY_FLAGS | XFS_RMAP_REC_FLAGS;
+> > > +
+> > > +	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
+> > > +
+> > 
+> > Ok, I see. We've swapped the meaning of the gaps in the record space to
+> > allocated blocks with an unknown owner. Comment please :). Also, I
+> > suppose the comments in xfs_getfsmap_helper() could be more discrete
+> > about this as they currently explicitly say that gaps refer to free
+> > space in one or two places.
 > 
-> Seeing as you're sprinkling refcount_t all over XFS, this ought to go in
-> xfs_linux.h with all the other Linux-specific #includes.
+> Er... yeah.  My first reaction to this was "Oh, I should introduce
+> info.missing_owner in the first patch" but apparently I already did but
+> evidently forgot to update the comments. :(
+> 
+> So, just to be clear, xfs_getfsmap_helper notices gaps between the rmaps
+> it's being fed, and emits synthesized fsmaps for the gaps that are owned
+> by info.missing_owner.
+> 
+> > > +	start_ag = XFS_FSB_TO_AGNO(mp, start_fsb);
+> > > +	end_ag = XFS_FSB_TO_AGNO(mp, end_fsb);
+> > > +
+> > > +	/* Query each AG */
+> > > +	for (info->agno = start_ag; info->agno <= end_ag; info->agno++) {
+> > > +		if (info->agno == end_ag) {
+> > > +			info->high.rm_startblock = XFS_FSB_TO_AGBNO(mp,
+> > > +					end_fsb);
+> > > +			info->high.rm_offset = XFS_BB_TO_FSBT(mp,
+> > > +					dkey_high->fmr_offset);
+> > > +			error = xfs_fsmap_owner_to_rmap(dkey_high, &info->high);
+> > > +			if (error)
+> > > +				goto err;
+> > > +			xfs_getfsmap_set_irec_flags(&info->high, dkey_high);
+> > > +		}
+> > > +
+> > > +		if (bt_cur) {
+> > > +			xfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
+> > > +			bt_cur = NULL;
+> > > +			info->agf_bp = NULL;
+> > > +		}
+> > > +
+> > > +		error = xfs_alloc_read_agf(mp, tp, info->agno, 0,
+> > > +				&info->agf_bp);
+> > > +		if (error)
+> > > +			goto err;
+> > > +
+> > > +		trace_xfs_fsmap_low_key(mp, info->dev, info->agno,
+> > > +				info->low.rm_startblock,
+> > > +				info->low.rm_blockcount,
+> > > +				info->low.rm_owner,
+> > > +				info->low.rm_offset);
+> > > +
+> > > +		trace_xfs_fsmap_high_key(mp, info->dev, info->agno,
+> > > +				info->high.rm_startblock,
+> > > +				info->high.rm_blockcount,
+> > > +				info->high.rm_owner,
+> > > +				info->high.rm_offset);
+> > > +
+> > > +		bt_cur = xfs_allocbt_init_cursor(mp, tp, info->agf_bp,
+> > > +				info->agno, XFS_BTNUM_BNO);
+> > > +		alow.ar_startblock = info->low.rm_startblock;
+> > > +		ahigh.ar_startblock = info->high.rm_startblock;
+> > > +		error = xfs_alloc_query_range(bt_cur, &alow, &ahigh,
+> > > +				xfs_getfsmap_datadev_bnobt_helper, info);
+> > > +		if (error)
+> > > +			goto err;
+> > > +
+> > > +		if (info->agno == start_ag) {
+> > > +			info->low.rm_startblock = 0;
+> > > +			info->low.rm_owner = 0;
+> > > +			info->low.rm_offset = 0;
+> > > +			info->low.rm_flags = 0;
+> > > +		}
+> > > +	}
+> > > +
+> > > +	/* Report any free space at the end of the AG */
+> > > +	info->last = true;
+> > > +	error = xfs_getfsmap_datadev_bnobt_helper(bt_cur, &ahigh, info);
+> > > +	if (error)
+> > > +		goto err;
+> > > +
+> > 
+> > I guess the comment here is a little misleading too because we aren't
+> > looking for more free space. Rather, any more allocated ranges beyond
+> > the last free space record, right?
+> 
+> Yes.  "Report any used space at the end of the AG"
+> 
+> > FWIW, this handler overall looks quite similar to xfs_datadev_helper().
+> > It might be interesting to see if the guts of the two could be combined
+> > into an internal function (called by both _datadev() and
+> > _datadev_bnobt() as wrappers) that has the unique bits passed to it
+> > (i.e., cursor, missing owner).
+> 
+> Hmm.  You're right, I bet they could be parameterized fairly easily.
+
+Yes, they can be parameterized pretty easily.  The two rtdev getfsmap
+implementations can also be collapsed into a single driver function,
+which is particularly slick if I introduce the rtalloc query_range
+functions as part of the getfsmap patchset, because then I no longer
+have to open-code iteration of the rtbitmap free extents.
+
+--D
+
 > 
 > --D
-
-Sure, I will move the include there and leave only one. 
-Will send a next version also after fixing the other non-reference counters case we discussed. 
-
-Best Regards,
-Elena.
 > 
-> > +
-> >  /*
-> >   * There are (currently) two pairs of bmap btree redo item types: map &
-> unmap.
-> >   * The common abbreviations for these are BUI (bmap update intent) and
-> BUD
-> > @@ -61,7 +63,7 @@ struct kmem_zone;
-> >   */
-> >  struct xfs_bui_log_item {
-> >  	struct xfs_log_item		bui_item;
-> > -	atomic_t			bui_refcount;
-> > +	refcount_t			bui_refcount;
-> >  	atomic_t			bui_next_extent;
-> >  	unsigned long			bui_flags;	/* misc
-> flags */
-> >  	struct xfs_bui_log_format	bui_format;
-> > --
-> > 2.7.4
-> >
+> > 
+> > Brian
+> > 
+> > > +err:
+> > > +	if (bt_cur)
+> > > +		xfs_btree_del_cursor(bt_cur, error < 0 ? XFS_BTREE_ERROR :
+> > > +							 XFS_BTREE_NOERROR);
+> > > +	if (info->agf_bp)
+> > > +		info->agf_bp = NULL;
+> > > +
+> > > +	return error;
+> > > +}
+> > > +
+> > >  /* Do we recognize the device? */
+> > >  STATIC bool
+> > >  xfs_getfsmap_is_valid_device(
+> > > @@ -689,8 +837,6 @@ xfs_getfsmap(
+> > >  	int				i;
+> > >  	int				error = 0;
+> > >  
+> > > -	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> > > -		return -EOPNOTSUPP;
+> > >  	if (head->fmh_iflags & ~FMH_IF_VALID)
+> > >  		return -EINVAL;
+> > >  	rkey_low = head->fmh_keys;
+> > > @@ -704,7 +850,10 @@ xfs_getfsmap(
+> > >  	/* Set up our device handlers. */
+> > >  	memset(handlers, 0, sizeof(handlers));
+> > >  	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
+> > > -	handlers[0].fn = xfs_getfsmap_datadev;
+> > > +	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+> > > +		handlers[0].fn = xfs_getfsmap_datadev;
+> > > +	else
+> > > +		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
+> > >  	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+> > >  		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
+> > >  		handlers[1].fn = xfs_getfsmap_logdev;
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > the body of a message to majordomo@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
