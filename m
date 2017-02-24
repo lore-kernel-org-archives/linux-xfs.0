@@ -1,396 +1,180 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31415 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751334AbdBUWPE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Feb 2017 17:15:04 -0500
-Date: Tue, 21 Feb 2017 14:14:55 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] ioctl_getfsmap.2: document the GETFSMAP ioctl
-Message-ID: <20170221221455.GA5837@birch.djwong.org>
-References: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
+Return-Path: <cmaiolino@redhat.com>
+Resent-Message-ID: <20170227145847.2ftctqqh3s2q7y7f@eorzea.usersys.redhat.com>
+Resent-To: sandeen@sandeen.net
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:18707 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751585AbdBXAJr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Feb 2017 19:09:47 -0500
+Date: Fri, 24 Feb 2017 11:08:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Clarification on inode alignment
+Message-ID: <20170224000852.GF17542@dastard>
+References: <1735943.rpnT4cuqyx@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <148738063792.29384.10681837280402457846.stgit@birch.djwong.org>
+In-Reply-To: <1735943.rpnT4cuqyx@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
-Cc: linux-api@vger.kernel.org, linux-man@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Cc: dchinner@redhat.com, linux-xfs <linux-xfs@vger.kernel.org>, "sandeen@sandeen.net" <sandeen@sandeen.net>, "Darrick J . Wong" <darrick.wong@oracle.com>, david@fromorbit.com
 
-Document the new GETFSMAP ioctl that returns the physical layout of a
-(disk-based) filesystem.  This time around the fs-specific parts have
-been moved to a separate section; I'll move move them into separate
-xfsprogs/e2fsprogs manpages when we get closer to landing the ioctl.
+[Please use david@fromorbit.com if you want my attention for
+upstream stuff]
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- man2/ioctl_getfsmap.2 |  359 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 359 insertions(+)
- create mode 100644 man2/ioctl_getfsmap.2
+On Thu, Feb 23, 2017 at 11:51:12AM +0530, Chandan Rajendra wrote:
+> Hi Dave,
+> 
+> Last week, during a discussion on #xfs you stated that,
+> 
+> "inode alignment is necessary to avoid needing to do an inobt lookup to find
+> the location of the inode every time we map an inode to disk".
+> 
+> Also, The following statement appears at
+> http://xfs.org/index.php/Improving_inode_Caching,
+> 
+> "The main problem we have is that XFS uses inode chunk size and alignment to
+> optimise inode number to disk location conversion. That is, the conversion
+> becomes a single set of shifts and masks instead of an AGI btree lookup. This
+> optimisation substantially reduces the CPU and I/O overhead of inode lookups,
+> but it does limit our flexibility. If we break the alignment restriction,
+> every lookup has to go back to a btree search. Hence we really want to avoid
+> breaking chunk alignment and size rules."
+> 
+> For the 4k block size scenario, I noticed that we have inode alignment of 4
+> blocks.
 
-diff --git a/man2/ioctl_getfsmap.2 b/man2/ioctl_getfsmap.2
-new file mode 100644
-index 0000000..7121d61
---- /dev/null
-+++ b/man2/ioctl_getfsmap.2
-@@ -0,0 +1,359 @@
-+.\" Copyright (c) 2017, Oracle.  All rights reserved.
-+.\"
-+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-+.\" This is free documentation; you can redistribute it and/or
-+.\" modify it under the terms of the GNU General Public License as
-+.\" published by the Free Software Foundation; either version 2 of
-+.\" the License, or (at your option) any later version.
-+.\"
-+.\" The GNU General Public License's references to "object code"
-+.\" and "executables" are to be interpreted as the output of any
-+.\" document formatting or typesetting system, including
-+.\" intermediate and printed output.
-+.\"
-+.\" This manual is distributed in the hope that it will be useful,
-+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
-+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+.\" GNU General Public License for more details.
-+.\"
-+.\" You should have received a copy of the GNU General Public
-+.\" License along with this manual; if not, see
-+.\" <http://www.gnu.org/licenses/>.
-+.\" %%%LICENSE_END
-+.TH IOCTL-GETFSMAP 2 2017-02-10 "Linux" "Linux Programmer's Manual"
-+.SH NAME
-+ioctl_getfsmap \- retrieve the physical layout of the filesystem
-+.SH SYNOPSIS
-+.br
-+.B #include <sys/ioctl.h>
-+.br
-+.B #include <linux/fs.h>
-+.br
-+.B #include <linux/fsmap.h>
-+.sp
-+.BI "int ioctl(int " fd ", GETFSMAP, struct fsmap_head * " arg );
-+.SH DESCRIPTION
-+This
-+.BR ioctl (2)
-+retrieves physical extent mappings for a filesystem.
-+This information can be used to discover which files are mapped to a physical
-+block, examine free space, or find known bad blocks, among other things.
-+
-+The sole argument to this ioctl should be a pointer to a single
-+.BR "struct fsmap_head" ":"
-+.in +4n
-+.nf
-+
-+struct fsmap {
-+	__u32		fmr_device;	/* device id */
-+	__u32		fmr_flags;	/* mapping flags */
-+	__u64		fmr_physical;	/* device offset of segment */
-+	__u64		fmr_owner;	/* owner id */
-+	__u64		fmr_offset;	/* file offset of segment */
-+	__u64		fmr_length;	/* length of segment */
-+	__u64		fmr_reserved[3];	/* must be zero */
-+};
-+
-+struct fsmap_head {
-+	__u32		fmh_iflags;	/* control flags */
-+	__u32		fmh_oflags;	/* output flags */
-+	__u32		fmh_count;	/* # of entries in array incl. input */
-+	__u32		fmh_entries;	/* # of entries filled in (output). */
-+	__u64		fmh_reserved[6];	/* must be zero */
-+
-+	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
-+	struct fsmap	fmh_recs[];	/* returned records */
-+};
-+
-+.fi
-+.in
-+The two
-+.I fmh_keys
-+array elements specify the lowest and highest reverse-mapping
-+keys, respectively, for which userspace would like physical mapping
-+information.
-+A reverse mapping key consists of the tuple (device, block, owner, offset).
-+The owner and offset fields are part of the key because some filesystems
-+support sharing physical blocks between multiple files and
-+therefore may return multiple mappings for a given physical block.
-+.PP
-+Filesystem mappings are copied into the
-+.I fmh_recs
-+array, which immediately follows the header data.
-+.SS Fields of struct fsmap_head
-+.PP
-+The
-+.I fmh_iflags
-+field is a bitmask passed to the kernel to alter the output.
-+There are no flags defined, so this value must be zero.
-+
-+.PP
-+The
-+.I fmh_oflags
-+field is a bitmask of flags that concern all output mappings.
-+If
-+.B FMH_OF_DEV_T
-+is set, then the
-+.I fmr_device
-+field represents a
-+.B dev_t
-+structure containing the major and minor numbers of the block device.
-+
-+.PP
-+The
-+.I fmh_count
-+field contains the number of elements in the array being passed to the
-+kernel.
-+If this value is 0,
-+.I fmh_entries
-+will be set to the number of records that would have been returned had
-+the array been large enough;
-+no mapping information will be returned.
-+
-+.PP
-+The
-+.I fmh_entries
-+field contains the number of elements in the
-+.I fmh_recs
-+array that contain useful information.
-+
-+.PP
-+The
-+.I fmh_reserved
-+fields must be set to zero.
-+
-+.SS Keys
-+.PP
-+The two key records in
-+.B fsmap_head.fmh_keys
-+specify the lowest and highest extent records in the keyspace that the caller
-+wants returned.
-+A filesystem that can share blocks between files likely requires the tuple
-+.RI "(" "device" ", " "physical" ", " "owner" ", " "offset" ", " "flags" ")"
-+to uniquely index any filesystem mapping record.
-+Classic non-sharing filesystems might be able to identify any record with only
-+.RI "(" "device" ", " "physical" ", " "flags" ")."
-+For example, if the low key is set to (0, 36864, 0, 0, 0), the filesystem will
-+only return records for extents starting at or above 36KiB on disk.
-+If the high key is set to (0, 1048576, 0, 0, 0), only records below 1MiB will
-+be returned.
-+By convention, the field
-+.B fsmap_head.fmh_keys[0]
-+must contain the low key and
-+.B fsmap_head.fmh_keys[1]
-+must contain the high key for the request.
-+.PP
-+For convenience, if
-+.B fmr_length
-+is set in the low key, it will be added to
-+.IR fmr_block " or " fmr_offset
-+as appropriate.
-+The caller can take advantage of this subtlety to set up subsequent calls
-+by copying
-+.B fsmap_head.fmh_recs[fsmap_head.fmh_entries - 1]
-+into the low key.
-+The function
-+.B fsmap_advance
-+provides this functionality.
-+
-+.SS Fields of struct fsmap
-+.PP
-+The
-+.I fmr_device
-+field contains a 32-bit cookie to uniquely identify the underlying storage
-+device.
-+If the
-+.B FMH_OF_DEV_T
-+flag is set in the header's
-+.I fmh_oflags
-+field, this field contains a
-+.B dev_t
-+from which major and minor numbers can be extracted.
-+If the flag is not set, this field contains a value that must be unique
-+for each unique storage device.
-+
-+.PP
-+The
-+.I fmr_physical
-+field contains the disk address of the extent in bytes.
-+
-+.PP
-+The
-+.I fmr_owner
-+field contains the owner of the extent.
-+This is an inode number unless
-+.B FMR_OF_SPECIAL_OWNER
-+is set in the
-+.I fmr_flags
-+field, in which case the value is determined by the filesystem.
-+See the section below about special owner values for more details.
-+
-+.PP
-+The
-+.I fmr_offset
-+field contains the logical address in the mapping record in bytes.
-+This field has no meaning if the
-+.BR FMR_OF_SPECIAL_OWNER " or " FMR_OF_EXTENT_MAP
-+flags are set in
-+.IR fmr_flags "."
-+
-+.PP
-+The
-+.I fmr_length
-+field contains the length of the extent in bytes.
-+
-+.PP
-+The
-+.I fmr_flags
-+field is a bitmask of extent state flags.
-+The bits are:
-+.RS 0.4i
-+.TP
-+.B FMR_OF_PREALLOC
-+The extent is allocated but not yet written.
-+.TP
-+.B FMR_OF_ATTR_FORK
-+This extent contains extended attribute data.
-+.TP
-+.B FMR_OF_EXTENT_MAP
-+This extent contains extent map information for the owner.
-+.TP
-+.B FMR_OF_SHARED
-+Parts of this extent may be shared.
-+.TP
-+.B FMR_OF_SPECIAL_OWNER
-+The
-+.I fmr_owner
-+field contains a special value instead of an inode number.
-+.TP
-+.B FMR_OF_LAST
-+This is the last record in the filesystem.
-+.RE
-+
-+.PP
-+The
-+.I fmr_reserved
-+field will be set to zero.
-+
-+.SS Special Owner Values
-+The following special owner values are generic to all filesystems:
-+.RS 0.4i
-+.TP
-+.B FMR_OWN_FREE
-+Free space.
-+.TP
-+.B FMR_OWN_UNKNOWN
-+This extent is in use but its owner is not known.
-+.TP
-+.B FMR_OWN_METADATA
-+This extent is filesystem metadata.
-+.RE
-+
-+XFS can return the following special owner values:
-+.RS 0.4i
-+.TP
-+.B XFS_FMR_OWN_FREE
-+Free space.
-+.TP
-+.B XFS_FMR_OWN_UNKNOWN
-+This extent is in use but its owner is not known.
-+.TP
-+.B XFS_FMR_OWN_FS
-+Static filesystem metadata which exists at a fixed address.
-+These are the AG superblock, the AGF, the AGFL, and the AGI headers.
-+.TP
-+.B XFS_FMR_OWN_LOG
-+The filesystem journal.
-+.TP
-+.B XFS_FMR_OWN_AG
-+Allocation group metadata, such as the free space btrees and the
-+reverse mapping btrees.
-+.TP
-+.B XFS_FMR_OWN_INOBT
-+The inode and free inode btrees.
-+.TP
-+.B XFS_FMR_OWN_INODES
-+Inode records.
-+.TP
-+.B XFS_FMR_OWN_REFC
-+Reference count information.
-+.TP
-+.B XFS_FMR_OWN_COW
-+This extent is being used to stage a copy-on-write.
-+.TP
-+.B XFS_FMR_OWN_DEFECTIVE:
-+This extent has been marked defective either by the filesystem or the
-+underlying device.
-+.RE
-+
-+ext4 can return the following special owner values:
-+.RS 0.4i
-+.TP
-+.B EXT4_FMR_OWN_FREE
-+Free space.
-+.TP
-+.B EXT4_FMR_OWN_UNKNOWN
-+This extent is in use but its owner is not known.
-+.TP
-+.B EXT4_FMR_OWN_FS
-+Static filesystem metadata which exists at a fixed address.
-+This is the superblock and the group descriptors.
-+.TP
-+.B EXT4_FMR_OWN_LOG
-+The filesystem journal.
-+.TP
-+.B EXT4_FMR_OWN_INODES
-+Inode records.
-+.TP
-+.B EXT4_FMR_OWN_BLKBM
-+Block bitmap.
-+.TP
-+.B EXT4_FMR_OWN_INOBM
-+Inode bitmap.
-+.RE
-+
-+.SH RETURN VALUE
-+On error, \-1 is returned, and
-+.I errno
-+is set to indicate the error.
-+.PP
-+.SH ERRORS
-+Error codes can be one of, but are not limited to, the following:
-+.TP
-+.B EINVAL
-+The array is not long enough, or a non-zero value was passed in one of the
-+fields that must be zero.
-+.TP
-+.B EFAULT
-+The pointer passed in was not mapped to a valid memory address.
-+.TP
-+.B EBADF
-+.IR fd
-+is not open for reading.
-+.TP
-+.B EPERM
-+This query is not allowed.
-+.TP
-+.B EOPNOTSUPP
-+The filesystem does not support this command.
-+.TP
-+.B EUCLEAN
-+The filesystem metadata is corrupt and needs repair.
-+.TP
-+.B EBADMSG
-+The filesystem has detected a checksum error in the metadata.
-+.TP
-+.B ENOMEM
-+Insufficient memory to process the request.
-+
-+.SH EXAMPLE
-+.TP
-+Please see io/fsmap.c in the xfsprogs distribution for a sample program.
-+
-+.SH CONFORMING TO
-+This API is Linux-specific.
-+Not all filesystems support it.
-+.fi
-+.in
-+.SH SEE ALSO
-+.BR ioctl (2)
+For some filesystem configurations. Not all.
+
+> I did go through macros such as XFS_INO_TO_AGNO(),
+> XFS_INO_TO_AGBNO() and XFS_INO_TO_OFFSET() which deal with extracting the
+> components from an inode number.
+> 
+> However I still don't understand how non-aligned inode clusters (64 inodes in
+> a single cluster) would break the inode number to disk location
+> arithmetic calculations. Could you please explain it?
+
+First, you need to understand the correct terminology: "inode
+cluster" vs "inode chunk"
+
+inode chunk: unit of inode allocation, always 64 contiguous inodes
+		referenced by a single inobt record
+
+inode cluster: a buffer used to do inode IO, whose size is dependent
+		on superblock flags and field values
+
+The inobt record records the AGBNO of the inode chunk, and
+internally then indexes the inodes in the chunk from 0 to 63.
+
+Inode clusters are independent of the inobt record. The number of
+inodes in a cluster buffer is dependent on the inode size and the
+inode cluster buffer size. The size of the inode cluster buffer is
+dependent on filesystem block size and inode alignment.
+
+Take, for example, v4 filesystem, 4k fsb, 256 byte inodes, with
+everything indexed to zero to show that the maths to derive
+everything from chunk_agbno + ino # is simple:
+
+chunk @ agbno
+	+-------------------------------------------+
+ino#	0          16	      32         48
+
+block	0	   1	      2          3
+	+----------+----------+----------+----------+
+agbno   +0	   +1	      +2	 +3
+
+cluster	0		      1
+	+---------------------+---------------------+
+agbno	+0		      +2
+
+All nice an simple, yes? So we can clearly see that an inode number
+of AGBNO | INO# can be mapped to the physical block
+
+	chunk_agbno + (INO# / inodes per block)
+
+And the cluster buffer physical location is:
+
+	chunk_agbno + (INO# / inodes per cluster)
+
+Ok, so the math is simple (as you've noticed), but it doesn't
+explain the alignment constraints. The question is this:
+what assumption does this math make about the relationship
+between the inode number and the physical location of the inode?
+
+....
+
+....
+
+That's right, it assumes that chunk_agbno + INO# can only map to a
+single physical location and so never overlaps with another inode
+chunk. i.e. this cannot happen as a result of a inode free/alloc
+operation pair:
+
+Free:
+chunk @ agbno
+	+-------------------------------------------+
+ino#	0          16	      32         48
+
+Alloc:
+chunk @ agbno+3
+					+-------------------------------------------+
+				ino#	0          16	      32         48
+
+If we have the overlapping chunk allocation ranges like this, then
+we can have multiple inode numbers that map to the same physical
+location.  in the above case, both of the inode numbers (agbno | 48)
+and (agbno + 3 | 0) map to the same physical location but they have
+different cluster buffer address (i.e. agbno+2 vs agbno+3)
+
+So, when you get an inode number, how do you know it is valid and
+you haven't raced with an unlink that just removed the underlying
+inode chunk? You can do a buffer lookup to see if it's stale, but
+that has all sorts of problems in that a key constraint is that we
+must not have overlapping buffers in the cache.  How do we know what
+buffers we need to look up (and how do we do it in a race free
+manner) to ensure that all the original inode cluster buffers have
+been invalidated and their transactions committed during an
+allocation?
+
+IOWs, without jumping through all sorts of cluster buffer coherence
+validation hoops we end up with free vs allocation and free vs
+lookup races on the cluster buffers if we just use inode number
+conversions for physical buffer mapping. That's complex, costly and
+extremely error prone, so we essentially have to treat all inode
+numbers as untrusted because of these races.
+
+There are two ways to solve this problem.
+	1) always look up the inobt record for an inode number to
+	get the chunk_agbno from the inobt as locking the AGI for
+	lookup guarantees no alloc/lookup/free races can occur; or
+
+	2) Ensure that inode chunks never overlap by physically
+	aligning them at allocation time, hence ensuring that every
+	physical address maps to exactly one inode number and
+	cluster buffer address.
+
+XFS implemented 1) back in 1994 when inode cluster buffers were
+introduced.  The issue with this is that inobt lookups every time we
+want to map an inode number is that it is excitingly expensive. If
+we know the inode number is correct (i.e. cames from other internal
+metadata that we've already validated), then this is overhead we can
+avoid if we constraint the disk format via method 2).
+
+That was done more than 20 years ago:
+
+commit 07d3e5d3764a8cf02d2e40397da0018c5c60f70a
+Author: Doug Doucette <doucette@engr.sgi.com>
+Date:   Tue Jun 4 19:08:18 1996 +0000
+
+    Support for aligned inode allocation (bug 385316).  Support for
+    superblock versioning (bug 385292).  Some cleanup.
+
+And we've used aligned inodes ever since....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
