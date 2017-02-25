@@ -1,140 +1,343 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:41778 "EHLO
-        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751787AbdB1JcD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 04:32:03 -0500
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
-        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v1S5ZXtv028612
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2017 05:35:33 GMT
-Date: Mon, 27 Feb 2017 21:34:20 -0800
+Return-Path: <cmaiolino@redhat.com>
+Resent-Message-ID: <20170227145932.6spourlpkrmxnf7t@eorzea.usersys.redhat.com>
+Resent-To: sandeen@sandeen.net
+Received: from userp1040.oracle.com ([156.151.31.81]:22018 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751291AbdBYBNJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Feb 2017 20:13:09 -0500
+Subject: [PATCH 4/4] xfs: stress test xfs_scrub
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix and streamline error handling in xfs_end_io
-Message-ID: <20170228053420.GG5297@birch.djwong.org>
-References: <20170228004950.9609-1-hch@lst.de>
+Date: Fri, 24 Feb 2017 17:13:04 -0800
+Message-ID: <148798518415.25833.11653991983531432757.stgit@birch.djwong.org>
+In-Reply-To: <148798515933.25833.2842247083803775089.stgit@birch.djwong.org>
+References: <148798515933.25833.2842247083803775089.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170228004950.9609-1-hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: eguan@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Feb 27, 2017 at 04:49:50PM -0800, Christoph Hellwig wrote:
-> There are two different cases of buffered I/O errors:
-> 
->  - first we can have an already shutdown fs.  In that case we should skip
->    any on-disk operations and just clean up the appen transaction if
->    present and destroy the ioend
->  - a real I/O error.  In that case we should cleanup any lingering COW
->    blocks.  This gets skipped in the current code and is fixed by this
->    patch.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Somehow I lost that through all the rebasing of the reflink patchset,
-thank you for catching this!
+Three new tests:
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+- Repair files that are mapped into memory in running programs
+- Run scrub -n concurrently with fsstress
+- Run scrub -y concurrently with fsstress
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/1375     |   69 +++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1375.out |    3 ++
+ tests/xfs/1376     |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1376.out |    4 ++
+ tests/xfs/1377     |   84 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1377.out |    4 ++
+ tests/xfs/group    |    3 ++
+ 7 files changed, 250 insertions(+)
+ create mode 100755 tests/xfs/1375
+ create mode 100644 tests/xfs/1375.out
+ create mode 100755 tests/xfs/1376
+ create mode 100644 tests/xfs/1376.out
+ create mode 100755 tests/xfs/1377
+ create mode 100644 tests/xfs/1377.out
 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_aops.c | 59 +++++++++++++++++++++++++------------------------------
->  1 file changed, 27 insertions(+), 32 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 290c0fb306e7..fe244648fff0 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -274,54 +274,49 @@ xfs_end_io(
->  	struct xfs_ioend	*ioend =
->  		container_of(work, struct xfs_ioend, io_work);
->  	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-> +	xfs_off_t		offset = ioend->io_offset;
-> +	size_t			size = ioend->io_size;
->  	int			error = ioend->io_bio->bi_error;
->  
->  	/*
-> -	 * Set an error if the mount has shut down and proceed with end I/O
-> -	 * processing so it can perform whatever cleanups are necessary.
-> +	 * Just clean up the in-memory strutures if the fs has been shut down.
->  	 */
-> -	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-> +	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
->  		error = -EIO;
-> +		goto done;
-> +	}
->  
->  	/*
-> -	 * For a CoW extent, we need to move the mapping from the CoW fork
-> -	 * to the data fork.  If instead an error happened, just dump the
-> -	 * new blocks.
-> +	 * Clean up any COW blocks on an I/O error.
->  	 */
-> -	if (ioend->io_type == XFS_IO_COW) {
-> -		if (error)
-> -			goto done;
-> -		if (ioend->io_bio->bi_error) {
-> -			error = xfs_reflink_cancel_cow_range(ip,
-> -					ioend->io_offset, ioend->io_size, 0);
-> -			goto done;
-> +	if (unlikely(error)) {
-> +		switch (ioend->io_type) {
-> +		case XFS_IO_COW:
-> +			xfs_reflink_cancel_cow_range(ip, offset, size, 0);
-> +			break;
->  		}
-> -		error = xfs_reflink_end_cow(ip, ioend->io_offset,
-> -				ioend->io_size);
-> -		if (error)
-> -			goto done;
-> +
-> +		goto done;
->  	}
->  
->  	/*
-> -	 * For unwritten extents we need to issue transactions to convert a
-> -	 * range to normal written extens after the data I/O has finished.
-> -	 * Detecting and handling completion IO errors is done individually
-> -	 * for each case as different cleanup operations need to be performed
-> -	 * on error.
-> +	 * Success:  commit the COW or unwritten blocks if needed.
->  	 */
-> -	if (ioend->io_type == XFS_IO_UNWRITTEN) {
-> -		if (error)
-> -			goto done;
-> -		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
-> -						  ioend->io_size);
-> -	} else if (ioend->io_append_trans) {
-> -		error = xfs_setfilesize_ioend(ioend, error);
-> -	} else {
-> -		ASSERT(!xfs_ioend_is_append(ioend) ||
-> -		       ioend->io_type == XFS_IO_COW);
-> +	switch (ioend->io_type) {
-> +	case XFS_IO_COW:
-> +		error = xfs_reflink_end_cow(ip, offset, size);
-> +		break;
-> +	case XFS_IO_UNWRITTEN:
-> +		error = xfs_iomap_write_unwritten(ip, offset, size);
-> +		break;
-> +	default:
-> +		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
-> +		break;
->  	}
->  
->  done:
-> +	if (ioend->io_append_trans)
-> +		error = xfs_setfilesize_ioend(ioend, error);
->  	xfs_destroy_ioend(ioend, error);
->  }
->  
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+diff --git a/tests/xfs/1375 b/tests/xfs/1375
+new file mode 100755
+index 0000000..d3119ef
+--- /dev/null
++++ b/tests/xfs/1375
+@@ -0,0 +1,69 @@
++#! /bin/bash
++# FS QA Test No. 1375
++#
++# Copy xfs_scrub to the scratch device, then run xfs_scrub in forced
++# repair mode (which will rebuild the data forks of the running scrub
++# executable and libraries!) to see what happens.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_command /usr/bin/ldd "ldd"
++_require_scrub
++_require_scratch
++_require_xfs_io_error_injection "force_repair"
++
++echo "Format and populate"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++cp $XFS_SCRUB_PROG $SCRATCH_MNT/xfs_scrub
++ldd $XFS_SCRUB_PROG | sed -e '/\//!d;/linux-gate/d;/=>/ {s/.*=>[[:blank:]]*\([^[:blank:]]*\).*/\1/};s/[[:blank:]]*\([^[:blank:]]*\) (.*)/\1/' | while read lib; do
++	cp $lib $SCRATCH_MNT/
++done
++LD_LIBRARY_PATH=$SCRATCH_MNT ldd $SCRATCH_MNT/xfs_scrub >> $seqres.full
++
++echo "Force online repairs"
++XFS_SCRUB_FORCE_REPAIR=1 LD_LIBRARY_PATH=$SCRATCH_MNT $SCRATCH_MNT/xfs_scrub -dTvy $SCRATCH_MNT >> $seqres.full
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1375.out b/tests/xfs/1375.out
+new file mode 100644
+index 0000000..dd7025e
+--- /dev/null
++++ b/tests/xfs/1375.out
+@@ -0,0 +1,3 @@
++QA output created by 1375
++Format and populate
++Force online repairs
+diff --git a/tests/xfs/1376 b/tests/xfs/1376
+new file mode 100755
+index 0000000..f037b43
+--- /dev/null
++++ b/tests/xfs/1376
+@@ -0,0 +1,83 @@
++#! /bin/bash
++# FS QA Test No. 1376
++#
++# Race fio and xfs_scrub for a while to see if we crash or livelock.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scrub
++_require_scratch
++_require_command "$KILLALL_PROG" killall
++
++echo "Format and populate"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++
++STRESS_DIR="$SCRATCH_MNT/testdir"
++mkdir -p $STRESS_DIR
++
++cpus=$((16 * LOAD_FACTOR))
++$FSSTRESS_PROG -d $STRESS_DIR -p $cpus -n $((cpus * 100000)) $FSSTRESS_AVOID >/dev/null 2>&1 &
++$XFS_SCRUB_PROG -d -T -v -n $SCRATCH_MNT >> $seqres.full
++
++killstress() {
++	sleep $(( 60 * LOAD_FACTOR ))
++	$KILLALL_PROG -q $FSSTRESS_PROG
++}
++
++echo "Concurrent scrub"
++start=$(date +%s)
++end=$((start + (60 * LOAD_FACTOR) ))
++killstress &
++echo "Scrub started at $(date --date="@${start}"), ending at $(date --date="@${end}")" >> $seqres.full
++while [ "$(date +%s)" -lt "$end" ]; do
++	timeout -s TERM $(( end - $(date +%s) + 2 )) $XFS_SCRUB_PROG -d -T -v -n $SCRATCH_MNT >> $seqres.full 2>&1
++done
++
++echo "Test done"
++echo "Scrub finished at $(date)" >> $seqres.full
++$KILLALL_PROG -q $FSSTRESS_PROG
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1376.out b/tests/xfs/1376.out
+new file mode 100644
+index 0000000..155f424
+--- /dev/null
++++ b/tests/xfs/1376.out
+@@ -0,0 +1,4 @@
++QA output created by 1376
++Format and populate
++Concurrent scrub
++Test done
+diff --git a/tests/xfs/1377 b/tests/xfs/1377
+new file mode 100755
+index 0000000..1e0814c
+--- /dev/null
++++ b/tests/xfs/1377
+@@ -0,0 +1,84 @@
++#! /bin/bash
++# FS QA Test No. 1377
++#
++# Race fio and xfs_scrub -y for a while to see if we crash or livelock.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scrub
++_require_scratch
++_require_command "$KILLALL_PROG" killall
++_require_xfs_io_error_injection "force_repair"
++
++echo "Format and populate"
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++
++STRESS_DIR="$SCRATCH_MNT/testdir"
++mkdir -p $STRESS_DIR
++
++cpus=$((16 * LOAD_FACTOR))
++$FSSTRESS_PROG -d $STRESS_DIR -p $cpus -n $((cpus * 100000)) $FSSTRESS_AVOID >/dev/null 2>&1 &
++$XFS_SCRUB_PROG -d -T -v -n $SCRATCH_MNT >> $seqres.full
++
++killstress() {
++	sleep $(( 60 * LOAD_FACTOR ))
++	$KILLALL_PROG -q $FSSTRESS_PROG
++}
++
++echo "Concurrent repair"
++start=$(date +%s)
++end=$((start + (60 * LOAD_FACTOR) ))
++killstress &
++echo "Repair started at $(date --date="@${start}"), ending at $(date --date="@${end}")" >> $seqres.full
++while [ "$(date +%s)" -lt "$end" ]; do
++	XFS_SCRUB_FORCE_REPAIR=1 timeout -s TERM $(( end - $(date +%s) + 2 )) $XFS_SCRUB_PROG -d -T -v -y $SCRATCH_MNT >> $seqres.full
++done
++
++echo "Test done"
++echo "Repair finished at $(date)" >> $seqres.full
++$KILLALL_PROG -q $FSSTRESS_PROG
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1377.out b/tests/xfs/1377.out
+new file mode 100644
+index 0000000..0454a87
+--- /dev/null
++++ b/tests/xfs/1377.out
+@@ -0,0 +1,4 @@
++QA output created by 1377
++Format and populate
++Concurrent repair
++Test done
+diff --git a/tests/xfs/group b/tests/xfs/group
+index eaa65b1..7fce0a0 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -408,3 +408,6 @@
+ 416 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 417 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 418 dangerous_fuzzers dangerous_scrub dangerous_repair
++1375 dangerous_fuzzers dangerous_scrub dangerous_online_repair
++1376 dangerous_fuzzers dangerous_scrub
++1377 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+
