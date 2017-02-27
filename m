@@ -1,151 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:34274 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751243AbdB1Rl3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 12:41:29 -0500
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: [PATCH] iomap: invalidate page caches should be after iomap_dio_complete() in direct write
-Date: Wed,  1 Mar 2017 01:36:26 +0800
-Message-Id: <20170228173626.27640-1-guaneryu@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:40482 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751637AbdB0QJD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Feb 2017 11:09:03 -0500
+Date: Mon, 27 Feb 2017 11:09:01 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: LTP write03 writev07 xfs failures
+Message-ID: <20170227160901.GB9344@bfoster.bfoster>
+References: <20170227042220.syhudcilvyettwnf@XZHOUW.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170227042220.syhudcilvyettwnf@XZHOUW.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, Eryu Guan <eguan@redhat.com>
+To: Xiong Zhou <xzhou@redhat.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-From: Eryu Guan <eguan@redhat.com>
+cc Christoph
 
-After XFS switching to iomap based DIO (commit acdda3aae146 ("xfs:
-use iomap_dio_rw")), I started to notice dio29/dio30 tests failures
-from LTP run on ppc64 hosts, and they can be reproduced on x86_64
-hosts with 512B/1k block size XFS too.
+On Mon, Feb 27, 2017 at 12:22:20PM +0800, Xiong Zhou wrote:
+> Hi,
+> 
+> These 2 tests PASS on Linus tree commit:
+>   37c8596 Merge tag 'tty-4.11-rc1' of git://git.kernel.org/pub/scm/linux...
+> FAIL on commit:
+>   60e8d3e Merge tag 'pci-v4.11-changes' of git://git.kernel.org/pub/scm/...
+> 
+> LTP latest commit: c60d3ca move_pages12: include lapi/mmap.h
+> 
+> Steps:
+> 
+> sh-4.2# pwd
+> /root/ltp
+> sh-4.2# git log --oneline -1
+> c60d3ca move_pages12: include lapi/mmap.h
+> sh-4.2# uname -r
+> 4.10.0-master-60e8d3e+
+> sh-4.2# mount | grep test1
+> /dev/sda3 on /test1 type xfs (rw,relatime,seclabel,attr2,inode64,logbsize=256k,sunit=512,swidth=512,noquota)
+> sh-4.2# xfs_info /test1
+> meta-data=/dev/sda3              isize=512    agcount=16, agsize=245696 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1 spinodes=0
+> data     =                       bsize=4096   blocks=3931136, imaxpct=25
+>          =                       sunit=64     swidth=64 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> log      =internal               bsize=4096   blocks=2560, version=2
+>          =                       sectsz=512   sunit=64 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> sh-4.2# 
+> sh-4.2# TMPDIR=/test1 ./testcases/kernel/syscalls/write/write03
+> write03     0  TINFO  :  Enter Block 1: test to check if write corrupts the file when write fails
+> write03     1  TFAIL  :  write03.c:125: failure of write(2) corrupted the file
+> write03     0  TINFO  :  Exit block 1
+> sh-4.2# 
 
-dio29	diotest3 -b 65536 -n 100 -i 1000 -o 1024000
-dio30	diotest6 -b 65536 -n 100 -i 1000 -o 1024000
+On a quick test, both of these are reproduced after commit fa7f138ac4
+("xfs: clear delalloc and cache on buffered write failure"). That patch
+fixed a problem where if the write allocates a block but fails to write
+anything (written == 0), we'd leave a delalloc block lingering in the
+inode.
 
-The failure message is like:
-bufcmp: offset 0: Expected: 0x62, got 0x0
-diotest03    1  TPASS  :  Read with Direct IO, Write without
-diotest03    2  TFAIL  :  diotest3.c:142: comparsion failed; child=98 offset=1425408
-diotest03    3  TFAIL  :  diotest3.c:194: Write Direct-child 98 failed
+With that change, this test now fails because it sends two writes within
+a single block. The first allocates the block, writes 100 bytes and
+returns successfully. The next attempts to write the next 100 bytes,
+fails and triggers the cleanup of the block because we can't tell
+whether this write or the previous had allocated it.
 
-Direct write wrote 0x62 but buffer read got zero. This is because,
-when doing direct write to a hole or preallocated file, we
-invalidate the page caches before converting the extent from
-unwritten state to normal state, which is done by
-iomap_dio_complete(), thus leave a window for other buffer reader to
-cache the unwritten state extent.
+I'm not convinced the right solution is to just go back to the previous
+code. That obviously reintroduces the original problem, but we'd also
+still have a similar problem if the second (failed) write was a rewrite
+of the first. The error handling of the second write would kill off the
+blocks allocated and written to successfully by the first. I'm wondering
+if the right thing to do here is factor in i_size as it appears that's
+what this code did prior to the iomap transition. I'm not sure where
+that leaves us wrt to writes into sparse files, though. I may need to
+play with this a bit..
 
-Consider this case, with sub-page blocksize XFS, two processes are
-direct writing to different blocksize-aligned regions (say 512B) of
-the same preallocated file, and reading the region back via buffered
-I/O to compare contents.
+Christoph, any thoughts on this?
 
-process A, region [0,512]		process B, region [512,1024]
-xfs_file_write_iter
- xfs_file_aio_dio_write
-  iomap_dio_rw
-   iomap_apply
-   invalidate_inode_pages2_range
-   					xfs_file_write_iter
-				 	xfs_file_aio_dio_write
-					  iomap_dio_rw
-					   iomap_apply
-					   invalidate_inode_pages2_range
-					   iomap_dio_complete
-					xfs_file_read_iter
-					 xfs_file_buffered_aio_read
-					  generic_file_read_iter
-					   do_generic_file_read
-					    <readahead fills pagecache with 0>
-   iomap_dio_complete
-xfs_file_read_iter
- <read gets 0 from pagecache>
+Brian
 
-Process A first invalidates page caches, at this point the
-underlying extent is still in unwritten state (iomap_dio_complete
-not called yet), and process B finishs direct write and populates
-page caches via readahead, which caches zeros in page for region A,
-then process A reads zeros from page cache, instead of the actual
-data.
-
-Fix it by invalidating page caches after converting unwritten extent
-to make sure we read content from disk after extent state changed,
-as what we did before switching to iomap based dio.
-
-Also introduce a new 'start' variable to save the original write
-offset (iomap_dio_complete() updates iocb->ki_pos), and a 'res'
-variable for invalidating caches result, cause we can't reuse 'ret'
-anymore.
-
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
- fs/iomap.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
-
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 0f85f24..d5e4ea0 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -844,10 +844,12 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	struct address_space *mapping = iocb->ki_filp->f_mapping;
- 	struct inode *inode = file_inode(iocb->ki_filp);
- 	size_t count = iov_iter_count(iter);
--	loff_t pos = iocb->ki_pos, end = iocb->ki_pos + count - 1, ret = 0;
-+	loff_t pos = iocb->ki_pos, start = pos;
-+	loff_t end = iocb->ki_pos + count - 1, ret = 0;
- 	unsigned int flags = IOMAP_DIRECT;
- 	struct blk_plug plug;
- 	struct iomap_dio *dio;
-+	int res;
- 
- 	lockdep_assert_held(&inode->i_rwsem);
- 
-@@ -885,14 +887,13 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	}
- 
- 	if (mapping->nrpages) {
--		ret = filemap_write_and_wait_range(mapping, iocb->ki_pos, end);
-+		ret = filemap_write_and_wait_range(mapping, start, end);
- 		if (ret)
- 			goto out_free_dio;
- 
--		ret = invalidate_inode_pages2_range(mapping,
--				iocb->ki_pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
--		WARN_ON_ONCE(ret);
--		ret = 0;
-+		res = invalidate_inode_pages2_range(mapping,
-+				start >> PAGE_SHIFT, end >> PAGE_SHIFT);
-+		WARN_ON_ONCE(res);
- 	}
- 
- 	inode_dio_begin(inode);
-@@ -939,6 +940,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		__set_current_state(TASK_RUNNING);
- 	}
- 
-+	ret = iomap_dio_complete(dio);
-+
- 	/*
- 	 * Try again to invalidate clean pages which might have been cached by
- 	 * non-direct readahead, or faulted in by get_user_pages() if the source
-@@ -947,12 +950,12 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	 * this invalidation fails, tough, the write still worked...
- 	 */
- 	if (iov_iter_rw(iter) == WRITE && mapping->nrpages) {
--		ret = invalidate_inode_pages2_range(mapping,
--				iocb->ki_pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
--		WARN_ON_ONCE(ret);
-+		res = invalidate_inode_pages2_range(mapping,
-+				start >> PAGE_SHIFT, end >> PAGE_SHIFT);
-+		WARN_ON_ONCE(res);
- 	}
- 
--	return iomap_dio_complete(dio);
-+	return ret;
- 
- out_free_dio:
- 	kfree(dio);
--- 
-2.9.3
-
+> sh-4.2# TMPDIR=/test1 ./testcases/kernel/syscalls/writev/writev07
+> tst_test.c:760: INFO: Timeout per run is 0h 05m 00s
+> writev07.c:60: INFO: starting test with initial file offset: 0 
+> writev07.c:82: INFO: got EFAULT
+> writev07.c:87: FAIL: file was written to
+> writev07.c:93: PASS: offset stayed unchanged
+> writev07.c:60: INFO: starting test with initial file offset: 65 
+> writev07.c:82: INFO: got EFAULT
+> writev07.c:89: PASS: file stayed untouched
+> writev07.c:93: PASS: offset stayed unchanged
+> writev07.c:60: INFO: starting test with initial file offset: 4096 
+> writev07.c:82: INFO: got EFAULT
+> writev07.c:89: PASS: file stayed untouched
+> writev07.c:93: PASS: offset stayed unchanged
+> writev07.c:60: INFO: starting test with initial file offset: 4097 
+> writev07.c:82: INFO: got EFAULT
+> writev07.c:89: PASS: file stayed untouched
+> writev07.c:93: PASS: offset stayed unchanged
+> 
+> Summary:
+> passed   7
+> failed   1
+> skipped  0
+> warnings 0
+> sh-4.2# 
+> sh-4.2# mkfs.xfs -V
+> mkfs.xfs version 4.7.0
+> sh-4.2# cd ../xfsprogs/
+> sh-4.2# git log --oneline -1
+> d7e1f5f xfsprogs: Release v4.7
+> sh-4.2# 
+> 
+> Thanks,
+> Xiong
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
