@@ -1,81 +1,52 @@
 Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227145016.yb3csncdleqizwtf@eorzea.usersys.redhat.com>
+Resent-Message-ID: <20170227150254.uvfqyp5oz5afij2h@eorzea.usersys.redhat.com>
 Resent-To: sandeen@sandeen.net
-Received: from mga02.intel.com ([134.134.136.20]:55037 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752752AbdBUPtj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Feb 2017 10:49:39 -0500
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 6/7] fs, xfs: convert xfs_cui_log_item.cui_refcount from atomic_t to refcount_t
-Date: Tue, 21 Feb 2017 17:49:06 +0200
-Message-Id: <1487692147-17066-7-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
-References: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:35406 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751284AbdB0CNT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Feb 2017 21:13:19 -0500
+Received: by mail-pf0-f178.google.com with SMTP id j5so3354068pfb.2
+        for <linux-xfs@vger.kernel.org>; Sun, 26 Feb 2017 18:11:49 -0800 (PST)
+From: "Halsey Pian" <halsey.pian@gmail.com>
+References: 
+In-Reply-To: 
+Subject: With respect to XFS Bitmap flush to disk
+Date: Mon, 27 Feb 2017 10:11:44 +0800
+Message-ID: <004e01d2909e$d9ce1580$8d6a4080$@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Language: zh-cn
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: halsey.pian@gmail.com
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+Dear All,
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- fs/xfs/xfs_refcount_item.c | 4 ++--
- fs/xfs/xfs_refcount_item.h | 4 +++-
- 2 files changed, 5 insertions(+), 3 deletions(-)
+Recently, I try to read analyze the bitmap of XFS file system, it seems =
+that I cannot read the latest bitmap from hard disk involving the XFS, =
+and cannot read the accurate info even after a long time. For example, i =
+cannot get the relevant bitmap info after I add/delete a big file =
+to/from XFS file system.
 
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 6e4c744..61bc570 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -205,7 +205,7 @@ xfs_cui_init(
- 	cuip->cui_format.cui_nextents = nextents;
- 	cuip->cui_format.cui_id = (uintptr_t)(void *)cuip;
- 	atomic_set(&cuip->cui_next_extent, 0);
--	atomic_set(&cuip->cui_refcount, 2);
-+	refcount_set(&cuip->cui_refcount, 2);
- 
- 	return cuip;
- }
-@@ -221,7 +221,7 @@ void
- xfs_cui_release(
- 	struct xfs_cui_log_item	*cuip)
- {
--	if (atomic_dec_and_test(&cuip->cui_refcount)) {
-+	if (refcount_dec_and_test(&cuip->cui_refcount)) {
- 		xfs_trans_ail_remove(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_cui_item_free(cuip);
- 	}
-diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
-index 5b74ddd..7f23ff8 100644
---- a/fs/xfs/xfs_refcount_item.h
-+++ b/fs/xfs/xfs_refcount_item.h
-@@ -20,6 +20,8 @@
- #ifndef	__XFS_REFCOUNT_ITEM_H__
- #define	__XFS_REFCOUNT_ITEM_H__
- 
-+#include <linux/refcount.h>
-+
- /*
-  * There are (currently) two pairs of refcount btree redo item types:
-  * increase and decrease.  The log items for these are CUI (refcount
-@@ -63,7 +65,7 @@ struct kmem_zone;
-  */
- struct xfs_cui_log_item {
- 	struct xfs_log_item		cui_item;
--	atomic_t			cui_refcount;
-+	refcount_t			cui_refcount;
- 	atomic_t			cui_next_extent;
- 	unsigned long			cui_flags;	/* misc flags */
- 	struct xfs_cui_log_format	cui_format;
--- 
-2.7.4
+I tried several solution, and find it out that I must execute xfs_freeze =
+for the XFS partition in CentOS7, and it seems that xfs_freeze =
+doesn=E2=80=99t work for XFS version included in Redhat6.5, I must =
+umount/mount the xfs, then I can get the latest bitmap info related to =
+the latest data located in disk.
+
+What  strategy does XFS use to cache/flush bitmap to hard disk?  How can =
+I get the accurate bitmap info especially for Redhat6 series Operating =
+System? Could you please give help on it?
+
+Thanks in advance! =E2=98=BA
+
+
+
+
+Halsey Pian=20
+
 
