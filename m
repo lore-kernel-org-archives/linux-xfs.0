@@ -1,64 +1,163 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42364 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:40398 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751094AbdBHCbn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Feb 2017 21:31:43 -0500
-Subject: Re: [PATCH] xfs: during log recovery, destroy the unlinked inodes
- even for read-only mount
-References: <1481014847-22242-1-git-send-email-houtao1@huawei.com>
- <20161207063009.GH4326@dastard>
- <ad2d0226-3901-735e-e640-af03ce348baf@sandeen.net>
- <504078b4-68ea-eb3c-231f-9d840f1e8687@huawei.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f4577e5e-e775-673b-c2a9-d36cb245377e@sandeen.net>
-Date: Tue, 7 Feb 2017 20:31:41 -0600
+        id S1751813AbdB0Iax (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Feb 2017 03:30:53 -0500
+Received: from smtp.corp.redhat.com (int-mx16.intmail.prod.int.phx2.redhat.com [10.5.11.28])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id AC421C04B950
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Feb 2017 08:29:15 +0000 (UTC)
+Date: Mon, 27 Feb 2017 09:29:11 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfsprogs: remove unused libxfs helper #defines
+Message-ID: <20170227082911.ju26lclipmw4xm7n@eorzea.usersys.redhat.com>
+References: <78814f34-15b8-9d72-7b25-377478e9c564@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <504078b4-68ea-eb3c-231f-9d840f1e8687@huawei.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <78814f34-15b8-9d72-7b25-377478e9c564@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hou Tao <houtao1@huawei.com>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-
-
-On 12/15/16 5:36 AM, Hou Tao wrote:
->>> I was talking to Eric about this larger "recovery on read-only
->>> mount" problem last week on IRC - I can't find it my logs right now,
->>> but IIRC I'd suggested that we should always run xfs_mountfs()
->>> in read-write mount if the underlying device can be written to,
->>> and then once that is complete do a rw->ro transition exactly as we
->>> do for a remount,ro operation.
->>
->> Yeah, I have a larger patchset to try to handle this and other
->> related processing that wasn't happening on ro mounts.  I got
->> derailed because my regression test for it ran into all kinds
->> of unexpected new & unrelated bugs.  So I haven't sent it yet...
->>
->> There were lots of little bits here and there stemming, I think,
->> from old Irix code that didn't do /any/ device IO on a ro mount.
->>
->> -Eric
-> It's glad to hear that you have nearly completed the ro mount patchset,
-> so I will stop reworking on this problem.
+On Sun, Feb 26, 2017 at 10:39:54PM -0600, Eric Sandeen wrote:
+> There are several #defines which aren't used anywhere
+> in either xfsprogs or the kernel, so remove them from the
+> libxfs/libxfs_priv.h helper file.
 > 
-> During the rework, I found two puzzling XFS_MOUNT_RDONLY checkings
-> at xfs_release(...) and xfs_inactive(...). In my opinion these check
-> should be done at VFS instead of the specific filesystem, so why
-> these XFS_MOUNT_RDONLY checkings there are ? Could we move the
-> needed check to VFS just like the things sb_prepare_remount_readonly()
-> have done ?
-
-Getting back to this - the reason for your original patch, I think,
-was that things like log recovery can get into this code without going
-through the vfs at all, so I think vfs checks are not always sufficient.
-
-That said, there probably are some XFS_MOUNT_RDONLY checks which are
-redundant.
-
--Eric
-
-> Tao
+> This does leave a few (currently) unused defines in place
+> if they are still used in the kernel, in the hope that future
+> libxfs changes might Just Work.
 > 
+
+Looks fine, you can add:
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+Thanks for this cleanup :)
+
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+>  libxfs_priv.h |   38 +-------------------------------------
+>  1 file changed, 1 insertion(+), 37 deletions(-)
+> 
+> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+> index 14ae788..ccc732f 100644
+> --- a/libxfs/libxfs_priv.h
+> +++ b/libxfs/libxfs_priv.h
+> @@ -103,8 +103,6 @@ extern char    *progname;
+>  #define ATTR_KERNOTIME			0
+>  #define ATTR_KERNOVAL			0
+>  
+> -#define IHOLD(ip)			((void) 0)
+> -
+>  #define XFS_IGET_CREATE			0x1
+>  #define XFS_IGET_UNTRUSTED		0x2
+>  
+> @@ -128,16 +126,12 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+>  	cmn_err(CE_ALERT, "%s: XFS_ERROR_REPORT", (e));  \
+>  } while (0)
+>  
+> -#define XFS_QM_DQATTACH(mp,ip,flags)	0
+>  #define XFS_ERRLEVEL_LOW		1
+>  #define XFS_FORCED_SHUTDOWN(mp)		0
+>  #define XFS_ILOCK_EXCL			0
+>  #define XFS_STATS_INC(mp, count)	do { (mp) = (mp); } while (0)
+>  #define XFS_STATS_DEC(mp, count, x)	do { (mp) = (mp); } while (0)
+>  #define XFS_STATS_ADD(mp, count, x)	do { (mp) = (mp); } while (0)
+> -#define XFS_TRANS_MOD_DQUOT_BYINO(mp,tp,ip,field,delta)	do { } while (0)
+> -#define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
+> -#define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
+>  #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
+>  #define XFS_WANT_CORRUPTED_GOTO(mp, expr, l)				\
+>  {									\
+> @@ -308,20 +302,11 @@ roundup_64(__uint64_t x, __uint32_t y)
+>  }
+>  
+>  /* buffer management */
+> -#define XFS_BUF_LOCK			0
+> -#define XFS_BUF_TRYLOCK			0
+> -#define XBF_LOCK			XFS_BUF_LOCK
+> -#define XBF_TRYLOCK			XFS_BUF_TRYLOCK
+> -#define XBF_DONT_BLOCK			0
+> +#define XBF_TRYLOCK			0
+>  #define XBF_UNMAPPED			0
+>  #define XBF_DONE			0
+> -#define XFS_BUF_GETERROR(bp)		0
+> -#define XFS_BUF_DONE(bp)		((bp)->b_flags |= LIBXFS_B_UPTODATE)
+> -#define XFS_BUF_ISDONE(bp)		((bp)->b_flags & LIBXFS_B_UPTODATE)
+>  #define xfs_buf_stale(bp)		((bp)->b_flags |= LIBXFS_B_STALE)
+>  #define XFS_BUF_UNDELAYWRITE(bp)	((bp)->b_flags &= ~LIBXFS_B_DIRTY)
+> -#define XFS_BUF_SET_VTYPE(a,b)		((void) 0)
+> -#define XFS_BUF_SET_VTYPE_REF(a,b,c)	((void) 0)
+>  #define XFS_BUF_SET_BDSTRAT_FUNC(a,b)	((void) 0)
+>  
+>  /* avoid gcc warning */
+> @@ -353,7 +338,6 @@ roundup_64(__uint64_t x, __uint32_t y)
+>  #define XFS_MOUNT_RDONLY		0	/* ignored in userspace */
+>  
+>  
+> -#define xfs_trans_get_block_res(tp)	1
+>  #define xfs_trans_set_sync(tp)		((void) 0)
+>  #define xfs_trans_ordered_buf(tp, bp)	((void) 0)
+>  #define	xfs_trans_agblocks_delta(tp, d)
+> @@ -373,26 +357,13 @@ roundup_64(__uint64_t x, __uint32_t y)
+>  	__d = __d; /* no set-but-unused warning */	\
+>  })
+>  #define xfs_buf_readahead_map(a,b,c,ops)	((void) 0)	/* no readahead */
+> -#define xfs_buftrace(x,y)			((void) 0)	/* debug only */
+>  
+> -#define xfs_cmn_err(tag,level,mp,fmt,args...)	cmn_err(level,fmt, ## args)
+>  #define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
+>  #define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
+>  #define xfs_alert_tag(mp,tag,fmt,args...)	cmn_err(CE_ALERT,fmt, ## args)
+>  
+> -#define xfs_dir2_trace_args(where, args)		((void) 0)
+> -#define xfs_dir2_trace_args_b(where, args, bp)		((void) 0)
+> -#define xfs_dir2_trace_args_bb(where, args, lbp, dbp)	((void) 0)
+> -#define xfs_dir2_trace_args_bibii(where, args, bs, ss, bd, sd, c) ((void) 0)
+> -#define xfs_dir2_trace_args_db(where, args, db, bp)	((void) 0)
+> -#define xfs_dir2_trace_args_i(where, args, i)		((void) 0)
+> -#define xfs_dir2_trace_args_s(where, args, s)		((void) 0)
+> -#define xfs_dir2_trace_args_sb(where, args, s, bp)	((void) 0)
+>  #define xfs_sort					qsort
+>  
+> -#define xfs_icsb_reinit_counters(mp)			do { } while (0)
+> -#define xfs_initialize_perag_icache(pag)		((void) 0)
+> -
+>  #define xfs_ilock(ip,mode)				((void) 0)
+>  #define xfs_ilock_nowait(ip,mode)			((void) 0)
+>  #define xfs_ilock_demote(ip,mode)			((void) 0)
+> @@ -402,7 +373,6 @@ roundup_64(__uint64_t x, __uint32_t y)
+>  	typeof(mode) __mode = mode;				\
+>  	__mode = __mode; /* no set-but-unused warning */	\
+>  })
+> -#define __xfs_flock(ip)					((void) 0)
+>  
+>  /* space allocation */
+>  #define xfs_extent_busy_reuse(mp,ag,bno,len,user)	((void) 0)
+> @@ -417,12 +387,6 @@ do { \
+>  	*(len) = (flen); \
+>  } while (0)
+>  
+> -/* avoid unused variable warning */
+> -#define xfs_alloc_busy_insert(tp,ag,b,len)	({	\
+> -	xfs_agnumber_t __foo = ag;			\
+> -	__foo = 0;					\
+> -})
+> -
+>  #define xfs_rotorstep				1
+>  #define xfs_bmap_rtalloc(a)			(-ENOSYS)
+>  #define xfs_get_extsz_hint(ip)			(0)
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
