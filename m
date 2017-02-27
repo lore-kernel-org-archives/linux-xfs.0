@@ -1,79 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56060 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751648AbdBUPtP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Feb 2017 10:49:15 -0500
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 1/7] fs, xfs: convert xfs_bui_log_item.bui_refcount from atomic_t to refcount_t
-Date: Tue, 21 Feb 2017 17:49:01 +0200
-Message-Id: <1487692147-17066-2-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
-References: <1487692147-17066-1-git-send-email-elena.reshetova@intel.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:50444 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751666AbdB0JXP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Feb 2017 04:23:15 -0500
+Date: Mon, 27 Feb 2017 00:46:58 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] build: add EXTRALIBS to link with
+Message-ID: <20170227084658.GB22809@infradead.org>
+References: <1488107722-15022-1-git-send-email-yann.morin.1998@free.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1488107722-15022-1-git-send-email-yann.morin.1998@free.fr>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: "Yann E. MORIN" <yann.morin.1998@free.fr>
+Cc: linux-xfs@vger.kernel.org, Waldemar Brodkorb <wbx@openadk.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+This doesn't look like the correct fix to me.  If you specify the
+libs at ./configure time they should be picked up by autoconf for
+the build process instead of having to specify them again.
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- fs/xfs/xfs_bmap_item.c | 4 ++--
- fs/xfs/xfs_bmap_item.h | 4 +++-
- 2 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 9bf57c7..33104ad 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -199,7 +199,7 @@ xfs_bui_init(
- 	buip->bui_format.bui_nextents = XFS_BUI_MAX_FAST_EXTENTS;
- 	buip->bui_format.bui_id = (uintptr_t)(void *)buip;
- 	atomic_set(&buip->bui_next_extent, 0);
--	atomic_set(&buip->bui_refcount, 2);
-+	refcount_set(&buip->bui_refcount, 2);
- 
- 	return buip;
- }
-@@ -215,7 +215,7 @@ void
- xfs_bui_release(
- 	struct xfs_bui_log_item	*buip)
- {
--	if (atomic_dec_and_test(&buip->bui_refcount)) {
-+	if (refcount_dec_and_test(&buip->bui_refcount)) {
- 		xfs_trans_ail_remove(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_bui_item_free(buip);
- 	}
-diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
-index c867daa..988a6ae 100644
---- a/fs/xfs/xfs_bmap_item.h
-+++ b/fs/xfs/xfs_bmap_item.h
-@@ -20,6 +20,8 @@
- #ifndef	__XFS_BMAP_ITEM_H__
- #define	__XFS_BMAP_ITEM_H__
- 
-+#include <linux/refcount.h>
-+
- /*
-  * There are (currently) two pairs of bmap btree redo item types: map & unmap.
-  * The common abbreviations for these are BUI (bmap update intent) and BUD
-@@ -61,7 +63,7 @@ struct kmem_zone;
-  */
- struct xfs_bui_log_item {
- 	struct xfs_log_item		bui_item;
--	atomic_t			bui_refcount;
-+	refcount_t			bui_refcount;
- 	atomic_t			bui_next_extent;
- 	unsigned long			bui_flags;	/* misc flags */
- 	struct xfs_bui_log_format	bui_format;
--- 
-2.7.4
-
+Never mind that the configure script really should probabe for the
+additional libraries to start with.
