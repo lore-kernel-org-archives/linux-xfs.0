@@ -1,39 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:37248 "EHLO mga04.intel.com"
+Received: from sandeen.net ([63.231.237.45]:33072 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932985AbdBVTkD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 22 Feb 2017 14:40:03 -0500
-Date: Wed, 22 Feb 2017 12:39:59 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: XFS kernel BUG during generic/270 with v4.10
-Message-ID: <20170222193959.GB29474@linux.intel.com>
-References: <20170222191300.GA29474@linux.intel.com>
+        id S1751010AbdB0FLO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Feb 2017 00:11:14 -0500
+Subject: Re: [PATCH] xfsdump: fix build on 32-bit platforms
+References: <d1f01b20-8272-80d8-df1c-0cb5c8f8aa70@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <7fc75583-923a-3f73-aa74-487e87b8efba@sandeen.net>
+Date: Sun, 26 Feb 2017 23:01:22 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170222191300.GA29474@linux.intel.com>
+In-Reply-To: <d1f01b20-8272-80d8-df1c-0cb5c8f8aa70@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>, Eric Biggers <ebiggers@google.com>
 
-On Wed, Feb 22, 2017 at 12:13:00PM -0700, Ross Zwisler wrote:
-> By running generic/270 in a loop on an XFS filesystem mounted with DAX I'm
-> able to reliably generate the following kernel bug after a few (~10)
-> iterations (output passed through kasan_symbolize.py):
+On 2/17/17 3:02 PM, Eric Sandeen wrote:
+> Now that xfsprogs requires anyone using the headers to
+> properly define 64-bit file access, xfsdump has stopped
+> building on 32-bit platforms.
+> 
+> I think this is all it needs; works for me here.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-A few other notes which I should have included in the original report:
+Ping?
 
-1) I initially found this while testing Brian's fix for the WARN_ON I reported
-with this same test [1].
-
-2) After the initial failure I was able to reproduce the issue reliably on
-v4.10.  Based on 1) and 2) my guess is that this failure is independent of the
-other issue that I reported and that Brian was trying to fix.  They just
-happen to show up with the same xfstest.
-
-[1] https://www.spinics.net/lists/linux-xfs/msg04300.html
+(with the dearth of devel traffic for xfsdump, don't want this
+to get lost...)
 
 Thanks,
-- Ross
+-Eric
+
+> ---
+> 
+> cc: Eric Biggers because he seems to enjoy this stuff :)
+> 
+> diff --git a/configure.ac b/configure.ac
+> index 7bb6f1d..8d78ed4 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -6,6 +6,8 @@ AC_CONFIG_SRCDIR([common/main.c])
+>  AC_CONFIG_HEADER(include/config.h)
+>  AC_PREFIX_DEFAULT(/usr)
+>  
+> +AC_SYS_LARGEFILE
+> +
+>  AC_PROG_LIBTOOL
+>  
+>  AC_ARG_ENABLE(shared,
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
