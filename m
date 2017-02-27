@@ -1,61 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38015 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750921AbdBCPno (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 Feb 2017 10:43:44 -0500
-Date: Fri, 3 Feb 2017 16:32:22 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 8/8] Revert "ext4: fix wrong gfp type under transaction"
-Message-ID: <20170203153222.GH19325@dhcp22.suse.cz>
-References: <20170117161618.GT19699@dhcp22.suse.cz>
- <20170117172925.GA2486@quack2.suse.cz>
- <20170119083956.GE30786@dhcp22.suse.cz>
- <20170119092236.GC2565@quack2.suse.cz>
- <20170119094405.GK30786@dhcp22.suse.cz>
- <20170126074455.GC8456@dhcp22.suse.cz>
- <20170127061318.xd2qxashbl4dajez@thunk.org>
- <20170127093735.GB4143@dhcp22.suse.cz>
- <20170127164042.2o3bnyopihcb224g@thunk.org>
- <20170130081210.GD8443@dhcp22.suse.cz>
+Received: from userp1040.oracle.com ([156.151.31.81]:40102 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751571AbdB0U2I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Feb 2017 15:28:08 -0500
+Date: Mon, 27 Feb 2017 12:27:55 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: Why does fsck.xfs not do what xfs_repair -n does?
+Message-ID: <20170227202755.GB5297@birch.djwong.org>
+References: <bfb182d9-a005-2d9f-355e-0d785c87c116@gmx.net>
+ <20170227081636.2evil6tpv75o5ldw@eorzea.usersys.redhat.com>
+ <20170227182646.GO31264@wotan.suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20170130081210.GD8443@dhcp22.suse.cz>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170227182646.GO31264@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Marcel Partap <mpartap@gmx.net>, linux-xfs@vger.kernel.org
 
-On Mon 30-01-17 09:12:10, Michal Hocko wrote:
-> On Fri 27-01-17 11:40:42, Theodore Ts'o wrote:
-> > On Fri, Jan 27, 2017 at 10:37:35AM +0100, Michal Hocko wrote:
-> > > If this ever turn out to be a problem and with the vmapped stacks we
-> > > have good chances to get a proper stack traces on a potential overflow
-> > > we can add the scope API around the problematic code path with the
-> > > explanation why it is needed.
+On Mon, Feb 27, 2017 at 07:26:46PM +0100, Luis R. Rodriguez wrote:
+> On Mon, Feb 27, 2017 at 09:16:36AM +0100, Carlos Maiolino wrote:
+> > On Fri, Feb 24, 2017 at 09:49:17PM +0100, Marcel Partap wrote:
+> > > Dear XFS dev crew,
+> > > > fsck.xfs(8)
+> > > >         fsck.xfs - do nothing, successfully
+> > > >         If you wish to check the consistency of an XFS filesystem, or repair a damaged or corrupt XFS filesystem, see xfs_repair(8).
+> > > 
+> > > So there's a FS check command that does not work as with all the other
+> > > filesystems. Instead of checking the FS, it tells you to use xfs_repair
+> > > both for - XFS repair.. and XFS check. Whereas in the man page of
+> > > > xfs_repair - repair an XFS filesystem
+> > > it doesn't tell you right at the top that xfs_repair can check XFS. Instead
+> > > > *       -n     No modify mode. Specifies that xfs_repair should […]  *scan  the  filesystem*
 > > 
-> > Yeah, or maybe we can automate it?  Can the reclaim code check how
-> > much stack space is left and do the right thing automatically?
+> > Xfs used to have two different tools for that. xfs_check and xfs_repair. This
+> > required one more tool, several more lines of code to be maintained, while
+> > xfs_repair does the check job with '-n' option, so, it was decided to deprecate
+> > xfs_check and keep efforts only in xfs_repair.
 > 
-> I am not sure how to do that. Checking for some magic value sounds quite
-> fragile to me. It also sounds a bit strange to focus only on the reclaim
-> while other code paths might suffer from the same problem.
-> 
-> What is actually the deepest possible call chain from the slab reclaim
-> where I stopped? I have tried to follow that path but hit the callback
-> wall quite early.
->  
-> > The reason why I'm nervous is that nojournal mode is not a common
-> > configuration, and "wait until production systems start failing" is
-> > not a strategy that I or many SRE-types find.... comforting.
-> 
-> I understand that but I would be much more happier if we did the
-> decision based on the actual data rather than a fear something would
-> break down.
+> A symlink to xfs_check and a check for the alias would have sufficed to keep the
+> old interface while sharing code. That can be considered should folks agree this
+> desirable and should be a few lines of code.
 
-ping on this. I would really like to move forward here and target 4.11
-merge window. Is your concern so serious to block this patch?
--- 
-Michal Hocko
-SUSE Labs
+Yuck.
+
+xfs_check does not (and has never had) the ability to repair anything.
+so fsck.xfs should /never/ point to it.
+
+Furthermore, xfs_repair was designed to work around the scalability
+problems that exist in the bitrotting xfs_check codebase.  In other
+words, _repair superseded _check long ago.  These days _check implements
+the bare minimum it needs to get by on a v5 filesystem without blowing
+up xfstests, which is afaict the sole remaining _check user.
+
+As for boot time checking, XFS stores logical in-core updates in its
+journal (unlike ext[34]|ocfs2 which store physical blocks in their
+journal), which means that the log replay only works in-kernel on the
+same type of machine that wrote the journal.  Therefore, running fsck at
+boot time because we crashed is pointless because xfs_repair cannot
+replay the journal.  Nor can xfs_check.
+
+I admit that fsck.xfs doing essentially nothing is weird, but it /does/
+tell you to go run xfs_repair if you really mean it.  It's unfortunate
+that there really are two use-cases here -- boot scripts running
+fsck.xfs (in which case we really do want to do nothing) and the admin
+running fsck.xfs (in which case the current behavior is clunky).
+
+This may become even less important once online fsck stabilizes,
+though I'm putting the cart way ahead of the horse on that one. :)
+
+--D
+
+> 
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
