@@ -1,72 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.194]:60031 "EHLO mout.perfora.net"
+Received: from sandeen.net ([63.231.237.45]:58254 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751470AbdB1Cht (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Feb 2017 21:37:49 -0500
-Received: from justpickone.org ([74.208.250.170]) by mrelay.perfora.net
- (mreueus002 [74.208.5.2]) with ESMTPSA (Nemesis) id 0MdMM1-1d0tb31JGV-00IXdm
- for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2017 03:37:26 +0100
-Date: Mon, 27 Feb 2017 21:37:24 -0500
-From: David T-G <davidtg@justpickone.org>
-Subject: xfs_growfs 3.2.1 on Knoppix-ADRIANE from Debian 7 does not grow
-Message-ID: <20170228023724.GJ23709@justpickone.org>
+        id S1751454AbdB0Plf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Feb 2017 10:41:35 -0500
+Subject: Re: With respect to XFS Bitmap flush to disk
+References: <004e01d2909e$d9ce1580$8d6a4080$@gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5b2d2e73-bd7e-e705-bd56-d764b7801492@sandeen.net>
+Date: Mon, 27 Feb 2017 09:33:10 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <004e01d2909e$d9ce1580$8d6a4080$@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Halsey Pian <halsey.pian@gmail.com>, linux-xfs@vger.kernel.org
 
-Hi, all --
+On 2/26/17 8:11 PM, Halsey Pian wrote:
+> Dear All,
+> 
+> Recently, I try to read analyze the bitmap of XFS file system, it
+> seems that I cannot read the latest bitmap from hard disk involving
+> the XFS, and cannot read the accurate info even after a long time.
+> For example, i cannot get the relevant bitmap info after I add/delete
+> a big file to/from XFS file system.
 
-I finally settled on xfs as the filesystem for my raid5 volume on my
-home computer even though I've been a longtime reiserfs lover :-)  But,
-hey, let's try something new.
+In general, attempting to read metadata from a mounted block device
+isn't going to be reliable.  For one, changes may only be staged
+in the log, and not yet in their final disk location.
+ 
+> I tried several solution, and find it out that I must execute
+> xfs_freeze for the XFS partition in CentOS7, and it seems that
+> xfs_freeze doesn’t work for XFS version included in Redhat6.5, I must
+> umount/mount the xfs, then I can get the latest bitmap info related
+> to the latest data located in disk.
+> 
+> What  strategy does XFS use to cache/flush bitmap to hard disk?  How
+> can I get the accurate bitmap info especially for Redhat6 series
+> Operating System? Could you please give help on it?
 
-I recently added another device to my md raid5 set and expanded the
-device from 8T to 12T, and now I want to grow the filesystem.  I remade
-the partition and we oughta be good to go:
+The short answer is "you can't."  Directly reading the block device
+while mounted isn't a supported use of the filesystem.
 
-  diskfarm:root:10:~> parted /dev/md0 print | egrep 'TB|Table|Sector'
-  Disk /dev/md0: 12.0TB
-  Sector size (logical/physical): 512B/4096B
-  Partition Table: gpt
-   1      1049kB  12.0TB  12.0TB  xfs          Linux filesystem
+What are you trying to do, here?
 
-When I try xfs_growfs, however, nothing changes:
+Thanks,
+-Eric
 
-  diskfarm:root:10:~> df -kh /mnt/4Traid5md/
-  Filesystem      Size  Used Avail Use% Mounted on
-  /dev/md0p1      7.3T  6.5T  863G  89% /mnt/4Traid5md
-  diskfarm:root:10:~> xfs_growfs -d /mnt/4Traid5md/
-  meta-data=/dev/md0p1             isize=256    agcount=32, agsize=61043072 blks
-           =                       sectsz=4096  attr=2, projid32bit=1
-           =                       crc=0        finobt=0
-  data     =                       bsize=4096   blocks=1953377275, imaxpct=5
-           =                       sunit=128    swidth=256 blks
-  naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
-  log      =internal               bsize=4096   blocks=521728, version=2
-           =                       sectsz=4096  sunit=1 blks, lazy-count=1
-  realtime =none                   extsz=4096   blocks=0, rtextents=0
-  data size unchanged, skipping
-  diskfarm:root:10:~> df -kh /mnt/4Traid5md/
-  Filesystem      Size  Used Avail Use% Mounted on
-  /dev/md0p1      7.3T  6.5T  863G  89% /mnt/4Traid5md
-
-I've searched high and low and haven't found any indication of why I
-shouldn't be able to grow as long as the partition is large enough, so
-now it's time to dive into the mailing list :-)
-
-Please bcc: me on your replies since I am not subscribed.  I promise to
-follow up with my ongoing results :-)
-
-
-TIA & HAND
-
-:-D
--- 
-David T-G
-See http://justpickone.org/davidtg/email/
-See http://justpickone.org/davidtg/tofu.txt
-
+> Thanks in advance! ☺
+> 
+> 
+> 
+> 
+> Halsey Pian
+> 
+> 
+> -- To unsubscribe from this list: send the line "unsubscribe
+> linux-xfs" in the body of a message to majordomo@vger.kernel.org More
+> majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
