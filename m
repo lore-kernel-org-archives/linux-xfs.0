@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37183 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:49757 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752000AbdB1O6E (ORCPT
+        with ESMTP id S1752093AbdB1O6E (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 09:58:04 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/12] fs: add a BH_Atomic flag
-Date: Tue, 28 Feb 2017 06:57:29 -0800
-Message-Id: <20170228145737.19016-5-hch@lst.de>
+Subject: [PATCH 05/12] fs: add a F_IOINFO fcntl
+Date: Tue, 28 Feb 2017 06:57:30 -0800
+Message-Id: <20170228145737.19016-6-hch@lst.de>
 In-Reply-To: <20170228145737.19016-1-hch@lst.de>
 References: <20170228145737.19016-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -14,119 +14,92 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
 
-This allows us propagate the O_ATOMIC flag through the writeback code.
+This fcntl can be used to query I/O parameters for the given file
+descriptor.  Initially it is used for the I/O alignment and atomic
+write parameters.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/buffer.c                 | 13 +++++++++----
- fs/internal.h               |  2 +-
- fs/iomap.c                  |  4 ++--
- include/linux/buffer_head.h |  2 ++
- 4 files changed, 14 insertions(+), 7 deletions(-)
+ fs/fcntl.c                 | 18 ++++++++++++++++++
+ include/linux/fs.h         |  1 +
+ include/uapi/linux/fcntl.h | 16 ++++++++++++++++
+ 3 files changed, 35 insertions(+)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 0e87401cf335..85b0dce31b34 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -1937,7 +1937,7 @@ EXPORT_SYMBOL(page_zero_new_buffers);
+diff --git a/fs/fcntl.c b/fs/fcntl.c
+index ca5d228be7ea..248fb4cc66a6 100644
+--- a/fs/fcntl.c
++++ b/fs/fcntl.c
+@@ -241,6 +241,21 @@ static int f_getowner_uids(struct file *filp, unsigned long arg)
+ }
+ #endif
  
- static void
- iomap_to_bh(struct inode *inode, sector_t block, struct buffer_head *bh,
--		struct iomap *iomap)
-+		struct iomap *iomap, unsigned flags)
++static int fcntl_ioinfo(struct file *file, void __user *argp)
++{
++	struct fcntl_ioinfo fio = { 0, };
++
++	if (file->f_op->ioinfo) {
++		int ret = file->f_op->ioinfo(file, &fio);
++		if (ret)
++			return ret;
++	}
++
++	if (copy_to_user(argp, &fio, sizeof(fio)))
++		return -EFAULT;
++	return 0;
++}
++
+ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
+ 		struct file *filp)
  {
- 	loff_t offset = block << inode->i_blkbits;
- 
-@@ -1987,10 +1987,15 @@ iomap_to_bh(struct inode *inode, sector_t block, struct buffer_head *bh,
- 		set_buffer_mapped(bh);
+@@ -335,6 +350,9 @@ static long do_fcntl(int fd, unsigned int cmd, unsigned long arg,
+ 	case F_GET_SEALS:
+ 		err = shmem_fcntl(filp, cmd, arg);
+ 		break;
++	case F_IOINFO:
++		err = fcntl_ioinfo(filp, (void __user *)arg);
++		break;
+ 	default:
  		break;
  	}
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 2ba074328894..33b08a8c2bc3 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1680,6 +1680,7 @@ struct file_operations {
+ 			u64);
+ 	ssize_t (*dedupe_file_range)(struct file *, u64, u64, struct file *,
+ 			u64);
++	int (*ioinfo)(struct file *, struct fcntl_ioinfo *);
+ };
+ 
+ struct inode_operations {
+diff --git a/include/uapi/linux/fcntl.h b/include/uapi/linux/fcntl.h
+index beed138bd359..6b0aaba7c623 100644
+--- a/include/uapi/linux/fcntl.h
++++ b/include/uapi/linux/fcntl.h
+@@ -42,6 +42,22 @@
+ #define F_SEAL_WRITE	0x0008	/* prevent writes */
+ /* (1U << 31) is reserved for signed error codes */
+ 
 +
-+	if (flags & IOMAP_ATOMIC)
-+		set_buffer_atomic(bh);
-+	else
-+		clear_buffer_atomic(bh);
- }
- 
- int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
--		get_block_t *get_block, struct iomap *iomap)
-+		get_block_t *get_block, struct iomap *iomap, unsigned flags)
- {
- 	unsigned from = pos & (PAGE_SIZE - 1);
- 	unsigned to = from + len;
-@@ -2031,7 +2036,7 @@ int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
- 				if (err)
- 					break;
- 			} else {
--				iomap_to_bh(inode, block, bh, iomap);
-+				iomap_to_bh(inode, block, bh, iomap, flags);
- 			}
- 
- 			if (buffer_new(bh)) {
-@@ -2077,7 +2082,7 @@ int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
- int __block_write_begin(struct page *page, loff_t pos, unsigned len,
- 		get_block_t *get_block)
- {
--	return __block_write_begin_int(page, pos, len, get_block, NULL);
-+	return __block_write_begin_int(page, pos, len, get_block, NULL, 0);
- }
- EXPORT_SYMBOL(__block_write_begin);
- 
-diff --git a/fs/internal.h b/fs/internal.h
-index 1934fdb2bb27..5f4cbdedafdb 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -42,7 +42,7 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
-  */
- extern void guard_bio_eod(int rw, struct bio *bio);
- extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
--		get_block_t *get_block, struct iomap *iomap);
-+		get_block_t *get_block, struct iomap *iomap, unsigned flags);
- 
++#define F_IOINFO	(F_LINUX_SPECIFIC_BASE +  11)
++
++struct fcntl_ioinfo {
++	__u16		fio_flags;	/* FIO_FL_* */
++	__u16		fio_alignment;	/* required I/O alignment on disk */
++	__u32		__reserved1;	/* must be zero */
++	__u64		fio_max_atomic;	/* max size for atomic writes */
++	__u64		__reserved2[14];/* must be zero */
++};
++
++/* supports atomic writes using O_(D)SYNC */
++#define FIO_FL_ATOMIC_OSYNC	(1 << 0)
++/* supports atomic writes committed using fsync/fdatasync/msync */
++#define FIO_FL_ATOMIC_FSYNC	(1 << 1)
++
  /*
-  * char_dev.c
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 096cbf573932..3c3c09104dcd 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -119,7 +119,7 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
- 	if (!page)
- 		return -ENOMEM;
- 
--	status = __block_write_begin_int(page, pos, len, NULL, iomap);
-+	status = __block_write_begin_int(page, pos, len, NULL, iomap, flags);
- 	if (unlikely(status)) {
- 		unlock_page(page);
- 		put_page(page);
-@@ -441,7 +441,7 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
- 	struct page *page = data;
- 	int ret;
- 
--	ret = __block_write_begin_int(page, pos, length, NULL, iomap);
-+	ret = __block_write_begin_int(page, pos, length, NULL, iomap, flags);
- 	if (ret)
- 		return ret;
- 
-diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
-index d67ab83823ad..baff49fdfbe8 100644
---- a/include/linux/buffer_head.h
-+++ b/include/linux/buffer_head.h
-@@ -37,6 +37,7 @@ enum bh_state_bits {
- 	BH_Meta,	/* Buffer contains metadata */
- 	BH_Prio,	/* Buffer should be submitted with REQ_PRIO */
- 	BH_Defer_Completion, /* Defer AIO completion to workqueue */
-+	BH_Atomic,	/* part of an O_ATOMIC write */
- 
- 	BH_PrivateStart,/* not a state bit, but the first bit available
- 			 * for private allocation by other entities
-@@ -130,6 +131,7 @@ BUFFER_FNS(Unwritten, unwritten)
- BUFFER_FNS(Meta, meta)
- BUFFER_FNS(Prio, prio)
- BUFFER_FNS(Defer_Completion, defer_completion)
-+BUFFER_FNS(Atomic, atomic);
- 
- #define bh_offset(bh)		((unsigned long)(bh)->b_data & ~PAGE_MASK)
- 
+  * Types of directory notifications that may be requested.
+  */
 -- 
 2.11.0
 
