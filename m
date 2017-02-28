@@ -1,190 +1,294 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33186 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751045AbdB1IPF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Feb 2017 03:15:05 -0500
-Date: Tue, 28 Feb 2017 16:15:02 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 3/4] reflink: test adjacency of reflinked blocks
-Message-ID: <20170228081502.GG16443@eguan.usersys.redhat.com>
-References: <148798515933.25833.2842247083803775089.stgit@birch.djwong.org>
- <148798517790.25833.2585159479268361866.stgit@birch.djwong.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38484 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751337AbdB1SqI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 13:46:08 -0500
+Subject: [PATCH 2/9] xfs: plumb in needed functions for range querying of
+ the freespace btrees
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 28 Feb 2017 10:46:03 -0800
+Message-ID: <148830756295.22089.13723667843243394073.stgit@birch.djwong.org>
+In-Reply-To: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
+References: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <148798517790.25833.2585159479268361866.stgit@birch.djwong.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@djwong.org>, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-ext4@vger.kernel.org
 
-On Fri, Feb 24, 2017 at 05:12:57PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> If we reflink a file with N blocks to another file one block at a time,
-> does the destination file end up with the same number of extents as the
-> source file?  In other words, does the filesystem succeed at combining
-> adjacent mappings into a maximal extents?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I'm not sure if this is a standard behavior and applies to btrfs too?
-But btrfs is failing this test now:
+Plumb in the pieces (init_high_key, diff_two_keys) necessary to call
+query_range on the free space btrees.  Remove the debugging asserts
+so that we can make queries starting from block 0.
 
-+f1 (1) != f2 (32)
-+s1 (1) != s2 (32)
+While we're at it, merge the redundant "if (btnum ==" hunks.
 
-Fix test or btrfs? I'm taking it if btrfs is the one to be fixed :)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+v2: Add forgotten cntbt high key function.
+---
+ fs/xfs/libxfs/xfs_alloc_btree.c |  172 +++++++++++++++++++++++++++++----------
+ 1 file changed, 129 insertions(+), 43 deletions(-)
 
-Thanks,
-Eryu
 
-> 
-> Signed-off-by: Darrick J. Wong <djwong@djwong.org>
-> ---
->  tests/generic/930     |  106 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/930.out |   11 +++++
->  tests/generic/group   |    1 
->  3 files changed, 118 insertions(+)
->  create mode 100755 tests/generic/930
->  create mode 100644 tests/generic/930.out
-> 
-> 
-> diff --git a/tests/generic/930 b/tests/generic/930
-> new file mode 100755
-> index 0000000..15d8cbf
-> --- /dev/null
-> +++ b/tests/generic/930
-> @@ -0,0 +1,106 @@
-> +#! /bin/bash
-> +# FS QA Test No. 930
-> +#
-> +# Check that reflinking adjacent blocks in a file produces a single
-> +# block mapping extent.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 7 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -rf $tmp.*
-> +	wait
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/reflink
-> +
-> +# real QA test starts here
-> +_supported_os Linux
-> +_supported_fs generic
-> +_require_scratch_reflink
-> +_require_fiemap
-> +
-> +echo "Format and mount"
-> +_scratch_mkfs > $seqres.full 2>&1
-> +_scratch_mount >> $seqres.full 2>&1
-> +
-> +testdir=$SCRATCH_MNT/test-$seq
-> +mkdir $testdir
-> +
-> +blocks=32
-> +blksz=65536
-> +sz=$((blocks * blksz))
-> +
-> +echo "Create the original files"
-> +$XFS_IO_PROG -f -c "falloc 0 $sz" $testdir/file1 >> $seqres.full
-> +_pwrite_byte 0x61 0 $sz $testdir/file1 >> $seqres.full
-> +seq 0 $blksz $((sz - blksz)) | while read offset; do
-> +	_reflink_range $testdir/file1 $offset $testdir/file2 $offset $blksz >> $seqres.full
-> +done
-> +
-> +echo "Compare files"
-> +md5sum $testdir/file1 | _filter_scratch
-> +md5sum $testdir/file2 | _filter_scratch
-> +
-> +echo "Check extent counts"
-> +f1=$(_count_extents $testdir/file1)
-> +f2=$(_count_extents $testdir/file2)
-> +s1=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file1 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> +s2=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file2 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> +
-> +# Did the fs combine the extent mappings when we made f2?
-> +test $f1 -eq $f2 || echo "f1 ($f1) != f2 ($f2)"
-> +test $s1 -eq $s2 || echo "s1 ($s1) != s2 ($s2)"
-> +test $f1 -eq $s1 || echo "f1 ($f1) != s1 ($f1)"
-> +test $f2 -eq $s2 || echo "f2 ($f2) != s2 ($f2)"
-> +
-> +_scratch_cycle_mount
-> +
-> +echo "Compare files after remounting"
-> +md5sum $testdir/file1 | _filter_scratch
-> +md5sum $testdir/file2 | _filter_scratch
-> +
-> +echo "Check extent counts"
-> +f1=$(_count_extents $testdir/file1)
-> +f2=$(_count_extents $testdir/file2)
-> +s1=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file1 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> +s2=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file2 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> +
-> +# Are the mappings still combined?
-> +test $f1 -eq $f2 || echo "f1 ($f1) != f2 ($f2)"
-> +test $s1 -eq $s2 || echo "s1 ($s1) != s2 ($s2)"
-> +test $f1 -eq $s1 || echo "f1 ($f1) != s1 ($f1)"
-> +test $f2 -eq $s2 || echo "f2 ($f2) != s2 ($f2)"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/930.out b/tests/generic/930.out
-> new file mode 100644
-> index 0000000..556108a
-> --- /dev/null
-> +++ b/tests/generic/930.out
-> @@ -0,0 +1,11 @@
-> +QA output created by 930
-> +Format and mount
-> +Create the original files
-> +Compare files
-> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file1
-> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file2
-> +Check extent counts
-> +Compare files after remounting
-> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file1
-> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file2
-> +Check extent counts
-> diff --git a/tests/generic/group b/tests/generic/group
-> index d0bc47d..4b4df66 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -411,3 +411,4 @@
->  406 auto quick dangerous
->  407 auto quick clone metadata
->  408 auto quick clone dedupe metadata
-> +930 auto quick clone
-> 
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index efb467b..e1fcfe7 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -205,19 +205,37 @@ xfs_allocbt_init_key_from_rec(
+ 	union xfs_btree_key	*key,
+ 	union xfs_btree_rec	*rec)
+ {
+-	ASSERT(rec->alloc.ar_startblock != 0);
+-
+ 	key->alloc.ar_startblock = rec->alloc.ar_startblock;
+ 	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
+ }
+ 
+ STATIC void
++xfs_bnobt_init_high_key_from_rec(
++	union xfs_btree_key	*key,
++	union xfs_btree_rec	*rec)
++{
++	__u32			x;
++
++	x = be32_to_cpu(rec->alloc.ar_startblock);
++	x += be32_to_cpu(rec->alloc.ar_blockcount) - 1;
++	key->alloc.ar_startblock = cpu_to_be32(x);
++	key->alloc.ar_blockcount = 0;
++}
++
++STATIC void
++xfs_cntbt_init_high_key_from_rec(
++	union xfs_btree_key	*key,
++	union xfs_btree_rec	*rec)
++{
++	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
++	key->alloc.ar_startblock = 0;
++}
++
++STATIC void
+ xfs_allocbt_init_rec_from_cur(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_rec	*rec)
+ {
+-	ASSERT(cur->bc_rec.a.ar_startblock != 0);
+-
+ 	rec->alloc.ar_startblock = cpu_to_be32(cur->bc_rec.a.ar_startblock);
+ 	rec->alloc.ar_blockcount = cpu_to_be32(cur->bc_rec.a.ar_blockcount);
+ }
+@@ -236,18 +254,24 @@ xfs_allocbt_init_ptr_from_cur(
+ }
+ 
+ STATIC __int64_t
+-xfs_allocbt_key_diff(
++xfs_bnobt_key_diff(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*key)
+ {
+ 	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
+ 	xfs_alloc_key_t		*kp = &key->alloc;
+-	__int64_t		diff;
+ 
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return (__int64_t)be32_to_cpu(kp->ar_startblock) -
+-				rec->ar_startblock;
+-	}
++	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
++}
++
++STATIC __int64_t
++xfs_cntbt_key_diff(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*key)
++{
++	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
++	xfs_alloc_key_t		*kp = &key->alloc;
++	__int64_t		diff;
+ 
+ 	diff = (__int64_t)be32_to_cpu(kp->ar_blockcount) - rec->ar_blockcount;
+ 	if (diff)
+@@ -256,6 +280,33 @@ xfs_allocbt_key_diff(
+ 	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
+ }
+ 
++STATIC __int64_t
++xfs_bnobt_diff_two_keys(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	return (__int64_t)be32_to_cpu(k1->alloc.ar_startblock) -
++			  be32_to_cpu(k2->alloc.ar_startblock);
++}
++
++STATIC __int64_t
++xfs_cntbt_diff_two_keys(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	__int64_t		diff;
++
++	diff =  be32_to_cpu(k1->alloc.ar_blockcount) -
++		be32_to_cpu(k2->alloc.ar_blockcount);
++	if (diff)
++		return diff;
++
++	return  be32_to_cpu(k1->alloc.ar_startblock) -
++		be32_to_cpu(k2->alloc.ar_startblock);
++}
++
+ static bool
+ xfs_allocbt_verify(
+ 	struct xfs_buf		*bp)
+@@ -346,44 +397,54 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
+ 
+ #if defined(DEBUG) || defined(XFS_WARN)
+ STATIC int
+-xfs_allocbt_keys_inorder(
++xfs_bnobt_keys_inorder(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_key	*k1,
+ 	union xfs_btree_key	*k2)
+ {
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return be32_to_cpu(k1->alloc.ar_startblock) <
+-		       be32_to_cpu(k2->alloc.ar_startblock);
+-	} else {
+-		return be32_to_cpu(k1->alloc.ar_blockcount) <
+-			be32_to_cpu(k2->alloc.ar_blockcount) ||
+-			(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
+-			 be32_to_cpu(k1->alloc.ar_startblock) <
+-			 be32_to_cpu(k2->alloc.ar_startblock));
+-	}
++	return be32_to_cpu(k1->alloc.ar_startblock) <
++	       be32_to_cpu(k2->alloc.ar_startblock);
+ }
+ 
+ STATIC int
+-xfs_allocbt_recs_inorder(
++xfs_bnobt_recs_inorder(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_rec	*r1,
+ 	union xfs_btree_rec	*r2)
+ {
+-	if (cur->bc_btnum == XFS_BTNUM_BNO) {
+-		return be32_to_cpu(r1->alloc.ar_startblock) +
+-			be32_to_cpu(r1->alloc.ar_blockcount) <=
+-			be32_to_cpu(r2->alloc.ar_startblock);
+-	} else {
+-		return be32_to_cpu(r1->alloc.ar_blockcount) <
+-			be32_to_cpu(r2->alloc.ar_blockcount) ||
+-			(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
+-			 be32_to_cpu(r1->alloc.ar_startblock) <
+-			 be32_to_cpu(r2->alloc.ar_startblock));
+-	}
++	return be32_to_cpu(r1->alloc.ar_startblock) +
++		be32_to_cpu(r1->alloc.ar_blockcount) <=
++		be32_to_cpu(r2->alloc.ar_startblock);
++}
++
++STATIC int
++xfs_cntbt_keys_inorder(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_key	*k1,
++	union xfs_btree_key	*k2)
++{
++	return be32_to_cpu(k1->alloc.ar_blockcount) <
++		be32_to_cpu(k2->alloc.ar_blockcount) ||
++		(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
++		 be32_to_cpu(k1->alloc.ar_startblock) <
++		 be32_to_cpu(k2->alloc.ar_startblock));
+ }
+-#endif	/* DEBUG */
+ 
+-static const struct xfs_btree_ops xfs_allocbt_ops = {
++STATIC int
++xfs_cntbt_recs_inorder(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_rec	*r1,
++	union xfs_btree_rec	*r2)
++{
++	return be32_to_cpu(r1->alloc.ar_blockcount) <
++		be32_to_cpu(r2->alloc.ar_blockcount) ||
++		(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
++		 be32_to_cpu(r1->alloc.ar_startblock) <
++		 be32_to_cpu(r2->alloc.ar_startblock));
++}
++#endif /* DEBUG */
++
++static const struct xfs_btree_ops xfs_bnobt_ops = {
+ 	.rec_len		= sizeof(xfs_alloc_rec_t),
+ 	.key_len		= sizeof(xfs_alloc_key_t),
+ 
+@@ -395,13 +456,39 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
+ 	.get_minrecs		= xfs_allocbt_get_minrecs,
+ 	.get_maxrecs		= xfs_allocbt_get_maxrecs,
+ 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
++	.init_high_key_from_rec	= xfs_bnobt_init_high_key_from_rec,
+ 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
+ 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
+-	.key_diff		= xfs_allocbt_key_diff,
++	.key_diff		= xfs_bnobt_key_diff,
+ 	.buf_ops		= &xfs_allocbt_buf_ops,
++	.diff_two_keys		= xfs_bnobt_diff_two_keys,
+ #if defined(DEBUG) || defined(XFS_WARN)
+-	.keys_inorder		= xfs_allocbt_keys_inorder,
+-	.recs_inorder		= xfs_allocbt_recs_inorder,
++	.keys_inorder		= xfs_bnobt_keys_inorder,
++	.recs_inorder		= xfs_bnobt_recs_inorder,
++#endif
++};
++
++static const struct xfs_btree_ops xfs_cntbt_ops = {
++	.rec_len		= sizeof(xfs_alloc_rec_t),
++	.key_len		= sizeof(xfs_alloc_key_t),
++
++	.dup_cursor		= xfs_allocbt_dup_cursor,
++	.set_root		= xfs_allocbt_set_root,
++	.alloc_block		= xfs_allocbt_alloc_block,
++	.free_block		= xfs_allocbt_free_block,
++	.update_lastrec		= xfs_allocbt_update_lastrec,
++	.get_minrecs		= xfs_allocbt_get_minrecs,
++	.get_maxrecs		= xfs_allocbt_get_maxrecs,
++	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
++	.init_high_key_from_rec	= xfs_cntbt_init_high_key_from_rec,
++	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
++	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
++	.key_diff		= xfs_cntbt_key_diff,
++	.buf_ops		= &xfs_allocbt_buf_ops,
++	.diff_two_keys		= xfs_cntbt_diff_two_keys,
++#if defined(DEBUG) || defined(XFS_WARN)
++	.keys_inorder		= xfs_cntbt_keys_inorder,
++	.recs_inorder		= xfs_cntbt_recs_inorder,
+ #endif
+ };
+ 
+@@ -427,16 +514,15 @@ xfs_allocbt_init_cursor(
+ 	cur->bc_mp = mp;
+ 	cur->bc_btnum = btnum;
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
+-	cur->bc_ops = &xfs_allocbt_ops;
+-	if (btnum == XFS_BTNUM_BNO)
+-		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
+-	else
+-		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
+ 
+ 	if (btnum == XFS_BTNUM_CNT) {
++		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
++		cur->bc_ops = &xfs_cntbt_ops;
+ 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
+ 		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
+ 	} else {
++		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
++		cur->bc_ops = &xfs_bnobt_ops;
+ 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
+ 	}
+ 
+
