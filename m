@@ -1,401 +1,202 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44047 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:44726 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752117AbdB1O6E (ORCPT
+        with ESMTP id S1751986AbdB1O6E (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 09:58:04 -0500
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/12] xfs: implement failure-atomic writes
-Date: Tue, 28 Feb 2017 06:57:32 -0800
-Message-Id: <20170228145737.19016-8-hch@lst.de>
+Subject: [PATCH 02/12] iomap: pass IOMAP_* flags to actors
+Date: Tue, 28 Feb 2017 06:57:27 -0800
+Message-Id: <20170228145737.19016-3-hch@lst.de>
 In-Reply-To: <20170228145737.19016-1-hch@lst.de>
 References: <20170228145737.19016-1-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
 
-If O_ATOMIC is specified in the open flags this will cause XFS to
-allocate new extents in the COW for even if overwriting existing data,
-and not remap them into the data fork until ->fsync is called,
-at which point the whole range will be atomically remapped into the
-data fork.  This allows applications to ѕafely overwrite data instead
-of having to do double writes.
+This will be needed to implement O_ATOMIC.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c    | 18 +++++++++-----
- fs/xfs/xfs_aops.h    |  4 ++-
- fs/xfs/xfs_file.c    | 17 +++++++++++++
- fs/xfs/xfs_iomap.c   | 18 ++++++++------
- fs/xfs/xfs_reflink.c | 69 ++++++++++++++++++++++++++++++++++------------------
- fs/xfs/xfs_reflink.h |  5 ++--
- 6 files changed, 91 insertions(+), 40 deletions(-)
+ fs/dax.c      |  2 +-
+ fs/internal.h |  2 +-
+ fs/iomap.c    | 39 +++++++++++++++++++++------------------
+ 3 files changed, 23 insertions(+), 20 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index c78b585b3d84..1c5efbb05b47 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -292,6 +292,7 @@ xfs_end_io(
- 	if (unlikely(error)) {
- 		switch (ioend->io_type) {
- 		case XFS_IO_COW:
-+		case XFS_IO_ATOMIC:
- 			xfs_reflink_cancel_cow_range(ip, offset, size, 0);
- 			break;
- 		}
-@@ -327,7 +328,9 @@ xfs_end_bio(
- 	struct xfs_ioend	*ioend = bio->bi_private;
- 	struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
+diff --git a/fs/dax.c b/fs/dax.c
+index 78b9651576c6..5d71fc5f0a08 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -997,7 +997,7 @@ static sector_t dax_iomap_sector(struct iomap *iomap, loff_t pos)
  
--	if (ioend->io_type == XFS_IO_UNWRITTEN || ioend->io_type == XFS_IO_COW)
-+	if (ioend->io_type == XFS_IO_UNWRITTEN ||
-+	    ioend->io_type == XFS_IO_COW ||
-+	    ioend->io_type == XFS_IO_ATOMIC)
- 		queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
- 	else if (ioend->io_append_trans)
- 		queue_work(mp->m_data_workqueue, &ioend->io_work);
-@@ -354,6 +357,7 @@ xfs_map_blocks(
- 		return -EIO;
- 
- 	ASSERT(type != XFS_IO_COW);
-+	ASSERT(type != XFS_IO_ATOMIC);
- 	if (type == XFS_IO_UNWRITTEN)
- 		bmapi_flags |= XFS_BMAPI_IGSTATE;
- 
-@@ -768,7 +772,8 @@ xfs_map_cow(
- 	struct xfs_writepage_ctx *wpc,
- 	struct inode		*inode,
- 	loff_t			offset,
--	unsigned int		*new_type)
-+	unsigned int		*new_type,
-+	bool			atomic)
+ static loff_t
+ dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+-		struct iomap *iomap)
++		struct iomap *iomap, unsigned flags)
  {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_bmbt_irec	imap;
-@@ -778,10 +783,10 @@ xfs_map_cow(
- 	/*
- 	 * If we already have a valid COW mapping keep using it.
+ 	struct iov_iter *iter = data;
+ 	loff_t end = pos + length, done = 0;
+diff --git a/fs/internal.h b/fs/internal.h
+index 11c6d89dce9c..1934fdb2bb27 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -179,7 +179,7 @@ extern long vfs_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+  * iomap support:
+  */
+ typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
+-		void *data, struct iomap *iomap);
++		void *data, struct iomap *iomap, unsigned flags);
+ 
+ loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
+ 		unsigned flags, const struct iomap_ops *ops, void *data,
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 7f08ca03d95d..16a9d2b89cb6 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -76,7 +76,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 	 * we can do the copy-in page by page without having to worry about
+ 	 * failures exposing transient data.
  	 */
--	if (wpc->io_type == XFS_IO_COW) {
-+	if (wpc->io_type == XFS_IO_COW || wpc->io_type == XFS_IO_ATOMIC) {
- 		wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap, offset);
- 		if (wpc->imap_valid) {
--			*new_type = XFS_IO_COW;
-+			*new_type = wpc->io_type;
- 			return 0;
- 		}
- 	}
-@@ -807,7 +812,7 @@ xfs_map_cow(
- 			return error;
- 	}
+-	written = actor(inode, pos, length, data, &iomap);
++	written = actor(inode, pos, length, data, &iomap, flags);
  
--	wpc->io_type = *new_type = XFS_IO_COW;
-+	wpc->io_type = *new_type = atomic ? XFS_IO_ATOMIC : XFS_IO_COW;
- 	wpc->imap_valid = true;
- 	wpc->imap = imap;
- 	return 0;
-@@ -886,7 +891,8 @@ xfs_writepage_map(
- 		}
- 
- 		if (XFS_I(inode)->i_cowfp) {
--			error = xfs_map_cow(wpc, inode, offset, &new_type);
-+			error = xfs_map_cow(wpc, inode, offset, &new_type,
-+					buffer_atomic(bh));
- 			if (error)
- 				goto out;
- 		}
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index cc174ec6c2fd..798e653e68b6 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -29,6 +29,7 @@ enum {
- 	XFS_IO_UNWRITTEN,	/* covers allocated but uninitialized data */
- 	XFS_IO_OVERWRITE,	/* covers already allocated extent */
- 	XFS_IO_COW,		/* covers copy-on-write extent */
-+	XFS_IO_ATOMIC,		/* atomic write */
- };
- 
- #define XFS_IO_TYPES \
-@@ -36,7 +37,8 @@ enum {
- 	{ XFS_IO_DELALLOC,		"delalloc" }, \
- 	{ XFS_IO_UNWRITTEN,		"unwritten" }, \
- 	{ XFS_IO_OVERWRITE,		"overwrite" }, \
--	{ XFS_IO_COW,			"CoW" }
-+	{ XFS_IO_COW,			"CoW" }, \
-+	{ XFS_IO_ATOMIC,		"atomic" }
- 
- /*
-  * Structure for buffered I/O completions.
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 086440e79b86..a7d8324b59c5 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -160,6 +160,12 @@ xfs_file_fsync(
- 	else if (mp->m_logdev_targp != mp->m_ddev_targp)
- 		xfs_blkdev_issue_flush(mp->m_ddev_targp);
- 
-+	if (file->f_flags & O_ATOMIC) {
-+		error = xfs_reflink_end_cow(ip, start, end - start + 1);
-+		if (error)
-+			return error;
-+	}
-+
  	/*
- 	 * All metadata updates are logged, which means that we just have to
- 	 * flush the log up to the latest LSN that touched the inode. If we have
-@@ -457,6 +463,9 @@ xfs_dio_write_end_io(
- 	}
- 	spin_unlock(&ip->i_flags_lock);
- 
-+	if (iocb->ki_filp->f_flags & O_ATOMIC)
-+		return 0;
-+
- 	if (flags & IOMAP_DIO_COW) {
- 		error = xfs_reflink_end_cow(ip, offset, size);
- 		if (error)
-@@ -529,6 +538,12 @@ xfs_file_dio_aio_write(
- 		unaligned_io = 1;
- 
- 		/*
-+		 * We need filesystem block alignment to provide atomic commits.
-+		 */
-+		if (file->f_flags & O_ATOMIC)
-+			return -EINVAL;
-+
-+		/*
- 		 * We can't properly handle unaligned direct I/O to reflink
- 		 * files yet, as we can't unshare a partial block.
- 		 */
-@@ -892,6 +907,8 @@ xfs_file_open(
- 		return -EFBIG;
- 	if (XFS_FORCED_SHUTDOWN(XFS_M(inode->i_sb)))
- 		return -EIO;
-+	if (file->f_flags & O_ATOMIC)
-+		printk_ratelimited("O_ATOMIC!\n");
- 	return 0;
+ 	 * Now the data has been copied, commit the range we've copied.  This
+@@ -105,8 +105,9 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
  }
  
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 5d68b4279016..b686a6bd2db4 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -559,13 +559,14 @@ xfs_file_iomap_begin_delay(
- 
- 	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &idx, &got);
- 	if (!eof && got.br_startoff <= offset_fsb) {
--		if (xfs_is_reflink_inode(ip)) {
-+		if ((flags & IOMAP_ATOMIC) || xfs_is_reflink_inode(ip)) {
- 			bool		shared;
- 
- 			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
- 					maxbytes_fsb);
- 			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
--			error = xfs_reflink_reserve_cow(ip, &got, &shared);
-+			error = xfs_reflink_reserve_cow(ip, &got, &shared,
-+					(flags & IOMAP_ATOMIC));
- 			if (error)
- 				goto out_unlock;
- 		}
-@@ -951,7 +952,7 @@ static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
- 	 */
- 	if (xfs_is_reflink_inode(ip) && (flags & (IOMAP_WRITE | IOMAP_ZERO)))
- 		return true;
--	if ((flags & IOMAP_DIRECT) && (flags & IOMAP_WRITE))
-+	if ((flags & (IOMAP_DIRECT | IOMAP_ATOMIC)) && (flags & IOMAP_WRITE))
- 		return true;
- 	return false;
- }
-@@ -976,7 +977,8 @@ xfs_file_iomap_begin(
- 		return -EIO;
- 
- 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
--			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
-+	    ((flags & IOMAP_ATOMIC) ||
-+	     (!IS_DAX(inode) && !xfs_get_extsz_hint(ip)))) {
- 		/* Reserve delalloc blocks for regular writeback. */
- 		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
- 				iomap);
-@@ -1008,15 +1010,17 @@ xfs_file_iomap_begin(
- 			goto out_unlock;
- 	}
- 
--	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
-+	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) &&
-+	    ((flags & IOMAP_ATOMIC) || xfs_is_reflink_inode(ip))) {
- 		if (flags & IOMAP_DIRECT) {
- 			/* may drop and re-acquire the ilock */
- 			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
--					&lockmode);
-+					&lockmode, flags & IOMAP_ATOMIC);
- 			if (error)
- 				goto out_unlock;
- 		} else {
--			error = xfs_reflink_reserve_cow(ip, &imap, &shared);
-+			error = xfs_reflink_reserve_cow(ip, &imap, &shared,
-+					false);
- 			if (error)
- 				goto out_unlock;
- 		}
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 4225b5e67b17..4702dd800ab8 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -264,9 +264,9 @@ int
- xfs_reflink_reserve_cow(
- 	struct xfs_inode	*ip,
- 	struct xfs_bmbt_irec	*imap,
--	bool			*shared)
-+	bool			*shared,
-+	bool			always_cow)
+ static int
+-iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+-		struct page **pagep, struct iomap *iomap)
++iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
++		unsigned aop_flags, struct page **pagep, struct iomap *iomap,
++		unsigned flags)
  {
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	struct xfs_bmbt_irec	got;
- 	int			error = 0;
- 	bool			eof = false, trimmed;
-@@ -280,26 +280,30 @@ xfs_reflink_reserve_cow(
- 	 * extent list is generally faster than going out to the shared extent
- 	 * tree.
- 	 */
--
--	if (!xfs_iext_lookup_extent(ip, ifp, imap->br_startoff, &idx, &got))
-+	if (!ip->i_cowfp) {
-+		ASSERT(always_cow);
-+		xfs_ifork_init_cow(ip);
- 		eof = true;
--	if (!eof && got.br_startoff <= imap->br_startoff) {
--		trace_xfs_reflink_cow_found(ip, imap);
--		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
-+	} else {
-+		if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, imap->br_startoff,
-+				&idx, &got))
-+			eof = true;
-+		if (!eof && got.br_startoff <= imap->br_startoff) {
-+			trace_xfs_reflink_cow_found(ip, imap);
-+			xfs_trim_extent(imap, got.br_startoff,
-+					got.br_blockcount);
-+
-+			*shared = true;
-+			return 0;
-+		}
+ 	pgoff_t index = pos >> PAGE_SHIFT;
+ 	struct page *page;
+@@ -114,7 +115,7 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
  
--		*shared = true;
--		return 0;
-+		/* Trim the mapping to the nearest shared extent boundary. */
-+		error = xfs_reflink_trim_around_shared(ip, imap, shared,
-+				&trimmed);
-+		if (error || !*shared)
-+			return error;
- 	}
+ 	BUG_ON(pos + len > iomap->offset + iomap->length);
  
--	/* Trim the mapping to the nearest shared extent boundary. */
--	error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
--	if (error)
--		return error;
--
--	/* Not shared?  Just report the (potentially capped) extent. */
--	if (!*shared)
--		return 0;
--
- 	/*
- 	 * Fork all the shared blocks from our write offset until the end of
- 	 * the extent.
-@@ -383,7 +387,8 @@ xfs_reflink_allocate_cow(
- 	struct xfs_inode	*ip,
- 	struct xfs_bmbt_irec	*imap,
- 	bool			*shared,
--	uint			*lockmode)
-+	uint			*lockmode,
-+	bool			always_cow)
+-	page = grab_cache_page_write_begin(inode->i_mapping, index, flags);
++	page = grab_cache_page_write_begin(inode->i_mapping, index, aop_flags);
+ 	if (!page)
+ 		return -ENOMEM;
+ 
+@@ -146,18 +147,18 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+ 
+ static loff_t
+ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+-		struct iomap *iomap)
++		struct iomap *iomap, unsigned flags)
  {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		offset_fsb = imap->br_startoff;
-@@ -399,15 +404,19 @@ xfs_reflink_allocate_cow(
- 	xfs_extnum_t		idx;
+ 	struct iov_iter *i = data;
+ 	long status = 0;
+ 	ssize_t written = 0;
+-	unsigned int flags = AOP_FLAG_NOFS;
++	unsigned int aop_flags = AOP_FLAG_NOFS;
  
- retry:
--	ASSERT(xfs_is_reflink_inode(ip));
-+	ASSERT(always_cow | xfs_is_reflink_inode(ip));
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
- 
-+	if (!ip->i_cowfp) {
-+		ASSERT(always_cow);
-+		xfs_ifork_init_cow(ip);
-+
  	/*
- 	 * Even if the extent is not shared we might have a preallocation for
- 	 * it in the COW fork.  If so use it.
+ 	 * Copies from kernel address space cannot fail (NFSD is a big user).
  	 */
--	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &idx, &got) &&
--	    got.br_startoff <= offset_fsb) {
-+	} else if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &idx,
-+			&got) && got.br_startoff <= offset_fsb) {
- 		*shared = true;
+ 	if (!iter_is_iovec(i))
+-		flags |= AOP_FLAG_UNINTERRUPTIBLE;
++		aop_flags |= AOP_FLAG_UNINTERRUPTIBLE;
  
- 		/* If we have a real allocation in the COW fork we're done. */
-@@ -418,7 +427,7 @@ xfs_reflink_allocate_cow(
- 		}
- 
- 		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
--	} else {
-+	} else if (!always_cow) {
- 		error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
- 		if (error || !*shared)
- 			goto out;
-@@ -684,6 +693,7 @@ xfs_reflink_end_cow(
- 	xfs_fileoff_t			offset_fsb;
- 	xfs_fileoff_t			end_fsb;
- 	xfs_fsblock_t			firstfsb;
-+	xfs_off_t			new_size;
- 	struct xfs_defer_ops		dfops;
- 	int				error;
- 	unsigned int			resblks;
-@@ -693,7 +703,7 @@ xfs_reflink_end_cow(
- 	trace_xfs_reflink_end_cow(ip, offset, count);
- 
- 	/* No COW extents?  That's easy! */
--	if (ifp->if_bytes == 0)
-+	if (!ifp || ifp->if_bytes == 0)
- 		return 0;
- 
- 	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
-@@ -776,6 +786,17 @@ xfs_reflink_end_cow(
+ 	do {
+ 		struct page *page;
+@@ -187,8 +188,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
  			break;
- 	}
+ 		}
  
-+	/*
-+	 * Update the on-disk inode size if we completed an operation outside
-+	 * of the inode size.  This can only happen for atomic writes, and not
-+	 * for actual reflinked files.
-+	 */
-+	new_size = xfs_new_eof(ip, offset + count);
-+	if (new_size) {
-+		ip->i_d.di_size = new_size;
-+		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	}
-+
- 	error = xfs_trans_commit(tp);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	if (error)
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 9416279b3c89..0360e2c0f3a5 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -27,9 +27,10 @@ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
- 		struct xfs_bmbt_irec *irec, bool *shared, bool *trimmed);
+-		status = iomap_write_begin(inode, pos, bytes, flags, &page,
+-				iomap);
++		status = iomap_write_begin(inode, pos, bytes, aop_flags, &page,
++				iomap, flags);
+ 		if (unlikely(status))
+ 			break;
  
- extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
--		struct xfs_bmbt_irec *imap, bool *shared);
-+		struct xfs_bmbt_irec *imap, bool *shared, bool always_cow);
- extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
--		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
-+		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode,
-+		bool always_cow);
- extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
- extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
+@@ -268,7 +269,7 @@ __iomap_read_page(struct inode *inode, loff_t offset)
+ 
+ static loff_t
+ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+-		struct iomap *iomap)
++		struct iomap *iomap, unsigned flags)
+ {
+ 	long status = 0;
+ 	ssize_t written = 0;
+@@ -287,7 +288,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 		status = iomap_write_begin(inode, pos, bytes,
+ 				AOP_FLAG_NOFS | AOP_FLAG_UNINTERRUPTIBLE,
+-				&page, iomap);
++				&page, iomap, flags);
+ 		put_page(rpage);
+ 		if (unlikely(status))
+ 			return status;
+@@ -333,13 +334,14 @@ iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
+ EXPORT_SYMBOL_GPL(iomap_file_dirty);
+ 
+ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+-		unsigned bytes, struct iomap *iomap)
++		unsigned bytes, struct iomap *iomap, unsigned flags)
+ {
+ 	struct page *page;
+ 	int status;
+ 
+ 	status = iomap_write_begin(inode, pos, bytes,
+-			AOP_FLAG_UNINTERRUPTIBLE | AOP_FLAG_NOFS, &page, iomap);
++			AOP_FLAG_UNINTERRUPTIBLE | AOP_FLAG_NOFS, &page, iomap,
++			flags);
+ 	if (status)
+ 		return status;
+ 
+@@ -360,7 +362,7 @@ static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+ 
+ static loff_t
+ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+-		void *data, struct iomap *iomap)
++		void *data, struct iomap *iomap, unsigned flags)
+ {
+ 	bool *did_zero = data;
+ 	loff_t written = 0;
+@@ -379,7 +381,8 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+ 		if (IS_DAX(inode))
+ 			status = iomap_dax_zero(pos, offset, bytes, iomap);
+ 		else
+-			status = iomap_zero(inode, pos, offset, bytes, iomap);
++			status = iomap_zero(inode, pos, offset, bytes, iomap,
++					flags);
+ 		if (status < 0)
+ 			return status;
+ 
+@@ -429,7 +432,7 @@ EXPORT_SYMBOL_GPL(iomap_truncate_page);
+ 
+ static loff_t
+ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
+-		void *data, struct iomap *iomap)
++		void *data, struct iomap *iomap, unsigned flags)
+ {
+ 	struct page *page = data;
+ 	int ret;
+@@ -521,7 +524,7 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
+ 
+ static loff_t
+ iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+-		struct iomap *iomap)
++		struct iomap *iomap, unsigned flags)
+ {
+ 	struct fiemap_ctx *ctx = data;
+ 	loff_t ret = length;
+@@ -730,7 +733,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
+ 
+ static loff_t
+ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+-		void *data, struct iomap *iomap)
++		void *data, struct iomap *iomap, unsigned flags)
+ {
+ 	struct iomap_dio *dio = data;
+ 	unsigned blkbits = blksize_bits(bdev_logical_block_size(iomap->bdev));
 -- 
 2.11.0
 
