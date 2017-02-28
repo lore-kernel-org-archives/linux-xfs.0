@@ -1,81 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35370 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:48410 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751285AbdB1Atz (ORCPT
+        with ESMTP id S1751419AbdB1Atz (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Feb 2017 19:49:55 -0500
 Received: from [8.25.222.2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1ciVys-000613-Sr
+        id 1ciVys-00060z-Oe
         for linux-xfs@vger.kernel.org; Tue, 28 Feb 2017 00:49:30 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] xfs: remove the ISUNWRITTEN macro
-Date: Mon, 27 Feb 2017 16:49:30 -0800
-Message-Id: <20170228004930.9559-2-hch@lst.de>
-In-Reply-To: <20170228004930.9559-1-hch@lst.de>
-References: <20170228004930.9559-1-hch@lst.de>
+Subject: [PATCH 1/2] xfs: factor out a xfs_bmap_is_real_extent helper
+Date: Mon, 27 Feb 2017 16:49:29 -0800
+Message-Id: <20170228004930.9559-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Opencoding the trivial checks makes it much easier to read (and grep..).
+This checks for all the non-normal extent types, including handling both
+encodings of delayed allocations.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap_btree.h | 1 -
- fs/xfs/xfs_aops.c              | 4 ++--
- fs/xfs/xfs_iomap.c             | 4 ++--
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.h | 12 ++++++++++++
+ fs/xfs/xfs_aops.c        |  4 +---
+ fs/xfs/xfs_bmap_util.c   |  7 +++----
+ fs/xfs/xfs_reflink.c     | 21 ++++-----------------
+ 4 files changed, 20 insertions(+), 24 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index 819a8a4dee95..90347a99c6d2 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -30,7 +30,6 @@ struct xfs_trans;
- #define XFS_EXTFMT_INODE(x)	\
- 	(xfs_sb_version_hasextflgbit(&((x)->i_mount->m_sb)) ? \
- 		XFS_EXTFMT_HASSTATE : XFS_EXTFMT_NOSTATE)
--#define ISUNWRITTEN(x)	((x)->br_state == XFS_EXT_UNWRITTEN)
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index cdef87db5262..a6e612cabe15 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -172,6 +172,18 @@ static inline int xfs_bmapi_whichfork(int bmapi_flags)
+ 
  
  /*
-  * Btree block header size depends on a superblock flag.
++ * Return true if the extent is a real, allocated extent, or false if it is  a
++ * delayed allocation, and unwritten extent or a hole.
++ */
++static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
++{
++	return irec->br_state != XFS_EXT_UNWRITTEN &&
++		irec->br_startblock != HOLESTARTBLOCK &&
++		irec->br_startblock != DELAYSTARTBLOCK &&
++		!isnullstartblock(irec->br_startblock);
++}
++
++/*
+  * This macro is used to determine how many extents will be shifted
+  * in one write transaction. We could require two splits,
+  * an extent move on the first and an extent merge on the second,
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 582e3275bb51..b480647e00e7 100644
+index 1ff9df7a3ce8..582e3275bb51 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -1266,8 +1266,8 @@ xfs_get_blocks(
- 
- 	if (nimaps) {
- 		trace_xfs_get_blocks_found(ip, offset, size,
--				ISUNWRITTEN(&imap) ? XFS_IO_UNWRITTEN
--						   : XFS_IO_OVERWRITE, &imap);
-+			imap.br_state == XFS_EXT_UNWRITTEN ?
-+				XFS_IO_UNWRITTEN : XFS_IO_OVERWRITE, &imap);
- 		xfs_iunlock(ip, lockmode);
- 	} else {
- 		trace_xfs_get_blocks_notfound(ip, offset, size);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 41662fb14e87..5d68b4279016 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -240,7 +240,7 @@ xfs_iomap_write_direct(
+@@ -1281,9 +1281,7 @@ xfs_get_blocks(
+ 	 * For unwritten extents do not report a disk address in the buffered
+ 	 * read case (treat as if we're reading into a hole).
  	 */
- 	if (IS_DAX(VFS_I(ip))) {
- 		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
--		if (ISUNWRITTEN(imap)) {
-+		if (imap->br_state == XFS_EXT_UNWRITTEN) {
- 			tflags |= XFS_TRANS_RESERVE;
- 			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0) << 1;
- 		}
-@@ -940,7 +940,7 @@ static inline bool imap_needs_alloc(struct inode *inode,
- 	return !nimaps ||
- 		imap->br_startblock == HOLESTARTBLOCK ||
- 		imap->br_startblock == DELAYSTARTBLOCK ||
--		(IS_DAX(inode) && ISUNWRITTEN(imap));
-+		(IS_DAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
- }
+-	if (imap.br_startblock != HOLESTARTBLOCK &&
+-	    imap.br_startblock != DELAYSTARTBLOCK &&
+-	    !ISUNWRITTEN(&imap))
++	if (xfs_bmap_is_real_extent(&imap))
+ 		xfs_map_buffer(inode, bh_result, &imap, offset);
  
- static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
+ 	/*
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 8b75dcea5966..88b2e923f2ed 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -448,10 +448,9 @@ xfs_getbmap_adjust_shared(
+ 	next_map->br_blockcount = 0;
+ 
+ 	/* Only written data blocks can be shared. */
+-	if (!xfs_is_reflink_inode(ip) || whichfork != XFS_DATA_FORK ||
+-	    map->br_startblock == DELAYSTARTBLOCK ||
+-	    map->br_startblock == HOLESTARTBLOCK ||
+-	    ISUNWRITTEN(map))
++	if (!xfs_is_reflink_inode(ip) ||
++	    whichfork != XFS_DATA_FORK ||
++	    !xfs_bmap_is_real_extent(map))
+ 		return 0;
+ 
+ 	agno = XFS_FSB_TO_AGNO(mp, map->br_startblock);
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index da6d08fb359c..08ca9f81b087 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -206,11 +206,7 @@ xfs_reflink_trim_around_shared(
+ 	int			error = 0;
+ 
+ 	/* Holes, unwritten, and delalloc extents cannot be shared */
+-	if (!xfs_is_reflink_inode(ip) ||
+-	    ISUNWRITTEN(irec) ||
+-	    irec->br_startblock == HOLESTARTBLOCK ||
+-	    irec->br_startblock == DELAYSTARTBLOCK ||
+-	    isnullstartblock(irec->br_startblock)) {
++	if (!xfs_is_reflink_inode(ip) || !xfs_bmap_is_real_extent(irec)) {
+ 		*shared = false;
+ 		return 0;
+ 	}
+@@ -1036,12 +1032,12 @@ xfs_reflink_remap_extent(
+ 	xfs_off_t		new_isize)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
++	bool			real_extent = xfs_bmap_is_real_extent(irec);
+ 	struct xfs_trans	*tp;
+ 	xfs_fsblock_t		firstfsb;
+ 	unsigned int		resblks;
+ 	struct xfs_defer_ops	dfops;
+ 	struct xfs_bmbt_irec	uirec;
+-	bool			real_extent;
+ 	xfs_filblks_t		rlen;
+ 	xfs_filblks_t		unmap_len;
+ 	xfs_off_t		newlen;
+@@ -1050,11 +1046,6 @@ xfs_reflink_remap_extent(
+ 	unmap_len = irec->br_startoff + irec->br_blockcount - destoff;
+ 	trace_xfs_reflink_punch_range(ip, destoff, unmap_len);
+ 
+-	/* Only remap normal extents. */
+-	real_extent =  (irec->br_startblock != HOLESTARTBLOCK &&
+-			irec->br_startblock != DELAYSTARTBLOCK &&
+-			!ISUNWRITTEN(irec));
+-
+ 	/* No reflinking if we're low on space */
+ 	if (real_extent) {
+ 		error = xfs_reflink_ag_has_free_space(mp,
+@@ -1350,9 +1341,7 @@ xfs_reflink_dirty_extents(
+ 			goto out;
+ 		if (nmaps == 0)
+ 			break;
+-		if (map[0].br_startblock == HOLESTARTBLOCK ||
+-		    map[0].br_startblock == DELAYSTARTBLOCK ||
+-		    ISUNWRITTEN(&map[0]))
++		if (!xfs_bmap_is_real_extent(&map[0]))
+ 			goto next;
+ 
+ 		map[1] = map[0];
+@@ -1426,9 +1415,7 @@ xfs_reflink_clear_inode_flag(
+ 			return error;
+ 		if (nmaps == 0)
+ 			break;
+-		if (map.br_startblock == HOLESTARTBLOCK ||
+-		    map.br_startblock == DELAYSTARTBLOCK ||
+-		    ISUNWRITTEN(&map))
++		if (!xfs_bmap_is_real_extent(&map))
+ 			goto next;
+ 
+ 		agno = XFS_FSB_TO_AGNO(mp, map.br_startblock);
 -- 
 2.11.0
 
