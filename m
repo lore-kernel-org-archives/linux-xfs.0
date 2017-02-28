@@ -1,211 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:34229 "EHLO
+Received: from aserp1050.oracle.com ([141.146.126.70]:41778 "EHLO
         aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751334AbdB1QdT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 11:33:19 -0500
-Date: Tue, 28 Feb 2017 08:31:50 -0800
+        with ESMTP id S1751787AbdB1JcD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 04:32:03 -0500
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v1S5ZXtv028612
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2017 05:35:33 GMT
+Date: Mon, 27 Feb 2017 21:34:20 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/4] reflink: test adjacency of reflinked blocks
-Message-ID: <20170228163150.GA26275@birch.djwong.org>
-References: <148798515933.25833.2842247083803775089.stgit@birch.djwong.org>
- <148798517790.25833.2585159479268361866.stgit@birch.djwong.org>
- <20170228081502.GG16443@eguan.usersys.redhat.com>
+Subject: Re: [PATCH] xfs: fix and streamline error handling in xfs_end_io
+Message-ID: <20170228053420.GG5297@birch.djwong.org>
+References: <20170228004950.9609-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170228081502.GG16443@eguan.usersys.redhat.com>
+In-Reply-To: <20170228004950.9609-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@djwong.org>, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Feb 28, 2017 at 04:15:02PM +0800, Eryu Guan wrote:
-> On Fri, Feb 24, 2017 at 05:12:57PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > If we reflink a file with N blocks to another file one block at a time,
-> > does the destination file end up with the same number of extents as the
-> > source file?  In other words, does the filesystem succeed at combining
-> > adjacent mappings into a maximal extents?
+On Mon, Feb 27, 2017 at 04:49:50PM -0800, Christoph Hellwig wrote:
+> There are two different cases of buffered I/O errors:
 > 
-> I'm not sure if this is a standard behavior and applies to btrfs too?
-> But btrfs is failing this test now:
-> 
-> +f1 (1) != f2 (32)
-> +s1 (1) != s2 (32)
-> 
-> Fix test or btrfs? I'm taking it if btrfs is the one to be fixed :)
+>  - first we can have an already shutdown fs.  In that case we should skip
+>    any on-disk operations and just clean up the appen transaction if
+>    present and destroy the ioend
+>  - a real I/O error.  In that case we should cleanup any lingering COW
+>    blocks.  This gets skipped in the current code and is fixed by this
+>    patch.
 
-btrfs has that weird behavior where it doesn't merge the adjacent
-extents at all (at least not according to FIEMAP) until you remount the
-filesystem.  After the remount it's fine, but... WTF? :)
+Somehow I lost that through all the rebasing of the reflink patchset,
+thank you for catching this!
 
-So yes, the test is working as designed.  btrfs needs fixing, or I guess
-worst case we can _notrun it on btrfs.
-
-Snark aside, it was intended originally to make sure that XFS is
-properly merging the extent records together; then it occurred to me to
-rewrite it with fiemap and make it one of the generic reflink tests so
-that ocfs2 can get tested too.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > 
-> Thanks,
-> Eryu
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_aops.c | 59 +++++++++++++++++++++++++------------------------------
+>  1 file changed, 27 insertions(+), 32 deletions(-)
 > 
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@djwong.org>
-> > ---
-> >  tests/generic/930     |  106 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/930.out |   11 +++++
-> >  tests/generic/group   |    1 
-> >  3 files changed, 118 insertions(+)
-> >  create mode 100755 tests/generic/930
-> >  create mode 100644 tests/generic/930.out
-> > 
-> > 
-> > diff --git a/tests/generic/930 b/tests/generic/930
-> > new file mode 100755
-> > index 0000000..15d8cbf
-> > --- /dev/null
-> > +++ b/tests/generic/930
-> > @@ -0,0 +1,106 @@
-> > +#! /bin/bash
-> > +# FS QA Test No. 930
-> > +#
-> > +# Check that reflinking adjacent blocks in a file produces a single
-> > +# block mapping extent.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 7 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -rf $tmp.*
-> > +	wait
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +. ./common/reflink
-> > +
-> > +# real QA test starts here
-> > +_supported_os Linux
-> > +_supported_fs generic
-> > +_require_scratch_reflink
-> > +_require_fiemap
-> > +
-> > +echo "Format and mount"
-> > +_scratch_mkfs > $seqres.full 2>&1
-> > +_scratch_mount >> $seqres.full 2>&1
-> > +
-> > +testdir=$SCRATCH_MNT/test-$seq
-> > +mkdir $testdir
-> > +
-> > +blocks=32
-> > +blksz=65536
-> > +sz=$((blocks * blksz))
-> > +
-> > +echo "Create the original files"
-> > +$XFS_IO_PROG -f -c "falloc 0 $sz" $testdir/file1 >> $seqres.full
-> > +_pwrite_byte 0x61 0 $sz $testdir/file1 >> $seqres.full
-> > +seq 0 $blksz $((sz - blksz)) | while read offset; do
-> > +	_reflink_range $testdir/file1 $offset $testdir/file2 $offset $blksz >> $seqres.full
-> > +done
-> > +
-> > +echo "Compare files"
-> > +md5sum $testdir/file1 | _filter_scratch
-> > +md5sum $testdir/file2 | _filter_scratch
-> > +
-> > +echo "Check extent counts"
-> > +f1=$(_count_extents $testdir/file1)
-> > +f2=$(_count_extents $testdir/file2)
-> > +s1=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file1 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> > +s2=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file2 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> > +
-> > +# Did the fs combine the extent mappings when we made f2?
-> > +test $f1 -eq $f2 || echo "f1 ($f1) != f2 ($f2)"
-> > +test $s1 -eq $s2 || echo "s1 ($s1) != s2 ($s2)"
-> > +test $f1 -eq $s1 || echo "f1 ($f1) != s1 ($f1)"
-> > +test $f2 -eq $s2 || echo "f2 ($f2) != s2 ($f2)"
-> > +
-> > +_scratch_cycle_mount
-> > +
-> > +echo "Compare files after remounting"
-> > +md5sum $testdir/file1 | _filter_scratch
-> > +md5sum $testdir/file2 | _filter_scratch
-> > +
-> > +echo "Check extent counts"
-> > +f1=$(_count_extents $testdir/file1)
-> > +f2=$(_count_extents $testdir/file2)
-> > +s1=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file1 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> > +s2=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file2 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> > +
-> > +# Are the mappings still combined?
-> > +test $f1 -eq $f2 || echo "f1 ($f1) != f2 ($f2)"
-> > +test $s1 -eq $s2 || echo "s1 ($s1) != s2 ($s2)"
-> > +test $f1 -eq $s1 || echo "f1 ($f1) != s1 ($f1)"
-> > +test $f2 -eq $s2 || echo "f2 ($f2) != s2 ($f2)"
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/930.out b/tests/generic/930.out
-> > new file mode 100644
-> > index 0000000..556108a
-> > --- /dev/null
-> > +++ b/tests/generic/930.out
-> > @@ -0,0 +1,11 @@
-> > +QA output created by 930
-> > +Format and mount
-> > +Create the original files
-> > +Compare files
-> > +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file1
-> > +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file2
-> > +Check extent counts
-> > +Compare files after remounting
-> > +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file1
-> > +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file2
-> > +Check extent counts
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index d0bc47d..4b4df66 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -411,3 +411,4 @@
-> >  406 auto quick dangerous
-> >  407 auto quick clone metadata
-> >  408 auto quick clone dedupe metadata
-> > +930 auto quick clone
-> > 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 290c0fb306e7..fe244648fff0 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -274,54 +274,49 @@ xfs_end_io(
+>  	struct xfs_ioend	*ioend =
+>  		container_of(work, struct xfs_ioend, io_work);
+>  	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+> +	xfs_off_t		offset = ioend->io_offset;
+> +	size_t			size = ioend->io_size;
+>  	int			error = ioend->io_bio->bi_error;
+>  
+>  	/*
+> -	 * Set an error if the mount has shut down and proceed with end I/O
+> -	 * processing so it can perform whatever cleanups are necessary.
+> +	 * Just clean up the in-memory strutures if the fs has been shut down.
+>  	 */
+> -	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+> +	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+>  		error = -EIO;
+> +		goto done;
+> +	}
+>  
+>  	/*
+> -	 * For a CoW extent, we need to move the mapping from the CoW fork
+> -	 * to the data fork.  If instead an error happened, just dump the
+> -	 * new blocks.
+> +	 * Clean up any COW blocks on an I/O error.
+>  	 */
+> -	if (ioend->io_type == XFS_IO_COW) {
+> -		if (error)
+> -			goto done;
+> -		if (ioend->io_bio->bi_error) {
+> -			error = xfs_reflink_cancel_cow_range(ip,
+> -					ioend->io_offset, ioend->io_size, 0);
+> -			goto done;
+> +	if (unlikely(error)) {
+> +		switch (ioend->io_type) {
+> +		case XFS_IO_COW:
+> +			xfs_reflink_cancel_cow_range(ip, offset, size, 0);
+> +			break;
+>  		}
+> -		error = xfs_reflink_end_cow(ip, ioend->io_offset,
+> -				ioend->io_size);
+> -		if (error)
+> -			goto done;
+> +
+> +		goto done;
+>  	}
+>  
+>  	/*
+> -	 * For unwritten extents we need to issue transactions to convert a
+> -	 * range to normal written extens after the data I/O has finished.
+> -	 * Detecting and handling completion IO errors is done individually
+> -	 * for each case as different cleanup operations need to be performed
+> -	 * on error.
+> +	 * Success:  commit the COW or unwritten blocks if needed.
+>  	 */
+> -	if (ioend->io_type == XFS_IO_UNWRITTEN) {
+> -		if (error)
+> -			goto done;
+> -		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
+> -						  ioend->io_size);
+> -	} else if (ioend->io_append_trans) {
+> -		error = xfs_setfilesize_ioend(ioend, error);
+> -	} else {
+> -		ASSERT(!xfs_ioend_is_append(ioend) ||
+> -		       ioend->io_type == XFS_IO_COW);
+> +	switch (ioend->io_type) {
+> +	case XFS_IO_COW:
+> +		error = xfs_reflink_end_cow(ip, offset, size);
+> +		break;
+> +	case XFS_IO_UNWRITTEN:
+> +		error = xfs_iomap_write_unwritten(ip, offset, size);
+> +		break;
+> +	default:
+> +		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
+> +		break;
+>  	}
+>  
+>  done:
+> +	if (ioend->io_append_trans)
+> +		error = xfs_setfilesize_ioend(ioend, error);
+>  	xfs_destroy_ioend(ioend, error);
+>  }
+>  
+> -- 
+> 2.11.0
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
