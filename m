@@ -1,159 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19763 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:40058 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752117AbdB1O7m (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Feb 2017 09:59:42 -0500
-Date: Tue, 28 Feb 2017 09:59:40 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: LTP write03 writev07 xfs failures
-Message-ID: <20170228145940.GA13377@bfoster.bfoster>
-References: <20170227042220.syhudcilvyettwnf@XZHOUW.usersys.redhat.com>
- <20170227160901.GB9344@bfoster.bfoster>
- <20170227201334.GC9344@bfoster.bfoster>
- <20170228140455.GB9371@infradead.org>
+        id S1751985AbdB1PON (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Feb 2017 10:14:13 -0500
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id E737CABC6
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2017 14:56:02 +0000 (UTC)
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: lockdep splat in today's master in generic/070
+Message-ID: <0e8e52ac-36e4-c8f9-99c7-88e2c9bcb782@suse.com>
+Date: Tue, 28 Feb 2017 16:56:01 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170228140455.GB9371@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Feb 28, 2017 at 06:04:55AM -0800, Christoph Hellwig wrote:
-> On Mon, Feb 27, 2017 at 03:13:35PM -0500, Brian Foster wrote:
-> > After playing around a bit, I don't think using i_size is the right
-> > approach either. It just exacerbates the original problem on buffered
-> > writes into sparse files. We can end up leaving around however many
-> > delalloc blocks we've allocated.
-> > 
-> > I think we need a way to differentiate preexisting (previously written)
-> > delalloc blocks from those allocated and unused by the current write. We
-> > might be able to do that by looking at the pagecache, but I think that
-> > means looking at the buffer state to make sure we handle sub-page block
-> > sizes correctly. I.e., make *_iomap_end_delalloc() punch out all
-> > delalloc blocks in the non-written range that are either not page backed
-> > or not dirty+delalloc buffer backed. Hm?
-> 
-> That sounds ugly, but right off my mind I see no other way.  I'll need
-> to take a look at what the old pre-iomap code did there, as I think
-> none of these issues happened there.
+Hello, 
 
-Heh. I've appended what I'm currently playing around with. It's
-certainly uglier, but not terrible IMO (outside of the fact that we have
-to look at the buffer_heads). This seems to address the problem, but
-still only lightly tested...
+I've been running xfstest and I can reliably reproduce the following lockdep splat: 
 
-An entirely different approach may be to somehow or another
-differentiate allocated delalloc blocks from "found" delalloc blocks in
-the iomap_begin() handler, and then perhaps encode that into the iomap
-such that the iomap_end() handler has an explicit reference of what to
-punch. Personally, I wouldn't mind doing something like the below short
-term to fix the regression and then incorporate an iomap enhancement to
-break the buffer_head dependency.
+[  644.173373] =================================
+[  644.174012] [ INFO: inconsistent lock state ]
+[  644.174012] 4.10.0-nbor #134 Not tainted
+[  644.174012] ---------------------------------
+[  644.174012] inconsistent {IN-RECLAIM_FS-W} -> {RECLAIM_FS-ON-W} usage.
+[  644.174012] fsstress/3365 [HC0[0]:SC0[0]:HE1:SE1] takes:
+[  644.174012]  (&xfs_nondir_ilock_class){++++?.}, at: [<ffffffff8136f231>] xfs_ilock+0x141/0x230
+[  644.174012] {IN-RECLAIM_FS-W} state was registered at:
+[  644.174012]   __lock_acquire+0x62a/0x17c0
+[  644.174012]   lock_acquire+0xc5/0x220
+[  644.174012]   down_write_nested+0x4f/0x90
+[  644.174012]   xfs_ilock+0x141/0x230
+[  644.174012]   xfs_reclaim_inode+0x12a/0x320
+[  644.174012]   xfs_reclaim_inodes_ag+0x2c8/0x4e0
+[  644.174012]   xfs_reclaim_inodes_nr+0x33/0x40
+[  644.174012]   xfs_fs_free_cached_objects+0x19/0x20
+[  644.174012]   super_cache_scan+0x191/0x1a0
+[  644.174012]   shrink_slab+0x26f/0x5f0
+[  644.174012]   shrink_node+0xf9/0x2f0
+[  644.174012]   kswapd+0x356/0x920
+[  644.174012]   kthread+0x10c/0x140
+[  644.174012]   ret_from_fork+0x31/0x40
+[  644.174012] irq event stamp: 173777
+[  644.174012] hardirqs last  enabled at (173777): [<ffffffff8105b440>] __local_bh_enable_ip+0x70/0xc0
+[  644.174012] hardirqs last disabled at (173775): [<ffffffff8105b407>] __local_bh_enable_ip+0x37/0xc0
+[  644.174012] softirqs last  enabled at (173776): [<ffffffff81357e2a>] _xfs_buf_find+0x67a/0xb70
+[  644.174012] softirqs last disabled at (173774): [<ffffffff81357d8b>] _xfs_buf_find+0x5db/0xb70
+[  644.174012] 
+[  644.174012] other info that might help us debug this:
+[  644.174012]  Possible unsafe locking scenario:
+[  644.174012] 
+[  644.174012]        CPU0
+[  644.174012]        ----
+[  644.174012]   lock(&xfs_nondir_ilock_class);
+[  644.174012]   <Interrupt>
+[  644.174012]     lock(&xfs_nondir_ilock_class);
+[  644.174012] 
+[  644.174012]  *** DEADLOCK ***
+[  644.174012] 
+[  644.174012] 4 locks held by fsstress/3365:
+[  644.174012]  #0:  (sb_writers#10){++++++}, at: [<ffffffff81208d04>] mnt_want_write+0x24/0x50
+[  644.174012]  #1:  (&sb->s_type->i_mutex_key#12){++++++}, at: [<ffffffff8120ea2f>] vfs_setxattr+0x6f/0xb0
+[  644.174012]  #2:  (sb_internal#2){++++++}, at: [<ffffffff8138185c>] xfs_trans_alloc+0xfc/0x140
+[  644.174012]  #3:  (&xfs_nondir_ilock_class){++++?.}, at: [<ffffffff8136f231>] xfs_ilock+0x141/0x230
+[  644.174012] 
+[  644.174012] stack backtrace:
+[  644.174012] CPU: 0 PID: 3365 Comm: fsstress Not tainted 4.10.0-nbor #134
+[  644.174012] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
+[  644.174012] Call Trace:
+[  644.174012]  dump_stack+0x85/0xc9
+[  644.174012]  print_usage_bug.part.37+0x284/0x293
+[  644.174012]  ? print_shortest_lock_dependencies+0x1b0/0x1b0
+[  644.174012]  mark_lock+0x27e/0x660
+[  644.174012]  mark_held_locks+0x66/0x90
+[  644.174012]  lockdep_trace_alloc+0x6f/0xd0
+[  644.174012]  kmem_cache_alloc_node_trace+0x3a/0x2c0
+[  644.174012]  ? vm_map_ram+0x2a1/0x510
+[  644.174012]  vm_map_ram+0x2a1/0x510
+[  644.174012]  ? vm_map_ram+0x46/0x510
+[  644.174012]  _xfs_buf_map_pages+0x77/0x140
+[  644.174012]  xfs_buf_get_map+0x185/0x2a0
+[  644.174012]  xfs_attr_rmtval_set+0x233/0x430
+[  644.174012]  xfs_attr_leaf_addname+0x2d2/0x500
+[  644.174012]  xfs_attr_set+0x214/0x420
+[  644.174012]  xfs_xattr_set+0x59/0xb0
+[  644.174012]  __vfs_setxattr+0x76/0xa0
+[  644.174012]  __vfs_setxattr_noperm+0x5e/0xf0
+[  644.174012]  vfs_setxattr+0xae/0xb0
+[  644.174012]  ? __might_fault+0x43/0xa0
+[  644.174012]  setxattr+0x15e/0x1a0
+[  644.174012]  ? __lock_is_held+0x53/0x90
+[  644.174012]  ? rcu_read_lock_sched_held+0x93/0xa0
+[  644.174012]  ? rcu_sync_lockdep_assert+0x2f/0x60
+[  644.174012]  ? __sb_start_write+0x130/0x1d0
+[  644.174012]  ? mnt_want_write+0x24/0x50
+[  644.174012]  path_setxattr+0x8f/0xc0
+[  644.174012]  SyS_lsetxattr+0x11/0x20
+[  644.174012]  entry_SYSCALL_64_fastpath+0x23/0xc6
 
-Brian
 
----8<---
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 41662fb..5761dc6 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1066,6 +1066,30 @@ xfs_file_iomap_begin(
- 	return error;
- }
- 
-+/* grab the bh for a page offset */
-+static struct buffer_head *
-+bh_for_pgoff(
-+	struct page		*page,
-+	loff_t			offset)
-+{
-+	struct buffer_head	*bh, *head;
-+
-+	ASSERT(offset < PAGE_SIZE);
-+	ASSERT(page_has_buffers(page));
-+
-+	bh = head = page_buffers(page);
-+	do {
-+		struct buffer_head	*next = bh->b_this_page;
-+		if (next == head)
-+			break;
-+		if (bh_offset(next) > offset)
-+		       break;
-+		bh = next;
-+	} while (true);
-+
-+	return bh;
-+}
-+
- static int
- xfs_file_iomap_end_delalloc(
- 	struct xfs_inode	*ip,
-@@ -1074,13 +1098,21 @@ xfs_file_iomap_end_delalloc(
- 	ssize_t			written)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-+	struct address_space	*mapping = VFS_I(ip)->i_mapping;
-+	struct page		*page;
-+	struct buffer_head	*bh;
- 	xfs_fileoff_t		start_fsb;
- 	xfs_fileoff_t		end_fsb;
- 	int			error = 0;
- 
--	/* behave as if the write failed if drop writes is enabled */
--	if (xfs_mp_drop_writes(mp))
-+	/*
-+	 * Behave as if the write failed if drop writes is enabled. Punch out
-+	 * the pagecache to trigger delalloc cleanup.
-+	 */
-+	if (xfs_mp_drop_writes(mp)) {
- 		written = 0;
-+		truncate_pagecache_range(VFS_I(ip), offset, offset + length);
-+	}
- 
- 	/*
- 	 * start_fsb refers to the first unused block after a short write. If
-@@ -1094,22 +1126,29 @@ xfs_file_iomap_end_delalloc(
- 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
- 
- 	/*
--	 * Trim back delalloc blocks if we didn't manage to write the whole
--	 * range reserved.
-+	 * We have to clear out any unused delalloc blocks in the event of a
-+	 * failed or short write. Otherwise, these blocks linger indefinitely as
-+	 * they are not fronted by dirty pagecache.
- 	 *
--	 * We don't need to care about racing delalloc as we hold i_mutex
--	 * across the reserve/allocate/unreserve calls. If there are delalloc
--	 * blocks in the range, they are ours.
-+	 * To filter out blocks that were successfully written by a previous
-+	 * write, walk the unwritten range and only punch out blocks that are
-+	 * not backed by dirty+delalloc buffers.
- 	 */
--	if (start_fsb < end_fsb) {
--		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
--					 XFS_FSB_TO_B(mp, end_fsb) - 1);
-+	for (; start_fsb < end_fsb; start_fsb++) {
-+		offset = XFS_FSB_TO_B(mp, start_fsb);
-+		page = find_get_page(mapping, offset >> PAGE_SHIFT);
-+		if (page) {
-+			bh = bh_for_pgoff(page, offset & ~PAGE_MASK);
-+			if ((buffer_dirty(bh) && buffer_delay(bh))) {
-+				put_page(page);
-+				continue;
-+			}
-+			put_page(page);
-+		}
- 
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
--					       end_fsb - start_fsb);
-+		error = xfs_bmap_punch_delalloc_range(ip, start_fsb, 1);
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--
- 		if (error && !XFS_FORCED_SHUTDOWN(mp)) {
- 			xfs_alert(mp, "%s: unable to clean up ino %lld",
- 				__func__, ip->i_ino);
