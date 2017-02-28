@@ -1,169 +1,313 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:39915 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751026AbdB1GQl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 01:16:41 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v1S5T2Ov011300
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2017 05:29:03 GMT
-Date: Mon, 27 Feb 2017 21:27:54 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: factor out a xfs_bmap_is_real_extent helper
-Message-ID: <20170228052754.GE5297@birch.djwong.org>
-References: <20170228004930.9559-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:33170 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751663AbdB1JAO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Feb 2017 04:00:14 -0500
+Date: Tue, 28 Feb 2017 16:46:12 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 4/4] xfs: stress test xfs_scrub
+Message-ID: <20170228084612.GH16443@eguan.usersys.redhat.com>
+References: <148798515933.25833.2842247083803775089.stgit@birch.djwong.org>
+ <148798518415.25833.11653991983531432757.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170228004930.9559-1-hch@lst.de>
+In-Reply-To: <148798518415.25833.11653991983531432757.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Feb 27, 2017 at 04:49:29PM -0800, Christoph Hellwig wrote:
-> This checks for all the non-normal extent types, including handling both
-> encodings of delayed allocations.
+On Fri, Feb 24, 2017 at 05:13:04PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+> Three new tests:
+> 
+> - Repair files that are mapped into memory in running programs
+> - Run scrub -n concurrently with fsstress
+> - Run scrub -y concurrently with fsstress
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.h | 12 ++++++++++++
->  fs/xfs/xfs_aops.c        |  4 +---
->  fs/xfs/xfs_bmap_util.c   |  7 +++----
->  fs/xfs/xfs_reflink.c     | 21 ++++-----------------
->  4 files changed, 20 insertions(+), 24 deletions(-)
+>  tests/xfs/1375     |   69 +++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/1375.out |    3 ++
+>  tests/xfs/1376     |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/1376.out |    4 ++
+>  tests/xfs/1377     |   84 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/1377.out |    4 ++
+>  tests/xfs/group    |    3 ++
+>  7 files changed, 250 insertions(+)
+>  create mode 100755 tests/xfs/1375
+>  create mode 100644 tests/xfs/1375.out
+>  create mode 100755 tests/xfs/1376
+>  create mode 100644 tests/xfs/1376.out
+>  create mode 100755 tests/xfs/1377
+>  create mode 100644 tests/xfs/1377.out
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index cdef87db5262..a6e612cabe15 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -172,6 +172,18 @@ static inline int xfs_bmapi_whichfork(int bmapi_flags)
->  
->  
->  /*
-> + * Return true if the extent is a real, allocated extent, or false if it is  a
-> + * delayed allocation, and unwritten extent or a hole.
-> + */
-> +static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
+> 
+> diff --git a/tests/xfs/1375 b/tests/xfs/1375
+> new file mode 100755
+> index 0000000..d3119ef
+> --- /dev/null
+> +++ b/tests/xfs/1375
+> @@ -0,0 +1,69 @@
+> +#! /bin/bash
+> +# FS QA Test No. 1375
+> +#
+> +# Copy xfs_scrub to the scratch device, then run xfs_scrub in forced
+> +# repair mode (which will rebuild the data forks of the running scrub
+> +# executable and libraries!) to see what happens.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> +
+> +_cleanup()
 > +{
-> +	return irec->br_state != XFS_EXT_UNWRITTEN &&
-> +		irec->br_startblock != HOLESTARTBLOCK &&
-> +		irec->br_startblock != DELAYSTARTBLOCK &&
-> +		!isnullstartblock(irec->br_startblock);
+> +	cd /
+> +	rm -rf $tmp.*
 > +}
 > +
-> +/*
->   * This macro is used to determine how many extents will be shifted
->   * in one write transaction. We could require two splits,
->   * an extent move on the first and an extent merge on the second,
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 1ff9df7a3ce8..582e3275bb51 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1281,9 +1281,7 @@ xfs_get_blocks(
->  	 * For unwritten extents do not report a disk address in the buffered
->  	 * read case (treat as if we're reading into a hole).
->  	 */
-> -	if (imap.br_startblock != HOLESTARTBLOCK &&
-> -	    imap.br_startblock != DELAYSTARTBLOCK &&
-> -	    !ISUNWRITTEN(&imap))
-> +	if (xfs_bmap_is_real_extent(&imap))
->  		xfs_map_buffer(inode, bh_result, &imap, offset);
->  
->  	/*
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 8b75dcea5966..88b2e923f2ed 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -448,10 +448,9 @@ xfs_getbmap_adjust_shared(
->  	next_map->br_blockcount = 0;
->  
->  	/* Only written data blocks can be shared. */
-> -	if (!xfs_is_reflink_inode(ip) || whichfork != XFS_DATA_FORK ||
-> -	    map->br_startblock == DELAYSTARTBLOCK ||
-> -	    map->br_startblock == HOLESTARTBLOCK ||
-> -	    ISUNWRITTEN(map))
-> +	if (!xfs_is_reflink_inode(ip) ||
-> +	    whichfork != XFS_DATA_FORK ||
-> +	    !xfs_bmap_is_real_extent(map))
->  		return 0;
->  
->  	agno = XFS_FSB_TO_AGNO(mp, map->br_startblock);
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index da6d08fb359c..08ca9f81b087 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -206,11 +206,7 @@ xfs_reflink_trim_around_shared(
->  	int			error = 0;
->  
->  	/* Holes, unwritten, and delalloc extents cannot be shared */
-> -	if (!xfs_is_reflink_inode(ip) ||
-> -	    ISUNWRITTEN(irec) ||
-> -	    irec->br_startblock == HOLESTARTBLOCK ||
-> -	    irec->br_startblock == DELAYSTARTBLOCK ||
-> -	    isnullstartblock(irec->br_startblock)) {
-> +	if (!xfs_is_reflink_inode(ip) || !xfs_bmap_is_real_extent(irec)) {
->  		*shared = false;
->  		return 0;
->  	}
-> @@ -1036,12 +1032,12 @@ xfs_reflink_remap_extent(
->  	xfs_off_t		new_isize)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
-> +	bool			real_extent = xfs_bmap_is_real_extent(irec);
->  	struct xfs_trans	*tp;
->  	xfs_fsblock_t		firstfsb;
->  	unsigned int		resblks;
->  	struct xfs_defer_ops	dfops;
->  	struct xfs_bmbt_irec	uirec;
-> -	bool			real_extent;
->  	xfs_filblks_t		rlen;
->  	xfs_filblks_t		unmap_len;
->  	xfs_off_t		newlen;
-> @@ -1050,11 +1046,6 @@ xfs_reflink_remap_extent(
->  	unmap_len = irec->br_startoff + irec->br_blockcount - destoff;
->  	trace_xfs_reflink_punch_range(ip, destoff, unmap_len);
->  
-> -	/* Only remap normal extents. */
-> -	real_extent =  (irec->br_startblock != HOLESTARTBLOCK &&
-> -			irec->br_startblock != DELAYSTARTBLOCK &&
-> -			!ISUNWRITTEN(irec));
-> -
->  	/* No reflinking if we're low on space */
->  	if (real_extent) {
->  		error = xfs_reflink_ag_has_free_space(mp,
-> @@ -1350,9 +1341,7 @@ xfs_reflink_dirty_extents(
->  			goto out;
->  		if (nmaps == 0)
->  			break;
-> -		if (map[0].br_startblock == HOLESTARTBLOCK ||
-> -		    map[0].br_startblock == DELAYSTARTBLOCK ||
-> -		    ISUNWRITTEN(&map[0]))
-> +		if (!xfs_bmap_is_real_extent(&map[0]))
->  			goto next;
->  
->  		map[1] = map[0];
-> @@ -1426,9 +1415,7 @@ xfs_reflink_clear_inode_flag(
->  			return error;
->  		if (nmaps == 0)
->  			break;
-> -		if (map.br_startblock == HOLESTARTBLOCK ||
-> -		    map.br_startblock == DELAYSTARTBLOCK ||
-> -		    ISUNWRITTEN(&map))
-> +		if (!xfs_bmap_is_real_extent(&map))
->  			goto next;
->  
->  		agno = XFS_FSB_TO_AGNO(mp, map.br_startblock);
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/fuzzy
+> +. ./common/inject
+> +
+> +# real QA test starts here
+> +_supported_os Linux
+> +_supported_fs xfs
+> +_require_command /usr/bin/ldd "ldd"
+
+Introduce a new LDD_PROG? So that the path of ldd is set by
+set_prog_path not hardcoded.
+
+> +_require_scrub
+> +_require_scratch
+> +_require_xfs_io_error_injection "force_repair"
+
+Seems error injection is not used in this test.
+
+> +
+> +echo "Format and populate"
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount
+> +cp $XFS_SCRUB_PROG $SCRATCH_MNT/xfs_scrub
+> +ldd $XFS_SCRUB_PROG | sed -e '/\//!d;/linux-gate/d;/=>/ {s/.*=>[[:blank:]]*\([^[:blank:]]*\).*/\1/};s/[[:blank:]]*\([^[:blank:]]*\) (.*)/\1/' | while read lib; do
+> +	cp $lib $SCRATCH_MNT/
+> +done
+> +LD_LIBRARY_PATH=$SCRATCH_MNT ldd $SCRATCH_MNT/xfs_scrub >> $seqres.full
+> +
+> +echo "Force online repairs"
+> +XFS_SCRUB_FORCE_REPAIR=1 LD_LIBRARY_PATH=$SCRATCH_MNT $SCRATCH_MNT/xfs_scrub -dTvy $SCRATCH_MNT >> $seqres.full
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/1375.out b/tests/xfs/1375.out
+> new file mode 100644
+> index 0000000..dd7025e
+> --- /dev/null
+> +++ b/tests/xfs/1375.out
+> @@ -0,0 +1,3 @@
+> +QA output created by 1375
+> +Format and populate
+> +Force online repairs
+> diff --git a/tests/xfs/1376 b/tests/xfs/1376
+> new file mode 100755
+> index 0000000..f037b43
+> --- /dev/null
+> +++ b/tests/xfs/1376
+> @@ -0,0 +1,83 @@
+> +#! /bin/bash
+> +# FS QA Test No. 1376
+> +#
+> +# Race fio and xfs_scrub for a while to see if we crash or livelock.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -rf $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/fuzzy
+> +. ./common/inject
+> +
+> +# real QA test starts here
+> +_supported_os Linux
+> +_supported_fs xfs
+> +_require_scrub
+> +_require_scratch
+> +_require_command "$KILLALL_PROG" killall
+> +
+> +echo "Format and populate"
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount
+> +
+> +STRESS_DIR="$SCRATCH_MNT/testdir"
+> +mkdir -p $STRESS_DIR
+> +
+> +cpus=$((16 * LOAD_FACTOR))
+
+_require_test_program "feature"
+then
+cpus=$((`src/feature -o` * LOAD_FACTOR)) ?
+
+> +$FSSTRESS_PROG -d $STRESS_DIR -p $cpus -n $((cpus * 100000)) $FSSTRESS_AVOID >/dev/null 2>&1 &
+> +$XFS_SCRUB_PROG -d -T -v -n $SCRATCH_MNT >> $seqres.full
+> +
+> +killstress() {
+> +	sleep $(( 60 * LOAD_FACTOR ))
+
+There's a TIME_FACTOR for this, I think.
+
+> +	$KILLALL_PROG -q $FSSTRESS_PROG
+> +}
+> +
+> +echo "Concurrent scrub"
+> +start=$(date +%s)
+> +end=$((start + (60 * LOAD_FACTOR) ))
+> +killstress &
+> +echo "Scrub started at $(date --date="@${start}"), ending at $(date --date="@${end}")" >> $seqres.full
+> +while [ "$(date +%s)" -lt "$end" ]; do
+> +	timeout -s TERM $(( end - $(date +%s) + 2 )) $XFS_SCRUB_PROG -d -T -v -n $SCRATCH_MNT >> $seqres.full 2>&1
+
+Introduce TIMEOUT_PROG and _require it?
+
+> +done
+> +
+> +echo "Test done"
+> +echo "Scrub finished at $(date)" >> $seqres.full
+> +$KILLALL_PROG -q $FSSTRESS_PROG
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/1376.out b/tests/xfs/1376.out
+> new file mode 100644
+> index 0000000..155f424
+> --- /dev/null
+> +++ b/tests/xfs/1376.out
+> @@ -0,0 +1,4 @@
+> +QA output created by 1376
+> +Format and populate
+> +Concurrent scrub
+> +Test done
+> diff --git a/tests/xfs/1377 b/tests/xfs/1377
+> new file mode 100755
+> index 0000000..1e0814c
+> --- /dev/null
+> +++ b/tests/xfs/1377
+> @@ -0,0 +1,84 @@
+> +#! /bin/bash
+> +# FS QA Test No. 1377
+> +#
+> +# Race fio and xfs_scrub -y for a while to see if we crash or livelock.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -rf $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/fuzzy
+> +. ./common/inject
+> +
+> +# real QA test starts here
+> +_supported_os Linux
+> +_supported_fs xfs
+> +_require_scrub
+> +_require_scratch
+> +_require_command "$KILLALL_PROG" killall
+> +_require_xfs_io_error_injection "force_repair"
+
+Seems not used either.
+
+Comments to 1376 also apply to 1377 :)
+
+Thanks,
+Eryu
