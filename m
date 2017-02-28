@@ -1,40 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54181 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751497AbdB1PMd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 10:12:33 -0500
-Date: Tue, 28 Feb 2017 07:11:35 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: LTP write03 writev07 xfs failures
-Message-ID: <20170228151135.GA17880@infradead.org>
-References: <20170227042220.syhudcilvyettwnf@XZHOUW.usersys.redhat.com>
- <20170227160901.GB9344@bfoster.bfoster>
- <20170227201334.GC9344@bfoster.bfoster>
- <20170228140455.GB9371@infradead.org>
- <20170228145940.GA13377@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170228145940.GA13377@bfoster.bfoster>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46458 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751768AbdB1Nr5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 08:47:57 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1S9tHrG107160
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2017 04:57:11 -0500
+Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 28w3d4hj0y-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2017 04:57:10 -0500
+Received: from localhost
+        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Tue, 28 Feb 2017 02:57:09 -0700
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH] xfs: Use xfs_icluster_size_fsb() to calculate inode alignment mask
+Date: Tue, 28 Feb 2017 15:26:56 +0530
+Message-Id: <1488275816-26711-1-git-send-email-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, darrick.wong@oracle.com, sandeen@sandeen.net
 
-On Tue, Feb 28, 2017 at 09:59:40AM -0500, Brian Foster wrote:
-> Heh. I've appended what I'm currently playing around with. It's
-> certainly uglier, but not terrible IMO (outside of the fact that we have
-> to look at the buffer_heads). This seems to address the problem, but
-> still only lightly tested...
-> 
-> An entirely different approach may be to somehow or another
-> differentiate allocated delalloc blocks from "found" delalloc blocks in
-> the iomap_begin() handler, and then perhaps encode that into the iomap
-> such that the iomap_end() handler has an explicit reference of what to
-> punch. Personally, I wouldn't mind doing something like the below short
-> term to fix the regression and then incorporate an iomap enhancement to
-> break the buffer_head dependency.
+When block size is larger than inode cluster size, the call to
+XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
+would have set xfs_sb->sb_inoalignmt to 0. Hence in
+xfs_set_inoalignment(), xfs_mount->m_inoalign_mask gets initialized to
+-1 instead of 0. However, xfs_mount->m_sinoalign would get correctly
+intialized to 0 because for every positive value of xfs_mount->m_dalign,
+the condition "!(mp->m_dalign & mp->m_inoalign_mask)" would evaluate to
+false.
 
-We actually have a IOMAP_F_NEW for this already, but so far it's
-only used by the DIO and DAX code.
+Also, xfs_imap() worked fine even with xfs_mount->m_inoalign_mask having
+-1 as the value because blks_per_cluster variable would have the value 1
+and hence we would never have a need to use xfs_mount->m_inoalign_mask
+to compute the inode chunk's agbno and offset within the chunk.
+
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ fs/xfs/xfs_mount.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 450bde6..688ebff 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -513,8 +513,7 @@ STATIC void
+ xfs_set_inoalignment(xfs_mount_t *mp)
+ {
+ 	if (xfs_sb_version_hasalign(&mp->m_sb) &&
+-	    mp->m_sb.sb_inoalignmt >=
+-	    XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
++		mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
+ 		mp->m_inoalign_mask = mp->m_sb.sb_inoalignmt - 1;
+ 	else
+ 		mp->m_inoalign_mask = 0;
+-- 
+2.5.5
+
