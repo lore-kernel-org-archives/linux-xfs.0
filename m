@@ -1,45 +1,339 @@
-Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227150220.vpmbghkbxaufyumm@eorzea.usersys.redhat.com>
-Resent-To: sandeen@sandeen.net
-Received: from mr001msb.fastweb.it ([85.18.95.85]:38504 "EHLO
-        mr001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751115AbdBXL7t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Feb 2017 06:59:49 -0500
-Received: from ceres.assyoma.it (93.63.55.57) by mr001msb.fastweb.it (8.5.140.05)
-        id 5890BA1F010F5161 for linux-xfs@vger.kernel.org; Fri, 24 Feb 2017 12:47:29 +0100
-From: Gionatan Danti <g.danti@assyoma.it>
-Subject: Increase sync write performance?
-Message-ID: <f7c2bf78-dd91-7a4e-a02d-e0f5f90bcc08@assyoma.it>
-Date: Fri, 24 Feb 2017 12:47:23 +0100
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from aserp1050.oracle.com ([141.146.126.70]:48278 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750957AbdB1T5A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 14:57:00 -0500
+Date: Tue, 28 Feb 2017 09:42:28 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/4] xfs: stress test xfs_scrub
+Message-ID: <20170228174228.GB26275@birch.djwong.org>
+References: <148798515933.25833.2842247083803775089.stgit@birch.djwong.org>
+ <148798518415.25833.11653991983531432757.stgit@birch.djwong.org>
+ <20170228084612.GH16443@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170228084612.GH16443@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: g.danti@assyoma.it
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Hi list,
-I am trying to understand if, and how, to increase synchronous write 
-performance to an XFS filesystem.
+On Tue, Feb 28, 2017 at 04:46:12PM +0800, Eryu Guan wrote:
+> On Fri, Feb 24, 2017 at 05:13:04PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Three new tests:
+> > 
+> > - Repair files that are mapped into memory in running programs
+> > - Run scrub -n concurrently with fsstress
+> > - Run scrub -y concurrently with fsstress
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  tests/xfs/1375     |   69 +++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/1375.out |    3 ++
+> >  tests/xfs/1376     |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/1376.out |    4 ++
+> >  tests/xfs/1377     |   84 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/1377.out |    4 ++
+> >  tests/xfs/group    |    3 ++
+> >  7 files changed, 250 insertions(+)
+> >  create mode 100755 tests/xfs/1375
+> >  create mode 100644 tests/xfs/1375.out
+> >  create mode 100755 tests/xfs/1376
+> >  create mode 100644 tests/xfs/1376.out
+> >  create mode 100755 tests/xfs/1377
+> >  create mode 100644 tests/xfs/1377.out
+> > 
+> > 
+> > diff --git a/tests/xfs/1375 b/tests/xfs/1375
+> > new file mode 100755
+> > index 0000000..d3119ef
+> > --- /dev/null
+> > +++ b/tests/xfs/1375
+> > @@ -0,0 +1,69 @@
+> > +#! /bin/bash
+> > +# FS QA Test No. 1375
+> > +#
+> > +# Copy xfs_scrub to the scratch device, then run xfs_scrub in forced
+> > +# repair mode (which will rebuild the data forks of the running scrub
+> > +# executable and libraries!) to see what happens.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -rf $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +. ./common/fuzzy
+> > +. ./common/inject
+> > +
+> > +# real QA test starts here
+> > +_supported_os Linux
+> > +_supported_fs xfs
+> > +_require_command /usr/bin/ldd "ldd"
+> 
+> Introduce a new LDD_PROG? So that the path of ldd is set by
+> set_prog_path not hardcoded.
 
-A common scenario is an NFS-exported directory with sync writes enabled 
-(default). With EXT4, it is possible to mount it using the 
-"data=journal" option which, by eliminating small seeks, give a very 
-nice performance boost (at least with short write spikes).
+Ok.
 
-AFAIK, XFS only journals metadata, never user data alone. There is 
-nothing I can do to increase its sync write performance in this case?
+> > +_require_scrub
+> > +_require_scratch
+> > +_require_xfs_io_error_injection "force_repair"
+> 
+> Seems error injection is not used in this test.
 
-Short of using a powerloss-protected controller/drives with writeback 
-caches enabled, of course...
+It is -- xfs_scrub -d will turn it on if XFS_SCRUB_FORCE_REPAIR=1 is set.
+I'll add a comment stating that xfs_scrub turns it on directly.
 
-Thanks.
+> > +
+> > +echo "Format and populate"
+> > +_scratch_mkfs > "$seqres.full" 2>&1
+> > +_scratch_mount
+> > +cp $XFS_SCRUB_PROG $SCRATCH_MNT/xfs_scrub
+> > +ldd $XFS_SCRUB_PROG | sed -e '/\//!d;/linux-gate/d;/=>/ {s/.*=>[[:blank:]]*\([^[:blank:]]*\).*/\1/};s/[[:blank:]]*\([^[:blank:]]*\) (.*)/\1/' | while read lib; do
+> > +	cp $lib $SCRATCH_MNT/
+> > +done
+> > +LD_LIBRARY_PATH=$SCRATCH_MNT ldd $SCRATCH_MNT/xfs_scrub >> $seqres.full
+> > +
+> > +echo "Force online repairs"
+> > +XFS_SCRUB_FORCE_REPAIR=1 LD_LIBRARY_PATH=$SCRATCH_MNT $SCRATCH_MNT/xfs_scrub -dTvy $SCRATCH_MNT >> $seqres.full
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/1375.out b/tests/xfs/1375.out
+> > new file mode 100644
+> > index 0000000..dd7025e
+> > --- /dev/null
+> > +++ b/tests/xfs/1375.out
+> > @@ -0,0 +1,3 @@
+> > +QA output created by 1375
+> > +Format and populate
+> > +Force online repairs
+> > diff --git a/tests/xfs/1376 b/tests/xfs/1376
+> > new file mode 100755
+> > index 0000000..f037b43
+> > --- /dev/null
+> > +++ b/tests/xfs/1376
+> > @@ -0,0 +1,83 @@
+> > +#! /bin/bash
+> > +# FS QA Test No. 1376
+> > +#
+> > +# Race fio and xfs_scrub for a while to see if we crash or livelock.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -rf $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +. ./common/fuzzy
+> > +. ./common/inject
+> > +
+> > +# real QA test starts here
+> > +_supported_os Linux
+> > +_supported_fs xfs
+> > +_require_scrub
+> > +_require_scratch
+> > +_require_command "$KILLALL_PROG" killall
+> > +
+> > +echo "Format and populate"
+> > +_scratch_mkfs > "$seqres.full" 2>&1
+> > +_scratch_mount
+> > +
+> > +STRESS_DIR="$SCRATCH_MNT/testdir"
+> > +mkdir -p $STRESS_DIR
+> > +
+> > +cpus=$((16 * LOAD_FACTOR))
+> 
+> _require_test_program "feature"
+> then
+> cpus=$((`src/feature -o` * LOAD_FACTOR)) ?
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+Oh, did not know about that... though the point was to run 16 io threads per
+load_factor...
+
+...otoh I guess it's not such a big deal to change that to 4 threads per cpu.
+
+> > +$FSSTRESS_PROG -d $STRESS_DIR -p $cpus -n $((cpus * 100000)) $FSSTRESS_AVOID >/dev/null 2>&1 &
+> > +$XFS_SCRUB_PROG -d -T -v -n $SCRATCH_MNT >> $seqres.full
+> > +
+> > +killstress() {
+> > +	sleep $(( 60 * LOAD_FACTOR ))
+> 
+> There's a TIME_FACTOR for this, I think.
+
+D'oh, yes.  Thank you. :)
+
+> > +	$KILLALL_PROG -q $FSSTRESS_PROG
+> > +}
+> > +
+> > +echo "Concurrent scrub"
+> > +start=$(date +%s)
+> > +end=$((start + (60 * LOAD_FACTOR) ))
+> > +killstress &
+> > +echo "Scrub started at $(date --date="@${start}"), ending at $(date --date="@${end}")" >> $seqres.full
+> > +while [ "$(date +%s)" -lt "$end" ]; do
+> > +	timeout -s TERM $(( end - $(date +%s) + 2 )) $XFS_SCRUB_PROG -d -T -v -n $SCRATCH_MNT >> $seqres.full 2>&1
+> 
+> Introduce TIMEOUT_PROG and _require it?
+
+Ok.
+
+> > +done
+> > +
+> > +echo "Test done"
+> > +echo "Scrub finished at $(date)" >> $seqres.full
+> > +$KILLALL_PROG -q $FSSTRESS_PROG
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/1376.out b/tests/xfs/1376.out
+> > new file mode 100644
+> > index 0000000..155f424
+> > --- /dev/null
+> > +++ b/tests/xfs/1376.out
+> > @@ -0,0 +1,4 @@
+> > +QA output created by 1376
+> > +Format and populate
+> > +Concurrent scrub
+> > +Test done
+> > diff --git a/tests/xfs/1377 b/tests/xfs/1377
+> > new file mode 100755
+> > index 0000000..1e0814c
+> > --- /dev/null
+> > +++ b/tests/xfs/1377
+> > @@ -0,0 +1,84 @@
+> > +#! /bin/bash
+> > +# FS QA Test No. 1377
+> > +#
+> > +# Race fio and xfs_scrub -y for a while to see if we crash or livelock.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -rf $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +. ./common/fuzzy
+> > +. ./common/inject
+> > +
+> > +# real QA test starts here
+> > +_supported_os Linux
+> > +_supported_fs xfs
+> > +_require_scrub
+> > +_require_scratch
+> > +_require_command "$KILLALL_PROG" killall
+> > +_require_xfs_io_error_injection "force_repair"
+> 
+> Seems not used either.
+> 
+> Comments to 1376 also apply to 1377 :)
+
+Fixed.  I'll send a v2 patch shortly.
+Thank you for the review!
+
+--D
+
+> 
+> Thanks,
+> Eryu
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
