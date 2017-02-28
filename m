@@ -1,62 +1,198 @@
-Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227150228.353aruju2qbqv76y@eorzea.usersys.redhat.com>
-Resent-To: sandeen@sandeen.net
-Received: from mx1.redhat.com ([209.132.183.28]:14957 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751515AbdBXTxW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Feb 2017 14:53:22 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/3] xfs: fix up quotacheck buffer list error handling
-Date: Fri, 24 Feb 2017 14:53:19 -0500
-Message-Id: <1487966001-63263-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
-References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:32342 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751387AbdB1Stq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 13:49:46 -0500
+Subject: [PATCH 8/9] xfs: report realtime space information via the rtbitmap
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 28 Feb 2017 10:46:41 -0800
+Message-ID: <148830760185.22089.7585485406339387044.stgit@birch.djwong.org>
+In-Reply-To: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
+References: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <david@fromorbit.com>, Martin Svec <martin.svec@zoner.cz>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-The quotacheck error handling of the delwri buffer list assumes the
-resident buffers are locked and doesn't clear the _XBF_DELWRI_Q flag
-on the buffers that are dequeued. This can lead to assert failures
-on buffer release and possibly other locking problems.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Update the error handling code to lock each buffer as it is removed
-from the buffer list and clear the delwri queue flag.
+Use the realtime bitmap to return free space information via getfsmap.
+Eventually this will be superseded by the realtime rmapbt code.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf.c | 2 ++
- fs/xfs/xfs_qm.c  | 2 ++
- 2 files changed, 4 insertions(+)
+ fs/xfs/xfs_fsmap.c |  120 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 119 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index ac3b4db..e566510 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1078,6 +1078,8 @@ void
- xfs_buf_unlock(
- 	struct xfs_buf		*bp)
- {
-+	ASSERT(xfs_buf_islocked(bp));
-+
- 	XB_CLEAR_OWNER(bp);
- 	up(&bp->b_sema);
+
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 56bbd24..bb351ed 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -41,6 +41,7 @@
+ #include "xfs_refcount.h"
+ #include "xfs_refcount_btree.h"
+ #include "xfs_alloc_btree.h"
++#include "xfs_rtalloc.h"
  
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index b669b12..4ff993c 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1387,6 +1387,8 @@ xfs_qm_quotacheck(
- 	while (!list_empty(&buffer_list)) {
- 		struct xfs_buf *bp =
- 			list_first_entry(&buffer_list, struct xfs_buf, b_list);
-+		xfs_buf_lock(bp);
-+		bp->b_flags &= ~_XBF_DELWRI_Q;
- 		list_del_init(&bp->b_list);
- 		xfs_buf_relse(bp);
+ /* Convert an xfs_fsmap to an fsmap. */
+ void
+@@ -415,6 +416,29 @@ xfs_getfsmap_rtdev_helper(
+ 	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
+ }
+ 
++/* Transform a rtbitmap "record" into a fsmap */
++STATIC int
++xfs_getfsmap_rtdev_rtbitmap_helper(
++	struct xfs_trans		*tp,
++	struct xfs_rtalloc_rec		*rec,
++	void				*priv)
++{
++	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_getfsmap_info	*info = priv;
++	struct xfs_rmap_irec		irec;
++	xfs_daddr_t			rec_daddr;
++
++	rec_daddr = XFS_FSB_TO_BB(mp, rec->ar_startblock);
++
++	irec.rm_startblock = rec->ar_startblock;
++	irec.rm_blockcount = rec->ar_blockcount;
++	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
++	irec.rm_offset = 0;
++	irec.rm_flags = 0;
++
++	return xfs_getfsmap_helper(tp, info, &irec, rec_daddr);
++}
++
+ /* Transform a bnobt irec into a fsmap */
+ STATIC int
+ xfs_getfsmap_datadev_bnobt_helper(
+@@ -504,6 +528,93 @@ xfs_getfsmap_logdev(
+ 	return xfs_getfsmap_rtdev_helper(&cur, &rmap, info);
+ }
+ 
++/* Execute a getfsmap query against the realtime device. */
++STATIC int
++__xfs_getfsmap_rtdev(
++	struct xfs_trans		*tp,
++	struct xfs_fsmap		*keys,
++	int				(*query_fn)(struct xfs_trans *,
++						    struct xfs_getfsmap_info *),
++	struct xfs_getfsmap_info	*info)
++{
++	struct xfs_mount		*mp = tp->t_mountp;
++	xfs_fsblock_t			start_fsb;
++	xfs_fsblock_t			end_fsb;
++	xfs_daddr_t			eofs;
++	int				error = 0;
++
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
++	if (keys[0].fmr_physical >= eofs)
++		return 0;
++	if (keys[1].fmr_physical >= eofs)
++		keys[1].fmr_physical = eofs - 1;
++	start_fsb = XFS_BB_TO_FSBT(mp, keys[0].fmr_physical);
++	end_fsb = XFS_BB_TO_FSB(mp, keys[1].fmr_physical);
++
++	/* Set up search keys */
++	info->low.rm_startblock = start_fsb;
++	error = xfs_fsmap_owner_to_rmap(&info->low, &keys[0]);
++	if (error)
++		return error;
++	info->low.rm_offset = XFS_BB_TO_FSBT(mp, keys[0].fmr_offset);
++	info->low.rm_blockcount = 0;
++	xfs_getfsmap_set_irec_flags(&info->low, &keys[0]);
++
++	info->high.rm_startblock = end_fsb;
++	error = xfs_fsmap_owner_to_rmap(&info->high, &keys[1]);
++	if (error)
++		return error;
++	info->high.rm_offset = XFS_BB_TO_FSBT(mp, keys[1].fmr_offset);
++	info->high.rm_blockcount = 0;
++	xfs_getfsmap_set_irec_flags(&info->high, &keys[1]);
++
++	trace_xfs_fsmap_low_key(mp, info->dev, info->agno, &info->low);
++	trace_xfs_fsmap_high_key(mp, info->dev, info->agno, &info->high);
++
++	return query_fn(tp, info);
++}
++
++/* Actually query the realtime bitmap. */
++STATIC int
++xfs_getfsmap_rtdev_rtbitmap_query(
++	struct xfs_trans		*tp,
++	struct xfs_getfsmap_info	*info)
++{
++	struct xfs_rtalloc_rec		alow;
++	struct xfs_rtalloc_rec		ahigh;
++	int				error;
++
++	xfs_ilock(tp->t_mountp->m_rbmip, XFS_ILOCK_SHARED);
++
++	alow.ar_startblock = info->low.rm_startblock;
++	ahigh.ar_startblock = info->high.rm_startblock;
++	error = xfs_rtalloc_query_range(tp, &alow, &ahigh,
++			xfs_getfsmap_rtdev_rtbitmap_helper, info);
++	if (error)
++		goto err;
++
++	/* Report any gaps at the end of the rtbitmap */
++	info->last = true;
++	error = xfs_getfsmap_rtdev_rtbitmap_helper(tp, &ahigh, info);
++	if (error)
++		goto err;
++err:
++	xfs_iunlock(tp->t_mountp->m_rbmip, XFS_ILOCK_SHARED);
++	return error;
++}
++
++/* Execute a getfsmap query against the realtime device rtbitmap. */
++STATIC int
++xfs_getfsmap_rtdev_rtbitmap(
++	struct xfs_trans		*tp,
++	struct xfs_fsmap		*keys,
++	struct xfs_getfsmap_info	*info)
++{
++	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
++	return __xfs_getfsmap_rtdev(tp, keys, xfs_getfsmap_rtdev_rtbitmap_query,
++			info);
++}
++
+ /* Execute a getfsmap query against the regular data device. */
+ STATIC int
+ __xfs_getfsmap_datadev(
+@@ -719,6 +830,9 @@ xfs_getfsmap_is_valid_device(
+ 	if (mp->m_logdev_targp &&
+ 	    fm->fmr_device == new_encode_dev(mp->m_logdev_targp->bt_dev))
+ 		return true;
++	if (mp->m_rtdev_targp &&
++	    fm->fmr_device == new_encode_dev(mp->m_rtdev_targp->bt_dev))
++		return true;
+ 	return false;
+ }
+ 
+@@ -751,7 +865,7 @@ xfs_getfsmap_check_keys(
+ 	return false;
+ }
+ 
+-#define XFS_GETFSMAP_DEVS	2
++#define XFS_GETFSMAP_DEVS	3
+ /*
+  * Get filesystem's extents as described in head, and format for
+  * output.  Calls formatter to fill the user's buffer until all
+@@ -807,6 +921,10 @@ xfs_getfsmap(
+ 		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
+ 		handlers[1].fn = xfs_getfsmap_logdev;
  	}
--- 
-2.7.4
++	if (mp->m_rtdev_targp) {
++		handlers[2].dev = new_encode_dev(mp->m_rtdev_targp->bt_dev);
++		handlers[2].fn = xfs_getfsmap_rtdev_rtbitmap;
++	}
+ 
+ 	xfs_sort(handlers, XFS_GETFSMAP_DEVS, sizeof(struct xfs_getfsmap_dev),
+ 			xfs_getfsmap_dev_compare);
 
