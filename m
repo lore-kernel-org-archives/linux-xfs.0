@@ -1,191 +1,158 @@
-Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227150231.s3cs5lgohxywzj4h@eorzea.usersys.redhat.com>
-Resent-To: sandeen@sandeen.net
-Received: from mx1.redhat.com ([209.132.183.28]:44686 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751512AbdBXTxW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Feb 2017 14:53:22 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/3] xfs: push buffer of flush locked dquot to avoid quotacheck deadlock
-Date: Fri, 24 Feb 2017 14:53:20 -0500
-Message-Id: <1487966001-63263-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
-References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from userp1050.oracle.com ([156.151.31.82]:50708 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751495AbdB1Str (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 13:49:47 -0500
+Subject: [PATCH 5/9] xfs: add a couple of queries to iterate free extents in
+ the rtbitmap
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 28 Feb 2017 10:46:22 -0800
+Message-ID: <148830758195.22089.11914775154975299005.stgit@birch.djwong.org>
+In-Reply-To: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
+References: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <david@fromorbit.com>, Martin Svec <martin.svec@zoner.cz>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, "Darrick J. Wong" <djwong@djwong.org>
 
-Reclaim during quotacheck can lead to deadlocks on the dquot flush
-lock:
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
- - Quotacheck populates a local delwri queue with the physical dquot
-   buffers.
- - Quotacheck performs the xfs_qm_dqusage_adjust() bulkstat and
-   dirties all of the dquots.
- - Reclaim kicks in and attempts to flush a dquot whose buffer is
-   already queud on the quotacheck queue. The flush succeeds but
-   queueing to the reclaim delwri queue fails as the backing buffer is
-   already queued. The flush unlock is now deferred to I/O completion
-   of the buffer from the quotacheck queue.
- - The dqadjust bulkstat continues and dirties the recently flushed
-   dquot once again.
- - Quotacheck proceeds to the xfs_qm_flush_one() walk which requires
-   the flush lock to update the backing buffers with the in-core
-   recalculated values. It deadlocks on the redirtied dquot as the
-   flush lock was already acquired by reclaim, but the buffer resides
-   on the local delwri queue which isn't submitted until the end of
-   quotacheck.
+Add _query_range and _query_all functions to the realtime bitmap
+allocator.  These two functions are similar in usage to the btree
+functions with the same name and will be used for getfsmap and scrub.
 
-This is reproduced by running quotacheck on a filesystem with a
-couple million inodes in low memory (512MB-1GB) situations. This is
-a regression as of commit 43ff2122e6 ("xfs: on-stack delayed write
-buffer lists"), which removed a trylock and buffer I/O submission
-from the quotacheck dquot flush sequence.
-
-Quotacheck first resets and collects the physical dquot buffers in a
-delwri queue. Then, it traverses the filesystem inodes via bulkstat,
-updates the in-core dquots, flushes the corrected dquots to the
-backing buffers and finally submits the delwri queue for I/O. Since
-the backing buffers are queued across the entire quotacheck
-operation, dquot reclaim cannot possibly complete a dquot flush
-before quotacheck completes.
-
-Therefore, quotacheck must submit the buffer for I/O in order to
-cycle the flush lock and flush the dirty in-core dquot to the
-buffer. Add a delwri queue buffer push mechanism to submit an
-individual buffer for I/O without losing the delwri queue status and
-use it from quotacheck to avoid the deadlock. This restores
-quotacheck behavior to as before the regression was introduced.
-
-Reported-by: Martin Svec <martin.svec@zoner.cz>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <djwong@djwong.org>
 ---
- fs/xfs/xfs_buf.c   | 37 +++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_buf.h   |  1 +
- fs/xfs/xfs_qm.c    | 28 +++++++++++++++++++++++++++-
- fs/xfs/xfs_trace.h |  1 +
- 4 files changed, 66 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_rtbitmap.c |   70 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_rtalloc.h         |   22 ++++++++++++-
+ 2 files changed, 90 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index e566510..e97cf56 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -2011,6 +2011,43 @@ xfs_buf_delwri_submit(
- 	return error;
+
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index ea45584..e47b99e 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -1016,3 +1016,73 @@ xfs_rtfree_extent(
+ 	}
+ 	return 0;
  }
- 
++
++/* Find all the free records within a given range. */
 +int
-+xfs_buf_delwri_pushbuf(
-+	struct xfs_buf		*bp,
-+	struct list_head	*buffer_list)
++xfs_rtalloc_query_range(
++	struct xfs_trans		*tp,
++	struct xfs_rtalloc_rec		*low_rec,
++	struct xfs_rtalloc_rec		*high_rec,
++	xfs_rtalloc_query_range_fn	fn,
++	void				*priv)
 +{
-+	LIST_HEAD		(submit_list);
-+	int			error;
++	struct xfs_rtalloc_rec		rec;
++	struct xfs_mount		*mp = tp->t_mountp;
++	xfs_rtblock_t			rtstart;
++	xfs_rtblock_t			rtend;
++	xfs_rtblock_t			rem;
++	int				is_free;
++	int				error = 0;
 +
-+	ASSERT(xfs_buf_islocked(bp));
-+	ASSERT(bp->b_flags & _XBF_DELWRI_Q);
++	if (low_rec->ar_startblock > high_rec->ar_startblock)
++		return -EINVAL;
++	else if (low_rec->ar_startblock == high_rec->ar_startblock)
++		return 0;
 +
-+	trace_xfs_buf_delwri_pushbuf(bp, _RET_IP_);
++	/* Iterate the bitmap, looking for discrepancies. */
++	rtstart = low_rec->ar_startblock;
++	rem = high_rec->ar_startblock - rtstart;
++	while (rem) {
++		/* Is the first block free? */
++		error = xfs_rtcheck_range(mp, tp, rtstart, 1, 1, &rtend,
++				&is_free);
++		if (error)
++			break;
 +
-+	/*
-+	 * Move the buffer to an empty list and submit. Pass the original list
-+	 * as the wait list so delwri submission moves the buf back to it before
-+	 * it is submitted (and thus before it is unlocked). This means the
-+	 * buffer cannot be placed on another list while we wait for it.
-+	 */
-+	list_move(&bp->b_list, &submit_list);
-+	xfs_buf_unlock(bp);
++		/* How long does the extent go for? */
++		error = xfs_rtfind_forw(mp, tp, rtstart,
++				high_rec->ar_startblock - 1, &rtend);
++		if (error)
++			break;
 +
-+	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
++		if (is_free) {
++			rec.ar_startblock = rtstart;
++			rec.ar_blockcount = rtend - rtstart + 1;
 +
-+	/*
-+	 * Lock the buffer to wait for I/O completion. It's already held on the
-+	 * original list, so all we have to do is reset the delwri queue flag
-+	 * that was cleared by delwri submission.
-+	 */
-+	xfs_buf_lock(bp);
-+	error = bp->b_error;
-+	bp->b_flags |= _XBF_DELWRI_Q;
-+	xfs_buf_unlock(bp);
++			error = fn(tp, &rec, priv);
++			if (error)
++				break;
++		}
++
++		rem -= rtend - rtstart + 1;
++		rtstart = rtend + 1;
++	}
 +
 +	return error;
 +}
 +
- int __init
- xfs_buf_init(void)
- {
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 8a9d3a9..cd74216 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -334,6 +334,7 @@ extern void xfs_buf_stale(struct xfs_buf *bp);
- extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
- extern int xfs_buf_delwri_submit(struct list_head *);
- extern int xfs_buf_delwri_submit_nowait(struct list_head *);
-+extern int xfs_buf_delwri_pushbuf(struct xfs_buf *, struct list_head *);
++/* Find all the free records. */
++int
++xfs_rtalloc_query_all(
++	struct xfs_trans		*tp,
++	xfs_rtalloc_query_range_fn	fn,
++	void				*priv)
++{
++	struct xfs_rtalloc_rec		keys[2];
++
++	keys[0].ar_startblock = 0;
++	keys[1].ar_startblock = tp->t_mountp->m_sb.sb_rblocks;
++	keys[0].ar_blockcount = keys[1].ar_blockcount = 0;
++
++	return xfs_rtalloc_query_range(tp, &keys[0], &keys[1], fn, priv);
++}
+diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+index 355dd9e..b0d2761 100644
+--- a/fs/xfs/xfs_rtalloc.h
++++ b/fs/xfs/xfs_rtalloc.h
+@@ -23,6 +23,16 @@
+ struct xfs_mount;
+ struct xfs_trans;
  
- /* Buffer Daemon Setup Routines */
- extern int xfs_buf_init(void);
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 4ff993c..3815ed3 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1247,6 +1247,7 @@ xfs_qm_flush_one(
- 	struct xfs_dquot	*dqp,
- 	void			*data)
- {
-+	struct xfs_mount	*mp = dqp->q_mount;
- 	struct list_head	*buffer_list = data;
- 	struct xfs_buf		*bp = NULL;
- 	int			error = 0;
-@@ -1257,7 +1258,32 @@ xfs_qm_flush_one(
- 	if (!XFS_DQ_IS_DIRTY(dqp))
- 		goto out_unlock;
- 
--	xfs_dqflock(dqp);
-+	/*
-+	 * The only way the dquot is already flush locked by the time quotacheck
-+	 * gets here is if reclaim flushed it before the dqadjust walk dirtied
-+	 * it for the final time. Quotacheck collects all dquot bufs in the
-+	 * local delwri queue before dquots are dirtied, so reclaim can't have
-+	 * possibly queued it for I/O. The only way out is to push the buffer to
-+	 * cycle the flush lock.
-+	 */
-+	if (!xfs_dqflock_nowait(dqp)) {
-+		/* buf is pinned in-core by delwri list */
-+		DEFINE_SINGLE_BUF_MAP(map, dqp->q_blkno,
-+				      mp->m_quotainfo->qi_dqchunklen);
-+		bp = _xfs_buf_find(mp->m_ddev_targp, &map, 1, 0, NULL);
-+		if (!bp) {
-+			error = -EINVAL;
-+			goto out_unlock;
-+		}
++struct xfs_rtalloc_rec {
++	xfs_rtblock_t		ar_startblock;
++	xfs_rtblock_t		ar_blockcount;
++};
 +
-+		/* delwri_pushbuf drops the buf lock */
-+		xfs_buf_delwri_pushbuf(bp, buffer_list);
-+		xfs_buf_rele(bp);
++typedef int (*xfs_rtalloc_query_range_fn)(
++	struct xfs_trans	*tp,
++	struct xfs_rtalloc_rec	*rec,
++	void			*priv);
 +
-+		error = -EAGAIN;
-+		goto out_unlock;
-+	}
-+
- 	error = xfs_qm_dqflush(dqp, &bp);
- 	if (error)
- 		goto out_unlock;
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index fb7555e..c8d28a9 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -365,6 +365,7 @@ DEFINE_BUF_EVENT(xfs_buf_iowait_done);
- DEFINE_BUF_EVENT(xfs_buf_delwri_queue);
- DEFINE_BUF_EVENT(xfs_buf_delwri_queued);
- DEFINE_BUF_EVENT(xfs_buf_delwri_split);
-+DEFINE_BUF_EVENT(xfs_buf_delwri_pushbuf);
- DEFINE_BUF_EVENT(xfs_buf_get_uncached);
- DEFINE_BUF_EVENT(xfs_buf_item_relse);
- DEFINE_BUF_EVENT(xfs_buf_item_iodone_async);
--- 
-2.7.4
+ #ifdef CONFIG_XFS_RT
+ /*
+  * Function prototypes for exported functions.
+@@ -119,13 +129,21 @@ int xfs_rtmodify_summary(struct xfs_mount *mp, struct xfs_trans *tp, int log,
+ int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
+ 		     xfs_rtblock_t start, xfs_extlen_t len,
+ 		     struct xfs_buf **rbpp, xfs_fsblock_t *rsb);
+-
+-
++int xfs_rtalloc_query_range(struct xfs_trans *tp,
++			    struct xfs_rtalloc_rec *low_rec,
++			    struct xfs_rtalloc_rec *high_rec,
++			    xfs_rtalloc_query_range_fn fn,
++			    void *priv);
++int xfs_rtalloc_query_all(struct xfs_trans *tp,
++			  xfs_rtalloc_query_range_fn fn,
++			  void *priv);
+ #else
+ # define xfs_rtallocate_extent(t,b,min,max,l,a,f,p,rb)  (ENOSYS)
+ # define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
+ # define xfs_rtpick_extent(m,t,l,rb)                    (ENOSYS)
+ # define xfs_growfs_rt(mp,in)                           (ENOSYS)
++# define xfs_rtalloc_query_range(t,l,h,f,p)             (ENOSYS)
++# define xfs_rtalloc_query_all(t,f,p)                   (ENOSYS)
+ static inline int		/* error */
+ xfs_rtmount_init(
+ 	xfs_mount_t	*mp)	/* file system mount structure */
 
