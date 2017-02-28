@@ -1,91 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:33455 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbdB1EPo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Feb 2017 23:15:44 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v1S2sddw009079
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2017 02:54:39 GMT
-Date: Mon, 27 Feb 2017 18:52:48 -0800
+Received: from userp1040.oracle.com ([156.151.31.81]:31800 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751323AbdB1Sp6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 13:45:58 -0500
+Subject: [RFC PATCH v7 0/9] vfs/xfs/ext4: GETFSMAP support
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: xfs_growfs 3.2.1 on Knoppix-ADRIANE from Debian 7 does not grow
-Message-ID: <20170228025248.GC5297@birch.djwong.org>
-References: <20170228023724.GJ23709@justpickone.org>
+Date: Tue, 28 Feb 2017 10:45:50 -0800
+Message-ID: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170228023724.GJ23709@justpickone.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David T-G <davidtg@justpickone.org>
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Mon, Feb 27, 2017 at 09:37:24PM -0500, David T-G wrote:
-> Hi, all --
-> 
-> I finally settled on xfs as the filesystem for my raid5 volume on my
-> home computer even though I've been a longtime reiserfs lover :-)  But,
-> hey, let's try something new.
-> 
-> I recently added another device to my md raid5 set and expanded the
-> device from 8T to 12T, and now I want to grow the filesystem.  I remade
-> the partition and we oughta be good to go:
-> 
->   diskfarm:root:10:~> parted /dev/md0 print | egrep 'TB|Table|Sector'
->   Disk /dev/md0: 12.0TB
->   Sector size (logical/physical): 512B/4096B
->   Partition Table: gpt
->    1      1049kB  12.0TB  12.0TB  xfs          Linux filesystem
-> 
-> When I try xfs_growfs, however, nothing changes:
-> 
->   diskfarm:root:10:~> df -kh /mnt/4Traid5md/
->   Filesystem      Size  Used Avail Use% Mounted on
->   /dev/md0p1      7.3T  6.5T  863G  89% /mnt/4Traid5md
->   diskfarm:root:10:~> xfs_growfs -d /mnt/4Traid5md/
->   meta-data=/dev/md0p1             isize=256    agcount=32, agsize=61043072 blks
+Hi all,
 
-Did parted tell the kernel to reread the partition table?
+This is an RFC patchset implementing the GETFSMAP ioctl that we
+discussed at LSFMM 2016[1].  GETFSMAP takes two search keys, which are
+defined as a tuple of (device, physical block, owner, file offset), and
+returns all known space mapping information for the given filesystem.
 
-blockdev --getsz /dev/md0p1 will tell us the kernel's view of how big
-md0p1 is right now.
+The XFS implementation is fully complete for filesystems having the new
+reverse-mapping feature introduced in 4.8.  For legacy XFS filesystems
+and ext4, there is no reverse-mapping data and the returned extent
+information is restricted to listing "free", "unknown", or "metadata"
+owners.
 
-unmount, blockdev --rereadpt /dev/md0, try again(?)
+Space mapping information can be dumped via the xfs_io 'fsmap' command,
+and the upcoming xfs_spaceman utility analyzes the free extent data to
+produce free space fragmentations reports.  Further in the future, the
+xfs_scrub utility will use GETFSMAP to assist in data block read
+verification.
+
+Kernel source can be found in the git repo [2] and userspace utilities
+in the git repo[3].  The XFS patches have been hanging around in my
+repos for months accumulating fixes; the ext4 patches are newish.
+
+Note: This patchset is targeted for 4.12 at the earliest.  This new
+version contains all the fixes recommended by Brian Foster's review,
+most notably a refactoring of the space-record iterator functions to
+reduce duplicated code.
+
+Questions?  Comments?
 
 --D
 
->            =                       sectsz=4096  attr=2, projid32bit=1
->            =                       crc=0        finobt=0
->   data     =                       bsize=4096   blocks=1953377275, imaxpct=5
->            =                       sunit=128    swidth=256 blks
->   naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
->   log      =internal               bsize=4096   blocks=521728, version=2
->            =                       sectsz=4096  sunit=1 blks, lazy-count=1
->   realtime =none                   extsz=4096   blocks=0, rtextents=0
->   data size unchanged, skipping
->   diskfarm:root:10:~> df -kh /mnt/4Traid5md/
->   Filesystem      Size  Used Avail Use% Mounted on
->   /dev/md0p1      7.3T  6.5T  863G  89% /mnt/4Traid5md
-> 
-> I've searched high and low and haven't found any indication of why I
-> shouldn't be able to grow as long as the partition is large enough, so
-> now it's time to dive into the mailing list :-)
-> 
-> Please bcc: me on your replies since I am not subscribed.  I promise to
-> follow up with my ongoing results :-)
-> 
-> 
-> TIA & HAND
-> 
-> :-D
-> -- 
-> David T-G
-> See http://justpickone.org/davidtg/email/
-> See http://justpickone.org/davidtg/tofu.txt
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[1] https://lwn.net/Articles/685978/
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
