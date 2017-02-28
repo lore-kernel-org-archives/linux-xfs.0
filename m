@@ -1,104 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32033 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751928AbdB1StO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 13:49:14 -0500
-Subject: [PATCH 3/9] xfs: provide a query_range function for freespace btrees
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 28 Feb 2017 10:46:09 -0800
-Message-ID: <148830756923.22089.13512741575459313680.stgit@birch.djwong.org>
-In-Reply-To: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
-References: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([65.50.211.133]:34518 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752156AbdB1O6E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 09:58:04 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 11/12] block_dev: implement the F_IOINFO fcntl
+Date: Tue, 28 Feb 2017 06:57:36 -0800
+Message-Id: <20170228145737.19016-12-hch@lst.de>
+In-Reply-To: <20170228145737.19016-1-hch@lst.de>
+References: <20170228145737.19016-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-ext4@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Implement a query_range function for the bnobt and cntbt.  This will
-be used for getfsmap fallback if there is no rmapbt and by the online
-scrub and repair code.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   42 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_alloc.h |   10 ++++++++++
- 2 files changed, 52 insertions(+)
+ fs/block_dev.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 9f06a21..526df17 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2875,3 +2875,45 @@ xfs_free_extent(
- 	xfs_trans_brelse(tp, agbp);
- 	return error;
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 4dd5c54cdefb..48a799964e1d 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -2116,6 +2116,26 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
+ 					     end >> PAGE_SHIFT);
  }
+ 
++static int blkdev_ioinfo(struct file *file, struct fcntl_ioinfo *fio)
++{
++	struct block_device *bdev = I_BDEV(bdev_file_inode(file));
++	struct request_queue *q = bdev_get_queue(bdev);
++	unsigned int atomic_sectors = queue_max_atomic_write_sectors(q);
 +
-+struct xfs_alloc_query_range_info {
-+	xfs_alloc_query_range_fn	fn;
-+	void				*priv;
++	if (file->f_flags & O_DIRECT) {
++		fio->fio_alignment = bdev_logical_block_size(bdev);
++
++		if ((file->f_flags & O_ATOMIC) && atomic_sectors) {
++			fio->fio_flags = FIO_FL_ATOMIC_OSYNC;
++			fio->fio_max_atomic = (atomic_sectors << 9);
++			if (fio->fio_alignment)
++				fio->fio_max_atomic &= ~(fio->fio_alignment - 1);
++		}
++	}
++
++	return 0;
 +};
 +
-+/* Format btree record and pass to our callback. */
-+STATIC int
-+xfs_alloc_query_range_helper(
-+	struct xfs_btree_cur		*cur,
-+	union xfs_btree_rec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_alloc_query_range_info	*query = priv;
-+	struct xfs_alloc_rec_incore		irec;
-+
-+	irec.ar_startblock = be32_to_cpu(rec->alloc.ar_startblock);
-+	irec.ar_blockcount = be32_to_cpu(rec->alloc.ar_blockcount);
-+	return query->fn(cur, &irec, query->priv);
-+}
-+
-+/* Find all free space within a given range of blocks. */
-+int
-+xfs_alloc_query_range(
-+	struct xfs_btree_cur			*cur,
-+	struct xfs_alloc_rec_incore		*low_rec,
-+	struct xfs_alloc_rec_incore		*high_rec,
-+	xfs_alloc_query_range_fn		fn,
-+	void					*priv)
-+{
-+	union xfs_btree_irec			low_brec;
-+	union xfs_btree_irec			high_brec;
-+	struct xfs_alloc_query_range_info	query;
-+
-+	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
-+	low_brec.a = *low_rec;
-+	high_brec.a = *high_rec;
-+	query.priv = priv;
-+	query.fn = fn;
-+	return xfs_btree_query_range(cur, &low_brec, &high_brec,
-+			xfs_alloc_query_range_helper, &query);
-+}
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 1d0f48a..f534998 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -223,4 +223,14 @@ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+ const struct file_operations def_blk_fops = {
+ 	.open		= blkdev_open,
+ 	.release	= blkdev_close,
+@@ -2131,6 +2151,7 @@ const struct file_operations def_blk_fops = {
+ 	.splice_read	= generic_file_splice_read,
+ 	.splice_write	= iter_file_splice_write,
+ 	.fallocate	= blkdev_fallocate,
++	.ioinfo		= blkdev_ioinfo,
+ };
  
- xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
- 
-+typedef int (*xfs_alloc_query_range_fn)(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_alloc_rec_incore	*rec,
-+	void				*priv);
-+
-+int xfs_alloc_query_range(struct xfs_btree_cur *cur,
-+		struct xfs_alloc_rec_incore *low_rec,
-+		struct xfs_alloc_rec_incore *high_rec,
-+		xfs_alloc_query_range_fn fn, void *priv);
-+
- #endif	/* __XFS_ALLOC_H__ */
+ int ioctl_by_bdev(struct block_device *bdev, unsigned cmd, unsigned long arg)
+-- 
+2.11.0
 
