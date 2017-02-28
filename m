@@ -1,343 +1,104 @@
-Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227145932.6spourlpkrmxnf7t@eorzea.usersys.redhat.com>
-Resent-To: sandeen@sandeen.net
-Received: from userp1040.oracle.com ([156.151.31.81]:22018 "EHLO
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:32033 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751291AbdBYBNJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Feb 2017 20:13:09 -0500
-Subject: [PATCH 4/4] xfs: stress test xfs_scrub
+        with ESMTP id S1751928AbdB1StO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 13:49:14 -0500
+Subject: [PATCH 3/9] xfs: provide a query_range function for freespace btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 24 Feb 2017 17:13:04 -0800
-Message-ID: <148798518415.25833.11653991983531432757.stgit@birch.djwong.org>
-In-Reply-To: <148798515933.25833.2842247083803775089.stgit@birch.djwong.org>
-References: <148798515933.25833.2842247083803775089.stgit@birch.djwong.org>
+Date: Tue, 28 Feb 2017 10:46:09 -0800
+Message-ID: <148830756923.22089.13512741575459313680.stgit@birch.djwong.org>
+In-Reply-To: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
+References: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-ext4@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Three new tests:
-
-- Repair files that are mapped into memory in running programs
-- Run scrub -n concurrently with fsstress
-- Run scrub -y concurrently with fsstress
+Implement a query_range function for the bnobt and cntbt.  This will
+be used for getfsmap fallback if there is no rmapbt and by the online
+scrub and repair code.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- tests/xfs/1375     |   69 +++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1375.out |    3 ++
- tests/xfs/1376     |   83 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1376.out |    4 ++
- tests/xfs/1377     |   84 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1377.out |    4 ++
- tests/xfs/group    |    3 ++
- 7 files changed, 250 insertions(+)
- create mode 100755 tests/xfs/1375
- create mode 100644 tests/xfs/1375.out
- create mode 100755 tests/xfs/1376
- create mode 100644 tests/xfs/1376.out
- create mode 100755 tests/xfs/1377
- create mode 100644 tests/xfs/1377.out
+ fs/xfs/libxfs/xfs_alloc.c |   42 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_alloc.h |   10 ++++++++++
+ 2 files changed, 52 insertions(+)
 
 
-diff --git a/tests/xfs/1375 b/tests/xfs/1375
-new file mode 100755
-index 0000000..d3119ef
---- /dev/null
-+++ b/tests/xfs/1375
-@@ -0,0 +1,69 @@
-+#! /bin/bash
-+# FS QA Test No. 1375
-+#
-+# Copy xfs_scrub to the scratch device, then run xfs_scrub in forced
-+# repair mode (which will rebuild the data forks of the running scrub
-+# executable and libraries!) to see what happens.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
-+#-----------------------------------------------------------------------
-+#
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 9f06a21..526df17 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2875,3 +2875,45 @@ xfs_free_extent(
+ 	xfs_trans_brelse(tp, agbp);
+ 	return error;
+ }
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
++struct xfs_alloc_query_range_info {
++	xfs_alloc_query_range_fn	fn;
++	void				*priv;
++};
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
++/* Format btree record and pass to our callback. */
++STATIC int
++xfs_alloc_query_range_helper(
++	struct xfs_btree_cur		*cur,
++	union xfs_btree_rec		*rec,
++	void				*priv)
 +{
-+	cd /
-+	rm -rf $tmp.*
++	struct xfs_alloc_query_range_info	*query = priv;
++	struct xfs_alloc_rec_incore		irec;
++
++	irec.ar_startblock = be32_to_cpu(rec->alloc.ar_startblock);
++	irec.ar_blockcount = be32_to_cpu(rec->alloc.ar_blockcount);
++	return query->fn(cur, &irec, query->priv);
 +}
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/fuzzy
-+. ./common/inject
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_command /usr/bin/ldd "ldd"
-+_require_scrub
-+_require_scratch
-+_require_xfs_io_error_injection "force_repair"
-+
-+echo "Format and populate"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount
-+cp $XFS_SCRUB_PROG $SCRATCH_MNT/xfs_scrub
-+ldd $XFS_SCRUB_PROG | sed -e '/\//!d;/linux-gate/d;/=>/ {s/.*=>[[:blank:]]*\([^[:blank:]]*\).*/\1/};s/[[:blank:]]*\([^[:blank:]]*\) (.*)/\1/' | while read lib; do
-+	cp $lib $SCRATCH_MNT/
-+done
-+LD_LIBRARY_PATH=$SCRATCH_MNT ldd $SCRATCH_MNT/xfs_scrub >> $seqres.full
-+
-+echo "Force online repairs"
-+XFS_SCRUB_FORCE_REPAIR=1 LD_LIBRARY_PATH=$SCRATCH_MNT $SCRATCH_MNT/xfs_scrub -dTvy $SCRATCH_MNT >> $seqres.full
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1375.out b/tests/xfs/1375.out
-new file mode 100644
-index 0000000..dd7025e
---- /dev/null
-+++ b/tests/xfs/1375.out
-@@ -0,0 +1,3 @@
-+QA output created by 1375
-+Format and populate
-+Force online repairs
-diff --git a/tests/xfs/1376 b/tests/xfs/1376
-new file mode 100755
-index 0000000..f037b43
---- /dev/null
-+++ b/tests/xfs/1376
-@@ -0,0 +1,83 @@
-+#! /bin/bash
-+# FS QA Test No. 1376
-+#
-+# Race fio and xfs_scrub for a while to see if we crash or livelock.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
++/* Find all free space within a given range of blocks. */
++int
++xfs_alloc_query_range(
++	struct xfs_btree_cur			*cur,
++	struct xfs_alloc_rec_incore		*low_rec,
++	struct xfs_alloc_rec_incore		*high_rec,
++	xfs_alloc_query_range_fn		fn,
++	void					*priv)
 +{
-+	cd /
-+	rm -rf $tmp.*
++	union xfs_btree_irec			low_brec;
++	union xfs_btree_irec			high_brec;
++	struct xfs_alloc_query_range_info	query;
++
++	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
++	low_brec.a = *low_rec;
++	high_brec.a = *high_rec;
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_range(cur, &low_brec, &high_brec,
++			xfs_alloc_query_range_helper, &query);
 +}
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 1d0f48a..f534998 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -223,4 +223,14 @@ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+ 
+ xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
+ 
++typedef int (*xfs_alloc_query_range_fn)(
++	struct xfs_btree_cur		*cur,
++	struct xfs_alloc_rec_incore	*rec,
++	void				*priv);
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/fuzzy
-+. ./common/inject
++int xfs_alloc_query_range(struct xfs_btree_cur *cur,
++		struct xfs_alloc_rec_incore *low_rec,
++		struct xfs_alloc_rec_incore *high_rec,
++		xfs_alloc_query_range_fn fn, void *priv);
 +
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scrub
-+_require_scratch
-+_require_command "$KILLALL_PROG" killall
-+
-+echo "Format and populate"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount
-+
-+STRESS_DIR="$SCRATCH_MNT/testdir"
-+mkdir -p $STRESS_DIR
-+
-+cpus=$((16 * LOAD_FACTOR))
-+$FSSTRESS_PROG -d $STRESS_DIR -p $cpus -n $((cpus * 100000)) $FSSTRESS_AVOID >/dev/null 2>&1 &
-+$XFS_SCRUB_PROG -d -T -v -n $SCRATCH_MNT >> $seqres.full
-+
-+killstress() {
-+	sleep $(( 60 * LOAD_FACTOR ))
-+	$KILLALL_PROG -q $FSSTRESS_PROG
-+}
-+
-+echo "Concurrent scrub"
-+start=$(date +%s)
-+end=$((start + (60 * LOAD_FACTOR) ))
-+killstress &
-+echo "Scrub started at $(date --date="@${start}"), ending at $(date --date="@${end}")" >> $seqres.full
-+while [ "$(date +%s)" -lt "$end" ]; do
-+	timeout -s TERM $(( end - $(date +%s) + 2 )) $XFS_SCRUB_PROG -d -T -v -n $SCRATCH_MNT >> $seqres.full 2>&1
-+done
-+
-+echo "Test done"
-+echo "Scrub finished at $(date)" >> $seqres.full
-+$KILLALL_PROG -q $FSSTRESS_PROG
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1376.out b/tests/xfs/1376.out
-new file mode 100644
-index 0000000..155f424
---- /dev/null
-+++ b/tests/xfs/1376.out
-@@ -0,0 +1,4 @@
-+QA output created by 1376
-+Format and populate
-+Concurrent scrub
-+Test done
-diff --git a/tests/xfs/1377 b/tests/xfs/1377
-new file mode 100755
-index 0000000..1e0814c
---- /dev/null
-+++ b/tests/xfs/1377
-@@ -0,0 +1,84 @@
-+#! /bin/bash
-+# FS QA Test No. 1377
-+#
-+# Race fio and xfs_scrub -y for a while to see if we crash or livelock.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1335  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 7 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -rf $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/fuzzy
-+. ./common/inject
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_scrub
-+_require_scratch
-+_require_command "$KILLALL_PROG" killall
-+_require_xfs_io_error_injection "force_repair"
-+
-+echo "Format and populate"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount
-+
-+STRESS_DIR="$SCRATCH_MNT/testdir"
-+mkdir -p $STRESS_DIR
-+
-+cpus=$((16 * LOAD_FACTOR))
-+$FSSTRESS_PROG -d $STRESS_DIR -p $cpus -n $((cpus * 100000)) $FSSTRESS_AVOID >/dev/null 2>&1 &
-+$XFS_SCRUB_PROG -d -T -v -n $SCRATCH_MNT >> $seqres.full
-+
-+killstress() {
-+	sleep $(( 60 * LOAD_FACTOR ))
-+	$KILLALL_PROG -q $FSSTRESS_PROG
-+}
-+
-+echo "Concurrent repair"
-+start=$(date +%s)
-+end=$((start + (60 * LOAD_FACTOR) ))
-+killstress &
-+echo "Repair started at $(date --date="@${start}"), ending at $(date --date="@${end}")" >> $seqres.full
-+while [ "$(date +%s)" -lt "$end" ]; do
-+	XFS_SCRUB_FORCE_REPAIR=1 timeout -s TERM $(( end - $(date +%s) + 2 )) $XFS_SCRUB_PROG -d -T -v -y $SCRATCH_MNT >> $seqres.full
-+done
-+
-+echo "Test done"
-+echo "Repair finished at $(date)" >> $seqres.full
-+$KILLALL_PROG -q $FSSTRESS_PROG
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1377.out b/tests/xfs/1377.out
-new file mode 100644
-index 0000000..0454a87
---- /dev/null
-+++ b/tests/xfs/1377.out
-@@ -0,0 +1,4 @@
-+QA output created by 1377
-+Format and populate
-+Concurrent repair
-+Test done
-diff --git a/tests/xfs/group b/tests/xfs/group
-index eaa65b1..7fce0a0 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -408,3 +408,6 @@
- 416 dangerous_fuzzers dangerous_scrub dangerous_repair
- 417 dangerous_fuzzers dangerous_scrub dangerous_online_repair
- 418 dangerous_fuzzers dangerous_scrub dangerous_repair
-+1375 dangerous_fuzzers dangerous_scrub dangerous_online_repair
-+1376 dangerous_fuzzers dangerous_scrub
-+1377 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ #endif	/* __XFS_ALLOC_H__ */
 
