@@ -1,92 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.194]:64060 "EHLO mout.perfora.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751060AbdB1OPf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Feb 2017 09:15:35 -0500
-Date: Tue, 28 Feb 2017 09:01:25 -0500
-From: David T-G <davidtg@justpickone.org>
-Subject: SOLVED xfs_growfs 3.2.1 on Knoppix-ADRIANE from Debian 7 does not
- grow
-Message-ID: <20170228140125.GK23709@justpickone.org>
-References: <20170228023724.GJ23709@justpickone.org>
- <20170228025248.GC5297@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170228025248.GC5297@birch.djwong.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:37183 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752000AbdB1O6E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 09:58:04 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 04/12] fs: add a BH_Atomic flag
+Date: Tue, 28 Feb 2017 06:57:29 -0800
+Message-Id: <20170228145737.19016-5-hch@lst.de>
+In-Reply-To: <20170228145737.19016-1-hch@lst.de>
+References: <20170228145737.19016-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
 
-Darrick, et al --
+This allows us propagate the O_ATOMIC flag through the writeback code.
 
-...and then Darrick J. Wong said...
-% 
-% On Mon, Feb 27, 2017 at 09:37:24PM -0500, David T-G wrote:
-% > 
-...
-% >   diskfarm:root:10:~> parted /dev/md0 print | egrep 'TB|Table|Sector'
-...
-% >    1      1049kB  12.0TB  12.0TB  xfs          Linux filesystem
-% > 
-...
-% >   diskfarm:root:10:~> xfs_growfs -d /mnt/4Traid5md/
-% >   meta-data=/dev/md0p1             isize=256    agcount=32, agsize=61043072 blks
-% 
-% Did parted tell the kernel to reread the partition table?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/buffer.c                 | 13 +++++++++----
+ fs/internal.h               |  2 +-
+ fs/iomap.c                  |  4 ++--
+ include/linux/buffer_head.h |  2 ++
+ 4 files changed, 14 insertions(+), 7 deletions(-)
 
-Well, I thought that it did, since I kept seeing the new size plus saw
-the larger partition, but I admit that I don't know, because ...
-
-
-% 
-% blockdev --getsz /dev/md0p1 will tell us the kernel's view of how big
-% md0p1 is right now.
-% 
-% unmount, blockdev --rereadpt /dev/md0, try again(?)
-
-  diskfarm:root:10:~> blockdev --getsz /dev/md0p1
-  15627018207
-  diskfarm:root:10:~> umount /mnt/4Traid5md
-  diskfarm:root:10:~> blockdev --rereadpt /dev/md0
-  diskfarm:root:10:~> mount /mnt/4Traid5md
-  diskfarm:root:10:~> df -kh !$
-  df -kh /mnt/4Traid5md
-  Filesystem      Size  Used Avail Use% Mounted on
-  /dev/md0p1      7.3T  6.5T  863G  89% /mnt/4Traid5md
-  diskfarm:root:10:~> xfs_growfs -d !$
-  xfs_growfs -d /mnt/4Traid5md
-  meta-data=/dev/md0p1             isize=256    agcount=32, agsize=61043072 blks
-           =                       sectsz=4096  attr=2, projid32bit=1
-           =                       crc=0        finobt=0
-  data     =                       bsize=4096   blocks=1953377275, imaxpct=5
-           =                       sunit=128    swidth=256 blks
-  naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
-  log      =internal               bsize=4096   blocks=521728, version=2
-           =                       sectsz=4096  sunit=1 blks, lazy-count=1
-  realtime =none                   extsz=4096   blocks=0, rtextents=0
-  data blocks changed from 1953377275 to 2930066043
-  diskfarm:root:10:~> !df
-  df -kh /mnt/4Traid5md
-  Filesystem      Size  Used Avail Use% Mounted on
-  /dev/md0p1       11T  6.5T  4.5T  59% /mnt/4Traid5md
-
-WOO HOO!  That's awesome :-)  Thanks so much!
-
-Now I'm off to read the blockdev man pages to figure out what magick thou
-has given mee, good sirrah!
-
-
-% 
-% --D
-
-
-Thanks again to all & HAND
-
-:-D
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 0e87401cf335..85b0dce31b34 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -1937,7 +1937,7 @@ EXPORT_SYMBOL(page_zero_new_buffers);
+ 
+ static void
+ iomap_to_bh(struct inode *inode, sector_t block, struct buffer_head *bh,
+-		struct iomap *iomap)
++		struct iomap *iomap, unsigned flags)
+ {
+ 	loff_t offset = block << inode->i_blkbits;
+ 
+@@ -1987,10 +1987,15 @@ iomap_to_bh(struct inode *inode, sector_t block, struct buffer_head *bh,
+ 		set_buffer_mapped(bh);
+ 		break;
+ 	}
++
++	if (flags & IOMAP_ATOMIC)
++		set_buffer_atomic(bh);
++	else
++		clear_buffer_atomic(bh);
+ }
+ 
+ int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
+-		get_block_t *get_block, struct iomap *iomap)
++		get_block_t *get_block, struct iomap *iomap, unsigned flags)
+ {
+ 	unsigned from = pos & (PAGE_SIZE - 1);
+ 	unsigned to = from + len;
+@@ -2031,7 +2036,7 @@ int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
+ 				if (err)
+ 					break;
+ 			} else {
+-				iomap_to_bh(inode, block, bh, iomap);
++				iomap_to_bh(inode, block, bh, iomap, flags);
+ 			}
+ 
+ 			if (buffer_new(bh)) {
+@@ -2077,7 +2082,7 @@ int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
+ int __block_write_begin(struct page *page, loff_t pos, unsigned len,
+ 		get_block_t *get_block)
+ {
+-	return __block_write_begin_int(page, pos, len, get_block, NULL);
++	return __block_write_begin_int(page, pos, len, get_block, NULL, 0);
+ }
+ EXPORT_SYMBOL(__block_write_begin);
+ 
+diff --git a/fs/internal.h b/fs/internal.h
+index 1934fdb2bb27..5f4cbdedafdb 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -42,7 +42,7 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
+  */
+ extern void guard_bio_eod(int rw, struct bio *bio);
+ extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
+-		get_block_t *get_block, struct iomap *iomap);
++		get_block_t *get_block, struct iomap *iomap, unsigned flags);
+ 
+ /*
+  * char_dev.c
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 096cbf573932..3c3c09104dcd 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -119,7 +119,7 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
+ 	if (!page)
+ 		return -ENOMEM;
+ 
+-	status = __block_write_begin_int(page, pos, len, NULL, iomap);
++	status = __block_write_begin_int(page, pos, len, NULL, iomap, flags);
+ 	if (unlikely(status)) {
+ 		unlock_page(page);
+ 		put_page(page);
+@@ -441,7 +441,7 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	struct page *page = data;
+ 	int ret;
+ 
+-	ret = __block_write_begin_int(page, pos, length, NULL, iomap);
++	ret = __block_write_begin_int(page, pos, length, NULL, iomap, flags);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
+index d67ab83823ad..baff49fdfbe8 100644
+--- a/include/linux/buffer_head.h
++++ b/include/linux/buffer_head.h
+@@ -37,6 +37,7 @@ enum bh_state_bits {
+ 	BH_Meta,	/* Buffer contains metadata */
+ 	BH_Prio,	/* Buffer should be submitted with REQ_PRIO */
+ 	BH_Defer_Completion, /* Defer AIO completion to workqueue */
++	BH_Atomic,	/* part of an O_ATOMIC write */
+ 
+ 	BH_PrivateStart,/* not a state bit, but the first bit available
+ 			 * for private allocation by other entities
+@@ -130,6 +131,7 @@ BUFFER_FNS(Unwritten, unwritten)
+ BUFFER_FNS(Meta, meta)
+ BUFFER_FNS(Prio, prio)
+ BUFFER_FNS(Defer_Completion, defer_completion)
++BUFFER_FNS(Atomic, atomic);
+ 
+ #define bh_offset(bh)		((unsigned long)(bh)->b_data & ~PAGE_MASK)
+ 
 -- 
-David T-G
-See http://justpickone.org/davidtg/email/
-See http://justpickone.org/davidtg/tofu.txt
+2.11.0
 
