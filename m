@@ -1,84 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51641 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751447AbdBGBE4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2017 20:04:56 -0500
-Date: Mon, 6 Feb 2017 17:04:47 -0800
+Received: from aserp1050.oracle.com ([141.146.126.70]:27058 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751378AbdB1Fh3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 00:37:29 -0500
+Date: Mon, 27 Feb 2017 21:35:48 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] libxfs: sync up FSGETXATTR names and definitions with the
- kernel
-Message-ID: <20170207010447.GJ3580@birch.djwong.org>
+Subject: Re: [PATCH] xfs/004: relax freespace check
+Message-ID: <20170228053548.GH5297@birch.djwong.org>
+References: <20170228005235.9839-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20170228005235.9839-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-The rest of xfsprogs uses FS_XFLAG values for FSGETXATTR as defined in
-the kernel, so we should do the same in io/cowextsize.c.  Also, move the
-XFS_IOC_FSGETXATTR definition to the same part of xfs_fs.h as the
-kernel.
+On Mon, Feb 27, 2017 at 04:52:35PM -0800, Christoph Hellwig wrote:
+> Just check for a greater equals relation so that we don't have
+> to adjust the test for every new reservation scheme we add..
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- io/cowextsize.c |    6 +++---
- libxfs/xfs_fs.h |    5 ++---
- 2 files changed, 5 insertions(+), 6 deletions(-)
+Looks good!
 
-diff --git a/io/cowextsize.c b/io/cowextsize.c
-index b4a1c2e..c4cd6de 100644
---- a/io/cowextsize.c
-+++ b/io/cowextsize.c
-@@ -50,7 +50,7 @@ get_cowextsize(const char *path, int fd)
- {
- 	struct fsxattr	fsx;
- 
--	if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
-+	if ((xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
- 		printf("%s: XFS_IOC_FSGETXATTR %s: %s\n",
- 			progname, path, strerror(errno));
- 		return 0;
-@@ -69,7 +69,7 @@ set_cowextsize(const char *path, int fd, long extsz)
- 		perror("fstat64");
- 		return 0;
- 	}
--	if ((xfsctl(path, fd, XFS_IOC_FSGETXATTR, &fsx)) < 0) {
-+	if ((xfsctl(path, fd, FS_IOC_FSGETXATTR, &fsx)) < 0) {
- 		printf("%s: XFS_IOC_FSGETXATTR %s: %s\n",
- 			progname, path, strerror(errno));
- 		return 0;
-@@ -83,7 +83,7 @@ set_cowextsize(const char *path, int fd, long extsz)
- 	}
- 	fsx.fsx_cowextsize = extsz;
- 
--	if ((xfsctl(path, fd, XFS_IOC_FSSETXATTR, &fsx)) < 0) {
-+	if ((xfsctl(path, fd, FS_IOC_FSSETXATTR, &fsx)) < 0) {
- 		printf("%s: XFS_IOC_FSSETXATTR %s: %s\n",
- 			progname, path, strerror(errno));
- 		return 0;
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index b828853..157e280 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -56,9 +56,6 @@ struct dioattr {
- #define	XFS_XFLAG_FILESTREAM	FS_XFLAG_FILESTREAM
- #define	XFS_XFLAG_HASATTR	FS_XFLAG_HASATTR
- 
--#define XFS_IOC_FSGETXATTR	FS_IOC_FSGETXATTR
--#define XFS_IOC_FSSETXATTR	FS_IOC_FSSETXATTR
--
- /*
-  * Structure for XFS_IOC_GETBMAP.
-  * On input, fill in bmv_offset and bmv_length of the first structure
-@@ -508,6 +505,8 @@ typedef struct xfs_swapext
- #define XFS_IOC_ALLOCSP		_IOW ('X', 10, struct xfs_flock64)
- #define XFS_IOC_FREESP		_IOW ('X', 11, struct xfs_flock64)
- #define XFS_IOC_DIOINFO		_IOR ('X', 30, struct dioattr)
-+#define XFS_IOC_FSGETXATTR	FS_IOC_FSGETXATTR
-+#define XFS_IOC_FSSETXATTR	FS_IOC_FSSETXATTR
- #define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
- #define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
- #define XFS_IOC_GETBMAP		_IOWR('X', 38, struct getbmap)
+Tired-of-fixing-this-so-hooray: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  tests/xfs/004 | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/tests/xfs/004 b/tests/xfs/004
+> index bbc1aee3..f27f4b79 100755
+> --- a/tests/xfs/004
+> +++ b/tests/xfs/004
+> @@ -83,18 +83,15 @@ eval `$XFS_IO_PROG -x -c resblks $SCRATCH_MNT 2>&1 \
+>  echo "resblks gave: resblks=$resblks" >>$seqres.full
+>  
+>  # check the 'blocks' field from freesp command is OK
+> -#  - starting with Linux 4.10-rc the bmbt split reservation moved to be per-AG
+>  perl -ne '
+>  	BEGIN	{ $avail ='$avail' * 512 + ('$resblks' * '$dbsize');
+>  		  $answer="(no xfs_db free blocks line?)" }
+>  	/free blocks (\d+)$/	|| next;
+>  	$freesp = $1 * '$dbsize';
+> -	if ($freesp == $avail + ('$agcount') * '$dbsize' * 8) {
+> -		$answer = "yes";
+> -	} elsif ($freesp == $avail + (('$agcount' + 1) * '$dbsize' * 4)) {
+> +	if ($freesp >= $avail) {
+>  		$answer = "yes";
+>  	} else {
+> -		$answer = "no ($freesp != $avail)";
+> +		$answer = "no ($freesp < $avail)";
+>  	}
+>  	END	{ print "$answer\n" }
+>  	' <$tmp.xfs_db >$tmp.ans
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
