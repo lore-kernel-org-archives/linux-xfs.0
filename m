@@ -1,42 +1,39 @@
-Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227145936.nbdzpxaujdxrexa4@eorzea.usersys.redhat.com>
-Resent-To: sandeen@sandeen.net
-Received: from buxtehude.debian.org ([209.87.16.39]:49605 "EHLO
-        buxtehude.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751549AbdBYS5Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Feb 2017 13:57:16 -0500
-Content-Disposition: inline
-Content-Transfer-Encoding: 8BIT
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:56998 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751677AbdB1OF3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 09:05:29 -0500
+Date: Tue, 28 Feb 2017 06:04:55 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: LTP write03 writev07 xfs failures
+Message-ID: <20170228140455.GB9371@infradead.org>
+References: <20170227042220.syhudcilvyettwnf@XZHOUW.usersys.redhat.com>
+ <20170227160901.GB9344@bfoster.bfoster>
+ <20170227201334.GC9344@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-From: owner@bugs.debian.org (Debian Bug Tracking System)
-Subject: Processed: reassign 837581 to xfsdump
-Message-ID: <handler.s.C.14880489205197.transcript@bugs.debian.org>
-References: <1488048917-2783-bts-fsfs@debian.org>
-Date: Sat, 25 Feb 2017 18:57:07 +0000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170227201334.GC9344@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Florian Schlichting <fsfs@debian.org>
-Cc: nathans@debian.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-Processing commands for control@bugs.debian.org:
+On Mon, Feb 27, 2017 at 03:13:35PM -0500, Brian Foster wrote:
+> After playing around a bit, I don't think using i_size is the right
+> approach either. It just exacerbates the original problem on buffered
+> writes into sparse files. We can end up leaving around however many
+> delalloc blocks we've allocated.
+> 
+> I think we need a way to differentiate preexisting (previously written)
+> delalloc blocks from those allocated and unused by the current write. We
+> might be able to do that by looking at the pagecache, but I think that
+> means looking at the buffer state to make sure we handle sub-page block
+> sizes correctly. I.e., make *_iomap_end_delalloc() punch out all
+> delalloc blocks in the non-written range that are either not page backed
+> or not dirty+delalloc buffer backed. Hm?
 
-> reassign 837581 xfsdump
-Bug #837581 [xfslibs-dev] xfslibs-dev: Don't put the .so symlink to /lib/*.so
-Bug #847285 [xfslibs-dev] xfsdump: FTBFS (could not find a current XFS handle library)
-Bug reassigned from package 'xfslibs-dev' to 'xfsdump'.
-Bug reassigned from package 'xfslibs-dev' to 'xfsdump'.
-No longer marked as found in versions xfsprogs/4.3.0+nmu1 and xfsprogs/4.3.0.
-No longer marked as found in versions xfsprogs/4.3.0 and xfsprogs/4.3.0+nmu1.
-Ignoring request to alter fixed versions of bug #837581 to the same values previously set
-Ignoring request to alter fixed versions of bug #847285 to the same values previously set
-> thanks
-Stopping processing here.
-
-Please contact me if you need assistance.
--- 
-837581: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=837581
-847285: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=847285
-Debian Bug Tracking System
-Contact owner@bugs.debian.org with problems
+That sounds ugly, but right off my mind I see no other way.  I'll need
+to take a look at what the old pre-iomap code did there, as I think
+none of these issues happened there.
