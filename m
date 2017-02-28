@@ -1,32 +1,96 @@
-Return-Path: <cmaiolino@redhat.com>
-Resent-Message-ID: <20170227150156.hv5o3pcoyvv5fip4@eorzea.usersys.redhat.com>
-Resent-To: sandeen@sandeen.net
-Received: from szxga01-in.huawei.com ([45.249.212.187]:2835 "EHLO
-        dggrg01-dlp.huawei.com" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751070AbdBWI4e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Feb 2017 03:56:34 -0500
-Subject: Re: [PATCH] vfs: hoist {XFS,EXT4}_IOC_{GOING,SHUT}DOWN to the VFS
-References: <20170223075230.GB5837@birch.djwong.org>
-From: Chao Yu <yuchao0@huawei.com>
-Message-ID: <e8ce1e4a-3333-39d1-b9bd-1464512aa125@huawei.com>
-Date: Thu, 23 Feb 2017 16:54:47 +0800
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from userp1050.oracle.com ([156.151.31.82]:37596 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751323AbdB1Fa6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 00:30:58 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v1S5UPQ3011857
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2017 05:30:25 GMT
+Date: Mon, 27 Feb 2017 21:28:30 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] xfs: remove the ISUNWRITTEN macro
+Message-ID: <20170228052830.GF5297@birch.djwong.org>
+References: <20170228004930.9559-1-hch@lst.de>
+ <20170228004930.9559-2-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170223075230.GB5837@birch.djwong.org>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170228004930.9559-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Al Viro <viro@ZenIV.linux.org.uk>
-Cc: linux-f2fs-devel@lists.sourceforge.net, Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-Hi Darrick,
+On Mon, Feb 27, 2017 at 04:49:30PM -0800, Christoph Hellwig wrote:
+> Opencoding the trivial checks makes it much easier to read (and grep..).
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-On 2017/2/23 15:52, Darrick J. Wong wrote:
-> ext4 and XFS expose the same shutdown ioctl with the same parameters,
-> so let's hoist the whole mess into the vfs headers.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Could you cover f2fs in this patch since f2fs has already supported SHUTDOWN ioctl?
+--D
 
-Thanks,
-
+> ---
+>  fs/xfs/libxfs/xfs_bmap_btree.h | 1 -
+>  fs/xfs/xfs_aops.c              | 4 ++--
+>  fs/xfs/xfs_iomap.c             | 4 ++--
+>  3 files changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+> index 819a8a4dee95..90347a99c6d2 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.h
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+> @@ -30,7 +30,6 @@ struct xfs_trans;
+>  #define XFS_EXTFMT_INODE(x)	\
+>  	(xfs_sb_version_hasextflgbit(&((x)->i_mount->m_sb)) ? \
+>  		XFS_EXTFMT_HASSTATE : XFS_EXTFMT_NOSTATE)
+> -#define ISUNWRITTEN(x)	((x)->br_state == XFS_EXT_UNWRITTEN)
+>  
+>  /*
+>   * Btree block header size depends on a superblock flag.
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 582e3275bb51..b480647e00e7 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1266,8 +1266,8 @@ xfs_get_blocks(
+>  
+>  	if (nimaps) {
+>  		trace_xfs_get_blocks_found(ip, offset, size,
+> -				ISUNWRITTEN(&imap) ? XFS_IO_UNWRITTEN
+> -						   : XFS_IO_OVERWRITE, &imap);
+> +			imap.br_state == XFS_EXT_UNWRITTEN ?
+> +				XFS_IO_UNWRITTEN : XFS_IO_OVERWRITE, &imap);
+>  		xfs_iunlock(ip, lockmode);
+>  	} else {
+>  		trace_xfs_get_blocks_notfound(ip, offset, size);
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 41662fb14e87..5d68b4279016 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -240,7 +240,7 @@ xfs_iomap_write_direct(
+>  	 */
+>  	if (IS_DAX(VFS_I(ip))) {
+>  		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
+> -		if (ISUNWRITTEN(imap)) {
+> +		if (imap->br_state == XFS_EXT_UNWRITTEN) {
+>  			tflags |= XFS_TRANS_RESERVE;
+>  			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0) << 1;
+>  		}
+> @@ -940,7 +940,7 @@ static inline bool imap_needs_alloc(struct inode *inode,
+>  	return !nimaps ||
+>  		imap->br_startblock == HOLESTARTBLOCK ||
+>  		imap->br_startblock == DELAYSTARTBLOCK ||
+> -		(IS_DAX(inode) && ISUNWRITTEN(imap));
+> +		(IS_DAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
+>  }
+>  
+>  static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
