@@ -1,182 +1,173 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50836 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751441AbdB1QLc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Feb 2017 11:11:32 -0500
-Date: Tue, 28 Feb 2017 11:10:37 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: LTP write03 writev07 xfs failures
-Message-ID: <20170228161036.GB13377@bfoster.bfoster>
-References: <20170227042220.syhudcilvyettwnf@XZHOUW.usersys.redhat.com>
- <20170227160901.GB9344@bfoster.bfoster>
- <20170227201334.GC9344@bfoster.bfoster>
- <20170228140455.GB9371@infradead.org>
- <20170228145940.GA13377@bfoster.bfoster>
- <20170228151135.GA17880@infradead.org>
+Received: from userp1050.oracle.com ([156.151.31.82]:50692 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751468AbdB1Stq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2017 13:49:46 -0500
+Subject: [PATCH 4/9] xfs: create a function to query all records in a btree
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 28 Feb 2017 10:46:15 -0800
+Message-ID: <148830757543.22089.15709147746335212075.stgit@birch.djwong.org>
+In-Reply-To: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
+References: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170228151135.GA17880@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-ext4@vger.kernel.org
 
-On Tue, Feb 28, 2017 at 07:11:35AM -0800, Christoph Hellwig wrote:
-> On Tue, Feb 28, 2017 at 09:59:40AM -0500, Brian Foster wrote:
-> > Heh. I've appended what I'm currently playing around with. It's
-> > certainly uglier, but not terrible IMO (outside of the fact that we have
-> > to look at the buffer_heads). This seems to address the problem, but
-> > still only lightly tested...
-> > 
-> > An entirely different approach may be to somehow or another
-> > differentiate allocated delalloc blocks from "found" delalloc blocks in
-> > the iomap_begin() handler, and then perhaps encode that into the iomap
-> > such that the iomap_end() handler has an explicit reference of what to
-> > punch. Personally, I wouldn't mind doing something like the below short
-> > term to fix the regression and then incorporate an iomap enhancement to
-> > break the buffer_head dependency.
-> 
-> We actually have a IOMAP_F_NEW for this already, but so far it's
-> only used by the DIO and DAX code.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok. I think that has the potential to provide a more clean and simple
-solution. I don't think it's as straightforward of a change to enable
-that for the buffered write code, however. I don't think we can just set
-the NEW flag when we do xfs_bmapi_reserve_delalloc() because something
-like the following would still break:
+Create a helper function that will query all records in a btree.
+This will be used by the online repair functions to examine every
+record in a btree to rebuild a second btree.
 
-  xfs_io -fc "pwrite 16k 4k" -c "pwrite -b 32k 0 32k" <file>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c |   15 +++++++++++++++
+ fs/xfs/libxfs/xfs_alloc.h |    2 ++
+ fs/xfs/libxfs/xfs_btree.c |   15 +++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h |    2 ++
+ fs/xfs/libxfs/xfs_rmap.c  |   28 +++++++++++++++++++++-------
+ fs/xfs/libxfs/xfs_rmap.h  |    2 ++
+ 6 files changed, 57 insertions(+), 7 deletions(-)
 
-If the second write happened to fail, AFAICT it would still punch out
-the block allocated by the first. So I suppose we'd have to tweak
-reserve_delalloc() to trim the returned extent, or perhaps add a flag
-that skips the xfs_bmbt_get_all() call to update got after we insert the
-extent, and thus only return what was allocated..?
 
-(The latter actually seems to work on a very quick test, see appended
-diff..).
-
-Brian
-
----8<---
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a9c66d4..18b927d 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4159,7 +4159,8 @@ xfs_bmapi_reserve_delalloc(
- 	xfs_filblks_t		prealloc,
- 	struct xfs_bmbt_irec	*got,
- 	xfs_extnum_t		*lastx,
--	int			eof)
-+	int			eof,
-+	int			flags)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-@@ -4242,7 +4243,8 @@ xfs_bmapi_reserve_delalloc(
- 	 * Update our extent pointer, given that xfs_bmap_add_extent_hole_delay
- 	 * might have merged it into one of the neighbouring ones.
- 	 */
--	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), got);
-+	if (flags & XFS_BMAPI_ENTIRE)
-+		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), got);
- 
- 	/*
- 	 * Tag the inode if blocks were preallocated. Note that COW fork
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index cdef87d..459ba6b 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -243,7 +243,8 @@ int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
- int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
- 		xfs_fileoff_t off, xfs_filblks_t len, xfs_filblks_t prealloc,
--		struct xfs_bmbt_irec *got, xfs_extnum_t *lastx, int eof);
-+		struct xfs_bmbt_irec *got, xfs_extnum_t *lastx, int eof,
-+		int flags);
- 
- enum xfs_bmap_intent_type {
- 	XFS_BMAP_MAP = 1,
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 41662fb..9b1b2a4 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -613,7 +613,8 @@ xfs_file_iomap_begin_delay(
- 
- retry:
- 	error = xfs_bmapi_reserve_delalloc(ip, XFS_DATA_FORK, offset_fsb,
--			end_fsb - offset_fsb, prealloc_blocks, &got, &idx, eof);
-+			end_fsb - offset_fsb, prealloc_blocks, &got, &idx,
-+			eof, 0);
- 	switch (error) {
- 	case 0:
- 		break;
-@@ -629,7 +630,7 @@ xfs_file_iomap_begin_delay(
- 	default:
- 		goto out_unlock;
- 	}
--
-+	iomap->flags = IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
- done:
- 	if (isnullstartblock(got.br_startblock))
-@@ -1071,16 +1072,22 @@ xfs_file_iomap_end_delalloc(
- 	struct xfs_inode	*ip,
- 	loff_t			offset,
- 	loff_t			length,
--	ssize_t			written)
-+	ssize_t			written,
-+	struct iomap		*iomap)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		start_fsb;
- 	xfs_fileoff_t		end_fsb;
- 	int			error = 0;
- 
-+	trace_printk("%d: ino 0x%llx offset %llu len %llu writ %ld new %d\n", __LINE__,
-+		     ip->i_ino, offset, length, written, !!(iomap->flags & IOMAP_F_NEW));
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 526df17..ba15f30 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2917,3 +2917,18 @@ xfs_alloc_query_range(
+ 	return xfs_btree_query_range(cur, &low_brec, &high_brec,
+ 			xfs_alloc_query_range_helper, &query);
+ }
 +
- 	/* behave as if the write failed if drop writes is enabled */
--	if (xfs_mp_drop_writes(mp))
-+	if (xfs_mp_drop_writes(mp)) {
-+		iomap->flags |= IOMAP_F_NEW;
- 		written = 0;
-+	}
++/* Find all free space records. */
++int
++xfs_alloc_query_all(
++	struct xfs_btree_cur			*cur,
++	xfs_alloc_query_range_fn		fn,
++	void					*priv)
++{
++	struct xfs_alloc_query_range_info	query;
++
++	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
++}
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index f534998..a2101de 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -232,5 +232,7 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
+ 		struct xfs_alloc_rec_incore *low_rec,
+ 		struct xfs_alloc_rec_incore *high_rec,
+ 		xfs_alloc_query_range_fn fn, void *priv);
++int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
++		void *priv);
  
- 	/*
- 	 * start_fsb refers to the first unused block after a short write. If
-@@ -1101,7 +1108,7 @@ xfs_file_iomap_end_delalloc(
- 	 * across the reserve/allocate/unreserve calls. If there are delalloc
- 	 * blocks in the range, they are ours.
- 	 */
--	if (start_fsb < end_fsb) {
-+	if (iomap->flags & IOMAP_F_NEW && start_fsb < end_fsb) {
- 		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
- 					 XFS_FSB_TO_B(mp, end_fsb) - 1);
- 
-@@ -1131,7 +1138,7 @@ xfs_file_iomap_end(
- {
- 	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
- 		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
--				length, written);
-+				length, written, iomap);
- 	return 0;
+ #endif	/* __XFS_ALLOC_H__ */
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 2849d3f..ca94b87 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4823,6 +4823,21 @@ xfs_btree_query_range(
+ 			fn, priv);
  }
  
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index da6d08f..d76a2b6 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -313,7 +313,8 @@ xfs_reflink_reserve_cow(
- 		return error;
++/* Query a btree for all records. */
++int
++xfs_btree_query_all(
++	struct xfs_btree_cur		*cur,
++	xfs_btree_query_range_fn	fn,
++	void				*priv)
++{
++	union xfs_btree_irec		low_rec;
++	union xfs_btree_irec		high_rec;
++
++	memset(&low_rec, 0, sizeof(low_rec));
++	memset(&high_rec, 0xFF, sizeof(high_rec));
++	return xfs_btree_query_range(cur, &low_rec, &high_rec, fn, priv);
++}
++
+ /*
+  * Calculate the number of blocks needed to store a given number of records
+  * in a short-format (per-AG metadata) btree.
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 33a8f86..5114055 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -494,6 +494,8 @@ typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
+ int xfs_btree_query_range(struct xfs_btree_cur *cur,
+ 		union xfs_btree_irec *low_rec, union xfs_btree_irec *high_rec,
+ 		xfs_btree_query_range_fn fn, void *priv);
++int xfs_btree_query_all(struct xfs_btree_cur *cur, xfs_btree_query_range_fn fn,
++		void *priv);
  
- 	error = xfs_bmapi_reserve_delalloc(ip, XFS_COW_FORK, imap->br_startoff,
--			imap->br_blockcount, 0, &got, &idx, eof);
-+			imap->br_blockcount, 0, &got, &idx, eof,
-+			XFS_BMAPI_ENTIRE);
- 	if (error == -ENOSPC || error == -EDQUOT)
- 		trace_xfs_reflink_cow_enospc(ip, imap);
- 	if (error)
+ typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
+ 		void *data);
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 3a8cc71..3840556 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2001,14 +2001,14 @@ xfs_rmap_query_range_helper(
+ /* Find all rmaps between two keys. */
+ int
+ xfs_rmap_query_range(
+-	struct xfs_btree_cur		*cur,
+-	struct xfs_rmap_irec		*low_rec,
+-	struct xfs_rmap_irec		*high_rec,
+-	xfs_rmap_query_range_fn	fn,
+-	void				*priv)
++	struct xfs_btree_cur			*cur,
++	struct xfs_rmap_irec			*low_rec,
++	struct xfs_rmap_irec			*high_rec,
++	xfs_rmap_query_range_fn			fn,
++	void					*priv)
+ {
+-	union xfs_btree_irec		low_brec;
+-	union xfs_btree_irec		high_brec;
++	union xfs_btree_irec			low_brec;
++	union xfs_btree_irec			high_brec;
+ 	struct xfs_rmap_query_range_info	query;
+ 
+ 	low_brec.r = *low_rec;
+@@ -2019,6 +2019,20 @@ xfs_rmap_query_range(
+ 			xfs_rmap_query_range_helper, &query);
+ }
+ 
++/* Find all rmaps. */
++int
++xfs_rmap_query_all(
++	struct xfs_btree_cur			*cur,
++	xfs_rmap_query_range_fn			fn,
++	void					*priv)
++{
++	struct xfs_rmap_query_range_info	query;
++
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_all(cur, xfs_rmap_query_range_helper, &query);
++}
++
+ /* Clean up after calling xfs_rmap_finish_one. */
+ void
+ xfs_rmap_finish_one_cleanup(
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 7899305..faf2c1a 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -162,6 +162,8 @@ typedef int (*xfs_rmap_query_range_fn)(
+ int xfs_rmap_query_range(struct xfs_btree_cur *cur,
+ 		struct xfs_rmap_irec *low_rec, struct xfs_rmap_irec *high_rec,
+ 		xfs_rmap_query_range_fn fn, void *priv);
++int xfs_rmap_query_all(struct xfs_btree_cur *cur, xfs_rmap_query_range_fn fn,
++		void *priv);
+ 
+ enum xfs_rmap_intent_type {
+ 	XFS_RMAP_MAP,
+
