@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52385 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52386 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751186AbdB1X7y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1751291AbdB1X7y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Tue, 28 Feb 2017 18:59:54 -0500
 From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 1/8] nowait aio: Introduce IOCB_FLAG_NOWAIT
-Date: Tue, 28 Feb 2017 17:36:03 -0600
-Message-Id: <20170228233610.25456-2-rgoldwyn@suse.de>
+Subject: [PATCH 5/8] nowait aio: return on congested block device
+Date: Tue, 28 Feb 2017 17:36:07 -0600
+Message-Id: <20170228233610.25456-6-rgoldwyn@suse.de>
 In-Reply-To: <20170228233610.25456-1-rgoldwyn@suse.de>
 References: <20170228233610.25456-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,63 +17,97 @@ Cc: hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.or
 
 From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-This flag informs kernel to bail out if an AIO request will block
-for reasons such as file allocations, or a writeback triggered,
-or would block while allocating requests while performing
-direct I/O.
-
-IOCB_FLAG_NOWAIT is translated to IOCB_NOWAIT for
-iocb->ki_flags.
+A new flag BIO_NOWAIT is introduced to identify bio's
+orignating from iocb with IOCB_NOWAIT. This flag indicates
+to return immediately if a request cannot be made instead
+of retrying.
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- fs/aio.c                     | 3 +++
- include/linux/fs.h           | 1 +
- include/uapi/linux/aio_abi.h | 3 +++
- 3 files changed, 7 insertions(+)
+ block/blk-core.c          | 13 +++++++++++--
+ fs/direct-io.c            | 11 +++++++++--
+ include/linux/blk_types.h |  1 +
+ 3 files changed, 21 insertions(+), 4 deletions(-)
 
-diff --git a/fs/aio.c b/fs/aio.c
-index 873b4ca..5ae19ba 100644
---- a/fs/aio.c
-+++ b/fs/aio.c
-@@ -1586,6 +1586,9 @@ static int io_submit_one(struct kioctx *ctx, struct iocb __user *user_iocb,
- 		req->common.ki_flags |= IOCB_EVENTFD;
- 	}
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 61ba08c..e5cfc50 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1258,6 +1258,11 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
+ 	if (!IS_ERR(rq))
+ 		return rq;
  
-+	if (iocb->aio_flags & IOCB_FLAG_NOWAIT)
-+		req->common.ki_flags |= IOCB_NOWAIT;
++	if (bio_flagged(bio, BIO_NOWAIT)) {
++		blk_put_rl(rl);
++		return ERR_PTR(-EAGAIN);
++	}
 +
- 	ret = put_user(KIOCB_KEY, &user_iocb->aio_key);
- 	if (unlikely(ret)) {
- 		pr_debug("EFAULT: aio_key\n");
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 2ba0743..ab2f556 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -270,6 +270,7 @@ struct writeback_control;
- #define IOCB_DSYNC		(1 << 4)
- #define IOCB_SYNC		(1 << 5)
- #define IOCB_WRITE		(1 << 6)
-+#define IOCB_NOWAIT		(1 << 7)
+ 	if (!gfpflags_allow_blocking(gfp_mask) || unlikely(blk_queue_dying(q))) {
+ 		blk_put_rl(rl);
+ 		return rq;
+@@ -2018,7 +2023,7 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 	do {
+ 		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
  
- struct kiocb {
- 	struct file		*ki_filp;
-diff --git a/include/uapi/linux/aio_abi.h b/include/uapi/linux/aio_abi.h
-index bb2554f..82d1d94 100644
---- a/include/uapi/linux/aio_abi.h
-+++ b/include/uapi/linux/aio_abi.h
-@@ -51,8 +51,11 @@ enum {
-  *
-  * IOCB_FLAG_RESFD - Set if the "aio_resfd" member of the "struct iocb"
-  *                   is valid.
-+ * IOCB_FLAG_NOWAIT - Set if the user wants the iocb to fail if it would block
-+ *			for operations such as disk allocation.
-  */
- #define IOCB_FLAG_RESFD		(1 << 0)
-+#define IOCB_FLAG_NOWAIT	(1 << 1)
+-		if (likely(blk_queue_enter(q, false) == 0)) {
++		if (likely(blk_queue_enter(q, bio_flagged(bio, BIO_NOWAIT)) == 0)) {
+ 			ret = q->make_request_fn(q, bio);
  
- /* read() from /dev/aio returns these structures. */
- struct io_event {
+ 			blk_queue_exit(q);
+@@ -2027,7 +2032,11 @@ blk_qc_t generic_make_request(struct bio *bio)
+ 		} else {
+ 			struct bio *bio_next = bio_list_pop(current->bio_list);
+ 
+-			bio_io_error(bio);
++			if (unlikely(bio_flagged(bio, BIO_NOWAIT))) {
++				bio->bi_error = -EAGAIN;
++				bio_endio(bio);
++			} else
++				bio_io_error(bio);
+ 			bio = bio_next;
+ 		}
+ 	} while (bio);
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index c87bae4..2973df0 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -386,6 +386,9 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
+ 	else
+ 		bio->bi_end_io = dio_bio_end_io;
+ 
++	if (dio->iocb->ki_flags & IOCB_NOWAIT)
++		bio_set_flag(bio, BIO_NOWAIT);
++
+ 	sdio->bio = bio;
+ 	sdio->logical_offset_in_bio = sdio->cur_page_fs_offset;
+ }
+@@ -480,8 +483,12 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
+ 	unsigned i;
+ 	int err;
+ 
+-	if (bio->bi_error)
+-		dio->io_error = -EIO;
++	if (bio->bi_error) {
++		if (bio_flagged(bio, BIO_NOWAIT))
++			dio->io_error = bio->bi_error;
++		else
++			dio->io_error = -EIO;
++	}
+ 
+ 	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty) {
+ 		err = bio->bi_error;
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 519ea2c..1d77e9b 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -102,6 +102,7 @@ struct bio {
+ #define BIO_REFFED	8	/* bio has elevated ->bi_cnt */
+ #define BIO_THROTTLED	9	/* This bio has already been subjected to
+ 				 * throttling rules. Don't do it again. */
++#define BIO_NOWAIT	10	/* don't block over blk device congestion */
+ 
+ /*
+  * Flags starting here get preserved by bio_reset() - this includes
 -- 
 2.10.2
 
