@@ -1,79 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46987 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:28394 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750813AbdCAIvZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Mar 2017 03:51:25 -0500
+        id S1751062AbdCAIxB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Mar 2017 03:53:01 -0500
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 5/5] fs, xfs: convert xfs_rui_log_item.rui_refcount from atomic_t to refcount_t
-Date: Wed,  1 Mar 2017 10:47:40 +0200
-Message-Id: <1488358060-693-6-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
-References: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 0/5] fs, xfs atomic_t to refcount_t conversions version 2
+Date: Wed,  1 Mar 2017 10:47:35 +0200
+Message-Id: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-kernel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, david@fromorbit.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, david@fromorbit.com, Elena Reshetova <elena.reshetova@intel.com>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+changes in v2:
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- fs/xfs/xfs_rmap_item.c | 4 ++--
- fs/xfs/xfs_rmap_item.h | 4 +++-
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ * removed two patches that actually caused problems in testing and 
+ there didn't seem to be a resonable way to convert them to refcount_t 
+ based on all the triggered issues.
+ * run xfstests with TEST and SCRATCH partitions enabled, XFS_DEBUG on,
+ and WARNs on refcount_t API on. No issues found in the log upon execution. 
+ Some random test failures (based on different runs) and stress tests do not always
+ pass, but again, no issues on refcounts noticed anywhere. 
 
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 73c8278..5e1664a 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -204,7 +204,7 @@ xfs_rui_init(
- 	ruip->rui_format.rui_nextents = nextents;
- 	ruip->rui_format.rui_id = (uintptr_t)(void *)ruip;
- 	atomic_set(&ruip->rui_next_extent, 0);
--	atomic_set(&ruip->rui_refcount, 2);
-+	refcount_set(&ruip->rui_refcount, 2);
- 
- 	return ruip;
- }
-@@ -243,7 +243,7 @@ void
- xfs_rui_release(
- 	struct xfs_rui_log_item	*ruip)
- {
--	if (atomic_dec_and_test(&ruip->rui_refcount)) {
-+	if (refcount_dec_and_test(&ruip->rui_refcount)) {
- 		xfs_trans_ail_remove(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_rui_item_free(ruip);
- 	}
-diff --git a/fs/xfs/xfs_rmap_item.h b/fs/xfs/xfs_rmap_item.h
-index 340c968..2529a35 100644
---- a/fs/xfs/xfs_rmap_item.h
-+++ b/fs/xfs/xfs_rmap_item.h
-@@ -20,6 +20,8 @@
- #ifndef	__XFS_RMAP_ITEM_H__
- #define	__XFS_RMAP_ITEM_H__
- 
-+#include <linux/refcount.h>
-+
- /*
-  * There are (currently) three pairs of rmap btree redo item types: map, unmap,
-  * and convert.  The common abbreviations for these are RUI (rmap update
-@@ -64,7 +66,7 @@ struct kmem_zone;
-  */
- struct xfs_rui_log_item {
- 	struct xfs_log_item		rui_item;
--	atomic_t			rui_refcount;
-+	refcount_t			rui_refcount;
- 	atomic_t			rui_next_extent;
- 	unsigned long			rui_flags;	/* misc flags */
- 	struct xfs_rui_log_format	rui_format;
+
+Now when new refcount_t type and API are finally merged
+(see include/linux/refcount.h), the following
+patches convert various refcounters in the fs/xfs susystem from atomic_t
+to refcount_t. By doing this we prevent intentional or accidental
+underflows or overflows that can led to use-after-free vulnerabilities.
+
+The below patches are fully independent and can be cherry-picked separately.
+Since we convert all kernel subsystems in the same fashion, resulting
+in about 300 patches, we have to group them for sending at least in some
+fashion to be manageable. Please excuse the long cc list.
+
+Elena Reshetova (5):
+  fs, xfs: convert xfs_bui_log_item.bui_refcount from atomic_t to
+    refcount_t
+  fs, xfs: convert xfs_efi_log_item.efi_refcount from atomic_t to
+    refcount_t
+  fs, xfs: convert xlog_ticket.t_ref from atomic_t to refcount_t
+  fs, xfs: convert xfs_cui_log_item.cui_refcount from atomic_t to
+    refcount_t
+  fs, xfs: convert xfs_rui_log_item.rui_refcount from atomic_t to
+    refcount_t
+
+ fs/xfs/xfs_bmap_item.c     |  4 ++--
+ fs/xfs/xfs_bmap_item.h     |  4 +++-
+ fs/xfs/xfs_extfree_item.c  |  4 ++--
+ fs/xfs/xfs_extfree_item.h  |  4 +++-
+ fs/xfs/xfs_log.c           | 10 +++++-----
+ fs/xfs/xfs_log_priv.h      |  4 +++-
+ fs/xfs/xfs_refcount_item.c |  4 ++--
+ fs/xfs/xfs_refcount_item.h |  4 +++-
+ fs/xfs/xfs_rmap_item.c     |  4 ++--
+ fs/xfs/xfs_rmap_item.h     |  4 +++-
+ 10 files changed, 28 insertions(+), 18 deletions(-)
+
 -- 
 2.7.4
 
