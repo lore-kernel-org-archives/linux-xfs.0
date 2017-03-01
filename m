@@ -1,24 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:51899 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:51905 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752100AbdCAPH4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Mar 2017 10:07:56 -0500
-Date: Wed, 1 Mar 2017 16:07:37 +0100
+        id S1751435AbdCAPJd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Mar 2017 10:09:33 -0500
+Date: Wed, 1 Mar 2017 16:09:30 +0100
 From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [RFC] failure atomic writes for file systems and block devices
-Message-ID: <20170301150737.GE12248@lst.de>
-References: <20170228145737.19016-1-hch@lst.de> <CAOQ4uxjYwP+XGdDu-HiKmiAVEFydqYj6xfQbaKULB9WWUSuX5g@mail.gmail.com>
+Message-ID: <20170301150930.GF12248@lst.de>
+References: <20170228145737.19016-1-hch@lst.de> <20170228232204.GB5269@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjYwP+XGdDu-HiKmiAVEFydqYj6xfQbaKULB9WWUSuX5g@mail.gmail.com>
+In-Reply-To: <20170228232204.GB5269@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, linux-api@vger.kernel.org, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
 
-On Wed, Mar 01, 2017 at 01:21:41PM +0200, Amir Goldstein wrote:
-> [CC += linux-api@vger.kernel.org] for that question and for the new API
+On Tue, Feb 28, 2017 at 03:22:04PM -0800, Darrick J. Wong wrote:
+> (Assuming there's no syncv involved here...?)
 
-We'll need to iterate over the API a few more times first I think..
+No.  While I think we could implement it for XFS similar how we roll
+transactions over multiple inodes for a few transactions, the use case
+is much more limited, and the potential pitfalls are much bigger.
+
+> > have to check the F_IOINFO fcntl before, which is a bit of a killer.
+> > Because of that I've also not implemented any other validity checks
+> > yet, as they might make thing even worse when an open on a not supported
+> > file system or device fails, but not on an old kernel.  Maybe we need
+> > a new open version that checks arguments properly first?
+> 
+> Does fcntl(F_SETFL...) suffer from this?
+
+Yes.
