@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:28609 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:51230 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751075AbdCAIx1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Mar 2017 03:53:27 -0500
+        id S1751075AbdCAJEF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Mar 2017 04:04:05 -0500
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 3/5] fs, xfs: convert xlog_ticket.t_ref from atomic_t to refcount_t
-Date: Wed,  1 Mar 2017 10:47:38 +0200
-Message-Id: <1488358060-693-4-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 1/5] fs, xfs: convert xfs_bui_log_item.bui_refcount from atomic_t to refcount_t
+Date: Wed,  1 Mar 2017 10:47:36 +0200
+Message-Id: <1488358060-693-2-git-send-email-elena.reshetova@intel.com>
 In-Reply-To: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
 References: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -26,67 +26,54 @@ Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
 Signed-off-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- fs/xfs/xfs_log.c      | 10 +++++-----
- fs/xfs/xfs_log_priv.h |  4 +++-
- 2 files changed, 8 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_bmap_item.c | 4 ++--
+ fs/xfs/xfs_bmap_item.h | 4 +++-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index b1469f0..c127fa0 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3500,8 +3500,8 @@ void
- xfs_log_ticket_put(
- 	xlog_ticket_t	*ticket)
- {
--	ASSERT(atomic_read(&ticket->t_ref) > 0);
--	if (atomic_dec_and_test(&ticket->t_ref))
-+	ASSERT(refcount_read(&ticket->t_ref) > 0);
-+	if (refcount_dec_and_test(&ticket->t_ref))
- 		kmem_zone_free(xfs_log_ticket_zone, ticket);
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 9bf57c7..33104ad 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -199,7 +199,7 @@ xfs_bui_init(
+ 	buip->bui_format.bui_nextents = XFS_BUI_MAX_FAST_EXTENTS;
+ 	buip->bui_format.bui_id = (uintptr_t)(void *)buip;
+ 	atomic_set(&buip->bui_next_extent, 0);
+-	atomic_set(&buip->bui_refcount, 2);
++	refcount_set(&buip->bui_refcount, 2);
+ 
+ 	return buip;
  }
- 
-@@ -3509,8 +3509,8 @@ xlog_ticket_t *
- xfs_log_ticket_get(
- 	xlog_ticket_t	*ticket)
+@@ -215,7 +215,7 @@ void
+ xfs_bui_release(
+ 	struct xfs_bui_log_item	*buip)
  {
--	ASSERT(atomic_read(&ticket->t_ref) > 0);
--	atomic_inc(&ticket->t_ref);
-+	ASSERT(refcount_read(&ticket->t_ref) > 0);
-+	refcount_inc(&ticket->t_ref);
- 	return ticket;
- }
- 
-@@ -3632,7 +3632,7 @@ xlog_ticket_alloc(
- 
- 	unit_res = xfs_log_calc_unit_res(log->l_mp, unit_bytes);
- 
--	atomic_set(&tic->t_ref, 1);
-+	refcount_set(&tic->t_ref, 1);
- 	tic->t_task		= current;
- 	INIT_LIST_HEAD(&tic->t_queue);
- 	tic->t_unit_res		= unit_res;
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index c2604a5..279afce 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -18,6 +18,8 @@
- #ifndef	__XFS_LOG_PRIV_H__
- #define __XFS_LOG_PRIV_H__
+-	if (atomic_dec_and_test(&buip->bui_refcount)) {
++	if (refcount_dec_and_test(&buip->bui_refcount)) {
+ 		xfs_trans_ail_remove(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
+ 		xfs_bui_item_free(buip);
+ 	}
+diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
+index c867daa..988a6ae 100644
+--- a/fs/xfs/xfs_bmap_item.h
++++ b/fs/xfs/xfs_bmap_item.h
+@@ -20,6 +20,8 @@
+ #ifndef	__XFS_BMAP_ITEM_H__
+ #define	__XFS_BMAP_ITEM_H__
  
 +#include <linux/refcount.h>
 +
- struct xfs_buf;
- struct xlog;
- struct xlog_ticket;
-@@ -168,7 +170,7 @@ typedef struct xlog_ticket {
- 	struct list_head   t_queue;	 /* reserve/write queue */
- 	struct task_struct *t_task;	 /* task that owns this ticket */
- 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
--	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
-+	refcount_t	   t_ref;	 /* ticket reference count       : 4  */
- 	int		   t_curr_res;	 /* current reservation in bytes : 4  */
- 	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
- 	char		   t_ocnt;	 /* original count		 : 1  */
+ /*
+  * There are (currently) two pairs of bmap btree redo item types: map & unmap.
+  * The common abbreviations for these are BUI (bmap update intent) and BUD
+@@ -61,7 +63,7 @@ struct kmem_zone;
+  */
+ struct xfs_bui_log_item {
+ 	struct xfs_log_item		bui_item;
+-	atomic_t			bui_refcount;
++	refcount_t			bui_refcount;
+ 	atomic_t			bui_next_extent;
+ 	unsigned long			bui_flags;	/* misc flags */
+ 	struct xfs_bui_log_format	bui_format;
 -- 
 2.7.4
 
