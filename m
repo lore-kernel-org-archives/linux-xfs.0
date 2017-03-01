@@ -1,45 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39986 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750717AbdCBGaU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Mar 2017 01:30:20 -0500
-Date: Thu, 2 Mar 2017 13:19:00 +0800
-From: Xiong Zhou <xzhou@redhat.com>
-Subject: Re: mm allocation failure and hang when running xfstests generic/269
- on xfs
-Message-ID: <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
-References: <20170301044634.rgidgdqqiiwsmfpj@XZHOUW.usersys.redhat.com>
- <20170302003731.GB24593@infradead.org>
+Received: from userp1050.oracle.com ([156.151.31.82]:20999 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752163AbdCAQeS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Mar 2017 11:34:18 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v21GXg4f021561
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Mar 2017 16:33:42 GMT
+Date: Wed, 1 Mar 2017 08:32:04 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_repair: detect invalid zero-sized symlink inodes
+Message-ID: <20170301163204.GK5297@birch.djwong.org>
+References: <1488380403-5826-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170302003731.GB24593@infradead.org>
+In-Reply-To: <1488380403-5826-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, mhocko@suse.com
-Cc: Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Mathias Troiden <mathias.troiden@gmail.com>
 
-On Wed, Mar 01, 2017 at 04:37:31PM -0800, Christoph Hellwig wrote:
-> On Wed, Mar 01, 2017 at 12:46:34PM +0800, Xiong Zhou wrote:
-> > Hi,
-> > 
-> > It's reproduciable, not everytime though. Ext4 works fine.
+On Wed, Mar 01, 2017 at 10:00:03AM -0500, Brian Foster wrote:
+> Mathias Troiden reproduced a filesystem corruption that resulted in
+> a zero-sized local format symlink inode. This is invalid state and
+> results in an inode that cannot be accessed or modified.
 > 
-> On ext4 fsstress won't run bulkstat because it doesn't exist.  Either
-> way this smells like a MM issue to me as there were not XFS changes
-> in that area recently.
+> The kernel detects this problem on inode access, fails and warns the
+> user to umount and run xfs_repair. Unfortunately, xfs_repair doesn't
+> even detect the problem. Thus the user has no path to recovery.
+> 
+> Update xfs_repair to check for invalid zero-sized symlinks and flag
+> them as corrupted. This results in tossing the inode, but returns
+> the fs to a valid state.
+> 
+> Reported-by: Mathias Troiden <mathias.troiden@gmail.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Yap.
+Looks good,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-First bad commit:
+--D
 
-commit 5d17a73a2ebeb8d1c6924b91e53ab2650fe86ffb
-Author: Michal Hocko <mhocko@suse.com>
-Date:   Fri Feb 24 14:58:53 2017 -0800
-
-    vmalloc: back off when the current task is killed
-
-Reverting this commit on top of
-  e5d56ef Merge tag 'watchdog-for-linus-v4.11'
-survives the tests.
+> ---
+>  repair/dinode.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 8d01409..d664f87 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -1385,6 +1385,11 @@ process_symlink(
+>  		return(1);
+>  	}
+>  
+> +	if (be64_to_cpu(dino->di_size) == 0) {
+> +		do_warn(_("zero size symlink in inode %" PRIu64 "\n"), lino);
+> +		return 1;
+> +	}
+> +
+>  	/*
+>  	 * have to check symlink component by component.
+>  	 * get symlink contents into data area
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
