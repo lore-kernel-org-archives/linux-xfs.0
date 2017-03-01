@@ -1,63 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:28394 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:28609 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751062AbdCAIxB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Mar 2017 03:53:01 -0500
+        id S1751075AbdCAIx1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Mar 2017 03:53:27 -0500
 From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 0/5] fs, xfs atomic_t to refcount_t conversions version 2
-Date: Wed,  1 Mar 2017 10:47:35 +0200
-Message-Id: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
+Subject: [PATCH 3/5] fs, xfs: convert xlog_ticket.t_ref from atomic_t to refcount_t
+Date: Wed,  1 Mar 2017 10:47:38 +0200
+Message-Id: <1488358060-693-4-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
+References: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-kernel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, david@fromorbit.com, Elena Reshetova <elena.reshetova@intel.com>
+Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, david@fromorbit.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
 
-changes in v2:
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
- * removed two patches that actually caused problems in testing and 
- there didn't seem to be a resonable way to convert them to refcount_t 
- based on all the triggered issues.
- * run xfstests with TEST and SCRATCH partitions enabled, XFS_DEBUG on,
- and WARNs on refcount_t API on. No issues found in the log upon execution. 
- Some random test failures (based on different runs) and stress tests do not always
- pass, but again, no issues on refcounts noticed anywhere. 
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ fs/xfs/xfs_log.c      | 10 +++++-----
+ fs/xfs/xfs_log_priv.h |  4 +++-
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-
-Now when new refcount_t type and API are finally merged
-(see include/linux/refcount.h), the following
-patches convert various refcounters in the fs/xfs susystem from atomic_t
-to refcount_t. By doing this we prevent intentional or accidental
-underflows or overflows that can led to use-after-free vulnerabilities.
-
-The below patches are fully independent and can be cherry-picked separately.
-Since we convert all kernel subsystems in the same fashion, resulting
-in about 300 patches, we have to group them for sending at least in some
-fashion to be manageable. Please excuse the long cc list.
-
-Elena Reshetova (5):
-  fs, xfs: convert xfs_bui_log_item.bui_refcount from atomic_t to
-    refcount_t
-  fs, xfs: convert xfs_efi_log_item.efi_refcount from atomic_t to
-    refcount_t
-  fs, xfs: convert xlog_ticket.t_ref from atomic_t to refcount_t
-  fs, xfs: convert xfs_cui_log_item.cui_refcount from atomic_t to
-    refcount_t
-  fs, xfs: convert xfs_rui_log_item.rui_refcount from atomic_t to
-    refcount_t
-
- fs/xfs/xfs_bmap_item.c     |  4 ++--
- fs/xfs/xfs_bmap_item.h     |  4 +++-
- fs/xfs/xfs_extfree_item.c  |  4 ++--
- fs/xfs/xfs_extfree_item.h  |  4 +++-
- fs/xfs/xfs_log.c           | 10 +++++-----
- fs/xfs/xfs_log_priv.h      |  4 +++-
- fs/xfs/xfs_refcount_item.c |  4 ++--
- fs/xfs/xfs_refcount_item.h |  4 +++-
- fs/xfs/xfs_rmap_item.c     |  4 ++--
- fs/xfs/xfs_rmap_item.h     |  4 +++-
- 10 files changed, 28 insertions(+), 18 deletions(-)
-
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index b1469f0..c127fa0 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3500,8 +3500,8 @@ void
+ xfs_log_ticket_put(
+ 	xlog_ticket_t	*ticket)
+ {
+-	ASSERT(atomic_read(&ticket->t_ref) > 0);
+-	if (atomic_dec_and_test(&ticket->t_ref))
++	ASSERT(refcount_read(&ticket->t_ref) > 0);
++	if (refcount_dec_and_test(&ticket->t_ref))
+ 		kmem_zone_free(xfs_log_ticket_zone, ticket);
+ }
+ 
+@@ -3509,8 +3509,8 @@ xlog_ticket_t *
+ xfs_log_ticket_get(
+ 	xlog_ticket_t	*ticket)
+ {
+-	ASSERT(atomic_read(&ticket->t_ref) > 0);
+-	atomic_inc(&ticket->t_ref);
++	ASSERT(refcount_read(&ticket->t_ref) > 0);
++	refcount_inc(&ticket->t_ref);
+ 	return ticket;
+ }
+ 
+@@ -3632,7 +3632,7 @@ xlog_ticket_alloc(
+ 
+ 	unit_res = xfs_log_calc_unit_res(log->l_mp, unit_bytes);
+ 
+-	atomic_set(&tic->t_ref, 1);
++	refcount_set(&tic->t_ref, 1);
+ 	tic->t_task		= current;
+ 	INIT_LIST_HEAD(&tic->t_queue);
+ 	tic->t_unit_res		= unit_res;
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index c2604a5..279afce 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -18,6 +18,8 @@
+ #ifndef	__XFS_LOG_PRIV_H__
+ #define __XFS_LOG_PRIV_H__
+ 
++#include <linux/refcount.h>
++
+ struct xfs_buf;
+ struct xlog;
+ struct xlog_ticket;
+@@ -168,7 +170,7 @@ typedef struct xlog_ticket {
+ 	struct list_head   t_queue;	 /* reserve/write queue */
+ 	struct task_struct *t_task;	 /* task that owns this ticket */
+ 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
+-	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
++	refcount_t	   t_ref;	 /* ticket reference count       : 4  */
+ 	int		   t_curr_res;	 /* current reservation in bytes : 4  */
+ 	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
+ 	char		   t_ocnt;	 /* original count		 : 1  */
 -- 
 2.7.4
 
