@@ -1,178 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41120 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41882 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751527AbdCARt7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Mar 2017 12:49:59 -0500
-Date: Wed, 1 Mar 2017 12:59:20 -0500
+        id S1751955AbdCAR56 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Mar 2017 12:57:58 -0500
+Date: Wed, 1 Mar 2017 12:59:28 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 7/9] xfs: have getfsmap fall back to the freesp btrees
- when rmap is not present
-Message-ID: <20170301175920.GC3312@bfoster.bfoster>
+Subject: Re: [PATCH 8/9] xfs: report realtime space information via the
+ rtbitmap
+Message-ID: <20170301175928.GD3312@bfoster.bfoster>
 References: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
- <148830759554.22089.6408995371724685885.stgit@birch.djwong.org>
+ <148830760185.22089.7585485406339387044.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <148830759554.22089.6408995371724685885.stgit@birch.djwong.org>
+In-Reply-To: <148830760185.22089.7585485406339387044.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Feb 28, 2017 at 10:46:35AM -0800, Darrick J. Wong wrote:
+On Tue, Feb 28, 2017 at 10:46:41AM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> If the reverse-mapping btree isn't available, fall back to the
-> free space btrees to provide partial reverse mapping information.
-> The online scrub tool can make use of even partial information to
-> speed up the data block scan.
+> Use the realtime bitmap to return free space information via getfsmap.
+> Eventually this will be superseded by the realtime rmapbt code.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_fsmap.c |   81 ++++++++++++++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 78 insertions(+), 3 deletions(-)
+
+Looks good to me:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_fsmap.c |  120 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 119 insertions(+), 1 deletion(-)
 > 
 > 
 > diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> index 2d0fa2a..56bbd24 100644
+> index 56bbd24..bb351ed 100644
 > --- a/fs/xfs/xfs_fsmap.c
 > +++ b/fs/xfs/xfs_fsmap.c
-> @@ -40,6 +40,7 @@
->  #include "xfs_fsmap.h"
+> @@ -41,6 +41,7 @@
 >  #include "xfs_refcount.h"
 >  #include "xfs_refcount_btree.h"
-> +#include "xfs_alloc_btree.h"
+>  #include "xfs_alloc_btree.h"
+> +#include "xfs_rtalloc.h"
 >  
 >  /* Convert an xfs_fsmap to an fsmap. */
 >  void
-> @@ -158,6 +159,9 @@ xfs_fsmap_owner_from_rmap(
->  	case XFS_RMAP_OWN_COW:
->  		dest->fmr_owner = XFS_FMR_OWN_COW;
->  		break;
-> +	case XFS_RMAP_OWN_NULL:	/* "free" */
-> +		dest->fmr_owner = XFS_FMR_OWN_FREE;
-> +		break;
->  	default:
->  		return -EFSCORRUPTED;
->  	}
-> @@ -411,6 +415,31 @@ xfs_getfsmap_rtdev_helper(
+> @@ -415,6 +416,29 @@ xfs_getfsmap_rtdev_helper(
 >  	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
 >  }
 >  
-> +/* Transform a bnobt irec into a fsmap */
+> +/* Transform a rtbitmap "record" into a fsmap */
 > +STATIC int
-> +xfs_getfsmap_datadev_bnobt_helper(
-> +	struct xfs_btree_cur		*cur,
-> +	struct xfs_alloc_rec_incore	*rec,
+> +xfs_getfsmap_rtdev_rtbitmap_helper(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_rtalloc_rec		*rec,
 > +	void				*priv)
 > +{
-> +	struct xfs_mount		*mp = cur->bc_mp;
+> +	struct xfs_mount		*mp = tp->t_mountp;
 > +	struct xfs_getfsmap_info	*info = priv;
 > +	struct xfs_rmap_irec		irec;
-> +	xfs_fsblock_t			fsb;
 > +	xfs_daddr_t			rec_daddr;
 > +
-> +	fsb = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno, rec->ar_startblock);
-> +	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb);
+> +	rec_daddr = XFS_FSB_TO_BB(mp, rec->ar_startblock);
 > +
-
-XFS_AGB_TO_DADDR()?
-
 > +	irec.rm_startblock = rec->ar_startblock;
 > +	irec.rm_blockcount = rec->ar_blockcount;
 > +	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
 > +	irec.rm_offset = 0;
 > +	irec.rm_flags = 0;
 > +
-> +	return xfs_getfsmap_helper(cur->bc_tp, info, &irec, rec_daddr);
+> +	return xfs_getfsmap_helper(tp, info, &irec, rec_daddr);
 > +}
 > +
->  /* Set rmap flags based on the getfsmap flags */
->  static void
->  xfs_getfsmap_set_irec_flags(
-> @@ -633,6 +662,51 @@ xfs_getfsmap_datadev_rmapbt(
->  			xfs_getfsmap_datadev_rmapbt_end, NULL);
+>  /* Transform a bnobt irec into a fsmap */
+>  STATIC int
+>  xfs_getfsmap_datadev_bnobt_helper(
+> @@ -504,6 +528,93 @@ xfs_getfsmap_logdev(
+>  	return xfs_getfsmap_rtdev_helper(&cur, &rmap, info);
 >  }
 >  
-> +/* Report any gap at the end of bnobt records. */
+> +/* Execute a getfsmap query against the realtime device. */
 > +STATIC int
-> +xfs_getfsmap_datadev_bnobt_end(
-> +	struct xfs_btree_cur		*cur,
-> +	struct xfs_getfsmap_info	*info,
-> +	void				*priv)
-> +{
-> +	struct xfs_alloc_rec_incore	*key = priv;
-> +
-> +	return xfs_getfsmap_datadev_bnobt_helper(cur, key + 1, info);
-
-Nit: please use key[1] (or maybe call it keys to be clear) here and
-below rather than pointer arithmetic.
-
-Looks good aside from those couple nits and modulo the separate
-_query()/_end() callbacks thing.
-
-Brian
-
-> +}
-> +
-> +/* Actually query the bno btree. */
-> +STATIC int
-> +xfs_getfsmap_datadev_bnobt_query(
+> +__xfs_getfsmap_rtdev(
 > +	struct xfs_trans		*tp,
-> +	struct xfs_getfsmap_info	*info,
-> +	struct xfs_btree_cur		**curpp,
-> +	void				*priv)
+> +	struct xfs_fsmap		*keys,
+> +	int				(*query_fn)(struct xfs_trans *,
+> +						    struct xfs_getfsmap_info *),
+> +	struct xfs_getfsmap_info	*info)
 > +{
-> +	struct xfs_alloc_rec_incore	*key = priv;
+> +	struct xfs_mount		*mp = tp->t_mountp;
+> +	xfs_fsblock_t			start_fsb;
+> +	xfs_fsblock_t			end_fsb;
+> +	xfs_daddr_t			eofs;
+> +	int				error = 0;
 > +
-> +	*curpp = xfs_allocbt_init_cursor(tp->t_mountp, tp, info->agf_bp,
-> +			info->agno, XFS_BTNUM_BNO);
-> +	key->ar_startblock = info->low.rm_startblock;
-> +	(key + 1)->ar_startblock = info->high.rm_startblock;
-> +	return xfs_alloc_query_range(*curpp, key, key + 1,
-> +			xfs_getfsmap_datadev_bnobt_helper, info);
+> +	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks);
+> +	if (keys[0].fmr_physical >= eofs)
+> +		return 0;
+> +	if (keys[1].fmr_physical >= eofs)
+> +		keys[1].fmr_physical = eofs - 1;
+> +	start_fsb = XFS_BB_TO_FSBT(mp, keys[0].fmr_physical);
+> +	end_fsb = XFS_BB_TO_FSB(mp, keys[1].fmr_physical);
+> +
+> +	/* Set up search keys */
+> +	info->low.rm_startblock = start_fsb;
+> +	error = xfs_fsmap_owner_to_rmap(&info->low, &keys[0]);
+> +	if (error)
+> +		return error;
+> +	info->low.rm_offset = XFS_BB_TO_FSBT(mp, keys[0].fmr_offset);
+> +	info->low.rm_blockcount = 0;
+> +	xfs_getfsmap_set_irec_flags(&info->low, &keys[0]);
+> +
+> +	info->high.rm_startblock = end_fsb;
+> +	error = xfs_fsmap_owner_to_rmap(&info->high, &keys[1]);
+> +	if (error)
+> +		return error;
+> +	info->high.rm_offset = XFS_BB_TO_FSBT(mp, keys[1].fmr_offset);
+> +	info->high.rm_blockcount = 0;
+> +	xfs_getfsmap_set_irec_flags(&info->high, &keys[1]);
+> +
+> +	trace_xfs_fsmap_low_key(mp, info->dev, info->agno, &info->low);
+> +	trace_xfs_fsmap_high_key(mp, info->dev, info->agno, &info->high);
+> +
+> +	return query_fn(tp, info);
 > +}
 > +
-> +/* Execute a getfsmap query against the regular data device's bnobt. */
+> +/* Actually query the realtime bitmap. */
 > +STATIC int
-> +xfs_getfsmap_datadev_bnobt(
+> +xfs_getfsmap_rtdev_rtbitmap_query(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_getfsmap_info	*info)
+> +{
+> +	struct xfs_rtalloc_rec		alow;
+> +	struct xfs_rtalloc_rec		ahigh;
+> +	int				error;
+> +
+> +	xfs_ilock(tp->t_mountp->m_rbmip, XFS_ILOCK_SHARED);
+> +
+> +	alow.ar_startblock = info->low.rm_startblock;
+> +	ahigh.ar_startblock = info->high.rm_startblock;
+> +	error = xfs_rtalloc_query_range(tp, &alow, &ahigh,
+> +			xfs_getfsmap_rtdev_rtbitmap_helper, info);
+> +	if (error)
+> +		goto err;
+> +
+> +	/* Report any gaps at the end of the rtbitmap */
+> +	info->last = true;
+> +	error = xfs_getfsmap_rtdev_rtbitmap_helper(tp, &ahigh, info);
+> +	if (error)
+> +		goto err;
+> +err:
+> +	xfs_iunlock(tp->t_mountp->m_rbmip, XFS_ILOCK_SHARED);
+> +	return error;
+> +}
+> +
+> +/* Execute a getfsmap query against the realtime device rtbitmap. */
+> +STATIC int
+> +xfs_getfsmap_rtdev_rtbitmap(
 > +	struct xfs_trans		*tp,
 > +	struct xfs_fsmap		*keys,
 > +	struct xfs_getfsmap_info	*info)
 > +{
-> +	struct xfs_alloc_rec_incore	akeys[2];
-> +
 > +	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
-> +	return __xfs_getfsmap_datadev(tp, keys, info,
-> +			xfs_getfsmap_datadev_bnobt_query,
-> +			xfs_getfsmap_datadev_bnobt_end, &akeys[0]);
+> +	return __xfs_getfsmap_rtdev(tp, keys, xfs_getfsmap_rtdev_rtbitmap_query,
+> +			info);
 > +}
 > +
->  /* Do we recognize the device? */
->  STATIC bool
->  xfs_getfsmap_is_valid_device(
-> @@ -714,8 +788,6 @@ xfs_getfsmap(
->  	int				i;
->  	int				error = 0;
+>  /* Execute a getfsmap query against the regular data device. */
+>  STATIC int
+>  __xfs_getfsmap_datadev(
+> @@ -719,6 +830,9 @@ xfs_getfsmap_is_valid_device(
+>  	if (mp->m_logdev_targp &&
+>  	    fm->fmr_device == new_encode_dev(mp->m_logdev_targp->bt_dev))
+>  		return true;
+> +	if (mp->m_rtdev_targp &&
+> +	    fm->fmr_device == new_encode_dev(mp->m_rtdev_targp->bt_dev))
+> +		return true;
+>  	return false;
+>  }
 >  
-> -	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-> -		return -EOPNOTSUPP;
->  	if (head->fmh_iflags & ~FMH_IF_VALID)
->  		return -EINVAL;
->  	if (!xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[0]) ||
-> @@ -727,7 +799,10 @@ xfs_getfsmap(
->  	/* Set up our device handlers. */
->  	memset(handlers, 0, sizeof(handlers));
->  	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
-> -	handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
-> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> +		handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
-> +	else
-> +		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
->  	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+> @@ -751,7 +865,7 @@ xfs_getfsmap_check_keys(
+>  	return false;
+>  }
+>  
+> -#define XFS_GETFSMAP_DEVS	2
+> +#define XFS_GETFSMAP_DEVS	3
+>  /*
+>   * Get filesystem's extents as described in head, and format for
+>   * output.  Calls formatter to fill the user's buffer until all
+> @@ -807,6 +921,10 @@ xfs_getfsmap(
 >  		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
 >  		handlers[1].fn = xfs_getfsmap_logdev;
+>  	}
+> +	if (mp->m_rtdev_targp) {
+> +		handlers[2].dev = new_encode_dev(mp->m_rtdev_targp->bt_dev);
+> +		handlers[2].fn = xfs_getfsmap_rtdev_rtbitmap;
+> +	}
+>  
+>  	xfs_sort(handlers, XFS_GETFSMAP_DEVS, sizeof(struct xfs_getfsmap_dev),
+>  			xfs_getfsmap_dev_compare);
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
