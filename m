@@ -1,88 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38340 "EHLO sandeen.net"
+Received: from mga09.intel.com ([134.134.136.24]:33664 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750726AbdCIFis (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Mar 2017 00:38:48 -0500
-Subject: Re: [PATCH 9/9] mkfs.xfs: add mkfs.xfs.conf parse support
-References: <20170303231316.12716-1-mcgrof@kernel.org>
- <20170303231316.12716-10-mcgrof@kernel.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8753f955-cc54-e51d-53a7-0b62a3a32f96@sandeen.net>
-Date: Wed, 8 Mar 2017 23:38:02 -0600
-MIME-Version: 1.0
-In-Reply-To: <20170303231316.12716-10-mcgrof@kernel.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+        id S1750941AbdCAJEF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Mar 2017 04:04:05 -0500
+From: Elena Reshetova <elena.reshetova@intel.com>
+Subject: [PATCH 2/5] fs, xfs: convert xfs_efi_log_item.efi_refcount from atomic_t to refcount_t
+Date: Wed,  1 Mar 2017 10:47:37 +0200
+Message-Id: <1488358060-693-3-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
+References: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
-Cc: jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com
+To: linux-kernel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, david@fromorbit.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
 
-On 3/3/17 5:13 PM, Luis R. Rodriguez wrote:
-> You may want to stick to specific set of configuration options when
-> creating filesystems with mkfs.xfs -- sometimes due to pure technical
-> reasons, but some other times to ensure systems remain compatible as
-> new features are introduced with older kernels, or if you always want
-> to take advantage of some new feature which would otherwise typically
-> be disruptive.
-> 
-> Although mkfs.xfs already uses sensible defaults this adds a configuration
-> option for parsing defaults settings for mkfs.xfs parsed prior to processing
-> input arguments.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-So, a few other points on this, while you look at libconfig?
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ fs/xfs/xfs_extfree_item.c | 4 ++--
+ fs/xfs/xfs_extfree_item.h | 4 +++-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-Thanks for the man pages & updates, but I think they can use a bit
-of editing and wordsmithing for clarity; we can work on that if/when
-the technical details get sorted.
-
-> User input passed to mkfs.xfs overrides defaults founds through the
-> new optional configuration file, by default:
-> 
-> 	/etc/mkfs.xfs.conf
-> 
-> To use /etc/ be sure to configure xfsprogs with:
-> 
->  ./configure --sysconfdir=/etc/
-
-This should just DTRT by default (today it'd go to /usr/etc by default)
-
-(For what it's worth, xfs_quota just hard-codes "/etc" -
-
-#define PROJID          "/etc/projid"
-#define PROJECT_PATHS   "/etc/projects")
-
-> The build system also allows distributions to override the default
-> mkfs.xfs.conf defaults with a custom:
-> 
-> 	etc/mkfs.xfs.conf.custom.in
-
-I'm not a fan of this "drop untracked special files into $XFSPROGS/etc/
-and it'll get renamed and then installed."  If you want a custom
-config file in etc for the distro, just use the packaging tools to put
-it there, IMHO.  Filtering it through the source tree && make install just
-adds complexity.
-
-> The default etc/mkfs.xfs.conf.in provides commented out examples.
-> You can also override the configuration file used either with the
-> MKFS_XFS_CONFIG environment variable or by using the new -c command
-> line argument to mkfs.xfs. Only when -c is used will the configuration
-> file be required to be present.
-> 
-> To verify what configuration file is used on a system use the typical:
-> 
->   mkfs.xfs -N
-
-I'd prefer to drop the env var handling.  Nothing else in xfsprogs uses
-that for production cases; I don't really see a reason for it, and it
-only complicates things.   Require -c path if specified, use /etc/ path
-if present, otherwise ignore.
-
-Also, printing the config file path at mkfs time will probably break some
-scripts that aren't expecting an extra line ...
-
-thanks,
--Eric
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index d7bc149..4e0acf0 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -220,7 +220,7 @@ xfs_efi_init(
+ 	efip->efi_format.efi_nextents = nextents;
+ 	efip->efi_format.efi_id = (uintptr_t)(void *)efip;
+ 	atomic_set(&efip->efi_next_extent, 0);
+-	atomic_set(&efip->efi_refcount, 2);
++	refcount_set(&efip->efi_refcount, 2);
  
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+ 	return efip;
+ }
+@@ -290,7 +290,7 @@ void
+ xfs_efi_release(
+ 	struct xfs_efi_log_item	*efip)
+ {
+-	if (atomic_dec_and_test(&efip->efi_refcount)) {
++	if (refcount_dec_and_test(&efip->efi_refcount)) {
+ 		xfs_trans_ail_remove(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
+ 		xfs_efi_item_free(efip);
+ 	}
+diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+index a32c794..e6da63d 100644
+--- a/fs/xfs/xfs_extfree_item.h
++++ b/fs/xfs/xfs_extfree_item.h
+@@ -18,6 +18,8 @@
+ #ifndef	__XFS_EXTFREE_ITEM_H__
+ #define	__XFS_EXTFREE_ITEM_H__
+ 
++#include <linux/refcount.h>
++
+ /* kernel only EFI/EFD definitions */
+ 
+ struct xfs_mount;
+@@ -64,7 +66,7 @@ struct kmem_zone;
+  */
+ typedef struct xfs_efi_log_item {
+ 	xfs_log_item_t		efi_item;
+-	atomic_t		efi_refcount;
++	refcount_t		efi_refcount;
+ 	atomic_t		efi_next_extent;
+ 	unsigned long		efi_flags;	/* misc flags */
+ 	xfs_efi_log_format_t	efi_format;
+-- 
+2.7.4
+
