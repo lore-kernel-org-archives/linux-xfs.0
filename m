@@ -1,58 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:3449 "EHLO
-        dggrg03-dlp.huawei.com" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753909AbdCBGtR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 01:49:17 -0500
-Subject: Re: mm allocation failure and hang when running xfstests generic/269
- on xfs
-References: <20170301044634.rgidgdqqiiwsmfpj@XZHOUW.usersys.redhat.com>
- <20170302003731.GB24593@infradead.org>
- <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
-From: Bob Liu <liubo95@huawei.com>
-Message-ID: <25dc5032-db32-5814-cabe-14e015302423@huawei.com>
-Date: Thu, 2 Mar 2017 14:41:41 +0800
+Received: from mx1.redhat.com ([209.132.183.28]:41120 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751527AbdCARt7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Mar 2017 12:49:59 -0500
+Date: Wed, 1 Mar 2017 12:59:20 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 7/9] xfs: have getfsmap fall back to the freesp btrees
+ when rmap is not present
+Message-ID: <20170301175920.GC3312@bfoster.bfoster>
+References: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
+ <148830759554.22089.6408995371724685885.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <148830759554.22089.6408995371724685885.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Xiong Zhou <xzhou@redhat.com>, Christoph Hellwig <hch@infradead.org>, mhocko@suse.com
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 2017/3/2 13:19, Xiong Zhou wrote:
-> On Wed, Mar 01, 2017 at 04:37:31PM -0800, Christoph Hellwig wrote:
->> On Wed, Mar 01, 2017 at 12:46:34PM +0800, Xiong Zhou wrote:
->>> Hi,
->>>
->>> It's reproduciable, not everytime though. Ext4 works fine.
->>
->> On ext4 fsstress won't run bulkstat because it doesn't exist.  Either
->> way this smells like a MM issue to me as there were not XFS changes
->> in that area recently.
+On Tue, Feb 28, 2017 at 10:46:35AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Yap.
+> If the reverse-mapping btree isn't available, fall back to the
+> free space btrees to provide partial reverse mapping information.
+> The online scrub tool can make use of even partial information to
+> speed up the data block scan.
 > 
-> First bad commit:
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_fsmap.c |   81 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 78 insertions(+), 3 deletions(-)
 > 
+> 
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index 2d0fa2a..56bbd24 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -40,6 +40,7 @@
+>  #include "xfs_fsmap.h"
+>  #include "xfs_refcount.h"
+>  #include "xfs_refcount_btree.h"
+> +#include "xfs_alloc_btree.h"
+>  
+>  /* Convert an xfs_fsmap to an fsmap. */
+>  void
+> @@ -158,6 +159,9 @@ xfs_fsmap_owner_from_rmap(
+>  	case XFS_RMAP_OWN_COW:
+>  		dest->fmr_owner = XFS_FMR_OWN_COW;
+>  		break;
+> +	case XFS_RMAP_OWN_NULL:	/* "free" */
+> +		dest->fmr_owner = XFS_FMR_OWN_FREE;
+> +		break;
+>  	default:
+>  		return -EFSCORRUPTED;
+>  	}
+> @@ -411,6 +415,31 @@ xfs_getfsmap_rtdev_helper(
+>  	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
+>  }
+>  
+> +/* Transform a bnobt irec into a fsmap */
+> +STATIC int
+> +xfs_getfsmap_datadev_bnobt_helper(
+> +	struct xfs_btree_cur		*cur,
+> +	struct xfs_alloc_rec_incore	*rec,
+> +	void				*priv)
+> +{
+> +	struct xfs_mount		*mp = cur->bc_mp;
+> +	struct xfs_getfsmap_info	*info = priv;
+> +	struct xfs_rmap_irec		irec;
+> +	xfs_fsblock_t			fsb;
+> +	xfs_daddr_t			rec_daddr;
+> +
+> +	fsb = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno, rec->ar_startblock);
+> +	rec_daddr = XFS_FSB_TO_DADDR(mp, fsb);
+> +
 
-It looks like not a bug.
->From below commit, the allocation failure print was due to current process received SIGKILL signal.
-You may need to confirm whether that's the case. 
+XFS_AGB_TO_DADDR()?
 
-Regards,
-Bob
+> +	irec.rm_startblock = rec->ar_startblock;
+> +	irec.rm_blockcount = rec->ar_blockcount;
+> +	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
+> +	irec.rm_offset = 0;
+> +	irec.rm_flags = 0;
+> +
+> +	return xfs_getfsmap_helper(cur->bc_tp, info, &irec, rec_daddr);
+> +}
+> +
+>  /* Set rmap flags based on the getfsmap flags */
+>  static void
+>  xfs_getfsmap_set_irec_flags(
+> @@ -633,6 +662,51 @@ xfs_getfsmap_datadev_rmapbt(
+>  			xfs_getfsmap_datadev_rmapbt_end, NULL);
+>  }
+>  
+> +/* Report any gap at the end of bnobt records. */
+> +STATIC int
+> +xfs_getfsmap_datadev_bnobt_end(
+> +	struct xfs_btree_cur		*cur,
+> +	struct xfs_getfsmap_info	*info,
+> +	void				*priv)
+> +{
+> +	struct xfs_alloc_rec_incore	*key = priv;
+> +
+> +	return xfs_getfsmap_datadev_bnobt_helper(cur, key + 1, info);
 
-> commit 5d17a73a2ebeb8d1c6924b91e53ab2650fe86ffb
-> Author: Michal Hocko <mhocko@suse.com>
-> Date:   Fri Feb 24 14:58:53 2017 -0800
+Nit: please use key[1] (or maybe call it keys to be clear) here and
+below rather than pointer arithmetic.
+
+Looks good aside from those couple nits and modulo the separate
+_query()/_end() callbacks thing.
+
+Brian
+
+> +}
+> +
+> +/* Actually query the bno btree. */
+> +STATIC int
+> +xfs_getfsmap_datadev_bnobt_query(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_getfsmap_info	*info,
+> +	struct xfs_btree_cur		**curpp,
+> +	void				*priv)
+> +{
+> +	struct xfs_alloc_rec_incore	*key = priv;
+> +
+> +	*curpp = xfs_allocbt_init_cursor(tp->t_mountp, tp, info->agf_bp,
+> +			info->agno, XFS_BTNUM_BNO);
+> +	key->ar_startblock = info->low.rm_startblock;
+> +	(key + 1)->ar_startblock = info->high.rm_startblock;
+> +	return xfs_alloc_query_range(*curpp, key, key + 1,
+> +			xfs_getfsmap_datadev_bnobt_helper, info);
+> +}
+> +
+> +/* Execute a getfsmap query against the regular data device's bnobt. */
+> +STATIC int
+> +xfs_getfsmap_datadev_bnobt(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_fsmap		*keys,
+> +	struct xfs_getfsmap_info	*info)
+> +{
+> +	struct xfs_alloc_rec_incore	akeys[2];
+> +
+> +	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
+> +	return __xfs_getfsmap_datadev(tp, keys, info,
+> +			xfs_getfsmap_datadev_bnobt_query,
+> +			xfs_getfsmap_datadev_bnobt_end, &akeys[0]);
+> +}
+> +
+>  /* Do we recognize the device? */
+>  STATIC bool
+>  xfs_getfsmap_is_valid_device(
+> @@ -714,8 +788,6 @@ xfs_getfsmap(
+>  	int				i;
+>  	int				error = 0;
+>  
+> -	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> -		return -EOPNOTSUPP;
+>  	if (head->fmh_iflags & ~FMH_IF_VALID)
+>  		return -EINVAL;
+>  	if (!xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[0]) ||
+> @@ -727,7 +799,10 @@ xfs_getfsmap(
+>  	/* Set up our device handlers. */
+>  	memset(handlers, 0, sizeof(handlers));
+>  	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
+> -	handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
+> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+> +		handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
+> +	else
+> +		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
+>  	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+>  		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
+>  		handlers[1].fn = xfs_getfsmap_logdev;
 > 
->     vmalloc: back off when the current task is killed
-> 
-> Reverting this commit on top of
->   e5d56ef Merge tag 'watchdog-for-linus-v4.11'
-> survives the tests.
-> 
-
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
