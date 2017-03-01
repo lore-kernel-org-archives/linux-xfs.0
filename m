@@ -1,63 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60170 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750717AbdCBGtB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 01:49:01 -0500
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v226mf0g144574
-        for <linux-xfs@vger.kernel.org>; Thu, 2 Mar 2017 01:49:00 -0500
-Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 28wxrc15vh-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Mar 2017 01:49:00 -0500
-Received: from localhost
-        by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <khandual@linux.vnet.ibm.com>;
-        Thu, 2 Mar 2017 16:48:57 +1000
-Subject: Re: mm allocation failure and hang when running xfstests generic/269
- on xfs
-References: <20170301044634.rgidgdqqiiwsmfpj@XZHOUW.usersys.redhat.com>
- <20170302003731.GB24593@infradead.org>
- <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
-From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
-Date: Thu, 2 Mar 2017 12:17:47 +0530
+Received: from mx2.suse.de ([195.135.220.15]:34552 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750725AbdCARdu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Mar 2017 12:33:50 -0500
+Subject: Re: [PATCH 1/8] nowait aio: Introduce IOCB_FLAG_NOWAIT
+References: <20170228233610.25456-1-rgoldwyn@suse.de>
+ <20170228233610.25456-2-rgoldwyn@suse.de>
+ <20170301153647.GA30631@infradead.org> <20170301155634.GA9630@infradead.org>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Message-ID: <cc3fc6ee-c48d-1b51-59b7-1e322d10a561@suse.de>
+Date: Wed, 1 Mar 2017 10:57:17 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
+In-Reply-To: <20170301155634.GA9630@infradead.org>
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Message-Id: <d4c2cf89-8d82-ea78-b742-5bf6923a69c1@linux.vnet.ibm.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Xiong Zhou <xzhou@redhat.com>, Christoph Hellwig <hch@infradead.org>, mhocko@suse.com
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: jack@suse.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 03/02/2017 10:49 AM, Xiong Zhou wrote:
-> On Wed, Mar 01, 2017 at 04:37:31PM -0800, Christoph Hellwig wrote:
->> On Wed, Mar 01, 2017 at 12:46:34PM +0800, Xiong Zhou wrote:
->>> Hi,
->>>
->>> It's reproduciable, not everytime though. Ext4 works fine.
->> On ext4 fsstress won't run bulkstat because it doesn't exist.  Either
->> way this smells like a MM issue to me as there were not XFS changes
->> in that area recently.
-> Yap.
-> 
-> First bad commit:
-> 
-> commit 5d17a73a2ebeb8d1c6924b91e53ab2650fe86ffb
-> Author: Michal Hocko <mhocko@suse.com>
-> Date:   Fri Feb 24 14:58:53 2017 -0800
-> 
->     vmalloc: back off when the current task is killed
-> 
-> Reverting this commit on top of
->   e5d56ef Merge tag 'watchdog-for-linus-v4.11'
-> survives the tests.
 
-Does fsstress test or the system hang ? I am not familiar with this
-code but If it's the test which is getting hung and its hitting this
-new check introduced by the above commit that means the requester is
-currently being killed by OOM killer for some other memory allocation
-request. Then is not this kind if memory alloc failure expected ?
 
+On 03/01/2017 09:56 AM, Christoph Hellwig wrote:
+> On Wed, Mar 01, 2017 at 07:36:48AM -0800, Christoph Hellwig wrote:
+>> Given that we aren't validating aio_flags in older kernels we can't
+>> just add this flag as it will be a no-op in older kernels.  I think
+>> we will have to add IOCB_CMD_PREADV2/IOCB_CMD_WRITEV2 opcodes that
+>> properly validate all reserved fields or flags first.
+>>
+>> Once we do that I'd really prefer to use the same flags values
+>> as preadv2/pwritev2 so that we'll only need one set of flags over
+>> sync/async read/write ops.
+> 
+> I just took another look and we do verify that
+> aio_reserved1/aio_reserved2 must be zero.  So I think we can just
+> stick RWF_* into aio_reserved1 and fix that problem that way.
+> 
+
+RWF_* ? Isn't that kernel space flags? Or did you intend to say
+IOCB_FLAG_*? If yes, we maintain two flag fields? aio_reserved1 (perhaps
+renamed to aio_flags2) and aio_flags?
+
+aio_reserved1 is also used to return key for the purpose of io_cancel,
+but we should be able to fetch the flags before putting the key value
+there. Still I am not comfortable using the same field for it because it
+will be overwritten when io_submit returns.
+
+Which brings me to the next question: What is the purpose of aio_key?
+Why is aio_key set to KIOCB_KEY (which is zero) every time? You are not
+differentiating the request by setting all the iocb's key to zero.
+
+
+-- 
+Goldwyn
