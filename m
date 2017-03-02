@@ -1,72 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:20999 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752163AbdCAQeS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Mar 2017 11:34:18 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v21GXg4f021561
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Mar 2017 16:33:42 GMT
-Date: Wed, 1 Mar 2017 08:32:04 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_repair: detect invalid zero-sized symlink inodes
-Message-ID: <20170301163204.GK5297@birch.djwong.org>
-References: <1488380403-5826-1-git-send-email-bfoster@redhat.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60170 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750717AbdCBGtB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 01:49:01 -0500
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v226mf0g144574
+        for <linux-xfs@vger.kernel.org>; Thu, 2 Mar 2017 01:49:00 -0500
+Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 28wxrc15vh-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Mar 2017 01:49:00 -0500
+Received: from localhost
+        by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <khandual@linux.vnet.ibm.com>;
+        Thu, 2 Mar 2017 16:48:57 +1000
+Subject: Re: mm allocation failure and hang when running xfstests generic/269
+ on xfs
+References: <20170301044634.rgidgdqqiiwsmfpj@XZHOUW.usersys.redhat.com>
+ <20170302003731.GB24593@infradead.org>
+ <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
+From: Anshuman Khandual <khandual@linux.vnet.ibm.com>
+Date: Thu, 2 Mar 2017 12:17:47 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1488380403-5826-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Message-Id: <d4c2cf89-8d82-ea78-b742-5bf6923a69c1@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Mathias Troiden <mathias.troiden@gmail.com>
+To: Xiong Zhou <xzhou@redhat.com>, Christoph Hellwig <hch@infradead.org>, mhocko@suse.com
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Wed, Mar 01, 2017 at 10:00:03AM -0500, Brian Foster wrote:
-> Mathias Troiden reproduced a filesystem corruption that resulted in
-> a zero-sized local format symlink inode. This is invalid state and
-> results in an inode that cannot be accessed or modified.
+On 03/02/2017 10:49 AM, Xiong Zhou wrote:
+> On Wed, Mar 01, 2017 at 04:37:31PM -0800, Christoph Hellwig wrote:
+>> On Wed, Mar 01, 2017 at 12:46:34PM +0800, Xiong Zhou wrote:
+>>> Hi,
+>>>
+>>> It's reproduciable, not everytime though. Ext4 works fine.
+>> On ext4 fsstress won't run bulkstat because it doesn't exist.  Either
+>> way this smells like a MM issue to me as there were not XFS changes
+>> in that area recently.
+> Yap.
 > 
-> The kernel detects this problem on inode access, fails and warns the
-> user to umount and run xfs_repair. Unfortunately, xfs_repair doesn't
-> even detect the problem. Thus the user has no path to recovery.
+> First bad commit:
 > 
-> Update xfs_repair to check for invalid zero-sized symlinks and flag
-> them as corrupted. This results in tossing the inode, but returns
-> the fs to a valid state.
+> commit 5d17a73a2ebeb8d1c6924b91e53ab2650fe86ffb
+> Author: Michal Hocko <mhocko@suse.com>
+> Date:   Fri Feb 24 14:58:53 2017 -0800
 > 
-> Reported-by: Mathias Troiden <mathias.troiden@gmail.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+>     vmalloc: back off when the current task is killed
+> 
+> Reverting this commit on top of
+>   e5d56ef Merge tag 'watchdog-for-linus-v4.11'
+> survives the tests.
 
-Looks good,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Does fsstress test or the system hang ? I am not familiar with this
+code but If it's the test which is getting hung and its hitting this
+new check introduced by the above commit that means the requester is
+currently being killed by OOM killer for some other memory allocation
+request. Then is not this kind if memory alloc failure expected ?
 
---D
-
-> ---
->  repair/dinode.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 8d01409..d664f87 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -1385,6 +1385,11 @@ process_symlink(
->  		return(1);
->  	}
->  
-> +	if (be64_to_cpu(dino->di_size) == 0) {
-> +		do_warn(_("zero size symlink in inode %" PRIu64 "\n"), lino);
-> +		return 1;
-> +	}
-> +
->  	/*
->  	 * have to check symlink component by component.
->  	 * get symlink contents into data area
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
