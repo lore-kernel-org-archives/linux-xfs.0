@@ -1,27 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www262.sakura.ne.jp ([202.181.97.72]:27246 "EHLO
-        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750703AbdCBLtF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 06:49:05 -0500
-Subject: Re: mm allocation failure and hang when running xfstests generic/269on xfs
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Received: from mx1.redhat.com ([209.132.183.28]:46712 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752442AbdCBMZy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Mar 2017 07:25:54 -0500
+Date: Thu, 2 Mar 2017 07:24:27 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: mm allocation failure and hang when running xfstests generic/269
+ on xfs
+Message-ID: <20170302122426.GA3213@bfoster.bfoster>
 References: <20170301044634.rgidgdqqiiwsmfpj@XZHOUW.usersys.redhat.com>
-        <20170302003731.GB24593@infradead.org>
-        <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
-        <42eb5d53-5ceb-a9ce-791a-9469af30810c@I-love.SAKURA.ne.jp>
-        <20170302103520.GC1404@dhcp22.suse.cz>
-In-Reply-To: <20170302103520.GC1404@dhcp22.suse.cz>
-Message-Id: <201703021953.CDG13516.HLSQOVFFMFtOJO@I-love.SAKURA.ne.jp>
-Date: Thu, 2 Mar 2017 19:53:04 +0900
-Mime-Version: 1.0
+ <20170302003731.GB24593@infradead.org>
+ <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
+ <42eb5d53-5ceb-a9ce-791a-9469af30810c@I-love.SAKURA.ne.jp>
+ <20170302103520.GC1404@dhcp22.suse.cz>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170302103520.GC1404@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: mhocko@kernel.org
-Cc: xzhou@redhat.com, hch@infradead.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Michal Hocko wrote:
+On Thu, Mar 02, 2017 at 11:35:20AM +0100, Michal Hocko wrote:
 > On Thu 02-03-17 19:04:48, Tetsuo Handa wrote:
 > [...]
 > > So, commit 5d17a73a2ebeb8d1("vmalloc: back off when the current task is
@@ -32,14 +34,6 @@ Michal Hocko wrote:
 > You are right! The function is documented it might fail but the code
 > doesn't really allow that. This seems like a bug to me. What do you
 > think about the following?
-
-Yes, I think this patch is correct. Maybe
-
--May fail and may return vmalloced memory.
-+May fail.
-
-together, for it is always vmalloc()ed memory.
-
 > ---
 > From d02cb0285d8ce3344fd64dc7e2912e9a04bef80d Mon Sep 17 00:00:00 2001
 > From: Michal Hocko <mhocko@suse.com>
@@ -75,6 +69,16 @@ together, for it is always vmalloc()ed memory.
 >  		if ((kmsize >>= 1) <= minsize)
 >  			kmsize = minsize;
 >  	}
+
+More consistent with the rest of the kmem code might be to accept a
+flags argument and do something like this based on KM_MAYFAIL. The one
+current caller looks like it would pass it, but I suppose we'd still
+need a mechanism to break out should a new caller not pass that flag.
+Would a fatal_signal_pending() check in the loop as well allow us to
+break out in the scenario that is reproduced here?
+
+Brian
+
 > -- 
 > 2.11.0
 > 
@@ -82,3 +86,8 @@ together, for it is always vmalloc()ed memory.
 > Michal Hocko
 > SUSE Labs
 > 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
