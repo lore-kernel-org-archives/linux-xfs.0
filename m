@@ -1,92 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:51931 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:53148 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751243AbdCAPSA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Mar 2017 10:18:00 -0500
-Date: Wed, 1 Mar 2017 16:17:57 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 07/12] xfs: implement failure-atomic writes
-Message-ID: <20170301151757.GH12248@lst.de>
-References: <20170228145737.19016-1-hch@lst.de> <20170228145737.19016-8-hch@lst.de> <20170228230940.GB26319@birch.djwong.org>
+        id S1751531AbdCBOjn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Mar 2017 09:39:43 -0500
+Date: Thu, 2 Mar 2017 07:43:53 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH RFC] xfs: use iomap new flag for newly allocated delalloc
+ blocks
+Message-ID: <20170302124353.GB3213@bfoster.bfoster>
+References: <1488379009-4972-1-git-send-email-bfoster@redhat.com>
+ <20170301235624.GA29200@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170228230940.GB26319@birch.djwong.org>
+In-Reply-To: <20170301235624.GA29200@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, Xiong Zhou <xzhou@redhat.com>
 
-On Tue, Feb 28, 2017 at 03:09:40PM -0800, Darrick J. Wong wrote:
-> By the way, the copy on write code remembers the extents it has
-> allocated for CoW staging in the refcount btree so that it can free them
-> after a crash, which means that O_ATOMIC requires reflink to be enabled.
-
-Yeah.
-
-> There doesn't seem to be any explicit checking that reflink is even
-> enabled, which will probably just lead to weird crashes on a pre-reflink
-> xfs.
-
-True.  I had this earlier when I hat basic O_ATOMIC validity checking,
-but that was dropped from the series I posted.
-
+On Wed, Mar 01, 2017 at 03:56:24PM -0800, Christoph Hellwig wrote:
+> On Wed, Mar 01, 2017 at 09:36:49AM -0500, Brian Foster wrote:
+> > This is a stab at fixing the regression discussed in this[1] thread
+> > based on what Christoph mentioned regarding use of the IOMAP_F_NEW flag.
+> > I decided to co-opt the XFS_BMAPI_ENTIRE flag for the delalloc res bit
+> > since it seems logically equivalent, but we could define a new flag too.
+> > I considered as such to preserve default behavior of
+> > _reserve_delalloc(), but otoh there is only one other caller. Otherwise,
+> > this passes all of my testing so far. Thoughts?
 > 
-> FWIW I didn't see any checking anywhere (vfs or xfs) that the filesystem
-> can actually support O_ATOMIC.  If the FS doesn't support atomic writes,
-> shouldn't the kernel send EINVAL or something back to userspace?
+> I don't like reusing the flag that much, but I think instead of passing
+> the flag we could trivially just remove the xfs_bmbt_get_all in
+> xfs_bmapi_reserve_delalloc and let the caller handle it after
+> xfs_bmapi_reserve_delalloc returned.  That being said I see no good
+> reason why the COW would care to see the merged extent, so
+> unconditionally removing it should be fine as well.  Or did I miss
+> something?
 
-Older kernels can't check it, so having new ones check it creates even
-more of a mess.
+I think that's correct. The reflink code just feeds got into a
+tracepoint and otherwise doesn't seem to care what's returned.
 
-I'm still not feeling very well about O_ATOMIC - either we need an
-open2 that checks for unknown flags, or I need to change this to
-a per-op flag - RWF_ATOMIC for write (pwritev2 actually), and MAP_ATOMIC
-for mmap.  But given that pwritev2 isn't really supported in common
-userland yet that might be rather painful.
+My only concern is that the behavior of not updating got seems
+inconsistent with the rest of the bmap code. I also realize now that
+this case may have broken the subsequent ASSERT() calls in terms of
+their effectiveness (i.e., I'm not reproducing failures, but they sort
+of become no-ops).
 
-> At the start of xfs_reflink.c is a long block comment describing how the
-> copy on write mechanism works.  Since O_ATOMIC is a variant on CoW (it's
-> basically CoW with remapping deferred until fsync), please update the
-> comment so that the comments capture the details of how atomic writes
-> work.
-> 
-> (IOWs: Dave asked me to leave the big comment, so I'm going to try to
-> keep it fairly up to date.)
+We could rename the got param and/or update a local record structure to
+feed into the asserts, but that kind of confuses the input param
+requirements for got (which should be filled in based on a previous
+lookup), so I don't like that too much either. Hmm, what about instead
+of adding flags, we just add a new, optional output param that returns
+the allocated range? E.g.:
 
-I'll add some information to it.
+int
+xfs_bmapi_reserve_delalloc(
+        struct xfs_inode        *ip,
+        int                     whichfork,
+        xfs_fileoff_t           off,
+        xfs_filblks_t           len,
+        xfs_filblks_t           prealloc,
+        struct xfs_bmbt_irec    *got,		/* full rec after alloc */
+        xfs_extnum_t            *lastx,
+        int                     eof,
+        struct xfs_bmbt_irec	*arec)		/* allocation performed */
+{
+	...
+	if (arec)
+		arec = ...;
+	...
+}
 
-> I suppose it goes without saying that userspace will have to coordinate
-> its O_ATOMIC writes to the file.
+The reflink code could just pass NULL, the iomap code will use arec
+explicitly to document the requirement, and the function behavior should
+be clear enough to avoid landmines from any future callers. Thoughts?
 
-It does - but if you have multiple writers to a file they really need
-to be coordinated anyway.  If you have threads whose updates race
-you'd need something like
+Brian
 
-open(O_TMPFILE)
-clone file (or range) into tempfile
-
-update tempfile
-
-clone region you want atomically inserted back into the original file.
-
-We can actually do that with existing primitives, but it's a bit more
-heavyweight.  We could opimize this a bit by checking if an extent
-already points to the same physical blocks before replacing it in
-clone_file_range.
-
-> > +	if (file->f_flags & O_ATOMIC)
-> > +		printk_ratelimited("O_ATOMIC!\n");
-> 
-> Per above,
-> 
-> if (file->f_flags & O_ATOMIC) {
-> 	if (!xfs_sb_version_hasreflink(...))
-> 		return -EPROTONOSUPPORT;
-
-Yeah.
-
-> 	printk_ratelimited("EXPERIMENTAL atomic writes feature in use!\n");
-
-And that should just go away - it was a local debug aid :)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
