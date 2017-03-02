@@ -1,63 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51343 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:48156 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753142AbdCFL7i (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Mar 2017 06:59:38 -0500
-Date: Mon, 6 Mar 2017 12:59:15 +0100
+        id S1752200AbdCBTNm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Mar 2017 14:13:42 -0500
+Date: Thu, 2 Mar 2017 16:47:44 +0100
 From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 7/8] Revert "ext4: avoid deadlocks in the writeback path
- by using sb_getblk_gfp"
-Message-ID: <20170306115915.GB27953@dhcp22.suse.cz>
-References: <20170106141107.23953-1-mhocko@kernel.org>
- <20170106141107.23953-8-mhocko@kernel.org>
- <20170117030118.727jqyamjhojzajb@thunk.org>
- <20170117075450.GC19699@dhcp22.suse.cz>
+Subject: Re: mm allocation failure and hang when running xfstests generic/269
+ on xfs
+Message-ID: <20170302154744.GN1404@dhcp22.suse.cz>
+References: <20170302124909.GE1404@dhcp22.suse.cz>
+ <20170302130009.GC3213@bfoster.bfoster>
+ <20170302132755.GG1404@dhcp22.suse.cz>
+ <20170302134157.GD3213@bfoster.bfoster>
+ <20170302135001.GI1404@dhcp22.suse.cz>
+ <20170302142315.GE3213@bfoster.bfoster>
+ <20170302143441.GL1404@dhcp22.suse.cz>
+ <20170302145131.GF3213@bfoster.bfoster>
+ <20170302151411.GM1404@dhcp22.suse.cz>
+ <20170302153002.GG3213@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170117075450.GC19699@dhcp22.suse.cz>
+In-Reply-To: <20170302153002.GG3213@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Tue 17-01-17 08:54:50, Michal Hocko wrote:
-> On Mon 16-01-17 22:01:18, Theodore Ts'o wrote:
-> > On Fri, Jan 06, 2017 at 03:11:06PM +0100, Michal Hocko wrote:
-> > > From: Michal Hocko <mhocko@suse.com>
-> > > 
-> > > This reverts commit c45653c341f5c8a0ce19c8f0ad4678640849cb86 because
-> > > sb_getblk_gfp is not really needed as
-> > > sb_getblk
-> > >   __getblk_gfp
-> > >     __getblk_slow
-> > >       grow_buffers
-> > >         grow_dev_page
-> > > 	  gfp_mask = mapping_gfp_constraint(inode->i_mapping, ~__GFP_FS) | gfp
-> > > 
-> > > so __GFP_FS is cleared unconditionally and therefore the above commit
-> > > didn't have any real effect in fact.
-> > > 
-> > > This patch should not introduce any functional change. The main point
-> > > of this change is to reduce explicit GFP_NOFS usage inside ext4 code to
-> > > make the review of the remaining usage easier.
-> > > 
-> > > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> > > Reviewed-by: Jan Kara <jack@suse.cz>
+On Thu 02-03-17 10:30:02, Brian Foster wrote:
+> On Thu, Mar 02, 2017 at 04:14:11PM +0100, Michal Hocko wrote:
+[...]
+> > I am not objecting to adding fatal_signal_pending as well I just thought
+> > that from the logic POV breaking after reaching the minimum size is just
+> > the right thing to do. We can optimize further by checking
+> > fatal_signal_pending and reducing retries when we know it doesn't make
+> > much sense but that should be done on top as an optimization IMHO.
 > > 
-> > If I'm not mistaken, this patch is not dependent on any of the other
-> > patches in this series (and the other patches are not dependent on
-> > this one).  Hence, I could take this patch via the ext4 tree, correct?
 > 
-> Yes, that is correct
+> I don't think of it as an optimization to not invoke calls (a
+> non-deterministic number of times) that we know are going to fail, but
 
-Hi Ted,
-this doesn't seem to be in any of the branches [1]. I plan to resend the
-whole scope nofs series, should I add this to the pile or you are going
-to route it via your tree?
+the point is that vmalloc failure modes are an implementation detail
+which might change in the future. The fix should be really independent
+on the current implementation that is why I think the
+fatal_signal_pending is just an optimization.
 
-[1] git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git
+> ultimately I don't care too much how it's framed or if it's done in
+> separate patches or whatnot. As long as they are posted at the same
+> time. ;)
+
+Done
+
 -- 
 Michal Hocko
 SUSE Labs
