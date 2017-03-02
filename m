@@ -1,156 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:16835 "EHLO
-        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753717AbdCBCca (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Mar 2017 21:32:30 -0500
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
-        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v222WTnV024026
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 2 Mar 2017 02:32:29 GMT
-Date: Wed, 1 Mar 2017 18:29:53 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 7/9] xfs: have getfsmap fall back to the freesp btrees
- when rmap is not present
-Message-ID: <20170302022953.GM5297@birch.djwong.org>
-References: <148830755018.22089.4423076490708341523.stgit@birch.djwong.org>
- <148830759554.22089.6408995371724685885.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41818 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754071AbdCBJYf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Mar 2017 04:24:35 -0500
+Date: Thu, 2 Mar 2017 17:23:52 +0800
+From: Xiong Zhou <xzhou@redhat.com>
+Subject: Re: mm allocation failure and hang when running xfstests generic/269
+ on xfs
+Message-ID: <20170302092352.r7dcykmddwue6san@XZHOUW.usersys.redhat.com>
+References: <20170301044634.rgidgdqqiiwsmfpj@XZHOUW.usersys.redhat.com>
+ <20170302003731.GB24593@infradead.org>
+ <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
+ <d4c2cf89-8d82-ea78-b742-5bf6923a69c1@linux.vnet.ibm.com>
+ <20170302084222.GA1404@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <148830759554.22089.6408995371724685885.stgit@birch.djwong.org>
+In-Reply-To: <20170302084222.GA1404@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Xiong Zhou <xzhou@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-If the reverse-mapping btree isn't available, fall back to the
-free space btrees to provide partial reverse mapping information.
-The online scrub tool can make use of even partial information to
-speed up the data block scan.
+On Thu, Mar 02, 2017 at 09:42:23AM +0100, Michal Hocko wrote:
+> On Thu 02-03-17 12:17:47, Anshuman Khandual wrote:
+> > On 03/02/2017 10:49 AM, Xiong Zhou wrote:
+> > > On Wed, Mar 01, 2017 at 04:37:31PM -0800, Christoph Hellwig wrote:
+> > >> On Wed, Mar 01, 2017 at 12:46:34PM +0800, Xiong Zhou wrote:
+> > >>> Hi,
+> > >>>
+> > >>> It's reproduciable, not everytime though. Ext4 works fine.
+> > >> On ext4 fsstress won't run bulkstat because it doesn't exist.  Either
+> > >> way this smells like a MM issue to me as there were not XFS changes
+> > >> in that area recently.
+> > > Yap.
+> > > 
+> > > First bad commit:
+> > > 
+> > > commit 5d17a73a2ebeb8d1c6924b91e53ab2650fe86ffb
+> > > Author: Michal Hocko <mhocko@suse.com>
+> > > Date:   Fri Feb 24 14:58:53 2017 -0800
+> > > 
+> > >     vmalloc: back off when the current task is killed
+> > > 
+> > > Reverting this commit on top of
+> > >   e5d56ef Merge tag 'watchdog-for-linus-v4.11'
+> > > survives the tests.
+> > 
+> > Does fsstress test or the system hang ? I am not familiar with this
+> > code but If it's the test which is getting hung and its hitting this
+> > new check introduced by the above commit that means the requester is
+> > currently being killed by OOM killer for some other memory allocation
+> > request.
+> 
+> Well, not exactly. It is sufficient for it to be _killed_ by SIGKILL.
+> And for that it just needs to do a group_exit when one thread was still
+> in the kernel (see zap_process). While I can change this check to
+> actually do the oom specific check I believe a more generic
+> fatal_signal_pending is the right thing to do here. I am still not sure
+> what is the actual problem here, though. Could you be more specific
+> please?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: various refactorings, fix array pointer passing
----
- fs/xfs/xfs_fsmap.c |   72 ++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 69 insertions(+), 3 deletions(-)
+It's blocking the test and system-shutdown. fsstress wont exit.
 
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 2fd05a0..b855984 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -40,6 +40,7 @@
- #include "xfs_fsmap.h"
- #include "xfs_refcount.h"
- #include "xfs_refcount_btree.h"
-+#include "xfs_alloc_btree.h"
- 
- /* Convert an xfs_fsmap to an fsmap. */
- void
-@@ -158,6 +159,9 @@ xfs_fsmap_owner_from_rmap(
- 	case XFS_RMAP_OWN_COW:
- 		dest->fmr_owner = XFS_FMR_OWN_COW;
- 		break;
-+	case XFS_RMAP_OWN_NULL:	/* "free" */
-+		dest->fmr_owner = XFS_FMR_OWN_FREE;
-+		break;
- 	default:
- 		return -EFSCORRUPTED;
- 	}
-@@ -378,6 +382,30 @@ xfs_getfsmap_rtdev_helper(
- 	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
- }
- 
-+/* Transform a bnobt irec into a fsmap */
-+STATIC int
-+xfs_getfsmap_datadev_bnobt_helper(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_alloc_rec_incore	*rec,
-+	void				*priv)
-+{
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	struct xfs_getfsmap_info	*info = priv;
-+	struct xfs_rmap_irec		irec;
-+	xfs_daddr_t			rec_daddr;
-+
-+	rec_daddr = XFS_AGB_TO_DADDR(mp, cur->bc_private.a.agno,
-+			rec->ar_startblock);
-+
-+	irec.rm_startblock = rec->ar_startblock;
-+	irec.rm_blockcount = rec->ar_blockcount;
-+	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
-+	irec.rm_offset = 0;
-+	irec.rm_flags = 0;
-+
-+	return xfs_getfsmap_helper(cur->bc_tp, info, &irec, rec_daddr);
-+}
-+
- /* Set rmap flags based on the getfsmap flags */
- static void
- xfs_getfsmap_set_irec_flags(
-@@ -588,6 +616,43 @@ xfs_getfsmap_datadev_rmapbt(
- 			xfs_getfsmap_datadev_rmapbt_query, NULL);
- }
- 
-+/* Actually query the bno btree. */
-+STATIC int
-+xfs_getfsmap_datadev_bnobt_query(
-+	struct xfs_trans		*tp,
-+	struct xfs_getfsmap_info	*info,
-+	struct xfs_btree_cur		**curpp,
-+	void				*priv)
-+{
-+	struct xfs_alloc_rec_incore	*key = priv;
-+
-+	/* Report any gap at the end of the last AG. */
-+	if (info->last)
-+		return xfs_getfsmap_datadev_bnobt_helper(*curpp, &key[1], info);
-+
-+	/* Allocate cursor for this AG and query_range it. */
-+	*curpp = xfs_allocbt_init_cursor(tp->t_mountp, tp, info->agf_bp,
-+			info->agno, XFS_BTNUM_BNO);
-+	key->ar_startblock = info->low.rm_startblock;
-+	key[1].ar_startblock = info->high.rm_startblock;
-+	return xfs_alloc_query_range(*curpp, key, &key[1],
-+			xfs_getfsmap_datadev_bnobt_helper, info);
-+}
-+
-+/* Execute a getfsmap query against the regular data device's bnobt. */
-+STATIC int
-+xfs_getfsmap_datadev_bnobt(
-+	struct xfs_trans		*tp,
-+	struct xfs_fsmap		*keys,
-+	struct xfs_getfsmap_info	*info)
-+{
-+	struct xfs_alloc_rec_incore	akeys[2];
-+
-+	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
-+	return __xfs_getfsmap_datadev(tp, keys, info,
-+			xfs_getfsmap_datadev_bnobt_query, &akeys[0]);
-+}
-+
- /* Do we recognize the device? */
- STATIC bool
- xfs_getfsmap_is_valid_device(
-@@ -668,8 +733,6 @@ xfs_getfsmap(
- 	int				i;
- 	int				error = 0;
- 
--	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
--		return -EOPNOTSUPP;
- 	if (head->fmh_iflags & ~FMH_IF_VALID)
- 		return -EINVAL;
- 	if (!xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[0]) ||
-@@ -681,7 +744,10 @@ xfs_getfsmap(
- 	/* Set up our device handlers. */
- 	memset(handlers, 0, sizeof(handlers));
- 	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
--	handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
-+	else
-+		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
- 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
- 		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
- 		handlers[1].fn = xfs_getfsmap_logdev;
+For anyone interested, a simple ugly reproducer:
+
+cat > fst.sh <<EOFF
+#! /bin/bash -x
+
+[ \$# -ne 3 ] && { echo "./single FSTYP TEST XFSTESTS_DIR"; exit 1; }
+
+FST=\$1
+BLKSZ=4096
+
+fallocate -l 10G /home/test.img
+fallocate -l 15G /home/scratch.img
+
+MNT1=/loopmnt
+MNT2=/loopsch
+
+mkdir -p \$MNT1
+mkdir -p \$MNT2
+
+DEV1=\$(losetup --find --show /home/test.img)
+DEV2=\$(losetup --find --show /home/scratch.img)
+
+cleanup()
+{
+	umount -d \$MNT1
+	umount -d \$MNT2
+	umount \$DEV1 \$DEV2
+	losetup -D || losetup -a | awk -F: '{print \$1}' | xargs losetup -d
+	rm -f /home/{test,scratch}.img
+}
+
+trap cleanup 0 1 2
+
+if [[ \$FST =~ ext ]] ; then
+	mkfs.\${FST} -Fq -b \${BLKSZ} \$DEV1
+elif [[ \$FST =~ xfs ]] ; then
+	mkfs.\${FST} -fq -b size=\${BLKSZ} \$DEV1
+fi
+if test \$? -ne 0 ; then
+	echo "mkfs \$DEV1 failed" 
+	exit 1
+fi
+
+if [[ \$FST =~ ext ]] ; then
+	mkfs.\${FST} -Fq -b \${BLKSZ} \$DEV2
+elif [[ \$FST =~ xfs ]] ; then
+	mkfs.\${FST} -fq -b size=\${BLKSZ} \$DEV2
+fi
+if test \$? -ne 0 ; then
+	echo "mkfs \$DEV2 failed"
+	exit 1
+fi
+
+mount \$DEV1 \$MNT1
+if test \$? -ne 0 ; then
+	echo "mount \$DEV1 failed" 
+	exit 1
+fi
+mount \$DEV2 \$MNT2
+if test \$? -ne 0 ; then
+	echo "mount \$DEV2 failed" 
+	exit 1
+fi
+
+pushd \$3 || exit 1
+
+cat > local.config <<EOF
+TEST_DEV=\$DEV1
+TEST_DIR=\$MNT1
+SCRATCH_MNT=\$MNT2
+SCRATCH_DEV=\$DEV2
+EOF
+
+i=0
+while [ \$i -lt 50 ] ; do
+	./check \$2
+	echo \$i
+	((i=\$i+1))
+done
+
+popd
+EOFF
+
+git clone git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
+cd xfstests-dev
+make -j2 && make install || exit 1
+cd -
+sh -x ./fst.sh xfs generic/269 xfstests-dev
+
+
+> -- 
+> Michal Hocko
+> SUSE Labs
