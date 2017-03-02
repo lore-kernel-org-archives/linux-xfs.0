@@ -1,100 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34624 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752222AbdCBQdu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Mar 2017 11:33:50 -0500
-Date: Thu, 2 Mar 2017 17:16:06 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 1/2] xfs: allow kmem_zalloc_greedy to fail
-Message-ID: <20170302161606.GQ1404@dhcp22.suse.cz>
-References: <20170302153002.GG3213@bfoster.bfoster>
- <20170302154541.16155-1-mhocko@kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:34259 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752914AbdCBQsW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 11:48:22 -0500
+Date: Thu, 2 Mar 2017 07:47:25 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: mm allocation failure and hang when running xfstests generic/269
+ on xfs
+Message-ID: <20170302154725.GA28457@infradead.org>
+References: <20170302103520.GC1404@dhcp22.suse.cz>
+ <20170302122426.GA3213@bfoster.bfoster>
+ <20170302124909.GE1404@dhcp22.suse.cz>
+ <20170302130009.GC3213@bfoster.bfoster>
+ <20170302132755.GG1404@dhcp22.suse.cz>
+ <20170302134157.GD3213@bfoster.bfoster>
+ <20170302135001.GI1404@dhcp22.suse.cz>
+ <20170302142315.GE3213@bfoster.bfoster>
+ <20170302143441.GL1404@dhcp22.suse.cz>
+ <20170302145131.GF3213@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170302154541.16155-1-mhocko@kernel.org>
+In-Reply-To: <20170302145131.GF3213@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-I've just realized that Darrick was not on the CC list. Let's add him.
-I believe this patch should go in in the current cycle because
-5d17a73a2ebe was merged in this merge window and it can be abused...
+On Thu, Mar 02, 2017 at 09:51:31AM -0500, Brian Foster wrote:
+> Otherwise, I'm fine with breaking the infinite retry loop at the same
+> time. It looks like Christoph added this function originally so this
+> should probably require his ack as well..
 
-The other patch [1] is not that urgent.
-
-[1] http://lkml.kernel.org/r/20170302154541.16155-2-mhocko@kernel.org
-
-On Thu 02-03-17 16:45:40, Michal Hocko wrote:
-> From: Michal Hocko <mhocko@suse.com>
-> 
-> Even though kmem_zalloc_greedy is documented it might fail the current
-> code doesn't really implement this properly and loops on the smallest
-> allowed size for ever. This is a problem because vzalloc might fail
-> permanently - we might run out of vmalloc space or since 5d17a73a2ebe
-> ("vmalloc: back off when the current task is killed") when the current
-> task is killed. The later one makes the failure scenario much more
-> probable than it used to be because it makes vmalloc() failures
-> permanent for tasks with fatal signals pending.. Fix this by bailing out
-> if the minimum size request failed.
-> 
-> This has been noticed by a hung generic/269 xfstest by Xiong Zhou.
-> 
-> fsstress: vmalloc: allocation failure, allocated 12288 of 20480 bytes, mode:0x14080c2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_ZERO), nodemask=(null)
-> fsstress cpuset=/ mems_allowed=0-1
-> CPU: 1 PID: 23460 Comm: fsstress Not tainted 4.10.0-master-45554b2+ #21
-> Hardware name: HP ProLiant DL380 Gen9/ProLiant DL380 Gen9, BIOS P89 10/05/2016
-> Call Trace:
->  dump_stack+0x63/0x87
->  warn_alloc+0x114/0x1c0
->  ? alloc_pages_current+0x88/0x120
->  __vmalloc_node_range+0x250/0x2a0
->  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
->  ? free_hot_cold_page+0x21f/0x280
->  vzalloc+0x54/0x60
->  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
->  kmem_zalloc_greedy+0x2b/0x40 [xfs]
->  xfs_bulkstat+0x11b/0x730 [xfs]
->  ? xfs_bulkstat_one_int+0x340/0x340 [xfs]
->  ? selinux_capable+0x20/0x30
->  ? security_capable+0x48/0x60
->  xfs_ioc_bulkstat+0xe4/0x190 [xfs]
->  xfs_file_ioctl+0x9dd/0xad0 [xfs]
->  ? do_filp_open+0xa5/0x100
->  do_vfs_ioctl+0xa7/0x5e0
->  SyS_ioctl+0x79/0x90
->  do_syscall_64+0x67/0x180
->  entry_SYSCALL64_slow_path+0x25/0x25
-> 
-> fsstress keeps looping inside kmem_zalloc_greedy without any way out
-> because vmalloc keeps failing due to fatal_signal_pending.
-> 
-> Reported-by: Xiong Zhou <xzhou@redhat.com>
-> Analyzed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> Signed-off-by: Michal Hocko <mhocko@suse.com>
-> ---
->  fs/xfs/kmem.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> index 339c696bbc01..ee95f5c6db45 100644
-> --- a/fs/xfs/kmem.c
-> +++ b/fs/xfs/kmem.c
-> @@ -34,6 +34,8 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
->  	size_t		kmsize = maxsize;
->  
->  	while (!(ptr = vzalloc(kmsize))) {
-> +		if (kmsize == minsize)
-> +			break;
->  		if ((kmsize >>= 1) <= minsize)
->  			kmsize = minsize;
->  	}
-> -- 
-> 2.11.0
-> 
-
--- 
-Michal Hocko
-SUSE Labs
+I just moved the code around, but I'll take a look as well.
