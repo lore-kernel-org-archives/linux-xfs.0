@@ -1,39 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59567 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751945AbdCAPj4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Mar 2017 10:39:56 -0500
-Date: Wed, 1 Mar 2017 07:38:57 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/8] nowait aio: return if direct write will trigger
- writeback
-Message-ID: <20170301153857.GC30631@infradead.org>
-References: <20170228233610.25456-1-rgoldwyn@suse.de>
- <20170228233610.25456-4-rgoldwyn@suse.de>
- <20170301034606.GK16328@bombadil.infradead.org>
+Received: from szxga03-in.huawei.com ([45.249.212.189]:3449 "EHLO
+        dggrg03-dlp.huawei.com" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753909AbdCBGtR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 01:49:17 -0500
+Subject: Re: mm allocation failure and hang when running xfstests generic/269
+ on xfs
+References: <20170301044634.rgidgdqqiiwsmfpj@XZHOUW.usersys.redhat.com>
+ <20170302003731.GB24593@infradead.org>
+ <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
+From: Bob Liu <liubo95@huawei.com>
+Message-ID: <25dc5032-db32-5814-cabe-14e015302423@huawei.com>
+Date: Thu, 2 Mar 2017 14:41:41 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170301034606.GK16328@bombadil.infradead.org>
+In-Reply-To: <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, jack@suse.com, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Xiong Zhou <xzhou@redhat.com>, Christoph Hellwig <hch@infradead.org>, mhocko@suse.com
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Tue, Feb 28, 2017 at 07:46:06PM -0800, Matthew Wilcox wrote:
-> Ugh, this is pretty inefficient.  If that's all you want to know, then
-> using the radix tree directly will be far more efficient than spinning
-> up all the pagevec machinery only to discard the pages found.
+On 2017/3/2 13:19, Xiong Zhou wrote:
+> On Wed, Mar 01, 2017 at 04:37:31PM -0800, Christoph Hellwig wrote:
+>> On Wed, Mar 01, 2017 at 12:46:34PM +0800, Xiong Zhou wrote:
+>>> Hi,
+>>>
+>>> It's reproduciable, not everytime though. Ext4 works fine.
+>>
+>> On ext4 fsstress won't run bulkstat because it doesn't exist.  Either
+>> way this smells like a MM issue to me as there were not XFS changes
+>> in that area recently.
 > 
-> But what's going to kick these pages out of cache?  Shouldn't we rather
-> find the pages, kick them out if clean, start writeback if not, and *then*
-> return -EAGAIN?
+> Yap.
 > 
-> So maybe we want to spin up the pagevec machinery after all so we can
-> do that extra work?
+> First bad commit:
+> 
 
-As pointed out in the last round of these patches I think we really
-need to pass a flags argument to filemap_write_and_wait_range to
-communicate the non-blocking nature and only return -EAGAIN if we'd
-block.  As a bonus that can indeed start to kick the pages out.
+It looks like not a bug.
+>From below commit, the allocation failure print was due to current process received SIGKILL signal.
+You may need to confirm whether that's the case. 
+
+Regards,
+Bob
+
+> commit 5d17a73a2ebeb8d1c6924b91e53ab2650fe86ffb
+> Author: Michal Hocko <mhocko@suse.com>
+> Date:   Fri Feb 24 14:58:53 2017 -0800
+> 
+>     vmalloc: back off when the current task is killed
+> 
+> Reverting this commit on top of
+>   e5d56ef Merge tag 'watchdog-for-linus-v4.11'
+> survives the tests.
+> 
+
+
