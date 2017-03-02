@@ -1,54 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35952 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:40024 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752171AbdCBLQU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Mar 2017 06:16:20 -0500
-Date: Thu, 2 Mar 2017 11:38:45 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 3/8] nowait aio: return if direct write will trigger
- writeback
-Message-ID: <20170302103845.GB31792@quack2.suse.cz>
-References: <20170228233610.25456-1-rgoldwyn@suse.de>
- <20170228233610.25456-4-rgoldwyn@suse.de>
- <20170301034606.GK16328@bombadil.infradead.org>
- <20170301153857.GC30631@infradead.org>
+        id S1751617AbdCBMZz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Mar 2017 07:25:55 -0500
+Date: Thu, 2 Mar 2017 11:35:20 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: mm allocation failure and hang when running xfstests generic/269
+ on xfs
+Message-ID: <20170302103520.GC1404@dhcp22.suse.cz>
+References: <20170301044634.rgidgdqqiiwsmfpj@XZHOUW.usersys.redhat.com>
+ <20170302003731.GB24593@infradead.org>
+ <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
+ <42eb5d53-5ceb-a9ce-791a-9469af30810c@I-love.SAKURA.ne.jp>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170301153857.GC30631@infradead.org>
+In-Reply-To: <42eb5d53-5ceb-a9ce-791a-9469af30810c@I-love.SAKURA.ne.jp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Matthew Wilcox <willy@infradead.org>, Goldwyn Rodrigues <rgoldwyn@suse.de>, jack@suse.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: Xiong Zhou <xzhou@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Wed 01-03-17 07:38:57, Christoph Hellwig wrote:
-> On Tue, Feb 28, 2017 at 07:46:06PM -0800, Matthew Wilcox wrote:
-> > Ugh, this is pretty inefficient.  If that's all you want to know, then
-> > using the radix tree directly will be far more efficient than spinning
-> > up all the pagevec machinery only to discard the pages found.
-> > 
-> > But what's going to kick these pages out of cache?  Shouldn't we rather
-> > find the pages, kick them out if clean, start writeback if not, and *then*
-> > return -EAGAIN?
-> > 
-> > So maybe we want to spin up the pagevec machinery after all so we can
-> > do that extra work?
-> 
-> As pointed out in the last round of these patches I think we really
-> need to pass a flags argument to filemap_write_and_wait_range to
-> communicate the non-blocking nature and only return -EAGAIN if we'd
-> block.  As a bonus that can indeed start to kick the pages out.
+On Thu 02-03-17 19:04:48, Tetsuo Handa wrote:
+[...]
+> So, commit 5d17a73a2ebeb8d1("vmalloc: back off when the current task is
+> killed") implemented __GFP_KILLABLE flag and automatically applied that
+> flag. As a result, those who are not ready to fail upon SIGKILL are
+> confused. ;-)
 
-Aren't flags to filemap_write_and_wait_range() unnecessary complication?
-Realistically, most users wanting performance from AIO DIO so badly that
-they bother with this API won't have any pages to write / evict. If they do
-by some bad accident, they can fall back to standard "blocking" AIO DIO.
-So I don't see much value in teaching filemap_write_and_wait_range() about
-a non-blocking mode...
+You are right! The function is documented it might fail but the code
+doesn't really allow that. This seems like a bug to me. What do you
+think about the following?
+---
+>From d02cb0285d8ce3344fd64dc7e2912e9a04bef80d Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko@suse.com>
+Date: Thu, 2 Mar 2017 11:31:11 +0100
+Subject: [PATCH] xfs: allow kmem_zalloc_greedy to fail
 
-								Honza
+Even though kmem_zalloc_greedy is documented it might fail the current
+code doesn't really implement this properly and loops on the smallest
+allowed size for ever. This is a problem because vzalloc might fail
+permanently. Since 5d17a73a2ebe ("vmalloc: back off when the current
+task is killed") such a failure is much more probable than it used to
+be. Fix this by bailing out if the minimum size request failed.
+
+This has been noticed by a hung generic/269 xfstest by Xiong Zhou.
+
+Reported-by: Xiong Zhou <xzhou@redhat.com>
+Analyzed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ fs/xfs/kmem.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index 339c696bbc01..ee95f5c6db45 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -34,6 +34,8 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
+ 	size_t		kmsize = maxsize;
+ 
+ 	while (!(ptr = vzalloc(kmsize))) {
++		if (kmsize == minsize)
++			break;
+ 		if ((kmsize >>= 1) <= minsize)
+ 			kmsize = minsize;
+ 	}
+-- 
+2.11.0
 
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Michal Hocko
+SUSE Labs
