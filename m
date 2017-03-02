@@ -1,37 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60737 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753652AbdCBARc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Mar 2017 19:17:32 -0500
-Date: Wed, 1 Mar 2017 15:56:24 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH RFC] xfs: use iomap new flag for newly allocated delalloc
- blocks
-Message-ID: <20170301235624.GA29200@infradead.org>
-References: <1488379009-4972-1-git-send-email-bfoster@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43488 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751426AbdCBN0h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Mar 2017 08:26:37 -0500
+Date: Thu, 2 Mar 2017 08:00:09 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: mm allocation failure and hang when running xfstests generic/269
+ on xfs
+Message-ID: <20170302130009.GC3213@bfoster.bfoster>
+References: <20170301044634.rgidgdqqiiwsmfpj@XZHOUW.usersys.redhat.com>
+ <20170302003731.GB24593@infradead.org>
+ <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
+ <42eb5d53-5ceb-a9ce-791a-9469af30810c@I-love.SAKURA.ne.jp>
+ <20170302103520.GC1404@dhcp22.suse.cz>
+ <20170302122426.GA3213@bfoster.bfoster>
+ <20170302124909.GE1404@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1488379009-4972-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20170302124909.GE1404@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Xiong Zhou <xzhou@redhat.com>, Christoph Hellwig <hch@infradead.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Wed, Mar 01, 2017 at 09:36:49AM -0500, Brian Foster wrote:
-> This is a stab at fixing the regression discussed in this[1] thread
-> based on what Christoph mentioned regarding use of the IOMAP_F_NEW flag.
-> I decided to co-opt the XFS_BMAPI_ENTIRE flag for the delalloc res bit
-> since it seems logically equivalent, but we could define a new flag too.
-> I considered as such to preserve default behavior of
-> _reserve_delalloc(), but otoh there is only one other caller. Otherwise,
-> this passes all of my testing so far. Thoughts?
+On Thu, Mar 02, 2017 at 01:49:09PM +0100, Michal Hocko wrote:
+> On Thu 02-03-17 07:24:27, Brian Foster wrote:
+> > On Thu, Mar 02, 2017 at 11:35:20AM +0100, Michal Hocko wrote:
+> > > On Thu 02-03-17 19:04:48, Tetsuo Handa wrote:
+> > > [...]
+> > > > So, commit 5d17a73a2ebeb8d1("vmalloc: back off when the current task is
+> > > > killed") implemented __GFP_KILLABLE flag and automatically applied that
+> > > > flag. As a result, those who are not ready to fail upon SIGKILL are
+> > > > confused. ;-)
+> > > 
+> > > You are right! The function is documented it might fail but the code
+> > > doesn't really allow that. This seems like a bug to me. What do you
+> > > think about the following?
+> > > ---
+> > > From d02cb0285d8ce3344fd64dc7e2912e9a04bef80d Mon Sep 17 00:00:00 2001
+> > > From: Michal Hocko <mhocko@suse.com>
+> > > Date: Thu, 2 Mar 2017 11:31:11 +0100
+> > > Subject: [PATCH] xfs: allow kmem_zalloc_greedy to fail
+> > > 
+> > > Even though kmem_zalloc_greedy is documented it might fail the current
+> > > code doesn't really implement this properly and loops on the smallest
+> > > allowed size for ever. This is a problem because vzalloc might fail
+> > > permanently. Since 5d17a73a2ebe ("vmalloc: back off when the current
+> > > task is killed") such a failure is much more probable than it used to
+> > > be. Fix this by bailing out if the minimum size request failed.
+> > > 
+> > > This has been noticed by a hung generic/269 xfstest by Xiong Zhou.
+> > > 
+> > > Reported-by: Xiong Zhou <xzhou@redhat.com>
+> > > Analyzed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> > > Signed-off-by: Michal Hocko <mhocko@suse.com>
+> > > ---
+> > >  fs/xfs/kmem.c | 2 ++
+> > >  1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> > > index 339c696bbc01..ee95f5c6db45 100644
+> > > --- a/fs/xfs/kmem.c
+> > > +++ b/fs/xfs/kmem.c
+> > > @@ -34,6 +34,8 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
+> > >  	size_t		kmsize = maxsize;
+> > >  
+> > >  	while (!(ptr = vzalloc(kmsize))) {
+> > > +		if (kmsize == minsize)
+> > > +			break;
+> > >  		if ((kmsize >>= 1) <= minsize)
+> > >  			kmsize = minsize;
+> > >  	}
+> > 
+> > More consistent with the rest of the kmem code might be to accept a
+> > flags argument and do something like this based on KM_MAYFAIL.
+> 
+> Well, vmalloc doesn't really support GFP_NOFAIL semantic right now for
+> the same reason it doesn't support GFP_NOFS. So I am not sure this is a
+> good idea.
+> 
 
-I don't like reusing the flag that much, but I think instead of passing
-the flag we could trivially just remove the xfs_bmbt_get_all in
-xfs_bmapi_reserve_delalloc and let the caller handle it after
-xfs_bmapi_reserve_delalloc returned.  That being said I see no good
-reason why the COW would care to see the merged extent, so
-unconditionally removing it should be fine as well.  Or did I miss
-something?
+Not sure I follow..? I'm just suggesting to control the loop behavior
+based on the KM_ flag, not to do or change anything wrt to GFP_ flags.
+
+> > The one
+> > current caller looks like it would pass it, but I suppose we'd still
+> > need a mechanism to break out should a new caller not pass that flag.
+> > Would a fatal_signal_pending() check in the loop as well allow us to
+> > break out in the scenario that is reproduced here?
+> 
+> Yes that check would work as well I just thought the break out when the
+> minsize request fails to be more logical. There might be other reasons
+> to fail the request and looping here seems just wrong. But whatever you
+> or other xfs people prefer.
+
+There may be higher level reasons for why this code should or should not
+loop, that just seems like a separate issue to me. My thinking is more
+that this appears to be how every kmem_*() function operates today and
+it seems a bit out of place to change behavior of one to fix a bug.
+
+Maybe I'm missing something though.. are we subject to the same general
+problem in any of the other kmem_*() functions that can currently loop
+indefinitely?
+
+Brian
+
+> -- 
+> Michal Hocko
+> SUSE Labs
