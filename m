@@ -1,159 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41818 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754071AbdCBJYf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Mar 2017 04:24:35 -0500
-Date: Thu, 2 Mar 2017 17:23:52 +0800
-From: Xiong Zhou <xzhou@redhat.com>
+Received: from www262.sakura.ne.jp ([202.181.97.72]:27246 "EHLO
+        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751628AbdCBLvf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 06:51:35 -0500
 Subject: Re: mm allocation failure and hang when running xfstests generic/269
  on xfs
-Message-ID: <20170302092352.r7dcykmddwue6san@XZHOUW.usersys.redhat.com>
 References: <20170301044634.rgidgdqqiiwsmfpj@XZHOUW.usersys.redhat.com>
  <20170302003731.GB24593@infradead.org>
  <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
- <d4c2cf89-8d82-ea78-b742-5bf6923a69c1@linux.vnet.ibm.com>
- <20170302084222.GA1404@dhcp22.suse.cz>
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Message-ID: <42eb5d53-5ceb-a9ce-791a-9469af30810c@I-love.SAKURA.ne.jp>
+Date: Thu, 2 Mar 2017 19:04:48 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170302084222.GA1404@dhcp22.suse.cz>
+In-Reply-To: <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Xiong Zhou <xzhou@redhat.com>, Anshuman Khandual <khandual@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Xiong Zhou <xzhou@redhat.com>, Christoph Hellwig <hch@infradead.org>, mhocko@suse.com
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Thu, Mar 02, 2017 at 09:42:23AM +0100, Michal Hocko wrote:
-> On Thu 02-03-17 12:17:47, Anshuman Khandual wrote:
-> > On 03/02/2017 10:49 AM, Xiong Zhou wrote:
-> > > On Wed, Mar 01, 2017 at 04:37:31PM -0800, Christoph Hellwig wrote:
-> > >> On Wed, Mar 01, 2017 at 12:46:34PM +0800, Xiong Zhou wrote:
-> > >>> Hi,
-> > >>>
-> > >>> It's reproduciable, not everytime though. Ext4 works fine.
-> > >> On ext4 fsstress won't run bulkstat because it doesn't exist.  Either
-> > >> way this smells like a MM issue to me as there were not XFS changes
-> > >> in that area recently.
-> > > Yap.
-> > > 
-> > > First bad commit:
-> > > 
-> > > commit 5d17a73a2ebeb8d1c6924b91e53ab2650fe86ffb
-> > > Author: Michal Hocko <mhocko@suse.com>
-> > > Date:   Fri Feb 24 14:58:53 2017 -0800
-> > > 
-> > >     vmalloc: back off when the current task is killed
-> > > 
-> > > Reverting this commit on top of
-> > >   e5d56ef Merge tag 'watchdog-for-linus-v4.11'
-> > > survives the tests.
-> > 
-> > Does fsstress test or the system hang ? I am not familiar with this
-> > code but If it's the test which is getting hung and its hitting this
-> > new check introduced by the above commit that means the requester is
-> > currently being killed by OOM killer for some other memory allocation
-> > request.
+On 2017/03/02 14:19, Xiong Zhou wrote:
+> On Wed, Mar 01, 2017 at 04:37:31PM -0800, Christoph Hellwig wrote:
+>> On Wed, Mar 01, 2017 at 12:46:34PM +0800, Xiong Zhou wrote:
+>>> Hi,
+>>>
+>>> It's reproduciable, not everytime though. Ext4 works fine.
+>>
+>> On ext4 fsstress won't run bulkstat because it doesn't exist.  Either
+>> way this smells like a MM issue to me as there were not XFS changes
+>> in that area recently.
 > 
-> Well, not exactly. It is sufficient for it to be _killed_ by SIGKILL.
-> And for that it just needs to do a group_exit when one thread was still
-> in the kernel (see zap_process). While I can change this check to
-> actually do the oom specific check I believe a more generic
-> fatal_signal_pending is the right thing to do here. I am still not sure
-> what is the actual problem here, though. Could you be more specific
-> please?
+> Yap.
+> 
+> First bad commit:
+> 
+> commit 5d17a73a2ebeb8d1c6924b91e53ab2650fe86ffb
+> Author: Michal Hocko <mhocko@suse.com>
+> Date:   Fri Feb 24 14:58:53 2017 -0800
+> 
+>     vmalloc: back off when the current task is killed
+> 
+> Reverting this commit on top of
+>   e5d56ef Merge tag 'watchdog-for-linus-v4.11'
+> survives the tests.
+> 
 
-It's blocking the test and system-shutdown. fsstress wont exit.
+Looks like kmem_zalloc_greedy() is broken.
+It loops forever until vzalloc() succeeds.
+If somebody (not limited to the OOM killer) sends SIGKILL and
+vmalloc() backs off, kmem_zalloc_greedy() will loop forever.
 
-For anyone interested, a simple ugly reproducer:
-
-cat > fst.sh <<EOFF
-#! /bin/bash -x
-
-[ \$# -ne 3 ] && { echo "./single FSTYP TEST XFSTESTS_DIR"; exit 1; }
-
-FST=\$1
-BLKSZ=4096
-
-fallocate -l 10G /home/test.img
-fallocate -l 15G /home/scratch.img
-
-MNT1=/loopmnt
-MNT2=/loopsch
-
-mkdir -p \$MNT1
-mkdir -p \$MNT2
-
-DEV1=\$(losetup --find --show /home/test.img)
-DEV2=\$(losetup --find --show /home/scratch.img)
-
-cleanup()
+----------------------------------------
+void *
+kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
 {
-	umount -d \$MNT1
-	umount -d \$MNT2
-	umount \$DEV1 \$DEV2
-	losetup -D || losetup -a | awk -F: '{print \$1}' | xargs losetup -d
-	rm -f /home/{test,scratch}.img
+        void            *ptr;
+        size_t          kmsize = maxsize;
+
+        while (!(ptr = vzalloc(kmsize))) {
+                if ((kmsize >>= 1) <= minsize)
+                        kmsize = minsize;
+        }
+        if (ptr)
+                *size = kmsize;
+        return ptr;
 }
+----------------------------------------
 
-trap cleanup 0 1 2
+So, commit 5d17a73a2ebeb8d1("vmalloc: back off when the current task is
+killed") implemented __GFP_KILLABLE flag and automatically applied that
+flag. As a result, those who are not ready to fail upon SIGKILL are
+confused. ;-)
 
-if [[ \$FST =~ ext ]] ; then
-	mkfs.\${FST} -Fq -b \${BLKSZ} \$DEV1
-elif [[ \$FST =~ xfs ]] ; then
-	mkfs.\${FST} -fq -b size=\${BLKSZ} \$DEV1
-fi
-if test \$? -ne 0 ; then
-	echo "mkfs \$DEV1 failed" 
-	exit 1
-fi
-
-if [[ \$FST =~ ext ]] ; then
-	mkfs.\${FST} -Fq -b \${BLKSZ} \$DEV2
-elif [[ \$FST =~ xfs ]] ; then
-	mkfs.\${FST} -fq -b size=\${BLKSZ} \$DEV2
-fi
-if test \$? -ne 0 ; then
-	echo "mkfs \$DEV2 failed"
-	exit 1
-fi
-
-mount \$DEV1 \$MNT1
-if test \$? -ne 0 ; then
-	echo "mount \$DEV1 failed" 
-	exit 1
-fi
-mount \$DEV2 \$MNT2
-if test \$? -ne 0 ; then
-	echo "mount \$DEV2 failed" 
-	exit 1
-fi
-
-pushd \$3 || exit 1
-
-cat > local.config <<EOF
-TEST_DEV=\$DEV1
-TEST_DIR=\$MNT1
-SCRATCH_MNT=\$MNT2
-SCRATCH_DEV=\$DEV2
-EOF
-
-i=0
-while [ \$i -lt 50 ] ; do
-	./check \$2
-	echo \$i
-	((i=\$i+1))
-done
-
-popd
-EOFF
-
-git clone git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-cd xfstests-dev
-make -j2 && make install || exit 1
-cd -
-sh -x ./fst.sh xfs generic/269 xfstests-dev
-
-
-> -- 
-> Michal Hocko
-> SUSE Labs
