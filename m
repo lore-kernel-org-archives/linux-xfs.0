@@ -1,146 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35473 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751291AbdCAQrX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Mar 2017 11:47:23 -0500
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: [PATCH v2] iomap: invalidate page caches should be after iomap_dio_complete() in direct write
-Date: Thu,  2 Mar 2017 00:37:08 +0800
-Message-Id: <20170301163708.7002-1-guaneryu@gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:57641 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752900AbdCBPqj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Mar 2017 10:46:39 -0500
+Date: Thu, 2 Mar 2017 16:22:45 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 3/8] nowait aio: return if direct write will trigger
+ writeback
+Message-ID: <20170302152245.GC23354@quack2.suse.cz>
+References: <20170228233610.25456-1-rgoldwyn@suse.de>
+ <20170228233610.25456-4-rgoldwyn@suse.de>
+ <20170301034606.GK16328@bombadil.infradead.org>
+ <20170301153857.GC30631@infradead.org>
+ <20170302103845.GB31792@quack2.suse.cz>
+ <20170302141245.GO16328@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170302141245.GO16328@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, Eryu Guan <eguan@redhat.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Goldwyn Rodrigues <rgoldwyn@suse.de>, jack@suse.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-From: Eryu Guan <eguan@redhat.com>
+On Thu 02-03-17 06:12:45, Matthew Wilcox wrote:
+> On Thu, Mar 02, 2017 at 11:38:45AM +0100, Jan Kara wrote:
+> > On Wed 01-03-17 07:38:57, Christoph Hellwig wrote:
+> > > On Tue, Feb 28, 2017 at 07:46:06PM -0800, Matthew Wilcox wrote:
+> > > > But what's going to kick these pages out of cache?  Shouldn't we rather
+> > > > find the pages, kick them out if clean, start writeback if not, and *then*
+> > > > return -EAGAIN?
+> > > 
+> > > As pointed out in the last round of these patches I think we really
+> > > need to pass a flags argument to filemap_write_and_wait_range to
+> > > communicate the non-blocking nature and only return -EAGAIN if we'd
+> > > block.  As a bonus that can indeed start to kick the pages out.
+> > 
+> > Aren't flags to filemap_write_and_wait_range() unnecessary complication?
+> > Realistically, most users wanting performance from AIO DIO so badly that
+> > they bother with this API won't have any pages to write / evict. If they do
+> > by some bad accident, they can fall back to standard "blocking" AIO DIO.
+> > So I don't see much value in teaching filemap_write_and_wait_range() about
+> > a non-blocking mode...
+> 
+> That lets me execute a DoS against a user using this API.  All I have
+> to do is open the file they're using read-only and read a byte from it.
+> Page goes into page-cache, and they'll only get -EAGAIN from calling
+> this syscall until the page ages out.
 
-After XFS switching to iomap based DIO (commit acdda3aae146 ("xfs:
-use iomap_dio_rw")), I started to notice dio29/dio30 tests failures
-from LTP run on ppc64 hosts, and they can be reproduced on x86_64
-hosts with 512B/1k block size XFS too.
+It will not be a DoS. This non-blocking AIO can always return EAGAIN when
+it feels like it and the caller is required to fall back to a blocking
+version in that case if he wants to guarantee forward progress. It is just
+a performance optimization which allows user (database) to submit IO from a
+computation thread instead of having to offload it to an IO thread...
 
-dio29	diotest3 -b 65536 -n 100 -i 1000 -o 1024000
-dio30	diotest6 -b 65536 -n 100 -i 1000 -o 1024000
+> Also, I don't understand why this is a flag.  Isn't the point of AIO to
+> be non-blocking?  Why isn't this just a change to how we do AIO?
 
-The failure message is like:
-bufcmp: offset 0: Expected: 0x62, got 0x0
-diotest03    1  TPASS  :  Read with Direct IO, Write without
-diotest03    2  TFAIL  :  diotest3.c:142: comparsion failed; child=98 offset=1425408
-diotest03    3  TFAIL  :  diotest3.c:194: Write Direct-child 98 failed
+Because this is an API change and the caller has to implement some handling
+to guarantee a forward progress of non-blocking IO...
 
-Direct write wrote 0x62 but buffer read got zero. This is because,
-when doing direct write to a hole or preallocated file, we
-invalidate the page caches before converting the extent from
-unwritten state to normal state, which is done by
-iomap_dio_complete(), thus leave a window for other buffer reader to
-cache the unwritten state extent.
-
-Consider this case, with sub-page blocksize XFS, two processes are
-direct writing to different blocksize-aligned regions (say 512B) of
-the same preallocated file, and reading the region back via buffered
-I/O to compare contents.
-
-process A, region [0,512]		process B, region [512,1024]
-xfs_file_write_iter
- xfs_file_aio_dio_write
-  iomap_dio_rw
-   iomap_apply
-   invalidate_inode_pages2_range
-   					xfs_file_write_iter
-				 	xfs_file_aio_dio_write
-					  iomap_dio_rw
-					   iomap_apply
-					   invalidate_inode_pages2_range
-					   iomap_dio_complete
-					xfs_file_read_iter
-					 xfs_file_buffered_aio_read
-					  generic_file_read_iter
-					   do_generic_file_read
-					    <readahead fills pagecache with 0>
-   iomap_dio_complete
-xfs_file_read_iter
- <read gets 0 from pagecache>
-
-Process A first invalidates page caches, at this point the
-underlying extent is still in unwritten state (iomap_dio_complete
-not called yet), and process B finishs direct write and populates
-page caches via readahead, which caches zeros in page for region A,
-then process A reads zeros from page cache, instead of the actual
-data.
-
-Fix it by invalidating page caches after converting unwritten extent
-to make sure we read content from disk after extent state changed,
-as what we did before switching to iomap based dio.
-
-Also introduce a new 'start' variable to save the original write
-offset (iomap_dio_complete() updates iocb->ki_pos), and a 'err'
-variable for invalidating caches result, cause we can't reuse 'ret'
-anymore.
-
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
-v2:
-- kill global 'res' var and use local var in if block with better name
-
- fs/iomap.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
-
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 0f85f24..864ad17 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -844,7 +844,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	struct address_space *mapping = iocb->ki_filp->f_mapping;
- 	struct inode *inode = file_inode(iocb->ki_filp);
- 	size_t count = iov_iter_count(iter);
--	loff_t pos = iocb->ki_pos, end = iocb->ki_pos + count - 1, ret = 0;
-+	loff_t pos = iocb->ki_pos, start = pos;
-+	loff_t end = iocb->ki_pos + count - 1, ret = 0;
- 	unsigned int flags = IOMAP_DIRECT;
- 	struct blk_plug plug;
- 	struct iomap_dio *dio;
-@@ -885,12 +886,12 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	}
- 
- 	if (mapping->nrpages) {
--		ret = filemap_write_and_wait_range(mapping, iocb->ki_pos, end);
-+		ret = filemap_write_and_wait_range(mapping, start, end);
- 		if (ret)
- 			goto out_free_dio;
- 
- 		ret = invalidate_inode_pages2_range(mapping,
--				iocb->ki_pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
-+				start >> PAGE_SHIFT, end >> PAGE_SHIFT);
- 		WARN_ON_ONCE(ret);
- 		ret = 0;
- 	}
-@@ -939,6 +940,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		__set_current_state(TASK_RUNNING);
- 	}
- 
-+	ret = iomap_dio_complete(dio);
-+
- 	/*
- 	 * Try again to invalidate clean pages which might have been cached by
- 	 * non-direct readahead, or faulted in by get_user_pages() if the source
-@@ -947,12 +950,12 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	 * this invalidation fails, tough, the write still worked...
- 	 */
- 	if (iov_iter_rw(iter) == WRITE && mapping->nrpages) {
--		ret = invalidate_inode_pages2_range(mapping,
--				iocb->ki_pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
--		WARN_ON_ONCE(ret);
-+		int err = invalidate_inode_pages2_range(mapping,
-+				start >> PAGE_SHIFT, end >> PAGE_SHIFT);
-+		WARN_ON_ONCE(err);
- 	}
- 
--	return iomap_dio_complete(dio);
-+	return ret;
- 
- out_free_dio:
- 	kfree(dio);
+								Honza
 -- 
-2.9.3
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
