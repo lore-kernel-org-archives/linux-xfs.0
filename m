@@ -1,65 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f173.google.com ([209.85.128.173]:35755 "EHLO
-        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752290AbdCEO40 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Mar 2017 09:56:26 -0500
-Received: by mail-wr0-f173.google.com with SMTP id g10so100947897wrg.2
-        for <linux-xfs@vger.kernel.org>; Sun, 05 Mar 2017 06:56:25 -0800 (PST)
-Subject: Re: [PATCH 0/8 v2] Non-blocking AIO
-References: <20170228233610.25456-1-rgoldwyn@suse.de>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <347d19cb-dbb8-1d4f-dfb5-d1dd820dd65d@scylladb.com>
-Date: Sun, 5 Mar 2017 16:56:21 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:33520 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752219AbdCBRZN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Mar 2017 12:25:13 -0500
+Date: Thu, 2 Mar 2017 12:13:29 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: XFS kernel BUG during generic/270 with v4.10
+Message-ID: <20170302171329.GN3213@bfoster.bfoster>
+References: <20170222191300.GA29474@linux.intel.com>
+ <20170302162934.GM3213@bfoster.bfoster>
+ <20170302164701.GJ26319@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170228233610.25456-1-rgoldwyn@suse.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170302164701.GJ26319@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, jack@suse.com
-Cc: hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs@vger.kernel.org
 
+On Thu, Mar 02, 2017 at 08:47:01AM -0800, Darrick J. Wong wrote:
+> On Thu, Mar 02, 2017 at 11:29:34AM -0500, Brian Foster wrote:
+> > On Wed, Feb 22, 2017 at 12:13:00PM -0700, Ross Zwisler wrote:
+> > > By running generic/270 in a loop on an XFS filesystem mounted with DAX I'm
+> > > able to reliably generate the following kernel bug after a few (~10)
+> > > iterations (output passed through kasan_symbolize.py):
+> > > 
+> > > run fstests generic/270 at 2017-02-22 12:01:05
+> > > XFS (pmem0p2): Unmounting Filesystem
+> > > XFS (pmem0p2): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
+> > > XFS (pmem0p2): Mounting V5 Filesystem
+> > > XFS (pmem0p2): Ending clean mount
+> > > XFS (pmem0p2): Quotacheck needed: Please wait.
+> > > XFS (pmem0p2): Quotacheck: Done.
+> > > XFS (pmem0p2): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
+> > > XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 965
+> > 
+> > This means we've reclaimed an inode that still has delayed allocation
+> > blocks, which shouldn't occur. We do have one recent fix in this area:
+> > fa7f138 ("xfs: clear delalloc and cache on buffered write failure"). Do
+> > you still reproduce this? If so, does it reproduce with that patch?
+> > 
+> > > ------------[ cut here ]------------
+> > ...
+> > > ---[ end trace 384d06985052f068 ]---
+> > > 
+> > > Here's the xfstests run:
+> > > 
+> > > FSTYP         -- xfs (debug)
+> > > PLATFORM      -- Linux/x86_64 alara 4.10.0
+> > > MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem0p2
+> > > MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem0p2 /mnt/xfstests_scratch
+> > > 
+> > > generic/270 24s ..../check: line 596: 15817 Segmentation fault      ./$seq > $tmp.rawout 2>&1
+> > >  [failed, exit status 139] - output mismatch (see /root/xfstests/results//generic/270.out.bad)
+> > >     --- tests/generic/270.out	2016-10-21 15:31:10.568945780 -0600
+> > >     +++ /root/xfstests/results//generic/270.out.bad	2017-02-22 12:01:29.272718284 -0700
+> > >     @@ -3,6 +3,3 @@
+> > >      Run fsstress
+> > >      
+> > >      Run dd writers in parallel
+> > >     -Comparing user usage
+> > >     -Comparing group usage
+> > >     -Comparing filesystem consistency
+> > >     ...
+> > >     (Run 'diff -u tests/generic/270.out /root/xfstests/results//generic/270.out.bad'  to see the entire diff)
+> > > 
+> > > This was done in my normal test setup, which is a pair of PMEM disks that
+> > > enable DAX.
+> > > 
+> > 
+> > What I'm a little confused about though is that I thought DAX meant we
+> > bypassed buffered I/O and always used direct I/O (which means you should
+> > never perform delayed allocation). :/
+> 
+> The block devices are pmem, but I don't think g/270 does anything
+> special to turn on DAX (the inode flag) for the files it's writing.
+> 
 
+Doesn't the dax mount force the inode flag?
 
-On 03/01/2017 01:36 AM, Goldwyn Rodrigues wrote:
-> This series adds nonblocking feature to asynchronous I/O writes.
-> io_submit() can be delayed because of a number of reason:
->   - Block allocation for files
->   - Data writebacks for direct I/O
->   - Sleeping because of waiting to acquire i_rwsem
->   - Congested block device
+Brian
 
-We've been hit by a few of these so this change is very welcome.
-
->
-> The goal of the patch series is to return -EAGAIN/-EWOULDBLOCK if
-> any of these conditions are met. This way userspace can push most
-> of the write()s to the kernel to the best of its ability to complete
-> and if it returns -EAGAIN, can defer it to another thread.
->
-
-Is it not possible to push the iocb to a workqueue?  This will allow 
-existing userspace to work with the new functionality, unchanged. Any 
-userspace implementation would have to do the same thing, so it's not 
-like we're saving anything by pushing it there.
-
-> In order to enable this, IOCB_FLAG_NOWAIT is introduced in
-> uapi/linux/aio_abi.h which translates to IOCB_NOWAIT for struct iocb,
-> BIO_NOWAIT for bio and IOMAP_NOWAIT for iomap.
->
-> This feature is provided for direct I/O of asynchronous I/O only. I have
-> tested it against xfs, ext4, and btrfs.
->
-> Changes since v1:
->   + Forwardported from 4.9.10
->   + changed name from _NONBLOCKING to *_NOWAIT
->   + filemap_range_has_page call moved to closer to (just before) calling filemap_write_and_wait_range().
->   + BIO_NOWAIT limited to get_request()
->   + XFS fixes
-> 	- included reflink
-> 	- use of xfs_ilock_nowait() instead of a XFS_IOLOCK_NONBLOCKING flag
-> 	- Translate the flag through IOMAP_NOWAIT (iomap) to check for
-> 	  block allocation for the file.
->   + ext4 coding style
-
+> --D
+> 
+> > 
+> > Brian
+> > 
+> > > Here are the versions of xfstests and xfsprogs that I'm using:
+> > > 
+> > > xfstets: f438604 generic: test mmap io through DAX and non-DAX
+> > > 
+> > > xfsprogs: xfs_admin version 4.9.0
+> > > This is just the xfsprogs that comes packaged with Fedora 25.
+> > > 
+> > > Thanks,
+> > > - Ross
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
