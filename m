@@ -1,201 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([59.151.112.132]:52586 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752125AbdCUHOn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2017 03:14:43 -0400
-Subject: Re: [PATCH 3/4] reflink: test adjacency of reflinked blocks
-References: <148798515933.25833.2842247083803775089.stgit@birch.djwong.org>
- <148798517790.25833.2585159479268361866.stgit@birch.djwong.org>
-From: Qu Wenruo <quwenruo@cn.fujitsu.com>
-Message-ID: <6511f176-ee8e-09d8-d955-8aed36abaa29@cn.fujitsu.com>
-Date: Tue, 21 Mar 2017 15:14:36 +0800
-MIME-Version: 1.0
-In-Reply-To: <148798517790.25833.2585159479268361866.stgit@birch.djwong.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:36525 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751585AbdCBPqj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 10:46:39 -0500
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [PATCH 1/2] xfs: allow kmem_zalloc_greedy to fail
+Date: Thu,  2 Mar 2017 16:45:40 +0100
+Message-Id: <20170302154541.16155-1-mhocko@kernel.org>
+In-Reply-To: <20170302153002.GG3213@bfoster.bfoster>
+References: <20170302153002.GG3213@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@djwong.org>, fstests@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Michal Hocko <mhocko@suse.com>
 
-Hi Darrick
+From: Michal Hocko <mhocko@suse.com>
 
-At 02/25/2017 09:12 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> If we reflink a file with N blocks to another file one block at a time,
-> does the destination file end up with the same number of extents as the
-> source file?  In other words, does the filesystem succeed at combining
-> adjacent mappings into a maximal extents?
+Even though kmem_zalloc_greedy is documented it might fail the current
+code doesn't really implement this properly and loops on the smallest
+allowed size for ever. This is a problem because vzalloc might fail
+permanently - we might run out of vmalloc space or since 5d17a73a2ebe
+("vmalloc: back off when the current task is killed") when the current
+task is killed. The later one makes the failure scenario much more
+probable than it used to be because it makes vmalloc() failures
+permanent for tasks with fatal signals pending.. Fix this by bailing out
+if the minimum size request failed.
 
-Btrfs can't pass the test since it doesn't merge such mapping, not only 
-the fiemap result, but also on-disk extents.
+This has been noticed by a hung generic/269 xfstest by Xiong Zhou.
 
-IIRC ocfs also merges it, so I wonder if this is a documented behavior 
-to merge any extent maps that are adjacent.
+fsstress: vmalloc: allocation failure, allocated 12288 of 20480 bytes, mode:0x14080c2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_ZERO), nodemask=(null)
+fsstress cpuset=/ mems_allowed=0-1
+CPU: 1 PID: 23460 Comm: fsstress Not tainted 4.10.0-master-45554b2+ #21
+Hardware name: HP ProLiant DL380 Gen9/ProLiant DL380 Gen9, BIOS P89 10/05/2016
+Call Trace:
+ dump_stack+0x63/0x87
+ warn_alloc+0x114/0x1c0
+ ? alloc_pages_current+0x88/0x120
+ __vmalloc_node_range+0x250/0x2a0
+ ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
+ ? free_hot_cold_page+0x21f/0x280
+ vzalloc+0x54/0x60
+ ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
+ kmem_zalloc_greedy+0x2b/0x40 [xfs]
+ xfs_bulkstat+0x11b/0x730 [xfs]
+ ? xfs_bulkstat_one_int+0x340/0x340 [xfs]
+ ? selinux_capable+0x20/0x30
+ ? security_capable+0x48/0x60
+ xfs_ioc_bulkstat+0xe4/0x190 [xfs]
+ xfs_file_ioctl+0x9dd/0xad0 [xfs]
+ ? do_filp_open+0xa5/0x100
+ do_vfs_ioctl+0xa7/0x5e0
+ SyS_ioctl+0x79/0x90
+ do_syscall_64+0x67/0x180
+ entry_SYSCALL64_slow_path+0x25/0x25
 
-Further more, if a fs has a limit on extent size on disk, e.g 128M.
-But 2 file extents are also adjacent on disk, then should fiemap return 
-a large 256M map or just 2 adjacent 128M maps?
+fsstress keeps looping inside kmem_zalloc_greedy without any way out
+because vmalloc keeps failing due to fatal_signal_pending.
 
-Thanks,
-Qu
->
-> Signed-off-by: Darrick J. Wong <djwong@djwong.org>
-> ---
->  tests/generic/930     |  106 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/930.out |   11 +++++
->  tests/generic/group   |    1
->  3 files changed, 118 insertions(+)
->  create mode 100755 tests/generic/930
->  create mode 100644 tests/generic/930.out
->
->
-> diff --git a/tests/generic/930 b/tests/generic/930
-> new file mode 100755
-> index 0000000..15d8cbf
-> --- /dev/null
-> +++ b/tests/generic/930
-> @@ -0,0 +1,106 @@
-> +#! /bin/bash
-> +# FS QA Test No. 930
-> +#
-> +# Check that reflinking adjacent blocks in a file produces a single
-> +# block mapping extent.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 7 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -rf $tmp.*
-> +	wait
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/reflink
-> +
-> +# real QA test starts here
-> +_supported_os Linux
-> +_supported_fs generic
-> +_require_scratch_reflink
-> +_require_fiemap
-> +
-> +echo "Format and mount"
-> +_scratch_mkfs > $seqres.full 2>&1
-> +_scratch_mount >> $seqres.full 2>&1
-> +
-> +testdir=$SCRATCH_MNT/test-$seq
-> +mkdir $testdir
-> +
-> +blocks=32
-> +blksz=65536
-> +sz=$((blocks * blksz))
-> +
-> +echo "Create the original files"
-> +$XFS_IO_PROG -f -c "falloc 0 $sz" $testdir/file1 >> $seqres.full
-> +_pwrite_byte 0x61 0 $sz $testdir/file1 >> $seqres.full
-> +seq 0 $blksz $((sz - blksz)) | while read offset; do
-> +	_reflink_range $testdir/file1 $offset $testdir/file2 $offset $blksz >> $seqres.full
-> +done
-> +
-> +echo "Compare files"
-> +md5sum $testdir/file1 | _filter_scratch
-> +md5sum $testdir/file2 | _filter_scratch
-> +
-> +echo "Check extent counts"
-> +f1=$(_count_extents $testdir/file1)
-> +f2=$(_count_extents $testdir/file2)
-> +s1=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file1 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> +s2=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file2 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> +
-> +# Did the fs combine the extent mappings when we made f2?
-> +test $f1 -eq $f2 || echo "f1 ($f1) != f2 ($f2)"
-> +test $s1 -eq $s2 || echo "s1 ($s1) != s2 ($s2)"
-> +test $f1 -eq $s1 || echo "f1 ($f1) != s1 ($f1)"
-> +test $f2 -eq $s2 || echo "f2 ($f2) != s2 ($f2)"
-> +
-> +_scratch_cycle_mount
-> +
-> +echo "Compare files after remounting"
-> +md5sum $testdir/file1 | _filter_scratch
-> +md5sum $testdir/file2 | _filter_scratch
-> +
-> +echo "Check extent counts"
-> +f1=$(_count_extents $testdir/file1)
-> +f2=$(_count_extents $testdir/file2)
-> +s1=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file1 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> +s2=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file2 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
-> +
-> +# Are the mappings still combined?
-> +test $f1 -eq $f2 || echo "f1 ($f1) != f2 ($f2)"
-> +test $s1 -eq $s2 || echo "s1 ($s1) != s2 ($s2)"
-> +test $f1 -eq $s1 || echo "f1 ($f1) != s1 ($f1)"
-> +test $f2 -eq $s2 || echo "f2 ($f2) != s2 ($f2)"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/930.out b/tests/generic/930.out
-> new file mode 100644
-> index 0000000..556108a
-> --- /dev/null
-> +++ b/tests/generic/930.out
-> @@ -0,0 +1,11 @@
-> +QA output created by 930
-> +Format and mount
-> +Create the original files
-> +Compare files
-> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file1
-> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file2
-> +Check extent counts
-> +Compare files after remounting
-> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file1
-> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file2
-> +Check extent counts
-> diff --git a/tests/generic/group b/tests/generic/group
-> index d0bc47d..4b4df66 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -411,3 +411,4 @@
->  406 auto quick dangerous
->  407 auto quick clone metadata
->  408 auto quick clone dedupe metadata
-> +930 auto quick clone
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+Reported-by: Xiong Zhou <xzhou@redhat.com>
+Analyzed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ fs/xfs/kmem.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index 339c696bbc01..ee95f5c6db45 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -34,6 +34,8 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
+ 	size_t		kmsize = maxsize;
+ 
+ 	while (!(ptr = vzalloc(kmsize))) {
++		if (kmsize == minsize)
++			break;
+ 		if ((kmsize >>= 1) <= minsize)
+ 			kmsize = minsize;
+ 	}
+-- 
+2.11.0
 
