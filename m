@@ -1,103 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:34780 "EHLO
-        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754036AbdCBRuV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 12:50:21 -0500
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
-        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v22GbpCG006032
+Received: from userp1050.oracle.com ([156.151.31.82]:39853 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751767AbdCBRy0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 12:54:26 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v22HTbpr025516
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 2 Mar 2017 16:37:51 GMT
-Date: Thu, 2 Mar 2017 08:36:16 -0800
+        for <linux-xfs@vger.kernel.org>; Thu, 2 Mar 2017 17:29:37 GMT
+Date: Thu, 2 Mar 2017 09:28:29 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH RFC] xfs: use iomap new flag for newly allocated delalloc
- blocks
-Message-ID: <20170302163616.GB24806@birch.djwong.org>
-References: <1488379009-4972-1-git-send-email-bfoster@redhat.com>
- <20170301235624.GA29200@infradead.org>
- <20170302124353.GB3213@bfoster.bfoster>
+Subject: Re: XFS kernel BUG during generic/270 with v4.10
+Message-ID: <20170302172829.GK26319@birch.djwong.org>
+References: <20170222191300.GA29474@linux.intel.com>
+ <20170302162934.GM3213@bfoster.bfoster>
+ <20170302164701.GJ26319@birch.djwong.org>
+ <20170302171329.GN3213@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170302124353.GB3213@bfoster.bfoster>
+In-Reply-To: <20170302171329.GN3213@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, Xiong Zhou <xzhou@redhat.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs@vger.kernel.org
 
-On Thu, Mar 02, 2017 at 07:43:53AM -0500, Brian Foster wrote:
-> On Wed, Mar 01, 2017 at 03:56:24PM -0800, Christoph Hellwig wrote:
-> > On Wed, Mar 01, 2017 at 09:36:49AM -0500, Brian Foster wrote:
-> > > This is a stab at fixing the regression discussed in this[1] thread
-> > > based on what Christoph mentioned regarding use of the IOMAP_F_NEW flag.
-> > > I decided to co-opt the XFS_BMAPI_ENTIRE flag for the delalloc res bit
-> > > since it seems logically equivalent, but we could define a new flag too.
-> > > I considered as such to preserve default behavior of
-> > > _reserve_delalloc(), but otoh there is only one other caller. Otherwise,
-> > > this passes all of my testing so far. Thoughts?
+On Thu, Mar 02, 2017 at 12:13:29PM -0500, Brian Foster wrote:
+> On Thu, Mar 02, 2017 at 08:47:01AM -0800, Darrick J. Wong wrote:
+> > On Thu, Mar 02, 2017 at 11:29:34AM -0500, Brian Foster wrote:
+> > > On Wed, Feb 22, 2017 at 12:13:00PM -0700, Ross Zwisler wrote:
+> > > > By running generic/270 in a loop on an XFS filesystem mounted with DAX I'm
+> > > > able to reliably generate the following kernel bug after a few (~10)
+> > > > iterations (output passed through kasan_symbolize.py):
+> > > > 
+> > > > run fstests generic/270 at 2017-02-22 12:01:05
+> > > > XFS (pmem0p2): Unmounting Filesystem
+> > > > XFS (pmem0p2): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
+> > > > XFS (pmem0p2): Mounting V5 Filesystem
+> > > > XFS (pmem0p2): Ending clean mount
+> > > > XFS (pmem0p2): Quotacheck needed: Please wait.
+> > > > XFS (pmem0p2): Quotacheck: Done.
+> > > > XFS (pmem0p2): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
+> > > > XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 965
+> > > 
+> > > This means we've reclaimed an inode that still has delayed allocation
+> > > blocks, which shouldn't occur. We do have one recent fix in this area:
+> > > fa7f138 ("xfs: clear delalloc and cache on buffered write failure"). Do
+> > > you still reproduce this? If so, does it reproduce with that patch?
+> > > 
+> > > > ------------[ cut here ]------------
+> > > ...
+> > > > ---[ end trace 384d06985052f068 ]---
+> > > > 
+> > > > Here's the xfstests run:
+> > > > 
+> > > > FSTYP         -- xfs (debug)
+> > > > PLATFORM      -- Linux/x86_64 alara 4.10.0
+> > > > MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem0p2
+> > > > MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem0p2 /mnt/xfstests_scratch
+> > > > 
+> > > > generic/270 24s ..../check: line 596: 15817 Segmentation fault      ./$seq > $tmp.rawout 2>&1
+> > > >  [failed, exit status 139] - output mismatch (see /root/xfstests/results//generic/270.out.bad)
+> > > >     --- tests/generic/270.out	2016-10-21 15:31:10.568945780 -0600
+> > > >     +++ /root/xfstests/results//generic/270.out.bad	2017-02-22 12:01:29.272718284 -0700
+> > > >     @@ -3,6 +3,3 @@
+> > > >      Run fsstress
+> > > >      
+> > > >      Run dd writers in parallel
+> > > >     -Comparing user usage
+> > > >     -Comparing group usage
+> > > >     -Comparing filesystem consistency
+> > > >     ...
+> > > >     (Run 'diff -u tests/generic/270.out /root/xfstests/results//generic/270.out.bad'  to see the entire diff)
+> > > > 
+> > > > This was done in my normal test setup, which is a pair of PMEM disks that
+> > > > enable DAX.
+> > > > 
+> > > 
+> > > What I'm a little confused about though is that I thought DAX meant we
+> > > bypassed buffered I/O and always used direct I/O (which means you should
+> > > never perform delayed allocation). :/
 > > 
-> > I don't like reusing the flag that much, but I think instead of passing
-> > the flag we could trivially just remove the xfs_bmbt_get_all in
-> > xfs_bmapi_reserve_delalloc and let the caller handle it after
-> > xfs_bmapi_reserve_delalloc returned.  That being said I see no good
-> > reason why the COW would care to see the merged extent, so
-> > unconditionally removing it should be fine as well.  Or did I miss
-> > something?
+> > The block devices are pmem, but I don't think g/270 does anything
+> > special to turn on DAX (the inode flag) for the files it's writing.
+> > 
 > 
-> I think that's correct. The reflink code just feeds got into a
-> tracepoint and otherwise doesn't seem to care what's returned.
+> Doesn't the dax mount force the inode flag?
 
-Yes.  It doesn't need to know the exact results of what happened, so
-long as the reservation gets made.  The tracepoint exists so that I
-could check that manually while debugging.
-
-> My only concern is that the behavior of not updating got seems
-> inconsistent with the rest of the bmap code. I also realize now that
-> this case may have broken the subsequent ASSERT() calls in terms of
-> their effectiveness (i.e., I'm not reproducing failures, but they sort
-> of become no-ops).
-> 
-> We could rename the got param and/or update a local record structure to
-> feed into the asserts, but that kind of confuses the input param
-> requirements for got (which should be filled in based on a previous
-> lookup), so I don't like that too much either. Hmm, what about instead
-> of adding flags, we just add a new, optional output param that returns
-> the allocated range? E.g.:
-> 
-> int
-> xfs_bmapi_reserve_delalloc(
->         struct xfs_inode        *ip,
->         int                     whichfork,
->         xfs_fileoff_t           off,
->         xfs_filblks_t           len,
->         xfs_filblks_t           prealloc,
->         struct xfs_bmbt_irec    *got,		/* full rec after alloc */
->         xfs_extnum_t            *lastx,
->         int                     eof,
->         struct xfs_bmbt_irec	*arec)		/* allocation performed */
-> {
-> 	...
-> 	if (arec)
-> 		arec = ...;
-> 	...
-> }
-> 
-> The reflink code could just pass NULL, the iomap code will use arec
-> explicitly to document the requirement, and the function behavior should
-> be clear enough to avoid landmines from any future callers. Thoughts?
-
-That seems fine to me too.
+Oh, heh, I forgot that the mount flag still exists.  You're right.
 
 --D
 
 > 
 > Brian
 > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --D
+> > 
+> > > 
+> > > Brian
+> > > 
+> > > > Here are the versions of xfstests and xfsprogs that I'm using:
+> > > > 
+> > > > xfstets: f438604 generic: test mmap io through DAX and non-DAX
+> > > > 
+> > > > xfsprogs: xfs_admin version 4.9.0
+> > > > This is just the xfsprogs that comes packaged with Fedora 25.
+> > > > 
+> > > > Thanks,
+> > > > - Ross
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
