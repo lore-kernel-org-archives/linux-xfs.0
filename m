@@ -1,51 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50632 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753342AbdCBORl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 09:17:41 -0500
-Date: Thu, 2 Mar 2017 06:12:45 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH 3/8] nowait aio: return if direct write will trigger
- writeback
-Message-ID: <20170302141245.GO16328@bombadil.infradead.org>
-References: <20170228233610.25456-1-rgoldwyn@suse.de>
- <20170228233610.25456-4-rgoldwyn@suse.de>
- <20170301034606.GK16328@bombadil.infradead.org>
- <20170301153857.GC30631@infradead.org>
- <20170302103845.GB31792@quack2.suse.cz>
+Received: from mx1.redhat.com ([209.132.183.28]:55306 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753161AbdCBQAY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Mar 2017 11:00:24 -0500
+Date: Thu, 2 Mar 2017 10:59:41 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: back off from kmem_zalloc_greedy if the task is
+ killed
+Message-ID: <20170302155941.GK3213@bfoster.bfoster>
+References: <20170302153002.GG3213@bfoster.bfoster>
+ <20170302154541.16155-1-mhocko@kernel.org>
+ <20170302154541.16155-2-mhocko@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170302103845.GB31792@quack2.suse.cz>
+In-Reply-To: <20170302154541.16155-2-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@infradead.org>, Goldwyn Rodrigues <rgoldwyn@suse.de>, jack@suse.com, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Michal Hocko <mhocko@suse.com>
 
-On Thu, Mar 02, 2017 at 11:38:45AM +0100, Jan Kara wrote:
-> On Wed 01-03-17 07:38:57, Christoph Hellwig wrote:
-> > On Tue, Feb 28, 2017 at 07:46:06PM -0800, Matthew Wilcox wrote:
-> > > But what's going to kick these pages out of cache?  Shouldn't we rather
-> > > find the pages, kick them out if clean, start writeback if not, and *then*
-> > > return -EAGAIN?
-> > 
-> > As pointed out in the last round of these patches I think we really
-> > need to pass a flags argument to filemap_write_and_wait_range to
-> > communicate the non-blocking nature and only return -EAGAIN if we'd
-> > block.  As a bonus that can indeed start to kick the pages out.
+On Thu, Mar 02, 2017 at 04:45:41PM +0100, Michal Hocko wrote:
+> From: Michal Hocko <mhocko@suse.com>
 > 
-> Aren't flags to filemap_write_and_wait_range() unnecessary complication?
-> Realistically, most users wanting performance from AIO DIO so badly that
-> they bother with this API won't have any pages to write / evict. If they do
-> by some bad accident, they can fall back to standard "blocking" AIO DIO.
-> So I don't see much value in teaching filemap_write_and_wait_range() about
-> a non-blocking mode...
+> It doesn't really make much sense to retry vmalloc request if the
+> current task is killed. We should rather bail out as soon as possible
+> and let it RIP as soon as possible. The current implementation of
+> vmalloc will fail anyway.
+> 
+> Suggested-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Michal Hocko <mhocko@suse.com>
+> ---
 
-That lets me execute a DoS against a user using this API.  All I have
-to do is open the file they're using read-only and read a byte from it.
-Page goes into page-cache, and they'll only get -EAGAIN from calling
-this syscall until the page ages out.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Also, I don't understand why this is a flag.  Isn't the point of AIO to
-be non-blocking?  Why isn't this just a change to how we do AIO?
+>  fs/xfs/kmem.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> index ee95f5c6db45..01c52567a4ff 100644
+> --- a/fs/xfs/kmem.c
+> +++ b/fs/xfs/kmem.c
+> @@ -34,7 +34,7 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
+>  	size_t		kmsize = maxsize;
+>  
+>  	while (!(ptr = vzalloc(kmsize))) {
+> -		if (kmsize == minsize)
+> +		if (kmsize == minsize || fatal_signal_pending(current))
+>  			break;
+>  		if ((kmsize >>= 1) <= minsize)
+>  			kmsize = minsize;
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
