@@ -1,109 +1,176 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47753 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:39526 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752065AbdCBOHE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Mar 2017 09:07:04 -0500
-Date: Thu, 2 Mar 2017 14:27:55 +0100
-From: Michal Hocko <mhocko@kernel.org>
+        id S1753377AbdCBPaE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Mar 2017 10:30:04 -0500
+Date: Thu, 2 Mar 2017 10:30:02 -0500
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: mm allocation failure and hang when running xfstests generic/269
  on xfs
-Message-ID: <20170302132755.GG1404@dhcp22.suse.cz>
-References: <20170301044634.rgidgdqqiiwsmfpj@XZHOUW.usersys.redhat.com>
- <20170302003731.GB24593@infradead.org>
- <20170302051900.ct3xbesn2ku7ezll@XZHOUW.usersys.redhat.com>
- <42eb5d53-5ceb-a9ce-791a-9469af30810c@I-love.SAKURA.ne.jp>
- <20170302103520.GC1404@dhcp22.suse.cz>
- <20170302122426.GA3213@bfoster.bfoster>
+Message-ID: <20170302153002.GG3213@bfoster.bfoster>
+References: <20170302122426.GA3213@bfoster.bfoster>
  <20170302124909.GE1404@dhcp22.suse.cz>
  <20170302130009.GC3213@bfoster.bfoster>
+ <20170302132755.GG1404@dhcp22.suse.cz>
+ <20170302134157.GD3213@bfoster.bfoster>
+ <20170302135001.GI1404@dhcp22.suse.cz>
+ <20170302142315.GE3213@bfoster.bfoster>
+ <20170302143441.GL1404@dhcp22.suse.cz>
+ <20170302145131.GF3213@bfoster.bfoster>
+ <20170302151411.GM1404@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170302130009.GC3213@bfoster.bfoster>
+In-Reply-To: <20170302151411.GM1404@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Thu 02-03-17 08:00:09, Brian Foster wrote:
-> On Thu, Mar 02, 2017 at 01:49:09PM +0100, Michal Hocko wrote:
-> > On Thu 02-03-17 07:24:27, Brian Foster wrote:
-> > > On Thu, Mar 02, 2017 at 11:35:20AM +0100, Michal Hocko wrote:
-> > > > On Thu 02-03-17 19:04:48, Tetsuo Handa wrote:
-> > > > [...]
-> > > > > So, commit 5d17a73a2ebeb8d1("vmalloc: back off when the current task is
-> > > > > killed") implemented __GFP_KILLABLE flag and automatically applied that
-> > > > > flag. As a result, those who are not ready to fail upon SIGKILL are
-> > > > > confused. ;-)
+On Thu, Mar 02, 2017 at 04:14:11PM +0100, Michal Hocko wrote:
+> On Thu 02-03-17 09:51:31, Brian Foster wrote:
+> > On Thu, Mar 02, 2017 at 03:34:41PM +0100, Michal Hocko wrote:
+> > > On Thu 02-03-17 09:23:15, Brian Foster wrote:
+> > > > On Thu, Mar 02, 2017 at 02:50:01PM +0100, Michal Hocko wrote:
+> > > > > On Thu 02-03-17 08:41:58, Brian Foster wrote:
+> > > > > > On Thu, Mar 02, 2017 at 02:27:55PM +0100, Michal Hocko wrote:
+> > > > > [...]
+> > > > > > > I see your argument about being in sync with other kmem helpers but
+> > > > > > > those are bit different because regular page/slab allocators allow never
+> > > > > > > fail semantic (even though this is mostly ignored by those helpers which
+> > > > > > > implement their own retries but that is a different topic).
+> > > > > > > 
+> > > > > > 
+> > > > > > ... but what I'm trying to understand here is whether this failure
+> > > > > > scenario is specific to vmalloc() or whether the other kmem_*()
+> > > > > > functions are susceptible to the same problem. For example, suppose we
+> > > > > > replaced this kmem_zalloc_greedy() call with a kmem_zalloc(PAGE_SIZE,
+> > > > > > KM_SLEEP) call. Could we hit the same problem if the process is killed?
+> > > > > 
+> > > > > Well, kmem_zalloc uses kmalloc which can also fail when we are out of
+> > > > > memory but in that case we can expect the OOM killer releasing some
+> > > > > memory which would allow us to make a forward progress on the next
+> > > > > retry. So essentially retrying around kmalloc is much more safe in this
+> > > > > regard. Failing vmalloc might be permanent because there is no vmalloc
+> > > > > space to allocate from or much more likely due to already mentioned
+> > > > > patch. So vmalloc is different, really.
 > > > > 
-> > > > You are right! The function is documented it might fail but the code
-> > > > doesn't really allow that. This seems like a bug to me. What do you
-> > > > think about the following?
-> > > > ---
-> > > > From d02cb0285d8ce3344fd64dc7e2912e9a04bef80d Mon Sep 17 00:00:00 2001
-> > > > From: Michal Hocko <mhocko@suse.com>
-> > > > Date: Thu, 2 Mar 2017 11:31:11 +0100
-> > > > Subject: [PATCH] xfs: allow kmem_zalloc_greedy to fail
+> > > > Right.. that's why I'm asking. So it's technically possible but highly
+> > > > unlikely due to the different failure characteristics. That seems
+> > > > reasonable to me, then. 
 > > > > 
-> > > > Even though kmem_zalloc_greedy is documented it might fail the current
-> > > > code doesn't really implement this properly and loops on the smallest
-> > > > allowed size for ever. This is a problem because vzalloc might fail
-> > > > permanently. Since 5d17a73a2ebe ("vmalloc: back off when the current
-> > > > task is killed") such a failure is much more probable than it used to
-> > > > be. Fix this by bailing out if the minimum size request failed.
-> > > > 
-> > > > This has been noticed by a hung generic/269 xfstest by Xiong Zhou.
-> > > > 
-> > > > Reported-by: Xiong Zhou <xzhou@redhat.com>
-> > > > Analyzed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> > > > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> > > > ---
-> > > >  fs/xfs/kmem.c | 2 ++
-> > > >  1 file changed, 2 insertions(+)
-> > > > 
-> > > > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> > > > index 339c696bbc01..ee95f5c6db45 100644
-> > > > --- a/fs/xfs/kmem.c
-> > > > +++ b/fs/xfs/kmem.c
-> > > > @@ -34,6 +34,8 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
-> > > >  	size_t		kmsize = maxsize;
-> > > >  
-> > > >  	while (!(ptr = vzalloc(kmsize))) {
-> > > > +		if (kmsize == minsize)
-> > > > +			break;
-> > > >  		if ((kmsize >>= 1) <= minsize)
-> > > >  			kmsize = minsize;
-> > > >  	}
+> > > > To be clear, do we understand what causes the vzalloc() failure to be
+> > > > effectively permanent in this specific reproducer? I know you mention
+> > > > above that we could be out of vmalloc space, but that doesn't clarify
+> > > > whether there are other potential failure paths or then what this has to
+> > > > do with the fact that the process was killed. Does the pending signal
+> > > > cause the subsequent failures or are you saying that there is some other
+> > > > root cause of the failure, this process would effectively be spinning
+> > > > here anyways, and we're just noticing it because it's trying to exit?
 > > > 
-> > > More consistent with the rest of the kmem code might be to accept a
-> > > flags argument and do something like this based on KM_MAYFAIL.
+> > > In this particular case it is fatal_signal_pending that causes the
+> > > permanent failure. This check has been added to prevent from complete
+> > > memory reserves depletion on OOM when a killed task has a free ticket to
+> > > reserves and vmalloc requests can be really large. In this case there
+> > > was no OOM killer going on but fsstress has SIGKILL pending for other
+> > > reason. Most probably as a result of the group_exit when all threads
+> > > are killed (see zap_process). I could have turn fatal_signal_pending
+> > > into tsk_is_oom_victim which would be less likely to hit but in
+> > > principle fatal_signal_pending should be better because we do want to
+> > > bail out when the process is existing as soon as possible.
+> > > 
+> > > What I really wanted to say is that there are other possible permanent
+> > > failure paths in vmalloc AFAICS. They are much less probable but they
+> > > still exist.
+> > > 
+> > > Does that make more sense now?
 > > 
-> > Well, vmalloc doesn't really support GFP_NOFAIL semantic right now for
-> > the same reason it doesn't support GFP_NOFS. So I am not sure this is a
-> > good idea.
-> > 
+> > Yes, thanks. That explains why this crops up now where it hasn't in the
+> > past. Please include that background in the commit log description.
 > 
-> Not sure I follow..? I'm just suggesting to control the loop behavior
-> based on the KM_ flag, not to do or change anything wrt to GFP_ flags.
+> OK, does this sound better. I am open to any suggestions to improve this
+> of course
+> 
 
-As Tetsuo already pointed out, vmalloc cannot really support never-fail
-semantic with the current implementation so the semantic would have
-to be implemented in kmem_zalloc_greedy and the only way to do that
-would be to loop there and this is rather nasty as you can see from the
-reported issue because the vmalloc failure might be permanent so there
-won't be any way to make a forward progress. Breaking out of the loop
-on fatal_signal_pending pending would break the non-failing sementic.
+Yeah..
 
-Besides that, there doesn't really seem to be any demand for this
-semantic in the first place so why to make this more complicated than
-necessary?
+> : xfs: allow kmem_zalloc_greedy to fail
+> : 
+> : Even though kmem_zalloc_greedy is documented it might fail the current
+> : code doesn't really implement this properly and loops on the smallest
+> : allowed size for ever. This is a problem because vzalloc might fail
+> : permanently - we might run out of vmalloc space or since 5d17a73a2ebe
+> : ("vmalloc: back off when the current task is killed") when the current
+> : task is killed. The later one makes the failure scenario much more
+> : probable than it used to be. Fix this by bailing out if the minimum size
+                               ^
+	" because it makes vmalloc() failures permanent for tasks with fatal
+	  signals pending."
 
-I see your argument about being in sync with other kmem helpers but
-those are bit different because regular page/slab allocators allow never
-fail semantic (even though this is mostly ignored by those helpers which
-implement their own retries but that is a different topic).
+> : request failed.
+> : 
+> : This has been noticed by a hung generic/269 xfstest by Xiong Zhou.
+> : 
+> : fsstress: vmalloc: allocation failure, allocated 12288 of 20480 bytes, mode:0x14080c2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_ZERO), nodemask=(null)
+> : fsstress cpuset=/ mems_allowed=0-1
+> : CPU: 1 PID: 23460 Comm: fsstress Not tainted 4.10.0-master-45554b2+ #21
+> : Hardware name: HP ProLiant DL380 Gen9/ProLiant DL380 Gen9, BIOS P89 10/05/2016
+> : Call Trace:
+> :  dump_stack+0x63/0x87
+> :  warn_alloc+0x114/0x1c0
+> :  ? alloc_pages_current+0x88/0x120
+> :  __vmalloc_node_range+0x250/0x2a0
+> :  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
+> :  ? free_hot_cold_page+0x21f/0x280
+> :  vzalloc+0x54/0x60
+> :  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
+> :  kmem_zalloc_greedy+0x2b/0x40 [xfs]
+> :  xfs_bulkstat+0x11b/0x730 [xfs]
+> :  ? xfs_bulkstat_one_int+0x340/0x340 [xfs]
+> :  ? selinux_capable+0x20/0x30
+> :  ? security_capable+0x48/0x60
+> :  xfs_ioc_bulkstat+0xe4/0x190 [xfs]
+> :  xfs_file_ioctl+0x9dd/0xad0 [xfs]
+> :  ? do_filp_open+0xa5/0x100
+> :  do_vfs_ioctl+0xa7/0x5e0
+> :  SyS_ioctl+0x79/0x90
+> :  do_syscall_64+0x67/0x180
+> :  entry_SYSCALL64_slow_path+0x25/0x25
+> : 
+> : fsstress keeps looping inside kmem_zalloc_greedy without any way out
+> : because vmalloc keeps failing due to fatal_signal_pending.
+> : 
+> : Reported-by: Xiong Zhou <xzhou@redhat.com>
+> : Analyzed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> : Signed-off-by: Michal Hocko <mhocko@suse.com>
+> 
+> > Also, that kind of makes me think that a fatal_signal_pending() check is
+> > still appropriate in the loop, even if we want to drop the infinite
+> > retry loop in kmem_zalloc_greedy() as well. There's no sense in doing
+> > however many retries are left before we return and that's also more
+> > explicit for the next person who goes to change this code in the future.
+> 
+> I am not objecting to adding fatal_signal_pending as well I just thought
+> that from the logic POV breaking after reaching the minimum size is just
+> the right thing to do. We can optimize further by checking
+> fatal_signal_pending and reducing retries when we know it doesn't make
+> much sense but that should be done on top as an optimization IMHO.
+> 
 
--- 
-Michal Hocko
-SUSE Labs
+I don't think of it as an optimization to not invoke calls (a
+non-deterministic number of times) that we know are going to fail, but
+ultimately I don't care too much how it's framed or if it's done in
+separate patches or whatnot. As long as they are posted at the same
+time. ;)
+
+Brian
+
+> > Otherwise, I'm fine with breaking the infinite retry loop at the same
+> > time. It looks like Christoph added this function originally so this
+> > should probably require his ack as well..
+> 
+> What do you think Christoph?
+> -- 
+> Michal Hocko
+> SUSE Labs
