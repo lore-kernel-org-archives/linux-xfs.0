@@ -1,102 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40198 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751007AbdCMNXN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Mar 2017 09:23:13 -0400
-Date: Mon, 13 Mar 2017 09:23:12 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: remove readonly checks from xfs_release &
- xfs_inactive
-Message-ID: <20170313132309.GC4153@bfoster.bfoster>
-References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
- <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
- <0d11326f-ebfc-913a-ed1a-b88421982753@sandeen.net>
+Received: from aserp1050.oracle.com ([141.146.126.70]:17350 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751291AbdCBXTi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2017 18:19:38 -0500
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v22NJadF009551
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 2 Mar 2017 23:19:36 GMT
+Date: Thu, 2 Mar 2017 15:18:29 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: Use xfs_icluster_size_fsb() to calculate inode
+ alignment mask
+Message-ID: <20170302231828.GD24806@birch.djwong.org>
+References: <1488275816-26711-1-git-send-email-chandan@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0d11326f-ebfc-913a-ed1a-b88421982753@sandeen.net>
+In-Reply-To: <1488275816-26711-1-git-send-email-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Thu, Mar 09, 2017 at 02:39:59PM -0600, Eric Sandeen wrote:
-> On 3/9/17 2:24 PM, Eric Sandeen wrote:
-> > xfs_release & xfs_inactive both had early returns for readonly
-> > mounts.
-> > 
-> > Ultimately, this means that when we do log recovery on a
-> > read-only mount, we do not process unlinked inodes, because
-> > of this misguided effort to not do /any/ IO, ever, on a readonly
-> > mount.  IO at mount time is fine, and expected - after all we
-> > just got done doing log recovery!  Even ro mounts, without the
-> > norecovery flag, can do enough IO to put the filesystem in a
-> > consistent state.
-> > 
-> > We should not get here after mount is complete;
+On Tue, Feb 28, 2017 at 03:26:56PM +0530, Chandan Rajendra wrote:
+> When block size is larger than inode cluster size, the call to
+> XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
+> would have set xfs_sb->sb_inoalignmt to 0. Hence in
+> xfs_set_inoalignment(), xfs_mount->m_inoalign_mask gets initialized to
+> -1 instead of 0. However, xfs_mount->m_sinoalign would get correctly
+> intialized to 0 because for every positive value of xfs_mount->m_dalign,
+> the condition "!(mp->m_dalign & mp->m_inoalign_mask)" would evaluate to
+> false.
 > 
-> sorry, above is wrong.
+> Also, xfs_imap() worked fine even with xfs_mount->m_inoalign_mask having
+> -1 as the value because blks_per_cluster variable would have the value 1
+> and hence we would never have a need to use xfs_mount->m_inoalign_mask
+> to compute the inode chunk's agbno and offset within the chunk.
 > 
+> Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 
-Care to elaborate? :) Do you mean we should not be making modifications
-here after (ro) mount is complete?
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> > at that point
-> > the vfs will not allow anything from userspace to make
-> > modifications which would get us here with any IO to do - 
+--D
+
+> ---
+>  fs/xfs/xfs_mount.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> but I think this part is right.  :)  I guess we might lose
-> a little effiency doing pointless checks in i.e. xfs_release
-> if it's a readonly mount and we know there is no work to do.
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 450bde6..688ebff 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -513,8 +513,7 @@ STATIC void
+>  xfs_set_inoalignment(xfs_mount_t *mp)
+>  {
+>  	if (xfs_sb_version_hasalign(&mp->m_sb) &&
+> -	    mp->m_sb.sb_inoalignmt >=
+> -	    XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
+> +		mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
+>  		mp->m_inoalign_mask = mp->m_sb.sb_inoalignmt - 1;
+>  	else
+>  		mp->m_inoalign_mask = 0;
+> -- 
+> 2.5.5
 > 
-> I won't resend until it's had a couple eyeballs...
-> 
-> > we can't unlink files, or create blocks past eof, etc.
-> > So it's safe to just remove these checks.
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> > ---
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index edfa6a5..bf74165 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -1658,10 +1658,6 @@
-> >  	if (!S_ISREG(VFS_I(ip)->i_mode) || (VFS_I(ip)->i_mode == 0))
-> >  		return 0;
-> >  
-> > -	/* If this is a read-only mount, don't do this (would generate I/O) */
-> > -	if (mp->m_flags & XFS_MOUNT_RDONLY)
-> > -		return 0;
-> > -
-
-I think some ASSERT(!ro) calls would be prudent in the newly reachable
-codepaths that would make modifications (in both xfs_release() and
-xfs_inactive()), just to catch any future bugs that would otherwise go
-undetected. Otherwise, both patches seem reasonable to me.
-
-Brian
-
-> >  	if (!XFS_FORCED_SHUTDOWN(mp)) {
-> >  		int truncated;
-> >  
-> > @@ -1896,10 +1892,6 @@
-> >  	mp = ip->i_mount;
-> >  	ASSERT(!xfs_iflags_test(ip, XFS_IRECOVERY));
-> >  
-> > -	/* If this is a read-only mount, don't do this (would generate I/O) */
-> > -	if (mp->m_flags & XFS_MOUNT_RDONLY)
-> > -		return;
-> > -
-> >  	if (VFS_I(ip)->i_nlink != 0) {
-> >  		/*
-> >  		 * force is true because we are evicting an inode from the
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
