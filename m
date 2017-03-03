@@ -1,64 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45201 "EHLO mx2.suse.de"
+Received: from ozlabs.org ([103.22.144.67]:45889 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751862AbdCCNj7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 Mar 2017 08:39:59 -0500
-Date: Fri, 3 Mar 2017 14:39:51 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: How to favor memory allocations for WQ_MEM_RECLAIM threads?
-Message-ID: <20170303133950.GD31582@dhcp22.suse.cz>
-References: <201703031948.CHJ81278.VOHSFFFOOLJQMt@I-love.SAKURA.ne.jp>
+        id S1751278AbdCCL7o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Mar 2017 06:59:44 -0500
+From: Michael Ellerman <mpe@ellerman.id.au>
+Subject: Re: [PowerPC] XFS : Metadata corruption detected at 0x60000000382100b0, xfs_agf block
+In-Reply-To: <1488531850.5962.22.camel@abdul-ThinkPad-T450>
+References: <1488531850.5962.22.camel@abdul-ThinkPad-T450>
+Date: Fri, 03 Mar 2017 22:59:39 +1100
+Message-ID: <87efyer2ok.fsf@concordia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <201703031948.CHJ81278.VOHSFFFOOLJQMt@I-love.SAKURA.ne.jp>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: Abdul Haleem <abdhalee@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org
+Cc: sachinp@linux.vnet.ibm.com, mpe@ellerman.id, linuxppc-dev@lists.ozlabs.org, aneesh.kumar@linux.vnet.ibm.com
 
-On Fri 03-03-17 19:48:30, Tetsuo Handa wrote:
-> Continued from http://lkml.kernel.org/r/201702261530.JDD56292.OFOLFHQtVMJSOF@I-love.SAKURA.ne.jp :
-> 
-> While I was testing a patch which avoids infinite too_many_isolated() loop in
-> shrink_inactive_list(), I hit a lockup where WQ_MEM_RECLAIM threads got stuck
-> waiting for memory allocation. I guess that we overlooked a basic thing about
-> WQ_MEM_RECLAIM.
-> 
->   WQ_MEM_RECLAIM helps only when the cause of failing to complete
->   a work item is lack of "struct task_struct" to run that work item, for
->   WQ_MEM_RECLAIM preallocates one "struct task_struct" so that the workqueue
->   will not be blocked waiting for memory allocation for "struct task_struct".
-> 
->   WQ_MEM_RECLAIM does not help when "struct task_struct" running that work
->   item is blocked waiting for memory allocation (or is indirectly blocked
->   on a lock where the owner of that lock is blocked waiting for memory
->   allocation). That is, WQ_MEM_RECLAIM users must guarantee forward progress
->   if memory allocation (including indirect memory allocation via
->   locks/completions) is needed.
-> 
-> In XFS, "xfs_mru_cache", "xfs-buf/%s", "xfs-data/%s", "xfs-conv/%s", "xfs-cil/%s",
-> "xfs-reclaim/%s", "xfs-log/%s", "xfs-eofblocks/%s", "xfsalloc" and "xfsdiscard"
-> workqueues are used, and all but "xfsdiscard" are WQ_MEM_RECLAIM workqueues.
-> 
-> What I observed is at http://I-love.SAKURA.ne.jp/tmp/serial-20170226.txt.xz .
-> I guess that the key of this lockup is that xfs-data/sda1 and xfs-eofblocks/s
-> workqueues (which are RESCUER) got stuck waiting for memory allocation.
+Abdul Haleem <abdhalee@linux.vnet.ibm.com> writes:
 
-If those workers are really required for a further progress of the
-memory reclaim then they shouldn't block on allocation at all and either
-use pre allocated memory or use PF_MEMALLOC in case there is a guarantee
-that only very limited amount of memory is allocated from that context
-and there will be at least the same amount of memory freed as a result
-in a reasonable time.
+> Hi,
+>
+> Reboot fails for PowerPC machine running RHEL7.3 (3.10.0-514.el7)
+> following these messages:
+>
+> SGI XFS with ACLs, security attributes, no debug enabled
+> XFS (dm-0): Mounting V5 Filesystem
+> FS (dm-0): Starting recovery (logdev: internal)
+> XFS (dm-0): Metadata corruption detected at 0x60000000382100b0, xfs_agf
+> block 0x4b00001
+> XFS (dm-0): Unmount and run xfs_repair
+> XFS (dm-0): First 64 bytes of corrupted metadata buffer:
+> c0000000f06b7200: 58 41 47 46 00 00 00 01 00 00 00 03 00 32 00 00
+> XAGF.........2..
+> c0000000f06b7210: 00 00 00 01 00 00 00 02 00 00 00 00 00 00 00
+> 01  ................
+> c0000000f06b7220: 00 00 00 01 00 00 00 00 00 00 00 76 00 00 00
+> 02  ...........v....
+> c0000000f06b7230: 00 00 00 04 00 2d 0c c7 00 2a 14 62 00 00 00
+> 00  .....-...*.b....
+> XFS (dm-0): metadata I/O error: block 0x4b00001
+> ("xfs_trans_read_buf_map") error 117 numblks 1
+> Failed to mount /sysroot.
+>
+> Steps to recreate:
+> Run some file system test (ltp or xfs/086) on 4.10.0 upstream kernel
+> built on the PowerVM LPAR after the test completes, reboot the machine
+> back to base kernel, boot falls to dracut mode with above messages,
+> every time it requires a xfs_repair to recover the file system.
 
-This is something for xfs people to answer though. Please note that I
-didn't really have time to look through the below traces so the above
-note is rather generic. It would be really helpful if you could provide
-a high level dependency chains to see why those rescuers are necessary
-for the forward progress because it is really easy to get lost in so
-many traces.
--- 
-Michal Hocko
-SUSE Labs
+Can you work on a better repro case?
+
+What if you mount an XFS filesystem in the guest, run the test against
+it, unmount it and then remount it. Do you see the bug then? Or does it
+require a reboot to trigger?
+
+cheers
