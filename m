@@ -1,237 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45368 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752105AbdCCXOZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 Mar 2017 18:14:25 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH 7/9] mkfs.xfs: move ropts to struct mkfs_xfs_opts
-Date: Fri,  3 Mar 2017 15:13:14 -0800
-Message-Id: <20170303231316.12716-8-mcgrof@kernel.org>
-In-Reply-To: <20170303231316.12716-1-mcgrof@kernel.org>
-References: <20170303231316.12716-1-mcgrof@kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:19229 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752159AbdCCXVM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2017 18:21:12 -0500
+Date: Fri, 3 Mar 2017 15:19:12 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] xfs: allow kmem_zalloc_greedy to fail
+Message-ID: <20170303231912.GA5073@birch.djwong.org>
+References: <20170302153002.GG3213@bfoster.bfoster>
+ <20170302154541.16155-1-mhocko@kernel.org>
+ <20170303225444.GH17542@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170303225444.GH17542@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Cc: jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Michal Hocko <mhocko@suse.com>
 
-This moves all main() ropts to struct mkfs_xfs_opts in
-order to help with clutter and later enable re-parsing
-options for other purposes.
+On Sat, Mar 04, 2017 at 09:54:44AM +1100, Dave Chinner wrote:
+> On Thu, Mar 02, 2017 at 04:45:40PM +0100, Michal Hocko wrote:
+> > From: Michal Hocko <mhocko@suse.com>
+> > 
+> > Even though kmem_zalloc_greedy is documented it might fail the current
+> > code doesn't really implement this properly and loops on the smallest
+> > allowed size for ever. This is a problem because vzalloc might fail
+> > permanently - we might run out of vmalloc space or since 5d17a73a2ebe
+> > ("vmalloc: back off when the current task is killed") when the current
+> > task is killed. The later one makes the failure scenario much more
+> > probable than it used to be because it makes vmalloc() failures
+> > permanent for tasks with fatal signals pending.. Fix this by bailing out
+> > if the minimum size request failed.
+> > 
+> > This has been noticed by a hung generic/269 xfstest by Xiong Zhou.
+> > 
+> > fsstress: vmalloc: allocation failure, allocated 12288 of 20480 bytes, mode:0x14080c2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_ZERO), nodemask=(null)
+> > fsstress cpuset=/ mems_allowed=0-1
+> > CPU: 1 PID: 23460 Comm: fsstress Not tainted 4.10.0-master-45554b2+ #21
+> > Hardware name: HP ProLiant DL380 Gen9/ProLiant DL380 Gen9, BIOS P89 10/05/2016
+> > Call Trace:
+> >  dump_stack+0x63/0x87
+> >  warn_alloc+0x114/0x1c0
+> >  ? alloc_pages_current+0x88/0x120
+> >  __vmalloc_node_range+0x250/0x2a0
+> >  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
+> >  ? free_hot_cold_page+0x21f/0x280
+> >  vzalloc+0x54/0x60
+> >  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
+> >  kmem_zalloc_greedy+0x2b/0x40 [xfs]
+> >  xfs_bulkstat+0x11b/0x730 [xfs]
+> >  ? xfs_bulkstat_one_int+0x340/0x340 [xfs]
+> >  ? selinux_capable+0x20/0x30
+> >  ? security_capable+0x48/0x60
+> >  xfs_ioc_bulkstat+0xe4/0x190 [xfs]
+> >  xfs_file_ioctl+0x9dd/0xad0 [xfs]
+> >  ? do_filp_open+0xa5/0x100
+> >  do_vfs_ioctl+0xa7/0x5e0
+> >  SyS_ioctl+0x79/0x90
+> >  do_syscall_64+0x67/0x180
+> >  entry_SYSCALL64_slow_path+0x25/0x25
+> > 
+> > fsstress keeps looping inside kmem_zalloc_greedy without any way out
+> > because vmalloc keeps failing due to fatal_signal_pending.
+> > 
+> > Reported-by: Xiong Zhou <xzhou@redhat.com>
+> > Analyzed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> > Signed-off-by: Michal Hocko <mhocko@suse.com>
+> > ---
+> >  fs/xfs/kmem.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> > index 339c696bbc01..ee95f5c6db45 100644
+> > --- a/fs/xfs/kmem.c
+> > +++ b/fs/xfs/kmem.c
+> > @@ -34,6 +34,8 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
+> >  	size_t		kmsize = maxsize;
+> >  
+> >  	while (!(ptr = vzalloc(kmsize))) {
+> > +		if (kmsize == minsize)
+> > +			break;
+> >  		if ((kmsize >>= 1) <= minsize)
+> >  			kmsize = minsize;
+> >  	}
+> 
+> Seems wrong to me - this function used to have lots of callers and
+> over time we've slowly removed them or replaced them with something
+> else. I'd suggest removing it completely, replacing the call sites
+> with kmem_zalloc_large().
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- mkfs/xfs_mkfs.c | 98 +++++++++++++++++++++++++++------------------------------
- 1 file changed, 47 insertions(+), 51 deletions(-)
+Heh.  I thought the reason why _greedy still exists (for its sole user
+bulkstat) is that bulkstat had the flexibility to deal with receiving
+0, 1, or 4 pages.  So yeah, we could just kill it.
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index b2f4495d858d..39ab08148687 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -779,6 +779,10 @@ struct mkfs_xfs_opts {
- 	int			nlflag;
- 	int			nvflag; /* unused */
- 	int			nsflag;
-+
-+	char			*rtextsize;
-+	char			*rtsize;
-+	int			norsflag;
- };
- 
- #define TERABYTES(count, blog)	((__uint64_t)(count) << (40 - (blog)))
-@@ -1728,6 +1732,34 @@ parse_subopts(
- 			}
- 		}
- 		break;
-+	case 'r':
-+		while (*p != '\0') {
-+			switch (getsubopt(&p, (char **)ropts.subopts, &value)) {
-+			case R_EXTSIZE:
-+				params->rtextsize =
-+					getstr(value, &ropts, R_EXTSIZE);
-+				break;
-+			case R_FILE:
-+				params->xi.risfile =
-+					getnum(value, &ropts, R_FILE);
-+				break;
-+			case R_NAME:
-+			case R_DEV:
-+				params->xi.rtname =
-+					getstr(value, &ropts, R_NAME);
-+				break;
-+			case R_SIZE:
-+				params->rtsize = getstr(value, &ropts, R_SIZE);
-+				break;
-+			case R_NOALIGN:
-+				params->norsflag =
-+					getnum(value, &ropts, R_NOALIGN);
-+				break;
-+			default:
-+				unknown('r', value);
-+			}
-+		}
-+		break;
- 	default:
- 		usage();
- 	}
-@@ -1776,7 +1808,6 @@ main(
- 	xfs_mount_t		*mp;
- 	xfs_mount_t		mbuf;
- 	xfs_extlen_t		nbmblocks;
--	int			norsflag;
- 	xfs_alloc_rec_t		*nrec;
- 	int			Nflag;
- 	int			discard = 1;
-@@ -1787,9 +1818,7 @@ main(
- 	xfs_rfsblock_t		rtblocks;
- 	xfs_extlen_t		rtextblocks;
- 	xfs_rtblock_t		rtextents;
--	char			*rtextsize;
- 	char			*rtfile;
--	char			*rtsize;
- 	xfs_sb_t		*sbp;
- 	__uint64_t		sector_mask;
- 	__uint64_t		tmp_agsize;
-@@ -1815,10 +1844,8 @@ main(
- 	logblocks = rtblocks = rtextblocks = 0;
- 	Nflag = 0;
- 	qflag = 0;
--	dfile = rtfile = NULL;
--	rtsize = rtextsize = protofile = NULL;
-+	dfile = rtfile = protofile = NULL;
- 	lalign = 0;
--	norsflag = 0;
- 	force_overwrite = 0;
- 	worst_freelist = 0;
- 
-@@ -1837,6 +1864,7 @@ main(
- 		case 'l':
- 		case 'm':
- 		case 'n':
-+		case 'r':
- 			p = optarg;
- 			parse_subopts(c, p, &params);
- 			break;
-@@ -1859,38 +1887,6 @@ main(
- 		case 'q':
- 			qflag = 1;
- 			break;
--		case 'r':
--			p = optarg;
--			while (*p != '\0') {
--				char	**subopts = (char **)ropts.subopts;
--				char	*value;
--
--				switch (getsubopt(&p, subopts, &value)) {
--				case R_EXTSIZE:
--					rtextsize = getstr(value, &ropts,
--							   R_EXTSIZE);
--					break;
--				case R_FILE:
--					params.xi.risfile = getnum(value, &ropts,
--							    R_FILE);
--					break;
--				case R_NAME:
--				case R_DEV:
--					params.xi.rtname = getstr(value, &ropts,
--							   R_NAME);
--					break;
--				case R_SIZE:
--					rtsize = getstr(value, &ropts, R_SIZE);
--					break;
--				case R_NOALIGN:
--					norsflag = getnum(value, &ropts,
--								R_NOALIGN);
--					break;
--				default:
--					unknown('r', value);
--				}
--			}
--			break;
- 		case 's':
- 			p = optarg;
- 			while (*p != '\0') {
-@@ -1997,7 +1993,7 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
- 	if (params.xi.rtname)
- 		check_device_type(params.xi.rtname,
- 				  &params.xi.risfile,
--				  !rtsize,
-+				  !params.rtsize,
- 				  !params.xi.rtname,
- 				  Nflag ? NULL : &params.xi.rcreat,
- 				  force_overwrite, "r");
-@@ -2230,10 +2226,10 @@ _("rmapbt not supported with realtime devices\n"));
- 				(long long)logbytes, blocksize,
- 				(long long)(logblocks << params.blocklog));
- 	}
--	if (rtsize) {
-+	if (params.rtsize) {
- 		__uint64_t rtbytes;
- 
--		rtbytes = getnum(rtsize, &ropts, R_SIZE);
-+		rtbytes = getnum(params.rtsize, &ropts, R_SIZE);
- 		if (rtbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
- 			_("illegal rt length %lld, not a multiple of %d\n"),
-@@ -2250,10 +2246,10 @@ _("rmapbt not supported with realtime devices\n"));
- 	/*
- 	 * If specified, check rt extent size against its constraints.
- 	 */
--	if (rtextsize) {
-+	if (params.rtextsize) {
- 		__uint64_t rtextbytes;
- 
--		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
-+		rtextbytes = getnum(params.rtextsize, &ropts, R_EXTSIZE);
- 		if (rtextbytes % blocksize) {
- 			fprintf(stderr,
- 		_("illegal rt extent size %lld, not a multiple of %d\n"),
-@@ -2270,14 +2266,14 @@ _("rmapbt not supported with realtime devices\n"));
- 		__uint64_t	rswidth;
- 		__uint64_t	rtextbytes;
- 
--		if (!norsflag && !params.xi.risfile &&
--		    !(!rtsize && params.xi.disfile))
-+		if (!params.norsflag && !params.xi.risfile &&
-+		    !(!params.rtsize && params.xi.disfile))
- 			rswidth = ft.rtswidth;
- 		else
- 			rswidth = 0;
- 
- 		/* check that rswidth is a multiple of fs blocksize */
--		if (!norsflag && rswidth && !(BBTOB(rswidth) % blocksize)) {
-+		if (!params.norsflag && rswidth && !(BBTOB(rswidth) % blocksize)) {
- 			rswidth = DTOBT(rswidth);
- 			rtextbytes = rswidth << params.blocklog;
- 			if (XFS_MIN_RTEXTSIZE <= rtextbytes &&
-@@ -2427,22 +2423,22 @@ reported by the device (%u).\n"),
- reported by the device (%u).\n"),
- 			params.lsectorsize, params.xi.lbsize);
- 	}
--	if (rtsize && params.xi.rtsize > 0 && params.xi.rtbsize > sectorsize) {
-+	if (params.rtsize && params.xi.rtsize > 0 && params.xi.rtbsize > sectorsize) {
- 		fprintf(stderr, _(
- "Warning: the realtime subvolume sector size %u is less than the sector size\n\
- reported by the device (%u).\n"),
- 			sectorsize, params.xi.rtbsize);
- 	}
- 
--	if (rtsize && params.xi.rtsize > 0 && rtblocks > DTOBT(params.xi.rtsize)) {
-+	if (params.rtsize && params.xi.rtsize > 0 && rtblocks > DTOBT(params.xi.rtsize)) {
- 		fprintf(stderr,
- 			_("size %s specified for rt subvolume is too large, "
- 			"maximum is %lld blocks\n"),
--			rtsize, (long long)DTOBT(params.xi.rtsize));
-+			params.rtsize, (long long)DTOBT(params.xi.rtsize));
- 		usage();
--	} else if (!rtsize && params.xi.rtsize > 0)
-+	} else if (!params.rtsize && params.xi.rtsize > 0)
- 		rtblocks = DTOBT(params.xi.rtsize);
--	else if (rtsize && !params.xi.rtdev) {
-+	else if (params.rtsize && !params.xi.rtdev) {
- 		fprintf(stderr,
- 			_("size specified for non-existent rt subvolume\n"));
- 		usage();
--- 
-2.11.0
+But thinking even more stingily about memory, are there applications
+that care about being able to bulkstat 16384 inodes at once?  How badly
+does bulkstat need to be able to bulk-process more than a page's worth
+of inobt records, anyway?
 
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
