@@ -1,103 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33520 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752219AbdCBRZN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Mar 2017 12:25:13 -0500
-Date: Thu, 2 Mar 2017 12:13:29 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS kernel BUG during generic/270 with v4.10
-Message-ID: <20170302171329.GN3213@bfoster.bfoster>
-References: <20170222191300.GA29474@linux.intel.com>
- <20170302162934.GM3213@bfoster.bfoster>
- <20170302164701.GJ26319@birch.djwong.org>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:5734 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752105AbdCCXzG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2017 18:55:06 -0500
+Date: Sat, 4 Mar 2017 10:55:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 9/9] mkfs.xfs: add mkfs.xfs.conf parse support
+Message-ID: <20170303235502.GJ17542@dastard>
+References: <20170303231316.12716-1-mcgrof@kernel.org>
+ <20170303231316.12716-10-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170302164701.GJ26319@birch.djwong.org>
+In-Reply-To: <20170303231316.12716-10-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com
 
-On Thu, Mar 02, 2017 at 08:47:01AM -0800, Darrick J. Wong wrote:
-> On Thu, Mar 02, 2017 at 11:29:34AM -0500, Brian Foster wrote:
-> > On Wed, Feb 22, 2017 at 12:13:00PM -0700, Ross Zwisler wrote:
-> > > By running generic/270 in a loop on an XFS filesystem mounted with DAX I'm
-> > > able to reliably generate the following kernel bug after a few (~10)
-> > > iterations (output passed through kasan_symbolize.py):
-> > > 
-> > > run fstests generic/270 at 2017-02-22 12:01:05
-> > > XFS (pmem0p2): Unmounting Filesystem
-> > > XFS (pmem0p2): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
-> > > XFS (pmem0p2): Mounting V5 Filesystem
-> > > XFS (pmem0p2): Ending clean mount
-> > > XFS (pmem0p2): Quotacheck needed: Please wait.
-> > > XFS (pmem0p2): Quotacheck: Done.
-> > > XFS (pmem0p2): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
-> > > XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 965
-> > 
-> > This means we've reclaimed an inode that still has delayed allocation
-> > blocks, which shouldn't occur. We do have one recent fix in this area:
-> > fa7f138 ("xfs: clear delalloc and cache on buffered write failure"). Do
-> > you still reproduce this? If so, does it reproduce with that patch?
-> > 
-> > > ------------[ cut here ]------------
-> > ...
-> > > ---[ end trace 384d06985052f068 ]---
-> > > 
-> > > Here's the xfstests run:
-> > > 
-> > > FSTYP         -- xfs (debug)
-> > > PLATFORM      -- Linux/x86_64 alara 4.10.0
-> > > MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem0p2
-> > > MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem0p2 /mnt/xfstests_scratch
-> > > 
-> > > generic/270 24s ..../check: line 596: 15817 Segmentation fault      ./$seq > $tmp.rawout 2>&1
-> > >  [failed, exit status 139] - output mismatch (see /root/xfstests/results//generic/270.out.bad)
-> > >     --- tests/generic/270.out	2016-10-21 15:31:10.568945780 -0600
-> > >     +++ /root/xfstests/results//generic/270.out.bad	2017-02-22 12:01:29.272718284 -0700
-> > >     @@ -3,6 +3,3 @@
-> > >      Run fsstress
-> > >      
-> > >      Run dd writers in parallel
-> > >     -Comparing user usage
-> > >     -Comparing group usage
-> > >     -Comparing filesystem consistency
-> > >     ...
-> > >     (Run 'diff -u tests/generic/270.out /root/xfstests/results//generic/270.out.bad'  to see the entire diff)
-> > > 
-> > > This was done in my normal test setup, which is a pair of PMEM disks that
-> > > enable DAX.
-> > > 
-> > 
-> > What I'm a little confused about though is that I thought DAX meant we
-> > bypassed buffered I/O and always used direct I/O (which means you should
-> > never perform delayed allocation). :/
+On Fri, Mar 03, 2017 at 03:13:16PM -0800, Luis R. Rodriguez wrote:
+> You may want to stick to specific set of configuration options when
+> creating filesystems with mkfs.xfs -- sometimes due to pure technical
+> reasons, but some other times to ensure systems remain compatible as
+> new features are introduced with older kernels, or if you always want
+> to take advantage of some new feature which would otherwise typically
+> be disruptive.
 > 
-> The block devices are pmem, but I don't think g/270 does anything
-> special to turn on DAX (the inode flag) for the files it's writing.
+> Although mkfs.xfs already uses sensible defaults this adds a configuration
+> option for parsing defaults settings for mkfs.xfs parsed prior to processing
+> input arguments.
 > 
-
-Doesn't the dax mount force the inode flag?
-
-Brian
-
-> --D
+> User input passed to mkfs.xfs overrides defaults founds through the
+> new optional configuration file, by default:
 > 
-> > 
-> > Brian
-> > 
-> > > Here are the versions of xfstests and xfsprogs that I'm using:
-> > > 
-> > > xfstets: f438604 generic: test mmap io through DAX and non-DAX
-> > > 
-> > > xfsprogs: xfs_admin version 4.9.0
-> > > This is just the xfsprogs that comes packaged with Fedora 25.
-> > > 
-> > > Thanks,
-> > > - Ross
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 	/etc/mkfs.xfs.conf
+> 
+> To use /etc/ be sure to configure xfsprogs with:
+> 
+>  ./configure --sysconfdir=/etc/
+> 
+> The build system also allows distributions to override the default
+> mkfs.xfs.conf defaults with a custom:
+> 
+> 	etc/mkfs.xfs.conf.custom.in
+> 
+> The default etc/mkfs.xfs.conf.in provides commented out examples.
+> You can also override the configuration file used either with the
+> MKFS_XFS_CONFIG environment variable or by using the new -c command
+> line argument to mkfs.xfs. Only when -c is used will the configuration
+> file be required to be present.
+> 
+> To verify what configuration file is used on a system use the typical:
+> 
+>   mkfs.xfs -N
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+
+Why roll our own config file format and parsing code? Why not use
+something like libconfig which is quite simple, but is much more
+extensible and doesn't require us to reinvent the wheel?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
