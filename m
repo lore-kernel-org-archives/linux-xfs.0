@@ -1,236 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17283 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755050AbdCJXZS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:25:18 -0500
-Subject: [PATCH 4/9] xfs_db: write / fuzz bad values into dir/attr blocks
- with good CRCs
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 10 Mar 2017 15:25:09 -0800
-Message-ID: <148918830960.8311.782001002845453533.stgit@birch.djwong.org>
-In-Reply-To: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
-References: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
+Received: from fieldses.org ([173.255.197.46]:50326 "EHLO fieldses.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752089AbdCCXJW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Mar 2017 18:09:22 -0500
+Date: Fri, 3 Mar 2017 18:00:18 -0500
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+Message-ID: <20170303230018.GI13877@fieldses.org>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+From: bfields@fieldses.org (J. Bruce Fields)
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Dec 21, 2016 at 12:03:17PM -0500, Jeff Layton wrote:
+> tl;dr: I think we can greatly reduce the cost of the inode->i_version
+> counter, by exploiting the fact that we don't need to increment it
+> if no one is looking at it. We can also clean up the code to prepare
+> to eventually expose this value via statx().
+> 
+> The inode->i_version field is supposed to be a value that changes
+> whenever there is any data or metadata change to the inode. Some
+> filesystems use it internally to detect directory changes during
+> readdir. knfsd will use it if the filesystem has MS_I_VERSION
+> set. IMA will also use it (though it's not clear to me that that
+> works 100% -- no check for MS_I_VERSION there).
 
-Extend typ_t to (optionally) store a pointer to a function to calculate
-the CRC of the block, provide functions to do this for the dir3 and
-attr3 types, and then wire up the fuzz and write commands so that we can
-effectively fuzz directory and extended attribute block fields.
+I'm a little confused about the internal uses for directories.  Is it
+necessarily kept on disk?  In cases it's not, then there's not the same
+performance issue, right?  Is there any risk these patches make
+performance slightly worse in that case?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- db/attr.c  |   32 ++++++++++++++++++++++++++++++++
- db/attr.h  |    1 +
- db/dir2.c  |   37 +++++++++++++++++++++++++++++++++++++
- db/dir2.h  |    1 +
- db/fuzz.c  |    3 +++
- db/type.c  |    8 ++++----
- db/type.h  |    2 ++
- db/write.c |    3 +++
- 8 files changed, 83 insertions(+), 4 deletions(-)
+> Only btrfs, ext4, and xfs implement it for data changes. Because of
+> this, these filesystems must log the inode to disk whenever the
+> i_version counter changes.
 
+On those filesystems that's done for both files and directories, right?
 
-diff --git a/db/attr.c b/db/attr.c
-index 0fffbc2..5a97925 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -582,6 +582,38 @@ const struct field	attr3_remote_crc_flds[] = {
- 	{ NULL }
- };
- 
-+/* Set the CRC. */
-+void
-+xfs_attr3_set_crc(
-+	struct xfs_buf		*bp)
-+{
-+	__be32			magic32;
-+	__be16			magic16;
-+
-+	magic32 = *(__be32 *)bp->b_addr;
-+	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
-+
-+	switch (magic16) {
-+	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_ATTR3_LEAF_CRC_OFF);
-+		return;
-+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
-+		return;
-+	default:
-+		break;
-+	}
-+
-+	switch (magic32) {
-+	case cpu_to_be32(XFS_ATTR3_RMT_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_ATTR3_RMT_CRC_OFF);
-+		return;
-+	default:
-+		dbprintf(_("Unknown attribute buffer type!\n"));
-+		break;
-+	}
-+}
-+
- /*
-  * Special read verifier for attribute buffers. Detect the magic number
-  * appropriately and set the correct verifier and call it.
-diff --git a/db/attr.h b/db/attr.h
-index d7bb579..9ea7429 100644
---- a/db/attr.h
-+++ b/db/attr.h
-@@ -34,5 +34,6 @@ extern const field_t	attr3_remote_crc_flds[];
- 
- extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
- extern int	attr_size(void *obj, int startoff, int idx);
-+extern void	xfs_attr3_set_crc(struct xfs_buf *bp);
- 
- extern const struct xfs_buf_ops xfs_attr3_db_buf_ops;
-diff --git a/db/dir2.c b/db/dir2.c
-index 533f705..3e21a7b 100644
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -981,6 +981,43 @@ const field_t	da3_node_hdr_flds[] = {
- 	{ NULL }
- };
- 
-+/* Set the CRC. */
-+void
-+xfs_dir3_set_crc(
-+	struct xfs_buf		*bp)
-+{
-+	__be32			magic32;
-+	__be16			magic16;
-+
-+	magic32 = *(__be32 *)bp->b_addr;
-+	magic16 = ((struct xfs_da_blkinfo *)bp->b_addr)->magic;
-+
-+	switch (magic32) {
-+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
-+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_DIR3_DATA_CRC_OFF);
-+		return;
-+	case cpu_to_be32(XFS_DIR3_FREE_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_DIR3_FREE_CRC_OFF);
-+		return;
-+	default:
-+		break;
-+	}
-+
-+	switch (magic16) {
-+	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
-+	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_DIR3_LEAF_CRC_OFF);
-+		return;
-+	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
-+		xfs_buf_update_cksum(bp, XFS_DA3_NODE_CRC_OFF);
-+		return;
-+	default:
-+		dbprintf(_("Unknown directory buffer type! %x %x\n"), magic32, magic16);
-+		break;
-+	}
-+}
-+
- /*
-  * Special read verifier for directory buffers. Detect the magic number
-  * appropriately and set the correct verifier and call it.
-diff --git a/db/dir2.h b/db/dir2.h
-index 0c2a62e..1b87cd2 100644
---- a/db/dir2.h
-+++ b/db/dir2.h
-@@ -60,5 +60,6 @@ static inline uint8_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
- 
- extern int	dir2_data_union_size(void *obj, int startoff, int idx);
- extern int	dir2_size(void *obj, int startoff, int idx);
-+extern void	xfs_dir3_set_crc(struct xfs_buf *bp);
- 
- extern const struct xfs_buf_ops xfs_dir3_db_buf_ops;
-diff --git a/db/fuzz.c b/db/fuzz.c
-index 061ecd1..f294331 100644
---- a/db/fuzz.c
-+++ b/db/fuzz.c
-@@ -156,6 +156,9 @@ fuzz_f(
- 	} else if (iocur_top->ino_buf) {
- 		local_ops.verify_write = xfs_verify_recalc_inode_crc;
- 		dbprintf(_("Allowing fuzz of corrupted inode with good CRC\n"));
-+	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
-+		local_ops.verify_write = iocur_top->typ->set_crc;
-+		dbprintf(_("Allowing fuzz of corrupted data with good CRC\n"));
- 	} else { /* invalid data */
- 		local_ops.verify_write = xfs_verify_recalc_crc;
- 		dbprintf(_("Allowing fuzz of corrupted data with good CRC\n"));
-diff --git a/db/type.c b/db/type.c
-index adab10a..740adc0 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -88,7 +88,7 @@ static const typ_t	__typtab_crc[] = {
- 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops,
- 		XFS_AGI_CRC_OFF },
- 	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
--		&xfs_attr3_db_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_attr3_db_buf_ops, TYP_F_CRC_FUNC, xfs_attr3_set_crc },
- 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
- 		&xfs_bmbt_buf_ops, XFS_BTREE_LBLOCK_CRC_OFF },
- 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
-@@ -103,7 +103,7 @@ static const typ_t	__typtab_crc[] = {
- 		&xfs_refcountbt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
- 	{ TYP_DATA, "data", handle_block, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
--		&xfs_dir3_db_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
- 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
- 		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
- 	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld,
-@@ -132,7 +132,7 @@ static const typ_t	__typtab_spcrc[] = {
- 	{ TYP_AGI, "agi", handle_struct, agi_hfld, &xfs_agi_buf_ops ,
- 		XFS_AGI_CRC_OFF },
- 	{ TYP_ATTR, "attr3", handle_struct, attr3_hfld,
--		&xfs_attr3_db_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_attr3_db_buf_ops, TYP_F_CRC_FUNC, xfs_attr3_set_crc },
- 	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld,
- 		&xfs_bmbt_buf_ops, XFS_BTREE_LBLOCK_CRC_OFF },
- 	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld,
-@@ -147,7 +147,7 @@ static const typ_t	__typtab_spcrc[] = {
- 		&xfs_refcountbt_buf_ops, XFS_BTREE_SBLOCK_CRC_OFF },
- 	{ TYP_DATA, "data", handle_block, NULL, NULL, TYP_F_NO_CRC_OFF },
- 	{ TYP_DIR2, "dir3", handle_struct, dir3_hfld,
--		&xfs_dir3_db_buf_ops, TYP_F_NO_CRC_OFF },
-+		&xfs_dir3_db_buf_ops, TYP_F_CRC_FUNC, xfs_dir3_set_crc },
- 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld,
- 		&xfs_dquot_buf_ops, TYP_F_NO_CRC_OFF },
- 	{ TYP_INOBT, "inobt", handle_struct, inobt_spcrc_hfld,
-diff --git a/db/type.h b/db/type.h
-index a50d705..3971975 100644
---- a/db/type.h
-+++ b/db/type.h
-@@ -46,6 +46,8 @@ typedef struct typ
- 	const struct xfs_buf_ops *bops;
- 	unsigned long		crc_off;
- #define TYP_F_NO_CRC_OFF	(-1UL)
-+#define TYP_F_CRC_FUNC		(-2UL)
-+	void			(*set_crc)(struct xfs_buf *);
- } typ_t;
- extern const typ_t	*typtab, *cur_typ;
- 
-diff --git a/db/write.c b/db/write.c
-index 5c83874..ea87b40 100644
---- a/db/write.c
-+++ b/db/write.c
-@@ -164,6 +164,9 @@ write_f(
- 	if (corrupt) {
- 		local_ops.verify_write = xfs_dummy_verify;
- 		dbprintf(_("Allowing write of corrupted data and bad CRC\n"));
-+	} else if (iocur_top->typ->crc_off == TYP_F_CRC_FUNC) {
-+		local_ops.verify_write = iocur_top->typ->set_crc;
-+		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
- 	} else { /* invalid data */
- 		local_ops.verify_write = xfs_verify_recalc_crc;
- 		dbprintf(_("Allowing write of corrupted data with good CRC\n"));
+--b.
 
+> That has a non-zero performance impact,
+> especially on write-heavy workloads, because we end up dirtying the
+> inode metadata on every write, not just when the times change. [1]
+> 
+> It turns out though that none of these users of i_version require that
+> i_version change on every change to the file. The only real requirement
+> is that it be different if _something_ changed since the last time we
+> queried for it. [2]
+> 
+> So, if we simply keep track of when something queries the value, we
+> can avoid bumping the counter and that metadata update.
+> 
+> This patchset implements this:
+> 
+> It starts with some small cleanup patches to just remove any mention of
+> the i_version counter in filesystems that don't actually use it.
+> 
+> Then, we add a new set of static inlines for managing the counter. The
+> initial version should work identically to what we have now. Then, all
+> of the remaining filesystems that use i_version are converted to the new
+> inlines.
+> 
+> Once that's in place, we switch to a new implementation that allows us
+> to track readers of i_version counter, and only bump it when it's
+> necessary or convenient (i.e. we're going to disk anyway).
+> 
+> The final patch switches from a scheme that uses the i_lock to serialize
+> the counter updates during write to an atomic64_t. That's a wash
+> performance-wise in my testing, but I like not having to take the i_lock
+> down where it could end up nested inside other locks.
+> 
+> With this, we reduce inode metadata updates across all 3 filesystems
+> down to roughly the frequency of the timestamp granularity, particularly
+> when it's not being queried (the vastly common case).
+> 
+> The pessimal workload here is 1 byte writes, and it helps that
+> significantly. Of course, that's not a real-world workload.
+> 
+> A tiobench-example.fio workload also shows some modest performance
+> gains, and I've gotten mails from the kernel test robot that show some
+> significant performance gains on some microbenchmarks (case-msync-mt in
+> the vm-scalability testsuite to be specific).
+> 
+> I'm happy to run other workloads if anyone can suggest them.
+> 
+> At this point, the patchset works and does what it's expected to do in
+> my own testing. It seems like it's at least a modest performance win
+> across all 3 major disk-based filesystems. It may also encourage others
+> to implement i_version as well since it reduces that cost.
+> 
+> Is this an avenue that's worthwhile to pursue?
+> 
+> Note that I think we may have other changes coming in the future that
+> will make this sort of cleanup necessary anyway. I'd like to plug in the
+> Ceph change attribute here eventually, and that will require something
+> like this anyway.
+> 
+> Thoughts, comments and suggestions are welcome...
+> 
+> ---
+> 
+> [1]: On ext4 it must be turned on with the i_version mount option,
+>      mostly due to fears of incurring this impact, AFAICT.
+> 
+> [2]: NFS also recommends that it appear to increase in value over time, so
+>      that clients can discard metadata updates that are older than ones
+>      they've already seen.
+> 
+> Jeff Layton (30):
+>   lustre: don't set f_version in ll_readdir
+>   ecryptfs: remove unnecessary i_version bump
+>   ceph: remove the bump of i_version
+>   f2fs: don't bother setting i_version
+>   hpfs: don't bother with the i_version counter
+>   jfs: remove initialization of i_version counter
+>   nilfs2: remove inode->i_version initialization
+>   orangefs: remove initialization of i_version
+>   reiserfs: remove unneeded i_version bump
+>   ntfs: remove i_version handling
+>   fs: new API for handling i_version
+>   fat: convert to new i_version API
+>   affs: convert to new i_version API
+>   afs: convert to new i_version API
+>   btrfs: convert to new i_version API
+>   exofs: switch to new i_version API
+>   ext2: convert to new i_version API
+>   ext4: convert to new i_version API
+>   nfs: convert to new i_version API
+>   nfsd: convert to new i_version API
+>   ocfs2: convert to new i_version API
+>   ufs: use new i_version API
+>   xfs: convert to new i_version API
+>   IMA: switch IMA over to new i_version API
+>   fs: add a "force" parameter to inode_inc_iversion
+>   fs: only set S_VERSION when updating times if it has been queried
+>   xfs: avoid setting XFS_ILOG_CORE if i_version doesn't need
+>     incrementing
+>   btrfs: only dirty the inode in btrfs_update_time if something was
+>     changed
+>   fs: track whether the i_version has been queried with an i_state flag
+>   fs: convert i_version counter over to an atomic64_t
+> 
+>  drivers/staging/lustre/lustre/llite/dir.c |   3 -
+>  fs/affs/amigaffs.c                        |   4 +-
+>  fs/affs/dir.c                             |   4 +-
+>  fs/affs/super.c                           |   2 +-
+>  fs/afs/fsclient.c                         |   2 +-
+>  fs/afs/inode.c                            |   4 +-
+>  fs/btrfs/delayed-inode.c                  |   4 +-
+>  fs/btrfs/file.c                           |   4 +-
+>  fs/btrfs/inode.c                          |  41 ++++----
+>  fs/btrfs/ioctl.c                          |   4 +-
+>  fs/btrfs/tree-log.c                       |   2 +-
+>  fs/btrfs/xattr.c                          |   2 +-
+>  fs/ceph/inode.c                           |   1 -
+>  fs/ecryptfs/inode.c                       |   1 -
+>  fs/exofs/dir.c                            |   8 +-
+>  fs/exofs/super.c                          |   2 +-
+>  fs/ext2/dir.c                             |   8 +-
+>  fs/ext2/super.c                           |   4 +-
+>  fs/ext4/dir.c                             |   8 +-
+>  fs/ext4/inline.c                          |   6 +-
+>  fs/ext4/inode.c                           |  16 ++--
+>  fs/ext4/ioctl.c                           |   2 +-
+>  fs/ext4/namei.c                           |   8 +-
+>  fs/ext4/super.c                           |   2 +-
+>  fs/f2fs/super.c                           |   1 -
+>  fs/fat/dir.c                              |   2 +-
+>  fs/fat/inode.c                            |   8 +-
+>  fs/fat/namei_msdos.c                      |   6 +-
+>  fs/fat/namei_vfat.c                       |  20 ++--
+>  fs/hpfs/dir.c                             |   1 -
+>  fs/hpfs/dnode.c                           |   2 -
+>  fs/hpfs/super.c                           |   1 -
+>  fs/inode.c                                |   9 +-
+>  fs/jfs/super.c                            |   1 -
+>  fs/nfs/delegation.c                       |   2 +-
+>  fs/nfs/fscache-index.c                    |   4 +-
+>  fs/nfs/inode.c                            |  16 ++--
+>  fs/nfs/nfs4proc.c                         |   4 +-
+>  fs/nfs/nfstrace.h                         |   4 +-
+>  fs/nfs/write.c                            |   2 +-
+>  fs/nfsd/nfs3xdr.c                         |   2 +-
+>  fs/nfsd/nfs4xdr.c                         |   2 +-
+>  fs/nfsd/nfsfh.h                           |   2 +-
+>  fs/nilfs2/super.c                         |   1 -
+>  fs/ntfs/inode.c                           |   9 --
+>  fs/ntfs/mft.c                             |   6 --
+>  fs/ocfs2/dir.c                            |  14 +--
+>  fs/ocfs2/inode.c                          |   2 +-
+>  fs/ocfs2/namei.c                          |   2 +-
+>  fs/ocfs2/quota_global.c                   |   2 +-
+>  fs/orangefs/super.c                       |   2 -
+>  fs/reiserfs/super.c                       |   1 -
+>  fs/ufs/dir.c                              |   8 +-
+>  fs/ufs/inode.c                            |   2 +-
+>  fs/ufs/super.c                            |   2 +-
+>  fs/xfs/libxfs/xfs_inode_buf.c             |   4 +-
+>  fs/xfs/xfs_icache.c                       |   4 +-
+>  fs/xfs/xfs_inode.c                        |   2 +-
+>  fs/xfs/xfs_inode_item.c                   |   2 +-
+>  fs/xfs/xfs_trans_inode.c                  |  12 +--
+>  include/linux/fs.h                        | 151 ++++++++++++++++++++++++++++--
+>  security/integrity/ima/ima_api.c          |   2 +-
+>  security/integrity/ima/ima_main.c         |   2 +-
+>  63 files changed, 288 insertions(+), 173 deletions(-)
+> 
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
