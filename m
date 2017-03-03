@@ -1,133 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45010 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:52413 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752974AbdCFNvt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Mar 2017 08:51:49 -0500
-Date: Mon, 6 Mar 2017 08:51:44 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: allow zero-length symlinks (and directories), sort
- of
-Message-ID: <20170306135143.GC3223@bfoster.bfoster>
-References: <20170304000529.GB5073@birch.djwong.org>
+        id S1752087AbdCCXzP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Mar 2017 18:55:15 -0500
+From: NeilBrown <neil@brown.name>
+Date: Sat, 04 Mar 2017 10:55:04 +1100
+Subject: Re: [RFC PATCH v1 11/30] fs: new API for handling i_version
+In-Reply-To: <1482339827-7882-12-git-send-email-jlayton@redhat.com>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com> <1482339827-7882-12-git-send-email-jlayton@redhat.com>
+Message-ID: <8737etncfb.fsf@notabene.neil.brown.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170304000529.GB5073@birch.djwong.org>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Jeff Layton <jlayton@redhat.com>, linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Mar 03, 2017 at 04:05:29PM -0800, Darrick J. Wong wrote:
-> In commit ef388e2054 ("don't allow di_size with high bit set") and
-> commit 3c6f46eacd87 ("sanity check directory inode di_size") we
-> erroneously fail the inode verification checks for symlinks or
-> directories with di_size == 0.
-> 
-> This is proven incorrect by generic/388 because the unlink process uses
-> multiple unconnected transactions to truncate the remote symlink /
-> directory and to unlink and free the inode.  If the fs goes down after
-> the truncate commit but before the unlink happens, we are left with a
-> zero-length inode.  Worse yet, if the unlink /does/ commit, log recovery
-> will now break after the first transaction because we've zeroed di_size.
-> 
-> In order to prevent the crashes and ASSERTs that the old patches
-> covered, re-allow the zero-length inodes and change the functions that
-> interface with the vfs to return the appropriate error codes to
-> userspace.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+--=-=-=
+Content-Type: text/plain
 
-Interesting, thanks. I suppose this means we should drop the repair side
-fix..? I'm a bit leery on repair modifying a filesystem that is
-technically in a "valid" state, unless there's no other option to
-recover from that state.
+On Wed, Dec 21 2016, Jeff Layton wrote:
 
->  fs/xfs/libxfs/xfs_inode_buf.c |    4 ----
->  fs/xfs/xfs_dir2_readdir.c     |    6 ++----
->  fs/xfs/xfs_iops.c             |    9 ++++++++-
->  3 files changed, 10 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 3752bac..6e62999 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -402,10 +402,6 @@ xfs_dinode_verify(
->  	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
->  		return false;
->  
-> -	/* No zero-length symlinks/dirs. */
-> -	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
-> -		return false;
-> -
+> We already have inode_inc_iversion. Add inode_set_iversion,
+> inode_get_iversion, inode_cmp_iversion and inode_iversion_need_inc.
 
-What's the reasoning for dropping the S_ISDIR() logic here? Is the same
-scenario possible on a directory?
+This list of added interfaces is incomplete.
+And some of these interfaces could really use some justification up
+front.
 
->  	/* only version 3 or greater inodes are extensively verified here */
->  	if (dip->di_version < 3)
->  		return true;
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index 0b3b636..be1367a 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -74,10 +74,8 @@ xfs_dir2_sf_getdents(
->  	/*
->  	 * Give up if the directory is way too short.
->  	 */
-> -	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
-> -		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
-> -		return -EIO;
-> -	}
-> +	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent))
-> +		return -EFSCORRUPTED;
+You later add a "force" parameter to inode_inc_version.
+Why not do that up front here?
 
-This seems reasonable if it is truly an unexpected state...
-
->  
->  	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
->  	ASSERT(dp->i_df.if_u1.if_data != NULL);
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 22c1615..b7b6807 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -457,6 +457,9 @@ xfs_vn_get_link(
->  	char			*link;
->  	int			error = -ENOMEM;
->  
-> +	if (i_size_read(inode) == 0)
-> +		return ERR_PTR(-EFSCORRUPTED);
 > +
+> +/**
+> + * inode_get_iversion - read i_version for later use
+> + * @inode: inode from which i_version should be read
+> + *
+> + * Read the inode i_version counter. This should be used by callers that wish
+> + * to store the returned i_version for later comparison.
+> + */
+> +static inline u64
+> +inode_get_iversion(const struct inode *inode)
+> +{
+> +	return inode_get_iversion_raw(inode);
+> +}
 
-... but this one to me seems to qualify as an expected state, based on
-what you've described in the commit log description. Can we actually now
-"recover" from this situation at runtime (i.e., can we unlink the
-inode)? If so, it seems a little ominous to return a corruption errror
-as opposed to EINVAL or EIO or something (though I suppose either one
-may confuse a user enough into running xfs_repair anyways). Thoughts?
+I don't understand why this can use the _raw version rather than the
+_read version.
+Surely you need to know about any changes after this read.
 
-Brian
+Thanks,
+NeilBrown
 
->  	if (!dentry)
->  		return ERR_PTR(-ECHILD);
->  
-> @@ -483,8 +486,12 @@ xfs_vn_get_link_inline(
->  	struct inode		*inode,
->  	struct delayed_call	*done)
->  {
-> +	char			*p;
->  	ASSERT(XFS_I(inode)->i_df.if_flags & XFS_IFINLINE);
-> -	return XFS_I(inode)->i_df.if_u1.if_data;
-> +	p = XFS_I(inode)->i_df.if_u1.if_data;
-> +	if (p)
-> +		return p;
-> +	return ERR_PTR(-EFSCORRUPTED);
->  }
->  
->  STATIC int
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAli6AlgACgkQOeye3VZi
+gbmgpA/+Jvdv8FSZ8uY3DCx8phipNwrzX0yRr3pH2isCbNyBSDo8humzA+046YnM
+AQUakqeUzXzJKkXL5kiYjyoRyQ2JecSfHHETQeUrhlMAAnROdU/mvkeLBcg8mCf1
+qTI+QxHLKmBzGbnS5vsGkX/1sOk+adlnz9bhKWB6q14zTeANs4oapsqZZgwNWeFl
+VJ29tbL+VCzXfJ3yedgK7en2WQw/5VOP6gkoqeTrhXldy1PvF8en77oOnEScXnIp
+Q0h90vZxQfbIx2WFNdNh2z2CELl/fq8WC6tpVGoDsXEe1oHTa9jmHc1hTXSZogk4
+IbCCUt8D3gy7FLINO4eoe4GSz4w2rtibdyJ6+kKs2TCjwaYCUS9TCYm803WXAVoT
+IgNJhaNKez42Yszb5Q1m/FKnKviMWlP9iBVHi8tNBex4QtA+crnbZCUfeiJozkJj
+owMOc9ckIjndcgydGwCpvovjnFACrSmiomfyVdbMIyVYPyiKlL461rRMU1mSSqum
+jgcxIlJBSz+xL2T2KnkQp8dX1AG8STQDSr3rTUwlm3WUAHVoRsHteqO2I+1eTh3Q
+VEBCilylvv/s2pE93YxoC6DegVVjWvdmdIDRIKhInCH01Nd34YvOxrK22D3ifJnt
+qJRRFy5TfKFhuQhwzsTfaPLMO+L+G3uEN6GcL2XXUpGYXob0I7I=
+=UjhU
+-----END PGP SIGNATURE-----
+--=-=-=--
