@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45248 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:45158 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752147AbdCCXOY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1751989AbdCCXOY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Fri, 3 Mar 2017 18:14:24 -0500
 From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH 4/9] mkfs.xfs: move lopts to struct mkfs_xfs_opts
-Date: Fri,  3 Mar 2017 15:13:11 -0800
-Message-Id: <20170303231316.12716-5-mcgrof@kernel.org>
+Subject: [PATCH 1/9] mkfs.xfs: add helper to parse command line options
+Date: Fri,  3 Mar 2017 15:13:08 -0800
+Message-Id: <20170303231316.12716-2-mcgrof@kernel.org>
 In-Reply-To: <20170303231316.12716-1-mcgrof@kernel.org>
 References: <20170303231316.12716-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,675 +15,481 @@ List-Id: xfs
 To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
 Cc: jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-This moves all main() lopts to struct mkfs_xfs_opts in
-order to help with clutter and later enable re-parsing
-options for other purposes.
+Command line arguments are verified using a scheme which
+has been extended over the years. Making re-use of it however
+is not so easy mostly because all variables required are local
+on main() and assumptions of this for the verifiers.
+
+To enable future use of the verifiers in other areas add helper
+routine parse_subopts() which can be used to parse subopts, the
+subopts must be set then in the struct mkfs_xfs_opts, and all we
+pass is the value being parsed along with the subopt type.
+
+In the future this work should also help enable moving a lot of
+cruft on main() into helpers, given eventually we'll be able to
+pass around all important parameters.
+
+We start of with adding support for the b subopts.
+
+Leave the globals as-is for now.
 
 Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- mkfs/xfs_mkfs.c | 355 ++++++++++++++++++++++++++++----------------------------
- 1 file changed, 180 insertions(+), 175 deletions(-)
+ mkfs/xfs_mkfs.c | 167 +++++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 93 insertions(+), 74 deletions(-)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 4575d7c84f0a..cd52b525f824 100644
+index affa4052d62d..7ca972ee9675 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -755,6 +755,23 @@ struct mkfs_xfs_opts {
- 	int			ipflag;
- 	int			isflag;
- 	int			inopblock;
-+
-+	xfs_agnumber_t		logagno;
-+	int			laflag;
-+	int			liflag;
-+	int			lsuflag;
-+	int			lsu;
-+	int			loginternal;
-+	char			*logfile;
-+	char			*logsize;
-+	int			lsectorlog;
-+	int			lsectorsize;
-+	int			lsunit;
-+	int			lsunitflag;
-+	int			ldflag;
-+	int			lvflag;
-+	int			lslflag;
-+	int			lssflag;
+@@ -708,6 +708,12 @@ struct opt_params mopts = {
+ 	},
  };
  
++struct mkfs_xfs_opts {
++	int			blocklog;
++	int			blflag;
++	int			bsflag;
++};
++
  #define TERABYTES(count, blog)	((__uint64_t)(count) << (40 - (blog)))
-@@ -1573,6 +1590,67 @@ parse_subopts(
- 			}
- 		}
- 		break;
-+	case 'l':
+ #define GIGABYTES(count, blog)	((__uint64_t)(count) << (30 - (blog)))
+ #define MEGABYTES(count, blog)	((__uint64_t)(count) << (20 - (blog)))
+@@ -715,7 +721,7 @@ struct opt_params mopts = {
+ /*
+  * Use this macro before we have superblock and mount structure
+  */
+-#define	DTOBT(d)	((xfs_rfsblock_t)((d) >> (blocklog - BBSHIFT)))
++#define	DTOBT(d)	((xfs_rfsblock_t)((d) >> (params.blocklog - BBSHIFT)))
+ 
+ /*
+  * Use this for block reservations needed for mkfs's conditions
+@@ -1393,6 +1399,38 @@ getstr(
+ 	return str;
+ }
+ 
++static void
++parse_subopts(
++	int type,
++	char *p,
++	struct mkfs_xfs_opts *params)
++{
++	char	*value;
++
++	switch (type) {
++	case 'b':
 +		while (*p != '\0') {
-+			switch (getsubopt(&p, (char **)lopts.subopts, &value)) {
-+			case L_AGNUM:
-+				params->logagno = getnum(value, &lopts, L_AGNUM);
-+				params->laflag = 1;
++			switch (getsubopt(&p, (char **)bopts.subopts, &value)) {
++			case B_LOG:
++				params->blocklog = getnum(value, &bopts, B_LOG);
++				blocksize = 1 << params->blocklog;
++				params->blflag = 1;
 +				break;
-+			case L_FILE:
-+				params->xi.lisfile = getnum(value, &lopts,
-+						    L_FILE);
-+				break;
-+			case L_INTERNAL:
-+				params->loginternal = getnum(value, &lopts,
-+						     L_INTERNAL);
-+				params->liflag = 1;
-+				break;
-+			case L_SU:
-+				params->lsu = getnum(value, &lopts, L_SU);
-+				params->lsuflag = 1;
-+				break;
-+			case L_SUNIT:
-+				params->lsunit = getnum(value, &lopts, L_SUNIT);
-+				params->lsunitflag = 1;
-+				break;
-+			case L_NAME:
-+			case L_DEV:
-+				params->logfile = getstr(value, &lopts, L_NAME);
-+				params->xi.logname = params->logfile;
-+				params->ldflag = 1;
-+				params->loginternal = 0;
-+				break;
-+			case L_VERSION:
-+				params->sb_feat.log_version =
-+					getnum(value, &lopts, L_VERSION);
-+				params->lvflag = 1;
-+				break;
-+			case L_SIZE:
-+				params->logsize = getstr(value, &lopts, L_SIZE);
-+				break;
-+			case L_SECTLOG:
-+				params->lsectorlog = getnum(value, &lopts,
-+							    L_SECTLOG);
-+				params->lsectorsize = 1 << params->lsectorlog;
-+				params->lslflag = 1;
-+				break;
-+			case L_SECTSIZE:
-+				params->lsectorsize = getnum(value, &lopts,
-+							     L_SECTSIZE);
-+				params->lsectorlog =
-+					libxfs_highbit32(params->lsectorsize);
-+				params->lssflag = 1;
-+				break;
-+			case L_LAZYSBCNTR:
-+				params->sb_feat.lazy_sb_counters =
-+					getnum(value, &lopts, L_LAZYSBCNTR);
++			case B_SIZE:
++				blocksize = getnum(value, &bopts, B_SIZE);
++				params->blocklog = libxfs_highbit32(blocksize);
++				params->bsflag = 1;
 +				break;
 +			default:
-+				unknown('l', value);
++				unknown('b', value);
 +			}
 +		}
 +		break;
- 	default:
- 		usage();
- 	}
-@@ -1615,26 +1693,10 @@ main(
- 	int			dirblocksize;
- 	int			force_overwrite;
- 	char			*label = NULL;
--	int			laflag;
- 	int			lalign;
--	int			ldflag;
--	int			liflag;
--	xfs_agnumber_t		logagno;
- 	xfs_rfsblock_t		logblocks;
--	char			*logfile;
--	int			loginternal;
--	char			*logsize;
- 	xfs_fsblock_t		logstart;
--	int			lvflag;
- 	int			lsflag;
--	int			lsuflag;
--	int			lsunitflag;
--	int			lsectorlog;
--	int			lsectorsize;
--	int			lslflag;
--	int			lssflag;
--	int			lsu;
--	int			lsunit;
- 	int			min_logblocks;
- 	xfs_mount_t		*mp;
- 	xfs_mount_t		mbuf;
-@@ -1674,20 +1736,18 @@ main(
++	default:
++		usage();
++	}
++}
++
+ int
+ main(
+ 	int			argc,
+@@ -1405,9 +1443,6 @@ main(
+ 	__uint64_t		agsize;
+ 	xfs_alloc_rec_t		*arec;
+ 	struct xfs_btree_block	*block;
+-	int			blflag;
+-	int			blocklog;
+-	int			bsflag;
+ 	int			bsize;
+ 	xfs_buf_t		*buf;
+ 	int			c;
+@@ -1501,6 +1536,9 @@ main(
+ 		.rmapbt = false,
+ 		.reflink = false,
+ 	};
++	struct mkfs_xfs_opts params;
++
++	memset(&params, 0, sizeof(params));
+ 
+ 	platform_uuid_generate(&uuid);
+ 	progname = basename(argv[0]);
+@@ -1508,8 +1546,8 @@ main(
  	bindtextdomain(PACKAGE, LOCALEDIR);
  	textdomain(PACKAGE);
  
--	lslflag = lssflag = 0;
- 	blocksize = 0;
--	lsectorlog = 0;
--	sectorsize = lsectorsize = 0;
-+	sectorsize = 0;
- 	dblocks = 0;
--	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = 0;
--	loginternal = 1;
--	logagno = logblocks = rtblocks = rtextblocks = 0;
-+	params.loginternal = 1;
-+	lsflag = 0;
-+	logblocks = rtblocks = rtextblocks = 0;
- 	Nflag = nlflag = nsflag = nvflag = 0;
- 	dirblocklog = dirblocksize = 0;
- 	qflag = 0;
--	dfile = logfile = rtfile = NULL;
--	logsize = rtsize = rtextsize = protofile = NULL;
--	lalign = lsu = lsunit = 0;
-+	dfile = rtfile = NULL;
-+	rtsize = rtextsize = protofile = NULL;
-+	lalign = 0;
- 	norsflag = 0;
- 	force_overwrite = 0;
- 	worst_freelist = 0;
-@@ -1704,74 +1764,9 @@ main(
+-	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
+-	blocklog = blocksize = 0;
++	slflag = ssflag = lslflag = lssflag = 0;
++	blocksize = 0;
+ 	sectorlog = lsectorlog = 0;
+ 	sectorsize = lsectorsize = 0;
+ 	agsize = daflag = dasize = dblocks = 0;
+@@ -1541,26 +1579,7 @@ main(
+ 			break;
  		case 'b':
- 		case 'd':
- 		case 'i':
--			p = optarg;
--			parse_subopts(c, p, &params);
--			break;
- 		case 'l':
  			p = optarg;
 -			while (*p != '\0') {
--				char	**subopts = (char **)lopts.subopts;
+-				char	**subopts = (char **)bopts.subopts;
 -				char	*value;
 -
 -				switch (getsubopt(&p, subopts, &value)) {
--				case L_AGNUM:
--					logagno = getnum(value, &lopts, L_AGNUM);
--					laflag = 1;
+-				case B_LOG:
+-					blocklog = getnum(value, &bopts, B_LOG);
+-					blocksize = 1 << blocklog;
+-					blflag = 1;
 -					break;
--				case L_FILE:
--					params.xi.lisfile = getnum(value, &lopts,
--							    L_FILE);
--					break;
--				case L_INTERNAL:
--					loginternal = getnum(value, &lopts,
--							     L_INTERNAL);
--					liflag = 1;
--					break;
--				case L_SU:
--					lsu = getnum(value, &lopts, L_SU);
--					lsuflag = 1;
--					break;
--				case L_SUNIT:
--					lsunit = getnum(value, &lopts, L_SUNIT);
--					lsunitflag = 1;
--					break;
--				case L_NAME:
--				case L_DEV:
--					logfile = getstr(value, &lopts, L_NAME);
--					params.xi.logname = logfile;
--					ldflag = 1;
--					loginternal = 0;
--					break;
--				case L_VERSION:
--					sb_feat->log_version =
--						getnum(value, &lopts, L_VERSION);
--					lvflag = 1;
--					break;
--				case L_SIZE:
--					logsize = getstr(value, &lopts, L_SIZE);
--					break;
--				case L_SECTLOG:
--					lsectorlog = getnum(value, &lopts,
--							    L_SECTLOG);
--					lsectorsize = 1 << lsectorlog;
--					lslflag = 1;
--					break;
--				case L_SECTSIZE:
--					lsectorsize = getnum(value, &lopts,
--							     L_SECTSIZE);
--					lsectorlog =
--						libxfs_highbit32(lsectorsize);
--					lssflag = 1;
--					break;
--				case L_LAZYSBCNTR:
--					sb_feat->lazy_sb_counters =
--							getnum(value, &lopts,
--							       L_LAZYSBCNTR);
+-				case B_SIZE:
+-					blocksize = getnum(value, &bopts,
+-							   B_SIZE);
+-					blocklog = libxfs_highbit32(blocksize);
+-					bsflag = 1;
 -					break;
 -				default:
--					unknown('l', value);
+-					unknown('b', value);
 -				}
 -			}
 +			parse_subopts(c, p, &params);
  			break;
- 		case 'L':
- 			if (strlen(optarg) > sizeof(sbp->sb_fname))
-@@ -1910,28 +1905,28 @@ main(
- 				switch (getsubopt(&p, subopts, &value)) {
- 				case S_LOG:
- 				case S_SECTLOG:
--					if (lssflag)
-+					if (params.lssflag)
- 						conflict('s', subopts,
- 							 S_SECTSIZE, S_SECTLOG);
- 					params.sectorlog = getnum(value, &sopts,
- 							   S_SECTLOG);
--					lsectorlog = params.sectorlog;
-+					params.lsectorlog = params.sectorlog;
- 					sectorsize = 1 << params.sectorlog;
--					lsectorsize = sectorsize;
--					lslflag = params.slflag = 1;
-+					params.lsectorsize = sectorsize;
-+					params.lslflag = params.slflag = 1;
- 					break;
- 				case S_SIZE:
- 				case S_SECTSIZE:
--					if (lslflag)
-+					if (params.lslflag)
- 						conflict('s', subopts, S_SECTLOG,
- 							 S_SECTSIZE);
- 					sectorsize = getnum(value, &sopts,
- 							    S_SECTSIZE);
--					lsectorsize = sectorsize;
-+					params.lsectorsize = sectorsize;
- 					params.sectorlog =
- 						libxfs_highbit32(sectorsize);
--					lsectorlog = params.sectorlog;
--					lssflag = params.ssflag = 1;
-+					params.lsectorlog = params.sectorlog;
-+					params.lssflag = params.ssflag = 1;
- 					break;
- 				default:
- 					unknown('s', value);
-@@ -1982,9 +1977,9 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
- 		params.sectorlog = XFS_MIN_SECTORSIZE_LOG;
- 		sectorsize = XFS_MIN_SECTORSIZE;
+ 		case 'd':
+ 			p = optarg;
+@@ -1941,8 +1960,8 @@ main(
+ 	 * For RAID4/5/6 we want to align sector size and block size,
+ 	 * so we need to start with the device geometry extraction too.
+ 	 */
+-	if (!blflag && !bsflag) {
+-		blocklog = XFS_DFL_BLOCKSIZE_LOG;
++	if (!params.blflag && !params.bsflag) {
++		params.blocklog = XFS_DFL_BLOCKSIZE_LOG;
+ 		blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG;
  	}
--	if (!lslflag && !lssflag) {
--		lsectorlog = params.sectorlog;
--		lsectorsize = sectorsize;
-+	if (!params.lslflag && !params.lssflag) {
-+		params.lsectorlog = params.sectorlog;
-+		params.lsectorsize = sectorsize;
+ 	if (blocksize < XFS_MIN_BLOCKSIZE || blocksize > XFS_MAX_BLOCKSIZE) {
+@@ -2159,7 +2178,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 		if (blocksize < (1 << XFS_MIN_REC_DIRSIZE))
+ 			dirblocklog = XFS_MIN_REC_DIRSIZE;
+ 		else
+-			dirblocklog = blocklog;
++			dirblocklog = params.blocklog;
+ 		dirblocksize = 1 << dirblocklog;
  	}
  
+@@ -2174,15 +2193,15 @@ _("rmapbt not supported with realtime devices\n"));
+ 				(long long)dbytes, XFS_MIN_BLOCKSIZE);
+ 			usage();
+ 		}
+-		dblocks = (xfs_rfsblock_t)(dbytes >> blocklog);
++		dblocks = (xfs_rfsblock_t)(dbytes >> params.blocklog);
+ 		if (dbytes % blocksize)
+ 			fprintf(stderr, _("warning: "
+ 	"data length %lld not a multiple of %d, truncated to %lld\n"),
+ 				(long long)dbytes, blocksize,
+-				(long long)(dblocks << blocklog));
++				(long long)(dblocks << params.blocklog));
+ 	}
+ 	if (ipflag) {
+-		inodelog = blocklog - libxfs_highbit32(inopblock);
++		inodelog = params.blocklog - libxfs_highbit32(inopblock);
+ 		isize = 1 << inodelog;
+ 	} else if (!ilflag && !isflag) {
+ 		inodelog = sb_feat.crcs_enabled ? XFS_DINODE_DFL_CRC_LOG
+@@ -2206,12 +2225,12 @@ _("rmapbt not supported with realtime devices\n"));
+ 				(long long)logbytes, XFS_MIN_BLOCKSIZE);
+ 			usage();
+ 		}
+-		logblocks = (xfs_rfsblock_t)(logbytes >> blocklog);
++		logblocks = (xfs_rfsblock_t)(logbytes >> params.blocklog);
+ 		if (logbytes % blocksize)
+ 			fprintf(stderr,
+ 	_("warning: log length %lld not a multiple of %d, truncated to %lld\n"),
+ 				(long long)logbytes, blocksize,
+-				(long long)(logblocks << blocklog));
++				(long long)(logblocks << params.blocklog));
+ 	}
+ 	if (rtsize) {
+ 		__uint64_t rtbytes;
+@@ -2223,12 +2242,12 @@ _("rmapbt not supported with realtime devices\n"));
+ 				(long long)rtbytes, XFS_MIN_BLOCKSIZE);
+ 			usage();
+ 		}
+-		rtblocks = (xfs_rfsblock_t)(rtbytes >> blocklog);
++		rtblocks = (xfs_rfsblock_t)(rtbytes >> params.blocklog);
+ 		if (rtbytes % blocksize)
+ 			fprintf(stderr,
+ 	_("warning: rt length %lld not a multiple of %d, truncated to %lld\n"),
+ 				(long long)rtbytes, blocksize,
+-				(long long)(rtblocks << blocklog));
++				(long long)(rtblocks << params.blocklog));
+ 	}
  	/*
-@@ -1997,10 +1992,10 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
- 	check_device_type(dfile, &params.xi.disfile, !params.dsize, !dfile,
- 			  Nflag ? NULL : &params.xi.dcreat,
- 			  force_overwrite, "d");
--	if (!loginternal)
-+	if (!params.loginternal)
- 		check_device_type(params.xi.logname,
- 				  &params.xi.lisfile,
--				  !logsize,
-+				  !params.logsize,
- 				  !params.xi.logname,
- 				  Nflag ? NULL : &params.xi.lcreat,
- 				  force_overwrite, "l");
-@@ -2047,9 +2042,9 @@ _("switching to logical sector size %d\n"),
- 
- 	if (!params.ssflag) {
- 		params.sectorlog = libxfs_highbit32(sectorsize);
--		if (loginternal) {
--			lsectorsize = sectorsize;
--			lsectorlog = params.sectorlog;
-+		if (params.loginternal) {
-+			params.lsectorsize = sectorsize;
-+			params.lsectorlog = params.sectorlog;
+ 	 * If specified, check rt extent size against its constraints.
+@@ -2243,7 +2262,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 				(long long)rtextbytes, blocksize);
+ 			usage();
+ 		}
+-		rtextblocks = (xfs_extlen_t)(rtextbytes >> blocklog);
++		rtextblocks = (xfs_extlen_t)(rtextbytes >> params.blocklog);
+ 	} else {
+ 		/*
+ 		 * If realtime extsize has not been specified by the user,
+@@ -2261,7 +2280,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 		/* check that rswidth is a multiple of fs blocksize */
+ 		if (!norsflag && rswidth && !(BBTOB(rswidth) % blocksize)) {
+ 			rswidth = DTOBT(rswidth);
+-			rtextbytes = rswidth << blocklog;
++			rtextbytes = rswidth << params.blocklog;
+ 			if (XFS_MIN_RTEXTSIZE <= rtextbytes &&
+ 			    (rtextbytes <= XFS_MAX_RTEXTSIZE)) {
+ 				rtextblocks = rswidth;
+@@ -2269,7 +2288,7 @@ _("rmapbt not supported with realtime devices\n"));
+ 		}
+ 		if (!rtextblocks) {
+ 			rtextblocks = (blocksize < XFS_MIN_RTEXTSIZE) ?
+-					XFS_MIN_RTEXTSIZE >> blocklog : 1;
++					XFS_MIN_RTEXTSIZE >> params.blocklog : 1;
  		}
  	}
- 
-@@ -2068,12 +2063,13 @@ _("block size %d cannot be smaller than logical sector size %d\n"),
- 			sectorsize, ft.lsectorsize);
- 		usage();
- 	}
--	if (lsectorsize < XFS_MIN_SECTORSIZE ||
--	    lsectorsize > XFS_MAX_SECTORSIZE || lsectorsize > blocksize) {
--		fprintf(stderr, _("illegal log sector size %d\n"), lsectorsize);
-+	if (params.lsectorsize < XFS_MIN_SECTORSIZE ||
-+	    params.lsectorsize > XFS_MAX_SECTORSIZE || params.lsectorsize > blocksize) {
-+		fprintf(stderr, _("illegal log sector size %d\n"),
-+			params.lsectorsize);
- 		usage();
--	} else if (lsectorsize > XFS_MIN_SECTORSIZE && !lsu && !lsunit) {
--		lsu = blocksize;
-+	} else if (params.lsectorsize > XFS_MIN_SECTORSIZE && !params.lsu && !params.lsunit) {
-+		params.lsu = blocksize;
- 		sb_feat->log_version = 2;
+ 	ASSERT(rtextblocks);
+@@ -2472,7 +2491,7 @@ reported by the device (%u).\n"),
+ 	} else if (daflag) {	/* User-specified AG count */
+ 		agsize = dblocks / agcount + (dblocks % agcount != 0);
+ 	} else {
+-		calc_default_ag_geometry(blocklog, dblocks,
++		calc_default_ag_geometry(params.blocklog, dblocks,
+ 				dsunit | dswidth, &agsize, &agcount);
  	}
  
-@@ -2222,10 +2218,10 @@ _("rmapbt not supported with realtime devices\n"));
- 		usage();
- 	}
+@@ -2494,18 +2513,18 @@ reported by the device (%u).\n"),
+ 			/*
+ 			 * Round up to stripe unit boundary. Also make sure
+ 			 * that agsize is still larger than
+-			 * XFS_AG_MIN_BLOCKS(blocklog)
++			 * XFS_AG_MIN_BLOCKS(params.blocklog)
+ 		 	 */
+ 			tmp_agsize = ((agsize + (dsunit - 1))/ dsunit) * dsunit;
+ 			/*
+ 			 * Round down to stripe unit boundary if rounding up
+ 			 * created an AG size that is larger than the AG max.
+ 			 */
+-			if (tmp_agsize > XFS_AG_MAX_BLOCKS(blocklog))
++			if (tmp_agsize > XFS_AG_MAX_BLOCKS(params.blocklog))
+ 				tmp_agsize = ((agsize) / dsunit) * dsunit;
  
--	if (logsize) {
-+	if (params.logsize) {
- 		__uint64_t logbytes;
- 
--		logbytes = getnum(logsize, &lopts, L_SIZE);
-+		logbytes = getnum(params.logsize, &lopts, L_SIZE);
- 		if (logbytes % XFS_MIN_BLOCKSIZE) {
- 			fprintf(stderr,
- 			_("illegal log length %lld, not a multiple of %d\n"),
-@@ -2324,14 +2320,16 @@ _("rmapbt not supported with realtime devices\n"));
- 	}
- 
- 	/* if lsu or lsunit was specified, automatically use v2 logs */
--	if ((lsu || lsunit) && sb_feat->log_version == 1) {
-+	if ((params.lsu || params.lsunit) && sb_feat->log_version == 1) {
- 		fprintf(stderr,
- 			_("log stripe unit specified, using v2 logs\n"));
- 		sb_feat->log_version = 2;
- 	}
- 
--	calc_stripe_factors(params.dsu, params.dsw, sectorsize, lsu, lsectorsize,
--				&params.dsunit, &params.dswidth, &lsunit);
-+	calc_stripe_factors(params.dsu, params.dsw, sectorsize, params.lsu,
-+				params.lsectorsize,
-+				&params.dsunit, &params.dswidth,
-+				&params.lsunit);
- 
- 	params.xi.setblksize = sectorsize;
- 
-@@ -2359,8 +2357,8 @@ _("rmapbt not supported with realtime devices\n"));
- 	sector_mask = (__uint64_t)-1 << (MAX(params.sectorlog, 10) - BBSHIFT);
- 	params.xi.dsize &= sector_mask;
- 	params.xi.rtsize &= sector_mask;
--	params.xi.logBBsize &= (__uint64_t)-1 << (MAX(lsectorlog, 10) - BBSHIFT);
--
-+	params.xi.logBBsize &= (__uint64_t)-1 <<
-+		(MAX(params.lsectorlog, 10) - BBSHIFT);
- 
- 	/* don't do discards on print-only runs or on files */
- 	if (discard && !Nflag) {
-@@ -2373,15 +2371,15 @@ _("rmapbt not supported with realtime devices\n"));
- 			discard_blocks(params.xi.logdev, params.xi.logBBsize);
- 	}
- 
--	if (!liflag && !ldflag)
--		loginternal = params.xi.logdev == 0;
-+	if (!params.liflag && !params.ldflag)
-+		params.loginternal = params.xi.logdev == 0;
- 	if (params.xi.logname)
--		logfile = params.xi.logname;
--	else if (loginternal)
--		logfile = _("internal log");
-+		params.logfile = params.xi.logname;
-+	else if (params.loginternal)
-+		params.logfile = _("internal log");
- 	else if (params.xi.volname && params.xi.logdev)
--		logfile = _("volume log");
--	else if (!ldflag) {
-+		params.logfile = _("volume log");
-+	else if (!params.ldflag) {
- 		fprintf(stderr, _("no log subvolume or internal log\n"));
- 		usage();
- 	}
-@@ -2412,11 +2410,11 @@ _("rmapbt not supported with realtime devices\n"));
- 		usage();
- 	}
- 
--	if (loginternal && params.xi.logdev) {
-+	if (params.loginternal && params.xi.logdev) {
- 		fprintf(stderr,
- 			_("can't have both external and internal logs\n"));
- 		usage();
--	} else if (loginternal && sectorsize != lsectorsize) {
-+	} else if (params.loginternal && sectorsize != params.lsectorsize) {
- 		fprintf(stderr,
- 	_("data and log sector sizes must be equal for internal logs\n"));
- 		usage();
-@@ -2428,11 +2426,11 @@ _("rmapbt not supported with realtime devices\n"));
- reported by the device (%u).\n"),
- 			sectorsize, params.xi.dbsize);
- 	}
--	if (!loginternal && params.xi.lbsize > lsectorsize) {
-+	if (!params.loginternal && params.xi.lbsize > params.lsectorsize) {
- 		fprintf(stderr, _(
- "Warning: the log subvolume sector size %u is less than the sector size\n\
- reported by the device (%u).\n"),
--			lsectorsize, params.xi.lbsize);
-+			params.lsectorsize, params.xi.lbsize);
- 	}
- 	if (rtsize && params.xi.rtsize > 0 && params.xi.rtbsize > sectorsize) {
- 		fprintf(stderr, _(
-@@ -2640,24 +2638,24 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 	 * check that log sunit is modulo fsblksize or default it to dsunit.
+-			if ((tmp_agsize >= XFS_AG_MIN_BLOCKS(blocklog)) &&
+-			    (tmp_agsize <= XFS_AG_MAX_BLOCKS(blocklog))) {
++			if ((tmp_agsize >= XFS_AG_MIN_BLOCKS(params.blocklog)) &&
++			    (tmp_agsize <= XFS_AG_MAX_BLOCKS(params.blocklog))) {
+ 				agsize = tmp_agsize;
+ 				if (!daflag)
+ 					agcount = dblocks/agsize +
+@@ -2522,7 +2541,7 @@ reported by the device (%u).\n"),
+ 					 * agsize is out of bounds, this will
+ 					 * print nice details & exit.
+ 					 */
+-					validate_ag_geometry(blocklog, dblocks,
++					validate_ag_geometry(params.blocklog, dblocks,
+ 							    agsize, agcount);
+ 					exit(1);
+ 				}
+@@ -2535,7 +2554,7 @@ reported by the device (%u).\n"),
+ 			 * does not happen.
+ 			 */
+ 			tmp_agsize = agsize - dsunit;
+-			if (tmp_agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
++			if (tmp_agsize < XFS_AG_MIN_BLOCKS(params.blocklog)) {
+ 				tmp_agsize = agsize + dsunit;
+ 				if (dblocks < agsize) {
+ 					/* oh well, nothing to do */
+@@ -2557,7 +2576,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+ 				 */
+ 				if ( dblocks % agsize != 0 &&
+ 				    (dblocks % agsize <
+-				    XFS_AG_MIN_BLOCKS(blocklog))) {
++				    XFS_AG_MIN_BLOCKS(params.blocklog))) {
+ 					dblocks = (xfs_rfsblock_t)((agcount - 1) * agsize);
+ 					agcount--;
+ 					ASSERT(agcount != 0);
+@@ -2582,17 +2601,17 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+ 	 * and drop the blocks.
  	 */
- 
--	if (lsunit) {
-+	if (params.lsunit) {
- 		/* convert from 512 byte blocks to fs blocks */
--		lsunit = DTOBT(lsunit);
--	} else if (sb_feat->log_version == 2 && loginternal && params.dsunit) {
-+		params.lsunit = DTOBT(params.lsunit);
-+	} else if (sb_feat->log_version == 2 && params.loginternal && params.dsunit) {
- 		/* lsunit and dsunit now in fs blocks */
--		lsunit = params.dsunit;
-+		params.lsunit = params.dsunit;
+ 	if ( dblocks % agsize != 0 &&
+-	     (dblocks % agsize < XFS_AG_MIN_BLOCKS(blocklog))) {
++	     (dblocks % agsize < XFS_AG_MIN_BLOCKS(params.blocklog))) {
+ 		ASSERT(!daflag);
+ 		dblocks = (xfs_rfsblock_t)((agcount - 1) * agsize);
+ 		agcount--;
+ 		ASSERT(agcount != 0);
  	}
  
--	if (sb_feat->log_version == 2 && (lsunit * blocksize) > 256 * 1024) {
-+	if (sb_feat->log_version == 2 && (params.lsunit * blocksize) > 256 * 1024) {
- 		/* Warn only if specified on commandline */
--		if (lsuflag || lsunitflag) {
-+		if (params.lsuflag || params.lsunitflag) {
- 			fprintf(stderr,
- 	_("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"),
--				(lsunit * blocksize));
-+				(params.lsunit * blocksize));
+-	validate_ag_geometry(blocklog, dblocks, agsize, agcount);
++	validate_ag_geometry(params.blocklog, dblocks, agsize, agcount);
+ 
+ 	if (!imflag)
+-		imaxpct = calc_default_imaxpct(blocklog, dblocks);
++		imaxpct = calc_default_imaxpct(params.blocklog, dblocks);
+ 
+ 	/*
+ 	 * check that log sunit is modulo fsblksize or default it to dsunit.
+@@ -2615,18 +2634,18 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
  			fprintf(stderr,
  	_("log stripe unit adjusted to 32KiB\n"));
  		}
--		lsunit = (32 * 1024) >> params.blocklog;
-+		params.lsunit = (32 * 1024) >> params.blocklog;
+-		lsunit = (32 * 1024) >> blocklog;
++		lsunit = (32 * 1024) >> params.blocklog;
  	}
  
- 	min_logblocks = max_trans_res(params.agsize,
-@@ -2665,31 +2663,32 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 				   params.sectorlog, params.blocklog,
- 				   params.inodelog,
- 				   dirblocklog,
--				   sb_feat->log_version, lsunit, sb_feat->finobt,
-+				   sb_feat->log_version, params.lsunit,
-+				   sb_feat->finobt,
- 				   sb_feat->rmapbt, sb_feat->reflink);
+ 	min_logblocks = max_trans_res(agsize,
+ 				   sb_feat.crcs_enabled, sb_feat.dir_version,
+-				   sectorlog, blocklog, inodelog, dirblocklog,
++				   sectorlog, params.blocklog, inodelog, dirblocklog,
+ 				   sb_feat.log_version, lsunit, sb_feat.finobt,
+ 				   sb_feat.rmapbt, sb_feat.reflink);
  	ASSERT(min_logblocks);
  	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
--	if (!logsize && dblocks >= (1024*1024*1024) >> params.blocklog)
-+	if (!params.logsize && dblocks >= (1024*1024*1024) >> params.blocklog)
- 		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>params.blocklog);
--	if (logsize && params.xi.logBBsize > 0 &&
-+	if (params.logsize && params.xi.logBBsize > 0 &&
- 	    logblocks > DTOBT(params.xi.logBBsize)) {
+-	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
+-		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
++	if (!logsize && dblocks >= (1024*1024*1024) >> params.blocklog)
++		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>params.blocklog);
+ 	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
  		fprintf(stderr,
  _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
--			logsize, (long long)DTOBT(params.xi.logBBsize));
-+			params.logsize, (long long)DTOBT(params.xi.logBBsize));
- 		usage();
--	} else if (!logsize && params.xi.logBBsize > 0) {
-+	} else if (!params.logsize && params.xi.logBBsize > 0) {
- 		logblocks = DTOBT(params.xi.logBBsize);
--	} else if (logsize && !params.xi.logdev && !loginternal) {
-+	} else if (params.logsize && !params.xi.logdev && !params.loginternal) {
- 		fprintf(stderr,
- 			_("size specified for non-existent log subvolume\n"));
- 		usage();
--	} else if (loginternal && logsize && logblocks >= dblocks) {
-+	} else if (params.loginternal && params.logsize && logblocks >= dblocks) {
- 		fprintf(stderr, _("size %lld too large for internal log\n"),
- 			(long long)logblocks);
- 		usage();
--	} else if (!loginternal && !params.xi.logdev) {
-+	} else if (!params.loginternal && !params.xi.logdev) {
+@@ -2646,17 +2665,17 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
  		logblocks = 0;
--	} else if (loginternal && !logsize) {
-+	} else if (params.loginternal && !params.logsize) {
+ 	} else if (loginternal && !logsize) {
  
- 		if (dblocks < GIGABYTES(1, params.blocklog)) {
+-		if (dblocks < GIGABYTES(1, blocklog)) {
++		if (dblocks < GIGABYTES(1, params.blocklog)) {
  			/* tiny filesystems get minimum sized logs. */
-@@ -2747,15 +2746,15 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	 * libxfs_prealloc_blocks().
- 	 */
- 	sb_set_features(&mp->m_sb, sb_feat, sectorsize,
--			lsectorsize, params.dsunit);
-+			params.lsectorsize, params.dsunit);
+ 			logblocks = min_logblocks;
+-		} else if (dblocks < GIGABYTES(16, blocklog)) {
++		} else if (dblocks < GIGABYTES(16, params.blocklog)) {
  
- 
--	if (loginternal) {
-+	if (params.loginternal) {
- 		/*
- 		 * Readjust the log size to fit within an AG if it was sized
- 		 * automatically.
- 		 */
--		if (!logsize) {
-+		if (!params.logsize) {
- 			logblocks = MIN(logblocks,
- 					libxfs_alloc_ag_max_usable(mp));
- 
-@@ -2769,23 +2768,26 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 			usage();
+ 			/*
+ 			 * For small filesystems, we want to use the
+ 			 * XFS_MIN_LOG_BYTES for filesystems smaller than 16G if
+ 			 * at all possible, ramping up to 128MB at 256GB.
+ 			 */
+-			logblocks = MIN(XFS_MIN_LOG_BYTES >> blocklog,
++			logblocks = MIN(XFS_MIN_LOG_BYTES >> params.blocklog,
+ 					min_logblocks * XFS_DFL_LOG_FACTOR);
+ 		} else {
+ 			/*
+@@ -2665,8 +2684,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			 * max log size of 128M at 256GB fs size. IOWs,
+ 			 * the ratio of fs size to log size is 2048:1.
+ 			 */
+-			logblocks = (dblocks << blocklog) / 2048;
+-			logblocks = logblocks >> blocklog;
++			logblocks = (dblocks << params.blocklog) / 2048;
++			logblocks = logblocks >> params.blocklog;
  		}
  
--		if (laflag) {
--			if (logagno >= params.agcount) {
-+		if (params.laflag) {
-+			if (params.logagno >= params.agcount) {
- 				fprintf(stderr,
- 		_("log ag number %d too large, must be less than %lld\n"),
--					logagno, (long long)params.agcount);
-+					params.logagno,
-+					(long long)params.agcount);
- 				usage();
- 			}
- 		} else
--			logagno = (xfs_agnumber_t)(params.agcount / 2);
-+			params.logagno = (xfs_agnumber_t)(params.agcount / 2);
+ 		/* Ensure the chosen size meets minimum log size requirements */
+@@ -2678,18 +2697,18 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
  
--		logstart = XFS_AGB_TO_FSB(mp, logagno, libxfs_prealloc_blocks(mp));
-+		logstart = XFS_AGB_TO_FSB(mp, params.logagno,
-+					  libxfs_prealloc_blocks(mp));
- 		/*
- 		 * Align the logstart at stripe unit boundary.
- 		 */
--		if (lsunit) {
-+		if (params.lsunit) {
+ 		/* and now clamp the size to the maximum supported size */
+ 		logblocks = MIN(logblocks, XFS_MAX_LOG_BLOCKS);
+-		if ((logblocks << blocklog) > XFS_MAX_LOG_BYTES)
+-			logblocks = XFS_MAX_LOG_BYTES >> blocklog;
++		if ((logblocks << params.blocklog) > XFS_MAX_LOG_BYTES)
++			logblocks = XFS_MAX_LOG_BYTES >> params.blocklog;
+ 
+ 	}
+-	validate_log_size(logblocks, blocklog, min_logblocks);
++	validate_log_size(logblocks, params.blocklog, min_logblocks);
+ 
+ 	protostring = setup_proto(protofile);
+-	bsize = 1 << (blocklog - BBSHIFT);
++	bsize = 1 << (params.blocklog - BBSHIFT);
+ 	mp = &mbuf;
+ 	sbp = &mp->m_sb;
+ 	memset(mp, 0, sizeof(xfs_mount_t));
+-	sbp->sb_blocklog = (__uint8_t)blocklog;
++	sbp->sb_blocklog = (__uint8_t)params.blocklog;
+ 	sbp->sb_sectlog = (__uint8_t)sectorlog;
+ 	sbp->sb_agblklog = (__uint8_t)libxfs_log2_roundup((unsigned int)agsize);
+ 	sbp->sb_agblocks = (xfs_agblock_t)agsize;
+@@ -2713,7 +2732,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 					libxfs_alloc_ag_max_usable(mp));
+ 
+ 			/* revalidate the log size is valid if we changed it */
+-			validate_log_size(logblocks, blocklog, min_logblocks);
++			validate_log_size(logblocks, params.blocklog, min_logblocks);
+ 		}
+ 		if (logblocks > agsize - libxfs_prealloc_blocks(mp)) {
+ 			fprintf(stderr,
+@@ -2739,19 +2758,19 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		if (lsunit) {
  			logstart = fixup_internal_log_stripe(mp,
--					lsflag, logstart, params.agsize, lsunit,
-+					lsflag, logstart, params.agsize,
-+					params.lsunit,
- 					&logblocks, params.blocklog, &lalign);
- 		} else if (params.dsunit) {
+ 					lsflag, logstart, agsize, lsunit,
+-					&logblocks, blocklog, &lalign);
++					&logblocks, params.blocklog, &lalign);
+ 		} else if (dsunit) {
  			logstart = fixup_internal_log_stripe(mp,
-@@ -2796,9 +2798,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 					lsflag, logstart, agsize, dsunit,
+-					&logblocks, blocklog, &lalign);
++					&logblocks, params.blocklog, &lalign);
  		}
  	} else {
  		logstart = 0;
--		if (lsunit)
--			fixup_log_stripe_unit(lsflag, lsunit,
--					&logblocks, params.blocklog);
-+		if (params.lsunit)
-+			fixup_log_stripe_unit(lsflag, params.lsunit,
-+					      &logblocks, params.blocklog);
+ 		if (lsunit)
+ 			fixup_log_stripe_unit(lsflag, lsunit,
+-					&logblocks, blocklog);
++					&logblocks, params.blocklog);
  	}
- 	validate_log_size(logblocks, params.blocklog, min_logblocks);
+-	validate_log_size(logblocks, blocklog, min_logblocks);
++	validate_log_size(logblocks, params.blocklog, min_logblocks);
  
-@@ -2823,9 +2825,11 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 			"", params.dsunit, params.dswidth,
- 			sb_feat->dir_version, dirblocksize, sb_feat->nci,
- 				sb_feat->dirftype,
--			logfile, 1 << params.blocklog, (long long)logblocks,
--			sb_feat->log_version, "", lsectorsize, lsunit,
--				sb_feat->lazy_sb_counters,
-+			params.logfile, 1 << params.blocklog,
-+			(long long)logblocks,
-+			sb_feat->log_version, "", params.lsectorsize,
-+			params.lsunit,
-+			sb_feat->lazy_sb_counters,
- 			rtfile, rtextblocks << params.blocklog,
+ 	if (!qflag || Nflag) {
+ 		printf(_(
+@@ -2773,10 +2792,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			"", dsunit, dswidth,
+ 			sb_feat.dir_version, dirblocksize, sb_feat.nci,
+ 				sb_feat.dirftype,
+-			logfile, 1 << blocklog, (long long)logblocks,
++			logfile, 1 << params.blocklog, (long long)logblocks,
+ 			sb_feat.log_version, "", lsectorsize, lsunit,
+ 				sb_feat.lazy_sb_counters,
+-			rtfile, rtextblocks << blocklog,
++			rtfile, rtextblocks << params.blocklog,
  			(long long)rtblocks, (long long)rtextents);
  		if (Nflag)
-@@ -2862,7 +2866,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	sbp->sb_icount = 0;
- 	sbp->sb_ifree = 0;
- 	sbp->sb_fdblocks = dblocks - params.agcount * libxfs_prealloc_blocks(mp) -
--		(loginternal ? logblocks : 0);
-+		(params.loginternal ? logblocks : 0);
- 	sbp->sb_frextents = 0;	/* will do a free later */
- 	sbp->sb_uquotino = sbp->sb_gquotino = sbp->sb_pquotino = 0;
+ 			exit(0);
+@@ -2803,7 +2822,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	sbp->sb_inopblock = (__uint16_t)(blocksize / isize);
+ 	sbp->sb_sectlog = (__uint8_t)sectorlog;
+ 	sbp->sb_inodelog = (__uint8_t)inodelog;
+-	sbp->sb_inopblog = (__uint8_t)(blocklog - inodelog);
++	sbp->sb_inopblog = (__uint8_t)(params.blocklog - inodelog);
+ 	sbp->sb_rextslog =
+ 		(__uint8_t)(rtextents ?
+ 			libxfs_highbit32((unsigned int)rtextents) : 0);
+@@ -2818,7 +2837,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
  	sbp->sb_qflags = 0;
-@@ -2870,8 +2874,9 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	sbp->sb_width = params.dswidth;
- 	sbp->sb_dirblklog = dirblocklog - params.blocklog;
- 	if (sb_feat->log_version == 2) {	/* This is stored in bytes */
--		lsunit = (lsunit == 0) ? 1 : XFS_FSB_TO_B(mp, lsunit);
--		sbp->sb_logsunit = lsunit;
-+		params.lsunit = (params.lsunit == 0) ? 1 : XFS_FSB_TO_B(mp,
-+									params.lsunit);
-+		sbp->sb_logsunit = params.lsunit;
- 	} else
- 		sbp->sb_logsunit = 0;
- 	if (sb_feat->inode_align) {
-@@ -2882,16 +2887,16 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		sb_feat->inode_align = sbp->sb_inoalignmt != 0;
+ 	sbp->sb_unit = dsunit;
+ 	sbp->sb_width = dswidth;
+-	sbp->sb_dirblklog = dirblocklog - blocklog;
++	sbp->sb_dirblklog = dirblocklog - params.blocklog;
+ 	if (sb_feat.log_version == 2) {	/* This is stored in bytes */
+ 		lsunit = (lsunit == 0) ? 1 : XFS_FSB_TO_B(mp, lsunit);
+ 		sbp->sb_logsunit = lsunit;
+@@ -2828,7 +2847,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		int	cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
+ 		if (sb_feat.crcs_enabled)
+ 			cluster_size *= isize / XFS_DINODE_MIN_SIZE;
+-		sbp->sb_inoalignmt = cluster_size >> blocklog;
++		sbp->sb_inoalignmt = cluster_size >> params.blocklog;
+ 		sb_feat.inode_align = sbp->sb_inoalignmt != 0;
  	} else
  		sbp->sb_inoalignmt = 0;
--	if (lsectorsize != BBSIZE || sectorsize != BBSIZE) {
--		sbp->sb_logsectlog = (__uint8_t)lsectorlog;
--		sbp->sb_logsectsize = (__uint16_t)lsectorsize;
-+	if (params.lsectorsize != BBSIZE || sectorsize != BBSIZE) {
-+		sbp->sb_logsectlog = (__uint8_t)params.lsectorlog;
-+		sbp->sb_logsectsize = (__uint16_t) params.lsectorsize;
- 	} else {
- 		sbp->sb_logsectlog = 0;
- 		sbp->sb_logsectsize = 0;
- 	}
- 
- 	sb_set_features(&mp->m_sb, sb_feat, sectorsize,
--			lsectorsize, params.dsunit);
-+			params.lsectorsize, params.dsunit);
- 
- 	if (force_overwrite)
- 		zero_old_xfs_structures(&params.xi, sbp);
-@@ -2952,7 +2957,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	libxfs_log_clear(mp->m_logdev_targp, NULL,
- 		XFS_FSB_TO_DADDR(mp, logstart),
- 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, logblocks),
--		&sbp->sb_uuid, sb_feat->log_version, lsunit,
-+		&sbp->sb_uuid, sb_feat->log_version, params.lsunit,
- 		XLOG_FMT, XLOG_INIT_CYCLE, false);
- 
- 	mp = libxfs_mount(mp, sbp, params.xi.ddev, params.xi.logdev,
-@@ -3028,7 +3033,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		if (xfs_sb_version_hascrc(&mp->m_sb))
- 			platform_uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_uuid);
- 
--		if (loginternal && agno == logagno) {
-+		if (params.loginternal && agno == params.logagno) {
- 			be32_add_cpu(&agf->agf_freeblks, -logblocks);
- 			agf->agf_longest = cpu_to_be32(params.agsize -
- 				XFS_FSB_TO_AGBNO(mp, logstart) - logblocks);
-@@ -3104,7 +3109,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 
- 		arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
- 		arec->ar_startblock = cpu_to_be32(libxfs_prealloc_blocks(mp));
--		if (loginternal && agno == logagno) {
-+		if (params.loginternal && agno == params.logagno) {
- 			if (lalign) {
- 				/*
- 				 * Have to insert two records
-@@ -3159,7 +3164,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 
- 		arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
- 		arec->ar_startblock = cpu_to_be32(libxfs_prealloc_blocks(mp));
--		if (loginternal && agno == logagno) {
-+		if (params.loginternal && agno == params.logagno) {
- 			if (lalign) {
- 				arec->ar_blockcount = cpu_to_be32(
- 					XFS_FSB_TO_AGBNO(mp, logstart) -
-@@ -3304,7 +3309,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 			}
- 
- 			/* account for the log space */
--			if (loginternal && agno == logagno) {
-+			if (params.loginternal && agno == params.logagno) {
- 				rrec = XFS_RMAP_REC_ADDR(block,
- 					be16_to_cpu(block->bb_numrecs) + 1);
- 				rrec->rm_startblock = cpu_to_be32(
 -- 
 2.11.0
 
