@@ -1,195 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:33204 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753448AbdCFNpV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 08:45:21 -0500
-From: Michal Hocko <mhocko@kernel.org>
-Subject: [PATCH 2/7] lockdep: allow to disable reclaim lockup detection
-Date: Mon,  6 Mar 2017 14:14:03 +0100
-Message-Id: <20170306131408.9828-3-mhocko@kernel.org>
-In-Reply-To: <20170306131408.9828-1-mhocko@kernel.org>
-References: <20170306131408.9828-1-mhocko@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51960 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752010AbdCCPh1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Mar 2017 10:37:27 -0500
+Date: Fri, 3 Mar 2017 10:37:21 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: How to favor memory allocations for WQ_MEM_RECLAIM threads?
+Message-ID: <20170303153720.GC21245@bfoster.bfoster>
+References: <201703031948.CHJ81278.VOHSFFFOOLJQMt@I-love.SAKURA.ne.jp>
+ <20170303133950.GD31582@dhcp22.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170303133950.GD31582@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org
-Cc: linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Vlastimil Babka <vbabka@suse.cz>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-From: Michal Hocko <mhocko@suse.com>
+On Fri, Mar 03, 2017 at 02:39:51PM +0100, Michal Hocko wrote:
+> On Fri 03-03-17 19:48:30, Tetsuo Handa wrote:
+> > Continued from http://lkml.kernel.org/r/201702261530.JDD56292.OFOLFHQtVMJSOF@I-love.SAKURA.ne.jp :
+> > 
+> > While I was testing a patch which avoids infinite too_many_isolated() loop in
+> > shrink_inactive_list(), I hit a lockup where WQ_MEM_RECLAIM threads got stuck
+> > waiting for memory allocation. I guess that we overlooked a basic thing about
+> > WQ_MEM_RECLAIM.
+> > 
+> >   WQ_MEM_RECLAIM helps only when the cause of failing to complete
+> >   a work item is lack of "struct task_struct" to run that work item, for
+> >   WQ_MEM_RECLAIM preallocates one "struct task_struct" so that the workqueue
+> >   will not be blocked waiting for memory allocation for "struct task_struct".
+> > 
+> >   WQ_MEM_RECLAIM does not help when "struct task_struct" running that work
+> >   item is blocked waiting for memory allocation (or is indirectly blocked
+> >   on a lock where the owner of that lock is blocked waiting for memory
+> >   allocation). That is, WQ_MEM_RECLAIM users must guarantee forward progress
+> >   if memory allocation (including indirect memory allocation via
+> >   locks/completions) is needed.
+> > 
+> > In XFS, "xfs_mru_cache", "xfs-buf/%s", "xfs-data/%s", "xfs-conv/%s", "xfs-cil/%s",
+> > "xfs-reclaim/%s", "xfs-log/%s", "xfs-eofblocks/%s", "xfsalloc" and "xfsdiscard"
+> > workqueues are used, and all but "xfsdiscard" are WQ_MEM_RECLAIM workqueues.
+> > 
+> > What I observed is at http://I-love.SAKURA.ne.jp/tmp/serial-20170226.txt.xz .
+> > I guess that the key of this lockup is that xfs-data/sda1 and xfs-eofblocks/s
+> > workqueues (which are RESCUER) got stuck waiting for memory allocation.
+> 
+> If those workers are really required for a further progress of the
+> memory reclaim then they shouldn't block on allocation at all and either
+> use pre allocated memory or use PF_MEMALLOC in case there is a guarantee
+> that only very limited amount of memory is allocated from that context
+> and there will be at least the same amount of memory freed as a result
+> in a reasonable time.
+> 
+> This is something for xfs people to answer though. Please note that I
+> didn't really have time to look through the below traces so the above
+> note is rather generic. It would be really helpful if you could provide
+> a high level dependency chains to see why those rescuers are necessary
+> for the forward progress because it is really easy to get lost in so
+> many traces.
 
-The current implementation of the reclaim lockup detection can lead to
-false positives and those even happen and usually lead to tweak the
-code to silence the lockdep by using GFP_NOFS even though the context
-can use __GFP_FS just fine. See
-http://lkml.kernel.org/r/20160512080321.GA18496@dastard as an example.
+Hmm, I can't claim to fully grok the wq internals, but my understanding
+of the WQ_MEM_RECLAIM setting used on the XFS side was to create rescuer
+threads for workqueues to deal with the case where the kthread
+allocation required memory reclaim, and memory reclaim progress is made
+via a workqueue item. IIRC, this was originally targeted for the
+xfs-reclaim wq based on the report in commit 7a29ac474a ("xfs: give all
+workqueues rescuer threads"), but it looks like that patch was modified
+before it was committed to give all workqueues such a thread as well. I
+don't know that we explicitly need this flag for all XFS wq's, but I
+also don't recall particular meaning behind WQ_MEM_RECLAIM that
+suggested the associated wq should guarantee progress, so perhaps that's
+why it was added as such.
 
-=================================
-[ INFO: inconsistent lock state ]
-4.5.0-rc2+ #4 Tainted: G           O
----------------------------------
-inconsistent {RECLAIM_FS-ON-R} -> {IN-RECLAIM_FS-W} usage.
-kswapd0/543 [HC0[0]:SC0[0]:HE1:SE1] takes:
+That aside, looking through some of the traces in this case...
 
-(&xfs_nondir_ilock_class){++++-+}, at: [<ffffffffa00781f7>] xfs_ilock+0x177/0x200 [xfs]
+- kswapd0 is waiting on an inode flush lock. This means somebody else
+  flushed the inode and it won't be unlocked until the underlying buffer
+  I/O is completed. This context is also holding pag_ici_reclaim_lock
+  which is what probably blocks other contexts from getting into inode
+  reclaim.
+- xfsaild is in xfs_iflush(), which means it has the inode flush lock.
+  It's waiting on reading the underlying inode buffer. The buffer read
+  sets b_ioend_wq to the xfs-buf wq, which is ultimately going to be
+  queued in xfs_buf_bio_end_io()->xfs_buf_ioend_async(). The associated
+  work item is what eventually triggers the I/O completion in
+  xfs_buf_ioend().
 
-{RECLAIM_FS-ON-R} state was registered at:
-  [<ffffffff8110f369>] mark_held_locks+0x79/0xa0
-  [<ffffffff81113a43>] lockdep_trace_alloc+0xb3/0x100
-  [<ffffffff81224623>] kmem_cache_alloc+0x33/0x230
-  [<ffffffffa008acc1>] kmem_zone_alloc+0x81/0x120 [xfs]
-  [<ffffffffa005456e>] xfs_refcountbt_init_cursor+0x3e/0xa0 [xfs]
-  [<ffffffffa0053455>] __xfs_refcount_find_shared+0x75/0x580 [xfs]
-  [<ffffffffa00539e4>] xfs_refcount_find_shared+0x84/0xb0 [xfs]
-  [<ffffffffa005dcb8>] xfs_getbmap+0x608/0x8c0 [xfs]
-  [<ffffffffa007634b>] xfs_vn_fiemap+0xab/0xc0 [xfs]
-  [<ffffffff81244208>] do_vfs_ioctl+0x498/0x670
-  [<ffffffff81244459>] SyS_ioctl+0x79/0x90
-  [<ffffffff81847cd7>] entry_SYSCALL_64_fastpath+0x12/0x6f
+So at this point reclaim is waiting on a read I/O completion. It's not
+clear to me whether the read had completed and the work item was queued
+or not. I do see the following in the workqueue lockup BUG output:
 
-       CPU0
-       ----
-  lock(&xfs_nondir_ilock_class);
-  <Interrupt>
-    lock(&xfs_nondir_ilock_class);
+[  273.412600] workqueue xfs-buf/sda1: flags=0xc
+[  273.414486]   pwq 4: cpus=2 node=0 flags=0x0 nice=0 active=1/1
+[  273.416415]     pending: xfs_buf_ioend_work [xfs]
 
- *** DEADLOCK ***
+... which suggests that it was queued..? I suppose this could be one of
+the workqueues waiting on a kthread, but xfs-buf also has a rescuer that
+appears to be idle:
 
-3 locks held by kswapd0/543:
+[ 1041.555227] xfs-buf/sda1    S14904   450      2 0x00000000
+[ 1041.556813] Call Trace:
+[ 1041.557796]  __schedule+0x336/0xe00
+[ 1041.558983]  schedule+0x3d/0x90
+[ 1041.560085]  rescuer_thread+0x322/0x3d0
+[ 1041.561333]  kthread+0x10f/0x150
+[ 1041.562464]  ? worker_thread+0x4b0/0x4b0
+[ 1041.563732]  ? kthread_create_on_node+0x70/0x70
+[ 1041.565123]  ret_from_fork+0x31/0x40
 
-stack backtrace:
-CPU: 0 PID: 543 Comm: kswapd0 Tainted: G           O    4.5.0-rc2+ #4
+So shouldn't that thread pick up the work item if that is the case?
 
-Hardware name: innotek GmbH VirtualBox/VirtualBox, BIOS VirtualBox 12/01/2006
+Brian
 
- ffffffff82a34f10 ffff88003aa078d0 ffffffff813a14f9 ffff88003d8551c0
- ffff88003aa07920 ffffffff8110ec65 0000000000000000 0000000000000001
- ffff880000000001 000000000000000b 0000000000000008 ffff88003d855aa0
-Call Trace:
- [<ffffffff813a14f9>] dump_stack+0x4b/0x72
- [<ffffffff8110ec65>] print_usage_bug+0x215/0x240
- [<ffffffff8110ee85>] mark_lock+0x1f5/0x660
- [<ffffffff8110e100>] ? print_shortest_lock_dependencies+0x1a0/0x1a0
- [<ffffffff811102e0>] __lock_acquire+0xa80/0x1e50
- [<ffffffff8122474e>] ? kmem_cache_alloc+0x15e/0x230
- [<ffffffffa008acc1>] ? kmem_zone_alloc+0x81/0x120 [xfs]
- [<ffffffff811122e8>] lock_acquire+0xd8/0x1e0
- [<ffffffffa00781f7>] ? xfs_ilock+0x177/0x200 [xfs]
- [<ffffffffa0083a70>] ? xfs_reflink_cancel_cow_range+0x150/0x300 [xfs]
- [<ffffffff8110aace>] down_write_nested+0x5e/0xc0
- [<ffffffffa00781f7>] ? xfs_ilock+0x177/0x200 [xfs]
- [<ffffffffa00781f7>] xfs_ilock+0x177/0x200 [xfs]
- [<ffffffffa0083a70>] xfs_reflink_cancel_cow_range+0x150/0x300 [xfs]
- [<ffffffffa0085bdc>] xfs_fs_evict_inode+0xdc/0x1e0 [xfs]
- [<ffffffff8124d7d5>] evict+0xc5/0x190
- [<ffffffff8124d8d9>] dispose_list+0x39/0x60
- [<ffffffff8124eb2b>] prune_icache_sb+0x4b/0x60
- [<ffffffff8123317f>] super_cache_scan+0x14f/0x1a0
- [<ffffffff811e0d19>] shrink_slab.part.63.constprop.79+0x1e9/0x4e0
- [<ffffffff811e50ee>] shrink_zone+0x15e/0x170
- [<ffffffff811e5ef1>] kswapd+0x4f1/0xa80
- [<ffffffff811e5a00>] ? zone_reclaim+0x230/0x230
- [<ffffffff810e6882>] kthread+0xf2/0x110
- [<ffffffff810e6790>] ? kthread_create_on_node+0x220/0x220
- [<ffffffff8184803f>] ret_from_fork+0x3f/0x70
- [<ffffffff810e6790>] ? kthread_create_on_node+0x220/0x220
-
-To quote Dave:
-"
-Ignoring whether reflink should be doing anything or not, that's a
-"xfs_refcountbt_init_cursor() gets called both outside and inside
-transactions" lockdep false positive case. The problem here is
-lockdep has seen this allocation from within a transaction, hence a
-GFP_NOFS allocation, and now it's seeing it in a GFP_KERNEL context.
-Also note that we have an active reference to this inode.
-
-So, because the reclaim annotations overload the interrupt level
-detections and it's seen the inode ilock been taken in reclaim
-("interrupt") context, this triggers a reclaim context warning where
-it thinks it is unsafe to do this allocation in GFP_KERNEL context
-holding the inode ilock...
-"
-
-This sounds like a fundamental problem of the reclaim lock detection.
-It is really impossible to annotate such a special usecase IMHO unless
-the reclaim lockup detection is reworked completely. Until then it
-is much better to provide a way to add "I know what I am doing flag"
-and mark problematic places. This would prevent from abusing GFP_NOFS
-flag which has a runtime effect even on configurations which have
-lockdep disabled.
-
-Introduce __GFP_NOLOCKDEP flag which tells the lockdep gfp tracking to
-skip the current allocation request.
-
-While we are at it also make sure that the radix tree doesn't
-accidentaly override tags stored in the upper part of the gfp_mask.
-
-Suggested-by: Peter Zijlstra <peterz@infradead.org>
-Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
-Acked-by: Vlastimil Babka <vbabka@suse.cz>
-Signed-off-by: Michal Hocko <mhocko@suse.com>
----
- include/linux/gfp.h      | 10 +++++++++-
- kernel/locking/lockdep.c |  4 ++++
- lib/radix-tree.c         |  2 ++
- 3 files changed, 15 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/gfp.h b/include/linux/gfp.h
-index db373b9d3223..978232a3b4ae 100644
---- a/include/linux/gfp.h
-+++ b/include/linux/gfp.h
-@@ -40,6 +40,11 @@ struct vm_area_struct;
- #define ___GFP_DIRECT_RECLAIM	0x400000u
- #define ___GFP_WRITE		0x800000u
- #define ___GFP_KSWAPD_RECLAIM	0x1000000u
-+#ifdef CONFIG_LOCKDEP
-+#define ___GFP_NOLOCKDEP	0x4000000u
-+#else
-+#define ___GFP_NOLOCKDEP	0
-+#endif
- /* If the above are modified, __GFP_BITS_SHIFT may need updating */
- 
- /*
-@@ -179,8 +184,11 @@ struct vm_area_struct;
- #define __GFP_NOTRACK	((__force gfp_t)___GFP_NOTRACK)
- #define __GFP_NOTRACK_FALSE_POSITIVE (__GFP_NOTRACK)
- 
-+/* Disable lockdep for GFP context tracking */
-+#define __GFP_NOLOCKDEP ((__force gfp_t)___GFP_NOLOCKDEP)
-+
- /* Room for N __GFP_FOO bits */
--#define __GFP_BITS_SHIFT 25
-+#define __GFP_BITS_SHIFT (25 + IS_ENABLED(CONFIG_LOCKDEP))
- #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
- 
- /*
-diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
-index 25c33dcd86d7..b169339541f5 100644
---- a/kernel/locking/lockdep.c
-+++ b/kernel/locking/lockdep.c
-@@ -2884,6 +2884,10 @@ static void __lockdep_trace_alloc(gfp_t gfp_mask, unsigned long flags)
- 	if (DEBUG_LOCKS_WARN_ON(irqs_disabled_flags(flags)))
- 		return;
- 
-+	/* Disable lockdep if explicitly requested */
-+	if (gfp_mask & __GFP_NOLOCKDEP)
-+		return;
-+
- 	mark_held_locks(curr, RECLAIM_FS);
- }
- 
-diff --git a/lib/radix-tree.c b/lib/radix-tree.c
-index 5ed506d648c4..526142afcf8c 100644
---- a/lib/radix-tree.c
-+++ b/lib/radix-tree.c
-@@ -2284,6 +2284,8 @@ static int radix_tree_cpu_dead(unsigned int cpu)
- void __init radix_tree_init(void)
- {
- 	int ret;
-+
-+	BUILD_BUG_ON(RADIX_TREE_MAX_TAGS + __GFP_BITS_SHIFT > 32);
- 	radix_tree_node_cachep = kmem_cache_create("radix_tree_node",
- 			sizeof(struct radix_tree_node), 0,
- 			SLAB_PANIC | SLAB_RECLAIM_ACCOUNT,
--- 
-2.11.0
-
+> -- 
+> Michal Hocko
+> SUSE Labs
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
