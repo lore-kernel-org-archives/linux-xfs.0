@@ -1,195 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:43378 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752037AbdCDBlu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2017 20:41:50 -0500
-From: Josef Bacik <jbacik@fb.com>
-Subject: Re: [PATCH] xfs: clear XBF_ASYNC if we attach an iodone callback
-Date: Sat, 4 Mar 2017 01:26:50 +0000
-Message-ID: <A14C7E7E-2807-48E6-A5C1-ABD09A7B69D3@fb.com>
-References: <1488552404-21379-1-git-send-email-jbacik@fb.com>
- <20170303204902.GF21245@bfoster.bfoster>
- <1488576856.9307.13.camel@fb.com>,<20170303222001.GA24497@bfoster.bfoster>
-In-Reply-To: <20170303222001.GA24497@bfoster.bfoster>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:48058 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751560AbdCDEsS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2017 23:48:18 -0500
+Date: Sat, 4 Mar 2017 15:48:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: allow kmem_zalloc_greedy to fail
+Message-ID: <20170304044812.GK17542@dastard>
+References: <20170302153002.GG3213@bfoster.bfoster>
+ <20170302154541.16155-1-mhocko@kernel.org>
+ <20170303225444.GH17542@dastard>
+ <20170303231912.GA5073@birch.djwong.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170303231912.GA5073@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, Kernel Team <Kernel-team@fb.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Michal Hocko <mhocko@suse.com>
 
+On Fri, Mar 03, 2017 at 03:19:12PM -0800, Darrick J. Wong wrote:
+> On Sat, Mar 04, 2017 at 09:54:44AM +1100, Dave Chinner wrote:
+> > On Thu, Mar 02, 2017 at 04:45:40PM +0100, Michal Hocko wrote:
+> > > From: Michal Hocko <mhocko@suse.com>
+> > > 
+> > > Even though kmem_zalloc_greedy is documented it might fail the current
+> > > code doesn't really implement this properly and loops on the smallest
+> > > allowed size for ever. This is a problem because vzalloc might fail
+> > > permanently - we might run out of vmalloc space or since 5d17a73a2ebe
+> > > ("vmalloc: back off when the current task is killed") when the current
+> > > task is killed. The later one makes the failure scenario much more
+> > > probable than it used to be because it makes vmalloc() failures
+> > > permanent for tasks with fatal signals pending.. Fix this by bailing out
+> > > if the minimum size request failed.
+> > > 
+> > > This has been noticed by a hung generic/269 xfstest by Xiong Zhou.
+> > > 
+> > > fsstress: vmalloc: allocation failure, allocated 12288 of 20480 bytes, mode:0x14080c2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_ZERO), nodemask=(null)
+> > > fsstress cpuset=/ mems_allowed=0-1
+> > > CPU: 1 PID: 23460 Comm: fsstress Not tainted 4.10.0-master-45554b2+ #21
+> > > Hardware name: HP ProLiant DL380 Gen9/ProLiant DL380 Gen9, BIOS P89 10/05/2016
+> > > Call Trace:
+> > >  dump_stack+0x63/0x87
+> > >  warn_alloc+0x114/0x1c0
+> > >  ? alloc_pages_current+0x88/0x120
+> > >  __vmalloc_node_range+0x250/0x2a0
+> > >  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
+> > >  ? free_hot_cold_page+0x21f/0x280
+> > >  vzalloc+0x54/0x60
+> > >  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
+> > >  kmem_zalloc_greedy+0x2b/0x40 [xfs]
+> > >  xfs_bulkstat+0x11b/0x730 [xfs]
+> > >  ? xfs_bulkstat_one_int+0x340/0x340 [xfs]
+> > >  ? selinux_capable+0x20/0x30
+> > >  ? security_capable+0x48/0x60
+> > >  xfs_ioc_bulkstat+0xe4/0x190 [xfs]
+> > >  xfs_file_ioctl+0x9dd/0xad0 [xfs]
+> > >  ? do_filp_open+0xa5/0x100
+> > >  do_vfs_ioctl+0xa7/0x5e0
+> > >  SyS_ioctl+0x79/0x90
+> > >  do_syscall_64+0x67/0x180
+> > >  entry_SYSCALL64_slow_path+0x25/0x25
+> > > 
+> > > fsstress keeps looping inside kmem_zalloc_greedy without any way out
+> > > because vmalloc keeps failing due to fatal_signal_pending.
+> > > 
+> > > Reported-by: Xiong Zhou <xzhou@redhat.com>
+> > > Analyzed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> > > Signed-off-by: Michal Hocko <mhocko@suse.com>
+> > > ---
+> > >  fs/xfs/kmem.c | 2 ++
+> > >  1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> > > index 339c696bbc01..ee95f5c6db45 100644
+> > > --- a/fs/xfs/kmem.c
+> > > +++ b/fs/xfs/kmem.c
+> > > @@ -34,6 +34,8 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
+> > >  	size_t		kmsize = maxsize;
+> > >  
+> > >  	while (!(ptr = vzalloc(kmsize))) {
+> > > +		if (kmsize == minsize)
+> > > +			break;
+> > >  		if ((kmsize >>= 1) <= minsize)
+> > >  			kmsize = minsize;
+> > >  	}
+> > 
+> > Seems wrong to me - this function used to have lots of callers and
+> > over time we've slowly removed them or replaced them with something
+> > else. I'd suggest removing it completely, replacing the call sites
+> > with kmem_zalloc_large().
+> 
+> Heh.  I thought the reason why _greedy still exists (for its sole user
+> bulkstat) is that bulkstat had the flexibility to deal with receiving
+> 0, 1, or 4 pages.  So yeah, we could just kill it.
 
-> On Mar 3, 2017, at 5:20 PM, Brian Foster <bfoster@redhat.com> wrote:
->=20
->> On Fri, Mar 03, 2017 at 04:34:16PM -0500, Josef Bacik wrote:
->>> On Fri, 2017-03-03 at 15:49 -0500, Brian Foster wrote:
->>>> On Fri, Mar 03, 2017 at 09:46:44AM -0500, Josef Bacik wrote:
->>>>=20
->>>> While testing nbd disconnects I kept hitting the following hang
->>>>=20
->>>> Call Trace:
->>>>  schedule+0x35/0x80
->>>>  xfs_ail_push_all_sync+0xa3/0xe0
->>>>  ? prepare_to_wait_event+0x100/0x100
->>>>  xfs_unmountfs+0x57/0x190
->>>>  xfs_fs_put_super+0x32/0x90
->>>>  generic_shutdown_super+0x6f/0xf0
->>>>  kill_block_super+0x27/0x70
->>>>  deactivate_locked_super+0x3e/0x70
->>>>  deactivate_super+0x46/0x60
->>>>  cleanup_mnt+0x3f/0x80
->>>>  __cleanup_mnt+0x12/0x20
->>>>  task_work_run+0x86/0xb0
->>>>  exit_to_usermode_loop+0x6d/0x96
->>>>  do_syscall_64+0x8b/0xa0
->>>>  entry_SYSCALL64_slow_path+0x25/0x25
->>>>=20
->>>> After some digging around I found that there was a log item on the
->>>> ail
->>>> with a callback of xfs_iflush_done.  A printk confirmed that at the
->>>> call
->>>> to xfs_buf_attach_iodone in xfs_iflush_int had XBF_ASYNC already
->>>> set,
->>>> which means on error we do not call xfs_buf_do_callbacks, which
->>>> leaves
->>>> the log item on the ail list which causes us to hang on unmount.  I
->>>> assume the block has XBF_ASYNC set because we did a readahead on
->>>> it, so
->>>> it doesn't really need to have XBF_ASYNC set at this point as we do
->>>> actually care about what happens to the buffer once IO is complete.
->>>> With this patch my hang no longer happens.
->>>>=20
->>>> Signed-off-by: Josef Bacik <jbacik@fb.com>
->>>> ---
->>>>  fs/xfs/xfs_buf_item.c | 5 +++++
->>>>  1 file changed, 5 insertions(+)
->>>>=20
->>>> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
->>>> index 2975cb2..24fcb67 100644
->>>> --- a/fs/xfs/xfs_buf_item.c
->>>> +++ b/fs/xfs/xfs_buf_item.c
->>>> @@ -1016,6 +1016,11 @@ xfs_buf_attach_iodone(
->>>> =20
->>>>      ASSERT(bp->b_iodone =3D=3D NULL ||
->>>>             bp->b_iodone =3D=3D xfs_buf_iodone_callbacks);
->>>> +    /*
->>>> +     * Somebody now cares about the fate of this buffer, clear
->>>> XBF_ASYNC so
->>>> +     * that the iodone callback actually gets called.
->>>> +     */
->>>> +    bp->b_flags &=3D ~XBF_ASYNC;
->>> XBF_ASYNC generally describes the type of I/O being submitted for a
->>> particular buffer (blocking or non), so it being set or not is kind
->>> of
->>> outside the scope of xfs_iflush(). It really depends on how the
->>> caller
->>> ultimately wants to write the buffer. For example, if we get here via
->>> xfsaild_push()->xfs_inode_item_push(), the latter will do
->>> xfs_buf_delwri_queue() and the former will eventually call
->>> xfs_buf_delwri_submit_nowait(), which submits async I/O and so will
->>> re-add XBF_ASYNC.
->>>=20
->>> It is interesting if this prevents your problem. I can't quite make
->>> out
->>> why that would be. The other xfs_iflush() caller is reclaim, which
->>> calls
->>> xfs_bwrite() which itself clears XBF_ASYNC before submission.
->>>=20
->>> What I'm guessing you're referring to above wrt to not calling
->>> xfs_buf_do_callbacks() is the async check in
->>> xfs_buf_iodone_callback_error(), which is only relevant on I/O error.
->>> If
->>> the buffer I/O succeeds, we should always invoke the iodone callbacks
->>> regardless of async state. Do you observe otherwise or does this I/O
->>> indeed fail?
->>>=20
->>> Anyways, if we change the buffer flags simply to control the behavior
->>> of
->>> iodone_callback_error(), we've basically decided to treat an
->>> otherwise
->>> async I/O as sync with the assumption that the submitter is going to
->>> handle the I/O error. As mentioned above, we don't really have that
->>> information here so that is kind of a dangerous assumption. At the
->>> very
->>> least, it bypasses all of the configurable error handling
->>> infrastructure
->>> that is specifically in place for async submitted buffers.
->>>=20
->>> I'm wondering if you're hitting the flush locked inode retry problem
->>> that Carlos has been working on. The problem is basically that if the
->>> I/O fails on a buffer that backs a flush locked inode, we never retry
->>> the buffer and xfsaild basically spins on pushing the inode. What
->>> happens if you enable xfs tracepoints while the fs is hung?
->>=20
->> Sorry for some reason my reply to linux-xfs got eaten.  It made it to
->> Darrick but vger is being weird (sometimes it fails to get an email,
->> sometimes it works fine).
->>=20
->> So yes my patch doesn't actually work, I just didn't notice that the
->> problem had happened until after I sent the page.
->>=20
->> I'm doing this on a 4.6 kernel, I haven't actually tried it on a
->> upstream kernel but my original assumption was it was still available
->> to hit on an upstream kernel.  Basically on 4.6 we _always_ resubmit
->> the IO once if it fails, and then just drop the buffer if we've re-
->> submitted once.  We never do the xfs_buf_do_callbacks() call, which
->> seems wrong since as you say basically everything will set XBF_ASYNC.
->>=20
->=20
-> The XBF_WRITE_FAIL resubmission is an internal retry thing intended to
-> deal with transient errors. Assuming the internal retry fails, we do
-> release the buffer but note that the higher level item is still tracked
-> on the AIL (which basically just tracks that the inode is in the
-> physical log and we're waiting on the metadata writeback to complete to
-> free up space in the log).
->=20
-> IOWs, while the I/O path doesn't retry and releases the buffer, the
-> intent is that the next xfsaild_push() cycle will retry the I/O (this is
-> the part that is actually broken for flush locked inodes).
+irbuf is sized to minimise AGI locking, but if memory is low
+it just uses what it can get. Keep in mind the number of inodes we
+need to process is determined by the userspace buffer size, which
+can easily be sized to hold tens of thousands of struct
+xfs_bulkstat.
 
-Yeah this sounds like what is happening, as I'll see xfs errors every N sec=
-onds while its hanging, so it's retrying the IO, it's just not failing out =
-gracefully. What would be the course of action here?  I can apply things an=
-d run them here pretty quickly.
+> But thinking even more stingily about memory, are there applications
+> that care about being able to bulkstat 16384 inodes at once?
 
->=20
->> What I've done to fix it for 4.6 was in the second case where we just
->> drop the buffer was to go ahead and do the xfs_buf_do_callbacks() call
->> and then clear the fspriv and iodone callback on the buffer, and that
->> actually made the problem go away.  Looking at the upstream code if
->> it's a permanent IO error we still do the callbacks, so I think the
->> problem I've hit has already been fixed upstream.  I'll verify next
->> week just to be sure, since I can usually hit the problem in less than
->> 5 minutes of my reproducer.  Thanks,
->>=20
->=20
-> Ok, just be aware that while that might allow your hung unmount case to
-> progress, what you're doing in the general/runtime case is treating a
-> buffer that fails the I/O twice as successfully completed. E.g., see
-> that xfs_iflush_done() invokes xfs_trans_ail_delete_bulk() which removes
-> the inode item from the AIL as if it were written back to its final
-> location on disk.
->=20
-> It might not be straightforward to reproduce because in practice I/O
-> errors won't occur, may mean the device is broken and the fs is going to
-> shutdown anyways, or some other dirty inode backed by the same buffer
-> might flush it, but otherwise this sounds like a path to corruption. For
-> example, suppose we modify an inode, commit the transaction etc. such
-> that the inode makes it to the log. At this point, the buffer is now
-> available for writeback. Say we attempt the buffer writeback and it
-> fails both initially and for the internal retry. IIUC, the change you've
-> made will basically release the inode from the AIL at this point as if
-> it succeeded, but clearly the updated inode has not made it to disk. If
-> the device otherwise goes back to normal and no more I/O errors occur,
-> we've basically just thrown away the change to the inode and corrupted
-> the fs.
+IIRC, xfsdump can bulkstat up to 64k inodes per call....
 
-Well thankfully this is when the device goes completely away so I'm not wor=
-ried about that, but yeah that's not an excellent general solution.  Though=
- it looked like it was tripping the shutdown code in the iflush code, but t=
-his isn't my area.  Thanks,
+> How badly
+> does bulkstat need to be able to bulk-process more than a page's worth
+> of inobt records, anyway?
 
-Josef=
+Benchmark it on a busy system doing lots of other AGI work (e.g. a
+busy NFS server workload with a working set of tens of millions of
+inodes so it doesn't fit in cache) and find out. That's generally
+how I answer those sorts of questions...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
