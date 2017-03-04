@@ -1,163 +1,231 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55902 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755608AbdCGURB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Mar 2017 15:17:01 -0500
-Subject: Re: [PATCH 0/9] mkfs.xfs: add mkfs.xfs.conf support
-References: <20170303231316.12716-1-mcgrof@kernel.org>
- <6de0c7e4-8d20-ea90-fc49-d47a787e3939@sandeen.net>
- <20170304045615.GL17542@dastard>
- <7a6509ef-1c2b-cc9c-ecb5-d0a39b5f31db@sandeen.net>
- <49d92fb6-61f6-61c7-15dc-5cfac4c7033e@suse.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <2bd62db0-66b0-a6ca-cf98-af4128cb3aa3@sandeen.net>
-Date: Tue, 7 Mar 2017 14:09:10 -0600
-MIME-Version: 1.0
-In-Reply-To: <49d92fb6-61f6-61c7-15dc-5cfac4c7033e@suse.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="sk2inQ6gKrmd1vxVUHHvUgcbiMGmLQI2B"
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:35931 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752064AbdCDASM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2017 19:18:12 -0500
+Received: by mail-qk0-f173.google.com with SMTP id 1so83450160qkl.3
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Mar 2017 16:18:11 -0800 (PST)
+Message-ID: <1488586167.11672.1.camel@redhat.com>
+Subject: Re: [RFC PATCH v1 11/30] fs: new API for handling i_version
+From: Jeff Layton <jlayton@redhat.com>
+Date: Fri, 03 Mar 2017 19:09:27 -0500
+In-Reply-To: <20170303223649.GH13877@fieldses.org>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+         <1482339827-7882-12-git-send-email-jlayton@redhat.com>
+         <20170303223649.GH13877@fieldses.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Mahoney <jeffm@suse.com>, Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, okurz@suse.com, lpechacek@suse.com
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---sk2inQ6gKrmd1vxVUHHvUgcbiMGmLQI2B
-Content-Type: multipart/mixed; boundary="8dl2Aj6b0WdTCdACsgkIkcJn9oXp4LnS4";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: Jeff Mahoney <jeffm@suse.com>, Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org,
- jack@suse.com, okurz@suse.com, lpechacek@suse.com
-Message-ID: <2bd62db0-66b0-a6ca-cf98-af4128cb3aa3@sandeen.net>
-Subject: Re: [PATCH 0/9] mkfs.xfs: add mkfs.xfs.conf support
-References: <20170303231316.12716-1-mcgrof@kernel.org>
- <6de0c7e4-8d20-ea90-fc49-d47a787e3939@sandeen.net>
- <20170304045615.GL17542@dastard>
- <7a6509ef-1c2b-cc9c-ecb5-d0a39b5f31db@sandeen.net>
- <49d92fb6-61f6-61c7-15dc-5cfac4c7033e@suse.com>
-In-Reply-To: <49d92fb6-61f6-61c7-15dc-5cfac4c7033e@suse.com>
+On Fri, 2017-03-03 at 17:36 -0500, J. Bruce Fields wrote:
+> The patch ordering is a little annoying as I'd like to be able to be
+> able to verify the implementation at the same time these new interfaces
+> are added, but, I don't know, I don't have a better idea.
+> 
 
---8dl2Aj6b0WdTCdACsgkIkcJn9oXp4LnS4
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
+Fair point. My thinking was "add new API, convert everything over to it,
+and then convert the implementation to do something different". Maybe
+that's the wrong approach?
 
-On 3/7/17 2:07 PM, Jeff Mahoney wrote:
-> On 3/5/17 7:08 PM, Eric Sandeen wrote:
->> On 3/3/17 10:56 PM, Dave Chinner wrote:
->>> On Fri, Mar 03, 2017 at 09:49:58PM -0600, Eric Sandeen wrote:
->>>> On 3/3/17 5:13 PM, Luis R. Rodriguez wrote:
->>>>> This series adds mkfs.xfs.conf support, so that options can now be
->>>>> shoved into a configuration file. This enables certain defaults to =
-be
->>>>> saved for folks sticking to certain values, but more importantly it=
+> Anyway, various nits:
+> 
+> On Wed, Dec 21, 2016 at 12:03:28PM -0500, Jeff Layton wrote:
+> > We already have inode_inc_iversion. Add inode_set_iversion,
+> > inode_get_iversion, inode_cmp_iversion and inode_iversion_need_inc.
+> > 
+> > These should encompass how i_version is currently accessed and
+> > manipulated so that we can later change the implementation.
+> > 
+> > Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> > ---
+> >  include/linux/fs.h | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++---
+> >  1 file changed, 104 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/include/linux/fs.h b/include/linux/fs.h
+> > index 2ba074328894..075c915fe2b1 100644
+> > --- a/include/linux/fs.h
+> > +++ b/include/linux/fs.h
+> > @@ -1962,18 +1962,117 @@ static inline void inode_dec_link_count(struct inode *inode)
+> >  }
+> >  
+> >  /**
+> > + * inode_set_iversion - set i_version to a particular value
+> > + * @inode: inode to set
+> > + * @new: new i_version value to set
+> > + *
+> > + * Set the inode's i_version. Should generally be called when initializing
+> > + * a new inode.
+> > + */
+> > +static inline void
+> > +inode_set_iversion(struct inode *inode, const u64 new)
+> > +{
+> > +	inode->i_version = new;
+> > +}
+> > +
+> > +/**
+> > + * inode_inc_iversion_locked - increment i_version while protected
+> > + * @inode: inode to be updated
+> > + *
+> > + * Increment the i_version field in the inode. This version is usable
+> > + * when there is some other sort of lock in play that would prevent
+> > + * concurrent accessors.
+> > + */
+> > +static inline void
+> > +inode_inc_iversion_locked(struct inode *inode)
+> > +{
+> > +	inode->i_version++;
+> > +}
+> > +
+> > +/**
+> > + * inode_set_iversion_read - set i_version to a particular value and flag
+> > + * 			     set flag to indicate that it has been viewed
+> 
+> s/flag set flag/set flag/.
+> 
+> > + * @inode: inode to set
+> > + * @new: new i_version value to set
+> > + *
+> > + * Set the inode's i_version, and flag the inode as if it has been viewed.
+> > + * Should generally be called when initializinga new inode in memory from
+> > + * from disk.
+> 
+> s/from from/from/.
+> 
+> > + */
+> > +static inline void
+> > +inode_set_iversion_read(struct inode *inode, const u64 new)
+> > +{
+> > +	inode_set_iversion(inode, new);
+> > +}
+> > +
+> > +/**
+> >   * inode_inc_iversion - increments i_version
+> >   * @inode: inode that need to be updated
+> >   *
+> >   * Every time the inode is modified, the i_version field will be incremented.
+> > - * The filesystem has to be mounted with i_version flag
+> > + * The filesystem has to be mounted with MS_I_VERSION flag.
+> 
+> I'm not sure why that comment's there.  Filesystems can choose to
+> increment i_version without requiring the mount option if they want,
+> can't they?
+> 
 
->>>>> also enables distributions to override certain defaults so that new=
+Yeah, it should probably be removed. It honestly doesn't make much sense
+since we can end up bumping the thing regardless of whether it's set.
 
->>>>> filesystems remain compatible with older distributions.
->>>>>
->>>>> This has been based on top of xfsprogs-dev v4.9.0-rc1.
->>>>>
->>>>> Given we already have an existinsg infrastructure to validate argum=
-ent
->>>>> values this reuses that infrastructure by first adding helpers and =
-porting
->>>>> over the argument parsing suppor to use these helpers.
->>>>
->>>> I'm not necessarily the final word on this, but I have to say
->>>> I'm not a huge fan of having mkfs config files.  I've lived=20
->>>> through that in mke2fs land, and my personal feeling is that
->>>> it can lead to confusion when distros start shipping config
->>>> files with different defaults than upstream ships in the
->>>> code itself.
->>>>
->>>> I guess I can see the argument for shipping old/compatible
->>>> defaults with newer progs and older kernels, but by the
->>>> time a distro ships a custom old default config file they could
->>>> also patch out the new features just as easily... (which
->>>> is also confusing, I guess ;) )
->>>>
->>>> After 25+ years of no external config file, I'm concerned
->>>> about principal of least surprise when the same xfsprogs version
->>>> starts behaving differently on different boxes based on a new
->>>> file that popped up in /etc ...
->>>>
->>>> At the very least, I would like to /not/ ship or install any
->>>> config file with xfsprogs by default; the code itself should
->>>> be the canonical, single point of truth for defaults for a stock
->>>> "make && make install" installation.
->>>
->>> Hence my suggestion of libconfig - it can /write config files/ based
->>> on the current mkfs config. So there's no need to ship default
->>> config files - if a user wants a special config they can use mkfs to
->>> generate it and they can install it appropriately.
->>>
->>> e.g. 'mkfs -W <options>' outputs a config file to stdout that
->>> matches the config specified on the command line, but does not make
->>> the filesystem (similar to the "-n" option). If no options are
->>> specified, the default config is emitted....
->>
->> That sounds nice, but I guess I'd like to get some other thoughts
->> on the overall upsides and downsides of having config files which
->> alter a bare mkfs.xfs command's behavior.
->=20
-> The biggest upside is that we can package up the latest xfsprogs on any=
+> > + */
+> > +static inline bool
+> 
+> Document what the return value means?
+> 
 
-> distro release and have it work for the user without any surprises.  If=
+Will do.
 
-> we do that now, we end up with a mkfs that creates file systems that th=
-e
-> kernel can't actually use.  The most obvious example is using a modern
-> mkfs.xfs on a system that doesn't support v5 superblocks.  There's
-> actually nothing in the man page that will tell a user how to interpret=
+> > +inode_inc_iversion(struct inode *inode)
+> > +{
+> > +	spin_lock(&inode->i_lock);
+> > +	inode_inc_iversion_locked(inode);
+> > +	spin_unlock(&inode->i_lock);
+> > +	return true;
+> > +}
+> > +
+> > +/**
+> > + * inode_get_iversion_raw - read i_version without "perturbing" it
+> > + * @inode: inode from which i_version should be read
+> > + *
+> > + * Read the inode i_version counter for an inode without registering it as a
+> > + * read. Should typically be used by local filesystems that need to store an
+> > + * i_version on disk.
+> > + */
+> > +static inline u64
+> > +inode_get_iversion_raw(const struct inode *inode)
+> > +{
+> > +	return inode->i_version;
+> > +}
+> > +
+> > +/**
+> > + * inode_get_iversion - read i_version for later use
+> > + * @inode: inode from which i_version should be read
+> > + *
+> > + * Read the inode i_version counter. This should be used by callers that wish
+> > + * to store the returned i_version for later comparison.
+> 
+> I'm not sure what "for later comparison" means.  This is the "read"
+> operation that actually flags the i_version as read, which you'd use
+> (for example) to implement NFS getattr?  I wonder if there's a better
+> way to say that.
+> 
 
-> the error message and create a usable file system.  Defaults changing
-> over time is good practice, but having a way to keep the old defaults o=
-n
-> older systems is useful.  Being able to dump the defaults to a file is
-> helpful so that we can check whether the defaults have changed
-> programmatically without having to know about new options ahead of time=
-=2E
+Yeah, I'm definitely open to better suggestions on naming.
 
-Ok, I'm getting convinced.  Thanks for convincing.  :)
+> > + */
+> > +static inline u64
+> > +inode_get_iversion(const struct inode *inode)
+> > +{
+> > +	return inode_get_iversion_raw(inode);
+> > +}
+> > +
+> > +/**
+> > + * inode_cmp_iversion - check whether the i_version counter has changed
+> > + * @inode: inode to check
+> > + * @old: old value to check against its i_version
+> > + *
+> > + * Compare an i_version counter with a previous one. Returns 0 if they are
+> > + * the same or non-zero if they are different.
+> 
+> Does this flag the i_version as read?  What's it for?  (OK, I guess I'll
+> find out after a few more patches...).
+> 
 
--Eric
+No, that won't flag it as read. 
 
-> That said, by default, we shouldn't install a config file from 'make
-> install.'  If distros want to add one, they're welcome to do that eithe=
-r
-> in their xfsprogs package or via some per-release mechanism.
->=20
-> -Jeff
->=20
+Fetching an i_version value at a point in time must flag it as having
+been read. But, we can always "peek" at the i_version and see if it has
+changed from a given value without having to flag the new value as
+having been read. We haven't recorded its value, so we don't have to
+ensure that it changes on subsequent reads from where it is now.
 
+This function implements the latter. Given a value that we fetched
+earlier, has the current i_version value changed?
 
---8dl2Aj6b0WdTCdACsgkIkcJn9oXp4LnS4--
+> >   */
+> > +static inline s64
+> > +inode_cmp_iversion(const struct inode *inode, const u64 old)
+> > +{
+> > +	return (s64)inode->i_version - (s64)old;
+> > +}
+> >  
+> > -static inline void inode_inc_iversion(struct inode *inode)
+> > +/**
+> > + * inode_iversion_need_inc - is the i_version in need of being incremented?
+> > + * @inode: inode to check
+> > + *
+> > + * Returns whether the inode->i_version counter needs incrementing on the next
+> > + * change.
+> > + */
+> > +static inline bool
+> > +inode_iversion_need_inc(struct inode *inode)
+> >  {
+> > -       spin_lock(&inode->i_lock);
+> > -       inode->i_version++;
+> > -       spin_unlock(&inode->i_lock);
+> > +	return true;
+> >  }
+> >  
+> >  enum file_time_flags {
+> > -- 
+> > 2.7.4
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---sk2inQ6gKrmd1vxVUHHvUgcbiMGmLQI2B
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJYvxNuAAoJECCuFpLhPd7g/DgQAIYom7xAYQrxiOhTIYHRqAMD
-LD6JZljuXQAnSvWyDvdFFmAHTxaVyxgJLZRK36wyQfAUSVPcTzgyixOUUZOH+PuM
-ylfo0nSdg+RLr/ytWWNMeyJ+8csYozpExH+YD59A6N6QcsWD1ugV2WW1gofb+do+
-0eYJu9ArYEzzOTRfcN9/YKwbOPy8GLpo+h8uBYuYpIz1HBZW97qfbiQV3s9CWSuy
-egMnCFaHCISjIEAIlSoFEPOzVj4s/ksK7E4OvFZXtGOWmT3GVjEB2eStHLDej0lo
-//b1F9gbVdfzswBFFTgZth2jzRAa4pE0d14988nx0kfg5uT5dk3cQc7P/UfxAgmN
-nmeOFCEgdAZCluneNFau5Zd1dgSFKKb0BAaNeKglLFZIcr+8lwX2+llS6tR/pGFH
-ukyIwRZFPe4LkzymQsesoSclSNCoRdo93shM4SLgP1gk1viRBvy6AyKKmkUIPSa0
-6LtFNGkI9rJtxL/ys5zGxHTyz/SYMuHFBa/45d5ESbaj0jCJpS4An6IJ0neYmg7b
-JOdf34UwZ/1LraFr80HB4x62QRP6hYeVaJgy2SvwqSAnrbMXu+NIOYni//cnfJ+J
-aSMmb4HhchM83godpdt23urgWqnNx7TfEYyuVovBhVwfAZuNxOQ+k385H9zAyp7f
-IXydayoFqzk5aZVKM/yk
-=P4dc
------END PGP SIGNATURE-----
-
---sk2inQ6gKrmd1vxVUHHvUgcbiMGmLQI2B--
+-- 
+Jeff Layton <jlayton@redhat.com>
