@@ -1,113 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36014 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750738AbdCFNXr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 08:23:47 -0500
-From: Michal Hocko <mhocko@kernel.org>
-Subject: [PATCH 5/7] xfs: use memalloc_nofs_{save,restore} instead of memalloc_noio*
-Date: Mon,  6 Mar 2017 14:14:06 +0100
-Message-Id: <20170306131408.9828-6-mhocko@kernel.org>
-In-Reply-To: <20170306131408.9828-1-mhocko@kernel.org>
-References: <20170306131408.9828-1-mhocko@kernel.org>
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:35172 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752042AbdCDB6z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2017 20:58:55 -0500
+Received: by mail-qk0-f173.google.com with SMTP id v125so24882580qkh.2
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Mar 2017 17:58:54 -0800 (PST)
+Message-ID: <1488592730.2997.4.camel@redhat.com>
+Subject: Re: [RFC PATCH v1 11/30] fs: new API for handling i_version
+From: Jeff Layton <jlayton@redhat.com>
+Date: Fri, 03 Mar 2017 20:58:50 -0500
+In-Reply-To: <8737etncfb.fsf@notabene.neil.brown.name>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+         <1482339827-7882-12-git-send-email-jlayton@redhat.com>
+         <8737etncfb.fsf@notabene.neil.brown.name>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org
-Cc: linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Vlastimil Babka <vbabka@suse.cz>
+To: NeilBrown <neil@brown.name>, linux-fsdevel@vger.kernel.org, "J. Bruce Fields" <bfields@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Michal Hocko <mhocko@suse.com>
+On Sat, 2017-03-04 at 10:55 +1100, NeilBrown wrote:
+> On Wed, Dec 21 2016, Jeff Layton wrote:
+> 
+> > We already have inode_inc_iversion. Add inode_set_iversion,
+> > inode_get_iversion, inode_cmp_iversion and inode_iversion_need_inc.
+> 
+> This list of added interfaces is incomplete.
+> And some of these interfaces could really use some justification up
+> front.
+> 
+> You later add a "force" parameter to inode_inc_version.
+> Why not do that up front here?
+> 
 
-kmem_zalloc_large and _xfs_buf_map_pages use memalloc_noio_{save,restore}
-API to prevent from reclaim recursion into the fs because vmalloc can
-invoke unconditional GFP_KERNEL allocations and these functions might be
-called from the NOFS contexts. The memalloc_noio_save will enforce
-GFP_NOIO context which is even weaker than GFP_NOFS and that seems to be
-unnecessary. Let's use memalloc_nofs_{save,restore} instead as it should
-provide exactly what we need here - implicit GFP_NOFS context.
+First, thanks to you and Bruce for having a look.
 
-Changes since v1
-- s@memalloc_noio_restore@memalloc_nofs_restore@ in _xfs_buf_map_pages
-  as per Brian Foster
+Yes, it's clear from this and the earlier emails that I didn't do
+enough documentation and explanation. I'll plan to respin this when I
+get a chance, and lay out the justification and discussion a bit more.
 
-Acked-by: Vlastimil Babka <vbabka@suse.cz>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Michal Hocko <mhocko@suse.com>
----
- fs/xfs/kmem.c    | 12 ++++++------
- fs/xfs/xfs_buf.c |  8 ++++----
- 2 files changed, 10 insertions(+), 10 deletions(-)
+I'll also make sure the not change the API midstream like this when I
+respin.
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index e14da724a0b5..6b7b04468aa8 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -66,7 +66,7 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
- void *
- kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
- {
--	unsigned noio_flag = 0;
-+	unsigned nofs_flag = 0;
- 	void	*ptr;
- 	gfp_t	lflags;
- 
-@@ -78,17 +78,17 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
- 	 * __vmalloc() will allocate data pages and auxillary structures (e.g.
- 	 * pagetables) with GFP_KERNEL, yet we may be under GFP_NOFS context
- 	 * here. Hence we need to tell memory reclaim that we are in such a
--	 * context via PF_MEMALLOC_NOIO to prevent memory reclaim re-entering
-+	 * context via PF_MEMALLOC_NOFS to prevent memory reclaim re-entering
- 	 * the filesystem here and potentially deadlocking.
- 	 */
--	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
--		noio_flag = memalloc_noio_save();
-+	if (flags & KM_NOFS)
-+		nofs_flag = memalloc_nofs_save();
- 
- 	lflags = kmem_flags_convert(flags);
- 	ptr = __vmalloc(size, lflags | __GFP_HIGHMEM | __GFP_ZERO, PAGE_KERNEL);
- 
--	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
--		memalloc_noio_restore(noio_flag);
-+	if (flags & KM_NOFS)
-+		memalloc_nofs_restore(nofs_flag);
- 
- 	return ptr;
- }
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index b6208728ba39..ca09061369cb 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -443,17 +443,17 @@ _xfs_buf_map_pages(
- 		bp->b_addr = NULL;
- 	} else {
- 		int retried = 0;
--		unsigned noio_flag;
-+		unsigned nofs_flag;
- 
- 		/*
- 		 * vm_map_ram() will allocate auxillary structures (e.g.
- 		 * pagetables) with GFP_KERNEL, yet we are likely to be under
- 		 * GFP_NOFS context here. Hence we need to tell memory reclaim
--		 * that we are in such a context via PF_MEMALLOC_NOIO to prevent
-+		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
- 		 * memory reclaim re-entering the filesystem here and
- 		 * potentially deadlocking.
- 		 */
--		noio_flag = memalloc_noio_save();
-+		nofs_flag = memalloc_nofs_save();
- 		do {
- 			bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
- 						-1, PAGE_KERNEL);
-@@ -461,7 +461,7 @@ _xfs_buf_map_pages(
- 				break;
- 			vm_unmap_aliases();
- 		} while (retried++ <= 1);
--		memalloc_noio_restore(noio_flag);
-+		memalloc_nofs_restore(nofs_flag);
- 
- 		if (!bp->b_addr)
- 			return -ENOMEM;
+> > +
+> > +/**
+> > + * inode_get_iversion - read i_version for later use
+> > + * @inode: inode from which i_version should be read
+> > + *
+> > + * Read the inode i_version counter. This should be used by callers that wish
+> > + * to store the returned i_version for later comparison.
+> > + */
+> > +static inline u64
+> > +inode_get_iversion(const struct inode *inode)
+> > +{
+> > +	return inode_get_iversion_raw(inode);
+> > +}
+> 
+> I don't understand why this can use the _raw version rather than the
+> _read version.
+> Surely you need to know about any changes after this read.
+> 
+
+The approach here was to convert everything to a new API and have it
+work much like the code works today and then to morph it into something
+that only conditionally bumps the counter.
+
+In the later implementation, yes you do need to know about changes
+after the read, but in the initial implementation it doesn't matter
+since the counter is bumped on every change anyway.
+
+I'll try to do a better job laying out this rationale in follow-on
+postings.
 -- 
-2.11.0
-
+Jeff Layton <jlayton@redhat.com>
