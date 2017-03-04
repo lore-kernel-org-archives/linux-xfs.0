@@ -1,102 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57662 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:52647 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750747AbdCFNXr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Mar 2017 08:23:47 -0500
-Date: Mon, 6 Mar 2017 14:21:14 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 1/2] xfs: allow kmem_zalloc_greedy to fail
-Message-ID: <20170306132113.GC27953@dhcp22.suse.cz>
-References: <20170302153002.GG3213@bfoster.bfoster>
- <20170302154541.16155-1-mhocko@kernel.org>
- <20170303225444.GH17542@dastard>
+        id S1752161AbdCDAAk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 3 Mar 2017 19:00:40 -0500
+From: NeilBrown <neil@brown.name>
+Date: Sat, 04 Mar 2017 11:00:06 +1100
+Subject: Re: [RFC PATCH v1 30/30] fs: convert i_version counter over to an atomic64_t
+In-Reply-To: <1482339827-7882-31-git-send-email-jlayton@redhat.com>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com> <1482339827-7882-31-git-send-email-jlayton@redhat.com>
+Message-ID: <87zih1lxmh.fsf@notabene.neil.brown.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170303225444.GH17542@dastard>
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org
+To: Jeff Layton <jlayton@redhat.com>, linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Sat 04-03-17 09:54:44, Dave Chinner wrote:
-> On Thu, Mar 02, 2017 at 04:45:40PM +0100, Michal Hocko wrote:
-> > From: Michal Hocko <mhocko@suse.com>
-> > 
-> > Even though kmem_zalloc_greedy is documented it might fail the current
-> > code doesn't really implement this properly and loops on the smallest
-> > allowed size for ever. This is a problem because vzalloc might fail
-> > permanently - we might run out of vmalloc space or since 5d17a73a2ebe
-> > ("vmalloc: back off when the current task is killed") when the current
-> > task is killed. The later one makes the failure scenario much more
-> > probable than it used to be because it makes vmalloc() failures
-> > permanent for tasks with fatal signals pending.. Fix this by bailing out
-> > if the minimum size request failed.
-> > 
-> > This has been noticed by a hung generic/269 xfstest by Xiong Zhou.
-> > 
-> > fsstress: vmalloc: allocation failure, allocated 12288 of 20480 bytes, mode:0x14080c2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_ZERO), nodemask=(null)
-> > fsstress cpuset=/ mems_allowed=0-1
-> > CPU: 1 PID: 23460 Comm: fsstress Not tainted 4.10.0-master-45554b2+ #21
-> > Hardware name: HP ProLiant DL380 Gen9/ProLiant DL380 Gen9, BIOS P89 10/05/2016
-> > Call Trace:
-> >  dump_stack+0x63/0x87
-> >  warn_alloc+0x114/0x1c0
-> >  ? alloc_pages_current+0x88/0x120
-> >  __vmalloc_node_range+0x250/0x2a0
-> >  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
-> >  ? free_hot_cold_page+0x21f/0x280
-> >  vzalloc+0x54/0x60
-> >  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
-> >  kmem_zalloc_greedy+0x2b/0x40 [xfs]
-> >  xfs_bulkstat+0x11b/0x730 [xfs]
-> >  ? xfs_bulkstat_one_int+0x340/0x340 [xfs]
-> >  ? selinux_capable+0x20/0x30
-> >  ? security_capable+0x48/0x60
-> >  xfs_ioc_bulkstat+0xe4/0x190 [xfs]
-> >  xfs_file_ioctl+0x9dd/0xad0 [xfs]
-> >  ? do_filp_open+0xa5/0x100
-> >  do_vfs_ioctl+0xa7/0x5e0
-> >  SyS_ioctl+0x79/0x90
-> >  do_syscall_64+0x67/0x180
-> >  entry_SYSCALL64_slow_path+0x25/0x25
-> > 
-> > fsstress keeps looping inside kmem_zalloc_greedy without any way out
-> > because vmalloc keeps failing due to fatal_signal_pending.
-> > 
-> > Reported-by: Xiong Zhou <xzhou@redhat.com>
-> > Analyzed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> > ---
-> >  fs/xfs/kmem.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> > index 339c696bbc01..ee95f5c6db45 100644
-> > --- a/fs/xfs/kmem.c
-> > +++ b/fs/xfs/kmem.c
-> > @@ -34,6 +34,8 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
-> >  	size_t		kmsize = maxsize;
-> >  
-> >  	while (!(ptr = vzalloc(kmsize))) {
-> > +		if (kmsize == minsize)
-> > +			break;
-> >  		if ((kmsize >>= 1) <= minsize)
-> >  			kmsize = minsize;
-> >  	}
-> 
-> Seems wrong to me - this function used to have lots of callers and
-> over time we've slowly removed them or replaced them with something
-> else. I'd suggest removing it completely, replacing the call sites
-> with kmem_zalloc_large().
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I do not really care how this gets fixed. Dropping kmem_zalloc_greedy
-sounds like a way to go. I am not familiar with xfs_bulkstat to do an
-edicated guess which allocation size to use. So I guess I have to
-postpone this to you guys if you prefer that route though.
+On Wed, Dec 21 2016, Jeff Layton wrote:
 
-Thanks!
--- 
-Michal Hocko
-SUSE Labs
+>=20=20
+> +/*
+> + * We borrow the top bit in the i_version to use as a flag to tell us wh=
+ether
+> + * it has been queried since we last bumped it. If it has, then we must =
+bump
+> + * it and set the flag. Note that this means that we have to handle wrap=
+ping
+> + * manually.
+> + */
+> +#define INODE_I_VERSION_QUERIED		(1ULL<<63)
+> +
+
+I would prefer that the least significant bit were used, rather than the
+most significant.
+
+Partly, this is because the "queried" state is less significant than
+that "number has changed" state.
+But most, this would mean we wouldn't need inode_cmp_iversion() at all.
+We could just use "<" or ">=3D" or whatever.
+The number returned by inode_get_iversion() would always be even (or
+maybe odd) and wrapping (after the end of time) would "just work".
+
+Thanks,
+NeilBrown
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAli6A4YACgkQOeye3VZi
+gblBNA//dX+mAOOvNDvTqyQtKxXDIZlrQmK7oI+wSvSBbgpyOR6vwxMkmQboJXJ9
+q8pIudntLXjyEykbXb+HA30AxSpL/X/7PQxG/ZllYJ1ImY2QMcvSNKnkfsNcUN0o
+yv9334AIoShL8lEq35JLuoBQ3w2tVbDlNhFRTbW+lWW9hqzzNiWbSdgMuVg8qEAz
+feGjCW0FqmfyhCEX4UIARUDM7qpqt71fmI1EYmriEU0hU/rFViMVAyLU7cWjF9WS
+FxgYAR+QJFCHuA3OFB4Bg32jzj7qS35mI3bGG/v1X+RDjp8jQ0WwWI+8A45p0+vX
+Zdw6ABbkW56vl5kM5x4j7UNG96AthXjOf1qJ5UK1dw7S3GQJb0MfLh+94v4ECWU1
+SSZTvPC5OYfMcLThhew1CUx//f/p8CeG4Dfq3iBW6FHYWclWZoM0t3KRiC1dQJaT
+njf0xd7CUIsXaLtlKbLXKC2vqY9wcMX62E7W74DGeffyfQ+maQaygRUW9yBiMPPe
+Rh2akXxE5vpdPxm9rsP/PUJIStmTsM7MQl2oFb0zWxY5hY8PREpAXk8nD0QrrK/M
+S6qNtgFevm4sPemwfe04EmumUJjX5/u1gypeHz02omdBO6Fk5XE2be6EeBC8aHtL
+oxLnpA/JZxCrvoS+nvHAHvrPQHJ/EZYm1I+qDighBQN1NIxGVJI=
+=HK7d
+-----END PGP SIGNATURE-----
+--=-=-=--
