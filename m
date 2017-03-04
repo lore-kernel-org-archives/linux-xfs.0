@@ -1,64 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33362 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752767AbdCFNlx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 08:41:53 -0500
-From: Michal Hocko <mhocko@kernel.org>
-Subject: [PATCH 0/7 v5] scope GFP_NOFS api
-Date: Mon,  6 Mar 2017 14:14:01 +0100
-Message-Id: <20170306131408.9828-1-mhocko@kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:30194 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752064AbdCDAGT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2017 19:06:19 -0500
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v2405YOM015444
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 4 Mar 2017 00:05:34 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v2405YJl002031
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 4 Mar 2017 00:05:34 GMT
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v2405UJC000607
+        for <linux-xfs@vger.kernel.org>; Sat, 4 Mar 2017 00:05:32 GMT
+Date: Fri, 3 Mar 2017 16:05:29 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: allow zero-length symlinks (and directories), sort of
+Message-ID: <20170304000529.GB5073@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org
-Cc: linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Michal Hocko <mhocko@suse.com>, Michal Hocko <mhocko@suse.cz>, Nikolay Borisov <nborisov@suse.com>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Vlastimil Babka <vbabka@suse.cz>
+To: xfs <linux-xfs@vger.kernel.org>
 
-Hi,
-I have posted the previous version here [1]. There are no real changes
-in the implementation since then. I've just added "lockdep: teach
-lockdep about memalloc_noio_save" from Nikolay which is a lockdep bugfix
-developed independently but "mm: introduce memalloc_nofs_{save,restore}
-API" depends on it so I added it here. Then I've rebased the series on
-top of 4.11-rc1 which contains sched.h split up which required to add
-sched/mm.h include.
+In commit ef388e2054 ("don't allow di_size with high bit set") and
+commit 3c6f46eacd87 ("sanity check directory inode di_size") we
+erroneously fail the inode verification checks for symlinks or
+directories with di_size == 0.
 
-There didn't seem to be any real objections and so I think we should go
-and finally merge this - ideally in this release cycle as it doesn't
-really introduce any functional changes. Those were separated out and
-will be posted later. The risk of regressions should really be small
-because we do not remove any real GFP_NOFS users yet.
+This is proven incorrect by generic/388 because the unlink process uses
+multiple unconnected transactions to truncate the remote symlink /
+directory and to unlink and free the inode.  If the fs goes down after
+the truncate commit but before the unlink happens, we are left with a
+zero-length inode.  Worse yet, if the unlink /does/ commit, log recovery
+will now break after the first transaction because we've zeroed di_size.
 
-Diffstat says
- fs/jbd2/journal.c         |  8 ++++++++
- fs/jbd2/transaction.c     | 12 ++++++++++++
- fs/xfs/kmem.c             | 12 ++++++------
- fs/xfs/kmem.h             |  2 +-
- fs/xfs/libxfs/xfs_btree.c |  2 +-
- fs/xfs/xfs_aops.c         |  6 +++---
- fs/xfs/xfs_buf.c          |  8 ++++----
- fs/xfs/xfs_trans.c        | 12 ++++++------
- include/linux/gfp.h       | 18 +++++++++++++++++-
- include/linux/jbd2.h      |  2 ++
- include/linux/sched.h     |  6 +++---
- include/linux/sched/mm.h  | 26 +++++++++++++++++++++++---
- kernel/locking/lockdep.c  | 11 +++++++++--
- lib/radix-tree.c          |  2 ++
- mm/page_alloc.c           | 10 ++++++----
- mm/vmscan.c               |  6 +++---
- 16 files changed, 106 insertions(+), 37 deletions(-)
+In order to prevent the crashes and ASSERTs that the old patches
+covered, re-allow the zero-length inodes and change the functions that
+interface with the vfs to return the appropriate error codes to
+userspace.
 
-Shortlog:
-Michal Hocko (6):
-      lockdep: allow to disable reclaim lockup detection
-      xfs: abstract PF_FSTRANS to PF_MEMALLOC_NOFS
-      mm: introduce memalloc_nofs_{save,restore} API
-      xfs: use memalloc_nofs_{save,restore} instead of memalloc_noio*
-      jbd2: mark the transaction context with the scope GFP_NOFS context
-      jbd2: make the whole kjournald2 kthread NOFS safe
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_inode_buf.c |    4 ----
+ fs/xfs/xfs_dir2_readdir.c     |    6 ++----
+ fs/xfs/xfs_iops.c             |    9 ++++++++-
+ 3 files changed, 10 insertions(+), 9 deletions(-)
 
-Nikolay Borisov (1):
-      lockdep: teach lockdep about memalloc_noio_save
-
-
-[1] http://lkml.kernel.org/r/20170206140718.16222-1-mhocko@kernel.org
-[2] http://lkml.kernel.org/r/20170117030118.727jqyamjhojzajb@thunk.org
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 3752bac..6e62999 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -402,10 +402,6 @@ xfs_dinode_verify(
+ 	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
+ 		return false;
+ 
+-	/* No zero-length symlinks/dirs. */
+-	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
+-		return false;
+-
+ 	/* only version 3 or greater inodes are extensively verified here */
+ 	if (dip->di_version < 3)
+ 		return true;
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index 0b3b636..be1367a 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -74,10 +74,8 @@ xfs_dir2_sf_getdents(
+ 	/*
+ 	 * Give up if the directory is way too short.
+ 	 */
+-	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
+-		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
+-		return -EIO;
+-	}
++	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent))
++		return -EFSCORRUPTED;
+ 
+ 	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
+ 	ASSERT(dp->i_df.if_u1.if_data != NULL);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 22c1615..b7b6807 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -457,6 +457,9 @@ xfs_vn_get_link(
+ 	char			*link;
+ 	int			error = -ENOMEM;
+ 
++	if (i_size_read(inode) == 0)
++		return ERR_PTR(-EFSCORRUPTED);
++
+ 	if (!dentry)
+ 		return ERR_PTR(-ECHILD);
+ 
+@@ -483,8 +486,12 @@ xfs_vn_get_link_inline(
+ 	struct inode		*inode,
+ 	struct delayed_call	*done)
+ {
++	char			*p;
+ 	ASSERT(XFS_I(inode)->i_df.if_flags & XFS_IFINLINE);
+-	return XFS_I(inode)->i_df.if_u1.if_data;
++	p = XFS_I(inode)->i_df.if_u1.if_data;
++	if (p)
++		return p;
++	return ERR_PTR(-EFSCORRUPTED);
+ }
+ 
+ STATIC int
