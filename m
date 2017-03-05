@@ -1,199 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:50260 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751963AbdCCWha (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 Mar 2017 17:37:30 -0500
-Date: Fri, 3 Mar 2017 17:36:49 -0500
-Subject: Re: [RFC PATCH v1 11/30] fs: new API for handling i_version
-Message-ID: <20170303223649.GH13877@fieldses.org>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
- <1482339827-7882-12-git-send-email-jlayton@redhat.com>
+Received: from mail-wr0-f173.google.com ([209.85.128.173]:35755 "EHLO
+        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752290AbdCEO40 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Mar 2017 09:56:26 -0500
+Received: by mail-wr0-f173.google.com with SMTP id g10so100947897wrg.2
+        for <linux-xfs@vger.kernel.org>; Sun, 05 Mar 2017 06:56:25 -0800 (PST)
+Subject: Re: [PATCH 0/8 v2] Non-blocking AIO
+References: <20170228233610.25456-1-rgoldwyn@suse.de>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <347d19cb-dbb8-1d4f-dfb5-d1dd820dd65d@scylladb.com>
+Date: Sun, 5 Mar 2017 16:56:21 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1482339827-7882-12-git-send-email-jlayton@redhat.com>
-From: bfields@fieldses.org (J. Bruce Fields)
+In-Reply-To: <20170228233610.25456-1-rgoldwyn@suse.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>, jack@suse.com
+Cc: hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 
-The patch ordering is a little annoying as I'd like to be able to be
-able to verify the implementation at the same time these new interfaces
-are added, but, I don't know, I don't have a better idea.
 
-Anyway, various nits:
 
-On Wed, Dec 21, 2016 at 12:03:28PM -0500, Jeff Layton wrote:
-> We already have inode_inc_iversion. Add inode_set_iversion,
-> inode_get_iversion, inode_cmp_iversion and inode_iversion_need_inc.
-> 
-> These should encompass how i_version is currently accessed and
-> manipulated so that we can later change the implementation.
-> 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> ---
->  include/linux/fs.h | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 104 insertions(+), 5 deletions(-)
-> 
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 2ba074328894..075c915fe2b1 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1962,18 +1962,117 @@ static inline void inode_dec_link_count(struct inode *inode)
->  }
->  
->  /**
-> + * inode_set_iversion - set i_version to a particular value
-> + * @inode: inode to set
-> + * @new: new i_version value to set
-> + *
-> + * Set the inode's i_version. Should generally be called when initializing
-> + * a new inode.
-> + */
-> +static inline void
-> +inode_set_iversion(struct inode *inode, const u64 new)
-> +{
-> +	inode->i_version = new;
-> +}
-> +
-> +/**
-> + * inode_inc_iversion_locked - increment i_version while protected
-> + * @inode: inode to be updated
-> + *
-> + * Increment the i_version field in the inode. This version is usable
-> + * when there is some other sort of lock in play that would prevent
-> + * concurrent accessors.
-> + */
-> +static inline void
-> +inode_inc_iversion_locked(struct inode *inode)
-> +{
-> +	inode->i_version++;
-> +}
-> +
-> +/**
-> + * inode_set_iversion_read - set i_version to a particular value and flag
-> + * 			     set flag to indicate that it has been viewed
+On 03/01/2017 01:36 AM, Goldwyn Rodrigues wrote:
+> This series adds nonblocking feature to asynchronous I/O writes.
+> io_submit() can be delayed because of a number of reason:
+>   - Block allocation for files
+>   - Data writebacks for direct I/O
+>   - Sleeping because of waiting to acquire i_rwsem
+>   - Congested block device
 
-s/flag set flag/set flag/.
+We've been hit by a few of these so this change is very welcome.
 
-> + * @inode: inode to set
-> + * @new: new i_version value to set
-> + *
-> + * Set the inode's i_version, and flag the inode as if it has been viewed.
-> + * Should generally be called when initializinga new inode in memory from
-> + * from disk.
+>
+> The goal of the patch series is to return -EAGAIN/-EWOULDBLOCK if
+> any of these conditions are met. This way userspace can push most
+> of the write()s to the kernel to the best of its ability to complete
+> and if it returns -EAGAIN, can defer it to another thread.
+>
 
-s/from from/from/.
+Is it not possible to push the iocb to a workqueue?  This will allow 
+existing userspace to work with the new functionality, unchanged. Any 
+userspace implementation would have to do the same thing, so it's not 
+like we're saving anything by pushing it there.
 
-> + */
-> +static inline void
-> +inode_set_iversion_read(struct inode *inode, const u64 new)
-> +{
-> +	inode_set_iversion(inode, new);
-> +}
-> +
-> +/**
->   * inode_inc_iversion - increments i_version
->   * @inode: inode that need to be updated
->   *
->   * Every time the inode is modified, the i_version field will be incremented.
-> - * The filesystem has to be mounted with i_version flag
-> + * The filesystem has to be mounted with MS_I_VERSION flag.
+> In order to enable this, IOCB_FLAG_NOWAIT is introduced in
+> uapi/linux/aio_abi.h which translates to IOCB_NOWAIT for struct iocb,
+> BIO_NOWAIT for bio and IOMAP_NOWAIT for iomap.
+>
+> This feature is provided for direct I/O of asynchronous I/O only. I have
+> tested it against xfs, ext4, and btrfs.
+>
+> Changes since v1:
+>   + Forwardported from 4.9.10
+>   + changed name from _NONBLOCKING to *_NOWAIT
+>   + filemap_range_has_page call moved to closer to (just before) calling filemap_write_and_wait_range().
+>   + BIO_NOWAIT limited to get_request()
+>   + XFS fixes
+> 	- included reflink
+> 	- use of xfs_ilock_nowait() instead of a XFS_IOLOCK_NONBLOCKING flag
+> 	- Translate the flag through IOMAP_NOWAIT (iomap) to check for
+> 	  block allocation for the file.
+>   + ext4 coding style
 
-I'm not sure why that comment's there.  Filesystems can choose to
-increment i_version without requiring the mount option if they want,
-can't they?
-
-> + */
-> +static inline bool
-
-Document what the return value means?
-
-> +inode_inc_iversion(struct inode *inode)
-> +{
-> +	spin_lock(&inode->i_lock);
-> +	inode_inc_iversion_locked(inode);
-> +	spin_unlock(&inode->i_lock);
-> +	return true;
-> +}
-> +
-> +/**
-> + * inode_get_iversion_raw - read i_version without "perturbing" it
-> + * @inode: inode from which i_version should be read
-> + *
-> + * Read the inode i_version counter for an inode without registering it as a
-> + * read. Should typically be used by local filesystems that need to store an
-> + * i_version on disk.
-> + */
-> +static inline u64
-> +inode_get_iversion_raw(const struct inode *inode)
-> +{
-> +	return inode->i_version;
-> +}
-> +
-> +/**
-> + * inode_get_iversion - read i_version for later use
-> + * @inode: inode from which i_version should be read
-> + *
-> + * Read the inode i_version counter. This should be used by callers that wish
-> + * to store the returned i_version for later comparison.
-
-I'm not sure what "for later comparison" means.  This is the "read"
-operation that actually flags the i_version as read, which you'd use
-(for example) to implement NFS getattr?  I wonder if there's a better
-way to say that.
-
-> + */
-> +static inline u64
-> +inode_get_iversion(const struct inode *inode)
-> +{
-> +	return inode_get_iversion_raw(inode);
-> +}
-> +
-> +/**
-> + * inode_cmp_iversion - check whether the i_version counter has changed
-> + * @inode: inode to check
-> + * @old: old value to check against its i_version
-> + *
-> + * Compare an i_version counter with a previous one. Returns 0 if they are
-> + * the same or non-zero if they are different.
-
-Does this flag the i_version as read?  What's it for?  (OK, I guess I'll
-find out after a few more patches...).
-
---b.
-
->   */
-> +static inline s64
-> +inode_cmp_iversion(const struct inode *inode, const u64 old)
-> +{
-> +	return (s64)inode->i_version - (s64)old;
-> +}
->  
-> -static inline void inode_inc_iversion(struct inode *inode)
-> +/**
-> + * inode_iversion_need_inc - is the i_version in need of being incremented?
-> + * @inode: inode to check
-> + *
-> + * Returns whether the inode->i_version counter needs incrementing on the next
-> + * change.
-> + */
-> +static inline bool
-> +inode_iversion_need_inc(struct inode *inode)
->  {
-> -       spin_lock(&inode->i_lock);
-> -       inode->i_version++;
-> -       spin_unlock(&inode->i_lock);
-> +	return true;
->  }
->  
->  enum file_time_flags {
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
