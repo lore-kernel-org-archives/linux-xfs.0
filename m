@@ -1,168 +1,309 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:37160 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932226AbdCFSvm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 13:51:42 -0500
-Received: by mail-wm0-f54.google.com with SMTP id n11so72638015wma.0
-        for <linux-xfs@vger.kernel.org>; Mon, 06 Mar 2017 10:50:42 -0800 (PST)
-Subject: Re: [PATCH 0/8 v2] Non-blocking AIO
-References: <20170228233610.25456-1-rgoldwyn@suse.de>
- <347d19cb-dbb8-1d4f-dfb5-d1dd820dd65d@scylladb.com>
- <20170306082546.GA14932@quack2.suse.cz>
- <d0789835-5bae-6f99-af4d-c0e60eadbab7@kernel.dk>
- <9b64c78e-c984-cf29-8f79-c48332a4c450@scylladb.com>
- <57c873b2-fed6-e717-fc4e-ed2e328173b6@kernel.dk>
- <c8c3cede-d69a-a47a-0b08-85072b386d77@scylladb.com>
- <f1415241-ddd0-8918-4a68-c5e1adf06e09@kernel.dk>
- <56ae3a64-5e27-d7d4-5ab5-f5f68eef8b78@scylladb.com>
- <7aabb6b4-df8d-8554-fbe3-90504887fb8e@kernel.dk>
- <4cbafb12-a30e-bb57-da43-de7c47726c81@scylladb.com>
- <68e790b7-bee4-9cb7-66c8-3f9157d50b3b@kernel.dk>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <334fb384-438b-9929-d92f-af1e598d4650@scylladb.com>
-Date: Mon, 6 Mar 2017 20:50:37 +0200
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:57651 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751537AbdCFTCK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 14:02:10 -0500
+Message-ID: <1488826813.9307.21.camel@fb.com>
+Subject: Re: [PATCH] xfs: clear XBF_ASYNC if we attach an iodone callback
+From: Josef Bacik <jbacik@fb.com>
+Date: Mon, 6 Mar 2017 14:00:13 -0500
+In-Reply-To: <20170304135849.GA27205@bfoster.bfoster>
+References: <1488552404-21379-1-git-send-email-jbacik@fb.com>
+         <20170303204902.GF21245@bfoster.bfoster> <1488576856.9307.13.camel@fb.com>
+         <20170303222001.GA24497@bfoster.bfoster>
+         <A14C7E7E-2807-48E6-A5C1-ABD09A7B69D3@fb.com>
+         <20170304135849.GA27205@bfoster.bfoster>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <68e790b7-bee4-9cb7-66c8-3f9157d50b3b@kernel.dk>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, jack@suse.com, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, Kernel Team <Kernel-team@fb.com>, Carlos Maiolino <cmaiolino@redhat.com>
 
-On 03/06/2017 08:27 PM, Jens Axboe wrote:
-> On 03/06/2017 11:17 AM, Avi Kivity wrote:
->>
->> On 03/06/2017 07:06 PM, Jens Axboe wrote:
->>> On 03/06/2017 09:59 AM, Avi Kivity wrote:
->>>> On 03/06/2017 06:08 PM, Jens Axboe wrote:
->>>>> On 03/06/2017 08:59 AM, Avi Kivity wrote:
->>>>>> On 03/06/2017 05:38 PM, Jens Axboe wrote:
->>>>>>> On 03/06/2017 08:29 AM, Avi Kivity wrote:
->>>>>>>> On 03/06/2017 05:19 PM, Jens Axboe wrote:
->>>>>>>>> On 03/06/2017 01:25 AM, Jan Kara wrote:
->>>>>>>>>> On Sun 05-03-17 16:56:21, Avi Kivity wrote:
->>>>>>>>>>>> The goal of the patch series is to return -EAGAIN/-EWOULDBLOCK if
->>>>>>>>>>>> any of these conditions are met. This way userspace can push most
->>>>>>>>>>>> of the write()s to the kernel to the best of its ability to complete
->>>>>>>>>>>> and if it returns -EAGAIN, can defer it to another thread.
->>>>>>>>>>>>
->>>>>>>>>>> Is it not possible to push the iocb to a workqueue?  This will allow
->>>>>>>>>>> existing userspace to work with the new functionality, unchanged. Any
->>>>>>>>>>> userspace implementation would have to do the same thing, so it's not like
->>>>>>>>>>> we're saving anything by pushing it there.
->>>>>>>>>> That is not easy because until IO is fully submitted, you need some parts
->>>>>>>>>> of the context of the process which submits the IO (e.g. memory mappings,
->>>>>>>>>> but possibly also other credentials). So you would need to somehow transfer
->>>>>>>>>> this information to the workqueue.
->>>>>>>>> Outside of technical challenges, the API also needs to return EAGAIN or
->>>>>>>>> start blocking at some point. We can't expose a direct connection to
->>>>>>>>> queue work like that, and let any user potentially create millions of
->>>>>>>>> pending work items (and IOs).
->>>>>>>> You wouldn't expect more concurrent events than the maxevents parameter
->>>>>>>> that was supplied to io_setup syscall; it should have reserved any
->>>>>>>> resources needed.
->>>>>>> Doesn't matter what limit you apply, my point still stands - at some
->>>>>>> point you have to return EAGAIN, or block. Returning EAGAIN without
->>>>>>> the caller having flagged support for that change of behavior would
->>>>>>> be problematic.
->>>>>> Doesn't it already return EAGAIN (or some other error) if you exceed
->>>>>> maxevents?
->>>>> It's a setup thing. We check these limits when someone creates an IO
->>>>> context, and carve out the specified entries form our global pool. Then
->>>>> we free those "resources" when the io context is freed.
->>>>>
->>>>> Right now I can setup an IO context with 1000 entries on it, yet that
->>>>> number has NO bearing on when io_submit() would potentially block or
->>>>> return EAGAIN.
->>>>>
->>>>> We can have a huge gap on the intent signaled by io context setup, and
->>>>> the reality imposed by what actually happens on the IO submission side.
->>>> Isn't that a bug?  Shouldn't that 1001st incomplete io_submit() return
->>>> EAGAIN?
->>>>
->>>> Just tested it, and maxevents is not respected for this:
->>>>
->>>> io_setup(1, [0x7fc64537f000])           = 0
->>>> io_submit(0x7fc64537f000, 10, [{pread, fildes=3, buf=0x1eb4000,
->>>> nbytes=4096, offset=0}, {pread, fildes=3, buf=0x1eb4000, nbytes=4096,
->>>> offset=0}, {pread, fildes=3, buf=0x1eb4000, nbytes=4096, offset=0},
->>>> {pread, fildes=3, buf=0x1eb4000, nbytes=4096, offset=0}, {pread,
->>>> fildes=3, buf=0x1eb4000, nbytes=4096, offset=0}, {pread, fildes=3,
->>>> buf=0x1eb4000, nbytes=4096, offset=0}, {pread, fildes=3, buf=0x1eb4000,
->>>> nbytes=4096, offset=0}, {pread, fildes=3, buf=0x1eb4000, nbytes=4096,
->>>> offset=0}, {pread, fildes=3, buf=0x1eb4000, nbytes=4096, offset=0},
->>>> {pread, fildes=3, buf=0x1eb4000, nbytes=4096, offset=0}]) = 10
->>>>
->>>> which is unexpected, to me.
->>> ioctx_alloc()
->>> {
->>>           [...]
->>>
->>>           /*
->>>            * We keep track of the number of available ringbuffer slots, to prevent
->>>            * overflow (reqs_available), and we also use percpu counters for this.
->>>            *
->>>            * So since up to half the slots might be on other cpu's percpu counters
->>>            * and unavailable, double nr_events so userspace sees what they
->>>            * expected: additionally, we move req_batch slots to/from percpu
->>>            * counters at a time, so make sure that isn't 0:
->>>            */
->>>           nr_events = max(nr_events, num_possible_cpus() * 4);
->>>           nr_events *= 2;
->>> }
->> On a 4-lcore desktop:
->>
->> io_setup(1, [0x7fc210041000])           = 0
->> io_submit(0x7fc210041000, 10000, [big array]) = 126
->> io_submit(0x7fc210041000, 10000, [big array]) = -1 EAGAIN (Resource
->> temporarily unavailable)
->>
->> so, the user should already expect EAGAIN from io_submit() due to
->> resource limits.  I'm sure the check could be tightened so that if we do
->> have to use a workqueue, we respect the user's limit rather than some
->> inflated number.
-> This is why I previously said that the 1000 requests you potentially
-> asks for when setting up your IO context has NOTHING to do with when you
-> will run into EAGAIN. Yes, returning EAGAIN if the app exceeds the
-> limit that it itself has set is existing behavior and it certainly makes
-> sense. And it's an easily handled condition, since the app can just
-> backoff and wait/reap completion events.
+On Sat, 2017-03-04 at 08:58 -0500, Brian Foster wrote:
+> cc Carlos
+> 
+> On Sat, Mar 04, 2017 at 01:26:50AM +0000, Josef Bacik wrote:
+> > 
+> > 
+> > > 
+> > > On Mar 3, 2017, at 5:20 PM, Brian Foster <bfoster@redhat.com>
+> > > wrote:
+> > > 
+> > > > 
+> > > > On Fri, Mar 03, 2017 at 04:34:16PM -0500, Josef Bacik wrote:
+> > > > > 
+> > > > > On Fri, 2017-03-03 at 15:49 -0500, Brian Foster wrote:
+> > > > > > 
+> > > > > > On Fri, Mar 03, 2017 at 09:46:44AM -0500, Josef Bacik
+> > > > > > wrote:
+> > > > > > 
+> > > > > > While testing nbd disconnects I kept hitting the following
+> > > > > > hang
+> > > > > > 
+> > > > > > Call Trace:
+> > > > > >  schedule+0x35/0x80
+> > > > > >  xfs_ail_push_all_sync+0xa3/0xe0
+> > > > > >  ? prepare_to_wait_event+0x100/0x100
+> > > > > >  xfs_unmountfs+0x57/0x190
+> > > > > >  xfs_fs_put_super+0x32/0x90
+> > > > > >  generic_shutdown_super+0x6f/0xf0
+> > > > > >  kill_block_super+0x27/0x70
+> > > > > >  deactivate_locked_super+0x3e/0x70
+> > > > > >  deactivate_super+0x46/0x60
+> > > > > >  cleanup_mnt+0x3f/0x80
+> > > > > >  __cleanup_mnt+0x12/0x20
+> > > > > >  task_work_run+0x86/0xb0
+> > > > > >  exit_to_usermode_loop+0x6d/0x96
+> > > > > >  do_syscall_64+0x8b/0xa0
+> > > > > >  entry_SYSCALL64_slow_path+0x25/0x25
+> > > > > > 
+> > > > > > After some digging around I found that there was a log item
+> > > > > > on the
+> > > > > > ail
+> > > > > > with a callback of xfs_iflush_done.  A printk confirmed
+> > > > > > that at the
+> > > > > > call
+> > > > > > to xfs_buf_attach_iodone in xfs_iflush_int had XBF_ASYNC
+> > > > > > already
+> > > > > > set,
+> > > > > > which means on error we do not call xfs_buf_do_callbacks,
+> > > > > > which
+> > > > > > leaves
+> > > > > > the log item on the ail list which causes us to hang on
+> > > > > > unmount.  I
+> > > > > > assume the block has XBF_ASYNC set because we did a
+> > > > > > readahead on
+> > > > > > it, so
+> > > > > > it doesn't really need to have XBF_ASYNC set at this point
+> > > > > > as we do
+> > > > > > actually care about what happens to the buffer once IO is
+> > > > > > complete.
+> > > > > > With this patch my hang no longer happens.
+> > > > > > 
+> > > > > > Signed-off-by: Josef Bacik <jbacik@fb.com>
+> > > > > > ---
+> > > > > >  fs/xfs/xfs_buf_item.c | 5 +++++
+> > > > > >  1 file changed, 5 insertions(+)
+> > > > > > 
+> > > > > > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> > > > > > index 2975cb2..24fcb67 100644
+> > > > > > --- a/fs/xfs/xfs_buf_item.c
+> > > > > > +++ b/fs/xfs/xfs_buf_item.c
+> > > > > > @@ -1016,6 +1016,11 @@ xfs_buf_attach_iodone(
+> > > > > >  
+> > > > > >      ASSERT(bp->b_iodone == NULL ||
+> > > > > >             bp->b_iodone == xfs_buf_iodone_callbacks);
+> > > > > > +    /*
+> > > > > > +     * Somebody now cares about the fate of this buffer,
+> > > > > > clear
+> > > > > > XBF_ASYNC so
+> > > > > > +     * that the iodone callback actually gets called.
+> > > > > > +     */
+> > > > > > +    bp->b_flags &= ~XBF_ASYNC;
+> > > > > XBF_ASYNC generally describes the type of I/O being submitted
+> > > > > for a
+> > > > > particular buffer (blocking or non), so it being set or not
+> > > > > is kind
+> > > > > of
+> > > > > outside the scope of xfs_iflush(). It really depends on how
+> > > > > the
+> > > > > caller
+> > > > > ultimately wants to write the buffer. For example, if we get
+> > > > > here via
+> > > > > xfsaild_push()->xfs_inode_item_push(), the latter will do
+> > > > > xfs_buf_delwri_queue() and the former will eventually call
+> > > > > xfs_buf_delwri_submit_nowait(), which submits async I/O and
+> > > > > so will
+> > > > > re-add XBF_ASYNC.
+> > > > > 
+> > > > > It is interesting if this prevents your problem. I can't
+> > > > > quite make
+> > > > > out
+> > > > > why that would be. The other xfs_iflush() caller is reclaim,
+> > > > > which
+> > > > > calls
+> > > > > xfs_bwrite() which itself clears XBF_ASYNC before submission.
+> > > > > 
+> > > > > What I'm guessing you're referring to above wrt to not
+> > > > > calling
+> > > > > xfs_buf_do_callbacks() is the async check in
+> > > > > xfs_buf_iodone_callback_error(), which is only relevant on
+> > > > > I/O error.
+> > > > > If
+> > > > > the buffer I/O succeeds, we should always invoke the iodone
+> > > > > callbacks
+> > > > > regardless of async state. Do you observe otherwise or does
+> > > > > this I/O
+> > > > > indeed fail?
+> > > > > 
+> > > > > Anyways, if we change the buffer flags simply to control the
+> > > > > behavior
+> > > > > of
+> > > > > iodone_callback_error(), we've basically decided to treat an
+> > > > > otherwise
+> > > > > async I/O as sync with the assumption that the submitter is
+> > > > > going to
+> > > > > handle the I/O error. As mentioned above, we don't really
+> > > > > have that
+> > > > > information here so that is kind of a dangerous assumption.
+> > > > > At the
+> > > > > very
+> > > > > least, it bypasses all of the configurable error handling
+> > > > > infrastructure
+> > > > > that is specifically in place for async submitted buffers.
+> > > > > 
+> > > > > I'm wondering if you're hitting the flush locked inode retry
+> > > > > problem
+> > > > > that Carlos has been working on. The problem is basically
+> > > > > that if the
+> > > > > I/O fails on a buffer that backs a flush locked inode, we
+> > > > > never retry
+> > > > > the buffer and xfsaild basically spins on pushing the inode.
+> > > > > What
+> > > > > happens if you enable xfs tracepoints while the fs is hung?
+> > > > Sorry for some reason my reply to linux-xfs got eaten.  It made
+> > > > it to
+> > > > Darrick but vger is being weird (sometimes it fails to get an
+> > > > email,
+> > > > sometimes it works fine).
+> > > > 
+> > > > So yes my patch doesn't actually work, I just didn't notice
+> > > > that the
+> > > > problem had happened until after I sent the page.
+> > > > 
+> > > > I'm doing this on a 4.6 kernel, I haven't actually tried it on
+> > > > a
+> > > > upstream kernel but my original assumption was it was still
+> > > > available
+> > > > to hit on an upstream kernel.  Basically on 4.6 we _always_
+> > > > resubmit
+> > > > the IO once if it fails, and then just drop the buffer if we've
+> > > > re-
+> > > > submitted once.  We never do the xfs_buf_do_callbacks() call,
+> > > > which
+> > > > seems wrong since as you say basically everything will set
+> > > > XBF_ASYNC.
+> > > > 
+> > > The XBF_WRITE_FAIL resubmission is an internal retry thing
+> > > intended to
+> > > deal with transient errors. Assuming the internal retry fails, we
+> > > do
+> > > release the buffer but note that the higher level item is still
+> > > tracked
+> > > on the AIL (which basically just tracks that the inode is in the
+> > > physical log and we're waiting on the metadata writeback to
+> > > complete to
+> > > free up space in the log).
+> > > 
+> > > IOWs, while the I/O path doesn't retry and releases the buffer,
+> > > the
+> > > intent is that the next xfsaild_push() cycle will retry the I/O
+> > > (this is
+> > > the part that is actually broken for flush locked inodes).
+> > Yeah this sounds like what is happening, as I'll see xfs errors
+> > every N seconds while its hanging, so it's retrying the IO, it's
+> > just not failing out gracefully. What would be the course of action
+> > here?  I can apply things and run them here pretty quickly.
+> > 
+> If it is actually the flush lock issue, Carlos was working on a
+> proper
+> fix for that. I'm not sure where that stands currently, however..
+> Carlos?
+> 
+> If there isn't anything available to test quite yet, there was also a
+> poc patch[1] more to verify what the problem was. I believe that one
+> is
+> at least safe, but still probably not production worthy as it may
+> have
+> performance ramifications. It should at least tell you whether that
+> is
+> the problem or something else is going on here.
+> 
+> Oh, commit e6b3bb789 ("xfs: add "fail at unmount" error handling
+> configuration") may also be interesting here if the fs doesn't
+> shutdown
+> on unmount. That one looks like it came after v4.6 as well.
 
-Every time I used aio, I considered maxevents to be the maximum number 
-of in-flight requests for that queue, and observed this limit 
-religiously.  It's possible others don't.
+Ok I looked at that patch and the email that Dave sent in response,
+which sounds like what I'm hitting.  Looking at the 4.6 code we simply
+drop the xfs_buf if our IO retry fails and assume that the upper layer
+will take care of things if it cares.  Meanwhile the thing writing out
+the AIL doesn't actually know if things went wrong
+unless xfs_iflush_done() is run.
 
-> But if we allow EAGAIN to bubble up from block request submission, then
-> that's a change in behavior. This can happen without the app having any
-> pending IO against that IO context, hence we can return EAGAIN to the
-> app that then has no reasonable way to handle that condition.
->
+In the upstream code you guys do this
 
-For sure (and it's a different EAGAIN -- it's tied to the iocb, not 
-request submission).  But we do have an upper bound for the number of 
-concurrent requests, even if inflated, so having the kernel convert a 
-blocking iocb into a workqueue item does not allow userspace to exploit 
-the kernel.
+        if (!(bp->b_flags & (XBF_STALE | XBF_WRITE_FAIL)) 
+             bp->b_last_error != bp->b_error) {                    
+                bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
+                bp->b_last_error = bp->b_error;                  
+                if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
+                    !bp->b_first_retry_time)
+                        bp->b_first_retry_time = jiffies;
+                                                               
+                xfs_buf_ioerror(bp, 0);                        
+                xfs_buf_submit(bp);                                  
+                return true;
+        }
 
-We could limit the number of workqueue submissions to maxevents, and 
-queue anything between maxevents and (maxevents * inflation_factor) 
-using a regular queue.  So the intent of maxevents is respected, and 
-applications that overflow it are not regressed.
+so you retry once, and the second time through we will return false if
+we are unmounting, which means that xfs_buf_do_callbacks gets called.
 
-   if iocb would overflow inflated maxevents:
-       io_submit returns EAGAIN
-   elseif iocb can be submitted asynchronously:
-       do that
-   elseif number of iocbs running in workqueues < maxevents:
-       push to a workqueue
-   else
-       queue somewhere, when a work_item completes it can pick up an 
-iocb from the queue
+Now you say that xfs_buf_do_callbacks() being called when we errored
+out is dangerous, but I don't understand why.  We have this code
 
-this enables aio for all filesystems, and doesn't require lots of idle 
-thread pools if the filesystem works or useless syscalls if it doesn't.  
-It's a lot more work for the kernel, but results in a tighter and 
-simpler interface.
+        if (need_ail) {
+                struct xfs_log_item *log_items[need_ail];
+                int i = 0;
+                spin_lock(&ailp->xa_lock);
+                for (blip = lip; blip; blip = blip->li_bio_list) {
+                        iip = INODE_ITEM(blip);
+                        if (iip->ili_logged &&
+                            blip->li_lsn == iip->ili_flush_lsn) {
+                                log_items[i++] = blip;
+                        }
+                        ASSERT(i <= need_ail);
+                }
+                /* xfs_trans_ail_delete_bulk() drops the AIL lock. */
+                xfs_trans_ail_delete_bulk(ailp, log_items, i,
+                                          SHUTDOWN_CORRUPT_INCORE);
+        }
 
+and need_ail is set if we didn't actually end up on disk properly.  So
+we delete the thing and mark the fs as fucked.  Am I mis-reading what
+is going on here?  This is what I did to our 4.6 tree (in testing
+still, not actually pushed to production)
+
+        if (bp->b_flags & XBF_ASYNC) {
+                ASSERT(bp->b_iodone != NULL);
+
+                trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+
+                xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag
+*/
+
+                if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
+                        bp->b_flags |= XBF_WRITE | XBF_ASYNC |
+                                       XBF_DONE | XBF_WRITE_FAIL;
+                        xfs_buf_submit(bp);
+                } else {
++                       xfs_buf_do_callbacks(bp);
++                       bp->b_fspriv = NULL;
++                       bp->b_iodone = NULL;
+                        xfs_buf_relse(bp);
+                }
+
+                return;
+        }
+
+I've marked the things that I changed with '+'.  So we do the retry,
+and on the second go around we do the callbacks which trips the logic
+in xfs_iflush_done() to clean up the AIL and complain loudly.  I'm not
+seeing the danger here, in fact it seems like the appropriate thing to
+do as xfs_iflush_done() appears to do the correct thing if we call it
+when something failed.  Thanks,
+
+Josef
