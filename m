@@ -1,159 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38502 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756410AbdCGXGg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 18:06:36 -0500
-Date: Tue, 7 Mar 2017 14:33:19 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3] xfs: use iomap new flag for newly allocated delalloc
- blocks
-Message-ID: <20170307223319.GA1626@infradead.org>
-References: <1488899701-11051-1-git-send-email-bfoster@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:29925 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753575AbdCFSmJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 13:42:09 -0500
+Date: Mon, 6 Mar 2017 10:41:09 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: remove kmem_zalloc_greedy
+Message-ID: <20170306184109.GC5280@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1488899701-11051-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Xiong Zhou <xzhou@redhat.com>
+To: darrick.wong@oracle.com
+Cc: Brian Foster <bfoster@redhat.com>, Michal Hocko <mhocko@kernel.org>, Christoph Hellwig <hch@lst.de>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>
 
-I still really hate that new xfs_bmapi_reserve_delalloc parameter,
-as there shouldn't be any need for it in the caller.   I also don't
-think the existing asserts there are very helpful, so I'd suggest
-to just remove them.
+The sole remaining caller of kmem_zalloc_greedy is bulkstat, which uses
+it to grab 1-4 pages for staging of inobt records.  The infinite loop in
+the greedy allocation function is causing hangs[1] in generic/269, so
+just get rid of the greedy allocator in favor of kmem_zalloc_large.
+This makes bulkstat somewhat more likely to ENOMEM if there's really no
+pages to spare, but eliminates a source of hangs.
 
-Below is my quick hack of your patch with that edited in, but be aware
-that it's completely untested.
+[1] https://lkml.org/lkml/2017/2/28/832
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a9c66d47757a..f32d12cfa42a 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4150,6 +4150,19 @@ xfs_bmapi_read(
- 	return 0;
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/kmem.c       |   18 ------------------
+ fs/xfs/kmem.h       |    2 --
+ fs/xfs/xfs_itable.c |   14 ++++++++------
+ 3 files changed, 8 insertions(+), 26 deletions(-)
+
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index 339c696..bb2beae 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -24,24 +24,6 @@
+ #include "kmem.h"
+ #include "xfs_message.h"
+ 
+-/*
+- * Greedy allocation.  May fail and may return vmalloced memory.
+- */
+-void *
+-kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
+-{
+-	void		*ptr;
+-	size_t		kmsize = maxsize;
+-
+-	while (!(ptr = vzalloc(kmsize))) {
+-		if ((kmsize >>= 1) <= minsize)
+-			kmsize = minsize;
+-	}
+-	if (ptr)
+-		*size = kmsize;
+-	return ptr;
+-}
+-
+ void *
+ kmem_alloc(size_t size, xfs_km_flags_t flags)
+ {
+diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+index 689f746..f0fc84f 100644
+--- a/fs/xfs/kmem.h
++++ b/fs/xfs/kmem.h
+@@ -69,8 +69,6 @@ static inline void  kmem_free(const void *ptr)
  }
  
-+/*
-+ * Add a delayed allocation extent to an inode. Blocks are reserved from the
-+ * global pool and the extent inserted into the inode in-core extent tree.
-+ *
-+ * On entry, got refers to the first extent beyond the offset of the extent to
-+ * allocate or eof is specified if no such extent exists. On return, got refers
-+ * to the newly allocated portion of the extent, which may be a subset of actual
-+ * entry in the inodes extent list if it has been merged.
-+ * 
-+ * This difference is useful for callers that must distinguish newly allocated
-+ * blocks from preexisting delalloc blocks within the range of the allocation
-+ * request (in order to properly handle buffered write failure, for example).
-+ */
- int
- xfs_bmapi_reserve_delalloc(
- 	struct xfs_inode	*ip,
-@@ -4236,13 +4249,8 @@ xfs_bmapi_reserve_delalloc(
- 	got->br_startblock = nullstartblock(indlen);
- 	got->br_blockcount = alen;
- 	got->br_state = XFS_EXT_NORM;
--	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
  
--	/*
--	 * Update our extent pointer, given that xfs_bmap_add_extent_hole_delay
--	 * might have merged it into one of the neighbouring ones.
--	 */
--	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), got);
-+	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
- 
- 	/*
- 	 * Tag the inode if blocks were preallocated. Note that COW fork
-@@ -4254,10 +4262,6 @@ xfs_bmapi_reserve_delalloc(
- 	if (whichfork == XFS_COW_FORK && (prealloc || aoff < off || alen > len))
- 		xfs_inode_set_cowblocks_tag(ip);
- 
--	ASSERT(got->br_startoff <= aoff);
--	ASSERT(got->br_startoff + got->br_blockcount >= aoff + alen);
--	ASSERT(isnullstartblock(got->br_startblock));
--	ASSERT(got->br_state == XFS_EXT_NORM);
- 	return 0;
- 
- out_unreserve_blocks:
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 41662fb14e87..ce39d0143567 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -613,7 +613,8 @@ xfs_file_iomap_begin_delay(
- 
- retry:
- 	error = xfs_bmapi_reserve_delalloc(ip, XFS_DATA_FORK, offset_fsb,
--			end_fsb - offset_fsb, prealloc_blocks, &got, &idx, eof);
-+			end_fsb - offset_fsb, prealloc_blocks, &got, &idx,
-+			eof);
- 	switch (error) {
- 	case 0:
- 		break;
-@@ -630,6 +631,12 @@ xfs_file_iomap_begin_delay(
- 		goto out_unlock;
- 	}
- 
-+	/*
-+	 * IOMAP_F_NEW controls whether we punch out delalloc blocks if the
-+	 * write happens to fail, which means we can't combine newly allocated
-+	 * blocks with preexisting delalloc blocks in the same iomap.
-+	 */
-+	iomap->flags = IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
- done:
- 	if (isnullstartblock(got.br_startblock))
-@@ -1071,16 +1078,22 @@ xfs_file_iomap_end_delalloc(
- 	struct xfs_inode	*ip,
- 	loff_t			offset,
- 	loff_t			length,
--	ssize_t			written)
-+	ssize_t			written,
-+	struct iomap		*iomap)
+-extern void *kmem_zalloc_greedy(size_t *, size_t, size_t);
+-
+ static inline void *
+ kmem_zalloc(size_t size, xfs_km_flags_t flags)
  {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		start_fsb;
- 	xfs_fileoff_t		end_fsb;
- 	int			error = 0;
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 8b2150d..283e76c 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -362,7 +362,6 @@ xfs_bulkstat(
+ 	xfs_agino_t		agino;	/* inode # in allocation group */
+ 	xfs_agnumber_t		agno;	/* allocation group number */
+ 	xfs_btree_cur_t		*cur;	/* btree cursor for ialloc btree */
+-	size_t			irbsize; /* size of irec buffer in bytes */
+ 	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
+ 	int			nirbuf;	/* size of irbuf */
+ 	int			ubcount; /* size of user's buffer */
+@@ -389,11 +388,14 @@ xfs_bulkstat(
+ 	*ubcountp = 0;
+ 	*done = 0;
  
--	/* behave as if the write failed if drop writes is enabled */
--	if (xfs_mp_drop_writes(mp))
-+	/*
-+	 * Behave as if the write failed if drop writes is enabled. Set the NEW
-+	 * flag to force delalloc cleanup.
-+	 */
-+	if (xfs_mp_drop_writes(mp)) {
-+		iomap->flags |= IOMAP_F_NEW;
- 		written = 0;
+-	irbuf = kmem_zalloc_greedy(&irbsize, PAGE_SIZE, PAGE_SIZE * 4);
+-	if (!irbuf)
+-		return -ENOMEM;
+-
+-	nirbuf = irbsize / sizeof(*irbuf);
++	nirbuf = (PAGE_SIZE * 4) / sizeof(*irbuf);
++	irbuf = kmem_zalloc_large(PAGE_SIZE * 4, KM_SLEEP);
++	if (!irbuf) {
++		irbuf = kmem_zalloc_large(PAGE_SIZE, KM_SLEEP);
++		if (!irbuf)
++			return -ENOMEM;
++		nirbuf /= 4;
 +	}
  
  	/*
- 	 * start_fsb refers to the first unused block after a short write. If
-@@ -1094,14 +1107,14 @@ xfs_file_iomap_end_delalloc(
- 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
- 
- 	/*
--	 * Trim back delalloc blocks if we didn't manage to write the whole
--	 * range reserved.
-+	 * Trim delalloc blocks if they were allocated by this write and we
-+	 * didn't manage to write the whole range.
- 	 *
- 	 * We don't need to care about racing delalloc as we hold i_mutex
- 	 * across the reserve/allocate/unreserve calls. If there are delalloc
- 	 * blocks in the range, they are ours.
- 	 */
--	if (start_fsb < end_fsb) {
-+	if ((iomap->flags & IOMAP_F_NEW) && start_fsb < end_fsb) {
- 		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
- 					 XFS_FSB_TO_B(mp, end_fsb) - 1);
- 
-@@ -1131,7 +1144,7 @@ xfs_file_iomap_end(
- {
- 	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
- 		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
--				length, written);
-+				length, written, iomap);
- 	return 0;
- }
- 
+ 	 * Loop over the allocation groups, starting from the last
