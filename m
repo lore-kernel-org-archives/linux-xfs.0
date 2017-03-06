@@ -1,76 +1,194 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41872 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752398AbdCFAIy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 5 Mar 2017 19:08:54 -0500
-Subject: Re: [PATCH 0/9] mkfs.xfs: add mkfs.xfs.conf support
-References: <20170303231316.12716-1-mcgrof@kernel.org>
- <6de0c7e4-8d20-ea90-fc49-d47a787e3939@sandeen.net>
- <20170304045615.GL17542@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7a6509ef-1c2b-cc9c-ecb5-d0a39b5f31db@sandeen.net>
-Date: Sun, 5 Mar 2017 18:08:06 -0600
-MIME-Version: 1.0
-In-Reply-To: <20170304045615.GL17542@dastard>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36505 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932131AbdCFNq3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 08:46:29 -0500
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [PATCH 3/7] xfs: abstract PF_FSTRANS to PF_MEMALLOC_NOFS
+Date: Mon,  6 Mar 2017 14:14:04 +0100
+Message-Id: <20170306131408.9828-4-mhocko@kernel.org>
+In-Reply-To: <20170306131408.9828-1-mhocko@kernel.org>
+References: <20170306131408.9828-1-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com
+To: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org
+Cc: linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Vlastimil Babka <vbabka@suse.cz>
 
-On 3/3/17 10:56 PM, Dave Chinner wrote:
-> On Fri, Mar 03, 2017 at 09:49:58PM -0600, Eric Sandeen wrote:
->> On 3/3/17 5:13 PM, Luis R. Rodriguez wrote:
->>> This series adds mkfs.xfs.conf support, so that options can now be
->>> shoved into a configuration file. This enables certain defaults to be
->>> saved for folks sticking to certain values, but more importantly it
->>> also enables distributions to override certain defaults so that new
->>> filesystems remain compatible with older distributions.
->>>
->>> This has been based on top of xfsprogs-dev v4.9.0-rc1.
->>>
->>> Given we already have an existinsg infrastructure to validate argument
->>> values this reuses that infrastructure by first adding helpers and porting
->>> over the argument parsing suppor to use these helpers.
->>
->> I'm not necessarily the final word on this, but I have to say
->> I'm not a huge fan of having mkfs config files.  I've lived 
->> through that in mke2fs land, and my personal feeling is that
->> it can lead to confusion when distros start shipping config
->> files with different defaults than upstream ships in the
->> code itself.
->>
->> I guess I can see the argument for shipping old/compatible
->> defaults with newer progs and older kernels, but by the
->> time a distro ships a custom old default config file they could
->> also patch out the new features just as easily... (which
->> is also confusing, I guess ;) )
->>
->> After 25+ years of no external config file, I'm concerned
->> about principal of least surprise when the same xfsprogs version
->> starts behaving differently on different boxes based on a new
->> file that popped up in /etc ...
->>
->> At the very least, I would like to /not/ ship or install any
->> config file with xfsprogs by default; the code itself should
->> be the canonical, single point of truth for defaults for a stock
->> "make && make install" installation.
-> 
-> Hence my suggestion of libconfig - it can /write config files/ based
-> on the current mkfs config. So there's no need to ship default
-> config files - if a user wants a special config they can use mkfs to
-> generate it and they can install it appropriately.
-> 
-> e.g. 'mkfs -W <options>' outputs a config file to stdout that
-> matches the config specified on the command line, but does not make
-> the filesystem (similar to the "-n" option). If no options are
-> specified, the default config is emitted....
+From: Michal Hocko <mhocko@suse.com>
 
-That sounds nice, but I guess I'd like to get some other thoughts
-on the overall upsides and downsides of having config files which
-alter a bare mkfs.xfs command's behavior.
+xfs has defined PF_FSTRANS to declare a scope GFP_NOFS semantic quite
+some time ago. We would like to make this concept more generic and use
+it for other filesystems as well. Let's start by giving the flag a
+more generic name PF_MEMALLOC_NOFS which is in line with an exiting
+PF_MEMALLOC_NOIO already used for the same purpose for GFP_NOIO
+contexts. Replace all PF_FSTRANS usage from the xfs code in the first
+step before we introduce a full API for it as xfs uses the flag directly
+anyway.
 
-Thanks,
--Eric
+This patch doesn't introduce any functional change.
+
+Acked-by: Vlastimil Babka <vbabka@suse.cz>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Michal Hocko <mhocko@suse.com>
+---
+ fs/xfs/kmem.c             |  4 ++--
+ fs/xfs/kmem.h             |  2 +-
+ fs/xfs/libxfs/xfs_btree.c |  2 +-
+ fs/xfs/xfs_aops.c         |  6 +++---
+ fs/xfs/xfs_trans.c        | 12 ++++++------
+ include/linux/sched.h     |  2 ++
+ 6 files changed, 15 insertions(+), 13 deletions(-)
+
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index 2dfdc62f795e..e14da724a0b5 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -81,13 +81,13 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+ 	 * context via PF_MEMALLOC_NOIO to prevent memory reclaim re-entering
+ 	 * the filesystem here and potentially deadlocking.
+ 	 */
+-	if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
++	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+ 		noio_flag = memalloc_noio_save();
+ 
+ 	lflags = kmem_flags_convert(flags);
+ 	ptr = __vmalloc(size, lflags | __GFP_HIGHMEM | __GFP_ZERO, PAGE_KERNEL);
+ 
+-	if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
++	if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+ 		memalloc_noio_restore(noio_flag);
+ 
+ 	return ptr;
+diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+index 689f746224e7..d973dbfc2bfa 100644
+--- a/fs/xfs/kmem.h
++++ b/fs/xfs/kmem.h
+@@ -50,7 +50,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
+ 		lflags = GFP_ATOMIC | __GFP_NOWARN;
+ 	} else {
+ 		lflags = GFP_KERNEL | __GFP_NOWARN;
+-		if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
++		if ((current->flags & PF_MEMALLOC_NOFS) || (flags & KM_NOFS))
+ 			lflags &= ~__GFP_FS;
+ 	}
+ 
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index c3decedc9455..3059a3ec7ecb 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -2886,7 +2886,7 @@ xfs_btree_split_worker(
+ 	struct xfs_btree_split_args	*args = container_of(work,
+ 						struct xfs_btree_split_args, work);
+ 	unsigned long		pflags;
+-	unsigned long		new_pflags = PF_FSTRANS;
++	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
+ 
+ 	/*
+ 	 * we are in a transaction context here, but may also be doing work
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index bf65a9ea8642..330c6019120e 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -189,7 +189,7 @@ xfs_setfilesize_trans_alloc(
+ 	 * We hand off the transaction to the completion thread now, so
+ 	 * clear the flag here.
+ 	 */
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	return 0;
+ }
+ 
+@@ -252,7 +252,7 @@ xfs_setfilesize_ioend(
+ 	 * thus we need to mark ourselves as being in a transaction manually.
+ 	 * Similarly for freeze protection.
+ 	 */
+-	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
+ 
+ 	/* we abort the update if there was an IO error */
+@@ -1021,7 +1021,7 @@ xfs_do_writepage(
+ 	 * Given that we do not allow direct reclaim to call us, we should
+ 	 * never be called while in a filesystem transaction.
+ 	 */
+-	if (WARN_ON_ONCE(current->flags & PF_FSTRANS))
++	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
+ 		goto redirty;
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 70f42ea86dfb..f5969c8274fc 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -134,7 +134,7 @@ xfs_trans_reserve(
+ 	bool		rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
+ 
+ 	/* Mark this thread as being in a transaction */
+-	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 
+ 	/*
+ 	 * Attempt to reserve the needed disk blocks by decrementing
+@@ -144,7 +144,7 @@ xfs_trans_reserve(
+ 	if (blocks > 0) {
+ 		error = xfs_mod_fdblocks(tp->t_mountp, -((int64_t)blocks), rsvd);
+ 		if (error != 0) {
+-			current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++			current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 			return -ENOSPC;
+ 		}
+ 		tp->t_blk_res += blocks;
+@@ -221,7 +221,7 @@ xfs_trans_reserve(
+ 		tp->t_blk_res = 0;
+ 	}
+ 
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 
+ 	return error;
+ }
+@@ -914,7 +914,7 @@ __xfs_trans_commit(
+ 
+ 	xfs_log_commit_cil(mp, tp, &commit_lsn, regrant);
+ 
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	xfs_trans_free(tp);
+ 
+ 	/*
+@@ -944,7 +944,7 @@ __xfs_trans_commit(
+ 		if (commit_lsn == -1 && !error)
+ 			error = -EIO;
+ 	}
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 	xfs_trans_free_items(tp, NULLCOMMITLSN, !!error);
+ 	xfs_trans_free(tp);
+ 
+@@ -998,7 +998,7 @@ xfs_trans_cancel(
+ 		xfs_log_done(mp, tp->t_ticket, NULL, false);
+ 
+ 	/* mark this thread as no longer being in a transaction */
+-	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
++	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+ 
+ 	xfs_trans_free_items(tp, NULLCOMMITLSN, dirty);
+ 	xfs_trans_free(tp);
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index d67eee84fd43..4528f7c9789f 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1224,6 +1224,8 @@ extern struct pid *cad_pid;
+ #define PF_FREEZER_SKIP		0x40000000	/* Freezer should not count it as freezable */
+ #define PF_SUSPEND_TASK		0x80000000      /* This thread called freeze_processes() and should not be frozen */
+ 
++#define PF_MEMALLOC_NOFS PF_FSTRANS	/* Transition to a more generic GFP_NOFS scope semantic */
++
+ /*
+  * Only the _current_ task can read/write to tsk->flags, but other
+  * tasks can access tsk->flags in readonly mode for example
+-- 
+2.11.0
+
