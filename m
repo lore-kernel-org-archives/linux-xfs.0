@@ -1,125 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:48058 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751560AbdCDEsS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2017 23:48:18 -0500
-Date: Sat, 4 Mar 2017 15:48:12 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:1350 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753906AbdCFVvl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 16:51:41 -0500
+Date: Tue, 7 Mar 2017 08:51:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: allow kmem_zalloc_greedy to fail
-Message-ID: <20170304044812.GK17542@dastard>
-References: <20170302153002.GG3213@bfoster.bfoster>
- <20170302154541.16155-1-mhocko@kernel.org>
- <20170303225444.GH17542@dastard>
- <20170303231912.GA5073@birch.djwong.org>
+Subject: Re: xfstests and (automated) workflow?
+Message-ID: <20170306215112.GN17542@dastard>
+References: <CACj3i72avXdkrQdfGnfeRpnOoPo+bcBMForczMt_dnK-ZXQbkg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170303231912.GA5073@birch.djwong.org>
+In-Reply-To: <CACj3i72avXdkrQdfGnfeRpnOoPo+bcBMForczMt_dnK-ZXQbkg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Michal Hocko <mhocko@suse.com>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Mar 03, 2017 at 03:19:12PM -0800, Darrick J. Wong wrote:
-> On Sat, Mar 04, 2017 at 09:54:44AM +1100, Dave Chinner wrote:
-> > On Thu, Mar 02, 2017 at 04:45:40PM +0100, Michal Hocko wrote:
-> > > From: Michal Hocko <mhocko@suse.com>
-> > > 
-> > > Even though kmem_zalloc_greedy is documented it might fail the current
-> > > code doesn't really implement this properly and loops on the smallest
-> > > allowed size for ever. This is a problem because vzalloc might fail
-> > > permanently - we might run out of vmalloc space or since 5d17a73a2ebe
-> > > ("vmalloc: back off when the current task is killed") when the current
-> > > task is killed. The later one makes the failure scenario much more
-> > > probable than it used to be because it makes vmalloc() failures
-> > > permanent for tasks with fatal signals pending.. Fix this by bailing out
-> > > if the minimum size request failed.
-> > > 
-> > > This has been noticed by a hung generic/269 xfstest by Xiong Zhou.
-> > > 
-> > > fsstress: vmalloc: allocation failure, allocated 12288 of 20480 bytes, mode:0x14080c2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_ZERO), nodemask=(null)
-> > > fsstress cpuset=/ mems_allowed=0-1
-> > > CPU: 1 PID: 23460 Comm: fsstress Not tainted 4.10.0-master-45554b2+ #21
-> > > Hardware name: HP ProLiant DL380 Gen9/ProLiant DL380 Gen9, BIOS P89 10/05/2016
-> > > Call Trace:
-> > >  dump_stack+0x63/0x87
-> > >  warn_alloc+0x114/0x1c0
-> > >  ? alloc_pages_current+0x88/0x120
-> > >  __vmalloc_node_range+0x250/0x2a0
-> > >  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
-> > >  ? free_hot_cold_page+0x21f/0x280
-> > >  vzalloc+0x54/0x60
-> > >  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
-> > >  kmem_zalloc_greedy+0x2b/0x40 [xfs]
-> > >  xfs_bulkstat+0x11b/0x730 [xfs]
-> > >  ? xfs_bulkstat_one_int+0x340/0x340 [xfs]
-> > >  ? selinux_capable+0x20/0x30
-> > >  ? security_capable+0x48/0x60
-> > >  xfs_ioc_bulkstat+0xe4/0x190 [xfs]
-> > >  xfs_file_ioctl+0x9dd/0xad0 [xfs]
-> > >  ? do_filp_open+0xa5/0x100
-> > >  do_vfs_ioctl+0xa7/0x5e0
-> > >  SyS_ioctl+0x79/0x90
-> > >  do_syscall_64+0x67/0x180
-> > >  entry_SYSCALL64_slow_path+0x25/0x25
-> > > 
-> > > fsstress keeps looping inside kmem_zalloc_greedy without any way out
-> > > because vmalloc keeps failing due to fatal_signal_pending.
-> > > 
-> > > Reported-by: Xiong Zhou <xzhou@redhat.com>
-> > > Analyzed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> > > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> > > ---
-> > >  fs/xfs/kmem.c | 2 ++
-> > >  1 file changed, 2 insertions(+)
-> > > 
-> > > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> > > index 339c696bbc01..ee95f5c6db45 100644
-> > > --- a/fs/xfs/kmem.c
-> > > +++ b/fs/xfs/kmem.c
-> > > @@ -34,6 +34,8 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
-> > >  	size_t		kmsize = maxsize;
-> > >  
-> > >  	while (!(ptr = vzalloc(kmsize))) {
-> > > +		if (kmsize == minsize)
-> > > +			break;
-> > >  		if ((kmsize >>= 1) <= minsize)
-> > >  			kmsize = minsize;
-> > >  	}
-> > 
-> > Seems wrong to me - this function used to have lots of callers and
-> > over time we've slowly removed them or replaced them with something
-> > else. I'd suggest removing it completely, replacing the call sites
-> > with kmem_zalloc_large().
+On Mon, Mar 06, 2017 at 03:25:03PM +0100, Jan Tulak wrote:
+> Hi guys,
 > 
-> Heh.  I thought the reason why _greedy still exists (for its sole user
-> bulkstat) is that bulkstat had the flexibility to deal with receiving
-> 0, 1, or 4 pages.  So yeah, we could just kill it.
+> II decided to streamline and automate some things for me with testing
+> xfs, but as I worked on it, I realise that surely I'm not the first
+> one to do that. So I would like to ask you, can you share your tips
+> and tricks? :-)
+> 
+> What I began to work at is a small suite of scripts to deploy a docker
+> container (could be changed for a VM) which compiles my local version
+> of xfsprogs and xfstests, runs it, and if I specify multiple
+> revisions, it does it for every of the revisions and then tells me
+> which test results changed between the revisions. I know the
+> comparison of failures between runs can be done with
+> tools/compare-failures. It doesn't detect a change in "not run"
+> though, which I would like to detect too.
+> 
+> Are you using anything like this you can share?
 
-irbuf is sized to minimise AGI locking, but if memory is low
-it just uses what it can get. Keep in mind the number of inodes we
-need to process is determined by the userspace buffer size, which
-can easily be sized to hold tens of thousands of struct
-xfs_bulkstat.
+Ted's xfstests-bld does this sort of stuff, IIRC, using KVM:
 
-> But thinking even more stingily about memory, are there applications
-> that care about being able to bulkstat 16384 inodes at once?
-
-IIRC, xfsdump can bulkstat up to 64k inodes per call....
-
-> How badly
-> does bulkstat need to be able to bulk-process more than a page's worth
-> of inobt records, anyway?
-
-Benchmark it on a busy system doing lots of other AGI work (e.g. a
-busy NFS server workload with a working set of tens of millions of
-inodes so it doesn't fit in cache) and find out. That's generally
-how I answer those sorts of questions...
+https://git.kernel.org/cgit/fs/ext2/xfstests-bld.git/
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
