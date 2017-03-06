@@ -1,108 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29925 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753575AbdCFSmJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 13:42:09 -0500
-Date: Mon, 6 Mar 2017 10:41:09 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: remove kmem_zalloc_greedy
-Message-ID: <20170306184109.GC5280@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from mail.linuxfoundation.org ([140.211.169.12]:46720 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752685AbdCFVvk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 16:51:40 -0500
+Date: Mon, 6 Mar 2017 13:22:14 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 4/7] mm: introduce memalloc_nofs_{save,restore} API
+Message-Id: <20170306132214.1769368301d9e671e1bc68be@linux-foundation.org>
+In-Reply-To: <20170306131408.9828-5-mhocko@kernel.org>
+References: <20170306131408.9828-1-mhocko@kernel.org>
+        <20170306131408.9828-5-mhocko@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: Brian Foster <bfoster@redhat.com>, Michal Hocko <mhocko@kernel.org>, Christoph Hellwig <hch@lst.de>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, Vlastimil Babka <vbabka@suse.cz>
 
-The sole remaining caller of kmem_zalloc_greedy is bulkstat, which uses
-it to grab 1-4 pages for staging of inobt records.  The infinite loop in
-the greedy allocation function is causing hangs[1] in generic/269, so
-just get rid of the greedy allocator in favor of kmem_zalloc_large.
-This makes bulkstat somewhat more likely to ENOMEM if there's really no
-pages to spare, but eliminates a source of hangs.
+On Mon,  6 Mar 2017 14:14:05 +0100 Michal Hocko <mhocko@kernel.org> wrote:
 
-[1] https://lkml.org/lkml/2017/2/28/832
+> From: Michal Hocko <mhocko@suse.com>
+> 
+> GFP_NOFS context is used for the following 5 reasons currently
+> 	- to prevent from deadlocks when the lock held by the allocation
+> 	  context would be needed during the memory reclaim
+> 	- to prevent from stack overflows during the reclaim because
+> 	  the allocation is performed from a deep context already
+> 	- to prevent lockups when the allocation context depends on
+> 	  other reclaimers to make a forward progress indirectly
+> 	- just in case because this would be safe from the fs POV
+> 	- silence lockdep false positives
+> 
+> Unfortunately overuse of this allocation context brings some problems
+> to the MM. Memory reclaim is much weaker (especially during heavy FS
+> metadata workloads), OOM killer cannot be invoked because the MM layer
+> doesn't have enough information about how much memory is freeable by the
+> FS layer.
+> 
+> In many cases it is far from clear why the weaker context is even used
+> and so it might be used unnecessarily. We would like to get rid of
+> those as much as possible. One way to do that is to use the flag in
+> scopes rather than isolated cases. Such a scope is declared when really
+> necessary, tracked per task and all the allocation requests from within
+> the context will simply inherit the GFP_NOFS semantic.
+> 
+> Not only this is easier to understand and maintain because there are
+> much less problematic contexts than specific allocation requests, this
+> also helps code paths where FS layer interacts with other layers (e.g.
+> crypto, security modules, MM etc...) and there is no easy way to convey
+> the allocation context between the layers.
+> 
+> Introduce memalloc_nofs_{save,restore} API to control the scope
+> of GFP_NOFS allocation context. This is basically copying
+> memalloc_noio_{save,restore} API we have for other restricted allocation
+> context GFP_NOIO. The PF_MEMALLOC_NOFS flag already exists and it is
+> just an alias for PF_FSTRANS which has been xfs specific until recently.
+> There are no more PF_FSTRANS users anymore so let's just drop it.
+> 
+> PF_MEMALLOC_NOFS is now checked in the MM layer and drops __GFP_FS
+> implicitly same as PF_MEMALLOC_NOIO drops __GFP_IO. memalloc_noio_flags
+> is renamed to current_gfp_context because it now cares about both
+> PF_MEMALLOC_NOFS and PF_MEMALLOC_NOIO contexts. Xfs code paths preserve
+> their semantic. kmem_flags_convert() doesn't need to evaluate the flag
+> anymore.
+> 
+> This patch shouldn't introduce any functional changes.
+> 
+> Let's hope that filesystems will drop direct GFP_NOFS (resp. ~__GFP_FS)
+> usage as much as possible and only use a properly documented
+> memalloc_nofs_{save,restore} checkpoints where they are appropriate.
+> 
+> ....
+>
+> --- a/include/linux/gfp.h
+> +++ b/include/linux/gfp.h
+> @@ -210,8 +210,16 @@ struct vm_area_struct;
+>   *
+>   * GFP_NOIO will use direct reclaim to discard clean pages or slab pages
+>   *   that do not require the starting of any physical IO.
+> + *   Please try to avoid using this flag directly and instead use
+> + *   memalloc_noio_{save,restore} to mark the whole scope which cannot
+> + *   perform any IO with a short explanation why. All allocation requests
+> + *   will inherit GFP_NOIO implicitly.
+>   *
+>   * GFP_NOFS will use direct reclaim but will not use any filesystem interfaces.
+> + *   Please try to avoid using this flag directly and instead use
+> + *   memalloc_nofs_{save,restore} to mark the whole scope which cannot/shouldn't
+> + *   recurse into the FS layer with a short explanation why. All allocation
+> + *   requests will inherit GFP_NOFS implicitly.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/kmem.c       |   18 ------------------
- fs/xfs/kmem.h       |    2 --
- fs/xfs/xfs_itable.c |   14 ++++++++------
- 3 files changed, 8 insertions(+), 26 deletions(-)
+I wonder if these are worth a checkpatch rule.
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index 339c696..bb2beae 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -24,24 +24,6 @@
- #include "kmem.h"
- #include "xfs_message.h"
- 
--/*
-- * Greedy allocation.  May fail and may return vmalloced memory.
-- */
--void *
--kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
--{
--	void		*ptr;
--	size_t		kmsize = maxsize;
--
--	while (!(ptr = vzalloc(kmsize))) {
--		if ((kmsize >>= 1) <= minsize)
--			kmsize = minsize;
--	}
--	if (ptr)
--		*size = kmsize;
--	return ptr;
--}
--
- void *
- kmem_alloc(size_t size, xfs_km_flags_t flags)
- {
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 689f746..f0fc84f 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -69,8 +69,6 @@ static inline void  kmem_free(const void *ptr)
- }
- 
- 
--extern void *kmem_zalloc_greedy(size_t *, size_t, size_t);
--
- static inline void *
- kmem_zalloc(size_t size, xfs_km_flags_t flags)
- {
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 8b2150d..283e76c 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -362,7 +362,6 @@ xfs_bulkstat(
- 	xfs_agino_t		agino;	/* inode # in allocation group */
- 	xfs_agnumber_t		agno;	/* allocation group number */
- 	xfs_btree_cur_t		*cur;	/* btree cursor for ialloc btree */
--	size_t			irbsize; /* size of irec buffer in bytes */
- 	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
- 	int			nirbuf;	/* size of irbuf */
- 	int			ubcount; /* size of user's buffer */
-@@ -389,11 +388,14 @@ xfs_bulkstat(
- 	*ubcountp = 0;
- 	*done = 0;
- 
--	irbuf = kmem_zalloc_greedy(&irbsize, PAGE_SIZE, PAGE_SIZE * 4);
--	if (!irbuf)
--		return -ENOMEM;
--
--	nirbuf = irbsize / sizeof(*irbuf);
-+	nirbuf = (PAGE_SIZE * 4) / sizeof(*irbuf);
-+	irbuf = kmem_zalloc_large(PAGE_SIZE * 4, KM_SLEEP);
-+	if (!irbuf) {
-+		irbuf = kmem_zalloc_large(PAGE_SIZE, KM_SLEEP);
-+		if (!irbuf)
-+			return -ENOMEM;
-+		nirbuf /= 4;
-+	}
- 
- 	/*
- 	 * Loop over the allocation groups, starting from the last
