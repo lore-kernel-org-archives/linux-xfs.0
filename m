@@ -1,130 +1,168 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:34933 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932439AbdCFSsP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 13:48:15 -0500
-Date: Mon, 6 Mar 2017 10:48:04 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS kernel BUG during generic/270 with v4.10
-Message-ID: <20170306184804.GD5280@birch.djwong.org>
-References: <20170222191300.GA29474@linux.intel.com>
- <20170302162934.GM3213@bfoster.bfoster>
- <20170306184109.GA19127@linux.intel.com>
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:37160 "EHLO
+        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932226AbdCFSvm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 13:51:42 -0500
+Received: by mail-wm0-f54.google.com with SMTP id n11so72638015wma.0
+        for <linux-xfs@vger.kernel.org>; Mon, 06 Mar 2017 10:50:42 -0800 (PST)
+Subject: Re: [PATCH 0/8 v2] Non-blocking AIO
+References: <20170228233610.25456-1-rgoldwyn@suse.de>
+ <347d19cb-dbb8-1d4f-dfb5-d1dd820dd65d@scylladb.com>
+ <20170306082546.GA14932@quack2.suse.cz>
+ <d0789835-5bae-6f99-af4d-c0e60eadbab7@kernel.dk>
+ <9b64c78e-c984-cf29-8f79-c48332a4c450@scylladb.com>
+ <57c873b2-fed6-e717-fc4e-ed2e328173b6@kernel.dk>
+ <c8c3cede-d69a-a47a-0b08-85072b386d77@scylladb.com>
+ <f1415241-ddd0-8918-4a68-c5e1adf06e09@kernel.dk>
+ <56ae3a64-5e27-d7d4-5ab5-f5f68eef8b78@scylladb.com>
+ <7aabb6b4-df8d-8554-fbe3-90504887fb8e@kernel.dk>
+ <4cbafb12-a30e-bb57-da43-de7c47726c81@scylladb.com>
+ <68e790b7-bee4-9cb7-66c8-3f9157d50b3b@kernel.dk>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <334fb384-438b-9929-d92f-af1e598d4650@scylladb.com>
+Date: Mon, 6 Mar 2017 20:50:37 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170306184109.GA19127@linux.intel.com>
+In-Reply-To: <68e790b7-bee4-9cb7-66c8-3f9157d50b3b@kernel.dk>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>
+Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, jack@suse.com, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Mar 06, 2017 at 11:41:09AM -0700, Ross Zwisler wrote:
-> On Thu, Mar 02, 2017 at 11:29:34AM -0500, Brian Foster wrote:
-> > On Wed, Feb 22, 2017 at 12:13:00PM -0700, Ross Zwisler wrote:
-> > > By running generic/270 in a loop on an XFS filesystem mounted with DAX I'm
-> > > able to reliably generate the following kernel bug after a few (~10)
-> > > iterations (output passed through kasan_symbolize.py):
-> > > 
-> > > run fstests generic/270 at 2017-02-22 12:01:05
-> > > XFS (pmem0p2): Unmounting Filesystem
-> > > XFS (pmem0p2): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
-> > > XFS (pmem0p2): Mounting V5 Filesystem
-> > > XFS (pmem0p2): Ending clean mount
-> > > XFS (pmem0p2): Quotacheck needed: Please wait.
-> > > XFS (pmem0p2): Quotacheck: Done.
-> > > XFS (pmem0p2): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
-> > > XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 965
-> > 
-> > This means we've reclaimed an inode that still has delayed allocation
-> > blocks, which shouldn't occur. We do have one recent fix in this area:
-> > fa7f138 ("xfs: clear delalloc and cache on buffered write failure"). Do
-> > you still reproduce this? If so, does it reproduce with that patch?
-> 
-> Cool, I've done a bunch more testing and have some interesting info.
-> 
-> First, this issue isn't specific to DAX.  If I turn DAX off, it actually
-> reproduces much faster, usually on the first test run.
-> 
-> The branch I could find in the xfs repo that contained commit
-> 
-> fa7f138 ("xfs: clear delalloc and cache on buffered write failure")
-> 
-> Was based on v4.10-rc6.  Interestingly, this baseline does not reproduce this
-> issue, whereas v4.10 release reproduces it very consistently.  The commit
-> between v4.10-rc6 and v4.10 that changes this behavior is:
+On 03/06/2017 08:27 PM, Jens Axboe wrote:
+> On 03/06/2017 11:17 AM, Avi Kivity wrote:
+>>
+>> On 03/06/2017 07:06 PM, Jens Axboe wrote:
+>>> On 03/06/2017 09:59 AM, Avi Kivity wrote:
+>>>> On 03/06/2017 06:08 PM, Jens Axboe wrote:
+>>>>> On 03/06/2017 08:59 AM, Avi Kivity wrote:
+>>>>>> On 03/06/2017 05:38 PM, Jens Axboe wrote:
+>>>>>>> On 03/06/2017 08:29 AM, Avi Kivity wrote:
+>>>>>>>> On 03/06/2017 05:19 PM, Jens Axboe wrote:
+>>>>>>>>> On 03/06/2017 01:25 AM, Jan Kara wrote:
+>>>>>>>>>> On Sun 05-03-17 16:56:21, Avi Kivity wrote:
+>>>>>>>>>>>> The goal of the patch series is to return -EAGAIN/-EWOULDBLOCK if
+>>>>>>>>>>>> any of these conditions are met. This way userspace can push most
+>>>>>>>>>>>> of the write()s to the kernel to the best of its ability to complete
+>>>>>>>>>>>> and if it returns -EAGAIN, can defer it to another thread.
+>>>>>>>>>>>>
+>>>>>>>>>>> Is it not possible to push the iocb to a workqueue?  This will allow
+>>>>>>>>>>> existing userspace to work with the new functionality, unchanged. Any
+>>>>>>>>>>> userspace implementation would have to do the same thing, so it's not like
+>>>>>>>>>>> we're saving anything by pushing it there.
+>>>>>>>>>> That is not easy because until IO is fully submitted, you need some parts
+>>>>>>>>>> of the context of the process which submits the IO (e.g. memory mappings,
+>>>>>>>>>> but possibly also other credentials). So you would need to somehow transfer
+>>>>>>>>>> this information to the workqueue.
+>>>>>>>>> Outside of technical challenges, the API also needs to return EAGAIN or
+>>>>>>>>> start blocking at some point. We can't expose a direct connection to
+>>>>>>>>> queue work like that, and let any user potentially create millions of
+>>>>>>>>> pending work items (and IOs).
+>>>>>>>> You wouldn't expect more concurrent events than the maxevents parameter
+>>>>>>>> that was supplied to io_setup syscall; it should have reserved any
+>>>>>>>> resources needed.
+>>>>>>> Doesn't matter what limit you apply, my point still stands - at some
+>>>>>>> point you have to return EAGAIN, or block. Returning EAGAIN without
+>>>>>>> the caller having flagged support for that change of behavior would
+>>>>>>> be problematic.
+>>>>>> Doesn't it already return EAGAIN (or some other error) if you exceed
+>>>>>> maxevents?
+>>>>> It's a setup thing. We check these limits when someone creates an IO
+>>>>> context, and carve out the specified entries form our global pool. Then
+>>>>> we free those "resources" when the io context is freed.
+>>>>>
+>>>>> Right now I can setup an IO context with 1000 entries on it, yet that
+>>>>> number has NO bearing on when io_submit() would potentially block or
+>>>>> return EAGAIN.
+>>>>>
+>>>>> We can have a huge gap on the intent signaled by io context setup, and
+>>>>> the reality imposed by what actually happens on the IO submission side.
+>>>> Isn't that a bug?  Shouldn't that 1001st incomplete io_submit() return
+>>>> EAGAIN?
+>>>>
+>>>> Just tested it, and maxevents is not respected for this:
+>>>>
+>>>> io_setup(1, [0x7fc64537f000])           = 0
+>>>> io_submit(0x7fc64537f000, 10, [{pread, fildes=3, buf=0x1eb4000,
+>>>> nbytes=4096, offset=0}, {pread, fildes=3, buf=0x1eb4000, nbytes=4096,
+>>>> offset=0}, {pread, fildes=3, buf=0x1eb4000, nbytes=4096, offset=0},
+>>>> {pread, fildes=3, buf=0x1eb4000, nbytes=4096, offset=0}, {pread,
+>>>> fildes=3, buf=0x1eb4000, nbytes=4096, offset=0}, {pread, fildes=3,
+>>>> buf=0x1eb4000, nbytes=4096, offset=0}, {pread, fildes=3, buf=0x1eb4000,
+>>>> nbytes=4096, offset=0}, {pread, fildes=3, buf=0x1eb4000, nbytes=4096,
+>>>> offset=0}, {pread, fildes=3, buf=0x1eb4000, nbytes=4096, offset=0},
+>>>> {pread, fildes=3, buf=0x1eb4000, nbytes=4096, offset=0}]) = 10
+>>>>
+>>>> which is unexpected, to me.
+>>> ioctx_alloc()
+>>> {
+>>>           [...]
+>>>
+>>>           /*
+>>>            * We keep track of the number of available ringbuffer slots, to prevent
+>>>            * overflow (reqs_available), and we also use percpu counters for this.
+>>>            *
+>>>            * So since up to half the slots might be on other cpu's percpu counters
+>>>            * and unavailable, double nr_events so userspace sees what they
+>>>            * expected: additionally, we move req_batch slots to/from percpu
+>>>            * counters at a time, so make sure that isn't 0:
+>>>            */
+>>>           nr_events = max(nr_events, num_possible_cpus() * 4);
+>>>           nr_events *= 2;
+>>> }
+>> On a 4-lcore desktop:
+>>
+>> io_setup(1, [0x7fc210041000])           = 0
+>> io_submit(0x7fc210041000, 10000, [big array]) = 126
+>> io_submit(0x7fc210041000, 10000, [big array]) = -1 EAGAIN (Resource
+>> temporarily unavailable)
+>>
+>> so, the user should already expect EAGAIN from io_submit() due to
+>> resource limits.  I'm sure the check could be tightened so that if we do
+>> have to use a workqueue, we respect the user's limit rather than some
+>> inflated number.
+> This is why I previously said that the 1000 requests you potentially
+> asks for when setting up your IO context has NOTHING to do with when you
+> will run into EAGAIN. Yes, returning EAGAIN if the app exceeds the
+> limit that it itself has set is existing behavior and it certainly makes
+> sense. And it's an easily handled condition, since the app can just
+> backoff and wait/reap completion events.
 
-That was merged in 4.11-rc1.
+Every time I used aio, I considered maxevents to be the maximum number 
+of in-flight requests for that queue, and observed this limit 
+religiously.  It's possible others don't.
 
-> d1908f52557b ("fs: break out of iomap_file_buffered_write on fatal signals")
-> 
-> As of this commit the problem reproduces very easily, but with the previous
-> commit I can't get it to happen at all.
-> 
-> So, once I figured out that I needed d1908f52557b to make the issue appear, I
-> tested v4.10 merged with different commits in the current xfs/for-next branch
-> to try and see if the commit you referenced above fixed the problem, and it
-> does appear to.
-> 
-> So, quick summary:
-> 
-> v4.10				= failure
-> v4.10 + xfs/for_next 		= success
-> v4.10 + fa7f138			= success
-> v4.10 + fa7f138~1 (4560e78)	= failure
-> 
-> So, as far as I can tell, fa7f138 does indeed seem to fix the issue.
-> 
-> I don't know if this issue was actually introduced by d1908f52557b, or if that
-> commit just changed things enough that the issue started happening much more
-> regularly?
+> But if we allow EAGAIN to bubble up from block request submission, then
+> that's a change in behavior. This can happen without the app having any
+> pending IO against that IO context, hence we can return EAGAIN to the
+> app that then has no reasonable way to handle that condition.
+>
 
-/me doesn't know either.  I don't see anything in g/270 that would send fatal
-signals....
+For sure (and it's a different EAGAIN -- it's tied to the iocb, not 
+request submission).  But we do have an upper bound for the number of 
+concurrent requests, even if inflated, so having the kernel convert a 
+blocking iocb into a workqueue item does not allow userspace to exploit 
+the kernel.
 
-> 
-> > > ------------[ cut here ]------------
-> > ...
-> > > ---[ end trace 384d06985052f068 ]---
-> > > 
-> > > Here's the xfstests run:
-> > > 
-> > > FSTYP         -- xfs (debug)
-> > > PLATFORM      -- Linux/x86_64 alara 4.10.0
-> > > MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem0p2
-> > > MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:nfs_t:s0 /dev/pmem0p2 /mnt/xfstests_scratch
-> > > 
-> > > generic/270 24s ..../check: line 596: 15817 Segmentation fault      ./$seq > $tmp.rawout 2>&1
-> > >  [failed, exit status 139] - output mismatch (see /root/xfstests/results//generic/270.out.bad)
-> > >     --- tests/generic/270.out	2016-10-21 15:31:10.568945780 -0600
-> > >     +++ /root/xfstests/results//generic/270.out.bad	2017-02-22 12:01:29.272718284 -0700
-> > >     @@ -3,6 +3,3 @@
-> > >      Run fsstress
-> > >      
-> > >      Run dd writers in parallel
-> > >     -Comparing user usage
-> > >     -Comparing group usage
-> > >     -Comparing filesystem consistency
-> > >     ...
-> > >     (Run 'diff -u tests/generic/270.out /root/xfstests/results//generic/270.out.bad'  to see the entire diff)
-> > > 
-> > > This was done in my normal test setup, which is a pair of PMEM disks that
-> > > enable DAX.
-> > > 
-> > 
-> > What I'm a little confused about though is that I thought DAX meant we
-> > bypassed buffered I/O and always used direct I/O (which means you should
-> > never perform delayed allocation). :/
-> 
-> Sorry, I don't know about this one.  :/
+We could limit the number of workqueue submissions to maxevents, and 
+queue anything between maxevents and (maxevents * inflation_factor) 
+using a regular queue.  So the intent of maxevents is respected, and 
+applications that overflow it are not regressed.
 
-I was also under the impression that DAX means no delalloc, but maybe
-there's a defect somewhere?
+   if iocb would overflow inflated maxevents:
+       io_submit returns EAGAIN
+   elseif iocb can be submitted asynchronously:
+       do that
+   elseif number of iocbs running in workqueues < maxevents:
+       push to a workqueue
+   else
+       queue somewhere, when a work_item completes it can pick up an 
+iocb from the queue
 
---D
+this enables aio for all filesystems, and doesn't require lots of idle 
+thread pools if the filesystem works or useless syscalls if it doesn't.  
+It's a lot more work for the kernel, but results in a tighter and 
+simpler interface.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
