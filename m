@@ -1,54 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50822 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752882AbdCHDbv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Mar 2017 22:31:51 -0500
-Date: Wed, 8 Mar 2017 11:29:56 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: WARNING: CPU: 2 PID: 20539 at fs/iomap.c:954
- iomap_dio_rw+0x39a/0x3b0
-Message-ID: <20170308032956.GX14226@eguan.usersys.redhat.com>
-References: <1488922559.3877.6.camel@redhat.com>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:38758 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752728AbdCFIkl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 03:40:41 -0500
+Received: by mail-wm0-f50.google.com with SMTP id t193so57888218wmt.1
+        for <linux-xfs@vger.kernel.org>; Mon, 06 Mar 2017 00:40:40 -0800 (PST)
+Subject: Re: [PATCH 0/8 v2] Non-blocking AIO
+References: <20170228233610.25456-1-rgoldwyn@suse.de>
+ <347d19cb-dbb8-1d4f-dfb5-d1dd820dd65d@scylladb.com>
+ <20170306082546.GA14932@quack2.suse.cz>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <f1df9ffe-6803-41b3-3ec0-cd96ae32b995@scylladb.com>
+Date: Mon, 6 Mar 2017 10:40:36 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1488922559.3877.6.camel@redhat.com>
+In-Reply-To: <20170306082546.GA14932@quack2.suse.cz>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, jack@suse.com, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Hi Jeff,
+On 03/06/2017 10:25 AM, Jan Kara wrote:
+> On Sun 05-03-17 16:56:21, Avi Kivity wrote:
+>>> The goal of the patch series is to return -EAGAIN/-EWOULDBLOCK if
+>>> any of these conditions are met. This way userspace can push most
+>>> of the write()s to the kernel to the best of its ability to complete
+>>> and if it returns -EAGAIN, can defer it to another thread.
+>>>
+>> Is it not possible to push the iocb to a workqueue?  This will allow
+>> existing userspace to work with the new functionality, unchanged. Any
+>> userspace implementation would have to do the same thing, so it's not like
+>> we're saving anything by pushing it there.
+> That is not easy because until IO is fully submitted, you need some parts
+> of the context of the process which submits the IO (e.g. memory mappings,
+> but possibly also other credentials). So you would need to somehow transfer
+> this information to the workqueue.
+>
 
-On Tue, Mar 07, 2017 at 04:35:59PM -0500, Jeff Layton wrote:
-> I was doing an xfstests run on xfs with v4.11.0-rc1, and these two
-> warnings popped. Looks like invalidate_inode_pages2_range failed? A
-> small patch to print the error there showed that it was returning
-> -EBUSY.
-> 
-> Pretty easy to reproduce by running xfstests generic/095 on a KVM guest
-> running v4.11.0-rc1.
-> 
-> [  591.302422] run fstests generic/095 at 2017-03-07 15:38:32
-> [  591.452226] XFS (vda6): Unmounting Filesystem
-> [  591.825895] XFS (vda6): Mounting V5 Filesystem
-> [  591.841560] XFS (vda6): Ending clean mount
-> [  592.127155] ------------[ cut here ]------------
-> [  592.133775] WARNING: CPU: 2 PID: 20539 at fs/iomap.c:954 iomap_dio_rw+0x39a/0x3b0
 
-and
+It's at least possible to pass the mm_struct to the workqueue, and I 
+imagine other process attributes.  But I appreciate the difficulty.
 
-> [  592.202828] WARNING: CPU: 0 PID: 20540 at fs/iomap.c:896 iomap_dio_rw+0x1b1/0x3b0
-
-IIRC, these warnings are kind of "known issue", they're filtered out by
-generic/095 and should not cause the test to fail. You can check the
-comments before filter_xfs_dmesg() function in generic/095 test.
-
-Did generic/095 fail for you due to dmesg check? If so I think there
-might be an fstests bug. My generic/095 run on 4.11-rc1 kernel triggered
-these warnings too, but test itself didn't report failure.
-
-Thanks,
-Eryu
+It would be quite annoying to have to keep a large number of worker 
+threads active, just in case aio is not working.  Modern NVMes have 
+fairly deep queues, and at the worst case, you'll need one thread for 
+each I/O to keep everything busy.
