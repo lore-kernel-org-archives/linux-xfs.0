@@ -1,52 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43188 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750734AbdCAOuY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Mar 2017 09:50:24 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs_repair: detect invalid zero-sized symlink inodes
-Date: Wed,  1 Mar 2017 10:00:03 -0500
-Message-Id: <1488380403-5826-1-git-send-email-bfoster@redhat.com>
+Received: from mail-it0-f42.google.com ([209.85.214.42]:33378 "EHLO
+        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932211AbdCFOZk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 09:25:40 -0500
+Received: by mail-it0-f42.google.com with SMTP id w124so2178792itb.0
+        for <linux-xfs@vger.kernel.org>; Mon, 06 Mar 2017 06:25:34 -0800 (PST)
+MIME-Version: 1.0
+From: Jan Tulak <jtulak@redhat.com>
+Date: Mon, 6 Mar 2017 15:25:03 +0100
+Message-ID: <CACj3i72avXdkrQdfGnfeRpnOoPo+bcBMForczMt_dnK-ZXQbkg@mail.gmail.com>
+Subject: xfstests and (automated) workflow?
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Mathias Troiden <mathias.troiden@gmail.com>
 
-Mathias Troiden reproduced a filesystem corruption that resulted in
-a zero-sized local format symlink inode. This is invalid state and
-results in an inode that cannot be accessed or modified.
+Hi guys,
 
-The kernel detects this problem on inode access, fails and warns the
-user to umount and run xfs_repair. Unfortunately, xfs_repair doesn't
-even detect the problem. Thus the user has no path to recovery.
+II decided to streamline and automate some things for me with testing
+xfs, but as I worked on it, I realise that surely I'm not the first
+one to do that. So I would like to ask you, can you share your tips
+and tricks? :-)
 
-Update xfs_repair to check for invalid zero-sized symlinks and flag
-them as corrupted. This results in tossing the inode, but returns
-the fs to a valid state.
+What I began to work at is a small suite of scripts to deploy a docker
+container (could be changed for a VM) which compiles my local version
+of xfsprogs and xfstests, runs it, and if I specify multiple
+revisions, it does it for every of the revisions and then tells me
+which test results changed between the revisions. I know the
+comparison of failures between runs can be done with
+tools/compare-failures. It doesn't detect a change in "not run"
+though, which I would like to detect too.
 
-Reported-by: Mathias Troiden <mathias.troiden@gmail.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- repair/dinode.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Are you using anything like this you can share?
 
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 8d01409..d664f87 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -1385,6 +1385,11 @@ process_symlink(
- 		return(1);
- 	}
- 
-+	if (be64_to_cpu(dino->di_size) == 0) {
-+		do_warn(_("zero size symlink in inode %" PRIu64 "\n"), lino);
-+		return 1;
-+	}
-+
- 	/*
- 	 * have to check symlink component by component.
- 	 * get symlink contents into data area
+Thanks,
+Jan
+
 -- 
-2.7.4
-
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
