@@ -1,112 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:57123 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754574AbdCGDZV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 22:25:21 -0500
-From: Josef Bacik <jbacik@fb.com>
-Subject: Re: [PATCH] xfs: clear XBF_ASYNC if we attach an iodone callback
-Date: Tue, 7 Mar 2017 02:37:40 +0000
-Message-ID: <B76CB364-8A83-4D0C-A500-609E7F3CB21C@fb.com>
-References: <1488552404-21379-1-git-send-email-jbacik@fb.com>
- <20170303204902.GF21245@bfoster.bfoster> <1488576856.9307.13.camel@fb.com>
- <20170303222001.GA24497@bfoster.bfoster>
- <A14C7E7E-2807-48E6-A5C1-ABD09A7B69D3@fb.com>
- <20170304135849.GA27205@bfoster.bfoster>
- <1488826813.9307.21.camel@fb.com>,<20170307012204.GP17542@dastard>
-In-Reply-To: <20170307012204.GP17542@dastard>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Received: from aserp1050.oracle.com ([141.146.126.70]:48733 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753536AbdCGEQ3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 23:16:29 -0500
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v26NHxTq010305
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 6 Mar 2017 23:17:59 GMT
+Date: Mon, 6 Mar 2017 15:16:52 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: allow zero-length symlinks (and directories), sort
+ of
+Message-ID: <20170306231652.GF5280@birch.djwong.org>
+References: <20170304000529.GB5073@birch.djwong.org>
+ <20170306135143.GC3223@bfoster.bfoster>
+ <20170306172205.GA5280@birch.djwong.org>
+ <20170306181820.GE3223@bfoster.bfoster>
+ <20170306214755.GM17542@dastard>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170306214755.GM17542@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, Kernel Team <Kernel-team@fb.com>, Carlos Maiolino <cmaiolino@redhat.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
+On Tue, Mar 07, 2017 at 08:47:55AM +1100, Dave Chinner wrote:
+> On Mon, Mar 06, 2017 at 01:18:20PM -0500, Brian Foster wrote:
+> > On Mon, Mar 06, 2017 at 09:22:05AM -0800, Darrick J. Wong wrote:
+> > > On Mon, Mar 06, 2017 at 08:51:44AM -0500, Brian Foster wrote:
+> > > > On Fri, Mar 03, 2017 at 04:05:29PM -0800, Darrick J. Wong wrote:
+> > > > > In commit ef388e2054 ("don't allow di_size with high bit set") and
+> > > > > commit 3c6f46eacd87 ("sanity check directory inode di_size") we
+> > > > > erroneously fail the inode verification checks for symlinks or
+> > > > > directories with di_size == 0.
+> > > > > 
+> > > > > This is proven incorrect by generic/388 because the unlink process uses
+> > > > > multiple unconnected transactions to truncate the remote symlink /
+> > > > > directory and to unlink and free the inode.  If the fs goes down after
+> > > > > the truncate commit but before the unlink happens, we are left with a
+> > > > > zero-length inode.  Worse yet, if the unlink /does/ commit, log recovery
+> > > > > will now break after the first transaction because we've zeroed di_size.
 
-> On Mar 6, 2017, at 8:23 PM, Dave Chinner <david@fromorbit.com> wrote:
->=20
->> On Mon, Mar 06, 2017 at 02:00:13PM -0500, Josef Bacik wrote:
->> so you retry once, and the second time through we will return false if
->> we are unmounting, which means that xfs_buf_do_callbacks gets called.
->>=20
->> Now you say that xfs_buf_do_callbacks() being called when we errored
->> out is dangerous, but I don't understand why.  We have this code
->>=20
->>         if (need_ail) {
->>                 struct xfs_log_item *log_items[need_ail];
->>                 int i =3D 0;
->>                 spin_lock(&ailp->xa_lock);
->>                 for (blip =3D lip; blip; blip =3D blip->li_bio_list) {
->>                         iip =3D INODE_ITEM(blip);
->>                         if (iip->ili_logged &&
->>                             blip->li_lsn =3D=3D iip->ili_flush_lsn) {
->>                                 log_items[i++] =3D blip;
->>                         }
->>                         ASSERT(i <=3D need_ail);
->>                 }
->>                 /* xfs_trans_ail_delete_bulk() drops the AIL lock. */
->>                 xfs_trans_ail_delete_bulk(ailp, log_items, i,
->>                                           SHUTDOWN_CORRUPT_INCORE);
->>         }
->=20
-> [ Your cut-n-paste is horribly mangled in something non-ascii. ]
->=20
+Brian had a question in an earlier reply about whether or not g/388
+actually produced a filesystem with a zero-length symlink.  Looking back
+at the metadumps I kept around from Friday I don't see any indication of
+that happening.  However, the atomicity problem still exists.
 
-Yeah I keep trying new mail clients and it's just not going well.
+> > > 
+> > > Ugh, I misspoke slightly.  Truncate and *ifree* are separate
+> > > transactions that can lose each other in the mist after a crash.
+> > > 
+> > > So that separates this discussion into two classes of problem -- the
+> > > first is the case of "truncate, crash, forget to ifree", which at least
+> > > isn't a user-visible problem because the inode has been unlinked from
+> > > the directory tree at that point.  Log recovery breaks if iget ->
+> > > dinode_verify stumbles over the zero-length inode.
+> > > 
+> > 
+> > Ok, that change seems reasonable.
+> 
+> Not to me, though - it's indicative of an atomicity problem, and not
+> something we should work around by considering the intermediate
+> "corrupt" state on disk valid. Remember that one of the main reasons
+> for checks like these in the verifiers is that they tell us where
+> our transactional change atomicity is broken. Gutting the verifier
+> because it's indicated we have a change atomicity problem is not the
+> solution.
+> 
+> i.e. I think we should be looking at changing xfs_inactive() to use
+> the deferred ops state machine for the multiple {truncate-data,
+> truncata-attr, free inode} transactions. Then we don't need to care
+> about temporary incomplete state on disk - if we get the first
+> transaction completed, log recovery will have an intent one disk for
+> the next transaction, and we can complete the inode freeing
+> process rather than leaving a dangling chad.
 
->> and need_ail is set if we didn't actually end up on disk properly.  So
->> we delete the thing and mark the fs as fucked.  Am I mis-reading what
->> is going on here?
->=20
-> Yes. That won't shut down the filesystem on an inode write error. It
-> will simply remove the inode from the AIL, the error will do dropped
-> on the floor, and the filesystem will not be shut down even though
-> it's now in a corrupt state. xfs_trans_ail_delete_bulk() only shuts
-> down the filesytem if it doesn't find the item being removed form
-> the AIL in the AIL.
->=20
-> As I keep telling people, what needs to happen is this:
->=20
->    1. buffer write error occurs
->    2. retries exhausted, mark buffer as errored, run callbacks
->    3. xfs_iflush_done() (and other iodone callbacks) need to
->       look at the buffer error state to determine what to do.
->    4. if the buffer is errored and recovery is not possible,
->       the callback needs to shut down the filesytem.
->    5. the callback then needs to call flush abort function for
->       item (e.g. xfs_iflush_abort()) rather than the normal
->       IO completion processing path.
->=20
->>  This is what I did to our 4.6 tree (in testing
->> still, not actually pushed to production)
->>=20
->>         if (bp->b_flags & XBF_ASYNC) {
->>                 ASSERT(bp->b_iodone !=3D NULL);
->>=20
->>                 trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
->>=20
->>                 xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag
->> */
->>=20
->>                 if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
->>                         bp->b_flags |=3D XBF_WRITE | XBF_ASYNC |
->>                                        XBF_DONE | XBF_WRITE_FAIL;
->>                         xfs_buf_submit(bp);
->>                 } else {
->> +                       xfs_buf_do_callbacks(bp);
->> +                       bp->b_fspriv =3D NULL;
->> +                       bp->b_iodone =3D NULL;
->>                         xfs_buf_relse(bp);
->>                 }
->>=20
->>                 return;
->>         }
->=20
-> It's likely you'll end up with silent on disk corruption if you do
-> that because it's just tossing the error state away.
+I argued for this earlier as a longer-term fix, but vger has not been
+transmitting emails reliably for a week now, so I don't know if you saw
+that part.
 
-Ok great this is what I needed, thanks Dave,
+There are various parts of XFS that have atomicity problems just like
+this one.  Auditing the codebase to find all these places and add the
+necessary log functionality could take a while, though it ought to be
+done now that we have the ability to chain transactions.
 
-Josef
+(Also I think there's a minor bug with the defer_ops where if we call
+defer_trans_roll, the transaction commits successfully, but then
+something else fails, we end up double-freeing the intent items.)
+
+> Making an exception in a verifier for a special log recovery state
+> is fine - we have to handle all sorts of interesting intermediate
+> states in log recovery - but as a general rule if it's an invalid
+> state the verifier should always be catching it....
+
+Ah, see, there's something I didn't know -- that verifiers can be
+contextually sensitive.  In this case we could probably get away with a
+new iget flag so that log replay could say "Hey, I don't care if the
+size is zero".
+
+> [snip]
+> 
+> > Essentially what I'm saying is that if it is not possible to have a
+> > zero-sized symlink in a directory except for a bug or external
+> > modification, or there is otherwise no path to recover outside of
+> > xfs_repair (i.e., the current verify failure behavior) then EFSCORRUPTED
+> > makes sense to me.
+> 
+> *nod*
+> 
+> > If it is possible (even if it only occurs as an
+> > artifact of log recovery) and everything works except for reading the
+> > actual link returns an error (i.e., it can be renamed, unlinked), then
+> > I'm not sure EFSCORRUPTED is the right error.
+> 
+> We shouldn't ever get that far on a zero-length symlink/directory
+> because the inode is clearly in an invalid state....
+
+<nod> Ok, I'll leave the verifier as it is for now.
+
+--D
+
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
