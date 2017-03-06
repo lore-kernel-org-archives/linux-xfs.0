@@ -1,95 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:46720 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752685AbdCFVvk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 16:51:40 -0500
-Date: Mon, 6 Mar 2017 13:22:14 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 4/7] mm: introduce memalloc_nofs_{save,restore} API
-Message-Id: <20170306132214.1769368301d9e671e1bc68be@linux-foundation.org>
-In-Reply-To: <20170306131408.9828-5-mhocko@kernel.org>
-References: <20170306131408.9828-1-mhocko@kernel.org>
-        <20170306131408.9828-5-mhocko@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45668 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753140AbdCFVz0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 16:55:26 -0500
+Date: Tue, 7 Mar 2017 08:47:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: allow zero-length symlinks (and directories), sort
+ of
+Message-ID: <20170306214755.GM17542@dastard>
+References: <20170304000529.GB5073@birch.djwong.org>
+ <20170306135143.GC3223@bfoster.bfoster>
+ <20170306172205.GA5280@birch.djwong.org>
+ <20170306181820.GE3223@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170306181820.GE3223@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, Vlastimil Babka <vbabka@suse.cz>
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon,  6 Mar 2017 14:14:05 +0100 Michal Hocko <mhocko@kernel.org> wrote:
+On Mon, Mar 06, 2017 at 01:18:20PM -0500, Brian Foster wrote:
+> On Mon, Mar 06, 2017 at 09:22:05AM -0800, Darrick J. Wong wrote:
+> > On Mon, Mar 06, 2017 at 08:51:44AM -0500, Brian Foster wrote:
+> > > On Fri, Mar 03, 2017 at 04:05:29PM -0800, Darrick J. Wong wrote:
+> > > > In commit ef388e2054 ("don't allow di_size with high bit set") and
+> > > > commit 3c6f46eacd87 ("sanity check directory inode di_size") we
+> > > > erroneously fail the inode verification checks for symlinks or
+> > > > directories with di_size == 0.
+> > > > 
+> > > > This is proven incorrect by generic/388 because the unlink process uses
+> > > > multiple unconnected transactions to truncate the remote symlink /
+> > > > directory and to unlink and free the inode.  If the fs goes down after
+> > > > the truncate commit but before the unlink happens, we are left with a
+> > > > zero-length inode.  Worse yet, if the unlink /does/ commit, log recovery
+> > > > will now break after the first transaction because we've zeroed di_size.
+> > 
+> > Ugh, I misspoke slightly.  Truncate and *ifree* are separate
+> > transactions that can lose each other in the mist after a crash.
+> > 
+> > So that separates this discussion into two classes of problem -- the
+> > first is the case of "truncate, crash, forget to ifree", which at least
+> > isn't a user-visible problem because the inode has been unlinked from
+> > the directory tree at that point.  Log recovery breaks if iget ->
+> > dinode_verify stumbles over the zero-length inode.
+> > 
+> 
+> Ok, that change seems reasonable.
 
-> From: Michal Hocko <mhocko@suse.com>
-> 
-> GFP_NOFS context is used for the following 5 reasons currently
-> 	- to prevent from deadlocks when the lock held by the allocation
-> 	  context would be needed during the memory reclaim
-> 	- to prevent from stack overflows during the reclaim because
-> 	  the allocation is performed from a deep context already
-> 	- to prevent lockups when the allocation context depends on
-> 	  other reclaimers to make a forward progress indirectly
-> 	- just in case because this would be safe from the fs POV
-> 	- silence lockdep false positives
-> 
-> Unfortunately overuse of this allocation context brings some problems
-> to the MM. Memory reclaim is much weaker (especially during heavy FS
-> metadata workloads), OOM killer cannot be invoked because the MM layer
-> doesn't have enough information about how much memory is freeable by the
-> FS layer.
-> 
-> In many cases it is far from clear why the weaker context is even used
-> and so it might be used unnecessarily. We would like to get rid of
-> those as much as possible. One way to do that is to use the flag in
-> scopes rather than isolated cases. Such a scope is declared when really
-> necessary, tracked per task and all the allocation requests from within
-> the context will simply inherit the GFP_NOFS semantic.
-> 
-> Not only this is easier to understand and maintain because there are
-> much less problematic contexts than specific allocation requests, this
-> also helps code paths where FS layer interacts with other layers (e.g.
-> crypto, security modules, MM etc...) and there is no easy way to convey
-> the allocation context between the layers.
-> 
-> Introduce memalloc_nofs_{save,restore} API to control the scope
-> of GFP_NOFS allocation context. This is basically copying
-> memalloc_noio_{save,restore} API we have for other restricted allocation
-> context GFP_NOIO. The PF_MEMALLOC_NOFS flag already exists and it is
-> just an alias for PF_FSTRANS which has been xfs specific until recently.
-> There are no more PF_FSTRANS users anymore so let's just drop it.
-> 
-> PF_MEMALLOC_NOFS is now checked in the MM layer and drops __GFP_FS
-> implicitly same as PF_MEMALLOC_NOIO drops __GFP_IO. memalloc_noio_flags
-> is renamed to current_gfp_context because it now cares about both
-> PF_MEMALLOC_NOFS and PF_MEMALLOC_NOIO contexts. Xfs code paths preserve
-> their semantic. kmem_flags_convert() doesn't need to evaluate the flag
-> anymore.
-> 
-> This patch shouldn't introduce any functional changes.
-> 
-> Let's hope that filesystems will drop direct GFP_NOFS (resp. ~__GFP_FS)
-> usage as much as possible and only use a properly documented
-> memalloc_nofs_{save,restore} checkpoints where they are appropriate.
-> 
-> ....
->
-> --- a/include/linux/gfp.h
-> +++ b/include/linux/gfp.h
-> @@ -210,8 +210,16 @@ struct vm_area_struct;
->   *
->   * GFP_NOIO will use direct reclaim to discard clean pages or slab pages
->   *   that do not require the starting of any physical IO.
-> + *   Please try to avoid using this flag directly and instead use
-> + *   memalloc_noio_{save,restore} to mark the whole scope which cannot
-> + *   perform any IO with a short explanation why. All allocation requests
-> + *   will inherit GFP_NOIO implicitly.
->   *
->   * GFP_NOFS will use direct reclaim but will not use any filesystem interfaces.
-> + *   Please try to avoid using this flag directly and instead use
-> + *   memalloc_nofs_{save,restore} to mark the whole scope which cannot/shouldn't
-> + *   recurse into the FS layer with a short explanation why. All allocation
-> + *   requests will inherit GFP_NOFS implicitly.
+Not to me, though - it's indicative of an atomicity problem, and not
+something we should work around by considering the intermediate
+"corrupt" state on disk valid. Remember that one of the main reasons
+for checks like these in the verifiers is that they tell us where
+our transactional change atomicity is broken. Gutting the verifier
+because it's indicated we have a change atomicity problem is not the
+solution.
 
-I wonder if these are worth a checkpatch rule.
+i.e. I think we should be looking at changing xfs_inactive() to use
+the deferred ops state machine for the multiple {truncate-data,
+truncata-attr, free inode} transactions. Then we don't need to care
+about temporary incomplete state on disk - if we get the first
+transaction completed, log recovery will have an intent one disk for
+the next transaction, and we can complete the inode freeing
+process rather than leaving a dangling chad.
 
+Making an exception in a verifier for a special log recovery state
+is fine - we have to handle all sorts of interesting intermediate
+states in log recovery - but as a general rule if it's an invalid
+state the verifier should always be catching it....
+
+[snip]
+
+> Essentially what I'm saying is that if it is not possible to have a
+> zero-sized symlink in a directory except for a bug or external
+> modification, or there is otherwise no path to recover outside of
+> xfs_repair (i.e., the current verify failure behavior) then EFSCORRUPTED
+> makes sense to me.
+
+*nod*
+
+> If it is possible (even if it only occurs as an
+> artifact of log recovery) and everything works except for reading the
+> actual link returns an error (i.e., it can be renamed, unlinked), then
+> I'm not sure EFSCORRUPTED is the right error.
+
+We shouldn't ever get that far on a zero-length symlink/directory
+because the inode is clearly in an invalid state....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
