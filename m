@@ -1,58 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:45889 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751278AbdCCL7o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 3 Mar 2017 06:59:44 -0500
-From: Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [PowerPC] XFS : Metadata corruption detected at 0x60000000382100b0, xfs_agf block
-In-Reply-To: <1488531850.5962.22.camel@abdul-ThinkPad-T450>
-References: <1488531850.5962.22.camel@abdul-ThinkPad-T450>
-Date: Fri, 03 Mar 2017 22:59:39 +1100
-Message-ID: <87efyer2ok.fsf@concordia>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33362 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752767AbdCFNlx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 08:41:53 -0500
+From: Michal Hocko <mhocko@kernel.org>
+Subject: [PATCH 0/7 v5] scope GFP_NOFS api
+Date: Mon,  6 Mar 2017 14:14:01 +0100
+Message-Id: <20170306131408.9828-1-mhocko@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Abdul Haleem <abdhalee@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org
-Cc: sachinp@linux.vnet.ibm.com, mpe@ellerman.id, linuxppc-dev@lists.ozlabs.org, aneesh.kumar@linux.vnet.ibm.com
+To: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org
+Cc: linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Michal Hocko <mhocko@suse.com>, Michal Hocko <mhocko@suse.cz>, Nikolay Borisov <nborisov@suse.com>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Vlastimil Babka <vbabka@suse.cz>
 
-Abdul Haleem <abdhalee@linux.vnet.ibm.com> writes:
+Hi,
+I have posted the previous version here [1]. There are no real changes
+in the implementation since then. I've just added "lockdep: teach
+lockdep about memalloc_noio_save" from Nikolay which is a lockdep bugfix
+developed independently but "mm: introduce memalloc_nofs_{save,restore}
+API" depends on it so I added it here. Then I've rebased the series on
+top of 4.11-rc1 which contains sched.h split up which required to add
+sched/mm.h include.
 
-> Hi,
->
-> Reboot fails for PowerPC machine running RHEL7.3 (3.10.0-514.el7)
-> following these messages:
->
-> SGI XFS with ACLs, security attributes, no debug enabled
-> XFS (dm-0): Mounting V5 Filesystem
-> FS (dm-0): Starting recovery (logdev: internal)
-> XFS (dm-0): Metadata corruption detected at 0x60000000382100b0, xfs_agf
-> block 0x4b00001
-> XFS (dm-0): Unmount and run xfs_repair
-> XFS (dm-0): First 64 bytes of corrupted metadata buffer:
-> c0000000f06b7200: 58 41 47 46 00 00 00 01 00 00 00 03 00 32 00 00
-> XAGF.........2..
-> c0000000f06b7210: 00 00 00 01 00 00 00 02 00 00 00 00 00 00 00
-> 01  ................
-> c0000000f06b7220: 00 00 00 01 00 00 00 00 00 00 00 76 00 00 00
-> 02  ...........v....
-> c0000000f06b7230: 00 00 00 04 00 2d 0c c7 00 2a 14 62 00 00 00
-> 00  .....-...*.b....
-> XFS (dm-0): metadata I/O error: block 0x4b00001
-> ("xfs_trans_read_buf_map") error 117 numblks 1
-> Failed to mount /sysroot.
->
-> Steps to recreate:
-> Run some file system test (ltp or xfs/086) on 4.10.0 upstream kernel
-> built on the PowerVM LPAR after the test completes, reboot the machine
-> back to base kernel, boot falls to dracut mode with above messages,
-> every time it requires a xfs_repair to recover the file system.
+There didn't seem to be any real objections and so I think we should go
+and finally merge this - ideally in this release cycle as it doesn't
+really introduce any functional changes. Those were separated out and
+will be posted later. The risk of regressions should really be small
+because we do not remove any real GFP_NOFS users yet.
 
-Can you work on a better repro case?
+Diffstat says
+ fs/jbd2/journal.c         |  8 ++++++++
+ fs/jbd2/transaction.c     | 12 ++++++++++++
+ fs/xfs/kmem.c             | 12 ++++++------
+ fs/xfs/kmem.h             |  2 +-
+ fs/xfs/libxfs/xfs_btree.c |  2 +-
+ fs/xfs/xfs_aops.c         |  6 +++---
+ fs/xfs/xfs_buf.c          |  8 ++++----
+ fs/xfs/xfs_trans.c        | 12 ++++++------
+ include/linux/gfp.h       | 18 +++++++++++++++++-
+ include/linux/jbd2.h      |  2 ++
+ include/linux/sched.h     |  6 +++---
+ include/linux/sched/mm.h  | 26 +++++++++++++++++++++++---
+ kernel/locking/lockdep.c  | 11 +++++++++--
+ lib/radix-tree.c          |  2 ++
+ mm/page_alloc.c           | 10 ++++++----
+ mm/vmscan.c               |  6 +++---
+ 16 files changed, 106 insertions(+), 37 deletions(-)
 
-What if you mount an XFS filesystem in the guest, run the test against
-it, unmount it and then remount it. Do you see the bug then? Or does it
-require a reboot to trigger?
+Shortlog:
+Michal Hocko (6):
+      lockdep: allow to disable reclaim lockup detection
+      xfs: abstract PF_FSTRANS to PF_MEMALLOC_NOFS
+      mm: introduce memalloc_nofs_{save,restore} API
+      xfs: use memalloc_nofs_{save,restore} instead of memalloc_noio*
+      jbd2: mark the transaction context with the scope GFP_NOFS context
+      jbd2: make the whole kjournald2 kthread NOFS safe
 
-cheers
+Nikolay Borisov (1):
+      lockdep: teach lockdep about memalloc_noio_save
+
+
+[1] http://lkml.kernel.org/r/20170206140718.16222-1-mhocko@kernel.org
+[2] http://lkml.kernel.org/r/20170117030118.727jqyamjhojzajb@thunk.org
