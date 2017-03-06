@@ -1,114 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19229 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752159AbdCCXVM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2017 18:21:12 -0500
-Date: Fri, 3 Mar 2017 15:19:12 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: allow kmem_zalloc_greedy to fail
-Message-ID: <20170303231912.GA5073@birch.djwong.org>
-References: <20170302153002.GG3213@bfoster.bfoster>
- <20170302154541.16155-1-mhocko@kernel.org>
- <20170303225444.GH17542@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:45010 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752974AbdCFNvt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Mar 2017 08:51:49 -0500
+Date: Mon, 6 Mar 2017 08:51:44 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: allow zero-length symlinks (and directories), sort
+ of
+Message-ID: <20170306135143.GC3223@bfoster.bfoster>
+References: <20170304000529.GB5073@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170303225444.GH17542@dastard>
+In-Reply-To: <20170304000529.GB5073@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Michal Hocko <mhocko@suse.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Sat, Mar 04, 2017 at 09:54:44AM +1100, Dave Chinner wrote:
-> On Thu, Mar 02, 2017 at 04:45:40PM +0100, Michal Hocko wrote:
-> > From: Michal Hocko <mhocko@suse.com>
-> > 
-> > Even though kmem_zalloc_greedy is documented it might fail the current
-> > code doesn't really implement this properly and loops on the smallest
-> > allowed size for ever. This is a problem because vzalloc might fail
-> > permanently - we might run out of vmalloc space or since 5d17a73a2ebe
-> > ("vmalloc: back off when the current task is killed") when the current
-> > task is killed. The later one makes the failure scenario much more
-> > probable than it used to be because it makes vmalloc() failures
-> > permanent for tasks with fatal signals pending.. Fix this by bailing out
-> > if the minimum size request failed.
-> > 
-> > This has been noticed by a hung generic/269 xfstest by Xiong Zhou.
-> > 
-> > fsstress: vmalloc: allocation failure, allocated 12288 of 20480 bytes, mode:0x14080c2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_ZERO), nodemask=(null)
-> > fsstress cpuset=/ mems_allowed=0-1
-> > CPU: 1 PID: 23460 Comm: fsstress Not tainted 4.10.0-master-45554b2+ #21
-> > Hardware name: HP ProLiant DL380 Gen9/ProLiant DL380 Gen9, BIOS P89 10/05/2016
-> > Call Trace:
-> >  dump_stack+0x63/0x87
-> >  warn_alloc+0x114/0x1c0
-> >  ? alloc_pages_current+0x88/0x120
-> >  __vmalloc_node_range+0x250/0x2a0
-> >  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
-> >  ? free_hot_cold_page+0x21f/0x280
-> >  vzalloc+0x54/0x60
-> >  ? kmem_zalloc_greedy+0x2b/0x40 [xfs]
-> >  kmem_zalloc_greedy+0x2b/0x40 [xfs]
-> >  xfs_bulkstat+0x11b/0x730 [xfs]
-> >  ? xfs_bulkstat_one_int+0x340/0x340 [xfs]
-> >  ? selinux_capable+0x20/0x30
-> >  ? security_capable+0x48/0x60
-> >  xfs_ioc_bulkstat+0xe4/0x190 [xfs]
-> >  xfs_file_ioctl+0x9dd/0xad0 [xfs]
-> >  ? do_filp_open+0xa5/0x100
-> >  do_vfs_ioctl+0xa7/0x5e0
-> >  SyS_ioctl+0x79/0x90
-> >  do_syscall_64+0x67/0x180
-> >  entry_SYSCALL64_slow_path+0x25/0x25
-> > 
-> > fsstress keeps looping inside kmem_zalloc_greedy without any way out
-> > because vmalloc keeps failing due to fatal_signal_pending.
-> > 
-> > Reported-by: Xiong Zhou <xzhou@redhat.com>
-> > Analyzed-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> > ---
-> >  fs/xfs/kmem.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> > index 339c696bbc01..ee95f5c6db45 100644
-> > --- a/fs/xfs/kmem.c
-> > +++ b/fs/xfs/kmem.c
-> > @@ -34,6 +34,8 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
-> >  	size_t		kmsize = maxsize;
-> >  
-> >  	while (!(ptr = vzalloc(kmsize))) {
-> > +		if (kmsize == minsize)
-> > +			break;
-> >  		if ((kmsize >>= 1) <= minsize)
-> >  			kmsize = minsize;
-> >  	}
+On Fri, Mar 03, 2017 at 04:05:29PM -0800, Darrick J. Wong wrote:
+> In commit ef388e2054 ("don't allow di_size with high bit set") and
+> commit 3c6f46eacd87 ("sanity check directory inode di_size") we
+> erroneously fail the inode verification checks for symlinks or
+> directories with di_size == 0.
 > 
-> Seems wrong to me - this function used to have lots of callers and
-> over time we've slowly removed them or replaced them with something
-> else. I'd suggest removing it completely, replacing the call sites
-> with kmem_zalloc_large().
-
-Heh.  I thought the reason why _greedy still exists (for its sole user
-bulkstat) is that bulkstat had the flexibility to deal with receiving
-0, 1, or 4 pages.  So yeah, we could just kill it.
-
-But thinking even more stingily about memory, are there applications
-that care about being able to bulkstat 16384 inodes at once?  How badly
-does bulkstat need to be able to bulk-process more than a page's worth
-of inobt records, anyway?
-
---D
-
+> This is proven incorrect by generic/388 because the unlink process uses
+> multiple unconnected transactions to truncate the remote symlink /
+> directory and to unlink and free the inode.  If the fs goes down after
+> the truncate commit but before the unlink happens, we are left with a
+> zero-length inode.  Worse yet, if the unlink /does/ commit, log recovery
+> will now break after the first transaction because we've zeroed di_size.
 > 
-> Cheers,
+> In order to prevent the crashes and ASSERTs that the old patches
+> covered, re-allow the zero-length inodes and change the functions that
+> interface with the vfs to return the appropriate error codes to
+> userspace.
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+
+Interesting, thanks. I suppose this means we should drop the repair side
+fix..? I'm a bit leery on repair modifying a filesystem that is
+technically in a "valid" state, unless there's no other option to
+recover from that state.
+
+>  fs/xfs/libxfs/xfs_inode_buf.c |    4 ----
+>  fs/xfs/xfs_dir2_readdir.c     |    6 ++----
+>  fs/xfs/xfs_iops.c             |    9 ++++++++-
+>  3 files changed, 10 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 3752bac..6e62999 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -402,10 +402,6 @@ xfs_dinode_verify(
+>  	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
+>  		return false;
+>  
+> -	/* No zero-length symlinks/dirs. */
+> -	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
+> -		return false;
+> -
+
+What's the reasoning for dropping the S_ISDIR() logic here? Is the same
+scenario possible on a directory?
+
+>  	/* only version 3 or greater inodes are extensively verified here */
+>  	if (dip->di_version < 3)
+>  		return true;
+> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+> index 0b3b636..be1367a 100644
+> --- a/fs/xfs/xfs_dir2_readdir.c
+> +++ b/fs/xfs/xfs_dir2_readdir.c
+> @@ -74,10 +74,8 @@ xfs_dir2_sf_getdents(
+>  	/*
+>  	 * Give up if the directory is way too short.
+>  	 */
+> -	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
+> -		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
+> -		return -EIO;
+> -	}
+> +	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent))
+> +		return -EFSCORRUPTED;
+
+This seems reasonable if it is truly an unexpected state...
+
+>  
+>  	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
+>  	ASSERT(dp->i_df.if_u1.if_data != NULL);
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 22c1615..b7b6807 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -457,6 +457,9 @@ xfs_vn_get_link(
+>  	char			*link;
+>  	int			error = -ENOMEM;
+>  
+> +	if (i_size_read(inode) == 0)
+> +		return ERR_PTR(-EFSCORRUPTED);
+> +
+
+... but this one to me seems to qualify as an expected state, based on
+what you've described in the commit log description. Can we actually now
+"recover" from this situation at runtime (i.e., can we unlink the
+inode)? If so, it seems a little ominous to return a corruption errror
+as opposed to EINVAL or EIO or something (though I suppose either one
+may confuse a user enough into running xfs_repair anyways). Thoughts?
+
+Brian
+
+>  	if (!dentry)
+>  		return ERR_PTR(-ECHILD);
+>  
+> @@ -483,8 +486,12 @@ xfs_vn_get_link_inline(
+>  	struct inode		*inode,
+>  	struct delayed_call	*done)
+>  {
+> +	char			*p;
+>  	ASSERT(XFS_I(inode)->i_df.if_flags & XFS_IFINLINE);
+> -	return XFS_I(inode)->i_df.if_u1.if_data;
+> +	p = XFS_I(inode)->i_df.if_u1.if_data;
+> +	if (p)
+> +		return p;
+> +	return ERR_PTR(-EFSCORRUPTED);
+>  }
+>  
+>  STATIC int
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
