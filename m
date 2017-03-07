@@ -1,95 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45668 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753140AbdCFVz0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2017 16:55:26 -0500
-Date: Tue, 7 Mar 2017 08:47:55 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: allow zero-length symlinks (and directories), sort
- of
-Message-ID: <20170306214755.GM17542@dastard>
-References: <20170304000529.GB5073@birch.djwong.org>
- <20170306135143.GC3223@bfoster.bfoster>
- <20170306172205.GA5280@birch.djwong.org>
- <20170306181820.GE3223@bfoster.bfoster>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34213 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755985AbdCGW4O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 17:56:14 -0500
+Date: Tue, 7 Mar 2017 14:55:33 -0800
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: statx manpage
+Message-ID: <20170307225533.GA1403@zzz>
+References: <20170307050140.GA12946@infradead.org>
+ <20170307000609.GG5280@birch.djwong.org>
+ <10435.1488907375@warthog.procyon.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170306181820.GE3223@bfoster.bfoster>
+In-Reply-To: <10435.1488907375@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: David Howells <dhowells@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, mtk.manpages@gmail.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Mar 06, 2017 at 01:18:20PM -0500, Brian Foster wrote:
-> On Mon, Mar 06, 2017 at 09:22:05AM -0800, Darrick J. Wong wrote:
-> > On Mon, Mar 06, 2017 at 08:51:44AM -0500, Brian Foster wrote:
-> > > On Fri, Mar 03, 2017 at 04:05:29PM -0800, Darrick J. Wong wrote:
-> > > > In commit ef388e2054 ("don't allow di_size with high bit set") and
-> > > > commit 3c6f46eacd87 ("sanity check directory inode di_size") we
-> > > > erroneously fail the inode verification checks for symlinks or
-> > > > directories with di_size == 0.
-> > > > 
-> > > > This is proven incorrect by generic/388 because the unlink process uses
-> > > > multiple unconnected transactions to truncate the remote symlink /
-> > > > directory and to unlink and free the inode.  If the fs goes down after
-> > > > the truncate commit but before the unlink happens, we are left with a
-> > > > zero-length inode.  Worse yet, if the unlink /does/ commit, log recovery
-> > > > will now break after the first transaction because we've zeroed di_size.
-> > 
-> > Ugh, I misspoke slightly.  Truncate and *ifree* are separate
-> > transactions that can lose each other in the mist after a crash.
-> > 
-> > So that separates this discussion into two classes of problem -- the
-> > first is the case of "truncate, crash, forget to ifree", which at least
-> > isn't a user-visible problem because the inode has been unlinked from
-> > the directory tree at that point.  Log recovery breaks if iget ->
-> > dinode_verify stumbles over the zero-length inode.
-> > 
-> 
-> Ok, that change seems reasonable.
+On Tue, Mar 07, 2017 at 05:22:55PM +0000, David Howells wrote:
+> .fi
+> .in
+> .PP
+> (Note that reserved space and padding is ommitted)
 
-Not to me, though - it's indicative of an atomicity problem, and not
-something we should work around by considering the intermediate
-"corrupt" state on disk valid. Remember that one of the main reasons
-for checks like these in the verifiers is that they tell us where
-our transactional change atomicity is broken. Gutting the verifier
-because it's indicated we have a change atomicity problem is not the
-solution.
+ommitted => omitted
 
-i.e. I think we should be looking at changing xfs_inactive() to use
-the deferred ops state machine for the multiple {truncate-data,
-truncata-attr, free inode} transactions. Then we don't need to care
-about temporary incomplete state on disk - if we get the first
-transaction completed, log recovery will have an intent one disk for
-the next transaction, and we can complete the inode freeing
-process rather than leaving a dangling chad.
+> .TP
+> .BR AT_EMPTY_PATH " (since Linux 2.6.39)"
+...
+> .TP
+> .BR AT_NO_AUTOMOUNT " (since Linux 2.6.38)"
 
-Making an exception in a verifier for a special log recovery state
-is fine - we have to handle all sorts of interesting intermediate
-states in log recovery - but as a general rule if it's an invalid
-state the verifier should always be catching it....
+Given that statx is just being added now in 4.11, saying "since Linux 2.6.39"
+and "since Linux 2.6.38" for these flags seems unneeded.
 
-[snip]
+> The
+> .I mask
+> argument to
+> .BR statx ()
+> is used to tell the kernel which fields the caller is interested in
+> .I mask
+> is an OR'ed combination of the following constants:
 
-> Essentially what I'm saying is that if it is not possible to have a
-> zero-sized symlink in a directory except for a bug or external
-> modification, or there is otherwise no path to recover outside of
-> xfs_repair (i.e., the current verify failure behavior) then EFSCORRUPTED
-> makes sense to me.
+Missing a period between "interested in" and "mask".
 
-*nod*
+> .B "Do not"
+> simply set
+> .I mask
+> to UINT_MAX as one or more bits may, in future, be used to specify an extension
+> to the buffer.
 
-> If it is possible (even if it only occurs as an
-> artifact of log recovery) and everything works except for reading the
-> actual link returns an error (i.e., it can be renamed, unlinked), then
-> I'm not sure EFSCORRUPTED is the right error.
+"in future" => "in the future".
 
-We shouldn't ever get that far on a zero-length symlink/directory
-because the inode is clearly in an invalid state....
+> .I Note:
+> For performance and simplicity reasons, different fields in the
+> .I statx
+> structure may contain state information from different moments
+> during the execution of the system call.
+> For example, if
+> .IR stx_mode
+> or
+> .IR stx_uid
+> is changed by another process by calling
+> .BR chmod (2)
+> or
+> .BR chown (2),
+> .BR stat ()
+> might return the old
+> .I stx_mode
+> together with the new
+> .IR stx_uid ,
+> or the old
+> .I stx_uid
+> together with the new
+> .IR stx_mode .
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+This example is confusing because chmod() doesn't change st_uid, and chown()
+doesn't ordinarily change st_mode.  A better example would be that if chown() is
+used to change both the owner and group, it's possible that statx() would return
+the new owner paired with the old group, or the new group paired with the old
+owner.  Or, the new owner and group could be observed before the new ctime.
+Also, it seems this note belongs in a BUGS section of the man page, since it is
+a bug.
+
+> .SH ERRORS
+> .TP
+> .B EINVAL
+> Invalid flag specified in
+> .IR flags .
+
+Actually, the behavior when specifying invalid flags differs depending on
+whether a path is specified.
+
+If a path is specified, then statx() fails with EINVAL if unrecognized flags are
+specified.
+
+However, the behavior differs when no path is specified.  For example, the the
+following call with invalid flags succeeds:
+
+	statx(fd, NULL, 0xFFFF0000, 0, &stbuf);
+
+I think this is a bug, and it should be fixed by applying the same 'flags'
+validation regardless of whether a path is specified.
+
+> .B ENOENT
+> A component of
+> .I pathname
+> does not exist, or
+> .I pathname
+> is an empty string.
+
+is an empty string and AT_EMPTY_PATH was not specified in flags.
+
+> .SH SEE ALSO
+> .BR ls (1),
+> .BR stat (1),
+
+Shouldn't this link to stat (2), not stat (1)?
+
+- Eric
