@@ -1,196 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:18493 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752769AbdCGHYk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 02:24:40 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v270IxvW016506
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 7 Mar 2017 00:18:59 GMT
-Date: Mon, 6 Mar 2017 16:17:02 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: only reclaim unwritten COW extents periodically
-Message-ID: <20170307001702.GH5280@birch.djwong.org>
-References: <20170228004910.9495-1-hch@lst.de>
- <20170228052651.GD5297@birch.djwong.org>
+Received: from mx2.suse.de ([195.135.220.15]:41224 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755119AbdCGM14 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Mar 2017 07:27:56 -0500
+Date: Tue, 7 Mar 2017 13:15:04 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: How to favor memory allocations for WQ_MEM_RECLAIM threads?
+Message-ID: <20170307121503.GJ28642@dhcp22.suse.cz>
+References: <201703031948.CHJ81278.VOHSFFFOOLJQMt@I-love.SAKURA.ne.jp>
+ <20170303133950.GD31582@dhcp22.suse.cz>
+ <20170303232512.GI17542@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170228052651.GD5297@birch.djwong.org>
+In-Reply-To: <20170303232512.GI17542@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, Tejun Heo <tj@kernel.org>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, Feb 27, 2017 at 09:26:51PM -0800, Darrick J. Wong wrote:
-> On Mon, Feb 27, 2017 at 04:49:10PM -0800, Christoph Hellwig wrote:
-> > We only want to reclaim preallocations from our periodic work item.
-> > Currenrly this is archived by looking for a diry inode, but that check
-> > is rather fragile.  Instead add flags to the xfs_reflink_cancel_cow_* so
-> > that the caller can ask for just cancelling unwritten extents in the COw
-> > fork.
+[Let's add Tejun]
+
+On Sat 04-03-17 10:25:12, Dave Chinner wrote:
+> On Fri, Mar 03, 2017 at 02:39:51PM +0100, Michal Hocko wrote:
+> > On Fri 03-03-17 19:48:30, Tetsuo Handa wrote:
+> > > Continued from http://lkml.kernel.org/r/201702261530.JDD56292.OFOLFHQtVMJSOF@I-love.SAKURA.ne.jp :
+> > > 
+> > > While I was testing a patch which avoids infinite too_many_isolated() loop in
+> > > shrink_inactive_list(), I hit a lockup where WQ_MEM_RECLAIM threads got stuck
+> > > waiting for memory allocation. I guess that we overlooked a basic thing about
+> > > WQ_MEM_RECLAIM.
+> > > 
+> > >   WQ_MEM_RECLAIM helps only when the cause of failing to complete
+> > >   a work item is lack of "struct task_struct" to run that work item, for
+> > >   WQ_MEM_RECLAIM preallocates one "struct task_struct" so that the workqueue
+> > >   will not be blocked waiting for memory allocation for "struct task_struct".
+> > > 
+> > >   WQ_MEM_RECLAIM does not help when "struct task_struct" running that work
+> > >   item is blocked waiting for memory allocation (or is indirectly blocked
+> > >   on a lock where the owner of that lock is blocked waiting for memory
+> > >   allocation). That is, WQ_MEM_RECLAIM users must guarantee forward progress
+> > >   if memory allocation (including indirect memory allocation via
+> > >   locks/completions) is needed.
+> > > 
+> > > In XFS, "xfs_mru_cache", "xfs-buf/%s", "xfs-data/%s", "xfs-conv/%s", "xfs-cil/%s",
+> > > "xfs-reclaim/%s", "xfs-log/%s", "xfs-eofblocks/%s", "xfsalloc" and "xfsdiscard"
+> > > workqueues are used, and all but "xfsdiscard" are WQ_MEM_RECLAIM workqueues.
+> > > 
+> > > What I observed is at http://I-love.SAKURA.ne.jp/tmp/serial-20170226.txt.xz .
+> > > I guess that the key of this lockup is that xfs-data/sda1 and xfs-eofblocks/s
+> > > workqueues (which are RESCUER) got stuck waiting for memory allocation.
 > > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/xfs_aops.c    |  2 +-
-> >  fs/xfs/xfs_icache.c  |  2 +-
-> >  fs/xfs/xfs_inode.c   |  2 +-
-> >  fs/xfs/xfs_reflink.c | 14 +++++++++-----
-> >  fs/xfs/xfs_reflink.h |  5 +++--
-> >  fs/xfs/xfs_super.c   |  2 +-
-> >  6 files changed, 16 insertions(+), 11 deletions(-)
+> > If those workers are really required for a further progress of the
+> > memory reclaim then they shouldn't block on allocation at all and either
+> > use pre allocated memory or use PF_MEMALLOC in case there is a guarantee
+> > that only very limited amount of memory is allocated from that context
+> > and there will be at least the same amount of memory freed as a result
+> > in a reasonable time.
 > > 
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index b480647e00e7..290c0fb306e7 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -293,7 +293,7 @@ xfs_end_io(
-> >  			goto done;
-> >  		if (ioend->io_bio->bi_error) {
-> >  			error = xfs_reflink_cancel_cow_range(ip,
-> > -					ioend->io_offset, ioend->io_size);
-> > +					ioend->io_offset, ioend->io_size, 0);
-> >  			goto done;
-> >  		}
-> >  		error = xfs_reflink_end_cow(ip, ioend->io_offset,
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index 7234b9748c36..1f7d158266c1 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -1608,7 +1608,7 @@ xfs_inode_free_cowblocks(
-> >  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-> >  	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> >  
-> > -	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
-> > +	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, XFS_CC_UNWRITTEN);
+> > This is something for xfs people to answer though. Please note that I
+> > didn't really have time to look through the below traces so the above
+> > note is rather generic. It would be really helpful if you could provide
+> > a high level dependency chains to see why those rescuers are necessary
+> > for the forward progress because it is really easy to get lost in so
+> > many traces.
 > 
-> Ok, so the periodic work item leaves real cow extents alone now, which
-> is good since real extents now represent pending cow operations.  Good.
+> Data IO completion is required to make progress to free memory. IO
+> completion is done via work queues, so they need rescuer threads to
+> ensure work can be run.
 > 
-> >  	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-> >  	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index edfa6a55b064..164e74a511b1 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -1615,7 +1615,7 @@ xfs_itruncate_extents(
-> >  
-> >  	/* Remove all pending CoW reservations. */
-> >  	error = xfs_reflink_cancel_cow_blocks(ip, &tp, first_unmap_block,
-> > -			last_block);
-> > +			last_block, 0);
-> >  	if (error)
-> >  		goto out;
-> >  
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 08ca9f81b087..83605af3b135 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -551,7 +551,8 @@ xfs_reflink_cancel_cow_blocks(
-> >  	struct xfs_inode		*ip,
-> >  	struct xfs_trans		**tpp,
-> >  	xfs_fileoff_t			offset_fsb,
-> > -	xfs_fileoff_t			end_fsb)
-> > +	xfs_fileoff_t			end_fsb,
-> > +	unsigned			flags)
-> >  {
-> >  	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> >  	struct xfs_bmbt_irec		got, del;
-> > @@ -575,7 +576,8 @@ xfs_reflink_cancel_cow_blocks(
-> >  					&idx, &got, &del);
-> >  			if (error)
-> >  				break;
-> > -		} else {
-> > +		} else if (del.br_state == XFS_EXT_UNWRITTEN ||
-> > +			   !(flags & XFS_CC_UNWRITTEN)) {
-> >  			xfs_trans_ijoin(*tpp, ip, 0);
-> >  			xfs_defer_init(&dfops, &firstfsb);
-> >  
-> > @@ -623,7 +625,8 @@ int
-> >  xfs_reflink_cancel_cow_range(
-> >  	struct xfs_inode	*ip,
-> >  	xfs_off_t		offset,
-> > -	xfs_off_t		count)
-> > +	xfs_off_t		count,
-> > +	unsigned		flags)
-> >  {
-> >  	struct xfs_trans	*tp;
-> >  	xfs_fileoff_t		offset_fsb;
-> > @@ -649,7 +652,8 @@ xfs_reflink_cancel_cow_range(
-> >  	xfs_trans_ijoin(tp, ip, 0);
-> >  
-> >  	/* Scrape out the old CoW reservations */
-> > -	error = xfs_reflink_cancel_cow_blocks(ip, &tp, offset_fsb, end_fsb);
-> > +	error = xfs_reflink_cancel_cow_blocks(ip, &tp, offset_fsb, end_fsb,
-> > +			flags);
-> >  	if (error)
-> >  		goto out_cancel;
-> >  
-> > @@ -1437,7 +1441,7 @@ xfs_reflink_clear_inode_flag(
-> >  	 * We didn't find any shared blocks so turn off the reflink flag.
-> >  	 * First, get rid of any leftover CoW mappings.
-> >  	 */
-> > -	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF);
-> > +	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF, 0);
-> >  	if (error)
-> >  		return error;
-> >  
-> > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > index 33ac9b8db683..9416279b3c89 100644
-> > --- a/fs/xfs/xfs_reflink.h
-> > +++ b/fs/xfs/xfs_reflink.h
-> > @@ -37,11 +37,12 @@ extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
-> >  extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
-> >  		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
-> >  
-> > +#define XFS_CC_UNWRITTEN	0x01
+> IO completion can require transactions to run. Transactions require
+> memory allocation. Freeing memory therefore requires IO completion
+> to have access to memory reserves if it's occurring from rescuer
+> threads to allow progress to be made.
 > 
-> Could we have a comment here about what CC_UNWRITTEN means?
+> That means metadata IO completion require rescuer threads, because
+> data IO completion can be dependent on metadata buffers being
+> available. e.g. reserving space in the log for the transaction can
+> require waiting on metadata IO dispatch and completion. Hence the
+> buffer IO completion workqueues need rescuer threads.
 > 
-> I /think/ it means "don't remove real extents", since when it's specified
-> delalloc reservations still get removed by _reflink_cancel_cow_*, correct?
+> Transactions can also require log forces and flushes to occur, which
+> means they require the log workqueues (both the CIL flush and IO
+> completion workqueues) to make progress.  Log flushes also require
+> both IO and memory allocation to make progress to complete. Again,
+> this means the log workqueues need rescuer threads. It also needs
+> the log workqueues to be high priority so that they can make
+> progress before IO completion work that is dependent on
+> transactions making progress are processed.
 > 
-> Somewhere we ought to record the fact that flags == 0 removes everything.
+> IOWs, pretty much all the XFS workqueues are involved in memory
+> reclaim in one way or another.
+> 
+> The real problem here is that the XFS code has /no idea/ of what
+> workqueue context it is operating in - the fact it is in a rescuer
+> thread is completely hidden from the executing context. It seems to
+> me that the workqueue infrastructure's responsibility to tell memory
+> reclaim that the rescuer thread needs special access to the memory
+> reserves to allow the work it is running to allow forwards progress
+> to be made. i.e.  setting PF_MEMALLOC on the rescuer thread or
+> something similar...
 
-It's been a week; ping?  (Or: did anyone receive this reply at all?)
+I am not sure an automatic access to memory reserves from the rescuer
+context is safe. This sounds too easy to break (read consume all the
+reserves) - note that we have almost 200 users of WQ_MEM_RECLAIM and
+chances are some of them will not be careful with the memory
+allocations. I agree it would be helpful to know that the current item
+runs from the rescuer context, though. In such a case the implementation
+can do what ever it takes to make a forward progress. If that is using
+__GFP_MEMALLOC then be it but it would be at least explicit and well
+thought through (I hope).
 
---D
-
-> 
-> --D
-> 
-> >  extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
-> >  		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
-> > -		xfs_fileoff_t end_fsb);
-> > +		xfs_fileoff_t end_fsb, unsigned flags);
-> >  extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
-> > -		xfs_off_t count);
-> > +		xfs_off_t count, unsigned flags);
-> >  extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
-> >  		xfs_off_t count);
-> >  extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 890862f2447c..9136854030d5 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -953,7 +953,7 @@ xfs_fs_destroy_inode(
-> >  	XFS_STATS_INC(ip->i_mount, vn_remove);
-> >  
-> >  	if (xfs_is_reflink_inode(ip)) {
-> > -		error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
-> > +		error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, 0);
-> >  		if (error && !XFS_FORCED_SHUTDOWN(ip->i_mount))
-> >  			xfs_warn(ip->i_mount,
-> >  "Error %d while evicting CoW blocks for inode %llu.",
-> > -- 
-> > 2.11.0
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tejun, would it be possible/reasonable to add current_is_wq_rescuer() API?
+-- 
+Michal Hocko
+SUSE Labs
