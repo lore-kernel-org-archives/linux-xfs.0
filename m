@@ -1,153 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44872 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:41868 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755547AbdCGQNP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Mar 2017 11:13:15 -0500
-Date: Tue, 7 Mar 2017 11:12:46 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: clear XBF_ASYNC if we attach an iodone callback
-Message-ID: <20170307161246.GB8144@bfoster.bfoster>
-References: <1488552404-21379-1-git-send-email-jbacik@fb.com>
- <20170303204902.GF21245@bfoster.bfoster>
- <1488576856.9307.13.camel@fb.com>
- <20170303222001.GA24497@bfoster.bfoster>
- <A14C7E7E-2807-48E6-A5C1-ABD09A7B69D3@fb.com>
- <20170304135849.GA27205@bfoster.bfoster>
- <1488826813.9307.21.camel@fb.com>
- <20170307012204.GP17542@dastard>
- <1488902165.9307.26.camel@fb.com>
+        id S933190AbdCGRt6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Mar 2017 12:49:58 -0500
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+Subject: RE: [PATCH 4/5] fs, xfs: convert xfs_cui_log_item.cui_refcount from
+ atomic_t to refcount_t
+Date: Tue, 7 Mar 2017 17:33:14 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C55A19@IRSMSX102.ger.corp.intel.com>
+References: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
+ <1488358060-693-5-git-send-email-elena.reshetova@intel.com>
+ <20170306191446.GE5280@birch.djwong.org>
+In-Reply-To: <20170306191446.GE5280@birch.djwong.org>
+Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1488902165.9307.26.camel@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Josef Bacik <jbacik@fb.com>
-Cc: Dave Chinner <david@fromorbit.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, Kernel Team <Kernel-team@fb.com>, Carlos Maiolino <cmaiolino@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "david@fromorbit.com" <david@fromorbit.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
 
-On Tue, Mar 07, 2017 at 10:56:05AM -0500, Josef Bacik wrote:
-> On Tue, 2017-03-07 at 12:22 +1100, Dave Chinner wrote:
-> > On Mon, Mar 06, 2017 at 02:00:13PM -0500, Josef Bacik wrote:
-> > > 
-> > > so you retry once, and the second time through we will return false
-> > > if
-> > > we are unmounting, which means that xfs_buf_do_callbacks gets
-> > > called.
-> > > 
-> > > Now you say that xfs_buf_do_callbacks() being called when we
-> > > errored
-> > > out is dangerous, but I don't understand why.  We have this code
-> > > 
-> > >         if (need_ail) {
-> > >                 struct xfs_log_item *log_items[need_ail];
-> > >                 int i = 0;
-> > >                 spin_lock(&ailp->xa_lock);
-> > >                 for (blip = lip; blip; blip = blip->li_bio_list) {
-> > >                         iip = INODE_ITEM(blip);
-> > >                         if (iip->ili_logged &&
-> > >                             blip->li_lsn == iip->ili_flush_lsn) {
-> > >                                 log_items[i++] = blip;
-> > >                         }
-> > >                         ASSERT(i <= need_ail);
-> > >                 }
-> > >                 /* xfs_trans_ail_delete_bulk() drops the AIL lock.
-> > > */
-> > >                 xfs_trans_ail_delete_bulk(ailp, log_items, i,
-> > >                                           SHUTDOWN_CORRUPT_INCORE);
-> > >         }
-> > [ Your cut-n-paste is horribly mangled in something non-ascii. ]
-> > 
-> > > 
-> > > and need_ail is set if we didn't actually end up on disk properly.
-> > >  So
-> > > we delete the thing and mark the fs as fucked.  Am I mis-reading
-> > > what
-> > > is going on here?
-> > Yes. That won't shut down the filesystem on an inode write error. It
-> > will simply remove the inode from the AIL, the error will do dropped
-> > on the floor, and the filesystem will not be shut down even though
-> > it's now in a corrupt state. xfs_trans_ail_delete_bulk() only shuts
-> > down the filesytem if it doesn't find the item being removed form
-> > the AIL in the AIL.
-> > 
-> > As I keep telling people, what needs to happen is this:
-> > 
-> > 	1. buffer write error occurs
-> > 	2. retries exhausted, mark buffer as errored, run callbacks
-> > 	3. xfs_iflush_done() (and other iodone callbacks) need to
-> > 	   look at the buffer error state to determine what to do.
-> > 	4. if the buffer is errored and recovery is not possible,
-> > 	   the callback needs to shut down the filesytem.
-> > 	5. the callback then needs to call flush abort function for
-> > 	   item (e.g. xfs_iflush_abort()) rather than the normal
-> > 	   IO completion processing path.
-> > 
-> > > 
-> > >  This is what I did to our 4.6 tree (in testing
-> > > still, not actually pushed to production)
-> > > 
-> > >         if (bp->b_flags & XBF_ASYNC) {
-> > >                 ASSERT(bp->b_iodone != NULL);
-> > > 
-> > >                 trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
-> > > 
-> > >                 xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the
-> > > flag
-> > > */
-> > > 
-> > >                 if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
-> > >                         bp->b_flags |= XBF_WRITE | XBF_ASYNC
-> > >                                        XBF_DONE | XBF_WRITE_FAIL;
-> > >                         xfs_buf_submit(bp);
-> > >                 } else {
-> > > +                       xfs_buf_do_callbacks(bp);
-> > > +                       bp->b_fspriv = NULL;
-> > > +                       bp->b_iodone = NULL;
-> > >                         xfs_buf_relse(bp);
-> > >                 }
-> > > 
-> > >                 return;
-> > >         }
-> > It's likely you'll end up with silent on disk corruption if you do
-> > that because it's just tossing the error state away.
+ > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> > Signed-off-by: Kees Cook <keescook@chromium.org>
+> > Signed-off-by: David Windsor <dwindsor@gmail.com>
+> > ---
+> >  fs/xfs/xfs_refcount_item.c | 4 ++--
+> >  fs/xfs/xfs_refcount_item.h | 4 +++-
+> >  2 files changed, 5 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+> > index 6e4c744..61bc570 100644
+> > --- a/fs/xfs/xfs_refcount_item.c
+> > +++ b/fs/xfs/xfs_refcount_item.c
+> > @@ -205,7 +205,7 @@ xfs_cui_init(
+> >  	cuip->cui_format.cui_nextents = nextents;
+> >  	cuip->cui_format.cui_id = (uintptr_t)(void *)cuip;
+> >  	atomic_set(&cuip->cui_next_extent, 0);
+> > -	atomic_set(&cuip->cui_refcount, 2);
+> > +	refcount_set(&cuip->cui_refcount, 2);
 > 
-> I think I'm getting a handle on this, but I wonder if we don't have
-> this problem currently?  We get an error on a buffer, we retry it and
-> it fails again.  If we don't have XFS_ERR_RETRY_FOREVER set then we
-> error out and do the normal callbacks as if nothing ever happened, and
-> we get the silent corruption without shutting down the file system.
->  How is the code as it stands without XFS_ERR_RETRY_FOREVER safe?
->  Thanks,
+> I'm assuming the refcount design is ok with the log item refcounts
+> starting at 2 and marching down to zero?  The code seems to be
+> fine with it; I just want to make sure everyone's ok with supporting
+> this use case.
+
+Yes, as soon as it doesn't go beyond 0 or starting to increment again after reaching zero. 
+
 > 
+> >  	return cuip;
+> >  }
+> > @@ -221,7 +221,7 @@ void
+> >  xfs_cui_release(
+> >  	struct xfs_cui_log_item	*cuip)
+> >  {
+> > -	if (atomic_dec_and_test(&cuip->cui_refcount)) {
+> > +	if (refcount_dec_and_test(&cuip->cui_refcount)) {
+> 
+> I suppose it's useful to have refcount_dec_and_test complain loudly if
+> we ever have a dangling pointer... Friday I was chasing a possible
+> use-after-free of the EFI items in generic/388.
 
-We shouldn't get into a situation where we run the callbacks when the
-I/O has failed and the fs isn't shut down. IOWs, we do run the callbacks
-only when the I/O succeeds, or it fails and the fs is shutdown as a
-result (never when the I/O fails but we haven't shut down, which is the
-problematic case the patch above introduces).
+Currently it complains with WARN if it finds itself decrementing from zero. 
+There is patch in RFC stage also that would make it configurable: complain with WARN or complain/abort with BUG. 
 
-That tunable error handling logic (XFS_ERR_RETRY_FOREVER) basically
-determines when an I/O error is considered permanent, which means
-retries are futile and we have no choice but to shutdown the fs. E.g.,
-if an error is deemed permanent, we jump to permanent_error:
+> 
+> >  		xfs_trans_ail_remove(&cuip->cui_item,
+> SHUTDOWN_LOG_IO_ERROR);
+> >  		xfs_cui_item_free(cuip);
+> >  	}
+> > diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
+> > index 5b74ddd..7f23ff8 100644
+> > --- a/fs/xfs/xfs_refcount_item.h
+> > +++ b/fs/xfs/xfs_refcount_item.h
+> > @@ -20,6 +20,8 @@
+> >  #ifndef	__XFS_REFCOUNT_ITEM_H__
+> >  #define	__XFS_REFCOUNT_ITEM_H__
+> >
+> > +#include <linux/refcount.h>
+> 
+> I still think this include should go in xfs_linux.h, the same as most of
+> the other linux/*.h includes in XFS.
 
-        /*
-         * Permanent error - we need to trigger a shutdown if we haven't already
-         * to indicate that inconsistency will result from this action.
-         */
-permanent_error:
-        xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-out_stale:
-        xfs_buf_stale(bp);
-        bp->b_flags |= XBF_DONE;
-        trace_xfs_buf_error_relse(bp, _RET_IP_);
-        return false;
-}
+Oh, very sorry, I forgot this one. Got too much focused on testing :(
+Do you want me to resend with this change or can you take it in and do this small fix yourself? 
 
-... which shuts down the filesystem before we go any farther.
+Best Regards,
+Elena.
 
-Brian
 
-> Josef
+> 
+> --D
+> 
+> > +
+> >  /*
+> >   * There are (currently) two pairs of refcount btree redo item types:
+> >   * increase and decrease.  The log items for these are CUI (refcount
+> > @@ -63,7 +65,7 @@ struct kmem_zone;
+> >   */
+> >  struct xfs_cui_log_item {
+> >  	struct xfs_log_item		cui_item;
+> > -	atomic_t			cui_refcount;
+> > +	refcount_t			cui_refcount;
+> >  	atomic_t			cui_next_extent;
+> >  	unsigned long			cui_flags;	/* misc
+> flags */
+> >  	struct xfs_cui_log_format	cui_format;
+> > --
+> > 2.7.4
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
