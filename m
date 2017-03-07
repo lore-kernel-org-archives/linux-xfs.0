@@ -1,79 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45913 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750736AbdCAIvZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Mar 2017 03:51:25 -0500
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 4/5] fs, xfs: convert xfs_cui_log_item.cui_refcount from atomic_t to refcount_t
-Date: Wed,  1 Mar 2017 10:47:39 +0200
-Message-Id: <1488358060-693-5-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
-References: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:48083 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756456AbdCGWJS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 17:09:18 -0500
+Date: Tue, 7 Mar 2017 14:09:11 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: WARNING: CPU: 2 PID: 20539 at fs/iomap.c:954
+ iomap_dio_rw+0x39a/0x3b0
+Message-ID: <20170307220911.GA25288@infradead.org>
+References: <1488922559.3877.6.camel@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1488922559.3877.6.camel@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, david@fromorbit.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: Jeff Layton <jlayton@redhat.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+On Tue, Mar 07, 2017 at 04:35:59PM -0500, Jeff Layton wrote:
+> I was doing an xfstests run on xfs with v4.11.0-rc1, and these two
+> warnings popped. Looks like invalidate_inode_pages2_range failed? A
+> small patch to print the error there showed that it was returning
+> -EBUSY.
+> 
+> Pretty easy to reproduce by running xfstests generic/095 on a KVM guest
+> running v4.11.0-rc1.
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- fs/xfs/xfs_refcount_item.c | 4 ++--
- fs/xfs/xfs_refcount_item.h | 4 +++-
- 2 files changed, 5 insertions(+), 3 deletions(-)
+Can you try:
 
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 6e4c744..61bc570 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -205,7 +205,7 @@ xfs_cui_init(
- 	cuip->cui_format.cui_nextents = nextents;
- 	cuip->cui_format.cui_id = (uintptr_t)(void *)cuip;
- 	atomic_set(&cuip->cui_next_extent, 0);
--	atomic_set(&cuip->cui_refcount, 2);
-+	refcount_set(&cuip->cui_refcount, 2);
- 
- 	return cuip;
- }
-@@ -221,7 +221,7 @@ void
- xfs_cui_release(
- 	struct xfs_cui_log_item	*cuip)
- {
--	if (atomic_dec_and_test(&cuip->cui_refcount)) {
-+	if (refcount_dec_and_test(&cuip->cui_refcount)) {
- 		xfs_trans_ail_remove(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_cui_item_free(cuip);
- 	}
-diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
-index 5b74ddd..7f23ff8 100644
---- a/fs/xfs/xfs_refcount_item.h
-+++ b/fs/xfs/xfs_refcount_item.h
-@@ -20,6 +20,8 @@
- #ifndef	__XFS_REFCOUNT_ITEM_H__
- #define	__XFS_REFCOUNT_ITEM_H__
- 
-+#include <linux/refcount.h>
-+
- /*
-  * There are (currently) two pairs of refcount btree redo item types:
-  * increase and decrease.  The log items for these are CUI (refcount
-@@ -63,7 +65,7 @@ struct kmem_zone;
-  */
- struct xfs_cui_log_item {
- 	struct xfs_log_item		cui_item;
--	atomic_t			cui_refcount;
-+	refcount_t			cui_refcount;
- 	atomic_t			cui_next_extent;
- 	unsigned long			cui_flags;	/* misc flags */
- 	struct xfs_cui_log_format	cui_format;
--- 
-2.7.4
+"[PATCH v2] iomap: invalidate page caches should be after iomap_dio_complete() in direct write"
 
+which was sent to the XFS list last week and check if it fixes things
+for you?
