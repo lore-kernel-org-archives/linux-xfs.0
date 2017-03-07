@@ -1,64 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42148 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:44872 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755580AbdCGP3p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Mar 2017 10:29:45 -0500
-Date: Tue, 7 Mar 2017 16:09:56 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 4/7] mm: introduce memalloc_nofs_{save,restore} API
-Message-ID: <20170307150956.GM28642@dhcp22.suse.cz>
-References: <20170306131408.9828-1-mhocko@kernel.org>
- <20170306131408.9828-5-mhocko@kernel.org>
- <20170306132214.1769368301d9e671e1bc68be@linux-foundation.org>
+        id S1755547AbdCGQNP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Mar 2017 11:13:15 -0500
+Date: Tue, 7 Mar 2017 11:12:46 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: clear XBF_ASYNC if we attach an iodone callback
+Message-ID: <20170307161246.GB8144@bfoster.bfoster>
+References: <1488552404-21379-1-git-send-email-jbacik@fb.com>
+ <20170303204902.GF21245@bfoster.bfoster>
+ <1488576856.9307.13.camel@fb.com>
+ <20170303222001.GA24497@bfoster.bfoster>
+ <A14C7E7E-2807-48E6-A5C1-ABD09A7B69D3@fb.com>
+ <20170304135849.GA27205@bfoster.bfoster>
+ <1488826813.9307.21.camel@fb.com>
+ <20170307012204.GP17542@dastard>
+ <1488902165.9307.26.camel@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20170306132214.1769368301d9e671e1bc68be@linux-foundation.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1488902165.9307.26.camel@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Vlastimil Babka <vbabka@suse.cz>
+To: Josef Bacik <jbacik@fb.com>
+Cc: Dave Chinner <david@fromorbit.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, Kernel Team <Kernel-team@fb.com>, Carlos Maiolino <cmaiolino@redhat.com>
 
-On Mon 06-03-17 13:22:14, Andrew Morton wrote:
-> On Mon,  6 Mar 2017 14:14:05 +0100 Michal Hocko <mhocko@kernel.org> wrote:
-[...]
-> > --- a/include/linux/gfp.h
-> > +++ b/include/linux/gfp.h
-> > @@ -210,8 +210,16 @@ struct vm_area_struct;
-> >   *
-> >   * GFP_NOIO will use direct reclaim to discard clean pages or slab pages
-> >   *   that do not require the starting of any physical IO.
-> > + *   Please try to avoid using this flag directly and instead use
-> > + *   memalloc_noio_{save,restore} to mark the whole scope which cannot
-> > + *   perform any IO with a short explanation why. All allocation requests
-> > + *   will inherit GFP_NOIO implicitly.
-> >   *
-> >   * GFP_NOFS will use direct reclaim but will not use any filesystem interfaces.
-> > + *   Please try to avoid using this flag directly and instead use
-> > + *   memalloc_nofs_{save,restore} to mark the whole scope which cannot/shouldn't
-> > + *   recurse into the FS layer with a short explanation why. All allocation
-> > + *   requests will inherit GFP_NOFS implicitly.
+On Tue, Mar 07, 2017 at 10:56:05AM -0500, Josef Bacik wrote:
+> On Tue, 2017-03-07 at 12:22 +1100, Dave Chinner wrote:
+> > On Mon, Mar 06, 2017 at 02:00:13PM -0500, Josef Bacik wrote:
+> > > 
+> > > so you retry once, and the second time through we will return false
+> > > if
+> > > we are unmounting, which means that xfs_buf_do_callbacks gets
+> > > called.
+> > > 
+> > > Now you say that xfs_buf_do_callbacks() being called when we
+> > > errored
+> > > out is dangerous, but I don't understand why.  We have this code
+> > > 
+> > >         if (need_ail) {
+> > >                 struct xfs_log_item *log_items[need_ail];
+> > >                 int i = 0;
+> > >                 spin_lock(&ailp->xa_lock);
+> > >                 for (blip = lip; blip; blip = blip->li_bio_list) {
+> > >                         iip = INODE_ITEM(blip);
+> > >                         if (iip->ili_logged &&
+> > >                             blip->li_lsn == iip->ili_flush_lsn) {
+> > >                                 log_items[i++] = blip;
+> > >                         }
+> > >                         ASSERT(i <= need_ail);
+> > >                 }
+> > >                 /* xfs_trans_ail_delete_bulk() drops the AIL lock.
+> > > */
+> > >                 xfs_trans_ail_delete_bulk(ailp, log_items, i,
+> > >                                           SHUTDOWN_CORRUPT_INCORE);
+> > >         }
+> > [ Your cut-n-paste is horribly mangled in something non-ascii. ]
+> > 
+> > > 
+> > > and need_ail is set if we didn't actually end up on disk properly.
+> > >  So
+> > > we delete the thing and mark the fs as fucked.  Am I mis-reading
+> > > what
+> > > is going on here?
+> > Yes. That won't shut down the filesystem on an inode write error. It
+> > will simply remove the inode from the AIL, the error will do dropped
+> > on the floor, and the filesystem will not be shut down even though
+> > it's now in a corrupt state. xfs_trans_ail_delete_bulk() only shuts
+> > down the filesytem if it doesn't find the item being removed form
+> > the AIL in the AIL.
+> > 
+> > As I keep telling people, what needs to happen is this:
+> > 
+> > 	1. buffer write error occurs
+> > 	2. retries exhausted, mark buffer as errored, run callbacks
+> > 	3. xfs_iflush_done() (and other iodone callbacks) need to
+> > 	   look at the buffer error state to determine what to do.
+> > 	4. if the buffer is errored and recovery is not possible,
+> > 	   the callback needs to shut down the filesytem.
+> > 	5. the callback then needs to call flush abort function for
+> > 	   item (e.g. xfs_iflush_abort()) rather than the normal
+> > 	   IO completion processing path.
+> > 
+> > > 
+> > >  This is what I did to our 4.6 tree (in testing
+> > > still, not actually pushed to production)
+> > > 
+> > >         if (bp->b_flags & XBF_ASYNC) {
+> > >                 ASSERT(bp->b_iodone != NULL);
+> > > 
+> > >                 trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+> > > 
+> > >                 xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the
+> > > flag
+> > > */
+> > > 
+> > >                 if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
+> > >                         bp->b_flags |= XBF_WRITE | XBF_ASYNC
+> > >                                        XBF_DONE | XBF_WRITE_FAIL;
+> > >                         xfs_buf_submit(bp);
+> > >                 } else {
+> > > +                       xfs_buf_do_callbacks(bp);
+> > > +                       bp->b_fspriv = NULL;
+> > > +                       bp->b_iodone = NULL;
+> > >                         xfs_buf_relse(bp);
+> > >                 }
+> > > 
+> > >                 return;
+> > >         }
+> > It's likely you'll end up with silent on disk corruption if you do
+> > that because it's just tossing the error state away.
 > 
-> I wonder if these are worth a checkpatch rule.
+> I think I'm getting a handle on this, but I wonder if we don't have
+> this problem currently?  We get an error on a buffer, we retry it and
+> it fails again.  If we don't have XFS_ERR_RETRY_FOREVER set then we
+> error out and do the normal callbacks as if nothing ever happened, and
+> we get the silent corruption without shutting down the file system.
+>  How is the code as it stands without XFS_ERR_RETRY_FOREVER safe?
+>  Thanks,
+> 
 
-I am not really sure, to be honest. This may easilly end up people
-replacing
+We shouldn't get into a situation where we run the callbacks when the
+I/O has failed and the fs isn't shut down. IOWs, we do run the callbacks
+only when the I/O succeeds, or it fails and the fs is shutdown as a
+result (never when the I/O fails but we haven't shut down, which is the
+problematic case the patch above introduces).
 
-do_alloc(GFP_NOFS)
+That tunable error handling logic (XFS_ERR_RETRY_FOREVER) basically
+determines when an I/O error is considered permanent, which means
+retries are futile and we have no choice but to shutdown the fs. E.g.,
+if an error is deemed permanent, we jump to permanent_error:
 
-with
+        /*
+         * Permanent error - we need to trigger a shutdown if we haven't already
+         * to indicate that inconsistency will result from this action.
+         */
+permanent_error:
+        xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+out_stale:
+        xfs_buf_stale(bp);
+        bp->b_flags |= XBF_DONE;
+        trace_xfs_buf_error_relse(bp, _RET_IP_);
+        return false;
+}
 
-memalloc_nofs_save()
-do_alloc(GFP_KERNEL)
-memalloc_nofs_restore()
+... which shuts down the filesystem before we go any farther.
 
-which doesn't make any sense of course. From my experience, people tend
-to do stupid things just to silent checkpatch warnings very often.
-Moreover I believe we need to do the transition to the new api first
-before we can push back on the explicit GFP_NOFS usage. Maybe then we
-can think about the a checkpatch warning.
+Brian
 
--- 
-Michal Hocko
-SUSE Labs
+> Josef
