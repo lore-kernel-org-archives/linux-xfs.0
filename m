@@ -1,33 +1,196 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47658 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752477AbdCGFr4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Mar 2017 00:47:56 -0500
-Date: Tue, 7 Mar 2017 06:00:02 +0100
-From: Christoph Hellwig <hch@lst.de>
+Received: from userp1050.oracle.com ([156.151.31.82]:18493 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752769AbdCGHYk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 02:24:40 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v270IxvW016506
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 7 Mar 2017 00:18:59 GMT
+Date: Mon, 6 Mar 2017 16:17:02 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH] xfs: only reclaim unwritten COW extents periodically
-Message-ID: <20170307050002.GA14000@lst.de>
-References: <20170228004910.9495-1-hch@lst.de> <20170228052651.GD5297@birch.djwong.org> <20170307001702.GH5280@birch.djwong.org>
+Message-ID: <20170307001702.GH5280@birch.djwong.org>
+References: <20170228004910.9495-1-hch@lst.de>
+ <20170228052651.GD5297@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170307001702.GH5280@birch.djwong.org>
+In-Reply-To: <20170228052651.GD5297@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Mar 06, 2017 at 04:17:02PM -0800, Darrick J. Wong wrote:
-> > Could we have a comment here about what CC_UNWRITTEN means?
+On Mon, Feb 27, 2017 at 09:26:51PM -0800, Darrick J. Wong wrote:
+> On Mon, Feb 27, 2017 at 04:49:10PM -0800, Christoph Hellwig wrote:
+> > We only want to reclaim preallocations from our periodic work item.
+> > Currenrly this is archived by looking for a diry inode, but that check
+> > is rather fragile.  Instead add flags to the xfs_reflink_cancel_cow_* so
+> > that the caller can ask for just cancelling unwritten extents in the COw
+> > fork.
 > > 
-> > I /think/ it means "don't remove real extents", since when it's specified
-> > delalloc reservations still get removed by _reflink_cancel_cow_*, correct?
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_aops.c    |  2 +-
+> >  fs/xfs/xfs_icache.c  |  2 +-
+> >  fs/xfs/xfs_inode.c   |  2 +-
+> >  fs/xfs/xfs_reflink.c | 14 +++++++++-----
+> >  fs/xfs/xfs_reflink.h |  5 +++--
+> >  fs/xfs/xfs_super.c   |  2 +-
+> >  6 files changed, 16 insertions(+), 11 deletions(-)
 > > 
-> > Somewhere we ought to record the fact that flags == 0 removes everything.
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index b480647e00e7..290c0fb306e7 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -293,7 +293,7 @@ xfs_end_io(
+> >  			goto done;
+> >  		if (ioend->io_bio->bi_error) {
+> >  			error = xfs_reflink_cancel_cow_range(ip,
+> > -					ioend->io_offset, ioend->io_size);
+> > +					ioend->io_offset, ioend->io_size, 0);
+> >  			goto done;
+> >  		}
+> >  		error = xfs_reflink_end_cow(ip, ioend->io_offset,
+> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > index 7234b9748c36..1f7d158266c1 100644
+> > --- a/fs/xfs/xfs_icache.c
+> > +++ b/fs/xfs/xfs_icache.c
+> > @@ -1608,7 +1608,7 @@ xfs_inode_free_cowblocks(
+> >  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+> >  	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+> >  
+> > -	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
+> > +	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, XFS_CC_UNWRITTEN);
 > 
-> It's been a week; ping?  (Or: did anyone receive this reply at all?)
+> Ok, so the periodic work item leaves real cow extents alone now, which
+> is good since real extents now represent pending cow operations.  Good.
+> 
+> >  	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+> >  	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index edfa6a55b064..164e74a511b1 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -1615,7 +1615,7 @@ xfs_itruncate_extents(
+> >  
+> >  	/* Remove all pending CoW reservations. */
+> >  	error = xfs_reflink_cancel_cow_blocks(ip, &tp, first_unmap_block,
+> > -			last_block);
+> > +			last_block, 0);
+> >  	if (error)
+> >  		goto out;
+> >  
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 08ca9f81b087..83605af3b135 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -551,7 +551,8 @@ xfs_reflink_cancel_cow_blocks(
+> >  	struct xfs_inode		*ip,
+> >  	struct xfs_trans		**tpp,
+> >  	xfs_fileoff_t			offset_fsb,
+> > -	xfs_fileoff_t			end_fsb)
+> > +	xfs_fileoff_t			end_fsb,
+> > +	unsigned			flags)
+> >  {
+> >  	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+> >  	struct xfs_bmbt_irec		got, del;
+> > @@ -575,7 +576,8 @@ xfs_reflink_cancel_cow_blocks(
+> >  					&idx, &got, &del);
+> >  			if (error)
+> >  				break;
+> > -		} else {
+> > +		} else if (del.br_state == XFS_EXT_UNWRITTEN ||
+> > +			   !(flags & XFS_CC_UNWRITTEN)) {
+> >  			xfs_trans_ijoin(*tpp, ip, 0);
+> >  			xfs_defer_init(&dfops, &firstfsb);
+> >  
+> > @@ -623,7 +625,8 @@ int
+> >  xfs_reflink_cancel_cow_range(
+> >  	struct xfs_inode	*ip,
+> >  	xfs_off_t		offset,
+> > -	xfs_off_t		count)
+> > +	xfs_off_t		count,
+> > +	unsigned		flags)
+> >  {
+> >  	struct xfs_trans	*tp;
+> >  	xfs_fileoff_t		offset_fsb;
+> > @@ -649,7 +652,8 @@ xfs_reflink_cancel_cow_range(
+> >  	xfs_trans_ijoin(tp, ip, 0);
+> >  
+> >  	/* Scrape out the old CoW reservations */
+> > -	error = xfs_reflink_cancel_cow_blocks(ip, &tp, offset_fsb, end_fsb);
+> > +	error = xfs_reflink_cancel_cow_blocks(ip, &tp, offset_fsb, end_fsb,
+> > +			flags);
+> >  	if (error)
+> >  		goto out_cancel;
+> >  
+> > @@ -1437,7 +1441,7 @@ xfs_reflink_clear_inode_flag(
+> >  	 * We didn't find any shared blocks so turn off the reflink flag.
+> >  	 * First, get rid of any leftover CoW mappings.
+> >  	 */
+> > -	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF);
+> > +	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF, 0);
+> >  	if (error)
+> >  		return error;
+> >  
+> > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> > index 33ac9b8db683..9416279b3c89 100644
+> > --- a/fs/xfs/xfs_reflink.h
+> > +++ b/fs/xfs/xfs_reflink.h
+> > @@ -37,11 +37,12 @@ extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
+> >  extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
+> >  		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
+> >  
+> > +#define XFS_CC_UNWRITTEN	0x01
+> 
+> Could we have a comment here about what CC_UNWRITTEN means?
+> 
+> I /think/ it means "don't remove real extents", since when it's specified
+> delalloc reservations still get removed by _reflink_cancel_cow_*, correct?
+> 
+> Somewhere we ought to record the fact that flags == 0 removes everything.
 
-I've been travelling and fairly busy.  But I'll try to prepare a new
-version ASAP, especially as this something that should go into 4.11,
-unlike the rest of the series.
+It's been a week; ping?  (Or: did anyone receive this reply at all?)
+
+--D
+
+> 
+> --D
+> 
+> >  extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
+> >  		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
+> > -		xfs_fileoff_t end_fsb);
+> > +		xfs_fileoff_t end_fsb, unsigned flags);
+> >  extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
+> > -		xfs_off_t count);
+> > +		xfs_off_t count, unsigned flags);
+> >  extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
+> >  		xfs_off_t count);
+> >  extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index 890862f2447c..9136854030d5 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -953,7 +953,7 @@ xfs_fs_destroy_inode(
+> >  	XFS_STATS_INC(ip->i_mount, vn_remove);
+> >  
+> >  	if (xfs_is_reflink_inode(ip)) {
+> > -		error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
+> > +		error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, 0);
+> >  		if (error && !XFS_FORCED_SHUTDOWN(ip->i_mount))
+> >  			xfs_warn(ip->i_mount,
+> >  "Error %d while evicting CoW blocks for inode %llu.",
+> > -- 
+> > 2.11.0
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
