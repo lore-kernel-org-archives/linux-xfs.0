@@ -1,36 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43677 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751572AbdC0Qq6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 12:46:58 -0400
-Date: Mon, 27 Mar 2017 09:46:28 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: statx manpage
-Message-ID: <20170327164628.GA15147@infradead.org>
-References: <20170327154003.GA5716@birch.djwong.org>
- <20170307050140.GA12946@infradead.org>
- <20170307000609.GG5280@birch.djwong.org>
- <10435.1488907375@warthog.procyon.org.uk>
- <20170324205322.GA4986@gmail.com>
- <E6DB8461-22DE-496C-8A4A-B0A2F3702750@dilger.ca>
- <23715.1490631926@warthog.procyon.org.uk>
+Received: from userp1040.oracle.com ([156.151.31.81]:33308 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933331AbdCHAbo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 19:31:44 -0500
+Subject: [PATCH 3/3] xfs_io: support shutdown command on foreign fses
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 07 Mar 2017 16:30:23 -0800
+Message-ID: <148893302305.23674.11901575444165562002.stgit@birch.djwong.org>
+In-Reply-To: <148893300446.23674.6348172768180643163.stgit@birch.djwong.org>
+References: <148893300446.23674.6348172768180643163.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <23715.1490631926@warthog.procyon.org.uk>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Andreas Dilger <adilger@dilger.ca>, Eric Biggers <ebiggers3@gmail.com>, Christoph Hellwig <hch@infradead.org>, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Mar 27, 2017 at 05:25:26PM +0100, David Howells wrote:
-> That means a filesystem can't simply return non-basic data unconditionally if
-> possible.  I prefer letting it do so if it doesn't incur any extra I/O
-> overheads.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This seems like it will lead to userspace expecting certain fields to
-just be there, and a lot harder to properly verify for tests.  Which btw
-we all need for these odd behaviors.  If we can't get them any time soon
-(e.g. before -rc6) I think we'll simply have to revert statx instead of
-leaving this untested mess in the tree.
+Since f2fs and ext4 support the shutdown ioctl, enable it there.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ io/shutdown.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff --git a/io/shutdown.c b/io/shutdown.c
+index d9cd520..022a0e9 100644
+--- a/io/shutdown.c
++++ b/io/shutdown.c
+@@ -54,7 +54,7 @@ shutdown_init(void)
+ 	shutdown_cmd.cfunc = shutdown_f;
+ 	shutdown_cmd.argmin = 0;
+ 	shutdown_cmd.argmax = 1;
+-	shutdown_cmd.flags = CMD_NOMAP_OK | CMD_FLAG_ONESHOT;
++	shutdown_cmd.flags = CMD_NOMAP_OK | CMD_FLAG_ONESHOT | CMD_FLAG_FOREIGN_OK;
+ 	shutdown_cmd.args = _("[-f]");
+ 	shutdown_cmd.oneline =
+ 		_("shuts down the filesystem where the current file resides");
+
