@@ -1,231 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55842 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54408 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752709AbdCFSTS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 6 Mar 2017 13:19:18 -0500
-Date: Mon, 6 Mar 2017 13:18:20 -0500
+        id S1752607AbdCHNTj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Mar 2017 08:19:39 -0500
+Date: Wed, 8 Mar 2017 08:17:07 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: allow zero-length symlinks (and directories), sort
- of
-Message-ID: <20170306181820.GE3223@bfoster.bfoster>
-References: <20170304000529.GB5073@birch.djwong.org>
- <20170306135143.GC3223@bfoster.bfoster>
- <20170306172205.GA5280@birch.djwong.org>
+Subject: Re: 4.11.0-rc1 boot resulted in WARNING: CPU: 14 PID: 1722 at
+ fs/sysfs/dir.c:31 .sysfs_warn_dup+0x78/0xb0
+Message-ID: <20170308131705.GB23404@bfoster.bfoster>
+References: <1488904264.3961.17.camel@abdul-ThinkPad-T450>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170306172205.GA5280@birch.djwong.org>
+In-Reply-To: <1488904264.3961.17.camel@abdul-ThinkPad-T450>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, mpe@ellerman.id, linux-kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org
 
-On Mon, Mar 06, 2017 at 09:22:05AM -0800, Darrick J. Wong wrote:
-> On Mon, Mar 06, 2017 at 08:51:44AM -0500, Brian Foster wrote:
-> > On Fri, Mar 03, 2017 at 04:05:29PM -0800, Darrick J. Wong wrote:
-> > > In commit ef388e2054 ("don't allow di_size with high bit set") and
-> > > commit 3c6f46eacd87 ("sanity check directory inode di_size") we
-> > > erroneously fail the inode verification checks for symlinks or
-> > > directories with di_size == 0.
-> > > 
-> > > This is proven incorrect by generic/388 because the unlink process uses
-> > > multiple unconnected transactions to truncate the remote symlink /
-> > > directory and to unlink and free the inode.  If the fs goes down after
-> > > the truncate commit but before the unlink happens, we are left with a
-> > > zero-length inode.  Worse yet, if the unlink /does/ commit, log recovery
-> > > will now break after the first transaction because we've zeroed di_size.
+On Tue, Mar 07, 2017 at 10:01:04PM +0530, Abdul Haleem wrote:
 > 
-> Ugh, I misspoke slightly.  Truncate and *ifree* are separate
-> transactions that can lose each other in the mist after a crash.
+> Hi,
 > 
-> So that separates this discussion into two classes of problem -- the
-> first is the case of "truncate, crash, forget to ifree", which at least
-> isn't a user-visible problem because the inode has been unlinked from
-> the directory tree at that point.  Log recovery breaks if iget ->
-> dinode_verify stumbles over the zero-length inode.
+> Today's mainline (4.11.0-rc1) booted with warnings on Power7 LPAR.
 > 
-
-Ok, that change seems reasonable.
-
-> The second case (which is what the original dinode_verify patches were
-> focused on) is the case where someone intentionally corrupts a
-> filesystem to have zero-byte metafiles.  For that case we need to return
-> appropriate error codes without crashing.
+> Issue is not reproducible all the time.
 > 
-
-Yep, makes sense too...
-
-Though now I'm confused because the commit log implies that we can end
-up with zero-sized symlinks in the directory tree if we crash at the
-right point. Is that not the case?
-
-> > > In order to prevent the crashes and ASSERTs that the old patches
-> > > covered, re-allow the zero-length inodes and change the functions that
-> > > interface with the vfs to return the appropriate error codes to
-> > > userspace.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > 
-> > Interesting, thanks. I suppose this means we should drop the repair side
-> > fix..? I'm a bit leery on repair modifying a filesystem that is
-> > technically in a "valid" state, unless there's no other option to
-> > recover from that state.
+> traces:
+> --------
+> Found device VDASD 5.
+> Mounting /home...
+> Reached target Swap.
+> Found device VDASD 2.
 > 
-> I'm not sure if zero byte directories & symlinks are valid states.  They
-> cannot be created via the regular means (symlink("", "/sym/link")
-> returns -EINVAL), but such things can be encountered internally because
-> of the truncate-crash-forgettoifree sequence.  At a bare minimum the
-> rest of this patch needs to fix the parts of XFS that blow up on
-> zero-byte special files if the verifier cannot reject them outright.
+> Mounting /boot...
 > 
+> sysfs: cannot create duplicate filename '/fs/xfs/sda'
 
-By valid I just mean that it's a user-visible state the fs can end up in
-through normal and generally correct operation, which I mean to include
-system crash and log recovery, but exclude things like external metadata
-modification. The latter is clearly corruption, but the former may not
-be.
+That is strange. The sysfs name is ultimately based on the superblock id
+(sb->s_id), which afaik should reflect the underlying device and thus be
+unique. Just to be sure, do you otherwise have a mounted and functional
+sysfs dir?
 
-Essentially what I'm saying is that if it is not possible to have a
-zero-sized symlink in a directory except for a bug or external
-modification, or there is otherwise no path to recover outside of
-xfs_repair (i.e., the current verify failure behavior) then EFSCORRUPTED
-makes sense to me. If it is possible (even if it only occurs as an
-artifact of log recovery) and everything works except for reading the
-actual link returns an error (i.e., it can be renamed, unlinked), then
-I'm not sure EFSCORRUPTED is the right error.
+I assume after this boot you have a mounted 'sda' device somewhere.. If
+so, what content already exists under the sysfs fs/xfs/sda subdir when
+the duplicate warning occurs? Has the associated device been
+mounted/unmounted before this occurs, or is there anything abnormal
+going on during boot up, such as device repartitioning, devices coming
+and going, etc..?
 
-As noted above, however, I'm not quite following which of those
-scenarios applies here...
+What does 'mount' show for this system when the problem occurs vs. when
+it doesn't? It might be useful to post the full boot log for when this
+occurs as well.
 
 Brian
 
-> In the longer run, this situation ought to be fixed by some sort of
-> ifree log redo item to chain the two transactions together, thereby
-> avoiding this mess.
+> ------------[ cut here ]------------
+> WARNING: CPU: 14 PID: 1722 at fs/sysfs/dir.c:31 .sysfs_warn_dup
+> +0x78/0xb0
+> Modules linked in: sg(E) nfsd(E) auth_rpcgss(E) nfs_acl(E) lockd(E)
+> grace(E) sunrpc(E) binfmt_misc(E) ip_tables(E) ext4(E) mbcache(E)
+> jbd2(E) sd_mod(E) ibmvscsi(E) ibmveth(E) scsi_transport_srp(E)
+> CPU: 14 PID: 1722 Comm: mount Tainted: G        W   E   4.11.0-rc1-autotest #1
+> task: c0000009ed3f9c80 task.stack: c0000009ed430000
+> NIP: c0000000003a6c68 LR: c0000000003a6c64 CTR: 0000000001764c5c
+> REGS: c0000009ed4333c0 TRAP: 0700   Tainted: G        W   E    (4.11.0-rc1-autotest)
+> MSR: 800000000282b032 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI>
+>   CR: 22022822  XER: 00000006
+> CFAR: c000000000994958 SOFTE: 1
+> GPR00: c0000000003a6c64 c0000009ed433640 c00000000138a500 0000000000000035
+> GPR04: c0000009ff88ada0 c0000009ff8a1658 00000000014cfc2c 0000000000000000
+> GPR08: 0000000000000000 c000000000dd146c 00000009feac0000 0000000000003fef
+> GPR12: 0000000022022844 c00000000e9f7e00 0000000037409c40 0000000037409c30
+> GPR16: 0000000037409c28 ffffffffffffffff 0000000000000000 000000003741f1c8
+> GPR20: 00000100147d1270 0000000000000000 00000000c0ed0000 00003fffa0f53384
+> GPR24: c00000000394d178 c000000000c054c0 c000000001742e68 c0000000ff3ea640
+> GPR28: c00000000394d640 c0000013eec28c28 c0000009f2ab0148 c000000003833000
+> NIP [c0000000003a6c68] .sysfs_warn_dup+0x78/0xb0
+> LR [c0000000003a6c64] .sysfs_warn_dup+0x74/0xb0
+> Call Trace:
+> [c0000009ed433640] [c0000000003a6c64] .sysfs_warn_dup+0x74/0xb0 (unreliable)
+> [c0000009ed4336d0] [c0000000003a6de4] .sysfs_create_dir_ns+0xc4/0xd0
+> [c0000009ed433760] [c000000000551048] .kobject_add_internal+0xd8/0x450
+> [c0000009ed433800] [c00000000055141c] .kobject_init_and_add+0x5c/0x90
+> [c0000009ed433890] [c00000000044ac54] .xfs_mountfs+0x224/0xa30
+> [c0000009ed433960] [c000000000452a90] .xfs_fs_fill_super+0x490/0x620
+> [c0000009ed433a10] [c0000000002fefc0] .mount_bdev+0x220/0x260
+> [c0000009ed433ac0] [c0000000004509b8] .xfs_fs_mount+0x18/0x30
+> [c0000009ed433b30] [c000000000300520] .mount_fs+0x70/0x210
+> [c0000009ed433bf0] [c000000000325930] .vfs_kern_mount+0x60/0x1c0
+> [c0000009ed433cb0] [c00000000032a458] .do_mount+0x268/0xee0
+> [c0000009ed433d90] [c00000000032b4ec] .SyS_mount+0x8c/0x100
+> [c0000009ed433e30] [c00000000000b184] system_call+0x38/0xe0
+> Instruction dump:
+> 7fa3eb78 38800000 7fe5fb78 38c01000 4bffa929 60000000 3c62ff8b 7fe4fb78
+> 38636ec8 7fc5f378 485edcb9 60000000 <0fe00000> 7fe3fb78 4bf1fb01 60000000
+> ---[ end trace 78f08bafbc2388f3 ]---
+> kobject_add_internal failed for sda with -EEXIST, don't try to register
+> things with the same name in the same directory.
 > 
-> (OTOH I think the defer_ops piece could use more battle testing before
-> we start hooking it up to existing functionality that mostly doesn't
-> blow up.)
 > 
-> > >  fs/xfs/libxfs/xfs_inode_buf.c |    4 ----
-> > >  fs/xfs/xfs_dir2_readdir.c     |    6 ++----
-> > >  fs/xfs/xfs_iops.c             |    9 ++++++++-
-> > >  3 files changed, 10 insertions(+), 9 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> > > index 3752bac..6e62999 100644
-> > > --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> > > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> > > @@ -402,10 +402,6 @@ xfs_dinode_verify(
-> > >  	if (mode && xfs_mode_to_ftype(mode) == XFS_DIR3_FT_UNKNOWN)
-> > >  		return false;
-> > >  
-> > > -	/* No zero-length symlinks/dirs. */
-> > > -	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
-> > > -		return false;
-> > > -
-> > 
-> > What's the reasoning for dropping the S_ISDIR() logic here? Is the same
-> > scenario possible on a directory?
+> -- 
+> Regard's
 > 
-> Yes.
+> Abdul Haleem
+> IBM Linux Technology Centre
 > 
-> > >  	/* only version 3 or greater inodes are extensively verified here */
-> > >  	if (dip->di_version < 3)
-> > >  		return true;
-> > > diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> > > index 0b3b636..be1367a 100644
-> > > --- a/fs/xfs/xfs_dir2_readdir.c
-> > > +++ b/fs/xfs/xfs_dir2_readdir.c
-> > > @@ -74,10 +74,8 @@ xfs_dir2_sf_getdents(
-> > >  	/*
-> > >  	 * Give up if the directory is way too short.
-> > >  	 */
-> > > -	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
-> > > -		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
-> > > -		return -EIO;
-> > > -	}
-> > > +	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent))
-> > > +		return -EFSCORRUPTED;
-> > 
-> > This seems reasonable if it is truly an unexpected state...
 > 
-> I think the error code change is reasonable.  In any case the ASSERT
-> needs to go because we cant't crash the kernel on account of bad
-> disk metadata.
 > 
-> > >  
-> > >  	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
-> > >  	ASSERT(dp->i_df.if_u1.if_data != NULL);
-> > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > > index 22c1615..b7b6807 100644
-> > > --- a/fs/xfs/xfs_iops.c
-> > > +++ b/fs/xfs/xfs_iops.c
-> > > @@ -457,6 +457,9 @@ xfs_vn_get_link(
-> > >  	char			*link;
-> > >  	int			error = -ENOMEM;
-> > >  
-> > > +	if (i_size_read(inode) == 0)
-> > > +		return ERR_PTR(-EFSCORRUPTED);
-> > > +
-> > 
-> > ... but this one to me seems to qualify as an expected state, based on
-> > what you've described in the commit log description. Can we actually now
-> > "recover" from this situation at runtime (i.e., can we unlink the
-> > inode)? If so, it seems a little ominous to return a corruption errror
-> > as opposed to EINVAL or EIO or something (though I suppose either one
-> > may confuse a user enough into running xfs_repair anyways). Thoughts?
-> 
-> Right now _vn_get_link() on a zero-length rmt symlink just returns "".
-> Zero-length metadata is (clearly) not totally invalid, since it can be
-> reproduced (temporarily) via regular log interactions... but from this
-> user's perspective, the fs shouldn't ever present a metadata object that
-> can't be created by userspace.
-> 
-> An empty buffer (apparently) gets interpreted as a symlink to the
-> containing dir, so at least the mechanism doesn't go totally haywire.
-> That might not be harmful, but I still opine that we should nudge the
-> user in the direction of xfs_repair with -EFSCORRUPTED.
-> 
-> I don't consider it a good idea to have ifree be a potential
-> side-effect of readlink, though.  Scraping broken things off the
-> filesystem (I think) should remain the domain of the scrub/repair tools.
-> 
-> In the longer run I think it would be useful (certainly for xfs_scrub)
-> to be able to unlink bad files, though I've not implemented that.  In
-> order to totally tear down a file one would have to make sure that there
-> are zero dirents pointing to the inode, which requires either parent
-> pointers or a full directory scan.  Or xfs_repair. :)
-> 
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > >  	if (!dentry)
-> > >  		return ERR_PTR(-ECHILD);
-> > >  
-> > > @@ -483,8 +486,12 @@ xfs_vn_get_link_inline(
-> > >  	struct inode		*inode,
-> > >  	struct delayed_call	*done)
-> > >  {
-> > > +	char			*p;
-> > >  	ASSERT(XFS_I(inode)->i_df.if_flags & XFS_IFINLINE);
-> > > -	return XFS_I(inode)->i_df.if_u1.if_data;
-> > > +	p = XFS_I(inode)->i_df.if_u1.if_data;
-> > > +	if (p)
-> > > +		return p;
-> > > +	return ERR_PTR(-EFSCORRUPTED);
-> > >  }
-> > >  
-> > >  STATIC int
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
