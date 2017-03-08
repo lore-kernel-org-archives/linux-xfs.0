@@ -1,49 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:36567 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750762AbdCHHip (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 02:38:45 -0500
-Received: by mail-wm0-f66.google.com with SMTP id v190so4532805wme.3
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Mar 2017 23:38:00 -0800 (PST)
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-References: <20170228233610.25456-1-rgoldwyn@suse.de>
- <20170228233610.25456-6-rgoldwyn@suse.de>
-From: Sagi Grimberg <sagi@grimberg.me>
-Message-ID: <0d1ba678-69c0-16ce-6c3e-475cd8da203c@grimberg.me>
-Date: Wed, 8 Mar 2017 09:03:08 +0200
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:40403 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751906AbdCHVvm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 16:51:42 -0500
+Date: Thu, 9 Mar 2017 08:50:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Significantly longer fallocate times with Flag Unwritten Extents
+ disabled
+Message-ID: <20170308215026.GR17542@dastard>
+References: <CAEOfVRnuTD0AWNSE+_-3KVL_xTcgrq5Q8+mm0mEQYua7gaGQiQ@mail.gmail.com>
+ <20170308155602.GE4353@infradead.org>
+ <CAEOfVRkdurzmw4UZeyj6sTO+dGCniFvwp9BOjXyqU+_Tr6z-fw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170228233610.25456-6-rgoldwyn@suse.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAEOfVRkdurzmw4UZeyj6sTO+dGCniFvwp9BOjXyqU+_Tr6z-fw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, jack@suse.com
-Cc: hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Bill <billmcdave@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
+On Wed, Mar 08, 2017 at 04:48:09PM +0000, Bill wrote:
+> Woops, I forgot to send this response to the mailing list:
+> 
+> Thanks for the information and the explanation. That all makes sense,
+> as I cannot reproduce the non-zero data behaviour and suspect I called
+> fallocate() on an existing file.  When I read back freshly fallocated
+> files I only ever get zeros back.  Apologies for the confusion.
+> 
+> The reason I am trying to create large uninitialized files quickly is
+> that I have a hardware (FPGA) based system which is capable of writing
+> to an SSD at a very fast rate. With software in the loop (managing the
+> OS, file system and IO etc) I am limited to quite low rates (about 1/5
+> of the hardware performance) as my processor is not very capable.  As
+> I typically only write large sequential files, I was pondering whether
+> I could create a large uninitialized file, figure out where it was
+> physically located on the disk, unmount the drive and then let my
+> hardware fill the relevant blocks with data, before handing control
+> back to the software and remounting the drive. This would give me the
+> advantages of a filesystem, without having to implement one in
+> hardware, which would be challenging!
 
-> -		if (likely(blk_queue_enter(q, false) == 0)) {
-> +		if (likely(blk_queue_enter(q, bio_flagged(bio, BIO_NOWAIT)) == 0)) {
->  			ret = q->make_request_fn(q, bio);
+And, realistically, quite naive.
 
-I think that for ->make_request to not block we'd need to set
-BLK_MQ_REQ_NOWAIT in blk_mq_alloc_data to avoid blocking on a tag
-allocation.
+Go look at how the PNFS file layout code works - file leases for
+ensuring outstanding client side IO operations are completed
+correctly before the filesystem does something that will conflict
+with the client side IO (e.g. truncate), struct
+export_operations.map_blocks to allocate blocks and layouts that are
+handed to the client, client does the IO directly to/from the
+device, and then calls export_operations.commit_blocks for the
+client to signal the write IO is done.
 
-Something like the untested addition below:
---
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 09af8ff18719..40e78b57fb44 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -119,6 +119,9 @@ struct request *blk_mq_sched_get_request(struct 
-request_queue *q,
-         if (likely(!data->hctx))
-                 data->hctx = blk_mq_map_queue(q, data->ctx->cpu);
+i.e. you FPGA is the client, write a kernel module that takes a fd
+and uses the low level exportfs interfaces into the filesystem to do
+block allocation, pass the mapped blocks to the FPGA and then signal
+IO completion to the filesystem when each FPGA write completes.
 
-+       if (likely(bio) && bio_flagged(bio, BIO_NOWAIT))
-+               data->flags |= BLK_MQ_REQ_NOWAIT;
-+
-         if (e) {
-                 data->flags |= BLK_MQ_REQ_INTERNAL;
---
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
