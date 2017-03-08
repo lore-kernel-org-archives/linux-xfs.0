@@ -1,66 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:40403 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751906AbdCHVvm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 16:51:42 -0500
-Date: Thu, 9 Mar 2017 08:50:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Significantly longer fallocate times with Flag Unwritten Extents
- disabled
-Message-ID: <20170308215026.GR17542@dastard>
-References: <CAEOfVRnuTD0AWNSE+_-3KVL_xTcgrq5Q8+mm0mEQYua7gaGQiQ@mail.gmail.com>
- <20170308155602.GE4353@infradead.org>
- <CAEOfVRkdurzmw4UZeyj6sTO+dGCniFvwp9BOjXyqU+_Tr6z-fw@mail.gmail.com>
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:35590 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753717AbdCHXDa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 18:03:30 -0500
+Received: by mail-qk0-f175.google.com with SMTP id v125so91595300qkh.2
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Mar 2017 15:03:30 -0800 (PST)
+Date: Wed, 8 Mar 2017 18:03:27 -0500
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: How to favor memory allocations for WQ_MEM_RECLAIM threads?
+Message-ID: <20170308230327.GE21117@htj.duckdns.org>
+References: <201703031948.CHJ81278.VOHSFFFOOLJQMt@I-love.SAKURA.ne.jp>
+ <20170303133950.GD31582@dhcp22.suse.cz>
+ <20170303232512.GI17542@dastard>
+ <20170307121503.GJ28642@dhcp22.suse.cz>
+ <20170307193659.GD31179@htj.duckdns.org>
+ <20170307212132.GQ17542@dastard>
+ <20170307214842.GA7500@htj.duckdns.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAEOfVRkdurzmw4UZeyj6sTO+dGCniFvwp9BOjXyqU+_Tr6z-fw@mail.gmail.com>
+In-Reply-To: <20170307214842.GA7500@htj.duckdns.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill <billmcdave@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, Mar 08, 2017 at 04:48:09PM +0000, Bill wrote:
-> Woops, I forgot to send this response to the mailing list:
+Hello,
+
+On Tue, Mar 07, 2017 at 04:48:42PM -0500, Tejun Heo wrote:
+> > > It's implementable for sure.  I'm just not sure how it'd help
+> > > anything.  It's not a relevant information on anything.
+> > 
+> > Except to enable us to get closer to the "rescuer must make forwards
+> > progress" guarantee. In this context, the rescuer is the only
+> > context we should allow to dip into memory reserves. I'm happy if we
+> > have to explicitly check for that and set PF_MEMALLOC ourselves 
+> > (we do that for XFS kernel threads involved in memory reclaim),
+> > but it's not something we should set automatically on every
+> > IO completion work item we run....
 > 
-> Thanks for the information and the explanation. That all makes sense,
-> as I cannot reproduce the non-zero data behaviour and suspect I called
-> fallocate() on an existing file.  When I read back freshly fallocated
-> files I only ever get zeros back.  Apologies for the confusion.
-> 
-> The reason I am trying to create large uninitialized files quickly is
-> that I have a hardware (FPGA) based system which is capable of writing
-> to an SSD at a very fast rate. With software in the loop (managing the
-> OS, file system and IO etc) I am limited to quite low rates (about 1/5
-> of the hardware performance) as my processor is not very capable.  As
-> I typically only write large sequential files, I was pondering whether
-> I could create a large uninitialized file, figure out where it was
-> physically located on the disk, unmount the drive and then let my
-> hardware fill the relevant blocks with data, before handing control
-> back to the software and remounting the drive. This would give me the
-> advantages of a filesystem, without having to implement one in
-> hardware, which would be challenging!
+> Ah, okay, that does make sense to me.  Yeah, providing that test
+> shouldn't be difficult at all.  Lemme cook up a patch.
 
-And, realistically, quite naive.
+Turns out we already have this.  Writeback path already has a special
+case handling for the rescuer.  You can just use
+current_is_workqueue_rescuer().  The function can be called safely
+from any task context.
 
-Go look at how the PNFS file layout code works - file leases for
-ensuring outstanding client side IO operations are completed
-correctly before the filesystem does something that will conflict
-with the client side IO (e.g. truncate), struct
-export_operations.map_blocks to allocate blocks and layouts that are
-handed to the client, client does the IO directly to/from the
-device, and then calls export_operations.commit_blocks for the
-client to signal the write IO is done.
+Thanks.
 
-i.e. you FPGA is the client, write a kernel module that takes a fd
-and uses the low level exportfs interfaces into the filesystem to do
-block allocation, pass the mapped blocks to the FPGA and then signal
-IO completion to the filesystem when each FPGA write completes.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+tejun
