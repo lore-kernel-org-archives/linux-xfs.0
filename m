@@ -1,50 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:56352 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751975AbdCHR2W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Mar 2017 12:28:22 -0500
-Date: Wed, 8 Mar 2017 18:18:59 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] xfs: try any AG when allocating the first btree block
-        when reflinking
-Message-ID: <20170308171859.GA27174@lst.de>
-References: <20170308161315.11444-1-hch@lst.de> <20170308170701.GM5280@birch.djwong.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:22016 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753924AbdCHR4c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 12:56:32 -0500
+Date: Wed, 8 Mar 2017 09:56:21 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix and streamline error handling in xfs_end_io
+Message-ID: <20170308175621.GN5280@birch.djwong.org>
+References: <20170308163336.12133-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170308170701.GM5280@birch.djwong.org>
+In-Reply-To: <20170308163336.12133-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Mar 08, 2017 at 09:07:01AM -0800, Darrick J. Wong wrote:
-> > +	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
-> > +		xfs_iroot_realloc(ip, -1, whichfork);
-> > +		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-> > +		return -ENOMEM;
+On Wed, Mar 08, 2017 at 08:33:36AM -0800, Christoph Hellwig wrote:
+> There are two different cases of buffered I/O errors:
 > 
-> ENOSPC?
-
-Yeah.
-
-> > +	}
-> >  	/*
-> >  	 * Allocation can't fail, the space was reserved.
-> >  	 */
+>  - first we can have an already shutdown fs.  In that case we should skip
+>    any on-disk operations and just clean up the appen transaction if
+>    present and destroy the ioend
+>  - a real I/O error.  In that case we should cleanup any lingering COW
+>    blocks.  This gets skipped in the current code and is fixed by this
+>    patch.
 > 
-> Can we get rid of the ASSERT(args.fsbno != NULLFSBLOCK); just below here
-> now that we jump out above?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Sure.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+(I pushed the 'reclaim unwritten COW extents periodically' patch
+and a fixed up version of this one out for testing last night.
+My fixed version matches this one exactly, so everything looks ok.)
+
+--D
 
 > 
-> Conceptually I guess it's ok for now until we separate out the uses of
-> *firstblock to stay ahead of locking rules vs. *firstblock to remap
-> things.  Hmm, I'll try to make a first stab at that today.
-
-I've been working on that for a while - the problem is that it goes
-up a few layers, including xfs_bmapi_write and the da_args structures.
-
-Give me a little more time and I should have a series for you.
+> ---
+> 
+> Note: "[PATCH v3] xfs: only reclaim unwritten COW extents periodically"
+> needs to be applied before this one.
+> 
+>  fs/xfs/xfs_aops.c | 59 +++++++++++++++++++++++++------------------------------
+>  1 file changed, 27 insertions(+), 32 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index adea9da29c4b..eef453adbc06 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -274,54 +274,49 @@ xfs_end_io(
+>  	struct xfs_ioend	*ioend =
+>  		container_of(work, struct xfs_ioend, io_work);
+>  	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+> +	xfs_off_t		offset = ioend->io_offset;
+> +	size_t			size = ioend->io_size;
+>  	int			error = ioend->io_bio->bi_error;
+>  
+>  	/*
+> -	 * Set an error if the mount has shut down and proceed with end I/O
+> -	 * processing so it can perform whatever cleanups are necessary.
+> +	 * Just clean up the in-memory strutures if the fs has been shut down.
+>  	 */
+> -	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+> +	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+>  		error = -EIO;
+> +		goto done;
+> +	}
+>  
+>  	/*
+> -	 * For a CoW extent, we need to move the mapping from the CoW fork
+> -	 * to the data fork.  If instead an error happened, just dump the
+> -	 * new blocks.
+> +	 * Clean up any COW blocks on an I/O error.
+>  	 */
+> -	if (ioend->io_type == XFS_IO_COW) {
+> -		if (error)
+> -			goto done;
+> -		if (ioend->io_bio->bi_error) {
+> -			error = xfs_reflink_cancel_cow_range(ip,
+> -					ioend->io_offset, ioend->io_size, true);
+> -			goto done;
+> +	if (unlikely(error)) {
+> +		switch (ioend->io_type) {
+> +		case XFS_IO_COW:
+> +			xfs_reflink_cancel_cow_range(ip, offset, size, true);
+> +			break;
+>  		}
+> -		error = xfs_reflink_end_cow(ip, ioend->io_offset,
+> -				ioend->io_size);
+> -		if (error)
+> -			goto done;
+> +
+> +		goto done;
+>  	}
+>  
+>  	/*
+> -	 * For unwritten extents we need to issue transactions to convert a
+> -	 * range to normal written extens after the data I/O has finished.
+> -	 * Detecting and handling completion IO errors is done individually
+> -	 * for each case as different cleanup operations need to be performed
+> -	 * on error.
+> +	 * Success:  commit the COW or unwritten blocks if needed.
+>  	 */
+> -	if (ioend->io_type == XFS_IO_UNWRITTEN) {
+> -		if (error)
+> -			goto done;
+> -		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
+> -						  ioend->io_size);
+> -	} else if (ioend->io_append_trans) {
+> -		error = xfs_setfilesize_ioend(ioend, error);
+> -	} else {
+> -		ASSERT(!xfs_ioend_is_append(ioend) ||
+> -		       ioend->io_type == XFS_IO_COW);
+> +	switch (ioend->io_type) {
+> +	case XFS_IO_COW:
+> +		error = xfs_reflink_end_cow(ip, offset, size);
+> +		break;
+> +	case XFS_IO_UNWRITTEN:
+> +		error = xfs_iomap_write_unwritten(ip, offset, size);
+> +		break;
+> +	default:
+> +		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
+> +		break;
+>  	}
+>  
+>  done:
+> +	if (ioend->io_append_trans)
+> +		error = xfs_setfilesize_ioend(ioend, error);
+>  	xfs_destroy_ioend(ioend, error);
+>  }
+>  
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
