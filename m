@@ -1,189 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42744 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38579 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753289AbdCHNqO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Mar 2017 08:46:14 -0500
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 19556C054C42
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Mar 2017 13:46:02 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4] xfs: use iomap new flag for newly allocated delalloc blocks
-Date: Wed,  8 Mar 2017 08:46:00 -0500
-Message-Id: <1488980760-25198-1-git-send-email-bfoster@redhat.com>
+        id S1750764AbdCHJfi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Mar 2017 04:35:38 -0500
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <91D9638E-C96A-4D1E-9712-5D6543048700@dilger.ca>
+References: <91D9638E-C96A-4D1E-9712-5D6543048700@dilger.ca> <20170307050140.GA12946@infradead.org> <20170307000609.GG5280@birch.djwong.org> <10435.1488907375@warthog.procyon.org.uk>
+Subject: Re: statx manpage
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <17752.1488965058.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: 8BIT
+Date: Wed, 08 Mar 2017 09:24:18 +0000
+Message-ID: <17753.1488965058@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Xiong Zhou <xzhou@redhat.com>
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: dhowells@redhat.com, Christoph Hellwig <hch@infradead.org>, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-Commit fa7f138 ("xfs: clear delalloc and cache on buffered write
-failure") fixed one regression in the iomap error handling code and
-exposed another. The fundamental problem is that if a buffered write
-is a rewrite of preexisting delalloc blocks and the write fails, the
-failure handling code can punch out preexisting blocks with valid
-file data.
+Andreas Dilger <adilger@dilger.ca> wrote:
 
-This was reproduced directly by sub-block writes in the LTP
-kernel/syscalls/write/write03 test. A first 100 byte write allocates
-a single block in a file. A subsequent 100 byte write fails and
-punches out the block, including the data successfully written by
-the previous write.
+> > (Note that reserved space and padding is ommitted)
+> 
+> Do you think that not including the padding could be problematic for users?
 
-To address this problem, update the ->iomap_begin() handler to
-distinguish newly allocated delalloc blocks from preexisting
-delalloc blocks via the IOMAP_F_NEW flag. Use this flag in the
-->iomap_end() handler to decide when a failed or short write should
-punch out delalloc blocks.
+Interesting question.  Do you think it would be?  I don't see why it should be
+a problem, since they shouldn't be touching it anyway.  Also, the stat(2)
+manpage also gives the same warning and omits padding and doesn't seem to have
+been amended.
 
-This introduces the subtle requirement that ->iomap_begin() should
-never combine newly allocated delalloc blocks with existing blocks
-in the resulting iomap descriptor. This can occur when a new
-delalloc reservation merges with a neighboring extent that is part
-of the current write, for example. Therefore, drop the
-post-allocation extent lookup from xfs_bmapi_reserve_delalloc() and
-just return the record inserted into the fork. This ensures only new
-blocks are returned and thus that preexisting delalloc blocks are
-always handled as "found" blocks and not punched out on a failed
-rewrite.
+But if you would prefer, I can put it back.
 
-Reported-by: Xiong Zhou <xzhou@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+The only reason I can really see for explicitly including it is to say that
+this is where future extensions will go.
 
-v4:
-- Drop the extent lookup from bmapi_reserve_delalloc().
-v3: http://www.spinics.net/lists/linux-xfs/msg04791.html
-- Add params around IOMAP_F_NEW check.
-- Add comment for xfs_bmapi_reserve_delalloc().
-v2: http://www.spinics.net/lists/linux-xfs/msg04685.html
-- Use arec param rather than bmapi flag in xfs_bmapi_reserve_delalloc().
-v1: http://www.spinics.net/lists/linux-xfs/msg04604.html
+> > STATX_ATTR_IMMUTABLE	File is marked immutable
+> ...
+> > STATX_ATTR_APPEND	File is append-only
 
- fs/xfs/libxfs/xfs_bmap.c | 24 ++++++++++++++----------
- fs/xfs/xfs_iomap.c       | 25 ++++++++++++++++++-------
- 2 files changed, 32 insertions(+), 17 deletions(-)
+I should copy the definitions in chattr(1).
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a9c66d4..bfa59a1 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4150,6 +4150,19 @@ xfs_bmapi_read(
- 	return 0;
- }
- 
-+/*
-+ * Add a delayed allocation extent to an inode. Blocks are reserved from the
-+ * global pool and the extent inserted into the inode in-core extent tree.
-+ *
-+ * On entry, got refers to the first extent beyond the offset of the extent to
-+ * allocate or eof is specified if no such extent exists. On return, got refers
-+ * to the extent record that was inserted to the inode fork.
-+ *
-+ * Note that the allocated extent may have been merged with contiguous extents
-+ * during insertion into the inode fork. Thus, got does not reflect the current
-+ * state of the inode fork on return. If necessary, the caller can use lastx to
-+ * look up the updated record in the inode fork.
-+ */
- int
- xfs_bmapi_reserve_delalloc(
- 	struct xfs_inode	*ip,
-@@ -4236,13 +4249,8 @@ xfs_bmapi_reserve_delalloc(
- 	got->br_startblock = nullstartblock(indlen);
- 	got->br_blockcount = alen;
- 	got->br_state = XFS_EXT_NORM;
--	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
- 
--	/*
--	 * Update our extent pointer, given that xfs_bmap_add_extent_hole_delay
--	 * might have merged it into one of the neighbouring ones.
--	 */
--	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), got);
-+	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
- 
- 	/*
- 	 * Tag the inode if blocks were preallocated. Note that COW fork
-@@ -4254,10 +4262,6 @@ xfs_bmapi_reserve_delalloc(
- 	if (whichfork == XFS_COW_FORK && (prealloc || aoff < off || alen > len))
- 		xfs_inode_set_cowblocks_tag(ip);
- 
--	ASSERT(got->br_startoff <= aoff);
--	ASSERT(got->br_startoff + got->br_blockcount >= aoff + alen);
--	ASSERT(isnullstartblock(got->br_startblock));
--	ASSERT(got->br_state == XFS_EXT_NORM);
- 	return 0;
- 
- out_unreserve_blocks:
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 41662fb..288ee5b 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -630,6 +630,11 @@ xfs_file_iomap_begin_delay(
- 		goto out_unlock;
- 	}
- 
-+	/*
-+	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
-+	 * them out if the write happens to fail.
-+	 */
-+	iomap->flags = IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
- done:
- 	if (isnullstartblock(got.br_startblock))
-@@ -1071,16 +1076,22 @@ xfs_file_iomap_end_delalloc(
- 	struct xfs_inode	*ip,
- 	loff_t			offset,
- 	loff_t			length,
--	ssize_t			written)
-+	ssize_t			written,
-+	struct iomap		*iomap)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		start_fsb;
- 	xfs_fileoff_t		end_fsb;
- 	int			error = 0;
- 
--	/* behave as if the write failed if drop writes is enabled */
--	if (xfs_mp_drop_writes(mp))
-+	/*
-+	 * Behave as if the write failed if drop writes is enabled. Set the NEW
-+	 * flag to force delalloc cleanup.
-+	 */
-+	if (xfs_mp_drop_writes(mp)) {
-+		iomap->flags |= IOMAP_F_NEW;
- 		written = 0;
-+	}
- 
- 	/*
- 	 * start_fsb refers to the first unused block after a short write. If
-@@ -1094,14 +1105,14 @@ xfs_file_iomap_end_delalloc(
- 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
- 
- 	/*
--	 * Trim back delalloc blocks if we didn't manage to write the whole
--	 * range reserved.
-+	 * Trim delalloc blocks if they were allocated by this write and we
-+	 * didn't manage to write the whole range.
- 	 *
- 	 * We don't need to care about racing delalloc as we hold i_mutex
- 	 * across the reserve/allocate/unreserve calls. If there are delalloc
- 	 * blocks in the range, they are ours.
- 	 */
--	if (start_fsb < end_fsb) {
-+	if ((iomap->flags & IOMAP_F_NEW) && start_fsb < end_fsb) {
- 		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
- 					 XFS_FSB_TO_B(mp, end_fsb) - 1);
- 
-@@ -1131,7 +1142,7 @@ xfs_file_iomap_end(
- {
- 	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
- 		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
--				length, written);
-+				length, written, iomap);
- 	return 0;
- }
- 
--- 
-2.7.4
+>    To test whether a path is a regular file (for example), one could write:
+>    .nf
+>    .in +4n
+>    rc = statx(AT_FDCWD, pathname, 0, STATX_TYPE, &stx);
+>    if (stx.stx_mask & STATX_TYPE && S_ISREG(sb.stx_mode)) {
+>       /* Handle regular file */
+>    }
 
+Good idea.
+
+> > Because tests of the above form are common, additional macros are defined by
+> > POSIX to allow the test of the file type in
+> > .I stx_mode
+> > to be written more concisely:
+> 
+> Should this all just reference the existing stat(2) man page instead of
+> duplicating the whole contents here?  This is spending a lot of space
+> discussing the stx_mode field which could be avoided.
+
+Possibly.  On the other hand, it means that everything you need to refer to is
+in one page from the user's PoV.  I'm not sure what the best policy on this
+is.
+
+If I do defer to stat(2), I do need to make some sort of note that the
+examples are different and the field name is stx_mask, not st_mask.
+
+David
