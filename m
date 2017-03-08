@@ -1,117 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41868 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933190AbdCGRt6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Mar 2017 12:49:58 -0500
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-Subject: RE: [PATCH 4/5] fs, xfs: convert xfs_cui_log_item.cui_refcount from
- atomic_t to refcount_t
-Date: Tue, 7 Mar 2017 17:33:14 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C55A19@IRSMSX102.ger.corp.intel.com>
-References: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
- <1488358060-693-5-git-send-email-elena.reshetova@intel.com>
- <20170306191446.GE5280@birch.djwong.org>
-In-Reply-To: <20170306191446.GE5280@birch.djwong.org>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Received: from userp1050.oracle.com ([156.151.31.82]:20266 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933425AbdCHBRw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 20:17:52 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v281GZZh011117
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 8 Mar 2017 01:16:35 GMT
+Subject: [PATCH 8/9] xfs_spaceman: add a man page
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 07 Mar 2017 17:15:29 -0800
+Message-ID: <148893572942.16212.17134028994946952389.stgit@birch.djwong.org>
+In-Reply-To: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
+References: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "peterz@infradead.org" <peterz@infradead.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "david@fromorbit.com" <david@fromorbit.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
- > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > Signed-off-by: David Windsor <dwindsor@gmail.com>
-> > ---
-> >  fs/xfs/xfs_refcount_item.c | 4 ++--
-> >  fs/xfs/xfs_refcount_item.h | 4 +++-
-> >  2 files changed, 5 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> > index 6e4c744..61bc570 100644
-> > --- a/fs/xfs/xfs_refcount_item.c
-> > +++ b/fs/xfs/xfs_refcount_item.c
-> > @@ -205,7 +205,7 @@ xfs_cui_init(
-> >  	cuip->cui_format.cui_nextents = nextents;
-> >  	cuip->cui_format.cui_id = (uintptr_t)(void *)cuip;
-> >  	atomic_set(&cuip->cui_next_extent, 0);
-> > -	atomic_set(&cuip->cui_refcount, 2);
-> > +	refcount_set(&cuip->cui_refcount, 2);
-> 
-> I'm assuming the refcount design is ok with the log item refcounts
-> starting at 2 and marching down to zero?  The code seems to be
-> fine with it; I just want to make sure everyone's ok with supporting
-> this use case.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes, as soon as it doesn't go beyond 0 or starting to increment again after reaching zero. 
+Add a manual page describing xfs_spaceman's behavior.
 
-> 
-> >  	return cuip;
-> >  }
-> > @@ -221,7 +221,7 @@ void
-> >  xfs_cui_release(
-> >  	struct xfs_cui_log_item	*cuip)
-> >  {
-> > -	if (atomic_dec_and_test(&cuip->cui_refcount)) {
-> > +	if (refcount_dec_and_test(&cuip->cui_refcount)) {
-> 
-> I suppose it's useful to have refcount_dec_and_test complain loudly if
-> we ever have a dangling pointer... Friday I was chasing a possible
-> use-after-free of the EFI items in generic/388.
-
-Currently it complains with WARN if it finds itself decrementing from zero. 
-There is patch in RFC stage also that would make it configurable: complain with WARN or complain/abort with BUG. 
-
-> 
-> >  		xfs_trans_ail_remove(&cuip->cui_item,
-> SHUTDOWN_LOG_IO_ERROR);
-> >  		xfs_cui_item_free(cuip);
-> >  	}
-> > diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
-> > index 5b74ddd..7f23ff8 100644
-> > --- a/fs/xfs/xfs_refcount_item.h
-> > +++ b/fs/xfs/xfs_refcount_item.h
-> > @@ -20,6 +20,8 @@
-> >  #ifndef	__XFS_REFCOUNT_ITEM_H__
-> >  #define	__XFS_REFCOUNT_ITEM_H__
-> >
-> > +#include <linux/refcount.h>
-> 
-> I still think this include should go in xfs_linux.h, the same as most of
-> the other linux/*.h includes in XFS.
-
-Oh, very sorry, I forgot this one. Got too much focused on testing :(
-Do you want me to resend with this change or can you take it in and do this small fix yourself? 
-
-Best Regards,
-Elena.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ man/man8/xfs_spaceman.8 |  102 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 102 insertions(+)
+ create mode 100644 man/man8/xfs_spaceman.8
 
 
-> 
-> --D
-> 
-> > +
-> >  /*
-> >   * There are (currently) two pairs of refcount btree redo item types:
-> >   * increase and decrease.  The log items for these are CUI (refcount
-> > @@ -63,7 +65,7 @@ struct kmem_zone;
-> >   */
-> >  struct xfs_cui_log_item {
-> >  	struct xfs_log_item		cui_item;
-> > -	atomic_t			cui_refcount;
-> > +	refcount_t			cui_refcount;
-> >  	atomic_t			cui_next_extent;
-> >  	unsigned long			cui_flags;	/* misc
-> flags */
-> >  	struct xfs_cui_log_format	cui_format;
-> > --
-> > 2.7.4
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
+new file mode 100644
+index 0000000..c1d19c0
+--- /dev/null
++++ b/man/man8/xfs_spaceman.8
+@@ -0,0 +1,102 @@
++.TH xfs_spaceman 8
++.SH NAME
++xfs_spaceman \- show free space information about an XFS filesystem
++.SH SYNOPSIS
++.B xfs_spaceman
++[
++.B \-c
++.I cmd
++]
++.I file
++.br
++.B xfs_spaceman \-V
++.SH DESCRIPTION
++.B xfs_spaceman
++reports and controls free space usage in an XFS filesystem.
++.SH OPTIONS
++.TP 1.0i
++.BI \-c " cmd"
++.B xfs_spaceman
++commands may be run interactively (the default) or as arguments on
++the command line. Multiple
++.B \-c
++arguments may be given. The commands are run in the sequence given,
++then the program exits.
++
++.SH COMMANDS
++.TP
++.BI "freesp [ \-sr ] [ \-b | \-e bsize | \-h h1 [ \-m bmult ]] [-a agno]"
++With no arguments,
++.B freesp
++shows a histogram of all free space extents in the filesystem.
++The
++.B -b
++argument establishes that the histogram bins are successive powers of two.
++This is the default.
++The
++.BR -h " and " -m
++options can be used to specify a custom histogram bin size as well as a
++multiplication factor for subsequent bin sizes.
++The
++.BR -e
++option fixes the histogram size to a particular value.
++The
++.BR -a " and " -r
++options constrain the free space information report to a particular AG
++or the realtime device, respectively.  The
++.B -a
++option may be specified multiple times.
++A summary of free space information will be printed if the
++.B -s
++option is given.
++.TP
++.BR "help [ " command " ]"
++Display a brief description of one or all commands.
++.TP
++.BI "prealloc [ \-ugp id ] [ \-m minlen ] [ \-s ]"
++Controls speculative preallocation.  The
++.BR -u ","
++.BR -g ","
++and
++.B -p
++options will clear all speculative preallocations for a given user,
++group, or project ID, respectively.
++The
++.B -m
++option causes the operation to ignore any file with a size smaller than
++.BR minlen "."
++The
++.B -s
++option will flush all dirty data and metadata to disk.
++.TP
++.B print
++Display a list of all open files.
++.TP
++.B quit
++Exit
++.BR xfs_spaceman .
++.TP
++.BI "trim [ \-f ] [ \-a agno ] [ \-m minlen ] [" " offset length " ]
++Instructs the underlying storage device to release all storage that may
++be backing free space in the filesystem.
++The
++.B -f
++option trims all free space in the entire filesystem.
++The
++.B -a
++option trims only the free space in a given AG.
++The
++.B -m
++option only trims free space extents that are longer than
++.IR minlen "."
++The
++.IR offset " and " length
++arguments trim all free space between
++.I offset
++and
++.IR "offset+length" "."
++The
++.BR -a " and " -f
++options are mutually exclusive with each other as well as with the
++.IR offset " and " length
++arguments.
+
