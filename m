@@ -1,37 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48083 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756456AbdCGWJS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 17:09:18 -0500
-Date: Tue, 7 Mar 2017 14:09:11 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: WARNING: CPU: 2 PID: 20539 at fs/iomap.c:954
- iomap_dio_rw+0x39a/0x3b0
-Message-ID: <20170307220911.GA25288@infradead.org>
-References: <1488922559.3877.6.camel@redhat.com>
+Received: from aserp1050.oracle.com ([141.146.126.70]:26054 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933439AbdCHBRw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 20:17:52 -0500
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v281GgRG011145
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 8 Mar 2017 01:16:42 GMT
+Subject: [PATCH 9/9] xfs_spaceman: add group summary mode
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 07 Mar 2017 17:15:35 -0800
+Message-ID: <148893573548.16212.11324444380734588984.stgit@birch.djwong.org>
+In-Reply-To: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
+References: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1488922559.3877.6.camel@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Mar 07, 2017 at 04:35:59PM -0500, Jeff Layton wrote:
-> I was doing an xfstests run on xfs with v4.11.0-rc1, and these two
-> warnings popped. Looks like invalidate_inode_pages2_range failed? A
-> small patch to print the error there showed that it was returning
-> -EBUSY.
-> 
-> Pretty easy to reproduce by running xfstests generic/095 on a KVM guest
-> running v4.11.0-rc1.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Can you try:
+Add a -g switch to show only a per-group summary.
 
-"[PATCH v2] iomap: invalidate page caches should be after iomap_dio_complete() in direct write"
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ man/man8/xfs_spaceman.8 |    8 +++++++-
+ spaceman/freesp.c       |   27 ++++++++++++++++++++++++---
+ 2 files changed, 31 insertions(+), 4 deletions(-)
 
-which was sent to the XFS list last week and check if it fixes things
-for you?
+
+diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
+index c1d19c0..a57a0c3 100644
+--- a/man/man8/xfs_spaceman.8
++++ b/man/man8/xfs_spaceman.8
+@@ -25,7 +25,7 @@ then the program exits.
+ 
+ .SH COMMANDS
+ .TP
+-.BI "freesp [ \-sr ] [ \-b | \-e bsize | \-h h1 [ \-m bmult ]] [-a agno]"
++.BI "freesp [ \-srg ] [ \-b | \-e bsize | \-h h1 [ \-m bmult ]] [-a agno]"
+ With no arguments,
+ .B freesp
+ shows a histogram of all free space extents in the filesystem.
+@@ -49,6 +49,12 @@ option may be specified multiple times.
+ A summary of free space information will be printed if the
+ .B -s
+ option is given.
++The
++.B -g
++option prints a brief per-AG summary of the free space found in that AG.
++If
++.B -r
++is specified it will also report on free space in the realtime device.
+ .TP
+ .BR "help [ " command " ]"
+ Display a brief description of one or all commands.
+diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+index 42c30d6..36bf04a 100644
+--- a/spaceman/freesp.c
++++ b/spaceman/freesp.c
+@@ -42,6 +42,7 @@ static int		histcount;
+ static int		multsize;
+ static int		seen1;
+ static int		summaryflag;
++static int		gflag;
+ static bool		rtflag;
+ static long long	totblocks;
+ static long long	totexts;
+@@ -159,6 +160,8 @@ scan_ag(
+ 	off64_t			bperag;
+ 	off64_t			aglen;
+ 	xfs_agblock_t		agbno;
++	unsigned long long	freeblks = 0;
++	unsigned long long	freeexts = 0;
+ 	int			ret;
+ 	int			i;
+ 
+@@ -212,6 +215,8 @@ _("%s: FS_IOC_GETFSMAP [\"%s\"]: %s\n"),
+ 			agbno = (extent->fmr_physical - (bperag * agno)) /
+ 								blocksize;
+ 			aglen = extent->fmr_length / blocksize;
++			freeblks += aglen;
++			freeexts++;
+ 
+ 			addtohist(agno, agbno, aglen);
+ 		}
+@@ -221,6 +226,15 @@ _("%s: FS_IOC_GETFSMAP [\"%s\"]: %s\n"),
+ 			break;
+ 		fsmap_advance(fsmap);
+ 	}
++
++	if (gflag) {
++		if (agno == NULLAGNUMBER)
++			printf(_("     rtdev %10llu %10llu\n"), freeexts,
++					freeblks);
++		else
++			printf(_("%10u %10llu %10llu\n"), agno, freeexts,
++					freeblks);
++	}
+ }
+ static void
+ aglistadd(
+@@ -245,7 +259,7 @@ init(
+ 	aglist = NULL;
+ 	hist = NULL;
+ 	rtflag = false;
+-	while ((c = getopt(argc, argv, "a:bde:h:m:rs")) != EOF) {
++	while ((c = getopt(argc, argv, "a:bde:gh:m:rs")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			aglistadd(optarg);
+@@ -265,6 +279,10 @@ init(
+ 			equalsize = atoi(optarg);
+ 			speced = 1;
+ 			break;
++		case 'g':
++			histcount = 0;
++			gflag++;
++			break;
+ 		case 'h':
+ 			if (speced && !histcount)
+ 				return 0;
+@@ -307,13 +325,15 @@ freesp_f(
+ 
+ 	if (!init(argc, argv))
+ 		return 0;
++	if (gflag)
++		printf(_("        AG    extents     blocks\n"));
+ 	if (rtflag)
+ 		scan_ag(NULLAGNUMBER);
+ 	for (agno = 0; !rtflag && agno < file->geom.agcount; agno++)  {
+ 		if (inaglist(agno))
+ 			scan_ag(agno);
+ 	}
+-	if (histcount)
++	if (histcount && !gflag)
+ 		printhist();
+ 	if (summaryflag) {
+ 		printf(_("total free extents %lld\n"), totexts);
+@@ -335,10 +355,11 @@ freesp_help(void)
+ "\n"
+ "Examine filesystem free space\n"
+ "\n"
+-"Options: [-bcds] [-a agno] [-e bsize] [-h h1]... [-m bmult]\n"
++"Options: [-bcdgs] [-a agno] [-e bsize] [-h h1]... [-m bmult]\n"
+ "\n"
+ " -b -- binary histogram bin size\n"
+ " -d -- debug output\n"
++" -g -- print per-AG summary\n"
+ " -r -- display realtime device free space information\n"
+ " -s -- emit freespace summary information\n"
+ " -a agno -- scan only the given AG agno\n"
+
