@@ -1,88 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41964 "EHLO sandeen.net"
+Received: from mga07.intel.com ([134.134.136.100]:32163 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750796AbdCHFGw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Mar 2017 00:06:52 -0500
-Subject: Re: [PowerPC] XFS : Metadata corruption detected at
- 0x60000000382100b0, xfs_agf block
-References: <1488531850.5962.22.camel@abdul-ThinkPad-T450>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <0db2060c-2d4b-671a-47a9-01cc742c3862@sandeen.net>
-Date: Tue, 7 Mar 2017 14:44:07 -0600
-MIME-Version: 1.0
-In-Reply-To: <1488531850.5962.22.camel@abdul-ThinkPad-T450>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+        id S1751840AbdCHI7V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Mar 2017 03:59:21 -0500
+From: Elena Reshetova <elena.reshetova@intel.com>
+Subject: [PATCH 5/5] fs, xfs: convert xfs_rui_log_item.rui_refcount from atomic_t to refcount_t
+Date: Wed,  8 Mar 2017 10:53:39 +0200
+Message-Id: <1488963219-11709-6-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488963219-11709-1-git-send-email-elena.reshetova@intel.com>
+References: <1488963219-11709-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Abdul Haleem <abdhalee@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, sachinp@linux.vnet.ibm.com, mpe@ellerman.id, aneesh.kumar@linux.vnet.ibm.com
+To: darrick.wong@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
 
-On 3/3/17 3:04 AM, Abdul Haleem wrote:
-> Hi,
-> 
-> Reboot fails for PowerPC machine running RHEL7.3 (3.10.0-514.el7)
-> following these messages:
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Generally it's best to report RHEL bugs to Red Hat.
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ fs/xfs/xfs_rmap_item.c | 4 ++--
+ fs/xfs/xfs_rmap_item.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index 73c8278..5e1664a 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -204,7 +204,7 @@ xfs_rui_init(
+ 	ruip->rui_format.rui_nextents = nextents;
+ 	ruip->rui_format.rui_id = (uintptr_t)(void *)ruip;
+ 	atomic_set(&ruip->rui_next_extent, 0);
+-	atomic_set(&ruip->rui_refcount, 2);
++	refcount_set(&ruip->rui_refcount, 2);
  
-> SGI XFS with ACLs, security attributes, no debug enabled
-> XFS (dm-0): Mounting V5 Filesystem
-> FS (dm-0): Starting recovery (logdev: internal)
-> XFS (dm-0): Metadata corruption detected at 0x60000000382100b0, xfs_agf
-> block 0x4b00001
-> XFS (dm-0): Unmount and run xfs_repair
-> XFS (dm-0): First 64 bytes of corrupted metadata buffer:
-> c0000000f06b7200: 58 41 47 46 00 00 00 01 00 00 00 03 00 32 00 00 XAGF.........2..
-> c0000000f06b7210: 00 00 00 01 00 00 00 02 00 00 00 00 00 00 00 01  ................
-> c0000000f06b7220: 00 00 00 01 00 00 00 00 00 00 00 76 00 00 00 02  ...........v....
-> c0000000f06b7230: 00 00 00 04 00 2d 0c c7 00 2a 14 62 00 00 00 00  .....-...*.b....
-> XFS (dm-0): metadata I/O error: block 0x4b00001
-> ("xfs_trans_read_buf_map") error 117 numblks 1
-> Failed to mount /sysroot.
-> 
-> Steps to recreate:
-> Run some file system test (ltp or xfs/086) on 4.10.0 upstream kernel
-> built on the PowerVM LPAR after the test completes, reboot the machine
-> back to base kernel, boot falls to dracut mode with above messages,
-> every time it requires a xfs_repair to recover the file system.
+ 	return ruip;
+ }
+@@ -243,7 +243,7 @@ void
+ xfs_rui_release(
+ 	struct xfs_rui_log_item	*ruip)
+ {
+-	if (atomic_dec_and_test(&ruip->rui_refcount)) {
++	if (refcount_dec_and_test(&ruip->rui_refcount)) {
+ 		xfs_trans_ail_remove(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
+ 		xfs_rui_item_free(ruip);
+ 	}
+diff --git a/fs/xfs/xfs_rmap_item.h b/fs/xfs/xfs_rmap_item.h
+index 340c968..1e425a9 100644
+--- a/fs/xfs/xfs_rmap_item.h
++++ b/fs/xfs/xfs_rmap_item.h
+@@ -64,7 +64,7 @@ struct kmem_zone;
+  */
+ struct xfs_rui_log_item {
+ 	struct xfs_log_item		rui_item;
+-	atomic_t			rui_refcount;
++	refcount_t			rui_refcount;
+ 	atomic_t			rui_next_extent;
+ 	unsigned long			rui_flags;	/* misc flags */
+ 	struct xfs_rui_log_format	rui_format;
+-- 
+2.7.4
 
-... though Red Hat might tell you that running upstream kernels is
-out of the supported realm.
-
-However, this probably has to do with AGF packing changes.
-
-> c0000000f06b7200: 58 41 47 46 00 00 00 01 00 00 00 03 00 32 00 00 XAGF.........2..
-                    magic       version     sequence    length
-> c0000000f06b7210: 00 00 00 01 00 00 00 02 00 00 00 00 00 00 00 01  ................
-                    agf roots                           agf levels
-> c0000000f06b7220: 00 00 00 01 00 00 00 00 00 00 00 76 00 00 00 02  ...........v....
-                                            flfirst     fllast      
-> c0000000f06b7230: 00 00 00 04 00 2d 0c c7 00 2a 14 62 00 00 00 00  .....-...*.b....
-                    flcount     freeblocks  longest     btreeblks
-
-The AGF verifier does:
-
-        if (!(agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
-              XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
-              be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
-              be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
-              be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
-              be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp)))
-                return false;
-
-where:
-
-#define XFS_AGFL_SIZE(mp) \
-        (((mp)->m_sb.sb_sectsize - \
-         (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
-                sizeof(struct xfs_agfl) : 0)) / \
-          sizeof(xfs_agblock_t))
-
-and "struct xfs_agfl" packing has changed between rhel7 and upstream,
-due to an early bug related to nailing down that on-disk format :/
-
-Presumably this is what xfs_repair found and fixed?
-
--Eric
