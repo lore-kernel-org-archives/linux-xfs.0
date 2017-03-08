@@ -1,103 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:34913 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933353AbdCHAfz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 19:35:55 -0500
-Date: Tue, 7 Mar 2017 16:35:28 -0800
+Received: from userp1050.oracle.com ([156.151.31.82]:20274 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933453AbdCHBRw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 20:17:52 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v281Gvlb011181
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 8 Mar 2017 01:16:57 GMT
+Subject: [PATCH 2/9] xfs_repair: replace rmap_compare with libxfs version
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] xfs: remove kmem_zalloc_greedy
-Message-ID: <20170308003528.GK5280@birch.djwong.org>
+Date: Tue, 07 Mar 2017 17:14:46 -0800
+Message-ID: <148893568661.16212.4224459593786749253.stgit@birch.djwong.org>
+In-Reply-To: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
+References: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, Michal Hocko <mhocko@kernel.org>, Christoph Hellwig <hch@lst.de>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-The sole remaining caller of kmem_zalloc_greedy is bulkstat, which uses
-it to grab 1-4 pages for staging of inobt records.  The infinite loop in
-the greedy allocation function is causing hangs[1] in generic/269, so
-just get rid of the greedy allocator in favor of kmem_zalloc_large.
-This makes bulkstat somewhat more likely to ENOMEM if there's really no
-pages to spare, but eliminates a source of hangs.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-[1] http://lkml.kernel.org/r/20170301044634.rgidgdqqiiwsmfpj%40XZHOUW.usersys.redhat.com
+Now that libxfs has a function to compare rmaps, replace xfs_repair's
+helper function with that.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: remove single-page fallback
----
- fs/xfs/kmem.c       |   18 ------------------
- fs/xfs/kmem.h       |    2 --
- fs/xfs/xfs_itable.c |    6 ++----
- 3 files changed, 2 insertions(+), 24 deletions(-)
+ libxfs/libxfs_api_defs.h |    1 +
+ repair/rmap.c            |   32 ++------------------------------
+ 2 files changed, 3 insertions(+), 30 deletions(-)
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index 2dfdc62..70a5b55 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -25,24 +25,6 @@
- #include "kmem.h"
- #include "xfs_message.h"
+
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 31239ca..2d8d9c8 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -144,5 +144,6 @@
+ #define xfs_refcount_get_rec		libxfs_refcount_get_rec
+ #define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
+ #define xfs_refc_block			libxfs_refc_block
++#define xfs_rmap_compare		libxfs_rmap_compare
+ 
+ #endif /* __LIBXFS_API_DEFS_H__ */
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 7508973..ab6e583 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -49,37 +49,9 @@ static struct xfs_ag_rmap *ag_rmaps;
+ static bool rmapbt_suspect;
+ static bool refcbt_suspect;
  
 -/*
-- * Greedy allocation.  May fail and may return vmalloced memory.
+- * Compare rmap observations for array sorting.
 - */
--void *
--kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
--{
--	void		*ptr;
--	size_t		kmsize = maxsize;
--
--	while (!(ptr = vzalloc(kmsize))) {
--		if ((kmsize >>= 1) <= minsize)
--			kmsize = minsize;
--	}
--	if (ptr)
--		*size = kmsize;
--	return ptr;
--}
--
- void *
- kmem_alloc(size_t size, xfs_km_flags_t flags)
+-static int
+-rmap_compare(
+-	const void		*a,
+-	const void		*b)
++static inline int rmap_compare(const void *a, const void *b)
  {
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 689f746..f0fc84f 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -69,8 +69,6 @@ static inline void  kmem_free(const void *ptr)
+-	const struct xfs_rmap_irec	*pa;
+-	const struct xfs_rmap_irec	*pb;
+-	__u64			oa;
+-	__u64			ob;
+-
+-	pa = a; pb = b;
+-	oa = libxfs_rmap_irec_offset_pack(pa);
+-	ob = libxfs_rmap_irec_offset_pack(pb);
+-
+-	if (pa->rm_startblock < pb->rm_startblock)
+-		return -1;
+-	else if (pa->rm_startblock > pb->rm_startblock)
+-		return 1;
+-	else if (pa->rm_owner < pb->rm_owner)
+-		return -1;
+-	else if (pa->rm_owner > pb->rm_owner)
+-		return 1;
+-	else if (oa < ob)
+-		return -1;
+-	else if (oa > ob)
+-		return 1;
+-	else
+-		return 0;
++	return libxfs_rmap_compare(a, b);
  }
  
- 
--extern void *kmem_zalloc_greedy(size_t *, size_t, size_t);
--
- static inline void *
- kmem_zalloc(size_t size, xfs_km_flags_t flags)
- {
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 8b2150d..e775f78 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -362,7 +362,6 @@ xfs_bulkstat(
- 	xfs_agino_t		agino;	/* inode # in allocation group */
- 	xfs_agnumber_t		agno;	/* allocation group number */
- 	xfs_btree_cur_t		*cur;	/* btree cursor for ialloc btree */
--	size_t			irbsize; /* size of irec buffer in bytes */
- 	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
- 	int			nirbuf;	/* size of irbuf */
- 	int			ubcount; /* size of user's buffer */
-@@ -389,11 +388,10 @@ xfs_bulkstat(
- 	*ubcountp = 0;
- 	*done = 0;
- 
--	irbuf = kmem_zalloc_greedy(&irbsize, PAGE_SIZE, PAGE_SIZE * 4);
-+	irbuf = kmem_zalloc_large(PAGE_SIZE * 4, KM_SLEEP);
- 	if (!irbuf)
- 		return -ENOMEM;
--
--	nirbuf = irbsize / sizeof(*irbuf);
-+	nirbuf = (PAGE_SIZE * 4) / sizeof(*irbuf);
- 
- 	/*
- 	 * Loop over the allocation groups, starting from the last
+ /*
+
