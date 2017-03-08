@@ -1,27 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38923 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933152AbdCHAbo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 19:31:44 -0500
-Subject: [PATCH 0/3] xfsprogs: 4.11 rollup
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 07 Mar 2017 16:30:04 -0800
-Message-ID: <148893300446.23674.6348172768180643163.stgit@birch.djwong.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36567 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750762AbdCHHip (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 02:38:45 -0500
+Received: by mail-wm0-f66.google.com with SMTP id v190so4532805wme.3
+        for <linux-xfs@vger.kernel.org>; Tue, 07 Mar 2017 23:38:00 -0800 (PST)
+Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
+References: <20170228233610.25456-1-rgoldwyn@suse.de>
+ <20170228233610.25456-6-rgoldwyn@suse.de>
+From: Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <0d1ba678-69c0-16ce-6c3e-475cd8da203c@grimberg.me>
+Date: Wed, 8 Mar 2017 09:03:08 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20170228233610.25456-6-rgoldwyn@suse.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>, jack@suse.com
+Cc: hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Hi all,
 
-Here are a few patches I have for xfsprogs 4.11.  The first patch
-changes the codebase to use the system-defined clone/dedupe ioctl
-definitions; the second is Brian Foster's xfs_repair fix for zero length
-symlinks; and the third enables the xfs_io shutdown command for non-XFS
-filesystems, since ext4 and f2fs can now handle the ioctl.
+> -		if (likely(blk_queue_enter(q, false) == 0)) {
+> +		if (likely(blk_queue_enter(q, bio_flagged(bio, BIO_NOWAIT)) == 0)) {
+>  			ret = q->make_request_fn(q, bio);
 
---Darrick
+I think that for ->make_request to not block we'd need to set
+BLK_MQ_REQ_NOWAIT in blk_mq_alloc_data to avoid blocking on a tag
+allocation.
+
+Something like the untested addition below:
+--
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index 09af8ff18719..40e78b57fb44 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -119,6 +119,9 @@ struct request *blk_mq_sched_get_request(struct 
+request_queue *q,
+         if (likely(!data->hctx))
+                 data->hctx = blk_mq_map_queue(q, data->ctx->cpu);
+
++       if (likely(bio) && bio_flagged(bio, BIO_NOWAIT))
++               data->flags |= BLK_MQ_REQ_NOWAIT;
++
+         if (e) {
+                 data->flags |= BLK_MQ_REQ_INTERNAL;
+--
