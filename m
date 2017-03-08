@@ -1,100 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44311 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756292AbdCGWlH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 17:41:07 -0500
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v27Fs3i4079142
-        for <linux-xfs@vger.kernel.org>; Tue, 7 Mar 2017 11:31:23 -0500
-Received: from e28smtp05.in.ibm.com (e28smtp05.in.ibm.com [125.16.236.5])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 291xhv6v90-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Mar 2017 11:31:22 -0500
-Received: from localhost
-        by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <abdhalee@linux.vnet.ibm.com>;
-        Tue, 7 Mar 2017 22:01:19 +0530
-Subject: 4.11.0-rc1 boot resulted in WARNING: CPU: 14 PID: 1722 at
- fs/sysfs/dir.c:31 .sysfs_warn_dup+0x78/0xb0
-From: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-Date: Tue, 07 Mar 2017 22:01:04 +0530
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Message-Id: <1488904264.3961.17.camel@abdul-ThinkPad-T450>
+Received: from mx1.redhat.com ([209.132.183.28]:42744 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753289AbdCHNqO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Mar 2017 08:46:14 -0500
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 19556C054C42
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Mar 2017 13:46:02 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v4] xfs: use iomap new flag for newly allocated delalloc blocks
+Date: Wed,  8 Mar 2017 08:46:00 -0500
+Message-Id: <1488980760-25198-1-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Cc: mpe@ellerman.id, linux-kernel <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.orgmpe <mpe@ellerman.id>
+To: linux-xfs@vger.kernel.org
+Cc: Xiong Zhou <xzhou@redhat.com>
 
+Commit fa7f138 ("xfs: clear delalloc and cache on buffered write
+failure") fixed one regression in the iomap error handling code and
+exposed another. The fundamental problem is that if a buffered write
+is a rewrite of preexisting delalloc blocks and the write fails, the
+failure handling code can punch out preexisting blocks with valid
+file data.
 
-Hi,
+This was reproduced directly by sub-block writes in the LTP
+kernel/syscalls/write/write03 test. A first 100 byte write allocates
+a single block in a file. A subsequent 100 byte write fails and
+punches out the block, including the data successfully written by
+the previous write.
 
-Today's mainline (4.11.0-rc1) booted with warnings on Power7 LPAR.
+To address this problem, update the ->iomap_begin() handler to
+distinguish newly allocated delalloc blocks from preexisting
+delalloc blocks via the IOMAP_F_NEW flag. Use this flag in the
+->iomap_end() handler to decide when a failed or short write should
+punch out delalloc blocks.
 
-Issue is not reproducible all the time.
+This introduces the subtle requirement that ->iomap_begin() should
+never combine newly allocated delalloc blocks with existing blocks
+in the resulting iomap descriptor. This can occur when a new
+delalloc reservation merges with a neighboring extent that is part
+of the current write, for example. Therefore, drop the
+post-allocation extent lookup from xfs_bmapi_reserve_delalloc() and
+just return the record inserted into the fork. This ensures only new
+blocks are returned and thus that preexisting delalloc blocks are
+always handled as "found" blocks and not punched out on a failed
+rewrite.
 
-traces:
---------
-Found device VDASD 5.
-Mounting /home...
-Reached target Swap.
-Found device VDASD 2.
+Reported-by: Xiong Zhou <xzhou@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-Mounting /boot...
+v4:
+- Drop the extent lookup from bmapi_reserve_delalloc().
+v3: http://www.spinics.net/lists/linux-xfs/msg04791.html
+- Add params around IOMAP_F_NEW check.
+- Add comment for xfs_bmapi_reserve_delalloc().
+v2: http://www.spinics.net/lists/linux-xfs/msg04685.html
+- Use arec param rather than bmapi flag in xfs_bmapi_reserve_delalloc().
+v1: http://www.spinics.net/lists/linux-xfs/msg04604.html
 
-sysfs: cannot create duplicate filename '/fs/xfs/sda'
-------------[ cut here ]------------
-WARNING: CPU: 14 PID: 1722 at fs/sysfs/dir.c:31 .sysfs_warn_dup
-+0x78/0xb0
-Modules linked in: sg(E) nfsd(E) auth_rpcgss(E) nfs_acl(E) lockd(E)
-grace(E) sunrpc(E) binfmt_misc(E) ip_tables(E) ext4(E) mbcache(E)
-jbd2(E) sd_mod(E) ibmvscsi(E) ibmveth(E) scsi_transport_srp(E)
-CPU: 14 PID: 1722 Comm: mount Tainted: G        W   E   4.11.0-rc1-autotest #1
-task: c0000009ed3f9c80 task.stack: c0000009ed430000
-NIP: c0000000003a6c68 LR: c0000000003a6c64 CTR: 0000000001764c5c
-REGS: c0000009ed4333c0 TRAP: 0700   Tainted: G        W   E    (4.11.0-rc1-autotest)
-MSR: 800000000282b032 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI>
-  CR: 22022822  XER: 00000006
-CFAR: c000000000994958 SOFTE: 1
-GPR00: c0000000003a6c64 c0000009ed433640 c00000000138a500 0000000000000035
-GPR04: c0000009ff88ada0 c0000009ff8a1658 00000000014cfc2c 0000000000000000
-GPR08: 0000000000000000 c000000000dd146c 00000009feac0000 0000000000003fef
-GPR12: 0000000022022844 c00000000e9f7e00 0000000037409c40 0000000037409c30
-GPR16: 0000000037409c28 ffffffffffffffff 0000000000000000 000000003741f1c8
-GPR20: 00000100147d1270 0000000000000000 00000000c0ed0000 00003fffa0f53384
-GPR24: c00000000394d178 c000000000c054c0 c000000001742e68 c0000000ff3ea640
-GPR28: c00000000394d640 c0000013eec28c28 c0000009f2ab0148 c000000003833000
-NIP [c0000000003a6c68] .sysfs_warn_dup+0x78/0xb0
-LR [c0000000003a6c64] .sysfs_warn_dup+0x74/0xb0
-Call Trace:
-[c0000009ed433640] [c0000000003a6c64] .sysfs_warn_dup+0x74/0xb0 (unreliable)
-[c0000009ed4336d0] [c0000000003a6de4] .sysfs_create_dir_ns+0xc4/0xd0
-[c0000009ed433760] [c000000000551048] .kobject_add_internal+0xd8/0x450
-[c0000009ed433800] [c00000000055141c] .kobject_init_and_add+0x5c/0x90
-[c0000009ed433890] [c00000000044ac54] .xfs_mountfs+0x224/0xa30
-[c0000009ed433960] [c000000000452a90] .xfs_fs_fill_super+0x490/0x620
-[c0000009ed433a10] [c0000000002fefc0] .mount_bdev+0x220/0x260
-[c0000009ed433ac0] [c0000000004509b8] .xfs_fs_mount+0x18/0x30
-[c0000009ed433b30] [c000000000300520] .mount_fs+0x70/0x210
-[c0000009ed433bf0] [c000000000325930] .vfs_kern_mount+0x60/0x1c0
-[c0000009ed433cb0] [c00000000032a458] .do_mount+0x268/0xee0
-[c0000009ed433d90] [c00000000032b4ec] .SyS_mount+0x8c/0x100
-[c0000009ed433e30] [c00000000000b184] system_call+0x38/0xe0
-Instruction dump:
-7fa3eb78 38800000 7fe5fb78 38c01000 4bffa929 60000000 3c62ff8b 7fe4fb78
-38636ec8 7fc5f378 485edcb9 60000000 <0fe00000> 7fe3fb78 4bf1fb01 60000000
----[ end trace 78f08bafbc2388f3 ]---
-kobject_add_internal failed for sda with -EEXIST, don't try to register
-things with the same name in the same directory.
+ fs/xfs/libxfs/xfs_bmap.c | 24 ++++++++++++++----------
+ fs/xfs/xfs_iomap.c       | 25 ++++++++++++++++++-------
+ 2 files changed, 32 insertions(+), 17 deletions(-)
 
-
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index a9c66d4..bfa59a1 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4150,6 +4150,19 @@ xfs_bmapi_read(
+ 	return 0;
+ }
+ 
++/*
++ * Add a delayed allocation extent to an inode. Blocks are reserved from the
++ * global pool and the extent inserted into the inode in-core extent tree.
++ *
++ * On entry, got refers to the first extent beyond the offset of the extent to
++ * allocate or eof is specified if no such extent exists. On return, got refers
++ * to the extent record that was inserted to the inode fork.
++ *
++ * Note that the allocated extent may have been merged with contiguous extents
++ * during insertion into the inode fork. Thus, got does not reflect the current
++ * state of the inode fork on return. If necessary, the caller can use lastx to
++ * look up the updated record in the inode fork.
++ */
+ int
+ xfs_bmapi_reserve_delalloc(
+ 	struct xfs_inode	*ip,
+@@ -4236,13 +4249,8 @@ xfs_bmapi_reserve_delalloc(
+ 	got->br_startblock = nullstartblock(indlen);
+ 	got->br_blockcount = alen;
+ 	got->br_state = XFS_EXT_NORM;
+-	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
+ 
+-	/*
+-	 * Update our extent pointer, given that xfs_bmap_add_extent_hole_delay
+-	 * might have merged it into one of the neighbouring ones.
+-	 */
+-	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), got);
++	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
+ 
+ 	/*
+ 	 * Tag the inode if blocks were preallocated. Note that COW fork
+@@ -4254,10 +4262,6 @@ xfs_bmapi_reserve_delalloc(
+ 	if (whichfork == XFS_COW_FORK && (prealloc || aoff < off || alen > len))
+ 		xfs_inode_set_cowblocks_tag(ip);
+ 
+-	ASSERT(got->br_startoff <= aoff);
+-	ASSERT(got->br_startoff + got->br_blockcount >= aoff + alen);
+-	ASSERT(isnullstartblock(got->br_startblock));
+-	ASSERT(got->br_state == XFS_EXT_NORM);
+ 	return 0;
+ 
+ out_unreserve_blocks:
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 41662fb..288ee5b 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -630,6 +630,11 @@ xfs_file_iomap_begin_delay(
+ 		goto out_unlock;
+ 	}
+ 
++	/*
++	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
++	 * them out if the write happens to fail.
++	 */
++	iomap->flags = IOMAP_F_NEW;
+ 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
+ done:
+ 	if (isnullstartblock(got.br_startblock))
+@@ -1071,16 +1076,22 @@ xfs_file_iomap_end_delalloc(
+ 	struct xfs_inode	*ip,
+ 	loff_t			offset,
+ 	loff_t			length,
+-	ssize_t			written)
++	ssize_t			written,
++	struct iomap		*iomap)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_fileoff_t		start_fsb;
+ 	xfs_fileoff_t		end_fsb;
+ 	int			error = 0;
+ 
+-	/* behave as if the write failed if drop writes is enabled */
+-	if (xfs_mp_drop_writes(mp))
++	/*
++	 * Behave as if the write failed if drop writes is enabled. Set the NEW
++	 * flag to force delalloc cleanup.
++	 */
++	if (xfs_mp_drop_writes(mp)) {
++		iomap->flags |= IOMAP_F_NEW;
+ 		written = 0;
++	}
+ 
+ 	/*
+ 	 * start_fsb refers to the first unused block after a short write. If
+@@ -1094,14 +1105,14 @@ xfs_file_iomap_end_delalloc(
+ 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
+ 
+ 	/*
+-	 * Trim back delalloc blocks if we didn't manage to write the whole
+-	 * range reserved.
++	 * Trim delalloc blocks if they were allocated by this write and we
++	 * didn't manage to write the whole range.
+ 	 *
+ 	 * We don't need to care about racing delalloc as we hold i_mutex
+ 	 * across the reserve/allocate/unreserve calls. If there are delalloc
+ 	 * blocks in the range, they are ours.
+ 	 */
+-	if (start_fsb < end_fsb) {
++	if ((iomap->flags & IOMAP_F_NEW) && start_fsb < end_fsb) {
+ 		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
+ 					 XFS_FSB_TO_B(mp, end_fsb) - 1);
+ 
+@@ -1131,7 +1142,7 @@ xfs_file_iomap_end(
+ {
+ 	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
+ 		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
+-				length, written);
++				length, written, iomap);
+ 	return 0;
+ }
+ 
 -- 
-Regard's
-
-Abdul Haleem
-IBM Linux Technology Centre
-
-
+2.7.4
 
