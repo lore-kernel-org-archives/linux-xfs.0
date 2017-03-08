@@ -1,59 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43740 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751102AbdCOScl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Mar 2017 14:32:41 -0400
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 481C99D4E9
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 18:32:36 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v2FIWZPO022288
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 14:32:36 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_repair: warn about dirty log with -n option
-Message-ID: <a59b1187-cf8c-56ac-565d-9c37472730c4@redhat.com>
-Date: Wed, 15 Mar 2017 13:32:34 -0500
+Received: from userp1050.oracle.com ([156.151.31.82]:20627 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753294AbdCHTnb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 14:43:31 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v28JAvg7005978
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 8 Mar 2017 19:10:57 GMT
+Date: Wed, 8 Mar 2017 11:09:20 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3] misc: use system FICLONE/FICLONERANGE/FIDEDUPERANGE
+ definitions
+Message-ID: <20170308190920.GQ5280@birch.djwong.org>
+References: <148893300446.23674.6348172768180643163.stgit@birch.djwong.org>
+ <148893301058.23674.10160100843692497809.stgit@birch.djwong.org>
+ <20170308155313.GC4353@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170308155313.GC4353@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-When looking at xfs_repair -n output today, we have no idea if
-reported errors may be due to an un-replayed dirty log.  If this
-is the case, mention it in the output.
+On Wed, Mar 08, 2017 at 07:53:13AM -0800, Christoph Hellwig wrote:
+> xfs_fs.h should never removed previously define APIs - that'll just
+> break application.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Yeah, I should've erased those defines before they ended up in 4.9.
+Oh well.
 
-pls check double-check my logic for the 3 cases :)
+> So to be honest I'm not sure there is any upside to this patch - it
+> adds tons of lines, does not add any functionality and breaks existing
+> apps.
 
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 5964244..c21778b 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -90,11 +90,16 @@ zero_log(
- 	_("zero_log: head block %" PRId64 " tail block %" PRId64 "\n"),
- 				head_blk, tail_blk);
- 		}
--		if (!no_modify && head_blk != tail_blk) {
--			if (zap_log) {
-+		if (head_blk != tail_blk) {
-+			if (!no_modify && zap_log) {
- 				do_warn(_(
- "ALERT: The filesystem has valuable metadata changes in a log which is being\n"
- "destroyed because the -L option was used.\n"));
-+			} else if (no_modify) {
-+				do_warn(_(
-+"ALERT: The filesystem has valuable metadata changes in a log which is being\n"
-+"ignored because the -n option was used.  Expect spurious inconsistencies\n"
-+"which may be resolved by first mounting the filesystem to replay the log.\n"));
- 			} else {
- 				do_warn(_(
- "ERROR: The filesystem has valuable metadata changes in a log which needs to\n"
+But is it a good idea to expose the reflink and dedupe xfs_io commands
+on platforms where we know it isn't going to work?  AFAIK those ioctls
+are still Linux-only.
 
+Or: how popular are the darwin and *bsd ports of xfsprogs?  It looks
+like OSX can only read XFS via fuse, and freebsd dropped XFS from
+their kernel in 10.0.
+
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
