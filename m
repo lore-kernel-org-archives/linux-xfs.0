@@ -1,124 +1,219 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:34213 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755985AbdCGW4O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 17:56:14 -0500
-Date: Tue, 7 Mar 2017 14:55:33 -0800
-From: Eric Biggers <ebiggers3@gmail.com>
-Subject: Re: statx manpage
-Message-ID: <20170307225533.GA1403@zzz>
-References: <20170307050140.GA12946@infradead.org>
- <20170307000609.GG5280@birch.djwong.org>
- <10435.1488907375@warthog.procyon.org.uk>
+Received: from userp1050.oracle.com ([156.151.31.82]:27449 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933331AbdCHDdA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 22:33:00 -0500
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v281GFtp011027
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 8 Mar 2017 01:16:15 GMT
+Subject: [PATCH 5/9] xfs_spaceman: add new speculative prealloc control
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 07 Mar 2017 17:15:10 -0800
+Message-ID: <148893571038.16212.5471878553447666354.stgit@birch.djwong.org>
+In-Reply-To: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
+References: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <10435.1488907375@warthog.procyon.org.uk>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, mtk.manpages@gmail.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Tue, Mar 07, 2017 at 05:22:55PM +0000, David Howells wrote:
-> .fi
-> .in
-> .PP
-> (Note that reserved space and padding is ommitted)
+From: Dave Chinner <dchinner@redhat.com>
 
-ommitted => omitted
+Add an control interface for purging speculative
+preallocation via the new ioctls.
 
-> .TP
-> .BR AT_EMPTY_PATH " (since Linux 2.6.39)"
-...
-> .TP
-> .BR AT_NO_AUTOMOUNT " (since Linux 2.6.38)"
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[darrick: change xfsctl to ioctl]
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ spaceman/Makefile   |    2 -
+ spaceman/init.c     |    1 
+ spaceman/prealloc.c |  135 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ spaceman/space.h    |    1 
+ 4 files changed, 138 insertions(+), 1 deletion(-)
+ create mode 100644 spaceman/prealloc.c
 
-Given that statx is just being added now in 4.11, saying "since Linux 2.6.39"
-and "since Linux 2.6.38" for these flags seems unneeded.
 
-> The
-> .I mask
-> argument to
-> .BR statx ()
-> is used to tell the kernel which fields the caller is interested in
-> .I mask
-> is an OR'ed combination of the following constants:
+diff --git a/spaceman/Makefile b/spaceman/Makefile
+index 9fb9142..b1f1136 100644
+--- a/spaceman/Makefile
++++ b/spaceman/Makefile
+@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_spaceman
+ HFILES = init.h space.h
+ CFILES = init.c \
+-	file.c trim.c
++	file.c prealloc.c trim.c
+ 
+ LLDLIBS = $(LIBXCMD)
+ LTDEPENDENCIES = $(LIBXCMD)
+diff --git a/spaceman/init.c b/spaceman/init.c
+index ae5cfb5..08b5a33 100644
+--- a/spaceman/init.c
++++ b/spaceman/init.c
+@@ -39,6 +39,7 @@ init_commands(void)
+ {
+ 	file_init();
+ 	help_init();
++	prealloc_init();
+ 	quit_init();
+ 	trim_init();
+ }
+diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
+new file mode 100644
+index 0000000..b93f909
+--- /dev/null
++++ b/spaceman/prealloc.c
+@@ -0,0 +1,135 @@
++/*
++ * Copyright (c) 2012 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include "libxfs.h"
++#include "command.h"
++#include "input.h"
++#include "init.h"
++#include "space.h"
++
++#ifndef XFS_IOC_FREE_EOFBLOCKS
++#define XFS_IOC_FREE_EOFBLOCKS _IOR ('X', 58, struct xfs_eofblocks)
++
++#define XFS_EOFBLOCKS_VERSION           1
++struct xfs_fs_eofblocks {
++	__u32		eof_version;
++	__u32		eof_flags;
++	uid_t		eof_uid;
++	gid_t		eof_gid;
++	prid_t		eof_prid;
++	__u32		pad32;
++	__u64		eof_min_file_size;
++	__u64		pad64[12];
++};
++
++/* eof_flags values */
++#define XFS_EOF_FLAGS_SYNC		(1 << 0) /* sync/wait mode scan */
++#define XFS_EOF_FLAGS_UID		(1 << 1) /* filter by uid */
++#define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
++#define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
++#define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
++
++#endif
++
++static cmdinfo_t prealloc_cmd;
++
++/*
++ * Control preallocation amounts.
++ */
++static int
++prealloc_f(
++	int	argc,
++	char	**argv)
++{
++	struct xfs_fs_eofblocks eofb = {0};
++	int	c;
++
++	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
++
++	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
++		switch (c) {
++		case 'g':
++			eofb.eof_flags |= XFS_EOF_FLAGS_GID;
++			eofb.eof_gid = atoi(optarg);
++			break;
++		case 'u':
++			eofb.eof_flags |= XFS_EOF_FLAGS_UID;
++			eofb.eof_uid = atoi(optarg);
++			break;
++		case 'p':
++			eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
++			eofb.eof_prid = atoi(optarg);
++			break;
++		case 's':
++			eofb.eof_flags |= XFS_EOF_FLAGS_SYNC;
++			break;
++		case 'm':
++			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
++			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
++							file->geom.sectsize,
++							optarg);
++			break;
++		case '?':
++		default:
++			return command_usage(&prealloc_cmd);
++		}
++	}
++	if (optind != argc)
++		return command_usage(&prealloc_cmd);
++
++	if (ioctl(file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
++		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
++			progname, file->name, strerror(errno));
++	}
++	return 0;
++}
++
++static void
++prealloc_help(void)
++{
++	printf(_(
++"\n"
++"Control speculative preallocation\n"
++"\n"
++"Options: [-s] [-ugp id] [-m minlen]\n"
++"\n"
++" -s -- synchronous flush - wait for flush to complete\n"
++" -u uid -- remove prealloc on files matching user <uid>\n"
++" -g gid -- remove prealloc on files matching group <gid>\n"
++" -p prid -- remove prealloc on files matching project <prid>\n"
++" -m minlen -- only consider files larger than <minlen>\n"
++"\n"));
++
++}
++
++void
++prealloc_init(void)
++{
++	prealloc_cmd.name = "prealloc";
++	prealloc_cmd.altname = "prealloc";
++	prealloc_cmd.cfunc = prealloc_f;
++	prealloc_cmd.argmin = 1;
++	prealloc_cmd.argmax = -1;
++	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]\n";
++	prealloc_cmd.flags = CMD_FLAG_ONESHOT;
++	prealloc_cmd.oneline = _("Control speculative preallocation");
++	prealloc_cmd.help = prealloc_help;
++
++	add_command(&prealloc_cmd);
++}
++
+diff --git a/spaceman/space.h b/spaceman/space.h
+index 7b4f034..0ae3116 100644
+--- a/spaceman/space.h
++++ b/spaceman/space.h
+@@ -33,5 +33,6 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
+ 
+ extern void	file_init(void);
+ extern void	help_init(void);
++extern void	prealloc_init(void);
+ extern void	quit_init(void);
+ extern void	trim_init(void);
 
-Missing a period between "interested in" and "mask".
-
-> .B "Do not"
-> simply set
-> .I mask
-> to UINT_MAX as one or more bits may, in future, be used to specify an extension
-> to the buffer.
-
-"in future" => "in the future".
-
-> .I Note:
-> For performance and simplicity reasons, different fields in the
-> .I statx
-> structure may contain state information from different moments
-> during the execution of the system call.
-> For example, if
-> .IR stx_mode
-> or
-> .IR stx_uid
-> is changed by another process by calling
-> .BR chmod (2)
-> or
-> .BR chown (2),
-> .BR stat ()
-> might return the old
-> .I stx_mode
-> together with the new
-> .IR stx_uid ,
-> or the old
-> .I stx_uid
-> together with the new
-> .IR stx_mode .
-
-This example is confusing because chmod() doesn't change st_uid, and chown()
-doesn't ordinarily change st_mode.  A better example would be that if chown() is
-used to change both the owner and group, it's possible that statx() would return
-the new owner paired with the old group, or the new group paired with the old
-owner.  Or, the new owner and group could be observed before the new ctime.
-Also, it seems this note belongs in a BUGS section of the man page, since it is
-a bug.
-
-> .SH ERRORS
-> .TP
-> .B EINVAL
-> Invalid flag specified in
-> .IR flags .
-
-Actually, the behavior when specifying invalid flags differs depending on
-whether a path is specified.
-
-If a path is specified, then statx() fails with EINVAL if unrecognized flags are
-specified.
-
-However, the behavior differs when no path is specified.  For example, the the
-following call with invalid flags succeeds:
-
-	statx(fd, NULL, 0xFFFF0000, 0, &stbuf);
-
-I think this is a bug, and it should be fixed by applying the same 'flags'
-validation regardless of whether a path is specified.
-
-> .B ENOENT
-> A component of
-> .I pathname
-> does not exist, or
-> .I pathname
-> is an empty string.
-
-is an empty string and AT_EMPTY_PATH was not specified in flags.
-
-> .SH SEE ALSO
-> .BR ls (1),
-> .BR stat (1),
-
-Shouldn't this link to stat (2), not stat (1)?
-
-- Eric
