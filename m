@@ -1,31 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41622 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:53032 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752924AbdCIHp0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Mar 2017 02:45:26 -0500
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20170309065908.GI14226@eguan.usersys.redhat.com>
-References: <20170309065908.GI14226@eguan.usersys.redhat.com> <20170308034500.GY14226@eguan.usersys.redhat.com> <20170307050140.GA12946@infradead.org> <20170307000609.GG5280@birch.djwong.org> <10435.1488907375@warthog.procyon.org.uk> <21188.1489042008@warthog.procyon.org.uk>
-Subject: Re: statx manpage
+        id S1750930AbdCIUZN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Mar 2017 15:25:13 -0500
+Subject: [PATCH 2/2] xfs: remove readonly checks from xfs_release &
+ xfs_inactive
+References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
+Date: Thu, 9 Mar 2017 14:24:38 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <21540.1489045522.1@warthog.procyon.org.uk>
-Date: Thu, 09 Mar 2017 07:45:22 +0000
-Message-ID: <21541.1489045522@warthog.procyon.org.uk>
+In-Reply-To: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: dhowells@redhat.com, Christoph Hellwig <hch@infradead.org>, mtk.manpages@gmail.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Eryu Guan <eguan@redhat.com> wrote:
+xfs_release & xfs_inactive both had early returns for readonly
+mounts.
 
-> A normal way we take for fstests is adding new syscall support to xfs_io
-> first, then writing new tests based on it, as some other new
-> syscalls/utilities do, e.g. set|get_encpolicy were added to xfs_io
-> in January to set|get encryption policy for ext4 encryption testing.
+Ultimately, this means that when we do log recovery on a
+read-only mount, we do not process unlinked inodes, because
+of this misguided effort to not do /any/ IO, ever, on a readonly
+mount.  IO at mount time is fine, and expected - after all we
+just got done doing log recovery!  Even ro mounts, without the
+norecovery flag, can do enough IO to put the filesystem in a
+consistent state.
 
-Please add this to the docs.
+We should not get here after mount is complete; at that point
+the vfs will not allow anything from userspace to make
+modifications which would get us here with any IO to do - 
+we can't unlink files, or create blocks past eof, etc.
+So it's safe to just remove these checks.
 
-Thanks,
-David
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index edfa6a5..bf74165 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1658,10 +1658,6 @@
+ 	if (!S_ISREG(VFS_I(ip)->i_mode) || (VFS_I(ip)->i_mode == 0))
+ 		return 0;
+ 
+-	/* If this is a read-only mount, don't do this (would generate I/O) */
+-	if (mp->m_flags & XFS_MOUNT_RDONLY)
+-		return 0;
+-
+ 	if (!XFS_FORCED_SHUTDOWN(mp)) {
+ 		int truncated;
+ 
+@@ -1896,10 +1892,6 @@
+ 	mp = ip->i_mount;
+ 	ASSERT(!xfs_iflags_test(ip, XFS_IRECOVERY));
+ 
+-	/* If this is a read-only mount, don't do this (would generate I/O) */
+-	if (mp->m_flags & XFS_MOUNT_RDONLY)
+-		return;
+-
+ 	if (VFS_I(ip)->i_nlink != 0) {
+ 		/*
+ 		 * force is true because we are evicting an inode from the
