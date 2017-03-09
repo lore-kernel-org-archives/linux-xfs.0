@@ -1,79 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51230 "EHLO mga09.intel.com"
+Received: from sandeen.net ([63.231.237.45]:38340 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751075AbdCAJEF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Mar 2017 04:04:05 -0500
-From: Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 1/5] fs, xfs: convert xfs_bui_log_item.bui_refcount from atomic_t to refcount_t
-Date: Wed,  1 Mar 2017 10:47:36 +0200
-Message-Id: <1488358060-693-2-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
-References: <1488358060-693-1-git-send-email-elena.reshetova@intel.com>
+        id S1750726AbdCIFis (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Mar 2017 00:38:48 -0500
+Subject: Re: [PATCH 9/9] mkfs.xfs: add mkfs.xfs.conf parse support
+References: <20170303231316.12716-1-mcgrof@kernel.org>
+ <20170303231316.12716-10-mcgrof@kernel.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8753f955-cc54-e51d-53a7-0b62a3a32f96@sandeen.net>
+Date: Wed, 8 Mar 2017 23:38:02 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170303231316.12716-10-mcgrof@kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, peterz@infradead.org, gregkh@linuxfoundation.org, darrick.wong@oracle.com, david@fromorbit.com, Elena Reshetova <elena.reshetova@intel.com>, Hans Liljestrand <ishkamiel@gmail.com>, Kees Cook <keescook@chromium.org>, David Windsor <dwindsor@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+Cc: jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+On 3/3/17 5:13 PM, Luis R. Rodriguez wrote:
+> You may want to stick to specific set of configuration options when
+> creating filesystems with mkfs.xfs -- sometimes due to pure technical
+> reasons, but some other times to ensure systems remain compatible as
+> new features are introduced with older kernels, or if you always want
+> to take advantage of some new feature which would otherwise typically
+> be disruptive.
+> 
+> Although mkfs.xfs already uses sensible defaults this adds a configuration
+> option for parsing defaults settings for mkfs.xfs parsed prior to processing
+> input arguments.
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- fs/xfs/xfs_bmap_item.c | 4 ++--
- fs/xfs/xfs_bmap_item.h | 4 +++-
- 2 files changed, 5 insertions(+), 3 deletions(-)
+So, a few other points on this, while you look at libconfig?
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 9bf57c7..33104ad 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -199,7 +199,7 @@ xfs_bui_init(
- 	buip->bui_format.bui_nextents = XFS_BUI_MAX_FAST_EXTENTS;
- 	buip->bui_format.bui_id = (uintptr_t)(void *)buip;
- 	atomic_set(&buip->bui_next_extent, 0);
--	atomic_set(&buip->bui_refcount, 2);
-+	refcount_set(&buip->bui_refcount, 2);
+Thanks for the man pages & updates, but I think they can use a bit
+of editing and wordsmithing for clarity; we can work on that if/when
+the technical details get sorted.
+
+> User input passed to mkfs.xfs overrides defaults founds through the
+> new optional configuration file, by default:
+> 
+> 	/etc/mkfs.xfs.conf
+> 
+> To use /etc/ be sure to configure xfsprogs with:
+> 
+>  ./configure --sysconfdir=/etc/
+
+This should just DTRT by default (today it'd go to /usr/etc by default)
+
+(For what it's worth, xfs_quota just hard-codes "/etc" -
+
+#define PROJID          "/etc/projid"
+#define PROJECT_PATHS   "/etc/projects")
+
+> The build system also allows distributions to override the default
+> mkfs.xfs.conf defaults with a custom:
+> 
+> 	etc/mkfs.xfs.conf.custom.in
+
+I'm not a fan of this "drop untracked special files into $XFSPROGS/etc/
+and it'll get renamed and then installed."  If you want a custom
+config file in etc for the distro, just use the packaging tools to put
+it there, IMHO.  Filtering it through the source tree && make install just
+adds complexity.
+
+> The default etc/mkfs.xfs.conf.in provides commented out examples.
+> You can also override the configuration file used either with the
+> MKFS_XFS_CONFIG environment variable or by using the new -c command
+> line argument to mkfs.xfs. Only when -c is used will the configuration
+> file be required to be present.
+> 
+> To verify what configuration file is used on a system use the typical:
+> 
+>   mkfs.xfs -N
+
+I'd prefer to drop the env var handling.  Nothing else in xfsprogs uses
+that for production cases; I don't really see a reason for it, and it
+only complicates things.   Require -c path if specified, use /etc/ path
+if present, otherwise ignore.
+
+Also, printing the config file path at mkfs time will probably break some
+scripts that aren't expecting an extra line ...
+
+thanks,
+-Eric
  
- 	return buip;
- }
-@@ -215,7 +215,7 @@ void
- xfs_bui_release(
- 	struct xfs_bui_log_item	*buip)
- {
--	if (atomic_dec_and_test(&buip->bui_refcount)) {
-+	if (refcount_dec_and_test(&buip->bui_refcount)) {
- 		xfs_trans_ail_remove(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_bui_item_free(buip);
- 	}
-diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
-index c867daa..988a6ae 100644
---- a/fs/xfs/xfs_bmap_item.h
-+++ b/fs/xfs/xfs_bmap_item.h
-@@ -20,6 +20,8 @@
- #ifndef	__XFS_BMAP_ITEM_H__
- #define	__XFS_BMAP_ITEM_H__
- 
-+#include <linux/refcount.h>
-+
- /*
-  * There are (currently) two pairs of bmap btree redo item types: map & unmap.
-  * The common abbreviations for these are BUI (bmap update intent) and BUD
-@@ -61,7 +63,7 @@ struct kmem_zone;
-  */
- struct xfs_bui_log_item {
- 	struct xfs_log_item		bui_item;
--	atomic_t			bui_refcount;
-+	refcount_t			bui_refcount;
- 	atomic_t			bui_next_extent;
- 	unsigned long			bui_flags;	/* misc flags */
- 	struct xfs_bui_log_format	bui_format;
--- 
-2.7.4
-
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
