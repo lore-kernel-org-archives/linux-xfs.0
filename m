@@ -1,54 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f171.google.com ([74.125.82.171]:34365 "EHLO
-        mail-ot0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752672AbdCILIS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Mar 2017 06:08:18 -0500
-Received: by mail-ot0-f171.google.com with SMTP id o24so53835622otb.1
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Mar 2017 03:08:18 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:58834 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751331AbdCIGzR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Mar 2017 01:55:17 -0500
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20170308034500.GY14226@eguan.usersys.redhat.com>
+References: <20170308034500.GY14226@eguan.usersys.redhat.com> <20170307050140.GA12946@infradead.org> <20170307000609.GG5280@birch.djwong.org> <10435.1488907375@warthog.procyon.org.uk>
+Subject: Re: statx manpage
 MIME-Version: 1.0
-From: fuser ct1 <fuserct1@gmail.com>
-Date: Thu, 9 Mar 2017 11:08:17 +0000
-Message-ID: <CAL8yqiigz_ShyH=YE5GqxP+V5jRiMJLPSQpWbcsAiCzzQfsP_A@mail.gmail.com>
-Subject: pquota + xfs_fsr cron
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <21187.1489042008.1@warthog.procyon.org.uk>
+Date: Thu, 09 Mar 2017 06:46:48 +0000
+Message-ID: <21188.1489042008@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: dhowells@redhat.com, Christoph Hellwig <hch@infradead.org>, mtk.manpages@gmail.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-Hello list,
+Eryu Guan <eguan@redhat.com> wrote:
 
-Many of the posts here are DLEVEL, so I hope this won't seem too pedestrian.
+> There's a "ADDING TO THE FSQA SUITE" section in README file, basically
+> it's telling you to use './new' script to generate new test template. So
+> based on what type of new test you're going to create, you could run:
+> 
+> ./new generic	# new generic test
+> ./new xfs	# new xfs test
+> ./new ext4	# new ext4 test
+> ./new shared	# new shared test
+> ...
+> 
+> It finds the first free seq number and creates test template and a
+> default .out file in tests/<type> dir and add a new entry in
+> tests/<type>/group file.  You could just edit the template and update
+> the .out file with expected output from the test run.
 
-My questions are:
+Yes, I'd spotted the ./new script, but it's not as simple as that since shell
+scripts can't call system calls directly.
 
-
-1) do project quota's noticeably slow xfs down?
-
-That might sound silly, but I'm planning to use them quite
-extensively. Sure, initializing the quota can take a while (I don't
-want to limit the depth), but aside from this can't find any ill
-effects in the lab.
-
-
-2) is it moronic to do a nightly xfs_fsr?
-
-It seems reasonable that my system defrag XFS volumes automatically.
-
-The problem is I often don't have access my machines (no SSH), so
-would like to leave this simple option in place.
-
-Sure I can write a little script to check the defrag % then act
-accordingly, but xfs_fsr seems like it would already work.
-
-
-3) Finally, according to the docs, unless instructed otherwise xfs_fsr
-should check all XFS volumes present in mtab. My lab box only has one
-volume, but supposing there were two (or more) should I expect it to
-divide the 2 hours time it spends nightly between all mounted XFS
-volumes?
-
-
-Thanks in advance!
-
-fUSER
+David
