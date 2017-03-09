@@ -1,66 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60835 "EHLO mx2.suse.de"
+Received: from sandeen.net ([63.231.237.45]:54246 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754137AbdCILpa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Mar 2017 06:45:30 -0500
-Date: Thu, 9 Mar 2017 12:42:53 +0100
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: [PATCH 4/7] mm: introduce memalloc_nofs_{save,restore} API
-Message-ID: <20170309114253.GA14605@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-References: <20170306131408.9828-1-mhocko@kernel.org>
- <20170306131408.9828-5-mhocko@kernel.org>
- <20170306132214.1769368301d9e671e1bc68be@linux-foundation.org>
- <20170307150956.GM28642@dhcp22.suse.cz>
+        id S1750726AbdCIUkB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Mar 2017 15:40:01 -0500
+Subject: Re: [PATCH 2/2] xfs: remove readonly checks from xfs_release &
+ xfs_inactive
+References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
+ <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <0d11326f-ebfc-913a-ed1a-b88421982753@sandeen.net>
+Date: Thu, 9 Mar 2017 14:39:59 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170307150956.GM28642@dhcp22.suse.cz>
+In-Reply-To: <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Vlastimil Babka <vbabka@suse.cz>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Mar 07, 2017 at 04:09:56PM +0100, Michal Hocko wrote:
-> On Mon 06-03-17 13:22:14, Andrew Morton wrote:
-> > On Mon,  6 Mar 2017 14:14:05 +0100 Michal Hocko <mhocko@kernel.org> wrote:
-> [...]
-> > > --- a/include/linux/gfp.h
-> > > +++ b/include/linux/gfp.h
-> > > @@ -210,8 +210,16 @@ struct vm_area_struct;
-> > >   *
-> > >   * GFP_NOIO will use direct reclaim to discard clean pages or slab pages
-> > >   *   that do not require the starting of any physical IO.
-> > > + *   Please try to avoid using this flag directly and instead use
-> > > + *   memalloc_noio_{save,restore} to mark the whole scope which cannot
-> > > + *   perform any IO with a short explanation why. All allocation requests
-> > > + *   will inherit GFP_NOIO implicitly.
-> > >   *
-> > >   * GFP_NOFS will use direct reclaim but will not use any filesystem interfaces.
-> > > + *   Please try to avoid using this flag directly and instead use
-> > > + *   memalloc_nofs_{save,restore} to mark the whole scope which cannot/shouldn't
-> > > + *   recurse into the FS layer with a short explanation why. All allocation
-> > > + *   requests will inherit GFP_NOFS implicitly.
-> > 
-> > I wonder if these are worth a checkpatch rule.
+On 3/9/17 2:24 PM, Eric Sandeen wrote:
+> xfs_release & xfs_inactive both had early returns for readonly
+> mounts.
 > 
-> I am not really sure, to be honest. This may easilly end up people
-> replacing
+> Ultimately, this means that when we do log recovery on a
+> read-only mount, we do not process unlinked inodes, because
+> of this misguided effort to not do /any/ IO, ever, on a readonly
+> mount.  IO at mount time is fine, and expected - after all we
+> just got done doing log recovery!  Even ro mounts, without the
+> norecovery flag, can do enough IO to put the filesystem in a
+> consistent state.
 > 
-> do_alloc(GFP_NOFS)
-> 
-> with
-> 
-> memalloc_nofs_save()
-> do_alloc(GFP_KERNEL)
-> memalloc_nofs_restore()
-> 
-> which doesn't make any sense of course. From my experience, people tend
-> to do stupid things just to silent checkpatch warnings very often.
-> Moreover I believe we need to do the transition to the new api first
-> before we can push back on the explicit GFP_NOFS usage. Maybe then we
-> can think about the a checkpatch warning.
+> We should not get here after mount is complete;
 
-I agree will all your objections against adding that to checkpatch, at
-this point it's less harmful to use GFP_NOFS.
+sorry, above is wrong.
+
+> at that point
+> the vfs will not allow anything from userspace to make
+> modifications which would get us here with any IO to do - 
+
+but I think this part is right.  :)  I guess we might lose
+a little effiency doing pointless checks in i.e. xfs_release
+if it's a readonly mount and we know there is no work to do.
+
+I won't resend until it's had a couple eyeballs...
+
+> we can't unlink files, or create blocks past eof, etc.
+> So it's safe to just remove these checks.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index edfa6a5..bf74165 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1658,10 +1658,6 @@
+>  	if (!S_ISREG(VFS_I(ip)->i_mode) || (VFS_I(ip)->i_mode == 0))
+>  		return 0;
+>  
+> -	/* If this is a read-only mount, don't do this (would generate I/O) */
+> -	if (mp->m_flags & XFS_MOUNT_RDONLY)
+> -		return 0;
+> -
+>  	if (!XFS_FORCED_SHUTDOWN(mp)) {
+>  		int truncated;
+>  
+> @@ -1896,10 +1892,6 @@
+>  	mp = ip->i_mount;
+>  	ASSERT(!xfs_iflags_test(ip, XFS_IRECOVERY));
+>  
+> -	/* If this is a read-only mount, don't do this (would generate I/O) */
+> -	if (mp->m_flags & XFS_MOUNT_RDONLY)
+> -		return;
+> -
+>  	if (VFS_I(ip)->i_nlink != 0) {
+>  		/*
+>  		 * force is true because we are evicting an inode from the
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
