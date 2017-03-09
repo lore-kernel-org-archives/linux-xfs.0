@@ -1,32 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43557 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750778AbdCHPwH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 10:52:07 -0500
-Date: Wed, 8 Mar 2017 07:51:58 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-Message-ID: <20170308155158.GB4353@infradead.org>
-References: <20170228233610.25456-1-rgoldwyn@suse.de>
- <20170228233610.25456-6-rgoldwyn@suse.de>
- <0d1ba678-69c0-16ce-6c3e-475cd8da203c@grimberg.me>
- <44cc02b1-f7ac-cbc6-6f09-726ae8225358@suse.de>
- <20170308152806.GA9288@quack2.suse.cz>
+Received: from aserp1040.oracle.com ([141.146.126.69]:24230 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752016AbdCIHAw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Mar 2017 02:00:52 -0500
+Date: Wed, 8 Mar 2017 22:59:49 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: statx manpage
+Message-ID: <20170309065949.GI5281@birch.djwong.org>
+References: <20170308034500.GY14226@eguan.usersys.redhat.com>
+ <20170307050140.GA12946@infradead.org>
+ <20170307000609.GG5280@birch.djwong.org>
+ <10435.1488907375@warthog.procyon.org.uk>
+ <21188.1489042008@warthog.procyon.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170308152806.GA9288@quack2.suse.cz>
+In-Reply-To: <21188.1489042008@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, Sagi Grimberg <sagi@grimberg.me>, jack@suse.com, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: David Howells <dhowells@redhat.com>
+Cc: Eryu Guan <eguan@redhat.com>, Christoph Hellwig <hch@infradead.org>, mtk.manpages@gmail.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Mar 08, 2017 at 04:28:06PM +0100, Jan Kara wrote:
-> Well, that's not really good. If we cannot support this for both blk-mq and
-> legacy block layer the feature will not be usable. So please work on blk-mq
-> support as well.
+On Thu, Mar 09, 2017 at 06:46:48AM +0000, David Howells wrote:
+> Eryu Guan <eguan@redhat.com> wrote:
+> 
+> > There's a "ADDING TO THE FSQA SUITE" section in README file, basically
+> > it's telling you to use './new' script to generate new test template. So
+> > based on what type of new test you're going to create, you could run:
+> > 
+> > ./new generic	# new generic test
+> > ./new xfs	# new xfs test
+> > ./new ext4	# new ext4 test
+> > ./new shared	# new shared test
+> > ...
+> > 
+> > It finds the first free seq number and creates test template and a
+> > default .out file in tests/<type> dir and add a new entry in
+> > tests/<type>/group file.  You could just edit the template and update
+> > the .out file with expected output from the test run.
+> 
+> Yes, I'd spotted the ./new script, but it's not as simple as that since shell
+> scripts can't call system calls directly.
 
-Exactly.  In addition to that anything implementing a feature for the
-legacy request request code but not blk-mq is grounds for an instant
-NAK.
+Probably best to place a program in src/ so that xfstests can make the
+raw syscalls early while we wait for glibc to invent a wrapper.
+
+--D
+
+> 
+> David
