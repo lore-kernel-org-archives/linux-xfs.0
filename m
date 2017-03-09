@@ -1,81 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42474 "EHLO sandeen.net"
+Received: from mx2.suse.de ([195.135.220.15]:60835 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751929AbdCIA0x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Mar 2017 19:26:53 -0500
-Subject: Re: [PATCH 0/9] mkfs.xfs: add mkfs.xfs.conf support
-References: <20170303231316.12716-1-mcgrof@kernel.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <83a0df73-be0e-e3f9-df47-9b5c4a226498@sandeen.net>
-Date: Wed, 8 Mar 2017 18:16:57 -0600
+        id S1754137AbdCILpa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Mar 2017 06:45:30 -0500
+Date: Thu, 9 Mar 2017 12:42:53 +0100
+From: David Sterba <dsterba@suse.cz>
+Subject: Re: [PATCH 4/7] mm: introduce memalloc_nofs_{save,restore} API
+Message-ID: <20170309114253.GA14605@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+References: <20170306131408.9828-1-mhocko@kernel.org>
+ <20170306131408.9828-5-mhocko@kernel.org>
+ <20170306132214.1769368301d9e671e1bc68be@linux-foundation.org>
+ <20170307150956.GM28642@dhcp22.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <20170303231316.12716-1-mcgrof@kernel.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170307150956.GM28642@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
-Cc: jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>, djwong@kernel.org, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.cz>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, cluster-devel@redhat.com, linux-nfs@vger.kernel.org, logfs@logfs.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mtd@lists.infradead.org, reiserfs-devel@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, linux-f2fs-devel@lists.sourceforge.net, linux-afs@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Vlastimil Babka <vbabka@suse.cz>
 
-On 3/3/17 5:13 PM, Luis R. Rodriguez wrote:
-> This series adds mkfs.xfs.conf support, so that options can now be
-> shoved into a configuration file. This enables certain defaults to be
-> saved for folks sticking to certain values, but more importantly it
-> also enables distributions to override certain defaults so that new
-> filesystems remain compatible with older distributions.
+On Tue, Mar 07, 2017 at 04:09:56PM +0100, Michal Hocko wrote:
+> On Mon 06-03-17 13:22:14, Andrew Morton wrote:
+> > On Mon,  6 Mar 2017 14:14:05 +0100 Michal Hocko <mhocko@kernel.org> wrote:
+> [...]
+> > > --- a/include/linux/gfp.h
+> > > +++ b/include/linux/gfp.h
+> > > @@ -210,8 +210,16 @@ struct vm_area_struct;
+> > >   *
+> > >   * GFP_NOIO will use direct reclaim to discard clean pages or slab pages
+> > >   *   that do not require the starting of any physical IO.
+> > > + *   Please try to avoid using this flag directly and instead use
+> > > + *   memalloc_noio_{save,restore} to mark the whole scope which cannot
+> > > + *   perform any IO with a short explanation why. All allocation requests
+> > > + *   will inherit GFP_NOIO implicitly.
+> > >   *
+> > >   * GFP_NOFS will use direct reclaim but will not use any filesystem interfaces.
+> > > + *   Please try to avoid using this flag directly and instead use
+> > > + *   memalloc_nofs_{save,restore} to mark the whole scope which cannot/shouldn't
+> > > + *   recurse into the FS layer with a short explanation why. All allocation
+> > > + *   requests will inherit GFP_NOFS implicitly.
+> > 
+> > I wonder if these are worth a checkpatch rule.
 > 
-> This has been based on top of xfsprogs-dev v4.9.0-rc1.
+> I am not really sure, to be honest. This may easilly end up people
+> replacing
 > 
-> Given we already have an existinsg infrastructure to validate argument
-> values this reuses that infrastructure by first adding helpers and porting
-> over the argument parsing suppor to use these helpers.
-
-Hm, one functional problem with this, aside from Dave's concerns and
-suggestions, is that many options in the config file can't actually
-be overridden on the commandline because they are treated as having
-been respecified, which is not allowed:
-
-# mkfs.xfs -m crc=1 -m crc=0 -f fsfile
--m crc option respecified
-Usage: mkfs.xfs
-...
-
-and:
-
-# grep -B1 crc /etc/mkfs.xfs.conf 
-[metadata_options]
-crc = 1
-
-# mkfs/mkfs.xfs -c /etc/mkfs.xfs.conf -m crc=0 -f fsfile
--m crc option respecified
-Usage: mkfs.xfs
-...
-
--Eric
- 
-> Luis R. Rodriguez (9):
->   mkfs.xfs: add helper to parse command line options
->   mkfs.xfs: move dopts to struct mkfs_xfs_opts
->   mkfs.xfs: move iopts to to struct mkfs_xfs_opts
->   mkfs.xfs: move lopts to struct mkfs_xfs_opts
->   mkfs.xfs: move mopts to struct mkfs_xfs_opts
->   mkfs.xfs: move nopts to struct mkfs_xfs_opts
->   mkfs.xfs: move ropts to struct mkfs_xfs_opts
->   mkfs.xfs: use parse_subopts() to parse sopts
->   mkfs.xfs: add mkfs.xfs.conf parse support
+> do_alloc(GFP_NOFS)
 > 
->  .gitignore             |    3 +
->  Makefile               |    2 +-
->  etc/Makefile           |   21 +
->  etc/mkfs.xfs.conf.in   |   58 ++
->  include/builddefs.in   |    2 +
->  include/buildmacros    |    6 +
->  man/man5/mkfs.xfs.conf |  113 +++
->  man/man8/mkfs.xfs.8    |   28 +
->  mkfs/xfs_mkfs.c        | 1788 ++++++++++++++++++++++++++----------------------
->  9 files changed, 1220 insertions(+), 801 deletions(-)
->  create mode 100644 etc/Makefile
->  create mode 100644 etc/mkfs.xfs.conf.in
->  create mode 100644 man/man5/mkfs.xfs.conf
+> with
 > 
+> memalloc_nofs_save()
+> do_alloc(GFP_KERNEL)
+> memalloc_nofs_restore()
+> 
+> which doesn't make any sense of course. From my experience, people tend
+> to do stupid things just to silent checkpatch warnings very often.
+> Moreover I believe we need to do the transition to the new api first
+> before we can push back on the explicit GFP_NOFS usage. Maybe then we
+> can think about the a checkpatch warning.
+
+I agree will all your objections against adding that to checkpatch, at
+this point it's less harmful to use GFP_NOFS.
