@@ -1,52 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:20627 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753294AbdCHTnb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 14:43:31 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v28JAvg7005978
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 8 Mar 2017 19:10:57 GMT
-Date: Wed, 8 Mar 2017 11:09:20 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] misc: use system FICLONE/FICLONERANGE/FIDEDUPERANGE
- definitions
-Message-ID: <20170308190920.GQ5280@birch.djwong.org>
-References: <148893300446.23674.6348172768180643163.stgit@birch.djwong.org>
- <148893301058.23674.10160100843692497809.stgit@birch.djwong.org>
- <20170308155313.GC4353@infradead.org>
+Received: from mx2.suse.de ([195.135.220.15]:42420 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754526AbdCIR5y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Mar 2017 12:57:54 -0500
+Date: Thu, 9 Mar 2017 18:57:51 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 0/9] mkfs.xfs: add mkfs.xfs.conf support
+Message-ID: <20170309175750.GE14437@wotan.suse.de>
+References: <20170303231316.12716-1-mcgrof@kernel.org>
+ <83a0df73-be0e-e3f9-df47-9b5c4a226498@sandeen.net>
+ <20170309005130.GC14437@wotan.suse.de>
+ <ac91cbba-83b7-31d4-0fc9-cdb52286acdf@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170308155313.GC4353@infradead.org>
+In-Reply-To: <ac91cbba-83b7-31d4-0fc9-cdb52286acdf@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, Jan Tulak <jtulak@redhat.com>
 
-On Wed, Mar 08, 2017 at 07:53:13AM -0800, Christoph Hellwig wrote:
-> xfs_fs.h should never removed previously define APIs - that'll just
-> break application.
+On Wed, Mar 08, 2017 at 10:41:52PM -0600, Eric Sandeen wrote:
+> 
+> On 3/8/17 6:51 PM, Luis R. Rodriguez wrote:
+> > On Wed, Mar 08, 2017 at 06:16:57PM -0600, Eric Sandeen wrote:
+> >> On 3/3/17 5:13 PM, Luis R. Rodriguez wrote:
+> >>> This series adds mkfs.xfs.conf support, so that options can now be
+> >>> shoved into a configuration file. This enables certain defaults to be
+> >>> saved for folks sticking to certain values, but more importantly it
+> >>> also enables distributions to override certain defaults so that new
+> >>> filesystems remain compatible with older distributions.
+> >>>
+> >>> This has been based on top of xfsprogs-dev v4.9.0-rc1.
+> >>>
+> >>> Given we already have an existinsg infrastructure to validate argument
+> >>> values this reuses that infrastructure by first adding helpers and porting
+> >>> over the argument parsing suppor to use these helpers.
+> >>
+> >> Hm, one functional problem with this, aside from Dave's concerns and
+> >> suggestions, is that many options in the config file can't actually
+> >> be overridden on the commandline because they are treated as having
+> >> been respecified, which is not allowed:
+> >>
+> >> # mkfs.xfs -m crc=1 -m crc=0 -f fsfile
+> >> -m crc option respecified
+> >> Usage: mkfs.xfs
+> > 
+> > This was dealt by enabling the last option taken to override, and
+> > this mechanism was also taken to enable the config file to take
+> > the first value but let the command line to override. Refer to
+> > usage of reset_opt(). Granted I had only done this on B_LOG but
+> > this can easily be made to enable us to reset for all options.
+> 
+> Well, the above test was with your full patchset applied,
+> so my point is that it's not currently working properly as posted...
 
-Yeah, I should've erased those defines before they ended up in 4.9.
-Oh well.
+Sorry yes I failed to reset_opt() for each config entry on the config
+file. I had meant to move reset_opt() generically on parse_subopts()
+so that "last entry specified wins" always. I had only added this
+for B_LOG.
 
-> So to be honest I'm not sure there is any upside to this patch - it
-> adds tons of lines, does not add any functionality and breaks existing
-> apps.
+> But are you proposing adding this reset_opt() to /every/ option?
+> That would undo all of the respecification checks, which were
+> put there for a reason (I assume?) ;)  I don't really remember
+> how all of the respecification and compatibility checking works
+> tbh, I'd have to dig back into it.  Maybe jtulak can help...
+> 
+> But it makes little sense to have a framework to prevent
+> respecification but then render it useless with reset_opt()
+> after each option gets parsed.  Or do I misunderstand?
 
-But is it a good idea to expose the reflink and dedupe xfs_io commands
-on platforms where we know it isn't going to work?  AFAIK those ioctls
-are still Linux-only.
+I used reset_opt() and went with "last entry specified wins". From my
+review the goal of the respecification was to ensure each opt param
+parsed would not reset a prior set param, a paranoid measure, however
+this clearly does not work well if we want to allow for "last entry
+specified wins", or re-use the validators for a config file parsing
+for a first shot a parsing entries.
 
-Or: how popular are the darwin and *bsd ports of xfsprogs?  It looks
-like OSX can only read XFS via fuse, and freebsd dropped XFS from
-their kernel in 10.0.
+*Proper validation* is and should be done *after* all parameters are
+set, and it sounds like jtulak's work helps shove this into helpers
+*as should be done* to clear cruft out of main(). Having these params
+in structs should help both efforts.
 
---D
+> > If we don't want to enable subsequent command line entries to
+> > override (to keep old behaviour) but still allow at least the
+> > command line to override the config file options, that's also
+> > doable.
+> 
+> Well, I'm going to need to refamiliarize myself with how the
+> conflict checking works, and why respecification is prohibited.
+> If respecification matters, it matters just as much whether the
+> first specification came from the config file or from the command
+> line.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Agreed. The above is what I concluded based on my inspection of the
+code. It would be of course great to get more eyeballs on it.
+
+  Luis
