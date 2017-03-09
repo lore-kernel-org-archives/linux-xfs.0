@@ -1,64 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38404 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:41622 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751009AbdCICTJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Mar 2017 21:19:09 -0500
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-References: <20170228233610.25456-1-rgoldwyn@suse.de>
- <20170228233610.25456-6-rgoldwyn@suse.de>
- <0d1ba678-69c0-16ce-6c3e-475cd8da203c@grimberg.me>
- <44cc02b1-f7ac-cbc6-6f09-726ae8225358@suse.de>
- <a661cdc7-4859-4a39-3037-8036cc8c4712@kernel.dk>
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Message-ID: <310c6725-3263-2790-a445-d58e464fd3e4@suse.de>
-Date: Wed, 8 Mar 2017 20:18:54 -0600
+        id S1752924AbdCIHp0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Mar 2017 02:45:26 -0500
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20170309065908.GI14226@eguan.usersys.redhat.com>
+References: <20170309065908.GI14226@eguan.usersys.redhat.com> <20170308034500.GY14226@eguan.usersys.redhat.com> <20170307050140.GA12946@infradead.org> <20170307000609.GG5280@birch.djwong.org> <10435.1488907375@warthog.procyon.org.uk> <21188.1489042008@warthog.procyon.org.uk>
+Subject: Re: statx manpage
 MIME-Version: 1.0
-In-Reply-To: <a661cdc7-4859-4a39-3037-8036cc8c4712@kernel.dk>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <21540.1489045522.1@warthog.procyon.org.uk>
+Date: Thu, 09 Mar 2017 07:45:22 +0000
+Message-ID: <21541.1489045522@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>, jack@suse.com
-Cc: hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: dhowells@redhat.com, Christoph Hellwig <hch@infradead.org>, mtk.manpages@gmail.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
+Eryu Guan <eguan@redhat.com> wrote:
 
+> A normal way we take for fstests is adding new syscall support to xfs_io
+> first, then writing new tests based on it, as some other new
+> syscalls/utilities do, e.g. set|get_encpolicy were added to xfs_io
+> in January to set|get encryption policy for ext4 encryption testing.
 
-On 03/08/2017 10:17 AM, Jens Axboe wrote:
-> On 03/08/2017 08:00 AM, Goldwyn Rodrigues wrote:
->>
->>
->> On 03/08/2017 01:03 AM, Sagi Grimberg wrote:
->>>
->>>> -        if (likely(blk_queue_enter(q, false) == 0)) {
->>>> +        if (likely(blk_queue_enter(q, bio_flagged(bio, BIO_NOWAIT))
->>>> == 0)) {
->>>>              ret = q->make_request_fn(q, bio);
->>>
->>> I think that for ->make_request to not block we'd need to set
->>> BLK_MQ_REQ_NOWAIT in blk_mq_alloc_data to avoid blocking on a tag
->>> allocation.
->>>
->>> Something like the untested addition below:
->>
->> I did that in the first series, but there are too many reasons to block
->> in blk-mq [1]. I dropped blk-mq work in v2.
-> 
-> That's complete nonsense, there are no more places in blk-mq that will
-> block that in the legacy path. Most of the examples from your URL:
-> 
->> [1] https://patchwork.kernel.org/patch/9571051/
-> 
-> are not blk-mq, but writeback throttling, and drivers that explicitly
-> hook into ->make_request_fn.
-> 
-> As others have mentioned, it's a total non-starter to focus on the
-> deprecated IO path and just ignore the new one. Back to the drawing
-> board.
-> 
+Please add this to the docs.
 
-Thanks, I understood what I was doing wrong. I will include blk-mq in
-the patch.
-
--- 
-Goldwyn
+Thanks,
+David
