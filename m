@@ -1,66 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:53032 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750930AbdCIUZN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Mar 2017 15:25:13 -0500
-Subject: [PATCH 2/2] xfs: remove readonly checks from xfs_release &
- xfs_inactive
-References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
-Date: Thu, 9 Mar 2017 14:24:38 -0600
+Received: from aserp1040.oracle.com ([141.146.126.69]:49367 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751313AbdCIE4p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 23:56:45 -0500
+Date: Wed, 8 Mar 2017 20:56:36 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] xfs: try any AG when allocating the first btree block
+ when reflinking
+Message-ID: <20170309045636.GS5280@birch.djwong.org>
+References: <20170308180239.27452-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170308180239.27452-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-xfs_release & xfs_inactive both had early returns for readonly
-mounts.
+On Wed, Mar 08, 2017 at 10:02:39AM -0800, Christoph Hellwig wrote:
+> When a reflink operation causes the bmap code to allocate a btree block
+> we're currently doing single-AG allocations due to having ->firstblock
+> set and then try any higher AG due a little reflink quirk we've put in
+> when adding the reflink code.  But given that we do not have a minleft
+> reservation of any kind in this AG we can still not have any space in
+> the same or higher AG even if the file system has enough free space.
+> To fix this use a XFS_ALLOCTYPE_FIRST_AG allocation in this fall back
+> path instead.
+> 
+> [And yes, we need to redo this properly instead of piling hacks over
+>  hacks.  I'm working on that, but it's not going to be a small series.
+>  In the meantime this fixes the customer reported issue]
+> 
+> Also add a warning for failing allocations to make it easier to debug.
 
-Ultimately, this means that when we do log recovery on a
-read-only mount, we do not process unlinked inodes, because
-of this misguided effort to not do /any/ IO, ever, on a readonly
-mount.  IO at mount time is fine, and expected - after all we
-just got done doing log recovery!  Even ro mounts, without the
-norecovery flag, can do enough IO to put the filesystem in a
-consistent state.
+Looks good, tests ok;
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-We should not get here after mount is complete; at that point
-the vfs will not allow anything from userspace to make
-modifications which would get us here with any IO to do - 
-we can't unlink files, or create blocks past eof, etc.
-So it's safe to just remove these checks.
+--D
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index edfa6a5..bf74165 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1658,10 +1658,6 @@
- 	if (!S_ISREG(VFS_I(ip)->i_mode) || (VFS_I(ip)->i_mode == 0))
- 		return 0;
- 
--	/* If this is a read-only mount, don't do this (would generate I/O) */
--	if (mp->m_flags & XFS_MOUNT_RDONLY)
--		return 0;
--
- 	if (!XFS_FORCED_SHUTDOWN(mp)) {
- 		int truncated;
- 
-@@ -1896,10 +1892,6 @@
- 	mp = ip->i_mount;
- 	ASSERT(!xfs_iflags_test(ip, XFS_IRECOVERY));
- 
--	/* If this is a read-only mount, don't do this (would generate I/O) */
--	if (mp->m_flags & XFS_MOUNT_RDONLY)
--		return;
--
- 	if (VFS_I(ip)->i_nlink != 0) {
- 		/*
- 		 * force is true because we are evicting an inode from the
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c       | 10 +++++++---
+>  fs/xfs/libxfs/xfs_bmap_btree.c |  6 +++---
+>  2 files changed, 10 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index a9c66d47757a..fd7ccc10d244 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -763,8 +763,8 @@ xfs_bmap_extents_to_btree(
+>  		args.type = XFS_ALLOCTYPE_START_BNO;
+>  		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
+>  	} else if (dfops->dop_low) {
+> -try_another_ag:
+>  		args.type = XFS_ALLOCTYPE_START_BNO;
+> +try_another_ag:
+>  		args.fsbno = *firstblock;
+>  	} else {
+>  		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+> @@ -790,13 +790,17 @@ xfs_bmap_extents_to_btree(
+>  	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
+>  	    args.fsbno == NULLFSBLOCK &&
+>  	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
+> -		dfops->dop_low = true;
+> +		args.type = XFS_ALLOCTYPE_FIRST_AG;
+>  		goto try_another_ag;
+>  	}
+> +	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+> +		xfs_iroot_realloc(ip, -1, whichfork);
+> +		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> +		return -ENOSPC;
+> +	}
+>  	/*
+>  	 * Allocation can't fail, the space was reserved.
+>  	 */
+> -	ASSERT(args.fsbno != NULLFSBLOCK);
+>  	ASSERT(*firstblock == NULLFSBLOCK ||
+>  	       args.agno >= XFS_FSB_TO_AGNO(mp, *firstblock));
+>  	*firstblock = cur->bc_private.b.firstblock = args.fsbno;
+> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+> index f93072b58a58..fd55db479385 100644
+> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+> @@ -447,8 +447,8 @@ xfs_bmbt_alloc_block(
+>  
+>  	if (args.fsbno == NULLFSBLOCK) {
+>  		args.fsbno = be64_to_cpu(start->l);
+> -try_another_ag:
+>  		args.type = XFS_ALLOCTYPE_START_BNO;
+> +try_another_ag:
+>  		/*
+>  		 * Make sure there is sufficient room left in the AG to
+>  		 * complete a full tree split for an extent insert.  If
+> @@ -488,8 +488,8 @@ xfs_bmbt_alloc_block(
+>  	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
+>  	    args.fsbno == NULLFSBLOCK &&
+>  	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
+> -		cur->bc_private.b.dfops->dop_low = true;
+>  		args.fsbno = cur->bc_private.b.firstblock;
+> +		args.type = XFS_ALLOCTYPE_FIRST_AG;
+>  		goto try_another_ag;
+>  	}
+>  
+> @@ -506,7 +506,7 @@ xfs_bmbt_alloc_block(
+>  			goto error0;
+>  		cur->bc_private.b.dfops->dop_low = true;
+>  	}
+> -	if (args.fsbno == NULLFSBLOCK) {
+> +	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+>  		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+>  		*stat = 0;
+>  		return 0;
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
