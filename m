@@ -1,75 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:45415 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751962AbdC0WJw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 18:09:52 -0400
-Date: Tue, 28 Mar 2017 09:09:37 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: move the inline directory verifiers
-Message-ID: <20170327220937.GI17542@dastard>
-References: <20170327170828.GI5722@birch.djwong.org>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:36429 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932604AbdCJFCK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 00:02:10 -0500
+Date: Thu, 9 Mar 2017 21:01:56 -0800
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: statx manpage
+Message-ID: <20170310050156.GA11794@zzz>
+References: <20170307225533.GA1403@zzz>
+ <20170307050140.GA12946@infradead.org>
+ <20170307000609.GG5280@birch.djwong.org>
+ <10435.1488907375@warthog.procyon.org.uk>
+ <17957.1488966060@warthog.procyon.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170327170828.GI5722@birch.djwong.org>
+In-Reply-To: <17957.1488966060@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
+To: David Howells <dhowells@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, mtk.manpages@gmail.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Mar 27, 2017 at 10:08:28AM -0700, Darrick J. Wong wrote:
-> The inline directory verifiers should be called on the inode fork data,
-> which means after iformat_local on the read side, and prior to
-> ifork_flush on the write side.  This makes the fork verifier more
-> consistent with the way buffer verifiers work -- i.e. they will operate
-> on the memory buffer that the code will be reading and writing directly.
+On Wed, Mar 08, 2017 at 09:41:00AM +0000, David Howells wrote:
+> > 
+> > This example is confusing because chmod() doesn't change st_uid, and chown()
+> > doesn't ordinarily change st_mode.
 > 
-> Also revise the verifier function to return -EFSCORRUPTED so that we
-> don't flood the logs with corruption messages and assert notices.
+> Doesn't chown() clear the S_ISUID and S_ISGID flags?
 > 
-> I've been testing xfs/348 in a loop for 4 days now and it seems to fix
-> all of the crashes and weird behavior introduced by the original patch.
+
+It can, but it's not a straightforward example.
+
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-....
-> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-> @@ -632,36 +632,45 @@ xfs_dir2_sf_check(
->  /* Verify the consistency of an inline directory. */
->  int
->  xfs_dir2_sf_verify(
-> -	struct xfs_mount		*mp,
-> -	struct xfs_dir2_sf_hdr		*sfp,
-> -	int				size)
-> +	struct xfs_inode		*ip)
->  {
-> +	struct xfs_mount		*mp = ip->i_mount;
-> +	struct xfs_dir2_sf_hdr		*sfp;
->  	struct xfs_dir2_sf_entry	*sfep;
->  	struct xfs_dir2_sf_entry	*next_sfep;
->  	char				*endp;
->  	const struct xfs_dir_ops	*dops;
-> +	struct xfs_ifork		*ifp;
->  	xfs_ino_t			ino;
->  	int				i;
->  	int				i8count;
->  	int				offset;
-> +	int				size;
-> +	int				error;
->  	__uint8_t			filetype;
->  
-> -	dops = xfs_dir_get_ops(mp, NULL);
-> +	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
-> +	dops = mp->m_dir_inode_ops;
+> No, it's not a bug, exactly.  It's a design decision.  It might be worth
+> adding an AT_STAT_LOCK flag to synchronise against attribute setting, but it
+> will cost you something in terms of performance - and even then, over a
+> network filesystem it might not achieve anything.
+> 
 
-Please use xfs_dir_get_ops() for consistency - that way we don't
-have to care what context this function gets called from in future
-(especially in userspace!).
+Well, regardless of whether people want to fix it or not, I do think it's a bug.
+Currently even the update of a timestamp is non-atomic, since that involves
+updating both tv_sec and tv_nsec.  Therefore, stat() might return the new tv_sec
+along with the old tv_nsec, or vice versa.  This can cause some very strange
+behavior, such as two successively observed timestamps going backwards in time.
 
-Cheers,
+I expect that historically people haven't complained enough for this to be
+worthwhile to fix.  But in theory I think it could be fixed with little
+performance loss by protecting all the stat data with a sequence count, similar
+to how reads of i_size are made atomic on 32-bit platforms by using
+i_size_seqcount.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Good point.  Should I reject AT_EMPTY_PATH, AT_NO_AUTOMOUNT and
+> AT_SYMLINK_NOFOLLOW if pathname is NULL, I wonder?
+> 
+
+It could be argued either way, but I was thinking those particular flags should
+just be ignored, as they have known meanings but simply aren't relevant.  It
+could also cause confusion for
+
+	statx(dfd, "", AT_EMPTY_PATH, 0, buffer)
+
+to succeed but for
+
+	statx(dfd, NULL, AT_EMPTY_PATH, 0, buffer)
+
+to fail (for example).
+
+- Eric
