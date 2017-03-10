@@ -1,126 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35846 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752059AbdCHQd5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 11:33:57 -0500
-Received: from [63.163.107.100] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cleWv-0004iP-22
-        for linux-xfs@vger.kernel.org; Wed, 08 Mar 2017 16:33:37 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: fix and streamline error handling in xfs_end_io
-Date: Wed,  8 Mar 2017 08:33:36 -0800
-Message-Id: <20170308163336.12133-1-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20406 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932705AbdCJXTz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:19:55 -0500
+Subject: [PATCH v6A 00/19] xfs: online scrub support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 10 Mar 2017 15:19:49 -0800
+Message-ID: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-There are two different cases of buffered I/O errors:
+Hi all,
 
- - first we can have an already shutdown fs.  In that case we should skip
-   any on-disk operations and just clean up the appen transaction if
-   present and destroy the ioend
- - a real I/O error.  In that case we should cleanup any lingering COW
-   blocks.  This gets skipped in the current code and is fixed by this
-   patch.
+[Yes, this is a pre-LSFMM patch dump.]
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+This is the sixth revision of a patchset that adds to XFS kernel support
+for online metadata scrubbing and repair.  There aren't any on-disk
+format changes.  Changes since v5 include bug fixes to the repair code
+to eliminate weird hangs and to do a better job of temporarily stopping
+access to the filesystem in the rare event that we need todo so to
+rebuild something.  For my own dogfooding amusement, I now perform
+automated periodic scans of the XFS filesystems on my development
+workstations, which (so far) haven't destroyed anything or blown up.
 
----
+Online scrub/repair support consists of four major pieces -- first, an
+ioctl that maps physical extents to their owners (GETFSMAP; queued for
+4.12); second, various in-kernel metadata scrubbing ioctls to examine
+metadata records and cross-reference them with other filesystem
+metadata; third, an in-kernel mechanism for rebuilding damaged metadata
+objects and btrees; and fourth, a userspace component to coordinate
+scrubbing and repair operations.
 
-Note: "[PATCH v3] xfs: only reclaim unwritten COW extents periodically"
-needs to be applied before this one.
+This new utility, xfs_scrub, is separate from the existing offline
+xfs_repair tool.  The program uses GETFSMAP and various XFS ioctls to
+iterate all XFS metadata and asks the kernel to check the metadata and
+repair it if necessary.
 
- fs/xfs/xfs_aops.c | 59 +++++++++++++++++++++++++------------------------------
- 1 file changed, 27 insertions(+), 32 deletions(-)
+Per reviewer request, the v6 patch series has been broken into four
+smaller series -- this first one to add the minimum code necessary to
+scrub objects; a second one to add the ability to cross reference with
+other metadata; a third one containing the rebuilding code; and a fourth
+series with the userspace tool code.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index adea9da29c4b..eef453adbc06 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -274,54 +274,49 @@ xfs_end_io(
- 	struct xfs_ioend	*ioend =
- 		container_of(work, struct xfs_ioend, io_work);
- 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-+	xfs_off_t		offset = ioend->io_offset;
-+	size_t			size = ioend->io_size;
- 	int			error = ioend->io_bio->bi_error;
- 
- 	/*
--	 * Set an error if the mount has shut down and proceed with end I/O
--	 * processing so it can perform whatever cleanups are necessary.
-+	 * Just clean up the in-memory strutures if the fs has been shut down.
- 	 */
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-+	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
- 		error = -EIO;
-+		goto done;
-+	}
- 
- 	/*
--	 * For a CoW extent, we need to move the mapping from the CoW fork
--	 * to the data fork.  If instead an error happened, just dump the
--	 * new blocks.
-+	 * Clean up any COW blocks on an I/O error.
- 	 */
--	if (ioend->io_type == XFS_IO_COW) {
--		if (error)
--			goto done;
--		if (ioend->io_bio->bi_error) {
--			error = xfs_reflink_cancel_cow_range(ip,
--					ioend->io_offset, ioend->io_size, true);
--			goto done;
-+	if (unlikely(error)) {
-+		switch (ioend->io_type) {
-+		case XFS_IO_COW:
-+			xfs_reflink_cancel_cow_range(ip, offset, size, true);
-+			break;
- 		}
--		error = xfs_reflink_end_cow(ip, ioend->io_offset,
--				ioend->io_size);
--		if (error)
--			goto done;
-+
-+		goto done;
- 	}
- 
- 	/*
--	 * For unwritten extents we need to issue transactions to convert a
--	 * range to normal written extens after the data I/O has finished.
--	 * Detecting and handling completion IO errors is done individually
--	 * for each case as different cleanup operations need to be performed
--	 * on error.
-+	 * Success:  commit the COW or unwritten blocks if needed.
- 	 */
--	if (ioend->io_type == XFS_IO_UNWRITTEN) {
--		if (error)
--			goto done;
--		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
--						  ioend->io_size);
--	} else if (ioend->io_append_trans) {
--		error = xfs_setfilesize_ioend(ioend, error);
--	} else {
--		ASSERT(!xfs_ioend_is_append(ioend) ||
--		       ioend->io_type == XFS_IO_COW);
-+	switch (ioend->io_type) {
-+	case XFS_IO_COW:
-+		error = xfs_reflink_end_cow(ip, offset, size);
-+		break;
-+	case XFS_IO_UNWRITTEN:
-+		error = xfs_iomap_write_unwritten(ip, offset, size);
-+		break;
-+	default:
-+		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
-+		break;
- 	}
- 
- done:
-+	if (ioend->io_append_trans)
-+		error = xfs_setfilesize_ioend(ioend, error);
- 	xfs_destroy_ioend(ioend, error);
- }
- 
--- 
-2.11.0
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.11-rc1.  xfsprogs[2] and xfstests[3] can be found in their usual
+places.  The git trees contain all four series' worth of changes.
 
+This is an extraordinary way to eat your data.  Enjoy! 
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
