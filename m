@@ -1,109 +1,177 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51016 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754133AbdCOQBD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Mar 2017 12:01:03 -0400
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 666DF80F93
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:01:03 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 22/22] mkfs: prevent multiple specifications of a single option
-Date: Wed, 15 Mar 2017 17:00:17 +0100
-Message-Id: <20170315160017.27805-23-jtulak@redhat.com>
-In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
-References: <20170315160017.27805-1-jtulak@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:17250 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755050AbdCJXZK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:25:10 -0500
+Subject: [PATCH 3/9] xfs_db: print attribute remote value blocks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 10 Mar 2017 15:25:03 -0800
+Message-ID: <148918830355.8311.5597734868783605776.stgit@birch.djwong.org>
+In-Reply-To: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
+References: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Because things like -l size=40M,size=50M are clearly wrong and should
-not pass. However, in two cases, we do not know if the option is a
-string or number - thus the few more lines with can_respec flag.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Teach xfs_db how to print the contents of xattr remote value blocks.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- mkfs/xfs_mkfs.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+ db/attr.c  |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/attr.h  |    1 +
+ db/field.c |    3 +++
+ db/field.h |    1 +
+ 4 files changed, 64 insertions(+)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index dfb5e300..a472b92c 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -432,6 +432,10 @@ test_uvalue_num(enum e_type a_type, union u_value a, long long b) {
-  *     Set to true if, when user specifies the option, she has to specify
-  *     a value too. That is, if needs_val is true, then it is not possible to
-  *     use the subopt as a flag.
-+ *
-+ *   can_respec OPTIONAL
-+ *     If true, then there can come one getnum() after a getstr() call for this
-+ *     option.
-  */
- struct opt_params {
- 	int		index;
-@@ -458,6 +462,7 @@ struct opt_params {
- 		union u_value value;
- 		enum e_type 	type;
- 		bool		needs_val;
-+		bool		can_respec;
- 	}		subopt_params[MAX_SUBOPTS];
- } opts[MAX_OPTS] = {
- 	{
-@@ -876,6 +881,7 @@ struct opt_params {
- 			  .maxval.i = 2,
- 			  .needs_val = true,
- 			  .type = INT,
-+			  .can_respec = true,
- 			},
- 			{ .index = L_SUNIT,
- 			  .conflicts = { {.opt = OPT_L,
-@@ -1008,6 +1014,7 @@ struct opt_params {
- 			  .maxval.i = 2,
- 			  .needs_val = true,
- 			  .type = INT,
-+			  .can_respec = true,
- 			},
- 			{ .index = N_FTYPE,
- 			  .conflicts = {  {.opt = OPT_M,
-@@ -2020,6 +2027,22 @@ getnum(
- 	struct subopt_param	*sp = &opts->subopt_params[index];
- 	long long		c;
+
+diff --git a/db/attr.c b/db/attr.c
+index e26ac67..0fffbc2 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -41,6 +41,9 @@ static int	attr_leaf_nvlist_offset(void *obj, int startoff, int idx);
+ static int	attr_node_btree_count(void *obj, int startoff);
+ static int	attr_node_hdr_count(void *obj, int startoff);
  
-+	if (sp->seen){
-+		/* If the option has respec flag, it is possible to do ONE
-+		 * getnum call even with sp->seen == 1. Do this by disabling
-+		 * the respec flag - this time we can continue, but if getnum
-+		 * gets called once more, we will fail.
-+		 */
-+		if (sp->can_respec){
-+			sp->can_respec = false;
-+		} else {
-+			fprintf(stderr,
-+			_("You can't use an option multiple times: -%c %s\n"),
-+			  opts->name, opts->subopts[index]);
-+			usage();
-+		}
-+	}
++static int	attr_remote_count(void *obj, int startoff);
++static int	attr3_remote_count(void *obj, int startoff);
 +
- 	/* empty strings might just return a default value */
- 	if (!str || *str == '\0') {
- 		if (sp->needs_val)
-@@ -2132,6 +2155,12 @@ getstr(
- 	/* empty strings for string options are not valid */
- 	if (!str || *str == '\0')
- 		reqval(opts->name, (char **)opts->subopts, index);
-+	if (opts->subopt_params[index].seen){
-+		fprintf(stderr,
-+		_("You can't use an option multiple times: -%c %s\n"),
-+		  opts->name, opts->subopts[index]);
-+		usage();
-+	}
- 	opts->subopt_params[index].seen = true;
- 	return str;
+ const field_t	attr_hfld[] = {
+ 	{ "", FLDT_ATTR, OI(0), C1, 0, TYP_NONE },
+ 	{ NULL }
+@@ -53,6 +56,7 @@ const field_t	attr_flds[] = {
+ 	  FLD_COUNT, TYP_NONE },
+ 	{ "hdr", FLDT_ATTR_NODE_HDR, OI(NOFF(hdr)), attr_node_hdr_count,
+ 	  FLD_COUNT, TYP_NONE },
++	{ "data", FLDT_CHARNS, OI(0), attr_remote_count, FLD_COUNT, TYP_NONE },
+ 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(LOFF(entries)),
+ 	  attr_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+ 	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(NOFF(__btree)), attr_node_btree_count,
+@@ -197,6 +201,33 @@ attr3_leaf_hdr_count(
+ 	return be16_to_cpu(leaf->hdr.info.hdr.magic) == XFS_ATTR3_LEAF_MAGIC;
  }
--- 
-2.11.0
+ 
++static int
++attr_remote_count(
++	void		*obj,
++	int		startoff)
++{
++	if (attr_leaf_hdr_count(obj, startoff) == 0 &&
++	    attr_node_hdr_count(obj, startoff) == 0)
++		return mp->m_sb.sb_blocksize;
++	return 0;
++}
++
++static int
++attr3_remote_count(
++	void		*obj,
++	int		startoff)
++{
++	struct xfs_attr3_rmt_hdr	*hdr = obj;
++
++	ASSERT(startoff == 0);
++
++	if (hdr->rm_magic != cpu_to_be32(XFS_ATTR3_RMT_MAGIC))
++		return 0;
++	if (be32_to_cpu(hdr->rm_bytes) + sizeof(*hdr) > mp->m_sb.sb_blocksize)
++		return mp->m_sb.sb_blocksize - sizeof(*hdr);
++	return be32_to_cpu(hdr->rm_bytes);
++}
++
+ typedef int (*attr_leaf_entry_walk_f)(struct xfs_attr_leafblock *,
+ 				      struct xfs_attr_leaf_entry *, int);
+ static int
+@@ -477,6 +508,17 @@ attr3_node_hdr_count(
+ 	return be16_to_cpu(node->hdr.info.hdr.magic) == XFS_DA3_NODE_MAGIC;
+ }
+ 
++static int
++attr3_remote_hdr_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_attr3_rmt_hdr	*node = obj;
++
++	ASSERT(startoff == 0);
++	return be32_to_cpu(node->rm_magic) == XFS_ATTR3_RMT_MAGIC;
++}
++
+ int
+ attr_size(
+ 	void	*obj,
+@@ -501,6 +543,8 @@ const field_t	attr3_flds[] = {
+ 	  FLD_COUNT, TYP_NONE },
+ 	{ "hdr", FLDT_DA3_NODE_HDR, OI(N3OFF(hdr)), attr3_node_hdr_count,
+ 	  FLD_COUNT, TYP_NONE },
++	{ "hdr", FLDT_ATTR3_REMOTE_HDR, OI(0), attr3_remote_hdr_count,
++	  FLD_COUNT, TYP_NONE },
+ 	{ "entries", FLDT_ATTR_LEAF_ENTRY, OI(L3OFF(entries)),
+ 	  attr3_leaf_entries_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
+ 	{ "btree", FLDT_ATTR_NODE_ENTRY, OI(N3OFF(__btree)),
+@@ -523,6 +567,21 @@ const field_t	attr3_leaf_hdr_flds[] = {
+ 	{ NULL }
+ };
+ 
++#define	RM3OFF(f)	bitize(offsetof(struct xfs_attr3_rmt_hdr, rm_ ## f))
++const struct field	attr3_remote_crc_flds[] = {
++	{ "magic", FLDT_UINT32X, OI(RM3OFF(magic)), C1, 0, TYP_NONE },
++	{ "offset", FLDT_UINT32D, OI(RM3OFF(offset)), C1, 0, TYP_NONE },
++	{ "bytes", FLDT_UINT32D, OI(RM3OFF(bytes)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_CRC, OI(RM3OFF(crc)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(RM3OFF(uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_INO, OI(RM3OFF(owner)), C1, 0, TYP_NONE },
++	{ "bno", FLDT_DFSBNO, OI(RM3OFF(blkno)), C1, 0, TYP_BMAPBTD },
++	{ "lsn", FLDT_UINT64X, OI(RM3OFF(lsn)), C1, 0, TYP_NONE },
++	{ "data", FLDT_CHARNS, OI(bitize(sizeof(struct xfs_attr3_rmt_hdr))),
++		attr3_remote_count, FLD_COUNT, TYP_NONE },
++	{ NULL }
++};
++
+ /*
+  * Special read verifier for attribute buffers. Detect the magic number
+  * appropriately and set the correct verifier and call it.
+diff --git a/db/attr.h b/db/attr.h
+index bc3431f..d7bb579 100644
+--- a/db/attr.h
++++ b/db/attr.h
+@@ -30,6 +30,7 @@ extern const field_t	attr3_flds[];
+ extern const field_t	attr3_hfld[];
+ extern const field_t	attr3_leaf_hdr_flds[];
+ extern const field_t	attr3_node_hdr_flds[];
++extern const field_t	attr3_remote_crc_flds[];
+ 
+ extern int	attr_leaf_name_size(void *obj, int startoff, int idx);
+ extern int	attr_size(void *obj, int startoff, int idx);
+diff --git a/db/field.c b/db/field.c
+index 1968dd5..e8bbbe3 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -97,6 +97,9 @@ const ftattr_t	ftattrtab[] = {
+ 	{ FLDT_ATTR3_NODE_HDR, "attr3_node_hdr", NULL,
+ 	  (char *)da3_node_hdr_flds, SI(bitsz(struct xfs_da3_node_hdr)),
+ 	  0, NULL, da3_node_hdr_flds },
++	{ FLDT_ATTR3_REMOTE_HDR, "attr3_remote_hdr", NULL,
++	  (char *)attr3_remote_crc_flds, attr_size, FTARG_SIZE, NULL,
++	  attr3_remote_crc_flds },
+ 
+ 	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
+ 	  FTARG_SIZE, NULL, bmapbta_flds },
+diff --git a/db/field.h b/db/field.h
+index 53616f1..e5a943b 100644
+--- a/db/field.h
++++ b/db/field.h
+@@ -46,6 +46,7 @@ typedef enum fldt	{
+ 	FLDT_ATTR3,
+ 	FLDT_ATTR3_LEAF_HDR,
+ 	FLDT_ATTR3_NODE_HDR,
++	FLDT_ATTR3_REMOTE_HDR,
+ 
+ 	FLDT_BMAPBTA,
+ 	FLDT_BMAPBTA_CRC,
 
