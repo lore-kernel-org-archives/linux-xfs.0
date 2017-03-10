@@ -1,134 +1,311 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:35678 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752458AbdCIKOE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Mar 2017 05:14:04 -0500
-Received: by mail-io0-f178.google.com with SMTP id z13so25372528iof.2
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Mar 2017 02:12:25 -0800 (PST)
+Received: from userp1040.oracle.com ([156.151.31.81]:51352 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932731AbdCJXU0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:20:26 -0500
+Subject: [PATCH 05/19] xfs: scrub the backup superblocks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 10 Mar 2017 15:20:20 -0800
+Message-ID: <148918802055.6959.212674117540346186.stgit@birch.djwong.org>
+In-Reply-To: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
+References: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <ac91cbba-83b7-31d4-0fc9-cdb52286acdf@sandeen.net>
-References: <20170303231316.12716-1-mcgrof@kernel.org> <83a0df73-be0e-e3f9-df47-9b5c4a226498@sandeen.net>
- <20170309005130.GC14437@wotan.suse.de> <ac91cbba-83b7-31d4-0fc9-cdb52286acdf@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 9 Mar 2017 11:12:04 +0100
-Message-ID: <CACj3i73W8=vPZHHUMSvU-V=28NxaUmmn41rbG7bQ0JA+8ZKv8Q@mail.gmail.com>
-Subject: Re: [PATCH 0/9] mkfs.xfs: add mkfs.xfs.conf support
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Hi,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Eric, thanks for pinging me, I wanted to look at this and forgot... :-/
+Ensure that the geometry presented in the backup superblocks matches
+the primary superblock so that repair can recover the filesystem if
+that primary gets corrupted.
 
-First of all, this patchset has a lot of common with my advanced
-conflict checking patchset. And AFAIK, if my patchset was already in
-place, this set could be reduced to one new function that loads the
-file and changes the default values in a structure.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/Makefile         |    1 
+ fs/xfs/libxfs/xfs_fs.h  |    3 -
+ fs/xfs/scrub/agheader.c |  198 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/common.c   |    1 
+ fs/xfs/scrub/common.h   |    6 +
+ fs/xfs/xfs_trace.h      |    3 -
+ 6 files changed, 210 insertions(+), 2 deletions(-)
+ create mode 100644 fs/xfs/scrub/agheader.c
 
-See this http://www.spinics.net/lists/linux-xfs/msg02728.html
 
-I wanted to fix the few mentioned issues I got for that RFC and submit
-it this week, but with the flu I got, I'm doing things that don't
-cause me a headache when I spread my mind over too many LOC at once.
-:-) And now, looking at this, I would like to go through this patchset
-in more detail and see if you (Luis) got some things better than me
-before I send it, so it will take some more time.
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 39bcf8a..ca7399a 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -104,6 +104,7 @@ xfs-y				+= xfs_aops.o \
+ 
+ # online scrub/repair
+ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
++				   agheader.o \
+ 				   btree.o \
+ 				   common.o \
+ 				   )
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 3d52c5c..a36bdb3 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -493,7 +493,8 @@ struct xfs_scrub_metadata {
+  * Metadata types and flags for scrub operation.
+  */
+ #define XFS_SCRUB_TYPE_TEST	0	/* dummy to test ioctl */
+-#define XFS_SCRUB_TYPE_MAX	0
++#define XFS_SCRUB_TYPE_SB	1	/* superblock */
++#define XFS_SCRUB_TYPE_MAX	1
+ 
+ #define XFS_SCRUB_FLAG_REPAIR	0x01	/* i: repair this metadata */
+ #define XFS_SCRUB_FLAG_CORRUPT	0x02	/* o: needs repair */
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+new file mode 100644
+index 0000000..98031e3
+--- /dev/null
++++ b/fs/xfs/scrub/agheader.c
+@@ -0,0 +1,198 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_trace.h"
++#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "scrub/common.h"
++
++/* Set us up to check an AG header. */
++int
++xfs_scrub_setup_ag(
++	struct xfs_scrub_context	*sc,
++	struct xfs_inode		*ip,
++	struct xfs_scrub_metadata	*sm,
++	bool				retry_deadlocked)
++{
++	struct xfs_mount		*mp = ip->i_mount;
++
++	if (sm->sm_agno >= mp->m_sb.sb_agcount)
++		return -EINVAL;
++	return xfs_scrub_setup(sc, ip, sm, retry_deadlocked);
++}
++
++/* Superblock */
++
++#define XFS_SCRUB_SB_CHECK(fs_ok) \
++	XFS_SCRUB_CHECK(sc, bp, "superblock", fs_ok)
++#define XFS_SCRUB_SB_PREEN(fs_ok) \
++	XFS_SCRUB_PREEN(sc, bp, "superblock", fs_ok)
++#define XFS_SCRUB_SB_OP_ERROR_GOTO(label) \
++	XFS_SCRUB_OP_ERROR_GOTO(sc, agno, 0, "superblock", &error, out)
++/* Scrub the filesystem superblock. */
++int
++xfs_scrub_superblock(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_mount		*mp = sc->tp->t_mountp;
++	struct xfs_buf			*bp;
++	struct xfs_sb			sb;
++	xfs_agnumber_t			agno;
++	uint32_t			v2_ok;
++	int				error;
++
++	agno = sc->sm->sm_agno;
++
++	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
++		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
++		  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
++	if (error) {
++		trace_xfs_scrub_block_error(mp, agno, XFS_SB_BLOCK(mp),
++				"superblock", "error != 0", __func__, __LINE__);
++		error = 0;
++		sc->sm->sm_flags |= XFS_SCRUB_FLAG_CORRUPT;
++		goto out;
++	}
++
++	/*
++	 * The in-core sb is a more up-to-date copy of AG 0's sb,
++	 * so there's no point in comparing the two.
++	 */
++	if (agno == 0)
++		goto out;
++
++	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
++
++	/* Verify the geometries match. */
++#define XFS_SCRUB_SB_FIELD(fn) \
++		XFS_SCRUB_SB_CHECK(sb.sb_##fn == mp->m_sb.sb_##fn)
++#define XFS_PREEN_SB_FIELD(fn) \
++		XFS_SCRUB_SB_PREEN(sb.sb_##fn == mp->m_sb.sb_##fn)
++	XFS_SCRUB_SB_FIELD(blocksize);
++	XFS_SCRUB_SB_FIELD(dblocks);
++	XFS_SCRUB_SB_FIELD(rblocks);
++	XFS_SCRUB_SB_FIELD(rextents);
++	XFS_SCRUB_SB_PREEN(uuid_equal(&sb.sb_uuid, &mp->m_sb.sb_uuid));
++	XFS_SCRUB_SB_FIELD(logstart);
++	XFS_PREEN_SB_FIELD(rootino);
++	XFS_PREEN_SB_FIELD(rbmino);
++	XFS_PREEN_SB_FIELD(rsumino);
++	XFS_SCRUB_SB_FIELD(rextsize);
++	XFS_SCRUB_SB_FIELD(agblocks);
++	XFS_SCRUB_SB_FIELD(agcount);
++	XFS_SCRUB_SB_FIELD(rbmblocks);
++	XFS_SCRUB_SB_FIELD(logblocks);
++	XFS_SCRUB_SB_CHECK(!(sb.sb_versionnum & ~XFS_SB_VERSION_OKBITS));
++	XFS_SCRUB_SB_CHECK(XFS_SB_VERSION_NUM(&sb) ==
++			   XFS_SB_VERSION_NUM(&mp->m_sb));
++	XFS_SCRUB_SB_FIELD(sectsize);
++	XFS_SCRUB_SB_FIELD(inodesize);
++	XFS_SCRUB_SB_FIELD(inopblock);
++	XFS_SCRUB_SB_PREEN(memcmp(sb.sb_fname, mp->m_sb.sb_fname,
++			   sizeof(sb.sb_fname)) == 0);
++	XFS_SCRUB_SB_FIELD(blocklog);
++	XFS_SCRUB_SB_FIELD(sectlog);
++	XFS_SCRUB_SB_FIELD(inodelog);
++	XFS_SCRUB_SB_FIELD(inopblog);
++	XFS_SCRUB_SB_FIELD(agblklog);
++	XFS_SCRUB_SB_FIELD(rextslog);
++	XFS_PREEN_SB_FIELD(imax_pct);
++	XFS_PREEN_SB_FIELD(uquotino);
++	XFS_PREEN_SB_FIELD(gquotino);
++	XFS_SCRUB_SB_FIELD(shared_vn);
++	XFS_SCRUB_SB_FIELD(inoalignmt);
++	XFS_PREEN_SB_FIELD(unit);
++	XFS_PREEN_SB_FIELD(width);
++	XFS_SCRUB_SB_FIELD(dirblklog);
++	XFS_SCRUB_SB_FIELD(logsectlog);
++	XFS_SCRUB_SB_FIELD(logsectsize);
++	XFS_SCRUB_SB_FIELD(logsunit);
++	v2_ok = XFS_SB_VERSION2_OKBITS;
++	if (XFS_SB_VERSION_NUM(&sb) >= XFS_SB_VERSION_5)
++		v2_ok |= XFS_SB_VERSION2_CRCBIT;
++	XFS_SCRUB_SB_CHECK(!(sb.sb_features2 & ~v2_ok));
++	XFS_SCRUB_SB_PREEN(sb.sb_features2 == sb.sb_bad_features2);
++	XFS_SCRUB_SB_CHECK(!sb.sb_features2 ||
++			xfs_sb_version_hasmorebits(&mp->m_sb));
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		XFS_SCRUB_SB_CHECK(!xfs_sb_has_compat_feature(&sb,
++				XFS_SB_FEAT_COMPAT_UNKNOWN));
++		XFS_SCRUB_SB_CHECK(!xfs_sb_has_ro_compat_feature(&sb,
++				XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
++		XFS_SCRUB_SB_CHECK(!xfs_sb_has_incompat_feature(&sb,
++				XFS_SB_FEAT_INCOMPAT_UNKNOWN));
++		XFS_SCRUB_SB_CHECK(!xfs_sb_has_incompat_log_feature(&sb,
++				XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN));
++		XFS_SCRUB_SB_FIELD(spino_align);
++		XFS_PREEN_SB_FIELD(pquotino);
++	}
++	if (xfs_sb_version_hasmetauuid(&mp->m_sb)) {
++		XFS_SCRUB_SB_CHECK(uuid_equal(&sb.sb_meta_uuid,
++					&mp->m_sb.sb_meta_uuid));
++		XFS_SCRUB_SB_CHECK(uuid_equal(&sb.sb_uuid,
++					&mp->m_sb.sb_uuid));
++	} else
++		XFS_SCRUB_SB_CHECK(uuid_equal(&sb.sb_uuid,
++					&mp->m_sb.sb_meta_uuid));
++#undef XFS_SCRUB_SB_FIELD
++
++#define XFS_SCRUB_SB_FEAT(fn) \
++		XFS_SCRUB_SB_CHECK(xfs_sb_version_has##fn(&sb) == \
++		xfs_sb_version_has##fn(&mp->m_sb))
++	XFS_SCRUB_SB_FEAT(align);
++	XFS_SCRUB_SB_FEAT(dalign);
++	XFS_SCRUB_SB_FEAT(logv2);
++	XFS_SCRUB_SB_FEAT(extflgbit);
++	XFS_SCRUB_SB_FEAT(sector);
++	XFS_SCRUB_SB_FEAT(asciici);
++	XFS_SCRUB_SB_FEAT(morebits);
++	XFS_SCRUB_SB_FEAT(lazysbcount);
++	XFS_SCRUB_SB_FEAT(crc);
++	XFS_SCRUB_SB_FEAT(_pquotino);
++	XFS_SCRUB_SB_FEAT(ftype);
++	XFS_SCRUB_SB_FEAT(finobt);
++	XFS_SCRUB_SB_FEAT(sparseinodes);
++	XFS_SCRUB_SB_FEAT(metauuid);
++	XFS_SCRUB_SB_FEAT(rmapbt);
++	XFS_SCRUB_SB_FEAT(reflink);
++#undef XFS_SCRUB_SB_FEAT
++
++#define XFS_SCRUB_SB_FEAT_PREEN(fn) \
++		XFS_SCRUB_SB_PREEN(xfs_sb_version_has##fn(&sb) == \
++		xfs_sb_version_has##fn(&mp->m_sb))
++	XFS_SCRUB_SB_FEAT_PREEN(attr);
++	XFS_SCRUB_SB_FEAT_PREEN(attr2);
++#undef XFS_SCRUB_SB_FEAT_PREEN
++
++out:
++	return error;
++}
++#undef XFS_SCRUB_SB_OP_ERROR_GOTO
++#undef XFS_SCRUB_SB_CHECK
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 5460ec2..203153b 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -617,6 +617,7 @@ struct xfs_scrub_meta_fns {
+ 
+ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+ 	{xfs_scrub_setup, xfs_scrub_dummy, NULL, NULL},
++	{xfs_scrub_setup_ag, xfs_scrub_superblock, NULL, NULL},
+ };
+ 
+ /* Dispatch metadata scrubbing. */
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index eb211d0..bffdcfc 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -196,5 +196,11 @@ int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
+ int xfs_scrub_teardown(struct xfs_scrub_context *sc, int error);
+ int xfs_scrub_setup(struct xfs_scrub_context *sc, struct xfs_inode *ip,
+ 		    struct xfs_scrub_metadata *sm, bool retry_deadlocked);
++int xfs_scrub_setup_ag(struct xfs_scrub_context *sc, struct xfs_inode *ip,
++		       struct xfs_scrub_metadata *sm, bool retry_deadlocked);
++
++/* Metadata scrubbers */
++
++int xfs_scrub_superblock(struct xfs_scrub_context *sc);
+ 
+ #endif	/* __XFS_REPAIR_COMMON_H__ */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 2fd6695..c9a1ae09 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3354,7 +3354,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
+ 
+ /* scrub */
+ #define XFS_SCRUB_TYPE_DESC \
+-	{ XFS_SCRUB_TYPE_TEST,		"dummy" }
++	{ XFS_SCRUB_TYPE_TEST,		"dummy" }, \
++	{ XFS_SCRUB_TYPE_SB,		"superblock" }
+ DECLARE_EVENT_CLASS(xfs_scrub_class,
+ 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
+ 		 int error),
 
-Some other info is bellow between quotes.
-
-On Thu, Mar 9, 2017 at 5:41 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
->
-> On 3/8/17 6:51 PM, Luis R. Rodriguez wrote:
->> On Wed, Mar 08, 2017 at 06:16:57PM -0600, Eric Sandeen wrote:
->>> On 3/3/17 5:13 PM, Luis R. Rodriguez wrote:
->>>> This series adds mkfs.xfs.conf support, so that options can now be
->>>> shoved into a configuration file. This enables certain defaults to be
->>>> saved for folks sticking to certain values, but more importantly it
->>>> also enables distributions to override certain defaults so that new
->>>> filesystems remain compatible with older distributions.
->>>>
->>>> This has been based on top of xfsprogs-dev v4.9.0-rc1.
->>>>
->>>> Given we already have an existinsg infrastructure to validate argument
->>>> values this reuses that infrastructure by first adding helpers and porting
->>>> over the argument parsing suppor to use these helpers.
->>>
->>> Hm, one functional problem with this, aside from Dave's concerns and
->>> suggestions, is that many options in the config file can't actually
->>> be overridden on the commandline because they are treated as having
->>> been respecified, which is not allowed:
->>>
->>> # mkfs.xfs -m crc=1 -m crc=0 -f fsfile
->>> -m crc option respecified
->>> Usage: mkfs.xfs
->>
->> This was dealt by enabling the last option taken to override, and
->> this mechanism was also taken to enable the config file to take
->> the first value but let the command line to override. Refer to
->> usage of reset_opt(). Granted I had only done this on B_LOG but
->> this can easily be made to enable us to reset for all options.
->
-> Well, the above test was with your full patchset applied,
-> so my point is that it's not currently working properly as posted...
->
-> But are you proposing adding this reset_opt() to /every/ option?
-> That would undo all of the respecification checks, which were
-> put there for a reason (I assume?) ;)  I don't really remember
-> how all of the respecification and compatibility checking works
-> tbh, I'd have to dig back into it.  Maybe jtulak can help...
->
-> But it makes little sense to have a framework to prevent
-> respecification but then render it useless with reset_opt()
-> after each option gets parsed.  Or do I misunderstand?
-
-The reason why respec is forbidden (other than "what the hell the user
-wants, or is this a typo?" which could be decided as "simply take the
-last one, it's a feature") is that some options depend on other ones
-in "must be specified first" way. What should we do if we get -b
-size=X -d size=1000b -b size=Y? Values are parsed at the time of their
-occurrence, so suddenly, we have size in blocks but it is not matching
-the blocksize that would get written to the device...
-
-So we need to keep the respec limit in place.
-
->
->> If we don't want to enable subsequent command line entries to
->> override (to keep old behaviour) but still allow at least the
->> command line to override the config file options, that's also
->> doable.
->
-> Well, I'm going to need to refamiliarize myself with how the
-> conflict checking works, and why respecification is prohibited.
-> If respecification matters, it matters just as much whether the
-> first specification came from the config file or from the command
-> line.
->
-
-Regarding the last sentence:
-
-On a general level, not really, I think. Change from the config file
-can be seen as a change of defaults. It doesn't matter whether these
-values were put in during compilation or loaded from a config file.
-Multiple occurrences of the same option on the CLI is the only trouble
-here because it is at this time when further values are computed and
-it can go wrong. I didn't read these patches careful enough to answer
-whether it matters in this specific case, though.
-
-Saying this, putting -d size in blocks into config file maybe could
-still cause trouble, but this can be solved by limiting what values or
-options can be in the config file. For example: "all sizes has to be
-in bytes". And I think that building on my patchset, it should be
-possible with a reasonable amount of work to get a kind of lazy
-evaluation. So this issue would disappear because the "1000b" value
-would remain a string until all entries from CLI are parsed.
-
-Cheers,
-Jan
-
--- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
