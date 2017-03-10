@@ -1,109 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:46939 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752867AbdCHSXY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 13:23:24 -0500
-Received: from [63.163.107.100] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1clfv6-0001SI-6K
-        for linux-xfs@vger.kernel.org; Wed, 08 Mar 2017 18:02:40 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2] xfs: try any AG when allocating the first btree block when reflinking
-Date: Wed,  8 Mar 2017 10:02:39 -0800
-Message-Id: <20170308180239.27452-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:38676 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754107AbdCJQry (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 Mar 2017 11:47:54 -0500
+Subject: Re: [PATCH] repair: handle reading superblock from image on larger
+ sector size filesystem
+References: <1488998407-9094-1-git-send-email-zlang@redhat.com>
+ <41576a80-2f48-14e3-78c0-7425afe402c3@sandeen.net>
+ <20170310162859.GA21915@dhcp12-143.nay.redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c63969a0-9fce-fc9f-3713-76e46c7b6e0c@sandeen.net>
+Date: Fri, 10 Mar 2017 10:47:52 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170310162859.GA21915@dhcp12-143.nay.redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-When a reflink operation causes the bmap code to allocate a btree block
-we're currently doing single-AG allocations due to having ->firstblock
-set and then try any higher AG due a little reflink quirk we've put in
-when adding the reflink code.  But given that we do not have a minleft
-reservation of any kind in this AG we can still not have any space in
-the same or higher AG even if the file system has enough free space.
-To fix this use a XFS_ALLOCTYPE_FIRST_AG allocation in this fall back
-path instead.
+On 3/10/17 10:28 AM, Zorro Lang wrote:
+> On Thu, Mar 09, 2017 at 08:58:07PM -0600, Eric Sandeen wrote:
+>> On 3/8/17 12:40 PM, Zorro Lang wrote:
+>>> Due to xfs_repair uses direct IO, sometimes it can't read superblock
+>>> from an image file has smaller sector size than host filesystem.
+>>> Especially that superblock doesn't align with host filesystem's
+>>> sector size.
+>>>
+>>> To avoid this, when direct read returns EINVAL, turn off direct IO,
+>>> then try to read again.
+>>
+>> Ok, so the problem is that while we already do this after phase1,
+>> you're running into trouble /during/ phase1.
+> 
+> Yes,
+> 
+>>
+>>> Signed-off-by: Zorro Lang <zlang@redhat.com>
+>>> ---
+>>>
+>>> Hi,
+>>>
+>>> I found this bug when I try to modify xfstests' xfs/078 on s390x,
+>>> manually reproduce this bug by below steps:
+>>
+>> I bet you could write an xfstest for this using scsi_debug, yes?
+> 
+> xfs/078 (after my patch can be merged) can reproducer this bug on
+> s390x or other machines with 4k sector size disk. Do you think we
+> need a separate one case to test that?
 
-[And yes, we need to redo this properly instead of piling hacks over
- hacks.  I'm working on that, but it's not going to be a small series.
- In the meantime this fixes the customer reported issue]
+That would be best, because few people test on s390x or machines with
+hard 4k sector disks.
 
-Also add a warning for failing allocations to make it easier to debug.
+...
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c       | 10 +++++++---
- fs/xfs/libxfs/xfs_bmap_btree.c |  6 +++---
- 2 files changed, 10 insertions(+), 6 deletions(-)
+>> So I think that before we start either the superblock verification or
+>> discovery loops in verify_set_primary_sb() or find_secondary_sb(),
+>> check whether the sector size or block size is less than the host
+>> filesystem's geometry, and if so, turn off DIO.
+>>
+>> It probably doesn't hurt to call it again after phase1, when we have
+>> a valid superblock (same place as we do today)
+>>
+>> I think that'll work...
+> 
+> Hmm, that sounds good, but I need to read the code to make sure how
+> to do this change :)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a9c66d47757a..fd7ccc10d244 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -763,8 +763,8 @@ xfs_bmap_extents_to_btree(
- 		args.type = XFS_ALLOCTYPE_START_BNO;
- 		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
- 	} else if (dfops->dop_low) {
--try_another_ag:
- 		args.type = XFS_ALLOCTYPE_START_BNO;
-+try_another_ag:
- 		args.fsbno = *firstblock;
- 	} else {
- 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
-@@ -790,13 +790,17 @@ xfs_bmap_extents_to_btree(
- 	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
- 	    args.fsbno == NULLFSBLOCK &&
- 	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
--		dfops->dop_low = true;
-+		args.type = XFS_ALLOCTYPE_FIRST_AG;
- 		goto try_another_ag;
- 	}
-+	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
-+		xfs_iroot_realloc(ip, -1, whichfork);
-+		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+		return -ENOSPC;
-+	}
- 	/*
- 	 * Allocation can't fail, the space was reserved.
- 	 */
--	ASSERT(args.fsbno != NULLFSBLOCK);
- 	ASSERT(*firstblock == NULLFSBLOCK ||
- 	       args.agno >= XFS_FSB_TO_AGNO(mp, *firstblock));
- 	*firstblock = cur->bc_private.b.firstblock = args.fsbno;
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index f93072b58a58..fd55db479385 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -447,8 +447,8 @@ xfs_bmbt_alloc_block(
- 
- 	if (args.fsbno == NULLFSBLOCK) {
- 		args.fsbno = be64_to_cpu(start->l);
--try_another_ag:
- 		args.type = XFS_ALLOCTYPE_START_BNO;
-+try_another_ag:
- 		/*
- 		 * Make sure there is sufficient room left in the AG to
- 		 * complete a full tree split for an extent insert.  If
-@@ -488,8 +488,8 @@ xfs_bmbt_alloc_block(
- 	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
- 	    args.fsbno == NULLFSBLOCK &&
- 	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
--		cur->bc_private.b.dfops->dop_low = true;
- 		args.fsbno = cur->bc_private.b.firstblock;
-+		args.type = XFS_ALLOCTYPE_FIRST_AG;
- 		goto try_another_ag;
- 	}
- 
-@@ -506,7 +506,7 @@ xfs_bmbt_alloc_block(
- 			goto error0;
- 		cur->bc_private.b.dfops->dop_low = true;
- 	}
--	if (args.fsbno == NULLFSBLOCK) {
-+	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
- 		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
- 		*stat = 0;
- 		return 0;
--- 
-2.11.0
+Yes, it'll require a little thought.
 
+Goals are to avoid cut and paste, and try to find out beforehand if
+we'll be doing unaligned IOs.  Thinking more about the EINVAL test,
+it's not the best heuristic - we can know ahead of time whether or
+not our IOs will be aligned to the underlying filesystem's constrants.
+
+Thanks,
+-Eric
+
+> Thanks,
+> Zorro
+> 
+>>
+>> -Eric
+>>
+>>>  	}
+>>>  	libxfs_sb_from_disk(sbp, buf);
+>>>  
+>>>
+> 
