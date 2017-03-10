@@ -1,221 +1,167 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:37047 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750746AbdCHGO4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 01:14:56 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v281G8fc011023
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 8 Mar 2017 01:16:09 GMT
-Subject: [PATCH 4/9] xfs_spaceman: add FITRIM support
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 07 Mar 2017 17:15:04 -0800
-Message-ID: <148893570418.16212.17937843021295605764.stgit@birch.djwong.org>
-In-Reply-To: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
-References: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:56966 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750816AbdCJC6J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Mar 2017 21:58:09 -0500
+Subject: Re: [PATCH] repair: handle reading superblock from image on larger
+ sector size filesystem
+References: <1488998407-9094-1-git-send-email-zlang@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <41576a80-2f48-14e3-78c0-7425afe402c3@sandeen.net>
+Date: Thu, 9 Mar 2017 20:58:07 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <1488998407-9094-1-git-send-email-zlang@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On 3/8/17 12:40 PM, Zorro Lang wrote:
+> Due to xfs_repair uses direct IO, sometimes it can't read superblock
+> from an image file has smaller sector size than host filesystem.
+> Especially that superblock doesn't align with host filesystem's
+> sector size.
+> 
+> To avoid this, when direct read returns EINVAL, turn off direct IO,
+> then try to read again.
 
-Add support for discarding free space extents via the FITRIM
-command. Make it easy to discard a single range, an entire AG or all
-the freespace in the filesystem.
+Ok, so the problem is that while we already do this after phase1,
+you're running into trouble /during/ phase1.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- spaceman/Makefile |    2 -
- spaceman/init.c   |    1 
- spaceman/space.h  |    1 
- spaceman/trim.c   |  139 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 142 insertions(+), 1 deletion(-)
- create mode 100644 spaceman/trim.c
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> Hi,
+> 
+> I found this bug when I try to modify xfstests' xfs/078 on s390x,
+> manually reproduce this bug by below steps:
+
+I bet you could write an xfstest for this using scsi_debug, yes?
+
+>     [root@ibm-z-32 ~]# blockdev --getss --getpbsz --getbsz  /dev/dasda1
+>     4096
+>     4096
+>     4096
+>     [root@ibm-z-32 ~]# truncate -s $((168024*1024)) fsfile
+>     [root@ibm-z-32 ~]# echo $((168024*1024))
+>     172056576
+>     [root@ibm-z-32 ~]# losetup /dev/loop0 fsfile
+>     [root@ibm-z-32 ~]# mkfs.xfs -f -b size=1k /dev/loop0
+>     meta-data=/dev/loop0             isize=512    agcount=4, agsize=42006 blks
+>              =                       sectsz=512   attr=2, projid32bit=1
+>              =                       crc=1        finobt=0, sparse=0
+>     data     =                       bsize=1024   blocks=168024, imaxpct=25
+>              =                       sunit=0      swidth=0 blks
+>     naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+>     log      =internal log           bsize=1024   blocks=2573, version=2
+>              =                       sectsz=512   sunit=0 blks, lazy-count=1
+>     realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+presumably a repair of the file (not the loop dev) fails here as well?
+
+... snip ...
+
+>     [root@ibm-z-32 ~]# xfs_repair -f -n fsfile
+>     Phase 1 - find and verify superblock...
+>     superblock read failed, offset 43014144, size 131072, ag 1, rval -1
+>      
+>     fatal error -- Invalid argument
+> 
+> 
+> To avoid this problem, I use the same way as Dave did in:
+> 
+>   f63fd26 repair: handle repair of image files on large sector size filesystems
+> 
+> So there're some duplicate code in "fcntl" part, I want to pick up
+> this part to be a common function in xfsprogs or xfsprogs/repair,
+> but I don't know where's the proper place and if that's necessary?
 
 
-diff --git a/spaceman/Makefile b/spaceman/Makefile
-index ff8d23e..9fb9142 100644
---- a/spaceman/Makefile
-+++ b/spaceman/Makefile
-@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
- LTCOMMAND = xfs_spaceman
- HFILES = init.h space.h
- CFILES = init.c \
--	file.c
-+	file.c trim.c
- 
- LLDLIBS = $(LIBXCMD)
- LTDEPENDENCIES = $(LIBXCMD)
-diff --git a/spaceman/init.c b/spaceman/init.c
-index 404b183..ae5cfb5 100644
---- a/spaceman/init.c
-+++ b/spaceman/init.c
-@@ -40,6 +40,7 @@ init_commands(void)
- 	file_init();
- 	help_init();
- 	quit_init();
-+	trim_init();
- }
- 
- static int
-diff --git a/spaceman/space.h b/spaceman/space.h
-index 6e1bc52..7b4f034 100644
---- a/spaceman/space.h
-+++ b/spaceman/space.h
-@@ -34,3 +34,4 @@ extern int	addfile(char *, int , xfs_fsop_geom_t *, int);
- extern void	file_init(void);
- extern void	help_init(void);
- extern void	quit_init(void);
-+extern void	trim_init(void);
-diff --git a/spaceman/trim.c b/spaceman/trim.c
-new file mode 100644
-index 0000000..9bf6565
---- /dev/null
-+++ b/spaceman/trim.c
-@@ -0,0 +1,139 @@
-+/*
-+ * Copyright (c) 2012 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include "libxfs.h"
-+#include <linux/fs.h>
-+#include "command.h"
-+#include "init.h"
-+#include "space.h"
-+#include "input.h"
-+
-+#ifndef FITRIM
-+#define FITRIM          _IOWR('X', 121, struct fstrim_range)    /* Trim */
-+
-+struct fstrim_range {
-+	__u64 start;
-+	__u64 len;
-+	__u64 minlen;
-+};
-+#endif
-+
-+static cmdinfo_t trim_cmd;
-+
-+/*
-+ * Report on trimace usage in xfs filesystem.
-+ */
-+static int
-+trim_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	struct fstrim_range trim = {0};
-+	xfs_agnumber_t	agno = 0;
-+	off64_t		offset = 0;
-+	ssize_t		length = 0;
-+	ssize_t		minlen = 0;
-+	int		aflag = 0;
-+	int		fflag = 0;
-+	int		ret;
-+	int		c;
-+
-+	while ((c = getopt(argc, argv, "a:fm:")) != EOF) {
-+		switch (c) {
-+		case 'a':
-+			if (fflag)
-+				return command_usage(&trim_cmd);
-+			aflag = 1;
-+			agno = atoi(optarg);
-+			break;
-+		case 'f':
-+			if (aflag)
-+				return command_usage(&trim_cmd);
-+			fflag = 1;
-+			break;
-+		case 'm':
-+			minlen = cvtnum(file->geom.blocksize,
-+					file->geom.sectsize, argv[optind]);
-+			break;
-+		default:
-+			return command_usage(&trim_cmd);
-+		}
-+	}
-+
-+	if (optind != argc - 2 && !(aflag || fflag))
-+		return command_usage(&trim_cmd);
-+	if (optind != argc) {
-+		offset = cvtnum(file->geom.blocksize, file->geom.sectsize,
-+				argv[optind]);
-+		length = cvtnum(file->geom.blocksize, file->geom.sectsize,
-+				argv[optind + 1]);
-+	} else if (agno) {
-+		offset = agno * file->geom.agblocks * file->geom.blocksize;
-+		length = file->geom.agblocks * file->geom.blocksize;
-+	} else {
-+		offset = 0;
-+		length = file->geom.datablocks * file->geom.blocksize;
-+	}
-+
-+	trim.start = offset;
-+	trim.len = length;
-+	trim.minlen = minlen;
-+
-+	ret = ioctl(file->fd, FITRIM, (unsigned long)&trim);
-+	if (ret < 0) {
-+		fprintf(stderr, "%s: ioctl(FITRIM) [\"%s\"]: "
-+			"%s\n", progname, file->name, strerror(errno));
-+		exitcode = 1;
-+		return 0;
-+	}
-+	return 0;
-+}
-+
-+static void
-+trim_help(void)
-+{
-+	printf(_(
-+"\n"
-+"Discard filesystem free space\n"
-+"\n"
-+"Options: [-m minlen] [-f]|[-a agno]|[offset length]\n"
-+"\n"
-+" -m minlen -- skip freespace extents smaller than minlen\n"
-+" -f -- trim all the freespace in the entire filesystem\n"
-+" -a agno -- trim all the freespace in the given AG agno\n"
-+" offset length -- trim the freespace in the range {offset, length}\n"
-+"\n"));
-+
-+}
-+
-+void
-+trim_init(void)
-+{
-+	trim_cmd.name = "trim";
-+	trim_cmd.altname = "tr";
-+	trim_cmd.cfunc = trim_f;
-+	trim_cmd.argmin = 1;
-+	trim_cmd.argmax = 4;
-+	trim_cmd.args = "[-m minlen] [-f]|[-a agno]|[offset length]\n";
-+	trim_cmd.flags = CMD_FLAG_ONESHOT;
-+	trim_cmd.oneline = _("Discard filesystem free space");
-+	trim_cmd.help = trim_help;
-+
-+	add_command(&trim_cmd);
-+}
-+
+> Thanks,
+> Zorro
+> 
+>  repair/sb.c | 25 +++++++++++++++++++++++--
+>  1 file changed, 23 insertions(+), 2 deletions(-)
+> 
+> diff --git a/repair/sb.c b/repair/sb.c
+> index 77e5154..617ad98 100644
+> --- a/repair/sb.c
+> +++ b/repair/sb.c
+> @@ -567,11 +567,32 @@ get_sb(xfs_sb_t *sbp, xfs_off_t off, int size, xfs_agnumber_t agno)
+>  	}
+>  
+>  	if ((rval = read(x.dfd, buf, size)) != size)  {
+> +		/*
+> +		 * If file image sector is smaller than the host filesystem
+> +		 * sector, this O_DIRECT read will return EINVAL. So turn
+> +		 * off O_DIRECT and try to buffer read.
 
+Ok, thinking this through...
+
+In your case bsize is 1024, and agblocks is 42006, so our supers are at
+these offsets:
+
+0 -> OK
+43014144 -> not 4k aligned
+86028288 -> OK
+129042432 -> not 4k aligned
+
+so: the DIO is failing due to an unaligned offset, just to be clear.
+
+> +		 */
+> +		if (errno == EINVAL) {
+> +			long old_flags;
+> +
+> +			old_flags = fcntl(x.dfd, F_GETFL, 0);
+> +			if (fcntl(x.dfd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
+> +				do_warn(
+> +        _("Sector size on host filesystem larger than image sector size.\n"
+> +          "Cannot turn off direct IO, so exiting.\n"));
+> +				exit(1);
+> +			} else if ((rval = read(x.dfd, buf, size)) == size) {
+> +				errno = 0;
+> +			}
+> +		}
+>  		error = errno;
+> -		do_warn(
+> +		if (error != 0) {
+> +			do_warn(
+>  	_("superblock read failed, offset %" PRId64 ", size %d, ag %u, rval %d\n"),
+>  			off, size, agno, rval);
+> -		do_error("%s\n", strerror(error));
+> +			do_error("%s\n", strerror(error));
+> +		}
+> +
+
+I agree that we should not duplicate this code here.  Also,
+we really should only be handling DIO vs buffered if (isa_file) is true...
+if we got EINVAL from a device, this filesystem has bigger problems.
+
+So for starters I'd probably move the if (!isa_file) double checking
+in main() up above phase1(), so we have that information during phase1.
+
+Then I'd probably encapsulate the geometry checks and O_DIRECT disabling
+into its own function.
+
+Then we need to figure out when to call the check - this is a little tricky,
+because the filesystem geometry comes from the superblock, which we are still
+trying to validate.
+
+So I think that before we start either the superblock verification or
+discovery loops in verify_set_primary_sb() or find_secondary_sb(),
+check whether the sector size or block size is less than the host
+filesystem's geometry, and if so, turn off DIO.
+
+It probably doesn't hurt to call it again after phase1, when we have
+a valid superblock (same place as we do today)
+
+I think that'll work...
+
+-Eric
+
+>  	}
+>  	libxfs_sb_from_disk(sbp, buf);
+>  
+> 
