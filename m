@@ -1,83 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18756 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752016AbdCOHXz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 03:23:55 -0400
-Date: Wed, 15 Mar 2017 00:23:49 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:51435 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934117AbdCJXUk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:20:40 -0500
+Subject: [PATCH 07/19] xfs: scrub the AGI
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: boot failure after kernel update, imap claims in-use inode
- 661690 is free, would correct imap
-Message-ID: <20170315072349.GZ5280@birch.djwong.org>
-References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
+Date: Fri, 10 Mar 2017 15:20:33 -0800
+Message-ID: <148918803295.6959.1506871354245444373.stgit@birch.djwong.org>
+In-Reply-To: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
+References: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: xfs list <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Wed, Mar 15, 2017 at 12:53:10AM -0600, Chris Murphy wrote:
-> Hi,
-> 
-> A user reports a curious OS update bug with Fedora 22, 23, 24, and 25,
-> where after a kernel update, upon reboot there's only a grub> prompt,
-> no menu.
-> 
-> I've reproduced this using a qemu-kvm VM, with device SATA and unsafe
-> caching, pointed to an LVM LV. If I do 'dnf update' to update the
-> kernel, the problem doesn't happen, if I use gnome-software the
-> problem always happens.
-> 
-> gnome-software leverages PackageKit for downloading and staging, then
-> reboots to a systemd offline update target to do the update. So it's a
-> joint effort. The detailed reproduce steps I've come up with are in
-> comment 39 of the original bug report:
-> 
-> https://bugzilla.redhat.com/show_bug.cgi?id=1227736#c39
-> 
-> The gist of the analysis in that comment is that the modified grub.cfg
-> is a 0 length file, and that's why GRUB arrives at a grub> prompt
-> instead of a menu. If I boot from alternate media and run xfs_repair
-> -n, I get tons of errors - that log is attached to the bug report and
-> is here
-> 
-> https://bugzilla.redhat.com/attachment.cgi?id=1263176
-> 
-> If all I do is do a normal mount, kernel reports log replay, no
-> errors, and then I can boot the previously unbootable system just
-> fine, and xfs_repair -n reports no errors. So it seems like the volume
-> is left dirty at reboot time following these offline updates, and of
-> course GRUB doesn't read the XFS log so it has no idea how to recover
-> and find grub.cfg or any other affected files.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I'm not sure you'd want to replay the log from grub anyway. :)
+Add a forgotten check to the AGI verifier, then wire up the scrub
+infrastructure to check the AGI contents.
 
-So... you fire up gnome-software, click "Update", it downloads rpms to
-the hard disk, reboots, (presumably) installs the rpms, reboots again,
-and after the /second/ reboot grub just barfs up a grub> prompt?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_fs.h  |    3 +
+ fs/xfs/scrub/agheader.c |   96 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/common.c   |    7 ++-
+ fs/xfs/scrub/common.h   |    1 
+ fs/xfs/xfs_trace.h      |    3 +
+ 5 files changed, 106 insertions(+), 4 deletions(-)
 
-Now I'm curious how systemd actually triggers the reboot.  Unmounting
-would seem to force the log and push the AIL, which (you'd think) would
-be enough.  But maybe systemd is doing something weird?  Or maybe
-post-update we fail to unmount / ?
 
-(Tempting to, uh, "delegate" to Eric Sandeen. :))
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 82ba189b..2253df4 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -496,7 +496,8 @@ struct xfs_scrub_metadata {
+ #define XFS_SCRUB_TYPE_SB	1	/* superblock */
+ #define XFS_SCRUB_TYPE_AGF	2	/* AG free header */
+ #define XFS_SCRUB_TYPE_AGFL	3	/* AG free list */
+-#define XFS_SCRUB_TYPE_MAX	3
++#define XFS_SCRUB_TYPE_AGI	4	/* AG inode header */
++#define XFS_SCRUB_TYPE_MAX	4
+ 
+ #define XFS_SCRUB_FLAG_REPAIR	0x01	/* i: repair this metadata */
+ #define XFS_SCRUB_FLAG_CORRUPT	0x02	/* o: needs repair */
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 94f29ae..f3bbd89 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -423,3 +423,99 @@ xfs_scrub_agfl(
+ }
+ #undef XFS_SCRUB_AGFL_OP_ERROR_GOTO
+ #undef XFS_SCRUB_AGFL_CHECK
++
++/* AGI */
++
++#define XFS_SCRUB_AGI_CHECK(fs_ok) \
++	XFS_SCRUB_CHECK(sc, sc->sa.agi_bp, "AGI", fs_ok)
++#define XFS_SCRUB_AGI_OP_ERROR_GOTO(error, label) \
++	XFS_SCRUB_OP_ERROR_GOTO(sc, sc->sm->sm_agno, \
++			XFS_AGI_BLOCK(sc->tp->t_mountp), "AGI", error, label)
++/* Scrub the AGI. */
++int
++xfs_scrub_agi(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_mount		*mp = sc->tp->t_mountp;
++	struct xfs_agi			*agi;
++	xfs_daddr_t			daddr;
++	xfs_daddr_t			eofs;
++	xfs_agnumber_t			agno;
++	xfs_agblock_t			agbno;
++	xfs_agblock_t			eoag;
++	xfs_agino_t			agino;
++	xfs_agino_t			first_agino;
++	xfs_agino_t			last_agino;
++	int				i;
++	int				level;
++	int				error = 0;
++
++	agno = sc->sm->sm_agno;
++	error = xfs_scrub_load_ag_headers(sc, agno, XFS_SCRUB_TYPE_AGI);
++	XFS_SCRUB_AGI_OP_ERROR_GOTO(&error, out);
++
++	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
++	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
++
++	/* Check the AG length */
++	eoag = be32_to_cpu(agi->agi_length);
++	XFS_SCRUB_AGI_CHECK(eoag == xfs_scrub_ag_blocks(mp, agno));
++
++	/* Check btree roots and levels */
++	agbno = be32_to_cpu(agi->agi_root);
++	daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
++	XFS_SCRUB_AGI_CHECK(agbno > XFS_AGI_BLOCK(mp));
++	XFS_SCRUB_AGI_CHECK(agbno < mp->m_sb.sb_agblocks);
++	XFS_SCRUB_AGI_CHECK(agbno < eoag);
++	XFS_SCRUB_AGI_CHECK(daddr < eofs);
++
++	level = be32_to_cpu(agi->agi_level);
++	XFS_SCRUB_AGI_CHECK(level > 0);
++	XFS_SCRUB_AGI_CHECK(level <= XFS_BTREE_MAXLEVELS);
++
++	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++		agbno = be32_to_cpu(agi->agi_free_root);
++		daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
++		XFS_SCRUB_AGI_CHECK(agbno > XFS_AGI_BLOCK(mp));
++		XFS_SCRUB_AGI_CHECK(agbno < mp->m_sb.sb_agblocks);
++		XFS_SCRUB_AGI_CHECK(agbno < eoag);
++		XFS_SCRUB_AGI_CHECK(daddr < eofs);
++
++		level = be32_to_cpu(agi->agi_free_level);
++		XFS_SCRUB_AGI_CHECK(level > 0);
++		XFS_SCRUB_AGI_CHECK(level <= XFS_BTREE_MAXLEVELS);
++	}
++
++	/* Check inode counters */
++	first_agino = XFS_OFFBNO_TO_AGINO(mp, XFS_AGI_BLOCK(mp) + 1, 0);
++	last_agino = XFS_OFFBNO_TO_AGINO(mp, eoag + 1, 0) - 1;
++	agino = be32_to_cpu(agi->agi_count);
++	XFS_SCRUB_AGI_CHECK(agino <= last_agino - first_agino + 1);
++	XFS_SCRUB_AGI_CHECK(agino >= be32_to_cpu(agi->agi_freecount));
++
++	/* Check inode pointers */
++	agino = be32_to_cpu(agi->agi_newino);
++	if (agino != NULLAGINO) {
++		XFS_SCRUB_AGI_CHECK(agino >= first_agino);
++		XFS_SCRUB_AGI_CHECK(agino <= last_agino);
++	}
++	agino = be32_to_cpu(agi->agi_dirino);
++	if (agino != NULLAGINO) {
++		XFS_SCRUB_AGI_CHECK(agino >= first_agino);
++		XFS_SCRUB_AGI_CHECK(agino <= last_agino);
++	}
++
++	/* Check unlinked inode buckets */
++	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
++		agino = be32_to_cpu(agi->agi_unlinked[i]);
++		if (agino == NULLAGINO)
++			continue;
++		XFS_SCRUB_AGI_CHECK(agino >= first_agino);
++		XFS_SCRUB_AGI_CHECK(agino <= last_agino);
++	}
++
++out:
++	return error;
++}
++#undef XFS_SCRUB_AGI_CHECK
++#undef XFS_SCRUB_AGI_OP_ERROR_GOTO
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index ccd3549..6725e36 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -641,12 +641,14 @@ xfs_scrub_load_ag_headers(
+ 	struct xfs_mount		*mp = sc->tp->t_mountp;
+ 	int				error;
+ 
+-	ASSERT(type == XFS_SCRUB_TYPE_AGF || type == XFS_SCRUB_TYPE_AGFL);
++	ASSERT(type == XFS_SCRUB_TYPE_AGF || type == XFS_SCRUB_TYPE_AGFL ||
++	       type == XFS_SCRUB_TYPE_AGI);
+ 	memset(&sc->sa, 0, sizeof(sc->sa));
+ 	sc->sa.agno = agno;
+ 
+ 	error = xfs_scrub_load_ag_header(sc, XFS_AGI_DADDR(mp),
+-			&sc->sa.agi_bp, &xfs_agi_buf_ops, false);
++			&sc->sa.agi_bp, &xfs_agi_buf_ops,
++			type == XFS_SCRUB_TYPE_AGI);
+ 	if (error)
+ 		return error;
+ 
+@@ -680,6 +682,7 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
+ 	{xfs_scrub_setup_ag, xfs_scrub_superblock, NULL, NULL},
+ 	{xfs_scrub_setup_ag, xfs_scrub_agf, NULL, NULL},
+ 	{xfs_scrub_setup_ag, xfs_scrub_agfl, NULL, NULL},
++	{xfs_scrub_setup_ag, xfs_scrub_agi, NULL, NULL},
+ };
+ 
+ /* Dispatch metadata scrubbing. */
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 72bb175..e11b3fb 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -210,5 +210,6 @@ int xfs_scrub_setup_ag(struct xfs_scrub_context *sc, struct xfs_inode *ip,
+ int xfs_scrub_superblock(struct xfs_scrub_context *sc);
+ int xfs_scrub_agf(struct xfs_scrub_context *sc);
+ int xfs_scrub_agfl(struct xfs_scrub_context *sc);
++int xfs_scrub_agi(struct xfs_scrub_context *sc);
+ 
+ #endif	/* __XFS_REPAIR_COMMON_H__ */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index fb65a1f..56e0447 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3357,7 +3357,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
+ 	{ XFS_SCRUB_TYPE_TEST,		"dummy" }, \
+ 	{ XFS_SCRUB_TYPE_SB,		"superblock" }, \
+ 	{ XFS_SCRUB_TYPE_AGF,		"AGF" }, \
+-	{ XFS_SCRUB_TYPE_AGFL,		"AGFL" }
++	{ XFS_SCRUB_TYPE_AGFL,		"AGFL" }, \
++	{ XFS_SCRUB_TYPE_AGI,		"AGI" }
+ DECLARE_EVENT_CLASS(xfs_scrub_class,
+ 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
+ 		 int error),
 
---D
-
-> But with the available information I can't tell why the fs is left
-> dirty at reboot. Using the same configuration, the problem doesn't
-> happen with ext4 or Btrfs, but it may be normal behavior and what
-> really needs to be done is teach GRUB how to do log replay.
-> 
-> 
-> 
-> -- 
-> Chris Murphy
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
