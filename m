@@ -1,129 +1,300 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52532 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754116AbdCOQAv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Mar 2017 12:00:51 -0400
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0F0AB4E4CA
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:00:45 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 05/22] mkfs: add a check for conflicting values
-Date: Wed, 15 Mar 2017 17:00:00 +0100
-Message-Id: <20170315160017.27805-6-jtulak@redhat.com>
-In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
-References: <20170315160017.27805-1-jtulak@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:22158 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755440AbdCJXZl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:25:41 -0500
+Subject: [PATCH 8/9] xfs_scrub: create a script to scrub all xfs filesystems
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 10 Mar 2017 15:25:35 -0800
+Message-ID: <148918833500.8311.13666120246229902081.stgit@birch.djwong.org>
+In-Reply-To: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
+References: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Add a check that reports a conflict only when subopts are mixed with specific values.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Create an xfs_scrub_all command to find all XFS filesystems
+and run an online scrub against them all.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- mkfs/xfs_mkfs.c | 52 ++++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 44 insertions(+), 8 deletions(-)
+ debian/control           |    3 +
+ debian/rules             |    1 
+ man/man8/xfs_scrub_all.8 |   32 ++++++++++
+ scrub/Makefile           |   15 ++++-
+ scrub/xfs_scrub_all.in   |  148 ++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 195 insertions(+), 4 deletions(-)
+ create mode 100644 man/man8/xfs_scrub_all.8
+ create mode 100644 scrub/xfs_scrub_all.in
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index c9861409..7e0a4159 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1311,18 +1311,18 @@ illegal_option(
-  */
- static void
- check_opt(
--	struct opt_params	*opts,
-+	struct opt_params	*opt,
- 	int			index,
- 	bool			str_seen)
- {
--	struct subopt_param	*sp = &opts->subopt_params[index];
-+	struct subopt_param	*sp = &opt->subopt_params[index];
- 	int			i;
+
+diff --git a/debian/control b/debian/control
+index ad81662..d7c0316 100644
+--- a/debian/control
++++ b/debian/control
+@@ -3,12 +3,13 @@ Section: admin
+ Priority: optional
+ Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+-Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev
++Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, dh-python
+ Standards-Version: 3.9.1
+ Homepage: http://xfs.org/
  
- 	if (sp->index != index) {
- 		fprintf(stderr,
- 	("Developer screwed up option parsing (%d/%d)! Please report!\n"),
- 			sp->index, index);
--		reqval(opts->name, (char **)opts->subopts, index);
-+		reqval(opt->name, (char **)opt->subopts, index);
- 	}
+ Package: xfsprogs
+ Depends: ${shlibs:Depends}, ${misc:Depends}
++Recommends: ${python3:Depends}, util-linux
+ Provides: fsck-backend
+ Suggests: xfsdump, acl, attr, quota
+ Breaks: xfsdump (<< 3.0.0)
+diff --git a/debian/rules b/debian/rules
+index c673380..a870944 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -76,6 +76,7 @@ binary-arch: checkroot built
+ 	$(pkgdi)  $(MAKE) -C debian install-d-i
+ 	$(pkgme)  $(MAKE) dist
+ 	rmdir debian/xfslibs-dev/usr/share/doc/xfsprogs
++	dh_python3
+ 	dh_installdocs
+ 	dh_installchangelogs
+ 	dh_strip
+diff --git a/man/man8/xfs_scrub_all.8 b/man/man8/xfs_scrub_all.8
+new file mode 100644
+index 0000000..5e1420b
+--- /dev/null
++++ b/man/man8/xfs_scrub_all.8
+@@ -0,0 +1,32 @@
++.TH xfs_scrub_all 8
++.SH NAME
++xfs_scrub_all \- scrub all mounted XFS filesystems
++.SH SYNOPSIS
++.B xfs_scrub_all
++.SH DESCRIPTION
++.B xfs_scrub_all
++attempts to read and check all the metadata on all mounted XFS filesystems.
++The online scrub is performed via the
++.B xfs_scrub
++tool, either by running it directly or by using systemd to start it
++in a restricted fashion.
++Mounted filesystems are mapped to physical storage devices so that scrub
++operations can be run in parallel so long as no two scrubbers access
++the same device simultaneously.
++.SH EXIT CODE
++The exit code returned by
++.B xfs_scrub_all
++is the sum of the following conditions:
++.br
++\	0\	\-\ No errors
++.br
++\	4\	\-\ File system errors left uncorrected
++.br
++\	8\	\-\ Operational error
++.br
++\	16\	\-\ Usage or syntax error
++.TP
++These are the same error codes returned by xfs_scrub.
++.br
++.SH SEE ALSO
++.BR xfs_scrub (8).
+diff --git a/scrub/Makefile b/scrub/Makefile
+index bae2fa1..78e119f 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -10,6 +10,8 @@ SCRUB_PREREQS=$(HAVE_OPENAT)$(HAVE_FSTATAT)
+ ifeq ($(SCRUB_PREREQS),yesyes)
+ LTCOMMAND = xfs_scrub
+ INSTALL_SCRUB = install-scrub
++XFS_SCRUB_ALL_PROG = xfs_scrub_all
++XFS_SCRUB_ARGS = -Tvn
+ endif	# scrub_prereqs
  
- 	/*
-@@ -1335,11 +1335,11 @@ check_opt(
- 	 */
- 	if (!str_seen) {
- 		if (sp->seen)
--			respec(opts->name, (char **)opts->subopts, index);
-+			respec(opt->name, (char **)opt->subopts, index);
- 		sp->seen = true;
- 	} else {
- 		if (sp->str_seen)
--			respec(opts->name, (char **)opts->subopts, index);
-+			respec(opt->name, (char **)opt->subopts, index);
- 		sp->str_seen = true;
- 	}
+ HFILES = scrub.h ../repair/threads.h read_verify.h iocmd.h xfs_ioctl.h
+@@ -36,15 +38,22 @@ ifeq ($(HAVE_SYNCFS),yes)
+ LCFLAGS += -DHAVE_SYNCFS
+ endif
  
-@@ -1349,10 +1349,44 @@ check_opt(
- 
- 		if (conflict_opt.opt == LAST_CONFLICT)
- 			break;
--		if (opts->subopt_params[conflict_opt.subopt].seen ||
--		    opts->subopt_params[conflict_opt.subopt].str_seen)
--			conflict(opts->name, (char **)opts->subopts,
-+		if (conflict_opt.test_values)
-+			break;
-+		if (opt->subopt_params[conflict_opt.subopt].seen ||
-+		    opt->subopt_params[conflict_opt.subopt].str_seen) {
-+			conflict(opt->name, (char **)opt->subopts,
- 				 conflict_opt.subopt, index);
-+		}
-+	}
-+}
+-default: depend $(LTCOMMAND)
++default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG)
 +
-+/*
-+ * Check for conflict values between options.
-+ */
-+static void
-+check_opt_value(
-+	struct opt_params	*opt,
-+	int			index,
-+	long long 		value)
-+{
-+	struct subopt_param	*sp = &opt->subopt_params[index];
-+	int			i;
-+
-+	/* check for conflicts with the option */
-+	for (i = 0; i < MAX_CONFLICTS; i++) {
-+		struct subopt_conflict conflict_opt = sp->conflicts[i];
-+
-+		if (conflict_opt.opt == LAST_CONFLICT)
-+			break;
-+		if (!conflict_opt.test_values)
-+			break;
-+		if ((opt->subopt_params[conflict_opt.subopt].seen ||
-+				    opt->subopt_params[conflict_opt.subopt].str_seen) &&
-+		    opt->subopt_params[conflict_opt.subopt].value
-+				== conflict_opt.invalid_value &&
-+		    value == conflict_opt.at_value) {
-+			conflict(opt->name, (char **)opt->subopts,
-+				 conflict_opt.subopt, index);
-+		}
- 	}
- }
++xfs_scrub_all: xfs_scrub_all.in
++	@echo "    [SED]    $@"
++	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
++		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
++	$(Q)chmod a+x $@
  
-@@ -1399,6 +1433,8 @@ getnum(
- 			illegal_option(str, opts, index, NULL);
- 	}
+ include $(BUILDRULES)
  
-+	check_opt_value(opts, index, c);
+-install: default $(INSTALL_SCRUB)
++install: $(INSTALL_SCRUB)
+ 
+-install-scrub:
++install-scrub: default
+ 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
++	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_ROOT_SBIN_DIR)
+ 
+ install-dev:
+ 
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+new file mode 100644
+index 0000000..2215720
+--- /dev/null
++++ b/scrub/xfs_scrub_all.in
+@@ -0,0 +1,148 @@
++#!/usr/bin/env python3
 +
- 	/* Validity check the result. */
- 	if (c < sp->minval)
- 		illegal_option(str, opts, index, _("value is too small"));
--- 
-2.11.0
++# Run online scrubbers in parallel, but avoid thrashing.
++#
++# Copyright (C) 2017 Oracle.  All rights reserved.
++#
++# Author: Darrick J. Wong <darrick.wong@oracle.com>
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License
++# as published by the Free Software Foundation; either version 2
++# of the License, or (at your option) any later version.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++
++import subprocess
++import json
++import threading
++import time
++import sys
++
++retcode = 0
++terminate = False
++
++def find_mounts():
++	'''Map mountpoints to physical disks.'''
++
++	fs = {}
++	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
++	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
++	result.wait()
++	if result.returncode != 0:
++		return fs
++	sarray = [x.decode('utf-8') for x in result.stdout.readlines()]
++	output = ' '.join(sarray)
++	bdevdata = json.loads(output)
++	for bdev in bdevdata['blockdevices']:
++		if bdev['type'] == 'disk':
++			lastdisk = bdev['kname']
++		elif bdev['fstype'] == 'xfs':
++			mnt = bdev['mountpoint']
++			if mnt is not None:
++				if mnt in fs:
++					fs[mnt].add(lastdisk)
++				else:
++					fs[mnt] = set([lastdisk])
++	return fs
++
++def run_killable(cmd, stdout, killfuncs, kill_fn):
++	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
++	try:
++		proc = subprocess.Popen(cmd, stdout = stdout)
++		real_kill_fn = lambda: kill_fn(proc)
++		killfuncs.add(real_kill_fn)
++		proc.wait()
++		try:
++			killfuncs.remove(real_kill_fn)
++		except:
++			pass
++		return proc.returncode
++	except:
++		return -1
++
++def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
++	'''Run a scrub process.'''
++	global retcode, terminate
++
++	print("Scrubbing %s..." % mnt)
++
++	try:
++		if terminate:
++			return
++
++		# Invoke xfs_scrub manually
++		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
++		ret = run_killable(cmd, None, killfuncs, \
++				lambda proc: proc.terminate())
++		if ret >= 0:
++			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
++			retcode |= ret
++			return
++
++		if terminate:
++			return
++
++		print("Unable to start scrub tool.")
++	finally:
++		running_devs -= mntdevs
++		cond.acquire()
++		cond.notify()
++		cond.release()
++
++def main():
++	'''Find mounts, schedule scrub runs.'''
++	def thr(mnt, devs):
++		a = (mnt, cond, running_devs, devs, killfuncs)
++		thr = threading.Thread(target = run_scrub, args = a)
++		thr.start()
++	global retcode, terminate
++
++	fs = find_mounts()
++
++	# Schedule scrub jobs...
++	running_devs = set()
++	killfuncs = set()
++	cond = threading.Condition()
++	while len(fs) > 0:
++		if len(running_devs) == 0:
++			mnt, devs = fs.popitem()
++			running_devs.update(devs)
++			thr(mnt, devs)
++		poppers = set()
++		for mnt in fs:
++			devs = fs[mnt]
++			can_run = True
++			for dev in devs:
++				if dev in running_devs:
++					can_run = False
++					break
++			if can_run:
++				running_devs.update(devs)
++				poppers.add(mnt)
++				thr(mnt, devs)
++		for p in poppers:
++			fs.pop(p)
++		cond.acquire()
++		try:
++			cond.wait()
++		except KeyboardInterrupt:
++			terminate = True
++			print("Terminating...")
++			while len(killfuncs) > 0:
++				fn = killfuncs.pop()
++				fn()
++			fs = []
++		cond.release()
++
++	sys.exit(retcode)
++
++if __name__ == '__main__':
++	main()
 
