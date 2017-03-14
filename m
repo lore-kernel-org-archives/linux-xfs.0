@@ -1,648 +1,392 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20905 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934539AbdCJXV2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:21:28 -0500
-Subject: [PATCH 14/19] xfs: scrub directory/attribute btrees
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 10 Mar 2017 15:21:17 -0800
-Message-ID: <148918807693.6959.1217286236469455795.stgit@birch.djwong.org>
-In-Reply-To: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
-References: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
-MIME-Version: 1.0
+Received: from mail-db5eur01on0135.outbound.protection.outlook.com ([104.47.2.135]:20960
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750836AbdCNIPY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Mar 2017 04:15:24 -0400
+From: =?utf-8?B?TGlib3IgS2xlcMOhxI0=?= <libor.klepac@bcom.cz>
+Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
+Date: Tue, 14 Mar 2017 08:15:20 +0000
+Message-ID: <1702693.ETbqtf3ybS@libor-nb>
+References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com>
+ <5223151.9ZZzaImiEQ@libor-nb>
+ <2c8d1ee3-c795-aefa-4797-8b7970ea8266@sandeen.net>
+In-Reply-To: <2c8d1ee3-c795-aefa-4797-8b7970ea8266@sandeen.net>
+Content-Language: en-US
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-ID: <FE45513435EB534AA1CE4B7DC7372982@eurprd03.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Provide a way to check the shape and scrub the hashes and records
-in a directory or extended attribute btree.  These are helper functions
-for the directory & attribute scrubbers in subsequent patches.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-[fengguang: remove unneeded variable to store return value]
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
----
- fs/xfs/Makefile               |    1 
- fs/xfs/libxfs/xfs_dir2_node.c |   28 ++
- fs/xfs/libxfs/xfs_dir2_priv.h |    2 
- fs/xfs/scrub/dabtree.c        |  469 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/dabtree.h        |   62 +++++
- 5 files changed, 562 insertions(+)
- create mode 100644 fs/xfs/scrub/dabtree.c
- create mode 100644 fs/xfs/scrub/dabtree.h
-
-
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 7fad1d8..1b1ed40 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -109,6 +109,7 @@ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
- 				   bmap.o \
- 				   btree.o \
- 				   common.o \
-+				   dabtree.o \
- 				   ialloc.o \
- 				   inode.o \
- 				   refcount.o \
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index bbd1238..31e7fdf 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -528,6 +528,34 @@ xfs_dir2_free_hdr_check(
-  * Stale entries are ok.
-  */
- xfs_dahash_t					/* hash value */
-+xfs_dir2_leaf1_lasthash(
-+	struct xfs_inode *dp,
-+	struct xfs_buf	*bp,			/* leaf buffer */
-+	int		*count)			/* count of entries in leaf */
-+{
-+	struct xfs_dir2_leaf	*leaf = bp->b_addr;
-+	struct xfs_dir2_leaf_entry *ents;
-+	struct xfs_dir3_icleaf_hdr leafhdr;
-+
-+	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
-+
-+	ASSERT(leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
-+	       leafhdr.magic == XFS_DIR3_LEAF1_MAGIC);
-+
-+	if (count)
-+		*count = leafhdr.count;
-+	if (!leafhdr.count)
-+		return 0;
-+
-+	ents = dp->d_ops->leaf_ents_p(leaf);
-+	return be32_to_cpu(ents[leafhdr.count - 1].hashval);
-+}
-+
-+/*
-+ * Return the last hash value in the leaf.
-+ * Stale entries are ok.
-+ */
-+xfs_dahash_t					/* hash value */
- xfs_dir2_leafn_lasthash(
- 	struct xfs_inode *dp,
- 	struct xfs_buf	*bp,			/* leaf buffer */
-diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index d04547f..1abd314 100644
---- a/fs/xfs/libxfs/xfs_dir2_priv.h
-+++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -93,6 +93,8 @@ extern bool xfs_dir3_leaf_check_int(struct xfs_mount *mp, struct xfs_inode *dp,
- /* xfs_dir2_node.c */
- extern int xfs_dir2_leaf_to_node(struct xfs_da_args *args,
- 		struct xfs_buf *lbp);
-+extern xfs_dahash_t xfs_dir2_leaf1_lasthash(struct xfs_inode *dp,
-+		struct xfs_buf *bp, int *count);
- extern xfs_dahash_t xfs_dir2_leafn_lasthash(struct xfs_inode *dp,
- 		struct xfs_buf *bp, int *count);
- extern int xfs_dir2_leafn_lookup_int(struct xfs_buf *bp,
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-new file mode 100644
-index 0000000..c18f453
---- /dev/null
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -0,0 +1,469 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trace.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_dir2.h"
-+#include "xfs_dir2_priv.h"
-+#include "xfs_attr_leaf.h"
-+#include "scrub/common.h"
-+#include "scrub/dabtree.h"
-+
-+/* Directory/Attribute Btree */
-+
-+/* Find an entry at a certain level in a da btree. */
-+STATIC void *
-+xfs_scrub_da_btree_entry(
-+	struct xfs_scrub_da_btree	*ds,
-+	int				level,
-+	int				rec)
-+{
-+	char				*ents;
-+	void				*(*fn)(void *);
-+	size_t				sz;
-+	struct xfs_da_state_blk		*blk;
-+
-+	/* Dispatch the entry finding function. */
-+	blk = &ds->state->path.blk[level];
-+	switch (blk->magic) {
-+	case XFS_ATTR_LEAF_MAGIC:
-+	case XFS_ATTR3_LEAF_MAGIC:
-+		fn = (xfs_da_leaf_ents_fn)xfs_attr3_leaf_entryp;
-+		sz = sizeof(struct xfs_attr_leaf_entry);
-+		break;
-+	case XFS_DIR2_LEAFN_MAGIC:
-+	case XFS_DIR3_LEAFN_MAGIC:
-+		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->leaf_ents_p;
-+		sz = sizeof(struct xfs_dir2_leaf_entry);
-+		break;
-+	case XFS_DIR2_LEAF1_MAGIC:
-+	case XFS_DIR3_LEAF1_MAGIC:
-+		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->leaf_ents_p;
-+		sz = sizeof(struct xfs_dir2_leaf_entry);
-+		break;
-+	case XFS_DA_NODE_MAGIC:
-+	case XFS_DA3_NODE_MAGIC:
-+		fn = (xfs_da_leaf_ents_fn)ds->dargs.dp->d_ops->node_tree_p;
-+		sz = sizeof(struct xfs_da_node_entry);
-+		break;
-+	default:
-+		return NULL;
-+	}
-+
-+	ents = fn(blk->bp->b_addr);
-+	return ents + (sz * rec);
-+}
-+
-+/* Scrub a da btree hash (key). */
-+int
-+xfs_scrub_da_btree_hash(
-+	struct xfs_scrub_da_btree	*ds,
-+	int				level,
-+	__be32				*hashp)
-+{
-+	struct xfs_da_state_blk		*blks;
-+	struct xfs_da_node_entry	*btree;
-+	xfs_dahash_t			hash;
-+	xfs_dahash_t			parent_hash;
-+
-+	/* Is this hash in order? */
-+	hash = be32_to_cpu(*hashp);
-+	XFS_SCRUB_DA_CHECK(ds, hash >= ds->hashes[level]);
-+	ds->hashes[level] = hash;
-+
-+	if (level == 0)
-+		return 0;
-+
-+	/* Is this hash no larger than the parent hash? */
-+	blks = ds->state->path.blk;
-+	btree = xfs_scrub_da_btree_entry(ds, level - 1, blks[level - 1].index);
-+	parent_hash = be32_to_cpu(btree->hashval);
-+	XFS_SCRUB_DA_CHECK(ds, hash <= parent_hash);
-+
-+	return 0;
-+}
-+
-+/* Scrub a da btree pointer. */
-+STATIC int
-+xfs_scrub_da_btree_ptr(
-+	struct xfs_scrub_da_btree	*ds,
-+	int				level,
-+	xfs_dablk_t			blkno)
-+{
-+	XFS_SCRUB_DA_CHECK(ds, blkno >= ds->lowest);
-+	XFS_SCRUB_DA_CHECK(ds, ds->highest == 0 || blkno < ds->highest);
-+
-+	return 0;
-+}
-+
-+/*
-+ * The da btree scrubber can handle leaf1 blocks as a degenerate
-+ * form of da btree.  Since the regular da code doesn't handle
-+ * leaf1, we must multiplex the verifiers.
-+ */
-+static void
-+xfs_scrub_da_btree_read_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_da_blkinfo	*info = bp->b_addr;
-+
-+	switch (be16_to_cpu(info->magic)) {
-+	case XFS_DIR2_LEAF1_MAGIC:
-+	case XFS_DIR3_LEAF1_MAGIC:
-+		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
-+		bp->b_ops->verify_read(bp);
-+		return;
-+	default:
-+		bp->b_ops = &xfs_da3_node_buf_ops;
-+		bp->b_ops->verify_read(bp);
-+		return;
-+	}
-+}
-+static void
-+xfs_scrub_da_btree_write_verify(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_da_blkinfo	*info = bp->b_addr;
-+
-+	switch (be16_to_cpu(info->magic)) {
-+	case XFS_DIR2_LEAF1_MAGIC:
-+	case XFS_DIR3_LEAF1_MAGIC:
-+		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
-+		bp->b_ops->verify_write(bp);
-+		return;
-+	default:
-+		bp->b_ops = &xfs_da3_node_buf_ops;
-+		bp->b_ops->verify_write(bp);
-+		return;
-+	}
-+}
-+
-+static const struct xfs_buf_ops xfs_scrub_da_btree_buf_ops = {
-+	.name = "xfs_scrub_da_btree",
-+	.verify_read = xfs_scrub_da_btree_read_verify,
-+	.verify_write = xfs_scrub_da_btree_write_verify,
-+};
-+
-+/* Check a block's sibling pointers. */
-+STATIC int
-+xfs_scrub_da_btree_block_check_siblings(
-+	struct xfs_scrub_da_btree	*ds,
-+	int				level,
-+	struct xfs_da_blkinfo		*hdr)
-+{
-+	xfs_dablk_t			forw;
-+	xfs_dablk_t			back;
-+	int				retval;
-+	int				error = 0;
-+
-+	forw = be32_to_cpu(hdr->forw);
-+	back = be32_to_cpu(hdr->back);
-+
-+	/* Top level blocks should not have sibling pointers. */
-+	if (level == 0) {
-+		XFS_SCRUB_DA_CHECK(ds, forw == 0);
-+		XFS_SCRUB_DA_CHECK(ds, back == 0);
-+		return error;
-+	}
-+
-+	/* Check back (left) pointer. */
-+	if (back != 0) {
-+		/* Move the alternate cursor back one block. */
-+		ds->state->altpath = ds->state->path;
-+		error = xfs_da3_path_shift(ds->state, &ds->state->altpath,
-+				0, false, &retval);
-+		XFS_SCRUB_DA_OP_ERROR_GOTO(ds, &error, out);
-+		XFS_SCRUB_DA_GOTO(ds, retval == 0, verify_forw);
-+		XFS_SCRUB_DA_CHECK(ds,
-+				ds->state->altpath.blk[level].blkno == back);
-+	}
-+
-+verify_forw:
-+	/* Check forw (right) pointer. */
-+	if (!error && forw != 0) {
-+		/* Move the alternate cursor forward one block. */
-+		ds->state->altpath = ds->state->path;
-+		error = xfs_da3_path_shift(ds->state, &ds->state->altpath,
-+				1, false, &retval);
-+		XFS_SCRUB_DA_OP_ERROR_GOTO(ds, &error, out);
-+		XFS_SCRUB_DA_GOTO(ds, retval == 0, out);
-+		XFS_SCRUB_DA_CHECK(ds,
-+				ds->state->altpath.blk[level].blkno == forw);
-+	}
-+out:
-+	memset(&ds->state->altpath, 0, sizeof(ds->state->altpath));
-+	return error;
-+}
-+
-+/* Load a dir/attribute block from a btree. */
-+STATIC int
-+xfs_scrub_da_btree_block(
-+	struct xfs_scrub_da_btree	*ds,
-+	int				level,
-+	xfs_dablk_t			blkno)
-+{
-+	struct xfs_da_state_blk		*blk;
-+	struct xfs_da_intnode		*node;
-+	struct xfs_da_node_entry	*btree;
-+	struct xfs_da3_blkinfo		*hdr3;
-+	struct xfs_da_args		*dargs = &ds->dargs;
-+	struct xfs_inode		*ip = ds->dargs.dp;
-+	xfs_ino_t			owner;
-+	int				*pmaxrecs;
-+	struct xfs_da3_icnode_hdr	nodehdr;
-+	int				error;
-+
-+	blk = &ds->state->path.blk[level];
-+	ds->state->path.active = level + 1;
-+
-+	/* Release old block. */
-+	if (blk->bp) {
-+		xfs_trans_brelse(dargs->trans, blk->bp);
-+		blk->bp = NULL;
-+	}
-+
-+	/* Check the pointer. */
-+	blk->blkno = blkno;
-+	error = xfs_scrub_da_btree_ptr(ds, level, blkno);
-+	if (error) {
-+		blk->blkno = 0;
-+		goto out;
-+	}
-+
-+	/* Read the buffer. */
-+	error = xfs_da_read_buf(dargs->trans, dargs->dp, blk->blkno, -2,
-+			&blk->bp, dargs->whichfork,
-+			&xfs_scrub_da_btree_buf_ops);
-+	XFS_SCRUB_DA_OP_ERROR_GOTO(ds, &error, out_nobuf);
-+
-+	/* It's ok for a directory not to have a da btree in it. */
-+	if (ds->dargs.whichfork == XFS_DATA_FORK && level == 0 &&
-+			blk->bp == NULL)
-+		goto out_nobuf;
-+	XFS_SCRUB_DA_GOTO(ds, blk->bp != NULL, out_nobuf);
-+
-+	hdr3 = blk->bp->b_addr;
-+	blk->magic = be16_to_cpu(hdr3->hdr.magic);
-+	pmaxrecs = &ds->maxrecs[level];
-+
-+	/* Check the owner. */
-+	if (xfs_sb_version_hascrc(&ip->i_mount->m_sb)) {
-+		owner = be64_to_cpu(hdr3->owner);
-+		error = -EFSCORRUPTED;
-+		XFS_SCRUB_DA_GOTO(ds, owner == ip->i_ino, out);
-+	}
-+
-+	/* Check the siblings. */
-+	error = xfs_scrub_da_btree_block_check_siblings(ds, level, &hdr3->hdr);
-+	if (error)
-+		goto out;
-+
-+	/* Interpret the buffer. */
-+	error = -EFSCORRUPTED;
-+	switch (blk->magic) {
-+	case XFS_ATTR_LEAF_MAGIC:
-+	case XFS_ATTR3_LEAF_MAGIC:
-+		xfs_trans_buf_set_type(dargs->trans, blk->bp,
-+				XFS_BLFT_ATTR_LEAF_BUF);
-+		blk->magic = XFS_ATTR_LEAF_MAGIC;
-+		blk->hashval = xfs_attr_leaf_lasthash(blk->bp, pmaxrecs);
-+		XFS_SCRUB_DA_CHECK(ds, ds->tree_level == 0);
-+		break;
-+	case XFS_DIR2_LEAFN_MAGIC:
-+	case XFS_DIR3_LEAFN_MAGIC:
-+		xfs_trans_buf_set_type(dargs->trans, blk->bp,
-+				XFS_BLFT_DIR_LEAFN_BUF);
-+		blk->magic = XFS_DIR2_LEAFN_MAGIC;
-+		blk->hashval = xfs_dir2_leafn_lasthash(ip, blk->bp, pmaxrecs);
-+		XFS_SCRUB_DA_CHECK(ds, ds->tree_level == 0);
-+		break;
-+	case XFS_DIR2_LEAF1_MAGIC:
-+	case XFS_DIR3_LEAF1_MAGIC:
-+		xfs_trans_buf_set_type(dargs->trans, blk->bp,
-+				XFS_BLFT_DIR_LEAF1_BUF);
-+		blk->magic = XFS_DIR2_LEAF1_MAGIC;
-+		blk->hashval = xfs_dir2_leaf1_lasthash(ip, blk->bp, pmaxrecs);
-+		XFS_SCRUB_DA_CHECK(ds, ds->tree_level == 0);
-+		break;
-+	case XFS_DA_NODE_MAGIC:
-+	case XFS_DA3_NODE_MAGIC:
-+		xfs_trans_buf_set_type(dargs->trans, blk->bp,
-+				XFS_BLFT_DA_NODE_BUF);
-+		blk->magic = XFS_DA_NODE_MAGIC;
-+		node = blk->bp->b_addr;
-+		ip->d_ops->node_hdr_from_disk(&nodehdr, node);
-+		btree = ip->d_ops->node_tree_p(node);
-+		*pmaxrecs = nodehdr.count;
-+		blk->hashval = be32_to_cpu(btree[*pmaxrecs - 1].hashval);
-+		if (level == 0) {
-+			XFS_SCRUB_DA_GOTO(ds,
-+					nodehdr.level < XFS_DA_NODE_MAXDEPTH,
-+					out);
-+			ds->tree_level = nodehdr.level;
-+		} else
-+			XFS_SCRUB_DA_GOTO(ds, ds->tree_level == nodehdr.level,
-+					out);
-+		break;
-+	default:
-+		XFS_SCRUB_DA_CHECK(ds, false);
-+		xfs_trans_brelse(dargs->trans, blk->bp);
-+		blk->bp = NULL;
-+		blk->blkno = 0;
-+		break;
-+	}
-+	error = 0;
-+
-+out:
-+	return error;
-+out_nobuf:
-+	blk->blkno = 0;
-+	return error;
-+}
-+
-+/* Visit all nodes and leaves of a da btree. */
-+int
-+xfs_scrub_da_btree(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	xfs_scrub_da_btree_rec_fn	scrub_fn)
-+{
-+	struct xfs_scrub_da_btree	ds;
-+	struct xfs_mount		*mp = sc->tp->t_mountp;
-+	struct xfs_da_state_blk		*blks;
-+	struct xfs_da_node_entry	*btree;
-+	void				*rec;
-+	xfs_dablk_t			blkno;
-+	bool				is_attr;
-+	int				level;
-+	int				error;
-+
-+	memset(&ds, 0, sizeof(ds));
-+	/* Skip short format data structures; no btree to scan. */
-+	if (XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-+	    XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_BTREE)
-+		return 0;
-+
-+	/* Set up initial da state. */
-+	is_attr = whichfork == XFS_ATTR_FORK;
-+	ds.dargs.geo = is_attr ? mp->m_attr_geo : mp->m_dir_geo;
-+	ds.dargs.dp = sc->ip;
-+	ds.dargs.whichfork = whichfork;
-+	ds.dargs.trans = sc->tp;
-+	ds.dargs.op_flags = XFS_DA_OP_OKNOENT;
-+	ds.state = xfs_da_state_alloc();
-+	ds.state->args = &ds.dargs;
-+	ds.state->mp = sc->ip->i_mount;
-+	ds.type = is_attr ? "attr" : "dir";
-+	ds.sc = sc;
-+	blkno = ds.lowest = is_attr ? 0 : ds.dargs.geo->leafblk;
-+	ds.highest = is_attr ? 0 : ds.dargs.geo->freeblk;
-+	level = 0;
-+
-+	/* Find the root of the da tree, if present. */
-+	blks = ds.state->path.blk;
-+	error = xfs_scrub_da_btree_block(&ds, level, blkno);
-+	if (error)
-+		goto out_state;
-+	if (blks[level].bp == NULL)
-+		goto out_state;
-+
-+	blks[level].index = 0;
-+	while (level >= 0 && level < XFS_DA_NODE_MAXDEPTH) {
-+		/* Handle leaf block. */
-+		if (blks[level].magic != XFS_DA_NODE_MAGIC) {
-+			/* End of leaf, pop back towards the root. */
-+			if (blks[level].index >= ds.maxrecs[level]) {
-+				if (level > 0)
-+					blks[level - 1].index++;
-+				ds.tree_level++;
-+				level--;
-+				continue;
-+			}
-+
-+			/* Dispatch record scrubbing. */
-+			rec = xfs_scrub_da_btree_entry(&ds, level,
-+					blks[level].index);
-+			error = scrub_fn(&ds, level, rec);
-+			if (error < 0 ||
-+			    error == XFS_BTREE_QUERY_RANGE_ABORT)
-+				break;
-+			if (xfs_scrub_should_terminate(&error))
-+				break;
-+
-+			blks[level].index++;
-+			continue;
-+		}
-+
-+		btree = xfs_scrub_da_btree_entry(&ds, level, blks[level].index);
-+
-+		/* End of node, pop back towards the root. */
-+		if (blks[level].index >= ds.maxrecs[level]) {
-+			if (level > 0)
-+				blks[level - 1].index++;
-+			ds.tree_level++;
-+			level--;
-+			continue;
-+		}
-+
-+		/* Hashes in order for scrub? */
-+		error = xfs_scrub_da_btree_hash(&ds, level, &btree->hashval);
-+		if (error)
-+			goto out;
-+
-+		/* Drill another level deeper. */
-+		blkno = be32_to_cpu(btree->before);
-+		level++;
-+		ds.tree_level--;
-+		error = xfs_scrub_da_btree_block(&ds, level, blkno);
-+		if (error)
-+			goto out;
-+		if (blks[level].bp == NULL)
-+			goto out;
-+
-+		blks[level].index = 0;
-+	}
-+
-+out:
-+	/* Release all the buffers we're tracking. */
-+	for (level = 0; level < XFS_DA_NODE_MAXDEPTH; level++) {
-+		if (blks[level].bp == NULL)
-+			continue;
-+		xfs_trans_brelse(sc->tp, blks[level].bp);
-+		blks[level].bp = NULL;
-+	}
-+
-+out_state:
-+	xfs_da_state_free(ds.state);
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/dabtree.h b/fs/xfs/scrub/dabtree.h
-new file mode 100644
-index 0000000..1302d67
---- /dev/null
-+++ b/fs/xfs/scrub/dabtree.h
-@@ -0,0 +1,62 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef __XFS_REPAIR_DABTREE_H__
-+#define __XFS_REPAIR_DABTREE_H__
-+
-+/* dir/attr btree */
-+
-+struct xfs_scrub_da_btree {
-+	struct xfs_da_args		dargs;
-+	xfs_dahash_t			hashes[XFS_DA_NODE_MAXDEPTH];
-+	int				maxrecs[XFS_DA_NODE_MAXDEPTH];
-+	struct xfs_da_state		*state;
-+	const char			*type;
-+	struct xfs_scrub_context	*sc;
-+	xfs_dablk_t			lowest;
-+	xfs_dablk_t			highest;
-+	int				tree_level;
-+};
-+
-+typedef void *(*xfs_da_leaf_ents_fn)(void *);
-+typedef int (*xfs_scrub_da_btree_rec_fn)(struct xfs_scrub_da_btree *ds,
-+		int level, void *rec);
-+
-+#define XFS_SCRUB_DA_CHECK(ds, fs_ok) \
-+	XFS_SCRUB_DATA_CHECK((ds)->sc, (ds)->dargs.whichfork, \
-+			xfs_dir2_da_to_db((ds)->dargs.geo, \
-+			(ds)->state->path.blk[level].blkno), (ds)->type, \
-+			fs_ok)
-+#define XFS_SCRUB_DA_GOTO(ds, fs_ok, label) \
-+	XFS_SCRUB_DATA_GOTO((ds)->sc, (ds)->dargs.whichfork, \
-+			xfs_dir2_da_to_db((ds)->dargs.geo, \
-+			(ds)->state->path.blk[level].blkno), (ds)->type, \
-+			fs_ok, label)
-+#define XFS_SCRUB_DA_OP_ERROR_GOTO(ds, error, label) \
-+	XFS_SCRUB_FILE_OP_ERROR_GOTO((ds)->sc, (ds)->dargs.whichfork, \
-+			xfs_dir2_da_to_db((ds)->dargs.geo, \
-+			(ds)->state->path.blk[level].blkno), (ds)->type, \
-+			(error), label)
-+
-+int xfs_scrub_da_btree_hash(struct xfs_scrub_da_btree *ds, int level,
-+			    __be32 *hashp);
-+int xfs_scrub_da_btree(struct xfs_scrub_context *sc, int whichfork,
-+		       xfs_scrub_da_btree_rec_fn scrub_fn);
-+
-+#endif /* __XFS_REPAIR_DABTREE_H__ */
-
+SGVsbG8sDQppIGhhdmUgdGhpcyBkdXJpbmcgbmlnaHQgd2l0aCBlcnJvcl9sZXZlbCA9IDExLCBu
+byBmb3JjZSBzaHV0ZG93bg0KKGtlcm5lbCA0LjguMTUpDQpNYXIgMTQgMDI6MzY6MjkgdnBzMiBr
+ZXJuZWw6IFs1NDc5OS4wNjE5NTZdIFhGUyAoZG0tMik6IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0
+ZWN0ZWQgYXQgeGZzX2F0dHIzX2xlYWZfcmVhZF92ZXJpZnkrMHg1YS8weDEwMCBbeGZzXSwgeGZz
+X2F0dHIzX2xlYWYgYmxvY2sgMHgyNGU3MDI2OA0KTWFyIDE0IDAyOjM2OjI5IHZwczIga2VybmVs
+OiBbNTQ3OTkuMDYzMTk0XSBYRlMgKGRtLTIpOiBVbm1vdW50IGFuZCBydW4geGZzX3JlcGFpcg0K
+TWFyIDE0IDAyOjM2OjI5IHZwczIga2VybmVsOiBbNTQ3OTkuMDYzNzg2XSBYRlMgKGRtLTIpOiBG
+aXJzdCA2NCBieXRlcyBvZiBjb3JydXB0ZWQgbWV0YWRhdGEgYnVmZmVyOg0KTWFyIDE0IDAyOjM2
+OjI5IHZwczIga2VybmVsOiBbNTQ3OTkuMDY0Mzc3XSBmZmZmOTMzZGIxOTg4MDAwOiAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCBmYiBlZSAwMCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4u
+Lg0KTWFyIDE0IDAyOjM2OjI5IHZwczIga2VybmVsOiBbNTQ3OTkuMDY0OTcyXSBmZmZmOTMzZGIx
+OTg4MDEwOiAxMCAwMCAwMCAwMCAwMCAyMCAwZiBlMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAg
+Li4uLi4gLi4uLi4uLi4uLg0KTWFyIDE0IDAyOjM2OjI5IHZwczIga2VybmVsOiBbNTQ3OTkuMDY1
+NTY5XSBmZmZmOTMzZGIxOTg4MDIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLg0KTWFyIDE0IDAyOjM2OjI5IHZwczIga2Vy
+bmVsOiBbNTQ3OTkuMDY2MTQxXSBmZmZmOTMzZGIxOTg4MDMwOiAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLg0KTWFyIDE0IDAy
+OjM2OjI5IHZwczIga2VybmVsOiBbNTQ3OTkuMDY2NjgzXSBDUFU6IDEgUElEOiAyMjYwOSBDb21t
+OiBrd29ya2VyLzE6MzAgVGFpbnRlZDogRyAgICAgICAgICAgIEUgICA0LjguMC0wLmJwby4yLWFt
+ZDY0ICMxIERlYmlhbiA0LjguMTUtMn5icG84KzINCk1hciAxNCAwMjozNjoyOSB2cHMyIGtlcm5l
+bDogWzU0Nzk5LjA2NjY4NF0gSGFyZHdhcmUgbmFtZTogVk13YXJlLCBJbmMuIFZNd2FyZSBWaXJ0
+dWFsIFBsYXRmb3JtLzQ0MEJYIERlc2t0b3AgUmVmZXJlbmNlIFBsYXRmb3JtLCBCSU9TIDYuMDAg
+MDQvMTQvMjAxNA0KTWFyIDE0IDAyOjM2OjI5IHZwczIga2VybmVsOiBbNTQ3OTkuMDY2NzEwXSBX
+b3JrcXVldWU6IHhmcy1idWYvZG0tMiB4ZnNfYnVmX2lvZW5kX3dvcmsgW3hmc10NCk1hciAxNCAw
+MjozNjoyOSB2cHMyIGtlcm5lbDogWzU0Nzk5LjA2NjcxMl0gIDAwMDAwMDAwMDAwMDAyODYgMDAw
+MDAwMDA5NDBlMzI0OCBmZmZmZmZmZjkyMzIyYjA1IGZmZmY5MzNkYWZmMGUzMDANCk1hciAxNCAw
+MjozNjoyOSB2cHMyIGtlcm5lbDogWzU0Nzk5LjA2NjcxNF0gIGZmZmY5MzQwMTZlNzA0ODAgZmZm
+ZmZmZmZjMDczODk1YSBmZmZmOTM0MWJmYzk4NzAwIDAwMDAwMDAwOTQwZTMyNDgNCk1hciAxNCAw
+MjozNjoyOSB2cHMyIGtlcm5lbDogWzU0Nzk5LjA2NjcxNV0gIGZmZmY5MzNkYWZmMGUzMDAgZmZm
+ZjkzNDAxNmU3MDQ4MCAwMDAwMDAwMDAwMDAwMDAwIGZmZmZmZmZmYzA3NzlhMzQNCk1hciAxNCAw
+MjozNjoyOSB2cHMyIGtlcm5lbDogWzU0Nzk5LjA2NjcxNl0gQ2FsbCBUcmFjZToNCk1hciAxNCAw
+MjozNjoyOSB2cHMyIGtlcm5lbDogWzU0Nzk5LjA2NjczNl0gIFs8ZmZmZmZmZmY5MjMyMmIwNT5d
+ID8gZHVtcF9zdGFjaysweDVjLzB4NzcNCk1hciAxNCAwMjozNjoyOSB2cHMyIGtlcm5lbDogWzU0
+Nzk5LjA2Njc1MV0gIFs8ZmZmZmZmZmZjMDczODk1YT5dID8geGZzX2F0dHIzX2xlYWZfcmVhZF92
+ZXJpZnkrMHg1YS8weDEwMCBbeGZzXQ0KTWFyIDE0IDAyOjM2OjI5IHZwczIga2VybmVsOiBbNTQ3
+OTkuMDY2NzY4XSAgWzxmZmZmZmZmZmMwNzc5YTM0Pl0gPyB4ZnNfYnVmX2lvZW5kKzB4NTQvMHgx
+ZDAgW3hmc10NCk1hciAxNCAwMjozNjoyOSB2cHMyIGtlcm5lbDogWzU0Nzk5LjA2Njc3Nl0gIFs8
+ZmZmZmZmZmY5MjA5MDAwYj5dID8gcHJvY2Vzc19vbmVfd29yaysweDE0Yi8weDQxMA0KTWFyIDE0
+IDAyOjM2OjI5IHZwczIga2VybmVsOiBbNTQ3OTkuMDY2Nzc3XSAgWzxmZmZmZmZmZjkyMDkwYWM1
+Pl0gPyB3b3JrZXJfdGhyZWFkKzB4NjUvMHg0YTANCk1hciAxNCAwMjozNjoyOSB2cHMyIGtlcm5l
+bDogWzU0Nzk5LjA2Njc3OF0gIFs8ZmZmZmZmZmY5MjA5MGE2MD5dID8gcmVzY3Vlcl90aHJlYWQr
+MHgzNDAvMHgzNDANCk1hciAxNCAwMjozNjoyOSB2cHMyIGtlcm5lbDogWzU0Nzk5LjA2Njc4MF0g
+IFs8ZmZmZmZmZmY5MjA5NWQ1Zj5dID8ga3RocmVhZCsweGRmLzB4MTAwDQpNYXIgMTQgMDI6MzY6
+MjkgdnBzMiBrZXJuZWw6IFs1NDc5OS4wNjY4MDVdICBbPGZmZmZmZmZmOTIwMjQ3OGI+XSA/IF9f
+c3dpdGNoX3RvKzB4MmJiLzB4NzEwDQpNYXIgMTQgMDI6MzY6MjkgdnBzMiBrZXJuZWw6IFs1NDc5
+OS4wNjY4MDldICBbPGZmZmZmZmZmOTI1ZWNmMmY+XSA/IHJldF9mcm9tX2ZvcmsrMHgxZi8weDQw
+DQpNYXIgMTQgMDI6MzY6MjkgdnBzMiBrZXJuZWw6IFs1NDc5OS4wNjY4MTBdICBbPGZmZmZmZmZm
+OTIwOTVjODA+XSA/IGt0aHJlYWRfcGFyaysweDUwLzB4NTANCk1hciAxNCAwMjozNjoyOSB2cHMy
+IGtlcm5lbDogWzU0Nzk5LjA2NzU2Ml0gWEZTIChkbS0yKTogbWV0YWRhdGEgSS9PIGVycm9yOiBi
+bG9jayAweDI0ZTcwMjY4ICgieGZzX3RyYW5zX3JlYWRfYnVmX21hcCIpIGVycm9yIDExNyBudW1i
+bGtzIDgNCg0KVGhpcyBvbmUgaXMgZnJvbSBub3csIHdoZW4gaSB0cmllZCB0byBmaW5kIGlub2Rl
+PTIxNTI2MTYyNjQgd2hpY2ggY29ycmVzcG9uZHMgdG8gYmxvY2sgMHgyNGU3MDI2OCAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCihrZXJu
+ZWwgNC45LjEzKQ0KTWFyIDE0IDA5OjAxOjMxIHZwczIga2VybmVsOiBbMTA2NDQuNTI2ODM5XSBY
+RlMgKGRtLTIpOiBNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVkIGF0IHhmc19hdHRyM19sZWFm
+X3JlYWRfdmVyaWZ5KzB4NWEvMHgxMDAgW3hmc10sIHhmc19hdHRyM19sZWFmIGJsb2NrIDB4MjRl
+NzAyNjggICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgDQpNYXIgMTQgMDk6MDE6MzEgdnBzMiBrZXJuZWw6IFsxMDY0NC41MjY4OTZdIFhGUyAo
+ZG0tMik6IFVubW91bnQgYW5kIHJ1biB4ZnNfcmVwYWlyICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICANCk1hciAxNCAwOTowMTozMSB2cHMyIGtlcm5lbDogWzEwNjQ0LjUyNjkxN10gWEZTIChkbS0y
+KTogRmlyc3QgNjQgYnl0ZXMgb2YgY29ycnVwdGVkIG1ldGFkYXRhIGJ1ZmZlcjogICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0K
+TWFyIDE0IDA5OjAxOjMxIHZwczIga2VybmVsOiBbMTA2NDQuNTI2OTQ0XSBmZmZmOWYwYjViNWQy
+MDAwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCBmYiBlZSAwMCAwMCAwMCAwMCAwMCAwMCAgLi4u
+Li4uLi4uLi4uLi4uLiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQpNYXIg
+MTQgMDk6MDE6MzEgdnBzMiBrZXJuZWw6IFsxMDY0NC41MjY5ODBdIGZmZmY5ZjBiNWI1ZDIwMTA6
+IDEwIDAwIDAwIDAwIDAwIDIwIDBmIGUwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLiAu
+Li4uLi4uLi4uICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCk1hciAxNCAw
+OTowMTozMSB2cHMyIGtlcm5lbDogWzEwNjQ0LjUyNzAxNV0gZmZmZjlmMGI1YjVkMjAyMDogMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4u
+Li4uLi4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0KTWFyIDE0IDA5OjAx
+OjMxIHZwczIga2VybmVsOiBbMTA2NDQuNTI3MDQ5XSBmZmZmOWYwYjViNWQyMDMwOiAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4u
+LiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQpNYXIgMTQgMDk6MDE6MzEg
+dnBzMiBrZXJuZWw6IFsxMDY0NC41MjcwODZdIENQVTogMiBQSUQ6IDMwNjg5IENvbW06IGt3b3Jr
+ZXIvMjozIFRhaW50ZWQ6IEcgICAgICAgICAgICBFICAgNC45LjAtMC5icG8uMi1hbWQ2NCAjMSBE
+ZWJpYW4gNC45LjEzLTF+YnBvOCsxICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCk1hciAxNCAwOTowMTozMSB2cHMy
+IGtlcm5lbDogWzEwNjQ0LjUyNzA4N10gSGFyZHdhcmUgbmFtZTogVk13YXJlLCBJbmMuIFZNd2Fy
+ZSBWaXJ0dWFsIFBsYXRmb3JtLzQ0MEJYIERlc2t0b3AgUmVmZXJlbmNlIFBsYXRmb3JtLCBCSU9T
+IDYuMDAgMDQvMTQvMjAxNA0KTWFyIDE0IDA5OjAxOjMxIHZwczIga2VybmVsOiBbMTA2NDQuNTI3
+MTE5XSBXb3JrcXVldWU6IHhmcy1idWYvZG0tMiB4ZnNfYnVmX2lvZW5kX3dvcmsgW3hmc10NCk1h
+ciAxNCAwOTowMTozMSB2cHMyIGtlcm5lbDogWzEwNjQ0LjUyNzEyMV0gIDAwMDAwMDAwMDAwMDAw
+MDAgZmZmZmZmZmY5Y2YyOWNkNSBmZmZmOWYwYjkxMTA1YjAwIGZmZmY5ZjBiNmFjZDI5MDANCk1h
+ciAxNCAwOTowMTozMSB2cHMyIGtlcm5lbDogWzEwNjQ0LjUyNzEyM10gIGZmZmZmZmZmYzA3NDlh
+Y2EgZmZmZjlmMGU3ZmQxODcwMCAwMDAwMDAwMDYwNzZhMGMwIGZmZmY5ZjBiOTExMDViMDANCk1h
+ciAxNCAwOTowMTozMSB2cHMyIGtlcm5lbDogWzEwNjQ0LjUyNzEyNF0gIGZmZmY5ZjBiNmFjZDI5
+MDAgMDAwMDAwMDAwMDAwMDAwMCBmZmZmZmZmZmMwNzk0NDE0IGZmZmY5ZjBiOTExMDViYTgNCk1h
+ciAxNCAwOTowMTozMSB2cHMyIGtlcm5lbDogWzEwNjQ0LjUyNzEyNl0gQ2FsbCBUcmFjZToNCk1h
+ciAxNCAwOTowMTozMSB2cHMyIGtlcm5lbDogWzEwNjQ0LjUyNzEzMl0gIFs8ZmZmZmZmZmY5Y2Yy
+OWNkNT5dID8gZHVtcF9zdGFjaysweDVjLzB4NzcNCk1hciAxNCAwOTowMTozMSB2cHMyIGtlcm5l
+bDogWzEwNjQ0LjUyNzE1NV0gIFs8ZmZmZmZmZmZjMDc0OWFjYT5dID8geGZzX2F0dHIzX2xlYWZf
+cmVhZF92ZXJpZnkrMHg1YS8weDEwMCBbeGZzXQ0KTWFyIDE0IDA5OjAxOjMxIHZwczIga2VybmVs
+OiBbMTA2NDQuNTI3MTg0XSAgWzxmZmZmZmZmZmMwNzk0NDE0Pl0gPyB4ZnNfYnVmX2lvZW5kKzB4
+NTQvMHgxZDAgW3hmc10NCk1hciAxNCAwOTowMTozMSB2cHMyIGtlcm5lbDogWzEwNjQ0LjUyNzE4
+N10gIFs8ZmZmZmZmZmY5Y2M5MTcxYj5dID8gcHJvY2Vzc19vbmVfd29yaysweDE0Yi8weDQxMA0K
+TWFyIDE0IDA5OjAxOjMxIHZwczIga2VybmVsOiBbMTA2NDQuNTI3MTg5XSAgWzxmZmZmZmZmZjlj
+YzkyMWQ1Pl0gPyB3b3JrZXJfdGhyZWFkKzB4NjUvMHg0YTANCk1hciAxNCAwOTowMTozMSB2cHMy
+IGtlcm5lbDogWzEwNjQ0LjUyNzE5MF0gIFs8ZmZmZmZmZmY5Y2M5MjE3MD5dID8gcmVzY3Vlcl90
+aHJlYWQrMHgzNDAvMHgzNDANCk1hciAxNCAwOTowMTozMSB2cHMyIGtlcm5lbDogWzEwNjQ0LjUy
+NzE5MV0gIFs8ZmZmZmZmZmY5Y2M5MjE3MD5dID8gcmVzY3Vlcl90aHJlYWQrMHgzNDAvMHgzNDAN
+Ck1hciAxNCAwOTowMTozMSB2cHMyIGtlcm5lbDogWzEwNjQ0LjUyNzE5NF0gIFs8ZmZmZmZmZmY5
+Y2MwM2I4MT5dID8gZG9fc3lzY2FsbF82NCsweDgxLzB4MTkwDQpNYXIgMTQgMDk6MDE6MzEgdnBz
+MiBrZXJuZWw6IFsxMDY0NC41MjcxOTddICBbPGZmZmZmZmZmOWNjN2M3MzA+XSA/IFN5U19leGl0
+X2dyb3VwKzB4MTAvMHgxMA0KTWFyIDE0IDA5OjAxOjMxIHZwczIga2VybmVsOiBbMTA2NDQuNTI3
+MTk4XSAgWzxmZmZmZmZmZjljYzk3NGMwPl0gPyBrdGhyZWFkKzB4ZTAvMHgxMDANCk1hciAxNCAw
+OTowMTozMSB2cHMyIGtlcm5lbDogWzEwNjQ0LjUyNzIwMF0gIFs8ZmZmZmZmZmY5Y2MyNDc2Yj5d
+ID8gX19zd2l0Y2hfdG8rMHgyYmIvMHg3MDANCk1hciAxNCAwOTowMTozMSB2cHMyIGtlcm5lbDog
+WzEwNjQ0LjUyNzIwMl0gIFs8ZmZmZmZmZmY5Y2M5NzNlMD5dID8ga3RocmVhZF9wYXJrKzB4NjAv
+MHg2MA0KTWFyIDE0IDA5OjAxOjMxIHZwczIga2VybmVsOiBbMTA2NDQuNTI3MjA1XSAgWzxmZmZm
+ZmZmZjlkMWZiNjc1Pl0gPyByZXRfZnJvbV9mb3JrKzB4MjUvMHgzMA0KTWFyIDE0IDA5OjAxOjMx
+IHZwczIga2VybmVsOiBbMTA2NDQuNTI3MjEzXSBYRlMgKGRtLTIpOiBtZXRhZGF0YSBJL08gZXJy
+b3I6IGJsb2NrIDB4MjRlNzAyNjggKCJ4ZnNfdHJhbnNfcmVhZF9idWZfbWFwIikgZXJyb3IgMTE3
+IG51bWJsa3MgOA0KDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLQ0KVGhlcmUgYXJlIGxvZ3MgZnJvbSBteSBjb2xsZWd1ZSwgaGUgd2Fz
+bid0IGFibGUgdG8gZG8gcmVwYWlyLCBkZXZpY2Ugd2FzIGJ1c3ksIHByb2JhYmx5IHNvbWV0aGlu
+ZyBmb3Jnb3RlbiB0byBzdG9wIChjb250YWluZXIgd2l0aCBwcml2YXRlIG1vdW50cz8pDQoNCiMg
+eGZzX3JlcGFpciAtbiAvZGV2L21hcHBlci92Z0Rpc2stbHZEYXRhDQpQaGFzZSAxIC0gZmluZCBh
+bmQgdmVyaWZ5IHN1cGVyYmxvY2suLi4NClBoYXNlIDIgLSB1c2luZyBpbnRlcm5hbCBsb2cNCiAg
+ICAgICAgLSB6ZXJvIGxvZy4uLg0KICAgICAgICAtIHNjYW4gZmlsZXN5c3RlbSBmcmVlc3BhY2Ug
+YW5kIGlub2RlIG1hcHMuLi4NCnNiX2ZkYmxvY2tzIDIyNDUwNTksIGNvdW50ZWQgMjI1MzI1MQ0K
+ICAgICAgICAtIGZvdW5kIHJvb3QgaW5vZGUgY2h1bmsNClBoYXNlIDMgLSBmb3IgZWFjaCBBRy4u
+Lg0KICAgICAgICAtIHNjYW4gKGJ1dCBkb24ndCBjbGVhcikgYWdpIHVubGlua2VkIGxpc3RzLi4u
+DQogICAgICAgIC0gcHJvY2VzcyBrbm93biBpbm9kZXMgYW5kIHBlcmZvcm0gaW5vZGUgZGlzY292
+ZXJ5Li4uDQogICAgICAgIC0gYWdubyA9IDANCiAgICAgICAgLSBhZ25vID0gMQ0KICAgICAgICAt
+IGFnbm8gPSAyDQpiYWQgYXR0cmlidXRlIGNvdW50IDAgaW4gYXR0ciBibG9jayAwLCBpbm9kZSAy
+MTUyNjE2MjY0DQpwcm9ibGVtIHdpdGggYXR0cmlidXRlIGNvbnRlbnRzIGluIGlub2RlIDIxNTI2
+MTYyNjQNCndvdWxkIGNsZWFyIGF0dHIgZm9yaw0KYmFkIG5ibG9ja3MgMSBmb3IgaW5vZGUgMjE1
+MjYxNjI2NCwgd291bGQgcmVzZXQgdG8gMA0KYmFkIGFuZXh0ZW50cyAxIGZvciBpbm9kZSAyMTUy
+NjE2MjY0LCB3b3VsZCByZXNldCB0byAwDQogICAgICAgIC0gcHJvY2VzcyBuZXdseSBkaXNjb3Zl
+cmVkIGlub2Rlcy4uLg0KUGhhc2UgNCAtIGNoZWNrIGZvciBkdXBsaWNhdGUgYmxvY2tzLi4uDQog
+ICAgICAgIC0gc2V0dGluZyB1cCBkdXBsaWNhdGUgZXh0ZW50IGxpc3QuLi4NCiAgICAgICAgLSBj
+aGVjayBmb3IgaW5vZGVzIGNsYWltaW5nIGR1cGxpY2F0ZSBibG9ja3MuLi4NCiAgICAgICAgLSBh
+Z25vID0gMA0KICAgICAgICAtIGFnbm8gPSAxDQogICAgICAgIC0gYWdubyA9IDINCk5vIG1vZGlm
+eSBmbGFnIHNldCwgc2tpcHBpbmcgcGhhc2UgNQ0KUGhhc2UgNiAtIGNoZWNrIGlub2RlIGNvbm5l
+Y3Rpdml0eS4uLg0KICAgICAgICAtIHRyYXZlcnNpbmcgZmlsZXN5c3RlbSAuLi4NCiAgICAgICAg
+LSB0cmF2ZXJzYWwgZmluaXNoZWQgLi4uDQogICAgICAgIC0gbW92aW5nIGRpc2Nvbm5lY3RlZCBp
+bm9kZXMgdG8gbG9zdCtmb3VuZCAuLi4NClBoYXNlIDcgLSB2ZXJpZnkgbGluayBjb3VudHMuLi4N
+Ck5vIG1vZGlmeSBmbGFnIHNldCwgc2tpcHBpbmcgZmlsZXN5c3RlbSBmbHVzaCBhbmQgZXhpdGlu
+Zy4NCiANCiMgeGZzX2RiIC1yIC9kZXYvbWFwcGVyL3ZnRGlzazItbHZEYXRhDQp4ZnNfZGI+IGlu
+b2RlIDIxNTI2MTYyNjQNCnhmc19kYj4gcHJpbnQNCmNvcmUubWFnaWMgPSAweDQ5NGUNCmNvcmUu
+bW9kZSA9IDAxMDA2NjQNCmNvcmUudmVyc2lvbiA9IDINCmNvcmUuZm9ybWF0ID0gMiAoZXh0ZW50
+cykNCmNvcmUubmxpbmt2MiA9IDENCmNvcmUub25saW5rID0gMA0KY29yZS5wcm9qaWRfbG8gPSAw
+DQpjb3JlLnByb2ppZF9oaSA9IDANCmNvcmUudWlkID0gMjAwNDUNCmNvcmUuZ2lkID0gMjAwNDUN
+CmNvcmUuZmx1c2hpdGVyID0gMA0KY29yZS5hdGltZS5zZWMgPSBNb24gTWFyIDEzIDExOjE2OjMx
+IDIwMTcNCmNvcmUuYXRpbWUubnNlYyA9IDgxNTY0NTAwOA0KY29yZS5tdGltZS5zZWMgPSBNb24g
+TWFyIDEzIDExOjE2OjMxIDIwMTcNCmNvcmUubXRpbWUubnNlYyA9IDgxNTY0NTAwOA0KY29yZS5j
+dGltZS5zZWMgPSBNb24gTWFyIDEzIDExOjE2OjMxIDIwMTcNCmNvcmUuY3RpbWUubnNlYyA9IDgx
+NTY0NTAwOA0KY29yZS5zaXplID0gMA0KY29yZS5uYmxvY2tzID0gMQ0KY29yZS5leHRzaXplID0g
+MA0KY29yZS5uZXh0ZW50cyA9IDANCmNvcmUubmFleHRlbnRzID0gMQ0KY29yZS5mb3Jrb2ZmID0g
+MTUNCmNvcmUuYWZvcm1hdCA9IDIgKGV4dGVudHMpDQpjb3JlLmRtZXZtYXNrID0gMA0KY29yZS5k
+bXN0YXRlID0gMA0KY29yZS5uZXdydGJtID0gMA0KY29yZS5wcmVhbGxvYyA9IDANCmNvcmUucmVh
+bHRpbWUgPSAwDQpjb3JlLmltbXV0YWJsZSA9IDANCmNvcmUuYXBwZW5kID0gMA0KY29yZS5zeW5j
+ID0gMA0KY29yZS5ub2F0aW1lID0gMA0KY29yZS5ub2R1bXAgPSAwDQpjb3JlLnJ0aW5oZXJpdCA9
+IDANCmNvcmUucHJvamluaGVyaXQgPSAwDQpjb3JlLm5vc3ltbGlua3MgPSAwDQpjb3JlLmV4dHN6
+ID0gMA0KY29yZS5leHRzemluaGVyaXQgPSAwDQpjb3JlLm5vZGVmcmFnID0gMA0KY29yZS5maWxl
+c3RyZWFtID0gMA0KY29yZS5nZW4gPSAzMjc5MzkxMjg1DQpuZXh0X3VubGlua2VkID0gbnVsbA0K
+dSA9IChlbXB0eSkNCmEuYm14WzBdID0gW3N0YXJ0b2ZmLHN0YXJ0YmxvY2ssYmxvY2tjb3VudCxl
+eHRlbnRmbGFnXQ0KMDpbMCwxMzQ1MzgzMTcsMSwwXQ0KIA0KIyB4ZnNfcmVwYWlyIC9kZXYvbWFw
+cGVyL3ZnRGlzazItbHZEYXRhDQp4ZnNfcmVwYWlyOiBjYW5ub3Qgb3BlbiAvZGV2L21hcHBlci92
+Z0Rpc2syLWx2RGF0YTogRGV2aWNlIG9yIHJlc291cmNlIGJ1c3kNCg0KDQoNCkxpYm9yDQoNCg0K
+DQpPbiBwb25kxJtsw60gMTMuIGLFmWV6bmEgMjAxNyA5OjE0OjUzIENFVCBFcmljIFNhbmRlZW4g
+d3JvdGU6DQo+IE9uIDMvMTMvMTcgODo0OCBBTSwgTGlib3IgS2xlcMOhxI0gd3JvdGU6DQo+ID4g
+SGVsbG8sDQo+ID4gcHJvYmxlbSB3aXRoIHRoaXMgaG9zdCBhZ2FpbiwgYWZ0ZXIgcnVubmluZyB1
+bmludGVycnVwdGVkIGZyb20gbGFzdCBlbWFpbC9yZXBhaXIgb24ga2VybmVsIDQuOC4xNS4gKHNv
+IHNpbmNlIDMxLiBKYW51YXJ5KQ0KPiA+IA0KPiA+IFRvZGF5LCBtZXRhZGF0YSBjb3JydXB0aW9u
+IG9jY3VyZWQgYWdhaW4uDQo+ID4gTWFyIDEzIDExOjE2OjMxIHZwczIga2VybmVsOiBbMzU2Mzk5
+MS42MjMyNjBdIFhGUyAoZG0tMik6IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0ZWQgYXQgeGZz
+X2F0dHIzX2xlYWZfd3JpdGVfdmVyaWZ5KzB4ZTgvMHgxMDAgW3hmc10sIHhmc19hdHRyM19sZWFm
+IGJsb2NrIDB4MjRlNzAyNjgNCj4gPiBNYXIgMTMgMTE6MTY6MzEgdnBzMiBrZXJuZWw6IFszNTYz
+OTkxLjYyNDMyMV0gWEZTIChkbS0yKTogVW5tb3VudCBhbmQgcnVuIHhmc19yZXBhaXINCj4gDQo+
+IE9rLCBpbnRlcmVzdGluZyB0aGF0IHlvdSBoaXQgdGhpcyB3aGVuIHdyaXRpbmcgYW4gYXR0ci4N
+Cj4gDQo+IENhbiB5b3UgdHVybiB0aGUgbG9nZ2luZyBsZXZlbCB3YXkgdXA6DQo+ICMgZWNobyAx
+MSA+IC9wcm9jL3N5cy9mcy94ZnMvZXJyb3JfbGV2ZWwNCj4gDQo+IGFuZCB0aGVuIHRoaW5ncyBs
+aWtlIHRoZSBmb3JjZSBzaHV0ZG93biBhbmQgdGhlIG1ldGFkYXRhIHdpbGwgZ2l2ZSB5b3UgYSBi
+YWNrdHJhY2UsIHdoaWNoIG1pZ2h0IGJlIHVzZWZ1bCAobm9pc3ksIGJ1dCB1c2VmdWwpLi4uDQo+
+IA0KPiAtRXJpYw0KPiANCj4gPiBNYXIgMTMgMTE6MTY6MzEgdnBzMiBrZXJuZWw6IFszNTYzOTkx
+LjYyNDY5Nl0gWEZTIChkbS0yKTogRmlyc3QgNjQgYnl0ZXMgb2YgY29ycnVwdGVkIG1ldGFkYXRh
+IGJ1ZmZlcjoNCj4gPiBNYXIgMTMgMTE6MTY6MzEgdnBzMiBrZXJuZWw6IFszNTYzOTkxLjYyNTA4
+NV0gZmZmZjk5NDU0MzQxMDAwMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgZmIgZWUgMDAgMDAg
+MDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4NCj4gPiBNYXIgMTMgMTE6MTY6MzEgdnBzMiBr
+ZXJuZWw6IFszNTYzOTkxLjYyNTUxMV0gZmZmZjk5NDU0MzQxMDAxMDogMTAgMDAgMDAgMDAgMDAg
+MjAgMGYgZTAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uIC4uLi4uLi4uLi4NCj4gPiBN
+YXIgMTMgMTE6MTY6MzEgdnBzMiBrZXJuZWw6IFszNTYzOTkxLjYyNTk4M10gZmZmZjk5NDU0MzQx
+MDAyMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4u
+Li4uLi4uLi4uLi4uLi4NCj4gPiBNYXIgMTMgMTE6MTY6MzEgdnBzMiBrZXJuZWw6IFszNTYzOTkx
+LjYyNjM5OF0gZmZmZjk5NDU0MzQxMDAzMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4NCj4gPiBNYXIgMTMgMTE6MTY6MzEg
+dnBzMiBrZXJuZWw6IFszNTYzOTkxLjYyNjgyOV0gWEZTIChkbS0yKTogeGZzX2RvX2ZvcmNlX3No
+dXRkb3duKDB4OCkgY2FsbGVkIGZyb20gbGluZSAxMzIyIG9mIGZpbGUgL2J1aWxkL2xpbnV4LWFQ
+cnI4TC9saW51eC00LjguMTUvZnMveGZzL3hmc19idWYuYy4gIFJldHVybiBhZGRyZXNzID0gMHhm
+ZmZmZmZmZmMwODI5NWM0DQo+ID4gTWFyIDEzIDExOjE2OjMxIHZwczIga2VybmVsOiBbMzU2Mzk5
+MS42MjcyMTBdIFhGUyAoZG0tMik6IHhmc19pbWFwX3RvX2JwOiB4ZnNfdHJhbnNfcmVhZF9idWYo
+KSByZXR1cm5lZCBlcnJvciAtNS4NCj4gPiBNYXIgMTMgMTE6MTY6MzEgdnBzMiBrZXJuZWw6IFsz
+NTYzOTkxLjYyNzIxMl0gWEZTIChkbS0yKTogQ29ycnVwdGlvbiBvZiBpbi1tZW1vcnkgZGF0YSBk
+ZXRlY3RlZC4gIFNodXR0aW5nIGRvd24gZmlsZXN5c3RlbQ0KPiA+IE1hciAxMyAxMToxNjozMSB2
+cHMyIGtlcm5lbDogWzM1NjM5OTEuNjI3MjE1XSBYRlMgKGRtLTIpOiBQbGVhc2UgdW1vdW50IHRo
+ZSBmaWxlc3lzdGVtIGFuZCByZWN0aWZ5IHRoZSBwcm9ibGVtKHMpDQo+ID4gTWFyIDEzIDExOjE2
+OjMxIHZwczIga2VybmVsOiBbMzU2Mzk5MS42Mjg3NTJdIFhGUyAoZG0tMik6IHhmc19kb19mb3Jj
+ZV9zaHV0ZG93bigweDgpIGNhbGxlZCBmcm9tIGxpbmUgMzQyMCBvZiBmaWxlIC9idWlsZC9saW51
+eC1hUHJyOEwvbGludXgtNC44LjE1L2ZzL3hmcy94ZnNfaW5vZGUuYy4gIFJldHVybiBhZGRyZXNz
+ID0gMHhmZmZmZmZmZmMwODNmYzFlDQo+ID4gTWFyIDEzIDExOjE2OjQ4IHZwczIga2VybmVsOiBb
+MzU2NDAwOC41NTczNDBdIFhGUyAoZG0tMik6IHhmc19sb2dfZm9yY2U6IGVycm9yIC01IHJldHVy
+bmVkLg0KPiA+IA0KPiA+IEFmdGVyIHJlYm9vdCwgc29tZXRpbWVzIGl0IGxvZ3MNCj4gPiBNYXIg
+MTMgMTI6NTE6MTAgdnBzMiBrZXJuZWw6IFsgNTI4My4wMjU2NjVdIFhGUyAoZG0tMik6IE1ldGFk
+YXRhIGNvcnJ1cHRpb24gZGV0ZWN0ZWQgYXQgeGZzX2F0dHIzX2xlYWZfcmVhZF92ZXJpZnkrMHg1
+YS8weDEwMCBbeGZzXSwgeGZzX2F0dHIzX2xlYWYgYmxvY2sgMHgyNGU3MDI2OA0KPiA+IE1hciAx
+MyAxMjo1MToxMCB2cHMyIGtlcm5lbDogWyA1MjgzLjAyNjg3OV0gWEZTIChkbS0yKTogVW5tb3Vu
+dCBhbmQgcnVuIHhmc19yZXBhaXINCj4gPiBNYXIgMTMgMTI6NTE6MTAgdnBzMiBrZXJuZWw6IFsg
+NTI4My4wMjc0NzFdIFhGUyAoZG0tMik6IEZpcnN0IDY0IGJ5dGVzIG9mIGNvcnJ1cHRlZCBtZXRh
+ZGF0YSBidWZmZXI6DQo+ID4gTWFyIDEzIDEyOjUxOjEwIHZwczIga2VybmVsOiBbIDUyODMuMDI4
+MDc0XSBmZmZmOTMzZjE2ZjhjMDAwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCBmYiBlZSAwMCAw
+MCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLg0KPiA+IE1hciAxMyAxMjo1MToxMCB2cHMy
+IGtlcm5lbDogWyA1MjgzLjAyODY2OV0gZmZmZjkzM2YxNmY4YzAxMDogMTAgMDAgMDAgMDAgMDAg
+MjAgMGYgZTAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uIC4uLi4uLi4uLi4NCj4gPiBN
+YXIgMTMgMTI6NTE6MTAgdnBzMiBrZXJuZWw6IFsgNTI4My4wMjkyNDBdIGZmZmY5MzNmMTZmOGMw
+MjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4u
+Li4uLi4uLi4uLi4uDQo+ID4gTWFyIDEzIDEyOjUxOjEwIHZwczIga2VybmVsOiBbIDUyODMuMDI5
+ODE0XSBmZmZmOTMzZjE2ZjhjMDMwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLg0KPiA+IE1hciAxMyAxMjo1MToxMCB2cHMy
+IGtlcm5lbDogWyA1MjgzLjAzMDQyOF0gWEZTIChkbS0yKTogbWV0YWRhdGEgSS9PIGVycm9yOiBi
+bG9jayAweDI0ZTcwMjY4ICgieGZzX3RyYW5zX3JlYWRfYnVmX21hcCIpIGVycm9yIDExNyBudW1i
+bGtzIDgNCj4gPiBNYXIgMTMgMTI6NTE6MTAgdnBzMiBrZXJuZWw6IFsgNTI4My4wMzYyMjJdIFhG
+UyAoZG0tMik6IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0ZWQgYXQgeGZzX2F0dHIzX2xlYWZf
+cmVhZF92ZXJpZnkrMHg1YS8weDEwMCBbeGZzXSwgeGZzX2F0dHIzX2xlYWYgYmxvY2sgMHgyNGU3
+MDI2OA0KPiA+IE1hciAxMyAxMjo1MToxMCB2cHMyIGtlcm5lbDogWyA1MjgzLjAzNzQ0M10gWEZT
+IChkbS0yKTogVW5tb3VudCBhbmQgcnVuIHhmc19yZXBhaXINCj4gPiBNYXIgMTMgMTI6NTE6MTAg
+dnBzMiBrZXJuZWw6IFsgNTI4My4wMzgwNDldIFhGUyAoZG0tMik6IEZpcnN0IDY0IGJ5dGVzIG9m
+IGNvcnJ1cHRlZCBtZXRhZGF0YSBidWZmZXI6DQo+ID4gTWFyIDEzIDEyOjUxOjEwIHZwczIga2Vy
+bmVsOiBbIDUyODMuMDM4NjQ0XSBmZmZmOTMzZjE2ZjhjMDAwOiAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCBmYiBlZSAwMCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLg0KPiA+IE1hciAx
+MyAxMjo1MToxMCB2cHMyIGtlcm5lbDogWyA1MjgzLjAzOTI1N10gZmZmZjkzM2YxNmY4YzAxMDog
+MTAgMDAgMDAgMDAgMDAgMjAgMGYgZTAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uIC4u
+Li4uLi4uLi4NCj4gPiBNYXIgMTMgMTI6NTE6MTAgdnBzMiBrZXJuZWw6IFsgNTI4My4wMzk4Mzhd
+IGZmZmY5MzNmMTZmOGMwMjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4uDQo+ID4gTWFyIDEzIDEyOjUxOjEwIHZwczIga2Vy
+bmVsOiBbIDUyODMuMDQwMzk3XSBmZmZmOTMzZjE2ZjhjMDMwOiAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLg0KPiA+IE1hciAx
+MyAxMjo1MToxMCB2cHMyIGtlcm5lbDogWyA1MjgzLjA0MTQ4Ml0gWEZTIChkbS0yKTogbWV0YWRh
+dGEgSS9PIGVycm9yOiBibG9jayAweDI0ZTcwMjY4ICgieGZzX3RyYW5zX3JlYWRfYnVmX21hcCIp
+IGVycm9yIDExNyBudW1ibGtzIDgNCj4gPiANCj4gPiBJIGhhdmUgaW5zdGFsbGVkIGtlcm5lbCA0
+LjkuMTMgZnJvbSBiYWNrcG9ydHMgYW5kIGluc3RhbGxlZCB0b29scyA0LjEwLjAuDQo+ID4gQ29s
+bGVndWUgd2lsbCByZWJvb3QgeWVzdGVyZGF5IGFuZCBkbyB0aGUgcmVwYWlyLg0KPiA+IA0KPiA+
+IEl0IHNlZW1zIHRvIGJlIHRoZSBzYW1lIHBhdHRlcm4gYWdhaW4uIERvIHlvdSBoYXZlIGFueSBj
+bHVlIHdoZXJlIGl0IGNvbWVzIGZyb20/IEhvdyBjYW4gd2UgcHJldmVudCBpdCBmcm9tIGhhcHBl
+bmluZz8NCj4gPiANCj4gPiBUaGFua3MsDQo+ID4gTGlib3INCj4gPiANCj4gPiBPbiDDunRlcsO9
+IDMxLiBsZWRuYSAyMDE3IDk6MDM6MDIgQ0VUIExpYm9yIEtsZXDDocSNIHdyb3RlOg0KPiA+Pg0K
+PiA+PiBIZWxsbywNCj4gPj4gc29ycnkgZm9yIGxhdGUgcmVwbHkuIEl0IGRpZG4ndCBjcmFzaCBz
+aW5jZSB0aGFuIGFuZCBpIGZvcmdvdCBhbmQgbW92ZWQgb24gdG8gYW5vdGhlciB0YXNrcy4NCj4g
+Pj4NCj4gPj4gWWVzdGVyZGF5IGl0IGNyYXNoZWQgb24gb25lIG9mIG1hY2hpbmVzIChydW5uaW5n
+IDQuOC4xMSkNCj4gPj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+PiBKYW4gMzAgMDc6
+MTg6MTMgdnBzMiBrZXJuZWw6IFs1ODgxODMxLjM3OTU0N10gWEZTIChkbS0yKTogTWV0YWRhdGEg
+Y29ycnVwdGlvbiBkZXRlY3RlZCBhdCB4ZnNfYXR0cjNfbGVhZl9yZWFkX3ZlcmlmeSsweDVhLzB4
+MTAwIFt4ZnNdLCB4ZnNfYXR0cjNfbGVhZiBibG9jayAweDEyZjYzZjQwDQo+ID4+IEphbiAzMCAw
+NzoxODoxMyB2cHMyIGtlcm5lbDogWzU4ODE4MzEuMzgxNzIxXSBYRlMgKGRtLTIpOiBVbm1vdW50
+IGFuZCBydW4geGZzX3JlcGFpcg0KPiA+PiBKYW4gMzAgMDc6MTg6MTMgdnBzMiBrZXJuZWw6IFs1
+ODgxODMxLjM4Mjc1MF0gWEZTIChkbS0yKTogRmlyc3QgNjQgYnl0ZXMgb2YgY29ycnVwdGVkIG1l
+dGFkYXRhIGJ1ZmZlcjoNCj4gPj4gSmFuIDMwIDA3OjE4OjEzIHZwczIga2VybmVsOiBbNTg4MTgz
+MS4zODc4MTBdIFhGUyAoZG0tMik6IG1ldGFkYXRhIEkvTyBlcnJvcjogYmxvY2sgMHgxMmY2M2Y0
+MCAoInhmc190cmFuc19yZWFkX2J1Zl9tYXAiKSBlcnJvciAxMTcgbnVtYmxrcyA4DQo+ID4+IEph
+biAzMCAwNzoyNjowMiB2cHMyIGtlcm5lbDogWzU4ODIzMDAuNTI0NTI4XSBYRlMgKGRtLTIpOiBN
+ZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVkIGF0IHhmc19hdHRyM19sZWFmX3JlYWRfdmVyaWZ5
+KzB4NWEvMHgxMDAgW3hmc10sIHhmc19hdHRyM19sZWFmIGJsb2NrIDB4MTI2NDVlZjgNCj4gPj4g
+SmFuIDMwIDA3OjI2OjAyIHZwczIga2VybmVsOiBbNTg4MjMwMC41MjU5OTNdIFhGUyAoZG0tMik6
+IFVubW91bnQgYW5kIHJ1biB4ZnNfcmVwYWlyDQo+ID4+IEphbiAzMCAwNzoyNjowMiB2cHMyIGtl
+cm5lbDogWzU4ODIzMDAuNTI2NTM5XSBYRlMgKGRtLTIpOiBGaXJzdCA2NCBieXRlcyBvZiBjb3Jy
+dXB0ZWQgbWV0YWRhdGEgYnVmZmVyOg0KPiA+PiBKYW4gMzAgMDc6MjY6MDIgdnBzMiBrZXJuZWw6
+IFs1ODgyMzAwLjUyOTIyNF0gWEZTIChkbS0yKTogbWV0YWRhdGEgSS9PIGVycm9yOiBibG9jayAw
+eDEyNjQ1ZWY4ICgieGZzX3RyYW5zX3JlYWRfYnVmX21hcCIpIGVycm9yIDExNyBudW1ibGtzIDgN
+Cj4gPj4gSmFuIDMwIDEwOjAwOjI3IHZwczIga2VybmVsOiBbNTg5MTU2NC42ODI0ODNdIFhGUyAo
+ZG0tMik6IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0ZWQgYXQgeGZzX2F0dHIzX2xlYWZfd3Jp
+dGVfdmVyaWZ5KzB4ZTgvMHgxMDAgW3hmc10sIHhmc19hdHRyM19sZWFmIGJsb2NrIDB4MTI3YjU1
+NzgNCj4gPj4gSmFuIDMwIDEwOjAwOjI3IHZwczIga2VybmVsOiBbNTg5MTU2NC42ODM5NjJdIFhG
+UyAoZG0tMik6IFVubW91bnQgYW5kIHJ1biB4ZnNfcmVwYWlyDQo+ID4+IEphbiAzMCAxMDowMDoy
+NyB2cHMyIGtlcm5lbDogWzU4OTE1NjQuNjg0NTM2XSBYRlMgKGRtLTIpOiBGaXJzdCA2NCBieXRl
+cyBvZiBjb3JydXB0ZWQgbWV0YWRhdGEgYnVmZmVyOg0KPiA+PiBKYW4gMzAgMTA6MDA6MjcgdnBz
+MiBrZXJuZWw6IFs1ODkxNTY0LjY4NzIyM10gWEZTIChkbS0yKTogeGZzX2RvX2ZvcmNlX3NodXRk
+b3duKDB4OCkgY2FsbGVkIGZyb20gbGluZSAxMjUwIG9mIGZpbGUgL2J1aWxkL2xpbnV4LWxWRVZy
+bC9saW51eC00LjcuOC9mcy94ZnMveGZzX2J1Zi5jLiAgUmV0dXJuIGFkZHJlc3MgPSAweGZmZmZm
+ZmZmYzA2NzQ3ZjINCj4gPj4gSmFuIDMwIDEwOjAwOjI3IHZwczIga2VybmVsOiBbNTg5MTU2NC42
+ODcyMzBdIFhGUyAoZG0tMik6IENvcnJ1cHRpb24gb2YgaW4tbWVtb3J5IGRhdGEgZGV0ZWN0ZWQu
+ICBTaHV0dGluZyBkb3duIGZpbGVzeXN0ZW0NCj4gPj4gSmFuIDMwIDEwOjAwOjI3IHZwczIga2Vy
+bmVsOiBbNTg5MTU2NC42ODc3NzhdIFhGUyAoZG0tMik6IFBsZWFzZSB1bW91bnQgdGhlIGZpbGVz
+eXN0ZW0gYW5kIHJlY3RpZnkgdGhlIHByb2JsZW0ocykNCj4gPj4NCj4gPj4gYW5kIGxhdGVyDQo+
+ID4+IEphbiAzMCAyMToxMDozMSB2cHMyIGtlcm5lbDogWzM5NzQ3LjkxNzgzMV0gWEZTIChkbS0y
+KTogTWV0YWRhdGEgY29ycnVwdGlvbiBkZXRlY3RlZCBhdCB4ZnNfYXR0cjNfbGVhZl9yZWFkX3Zl
+cmlmeSsweDVhLzB4MTAwIFt4ZnNdLCB4ZnNfYXR0cjNfbGVhZiBibG9jayAweDI0YzE3YmE4DQo+
+ID4+IEphbiAzMCAyMToxMDozMSB2cHMyIGtlcm5lbDogWzM5NzQ3LjkxODEzMF0gWEZTIChkbS0y
+KTogbWV0YWRhdGEgSS9PIGVycm9yOiBibG9jayAweDI0YzE3YmE4ICgieGZzX3RyYW5zX3JlYWRf
+YnVmX21hcCIpIGVycm9yIDExNyBudW1ibGtzIDgNCj4gPj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLQ0KPiA+Pg0KPiA+PiBJIGhhdmUgc2NoZWR1bGVkIHJlcGFpciBvbiB0b2RheSwgYWxsIHRo
+ZXNlIGJsb2NrcyB3ZXJlIHJlcGFpcmVkIHVzaW5nIHhmc3Byb2dzIDQuOS4wDQo+ID4+IEtlcm5l
+bCBpcyBub3cgNC44LjE1DQo+ID4+DQo+ID4+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4g
+Pj4gUGhhc2UgMSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uDQo+ID4+IFBoYXNlIDIg
+LSB1c2luZyBpbnRlcm5hbCBsb2cNCj4gPj4gICAgICAgICAtIHplcm8gbG9nLi4uDQo+ID4+ICAg
+ICAgICAgLSBzY2FuIGZpbGVzeXN0ZW0gZnJlZXNwYWNlIGFuZCBpbm9kZSBtYXBzLi4uDQo+ID4+
+ICAgICAgICAgLSBmb3VuZCByb290IGlub2RlIGNodW5rDQo+ID4+IFBoYXNlIDMgLSBmb3IgZWFj
+aCBBRy4uLg0KPiA+PiAgICAgICAgIC0gc2NhbiBhbmQgY2xlYXIgYWdpIHVubGlua2VkIGxpc3Rz
+Li4uDQo+ID4+ICAgICAgICAgLSBwcm9jZXNzIGtub3duIGlub2RlcyBhbmQgcGVyZm9ybSBpbm9k
+ZSBkaXNjb3ZlcnkuLi4NCj4gPj4gICAgICAgICAtIGFnbm8gPSAwDQo+ID4+ICAgICAgICAgLSBh
+Z25vID0gMQ0KPiA+PiBNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVkIGF0IHhmc19hdHRyM19s
+ZWFmIGJsb2NrIDB4MTI2NDVlZjgvMHgxMDAwDQo+ID4+IGJhZCBhdHRyaWJ1dGUgY291bnQgMCBp
+biBhdHRyIGJsb2NrIDAsIGlub2RlIDEwNzQyNjg5MjINCj4gPj4gcHJvYmxlbSB3aXRoIGF0dHJp
+YnV0ZSBjb250ZW50cyBpbiBpbm9kZSAxMDc0MjY4OTIyDQo+ID4+IGNsZWFyaW5nIGlub2RlIDEw
+NzQyNjg5MjIgYXR0cmlidXRlcw0KPiA+PiBjb3JyZWN0aW5nIG5ibG9ja3MgZm9yIGlub2RlIDEw
+NzQyNjg5MjIsIHdhcyAxIC0gY291bnRlZCAwDQo+ID4+IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0
+ZWN0ZWQgYXQgeGZzX2F0dHIzX2xlYWYgYmxvY2sgMHgxMjdiNTU3OC8weDEwMDANCj4gPj4gYmFk
+IGF0dHJpYnV0ZSBjb3VudCAwIGluIGF0dHIgYmxvY2sgMCwgaW5vZGUgMTA3NzMzNDAzMg0KPiA+
+PiBwcm9ibGVtIHdpdGggYXR0cmlidXRlIGNvbnRlbnRzIGluIGlub2RlIDEwNzczMzQwMzINCj4g
+Pj4gY2xlYXJpbmcgaW5vZGUgMTA3NzMzNDAzMiBhdHRyaWJ1dGVzDQo+ID4+IGNvcnJlY3Rpbmcg
+bmJsb2NrcyBmb3IgaW5vZGUgMTA3NzMzNDAzMiwgd2FzIDEgLSBjb3VudGVkIDANCj4gPj4gTWV0
+YWRhdGEgY29ycnVwdGlvbiBkZXRlY3RlZCBhdCB4ZnNfYXR0cjNfbGVhZiBibG9jayAweDEyZjYz
+ZjQwLzB4MTAwMA0KPiA+PiBiYWQgYXR0cmlidXRlIGNvdW50IDAgaW4gYXR0ciBibG9jayAwLCBp
+bm9kZSAxMDkzNDM3ODU5DQo+ID4+IHByb2JsZW0gd2l0aCBhdHRyaWJ1dGUgY29udGVudHMgaW4g
+aW5vZGUgMTA5MzQzNzg1OQ0KPiA+PiBjbGVhcmluZyBpbm9kZSAxMDkzNDM3ODU5IGF0dHJpYnV0
+ZXMNCj4gPj4gY29ycmVjdGluZyBuYmxvY2tzIGZvciBpbm9kZSAxMDkzNDM3ODU5LCB3YXMgMSAt
+IGNvdW50ZWQgMA0KPiA+PiAgICAgICAgIC0gYWdubyA9IDINCj4gPj4gTWV0YWRhdGEgY29ycnVw
+dGlvbiBkZXRlY3RlZCBhdCB4ZnNfYXR0cjNfbGVhZiBibG9jayAweDI0YzE3YmE4LzB4MTAwMA0K
+PiA+PiBiYWQgYXR0cmlidXRlIGNvdW50IDAgaW4gYXR0ciBibG9jayAwLCBpbm9kZSAyMTQ3Njcz
+Nzc1DQo+ID4+IHByb2JsZW0gd2l0aCBhdHRyaWJ1dGUgY29udGVudHMgaW4gaW5vZGUgMjE0NzY3
+Mzc3NQ0KPiA+PiBjbGVhcmluZyBpbm9kZSAyMTQ3NjczNzc1IGF0dHJpYnV0ZXMNCj4gPj4gY29y
+cmVjdGluZyBuYmxvY2tzIGZvciBpbm9kZSAyMTQ3NjczNzc1LCB3YXMgMSAtIGNvdW50ZWQgMA0K
+PiA+PiAgICAgICAgIC0gcHJvY2VzcyBuZXdseSBkaXNjb3ZlcmVkIGlub2Rlcy4uLg0KPiA+PiBQ
+aGFzZSA0IC0gY2hlY2sgZm9yIGR1cGxpY2F0ZSBibG9ja3MuLi4NCj4gPj4gICAgICAgICAtIHNl
+dHRpbmcgdXAgZHVwbGljYXRlIGV4dGVudCBsaXN0Li4uDQo+ID4+ICAgICAgICAgLSBjaGVjayBm
+b3IgaW5vZGVzIGNsYWltaW5nIGR1cGxpY2F0ZSBibG9ja3MuLi4NCj4gPj4gICAgICAgICAtIGFn
+bm8gPSAwDQo+ID4+ICAgICAgICAgLSBhZ25vID0gMQ0KPiA+PiBiYWQgYXR0cmlidXRlIGZvcm1h
+dCAxIGluIGlub2RlIDEwNzQyNjg5MjIsIHJlc2V0dGluZyB2YWx1ZQ0KPiA+PiBiYWQgYXR0cmli
+dXRlIGZvcm1hdCAxIGluIGlub2RlIDEwNzczMzQwMzIsIHJlc2V0dGluZyB2YWx1ZQ0KPiA+PiBi
+YWQgYXR0cmlidXRlIGZvcm1hdCAxIGluIGlub2RlIDEwOTM0Mzc4NTksIHJlc2V0dGluZyB2YWx1
+ZQ0KPiA+PiAgICAgICAgIC0gYWdubyA9IDINCj4gPj4gYmFkIGF0dHJpYnV0ZSBmb3JtYXQgMSBp
+biBpbm9kZSAyMTQ3NjczNzc1LCByZXNldHRpbmcgdmFsdWUNCj4gPj4gUGhhc2UgNSAtIHJlYnVp
+bGQgQUcgaGVhZGVycyBhbmQgdHJlZXMuLi4NCj4gPj4gICAgICAgICAtIHJlc2V0IHN1cGVyYmxv
+Y2suLi4NCj4gPj4gUGhhc2UgNiAtIGNoZWNrIGlub2RlIGNvbm5lY3Rpdml0eS4uLg0KPiA+PiAg
+ICAgICAgIC0gcmVzZXR0aW5nIGNvbnRlbnRzIG9mIHJlYWx0aW1lIGJpdG1hcCBhbmQgc3VtbWFy
+eSBpbm9kZXMNCj4gPj4gICAgICAgICAtIHRyYXZlcnNpbmcgZmlsZXN5c3RlbSAuLi4NCj4gPj4g
+ICAgICAgICAtIHRyYXZlcnNhbCBmaW5pc2hlZCAuLi4NCj4gPj4gICAgICAgICAtIG1vdmluZyBk
+aXNjb25uZWN0ZWQgaW5vZGVzIHRvIGxvc3QrZm91bmQgLi4uDQo+ID4+IFBoYXNlIDcgLSB2ZXJp
+ZnkgYW5kIGNvcnJlY3QgbGluayBjb3VudHMuLi4NCj4gPj4gZG9uZQ0KPiA+PiAtLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tDQo+ID4+DQo+ID4+IFRoYW5rIHlvdSB2ZXJ5IG11Y2ggZm9yIHBhdGNo
+LCBpdCBoYXMgZG9uZSBpdCdzIHdvcmsNCj4gPj4NCj4gPj4gTGlib3INCj4gPj4NCj4gPj4gLS0N
+Cj4gPj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vi
+c2NyaWJlIGxpbnV4LXhmcyIgaW4NCj4gPj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9y
+ZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gPj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
+L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+ID4+DQo+ID4gDQo+ID4gDQo+
+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1
+YnNjcmliZSBsaW51eC14ZnMiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRv
+bW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2Vy
+Lmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPiANCg0KDQotLS0tLS0tLQ0KWzFdIG1h
+aWx0bzpsaWJvci5rbGVwYWNAYmNvbS5jeg0KWzJdIHRlbDorNDIwMzc3NDU3Njc2DQpbM10gaHR0
+cDovL3d3dy5iY29tLmN6DQo=
