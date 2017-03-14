@@ -1,67 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34144 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:39740 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750930AbdCNXX7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Mar 2017 19:23:59 -0400
-Subject: [PATCH 2/2 V2] xfs: toggle readonly state around xfs_log_mount_finish
-References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
- <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
+        id S1752228AbdCNSvQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Mar 2017 14:51:16 -0400
+Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
+References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com>
+ <5223151.9ZZzaImiEQ@libor-nb>
+ <2c8d1ee3-c795-aefa-4797-8b7970ea8266@sandeen.net>
+ <1702693.ETbqtf3ybS@libor-nb>
+ <503a4130-e6db-2d14-d377-01336022d6ee@sandeen.net>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <74f6a009-211c-617a-2d6f-0a115ceb366b@sandeen.net>
-Date: Tue, 14 Mar 2017 18:23:57 -0500
+Message-ID: <95735a3b-3a13-7d44-b16b-2d05ac8ab549@sandeen.net>
+Date: Tue, 14 Mar 2017 13:51:09 -0500
 MIME-Version: 1.0
-In-Reply-To: <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
+In-Reply-To: <503a4130-e6db-2d14-d377-01336022d6ee@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: =?UTF-8?B?TGlib3IgS2xlcMOhxI0=?= <libor.klepac@bcom.cz>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-When we do log recovery on a readonly mount, unlinked inode
-processing does not happen due to the readonly checks in
-xfs_inactive(), which are trying to prevent any I/O on a
-readonly mount.
 
-This is misguided - we do I/O on readonly mounts all the time,
-for consistency; for example, log recovery.  So do the same
-RDONLY flag twiddling around xfs_log_mount_finish() as we
-do around xfs_log_mount(), for the same reason.
 
-This all cries out for a big rework but for now this is a
-simple fix to an obvious problem.
+On 3/14/17 11:54 AM, Eric Sandeen wrote:
+> On 3/14/17 3:15 AM, Libor Klepáč wrote:
+>> Hello,
+>> i have this during night with error_level = 11, no force shutdown
+> 
+> Just to double check - are these all getting freshly created?  I.e.
+> you repair and fix the filesystem each time you see this, but they
+> keep re-appearing?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+And is anything else happening in between - unclean shutdowns,
+crashes, storage problems etc or are you just riding along, and
+they show up out of nowhere on an otherwise normal box?
 
-V2: And now for something completely different...
+(sorry if that's elsewhere in this long thread, but a summary
+of the problem at this point might help).
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 62176b8..374edc1 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -743,16 +743,23 @@
- 	struct xfs_mount	*mp)
- {
- 	int	error = 0;
-+	int	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
- 
- 	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
- 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
- 		return 0;
-+	} else if (readonly) {
-+		/* Allow unlinked processing to proceed */
-+		mp->m_flags &= ~XFS_MOUNT_RDONLY;
- 	}
- 
- 	error = xlog_recover_finish(mp->m_log);
- 	if (!error)
- 		xfs_log_work_queue(mp);
- 
-+	if (readonly)
-+		mp->m_flags |= XFS_MOUNT_RDONLY;
-+
- 	return error;
- }
- 
+-Eric
 
+>> (kernel 4.8.15)
+>> Mar 14 02:36:29 vps2 kernel: [54799.061956] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x24e70268
+> 
+> Unfortunately the read path is a bit less interesting.  We found something
+> on disk, but we're not sure how it got there.
+> 
+> If we could catch a write verifier failing that /might/ be a little more
+> useful.
+> 
+> I'm at a loss as to why you seem to be uniquely able to hit this problem.  :(
+> 
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
