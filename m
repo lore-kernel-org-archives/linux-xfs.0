@@ -1,147 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46668 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:36136 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932470AbdC2Vwi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Mar 2017 17:52:38 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <29183.1490711359@warthog.procyon.org.uk>
-References: <29183.1490711359@warthog.procyon.org.uk>
-Subject: [PATCH] xfs_io: Allow -P and -L to be given to open for O_PATH and O_NOFOLLOW
+        id S1752265AbdCNQ5y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Mar 2017 12:57:54 -0400
+Date: Tue, 14 Mar 2017 17:57:45 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH v2] xfs: remove kmem_zalloc_greedy
+Message-ID: <20170314165745.GB28800@wotan.suse.de>
+References: <20170308003528.GK5280@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <858.1490824354.1@warthog.procyon.org.uk>
-Content-Transfer-Encoding: 8BIT
-Date: Wed, 29 Mar 2017 22:52:34 +0100
-Message-ID: <859.1490824354@warthog.procyon.org.uk>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170308003528.GK5280@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: dhowells@redhat.com, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, Michal Hocko <mhocko@kernel.org>, Christoph Hellwig <hch@lst.de>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, sebastian.parschauer@suse.com, AlNovak@suse.com, jack@suse.cz
 
-Allow "open -P" to specify O_PATH so that paths which would otherwise be
-unopenable might be opened for stat()'ing.  Such things include files that
-would incur an access error or device files for which no corresponding
-driver is available.
+On Tue, Mar 07, 2017 at 04:35:28PM -0800, Darrick J. Wong wrote:
+> The sole remaining caller of kmem_zalloc_greedy is bulkstat, which uses
+> it to grab 1-4 pages for staging of inobt records.  The infinite loop in
+> the greedy allocation function is causing hangs[1] in generic/269, so
+> just get rid of the greedy allocator in favor of kmem_zalloc_large.
+> This makes bulkstat somewhat more likely to ENOMEM if there's really no
+> pages to spare, but eliminates a source of hangs.
+> 
+> [1] http://lkml.kernel.org/r/20170301044634.rgidgdqqiiwsmfpj%40XZHOUW.usersys.redhat.com
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: remove single-page fallback
+> ---
 
-Allow "-L" to be given in conjunction with O_PATH to specify O_NOFOLLOW
-also.
+Since this fixes a hang how about *at the very least* a respective Fixes tag ?
+This fixes an existing hang so what are the stable considerations here ? I
+realize the answer is not easy but figured its worth asking.
 
-Signed-off-by: David Howells <dhowells@redhat.com>
----
- io/io.h           |    2 ++
- io/open.c         |   22 ++++++++++++++++++++--
- man/man8/xfs_io.8 |   12 +++++++++++-
- 3 files changed, 33 insertions(+), 3 deletions(-)
+FWIW I trace kmem_zalloc_greedy()'s introduction back to 2006 77e4635ae1917
+("[XFS] Add a greedy allocation interface, allocating within a min/max size
+range.") through v2.6.19 days...
 
-diff --git a/io/io.h b/io/io.h
-index 952bdb8..4399419 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -38,6 +38,8 @@
- #define IO_FOREIGN	(1<<7)
- #define IO_NONBLOCK	(1<<8)
- #define IO_TMPFILE	(1<<9)
-+#define IO_PATH		(1<<10)
-+#define IO_NOFOLLOW	(1<<11)
- 
- /*
-  * Regular file I/O control
-diff --git a/io/open.c b/io/open.c
-index 2ed55cf..f7f508a 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -72,6 +72,10 @@ openfile(
- 		oflags |= O_NONBLOCK;
- 	if (flags & IO_TMPFILE)
- 		oflags |= O_TMPFILE;
-+	if (flags & IO_PATH)
-+		oflags |= O_PATH;
-+	if (flags & IO_NOFOLLOW)
-+		oflags |= O_NOFOLLOW;
- 
- 	fd = open(path, oflags, mode);
- 	if (fd < 0) {
-@@ -179,6 +183,8 @@ open_help(void)
- " -t -- open with O_TRUNC (truncate the file to zero length if it exists)\n"
- " -R -- mark the file as a realtime XFS file immediately after opening it\n"
- " -T -- open with O_TMPFILE (create a file not visible in the namespace)\n"
-+" -P -- open with O_PATH (create an fd that is merely a location reference)\n"
-+" -L -- open with O_NOFOLLOW (don't follow symlink)\n"
- " Note1: usually read/write direct IO requests must be blocksize aligned;\n"
- "        some kernels, however, allow sectorsize alignment for direct IO.\n"
- " Note2: the bmap for non-regular files can be obtained provided the file\n"
-@@ -203,7 +209,7 @@ open_f(
- 		return 0;
- 	}
- 
--	while ((c = getopt(argc, argv, "FRTacdfm:nrstx")) != EOF) {
-+	while ((c = getopt(argc, argv, "FLPRTacdfm:nrstx")) != EOF) {
- 		switch (c) {
- 		case 'F':
- 			/* Ignored / deprecated now, handled automatically */
-@@ -244,6 +250,12 @@ open_f(
- 		case 'T':
- 			flags |= IO_TMPFILE;
- 			break;
-+		case 'P':
-+			flags |= IO_PATH;
-+			break;
-+		case 'L':
-+			flags |= IO_NOFOLLOW;
-+			break;
- 		default:
- 			return command_usage(&open_cmd);
- 		}
-@@ -257,6 +269,12 @@ open_f(
- 		return -1;
- 	}
- 
-+	if ((flags & (IO_PATH|IO_NOFOLLOW)) &&
-+	    (flags & ~(IO_PATH|IO_NOFOLLOW))) {
-+		fprintf(stderr, _("-P and -L are incompatible with the other options\n"));
-+		return -1;
-+	}
-+
- 	fd = openfile(argv[optind], &geometry, flags, mode);
- 	if (fd < 0)
- 		return 0;
-@@ -772,7 +790,7 @@ open_init(void)
- 	open_cmd.argmax = -1;
- 	open_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK |
- 			 CMD_FOREIGN_OK | CMD_FLAG_ONESHOT;
--	open_cmd.args = _("[-acdrstxT] [-m mode] [path]");
-+	open_cmd.args = _("[-acdrstxRTPL] [-m mode] [path]");
- 	open_cmd.oneline = _("open the file specified by path");
- 	open_cmd.help = open_help;
- 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 022f0ea..e77be40 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -122,7 +122,7 @@ command for more details on any command.
- Display a list of all open files and (optionally) switch to an alternate
- current open file.
- .TP
--.BI "open [[ \-acdfrstRT ] " path " ]"
-+.BI "open [[ \-acdfrstRTPL ] " path " ]"
- Closes the current file, and opens the file specified by
- .I path
- instead. Without any arguments, displays statistics about the current
-@@ -164,6 +164,16 @@ option.
- .B \-R
- marks the file as a realtime XFS file after
- opening it, if it is not already marked as such.
-+.TP
-+.B \-P
-+opens the path as a referent only (O_PATH).  This is incompatible with other
-+flags specifying other O_xxx flags apart from
-+.BR \-L .
-+.TP
-+.B \-L
-+doesn't follow symlinks (O_NOFOLLOW).  This is incompatible with other
-+flags specifying other O_xxx flags apart from
-+.BR \-P .
- .PD
- .RE
- .TP
+  Luis
