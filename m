@@ -1,74 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f174.google.com ([209.85.161.174]:36351 "EHLO
-        mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751081AbdCQEOg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 00:14:36 -0400
-Received: by mail-yw0-f174.google.com with SMTP id o4so46193645ywd.3
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2017 21:14:35 -0700 (PDT)
+Received: from userp1040.oracle.com ([156.151.31.81]:38040 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751016AbdCNUAP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2017 16:00:15 -0400
+Date: Tue, 14 Mar 2017 13:00:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] xfs: don't run off the end of the buffer reading inline
+ dirents
+Message-ID: <20170314200009.GX5280@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170315193040.GG5280@birch.djwong.org>
-References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
- <20170315072349.GZ5280@birch.djwong.org> <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
- <20170315191355.GF5280@birch.djwong.org> <20170315193040.GG5280@birch.djwong.org>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Thu, 16 Mar 2017 22:07:41 -0600
-Message-ID: <CAJCQCtRt7_WpEp0npF=k1JJHFLE2sfc9ktB4YakuCZ5CNfZTTg@mail.gmail.com>
-Subject: Re: boot failure after kernel update, imap claims in-use inode 661690
- is free, would correct imap
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Brian Foster <bfoster@redhat.com>
 
-On Wed, Mar 15, 2017 at 1:30 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Wed, Mar 15, 2017 at 12:13:55PM -0700, Darrick J. Wong wrote:
->> On Wed, Mar 15, 2017 at 12:11:22PM -0600, Chris Murphy wrote:
->> > On Wed, Mar 15, 2017 at 1:23 AM, Darrick J. Wong
->> > <darrick.wong@oracle.com> wrote:
+Check that we don't run off the end of the inline data buffer when we're
+trying to read (apparently corrupt) directory entries.  xfs/348
+triggered kernel memory being exposed to userspace and a related
+complaint from the usercopy code when it corrupts an inline symlink
+into an inline dir.
 
->> > Unmounting file systems.
->> > Remounting '/tmp' read-only with options 'seclabel'.
->> > Unmounting /tmp.
->> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
->> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
->> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
->>
->> (I wonder why it does this three times?)
->
-> Because systemd (v229, anyway) doesn't ever unmount /; it merely tries
-> to remount it readonly.  Regrettably it /also/ throws away the return
-> code from the mount call so there's no way to positively confirm my
-> current theory, which is that we don't actually succeed at the
-> remount-ro request and that's why the log needs recovery after the
-> reboot.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: improved comments
+---
+ fs/xfs/xfs_dir2_readdir.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-The last line after those three is "All filesystems unmounted." So if
-it isn't really unmounting, then that's a bogus message.
-
-Also, on Btrfs I'm getting the same three remounting messages, and the
-unmounted message.
-
-Remounting '/' read-only with options
-'seclabel,space_cache,subvolid=5,subvol=/'.
-Remounting '/' read-only with options
-'seclabel,space_cache,subvolid=5,subvol=/'.
-Remounting '/' read-only with options
-'seclabel,space_cache,subvolid=5,subvol=/'.
-All filesystems unmounted.
-
-
-> So maybe plymouthd, or journald, or systemd, or something else entirely
-> still holds a writable file descriptor to somewhere on the rootfs.  I
-> guess you could build a custom systemd that actually logs the return
-> value....
-
-Yuck. I'll ask on systemd list if there's a way to get more verbose
-information about this without that. It really ought to be in
-systemd.log_level=debug anyway.
-
-
--- 
-Chris Murphy
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index 003a99b..26a280b 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -69,6 +69,7 @@ xfs_dir2_sf_getdents(
+ 	xfs_dir2_dataptr_t	dotdot_offset;
+ 	xfs_ino_t		ino;
+ 	struct xfs_da_geometry	*geo = args->geo;
++	char *endp;
+ 
+ 	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
+ 	/*
+@@ -83,6 +84,7 @@ xfs_dir2_sf_getdents(
+ 	ASSERT(dp->i_df.if_u1.if_data != NULL);
+ 
+ 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
++	endp = dp->i_df.if_u1.if_data + dp->i_df.if_bytes;
+ 
+ 	if (dp->i_d.di_size < xfs_dir2_sf_hdr_size(sfp->i8count))
+ 		return -EFSCORRUPTED;
+@@ -130,6 +132,21 @@ xfs_dir2_sf_getdents(
+ 	for (i = 0; i < sfp->count; i++) {
+ 		__uint8_t filetype;
+ 
++		/*
++		 * If we pass the end of the buffer, we're done.
++		 *
++		 * struct xfs_dir2_sf_entry has a variable length.
++		 * Therefore we must first check that the non-variable
++		 * parts of the structure don't go off the end of the
++		 * buffer, and then we must check that the name
++		 * component also does not go off the end of the buffer,
++		 * which we do by checking the nextentry pointer.
++		 */
++		if (((char *)sfep + sizeof(*sfep)) >= endp ||
++		    (char *)dp->d_ops->sf_nextentry(sfp, sfep) > endp) {
++			break;
++		}
++
+ 		off = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
+ 				xfs_dir2_sf_get_offset(sfep));
+ 
