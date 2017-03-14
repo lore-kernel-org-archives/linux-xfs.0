@@ -1,78 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41258 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35618 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753061AbdCMMjm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Mar 2017 08:39:42 -0400
-Date: Mon, 13 Mar 2017 08:39:40 -0400
+        id S1750806AbdCNLgB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Mar 2017 07:36:01 -0400
+Date: Tue, 14 Mar 2017 07:35:54 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH] xfs: don't run off the end of the buffer reading
- inline dirents
-Message-ID: <20170313123940.GB4153@bfoster.bfoster>
-References: <20170308210112.GR5280@birch.djwong.org>
+Subject: Re: [PATCH 2/2] xfs: remove readonly checks from xfs_release &
+ xfs_inactive
+Message-ID: <20170314113554.GB18042@bfoster.bfoster>
+References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
+ <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
+ <0d11326f-ebfc-913a-ed1a-b88421982753@sandeen.net>
+ <20170313132309.GC4153@bfoster.bfoster>
+ <fe60066a-e906-7615-4584-0756e186b20e@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170308210112.GR5280@birch.djwong.org>
+In-Reply-To: <fe60066a-e906-7615-4584-0756e186b20e@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Mar 08, 2017 at 01:01:12PM -0800, Darrick J. Wong wrote:
-> Check that we don't run off the end of the inline data buffer when we're
-> trying to read directory entries.  xfs/348 triggered kernel memory being
-> exposed to userspace and a related complaint from the usercopy code.
+On Mon, Mar 13, 2017 at 05:16:07PM -0500, Eric Sandeen wrote:
+> On 3/13/17 8:23 AM, Brian Foster wrote:
+> > I think some ASSERT(!ro) calls would be prudent in the newly reachable
+> > codepaths that would make modifications (in both xfs_release() and
+> > xfs_inactive()), just to catch any future bugs that would otherwise go
+> > undetected. Otherwise, both patches seem reasonable to me.
 > 
-> Evidently once we call dir_emit, the VFS ignores error return values
-> since it's already begun copying data back to userspace.
+> Ok, well - we can't assert (!ro) because we /do/ get here in the early
+> stages of an ro mount.
 > 
 
-How do we get into this situation in the first place?
+Ok, I suppose we'd have to filter out from "mounting" context. That is
+only for the case where we run log recovery though, right?
 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_dir2_readdir.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
+> I want to rework all this like Dave had suggested, but it's not getting
+> done this release cycle, and I thought a couple targeted changes like this
+> which fix the bug without making the code beautiful might still make it :)
 > 
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index 003a99b..70bdd21 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -69,6 +69,7 @@ xfs_dir2_sf_getdents(
->  	xfs_dir2_dataptr_t	dotdot_offset;
->  	xfs_ino_t		ino;
->  	struct xfs_da_geometry	*geo = args->geo;
-> +	char *endp;
->  
->  	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
->  	/*
-> @@ -83,6 +84,7 @@ xfs_dir2_sf_getdents(
->  	ASSERT(dp->i_df.if_u1.if_data != NULL);
->  
->  	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
-> +	endp = dp->i_df.if_u1.if_data + dp->i_df.if_bytes;
->  
->  	if (dp->i_d.di_size < xfs_dir2_sf_hdr_size(sfp->i8count))
->  		return -EFSCORRUPTED;
-> @@ -130,6 +132,12 @@ xfs_dir2_sf_getdents(
->  	for (i = 0; i < sfp->count; i++) {
->  		__uint8_t filetype;
->  
-> +		/* If we pass the end of the buffer, we're done. */
-> +		if (((char *)sfep + sizeof(*sfep)) >= endp ||
-> +		    (char *)dp->d_ops->sf_nextentry(sfp, sfep) > endp) {
-> +			break;
-> +		}
-> +
+> Maybe the best shortcut for now is to stash, remove, and replace the RO
+> mount flag like we do for log recovery itself, and clean it all up in
+> the next round.
+> 
 
-What's the reason for checking ->sf_nextentry()?
+Hmm, that does sound like a cleaner approach.
 
 Brian
 
->  		off = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
->  				xfs_dir2_sf_get_offset(sfep));
->  
+> -Eric
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
