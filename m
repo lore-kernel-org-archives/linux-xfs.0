@@ -1,78 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47516 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50674 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752438AbdCOLga (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Mar 2017 07:36:30 -0400
-Date: Wed, 15 Mar 2017 07:36:29 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2 V2] xfs: toggle readonly state around
- xfs_log_mount_finish
-Message-ID: <20170315113629.GA23221@bfoster.bfoster>
-References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
- <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
- <74f6a009-211c-617a-2d6f-0a115ceb366b@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <74f6a009-211c-617a-2d6f-0a115ceb366b@sandeen.net>
+        id S1754125AbdCOQAv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 12:00:51 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 6AB6E80F94
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:00:50 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 10/22] mkfs: change when to mark an option as seen
+Date: Wed, 15 Mar 2017 17:00:05 +0100
+Message-Id: <20170315160017.27805-11-jtulak@redhat.com>
+In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
+References: <20170315160017.27805-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Tue, Mar 14, 2017 at 06:23:57PM -0500, Eric Sandeen wrote:
-> When we do log recovery on a readonly mount, unlinked inode
-> processing does not happen due to the readonly checks in
-> xfs_inactive(), which are trying to prevent any I/O on a
-> readonly mount.
-> 
-> This is misguided - we do I/O on readonly mounts all the time,
-> for consistency; for example, log recovery.  So do the same
-> RDONLY flag twiddling around xfs_log_mount_finish() as we
-> do around xfs_log_mount(), for the same reason.
-> 
-> This all cries out for a big rework but for now this is a
-> simple fix to an obvious problem.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
+Make the check for seen option more useful for new conflict detection
+by moving it's logic to new place - we are no longer doing the
+respecification as before.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 40 +++++++++++-----------------------------
+ 1 file changed, 11 insertions(+), 29 deletions(-)
 
-> V2: And now for something completely different...
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 62176b8..374edc1 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -743,16 +743,23 @@
->  	struct xfs_mount	*mp)
->  {
->  	int	error = 0;
-> +	int	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
->  
->  	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
->  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
->  		return 0;
-> +	} else if (readonly) {
-> +		/* Allow unlinked processing to proceed */
-> +		mp->m_flags &= ~XFS_MOUNT_RDONLY;
->  	}
->  
->  	error = xlog_recover_finish(mp->m_log);
->  	if (!error)
->  		xfs_log_work_queue(mp);
->  
-> +	if (readonly)
-> +		mp->m_flags |= XFS_MOUNT_RDONLY;
-> +
->  	return error;
->  }
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index c3ab9221..db82a528 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -152,10 +152,6 @@ unsigned int		sectorsize;
+  *     Do not set this flag when definning a subopt. It is used to remeber that
+  *     this subopt was already seen, for example for conflicts detection.
+  *
+- *   str_seen INTERNAL
+- *     Do not set. It is used internally for respecification, when some options
+- *     has to be parsed twice - at first as a string, then later as a number.
+- *
+  *   convert OPTIONAL
+  *     A flag signalling whether the user-given value can use suffixes.
+  *     If you want to allow the use of user-friendly values like 13k, 42G,
+@@ -212,7 +208,6 @@ struct opt_params {
+ 	struct subopt_param {
+ 		int		index;
+ 		bool		seen;
+-		bool		str_seen;
+ 		bool		convert;
+ 		bool		is_power_2;
+ 		struct subopt_conflict {
+@@ -1375,7 +1370,7 @@ static void
+ check_subopt_conflicts(
+ 	struct opt_params	*opt,
+ 	int			index,
+-	bool			str_seen)
++	bool			seen)
+ {
+ 	struct subopt_param	*sp = &opt->subopt_params[index];
+ 	int			i;
+@@ -1387,23 +1382,6 @@ check_subopt_conflicts(
+ 		reqval(opt->name, (char **)opt->subopts, index);
+ 	}
+ 
+-	/*
+-	 * Check for respecification of the option. This is more complex than it
+-	 * seems because some options are parsed twice - once as a string during
+-	 * input parsing, then later the string is passed to getnum for
+-	 * conversion into a number and bounds checking. Hence the two variables
+-	 * used to track the different uses based on the @str parameter passed
+-	 * to us.
+-	 */
+-	if (!str_seen) {
+-		if (sp->seen)
+-			respec(opt->name, (char **)opt->subopts, index);
+-		sp->seen = true;
+-	} else {
+-		if (sp->str_seen)
+-			respec(opt->name, (char **)opt->subopts, index);
+-		sp->str_seen = true;
+-	}
+ 
+ 	/* check for conflicts with the option */
+ 	for (i = 0; i < MAX_CONFLICTS; i++) {
+@@ -1413,8 +1391,7 @@ check_subopt_conflicts(
+ 			break;
+ 		if (conflict_opt.test_values)
+ 			break;
+-		if (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen ||
+-		    opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].str_seen) {
++		if (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen) {
+ 			conflict_struct(opt, sp, &conflict_opt);
+ 		}
+ 	}
+@@ -1440,8 +1417,7 @@ check_subopt_value(
+ 			break;
+ 		if (!conflict_opt.test_values)
+ 			break;
+-		if ((opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen ||
+-		     opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].str_seen) &&
++		if (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen &&
+ 		    opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].value
+ 				== conflict_opt.invalid_value &&
+ 		    value == conflict_opt.at_value) {
+@@ -1462,7 +1438,11 @@ check_opt(
+ 	int index;
+ 	struct opt_params *opt = &opts[opti];
+ 	for (index = 0; index < MAX_SUBOPTS; index++) {
++		if (opt->subopts[index] == NULL)
++			break;
+ 		struct subopt_param *sp = &opt->subopt_params[index];
++		if (!sp->seen)
++			continue;
+ 		check_subopt_conflicts(opt, index, false);
+ 		check_subopt_value(opt, index, sp->value);
+ 	}
+@@ -1489,9 +1469,12 @@ getnum(
+ 	if (!str || *str == '\0') {
+ 		if (sp->defaultval == SUBOPT_NEEDS_VAL)
+ 			reqval(opts->name, (char **)opts->subopts, index);
++		sp->seen = true;
+ 		return sp->defaultval;
+ 	}
+ 
++	sp->seen = true;
++
+ 	if (sp->minval == 0 && sp->maxval == 0) {
+ 		fprintf(stderr,
+ 			_("Option -%c %s has undefined minval/maxval."
+@@ -1540,11 +1523,10 @@ getstr(
+ 	struct opt_params	*opts,
+ 	int			index)
+ {
+-	check_subopt_conflicts(opts, index, true);
+-
+ 	/* empty strings for string options are not valid */
+ 	if (!str || *str == '\0')
+ 		reqval(opts->name, (char **)opts->subopts, index);
++	opts->subopt_params[index].seen = true;
+ 	return str;
+ }
+ 
+-- 
+2.11.0
+
