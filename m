@@ -1,55 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33136 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751112AbdCQUaT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Mar 2017 16:30:19 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 86A5F624C6
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 20:29:45 +0000 (UTC)
-Date: Fri, 17 Mar 2017 15:29:40 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH (TRIVIAL)] xfs: fix up inode validation failure message
-Message-ID: <20170317202940.GA19030@redhat.com>
-References: <59d16175-1c24-4bc2-5cd9-ac7a062e5ae3@redhat.com>
+Received: from mail-yw0-f177.google.com ([209.85.161.177]:34617 "EHLO
+        mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753341AbdCOSPc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 14:15:32 -0400
+Received: by mail-yw0-f177.google.com with SMTP id p77so16203447ywg.1
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 11:15:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <59d16175-1c24-4bc2-5cd9-ac7a062e5ae3@redhat.com>
+In-Reply-To: <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
+References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
+ <20170315072349.GZ5280@birch.djwong.org> <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Wed, 15 Mar 2017 12:15:29 -0600
+Message-ID: <CAJCQCtSk83ocw-iTinZk2ncOZDqhJiZzJN=kk5OtsYznvfO+ug@mail.gmail.com>
+Subject: Re: boot failure after kernel update, imap claims in-use inode 661690
+ is free, would correct imap
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs list <linux-xfs@vger.kernel.org>
 
-On Fri, Mar 17, 2017 at 08:47:38AM -0700, Eric Sandeen wrote:
-> "xfs_iread: validation failed for inode 96 failed"
-> 
-> One "failed" seems like enough.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
-> ---
-> 
-> Yo dawg, I heard you like failed so I put failed in your
-> failed so you can fail while you fail.
-> 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index d93f9d9..09c3d1a 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -508,7 +508,7 @@
->  
->  	/* even unallocated inodes are verified */
->  	if (!xfs_dinode_verify(mp, ip->i_ino, dip)) {
-> -		xfs_alert(mp, "%s: validation failed for inode %lld failed",
-> +		xfs_alert(mp, "%s: validation failed for inode %lld",
->  				__func__, ip->i_ino);
->  
->  		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, dip);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Wed, Mar 15, 2017 at 12:11 PM, Chris Murphy <lists@colorremedies.com> wrote:
+> I'm guessing the slowness of
+> systemd debug is
+
+resulting in the difference; more time to commit the changes?
+
+Anyway, it looks / is remounted read-only before reboot. Note, this is
+a single partition/volume setup, so /boot/grub2/grub.cfg being
+modified by grubby is on the fs being remounted read-only and reboot
+time.
+
+-- 
+Chris Murphy
