@@ -1,140 +1,457 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f180.google.com ([209.85.161.180]:36136 "EHLO
-        mail-yw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753379AbdCXFPw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Mar 2017 01:15:52 -0400
-Received: by mail-yw0-f180.google.com with SMTP id i203so2577020ywc.3
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Mar 2017 22:15:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170323230157.GG17542@dastard>
-References: <20170315072349.GZ5280@birch.djwong.org> <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
- <20170315191355.GF5280@birch.djwong.org> <20170315193040.GG5280@birch.djwong.org>
- <CAJCQCtRt7_WpEp0npF=k1JJHFLE2sfc9ktB4YakuCZ5CNfZTTg@mail.gmail.com>
- <CAJCQCtRVuKiOMdtGLb3QbR8uCTXbhFMnNQgPzzZWG7y6URawHQ@mail.gmail.com>
- <20170322043438.GD17542@dastard> <CAJCQCtQ6VXd4s=SZcMuSbEhN7yRKRk0GULY2isbg2ZAh5RW+=w@mail.gmail.com>
- <20170322221912.GE17542@dastard> <CAJCQCtRes2OiqH1-UP9A_L1DLAZcXJbG--o669G+0XK1fmK8BQ@mail.gmail.com>
- <20170323230157.GG17542@dastard>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Thu, 23 Mar 2017 23:15:50 -0600
-Message-ID: <CAJCQCtTBcge03aVRkkdxp24YdvKaiHq6p7n3zJ+bcBhpLnXpXw@mail.gmail.com>
-Subject: Re: boot failure after kernel update, imap claims in-use inode 661690
- is free, would correct imap
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:35454 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754103AbdCOQAv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 12:00:51 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C185B19C336
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:00:42 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 03/22] mkfs: extend opt_params with a value field
+Date: Wed, 15 Mar 2017 16:59:58 +0100
+Message-Id: <20170315160017.27805-4-jtulak@redhat.com>
+In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
+References: <20170315160017.27805-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chris Murphy <lists@colorremedies.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs list <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Thu, Mar 23, 2017 at 5:01 PM, Dave Chinner <david@fromorbit.com> wrote:
+Add a new field int opt_params - value, which is filled with user input.
 
->
-> We solved reliable booting 20 years ago - it's a simple as "set up
-> separate boot partition and use Lilo". Been working reliably for me
-> and all the systems I've installed and managed since 1995.... :/
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 132 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 132 insertions(+)
 
-The problem doesn't happen with a separate boot volume; different
-bootloader isn't necessary. No one is actively supporting LILO
-anymore. There are apparently so many uses cases people want to
-support that it doesn't support that no one cares to bring it up to
-speed. It's like saying the old ice box works just fine since 1895,
-just that it's someone else's fault they don't deliver ice blocks
-anymore.
-
-
-
->
-> <feel free to insert you own "rocking chairs and lawn" comments :P>
->
->> But I sincerely doubt anyone on this list gives a flying fuck about
->> bootloader problems.
->
-> Nobody should care, because in future we should be replacing the
-> bootloader with "copy kernels into EFI partition and boot from EFI".
-> i.e. bypassing the need for a bootloader altogether. Worked
-> perfectly well for booting ia64 machines 10-15 years ago....
-
-Unworkable for dual boot, let alone multibooting. The ESP is too
-small, no installer team is going to take responsibility for growing
-it, Windows gets confused when there's more than one on a disk,  and
-the UEFI spec has no standardization for firmware boot managers, so
-there's no way to provide generic documentation for the built-in boot
-manager: and thus the bootloader needs to also be a boot manager in
-order to document it. And that leaves us right back to each distro
-owning it's own bootloader even on UEFI systems, where they have no
-idea WTF other distros have been installed (yes they will all see
-Windows, but it won't discover each other because Windows is not
-really a competitor, again leaving us with distros eating each others
-babies, etc.)
-
-
-
->
->> Actually, characterizing the distros as
->> uncooperative is too polite. They actively sabotage each other. It's
->> so bad, they even sabotage themselves (try doing back to back side by
->> side installations of Fedora). Each distro's grub is effectively a
->> fork. Fedora ostensibly uses mostly upstream stuff, but with grub the
->> upstream copy has 200+ hacks that are Fedora specific, SUSE has more
->> and more invasive hacks, both of them are mutually incompatible. The
->> distros don't agree. They're different operating systems that just so
->> happen to share a kernel (or an init service). This fact isn't going
->> to get solved on this list.
->
-> Yup, that's exactly what I was implying is the problem - everyone
-> has their own special snowflake rather than working together to
-> produce one simple, robust, reliable solution to a well known problem...
-
-Unsolvable. Systemd folks wrote up the bootloaderspec, and about 10
-minutes later there was a more sane fork by Matthew Garrett, and 10
-minutes later there were three implementations, all of which are
-mutually incompatible with each other. Still no cross distro
-cooperation either.
-
-
->> So if you have something else for me to actually act on, I'm happy to
->> try and push this forward so a teeny tiny handful of users can
->> actually do single volume XFS booting and not end up face planted when
->> they do offline updates. Thanks.
->
-> *As I always say*: fix the root cause of the problem, don't hack
-> around it because that almost always makes things worse in the long
-> run. Hacking code into systemd to work around a distro-specific
-> and/or bootloader bug is simply not a viable long term solution to
-> the collaboration problems that have been pointed out here...
-
-OK well in three replies you're still vague on precisely how the
-bootloader is even involved in this problem, seeing as it doesn't make
-any changes to the disk during kernel update, at all. If you want to
-implicate grubby for doing the wrong thing, that'll need more detailed
-explanation. From what I can tell the problem is systemd initiates a
-reboot, while root fs is still mounted rw, the kernel tolerates this
-and leaves the fs dirty, and the bootloader can't handle the fallout
-and can't be expected to handle it.
-
-It's either systemd needs to not do reboots when root fs can't be
-remounted-ro; and therefore must not have indefinite exemptions from
-killing processes that don't hold rw mount on volumes. LIterally any
-bad program could exist somewhere at sometime, not exit, and thus
-cause this problem. So even if plymouth is an instigator in this case,
-the central problem seems to be either systemd for the indefinite kill
-exemption, or it's the kernel for doing a reboot when a file system is
-still dirty. And I don't know nearly enough about the separation of
-responsibilities between systemd and the kernel to have a clue whether
-the root cause is systemd or the kernel.
-
-But I'm unconvinced it's plymouth, dracut, grubby, or the bootloader,
-even though all of them are instigators.
-
-And by the way, the freeze/unfreeze idea was your idea. So to bring
-that up, and then in the very next email say it's fucked up to
-actually insert it somewhere if multiple remount attempts fail is
-bizarre. Since it's sufficiently fucked up to get you to actually
-write out the words fucked up, maybe the idea shouldn't have been
-mentioned in the first place? Why mention a bag of dicks as a solution
-if you're just doing to say oh shit that's a bag of dicks are you
-fucking crazy? Don't do that!
-
-
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 372c620d..5e15fee2 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -115,6 +115,12 @@ unsigned int		sectorsize;
+  *     sets what is used with simple specifying the subopt (-d file).
+  *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
+  *     value in any case.
++ *
++ *   value INTERNAL
++ *     Do not set this on initialization. Use defaultval for what you want
++ *     to do. This is filled with user input and anything you write here now
++ *     is overwritten. (If the user input is a string and not a number, this
++ *     value is set to a positive non-zero number.)
+  */
+ struct opt_params {
+ 	int		index;
+@@ -131,6 +137,7 @@ struct opt_params {
+ 		long long	minval;
+ 		long long	maxval;
+ 		long long	defaultval;
++		long long	value;
+ 	}		subopt_params[MAX_SUBOPTS];
+ } opts[MAX_OPTS] = {
+ #define OPT_B	0
+@@ -1566,12 +1573,20 @@ main(
+ 								B_LOG);
+ 					blocksize = 1 << blocklog;
+ 					blflag = 1;
++					opts[OPT_B].subopt_params[B_LOG].value =
++							blocklog;
++					opts[OPT_B].subopt_params[B_SIZE].value =
++							blocksize;
+ 					break;
+ 				case B_SIZE:
+ 					blocksize = getnum(value, &opts[OPT_B],
+ 							   B_SIZE);
+ 					blocklog = libxfs_highbit32(blocksize);
+ 					bsflag = 1;
++					opts[OPT_B].subopt_params[B_LOG].value =
++							blocklog;
++					opts[OPT_B].subopt_params[B_SIZE].value =
++							blocksize;
+ 					break;
+ 				default:
+ 					unknown('b', value);
+@@ -1589,47 +1604,70 @@ main(
+ 					agcount = getnum(value, &opts[OPT_D],
+ 							 D_AGCOUNT);
+ 					daflag = 1;
++					opts[OPT_D].subopt_params[D_AGCOUNT].value =
++							agcount;
+ 					break;
+ 				case D_AGSIZE:
+ 					agsize = getnum(value, &opts[OPT_D],
+ 								D_AGSIZE);
+ 					dasize = 1;
++					opts[OPT_D].subopt_params[D_AGSIZE].value =
++							agsize;
+ 					break;
+ 				case D_FILE:
+ 					xi.disfile = getnum(value, &opts[OPT_D],
+ 							    D_FILE);
++					opts[OPT_D].subopt_params[D_FILE].value =
++							xi.disfile;
+ 					break;
+ 				case D_NAME:
+ 					xi.dname = getstr(value, &opts[OPT_D],
+ 								D_NAME);
++					opts[OPT_D].subopt_params[D_NAME].value = 1;
+ 					break;
+ 				case D_SIZE:
+ 					dbytes = getnum(value, &opts[OPT_D],
+ 								D_SIZE);
++					opts[OPT_D].subopt_params[D_SIZE].value =
++							dbytes;
+ 					break;
+ 				case D_SUNIT:
+ 					dsunit = getnum(value, &opts[OPT_D],
+ 								D_SUNIT);
++					opts[OPT_D].subopt_params[D_SUNIT].value =
++							dsunit;
+ 					break;
+ 				case D_SWIDTH:
+ 					dswidth = getnum(value, &opts[OPT_D],
+ 							 D_SWIDTH);
++					opts[OPT_D].subopt_params[D_SWIDTH].value =
++							dswidth;
+ 					break;
+ 				case D_SU:
+ 					dsu = getnum(value, &opts[OPT_D], D_SU);
++					opts[OPT_D].subopt_params[D_SU].value =
++							dsu;
+ 					break;
+ 				case D_SW:
+ 					dsw = getnum(value, &opts[OPT_D], D_SW);
++					opts[OPT_D].subopt_params[D_SW].value =
++							dsw;
+ 					break;
+ 				case D_NOALIGN:
+ 					nodsflag = getnum(value, &opts[OPT_D],
+ 								D_NOALIGN);
++					opts[OPT_D].subopt_params[D_NOALIGN].value =
++							nodsflag;
+ 					break;
+ 				case D_SECTLOG:
+ 					sectorlog = getnum(value, &opts[OPT_D],
+ 							   D_SECTLOG);
+ 					sectorsize = 1 << sectorlog;
+ 					slflag = 1;
++					opts[OPT_D].subopt_params[D_SECTSIZE].value =
++							sectorsize;
++					opts[OPT_D].subopt_params[D_SECTLOG].value =
++							sectorlog;
+ 					break;
+ 				case D_SECTSIZE:
+ 					sectorsize = getnum(value, &opts[OPT_D],
+@@ -1637,6 +1675,10 @@ main(
+ 					sectorlog =
+ 						libxfs_highbit32(sectorsize);
+ 					ssflag = 1;
++					opts[OPT_D].subopt_params[D_SECTSIZE].value =
++							sectorsize;
++					opts[OPT_D].subopt_params[D_SECTLOG].value =
++							sectorlog;
+ 					break;
+ 				case D_RTINHERIT:
+ 					c = getnum(value, &opts[OPT_D],
+@@ -1644,18 +1686,24 @@ main(
+ 					if (c)
+ 						fsx.fsx_xflags |=
+ 							XFS_DIFLAG_RTINHERIT;
++					opts[OPT_D].subopt_params[D_RTINHERIT].value =
++							c;
+ 					break;
+ 				case D_PROJINHERIT:
+ 					fsx.fsx_projid = getnum(value, &opts[OPT_D],
+ 								D_PROJINHERIT);
+ 					fsx.fsx_xflags |=
+ 						XFS_DIFLAG_PROJINHERIT;
++					opts[OPT_D].subopt_params[D_PROJINHERIT].value =
++							fsx.fsx_projid;
+ 					break;
+ 				case D_EXTSZINHERIT:
+ 					fsx.fsx_extsize = getnum(value, &opts[OPT_D],
+ 								 D_EXTSZINHERIT);
+ 					fsx.fsx_xflags |=
+ 						XFS_DIFLAG_EXTSZINHERIT;
++					opts[OPT_D].subopt_params[D_EXTSZINHERIT].value =
++							fsx.fsx_extsize;
+ 					break;
+ 				default:
+ 					unknown('d', value);
+@@ -1673,43 +1721,64 @@ main(
+ 					sb_feat.inode_align = getnum(value,
+ 								&opts[OPT_I],
+ 								I_ALIGN);
++					opts[OPT_I].subopt_params[I_ALIGN].value =
++							sb_feat.inode_align;
+ 					break;
+ 				case I_LOG:
+ 					inodelog = getnum(value, &opts[OPT_I],
+ 								I_LOG);
+ 					isize = 1 << inodelog;
+ 					ilflag = 1;
++					opts[OPT_I].subopt_params[I_SIZE].value =
++							isize;
++					opts[OPT_I].subopt_params[I_LOG].value =
++							inodelog;
+ 					break;
+ 				case I_MAXPCT:
+ 					imaxpct = getnum(value, &opts[OPT_I],
+ 							 I_MAXPCT);
+ 					imflag = 1;
++					opts[OPT_I].subopt_params[I_MAXPCT].value =
++							imaxpct;
+ 					break;
+ 				case I_PERBLOCK:
+ 					inopblock = getnum(value, &opts[OPT_I],
+ 							   I_PERBLOCK);
+ 					ipflag = 1;
++					opts[OPT_I].subopt_params[I_PERBLOCK].value =
++							inopblock;
+ 					break;
+ 				case I_SIZE:
+ 					isize = getnum(value, &opts[OPT_I],
+ 								I_SIZE);
+ 					inodelog = libxfs_highbit32(isize);
+ 					isflag = 1;
++					opts[OPT_I].subopt_params[I_SIZE].value =
++							isize;
++					opts[OPT_I].subopt_params[I_LOG].value =
++							inodelog;
+ 					break;
+ 				case I_ATTR:
+ 					sb_feat.attr_version =
++
+ 						getnum(value, &opts[OPT_I],
+ 								I_ATTR);
++					opts[OPT_I].subopt_params[I_ATTR].value =
++							sb_feat.attr_version;
+ 					break;
+ 				case I_PROJID32BIT:
+ 					sb_feat.projid16bit =
+ 						!getnum(value, &opts[OPT_I],
+ 							I_PROJID32BIT);
++					opts[OPT_I].subopt_params[I_PROJID32BIT].value =
++							sb_feat.projid16bit;
+ 					break;
+ 				case I_SPINODES:
+ 					sb_feat.spinodes = getnum(value,
+ 								&opts[OPT_I],
+ 								I_SPINODES);
++					opts[OPT_I].subopt_params[I_SPINODES].value =
++							sb_feat.spinodes;
+ 					break;
+ 				default:
+ 					unknown('i', value);
+@@ -1727,24 +1796,34 @@ main(
+ 					logagno = getnum(value, &opts[OPT_L],
+ 								L_AGNUM);
+ 					laflag = 1;
++					opts[OPT_L].subopt_params[L_AGNUM].value =
++							logagno;
+ 					break;
+ 				case L_FILE:
+ 					xi.lisfile = getnum(value, &opts[OPT_L],
+ 							    L_FILE);
++					opts[OPT_L].subopt_params[L_FILE].value =
++							xi.lisfile;
+ 					break;
+ 				case L_INTERNAL:
+ 					loginternal = getnum(value, &opts[OPT_L],
+ 							     L_INTERNAL);
+ 					liflag = 1;
++					opts[OPT_L].subopt_params[L_INTERNAL].value =
++							loginternal;
+ 					break;
+ 				case L_SU:
+ 					lsu = getnum(value, &opts[OPT_L], L_SU);
+ 					lsuflag = 1;
++					opts[OPT_L].subopt_params[L_SU].value =
++							lsu;
+ 					break;
+ 				case L_SUNIT:
+ 					lsunit = getnum(value, &opts[OPT_L],
+ 								L_SUNIT);
+ 					lsunitflag = 1;
++					opts[OPT_L].subopt_params[L_SUNIT].value =
++							lsunit;
+ 					break;
+ 				case L_NAME:
+ 				case L_DEV:
+@@ -1753,22 +1832,32 @@ main(
+ 					xi.logname = logfile;
+ 					ldflag = 1;
+ 					loginternal = 0;
++					opts[OPT_L].subopt_params[L_NAME].value = 1;
++					opts[OPT_L].subopt_params[L_DEV].value = 1;
+ 					break;
+ 				case L_VERSION:
+ 					sb_feat.log_version =
+ 						getnum(value, &opts[OPT_L],
+ 								L_VERSION);
+ 					lvflag = 1;
++					opts[OPT_L].subopt_params[L_VERSION].value =
++							sb_feat.log_version;
+ 					break;
+ 				case L_SIZE:
+ 					logbytes = getnum(value, &opts[OPT_L],
+ 								L_SIZE);
++					opts[OPT_L].subopt_params[L_SIZE].value =
++							logbytes;
+ 					break;
+ 				case L_SECTLOG:
+ 					lsectorlog = getnum(value, &opts[OPT_L],
+ 							    L_SECTLOG);
+ 					lsectorsize = 1 << lsectorlog;
+ 					lslflag = 1;
++					opts[OPT_L].subopt_params[L_SECTSIZE].value =
++							lsectorsize;
++					opts[OPT_L].subopt_params[L_SECTLOG].value =
++							lsectorlog;
+ 					break;
+ 				case L_SECTSIZE:
+ 					lsectorsize = getnum(value, &opts[OPT_L],
+@@ -1776,11 +1865,17 @@ main(
+ 					lsectorlog =
+ 						libxfs_highbit32(lsectorsize);
+ 					lssflag = 1;
++					opts[OPT_L].subopt_params[L_SECTSIZE].value =
++							lsectorsize;
++					opts[OPT_L].subopt_params[L_SECTLOG].value =
++							lsectorlog;
+ 					break;
+ 				case L_LAZYSBCNTR:
+ 					sb_feat.lazy_sb_counters =
+ 							getnum(value, &opts[OPT_L],
+ 							       L_LAZYSBCNTR);
++					opts[OPT_L].subopt_params[L_LAZYSBCNTR].value =
++							sb_feat.lazy_sb_counters;
+ 					break;
+ 				default:
+ 					unknown('l', value);
+@@ -1805,20 +1900,27 @@ main(
+ 								M_CRC);
+ 					if (sb_feat.crcs_enabled)
+ 						sb_feat.dirftype = true;
++					opts[OPT_M].subopt_params[M_CRC].value =
++							sb_feat.crcs_enabled;
+ 					break;
+ 				case M_FINOBT:
+ 					sb_feat.finobt = getnum(
+ 						value, &opts[OPT_M], M_FINOBT);
++					opts[OPT_M].subopt_params[M_FINOBT].value =
++							sb_feat.finobt;
+ 					break;
+ 				case M_UUID:
+ 					if (!value || *value == '\0')
+ 						reqval('m', subopts, M_UUID);
+ 					if (platform_uuid_parse(value, &uuid))
+ 						illegal(optarg, "m uuid");
++					opts[OPT_M].subopt_params[M_UUID].value = 1;
+ 					break;
+ 				case M_RMAPBT:
+ 					sb_feat.rmapbt = getnum(
+ 						value, &opts[OPT_M], M_RMAPBT);
++					opts[OPT_M].subopt_params[M_RMAPBT].value =
++						sb_feat.rmapbt;
+ 					break;
+ 				case M_REFLINK:
+ 					sb_feat.reflink = getnum(
+@@ -1841,6 +1943,10 @@ main(
+ 							     N_LOG);
+ 					dirblocksize = 1 << dirblocklog;
+ 					nlflag = 1;
++					opts[OPT_N].subopt_params[N_SIZE].value =
++							dirblocksize;
++					opts[OPT_N].subopt_params[N_LOG].value =
++							dirblocklog;
+ 					break;
+ 				case N_SIZE:
+ 					dirblocksize = getnum(value, &opts[OPT_N],
+@@ -1848,6 +1954,10 @@ main(
+ 					dirblocklog =
+ 						libxfs_highbit32(dirblocksize);
+ 					nsflag = 1;
++					opts[OPT_N].subopt_params[N_SIZE].value =
++							dirblocksize;
++					opts[OPT_N].subopt_params[N_LOG].value =
++							dirblocklog;
+ 					break;
+ 				case N_VERSION:
+ 					value = getstr(value, &opts[OPT_N],
+@@ -1861,10 +1971,14 @@ main(
+ 							       N_VERSION);
+ 					}
+ 					nvflag = 1;
++					opts[OPT_N].subopt_params[N_VERSION].value =
++							sb_feat.dir_version;
+ 					break;
+ 				case N_FTYPE:
+ 					sb_feat.dirftype = getnum(value, &opts[OPT_N],
+ 								  N_FTYPE);
++					opts[OPT_N].subopt_params[N_FTYPE].value =
++							sb_feat.dirftype;
+ 					break;
+ 				default:
+ 					unknown('n', value);
+@@ -1895,23 +2009,33 @@ main(
+ 				case R_EXTSIZE:
+ 					rtextbytes = getnum(value, &opts[OPT_R],
+ 								R_EXTSIZE);
++					opts[OPT_R].subopt_params[R_EXTSIZE].value =
++							rtextbytes;
+ 					break;
+ 				case R_FILE:
+ 					xi.risfile = getnum(value, &opts[OPT_R],
+ 							    R_FILE);
++					opts[OPT_R].subopt_params[R_FILE].value =
++							xi.risfile;
+ 					break;
+ 				case R_NAME:
+ 				case R_DEV:
+ 					xi.rtname = getstr(value, &opts[OPT_R],
+ 							   R_NAME);
++					opts[OPT_R].subopt_params[R_NAME].value = 1;
++					opts[OPT_R].subopt_params[R_DEV].value = 1;
+ 					break;
+ 				case R_SIZE:
+ 					rtbytes = getnum(value, &opts[OPT_R],
+ 								R_SIZE);
++					opts[OPT_R].subopt_params[R_SIZE].value =
++							rtbytes;
+ 					break;
+ 				case R_NOALIGN:
+ 					norsflag = getnum(value, &opts[OPT_R],
+ 								R_NOALIGN);
++					opts[OPT_R].subopt_params[R_NOALIGN].value =
++							norsflag;
+ 					break;
+ 				default:
+ 					unknown('r', value);
+@@ -1936,6 +2060,10 @@ main(
+ 					sectorsize = 1 << sectorlog;
+ 					lsectorsize = sectorsize;
+ 					lslflag = slflag = 1;
++					opts[OPT_S].subopt_params[S_LOG].value =
++							sectorsize;
++					opts[OPT_S].subopt_params[S_SECTLOG].value =
++							sectorsize;
+ 					break;
+ 				case S_SIZE:
+ 				case S_SECTSIZE:
+@@ -1949,6 +2077,10 @@ main(
+ 						libxfs_highbit32(sectorsize);
+ 					lsectorlog = sectorlog;
+ 					lssflag = ssflag = 1;
++					opts[OPT_S].subopt_params[S_SIZE].value =
++							sectorlog;
++					opts[OPT_S].subopt_params[S_SECTSIZE].value =
++							sectorlog;
+ 					break;
+ 				default:
+ 					unknown('s', value);
 -- 
-Chris Murphy
+2.11.0
+
