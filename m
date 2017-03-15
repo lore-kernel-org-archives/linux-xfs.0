@@ -1,61 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39740 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:34466 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752228AbdCNSvQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Mar 2017 14:51:16 -0400
-Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
-References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com>
- <5223151.9ZZzaImiEQ@libor-nb>
- <2c8d1ee3-c795-aefa-4797-8b7970ea8266@sandeen.net>
- <1702693.ETbqtf3ybS@libor-nb>
- <503a4130-e6db-2d14-d377-01336022d6ee@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <95735a3b-3a13-7d44-b16b-2d05ac8ab549@sandeen.net>
-Date: Tue, 14 Mar 2017 13:51:09 -0500
-MIME-Version: 1.0
-In-Reply-To: <503a4130-e6db-2d14-d377-01336022d6ee@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+        id S1754118AbdCOQAv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 12:00:51 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1D2CA7E9C0
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:00:46 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 06/22] mkfs: add cross-section conflict checks
+Date: Wed, 15 Mar 2017 17:00:01 +0100
+Message-Id: <20170315160017.27805-7-jtulak@redhat.com>
+In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
+References: <20170315160017.27805-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?UTF-8?B?TGlib3IgS2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
+Checks are modified to work with cross-section conflicts (data, metada, log, ...).
 
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 43 ++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 34 insertions(+), 9 deletions(-)
 
-On 3/14/17 11:54 AM, Eric Sandeen wrote:
-> On 3/14/17 3:15 AM, Libor Klepáč wrote:
->> Hello,
->> i have this during night with error_level = 11, no force shutdown
-> 
-> Just to double check - are these all getting freshly created?  I.e.
-> you repair and fix the filesystem each time you see this, but they
-> keep re-appearing?
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 7e0a4159..0877c196 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -744,6 +744,9 @@ struct opt_params {
+ 	},
+ };
+ 
++static void conflict_struct(struct opt_params 	*opt, struct subopt_param *subopt,
++			struct subopt_conflict 	*conflict);
++
+ #define TERABYTES(count, blog)	((__uint64_t)(count) << (40 - (blog)))
+ #define GIGABYTES(count, blog)	((__uint64_t)(count) << (30 - (blog)))
+ #define MEGABYTES(count, blog)	((__uint64_t)(count) << (20 - (blog)))
+@@ -1351,10 +1354,9 @@ check_opt(
+ 			break;
+ 		if (conflict_opt.test_values)
+ 			break;
+-		if (opt->subopt_params[conflict_opt.subopt].seen ||
+-		    opt->subopt_params[conflict_opt.subopt].str_seen) {
+-			conflict(opt->name, (char **)opt->subopts,
+-				 conflict_opt.subopt, index);
++		if (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen ||
++		    opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].str_seen) {
++			conflict_struct(opt, sp, &conflict_opt);
+ 		}
+ 	}
+ }
+@@ -1379,13 +1381,12 @@ check_opt_value(
+ 			break;
+ 		if (!conflict_opt.test_values)
+ 			break;
+-		if ((opt->subopt_params[conflict_opt.subopt].seen ||
+-				    opt->subopt_params[conflict_opt.subopt].str_seen) &&
+-		    opt->subopt_params[conflict_opt.subopt].value
++		if ((opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen ||
++		     opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].str_seen) &&
++		    opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].value
+ 				== conflict_opt.invalid_value &&
+ 		    value == conflict_opt.at_value) {
+-			conflict(opt->name, (char **)opt->subopts,
+-				 conflict_opt.subopt, index);
++			conflict_struct(opt, sp, &conflict_opt);
+ 		}
+ 	}
+ }
+@@ -3586,12 +3587,36 @@ conflict(
+ 	char		*tab[],
+ 	int		oldidx,
+ 	int		newidx)
++
+ {
+ 	fprintf(stderr, _("Cannot specify both -%c %s and -%c %s\n"),
+ 		opt, tab[oldidx], opt, tab[newidx]);
+ 	usage();
+ }
+ 
++static void
++conflict_struct(
++	struct opt_params 	*opt,
++	struct subopt_param	*subopt,
++	struct subopt_conflict 	*conflict)
++{
++	if(conflict->message) {
++		fprintf(stderr, _("Cannot specify both -%c %s and -%c %s: %s\n"),
++			opt->name,
++			opt->subopts[subopt->index],
++			opts[conflict->opt].name,
++			opts[conflict->opt].subopts[conflict->subopt],
++			_(conflict->message));
++	} else {
++		fprintf(stderr, _("Cannot specify both -%c %s and -%c %s\n"),
++			opt->name,
++			opt->subopts[subopt->index],
++			opts[conflict->opt].name,
++			opts[conflict->opt].subopts[conflict->subopt]);
++	}
++	usage();
++}
++
+ 
+ static void
+ illegal(
+-- 
+2.11.0
 
-And is anything else happening in between - unclean shutdowns,
-crashes, storage problems etc or are you just riding along, and
-they show up out of nowhere on an otherwise normal box?
-
-(sorry if that's elsewhere in this long thread, but a summary
-of the problem at this point might help).
-
--Eric
-
->> (kernel 4.8.15)
->> Mar 14 02:36:29 vps2 kernel: [54799.061956] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x24e70268
-> 
-> Unfortunately the read path is a bit less interesting.  We found something
-> on disk, but we're not sure how it got there.
-> 
-> If we could catch a write verifier failing that /might/ be a little more
-> useful.
-> 
-> I'm at a loss as to why you seem to be uniquely able to hit this problem.  :(
-> 
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
