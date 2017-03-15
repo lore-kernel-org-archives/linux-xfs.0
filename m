@@ -1,84 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56592 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35716 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933817AbdCUS73 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Mar 2017 14:59:29 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH RFC 0/2] xfs_io: hook up statx
-Message-ID: <0bc83cf4-a927-e78e-9bfb-7f3fa91303eb@redhat.com>
-Date: Tue, 21 Mar 2017 14:59:21 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+        id S1754124AbdCOQAv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 12:00:51 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 53F60C057FA6
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:00:49 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 09/22] mkfs: change conflict checks to utilize the new conflict structure
+Date: Wed, 15 Mar 2017 17:00:04 +0100
+Message-Id: <20170315160017.27805-10-jtulak@redhat.com>
+In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
+References: <20170315160017.27805-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: David Howells <dhowells@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-These 2 patches are a first pass to add a statx command
-to xfs_io in hopes that it will aid creation of xfstests
-statx regression tests.
+Bring the conflicts detection up to date with conflicts declaration.
 
-xfs_io> help statx
-statx [-O | -m mask][-FDLAP] -- extended information about the currently open file
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
- Display extended file status.
+---
+v2: A call rename was fixed from check_subopt to check_subopt_conflicts
+---
+ mkfs/xfs_mkfs.c | 37 +++++++++++++++++++++++++++++++------
+ 1 file changed, 31 insertions(+), 6 deletions(-)
 
- Options:
- -m mask -- Specify the field mask for the statx call (default STATX_ALL)
- -A -- Suppress terminal automount traversal
- -D -- Don't sync attributes with the server
- -F -- Force the attributes to be sync'd with the server
- -L -- Follow symlinks (statx link target)
- -O -- Remove basic stats (STATX_BASIC_STATS) from default mask
- -P -- pretty-print results similar to stat(1)
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index c100fef9..c3ab9221 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1372,7 +1372,7 @@ illegal_option(
+  * Check for conflicts and option respecification.
+  */
+ static void
+-check_opt(
++check_subopt_conflicts(
+ 	struct opt_params	*opt,
+ 	int			index,
+ 	bool			str_seen)
+@@ -1424,7 +1424,7 @@ check_opt(
+  * Check for conflict values between options.
+  */
+ static void
+-check_opt_value(
++check_subopt_value(
+ 	struct opt_params	*opt,
+ 	int			index,
+ 	long long 		value)
+@@ -1450,6 +1450,32 @@ check_opt_value(
+ 	}
+ }
+ 
++/**
++ * Go through entire opt_params table and check every option for valid values
++ * and for conflicts.
++ */
++static void
++check_opt(
++	struct opt_params *opts,
++	int opti)
++{
++	int index;
++	struct opt_params *opt = &opts[opti];
++	for (index = 0; index < MAX_SUBOPTS; index++) {
++		struct subopt_param *sp = &opt->subopt_params[index];
++		check_subopt_conflicts(opt, index, false);
++		check_subopt_value(opt, index, sp->value);
++	}
++}
++static void
++check_all_opts(struct opt_params *opts)
++{
++	int opti;
++	for (opti = 0; opti < MAX_OPTS; opti++) {
++		check_opt(opts, opti);
++	}
++}
++
+ static long long
+ getnum(
+ 	const char		*str,
+@@ -1459,7 +1485,6 @@ getnum(
+ 	struct subopt_param	*sp = &opts->subopt_params[index];
+ 	long long		c;
+ 
+-	check_opt(opts, index, false);
+ 	/* empty strings might just return a default value */
+ 	if (!str || *str == '\0') {
+ 		if (sp->defaultval == SUBOPT_NEEDS_VAL)
+@@ -1493,8 +1518,6 @@ getnum(
+ 			illegal_option(str, opts, index, NULL);
+ 	}
+ 
+-	check_opt_value(opts, index, c);
+-
+ 	/* Validity check the result. */
+ 	if (c < sp->minval)
+ 		illegal_option(str, opts, index, _("value is too small"));
+@@ -1517,7 +1540,7 @@ getstr(
+ 	struct opt_params	*opts,
+ 	int			index)
+ {
+-	check_opt(opts, index, true);
++	check_subopt_conflicts(opts, index, true);
+ 
+ 	/* empty strings for string options are not valid */
+ 	if (!str || *str == '\0')
+@@ -2213,6 +2236,8 @@ main(
+ 	} else
+ 		dfile = xi.dname;
+ 
++	check_all_opts(opts);
++
+ 	/*
+ 	 * Blocksize and sectorsize first, other things depend on them
+ 	 * For RAID4/5/6 we want to align sector size and block size,
+-- 
+2.11.0
 
-xfs_io> statx
-stx_mask: 0xfff
-stx_blksize: 4096
-stx_attributes: 0x70
-stx_nlink: 1
-stx_uid: 0
-stx_gid: 0
-stx_mode: 0100644
-stx_ino: 99
-stx_size: 0
-stx_blocks: 0
-stx_atime.tv_sec: 1490109633
-stx_atime.tv_nsec: 676550238
-stx_btime.tv_sec: 1490109633
-stx_btime.tv_nsec: 675550234
-stx_ctime.tv_sec: 1490109725
-stx_ctime.tv_nsec: 69966839
-stx_mtime.tv_sec: 1490109633
-stx_mtime.tv_nsec: 676550238
-stx_rdev_major: 0
-stx_rdev_minor: 0
-stx_dev_major: 7
-stx_dev_minor: 0
-
-patch 2 is a bit of a hack for now; it hardcodes the 64-bit x86
-syscall nr, and includes a whole header full of statx
-#defines.
-
-I'm not sure if we want to provide those under #ifndef,
-or just require new kernel headers & test for them w/
-autoconf.  I'll clean it up one way or another.
-
-It also lifts a fair bit from David's samples/statx/test-statx.c;
-a lot of that is pretty-printing that we don't do for xfs_io's
-standard stat command, so maybe it should get dropped from this
-patch for code brevity.
-
-Another interesting limitation of all of the xfs_io stat
-variants is that they currently can't stat any file that
-they can't open, which may or may not be a limitation that
-we care about....
-
-Anyway - thoughts on whether this is enough of an interface
-to facilitate testing, and whether we should accommodate old
-headers would be appreciated, and I'll get it cleaned up &
-send a V2.
-
--Eric
