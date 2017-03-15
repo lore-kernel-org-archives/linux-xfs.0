@@ -1,87 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53881 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754960AbdCTRdi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Mar 2017 13:33:38 -0400
-Date: Mon, 20 Mar 2017 18:33:12 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-Message-ID: <20170320173312.GA10436@quack2.suse.cz>
-References: <20170315215107.5628-1-rgoldwyn@suse.de>
- <20170315215107.5628-6-rgoldwyn@suse.de>
- <20170316213134.GV17542@dastard>
- <045e06ce-ac19-6293-a62b-8ac937f753ac@suse.de>
+Received: from userp1050.oracle.com ([156.151.31.82]:24841 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751277AbdCOTQB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 15:16:01 -0400
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v2FJFNlt008686
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 19:15:23 GMT
+Date: Wed, 15 Mar 2017 12:13:55 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: boot failure after kernel update, imap claims in-use inode
+ 661690 is free, would correct imap
+Message-ID: <20170315191355.GF5280@birch.djwong.org>
+References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
+ <20170315072349.GZ5280@birch.djwong.org>
+ <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <045e06ce-ac19-6293-a62b-8ac937f753ac@suse.de>
+In-Reply-To: <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: Dave Chinner <david@fromorbit.com>, Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: xfs list <linux-xfs@vger.kernel.org>
 
-On Fri 17-03-17 07:23:24, Goldwyn Rodrigues wrote:
-> On 03/16/2017 04:31 PM, Dave Chinner wrote:
-> > On Wed, Mar 15, 2017 at 04:51:04PM -0500, Goldwyn Rodrigues wrote:
-> >> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> >>
-> >> A new flag BIO_NOWAIT is introduced to identify bio's
-> >> orignating from iocb with IOCB_NOWAIT. This flag indicates
-> >> to return immediately if a request cannot be made instead
-> >> of retrying.
-> > 
-> > So this makes a congested block device run the bio IO completion
-> > callback with an -EAGAIN error present? Are all the filesystem
-> > direct IO submission and completion routines OK with that? i.e. does
-> > such a congestion case cause filesystems to temporarily expose stale
-> > data to unprivileged users when the IO is requeued in this way?
-> > 
-> > e.g. filesystem does allocation without blocking, submits bio,
-> > device is congested, runs IO completion with error, so nothing
-> > written to allocated blocks, write gets queued, so other read
-> > comes in while the write is queued, reads data from uninitialised
-> > blocks that were allocated during the write....
-> > 
-> > Seems kinda problematic to me to have a undocumented design
-> > constraint (i.e a landmine) where we submit the AIO only to have it
-> > error out and then expect the filesystem to do something special and
-> > different /without blocking/ on EAGAIN.
+On Wed, Mar 15, 2017 at 12:11:22PM -0600, Chris Murphy wrote:
+> On Wed, Mar 15, 2017 at 1:23 AM, Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
 > 
-> If the filesystems has to perform block allocation, we would return
-> -EAGAIN early enough. However, I agree there is a problem, since not all
-> filesystems know this. I worked on only three of them.
-
-So Dave has a good point about the missing documentation explaining the
-expectation from the filesystem. Other than that the filesystem is
-responsible for determining in its direct IO submission routine whether it
-can deal with NOWAIT direct IO without blocking (including backing out of
-block layer refuses to do the IO) and if not, just return with EAGAIN right
-away.
-
-Probably we should also have a feature flag in filesystem_type telling
-whether a particular filesystem knows about NOWAIT direct IO at all so that
-we don't have to add stub to each and every filesystem supporting direct IO
-that returns EAGAIN when NOWAIT is set (OTOH adding that stub won't be that
-hard either since there are not *that* many filesystems supporting direct
-IO). But one or the other has to be done.
-
-> > Why isn't the congestion check at a higher layer like we do for page
-> > cache readahead? i.e. using the bdi*congested() API at the time we
-> > are doing all the other filesystem blocking checks.
-> > 
+> >
+> > So... you fire up gnome-software, click "Update", it downloads rpms to
+> > the hard disk, reboots, (presumably) installs the rpms, reboots again,
+> > and after the /second/ reboot grub just barfs up a grub> prompt?
 > 
-> Yes, that may work better. We will have to call bdi_read_congested() on
-> a write path. (will have to comment that part of the code). Would it
-> encompass all possible waits in the block layer?
+> Correct.
+> 
+> 
+> > Now I'm curious how systemd actually triggers the reboot.  Unmounting
+> > would seem to force the log and push the AIL, which (you'd think) would
+> > be enough.  But maybe systemd is doing something weird?  Or maybe
+> > post-update we fail to unmount / ?
+> 
+> If I boot with the following parameters, and use virsh console to
+> track what's going on right after the updating,
+> 
+> systemd.log_level=debug systemd.log_target=console console=ttyS0,38400
+> 
+> 
+> 
+> Sending SIGTERM to remaining processes...
+> Sending SIGKILL to remaining processes...
+> Process 304 (plymouthd) has been marked to be excluded from killing.
+> It is running from the root file system, and thus likely to block
+> re-mounting of the root file system to read-only. Please consider
+> moving it into an initrd file system instead.
 
-Congestion mechanism is not really reliable. The bdi can show the device is
-not congested but block layer will still block you waiting for some
-resource. And for some of the stuff like tag allocation you cannot really
-do a reliable check in advance so I don't think congestion checks are
-really a viable alternative.
+Heh.  So the splash screen is still running and we can't unmount /.
+Consequently systemd remounts the fs readonly...
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> Unmounting file systems.
+> Remounting '/tmp' read-only with options 'seclabel'.
+> Unmounting /tmp.
+> Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
+> Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
+> Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
+
+(I wonder why it does this three times?)
+
+> All filesystems unmounted.
+> Deactivating swaps.
+> All swaps deactivated.
+> Detaching loop devices.
+> device-enumerator: scan all dirs
+>   device-enumerator: scanning /sys/bus
+>   device-enumerator: scanning /sys/class
+> All loop devices detached.
+> Detaching DM devices.
+> device-enumerator: scan all dirs
+>   device-enumerator: scanning /sys/bus
+>   device-enumerator: scanning /sys/class
+> All DM devices detached.
+> Spawned /usr/lib/systemd/system-shutdown/mdadm.shutdown as 8408.
+> /usr/lib/systemd/system-shutdown/mdadm.shutdown succeeded.
+> system-shutdown succeeded.
+> Failed to read reboot parameter file: No such file or directory
+> Rebooting.
+> [   52.963598] Unregister pv shared memory for cpu 0
+> [   52.965736] Unregister pv shared memory for cpu 1
+> [   52.966795] sd 1:0:0:0: [sda] Synchronizing SCSI cache
+> [   52.991220] reboot: Restarting system
+> [   52.993119] reboot: machine restart
+
+...and reboots, having not unmounted, and (I guess?) without forcing the
+log to write all of the logged changes back to the metadata.  They
+changes are safely recorded /in/ the log....
+
+> <no further entries, VM shuts down>
+> 
+> However, I get a different result. This time I get a stale grub menu
+> with a single kernel option (same as if the update hadn't happened).
+> If I boot, kernel messages reports log replay. When I reboot again,
+
+...because mounting replays them and after that the metadata is up to
+date.
+
+Strange, though, because afaict we xfs_attr_quiesce seems to do the
+right things when we remount rw->ro, so you wouldn't think that there
+would be a need to recover.  Maybe there's something funny going on
+w.r.t. the three messages about remounting readonly?
+
+> now I have a two kernel grub menu. I'm guessing the slowness of
+> systemd debug is resulting in the difference; more time to commit the
+> changes?
+>
+> Anyway, it looks / is remounted read-only before reboot. Note, this is
+> a single partition/volume setup, so /boot/grub2/grub.cfg being
+> modified by grubby is on the fs being remounted read-only and reboot
+> time.
+
+--D
+
+> 
+> 
+> 
+> -- 
+> Chris Murphy
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
