@@ -1,45 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33722 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:52994 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752460AbdCQANT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Mar 2017 20:13:19 -0400
-Subject: Re: [PATCH 00/22] mkfs.xfs: Make stronger conflict checks
+        id S1754132AbdCOQBC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 12:01:02 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 5DBCC64D99
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:01:02 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 21/22] mkfs: remove duplicit checks
+Date: Wed, 15 Mar 2017 17:00:16 +0100
+Message-Id: <20170315160017.27805-22-jtulak@redhat.com>
+In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
 References: <20170315160017.27805-1-jtulak@redhat.com>
- <20170316233845.GY28800@wotan.suse.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <2030b8be-4fe0-c767-4c3a-0e5ff25c4362@sandeen.net>
-Date: Thu, 16 Mar 2017 16:47:10 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170316233845.GY28800@wotan.suse.de>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>, Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On 3/16/17 4:38 PM, Luis R. Rodriguez wrote:
-> On Wed, Mar 15, 2017 at 04:59:55PM +0100, Jan Tulak wrote:
->> This set is a follow-up of some old discussions and further attempts to untangle
->> the spaghetti in options parsing. In short, this patchset allows to define
->> cross-option conflicts and makes the conflicts detection more robust.
-> 
-> This series is pretty large. There are quite a bit of patches which just rename
-> something, or just shove code from one place to another. Can you group up
-> non-functional changes together first, and send a small series of simple stuff
-> with no functional changes first?
+Remove old checks that are now done by the conflicts table.
 
-I have to say I'm still struggling with it as well.  Apologies for the 
-random detail nitpicking, I'm trying to look through it all to get a better
-big picture.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 20 --------------------
+ 1 file changed, 20 deletions(-)
 
-And as far as "no-op changes" it's imperative to make them really no-op.
-Make sure that other random changes aren't stuck into the middle of anything...
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 865bd389..dfb5e300 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2769,26 +2769,6 @@ main(
+ 		*blocklog = XFS_DFL_BLOCKSIZE_LOG;
+ 		*blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG;
+ 	}
+-	if (*blocksize < XFS_MIN_BLOCKSIZE || *blocksize > XFS_MAX_BLOCKSIZE) {
+-		fprintf(stderr, _("illegal block size %d\n"), *blocksize);
+-		usage();
+-	}
+-	if (sb_feat.crcs_enabled && *blocksize < XFS_MIN_CRC_BLOCKSIZE) {
+-		fprintf(stderr,
+-_("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
+-			XFS_MIN_CRC_BLOCKSIZE);
+-		usage();
+-	}
+-
+-	/*
+-	 * If user explicitly stated -m crc=1 -n ftype=0, an error was already
+-	 * issued. But if -n ftype=0 was stated alone, then it is a conflict
+-	 * with a default value for crc enabled and has to be detected here.
+-	 */
+-	if (sb_feat.crcs_enabled && !sb_feat.dirftype) {
+-		fprintf(stderr, _("cannot disable ftype with crcs enabled\n"));
+-		usage();
+-	}
+ 	if (!slflag && !ssflag) {
+ 		sectorlog = XFS_MIN_SECTORSIZE_LOG;
+ 		sectorsize = XFS_MIN_SECTORSIZE;
+-- 
+2.11.0
 
-I'll probably keep flinging comments on various patches as I read them,
-some of it may be helpful in terms of just learning some best practice
-for patches, but TBH I'm still trying to wrap my head around the big change
-and purpose.
-
--Eric
