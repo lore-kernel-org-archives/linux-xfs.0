@@ -1,489 +1,299 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20941 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934542AbdCJXVi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:21:38 -0500
-Subject: [PATCH 15/19] xfs: scrub directory metadata
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 10 Mar 2017 15:21:23 -0800
-Message-ID: <148918808330.6959.8339986661759718701.stgit@birch.djwong.org>
-In-Reply-To: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
-References: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58122 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751959AbdCOPAV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 11:00:21 -0400
+Date: Wed, 15 Mar 2017 11:00:18 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: verify inline directory data forks
+Message-ID: <20170315150018.GA24729@bfoster.bfoster>
+References: <20170315072855.GA5280@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170315072855.GA5280@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 15, 2017 at 12:28:55AM -0700, Darrick J. Wong wrote:
+> When we're reading or writing the data fork of an inline directory,
+> check the contents to make sure we're not overflowing buffers or eating
+> garbage data.  xfs/348 corrupts an inline symlink into an inline
+> directory, triggering a buffer overflow bug.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Scrub the hash tree and all the entries in a directory.
+Thanks, this looks much nicer to me. I suppose some of the checks in
+xfs_dir2_sf_getdents() could be killed off as redundant with the
+verifier in place..?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/Makefile               |    1 
- fs/xfs/libxfs/xfs_dir2_priv.h |    4 -
- fs/xfs/libxfs/xfs_fs.h        |    3 
- fs/xfs/scrub/common.c         |    1 
- fs/xfs/scrub/common.h         |    1 
- fs/xfs/scrub/dir.c            |  273 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dir2_readdir.c     |   19 ++-
- fs/xfs/xfs_file.c             |    2 
- fs/xfs/xfs_trace.h            |    3 
- 9 files changed, 296 insertions(+), 11 deletions(-)
- create mode 100644 fs/xfs/scrub/dir.c
+Just a few other comments...
 
+>  fs/xfs/libxfs/xfs_dir2_data.c  |   73 ++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_dir2_priv.h  |    2 +
+>  fs/xfs/libxfs/xfs_inode_fork.c |   22 ++++++++++--
+>  fs/xfs/libxfs/xfs_inode_fork.h |    2 +
+>  fs/xfs/xfs_inode.c             |   12 +++++--
+>  5 files changed, 104 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+> index d478065..fb6f32d 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_data.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_data.c
+> @@ -33,6 +33,79 @@
+>  #include "xfs_cksum.h"
+>  #include "xfs_log.h"
+>  
+> +/* Check the consistency of an inline directory. */
+> +int
+> +xfs_dir3_inline_check(
+> +	struct xfs_mount		*mp,
+> +	struct xfs_dinode		*dip,
+> +	int				size)
+> +{
+> +	struct xfs_dir2_sf_entry	*sfep;
+> +	struct xfs_dir2_sf_entry	*next_sfep;
+> +	struct xfs_dir2_sf_hdr		*sfp;
+> +	char				*endp;
+> +	const struct xfs_dir_ops	*dops;
+> +	xfs_ino_t			ino;
+> +	int				i;
+> +	__uint8_t			filetype;
+> +
+> +	dops = xfs_dir_get_ops(mp, NULL);
+> +
+> +	/*
+> +	 * Give up if the directory is way too short.
+> +	 */
+> +	XFS_WANT_CORRUPTED_RETURN(mp, size >
+> +			offsetof(struct xfs_dir2_sf_hdr, parent));
+> +
+> +	sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_PTR(dip, XFS_DATA_FORK);
+> +	endp = (char *)sfp + size;
+> +
+> +	XFS_WANT_CORRUPTED_RETURN(mp, size >=
+> +			xfs_dir2_sf_hdr_size(sfp->i8count));
+> +
+> +	/* Check .. entry */
+> +	ino = dops->sf_get_parent_ino(sfp);
+> +	XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
+> +
+> +	/*
+> +	 * Loop while there are more entries and put'ing works.
+> +	 */
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 1b1ed40..c05f503 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -110,6 +110,7 @@ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
- 				   btree.o \
- 				   common.o \
- 				   dabtree.o \
-+				   dir.o \
- 				   ialloc.o \
- 				   inode.o \
- 				   refcount.o \
-diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index 1abd314..4cf2956 100644
---- a/fs/xfs/libxfs/xfs_dir2_priv.h
-+++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -129,7 +129,7 @@ extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
- extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
- 
- /* xfs_dir2_readdir.c */
--extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
--		       size_t bufsize);
-+extern int xfs_readdir(struct xfs_trans *tp, struct xfs_inode *dp,
-+		       struct dir_context *ctx, size_t bufsize);
- 
- #endif /* __XFS_DIR2_PRIV_H__ */
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index b016ceb..7a6d1d1 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -507,7 +507,8 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_BMBTD	12	/* data fork block mapping */
- #define XFS_SCRUB_TYPE_BMBTA	13	/* attr fork block mapping */
- #define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
--#define XFS_SCRUB_TYPE_MAX	14
-+#define XFS_SCRUB_TYPE_DIR	15	/* directory */
-+#define XFS_SCRUB_TYPE_MAX	15
- 
- #define XFS_SCRUB_FLAG_REPAIR	0x01	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x02	/* o: needs repair */
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 50aea6e..e2155d6 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -702,6 +702,7 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 	{xfs_scrub_setup_inode_bmap, xfs_scrub_bmap_data, NULL, NULL},
- 	{xfs_scrub_setup_inode_bmap, xfs_scrub_bmap_attr, NULL, NULL},
- 	{xfs_scrub_setup_inode_bmap, xfs_scrub_bmap_cow, NULL, NULL},
-+	{xfs_scrub_setup_inode, xfs_scrub_directory, NULL, NULL},
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 5373e8f..575c834 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -243,5 +243,6 @@ int xfs_scrub_inode(struct xfs_scrub_context *sc);
- int xfs_scrub_bmap_data(struct xfs_scrub_context *sc);
- int xfs_scrub_bmap_attr(struct xfs_scrub_context *sc);
- int xfs_scrub_bmap_cow(struct xfs_scrub_context *sc);
-+int xfs_scrub_directory(struct xfs_scrub_context *sc);
- 
- #endif	/* __XFS_REPAIR_COMMON_H__ */
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-new file mode 100644
-index 0000000..ae1751a
---- /dev/null
-+++ b/fs/xfs/scrub/dir.c
-@@ -0,0 +1,273 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trace.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_icache.h"
-+#include "xfs_itable.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_dir2.h"
-+#include "xfs_dir2_priv.h"
-+#include "scrub/common.h"
-+#include "scrub/dabtree.h"
-+
-+/* Directories */
-+
-+/* Scrub a directory entry. */
-+
-+struct xfs_scrub_dir_ctx {
-+	struct dir_context		dc;
-+	struct xfs_scrub_context	*sc;
-+};
-+
-+#define XFS_SCRUB_DIR_CHECK(fs_ok) \
-+	XFS_SCRUB_DATA_CHECK(sdc->sc, XFS_DATA_FORK, offset, "dir", fs_ok)
-+#define XFS_SCRUB_DIR_GOTO(fs_ok, label) \
-+	XFS_SCRUB_DATA_GOTO(sdc->sc, XFS_DATA_FORK, offset, "dir", fs_ok, label)
-+#define XFS_SCRUB_DIR_OP_ERROR_GOTO(label) \
-+	XFS_SCRUB_FILE_OP_ERROR_GOTO(sdc->sc, XFS_DATA_FORK, offset, "dir", &error, label)
-+/* Check that an inode's mode matches a given DT_ type. */
-+STATIC int
-+xfs_scrub_dir_check_ftype(
-+	struct xfs_scrub_dir_ctx	*sdc,
-+	xfs_fileoff_t			offset,
-+	xfs_ino_t			inum,
-+	int				dtype)
-+{
-+	struct xfs_mount		*mp = sdc->sc->ip->i_mount;
-+	struct xfs_inode		*ip;
-+	int				ino_dtype;
-+	int				error = 0;
-+
-+	if (!xfs_sb_version_hasftype(&mp->m_sb)) {
-+		XFS_SCRUB_DIR_CHECK(dtype == DT_UNKNOWN || dtype == DT_DIR);
-+		goto out;
-+	}
-+
-+	error = xfs_iget(mp, sdc->sc->tp, inum, 0, 0, &ip);
-+	XFS_SCRUB_OP_ERROR_GOTO(sdc->sc,
-+			XFS_INO_TO_AGNO(mp, inum),
-+			XFS_INO_TO_AGBNO(mp, inum),
-+			"inode", &error, out);
-+	/* Convert mode to the DT_* values that dir_emit uses. */
-+	ino_dtype = (VFS_I(ip)->i_mode & S_IFMT) >> 12;
-+	XFS_SCRUB_DIR_CHECK(ino_dtype == dtype);
-+	IRELE(ip);
-+out:
-+	return error;
-+}
-+
-+/* Scrub a single directory entry. */
-+STATIC int
-+xfs_scrub_dir_actor(
-+	struct dir_context		*dc,
-+	const char			*name,
-+	int				namelen,
-+	loff_t				pos,
-+	u64				ino,
-+	unsigned			type)
-+{
-+	struct xfs_mount		*mp;
-+	struct xfs_inode		*ip;
-+	struct xfs_scrub_dir_ctx	*sdc;
-+	struct xfs_name			xname;
-+	xfs_ino_t			lookup_ino;
-+	xfs_dablk_t			offset;
-+	int				error = 0;
-+
-+	sdc = container_of(dc, struct xfs_scrub_dir_ctx, dc);
-+	ip = sdc->sc->ip;
-+	mp = ip->i_mount;
-+	offset = xfs_dir2_db_to_da(mp->m_dir_geo,
-+			xfs_dir2_dataptr_to_db(mp->m_dir_geo, pos));
-+
-+	/* Does this inode number make sense? */
-+	XFS_SCRUB_DIR_GOTO(xfs_dir_ino_validate(mp, ino) == 0, out);
-+	XFS_SCRUB_DIR_GOTO(!xfs_internal_inum(mp, ino), out);
-+
-+	/* Verify that we can look up this name by hash. */
-+	xname.name = name;
-+	xname.len = namelen;
-+	xname.type = XFS_DIR3_FT_UNKNOWN;
-+
-+	error = xfs_dir_lookup(sdc->sc->tp, ip, &xname, &lookup_ino, NULL);
-+	XFS_SCRUB_DIR_OP_ERROR_GOTO(fail_xref);
-+	XFS_SCRUB_DIR_GOTO(lookup_ino == ino, out);
-+
-+	if (!memcmp(".", name, namelen)) {
-+		/* If this is "." then check that the inum matches the dir. */
-+		if (xfs_sb_version_hasftype(&mp->m_sb))
-+			XFS_SCRUB_DIR_CHECK(type == DT_DIR);
-+		XFS_SCRUB_DIR_CHECK(ino == ip->i_ino);
-+	} else if (!memcmp("..", name, namelen)) {
-+		/*
-+		 * If this is ".." in the root inode, check that the inum
-+		 * matches this dir.
-+		 */
-+		if (xfs_sb_version_hasftype(&mp->m_sb))
-+			XFS_SCRUB_DIR_CHECK(type == DT_DIR);
-+		if (ip->i_ino == mp->m_sb.sb_rootino)
-+			XFS_SCRUB_DIR_CHECK(ino == ip->i_ino);
-+	}
-+	if (error)
-+		goto out;
-+
-+	/* Verify the file type. */
-+	error = xfs_scrub_dir_check_ftype(sdc, offset, lookup_ino, type);
-+	if (error)
-+		goto out;
-+out:
-+	return error;
-+fail_xref:
-+	return error ? error : -EFSCORRUPTED;
-+}
-+#undef XFS_SCRUB_DIR_OP_ERROR_GOTO
-+#undef XFS_SCRUB_DIR_GOTO
-+#undef XFS_SCRUB_DIR_CHECK
-+
-+#define XFS_SCRUB_DIRENT_CHECK(fs_ok) \
-+	XFS_SCRUB_DATA_CHECK(ds->sc, XFS_DATA_FORK, rec_bno, "dir", fs_ok)
-+#define XFS_SCRUB_DIRENT_GOTO(fs_ok, label) \
-+	XFS_SCRUB_DATA_GOTO(ds->sc, XFS_DATA_FORK, rec_bno, "dir", fs_ok, label)
-+#define XFS_SCRUB_DIRENT_OP_ERROR_GOTO(label) \
-+	XFS_SCRUB_FILE_OP_ERROR_GOTO(ds->sc, XFS_DATA_FORK, rec_bno, "dir", &error, label)
-+/* Scrub a directory btree record. */
-+STATIC int
-+xfs_scrub_dir_rec(
-+	struct xfs_scrub_da_btree	*ds,
-+	int				level,
-+	void				*rec)
-+{
-+	struct xfs_mount		*mp = ds->state->mp;
-+	struct xfs_dir2_leaf_entry	*ent = rec;
-+	struct xfs_inode		*dp = ds->dargs.dp;
-+	struct xfs_dir2_data_entry	*dent;
-+	struct xfs_buf			*bp;
-+	xfs_ino_t			ino;
-+	xfs_dablk_t			rec_bno;
-+	xfs_dir2_db_t			db;
-+	xfs_dir2_data_aoff_t		off;
-+	xfs_dir2_dataptr_t		ptr;
-+	xfs_dahash_t			calc_hash;
-+	xfs_dahash_t			hash;
-+	unsigned int			tag;
-+	int				error;
-+
-+	/* Check the hash of the entry. */
-+	error = xfs_scrub_da_btree_hash(ds, level, &ent->hashval);
-+	if (error)
-+		goto out;
-+
-+	/* Valid hash pointer? */
-+	ptr = be32_to_cpu(ent->address);
-+	if (ptr == 0)
-+		return 0;
-+
-+	/* Find the directory entry's location. */
-+	db = xfs_dir2_dataptr_to_db(mp->m_dir_geo, ptr);
-+	off = xfs_dir2_dataptr_to_off(mp->m_dir_geo, ptr);
-+	rec_bno = xfs_dir2_db_to_da(mp->m_dir_geo, db);
-+
-+	XFS_SCRUB_DA_GOTO(ds, rec_bno < mp->m_dir_geo->leafblk, out);
-+	error = xfs_dir3_data_read(ds->dargs.trans, dp, rec_bno, -2, &bp);
-+	XFS_SCRUB_DIRENT_OP_ERROR_GOTO(out);
-+	XFS_SCRUB_DIRENT_GOTO(bp != NULL, out);
-+
-+	/* Retrieve the entry and check it. */
-+	dent = (struct xfs_dir2_data_entry *)(((char *)bp->b_addr) + off);
-+	ino = be64_to_cpu(dent->inumber);
-+	hash = be32_to_cpu(ent->hashval);
-+	tag = be16_to_cpup(dp->d_ops->data_entry_tag_p(dent));
-+	XFS_SCRUB_DIRENT_CHECK(xfs_dir_ino_validate(mp, ino) == 0);
-+	XFS_SCRUB_DIRENT_CHECK(!xfs_internal_inum(mp, ino));
-+	XFS_SCRUB_DIRENT_CHECK(tag == off);
-+	XFS_SCRUB_DIRENT_GOTO(dent->namelen < MAXNAMELEN, out_relse);
-+	calc_hash = xfs_da_hashname(dent->name, dent->namelen);
-+	XFS_SCRUB_DIRENT_CHECK(calc_hash == hash);
-+
-+out_relse:
-+	xfs_trans_brelse(ds->dargs.trans, bp);
-+out:
-+	return error;
-+}
-+#undef XFS_SCRUB_DIRENT_OP_ERROR_GOTO
-+#undef XFS_SCRUB_DIRENT_GOTO
-+#undef XFS_SCRUB_DIRENT_CHECK
-+
-+/* Scrub a whole directory. */
-+int
-+xfs_scrub_directory(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_scrub_dir_ctx	sdc = {
-+		.dc.actor = xfs_scrub_dir_actor,
-+		.dc.pos = 0,
-+	};
-+	struct xfs_mount		*mp = sc->tp->t_mountp;
-+	size_t				bufsize;
-+	loff_t				oldpos;
-+	int				error;
-+
-+	if (!S_ISDIR(VFS_I(sc->ip)->i_mode))
-+		return -ENOENT;
-+
-+	/* Plausible size? */
-+	XFS_SCRUB_INO_GOTO(sc, sc->ip->i_ino, NULL, "inode",
-+			sc->ip->i_d.di_size >= xfs_dir2_sf_hdr_size(0), out);
-+
-+	/* Check directory tree structure */
-+	error = xfs_scrub_da_btree(sc, XFS_DATA_FORK, xfs_scrub_dir_rec);
-+	if (error)
-+		return error;
-+
-+	/* Check that every dirent we see can also be looked up by hash. */
-+	bufsize = (size_t)min_t(loff_t, 32768, sc->ip->i_d.di_size);
-+	sdc.sc = sc;
-+
-+	oldpos = 0;
-+	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL);
-+	while (true) {
-+		error = xfs_readdir(sc->tp, sc->ip, &sdc.dc, bufsize);
-+		XFS_SCRUB_OP_ERROR_GOTO(sc,
-+				XFS_INO_TO_AGNO(mp, sc->ip->i_ino),
-+				XFS_INO_TO_AGBNO(mp, sc->ip->i_ino),
-+				"inode", &error, out_unlock);
-+		if (oldpos == sdc.dc.pos)
-+			break;
-+		oldpos = sdc.dc.pos;
-+	}
-+
-+out_unlock:
-+	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
-+out:
-+	return error;
-+}
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 003a99b..0b3b636 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -181,7 +181,7 @@ xfs_dir2_block_getdents(
- 		return 0;
- 
- 	lock_mode = xfs_ilock_data_map_shared(dp);
--	error = xfs_dir3_block_read(NULL, dp, &bp);
-+	error = xfs_dir3_block_read(args->trans, dp, &bp);
- 	xfs_iunlock(dp, lock_mode);
- 	if (error)
- 		return error;
-@@ -239,7 +239,7 @@ xfs_dir2_block_getdents(
- 		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
- 			    be64_to_cpu(dep->inumber),
- 			    xfs_dir3_get_dtype(dp->i_mount, filetype))) {
--			xfs_trans_brelse(NULL, bp);
-+			xfs_trans_brelse(args->trans, bp);
- 			return 0;
- 		}
- 	}
-@@ -250,7 +250,7 @@ xfs_dir2_block_getdents(
- 	 */
- 	ctx->pos = xfs_dir2_db_off_to_dataptr(geo, geo->datablk + 1, 0) &
- 								0x7fffffff;
--	xfs_trans_brelse(NULL, bp);
-+	xfs_trans_brelse(args->trans, bp);
- 	return 0;
- }
- 
-@@ -386,7 +386,7 @@ xfs_dir2_leaf_readbuf(
- 	 * Read the directory block starting at the first mapping.
- 	 */
- 	mip->curdb = xfs_dir2_da_to_db(geo, map->br_startoff);
--	error = xfs_dir3_data_read(NULL, dp, map->br_startoff,
-+	error = xfs_dir3_data_read(args->trans, dp, map->br_startoff,
- 			map->br_blockcount >= geo->fsbcount ?
- 			    XFS_FSB_TO_DADDR(dp->i_mount, map->br_startblock) :
- 			    -1, &bp);
-@@ -535,7 +535,7 @@ xfs_dir2_leaf_getdents(
- 			bool	trim_map = false;
- 
- 			if (bp) {
--				xfs_trans_brelse(NULL, bp);
-+				xfs_trans_brelse(args->trans, bp);
- 				bp = NULL;
- 				trim_map = true;
- 			}
-@@ -649,15 +649,21 @@ xfs_dir2_leaf_getdents(
- 		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
- 	kmem_free(map_info);
- 	if (bp)
--		xfs_trans_brelse(NULL, bp);
-+		xfs_trans_brelse(args->trans, bp);
- 	return error;
- }
- 
- /*
-  * Read a directory.
-+ *
-+ * If supplied, the transaction collects locked dir buffers to avoid
-+ * nested buffer deadlocks.  This function does not dirty the
-+ * transaction.  The caller should ensure that the inode is locked
-+ * before calling this function.
-  */
- int
- xfs_readdir(
-+	struct xfs_trans	*tp,
- 	struct xfs_inode	*dp,
- 	struct dir_context	*ctx,
- 	size_t			bufsize)
-@@ -676,6 +682,7 @@ xfs_readdir(
- 
- 	args.dp = dp;
- 	args.geo = dp->i_mount->m_dir_geo;
-+	args.trans = tp;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
- 		rval = xfs_dir2_sf_getdents(&args, ctx);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 35703a8..11d32bd 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -950,7 +950,7 @@ xfs_file_readdir(
- 	 */
- 	bufsize = (size_t)min_t(loff_t, 32768, ip->i_d.di_size);
- 
--	return xfs_readdir(ip, ctx, bufsize);
-+	return xfs_readdir(NULL, ip, ctx, bufsize);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index a10bc77b..d2bb5d5 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3368,7 +3368,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_INODE,		"inode" }, \
- 	{ XFS_SCRUB_TYPE_BMBTD,		"bmapbtd" }, \
- 	{ XFS_SCRUB_TYPE_BMBTA,		"bmapbta" }, \
--	{ XFS_SCRUB_TYPE_BMBTC,		"bmapbtc" }
-+	{ XFS_SCRUB_TYPE_BMBTC,		"bmapbtc" }, \
-+	{ XFS_SCRUB_TYPE_DIR,		"dir" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
- 		 int error),
+Probably need to fix up the comment here.
 
+> +	sfep = xfs_dir2_sf_firstentry(sfp);
+> +	for (i = 0; i < sfp->count; i++) {
+> +		/*
+> +		 * struct xfs_dir2_sf_entry has a variable length.
+> +		 * Check the fixed-offset parts of the structure are
+> +		 * within the data buffer.
+> +		 */
+> +		XFS_WANT_CORRUPTED_RETURN(mp,
+> +				((char *)sfep + sizeof(*sfep)) < endp);
+> +
+> +		/* Don't allow names with known bad length. */
+> +		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen > 0);
+> +		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen < MAXNAMELEN);
+> +
+> +		/*
+> +		 * Check that the variable-length part of the structure is
+> +		 * within the data buffer.  The next entry starts after the
+> +		 * name component, so nextentry is an acceptable test.
+> +		 */
+> +		next_sfep = dops->sf_nextentry(sfp, sfep);
+> +		XFS_WANT_CORRUPTED_RETURN(mp, endp >= (char *)next_sfep);
+> +
+> +		/* Check the inode number. */
+> +		ino = dops->sf_get_ino(sfp, sfep);
+> +		XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
+> +
+
+It might be useful to verify the entry offsets as well (perhaps at least
+that they are ascending, for example), particularly since we have
+limited header data to go on.
+
+> +		/* Check the file type. */
+> +		filetype = dops->sf_get_ftype(sfep);
+> +		XFS_WANT_CORRUPTED_RETURN(mp, filetype < XFS_DIR3_FT_MAX);
+> +
+> +		sfep = next_sfep;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  /*
+>   * Check the consistency of the data block.
+>   * The input can also be a block-format directory.
+> diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+> index d04547f..e4f489b 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_priv.h
+> +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+> @@ -44,6 +44,8 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
+>  #define	xfs_dir3_data_check(dp,bp)
+>  #endif
+>  
+> +extern int xfs_dir3_inline_check(struct xfs_mount *mp, struct xfs_dinode *dip,
+> +		int size);
+>  extern int __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
+>  extern int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
+>  		xfs_dablk_t bno, xfs_daddr_t mapped_bno, struct xfs_buf **bpp);
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 25c1e07..2a454cf 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -33,6 +33,8 @@
+>  #include "xfs_trace.h"
+>  #include "xfs_attr_sf.h"
+>  #include "xfs_da_format.h"
+> +#include "xfs_da_btree.h"
+> +#include "xfs_dir2_priv.h"
+>  
+>  kmem_zone_t *xfs_ifork_zone;
+>  
+> @@ -320,6 +322,7 @@ xfs_iformat_local(
+>  	int		whichfork,
+>  	int		size)
+>  {
+> +	int		error;
+>  
+>  	/*
+>  	 * If the size is unreasonable, then something
+> @@ -336,6 +339,12 @@ xfs_iformat_local(
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> +	if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
+> +		error = xfs_dir3_inline_check(ip->i_mount, dip, size);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+
+I'm wondering if we should do this after the xfs_init_local_fork() call
+and perhaps just pass the fully initialized xfs_ifork to the verifier.
+The logic being that the memcpy() to and from the disk buffer are
+effectively the "write/read" operations of the fork...
+
+>  	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size);
+>  	return 0;
+>  }
+> @@ -856,7 +865,7 @@ xfs_iextents_copy(
+>   * In these cases, the format always takes precedence, because the
+>   * format indicates the current state of the fork.
+>   */
+> -void
+> +int
+>  xfs_iflush_fork(
+>  	xfs_inode_t		*ip,
+>  	xfs_dinode_t		*dip,
+> @@ -866,6 +875,7 @@ xfs_iflush_fork(
+>  	char			*cp;
+>  	xfs_ifork_t		*ifp;
+>  	xfs_mount_t		*mp;
+> +	int			error;
+>  	static const short	brootflag[2] =
+>  		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
+>  	static const short	dataflag[2] =
+> @@ -874,7 +884,7 @@ xfs_iflush_fork(
+>  		{ XFS_ILOG_DEXT, XFS_ILOG_AEXT };
+>  
+>  	if (!iip)
+> -		return;
+> +		return 0;
+>  	ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	/*
+>  	 * This can happen if we gave up in iformat in an error path,
+> @@ -882,7 +892,7 @@ xfs_iflush_fork(
+>  	 */
+>  	if (!ifp) {
+>  		ASSERT(whichfork == XFS_ATTR_FORK);
+> -		return;
+> +		return 0;
+>  	}
+>  	cp = XFS_DFORK_PTR(dip, whichfork);
+>  	mp = ip->i_mount;
+> @@ -894,6 +904,11 @@ xfs_iflush_fork(
+>  			ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
+>  			memcpy(cp, ifp->if_u1.if_data, ifp->if_bytes);
+>  		}
+> +		if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
+> +			error = xfs_dir3_inline_check(mp, dip, ifp->if_bytes);
+> +			if (error)
+> +				return error;
+> +		}
+
+... and thus similarly here, with the verifier before the "write" to the
+buffer and perhaps only when the data fork has been modified (and hence
+the "write" actually occurs).
+
+Then again, it might be prudent to run it even when only the core inode
+has changed. I'm not really tied to either way I guess.
+
+Brian
+
+>  		break;
+>  
+>  	case XFS_DINODE_FMT_EXTENTS:
+> @@ -940,6 +955,7 @@ xfs_iflush_fork(
+>  		ASSERT(0);
+>  		break;
+>  	}
+> +	return 0;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 7fb8365..132dc59 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -140,7 +140,7 @@ typedef struct xfs_ifork {
+>  struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
+>  
+>  int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
+> -void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+> +int		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+>  				struct xfs_inode_log_item *, int);
+>  void		xfs_idestroy_fork(struct xfs_inode *, int);
+>  void		xfs_idata_realloc(struct xfs_inode *, int, int);
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 7eaf1ef..c7fe2c2 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3475,6 +3475,7 @@ xfs_iflush_int(
+>  	struct xfs_inode_log_item *iip = ip->i_itemp;
+>  	struct xfs_dinode	*dip;
+>  	struct xfs_mount	*mp = ip->i_mount;
+> +	int			error;
+>  
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+>  	ASSERT(xfs_isiflocked(ip));
+> @@ -3557,9 +3558,14 @@ xfs_iflush_int(
+>  	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
+>  		ip->i_d.di_flushiter = 0;
+>  
+> -	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+> -	if (XFS_IFORK_Q(ip))
+> -		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
+> +	error = xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+> +	if (error)
+> +		return error;
+> +	if (XFS_IFORK_Q(ip)) {
+> +		error = xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
+> +		if (error)
+> +			return error;
+> +	}
+>  	xfs_inobp_check(mp, bp);
+>  
+>  	/*
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
