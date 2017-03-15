@@ -1,66 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54972 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:39390 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751416AbdCOIfd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Mar 2017 04:35:33 -0400
-Date: Wed, 15 Mar 2017 09:35:29 +0100
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v2] xfs: remove kmem_zalloc_greedy
-Message-ID: <20170315083529.GD32620@dhcp22.suse.cz>
-References: <20170308003528.GK5280@birch.djwong.org>
- <20170314165745.GB28800@wotan.suse.de>
- <20170314180738.GV5280@birch.djwong.org>
- <20170315001427.GI28800@wotan.suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170315001427.GI28800@wotan.suse.de>
+        id S1753993AbdCOQA7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 12:00:59 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2531D80468
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:00:59 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 18/22] mkfs: prevent sector/blocksize to be specified as a number of blocks
+Date: Wed, 15 Mar 2017 17:00:13 +0100
+Message-Id: <20170315160017.27805-19-jtulak@redhat.com>
+In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
+References: <20170315160017.27805-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, sebastian.parschauer@suse.com, AlNovak@suse.com, jack@suse.cz, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Wed 15-03-17 01:14:27, Luis R. Rodriguez wrote:
-> On Tue, Mar 14, 2017 at 11:07:38AM -0700, Darrick J. Wong wrote:
-> > On Tue, Mar 14, 2017 at 05:57:45PM +0100, Luis R. Rodriguez wrote:
-> > > On Tue, Mar 07, 2017 at 04:35:28PM -0800, Darrick J. Wong wrote:
-> > > > The sole remaining caller of kmem_zalloc_greedy is bulkstat, which uses
-> > > > it to grab 1-4 pages for staging of inobt records.  The infinite loop in
-> > > > the greedy allocation function is causing hangs[1] in generic/269, so
-> > > > just get rid of the greedy allocator in favor of kmem_zalloc_large.
-> > > > This makes bulkstat somewhat more likely to ENOMEM if there's really no
-> > > > pages to spare, but eliminates a source of hangs.
-> > > > 
-> > > > [1] http://lkml.kernel.org/r/20170301044634.rgidgdqqiiwsmfpj%40XZHOUW.usersys.redhat.com
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > > v2: remove single-page fallback
-> > > > ---
-> > > 
-> > > Since this fixes a hang how about *at the very least* a respective Fixes tag ?
-> > > This fixes an existing hang so what are the stable considerations here ? I
-> > > realize the answer is not easy but figured its worth asking.
-> > 
-> > I didn't think it was appropriate to "Fixes: 77e4635ae1917" since we're
-> > not fixing _greedy so much as we are killing it.  The patch fixes an
-> > infinite retry hang when bulkstat tries a memory allocation that cannot
-> > be satisfied; and having done that, realizes there are no remaining
-> > callers of _greedy and garbage collects it.  The code that was there
-> > before also seems capable of sleeping forever, I think.
-> > 
-> > So the minimally invasive fix is to apply the allocation conversion in
-> > bulkstat, and if there aren't any other callers of _greedy then you can
-> > get rid of it too.
-> 
-> For the stake of stable XFS users then why not do the less invasive change
-> first, Cc stable, and then move on to the less backward portable solution ?
+Documentation states that the options blocked in this patch accepts the
+size only in bytes. So prevent blocksize or sectorsize to be specified as
+a number of blocks or sectors.
 
-The thing is that the permanent failures for vmalloc were so unlikely
-prior to 5d17a73a2ebe ("vmalloc: back off when the current task is
-killed") that this was basically a non-issue before this (4.11) merge
-window.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+
+--
+Change:
+  * sectsize can be set in blocks and vice versa now
+---
+ mkfs/xfs_mkfs.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index bd2d81a3..767aeeea 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2044,6 +2044,33 @@ getnum(
+ 		}
+ 	}
+ 
++	/* Prevent things like specifying blocksize as a number of blocks. */
++	if (opts->index == OPT_B ||
++		(opts->index == OPT_N && (index == N_SIZE))
++		) {
++		if ('b' == str[strlen(str)-1]) {
++			fprintf(stderr,
++				_("You can't set a block size in "
++				  "number of blocks (-%c %s).\n"),
++				opts->name, opts->subopts[index]);
++			exit(1);
++		}
++	}
++	else if (opts->index == OPT_S ||
++		(opts->index == OPT_L && (index == L_SECTLOG ||
++			index == L_SECTSIZE)) ||
++		(opts->index == OPT_D && (index == D_SECTLOG ||
++			index == D_SECTSIZE))
++		) {
++		if ('s' == str[strlen(str)-1]) {
++			fprintf(stderr,
++				_("You can't set a sector size in "
++				  "number of sectors (-%c %s).\n"),
++				opts->name, opts->subopts[index]);
++			exit(1);
++		}
++	}
++
+ 	sp->seen = true;
+ 
+ 	if (test_uvalue_num(sp->type, sp->minval, 0) &&
 -- 
-Michal Hocko
-SUSE Labs
+2.11.0
+
