@@ -1,80 +1,503 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:55578 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751836AbdCMRbz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Mar 2017 13:31:55 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2DHIs0c066139
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Mar 2017 13:31:53 -0400
-Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 294b21tw0g-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Mar 2017 13:31:53 -0400
-Received: from localhost
-        by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <abdhalee@linux.vnet.ibm.com>;
-        Tue, 14 Mar 2017 03:31:50 +1000
-Subject: Re: 4.11.0-rc1 boot resulted in WARNING: CPU: 14 PID: 1722 at
- fs/sysfs/dir.c:31 .sysfs_warn_dup+0x78/0xb0
-From: Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-Date: Mon, 13 Mar 2017 23:00:27 +0530
-In-Reply-To: <158127ce-d71d-56a5-3dd3-f676b106c65d@kernel.dk>
-References: <1488904264.3961.17.camel@abdul-ThinkPad-T450>
-         <20170308131705.GB23404@bfoster.bfoster>
-         <1489056606.3961.41.camel@abdul-ThinkPad-T450>
-         <20170309125919.GA16713@bfoster.bfoster>
-         <158127ce-d71d-56a5-3dd3-f676b106c65d@kernel.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Message-Id: <1489426227.19698.36.camel@abdul>
+Received: from mx1.redhat.com ([209.132.183.28]:50780 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754022AbdCOQAx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 12:00:53 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id AC593804EB
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:00:53 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 13/22] mkfs: remove zeroed items from conflicts declaration
+Date: Wed, 15 Mar 2017 17:00:08 +0100
+Message-Id: <20170315160017.27805-14-jtulak@redhat.com>
+In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
+References: <20170315160017.27805-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, mpe@ellerman.id, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Sat, 2017-03-11 at 15:46 -0700, Jens Axboe wrote:
-> On 03/09/2017 05:59 AM, Brian Foster wrote:
-> > cc linux-block
-> > 
-> > On Thu, Mar 09, 2017 at 04:20:06PM +0530, Abdul Haleem wrote:
-> >> On Wed, 2017-03-08 at 08:17 -0500, Brian Foster wrote:
-> >>> On Tue, Mar 07, 2017 at 10:01:04PM +0530, Abdul Haleem wrote:
-> >>>>
-> >>>> Hi,
-> >>>>
-> >>>> Today's mainline (4.11.0-rc1) booted with warnings on Power7 LPAR.
-> >>>>
-> >>>> Issue is not reproducible all the time.
-> 
-> Is that still the case with -git as of yesterday? Check that you
-> have this merge:
-> 
-> 34bbce9e344b47e8871273409632f525973afad4
-> 
-> in your tree.
-> 
+opts is a global array of structs, so it is already zeroed. No need
+for explicit zeros on items unless we want to highlight the value.
 
-Thanks for pointing out, with the below merge commit warnings disappear.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 200 --------------------------------------------------------
+ 1 file changed, 200 deletions(-)
 
-commit 34bbce9e344b47e8871273409632f525973afad4
-Merge: bb61ce5 672a2c8
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Thu Mar 9 15:53:25 2017 -0800
-
-    Merge branch 'for-linus' of git://git.kernel.dk/linux-block
-
-
-Thanks for the fix !
-
-Reported-by & Tested-by : Abdul Haleem <abdhalee@linux.vnet.ibm.com>
-
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 3ba71cdc..a604c801 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -239,10 +239,6 @@ struct opt_params {
+ 			{ .index = B_LOG,
+ 			  .conflicts = { {.opt = OPT_B,
+ 					  .subopt = B_SIZE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_BLOCKSIZE_LOG,
+@@ -254,10 +250,6 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .conflicts = { {.opt = OPT_B,
+ 					  .subopt = B_LOG,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_BLOCKSIZE,
+@@ -291,10 +283,6 @@ struct opt_params {
+ 			{ .index = D_AGCOUNT,
+ 			  .conflicts = { {.opt = OPT_D,
+ 					  .subopt = D_AGSIZE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 1,
+@@ -321,24 +309,12 @@ struct opt_params {
+ 			{ .index = D_SUNIT,
+ 			  .conflicts = { {.opt = OPT_D,
+ 					  .subopt = D_NOALIGN,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_D,
+ 					  .subopt = D_SU,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_D,
+ 					  .subopt = D_SW,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+@@ -348,24 +324,12 @@ struct opt_params {
+ 			{ .index = D_SWIDTH,
+ 			  .conflicts = { {.opt = OPT_D,
+ 					  .subopt = D_NOALIGN,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_D,
+ 					  .subopt = D_SU,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_D,
+ 					  .subopt = D_SW,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+@@ -375,10 +339,6 @@ struct opt_params {
+ 			{ .index = D_AGSIZE,
+ 			  .conflicts = { {.opt = OPT_D,
+ 					  .subopt = D_AGCOUNT,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .convert = true,
+@@ -389,24 +349,12 @@ struct opt_params {
+ 			{ .index = D_SU,
+ 			  .conflicts = { {.opt = OPT_D,
+ 					  .subopt = D_NOALIGN,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_D,
+ 					  .subopt = D_SUNIT,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_D,
+ 					  .subopt = D_SWIDTH,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .convert = true,
+@@ -417,24 +365,12 @@ struct opt_params {
+ 			{ .index = D_SW,
+ 			  .conflicts = { {.opt = OPT_D,
+ 					  .subopt = D_NOALIGN,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_D,
+ 					  .subopt = D_SUNIT,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_D,
+ 					  .subopt = D_SWIDTH,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+@@ -444,10 +380,6 @@ struct opt_params {
+ 			{ .index = D_SECTLOG,
+ 			  .conflicts = { {.opt = OPT_D,
+ 					  .subopt = D_SECTSIZE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+@@ -457,10 +389,6 @@ struct opt_params {
+ 			{ .index = D_SECTSIZE,
+ 			  .conflicts = { {.opt = OPT_D,
+ 					  .subopt = D_SECTLOG,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .convert = true,
+@@ -472,31 +400,15 @@ struct opt_params {
+ 			{ .index = D_NOALIGN,
+ 			  .conflicts = { {.opt = OPT_D,
+ 					  .subopt = D_SU,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_D,
+ 					  .subopt = D_SW,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_D,
+ 					  .subopt = D_SUNIT,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_D,
+ 					  .subopt = D_SWIDTH,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+@@ -555,17 +467,9 @@ struct opt_params {
+ 			{ .index = I_LOG,
+ 			  .conflicts = { {.opt = OPT_I,
+ 					  .subopt = I_PERBLOCK,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_I,
+ 					  .subopt = I_SIZE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_DINODE_MIN_LOG,
+@@ -581,17 +485,9 @@ struct opt_params {
+ 			{ .index = I_PERBLOCK,
+ 			  .conflicts = { {.opt = OPT_I,
+ 					  .subopt = I_LOG,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_I,
+ 					  .subopt = I_SIZE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .is_power_2 = true,
+@@ -602,17 +498,9 @@ struct opt_params {
+ 			{ .index = I_SIZE,
+ 			  .conflicts = { {.opt = OPT_I,
+ 					  .subopt = I_PERBLOCK,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_I,
+ 					  .subopt = I_LOG,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .is_power_2 = true,
+@@ -687,10 +575,6 @@ struct opt_params {
+ 			{ .index = L_AGNUM,
+ 			  .conflicts = { {.opt = OPT_L,
+ 					  .subopt = L_DEV,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+@@ -700,17 +584,9 @@ struct opt_params {
+ 			{ .index = L_INTERNAL,
+ 			  .conflicts = { {.opt = OPT_L,
+ 					  .subopt = L_FILE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_L,
+ 					  .subopt = L_DEV,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+@@ -741,10 +617,6 @@ struct opt_params {
+ 			{ .index = L_SUNIT,
+ 			  .conflicts = { {.opt = OPT_L,
+ 					  .subopt = L_SU,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 1,
+@@ -754,10 +626,6 @@ struct opt_params {
+ 			{ .index = L_SU,
+ 			  .conflicts = { {.opt = OPT_L,
+ 					  .subopt = L_SUNIT,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .convert = true,
+@@ -768,17 +636,9 @@ struct opt_params {
+ 			{ .index = L_DEV,
+ 			  .conflicts = { {.opt = OPT_L,
+ 					  .subopt = L_AGNUM,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_L,
+ 					  .subopt = L_INTERNAL,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .defaultval = SUBOPT_NEEDS_VAL,
+@@ -786,10 +646,6 @@ struct opt_params {
+ 			{ .index = L_SECTLOG,
+ 			  .conflicts = { {.opt = OPT_L,
+ 					  .subopt = L_SECTSIZE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+@@ -799,10 +655,6 @@ struct opt_params {
+ 			{ .index = L_SECTSIZE,
+ 			  .conflicts = { {.opt = OPT_L,
+ 					  .subopt = L_SECTLOG,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .convert = true,
+@@ -814,10 +666,6 @@ struct opt_params {
+ 			{ .index = L_FILE,
+ 			  .conflicts = { {.opt = OPT_L,
+ 					  .subopt = L_INTERNAL,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+@@ -827,17 +675,9 @@ struct opt_params {
+ 			{ .index = L_NAME,
+ 			  .conflicts = { {.opt = OPT_L,
+ 					  .subopt = L_AGNUM,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_L,
+ 					  .subopt = L_INTERNAL,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .defaultval = SUBOPT_NEEDS_VAL,
+@@ -872,10 +712,6 @@ struct opt_params {
+ 			{ .index = N_LOG,
+ 			  .conflicts = { {.opt = OPT_N,
+ 					  .subopt = N_SIZE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_REC_DIRSIZE,
+@@ -885,10 +721,6 @@ struct opt_params {
+ 			{ .index = N_SIZE,
+ 			  .conflicts = { {.opt = OPT_N,
+ 					  .subopt = N_LOG,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .convert = true,
+@@ -998,17 +830,9 @@ struct opt_params {
+ 			{ .index = S_LOG,
+ 			  .conflicts = { {.opt = OPT_S,
+ 					  .subopt = S_SIZE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_S,
+ 					  .subopt = S_SECTSIZE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+@@ -1018,17 +842,9 @@ struct opt_params {
+ 			{ .index = S_SECTLOG,
+ 			  .conflicts = { {.opt = OPT_S,
+ 					  .subopt = S_SIZE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_S,
+ 					  .subopt = S_SECTSIZE,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+@@ -1038,17 +854,9 @@ struct opt_params {
+ 			{ .index = S_SIZE,
+ 			  .conflicts = { {.opt = OPT_S,
+ 					  .subopt = S_LOG,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_S,
+ 					  .subopt = S_SECTLOG,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .convert = true,
+@@ -1060,17 +868,9 @@ struct opt_params {
+ 			{ .index = S_SECTSIZE,
+ 			  .conflicts = { {.opt = OPT_S,
+ 					  .subopt = S_LOG,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {.opt = OPT_S,
+ 					  .subopt = S_SECTLOG,
+-					  .test_values = false,
+-					  .test_default_value = false,
+-					  .invalid_value = 0,
+-					  .at_value = 0
+ 					 },
+ 					 {LAST_CONFLICT} },
+ 			  .convert = true,
 -- 
-Regard's
-
-Abdul Haleem
-IBM Linux Technology Centre
-
-
+2.11.0
 
