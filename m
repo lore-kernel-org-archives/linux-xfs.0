@@ -1,287 +1,306 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from buxtehude.debian.org ([209.87.16.39]:55151 "EHLO
-        buxtehude.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751230AbdCQTz1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 15:55:27 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:46117 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753626AbdCOWjw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 18:39:52 -0400
+Date: Wed, 15 Mar 2017 15:39:44 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] xfs: verify inline directory data forks
+Message-ID: <20170315223944.GH5280@birch.djwong.org>
 MIME-Version: 1.0
-From: owner@bugs.debian.org (Debian Bug Tracking System)
-Subject: Bug#854961: marked as done (xfslibs-dev won't install in Docker
- image (where /lib -> /usr/lib))
-Message-ID: <handler.854961.D766811.148978029129803.ackdone@bugs.debian.org>
-References: <E1coxuK-000ALN-Uw@fasolo.debian.org>
- <148691383691.1180.7344036562989980417.reportbug@9c82cf89c040>
-Date: Fri, 17 Mar 2017 19:54:04 +0000
-Content-Type: multipart/mixed; boundary="----------=_1489780444-30420-2"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michael Biebl <biebl@debian.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-This is a multi-part message in MIME format...
+When we're reading or writing the data fork of an inline directory,
+check the contents to make sure we're not overflowing buffers or eating
+garbage data.  xfs/348 corrupts an inline symlink into an inline
+directory, triggering a buffer overflow bug.
 
-------------=_1489780444-30420-2
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=utf-8
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: add more checks consistent with _dir2_sf_check and make the verifier
+usable from anywhere.
+---
+ fs/xfs/libxfs/xfs_dir2_priv.h  |    2 +
+ fs/xfs/libxfs/xfs_dir2_sf.c    |   85 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_inode_fork.c |   26 +++++++++++-
+ fs/xfs/libxfs/xfs_inode_fork.h |    2 -
+ fs/xfs/xfs_dir2_readdir.c      |   11 -----
+ fs/xfs/xfs_inode.c             |   12 ++++--
+ 6 files changed, 120 insertions(+), 18 deletions(-)
 
-Your message dated Fri, 17 Mar 2017 19:51:28 +0000
-with message-id <E1coxuK-000ALN-Uw@fasolo.debian.org>
-and subject line Bug#766811: fixed in xfsprogs 4.9.0+nmu1
-has caused the Debian Bug report #766811,
-regarding xfslibs-dev won't install in Docker image (where /lib -> /usr/lib)
-to be marked as done.
-
-This means that you claim that the problem has been dealt with.
-If this is not the case it is now your responsibility to reopen the
-Bug report if necessary, and/or fix the problem forthwith.
-
-(NB: If you are a system administrator and have no idea what this
-message is talking about, this may indicate a serious mail system
-misconfiguration somewhere. Please contact owner@bugs.debian.org
-immediately.)
-
-
---=20
-766811: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D766811
-Debian Bug Tracking System
-Contact owner@bugs.debian.org with problems
-
-------------=_1489780444-30420-2
-Content-Type: message/rfc822
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
-Received: (at submit) by bugs.debian.org; 12 Feb 2017 15:37:23 +0000
-X-Spam-Checker-Version: SpamAssassin 3.4.0-bugs.debian.org_2005_01_02
-	(2014-02-07) on buxtehude.debian.org
-X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=4.0 tests=BAYES_00,
-	DKIM_ADSP_CUSTOM_MED,FOURLA,FREEMAIL_FROM,HAS_PACKAGE,HELO_MISC_IP,
-	NML_ADSP_CUSTOM_MED,RDNS_NONE,SPF_SOFTFAIL,WORD_WITHOUT_VOWELS,
-	XMAILER_REPORTBUG,X_DEBBUGS_CC autolearn=ham autolearn_force=no
-	version=3.4.0-bugs.debian.org_2005_01_02
-X-Spam-Bayes: score:0.0000 Tokens: new, 60; hammy, 150; neutral, 182; spammy,
-	0. spammytokens: hammytokens:0.000-+--H*M:reportbug, 0.000-+--H*MI:reportbug,
-	0.000-+--H*x:reportbug, 0.000-+--H*UA:reportbug, 0.000-+--Subprocess
-Return-path: <stevie.trujillo@gmail.com>
-Received: from [91.189.182.65] (helo=[172.17.0.2])
-	by buxtehude.debian.org with esmtp (Exim 4.84_2)
-	(envelope-from <stevie.trujillo@gmail.com>)
-	id 1ccwDL-0005ah-Gi
-	for submit@bugs.debian.org; Sun, 12 Feb 2017 15:37:23 +0000
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-From: Stevie Trujillo <stevie.trujillo@gmail.com>
-To: Debian Bug Tracking System <submit@bugs.debian.org>
-Subject: xfslibs-dev won't install in Docker image (where /lib -> /usr/lib)
-Message-ID: <148691383691.1180.7344036562989980417.reportbug@9c82cf89c040>
-X-Mailer: reportbug 7.1.4
-Date: Sun, 12 Feb 2017 15:37:16 +0000
-X-Debbugs-Cc: stevie.trujillo@gmail.com
-Delivered-To: submit@bugs.debian.org
-
-Package: xfslibs-dev
-Version: 4.9.0
-Severity: important
-
-Dear Maintainer,
-
-I was trying to rebuild qemu, which somehow pulls into xfslibs-dev.  To
-avoid cluttering my system I tried to build qemu inside Docker, with the
-debian:stretch image. The installation fails with the error below.
-Before (and after) running apt-get there is no libhandle.a in /lib or
-/usr/lib.
-
-
-# apt-get install xfslibs-dev
-Reading package lists... Done
-Building dependency tree
-Reading state information... Done
-The following NEW packages will be installed:
-  xfslibs-dev
-0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.
-Need to get 58.3 kB of archives.
-After this operation, 243 kB of additional disk space will be used.
-Get:1 http://deb.debian.org/debian stretch/main amd64 xfslibs-dev amd64 4.9.0 [58.3 kB]
-Fetched 58.3 kB in 0s (490 kB/s)
-debconf: delaying package configuration, since apt-utils is not installed
-(Reading database ... 28662 files and directories currently installed.)
-Preparing to unpack .../xfslibs-dev_4.9.0_amd64.deb ...
-Unpacking xfslibs-dev (4.9.0) ...
-dpkg: error processing archive /var/cache/apt/archives/xfslibs-dev_4.9.0_amd64.deb (--unpack):
- unable to install new version of '/lib/libhandle.a': No such file or directory
-Errors were encountered while processing:
- /var/cache/apt/archives/xfslibs-dev_4.9.0_amd64.deb
-E: Sub-process /usr/bin/dpkg returned an error code (1)
-
-
-On my host system (also running stretch) xfslibs-dev installs fine.  I
-tried to figure out what's different between the two environments, and I
-found that the Docker image had /lib symlinked to /usr/lib, which my host
-system had not.
-
-https://packages.debian.org/stretch/amd64/xfslibs-dev/filelist shows
-that the package tries to install both /lib/libhandle.a and
-/usr/lib/libhandle.a . I speculate that this might confuse dpkg, but I
-don't know how to test if this is the cause.
-
-I tried running apt-get in strace, and found this fragment that I believe confirms my suspicion.
-Because /lib -> /usr/lib, /lib/libhandle.a.dpkg-new will be removed by
-the rename("/usr/lib/libhandle.a.dpkg-new", "/usr/lib/libhandle.a")
-call.
-
-rename("/usr/include/xfs/handle.h.dpkg-new", "/usr/include/xfs/handle.h") = 0
-rename("/usr/include/xfs/jdm.h.dpkg-new", "/usr/include/xfs/jdm.h") = 0
-rename("/usr/include/xfs/linux.h.dpkg-new", "/usr/include/xfs/linux.h") = 0
-rename("/usr/include/xfs/xfs.h.dpkg-new", "/usr/include/xfs/xfs.h") = 0
-rename("/usr/include/xfs/xfs_arch.h.dpkg-new", "/usr/include/xfs/xfs_arch.h") = 0
-rename("/usr/include/xfs/xfs_da_format.h.dpkg-new", "/usr/include/xfs/xfs_da_format.h") = 0
-rename("/usr/include/xfs/xfs_format.h.dpkg-new", "/usr/include/xfs/xfs_format.h") = 0
-rename("/usr/include/xfs/xfs_fs.h.dpkg-new", "/usr/include/xfs/xfs_fs.h") = 0
-rename("/usr/include/xfs/xfs_log_format.h.dpkg-new", "/usr/include/xfs/xfs_log_format.h") = 0
-rename("/usr/include/xfs/xfs_types.h.dpkg-new", "/usr/include/xfs/xfs_types.h") = 0
-rename("/usr/include/xfs/xqm.h.dpkg-new", "/usr/include/xfs/xqm.h") = 0
-rename("/usr/lib/libhandle.a.dpkg-new", "/usr/lib/libhandle.a") = 0
-rename("/usr/lib/libhandle.la.dpkg-new", "/usr/lib/libhandle.la") = 0
-rename("/usr/share/doc/xfslibs-dev/changelog.Debian.gz.dpkg-new", "/usr/share/doc/xfslibs-dev/changelog.Debian.gz") = 0
-rename("/usr/share/doc/xfslibs-dev/changelog.gz.dpkg-new", "/usr/share/doc/xfslibs-dev/changelog.gz") = 0
-rename("/usr/share/doc/xfslibs-dev/copyright.dpkg-new", "/usr/share/doc/xfslibs-dev/copyright") = 0
-rename("/usr/share/man/man3/path_to_handle.3.gz.dpkg-new", "/usr/share/man/man3/path_to_handle.3.gz") = 0
-rename("/usr/share/man/man3/xfsctl.3.gz.dpkg-new", "/usr/share/man/man3/xfsctl.3.gz") = 0
-rename("/lib/libhandle.a.dpkg-new", "/lib/libhandle.a") = -1 ENOENT (No such file or directory)
-
--- System Information:
-Debian Release: 9.0
-  APT prefers testing
-  APT policy: (500, 'testing')
-Architecture: amd64 (x86_64)
-
-Kernel: Linux 4.9.0-1-amd64 (SMP w/1 CPU core)
-Locale: LANG=en_US.utf8, LC_CTYPE=en_US.utf8 (charmap=UTF-8)
-Shell: /bin/sh linked to /usr/bin/dash
-Init: unable to detect
-
-------------=_1489780444-30420-2
-Content-Type: message/rfc822
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
-Received: (at 766811-close) by bugs.debian.org; 17 Mar 2017 19:51:31 +0000
-X-Spam-Checker-Version: SpamAssassin 3.4.0-bugs.debian.org_2005_01_02
-	(2014-02-07) on buxtehude.debian.org
-X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=4.0 tests=BAYES_00,DIGITS_LETTERS,
-	FOURLA,FROMDEVELOPER,FVGT_m_MULTI_ODD,HAS_BUG_NUMBER,PGPSIGNATURE,
-	RCVD_IN_DNSWL_MED,RP_MATCHES_RCVD autolearn=ham autolearn_force=no
-	version=3.4.0-bugs.debian.org_2005_01_02
-X-Spam-Bayes: score:0.0000 Tokens: new, 78; hammy, 150; neutral, 141; spammy,
-	0. spammytokens: hammytokens:0.000-+--HX-Debian:DAK,
-	0.000-+--H*rp:D*ftp-master.debian.org, 0.000-+--HX-DAK:process-upload,
-	0.000-+--Hx-spam-relays-external:sk:envelop, 0.000-+--H*r:138.16.160
-Return-path: <envelope@ftp-master.debian.org>
-Received: from mailly.debian.org ([2001:41b8:202:deb:6564:a62:52c3:4b72])
-	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=mailly.debian.org,EMAIL=hostmaster@mailly.debian.org (verified)
-	by buxtehude.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	(Exim 4.84_2)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1coxuN-0007kR-KX
-	for 766811-close@bugs.debian.org; Fri, 17 Mar 2017 19:51:31 +0000
-Received: from [138.16.160.17] (helo=fasolo.debian.org)
-	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=fasolo.debian.org,EMAIL=hostmaster@fasolo.debian.org (verified)
-	by mailly.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	(Exim 4.84_2)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1coxuL-0003BA-VA; Fri, 17 Mar 2017 19:51:30 +0000
-Received: from dak by fasolo.debian.org with local (Exim 4.84_2)
-	(envelope-from <envelope@ftp-master.debian.org>)
-	id 1coxuK-000ALN-Uw; Fri, 17 Mar 2017 19:51:28 +0000
-From: Michael Biebl <biebl@debian.org>
-To: 766811-close@bugs.debian.org
-X-DAK: dak process-upload
-X-Debian: DAK
-X-Debian-Package: xfsprogs
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Subject: Bug#766811: fixed in xfsprogs 4.9.0+nmu1
-Message-Id: <E1coxuK-000ALN-Uw@fasolo.debian.org>
-Date: Fri, 17 Mar 2017 19:51:28 +0000
-
-Source: xfsprogs
-Source-Version: 4.9.0+nmu1
-
-We believe that the bug you reported is fixed in the latest version of
-xfsprogs, which is due to be installed in the Debian FTP archive.
-
-A summary of the changes between this version and the previous one is
-attached.
-
-Thank you for reporting the bug, which will now be closed.  If you
-have further comments please address them to 766811@bugs.debian.org,
-and the maintainer will reopen the bug report if appropriate.
-
-Debian distribution maintenance software
-pp.
-Michael Biebl <biebl@debian.org> (supplier of updated xfsprogs package)
-
-(This message was generated automatically at their request; if you
-believe that there is a problem with it please contact the archive
-administrators by mailing ftpmaster@ftp-master.debian.org)
-
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
-
-Format: 1.8
-Date: Fri, 17 Mar 2017 19:27:58 +0100
-Source: xfsprogs
-Binary: xfsprogs xfslibs-dev xfsprogs-udeb
-Architecture: source
-Version: 4.9.0+nmu1
-Distribution: unstable
-Urgency: medium
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Michael Biebl <biebl@debian.org>
-Description:
- xfslibs-dev - XFS filesystem-specific static libraries and headers
- xfsprogs   - Utilities for managing the XFS filesystem
- xfsprogs-udeb - A stripped-down version of xfsprogs, for debian-installer (udeb)
-Closes: 766811
-Changes:
- xfsprogs (4.9.0+nmu1) unstable; urgency=medium
- .
-   * Non-maintainer upload.
-   * Remove code in include/buildmacros which creates bogus symlinks for
-     libraries. (Closes: #766811)
-Checksums-Sha1:
- 5c954e8054ca48d1857919c236bd9a0c1d87b5d8 1815 xfsprogs_4.9.0+nmu1.dsc
- 4d3d77915ac1e71c5418119121ab1d0f2386e704 1643816 xfsprogs_4.9.0+nmu1.tar.gz
- 443b18c4123b93f76f7111d34b1574cbdd8d27cc 5592 xfsprogs_4.9.0+nmu1_source.buildinfo
-Checksums-Sha256:
- c06dfa6510a7c2182bae08bd96287f16df4201e6e3b3ce51f336b0ef1833fc38 1815 xfsprogs_4.9.0+nmu1.dsc
- 7866bb0e7d7256a52dc5a6aec84329858575ecd6b544db03d6af3bb66cd39631 1643816 xfsprogs_4.9.0+nmu1.tar.gz
- 5100c328228196d8117429f7e802bf756f10285aafce72b9fba8087b03b567e3 5592 xfsprogs_4.9.0+nmu1_source.buildinfo
-Files:
- 1acb0a512e3d007978d4aa23fc2192a2 1815 admin optional xfsprogs_4.9.0+nmu1.dsc
- a8cf31861e3922a004cc7ecbc5d7f30d 1643816 admin optional xfsprogs_4.9.0+nmu1.tar.gz
- 89d8f8097f9a6036798c3c2e9dfebb19 5592 admin optional xfsprogs_4.9.0+nmu1_source.buildinfo
-
------BEGIN PGP SIGNATURE-----
-
-iQJFBAEBCAAvFiEECbOsLssWnJBDRcxUauHfDWCPItwFAljMNl0RHGJpZWJsQGRl
-Ymlhbi5vcmcACgkQauHfDWCPItwXhRAAj6+zQiPdFZNsF2X4ooLcRuMnPWp5k113
-IYhgS5DfWoIj8IGBziSv258dosjrUK+EjVRQ0xIjD2HlNcT7/ArdA9YJh+3a2KRu
-H3mmCr2c/dxlGjqk3Y1B9hCUIuGrZDFUePVt641xs2bzpHDrjATZQ1X+DA7hYFAk
-PXUysxz9Amioiz1mkaHGrb1itJ6G//YIYB+9WIlfRfbr6M2XqmWtrenEWykXO+OC
-BlpDE4GSKwaUlcw3KMFfLItREcl9ZpcNErCbSc3j2rzdbgosyvS2Yv7sBYI6SETX
-Fll27GWtmaIGimFvZD+HlOE/SH1RjAAaDnYxzJE7qBfHoJFlfa3jrZp9ytKKUmTI
-5fgLlDjPDUIBimMfnZmzthWk6Fm+Ar4l4Fa5RUcqi6gXycxvoeuK93lOS45XMNGR
-1i6mA2nQmZqGLl+UlluJbhbTqd+Go3UH0AGlKl1qH8JFCJ1YxRVZRcHWm23iLNz3
-p75XHSGZqmdS1HVk+T0cBAszJkOdv47FbFQbg5nFVfUN+Cj4Tv4CEFunCNbotV96
-Bm6c6cLolQJkkemMmTVSQyM2+INYE4bKxzDKW20pH7RsLg2NznDLys+3jQKMzXPl
-dMILQEFpCKrZ7VYTYSWkzboq5sdfdJnstLvbMlplimRs2u6jhJ1xPgYN+5joveui
-aUld6mwrkMA=
-=q/qr
------END PGP SIGNATURE-----
-------------=_1489780444-30420-2--
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index d04547f..eb00bc1 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -125,6 +125,8 @@ extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
+ extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
+ extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
+ extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
++extern int xfs_dir2_sf_verify(struct xfs_mount *mp, struct xfs_dir2_sf_hdr *sfp,
++		int size);
+ 
+ /* xfs_dir2_readdir.c */
+ extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index c6809ff..b0cfc7d 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -629,6 +629,91 @@ xfs_dir2_sf_check(
+ }
+ #endif	/* DEBUG */
+ 
++/* Verify the consistency of an inline directory. */
++int
++xfs_dir2_sf_verify(
++	struct xfs_mount		*mp,
++	struct xfs_dir2_sf_hdr		*sfp,
++	int				size)
++{
++	struct xfs_dir2_sf_entry	*sfep;
++	struct xfs_dir2_sf_entry	*next_sfep;
++	char				*endp;
++	const struct xfs_dir_ops	*dops;
++	xfs_ino_t			ino;
++	int				i;
++	int				i8count;
++	int				offset;
++	__uint8_t			filetype;
++
++	dops = xfs_dir_get_ops(mp, NULL);
++
++	/*
++	 * Give up if the directory is way too short.
++	 */
++	XFS_WANT_CORRUPTED_RETURN(mp, size >
++			offsetof(struct xfs_dir2_sf_hdr, parent));
++	XFS_WANT_CORRUPTED_RETURN(mp, size >=
++			xfs_dir2_sf_hdr_size(sfp->i8count));
++
++	endp = (char *)sfp + size;
++
++	/* Check .. entry */
++	ino = dops->sf_get_parent_ino(sfp);
++	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
++	XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
++	offset = dops->data_first_offset;
++
++	/* Check all reported entries */
++	sfep = xfs_dir2_sf_firstentry(sfp);
++	for (i = 0; i < sfp->count; i++) {
++		/*
++		 * struct xfs_dir2_sf_entry has a variable length.
++		 * Check the fixed-offset parts of the structure are
++		 * within the data buffer.
++		 */
++		XFS_WANT_CORRUPTED_RETURN(mp,
++				((char *)sfep + sizeof(*sfep)) < endp);
++
++		/* Don't allow names with known bad length. */
++		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen > 0);
++		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen < MAXNAMELEN);
++
++		/*
++		 * Check that the variable-length part of the structure is
++		 * within the data buffer.  The next entry starts after the
++		 * name component, so nextentry is an acceptable test.
++		 */
++		next_sfep = dops->sf_nextentry(sfp, sfep);
++		XFS_WANT_CORRUPTED_RETURN(mp, endp >= (char *)next_sfep);
++
++		/* Check that the offsets always increase. */
++		XFS_WANT_CORRUPTED_RETURN(mp,
++				xfs_dir2_sf_get_offset(sfep) >= offset);
++
++		/* Check the inode number. */
++		ino = dops->sf_get_ino(sfp, sfep);
++		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
++		XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
++
++		/* Check the file type. */
++		filetype = dops->sf_get_ftype(sfep);
++		XFS_WANT_CORRUPTED_RETURN(mp, filetype < XFS_DIR3_FT_MAX);
++
++		offset = xfs_dir2_sf_get_offset(sfep) +
++				dops->data_entsize(sfep->namelen);
++
++		sfep = next_sfep;
++	}
++	XFS_WANT_CORRUPTED_RETURN(mp, i8count == sfp->i8count);
++	XFS_WANT_CORRUPTED_RETURN(mp, (void *)sfep == (void *)endp);
++	XFS_WANT_CORRUPTED_RETURN(mp, offset +
++	       (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
++	       (uint)sizeof(xfs_dir2_block_tail_t) <= mp->m_dir_geo->blksize);
++
++	return 0;
++}
++
+ /*
+  * Create a new (shortform) directory.
+  */
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 25c1e07..9653e96 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -33,6 +33,8 @@
+ #include "xfs_trace.h"
+ #include "xfs_attr_sf.h"
+ #include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_dir2_priv.h"
+ 
+ kmem_zone_t *xfs_ifork_zone;
+ 
+@@ -320,6 +322,7 @@ xfs_iformat_local(
+ 	int		whichfork,
+ 	int		size)
+ {
++	int		error;
+ 
+ 	/*
+ 	 * If the size is unreasonable, then something
+@@ -336,6 +339,14 @@ xfs_iformat_local(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
++	if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
++		error = xfs_dir2_sf_verify(ip->i_mount,
++				(struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip),
++				size);
++		if (error)
++			return error;
++	}
++
+ 	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size);
+ 	return 0;
+ }
+@@ -856,7 +867,7 @@ xfs_iextents_copy(
+  * In these cases, the format always takes precedence, because the
+  * format indicates the current state of the fork.
+  */
+-void
++int
+ xfs_iflush_fork(
+ 	xfs_inode_t		*ip,
+ 	xfs_dinode_t		*dip,
+@@ -866,6 +877,7 @@ xfs_iflush_fork(
+ 	char			*cp;
+ 	xfs_ifork_t		*ifp;
+ 	xfs_mount_t		*mp;
++	int			error;
+ 	static const short	brootflag[2] =
+ 		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
+ 	static const short	dataflag[2] =
+@@ -874,7 +886,7 @@ xfs_iflush_fork(
+ 		{ XFS_ILOG_DEXT, XFS_ILOG_AEXT };
+ 
+ 	if (!iip)
+-		return;
++		return 0;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	/*
+ 	 * This can happen if we gave up in iformat in an error path,
+@@ -882,12 +894,19 @@ xfs_iflush_fork(
+ 	 */
+ 	if (!ifp) {
+ 		ASSERT(whichfork == XFS_ATTR_FORK);
+-		return;
++		return 0;
+ 	}
+ 	cp = XFS_DFORK_PTR(dip, whichfork);
+ 	mp = ip->i_mount;
+ 	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
+ 	case XFS_DINODE_FMT_LOCAL:
++		if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
++			error = xfs_dir2_sf_verify(mp,
++					(struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data,
++					ifp->if_bytes);
++			if (error)
++				return error;
++		}
+ 		if ((iip->ili_fields & dataflag[whichfork]) &&
+ 		    (ifp->if_bytes > 0)) {
+ 			ASSERT(ifp->if_u1.if_data != NULL);
+@@ -940,6 +959,7 @@ xfs_iflush_fork(
+ 		ASSERT(0);
+ 		break;
+ 	}
++	return 0;
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 7fb8365..132dc59 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -140,7 +140,7 @@ typedef struct xfs_ifork {
+ struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
+ 
+ int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
+-void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
++int		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+ 				struct xfs_inode_log_item *, int);
+ void		xfs_idestroy_fork(struct xfs_inode *, int);
+ void		xfs_idata_realloc(struct xfs_inode *, int, int);
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index 003a99b..ad9396e 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -71,22 +71,11 @@ xfs_dir2_sf_getdents(
+ 	struct xfs_da_geometry	*geo = args->geo;
+ 
+ 	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
+-	/*
+-	 * Give up if the directory is way too short.
+-	 */
+-	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
+-		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
+-		return -EIO;
+-	}
+-
+ 	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
+ 	ASSERT(dp->i_df.if_u1.if_data != NULL);
+ 
+ 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
+ 
+-	if (dp->i_d.di_size < xfs_dir2_sf_hdr_size(sfp->i8count))
+-		return -EFSCORRUPTED;
+-
+ 	/*
+ 	 * If the block number in the offset is out of range, we're done.
+ 	 */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 7eaf1ef..c7fe2c2 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3475,6 +3475,7 @@ xfs_iflush_int(
+ 	struct xfs_inode_log_item *iip = ip->i_itemp;
+ 	struct xfs_dinode	*dip;
+ 	struct xfs_mount	*mp = ip->i_mount;
++	int			error;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+ 	ASSERT(xfs_isiflocked(ip));
+@@ -3557,9 +3558,14 @@ xfs_iflush_int(
+ 	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
+ 		ip->i_d.di_flushiter = 0;
+ 
+-	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+-	if (XFS_IFORK_Q(ip))
+-		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
++	error = xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
++	if (error)
++		return error;
++	if (XFS_IFORK_Q(ip)) {
++		error = xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
++		if (error)
++			return error;
++	}
+ 	xfs_inobp_check(mp, bp);
+ 
+ 	/*
