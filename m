@@ -1,225 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21048 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934558AbdCJXVz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:21:55 -0500
-Subject: [PATCH 18/19] xfs: scrub symbolic links
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 10 Mar 2017 15:21:44 -0800
-Message-ID: <148918810422.6959.284945094581597519.stgit@birch.djwong.org>
-In-Reply-To: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
-References: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
+Received: from mx2.suse.de ([195.135.220.15]:54972 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751416AbdCOIfd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 04:35:33 -0400
+Date: Wed, 15 Mar 2017 09:35:29 +0100
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH v2] xfs: remove kmem_zalloc_greedy
+Message-ID: <20170315083529.GD32620@dhcp22.suse.cz>
+References: <20170308003528.GK5280@birch.djwong.org>
+ <20170314165745.GB28800@wotan.suse.de>
+ <20170314180738.GV5280@birch.djwong.org>
+ <20170315001427.GI28800@wotan.suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170315001427.GI28800@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, sebastian.parschauer@suse.com, AlNovak@suse.com, jack@suse.cz, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed 15-03-17 01:14:27, Luis R. Rodriguez wrote:
+> On Tue, Mar 14, 2017 at 11:07:38AM -0700, Darrick J. Wong wrote:
+> > On Tue, Mar 14, 2017 at 05:57:45PM +0100, Luis R. Rodriguez wrote:
+> > > On Tue, Mar 07, 2017 at 04:35:28PM -0800, Darrick J. Wong wrote:
+> > > > The sole remaining caller of kmem_zalloc_greedy is bulkstat, which uses
+> > > > it to grab 1-4 pages for staging of inobt records.  The infinite loop in
+> > > > the greedy allocation function is causing hangs[1] in generic/269, so
+> > > > just get rid of the greedy allocator in favor of kmem_zalloc_large.
+> > > > This makes bulkstat somewhat more likely to ENOMEM if there's really no
+> > > > pages to spare, but eliminates a source of hangs.
+> > > > 
+> > > > [1] http://lkml.kernel.org/r/20170301044634.rgidgdqqiiwsmfpj%40XZHOUW.usersys.redhat.com
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > > v2: remove single-page fallback
+> > > > ---
+> > > 
+> > > Since this fixes a hang how about *at the very least* a respective Fixes tag ?
+> > > This fixes an existing hang so what are the stable considerations here ? I
+> > > realize the answer is not easy but figured its worth asking.
+> > 
+> > I didn't think it was appropriate to "Fixes: 77e4635ae1917" since we're
+> > not fixing _greedy so much as we are killing it.  The patch fixes an
+> > infinite retry hang when bulkstat tries a memory allocation that cannot
+> > be satisfied; and having done that, realizes there are no remaining
+> > callers of _greedy and garbage collects it.  The code that was there
+> > before also seems capable of sleeping forever, I think.
+> > 
+> > So the minimally invasive fix is to apply the allocation conversion in
+> > bulkstat, and if there aren't any other callers of _greedy then you can
+> > get rid of it too.
+> 
+> For the stake of stable XFS users then why not do the less invasive change
+> first, Cc stable, and then move on to the less backward portable solution ?
 
-Create the infrastructure to scrub symbolic link data.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/Makefile        |    1 
- fs/xfs/libxfs/xfs_fs.h |    3 +
- fs/xfs/scrub/common.c  |    1 
- fs/xfs/scrub/common.h  |    5 ++
- fs/xfs/scrub/symlink.c |  108 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trace.h     |    3 +
- 6 files changed, 119 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/symlink.c
-
-
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index d723ebc..5035ee0 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -116,6 +116,7 @@ xfs-$(CONFIG_XFS_DEBUG)		+= $(addprefix scrub/, \
- 				   inode.o \
- 				   refcount.o \
- 				   rmap.o \
-+				   symlink.o \
- 				   )
- 
- # low-level transaction/log code
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index f206bb4..e7eb653 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -509,7 +509,8 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_BMBTC	14	/* CoW fork block mapping */
- #define XFS_SCRUB_TYPE_DIR	15	/* directory */
- #define XFS_SCRUB_TYPE_XATTR	16	/* extended attribute */
--#define XFS_SCRUB_TYPE_MAX	16
-+#define XFS_SCRUB_TYPE_SYMLINK	17	/* symbolic link */
-+#define XFS_SCRUB_TYPE_MAX	17
- 
- #define XFS_SCRUB_FLAG_REPAIR	0x01	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x02	/* o: needs repair */
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 4e7c8c3..e6ab066 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -708,6 +708,7 @@ static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 	{xfs_scrub_setup_inode_bmap, xfs_scrub_bmap_cow, NULL, NULL},
- 	{xfs_scrub_setup_inode, xfs_scrub_directory, NULL, NULL},
- 	{xfs_scrub_setup_inode_xattr, xfs_scrub_xattr, NULL, NULL},
-+	{xfs_scrub_setup_inode_symlink, xfs_scrub_symlink, NULL, NULL},
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 30b03ea..29220d1 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -231,6 +231,10 @@ int xfs_scrub_setup_inode_xattr(struct xfs_scrub_context *sc,
- 				struct xfs_inode *ip,
- 				struct xfs_scrub_metadata *sm,
- 				bool retry_deadlocked);
-+int xfs_scrub_setup_inode_symlink(struct xfs_scrub_context *sc,
-+				  struct xfs_inode *ip,
-+				  struct xfs_scrub_metadata *sm,
-+				  bool retry_deadlocked);
- 
- /* Metadata scrubbers */
- 
-@@ -250,5 +254,6 @@ int xfs_scrub_bmap_attr(struct xfs_scrub_context *sc);
- int xfs_scrub_bmap_cow(struct xfs_scrub_context *sc);
- int xfs_scrub_directory(struct xfs_scrub_context *sc);
- int xfs_scrub_xattr(struct xfs_scrub_context *sc);
-+int xfs_scrub_symlink(struct xfs_scrub_context *sc);
- 
- #endif	/* __XFS_REPAIR_COMMON_H__ */
-diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
-new file mode 100644
-index 0000000..76c1d8e
---- /dev/null
-+++ b/fs/xfs/scrub/symlink.c
-@@ -0,0 +1,108 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_trace.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_symlink.h"
-+#include "scrub/common.h"
-+
-+/* Set us up with an inode and a buffer for reading symlink targets. */
-+int
-+xfs_scrub_setup_inode_symlink(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inode		*ip,
-+	struct xfs_scrub_metadata	*sm,
-+	bool				retry_deadlocked)
-+{
-+	void				*buf;
-+	int				error;
-+
-+	/* Allocate the buffer without the inode lock held. */
-+	buf = kmem_zalloc_large(MAXPATHLEN + 1, KM_SLEEP);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	error = xfs_scrub_setup_inode(sc, ip, sm, retry_deadlocked);
-+	if (error) {
-+		kmem_free(buf);
-+		return error;
-+	}
-+
-+	sc->buf = buf;
-+	return 0;
-+}
-+
-+/* Symbolic links. */
-+
-+#define XFS_SCRUB_SYMLINK_CHECK(fs_ok) \
-+	XFS_SCRUB_INO_CHECK(sc, ip->i_ino, NULL, "symlink", fs_ok)
-+#define XFS_SCRUB_SYMLINK_GOTO(fs_ok, label) \
-+	XFS_SCRUB_INO_GOTO(sc, ip->i_ino, NULL, "symlink", fs_ok, label)
-+int
-+xfs_scrub_symlink(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_ifork		*ifp;
-+	loff_t				len;
-+	int				error = 0;
-+
-+	if (!S_ISLNK(VFS_I(ip)->i_mode))
-+		return -ENOENT;
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	len = ip->i_d.di_size;
-+
-+	/* Plausible size? */
-+	XFS_SCRUB_SYMLINK_GOTO(len <= MAXPATHLEN, out);
-+	XFS_SCRUB_SYMLINK_GOTO(len > 0, out);
-+
-+	/* Inline symlink? */
-+	if (ifp->if_flags & XFS_IFINLINE) {
-+		XFS_SCRUB_SYMLINK_GOTO(len > 0, out);
-+		XFS_SCRUB_SYMLINK_CHECK(len <= XFS_IFORK_DSIZE(ip));
-+		XFS_SCRUB_SYMLINK_CHECK(len <= strnlen(ifp->if_u1.if_data,
-+				XFS_IFORK_DSIZE(ip)));
-+		goto out;
-+	}
-+
-+	/* Remote symlink; must read. */
-+	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL);
-+	error = xfs_readlink(sc->ip, sc->buf);
-+	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
-+	XFS_SCRUB_FILE_OP_ERROR_GOTO(sc, XFS_DATA_FORK, 0, "symlink",
-+			&error, out);
-+	XFS_SCRUB_SYMLINK_CHECK(len <= strnlen(sc->buf, MAXPATHLEN));
-+out:
-+	return error;
-+}
-+#undef XFS_SCRUB_SYMLINK_GOTO
-+#undef XFS_SCRUB_SYMLINK_CHECK
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 9f7079e..4b45d0e 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3370,7 +3370,8 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- 	{ XFS_SCRUB_TYPE_BMBTA,		"bmapbta" }, \
- 	{ XFS_SCRUB_TYPE_BMBTC,		"bmapbtc" }, \
- 	{ XFS_SCRUB_TYPE_DIR,		"dir" }, \
--	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }
-+	{ XFS_SCRUB_TYPE_XATTR,		"xattr" }, \
-+	{ XFS_SCRUB_TYPE_SYMLINK,	"symlink" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
- 		 int error),
-
+The thing is that the permanent failures for vmalloc were so unlikely
+prior to 5d17a73a2ebe ("vmalloc: back off when the current task is
+killed") that this was basically a non-issue before this (4.11) merge
+window.
+-- 
+Michal Hocko
+SUSE Labs
