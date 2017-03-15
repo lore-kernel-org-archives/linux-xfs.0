@@ -1,55 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f47.google.com ([209.85.214.47]:36934 "EHLO
-        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751062AbdCQMGq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 08:06:46 -0400
-Received: by mail-it0-f47.google.com with SMTP id g138so22757266itb.0
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 05:06:45 -0700 (PDT)
+Received: from aserp1040.oracle.com ([141.146.126.69]:44055 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752419AbdCOQlU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 12:41:20 -0400
+Date: Wed, 15 Mar 2017 09:40:52 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] xfs: remove kmem_zalloc_greedy
+Message-ID: <20170315164052.GC5280@birch.djwong.org>
+References: <20170308003528.GK5280@birch.djwong.org>
+ <20170314165745.GB28800@wotan.suse.de>
+ <20170314180738.GV5280@birch.djwong.org>
+ <20170315001427.GI28800@wotan.suse.de>
+ <20170315083529.GD32620@dhcp22.suse.cz>
+ <20170315154327.GL28800@wotan.suse.de>
 MIME-Version: 1.0
-In-Reply-To: <20170316232000.GW28800@wotan.suse.de>
-References: <20170315160017.27805-1-jtulak@redhat.com> <20170315160017.27805-15-jtulak@redhat.com>
- <20170316232000.GW28800@wotan.suse.de>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 17 Mar 2017 13:06:24 +0100
-Message-ID: <CACj3i727bsYTcUYtEw1DJnNJCZURxuArACc1wNZUFOC=1UOKSw@mail.gmail.com>
-Subject: Re: [PATCH 14/22] mkfs: rename defaultval to flagval in opts
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170315154327.GL28800@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org
+Cc: Michal Hocko <mhocko@kernel.org>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, sebastian.parschauer@suse.com, AlNovak@suse.com, jack@suse.cz, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-On Fri, Mar 17, 2017 at 12:20 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> On Wed, Mar 15, 2017 at 05:00:09PM +0100, Jan Tulak wrote:
->> The old name 'defaultval' was misleading - it is not the default value,
->> but the value the option has when used as a flag by an user.
->>
->> Signed-off-by: Jan Tulak <jtulak@redhat.com>
->> --- a/mkfs/xfs_mkfs.c
->> +++ b/mkfs/xfs_mkfs.c
->> @@ -189,7 +189,7 @@ unsigned int              sectorsize;
->> @@ -223,7 +223,7 @@ struct opt_params {
->>               }               conflicts [MAX_CONFLICTS];
->>               long long       minval;
->>               long long       maxval;
->> -             long long       defaultval;
->> +             long long       flagval;
->
-> David suggested that in the future the config value(mkfs.xfs.conf) will override
-> the defaultval, in this case since you are renaming this, just want to be sure
-> the new name we choose can fit its later use also with the config. Perhaps
-> userval ?
->
+On Wed, Mar 15, 2017 at 04:43:27PM +0100, Luis R. Rodriguez wrote:
+> On Wed, Mar 15, 2017 at 09:35:29AM +0100, Michal Hocko wrote:
+> > On Wed 15-03-17 01:14:27, Luis R. Rodriguez wrote:
+> > > On Tue, Mar 14, 2017 at 11:07:38AM -0700, Darrick J. Wong wrote:
+> > > > On Tue, Mar 14, 2017 at 05:57:45PM +0100, Luis R. Rodriguez wrote:
+> > > > > On Tue, Mar 07, 2017 at 04:35:28PM -0800, Darrick J. Wong wrote:
+> > > > > > The sole remaining caller of kmem_zalloc_greedy is bulkstat, which uses
+> > > > > > it to grab 1-4 pages for staging of inobt records.  The infinite loop in
+> > > > > > the greedy allocation function is causing hangs[1] in generic/269, so
+> > > > > > just get rid of the greedy allocator in favor of kmem_zalloc_large.
+> > > > > > This makes bulkstat somewhat more likely to ENOMEM if there's really no
+> > > > > > pages to spare, but eliminates a source of hangs.
+> > > > > > 
+> > > > > > [1] http://lkml.kernel.org/r/20170301044634.rgidgdqqiiwsmfpj%40XZHOUW.usersys.redhat.com
+> > > > > > 
+> > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > ---
+> > > > > > v2: remove single-page fallback
+> > > > > > ---
+> > > > > 
+> > > > > Since this fixes a hang how about *at the very least* a respective Fixes tag ?
+> > > > > This fixes an existing hang so what are the stable considerations here ? I
+> > > > > realize the answer is not easy but figured its worth asking.
+> > > > 
+> > > > I didn't think it was appropriate to "Fixes: 77e4635ae1917" since we're
+> > > > not fixing _greedy so much as we are killing it.  The patch fixes an
+> > > > infinite retry hang when bulkstat tries a memory allocation that cannot
+> > > > be satisfied; and having done that, realizes there are no remaining
+> > > > callers of _greedy and garbage collects it.  The code that was there
+> > > > before also seems capable of sleeping forever, I think.
+> > > > 
+> > > > So the minimally invasive fix is to apply the allocation conversion in
+> > > > bulkstat, and if there aren't any other callers of _greedy then you can
+> > > > get rid of it too.
+> > > 
+> > > For the stake of stable XFS users then why not do the less invasive change
+> > > first, Cc stable, and then move on to the less backward portable solution ?
+> > 
+> > The thing is that the permanent failures for vmalloc were so unlikely
+> > prior to 5d17a73a2ebe ("vmalloc: back off when the current task is
+> > killed") that this was basically a non-issue before this (4.11) merge
+> > window.
+> 
+> I see, this seems like critical information to add to the commit log.
+> Also, will this be at least pushed to v4.11 ?
+
+It's already in rc2.
+
+--D
+
+> 
 >   Luis
-
-Your question is exactly why I'm renaming it. :-) This is not the
-value that is used when no option is passed, but when an option
-doesn't have an argument. So we don't require "-m crc=0|1", but "-m
-crc" is enough.
-
-Jan
-
--- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
