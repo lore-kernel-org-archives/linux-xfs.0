@@ -1,78 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from muffat.debian.org ([209.87.16.33]:37889 "EHLO muffat.debian.org"
+Received: from sandeen.net ([63.231.237.45]:40160 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751272AbdCQW1f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Mar 2017 18:27:35 -0400
-From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+        id S1752851AbdCOSm5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 14:42:57 -0400
+Subject: Re: boot failure after kernel update, imap claims in-use inode 661690
+ is free, would correct imap
+References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <25ef4413-9364-1077-9727-a506e9b250de@sandeen.net>
+Date: Wed, 15 Mar 2017 13:42:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Subject: xfsprogs_4.9.0+nmu1_source.changes ACCEPTED into unstable
-Message-Id: <E1coxuK-000ALD-T9@fasolo.debian.org>
-Date: Fri, 17 Mar 2017 19:51:28 +0000
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: XFS Development Team <linux-xfs@vger.kernel.org>, Michael Biebl <biebl@debian.org>
+To: Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>
 
+On 3/15/17 1:53 AM, Chris Murphy wrote:
+> Hi,
+> 
+> A user reports a curious OS update bug with Fedora 22, 23, 24, and 25,
+> where after a kernel update, upon reboot there's only a grub> prompt,
+> no menu.
+> 
+> I've reproduced this using a qemu-kvm VM, with device SATA and unsafe
+> caching, pointed to an LVM LV. If I do 'dnf update' to update the
+> kernel, the problem doesn't happen, if I use gnome-software the
+> problem always happens.
+> 
+> gnome-software leverages PackageKit for downloading and staging, then
+> reboots to a systemd offline update target to do the update. So it's a
+> joint effort. The detailed reproduce steps I've come up with are in
+> comment 39 of the original bug report:
+> 
+> https://bugzilla.redhat.com/show_bug.cgi?id=1227736#c39
+> 
+> The gist of the analysis in that comment is that the modified grub.cfg
+> is a 0 length file, and that's why GRUB arrives at a grub> prompt
+> instead of a menu. If I boot from alternate media and run xfs_repair
+> -n, I get tons of errors - that log is attached to the bug report and
+> is here
+> 
+> https://bugzilla.redhat.com/attachment.cgi?id=1263176
 
+Ok, those errors are probably just due to a dirty log.  (I just sent
+a patch to make this more clear in xfs_repair output with -n)
 
-Accepted:
+> If all I do is do a normal mount, kernel reports log replay,
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+Ok, so I think the question is: why after a clean reboot is the log
+still dirty?  That's not supposed to happen.
 
-Format: 1.8
-Date: Fri, 17 Mar 2017 19:27:58 +0100
-Source: xfsprogs
-Binary: xfsprogs xfslibs-dev xfsprogs-udeb
-Architecture: source
-Version: 4.9.0+nmu1
-Distribution: unstable
-Urgency: medium
-Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
-Changed-By: Michael Biebl <biebl@debian.org>
-Description:
- xfslibs-dev - XFS filesystem-specific static libraries and headers
- xfsprogs   - Utilities for managing the XFS filesystem
- xfsprogs-udeb - A stripped-down version of xfsprogs, for debian-installer (udeb)
-Closes: 766811
-Changes:
- xfsprogs (4.9.0+nmu1) unstable; urgency=medium
- .
-   * Non-maintainer upload.
-   * Remove code in include/buildmacros which creates bogus symlinks for
-     libraries. (Closes: #766811)
-Checksums-Sha1:
- 5c954e8054ca48d1857919c236bd9a0c1d87b5d8 1815 xfsprogs_4.9.0+nmu1.dsc
- 4d3d77915ac1e71c5418119121ab1d0f2386e704 1643816 xfsprogs_4.9.0+nmu1.tar.gz
- 443b18c4123b93f76f7111d34b1574cbdd8d27cc 5592 xfsprogs_4.9.0+nmu1_source.buildinfo
-Checksums-Sha256:
- c06dfa6510a7c2182bae08bd96287f16df4201e6e3b3ce51f336b0ef1833fc38 1815 xfsprogs_4.9.0+nmu1.dsc
- 7866bb0e7d7256a52dc5a6aec84329858575ecd6b544db03d6af3bb66cd39631 1643816 xfsprogs_4.9.0+nmu1.tar.gz
- 5100c328228196d8117429f7e802bf756f10285aafce72b9fba8087b03b567e3 5592 xfsprogs_4.9.0+nmu1_source.buildinfo
-Files:
- 1acb0a512e3d007978d4aa23fc2192a2 1815 admin optional xfsprogs_4.9.0+nmu1.dsc
- a8cf31861e3922a004cc7ecbc5d7f30d 1643816 admin optional xfsprogs_4.9.0+nmu1.tar.gz
- 89d8f8097f9a6036798c3c2e9dfebb19 5592 admin optional xfsprogs_4.9.0+nmu1_source.buildinfo
+systemd is still doing remount,ro before shooting the system in the
+head, right?
 
------BEGIN PGP SIGNATURE-----
+Does a normal reboot also come up w/ a dirty log?
 
-iQJFBAEBCAAvFiEECbOsLssWnJBDRcxUauHfDWCPItwFAljMNl0RHGJpZWJsQGRl
-Ymlhbi5vcmcACgkQauHfDWCPItwXhRAAj6+zQiPdFZNsF2X4ooLcRuMnPWp5k113
-IYhgS5DfWoIj8IGBziSv258dosjrUK+EjVRQ0xIjD2HlNcT7/ArdA9YJh+3a2KRu
-H3mmCr2c/dxlGjqk3Y1B9hCUIuGrZDFUePVt641xs2bzpHDrjATZQ1X+DA7hYFAk
-PXUysxz9Amioiz1mkaHGrb1itJ6G//YIYB+9WIlfRfbr6M2XqmWtrenEWykXO+OC
-BlpDE4GSKwaUlcw3KMFfLItREcl9ZpcNErCbSc3j2rzdbgosyvS2Yv7sBYI6SETX
-Fll27GWtmaIGimFvZD+HlOE/SH1RjAAaDnYxzJE7qBfHoJFlfa3jrZp9ytKKUmTI
-5fgLlDjPDUIBimMfnZmzthWk6Fm+Ar4l4Fa5RUcqi6gXycxvoeuK93lOS45XMNGR
-1i6mA2nQmZqGLl+UlluJbhbTqd+Go3UH0AGlKl1qH8JFCJ1YxRVZRcHWm23iLNz3
-p75XHSGZqmdS1HVk+T0cBAszJkOdv47FbFQbg5nFVfUN+Cj4Tv4CEFunCNbotV96
-Bm6c6cLolQJkkemMmTVSQyM2+INYE4bKxzDKW20pH7RsLg2NznDLys+3jQKMzXPl
-dMILQEFpCKrZ7VYTYSWkzboq5sdfdJnstLvbMlplimRs2u6jhJ1xPgYN+5joveui
-aUld6mwrkMA=
-=q/qr
------END PGP SIGNATURE-----
+/me goes to read the bug...
 
-
-Thank you for your contribution to Debian.
+-Eric
