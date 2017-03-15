@@ -1,552 +1,261 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50822 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754080AbdCOQAy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Mar 2017 12:00:54 -0400
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C8AFE804E4
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:00:54 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 14/22] mkfs: rename defaultval to flagval in opts
-Date: Wed, 15 Mar 2017 17:00:09 +0100
-Message-Id: <20170315160017.27805-15-jtulak@redhat.com>
-In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
-References: <20170315160017.27805-1-jtulak@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:43609 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752580AbdCOH3U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 03:29:20 -0400
+Date: Wed, 15 Mar 2017 00:28:55 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: verify inline directory data forks
+Message-ID: <20170315072855.GA5280@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Brian Foster <bfoster@redhat.com>
 
-The old name 'defaultval' was misleading - it is not the default value,
-but the value the option has when used as a flag by an user.
+When we're reading or writing the data fork of an inline directory,
+check the contents to make sure we're not overflowing buffers or eating
+garbage data.  xfs/348 corrupts an inline symlink into an inline
+directory, triggering a buffer overflow bug.
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- mkfs/xfs_mkfs.c | 122 ++++++++++++++++++++++++++++----------------------------
- 1 file changed, 61 insertions(+), 61 deletions(-)
+ fs/xfs/libxfs/xfs_dir2_data.c  |   73 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_dir2_priv.h  |    2 +
+ fs/xfs/libxfs/xfs_inode_fork.c |   22 ++++++++++--
+ fs/xfs/libxfs/xfs_inode_fork.h |    2 +
+ fs/xfs/xfs_inode.c             |   12 +++++--
+ 5 files changed, 104 insertions(+), 7 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index a604c801..273cdbc4 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -189,7 +189,7 @@ unsigned int		sectorsize;
-  *     to zero. But if one value is different: minval=0 and maxval=1,
-  *     then it is OK.)
-  *
-- *   defaultval MANDATORY
-+ *   flagval MANDATORY
-  *     The value used if user specifies the subopt, but no value.
-  *     If the subopt accepts some values (-d file=[1|0]), then this
-  *     sets what is used with simple specifying the subopt (-d file).
-@@ -197,7 +197,7 @@ unsigned int		sectorsize;
-  *     value in any case.
-  *
-  *   value INTERNAL
-- *     Do not set this on initialization. Use defaultval for what you want
-+ *     Do not set this on initialization. Use flagval for what you want
-  *     to do. This is filled with user input and anything you write here now
-  *     is overwritten. (If the user input is a string and not a number, this
-  *     value is set to a positive non-zero number.)
-@@ -223,7 +223,7 @@ struct opt_params {
- 		}		conflicts [MAX_CONFLICTS];
- 		long long	minval;
- 		long long	maxval;
--		long long	defaultval;
-+		long long	flagval;
- 		long long	value;
- 	}		subopt_params[MAX_SUBOPTS];
- } opts[MAX_OPTS] = {
-@@ -243,7 +243,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_BLOCKSIZE_LOG,
- 			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = B_SIZE,
- 			  .convert = true,
-@@ -254,7 +254,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_BLOCKSIZE,
- 			  .maxval = XFS_MAX_BLOCKSIZE,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 		},
- 	},
-@@ -287,24 +287,24 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 1,
- 			  .maxval = XFS_MAX_AGNUMBER,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = D_FILE,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 			{ .index = D_NAME,
- 			  .conflicts = { {LAST_CONFLICT} },
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = D_SIZE,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			  .convert = true,
- 			  .minval = XFS_AG_MIN_BYTES,
- 			  .maxval = LLONG_MAX,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = D_SUNIT,
- 			  .conflicts = { {.opt = OPT_D,
-@@ -319,7 +319,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = UINT_MAX,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = D_SWIDTH,
- 			  .conflicts = { {.opt = OPT_D,
-@@ -334,7 +334,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = UINT_MAX,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = D_AGSIZE,
- 			  .conflicts = { {.opt = OPT_D,
-@@ -344,7 +344,7 @@ struct opt_params {
- 			  .convert = true,
- 			  .minval = XFS_AG_MIN_BYTES,
- 			  .maxval = XFS_AG_MAX_BYTES,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = D_SU,
- 			  .conflicts = { {.opt = OPT_D,
-@@ -360,7 +360,7 @@ struct opt_params {
- 			  .convert = true,
- 			  .minval = 0,
- 			  .maxval = UINT_MAX,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = D_SW,
- 			  .conflicts = { {.opt = OPT_D,
-@@ -375,7 +375,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = UINT_MAX,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = D_SECTLOG,
- 			  .conflicts = { {.opt = OPT_D,
-@@ -384,7 +384,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_SECTORSIZE_LOG,
- 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = D_SECTSIZE,
- 			  .conflicts = { {.opt = OPT_D,
-@@ -395,7 +395,7 @@ struct opt_params {
- 			  .is_power_2 = true,
- 			  .minval = XFS_MIN_SECTORSIZE,
- 			  .maxval = XFS_MAX_SECTORSIZE,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = D_NOALIGN,
- 			  .conflicts = { {.opt = OPT_D,
-@@ -413,25 +413,25 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 			{ .index = D_RTINHERIT,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			  .minval = 1,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 			{ .index = D_PROJINHERIT,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = UINT_MAX,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = D_EXTSZINHERIT,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = UINT_MAX,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 		},
- 	},
-@@ -462,7 +462,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 			{ .index = I_LOG,
- 			  .conflicts = { {.opt = OPT_I,
-@@ -474,13 +474,13 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_DINODE_MIN_LOG,
- 			  .maxval = XFS_DINODE_MAX_LOG,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = I_MAXPCT,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 100,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = I_PERBLOCK,
- 			  .conflicts = { {.opt = OPT_I,
-@@ -493,7 +493,7 @@ struct opt_params {
- 			  .is_power_2 = true,
- 			  .minval = XFS_MIN_INODE_PERBLOCK,
- 			  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = I_SIZE,
- 			  .conflicts = { {.opt = OPT_I,
-@@ -506,7 +506,7 @@ struct opt_params {
- 			  .is_power_2 = true,
- 			  .minval = XFS_DINODE_MIN_SIZE,
- 			  .maxval = XFS_DINODE_MAX_SIZE,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = I_ATTR,
- 			  .conflicts = { {.opt = OPT_M,
-@@ -520,7 +520,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 2,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = I_PROJID32BIT,
- 			  .conflicts = { {.opt = OPT_M,
-@@ -535,7 +535,7 @@ struct opt_params {
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index d478065..fb6f32d 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -33,6 +33,79 @@
+ #include "xfs_cksum.h"
+ #include "xfs_log.h"
  
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 			{ .index = I_SPINODES,
- 			  .conflicts = { {.opt = OPT_M,
-@@ -549,7 +549,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 		},
- 	},
-@@ -579,7 +579,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = UINT_MAX,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = L_INTERNAL,
- 			  .conflicts = { {.opt = OPT_L,
-@@ -591,14 +591,14 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 			{ .index = L_SIZE,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			  .convert = true,
- 			  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
- 			  .maxval = XFS_MAX_LOG_BYTES,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = L_VERSION,
- 			  .conflicts = {{.opt = OPT_M,
-@@ -612,7 +612,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 1,
- 			  .maxval = 2,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = L_SUNIT,
- 			  .conflicts = { {.opt = OPT_L,
-@@ -621,7 +621,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 1,
- 			  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = L_SU,
- 			  .conflicts = { {.opt = OPT_L,
-@@ -631,7 +631,7 @@ struct opt_params {
- 			  .convert = true,
- 			  .minval = BBTOB(1),
- 			  .maxval = XLOG_MAX_RECORD_BSIZE,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = L_DEV,
- 			  .conflicts = { {.opt = OPT_L,
-@@ -641,7 +641,7 @@ struct opt_params {
- 					  .subopt = L_INTERNAL,
- 					 },
- 					 {LAST_CONFLICT} },
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = L_SECTLOG,
- 			  .conflicts = { {.opt = OPT_L,
-@@ -650,7 +650,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_SECTORSIZE_LOG,
- 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = L_SECTSIZE,
- 			  .conflicts = { {.opt = OPT_L,
-@@ -661,7 +661,7 @@ struct opt_params {
- 			  .is_power_2 = true,
- 			  .minval = XFS_MIN_SECTORSIZE,
- 			  .maxval = XFS_MAX_SECTORSIZE,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = L_FILE,
- 			  .conflicts = { {.opt = OPT_L,
-@@ -670,7 +670,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 			{ .index = L_NAME,
- 			  .conflicts = { {.opt = OPT_L,
-@@ -680,7 +680,7 @@ struct opt_params {
- 					  .subopt = L_INTERNAL,
- 					 },
- 					 {LAST_CONFLICT} },
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = L_LAZYSBCNTR,
- 			  .conflicts = { {.opt = OPT_M,
-@@ -694,7 +694,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 		},
- 	},
-@@ -716,7 +716,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_REC_DIRSIZE,
- 			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = N_SIZE,
- 			  .conflicts = { {.opt = OPT_N,
-@@ -727,13 +727,13 @@ struct opt_params {
- 			  .is_power_2 = true,
- 			  .minval = 1 << XFS_MIN_REC_DIRSIZE,
- 			  .maxval = XFS_MAX_BLOCKSIZE,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = N_VERSION,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			  .minval = 2,
- 			  .maxval = 2,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = N_FTYPE,
- 			  .conflicts = {  {.opt = OPT_M,
-@@ -747,7 +747,7 @@ struct opt_params {
- 					  {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 		},
- 	},
-@@ -769,14 +769,14 @@ struct opt_params {
- 			  .convert = true,
- 			  .minval = XFS_MIN_RTEXTSIZE,
- 			  .maxval = XFS_MAX_RTEXTSIZE,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = R_SIZE,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			  .convert = true,
- 			  .minval = 0,
- 			  .maxval = LLONG_MAX,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = R_DEV,
- 			  .conflicts = { {.opt = OPT_M,
-@@ -788,12 +788,12 @@ struct opt_params {
- 					  .message =
- 		"rmapbt not supported without CRC support."},
- 					 {LAST_CONFLICT} },
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = R_FILE,
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			},
- 			{ .index = R_NAME,
-@@ -806,12 +806,12 @@ struct opt_params {
- 					  .message =
- 		"rmapbt not supported without CRC support."},
- 					 {LAST_CONFLICT} },
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = R_NOALIGN,
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			  .conflicts = { {LAST_CONFLICT} },
- 			},
- 		},
-@@ -837,7 +837,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_SECTORSIZE_LOG,
- 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = S_SECTLOG,
- 			  .conflicts = { {.opt = OPT_S,
-@@ -849,7 +849,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = XFS_MIN_SECTORSIZE_LOG,
- 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = S_SIZE,
- 			  .conflicts = { {.opt = OPT_S,
-@@ -863,7 +863,7 @@ struct opt_params {
- 			  .is_power_2 = true,
- 			  .minval = XFS_MIN_SECTORSIZE,
- 			  .maxval = XFS_MAX_SECTORSIZE,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = S_SECTSIZE,
- 			  .conflicts = { {.opt = OPT_S,
-@@ -877,7 +877,7 @@ struct opt_params {
- 			  .is_power_2 = true,
- 			  .minval = XFS_MIN_SECTORSIZE,
- 			  .maxval = XFS_MAX_SECTORSIZE,
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 		},
- 	},
-@@ -977,7 +977,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 			{ .index = M_FINOBT,
- 			  .conflicts = { {.opt = OPT_M,
-@@ -991,11 +991,11 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 1,
-+			  .flagval = 1,
- 			},
- 			{ .index = M_UUID,
- 			  .conflicts = { {LAST_CONFLICT} },
--			  .defaultval = SUBOPT_NEEDS_VAL,
-+			  .flagval = SUBOPT_NEEDS_VAL,
- 			},
- 			{ .index = M_RMAPBT,
- 			.conflicts = { {.opt = OPT_M,
-@@ -1025,7 +1025,7 @@ struct opt_params {
- 				       {LAST_CONFLICT} },
- 			.minval = 0,
- 			.maxval = 1,
--			.defaultval = 0,
-+			.flagval = 0,
- 			},
- 			{ .index = M_REFLINK,
- 			.conflicts = { {.opt = OPT_M,
-@@ -1039,7 +1039,7 @@ struct opt_params {
- 					 {LAST_CONFLICT} },
- 			  .minval = 0,
- 			  .maxval = 1,
--			  .defaultval = 0,
-+			  .flagval = 0,
- 			},
- 		},
- 	},
-@@ -1715,10 +1715,10 @@ getnum(
++/* Check the consistency of an inline directory. */
++int
++xfs_dir3_inline_check(
++	struct xfs_mount		*mp,
++	struct xfs_dinode		*dip,
++	int				size)
++{
++	struct xfs_dir2_sf_entry	*sfep;
++	struct xfs_dir2_sf_entry	*next_sfep;
++	struct xfs_dir2_sf_hdr		*sfp;
++	char				*endp;
++	const struct xfs_dir_ops	*dops;
++	xfs_ino_t			ino;
++	int				i;
++	__uint8_t			filetype;
++
++	dops = xfs_dir_get_ops(mp, NULL);
++
++	/*
++	 * Give up if the directory is way too short.
++	 */
++	XFS_WANT_CORRUPTED_RETURN(mp, size >
++			offsetof(struct xfs_dir2_sf_hdr, parent));
++
++	sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_PTR(dip, XFS_DATA_FORK);
++	endp = (char *)sfp + size;
++
++	XFS_WANT_CORRUPTED_RETURN(mp, size >=
++			xfs_dir2_sf_hdr_size(sfp->i8count));
++
++	/* Check .. entry */
++	ino = dops->sf_get_parent_ino(sfp);
++	XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
++
++	/*
++	 * Loop while there are more entries and put'ing works.
++	 */
++	sfep = xfs_dir2_sf_firstentry(sfp);
++	for (i = 0; i < sfp->count; i++) {
++		/*
++		 * struct xfs_dir2_sf_entry has a variable length.
++		 * Check the fixed-offset parts of the structure are
++		 * within the data buffer.
++		 */
++		XFS_WANT_CORRUPTED_RETURN(mp,
++				((char *)sfep + sizeof(*sfep)) < endp);
++
++		/* Don't allow names with known bad length. */
++		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen > 0);
++		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen < MAXNAMELEN);
++
++		/*
++		 * Check that the variable-length part of the structure is
++		 * within the data buffer.  The next entry starts after the
++		 * name component, so nextentry is an acceptable test.
++		 */
++		next_sfep = dops->sf_nextentry(sfp, sfep);
++		XFS_WANT_CORRUPTED_RETURN(mp, endp >= (char *)next_sfep);
++
++		/* Check the inode number. */
++		ino = dops->sf_get_ino(sfp, sfep);
++		XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
++
++		/* Check the file type. */
++		filetype = dops->sf_get_ftype(sfep);
++		XFS_WANT_CORRUPTED_RETURN(mp, filetype < XFS_DIR3_FT_MAX);
++
++		sfep = next_sfep;
++	}
++
++	return 0;
++}
++
+ /*
+  * Check the consistency of the data block.
+  * The input can also be a block-format directory.
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index d04547f..e4f489b 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -44,6 +44,8 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
+ #define	xfs_dir3_data_check(dp,bp)
+ #endif
  
- 	/* empty strings might just return a default value */
- 	if (!str || *str == '\0') {
--		if (sp->defaultval == SUBOPT_NEEDS_VAL)
-+		if (sp->flagval == SUBOPT_NEEDS_VAL)
- 			reqval(opts->name, (char **)opts->subopts, index);
- 		sp->seen = true;
--		return sp->defaultval;
-+		return sp->flagval;
++extern int xfs_dir3_inline_check(struct xfs_mount *mp, struct xfs_dinode *dip,
++		int size);
+ extern int __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
+ extern int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		xfs_dablk_t bno, xfs_daddr_t mapped_bno, struct xfs_buf **bpp);
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 25c1e07..2a454cf 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -33,6 +33,8 @@
+ #include "xfs_trace.h"
+ #include "xfs_attr_sf.h"
+ #include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_dir2_priv.h"
+ 
+ kmem_zone_t *xfs_ifork_zone;
+ 
+@@ -320,6 +322,7 @@ xfs_iformat_local(
+ 	int		whichfork,
+ 	int		size)
+ {
++	int		error;
+ 
+ 	/*
+ 	 * If the size is unreasonable, then something
+@@ -336,6 +339,12 @@ xfs_iformat_local(
+ 		return -EFSCORRUPTED;
  	}
  
- 	sp->seen = true;
--- 
-2.11.0
-
++	if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
++		error = xfs_dir3_inline_check(ip->i_mount, dip, size);
++		if (error)
++			return error;
++	}
++
+ 	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size);
+ 	return 0;
+ }
+@@ -856,7 +865,7 @@ xfs_iextents_copy(
+  * In these cases, the format always takes precedence, because the
+  * format indicates the current state of the fork.
+  */
+-void
++int
+ xfs_iflush_fork(
+ 	xfs_inode_t		*ip,
+ 	xfs_dinode_t		*dip,
+@@ -866,6 +875,7 @@ xfs_iflush_fork(
+ 	char			*cp;
+ 	xfs_ifork_t		*ifp;
+ 	xfs_mount_t		*mp;
++	int			error;
+ 	static const short	brootflag[2] =
+ 		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
+ 	static const short	dataflag[2] =
+@@ -874,7 +884,7 @@ xfs_iflush_fork(
+ 		{ XFS_ILOG_DEXT, XFS_ILOG_AEXT };
+ 
+ 	if (!iip)
+-		return;
++		return 0;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	/*
+ 	 * This can happen if we gave up in iformat in an error path,
+@@ -882,7 +892,7 @@ xfs_iflush_fork(
+ 	 */
+ 	if (!ifp) {
+ 		ASSERT(whichfork == XFS_ATTR_FORK);
+-		return;
++		return 0;
+ 	}
+ 	cp = XFS_DFORK_PTR(dip, whichfork);
+ 	mp = ip->i_mount;
+@@ -894,6 +904,11 @@ xfs_iflush_fork(
+ 			ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
+ 			memcpy(cp, ifp->if_u1.if_data, ifp->if_bytes);
+ 		}
++		if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
++			error = xfs_dir3_inline_check(mp, dip, ifp->if_bytes);
++			if (error)
++				return error;
++		}
+ 		break;
+ 
+ 	case XFS_DINODE_FMT_EXTENTS:
+@@ -940,6 +955,7 @@ xfs_iflush_fork(
+ 		ASSERT(0);
+ 		break;
+ 	}
++	return 0;
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 7fb8365..132dc59 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -140,7 +140,7 @@ typedef struct xfs_ifork {
+ struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
+ 
+ int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
+-void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
++int		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+ 				struct xfs_inode_log_item *, int);
+ void		xfs_idestroy_fork(struct xfs_inode *, int);
+ void		xfs_idata_realloc(struct xfs_inode *, int, int);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 7eaf1ef..c7fe2c2 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3475,6 +3475,7 @@ xfs_iflush_int(
+ 	struct xfs_inode_log_item *iip = ip->i_itemp;
+ 	struct xfs_dinode	*dip;
+ 	struct xfs_mount	*mp = ip->i_mount;
++	int			error;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+ 	ASSERT(xfs_isiflocked(ip));
+@@ -3557,9 +3558,14 @@ xfs_iflush_int(
+ 	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
+ 		ip->i_d.di_flushiter = 0;
+ 
+-	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+-	if (XFS_IFORK_Q(ip))
+-		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
++	error = xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
++	if (error)
++		return error;
++	if (XFS_IFORK_Q(ip)) {
++		error = xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
++		if (error)
++			return error;
++	}
+ 	xfs_inobp_check(mp, bp);
+ 
+ 	/*
