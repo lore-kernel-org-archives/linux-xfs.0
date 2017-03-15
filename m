@@ -1,61 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.webx.cz ([109.123.222.201]:44944 "EHLO mail.webx.cz"
+Received: from mx1.redhat.com ([209.132.183.28]:51016 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751642AbdCOKHn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Mar 2017 06:07:43 -0400
-From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
-Date: Wed, 15 Mar 2017 11:07:39 +0100
-Message-ID: <74482935.PWezjV9Qp4@libor-nb>
-In-Reply-To: <503a4130-e6db-2d14-d377-01336022d6ee@sandeen.net>
-References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com> <1702693.ETbqtf3ybS@libor-nb> <503a4130-e6db-2d14-d377-01336022d6ee@sandeen.net>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="UTF-8"
+        id S1754133AbdCOQBD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 12:01:03 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 666DF80F93
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:01:03 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 22/22] mkfs: prevent multiple specifications of a single option
+Date: Wed, 15 Mar 2017 17:00:17 +0100
+Message-Id: <20170315160017.27805-23-jtulak@redhat.com>
+In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
+References: <20170315160017.27805-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-Hello,
+Because things like -l size=40M,size=50M are clearly wrong and should
+not pass. However, in two cases, we do not know if the option is a
+string or number - thus the few more lines with can_respec flag.
 
-all VMs are running smoothly between these problems with XFS, no HW problems, no crashes, no force reboots.
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-On úterý 14. března 2017 11:54:37 CET Eric Sandeen wrote:
-> On 3/14/17 3:15 AM, Libor Klepáč wrote:
-> > Hello,
-> > i have this during night with error_level = 11, no force shutdown
-> 
-> Just to double check - are these all getting freshly created?  I.e.
-> you repair and fix the filesystem each time you see this, but they
-> keep re-appearing?
-
-I have looked to old emails and every xfs_repair fixes problem and next time different block/inode pops out.
-I'm trying to lookup files using inode numbers from old emails.
-
-If i remember correctly, files/dirs are usually created in some website cache directory. (ie. generated from template by php and saved to disk for later use).
-So my lookup will probably come to nothing. Last reported force shutdown was on cache file.
-
-> 
-> > (kernel 4.8.15)
-> > Mar 14 02:36:29 vps2 kernel: [54799.061956] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x24e70268
-> 
-> Unfortunately the read path is a bit less interesting.  We found something
-> on disk, but we're not sure how it got there.
-> If we could catch a write verifier failing that /might/ be a little more
-> useful.
-
-I'm prepared to run all affected hosts with error_level=11 , if it doesn't mean performance hit.
-
-> 
-> I'm at a loss as to why you seem to be uniquely able to hit this problem.  :(
-
-And I was questioning my googling skills ;)
-
-> 
-> -Eric
-> 
-
-Libor
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index dfb5e300..a472b92c 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -432,6 +432,10 @@ test_uvalue_num(enum e_type a_type, union u_value a, long long b) {
+  *     Set to true if, when user specifies the option, she has to specify
+  *     a value too. That is, if needs_val is true, then it is not possible to
+  *     use the subopt as a flag.
++ *
++ *   can_respec OPTIONAL
++ *     If true, then there can come one getnum() after a getstr() call for this
++ *     option.
+  */
+ struct opt_params {
+ 	int		index;
+@@ -458,6 +462,7 @@ struct opt_params {
+ 		union u_value value;
+ 		enum e_type 	type;
+ 		bool		needs_val;
++		bool		can_respec;
+ 	}		subopt_params[MAX_SUBOPTS];
+ } opts[MAX_OPTS] = {
+ 	{
+@@ -876,6 +881,7 @@ struct opt_params {
+ 			  .maxval.i = 2,
+ 			  .needs_val = true,
+ 			  .type = INT,
++			  .can_respec = true,
+ 			},
+ 			{ .index = L_SUNIT,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -1008,6 +1014,7 @@ struct opt_params {
+ 			  .maxval.i = 2,
+ 			  .needs_val = true,
+ 			  .type = INT,
++			  .can_respec = true,
+ 			},
+ 			{ .index = N_FTYPE,
+ 			  .conflicts = {  {.opt = OPT_M,
+@@ -2020,6 +2027,22 @@ getnum(
+ 	struct subopt_param	*sp = &opts->subopt_params[index];
+ 	long long		c;
+ 
++	if (sp->seen){
++		/* If the option has respec flag, it is possible to do ONE
++		 * getnum call even with sp->seen == 1. Do this by disabling
++		 * the respec flag - this time we can continue, but if getnum
++		 * gets called once more, we will fail.
++		 */
++		if (sp->can_respec){
++			sp->can_respec = false;
++		} else {
++			fprintf(stderr,
++			_("You can't use an option multiple times: -%c %s\n"),
++			  opts->name, opts->subopts[index]);
++			usage();
++		}
++	}
++
+ 	/* empty strings might just return a default value */
+ 	if (!str || *str == '\0') {
+ 		if (sp->needs_val)
+@@ -2132,6 +2155,12 @@ getstr(
+ 	/* empty strings for string options are not valid */
+ 	if (!str || *str == '\0')
+ 		reqval(opts->name, (char **)opts->subopts, index);
++	if (opts->subopt_params[index].seen){
++		fprintf(stderr,
++		_("You can't use an option multiple times: -%c %s\n"),
++		  opts->name, opts->subopts[index]);
++		usage();
++	}
+ 	opts->subopt_params[index].seen = true;
+ 	return str;
+ }
+-- 
+2.11.0
 
