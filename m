@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35454 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50846 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754103AbdCOQAv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Mar 2017 12:00:51 -0400
+        id S1753832AbdCOQA4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 12:00:56 -0400
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C185B19C336
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:00:42 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id E152D804E2
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 16:00:55 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 03/22] mkfs: extend opt_params with a value field
-Date: Wed, 15 Mar 2017 16:59:58 +0100
-Message-Id: <20170315160017.27805-4-jtulak@redhat.com>
+Subject: [PATCH 15/22] mkfs: replace SUBOPT_NEEDS_VAL for a flag
+Date: Wed, 15 Mar 2017 17:00:10 +0100
+Message-Id: <20170315160017.27805-16-jtulak@redhat.com>
 In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
 References: <20170315160017.27805-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -20,438 +20,424 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Jan Tulak <jtulak@redhat.com>
 
-Add a new field int opt_params - value, which is filled with user input.
+Do not use a special value as a signal for a required value,
+as it causes issues when we have more value types.
 
 Signed-off-by: Jan Tulak <jtulak@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 132 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 132 insertions(+)
+ mkfs/xfs_mkfs.c | 93 +++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 48 insertions(+), 45 deletions(-)
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 372c620d..5e15fee2 100644
+index 273cdbc4..55b8c674 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -115,6 +115,12 @@ unsigned int		sectorsize;
+@@ -44,7 +44,6 @@ unsigned int		sectorsize;
+ 
+ #define MAX_OPTS	16
+ #define MAX_SUBOPTS	16
+-#define SUBOPT_NEEDS_VAL	(-1LL)
+ #define MAX_CONFLICTS	32
+ #define LAST_CONFLICT	(-1)
+ 
+@@ -193,14 +192,17 @@ unsigned int		sectorsize;
+  *     The value used if user specifies the subopt, but no value.
+  *     If the subopt accepts some values (-d file=[1|0]), then this
   *     sets what is used with simple specifying the subopt (-d file).
-  *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
-  *     value in any case.
+- *     A special SUBOPT_NEEDS_VAL can be used to require a user-given
+- *     value in any case.
+  *
+  *   value INTERNAL
+  *     Do not set this on initialization. Use flagval for what you want
+  *     to do. This is filled with user input and anything you write here now
+  *     is overwritten. (If the user input is a string and not a number, this
+  *     value is set to a positive non-zero number.)
 + *
-+ *   value INTERNAL
-+ *     Do not set this on initialization. Use defaultval for what you want
-+ *     to do. This is filled with user input and anything you write here now
-+ *     is overwritten. (If the user input is a string and not a number, this
-+ *     value is set to a positive non-zero number.)
++ *   needs_val OPTIONAL
++ *     Set to true if, when user specifies the option, she has to specify
++ *     a value too. That is, if needs_val is true, then it is not possible to
++ *     use the subopt as a flag.
   */
  struct opt_params {
  	int		index;
-@@ -131,6 +137,7 @@ struct opt_params {
- 		long long	minval;
+@@ -225,6 +227,7 @@ struct opt_params {
  		long long	maxval;
- 		long long	defaultval;
-+		long long	value;
+ 		long long	flagval;
+ 		long long	value;
++		bool		needs_val;
  	}		subopt_params[MAX_SUBOPTS];
  } opts[MAX_OPTS] = {
- #define OPT_B	0
-@@ -1566,12 +1573,20 @@ main(
- 								B_LOG);
- 					blocksize = 1 << blocklog;
- 					blflag = 1;
-+					opts[OPT_B].subopt_params[B_LOG].value =
-+							blocklog;
-+					opts[OPT_B].subopt_params[B_SIZE].value =
-+							blocksize;
- 					break;
- 				case B_SIZE:
- 					blocksize = getnum(value, &opts[OPT_B],
- 							   B_SIZE);
- 					blocklog = libxfs_highbit32(blocksize);
- 					bsflag = 1;
-+					opts[OPT_B].subopt_params[B_LOG].value =
-+							blocklog;
-+					opts[OPT_B].subopt_params[B_SIZE].value =
-+							blocksize;
- 					break;
- 				default:
- 					unknown('b', value);
-@@ -1589,47 +1604,70 @@ main(
- 					agcount = getnum(value, &opts[OPT_D],
- 							 D_AGCOUNT);
- 					daflag = 1;
-+					opts[OPT_D].subopt_params[D_AGCOUNT].value =
-+							agcount;
- 					break;
- 				case D_AGSIZE:
- 					agsize = getnum(value, &opts[OPT_D],
- 								D_AGSIZE);
- 					dasize = 1;
-+					opts[OPT_D].subopt_params[D_AGSIZE].value =
-+							agsize;
- 					break;
- 				case D_FILE:
- 					xi.disfile = getnum(value, &opts[OPT_D],
- 							    D_FILE);
-+					opts[OPT_D].subopt_params[D_FILE].value =
-+							xi.disfile;
- 					break;
- 				case D_NAME:
- 					xi.dname = getstr(value, &opts[OPT_D],
- 								D_NAME);
-+					opts[OPT_D].subopt_params[D_NAME].value = 1;
- 					break;
- 				case D_SIZE:
- 					dbytes = getnum(value, &opts[OPT_D],
- 								D_SIZE);
-+					opts[OPT_D].subopt_params[D_SIZE].value =
-+							dbytes;
- 					break;
- 				case D_SUNIT:
- 					dsunit = getnum(value, &opts[OPT_D],
- 								D_SUNIT);
-+					opts[OPT_D].subopt_params[D_SUNIT].value =
-+							dsunit;
- 					break;
- 				case D_SWIDTH:
- 					dswidth = getnum(value, &opts[OPT_D],
- 							 D_SWIDTH);
-+					opts[OPT_D].subopt_params[D_SWIDTH].value =
-+							dswidth;
- 					break;
- 				case D_SU:
- 					dsu = getnum(value, &opts[OPT_D], D_SU);
-+					opts[OPT_D].subopt_params[D_SU].value =
-+							dsu;
- 					break;
- 				case D_SW:
- 					dsw = getnum(value, &opts[OPT_D], D_SW);
-+					opts[OPT_D].subopt_params[D_SW].value =
-+							dsw;
- 					break;
- 				case D_NOALIGN:
- 					nodsflag = getnum(value, &opts[OPT_D],
- 								D_NOALIGN);
-+					opts[OPT_D].subopt_params[D_NOALIGN].value =
-+							nodsflag;
- 					break;
- 				case D_SECTLOG:
- 					sectorlog = getnum(value, &opts[OPT_D],
- 							   D_SECTLOG);
- 					sectorsize = 1 << sectorlog;
- 					slflag = 1;
-+					opts[OPT_D].subopt_params[D_SECTSIZE].value =
-+							sectorsize;
-+					opts[OPT_D].subopt_params[D_SECTLOG].value =
-+							sectorlog;
- 					break;
- 				case D_SECTSIZE:
- 					sectorsize = getnum(value, &opts[OPT_D],
-@@ -1637,6 +1675,10 @@ main(
- 					sectorlog =
- 						libxfs_highbit32(sectorsize);
- 					ssflag = 1;
-+					opts[OPT_D].subopt_params[D_SECTSIZE].value =
-+							sectorsize;
-+					opts[OPT_D].subopt_params[D_SECTLOG].value =
-+							sectorlog;
- 					break;
- 				case D_RTINHERIT:
- 					c = getnum(value, &opts[OPT_D],
-@@ -1644,18 +1686,24 @@ main(
- 					if (c)
- 						fsx.fsx_xflags |=
- 							XFS_DIFLAG_RTINHERIT;
-+					opts[OPT_D].subopt_params[D_RTINHERIT].value =
-+							c;
- 					break;
- 				case D_PROJINHERIT:
- 					fsx.fsx_projid = getnum(value, &opts[OPT_D],
- 								D_PROJINHERIT);
- 					fsx.fsx_xflags |=
- 						XFS_DIFLAG_PROJINHERIT;
-+					opts[OPT_D].subopt_params[D_PROJINHERIT].value =
-+							fsx.fsx_projid;
- 					break;
- 				case D_EXTSZINHERIT:
- 					fsx.fsx_extsize = getnum(value, &opts[OPT_D],
- 								 D_EXTSZINHERIT);
- 					fsx.fsx_xflags |=
- 						XFS_DIFLAG_EXTSZINHERIT;
-+					opts[OPT_D].subopt_params[D_EXTSZINHERIT].value =
-+							fsx.fsx_extsize;
- 					break;
- 				default:
- 					unknown('d', value);
-@@ -1673,43 +1721,64 @@ main(
- 					sb_feat.inode_align = getnum(value,
- 								&opts[OPT_I],
- 								I_ALIGN);
-+					opts[OPT_I].subopt_params[I_ALIGN].value =
-+							sb_feat.inode_align;
- 					break;
- 				case I_LOG:
- 					inodelog = getnum(value, &opts[OPT_I],
- 								I_LOG);
- 					isize = 1 << inodelog;
- 					ilflag = 1;
-+					opts[OPT_I].subopt_params[I_SIZE].value =
-+							isize;
-+					opts[OPT_I].subopt_params[I_LOG].value =
-+							inodelog;
- 					break;
- 				case I_MAXPCT:
- 					imaxpct = getnum(value, &opts[OPT_I],
- 							 I_MAXPCT);
- 					imflag = 1;
-+					opts[OPT_I].subopt_params[I_MAXPCT].value =
-+							imaxpct;
- 					break;
- 				case I_PERBLOCK:
- 					inopblock = getnum(value, &opts[OPT_I],
- 							   I_PERBLOCK);
- 					ipflag = 1;
-+					opts[OPT_I].subopt_params[I_PERBLOCK].value =
-+							inopblock;
- 					break;
- 				case I_SIZE:
- 					isize = getnum(value, &opts[OPT_I],
- 								I_SIZE);
- 					inodelog = libxfs_highbit32(isize);
- 					isflag = 1;
-+					opts[OPT_I].subopt_params[I_SIZE].value =
-+							isize;
-+					opts[OPT_I].subopt_params[I_LOG].value =
-+							inodelog;
- 					break;
- 				case I_ATTR:
- 					sb_feat.attr_version =
-+
- 						getnum(value, &opts[OPT_I],
- 								I_ATTR);
-+					opts[OPT_I].subopt_params[I_ATTR].value =
-+							sb_feat.attr_version;
- 					break;
- 				case I_PROJID32BIT:
- 					sb_feat.projid16bit =
- 						!getnum(value, &opts[OPT_I],
- 							I_PROJID32BIT);
-+					opts[OPT_I].subopt_params[I_PROJID32BIT].value =
-+							sb_feat.projid16bit;
- 					break;
- 				case I_SPINODES:
- 					sb_feat.spinodes = getnum(value,
- 								&opts[OPT_I],
- 								I_SPINODES);
-+					opts[OPT_I].subopt_params[I_SPINODES].value =
-+							sb_feat.spinodes;
- 					break;
- 				default:
- 					unknown('i', value);
-@@ -1727,24 +1796,34 @@ main(
- 					logagno = getnum(value, &opts[OPT_L],
- 								L_AGNUM);
- 					laflag = 1;
-+					opts[OPT_L].subopt_params[L_AGNUM].value =
-+							logagno;
- 					break;
- 				case L_FILE:
- 					xi.lisfile = getnum(value, &opts[OPT_L],
- 							    L_FILE);
-+					opts[OPT_L].subopt_params[L_FILE].value =
-+							xi.lisfile;
- 					break;
- 				case L_INTERNAL:
- 					loginternal = getnum(value, &opts[OPT_L],
- 							     L_INTERNAL);
- 					liflag = 1;
-+					opts[OPT_L].subopt_params[L_INTERNAL].value =
-+							loginternal;
- 					break;
- 				case L_SU:
- 					lsu = getnum(value, &opts[OPT_L], L_SU);
- 					lsuflag = 1;
-+					opts[OPT_L].subopt_params[L_SU].value =
-+							lsu;
- 					break;
- 				case L_SUNIT:
- 					lsunit = getnum(value, &opts[OPT_L],
- 								L_SUNIT);
- 					lsunitflag = 1;
-+					opts[OPT_L].subopt_params[L_SUNIT].value =
-+							lsunit;
- 					break;
- 				case L_NAME:
- 				case L_DEV:
-@@ -1753,22 +1832,32 @@ main(
- 					xi.logname = logfile;
- 					ldflag = 1;
- 					loginternal = 0;
-+					opts[OPT_L].subopt_params[L_NAME].value = 1;
-+					opts[OPT_L].subopt_params[L_DEV].value = 1;
- 					break;
- 				case L_VERSION:
- 					sb_feat.log_version =
- 						getnum(value, &opts[OPT_L],
- 								L_VERSION);
- 					lvflag = 1;
-+					opts[OPT_L].subopt_params[L_VERSION].value =
-+							sb_feat.log_version;
- 					break;
- 				case L_SIZE:
- 					logbytes = getnum(value, &opts[OPT_L],
- 								L_SIZE);
-+					opts[OPT_L].subopt_params[L_SIZE].value =
-+							logbytes;
- 					break;
- 				case L_SECTLOG:
- 					lsectorlog = getnum(value, &opts[OPT_L],
- 							    L_SECTLOG);
- 					lsectorsize = 1 << lsectorlog;
- 					lslflag = 1;
-+					opts[OPT_L].subopt_params[L_SECTSIZE].value =
-+							lsectorsize;
-+					opts[OPT_L].subopt_params[L_SECTLOG].value =
-+							lsectorlog;
- 					break;
- 				case L_SECTSIZE:
- 					lsectorsize = getnum(value, &opts[OPT_L],
-@@ -1776,11 +1865,17 @@ main(
- 					lsectorlog =
- 						libxfs_highbit32(lsectorsize);
- 					lssflag = 1;
-+					opts[OPT_L].subopt_params[L_SECTSIZE].value =
-+							lsectorsize;
-+					opts[OPT_L].subopt_params[L_SECTLOG].value =
-+							lsectorlog;
- 					break;
- 				case L_LAZYSBCNTR:
- 					sb_feat.lazy_sb_counters =
- 							getnum(value, &opts[OPT_L],
- 							       L_LAZYSBCNTR);
-+					opts[OPT_L].subopt_params[L_LAZYSBCNTR].value =
-+							sb_feat.lazy_sb_counters;
- 					break;
- 				default:
- 					unknown('l', value);
-@@ -1805,20 +1900,27 @@ main(
- 								M_CRC);
- 					if (sb_feat.crcs_enabled)
- 						sb_feat.dirftype = true;
-+					opts[OPT_M].subopt_params[M_CRC].value =
-+							sb_feat.crcs_enabled;
- 					break;
- 				case M_FINOBT:
- 					sb_feat.finobt = getnum(
- 						value, &opts[OPT_M], M_FINOBT);
-+					opts[OPT_M].subopt_params[M_FINOBT].value =
-+							sb_feat.finobt;
- 					break;
- 				case M_UUID:
- 					if (!value || *value == '\0')
- 						reqval('m', subopts, M_UUID);
- 					if (platform_uuid_parse(value, &uuid))
- 						illegal(optarg, "m uuid");
-+					opts[OPT_M].subopt_params[M_UUID].value = 1;
- 					break;
- 				case M_RMAPBT:
- 					sb_feat.rmapbt = getnum(
- 						value, &opts[OPT_M], M_RMAPBT);
-+					opts[OPT_M].subopt_params[M_RMAPBT].value =
-+						sb_feat.rmapbt;
- 					break;
- 				case M_REFLINK:
- 					sb_feat.reflink = getnum(
-@@ -1841,6 +1943,10 @@ main(
- 							     N_LOG);
- 					dirblocksize = 1 << dirblocklog;
- 					nlflag = 1;
-+					opts[OPT_N].subopt_params[N_SIZE].value =
-+							dirblocksize;
-+					opts[OPT_N].subopt_params[N_LOG].value =
-+							dirblocklog;
- 					break;
- 				case N_SIZE:
- 					dirblocksize = getnum(value, &opts[OPT_N],
-@@ -1848,6 +1954,10 @@ main(
- 					dirblocklog =
- 						libxfs_highbit32(dirblocksize);
- 					nsflag = 1;
-+					opts[OPT_N].subopt_params[N_SIZE].value =
-+							dirblocksize;
-+					opts[OPT_N].subopt_params[N_LOG].value =
-+							dirblocklog;
- 					break;
- 				case N_VERSION:
- 					value = getstr(value, &opts[OPT_N],
-@@ -1861,10 +1971,14 @@ main(
- 							       N_VERSION);
- 					}
- 					nvflag = 1;
-+					opts[OPT_N].subopt_params[N_VERSION].value =
-+							sb_feat.dir_version;
- 					break;
- 				case N_FTYPE:
- 					sb_feat.dirftype = getnum(value, &opts[OPT_N],
- 								  N_FTYPE);
-+					opts[OPT_N].subopt_params[N_FTYPE].value =
-+							sb_feat.dirftype;
- 					break;
- 				default:
- 					unknown('n', value);
-@@ -1895,23 +2009,33 @@ main(
- 				case R_EXTSIZE:
- 					rtextbytes = getnum(value, &opts[OPT_R],
- 								R_EXTSIZE);
-+					opts[OPT_R].subopt_params[R_EXTSIZE].value =
-+							rtextbytes;
- 					break;
- 				case R_FILE:
- 					xi.risfile = getnum(value, &opts[OPT_R],
- 							    R_FILE);
-+					opts[OPT_R].subopt_params[R_FILE].value =
-+							xi.risfile;
- 					break;
- 				case R_NAME:
- 				case R_DEV:
- 					xi.rtname = getstr(value, &opts[OPT_R],
- 							   R_NAME);
-+					opts[OPT_R].subopt_params[R_NAME].value = 1;
-+					opts[OPT_R].subopt_params[R_DEV].value = 1;
- 					break;
- 				case R_SIZE:
- 					rtbytes = getnum(value, &opts[OPT_R],
- 								R_SIZE);
-+					opts[OPT_R].subopt_params[R_SIZE].value =
-+							rtbytes;
- 					break;
- 				case R_NOALIGN:
- 					norsflag = getnum(value, &opts[OPT_R],
- 								R_NOALIGN);
-+					opts[OPT_R].subopt_params[R_NOALIGN].value =
-+							norsflag;
- 					break;
- 				default:
- 					unknown('r', value);
-@@ -1936,6 +2060,10 @@ main(
- 					sectorsize = 1 << sectorlog;
- 					lsectorsize = sectorsize;
- 					lslflag = slflag = 1;
-+					opts[OPT_S].subopt_params[S_LOG].value =
-+							sectorsize;
-+					opts[OPT_S].subopt_params[S_SECTLOG].value =
-+							sectorsize;
- 					break;
- 				case S_SIZE:
- 				case S_SECTSIZE:
-@@ -1949,6 +2077,10 @@ main(
- 						libxfs_highbit32(sectorsize);
- 					lsectorlog = sectorlog;
- 					lssflag = ssflag = 1;
-+					opts[OPT_S].subopt_params[S_SIZE].value =
-+							sectorlog;
-+					opts[OPT_S].subopt_params[S_SECTSIZE].value =
-+							sectorlog;
- 					break;
- 				default:
- 					unknown('s', value);
+ 	{
+@@ -243,7 +246,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_BLOCKSIZE_LOG,
+ 			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = B_SIZE,
+ 			  .convert = true,
+@@ -254,7 +257,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_BLOCKSIZE,
+ 			  .maxval = XFS_MAX_BLOCKSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 		},
+ 	},
+@@ -287,7 +290,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 1,
+ 			  .maxval = XFS_MAX_AGNUMBER,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_FILE,
+ 			  .conflicts = { {LAST_CONFLICT} },
+@@ -297,14 +300,14 @@ struct opt_params {
+ 			},
+ 			{ .index = D_NAME,
+ 			  .conflicts = { {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SIZE,
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .convert = true,
+ 			  .minval = XFS_AG_MIN_BYTES,
+ 			  .maxval = LLONG_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SUNIT,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -319,7 +322,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SWIDTH,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -334,7 +337,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_AGSIZE,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -344,7 +347,7 @@ struct opt_params {
+ 			  .convert = true,
+ 			  .minval = XFS_AG_MIN_BYTES,
+ 			  .maxval = XFS_AG_MAX_BYTES,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SU,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -360,7 +363,7 @@ struct opt_params {
+ 			  .convert = true,
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SW,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -375,7 +378,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SECTLOG,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -384,7 +387,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_SECTSIZE,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -395,7 +398,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_MIN_SECTORSIZE,
+ 			  .maxval = XFS_MAX_SECTORSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_NOALIGN,
+ 			  .conflicts = { {.opt = OPT_D,
+@@ -425,13 +428,13 @@ struct opt_params {
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = D_EXTSZINHERIT,
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 		},
+ 	},
+@@ -474,13 +477,13 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_DINODE_MIN_LOG,
+ 			  .maxval = XFS_DINODE_MAX_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = I_MAXPCT,
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = 100,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = I_PERBLOCK,
+ 			  .conflicts = { {.opt = OPT_I,
+@@ -493,7 +496,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_MIN_INODE_PERBLOCK,
+ 			  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = I_SIZE,
+ 			  .conflicts = { {.opt = OPT_I,
+@@ -506,7 +509,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_DINODE_MIN_SIZE,
+ 			  .maxval = XFS_DINODE_MAX_SIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = I_ATTR,
+ 			  .conflicts = { {.opt = OPT_M,
+@@ -520,7 +523,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = 2,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = I_PROJID32BIT,
+ 			  .conflicts = { {.opt = OPT_M,
+@@ -579,7 +582,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = UINT_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_INTERNAL,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -598,7 +601,7 @@ struct opt_params {
+ 			  .convert = true,
+ 			  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
+ 			  .maxval = XFS_MAX_LOG_BYTES,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_VERSION,
+ 			  .conflicts = {{.opt = OPT_M,
+@@ -612,7 +615,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 1,
+ 			  .maxval = 2,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_SUNIT,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -621,7 +624,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 1,
+ 			  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_SU,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -631,7 +634,7 @@ struct opt_params {
+ 			  .convert = true,
+ 			  .minval = BBTOB(1),
+ 			  .maxval = XLOG_MAX_RECORD_BSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_DEV,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -641,7 +644,7 @@ struct opt_params {
+ 					  .subopt = L_INTERNAL,
+ 					 },
+ 					 {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_SECTLOG,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -650,7 +653,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_SECTSIZE,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -661,7 +664,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_MIN_SECTORSIZE,
+ 			  .maxval = XFS_MAX_SECTORSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_FILE,
+ 			  .conflicts = { {.opt = OPT_L,
+@@ -680,7 +683,7 @@ struct opt_params {
+ 					  .subopt = L_INTERNAL,
+ 					 },
+ 					 {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = L_LAZYSBCNTR,
+ 			  .conflicts = { {.opt = OPT_M,
+@@ -716,7 +719,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_REC_DIRSIZE,
+ 			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = N_SIZE,
+ 			  .conflicts = { {.opt = OPT_N,
+@@ -727,13 +730,13 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = 1 << XFS_MIN_REC_DIRSIZE,
+ 			  .maxval = XFS_MAX_BLOCKSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = N_VERSION,
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .minval = 2,
+ 			  .maxval = 2,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = N_FTYPE,
+ 			  .conflicts = {  {.opt = OPT_M,
+@@ -769,14 +772,14 @@ struct opt_params {
+ 			  .convert = true,
+ 			  .minval = XFS_MIN_RTEXTSIZE,
+ 			  .maxval = XFS_MAX_RTEXTSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = R_SIZE,
+ 			  .conflicts = { {LAST_CONFLICT} },
+ 			  .convert = true,
+ 			  .minval = 0,
+ 			  .maxval = LLONG_MAX,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = R_DEV,
+ 			  .conflicts = { {.opt = OPT_M,
+@@ -788,7 +791,7 @@ struct opt_params {
+ 					  .message =
+ 		"rmapbt not supported without CRC support."},
+ 					 {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = R_FILE,
+ 			  .minval = 0,
+@@ -806,7 +809,7 @@ struct opt_params {
+ 					  .message =
+ 		"rmapbt not supported without CRC support."},
+ 					 {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = R_NOALIGN,
+ 			  .minval = 0,
+@@ -837,7 +840,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = S_SECTLOG,
+ 			  .conflicts = { {.opt = OPT_S,
+@@ -849,7 +852,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = XFS_MIN_SECTORSIZE_LOG,
+ 			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = S_SIZE,
+ 			  .conflicts = { {.opt = OPT_S,
+@@ -863,7 +866,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_MIN_SECTORSIZE,
+ 			  .maxval = XFS_MAX_SECTORSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = S_SECTSIZE,
+ 			  .conflicts = { {.opt = OPT_S,
+@@ -877,7 +880,7 @@ struct opt_params {
+ 			  .is_power_2 = true,
+ 			  .minval = XFS_MIN_SECTORSIZE,
+ 			  .maxval = XFS_MAX_SECTORSIZE,
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 		},
+ 	},
+@@ -995,7 +998,7 @@ struct opt_params {
+ 			},
+ 			{ .index = M_UUID,
+ 			  .conflicts = { {LAST_CONFLICT} },
+-			  .flagval = SUBOPT_NEEDS_VAL,
++			  .needs_val = true,
+ 			},
+ 			{ .index = M_RMAPBT,
+ 			.conflicts = { {.opt = OPT_M,
+@@ -1039,7 +1042,7 @@ struct opt_params {
+ 					 {LAST_CONFLICT} },
+ 			  .minval = 0,
+ 			  .maxval = 1,
+-			  .flagval = 0,
++			  .needs_val = true,
+ 			},
+ 		},
+ 	},
+@@ -1715,7 +1718,7 @@ getnum(
+ 
+ 	/* empty strings might just return a default value */
+ 	if (!str || *str == '\0') {
+-		if (sp->flagval == SUBOPT_NEEDS_VAL)
++		if (sp->needs_val)
+ 			reqval(opts->name, (char **)opts->subopts, index);
+ 		sp->seen = true;
+ 		return sp->flagval;
 -- 
 2.11.0
 
