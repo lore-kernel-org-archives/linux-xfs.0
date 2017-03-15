@@ -1,55 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:37410 "EHLO
-        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751037AbdCQQfq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 12:35:46 -0400
-Received: by mail-it0-f41.google.com with SMTP id g138so32695279itb.0
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 09:35:45 -0700 (PDT)
-Subject: Re: [PATCH (TRIVIAL)] xfs: fix up inode validation failure message
-References: <59d16175-1c24-4bc2-5cd9-ac7a062e5ae3@redhat.com>
-From: Alex Elder <elder@ieee.org>
-Message-ID: <5e2f6991-9287-4111-d34e-b08598b76363@ieee.org>
-Date: Fri, 17 Mar 2017 11:35:42 -0500
+Received: from userp1050.oracle.com ([156.151.31.82]:25900 "EHLO
+        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752874AbdCOTdA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 15:33:00 -0400
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
+        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v2FJWN5T016146
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 19:32:23 GMT
+Date: Wed, 15 Mar 2017 12:30:40 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: boot failure after kernel update, imap claims in-use inode
+ 661690 is free, would correct imap
+Message-ID: <20170315193040.GG5280@birch.djwong.org>
+References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
+ <20170315072349.GZ5280@birch.djwong.org>
+ <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
+ <20170315191355.GF5280@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <59d16175-1c24-4bc2-5cd9-ac7a062e5ae3@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170315191355.GF5280@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: xfs list <linux-xfs@vger.kernel.org>
 
-On 03/17/2017 10:47 AM, Eric Sandeen wrote:
-> "xfs_iread: validation failed for inode 96 failed"
+On Wed, Mar 15, 2017 at 12:13:55PM -0700, Darrick J. Wong wrote:
+> On Wed, Mar 15, 2017 at 12:11:22PM -0600, Chris Murphy wrote:
+> > On Wed, Mar 15, 2017 at 1:23 AM, Darrick J. Wong
+> > <darrick.wong@oracle.com> wrote:
+> > 
+> > >
+> > > So... you fire up gnome-software, click "Update", it downloads rpms to
+> > > the hard disk, reboots, (presumably) installs the rpms, reboots again,
+> > > and after the /second/ reboot grub just barfs up a grub> prompt?
+> > 
+> > Correct.
+> > 
+> > 
+> > > Now I'm curious how systemd actually triggers the reboot.  Unmounting
+> > > would seem to force the log and push the AIL, which (you'd think) would
+> > > be enough.  But maybe systemd is doing something weird?  Or maybe
+> > > post-update we fail to unmount / ?
+> > 
+> > If I boot with the following parameters, and use virsh console to
+> > track what's going on right after the updating,
+> > 
+> > systemd.log_level=debug systemd.log_target=console console=ttyS0,38400
+> > 
+> > 
+> > 
+> > Sending SIGTERM to remaining processes...
+> > Sending SIGKILL to remaining processes...
+> > Process 304 (plymouthd) has been marked to be excluded from killing.
+> > It is running from the root file system, and thus likely to block
+> > re-mounting of the root file system to read-only. Please consider
+> > moving it into an initrd file system instead.
 > 
-> One "failed" seems like enough.
+> Heh.  So the splash screen is still running and we can't unmount /.
+> Consequently systemd remounts the fs readonly...
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > Unmounting file systems.
+> > Remounting '/tmp' read-only with options 'seclabel'.
+> > Unmounting /tmp.
+> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
+> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
+> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
+> 
+> (I wonder why it does this three times?)
 
-Reviewed-by: Alex Elder <elder@linaro.org>
+Because systemd (v229, anyway) doesn't ever unmount /; it merely tries
+to remount it readonly.  Regrettably it /also/ throws away the return
+code from the mount call so there's no way to positively confirm my
+current theory, which is that we don't actually succeed at the
+remount-ro request and that's why the log needs recovery after the
+reboot.
 
-> ---
+So maybe plymouthd, or journald, or systemd, or something else entirely
+still holds a writable file descriptor to somewhere on the rootfs.  I
+guess you could build a custom systemd that actually logs the return
+value....
+
+> > All filesystems unmounted.
+> > Deactivating swaps.
+> > All swaps deactivated.
+> > Detaching loop devices.
+> > device-enumerator: scan all dirs
+> >   device-enumerator: scanning /sys/bus
+> >   device-enumerator: scanning /sys/class
+> > All loop devices detached.
+> > Detaching DM devices.
+> > device-enumerator: scan all dirs
+> >   device-enumerator: scanning /sys/bus
+> >   device-enumerator: scanning /sys/class
+> > All DM devices detached.
+> > Spawned /usr/lib/systemd/system-shutdown/mdadm.shutdown as 8408.
+> > /usr/lib/systemd/system-shutdown/mdadm.shutdown succeeded.
+> > system-shutdown succeeded.
+> > Failed to read reboot parameter file: No such file or directory
+> > Rebooting.
+> > [   52.963598] Unregister pv shared memory for cpu 0
+> > [   52.965736] Unregister pv shared memory for cpu 1
+> > [   52.966795] sd 1:0:0:0: [sda] Synchronizing SCSI cache
+> > [   52.991220] reboot: Restarting system
+> > [   52.993119] reboot: machine restart
 > 
-> Yo dawg, I heard you like failed so I put failed in your
-> failed so you can fail while you fail.
+> ...and reboots, having not unmounted, and (I guess?) without forcing the
+> log to write all of the logged changes back to the metadata.  They
+> changes are safely recorded /in/ the log....
 > 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index d93f9d9..09c3d1a 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -508,7 +508,7 @@
->  
->  	/* even unallocated inodes are verified */
->  	if (!xfs_dinode_verify(mp, ip->i_ino, dip)) {
-> -		xfs_alert(mp, "%s: validation failed for inode %lld failed",
-> +		xfs_alert(mp, "%s: validation failed for inode %lld",
->  				__func__, ip->i_ino);
->  
->  		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, dip);
+> > <no further entries, VM shuts down>
+> > 
+> > However, I get a different result. This time I get a stale grub menu
+> > with a single kernel option (same as if the update hadn't happened).
+> > If I boot, kernel messages reports log replay. When I reboot again,
 > 
+> ...because mounting replays them and after that the metadata is up to
+> date.
+> 
+> Strange, though, because afaict we xfs_attr_quiesce seems to do the
+> right things when we remount rw->ro, so you wouldn't think that there
+> would be a need to recover.  Maybe there's something funny going on
+> w.r.t. the three messages about remounting readonly?
+
+Or maybe we're simply /not/ remounting readonly despite the log
+messages, as mentioned above.
+
+--D
+
+> > now I have a two kernel grub menu. I'm guessing the slowness of
+> > systemd debug is resulting in the difference; more time to commit the
+> > changes?
+> >
+> > Anyway, it looks / is remounted read-only before reboot. Note, this is
+> > a single partition/volume setup, so /boot/grub2/grub.cfg being
+> > modified by grubby is on the fs being remounted read-only and reboot
+> > time.
+> 
+> --D
+> 
+> > 
+> > 
+> > 
+> > -- 
+> > Chris Murphy
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
