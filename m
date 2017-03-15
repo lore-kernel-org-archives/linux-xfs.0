@@ -1,413 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:51403 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932731AbdCJXUe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:20:34 -0500
-Subject: [PATCH 06/19] xfs: scrub AGF and AGFL
+Received: from aserp1040.oracle.com ([141.146.126.69]:18756 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752016AbdCOHXz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 03:23:55 -0400
+Date: Wed, 15 Mar 2017 00:23:49 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 10 Mar 2017 15:20:26 -0800
-Message-ID: <148918802671.6959.11431830968832291943.stgit@birch.djwong.org>
-In-Reply-To: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
-References: <148918798893.6959.7972227235163150709.stgit@birch.djwong.org>
+Subject: Re: boot failure after kernel update, imap claims in-use inode
+ 661690 is free, would correct imap
+Message-ID: <20170315072349.GZ5280@birch.djwong.org>
+References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: xfs list <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 15, 2017 at 12:53:10AM -0600, Chris Murphy wrote:
+> Hi,
+> 
+> A user reports a curious OS update bug with Fedora 22, 23, 24, and 25,
+> where after a kernel update, upon reboot there's only a grub> prompt,
+> no menu.
+> 
+> I've reproduced this using a qemu-kvm VM, with device SATA and unsafe
+> caching, pointed to an LVM LV. If I do 'dnf update' to update the
+> kernel, the problem doesn't happen, if I use gnome-software the
+> problem always happens.
+> 
+> gnome-software leverages PackageKit for downloading and staging, then
+> reboots to a systemd offline update target to do the update. So it's a
+> joint effort. The detailed reproduce steps I've come up with are in
+> comment 39 of the original bug report:
+> 
+> https://bugzilla.redhat.com/show_bug.cgi?id=1227736#c39
+> 
+> The gist of the analysis in that comment is that the modified grub.cfg
+> is a 0 length file, and that's why GRUB arrives at a grub> prompt
+> instead of a menu. If I boot from alternate media and run xfs_repair
+> -n, I get tons of errors - that log is attached to the bug report and
+> is here
+> 
+> https://bugzilla.redhat.com/attachment.cgi?id=1263176
+> 
+> If all I do is do a normal mount, kernel reports log replay, no
+> errors, and then I can boot the previously unbootable system just
+> fine, and xfs_repair -n reports no errors. So it seems like the volume
+> is left dirty at reboot time following these offline updates, and of
+> course GRUB doesn't read the XFS log so it has no idea how to recover
+> and find grub.cfg or any other affected files.
 
-Check the block references in the AGF and AGFL headers to make sure
-they make sense.
+I'm not sure you'd want to replay the log from grub anyway. :)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_fs.h  |    4 +
- fs/xfs/scrub/agheader.c |  227 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.c   |   62 +++++++++++++
- fs/xfs/scrub/common.h   |    8 ++
- fs/xfs/xfs_trace.h      |    4 +
- 5 files changed, 303 insertions(+), 2 deletions(-)
+So... you fire up gnome-software, click "Update", it downloads rpms to
+the hard disk, reboots, (presumably) installs the rpms, reboots again,
+and after the /second/ reboot grub just barfs up a grub> prompt?
 
+Now I'm curious how systemd actually triggers the reboot.  Unmounting
+would seem to force the log and push the AIL, which (you'd think) would
+be enough.  But maybe systemd is doing something weird?  Or maybe
+post-update we fail to unmount / ?
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index a36bdb3..82ba189b 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -494,7 +494,9 @@ struct xfs_scrub_metadata {
-  */
- #define XFS_SCRUB_TYPE_TEST	0	/* dummy to test ioctl */
- #define XFS_SCRUB_TYPE_SB	1	/* superblock */
--#define XFS_SCRUB_TYPE_MAX	1
-+#define XFS_SCRUB_TYPE_AGF	2	/* AG free header */
-+#define XFS_SCRUB_TYPE_AGFL	3	/* AG free list */
-+#define XFS_SCRUB_TYPE_MAX	3
- 
- #define XFS_SCRUB_FLAG_REPAIR	0x01	/* i: repair this metadata */
- #define XFS_SCRUB_FLAG_CORRUPT	0x02	/* o: needs repair */
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 98031e3..94f29ae 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -48,6 +48,72 @@ xfs_scrub_setup_ag(
- 	return xfs_scrub_setup(sc, ip, sm, retry_deadlocked);
- }
- 
-+/* Find the size of the AG, in blocks. */
-+static inline xfs_agblock_t
-+xfs_scrub_ag_blocks(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno)
-+{
-+	ASSERT(agno < mp->m_sb.sb_agcount);
-+
-+	if (agno < mp->m_sb.sb_agcount - 1)
-+		return mp->m_sb.sb_agblocks;
-+	return mp->m_sb.sb_dblocks - (agno * mp->m_sb.sb_agblocks);
-+}
-+
-+/* Walk all the blocks in the AGFL. */
-+int
-+xfs_scrub_walk_agfl(
-+	struct xfs_scrub_context	*sc,
-+	int				(*fn)(struct xfs_scrub_context *,
-+					      xfs_agblock_t bno, void *),
-+	void				*priv)
-+{
-+	struct xfs_agf			*agf;
-+	__be32				*agfl_bno;
-+	struct xfs_mount		*mp = sc->tp->t_mountp;
-+	unsigned int			flfirst;
-+	unsigned int			fllast;
-+	int				i;
-+	int				error;
-+
-+	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-+	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, sc->sa.agfl_bp);
-+	flfirst = be32_to_cpu(agf->agf_flfirst);
-+	fllast = be32_to_cpu(agf->agf_fllast);
-+
-+	/* Skip an empty AGFL. */
-+	if (agf->agf_flcount == cpu_to_be32(0))
-+		return 0;
-+
-+	/* first to last is a consecutive list. */
-+	if (fllast >= flfirst) {
-+		for (i = flfirst; i <= fllast; i++) {
-+			error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
-+			if (error)
-+				return error;
-+		}
-+
-+		return 0;
-+	}
-+
-+	/* first to the end */
-+	for (i = flfirst; i < XFS_AGFL_SIZE(mp); i++) {
-+		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
-+		if (error)
-+			return error;
-+	}
-+
-+	/* the start to last. */
-+	for (i = 0; i <= fllast; i++) {
-+		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
-+		if (error)
-+			return error;
-+	}
-+
-+	return 0;
-+}
-+
- /* Superblock */
- 
- #define XFS_SCRUB_SB_CHECK(fs_ok) \
-@@ -196,3 +262,164 @@ xfs_scrub_superblock(
- }
- #undef XFS_SCRUB_SB_OP_ERROR_GOTO
- #undef XFS_SCRUB_SB_CHECK
-+
-+/* AGF */
-+
-+#define XFS_SCRUB_AGF_CHECK(fs_ok) \
-+	XFS_SCRUB_CHECK(sc, sc->sa.agf_bp, "AGF", fs_ok)
-+#define XFS_SCRUB_AGF_OP_ERROR_GOTO(error, label) \
-+	XFS_SCRUB_OP_ERROR_GOTO(sc, sc->sm->sm_agno, \
-+			XFS_AGF_BLOCK(sc->tp->t_mountp), "AGF", error, label)
-+/* Scrub the AGF. */
-+int
-+xfs_scrub_agf(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_mount		*mp = sc->tp->t_mountp;
-+	struct xfs_agf			*agf;
-+	xfs_daddr_t			daddr;
-+	xfs_daddr_t			eofs;
-+	xfs_agnumber_t			agno;
-+	xfs_agblock_t			agbno;
-+	xfs_agblock_t			eoag;
-+	xfs_agblock_t			agfl_first;
-+	xfs_agblock_t			agfl_last;
-+	xfs_agblock_t			agfl_count;
-+	xfs_agblock_t			fl_count;
-+	int				level;
-+	int				error = 0;
-+
-+	agno = sc->sm->sm_agno;
-+	error = xfs_scrub_load_ag_headers(sc, agno, XFS_SCRUB_TYPE_AGF);
-+	XFS_SCRUB_AGF_OP_ERROR_GOTO(&error, out);
-+
-+	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-+	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-+
-+	/* Check the AG length */
-+	eoag = be32_to_cpu(agf->agf_length);
-+	XFS_SCRUB_AGF_CHECK(eoag == xfs_scrub_ag_blocks(mp, agno));
-+
-+	/* Check the AGF btree roots and levels */
-+	agbno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNO]);
-+	daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
-+	XFS_SCRUB_AGF_CHECK(agbno > XFS_AGI_BLOCK(mp));
-+	XFS_SCRUB_AGF_CHECK(agbno < mp->m_sb.sb_agblocks);
-+	XFS_SCRUB_AGF_CHECK(agbno < eoag);
-+	XFS_SCRUB_AGF_CHECK(daddr < eofs);
-+
-+	agbno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT]);
-+	daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
-+	XFS_SCRUB_AGF_CHECK(agbno > XFS_AGI_BLOCK(mp));
-+	XFS_SCRUB_AGF_CHECK(agbno < mp->m_sb.sb_agblocks);
-+	XFS_SCRUB_AGF_CHECK(agbno < eoag);
-+	XFS_SCRUB_AGF_CHECK(daddr < eofs);
-+
-+	level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
-+	XFS_SCRUB_AGF_CHECK(level > 0);
-+	XFS_SCRUB_AGF_CHECK(level <= XFS_BTREE_MAXLEVELS);
-+
-+	level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
-+	XFS_SCRUB_AGF_CHECK(level > 0);
-+	XFS_SCRUB_AGF_CHECK(level <= XFS_BTREE_MAXLEVELS);
-+
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+		agbno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_RMAP]);
-+		daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
-+		XFS_SCRUB_AGF_CHECK(agbno > XFS_AGI_BLOCK(mp));
-+		XFS_SCRUB_AGF_CHECK(agbno < mp->m_sb.sb_agblocks);
-+		XFS_SCRUB_AGF_CHECK(agbno < eoag);
-+		XFS_SCRUB_AGF_CHECK(daddr < eofs);
-+
-+		level = be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]);
-+		XFS_SCRUB_AGF_CHECK(level > 0);
-+		XFS_SCRUB_AGF_CHECK(level <= XFS_BTREE_MAXLEVELS);
-+	}
-+
-+	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		agbno = be32_to_cpu(agf->agf_refcount_root);
-+		daddr = XFS_AGB_TO_DADDR(mp, agno, agbno);
-+		XFS_SCRUB_AGF_CHECK(agbno > XFS_AGI_BLOCK(mp));
-+		XFS_SCRUB_AGF_CHECK(agbno < mp->m_sb.sb_agblocks);
-+		XFS_SCRUB_AGF_CHECK(agbno < eoag);
-+		XFS_SCRUB_AGF_CHECK(daddr < eofs);
-+
-+		level = be32_to_cpu(agf->agf_refcount_level);
-+		XFS_SCRUB_AGF_CHECK(level > 0);
-+		XFS_SCRUB_AGF_CHECK(level <= XFS_BTREE_MAXLEVELS);
-+	}
-+
-+	/* Check the AGFL counters */
-+	agfl_first = be32_to_cpu(agf->agf_flfirst);
-+	agfl_last = be32_to_cpu(agf->agf_fllast);
-+	agfl_count = be32_to_cpu(agf->agf_flcount);
-+	if (agfl_last > agfl_first)
-+		fl_count = agfl_last - agfl_first + 1;
-+	else
-+		fl_count = XFS_AGFL_SIZE(mp) - agfl_first + agfl_last + 1;
-+	XFS_SCRUB_AGF_CHECK(agfl_count == 0 || fl_count == agfl_count);
-+
-+out:
-+	return error;
-+}
-+#undef XFS_SCRUB_AGF_OP_ERROR_GOTO
-+#undef XFS_SCRUB_AGF_CHECK
-+
-+/* AGFL */
-+
-+#define XFS_SCRUB_AGFL_CHECK(fs_ok) \
-+	XFS_SCRUB_CHECK(sc, sc->sa.agfl_bp, "AGFL", fs_ok)
-+struct xfs_scrub_agfl {
-+	xfs_agblock_t			eoag;
-+	xfs_daddr_t			eofs;
-+};
-+
-+/* Scrub an AGFL block. */
-+STATIC int
-+xfs_scrub_agfl_block(
-+	struct xfs_scrub_context	*sc,
-+	xfs_agblock_t			agbno,
-+	void				*priv)
-+{
-+	struct xfs_mount		*mp = sc->tp->t_mountp;
-+	xfs_agnumber_t			agno = sc->sa.agno;
-+	struct xfs_scrub_agfl		*sagfl = priv;
-+
-+	XFS_SCRUB_AGFL_CHECK(agbno > XFS_AGI_BLOCK(mp));
-+	XFS_SCRUB_AGFL_CHECK(XFS_AGB_TO_DADDR(mp, agno, agbno) < sagfl->eofs);
-+	XFS_SCRUB_AGFL_CHECK(agbno < mp->m_sb.sb_agblocks);
-+	XFS_SCRUB_AGFL_CHECK(agbno < sagfl->eoag);
-+
-+	return 0;
-+}
-+
-+#define XFS_SCRUB_AGFL_OP_ERROR_GOTO(error, label) \
-+	XFS_SCRUB_OP_ERROR_GOTO(sc, sc->sm->sm_agno, \
-+			XFS_AGFL_BLOCK(sc->tp->t_mountp), "AGFL", error, label)
-+/* Scrub the AGFL. */
-+int
-+xfs_scrub_agfl(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_scrub_agfl		sagfl;
-+	struct xfs_mount		*mp = sc->tp->t_mountp;
-+	struct xfs_agf			*agf;
-+	int				error;
-+
-+	error = xfs_scrub_load_ag_headers(sc, sc->sm->sm_agno,
-+			XFS_SCRUB_TYPE_AGFL);
-+	XFS_SCRUB_AGFL_OP_ERROR_GOTO(&error, out);
-+	if (!sc->sa.agf_bp)
-+		return -EFSCORRUPTED;
-+
-+	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-+	sagfl.eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-+	sagfl.eoag = be32_to_cpu(agf->agf_length);
-+
-+	/* Check the blocks in the AGFL. */
-+	return xfs_scrub_walk_agfl(sc, xfs_scrub_agfl_block, &sagfl);
-+out:
-+	return error;
-+}
-+#undef XFS_SCRUB_AGFL_OP_ERROR_GOTO
-+#undef XFS_SCRUB_AGFL_CHECK
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 203153b..ccd3549 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -605,6 +605,66 @@ xfs_scrub_setup(
- 			0, 0, 0, &sc->tp);
- }
- 
-+/*
-+ * Load and verify an AG header for further AG header examination.
-+ * If this header is not the target of the examination, don't return
-+ * the buffer if a runtime or verifier error occurs.
-+ */
-+STATIC int
-+xfs_scrub_load_ag_header(
-+	struct xfs_scrub_context	*sc,
-+	xfs_daddr_t			daddr,
-+	struct xfs_buf			**bpp,
-+	const struct xfs_buf_ops	*ops,
-+	bool				is_target)
-+{
-+	struct xfs_mount		*mp = sc->tp->t_mountp;
-+	int				error;
-+
-+	*bpp = NULL;
-+	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-+			XFS_AG_DADDR(mp, sc->sa.agno, daddr),
-+			XFS_FSS_TO_BB(mp, 1), 0, bpp, ops);
-+	return is_target ? error : 0;
-+}
-+
-+/*
-+ * Load as many of the AG headers and btree cursors as we can for an
-+ * examination and cross-reference of an AG header.
-+ */
-+int
-+xfs_scrub_load_ag_headers(
-+	struct xfs_scrub_context	*sc,
-+	xfs_agnumber_t			agno,
-+	unsigned int			type)
-+{
-+	struct xfs_mount		*mp = sc->tp->t_mountp;
-+	int				error;
-+
-+	ASSERT(type == XFS_SCRUB_TYPE_AGF || type == XFS_SCRUB_TYPE_AGFL);
-+	memset(&sc->sa, 0, sizeof(sc->sa));
-+	sc->sa.agno = agno;
-+
-+	error = xfs_scrub_load_ag_header(sc, XFS_AGI_DADDR(mp),
-+			&sc->sa.agi_bp, &xfs_agi_buf_ops, false);
-+	if (error)
-+		return error;
-+
-+	error = xfs_scrub_load_ag_header(sc, XFS_AGF_DADDR(mp),
-+			&sc->sa.agf_bp, &xfs_agf_buf_ops,
-+			type == XFS_SCRUB_TYPE_AGF);
-+	if (error)
-+		return error;
-+
-+	error = xfs_scrub_load_ag_header(sc, XFS_AGFL_DADDR(mp),
-+			&sc->sa.agfl_bp, &xfs_agfl_buf_ops,
-+			type == XFS_SCRUB_TYPE_AGFL);
-+	if (error)
-+		return error;
-+
-+	return 0;
-+}
-+
- /* Scrubbing dispatch. */
- 
- struct xfs_scrub_meta_fns {
-@@ -618,6 +678,8 @@ struct xfs_scrub_meta_fns {
- static const struct xfs_scrub_meta_fns meta_scrub_fns[] = {
- 	{xfs_scrub_setup, xfs_scrub_dummy, NULL, NULL},
- 	{xfs_scrub_setup_ag, xfs_scrub_superblock, NULL, NULL},
-+	{xfs_scrub_setup_ag, xfs_scrub_agf, NULL, NULL},
-+	{xfs_scrub_setup_ag, xfs_scrub_agfl, NULL, NULL},
- };
- 
- /* Dispatch metadata scrubbing. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index bffdcfc..72bb175 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -190,6 +190,12 @@ int xfs_scrub_ag_read_headers(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
- 			      struct xfs_buf **agfl);
- int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
- 			    struct xfs_scrub_ag *sa);
-+int xfs_scrub_load_ag_headers(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
-+			      unsigned int type);
-+int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
-+			int (*fn)(struct xfs_scrub_context *, xfs_agblock_t bno,
-+				  void *),
-+			void *priv);
- 
- /* Setup functions */
- 
-@@ -202,5 +208,7 @@ int xfs_scrub_setup_ag(struct xfs_scrub_context *sc, struct xfs_inode *ip,
- /* Metadata scrubbers */
- 
- int xfs_scrub_superblock(struct xfs_scrub_context *sc);
-+int xfs_scrub_agf(struct xfs_scrub_context *sc);
-+int xfs_scrub_agfl(struct xfs_scrub_context *sc);
- 
- #endif	/* __XFS_REPAIR_COMMON_H__ */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index c9a1ae09..fb65a1f 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3355,7 +3355,9 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
- /* scrub */
- #define XFS_SCRUB_TYPE_DESC \
- 	{ XFS_SCRUB_TYPE_TEST,		"dummy" }, \
--	{ XFS_SCRUB_TYPE_SB,		"superblock" }
-+	{ XFS_SCRUB_TYPE_SB,		"superblock" }, \
-+	{ XFS_SCRUB_TYPE_AGF,		"AGF" }, \
-+	{ XFS_SCRUB_TYPE_AGFL,		"AGFL" }
- DECLARE_EVENT_CLASS(xfs_scrub_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_scrub_metadata *sm,
- 		 int error),
+(Tempting to, uh, "delegate" to Eric Sandeen. :))
 
+--D
+
+> But with the available information I can't tell why the fs is left
+> dirty at reboot. Using the same configuration, the problem doesn't
+> happen with ext4 or Btrfs, but it may be normal behavior and what
+> really needs to be done is teach GRUB how to do log replay.
+> 
+> 
+> 
+> -- 
+> Chris Murphy
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
