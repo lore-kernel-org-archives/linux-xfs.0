@@ -1,41 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17125 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755050AbdCJXYv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:24:51 -0500
-Subject: [PATCH v6 0/9] xfsprogs: online scrub/repair support
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 10 Mar 2017 15:24:44 -0800
-Message-ID: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
+Received: from mail.webx.cz ([109.123.222.201]:44944 "EHLO mail.webx.cz"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751642AbdCOKHn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Mar 2017 06:07:43 -0400
+From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
+Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
+Date: Wed, 15 Mar 2017 11:07:39 +0100
+Message-ID: <74482935.PWezjV9Qp4@libor-nb>
+In-Reply-To: <503a4130-e6db-2d14-d377-01336022d6ee@sandeen.net>
+References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com> <1702693.ETbqtf3ybS@libor-nb> <503a4130-e6db-2d14-d377-01336022d6ee@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi all,
+Hello,
 
-This is the sixth revision of a patchset that adds to XFS userland tools
-support for online metadata scrubbing and repair.  There aren't any
-on-disk format changes, and the main overview is in the cover letter for
-the kernel patches.  Since v5 I have removed from xfs_scrub the ability
-to scrub non-XFS filesystems (i.e. XFS is now required) and have added
-the ability to run xfs_scrub periodically and in a contained environment
-if systemd is active.  None of the systemd functionality is active by
-default.
+all VMs are running smoothly between these problems with XFS, no HW problems, no crashes, no force reboots.
 
-If you're going to start using this mess, you probably ought to just
-pull from my github trees for kernel[1], xfsprogs[2], and xfstests[3].
-The xfsprogs patches should apply against 4.10.
+On úterý 14. března 2017 11:54:37 CET Eric Sandeen wrote:
+> On 3/14/17 3:15 AM, Libor Klepáč wrote:
+> > Hello,
+> > i have this during night with error_level = 11, no force shutdown
+> 
+> Just to double check - are these all getting freshly created?  I.e.
+> you repair and fix the filesystem each time you see this, but they
+> keep re-appearing?
 
-This is an extraordinary way to eat your data.  Enjoy! 
-Comments and questions are, as always, welcome.
+I have looked to old emails and every xfs_repair fixes problem and next time different block/inode pops out.
+I'm trying to lookup files using inode numbers from old emails.
 
---D
+If i remember correctly, files/dirs are usually created in some website cache directory. (ie. generated from template by php and saved to disk for later use).
+So my lookup will probably come to nothing. Last reported force shutdown was on cache file.
 
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
+> 
+> > (kernel 4.8.15)
+> > Mar 14 02:36:29 vps2 kernel: [54799.061956] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_read_verify+0x5a/0x100 [xfs], xfs_attr3_leaf block 0x24e70268
+> 
+> Unfortunately the read path is a bit less interesting.  We found something
+> on disk, but we're not sure how it got there.
+> If we could catch a write verifier failing that /might/ be a little more
+> useful.
+
+I'm prepared to run all affected hosts with error_level=11 , if it doesn't mean performance hit.
+
+> 
+> I'm at a loss as to why you seem to be uniquely able to hit this problem.  :(
+
+And I was questioning my googling skills ;)
+
+> 
+> -Eric
+> 
+
+Libor
+
