@@ -1,266 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40075 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751751AbdC0Iit (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:38:49 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/26] xfs: pull up iolock from xfs_free_eofblocks()
-Date: Mon, 27 Mar 2017 10:38:12 +0200
-Message-Id: <20170327083837.11027-2-hch@lst.de>
-In-Reply-To: <20170327083837.11027-1-hch@lst.de>
-References: <20170327083837.11027-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:39655 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752460AbdCQAxm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Mar 2017 20:53:42 -0400
+Date: Fri, 17 Mar 2017 00:40:31 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: XFS developers meeting at Vault?
+Message-ID: <20170316234031.GZ28800@wotan.suse.de>
+References: <20170123174432.GA22900@lst.de>
+ <20170206124053.c5jh6cieebnhnixy@eorzea.usersys.redhat.com>
+ <20170206131711.GB57865@bfoster.bfoster>
+ <20170207093958.GB15267@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170207093958.GB15267@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+On Tue, Feb 07, 2017 at 10:39:58AM +0100, Christoph Hellwig wrote:
+> Ok, seems like we don't have too many people with availabily.
+> Let's just meet for a beer during Vault.
 
-commit a36b926180cda375ac2ec89e1748b47137cfc51c upstream.
+Beer BoF, count me in.
 
-xfs_free_eofblocks() requires the IOLOCK_EXCL lock, but is called from
-different contexts where the lock may or may not be held. The
-need_iolock parameter exists for this reason, to indicate whether
-xfs_free_eofblocks() must acquire the iolock itself before it can
-proceed.
-
-This is ugly and confusing. Simplify the semantics of
-xfs_free_eofblocks() to require the caller to acquire the iolock
-appropriately and kill the need_iolock parameter. While here, the mp
-param can be removed as well as the xfs_mount is accessible from the
-xfs_inode structure. This patch does not change behavior.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_bmap_util.c | 41 ++++++++++++++++------------------------
- fs/xfs/xfs_bmap_util.h |  3 +--
- fs/xfs/xfs_icache.c    | 24 +++++++++++++++---------
- fs/xfs/xfs_inode.c     | 51 +++++++++++++++++++++++++++-----------------------
- 4 files changed, 60 insertions(+), 59 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index c1417919ab0a..9319ee9759d4 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -917,17 +917,18 @@ xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
-  */
- int
- xfs_free_eofblocks(
--	xfs_mount_t	*mp,
--	xfs_inode_t	*ip,
--	bool		need_iolock)
-+	struct xfs_inode	*ip)
- {
--	xfs_trans_t	*tp;
--	int		error;
--	xfs_fileoff_t	end_fsb;
--	xfs_fileoff_t	last_fsb;
--	xfs_filblks_t	map_len;
--	int		nimaps;
--	xfs_bmbt_irec_t	imap;
-+	struct xfs_trans	*tp;
-+	int			error;
-+	xfs_fileoff_t		end_fsb;
-+	xfs_fileoff_t		last_fsb;
-+	xfs_filblks_t		map_len;
-+	int			nimaps;
-+	struct xfs_bmbt_irec	imap;
-+	struct xfs_mount	*mp = ip->i_mount;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
- 
- 	/*
- 	 * Figure out if there are any blocks beyond the end
-@@ -944,6 +945,10 @@ xfs_free_eofblocks(
- 	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
-+	/*
-+	 * If there are blocks after the end of file, truncate the file to its
-+	 * current size to free them up.
-+	 */
- 	if (!error && (nimaps != 0) &&
- 	    (imap.br_startblock != HOLESTARTBLOCK ||
- 	     ip->i_delayed_blks)) {
-@@ -954,22 +959,10 @@ xfs_free_eofblocks(
- 		if (error)
- 			return error;
- 
--		/*
--		 * There are blocks after the end of file.
--		 * Free them up now by truncating the file to
--		 * its current size.
--		 */
--		if (need_iolock) {
--			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL))
--				return -EAGAIN;
--		}
--
- 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0,
- 				&tp);
- 		if (error) {
- 			ASSERT(XFS_FORCED_SHUTDOWN(mp));
--			if (need_iolock)
--				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 			return error;
- 		}
- 
-@@ -997,8 +990,6 @@ xfs_free_eofblocks(
- 		}
- 
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		if (need_iolock)
--			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 	}
- 	return error;
- }
-@@ -1415,7 +1406,7 @@ xfs_shift_file_space(
- 	 * into the accessible region of the file.
- 	 */
- 	if (xfs_can_free_eofblocks(ip, true)) {
--		error = xfs_free_eofblocks(mp, ip, false);
-+		error = xfs_free_eofblocks(ip);
- 		if (error)
- 			return error;
- 	}
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 68a621a8e0c0..f1005393785c 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -63,8 +63,7 @@ int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
- 
- /* EOF block manipulation functions */
- bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
--int	xfs_free_eofblocks(struct xfs_mount *mp, struct xfs_inode *ip,
--			   bool need_iolock);
-+int	xfs_free_eofblocks(struct xfs_inode *ip);
- 
- int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
- 			 struct xfs_swapext *sx);
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 70ca4f608321..c6b698f0fed9 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1322,7 +1322,7 @@ xfs_inode_free_eofblocks(
- 	int			flags,
- 	void			*args)
- {
--	int ret;
-+	int ret = 0;
- 	struct xfs_eofblocks *eofb = args;
- 	bool need_iolock = true;
- 	int match;
-@@ -1358,19 +1358,25 @@ xfs_inode_free_eofblocks(
- 			return 0;
- 
- 		/*
--		 * A scan owner implies we already hold the iolock. Skip it in
--		 * xfs_free_eofblocks() to avoid deadlock. This also eliminates
--		 * the possibility of EAGAIN being returned.
-+		 * A scan owner implies we already hold the iolock. Skip it here
-+		 * to avoid deadlock.
- 		 */
- 		if (eofb->eof_scan_owner == ip->i_ino)
- 			need_iolock = false;
- 	}
- 
--	ret = xfs_free_eofblocks(ip->i_mount, ip, need_iolock);
--
--	/* don't revisit the inode if we're not waiting */
--	if (ret == -EAGAIN && !(flags & SYNC_WAIT))
--		ret = 0;
-+	/*
-+	 * If the caller is waiting, return -EAGAIN to keep the background
-+	 * scanner moving and revisit the inode in a subsequent pass.
-+	 */
-+	if (need_iolock && !xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
-+		if (flags & SYNC_WAIT)
-+			ret = -EAGAIN;
-+		return ret;
-+	}
-+	ret = xfs_free_eofblocks(ip);
-+	if (need_iolock)
-+		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 
- 	return ret;
- }
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index de32f0fe47c8..edfa6a55b064 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1692,32 +1692,34 @@ xfs_release(
- 	if (xfs_can_free_eofblocks(ip, false)) {
- 
- 		/*
-+		 * Check if the inode is being opened, written and closed
-+		 * frequently and we have delayed allocation blocks outstanding
-+		 * (e.g. streaming writes from the NFS server), truncating the
-+		 * blocks past EOF will cause fragmentation to occur.
-+		 *
-+		 * In this case don't do the truncation, but we have to be
-+		 * careful how we detect this case. Blocks beyond EOF show up as
-+		 * i_delayed_blks even when the inode is clean, so we need to
-+		 * truncate them away first before checking for a dirty release.
-+		 * Hence on the first dirty close we will still remove the
-+		 * speculative allocation, but after that we will leave it in
-+		 * place.
-+		 */
-+		if (xfs_iflags_test(ip, XFS_IDIRTY_RELEASE))
-+			return 0;
-+		/*
- 		 * If we can't get the iolock just skip truncating the blocks
- 		 * past EOF because we could deadlock with the mmap_sem
--		 * otherwise.  We'll get another chance to drop them once the
-+		 * otherwise. We'll get another chance to drop them once the
- 		 * last reference to the inode is dropped, so we'll never leak
- 		 * blocks permanently.
--		 *
--		 * Further, check if the inode is being opened, written and
--		 * closed frequently and we have delayed allocation blocks
--		 * outstanding (e.g. streaming writes from the NFS server),
--		 * truncating the blocks past EOF will cause fragmentation to
--		 * occur.
--		 *
--		 * In this case don't do the truncation, either, but we have to
--		 * be careful how we detect this case. Blocks beyond EOF show
--		 * up as i_delayed_blks even when the inode is clean, so we
--		 * need to truncate them away first before checking for a dirty
--		 * release. Hence on the first dirty close we will still remove
--		 * the speculative allocation, but after that we will leave it
--		 * in place.
- 		 */
--		if (xfs_iflags_test(ip, XFS_IDIRTY_RELEASE))
--			return 0;
--
--		error = xfs_free_eofblocks(mp, ip, true);
--		if (error && error != -EAGAIN)
--			return error;
-+		if (xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
-+			error = xfs_free_eofblocks(ip);
-+			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+			if (error)
-+				return error;
-+		}
- 
- 		/* delalloc blocks after truncation means it really is dirty */
- 		if (ip->i_delayed_blks)
-@@ -1904,8 +1906,11 @@ xfs_inactive(
- 		 * cache. Post-eof blocks must be freed, lest we end up with
- 		 * broken free space accounting.
- 		 */
--		if (xfs_can_free_eofblocks(ip, true))
--			xfs_free_eofblocks(mp, ip, false);
-+		if (xfs_can_free_eofblocks(ip, true)) {
-+			xfs_ilock(ip, XFS_IOLOCK_EXCL);
-+			xfs_free_eofblocks(ip);
-+			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+		}
- 
- 		return;
- 	}
--- 
-2.11.0
-
+  Luis
