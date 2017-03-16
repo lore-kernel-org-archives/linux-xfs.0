@@ -1,81 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44055 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752419AbdCOQlU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 12:41:20 -0400
-Date: Wed, 15 Mar 2017 09:40:52 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: remove kmem_zalloc_greedy
-Message-ID: <20170315164052.GC5280@birch.djwong.org>
-References: <20170308003528.GK5280@birch.djwong.org>
- <20170314165745.GB28800@wotan.suse.de>
- <20170314180738.GV5280@birch.djwong.org>
- <20170315001427.GI28800@wotan.suse.de>
- <20170315083529.GD32620@dhcp22.suse.cz>
- <20170315154327.GL28800@wotan.suse.de>
+Received: from mail.kernel.org ([198.145.29.136]:38776 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753550AbdCPTKy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Mar 2017 15:10:54 -0400
+Date: Thu, 16 Mar 2017 12:10:35 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 4.11-rc3
+Message-ID: <20170316191035.GK5280@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170315154327.GL28800@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Xiong Zhou <xzhou@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, sebastian.parschauer@suse.com, AlNovak@suse.com, jack@suse.cz, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, Brian Foster <bfoster@redhat.com>
 
-On Wed, Mar 15, 2017 at 04:43:27PM +0100, Luis R. Rodriguez wrote:
-> On Wed, Mar 15, 2017 at 09:35:29AM +0100, Michal Hocko wrote:
-> > On Wed 15-03-17 01:14:27, Luis R. Rodriguez wrote:
-> > > On Tue, Mar 14, 2017 at 11:07:38AM -0700, Darrick J. Wong wrote:
-> > > > On Tue, Mar 14, 2017 at 05:57:45PM +0100, Luis R. Rodriguez wrote:
-> > > > > On Tue, Mar 07, 2017 at 04:35:28PM -0800, Darrick J. Wong wrote:
-> > > > > > The sole remaining caller of kmem_zalloc_greedy is bulkstat, which uses
-> > > > > > it to grab 1-4 pages for staging of inobt records.  The infinite loop in
-> > > > > > the greedy allocation function is causing hangs[1] in generic/269, so
-> > > > > > just get rid of the greedy allocator in favor of kmem_zalloc_large.
-> > > > > > This makes bulkstat somewhat more likely to ENOMEM if there's really no
-> > > > > > pages to spare, but eliminates a source of hangs.
-> > > > > > 
-> > > > > > [1] http://lkml.kernel.org/r/20170301044634.rgidgdqqiiwsmfpj%40XZHOUW.usersys.redhat.com
-> > > > > > 
-> > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > ---
-> > > > > > v2: remove single-page fallback
-> > > > > > ---
-> > > > > 
-> > > > > Since this fixes a hang how about *at the very least* a respective Fixes tag ?
-> > > > > This fixes an existing hang so what are the stable considerations here ? I
-> > > > > realize the answer is not easy but figured its worth asking.
-> > > > 
-> > > > I didn't think it was appropriate to "Fixes: 77e4635ae1917" since we're
-> > > > not fixing _greedy so much as we are killing it.  The patch fixes an
-> > > > infinite retry hang when bulkstat tries a memory allocation that cannot
-> > > > be satisfied; and having done that, realizes there are no remaining
-> > > > callers of _greedy and garbage collects it.  The code that was there
-> > > > before also seems capable of sleeping forever, I think.
-> > > > 
-> > > > So the minimally invasive fix is to apply the allocation conversion in
-> > > > bulkstat, and if there aren't any other callers of _greedy then you can
-> > > > get rid of it too.
-> > > 
-> > > For the stake of stable XFS users then why not do the less invasive change
-> > > first, Cc stable, and then move on to the less backward portable solution ?
-> > 
-> > The thing is that the permanent failures for vmalloc were so unlikely
-> > prior to 5d17a73a2ebe ("vmalloc: back off when the current task is
-> > killed") that this was basically a non-issue before this (4.11) merge
-> > window.
-> 
-> I see, this seems like critical information to add to the commit log.
-> Also, will this be at least pushed to v4.11 ?
+Hi Linus,
 
-It's already in rc2.
+Here's a single fix for -rc3 to improve input validation on inline
+directory metadata.  Could you pull it please?
+
+(After the 4.10 cycle was over Dave told me that it's not customary to
+keep rebasing the -fixes branch with every rc, so this time around I'm
+sticking to appending fixes until the next merge window.  Let me know
+if you have a problem with that.  I tried a test merge against HEAD
+and it finished without issues.)
 
 --D
 
-> 
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The following changes since commit 2fcc319d2467a5f5b78f35f79fd6e22741a31b1e:
+
+  xfs: try any AG when allocating the first btree block when reflinking (2017-03-08 10:38:53 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.11-fixes-2
+
+for you to fetch changes up to 630a04e79dd41ff746b545d4fc052e0abb836120:
+
+  xfs: verify inline directory data forks (2017-03-15 00:24:25 -0700)
+
+----------------------------------------------------------------
+Changes since last time:
+- Validate inline directory data to prevent buffer overruns due to corrupt
+  metadata.
+
+----------------------------------------------------------------
+Darrick J. Wong (1):
+      xfs: verify inline directory data forks
+
+ fs/xfs/libxfs/xfs_dir2_priv.h  |  2 +
+ fs/xfs/libxfs/xfs_dir2_sf.c    | 87 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_inode_fork.c | 26 +++++++++++--
+ fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
+ fs/xfs/xfs_dir2_readdir.c      | 11 ------
+ fs/xfs/xfs_inode.c             | 12 ++++--
+ 6 files changed, 122 insertions(+), 18 deletions(-)
