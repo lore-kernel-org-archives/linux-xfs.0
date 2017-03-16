@@ -1,524 +1,316 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21921 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755050AbdCJXY7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:24:59 -0500
-Subject: [PATCH 1/9] xfs_repair: rebuild bmbt from rmapbt data
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 10 Mar 2017 15:24:51 -0800
-Message-ID: <148918829104.8311.15211853599014518835.stgit@birch.djwong.org>
-In-Reply-To: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
-References: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:55930 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752928AbdCPW7n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Mar 2017 18:59:43 -0400
+Subject: Re: [PATCH 01/22] mkfs: remove intermediate getstr followed by getnum
+References: <20170315160017.27805-1-jtulak@redhat.com>
+ <20170315160017.27805-2-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <96ddb2a7-d93e-3ba4-6845-eb60d9558f60@sandeen.net>
+Date: Thu, 16 Mar 2017 15:59:40 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20170315160017.27805-2-jtulak@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 3/15/17 8:59 AM, Jan Tulak wrote:
+> Some options loaded a number as a string with getstr and converted it to
+> number with getnum later in the code, without any reason for this approach.
+> (They were probably forgotten in some past cleaning.)
+> 
+> This patch changes them to skip the string and use getnum directly in the main
+> option-parsing loop, as do all the other numerical options.
+> 
+> And as we now have two variables of the same type for the same value,
+> merge them together. (e.g. former string dsize and number dbytes).
 
-Use rmap records to rebuild corrupt inode forks instead of zapping
-the whole inode.
+The only downside I see to this is that we used to echo back the same
+form that was specified, i.e. -
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libxfs/libxfs_api_defs.h |    2 
- repair/Makefile          |    5 -
- repair/dino_chunks.c     |    7 +
- repair/dinode.c          |   41 +++++++
- repair/rebuild.c         |  277 ++++++++++++++++++++++++++++++++++++++++++++++
- repair/rebuild.h         |   26 ++++
- repair/rmap.c            |    2 
- repair/rmap.h            |    1 
- 8 files changed, 357 insertions(+), 4 deletions(-)
- create mode 100644 repair/rebuild.c
- create mode 100644 repair/rebuild.h
+# mkfs.xfs -f -d size=4e fsfile
+size 4e specified for data subvolume is too large, maximum is 262144 blocks
+# mkfs.xfs -f -d size=4611686018427387904 fsfile
+size 4611686018427387904 specified for data subvolume is too large, maximum is 262144 blocks
+# mkfs.xfs -f -d size=1125899906842624b fsfile
+size 1125899906842624b specified for data subvolume is too large, maximum is 262144 blocks
 
+now we always get back the raw byte value:
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index d299b7a..f01fff0 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -146,5 +146,7 @@
- #define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
- #define xfs_refc_block			libxfs_refc_block
- #define xfs_rmap_compare		libxfs_rmap_compare
-+#define xfs_bmbt_calc_size		libxfs_bmbt_calc_size
-+#define xfs_rmap_query_all		libxfs_rmap_query_all
- 
- #endif /* __LIBXFS_API_DEFS_H__ */
-diff --git a/repair/Makefile b/repair/Makefile
-index b7e8fd5..9edaf18 100644
---- a/repair/Makefile
-+++ b/repair/Makefile
-@@ -11,14 +11,15 @@ LTCOMMAND = xfs_repair
- 
- HFILES = agheader.h attr_repair.h avl.h avl64.h bmap.h btree.h \
- 	da_util.h dinode.h dir2.h err_protos.h globals.h incore.h protos.h \
--	rt.h progress.h scan.h versions.h prefetch.h rmap.h slab.h threads.h
-+	rt.h progress.h scan.h versions.h prefetch.h rmap.h slab.h threads.h \
-+	rebuild.h
- 
- CFILES = agheader.c attr_repair.c avl.c avl64.c bmap.c btree.c \
- 	da_util.c dino_chunks.c dinode.c dir2.c globals.c incore.c \
- 	incore_bmc.c init.c incore_ext.c incore_ino.c phase1.c \
- 	phase2.c phase3.c phase4.c phase5.c phase6.c phase7.c \
- 	progress.c prefetch.c rmap.c rt.c sb.c scan.c slab.c threads.c \
--	versions.c xfs_repair.c
-+	versions.c rebuild.c xfs_repair.c
- 
- LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBUUID) \
- 	$(LIBRT) $(LIBPTHREAD) $(LIBBLKID)
-diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-index a3909ac..c479f2c 100644
---- a/repair/dino_chunks.c
-+++ b/repair/dino_chunks.c
-@@ -697,6 +697,13 @@ process_inode_chunk(
- 		irec_offset += mp->m_sb.sb_inopblock * blks_per_cluster;
- 		agbno += blks_per_cluster;
- 	}
-+	/*
-+	 * Allow the buffer to be re-locked by this thread in case
-+	 * we want to rebuild an inode fork.
-+	 */
-+	for (bp_index = 0; bp_index < cluster_count; bp_index++)
-+		if (bplist[bp_index])
-+			bplist[bp_index]->b_flags |= LIBXFS_B_RECURSIVE_LOCK;
- 	agbno = XFS_AGINO_TO_AGBNO(mp, first_irec->ino_startnum);
- 
- 	/*
-diff --git a/repair/dinode.c b/repair/dinode.c
-index d664f87..6f71c2f 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -32,6 +32,7 @@
- #include "threads.h"
- #include "slab.h"
- #include "rmap.h"
-+#include "rebuild.h"
- 
- /*
-  * gettext lookups for translations of strings use mutexes internally to
-@@ -1915,7 +1916,9 @@ process_inode_data_fork(
- 	xfs_ino_t	lino = XFS_AGINO_TO_INO(mp, agno, ino);
- 	int		err = 0;
- 	int		nex;
-+	bool		try_rebuild = !rmapbt_suspect;
- 
-+retry:
- 	/*
- 	 * extent count on disk is only valid for positive values. The kernel
- 	 * uses negative values in memory. hence if we see negative numbers
-@@ -1961,8 +1964,25 @@ process_inode_data_fork(
- 	if (err)  {
- 		do_warn(_("bad data fork in inode %" PRIu64 "\n"), lino);
- 		if (!no_modify)  {
-+			if (try_rebuild) {
-+				do_warn(
-+_("rebuilding inode %"PRIu64" data fork\n"),
-+					lino);
-+				try_rebuild = false;
-+				err = rebuild_bmap(mp, lino, XFS_DATA_FORK,
-+						be32_to_cpu(dino->di_nextents));
-+				if (!err)
-+					goto retry;
-+				do_warn(
-+_("inode %"PRIu64" data fork rebuild failed, error %d\n"),
-+					lino, err);
-+			}
- 			*dirty += clear_dinode(mp, dino, lino);
- 			ASSERT(*dirty > 0);
-+		} else if (try_rebuild) {
-+			do_warn(
-+_("would have tried to rebuild inode %"PRIu64" data fork, or else\n"),
-+					lino);
- 		}
- 		return 1;
- 	}
-@@ -2026,7 +2046,9 @@ process_inode_attr_fork(
- 	blkmap_t	*ablkmap = NULL;
- 	int		repair = 0;
- 	int		err;
-+	bool		try_rebuild = !rmapbt_suspect;
- 
-+retry:
- 	if (!XFS_DFORK_Q(dino)) {
- 		*anextents = 0;
- 		if (dino->di_aformat != XFS_DINODE_FMT_EXTENTS) {
-@@ -2085,6 +2107,19 @@ process_inode_attr_fork(
- 		do_warn(_("bad attribute fork in inode %" PRIu64), lino);
- 
- 		if (!no_modify)  {
-+			if (try_rebuild) {
-+				try_rebuild = false;
-+				do_warn(
-+_("rebuilding inode %"PRIu64" attr fork\n"),
-+					lino);
-+				err = rebuild_bmap(mp, lino, XFS_DATA_FORK,
-+						be32_to_cpu(dino->di_nextents));
-+				if (!err)
-+					goto retry;
-+				do_warn(
-+_("inode %"PRIu64" attr fork rebuild failed, error %d\n"),
-+					lino, err);
-+			}
- 			if (delete_attr_ok)  {
- 				do_warn(_(", clearing attr fork\n"));
- 				*dirty += clear_dinode_attr(mp, dino, lino);
-@@ -2094,7 +2129,11 @@ process_inode_attr_fork(
- 				*dirty += clear_dinode(mp, dino, lino);
- 			}
- 			ASSERT(*dirty > 0);
--		} else  {
-+		} else if (try_rebuild) {
-+			do_warn(
-+_("would have tried to rebuild inode %"PRIu64" attr fork or cleared it\n"),
-+					lino);
-+		} else {
- 			do_warn(_(", would clear attr fork\n"));
- 		}
- 
-diff --git a/repair/rebuild.c b/repair/rebuild.c
-new file mode 100644
-index 0000000..bd5d6a8
---- /dev/null
-+++ b/repair/rebuild.c
-@@ -0,0 +1,277 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <libxfs.h>
-+#include "btree.h"
-+#include "err_protos.h"
-+#include "libxlog.h"
-+#include "incore.h"
-+#include "globals.h"
-+#include "dinode.h"
-+#include "slab.h"
-+#include "rmap.h"
-+
-+/* Borrowed routines from xfs_scrub.c */
-+
-+struct xfs_repair_bmap_extent {
-+	struct xfs_rmap_irec		rmap;
-+	xfs_agnumber_t			agno;
-+};
-+
-+struct xfs_repair_bmap {
-+	struct xfs_slab			*extslab;
-+	xfs_ino_t			ino;
-+	xfs_rfsblock_t			bmbt_blocks;
-+	int				whichfork;
-+};
-+
-+/* Record extents that belong to this inode's fork. */
-+STATIC int
-+xfs_repair_bmap_extent_fn(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_repair_bmap		*rb = priv;
-+	struct xfs_repair_bmap_extent	rbe;
-+
-+	/* Skip extents which are not owned by this inode and fork. */
-+	if (rec->rm_owner != rb->ino)
-+		return 0;
-+	else if (rb->whichfork == XFS_DATA_FORK &&
-+		 (rec->rm_flags & XFS_RMAP_ATTR_FORK))
-+		return 0;
-+	else if (rb->whichfork == XFS_ATTR_FORK &&
-+		 !(rec->rm_flags & XFS_RMAP_ATTR_FORK))
-+		return 0;
-+	else if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK) {
-+		rb->bmbt_blocks += rec->rm_blockcount;
-+		return 0;
-+	}
-+
-+	rbe.rmap = *rec;
-+	rbe.agno = cur->bc_private.a.agno;
-+	return slab_add(rb->extslab, &rbe);
-+}
-+
-+/* Compare two bmap extents. */
-+static int
-+xfs_repair_bmap_extent_cmp(
-+	const void				*a,
-+	const void				*b)
-+{
-+	const struct xfs_repair_bmap_extent	*ap = a;
-+	const struct xfs_repair_bmap_extent	*bp = b;
-+
-+	if (ap->rmap.rm_offset > bp->rmap.rm_offset)
-+		return 1;
-+	else if (ap->rmap.rm_offset < bp->rmap.rm_offset)
-+		return -1;
-+	return 0;
-+}
-+
-+/* Repair an inode fork. */
-+STATIC int
-+xfs_repair_bmap(
-+	struct xfs_inode		*ip,
-+	struct xfs_trans		**tpp,
-+	int				whichfork)
-+{
-+	struct xfs_repair_bmap		rb = {0};
-+	struct xfs_bmbt_irec		bmap;
-+	struct xfs_defer_ops		dfops;
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_buf			*agf_bp = NULL;
-+	struct xfs_repair_bmap_extent	*rbe;
-+	struct xfs_btree_cur		*cur;
-+	struct xfs_slab_cursor		*scur = NULL;
-+	xfs_fsblock_t			firstfsb;
-+	xfs_agnumber_t			agno;
-+	xfs_extlen_t			extlen;
-+	int				baseflags;
-+	int				flags;
-+	int				nimaps;
-+	int				error = 0;
-+
-+	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_ATTR_FORK);
-+
-+	/* Don't know how to repair the other fork formats. */
-+	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-+	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)
-+		return ENOTTY;
-+
-+	/* Only files, symlinks, and directories get to have data forks. */
-+	if (whichfork == XFS_DATA_FORK && !S_ISREG(VFS_I(ip)->i_mode) &&
-+	    !S_ISDIR(VFS_I(ip)->i_mode) && !S_ISLNK(VFS_I(ip)->i_mode))
-+		return EINVAL;
-+
-+	/* If we somehow have delalloc extents, forget it. */
-+	if (whichfork == XFS_DATA_FORK && ip->i_delayed_blks)
-+		return EBUSY;
-+
-+	/* We require the rmapbt to rebuild anything. */
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return EOPNOTSUPP;
-+
-+	/* Don't know how to rebuild realtime data forks. */
-+	if (XFS_IS_REALTIME_INODE(ip) && whichfork == XFS_DATA_FORK)
-+		return EOPNOTSUPP;
-+
-+	/* Collect all reverse mappings for this fork's extents. */
-+	init_slab(&rb.extslab, sizeof(*rbe));
-+	rb.ino = ip->i_ino;
-+	rb.whichfork = whichfork;
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		error = -libxfs_alloc_read_agf(mp, *tpp, agno, 0, &agf_bp);
-+		if (error)
-+			goto out;
-+		cur = libxfs_rmapbt_init_cursor(mp, *tpp, agf_bp, agno);
-+		error = -libxfs_rmap_query_all(cur, xfs_repair_bmap_extent_fn, &rb);
-+		libxfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
-+				XFS_BTREE_NOERROR);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Blow out the in-core fork and zero the on-disk fork. */
-+	libxfs_trans_ijoin(*tpp, ip, 0);
-+	if (XFS_IFORK_PTR(ip, whichfork) != NULL)
-+		libxfs_idestroy_fork(ip, whichfork);
-+	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
-+	XFS_IFORK_NEXT_SET(ip, whichfork, 0);
-+
-+	/* Reinitialize the on-disk fork. */
-+	if (whichfork == XFS_DATA_FORK) {
-+		memset(&ip->i_df, 0, sizeof(struct xfs_ifork));
-+		ip->i_df.if_flags |= XFS_IFEXTENTS;
-+	} else if (whichfork == XFS_ATTR_FORK) {
-+		if (slab_count(rb.extslab) == 0)
-+			ip->i_afp = NULL;
-+		else {
-+			ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_NOFS);
-+			ip->i_afp->if_flags |= XFS_IFEXTENTS;
-+		}
-+	}
-+	libxfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
-+	error = -libxfs_trans_roll(tpp, ip);
-+	if (error)
-+		goto out;
-+
-+	baseflags = XFS_BMAPI_REMAP | XFS_BMAPI_NORMAP;
-+	if (whichfork == XFS_ATTR_FORK)
-+		baseflags |= XFS_BMAPI_ATTRFORK;
-+
-+	/* "Remap" the extents into the fork. */
-+	init_slab_cursor(rb.extslab, xfs_repair_bmap_extent_cmp, &scur);
-+	rbe = pop_slab_cursor(scur);
-+	while (rbe != NULL) {
-+		/* Form the "new" mapping... */
-+		bmap.br_startblock = XFS_AGB_TO_FSB(mp, rbe->agno,
-+				rbe->rmap.rm_startblock);
-+		bmap.br_startoff = rbe->rmap.rm_offset;
-+		flags = 0;
-+		if (rbe->rmap.rm_flags & XFS_RMAP_UNWRITTEN)
-+			flags = XFS_BMAPI_PREALLOC;
-+		while (rbe->rmap.rm_blockcount > 0) {
-+			libxfs_defer_init(&dfops, &firstfsb);
-+			extlen = min(rbe->rmap.rm_blockcount, MAXEXTLEN);
-+			bmap.br_blockcount = extlen;
-+
-+			/* Drop the block counter... */
-+			ip->i_d.di_nblocks -= extlen;
-+
-+			/* Re-add the extent to the fork. */
-+			nimaps = 1;
-+			firstfsb = bmap.br_startblock;
-+			error = -libxfs_bmapi_write(*tpp, ip,
-+					bmap.br_startoff,
-+					extlen, baseflags | flags, &firstfsb,
-+					extlen, &bmap, &nimaps,
-+					&dfops);
-+			if (error)
-+				goto out;
-+
-+			bmap.br_startblock += extlen;
-+			bmap.br_startoff += extlen;
-+			rbe->rmap.rm_blockcount -= extlen;
-+			error = -libxfs_defer_finish(tpp, &dfops, ip);
-+			if (error)
-+				goto out;
-+			/* Make sure we roll the transaction. */
-+			error = -libxfs_trans_roll(tpp, ip);
-+			if (error)
-+				goto out;
-+		}
-+		rbe = pop_slab_cursor(scur);
-+	}
-+	free_slab_cursor(&scur);
-+	free_slab(&rb.extslab);
-+
-+	/* Decrease nblocks to reflect the freed bmbt blocks. */
-+	if (rb.bmbt_blocks) {
-+		ip->i_d.di_nblocks -= rb.bmbt_blocks;
-+		libxfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
-+		error = -libxfs_trans_roll(tpp, ip);
-+		if (error)
-+			goto out;
-+	}
-+
-+	return error;
-+out:
-+	if (scur)
-+		free_slab_cursor(&scur);
-+	if (rb.extslab)
-+		free_slab(&rb.extslab);
-+	return error;
-+}
-+
-+/* Rebuild some inode's bmap. */
-+int
-+rebuild_bmap(
-+	struct xfs_mount	*mp,
-+	xfs_ino_t		ino,
-+	int			whichfork,
-+	unsigned long		nr_extents)
-+{
-+	struct xfs_inode	*ip;
-+	struct xfs_trans	*tp;
-+	unsigned long long	resblks;
-+	int			error;
-+
-+	resblks = libxfs_bmbt_calc_size(mp, nr_extents);
-+	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+			resblks, 0, 0, &tp);
-+	if (error)
-+		return error;
-+	error = -libxfs_iget(mp, NULL, ino, 0, &ip);
-+	if (error)
-+		goto out_trans;
-+	error = xfs_repair_bmap(ip, &tp, whichfork);
-+	if (error)
-+		goto out_irele;
-+
-+	error = -libxfs_trans_commit(tp);
-+	IRELE(ip);
-+	return error;
-+out_irele:
-+	IRELE(ip);
-+out_trans:
-+	libxfs_trans_cancel(tp);
-+	return error;
-+}
-diff --git a/repair/rebuild.h b/repair/rebuild.h
-new file mode 100644
-index 0000000..51a44ea
---- /dev/null
-+++ b/repair/rebuild.h
-@@ -0,0 +1,26 @@
-+/*
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef REBUILD_H_
-+#define REBUILD_H_
-+
-+int rebuild_bmap(struct xfs_mount *mp, xfs_ino_t ino, int whichfork,
-+		 unsigned long nr_extents);
-+
-+#endif /* REBUILD_H_ */
-diff --git a/repair/rmap.c b/repair/rmap.c
-index ab6e583..af37829 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -46,7 +46,7 @@ struct xfs_ag_rmap {
- };
- 
- static struct xfs_ag_rmap *ag_rmaps;
--static bool rmapbt_suspect;
-+bool rmapbt_suspect;
- static bool refcbt_suspect;
- 
- static inline int rmap_compare(const void *a, const void *b)
-diff --git a/repair/rmap.h b/repair/rmap.h
-index 752ece8..c970942 100644
---- a/repair/rmap.h
-+++ b/repair/rmap.h
-@@ -21,6 +21,7 @@
- #define RMAP_H_
- 
- extern bool collect_rmaps;
-+extern bool rmapbt_suspect;
- 
- extern bool rmap_needs_work(struct xfs_mount *);
- 
+# mkfs/mkfs.xfs -f -d size=4e fsfile
+size 4611686018427387904 specified for data subvolume is too large, maximum is 262144 blocks
 
+Anything that fails the getnum() checks echo back the original
+form on the cmdline; this case is different because getnum() passes,
+but by the time we do value checking all we have is the bytes.  Is
+that intentional/desirable?
+
+So it's a change, not necessarily incorrect or unacceptable, but
+I wanted to highlight it and check.  It wouldn't be too hard to
+convert it right away, but keep the string around for error printing
+purposes, I suppose.
+
+-Eric
+
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> ---
+>  mkfs/xfs_mkfs.c | 88 +++++++++++++++++++++++++--------------------------------
+>  1 file changed, 38 insertions(+), 50 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index affa4052..b3bc218a 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -1417,7 +1417,7 @@ main(
+>  	char			*dfile;
+>  	int			dirblocklog;
+>  	int			dirblocksize;
+> -	char			*dsize;
+> +	__uint64_t 		dbytes;
+>  	int			dsu;
+>  	int			dsw;
+>  	int			dsunit;
+> @@ -1441,7 +1441,7 @@ main(
+>  	xfs_rfsblock_t		logblocks;
+>  	char			*logfile;
+>  	int			loginternal;
+> -	char			*logsize;
+> +	__uint64_t 		logbytes;
+>  	xfs_fsblock_t		logstart;
+>  	int			lvflag;
+>  	int			lsflag;
+> @@ -1470,11 +1470,11 @@ main(
+>  	char			*protostring;
+>  	int			qflag;
+>  	xfs_rfsblock_t		rtblocks;
+> +	__uint64_t 		rtbytes;
+>  	xfs_extlen_t		rtextblocks;
+>  	xfs_rtblock_t		rtextents;
+> -	char			*rtextsize;
+> +	__uint64_t 		rtextbytes;
+>  	char			*rtfile;
+> -	char			*rtsize;
+>  	xfs_sb_t		*sbp;
+>  	int			sectorlog;
+>  	__uint64_t		sector_mask;
+> @@ -1522,7 +1522,8 @@ main(
+>  	qflag = 0;
+>  	imaxpct = inodelog = inopblock = isize = 0;
+>  	dfile = logfile = rtfile = NULL;
+> -	dsize = logsize = rtsize = rtextsize = protofile = NULL;
+> +	protofile = NULL;
+> +	rtbytes = rtextbytes = logbytes = dbytes = 0;
+>  	dsu = dsw = dsunit = dswidth = lalign = lsu = lsunit = 0;
+>  	nodsflag = norsflag = 0;
+>  	force_overwrite = 0;
+> @@ -1586,7 +1587,7 @@ main(
+>  					xi.dname = getstr(value, &dopts, D_NAME);
+>  					break;
+>  				case D_SIZE:
+> -					dsize = getstr(value, &dopts, D_SIZE);
+> +					dbytes = getnum(value, &dopts, D_SIZE);
+>  					break;
+>  				case D_SUNIT:
+>  					dsunit = getnum(value, &dopts, D_SUNIT);
+> @@ -1731,7 +1732,7 @@ main(
+>  					lvflag = 1;
+>  					break;
+>  				case L_SIZE:
+> -					logsize = getstr(value, &lopts, L_SIZE);
+> +					logbytes = getnum(value, &lopts, L_SIZE);
+>  					break;
+>  				case L_SECTLOG:
+>  					lsectorlog = getnum(value, &lopts,
+> @@ -1860,8 +1861,7 @@ main(
+>  
+>  				switch (getsubopt(&p, subopts, &value)) {
+>  				case R_EXTSIZE:
+> -					rtextsize = getstr(value, &ropts,
+> -							   R_EXTSIZE);
+> +					rtextbytes = getnum(value, &ropts, R_EXTSIZE);
+>  					break;
+>  				case R_FILE:
+>  					xi.risfile = getnum(value, &ropts,
+> @@ -1873,7 +1873,7 @@ main(
+>  							   R_NAME);
+>  					break;
+>  				case R_SIZE:
+> -					rtsize = getstr(value, &ropts, R_SIZE);
+> +					rtbytes = getnum(value, &ropts, R_SIZE);
+>  					break;
+>  				case R_NOALIGN:
+>  					norsflag = getnum(value, &ropts,
+> @@ -1976,14 +1976,14 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
+>  	 * sector size mismatches between the new filesystem and the underlying
+>  	 * host filesystem.
+>  	 */
+> -	check_device_type(dfile, &xi.disfile, !dsize, !dfile,
+> +	check_device_type(dfile, &xi.disfile, !dbytes, !dfile,
+>  			  Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
+>  	if (!loginternal)
+> -		check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
+> +		check_device_type(xi.logname, &xi.lisfile, !logbytes, !xi.logname,
+>  				  Nflag ? NULL : &xi.lcreat,
+>  				  force_overwrite, "l");
+>  	if (xi.rtname)
+> -		check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
+> +		check_device_type(xi.rtname, &xi.risfile, !rtbytes, !xi.rtname,
+>  				  Nflag ? NULL : &xi.rcreat,
+>  				  force_overwrite, "r");
+>  	if (xi.disfile || xi.lisfile || xi.risfile)
+> @@ -2164,10 +2164,7 @@ _("rmapbt not supported with realtime devices\n"));
+>  	}
+>  
+>  
+> -	if (dsize) {
+> -		__uint64_t dbytes;
+> -
+> -		dbytes = getnum(dsize, &dopts, D_SIZE);
+> +	if (dbytes) {
+>  		if (dbytes % XFS_MIN_BLOCKSIZE) {
+>  			fprintf(stderr,
+>  			_("illegal data length %lld, not a multiple of %d\n"),
+> @@ -2196,10 +2193,7 @@ _("rmapbt not supported with realtime devices\n"));
+>  		usage();
+>  	}
+>  
+> -	if (logsize) {
+> -		__uint64_t logbytes;
+> -
+> -		logbytes = getnum(logsize, &lopts, L_SIZE);
+> +	if (logbytes) {
+>  		if (logbytes % XFS_MIN_BLOCKSIZE) {
+>  			fprintf(stderr,
+>  			_("illegal log length %lld, not a multiple of %d\n"),
+> @@ -2213,10 +2207,7 @@ _("rmapbt not supported with realtime devices\n"));
+>  				(long long)logbytes, blocksize,
+>  				(long long)(logblocks << blocklog));
+>  	}
+> -	if (rtsize) {
+> -		__uint64_t rtbytes;
+> -
+> -		rtbytes = getnum(rtsize, &ropts, R_SIZE);
+> +	if (rtbytes) {
+>  		if (rtbytes % XFS_MIN_BLOCKSIZE) {
+>  			fprintf(stderr,
+>  			_("illegal rt length %lld, not a multiple of %d\n"),
+> @@ -2233,10 +2224,7 @@ _("rmapbt not supported with realtime devices\n"));
+>  	/*
+>  	 * If specified, check rt extent size against its constraints.
+>  	 */
+> -	if (rtextsize) {
+> -		__uint64_t rtextbytes;
+> -
+> -		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
+> +	if (rtextbytes) {
+>  		if (rtextbytes % blocksize) {
+>  			fprintf(stderr,
+>  		_("illegal rt extent size %lld, not a multiple of %d\n"),
+> @@ -2253,7 +2241,7 @@ _("rmapbt not supported with realtime devices\n"));
+>  		__uint64_t	rswidth;
+>  		__uint64_t	rtextbytes;
+>  
+> -		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
+> +		if (!norsflag && !xi.risfile && !(!rtbytes && xi.disfile))
+>  			rswidth = ft.rtswidth;
+>  		else
+>  			rswidth = 0;
+> @@ -2364,15 +2352,15 @@ _("rmapbt not supported with realtime devices\n"));
+>  		rtfile = _("volume rt");
+>  	else if (!xi.rtdev)
+>  		rtfile = _("none");
+> -	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
+> +	if (dbytes && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
+>  		fprintf(stderr,
+> -			_("size %s specified for data subvolume is too large, "
+> +			_("size %lld specified for data subvolume is too large, "
+>  			"maximum is %lld blocks\n"),
+> -			dsize, (long long)DTOBT(xi.dsize));
+> +			(long long)dbytes, (long long)DTOBT(xi.dsize));
+>  		usage();
+> -	} else if (!dsize && xi.dsize > 0)
+> +	} else if (!dbytes && xi.dsize > 0)
+>  		dblocks = DTOBT(xi.dsize);
+> -	else if (!dsize) {
+> +	else if (!dbytes) {
+>  		fprintf(stderr, _("can't get size of data subvolume\n"));
+>  		usage();
+>  	}
+> @@ -2405,22 +2393,22 @@ reported by the device (%u).\n"),
+>  reported by the device (%u).\n"),
+>  			lsectorsize, xi.lbsize);
+>  	}
+> -	if (rtsize && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
+> +	if (rtbytes && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
+>  		fprintf(stderr, _(
+>  "Warning: the realtime subvolume sector size %u is less than the sector size\n\
+>  reported by the device (%u).\n"),
+>  			sectorsize, xi.rtbsize);
+>  	}
+>  
+> -	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
+> +	if (rtbytes && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
+>  		fprintf(stderr,
+> -			_("size %s specified for rt subvolume is too large, "
+> +			_("size %lld specified for rt subvolume is too large, "
+>  			"maximum is %lld blocks\n"),
+> -			rtsize, (long long)DTOBT(xi.rtsize));
+> +			(long long)rtbytes, (long long)DTOBT(xi.rtsize));
+>  		usage();
+> -	} else if (!rtsize && xi.rtsize > 0)
+> +	} else if (!rtbytes && xi.rtsize > 0)
+>  		rtblocks = DTOBT(xi.rtsize);
+> -	else if (rtsize && !xi.rtdev) {
+> +	else if (rtbytes && !xi.rtdev) {
+>  		fprintf(stderr,
+>  			_("size specified for non-existent rt subvolume\n"));
+>  		usage();
+> @@ -2625,26 +2613,26 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+>  				   sb_feat.rmapbt, sb_feat.reflink);
+>  	ASSERT(min_logblocks);
+>  	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
+> -	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
+> +	if (!logbytes && dblocks >= (1024*1024*1024) >> blocklog)
+>  		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
+> -	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
+> +	if (logbytes && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
+>  		fprintf(stderr,
+> -_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+> -			logsize, (long long)DTOBT(xi.logBBsize));
+> +_("size %lld specified for log subvolume is too large, maximum is %lld blocks\n"),
+> +			(long long)logbytes, (long long)DTOBT(xi.logBBsize));
+>  		usage();
+> -	} else if (!logsize && xi.logBBsize > 0) {
+> +	} else if (!logbytes && xi.logBBsize > 0) {
+>  		logblocks = DTOBT(xi.logBBsize);
+> -	} else if (logsize && !xi.logdev && !loginternal) {
+> +	} else if (logbytes && !xi.logdev && !loginternal) {
+>  		fprintf(stderr,
+>  			_("size specified for non-existent log subvolume\n"));
+>  		usage();
+> -	} else if (loginternal && logsize && logblocks >= dblocks) {
+> +	} else if (loginternal && logbytes && logblocks >= dblocks) {
+>  		fprintf(stderr, _("size %lld too large for internal log\n"),
+>  			(long long)logblocks);
+>  		usage();
+>  	} else if (!loginternal && !xi.logdev) {
+>  		logblocks = 0;
+> -	} else if (loginternal && !logsize) {
+> +	} else if (loginternal && !logbytes) {
+>  
+>  		if (dblocks < GIGABYTES(1, blocklog)) {
+>  			/* tiny filesystems get minimum sized logs. */
+> @@ -2708,7 +2696,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+>  		 * Readjust the log size to fit within an AG if it was sized
+>  		 * automatically.
+>  		 */
+> -		if (!logsize) {
+> +		if (!logbytes) {
+>  			logblocks = MIN(logblocks,
+>  					libxfs_alloc_ag_max_usable(mp));
+>  
+> 
