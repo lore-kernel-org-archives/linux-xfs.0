@@ -1,67 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:56180 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751047AbdCRB1I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 21:27:08 -0400
-Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2I1PDeC004507
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 18:26:16 -0700
-Received: from mail.thefacebook.com ([199.201.64.23])
-        by mx0a-00082601.pphosted.com with ESMTP id 298nhuh6e7-1
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 18:26:16 -0700
-Received: from facebook.com (2401:db00:11:d0be:face:0:1b:0)     by
- mx-out.facebook.com (10.102.107.97) with ESMTP id
- e0a741f00b7911e7be760002c99331b0-e2dc79a0 for <linux-xfs@vger.kernel.org>;
-        Fri, 17 Mar 2017 18:26:14 -0700
-From: Calvin Owens <calvinowens@fb.com>
-Subject: [PATCH][PROGS] xfs_io: Allow setting multiple mode flags for fallocate()
-Date: Fri, 17 Mar 2017 18:26:09 -0700
-Message-ID: <c2fdfcbb1f4ac9a71633dfbe192ed1145b12b8ac.1489799604.git.calvinowens@fb.com>
+Received: from sandeen.net ([63.231.237.45]:47362 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753253AbdCPPVz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Mar 2017 11:21:55 -0400
+Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
+References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com>
+ <74482935.PWezjV9Qp4@libor-nb>
+ <64592e33-6597-a4b4-3e1a-3ec41beeda8c@sandeen.net>
+ <2727630.ZS8FFPfE3C@libor-nb>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b6492357-4bf3-c570-be33-90010e3b1967@sandeen.net>
+Date: Thu, 16 Mar 2017 08:21:43 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <2727630.ZS8FFPfE3C@libor-nb>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: kernel-team@fb.com, calvinowens@fb.com
+To: =?UTF-8?B?TGlib3IgS2xlcMOhxI0=?= <libor.klepac@bcom.cz>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-This allows testing FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE.
+On 3/16/17 1:58 AM, Libor Klepáč wrote:
+> Hi,
+> On středa 15. března 2017 10:22:05 CET Eric Sandeen wrote:
+>> On 3/15/17 5:07 AM, Libor Klepáč wrote:
+>>> Hello,
+>>
+>> ...
+>>
+>>>> Unfortunately the read path is a bit less interesting.  We found something
+>>>> on disk, but we're not sure how it got there.
+>>>> If we could catch a write verifier failing that /might/ be a little more
+>>>> useful.
+>>>
+>>> I'm prepared to run all affected hosts with error_level=11 , if it doesn't mean performance hit.
+>>
+>> It shouldn't.  It only changes logging behavior on error.  The printks to the
+>> console probably take a bit of extra time but at that point you've already lost,
+>> right?
+> 
+> Ok, thanks for clarification, I was wondering whether higher error_level isn't triggering some extra code paths during normal operation.
+> I will leave it on 11 on all machines with problems.
 
-Signed-off-by: Calvin Owens <calvinowens@fb.com>
----
- io/prealloc.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Understood.  Yup, it's really not, it only changes reporting post-error.
 
-diff --git a/io/prealloc.c b/io/prealloc.c
-index a9d66cc..2a4bcdc 100644
---- a/io/prealloc.c
-+++ b/io/prealloc.c
-@@ -201,19 +201,19 @@ fallocate_f(
- 	while ((c = getopt(argc, argv, "cikpu")) != EOF) {
- 		switch (c) {
- 		case 'c':
--			mode = FALLOC_FL_COLLAPSE_RANGE;
-+			mode |= FALLOC_FL_COLLAPSE_RANGE;
- 			break;
- 		case 'i':
--			mode = FALLOC_FL_INSERT_RANGE;
-+			mode |= FALLOC_FL_INSERT_RANGE;
- 			break;
- 		case 'k':
--			mode = FALLOC_FL_KEEP_SIZE;
-+			mode |= FALLOC_FL_KEEP_SIZE;
- 			break;
- 		case 'p':
--			mode = FALLOC_FL_PUNCH_HOLE;
-+			mode |= FALLOC_FL_PUNCH_HOLE;
- 			break;
- 		case 'u':
--			mode = FALLOC_FL_UNSHARE_RANGE;
-+			mode |= FALLOC_FL_UNSHARE_RANGE;
- 			break;
- 		default:
- 			command_usage(&falloc_cmd);
--- 
-2.9.3
+> Btw. i naively created 
+> /etc/sysctl.d/fs_xfs_error_level.conf
+> with 
+> fs.xfs.error_level=11
+> inside.
+> But it's not set after reboot. May it be because XFS module (not root filesystem) is loaded after sysctl is set?
 
+Must be, the systctl file will not appear until xfs is loaded.
+ 
+> Bellow is result of repair.
+> I was expecting 
+> bad attribute count 0 in attr block 0, inode 2152616264
+> to be
+> bad attribute count 0 in attr block 0x24e70268, inode 2152616264
+> 
+> Function process_leaf_attr_block should be called with non-zero da_bno in process_leaf_attr_level , right?
+> But it's called with da_bno = 0 in process_longform_attr .
+
+typedef __uint32_t      xfs_dablk_t;    /* dir/attr block number (in file) */
+
+It's the relative block number in the attribute, i.e. block 0 (first block)
+
+> Of course I don't know the code.
+> 
+> Libor
+> 
+> # xfs_repair  /dev/mapper/vgDisk2-lvData
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+> bad attribute count 0 in attr block 0, inode 2152616264
+> problem with attribute contents in inode 2152616264
+> clearing inode 2152616264 attributes
+> correcting nblocks for inode 2152616264, was 1 - counted 0
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+> bad attribute format 1 in inode 2152616264, resetting value
+> Phase 5 - rebuild AG headers and trees...
+>         - reset superblock...
+> Phase 6 - check inode connectivity...
+>         - resetting contents of realtime bitmap and summary inodes
+>         - traversing filesystem ...
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> Phase 7 - verify and correct link counts...
+> Done
+> 
+> 
