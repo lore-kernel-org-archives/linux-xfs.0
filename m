@@ -1,300 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22158 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755440AbdCJXZl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:25:41 -0500
-Subject: [PATCH 8/9] xfs_scrub: create a script to scrub all xfs filesystems
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 10 Mar 2017 15:25:35 -0800
-Message-ID: <148918833500.8311.13666120246229902081.stgit@birch.djwong.org>
-In-Reply-To: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
-References: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:56814 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751389AbdCPRT3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Mar 2017 13:19:29 -0400
+Subject: Re: [PATCH 00/22] mkfs.xfs: Make stronger conflict checks
+References: <20170315160017.27805-1-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <79cc8aa4-9ff0-07cb-9f88-755239d4311f@sandeen.net>
+Date: Thu, 16 Mar 2017 10:19:26 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+Cc: "Luis R . Rodriguez" <mcgrof@kernel.org>, Dave Chinner <david@fromorbit.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 3/15/17 8:59 AM, Jan Tulak wrote:
+> Hi guys,
+> 
+> my RFC didn't got much of attention, so I'm sending it as a merge request.
+> Hopefully, this will get more eyes on it. ;-) I fixed the few small issues Bill
+> noticed (Thanks, Bill!) and xfstests runs ok. There is one case where test
+> xfs/191-input-validation was accepting a behaviour forbidden in man page, so
+> I'm sending also a xfstests patch:
+> 
+> Specifically, a standalone "-l size=4096b" should fail, because:
+>               To  specify any options on the command line in units of filesys‐
+>               tem blocks, this option must be  specified  first  so  that  the
+>               filesystem block size is applied consistently to all options.
+> 
+> So without the xfstest patch, expect this one test to fail.
+> 
+> The following text is copy&paste from RFC. I only removed/edited one question
+> I had at the time and was solved in the RFC thread. After that is an addendum
+> with regards to Luis' config file support.
 
-Create an xfs_scrub_all command to find all XFS filesystems
-and run an online scrub against them all.
+Hi Jan -
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- debian/control           |    3 +
- debian/rules             |    1 
- man/man8/xfs_scrub_all.8 |   32 ++++++++++
- scrub/Makefile           |   15 ++++-
- scrub/xfs_scrub_all.in   |  148 ++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 195 insertions(+), 4 deletions(-)
- create mode 100644 man/man8/xfs_scrub_all.8
- create mode 100644 scrub/xfs_scrub_all.in
+I'm finally trying to take some time and give this serious review.
+
+At a top level, though, please fix up coding style issues which are
+introduced throughout the series.
+
+As Dave has said before, checkpatch.pl in the kernel tree isn't perfect,
+and we need to apply understanding and reason to its results, but it's
+a place to start looking - for a sampling,
+
+WARNING: please, no space before tabs
+#29: FILE: mkfs/xfs_mkfs.c:59:
++#define D_SUNIT ^I4$
+
+ERROR: space required before the open brace '{'
+#117: FILE: mkfs/xfs_mkfs.c:147:
++	}	switch(a_type){
+
+(also switch shouldn't be on the same line as the closing brace)
+
+ERROR: space required before the open brace '{'
+#119: FILE: mkfs/xfs_mkfs.c:149:
++		switch(b_type){
+
+ERROR: space prohibited before open square bracket '['
+#417: FILE: mkfs/xfs_mkfs.c:458:
++		}		conflicts [MAX_CONFLICTS];
+
+WARNING: line over 80 characters
+#992: FILE: mkfs/xfs_mkfs.c:779:
++		"V2 attribute format always enabled on CRC enabled filesytems."},
+
+(usually we tab that sort of thing back to fit if possible)
+
+WARNING: Avoid unnecessary line continuations
+#1006: FILE: mkfs/xfs_mkfs.c:793:
++					  .message = \
+
+ERROR: space prohibited after that open parenthesis '('
+#1976: FILE: mkfs/xfs_mkfs.c:1963:
++		if ( (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen ||
+
+(and it may be an > 80-char line; again judgement here, this
+might be hard to make nice)
+
+ERROR: space required before the open brace '{'
+#2042: FILE: mkfs/xfs_mkfs.c:2030:
++	if (sp->seen){
+
+ERROR: else should follow close brace '}'
+#2097: FILE: mkfs/xfs_mkfs.c:2082:
++	}
++	else if (opts->index == OPT_S ||
+
+ERROR: space required before the open parenthesis '('
+#4104: FILE: mkfs/xfs_mkfs.c:4158:
++	if(conflict->message) {
 
 
-diff --git a/debian/control b/debian/control
-index ad81662..d7c0316 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,12 +3,13 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
--Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev
-+Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, dh-python
- Standards-Version: 3.9.1
- Homepage: http://xfs.org/
- 
- Package: xfsprogs
- Depends: ${shlibs:Depends}, ${misc:Depends}
-+Recommends: ${python3:Depends}, util-linux
- Provides: fsck-backend
- Suggests: xfsdump, acl, attr, quota
- Breaks: xfsdump (<< 3.0.0)
-diff --git a/debian/rules b/debian/rules
-index c673380..a870944 100755
---- a/debian/rules
-+++ b/debian/rules
-@@ -76,6 +76,7 @@ binary-arch: checkroot built
- 	$(pkgdi)  $(MAKE) -C debian install-d-i
- 	$(pkgme)  $(MAKE) dist
- 	rmdir debian/xfslibs-dev/usr/share/doc/xfsprogs
-+	dh_python3
- 	dh_installdocs
- 	dh_installchangelogs
- 	dh_strip
-diff --git a/man/man8/xfs_scrub_all.8 b/man/man8/xfs_scrub_all.8
-new file mode 100644
-index 0000000..5e1420b
---- /dev/null
-+++ b/man/man8/xfs_scrub_all.8
-@@ -0,0 +1,32 @@
-+.TH xfs_scrub_all 8
-+.SH NAME
-+xfs_scrub_all \- scrub all mounted XFS filesystems
-+.SH SYNOPSIS
-+.B xfs_scrub_all
-+.SH DESCRIPTION
-+.B xfs_scrub_all
-+attempts to read and check all the metadata on all mounted XFS filesystems.
-+The online scrub is performed via the
-+.B xfs_scrub
-+tool, either by running it directly or by using systemd to start it
-+in a restricted fashion.
-+Mounted filesystems are mapped to physical storage devices so that scrub
-+operations can be run in parallel so long as no two scrubbers access
-+the same device simultaneously.
-+.SH EXIT CODE
-+The exit code returned by
-+.B xfs_scrub_all
-+is the sum of the following conditions:
-+.br
-+\	0\	\-\ No errors
-+.br
-+\	4\	\-\ File system errors left uncorrected
-+.br
-+\	8\	\-\ Operational error
-+.br
-+\	16\	\-\ Usage or syntax error
-+.TP
-+These are the same error codes returned by xfs_scrub.
-+.br
-+.SH SEE ALSO
-+.BR xfs_scrub (8).
-diff --git a/scrub/Makefile b/scrub/Makefile
-index bae2fa1..78e119f 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -10,6 +10,8 @@ SCRUB_PREREQS=$(HAVE_OPENAT)$(HAVE_FSTATAT)
- ifeq ($(SCRUB_PREREQS),yesyes)
- LTCOMMAND = xfs_scrub
- INSTALL_SCRUB = install-scrub
-+XFS_SCRUB_ALL_PROG = xfs_scrub_all
-+XFS_SCRUB_ARGS = -Tvn
- endif	# scrub_prereqs
- 
- HFILES = scrub.h ../repair/threads.h read_verify.h iocmd.h xfs_ioctl.h
-@@ -36,15 +38,22 @@ ifeq ($(HAVE_SYNCFS),yes)
- LCFLAGS += -DHAVE_SYNCFS
- endif
- 
--default: depend $(LTCOMMAND)
-+default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG)
-+
-+xfs_scrub_all: xfs_scrub_all.in
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
-+		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
-+	$(Q)chmod a+x $@
- 
- include $(BUILDRULES)
- 
--install: default $(INSTALL_SCRUB)
-+install: $(INSTALL_SCRUB)
- 
--install-scrub:
-+install-scrub: default
- 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
-+	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_ROOT_SBIN_DIR)
- 
- install-dev:
- 
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-new file mode 100644
-index 0000000..2215720
---- /dev/null
-+++ b/scrub/xfs_scrub_all.in
-@@ -0,0 +1,148 @@
-+#!/usr/bin/env python3
-+
-+# Run online scrubbers in parallel, but avoid thrashing.
-+#
-+# Copyright (C) 2017 Oracle.  All rights reserved.
-+#
-+# Author: Darrick J. Wong <darrick.wong@oracle.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License
-+# as published by the Free Software Foundation; either version 2
-+# of the License, or (at your option) any later version.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+
-+import subprocess
-+import json
-+import threading
-+import time
-+import sys
-+
-+retcode = 0
-+terminate = False
-+
-+def find_mounts():
-+	'''Map mountpoints to physical disks.'''
-+
-+	fs = {}
-+	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
-+	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-+	result.wait()
-+	if result.returncode != 0:
-+		return fs
-+	sarray = [x.decode('utf-8') for x in result.stdout.readlines()]
-+	output = ' '.join(sarray)
-+	bdevdata = json.loads(output)
-+	for bdev in bdevdata['blockdevices']:
-+		if bdev['type'] == 'disk':
-+			lastdisk = bdev['kname']
-+		elif bdev['fstype'] == 'xfs':
-+			mnt = bdev['mountpoint']
-+			if mnt is not None:
-+				if mnt in fs:
-+					fs[mnt].add(lastdisk)
-+				else:
-+					fs[mnt] = set([lastdisk])
-+	return fs
-+
-+def run_killable(cmd, stdout, killfuncs, kill_fn):
-+	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
-+	try:
-+		proc = subprocess.Popen(cmd, stdout = stdout)
-+		real_kill_fn = lambda: kill_fn(proc)
-+		killfuncs.add(real_kill_fn)
-+		proc.wait()
-+		try:
-+			killfuncs.remove(real_kill_fn)
-+		except:
-+			pass
-+		return proc.returncode
-+	except:
-+		return -1
-+
-+def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
-+	'''Run a scrub process.'''
-+	global retcode, terminate
-+
-+	print("Scrubbing %s..." % mnt)
-+
-+	try:
-+		if terminate:
-+			return
-+
-+		# Invoke xfs_scrub manually
-+		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
-+		ret = run_killable(cmd, None, killfuncs, \
-+				lambda proc: proc.terminate())
-+		if ret >= 0:
-+			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
-+			retcode |= ret
-+			return
-+
-+		if terminate:
-+			return
-+
-+		print("Unable to start scrub tool.")
-+	finally:
-+		running_devs -= mntdevs
-+		cond.acquire()
-+		cond.notify()
-+		cond.release()
-+
-+def main():
-+	'''Find mounts, schedule scrub runs.'''
-+	def thr(mnt, devs):
-+		a = (mnt, cond, running_devs, devs, killfuncs)
-+		thr = threading.Thread(target = run_scrub, args = a)
-+		thr.start()
-+	global retcode, terminate
-+
-+	fs = find_mounts()
-+
-+	# Schedule scrub jobs...
-+	running_devs = set()
-+	killfuncs = set()
-+	cond = threading.Condition()
-+	while len(fs) > 0:
-+		if len(running_devs) == 0:
-+			mnt, devs = fs.popitem()
-+			running_devs.update(devs)
-+			thr(mnt, devs)
-+		poppers = set()
-+		for mnt in fs:
-+			devs = fs[mnt]
-+			can_run = True
-+			for dev in devs:
-+				if dev in running_devs:
-+					can_run = False
-+					break
-+			if can_run:
-+				running_devs.update(devs)
-+				poppers.add(mnt)
-+				thr(mnt, devs)
-+		for p in poppers:
-+			fs.pop(p)
-+		cond.acquire()
-+		try:
-+			cond.wait()
-+		except KeyboardInterrupt:
-+			terminate = True
-+			print("Terminating...")
-+			while len(killfuncs) > 0:
-+				fn = killfuncs.pop()
-+				fn()
-+			fs = []
-+		cond.release()
-+
-+	sys.exit(retcode)
-+
-+if __name__ == '__main__':
-+	main()
+and many, many more.  
 
+So use your good judgement, but please fix as many of these as you can;
+it's important to have a consistent coding style throughout the xfsprogs
+codebase.
+
+Thanks,
+-Eric
