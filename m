@@ -1,103 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:59315 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1757551AbdCUTNl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2017 15:13:41 -0400
-From: Calvin Owens <calvinowens@fb.com>
-Subject: Re: [PATCH v2] xfs: Honor FALLOC_FL_KEEP_SIZE when punching ends of
- files
-References: <22a11e65fd5037498a78de61f3ed4dae466ad854.1489791330.git.calvinowens@fb.com>
- <19504ff40a16efff2e51d85388fce5be578edbc3.1489985397.git.calvinowens@fb.com>
- <20170321113932.GA58653@bfoster.bfoster>
-Message-ID: <ab15bba5-601a-3297-959c-ddb04b42d082@fb.com>
-Date: Tue, 21 Mar 2017 12:13:21 -0700
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:10276 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751663AbdCPVcd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2017 17:32:33 -0400
+Date: Fri, 17 Mar 2017 08:31:34 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
+Message-ID: <20170316213134.GV17542@dastard>
+References: <20170315215107.5628-1-rgoldwyn@suse.de>
+ <20170315215107.5628-6-rgoldwyn@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <20170321113932.GA58653@bfoster.bfoster>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170315215107.5628-6-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, kernel-team@fb.com, stable@vger.kernel.org, calvinowens <calvinowens@fb.com>
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On 03/21/2017 04:39 AM, Brian Foster wrote:
-> On Sun, Mar 19, 2017 at 09:54:51PM -0700, Calvin Owens wrote:
->> When punching past EOF on XFS, fallocate(mode=PUNCH_HOLE|KEEP_SIZE) will
->> round the file size up to the nearest multiple of PAGE_SIZE:
->>
->>   calvinow@vm-disks/generic-xfs-1 ~$ dd if=/dev/urandom of=test bs=2048 count=1
->>   calvinow@vm-disks/generic-xfs-1 ~$ stat test
->>     Size: 2048            Blocks: 8          IO Block: 4096   regular file
->>   calvinow@vm-disks/generic-xfs-1 ~$ fallocate -n -l 2048 -o 2048 -p test
->>   calvinow@vm-disks/generic-xfs-1 ~$ stat test
->>     Size: 4096            Blocks: 8          IO Block: 4096   regular file
->>
->> Commit 3c2bdc912a1cc050 ("xfs: kill xfs_zero_remaining_bytes") replaced
->> xfs_zero_remaining_bytes() with calls to iomap helpers. The new helpers
->> don't enforce that [pos,offset) lies strictly on [0,i_size) when being
->> called from xfs_free_file_space(), so by "leaking" these ranges into
->> xfs_zero_range() we get this buggy behavior.
->>
->> Fix this by reintroducing the checks xfs_zero_remaining_bytes() did
->> against i_size at the bottom of xfs_free_file_space().
->>
->> Reported-by: Aaron Gao <gzh@fb.com>
->> Fixes: 3c2bdc912a1cc050 ("xfs: kill xfs_zero_remaining_bytes")
->> Cc: Christoph Hellwig <hch@lst.de>
->> Cc: <stable@vger.kernel.org> # 4.8+
->> Signed-off-by: Calvin Owens <calvinowens@fb.com>
->> ---
->>  fs/xfs/xfs_bmap_util.c | 11 +++++++++++
->>  1 file changed, 11 insertions(+)
->>
->> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
->> index 8b75dce..0796ebc 100644
->> --- a/fs/xfs/xfs_bmap_util.c
->> +++ b/fs/xfs/xfs_bmap_util.c
->> @@ -1309,6 +1309,17 @@ xfs_free_file_space(
->>  	}
->>
->>  	/*
->> +	 * Avoid doing I/O beyond eof - it's not necessary
->> +	 * since nothing can read beyond eof.  The space will
->> +	 * be zeroed when the file is extended anyway.
->> +	 */
->
-> I'd suggest to update the comment below with this information and move
-> the following bits down below it as well.
+On Wed, Mar 15, 2017 at 04:51:04PM -0500, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> 
+> A new flag BIO_NOWAIT is introduced to identify bio's
+> orignating from iocb with IOCB_NOWAIT. This flag indicates
+> to return immediately if a request cannot be made instead
+> of retrying.
 
-Will do.
+So this makes a congested block device run the bio IO completion
+callback with an -EAGAIN error present? Are all the filesystem
+direct IO submission and completion routines OK with that? i.e. does
+such a congestion case cause filesystems to temporarily expose stale
+data to unprivileged users when the IO is requeued in this way?
 
->> +	if (offset >= XFS_ISIZE(ip))
->> +		return 0;
->> +
->> +	if ((offset + len) >= XFS_ISIZE(ip))
->> +		len = XFS_ISIZE(ip) - offset - 1;
->> +
->
-> This looks like an off-by-one. Do you mean the following?
->
-> 	if (offset + len > XFS_ISIZE(ip))
-> 		len = XFS_ISIZE(ip) - offset;
+e.g. filesystem does allocation without blocking, submits bio,
+device is congested, runs IO completion with error, so nothing
+written to allocated blocks, write gets queued, so other read
+comes in while the write is queued, reads data from uninitialised
+blocks that were allocated during the write....
 
-It's not an off-by-one (it's self-consistent), but your way makes more
-sense, I'll fix it ;)
+Seems kinda problematic to me to have a undocumented design
+constraint (i.e a landmine) where we submit the AIO only to have it
+error out and then expect the filesystem to do something special and
+different /without blocking/ on EAGAIN.
 
-Thanks,
-Calvin
+Why isn't the congestion check at a higher layer like we do for page
+cache readahead? i.e. using the bdi*congested() API at the time we
+are doing all the other filesystem blocking checks.
 
-> Brian
->
->> +	/*
->>  	 * Now that we've unmap all full blocks we'll have to zero out any
->>  	 * partial block at the beginning and/or end.  xfs_zero_range is
->>  	 * smart enough to skip any holes, including those we just created.
->> --
->> 2.9.3
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
