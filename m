@@ -1,71 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:37585 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751146AbdCPKHp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2017 06:07:45 -0400
-Subject: Re: xfs: pass total block res. as total xfs_bmapi_write() parameter
-References: <153397e1-ba41-20b3-455e-d622c234bc3a@gmail.com>
- <1489580654-29669-1-git-send-email-nborisov@suse.com>
-From: Jiri Slaby <jslaby@suse.cz>
-Message-ID: <862c1ff6-2d48-d059-4cc5-326927f440dd@suse.cz>
-Date: Thu, 16 Mar 2017 11:07:41 +0100
+Received: from bombadil.infradead.org ([65.50.211.133]:49454 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751477AbdCPNIk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2017 09:08:40 -0400
+Date: Thu, 16 Mar 2017 06:08:24 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 3/8] nowait aio: return if direct write will trigger
+ writeback
+Message-ID: <20170316130824.GF4033@bombadil.infradead.org>
+References: <20170315215107.5628-1-rgoldwyn@suse.de>
+ <20170315215107.5628-4-rgoldwyn@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <1489580654-29669-1-git-send-email-nborisov@suse.com>
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170315215107.5628-4-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>, stable@vger.kernel.org
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, david@fromorbit.com, Brian Foster <bfoster@redhat.com>
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On 03/15/2017, 01:24 PM, Nikolay Borisov wrote:
-> From: Brian Foster <bfoster@redhat.com>
-> 
-> The total field from struct xfs_alloc_arg is a bit of an unknown
-> commodity. It is documented as the total block requirement for the
-> transaction and is used in this manner from most call sites by virtue of
-> passing the total block reservation of the transaction associated with
-> an allocation. Several xfs_bmapi_write() callers pass hardcoded values
-> of 0 or 1 for the total block requirement, which is a historical oddity
-> without any clear reasoning.
-> 
-> The xfs_iomap_write_direct() caller, for example, passes 0 for the total
-> block requirement. This has been determined to cause problems in the
-> form of ABBA deadlocks of AGF buffers due to incorrect AG selection in
-> the block allocator. Specifically, the xfs_alloc_space_available()
-> function incorrectly selects an AG that doesn't actually have sufficient
-> space for the allocation. This occurs because the args.total field is 0
-> and thus the remaining free space check on the AG doesn't actually
-> consider the size of the allocation request. This locks the AGF buffer,
-> the allocation attempt proceeds and ultimately fails (in
-> xfs_alloc_fix_minleft()), and xfs_alloc_vexent() moves on to the next
-> AG. In turn, this can lead to incorrect AG locking order (if the
-> allocator wraps around, attempting to lock AG 0 after acquiring AG N)
-> and thus deadlock if racing with another operation. This problem has
-> been reproduced via generic/299 on smallish (1GB) ramdisk test devices.
-> 
-> To avoid this problem, replace the undocumented hardcoded total
-> parameters from the iomap and utility callers to pass the block
-> reservation used for the associated transaction. This is consistent with
-> other xfs_bmapi_write() callers throughout XFS. The assumption is that
-> the total field allows the selection of an AG that can handle the entire
-> operation rather than simply the allocation/range being requested (e.g.,
-> resulting btree splits, etc.). This addresses the aforementioned
-> generic/299 hang by ensuring AG selection only occurs when the
-> allocation can be satisfied by the AG.
-> 
-> Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> ---
-> 
-> Here is the backport for 3.12 
+On Wed, Mar 15, 2017 at 04:51:02PM -0500, Goldwyn Rodrigues wrote:
+> This introduces a new function filemap_range_has_page() which
+> returns true if the file's mapping has a page within the range
+> mentioned.
 
-Applied, thanks!
+I thought you were going to replace this patch with one that starts
+writeback for these pages but does not wait for them?
 
--- 
-js
-suse labs
