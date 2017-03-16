@@ -1,72 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f45.google.com ([209.85.214.45]:37884 "EHLO
-        mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752352AbdCPOdw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2017 10:33:52 -0400
-Received: by mail-it0-f45.google.com with SMTP id g138so45649588itb.0
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2017 07:33:51 -0700 (PDT)
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-References: <20170315215107.5628-1-rgoldwyn@suse.de>
- <20170315215107.5628-6-rgoldwyn@suse.de>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <eee4683d-9f44-434f-b97f-b0b24c7b3dab@kernel.dk>
-Date: Thu, 16 Mar 2017 08:33:38 -0600
+Received: from mx2.suse.de ([195.135.220.15]:34014 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752220AbdCPXkE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Mar 2017 19:40:04 -0400
+Date: Fri, 17 Mar 2017 00:38:45 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 00/22] mkfs.xfs: Make stronger conflict checks
+Message-ID: <20170316233845.GY28800@wotan.suse.de>
+References: <20170315160017.27805-1-jtulak@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20170315215107.5628-6-rgoldwyn@suse.de>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170315160017.27805-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, linux-api@vger.kernel.org, willy@infradead.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org, "Luis R . Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
 
-On 03/15/2017 03:51 PM, Goldwyn Rodrigues wrote:
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 0eeb99e..2e5cba2 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -2014,7 +2019,7 @@ blk_qc_t generic_make_request(struct bio *bio)
->  	do {
->  		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
->  
-> -		if (likely(blk_queue_enter(q, false) == 0)) {
-> +		if (likely(blk_queue_enter(q, bio_flagged(bio, BIO_NOWAIT)) == 0)) {
->  			struct bio_list hold;
->  			struct bio_list lower, same;
->  
-> @@ -2040,7 +2045,10 @@ blk_qc_t generic_make_request(struct bio *bio)
->  			bio_list_merge(&bio_list_on_stack, &same);
->  			bio_list_merge(&bio_list_on_stack, &hold);
->  		} else {
-> -			bio_io_error(bio);
-> +			if (unlikely(bio_flagged(bio, BIO_NOWAIT)))
-> +				bio_wouldblock_error(bio);
-> +			else
-> +				bio_io_error(bio);
+On Wed, Mar 15, 2017 at 04:59:55PM +0100, Jan Tulak wrote:
+> This set is a follow-up of some old discussions and further attempts to untangle
+> the spaghetti in options parsing. In short, this patchset allows to define
+> cross-option conflicts and makes the conflicts detection more robust.
 
-This doesn't look right. What if the queue is dying, and BIO_NOWAIT just
-happened to be set?
+This series is pretty large. There are quite a bit of patches which just rename
+something, or just shove code from one place to another. Can you group up
+non-functional changes together first, and send a small series of simple stuff
+with no functional changes first?
 
-And you're missing wbt_wait() as well as a blocking point. Ditto in
-blk-mq.
+That should reduce the size of the functional patch set, and make it clearer
+which patches require much careful eyeballing. It should also put out of your
+queue tons of changes which are trivial and can go in rather sooner.
 
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index 159187a..942ce8c 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -1518,6 +1518,8 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
->  	rq = blk_mq_sched_get_request(q, bio, bio->bi_opf, &data);
->  	if (unlikely(!rq)) {
->  		__wbt_done(q->rq_wb, wb_acct);
-> +		if (bio && bio_flagged(bio, BIO_NOWAIT))
-> +			bio_wouldblock_error(bio);
->  		return BLK_QC_T_NONE;
->  	}
->  
+> Config file patches addendum:
+> 
+> (Thread: http://www.spinics.net/lists/linux-xfs/msg04703.html)
+> 
+> I read through the changes, but decided to don't take anything from it.
 
-This seems a little fragile now, since not both paths free the bio.
+The last 2 patches of my config series are really the functional change there,
+the rest is fluff to account for the insanity we have now.
 
--- 
-Jens Axboe
+> I think it is time to do something and adding further changes would just
+> push it down again. Nevertheless, the other patchset contains some changes
+> (like splitting the main opts loop) that I wanted to add in some later patch
+> too.
 
+OK.
+
+> I suggest that we first merge these patches I'm sending, and once it solves
+> some of the issues Luis hit too, we can look again on the config file thing
+> and even if the main idea fell out of favor for some reason, there are still
+> other useful changes.
+
+Sure, I'm fine with this, do you have a git tree ? Once you rev and post new
+series if you can provide a git URL that'd be great as then I can just work
+off of that.
+
+> PS: I'm traveling at Vault next week, so if you are there too, we can open it
+> there.
+
+I'm up for beers there.
+
+  Luis
