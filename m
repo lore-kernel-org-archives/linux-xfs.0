@@ -1,90 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38143 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752808AbdCPTPG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2017 15:15:06 -0400
-Date: Thu, 16 Mar 2017 12:15:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2 V2] xfs: toggle readonly state around
- xfs_log_mount_finish
-Message-ID: <20170316191500.GL5280@birch.djwong.org>
-References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
- <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
- <74f6a009-211c-617a-2d6f-0a115ceb366b@sandeen.net>
- <20170315113629.GA23221@bfoster.bfoster>
+Received: from mx2.suse.de ([195.135.220.15]:36095 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752510AbdCPTvs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 16 Mar 2017 15:51:48 -0400
+Date: Thu, 16 Mar 2017 20:50:56 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH] xfs: use dedicated log worker wq to avoid deadlock with
+ cil wq
+Message-ID: <20170316195056.GN28800@wotan.suse.de>
+References: <1489083497-22964-1-git-send-email-bfoster@redhat.com>
+ <20170316191734.GM5280@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170315113629.GA23221@bfoster.bfoster>
+In-Reply-To: <20170316191734.GM5280@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, David Jeffery <djeffery@redhat.com>, sebastian.parschauer@suse.com, AlNovak@suse.com
 
-On Wed, Mar 15, 2017 at 07:36:29AM -0400, Brian Foster wrote:
-> On Tue, Mar 14, 2017 at 06:23:57PM -0500, Eric Sandeen wrote:
-> > When we do log recovery on a readonly mount, unlinked inode
-> > processing does not happen due to the readonly checks in
-> > xfs_inactive(), which are trying to prevent any I/O on a
-> > readonly mount.
+On Thu, Mar 16, 2017 at 12:17:34PM -0700, Darrick J. Wong wrote:
+> On Thu, Mar 09, 2017 at 01:18:17PM -0500, Brian Foster wrote:
+> > The log covering background task used to be part of the xfssyncd
+> > workqueue. That workqueue was removed as of commit 5889608df ("xfs:
+> > syncd workqueue is no more") and the associated work item scheduled
+> > to the xfs-log wq. The latter is used for log buffer I/O completion.
+
+That went in on v3.8.
+
+<-- snip -->
+
+> > In this scenario
+> > both workqueues are deadlocked waiting on eachother.
 > > 
-> > This is misguided - we do I/O on readonly mounts all the time,
-> > for consistency; for example, log recovery.  So do the same
-> > RDONLY flag twiddling around xfs_log_mount_finish() as we
-> > do around xfs_log_mount(), for the same reason.
+> > Add a new workqueue specifically for the high level log covering and
+> > ail pushing worker, as was the case prior to commit 5889608df.
 > > 
-> > This all cries out for a big rework but for now this is a
-> > simple fix to an obvious problem.
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > Diagnosed-by: David Jeffery <djeffery@redhat.com>
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+
 > > ---
 > > 
+> > Note that this seems difficult to reproduce in practice because I
+> > believe it also relies on memory pressure. Otherwise, the xfs-log wq
+> > rescuer thread may be available to unwind the deadlock.
 
-Both patches look ok, so I'll put them on the test queue for -rc4.
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Still, a dead lock is no bueno. No happy user can exist with a deadlock.
 
---D
+> I /think/ this looks ok?  But let me run it through xfstests before I
+> commit to anything. :)
 
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> > V2: And now for something completely different...
-> > 
-> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > index 62176b8..374edc1 100644
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -743,16 +743,23 @@
-> >  	struct xfs_mount	*mp)
-> >  {
-> >  	int	error = 0;
-> > +	int	readonly = (mp->m_flags & XFS_MOUNT_RDONLY);
-> >  
-> >  	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
-> >  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
-> >  		return 0;
-> > +	} else if (readonly) {
-> > +		/* Allow unlinked processing to proceed */
-> > +		mp->m_flags &= ~XFS_MOUNT_RDONLY;
-> >  	}
-> >  
-> >  	error = xlog_recover_finish(mp->m_log);
-> >  	if (!error)
-> >  		xfs_log_work_queue(mp);
-> >  
-> > +	if (readonly)
-> > +		mp->m_flags |= XFS_MOUNT_RDONLY;
-> > +
-> >  	return error;
-> >  }
-> >  
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Provided that goes smooth -- this seems like a stable candidate to me.
+Otherwise we're going to have to carry it anyway on distributions.
+
+  Luis
