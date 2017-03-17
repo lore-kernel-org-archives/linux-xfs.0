@@ -1,155 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:25900 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752874AbdCOTdA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 15:33:00 -0400
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v2FJWN5T016146
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2017 19:32:23 GMT
-Date: Wed, 15 Mar 2017 12:30:40 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: boot failure after kernel update, imap claims in-use inode
- 661690 is free, would correct imap
-Message-ID: <20170315193040.GG5280@birch.djwong.org>
-References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
- <20170315072349.GZ5280@birch.djwong.org>
- <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
- <20170315191355.GF5280@birch.djwong.org>
+Received: from buxtehude.debian.org ([209.87.16.39]:55918 "EHLO
+        buxtehude.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751096AbdCQUqd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 16:46:33 -0400
+Subject: Bug#766811: spurious library links
+Reply-To: Michael Biebl <biebl@debian.org>, 766811@bugs.debian.org
+References: <20141026004825.GA27863@bongo.bofh.it>
+ <20160124151308.GA7620@jwilk.net> <20160206005821.GA11551@bongo.bofh.it>
+ <20160206132241.GA2869@jwilk.net> <20160210031703.GA28092@bongo.bofh.it>
+ <822351939.19802495.1455074423707.JavaMail.zimbra@redhat.com>
+ <785bca5c-7b92-1c20-7a68-7c8b79419fa4@debian.org>
+ <CAFMei7NSLSmONCC6AT1hbyLi18e4MWkYwt9pjqBrWACBEa+AfA@mail.gmail.com>
+ <9f4d18b6-66b9-5014-4c8b-40ad63ecbbe0@debian.org>
+ <CAFMei7Obi6WV2+RW4kccQn7zyqMZZcm7WtSAKt6D2a-VKH0cDA@mail.gmail.com>
+From: Michael Biebl <biebl@debian.org>
+Message-ID: <29b6e6b8-46ff-ad69-9016-ab7bef89d809@debian.org>
+Date: Fri, 17 Mar 2017 21:42:54 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170315191355.GF5280@birch.djwong.org>
+In-Reply-To: <CAFMei7Obi6WV2+RW4kccQn7zyqMZZcm7WtSAKt6D2a-VKH0cDA@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="FMln56jV5M1tAxDeReA4UX8ms79CGcjlx"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: xfs list <linux-xfs@vger.kernel.org>
+To: Nathan Scott <nscott@redhat.com>
+Cc: 766811 <766811@bugs.debian.org>, Nathan Scott <nathans@debian.org>, Marco d'Itri <md@linux.it>
 
-On Wed, Mar 15, 2017 at 12:13:55PM -0700, Darrick J. Wong wrote:
-> On Wed, Mar 15, 2017 at 12:11:22PM -0600, Chris Murphy wrote:
-> > On Wed, Mar 15, 2017 at 1:23 AM, Darrick J. Wong
-> > <darrick.wong@oracle.com> wrote:
-> > 
-> > >
-> > > So... you fire up gnome-software, click "Update", it downloads rpms to
-> > > the hard disk, reboots, (presumably) installs the rpms, reboots again,
-> > > and after the /second/ reboot grub just barfs up a grub> prompt?
-> > 
-> > Correct.
-> > 
-> > 
-> > > Now I'm curious how systemd actually triggers the reboot.  Unmounting
-> > > would seem to force the log and push the AIL, which (you'd think) would
-> > > be enough.  But maybe systemd is doing something weird?  Or maybe
-> > > post-update we fail to unmount / ?
-> > 
-> > If I boot with the following parameters, and use virsh console to
-> > track what's going on right after the updating,
-> > 
-> > systemd.log_level=debug systemd.log_target=console console=ttyS0,38400
-> > 
-> > 
-> > 
-> > Sending SIGTERM to remaining processes...
-> > Sending SIGKILL to remaining processes...
-> > Process 304 (plymouthd) has been marked to be excluded from killing.
-> > It is running from the root file system, and thus likely to block
-> > re-mounting of the root file system to read-only. Please consider
-> > moving it into an initrd file system instead.
-> 
-> Heh.  So the splash screen is still running and we can't unmount /.
-> Consequently systemd remounts the fs readonly...
-> 
-> > Unmounting file systems.
-> > Remounting '/tmp' read-only with options 'seclabel'.
-> > Unmounting /tmp.
-> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
-> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
-> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
-> 
-> (I wonder why it does this three times?)
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--FMln56jV5M1tAxDeReA4UX8ms79CGcjlx
+Content-Type: multipart/mixed; boundary="9xMVNadrLMbSbOeeS2g1ehhA9VW2qgM0l";
+ protected-headers="v1"
+From: Michael Biebl <biebl@debian.org>
+To: Nathan Scott <nscott@redhat.com>
+Cc: 766811 <766811@bugs.debian.org>, Nathan Scott <nathans@debian.org>,
+ Marco d'Itri <md@linux.it>
+Message-ID: <29b6e6b8-46ff-ad69-9016-ab7bef89d809@debian.org>
+Subject: Re: Bug#766811: spurious library links
+References: <20141026004825.GA27863@bongo.bofh.it>
+ <20160124151308.GA7620@jwilk.net> <20160206005821.GA11551@bongo.bofh.it>
+ <20160206132241.GA2869@jwilk.net> <20160210031703.GA28092@bongo.bofh.it>
+ <822351939.19802495.1455074423707.JavaMail.zimbra@redhat.com>
+ <785bca5c-7b92-1c20-7a68-7c8b79419fa4@debian.org>
+ <CAFMei7NSLSmONCC6AT1hbyLi18e4MWkYwt9pjqBrWACBEa+AfA@mail.gmail.com>
+ <9f4d18b6-66b9-5014-4c8b-40ad63ecbbe0@debian.org>
+ <CAFMei7Obi6WV2+RW4kccQn7zyqMZZcm7WtSAKt6D2a-VKH0cDA@mail.gmail.com>
+In-Reply-To: <CAFMei7Obi6WV2+RW4kccQn7zyqMZZcm7WtSAKt6D2a-VKH0cDA@mail.gmail.com>
 
-Because systemd (v229, anyway) doesn't ever unmount /; it merely tries
-to remount it readonly.  Regrettably it /also/ throws away the return
-code from the mount call so there's no way to positively confirm my
-current theory, which is that we don't actually succeed at the
-remount-ro request and that's why the log needs recovery after the
-reboot.
+--9xMVNadrLMbSbOeeS2g1ehhA9VW2qgM0l
+Content-Type: multipart/mixed;
+ boundary="------------7042D7A2FD74CF2CA02AF554"
 
-So maybe plymouthd, or journald, or systemd, or something else entirely
-still holds a writable file descriptor to somewhere on the rootfs.  I
-guess you could build a custom systemd that actually logs the return
-value....
+This is a multi-part message in MIME format.
+--------------7042D7A2FD74CF2CA02AF554
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-> > All filesystems unmounted.
-> > Deactivating swaps.
-> > All swaps deactivated.
-> > Detaching loop devices.
-> > device-enumerator: scan all dirs
-> >   device-enumerator: scanning /sys/bus
-> >   device-enumerator: scanning /sys/class
-> > All loop devices detached.
-> > Detaching DM devices.
-> > device-enumerator: scan all dirs
-> >   device-enumerator: scanning /sys/bus
-> >   device-enumerator: scanning /sys/class
-> > All DM devices detached.
-> > Spawned /usr/lib/systemd/system-shutdown/mdadm.shutdown as 8408.
-> > /usr/lib/systemd/system-shutdown/mdadm.shutdown succeeded.
-> > system-shutdown succeeded.
-> > Failed to read reboot parameter file: No such file or directory
-> > Rebooting.
-> > [   52.963598] Unregister pv shared memory for cpu 0
-> > [   52.965736] Unregister pv shared memory for cpu 1
-> > [   52.966795] sd 1:0:0:0: [sda] Synchronizing SCSI cache
-> > [   52.991220] reboot: Restarting system
-> > [   52.993119] reboot: machine restart
-> 
-> ...and reboots, having not unmounted, and (I guess?) without forcing the
-> log to write all of the logged changes back to the metadata.  They
-> changes are safely recorded /in/ the log....
-> 
-> > <no further entries, VM shuts down>
-> > 
-> > However, I get a different result. This time I get a stale grub menu
-> > with a single kernel option (same as if the update hadn't happened).
-> > If I boot, kernel messages reports log replay. When I reboot again,
-> 
-> ...because mounting replays them and after that the metadata is up to
-> date.
-> 
-> Strange, though, because afaict we xfs_attr_quiesce seems to do the
-> right things when we remount rw->ro, so you wouldn't think that there
-> would be a need to recover.  Maybe there's something funny going on
-> w.r.t. the three messages about remounting readonly?
+Am 17.03.2017 um 16:50 schrieb Nathan Scott:
+> Hi Michael,
+>=20
+> Yes, please go right ahead with NMU -
 
-Or maybe we're simply /not/ remounting readonly despite the log
-messages, as mentioned above.
+Done. I've just uploaded xfsprogs_4.9.0+nmu1
 
---D
+ I will follow up with the XFS
+> folks when I can.
 
-> > now I have a two kernel grub menu. I'm guessing the slowness of
-> > systemd debug is resulting in the difference; more time to commit the
-> > changes?
-> >
-> > Anyway, it looks / is remounted read-only before reboot. Note, this is
-> > a single partition/volume setup, so /boot/grub2/grub.cfg being
-> > modified by grubby is on the fs being remounted read-only and reboot
-> > time.
-> 
-> --D
-> 
-> > 
-> > 
-> > 
-> > -- 
-> > Chris Murphy
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+debdiff is attached. It slightly differs from Marco's original patch.
+Instead of disabling the code, I simply removed it. This should be more
+suitable for upstreaming.
+
+Regards,
+Michael
+
+--=20
+Why is it that all of the instruments seeking intelligent life in the
+universe are pointed away from Earth?
+
+--------------7042D7A2FD74CF2CA02AF554
+Content-Type: text/plain; charset=UTF-8;
+ name="xfsprogs_4.9.0+nmu1.debdiff"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="xfsprogs_4.9.0+nmu1.debdiff"
+
+ZGlmZiAtTnJ1IHhmc3Byb2dzLTQuOS4wL2RlYmlhbi9jaGFuZ2Vsb2cgeGZzcHJvZ3MtNC45
+LjArbm11MS9kZWJpYW4vY2hhbmdlbG9nCi0tLSB4ZnNwcm9ncy00LjkuMC9kZWJpYW4vY2hh
+bmdlbG9nCTIwMTctMDEtMDUgMjM6MDU6NTUuMDAwMDAwMDAwICswMTAwCisrKyB4ZnNwcm9n
+cy00LjkuMCtubXUxL2RlYmlhbi9jaGFuZ2Vsb2cJMjAxNy0wMy0xNyAxOToyNzo1OC4wMDAw
+MDAwMDAgKzAxMDAKQEAgLTEsMyArMSwxMSBAQAoreGZzcHJvZ3MgKDQuOS4wK25tdTEpIHVu
+c3RhYmxlOyB1cmdlbmN5PW1lZGl1bQorCisgICogTm9uLW1haW50YWluZXIgdXBsb2FkLgor
+ICAqIFJlbW92ZSBjb2RlIGluIGluY2x1ZGUvYnVpbGRtYWNyb3Mgd2hpY2ggY3JlYXRlcyBi
+b2d1cyBzeW1saW5rcyBmb3IKKyAgICBsaWJyYXJpZXMuIChDbG9zZXM6ICM3NjY4MTEpCisK
+KyAtLSBNaWNoYWVsIEJpZWJsIDxiaWVibEBkZWJpYW4ub3JnPiAgRnJpLCAxNyBNYXIgMjAx
+NyAxOToyNzo1OCArMDEwMAorCiB4ZnNwcm9ncyAoNC45LjApIHVuc3RhYmxlOyB1cmdlbmN5
+PWxvdwogCiAgICogTmV3IHVwc3RyZWFtIHJlbGVhc2UKZGlmZiAtTnJ1IHhmc3Byb2dzLTQu
+OS4wL2luY2x1ZGUvYnVpbGRtYWNyb3MgeGZzcHJvZ3MtNC45LjArbm11MS9pbmNsdWRlL2J1
+aWxkbWFjcm9zCi0tLSB4ZnNwcm9ncy00LjkuMC9pbmNsdWRlL2J1aWxkbWFjcm9zCTIwMTct
+MDEtMDUgMjM6MDU6NTUuMDAwMDAwMDAwICswMTAwCisrKyB4ZnNwcm9ncy00LjkuMCtubXUx
+L2luY2x1ZGUvYnVpbGRtYWNyb3MJMjAxNy0wMy0xNyAxOToyNzo1OC4wMDAwMDAwMDAgKzAx
+MDAKQEAgLTc1LDEzICs3NSw3IEBACiAJLi4vJChJTlNUQUxMKSAtbSA2NDQgLVQgb2xkX2xp
+YiAkKExJQk5BTUUpLmxhaSAkKFBLR19MSUJfRElSKTsgXAogCS4uLyQoSU5TVEFMTCkgLW0g
+NjQ0ICQoTElCTkFNRSkubGFpICQoUEtHX0xJQl9ESVIpLyQoTElCTkFNRSkubGEgOyBcCiAJ
+Li4vJChJTlNUQUxMKSAtbSA3NTUgLWQgJChQS0dfUk9PVF9MSUJfRElSKTsgXAotCS4uLyQo
+SU5TVEFMTCkgLVQgc29fYmFzZSAkKExJQk5BTUUpLmxhaSAkKFBLR19ST09UX0xJQl9ESVIp
+OyBcCi0JaWYgWyAieCQoc2hlbGwgcmVhZGxpbmsgLWYgJChQS0dfTElCX0RJUikpIiAhPSBc
+Ci0JICAgICAieCQoc2hlbGwgcmVhZGxpbmsgLWYgJChQS0dfUk9PVF9MSUJfRElSKSkiIF07
+IHRoZW4gXAotCQkuLi8kKElOU1RBTEwpIC1TICQoUEtHX0xJQl9ESVIpLyQoTElCTkFNRSku
+YSAkKFBLR19ST09UX0xJQl9ESVIpLyQoTElCTkFNRSkuYTsgXAotCQkuLi8kKElOU1RBTEwp
+IC1TICQoUEtHX0xJQl9ESVIpLyQoTElCTkFNRSkubGEgJChQS0dfUk9PVF9MSUJfRElSKS8k
+KExJQk5BTUUpLmxhOyBcCi0JCS4uLyQoSU5TVEFMTCkgLVMgJChQS0dfUk9PVF9MSUJfRElS
+KS8kKExJQk5BTUUpLnNvICQoUEtHX0xJQl9ESVIpLyQoTElCTkFNRSkuc287IFwKLQlmaQor
+CS4uLyQoSU5TVEFMTCkgLVQgc29fYmFzZSAkKExJQk5BTUUpLmxhaSAkKFBLR19ST09UX0xJ
+Ql9ESVIpOwogZWxzZQogSU5TVEFMTF9MVExJQl9ERVYgPSAkKElOU1RBTExfTFRMSUJfU1RB
+VElDKQogZW5kaWYK
+--------------7042D7A2FD74CF2CA02AF554--
+
+--9xMVNadrLMbSbOeeS2g1ehhA9VW2qgM0l--
+
+--FMln56jV5M1tAxDeReA4UX8ms79CGcjlx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEECbOsLssWnJBDRcxUauHfDWCPItwFAljMSlEACgkQauHfDWCP
+ItxRXhAAk6Ch+qKpH4xNlkslA9m1Uw/vxcJO2Z4ATpvd0zeoYR87z87HYS6JPdjI
+mClTjTkAT0vIFizBrVO0ZU96LmC95J9F9Avmgm4oYO+OgbpXw7cBCsnB1+Urk3KV
+zDkn9ORmZJTMSVokRTNhBbxozehz5OuvPq0Z8y7Uxlc9eR9U7t46gHge1Odro93A
+qmCu5tH0aLWVmB8u4oKS13a7MFLkzc+FN+/DGdFQnUW18/GeRN8aekF9JZR3mEPs
+O7oHJ65DwcSFndOptkxl1wUSu0o1ggh+uOTGPnNWfDDPtkjnY4ELhZ+VehJwGaWS
+rTOaj3Rmu474iDOLONxlO5PxOUuNmL/uBS7gqcxDjTvK9y1b67B7qrALXY05jSGG
+lhXXBZvb7pHU/bxF7WFeUblEvdjYSS4Lh6MpkKTy2MErQDIm9oihuAvQnHcReJuR
+3pPxXC3kjNiTieHQZf7YQbcagj+8Wh2yMdduR+/AXBFPGUeTfJhJyPSCgdpoTPkV
+cqMDlLlZ7mM60nkqpdWBawORR4sSvvjDJiy0YTJvNAP2SPBR2EVPwsVr6zEqoCLD
+M5GhcWo10PUr8hfZi5+Kpd4b+2RSVq9JGK0bkG7WNNQFh+Q5WqNU65nKzSNjv0B6
+t77L9cs/12Fs+QSp+avNpt9RDDqYlfjd/1F6pScH4z2jlyIqa4M=
+=EJVK
+-----END PGP SIGNATURE-----
+
+--FMln56jV5M1tAxDeReA4UX8ms79CGcjlx--
