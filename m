@@ -1,325 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35566 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936572AbdCXXxS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Mar 2017 19:53:18 -0400
-Subject: Re: [PATCH 08/22] mkfs: move conflicts into the table
-References: <20170315160017.27805-1-jtulak@redhat.com>
- <20170315160017.27805-9-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <89179241-774e-39d9-9e9d-16828ffbd67b@sandeen.net>
-Date: Fri, 24 Mar 2017 18:53:15 -0500
+Received: from mail-yw0-f174.google.com ([209.85.161.174]:36351 "EHLO
+        mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751081AbdCQEOg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 00:14:36 -0400
+Received: by mail-yw0-f174.google.com with SMTP id o4so46193645ywd.3
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2017 21:14:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170315160017.27805-9-jtulak@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170315193040.GG5280@birch.djwong.org>
+References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
+ <20170315072349.GZ5280@birch.djwong.org> <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
+ <20170315191355.GF5280@birch.djwong.org> <20170315193040.GG5280@birch.djwong.org>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Thu, 16 Mar 2017 22:07:41 -0600
+Message-ID: <CAJCQCtRt7_WpEp0npF=k1JJHFLE2sfc9ktB4YakuCZ5CNfZTTg@mail.gmail.com>
+Subject: Re: boot failure after kernel update, imap claims in-use inode 661690
+ is free, would correct imap
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>
 
-On 3/15/17 11:00 AM, Jan Tulak wrote:
-> Fill the table with conflicts data and remove now-duplicate code for their
-> detection from other parts of mkfs.
+On Wed, Mar 15, 2017 at 1:30 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Wed, Mar 15, 2017 at 12:13:55PM -0700, Darrick J. Wong wrote:
+>> On Wed, Mar 15, 2017 at 12:11:22PM -0600, Chris Murphy wrote:
+>> > On Wed, Mar 15, 2017 at 1:23 AM, Darrick J. Wong
+>> > <darrick.wong@oracle.com> wrote:
 
-One other thing that I've noticed is that if you do:
+>> > Unmounting file systems.
+>> > Remounting '/tmp' read-only with options 'seclabel'.
+>> > Unmounting /tmp.
+>> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
+>> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
+>> > Remounting '/' read-only with options 'seclabel,attr2,inode64,noquota'.
+>>
+>> (I wonder why it does this three times?)
+>
+> Because systemd (v229, anyway) doesn't ever unmount /; it merely tries
+> to remount it readonly.  Regrettably it /also/ throws away the return
+> code from the mount call so there's no way to positively confirm my
+> current theory, which is that we don't actually succeed at the
+> remount-ro request and that's why the log needs recovery after the
+> reboot.
 
-# mkfs.xfs -i align=0 /dev/foo
+The last line after those three is "All filesystems unmounted." So if
+it isn't really unmounting, then that's a bogus message.
 
-that passes now, and it shouldn't.  Prior to this patch, it said:
+Also, on Btrfs I'm getting the same three remounting messages, and the
+unmounted message.
 
-Inodes always aligned for CRC enabled filesytems
+Remounting '/' read-only with options
+'seclabel,space_cache,subvolid=5,subvol=/'.
+Remounting '/' read-only with options
+'seclabel,space_cache,subvolid=5,subvol=/'.
+Remounting '/' read-only with options
+'seclabel,space_cache,subvolid=5,subvol=/'.
+All filesystems unmounted.
 
-The above testcase actually alternates between pass & fail over
-the next several patches.  If you have testcases for these conflicts,
-please try to make sure that they don't regress throughout the
-series.
 
--Eric
+> So maybe plymouthd, or journald, or systemd, or something else entirely
+> still holds a writable file descriptor to somewhere on the rootfs.  I
+> guess you could build a custom systemd that actually logs the return
+> value....
 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> ---
->  mkfs/xfs_mkfs.c | 152 ++++++++++++++++++++++++++------------------------------
->  1 file changed, 70 insertions(+), 82 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 4ba6df05..c100fef9 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -45,7 +45,7 @@ unsigned int		sectorsize;
->  #define MAX_OPTS	16
->  #define MAX_SUBOPTS	16
->  #define SUBOPT_NEEDS_VAL	(-1LL)
-> -#define MAX_CONFLICTS	8
-> +#define MAX_CONFLICTS	32
->  #define LAST_CONFLICT	(-1)
->  
->  #define OPT_B		0
-> @@ -409,7 +409,9 @@ struct opt_params {
->  		},
->  		.subopt_params = {
->  			{ .index = I_ALIGN,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = { {OPT_M, M_CRC, true, 1, 0,
-> +		"Inodes always aligned for CRC enabled filesytems."},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
-> @@ -447,19 +449,26 @@ struct opt_params {
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = I_ATTR,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = { {OPT_M, M_CRC, true, 1, 1,
-> +		"V2 attribute format always enabled on CRC enabled filesytems."},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 2,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = I_PROJID32BIT,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = { {OPT_M, M_CRC, true, 1, 0,
-> +		"32 bit Project IDs always enabled on CRC enabled filesytems."},
-> +					 {LAST_CONFLICT} },
-> +
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
->  			},
->  			{ .index = I_SPINODES,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = { {OPT_M, M_CRC, true, 0, 1,
-> +		"Sparse inodes not supported without CRC support."},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
-> @@ -508,7 +517,9 @@ struct opt_params {
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = L_VERSION,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = { {OPT_M, M_CRC, true, 1, 1,
-> +				"V2 logs are required for CRC enabled filesystems."},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 1,
->  			  .maxval = 2,
->  			  .defaultval = SUBOPT_NEEDS_VAL,
-> @@ -564,7 +575,9 @@ struct opt_params {
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = L_LAZYSBCNTR,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = { {OPT_M, M_CRC, true, 1, 0,
-> +		"Lazy superblock counted always enabled for CRC enabled filesytems."},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
-> @@ -605,7 +618,9 @@ struct opt_params {
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = N_FTYPE,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = {  {OPT_M, M_CRC, true, 1, 0,
-> +		"Cannot disable ftype with crcs enabled."},
-> +					  {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
-> @@ -640,7 +655,9 @@ struct opt_params {
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = R_DEV,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = { {OPT_M, M_RMAPBT, false, 0, 0,
-> +		"rmapbt not supported without CRC support."},
-> +					 {LAST_CONFLICT} },
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = R_FILE,
-> @@ -650,7 +667,9 @@ struct opt_params {
->  			  .conflicts = { {LAST_CONFLICT} },
->  			},
->  			{ .index = R_NAME,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = { {OPT_M, M_RMAPBT, false, 0, 0,
-> +		"rmapbt not supported without CRC support."},
-> +					 {LAST_CONFLICT} },
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = R_NOALIGN,
-> @@ -723,13 +742,35 @@ struct opt_params {
->  		},
->  		.subopt_params = {
->  			{ .index = M_CRC,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = { {OPT_L, L_VERSION, true, 1, 1,
-> +		"V2 logs are required for CRC enabled filesystems."},
-> +					 {OPT_I, I_ALIGN, true, 0, 1,
-> +		"Inodes always aligned for CRC enabled filesytems."},
-> +					 {OPT_I, I_PROJID32BIT, true, 0, 1,
-> +		"32 bit Project IDs always enabled on CRC enabled filesytems."},
-> +					 {OPT_I, I_ATTR, true, 1, 1,
-> +		"V2 attribute format always enabled on CRC enabled filesytems."},
-> +					 {OPT_L, L_LAZYSBCNTR, true, 0, 1,
-> +		"Lazy superblock counted always enabled for CRC enabled filesytems."},
-> +					 {OPT_M, M_FINOBT, true, 1, 0,
-> +		"Finobt not supported without CRC support."},
-> +					 {OPT_M, M_RMAPBT, true, 1, 0,
-> +		"rmapbt not supported without CRC support."},
-> +					 {OPT_M, M_REFLINK, true, 1, 0,
-> +		"reflink not supported without CRC support."},
-> +					 {OPT_I, I_SPINODES, true, 1, 0,
-> +		"Sparse inodes not supported without CRC support."},
-> +					 {OPT_N, N_FTYPE, true, 0, 1,
-> +		"Cannot disable ftype with crcs enabled."},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
->  			},
->  			{ .index = M_FINOBT,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = { {OPT_M, M_CRC, true, 0, 1,
-> +		"Finobt not supported without CRC support\n"},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 1,
-> @@ -739,13 +780,21 @@ struct opt_params {
->  			  .defaultval = SUBOPT_NEEDS_VAL,
->  			},
->  			{ .index = M_RMAPBT,
-> -			.conflicts = { {LAST_CONFLICT} },
-> +			.conflicts = { {OPT_M, M_CRC, true, 0, 1,
-> +		"rmapbt not supported without CRC support."},
-> +					{OPT_R, R_NAME, false, 0, 0,
-> +		"rmapbt not supported with realtime devices."},
-> +					{OPT_R, R_DEV, false, 0, 0,
-> +		"rmapbt not supported with realtime devices."},
-> +				       {LAST_CONFLICT} },
->  			.minval = 0,
->  			.maxval = 1,
->  			.defaultval = 0,
->  			},
->  			{ .index = M_REFLINK,
-> -			  .conflicts = { {LAST_CONFLICT} },
-> +			  .conflicts = { {OPT_M, M_CRC, true, 0, 1,
-> +		"reflink not supported without CRC support."},
-> +					 {LAST_CONFLICT} },
->  			  .minval = 0,
->  			  .maxval = 1,
->  			  .defaultval = 0,
-> @@ -2183,11 +2232,16 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
->  			XFS_MIN_CRC_BLOCKSIZE);
->  		usage();
->  	}
-> +
-> +	/*
-> +	 * If user explicitly stated -m crc=1 -n ftype=0, an error was already
-> +	 * issued. But if -n ftype=0 was stated alone, then it is a conflict
-> +	 * with a default value for crc enabled and has to be detected here.
-> +	 */
->  	if (sb_feat.crcs_enabled && !sb_feat.dirftype) {
->  		fprintf(stderr, _("cannot disable ftype with crcs enabled\n"));
->  		usage();
->  	}
-> -
->  	if (!slflag && !ssflag) {
->  		sectorlog = XFS_MIN_SECTORSIZE_LOG;
->  		sectorsize = XFS_MIN_SECTORSIZE;
-> @@ -2293,42 +2347,6 @@ _("Minimum inode size for CRCs is %d bytes\n"),
->  				1 << XFS_DINODE_DFL_CRC_LOG);
->  			usage();
->  		}
-> -
-> -		/* inodes always aligned */
-> -		if (!sb_feat.inode_align) {
-> -			fprintf(stderr,
-> -_("Inodes always aligned for CRC enabled filesytems\n"));
-> -			usage();
-> -		}
-> -
-> -		/* lazy sb counters always on */
-> -		if (!sb_feat.lazy_sb_counters) {
-> -			fprintf(stderr,
-> -_("Lazy superblock counted always enabled for CRC enabled filesytems\n"));
-> -			usage();
-> -		}
-> -
-> -		/* version 2 logs always on */
-> -		if (sb_feat.log_version != 2) {
-> -			fprintf(stderr,
-> -_("V2 logs always enabled for CRC enabled filesytems\n"));
-> -			usage();
-> -		}
-> -
-> -		/* attr2 always on */
-> -		if (sb_feat.attr_version != 2) {
-> -			fprintf(stderr,
-> -_("V2 attribute format always enabled on CRC enabled filesytems\n"));
-> -			usage();
-> -		}
-> -
-> -		/* 32 bit project quota always on */
-> -		/* attr2 always on */
-> -		if (sb_feat.projid16bit) {
-> -			fprintf(stderr,
-> -_("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
-> -			usage();
-> -		}
->  	} else {
->  		/*
->  		 * The kernel doesn't currently support crc=0,finobt=1
-> @@ -2336,46 +2354,16 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
->  		 * explicitly turned finobt on, then silently turn it off to
->  		 * avoid an unnecessary warning.
->  		 * If the user explicitly tried to use crc=0,finobt=1,
-> -		 * then issue an error.
-> +		 * the error was already issued during args parsing.
->  		 * The same is also for sparse inodes.
->  		 */
-> -		if (sb_feat.finobt && opts[OPT_M].subopt_params[M_FINOBT].seen) {
-> -			fprintf(stderr,
-> -_("finobt not supported without CRC support\n"));
-> -			usage();
-> -		}
->  		sb_feat.finobt = 0;
-> -
-> -		if (sb_feat.spinodes) {
-> -			fprintf(stderr,
-> -_("sparse inodes not supported without CRC support\n"));
-> -			usage();
-> -		}
->  		sb_feat.spinodes = 0;
->  
-> -		if (sb_feat.rmapbt) {
-> -			fprintf(stderr,
-> -_("rmapbt not supported without CRC support\n"));
-> -			usage();
-> -		}
->  		sb_feat.rmapbt = false;
-> -
-> -		if (sb_feat.reflink) {
-> -			fprintf(stderr,
-> -_("reflink not supported without CRC support\n"));
-> -			usage();
-> -		}
->  		sb_feat.reflink = false;
->  	}
->  
-> -
-> -	if (sb_feat.rmapbt && xi.rtname) {
-> -		fprintf(stderr,
-> -_("rmapbt not supported with realtime devices\n"));
-> -		usage();
-> -		sb_feat.rmapbt = false;
-> -	}
-> -
->  	if (nsflag || nlflag) {
->  		if (dirblocksize < blocksize ||
->  					dirblocksize > XFS_MAX_BLOCKSIZE) {
-> 
+Yuck. I'll ask on systemd list if there's a way to get more verbose
+information about this without that. It really ought to be in
+systemd.log_level=debug anyway.
+
+
+-- 
+Chris Murphy
