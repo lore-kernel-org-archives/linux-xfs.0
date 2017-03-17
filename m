@@ -1,58 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:34278 "EHLO
-        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751061AbdCQCEN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2017 22:04:13 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:33136 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751112AbdCQUaT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Mar 2017 16:30:19 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 86A5F624C6
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 20:29:45 +0000 (UTC)
+Date: Fri, 17 Mar 2017 15:29:40 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH (TRIVIAL)] xfs: fix up inode validation failure message
+Message-ID: <20170317202940.GA19030@redhat.com>
+References: <59d16175-1c24-4bc2-5cd9-ac7a062e5ae3@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <eee4683d-9f44-434f-b97f-b0b24c7b3dab@kernel.dk>
-References: <20170315215107.5628-1-rgoldwyn@suse.de> <20170315215107.5628-6-rgoldwyn@suse.de>
- <eee4683d-9f44-434f-b97f-b0b24c7b3dab@kernel.dk>
-From: Ming Lei <tom.leiming@gmail.com>
-Date: Fri, 17 Mar 2017 10:03:18 +0800
-Message-ID: <CACVXFVMTxxRM==3ton-=LmDHYKpBu2Sh59hs_gyvFCUtnQwjVQ@mail.gmail.com>
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <59d16175-1c24-4bc2-5cd9-ac7a062e5ae3@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.com>, Christoph Hellwig <hch@infradead.org>, linux-block <linux-block@vger.kernel.org>, Btrfs BTRFS <linux-btrfs@vger.kernel.org>, "open list:EXT4 FILE SYSTEM" <linux-ext4@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Sagi Grimberg <sagi@grimberg.me>, avi@scylladb.com, linux-api@vger.kernel.org, Matthew Wilcox <willy@infradead.org>, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Mar 16, 2017 at 10:33 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> On 03/15/2017 03:51 PM, Goldwyn Rodrigues wrote:
->> diff --git a/block/blk-core.c b/block/blk-core.c
->> index 0eeb99e..2e5cba2 100644
->> --- a/block/blk-core.c
->> +++ b/block/blk-core.c
->> @@ -2014,7 +2019,7 @@ blk_qc_t generic_make_request(struct bio *bio)
->>       do {
->>               struct request_queue *q = bdev_get_queue(bio->bi_bdev);
->>
->> -             if (likely(blk_queue_enter(q, false) == 0)) {
->> +             if (likely(blk_queue_enter(q, bio_flagged(bio, BIO_NOWAIT)) == 0)) {
->>                       struct bio_list hold;
->>                       struct bio_list lower, same;
->>
->> @@ -2040,7 +2045,10 @@ blk_qc_t generic_make_request(struct bio *bio)
->>                       bio_list_merge(&bio_list_on_stack, &same);
->>                       bio_list_merge(&bio_list_on_stack, &hold);
->>               } else {
->> -                     bio_io_error(bio);
->> +                     if (unlikely(bio_flagged(bio, BIO_NOWAIT)))
->> +                             bio_wouldblock_error(bio);
->> +                     else
->> +                             bio_io_error(bio);
->
-> This doesn't look right. What if the queue is dying, and BIO_NOWAIT just
-> happened to be set?
->
-> And you're missing wbt_wait() as well as a blocking point. Ditto in
-> blk-mq.
-
-There are also tons of block points in dm/md/bcache, which need to be
-considered or be documented at least, :-)
-
-
-
-Thanks,
-Ming Lei
+On Fri, Mar 17, 2017 at 08:47:38AM -0700, Eric Sandeen wrote:
+> "xfs_iread: validation failed for inode 96 failed"
+> 
+> One "failed" seems like enough.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+> 
+> Yo dawg, I heard you like failed so I put failed in your
+> failed so you can fail while you fail.
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index d93f9d9..09c3d1a 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -508,7 +508,7 @@
+>  
+>  	/* even unallocated inodes are verified */
+>  	if (!xfs_dinode_verify(mp, ip->i_ino, dip)) {
+> -		xfs_alert(mp, "%s: validation failed for inode %lld failed",
+> +		xfs_alert(mp, "%s: validation failed for inode %lld",
+>  				__func__, ip->i_ino);
+>  
+>  		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, dip);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
