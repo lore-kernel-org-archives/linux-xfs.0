@@ -1,64 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33638 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750877AbdCOTAR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 15:00:17 -0400
-Date: Wed, 15 Mar 2017 12:00:11 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_repair: warn about dirty log with -n option
-Message-ID: <20170315190011.GE5280@birch.djwong.org>
-References: <a59b1187-cf8c-56ac-565d-9c37472730c4@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:48444 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750885AbdCQMXc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Mar 2017 08:23:32 -0400
+Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
+References: <20170315215107.5628-1-rgoldwyn@suse.de>
+ <20170315215107.5628-6-rgoldwyn@suse.de> <20170316213134.GV17542@dastard>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Message-ID: <045e06ce-ac19-6293-a62b-8ac937f753ac@suse.de>
+Date: Fri, 17 Mar 2017 07:23:24 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a59b1187-cf8c-56ac-565d-9c37472730c4@redhat.com>
+In-Reply-To: <20170316213134.GV17542@dastard>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>, Goldwyn Rodrigues <rgoldwyn@suse.com>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org
 
-On Wed, Mar 15, 2017 at 01:32:34PM -0500, Eric Sandeen wrote:
-> When looking at xfs_repair -n output today, we have no idea if
-> reported errors may be due to an un-replayed dirty log.  If this
-> is the case, mention it in the output.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
---D
+On 03/16/2017 04:31 PM, Dave Chinner wrote:
+> On Wed, Mar 15, 2017 at 04:51:04PM -0500, Goldwyn Rodrigues wrote:
+>> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+>>
+>> A new flag BIO_NOWAIT is introduced to identify bio's
+>> orignating from iocb with IOCB_NOWAIT. This flag indicates
+>> to return immediately if a request cannot be made instead
+>> of retrying.
+> 
+> So this makes a congested block device run the bio IO completion
+> callback with an -EAGAIN error present? Are all the filesystem
+> direct IO submission and completion routines OK with that? i.e. does
+> such a congestion case cause filesystems to temporarily expose stale
+> data to unprivileged users when the IO is requeued in this way?
+> 
+> e.g. filesystem does allocation without blocking, submits bio,
+> device is congested, runs IO completion with error, so nothing
+> written to allocated blocks, write gets queued, so other read
+> comes in while the write is queued, reads data from uninitialised
+> blocks that were allocated during the write....
+> 
+> Seems kinda problematic to me to have a undocumented design
+> constraint (i.e a landmine) where we submit the AIO only to have it
+> error out and then expect the filesystem to do something special and
+> different /without blocking/ on EAGAIN.
 
-> ---
+
+If the filesystems has to perform block allocation, we would return
+-EAGAIN early enough. However, I agree there is a problem, since not all
+filesystems know this. I worked on only three of them.
+
 > 
-> pls check double-check my logic for the 3 cases :)
+> Why isn't the congestion check at a higher layer like we do for page
+> cache readahead? i.e. using the bdi*congested() API at the time we
+> are doing all the other filesystem blocking checks.
 > 
-> diff --git a/repair/phase2.c b/repair/phase2.c
-> index 5964244..c21778b 100644
-> --- a/repair/phase2.c
-> +++ b/repair/phase2.c
-> @@ -90,11 +90,16 @@ zero_log(
->  	_("zero_log: head block %" PRId64 " tail block %" PRId64 "\n"),
->  				head_blk, tail_blk);
->  		}
-> -		if (!no_modify && head_blk != tail_blk) {
-> -			if (zap_log) {
-> +		if (head_blk != tail_blk) {
-> +			if (!no_modify && zap_log) {
->  				do_warn(_(
->  "ALERT: The filesystem has valuable metadata changes in a log which is being\n"
->  "destroyed because the -L option was used.\n"));
-> +			} else if (no_modify) {
-> +				do_warn(_(
-> +"ALERT: The filesystem has valuable metadata changes in a log which is being\n"
-> +"ignored because the -n option was used.  Expect spurious inconsistencies\n"
-> +"which may be resolved by first mounting the filesystem to replay the log.\n"));
->  			} else {
->  				do_warn(_(
->  "ERROR: The filesystem has valuable metadata changes in a log which needs to\n"
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Yes, that may work better. We will have to call bdi_read_congested() on
+a write path. (will have to comment that part of the code). Would it
+encompass all possible waits in the block layer?
+
+
+-- 
+Goldwyn
