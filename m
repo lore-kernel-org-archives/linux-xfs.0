@@ -1,45 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50931 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933132AbdCUQKj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2017 12:10:39 -0400
-Date: Tue, 21 Mar 2017 12:10:26 -0400
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS developers meeting at Vault?
-Message-ID: <20170321161026.GB5722@birch.djwong.org>
-References: <20170123174432.GA22900@lst.de>
- <20170206124053.c5jh6cieebnhnixy@eorzea.usersys.redhat.com>
- <20170206131711.GB57865@bfoster.bfoster>
- <20170207093958.GB15267@lst.de>
- <20170316234031.GZ28800@wotan.suse.de>
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:34278 "EHLO
+        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751061AbdCQCEN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2017 22:04:13 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170316234031.GZ28800@wotan.suse.de>
+In-Reply-To: <eee4683d-9f44-434f-b97f-b0b24c7b3dab@kernel.dk>
+References: <20170315215107.5628-1-rgoldwyn@suse.de> <20170315215107.5628-6-rgoldwyn@suse.de>
+ <eee4683d-9f44-434f-b97f-b0b24c7b3dab@kernel.dk>
+From: Ming Lei <tom.leiming@gmail.com>
+Date: Fri, 17 Mar 2017 10:03:18 +0800
+Message-ID: <CACVXFVMTxxRM==3ton-=LmDHYKpBu2Sh59hs_gyvFCUtnQwjVQ@mail.gmail.com>
+Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.com>, Christoph Hellwig <hch@infradead.org>, linux-block <linux-block@vger.kernel.org>, Btrfs BTRFS <linux-btrfs@vger.kernel.org>, "open list:EXT4 FILE SYSTEM" <linux-ext4@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Sagi Grimberg <sagi@grimberg.me>, avi@scylladb.com, linux-api@vger.kernel.org, Matthew Wilcox <willy@infradead.org>, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Fri, Mar 17, 2017 at 12:40:31AM +0100, Luis R. Rodriguez wrote:
-> On Tue, Feb 07, 2017 at 10:39:58AM +0100, Christoph Hellwig wrote:
-> > Ok, seems like we don't have too many people with availabily.
-> > Let's just meet for a beer during Vault.
-> 
-> Beer BoF, count me in.
+On Thu, Mar 16, 2017 at 10:33 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> On 03/15/2017 03:51 PM, Goldwyn Rodrigues wrote:
+>> diff --git a/block/blk-core.c b/block/blk-core.c
+>> index 0eeb99e..2e5cba2 100644
+>> --- a/block/blk-core.c
+>> +++ b/block/blk-core.c
+>> @@ -2014,7 +2019,7 @@ blk_qc_t generic_make_request(struct bio *bio)
+>>       do {
+>>               struct request_queue *q = bdev_get_queue(bio->bi_bdev);
+>>
+>> -             if (likely(blk_queue_enter(q, false) == 0)) {
+>> +             if (likely(blk_queue_enter(q, bio_flagged(bio, BIO_NOWAIT)) == 0)) {
+>>                       struct bio_list hold;
+>>                       struct bio_list lower, same;
+>>
+>> @@ -2040,7 +2045,10 @@ blk_qc_t generic_make_request(struct bio *bio)
+>>                       bio_list_merge(&bio_list_on_stack, &same);
+>>                       bio_list_merge(&bio_list_on_stack, &hold);
+>>               } else {
+>> -                     bio_io_error(bio);
+>> +                     if (unlikely(bio_flagged(bio, BIO_NOWAIT)))
+>> +                             bio_wouldblock_error(bio);
+>> +                     else
+>> +                             bio_io_error(bio);
+>
+> This doesn't look right. What if the queue is dying, and BIO_NOWAIT just
+> happened to be set?
+>
+> And you're missing wbt_wait() as well as a blocking point. Ditto in
+> blk-mq.
 
-Well I do have that AMA session 5-6pm on Wednesday during Vault.
-How about we meet after that?
+There are also tons of block points in dm/md/bcache, which need to be
+considered or be documented at least, :-)
 
-"Onsite Attendee Reception" is the only thing after that.  Maybe they'll
-have free beer?  Maybe not?
 
---D
 
-> 
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Ming Lei
