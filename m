@@ -1,93 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:7292 "EHLO
-        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751854AbdCVWTW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2017 18:19:22 -0400
-Date: Thu, 23 Mar 2017 09:19:12 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: boot failure after kernel update, imap claims in-use inode
- 661690 is free, would correct imap
-Message-ID: <20170322221912.GE17542@dastard>
-References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
- <20170315072349.GZ5280@birch.djwong.org>
- <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
- <20170315191355.GF5280@birch.djwong.org>
- <20170315193040.GG5280@birch.djwong.org>
- <CAJCQCtRt7_WpEp0npF=k1JJHFLE2sfc9ktB4YakuCZ5CNfZTTg@mail.gmail.com>
- <CAJCQCtRVuKiOMdtGLb3QbR8uCTXbhFMnNQgPzzZWG7y6URawHQ@mail.gmail.com>
- <20170322043438.GD17542@dastard>
- <CAJCQCtQ6VXd4s=SZcMuSbEhN7yRKRk0GULY2isbg2ZAh5RW+=w@mail.gmail.com>
+Received: from mail-it0-f47.google.com ([209.85.214.47]:34217 "EHLO
+        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751129AbdCQMLk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 08:11:40 -0400
+Received: by mail-it0-f47.google.com with SMTP id m27so11653431iti.1
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 05:11:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJCQCtQ6VXd4s=SZcMuSbEhN7yRKRk0GULY2isbg2ZAh5RW+=w@mail.gmail.com>
+In-Reply-To: <20170316232555.GX28800@wotan.suse.de>
+References: <20170315160017.27805-1-jtulak@redhat.com> <20170315160017.27805-8-jtulak@redhat.com>
+ <20170316232555.GX28800@wotan.suse.de>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Fri, 17 Mar 2017 13:11:13 +0100
+Message-ID: <CACj3i73O96z7vDR+P4JVt4VfJ0B7WfuZc_sRZMdHD9=+BR09Xw@mail.gmail.com>
+Subject: Re: [PATCH 07/22] mkfs: Move opts related #define to one place
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs list <linux-xfs@vger.kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Mar 22, 2017 at 09:36:21AM -0600, Chris Murphy wrote:
-> On Tue, Mar 21, 2017 at 10:34 PM, Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > FYI, I've ranted previously over many years about how broken grub's
-> > kernel update and retreival process is fundamentally broken, but
-> > it's never been fixed(*). As a result, I don't use grub on any of my
-> > systems, nor do I recommend that anyone else use it.
-> 
-> OK I follow all the previous comments, thanks, but here is where
-> there's a departure.
-> 
-> On Ubuntu systems, maybe all Debian systems, they are using
-> grub-mkconfig script, possibly in the form of update-grub, to create a
-> completely new grub.cfg. That script writes out grub.cfg.new and then
-> renames it to grub.cfg.
-> 
-> Fedora/RH systems don't use that at all. They don't use anything from
-> upstream GRUB to do updates in fact. The kernel RPM uses
-> new-kernel-pkg which in turn calls things like dracut, and eventually
-> it has grubby modify the grub.cfg in place. The grubby package has no
-> relationship at all with upstream grub. Directly modifying grub.cfg
-> and overwriting it seems risky, but I'm pretty sure that's how it
-> works.
-> 
-> 
-> > (*) The simple fix for grub to freeze/unfreeze the filesystem rather
-> > than/after calling sync() - this does the same thing as remount-ro,
-> > but unlike remount-ro it does not fail if there are writable file
-> > descriptors open.
-> 
-> 
-> OK. It looks to me like systemd eventually gives up on the remount-ro,
-> and then just reboots. That strikes me as a flawed design. Systemd
-> needs to wait longer (which is vague advice), or maybe after the 3rd
-> failed remount-ro, insert a freeze/unfreeze, then reboot. How does
-> that sound?
+On Fri, Mar 17, 2017 at 12:25 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> On Wed, Mar 15, 2017 at 05:00:02PM +0100, Jan Tulak wrote:
+>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>> index 0877c196..4ba6df05 100644
+>> --- a/mkfs/xfs_mkfs.c
+>> +++ b/mkfs/xfs_mkfs.c
+>> @@ -48,6 +48,80 @@ unsigned int               sectorsize;
+>>  #define MAX_CONFLICTS        8
+>>  #define LAST_CONFLICT        (-1)
+>>
+>> +#define OPT_B                0
+>> +#define B_LOG                0
+>> +#define B_SIZE               1
+>
+> How about instead using enums, this way if we use kdoc format (hey the new
+> kernel doc format is producing nicer docs) we can then document what the
+> hell each of these things are nicely. Also, when enums are used in switches
+> the compiler will nag at you if you happened to have missed a case, unless you
+> have a default.
+>
+> We could have an enum for the opts and then one for each subopt group.
+>
+>   Luis
 
-Sounds supremely fragile and fucked up. Sure, lets add another
-layers of hacks to systemd to work around the problem that systemd
-can't remount-ro the root filesystem because systemd holds open
-write fds on the root fs. Fix the problem that causes open write fds
-on the root fs at the end of shutdown? Nah, that's stupid talk -
-just hack a bandaid over the top....
+Good point. I kept it as defines, but given how I'm shuffling it, I
+might turn it into enum as well. This change should cause no issue
+except separating option/suboption definition. I will think about it,
+but now I'm more for the enums.
 
-And let's also ignore the fact that, in this case, the remount-ro is
-effectively working around bootloader updates not providing
-durability guarantees.  i.e. the bootloader doesn't do guaranteed
-safe updates and requires 3rd party action to provide update
-integrity.  The distro update scripts are all different because the
-bootloader doesn't provide the necessary update infrastructure the
-distros require, and it's extremely naive to expect the developers
-of those scripts to understand that they need to provide integrity
-guarantees that the bootloader itself doesn't provide.
+Jan
 
-Really, the bootloader needs fixing, then we can go back to
-blissfully ignoring all the stupid bugs in the steaming pile we know
-as systemd...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
