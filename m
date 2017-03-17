@@ -1,81 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f42.google.com ([209.85.214.42]:38232 "EHLO
-        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751317AbdCQMUt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 08:20:49 -0400
-Received: by mail-it0-f42.google.com with SMTP id m27so23122756iti.1
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 05:20:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170316233845.GY28800@wotan.suse.de>
-References: <20170315160017.27805-1-jtulak@redhat.com> <20170316233845.GY28800@wotan.suse.de>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 17 Mar 2017 13:20:11 +0100
-Message-ID: <CACj3i72s_M_MX-0pR+Q=dePnVo_XOX=xAeaNyab02Wg6_EB+Gw@mail.gmail.com>
-Subject: Re: [PATCH 00/22] mkfs.xfs: Make stronger conflict checks
-Content-Type: text/plain; charset=UTF-8
+Received: from mailly.debian.org ([82.195.75.114]:36809 "EHLO
+        mailly.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751332AbdCQVFK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 17:05:10 -0400
+Received: from usper.debian.org ([128.31.0.69])
+        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=usper.debian.org,EMAIL=hostmaster@usper.debian.org (verified)
+        by mailly.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.84_2)
+        (envelope-from <ftpmaster@ftp-master.debian.org>)
+        id 1coxgc-0002J7-GW
+        for linux-xfs@vger.kernel.org; Fri, 17 Mar 2017 19:37:18 +0000
+Received: from dak-unpriv by usper.debian.org with local (Exim 4.84_2)
+        (envelope-from <ftpmaster@ftp-master.debian.org>)
+        id 1coxgc-000632-4P
+        for linux-xfs@vger.kernel.org; Fri, 17 Mar 2017 19:37:18 +0000
+From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+Subject: Processing of xfsprogs_4.9.0+nmu1_source.changes
+Date: Fri, 17 Mar 2017 19:37:18 +0000
+Message-Id: <E1coxgc-000632-4P@usper.debian.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Mar 17, 2017 at 12:38 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> On Wed, Mar 15, 2017 at 04:59:55PM +0100, Jan Tulak wrote:
->> This set is a follow-up of some old discussions and further attempts to untangle
->> the spaghetti in options parsing. In short, this patchset allows to define
->> cross-option conflicts and makes the conflicts detection more robust.
->
-> This series is pretty large. There are quite a bit of patches which just rename
-> something, or just shove code from one place to another. Can you group up
-> non-functional changes together first, and send a small series of simple stuff
-> with no functional changes first?
->
-> That should reduce the size of the functional patch set, and make it clearer
-> which patches require much careful eyeballing. It should also put out of your
-> queue tons of changes which are trivial and can go in rather sooner.
->
+xfsprogs_4.9.0+nmu1_source.changes uploaded successfully to localhost
+along with the files:
+  xfsprogs_4.9.0+nmu1.dsc
+  xfsprogs_4.9.0+nmu1.tar.gz
+  xfsprogs_4.9.0+nmu1_source.buildinfo
 
-I see... I will see how I can split it better. I guess not everything
-can be moved like this, but at least some changes can be moved.
+Greetings,
 
->> Config file patches addendum:
->>
->> (Thread: http://www.spinics.net/lists/linux-xfs/msg04703.html)
->>
->> I read through the changes, but decided to don't take anything from it.
->
-> The last 2 patches of my config series are really the functional change there,
-> the rest is fluff to account for the insanity we have now.
->
->> I think it is time to do something and adding further changes would just
->> push it down again. Nevertheless, the other patchset contains some changes
->> (like splitting the main opts loop) that I wanted to add in some later patch
->> too.
->
-> OK.
->
->> I suggest that we first merge these patches I'm sending, and once it solves
->> some of the issues Luis hit too, we can look again on the config file thing
->> and even if the main idea fell out of favor for some reason, there are still
->> other useful changes.
->
-> Sure, I'm fine with this, do you have a git tree ? Once you rev and post new
-> series if you can provide a git URL that'd be great as then I can just work
-> off of that.
->
->> PS: I'm traveling at Vault next week, so if you are there too, we can open it
->> there.
->
-> I'm up for beers there.
->
-
-Great. :-)
-
-Cheers,
-Jan
-
-
-
--- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+	Your Debian queue daemon (running on host usper.debian.org)
