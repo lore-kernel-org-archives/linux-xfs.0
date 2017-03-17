@@ -1,108 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47362 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753253AbdCPPVz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Mar 2017 11:21:55 -0400
-Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
-References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com>
- <74482935.PWezjV9Qp4@libor-nb>
- <64592e33-6597-a4b4-3e1a-3ec41beeda8c@sandeen.net>
- <2727630.ZS8FFPfE3C@libor-nb>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b6492357-4bf3-c570-be33-90010e3b1967@sandeen.net>
-Date: Thu, 16 Mar 2017 08:21:43 -0700
+Received: from mail-it0-f52.google.com ([209.85.214.52]:37353 "EHLO
+        mail-it0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751010AbdCQNI3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 09:08:29 -0400
+Received: by mail-it0-f52.google.com with SMTP id g138so24726372itb.0
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 06:06:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <2727630.ZS8FFPfE3C@libor-nb>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <2030b8be-4fe0-c767-4c3a-0e5ff25c4362@sandeen.net>
+References: <20170315160017.27805-1-jtulak@redhat.com> <20170316233845.GY28800@wotan.suse.de>
+ <2030b8be-4fe0-c767-4c3a-0e5ff25c4362@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Fri, 17 Mar 2017 13:57:10 +0100
+Message-ID: <CACj3i72OB8Ywx-vomuT+jV5P7KFVZN-4g=NssTXX6W_G8MjQ1w@mail.gmail.com>
+Subject: Re: [PATCH 00/22] mkfs.xfs: Make stronger conflict checks
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?UTF-8?B?TGlib3IgS2xlcMOhxI0=?= <libor.klepac@bcom.cz>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
 
-On 3/16/17 1:58 AM, Libor Klepáč wrote:
-> Hi,
-> On středa 15. března 2017 10:22:05 CET Eric Sandeen wrote:
->> On 3/15/17 5:07 AM, Libor Klepáč wrote:
->>> Hello,
+On Fri, Mar 17, 2017 at 12:47 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 3/16/17 4:38 PM, Luis R. Rodriguez wrote:
+>> On Wed, Mar 15, 2017 at 04:59:55PM +0100, Jan Tulak wrote:
+>>> This set is a follow-up of some old discussions and further attempts to untangle
+>>> the spaghetti in options parsing. In short, this patchset allows to define
+>>> cross-option conflicts and makes the conflicts detection more robust.
 >>
->> ...
->>
->>>> Unfortunately the read path is a bit less interesting.  We found something
->>>> on disk, but we're not sure how it got there.
->>>> If we could catch a write verifier failing that /might/ be a little more
->>>> useful.
->>>
->>> I'm prepared to run all affected hosts with error_level=11 , if it doesn't mean performance hit.
->>
->> It shouldn't.  It only changes logging behavior on error.  The printks to the
->> console probably take a bit of extra time but at that point you've already lost,
->> right?
-> 
-> Ok, thanks for clarification, I was wondering whether higher error_level isn't triggering some extra code paths during normal operation.
-> I will leave it on 11 on all machines with problems.
+>> This series is pretty large. There are quite a bit of patches which just rename
+>> something, or just shove code from one place to another. Can you group up
+>> non-functional changes together first, and send a small series of simple stuff
+>> with no functional changes first?
+>
+> I have to say I'm still struggling with it as well.  Apologies for the
+> random detail nitpicking, I'm trying to look through it all to get a better
+> big picture.
 
-Understood.  Yup, it's really not, it only changes reporting post-error.
+No issue. I guess that if I split the changes differently, it might be
+easier to read.
+I need to find a better way how to present/group the changes.
 
-> Btw. i naively created 
-> /etc/sysctl.d/fs_xfs_error_level.conf
-> with 
-> fs.xfs.error_level=11
-> inside.
-> But it's not set after reboot. May it be because XFS module (not root filesystem) is loaded after sysctl is set?
+>
+> And as far as "no-op changes" it's imperative to make them really no-op.
+> Make sure that other random changes aren't stuck into the middle of anything...
+>
 
-Must be, the systctl file will not appear until xfs is loaded.
- 
-> Bellow is result of repair.
-> I was expecting 
-> bad attribute count 0 in attr block 0, inode 2152616264
-> to be
-> bad attribute count 0 in attr block 0x24e70268, inode 2152616264
-> 
-> Function process_leaf_attr_block should be called with non-zero da_bno in process_leaf_attr_level , right?
-> But it's called with da_bno = 0 in process_longform_attr .
+Of course. :-)
 
-typedef __uint32_t      xfs_dablk_t;    /* dir/attr block number (in file) */
+> I'll probably keep flinging comments on various patches as I read them,
+> some of it may be helpful in terms of just learning some best practice
+> for patches, but TBH I'm still trying to wrap my head around the big change
+> and purpose.
+>
 
-It's the relative block number in the attribute, i.e. block 0 (first block)
+OK. We can talk about it next week personally if needed. And decide
+whether it is worth to reorganise this set into no-op and op changes.
 
-> Of course I don't know the code.
-> 
-> Libor
-> 
-> # xfs_repair  /dev/mapper/vgDisk2-lvData
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
->         - agno = 2
-> bad attribute count 0 in attr block 0, inode 2152616264
-> problem with attribute contents in inode 2152616264
-> clearing inode 2152616264 attributes
-> correcting nblocks for inode 2152616264, was 1 - counted 0
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
-> bad attribute format 1 in inode 2152616264, resetting value
-> Phase 5 - rebuild AG headers and trees...
->         - reset superblock...
-> Phase 6 - check inode connectivity...
->         - resetting contents of realtime bitmap and summary inodes
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify and correct link counts...
-> Done
-> 
-> 
+Cheers,
+Jan
+
+
+
+-- 
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
