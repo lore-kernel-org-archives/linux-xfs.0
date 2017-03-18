@@ -1,44 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:38969 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750971AbdCRHIu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Mar 2017 03:08:50 -0400
-Date: Sat, 18 Mar 2017 18:08:47 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/22] mkfs.xfs: Make stronger conflict checks
-Message-ID: <20170318070847.GY17542@dastard>
-References: <20170315160017.27805-1-jtulak@redhat.com>
- <20170316233845.GY28800@wotan.suse.de>
- <2030b8be-4fe0-c767-4c3a-0e5ff25c4362@sandeen.net>
- <CACj3i72OB8Ywx-vomuT+jV5P7KFVZN-4g=NssTXX6W_G8MjQ1w@mail.gmail.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:54760 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751160AbdCRC4Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 22:56:24 -0400
+From: Calvin Owens <calvinowens@fb.com>
+Subject: Re: [PATCH] xfs: Honor FALLOC_FL_KEEP_SIZE when punching ends of
+ files
+Date: Sat, 18 Mar 2017 02:54:40 +0000
+Message-ID: <CY4PR15MB122168537FAC70A66BCC6708CE380@CY4PR15MB1221.namprd15.prod.outlook.com>
+References: <22a11e65fd5037498a78de61f3ed4dae466ad854.1489791330.git.calvinowens@fb.com>
+In-Reply-To: <22a11e65fd5037498a78de61f3ed4dae466ad854.1489791330.git.calvinowens@fb.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACj3i72OB8Ywx-vomuT+jV5P7KFVZN-4g=NssTXX6W_G8MjQ1w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Kernel Team <Kernel-team@fb.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 
-On Fri, Mar 17, 2017 at 01:57:10PM +0100, Jan Tulak wrote:
-> On Fri, Mar 17, 2017 at 12:47 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> > On 3/16/17 4:38 PM, Luis R. Rodriguez wrote:
-> >> On Wed, Mar 15, 2017 at 04:59:55PM +0100, Jan Tulak wrote:
-> > I'll probably keep flinging comments on various patches as I read them,
-> > some of it may be helpful in terms of just learning some best practice
-> > for patches, but TBH I'm still trying to wrap my head around the big change
-> > and purpose.
-> >
-> 
-> OK. We can talk about it next week personally if needed. And decide
-> whether it is worth to reorganise this set into no-op and op changes.
+> Fix this by reintroducing the checks xfs_zero_remaining_bytes() did
+> against i_size into xfs_zero_range().
 
-It's better to discuss this sort of thing on the mailing list so
-that every sees the explanations and understands the reasons for the
-changes being made....
+Sorry this is wrong: I missed that xfs_zero_range() has another caller that
+depends on the behavior I'm changing. I'll send a v2 with the same hunk at
+the bottom of xfs_free_file_space() instead.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Calvin=
