@@ -1,52 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:43487 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751454AbdC0RKk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 13:10:40 -0400
-Date: Mon, 27 Mar 2017 10:10:06 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: verify inline directory data forks
-Message-ID: <20170327171006.GF5738@birch.djwong.org>
-References: <20170315072855.GA5280@birch.djwong.org>
- <20170316211255.GU17542@dastard>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:4589 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750712AbdCRHpb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Mar 2017 03:45:31 -0400
+Date: Sat, 18 Mar 2017 18:38:35 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2 V2] xfs: toggle readonly state around
+ xfs_log_mount_finish
+Message-ID: <20170318073835.GZ17542@dastard>
+References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
+ <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
+ <74f6a009-211c-617a-2d6f-0a115ceb366b@sandeen.net>
+ <20170315113629.GA23221@bfoster.bfoster>
+ <20170316191500.GL5280@birch.djwong.org>
+ <20170316234249.GW17542@dastard>
+ <900524f8-4f2d-17e7-31a8-ecde486acc50@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170316211255.GU17542@dastard>
+In-Reply-To: <900524f8-4f2d-17e7-31a8-ecde486acc50@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Mar 17, 2017 at 08:12:56AM +1100, Dave Chinner wrote:
-> On Wed, Mar 15, 2017 at 12:28:55AM -0700, Darrick J. Wong wrote:
-> > When we're reading or writing the data fork of an inline directory,
-> > check the contents to make sure we're not overflowing buffers or eating
-> > garbage data.  xfs/348 corrupts an inline symlink into an inline
-> > directory, triggering a buffer overflow bug.
+On Thu, Mar 16, 2017 at 04:52:43PM -0700, Eric Sandeen wrote:
+> On 3/16/17 4:42 PM, Dave Chinner wrote:
+> > On Thu, Mar 16, 2017 at 12:15:00PM -0700, Darrick J. Wong wrote:
+> >> On Wed, Mar 15, 2017 at 07:36:29AM -0400, Brian Foster wrote:
+> >>> On Tue, Mar 14, 2017 at 06:23:57PM -0500, Eric Sandeen wrote:
+> >>>> When we do log recovery on a readonly mount, unlinked inode
+> >>>> processing does not happen due to the readonly checks in
+> >>>> xfs_inactive(), which are trying to prevent any I/O on a
+> >>>> readonly mount.
+> >>>>
+> >>>> This is misguided - we do I/O on readonly mounts all the time,
+> >>>> for consistency; for example, log recovery.  So do the same
+> >>>> RDONLY flag twiddling around xfs_log_mount_finish() as we
+> >>>> do around xfs_log_mount(), for the same reason.
+> >>>>
+> >>>> This all cries out for a big rework but for now this is a
+> >>>> simple fix to an obvious problem.
+> >>>>
+> >>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >>>> ---
+> >>>>
+> >>
+> >> Both patches look ok, so I'll put them on the test queue for -rc4.
+> >> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > FWIW, I don't think this is a -rc candidate. Making log recovery
+> > process unlinked inode transactions on read-only mounts is a pretty
+> > major change in behaviour. Who knows exactly what dragons are
+> > lurking at lower layers that have never been run in this context
+> > until now.
+> > 
+> > Also, it's not urgent - we've lived with this behaviour for years -
+> > so waiting a month for the next merge window is not going to hurt
+> > anyone and it gives us a chance to test it - XFS developers are the
+> > people who should be burnt by the lurking dragons, not users who
+> > updated to a late -rcX kernel....
 > 
-> I think the check is fine, but from a structural point of view they
-> are in the wrong place. i.e.  the functions xfs_iformat_local() and
-> xfs_iflush_fork() should not be doing any content specific checks
-> and verification. All they do is marshall the fork data to and from
-> in-memory and on-disk formats - the contents of the forks should be
-> opaque to them.
+> To shield Darrick a bit ;) I was agitating/asking for sooner, but
+> admittedly that was a little bit selfish on my part.
 > 
-> IOWs, incoming fork contents validity should be checked in
-> xfs_iformat_fork() after we call xfs_iformat_local(), outgoing fork
-> validity is checked in xfs_iflush_int() before calling
-> xfs_iflush_fork().
+> Still, we have had field reports of people with /gigabytes/ missing
+> from the root filesystem, and it was not fixable without an 
+> xfs_repair.  Which on a root filesystem is ... special.
 
-Sorry for pushing the button prematurely.  I just sent out a patch to
-clean this up and address a few other issues.
+That's information that should be in the commit message....
 
---D
+> So, my fault for getting it sent late, for sure - but I do think it's
+> an important fix.  I know we can't really address the "unknown unknown"
+> dragons easily, but actually completing recovery on RO mounts seems
+> straightforward to me... we allow half of recovery to go, and
+> disallow the other half.  Seems plainly broken.
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+I still don't think that makes it an urgent, immediate -rcX fix.  It
+definitely makes it a fix that should go to stable kernels, but that
+does not mean we should short-cut our integrationa nd testing
+processes. If anything, it makes it far more important to ensure the
+change is safe and well tested, because it's going to be distributed
+to /everyone/ in the near future through the stable update process,
+distros included.
+
+As I've already said: rushing fixes upstream without adequate test
+time is almost always the wrong thing to do. Call me conservative,
+but I have plenty of scars to justify being careful about pushing
+fixes too quickly.
+
+I'm more worried about the impact on the unknown number of read-only
+filesystems out there across the entire userbase that have the
+potential to process inodes that have been sitting orphaned for
+years than I am about the few recent users who have had to run
+xfs-repair on their root filesystem to fix this up due to the nature
+of ro->rw transition in root filesystem mounting.  Let's make really
+sure everything is OK before we expose it to all our users running
+stable/distro kernels....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
