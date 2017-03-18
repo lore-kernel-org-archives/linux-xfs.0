@@ -1,79 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34588 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751848AbdCOPSL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Mar 2017 11:18:11 -0400
-Date: Wed, 15 Mar 2017 11:18:10 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: write unmount record for ro mounts
-Message-ID: <20170315151810.GC24729@bfoster.bfoster>
-References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
- <9a573fb1-0d4c-e393-b0b7-a0688b3849e5@sandeen.net>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:56180 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751047AbdCRB1I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 21:27:08 -0400
+Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2I1PDeC004507
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 18:26:16 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 298nhuh6e7-1
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 18:26:16 -0700
+Received: from facebook.com (2401:db00:11:d0be:face:0:1b:0)     by
+ mx-out.facebook.com (10.102.107.97) with ESMTP id
+ e0a741f00b7911e7be760002c99331b0-e2dc79a0 for <linux-xfs@vger.kernel.org>;
+        Fri, 17 Mar 2017 18:26:14 -0700
+From: Calvin Owens <calvinowens@fb.com>
+Subject: [PATCH][PROGS] xfs_io: Allow setting multiple mode flags for fallocate()
+Date: Fri, 17 Mar 2017 18:26:09 -0700
+Message-ID: <c2fdfcbb1f4ac9a71633dfbe192ed1145b12b8ac.1489799604.git.calvinowens@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9a573fb1-0d4c-e393-b0b7-a0688b3849e5@sandeen.net>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: kernel-team@fb.com, calvinowens@fb.com
 
-On Thu, Mar 09, 2017 at 02:15:01PM -0600, Eric Sandeen wrote:
-> There are dueling comments in the xfs code about intent
-> for log writes when unmounting a readonly filesystem.
-> 
-> In xfs_mountfs, we see the intent:
-> 
-> /*
->  * Now the log is fully replayed, we can transition to full read-only
->  * mode for read-only mounts. This will sync all the metadata and clean
->  * the log so that the recovery we just performed does not have to be
->  * replayed again on the next mount.
->  */
-> 
-> and it calls xfs_quiesce_attr(), but by the time we get to 
-> xfs_log_unmount_write(), it returns early for a RDONLY mount:
-> 
->  * Don't write out unmount record on read-only mounts.
-> 
-> Because of this, sequential ro mounts of a filesystem with
-> a dirty log will replay the log each time, which seems odd.
-> 
-> Fix this by writing an unmount record even for RO mounts, as long
-> as norecovery wasn't specified (don't write a clean log record
-> if a dirty log may still be there!) and the log device is
-> writable.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+This allows testing FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Calvin Owens <calvinowens@fb.com>
+---
+ io/prealloc.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index b1469f0..62176b8 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -801,11 +801,14 @@
->  	int		 error;
->  
->  	/*
-> -	 * Don't write out unmount record on read-only mounts.
-> +	 * Don't write out unmount record on norecovery mounts or ro devices.
->  	 * Or, if we are doing a forced umount (typically because of IO errors).
->  	 */
-> -	if (mp->m_flags & XFS_MOUNT_RDONLY)
-> +	if (mp->m_flags & XFS_MOUNT_NORECOVERY ||
-> +	    xfs_readonly_buftarg(log->l_mp->m_logdev_targp)) {
-> +		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
->  		return 0;
-> +	}
->  
->  	error = _xfs_log_force(mp, XFS_LOG_SYNC, NULL);
->  	ASSERT(error || !(XLOG_FORCED_SHUTDOWN(log)));
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/io/prealloc.c b/io/prealloc.c
+index a9d66cc..2a4bcdc 100644
+--- a/io/prealloc.c
++++ b/io/prealloc.c
+@@ -201,19 +201,19 @@ fallocate_f(
+ 	while ((c = getopt(argc, argv, "cikpu")) != EOF) {
+ 		switch (c) {
+ 		case 'c':
+-			mode = FALLOC_FL_COLLAPSE_RANGE;
++			mode |= FALLOC_FL_COLLAPSE_RANGE;
+ 			break;
+ 		case 'i':
+-			mode = FALLOC_FL_INSERT_RANGE;
++			mode |= FALLOC_FL_INSERT_RANGE;
+ 			break;
+ 		case 'k':
+-			mode = FALLOC_FL_KEEP_SIZE;
++			mode |= FALLOC_FL_KEEP_SIZE;
+ 			break;
+ 		case 'p':
+-			mode = FALLOC_FL_PUNCH_HOLE;
++			mode |= FALLOC_FL_PUNCH_HOLE;
+ 			break;
+ 		case 'u':
+-			mode = FALLOC_FL_UNSHARE_RANGE;
++			mode |= FALLOC_FL_UNSHARE_RANGE;
+ 			break;
+ 		default:
+ 			command_usage(&falloc_cmd);
+-- 
+2.9.3
+
