@@ -1,82 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:37866 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753522AbdCTJl2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Mar 2017 05:41:28 -0400
+Received: from bombadil.infradead.org ([65.50.211.133]:52278 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754077AbdCTQEO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Mar 2017 12:04:14 -0400
+Date: Mon, 20 Mar 2017 09:01:27 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: statx manpage
+Message-ID: <20170320160127.GB31556@bombadil.infradead.org>
+References: <91D9638E-C96A-4D1E-9712-5D6543048700@dilger.ca>
+ <20170307050140.GA12946@infradead.org>
+ <20170307000609.GG5280@birch.djwong.org>
+ <10435.1488907375@warthog.procyon.org.uk>
+ <17753.1488965058@warthog.procyon.org.uk>
+ <1488986774.2802.18.camel@poochiereds.net>
 MIME-Version: 1.0
-In-Reply-To: <20170316193540.CF2E5660939@gitolite.kernel.org>
-References: <20170316193540.CF2E5660939@gitolite.kernel.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 20 Mar 2017 10:41:16 +0100
-Message-ID: <CAMuHMdVpE2efAMNZzPs37jVnCWJz-jQqGPEhVx+8VFUNg+4yTg@mail.gmail.com>
-Subject: Re: xfs: verify inline directory data forks
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1488986774.2802.18.camel@poochiereds.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Jeff Layton <jlayton@poochiereds.net>
+Cc: David Howells <dhowells@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Mar 16, 2017 at 8:35 PM, Linux Kernel Mailing List
-<linux-kernel@vger.kernel.org> wrote:
-> Web:        https://git.kernel.org/torvalds/c/630a04e79dd41ff746b545d4fc0=
-52e0abb836120
-> Commit:     630a04e79dd41ff746b545d4fc052e0abb836120
-> Parent:     2fcc319d2467a5f5b78f35f79fd6e22741a31b1e
-> Refname:    refs/heads/master
-> Author:     Darrick J. Wong <darrick.wong@oracle.com>
-> AuthorDate: Wed Mar 15 00:24:25 2017 -0700
-> Committer:  Darrick J. Wong <darrick.wong@oracle.com>
-> CommitDate: Wed Mar 15 00:24:25 2017 -0700
->
->     xfs: verify inline directory data forks
->
->     When we're reading or writing the data fork of an inline directory,
->     check the contents to make sure we're not overflowing buffers or eati=
-ng
->     garbage data.  xfs/348 corrupts an inline symlink into an inline
->     directory, triggering a buffer overflow bug.
->
->     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->     Reviewed-by: Brian Foster <bfoster@redhat.com>
+On Wed, Mar 08, 2017 at 10:26:14AM -0500, Jeff Layton wrote:
+> On Wed, 2017-03-08 at 09:24 +0000, David Howells wrote:
+> > Andreas Dilger <adilger@dilger.ca> wrote:
+> > >    To test whether a path is a regular file (for example), one could write:
+> > >    .nf
+> > >    .in +4n
+> > >    rc = statx(AT_FDCWD, pathname, 0, STATX_TYPE, &stx);
+> > >    if (stx.stx_mask & STATX_TYPE && S_ISREG(sb.stx_mode)) {
+> > >       /* Handle regular file */
+> > >    }
+> > 
+> > Good idea.
+> 
+> Note that & and && have similar precedence, IIRC, so you probably want
+> to wrap that flag check in parenthesis.
 
-> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+They're actually pretty far apart.  & is priority 8 and && is priority 11.
+But the fact that you thought they were similar shows that most of
+us don't really know what C's operator precedence is (beyond + and *)
+and we should err on the side of clarity by using the unnecessary parens.
 
-> +/* Verify the consistency of an inline directory. */
-> +int
-> +xfs_dir2_sf_verify(
-> +       struct xfs_mount                *mp,
-> +       struct xfs_dir2_sf_hdr          *sfp,
-> +       int                             size)
-> +{
+> If the plan is to eventually (in some far away future) to deprecate
+> stat(), then we probably don't want this manpage to refer to it as a
+> canonical source of information. I say duplicate it here.
 
-> +               /* Don't allow names with known bad length. */
-> +               XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen > 0);
-> +               XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen < MAXNAMELEN)=
-;
-
-With gcc 4.1.2:
-
-fs/xfs/libxfs/xfs_dir2_sf.c: In function =E2=80=98xfs_dir2_sf_verify=E2=80=
-=99:
-fs/xfs/libxfs/xfs_dir2_sf.c:680: warning: comparison is always true
-due to limited range of data type
-
-As sfep->namelen is __u8, and MAXNAMELEN =3D 256, none of the two checks
-above can be true.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
-.org
-
-In personal conversations with technical people, I call myself a hacker. Bu=
-t
-when I'm talking to journalists I just say "programmer" or something like t=
-hat.
-                                -- Linus Torvalds
+We haven't even deprecated select() in favour of poll() ... indeed,
+pselect() was added.  I can't imagine stat() ever being deprecated.
