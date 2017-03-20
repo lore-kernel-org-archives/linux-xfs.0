@@ -1,195 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:34824 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751796AbdC0HcN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 03:32:13 -0400
-From: Nikolay Borisov <n.borisov.lkml@gmail.com>
-Subject: Request for inclusion of 4dfce57db635 ("xfs: fix up
- xfs_swap_extent_forks inline extent handling") in stable
-Message-ID: <473e7987-03d9-4118-d7e1-11465928f021@gmail.com>
-Date: Mon, 27 Mar 2017 10:31:55 +0300
+Received: from fieldses.org ([173.255.197.46]:40366 "EHLO fieldses.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753950AbdCTVoA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 Mar 2017 17:44:00 -0400
+Date: Mon, 20 Mar 2017 17:43:27 -0400
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+Message-ID: <20170320214327.GA5098@fieldses.org>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+ <20161222084549.GA8833@infradead.org>
+ <1482417724.3924.39.camel@redhat.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------3A6011F19395F382189757BF"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1482417724.3924.39.camel@redhat.com>
+From: bfields@fieldses.org (J. Bruce Fields)
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org, linux-xfs@vger.kernel.org, bfoster@redhat.com, darrick.wong@oracle.com
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------3A6011F19395F382189757BF
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+On Thu, Dec 22, 2016 at 09:42:04AM -0500, Jeff Layton wrote:
+> On Thu, 2016-12-22 at 00:45 -0800, Christoph Hellwig wrote:
+> > On Wed, Dec 21, 2016 at 12:03:17PM -0500, Jeff Layton wrote:
+> > > 
+> > > Only btrfs, ext4, and xfs implement it for data changes. Because of
+> > > this, these filesystems must log the inode to disk whenever the
+> > > i_version counter changes. That has a non-zero performance impact,
+> > > especially on write-heavy workloads, because we end up dirtying the
+> > > inode metadata on every write, not just when the times change. [1]
+> > 
+> > Do you have numbers to justify these changes?
+> 
+> I have numbers. As to whether they justify the changes, I'm not sure.
+> This helps a lot on a (admittedly nonsensical) 1-byte write workload. On
+> XFS, with this fio jobfile:
 
-Hello,
+To me, the interesting question is whether this allows us to turn on
+i_version updates by default on xfs and ext4.
 
+When Josef looked at doing that previously he withdrew the patch due to
+performance regressions.  I think the most useful thread started here:
 
-The commit in the subject was tagged as stable but I guess it got missed
-being included into stable. Without these stable kernels crash on
-xfs/118. I've attached backports for both 3.12 and 4.4 and also ran a
-regtest with xfstest with no regressions showing up.
+	http://lkml.kernel.org/r/1337092396-3272-1-git-send-email-josef@redhat.com
 
-Regards,
-Nikolay
+Skimming quickly....  I think the regression was also in the small-write
+case.  So apparently that was thought to reveal a real problem?
 
---------------3A6011F19395F382189757BF
-Content-Type: text/plain; charset=UTF-8;
- name="xfs-fix-up-xfs_swap_extent_forks-inline-extent-handling.patch-3.12"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename*0="xfs-fix-up-xfs_swap_extent_forks-inline-extent-handling.patc";
- filename*1="h-3.12"
+So if you've mostly eliminated that regression, then that's good
+motivation for your patches.  (Though I think in addition to comparing
+the patched and unpatched i_version case, we need to compare to the
+unpatched not-i_version case.  I'm not clear whether you did that.)
 
-RnJvbTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0PgpEYXRlOiBUdWUsIDgg
-Tm92IDIwMTYgMTI6NTU6MTggKzExMDAKU3ViamVjdDogeGZzOiBmaXggdXAgeGZzX3N3YXBf
-ZXh0ZW50X2ZvcmtzIGlubGluZSBleHRlbnQgaGFuZGxpbmcKClRoZXJlIGhhdmUgYmVlbiBz
-ZXZlcmFsIHJlcG9ydHMgb3ZlciB0aGUgeWVhcnMgb2YgTlVMTCBwb2ludGVyCmRlcmVmZXJl
-bmNlcyBpbiB4ZnNfdHJhbnNfbG9nX2lub2RlIGR1cmluZyB4ZnNfZnNyIHByb2Nlc3NlcywK
-d2hlbiB0aGUgcHJvY2VzcyBpcyBkb2luZyBhbiBmcHV0IGFuZCB0ZWFyaW5nIGRvd24gZXh0
-ZW50cwpvbiB0aGUgdGVtcG9yYXJ5IGlub2RlLCBzb21ldGhpbmcgbGlrZToKCkJVRzogdW5h
-YmxlIHRvIGhhbmRsZSBrZXJuZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0IDAwMDAw
-MDAwMDAwMDAwMTgKUElEOiAyOTQzOSAgVEFTSzogZmZmZjg4MDU1MDU4NGZhMCAgQ1BVOiA2
-ICAgQ09NTUFORDogInhmc19mc3IiCiAgICBbZXhjZXB0aW9uIFJJUDogeGZzX3RyYW5zX2xv
-Z19pbm9kZSsweDEwXQogIzkgW2ZmZmY4ODAwYTU3YmJiZTBdIHhmc19idW5tYXBpIGF0IGZm
-ZmZmZmZmYTAzNzM5OGUgW3hmc10KIzEwIFtmZmZmODgwMGE1N2JiY2U4XSB4ZnNfaXRydW5j
-YXRlX2V4dGVudHMgYXQgZmZmZmZmZmZhMDM5MWIyOSBbeGZzXQojMTEgW2ZmZmY4ODAwYTU3
-YmJkODhdIHhmc19pbmFjdGl2ZV90cnVuY2F0ZSBhdCBmZmZmZmZmZmEwMzkxZDBjIFt4ZnNd
-CiMxMiBbZmZmZjg4MDBhNTdiYmRiOF0geGZzX2luYWN0aXZlIGF0IGZmZmZmZmZmYTAzOTI1
-MDggW3hmc10KIzEzIFtmZmZmODgwMGE1N2JiZGQ4XSB4ZnNfZnNfZXZpY3RfaW5vZGUgYXQg
-ZmZmZmZmZmZhMDM1OTA3ZSBbeGZzXQojMTQgW2ZmZmY4ODAwYTU3YmJlMDBdIGV2aWN0IGF0
-IGZmZmZmZmZmODExZTFiNjcKIzE1IFtmZmZmODgwMGE1N2JiZTI4XSBpcHV0IGF0IGZmZmZm
-ZmZmODExZTIzYTUKIzE2IFtmZmZmODgwMGE1N2JiZTU4XSBkZW50cnlfa2lsbCBhdCBmZmZm
-ZmZmZjgxMWRjZmM4CiMxNyBbZmZmZjg4MDBhNTdiYmU4OF0gZHB1dCBhdCBmZmZmZmZmZjgx
-MWRkMDZjCiMxOCBbZmZmZjg4MDBhNTdiYmVhOF0gX19mcHV0IGF0IGZmZmZmZmZmODExYzgy
-M2IKIzE5IFtmZmZmODgwMGE1N2JiZWYwXSBfX19fZnB1dCBhdCBmZmZmZmZmZjgxMWM4NDZl
-CiMyMCBbZmZmZjg4MDBhNTdiYmYwMF0gdGFza193b3JrX3J1biBhdCBmZmZmZmZmZjgxMDkz
-YjI3CiMyMSBbZmZmZjg4MDBhNTdiYmYzMF0gZG9fbm90aWZ5X3Jlc3VtZSBhdCBmZmZmZmZm
-ZjgxMDEzYjBjCiMyMiBbZmZmZjg4MDBhNTdiYmY1MF0gaW50X3NpZ25hbCBhdCBmZmZmZmZm
-ZjgxNjE0MDVkCgpBcyBpdCB0dXJucyBvdXQsIHRoaXMgaXMgYmVjYXVzZSB0aGUgaV9pdGVt
-cCBwb2ludGVyLCBhbG9uZwp3aXRoIHRoZSBkX29wcyBwb2ludGVyLCBoYXMgYmVlbiBvdmVy
-d3JpdHRlbiB3aXRoIHplcm9zCndoZW4gd2UgdGVhciBkb3duIHRoZSBleHRlbnRzIGR1cmlu
-ZyB0cnVuY2F0ZS4gIFdoZW4gdGhlIGluLWNvcmUKaW5vZGUgZm9yayBvbiB0aGUgdGVtcG9y
-YXJ5IGlub2RlIHVzZWQgYnkgeGZzX2ZzciB3YXMgb3JpZ2luYWxseQpzZXQgdXAgZHVyaW5n
-IHRoZSBleHRlbnQgc3dhcCwgd2UgbWlzdGFrZW5seSBsb29rZWQgYXQgZGlfbmV4dGVudHMK
-dG8gZGV0ZXJtaW5lIHdoZXRoZXIgYWxsIGV4dGVudHMgZml0IGlubGluZSwgYnV0IHRoaXMg
-bWlzc2VzIGV4dGVudHMKZ2VuZXJhdGVkIGJ5IHNwZWN1bGF0aXZlIHByZWFsbG9jYXRpb247
-IHdlIHNob3VsZCBiZSB1c2luZyBpZl9ieXRlcwppbnN0ZWFkLgoKVGhpcyBtaXN0YWtlIGNv
-cnJ1cHRzIHRoZSBpbi1tZW1vcnkgaW5vZGUsIGFuZCBjb2RlIGluCnhmc19pZXh0X3JlbW92
-ZV9pbmxpbmUgZXZlbnR1YWxseSBnZXRzIGJhZCBpbnB1dHMsIGNhdXNpbmcKaXQgdG8gbWVt
-bW92ZSBhbmQgbWVtc2V0IGluY29ycmVjdCByYW5nZXM7IHRoaXMgYmVjYW1lIGFwcGFyZW50
-CmJlY2F1c2UgdGhlIHR3byB2YWx1ZXMgaW4gaWZwLT5pZl91Mi5pZl9pbmxpbmVfZXh0WzFd
-IGNvbnRhaW5lZAp3aGF0IHNob3VsZCBoYXZlIGJlZW4gaW4gZF9vcHMgYW5kIGlfaXRlbXA7
-IHRoZXkgd2VyZSBtZW1tb3ZlZCBkdWUKdG8gaW5jb3JyZWN0IGFycmF5IGluZGV4aW5nIGFu
-ZCB0aGVuIHRoZSBvcmlnaW5hbCBsb2NhdGlvbnMKd2VyZSB6ZXJvZWQgd2l0aCBtZW1zZXQs
-IGFnYWluIGR1ZSB0byBhbiBhcnJheSBvdmVycnVuLgoKRml4IHRoaXMgYnkgcHJvcGVybHkg
-dXNpbmcgaV9kZi5pZl9ieXRlcyB0byBkZXRlcm1pbmUgdGhlIG51bWJlcgpvZiBleHRlbnRz
-LCBub3QgZGlfbmV4dGVudHMuCgpUaGFua3MgdG8gZGNoaW5uZXIgZm9yIGxvb2tpbmcgYXQg
-dGhpcyB3aXRoIG1lIGFuZCBzcG90dGluZyB0aGUKcm9vdCBjYXVzZS4KCltuYm9yaXNvdjog
-QmFja3BvcnRlZCB0byAzLjEyXQoKQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcKU2lnbmVk
-LW9mZi1ieTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHJlZGhhdC5jb20+ClJldmlld2VkLWJ5
-OiBCcmlhbiBGb3N0ZXIgPGJmb3N0ZXJAcmVkaGF0LmNvbT4KU2lnbmVkLW9mZi1ieTogRGF2
-ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPgpTaWduZWQtb2ZmLWJ5OiBOaWtvbGF5
-IEJvcmlzb3YgPG5ib3Jpc292QHN1c2UuY29tPgotLQogZnMveGZzL3hmc19ibWFwX3V0aWwu
-YyB8IDcgKysrKystLQogMSBmaWxlIGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKSwgMiBkZWxl
-dGlvbnMoLSkKCmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2JtYXBfdXRpbC5jIGIvZnMveGZz
-L3hmc19ibWFwX3V0aWwuYwppbmRleCBkNzU2ZGE1MTViMTUuLjgzMzY3MDFhMjgxYyAxMDA2
-NDQKLS0tIGEvZnMveGZzL3hmc19ibWFwX3V0aWwuYworKysgYi9mcy94ZnMveGZzX2JtYXBf
-dXRpbC5jCkBAIC0xNzg4LDYgKzE3ODgsNyBAQCB4ZnNfc3dhcF9leHRlbnRzKAogCXhmc190
-cmFuc190CSp0cDsKIAl4ZnNfYnN0YXRfdAkqc2JwID0gJnN4cC0+c3hfc3RhdDsKIAl4ZnNf
-aWZvcmtfdAkqdGVtcGlmcCwgKmlmcCwgKnRpZnA7CisJeGZzX2V4dG51bV90CW5leHRlbnRz
-OwogCWludAkJc3JjX2xvZ19mbGFncywgdGFyZ2V0X2xvZ19mbGFnczsKIAlpbnQJCWVycm9y
-ID0gMDsKIAlpbnQJCWFmb3JrYmxrcyA9IDA7CkBAIC0xOTc0LDcgKzE5NzUsOCBAQCB4ZnNf
-c3dhcF9leHRlbnRzKAogCQkgKiBwb2ludGVyLiAgT3RoZXJ3aXNlIGl0J3MgYWxyZWFkeSBO
-VUxMIG9yCiAJCSAqIHBvaW50aW5nIHRvIHRoZSBleHRlbnQuCiAJCSAqLwotCQlpZiAoaXAt
-PmlfZC5kaV9uZXh0ZW50cyA8PSBYRlNfSU5MSU5FX0VYVFMpIHsKKwkJbmV4dGVudHMgPSBp
-cC0+aV9kZi5pZl9ieXRlcyAvICh1aW50KXNpemVvZih4ZnNfYm1idF9yZWNfdCk7CisJCWlm
-IChuZXh0ZW50cyA8PSBYRlNfSU5MSU5FX0VYVFMpIHsKIAkJCWlmcC0+aWZfdTEuaWZfZXh0
-ZW50cyA9CiAJCQkJaWZwLT5pZl91Mi5pZl9pbmxpbmVfZXh0OwogCQl9CkBAIC0xOTkzLDcg
-KzE5OTUsOCBAQCB4ZnNfc3dhcF9leHRlbnRzKAogCQkgKiBwb2ludGVyLiAgT3RoZXJ3aXNl
-IGl0J3MgYWxyZWFkeSBOVUxMIG9yCiAJCSAqIHBvaW50aW5nIHRvIHRoZSBleHRlbnQuCiAJ
-CSAqLwotCQlpZiAodGlwLT5pX2QuZGlfbmV4dGVudHMgPD0gWEZTX0lOTElORV9FWFRTKSB7
-CisJCW5leHRlbnRzID0gdGlwLT5pX2RmLmlmX2J5dGVzIC8gKHVpbnQpc2l6ZW9mKHhmc19i
-bWJ0X3JlY190KTsKKwkJaWYgKG5leHRlbnRzIDw9IFhGU19JTkxJTkVfRVhUUykgewogCQkJ
-dGlmcC0+aWZfdTEuaWZfZXh0ZW50cyA9CiAJCQkJdGlmcC0+aWZfdTIuaWZfaW5saW5lX2V4
-dDsKIAkJfQotLSAKMi43LjQKCg==
---------------3A6011F19395F382189757BF
-Content-Type: text/plain; charset=UTF-8;
- name="xfs-fix-up-xfs_swap_extent_forks-inline-extent-handling.patch-4.4"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename*0="xfs-fix-up-xfs_swap_extent_forks-inline-extent-handling.patc";
- filename*1="h-4.4"
+--b.
 
-RnJvbTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0PgpEYXRlOiBUdWUsIDgg
-Tm92IDIwMTYgMTI6NTU6MTggKzExMDAKU3ViamVjdDogeGZzOiBmaXggdXAgeGZzX3N3YXBf
-ZXh0ZW50X2ZvcmtzIGlubGluZSBleHRlbnQgaGFuZGxpbmcKClRoZXJlIGhhdmUgYmVlbiBz
-ZXZlcmFsIHJlcG9ydHMgb3ZlciB0aGUgeWVhcnMgb2YgTlVMTCBwb2ludGVyCmRlcmVmZXJl
-bmNlcyBpbiB4ZnNfdHJhbnNfbG9nX2lub2RlIGR1cmluZyB4ZnNfZnNyIHByb2Nlc3NlcywK
-d2hlbiB0aGUgcHJvY2VzcyBpcyBkb2luZyBhbiBmcHV0IGFuZCB0ZWFyaW5nIGRvd24gZXh0
-ZW50cwpvbiB0aGUgdGVtcG9yYXJ5IGlub2RlLCBzb21ldGhpbmcgbGlrZToKCkJVRzogdW5h
-YmxlIHRvIGhhbmRsZSBrZXJuZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0IDAwMDAw
-MDAwMDAwMDAwMTgKUElEOiAyOTQzOSAgVEFTSzogZmZmZjg4MDU1MDU4NGZhMCAgQ1BVOiA2
-ICAgQ09NTUFORDogInhmc19mc3IiCiAgICBbZXhjZXB0aW9uIFJJUDogeGZzX3RyYW5zX2xv
-Z19pbm9kZSsweDEwXQogIzkgW2ZmZmY4ODAwYTU3YmJiZTBdIHhmc19idW5tYXBpIGF0IGZm
-ZmZmZmZmYTAzNzM5OGUgW3hmc10KIzEwIFtmZmZmODgwMGE1N2JiY2U4XSB4ZnNfaXRydW5j
-YXRlX2V4dGVudHMgYXQgZmZmZmZmZmZhMDM5MWIyOSBbeGZzXQojMTEgW2ZmZmY4ODAwYTU3
-YmJkODhdIHhmc19pbmFjdGl2ZV90cnVuY2F0ZSBhdCBmZmZmZmZmZmEwMzkxZDBjIFt4ZnNd
-CiMxMiBbZmZmZjg4MDBhNTdiYmRiOF0geGZzX2luYWN0aXZlIGF0IGZmZmZmZmZmYTAzOTI1
-MDggW3hmc10KIzEzIFtmZmZmODgwMGE1N2JiZGQ4XSB4ZnNfZnNfZXZpY3RfaW5vZGUgYXQg
-ZmZmZmZmZmZhMDM1OTA3ZSBbeGZzXQojMTQgW2ZmZmY4ODAwYTU3YmJlMDBdIGV2aWN0IGF0
-IGZmZmZmZmZmODExZTFiNjcKIzE1IFtmZmZmODgwMGE1N2JiZTI4XSBpcHV0IGF0IGZmZmZm
-ZmZmODExZTIzYTUKIzE2IFtmZmZmODgwMGE1N2JiZTU4XSBkZW50cnlfa2lsbCBhdCBmZmZm
-ZmZmZjgxMWRjZmM4CiMxNyBbZmZmZjg4MDBhNTdiYmU4OF0gZHB1dCBhdCBmZmZmZmZmZjgx
-MWRkMDZjCiMxOCBbZmZmZjg4MDBhNTdiYmVhOF0gX19mcHV0IGF0IGZmZmZmZmZmODExYzgy
-M2IKIzE5IFtmZmZmODgwMGE1N2JiZWYwXSBfX19fZnB1dCBhdCBmZmZmZmZmZjgxMWM4NDZl
-CiMyMCBbZmZmZjg4MDBhNTdiYmYwMF0gdGFza193b3JrX3J1biBhdCBmZmZmZmZmZjgxMDkz
-YjI3CiMyMSBbZmZmZjg4MDBhNTdiYmYzMF0gZG9fbm90aWZ5X3Jlc3VtZSBhdCBmZmZmZmZm
-ZjgxMDEzYjBjCiMyMiBbZmZmZjg4MDBhNTdiYmY1MF0gaW50X3NpZ25hbCBhdCBmZmZmZmZm
-ZjgxNjE0MDVkCgpBcyBpdCB0dXJucyBvdXQsIHRoaXMgaXMgYmVjYXVzZSB0aGUgaV9pdGVt
-cCBwb2ludGVyLCBhbG9uZwp3aXRoIHRoZSBkX29wcyBwb2ludGVyLCBoYXMgYmVlbiBvdmVy
-d3JpdHRlbiB3aXRoIHplcm9zCndoZW4gd2UgdGVhciBkb3duIHRoZSBleHRlbnRzIGR1cmlu
-ZyB0cnVuY2F0ZS4gIFdoZW4gdGhlIGluLWNvcmUKaW5vZGUgZm9yayBvbiB0aGUgdGVtcG9y
-YXJ5IGlub2RlIHVzZWQgYnkgeGZzX2ZzciB3YXMgb3JpZ2luYWxseQpzZXQgdXAgZHVyaW5n
-IHRoZSBleHRlbnQgc3dhcCwgd2UgbWlzdGFrZW5seSBsb29rZWQgYXQgZGlfbmV4dGVudHMK
-dG8gZGV0ZXJtaW5lIHdoZXRoZXIgYWxsIGV4dGVudHMgZml0IGlubGluZSwgYnV0IHRoaXMg
-bWlzc2VzIGV4dGVudHMKZ2VuZXJhdGVkIGJ5IHNwZWN1bGF0aXZlIHByZWFsbG9jYXRpb247
-IHdlIHNob3VsZCBiZSB1c2luZyBpZl9ieXRlcwppbnN0ZWFkLgoKVGhpcyBtaXN0YWtlIGNv
-cnJ1cHRzIHRoZSBpbi1tZW1vcnkgaW5vZGUsIGFuZCBjb2RlIGluCnhmc19pZXh0X3JlbW92
-ZV9pbmxpbmUgZXZlbnR1YWxseSBnZXRzIGJhZCBpbnB1dHMsIGNhdXNpbmcKaXQgdG8gbWVt
-bW92ZSBhbmQgbWVtc2V0IGluY29ycmVjdCByYW5nZXM7IHRoaXMgYmVjYW1lIGFwcGFyZW50
-CmJlY2F1c2UgdGhlIHR3byB2YWx1ZXMgaW4gaWZwLT5pZl91Mi5pZl9pbmxpbmVfZXh0WzFd
-IGNvbnRhaW5lZAp3aGF0IHNob3VsZCBoYXZlIGJlZW4gaW4gZF9vcHMgYW5kIGlfaXRlbXA7
-IHRoZXkgd2VyZSBtZW1tb3ZlZCBkdWUKdG8gaW5jb3JyZWN0IGFycmF5IGluZGV4aW5nIGFu
-ZCB0aGVuIHRoZSBvcmlnaW5hbCBsb2NhdGlvbnMKd2VyZSB6ZXJvZWQgd2l0aCBtZW1zZXQs
-IGFnYWluIGR1ZSB0byBhbiBhcnJheSBvdmVycnVuLgoKRml4IHRoaXMgYnkgcHJvcGVybHkg
-dXNpbmcgaV9kZi5pZl9ieXRlcyB0byBkZXRlcm1pbmUgdGhlIG51bWJlcgpvZiBleHRlbnRz
-LCBub3QgZGlfbmV4dGVudHMuCgpUaGFua3MgdG8gZGNoaW5uZXIgZm9yIGxvb2tpbmcgYXQg
-dGhpcyB3aXRoIG1lIGFuZCBzcG90dGluZyB0aGUKcm9vdCBjYXVzZS4KCltuYm9yaXNvdjog
-YmFja3BvcnRlZCB0byA0LjRdCgpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZwpTaWduZWQt
-b2ZmLWJ5OiBFcmljIFNhbmRlZW4gPHNhbmRlZW5AcmVkaGF0LmNvbT4KUmV2aWV3ZWQtYnk6
-IEJyaWFuIEZvc3RlciA8YmZvc3RlckByZWRoYXQuY29tPgpTaWduZWQtb2ZmLWJ5OiBEYXZl
-IENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+ClNpZ25lZC1vZmYtYnk6IE5pa29sYXkg
-Qm9yaXNvdiA8bmJvcmlzb3ZAc3VzZS5jb20+Ci0tCiBmcy94ZnMveGZzX2JtYXBfdXRpbC5j
-IHwgNyArKysrKy0tCiAxIGZpbGUgY2hhbmdlZCwgNSBpbnNlcnRpb25zKCspLCAyIGRlbGV0
-aW9ucygtKQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfYm1hcF91dGlsLmMgYi9mcy94ZnMv
-eGZzX2JtYXBfdXRpbC5jCmluZGV4IGQ3NTZkYTUxNWIxNS4uODMzNjcwMWEyODFjIDEwMDY0
-NAotLS0gYS9mcy94ZnMveGZzX2JtYXBfdXRpbC5jCisrKyBiL2ZzL3hmcy94ZnNfYm1hcF91
-dGlsLmMKQEAgLTE3ODgsNiArMTc4OCw3IEBAIHhmc19zd2FwX2V4dGVudHMoCiAJeGZzX3Ry
-YW5zX3QJKnRwOwogCXhmc19ic3RhdF90CSpzYnAgPSAmc3hwLT5zeF9zdGF0OwogCXhmc19p
-Zm9ya190CSp0ZW1waWZwLCAqaWZwLCAqdGlmcDsKKwl4ZnNfZXh0bnVtX3QJbmV4dGVudHM7
-CiAJaW50CQlzcmNfbG9nX2ZsYWdzLCB0YXJnZXRfbG9nX2ZsYWdzOwogCWludAkJZXJyb3Ig
-PSAwOwogCWludAkJYWZvcmtibGtzID0gMDsKQEAgLTE5NzQsNyArMTk3NSw4IEBAIHhmc19z
-d2FwX2V4dGVudHMoCiAJCSAqIHBvaW50ZXIuICBPdGhlcndpc2UgaXQncyBhbHJlYWR5IE5V
-TEwgb3IKIAkJICogcG9pbnRpbmcgdG8gdGhlIGV4dGVudC4KIAkJICovCi0JCWlmIChpcC0+
-aV9kLmRpX25leHRlbnRzIDw9IFhGU19JTkxJTkVfRVhUUykgeworCQluZXh0ZW50cyA9IGlw
-LT5pX2RmLmlmX2J5dGVzIC8gKHVpbnQpc2l6ZW9mKHhmc19ibWJ0X3JlY190KTsKKwkJaWYg
-KG5leHRlbnRzIDw9IFhGU19JTkxJTkVfRVhUUykgewogCQkJaWZwLT5pZl91MS5pZl9leHRl
-bnRzID0KIAkJCQlpZnAtPmlmX3UyLmlmX2lubGluZV9leHQ7CiAJCX0KQEAgLTE5OTMsNyAr
-MTk5NSw4IEBAIHhmc19zd2FwX2V4dGVudHMoCiAJCSAqIHBvaW50ZXIuICBPdGhlcndpc2Ug
-aXQncyBhbHJlYWR5IE5VTEwgb3IKIAkJICogcG9pbnRpbmcgdG8gdGhlIGV4dGVudC4KIAkJ
-ICovCi0JCWlmICh0aXAtPmlfZC5kaV9uZXh0ZW50cyA8PSBYRlNfSU5MSU5FX0VYVFMpIHsK
-KwkJbmV4dGVudHMgPSB0aXAtPmlfZGYuaWZfYnl0ZXMgLyAodWludClzaXplb2YoeGZzX2Jt
-YnRfcmVjX3QpOworCQlpZiAobmV4dGVudHMgPD0gWEZTX0lOTElORV9FWFRTKSB7CiAJCQl0
-aWZwLT5pZl91MS5pZl9leHRlbnRzID0KIAkJCQl0aWZwLT5pZl91Mi5pZl9pbmxpbmVfZXh0
-OwogCQl9Ci0tIAoyLjcuNAoK
---------------3A6011F19395F382189757BF--
+> 
+> --------------------8<------------------
+> [global]
+> direct=0
+> size=2g
+> filesize=512m
+> bsrange=1-1
+> timeout=60
+> numjobs=1
+> directory=/mnt/scratch
+> 
+> [f1]
+> filename=randwrite
+> rw=randwrite
+> --------------------8<------------------
+> 
+> Unpatched kernel:
+>   WRITE: io=7707KB, aggrb=128KB/s, minb=128KB/s, maxb=128KB/s, mint=60000msec, maxt=60000msec
+> 
+> Patched kernel:
+>   WRITE: io=12701KB, aggrb=211KB/s, minb=211KB/s, maxb=211KB/s, mint=60000msec, maxt=60000msec
+> 
+> So quite a difference there and it's pretty consistent across runs. If I
+> change the jobfile to have "direct=1" and "bsrange=4k-4k", then any
+> variation between the two doesn't seem to be significant (numbers vary
+> as much between runs on the same kernels and are roughly the same).
+> 
+> Playing with buffered I/O sizes between 1 byte and 4k shows that as the
+> I/O sizes get larger, this makes less difference (which is what I'd
+> expect).
+> 
+> Previous testing with ext4 shows roughly the same results. btrfs shows
+> some benefit here but significantly less than with ext4 or xfs. Not sure
+> why that is yet -- maybe CoW effects?
+> 
+> That said, I don't have a great test rig for this. I'm using VMs with a
+> dedicated LVM volume that's on a random SSD I had laying around. It
+> could use testing on a wider set of configurations and workloads.
+> 
+> I was also hoping that others may have workloads that they think might
+> be (postively or negatively) affected by these changes. If you can think
+> of any in particular, then I'm interested to hear about them.
+> 
+> -- 
+> Jeff Layton <jlayton@redhat.com>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
