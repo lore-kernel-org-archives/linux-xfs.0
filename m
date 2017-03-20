@@ -1,114 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44135 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:46080 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752438AbdCOM0A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 15 Mar 2017 08:26:00 -0400
-From: Nikolay Borisov <nborisov@suse.com>
-Subject: xfs: pass total block res. as total xfs_bmapi_write() parameter
-Date: Wed, 15 Mar 2017 14:24:14 +0200
-Message-Id: <1489580654-29669-1-git-send-email-nborisov@suse.com>
-In-Reply-To: <153397e1-ba41-20b3-455e-d622c234bc3a@gmail.com>
-References: <153397e1-ba41-20b3-455e-d622c234bc3a@gmail.com>
+        id S1753172AbdCTObd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 Mar 2017 10:31:33 -0400
+Date: Mon, 20 Mar 2017 22:22:51 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: [4.11-rc3 BUG] xfs/348 crashes debug kernel
+Message-ID: <20170320142251.GP14226@eguan.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, david@fromorbit.com, Brian Foster <bfoster@redhat.com>, Nikolay Borisov <nborisov@suse.com>
+To: linux-xfs@vger.kernel.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+Hi,
 
-The total field from struct xfs_alloc_arg is a bit of an unknown
-commodity. It is documented as the total block requirement for the
-transaction and is used in this manner from most call sites by virtue of
-passing the total block reservation of the transaction associated with
-an allocation. Several xfs_bmapi_write() callers pass hardcoded values
-of 0 or 1 for the total block requirement, which is a historical oddity
-without any clear reasoning.
+I noticed xfs/348 could crash xfs debug build starting from 4.11-rc3,
+and test failed on non-debug build xfs, and the only xfs patch in -rc3
+is 630a04e79, reverting it "fixed" the crash for me.
 
-The xfs_iomap_write_direct() caller, for example, passes 0 for the total
-block requirement. This has been determined to cause problems in the
-form of ABBA deadlocks of AGF buffers due to incorrect AG selection in
-the block allocator. Specifically, the xfs_alloc_space_available()
-function incorrectly selects an AG that doesn't actually have sufficient
-space for the allocation. This occurs because the args.total field is 0
-and thus the remaining free space check on the AG doesn't actually
-consider the size of the allocation request. This locks the AGF buffer,
-the allocation attempt proceeds and ultimately fails (in
-xfs_alloc_fix_minleft()), and xfs_alloc_vexent() moves on to the next
-AG. In turn, this can lead to incorrect AG locking order (if the
-allocator wraps around, attempting to lock AG 0 after acquiring AG N)
-and thus deadlock if racing with another operation. This problem has
-been reproduced via generic/299 on smallish (1GB) ramdisk test devices.
+commit 630a04e79dd41ff746b545d4fc052e0abb836120
+Author: Darrick J. Wong <darrick.wong@oracle.com>
+Date:   Wed Mar 15 00:24:25 2017 -0700
 
-To avoid this problem, replace the undocumented hardcoded total
-parameters from the iomap and utility callers to pass the block
-reservation used for the associated transaction. This is consistent with
-other xfs_bmapi_write() callers throughout XFS. The assumption is that
-the total field allows the selection of an AG that can handle the entire
-operation rather than simply the allocation/range being requested (e.g.,
-resulting btree splits, etc.). This addresses the aforementioned
-generic/299 hang by ensuring AG selection only occurs when the
-allocation can be satisfied by the AG.
+    xfs: verify inline directory data forks
 
-Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
----
+I appended the console log of the crash and test failure diff at the end
+of email. If you need more information please let me knwo.
 
-Here is the backport for 3.12 
+Thanks,
+Eryu
 
- fs/xfs/xfs_bmap_util.c | 2 +-
- fs/xfs/xfs_iomap.c     | 8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+P.S. 1: console log of the crash
+[  288.117462] XFS (sdc2): Invalid inode number 0x74312f74657374
+[  288.123269] XFS (sdc2): Internal error xfs_dir_ino_validate at line 225 of file fs/xfs/libxfs/xfs_dir2.c.  Caller xfs_dir2_sf_verify+0x75/0x3b0 [xfs]
+[  288.136649] CPU: 0 PID: 22059 Comm: stat Tainted: G           OE   4.11.0-rc3 #81
+[  288.144124] Hardware name: IBM System x3550 M3 -[7944OEJ]-/90Y4784     , BIOS -[D6E150CUS-1.11]- 02/08/2011
+[  288.153852] Call Trace:
+[  288.156304]  dump_stack+0x63/0x87
+[  288.159651]  xfs_error_report+0x3b/0x40 [xfs]
+[  288.164033]  ? xfs_dir2_sf_verify+0x75/0x3b0 [xfs]
+[  288.168849]  xfs_dir_ino_validate+0x89/0x110 [xfs]
+[  288.173666]  xfs_dir2_sf_verify+0x75/0x3b0 [xfs]
+[  288.178283]  ? crc32c_pcl_intel_update+0x2d/0x70 [crc32c_intel]
+[  288.184229]  xfs_iformat_local+0x19c/0x1d0 [xfs]
+[  288.188875]  xfs_iformat_fork+0x2c0/0x630 [xfs]
+[  288.193433]  ? xfs_inode_from_disk+0x35/0x230 [xfs]
+[  288.198339]  xfs_iread+0x37a/0x430 [xfs]
+[  288.202294]  xfs_iget+0x331/0x8b0 [xfs]
+[  288.206155]  ? xfs_dir_lookup+0x14d/0x1c0 [xfs]
+[  288.210716]  xfs_lookup+0xc6/0xe0 [xfs]
+[  288.214583]  xfs_vn_lookup+0x52/0x90 [xfs]
+[  288.218681]  lookup_slow+0x8f/0x130
+[  288.222169]  walk_component+0x19a/0x210
+[  288.226004]  ? path_init+0x1f6/0x340
+[  288.229580]  path_lookupat+0x4e/0x100
+[  288.233240]  filename_lookup+0x9c/0x150
+[  288.237077]  ? filemap_map_pages+0x32e/0x380
+[  288.241347]  ? kmem_cache_alloc+0x137/0x190
+[  288.245527]  ? getname_flags+0x4f/0x1f0
+[  288.249362]  user_path_at_empty+0x36/0x40
+[  288.253369]  vfs_statx+0x68/0xc0
+[  288.256597]  SYSC_newlstat+0x2b/0x50
+[  288.260174]  ? __audit_syscall_entry+0xaf/0x100
+[  288.264703]  ? syscall_trace_enter+0x1b7/0x290
+[  288.269147]  ? vtime_delta+0x23/0x30
+[  288.272723]  SyS_newlstat+0xe/0x10
+[  288.276125]  do_syscall_64+0x67/0x180
+[  288.279786]  entry_SYSCALL64_slow_path+0x25/0x25
+[  288.284403] RIP: 0033:0x7f5669380615
+[  288.287979] RSP: 002b:00007ffed137e3f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000006
+[  288.295542] RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007f5669380615
+[  288.302669] RDX: 00007ffed137e430 RSI: 00007ffed137e430 RDI: 00007ffed1380874
+[  288.309798] RBP: 00007ffed1380871 R08: 0000000000000000 R09: 00007ffed1380874
+[  288.316925] R10: 00007ffed137e180 R11: 0000000000000246 R12: 0000000000000000
+[  288.324052] R13: 0000000000000001 R14: 0000000000000000 R15: 0000000000000002
+[  288.331207] XFS: Assertion failed: fs_is_ok, file: fs/xfs/libxfs/xfs_dir2_sf.c, line: 664
+[  288.339449] ------------[ cut here ]------------
+[  288.344066] kernel BUG at fs/xfs/xfs_message.c:113!
+[  288.348939] invalid opcode: 0000 [#1] SMP
+[  288.352946] Modules linked in: xfs(OE) binfmt_misc ip6t_rpfilter ipt_REJECT nf_reject_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6 nf_defrag_ipv6 xt_conntrack nf_conntrack libcrc32c ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_mangle ip6table_security ip6table_raw iptable_mangle iptable_security iptable_raw ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter btrfs intel_powerclamp coretemp xor kvm_intel kvm raid6_pq irqbypass crc32_pclmul ghash_clmulni_intel pcbc aesni_intel iTCO_wdt crypto_simd iTCO_vendor_support glue_helper cdc_ether ipmi_si usbnet cryptd lpc_ich pcspkr mii ipmi_devintf mfd_core i2c_i801 sg i7core_edac ipmi_msghandler ioatdma shpchp edac_core acpi_cpufreq dca nfsd auth_rpcgss nfs_acl lockd grace sunrpc
+[  288.423302]  ip_tables ext4 jbd2 mbcache sr_mod sd_mod cdrom mgag200 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops ttm ata_generic pata_acpi drm ata_piix libata crc32c_intel megaraid_sas i2c_core bnx2 dm_mirror dm_region_hash dm_log dm_mod [last unloaded: xfs]
+[  288.448736] CPU: 0 PID: 22059 Comm: stat Tainted: G           OE   4.11.0-rc3 #81
+[  288.456212] Hardware name: IBM System x3550 M3 -[7944OEJ]-/90Y4784     , BIOS -[D6E150CUS-1.11]- 02/08/2011
+[  288.465940] task: ffff880274e6a440 task.stack: ffffc90008628000
+[  288.471889] RIP: 0010:assfail+0x22/0x30 [xfs]
+[  288.476241] RSP: 0018:ffffc9000862b9c0 EFLAGS: 00010282
+[  288.481463] RAX: 00000000ffffffea RBX: 00000000ffffffff RCX: 0000000000000021
+[  288.488589] RDX: ffffc9000862b8e8 RSI: 000000000000000a RDI: ffffffffa0909fb2
+[  288.495715] RBP: ffffc9000862b9c0 R08: 0000000000000000 R09: 0000000000000000
+[  288.502842] R10: 000000000000000a R11: f000000000000000 R12: ffffffffa09039c0
+[  288.509969] R13: ffff880274aadcb0 R14: 0000000000000000 R15: 0000000000000200
+[  288.517098] FS:  00007f5669a90800(0000) GS:ffff88017ba00000(0000) knlGS:0000000000000000
+[  288.525180] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  288.530920] CR2: 00007f56693741a0 CR3: 00000001747c0000 CR4: 00000000000006f0
+[  288.538047] Call Trace:
+[  288.540523]  xfs_dir2_sf_verify+0x329/0x3b0 [xfs]
+[  288.545226]  ? crc32c_pcl_intel_update+0x2d/0x70 [crc32c_intel]
+[  288.551170]  xfs_iformat_local+0x19c/0x1d0 [xfs]
+[  288.555816]  xfs_iformat_fork+0x2c0/0x630 [xfs]
+[  288.560375]  ? xfs_inode_from_disk+0x35/0x230 [xfs]
+[  288.565278]  xfs_iread+0x37a/0x430 [xfs]
+[  288.569235]  xfs_iget+0x331/0x8b0 [xfs]
+[  288.573096]  ? xfs_dir_lookup+0x14d/0x1c0 [xfs]
+[  288.577656]  xfs_lookup+0xc6/0xe0 [xfs]
+[  288.581523]  xfs_vn_lookup+0x52/0x90 [xfs]
+[  288.585620]  lookup_slow+0x8f/0x130
+[  288.589108]  walk_component+0x19a/0x210
+[  288.592942]  ? path_init+0x1f6/0x340
+[  288.596519]  path_lookupat+0x4e/0x100
+[  288.600179]  filename_lookup+0x9c/0x150
+[  288.604013]  ? filemap_map_pages+0x32e/0x380
+[  288.608282]  ? kmem_cache_alloc+0x137/0x190
+[  288.612463]  ? getname_flags+0x4f/0x1f0
+[  288.616297]  user_path_at_empty+0x36/0x40
+[  288.620303]  vfs_statx+0x68/0xc0
+[  288.623533]  SYSC_newlstat+0x2b/0x50
+[  288.627109]  ? __audit_syscall_entry+0xaf/0x100
+[  288.631637]  ? syscall_trace_enter+0x1b7/0x290
+[  288.636079]  ? vtime_delta+0x23/0x30
+[  288.639654]  SyS_newlstat+0xe/0x10
+[  288.643057]  do_syscall_64+0x67/0x180
+[  288.646718]  entry_SYSCALL64_slow_path+0x25/0x25
+[  288.651333] RIP: 0033:0x7f5669380615
+[  288.654907] RSP: 002b:00007ffed137e3f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000006
+[  288.662470] RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007f5669380615
+[  288.669598] RDX: 00007ffed137e430 RSI: 00007ffed137e430 RDI: 00007ffed1380874
+[  288.676728] RBP: 00007ffed1380871 R08: 0000000000000000 R09: 00007ffed1380874
+[  288.683855] R10: 00007ffed137e180 R11: 0000000000000246 R12: 0000000000000000
+[  288.690982] R13: 0000000000000001 R14: 0000000000000000 R15: 0000000000000002
+[  288.698110] Code: 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 55 48 89 f1 41 89 d0 48 c7 c6 98 64 91 a0 48 89 fa 31 c0 48 89 e5 31 ff e8 ce f9 ff ff <0f> 0b 66 90 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 55 48
+[  288.716996] RIP: assfail+0x22/0x30 [xfs] RSP: ffffc9000862b9c0
+[  288.722899] ---[ end trace 5b34e0235aa3bdf2 ]---
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 2843a0426bca..66172581dacb 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1146,7 +1146,7 @@ retry:
- 		xfs_bmap_init(&free_list, &firstfsb);
- 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
- 					allocatesize_fsb, alloc_type, &firstfsb,
--					0, imapp, &nimaps, &free_list);
-+					resblks, imapp, &nimaps, &free_list);
- 		if (error) {
- 			goto error0;
- 		}
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 43e31b0b288b..da87415ac561 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -217,7 +217,7 @@ xfs_iomap_write_direct(
- 	xfs_bmap_init(&free_list, &firstfsb);
- 	nimaps = 1;
- 	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb, bmapi_flag,
--				&firstfsb, 0, imap, &nimaps, &free_list);
-+				&firstfsb, resblks, imap, &nimaps, &free_list);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -762,7 +762,7 @@ xfs_iomap_write_allocate(
- 			error = xfs_bmapi_write(tp, ip, map_start_fsb,
- 						count_fsb,
- 						XFS_BMAPI_STACK_SWITCH,
--						&first_block, 1,
-+						&first_block, nres,
- 						imap, &nimaps, &free_list);
- 			if (error)
- 				goto trans_cancel;
-@@ -877,8 +877,8 @@ xfs_iomap_write_unwritten(
- 		xfs_bmap_init(&free_list, &firstfsb);
- 		nimaps = 1;
- 		error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
--				  XFS_BMAPI_CONVERT, &firstfsb,
--				  1, &imap, &nimaps, &free_list);
-+					XFS_BMAPI_CONVERT, &firstfsb, resblks,
-+					&imap, &nimaps, &free_list);
- 		if (error)
- 			goto error_on_bmapi_transaction;
- 
--- 
-2.7.4
-
+P.S. 2: diff output of test failure on non-debug build xfs
+--- /dev/fd/63	2017-03-20 09:14:03.306152055 -0400
++++ results/xfs/348.out.bad	2017-03-20 09:14:02.754158081 -0400
+@@ -110,7 +110,7 @@
+ stat: 'SCRATCH_MNT/test/DIR' is a directory
+ stat: 'SCRATCH_MNT/test/DATA' is a directory
+ stat: cannot stat 'SCRATCH_MNT/test/EMPTY': Structure needs cleaning
+-stat: 'SCRATCH_MNT/test/SYMLINK' is a directory
++stat: cannot stat 'SCRATCH_MNT/test/SYMLINK': Structure needs cleaning
+ stat: cannot stat 'SCRATCH_MNT/test/CHRDEV': Structure needs cleaning
+ stat: cannot stat 'SCRATCH_MNT/test/BLKDEV': Structure needs cleaning
+ stat: cannot stat 'SCRATCH_MNT/test/FIFO': Structure needs cleaning
