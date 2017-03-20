@@ -1,105 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from buxtehude.debian.org ([209.87.16.39]:49635 "EHLO
-        buxtehude.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751094AbdCQPpa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 11:45:30 -0400
-Subject: Bug#766811: spurious library links
-Reply-To: Michael Biebl <biebl@debian.org>, 766811@bugs.debian.org
-References: <20141026004825.GA27863@bongo.bofh.it>
- <20160124151308.GA7620@jwilk.net> <20160206005821.GA11551@bongo.bofh.it>
- <20160206132241.GA2869@jwilk.net> <20160210031703.GA28092@bongo.bofh.it>
- <822351939.19802495.1455074423707.JavaMail.zimbra@redhat.com>
- <785bca5c-7b92-1c20-7a68-7c8b79419fa4@debian.org>
- <CAFMei7NSLSmONCC6AT1hbyLi18e4MWkYwt9pjqBrWACBEa+AfA@mail.gmail.com>
-From: Michael Biebl <biebl@debian.org>
-Message-ID: <9f4d18b6-66b9-5014-4c8b-40ad63ecbbe0@debian.org>
-Date: Fri, 17 Mar 2017 15:32:00 +0100
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:47641 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751027AbdCTE5c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Mar 2017 00:57:32 -0400
+Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2K4oIMc006278
+        for <linux-xfs@vger.kernel.org>; Sun, 19 Mar 2017 21:54:56 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 299tbx1nf5-2
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Sun, 19 Mar 2017 21:54:56 -0700
+Received: from facebook.com (2401:db00:11:d0be:face:0:1b:0)     by
+ mx-out.facebook.com (10.223.100.99) with ESMTP id
+ 5b0cda9e0d2911e7a0eb24be05956610-bb3fc9a0 for <linux-xfs@vger.kernel.org>;
+        Sun, 19 Mar 2017 21:54:53 -0700
+From: Calvin Owens <calvinowens@fb.com>
+Subject: [PATCH v2] xfs: Honor FALLOC_FL_KEEP_SIZE when punching ends of files
+Date: Sun, 19 Mar 2017 21:54:51 -0700
+Message-ID: <19504ff40a16efff2e51d85388fce5be578edbc3.1489985397.git.calvinowens@fb.com>
+In-Reply-To: <22a11e65fd5037498a78de61f3ed4dae466ad854.1489791330.git.calvinowens@fb.com>
+References: <22a11e65fd5037498a78de61f3ed4dae466ad854.1489791330.git.calvinowens@fb.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFMei7NSLSmONCC6AT1hbyLi18e4MWkYwt9pjqBrWACBEa+AfA@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="l2biDVLEk5miXbHKNLpEjVbSlwx1s8IvA"
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nathan Scott <nscott@redhat.com>, 766811 <766811@bugs.debian.org>
-Cc: Nathan Scott <nathans@debian.org>, Marco d'Itri <md@linux.it>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, kernel-team@fb.com, stable@vger.kernel.org, calvinowens@fb.com
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---l2biDVLEk5miXbHKNLpEjVbSlwx1s8IvA
-Content-Type: multipart/mixed; boundary="AC9av7mvNxsH3mku7cjEDaqNCaqr09WT5";
- protected-headers="v1"
-From: Michael Biebl <biebl@debian.org>
-To: Nathan Scott <nscott@redhat.com>, 766811 <766811@bugs.debian.org>
-Cc: Nathan Scott <nathans@debian.org>, Marco d'Itri <md@linux.it>
-Message-ID: <9f4d18b6-66b9-5014-4c8b-40ad63ecbbe0@debian.org>
-Subject: Re: Bug#766811: spurious library links
-References: <20141026004825.GA27863@bongo.bofh.it>
- <20160124151308.GA7620@jwilk.net> <20160206005821.GA11551@bongo.bofh.it>
- <20160206132241.GA2869@jwilk.net> <20160210031703.GA28092@bongo.bofh.it>
- <822351939.19802495.1455074423707.JavaMail.zimbra@redhat.com>
- <785bca5c-7b92-1c20-7a68-7c8b79419fa4@debian.org>
- <CAFMei7NSLSmONCC6AT1hbyLi18e4MWkYwt9pjqBrWACBEa+AfA@mail.gmail.com>
-In-Reply-To: <CAFMei7NSLSmONCC6AT1hbyLi18e4MWkYwt9pjqBrWACBEa+AfA@mail.gmail.com>
+When punching past EOF on XFS, fallocate(mode=PUNCH_HOLE|KEEP_SIZE) will
+round the file size up to the nearest multiple of PAGE_SIZE:
 
---AC9av7mvNxsH3mku7cjEDaqNCaqr09WT5
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+  calvinow@vm-disks/generic-xfs-1 ~$ dd if=/dev/urandom of=test bs=2048 count=1
+  calvinow@vm-disks/generic-xfs-1 ~$ stat test
+    Size: 2048            Blocks: 8          IO Block: 4096   regular file
+  calvinow@vm-disks/generic-xfs-1 ~$ fallocate -n -l 2048 -o 2048 -p test
+  calvinow@vm-disks/generic-xfs-1 ~$ stat test
+    Size: 4096            Blocks: 8          IO Block: 4096   regular file
 
-Hi Nathan,
+Commit 3c2bdc912a1cc050 ("xfs: kill xfs_zero_remaining_bytes") replaced
+xfs_zero_remaining_bytes() with calls to iomap helpers. The new helpers
+don't enforce that [pos,offset) lies strictly on [0,i_size) when being
+called from xfs_free_file_space(), so by "leaking" these ranges into
+xfs_zero_range() we get this buggy behavior.
 
-thanks for your quick reply
+Fix this by reintroducing the checks xfs_zero_remaining_bytes() did
+against i_size at the bottom of xfs_free_file_space().
 
-Am 17.03.2017 um 13:22 schrieb Nathan Scott:
->> So this NMU happened, but unfortunately your followup maintainer uploa=
-d,
->> i.e. 4.5.0 did not include the changes from the NMU.
->=20
-> (d'oh, these changes needs to be sent upstream to the kernel.org
-> <http://kernel.org> XFS list)
+Reported-by: Aaron Gao <gzh@fb.com>
+Fixes: 3c2bdc912a1cc050 ("xfs: kill xfs_zero_remaining_bytes")
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: <stable@vger.kernel.org> # 4.8+
+Signed-off-by: Calvin Owens <calvinowens@fb.com>
+---
+ fs/xfs/xfs_bmap_util.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-I'm not sure about Marco, but I don't know the procedures getting a
-patch into xfsprogs. So I would very much prefer if you forward the
-patch to the right people.
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 8b75dce..0796ebc 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1309,6 +1309,17 @@ xfs_free_file_space(
+ 	}
+ 
+ 	/*
++	 * Avoid doing I/O beyond eof - it's not necessary
++	 * since nothing can read beyond eof.  The space will
++	 * be zeroed when the file is extended anyway.
++	 */
++	if (offset >= XFS_ISIZE(ip))
++		return 0;
++
++	if ((offset + len) >= XFS_ISIZE(ip))
++		len = XFS_ISIZE(ip) - offset - 1;
++
++	/*
+ 	 * Now that we've unmap all full blocks we'll have to zero out any
+ 	 * partial block at the beginning and/or end.  xfs_zero_range is
+ 	 * smart enough to skip any holes, including those we just created.
+-- 
+2.9.3
 
->> Nathan, could you make another upload including the fix from Marco?
->=20
-> I'm currently traveling and will be unable to attend to this for some t=
-ime.
-
-Should Marco or myself do another NMU then? I would send you an updated
-debdiff in this case.
-
-Regards,
-Michael
-
---=20
-Why is it that all of the instruments seeking intelligent life in the
-universe are pointed away from Earth?
-
-
---AC9av7mvNxsH3mku7cjEDaqNCaqr09WT5--
-
---l2biDVLEk5miXbHKNLpEjVbSlwx1s8IvA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEECbOsLssWnJBDRcxUauHfDWCPItwFAljL82AACgkQauHfDWCP
-ItwwPA//Qi3fjnj9+k8gyLvyF+OCJ3dWhj/jxVbdKTz0rqHfvXzOWgPlIeGXD5MR
-s3gpaqHEOLLLJull0UJOwlaNweNzI5SDNHklQGF5VozHddqMF64v0P+k3QNf+h98
-7JXtrhPenDwCVgcnEzOp8G6VCjKRBaSqRuUDNq30ragBZba4IBh2o6PLXogIR7cB
-lujhcSysk3IXUt4bopJV+Svjjt4HfVJngWas0Xhd+p0GHikBtNJ/z7g7rOQ1XihF
-OjkMiPl+xCVhxaPCDqwkJKGeF/xah//44XRJvzwSluntf2dgQsubULdRZD1RrNdo
-GC1iMjW0Sam3DkPLiPlTgqZhq9zFvCaYcdH5r47ctZYXgEWZcCRehBboal4T9hlH
-mRYGjet5y+Lm5vpEYc1UqFZg1m9n/P0D5xDUgqXrryOGGI0dpH5wSz5DWrKiltNK
-dPlvVkNtWd8bfwD5Rcs9elIDn2d89F5yjT/w7LXQ7MKeIYDsL+6K6A/JkyYVby4q
-oNO5eEVMxKk1LbTSjtJLgmv0t0i2FUnho0cJk4m/dRWbhs/TksHnfc3Fe/Ia+WGp
-cfSgON9TQ5lD98BDOlt1ff36W1kdyIEqB6bNcyiOBO8BhGd9a698u5j3TlhJEPXp
-tFmhiYOgvqxoKAh5D1rjqOiptEHYDDVacMjAMEPdjl/LhSjU0ok=
-=4ite
------END PGP SIGNATURE-----
-
---l2biDVLEk5miXbHKNLpEjVbSlwx1s8IvA--
