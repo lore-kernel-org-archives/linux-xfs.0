@@ -1,95 +1,480 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:35623 "EHLO
-        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757547AbdCURX2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2017 13:23:28 -0400
-Received: by mail-qk0-f176.google.com with SMTP id v127so140430211qkb.2
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Mar 2017 10:23:27 -0700 (PDT)
-Message-ID: <1490117004.2542.1.camel@redhat.com>
-Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and
- optimization
-From: Jeff Layton <jlayton@redhat.com>
-Date: Tue, 21 Mar 2017 13:23:24 -0400
-In-Reply-To: <20170321163011.GA16666@fieldses.org>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
-         <20161222084549.GA8833@infradead.org> <1482417724.3924.39.camel@redhat.com>
-         <20170320214327.GA5098@fieldses.org> <20170321134500.GA1318@infradead.org>
-         <20170321163011.GA16666@fieldses.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:46640 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756925AbdCURfL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Mar 2017 13:35:11 -0400
+Date: Tue, 21 Mar 2017 13:35:09 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] generic: test pagecache invalidation after direct
+ write
+Message-ID: <20170321173509.GC59313@bfoster.bfoster>
+References: <20170321165314.11434-1-eguan@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170321165314.11434-1-eguan@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, 2017-03-21 at 12:30 -0400, J. Bruce Fields wrote:
-> On Tue, Mar 21, 2017 at 06:45:00AM -0700, Christoph Hellwig wrote:
-> > On Mon, Mar 20, 2017 at 05:43:27PM -0400, J. Bruce Fields wrote:
-> > > To me, the interesting question is whether this allows us to turn on
-> > > i_version updates by default on xfs and ext4.
-> > 
-> > XFS v5 file systems have it on by default.
+On Wed, Mar 22, 2017 at 12:53:14AM +0800, Eryu Guan wrote:
+> Test if direct write invalidates pagecache correctly, so that subsequent
+> buffer read reads the correct data from disk.
 > 
-> Great, thanks.
+> This test is inspired by LTP tests dio29, and serves as a regression
+> test for the bug found by it, see kernel commit c771c14baa33
+> ("iomap: invalidate page caches should be after iomap_dio_complete()
+> in direct write").
 > 
-> > Although we'll still need to agree on the exact semantics of i_version
-> > before it's going to be useful.
+> The test can be easily expanded to other write/read combinations, e.g.
+> buffer write + direct read and direct write + direct read, so they are
+> also being tested.
 > 
-> Once it's figured out maybe we should write it up for a manpage that
-> could be used if statx starts exposing it to userspace.
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
+> v2: Address Brian's review comments
+> - compare buffer content byte-by-byte instead of strncmp
+> - use 'pids[i]' not *(pids + 1)
+> - dump buffer content to stdout on error
+> - initialize write buffer with (i + 1)
+> - use pwrite/pread instead of lseek+write/read
+> - remove increment of unused 'ret'
+> - call fsync(fd) instead of sync()
+> - fix typos
 > 
-> A first attempt:
+>  .gitignore                 |   1 +
+>  src/Makefile               |   3 +-
+>  src/dio-invalidate-cache.c | 326 +++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/418          | 122 +++++++++++++++++
+>  tests/generic/418.out      |   2 +
+>  tests/generic/group        |   1 +
+>  6 files changed, 454 insertions(+), 1 deletion(-)
+>  create mode 100644 src/dio-invalidate-cache.c
+>  create mode 100755 tests/generic/418
+>  create mode 100644 tests/generic/418.out
 > 
-> - It's a u64.
-> 
-> - It works for regular files and directories.  (What about symlinks or
->   other special types?)
-> 
-> - It changes between two checks if and only if there were intervening
->   data or metadata changes.  The change will always be an increase, but
->   the amount of the increase is meaningless.
-> 	- NFS doesn't actually require that it increases, but I think it
-> 	  should.  I assume 64 bits means we don't need a discussion of
-> 	  wraparound.
+...
+> diff --git a/src/dio-invalidate-cache.c b/src/dio-invalidate-cache.c
+> new file mode 100644
+> index 0000000..bc795f9
+> --- /dev/null
+> +++ b/src/dio-invalidate-cache.c
+> @@ -0,0 +1,326 @@
+...
+> +static void kill_children(pid_t *pids, int nr_child)
+> +{
+> +	int i;
+> +	pid_t pid;
+> +
+> +	for (i = 0; i < nr_child; i++) {
+> +		pid = *(pids + i);
+> +		if (pid == 0)
+> +			continue;
+> +		kill(pid, SIGTERM);
+> +	}
+> +	return;
 
-I thought NFS spec required that you be able to recognize old change
-attributes so that they can be discarded. I could be wrong here though.
-I'd have to go back and look through the spec to be sure.
+Still have pids pointer arithmetic above and the return is unnecessary.
+Otherwise looks Ok to me:
 
-> 	- AFS wants an actual counter: if you get i_version X, then
-> 	  write twice, then get i_version X+2, you're allowed to assume
-> 	  your writes were the only modifications.  Let's ignore this
-> 	  for now.  In the future if someone explains how to count
-> 	  operations, then we can extend the interface to tell the
-> 	  caller it can get those extra semantics.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +}
+> +
+> +static int wait_children(pid_t *pids, int nr_child)
+> +{
+> +	int i, status, ret = 0;
+> +	pid_t pid;
+> +
+> +	for (i = 0; i < nr_child; i++) {
+> +		pid = pids[i];
+> +		if (pid == 0)
+> +			continue;
+> +		waitpid(pid, &status, 0);
+> +		ret += WEXITSTATUS(status);
+> +	}
+> +	return ret;
+> +}
+> +
+> +static void dumpbuf(char *buf, int size, int blksz)
+> +{
+> +	int i;
+> +
+> +	printf("dumping buffer content\n");
+> +	for (i = 0; i < size; i++) {
+> +		if (((i % blksz) == 0) || ((i % 64) == 0))
+> +			putchar('\n');
+> +		printf("%x", buf[i]);
+> +	}
+> +	putchar('\n');
+> +}
+> +
+> +static int run_test(const char *filename, int n_child, int blksz, off_t offset,
+> +		    int nr_iter, int flag_rd, int flag_wr)
+> +{
+> +	char *buf_rd;
+> +	char *buf_wr;
+> +	off_t seekoff;
+> +	int fd_rd, fd_wr;
+> +	int i, ret;
+> +	long page_size;
+> +
+> +	seekoff = offset + blksz * n_child;
+> +
+> +	page_size = sysconf(_SC_PAGESIZE);
+> +	ret = posix_memalign((void **)&buf_rd, (size_t)page_size,
+> +		blksz > page_size ? blksz : (size_t)page_size);
+> +	if (ret) {
+> +		fprintf(stderr, "posix_memalign(buf_rd, %d, %d) failed: %d\n",
+> +			blksz, blksz, ret);
+> +		exit(EXIT_FAILURE);
+> +	}
+> +	memset(buf_rd, 0, blksz);
+> +	ret = posix_memalign((void **)&buf_wr, (size_t)page_size,
+> +		blksz > page_size ? blksz : (size_t)page_size);
+> +	if (ret) {
+> +		fprintf(stderr, "posix_memalign(buf_wr, %d, %d) failed: %d\n",
+> +			blksz, blksz, ret);
+> +		exit(EXIT_FAILURE);
+> +	}
+> +	memset(buf_wr, 0, blksz);
+> +
+> +	fd_rd = open(filename, flag_rd);
+> +	if (fd_rd < 0) {
+> +		perror("open readonly for read");
+> +		exit(EXIT_FAILURE);
+> +	}
+> +
+> +	fd_wr = open(filename, flag_wr);
+> +	if (fd_wr < 0) {
+> +		perror("open writeonly for direct write");
+> +		exit(EXIT_FAILURE);
+> +	}
+> +
+> +#define log(format, ...) 			\
+> +	if (verbose) {				\
+> +		printf("[%d:%d] ", n_child, i);	\
+> +		printf(format, __VA_ARGS__);	\
+> +	}
+> +
+> +
+> +	/* seek, write, read and verify */
+> +	for (i = 0; i < nr_iter; i++) {
+> +		memset(buf_wr, i + 1, blksz);
+> +		log("pwrite(fd_wr, %p, %d, %lu)\n", buf_wr, blksz, seekoff);
+> +		if (pwrite(fd_wr, buf_wr, blksz, seekoff) != blksz) {
+> +			perror("direct write");
+> +			exit(EXIT_FAILURE);
+> +		}
+> +
+> +		/* make sure buffer write hits disk before direct read */
+> +		if (!(flag_wr & O_DIRECT)) {
+> +			if (fsync(fd_wr) < 0) {
+> +				perror("fsync(fd_wr)");
+> +				exit(EXIT_FAILURE);
+> +			}
+> +		}
+> +
+> +		log("pread(fd_rd, %p, %d, %lu)\n", buf_rd, blksz, seekoff);
+> +		if (pread(fd_rd, buf_rd, blksz, seekoff) != blksz) {
+> +			perror("buffer read");
+> +			exit(EXIT_FAILURE);
+> +		}
+> +		if (cmpbuf(buf_wr, buf_rd, blksz) != 0) {
+> +			fprintf(stderr, "[%d:%d] FAIL - comparison failed, "
+> +				"offset %d\n", n_child, i, (int)seekoff);
+> +			if (verbose)
+> +				dumpbuf(buf_rd, blksz, blksz);
+> +			exit(EXIT_FAILURE);
+> +		}
+> +	}
+> +	exit(EXIT_SUCCESS);
+> +}
+> +
+> +int main(int argc, char *argv[])
+> +{
+> +	int nr_iter = 1;
+> +	int nr_child = 1;
+> +	int blksz = DEF_BLKSZ;
+> +	int fd, i, ret = 0;
+> +	int flag_rd = O_RDONLY;
+> +	int flag_wr = O_WRONLY;
+> +	int do_trunc = 0;
+> +	int pre_fill = 0;
+> +	int pre_alloc = 0;
+> +	pid_t pid;
+> +	pid_t *pids;
+> +	off_t offset = 0;
+> +	char *filename = NULL;
+> +
+> +	while ((i = getopt(argc, argv, "b:i:n:f:Fpo:tvrw")) != -1) {
+> +		switch (i) {
+> +		case 'b':
+> +			if ((blksz = atoi(optarg)) <= 0) {
+> +				fprintf(stderr, "blksz must be > 0\n");
+> +				exit(EXIT_FAILURE);
+> +			}
+> +			if (blksz % 512 != 0) {
+> +				fprintf(stderr, "blksz must be multiple of 512\n");
+> +				exit(EXIT_FAILURE);
+> +			}
+> +			break;
+> +		case 'i':
+> +			if ((nr_iter = atoi(optarg)) <= 0) {
+> +				fprintf(stderr, "iterations must be > 0\n");
+> +				exit(EXIT_FAILURE);
+> +			}
+> +			break;
+> +		case 'n':
+> +			if ((nr_child = atoi(optarg)) <= 0) {
+> +				fprintf(stderr, "no of children must be > 0\n");
+> +				exit(EXIT_FAILURE);
+> +			}
+> +			break;
+> +		case 'f':
+> +			filename = optarg;
+> +			break;
+> +		case 'F':
+> +			pre_fill = 1;
+> +			break;
+> +		case 'p':
+> +			pre_alloc = 1;
+> +			break;
+> +		case 'r':
+> +			flag_rd |= O_DIRECT;
+> +			break;
+> +		case 'w':
+> +			flag_wr |= O_DIRECT;
+> +			break;
+> +		case 't':
+> +			do_trunc = 1;
+> +			break;
+> +		case 'o':
+> +			if ((offset = atol(optarg)) < 0) {
+> +				fprintf(stderr, "offset must be >= 0\n");
+> +				exit(EXIT_FAILURE);
+> +			}
+> +			break;
+> +		case 'v':
+> +			verbose = 1;
+> +			break;
+> +		case 'h':	/* fall through */
+> +		default:
+> +			usage(argv[0]);
+> +		}
+> +	}
+> +
+> +	if (filename == NULL)
+> +		usage(argv[0]);
+> +	if (pre_fill && pre_alloc) {
+> +		fprintf(stderr, "Error: -F and -p are both specified\n");
+> +		exit(EXIT_FAILURE);
+> +	}
+> +
+> +	pids = malloc(nr_child * sizeof(pid_t));
+> +	if (!pids) {
+> +		fprintf(stderr, "failed to malloc memory for pids\n");
+> +		exit(EXIT_FAILURE);
+> +	}
+> +	memset(pids, 0, nr_child * sizeof(pid_t));
+> +
+> +	/* create & truncate testfile first */
+> +	fd = open(filename, O_CREAT | O_TRUNC | O_RDWR, 0600);
+> +	if (fd < 0) {
+> +		perror("create & truncate testfile");
+> +		free(pids);
+> +		exit(EXIT_FAILURE);
+> +	}
+> +	if (do_trunc && (ftruncate(fd, blksz * nr_child) < 0)) {
+> +		perror("ftruncate failed");
+> +		free(pids);
+> +		exit(EXIT_FAILURE);
+> +	}
+> +	if (pre_fill) {
+> +		char *buf;
+> +		buf = malloc(blksz * nr_child);
+> +		memset(buf, 's', blksz * nr_child);
+> +		write(fd, buf, blksz * nr_child);
+> +		free(buf);
+> +	}
+> +	if (pre_alloc) {
+> +		fallocate(fd, 0, 0, blksz * nr_child);
+> +	}
+> +	fsync(fd);
+> +	close(fd);
+> +
+> +	/* fork workers */
+> +	for (i = 0; i < nr_child; i++) {
+> +		pid = fork();
+> +		if (pid < 0) {
+> +			perror("fork");
+> +			kill_children(pids, nr_child);
+> +			free(pids);
+> +			exit(EXIT_FAILURE);
+> +		} else if (pid == 0) {
+> +			/* never returns */
+> +			run_test(filename, i, blksz, offset, nr_iter,
+> +				 flag_rd, flag_wr);
+> +		} else {
+> +			pids[i] = pid;
+> +		}
+> +	}
+> +
+> +	ret = wait_children(pids, nr_child);
+> +	free(pids);
+> +	exit(ret);
+> +}
+> diff --git a/tests/generic/418 b/tests/generic/418
+> new file mode 100755
+> index 0000000..1fa782e
+> --- /dev/null
+> +++ b/tests/generic/418
+> @@ -0,0 +1,122 @@
+> +#! /bin/bash
+> +# FS QA Test 418
+> +#
+> +# Test pagecache invalidation in buffer/direct write/read combination.
+> +#
+> +# Fork N children, each child writes to and reads from its own region of the
+> +# same test file, and check if what it reads is what it writes. The test region
+> +# is determined by N * blksz. Write and read operation can be either direct or
+> +# buffered.
+> +#
+> +# Regression test for commit c771c14baa33 ("iomap: invalidate page caches
+> +# should be after iomap_dio_complete() in direct write")
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2017 Red Hat Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_test
+> +_require_odirect
+> +_require_block_device $TEST_DEV
+> +_require_test_program "dio-invalidate-cache"
+> +_require_test_program "feature"
+> +
+> +diotest=$here/src/dio-invalidate-cache
+> +testfile=$TEST_DIR/$seq-diotest
+> +sectorsize=`blockdev --getss $TEST_DEV`
+> +pagesize=`src/feature -s`
+> +
+> +# test case array, test different write/read combinations
+> +# -r: use direct read
+> +# -w: use direct write
+> +# -t: truncate file to final size before test, i.e. write to hole
+> +# -p: fallocate whole file before test, i.e. write to allocated but unwritten extents
+> +# -F: fulfill whole file before test, i.e. write to allocated & written extents
+> +t_cases=(
+> +	"-w"
+> +	"-wt"
+> +	"-wp"
+> +	"-wF"
+> +	"-r"
+> +	"-rt"
+> +	"-rp"
+> +	"-rF"
+> +	"-rw"
+> +	"-rwt"
+> +	"-rwp"
+> +	"-rwF"
+> +)
+> +
+> +runtest()
+> +{
+> +	local i=0
+> +	local tc=""
+> +	local loop=$1
+> +	shift
+> +
+> +	for tc in ${t_cases[*]}; do
+> +		echo "diotest $tc $*" >> $seqres.full
+> +		i=0
+> +		while [ $i -lt $loop ]; do
+> +			$diotest $tc $* -f $testfile
+> +			if [ $? -ne 0 ]; then
+> +				echo "diotest $tc $* failed at loop $i" | \
+> +					tee -a $seqres.full
+> +				break
+> +			fi
+> +			let i=i+1
+> +		done
+> +	done
+> +}
+> +
+> +while [ $sectorsize -le $((pagesize * 2)) ]; do
+> +	# reproducer for the original bug
+> +	runtest $((10 * LOAD_FACTOR)) -b $sectorsize -n 3 -i 1
+> +	# try more processes and iterations
+> +	runtest $((5 * LOAD_FACTOR))  -b $sectorsize -n 8 -i 4
+> +	sectorsize=$((sectorsize * 2))
+> +done
+> +echo "Silence is golden"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/418.out b/tests/generic/418.out
+> new file mode 100644
+> index 0000000..954de31
+> --- /dev/null
+> +++ b/tests/generic/418.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 418
+> +Silence is golden
+> diff --git a/tests/generic/group b/tests/generic/group
+> index f0096bb..0a272b7 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -420,3 +420,4 @@
+>  415 auto clone
+>  416 auto enospc
+>  417 auto quick shutdown log
+> +418 auto rw
+> -- 
+> 2.9.3
 > 
-> - It's durable; the above comparison still works if there were reboots
->   between the two i_version checks.
-> 	- I don't know how realistic this is--we may need to figure out
-> 	  if there's a weaker guarantee that's still useful.  Do
-> 	  filesystems actually make ctime/mtime/i_version changes
-> 	  atomically with the changes that caused them?  What if a
-> 	  change attribute is exposed to an NFS client but doesn't make
-> 	  it to disk, and then that value is reused after reboot?
-> 
-
-Yeah, there could be atomicity there. If we bump i_version, we'll mark
-the inode dirty and I think that will end up with the new i_version at
-least being journalled before __mark_inode_dirty returns.
-
-That said, I suppose it is possible for us to bump the counter, hand
-that new counter value out to a NFS client and then the box crashes
-before it makes it to the journal.
-
-Not sure how big a problem that really is.
-
-> Am I missing any issues?
-> 
-
-No, I think you have it covered, and that's pretty much exactly what I
-had in mind as far as semantics go. Thanks for writing it up!
-
--- 
-Jeff Layton <jlayton@redhat.com>
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
