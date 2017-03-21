@@ -1,35 +1,221 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f182.google.com ([209.85.128.182]:32865 "EHLO
-        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751406AbdC0IRg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:17:36 -0400
-Subject: Re: Request for inclusion of 4dfce57db635 ("xfs: fix up
- xfs_swap_extent_forks inline extent handling") in stable
-References: <473e7987-03d9-4118-d7e1-11465928f021@gmail.com>
-From: Jiri Slaby <jslaby@suse.cz>
-Message-ID: <9e025fd5-9497-0e49-a60c-583f96a9d329@suse.cz>
-Date: Mon, 27 Mar 2017 10:17:27 +0200
+Received: from aserp1040.oracle.com ([141.146.126.69]:37166 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932619AbdCUOZR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2017 10:25:17 -0400
+Date: Tue, 21 Mar 2017 10:23:52 -0400
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/4] reflink: test adjacency of reflinked blocks
+Message-ID: <20170321142352.GA5722@birch.djwong.org>
+References: <148798515933.25833.2842247083803775089.stgit@birch.djwong.org>
+ <148798517790.25833.2585159479268361866.stgit@birch.djwong.org>
+ <6511f176-ee8e-09d8-d955-8aed36abaa29@cn.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <473e7987-03d9-4118-d7e1-11465928f021@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6511f176-ee8e-09d8-d955-8aed36abaa29@cn.fujitsu.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <n.borisov.lkml@gmail.com>, stable@vger.kernel.org, linux-xfs@vger.kernel.org, bfoster@redhat.com, darrick.wong@oracle.com
+To: Qu Wenruo <quwenruo@cn.fujitsu.com>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@djwong.org>, fstests@vger.kernel.org
 
-On 03/27/2017, 09:31 AM, Nikolay Borisov wrote:
-> Hello,
+On Tue, Mar 21, 2017 at 03:14:36PM +0800, Qu Wenruo wrote:
+> Hi Darrick
+> 
+> At 02/25/2017 09:12 AM, Darrick J. Wong wrote:
+> >From: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> >If we reflink a file with N blocks to another file one block at a time,
+> >does the destination file end up with the same number of extents as the
+> >source file?  In other words, does the filesystem succeed at combining
+> >adjacent mappings into a maximal extents?
+> 
+> Btrfs can't pass the test since it doesn't merge such mapping, not only the
+> fiemap result, but also on-disk extents.
+
+Weirdly, I observed that if you unmount and remount the btrfs it
+actually /will/ merge the extents.
+
+> IIRC ocfs also merges it, so I wonder if this is a documented behavior to
+> merge any extent maps that are adjacent.
+
+Generally, yes you'd expect that two logically and physically contiguous
+extents to be merged together.  That might change a bit for compressed
+or encrypted extents.
+
+> Further more, if a fs has a limit on extent size on disk, e.g 128M.
+> But 2 file extents are also adjacent on disk, then should fiemap return a
+> large 256M map or just 2 adjacent 128M maps?
+
+It's up to the fs, really... XFS will merge the extent records (up to
+maximum extent size) and then unmerge the shared/not-shared FIEMAP
+records for accurate shared extent reporting.
+
+--D
+
+> 
+> Thanks,
+> Qu
+> >
+> >Signed-off-by: Darrick J. Wong <djwong@djwong.org>
+> >---
+> > tests/generic/930     |  106 +++++++++++++++++++++++++++++++++++++++++++++++++
+> > tests/generic/930.out |   11 +++++
+> > tests/generic/group   |    1
+> > 3 files changed, 118 insertions(+)
+> > create mode 100755 tests/generic/930
+> > create mode 100644 tests/generic/930.out
+> >
+> >
+> >diff --git a/tests/generic/930 b/tests/generic/930
+> >new file mode 100755
+> >index 0000000..15d8cbf
+> >--- /dev/null
+> >+++ b/tests/generic/930
+> >@@ -0,0 +1,106 @@
+> >+#! /bin/bash
+> >+# FS QA Test No. 930
+> >+#
+> >+# Check that reflinking adjacent blocks in a file produces a single
+> >+# block mapping extent.
+> >+#
+> >+#-----------------------------------------------------------------------
+> >+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
+> >+#
+> >+# This program is free software; you can redistribute it and/or
+> >+# modify it under the terms of the GNU General Public License as
+> >+# published by the Free Software Foundation.
+> >+#
+> >+# This program is distributed in the hope that it would be useful,
+> >+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> >+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> >+# GNU General Public License for more details.
+> >+#
+> >+# You should have received a copy of the GNU General Public License
+> >+# along with this program; if not, write the Free Software Foundation,
+> >+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> >+#-----------------------------------------------------------------------
+> >+#
+> >+
+> >+seq=`basename $0`
+> >+seqres=$RESULT_DIR/$seq
+> >+echo "QA output created by $seq"
+> >+
+> >+here=`pwd`
+> >+tmp=/tmp/$$
+> >+status=1	# failure is the default!
+> >+trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> >+
+> >+_cleanup()
+> >+{
+> >+	cd /
+> >+	rm -rf $tmp.*
+> >+	wait
+> >+}
+> >+
+> >+# get standard environment, filters and checks
+> >+. ./common/rc
+> >+. ./common/filter
+> >+. ./common/reflink
+> >+
+> >+# real QA test starts here
+> >+_supported_os Linux
+> >+_supported_fs generic
+> >+_require_scratch_reflink
+> >+_require_fiemap
+> >+
+> >+echo "Format and mount"
+> >+_scratch_mkfs > $seqres.full 2>&1
+> >+_scratch_mount >> $seqres.full 2>&1
+> >+
+> >+testdir=$SCRATCH_MNT/test-$seq
+> >+mkdir $testdir
+> >+
+> >+blocks=32
+> >+blksz=65536
+> >+sz=$((blocks * blksz))
+> >+
+> >+echo "Create the original files"
+> >+$XFS_IO_PROG -f -c "falloc 0 $sz" $testdir/file1 >> $seqres.full
+> >+_pwrite_byte 0x61 0 $sz $testdir/file1 >> $seqres.full
+> >+seq 0 $blksz $((sz - blksz)) | while read offset; do
+> >+	_reflink_range $testdir/file1 $offset $testdir/file2 $offset $blksz >> $seqres.full
+> >+done
+> >+
+> >+echo "Compare files"
+> >+md5sum $testdir/file1 | _filter_scratch
+> >+md5sum $testdir/file2 | _filter_scratch
+> >+
+> >+echo "Check extent counts"
+> >+f1=$(_count_extents $testdir/file1)
+> >+f2=$(_count_extents $testdir/file2)
+> >+s1=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file1 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
+> >+s2=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file2 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
+> >+
+> >+# Did the fs combine the extent mappings when we made f2?
+> >+test $f1 -eq $f2 || echo "f1 ($f1) != f2 ($f2)"
+> >+test $s1 -eq $s2 || echo "s1 ($s1) != s2 ($s2)"
+> >+test $f1 -eq $s1 || echo "f1 ($f1) != s1 ($f1)"
+> >+test $f2 -eq $s2 || echo "f2 ($f2) != s2 ($f2)"
+> >+
+> >+_scratch_cycle_mount
+> >+
+> >+echo "Compare files after remounting"
+> >+md5sum $testdir/file1 | _filter_scratch
+> >+md5sum $testdir/file2 | _filter_scratch
+> >+
+> >+echo "Check extent counts"
+> >+f1=$(_count_extents $testdir/file1)
+> >+f2=$(_count_extents $testdir/file2)
+> >+s1=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file1 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
+> >+s2=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file2 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
+> >+
+> >+# Are the mappings still combined?
+> >+test $f1 -eq $f2 || echo "f1 ($f1) != f2 ($f2)"
+> >+test $s1 -eq $s2 || echo "s1 ($s1) != s2 ($s2)"
+> >+test $f1 -eq $s1 || echo "f1 ($f1) != s1 ($f1)"
+> >+test $f2 -eq $s2 || echo "f2 ($f2) != s2 ($f2)"
+> >+
+> >+# success, all done
+> >+status=0
+> >+exit
+> >diff --git a/tests/generic/930.out b/tests/generic/930.out
+> >new file mode 100644
+> >index 0000000..556108a
+> >--- /dev/null
+> >+++ b/tests/generic/930.out
+> >@@ -0,0 +1,11 @@
+> >+QA output created by 930
+> >+Format and mount
+> >+Create the original files
+> >+Compare files
+> >+de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file1
+> >+de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file2
+> >+Check extent counts
+> >+Compare files after remounting
+> >+de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file1
+> >+de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file2
+> >+Check extent counts
+> >diff --git a/tests/generic/group b/tests/generic/group
+> >index d0bc47d..4b4df66 100644
+> >--- a/tests/generic/group
+> >+++ b/tests/generic/group
+> >@@ -411,3 +411,4 @@
+> > 406 auto quick dangerous
+> > 407 auto quick clone metadata
+> > 408 auto quick clone dedupe metadata
+> >+930 auto quick clone
+> >
+> >--
+> >To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >the body of a message to majordomo@vger.kernel.org
+> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> >
 > 
 > 
-> The commit in the subject was tagged as stable but I guess it got missed
-> being included into stable. Without these stable kernels crash on
-> xfs/118. I've attached backports for both 3.12 and 4.4 and also ran a
-> regtest with xfstest with no regressions showing up.
-
-Applied to 3.12, thanks!
-
-
--- 
-js
-suse labs
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
