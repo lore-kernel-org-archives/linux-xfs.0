@@ -1,93 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33858 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751730AbdC0IjD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:39:03 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/26] xfs: fail _dir_open when readahead fails
-Date: Mon, 27 Mar 2017 10:38:16 +0200
-Message-Id: <20170327083837.11027-6-hch@lst.de>
-In-Reply-To: <20170327083837.11027-1-hch@lst.de>
-References: <20170327083837.11027-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:56592 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933817AbdCUS73 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Mar 2017 14:59:29 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH RFC 0/2] xfs_io: hook up statx
+Message-ID: <0bc83cf4-a927-e78e-9bfb-7f3fa91303eb@redhat.com>
+Date: Tue, 21 Mar 2017 14:59:21 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: David Howells <dhowells@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+These 2 patches are a first pass to add a statx command
+to xfs_io in hopes that it will aid creation of xfstests
+statx regression tests.
 
-commit 7a652bbe366464267190c2792a32ce4fff5595ef upstream.
+xfs_io> help statx
+statx [-O | -m mask][-FDLAP] -- extended information about the currently open file
 
-When we open a directory, we try to readahead block 0 of the directory
-on the assumption that we're going to need it soon.  If the bmbt is
-corrupt, the directory will never be usable and the readahead fails
-immediately, so we might as well prevent the directory from being opened
-at all.  This prevents a subsequent read or modify operation from
-hitting it and taking the fs offline.
+ Display extended file status.
 
-NOTE: We're only checking for early failures in the block mapping, not
-the readahead directory block itself.
+ Options:
+ -m mask -- Specify the field mask for the statx call (default STATX_ALL)
+ -A -- Suppress terminal automount traversal
+ -D -- Don't sync attributes with the server
+ -F -- Force the attributes to be sync'd with the server
+ -L -- Follow symlinks (statx link target)
+ -O -- Remove basic stats (STATX_BASIC_STATS) from default mask
+ -P -- pretty-print results similar to stat(1)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_da_btree.c | 6 ++----
- fs/xfs/libxfs/xfs_da_btree.h | 2 +-
- fs/xfs/xfs_file.c            | 4 ++--
- 3 files changed, 5 insertions(+), 7 deletions(-)
+xfs_io> statx
+stx_mask: 0xfff
+stx_blksize: 4096
+stx_attributes: 0x70
+stx_nlink: 1
+stx_uid: 0
+stx_gid: 0
+stx_mode: 0100644
+stx_ino: 99
+stx_size: 0
+stx_blocks: 0
+stx_atime.tv_sec: 1490109633
+stx_atime.tv_nsec: 676550238
+stx_btime.tv_sec: 1490109633
+stx_btime.tv_nsec: 675550234
+stx_ctime.tv_sec: 1490109725
+stx_ctime.tv_nsec: 69966839
+stx_mtime.tv_sec: 1490109633
+stx_mtime.tv_nsec: 676550238
+stx_rdev_major: 0
+stx_rdev_minor: 0
+stx_dev_major: 7
+stx_dev_minor: 0
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index f2dc1a950c85..1bdf2888295b 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -2633,7 +2633,7 @@ xfs_da_read_buf(
- /*
-  * Readahead the dir/attr block.
-  */
--xfs_daddr_t
-+int
- xfs_da_reada_buf(
- 	struct xfs_inode	*dp,
- 	xfs_dablk_t		bno,
-@@ -2664,7 +2664,5 @@ xfs_da_reada_buf(
- 	if (mapp != &map)
- 		kmem_free(mapp);
- 
--	if (error)
--		return -1;
--	return mappedbno;
-+	return error;
- }
-diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index 98c75cbe6ac2..4e29cb6a3627 100644
---- a/fs/xfs/libxfs/xfs_da_btree.h
-+++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -201,7 +201,7 @@ int	xfs_da_read_buf(struct xfs_trans *trans, struct xfs_inode *dp,
- 			       xfs_dablk_t bno, xfs_daddr_t mappedbno,
- 			       struct xfs_buf **bpp, int whichfork,
- 			       const struct xfs_buf_ops *ops);
--xfs_daddr_t	xfs_da_reada_buf(struct xfs_inode *dp, xfs_dablk_t bno,
-+int	xfs_da_reada_buf(struct xfs_inode *dp, xfs_dablk_t bno,
- 				xfs_daddr_t mapped_bno, int whichfork,
- 				const struct xfs_buf_ops *ops);
- int	xfs_da_shrink_inode(xfs_da_args_t *args, xfs_dablk_t dead_blkno,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 0a29739f785e..032c8a74824a 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -913,9 +913,9 @@ xfs_dir_open(
- 	 */
- 	mode = xfs_ilock_data_map_shared(ip);
- 	if (ip->i_d.di_nextents > 0)
--		xfs_dir3_data_readahead(ip, 0, -1);
-+		error = xfs_dir3_data_readahead(ip, 0, -1);
- 	xfs_iunlock(ip, mode);
--	return 0;
-+	return error;
- }
- 
- STATIC int
--- 
-2.11.0
+patch 2 is a bit of a hack for now; it hardcodes the 64-bit x86
+syscall nr, and includes a whole header full of statx
+#defines.
 
+I'm not sure if we want to provide those under #ifndef,
+or just require new kernel headers & test for them w/
+autoconf.  I'll clean it up one way or another.
+
+It also lifts a fair bit from David's samples/statx/test-statx.c;
+a lot of that is pretty-printing that we don't do for xfs_io's
+standard stat command, so maybe it should get dropped from this
+patch for code brevity.
+
+Another interesting limitation of all of the xfs_io stat
+variants is that they currently can't stat any file that
+they can't open, which may or may not be a limitation that
+we care about....
+
+Anyway - thoughts on whether this is enough of an interface
+to facilitate testing, and whether we should accommodate old
+headers would be appreciated, and I'll get it cleaned up &
+send a V2.
+
+-Eric
