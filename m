@@ -1,112 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:35458 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751406AbdC0IPM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:15:12 -0400
-Subject: Re: Request 5c6863019e45 ("cancel the setfilesize transation when io
- error happen") for 3.12 stable inclusion
-References: <48c85015-5520-bd42-dca7-cfb9634dcc39@gmail.com>
-From: Jiri Slaby <jslaby@suse.cz>
-Message-ID: <c76b9580-1012-000b-1c69-3ef090162145@suse.cz>
-Date: Mon, 27 Mar 2017 10:15:08 +0200
+Received: from bombadil.infradead.org ([65.50.211.133]:41619 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756497AbdCUNpC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2017 09:45:02 -0400
+Date: Tue, 21 Mar 2017 06:45:00 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+Message-ID: <20170321134500.GA1318@infradead.org>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+ <20161222084549.GA8833@infradead.org>
+ <1482417724.3924.39.camel@redhat.com>
+ <20170320214327.GA5098@fieldses.org>
 MIME-Version: 1.0
-In-Reply-To: <48c85015-5520-bd42-dca7-cfb9634dcc39@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170320214327.GA5098@fieldses.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <n.borisov.lkml@gmail.com>, stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, bfoster@redhat.com, david@fromorbit.com
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: Jeff Layton <jlayton@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 03/23/2017, 04:19 PM, Nikolay Borisov wrote:
-> Hello,
-> 
-> 
-> I'd like to request the above patch be included into the 3.12 stable
-> tree. I've attached a backport and have run xfstest and no regressions
-> were observed. This fixes hang in generic/361 test.
+On Mon, Mar 20, 2017 at 05:43:27PM -0400, J. Bruce Fields wrote:
+> To me, the interesting question is whether this allows us to turn on
+> i_version updates by default on xfs and ext4.
 
-So this is actually 5cb13dcd0fac071b45c4bebe1801a08ff0d89cad, not
-5c6863019e45, right? Applied as the former. Thanks.
-
-> 0001-cancel-the-setfilesize-transation-when-io-error-happ.patch
-> 
-> 
-> From 5c6863019e453bee3ac6dbdf1fbf0d9125942c3b Mon Sep 17 00:00:00 2001
-> From: Zhaohongjiang <zhaohongjiang@huawei.com>
-> Date: Mon, 12 Oct 2015 15:28:39 +1100
-> Subject: [PATCH] cancel the setfilesize transation when io error happen
-> 
-> When I ran xfstest/073 case, the remount process was blocked to wait
-> transactions to be zero. I found there was a io error happened, and
-> the setfilesize transaction was not released properly. We should add
-> the changes to cancel the io error in this case.
-> 
-> Reproduction steps:
-> 1. dd if=/dev/zero of=xfs1.img bs=1M count=2048
-> 2. mkfs.xfs xfs1.img
-> 3. losetup -f ./xfs1.img /dev/loop0
-> 4. mount -t xfs /dev/loop0 /home/test_dir/
-> 5. mkdir /home/test_dir/test
-> 6. mkfs.xfs -dfile,name=image,size=2g
-> 7. mount -t xfs -o loop image /home/test_dir/test
-> 8. cp a file bigger than 2g to /home/test_dir/test
-> 9. mount -t xfs -o remount,ro /home/test_dir/test
-> 
-> [ dchinner: moved io error detection to xfs_setfilesize_ioend() after
->   transaction context restoration. ]
-> 
-> [ nborisov: Adjusted context for 3.12 ]
-> 
-> Signed-off-by: Zhao Hongjiang <zhaohongjiang@huawei.com>
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> ---
->  fs/xfs/xfs_aops.c | 13 +++++++++++--
->  1 file changed, 11 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index ab28ad576b16..6394e3f51553 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -150,6 +150,12 @@ xfs_setfilesize(
->  	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
->  			   0, 1, _THIS_IP_);
->  
-> +	/* we abort the update if there was an IO error */
-> +	if (ioend->io_error) {
-> +		xfs_trans_cancel(tp, 0);
-> +		return ioend->io_error;
-> +	}
-> +
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
->  	if (!isize) {
-> @@ -205,14 +211,17 @@ xfs_end_io(
->  		ioend->io_error = -EIO;
->  		goto done;
->  	}
-> -	if (ioend->io_error)
-> -		goto done;
->  
->  	/*
->  	 * For unwritten extents we need to issue transactions to convert a
->  	 * range to normal written extens after the data I/O has finished.
-> +	 * Detecting and handling completion IO errors is done individually
-> +	 * for each case as different cleanup operations need to be performed
-> +	 * on error.
->  	 */
->  	if (ioend->io_type == XFS_IO_UNWRITTEN) {
-> +		if (ioend->io_error)
-> +			goto done;
->  		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
->  						  ioend->io_size);
->  	} else if (ioend->io_isdirect && xfs_ioend_is_append(ioend)) {
-> -- 2.7.4
-> 
-
-
--- 
-js
-suse labs
+XFS v5 file systems have it on by default.  Although we'll still need
+to agree on the exact semantics of i_version before it's going to be
+useful.
