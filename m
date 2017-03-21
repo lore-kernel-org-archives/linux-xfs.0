@@ -1,62 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59842 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751730AbdC0Ii7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:38:59 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/26] xfs: fix toctou race when locking an inode to access the data map
-Date: Mon, 27 Mar 2017 10:38:15 +0200
-Message-Id: <20170327083837.11027-5-hch@lst.de>
-In-Reply-To: <20170327083837.11027-1-hch@lst.de>
-References: <20170327083837.11027-1-hch@lst.de>
+Received: from fieldses.org ([173.255.197.46]:42060 "EHLO fieldses.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757738AbdCUQaN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Mar 2017 12:30:13 -0400
+Date: Tue, 21 Mar 2017 12:30:11 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+Message-ID: <20170321163011.GA16666@fieldses.org>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+ <20161222084549.GA8833@infradead.org>
+ <1482417724.3924.39.camel@redhat.com>
+ <20170320214327.GA5098@fieldses.org>
+ <20170321134500.GA1318@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170321134500.GA1318@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeff Layton <jlayton@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+On Tue, Mar 21, 2017 at 06:45:00AM -0700, Christoph Hellwig wrote:
+> On Mon, Mar 20, 2017 at 05:43:27PM -0400, J. Bruce Fields wrote:
+> > To me, the interesting question is whether this allows us to turn on
+> > i_version updates by default on xfs and ext4.
+> 
+> XFS v5 file systems have it on by default.
 
-commit 4b5bd5bf3fb182dc504b1b64e0331300f156e756 upstream.
+Great, thanks.
 
-We use di_format and if_flags to decide whether we're grabbing the ilock
-in btree mode (btree extents not loaded) or shared mode (anything else),
-but the state of those fields can be changed by other threads that are
-also trying to load the btree extents -- IFEXTENTS gets set before the
-_bmap_read_extents call and cleared if it fails.
+> Although we'll still need to agree on the exact semantics of i_version
+> before it's going to be useful.
 
-We don't actually need to have IFEXTENTS set until after the bmbt
-records are successfully loaded and validated, which will fix the race
-between multiple threads trying to read the same directory.  The next
-patch strengthens directory bmbt validation by refusing to open the
-directory if reading the bmbt to start directory readahead fails.
+Once it's figured out maybe we should write it up for a manpage that
+could be used if statx starts exposing it to userspace.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_inode_fork.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+A first attempt:
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 222e103356c6..421341f93bea 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -497,15 +497,14 @@ xfs_iread_extents(
- 	 * We know that the size is valid (it's checked in iformat_btree)
- 	 */
- 	ifp->if_bytes = ifp->if_real_bytes = 0;
--	ifp->if_flags |= XFS_IFEXTENTS;
- 	xfs_iext_add(ifp, 0, nextents);
- 	error = xfs_bmap_read_extents(tp, ip, whichfork);
- 	if (error) {
- 		xfs_iext_destroy(ifp);
--		ifp->if_flags &= ~XFS_IFEXTENTS;
- 		return error;
- 	}
- 	xfs_validate_extents(ifp, nextents, XFS_EXTFMT_INODE(ip));
-+	ifp->if_flags |= XFS_IFEXTENTS;
- 	return 0;
- }
- /*
--- 
-2.11.0
+- It's a u64.
 
+- It works for regular files and directories.  (What about symlinks or
+  other special types?)
+
+- It changes between two checks if and only if there were intervening
+  data or metadata changes.  The change will always be an increase, but
+  the amount of the increase is meaningless.
+	- NFS doesn't actually require that it increases, but I think it
+	  should.  I assume 64 bits means we don't need a discussion of
+	  wraparound.
+	- AFS wants an actual counter: if you get i_version X, then
+	  write twice, then get i_version X+2, you're allowed to assume
+	  your writes were the only modifications.  Let's ignore this
+	  for now.  In the future if someone explains how to count
+	  operations, then we can extend the interface to tell the
+	  caller it can get those extra semantics.
+
+- It's durable; the above comparison still works if there were reboots
+  between the two i_version checks.
+	- I don't know how realistic this is--we may need to figure out
+	  if there's a weaker guarantee that's still useful.  Do
+	  filesystems actually make ctime/mtime/i_version changes
+	  atomically with the changes that caused them?  What if a
+	  change attribute is exposed to an NFS client but doesn't make
+	  it to disk, and then that value is reused after reboot?
+
+Am I missing any issues?
+
+--b.
