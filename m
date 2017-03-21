@@ -1,103 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:42360 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757058AbdCUTNb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Mar 2017 15:13:31 -0400
-Date: Tue, 21 Mar 2017 15:13:30 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
-Message-ID: <20170321191330.GF17872@fieldses.org>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
- <20161222084549.GA8833@infradead.org>
- <1482417724.3924.39.camel@redhat.com>
- <20170320214327.GA5098@fieldses.org>
- <20170321134500.GA1318@infradead.org>
- <20170321163011.GA16666@fieldses.org>
- <1490117004.2542.1.camel@redhat.com>
- <20170321183006.GD17872@fieldses.org>
- <1490122013.2593.1.camel@redhat.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:59315 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1757551AbdCUTNl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2017 15:13:41 -0400
+From: Calvin Owens <calvinowens@fb.com>
+Subject: Re: [PATCH v2] xfs: Honor FALLOC_FL_KEEP_SIZE when punching ends of
+ files
+References: <22a11e65fd5037498a78de61f3ed4dae466ad854.1489791330.git.calvinowens@fb.com>
+ <19504ff40a16efff2e51d85388fce5be578edbc3.1489985397.git.calvinowens@fb.com>
+ <20170321113932.GA58653@bfoster.bfoster>
+Message-ID: <ab15bba5-601a-3297-959c-ddb04b42d082@fb.com>
+Date: Tue, 21 Mar 2017 12:13:21 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1490122013.2593.1.camel@redhat.com>
+In-Reply-To: <20170321113932.GA58653@bfoster.bfoster>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, kernel-team@fb.com, stable@vger.kernel.org, calvinowens <calvinowens@fb.com>
 
-On Tue, Mar 21, 2017 at 02:46:53PM -0400, Jeff Layton wrote:
-> On Tue, 2017-03-21 at 14:30 -0400, J. Bruce Fields wrote:
-> > On Tue, Mar 21, 2017 at 01:23:24PM -0400, Jeff Layton wrote:
-> > > On Tue, 2017-03-21 at 12:30 -0400, J. Bruce Fields wrote:
-> > > > - It's durable; the above comparison still works if there were reboots
-> > > >   between the two i_version checks.
-> > > > 	- I don't know how realistic this is--we may need to figure out
-> > > > 	  if there's a weaker guarantee that's still useful.  Do
-> > > > 	  filesystems actually make ctime/mtime/i_version changes
-> > > > 	  atomically with the changes that caused them?  What if a
-> > > > 	  change attribute is exposed to an NFS client but doesn't make
-> > > > 	  it to disk, and then that value is reused after reboot?
-> > > > 
-> > > 
-> > > Yeah, there could be atomicity there. If we bump i_version, we'll mark
-> > > the inode dirty and I think that will end up with the new i_version at
-> > > least being journalled before __mark_inode_dirty returns.
-> > 
-> > So you think the filesystem can provide the atomicity?  In more detail:
-> > 
-> 
-> Sorry, I hit send too quickly. That should have read:
-> 
-> "Yeah, there could be atomicity issues there."
-> 
-> I think providing that level of atomicity may be difficult, though
-> maybe there's some way to make the querying of i_version block until
-> the inode update has been journalled?
+On 03/21/2017 04:39 AM, Brian Foster wrote:
+> On Sun, Mar 19, 2017 at 09:54:51PM -0700, Calvin Owens wrote:
+>> When punching past EOF on XFS, fallocate(mode=PUNCH_HOLE|KEEP_SIZE) will
+>> round the file size up to the nearest multiple of PAGE_SIZE:
+>>
+>>   calvinow@vm-disks/generic-xfs-1 ~$ dd if=/dev/urandom of=test bs=2048 count=1
+>>   calvinow@vm-disks/generic-xfs-1 ~$ stat test
+>>     Size: 2048            Blocks: 8          IO Block: 4096   regular file
+>>   calvinow@vm-disks/generic-xfs-1 ~$ fallocate -n -l 2048 -o 2048 -p test
+>>   calvinow@vm-disks/generic-xfs-1 ~$ stat test
+>>     Size: 4096            Blocks: 8          IO Block: 4096   regular file
+>>
+>> Commit 3c2bdc912a1cc050 ("xfs: kill xfs_zero_remaining_bytes") replaced
+>> xfs_zero_remaining_bytes() with calls to iomap helpers. The new helpers
+>> don't enforce that [pos,offset) lies strictly on [0,i_size) when being
+>> called from xfs_free_file_space(), so by "leaking" these ranges into
+>> xfs_zero_range() we get this buggy behavior.
+>>
+>> Fix this by reintroducing the checks xfs_zero_remaining_bytes() did
+>> against i_size at the bottom of xfs_free_file_space().
+>>
+>> Reported-by: Aaron Gao <gzh@fb.com>
+>> Fixes: 3c2bdc912a1cc050 ("xfs: kill xfs_zero_remaining_bytes")
+>> Cc: Christoph Hellwig <hch@lst.de>
+>> Cc: <stable@vger.kernel.org> # 4.8+
+>> Signed-off-by: Calvin Owens <calvinowens@fb.com>
+>> ---
+>>  fs/xfs/xfs_bmap_util.c | 11 +++++++++++
+>>  1 file changed, 11 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+>> index 8b75dce..0796ebc 100644
+>> --- a/fs/xfs/xfs_bmap_util.c
+>> +++ b/fs/xfs/xfs_bmap_util.c
+>> @@ -1309,6 +1309,17 @@ xfs_free_file_space(
+>>  	}
+>>
+>>  	/*
+>> +	 * Avoid doing I/O beyond eof - it's not necessary
+>> +	 * since nothing can read beyond eof.  The space will
+>> +	 * be zeroed when the file is extended anyway.
+>> +	 */
+>
+> I'd suggest to update the comment below with this information and move
+> the following bits down below it as well.
 
-No idea.  Anyway, I'd like to figure out some reasonable requirement
-that we can document.
+Will do.
 
-> 
-> > 	- if I write to a file, a simultaneous reader should see either
-> > 	  (old data, old i_version) or (new data, new i_version), not a
-> > 	  combination of the two.
-> > 	- ditto for metadata modifications.
-> > 	- the same should be true if there's a crash.
-> > 
-> > (If that's not possible, then I think we could live with a brief window
-> > of (new data, old i_version) as long as it doesn't persist beyond sync?)
-> > 
-> > > That said, I suppose it is possible for us to bump the counter, hand
-> > > that new counter value out to a NFS client and then the box crashes
-> > > before it makes it to the journal.
-> > > 
-> > > Not sure how big a problem that really is.
-> > 
-> > The other case I was wondering about may have been unclear.  Represent
-> > the state of a file by a (data, i_version) pair.  Say:
-> > 
-> > 	- file is modified from (F, V) to (F', V+1).
-> > 	- client reads and caches (F', V+1).
-> > 	- server crashes before writeback, so disk still has (F, V).
-> > 	- after restart, someone else modifies file to (F'', V+1).
-> > 	- original client revalidates its cache, sees V+1, concludes
-> > 	  file data is still F'.
-> > 
-> > This may not cause a real problem for clients depending only on
-> > traditional NFS close-to-open semantics.
-> > 
-> > 
-> 
-> No, I think that is a legitimate problem.
-> 
-> That said, after F'', the mtime would almost certainly be different
-> from the time after F', and that would likely be enough to prevent
-> confusion in NFS clients.
+>> +	if (offset >= XFS_ISIZE(ip))
+>> +		return 0;
+>> +
+>> +	if ((offset + len) >= XFS_ISIZE(ip))
+>> +		len = XFS_ISIZE(ip) - offset - 1;
+>> +
+>
+> This looks like an off-by-one. Do you mean the following?
+>
+> 	if (offset + len > XFS_ISIZE(ip))
+> 		len = XFS_ISIZE(ip) - offset;
 
-Oh, good point.  So, may be worth saying that anyone wanting to make
-sense of these across reboot should compare times as well (maybe that
-should be in nfs rfc's too).  I think that should be ctime not mtime,
-though?
+It's not an off-by-one (it's self-consistent), but your way makes more
+sense, I'll fix it ;)
 
---b.
+Thanks,
+Calvin
+
+> Brian
+>
+>> +	/*
+>>  	 * Now that we've unmap all full blocks we'll have to zero out any
+>>  	 * partial block at the beginning and/or end.  xfs_zero_range is
+>>  	 * smart enough to skip any holes, including those we just created.
+>> --
+>> 2.9.3
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
