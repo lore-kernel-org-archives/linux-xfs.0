@@ -1,292 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56781 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751730AbdC0Ij2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:39:28 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/26] xfs: allow unwritten extents in the CoW fork
-Date: Mon, 27 Mar 2017 10:38:20 +0200
-Message-Id: <20170327083837.11027-10-hch@lst.de>
-In-Reply-To: <20170327083837.11027-1-hch@lst.de>
-References: <20170327083837.11027-1-hch@lst.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:35426 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751814AbdCVElZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2017 00:41:25 -0400
+Date: Wed, 22 Mar 2017 15:34:38 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: boot failure after kernel update, imap claims in-use inode
+ 661690 is free, would correct imap
+Message-ID: <20170322043438.GD17542@dastard>
+References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
+ <20170315072349.GZ5280@birch.djwong.org>
+ <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
+ <20170315191355.GF5280@birch.djwong.org>
+ <20170315193040.GG5280@birch.djwong.org>
+ <CAJCQCtRt7_WpEp0npF=k1JJHFLE2sfc9ktB4YakuCZ5CNfZTTg@mail.gmail.com>
+ <CAJCQCtRVuKiOMdtGLb3QbR8uCTXbhFMnNQgPzzZWG7y6URawHQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJCQCtRVuKiOMdtGLb3QbR8uCTXbhFMnNQgPzzZWG7y6URawHQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs list <linux-xfs@vger.kernel.org>
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+On Tue, Mar 21, 2017 at 01:47:12PM -0600, Chris Murphy wrote:
+> On Thu, Mar 16, 2017 at 10:07 PM, Chris Murphy <lists@colorremedies.com> wrote:
+> 
+> > Yuck. I'll ask on systemd list if there's a way to get more verbose
+> > information about this without that. It really ought to be in
+> > systemd.log_level=debug anyway.
+> 
+> I've gotten one response so far, which did not answer the question how
+> to get more verbose debug information.
+> https://lists.freedesktop.org/archives/systemd-devel/2017-March/038502.html
+> 
+> The assertion there is that it's virtually certainly an EBUSY exit code.
+> 
+> Additionally:
+> a. Systemd only ever does a remount to read-only with root fs. It
+> never umounts it.
+> https://github.com/systemd/systemd/blob/master/src/core/umount.c line 413
+> 
+> b. The three messages suggests that it's retrying to remount ro.
+> 
+> c. The failure to remount ro is predicted by the plymouth message "It
+> is running from the root file system, and thus likely to block
+> re-mounting of the root file system to read-only."
+> 
+> d. All of this happens on ext4, XFS, and Btrfs. But only XFS manifests
+> by being unbootable.
 
-commit 05a630d76bd3f39baf0eecfa305bed2820796dee upstream.
+Because, in this case, both ext4 and XFS require a successful
+remount-ro to guarantee that the metadata grub is relying on is
+written to disk. In the case of ext4, you've just been lucky,
+probably because it has a faster background journal flush cycle.
 
-In the data fork, we only allow extents to perform the following state
-transitions:
+....
 
-delay -> real <-> unwritten
+> https://github.com/systemd/systemd/blob/master/src/core/shutdown.c
+> line 213 suggests a sync happens. This sync is after pk offline update
+> has finished, so why is this sync not syncing with XFS and ext4? Why
+> does the kernel permit a reboot before root fs has been cleanly
+> umounted?
 
-There's no way to move directly from a delalloc reservation to an
-/unwritten/ allocated extent.  However, for the CoW fork we want to be
-able to do the following to each extent:
+sync is /not sufficient/ to force metadata to disk. All that is
+required during sync for a journalling filesystem is to ensure that
+data is flushed and the journal is committed to disk. If the system
+crashes, then log recovery is run and no metadata or data is lost.
 
-delalloc -> unwritten -> written -> remapped to data fork
+Hence, if grub is trying to find the new kernel that was written to
+disk then sync()d but not unmounted/remounted before rebooting, the
+metadata that grub needs to find the new kernel image is in the
+journal, not resting on disk as grub is assuming it will be.
 
-This will help us to avoid a race in the speculative CoW preallocation
-code between a first thread that is allocating a CoW extent and a second
-thread that is remapping part of a file after a write.  In order to do
-this, however, we need two things: first, we have to be able to
-transition from da to unwritten, and second the function that converts
-between real and unwritten has to be made aware of the cow fork.  Do
-both of those things.
+Hence, boot fails because grub/systemd did not correctly
+sync/unmount/remount the filesystem before boot. And, no, having
+grub replay the log is not the answer - that's a recipe for endless
+filesystem corruption problems that filesystem developers will
+disown with "grub screwed up your filesystem, go shout at them".
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 80 ++++++++++++++++++++++++++++++------------------
- 1 file changed, 50 insertions(+), 30 deletions(-)
+FYI, I've ranted previously over many years about how broken grub's
+kernel update and retreival process is fundamentally broken, but
+it's never been fixed(*). As a result, I don't use grub on any of my
+systems, nor do I recommend that anyone else use it.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index d79c66d1215d..5b626a4f1d13 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1861,6 +1861,7 @@ xfs_bmap_add_extent_delay_real(
- 		 */
- 		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
- 		xfs_bmbt_set_startblock(ep, new->br_startblock);
-+		xfs_bmbt_set_state(ep, new->br_state);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
- 
- 		(*nextents)++;
-@@ -2199,6 +2200,7 @@ STATIC int				/* error */
- xfs_bmap_add_extent_unwritten_real(
- 	struct xfs_trans	*tp,
- 	xfs_inode_t		*ip,	/* incore inode pointer */
-+	int			whichfork,
- 	xfs_extnum_t		*idx,	/* extent number to update/insert */
- 	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
- 	xfs_bmbt_irec_t		*new,	/* new data to add to file extents */
-@@ -2218,12 +2220,14 @@ xfs_bmap_add_extent_unwritten_real(
- 					/* left is 0, right is 1, prev is 2 */
- 	int			rval=0;	/* return value (logging flags) */
- 	int			state = 0;/* state bits, accessed thru macros */
--	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_mount	*mp = ip->i_mount;
- 
- 	*logflagsp = 0;
- 
- 	cur = *curp;
--	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
-+	if (whichfork == XFS_COW_FORK)
-+		state |= BMAP_COWFORK;
- 
- 	ASSERT(*idx >= 0);
- 	ASSERT(*idx <= xfs_iext_count(ifp));
-@@ -2282,7 +2286,7 @@ xfs_bmap_add_extent_unwritten_real(
- 	 * Don't set contiguous if the combined extent would be too large.
- 	 * Also check for all-three-contiguous being too large.
- 	 */
--	if (*idx < xfs_iext_count(&ip->i_df) - 1) {
-+	if (*idx < xfs_iext_count(ifp) - 1) {
- 		state |= BMAP_RIGHT_VALID;
- 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx + 1), &RIGHT);
- 		if (isnullstartblock(RIGHT.br_startblock))
-@@ -2322,7 +2326,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		xfs_iext_remove(ip, *idx + 1, 2, state);
--		ip->i_d.di_nextents -= 2;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) - 2);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2365,7 +2370,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		xfs_iext_remove(ip, *idx + 1, 1, state);
--		ip->i_d.di_nextents--;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2400,7 +2406,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		xfs_bmbt_set_state(ep, newext);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 		xfs_iext_remove(ip, *idx + 1, 1, state);
--		ip->i_d.di_nextents--;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2512,7 +2519,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		xfs_iext_insert(ip, *idx, 1, new, state);
--		ip->i_d.di_nextents++;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2590,7 +2598,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		++*idx;
- 		xfs_iext_insert(ip, *idx, 1, new, state);
- 
--		ip->i_d.di_nextents++;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2638,7 +2647,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		++*idx;
- 		xfs_iext_insert(ip, *idx, 2, &r[0], state);
- 
--		ip->i_d.di_nextents += 2;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) + 2);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2692,17 +2702,17 @@ xfs_bmap_add_extent_unwritten_real(
- 	}
- 
- 	/* update reverse mappings */
--	error = xfs_rmap_convert_extent(mp, dfops, ip, XFS_DATA_FORK, new);
-+	error = xfs_rmap_convert_extent(mp, dfops, ip, whichfork, new);
- 	if (error)
- 		goto done;
- 
- 	/* convert to a btree if necessary */
--	if (xfs_bmap_needs_btree(ip, XFS_DATA_FORK)) {
-+	if (xfs_bmap_needs_btree(ip, whichfork)) {
- 		int	tmp_logflags;	/* partial log flag return val */
- 
- 		ASSERT(cur == NULL);
- 		error = xfs_bmap_extents_to_btree(tp, ip, first, dfops, &cur,
--				0, &tmp_logflags, XFS_DATA_FORK);
-+				0, &tmp_logflags, whichfork);
- 		*logflagsp |= tmp_logflags;
- 		if (error)
- 			goto done;
-@@ -2714,7 +2724,7 @@ xfs_bmap_add_extent_unwritten_real(
- 		*curp = cur;
- 	}
- 
--	xfs_bmap_check_leaf_extents(*curp, ip, XFS_DATA_FORK);
-+	xfs_bmap_check_leaf_extents(*curp, ip, whichfork);
- done:
- 	*logflagsp |= rval;
- 	return error;
-@@ -4365,10 +4375,16 @@ xfs_bmapi_allocate(
- 	bma->got.br_state = XFS_EXT_NORM;
- 
- 	/*
--	 * A wasdelay extent has been initialized, so shouldn't be flagged
--	 * as unwritten.
-+	 * In the data fork, a wasdelay extent has been initialized, so
-+	 * shouldn't be flagged as unwritten.
-+	 *
-+	 * For the cow fork, however, we convert delalloc reservations
-+	 * (extents allocated for speculative preallocation) to
-+	 * allocated unwritten extents, and only convert the unwritten
-+	 * extents to real extents when we're about to write the data.
- 	 */
--	if (!bma->wasdel && (bma->flags & XFS_BMAPI_PREALLOC) &&
-+	if ((!bma->wasdel || (bma->flags & XFS_BMAPI_COWFORK)) &&
-+	    (bma->flags & XFS_BMAPI_PREALLOC) &&
- 	    xfs_sb_version_hasextflgbit(&mp->m_sb))
- 		bma->got.br_state = XFS_EXT_UNWRITTEN;
- 
-@@ -4419,8 +4435,6 @@ xfs_bmapi_convert_unwritten(
- 			(XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT))
- 		return 0;
- 
--	ASSERT(whichfork != XFS_COW_FORK);
--
- 	/*
- 	 * Modify (by adding) the state flag, if writing.
- 	 */
-@@ -4445,8 +4459,8 @@ xfs_bmapi_convert_unwritten(
- 			return error;
- 	}
- 
--	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, &bma->idx,
--			&bma->cur, mval, bma->firstblock, bma->dfops,
-+	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, whichfork,
-+			&bma->idx, &bma->cur, mval, bma->firstblock, bma->dfops,
- 			&tmp_logflags);
- 	/*
- 	 * Log the inode core unconditionally in the unwritten extent conversion
-@@ -4455,8 +4469,12 @@ xfs_bmapi_convert_unwritten(
- 	 * in the transaction for the sake of fsync(), even if nothing has
- 	 * changed, because fsync() will not force the log for this transaction
- 	 * unless it sees the inode pinned.
-+	 *
-+	 * Note: If we're only converting cow fork extents, there aren't
-+	 * any on-disk updates to make, so we don't need to log anything.
- 	 */
--	bma->logflags |= tmp_logflags | XFS_ILOG_CORE;
-+	if (whichfork != XFS_COW_FORK)
-+		bma->logflags |= tmp_logflags | XFS_ILOG_CORE;
- 	if (error)
- 		return error;
- 
-@@ -4530,15 +4548,15 @@ xfs_bmapi_write(
- 	ASSERT(*nmap >= 1);
- 	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
- 	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
--	ASSERT(tp != NULL);
-+	ASSERT(tp != NULL ||
-+	       (flags & (XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK)) ==
-+			(XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK));
- 	ASSERT(len > 0);
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(!(flags & XFS_BMAPI_REMAP) || whichfork == XFS_DATA_FORK);
- 	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || !(flags & XFS_BMAPI_REMAP));
- 	ASSERT(!(flags & XFS_BMAPI_CONVERT) || !(flags & XFS_BMAPI_REMAP));
--	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || whichfork != XFS_COW_FORK);
--	ASSERT(!(flags & XFS_BMAPI_CONVERT) || whichfork != XFS_COW_FORK);
- 
- 	/* zeroing is for currently only for data extents, not metadata */
- 	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
-@@ -5553,8 +5571,8 @@ __xfs_bunmapi(
- 			}
- 			del.br_state = XFS_EXT_UNWRITTEN;
- 			error = xfs_bmap_add_extent_unwritten_real(tp, ip,
--					&lastx, &cur, &del, firstblock, dfops,
--					&logflags);
-+					whichfork, &lastx, &cur, &del,
-+					firstblock, dfops, &logflags);
- 			if (error)
- 				goto error0;
- 			goto nodelete;
-@@ -5607,8 +5625,9 @@ __xfs_bunmapi(
- 				prev.br_state = XFS_EXT_UNWRITTEN;
- 				lastx--;
- 				error = xfs_bmap_add_extent_unwritten_real(tp,
--						ip, &lastx, &cur, &prev,
--						firstblock, dfops, &logflags);
-+						ip, whichfork, &lastx, &cur,
-+						&prev, firstblock, dfops,
-+						&logflags);
- 				if (error)
- 					goto error0;
- 				goto nodelete;
-@@ -5616,8 +5635,9 @@ __xfs_bunmapi(
- 				ASSERT(del.br_state == XFS_EXT_NORM);
- 				del.br_state = XFS_EXT_UNWRITTEN;
- 				error = xfs_bmap_add_extent_unwritten_real(tp,
--						ip, &lastx, &cur, &del,
--						firstblock, dfops, &logflags);
-+						ip, whichfork, &lastx, &cur,
-+						&del, firstblock, dfops,
-+						&logflags);
- 				if (error)
- 					goto error0;
- 				goto nodelete;
+(*) The simple fix for grub to freeze/unfreeze the filesystem rather
+than/after calling sync() - this does the same thing as remount-ro,
+but unlike remount-ro it does not fail if there are writable file
+descriptors open.
+
+> Meanwhile, retesting on Btrfs, offline check reports no error after
+> the pk offline update reboot; nor when mounting the fs.
+
+of course - it's the nature of btrfs structure that the superblock
+is updated to only point at a valid tree. If the superblock is not
+updated, then none of the update in progress is even known to
+exist...
+
+Cheers,
+
+Dave.
 -- 
-2.11.0
-
+Dave Chinner
+david@fromorbit.com
