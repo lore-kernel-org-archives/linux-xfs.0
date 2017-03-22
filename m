@@ -1,126 +1,251 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:34495 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752009AbdCVFQM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2017 01:16:12 -0400
-Date: Wed, 22 Mar 2017 01:16:02 -0400
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: boot failure after kernel update, imap claims in-use inode
- 661690 is free, would correct imap
-Message-ID: <20170322051602.GD5722@birch.djwong.org>
-References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
- <20170315072349.GZ5280@birch.djwong.org>
- <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
- <20170315191355.GF5280@birch.djwong.org>
- <20170315193040.GG5280@birch.djwong.org>
- <CAJCQCtRt7_WpEp0npF=k1JJHFLE2sfc9ktB4YakuCZ5CNfZTTg@mail.gmail.com>
- <CAJCQCtRVuKiOMdtGLb3QbR8uCTXbhFMnNQgPzzZWG7y6URawHQ@mail.gmail.com>
- <20170322043438.GD17542@dastard>
+Received: from cn.fujitsu.com ([59.151.112.132]:2880 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758806AbdCVINZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2017 04:13:25 -0400
+Subject: Re: [PATCH 3/4] reflink: test adjacency of reflinked blocks
+References: <148798515933.25833.2842247083803775089.stgit@birch.djwong.org>
+ <148798517790.25833.2585159479268361866.stgit@birch.djwong.org>
+ <6511f176-ee8e-09d8-d955-8aed36abaa29@cn.fujitsu.com>
+ <20170321142352.GA5722@birch.djwong.org>
+From: Qu Wenruo <quwenruo@cn.fujitsu.com>
+Message-ID: <b8f0aa4d-4d5e-7fe0-84db-bba0b9597bc5@cn.fujitsu.com>
+Date: Wed, 22 Mar 2017 16:13:16 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170322043438.GD17542@dastard>
+In-Reply-To: <20170321142352.GA5722@birch.djwong.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@djwong.org>, fstests@vger.kernel.org
 
-On Wed, Mar 22, 2017 at 03:34:38PM +1100, Dave Chinner wrote:
-> On Tue, Mar 21, 2017 at 01:47:12PM -0600, Chris Murphy wrote:
-> > On Thu, Mar 16, 2017 at 10:07 PM, Chris Murphy <lists@colorremedies.com> wrote:
-> > 
-> > > Yuck. I'll ask on systemd list if there's a way to get more verbose
-> > > information about this without that. It really ought to be in
-> > > systemd.log_level=debug anyway.
-> > 
-> > I've gotten one response so far, which did not answer the question how
-> > to get more verbose debug information.
-> > https://lists.freedesktop.org/archives/systemd-devel/2017-March/038502.html
-> > 
-> > The assertion there is that it's virtually certainly an EBUSY exit code.
-> > 
-> > Additionally:
-> > a. Systemd only ever does a remount to read-only with root fs. It
-> > never umounts it.
-> > https://github.com/systemd/systemd/blob/master/src/core/umount.c line 413
-> > 
-> > b. The three messages suggests that it's retrying to remount ro.
-> > 
-> > c. The failure to remount ro is predicted by the plymouth message "It
-> > is running from the root file system, and thus likely to block
-> > re-mounting of the root file system to read-only."
-> > 
-> > d. All of this happens on ext4, XFS, and Btrfs. But only XFS manifests
-> > by being unbootable.
-> 
-> Because, in this case, both ext4 and XFS require a successful
-> remount-ro to guarantee that the metadata grub is relying on is
-> written to disk. In the case of ext4, you've just been lucky,
-> probably because it has a faster background journal flush cycle.
-> 
-> ....
-> 
-> > https://github.com/systemd/systemd/blob/master/src/core/shutdown.c
-> > line 213 suggests a sync happens. This sync is after pk offline update
-> > has finished, so why is this sync not syncing with XFS and ext4? Why
-> > does the kernel permit a reboot before root fs has been cleanly
-> > umounted?
-> 
-> sync is /not sufficient/ to force metadata to disk. All that is
-> required during sync for a journalling filesystem is to ensure that
-> data is flushed and the journal is committed to disk. If the system
-> crashes, then log recovery is run and no metadata or data is lost.
-> 
-> Hence, if grub is trying to find the new kernel that was written to
-> disk then sync()d but not unmounted/remounted before rebooting, the
-> metadata that grub needs to find the new kernel image is in the
-> journal, not resting on disk as grub is assuming it will be.
 
-Yep, that's exactly what I was getting at in my last mail.
 
-> Hence, boot fails because grub/systemd did not correctly
-> sync/unmount/remount the filesystem before boot. And, no, having
-> grub replay the log is not the answer - that's a recipe for endless
-> filesystem corruption problems that filesystem developers will
-> disown with "grub screwed up your filesystem, go shout at them".
+At 03/21/2017 10:23 PM, Darrick J. Wong wrote:
+> On Tue, Mar 21, 2017 at 03:14:36PM +0800, Qu Wenruo wrote:
+>> Hi Darrick
+>>
+>> At 02/25/2017 09:12 AM, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>
+>>> If we reflink a file with N blocks to another file one block at a time,
+>>> does the destination file end up with the same number of extents as the
+>>> source file?  In other words, does the filesystem succeed at combining
+>>> adjacent mappings into a maximal extents?
+>>
+>> Btrfs can't pass the test since it doesn't merge such mapping, not only the
+>> fiemap result, but also on-disk extents.
+>
+> Weirdly, I observed that if you unmount and remount the btrfs it
+> actually /will/ merge the extents.
 
-The prospect of replaying the log in 640K of memory is comical to me!
+I tried that, but it's even more weird, after remount, fiemap still 
+return split ones.
+But if call fiemap again after about 1 second, it reports one single 
+large extent.
+(if calling 2nd fiemap just after 1st one, 2nd one will still return 
+split extent map)
 
-:P
+While on disk, the extents are split indeed.
 
-> FYI, I've ranted previously over many years about how broken grub's
-> kernel update and retreival process is fundamentally broken, but
-> it's never been fixed(*). As a result, I don't use grub on any of my
-> systems, nor do I recommend that anyone else use it.
-> 
-> (*) The simple fix for grub to freeze/unfreeze the filesystem rather
-> than/after calling sync() - this does the same thing as remount-ro,
-> but unlike remount-ro it does not fail if there are writable file
-> descriptors open.
+So it's a btrfs bug then.
 
-You mean systemd here, right?  AFAIK the grub scripts (at least on
-Debian) don't actually retrieve or update kernels; apt/dpkg still do
-that, and they don't use this weird systemd update mode.  So it's really
-systemd that ought to be freezing the rootfs as the last thing it does
-before triggering the kernel reboot.
+>
+>> IIRC ocfs also merges it, so I wonder if this is a documented behavior to
+>> merge any extent maps that are adjacent.
+>
+> Generally, yes you'd expect that two logically and physically contiguous
+> extents to be merged together.  That might change a bit for compressed
+> or encrypted extents.
+>
+>> Further more, if a fs has a limit on extent size on disk, e.g 128M.
+>> But 2 file extents are also adjacent on disk, then should fiemap return a
+>> large 256M map or just 2 adjacent 128M maps?
+>
+> It's up to the fs, really... XFS will merge the extent records (up to
+> maximum extent size) and then unmerge the shared/not-shared FIEMAP
+> records for accurate shared extent reporting.
 
-(Then again I have separate /boot so it probably gets umounted
-successfully bootsplash or otherwise. :P)
+BTW, are XFS extents on disk are merged when doing reflink, or just 
+merge the extent record at fiemap time?
 
---D
+Further more, is there any tool like btrfs-debug-tree to show *every* 
+btree block and its content data?
+I am very interested in XFS on-disk and runtime implementation.
 
-> > Meanwhile, retesting on Btrfs, offline check reports no error after
-> > the pk offline update reboot; nor when mounting the fs.
-> 
-> of course - it's the nature of btrfs structure that the superblock
-> is updated to only point at a valid tree. If the superblock is not
-> updated, then none of the update in progress is even known to
-> exist...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Thanks,
+Qu
+>
+> --D
+>
+>>
+>> Thanks,
+>> Qu
+>>>
+>>> Signed-off-by: Darrick J. Wong <djwong@djwong.org>
+>>> ---
+>>> tests/generic/930     |  106 +++++++++++++++++++++++++++++++++++++++++++++++++
+>>> tests/generic/930.out |   11 +++++
+>>> tests/generic/group   |    1
+>>> 3 files changed, 118 insertions(+)
+>>> create mode 100755 tests/generic/930
+>>> create mode 100644 tests/generic/930.out
+>>>
+>>>
+>>> diff --git a/tests/generic/930 b/tests/generic/930
+>>> new file mode 100755
+>>> index 0000000..15d8cbf
+>>> --- /dev/null
+>>> +++ b/tests/generic/930
+>>> @@ -0,0 +1,106 @@
+>>> +#! /bin/bash
+>>> +# FS QA Test No. 930
+>>> +#
+>>> +# Check that reflinking adjacent blocks in a file produces a single
+>>> +# block mapping extent.
+>>> +#
+>>> +#-----------------------------------------------------------------------
+>>> +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
+>>> +#
+>>> +# This program is free software; you can redistribute it and/or
+>>> +# modify it under the terms of the GNU General Public License as
+>>> +# published by the Free Software Foundation.
+>>> +#
+>>> +# This program is distributed in the hope that it would be useful,
+>>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>>> +# GNU General Public License for more details.
+>>> +#
+>>> +# You should have received a copy of the GNU General Public License
+>>> +# along with this program; if not, write the Free Software Foundation,
+>>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>>> +#-----------------------------------------------------------------------
+>>> +#
+>>> +
+>>> +seq=`basename $0`
+>>> +seqres=$RESULT_DIR/$seq
+>>> +echo "QA output created by $seq"
+>>> +
+>>> +here=`pwd`
+>>> +tmp=/tmp/$$
+>>> +status=1	# failure is the default!
+>>> +trap "_cleanup; exit \$status" 0 1 2 3 7 15
+>>> +
+>>> +_cleanup()
+>>> +{
+>>> +	cd /
+>>> +	rm -rf $tmp.*
+>>> +	wait
+>>> +}
+>>> +
+>>> +# get standard environment, filters and checks
+>>> +. ./common/rc
+>>> +. ./common/filter
+>>> +. ./common/reflink
+>>> +
+>>> +# real QA test starts here
+>>> +_supported_os Linux
+>>> +_supported_fs generic
+>>> +_require_scratch_reflink
+>>> +_require_fiemap
+>>> +
+>>> +echo "Format and mount"
+>>> +_scratch_mkfs > $seqres.full 2>&1
+>>> +_scratch_mount >> $seqres.full 2>&1
+>>> +
+>>> +testdir=$SCRATCH_MNT/test-$seq
+>>> +mkdir $testdir
+>>> +
+>>> +blocks=32
+>>> +blksz=65536
+>>> +sz=$((blocks * blksz))
+>>> +
+>>> +echo "Create the original files"
+>>> +$XFS_IO_PROG -f -c "falloc 0 $sz" $testdir/file1 >> $seqres.full
+>>> +_pwrite_byte 0x61 0 $sz $testdir/file1 >> $seqres.full
+>>> +seq 0 $blksz $((sz - blksz)) | while read offset; do
+>>> +	_reflink_range $testdir/file1 $offset $testdir/file2 $offset $blksz >> $seqres.full
+>>> +done
+>>> +
+>>> +echo "Compare files"
+>>> +md5sum $testdir/file1 | _filter_scratch
+>>> +md5sum $testdir/file2 | _filter_scratch
+>>> +
+>>> +echo "Check extent counts"
+>>> +f1=$(_count_extents $testdir/file1)
+>>> +f2=$(_count_extents $testdir/file2)
+>>> +s1=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file1 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
+>>> +s2=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file2 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
+>>> +
+>>> +# Did the fs combine the extent mappings when we made f2?
+>>> +test $f1 -eq $f2 || echo "f1 ($f1) != f2 ($f2)"
+>>> +test $s1 -eq $s2 || echo "s1 ($s1) != s2 ($s2)"
+>>> +test $f1 -eq $s1 || echo "f1 ($f1) != s1 ($f1)"
+>>> +test $f2 -eq $s2 || echo "f2 ($f2) != s2 ($f2)"
+>>> +
+>>> +_scratch_cycle_mount
+>>> +
+>>> +echo "Compare files after remounting"
+>>> +md5sum $testdir/file1 | _filter_scratch
+>>> +md5sum $testdir/file2 | _filter_scratch
+>>> +
+>>> +echo "Check extent counts"
+>>> +f1=$(_count_extents $testdir/file1)
+>>> +f2=$(_count_extents $testdir/file2)
+>>> +s1=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file1 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
+>>> +s2=$($XFS_IO_PROG -c 'fiemap -v' $testdir/file2 | awk '{print $5}' | grep -c '0x.*[2367aAbBfF]...$')
+>>> +
+>>> +# Are the mappings still combined?
+>>> +test $f1 -eq $f2 || echo "f1 ($f1) != f2 ($f2)"
+>>> +test $s1 -eq $s2 || echo "s1 ($s1) != s2 ($s2)"
+>>> +test $f1 -eq $s1 || echo "f1 ($f1) != s1 ($f1)"
+>>> +test $f2 -eq $s2 || echo "f2 ($f2) != s2 ($f2)"
+>>> +
+>>> +# success, all done
+>>> +status=0
+>>> +exit
+>>> diff --git a/tests/generic/930.out b/tests/generic/930.out
+>>> new file mode 100644
+>>> index 0000000..556108a
+>>> --- /dev/null
+>>> +++ b/tests/generic/930.out
+>>> @@ -0,0 +1,11 @@
+>>> +QA output created by 930
+>>> +Format and mount
+>>> +Create the original files
+>>> +Compare files
+>>> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file1
+>>> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file2
+>>> +Check extent counts
+>>> +Compare files after remounting
+>>> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file1
+>>> +de89461b64701958984c95d1bfb0065a  SCRATCH_MNT/test-930/file2
+>>> +Check extent counts
+>>> diff --git a/tests/generic/group b/tests/generic/group
+>>> index d0bc47d..4b4df66 100644
+>>> --- a/tests/generic/group
+>>> +++ b/tests/generic/group
+>>> @@ -411,3 +411,4 @@
+>>> 406 auto quick dangerous
+>>> 407 auto quick clone metadata
+>>> 408 auto quick clone dedupe metadata
+>>> +930 auto quick clone
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>>
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+
+
