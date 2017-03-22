@@ -1,246 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54011 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751751AbdC0Iix (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:38:53 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/26] xfs: sync eofblocks scans under iolock are livelock prone
-Date: Mon, 27 Mar 2017 10:38:13 +0200
-Message-Id: <20170327083837.11027-3-hch@lst.de>
-In-Reply-To: <20170327083837.11027-1-hch@lst.de>
-References: <20170327083837.11027-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:60826 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758645AbdCVDJa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Mar 2017 23:09:30 -0400
+Date: Wed, 22 Mar 2017 11:09:23 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v2] generic: test pagecache invalidation after direct
+ write
+Message-ID: <20170322030923.GB14226@eguan.usersys.redhat.com>
+References: <20170321165314.11434-1-eguan@redhat.com>
+ <20170321173509.GC59313@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170321173509.GC59313@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+On Tue, Mar 21, 2017 at 01:35:09PM -0400, Brian Foster wrote:
+> On Wed, Mar 22, 2017 at 12:53:14AM +0800, Eryu Guan wrote:
+> > Test if direct write invalidates pagecache correctly, so that subsequent
+> > buffer read reads the correct data from disk.
+> > 
+> > This test is inspired by LTP tests dio29, and serves as a regression
+> > test for the bug found by it, see kernel commit c771c14baa33
+> > ("iomap: invalidate page caches should be after iomap_dio_complete()
+> > in direct write").
+> > 
+> > The test can be easily expanded to other write/read combinations, e.g.
+> > buffer write + direct read and direct write + direct read, so they are
+> > also being tested.
+> > 
+> > Signed-off-by: Eryu Guan <eguan@redhat.com>
+> > ---
+> > v2: Address Brian's review comments
+> > - compare buffer content byte-by-byte instead of strncmp
+> > - use 'pids[i]' not *(pids + 1)
+> > - dump buffer content to stdout on error
+> > - initialize write buffer with (i + 1)
+> > - use pwrite/pread instead of lseek+write/read
+> > - remove increment of unused 'ret'
+> > - call fsync(fd) instead of sync()
+> > - fix typos
+> > 
+> >  .gitignore                 |   1 +
+> >  src/Makefile               |   3 +-
+> >  src/dio-invalidate-cache.c | 326 +++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/418          | 122 +++++++++++++++++
+> >  tests/generic/418.out      |   2 +
+> >  tests/generic/group        |   1 +
+> >  6 files changed, 454 insertions(+), 1 deletion(-)
+> >  create mode 100644 src/dio-invalidate-cache.c
+> >  create mode 100755 tests/generic/418
+> >  create mode 100644 tests/generic/418.out
+> > 
+> ...
+> > diff --git a/src/dio-invalidate-cache.c b/src/dio-invalidate-cache.c
+> > new file mode 100644
+> > index 0000000..bc795f9
+> > --- /dev/null
+> > +++ b/src/dio-invalidate-cache.c
+> > @@ -0,0 +1,326 @@
+> ...
+> > +static void kill_children(pid_t *pids, int nr_child)
+> > +{
+> > +	int i;
+> > +	pid_t pid;
+> > +
+> > +	for (i = 0; i < nr_child; i++) {
+> > +		pid = *(pids + i);
+> > +		if (pid == 0)
+> > +			continue;
+> > +		kill(pid, SIGTERM);
+> > +	}
+> > +	return;
+> 
+> Still have pids pointer arithmetic above and the return is unnecessary.
+> Otherwise looks Ok to me:
 
-commit c3155097ad89a956579bc305856a1f2878494e52 upstream.
+I applied this change and queued for next update.
 
-The xfs_eofblocks.eof_scan_owner field is an internal field to
-facilitate invoking eofb scans from the kernel while under the iolock.
-This is necessary because the eofb scan acquires the iolock of each
-inode. Synchronous scans are invoked on certain buffered write failures
-while under iolock. In such cases, the scan owner indicates that the
-context for the scan already owns the particular iolock and prevents a
-double lock deadlock.
-
-eofblocks scans while under iolock are still livelock prone in the event
-of multiple parallel scans, however. If multiple buffered writes to
-different inodes fail and invoke eofblocks scans at the same time, each
-scan avoids a deadlock with its own inode by virtue of the
-eof_scan_owner field, but will never be able to acquire the iolock of
-the inode from the parallel scan. Because the low free space scans are
-invoked with SYNC_WAIT, the scan will not return until it has processed
-every tagged inode and thus both scans will spin indefinitely on the
-iolock being held across the opposite scan. This problem can be
-reproduced reliably by generic/224 on systems with higher cpu counts
-(x16).
-
-To avoid this problem, simplify the semantics of eofblocks scans to
-never invoke a scan while under iolock. This means that the buffered
-write context must drop the iolock before the scan. It must reacquire
-the lock before the write retry and also repeat the initial write
-checks, as the original state might no longer be valid once the iolock
-was dropped.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_file.c   | 13 +++++++++----
- fs/xfs/xfs_icache.c | 45 +++++++--------------------------------------
- fs/xfs/xfs_icache.h |  2 --
- 3 files changed, 16 insertions(+), 44 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index bbb9eb6811b2..0a29739f785e 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -614,8 +614,10 @@ xfs_file_buffered_aio_write(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	ssize_t			ret;
- 	int			enospc = 0;
--	int			iolock = XFS_IOLOCK_EXCL;
-+	int			iolock;
+diff --git a/src/dio-invalidate-cache.c b/src/dio-invalidate-cache.c
+index bc795f9..4c40c87 100644
+--- a/src/dio-invalidate-cache.c
++++ b/src/dio-invalidate-cache.c
+@@ -73,12 +73,11 @@ static void kill_children(pid_t *pids, int nr_child)
+        pid_t pid;
  
-+write_retry:
-+	iolock = XFS_IOLOCK_EXCL;
- 	xfs_ilock(ip, iolock);
- 
- 	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
-@@ -625,7 +627,6 @@ xfs_file_buffered_aio_write(
- 	/* We can write back this queue in page reclaim */
- 	current->backing_dev_info = inode_to_bdi(inode);
- 
--write_retry:
- 	trace_xfs_file_buffered_write(ip, iov_iter_count(from), iocb->ki_pos);
- 	ret = iomap_file_buffered_write(iocb, from, &xfs_iomap_ops);
- 	if (likely(ret >= 0))
-@@ -641,18 +642,21 @@ xfs_file_buffered_aio_write(
- 	 * running at the same time.
- 	 */
- 	if (ret == -EDQUOT && !enospc) {
-+		xfs_iunlock(ip, iolock);
- 		enospc = xfs_inode_free_quota_eofblocks(ip);
- 		if (enospc)
- 			goto write_retry;
- 		enospc = xfs_inode_free_quota_cowblocks(ip);
- 		if (enospc)
- 			goto write_retry;
-+		iolock = 0;
- 	} else if (ret == -ENOSPC && !enospc) {
- 		struct xfs_eofblocks eofb = {0};
- 
- 		enospc = 1;
- 		xfs_flush_inodes(ip->i_mount);
--		eofb.eof_scan_owner = ip->i_ino; /* for locking */
-+
-+		xfs_iunlock(ip, iolock);
- 		eofb.eof_flags = XFS_EOF_FLAGS_SYNC;
- 		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
- 		goto write_retry;
-@@ -660,7 +664,8 @@ xfs_file_buffered_aio_write(
- 
- 	current->backing_dev_info = NULL;
- out:
--	xfs_iunlock(ip, iolock);
-+	if (iolock)
-+		xfs_iunlock(ip, iolock);
- 	return ret;
+        for (i = 0; i < nr_child; i++) {
+-               pid = *(pids + i);
++               pid = pids[i];
+                if (pid == 0)
+                        continue;
+                kill(pid, SIGTERM);
+        }
+-       return;
  }
  
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index c6b698f0fed9..7234b9748c36 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1324,11 +1324,8 @@ xfs_inode_free_eofblocks(
- {
- 	int ret = 0;
- 	struct xfs_eofblocks *eofb = args;
--	bool need_iolock = true;
- 	int match;
- 
--	ASSERT(!eofb || (eofb && eofb->eof_scan_owner != 0));
--
- 	if (!xfs_can_free_eofblocks(ip, false)) {
- 		/* inode could be preallocated or append-only */
- 		trace_xfs_inode_free_eofblocks_invalid(ip);
-@@ -1356,27 +1353,19 @@ xfs_inode_free_eofblocks(
- 		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
- 		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
- 			return 0;
--
--		/*
--		 * A scan owner implies we already hold the iolock. Skip it here
--		 * to avoid deadlock.
--		 */
--		if (eofb->eof_scan_owner == ip->i_ino)
--			need_iolock = false;
- 	}
- 
- 	/*
- 	 * If the caller is waiting, return -EAGAIN to keep the background
- 	 * scanner moving and revisit the inode in a subsequent pass.
- 	 */
--	if (need_iolock && !xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
-+	if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
- 		if (flags & SYNC_WAIT)
- 			ret = -EAGAIN;
- 		return ret;
- 	}
- 	ret = xfs_free_eofblocks(ip);
--	if (need_iolock)
--		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 
- 	return ret;
- }
-@@ -1423,15 +1412,10 @@ __xfs_inode_free_quota_eofblocks(
- 	struct xfs_eofblocks eofb = {0};
- 	struct xfs_dquot *dq;
- 
--	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
--
- 	/*
--	 * Set the scan owner to avoid a potential livelock. Otherwise, the scan
--	 * can repeatedly trylock on the inode we're currently processing. We
--	 * run a sync scan to increase effectiveness and use the union filter to
-+	 * Run a sync scan to increase effectiveness and use the union filter to
- 	 * cover all applicable quotas in a single scan.
- 	 */
--	eofb.eof_scan_owner = ip->i_ino;
- 	eofb.eof_flags = XFS_EOF_FLAGS_UNION|XFS_EOF_FLAGS_SYNC;
- 
- 	if (XFS_IS_UQUOTA_ENFORCED(ip->i_mount)) {
-@@ -1583,12 +1567,9 @@ xfs_inode_free_cowblocks(
- {
- 	int ret;
- 	struct xfs_eofblocks *eofb = args;
--	bool need_iolock = true;
- 	int match;
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 
--	ASSERT(!eofb || (eofb && eofb->eof_scan_owner != 0));
--
- 	/*
- 	 * Just clear the tag if we have an empty cow fork or none at all. It's
- 	 * possible the inode was fully unshared since it was originally tagged.
-@@ -1621,28 +1602,16 @@ xfs_inode_free_cowblocks(
- 		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
- 		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
- 			return 0;
--
--		/*
--		 * A scan owner implies we already hold the iolock. Skip it in
--		 * xfs_free_eofblocks() to avoid deadlock. This also eliminates
--		 * the possibility of EAGAIN being returned.
--		 */
--		if (eofb->eof_scan_owner == ip->i_ino)
--			need_iolock = false;
- 	}
- 
- 	/* Free the CoW blocks */
--	if (need_iolock) {
--		xfs_ilock(ip, XFS_IOLOCK_EXCL);
--		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	}
-+	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-+	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- 
- 	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
- 
--	if (need_iolock) {
--		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
--		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
--	}
-+	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-+	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 
- 	return ret;
- }
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index a1e02f4708ab..8a7c849b4dea 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -27,7 +27,6 @@ struct xfs_eofblocks {
- 	kgid_t		eof_gid;
- 	prid_t		eof_prid;
- 	__u64		eof_min_file_size;
--	xfs_ino_t	eof_scan_owner;
- };
- 
- #define SYNC_WAIT		0x0001	/* wait for i/o to complete */
-@@ -102,7 +101,6 @@ xfs_fs_eofblocks_from_user(
- 	dst->eof_flags = src->eof_flags;
- 	dst->eof_prid = src->eof_prid;
- 	dst->eof_min_file_size = src->eof_min_file_size;
--	dst->eof_scan_owner = NULLFSINO;
- 
- 	dst->eof_uid = INVALID_UID;
- 	if (src->eof_flags & XFS_EOF_FLAGS_UID) {
--- 
-2.11.0
+ static int wait_children(pid_t *pids, int nr_child)
 
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+Thanks for the review!
+
+Eryu
