@@ -1,115 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:34285 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757944AbdCUWC5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2017 18:02:57 -0400
-Received: by mail-qk0-f173.google.com with SMTP id p64so145986048qke.1
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Mar 2017 15:02:26 -0700 (PDT)
-Message-ID: <1490133240.2593.4.camel@redhat.com>
-Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and
- optimization
-From: Jeff Layton <jlayton@redhat.com>
-Date: Tue, 21 Mar 2017 17:54:00 -0400
-In-Reply-To: <20170321191330.GF17872@fieldses.org>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
-         <20161222084549.GA8833@infradead.org> <1482417724.3924.39.camel@redhat.com>
-         <20170320214327.GA5098@fieldses.org> <20170321134500.GA1318@infradead.org>
-         <20170321163011.GA16666@fieldses.org> <1490117004.2542.1.camel@redhat.com>
-         <20170321183006.GD17872@fieldses.org> <1490122013.2593.1.camel@redhat.com>
-         <20170321191330.GF17872@fieldses.org>
+Received: from mail-qt0-f172.google.com ([209.85.216.172]:33822 "EHLO
+        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759297AbdCVKzN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2017 06:55:13 -0400
+Received: by mail-qt0-f172.google.com with SMTP id n21so150508621qta.1
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2017 03:55:12 -0700 (PDT)
+Message-ID: <1490180109.2593.13.camel@poochiereds.net>
+Subject: Re: statx manpage
+From: Jeff Layton <jlayton@poochiereds.net>
+Date: Wed, 22 Mar 2017 06:55:09 -0400
+In-Reply-To: <20170320160127.GB31556@bombadil.infradead.org>
+References: <91D9638E-C96A-4D1E-9712-5D6543048700@dilger.ca>
+         <20170307050140.GA12946@infradead.org>
+         <20170307000609.GG5280@birch.djwong.org>
+         <10435.1488907375@warthog.procyon.org.uk>
+         <17753.1488965058@warthog.procyon.org.uk>
+         <1488986774.2802.18.camel@poochiereds.net>
+         <20170320160127.GB31556@bombadil.infradead.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: David Howells <dhowells@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Tue, 2017-03-21 at 15:13 -0400, J. Bruce Fields wrote:
-> On Tue, Mar 21, 2017 at 02:46:53PM -0400, Jeff Layton wrote:
-> > On Tue, 2017-03-21 at 14:30 -0400, J. Bruce Fields wrote:
-> > > On Tue, Mar 21, 2017 at 01:23:24PM -0400, Jeff Layton wrote:
-> > > > On Tue, 2017-03-21 at 12:30 -0400, J. Bruce Fields wrote:
-> > > > > - It's durable; the above comparison still works if there were reboots
-> > > > >   between the two i_version checks.
-> > > > > 	- I don't know how realistic this is--we may need to figure out
-> > > > > 	  if there's a weaker guarantee that's still useful.  Do
-> > > > > 	  filesystems actually make ctime/mtime/i_version changes
-> > > > > 	  atomically with the changes that caused them?  What if a
-> > > > > 	  change attribute is exposed to an NFS client but doesn't make
-> > > > > 	  it to disk, and then that value is reused after reboot?
-> > > > > 
-> > > > 
-> > > > Yeah, there could be atomicity there. If we bump i_version, we'll mark
-> > > > the inode dirty and I think that will end up with the new i_version at
-> > > > least being journalled before __mark_inode_dirty returns.
+On Mon, 2017-03-20 at 09:01 -0700, Matthew Wilcox wrote:
+> On Wed, Mar 08, 2017 at 10:26:14AM -0500, Jeff Layton wrote:
+> > On Wed, 2017-03-08 at 09:24 +0000, David Howells wrote:
+> > > Andreas Dilger <adilger@dilger.ca> wrote:
+> > > >    To test whether a path is a regular file (for example), one could write:
+> > > >    .nf
+> > > >    .in +4n
+> > > >    rc = statx(AT_FDCWD, pathname, 0, STATX_TYPE, &stx);
+> > > >    if (stx.stx_mask & STATX_TYPE && S_ISREG(sb.stx_mode)) {
+> > > >       /* Handle regular file */
+> > > >    }
 > > > 
-> > > So you think the filesystem can provide the atomicity?  In more detail:
-> > > 
+> > > Good idea.
 > > 
-> > Sorry, I hit send too quickly. That should have read:
-> > 
-> > "Yeah, there could be atomicity issues there."
-> > 
-> > I think providing that level of atomicity may be difficult, though
-> > maybe there's some way to make the querying of i_version block until
-> > the inode update has been journalled?
+> > Note that & and && have similar precedence, IIRC, so you probably want
+> > to wrap that flag check in parenthesis.
 > 
-> No idea.  Anyway, I'd like to figure out some reasonable requirement
-> that we can document.
-> 
-> > 
-> > > 	- if I write to a file, a simultaneous reader should see either
-> > > 	  (old data, old i_version) or (new data, new i_version), not a
-> > > 	  combination of the two.
-> > > 	- ditto for metadata modifications.
-> > > 	- the same should be true if there's a crash.
-> > > 
-> > > (If that's not possible, then I think we could live with a brief window
-> > > of (new data, old i_version) as long as it doesn't persist beyond sync?)
-> > > 
-> > > > That said, I suppose it is possible for us to bump the counter, hand
-> > > > that new counter value out to a NFS client and then the box crashes
-> > > > before it makes it to the journal.
-> > > > 
-> > > > Not sure how big a problem that really is.
-> > > 
-> > > The other case I was wondering about may have been unclear.  Represent
-> > > the state of a file by a (data, i_version) pair.  Say:
-> > > 
-> > > 	- file is modified from (F, V) to (F', V+1).
-> > > 	- client reads and caches (F', V+1).
-> > > 	- server crashes before writeback, so disk still has (F, V).
-> > > 	- after restart, someone else modifies file to (F'', V+1).
-> > > 	- original client revalidates its cache, sees V+1, concludes
-> > > 	  file data is still F'.
-> > > 
-> > > This may not cause a real problem for clients depending only on
-> > > traditional NFS close-to-open semantics.
-> > > 
-> > > 
-> > 
-> > No, I think that is a legitimate problem.
-> > 
-> > That said, after F'', the mtime would almost certainly be different
-> > from the time after F', and that would likely be enough to prevent
-> > confusion in NFS clients.
-> 
-> Oh, good point.  So, may be worth saying that anyone wanting to make
-> sense of these across reboot should compare times as well (maybe that
-> should be in nfs rfc's too).  I think that should be ctime not mtime,
-> though?
+> They're actually pretty far apart.  & is priority 8 and && is priority 11.
+> But the fact that you thought they were similar shows that most of
+> us don't really know what C's operator precedence is (beyond + and *)
+> and we should err on the side of clarity by using the unnecessary parens.
 > 
 
-Yes, it might be worth a mention there. IIRC, it does mention that you
-shouldn't just look at a single attribute for cache validation
-purposes, but the wording is a bit vague. I can't find the section at
-the moment though.
+Ahh, good to know. My rules are generally: multiplication and division
+come before addition and subtraction, and put parenthesis around
+everything else. :)
 
-The more I think about it though, simply ensuring that we don't publish
- a new change attr until the inode update has hit the journal may be
-the best we can do. I'd have to think about how to implement that
-though.
+> > If the plan is to eventually (in some far away future) to deprecate
+> > stat(), then we probably don't want this manpage to refer to it as a
+> > canonical source of information. I say duplicate it here.
+> 
+> We haven't even deprecated select() in favour of poll() ... indeed,
+> pselect() was added.  I can't imagine stat() ever being deprecated.
+
+Ok, deprecated is probably the wrong choice of words. You're correct
+that we'll never be able to fully rip it out just due to the volume of
+old programs that use it.
+
+My thinking is that statx will come to supplant stat in newer code, and
+stat will eventually become a "legacy" syscall. Typically we don't want
+to have to refer to "legacy" manpages for canonical info in new
+interfaces. If anything we may want to remove that info from stat(2)
+manpage and have it refer to statx(2) for it.
 -- 
-Jeff Layton <jlayton@redhat.com>
+Jeff Layton <jlayton@poochiereds.net>
