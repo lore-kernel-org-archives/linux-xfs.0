@@ -1,282 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:20312 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933397AbdCHBRw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2017 20:17:52 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v281HLnc011498
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 8 Mar 2017 01:17:21 GMT
-Subject: [PATCH 6/9] xfs_spaceman: AG state control
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 07 Mar 2017 17:15:16 -0800
-Message-ID: <148893571657.16212.13062635698635483232.stgit@birch.djwong.org>
-In-Reply-To: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
-References: <148893567413.16212.9755642670176405699.stgit@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:33867 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758663AbdCVTyG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2017 15:54:06 -0400
+Received: by mail-qk0-f176.google.com with SMTP id p64so164651588qke.1
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2017 12:53:45 -0700 (PDT)
+Message-ID: <1490212422.3921.1.camel@redhat.com>
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and
+ optimization
+From: Jeff Layton <jlayton@redhat.com>
+Date: Wed, 22 Mar 2017 15:53:42 -0400
+In-Reply-To: <20170321214518.GB17542@dastard>
+References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
+         <20161222084549.GA8833@infradead.org> <1482417724.3924.39.camel@redhat.com>
+         <20170320214327.GA5098@fieldses.org> <20170321134500.GA1318@infradead.org>
+         <20170321163011.GA16666@fieldses.org> <1490117004.2542.1.camel@redhat.com>
+         <20170321214518.GB17542@dastard>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, 2017-03-22 at 08:45 +1100, Dave Chinner wrote:
+> On Tue, Mar 21, 2017 at 01:23:24PM -0400, Jeff Layton wrote:
+> > On Tue, 2017-03-21 at 12:30 -0400, J. Bruce Fields wrote:
+> > > - It's durable; the above comparison still works if there were reboots
+> > >   between the two i_version checks.
+> > > 	- I don't know how realistic this is--we may need to figure out
+> > > 	  if there's a weaker guarantee that's still useful.  Do
+> > > 	  filesystems actually make ctime/mtime/i_version changes
+> > > 	  atomically with the changes that caused them?  What if a
+> > > 	  change attribute is exposed to an NFS client but doesn't make
+> > > 	  it to disk, and then that value is reused after reboot?
+> > > 
+> > 
+> > Yeah, there could be atomicity there. If we bump i_version, we'll mark
+> > the inode dirty and I think that will end up with the new i_version at
+> > least being journalled before __mark_inode_dirty returns.
+> 
+> The change may be journalled, but it isn't guaranteed stable until
+> fsync is run on the inode.
+> 
+> NFS server operations commit the metadata changed by a modification
+> through ->commit_metadata or sync_inode_metadata() before the
+> response is sent back to the client, hence guaranteeing that
+> i_version changes through the NFS server are stable and durable.
+> 
+> This is not the case for normal operations done through the POSIX
+> API - the journalling is asynchronous and the only durability
+> guarantees are provided by fsync()....
+> 
 
-Add support for a new allocation group state control ioctl. This
-allows control of various AG parameters, such as whether inode
-allocation is allowed in the AG, metadata preference, whether new
-allocations are allowed, etc. This requires a new ioctl.
+Ahh ok, I missed that...thanks.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[darrick: change xfsctl to ioctl]
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- spaceman/Makefile |    2 
- spaceman/ag.c     |  221 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 222 insertions(+), 1 deletion(-)
- create mode 100644 spaceman/ag.c
+I think we'll have a hard time making this fully atomic. We may end up
+having to settle for something less (and doing our best to warn users
+of that possibility).
 
+One idea might be to tie the behavior to AT_FORCE/DONT_SYNC. In the
+don't sync case, allow the kernel to hand out the i_version without
+syncing it to disk. In the FORCE_SYNC case, do an fsync internally
+before returning.
 
-diff --git a/spaceman/Makefile b/spaceman/Makefile
-index b1f1136..08709b3 100644
---- a/spaceman/Makefile
-+++ b/spaceman/Makefile
-@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
- LTCOMMAND = xfs_spaceman
- HFILES = init.h space.h
- CFILES = init.c \
--	file.c prealloc.c trim.c
-+	ag.c file.c prealloc.c trim.c
- 
- LLDLIBS = $(LIBXCMD)
- LTDEPENDENCIES = $(LIBXCMD)
-diff --git a/spaceman/ag.c b/spaceman/ag.c
-new file mode 100644
-index 0000000..1eb8aa0
---- /dev/null
-+++ b/spaceman/ag.c
-@@ -0,0 +1,221 @@
-+/*
-+ * Copyright (c) 2012 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include "libxfs.h"
-+#include <linux/dqblk_xfs.h>
-+#include "command.h"
-+#include "input.h"
-+#include "init.h"
-+#include "space.h"
-+
-+#ifndef XFS_IOC_AGCONTROL
-+#define XFS_IOC_AGCONTROL _IOWR ('X', 60, struct xfs_agcontrol)
-+
-+#define XFS_AGCONTROL_VERSION		1
-+struct xfs_agcontrol {
-+	__u32		version;
-+	__u32		flags;
-+	__u32		agno;
-+	__u32		state;
-+	__u64		pad[8];
-+};
-+
-+/* control flags */
-+#define XFS_AGCONTROL_GETAGFSTATE	(1 << 0)	/* get AGF state */
-+#define XFS_AGCONTROL_SETAGFSTATE	(1 << 1)	/* set AGF state */
-+#define XFS_AGCONTROL_GETAGISTATE	(1 << 2)	/* get AGI state */
-+#define XFS_AGCONTROL_SETAGISTATE	(1 << 3)	/* set AGI state */
-+
-+/* state flags */
-+
-+/*
-+ * inode and allocation states are split. AGF and AGI online state will move in
-+ * sync as it is really a whole AG state. No allocation flags imply no new
-+ * allocations, but inodes and extents can be removed. Readonly means no
-+ * modification (alloc or free) is allowed. This is to allow different
-+ * operations to be performed. e.g. emptying an AG in preparation for a shrink
-+ * require NOALLOC state, but an AG that has a corrupted freespace btree might
-+ * be switched to READONLY until the freespace tree is rebuilt. An AGF/AGI in
-+ * this corrupt/ro state will set the relevant corruption flag in the state
-+ * field....
-+ */
-+#define XFS_AGFSTATE_ONLINE		(1 << 0)	/* AGF online */
-+#define XFS_AGFSTATE_NOALLOC		(1 << 1)	/* No new allocation */
-+#define XFS_AGFSTATE_READONLY		(1 << 2)	/* AGF is immutable */
-+#define XFS_AGFSTATE_METADATA		(1 << 3)	/* metadata preferred */
-+#define XFS_AGFSTATE_CORRUPT_BNO	(1 << 4)	/* bno freespace corrupt */
-+#define XFS_AGFSTATE_CORRUPT_CNT	(1 << 5)	/* cnt freespace corrupt */
-+#define XFS_AGFSTATE_CORRUPT_AGFL	(1 << 6)	/* AGFL freespace corrupt */
-+
-+#define XFS_AGISTATE_ONLINE		(1 << 0)	/* AGI online */
-+#define XFS_AGISTATE_NOALLOC		(1 << 1)	/* No new allocation */
-+#define XFS_AGISTATE_READONLY		(1 << 2)	/* AGI is immutable */
-+#define XFS_AGISTATE_CORRUPT_TREE	(1 << 2)	/* AGI btree corrupt */
-+
-+#endif
-+
-+static cmdinfo_t agfctl_cmd;
-+static cmdinfo_t agictl_cmd;
-+
-+static int
-+agfctl_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	struct xfs_agcontrol agctl = {0};
-+	xfs_agnumber_t	agno;
-+	int		gflag = 0;
-+	int		c;
-+
-+	while ((c = getopt(argc, argv, "gs")) != EOF) {
-+		switch (c) {
-+		case 'g':
-+			gflag = 1;
-+			break;
-+		default:
-+			return command_usage(&agfctl_cmd);
-+		}
-+	}
-+	if (optind != argc - 1)
-+		return command_usage(&agfctl_cmd);
-+
-+	agno = atoi(argv[optind]);
-+	if (agno >= file->geom.agcount) {
-+		fprintf(stderr, _("%s: agno %d out of range (max %d)\n"),
-+			progname, agno, file->geom.agcount);
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	agctl.version = XFS_AGCONTROL_VERSION;
-+	agctl.agno = agno;
-+	if (gflag)
-+		agctl.flags = XFS_AGCONTROL_GETAGFSTATE;
-+
-+	if (ioctl(file->fd, XFS_IOC_AGCONTROL, &agctl) < 0) {
-+		fprintf(stderr, _("%s: XFS_IOC_AGCONTROL on %s: %s\n"),
-+			progname, file->name, strerror(errno));
-+	}
-+	return 0;
-+}
-+
-+static void
-+agfctl_help(void)
-+{
-+	printf(_(
-+"\n"
-+"AGF state control\n"
-+"\n"
-+"Options: [-g] agno\n"
-+"\n"
-+" -g -- get state\n"
-+" agno -- AG to operate on\n"
-+"\n"));
-+
-+}
-+
-+void
-+agfctl_init(void)
-+{
-+	agfctl_cmd.name = "agfctl";
-+	agfctl_cmd.altname = "agfctl";
-+	agfctl_cmd.cfunc = agfctl_f;
-+	agfctl_cmd.argmin = 2;
-+	agfctl_cmd.argmax = -1;
-+	agfctl_cmd.args = "agno\n";
-+	agfctl_cmd.flags = CMD_FLAG_ONESHOT;
-+	agfctl_cmd.oneline = _("AGF state control");
-+	agfctl_cmd.help = agfctl_help;
-+
-+	add_command(&agfctl_cmd);
-+}
-+
-+static int
-+agictl_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	struct xfs_agcontrol agctl = {0};
-+	xfs_agnumber_t	agno;
-+	int		gflag = 0;
-+	int		c;
-+
-+	while ((c = getopt(argc, argv, "gs")) != EOF) {
-+		switch (c) {
-+		case 'g':
-+			gflag = 1;
-+			break;
-+		default:
-+			return command_usage(&agictl_cmd);
-+		}
-+	}
-+	if (optind != argc - 1)
-+		return command_usage(&agictl_cmd);
-+
-+	agno = atoi(argv[optind]);
-+	if (agno >= file->geom.agcount) {
-+		fprintf(stderr, _("%s: agno %d out of range (max %d)\n"),
-+			progname, agno, file->geom.agcount);
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	agctl.version = XFS_AGCONTROL_VERSION;
-+	agctl.agno = agno;
-+	if (gflag)
-+		agctl.flags = XFS_AGCONTROL_GETAGISTATE;
-+
-+	if (ioctl(file->fd, XFS_IOC_AGCONTROL, &agctl) < 0) {
-+		fprintf(stderr, _("%s: XFS_IOC_AGCONTROL on %s: %s\n"),
-+			progname, file->name, strerror(errno));
-+		exitcode = 1;
-+		return 0;
-+	}
-+	return 0;
-+}
-+
-+static void
-+agictl_help(void)
-+{
-+	printf(_(
-+"\n"
-+"AGI state control\n"
-+"\n"
-+"Options: [-g] agno\n"
-+"\n"
-+" -g -- get state\n"
-+" agno -- AG to operate on\n"
-+"\n"));
-+
-+}
-+
-+void
-+agictl_init(void)
-+{
-+	agictl_cmd.name = "agictl";
-+	agictl_cmd.altname = "agictl";
-+	agictl_cmd.cfunc = agictl_f;
-+	agictl_cmd.argmin = 2;
-+	agictl_cmd.argmax = -1;
-+	agictl_cmd.args = "agno\n";
-+	agictl_cmd.flags = CMD_FLAG_ONESHOT;
-+	agictl_cmd.oneline = _("AGI state control");
-+	agictl_cmd.help = agictl_help;
-+
-+	add_command(&agictl_cmd);
-+}
+> > That said, I suppose it is possible for us to bump the counter, hand
+> > that new counter value out to a NFS client and then the box crashes
+> > before it makes it to the journal.
+> 
+> Yup, this has aways been a problem when you mix posix applications
+> running on the NFS server modifying the same files as the NFS
+> clients are accessing and requiring synchronisation.
+> 
+> > Not sure how big a problem that really is.
+> 
+> This coherency problem has always existed on the server side...
+> 
 
+Yes. I don't think this patchset makes anything worse in this regard.
+We will need well-defined semantics here before i_version can be
+exposed to userland via statx however.
+-- 
+Jeff Layton <jlayton@redhat.com>
