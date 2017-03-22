@@ -1,30 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39655 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752460AbdCQAxm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Mar 2017 20:53:42 -0400
-Date: Fri, 17 Mar 2017 00:40:31 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: XFS developers meeting at Vault?
-Message-ID: <20170316234031.GZ28800@wotan.suse.de>
-References: <20170123174432.GA22900@lst.de>
- <20170206124053.c5jh6cieebnhnixy@eorzea.usersys.redhat.com>
- <20170206131711.GB57865@bfoster.bfoster>
- <20170207093958.GB15267@lst.de>
+Received: from mail-vk0-f44.google.com ([209.85.213.44]:34910 "EHLO
+        mail-vk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759365AbdCVMeY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2017 08:34:24 -0400
+Received: by mail-vk0-f44.google.com with SMTP id r69so13125744vke.2
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2017 05:34:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170207093958.GB15267@lst.de>
+In-Reply-To: <20170321155512.GZ14226@eguan.usersys.redhat.com>
+References: <20170315163347.29743-1-jtulak@redhat.com> <20170316074941.GS14226@eguan.usersys.redhat.com>
+ <20170321152253.GB59313@bfoster.bfoster> <20170321155512.GZ14226@eguan.usersys.redhat.com>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Wed, 22 Mar 2017 13:33:55 +0100
+Message-ID: <CACj3i73zH0f_saV21nD5=g6jYWStf0QfaV79tt5_UOheRY9zMA@mail.gmail.com>
+Subject: Re: [PATCH] xfstests: xfs/191 update
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Feb 07, 2017 at 10:39:58AM +0100, Christoph Hellwig wrote:
-> Ok, seems like we don't have too many people with availabily.
-> Let's just meet for a beer during Vault.
+On Tue, Mar 21, 2017 at 4:55 PM, Eryu Guan <eguan@redhat.com> wrote:
+> On Tue, Mar 21, 2017 at 11:22:54AM -0400, Brian Foster wrote:
+>> On Thu, Mar 16, 2017 at 03:49:41PM +0800, Eryu Guan wrote:
+>> > On Wed, Mar 15, 2017 at 05:33:47PM +0100, Jan Tulak wrote:
+>> > > The removed 'do_mkfs_pass -l size=4096b' was against man page
+>> > > (-b section). Other entries are things that weren't covered before.
+>> > >
+>> > > Specifically, a standalone "-l size=4096b" should fail, because:
+>> > > To  specify any options on the command line in units of filesys‐
+>> > > tem blocks, this option must be  specified  first  so  that  the
+>> > > filesystem block size is applied consistently to all options.
+>> > >
+>> > > Signed-off-by: Jan Tulak <jtulak@redhat.com>
+>> >
+>> > This looks fine to me. But I'd like some reviews from xfs developers
+>> > too. (cc'd linux-xfs@vger.kernel.org).
+>> >
+>>
+>> So has mkfs been fixed to cause '-l size=4096b' to fail? I'm not sure we
+>> should cause the test to fail until/unless the mkfs behavior is fixed
+>> up.
+>
+> I agreed, we don't want to update existing test and introduce false
+> regressions. This is one of the reasons I want more reviews on this
+> patch :)
+>
 
-Beer BoF, count me in.
+I forgot to mention that this patch is a complement to my patchset for
+mkfs.xfs. So yes, do not merge it now, it looks like the set won't get
+merged yet. Sorry for not stating it in the description.
 
-  Luis
+Jan
+
+
+-- 
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
