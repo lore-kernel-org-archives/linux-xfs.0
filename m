@@ -1,72 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:46025 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756886AbdCUVqD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2017 17:46:03 -0400
-Date: Wed, 22 Mar 2017 08:45:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
-Message-ID: <20170321214518.GB17542@dastard>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
- <20161222084549.GA8833@infradead.org>
- <1482417724.3924.39.camel@redhat.com>
- <20170320214327.GA5098@fieldses.org>
- <20170321134500.GA1318@infradead.org>
- <20170321163011.GA16666@fieldses.org>
- <1490117004.2542.1.camel@redhat.com>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:34554 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932449AbdCWPUG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Mar 2017 11:20:06 -0400
+From: Nikolay Borisov <n.borisov.lkml@gmail.com>
+Subject: Request 5c6863019e45 ("cancel the setfilesize transation when io
+ error happen") for 3.12 stable inclusion
+Message-ID: <48c85015-5520-bd42-dca7-cfb9634dcc39@gmail.com>
+Date: Thu, 23 Mar 2017 17:19:56 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1490117004.2542.1.camel@redhat.com>
+Content-Type: multipart/mixed;
+ boundary="------------CD73CEE576983282630AE0B7"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, bfoster@redhat.com, david@fromorbit.com
 
-On Tue, Mar 21, 2017 at 01:23:24PM -0400, Jeff Layton wrote:
-> On Tue, 2017-03-21 at 12:30 -0400, J. Bruce Fields wrote:
-> > - It's durable; the above comparison still works if there were reboots
-> >   between the two i_version checks.
-> > 	- I don't know how realistic this is--we may need to figure out
-> > 	  if there's a weaker guarantee that's still useful.  Do
-> > 	  filesystems actually make ctime/mtime/i_version changes
-> > 	  atomically with the changes that caused them?  What if a
-> > 	  change attribute is exposed to an NFS client but doesn't make
-> > 	  it to disk, and then that value is reused after reboot?
-> > 
-> 
-> Yeah, there could be atomicity there. If we bump i_version, we'll mark
-> the inode dirty and I think that will end up with the new i_version at
-> least being journalled before __mark_inode_dirty returns.
+This is a multi-part message in MIME format.
+--------------CD73CEE576983282630AE0B7
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-The change may be journalled, but it isn't guaranteed stable until
-fsync is run on the inode.
+Hello,
 
-NFS server operations commit the metadata changed by a modification
-through ->commit_metadata or sync_inode_metadata() before the
-response is sent back to the client, hence guaranteeing that
-i_version changes through the NFS server are stable and durable.
 
-This is not the case for normal operations done through the POSIX
-API - the journalling is asynchronous and the only durability
-guarantees are provided by fsync()....
+I'd like to request the above patch be included into the 3.12 stable
+tree. I've attached a backport and have run xfstest and no regressions
+were observed. This fixes hang in generic/361 test.
 
-> That said, I suppose it is possible for us to bump the counter, hand
-> that new counter value out to a NFS client and then the box crashes
-> before it makes it to the journal.
 
-Yup, this has aways been a problem when you mix posix applications
-running on the NFS server modifying the same files as the NFS
-clients are accessing and requiring synchronisation.
+Regards,
+Nikolay
 
-> Not sure how big a problem that really is.
+--------------CD73CEE576983282630AE0B7
+Content-Type: text/x-patch;
+ name="0001-cancel-the-setfilesize-transation-when-io-error-happ.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-cancel-the-setfilesize-transation-when-io-error-happ.pa";
+ filename*1="tch"
 
-This coherency problem has always existed on the server side...
+>From 5c6863019e453bee3ac6dbdf1fbf0d9125942c3b Mon Sep 17 00:00:00 2001
+From: Zhaohongjiang <zhaohongjiang@huawei.com>
+Date: Mon, 12 Oct 2015 15:28:39 +1100
+Subject: [PATCH] cancel the setfilesize transation when io error happen
 
-Cheers,
+When I ran xfstest/073 case, the remount process was blocked to wait
+transactions to be zero. I found there was a io error happened, and
+the setfilesize transaction was not released properly. We should add
+the changes to cancel the io error in this case.
 
-Dave.
+Reproduction steps:
+1. dd if=/dev/zero of=xfs1.img bs=1M count=2048
+2. mkfs.xfs xfs1.img
+3. losetup -f ./xfs1.img /dev/loop0
+4. mount -t xfs /dev/loop0 /home/test_dir/
+5. mkdir /home/test_dir/test
+6. mkfs.xfs -dfile,name=image,size=2g
+7. mount -t xfs -o loop image /home/test_dir/test
+8. cp a file bigger than 2g to /home/test_dir/test
+9. mount -t xfs -o remount,ro /home/test_dir/test
+
+[ dchinner: moved io error detection to xfs_setfilesize_ioend() after
+  transaction context restoration. ]
+
+[ nborisov: Adjusted context for 3.12 ]
+
+Signed-off-by: Zhao Hongjiang <zhaohongjiang@huawei.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ fs/xfs/xfs_aops.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index ab28ad576b16..6394e3f51553 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -150,6 +150,12 @@ xfs_setfilesize(
+ 	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
+ 			   0, 1, _THIS_IP_);
+ 
++	/* we abort the update if there was an IO error */
++	if (ioend->io_error) {
++		xfs_trans_cancel(tp, 0);
++		return ioend->io_error;
++	}
++
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
+ 	if (!isize) {
+@@ -205,14 +211,17 @@ xfs_end_io(
+ 		ioend->io_error = -EIO;
+ 		goto done;
+ 	}
+-	if (ioend->io_error)
+-		goto done;
+ 
+ 	/*
+ 	 * For unwritten extents we need to issue transactions to convert a
+ 	 * range to normal written extens after the data I/O has finished.
++	 * Detecting and handling completion IO errors is done individually
++	 * for each case as different cleanup operations need to be performed
++	 * on error.
+ 	 */
+ 	if (ioend->io_type == XFS_IO_UNWRITTEN) {
++		if (ioend->io_error)
++			goto done;
+ 		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
+ 						  ioend->io_size);
+ 	} else if (ioend->io_isdirect && xfs_ioend_is_append(ioend)) {
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
+
+--------------CD73CEE576983282630AE0B7--
