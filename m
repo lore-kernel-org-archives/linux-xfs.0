@@ -1,30 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:41619 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756497AbdCUNpC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2017 09:45:02 -0400
-Date: Tue, 21 Mar 2017 06:45:00 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
-Message-ID: <20170321134500.GA1318@infradead.org>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
- <20161222084549.GA8833@infradead.org>
- <1482417724.3924.39.camel@redhat.com>
- <20170320214327.GA5098@fieldses.org>
+Received: from mout.perfora.net ([74.208.4.196]:52158 "EHLO mout.perfora.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932592AbdCWOcF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 Mar 2017 10:32:05 -0400
+Subject: Re: Selectively backup based on specific date
+References: <0c190757-c4ac-ae5c-6e1c-b9be37470be5@lueckdatasystems.com>
+ <1904662.EPkO7u6dZY@xrated>
+From: Michael Lueck <mlueck@lueckdatasystems.com>
+Message-ID: <889643de-4c95-fa11-029c-50b07355f0ba@lueckdatasystems.com>
+Date: Thu, 23 Mar 2017 10:31:59 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170320214327.GA5098@fieldses.org>
+In-Reply-To: <1904662.EPkO7u6dZY@xrated>
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Jeff Layton <jlayton@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Hans-Peter Jansen <hpj@urpla.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Mar 20, 2017 at 05:43:27PM -0400, J. Bruce Fields wrote:
-> To me, the interesting question is whether this allows us to turn on
-> i_version updates by default on xfs and ext4.
+Greetings Hans-Peter,
 
-XFS v5 file systems have it on by default.  Although we'll still need
-to agree on the exact semantics of i_version before it's going to be
-useful.
+Hans-Peter Jansen wrote:
+> Here are some of my favorite tools:
+> 	rsync for ad hoc operations,
+
+
+Excellent idea!
+
+As this effort involves a slide replacement migration... OK to begin with the xfsrestore from a full backup. Then change the IP on the old server, put both servers on the wire, and rsync to catch up. 
+Got it! (y)
+
+I am thankful,
+
+-- 
+Michael Lueck
+Lueck Data Systems
+http://www.lueckdatasystems.com/
