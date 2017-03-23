@@ -1,106 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:40366 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753950AbdCTVoA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Mar 2017 17:44:00 -0400
-Date: Mon, 20 Mar 2017 17:43:27 -0400
-Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
-Message-ID: <20170320214327.GA5098@fieldses.org>
-References: <1482339827-7882-1-git-send-email-jlayton@redhat.com>
- <20161222084549.GA8833@infradead.org>
- <1482417724.3924.39.camel@redhat.com>
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:35581 "EHLO
+        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754973AbdCWAPp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2017 20:15:45 -0400
+Received: by mail-yw0-f194.google.com with SMTP id h11so21896419ywa.2
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2017 17:15:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1482417724.3924.39.camel@redhat.com>
-From: bfields@fieldses.org (J. Bruce Fields)
+In-Reply-To: <20170322221912.GE17542@dastard>
+References: <CAJCQCtQ8aZn5y7WjCC=PamChxSw9Fd=0D7o2+S_GEbifV1h+ig@mail.gmail.com>
+ <20170315072349.GZ5280@birch.djwong.org> <CAJCQCtR8RLOBxK7S9Ck0ATT_5vVY6T9rmLtKrYGLPJTrsDRdNQ@mail.gmail.com>
+ <20170315191355.GF5280@birch.djwong.org> <20170315193040.GG5280@birch.djwong.org>
+ <CAJCQCtRt7_WpEp0npF=k1JJHFLE2sfc9ktB4YakuCZ5CNfZTTg@mail.gmail.com>
+ <CAJCQCtRVuKiOMdtGLb3QbR8uCTXbhFMnNQgPzzZWG7y6URawHQ@mail.gmail.com>
+ <20170322043438.GD17542@dastard> <CAJCQCtQ6VXd4s=SZcMuSbEhN7yRKRk0GULY2isbg2ZAh5RW+=w@mail.gmail.com>
+ <20170322221912.GE17542@dastard>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Wed, 22 Mar 2017 18:15:42 -0600
+Message-ID: <CAJCQCtRes2OiqH1-UP9A_L1DLAZcXJbG--o669G+0XK1fmK8BQ@mail.gmail.com>
+Subject: Re: boot failure after kernel update, imap claims in-use inode 661690
+ is free, would correct imap
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Chris Murphy <lists@colorremedies.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs list <linux-xfs@vger.kernel.org>
 
-On Thu, Dec 22, 2016 at 09:42:04AM -0500, Jeff Layton wrote:
-> On Thu, 2016-12-22 at 00:45 -0800, Christoph Hellwig wrote:
-> > On Wed, Dec 21, 2016 at 12:03:17PM -0500, Jeff Layton wrote:
-> > > 
-> > > Only btrfs, ext4, and xfs implement it for data changes. Because of
-> > > this, these filesystems must log the inode to disk whenever the
-> > > i_version counter changes. That has a non-zero performance impact,
-> > > especially on write-heavy workloads, because we end up dirtying the
-> > > inode metadata on every write, not just when the times change. [1]
-> > 
-> > Do you have numbers to justify these changes?
-> 
-> I have numbers. As to whether they justify the changes, I'm not sure.
-> This helps a lot on a (admittedly nonsensical) 1-byte write workload. On
-> XFS, with this fio jobfile:
+On Wed, Mar 22, 2017 at 4:19 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Wed, Mar 22, 2017 at 09:36:21AM -0600, Chris Murphy wrote:
 
-To me, the interesting question is whether this allows us to turn on
-i_version updates by default on xfs and ext4.
+>> OK. It looks to me like systemd eventually gives up on the remount-ro,
+>> and then just reboots. That strikes me as a flawed design. Systemd
+>> needs to wait longer (which is vague advice), or maybe after the 3rd
+>> failed remount-ro, insert a freeze/unfreeze, then reboot. How does
+>> that sound?
+>
+> Sounds supremely fragile and fucked up. Sure, lets add another
+> layers of hacks to systemd to work around the problem that systemd
+> can't remount-ro the root filesystem because systemd holds open
+> write fds on the root fs. Fix the problem that causes open write fds
+> on the root fs at the end of shutdown? Nah, that's stupid talk -
+> just hack a bandaid over the top....
 
-When Josef looked at doing that previously he withdrew the patch due to
-performance regressions.  I think the most useful thread started here:
+That's adorable, no really. I thought you were on vacation?
 
-	http://lkml.kernel.org/r/1337092396-3272-1-git-send-email-josef@redhat.com
+Anyway, there isn't enough information from systemd's debugging to
+know exactly why it's failing to remount-ro. The trail of breadcrumbs
+we have implicates plymouth, not systemd which I reported in the 2nd
+message of this thread.
 
-Skimming quickly....  I think the regression was also in the small-write
-case.  So apparently that was thought to reveal a real problem?
+Process 304 (plymouthd) has been marked to be excluded from killing.
+It is running from the root file system, and thus likely to block
+re-mounting of the root file system to read-only. Please consider
+moving it into an initrd file system instead.
 
-So if you've mostly eliminated that regression, then that's good
-motivation for your patches.  (Though I think in addition to comparing
-the patched and unpatched i_version case, we need to compare to the
-unpatched not-i_version case.  I'm not clear whether you did that.)
+I already suggested elsewhere that this is a distribution problem, and
+dracut needs to always stuff plymouth into the initramfs. When I do
+this manually, the reported problem does not happen; where if plymouth
+is running from root fs *and* /boot is a directory on that same root
+fs, this problem always happens.
 
---b.
+So plymouth blames itself and dracut, pretty much. Is there some
+additional technical reason to blame systemd for this problem?
 
-> 
-> --------------------8<------------------
-> [global]
-> direct=0
-> size=2g
-> filesize=512m
-> bsrange=1-1
-> timeout=60
-> numjobs=1
-> directory=/mnt/scratch
-> 
-> [f1]
-> filename=randwrite
-> rw=randwrite
-> --------------------8<------------------
-> 
-> Unpatched kernel:
->   WRITE: io=7707KB, aggrb=128KB/s, minb=128KB/s, maxb=128KB/s, mint=60000msec, maxt=60000msec
-> 
-> Patched kernel:
->   WRITE: io=12701KB, aggrb=211KB/s, minb=211KB/s, maxb=211KB/s, mint=60000msec, maxt=60000msec
-> 
-> So quite a difference there and it's pretty consistent across runs. If I
-> change the jobfile to have "direct=1" and "bsrange=4k-4k", then any
-> variation between the two doesn't seem to be significant (numbers vary
-> as much between runs on the same kernels and are roughly the same).
-> 
-> Playing with buffered I/O sizes between 1 byte and 4k shows that as the
-> I/O sizes get larger, this makes less difference (which is what I'd
-> expect).
-> 
-> Previous testing with ext4 shows roughly the same results. btrfs shows
-> some benefit here but significantly less than with ext4 or xfs. Not sure
-> why that is yet -- maybe CoW effects?
-> 
-> That said, I don't have a great test rig for this. I'm using VMs with a
-> dedicated LVM volume that's on a random SSD I had laying around. It
-> could use testing on a wider set of configurations and workloads.
-> 
-> I was also hoping that others may have workloads that they think might
-> be (postively or negatively) affected by these changes. If you can think
-> of any in particular, then I'm interested to hear about them.
-> 
-> -- 
-> Jeff Layton <jlayton@redhat.com>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+> And let's also ignore the fact that, in this case, the remount-ro is
+> effectively working around bootloader updates not providing
+> durability guarantees.  i.e. the bootloader doesn't do guaranteed
+> safe updates and requires 3rd party action to provide update
+> integrity.  The distro update scripts are all different because the
+> bootloader doesn't provide the necessary update infrastructure the
+> distros require, and it's extremely naive to expect the developers
+> of those scripts to understand that they need to provide integrity
+> guarantees that the bootloader itself doesn't provide.
+
+The only bootloader that has a script for updating its configuration
+file is GRUB, and has I previously explained that's grub-mkconfig and
+it's not used at all on Fedora (or CentOS or RHEL). For at least 10
+years it has been the job of grubby, going back to grub legacy. And it
+doesn't matter what the bootloader being used is, grubby directly
+modifies (read-modify-write) the configuration file for grub,
+systemd-boot, extlinux, lilo, u-boot, and a pile of others.
+
+> Really, the bootloader needs fixing, then we can go back to
+> blissfully ignoring all the stupid bugs in the steaming pile we know
+> as systemd...
+
+If I thought that bitching about the deplorable state of bootloaders
+on Linux, the total lack of cooperation among the distributions when
+it comes to the basic task of booting a fucking computer in 2017, when
+this shit was solved fucking 25 goddamn years ago by Microsoft and
+Apple, and they don't have the myriad problems and bugs I'm constantly
+finding on just Fedora release to release? I would have done it a long
+time ago.
+
+But I sincerely doubt anyone on this list gives a flying fuck about
+bootloader problems. Actually, characterizing the distros as
+uncooperative is too polite. They actively sabotage each other. It's
+so bad, they even sabotage themselves (try doing back to back side by
+side installations of Fedora). Each distro's grub is effectively a
+fork. Fedora ostensibly uses mostly upstream stuff, but with grub the
+upstream copy has 200+ hacks that are Fedora specific, SUSE has more
+and more invasive hacks, both of them are mutually incompatible. The
+distros don't agree. They're different operating systems that just so
+happen to share a kernel (or an init service). This fact isn't going
+to get solved on this list.
+
+So if you have something else for me to actually act on, I'm happy to
+try and push this forward so a teeny tiny handful of users can
+actually do single volume XFS booting and not end up face planted when
+they do offline updates. Thanks.
+
+
+-- 
+Chris Murphy
