@@ -1,110 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60826 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:46179 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758645AbdCVDJa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Mar 2017 23:09:30 -0400
-Date: Wed, 22 Mar 2017 11:09:23 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v2] generic: test pagecache invalidation after direct
- write
-Message-ID: <20170322030923.GB14226@eguan.usersys.redhat.com>
-References: <20170321165314.11434-1-eguan@redhat.com>
- <20170321173509.GC59313@bfoster.bfoster>
+        id S1752008AbdCXLcS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Mar 2017 07:32:18 -0400
+Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
+References: <20170315215107.5628-1-rgoldwyn@suse.de>
+ <20170315215107.5628-6-rgoldwyn@suse.de>
+ <eee4683d-9f44-434f-b97f-b0b24c7b3dab@kernel.dk>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Message-ID: <47d742e9-1343-ef5b-f7d4-29a6e22bef84@suse.de>
+Date: Fri, 24 Mar 2017 06:32:11 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170321173509.GC59313@bfoster.bfoster>
+In-Reply-To: <eee4683d-9f44-434f-b97f-b0b24c7b3dab@kernel.dk>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, linux-api@vger.kernel.org, willy@infradead.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Tue, Mar 21, 2017 at 01:35:09PM -0400, Brian Foster wrote:
-> On Wed, Mar 22, 2017 at 12:53:14AM +0800, Eryu Guan wrote:
-> > Test if direct write invalidates pagecache correctly, so that subsequent
-> > buffer read reads the correct data from disk.
-> > 
-> > This test is inspired by LTP tests dio29, and serves as a regression
-> > test for the bug found by it, see kernel commit c771c14baa33
-> > ("iomap: invalidate page caches should be after iomap_dio_complete()
-> > in direct write").
-> > 
-> > The test can be easily expanded to other write/read combinations, e.g.
-> > buffer write + direct read and direct write + direct read, so they are
-> > also being tested.
-> > 
-> > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> > ---
-> > v2: Address Brian's review comments
-> > - compare buffer content byte-by-byte instead of strncmp
-> > - use 'pids[i]' not *(pids + 1)
-> > - dump buffer content to stdout on error
-> > - initialize write buffer with (i + 1)
-> > - use pwrite/pread instead of lseek+write/read
-> > - remove increment of unused 'ret'
-> > - call fsync(fd) instead of sync()
-> > - fix typos
-> > 
-> >  .gitignore                 |   1 +
-> >  src/Makefile               |   3 +-
-> >  src/dio-invalidate-cache.c | 326 +++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/418          | 122 +++++++++++++++++
-> >  tests/generic/418.out      |   2 +
-> >  tests/generic/group        |   1 +
-> >  6 files changed, 454 insertions(+), 1 deletion(-)
-> >  create mode 100644 src/dio-invalidate-cache.c
-> >  create mode 100755 tests/generic/418
-> >  create mode 100644 tests/generic/418.out
-> > 
-> ...
-> > diff --git a/src/dio-invalidate-cache.c b/src/dio-invalidate-cache.c
-> > new file mode 100644
-> > index 0000000..bc795f9
-> > --- /dev/null
-> > +++ b/src/dio-invalidate-cache.c
-> > @@ -0,0 +1,326 @@
-> ...
-> > +static void kill_children(pid_t *pids, int nr_child)
-> > +{
-> > +	int i;
-> > +	pid_t pid;
-> > +
-> > +	for (i = 0; i < nr_child; i++) {
-> > +		pid = *(pids + i);
-> > +		if (pid == 0)
-> > +			continue;
-> > +		kill(pid, SIGTERM);
-> > +	}
-> > +	return;
+
+
+On 03/16/2017 09:33 AM, Jens Axboe wrote:
+> On 03/15/2017 03:51 PM, Goldwyn Rodrigues wrote:
+>> diff --git a/block/blk-core.c b/block/blk-core.c
+>> index 0eeb99e..2e5cba2 100644
+>> --- a/block/blk-core.c
+>> +++ b/block/blk-core.c
+>> @@ -2014,7 +2019,7 @@ blk_qc_t generic_make_request(struct bio *bio)
+>>  	do {
+>>  		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
+>>  
+>> -		if (likely(blk_queue_enter(q, false) == 0)) {
+>> +		if (likely(blk_queue_enter(q, bio_flagged(bio, BIO_NOWAIT)) == 0)) {
+>>  			struct bio_list hold;
+>>  			struct bio_list lower, same;
+>>  
+>> @@ -2040,7 +2045,10 @@ blk_qc_t generic_make_request(struct bio *bio)
+>>  			bio_list_merge(&bio_list_on_stack, &same);
+>>  			bio_list_merge(&bio_list_on_stack, &hold);
+>>  		} else {
+>> -			bio_io_error(bio);
+>> +			if (unlikely(bio_flagged(bio, BIO_NOWAIT)))
+>> +				bio_wouldblock_error(bio);
+>> +			else
+>> +				bio_io_error(bio);
 > 
-> Still have pids pointer arithmetic above and the return is unnecessary.
-> Otherwise looks Ok to me:
+> This doesn't look right. What if the queue is dying, and BIO_NOWAIT just
+> happened to be set?
+> 
 
-I applied this change and queued for next update.
+Yes, I need to add a condition here to check for blk_queue_dying(). Thanks.
 
-diff --git a/src/dio-invalidate-cache.c b/src/dio-invalidate-cache.c
-index bc795f9..4c40c87 100644
---- a/src/dio-invalidate-cache.c
-+++ b/src/dio-invalidate-cache.c
-@@ -73,12 +73,11 @@ static void kill_children(pid_t *pids, int nr_child)
-        pid_t pid;
- 
-        for (i = 0; i < nr_child; i++) {
--               pid = *(pids + i);
-+               pid = pids[i];
-                if (pid == 0)
-                        continue;
-                kill(pid, SIGTERM);
-        }
--       return;
- }
- 
- static int wait_children(pid_t *pids, int nr_child)
+> And you're missing wbt_wait() as well as a blocking point. Ditto in
+> blk-mq.
+
+wbt_wait() does not apply to WRITE_ODIRECT
+
 
 > 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+>> diff --git a/block/blk-mq.c b/block/blk-mq.c
+>> index 159187a..942ce8c 100644
+>> --- a/block/blk-mq.c
+>> +++ b/block/blk-mq.c
+>> @@ -1518,6 +1518,8 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+>>  	rq = blk_mq_sched_get_request(q, bio, bio->bi_opf, &data);
+>>  	if (unlikely(!rq)) {
+>>  		__wbt_done(q->rq_wb, wb_acct);
+>> +		if (bio && bio_flagged(bio, BIO_NOWAIT))
+>> +			bio_wouldblock_error(bio);
+>>  		return BLK_QC_T_NONE;
+>>  	}
+>>  
+> 
+> This seems a little fragile now, since not both paths free the bio.
+> 
 
-Thanks for the review!
+Direct I/O should free the bios in bio_dio_complete(). I am not sure why
+it would not free bio here originally, but IIRC, this path is for
+bio==NULL only. So, with this patch we would get a rq==NULL here and
+hence the bio_wouldblock_error() call.
 
-Eryu
+-- 
+Goldwyn
