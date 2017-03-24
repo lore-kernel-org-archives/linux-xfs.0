@@ -1,48 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39835 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751487AbdCPNqi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Mar 2017 09:46:38 -0400
-Subject: Re: [PATCH 3/8] nowait aio: return if direct write will trigger
- writeback
-References: <20170315215107.5628-1-rgoldwyn@suse.de>
- <20170315215107.5628-4-rgoldwyn@suse.de>
- <20170316132052.GG4033@bombadil.infradead.org>
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Message-ID: <8a799ad5-6481-66d3-7f21-6eaeb33eaa7b@suse.de>
-Date: Thu, 16 Mar 2017 08:46:31 -0500
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33929 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754459AbdCXUx0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Mar 2017 16:53:26 -0400
+Date: Fri, 24 Mar 2017 13:53:22 -0700
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: statx manpage
+Message-ID: <20170324205322.GA4986@gmail.com>
+References: <20170307050140.GA12946@infradead.org>
+ <20170307000609.GG5280@birch.djwong.org>
+ <10435.1488907375@warthog.procyon.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <20170316132052.GG4033@bombadil.infradead.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <10435.1488907375@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: David Howells <dhowells@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, mtk.manpages@gmail.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
+On Tue, Mar 07, 2017 at 05:22:55PM +0000, David Howells wrote:
+> STATX_ALL	[All currently available stuff]
+> .TE
+> .in
+> .PP
+> .B "Do not"
+> simply set
+> .I mask
+> to UINT_MAX as one or more bits may, in future, be used to specify an extension
+> to the buffer.
 
+To clarify, will an "extension to the buffer" be an increase in the size of
+struct statx?  I think it would have to be, otherwise programs filling a struct
+statx with STATX_ALL would start breaking as soon as they're rebuilt with the
+new value of STATX_ALL, no?  Or would these "extension to the buffer" bits not
+be added to STATX_ALL ...?
 
-On 03/16/2017 08:20 AM, Matthew Wilcox wrote:
-> On Wed, Mar 15, 2017 at 04:51:02PM -0500, Goldwyn Rodrigues wrote:
->> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
->>
->> Find out if the write will trigger a wait due to writeback. If yes,
->> return -EAGAIN.
->>
->> This introduces a new function filemap_range_has_page() which
->> returns true if the file's mapping has a page within the range
->> mentioned.
->>
->> Return -EINVAL for buffered AIO: there are multiple causes of
->> delay such as page locks, dirty throttling logic, page loading
->> from disk etc. which cannot be taken care of.
-> 
-> Also, this patch only touches the write path; we have a similar call to
-> write_and_wait_range() in generic_file_read_iter().
-> 
+And I don't suppose there's anything we can do to stop programs from asking for
+mask bits that haven't been defined yet, then breaking later if they happen to
+be defined as "extensions"?  Maybe adding an extra "buffer size" argument to the
+syscall?
 
-This patch series is concerned with direct-write AIO paths only.
+I'm concerned that the idea of "extensions" isn't well thought out, and in
+practice we'll just be stuck with the current struct size (256 bytes) forever.
 
--- 
-Goldwyn
+- Eric
