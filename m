@@ -1,59 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f44.google.com ([209.85.213.44]:34910 "EHLO
-        mail-vk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759365AbdCVMeY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2017 08:34:24 -0400
-Received: by mail-vk0-f44.google.com with SMTP id r69so13125744vke.2
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2017 05:34:16 -0700 (PDT)
+Received: from sandeen.net ([63.231.237.45]:53736 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751170AbdCXEct (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Mar 2017 00:32:49 -0400
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH 0/2 V2] xfs_io: hook up statx
+Message-ID: <7a090a8e-7204-1b9b-8b31-e7a061b39f87@sandeen.net>
+Date: Thu, 23 Mar 2017 23:32:47 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170321155512.GZ14226@eguan.usersys.redhat.com>
-References: <20170315163347.29743-1-jtulak@redhat.com> <20170316074941.GS14226@eguan.usersys.redhat.com>
- <20170321152253.GB59313@bfoster.bfoster> <20170321155512.GZ14226@eguan.usersys.redhat.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Wed, 22 Mar 2017 13:33:55 +0100
-Message-ID: <CACj3i73zH0f_saV21nD5=g6jYWStf0QfaV79tt5_UOheRY9zMA@mail.gmail.com>
-Subject: Re: [PATCH] xfstests: xfs/191 update
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>, David Howells <dhowells@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Tue, Mar 21, 2017 at 4:55 PM, Eryu Guan <eguan@redhat.com> wrote:
-> On Tue, Mar 21, 2017 at 11:22:54AM -0400, Brian Foster wrote:
->> On Thu, Mar 16, 2017 at 03:49:41PM +0800, Eryu Guan wrote:
->> > On Wed, Mar 15, 2017 at 05:33:47PM +0100, Jan Tulak wrote:
->> > > The removed 'do_mkfs_pass -l size=4096b' was against man page
->> > > (-b section). Other entries are things that weren't covered before.
->> > >
->> > > Specifically, a standalone "-l size=4096b" should fail, because:
->> > > To  specify any options on the command line in units of filesys‐
->> > > tem blocks, this option must be  specified  first  so  that  the
->> > > filesystem block size is applied consistently to all options.
->> > >
->> > > Signed-off-by: Jan Tulak <jtulak@redhat.com>
->> >
->> > This looks fine to me. But I'd like some reviews from xfs developers
->> > too. (cc'd linux-xfs@vger.kernel.org).
->> >
->>
->> So has mkfs been fixed to cause '-l size=4096b' to fail? I'm not sure we
->> should cause the test to fail until/unless the mkfs behavior is fixed
->> up.
->
-> I agreed, we don't want to update existing test and introduce false
-> regressions. This is one of the reasons I want more reviews on this
-> patch :)
->
+These 2 patches are a second pass to add a statx command
+to xfs_io in hopes that it will aid creation of xfstests
+statx regression tests.
 
-I forgot to mention that this patch is a complement to my patchset for
-mkfs.xfs. So yes, do not merge it now, it looks like the set won't get
-merged yet. Sorry for not stating it in the description.
+xfs_io> help statx
+statx [-O | -m mask][-FDLA] -- extended information about the currently open file
 
-Jan
+ Display extended file status.
 
+ Options:
+ -m mask -- Specify the field mask for the statx call (default STATX_ALL)
+ -A -- Suppress terminal automount traversal
+ -D -- Don't sync attributes with the server
+ -F -- Force the attributes to be sync'd with the server
+ -L -- Follow symlinks (statx link target)
+ -O -- Add only basic stats (STATX_BASIC_STATS) to default mask
 
--- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+xfs_io> statx
+stx_mask: 0xfff
+stx_blksize: 4096
+stx_attributes: 0x70
+stx_nlink: 1
+stx_uid: 0
+stx_gid: 0
+stx_mode: 0100644
+stx_ino: 99
+stx_size: 0
+stx_blocks: 0
+stx_atime.tv_sec: 1490109633
+stx_atime.tv_nsec: 676550238
+stx_btime.tv_sec: 1490109633
+stx_btime.tv_nsec: 675550234
+stx_ctime.tv_sec: 1490109725
+stx_ctime.tv_nsec: 69966839
+stx_mtime.tv_sec: 1490109633
+stx_mtime.tv_nsec: 676550238
+stx_rdev_major: 0
+stx_rdev_minor: 0
+stx_dev_major: 7
+stx_dev_minor: 0
+
+patch 2 includes a header file with lots of the new #defines
+so this can build on older systems; eventually that can be
+removed perhaps.
+
+An interesting limitation of all of the xfs_io stat
+variants is that they currently can't stat any file that
+they can't open, which may or may not be a limitation that
+we care about....
+
+-Eric
+
