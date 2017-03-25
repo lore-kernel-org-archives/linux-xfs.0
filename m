@@ -1,86 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20943 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752345AbdCOH3q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 03:29:46 -0400
-Date: Wed, 15 Mar 2017 00:29:34 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: don't run off the end of the buffer reading
- inline dirents
-Message-ID: <20170315072934.GB5280@birch.djwong.org>
-References: <20170314200009.GX5280@birch.djwong.org>
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:34509 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751159AbdCYHtK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Mar 2017 03:49:10 -0400
+Received: by mail-pf0-f179.google.com with SMTP id p189so5034478pfp.1
+        for <linux-xfs@vger.kernel.org>; Sat, 25 Mar 2017 00:49:09 -0700 (PDT)
+Date: Sat, 25 Mar 2017 07:49:00 +0000
+From: Ivan Kozik <ivan@ludios.org>
+Subject: Request 2aa6ba7b5ad3 ("clear _XBF_PAGES from buffers when readahead
+ page") for 4.4 stable inclusion
+Message-ID: <20170325074856.GA20773@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170314200009.GX5280@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Brian Foster <bfoster@redhat.com>
+To: stable@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, bfoster@redhat.com, david@fromorbit.com
 
-On Tue, Mar 14, 2017 at 01:00:09PM -0700, Darrick J. Wong wrote:
-> Check that we don't run off the end of the inline data buffer when we're
-> trying to read (apparently corrupt) directory entries.  xfs/348
-> triggered kernel memory being exposed to userspace and a related
-> complaint from the usercopy code when it corrupts an inline symlink
-> into an inline dir.
+Hi,
 
-Self-NAK, see "xfs: verify inline directory data forks" as its replacement.
+I would like to request that this patch be included in the 4.4 stable tree.  It 
+fixes the Bad page state issue discovered at 
+http://oss.sgi.com/archives/xfs/2016-08/msg00617.html ('"Bad page state" errors 
+when calling BULKSTAT under memory pressure?')
 
---D
+I tested the patch (no changes needed) by applying it to 4.4.52, running a 
+program to use almost all of my free memory, then running xfs_fsr on a 
+filesystem with > 1.5M files.  Before patch: kernel screams with Bad page state 
+/ "count:-1" within a minute.  After patch: no complaints from the kernel. 
+I repeated the test several times and on another machine that was affected. 
+I have not seen any problems five days later.
 
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: improved comments
-> ---
->  fs/xfs/xfs_dir2_readdir.c |   17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index 003a99b..26a280b 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -69,6 +69,7 @@ xfs_dir2_sf_getdents(
->  	xfs_dir2_dataptr_t	dotdot_offset;
->  	xfs_ino_t		ino;
->  	struct xfs_da_geometry	*geo = args->geo;
-> +	char *endp;
->  
->  	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
->  	/*
-> @@ -83,6 +84,7 @@ xfs_dir2_sf_getdents(
->  	ASSERT(dp->i_df.if_u1.if_data != NULL);
->  
->  	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
-> +	endp = dp->i_df.if_u1.if_data + dp->i_df.if_bytes;
->  
->  	if (dp->i_d.di_size < xfs_dir2_sf_hdr_size(sfp->i8count))
->  		return -EFSCORRUPTED;
-> @@ -130,6 +132,21 @@ xfs_dir2_sf_getdents(
->  	for (i = 0; i < sfp->count; i++) {
->  		__uint8_t filetype;
->  
-> +		/*
-> +		 * If we pass the end of the buffer, we're done.
-> +		 *
-> +		 * struct xfs_dir2_sf_entry has a variable length.
-> +		 * Therefore we must first check that the non-variable
-> +		 * parts of the structure don't go off the end of the
-> +		 * buffer, and then we must check that the name
-> +		 * component also does not go off the end of the buffer,
-> +		 * which we do by checking the nextentry pointer.
-> +		 */
-> +		if (((char *)sfep + sizeof(*sfep)) >= endp ||
-> +		    (char *)dp->d_ops->sf_nextentry(sfp, sfep) > endp) {
-> +			break;
-> +		}
-> +
->  		off = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
->  				xfs_dir2_sf_get_offset(sfep));
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+
+Ivan
+
+>From 2aa6ba7b5ad3189cc27f14540aa2f57f0ed8df4b Mon Sep 17 00:00:00 2001
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 25 Jan 2017 20:24:57 -0800
+Subject: [PATCH] xfs: clear _XBF_PAGES from buffers when readahead page
+
+If we try to allocate memory pages to back an xfs_buf that we're trying
+to read, it's possible that we'll be so short on memory that the page
+allocation fails.  For a blocking read we'll just wait, but for
+readahead we simply dump all the pages we've collected so far.
+
+Unfortunately, after dumping the pages we neglect to clear the
+_XBF_PAGES state, which means that the subsequent call to xfs_buf_free
+thinks that b_pages still points to pages we own.  It then double-frees
+the b_pages pages.
+
+This results in screaming about negative page refcounts from the memory
+manager, which xfs oughtn't be triggering.  To reproduce this case,
+mount a filesystem where the size of the inodes far outweighs the
+availalble memory (a ~500M inode filesystem on a VM with 300MB memory
+did the trick here) and run bulkstat in parallel with other memory
+eating processes to put a huge load on the system.  The "check summary"
+phase of xfs_scrub also works for this purpose.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+---
+ fs/xfs/xfs_buf.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 7f0a01f7b592..ac3b4db519df 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -422,6 +422,7 @@ retry:
+ out_free_pages:
+ 	for (i = 0; i < bp->b_page_count; i++)
+ 		__free_page(bp->b_pages[i]);
++	bp->b_flags &= ~_XBF_PAGES;
+ 	return error;
+ }
+ 
+-- 
+2.11.0
+
