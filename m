@@ -1,362 +1,537 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22192 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755050AbdCJXZr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2017 18:25:47 -0500
-Subject: [PATCH 9/9] xfs_scrub: integrate services with systemd
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 10 Mar 2017 15:25:41 -0800
-Message-ID: <148918834114.8311.4698303987559106316.stgit@birch.djwong.org>
-In-Reply-To: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
-References: <148918828436.8311.8130426069001200240.stgit@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:37070 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752253AbdCYAJG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Mar 2017 20:09:06 -0400
+Subject: Re: [PATCH 11/22] mkfs: add test_default_value into conflict struct
+References: <20170315160017.27805-1-jtulak@redhat.com>
+ <20170315160017.27805-12-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <40f76322-d4f1-5c48-3568-206a2564dad5@sandeen.net>
+Date: Fri, 24 Mar 2017 19:09:03 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20170315160017.27805-12-jtulak@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 3/15/17 11:00 AM, Jan Tulak wrote:
+> Add a flag signalising that a subopt can be conflicting with
+> default value of another option.
 
-Create a systemd service unit so that we can run the online scrubber
-under systemd with (somewhat) appropriate containment.
+I'm a little confused about why we would not /always/ test against
+the default value.  When is it ever appropriate to ignore it?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- configure.ac                     |   15 +++++++++++++
- include/builddefs.in             |    3 +++
- scrub/Makefile                   |   21 +++++++++++++++++-
- scrub/scrub.c                    |   20 +++++++++++++++++
- scrub/xfs_scrub@.service.in      |   18 ++++++++++++++++
- scrub/xfs_scrub_all.in           |   44 ++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub_all.service.in   |    8 +++++++
- scrub/xfs_scrub_all.timer        |   11 ++++++++++
- scrub/xfs_scrub_fail             |   26 ++++++++++++++++++++++
- scrub/xfs_scrub_fail@.service.in |   10 +++++++++
- 10 files changed, 175 insertions(+), 1 deletion(-)
- create mode 100644 scrub/xfs_scrub@.service.in
- create mode 100644 scrub/xfs_scrub_all.service.in
- create mode 100644 scrub/xfs_scrub_all.timer
- create mode 100755 scrub/xfs_scrub_fail
- create mode 100644 scrub/xfs_scrub_fail@.service.in
+I was also going to suggest flags rather than the two booleans,
+i.e. something like "CONFLICT_OPTION_ALWAYS" or "CONFLICT_OPTION_AT_VALUE"
+vs. the true, false / true, true / false, false ... etc,
+but I guess the next patch that adds named initializers might
+help a little in that respect.  Still, flags named like this
+might be clearer in the code...
 
+Also, I am confused by:
 
-diff --git a/configure.ac b/configure.ac
-index ccd7460..e89aea0 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -103,6 +103,21 @@ esac
- AC_SUBST([root_sbindir])
- AC_SUBST([root_libdir])
- 
-+# Where do systemd services go?
-+pkg_systemdsystemunitdir="$(pkg-config --variable=systemdsystemunitdir systemd 2>/dev/null)"
-+case "${pkg_systemdsystemunitdir}" in
-+"")
-+	systemdsystemunitdir=""
-+	have_systemd=no
-+	;;
-+*)
-+	systemdsystemunitdir="${pkg_systemdsystemunitdir}"
-+	have_systemd=yes
-+	;;
-+esac
-+AC_SUBST([have_systemd])
-+AC_SUBST([systemdsystemunitdir])
-+
- # Find localized files.  Don't descend into any "dot directories"
- # (like .git or .pc from quilt).  Strangely, the "-print" argument
- # to "find" is required, to avoid including such directories in the
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 9d478d3..d99c402 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -123,6 +123,9 @@ HAVE_OPENAT = @have_openat@
- HAVE_SYNCFS = @have_syncfs@
- HAVE_FSTATAT = @have_fstatat@
- 
-+HAVE_SYSTEMD = @have_systemd@
-+SYSTEMDSYSTEMUNITDIR = @systemdsystemunitdir@
-+
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
- 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 78e119f..d34e3d4 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -12,6 +12,12 @@ LTCOMMAND = xfs_scrub
- INSTALL_SCRUB = install-scrub
- XFS_SCRUB_ALL_PROG = xfs_scrub_all
- XFS_SCRUB_ARGS = -Tvn
-+
-+ifeq ($(HAVE_SYSTEMD),yes)
-+INSTALL_SCRUB += install-systemd
-+SYSTEMDSERVICES = xfs_scrub@.service xfs_scrub_all.service xfs_scrub_all.timer xfs_scrub_fail@.service
-+endif
-+
- endif	# scrub_prereqs
- 
- HFILES = scrub.h ../repair/threads.h read_verify.h iocmd.h xfs_ioctl.h
-@@ -38,7 +44,7 @@ ifeq ($(HAVE_SYNCFS),yes)
- LCFLAGS += -DHAVE_SYNCFS
- endif
- 
--default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG)
-+default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(SYSTEMDSERVICES)
- 
- xfs_scrub_all: xfs_scrub_all.in
- 	@echo "    [SED]    $@"
-@@ -50,6 +56,19 @@ include $(BUILDRULES)
- 
- install: $(INSTALL_SCRUB)
- 
-+%.service: %.service.in
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
-+		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" \
-+		   -e "s|@pkg_lib_dir@|$(PKG_LIB_DIR)|g" \
-+		   -e "s|@pkg_name@|$(PKG_NAME)|g" < $< > $@
-+
-+install-systemd: default
-+	$(INSTALL) -m 755 -d $(SYSTEMDSYSTEMUNITDIR)
-+	$(INSTALL) -m 644 $(SYSTEMDSERVICES) $(SYSTEMDSYSTEMUNITDIR)
-+	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/$(PKG_NAME)
-+	$(INSTALL) -m 755 xfs_scrub_fail $(PKG_LIB_DIR)/$(PKG_NAME)
-+
- install-scrub: default
- 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index a363ac1..0b6a11d 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -44,6 +44,7 @@ bool				dumpcore;
- bool				display_rusage;
- long				page_size;
- int				nr_threads = -1;
-+bool				is_service;
- enum errors_action		error_action = ERRORS_CONTINUE;
- static unsigned long		max_errors;
- 
-@@ -830,6 +831,9 @@ _("Only one of the options -n or -y may be specified.\n"));
- 
- 	ctx.mntpoint = argv[optind];
- 
-+	if (getenv("SERVICE_MODE"))
-+		is_service = true;
-+
- 	/* Find the mount record for the passed-in argument. */
- 
- 	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
-@@ -957,5 +961,21 @@ _("%s: %lu warnings found.\n"),
- 	free(ctx.mntpoint);
- 	free(ctx.mnt_type);
- end:
-+	/*
-+	 * If we're running as a service, bump return code up by 16 to
-+	 * avoid conflicting with service return codes.
-+	 */
-+	if (is_service) {
-+		/*
-+		 * journald queries /proc as part of taking in log
-+		 * messages; it uses this information to associate the
-+		 * message with systemd units, etc.  This races with
-+		 * process exit, so delay that a couple of seconds so
-+		 * that we capture the summary outputs in the job log.
-+		 */
-+		sleep(2);
-+		if (ret)
-+			ret += 16;
-+	}
- 	return ret;
- }
-diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
-new file mode 100644
-index 0000000..6b6992d
---- /dev/null
-+++ b/scrub/xfs_scrub@.service.in
-@@ -0,0 +1,18 @@
-+[Unit]
-+Description=Online XFS Metadata Check for %I
-+OnFailure=xfs_scrub_fail@%i.service
-+
-+[Service]
-+Type=oneshot
-+WorkingDirectory=%I
-+PrivateNetwork=true
-+ProtectSystem=full
-+ProtectHome=read-only
-+PrivateTmp=yes
-+AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
-+NoNewPrivileges=yes
-+User=nobody
-+IOSchedulingClass=idle
-+CPUSchedulingPolicy=idle
-+Environment=SERVICE_MODE=1
-+ExecStart=@sbindir@/xfs_scrub @scrub_args@ %I
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 2215720..81e0cc2 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -25,6 +25,7 @@ import json
- import threading
- import time
- import sys
-+import os
- 
- retcode = 0
- terminate = False
-@@ -53,6 +54,13 @@ def find_mounts():
- 					fs[mnt] = set([lastdisk])
- 	return fs
- 
-+def kill_systemd(unit, proc):
-+	'''Kill systemd unit.'''
-+	proc.terminate()
-+	cmd=['systemctl', 'stop', unit]
-+	x = subprocess.Popen(cmd)
-+	x.wait()
-+
- def run_killable(cmd, stdout, killfuncs, kill_fn):
- 	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
- 	try:
-@@ -78,6 +86,20 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
- 		if terminate:
- 			return
- 
-+		# Try it the systemd way
-+		cmd=['systemctl', 'start', 'xfs_scrub@%s' % mnt]
-+		ret = run_killable(cmd, subprocess.DEVNULL, killfuncs, \
-+				lambda proc: kill_systemd('xfs_scrub@%s' % mnt, proc))
-+		if ret == 0 or (ret >= 16 and ret <= 32):
-+			if ret != 0:
-+				ret -= 16
-+			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
-+			retcode |= ret
-+			return
-+
-+		if terminate:
-+			return
-+
- 		# Invoke xfs_scrub manually
- 		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
- 		ret = run_killable(cmd, None, killfuncs, \
-@@ -107,6 +129,17 @@ def main():
- 
- 	fs = find_mounts()
- 
-+	# Tail the journal if we ourselves aren't a service...
-+	journalthread = None
-+	if 'SERVICE_MODE' not in os.environ:
-+		try:
-+			cmd=['journalctl', '--no-pager', '-q', '-S', 'now', \
-+					'-f', '-u', 'xfs_scrub@*', '-o', \
-+					'cat']
-+			journalthread = subprocess.Popen(cmd)
-+		except:
-+			pass
-+
- 	# Schedule scrub jobs...
- 	running_devs = set()
- 	killfuncs = set()
-@@ -142,6 +175,17 @@ def main():
- 			fs = []
- 		cond.release()
- 
-+	if journalthread is not None:
-+		journalthread.terminate()
-+
-+	# journald queries /proc as part of taking in log
-+	# messages; it uses this information to associate the
-+	# message with systemd units, etc.  This races with
-+	# process exit, so delay that a couple of seconds so
-+	# that we capture the summary outputs in the job log.
-+	if 'SERVICE_MODE' in os.environ:
-+		time.sleep(2)
-+
- 	sys.exit(retcode)
- 
- if __name__ == '__main__':
-diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
-new file mode 100644
-index 0000000..15b0af9
---- /dev/null
-+++ b/scrub/xfs_scrub_all.service.in
-@@ -0,0 +1,8 @@
-+[Unit]
-+Description=Online XFS Metadata Check for All Filesystems
-+
-+[Service]
-+Type=oneshot
-+Environment=SERVICE_MODE=1
-+ConditionACPower=true
-+ExecStart=@sbindir@/xfs_scrub_all
-diff --git a/scrub/xfs_scrub_all.timer b/scrub/xfs_scrub_all.timer
-new file mode 100644
-index 0000000..efc13a6
---- /dev/null
-+++ b/scrub/xfs_scrub_all.timer
-@@ -0,0 +1,11 @@
-+[Unit]
-+Description=Periodic XFS Online Metadata Check for All Filesystems
-+
-+[Timer]
-+# Run on Sunday at 2am
-+OnCalendar=Sun *-*-* 02:00:00
-+RandomizedDelaySec=60
-+Persistent=true
-+
-+[Install]
-+WantedBy=timers.target
-diff --git a/scrub/xfs_scrub_fail b/scrub/xfs_scrub_fail
-new file mode 100755
-index 0000000..36dd50e
---- /dev/null
-+++ b/scrub/xfs_scrub_fail
-@@ -0,0 +1,26 @@
-+#!/bin/bash
-+
-+# Email logs of failed xfs_scrub unit runs
-+
-+mailer=/usr/sbin/sendmail
-+recipient="$1"
-+test -z "${recipient}" && exit 0
-+mntpoint="$2"
-+test -z "${mntpoint}" && exit 0
-+hostname="$(hostname -f 2>/dev/null)"
-+test -z "${hostname}" && hostname="${HOSTNAME}"
-+if [ ! -x "${mailer}" ]; then
-+	echo "${mailer}: Mailer program not found."
-+	exit 1
-+fi
-+
-+(cat << ENDL
-+To: $1
-+From: <xfs_scrub@${hostname}>
-+Subject: xfs_scrub failure on ${mntpoint}
-+
-+So sorry, the automatic xfs_scrub of ${mntpoint} on ${hostname} failed.
-+
-+A log of what happened follows:
-+ENDL
-+systemctl status --full --lines 4294967295 "xfs_scrub@${mntpoint}") | "${mailer}" -t -i
-diff --git a/scrub/xfs_scrub_fail@.service.in b/scrub/xfs_scrub_fail@.service.in
-new file mode 100644
-index 0000000..785f881
---- /dev/null
-+++ b/scrub/xfs_scrub_fail@.service.in
-@@ -0,0 +1,10 @@
-+[Unit]
-+Description=Online XFS Metadata Check Failure Reporting for %I
-+
-+[Service]
-+Type=oneshot
-+Environment=EMAIL_ADDR=root
-+ExecStart=@pkg_lib_dir@/@pkg_name@/xfs_scrub_fail "${EMAIL_ADDR}" %I
-+User=mail
-+Group=mail
-+SupplementaryGroups=systemd-journal
+"The .test_default_value is used when .test_values is true"
 
+and yet I see:
+
+>  			{ .index = R_DEV,
+> -			  .conflicts = { {OPT_M, M_RMAPBT, false, 0, 0,
+> +			  .conflicts = { {OPT_M, M_RMAPBT, false, true, 0, 0,
+>  		"rmapbt not supported without CRC support."},
+
+so it is also used when it is false?  So we do not test the values
+specified, but we do test the default values?  that seems odd, is
+it correct?  I'm not sure what this means.  The unique combination of
+"false, true" actually only occurs 5 times.
+
+There also seems to be a mismatch between the M_CRC -> I_ALIGN conflict,
+vs. the I_ALIGN -> M_CRC conflict.
+
+... and that highlights one of my concerns about this patchset - while it is at
+least moving towards encoding every conflict into this (giant) structure,
+it also seems a bit error prone.  The opt_params structure is now nearly
+1000 lines of code.  I'm not quite sure how to make this more maintainable,
+but it seems difficult right now...
+
+Thanks,
+-Eric
+ 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> ---
+>  mkfs/xfs_mkfs.c | 156 +++++++++++++++++++++++++++++---------------------------
+>  1 file changed, 80 insertions(+), 76 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index db82a528..19024847 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -172,6 +172,8 @@ unsigned int		sectorsize;
+>   *     on the CLI, no matter its value. The field .message contains an optional
+>   *     explanatory string for the user. This string can't be translated here,
+>   *     so it has to be enveloped with _() when printed.
+> + *     The .test_default_value is used when .test_values is true, and extends
+> + *     the check also for default values.
+>   *     The last member of this list has to be {LAST_CONFLICT}.
+>   *
+>   *   minval, maxval OPTIONAL
+> @@ -214,6 +216,7 @@ struct opt_params {
+>  			int		opt;
+>  			int		subopt;
+>  			bool		test_values;
+> +			bool		test_default_value;
+>  			long long	invalid_value;
+>  			long long	at_value;
+>  			const char	*message;
+> @@ -234,7 +237,7 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = B_LOG,
+> -			  .conflicts = { {OPT_B, B_SIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_B, B_SIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_BLOCKSIZE_LOG,
+>  			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+> @@ -243,7 +246,7 @@ struct opt_params {
+>  			{ .index = B_SIZE,
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> -			  .conflicts = { {OPT_B, B_LOG, false, 0, 0},
+> +			  .conflicts = { {OPT_B, B_LOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_BLOCKSIZE,
+>  			  .maxval = XFS_MAX_BLOCKSIZE,
+> @@ -274,7 +277,7 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = D_AGCOUNT,
+> -			  .conflicts = { {OPT_D, D_AGSIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_AGSIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 1,
+>  			  .maxval = XFS_MAX_AGNUMBER,
+> @@ -298,25 +301,25 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SUNIT,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
+> -					 {OPT_D, D_SU, false, 0, 0},
+> -					 {OPT_D, D_SW, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> +					 {OPT_D, D_SU, false, false, 0, 0},
+> +					 {OPT_D, D_SW, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SWIDTH,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
+> -					 {OPT_D, D_SU, false, 0, 0},
+> -					 {OPT_D, D_SW, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> +					 {OPT_D, D_SU, false, false, 0, 0},
+> +					 {OPT_D, D_SW, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_AGSIZE,
+> -			  .conflicts = { {OPT_D, D_AGCOUNT, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_AGCOUNT, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .minval = XFS_AG_MIN_BYTES,
+> @@ -324,9 +327,9 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SU,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
+> -					 {OPT_D, D_SUNIT, false, 0, 0},
+> -					 {OPT_D, D_SWIDTH, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> +					 {OPT_D, D_SUNIT, false, false, 0, 0},
+> +					 {OPT_D, D_SWIDTH, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .minval = 0,
+> @@ -334,23 +337,23 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SW,
+> -			  .conflicts = { {OPT_D, D_NOALIGN, false, 0, 0},
+> -					 {OPT_D, D_SUNIT, false, 0, 0},
+> -					 {OPT_D, D_SWIDTH, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_NOALIGN, false, false, 0, 0},
+> +					 {OPT_D, D_SUNIT, false, false, 0, 0},
+> +					 {OPT_D, D_SWIDTH, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SECTLOG,
+> -			  .conflicts = { {OPT_D, D_SECTSIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_SECTSIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_SECTSIZE,
+> -			  .conflicts = { {OPT_D, D_SECTLOG, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_SECTLOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -359,10 +362,10 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = D_NOALIGN,
+> -			  .conflicts = { {OPT_D, D_SU, false, 0, 0},
+> -					 {OPT_D, D_SW, false, 0, 0},
+> -					 {OPT_D, D_SUNIT, false, 0, 0},
+> -					 {OPT_D, D_SWIDTH, false, 0, 0},
+> +			  .conflicts = { {OPT_D, D_SU, false, false, 0, 0},
+> +					 {OPT_D, D_SW, false, false, 0, 0},
+> +					 {OPT_D, D_SUNIT, false, false, 0, 0},
+> +					 {OPT_D, D_SWIDTH, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = 1,
+> @@ -404,7 +407,7 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = I_ALIGN,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 1, 0,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 0,
+>  		"Inodes always aligned for CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -412,8 +415,8 @@ struct opt_params {
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = I_LOG,
+> -			  .conflicts = { {OPT_I, I_PERBLOCK, false, 0, 0},
+> -					 {OPT_I, I_SIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_I, I_PERBLOCK, false, false, 0, 0},
+> +					 {OPT_I, I_SIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_DINODE_MIN_LOG,
+>  			  .maxval = XFS_DINODE_MAX_LOG,
+> @@ -426,8 +429,8 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_PERBLOCK,
+> -			  .conflicts = { {OPT_I, I_LOG, false, 0, 0},
+> -					 {OPT_I, I_SIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_I, I_LOG, false, false, 0, 0},
+> +					 {OPT_I, I_SIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .is_power_2 = true,
+>  			  .minval = XFS_MIN_INODE_PERBLOCK,
+> @@ -435,8 +438,8 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_SIZE,
+> -			  .conflicts = { {OPT_I, I_PERBLOCK, false, 0, 0},
+> -					 {OPT_I, I_LOG, false, 0, 0},
+> +			  .conflicts = { {OPT_I, I_PERBLOCK, false, false, 0, 0},
+> +					 {OPT_I, I_LOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .is_power_2 = true,
+>  			  .minval = XFS_DINODE_MIN_SIZE,
+> @@ -444,7 +447,7 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_ATTR,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 1, 1,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 1,
+>  		"V2 attribute format always enabled on CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -452,7 +455,7 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = I_PROJID32BIT,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 1, 0,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 0,
+>  		"32 bit Project IDs always enabled on CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  
+> @@ -461,7 +464,7 @@ struct opt_params {
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = I_SPINODES,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 0, 1,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+>  		"Sparse inodes not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -490,15 +493,15 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = L_AGNUM,
+> -			  .conflicts = { {OPT_L, L_DEV, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_DEV, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = UINT_MAX,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_INTERNAL,
+> -			  .conflicts = { {OPT_L, L_FILE, false, 0, 0},
+> -					 {OPT_L, L_DEV, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_FILE, false, false, 0, 0},
+> +					 {OPT_L, L_DEV, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = 1,
+> @@ -512,7 +515,7 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_VERSION,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 1, 1,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 1,
+>  				"V2 logs are required for CRC enabled filesystems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 1,
+> @@ -520,14 +523,14 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SUNIT,
+> -			  .conflicts = { {OPT_L, L_SU, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_SU, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 1,
+>  			  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SU,
+> -			  .conflicts = { {OPT_L, L_SUNIT, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_SUNIT, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .minval = BBTOB(1),
+> @@ -535,20 +538,20 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_DEV,
+> -			  .conflicts = { {OPT_L, L_AGNUM, false, 0, 0},
+> -					 {OPT_L, L_INTERNAL, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_AGNUM, false, false, 0, 0},
+> +					 {OPT_L, L_INTERNAL, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SECTLOG,
+> -			  .conflicts = { {OPT_L, L_SECTSIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_SECTSIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_SECTSIZE,
+> -			  .conflicts = { {OPT_L, L_SECTLOG, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_SECTLOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -557,20 +560,20 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_FILE,
+> -			  .conflicts = { {OPT_L, L_INTERNAL, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_INTERNAL, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = 1,
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = L_NAME,
+> -			  .conflicts = { {OPT_L, L_AGNUM, false, 0, 0},
+> -					 {OPT_L, L_INTERNAL, false, 0, 0},
+> +			  .conflicts = { {OPT_L, L_AGNUM, false, false, 0, 0},
+> +					 {OPT_L, L_INTERNAL, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = L_LAZYSBCNTR,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 1, 0,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 1, 0,
+>  		"Lazy superblock counted always enabled for CRC enabled filesytems."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -591,14 +594,14 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = N_LOG,
+> -			  .conflicts = { {OPT_N, N_SIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_N, N_SIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_REC_DIRSIZE,
+>  			  .maxval = XFS_MAX_BLOCKSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = N_SIZE,
+> -			  .conflicts = { {OPT_N, N_LOG, false, 0, 0},
+> +			  .conflicts = { {OPT_N, N_LOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -613,7 +616,7 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = N_FTYPE,
+> -			  .conflicts = {  {OPT_M, M_CRC, true, 1, 0,
+> +			  .conflicts = {  {OPT_M, M_CRC, true, true, 1, 0,
+>  		"Cannot disable ftype with crcs enabled."},
+>  					  {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -650,7 +653,7 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = R_DEV,
+> -			  .conflicts = { {OPT_M, M_RMAPBT, false, 0, 0,
+> +			  .conflicts = { {OPT_M, M_RMAPBT, false, true, 0, 0,
+>  		"rmapbt not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+> @@ -662,7 +665,7 @@ struct opt_params {
+>  			  .conflicts = { {LAST_CONFLICT} },
+>  			},
+>  			{ .index = R_NAME,
+> -			  .conflicts = { {OPT_M, M_RMAPBT, false, 0, 0,
+> +			  .conflicts = { {OPT_M, M_RMAPBT, false, true, 0, 0,
+>  		"rmapbt not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+> @@ -687,24 +690,24 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = S_LOG,
+> -			  .conflicts = { {OPT_S, S_SIZE, false, 0, 0},
+> -					 {OPT_S, S_SECTSIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_S, S_SIZE, false, false, 0, 0},
+> +					 {OPT_S, S_SECTSIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = S_SECTLOG,
+> -			  .conflicts = { {OPT_S, S_SIZE, false, 0, 0},
+> -					 {OPT_S, S_SECTSIZE, false, 0, 0},
+> +			  .conflicts = { {OPT_S, S_SIZE, false, false, 0, 0},
+> +					 {OPT_S, S_SECTSIZE, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = XFS_MIN_SECTORSIZE_LOG,
+>  			  .maxval = XFS_MAX_SECTORSIZE_LOG,
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = S_SIZE,
+> -			  .conflicts = { {OPT_S, S_LOG, false, 0, 0},
+> -					 {OPT_S, S_SECTLOG, false, 0, 0},
+> +			  .conflicts = { {OPT_S, S_LOG, false, false, 0, 0},
+> +					 {OPT_S, S_SECTLOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -713,8 +716,8 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = S_SECTSIZE,
+> -			  .conflicts = { {OPT_S, S_LOG, false, 0, 0},
+> -					 {OPT_S, S_SECTLOG, false, 0, 0},
+> +			  .conflicts = { {OPT_S, S_LOG, false, false, 0, 0},
+> +					 {OPT_S, S_SECTLOG, false, false, 0, 0},
+>  					 {LAST_CONFLICT} },
+>  			  .convert = true,
+>  			  .is_power_2 = true,
+> @@ -737,25 +740,25 @@ struct opt_params {
+>  		},
+>  		.subopt_params = {
+>  			{ .index = M_CRC,
+> -			  .conflicts = { {OPT_L, L_VERSION, true, 1, 1,
+> +			  .conflicts = { {OPT_L, L_VERSION, true, true, 1, 1,
+>  		"V2 logs are required for CRC enabled filesystems."},
+> -					 {OPT_I, I_ALIGN, true, 0, 1,
+> +					 {OPT_I, I_ALIGN, false, true, 0, 1,
+>  		"Inodes always aligned for CRC enabled filesytems."},
+> -					 {OPT_I, I_PROJID32BIT, true, 0, 1,
+> +					 {OPT_I, I_PROJID32BIT, true, true, 0, 1,
+>  		"32 bit Project IDs always enabled on CRC enabled filesytems."},
+> -					 {OPT_I, I_ATTR, true, 1, 1,
+> +					 {OPT_I, I_ATTR, true, true, 1, 1,
+>  		"V2 attribute format always enabled on CRC enabled filesytems."},
+> -					 {OPT_L, L_LAZYSBCNTR, true, 0, 1,
+> +					 {OPT_L, L_LAZYSBCNTR, true, true, 0, 1,
+>  		"Lazy superblock counted always enabled for CRC enabled filesytems."},
+> -					 {OPT_M, M_FINOBT, true, 1, 0,
+> +					 {OPT_M, M_FINOBT, true, true, 1, 0,
+>  		"Finobt not supported without CRC support."},
+> -					 {OPT_M, M_RMAPBT, true, 1, 0,
+> +					 {OPT_M, M_RMAPBT, true, true, 1, 0,
+>  		"rmapbt not supported without CRC support."},
+> -					 {OPT_M, M_REFLINK, true, 1, 0,
+> +					 {OPT_M, M_REFLINK, true, true, 1, 0,
+>  		"reflink not supported without CRC support."},
+> -					 {OPT_I, I_SPINODES, true, 1, 0,
+> +					 {OPT_I, I_SPINODES, true, true, 1, 0,
+>  		"Sparse inodes not supported without CRC support."},
+> -					 {OPT_N, N_FTYPE, true, 0, 1,
+> +					 {OPT_N, N_FTYPE, true, true, 0, 1,
+>  		"Cannot disable ftype with crcs enabled."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -763,8 +766,8 @@ struct opt_params {
+>  			  .defaultval = 1,
+>  			},
+>  			{ .index = M_FINOBT,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 0, 1,
+> -		"Finobt not supported without CRC support\n"},
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+> +		"Finobt not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+>  			  .maxval = 1,
+> @@ -775,11 +778,11 @@ struct opt_params {
+>  			  .defaultval = SUBOPT_NEEDS_VAL,
+>  			},
+>  			{ .index = M_RMAPBT,
+> -			.conflicts = { {OPT_M, M_CRC, true, 0, 1,
+> +			.conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+>  		"rmapbt not supported without CRC support."},
+> -					{OPT_R, R_NAME, false, 0, 0,
+> +					{OPT_R, R_NAME, false, true, 0, 0,
+>  		"rmapbt not supported with realtime devices."},
+> -					{OPT_R, R_DEV, false, 0, 0,
+> +					{OPT_R, R_DEV, false, true, 0, 0,
+>  		"rmapbt not supported with realtime devices."},
+>  				       {LAST_CONFLICT} },
+>  			.minval = 0,
+> @@ -787,7 +790,7 @@ struct opt_params {
+>  			.defaultval = 0,
+>  			},
+>  			{ .index = M_REFLINK,
+> -			  .conflicts = { {OPT_M, M_CRC, true, 0, 1,
+> +			  .conflicts = { {OPT_M, M_CRC, true, true, 0, 1,
+>  		"reflink not supported without CRC support."},
+>  					 {LAST_CONFLICT} },
+>  			  .minval = 0,
+> @@ -1417,7 +1420,8 @@ check_subopt_value(
+>  			break;
+>  		if (!conflict_opt.test_values)
+>  			break;
+> -		if (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen &&
+> +		if ( (opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].seen ||
+> +		      conflict_opt.test_default_value) &&
+>  		    opts[conflict_opt.opt].subopt_params[conflict_opt.subopt].value
+>  				== conflict_opt.invalid_value &&
+>  		    value == conflict_opt.at_value) {
+> 
