@@ -1,69 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:32192 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751448AbdCWVig (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Mar 2017 17:38:36 -0400
-Date: Fri, 24 Mar 2017 08:38:31 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Selectively backup based on specific date
-Message-ID: <20170323213831.GF17542@dastard>
-References: <0c190757-c4ac-ae5c-6e1c-b9be37470be5@lueckdatasystems.com>
- <1904662.EPkO7u6dZY@xrated>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1904662.EPkO7u6dZY@xrated>
+Received: from bombadil.infradead.org ([65.50.211.133]:51769 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751821AbdC0Itf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:49:35 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/27] xfs: only update mount/resv fields on success in __xfs_ag_resv_init
+Date: Mon, 27 Mar 2017 10:48:56 +0200
+Message-Id: <20170327084922.11691-2-hch@lst.de>
+In-Reply-To: <20170327084922.11691-1-hch@lst.de>
+References: <20170327084922.11691-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: Michael Lueck <mlueck@lueckdatasystems.com>, linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-On Thu, Mar 23, 2017 at 03:11:07PM +0100, Hans-Peter Jansen wrote:
-> Hi Michael,
-> 
-> On Donnerstag, 23. März 2017 09:21:56 Michael Lueck wrote:
-> > Greetings,
-> > 
-> > I am looking for the correct xfsdump syntax to backup dirs/files newer than
-> > a certain date.
-> 
-> xfsdump is a tool in the tradition of unix filesystem dump utilities.
-> Those always dump a full filesystem, and consequently, fully restore  
-> filesystems only.
+commit 4dfa2b84118fd6c95202ae87e62adf5000ccd4d0 upstream.
 
-Not true. xfsdump/restore can backup directory subtrees just fine.
-See, for example, the '-s pathname' option....
+Try to reserve the blocks first and only then update the fields in
+or hanging off the mount structure.  This way we can call __xfs_ag_resv_init
+again after a previous failure.
 
-> > I have not found mention of such an option / capability within xfsdump.
-> > Hopefully there is a creative way to do the selective backup.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ag_resv.c | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
 
-xfsdump does "backup files changed since" operations via incremental
-backups. i.e. if you want to backup only things changed since $DATE,
-you first need to have run a dump that on $DATE, and you then do an
-incremental dump which will contain only the changed files/dirs
-since $DATE...
-
-IOWs, xfsdump is designed to be used as part of a well-defined,
-managed backup and disaster recovery strategy - it's not an ad-hoc
-"copy random specification of files" tool.
-
-> Using a linux derivate, there are plenty of more or less creative options to 
-> selectively backup/restore arbitrary file systems, but this is rather OT for 
-> the ML. 
-
-The downside of these generic utilities is they are much slower than
-xfsdump for large scale backup operations, they trash the
-inode/dentry/page caches and they don't really support concurrent
-operations needed to scale effectively. i.e.  if you need to dump
-throughput of multiple GB/s, process tens/hundreds of millions of
-files and/or drive multiple tape drives concurrently from a single
-filesystem, then xfsdump is a much better option...
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index d346d42c54d1..94234bff40dc 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -200,22 +200,27 @@ __xfs_ag_resv_init(
+ 	struct xfs_mount		*mp = pag->pag_mount;
+ 	struct xfs_ag_resv		*resv;
+ 	int				error;
++	xfs_extlen_t			reserved;
+ 
+-	resv = xfs_perag_resv(pag, type);
+ 	if (used > ask)
+ 		ask = used;
+-	resv->ar_asked = ask;
+-	resv->ar_reserved = resv->ar_orig_reserved = ask - used;
+-	mp->m_ag_max_usable -= ask;
++	reserved = ask - used;
+ 
+-	trace_xfs_ag_resv_init(pag, type, ask);
+-
+-	error = xfs_mod_fdblocks(mp, -(int64_t)resv->ar_reserved, true);
+-	if (error)
++	error = xfs_mod_fdblocks(mp, -(int64_t)reserved, true);
++	if (error) {
+ 		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
+ 				error, _RET_IP_);
++		return error;
++	}
+ 
+-	return error;
++	mp->m_ag_max_usable -= ask;
++
++	resv = xfs_perag_resv(pag, type);
++	resv->ar_asked = ask;
++	resv->ar_reserved = resv->ar_orig_reserved = reserved;
++
++	trace_xfs_ag_resv_init(pag, type, ask);
++	return 0;
+ }
+ 
+ /* Create a per-AG block reservation. */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.11.0
+
