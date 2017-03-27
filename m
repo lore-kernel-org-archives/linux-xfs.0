@@ -1,107 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:4589 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750712AbdCRHpb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Mar 2017 03:45:31 -0400
-Date: Sat, 18 Mar 2017 18:38:35 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2 V2] xfs: toggle readonly state around
- xfs_log_mount_finish
-Message-ID: <20170318073835.GZ17542@dastard>
-References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
- <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
- <74f6a009-211c-617a-2d6f-0a115ceb366b@sandeen.net>
- <20170315113629.GA23221@bfoster.bfoster>
- <20170316191500.GL5280@birch.djwong.org>
- <20170316234249.GW17542@dastard>
- <900524f8-4f2d-17e7-31a8-ecde486acc50@sandeen.net>
+Received: from aserp1040.oracle.com ([141.146.126.69]:28841 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751508AbdC0RW0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 13:22:26 -0400
+Date: Mon, 27 Mar 2017 10:22:10 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: Request 2aa6ba7b5ad3 ("clear _XBF_PAGES from buffers when
+ readahead page") for 4.4 stable inclusion
+Message-ID: <20170327172210.GJ5722@birch.djwong.org>
+References: <20170325074856.GA20773@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <900524f8-4f2d-17e7-31a8-ecde486acc50@sandeen.net>
+In-Reply-To: <20170325074856.GA20773@localhost>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Ivan Kozik <ivan@ludios.org>
+Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org, bfoster@redhat.com, david@fromorbit.com
 
-On Thu, Mar 16, 2017 at 04:52:43PM -0700, Eric Sandeen wrote:
-> On 3/16/17 4:42 PM, Dave Chinner wrote:
-> > On Thu, Mar 16, 2017 at 12:15:00PM -0700, Darrick J. Wong wrote:
-> >> On Wed, Mar 15, 2017 at 07:36:29AM -0400, Brian Foster wrote:
-> >>> On Tue, Mar 14, 2017 at 06:23:57PM -0500, Eric Sandeen wrote:
-> >>>> When we do log recovery on a readonly mount, unlinked inode
-> >>>> processing does not happen due to the readonly checks in
-> >>>> xfs_inactive(), which are trying to prevent any I/O on a
-> >>>> readonly mount.
-> >>>>
-> >>>> This is misguided - we do I/O on readonly mounts all the time,
-> >>>> for consistency; for example, log recovery.  So do the same
-> >>>> RDONLY flag twiddling around xfs_log_mount_finish() as we
-> >>>> do around xfs_log_mount(), for the same reason.
-> >>>>
-> >>>> This all cries out for a big rework but for now this is a
-> >>>> simple fix to an obvious problem.
-> >>>>
-> >>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >>>> ---
-> >>>>
-> >>
-> >> Both patches look ok, so I'll put them on the test queue for -rc4.
-> >> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > FWIW, I don't think this is a -rc candidate. Making log recovery
-> > process unlinked inode transactions on read-only mounts is a pretty
-> > major change in behaviour. Who knows exactly what dragons are
-> > lurking at lower layers that have never been run in this context
-> > until now.
-> > 
-> > Also, it's not urgent - we've lived with this behaviour for years -
-> > so waiting a month for the next merge window is not going to hurt
-> > anyone and it gives us a chance to test it - XFS developers are the
-> > people who should be burnt by the lurking dragons, not users who
-> > updated to a late -rcX kernel....
+On Sat, Mar 25, 2017 at 07:49:00AM +0000, Ivan Kozik wrote:
+> Hi,
 > 
-> To shield Darrick a bit ;) I was agitating/asking for sooner, but
-> admittedly that was a little bit selfish on my part.
+> I would like to request that this patch be included in the 4.4 stable tree.  It 
+> fixes the Bad page state issue discovered at 
+> http://oss.sgi.com/archives/xfs/2016-08/msg00617.html ('"Bad page state" errors 
+> when calling BULKSTAT under memory pressure?')
 > 
-> Still, we have had field reports of people with /gigabytes/ missing
-> from the root filesystem, and it was not fixable without an 
-> xfs_repair.  Which on a root filesystem is ... special.
+> I tested the patch (no changes needed) by applying it to 4.4.52, running a 
+> program to use almost all of my free memory, then running xfs_fsr on a 
+> filesystem with > 1.5M files.  Before patch: kernel screams with Bad page state 
+> / "count:-1" within a minute.  After patch: no complaints from the kernel. 
+> I repeated the test several times and on another machine that was affected. 
+> I have not seen any problems five days later.
 
-That's information that should be in the commit message....
+FWIW this looks fine for 4.4, so
+Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> So, my fault for getting it sent late, for sure - but I do think it's
-> an important fix.  I know we can't really address the "unknown unknown"
-> dragons easily, but actually completing recovery on RO mounts seems
-> straightforward to me... we allow half of recovery to go, and
-> disallow the other half.  Seems plainly broken.
+(It's probably ok for all the stable kernels too, but I haven't tested
+any of them so I won't make such a claim at this time.)
 
-I still don't think that makes it an urgent, immediate -rcX fix.  It
-definitely makes it a fix that should go to stable kernels, but that
-does not mean we should short-cut our integrationa nd testing
-processes. If anything, it makes it far more important to ensure the
-change is safe and well tested, because it's going to be distributed
-to /everyone/ in the near future through the stable update process,
-distros included.
+--D
 
-As I've already said: rushing fixes upstream without adequate test
-time is almost always the wrong thing to do. Call me conservative,
-but I have plenty of scars to justify being careful about pushing
-fixes too quickly.
-
-I'm more worried about the impact on the unknown number of read-only
-filesystems out there across the entire userbase that have the
-potential to process inodes that have been sitting orphaned for
-years than I am about the few recent users who have had to run
-xfs-repair on their root filesystem to fix this up due to the nature
-of ro->rw transition in root filesystem mounting.  Let's make really
-sure everything is OK before we expose it to all our users running
-stable/distro kernels....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Thanks,
+> 
+> Ivan
+> 
+> >From 2aa6ba7b5ad3189cc27f14540aa2f57f0ed8df4b Mon Sep 17 00:00:00 2001
+> From: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Date: Wed, 25 Jan 2017 20:24:57 -0800
+> Subject: [PATCH] xfs: clear _XBF_PAGES from buffers when readahead page
+> 
+> If we try to allocate memory pages to back an xfs_buf that we're trying
+> to read, it's possible that we'll be so short on memory that the page
+> allocation fails.  For a blocking read we'll just wait, but for
+> readahead we simply dump all the pages we've collected so far.
+> 
+> Unfortunately, after dumping the pages we neglect to clear the
+> _XBF_PAGES state, which means that the subsequent call to xfs_buf_free
+> thinks that b_pages still points to pages we own.  It then double-frees
+> the b_pages pages.
+> 
+> This results in screaming about negative page refcounts from the memory
+> manager, which xfs oughtn't be triggering.  To reproduce this case,
+> mount a filesystem where the size of the inodes far outweighs the
+> availalble memory (a ~500M inode filesystem on a VM with 300MB memory
+> did the trick here) and run bulkstat in parallel with other memory
+> eating processes to put a huge load on the system.  The "check summary"
+> phase of xfs_scrub also works for this purpose.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 7f0a01f7b592..ac3b4db519df 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -422,6 +422,7 @@ retry:
+>  out_free_pages:
+>  	for (i = 0; i < bp->b_page_count; i++)
+>  		__free_page(bp->b_pages[i]);
+> +	bp->b_flags &= ~_XBF_PAGES;
+>  	return error;
+>  }
+>  
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
