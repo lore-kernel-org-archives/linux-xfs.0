@@ -1,131 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56476 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751593AbdC0Iuv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:50:51 -0400
+Received: from bombadil.infradead.org ([65.50.211.133]:36202 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752427AbdC0Iuy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:50:54 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/27] xfs: split indlen reservations fairly when under reserved
-Date: Mon, 27 Mar 2017 10:49:13 +0200
-Message-Id: <20170327084922.11691-19-hch@lst.de>
+Subject: [PATCH 14/27] xfs: reject all unaligned direct writes to reflinked files
+Date: Mon, 27 Mar 2017 10:49:09 +0200
+Message-Id: <20170327084922.11691-15-hch@lst.de>
 In-Reply-To: <20170327084922.11691-1-hch@lst.de>
 References: <20170327084922.11691-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+commit 54a4ef8af4e0dc5c983d17fcb9cf5fd25666d94e upstream.
+[slight changes in context due to the new direct I/O code in 4.10+]
 
-commit 75d65361cf3c0dae2af970c305e19c727b28a510 upstream.
+We currently fall back from direct to buffered writes if we detect a
+remaining shared extent in the iomap_begin callback.  But by the time
+iomap_begin is called for the potentially unaligned end block we might
+have already written most of the data to disk, which we'd now write
+again using buffered I/O.  To avoid this reject all writes to reflinked
+files before starting I/O so that we are guaranteed to only write the
+data once.
 
-Certain workoads that punch holes into speculative preallocation can
-cause delalloc indirect reservation splits when the delalloc extent is
-split in two. If further splits occur, an already short-handed extent
-can be split into two in a manner that leaves zero indirect blocks for
-one of the two new extents. This occurs because the shortage is large
-enough that the xfs_bmap_split_indlen() algorithm completely drains the
-requested indlen of one of the extents before it honors the existing
-reservation.
+The alternative would be to unshare the unaligned start and/or end block
+before doing the I/O. I think that's doable, and will actually be
+required to support reflinks on DAX file system.  But it will take a
+little more time and I'd rather get rid of the double write ASAP.
 
-This ultimately results in a warning from xfs_bmap_del_extent(). This
-has been observed during file copies of large, sparse files using 'cp
---sparse=always.'
-
-To avoid this problem, update xfs_bmap_split_indlen() to explicitly
-apply the reservation shortage fairly between both extents. This smooths
-out the overall indlen shortage and defers the situation where we end up
-with a delalloc extent with zero indlen reservation to extreme
-circumstances.
-
-Reported-by: Patrick Dung <mpatdung@gmail.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 61 ++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 43 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_aops.c  | 45 ---------------------------------------------
+ fs/xfs/xfs_file.c  |  9 +++++++++
+ fs/xfs/xfs_trace.h |  2 +-
+ 3 files changed, 10 insertions(+), 46 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 7457937549bb..70e732ce3dea 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4899,34 +4899,59 @@ xfs_bmap_split_indlen(
- 	xfs_filblks_t			len2 = *indlen2;
- 	xfs_filblks_t			nres = len1 + len2; /* new total res. */
- 	xfs_filblks_t			stolen = 0;
-+	xfs_filblks_t			resfactor;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 6845ebfa3067..f5f51d40a2ec 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1263,44 +1263,6 @@ xfs_map_trim_size(
+ 	bh_result->b_size = mapping_size;
+ }
  
- 	/*
- 	 * Steal as many blocks as we can to try and satisfy the worst case
- 	 * indlen for both new extents.
- 	 */
--	while (nres > ores && avail) {
--		nres--;
--		avail--;
--		stolen++;
+-/* Bounce unaligned directio writes to the page cache. */
+-static int
+-xfs_bounce_unaligned_dio_write(
+-	struct xfs_inode	*ip,
+-	xfs_fileoff_t		offset_fsb,
+-	struct xfs_bmbt_irec	*imap)
+-{
+-	struct xfs_bmbt_irec	irec;
+-	xfs_fileoff_t		delta;
+-	bool			shared;
+-	bool			x;
+-	int			error;
+-
+-	irec = *imap;
+-	if (offset_fsb > irec.br_startoff) {
+-		delta = offset_fsb - irec.br_startoff;
+-		irec.br_blockcount -= delta;
+-		irec.br_startblock += delta;
+-		irec.br_startoff = offset_fsb;
 -	}
-+	if (ores < nres && avail)
-+		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
-+	ores += stolen;
+-	error = xfs_reflink_trim_around_shared(ip, &irec, &shared, &x);
+-	if (error)
+-		return error;
+-
+-	/*
+-	 * We're here because we're trying to do a directio write to a
+-	 * region that isn't aligned to a filesystem block.  If any part
+-	 * of the extent is shared, fall back to buffered mode to handle
+-	 * the RMW.  This is done by returning -EREMCHG ("remote addr
+-	 * changed"), which is caught further up the call stack.
+-	 */
+-	if (shared) {
+-		trace_xfs_reflink_bounce_dio_write(ip, imap);
+-		return -EREMCHG;
+-	}
+-	return 0;
+-}
+-
+ STATIC int
+ __xfs_get_blocks(
+ 	struct inode		*inode,
+@@ -1438,13 +1400,6 @@ __xfs_get_blocks(
+ 	if (imap.br_startblock != HOLESTARTBLOCK &&
+ 	    imap.br_startblock != DELAYSTARTBLOCK &&
+ 	    (create || !ISUNWRITTEN(&imap))) {
+-		if (create && direct && !is_cow) {
+-			error = xfs_bounce_unaligned_dio_write(ip, offset_fsb,
+-					&imap);
+-			if (error)
+-				return error;
+-		}
+-
+ 		xfs_map_buffer(inode, bh_result, &imap, offset);
+ 		if (ISUNWRITTEN(&imap))
+ 			set_buffer_unwritten(bh_result);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 780be7a7abe9..1209ad29e902 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -554,6 +554,15 @@ xfs_file_dio_aio_write(
+ 	if ((iocb->ki_pos & mp->m_blockmask) ||
+ 	    ((iocb->ki_pos + count) & mp->m_blockmask)) {
+ 		unaligned_io = 1;
 +
-+	 /* nothing else to do if we've satisfied the new reservation */
-+	if (ores >= nres)
-+		return stolen;
-+
-+	/*
-+	 * We can't meet the total required reservation for the two extents.
-+	 * Calculate the percent of the overall shortage between both extents
-+	 * and apply this percentage to each of the requested indlen values.
-+	 * This distributes the shortage fairly and reduces the chances that one
-+	 * of the two extents is left with nothing when extents are repeatedly
-+	 * split.
-+	 */
-+	resfactor = (ores * 100);
-+	do_div(resfactor, nres);
-+	len1 *= resfactor;
-+	do_div(len1, 100);
-+	len2 *= resfactor;
-+	do_div(len2, 100);
-+	ASSERT(len1 + len2 <= ores);
-+	ASSERT(len1 < *indlen1 && len2 < *indlen2);
++		/*
++		 * We can't properly handle unaligned direct I/O to reflink
++		 * files yet, as we can't unshare a partial block.
++		 */
++		if (xfs_is_reflink_inode(ip)) {
++			trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos, count);
++			return -EREMCHG;
++		}
+ 		iolock = XFS_IOLOCK_EXCL;
+ 	} else {
+ 		iolock = XFS_IOLOCK_SHARED;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index b62764064af6..828f383df121 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3353,7 +3353,7 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
+ DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
+ DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
  
- 	/*
--	 * The only blocks available are those reserved for the original
--	 * extent and what we can steal from the extent being removed.
--	 * If this still isn't enough to satisfy the combined
--	 * requirements for the two new extents, skim blocks off of each
--	 * of the new reservations until they match what is available.
-+	 * Hand out the remainder to each extent. If one of the two reservations
-+	 * is zero, we want to make sure that one gets a block first. The loop
-+	 * below starts with len1, so hand len2 a block right off the bat if it
-+	 * is zero.
- 	 */
--	while (nres > ores) {
--		if (len1) {
--			len1--;
--			nres--;
-+	ores -= (len1 + len2);
-+	ASSERT((*indlen1 - len1) + (*indlen2 - len2) >= ores);
-+	if (ores && !len2 && *indlen2) {
-+		len2++;
-+		ores--;
-+	}
-+	while (ores) {
-+		if (len1 < *indlen1) {
-+			len1++;
-+			ores--;
- 		}
--		if (nres == ores)
-+		if (!ores)
- 			break;
--		if (len2) {
--			len2--;
--			nres--;
-+		if (len2 < *indlen2) {
-+			len2++;
-+			ores--;
- 		}
- 	}
+-DEFINE_INODE_IREC_EVENT(xfs_reflink_bounce_dio_write);
++DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
+ DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
+ DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
  
 -- 
 2.11.0
