@@ -1,39 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.196]:52158 "EHLO mout.perfora.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932592AbdCWOcF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 23 Mar 2017 10:32:05 -0400
-Subject: Re: Selectively backup based on specific date
-References: <0c190757-c4ac-ae5c-6e1c-b9be37470be5@lueckdatasystems.com>
- <1904662.EPkO7u6dZY@xrated>
-From: Michael Lueck <mlueck@lueckdatasystems.com>
-Message-ID: <889643de-4c95-fa11-029c-50b07355f0ba@lueckdatasystems.com>
-Date: Thu, 23 Mar 2017 10:31:59 -0400
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:32865 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751406AbdC0IRg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:17:36 -0400
+Subject: Re: Request for inclusion of 4dfce57db635 ("xfs: fix up
+ xfs_swap_extent_forks inline extent handling") in stable
+References: <473e7987-03d9-4118-d7e1-11465928f021@gmail.com>
+From: Jiri Slaby <jslaby@suse.cz>
+Message-ID: <9e025fd5-9497-0e49-a60c-583f96a9d329@suse.cz>
+Date: Mon, 27 Mar 2017 10:17:27 +0200
 MIME-Version: 1.0
-In-Reply-To: <1904662.EPkO7u6dZY@xrated>
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+In-Reply-To: <473e7987-03d9-4118-d7e1-11465928f021@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: linux-xfs@vger.kernel.org
+To: Nikolay Borisov <n.borisov.lkml@gmail.com>, stable@vger.kernel.org, linux-xfs@vger.kernel.org, bfoster@redhat.com, darrick.wong@oracle.com
 
-Greetings Hans-Peter,
+On 03/27/2017, 09:31 AM, Nikolay Borisov wrote:
+> Hello,
+> 
+> 
+> The commit in the subject was tagged as stable but I guess it got missed
+> being included into stable. Without these stable kernels crash on
+> xfs/118. I've attached backports for both 3.12 and 4.4 and also ran a
+> regtest with xfstest with no regressions showing up.
 
-Hans-Peter Jansen wrote:
-> Here are some of my favorite tools:
-> 	rsync for ad hoc operations,
+Applied to 3.12, thanks!
 
-
-Excellent idea!
-
-As this effort involves a slide replacement migration... OK to begin with the xfsrestore from a full backup. Then change the IP on the old server, put both servers on the wire, and rsync to catch up. 
-Got it! (y)
-
-I am thankful,
 
 -- 
-Michael Lueck
-Lueck Data Systems
-http://www.lueckdatasystems.com/
+js
+suse labs
