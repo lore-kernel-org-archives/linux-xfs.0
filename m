@@ -1,56 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f47.google.com ([209.85.214.47]:34217 "EHLO
-        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751129AbdCQMLk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2017 08:11:40 -0400
-Received: by mail-it0-f47.google.com with SMTP id m27so11653431iti.1
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2017 05:11:39 -0700 (PDT)
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:32832 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751945AbdC0Hwm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 03:52:42 -0400
+From: Nikolay Borisov <n.borisov.lkml@gmail.com>
+Subject: Consider including ef388e2054fe ("xfs: don't allow di_size with high
+ bit set") into stable releases
+Message-ID: <53efcbd6-289e-3b71-3d47-73d2b06b98ba@gmail.com>
+Date: Mon, 27 Mar 2017 10:43:31 +0300
 MIME-Version: 1.0
-In-Reply-To: <20170316232555.GX28800@wotan.suse.de>
-References: <20170315160017.27805-1-jtulak@redhat.com> <20170315160017.27805-8-jtulak@redhat.com>
- <20170316232555.GX28800@wotan.suse.de>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 17 Mar 2017 13:11:13 +0100
-Message-ID: <CACj3i73O96z7vDR+P4JVt4VfJ0B7WfuZc_sRZMdHD9=+BR09Xw@mail.gmail.com>
-Subject: Re: [PATCH 07/22] mkfs: Move opts related #define to one place
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/mixed;
+ boundary="------------B8811F05910FFB20D8FC1EA5"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-On Fri, Mar 17, 2017 at 12:25 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> On Wed, Mar 15, 2017 at 05:00:02PM +0100, Jan Tulak wrote:
->> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->> index 0877c196..4ba6df05 100644
->> --- a/mkfs/xfs_mkfs.c
->> +++ b/mkfs/xfs_mkfs.c
->> @@ -48,6 +48,80 @@ unsigned int               sectorsize;
->>  #define MAX_CONFLICTS        8
->>  #define LAST_CONFLICT        (-1)
->>
->> +#define OPT_B                0
->> +#define B_LOG                0
->> +#define B_SIZE               1
->
-> How about instead using enums, this way if we use kdoc format (hey the new
-> kernel doc format is producing nicer docs) we can then document what the
-> hell each of these things are nicely. Also, when enums are used in switches
-> the compiler will nag at you if you happened to have missed a case, unless you
-> have a default.
->
-> We could have an enum for the opts and then one for each subopt group.
->
->   Luis
+This is a multi-part message in MIME format.
+--------------B8811F05910FFB20D8FC1EA5
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-Good point. I kept it as defines, but given how I'm shuffling it, I
-might turn it into enum as well. This change should cause no issue
-except separating option/suboption definition. I will think about it,
-but now I'm more for the enums.
+Hello,
 
-Jan
 
+The patch in the subject applies cleanly on 4.4 and I have attached the
+backport for 3.12. This causes hangs in both xfs/133 and xfs/134. As is
+customary - a battery of xfstests have been run to ensure no regressions
+were introduced.
+
+Regards,
+Nikolay
+
+--------------B8811F05910FFB20D8FC1EA5
+Content-Type: text/x-patch;
+ name="0001-xfs-don-t-allow-di_size-with-high-bit-set.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-xfs-don-t-allow-di_size-with-high-bit-set.patch"
+
+>From a8581aae46a02f329fce5678a5932d99e1c188e0 Mon Sep 17 00:00:00 2001
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 5 Dec 2016 12:38:38 +1100
+Subject: [PATCH] xfs: don't allow di_size with high bit set
+
+The on-disk field di_size is used to set i_size, which is a signed
+integer of loff_t.  If the high bit of di_size is set, we'll end up with
+a negative i_size, which will cause all sorts of problems.  Since the
+VFS won't let us create a file with such length, we should catch them
+here in the verifier too.
+
+[nborisov: Backported to 3.12]
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ fs/xfs/xfs_inode_buf.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/fs/xfs/xfs_inode_buf.c b/fs/xfs/xfs_inode_buf.c
+index 4b1447b3a9e4..8cc193ab434a 100644
+--- a/fs/xfs/xfs_inode_buf.c
++++ b/fs/xfs/xfs_inode_buf.c
+@@ -301,6 +301,14 @@ xfs_dinode_verify(
+ 	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
+ 		return false;
+ 
++	/* don't allow invalid i_size */
++	if (be64_to_cpu(dip->di_size) & (1ULL << 63))
++		return false;
++
++	/* No zero-length symlinks. */
++	if (S_ISLNK(be16_to_cpu(dip->di_mode)) && dip->di_size == 0)
++		return false;
++
+ 	/* only version 3 or greater inodes are extensively verified here */
+ 	if (dip->di_version < 3)
+ 		return true;
 -- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+2.7.4
+
+
+--------------B8811F05910FFB20D8FC1EA5--
