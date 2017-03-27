@@ -1,90 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:23722 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753173AbdCHNMQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2017 08:12:16 -0500
-Date: Wed, 8 Mar 2017 08:21:32 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:45415 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751962AbdC0WJw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 18:09:52 -0400
+Date: Tue, 28 Mar 2017 09:09:37 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: How to favor memory allocations for WQ_MEM_RECLAIM threads?
-Message-ID: <20170307212132.GQ17542@dastard>
-References: <201703031948.CHJ81278.VOHSFFFOOLJQMt@I-love.SAKURA.ne.jp>
- <20170303133950.GD31582@dhcp22.suse.cz>
- <20170303232512.GI17542@dastard>
- <20170307121503.GJ28642@dhcp22.suse.cz>
- <20170307193659.GD31179@htj.duckdns.org>
+Subject: Re: [PATCH] xfs: move the inline directory verifiers
+Message-ID: <20170327220937.GI17542@dastard>
+References: <20170327170828.GI5722@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170307193659.GD31179@htj.duckdns.org>
+In-Reply-To: <20170327170828.GI5722@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Tejun Heo <tj@kernel.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
 
-On Tue, Mar 07, 2017 at 02:36:59PM -0500, Tejun Heo wrote:
-> Hello,
+On Mon, Mar 27, 2017 at 10:08:28AM -0700, Darrick J. Wong wrote:
+> The inline directory verifiers should be called on the inode fork data,
+> which means after iformat_local on the read side, and prior to
+> ifork_flush on the write side.  This makes the fork verifier more
+> consistent with the way buffer verifiers work -- i.e. they will operate
+> on the memory buffer that the code will be reading and writing directly.
 > 
-> On Tue, Mar 07, 2017 at 01:15:04PM +0100, Michal Hocko wrote:
-> > > The real problem here is that the XFS code has /no idea/ of what
-> > > workqueue context it is operating in - the fact it is in a rescuer
+> Also revise the verifier function to return -EFSCORRUPTED so that we
+> don't flood the logs with corruption messages and assert notices.
 > 
-> I don't see how whether something is running off of a rescuer or not
-> matters here.  The only thing workqueue guarantees is that there's
-> gonna be at least one kworker thread executing work items from the
-> workqueue.  Running on a rescuer doesn't necessarily indicate memory
-> pressure condition.
-
-That's news to me. In what situations do we run the rescuer thread
-other than memory allocation failure when queuing work?
-
-> > > thread is completely hidden from the executing context. It seems to
-> > > me that the workqueue infrastructure's responsibility to tell memory
-> > > reclaim that the rescuer thread needs special access to the memory
-> > > reserves to allow the work it is running to allow forwards progress
-> > > to be made. i.e.  setting PF_MEMALLOC on the rescuer thread or
-> > > something similar...
-> >
-> > I am not sure an automatic access to memory reserves from the rescuer
-> > context is safe. This sounds too easy to break (read consume all the
-> > reserves) - note that we have almost 200 users of WQ_MEM_RECLAIM and
-> > chances are some of them will not be careful with the memory
-> > allocations. I agree it would be helpful to know that the current item
-> > runs from the rescuer context, though. In such a case the implementation
-> > can do what ever it takes to make a forward progress. If that is using
-> > __GFP_MEMALLOC then be it but it would be at least explicit and well
-> > thought through (I hope).
+> I've been testing xfs/348 in a loop for 4 days now and it seems to fix
+> all of the crashes and weird behavior introduced by the original patch.
 > 
-> I don't think doing this automatically is a good idea.  xfs work items
-> are free to mark itself PF_MEMALLOC while running tho.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+....
+> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> @@ -632,36 +632,45 @@ xfs_dir2_sf_check(
+>  /* Verify the consistency of an inline directory. */
+>  int
+>  xfs_dir2_sf_verify(
+> -	struct xfs_mount		*mp,
+> -	struct xfs_dir2_sf_hdr		*sfp,
+> -	int				size)
+> +	struct xfs_inode		*ip)
+>  {
+> +	struct xfs_mount		*mp = ip->i_mount;
+> +	struct xfs_dir2_sf_hdr		*sfp;
+>  	struct xfs_dir2_sf_entry	*sfep;
+>  	struct xfs_dir2_sf_entry	*next_sfep;
+>  	char				*endp;
+>  	const struct xfs_dir_ops	*dops;
+> +	struct xfs_ifork		*ifp;
+>  	xfs_ino_t			ino;
+>  	int				i;
+>  	int				i8count;
+>  	int				offset;
+> +	int				size;
+> +	int				error;
+>  	__uint8_t			filetype;
+>  
+> -	dops = xfs_dir_get_ops(mp, NULL);
+> +	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
+> +	dops = mp->m_dir_inode_ops;
 
-I don't think that's a good idea to do unconditionally.It's quite
-common to have IO intensive XFS workloads queue so much work that we
-see several /thousand/ kworker threads running at once, even
-on realtively small 16p systems.
-
-> It makes sense
-> to mark these cases explicitly anyway. 
-
-Doing it on every work we queue will lead to immediate depletion of
-memory reserves under heavy IO loads.
-
-> W  can update workqueue code
-> so that it automatically clears the flag after each work item
-> completion to help.
-> 
-> > Tejun, would it be possible/reasonable to add current_is_wq_rescuer() API?
-> 
-> It's implementable for sure.  I'm just not sure how it'd help
-> anything.  It's not a relevant information on anything.
-
-Except to enable us to get closer to the "rescuer must make forwards
-progress" guarantee. In this context, the rescuer is the only
-context we should allow to dip into memory reserves. I'm happy if we
-have to explicitly check for that and set PF_MEMALLOC ourselves 
-(we do that for XFS kernel threads involved in memory reclaim),
-but it's not something we should set automatically on every
-IO completion work item we run....
+Please use xfs_dir_get_ops() for consistency - that way we don't
+have to care what context this function gets called from in future
+(especially in userspace!).
 
 Cheers,
 
