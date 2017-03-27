@@ -1,123 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58816 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:60378 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751751AbdC0Ijn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:39:43 -0400
+        with ESMTP id S1751751AbdC0Ijv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:39:51 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/26] xfs: correct null checks and error processing in xfs_initialize_perag
-Date: Mon, 27 Mar 2017 10:38:25 +0200
-Message-Id: <20170327083837.11027-15-hch@lst.de>
+Subject: [PATCH 16/26] xfs: handle indlen shortage on delalloc extent merge
+Date: Mon, 27 Mar 2017 10:38:27 +0200
+Message-Id: <20170327083837.11027-17-hch@lst.de>
 In-Reply-To: <20170327083837.11027-1-hch@lst.de>
 References: <20170327083837.11027-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, Bill O'Donnell <billodo@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Bill O'Donnell <billodo@redhat.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit b20fe4730ea5c037c16631fb0df659c7b6d4b3b1 upstream.
+commit 0e339ef8556d9e567aa7925f8892c263d79430d9 upstream.
 
-If pag cannot be allocated, the current error exit path will trip
-a null pointer deference error when calling xfs_buf_hash_destroy
-with a null pag.  Fix this by adding a new error exit labels and
-jumping to those accordingly, avoiding the hash destroy and
-unnecessary kmem_free on pag.
+When a delalloc extent is created, it can be merged with pre-existing,
+contiguous, delalloc extents. When this occurs,
+xfs_bmap_add_extent_hole_delay() merges the extents along with the
+associated indirect block reservations. The expectation here is that the
+combined worst case indlen reservation is always less than or equal to
+the indlen reservation for the individual extents.
 
-Up to three things need to be properly unwound:
+This is not always the case, however, as existing extents can less than
+the expected indlen reservation if the extent was previously split due
+to a hole punch. If a new extent merges with such an extent, the total
+indlen requirement may be larger than the sum of the indlen reservations
+held by both extents.
 
-1) pag memory allocation
-2) xfs_buf_hash_init
-3) radix_tree_insert
+xfs_bmap_add_extent_hole_delay() assumes that the worst case indlen
+reservation is always available and assigns it to the merged extent
+without consideration for the indlen held by the pre-existing extent. As
+a result, the subsequent xfs_mod_fdblocks() call can attempt an
+unintentional allocation rather than a free (indicated by an ASSERT()
+failure). Further, if the allocation happens to fail in this context,
+the failure goes unhandled and creates a filesystem wide block
+accounting inconsistency.
 
-For any given iteration through the loop, any of the above which
-succeed must be unwound for /this/ pag, and then all prior
-initialized pags must be unwound.
+Fix xfs_bmap_add_extent_hole_delay() to function as designed. Cap the
+indlen reservation assigned to the merged extent to the sum of the
+indlen reservations held by each of the individual extents.
 
-Addresses-Coverity-Id: 1397628 ("Dereference after null check")
-
-Reported-by: Colin Ian King <colin.king@canonical.com>
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_mount.c | 24 +++++++++++++++---------
- 1 file changed, 15 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 9b9540db17a6..1f1e4ae44150 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -187,7 +187,7 @@ xfs_initialize_perag(
- 	xfs_agnumber_t	*maxagi)
- {
- 	xfs_agnumber_t	index;
--	xfs_agnumber_t	first_initialised = 0;
-+	xfs_agnumber_t	first_initialised = NULLAGNUMBER;
- 	xfs_perag_t	*pag;
- 	int		error = -ENOMEM;
- 
-@@ -202,22 +202,20 @@ xfs_initialize_perag(
- 			xfs_perag_put(pag);
- 			continue;
- 		}
--		if (!first_initialised)
--			first_initialised = index;
- 
- 		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
- 		if (!pag)
--			goto out_unwind;
-+			goto out_unwind_new_pags;
- 		pag->pag_agno = index;
- 		pag->pag_mount = mp;
- 		spin_lock_init(&pag->pag_ici_lock);
- 		mutex_init(&pag->pag_ici_reclaim_lock);
- 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
- 		if (xfs_buf_hash_init(pag))
--			goto out_unwind;
-+			goto out_free_pag;
- 
- 		if (radix_tree_preload(GFP_NOFS))
--			goto out_unwind;
-+			goto out_hash_destroy;
- 
- 		spin_lock(&mp->m_perag_lock);
- 		if (radix_tree_insert(&mp->m_perag_tree, index, pag)) {
-@@ -225,10 +223,13 @@ xfs_initialize_perag(
- 			spin_unlock(&mp->m_perag_lock);
- 			radix_tree_preload_end();
- 			error = -EEXIST;
--			goto out_unwind;
-+			goto out_hash_destroy;
- 		}
- 		spin_unlock(&mp->m_perag_lock);
- 		radix_tree_preload_end();
-+		/* first new pag is fully initialized */
-+		if (first_initialised == NULLAGNUMBER)
-+			first_initialised = index;
- 	}
- 
- 	index = xfs_set_inode_alloc(mp, agcount);
-@@ -239,11 +240,16 @@ xfs_initialize_perag(
- 	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
- 	return 0;
- 
--out_unwind:
-+out_hash_destroy:
- 	xfs_buf_hash_destroy(pag);
-+out_free_pag:
- 	kmem_free(pag);
--	for (; index > first_initialised; index--) {
-+out_unwind_new_pags:
-+	/* unwind any prior newly initialized pags */
-+	for (index = first_initialised; index < agcount; index++) {
- 		pag = radix_tree_delete(&mp->m_perag_tree, index);
-+		if (!pag)
-+			break;
- 		xfs_buf_hash_destroy(pag);
- 		kmem_free(pag);
- 	}
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 5b626a4f1d13..6eb9ae8ed22d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2816,7 +2816,8 @@ xfs_bmap_add_extent_hole_delay(
+ 		oldlen = startblockval(left.br_startblock) +
+ 			startblockval(new->br_startblock) +
+ 			startblockval(right.br_startblock);
+-		newlen = xfs_bmap_worst_indlen(ip, temp);
++		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
++					 oldlen);
+ 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
+ 			nullstartblock((int)newlen));
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+@@ -2837,7 +2838,8 @@ xfs_bmap_add_extent_hole_delay(
+ 		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx), temp);
+ 		oldlen = startblockval(left.br_startblock) +
+ 			startblockval(new->br_startblock);
+-		newlen = xfs_bmap_worst_indlen(ip, temp);
++		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
++					 oldlen);
+ 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
+ 			nullstartblock((int)newlen));
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+@@ -2853,7 +2855,8 @@ xfs_bmap_add_extent_hole_delay(
+ 		temp = new->br_blockcount + right.br_blockcount;
+ 		oldlen = startblockval(new->br_startblock) +
+ 			startblockval(right.br_startblock);
+-		newlen = xfs_bmap_worst_indlen(ip, temp);
++		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
++					 oldlen);
+ 		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
+ 			new->br_startoff,
+ 			nullstartblock((int)newlen), temp, right.br_state);
 -- 
 2.11.0
 
