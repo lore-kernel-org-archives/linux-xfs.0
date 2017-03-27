@@ -1,343 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42611 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751278AbdC0RIl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 13:08:41 -0400
-Date: Mon, 27 Mar 2017 10:08:28 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: move the inline directory verifiers
-Message-ID: <20170327170828.GI5722@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:43216 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752582AbdC0J4O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Mar 2017 05:56:14 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20170324205322.GA4986@gmail.com>
+References: <20170324205322.GA4986@gmail.com> <20170307050140.GA12946@infradead.org> <20170307000609.GG5280@birch.djwong.org> <10435.1488907375@warthog.procyon.org.uk>
+Subject: Re: statx manpage
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <5176.1490608516.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: 8BIT
+Date: Mon, 27 Mar 2017 10:55:16 +0100
+Message-ID: <5177.1490608516@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
+To: Eric Biggers <ebiggers3@gmail.com>
+Cc: dhowells@redhat.com, Christoph Hellwig <hch@infradead.org>, mtk.manpages@gmail.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-The inline directory verifiers should be called on the inode fork data,
-which means after iformat_local on the read side, and prior to
-ifork_flush on the write side.  This makes the fork verifier more
-consistent with the way buffer verifiers work -- i.e. they will operate
-on the memory buffer that the code will be reading and writing directly.
+Eric Biggers <ebiggers3@gmail.com> wrote:
 
-Also revise the verifier function to return -EFSCORRUPTED so that we
-don't flood the logs with corruption messages and assert notices.
+> On Tue, Mar 07, 2017 at 05:22:55PM +0000, David Howells wrote:
+> > STATX_ALL	[All currently available stuff]
+> > .TE
+> > .in
+> > .PP
+> > .B "Do not"
+> > simply set
+> > .I mask
+> > to UINT_MAX as one or more bits may, in future, be used to specify an extension
+> > to the buffer.
+> 
+> To clarify, will an "extension to the buffer" be an increase in the size of
+> struct statx?
 
-I've been testing xfs/348 in a loop for 4 days now and it seems to fix
-all of the crashes and weird behavior introduced by the original patch.
+Yes.  I can make that more explicit, say perhaps "... specify an extension to
+the size of the buffer".
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_dir2_priv.h  |    3 +-
- fs/xfs/libxfs/xfs_dir2_sf.c    |   61 +++++++++++++++++++++++++---------------
- fs/xfs/libxfs/xfs_inode_fork.c |   35 +++++++++--------------
- fs/xfs/libxfs/xfs_inode_fork.h |    2 +
- fs/xfs/xfs_inode.c             |   19 +++++++-----
- 5 files changed, 63 insertions(+), 57 deletions(-)
+> I think it would have to be, otherwise programs filling a struct statx with
+> STATX_ALL would start breaking as soon as they're rebuilt with the new value
+> of STATX_ALL, no?  Or would these "extension to the buffer" bits not be
+> added to STATX_ALL ...?
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index eb00bc1..39f8604 100644
---- a/fs/xfs/libxfs/xfs_dir2_priv.h
-+++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -125,8 +125,7 @@ extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
- extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
- extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
- extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
--extern int xfs_dir2_sf_verify(struct xfs_mount *mp, struct xfs_dir2_sf_hdr *sfp,
--		int size);
-+extern int xfs_dir2_sf_verify(struct xfs_inode *ip);
- 
- /* xfs_dir2_readdir.c */
- extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index 96b45cd..23fef32 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -632,36 +632,45 @@ xfs_dir2_sf_check(
- /* Verify the consistency of an inline directory. */
- int
- xfs_dir2_sf_verify(
--	struct xfs_mount		*mp,
--	struct xfs_dir2_sf_hdr		*sfp,
--	int				size)
-+	struct xfs_inode		*ip)
- {
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_dir2_sf_hdr		*sfp;
- 	struct xfs_dir2_sf_entry	*sfep;
- 	struct xfs_dir2_sf_entry	*next_sfep;
- 	char				*endp;
- 	const struct xfs_dir_ops	*dops;
-+	struct xfs_ifork		*ifp;
- 	xfs_ino_t			ino;
- 	int				i;
- 	int				i8count;
- 	int				offset;
-+	int				size;
-+	int				error;
- 	__uint8_t			filetype;
- 
--	dops = xfs_dir_get_ops(mp, NULL);
-+	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
-+	dops = mp->m_dir_inode_ops;
-+
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	sfp = (struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data;
-+	size = ifp->if_bytes;
- 
- 	/*
- 	 * Give up if the directory is way too short.
- 	 */
--	XFS_WANT_CORRUPTED_RETURN(mp, size >
--			offsetof(struct xfs_dir2_sf_hdr, parent));
--	XFS_WANT_CORRUPTED_RETURN(mp, size >=
--			xfs_dir2_sf_hdr_size(sfp->i8count));
-+	if (size <= offsetof(struct xfs_dir2_sf_hdr, parent) ||
-+	    size < xfs_dir2_sf_hdr_size(sfp->i8count))
-+		return -EFSCORRUPTED;
- 
- 	endp = (char *)sfp + size;
- 
- 	/* Check .. entry */
- 	ino = dops->sf_get_parent_ino(sfp);
- 	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
--	XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
-+	error = xfs_dir_ino_validate(mp, ino);
-+	if (error)
-+		return error;
- 	offset = dops->data_first_offset;
- 
- 	/* Check all reported entries */
-@@ -672,12 +681,12 @@ xfs_dir2_sf_verify(
- 		 * Check the fixed-offset parts of the structure are
- 		 * within the data buffer.
- 		 */
--		XFS_WANT_CORRUPTED_RETURN(mp,
--				((char *)sfep + sizeof(*sfep)) < endp);
-+		if (((char *)sfep + sizeof(*sfep)) >= endp)
-+			return -EFSCORRUPTED;
- 
- 		/* Don't allow names with known bad length. */
--		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen > 0);
--		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen < MAXNAMELEN);
-+		if (sfep->namelen == 0)
-+			return -EFSCORRUPTED;
- 
- 		/*
- 		 * Check that the variable-length part of the structure is
-@@ -685,33 +694,39 @@ xfs_dir2_sf_verify(
- 		 * name component, so nextentry is an acceptable test.
- 		 */
- 		next_sfep = dops->sf_nextentry(sfp, sfep);
--		XFS_WANT_CORRUPTED_RETURN(mp, endp >= (char *)next_sfep);
-+		if (endp < (char *)next_sfep)
-+			return -EFSCORRUPTED;
- 
- 		/* Check that the offsets always increase. */
--		XFS_WANT_CORRUPTED_RETURN(mp,
--				xfs_dir2_sf_get_offset(sfep) >= offset);
-+		if (xfs_dir2_sf_get_offset(sfep) < offset)
-+			return -EFSCORRUPTED;
- 
- 		/* Check the inode number. */
- 		ino = dops->sf_get_ino(sfp, sfep);
- 		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
--		XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
-+		error = xfs_dir_ino_validate(mp, ino);
-+		if (error)
-+			return error;
- 
- 		/* Check the file type. */
- 		filetype = dops->sf_get_ftype(sfep);
--		XFS_WANT_CORRUPTED_RETURN(mp, filetype < XFS_DIR3_FT_MAX);
-+		if (filetype >= XFS_DIR3_FT_MAX)
-+			return -EFSCORRUPTED;
- 
- 		offset = xfs_dir2_sf_get_offset(sfep) +
- 				dops->data_entsize(sfep->namelen);
- 
- 		sfep = next_sfep;
- 	}
--	XFS_WANT_CORRUPTED_RETURN(mp, i8count == sfp->i8count);
--	XFS_WANT_CORRUPTED_RETURN(mp, (void *)sfep == (void *)endp);
-+	if (i8count != sfp->i8count)
-+		return -EFSCORRUPTED;
-+	if ((void *)sfep != (void *)endp)
-+		return -EFSCORRUPTED;
- 
- 	/* Make sure this whole thing ought to be in local format. */
--	XFS_WANT_CORRUPTED_RETURN(mp, offset +
--	       (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
--	       (uint)sizeof(xfs_dir2_block_tail_t) <= mp->m_dir_geo->blksize);
-+	if (offset + (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
-+	    (uint)sizeof(xfs_dir2_block_tail_t) > mp->m_dir_geo->blksize)
-+		return -EFSCORRUPTED;
- 
- 	return 0;
- }
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 9653e96..8a37efe 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -212,6 +212,16 @@ xfs_iformat_fork(
- 	if (error)
- 		return error;
- 
-+	/* Check inline dir contents. */
-+	if (S_ISDIR(VFS_I(ip)->i_mode) &&
-+	    dip->di_format == XFS_DINODE_FMT_LOCAL) {
-+		error = xfs_dir2_sf_verify(ip);
-+		if (error) {
-+			xfs_idestroy_fork(ip, XFS_DATA_FORK);
-+			return error;
-+		}
-+	}
-+
- 	if (xfs_is_reflink_inode(ip)) {
- 		ASSERT(ip->i_cowfp == NULL);
- 		xfs_ifork_init_cow(ip);
-@@ -322,8 +332,6 @@ xfs_iformat_local(
- 	int		whichfork,
- 	int		size)
- {
--	int		error;
--
- 	/*
- 	 * If the size is unreasonable, then something
- 	 * is wrong and we just bail out rather than crash in
-@@ -339,14 +347,6 @@ xfs_iformat_local(
- 		return -EFSCORRUPTED;
- 	}
- 
--	if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
--		error = xfs_dir2_sf_verify(ip->i_mount,
--				(struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip),
--				size);
--		if (error)
--			return error;
--	}
--
- 	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size);
- 	return 0;
- }
-@@ -867,7 +867,7 @@ xfs_iextents_copy(
-  * In these cases, the format always takes precedence, because the
-  * format indicates the current state of the fork.
-  */
--int
-+void
- xfs_iflush_fork(
- 	xfs_inode_t		*ip,
- 	xfs_dinode_t		*dip,
-@@ -877,7 +877,6 @@ xfs_iflush_fork(
- 	char			*cp;
- 	xfs_ifork_t		*ifp;
- 	xfs_mount_t		*mp;
--	int			error;
- 	static const short	brootflag[2] =
- 		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
- 	static const short	dataflag[2] =
-@@ -886,7 +885,7 @@ xfs_iflush_fork(
- 		{ XFS_ILOG_DEXT, XFS_ILOG_AEXT };
- 
- 	if (!iip)
--		return 0;
-+		return;
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	/*
- 	 * This can happen if we gave up in iformat in an error path,
-@@ -894,19 +893,12 @@ xfs_iflush_fork(
- 	 */
- 	if (!ifp) {
- 		ASSERT(whichfork == XFS_ATTR_FORK);
--		return 0;
-+		return;
- 	}
- 	cp = XFS_DFORK_PTR(dip, whichfork);
- 	mp = ip->i_mount;
- 	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
- 	case XFS_DINODE_FMT_LOCAL:
--		if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
--			error = xfs_dir2_sf_verify(mp,
--					(struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data,
--					ifp->if_bytes);
--			if (error)
--				return error;
--		}
- 		if ((iip->ili_fields & dataflag[whichfork]) &&
- 		    (ifp->if_bytes > 0)) {
- 			ASSERT(ifp->if_u1.if_data != NULL);
-@@ -959,7 +951,6 @@ xfs_iflush_fork(
- 		ASSERT(0);
- 		break;
- 	}
--	return 0;
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 132dc59..7fb8365 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -140,7 +140,7 @@ typedef struct xfs_ifork {
- struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
- 
- int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
--int		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
-+void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
- 				struct xfs_inode_log_item *, int);
- void		xfs_idestroy_fork(struct xfs_inode *, int);
- void		xfs_idata_realloc(struct xfs_inode *, int, int);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index c7fe2c2..7605d83 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -50,6 +50,7 @@
- #include "xfs_log.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_reflink.h"
-+#include "xfs_dir2_priv.h"
- 
- kmem_zone_t *xfs_inode_zone;
- 
-@@ -3475,7 +3476,6 @@ xfs_iflush_int(
- 	struct xfs_inode_log_item *iip = ip->i_itemp;
- 	struct xfs_dinode	*dip;
- 	struct xfs_mount	*mp = ip->i_mount;
--	int			error;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
- 	ASSERT(xfs_isiflocked(ip));
-@@ -3547,6 +3547,12 @@ xfs_iflush_int(
- 	if (ip->i_d.di_version < 3)
- 		ip->i_d.di_flushiter++;
- 
-+	/* Check the inline directory data. */
-+	if (S_ISDIR(VFS_I(ip)->i_mode) &&
-+	    ip->i_d.di_format == XFS_DINODE_FMT_LOCAL &&
-+	    xfs_dir2_sf_verify(ip))
-+		goto corrupt_out;
-+
- 	/*
- 	 * Copy the dirty parts of the inode into the on-disk inode.  We always
- 	 * copy out the core of the inode, because if the inode is dirty at all
-@@ -3558,14 +3564,9 @@ xfs_iflush_int(
- 	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
- 		ip->i_d.di_flushiter = 0;
- 
--	error = xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
--	if (error)
--		return error;
--	if (XFS_IFORK_Q(ip)) {
--		error = xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
--		if (error)
--			return error;
--	}
-+	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
-+	if (XFS_IFORK_Q(ip))
-+		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
- 	xfs_inobp_check(mp, bp);
- 
- 	/*
+It would have to work that way.  I can put this in a comment for future
+guidance in the kernel header file if you'd prefer.
+
+> And I don't suppose there's anything we can do to stop programs from asking
+> for mask bits that haven't been defined yet, then breaking later if they
+> happen to be defined as "extensions"?
+
+If someone decides not to read the documentation, one could argue they get
+what they deserve.
+
+> Maybe adding an extra "buffer size" argument to the syscall?
+
+This idea has already been rejected.
+
+> I'm concerned that the idea of "extensions" isn't well thought out, and in
+> practice we'll just be stuck with the current struct size (256 bytes) forever.
+
+One or more bits (probably just one) are tentatively reserved to indicate that
+the buffer is now bigger.  How much bigger I cannot say at this point, not
+knowing the circumstances yet that will require the extension.
+
+David
