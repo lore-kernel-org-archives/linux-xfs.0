@@ -1,181 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45821 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752236AbdC0Ivv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:51:51 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 23/27] xfs: only reclaim unwritten COW extents periodically
-Date: Mon, 27 Mar 2017 10:49:18 +0200
-Message-Id: <20170327084922.11691-24-hch@lst.de>
-In-Reply-To: <20170327084922.11691-1-hch@lst.de>
-References: <20170327084922.11691-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:42312 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752657AbdC0XOe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Mar 2017 19:14:34 -0400
+Date: Tue, 28 Mar 2017 01:14:26 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: Suspend fails when xfs is involved?
+Message-ID: <20170327231426.GO28800@wotan.suse.de>
+References: <20170203010401.GR9134@birch.djwong.org>
+ <20170203223127.GC32761@dastard>
+ <20170327204607.GA4874@birch.djwong.org>
+ <1707526.iy5HQXy0ZS@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1707526.iy5HQXy0ZS@aspire.rjw.lan>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jiri Kosina <jkosina@suse.cz>, Petr Mladek <pmladek@suse.com>, Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>, linux-pm@vger.kernel.org
 
-commit 3802a345321a08093ba2ddb1849e736f84e8d450 upstream.
+On Tue, Mar 28, 2017 at 12:30:40AM +0200, Rafael J. Wysocki wrote:
+> On Monday, March 27, 2017 01:46:07 PM Darrick J. Wong wrote:
+> > [cc linux-pm since this intersects with suspend...]
+> > > 
+> > > That's inode writeback when the underlying inode buffer has been
+> > > reclaimed before the dirty cached inode has been written. So the
+> > > xfsaild is doing read/modify/write cycles to write back dirty
+> > > inodes. i.e. you're running in active memory reclaim conditions
+> > > prior to suspend...
+> > 
+> > So I wrote up a patch that removes WQ_FREEZABLE from the xfs_buf thread,
+> > and since then I haven't had any problems suspending my laptop.  Last
+> > week at LSF I inquired about whether it was proper to be freezing IO
+> > helper threads as part of suspend, and was told in response "Are you
+> > convinced that use of WQ_FREEZABLE is even correct?"  TBH I can't see
+> > why you'd want to freeze IO helper workqueues at all.
+> > 
+> > So, I'm going to email that patch out as an RFC and if anyone wants to
+> > follow up the discussion, let's do it there.
+> 
+> Yes, please!
 
-We only want to reclaim preallocations from our periodic work item.
-Currently this is archived by looking for a dirty inode, but that check
-is rather fragile.  Instead add a flag to xfs_reflink_cancel_cow_* so
-that the caller can ask for just cancelling unwritten extents in the COW
-fork.
+Do we any respective xfstests for this sort of stuff ? FWIW I've been
+starting to try to draw up some tests on some other fs lookup stuff and
+had to cook up scripts using resume on qemu, to do that, in case its
+helpful use:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-[darrick: fix typos in commit message]
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_aops.c    |  2 +-
- fs/xfs/xfs_icache.c  |  2 +-
- fs/xfs/xfs_inode.c   |  2 +-
- fs/xfs/xfs_reflink.c | 23 ++++++++++++++++-------
- fs/xfs/xfs_reflink.h |  4 ++--
- fs/xfs/xfs_super.c   |  2 +-
- 6 files changed, 22 insertions(+), 13 deletions(-)
+QEMU_CTRL="/dev/pts/7"
+echo system_wakeup | socat - $QEMU_CTRL,raw,echo=0,crnl
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index f5f51d40a2ec..08a2515460ff 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -298,7 +298,7 @@ xfs_end_io(
- 			goto done;
- 		if (ioend->io_bio->bi_error) {
- 			error = xfs_reflink_cancel_cow_range(ip,
--					ioend->io_offset, ioend->io_size);
-+					ioend->io_offset, ioend->io_size, true);
- 			goto done;
- 		}
- 		error = xfs_reflink_end_cow(ip, ioend->io_offset,
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 78708d001a63..3fb1f3fb8efe 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1610,7 +1610,7 @@ xfs_inode_free_cowblocks(
- 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- 
--	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
-+	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
- 
- 	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index f9f44cb56fe8..e50636c9a89c 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1624,7 +1624,7 @@ xfs_itruncate_extents(
- 
- 	/* Remove all pending CoW reservations. */
- 	error = xfs_reflink_cancel_cow_blocks(ip, &tp, first_unmap_block,
--			last_block);
-+			last_block, true);
- 	if (error)
- 		goto out;
- 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index eff070accf04..2252f163c38f 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -571,14 +571,18 @@ xfs_reflink_trim_irec_to_next_cow(
- }
- 
- /*
-- * Cancel all pending CoW reservations for some block range of an inode.
-+ * Cancel CoW reservations for some block range of an inode.
-+ *
-+ * If cancel_real is true this function cancels all COW fork extents for the
-+ * inode; if cancel_real is false, real extents are not cleared.
-  */
- int
- xfs_reflink_cancel_cow_blocks(
- 	struct xfs_inode		*ip,
- 	struct xfs_trans		**tpp,
- 	xfs_fileoff_t			offset_fsb,
--	xfs_fileoff_t			end_fsb)
-+	xfs_fileoff_t			end_fsb,
-+	bool				cancel_real)
- {
- 	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	struct xfs_bmbt_irec		got, prev, del;
-@@ -605,7 +609,7 @@ xfs_reflink_cancel_cow_blocks(
- 					&idx, &got, &del);
- 			if (error)
- 				break;
--		} else {
-+		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
- 			xfs_trans_ijoin(*tpp, ip, 0);
- 			xfs_defer_init(&dfops, &firstfsb);
- 
-@@ -648,13 +652,17 @@ xfs_reflink_cancel_cow_blocks(
- }
- 
- /*
-- * Cancel all pending CoW reservations for some byte range of an inode.
-+ * Cancel CoW reservations for some byte range of an inode.
-+ *
-+ * If cancel_real is true this function cancels all COW fork extents for the
-+ * inode; if cancel_real is false, real extents are not cleared.
-  */
- int
- xfs_reflink_cancel_cow_range(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset,
--	xfs_off_t		count)
-+	xfs_off_t		count,
-+	bool			cancel_real)
- {
- 	struct xfs_trans	*tp;
- 	xfs_fileoff_t		offset_fsb;
-@@ -680,7 +688,8 @@ xfs_reflink_cancel_cow_range(
- 	xfs_trans_ijoin(tp, ip, 0);
- 
- 	/* Scrape out the old CoW reservations */
--	error = xfs_reflink_cancel_cow_blocks(ip, &tp, offset_fsb, end_fsb);
-+	error = xfs_reflink_cancel_cow_blocks(ip, &tp, offset_fsb, end_fsb,
-+			cancel_real);
- 	if (error)
- 		goto out_cancel;
- 
-@@ -1686,7 +1695,7 @@ xfs_reflink_clear_inode_flag(
- 	 * We didn't find any shared blocks so turn off the reflink flag.
- 	 * First, get rid of any leftover CoW mappings.
- 	 */
--	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF);
-+	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF, true);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 523e06d88f43..a57966fc7ddd 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -39,9 +39,9 @@ extern int xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
- 
- extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
- 		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
--		xfs_fileoff_t end_fsb);
-+		xfs_fileoff_t end_fsb, bool cancel_real);
- extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
--		xfs_off_t count);
-+		xfs_off_t count, bool cancel_real);
- extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
- extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index ade4691e3f74..dbbd3f1fd2b7 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -948,7 +948,7 @@ xfs_fs_destroy_inode(
- 	XFS_STATS_INC(ip->i_mount, vn_remove);
- 
- 	if (xfs_is_reflink_inode(ip)) {
--		error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
-+		error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
- 		if (error && !XFS_FORCED_SHUTDOWN(ip->i_mount))
- 			xfs_warn(ip->i_mount,
- "Error %d while evicting CoW blocks for inode %llu.",
--- 
-2.11.0
+Sadly, the above only works *sometimes*, so you have to smack qemu
+a few times with it seems.
 
+> > I get it, suspend really
+> > should just fsfreeze, but the question I really want to know is, why
+> > does XFS freeze its own threads?  They seem to go to sleep just fine
+> > after we're done doing all the IO we want.
+> 
+> That, quite frankly, is what I would expect.
+
+Do we have a deterministic requirement for how long this IO wait should / can
+last for ? FWIW if we have tasks we *know* need to complete prior to suspend
+we can do these with the pm ops. If something not done on pm ops is blocking
+already though do we want a limit ? Why did XFS start freezing its own threads
+to begin with ?
+
+> > > > ISTR Dave or someone grumbling about this being some artifact of the log
+> > > > trying to read in some buffer or other as part of flushing the log prior
+> > > > to suspend, but the io completion ends up tied to a workqueue that's
+> > > > already been put to sleep, so xfs gets stuck forever.
+> > > 
+> > > Yup, suspend is just completely fucked, has been for more than 10
+> > > years. It needs to freeze filesystems so they are quiesced sanely,
+> > > not left to run while random parts of the kernel infrastructure they
+> > > rely on are shut down behind the filesystem's back.
+> > > 
+> > > > Look familiar to anyone before I try to debug this tomorrow?
+> > > 
+> > > See this as a recent starting point.
+> > > 
+> > > https://lwn.net/Articles/705269/
+> > 
+> > I wonder if they've done any work on freezing filesystems...
+> 
+> Not that I know of.
+
+https://git.kernel.org/pub/scm/linux/kernel/git/jikos/jikos.git/commit/?h=might-rebase/get-rid-of-kthread-freezer&id=394aa67810abefde6d79ea96a90e5d41a7df99f4
+
+freeze_all_supers() ?
+
+  Luis
