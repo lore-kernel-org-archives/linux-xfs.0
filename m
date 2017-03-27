@@ -1,123 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33353 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:52642 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752169AbdC0Ikq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:40:46 -0400
+        with ESMTP id S1752169AbdC0Iku (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:40:50 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 23/26] xfs: fix and streamline error handling in xfs_end_io
-Date: Mon, 27 Mar 2017 10:38:34 +0200
-Message-Id: <20170327083837.11027-24-hch@lst.de>
+Subject: [PATCH 19/26] xfs: don't reserve blocks for right shift transactions
+Date: Mon, 27 Mar 2017 10:38:30 +0200
+Message-Id: <20170327083837.11027-20-hch@lst.de>
 In-Reply-To: <20170327083837.11027-1-hch@lst.de>
 References: <20170327083837.11027-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit 787eb485509f9d58962bd8b4dbc6a5ac6e2034fe upstream.
+From: Brian Foster <bfoster@redhat.com>
 
-There are two different cases of buffered I/O errors:
+commit 48af96ab92bc68fb645068b978ce36df2379e076 upstream.
 
- - first we can have an already shutdown fs.  In that case we should skip
-   any on-disk operations and just clean up the appen transaction if
-   present and destroy the ioend
- - a real I/O error.  In that case we should cleanup any lingering COW
-   blocks.  This gets skipped in the current code and is fixed by this
-   patch.
+The block reservation for the transaction allocated in
+xfs_shift_file_space() is an artifact of the original collapse range
+support. It exists to handle the case where a collapse range occurs,
+the initial extent is left shifted into a location that forms a
+contiguous boundary with the previous extent and thus the extents
+are merged. This code was subsequently refactored and reused for
+insert range (right shift) support.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+If an insert range occurs under low free space conditions, the
+extent at the starting offset is split before the first shift
+transaction is allocated. If the block reservation fails, this
+leaves separate, but contiguous extents around in the inode. While
+not a fatal problem, this is unexpected and will flag a warning on
+subsequent insert range operations on the inode. This problem has
+been reproduce intermittently by generic/270 running against a
+ramdisk device.
+
+Since right shift does not create new extent boundaries in the
+inode, a block reservation for extent merge is unnecessary. Update
+xfs_shift_file_space() to conditionally reserve fs blocks for left
+shift transactions only. This avoids the warning reproduced by
+generic/270.
+
+Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 59 +++++++++++++++++++++++++------------------------------
- 1 file changed, 27 insertions(+), 32 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 407d840c5c16..937d406d3c11 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -274,54 +274,49 @@ xfs_end_io(
- 	struct xfs_ioend	*ioend =
- 		container_of(work, struct xfs_ioend, io_work);
- 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-+	xfs_off_t		offset = ioend->io_offset;
-+	size_t			size = ioend->io_size;
- 	int			error = ioend->io_bio->bi_error;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index eb890ed1ed5c..c516d7158a21 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1387,10 +1387,16 @@ xfs_shift_file_space(
+ 	xfs_fileoff_t		stop_fsb;
+ 	xfs_fileoff_t		next_fsb;
+ 	xfs_fileoff_t		shift_fsb;
++	uint			resblks;
  
- 	/*
--	 * Set an error if the mount has shut down and proceed with end I/O
--	 * processing so it can perform whatever cleanups are necessary.
-+	 * Just clean up the in-memory strutures if the fs has been shut down.
- 	 */
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-+	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
- 		error = -EIO;
-+		goto done;
-+	}
+ 	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
  
- 	/*
--	 * For a CoW extent, we need to move the mapping from the CoW fork
--	 * to the data fork.  If instead an error happened, just dump the
--	 * new blocks.
-+	 * Clean up any COW blocks on an I/O error.
- 	 */
--	if (ioend->io_type == XFS_IO_COW) {
--		if (error)
--			goto done;
--		if (ioend->io_bio->bi_error) {
--			error = xfs_reflink_cancel_cow_range(ip,
--					ioend->io_offset, ioend->io_size, true);
--			goto done;
-+	if (unlikely(error)) {
-+		switch (ioend->io_type) {
-+		case XFS_IO_COW:
-+			xfs_reflink_cancel_cow_range(ip, offset, size, true);
-+			break;
- 		}
--		error = xfs_reflink_end_cow(ip, ioend->io_offset,
--				ioend->io_size);
--		if (error)
--			goto done;
-+
-+		goto done;
+ 	if (direction == SHIFT_LEFT) {
++		/*
++		 * Reserve blocks to cover potential extent merges after left
++		 * shift operations.
++		 */
++		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+ 		next_fsb = XFS_B_TO_FSB(mp, offset + len);
+ 		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
+ 	} else {
+@@ -1398,6 +1404,7 @@ xfs_shift_file_space(
+ 		 * If right shift, delegate the work of initialization of
+ 		 * next_fsb to xfs_bmap_shift_extent as it has ilock held.
+ 		 */
++		resblks = 0;
+ 		next_fsb = NULLFSBLOCK;
+ 		stop_fsb = XFS_B_TO_FSB(mp, offset);
+ 	}
+@@ -1439,21 +1446,14 @@ xfs_shift_file_space(
  	}
  
- 	/*
--	 * For unwritten extents we need to issue transactions to convert a
--	 * range to normal written extens after the data I/O has finished.
--	 * Detecting and handling completion IO errors is done individually
--	 * for each case as different cleanup operations need to be performed
--	 * on error.
-+	 * Success:  commit the COW or unwritten blocks if needed.
- 	 */
--	if (ioend->io_type == XFS_IO_UNWRITTEN) {
--		if (error)
--			goto done;
--		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
--						  ioend->io_size);
--	} else if (ioend->io_append_trans) {
--		error = xfs_setfilesize_ioend(ioend, error);
--	} else {
--		ASSERT(!xfs_ioend_is_append(ioend) ||
--		       ioend->io_type == XFS_IO_COW);
-+	switch (ioend->io_type) {
-+	case XFS_IO_COW:
-+		error = xfs_reflink_end_cow(ip, offset, size);
-+		break;
-+	case XFS_IO_UNWRITTEN:
-+		error = xfs_iomap_write_unwritten(ip, offset, size);
-+		break;
-+	default:
-+		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
-+		break;
- 	}
+ 	while (!error && !done) {
+-		/*
+-		 * We would need to reserve permanent block for transaction.
+-		 * This will come into picture when after shifting extent into
+-		 * hole we found that adjacent extents can be merged which
+-		 * may lead to freeing of a block during record update.
+-		 */
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
+-				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
++		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
++					&tp);
+ 		if (error)
+ 			break;
  
- done:
-+	if (ioend->io_append_trans)
-+		error = xfs_setfilesize_ioend(ioend, error);
- 	xfs_destroy_ioend(ioend, error);
- }
- 
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
+-				ip->i_gdquot, ip->i_pdquot,
+-				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
++				ip->i_gdquot, ip->i_pdquot, resblks, 0,
+ 				XFS_QMOPT_RES_REGBLKS);
+ 		if (error)
+ 			goto out_trans_cancel;
 -- 
 2.11.0
 
