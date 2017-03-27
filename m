@@ -1,105 +1,181 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33158 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:45821 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752178AbdC0IvZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:51:25 -0400
+        with ESMTP id S1752236AbdC0Ivv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:51:51 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 21/27] xfs: Use xfs_icluster_size_fsb() to calculate inode chunk alignment
-Date: Mon, 27 Mar 2017 10:49:16 +0200
-Message-Id: <20170327084922.11691-22-hch@lst.de>
+Subject: [PATCH 23/27] xfs: only reclaim unwritten COW extents periodically
+Date: Mon, 27 Mar 2017 10:49:18 +0200
+Message-Id: <20170327084922.11691-24-hch@lst.de>
 In-Reply-To: <20170327084922.11691-1-hch@lst.de>
 References: <20170327084922.11691-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, Chandan Rajendra <chandan@linux.vnet.ibm.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+commit 3802a345321a08093ba2ddb1849e736f84e8d450 upstream.
 
-commit 8ee9fdbebc84b39f1d1c201c5e32277c61d034aa upstream.
+We only want to reclaim preallocations from our periodic work item.
+Currently this is archived by looking for a dirty inode, but that check
+is rather fragile.  Instead add a flag to xfs_reflink_cancel_cow_* so
+that the caller can ask for just cancelling unwritten extents in the COW
+fork.
 
-On a ppc64 system, executing generic/256 test with 32k block size gives the following call trace,
-
-XFS: Assertion failed: args->maxlen > 0, file: /root/repos/linux/fs/xfs/libxfs/xfs_alloc.c, line: 2026
-
-kernel BUG at /root/repos/linux/fs/xfs/xfs_message.c:113!
-Oops: Exception in kernel mode, sig: 5 [#1]
-SMP NR_CPUS=2048
-DEBUG_PAGEALLOC
-NUMA
-pSeries
-Modules linked in:
-CPU: 2 PID: 19361 Comm: mkdir Not tainted 4.10.0-rc5 #58
-task: c000000102606d80 task.stack: c0000001026b8000
-NIP: c0000000004ef798 LR: c0000000004ef798 CTR: c00000000082b290
-REGS: c0000001026bb090 TRAP: 0700   Not tainted  (4.10.0-rc5)
-MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>
-CR: 28004428  XER: 00000000
-CFAR: c0000000004ef180 SOFTE: 1
-GPR00: c0000000004ef798 c0000001026bb310 c000000001157300 ffffffffffffffea
-GPR04: 000000000000000a c0000001026bb130 0000000000000000 ffffffffffffffc0
-GPR08: 00000000000000d1 0000000000000021 00000000ffffffd1 c000000000dd4990
-GPR12: 0000000022004444 c00000000fe00800 0000000020000000 0000000000000000
-GPR16: 0000000000000000 0000000043a606fc 0000000043a76c08 0000000043a1b3d0
-GPR20: 000001002a35cd60 c0000001026bbb80 0000000000000000 0000000000000001
-GPR24: 0000000000000240 0000000000000004 c00000062dc55000 0000000000000000
-GPR28: 0000000000000004 c00000062ecd9200 0000000000000000 c0000001026bb6c0
-NIP [c0000000004ef798] .assfail+0x28/0x30
-LR [c0000000004ef798] .assfail+0x28/0x30
-Call Trace:
-[c0000001026bb310] [c0000000004ef798] .assfail+0x28/0x30 (unreliable)
-[c0000001026bb380] [c000000000455d74] .xfs_alloc_space_available+0x194/0x1b0
-[c0000001026bb410] [c00000000045b914] .xfs_alloc_fix_freelist+0x144/0x480
-[c0000001026bb580] [c00000000045c368] .xfs_alloc_vextent+0x698/0xa90
-[c0000001026bb650] [c0000000004a6200] .xfs_ialloc_ag_alloc+0x170/0x820
-[c0000001026bb7c0] [c0000000004a9098] .xfs_dialloc+0x158/0x320
-[c0000001026bb8a0] [c0000000004e628c] .xfs_ialloc+0x7c/0x610
-[c0000001026bb990] [c0000000004e8138] .xfs_dir_ialloc+0xa8/0x2f0
-[c0000001026bbaa0] [c0000000004e8814] .xfs_create+0x494/0x790
-[c0000001026bbbf0] [c0000000004e5ebc] .xfs_generic_create+0x2bc/0x410
-[c0000001026bbce0] [c0000000002b4a34] .vfs_mkdir+0x154/0x230
-[c0000001026bbd70] [c0000000002bc444] .SyS_mkdirat+0x94/0x120
-[c0000001026bbe30] [c00000000000b760] system_call+0x38/0xfc
-Instruction dump:
-4e800020 60000000 7c0802a6 7c862378 3c82ffca 7ca72b78 38841c18 7c651b78
-38600000 f8010010 f821ff91 4bfff94d <0fe00000> 60000000 7c0802a6 7c892378
-
-When block size is larger than inode cluster size, the call to
-XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
-would have set xfs_sb->sb_inoalignmt to 0. This causes
-xfs_ialloc_cluster_alignment() to return 0.  Due to this
-args.minalignslop (in xfs_ialloc_ag_alloc()) gets the unsigned
-equivalent of -1 assigned to it. This later causes alloc_len in
-xfs_alloc_space_available() to have a value of 0. In such a scenario
-when args.total is also 0, the assert statement "ASSERT(args->maxlen >
-0);" fails.
-
-This commit fixes the bug by replacing the call to XFS_B_TO_FSBT() in
-xfs_ialloc_cluster_alignment() with a call to xfs_icluster_size_fsb().
-
-Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+[darrick: fix typos in commit message]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/xfs_aops.c    |  2 +-
+ fs/xfs/xfs_icache.c  |  2 +-
+ fs/xfs/xfs_inode.c   |  2 +-
+ fs/xfs/xfs_reflink.c | 23 ++++++++++++++++-------
+ fs/xfs/xfs_reflink.h |  4 ++--
+ fs/xfs/xfs_super.c   |  2 +-
+ 6 files changed, 22 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index d45c03779dae..a2818f6e8598 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -51,8 +51,7 @@ xfs_ialloc_cluster_alignment(
- 	struct xfs_mount	*mp)
- {
- 	if (xfs_sb_version_hasalign(&mp->m_sb) &&
--	    mp->m_sb.sb_inoalignmt >=
--			XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
-+	    mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
- 		return mp->m_sb.sb_inoalignmt;
- 	return 1;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f5f51d40a2ec..08a2515460ff 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -298,7 +298,7 @@ xfs_end_io(
+ 			goto done;
+ 		if (ioend->io_bio->bi_error) {
+ 			error = xfs_reflink_cancel_cow_range(ip,
+-					ioend->io_offset, ioend->io_size);
++					ioend->io_offset, ioend->io_size, true);
+ 			goto done;
+ 		}
+ 		error = xfs_reflink_end_cow(ip, ioend->io_offset,
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 78708d001a63..3fb1f3fb8efe 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1610,7 +1610,7 @@ xfs_inode_free_cowblocks(
+ 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+ 
+-	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
++	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
+ 
+ 	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index f9f44cb56fe8..e50636c9a89c 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1624,7 +1624,7 @@ xfs_itruncate_extents(
+ 
+ 	/* Remove all pending CoW reservations. */
+ 	error = xfs_reflink_cancel_cow_blocks(ip, &tp, first_unmap_block,
+-			last_block);
++			last_block, true);
+ 	if (error)
+ 		goto out;
+ 
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index eff070accf04..2252f163c38f 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -571,14 +571,18 @@ xfs_reflink_trim_irec_to_next_cow(
  }
+ 
+ /*
+- * Cancel all pending CoW reservations for some block range of an inode.
++ * Cancel CoW reservations for some block range of an inode.
++ *
++ * If cancel_real is true this function cancels all COW fork extents for the
++ * inode; if cancel_real is false, real extents are not cleared.
+  */
+ int
+ xfs_reflink_cancel_cow_blocks(
+ 	struct xfs_inode		*ip,
+ 	struct xfs_trans		**tpp,
+ 	xfs_fileoff_t			offset_fsb,
+-	xfs_fileoff_t			end_fsb)
++	xfs_fileoff_t			end_fsb,
++	bool				cancel_real)
+ {
+ 	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+ 	struct xfs_bmbt_irec		got, prev, del;
+@@ -605,7 +609,7 @@ xfs_reflink_cancel_cow_blocks(
+ 					&idx, &got, &del);
+ 			if (error)
+ 				break;
+-		} else {
++		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
+ 			xfs_trans_ijoin(*tpp, ip, 0);
+ 			xfs_defer_init(&dfops, &firstfsb);
+ 
+@@ -648,13 +652,17 @@ xfs_reflink_cancel_cow_blocks(
+ }
+ 
+ /*
+- * Cancel all pending CoW reservations for some byte range of an inode.
++ * Cancel CoW reservations for some byte range of an inode.
++ *
++ * If cancel_real is true this function cancels all COW fork extents for the
++ * inode; if cancel_real is false, real extents are not cleared.
+  */
+ int
+ xfs_reflink_cancel_cow_range(
+ 	struct xfs_inode	*ip,
+ 	xfs_off_t		offset,
+-	xfs_off_t		count)
++	xfs_off_t		count,
++	bool			cancel_real)
+ {
+ 	struct xfs_trans	*tp;
+ 	xfs_fileoff_t		offset_fsb;
+@@ -680,7 +688,8 @@ xfs_reflink_cancel_cow_range(
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+ 	/* Scrape out the old CoW reservations */
+-	error = xfs_reflink_cancel_cow_blocks(ip, &tp, offset_fsb, end_fsb);
++	error = xfs_reflink_cancel_cow_blocks(ip, &tp, offset_fsb, end_fsb,
++			cancel_real);
+ 	if (error)
+ 		goto out_cancel;
+ 
+@@ -1686,7 +1695,7 @@ xfs_reflink_clear_inode_flag(
+ 	 * We didn't find any shared blocks so turn off the reflink flag.
+ 	 * First, get rid of any leftover CoW mappings.
+ 	 */
+-	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF);
++	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF, true);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 523e06d88f43..a57966fc7ddd 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -39,9 +39,9 @@ extern int xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
+ 
+ extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
+ 		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
+-		xfs_fileoff_t end_fsb);
++		xfs_fileoff_t end_fsb, bool cancel_real);
+ extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
+-		xfs_off_t count);
++		xfs_off_t count, bool cancel_real);
+ extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t count);
+ extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index ade4691e3f74..dbbd3f1fd2b7 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -948,7 +948,7 @@ xfs_fs_destroy_inode(
+ 	XFS_STATS_INC(ip->i_mount, vn_remove);
+ 
+ 	if (xfs_is_reflink_inode(ip)) {
+-		error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF);
++		error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
+ 		if (error && !XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 			xfs_warn(ip->i_mount,
+ "Error %d while evicting CoW blocks for inode %llu.",
 -- 
 2.11.0
 
