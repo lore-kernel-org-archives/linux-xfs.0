@@ -1,57 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38566 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:36210 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752427AbdC0Ius (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:50:48 -0400
+        with ESMTP id S1752431AbdC0Iuu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:50:50 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/27] xfs: don't fail xfs_extent_busy allocation
-Date: Mon, 27 Mar 2017 10:49:11 +0200
-Message-Id: <20170327084922.11691-17-hch@lst.de>
+Subject: [PATCH 19/27] xfs: fix uninitialized variable in _reflink_convert_cow
+Date: Mon, 27 Mar 2017 10:49:14 +0200
+Message-Id: <20170327084922.11691-20-hch@lst.de>
 In-Reply-To: <20170327084922.11691-1-hch@lst.de>
 References: <20170327084922.11691-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 5e30c23d13919a718b22d4921dc5c0accc59da27 upstream.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-We don't just need the structure to track busy extents which can be
-avoided with a synchronous transaction, but also to keep track of
-pending discard.
+commit 93aaead52a9eebdc20dc8fa673c350e592a06949 upstream.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Fix an uninitialize variable.
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_extent_busy.c | 13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
+ fs/xfs/xfs_reflink.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 162dc186cf04..29c2f997aedf 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -45,18 +45,7 @@ xfs_extent_busy_insert(
- 	struct rb_node		**rbp;
- 	struct rb_node		*parent = NULL;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 36c07b12189e..eff070accf04 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -363,7 +363,7 @@ xfs_reflink_convert_cow(
+ 	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
+ 	xfs_extnum_t		idx;
+ 	bool			found;
+-	int			error;
++	int			error = 0;
  
--	new = kmem_zalloc(sizeof(struct xfs_extent_busy), KM_MAYFAIL);
--	if (!new) {
--		/*
--		 * No Memory!  Since it is now not possible to track the free
--		 * block, make this a synchronous transaction to insure that
--		 * the block is not reused before this transaction commits.
--		 */
--		trace_xfs_extent_busy_enomem(tp->t_mountp, agno, bno, len);
--		xfs_trans_set_sync(tp);
--		return;
--	}
--
-+	new = kmem_zalloc(sizeof(struct xfs_extent_busy), KM_SLEEP);
- 	new->agno = agno;
- 	new->bno = bno;
- 	new->length = len;
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 
 -- 
 2.11.0
 
