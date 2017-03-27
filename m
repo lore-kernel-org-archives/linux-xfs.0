@@ -1,306 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46117 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753626AbdCOWjw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2017 18:39:52 -0400
-Date: Wed, 15 Mar 2017 15:39:44 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:47687 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751294AbdC0RRU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 13:17:20 -0400
+Date: Mon, 27 Mar 2017 10:16:10 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] xfs: verify inline directory data forks
-Message-ID: <20170315223944.GH5280@birch.djwong.org>
+Subject: Re: [PATCH 2/2 V2] xfs: toggle readonly state around
+ xfs_log_mount_finish
+Message-ID: <20170327171610.GG5738@birch.djwong.org>
+References: <bbb0243d-e491-02e0-1802-e95cba4e8486@redhat.com>
+ <36942625-073a-56ba-4d31-cd9511f3bfb8@sandeen.net>
+ <74f6a009-211c-617a-2d6f-0a115ceb366b@sandeen.net>
+ <20170315113629.GA23221@bfoster.bfoster>
+ <20170316191500.GL5280@birch.djwong.org>
+ <20170316234249.GW17542@dastard>
+ <900524f8-4f2d-17e7-31a8-ecde486acc50@sandeen.net>
+ <20170318073835.GZ17542@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20170318073835.GZ17542@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-When we're reading or writing the data fork of an inline directory,
-check the contents to make sure we're not overflowing buffers or eating
-garbage data.  xfs/348 corrupts an inline symlink into an inline
-directory, triggering a buffer overflow bug.
+On Sat, Mar 18, 2017 at 06:38:35PM +1100, Dave Chinner wrote:
+> On Thu, Mar 16, 2017 at 04:52:43PM -0700, Eric Sandeen wrote:
+> > On 3/16/17 4:42 PM, Dave Chinner wrote:
+> > > On Thu, Mar 16, 2017 at 12:15:00PM -0700, Darrick J. Wong wrote:
+> > >> On Wed, Mar 15, 2017 at 07:36:29AM -0400, Brian Foster wrote:
+> > >>> On Tue, Mar 14, 2017 at 06:23:57PM -0500, Eric Sandeen wrote:
+> > >>>> When we do log recovery on a readonly mount, unlinked inode
+> > >>>> processing does not happen due to the readonly checks in
+> > >>>> xfs_inactive(), which are trying to prevent any I/O on a
+> > >>>> readonly mount.
+> > >>>>
+> > >>>> This is misguided - we do I/O on readonly mounts all the time,
+> > >>>> for consistency; for example, log recovery.  So do the same
+> > >>>> RDONLY flag twiddling around xfs_log_mount_finish() as we
+> > >>>> do around xfs_log_mount(), for the same reason.
+> > >>>>
+> > >>>> This all cries out for a big rework but for now this is a
+> > >>>> simple fix to an obvious problem.
+> > >>>>
+> > >>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > >>>> ---
+> > >>>>
+> > >>
+> > >> Both patches look ok, so I'll put them on the test queue for -rc4.
+> > >> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > FWIW, I don't think this is a -rc candidate. Making log recovery
+> > > process unlinked inode transactions on read-only mounts is a pretty
+> > > major change in behaviour. Who knows exactly what dragons are
+> > > lurking at lower layers that have never been run in this context
+> > > until now.
+> > > 
+> > > Also, it's not urgent - we've lived with this behaviour for years -
+> > > so waiting a month for the next merge window is not going to hurt
+> > > anyone and it gives us a chance to test it - XFS developers are the
+> > > people who should be burnt by the lurking dragons, not users who
+> > > updated to a late -rcX kernel....
+> > 
+> > To shield Darrick a bit ;) I was agitating/asking for sooner, but
+> > admittedly that was a little bit selfish on my part.
+> > 
+> > Still, we have had field reports of people with /gigabytes/ missing
+> > from the root filesystem, and it was not fixable without an 
+> > xfs_repair.  Which on a root filesystem is ... special.
+> 
+> That's information that should be in the commit message....
+> 
+> > So, my fault for getting it sent late, for sure - but I do think it's
+> > an important fix.  I know we can't really address the "unknown unknown"
+> > dragons easily, but actually completing recovery on RO mounts seems
+> > straightforward to me... we allow half of recovery to go, and
+> > disallow the other half.  Seems plainly broken.
+> 
+> I still don't think that makes it an urgent, immediate -rcX fix.  It
+> definitely makes it a fix that should go to stable kernels, but that
+> does not mean we should short-cut our integrationa nd testing
+> processes. If anything, it makes it far more important to ensure the
+> change is safe and well tested, because it's going to be distributed
+> to /everyone/ in the near future through the stable update process,
+> distros included.
+> 
+> As I've already said: rushing fixes upstream without adequate test
+> time is almost always the wrong thing to do. Call me conservative,
+> but I have plenty of scars to justify being careful about pushing
+> fixes too quickly.
+> 
+> I'm more worried about the impact on the unknown number of read-only
+> filesystems out there across the entire userbase that have the
+> potential to process inodes that have been sitting orphaned for
+> years than I am about the few recent users who have had to run
+> xfs-repair on their root filesystem to fix this up due to the nature
+> of ro->rw transition in root filesystem mounting.  Let's make really
+> sure everything is OK before we expose it to all our users running
+> stable/distro kernels....
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: add more checks consistent with _dir2_sf_check and make the verifier
-usable from anywhere.
----
- fs/xfs/libxfs/xfs_dir2_priv.h  |    2 +
- fs/xfs/libxfs/xfs_dir2_sf.c    |   85 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_inode_fork.c |   26 +++++++++++-
- fs/xfs/libxfs/xfs_inode_fork.h |    2 -
- fs/xfs/xfs_dir2_readdir.c      |   11 -----
- fs/xfs/xfs_inode.c             |   12 ++++--
- 6 files changed, 120 insertions(+), 18 deletions(-)
+FWIW I let this run w/ all my testing configs during LSF/Vault last week
+and I didn't see any new failures.  I'll hold off on sending these patches.
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index d04547f..eb00bc1 100644
---- a/fs/xfs/libxfs/xfs_dir2_priv.h
-+++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -125,6 +125,8 @@ extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
- extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
- extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
- extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
-+extern int xfs_dir2_sf_verify(struct xfs_mount *mp, struct xfs_dir2_sf_hdr *sfp,
-+		int size);
- 
- /* xfs_dir2_readdir.c */
- extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index c6809ff..b0cfc7d 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -629,6 +629,91 @@ xfs_dir2_sf_check(
- }
- #endif	/* DEBUG */
- 
-+/* Verify the consistency of an inline directory. */
-+int
-+xfs_dir2_sf_verify(
-+	struct xfs_mount		*mp,
-+	struct xfs_dir2_sf_hdr		*sfp,
-+	int				size)
-+{
-+	struct xfs_dir2_sf_entry	*sfep;
-+	struct xfs_dir2_sf_entry	*next_sfep;
-+	char				*endp;
-+	const struct xfs_dir_ops	*dops;
-+	xfs_ino_t			ino;
-+	int				i;
-+	int				i8count;
-+	int				offset;
-+	__uint8_t			filetype;
-+
-+	dops = xfs_dir_get_ops(mp, NULL);
-+
-+	/*
-+	 * Give up if the directory is way too short.
-+	 */
-+	XFS_WANT_CORRUPTED_RETURN(mp, size >
-+			offsetof(struct xfs_dir2_sf_hdr, parent));
-+	XFS_WANT_CORRUPTED_RETURN(mp, size >=
-+			xfs_dir2_sf_hdr_size(sfp->i8count));
-+
-+	endp = (char *)sfp + size;
-+
-+	/* Check .. entry */
-+	ino = dops->sf_get_parent_ino(sfp);
-+	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
-+	XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
-+	offset = dops->data_first_offset;
-+
-+	/* Check all reported entries */
-+	sfep = xfs_dir2_sf_firstentry(sfp);
-+	for (i = 0; i < sfp->count; i++) {
-+		/*
-+		 * struct xfs_dir2_sf_entry has a variable length.
-+		 * Check the fixed-offset parts of the structure are
-+		 * within the data buffer.
-+		 */
-+		XFS_WANT_CORRUPTED_RETURN(mp,
-+				((char *)sfep + sizeof(*sfep)) < endp);
-+
-+		/* Don't allow names with known bad length. */
-+		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen > 0);
-+		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen < MAXNAMELEN);
-+
-+		/*
-+		 * Check that the variable-length part of the structure is
-+		 * within the data buffer.  The next entry starts after the
-+		 * name component, so nextentry is an acceptable test.
-+		 */
-+		next_sfep = dops->sf_nextentry(sfp, sfep);
-+		XFS_WANT_CORRUPTED_RETURN(mp, endp >= (char *)next_sfep);
-+
-+		/* Check that the offsets always increase. */
-+		XFS_WANT_CORRUPTED_RETURN(mp,
-+				xfs_dir2_sf_get_offset(sfep) >= offset);
-+
-+		/* Check the inode number. */
-+		ino = dops->sf_get_ino(sfp, sfep);
-+		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
-+		XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
-+
-+		/* Check the file type. */
-+		filetype = dops->sf_get_ftype(sfep);
-+		XFS_WANT_CORRUPTED_RETURN(mp, filetype < XFS_DIR3_FT_MAX);
-+
-+		offset = xfs_dir2_sf_get_offset(sfep) +
-+				dops->data_entsize(sfep->namelen);
-+
-+		sfep = next_sfep;
-+	}
-+	XFS_WANT_CORRUPTED_RETURN(mp, i8count == sfp->i8count);
-+	XFS_WANT_CORRUPTED_RETURN(mp, (void *)sfep == (void *)endp);
-+	XFS_WANT_CORRUPTED_RETURN(mp, offset +
-+	       (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
-+	       (uint)sizeof(xfs_dir2_block_tail_t) <= mp->m_dir_geo->blksize);
-+
-+	return 0;
-+}
-+
- /*
-  * Create a new (shortform) directory.
-  */
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 25c1e07..9653e96 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -33,6 +33,8 @@
- #include "xfs_trace.h"
- #include "xfs_attr_sf.h"
- #include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_dir2_priv.h"
- 
- kmem_zone_t *xfs_ifork_zone;
- 
-@@ -320,6 +322,7 @@ xfs_iformat_local(
- 	int		whichfork,
- 	int		size)
- {
-+	int		error;
- 
- 	/*
- 	 * If the size is unreasonable, then something
-@@ -336,6 +339,14 @@ xfs_iformat_local(
- 		return -EFSCORRUPTED;
- 	}
- 
-+	if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
-+		error = xfs_dir2_sf_verify(ip->i_mount,
-+				(struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip),
-+				size);
-+		if (error)
-+			return error;
-+	}
-+
- 	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size);
- 	return 0;
- }
-@@ -856,7 +867,7 @@ xfs_iextents_copy(
-  * In these cases, the format always takes precedence, because the
-  * format indicates the current state of the fork.
-  */
--void
-+int
- xfs_iflush_fork(
- 	xfs_inode_t		*ip,
- 	xfs_dinode_t		*dip,
-@@ -866,6 +877,7 @@ xfs_iflush_fork(
- 	char			*cp;
- 	xfs_ifork_t		*ifp;
- 	xfs_mount_t		*mp;
-+	int			error;
- 	static const short	brootflag[2] =
- 		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
- 	static const short	dataflag[2] =
-@@ -874,7 +886,7 @@ xfs_iflush_fork(
- 		{ XFS_ILOG_DEXT, XFS_ILOG_AEXT };
- 
- 	if (!iip)
--		return;
-+		return 0;
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	/*
- 	 * This can happen if we gave up in iformat in an error path,
-@@ -882,12 +894,19 @@ xfs_iflush_fork(
- 	 */
- 	if (!ifp) {
- 		ASSERT(whichfork == XFS_ATTR_FORK);
--		return;
-+		return 0;
- 	}
- 	cp = XFS_DFORK_PTR(dip, whichfork);
- 	mp = ip->i_mount;
- 	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
- 	case XFS_DINODE_FMT_LOCAL:
-+		if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
-+			error = xfs_dir2_sf_verify(mp,
-+					(struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data,
-+					ifp->if_bytes);
-+			if (error)
-+				return error;
-+		}
- 		if ((iip->ili_fields & dataflag[whichfork]) &&
- 		    (ifp->if_bytes > 0)) {
- 			ASSERT(ifp->if_u1.if_data != NULL);
-@@ -940,6 +959,7 @@ xfs_iflush_fork(
- 		ASSERT(0);
- 		break;
- 	}
-+	return 0;
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 7fb8365..132dc59 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -140,7 +140,7 @@ typedef struct xfs_ifork {
- struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
- 
- int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
--void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
-+int		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
- 				struct xfs_inode_log_item *, int);
- void		xfs_idestroy_fork(struct xfs_inode *, int);
- void		xfs_idata_realloc(struct xfs_inode *, int, int);
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 003a99b..ad9396e 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -71,22 +71,11 @@ xfs_dir2_sf_getdents(
- 	struct xfs_da_geometry	*geo = args->geo;
- 
- 	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
--	/*
--	 * Give up if the directory is way too short.
--	 */
--	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
--		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
--		return -EIO;
--	}
--
- 	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
- 	ASSERT(dp->i_df.if_u1.if_data != NULL);
- 
- 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
- 
--	if (dp->i_d.di_size < xfs_dir2_sf_hdr_size(sfp->i8count))
--		return -EFSCORRUPTED;
--
- 	/*
- 	 * If the block number in the offset is out of range, we're done.
- 	 */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 7eaf1ef..c7fe2c2 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3475,6 +3475,7 @@ xfs_iflush_int(
- 	struct xfs_inode_log_item *iip = ip->i_itemp;
- 	struct xfs_dinode	*dip;
- 	struct xfs_mount	*mp = ip->i_mount;
-+	int			error;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
- 	ASSERT(xfs_isiflocked(ip));
-@@ -3557,9 +3558,14 @@ xfs_iflush_int(
- 	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
- 		ip->i_d.di_flushiter = 0;
- 
--	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
--	if (XFS_IFORK_Q(ip))
--		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
-+	error = xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
-+	if (error)
-+		return error;
-+	if (XFS_IFORK_Q(ip)) {
-+		error = xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
-+		if (error)
-+			return error;
-+	}
- 	xfs_inobp_check(mp, bp);
- 
- 	/*
+But, waiting for 4.12 does provide the opportunity to add more stressful
+tests than what generic/417 does now.  How about a test that creates a
+big directory structure + some heavily fragmented files, then opens all
+of those files, deletes the directory tree, shuts down the fs, then
+attempts a ro mode recovery?  That way we have a lot of files and a lot
+of bmap records to get rid of during mount.
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
