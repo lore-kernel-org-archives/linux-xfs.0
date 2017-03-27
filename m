@@ -1,36 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.perfora.net ([74.208.4.196]:57437 "EHLO mout.perfora.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751277AbdCWNV7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 23 Mar 2017 09:21:59 -0400
-Received: from [10.10.10.211] ([71.89.161.98]) by mrelay.perfora.net
- (mreueus002 [74.208.5.2]) with ESMTPSA (Nemesis) id 0M8jzW-1d3AhG0v5I-00C6KS
- for <linux-xfs@vger.kernel.org>; Thu, 23 Mar 2017 14:21:58 +0100
-From: Michael Lueck <mlueck@lueckdatasystems.com>
-Subject: Selectively backup based on specific date
-Message-ID: <0c190757-c4ac-ae5c-6e1c-b9be37470be5@lueckdatasystems.com>
-Date: Thu, 23 Mar 2017 09:21:56 -0400
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:35458 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751406AbdC0IPM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:15:12 -0400
+Subject: Re: Request 5c6863019e45 ("cancel the setfilesize transation when io
+ error happen") for 3.12 stable inclusion
+References: <48c85015-5520-bd42-dca7-cfb9634dcc39@gmail.com>
+From: Jiri Slaby <jslaby@suse.cz>
+Message-ID: <c76b9580-1012-000b-1c69-3ef090162145@suse.cz>
+Date: Mon, 27 Mar 2017 10:15:08 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <48c85015-5520-bd42-dca7-cfb9634dcc39@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Nikolay Borisov <n.borisov.lkml@gmail.com>, stable@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, bfoster@redhat.com, david@fromorbit.com
 
-Greetings,
+On 03/23/2017, 04:19 PM, Nikolay Borisov wrote:
+> Hello,
+> 
+> 
+> I'd like to request the above patch be included into the 3.12 stable
+> tree. I've attached a backport and have run xfstest and no regressions
+> were observed. This fixes hang in generic/361 test.
 
-I am looking for the correct xfsdump syntax to backup dirs/files newer than a certain date.
+So this is actually 5cb13dcd0fac071b45c4bebe1801a08ff0d89cad, not
+5c6863019e45, right? Applied as the former. Thanks.
 
-I have not found mention of such an option / capability within xfsdump. Hopefully there is a creative way to do the selective backup.
+> 0001-cancel-the-setfilesize-transation-when-io-error-happ.patch
+> 
+> 
+> From 5c6863019e453bee3ac6dbdf1fbf0d9125942c3b Mon Sep 17 00:00:00 2001
+> From: Zhaohongjiang <zhaohongjiang@huawei.com>
+> Date: Mon, 12 Oct 2015 15:28:39 +1100
+> Subject: [PATCH] cancel the setfilesize transation when io error happen
+> 
+> When I ran xfstest/073 case, the remount process was blocked to wait
+> transactions to be zero. I found there was a io error happened, and
+> the setfilesize transaction was not released properly. We should add
+> the changes to cancel the io error in this case.
+> 
+> Reproduction steps:
+> 1. dd if=/dev/zero of=xfs1.img bs=1M count=2048
+> 2. mkfs.xfs xfs1.img
+> 3. losetup -f ./xfs1.img /dev/loop0
+> 4. mount -t xfs /dev/loop0 /home/test_dir/
+> 5. mkdir /home/test_dir/test
+> 6. mkfs.xfs -dfile,name=image,size=2g
+> 7. mount -t xfs -o loop image /home/test_dir/test
+> 8. cp a file bigger than 2g to /home/test_dir/test
+> 9. mount -t xfs -o remount,ro /home/test_dir/test
+> 
+> [ dchinner: moved io error detection to xfs_setfilesize_ioend() after
+>   transaction context restoration. ]
+> 
+> [ nborisov: Adjusted context for 3.12 ]
+> 
+> Signed-off-by: Zhao Hongjiang <zhaohongjiang@huawei.com>
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> ---
+>  fs/xfs/xfs_aops.c | 13 +++++++++++--
+>  1 file changed, 11 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index ab28ad576b16..6394e3f51553 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -150,6 +150,12 @@ xfs_setfilesize(
+>  	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
+>  			   0, 1, _THIS_IP_);
+>  
+> +	/* we abort the update if there was an IO error */
+> +	if (ioend->io_error) {
+> +		xfs_trans_cancel(tp, 0);
+> +		return ioend->io_error;
+> +	}
+> +
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
+>  	if (!isize) {
+> @@ -205,14 +211,17 @@ xfs_end_io(
+>  		ioend->io_error = -EIO;
+>  		goto done;
+>  	}
+> -	if (ioend->io_error)
+> -		goto done;
+>  
+>  	/*
+>  	 * For unwritten extents we need to issue transactions to convert a
+>  	 * range to normal written extens after the data I/O has finished.
+> +	 * Detecting and handling completion IO errors is done individually
+> +	 * for each case as different cleanup operations need to be performed
+> +	 * on error.
+>  	 */
+>  	if (ioend->io_type == XFS_IO_UNWRITTEN) {
+> +		if (ioend->io_error)
+> +			goto done;
+>  		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
+>  						  ioend->io_size);
+>  	} else if (ioend->io_isdirect && xfs_ioend_is_append(ioend)) {
+> -- 2.7.4
+> 
 
-This is for use on Ubuntu 16.04.
-
-Please advise.
-
-I am thankful,
 
 -- 
-Michael Lueck
-Lueck Data Systems
-http://www.lueckdatasystems.com/
+js
+suse labs
