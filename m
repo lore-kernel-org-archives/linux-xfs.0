@@ -1,166 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52085 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:52010 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752116AbdC0Ik3 (ORCPT
+        with ESMTP id S1752169AbdC0Ik3 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:40:29 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 25/26] xfs: use iomap new flag for newly allocated delalloc blocks
-Date: Mon, 27 Mar 2017 10:38:36 +0200
-Message-Id: <20170327083837.11027-26-hch@lst.de>
+Subject: [PATCH 24/26] xfs: Use xfs_icluster_size_fsb() to calculate inode alignment mask
+Date: Mon, 27 Mar 2017 10:38:35 +0200
+Message-Id: <20170327083837.11027-25-hch@lst.de>
 In-Reply-To: <20170327083837.11027-1-hch@lst.de>
 References: <20170327083837.11027-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Chandan Rajendra <chandan@linux.vnet.ibm.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 
-commit f65e6fad293b3a5793b7fa2044800506490e7a2e upstream.
+commit d5825712ee98d68a2c17bc89dad2c30276894cba upstream.
 
-Commit fa7f138 ("xfs: clear delalloc and cache on buffered write
-failure") fixed one regression in the iomap error handling code and
-exposed another. The fundamental problem is that if a buffered write
-is a rewrite of preexisting delalloc blocks and the write fails, the
-failure handling code can punch out preexisting blocks with valid
-file data.
+When block size is larger than inode cluster size, the call to
+XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
+would have set xfs_sb->sb_inoalignmt to 0. Hence in
+xfs_set_inoalignment(), xfs_mount->m_inoalign_mask gets initialized to
+-1 instead of 0. However, xfs_mount->m_sinoalign would get correctly
+intialized to 0 because for every positive value of xfs_mount->m_dalign,
+the condition "!(mp->m_dalign & mp->m_inoalign_mask)" would evaluate to
+false.
 
-This was reproduced directly by sub-block writes in the LTP
-kernel/syscalls/write/write03 test. A first 100 byte write allocates
-a single block in a file. A subsequent 100 byte write fails and
-punches out the block, including the data successfully written by
-the previous write.
+Also, xfs_imap() worked fine even with xfs_mount->m_inoalign_mask having
+-1 as the value because blks_per_cluster variable would have the value 1
+and hence we would never have a need to use xfs_mount->m_inoalign_mask
+to compute the inode chunk's agbno and offset within the chunk.
 
-To address this problem, update the ->iomap_begin() handler to
-distinguish newly allocated delalloc blocks from preexisting
-delalloc blocks via the IOMAP_F_NEW flag. Use this flag in the
-->iomap_end() handler to decide when a failed or short write should
-punch out delalloc blocks.
-
-This introduces the subtle requirement that ->iomap_begin() should
-never combine newly allocated delalloc blocks with existing blocks
-in the resulting iomap descriptor. This can occur when a new
-delalloc reservation merges with a neighboring extent that is part
-of the current write, for example. Therefore, drop the
-post-allocation extent lookup from xfs_bmapi_reserve_delalloc() and
-just return the record inserted into the fork. This ensures only new
-blocks are returned and thus that preexisting delalloc blocks are
-always handled as "found" blocks and not punched out on a failed
-rewrite.
-
-Reported-by: Xiong Zhou <xzhou@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 24 ++++++++++++++----------
- fs/xfs/xfs_iomap.c       | 16 +++++++++++-----
- 2 files changed, 25 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_mount.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9224dd96231c..eb34879d1a0c 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4160,6 +4160,19 @@ xfs_bmapi_read(
- 	return 0;
- }
- 
-+/*
-+ * Add a delayed allocation extent to an inode. Blocks are reserved from the
-+ * global pool and the extent inserted into the inode in-core extent tree.
-+ *
-+ * On entry, got refers to the first extent beyond the offset of the extent to
-+ * allocate or eof is specified if no such extent exists. On return, got refers
-+ * to the extent record that was inserted to the inode fork.
-+ *
-+ * Note that the allocated extent may have been merged with contiguous extents
-+ * during insertion into the inode fork. Thus, got does not reflect the current
-+ * state of the inode fork on return. If necessary, the caller can use lastx to
-+ * look up the updated record in the inode fork.
-+ */
- int
- xfs_bmapi_reserve_delalloc(
- 	struct xfs_inode	*ip,
-@@ -4246,13 +4259,8 @@ xfs_bmapi_reserve_delalloc(
- 	got->br_startblock = nullstartblock(indlen);
- 	got->br_blockcount = alen;
- 	got->br_state = XFS_EXT_NORM;
--	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
- 
--	/*
--	 * Update our extent pointer, given that xfs_bmap_add_extent_hole_delay
--	 * might have merged it into one of the neighbouring ones.
--	 */
--	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), got);
-+	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
- 
- 	/*
- 	 * Tag the inode if blocks were preallocated. Note that COW fork
-@@ -4264,10 +4272,6 @@ xfs_bmapi_reserve_delalloc(
- 	if (whichfork == XFS_COW_FORK && (prealloc || aoff < off || alen > len))
- 		xfs_inode_set_cowblocks_tag(ip);
- 
--	ASSERT(got->br_startoff <= aoff);
--	ASSERT(got->br_startoff + got->br_blockcount >= aoff + alen);
--	ASSERT(isnullstartblock(got->br_startblock));
--	ASSERT(got->br_state == XFS_EXT_NORM);
- 	return 0;
- 
- out_unreserve_blocks:
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index e8811bd1019b..2326a6913fde 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -637,6 +637,11 @@ xfs_file_iomap_begin_delay(
- 		goto out_unlock;
- 	}
- 
-+	/*
-+	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
-+	 * them out if the write happens to fail.
-+	 */
-+	iomap->flags = IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
- done:
- 	if (isnullstartblock(got.br_startblock))
-@@ -1085,7 +1090,8 @@ xfs_file_iomap_end_delalloc(
- 	struct xfs_inode	*ip,
- 	loff_t			offset,
- 	loff_t			length,
--	ssize_t			written)
-+	ssize_t			written,
-+	struct iomap		*iomap)
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 1f1e4ae44150..52d27cc4370a 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -511,8 +511,7 @@ STATIC void
+ xfs_set_inoalignment(xfs_mount_t *mp)
  {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		start_fsb;
-@@ -1104,14 +1110,14 @@ xfs_file_iomap_end_delalloc(
- 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
- 
- 	/*
--	 * Trim back delalloc blocks if we didn't manage to write the whole
--	 * range reserved.
-+	 * Trim delalloc blocks if they were allocated by this write and we
-+	 * didn't manage to write the whole range.
- 	 *
- 	 * We don't need to care about racing delalloc as we hold i_mutex
- 	 * across the reserve/allocate/unreserve calls. If there are delalloc
- 	 * blocks in the range, they are ours.
- 	 */
--	if (start_fsb < end_fsb) {
-+	if ((iomap->flags & IOMAP_F_NEW) && start_fsb < end_fsb) {
- 		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
- 					 XFS_FSB_TO_B(mp, end_fsb) - 1);
- 
-@@ -1141,7 +1147,7 @@ xfs_file_iomap_end(
- {
- 	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
- 		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
--				length, written);
-+				length, written, iomap);
- 	return 0;
- }
- 
+ 	if (xfs_sb_version_hasalign(&mp->m_sb) &&
+-	    mp->m_sb.sb_inoalignmt >=
+-	    XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
++		mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
+ 		mp->m_inoalign_mask = mp->m_sb.sb_inoalignmt - 1;
+ 	else
+ 		mp->m_inoalign_mask = 0;
 -- 
 2.11.0
 
