@@ -1,166 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40124 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:33158 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752237AbdC0Ive (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:51:34 -0400
+        with ESMTP id S1752178AbdC0IvZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:51:25 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 26/27] xfs: use iomap new flag for newly allocated delalloc blocks
-Date: Mon, 27 Mar 2017 10:49:21 +0200
-Message-Id: <20170327084922.11691-27-hch@lst.de>
+Subject: [PATCH 21/27] xfs: Use xfs_icluster_size_fsb() to calculate inode chunk alignment
+Date: Mon, 27 Mar 2017 10:49:16 +0200
+Message-Id: <20170327084922.11691-22-hch@lst.de>
 In-Reply-To: <20170327084922.11691-1-hch@lst.de>
 References: <20170327084922.11691-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Chandan Rajendra <chandan@linux.vnet.ibm.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 
-commit f65e6fad293b3a5793b7fa2044800506490e7a2e upstream.
+commit 8ee9fdbebc84b39f1d1c201c5e32277c61d034aa upstream.
 
-Commit fa7f138 ("xfs: clear delalloc and cache on buffered write
-failure") fixed one regression in the iomap error handling code and
-exposed another. The fundamental problem is that if a buffered write
-is a rewrite of preexisting delalloc blocks and the write fails, the
-failure handling code can punch out preexisting blocks with valid
-file data.
+On a ppc64 system, executing generic/256 test with 32k block size gives the following call trace,
 
-This was reproduced directly by sub-block writes in the LTP
-kernel/syscalls/write/write03 test. A first 100 byte write allocates
-a single block in a file. A subsequent 100 byte write fails and
-punches out the block, including the data successfully written by
-the previous write.
+XFS: Assertion failed: args->maxlen > 0, file: /root/repos/linux/fs/xfs/libxfs/xfs_alloc.c, line: 2026
 
-To address this problem, update the ->iomap_begin() handler to
-distinguish newly allocated delalloc blocks from preexisting
-delalloc blocks via the IOMAP_F_NEW flag. Use this flag in the
-->iomap_end() handler to decide when a failed or short write should
-punch out delalloc blocks.
+kernel BUG at /root/repos/linux/fs/xfs/xfs_message.c:113!
+Oops: Exception in kernel mode, sig: 5 [#1]
+SMP NR_CPUS=2048
+DEBUG_PAGEALLOC
+NUMA
+pSeries
+Modules linked in:
+CPU: 2 PID: 19361 Comm: mkdir Not tainted 4.10.0-rc5 #58
+task: c000000102606d80 task.stack: c0000001026b8000
+NIP: c0000000004ef798 LR: c0000000004ef798 CTR: c00000000082b290
+REGS: c0000001026bb090 TRAP: 0700   Not tainted  (4.10.0-rc5)
+MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>
+CR: 28004428  XER: 00000000
+CFAR: c0000000004ef180 SOFTE: 1
+GPR00: c0000000004ef798 c0000001026bb310 c000000001157300 ffffffffffffffea
+GPR04: 000000000000000a c0000001026bb130 0000000000000000 ffffffffffffffc0
+GPR08: 00000000000000d1 0000000000000021 00000000ffffffd1 c000000000dd4990
+GPR12: 0000000022004444 c00000000fe00800 0000000020000000 0000000000000000
+GPR16: 0000000000000000 0000000043a606fc 0000000043a76c08 0000000043a1b3d0
+GPR20: 000001002a35cd60 c0000001026bbb80 0000000000000000 0000000000000001
+GPR24: 0000000000000240 0000000000000004 c00000062dc55000 0000000000000000
+GPR28: 0000000000000004 c00000062ecd9200 0000000000000000 c0000001026bb6c0
+NIP [c0000000004ef798] .assfail+0x28/0x30
+LR [c0000000004ef798] .assfail+0x28/0x30
+Call Trace:
+[c0000001026bb310] [c0000000004ef798] .assfail+0x28/0x30 (unreliable)
+[c0000001026bb380] [c000000000455d74] .xfs_alloc_space_available+0x194/0x1b0
+[c0000001026bb410] [c00000000045b914] .xfs_alloc_fix_freelist+0x144/0x480
+[c0000001026bb580] [c00000000045c368] .xfs_alloc_vextent+0x698/0xa90
+[c0000001026bb650] [c0000000004a6200] .xfs_ialloc_ag_alloc+0x170/0x820
+[c0000001026bb7c0] [c0000000004a9098] .xfs_dialloc+0x158/0x320
+[c0000001026bb8a0] [c0000000004e628c] .xfs_ialloc+0x7c/0x610
+[c0000001026bb990] [c0000000004e8138] .xfs_dir_ialloc+0xa8/0x2f0
+[c0000001026bbaa0] [c0000000004e8814] .xfs_create+0x494/0x790
+[c0000001026bbbf0] [c0000000004e5ebc] .xfs_generic_create+0x2bc/0x410
+[c0000001026bbce0] [c0000000002b4a34] .vfs_mkdir+0x154/0x230
+[c0000001026bbd70] [c0000000002bc444] .SyS_mkdirat+0x94/0x120
+[c0000001026bbe30] [c00000000000b760] system_call+0x38/0xfc
+Instruction dump:
+4e800020 60000000 7c0802a6 7c862378 3c82ffca 7ca72b78 38841c18 7c651b78
+38600000 f8010010 f821ff91 4bfff94d <0fe00000> 60000000 7c0802a6 7c892378
 
-This introduces the subtle requirement that ->iomap_begin() should
-never combine newly allocated delalloc blocks with existing blocks
-in the resulting iomap descriptor. This can occur when a new
-delalloc reservation merges with a neighboring extent that is part
-of the current write, for example. Therefore, drop the
-post-allocation extent lookup from xfs_bmapi_reserve_delalloc() and
-just return the record inserted into the fork. This ensures only new
-blocks are returned and thus that preexisting delalloc blocks are
-always handled as "found" blocks and not punched out on a failed
-rewrite.
+When block size is larger than inode cluster size, the call to
+XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
+would have set xfs_sb->sb_inoalignmt to 0. This causes
+xfs_ialloc_cluster_alignment() to return 0.  Due to this
+args.minalignslop (in xfs_ialloc_ag_alloc()) gets the unsigned
+equivalent of -1 assigned to it. This later causes alloc_len in
+xfs_alloc_space_available() to have a value of 0. In such a scenario
+when args.total is also 0, the assert statement "ASSERT(args->maxlen >
+0);" fails.
 
-Reported-by: Xiong Zhou <xzhou@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+This commit fixes the bug by replacing the call to XFS_B_TO_FSBT() in
+xfs_ialloc_cluster_alignment() with a call to xfs_icluster_size_fsb().
+
+Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 24 ++++++++++++++----------
- fs/xfs/xfs_iomap.c       | 16 +++++++++++-----
- 2 files changed, 25 insertions(+), 15 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a4322526ea5f..ec93395eccdc 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4253,6 +4253,19 @@ xfs_bmapi_read(
- 	return 0;
- }
- 
-+/*
-+ * Add a delayed allocation extent to an inode. Blocks are reserved from the
-+ * global pool and the extent inserted into the inode in-core extent tree.
-+ *
-+ * On entry, got refers to the first extent beyond the offset of the extent to
-+ * allocate or eof is specified if no such extent exists. On return, got refers
-+ * to the extent record that was inserted to the inode fork.
-+ *
-+ * Note that the allocated extent may have been merged with contiguous extents
-+ * during insertion into the inode fork. Thus, got does not reflect the current
-+ * state of the inode fork on return. If necessary, the caller can use lastx to
-+ * look up the updated record in the inode fork.
-+ */
- int
- xfs_bmapi_reserve_delalloc(
- 	struct xfs_inode	*ip,
-@@ -4339,13 +4352,8 @@ xfs_bmapi_reserve_delalloc(
- 	got->br_startblock = nullstartblock(indlen);
- 	got->br_blockcount = alen;
- 	got->br_state = XFS_EXT_NORM;
--	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
- 
--	/*
--	 * Update our extent pointer, given that xfs_bmap_add_extent_hole_delay
--	 * might have merged it into one of the neighbouring ones.
--	 */
--	xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *lastx), got);
-+	xfs_bmap_add_extent_hole_delay(ip, whichfork, lastx, got);
- 
- 	/*
- 	 * Tag the inode if blocks were preallocated. Note that COW fork
-@@ -4357,10 +4365,6 @@ xfs_bmapi_reserve_delalloc(
- 	if (whichfork == XFS_COW_FORK && (prealloc || aoff < off || alen > len))
- 		xfs_inode_set_cowblocks_tag(ip);
- 
--	ASSERT(got->br_startoff <= aoff);
--	ASSERT(got->br_startoff + got->br_blockcount >= aoff + alen);
--	ASSERT(isnullstartblock(got->br_startblock));
--	ASSERT(got->br_state == XFS_EXT_NORM);
- 	return 0;
- 
- out_unreserve_blocks:
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 5211887cbcd2..360562484e7b 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -637,6 +637,11 @@ xfs_file_iomap_begin_delay(
- 		goto out_unlock;
- 	}
- 
-+	/*
-+	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
-+	 * them out if the write happens to fail.
-+	 */
-+	iomap->flags = IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
- done:
- 	if (isnullstartblock(got.br_startblock))
-@@ -1061,7 +1066,8 @@ xfs_file_iomap_end_delalloc(
- 	struct xfs_inode	*ip,
- 	loff_t			offset,
- 	loff_t			length,
--	ssize_t			written)
-+	ssize_t			written,
-+	struct iomap		*iomap)
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index d45c03779dae..a2818f6e8598 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -51,8 +51,7 @@ xfs_ialloc_cluster_alignment(
+ 	struct xfs_mount	*mp)
  {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		start_fsb;
-@@ -1080,14 +1086,14 @@ xfs_file_iomap_end_delalloc(
- 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
- 
- 	/*
--	 * Trim back delalloc blocks if we didn't manage to write the whole
--	 * range reserved.
-+	 * Trim delalloc blocks if they were allocated by this write and we
-+	 * didn't manage to write the whole range.
- 	 *
- 	 * We don't need to care about racing delalloc as we hold i_mutex
- 	 * across the reserve/allocate/unreserve calls. If there are delalloc
- 	 * blocks in the range, they are ours.
- 	 */
--	if (start_fsb < end_fsb) {
-+	if ((iomap->flags & IOMAP_F_NEW) && start_fsb < end_fsb) {
- 		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
- 					 XFS_FSB_TO_B(mp, end_fsb) - 1);
- 
-@@ -1117,7 +1123,7 @@ xfs_file_iomap_end(
- {
- 	if ((flags & IOMAP_WRITE) && iomap->type == IOMAP_DELALLOC)
- 		return xfs_file_iomap_end_delalloc(XFS_I(inode), offset,
--				length, written);
-+				length, written, iomap);
- 	return 0;
+ 	if (xfs_sb_version_hasalign(&mp->m_sb) &&
+-	    mp->m_sb.sb_inoalignmt >=
+-			XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
++	    mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
+ 		return mp->m_sb.sb_inoalignmt;
+ 	return 1;
  }
- 
 -- 
 2.11.0
 
