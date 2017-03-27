@@ -1,69 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:53736 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751170AbdCXEct (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Mar 2017 00:32:49 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 0/2 V2] xfs_io: hook up statx
-Message-ID: <7a090a8e-7204-1b9b-8b31-e7a061b39f87@sandeen.net>
-Date: Thu, 23 Mar 2017 23:32:47 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Received: from bombadil.infradead.org ([65.50.211.133]:44830 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751751AbdC0Iiv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:38:51 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/26] xfs: fix eofblocks race with file extending async dio writes
+Date: Mon, 27 Mar 2017 10:38:14 +0200
+Message-Id: <20170327083837.11027-4-hch@lst.de>
+In-Reply-To: <20170327083837.11027-1-hch@lst.de>
+References: <20170327083837.11027-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>, David Howells <dhowells@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-These 2 patches are a second pass to add a statx command
-to xfs_io in hopes that it will aid creation of xfstests
-statx regression tests.
+From: Brian Foster <bfoster@redhat.com>
 
-xfs_io> help statx
-statx [-O | -m mask][-FDLA] -- extended information about the currently open file
+commit e4229d6b0bc9280f29624faf170cf76a9f1ca60e upstream.
 
- Display extended file status.
+It's possible for post-eof blocks to end up being used for direct I/O
+writes. dio write performs an upfront unwritten extent allocation, sends
+the dio and then updates the inode size (if necessary) on write
+completion. If a file release occurs while a file extending dio write is
+in flight, it is possible to mistake the post-eof blocks for speculative
+preallocation and incorrectly truncate them from the inode. This means
+that the resulting dio write completion can discover a hole and allocate
+new blocks rather than perform unwritten extent conversion.
 
- Options:
- -m mask -- Specify the field mask for the statx call (default STATX_ALL)
- -A -- Suppress terminal automount traversal
- -D -- Don't sync attributes with the server
- -F -- Force the attributes to be sync'd with the server
- -L -- Follow symlinks (statx link target)
- -O -- Add only basic stats (STATX_BASIC_STATS) to default mask
+This requires a strange mix of I/O and is thus not likely to reproduce
+in real world workloads. It is intermittently reproduced by generic/299.
+The error manifests as an assert failure due to transaction overrun
+because the aforementioned write completion transaction has only
+reserved enough blocks for btree operations:
 
-xfs_io> statx
-stx_mask: 0xfff
-stx_blksize: 4096
-stx_attributes: 0x70
-stx_nlink: 1
-stx_uid: 0
-stx_gid: 0
-stx_mode: 0100644
-stx_ino: 99
-stx_size: 0
-stx_blocks: 0
-stx_atime.tv_sec: 1490109633
-stx_atime.tv_nsec: 676550238
-stx_btime.tv_sec: 1490109633
-stx_btime.tv_nsec: 675550234
-stx_ctime.tv_sec: 1490109725
-stx_ctime.tv_nsec: 69966839
-stx_mtime.tv_sec: 1490109633
-stx_mtime.tv_nsec: 676550238
-stx_rdev_major: 0
-stx_rdev_minor: 0
-stx_dev_major: 7
-stx_dev_minor: 0
+  XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, \
+   file: fs/xfs//xfs_trans.c, line: 309
 
-patch 2 includes a header file with lots of the new #defines
-so this can build on older systems; eventually that can be
-removed perhaps.
+The root cause is that xfs_free_eofblocks() uses i_size to truncate
+post-eof blocks from the inode, but async, file extending direct writes
+do not update i_size until write completion, long after inode locks are
+dropped. Therefore, xfs_free_eofblocks() effectively truncates the inode
+to the incorrect size.
 
-An interesting limitation of all of the xfs_io stat
-variants is that they currently can't stat any file that
-they can't open, which may or may not be a limitation that
-we care about....
+Update xfs_free_eofblocks() to serialize against dio similar to how
+extending writes are serialized against i_size updates before post-eof
+block zeroing. Specifically, wait on dio while under the iolock. This
+ensures that dio write completions have updated i_size before post-eof
+blocks are processed.
 
--Eric
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_bmap_util.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 9319ee9759d4..eb890ed1ed5c 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -959,6 +959,9 @@ xfs_free_eofblocks(
+ 		if (error)
+ 			return error;
+ 
++		/* wait on dio to ensure i_size has settled */
++		inode_dio_wait(VFS_I(ip));
++
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0,
+ 				&tp);
+ 		if (error) {
+-- 
+2.11.0
 
