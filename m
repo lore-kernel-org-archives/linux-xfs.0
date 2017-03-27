@@ -1,50 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:63220 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754465AbdCWOLN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Mar 2017 10:11:13 -0400
-From: Hans-Peter Jansen <hpj@urpla.net>
-Subject: Re: Selectively backup based on specific date
-Date: Thu, 23 Mar 2017 15:11:07 +0100
-Message-ID: <1904662.EPkO7u6dZY@xrated>
-In-Reply-To: <0c190757-c4ac-ae5c-6e1c-b9be37470be5@lueckdatasystems.com>
-References: <0c190757-c4ac-ae5c-6e1c-b9be37470be5@lueckdatasystems.com>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33240 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751968AbdC0U6z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 16:58:55 -0400
+Date: Mon, 27 Mar 2017 13:58:46 -0700
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: [PATCH 2/2 V2] xfs_io: hook up statx
+Message-ID: <20170327205846.GA6502@gmail.com>
+References: <7a090a8e-7204-1b9b-8b31-e7a061b39f87@sandeen.net>
+ <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michael Lueck <mlueck@lueckdatasystems.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, David Howells <dhowells@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>
 
-Hi Michael,
+Hi Eric,
 
-On Donnerstag, 23. März 2017 09:21:56 Michael Lueck wrote:
-> Greetings,
+On Thu, Mar 23, 2017 at 11:45:45PM -0500, Eric Sandeen wrote:
+> Wire up the statx syscall to xfs_io.
 > 
-> I am looking for the correct xfsdump syntax to backup dirs/files newer than
-> a certain date.
 
-xfsdump is a tool in the tradition of unix filesystem dump utilities.
-Those always dump a full filesystem, and consequently, fully restore  
-filesystems only.
+I haven't reviewed these patches in detail, but just a few nits:
 
-> I have not found mention of such an option / capability within xfsdump.
-> Hopefully there is a creative way to do the selective backup.
+Given that the command operates on an open file, wouldn't it make more sense to
+call statx() with the file descriptor and a NULL path?  It wouldn't be ideal for
+test coverage, but it seems xfs_io isn't currently designed to work otherwise.
+And note that the 'stat' xfs_io command already calls fstat(), not stat().
 
-Using a linux derivate, there are plenty of more or less creative options to 
-selectively backup/restore arbitrary file systems, but this is rather OT for 
-the ML. 
+(In particular think about what should happen if you open a file through a
+symlink, then execute both the 'stat' and 'statx' commands... with the current
+proposal 'stat' would operate on the file, while 'statx' would operate on the
+symlink by default.  Seems inconsistent.)
 
-Here are some of my favorite tools:
-	rsync for ad hoc operations, 
-	rsnapshot for regular file based backups, 
-	borg for deduplicated backups (e.g. VM images).
+> diff --git a/io/init.c b/io/init.c
+> index 06002e6..c15a1e1 100644
+> --- a/io/init.c
+> +++ b/io/init.c
+> @@ -86,6 +86,7 @@ init_commands(void)
+>  	seek_init();
+>  	sendfile_init();
+>  	shutdown_init();
+> +	stat_init();
+>  	sync_init();
 
-They all perform nicely over LAN as well.
+The call to stat_init() should be added in patch 1 instead of patch 2, since
+otherwise the 'stat' command is unavailable after applying just patch 1.
 
-If you seek professional support in this regard, send an PM.
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 19e1ae4..022f0ea 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -880,6 +880,32 @@ and the XFS_IOC_GETXATTR system call on the current file. If the
+>  option is specified, the atime (last access), mtime
+>  (last modify), and ctime (last change) timestamps are also displayed.
+>  .TP
+> +.BR statx " [ " \-O " | " "\-m mask" " ][ \-" FDLA " ]"
+> +Extended information from the statx syscall.
+> +.RS 1.0i
+> +.PD 0
+> +.TP 0.4i
+> +.B \-m mask
+> +Specify the field mask for the statx call (default STATX_ALL)
+> +.TP
+> +.B \-O
+> +Add only basic stats (STATX_BASIC_STATS) to default mask
+> +.TP
+> +.B \-F
+> +Force the attributes to be sync'd with the server
+> +.TP
+> +.B \-D
+> +Don't sync attributes with the server
+> +.TP
+> +.B \-L
+> +Follow symlinks (statx link target)
+> +.TP
+> +.B \-A
+> +Suppress terminal automount traversal
+> +.TP
+> +.RE
+> +.IP
+> +.TP
+>  .B statfs
+>  Selected statistics from
+>  .BR statfs (2)
 
-Cheers,
-Pete
+This re-introduces the issue where the later text in the formatted man page is
+indented too much.  Removing the extra .TP and .IP, so that the source looks
+like the following, appears to fix it:
+
+.TP
+.B \-A
+Suppress terminal automount traversal
+.RE
+.TP
+.B statfs
+
+
+- Eric
