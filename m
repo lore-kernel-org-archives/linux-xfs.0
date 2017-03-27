@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52809 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:58260 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752445AbdC0IvB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:51:01 -0400
+        with ESMTP id S1752450AbdC0IvD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:51:03 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 22/27] xfs: tune down agno asserts in the bmap code
-Date: Mon, 27 Mar 2017 10:49:17 +0200
-Message-Id: <20170327084922.11691-23-hch@lst.de>
+Subject: [PATCH 24/27] xfs: fix and streamline error handling in xfs_end_io
+Date: Mon, 27 Mar 2017 10:49:19 +0200
+Message-Id: <20170327084922.11691-25-hch@lst.de>
 In-Reply-To: <20170327084922.11691-1-hch@lst.de>
 References: <20170327084922.11691-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -14,82 +14,110 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit 410d17f67e583559be3a922f8b6cc336331893f3 upstream.
+commit 787eb485509f9d58962bd8b4dbc6a5ac6e2034fe upstream.
 
-In various places we currently assert that xfs_bmap_btalloc allocates
-from the same as the firstblock value passed in, unless it's either
-NULLAGNO or the dop_low flag is set.  But the reflink code does not
-fully follow this convention as it passes in firstblock purely as
-a hint for the allocator without actually having previous allocations
-in the transaction, and without having a minleft check on the current
-AG, leading to the assert firing on a very full and heavily used
-file system.  As even the reflink code only allocates from equal or
-higher AGs for now we can simply the check to always allow for equal
-or higher AGs.
+There are two different cases of buffered I/O errors:
 
-Note that we need to eventually split the two meanings of the firstblock
-value.  At that point we can also allow the reflink code to allocate
-from any AG instead of limiting it in any way.
+ - first we can have an already shutdown fs.  In that case we should skip
+   any on-disk operations and just clean up the appen transaction if
+   present and destroy the ioend
+ - a real I/O error.  In that case we should cleanup any lingering COW
+   blocks.  This gets skipped in the current code and is fixed by this
+   patch.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 22 ++++++----------------
- 1 file changed, 6 insertions(+), 16 deletions(-)
+ fs/xfs/xfs_aops.c | 59 +++++++++++++++++++++++++------------------------------
+ 1 file changed, 27 insertions(+), 32 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 70e732ce3dea..a4322526ea5f 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -804,9 +804,7 @@ xfs_bmap_extents_to_btree(
- 	 */
- 	ASSERT(args.fsbno != NULLFSBLOCK);
- 	ASSERT(*firstblock == NULLFSBLOCK ||
--	       args.agno == XFS_FSB_TO_AGNO(mp, *firstblock) ||
--	       (dfops->dop_low &&
--		args.agno > XFS_FSB_TO_AGNO(mp, *firstblock)));
-+	       args.agno >= XFS_FSB_TO_AGNO(mp, *firstblock));
- 	*firstblock = cur->bc_private.b.firstblock = args.fsbno;
- 	cur->bc_private.b.allocated++;
- 	ip->i_d.di_nblocks++;
-@@ -3923,17 +3921,13 @@ xfs_bmap_btalloc(
- 		 * the first block that was allocated.
- 		 */
- 		ASSERT(*ap->firstblock == NULLFSBLOCK ||
--		       XFS_FSB_TO_AGNO(mp, *ap->firstblock) ==
--		       XFS_FSB_TO_AGNO(mp, args.fsbno) ||
--		       (ap->dfops->dop_low &&
--			XFS_FSB_TO_AGNO(mp, *ap->firstblock) <
--			XFS_FSB_TO_AGNO(mp, args.fsbno)));
-+		       XFS_FSB_TO_AGNO(mp, *ap->firstblock) <=
-+		       XFS_FSB_TO_AGNO(mp, args.fsbno));
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 08a2515460ff..0457abe4118a 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -279,54 +279,49 @@ xfs_end_io(
+ 	struct xfs_ioend	*ioend =
+ 		container_of(work, struct xfs_ioend, io_work);
+ 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
++	xfs_off_t		offset = ioend->io_offset;
++	size_t			size = ioend->io_size;
+ 	int			error = ioend->io_bio->bi_error;
  
- 		ap->blkno = args.fsbno;
- 		if (*ap->firstblock == NULLFSBLOCK)
- 			*ap->firstblock = args.fsbno;
--		ASSERT(nullfb || fb_agno == args.agno ||
--		       (ap->dfops->dop_low && fb_agno < args.agno));
-+		ASSERT(nullfb || fb_agno <= args.agno);
- 		ap->length = args.len;
- 		if (!(ap->flags & XFS_BMAPI_COWFORK))
- 			ap->ip->i_d.di_nblocks += args.len;
-@@ -4858,13 +4852,9 @@ xfs_bmapi_write(
- 	if (bma.cur) {
- 		if (!error) {
- 			ASSERT(*firstblock == NULLFSBLOCK ||
--			       XFS_FSB_TO_AGNO(mp, *firstblock) ==
-+			       XFS_FSB_TO_AGNO(mp, *firstblock) <=
- 			       XFS_FSB_TO_AGNO(mp,
--				       bma.cur->bc_private.b.firstblock) ||
--			       (dfops->dop_low &&
--				XFS_FSB_TO_AGNO(mp, *firstblock) <
--				XFS_FSB_TO_AGNO(mp,
--					bma.cur->bc_private.b.firstblock)));
-+				       bma.cur->bc_private.b.firstblock));
- 			*firstblock = bma.cur->bc_private.b.firstblock;
+ 	/*
+-	 * Set an error if the mount has shut down and proceed with end I/O
+-	 * processing so it can perform whatever cleanups are necessary.
++	 * Just clean up the in-memory strutures if the fs has been shut down.
+ 	 */
+-	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
++	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+ 		error = -EIO;
++		goto done;
++	}
+ 
+ 	/*
+-	 * For a CoW extent, we need to move the mapping from the CoW fork
+-	 * to the data fork.  If instead an error happened, just dump the
+-	 * new blocks.
++	 * Clean up any COW blocks on an I/O error.
+ 	 */
+-	if (ioend->io_type == XFS_IO_COW) {
+-		if (error)
+-			goto done;
+-		if (ioend->io_bio->bi_error) {
+-			error = xfs_reflink_cancel_cow_range(ip,
+-					ioend->io_offset, ioend->io_size, true);
+-			goto done;
++	if (unlikely(error)) {
++		switch (ioend->io_type) {
++		case XFS_IO_COW:
++			xfs_reflink_cancel_cow_range(ip, offset, size, true);
++			break;
  		}
- 		xfs_btree_del_cursor(bma.cur,
+-		error = xfs_reflink_end_cow(ip, ioend->io_offset,
+-				ioend->io_size);
+-		if (error)
+-			goto done;
++
++		goto done;
+ 	}
+ 
+ 	/*
+-	 * For unwritten extents we need to issue transactions to convert a
+-	 * range to normal written extens after the data I/O has finished.
+-	 * Detecting and handling completion IO errors is done individually
+-	 * for each case as different cleanup operations need to be performed
+-	 * on error.
++	 * Success:  commit the COW or unwritten blocks if needed.
+ 	 */
+-	if (ioend->io_type == XFS_IO_UNWRITTEN) {
+-		if (error)
+-			goto done;
+-		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
+-						  ioend->io_size);
+-	} else if (ioend->io_append_trans) {
+-		error = xfs_setfilesize_ioend(ioend, error);
+-	} else {
+-		ASSERT(!xfs_ioend_is_append(ioend) ||
+-		       ioend->io_type == XFS_IO_COW);
++	switch (ioend->io_type) {
++	case XFS_IO_COW:
++		error = xfs_reflink_end_cow(ip, offset, size);
++		break;
++	case XFS_IO_UNWRITTEN:
++		error = xfs_iomap_write_unwritten(ip, offset, size);
++		break;
++	default:
++		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
++		break;
+ 	}
+ 
+ done:
++	if (ioend->io_append_trans)
++		error = xfs_setfilesize_ioend(ioend, error);
+ 	xfs_destroy_ioend(ioend, error);
+ }
+ 
 -- 
 2.11.0
 
