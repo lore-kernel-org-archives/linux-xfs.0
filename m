@@ -1,105 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34978 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:48521 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752116AbdC0IkG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:40:06 -0400
+        with ESMTP id S1752116AbdC0IkS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:40:18 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 20/26] xfs: Use xfs_icluster_size_fsb() to calculate inode chunk alignment
-Date: Mon, 27 Mar 2017 10:38:31 +0200
-Message-Id: <20170327083837.11027-21-hch@lst.de>
+Subject: [PATCH 26/26] xfs: try any AG when allocating the first btree block when reflinking
+Date: Mon, 27 Mar 2017 10:38:37 +0200
+Message-Id: <20170327083837.11027-27-hch@lst.de>
 In-Reply-To: <20170327083837.11027-1-hch@lst.de>
 References: <20170327083837.11027-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, Chandan Rajendra <chandan@linux.vnet.ibm.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+commit 2fcc319d2467a5f5b78f35f79fd6e22741a31b1e upstream.
 
-commit 8ee9fdbebc84b39f1d1c201c5e32277c61d034aa upstream.
+When a reflink operation causes the bmap code to allocate a btree block
+we're currently doing single-AG allocations due to having ->firstblock
+set and then try any higher AG due a little reflink quirk we've put in
+when adding the reflink code.  But given that we do not have a minleft
+reservation of any kind in this AG we can still not have any space in
+the same or higher AG even if the file system has enough free space.
+To fix this use a XFS_ALLOCTYPE_FIRST_AG allocation in this fall back
+path instead.
 
-On a ppc64 system, executing generic/256 test with 32k block size gives the following call trace,
+[And yes, we need to redo this properly instead of piling hacks over
+ hacks.  I'm working on that, but it's not going to be a small series.
+ In the meantime this fixes the customer reported issue]
 
-XFS: Assertion failed: args->maxlen > 0, file: /root/repos/linux/fs/xfs/libxfs/xfs_alloc.c, line: 2026
+Also add a warning for failing allocations to make it easier to debug.
 
-kernel BUG at /root/repos/linux/fs/xfs/xfs_message.c:113!
-Oops: Exception in kernel mode, sig: 5 [#1]
-SMP NR_CPUS=2048
-DEBUG_PAGEALLOC
-NUMA
-pSeries
-Modules linked in:
-CPU: 2 PID: 19361 Comm: mkdir Not tainted 4.10.0-rc5 #58
-task: c000000102606d80 task.stack: c0000001026b8000
-NIP: c0000000004ef798 LR: c0000000004ef798 CTR: c00000000082b290
-REGS: c0000001026bb090 TRAP: 0700   Not tainted  (4.10.0-rc5)
-MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>
-CR: 28004428  XER: 00000000
-CFAR: c0000000004ef180 SOFTE: 1
-GPR00: c0000000004ef798 c0000001026bb310 c000000001157300 ffffffffffffffea
-GPR04: 000000000000000a c0000001026bb130 0000000000000000 ffffffffffffffc0
-GPR08: 00000000000000d1 0000000000000021 00000000ffffffd1 c000000000dd4990
-GPR12: 0000000022004444 c00000000fe00800 0000000020000000 0000000000000000
-GPR16: 0000000000000000 0000000043a606fc 0000000043a76c08 0000000043a1b3d0
-GPR20: 000001002a35cd60 c0000001026bbb80 0000000000000000 0000000000000001
-GPR24: 0000000000000240 0000000000000004 c00000062dc55000 0000000000000000
-GPR28: 0000000000000004 c00000062ecd9200 0000000000000000 c0000001026bb6c0
-NIP [c0000000004ef798] .assfail+0x28/0x30
-LR [c0000000004ef798] .assfail+0x28/0x30
-Call Trace:
-[c0000001026bb310] [c0000000004ef798] .assfail+0x28/0x30 (unreliable)
-[c0000001026bb380] [c000000000455d74] .xfs_alloc_space_available+0x194/0x1b0
-[c0000001026bb410] [c00000000045b914] .xfs_alloc_fix_freelist+0x144/0x480
-[c0000001026bb580] [c00000000045c368] .xfs_alloc_vextent+0x698/0xa90
-[c0000001026bb650] [c0000000004a6200] .xfs_ialloc_ag_alloc+0x170/0x820
-[c0000001026bb7c0] [c0000000004a9098] .xfs_dialloc+0x158/0x320
-[c0000001026bb8a0] [c0000000004e628c] .xfs_ialloc+0x7c/0x610
-[c0000001026bb990] [c0000000004e8138] .xfs_dir_ialloc+0xa8/0x2f0
-[c0000001026bbaa0] [c0000000004e8814] .xfs_create+0x494/0x790
-[c0000001026bbbf0] [c0000000004e5ebc] .xfs_generic_create+0x2bc/0x410
-[c0000001026bbce0] [c0000000002b4a34] .vfs_mkdir+0x154/0x230
-[c0000001026bbd70] [c0000000002bc444] .SyS_mkdirat+0x94/0x120
-[c0000001026bbe30] [c00000000000b760] system_call+0x38/0xfc
-Instruction dump:
-4e800020 60000000 7c0802a6 7c862378 3c82ffca 7ca72b78 38841c18 7c651b78
-38600000 f8010010 f821ff91 4bfff94d <0fe00000> 60000000 7c0802a6 7c892378
-
-When block size is larger than inode cluster size, the call to
-XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
-would have set xfs_sb->sb_inoalignmt to 0. This causes
-xfs_ialloc_cluster_alignment() to return 0.  Due to this
-args.minalignslop (in xfs_ialloc_ag_alloc()) gets the unsigned
-equivalent of -1 assigned to it. This later causes alloc_len in
-xfs_alloc_space_available() to have a value of 0. In such a scenario
-when args.total is also 0, the assert statement "ASSERT(args->maxlen >
-0);" fails.
-
-This commit fixes the bug by replacing the call to XFS_B_TO_FSBT() in
-xfs_ialloc_cluster_alignment() with a call to xfs_icluster_size_fsb().
-
-Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c       | 10 +++++++---
+ fs/xfs/libxfs/xfs_bmap_btree.c |  6 +++---
+ 2 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index f272abff11e1..d41ade5d293e 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -51,8 +51,7 @@ xfs_ialloc_cluster_alignment(
- 	struct xfs_mount	*mp)
- {
- 	if (xfs_sb_version_hasalign(&mp->m_sb) &&
--	    mp->m_sb.sb_inoalignmt >=
--			XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
-+	    mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
- 		return mp->m_sb.sb_inoalignmt;
- 	return 1;
- }
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index eb34879d1a0c..3365ecb9074d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -769,8 +769,8 @@ xfs_bmap_extents_to_btree(
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+ 		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
+ 	} else if (dfops->dop_low) {
+-try_another_ag:
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
++try_another_ag:
+ 		args.fsbno = *firstblock;
+ 	} else {
+ 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+@@ -796,13 +796,17 @@ xfs_bmap_extents_to_btree(
+ 	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
+ 	    args.fsbno == NULLFSBLOCK &&
+ 	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
+-		dfops->dop_low = true;
++		args.type = XFS_ALLOCTYPE_FIRST_AG;
+ 		goto try_another_ag;
+ 	}
++	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
++		xfs_iroot_realloc(ip, -1, whichfork);
++		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++		return -ENOSPC;
++	}
+ 	/*
+ 	 * Allocation can't fail, the space was reserved.
+ 	 */
+-	ASSERT(args.fsbno != NULLFSBLOCK);
+ 	ASSERT(*firstblock == NULLFSBLOCK ||
+ 	       args.agno >= XFS_FSB_TO_AGNO(mp, *firstblock));
+ 	*firstblock = cur->bc_private.b.firstblock = args.fsbno;
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index d9be241fc86f..999cc5878890 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -453,8 +453,8 @@ xfs_bmbt_alloc_block(
+ 
+ 	if (args.fsbno == NULLFSBLOCK) {
+ 		args.fsbno = be64_to_cpu(start->l);
+-try_another_ag:
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
++try_another_ag:
+ 		/*
+ 		 * Make sure there is sufficient room left in the AG to
+ 		 * complete a full tree split for an extent insert.  If
+@@ -494,8 +494,8 @@ xfs_bmbt_alloc_block(
+ 	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
+ 	    args.fsbno == NULLFSBLOCK &&
+ 	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
+-		cur->bc_private.b.dfops->dop_low = true;
+ 		args.fsbno = cur->bc_private.b.firstblock;
++		args.type = XFS_ALLOCTYPE_FIRST_AG;
+ 		goto try_another_ag;
+ 	}
+ 
+@@ -512,7 +512,7 @@ xfs_bmbt_alloc_block(
+ 			goto error0;
+ 		cur->bc_private.b.dfops->dop_low = true;
+ 	}
+-	if (args.fsbno == NULLFSBLOCK) {
++	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+ 		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+ 		*stat = 0;
+ 		return 0;
 -- 
 2.11.0
 
