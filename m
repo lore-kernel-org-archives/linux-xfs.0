@@ -1,90 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60378 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:39382 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751751AbdC0Ijv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:39:51 -0400
+        with ESMTP id S1751751AbdC0Ijw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:39:52 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/26] xfs: handle indlen shortage on delalloc extent merge
-Date: Mon, 27 Mar 2017 10:38:27 +0200
-Message-Id: <20170327083837.11027-17-hch@lst.de>
+Subject: [PATCH 15/26] xfs: don't fail xfs_extent_busy allocation
+Date: Mon, 27 Mar 2017 10:38:26 +0200
+Message-Id: <20170327083837.11027-16-hch@lst.de>
 In-Reply-To: <20170327083837.11027-1-hch@lst.de>
 References: <20170327083837.11027-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+commit 5e30c23d13919a718b22d4921dc5c0accc59da27 upstream.
 
-commit 0e339ef8556d9e567aa7925f8892c263d79430d9 upstream.
+We don't just need the structure to track busy extents which can be
+avoided with a synchronous transaction, but also to keep track of
+pending discard.
 
-When a delalloc extent is created, it can be merged with pre-existing,
-contiguous, delalloc extents. When this occurs,
-xfs_bmap_add_extent_hole_delay() merges the extents along with the
-associated indirect block reservations. The expectation here is that the
-combined worst case indlen reservation is always less than or equal to
-the indlen reservation for the individual extents.
-
-This is not always the case, however, as existing extents can less than
-the expected indlen reservation if the extent was previously split due
-to a hole punch. If a new extent merges with such an extent, the total
-indlen requirement may be larger than the sum of the indlen reservations
-held by both extents.
-
-xfs_bmap_add_extent_hole_delay() assumes that the worst case indlen
-reservation is always available and assigns it to the merged extent
-without consideration for the indlen held by the pre-existing extent. As
-a result, the subsequent xfs_mod_fdblocks() call can attempt an
-unintentional allocation rather than a free (indicated by an ASSERT()
-failure). Further, if the allocation happens to fail in this context,
-the failure goes unhandled and creates a filesystem wide block
-accounting inconsistency.
-
-Fix xfs_bmap_add_extent_hole_delay() to function as designed. Cap the
-indlen reservation assigned to the merged extent to the sum of the
-indlen reservations held by each of the individual extents.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_extent_busy.c | 13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 5b626a4f1d13..6eb9ae8ed22d 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2816,7 +2816,8 @@ xfs_bmap_add_extent_hole_delay(
- 		oldlen = startblockval(left.br_startblock) +
- 			startblockval(new->br_startblock) +
- 			startblockval(right.br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
- 			nullstartblock((int)newlen));
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-@@ -2837,7 +2838,8 @@ xfs_bmap_add_extent_hole_delay(
- 		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx), temp);
- 		oldlen = startblockval(left.br_startblock) +
- 			startblockval(new->br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
- 			nullstartblock((int)newlen));
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-@@ -2853,7 +2855,8 @@ xfs_bmap_add_extent_hole_delay(
- 		temp = new->br_blockcount + right.br_blockcount;
- 		oldlen = startblockval(new->br_startblock) +
- 			startblockval(right.br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
- 			new->br_startoff,
- 			nullstartblock((int)newlen), temp, right.br_state);
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index 162dc186cf04..29c2f997aedf 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -45,18 +45,7 @@ xfs_extent_busy_insert(
+ 	struct rb_node		**rbp;
+ 	struct rb_node		*parent = NULL;
+ 
+-	new = kmem_zalloc(sizeof(struct xfs_extent_busy), KM_MAYFAIL);
+-	if (!new) {
+-		/*
+-		 * No Memory!  Since it is now not possible to track the free
+-		 * block, make this a synchronous transaction to insure that
+-		 * the block is not reused before this transaction commits.
+-		 */
+-		trace_xfs_extent_busy_enomem(tp->t_mountp, agno, bno, len);
+-		xfs_trans_set_sync(tp);
+-		return;
+-	}
+-
++	new = kmem_zalloc(sizeof(struct xfs_extent_busy), KM_SLEEP);
+ 	new->agno = agno;
+ 	new->bno = bno;
+ 	new->length = len;
 -- 
 2.11.0
 
