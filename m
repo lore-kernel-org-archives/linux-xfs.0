@@ -1,111 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48521 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:55033 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752116AbdC0IkS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:40:18 -0400
+        with ESMTP id S1752116AbdC0IkD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:40:03 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 26/26] xfs: try any AG when allocating the first btree block when reflinking
-Date: Mon, 27 Mar 2017 10:38:37 +0200
-Message-Id: <20170327083837.11027-27-hch@lst.de>
+Subject: [PATCH 17/26] xfs: split indlen reservations fairly when under reserved
+Date: Mon, 27 Mar 2017 10:38:28 +0200
+Message-Id: <20170327083837.11027-18-hch@lst.de>
 In-Reply-To: <20170327083837.11027-1-hch@lst.de>
 References: <20170327083837.11027-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit 2fcc319d2467a5f5b78f35f79fd6e22741a31b1e upstream.
+From: Brian Foster <bfoster@redhat.com>
 
-When a reflink operation causes the bmap code to allocate a btree block
-we're currently doing single-AG allocations due to having ->firstblock
-set and then try any higher AG due a little reflink quirk we've put in
-when adding the reflink code.  But given that we do not have a minleft
-reservation of any kind in this AG we can still not have any space in
-the same or higher AG even if the file system has enough free space.
-To fix this use a XFS_ALLOCTYPE_FIRST_AG allocation in this fall back
-path instead.
+commit 75d65361cf3c0dae2af970c305e19c727b28a510 upstream.
 
-[And yes, we need to redo this properly instead of piling hacks over
- hacks.  I'm working on that, but it's not going to be a small series.
- In the meantime this fixes the customer reported issue]
+Certain workoads that punch holes into speculative preallocation can
+cause delalloc indirect reservation splits when the delalloc extent is
+split in two. If further splits occur, an already short-handed extent
+can be split into two in a manner that leaves zero indirect blocks for
+one of the two new extents. This occurs because the shortage is large
+enough that the xfs_bmap_split_indlen() algorithm completely drains the
+requested indlen of one of the extents before it honors the existing
+reservation.
 
-Also add a warning for failing allocations to make it easier to debug.
+This ultimately results in a warning from xfs_bmap_del_extent(). This
+has been observed during file copies of large, sparse files using 'cp
+--sparse=always.'
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+To avoid this problem, update xfs_bmap_split_indlen() to explicitly
+apply the reservation shortage fairly between both extents. This smooths
+out the overall indlen shortage and defers the situation where we end up
+with a delalloc extent with zero indlen reservation to extreme
+circumstances.
+
+Reported-by: Patrick Dung <mpatdung@gmail.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c       | 10 +++++++---
- fs/xfs/libxfs/xfs_bmap_btree.c |  6 +++---
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 61 ++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 43 insertions(+), 18 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index eb34879d1a0c..3365ecb9074d 100644
+index 6eb9ae8ed22d..0eece4c13500 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -769,8 +769,8 @@ xfs_bmap_extents_to_btree(
- 		args.type = XFS_ALLOCTYPE_START_BNO;
- 		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
- 	} else if (dfops->dop_low) {
--try_another_ag:
- 		args.type = XFS_ALLOCTYPE_START_BNO;
-+try_another_ag:
- 		args.fsbno = *firstblock;
- 	} else {
- 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
-@@ -796,13 +796,17 @@ xfs_bmap_extents_to_btree(
- 	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
- 	    args.fsbno == NULLFSBLOCK &&
- 	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
--		dfops->dop_low = true;
-+		args.type = XFS_ALLOCTYPE_FIRST_AG;
- 		goto try_another_ag;
- 	}
-+	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
-+		xfs_iroot_realloc(ip, -1, whichfork);
-+		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+		return -ENOSPC;
-+	}
+@@ -4805,34 +4805,59 @@ xfs_bmap_split_indlen(
+ 	xfs_filblks_t			len2 = *indlen2;
+ 	xfs_filblks_t			nres = len1 + len2; /* new total res. */
+ 	xfs_filblks_t			stolen = 0;
++	xfs_filblks_t			resfactor;
+ 
  	/*
- 	 * Allocation can't fail, the space was reserved.
+ 	 * Steal as many blocks as we can to try and satisfy the worst case
+ 	 * indlen for both new extents.
  	 */
--	ASSERT(args.fsbno != NULLFSBLOCK);
- 	ASSERT(*firstblock == NULLFSBLOCK ||
- 	       args.agno >= XFS_FSB_TO_AGNO(mp, *firstblock));
- 	*firstblock = cur->bc_private.b.firstblock = args.fsbno;
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index d9be241fc86f..999cc5878890 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -453,8 +453,8 @@ xfs_bmbt_alloc_block(
+-	while (nres > ores && avail) {
+-		nres--;
+-		avail--;
+-		stolen++;
+-	}
++	if (ores < nres && avail)
++		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
++	ores += stolen;
++
++	 /* nothing else to do if we've satisfied the new reservation */
++	if (ores >= nres)
++		return stolen;
++
++	/*
++	 * We can't meet the total required reservation for the two extents.
++	 * Calculate the percent of the overall shortage between both extents
++	 * and apply this percentage to each of the requested indlen values.
++	 * This distributes the shortage fairly and reduces the chances that one
++	 * of the two extents is left with nothing when extents are repeatedly
++	 * split.
++	 */
++	resfactor = (ores * 100);
++	do_div(resfactor, nres);
++	len1 *= resfactor;
++	do_div(len1, 100);
++	len2 *= resfactor;
++	do_div(len2, 100);
++	ASSERT(len1 + len2 <= ores);
++	ASSERT(len1 < *indlen1 && len2 < *indlen2);
  
- 	if (args.fsbno == NULLFSBLOCK) {
- 		args.fsbno = be64_to_cpu(start->l);
--try_another_ag:
- 		args.type = XFS_ALLOCTYPE_START_BNO;
-+try_another_ag:
- 		/*
- 		 * Make sure there is sufficient room left in the AG to
- 		 * complete a full tree split for an extent insert.  If
-@@ -494,8 +494,8 @@ xfs_bmbt_alloc_block(
- 	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
- 	    args.fsbno == NULLFSBLOCK &&
- 	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
--		cur->bc_private.b.dfops->dop_low = true;
- 		args.fsbno = cur->bc_private.b.firstblock;
-+		args.type = XFS_ALLOCTYPE_FIRST_AG;
- 		goto try_another_ag;
+ 	/*
+-	 * The only blocks available are those reserved for the original
+-	 * extent and what we can steal from the extent being removed.
+-	 * If this still isn't enough to satisfy the combined
+-	 * requirements for the two new extents, skim blocks off of each
+-	 * of the new reservations until they match what is available.
++	 * Hand out the remainder to each extent. If one of the two reservations
++	 * is zero, we want to make sure that one gets a block first. The loop
++	 * below starts with len1, so hand len2 a block right off the bat if it
++	 * is zero.
+ 	 */
+-	while (nres > ores) {
+-		if (len1) {
+-			len1--;
+-			nres--;
++	ores -= (len1 + len2);
++	ASSERT((*indlen1 - len1) + (*indlen2 - len2) >= ores);
++	if (ores && !len2 && *indlen2) {
++		len2++;
++		ores--;
++	}
++	while (ores) {
++		if (len1 < *indlen1) {
++			len1++;
++			ores--;
+ 		}
+-		if (nres == ores)
++		if (!ores)
+ 			break;
+-		if (len2) {
+-			len2--;
+-			nres--;
++		if (len2 < *indlen2) {
++			len2++;
++			ores--;
+ 		}
  	}
  
-@@ -512,7 +512,7 @@ xfs_bmbt_alloc_block(
- 			goto error0;
- 		cur->bc_private.b.dfops->dop_low = true;
- 	}
--	if (args.fsbno == NULLFSBLOCK) {
-+	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
- 		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
- 		*stat = 0;
- 		return 0;
 -- 
 2.11.0
 
