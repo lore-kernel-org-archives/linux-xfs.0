@@ -1,108 +1,341 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52642 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:47820 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752169AbdC0Iku (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:40:50 -0400
+        with ESMTP id S1752145AbdC0Ito (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:49:44 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/26] xfs: don't reserve blocks for right shift transactions
-Date: Mon, 27 Mar 2017 10:38:30 +0200
-Message-Id: <20170327083837.11027-20-hch@lst.de>
-In-Reply-To: <20170327083837.11027-1-hch@lst.de>
-References: <20170327083837.11027-1-hch@lst.de>
+Subject: [PATCH 02/27] xfs: use per-AG reservations for the finobt
+Date: Mon, 27 Mar 2017 10:48:57 +0200
+Message-Id: <20170327084922.11691-3-hch@lst.de>
+In-Reply-To: <20170327084922.11691-1-hch@lst.de>
+References: <20170327084922.11691-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+commit 76d771b4cbe33c581bd6ca2710c120be51172440 upstream.
 
-commit 48af96ab92bc68fb645068b978ce36df2379e076 upstream.
+Currently we try to rely on the global reserved block pool for block
+allocations for the free inode btree, but I have customer reports
+(fairly complex workload, need to find an easier reproducer) where that
+is not enough as the AG where we free an inode that requires a new
+finobt block is entirely full.  This causes us to cancel a dirty
+transaction and thus a file system shutdown.
 
-The block reservation for the transaction allocated in
-xfs_shift_file_space() is an artifact of the original collapse range
-support. It exists to handle the case where a collapse range occurs,
-the initial extent is left shifted into a location that forms a
-contiguous boundary with the previous extent and thus the extents
-are merged. This code was subsequently refactored and reused for
-insert range (right shift) support.
+I think the right way to guard against this is to treat the finot the same
+way as the refcount btree and have a per-AG reservations for the possible
+worst case size of it, and the patch below implements that.
 
-If an insert range occurs under low free space conditions, the
-extent at the starting offset is split before the first shift
-transaction is allocated. If the block reservation fails, this
-leaves separate, but contiguous extents around in the inode. While
-not a fatal problem, this is unexpected and will flag a warning on
-subsequent insert range operations on the inode. This problem has
-been reproduce intermittently by generic/270 running against a
-ramdisk device.
+Note that this could increase mount times with large finobt trees.  In
+an ideal world we would have added a field for the number of finobt
+fields to the AGI, similar to what we did for the refcount blocks.
+We should do add it next time we rev the AGI or AGF format by adding
+new fields.
 
-Since right shift does not create new extent boundaries in the
-inode, a block reservation for extent merge is unnecessary. Update
-xfs_shift_file_space() to conditionally reserve fs blocks for left
-shift transactions only. This avoids the warning reproduced by
-generic/270.
-
-Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ fs/xfs/libxfs/xfs_ag_resv.c      | 47 ++++++++++++++++++---
+ fs/xfs/libxfs/xfs_ialloc_btree.c | 90 ++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/libxfs/xfs_ialloc_btree.h |  3 ++
+ fs/xfs/xfs_inode.c               | 23 +++++-----
+ fs/xfs/xfs_mount.h               |  1 +
+ 5 files changed, 144 insertions(+), 20 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index eb890ed1ed5c..c516d7158a21 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1387,10 +1387,16 @@ xfs_shift_file_space(
- 	xfs_fileoff_t		stop_fsb;
- 	xfs_fileoff_t		next_fsb;
- 	xfs_fileoff_t		shift_fsb;
-+	uint			resblks;
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index 94234bff40dc..33db69be4832 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -39,6 +39,7 @@
+ #include "xfs_rmap_btree.h"
+ #include "xfs_btree.h"
+ #include "xfs_refcount_btree.h"
++#include "xfs_ialloc_btree.h"
  
- 	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
- 
- 	if (direction == SHIFT_LEFT) {
-+		/*
-+		 * Reserve blocks to cover potential extent merges after left
-+		 * shift operations.
-+		 */
-+		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
- 		next_fsb = XFS_B_TO_FSB(mp, offset + len);
- 		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
- 	} else {
-@@ -1398,6 +1404,7 @@ xfs_shift_file_space(
- 		 * If right shift, delegate the work of initialization of
- 		 * next_fsb to xfs_bmap_shift_extent as it has ilock held.
- 		 */
-+		resblks = 0;
- 		next_fsb = NULLFSBLOCK;
- 		stop_fsb = XFS_B_TO_FSB(mp, offset);
- 	}
-@@ -1439,21 +1446,14 @@ xfs_shift_file_space(
+ /*
+  * Per-AG Block Reservations
+@@ -210,6 +211,9 @@ __xfs_ag_resv_init(
+ 	if (error) {
+ 		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
+ 				error, _RET_IP_);
++		xfs_warn(mp,
++"Per-AG reservation for AG %u failed.  Filesystem may run out of space.",
++				pag->pag_agno);
+ 		return error;
  	}
  
- 	while (!error && !done) {
--		/*
--		 * We would need to reserve permanent block for transaction.
--		 * This will come into picture when after shifting extent into
--		 * hole we found that adjacent extents can be merged which
--		 * may lead to freeing of a block during record update.
--		 */
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
--				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
-+		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
-+					&tp);
- 		if (error)
- 			break;
+@@ -228,6 +232,8 @@ int
+ xfs_ag_resv_init(
+ 	struct xfs_perag		*pag)
+ {
++	struct xfs_mount		*mp = pag->pag_mount;
++	xfs_agnumber_t			agno = pag->pag_agno;
+ 	xfs_extlen_t			ask;
+ 	xfs_extlen_t			used;
+ 	int				error = 0;
+@@ -236,23 +242,45 @@ xfs_ag_resv_init(
+ 	if (pag->pag_meta_resv.ar_asked == 0) {
+ 		ask = used = 0;
  
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
--				ip->i_gdquot, ip->i_pdquot,
--				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
-+				ip->i_gdquot, ip->i_pdquot, resblks, 0,
- 				XFS_QMOPT_RES_REGBLKS);
+-		error = xfs_refcountbt_calc_reserves(pag->pag_mount,
+-				pag->pag_agno, &ask, &used);
++		error = xfs_refcountbt_calc_reserves(mp, agno, &ask, &used);
  		if (error)
- 			goto out_trans_cancel;
+ 			goto out;
+ 
+-		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_METADATA,
+-				ask, used);
++		error = xfs_finobt_calc_reserves(mp, agno, &ask, &used);
+ 		if (error)
+ 			goto out;
++
++		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_METADATA,
++				ask, used);
++		if (error) {
++			/*
++			 * Because we didn't have per-AG reservations when the
++			 * finobt feature was added we might not be able to
++			 * reserve all needed blocks.  Warn and fall back to the
++			 * old and potentially buggy code in that case, but
++			 * ensure we do have the reservation for the refcountbt.
++			 */
++			ask = used = 0;
++
++			mp->m_inotbt_nores = true;
++
++			error = xfs_refcountbt_calc_reserves(mp, agno, &ask,
++					&used);
++			if (error)
++				goto out;
++
++			error = __xfs_ag_resv_init(pag, XFS_AG_RESV_METADATA,
++					ask, used);
++			if (error)
++				goto out;
++		}
+ 	}
+ 
+ 	/* Create the AGFL metadata reservation */
+ 	if (pag->pag_agfl_resv.ar_asked == 0) {
+ 		ask = used = 0;
+ 
+-		error = xfs_rmapbt_calc_reserves(pag->pag_mount, pag->pag_agno,
+-				&ask, &used);
++		error = xfs_rmapbt_calc_reserves(mp, agno, &ask, &used);
+ 		if (error)
+ 			goto out;
+ 
+@@ -261,9 +289,16 @@ xfs_ag_resv_init(
+ 			goto out;
+ 	}
+ 
++#ifdef DEBUG
++	/* need to read in the AGF for the ASSERT below to work */
++	error = xfs_alloc_pagf_init(pag->pag_mount, NULL, pag->pag_agno, 0);
++	if (error)
++		return error;
++
+ 	ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
+ 	       xfs_perag_resv(pag, XFS_AG_RESV_AGFL)->ar_reserved <=
+ 	       pag->pagf_freeblks + pag->pagf_flcount);
++#endif
+ out:
+ 	return error;
+ }
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 6c6b95947e71..b9c351ff0422 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -82,11 +82,12 @@ xfs_finobt_set_root(
+ }
+ 
+ STATIC int
+-xfs_inobt_alloc_block(
++__xfs_inobt_alloc_block(
+ 	struct xfs_btree_cur	*cur,
+ 	union xfs_btree_ptr	*start,
+ 	union xfs_btree_ptr	*new,
+-	int			*stat)
++	int			*stat,
++	enum xfs_ag_resv_type	resv)
+ {
+ 	xfs_alloc_arg_t		args;		/* block allocation args */
+ 	int			error;		/* error return value */
+@@ -103,6 +104,7 @@ xfs_inobt_alloc_block(
+ 	args.maxlen = 1;
+ 	args.prod = 1;
+ 	args.type = XFS_ALLOCTYPE_NEAR_BNO;
++	args.resv = resv;
+ 
+ 	error = xfs_alloc_vextent(&args);
+ 	if (error) {
+@@ -123,6 +125,27 @@ xfs_inobt_alloc_block(
+ }
+ 
+ STATIC int
++xfs_inobt_alloc_block(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_ptr	*start,
++	union xfs_btree_ptr	*new,
++	int			*stat)
++{
++	return __xfs_inobt_alloc_block(cur, start, new, stat, XFS_AG_RESV_NONE);
++}
++
++STATIC int
++xfs_finobt_alloc_block(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_ptr	*start,
++	union xfs_btree_ptr	*new,
++	int			*stat)
++{
++	return __xfs_inobt_alloc_block(cur, start, new, stat,
++			XFS_AG_RESV_METADATA);
++}
++
++STATIC int
+ xfs_inobt_free_block(
+ 	struct xfs_btree_cur	*cur,
+ 	struct xfs_buf		*bp)
+@@ -328,7 +351,7 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
+ 
+ 	.dup_cursor		= xfs_inobt_dup_cursor,
+ 	.set_root		= xfs_finobt_set_root,
+-	.alloc_block		= xfs_inobt_alloc_block,
++	.alloc_block		= xfs_finobt_alloc_block,
+ 	.free_block		= xfs_inobt_free_block,
+ 	.get_minrecs		= xfs_inobt_get_minrecs,
+ 	.get_maxrecs		= xfs_inobt_get_maxrecs,
+@@ -478,3 +501,64 @@ xfs_inobt_rec_check_count(
+ 	return 0;
+ }
+ #endif	/* DEBUG */
++
++static xfs_extlen_t
++xfs_inobt_max_size(
++	struct xfs_mount	*mp)
++{
++	/* Bail out if we're uninitialized, which can happen in mkfs. */
++	if (mp->m_inobt_mxr[0] == 0)
++		return 0;
++
++	return xfs_btree_calc_size(mp, mp->m_inobt_mnr,
++		(uint64_t)mp->m_sb.sb_agblocks * mp->m_sb.sb_inopblock /
++				XFS_INODES_PER_CHUNK);
++}
++
++static int
++xfs_inobt_count_blocks(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_btnum_t		btnum,
++	xfs_extlen_t		*tree_blocks)
++{
++	struct xfs_buf		*agbp;
++	struct xfs_btree_cur	*cur;
++	int			error;
++
++	error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
++	if (error)
++		return error;
++
++	cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno, btnum);
++	error = xfs_btree_count_blocks(cur, tree_blocks);
++	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_buf_relse(agbp);
++
++	return error;
++}
++
++/*
++ * Figure out how many blocks to reserve and how many are used by this btree.
++ */
++int
++xfs_finobt_calc_reserves(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_extlen_t		*ask,
++	xfs_extlen_t		*used)
++{
++	xfs_extlen_t		tree_len = 0;
++	int			error;
++
++	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
++		return 0;
++
++	error = xfs_inobt_count_blocks(mp, agno, XFS_BTNUM_FINO, &tree_len);
++	if (error)
++		return error;
++
++	*ask += xfs_inobt_max_size(mp);
++	*used += tree_len;
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
+index bd88453217ce..aa81e2e63f3f 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.h
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
+@@ -72,4 +72,7 @@ int xfs_inobt_rec_check_count(struct xfs_mount *,
+ #define xfs_inobt_rec_check_count(mp, rec)	0
+ #endif	/* DEBUG */
+ 
++int xfs_finobt_calc_reserves(struct xfs_mount *mp, xfs_agnumber_t agno,
++		xfs_extlen_t *ask, xfs_extlen_t *used);
++
+ #endif	/* __XFS_IALLOC_BTREE_H__ */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 512ff13ed66a..a1c7e138dbca 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1801,22 +1801,23 @@ xfs_inactive_ifree(
+ 	int			error;
+ 
+ 	/*
+-	 * The ifree transaction might need to allocate blocks for record
+-	 * insertion to the finobt. We don't want to fail here at ENOSPC, so
+-	 * allow ifree to dip into the reserved block pool if necessary.
+-	 *
+-	 * Freeing large sets of inodes generally means freeing inode chunks,
+-	 * directory and file data blocks, so this should be relatively safe.
+-	 * Only under severe circumstances should it be possible to free enough
+-	 * inodes to exhaust the reserve block pool via finobt expansion while
+-	 * at the same time not creating free space in the filesystem.
++	 * We try to use a per-AG reservation for any block needed by the finobt
++	 * tree, but as the finobt feature predates the per-AG reservation
++	 * support a degraded file system might not have enough space for the
++	 * reservation at mount time.  In that case try to dip into the reserved
++	 * pool and pray.
+ 	 *
+ 	 * Send a warning if the reservation does happen to fail, as the inode
+ 	 * now remains allocated and sits on the unlinked list until the fs is
+ 	 * repaired.
+ 	 */
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ifree,
+-			XFS_IFREE_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
++	if (unlikely(mp->m_inotbt_nores)) {
++		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ifree,
++				XFS_IFREE_SPACE_RES(mp), 0, XFS_TRANS_RESERVE,
++				&tp);
++	} else {
++		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ifree, 0, 0, 0, &tp);
++	}
+ 	if (error) {
+ 		if (error == -ENOSPC) {
+ 			xfs_warn_ratelimited(mp,
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 819b80b15bfb..1bf878b0492c 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -140,6 +140,7 @@ typedef struct xfs_mount {
+ 	int			m_fixedfsid[2];	/* unchanged for life of FS */
+ 	uint			m_dmevmask;	/* DMI events for this FS */
+ 	__uint64_t		m_flags;	/* global mount flags */
++	bool			m_inotbt_nores; /* no per-AG finobt resv. */
+ 	int			m_ialloc_inos;	/* inodes in inode allocation */
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_ialloc_min_blks;/* min blocks in sparse inode
 -- 
 2.11.0
 
