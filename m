@@ -1,118 +1,195 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:34554 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932449AbdCWPUG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Mar 2017 11:20:06 -0400
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:34824 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751796AbdC0HcN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 03:32:13 -0400
 From: Nikolay Borisov <n.borisov.lkml@gmail.com>
-Subject: Request 5c6863019e45 ("cancel the setfilesize transation when io
- error happen") for 3.12 stable inclusion
-Message-ID: <48c85015-5520-bd42-dca7-cfb9634dcc39@gmail.com>
-Date: Thu, 23 Mar 2017 17:19:56 +0200
+Subject: Request for inclusion of 4dfce57db635 ("xfs: fix up
+ xfs_swap_extent_forks inline extent handling") in stable
+Message-ID: <473e7987-03d9-4118-d7e1-11465928f021@gmail.com>
+Date: Mon, 27 Mar 2017 10:31:55 +0300
 MIME-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------CD73CEE576983282630AE0B7"
+ boundary="------------3A6011F19395F382189757BF"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, bfoster@redhat.com, david@fromorbit.com
+To: stable@vger.kernel.org, linux-xfs@vger.kernel.org, bfoster@redhat.com, darrick.wong@oracle.com
 
 This is a multi-part message in MIME format.
---------------CD73CEE576983282630AE0B7
+--------------3A6011F19395F382189757BF
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 
 Hello,
 
 
-I'd like to request the above patch be included into the 3.12 stable
-tree. I've attached a backport and have run xfstest and no regressions
-were observed. This fixes hang in generic/361 test.
-
+The commit in the subject was tagged as stable but I guess it got missed
+being included into stable. Without these stable kernels crash on
+xfs/118. I've attached backports for both 3.12 and 4.4 and also ran a
+regtest with xfstest with no regressions showing up.
 
 Regards,
 Nikolay
 
---------------CD73CEE576983282630AE0B7
-Content-Type: text/x-patch;
- name="0001-cancel-the-setfilesize-transation-when-io-error-happ.patch"
-Content-Transfer-Encoding: 7bit
+--------------3A6011F19395F382189757BF
+Content-Type: text/plain; charset=UTF-8;
+ name="xfs-fix-up-xfs_swap_extent_forks-inline-extent-handling.patch-3.12"
+Content-Transfer-Encoding: base64
 Content-Disposition: attachment;
- filename*0="0001-cancel-the-setfilesize-transation-when-io-error-happ.pa";
- filename*1="tch"
+ filename*0="xfs-fix-up-xfs_swap_extent_forks-inline-extent-handling.patc";
+ filename*1="h-3.12"
 
->From 5c6863019e453bee3ac6dbdf1fbf0d9125942c3b Mon Sep 17 00:00:00 2001
-From: Zhaohongjiang <zhaohongjiang@huawei.com>
-Date: Mon, 12 Oct 2015 15:28:39 +1100
-Subject: [PATCH] cancel the setfilesize transation when io error happen
+RnJvbTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0PgpEYXRlOiBUdWUsIDgg
+Tm92IDIwMTYgMTI6NTU6MTggKzExMDAKU3ViamVjdDogeGZzOiBmaXggdXAgeGZzX3N3YXBf
+ZXh0ZW50X2ZvcmtzIGlubGluZSBleHRlbnQgaGFuZGxpbmcKClRoZXJlIGhhdmUgYmVlbiBz
+ZXZlcmFsIHJlcG9ydHMgb3ZlciB0aGUgeWVhcnMgb2YgTlVMTCBwb2ludGVyCmRlcmVmZXJl
+bmNlcyBpbiB4ZnNfdHJhbnNfbG9nX2lub2RlIGR1cmluZyB4ZnNfZnNyIHByb2Nlc3NlcywK
+d2hlbiB0aGUgcHJvY2VzcyBpcyBkb2luZyBhbiBmcHV0IGFuZCB0ZWFyaW5nIGRvd24gZXh0
+ZW50cwpvbiB0aGUgdGVtcG9yYXJ5IGlub2RlLCBzb21ldGhpbmcgbGlrZToKCkJVRzogdW5h
+YmxlIHRvIGhhbmRsZSBrZXJuZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0IDAwMDAw
+MDAwMDAwMDAwMTgKUElEOiAyOTQzOSAgVEFTSzogZmZmZjg4MDU1MDU4NGZhMCAgQ1BVOiA2
+ICAgQ09NTUFORDogInhmc19mc3IiCiAgICBbZXhjZXB0aW9uIFJJUDogeGZzX3RyYW5zX2xv
+Z19pbm9kZSsweDEwXQogIzkgW2ZmZmY4ODAwYTU3YmJiZTBdIHhmc19idW5tYXBpIGF0IGZm
+ZmZmZmZmYTAzNzM5OGUgW3hmc10KIzEwIFtmZmZmODgwMGE1N2JiY2U4XSB4ZnNfaXRydW5j
+YXRlX2V4dGVudHMgYXQgZmZmZmZmZmZhMDM5MWIyOSBbeGZzXQojMTEgW2ZmZmY4ODAwYTU3
+YmJkODhdIHhmc19pbmFjdGl2ZV90cnVuY2F0ZSBhdCBmZmZmZmZmZmEwMzkxZDBjIFt4ZnNd
+CiMxMiBbZmZmZjg4MDBhNTdiYmRiOF0geGZzX2luYWN0aXZlIGF0IGZmZmZmZmZmYTAzOTI1
+MDggW3hmc10KIzEzIFtmZmZmODgwMGE1N2JiZGQ4XSB4ZnNfZnNfZXZpY3RfaW5vZGUgYXQg
+ZmZmZmZmZmZhMDM1OTA3ZSBbeGZzXQojMTQgW2ZmZmY4ODAwYTU3YmJlMDBdIGV2aWN0IGF0
+IGZmZmZmZmZmODExZTFiNjcKIzE1IFtmZmZmODgwMGE1N2JiZTI4XSBpcHV0IGF0IGZmZmZm
+ZmZmODExZTIzYTUKIzE2IFtmZmZmODgwMGE1N2JiZTU4XSBkZW50cnlfa2lsbCBhdCBmZmZm
+ZmZmZjgxMWRjZmM4CiMxNyBbZmZmZjg4MDBhNTdiYmU4OF0gZHB1dCBhdCBmZmZmZmZmZjgx
+MWRkMDZjCiMxOCBbZmZmZjg4MDBhNTdiYmVhOF0gX19mcHV0IGF0IGZmZmZmZmZmODExYzgy
+M2IKIzE5IFtmZmZmODgwMGE1N2JiZWYwXSBfX19fZnB1dCBhdCBmZmZmZmZmZjgxMWM4NDZl
+CiMyMCBbZmZmZjg4MDBhNTdiYmYwMF0gdGFza193b3JrX3J1biBhdCBmZmZmZmZmZjgxMDkz
+YjI3CiMyMSBbZmZmZjg4MDBhNTdiYmYzMF0gZG9fbm90aWZ5X3Jlc3VtZSBhdCBmZmZmZmZm
+ZjgxMDEzYjBjCiMyMiBbZmZmZjg4MDBhNTdiYmY1MF0gaW50X3NpZ25hbCBhdCBmZmZmZmZm
+ZjgxNjE0MDVkCgpBcyBpdCB0dXJucyBvdXQsIHRoaXMgaXMgYmVjYXVzZSB0aGUgaV9pdGVt
+cCBwb2ludGVyLCBhbG9uZwp3aXRoIHRoZSBkX29wcyBwb2ludGVyLCBoYXMgYmVlbiBvdmVy
+d3JpdHRlbiB3aXRoIHplcm9zCndoZW4gd2UgdGVhciBkb3duIHRoZSBleHRlbnRzIGR1cmlu
+ZyB0cnVuY2F0ZS4gIFdoZW4gdGhlIGluLWNvcmUKaW5vZGUgZm9yayBvbiB0aGUgdGVtcG9y
+YXJ5IGlub2RlIHVzZWQgYnkgeGZzX2ZzciB3YXMgb3JpZ2luYWxseQpzZXQgdXAgZHVyaW5n
+IHRoZSBleHRlbnQgc3dhcCwgd2UgbWlzdGFrZW5seSBsb29rZWQgYXQgZGlfbmV4dGVudHMK
+dG8gZGV0ZXJtaW5lIHdoZXRoZXIgYWxsIGV4dGVudHMgZml0IGlubGluZSwgYnV0IHRoaXMg
+bWlzc2VzIGV4dGVudHMKZ2VuZXJhdGVkIGJ5IHNwZWN1bGF0aXZlIHByZWFsbG9jYXRpb247
+IHdlIHNob3VsZCBiZSB1c2luZyBpZl9ieXRlcwppbnN0ZWFkLgoKVGhpcyBtaXN0YWtlIGNv
+cnJ1cHRzIHRoZSBpbi1tZW1vcnkgaW5vZGUsIGFuZCBjb2RlIGluCnhmc19pZXh0X3JlbW92
+ZV9pbmxpbmUgZXZlbnR1YWxseSBnZXRzIGJhZCBpbnB1dHMsIGNhdXNpbmcKaXQgdG8gbWVt
+bW92ZSBhbmQgbWVtc2V0IGluY29ycmVjdCByYW5nZXM7IHRoaXMgYmVjYW1lIGFwcGFyZW50
+CmJlY2F1c2UgdGhlIHR3byB2YWx1ZXMgaW4gaWZwLT5pZl91Mi5pZl9pbmxpbmVfZXh0WzFd
+IGNvbnRhaW5lZAp3aGF0IHNob3VsZCBoYXZlIGJlZW4gaW4gZF9vcHMgYW5kIGlfaXRlbXA7
+IHRoZXkgd2VyZSBtZW1tb3ZlZCBkdWUKdG8gaW5jb3JyZWN0IGFycmF5IGluZGV4aW5nIGFu
+ZCB0aGVuIHRoZSBvcmlnaW5hbCBsb2NhdGlvbnMKd2VyZSB6ZXJvZWQgd2l0aCBtZW1zZXQs
+IGFnYWluIGR1ZSB0byBhbiBhcnJheSBvdmVycnVuLgoKRml4IHRoaXMgYnkgcHJvcGVybHkg
+dXNpbmcgaV9kZi5pZl9ieXRlcyB0byBkZXRlcm1pbmUgdGhlIG51bWJlcgpvZiBleHRlbnRz
+LCBub3QgZGlfbmV4dGVudHMuCgpUaGFua3MgdG8gZGNoaW5uZXIgZm9yIGxvb2tpbmcgYXQg
+dGhpcyB3aXRoIG1lIGFuZCBzcG90dGluZyB0aGUKcm9vdCBjYXVzZS4KCltuYm9yaXNvdjog
+QmFja3BvcnRlZCB0byAzLjEyXQoKQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcKU2lnbmVk
+LW9mZi1ieTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHJlZGhhdC5jb20+ClJldmlld2VkLWJ5
+OiBCcmlhbiBGb3N0ZXIgPGJmb3N0ZXJAcmVkaGF0LmNvbT4KU2lnbmVkLW9mZi1ieTogRGF2
+ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPgpTaWduZWQtb2ZmLWJ5OiBOaWtvbGF5
+IEJvcmlzb3YgPG5ib3Jpc292QHN1c2UuY29tPgotLQogZnMveGZzL3hmc19ibWFwX3V0aWwu
+YyB8IDcgKysrKystLQogMSBmaWxlIGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKSwgMiBkZWxl
+dGlvbnMoLSkKCmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2JtYXBfdXRpbC5jIGIvZnMveGZz
+L3hmc19ibWFwX3V0aWwuYwppbmRleCBkNzU2ZGE1MTViMTUuLjgzMzY3MDFhMjgxYyAxMDA2
+NDQKLS0tIGEvZnMveGZzL3hmc19ibWFwX3V0aWwuYworKysgYi9mcy94ZnMveGZzX2JtYXBf
+dXRpbC5jCkBAIC0xNzg4LDYgKzE3ODgsNyBAQCB4ZnNfc3dhcF9leHRlbnRzKAogCXhmc190
+cmFuc190CSp0cDsKIAl4ZnNfYnN0YXRfdAkqc2JwID0gJnN4cC0+c3hfc3RhdDsKIAl4ZnNf
+aWZvcmtfdAkqdGVtcGlmcCwgKmlmcCwgKnRpZnA7CisJeGZzX2V4dG51bV90CW5leHRlbnRz
+OwogCWludAkJc3JjX2xvZ19mbGFncywgdGFyZ2V0X2xvZ19mbGFnczsKIAlpbnQJCWVycm9y
+ID0gMDsKIAlpbnQJCWFmb3JrYmxrcyA9IDA7CkBAIC0xOTc0LDcgKzE5NzUsOCBAQCB4ZnNf
+c3dhcF9leHRlbnRzKAogCQkgKiBwb2ludGVyLiAgT3RoZXJ3aXNlIGl0J3MgYWxyZWFkeSBO
+VUxMIG9yCiAJCSAqIHBvaW50aW5nIHRvIHRoZSBleHRlbnQuCiAJCSAqLwotCQlpZiAoaXAt
+PmlfZC5kaV9uZXh0ZW50cyA8PSBYRlNfSU5MSU5FX0VYVFMpIHsKKwkJbmV4dGVudHMgPSBp
+cC0+aV9kZi5pZl9ieXRlcyAvICh1aW50KXNpemVvZih4ZnNfYm1idF9yZWNfdCk7CisJCWlm
+IChuZXh0ZW50cyA8PSBYRlNfSU5MSU5FX0VYVFMpIHsKIAkJCWlmcC0+aWZfdTEuaWZfZXh0
+ZW50cyA9CiAJCQkJaWZwLT5pZl91Mi5pZl9pbmxpbmVfZXh0OwogCQl9CkBAIC0xOTkzLDcg
+KzE5OTUsOCBAQCB4ZnNfc3dhcF9leHRlbnRzKAogCQkgKiBwb2ludGVyLiAgT3RoZXJ3aXNl
+IGl0J3MgYWxyZWFkeSBOVUxMIG9yCiAJCSAqIHBvaW50aW5nIHRvIHRoZSBleHRlbnQuCiAJ
+CSAqLwotCQlpZiAodGlwLT5pX2QuZGlfbmV4dGVudHMgPD0gWEZTX0lOTElORV9FWFRTKSB7
+CisJCW5leHRlbnRzID0gdGlwLT5pX2RmLmlmX2J5dGVzIC8gKHVpbnQpc2l6ZW9mKHhmc19i
+bWJ0X3JlY190KTsKKwkJaWYgKG5leHRlbnRzIDw9IFhGU19JTkxJTkVfRVhUUykgewogCQkJ
+dGlmcC0+aWZfdTEuaWZfZXh0ZW50cyA9CiAJCQkJdGlmcC0+aWZfdTIuaWZfaW5saW5lX2V4
+dDsKIAkJfQotLSAKMi43LjQKCg==
+--------------3A6011F19395F382189757BF
+Content-Type: text/plain; charset=UTF-8;
+ name="xfs-fix-up-xfs_swap_extent_forks-inline-extent-handling.patch-4.4"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename*0="xfs-fix-up-xfs_swap_extent_forks-inline-extent-handling.patc";
+ filename*1="h-4.4"
 
-When I ran xfstest/073 case, the remount process was blocked to wait
-transactions to be zero. I found there was a io error happened, and
-the setfilesize transaction was not released properly. We should add
-the changes to cancel the io error in this case.
-
-Reproduction steps:
-1. dd if=/dev/zero of=xfs1.img bs=1M count=2048
-2. mkfs.xfs xfs1.img
-3. losetup -f ./xfs1.img /dev/loop0
-4. mount -t xfs /dev/loop0 /home/test_dir/
-5. mkdir /home/test_dir/test
-6. mkfs.xfs -dfile,name=image,size=2g
-7. mount -t xfs -o loop image /home/test_dir/test
-8. cp a file bigger than 2g to /home/test_dir/test
-9. mount -t xfs -o remount,ro /home/test_dir/test
-
-[ dchinner: moved io error detection to xfs_setfilesize_ioend() after
-  transaction context restoration. ]
-
-[ nborisov: Adjusted context for 3.12 ]
-
-Signed-off-by: Zhao Hongjiang <zhaohongjiang@huawei.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Nikolay Borisov <nborisov@suse.com>
----
- fs/xfs/xfs_aops.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index ab28ad576b16..6394e3f51553 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -150,6 +150,12 @@ xfs_setfilesize(
- 	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
- 			   0, 1, _THIS_IP_);
- 
-+	/* we abort the update if there was an IO error */
-+	if (ioend->io_error) {
-+		xfs_trans_cancel(tp, 0);
-+		return ioend->io_error;
-+	}
-+
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
- 	if (!isize) {
-@@ -205,14 +211,17 @@ xfs_end_io(
- 		ioend->io_error = -EIO;
- 		goto done;
- 	}
--	if (ioend->io_error)
--		goto done;
- 
- 	/*
- 	 * For unwritten extents we need to issue transactions to convert a
- 	 * range to normal written extens after the data I/O has finished.
-+	 * Detecting and handling completion IO errors is done individually
-+	 * for each case as different cleanup operations need to be performed
-+	 * on error.
- 	 */
- 	if (ioend->io_type == XFS_IO_UNWRITTEN) {
-+		if (ioend->io_error)
-+			goto done;
- 		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
- 						  ioend->io_size);
- 	} else if (ioend->io_isdirect && xfs_ioend_is_append(ioend)) {
--- 
-2.7.4
-
-
---------------CD73CEE576983282630AE0B7--
+RnJvbTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0PgpEYXRlOiBUdWUsIDgg
+Tm92IDIwMTYgMTI6NTU6MTggKzExMDAKU3ViamVjdDogeGZzOiBmaXggdXAgeGZzX3N3YXBf
+ZXh0ZW50X2ZvcmtzIGlubGluZSBleHRlbnQgaGFuZGxpbmcKClRoZXJlIGhhdmUgYmVlbiBz
+ZXZlcmFsIHJlcG9ydHMgb3ZlciB0aGUgeWVhcnMgb2YgTlVMTCBwb2ludGVyCmRlcmVmZXJl
+bmNlcyBpbiB4ZnNfdHJhbnNfbG9nX2lub2RlIGR1cmluZyB4ZnNfZnNyIHByb2Nlc3NlcywK
+d2hlbiB0aGUgcHJvY2VzcyBpcyBkb2luZyBhbiBmcHV0IGFuZCB0ZWFyaW5nIGRvd24gZXh0
+ZW50cwpvbiB0aGUgdGVtcG9yYXJ5IGlub2RlLCBzb21ldGhpbmcgbGlrZToKCkJVRzogdW5h
+YmxlIHRvIGhhbmRsZSBrZXJuZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIGF0IDAwMDAw
+MDAwMDAwMDAwMTgKUElEOiAyOTQzOSAgVEFTSzogZmZmZjg4MDU1MDU4NGZhMCAgQ1BVOiA2
+ICAgQ09NTUFORDogInhmc19mc3IiCiAgICBbZXhjZXB0aW9uIFJJUDogeGZzX3RyYW5zX2xv
+Z19pbm9kZSsweDEwXQogIzkgW2ZmZmY4ODAwYTU3YmJiZTBdIHhmc19idW5tYXBpIGF0IGZm
+ZmZmZmZmYTAzNzM5OGUgW3hmc10KIzEwIFtmZmZmODgwMGE1N2JiY2U4XSB4ZnNfaXRydW5j
+YXRlX2V4dGVudHMgYXQgZmZmZmZmZmZhMDM5MWIyOSBbeGZzXQojMTEgW2ZmZmY4ODAwYTU3
+YmJkODhdIHhmc19pbmFjdGl2ZV90cnVuY2F0ZSBhdCBmZmZmZmZmZmEwMzkxZDBjIFt4ZnNd
+CiMxMiBbZmZmZjg4MDBhNTdiYmRiOF0geGZzX2luYWN0aXZlIGF0IGZmZmZmZmZmYTAzOTI1
+MDggW3hmc10KIzEzIFtmZmZmODgwMGE1N2JiZGQ4XSB4ZnNfZnNfZXZpY3RfaW5vZGUgYXQg
+ZmZmZmZmZmZhMDM1OTA3ZSBbeGZzXQojMTQgW2ZmZmY4ODAwYTU3YmJlMDBdIGV2aWN0IGF0
+IGZmZmZmZmZmODExZTFiNjcKIzE1IFtmZmZmODgwMGE1N2JiZTI4XSBpcHV0IGF0IGZmZmZm
+ZmZmODExZTIzYTUKIzE2IFtmZmZmODgwMGE1N2JiZTU4XSBkZW50cnlfa2lsbCBhdCBmZmZm
+ZmZmZjgxMWRjZmM4CiMxNyBbZmZmZjg4MDBhNTdiYmU4OF0gZHB1dCBhdCBmZmZmZmZmZjgx
+MWRkMDZjCiMxOCBbZmZmZjg4MDBhNTdiYmVhOF0gX19mcHV0IGF0IGZmZmZmZmZmODExYzgy
+M2IKIzE5IFtmZmZmODgwMGE1N2JiZWYwXSBfX19fZnB1dCBhdCBmZmZmZmZmZjgxMWM4NDZl
+CiMyMCBbZmZmZjg4MDBhNTdiYmYwMF0gdGFza193b3JrX3J1biBhdCBmZmZmZmZmZjgxMDkz
+YjI3CiMyMSBbZmZmZjg4MDBhNTdiYmYzMF0gZG9fbm90aWZ5X3Jlc3VtZSBhdCBmZmZmZmZm
+ZjgxMDEzYjBjCiMyMiBbZmZmZjg4MDBhNTdiYmY1MF0gaW50X3NpZ25hbCBhdCBmZmZmZmZm
+ZjgxNjE0MDVkCgpBcyBpdCB0dXJucyBvdXQsIHRoaXMgaXMgYmVjYXVzZSB0aGUgaV9pdGVt
+cCBwb2ludGVyLCBhbG9uZwp3aXRoIHRoZSBkX29wcyBwb2ludGVyLCBoYXMgYmVlbiBvdmVy
+d3JpdHRlbiB3aXRoIHplcm9zCndoZW4gd2UgdGVhciBkb3duIHRoZSBleHRlbnRzIGR1cmlu
+ZyB0cnVuY2F0ZS4gIFdoZW4gdGhlIGluLWNvcmUKaW5vZGUgZm9yayBvbiB0aGUgdGVtcG9y
+YXJ5IGlub2RlIHVzZWQgYnkgeGZzX2ZzciB3YXMgb3JpZ2luYWxseQpzZXQgdXAgZHVyaW5n
+IHRoZSBleHRlbnQgc3dhcCwgd2UgbWlzdGFrZW5seSBsb29rZWQgYXQgZGlfbmV4dGVudHMK
+dG8gZGV0ZXJtaW5lIHdoZXRoZXIgYWxsIGV4dGVudHMgZml0IGlubGluZSwgYnV0IHRoaXMg
+bWlzc2VzIGV4dGVudHMKZ2VuZXJhdGVkIGJ5IHNwZWN1bGF0aXZlIHByZWFsbG9jYXRpb247
+IHdlIHNob3VsZCBiZSB1c2luZyBpZl9ieXRlcwppbnN0ZWFkLgoKVGhpcyBtaXN0YWtlIGNv
+cnJ1cHRzIHRoZSBpbi1tZW1vcnkgaW5vZGUsIGFuZCBjb2RlIGluCnhmc19pZXh0X3JlbW92
+ZV9pbmxpbmUgZXZlbnR1YWxseSBnZXRzIGJhZCBpbnB1dHMsIGNhdXNpbmcKaXQgdG8gbWVt
+bW92ZSBhbmQgbWVtc2V0IGluY29ycmVjdCByYW5nZXM7IHRoaXMgYmVjYW1lIGFwcGFyZW50
+CmJlY2F1c2UgdGhlIHR3byB2YWx1ZXMgaW4gaWZwLT5pZl91Mi5pZl9pbmxpbmVfZXh0WzFd
+IGNvbnRhaW5lZAp3aGF0IHNob3VsZCBoYXZlIGJlZW4gaW4gZF9vcHMgYW5kIGlfaXRlbXA7
+IHRoZXkgd2VyZSBtZW1tb3ZlZCBkdWUKdG8gaW5jb3JyZWN0IGFycmF5IGluZGV4aW5nIGFu
+ZCB0aGVuIHRoZSBvcmlnaW5hbCBsb2NhdGlvbnMKd2VyZSB6ZXJvZWQgd2l0aCBtZW1zZXQs
+IGFnYWluIGR1ZSB0byBhbiBhcnJheSBvdmVycnVuLgoKRml4IHRoaXMgYnkgcHJvcGVybHkg
+dXNpbmcgaV9kZi5pZl9ieXRlcyB0byBkZXRlcm1pbmUgdGhlIG51bWJlcgpvZiBleHRlbnRz
+LCBub3QgZGlfbmV4dGVudHMuCgpUaGFua3MgdG8gZGNoaW5uZXIgZm9yIGxvb2tpbmcgYXQg
+dGhpcyB3aXRoIG1lIGFuZCBzcG90dGluZyB0aGUKcm9vdCBjYXVzZS4KCltuYm9yaXNvdjog
+YmFja3BvcnRlZCB0byA0LjRdCgpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZwpTaWduZWQt
+b2ZmLWJ5OiBFcmljIFNhbmRlZW4gPHNhbmRlZW5AcmVkaGF0LmNvbT4KUmV2aWV3ZWQtYnk6
+IEJyaWFuIEZvc3RlciA8YmZvc3RlckByZWRoYXQuY29tPgpTaWduZWQtb2ZmLWJ5OiBEYXZl
+IENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+ClNpZ25lZC1vZmYtYnk6IE5pa29sYXkg
+Qm9yaXNvdiA8bmJvcmlzb3ZAc3VzZS5jb20+Ci0tCiBmcy94ZnMveGZzX2JtYXBfdXRpbC5j
+IHwgNyArKysrKy0tCiAxIGZpbGUgY2hhbmdlZCwgNSBpbnNlcnRpb25zKCspLCAyIGRlbGV0
+aW9ucygtKQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfYm1hcF91dGlsLmMgYi9mcy94ZnMv
+eGZzX2JtYXBfdXRpbC5jCmluZGV4IGQ3NTZkYTUxNWIxNS4uODMzNjcwMWEyODFjIDEwMDY0
+NAotLS0gYS9mcy94ZnMveGZzX2JtYXBfdXRpbC5jCisrKyBiL2ZzL3hmcy94ZnNfYm1hcF91
+dGlsLmMKQEAgLTE3ODgsNiArMTc4OCw3IEBAIHhmc19zd2FwX2V4dGVudHMoCiAJeGZzX3Ry
+YW5zX3QJKnRwOwogCXhmc19ic3RhdF90CSpzYnAgPSAmc3hwLT5zeF9zdGF0OwogCXhmc19p
+Zm9ya190CSp0ZW1waWZwLCAqaWZwLCAqdGlmcDsKKwl4ZnNfZXh0bnVtX3QJbmV4dGVudHM7
+CiAJaW50CQlzcmNfbG9nX2ZsYWdzLCB0YXJnZXRfbG9nX2ZsYWdzOwogCWludAkJZXJyb3Ig
+PSAwOwogCWludAkJYWZvcmtibGtzID0gMDsKQEAgLTE5NzQsNyArMTk3NSw4IEBAIHhmc19z
+d2FwX2V4dGVudHMoCiAJCSAqIHBvaW50ZXIuICBPdGhlcndpc2UgaXQncyBhbHJlYWR5IE5V
+TEwgb3IKIAkJICogcG9pbnRpbmcgdG8gdGhlIGV4dGVudC4KIAkJICovCi0JCWlmIChpcC0+
+aV9kLmRpX25leHRlbnRzIDw9IFhGU19JTkxJTkVfRVhUUykgeworCQluZXh0ZW50cyA9IGlw
+LT5pX2RmLmlmX2J5dGVzIC8gKHVpbnQpc2l6ZW9mKHhmc19ibWJ0X3JlY190KTsKKwkJaWYg
+KG5leHRlbnRzIDw9IFhGU19JTkxJTkVfRVhUUykgewogCQkJaWZwLT5pZl91MS5pZl9leHRl
+bnRzID0KIAkJCQlpZnAtPmlmX3UyLmlmX2lubGluZV9leHQ7CiAJCX0KQEAgLTE5OTMsNyAr
+MTk5NSw4IEBAIHhmc19zd2FwX2V4dGVudHMoCiAJCSAqIHBvaW50ZXIuICBPdGhlcndpc2Ug
+aXQncyBhbHJlYWR5IE5VTEwgb3IKIAkJICogcG9pbnRpbmcgdG8gdGhlIGV4dGVudC4KIAkJ
+ICovCi0JCWlmICh0aXAtPmlfZC5kaV9uZXh0ZW50cyA8PSBYRlNfSU5MSU5FX0VYVFMpIHsK
+KwkJbmV4dGVudHMgPSB0aXAtPmlfZGYuaWZfYnl0ZXMgLyAodWludClzaXplb2YoeGZzX2Jt
+YnRfcmVjX3QpOworCQlpZiAobmV4dGVudHMgPD0gWEZTX0lOTElORV9FWFRTKSB7CiAJCQl0
+aWZwLT5pZl91MS5pZl9leHRlbnRzID0KIAkJCQl0aWZwLT5pZl91Mi5pZl9pbmxpbmVfZXh0
+OwogCQl9Ci0tIAoyLjcuNAoK
+--------------3A6011F19395F382189757BF--
