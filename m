@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55678 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:46060 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752217AbdC0IuW (ORCPT
+        with ESMTP id S1752186AbdC0IuW (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:50:22 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/27] xfs: fail _dir_open when readahead fails
-Date: Mon, 27 Mar 2017 10:49:02 +0200
-Message-Id: <20170327084922.11691-8-hch@lst.de>
+Subject: [PATCH 09/27] xfs: check for obviously bad level values in the bmbt root
+Date: Mon, 27 Mar 2017 10:49:04 +0200
+Message-Id: <20170327084922.11691-10-hch@lst.de>
 In-Reply-To: <20170327084922.11691-1-hch@lst.de>
 References: <20170327084922.11691-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,78 +16,54 @@ Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 7a652bbe366464267190c2792a32ce4fff5595ef upstream.
+commit b3bf607d58520ea8c0666aeb4be60dbb724cd3a2 upstream.
 
-When we open a directory, we try to readahead block 0 of the directory
-on the assumption that we're going to need it soon.  If the bmbt is
-corrupt, the directory will never be usable and the readahead fails
-immediately, so we might as well prevent the directory from being opened
-at all.  This prevents a subsequent read or modify operation from
-hitting it and taking the fs offline.
-
-NOTE: We're only checking for early failures in the block mapping, not
-the readahead directory block itself.
+We can't handle a bmbt that's taller than BTREE_MAXLEVELS, and there's
+no such thing as a zero-level bmbt (for that we have extents format),
+so if we see this, send back an error code.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_da_btree.c | 6 ++----
- fs/xfs/libxfs/xfs_da_btree.h | 2 +-
- fs/xfs/xfs_file.c            | 4 ++--
- 3 files changed, 5 insertions(+), 7 deletions(-)
+ fs/xfs/libxfs/xfs_inode_fork.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index f2dc1a950c85..1bdf2888295b 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -2633,7 +2633,7 @@ xfs_da_read_buf(
- /*
-  * Readahead the dir/attr block.
-  */
--xfs_daddr_t
-+int
- xfs_da_reada_buf(
- 	struct xfs_inode	*dp,
- 	xfs_dablk_t		bno,
-@@ -2664,7 +2664,5 @@ xfs_da_reada_buf(
- 	if (mapp != &map)
- 		kmem_free(mapp);
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 421341f93bea..25c1e078aef6 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -26,6 +26,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_trans.h"
+ #include "xfs_inode_item.h"
++#include "xfs_btree.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_bmap.h"
+ #include "xfs_error.h"
+@@ -429,11 +430,13 @@ xfs_iformat_btree(
+ 	/* REFERENCED */
+ 	int			nrecs;
+ 	int			size;
++	int			level;
  
--	if (error)
--		return -1;
--	return mappedbno;
-+	return error;
- }
-diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index 98c75cbe6ac2..4e29cb6a3627 100644
---- a/fs/xfs/libxfs/xfs_da_btree.h
-+++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -201,7 +201,7 @@ int	xfs_da_read_buf(struct xfs_trans *trans, struct xfs_inode *dp,
- 			       xfs_dablk_t bno, xfs_daddr_t mappedbno,
- 			       struct xfs_buf **bpp, int whichfork,
- 			       const struct xfs_buf_ops *ops);
--xfs_daddr_t	xfs_da_reada_buf(struct xfs_inode *dp, xfs_dablk_t bno,
-+int	xfs_da_reada_buf(struct xfs_inode *dp, xfs_dablk_t bno,
- 				xfs_daddr_t mapped_bno, int whichfork,
- 				const struct xfs_buf_ops *ops);
- int	xfs_da_shrink_inode(xfs_da_args_t *args, xfs_dablk_t dead_blkno,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 81b7fee40b54..780be7a7abe9 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -992,9 +992,9 @@ xfs_dir_open(
- 	 */
- 	mode = xfs_ilock_data_map_shared(ip);
- 	if (ip->i_d.di_nextents > 0)
--		xfs_dir3_data_readahead(ip, 0, -1);
-+		error = xfs_dir3_data_readahead(ip, 0, -1);
- 	xfs_iunlock(ip, mode);
--	return 0;
-+	return error;
- }
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	dfp = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
+ 	size = XFS_BMAP_BROOT_SPACE(mp, dfp);
+ 	nrecs = be16_to_cpu(dfp->bb_numrecs);
++	level = be16_to_cpu(dfp->bb_level);
  
- STATIC int
+ 	/*
+ 	 * blow out if -- fork has less extents than can fit in
+@@ -446,7 +449,8 @@ xfs_iformat_btree(
+ 					XFS_IFORK_MAXEXT(ip, whichfork) ||
+ 		     XFS_BMDR_SPACE_CALC(nrecs) >
+ 					XFS_DFORK_SIZE(dip, mp, whichfork) ||
+-		     XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks)) {
++		     XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks) ||
++		     level == 0 || level > XFS_BTREE_MAXLEVELS) {
+ 		xfs_warn(mp, "corrupt inode %Lu (btree).",
+ 					(unsigned long long) ip->i_ino);
+ 		XFS_CORRUPTION_ERROR("xfs_iformat_btree", XFS_ERRLEVEL_LOW,
 -- 
 2.11.0
 
