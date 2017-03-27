@@ -1,75 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f48.google.com ([209.85.214.48]:36917 "EHLO
-        mail-it0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756692AbdCXOjq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Mar 2017 10:39:46 -0400
-Received: by mail-it0-f48.google.com with SMTP id 190so2786656itm.0
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Mar 2017 07:39:45 -0700 (PDT)
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-References: <20170315215107.5628-1-rgoldwyn@suse.de>
- <20170315215107.5628-6-rgoldwyn@suse.de>
- <eee4683d-9f44-434f-b97f-b0b24c7b3dab@kernel.dk>
- <47d742e9-1343-ef5b-f7d4-29a6e22bef84@suse.de>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <65504798-90c0-6abe-30ea-2faf3824eed8@kernel.dk>
-Date: Fri, 24 Mar 2017 08:39:42 -0600
-MIME-Version: 1.0
-In-Reply-To: <47d742e9-1343-ef5b-f7d4-29a6e22bef84@suse.de>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([65.50.211.133]:52446 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751730AbdC0IjB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:39:01 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/26] xfs: filter out obviously bad btree pointers
+Date: Mon, 27 Mar 2017 10:38:17 +0200
+Message-Id: <20170327083837.11027-7-hch@lst.de>
+In-Reply-To: <20170327083837.11027-1-hch@lst.de>
+References: <20170327083837.11027-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, linux-api@vger.kernel.org, willy@infradead.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On 03/24/2017 05:32 AM, Goldwyn Rodrigues wrote:
-> 
-> 
-> On 03/16/2017 09:33 AM, Jens Axboe wrote:
->> On 03/15/2017 03:51 PM, Goldwyn Rodrigues wrote:
->>> diff --git a/block/blk-core.c b/block/blk-core.c
->>> index 0eeb99e..2e5cba2 100644
->>> --- a/block/blk-core.c
->>> +++ b/block/blk-core.c
->>> @@ -2014,7 +2019,7 @@ blk_qc_t generic_make_request(struct bio *bio)
->>>  	do {
->>>  		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
->>>  
->>> -		if (likely(blk_queue_enter(q, false) == 0)) {
->>> +		if (likely(blk_queue_enter(q, bio_flagged(bio, BIO_NOWAIT)) == 0)) {
->>>  			struct bio_list hold;
->>>  			struct bio_list lower, same;
->>>  
->>> @@ -2040,7 +2045,10 @@ blk_qc_t generic_make_request(struct bio *bio)
->>>  			bio_list_merge(&bio_list_on_stack, &same);
->>>  			bio_list_merge(&bio_list_on_stack, &hold);
->>>  		} else {
->>> -			bio_io_error(bio);
->>> +			if (unlikely(bio_flagged(bio, BIO_NOWAIT)))
->>> +				bio_wouldblock_error(bio);
->>> +			else
->>> +				bio_io_error(bio);
->>
->> This doesn't look right. What if the queue is dying, and BIO_NOWAIT just
->> happened to be set?
->>
-> 
-> Yes, I need to add a condition here to check for blk_queue_dying(). Thanks.
-> 
->> And you're missing wbt_wait() as well as a blocking point. Ditto in
->> blk-mq.
-> 
-> wbt_wait() does not apply to WRITE_ODIRECT
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-It doesn't _currently_ block for it, but that could change. It should
-have an explicit check.
+commit d5a91baeb6033c3392121e4d5c011cdc08dfa9f7 upstream.
 
-Additionally, the more weird assumptions you make, the more half assed
-this will be. The other assumption made here is that only direct IO
-would set nonblock. We have to assume that any IO can have NONBLOCK set,
-and not make any assumptions about the caller.
+Don't let anybody load an obviously bad btree pointer.  Since the values
+come from disk, we must return an error, not just ASSERT.
 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c  | 5 +----
+ fs/xfs/libxfs/xfs_btree.c | 3 ++-
+ fs/xfs/libxfs/xfs_btree.h | 2 +-
+ 3 files changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index bfc00de5c6f1..d79c66d1215d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1278,7 +1278,6 @@ xfs_bmap_read_extents(
+ 	/* REFERENCED */
+ 	xfs_extnum_t		room;	/* number of entries there's room for */
+ 
+-	bno = NULLFSBLOCK;
+ 	mp = ip->i_mount;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	exntf = (whichfork != XFS_DATA_FORK) ? XFS_EXTFMT_NOSTATE :
+@@ -1291,9 +1290,7 @@ xfs_bmap_read_extents(
+ 	ASSERT(level > 0);
+ 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+ 	bno = be64_to_cpu(*pp);
+-	ASSERT(bno != NULLFSBLOCK);
+-	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
+-	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
++
+ 	/*
+ 	 * Go down the tree until leaf level is reached, following the first
+ 	 * pointer (leftmost) at each level.
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 21e6a6ab6b9a..2849d3fa3d0b 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -810,7 +810,8 @@ xfs_btree_read_bufl(
+ 	xfs_daddr_t		d;		/* real disk block address */
+ 	int			error;
+ 
+-	ASSERT(fsbno != NULLFSBLOCK);
++	if (!XFS_FSB_SANITY_CHECK(mp, fsbno))
++		return -EFSCORRUPTED;
+ 	d = XFS_FSB_TO_DADDR(mp, fsbno);
+ 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
+ 				   mp->m_bsize, lock, &bp, ops);
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index b69b947c4c1b..33a8f8694d30 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -456,7 +456,7 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+ #define	XFS_FILBLKS_MAX(a,b)	max_t(xfs_filblks_t, (a), (b))
+ 
+ #define	XFS_FSB_SANITY_CHECK(mp,fsb)	\
+-	(XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
++	(fsb && XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
+ 		XFS_FSB_TO_AGBNO(mp, fsb) < mp->m_sb.sb_agblocks)
+ 
+ /*
 -- 
-Jens Axboe
+2.11.0
 
