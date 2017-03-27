@@ -1,58 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52010 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:33353 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752169AbdC0Ik3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:40:29 -0400
+        with ESMTP id S1752169AbdC0Ikq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:40:46 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 24/26] xfs: Use xfs_icluster_size_fsb() to calculate inode alignment mask
-Date: Mon, 27 Mar 2017 10:38:35 +0200
-Message-Id: <20170327083837.11027-25-hch@lst.de>
+Subject: [PATCH 23/26] xfs: fix and streamline error handling in xfs_end_io
+Date: Mon, 27 Mar 2017 10:38:34 +0200
+Message-Id: <20170327083837.11027-24-hch@lst.de>
 In-Reply-To: <20170327083837.11027-1-hch@lst.de>
 References: <20170327083837.11027-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, Chandan Rajendra <chandan@linux.vnet.ibm.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+commit 787eb485509f9d58962bd8b4dbc6a5ac6e2034fe upstream.
 
-commit d5825712ee98d68a2c17bc89dad2c30276894cba upstream.
+There are two different cases of buffered I/O errors:
 
-When block size is larger than inode cluster size, the call to
-XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
-would have set xfs_sb->sb_inoalignmt to 0. Hence in
-xfs_set_inoalignment(), xfs_mount->m_inoalign_mask gets initialized to
--1 instead of 0. However, xfs_mount->m_sinoalign would get correctly
-intialized to 0 because for every positive value of xfs_mount->m_dalign,
-the condition "!(mp->m_dalign & mp->m_inoalign_mask)" would evaluate to
-false.
+ - first we can have an already shutdown fs.  In that case we should skip
+   any on-disk operations and just clean up the appen transaction if
+   present and destroy the ioend
+ - a real I/O error.  In that case we should cleanup any lingering COW
+   blocks.  This gets skipped in the current code and is fixed by this
+   patch.
 
-Also, xfs_imap() worked fine even with xfs_mount->m_inoalign_mask having
--1 as the value because blks_per_cluster variable would have the value 1
-and hence we would never have a need to use xfs_mount->m_inoalign_mask
-to compute the inode chunk's agbno and offset within the chunk.
-
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_mount.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/xfs_aops.c | 59 +++++++++++++++++++++++++------------------------------
+ 1 file changed, 27 insertions(+), 32 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 1f1e4ae44150..52d27cc4370a 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -511,8 +511,7 @@ STATIC void
- xfs_set_inoalignment(xfs_mount_t *mp)
- {
- 	if (xfs_sb_version_hasalign(&mp->m_sb) &&
--	    mp->m_sb.sb_inoalignmt >=
--	    XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
-+		mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
- 		mp->m_inoalign_mask = mp->m_sb.sb_inoalignmt - 1;
- 	else
- 		mp->m_inoalign_mask = 0;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 407d840c5c16..937d406d3c11 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -274,54 +274,49 @@ xfs_end_io(
+ 	struct xfs_ioend	*ioend =
+ 		container_of(work, struct xfs_ioend, io_work);
+ 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
++	xfs_off_t		offset = ioend->io_offset;
++	size_t			size = ioend->io_size;
+ 	int			error = ioend->io_bio->bi_error;
+ 
+ 	/*
+-	 * Set an error if the mount has shut down and proceed with end I/O
+-	 * processing so it can perform whatever cleanups are necessary.
++	 * Just clean up the in-memory strutures if the fs has been shut down.
+ 	 */
+-	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
++	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+ 		error = -EIO;
++		goto done;
++	}
+ 
+ 	/*
+-	 * For a CoW extent, we need to move the mapping from the CoW fork
+-	 * to the data fork.  If instead an error happened, just dump the
+-	 * new blocks.
++	 * Clean up any COW blocks on an I/O error.
+ 	 */
+-	if (ioend->io_type == XFS_IO_COW) {
+-		if (error)
+-			goto done;
+-		if (ioend->io_bio->bi_error) {
+-			error = xfs_reflink_cancel_cow_range(ip,
+-					ioend->io_offset, ioend->io_size, true);
+-			goto done;
++	if (unlikely(error)) {
++		switch (ioend->io_type) {
++		case XFS_IO_COW:
++			xfs_reflink_cancel_cow_range(ip, offset, size, true);
++			break;
+ 		}
+-		error = xfs_reflink_end_cow(ip, ioend->io_offset,
+-				ioend->io_size);
+-		if (error)
+-			goto done;
++
++		goto done;
+ 	}
+ 
+ 	/*
+-	 * For unwritten extents we need to issue transactions to convert a
+-	 * range to normal written extens after the data I/O has finished.
+-	 * Detecting and handling completion IO errors is done individually
+-	 * for each case as different cleanup operations need to be performed
+-	 * on error.
++	 * Success:  commit the COW or unwritten blocks if needed.
+ 	 */
+-	if (ioend->io_type == XFS_IO_UNWRITTEN) {
+-		if (error)
+-			goto done;
+-		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
+-						  ioend->io_size);
+-	} else if (ioend->io_append_trans) {
+-		error = xfs_setfilesize_ioend(ioend, error);
+-	} else {
+-		ASSERT(!xfs_ioend_is_append(ioend) ||
+-		       ioend->io_type == XFS_IO_COW);
++	switch (ioend->io_type) {
++	case XFS_IO_COW:
++		error = xfs_reflink_end_cow(ip, offset, size);
++		break;
++	case XFS_IO_UNWRITTEN:
++		error = xfs_iomap_write_unwritten(ip, offset, size);
++		break;
++	default:
++		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
++		break;
+ 	}
+ 
+ done:
++	if (ioend->io_append_trans)
++		error = xfs_setfilesize_ioend(ioend, error);
+ 	xfs_destroy_ioend(ioend, error);
+ }
+ 
 -- 
 2.11.0
 
