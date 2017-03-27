@@ -1,111 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48002 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:43376 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752460AbdC0Ivh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:51:37 -0400
+        with ESMTP id S1752199AbdC0Iva (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:51:30 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 27/27] xfs: try any AG when allocating the first btree block when reflinking
-Date: Mon, 27 Mar 2017 10:49:22 +0200
-Message-Id: <20170327084922.11691-28-hch@lst.de>
+Subject: [PATCH 20/27] xfs: don't reserve blocks for right shift transactions
+Date: Mon, 27 Mar 2017 10:49:15 +0200
+Message-Id: <20170327084922.11691-21-hch@lst.de>
 In-Reply-To: <20170327084922.11691-1-hch@lst.de>
 References: <20170327084922.11691-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit 2fcc319d2467a5f5b78f35f79fd6e22741a31b1e upstream.
+From: Brian Foster <bfoster@redhat.com>
 
-When a reflink operation causes the bmap code to allocate a btree block
-we're currently doing single-AG allocations due to having ->firstblock
-set and then try any higher AG due a little reflink quirk we've put in
-when adding the reflink code.  But given that we do not have a minleft
-reservation of any kind in this AG we can still not have any space in
-the same or higher AG even if the file system has enough free space.
-To fix this use a XFS_ALLOCTYPE_FIRST_AG allocation in this fall back
-path instead.
+commit 48af96ab92bc68fb645068b978ce36df2379e076 upstream.
 
-[And yes, we need to redo this properly instead of piling hacks over
- hacks.  I'm working on that, but it's not going to be a small series.
- In the meantime this fixes the customer reported issue]
+The block reservation for the transaction allocated in
+xfs_shift_file_space() is an artifact of the original collapse range
+support. It exists to handle the case where a collapse range occurs,
+the initial extent is left shifted into a location that forms a
+contiguous boundary with the previous extent and thus the extents
+are merged. This code was subsequently refactored and reused for
+insert range (right shift) support.
 
-Also add a warning for failing allocations to make it easier to debug.
+If an insert range occurs under low free space conditions, the
+extent at the starting offset is split before the first shift
+transaction is allocated. If the block reservation fails, this
+leaves separate, but contiguous extents around in the inode. While
+not a fatal problem, this is unexpected and will flag a warning on
+subsequent insert range operations on the inode. This problem has
+been reproduce intermittently by generic/270 running against a
+ramdisk device.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Since right shift does not create new extent boundaries in the
+inode, a block reservation for extent merge is unnecessary. Update
+xfs_shift_file_space() to conditionally reserve fs blocks for left
+shift transactions only. This avoids the warning reproduced by
+generic/270.
+
+Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c       | 10 +++++++---
- fs/xfs/libxfs/xfs_bmap_btree.c |  6 +++---
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index ec93395eccdc..5a508b011e27 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -769,8 +769,8 @@ xfs_bmap_extents_to_btree(
- 		args.type = XFS_ALLOCTYPE_START_BNO;
- 		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
- 	} else if (dfops->dop_low) {
--try_another_ag:
- 		args.type = XFS_ALLOCTYPE_START_BNO;
-+try_another_ag:
- 		args.fsbno = *firstblock;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index fd459b69161e..5c395e485170 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1387,10 +1387,16 @@ xfs_shift_file_space(
+ 	xfs_fileoff_t		stop_fsb;
+ 	xfs_fileoff_t		next_fsb;
+ 	xfs_fileoff_t		shift_fsb;
++	uint			resblks;
+ 
+ 	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
+ 
+ 	if (direction == SHIFT_LEFT) {
++		/*
++		 * Reserve blocks to cover potential extent merges after left
++		 * shift operations.
++		 */
++		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+ 		next_fsb = XFS_B_TO_FSB(mp, offset + len);
+ 		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
  	} else {
- 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
-@@ -796,13 +796,17 @@ xfs_bmap_extents_to_btree(
- 	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
- 	    args.fsbno == NULLFSBLOCK &&
- 	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
--		dfops->dop_low = true;
-+		args.type = XFS_ALLOCTYPE_FIRST_AG;
- 		goto try_another_ag;
+@@ -1398,6 +1404,7 @@ xfs_shift_file_space(
+ 		 * If right shift, delegate the work of initialization of
+ 		 * next_fsb to xfs_bmap_shift_extent as it has ilock held.
+ 		 */
++		resblks = 0;
+ 		next_fsb = NULLFSBLOCK;
+ 		stop_fsb = XFS_B_TO_FSB(mp, offset);
  	}
-+	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
-+		xfs_iroot_realloc(ip, -1, whichfork);
-+		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+		return -ENOSPC;
-+	}
- 	/*
- 	 * Allocation can't fail, the space was reserved.
- 	 */
--	ASSERT(args.fsbno != NULLFSBLOCK);
- 	ASSERT(*firstblock == NULLFSBLOCK ||
- 	       args.agno >= XFS_FSB_TO_AGNO(mp, *firstblock));
- 	*firstblock = cur->bc_private.b.firstblock = args.fsbno;
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index f76c1693ff01..5c3918678bb6 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -453,8 +453,8 @@ xfs_bmbt_alloc_block(
- 
- 	if (args.fsbno == NULLFSBLOCK) {
- 		args.fsbno = be64_to_cpu(start->l);
--try_another_ag:
- 		args.type = XFS_ALLOCTYPE_START_BNO;
-+try_another_ag:
- 		/*
- 		 * Make sure there is sufficient room left in the AG to
- 		 * complete a full tree split for an extent insert.  If
-@@ -494,8 +494,8 @@ xfs_bmbt_alloc_block(
- 	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
- 	    args.fsbno == NULLFSBLOCK &&
- 	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
--		cur->bc_private.b.dfops->dop_low = true;
- 		args.fsbno = cur->bc_private.b.firstblock;
-+		args.type = XFS_ALLOCTYPE_FIRST_AG;
- 		goto try_another_ag;
+@@ -1439,21 +1446,14 @@ xfs_shift_file_space(
  	}
  
-@@ -512,7 +512,7 @@ xfs_bmbt_alloc_block(
- 			goto error0;
- 		cur->bc_private.b.dfops->dop_low = true;
- 	}
--	if (args.fsbno == NULLFSBLOCK) {
-+	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
- 		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
- 		*stat = 0;
- 		return 0;
+ 	while (!error && !done) {
+-		/*
+-		 * We would need to reserve permanent block for transaction.
+-		 * This will come into picture when after shifting extent into
+-		 * hole we found that adjacent extents can be merged which
+-		 * may lead to freeing of a block during record update.
+-		 */
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
+-				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
++		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
++					&tp);
+ 		if (error)
+ 			break;
+ 
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
+-				ip->i_gdquot, ip->i_pdquot,
+-				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
++				ip->i_gdquot, ip->i_pdquot, resblks, 0,
+ 				XFS_QMOPT_RES_REGBLKS);
+ 		if (error)
+ 			goto out_trans_cancel;
 -- 
 2.11.0
 
