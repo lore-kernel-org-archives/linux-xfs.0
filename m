@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60038 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:47348 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752200AbdC0IuW (ORCPT
+        with ESMTP id S1752176AbdC0IuW (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:50:22 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/27] xfs: verify free block header fields
-Date: Mon, 27 Mar 2017 10:49:05 +0200
-Message-Id: <20170327084922.11691-11-hch@lst.de>
+Subject: [PATCH 08/27] xfs: filter out obviously bad btree pointers
+Date: Mon, 27 Mar 2017 10:49:03 +0200
+Message-Id: <20170327084922.11691-9-hch@lst.de>
 In-Reply-To: <20170327084922.11691-1-hch@lst.de>
 References: <20170327084922.11691-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -16,92 +16,69 @@ Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit de14c5f541e78c59006bee56f6c5c2ef1ca07272 upstream.
+commit d5a91baeb6033c3392121e4d5c011cdc08dfa9f7 upstream.
 
-Perform basic sanity checking of the directory free block header
-fields so that we avoid hanging the system on invalid data.
-
-(Granted that just means that now we shutdown on directory write,
-but that seems better than hanging...)
+Don't let anybody load an obviously bad btree pointer.  Since the values
+come from disk, we must return an error, not just ASSERT.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/libxfs/xfs_dir2_node.c | 51 +++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 49 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c  | 5 +----
+ fs/xfs/libxfs/xfs_btree.c | 3 ++-
+ fs/xfs/libxfs/xfs_btree.h | 2 +-
+ 3 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 75a557432d0f..bbd1238852b3 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -155,6 +155,42 @@ const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
- 	.verify_write = xfs_dir3_free_write_verify,
- };
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index f52fd63fce19..02c466081991 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1278,7 +1278,6 @@ xfs_bmap_read_extents(
+ 	/* REFERENCED */
+ 	xfs_extnum_t		room;	/* number of entries there's room for */
  
-+/* Everything ok in the free block header? */
-+static bool
-+xfs_dir3_free_header_check(
-+	struct xfs_inode	*dp,
-+	xfs_dablk_t		fbno,
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = dp->i_mount;
-+	unsigned int		firstdb;
-+	int			maxbests;
+-	bno = NULLFSBLOCK;
+ 	mp = ip->i_mount;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	exntf = (whichfork != XFS_DATA_FORK) ? XFS_EXTFMT_NOSTATE :
+@@ -1291,9 +1290,7 @@ xfs_bmap_read_extents(
+ 	ASSERT(level > 0);
+ 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+ 	bno = be64_to_cpu(*pp);
+-	ASSERT(bno != NULLFSBLOCK);
+-	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
+-	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
 +
-+	maxbests = dp->d_ops->free_max_bests(mp->m_dir_geo);
-+	firstdb = (xfs_dir2_da_to_db(mp->m_dir_geo, fbno) -
-+		   xfs_dir2_byte_to_db(mp->m_dir_geo, XFS_DIR2_FREE_OFFSET)) *
-+			maxbests;
-+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+		struct xfs_dir3_free_hdr *hdr3 = bp->b_addr;
-+
-+		if (be32_to_cpu(hdr3->firstdb) != firstdb)
-+			return false;
-+		if (be32_to_cpu(hdr3->nvalid) > maxbests)
-+			return false;
-+		if (be32_to_cpu(hdr3->nvalid) < be32_to_cpu(hdr3->nused))
-+			return false;
-+	} else {
-+		struct xfs_dir2_free_hdr *hdr = bp->b_addr;
-+
-+		if (be32_to_cpu(hdr->firstdb) != firstdb)
-+			return false;
-+		if (be32_to_cpu(hdr->nvalid) > maxbests)
-+			return false;
-+		if (be32_to_cpu(hdr->nvalid) < be32_to_cpu(hdr->nused))
-+			return false;
-+	}
-+	return true;
-+}
+ 	/*
+ 	 * Go down the tree until leaf level is reached, following the first
+ 	 * pointer (leftmost) at each level.
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 21e6a6ab6b9a..2849d3fa3d0b 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -810,7 +810,8 @@ xfs_btree_read_bufl(
+ 	xfs_daddr_t		d;		/* real disk block address */
+ 	int			error;
  
- static int
- __xfs_dir3_free_read(
-@@ -168,11 +204,22 @@ __xfs_dir3_free_read(
- 
- 	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
- 				XFS_DATA_FORK, &xfs_dir3_free_buf_ops);
-+	if (err || !*bpp)
-+		return err;
-+
-+	/* Check things that we can't do in the verifier. */
-+	if (!xfs_dir3_free_header_check(dp, fbno, *bpp)) {
-+		xfs_buf_ioerror(*bpp, -EFSCORRUPTED);
-+		xfs_verifier_error(*bpp);
-+		xfs_trans_brelse(tp, *bpp);
+-	ASSERT(fsbno != NULLFSBLOCK);
++	if (!XFS_FSB_SANITY_CHECK(mp, fsbno))
 +		return -EFSCORRUPTED;
-+	}
+ 	d = XFS_FSB_TO_DADDR(mp, fsbno);
+ 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
+ 				   mp->m_bsize, lock, &bp, ops);
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index c2b01d1c79ee..3b0fc1afada5 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -491,7 +491,7 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+ #define	XFS_FILBLKS_MAX(a,b)	max_t(xfs_filblks_t, (a), (b))
  
- 	/* try read returns without an error or *bpp if it lands in a hole */
--	if (!err && tp && *bpp)
-+	if (tp)
- 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_FREE_BUF);
--	return err;
-+
-+	return 0;
- }
+ #define	XFS_FSB_SANITY_CHECK(mp,fsb)	\
+-	(XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
++	(fsb && XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
+ 		XFS_FSB_TO_AGBNO(mp, fsb) < mp->m_sb.sb_agblocks)
  
- int
+ /*
 -- 
 2.11.0
 
