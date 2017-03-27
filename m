@@ -1,104 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33240 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751968AbdC0U6z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 16:58:55 -0400
-Date: Mon, 27 Mar 2017 13:58:46 -0700
-From: Eric Biggers <ebiggers3@gmail.com>
-Subject: Re: [PATCH 2/2 V2] xfs_io: hook up statx
-Message-ID: <20170327205846.GA6502@gmail.com>
-References: <7a090a8e-7204-1b9b-8b31-e7a061b39f87@sandeen.net>
- <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net>
+Received: from bombadil.infradead.org ([65.50.211.133]:45310 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751599AbdC0Ije (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 04:39:34 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 13/26] xfs: update ctime and mtime on clone destinatation inodes
+Date: Mon, 27 Mar 2017 10:38:24 +0200
+Message-Id: <20170327083837.11027-14-hch@lst.de>
+In-Reply-To: <20170327083837.11027-1-hch@lst.de>
+References: <20170327083837.11027-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, David Howells <dhowells@redhat.com>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-Hi Eric,
+commit c5ecb42342852892f978572ddc6dca703460f25a upstream.
 
-On Thu, Mar 23, 2017 at 11:45:45PM -0500, Eric Sandeen wrote:
-> Wire up the statx syscall to xfs_io.
-> 
+We're changing both metadata and data, so we need to update the
+timestamps for clone operations.  Dedupe on the other hand does
+not change file data, and only changes invisible metadata so the
+timestamps should not be updated.
 
-I haven't reviewed these patches in detail, but just a few nits:
+This follows existing btrfs behavior.
 
-Given that the command operates on an open file, wouldn't it make more sense to
-call statx() with the file descriptor and a NULL path?  It wouldn't be ideal for
-test coverage, but it seems xfs_io isn't currently designed to work otherwise.
-And note that the 'stat' xfs_io command already calls fstat(), not stat().
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+[darrick: remove redundant is_dedupe test]
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_reflink.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-(In particular think about what should happen if you open a file through a
-symlink, then execute both the 'stat' and 'statx' commands... with the current
-proposal 'stat' would operate on the file, while 'statx' would operate on the
-symlink by default.  Seems inconsistent.)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 8c8c4f4676da..d8c51248e207 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -955,13 +955,14 @@ STATIC int
+ xfs_reflink_update_dest(
+ 	struct xfs_inode	*dest,
+ 	xfs_off_t		newlen,
+-	xfs_extlen_t		cowextsize)
++	xfs_extlen_t		cowextsize,
++	bool			is_dedupe)
+ {
+ 	struct xfs_mount	*mp = dest->i_mount;
+ 	struct xfs_trans	*tp;
+ 	int			error;
+ 
+-	if (newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
++	if (is_dedupe && newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
+ 		return 0;
+ 
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
+@@ -982,6 +983,10 @@ xfs_reflink_update_dest(
+ 		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+ 	}
+ 
++	if (!is_dedupe) {
++		xfs_trans_ichgtime(tp, dest,
++				   XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	}
+ 	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
+ 
+ 	error = xfs_trans_commit(tp);
+@@ -1295,7 +1300,8 @@ xfs_reflink_remap_range(
+ 	    !(dest->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
+ 		cowextsize = src->i_d.di_cowextsize;
+ 
+-	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize);
++	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize,
++			is_dedupe);
+ 
+ out_unlock:
+ 	xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
+-- 
+2.11.0
 
-> diff --git a/io/init.c b/io/init.c
-> index 06002e6..c15a1e1 100644
-> --- a/io/init.c
-> +++ b/io/init.c
-> @@ -86,6 +86,7 @@ init_commands(void)
->  	seek_init();
->  	sendfile_init();
->  	shutdown_init();
-> +	stat_init();
->  	sync_init();
-
-The call to stat_init() should be added in patch 1 instead of patch 2, since
-otherwise the 'stat' command is unavailable after applying just patch 1.
-
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 19e1ae4..022f0ea 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -880,6 +880,32 @@ and the XFS_IOC_GETXATTR system call on the current file. If the
->  option is specified, the atime (last access), mtime
->  (last modify), and ctime (last change) timestamps are also displayed.
->  .TP
-> +.BR statx " [ " \-O " | " "\-m mask" " ][ \-" FDLA " ]"
-> +Extended information from the statx syscall.
-> +.RS 1.0i
-> +.PD 0
-> +.TP 0.4i
-> +.B \-m mask
-> +Specify the field mask for the statx call (default STATX_ALL)
-> +.TP
-> +.B \-O
-> +Add only basic stats (STATX_BASIC_STATS) to default mask
-> +.TP
-> +.B \-F
-> +Force the attributes to be sync'd with the server
-> +.TP
-> +.B \-D
-> +Don't sync attributes with the server
-> +.TP
-> +.B \-L
-> +Follow symlinks (statx link target)
-> +.TP
-> +.B \-A
-> +Suppress terminal automount traversal
-> +.TP
-> +.RE
-> +.IP
-> +.TP
->  .B statfs
->  Selected statistics from
->  .BR statfs (2)
-
-This re-introduces the issue where the later text in the formatted man page is
-indented too much.  Removing the extra .TP and .IP, so that the source looks
-like the following, appears to fix it:
-
-.TP
-.B \-A
-Suppress terminal automount traversal
-.RE
-.TP
-.B statfs
-
-
-- Eric
