@@ -1,37 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45224 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42042 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751522AbdC0TEL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Mar 2017 15:04:11 -0400
+        id S1751962AbdC0U0K (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Mar 2017 16:26:10 -0400
 From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20170327164628.GA15147@infradead.org>
-References: <20170327164628.GA15147@infradead.org> <20170327154003.GA5716@birch.djwong.org> <20170307050140.GA12946@infradead.org> <20170307000609.GG5280@birch.djwong.org> <10435.1488907375@warthog.procyon.org.uk> <20170324205322.GA4986@gmail.com> <E6DB8461-22DE-496C-8A4A-B0A2F3702750@dilger.ca> <23715.1490631926@warthog.procyon.org.uk>
-Subject: Re: statx manpage
+In-Reply-To: <05b4710f-8459-6386-244b-9df2db8398f9@sandeen.net>
+References: <05b4710f-8459-6386-244b-9df2db8398f9@sandeen.net> <7a090a8e-7204-1b9b-8b31-e7a061b39f87@sandeen.net>
+Subject: Re: [PATCH 1/2 V2] xfs_io: move stat functions to new file
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <24755.1490641071.1@warthog.procyon.org.uk>
-Content-Transfer-Encoding: 8BIT
-Date: Mon, 27 Mar 2017 19:57:51 +0100
-Message-ID: <24756.1490641071@warthog.procyon.org.uk>
+Content-ID: <6206.1490646367.1@warthog.procyon.org.uk>
+Date: Mon, 27 Mar 2017 21:26:07 +0100
+Message-ID: <6207.1490646367@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: dhowells@redhat.com, "Darrick J. Wong" <darrick.wong@oracle.com>, Andreas Dilger <adilger@dilger.ca>, Eric Biggers <ebiggers3@gmail.com>, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: dhowells@redhat.com, linux-xfs <linux-xfs@vger.kernel.org>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>
 
-Christoph Hellwig <hch@infradead.org> wrote:
+Eric Sandeen <sandeen@sandeen.net> wrote:
 
-> On Mon, Mar 27, 2017 at 05:25:26PM +0100, David Howells wrote:
-> > That means a filesystem can't simply return non-basic data unconditionally if
-> > possible.  I prefer letting it do so if it doesn't incur any extra I/O
-> > overheads.
-> 
-> This seems like it will lead to userspace expecting certain fields to
-> just be there, and a lot harder to properly verify for tests.  Which btw
-> we all need for these odd behaviors.  If we can't get them any time soon
-> (e.g. before -rc6) I think we'll simply have to revert statx instead of
-> leaving this untested mess in the tree.
+> diff --git a/io/Makefile b/io/Makefile
 
-Have you reviewed the manpage yet?
+What do I apply this to?  I don't see any directory or file called "io" in
+xfstests-dev/master.
 
 David
