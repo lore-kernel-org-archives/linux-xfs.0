@@ -1,150 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32527 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933443AbdC3P6L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 11:58:11 -0400
-Subject: [PATCH 1/9] vfs: add common GETFSMAP ioctl definitions
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 30 Mar 2017 08:58:04 -0700
-Message-ID: <149088948402.25895.8126454500151691913.stgit@birch.djwong.org>
-In-Reply-To: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
-References: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
+Received: from mail-ot0-f179.google.com ([74.125.82.179]:34947 "EHLO
+        mail-ot0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752942AbdC1Rf5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Mar 2017 13:35:57 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <4DB15765-D097-43B5-9F1B-43DE76D3BC90@sandeen.net>
+References: <29458.1490711932@warthog.procyon.org.uk> <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net>
+ <7a090a8e-7204-1b9b-8b31-e7a061b39f87@sandeen.net> <29491.1490712064@warthog.procyon.org.uk>
+ <4DB15765-D097-43B5-9F1B-43DE76D3BC90@sandeen.net>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 28 Mar 2017 13:35:45 -0400
+Message-ID: <CAOQ4uxj_S2UtW0A5vSsmD_1vjgPsdopckj4Jtc5w5KuM2aTppA@mail.gmail.com>
+Subject: Re: [PATCH] xfs_io: changes to statx interface [ver #2]
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-api@vger.kernel.org
+To: David Howells <dhowells@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Mar 28, 2017 at 12:42 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> I am (literally) in the woods this week so can't really comment at length, but generally:
+>
+> xfs_io is useful to facilitate testing at times, but usually doesn't have tests built into the tool itself.
+>
 
-Add the GETFSMAP headers to the VFS kernel headers
+David,
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- include/uapi/linux/fsmap.h |  112 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 112 insertions(+)
- create mode 100644 include/uapi/linux/fsmap.h
+Eric being the maintainer, so he gets to decide, but he is being
+somewhat subtle.
+There is no precedence AFAIK to tests within xfs_io.
+Instead of comparing to stat with -c flag, you can make sure that
+output of xfs_io -c 'statx -c'
+is fully compatible to output of xfs_io -c 'stat -v' and do the test in scripts.
 
+> And I think you are right that it is a poor fit for some of the testing you'd like to do.
+> There is a src/ dir in xfstests for specialized C tests which get called by the test harness; that might also be a reasonable option.
+>
 
-diff --git a/include/uapi/linux/fsmap.h b/include/uapi/linux/fsmap.h
-new file mode 100644
-index 0000000..7e8e5f0b
---- /dev/null
-+++ b/include/uapi/linux/fsmap.h
-@@ -0,0 +1,112 @@
-+/*
-+ * FS_IOC_GETFSMAP ioctl infrastructure.
-+ *
-+ * Copyright (C) 2017 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#ifndef _LINUX_FSMAP_H
-+#define _LINUX_FSMAP_H
-+
-+#include <linux/types.h>
-+
-+/*
-+ *	Structure for FS_IOC_GETFSMAP.
-+ *
-+ *	The memory layout for this call are the scalar values defined in
-+ *	struct fsmap_head, followed by two struct fsmap that describe
-+ *	the lower and upper bound of mappings to return, followed by an
-+ *	array of struct fsmap mappings.
-+ *
-+ *	fmh_iflags control the output of the call, whereas fmh_oflags report
-+ *	on the overall record output.  fmh_count should be set to the
-+ *	length of the fmh_recs array, and fmh_entries will be set to the
-+ *	number of entries filled out during each call.  If fmh_count is
-+ *	zero, the number of reverse mappings will be returned in
-+ *	fmh_entries, though no mappings will be returned.  fmh_reserved
-+ *	must be set to zero.
-+ *
-+ *	The two elements in the fmh_keys array are used to constrain the
-+ *	output.  The first element in the array should represent the
-+ *	lowest disk mapping ("low key") that the user wants to learn
-+ *	about.  If this value is all zeroes, the filesystem will return
-+ *	the first entry it knows about.  For a subsequent call, the
-+ *	contents of fsmap_head.fmh_recs[fsmap_head.fmh_count - 1] should be
-+ *	copied into fmh_keys[0] to have the kernel start where it left off.
-+ *
-+ *	The second element in the fmh_keys array should represent the
-+ *	highest disk mapping ("high key") that the user wants to learn
-+ *	about.  If this value is all ones, the filesystem will not stop
-+ *	until it runs out of mapping to return or runs out of space in
-+ *	fmh_recs.
-+ *
-+ *	fmr_device can be either a 32-bit cookie representing a device, or
-+ *	a 32-bit dev_t if the FMH_OF_DEV_T flag is set.  fmr_physical,
-+ *	fmr_offset, and fmr_length are expressed in units of bytes.
-+ *	fmr_owner is either an inode number, or a special value if
-+ *	FMR_OF_SPECIAL_OWNER is set in fmr_flags.
-+ */
-+struct fsmap {
-+	__u32		fmr_device;	/* device id */
-+	__u32		fmr_flags;	/* mapping flags */
-+	__u64		fmr_physical;	/* device offset of segment */
-+	__u64		fmr_owner;	/* owner id */
-+	__u64		fmr_offset;	/* file offset of segment */
-+	__u64		fmr_length;	/* length of segment */
-+	__u64		fmr_reserved[3];	/* must be zero */
-+};
-+
-+struct fsmap_head {
-+	__u32		fmh_iflags;	/* control flags */
-+	__u32		fmh_oflags;	/* output flags */
-+	__u32		fmh_count;	/* # of entries in array incl. input */
-+	__u32		fmh_entries;	/* # of entries filled in (output). */
-+	__u64		fmh_reserved[6];	/* must be zero */
-+
-+	struct fsmap	fmh_keys[2];	/* low and high keys for the mapping search */
-+	struct fsmap	fmh_recs[];	/* returned records */
-+};
-+
-+/* Size of an fsmap_head with room for nr records. */
-+static inline size_t
-+fsmap_sizeof(
-+	unsigned int	nr)
-+{
-+	return sizeof(struct fsmap_head) + nr * sizeof(struct fsmap);
-+}
-+
-+/* Start the next fsmap query at the end of the current query results. */
-+static inline void
-+fsmap_advance(
-+	struct fsmap_head	*head)
-+{
-+	head->fmh_keys[0] = head->fmh_recs[head->fmh_entries - 1];
-+}
-+
-+/*	fmh_iflags values - set by FS_IOC_GETFSMAP caller in the header. */
-+/* no flags defined yet */
-+#define FMH_IF_VALID		0
-+
-+/*	fmh_oflags values - returned in the header segment only. */
-+#define FMH_OF_DEV_T		0x1	/* fmr_device values will be dev_t */
-+
-+/*	fmr_flags values - returned for each non-header segment */
-+#define FMR_OF_PREALLOC		0x1	/* segment = unwritten pre-allocation */
-+#define FMR_OF_ATTR_FORK	0x2	/* segment = attribute fork */
-+#define FMR_OF_EXTENT_MAP	0x4	/* segment = extent map */
-+#define FMR_OF_SHARED		0x8	/* segment = shared with another file */
-+#define FMR_OF_SPECIAL_OWNER	0x10	/* owner is a special value */
-+#define FMR_OF_LAST		0x20	/* segment is the last in the FS */
-+
-+/* Each FS gets to define its own special owner codes. */
-+#define FMR_OWNER(type, code)	(((__u64)type << 32) | \
-+				 ((__u64)code & 0xFFFFFFFFULL))
-+#define FMR_OWNER_TYPE(owner)	((__u32)((__u64)owner >> 32))
-+#define FMR_OWNER_CODE(owner)	((__u32)(((__u64)owner & 0xFFFFFFFFULL)))
-+#define FMR_OWN_FREE		FMR_OWNER(0, 1) /* free space */
-+#define FMR_OWN_UNKNOWN		FMR_OWNER(0, 2) /* unknown owner */
-+#define FMR_OWN_METADATA	FMR_OWNER(0, 3) /* metadata */
-+
-+#define FS_IOC_GETFSMAP		_IOWR('X', 59, struct fsmap_head)
-+
-+#endif /* _LINUX_FSMAP_H */
+That's actually the shortest path for you and there are quite a few
+tests in xfstests that took
+this path. It should be easy for you to copy & paste one of them.
 
+That's not instead of adding xfs_io statx - just for tests that are
+not natural to do with xfs_io.
+
+> Thanks,
+> Eric
+>
+>> On Mar 28, 2017, at 9:41 AM, David Howells <dhowells@redhat.com> wrote:
+>>
+>> Note that the intention is to put the testing of the syscall parameter
+>> handling into LTP, along with testing of the symlink following and dirfd usage
+>> since xfstests seems unsuitable for this.
+>>
+>> David
+>
