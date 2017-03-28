@@ -1,52 +1,241 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22238 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751183AbdC0UHA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 16:07:00 -0400
-Date: Mon, 27 Mar 2017 13:05:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: Remove obsolete declaration of xfs_buf_get_empty
-Message-ID: <20170327200558.GI5738@birch.djwong.org>
-References: <1490644909-30636-1-git-send-email-nborisov@suse.com>
+Received: from mx1.redhat.com ([209.132.183.28]:54512 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754107AbdC1KcX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Mar 2017 06:32:23 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net>
+References: <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net> <7a090a8e-7204-1b9b-8b31-e7a061b39f87@sandeen.net>
+Subject: [PATCH] xfs_io: changes to statx interface
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1490644909-30636-1-git-send-email-nborisov@suse.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <22057.1490696551.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: 8BIT
+Date: Tue, 28 Mar 2017 11:22:31 +0100
+Message-ID: <22058.1490696551@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: dhowells@redhat.com, linux-xfs <linux-xfs@vger.kernel.org>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Mon, Mar 27, 2017 at 11:01:49PM +0300, Nikolay Borisov wrote:
-> This function has been removed ever since at least 3.12-era. No need to
-> keep its declaration in the header so nuke it.
+Eric Sandeen <sandeen@sandeen.net> wrote:
+
+> Wire up the statx syscall to xfs_io.
 > 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> xfs_io> help statx
+> statx [-O | -m mask][-FDLA] -- extended information about the currently open file
+> ...
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+I would like to make the attached changes, to make it more capable, except
+that xfs_io seems to precheck the "-m mask" argument somewhere:
 
-Will queue this for 4.12.
+	[root@andromeda ~]# xfs_io -c statx -m all /dev/null
+	non-numeric mode -- all
 
---D
+and interprets "-c" for itself on the command line:
 
-> ---
->  fs/xfs/xfs_buf.h | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 3c867e5a63e1..e1bc1af743fa 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -291,7 +291,6 @@ xfs_buf_readahead(
->  	return xfs_buf_readahead_map(target, &map, 1, ops);
->  }
->  
-> -struct xfs_buf *xfs_buf_get_empty(struct xfs_buftarg *target, size_t numblks);
->  void xfs_buf_set_empty(struct xfs_buf *bp, size_t numblks);
->  int xfs_buf_associate_memory(struct xfs_buf *bp, void *mem, size_t length);
->  
-> -- 
-> 2.7.4
-> 
+	[root@andromeda ~]# xfs_io -c statx -c /dev/null
+	command "/dev/null" not found
+
+though both these seem to work when used from xfs_io's command prompt.  I
+guess I should switch -c to -C and also -m to -M since it's not a file mode as
+I think the core is expecting.
+
+Also, how do you get xfs_io to tell you what fd it has opened from its own
+command prompt?  I would need to pass that to the -d flag as a dir fd.
+
+David
+---
+commit 03e4ca1cdc59aaa362fdd51f079493a1f0da254c
+Author: David Howells <dhowells@redhat.com>
+Date:   Tue Mar 28 10:42:23 2017 +0100
+
+    changes
+
+diff --git a/io/stat.c b/io/stat.c
+index a7aebcd..0b05ec9 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -189,12 +189,14 @@ statx_help(void)
+ " Display extended file status.\n"
+ "\n"
+ " Options:\n"
+-" -m mask -- Specify the field mask for the statx call (default STATX_ALL)\n"
++" -c -- Compare against fstat/fstatat on the same file/fd\n"
++" -d dirfd -- Use a specific directory fd\n"
++" -f -- Do fstat equivalent and operate on fd\n"
++" -m mask -- Specify the field mask for the statx call (can also be 'basic' or 'all'; default STATX_ALL)\n"
+ " -A -- Suppress terminal automount traversal\n"
+ " -D -- Don't sync attributes with the server\n"
+ " -F -- Force the attributes to be sync'd with the server\n"
+ " -L -- Follow symlinks (statx link target)\n"
+-" -O -- Add only basic stats (STATX_BASIC_STATS) to default mask\n"
+ "\n"));
+ }
+ 
+@@ -227,6 +229,65 @@ dump_statx(struct statx *stx)
+ }
+ 
+ /*
++ * Compare the contents of a statx struct with that of a stat struct and check
++ * that they're the same.
++ */
++static int
++cmp_statx(const struct statx *stx, const struct stat *st)
++{
++	const char *what = NULL;
++
++#define cmp(x) \
++	do {					\
++		what = #x;		\
++		if (stx->stx_##x != st->st_##x)	\
++			goto mismatch;		\
++	} while (0)
++
++	cmp(blksize);
++	cmp(nlink);
++	cmp(uid);
++	cmp(gid);
++	cmp(mode);
++	cmp(ino);
++	cmp(size);
++	cmp(blocks);
++
++#define devcmp(x) \
++	do {						\
++		what = #x".major";			\
++		if (stx->stx_##x##_major != major(st->st_##x))	\
++			goto mismatch;			\
++		what = #x".minor";			\
++		if (stx->stx_##x##_minor != minor(st->st_##x))	\
++			goto mismatch;			\
++	} while (0)
++
++	devcmp(dev);
++	devcmp(rdev);
++
++#define timecmp(x) \
++	do {						\
++		what = #x".tv_sec";			\
++		if (stx->stx_##x##time.tv_sec != st->st_##x##tim.tv_sec)	\
++			goto mismatch;			\
++		what = #x".tv_nsec";			\
++		if (stx->stx_##x##time.tv_nsec != st->st_##x##tim.tv_nsec)	\
++			goto mismatch;			\
++	} while (0)
++
++	timecmp(a);
++	timecmp(c);
++	timecmp(m);
++
++	return 0;
++
++mismatch:
++	fprintf(stderr, "Mismatch between stat and statx output (%s)\n", what);
++	return -1;
++}
++
++/*
+  * options:
+  * 	- input flags - query type
+  * 	- output style for flags (and all else?) (chars vs. hex?)
+@@ -239,16 +300,31 @@ statx_f(
+ {
+ 	int		c;
+ 	struct statx	stx;
++	struct stat	st;
+ 	int		atflag = AT_SYMLINK_NOFOLLOW;
+-	unsigned int	m_mask = 0;	/* mask requested with -m */
+-	int		Oflag = 0, mflag = 0;	/* -O or -m was used */
+ 	unsigned int	mask = STATX_ALL;
++	int		use_fd = 0;
++	int		dirfd = AT_FDCWD;
++	int		compare = 0;
+ 
+-	while ((c = getopt(argc, argv, "m:FDLOA")) != EOF) {
++	while ((c = getopt(argc, argv, "d:cfm:FDLA")) != EOF) {
+ 		switch (c) {
++		case 'c':
++			compare = 1;
++			break;
++		case 'd':
++			dirfd = strtoul(optarg, NULL, 0);
++			break;
++		case 'f':
++			use_fd = 1;
++			break;
+ 		case 'm':
+-			m_mask = atoi(optarg);
+-			mflag = 1;
++			if (strcmp(optarg, "basic") == 0)
++				mask = STATX_BASIC_STATS;
++			else if (strcmp(optarg, "all") == 0)
++				mask = STATX_ALL;
++			else
++				mask = strtoul(optarg, NULL, 0);
+ 			break;
+ 		case 'F':
+ 			atflag &= ~AT_STATX_SYNC_TYPE;
+@@ -261,10 +337,6 @@ statx_f(
+ 		case 'L':
+ 			atflag &= ~AT_SYMLINK_NOFOLLOW;
+ 			break;
+-		case 'O':
+-			mask = STATX_BASIC_STATS;
+-			Oflag = 1;
+-			break;
+ 		case 'A':
+ 			atflag |= AT_NO_AUTOMOUNT;
+ 			break;
+@@ -273,23 +345,38 @@ statx_f(
+ 		}
+ 	}
+ 
+-	if (Oflag && mflag) {
+-		printf("Cannot specify both -m mask and -O\n");
+-		return 0;
++	memset(&stx, 0xbf, sizeof(stx));
++
++	if (use_fd) {
++		if (statx(file->fd, NULL, atflag, mask, &stx) < 0) {
++			perror("statx");
++			return 0;
++		}
++	} else {
++		if (statx(dirfd, file->name, atflag, mask, &stx) < 0) {
++			perror("statx");
++			return 0;
++		}
+ 	}
+ 
+-	/* -m overrides any other mask options */
+-	if (mflag)
+-		mask = m_mask;
++	if (compare) {
++		if (use_fd) {
++			if (fstat(file->fd, &st) < 0) {
++				perror("fstat");
++				return 0;
++			}
++		} else {
++			if (fstatat(dirfd, file->name, &st,
++				    atflag & ~AT_STATX_SYNC_TYPE) < 0) {
++				perror("fstatat");
++				return 0;
++			}
++		}
+ 
+-	memset(&stx, 0xbf, sizeof(stx));
+-	if (statx(AT_FDCWD, file->name, atflag, mask, &stx) < 0) {
+-		perror("statx");
+-		return 0;
++		cmp_statx(&stx, &st);
+ 	}
+-
++	
+ 	dump_statx(&stx);
+-
+ 	return 0;
+ }
+ 
