@@ -1,39 +1,165 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:52712 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932115AbdC1LoU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Mar 2017 07:44:20 -0400
-Date: Tue, 28 Mar 2017 13:43:45 +0200
-From: Greg KH <greg@kroah.com>
-Subject: Re: Request 2aa6ba7b5ad3 ("clear _XBF_PAGES from buffers when
- readahead page") for 4.4 stable inclusion
-Message-ID: <20170328114345.GA17359@kroah.com>
-References: <20170325074856.GA20773@localhost>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51509 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753660AbdC1PB7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Mar 2017 11:01:59 -0400
+Date: Tue, 28 Mar 2017 08:01:33 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: use dedicated log worker wq to avoid deadlock with
+ cil wq
+Message-ID: <20170328150133.GC4874@birch.djwong.org>
+References: <1489083497-22964-1-git-send-email-bfoster@redhat.com>
+ <20170316191734.GM5280@birch.djwong.org>
+ <20170328125158.GB4100@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170325074856.GA20773@localhost>
+In-Reply-To: <20170328125158.GB4100@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ivan Kozik <ivan@ludios.org>
-Cc: stable@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, bfoster@redhat.com, david@fromorbit.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, David Jeffery <djeffery@redhat.com>
 
-On Sat, Mar 25, 2017 at 07:49:00AM +0000, Ivan Kozik wrote:
-> Hi,
+On Tue, Mar 28, 2017 at 08:51:58AM -0400, Brian Foster wrote:
+> On Thu, Mar 16, 2017 at 12:17:34PM -0700, Darrick J. Wong wrote:
+> > On Thu, Mar 09, 2017 at 01:18:17PM -0500, Brian Foster wrote:
+> > > The log covering background task used to be part of the xfssyncd
+> > > workqueue. That workqueue was removed as of commit 5889608df ("xfs:
+> > > syncd workqueue is no more") and the associated work item scheduled
+> > > to the xfs-log wq. The latter is used for log buffer I/O completion.
+> > > 
+> > > Since xfs_log_worker() can invoke a log flush, a deadlock is
+> > > possible between the xfs-log and xfs-cil workqueues. Consider the
+> > > following codepath from xfs_log_worker():
+> > > 
+> > > xfs_log_worker()
+> > >   xfs_log_force()
+> > >     _xfs_log_force()
+> > >       xlog_cil_force()
+> > >         xlog_cil_force_lsn()
+> > >           xlog_cil_push_now()
+> > >             flush_work()
+> > > 
+> > > The above is in xfs-log wq context and blocked waiting on the
+> > > completion of an xfs-cil work item. Concurrently, the cil push in
+> > > progress can end up blocked here:
+> > > 
+> > > xlog_cil_push_work()
+> > >   xlog_cil_push()
+> > >     xlog_write()
+> > >       xlog_state_get_iclog_space()
+> > >         xlog_wait(&log->l_flush_wait, ...)
+> > > 
+> > > The above is in xfs-cil context waiting on log buffer I/O
+> > > completion, which executes in xfs-log wq context. In this scenario
+> > > both workqueues are deadlocked waiting on eachother.
+> > > 
+> > > Add a new workqueue specifically for the high level log covering and
+> > > ail pushing worker, as was the case prior to commit 5889608df.
+> > > 
+> > > Diagnosed-by: David Jeffery <djeffery@redhat.com>
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > > 
+> > > Note that this seems difficult to reproduce in practice because I
+> > > believe it also relies on memory pressure. Otherwise, the xfs-log wq
+> > > rescuer thread may be available to unwind the deadlock.
+> > > 
+> > > Given that, one alternative approach I considered here is to use the
+> > > rescuer thread check brought up in the other thread[1] regarding
+> > > WQ_MEM_RECLAIM. I opted for this approach because I think the former is
+> > > brittle in that it assumes context within the xfs_log_worker() code,
+> > > adds non-determinism to the overall job of the background worker, and
+> > > also doesn't address the fact that it's probably unnecessary to run this
+> > > code at high priority.
+> > > 
+> > > Brian
+> > > 
+> > > [1] http://www.spinics.net/lists/linux-xfs/msg04673.html
+> > > 
+> > >  fs/xfs/xfs_log.c   | 2 +-
+> > >  fs/xfs/xfs_mount.h | 1 +
+> > >  fs/xfs/xfs_super.c | 8 ++++++++
+> > >  3 files changed, 10 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > > index b1469f0..bb58cd1 100644
+> > > --- a/fs/xfs/xfs_log.c
+> > > +++ b/fs/xfs/xfs_log.c
+> > > @@ -1293,7 +1293,7 @@ void
+> > >  xfs_log_work_queue(
+> > >  	struct xfs_mount        *mp)
+> > >  {
+> > > -	queue_delayed_work(mp->m_log_workqueue, &mp->m_log->l_work,
+> > > +	queue_delayed_work(mp->m_sync_workqueue, &mp->m_log->l_work,
+> > >  				msecs_to_jiffies(xfs_syncd_centisecs * 10));
+> > 
+> > I /think/ this looks ok?  But let me run it through xfstests before I
+> > commit to anything. :)
+> > 
 > 
-> I would like to request that this patch be included in the 4.4 stable tree.  It 
-> fixes the Bad page state issue discovered at 
-> http://oss.sgi.com/archives/xfs/2016-08/msg00617.html ('"Bad page state" errors 
-> when calling BULKSTAT under memory pressure?')
+> Ping... just checking in on this one. Is this in the pipe..? Thanks.
+
+Tested ok; do you want me to put this in for 4.11 or save it for 4.12?
+
+--D
+
 > 
-> I tested the patch (no changes needed) by applying it to 4.4.52, running a 
-> program to use almost all of my free memory, then running xfs_fsr on a 
-> filesystem with > 1.5M files.  Before patch: kernel screams with Bad page state 
-> / "count:-1" within a minute.  After patch: no complaints from the kernel. 
-> I repeated the test several times and on another machine that was affected. 
-> I have not seen any problems five days later.
-
-Now queued up, thanks.
-
-greg k-h
+> Brian
+> 
+> > --D
+> > 
+> > >  }
+> > >  
+> > > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > > index 6db6fd6..22b2185 100644
+> > > --- a/fs/xfs/xfs_mount.h
+> > > +++ b/fs/xfs/xfs_mount.h
+> > > @@ -183,6 +183,7 @@ typedef struct xfs_mount {
+> > >  	struct workqueue_struct	*m_reclaim_workqueue;
+> > >  	struct workqueue_struct	*m_log_workqueue;
+> > >  	struct workqueue_struct *m_eofblocks_workqueue;
+> > > +	struct workqueue_struct	*m_sync_workqueue;
+> > >  
+> > >  	/*
+> > >  	 * Generation of the filesysyem layout.  This is incremented by each
+> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > index 890862f..4bad410 100644
+> > > --- a/fs/xfs/xfs_super.c
+> > > +++ b/fs/xfs/xfs_super.c
+> > > @@ -877,8 +877,15 @@ xfs_init_mount_workqueues(
+> > >  	if (!mp->m_eofblocks_workqueue)
+> > >  		goto out_destroy_log;
+> > >  
+> > > +	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s", WQ_FREEZABLE, 0,
+> > > +					       mp->m_fsname);
+> > > +	if (!mp->m_sync_workqueue)
+> > > +		goto out_destroy_eofb;
+> > > +
+> > >  	return 0;
+> > >  
+> > > +out_destroy_eofb:
+> > > +	destroy_workqueue(mp->m_eofblocks_workqueue);
+> > >  out_destroy_log:
+> > >  	destroy_workqueue(mp->m_log_workqueue);
+> > >  out_destroy_reclaim:
+> > > @@ -899,6 +906,7 @@ STATIC void
+> > >  xfs_destroy_mount_workqueues(
+> > >  	struct xfs_mount	*mp)
+> > >  {
+> > > +	destroy_workqueue(mp->m_sync_workqueue);
+> > >  	destroy_workqueue(mp->m_eofblocks_workqueue);
+> > >  	destroy_workqueue(mp->m_log_workqueue);
+> > >  	destroy_workqueue(mp->m_reclaim_workqueue);
+> > > -- 
+> > > 2.7.4
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
