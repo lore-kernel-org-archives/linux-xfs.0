@@ -1,109 +1,357 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:52277 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751839AbdC0Wgb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 18:36:31 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: Suspend fails when xfs is involved?
-Date: Tue, 28 Mar 2017 00:30:40 +0200
-Message-ID: <1707526.iy5HQXy0ZS@aspire.rjw.lan>
-In-Reply-To: <20170327204607.GA4874@birch.djwong.org>
-References: <20170203010401.GR9134@birch.djwong.org> <20170203223127.GC32761@dastard> <20170327204607.GA4874@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55582 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932415AbdC1MvN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Mar 2017 08:51:13 -0400
+Date: Tue, 28 Mar 2017 08:51:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: move the inline directory verifiers
+Message-ID: <20170328125104.GA4100@bfoster.bfoster>
+References: <20170327230315.GB4864@birch.djwong.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170327230315.GB4864@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>, linux-pm@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Monday, March 27, 2017 01:46:07 PM Darrick J. Wong wrote:
-> [cc linux-pm since this intersects with suspend...]
+On Mon, Mar 27, 2017 at 04:03:15PM -0700, Darrick J. Wong wrote:
+> The inline directory verifiers should be called on the inode fork data,
+> which means after iformat_local on the read side, and prior to
+> ifork_flush on the write side.  This makes the fork verifier more
+> consistent with the way buffer verifiers work -- i.e. they will operate
+> on the memory buffer that the code will be reading and writing directly.
 > 
-> On Sat, Feb 04, 2017 at 09:31:27AM +1100, Dave Chinner wrote:
-> > On Thu, Feb 02, 2017 at 05:04:01PM -0800, Darrick J. Wong wrote:
-> > > Hi list,
-> > > 
-> > > So I've noticed that my laptop consistently fails to suspend with:
-> > > 
-> > > [1183625.726800] atkbd serio0: Unknown key pressed (translated set 2, code 0xd8 on isa0060/serio0).
-> > > [1183625.726804] atkbd serio0: Use 'setkeycodes e058 <keycode>' to make it known.
-> > > [1183625.727492] atkbd serio0: Unknown key released (translated set 2, code 0xd8 on isa0060/serio0).
-> > > [1183625.727497] atkbd serio0: Use 'setkeycodes e058 <keycode>' to make it known.
-> > > [1183626.203928] e1000e: enp0s25 NIC Link is Down
-> > > [1183626.422720] PM: Syncing filesystems ... done.
-> > > [1183626.450348] Freezing user space processes ... (elapsed 0.002 seconds) done.
-> > > [1183626.452995] Freezing remaining freezable tasks ... 
-> > > [1183632.657243] atkbd serio0: Unknown key pressed (translated set 2, code 0xd9 on isa0060/serio0).
-> > > [1183632.657247] atkbd serio0: Use 'setkeycodes e059 <keycode>' to make it known.
-> > > [1183632.657814] atkbd serio0: Unknown key released (translated set 2, code 0xd9 on isa0060/serio0).
-> > > [1183632.657817] atkbd serio0: Use 'setkeycodes e059 <keycode>' to make it known.
-> > > [1183646.459310] Freezing of tasks failed after 20.006 seconds (1 tasks refusing to freeze, wq_busy=0):
-> > > [1183646.459348] xfsaild/dm-1    D    0  1767      2 0x00000000
-> > 
-> > Yes, this can happen because suspend thinks that "sync" is
-> > sufficient to quiesce a filesystem into an idle state. 
-> > 
-> > > [1183646.459366] Call Trace:
-> > > [1183646.459386]  [<ffffffffb5a43b8d>] schedule+0x3d/0x90
-> > > [1183646.459390]  [<ffffffffb5a47339>] schedule_timeout+0x239/0x420
-> > > [1183646.459401]  [<ffffffffb5a450e6>] wait_for_completion+0xa6/0x120
-> > > [1183646.459460]  [<ffffffffb539ba0f>] xfs_buf_submit_wait+0x7f/0x280
-> > > [1183646.459466]  [<ffffffffb539bc33>] _xfs_buf_read+0x23/0x30
-> > > [1183646.459470]  [<ffffffffb539bd64>] xfs_buf_read_map+0x124/0x1b0
-> > > [1183646.459473]  [<ffffffffb53eb270>] xfs_trans_read_buf_map+0x110/0x370
-> > > [1183646.459478]  [<ffffffffb538417e>] xfs_imap_to_bp+0x6e/0xe0
-> > > [1183646.459481]  [<ffffffffb53b3883>] xfs_iflush+0xd3/0x230
-> > > [1183646.459486]  [<ffffffffb53e0ab4>] xfs_inode_item_push+0xf4/0x150
-> > > [1183646.459489]  [<ffffffffb53e9cdf>] xfsaild+0x2df/0x740
-> > > [1183646.459500]  [<ffffffffb51101f9>] kthread+0xd9/0xf0
-> > 
-> > That's inode writeback when the underlying inode buffer has been
-> > reclaimed before the dirty cached inode has been written. So the
-> > xfsaild is doing read/modify/write cycles to write back dirty
-> > inodes. i.e. you're running in active memory reclaim conditions
-> > prior to suspend...
+> Also revise the verifier function to return -EFSCORRUPTED so that we
+> don't flood the logs with corruption messages and assert notices.
 > 
-> So I wrote up a patch that removes WQ_FREEZABLE from the xfs_buf thread,
-> and since then I haven't had any problems suspending my laptop.  Last
-> week at LSF I inquired about whether it was proper to be freezing IO
-> helper threads as part of suspend, and was told in response "Are you
-> convinced that use of WQ_FREEZABLE is even correct?"  TBH I can't see
-> why you'd want to freeze IO helper workqueues at all.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: get the inode d_ops the proper way
+> ---
+
+What does this apply against?
+
+Brian
+
+>  fs/xfs/libxfs/xfs_dir2_priv.h  |    3 +-
+>  fs/xfs/libxfs/xfs_dir2_sf.c    |   63 ++++++++++++++++++++++++++--------------
+>  fs/xfs/libxfs/xfs_inode_fork.c |   35 ++++++++--------------
+>  fs/xfs/libxfs/xfs_inode_fork.h |    2 +
+>  fs/xfs/xfs_inode.c             |   19 ++++++------
+>  5 files changed, 66 insertions(+), 56 deletions(-)
 > 
-> So, I'm going to email that patch out as an RFC and if anyone wants to
-> follow up the discussion, let's do it there.
-
-Yes, please!
-
-> I get it, suspend really
-> should just fsfreeze, but the question I really want to know is, why
-> does XFS freeze its own threads?  They seem to go to sleep just fine
-> after we're done doing all the IO we want.
-
-That, quite frankly, is what I would expect.
-
-> > > ISTR Dave or someone grumbling about this being some artifact of the log
-> > > trying to read in some buffer or other as part of flushing the log prior
-> > > to suspend, but the io completion ends up tied to a workqueue that's
-> > > already been put to sleep, so xfs gets stuck forever.
-> > 
-> > Yup, suspend is just completely fucked, has been for more than 10
-> > years. It needs to freeze filesystems so they are quiesced sanely,
-> > not left to run while random parts of the kernel infrastructure they
-> > rely on are shut down behind the filesystem's back.
-> > 
-> > > Look familiar to anyone before I try to debug this tomorrow?
-> > 
-> > See this as a recent starting point.
-> > 
-> > https://lwn.net/Articles/705269/
-> 
-> I wonder if they've done any work on freezing filesystems...
-
-Not that I know of.
-
-Thanks,
-Rafael
-
+> diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+> index eb00bc1..39f8604 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_priv.h
+> +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+> @@ -125,8 +125,7 @@ extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
+>  extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
+>  extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
+>  extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
+> -extern int xfs_dir2_sf_verify(struct xfs_mount *mp, struct xfs_dir2_sf_hdr *sfp,
+> -		int size);
+> +extern int xfs_dir2_sf_verify(struct xfs_inode *ip);
+>  
+>  /* xfs_dir2_readdir.c */
+>  extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
+> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+> index 96b45cd..e84af09 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> @@ -632,36 +632,49 @@ xfs_dir2_sf_check(
+>  /* Verify the consistency of an inline directory. */
+>  int
+>  xfs_dir2_sf_verify(
+> -	struct xfs_mount		*mp,
+> -	struct xfs_dir2_sf_hdr		*sfp,
+> -	int				size)
+> +	struct xfs_inode		*ip)
+>  {
+> +	struct xfs_mount		*mp = ip->i_mount;
+> +	struct xfs_dir2_sf_hdr		*sfp;
+>  	struct xfs_dir2_sf_entry	*sfep;
+>  	struct xfs_dir2_sf_entry	*next_sfep;
+>  	char				*endp;
+>  	const struct xfs_dir_ops	*dops;
+> +	struct xfs_ifork		*ifp;
+>  	xfs_ino_t			ino;
+>  	int				i;
+>  	int				i8count;
+>  	int				offset;
+> +	int				size;
+> +	int				error;
+>  	__uint8_t			filetype;
+>  
+> +	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
+> +	/*
+> +	 * xfs_iread calls us before xfs_setup_inode sets up ip->d_ops,
+> +	 * so we can only trust the mountpoint to have the right pointer.
+> +	 */
+>  	dops = xfs_dir_get_ops(mp, NULL);
+>  
+> +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> +	sfp = (struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data;
+> +	size = ifp->if_bytes;
+> +
+>  	/*
+>  	 * Give up if the directory is way too short.
+>  	 */
+> -	XFS_WANT_CORRUPTED_RETURN(mp, size >
+> -			offsetof(struct xfs_dir2_sf_hdr, parent));
+> -	XFS_WANT_CORRUPTED_RETURN(mp, size >=
+> -			xfs_dir2_sf_hdr_size(sfp->i8count));
+> +	if (size <= offsetof(struct xfs_dir2_sf_hdr, parent) ||
+> +	    size < xfs_dir2_sf_hdr_size(sfp->i8count))
+> +		return -EFSCORRUPTED;
+>  
+>  	endp = (char *)sfp + size;
+>  
+>  	/* Check .. entry */
+>  	ino = dops->sf_get_parent_ino(sfp);
+>  	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
+> -	XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
+> +	error = xfs_dir_ino_validate(mp, ino);
+> +	if (error)
+> +		return error;
+>  	offset = dops->data_first_offset;
+>  
+>  	/* Check all reported entries */
+> @@ -672,12 +685,12 @@ xfs_dir2_sf_verify(
+>  		 * Check the fixed-offset parts of the structure are
+>  		 * within the data buffer.
+>  		 */
+> -		XFS_WANT_CORRUPTED_RETURN(mp,
+> -				((char *)sfep + sizeof(*sfep)) < endp);
+> +		if (((char *)sfep + sizeof(*sfep)) >= endp)
+> +			return -EFSCORRUPTED;
+>  
+>  		/* Don't allow names with known bad length. */
+> -		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen > 0);
+> -		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen < MAXNAMELEN);
+> +		if (sfep->namelen == 0)
+> +			return -EFSCORRUPTED;
+>  
+>  		/*
+>  		 * Check that the variable-length part of the structure is
+> @@ -685,33 +698,39 @@ xfs_dir2_sf_verify(
+>  		 * name component, so nextentry is an acceptable test.
+>  		 */
+>  		next_sfep = dops->sf_nextentry(sfp, sfep);
+> -		XFS_WANT_CORRUPTED_RETURN(mp, endp >= (char *)next_sfep);
+> +		if (endp < (char *)next_sfep)
+> +			return -EFSCORRUPTED;
+>  
+>  		/* Check that the offsets always increase. */
+> -		XFS_WANT_CORRUPTED_RETURN(mp,
+> -				xfs_dir2_sf_get_offset(sfep) >= offset);
+> +		if (xfs_dir2_sf_get_offset(sfep) < offset)
+> +			return -EFSCORRUPTED;
+>  
+>  		/* Check the inode number. */
+>  		ino = dops->sf_get_ino(sfp, sfep);
+>  		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
+> -		XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
+> +		error = xfs_dir_ino_validate(mp, ino);
+> +		if (error)
+> +			return error;
+>  
+>  		/* Check the file type. */
+>  		filetype = dops->sf_get_ftype(sfep);
+> -		XFS_WANT_CORRUPTED_RETURN(mp, filetype < XFS_DIR3_FT_MAX);
+> +		if (filetype >= XFS_DIR3_FT_MAX)
+> +			return -EFSCORRUPTED;
+>  
+>  		offset = xfs_dir2_sf_get_offset(sfep) +
+>  				dops->data_entsize(sfep->namelen);
+>  
+>  		sfep = next_sfep;
+>  	}
+> -	XFS_WANT_CORRUPTED_RETURN(mp, i8count == sfp->i8count);
+> -	XFS_WANT_CORRUPTED_RETURN(mp, (void *)sfep == (void *)endp);
+> +	if (i8count != sfp->i8count)
+> +		return -EFSCORRUPTED;
+> +	if ((void *)sfep != (void *)endp)
+> +		return -EFSCORRUPTED;
+>  
+>  	/* Make sure this whole thing ought to be in local format. */
+> -	XFS_WANT_CORRUPTED_RETURN(mp, offset +
+> -	       (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
+> -	       (uint)sizeof(xfs_dir2_block_tail_t) <= mp->m_dir_geo->blksize);
+> +	if (offset + (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
+> +	    (uint)sizeof(xfs_dir2_block_tail_t) > mp->m_dir_geo->blksize)
+> +		return -EFSCORRUPTED;
+>  
+>  	return 0;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 9653e96..8a37efe 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -212,6 +212,16 @@ xfs_iformat_fork(
+>  	if (error)
+>  		return error;
+>  
+> +	/* Check inline dir contents. */
+> +	if (S_ISDIR(VFS_I(ip)->i_mode) &&
+> +	    dip->di_format == XFS_DINODE_FMT_LOCAL) {
+> +		error = xfs_dir2_sf_verify(ip);
+> +		if (error) {
+> +			xfs_idestroy_fork(ip, XFS_DATA_FORK);
+> +			return error;
+> +		}
+> +	}
+> +
+>  	if (xfs_is_reflink_inode(ip)) {
+>  		ASSERT(ip->i_cowfp == NULL);
+>  		xfs_ifork_init_cow(ip);
+> @@ -322,8 +332,6 @@ xfs_iformat_local(
+>  	int		whichfork,
+>  	int		size)
+>  {
+> -	int		error;
+> -
+>  	/*
+>  	 * If the size is unreasonable, then something
+>  	 * is wrong and we just bail out rather than crash in
+> @@ -339,14 +347,6 @@ xfs_iformat_local(
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> -	if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
+> -		error = xfs_dir2_sf_verify(ip->i_mount,
+> -				(struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip),
+> -				size);
+> -		if (error)
+> -			return error;
+> -	}
+> -
+>  	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size);
+>  	return 0;
+>  }
+> @@ -867,7 +867,7 @@ xfs_iextents_copy(
+>   * In these cases, the format always takes precedence, because the
+>   * format indicates the current state of the fork.
+>   */
+> -int
+> +void
+>  xfs_iflush_fork(
+>  	xfs_inode_t		*ip,
+>  	xfs_dinode_t		*dip,
+> @@ -877,7 +877,6 @@ xfs_iflush_fork(
+>  	char			*cp;
+>  	xfs_ifork_t		*ifp;
+>  	xfs_mount_t		*mp;
+> -	int			error;
+>  	static const short	brootflag[2] =
+>  		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
+>  	static const short	dataflag[2] =
+> @@ -886,7 +885,7 @@ xfs_iflush_fork(
+>  		{ XFS_ILOG_DEXT, XFS_ILOG_AEXT };
+>  
+>  	if (!iip)
+> -		return 0;
+> +		return;
+>  	ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	/*
+>  	 * This can happen if we gave up in iformat in an error path,
+> @@ -894,19 +893,12 @@ xfs_iflush_fork(
+>  	 */
+>  	if (!ifp) {
+>  		ASSERT(whichfork == XFS_ATTR_FORK);
+> -		return 0;
+> +		return;
+>  	}
+>  	cp = XFS_DFORK_PTR(dip, whichfork);
+>  	mp = ip->i_mount;
+>  	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
+>  	case XFS_DINODE_FMT_LOCAL:
+> -		if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
+> -			error = xfs_dir2_sf_verify(mp,
+> -					(struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data,
+> -					ifp->if_bytes);
+> -			if (error)
+> -				return error;
+> -		}
+>  		if ((iip->ili_fields & dataflag[whichfork]) &&
+>  		    (ifp->if_bytes > 0)) {
+>  			ASSERT(ifp->if_u1.if_data != NULL);
+> @@ -959,7 +951,6 @@ xfs_iflush_fork(
+>  		ASSERT(0);
+>  		break;
+>  	}
+> -	return 0;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 132dc59..7fb8365 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -140,7 +140,7 @@ typedef struct xfs_ifork {
+>  struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
+>  
+>  int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
+> -int		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+> +void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+>  				struct xfs_inode_log_item *, int);
+>  void		xfs_idestroy_fork(struct xfs_inode *, int);
+>  void		xfs_idata_realloc(struct xfs_inode *, int, int);
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index c7fe2c2..7605d83 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -50,6 +50,7 @@
+>  #include "xfs_log.h"
+>  #include "xfs_bmap_btree.h"
+>  #include "xfs_reflink.h"
+> +#include "xfs_dir2_priv.h"
+>  
+>  kmem_zone_t *xfs_inode_zone;
+>  
+> @@ -3475,7 +3476,6 @@ xfs_iflush_int(
+>  	struct xfs_inode_log_item *iip = ip->i_itemp;
+>  	struct xfs_dinode	*dip;
+>  	struct xfs_mount	*mp = ip->i_mount;
+> -	int			error;
+>  
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+>  	ASSERT(xfs_isiflocked(ip));
+> @@ -3547,6 +3547,12 @@ xfs_iflush_int(
+>  	if (ip->i_d.di_version < 3)
+>  		ip->i_d.di_flushiter++;
+>  
+> +	/* Check the inline directory data. */
+> +	if (S_ISDIR(VFS_I(ip)->i_mode) &&
+> +	    ip->i_d.di_format == XFS_DINODE_FMT_LOCAL &&
+> +	    xfs_dir2_sf_verify(ip))
+> +		goto corrupt_out;
+> +
+>  	/*
+>  	 * Copy the dirty parts of the inode into the on-disk inode.  We always
+>  	 * copy out the core of the inode, because if the inode is dirty at all
+> @@ -3558,14 +3564,9 @@ xfs_iflush_int(
+>  	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
+>  		ip->i_d.di_flushiter = 0;
+>  
+> -	error = xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+> -	if (error)
+> -		return error;
+> -	if (XFS_IFORK_Q(ip)) {
+> -		error = xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
+> -		if (error)
+> -			return error;
+> -	}
+> +	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+> +	if (XFS_IFORK_Q(ip))
+> +		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
+>  	xfs_inobp_check(mp, bp);
+>  
+>  	/*
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
