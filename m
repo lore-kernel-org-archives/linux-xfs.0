@@ -1,88 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:39845 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751839AbdC0WmA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2017 18:42:00 -0400
-Date: Tue, 28 Mar 2017 09:40:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: don't let suspend freeze the buffer workqueue
-Message-ID: <20170327224045.GJ17542@dastard>
-References: <20170327204611.GA4864@birch.djwong.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:45727 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754530AbdC1Gqh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Mar 2017 02:46:37 -0400
+Date: Mon, 27 Mar 2017 23:28:25 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Add initial batch of statx() LTP tests
+Message-ID: <20170328062825.GA11567@infradead.org>
+References: <20170327164628.GA15147@infradead.org>
+ <20170327154003.GA5716@birch.djwong.org>
+ <20170307050140.GA12946@infradead.org>
+ <20170307000609.GG5280@birch.djwong.org>
+ <10435.1488907375@warthog.procyon.org.uk>
+ <20170324205322.GA4986@gmail.com>
+ <E6DB8461-22DE-496C-8A4A-B0A2F3702750@dilger.ca>
+ <23715.1490631926@warthog.procyon.org.uk>
+ <23003.1490660007@warthog.procyon.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170327204611.GA4864@birch.djwong.org>
+In-Reply-To: <23003.1490660007@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-pm@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+To: David Howells <dhowells@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Andreas Dilger <adilger@dilger.ca>, Eric Biggers <ebiggers3@gmail.com>, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Mar 27, 2017 at 01:46:11PM -0700, Darrick J. Wong wrote:
-> Suspend has this annoying behavior in XFS where it freezes workqueues in
-> some arbitrary order.  This is a problem because the sync call can cause
-> an AIL push, which may have to perform a RMW cycle on an inode cluster
-> buffer if that buffer has been reclaimed.  When this happens, the AIL
-> issues a buffer read for which the io completion ends up on the xfs_buf
-> workqueue.  If /that/ workqueue has already been frozen, the suspend
-> will timeout because we froze the workqueues in the wrong order.
+On Tue, Mar 28, 2017 at 01:13:27AM +0100, David Howells wrote:
+> Christoph Hellwig <hch@infradead.org> wrote:
 > 
-> It seems suspicious to be freezing IO helper threads[1], so let's just
-> not do that anymore.  Prior to this patch, 4.10 fails to suspend on my
-> laptop about 80% of the time; afterwards, it works every time.  I've not
-> done much suspend-and-crash testing on it though.
+> > > That means a filesystem can't simply return non-basic data unconditionally if
+> > > possible.  I prefer letting it do so if it doesn't incur any extra I/O
+> > > overheads.
+> > 
+> > This seems like it will lead to userspace expecting certain fields to
+> > just be there, and a lot harder to properly verify for tests.  Which btw
+> > we all need for these odd behaviors.  If we can't get them any time soon
+> > (e.g. before -rc6) I think we'll simply have to revert statx instead of
+> > leaving this untested mess in the tree.
+> 
+> Here you go.  First batch of tests.  Please review - and test:-)
 
-The problem with doing this is that it opens up an even worse race
-condition - a memory corruption condition, and potentially a
-filesystem corruption condition if not caught after resume quickly
-enough.
-
-That is, if we don't freeze the m_buf_workqueue, we end up doing
-this:
-
-freezer			aild		m_buf_workqueue
-.....
-freeze user processes
-sync
-freeze work queues
-			pushes dirty metadata
-			<starts IO>
-freeze kernel threads
-					<IO completion interrupt>
-					<work queued>
-create_image()
-					run IO completion work
-
-At this point, we have IO completion in XFS modifying memory state
-that is being snapshotted by the freezer process. Hence we can end
-up with the hibernation image having an inconsistent state such as
-an inode marked clean (because it was copied after IO completion)
-but the AIL still has the inode item linked into it (because it was
-copied before IO completion).
-
-The only way to avoid this race condition is to ensure that the
-m_buf_workqueue cannot run work while the hibernation image is being
-created. This is still just a workaround - we can lose IO
-completions completely if they occur after the image creation begins
-- but it removes the most common case of memory corruption that has
-previously been seen during hibernation.
-
-Unfortunately, these races are just about impossible to trigger in
-test environments, so it's no surprise that you haven't "seen
-problems".  The decision that I made here is that it is better for
-suspend to hang and annoy people than it is for users to suffer
-silent memory and filesystem corruption resulting in data loss
-that has no obvious logical cause, cannot be reproduced or
-debugged...
-
-AFAICT, we can't fix this problem in XFS - we need the suspend code
-to /freeze the filesystems/ to safely quiesce them because the only
-choices we have right now is to choose the least worst behaviour of
-either "hang during suspend" or "be silent and deadly".
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+ltp is a trainwreck.  Please send xfstests test like for all other file
+system functionality.  You're really trying to make it as hard as
+possible for fs developers, don't you?
