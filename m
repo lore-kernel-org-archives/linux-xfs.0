@@ -1,41 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:35911 "EHLO
-        mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753112AbdC1SLi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Mar 2017 14:11:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <7095.1490723812@warthog.procyon.org.uk>
-References: <29458.1490711932@warthog.procyon.org.uk> <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net>
- <7a090a8e-7204-1b9b-8b31-e7a061b39f87@sandeen.net> <29491.1490712064@warthog.procyon.org.uk>
- <4DB15765-D097-43B5-9F1B-43DE76D3BC90@sandeen.net> <CAOQ4uxj_S2UtW0A5vSsmD_1vjgPsdopckj4Jtc5w5KuM2aTppA@mail.gmail.com>
- <7095.1490723812@warthog.procyon.org.uk>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 28 Mar 2017 14:11:22 -0400
-Message-ID: <CAOQ4uxg2Y7V_GhqEbTvnOfVn0ihzs=gWGJ-fBMvjA5ezwx2cYg@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:56214 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752323AbdC1WM1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Mar 2017 18:12:27 -0400
 Subject: Re: [PATCH] xfs_io: changes to statx interface [ver #2]
-Content-Type: text/plain; charset=UTF-8
+References: <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net>
+ <7a090a8e-7204-1b9b-8b31-e7a061b39f87@sandeen.net>
+ <29458.1490711932@warthog.procyon.org.uk>
+ <FEBBB5DF-1B64-468A-AD41-01E0D8D48C7A@dilger.ca>
+ <CAOQ4uxhmax9bOLmx253nNxdzrXO3LP-_-QxqG9m=F34sgfVOQw@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <60657a0d-3e24-18d7-ec35-9758fefdf28c@sandeen.net>
+Date: Tue, 28 Mar 2017 17:12:24 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAOQ4uxhmax9bOLmx253nNxdzrXO3LP-_-QxqG9m=F34sgfVOQw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: Amir Goldstein <amir73il@gmail.com>, Andreas Dilger <adilger@dilger.ca>
+Cc: David Howells <dhowells@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Tue, Mar 28, 2017 at 1:56 PM, David Howells <dhowells@redhat.com> wrote:
-> Amir Goldstein <amir73il@gmail.com> wrote:
->
->> That's actually the shortest path for you and there are quite a few
->> tests in xfstests that took
->> this path. It should be easy for you to copy & paste one of them.
->
-> Don't forget that syscall testing for this has to be added to LTP anyway...
->
+On 3/28/17 2:07 PM, Amir Goldstein wrote:
+> On Tue, Mar 28, 2017 at 2:40 PM, Andreas Dilger <adilger@dilger.ca> wrote:
+>> On Mar 28, 2017, at 8:38 AM, David Howells <dhowells@redhat.com> wrote:
+>>>
+>>> Here are my current changes to Eric's statx interface patch.  I've made it
+>>> analoguous to the stat command and so it only does statx-of-fd.
+>>>
+>>> I've made the "-m" flag able to take the words "basic" and "all" in
+>>> preference to a number and able to take an octal or hex number as an
+>>> alternative too.
+>>>
+>>> I've dropped the -A and -L flags since it no longer passes a path over.
+>>>
+>>> Finally, I've added a -c flag that causes an fstat() to be done as well and
+>>> the buffers compared as a consistency check.
+>>
+>> It probably makes sense to use "-C" to avoid confusion with xfs_io's "-c"
+>> option, and also the "stat -c" option to dump only specific fields (which
+>> may be useful to add at some point in the future as well).
+>>
+> 
+> I'm afraid its not better for avoiding confusion.
+> -C already taken as well for new "oneshot commands"...
 
-Sure, LTP is good for that and many testers run LTP, but I have no idea how
-wide is the file system diversity of their setups.
-statx may have bugs in syscall/vfs and it may have bugs in specific
-fs, so having
-some C tests in LTP and some C tests in xfstest can't hurt.
+There's no conflict here AFAICT; the "-C" for oneshot is for
+xfs_io invocation; individual commands are free to re-use such
+options for their own purposes.
 
-It's not difficult to harness a C test to xfstest.
-See recent example of C only (mostly) test in
- 2161614 generic: concurrent non-overlapping direct I/O on the same extents
+i.e.:
+
+# xfs_io -C "command -C" file
+
+is fine; the two different -C args have different contexts.  Adding a
+-C to the statx command poses no problem.
+
+And with that public service announcement let me go read this thread and
+catch up... ;)
+
+-Eric
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
