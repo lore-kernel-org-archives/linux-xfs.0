@@ -1,85 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f170.google.com ([209.85.216.170]:36120 "EHLO
-        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753330AbdC1UWj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Mar 2017 16:22:39 -0400
-Received: by mail-qt0-f170.google.com with SMTP id r45so74484575qte.3
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Mar 2017 13:22:38 -0700 (PDT)
-Message-ID: <1490732554.24656.7.camel@poochiereds.net>
-Subject: Re: statx manpage
-From: Jeff Layton <jlayton@poochiereds.net>
-Date: Tue, 28 Mar 2017 16:22:34 -0400
-In-Reply-To: <5E78AA22-2C44-4A94-9CEA-A954D836FC6C@dilger.ca>
-References: <20170327154003.GA5716@birch.djwong.org>
-         <20170307050140.GA12946@infradead.org>
-         <20170307000609.GG5280@birch.djwong.org>
-         <10435.1488907375@warthog.procyon.org.uk> <20170324205322.GA4986@gmail.com>
-         <E6DB8461-22DE-496C-8A4A-B0A2F3702750@dilger.ca>
-         <23715.1490631926@warthog.procyon.org.uk>
-         <20170327164628.GA15147@infradead.org>
-         <1490641451.9691.4.camel@poochiereds.net>
-         <5E78AA22-2C44-4A94-9CEA-A954D836FC6C@dilger.ca>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:35090 "EHLO
+        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932176AbdC1NeP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Mar 2017 09:34:15 -0400
+MIME-Version: 1.0
+In-Reply-To: <23774.1490704285@warthog.procyon.org.uk>
+References: <7a090a8e-7204-1b9b-8b31-e7a061b39f87@sandeen.net>
+ <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net> <22058.1490696551@warthog.procyon.org.uk>
+ <CAOQ4uxhipk2anBVUh9eKL1A1RqDUMRci5rpYbrjQPo9voab5ZA@mail.gmail.com> <23774.1490704285@warthog.procyon.org.uk>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 28 Mar 2017 09:34:08 -0400
+Message-ID: <CAOQ4uxgzV7BR5ZHmfWhu2vnGmO9uMqFuzMFrZnKfnH1fooob7w@mail.gmail.com>
+Subject: Re: [PATCH] xfs_io: changes to statx interface
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Christoph Hellwig <hch@infradead.org>, David Howells <dhowells@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Biggers <ebiggers3@gmail.com>, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: David Howells <dhowells@redhat.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Tue, 2017-03-28 at 13:39 -0600, Andreas Dilger wrote:
-> On Mar 27, 2017, at 1:04 PM, Jeff Layton <jlayton@poochiereds.net> wrote:
-> > 
-> > On Mon, 2017-03-27 at 09:46 -0700, Christoph Hellwig wrote:
-> > > On Mon, Mar 27, 2017 at 05:25:26PM +0100, David Howells wrote:
-> > > > That means a filesystem can't simply return non-basic data unconditionally if
-> > > > possible.  I prefer letting it do so if it doesn't incur any extra I/O
-> > > > overheads.
-> > > 
-> > > This seems like it will lead to userspace expecting certain fields to
-> > > just be there, and a lot harder to properly verify for tests.  Which btw
-> > > we all need for these odd behaviors.  If we can't get them any time soon
-> > > (e.g. before -rc6) I think we'll simply have to revert statx instead of
-> > > leaving this untested mess in the tree.
-> > 
-> > I don't think so.
-> > 
-> > I think we just have to clearly document that that will not be the
-> > case. If they really expect the field to be there, then they need to
-> > set the bit in the "want" mask -- it's really as simple as that.
-> 
-> It would be my preference to only return attributes which are explicitly
-> requested (Lustre won't return fields for which the bit is not set), but
-> there was a request for this behaviour in NFS I recall.
-> 
-> That said, there are also flags for "lazy" attributes for NFS. I wonder if
-> it is enough to pass AT_STATX_DONT_SYNC and request STATX_SIZE | STATX_CTIME,
-> or whatever NFS is worried about, and return the client-local version of the
-> attributes?
-> 
-> I guess the real question is what an application is going to do with fields
-> that it didn't actually request, and has no way to know if they are valid or
-> contain garbage?
-> 
+On Tue, Mar 28, 2017 at 8:31 AM, David Howells <dhowells@redhat.com> wrote:
+> Amir Goldstein <amir73il@gmail.com> wrote:
+>
+>> xfs_io -c "statx -c /dev/null"
+>>
+>> is what you want
+>
+> That doesn't produce any output.  Did you mean:
+>
+>         xfs_io -c "statx -c" /dev/null
 
-You certainly do have a way to know if they're valid. You can check the
-stx_mask.
+Yes.
 
-Basically, if you request something, you're guaranteed to get it, or an
-error. If you don't request it, you might get it but you had better
-check the stx_mask before assuming that you did.
+>
+> Further, this should work:
+>
+>         warthog>xfs_io -c "statx -c" /dev/sda
+>         /dev/sda: Permission denied
+>
 
-TBQH though, I don't _really_ expect userland to use this that often.
+This opens /dev/sda for read/write and feeds the fd to the commands
+executed.
+You may want to try
+xfs_io -r -c "statx -c" /dev/sda
 
-The main reason I'm arguing for this is for simplicity of the in-kernel 
-implementations. Having to check each bit in the mask before filling
-out its field is cumbersome. It's much simpler to fill out the kstat
-struct with what you have and set the stx_mask unconditionally.
+> but doesn't.
+>
+>> See the output of 'file' command or the global var filetable.
+>
+> So I would have to make "-d dirfd" take an entry in the global var filetable
+> rather than an actual fd number?
+>
 
-It's also not 100% clear to me how the unrequested fields would be set
-if we don't allow this. zeroing them out seems like the obvious thing
-to do, but that doesn't really provide any guarantee that someone won't
-try to interpret it as valid.
--- 
-Jeff Layton <jlayton@poochiereds.net>
+I guess if you want to test statx without -f/-d then you'd
+need to provide filename as one of the args to the statx command
+(and not as args to xfs_io command line).
+
+-f is the natural operation you can get from xfs_io
+and you can use -d on current fd as well.
+
+The only command I see that uses the non current fd is
+sendfile -f N
+Mostly commands operate on the "current" fd and current fd
+is iterated from filetable.
+if you use -d N from command line, you must use -C instead of
+-c so statx is not performed on all fds in filetable, e.g:
+
+xfs_io -r -C "statx -c -d 0" /a/ /a/foo
+
+But you see that this makes little sense if "foo" is not an argument
+of statx.
+
+In my (hopefully unbiased) opinion, there is room for the syscall sanity
+tests that you posted to LTP and there is room for file system
+functional tests with xfstests, which xfs_io can be used for.
+
+The main advantage you get from writing xfstests is that many of us run
+them on a diversity of file systems, so it is good for catching wrong
+implementation of statx by specific file systems.
+
+By the time statx() gets to fs specific code it does not matter if you called it
+with -d/-f or like stat() does it?
+
+Amir.
