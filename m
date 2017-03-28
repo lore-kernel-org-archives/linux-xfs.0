@@ -1,94 +1,314 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42312 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:39210 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752657AbdC0XOe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Mar 2017 19:14:34 -0400
-Date: Tue, 28 Mar 2017 01:14:26 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: Suspend fails when xfs is involved?
-Message-ID: <20170327231426.GO28800@wotan.suse.de>
-References: <20170203010401.GR9134@birch.djwong.org>
- <20170203223127.GC32761@dastard>
- <20170327204607.GA4874@birch.djwong.org>
- <1707526.iy5HQXy0ZS@aspire.rjw.lan>
+        id S1754641AbdC1JJG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Mar 2017 05:09:06 -0400
+Date: Tue, 28 Mar 2017 17:08:53 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH v9 1/2] fsstress: add mwrite/mread into test operation
+ list
+Message-ID: <20170328090853.GV21915@dhcp12-143.nay.redhat.com>
+References: <1490690795-4527-1-git-send-email-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1707526.iy5HQXy0ZS@aspire.rjw.lan>
+In-Reply-To: <1490690795-4527-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Jiri Kosina <jkosina@suse.cz>, Petr Mladek <pmladek@suse.com>, Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>, linux-pm@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Mar 28, 2017 at 12:30:40AM +0200, Rafael J. Wysocki wrote:
-> On Monday, March 27, 2017 01:46:07 PM Darrick J. Wong wrote:
-> > [cc linux-pm since this intersects with suspend...]
-> > > 
-> > > That's inode writeback when the underlying inode buffer has been
-> > > reclaimed before the dirty cached inode has been written. So the
-> > > xfsaild is doing read/modify/write cycles to write back dirty
-> > > inodes. i.e. you're running in active memory reclaim conditions
-> > > prior to suspend...
-> > 
-> > So I wrote up a patch that removes WQ_FREEZABLE from the xfs_buf thread,
-> > and since then I haven't had any problems suspending my laptop.  Last
-> > week at LSF I inquired about whether it was proper to be freezing IO
-> > helper threads as part of suspend, and was told in response "Are you
-> > convinced that use of WQ_FREEZABLE is even correct?"  TBH I can't see
-> > why you'd want to freeze IO helper workqueues at all.
-> > 
-> > So, I'm going to email that patch out as an RFC and if anyone wants to
-> > follow up the discussion, let's do it there.
+On Tue, Mar 28, 2017 at 04:46:34PM +0800, Zorro Lang wrote:
+> mmap as a popular and basic operation, most of softwares use it to
+> access files. More and more customers report bugs related with
+> mmap/munmap and other stress conditions.
 > 
-> Yes, please!
-
-Do we any respective xfstests for this sort of stuff ? FWIW I've been
-starting to try to draw up some tests on some other fs lookup stuff and
-had to cook up scripts using resume on qemu, to do that, in case its
-helpful use:
-
-QEMU_CTRL="/dev/pts/7"
-echo system_wakeup | socat - $QEMU_CTRL,raw,echo=0,crnl
-
-Sadly, the above only works *sometimes*, so you have to smack qemu
-a few times with it seems.
-
-> > I get it, suspend really
-> > should just fsfreeze, but the question I really want to know is, why
-> > does XFS freeze its own threads?  They seem to go to sleep just fine
-> > after we're done doing all the IO we want.
+> So add mmap read/write test into fsstress to increase mmap related
+> stress to reproduce or find more bugs easily.
 > 
-> That, quite frankly, is what I would expect.
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
 
-Do we have a deterministic requirement for how long this IO wait should / can
-last for ? FWIW if we have tasks we *know* need to complete prior to suspend
-we can do these with the pm ops. If something not done on pm ops is blocking
-already though do we want a limit ? Why did XFS start freezing its own threads
-to begin with ?
+Hi,
 
-> > > > ISTR Dave or someone grumbling about this being some artifact of the log
-> > > > trying to read in some buffer or other as part of flushing the log prior
-> > > > to suspend, but the io completion ends up tied to a workqueue that's
-> > > > already been put to sleep, so xfs gets stuck forever.
-> > > 
-> > > Yup, suspend is just completely fucked, has been for more than 10
-> > > years. It needs to freeze filesystems so they are quiesced sanely,
-> > > not left to run while random parts of the kernel infrastructure they
-> > > rely on are shut down behind the filesystem's back.
-> > > 
-> > > > Look familiar to anyone before I try to debug this tomorrow?
-> > > 
-> > > See this as a recent starting point.
-> > > 
-> > > https://lwn.net/Articles/705269/
-> > 
-> > I wonder if they've done any work on freezing filesystems...
+Sorry I forgot to write changelog.
+
+Thanks Eryu found a problem by run g/270 and give me more suggestions.
+When filesystem is filled, mwrite a hole of sparse file will hit
+ENOSPC, and will trigger SIGBUS which will kill running process and
+core dump.
+
+So V9 add SIGBUS handler. Use sigsetjmp() before mwrite a mapped
+memory, and siglongjmp() back to sigsetjmp() place from signal
+handler. If siglongjmp() from a non-zero, print "Bus error".
+
+To stop SIGBUS from other functions cause a endless loop (trigger
+SIGBUS over and over ...), abort() the process if an unknown
+SIGBUS is triggered.
+
+generic/270 and xfs/068 test passed by merge this V9 patchset.
+
+Thanks,
+Zorro
+
+
+>  configure.ac   |   1 +
+>  ltp/fsstress.c | 159 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  src/global.h   |   4 ++
+>  3 files changed, 162 insertions(+), 2 deletions(-)
 > 
-> Not that I know of.
-
-https://git.kernel.org/pub/scm/linux/kernel/git/jikos/jikos.git/commit/?h=might-rebase/get-rid-of-kthread-freezer&id=394aa67810abefde6d79ea96a90e5d41a7df99f4
-
-freeze_all_supers() ?
-
-  Luis
+> diff --git a/configure.ac b/configure.ac
+> index fa48d2f..246f92e 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -32,6 +32,7 @@ AC_HEADER_STDC
+>  			xfs/platform_defs.h	\
+>  			btrfs/ioctl.h		\
+>  			cifs/ioctl.h		\
+> +			sys/mman.h		\
+>      ])
+>  
+>  AC_CHECK_HEADERS([xfs/xfs_log_format.h],,,[
+> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> index 7e7cf60..6d8f117 100644
+> --- a/ltp/fsstress.c
+> +++ b/ltp/fsstress.c
+> @@ -17,6 +17,7 @@
+>   */
+>  
+>  #include <linux/fs.h>
+> +#include <setjmp.h>
+>  #include "global.h"
+>  
+>  #ifdef HAVE_ATTR_XATTR_H
+> @@ -69,6 +70,8 @@ typedef enum {
+>  	OP_LINK,
+>  	OP_MKDIR,
+>  	OP_MKNOD,
+> +	OP_MREAD,
+> +	OP_MWRITE,
+>  	OP_PUNCH,
+>  	OP_ZERO,
+>  	OP_COLLAPSE,
+> @@ -168,6 +171,8 @@ void	getdents_f(int, long);
+>  void	link_f(int, long);
+>  void	mkdir_f(int, long);
+>  void	mknod_f(int, long);
+> +void	mread_f(int, long);
+> +void	mwrite_f(int, long);
+>  void	punch_f(int, long);
+>  void	zero_f(int, long);
+>  void	collapse_f(int, long);
+> @@ -208,6 +213,8 @@ opdesc_t	ops[] = {
+>  	{ OP_LINK, "link", link_f, 1, 1 },
+>  	{ OP_MKDIR, "mkdir", mkdir_f, 2, 1 },
+>  	{ OP_MKNOD, "mknod", mknod_f, 2, 1 },
+> +	{ OP_MREAD, "mread", mread_f, 2, 0 },
+> +	{ OP_MWRITE, "mwrite", mwrite_f, 2, 1 },
+>  	{ OP_PUNCH, "punch", punch_f, 1, 1 },
+>  	{ OP_ZERO, "zero", zero_f, 1, 1 },
+>  	{ OP_COLLAPSE, "collapse", collapse_f, 1, 1 },
+> @@ -262,6 +269,7 @@ int		cleanup = 0;
+>  int		verbose = 0;
+>  int		verifiable_log = 0;
+>  sig_atomic_t	should_stop = 0;
+> +sigjmp_buf	*sigbus_jmp = NULL;
+>  char		*execute_cmd = NULL;
+>  int		execute_freq = 1;
+>  struct print_string	flag_str = {0};
+> @@ -311,7 +319,26 @@ void	zero_freq(void);
+>  
+>  void sg_handler(int signum)
+>  {
+> -	should_stop = 1;
+> +	switch (signum) {
+> +	case SIGTERM:
+> +		should_stop = 1;
+> +		break;
+> +	case SIGBUS:
+> +		/*
+> +		 * Only handle SIGBUS when mmap write to a hole and no
+> +		 * block can be allocated due to ENOSPC, abort otherwise.
+> +		 */
+> +		if (sigbus_jmp) {
+> +			siglongjmp(*sigbus_jmp, -1);
+> +		} else {
+> +			printf("Unknown SIGBUS is caught, Abort!\n");
+> +			abort();
+> +		}
+> +		/* should not reach here */
+> +		break;
+> +	default:
+> +		break;
+> +	}
+>  }
+>  
+>  int main(int argc, char **argv)
+> @@ -527,10 +554,13 @@ int main(int argc, char **argv)
+>  
+>  	for (i = 0; i < nproc; i++) {
+>  		if (fork() == 0) {
+> -			action.sa_handler = SIG_DFL;
+>  			sigemptyset(&action.sa_mask);
+> +			action.sa_handler = SIG_DFL;
+>  			if (sigaction(SIGTERM, &action, 0))
+>  				return 1;
+> +			action.sa_handler = sg_handler;
+> +			if (sigaction(SIGBUS, &action, 0))
+> +				return 1;
+>  #ifdef HAVE_SYS_PRCTL_H
+>  			prctl(PR_SET_PDEATHSIG, SIGKILL);
+>  			if (getppid() == 1) /* parent died already? */
+> @@ -2655,6 +2685,131 @@ mknod_f(int opno, long r)
+>  	free_pathname(&f);
+>  }
+>  
+> +#ifdef HAVE_SYS_MMAN_H
+> +struct print_flags mmap_flags[] = {
+> +	{ MAP_SHARED, "SHARED"},
+> +	{ MAP_PRIVATE, "PRIVATE"},
+> +	{ -1, NULL}
+> +};
+> +
+> +#define translate_mmap_flags(flags)	  \
+> +	({translate_flags(flags, "|", mmap_flags);})
+> +#endif
+> +
+> +void
+> +do_mmap(int opno, long r, int prot)
+> +{
+> +#ifdef HAVE_SYS_MMAN_H
+> +	char		*addr;
+> +	int		e;
+> +	pathname_t	f;
+> +	int		fd;
+> +	size_t		len;
+> +	__int64_t	lr;
+> +	off64_t		off;
+> +	int		flags;
+> +	struct stat64	stb;
+> +	int		v;
+> +	char		st[1024];
+> +	sigjmp_buf	sigbus_jmpbuf;
+> +
+> +	init_pathname(&f);
+> +	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
+> +		if (v)
+> +			printf("%d/%d: do_mmap - no filename\n", procid, opno);
+> +		free_pathname(&f);
+> +		return;
+> +	}
+> +	fd = open_path(&f, O_RDWR);
+> +	e = fd < 0 ? errno : 0;
+> +	check_cwd();
+> +	if (fd < 0) {
+> +		if (v)
+> +			printf("%d/%d: do_mmap - open %s failed %d\n",
+> +			       procid, opno, f.path, e);
+> +		free_pathname(&f);
+> +		return;
+> +	}
+> +	if (fstat64(fd, &stb) < 0) {
+> +		if (v)
+> +			printf("%d/%d: do_mmap - fstat64 %s failed %d\n",
+> +			       procid, opno, f.path, errno);
+> +		free_pathname(&f);
+> +		close(fd);
+> +		return;
+> +	}
+> +	inode_info(st, sizeof(st), &stb, v);
+> +	if (stb.st_size == 0) {
+> +		if (v)
+> +			printf("%d/%d: do_mmap - %s%s zero size\n", procid, opno,
+> +			       f.path, st);
+> +		free_pathname(&f);
+> +		close(fd);
+> +		return;
+> +	}
+> +
+> +	lr = ((__int64_t)random() << 32) + random();
+> +	off = (off64_t)(lr % stb.st_size);
+> +	off &= (off64_t)(~(sysconf(_SC_PAGE_SIZE) - 1));
+> +	len = (size_t)(random() % MIN(stb.st_size - off, FILELEN_MAX)) + 1;
+> +
+> +	flags = (random() % 2) ? MAP_SHARED : MAP_PRIVATE;
+> +	addr = mmap(NULL, len, prot, flags, fd, off);
+> +	e = (addr == MAP_FAILED) ? errno : 0;
+> +	if (e) {
+> +		if (v)
+> +			printf("%d/%d: do_mmap - mmap failed %s%s [%lld,%d,%s] %d\n",
+> +			       procid, opno, f.path, st, (long long)off,
+> +			       (int)len, translate_mmap_flags(flags), e);
+> +		free_pathname(&f);
+> +		close(fd);
+> +		return;
+> +	}
+> +
+> +	if (prot & PROT_WRITE) {
+> +		if ((e = sigsetjmp(sigbus_jmpbuf, 1)) == 0) {
+> +			sigbus_jmp = &sigbus_jmpbuf;
+> +			memset(addr, nameseq & 0xff, len);
+> +		}
+> +	} else {
+> +		char *buf;
+> +		if ((buf = malloc(len)) != NULL) {
+> +			memcpy(buf, addr, len);
+> +			free(buf);
+> +		}
+> +	}
+> +	munmap(addr, len);
+> +	/* set NULL to stop other functions from doing siglongjmp */
+> +	sigbus_jmp = NULL;
+> +
+> +	if (v)
+> +		printf("%d/%d: %s %s%s [%lld,%d,%s] %s\n",
+> +		       procid, opno, (prot & PROT_WRITE) ? "mwrite" : "mread",
+> +		       f.path, st, (long long)off, (int)len,
+> +		       translate_mmap_flags(flags),
+> +		       (e == 0) ? "0" : "Bus error");
+> +
+> +	free_pathname(&f);
+> +	close(fd);
+> +#endif
+> +}
+> +
+> +void
+> +mread_f(int opno, long r)
+> +{
+> +#ifdef HAVE_SYS_MMAN_H
+> +	do_mmap(opno, r, PROT_READ);
+> +#endif
+> +}
+> +
+> +void
+> +mwrite_f(int opno, long r)
+> +{
+> +#ifdef HAVE_SYS_MMAN_H
+> +	do_mmap(opno, r, PROT_WRITE);
+> +#endif
+> +}
+> +
+>  void
+>  punch_f(int opno, long r)
+>  {
+> diff --git a/src/global.h b/src/global.h
+> index f63246b..3920c0d 100644
+> --- a/src/global.h
+> +++ b/src/global.h
+> @@ -178,4 +178,8 @@
+>  
+>  #endif /* HAVE_LINUX_FALLOC_H */
+>  
+> +#ifdef HAVE_SYS_MMAN_H
+> +#include <sys/mman.h>
+> +#endif
+> +
+>  #endif /* GLOBAL_H */
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
