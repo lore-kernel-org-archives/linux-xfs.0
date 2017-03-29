@@ -1,294 +1,297 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38942 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933443AbdC3P6V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 11:58:21 -0400
-Subject: [PATCH 2/9] xfs: plumb in needed functions for range querying of
- the freespace btrees
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 30 Mar 2017 08:58:12 -0700
-Message-ID: <149088949205.25895.646552893447124530.stgit@birch.djwong.org>
-In-Reply-To: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
-References: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52691 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753476AbdC2Ptw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Mar 2017 11:49:52 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net>
+References: <3791d155-b448-5257-d8b9-8a6f20e12180@sandeen.net> <7a090a8e-7204-1b9b-8b31-e7a061b39f87@sandeen.net>
+Subject: [PATCH] xfs_io: changes to statx interface [ver #3]
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <8126.1490802589.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: 8BIT
+Date: Wed, 29 Mar 2017 16:49:49 +0100
+Message-ID: <8127.1490802589@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-ext4@vger.kernel.org, linux-api@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: dhowells@redhat.com, linux-xfs <linux-xfs@vger.kernel.org>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, fsdevel <linux-fsdevel@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Here's my third attempt at changing Eric's statx patch.  I've got rid of the
+compare option to statx and added a raw output option to stat.  They're still
+not directly comparable since the stat output lacks some fields, but it will
+hopefully be possible to load them into associative arrays in bash and compare
+them that way.
 
-Plumb in the pieces (init_high_key, diff_two_keys) necessary to call
-query_range on the free space btrees.  Remove the debugging asserts
-so that we can make queries starting from block 0.
-
-While we're at it, merge the redundant "if (btnum ==" hunks.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
-v2: Add forgotten cntbt high key function.
----
- fs/xfs/libxfs/xfs_alloc_btree.c |  172 +++++++++++++++++++++++++++++----------
- 1 file changed, 129 insertions(+), 43 deletions(-)
-
-
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index efb467b..e1fcfe7 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -205,19 +205,37 @@ xfs_allocbt_init_key_from_rec(
- 	union xfs_btree_key	*key,
- 	union xfs_btree_rec	*rec)
+diff --git a/io/stat.c b/io/stat.c
+index a7aebcd..d2ea854 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -44,6 +44,35 @@ filesize(void)
+ 	return st.st_size;
+ }
+ 
++static int
++dump_raw_stat(struct stat *st)
++{
++	if (fstat(file->fd, st) < 0) {
++		perror("fstat");
++		return -1;
++	}
++
++	printf("stat.blksize: %lu\n", st->st_blksize);
++	printf("stat.nlink: %lu\n", st->st_nlink);
++	printf("stat.uid: %u\n", st->st_uid);
++	printf("stat.gid: %u\n", st->st_gid);
++	printf("stat.mode: 0%o\n", st->st_mode);
++	printf("stat.ino: %lu\n", st->st_ino);
++	printf("stat.size: %lu\n", st->st_size);
++	printf("stat.blocks: %lu\n", st->st_blocks);
++	printf("stat.atime.tv_sec: %ld\n", st->st_atim.tv_sec);
++	printf("stat.atime.tv_nsec: %ld\n", st->st_atim.tv_nsec);
++	printf("stat.ctime.tv_sec: %ld\n", st->st_ctim.tv_sec);
++	printf("stat.ctime.tv_nsec: %ld\n", st->st_ctim.tv_nsec);
++	printf("stat.mtime.tv_sec: %ld\n", st->st_mtim.tv_sec);
++	printf("stat.mtime.tv_nsec: %ld\n", st->st_mtim.tv_nsec);
++	printf("stat.rdev_major: %u\n", major(st->st_rdev));
++	printf("stat.rdev_minor: %u\n", minor(st->st_rdev));
++	printf("stat.dev_major: %u\n", major(st->st_dev));
++	printf("stat.dev_minor: %u\n", minor(st->st_dev));
++	return 0;
++}
++
+ static char *
+ filetype(mode_t mode)
  {
--	ASSERT(rec->alloc.ar_startblock != 0);
--
- 	key->alloc.ar_startblock = rec->alloc.ar_startblock;
- 	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
+@@ -74,7 +103,23 @@ stat_f(
+ 	struct dioattr	dio;
+ 	struct fsxattr	fsx, fsxa;
+ 	struct stat	st;
+-	int		verbose = (argc == 2 && !strcmp(argv[1], "-v"));
++	int		c, verbose = 0, raw = 0;
++
++	while ((c = getopt(argc, argv, "rv")) != EOF) {
++		switch (c) {
++		case 'r':
++			raw = 1;
++			break;
++		case 'v':
++			verbose = 1;
++			break;
++		default:
++			return command_usage(&stat_cmd);
++		}
++	}
++
++	if (raw)
++		return dump_raw_stat(&st);
+ 
+ 	printf(_("fd.path = \"%s\"\n"), file->name);
+ 	printf(_("fd.flags = %s,%s,%s%s%s%s%s\n"),
+@@ -189,12 +234,9 @@ statx_help(void)
+ " Display extended file status.\n"
+ "\n"
+ " Options:\n"
+-" -m mask -- Specify the field mask for the statx call (default STATX_ALL)\n"
+-" -A -- Suppress terminal automount traversal\n"
++" -m mask -- Specify the field mask for the statx call (can also be 'basic' or 'all'; default STATX_ALL)\n"
+ " -D -- Don't sync attributes with the server\n"
+ " -F -- Force the attributes to be sync'd with the server\n"
+-" -L -- Follow symlinks (statx link target)\n"
+-" -O -- Add only basic stats (STATX_BASIC_STATS) to default mask\n"
+ "\n"));
  }
  
- STATIC void
-+xfs_bnobt_init_high_key_from_rec(
-+	union xfs_btree_key	*key,
-+	union xfs_btree_rec	*rec)
-+{
-+	__u32			x;
-+
-+	x = be32_to_cpu(rec->alloc.ar_startblock);
-+	x += be32_to_cpu(rec->alloc.ar_blockcount) - 1;
-+	key->alloc.ar_startblock = cpu_to_be32(x);
-+	key->alloc.ar_blockcount = 0;
-+}
-+
-+STATIC void
-+xfs_cntbt_init_high_key_from_rec(
-+	union xfs_btree_key	*key,
-+	union xfs_btree_rec	*rec)
-+{
-+	key->alloc.ar_blockcount = rec->alloc.ar_blockcount;
-+	key->alloc.ar_startblock = 0;
-+}
-+
-+STATIC void
- xfs_allocbt_init_rec_from_cur(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_rec	*rec)
+@@ -202,28 +244,28 @@ statx_help(void)
+ static void
+ dump_statx(struct statx *stx)
  {
--	ASSERT(cur->bc_rec.a.ar_startblock != 0);
--
- 	rec->alloc.ar_startblock = cpu_to_be32(cur->bc_rec.a.ar_startblock);
- 	rec->alloc.ar_blockcount = cpu_to_be32(cur->bc_rec.a.ar_blockcount);
- }
-@@ -236,18 +254,24 @@ xfs_allocbt_init_ptr_from_cur(
+-	printf("stx_mask: 0x%x\n", stx->stx_mask);
+-	printf("stx_blksize: %u\n", stx->stx_blksize);
+-	printf("stx_attributes: 0x%llx\n", stx->stx_attributes);
+-	printf("stx_nlink: %u\n", stx->stx_nlink);
+-	printf("stx_uid: %u\n", stx->stx_uid);
+-	printf("stx_gid: %u\n", stx->stx_gid);
+-	printf("stx_mode: 0%o\n", stx->stx_mode);
+-	printf("stx_ino: %llu\n", stx->stx_ino);
+-	printf("stx_size: %llu\n", stx->stx_size);
+-	printf("stx_blocks: %llu\n", stx->stx_blocks);
+-	printf("stx_atime.tv_sec: %lld\n", stx->stx_atime.tv_sec);
+-	printf("stx_atime.tv_nsec: %d\n", stx->stx_atime.tv_nsec);
+-	printf("stx_btime.tv_sec: %lld\n", stx->stx_btime.tv_sec);
+-	printf("stx_btime.tv_nsec: %d\n", stx->stx_btime.tv_nsec);
+-	printf("stx_ctime.tv_sec: %lld\n", stx->stx_ctime.tv_sec);
+-	printf("stx_ctime.tv_nsec: %d\n", stx->stx_ctime.tv_nsec);
+-	printf("stx_mtime.tv_sec: %lld\n", stx->stx_mtime.tv_sec);
+-	printf("stx_mtime.tv_nsec: %d\n", stx->stx_mtime.tv_nsec);
+-	printf("stx_rdev_major: %u\n", stx->stx_rdev_major);
+-	printf("stx_rdev_minor: %u\n", stx->stx_rdev_minor);
+-	printf("stx_dev_major: %u\n", stx->stx_dev_major);
+-	printf("stx_dev_minor: %u\n", stx->stx_dev_minor);
++	printf("stat.mask: 0x%x\n", stx->stx_mask);
++	printf("stat.blksize: %u\n", stx->stx_blksize);
++	printf("stat.attributes: 0x%llx\n", stx->stx_attributes);
++	printf("stat.nlink: %u\n", stx->stx_nlink);
++	printf("stat.uid: %u\n", stx->stx_uid);
++	printf("stat.gid: %u\n", stx->stx_gid);
++	printf("stat.mode: 0%o\n", stx->stx_mode);
++	printf("stat.ino: %llu\n", stx->stx_ino);
++	printf("stat.size: %llu\n", stx->stx_size);
++	printf("stat.blocks: %llu\n", stx->stx_blocks);
++	printf("stat.atime.tv_sec: %lld\n", stx->stx_atime.tv_sec);
++	printf("stat.atime.tv_nsec: %d\n", stx->stx_atime.tv_nsec);
++	printf("stat.btime.tv_sec: %lld\n", stx->stx_btime.tv_sec);
++	printf("stat.btime.tv_nsec: %d\n", stx->stx_btime.tv_nsec);
++	printf("stat.ctime.tv_sec: %lld\n", stx->stx_ctime.tv_sec);
++	printf("stat.ctime.tv_nsec: %d\n", stx->stx_ctime.tv_nsec);
++	printf("stat.mtime.tv_sec: %lld\n", stx->stx_mtime.tv_sec);
++	printf("stat.mtime.tv_nsec: %d\n", stx->stx_mtime.tv_nsec);
++	printf("stat.rdev_major: %u\n", stx->stx_rdev_major);
++	printf("stat.rdev_minor: %u\n", stx->stx_rdev_minor);
++	printf("stat.dev_major: %u\n", stx->stx_dev_major);
++	printf("stat.dev_minor: %u\n", stx->stx_dev_minor);
  }
  
- STATIC __int64_t
--xfs_allocbt_key_diff(
-+xfs_bnobt_key_diff(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_key	*key)
+ /*
+@@ -239,16 +281,18 @@ statx_f(
  {
- 	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
- 	xfs_alloc_key_t		*kp = &key->alloc;
--	__int64_t		diff;
+ 	int		c;
+ 	struct statx	stx;
+-	int		atflag = AT_SYMLINK_NOFOLLOW;
+-	unsigned int	m_mask = 0;	/* mask requested with -m */
+-	int		Oflag = 0, mflag = 0;	/* -O or -m was used */
++	int		atflag = 0;
+ 	unsigned int	mask = STATX_ALL;
  
--	if (cur->bc_btnum == XFS_BTNUM_BNO) {
--		return (__int64_t)be32_to_cpu(kp->ar_startblock) -
--				rec->ar_startblock;
--	}
-+	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
-+}
-+
-+STATIC __int64_t
-+xfs_cntbt_key_diff(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*key)
-+{
-+	xfs_alloc_rec_incore_t	*rec = &cur->bc_rec.a;
-+	xfs_alloc_key_t		*kp = &key->alloc;
-+	__int64_t		diff;
- 
- 	diff = (__int64_t)be32_to_cpu(kp->ar_blockcount) - rec->ar_blockcount;
- 	if (diff)
-@@ -256,6 +280,33 @@ xfs_allocbt_key_diff(
- 	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
- }
- 
-+STATIC __int64_t
-+xfs_bnobt_diff_two_keys(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	return (__int64_t)be32_to_cpu(k1->alloc.ar_startblock) -
-+			  be32_to_cpu(k2->alloc.ar_startblock);
-+}
-+
-+STATIC __int64_t
-+xfs_cntbt_diff_two_keys(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	__int64_t		diff;
-+
-+	diff =  be32_to_cpu(k1->alloc.ar_blockcount) -
-+		be32_to_cpu(k2->alloc.ar_blockcount);
-+	if (diff)
-+		return diff;
-+
-+	return  be32_to_cpu(k1->alloc.ar_startblock) -
-+		be32_to_cpu(k2->alloc.ar_startblock);
-+}
-+
- static bool
- xfs_allocbt_verify(
- 	struct xfs_buf		*bp)
-@@ -346,44 +397,54 @@ const struct xfs_buf_ops xfs_allocbt_buf_ops = {
- 
- #if defined(DEBUG) || defined(XFS_WARN)
- STATIC int
--xfs_allocbt_keys_inorder(
-+xfs_bnobt_keys_inorder(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_key	*k1,
- 	union xfs_btree_key	*k2)
- {
--	if (cur->bc_btnum == XFS_BTNUM_BNO) {
--		return be32_to_cpu(k1->alloc.ar_startblock) <
--		       be32_to_cpu(k2->alloc.ar_startblock);
--	} else {
--		return be32_to_cpu(k1->alloc.ar_blockcount) <
--			be32_to_cpu(k2->alloc.ar_blockcount) ||
--			(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
--			 be32_to_cpu(k1->alloc.ar_startblock) <
--			 be32_to_cpu(k2->alloc.ar_startblock));
--	}
-+	return be32_to_cpu(k1->alloc.ar_startblock) <
-+	       be32_to_cpu(k2->alloc.ar_startblock);
- }
- 
- STATIC int
--xfs_allocbt_recs_inorder(
-+xfs_bnobt_recs_inorder(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_rec	*r1,
- 	union xfs_btree_rec	*r2)
- {
--	if (cur->bc_btnum == XFS_BTNUM_BNO) {
--		return be32_to_cpu(r1->alloc.ar_startblock) +
--			be32_to_cpu(r1->alloc.ar_blockcount) <=
--			be32_to_cpu(r2->alloc.ar_startblock);
--	} else {
--		return be32_to_cpu(r1->alloc.ar_blockcount) <
--			be32_to_cpu(r2->alloc.ar_blockcount) ||
--			(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
--			 be32_to_cpu(r1->alloc.ar_startblock) <
--			 be32_to_cpu(r2->alloc.ar_startblock));
--	}
-+	return be32_to_cpu(r1->alloc.ar_startblock) +
-+		be32_to_cpu(r1->alloc.ar_blockcount) <=
-+		be32_to_cpu(r2->alloc.ar_startblock);
-+}
-+
-+STATIC int
-+xfs_cntbt_keys_inorder(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	return be32_to_cpu(k1->alloc.ar_blockcount) <
-+		be32_to_cpu(k2->alloc.ar_blockcount) ||
-+		(k1->alloc.ar_blockcount == k2->alloc.ar_blockcount &&
-+		 be32_to_cpu(k1->alloc.ar_startblock) <
-+		 be32_to_cpu(k2->alloc.ar_startblock));
- }
--#endif	/* DEBUG */
- 
--static const struct xfs_btree_ops xfs_allocbt_ops = {
-+STATIC int
-+xfs_cntbt_recs_inorder(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*r1,
-+	union xfs_btree_rec	*r2)
-+{
-+	return be32_to_cpu(r1->alloc.ar_blockcount) <
-+		be32_to_cpu(r2->alloc.ar_blockcount) ||
-+		(r1->alloc.ar_blockcount == r2->alloc.ar_blockcount &&
-+		 be32_to_cpu(r1->alloc.ar_startblock) <
-+		 be32_to_cpu(r2->alloc.ar_startblock));
-+}
-+#endif /* DEBUG */
-+
-+static const struct xfs_btree_ops xfs_bnobt_ops = {
- 	.rec_len		= sizeof(xfs_alloc_rec_t),
- 	.key_len		= sizeof(xfs_alloc_key_t),
- 
-@@ -395,13 +456,39 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
- 	.get_minrecs		= xfs_allocbt_get_minrecs,
- 	.get_maxrecs		= xfs_allocbt_get_maxrecs,
- 	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
-+	.init_high_key_from_rec	= xfs_bnobt_init_high_key_from_rec,
- 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
--	.key_diff		= xfs_allocbt_key_diff,
-+	.key_diff		= xfs_bnobt_key_diff,
- 	.buf_ops		= &xfs_allocbt_buf_ops,
-+	.diff_two_keys		= xfs_bnobt_diff_two_keys,
- #if defined(DEBUG) || defined(XFS_WARN)
--	.keys_inorder		= xfs_allocbt_keys_inorder,
--	.recs_inorder		= xfs_allocbt_recs_inorder,
-+	.keys_inorder		= xfs_bnobt_keys_inorder,
-+	.recs_inorder		= xfs_bnobt_recs_inorder,
-+#endif
-+};
-+
-+static const struct xfs_btree_ops xfs_cntbt_ops = {
-+	.rec_len		= sizeof(xfs_alloc_rec_t),
-+	.key_len		= sizeof(xfs_alloc_key_t),
-+
-+	.dup_cursor		= xfs_allocbt_dup_cursor,
-+	.set_root		= xfs_allocbt_set_root,
-+	.alloc_block		= xfs_allocbt_alloc_block,
-+	.free_block		= xfs_allocbt_free_block,
-+	.update_lastrec		= xfs_allocbt_update_lastrec,
-+	.get_minrecs		= xfs_allocbt_get_minrecs,
-+	.get_maxrecs		= xfs_allocbt_get_maxrecs,
-+	.init_key_from_rec	= xfs_allocbt_init_key_from_rec,
-+	.init_high_key_from_rec	= xfs_cntbt_init_high_key_from_rec,
-+	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
-+	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
-+	.key_diff		= xfs_cntbt_key_diff,
-+	.buf_ops		= &xfs_allocbt_buf_ops,
-+	.diff_two_keys		= xfs_cntbt_diff_two_keys,
-+#if defined(DEBUG) || defined(XFS_WARN)
-+	.keys_inorder		= xfs_cntbt_keys_inorder,
-+	.recs_inorder		= xfs_cntbt_recs_inorder,
- #endif
- };
- 
-@@ -427,16 +514,15 @@ xfs_allocbt_init_cursor(
- 	cur->bc_mp = mp;
- 	cur->bc_btnum = btnum;
- 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
--	cur->bc_ops = &xfs_allocbt_ops;
--	if (btnum == XFS_BTNUM_BNO)
--		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
--	else
--		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
- 
- 	if (btnum == XFS_BTNUM_CNT) {
-+		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtc_2);
-+		cur->bc_ops = &xfs_cntbt_ops;
- 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]);
- 		cur->bc_flags = XFS_BTREE_LASTREC_UPDATE;
- 	} else {
-+		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
-+		cur->bc_ops = &xfs_bnobt_ops;
- 		cur->bc_nlevels = be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]);
+-	while ((c = getopt(argc, argv, "m:FDLOA")) != EOF) {
++	while ((c = getopt(argc, argv, "m:FD")) != EOF) {
+ 		switch (c) {
+ 		case 'm':
+-			m_mask = atoi(optarg);
+-			mflag = 1;
++			if (strcmp(optarg, "basic") == 0)
++				mask = STATX_BASIC_STATS;
++			else if (strcmp(optarg, "all") == 0)
++				mask = STATX_ALL;
++			else
++				mask = strtoul(optarg, NULL, 0);
+ 			break;
+ 		case 'F':
+ 			atflag &= ~AT_STATX_SYNC_TYPE;
+@@ -258,38 +302,19 @@ statx_f(
+ 			atflag &= ~AT_STATX_SYNC_TYPE;
+ 			atflag |= AT_STATX_DONT_SYNC;
+ 			break;
+-		case 'L':
+-			atflag &= ~AT_SYMLINK_NOFOLLOW;
+-			break;
+-		case 'O':
+-			mask = STATX_BASIC_STATS;
+-			Oflag = 1;
+-			break;
+-		case 'A':
+-			atflag |= AT_NO_AUTOMOUNT;
+-			break;
+ 		default:
+ 			return command_usage(&statx_cmd);
+ 		}
  	}
  
-
+-	if (Oflag && mflag) {
+-		printf("Cannot specify both -m mask and -O\n");
+-		return 0;
+-	}
+-
+-	/* -m overrides any other mask options */
+-	if (mflag)
+-		mask = m_mask;
+-
+ 	memset(&stx, 0xbf, sizeof(stx));
+-	if (statx(AT_FDCWD, file->name, atflag, mask, &stx) < 0) {
++
++	if (statx(file->fd, NULL, atflag, mask, &stx) < 0) {
+ 		perror("statx");
+ 		return 0;
+ 	}
+-
++	
+ 	dump_statx(&stx);
+-
+ 	return 0;
+ }
+ 
+@@ -301,7 +326,7 @@ stat_init(void)
+ 	stat_cmd.argmin = 0;
+ 	stat_cmd.argmax = 1;
+ 	stat_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	stat_cmd.args = _("[-v]");
++	stat_cmd.args = _("[-rv]");
+ 	stat_cmd.oneline = _("information about the currently open file");
+ 
+ 	statfs_cmd.name = "statfs";
+@@ -315,7 +340,7 @@ stat_init(void)
+ 	statx_cmd.argmin = 0;
+ 	statx_cmd.argmax = -1;
+ 	statx_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	statx_cmd.args = _("[-O | -m mask][-FDLAP]");
++	statx_cmd.args = _("[-m basic | -m all | -m <mask>][-FD]");
+ 	statx_cmd.oneline =
+  _("extended information about the currently open file");
+ 	statx_cmd.help = statx_help;
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 77ba760..486ad11 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -876,24 +876,29 @@ Only available in expert mode and requires privileges.
+ Force the filesystem to shutdown (with or without flushing the log).
+ Only available in expert mode and requires privileges.
+ .TP
+-.BR stat " [ " \-v " ]"
++.BR stat " [ \-" rv " ]"
+ Selected statistics from
+ .BR stat (2)
+ and the XFS_IOC_GETXATTR system call on the current file. If the
+ .B \-v
+ option is specified, the atime (last access), mtime
+-(last modify), and ctime (last change) timestamps are also displayed.
++(last modify), and ctime (last change) timestamps are also displayed. If the
++.B \-r
++option is specified, the raw output will be dumped in the same form as the
++output for the statx command, but with some fields missing.
+ .TP
+-.BR statx " [ " \-O " | " "\-m mask" " ][ \-" FDLA " ]"
++.BR statx " [ " "\-m mask" " ][ \-" FD " ]"
+ Extended information from the statx syscall.
+ .RS 1.0i
+ .PD 0
+ .TP 0.4i
+ .B \-m mask
+-Specify the field mask for the statx call (default STATX_ALL)
+-.TP
+-.B \-O
+-Add only basic stats (STATX_BASIC_STATS) to default mask
++Specify the field mask for the statx call as an decimal, hex or octal integer
++or
++.RI \" basic "\" or \"" all \"
++to specify the basic stats that
++.IR stat ()
++returns or all the stats known by the header file.  All is the default.
+ .TP
+ .B \-F
+ Force the attributes to be sync'd with the server
+@@ -901,12 +906,6 @@ Force the attributes to be sync'd with the server
+ .B \-D
+ Don't sync attributes with the server
+ .TP
+-.B \-L
+-Follow symlinks (statx link target)
+-.TP
+-.B \-A
+-Suppress terminal automount traversal
+-.TP
+ .RE
+ .IP
+ .TP
