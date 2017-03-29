@@ -1,104 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32618 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933443AbdC3P6X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 11:58:23 -0400
-Subject: [PATCH 3/9] xfs: provide a query_range function for freespace btrees
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 30 Mar 2017 08:58:18 -0700
-Message-ID: <149088949857.25895.936552860313902403.stgit@birch.djwong.org>
-In-Reply-To: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
-References: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:62811 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932714AbdC2XWu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Mar 2017 19:22:50 -0400
+Date: Thu, 30 Mar 2017 10:22:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: largely extend aild sleep time if no work has to be
+ done
+Message-ID: <20170329232246.GM17542@dastard>
+References: <20170329204224.6412-1-dev@lynxeye.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170329204224.6412-1-dev@lynxeye.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-ext4@vger.kernel.org, linux-api@vger.kernel.org
+To: Lucas Stach <dev@lynxeye.de>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 29, 2017 at 10:42:24PM +0200, Lucas Stach wrote:
+> If the AIL has been pushed up to the target LSN, there is no
+> point in waking up every 50ms to check if there is more work
+> to do. All functions that move the target LSN forward make sure
+> to wake aild as appropriate.
+> 
+> Keep the timeout wakeup as a watchdog in case we miss the
+> wakeup from a target LSN update to guarantee forward progress,
+> but extend the timeout to 10 seconds.
+> 
+> This keeps the safety net, but also makes laptop users happy
+> as it gets rid of almost all the wakeups caused by a lightly
+> loaded FS.
 
-Implement a query_range function for the bnobt and cntbt.  This will
-be used for getfsmap fallback if there is no rmapbt and by the online
-scrub and repair code.
+The aild already has an idle capability that occurs when the target
+has been reached. See xfsaild() - it will ignore the timeout and
+schedule indefinitely when the AIL has been emptied and the target
+has not been updated during the last push. i.e. this timeout is
+not a watchdog, just a backoff for the next check if there is still
+work to be done.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c |   42 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_alloc.h |   10 ++++++++++
- 2 files changed, 52 insertions(+)
+Keep in mind that XFS doesn't fully empty the AIL until the log has
+been covered, and this takes 60-90s to occur after the last
+modification has occurred to the filesystem. Delaying pushes on an
+uncovered log risks breaking the covering state machine (it's
+dependent on writeback from the AIL occurring within a certain time)
+and so changes like this may break idling on more machines that it
+"fixes".
 
+FYI, filesystems that refuse to idle are typically a sign of
+userspace touching the filesystem every 2-3 minutes. IIRC, the XFS
+ail event tracing will tell you if metadata is being dirtied
+regularly and so whether the AIL is staying empty or not and
+hence whether it should actually be idle...
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 369adcc..f65b8d4 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2868,3 +2868,45 @@ xfs_free_extent(
- 	xfs_trans_brelse(tp, agbp);
- 	return error;
- }
-+
-+struct xfs_alloc_query_range_info {
-+	xfs_alloc_query_range_fn	fn;
-+	void				*priv;
-+};
-+
-+/* Format btree record and pass to our callback. */
-+STATIC int
-+xfs_alloc_query_range_helper(
-+	struct xfs_btree_cur		*cur,
-+	union xfs_btree_rec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_alloc_query_range_info	*query = priv;
-+	struct xfs_alloc_rec_incore		irec;
-+
-+	irec.ar_startblock = be32_to_cpu(rec->alloc.ar_startblock);
-+	irec.ar_blockcount = be32_to_cpu(rec->alloc.ar_blockcount);
-+	return query->fn(cur, &irec, query->priv);
-+}
-+
-+/* Find all free space within a given range of blocks. */
-+int
-+xfs_alloc_query_range(
-+	struct xfs_btree_cur			*cur,
-+	struct xfs_alloc_rec_incore		*low_rec,
-+	struct xfs_alloc_rec_incore		*high_rec,
-+	xfs_alloc_query_range_fn		fn,
-+	void					*priv)
-+{
-+	union xfs_btree_irec			low_brec;
-+	union xfs_btree_irec			high_brec;
-+	struct xfs_alloc_query_range_info	query;
-+
-+	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
-+	low_brec.a = *low_rec;
-+	high_brec.a = *high_rec;
-+	query.priv = priv;
-+	query.fn = fn;
-+	return xfs_btree_query_range(cur, &low_brec, &high_brec,
-+			xfs_alloc_query_range_helper, &query);
-+}
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 2a8d0fa..6c2643c 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -219,4 +219,14 @@ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
- 
- xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
- 
-+typedef int (*xfs_alloc_query_range_fn)(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_alloc_rec_incore	*rec,
-+	void				*priv);
-+
-+int xfs_alloc_query_range(struct xfs_btree_cur *cur,
-+		struct xfs_alloc_rec_incore *low_rec,
-+		struct xfs_alloc_rec_incore *high_rec,
-+		xfs_alloc_query_range_fn fn, void *priv);
-+
- #endif	/* __XFS_ALLOC_H__ */
+Yes, there have been bugs in this code in the past, and there may be
+bugs now. However, just bumping the timeout up to something massive
+is not a solution if there is a still bugs lurking here...
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
