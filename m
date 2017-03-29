@@ -1,111 +1,417 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:34269 "EHLO
-        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932918AbdC3KCK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 06:02:10 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:32934 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751945AbdC2Sw3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Mar 2017 14:52:29 -0400
+Date: Wed, 29 Mar 2017 14:52:26 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: move the inline directory verifiers
+Message-ID: <20170329185225.GA30670@bfoster.bfoster>
+References: <20170327230315.GB4864@birch.djwong.org>
+ <20170328125104.GA4100@bfoster.bfoster>
+ <20170328150047.GB4874@birch.djwong.org>
+ <20170328151105.GC4100@bfoster.bfoster>
+ <20170328172444.GE4100@bfoster.bfoster>
+ <20170329182156.GC4864@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170330062500.GB1972@dhcp22.suse.cz>
-References: <20170328122601.905696872@linuxfoundation.org> <20170328124312.GE18241@dhcp22.suse.cz>
- <CAOi1vP-TeEwNM8n=Z5b6yx1epMDVJ4f7+S1poubA7zfT7L0hQQ@mail.gmail.com>
- <20170328133040.GJ18241@dhcp22.suse.cz> <CAOi1vP-doHSj8epQ1zLBnEi8QM4Eb7nFb5uo-XeUquZUkhacsg@mail.gmail.com>
- <20170329104126.GF27994@dhcp22.suse.cz> <20170329105536.GH27994@dhcp22.suse.cz>
- <CAOi1vP93+MAQsSKpEGcrK0h3WpUH2rFnaFR4nUhhAQAXk0mrNA@mail.gmail.com>
- <20170329111650.GI27994@dhcp22.suse.cz> <CAOi1vP_6HvHAGo4Neu=q_LY_m_NRmSRkkGsW=95xYctLUdag6A@mail.gmail.com>
- <20170330062500.GB1972@dhcp22.suse.cz>
-From: Ilya Dryomov <idryomov@gmail.com>
-Date: Thu, 30 Mar 2017 12:02:03 +0200
-Message-ID: <CAOi1vP8z4hngZecp6MoOOhKsLadZ5eJbQ92MvAGBbqdN03CfPw@mail.gmail.com>
-Subject: Re: [PATCH 4.4 48/76] libceph: force GFP_NOIO for socket allocations
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170329182156.GC4864@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, Sergey Jerusalimov <wintchester@gmail.com>, Jeff Layton <jlayton@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Mar 30, 2017 at 8:25 AM, Michal Hocko <mhocko@kernel.org> wrote:
-> On Wed 29-03-17 16:25:18, Ilya Dryomov wrote:
->> On Wed, Mar 29, 2017 at 1:16 PM, Michal Hocko <mhocko@kernel.org> wrote:
->> > On Wed 29-03-17 13:10:01, Ilya Dryomov wrote:
->> >> On Wed, Mar 29, 2017 at 12:55 PM, Michal Hocko <mhocko@kernel.org> wrote:
->> >> > On Wed 29-03-17 12:41:26, Michal Hocko wrote:
->> >> > [...]
->> >> >> > ceph_con_workfn
->> >> >> >   mutex_lock(&con->mutex)  # ceph_connection::mutex
->> >> >> >   try_write
->> >> >> >     ceph_tcp_connect
->> >> >> >       sock_create_kern
->> >> >> >         GFP_KERNEL allocation
->> >> >> >           allocator recurses into XFS, more I/O is issued
->> >> >
->> >> > One more note. So what happens if this is a GFP_NOIO request which
->> >> > cannot make any progress? Your IO thread is blocked on con->mutex
->> >> > as you write below but the above thread cannot proceed as well. So I am
->> >> > _really_ not sure this acutally helps.
->> >>
->> >> This is not the only I/O worker.  A ceph cluster typically consists of
->> >> at least a few OSDs and can be as large as thousands of OSDs.  This is
->> >> the reason we are calling sock_create_kern() on the writeback path in
->> >> the first place: pre-opening thousands of sockets isn't feasible.
->> >
->> > Sorry for being dense here but what actually guarantees the forward
->> > progress? My current understanding is that the deadlock is caused by
->> > con->mutext being held while the allocation cannot make a forward
->> > progress. I can imagine this would be possible if the other io flushers
->> > depend on this lock. But then NOIO vs. KERNEL allocation doesn't make
->> > much difference. What am I missing?
->>
->> con->mutex is per-ceph_connection, osdc->request_mutex is global and is
->> the real problem here because we need both on the submit side, at least
->> in 3.18.  You are correct that even with GFP_NOIO this code may lock up
->> in theory, however I think it's very unlikely in practice.
->
-> No, it would just make such a bug more obscure. The real problem seems
-> to be that you rely on locks which cannot guarantee a forward progress
-> in the IO path. And that is a bug IMHO.
+On Wed, Mar 29, 2017 at 11:21:57AM -0700, Darrick J. Wong wrote:
+> On Tue, Mar 28, 2017 at 01:24:44PM -0400, Brian Foster wrote:
+> > On Tue, Mar 28, 2017 at 11:11:05AM -0400, Brian Foster wrote:
+> > > On Tue, Mar 28, 2017 at 08:00:47AM -0700, Darrick J. Wong wrote:
+> > > > On Tue, Mar 28, 2017 at 08:51:05AM -0400, Brian Foster wrote:
+> > > > > On Mon, Mar 27, 2017 at 04:03:15PM -0700, Darrick J. Wong wrote:
+> > > > > > The inline directory verifiers should be called on the inode fork data,
+> > > > > > which means after iformat_local on the read side, and prior to
+> > > > > > ifork_flush on the write side.  This makes the fork verifier more
+> > > > > > consistent with the way buffer verifiers work -- i.e. they will operate
+> > > > > > on the memory buffer that the code will be reading and writing directly.
+> > > > > > 
+> > > > > > Also revise the verifier function to return -EFSCORRUPTED so that we
+> > > > > > don't flood the logs with corruption messages and assert notices.
+> > > > > > 
+> > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > ---
+> > > > > > v2: get the inode d_ops the proper way
+> > > > > > ---
+> > > > > 
+> > > > > What does this apply against?
+> > > > 
+> > > > It ought to apply against the previous inline dir verifier patch.
+> > > > 
+> > > 
+> > > Hm, doesn't apply against [1] for me. Care to just repost these as a
+> > > series if the dependent code hasn't been merged yet?
+> > > 
+> > > Brian
+> > > 
+> > > [1] https://patchwork.kernel.org/patch/9626859/
+> > > 
+> > 
+> > I lost track of the fact that the first patch went into -rc and thus
+> > confused myself over where this should apply. This applies to 4.11.0-rc4
+> > and looks fine to me:
+> 
+> Does anyone have a problem if I send this to Linus for 4.11-rc5?
+> I'd rather atone for my sins sooner than later. :)
+> 
 
-Just to be clear: the "may lock up" comment above goes for 3.18, which
-is where these stack traces came from.  osdc->request_mutex which stood
-in the way of other ceph_connection workers is no more.
+No issues from me. You might want to give Dave 24h or so to ack/nack
+though..
 
->
->> We got rid of osdc->request_mutex in 4.7, so these workers are almost
->> independent in newer kernels and should be able to free up memory for
->> those blocked on GFP_NOIO retries with their respective con->mutex
->> held.  Using GFP_KERNEL and thus allowing the recursion is just asking
->> for an AA deadlock on con->mutex OTOH, so it does make a difference.
->
-> You keep saying this but so far I haven't heard how the AA deadlock is
-> possible. Both GFP_KERNEL and GFP_NOIO can stall for an unbounded amount
-> of time and that would cause you problems AFAIU.
+Brian
 
-Suppose we have an I/O for OSD X, which means it's got to go through
-ceph_connection X:
-
-ceph_con_workfn
-  mutex_lock(&con->mutex)
-    try_write
-      ceph_tcp_connect
-        sock_create_kern
-          GFP_KERNEL allocation
-
-Suppose that generates another I/O for OSD X and blocks on it.  Well,
-it's got to go through the same ceph_connection:
-
-rbd_queue_workfn
-  ceph_osdc_start_request
-    ceph_con_send
-      mutex_lock(&con->mutex)  # deadlock, OSD X worker is knocked out
-
-Now if that was a GFP_NOIO allocation, we would simply block in the
-allocator.  The placement algorithm distributes objects across the OSDs
-in a pseudo-random fashion, so even if we had a whole bunch of I/Os for
-that OSD, some other I/Os for other OSDs would complete in the meantime
-and free up memory.  If we are under the kind of memory pressure that
-makes GFP_NOIO allocations block for an extended period of time, we are
-bound to have a lot of pre-open sockets, as we would have done at least
-some flushing by then.
-
-Thanks,
-
-                Ilya
+> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
+> Ok, thanks.
+> 
+> --D
+> 
+> > 
+> > > > --D
+> > > > 
+> > > > > 
+> > > > > Brian
+> > > > > 
+> > > > > >  fs/xfs/libxfs/xfs_dir2_priv.h  |    3 +-
+> > > > > >  fs/xfs/libxfs/xfs_dir2_sf.c    |   63 ++++++++++++++++++++++++++--------------
+> > > > > >  fs/xfs/libxfs/xfs_inode_fork.c |   35 ++++++++--------------
+> > > > > >  fs/xfs/libxfs/xfs_inode_fork.h |    2 +
+> > > > > >  fs/xfs/xfs_inode.c             |   19 ++++++------
+> > > > > >  5 files changed, 66 insertions(+), 56 deletions(-)
+> > > > > > 
+> > > > > > diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > > > > index eb00bc1..39f8604 100644
+> > > > > > --- a/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > > > > +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+> > > > > > @@ -125,8 +125,7 @@ extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
+> > > > > >  extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
+> > > > > >  extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
+> > > > > >  extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
+> > > > > > -extern int xfs_dir2_sf_verify(struct xfs_mount *mp, struct xfs_dir2_sf_hdr *sfp,
+> > > > > > -		int size);
+> > > > > > +extern int xfs_dir2_sf_verify(struct xfs_inode *ip);
+> > > > > >  
+> > > > > >  /* xfs_dir2_readdir.c */
+> > > > > >  extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
+> > > > > > diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+> > > > > > index 96b45cd..e84af09 100644
+> > > > > > --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> > > > > > +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> > > > > > @@ -632,36 +632,49 @@ xfs_dir2_sf_check(
+> > > > > >  /* Verify the consistency of an inline directory. */
+> > > > > >  int
+> > > > > >  xfs_dir2_sf_verify(
+> > > > > > -	struct xfs_mount		*mp,
+> > > > > > -	struct xfs_dir2_sf_hdr		*sfp,
+> > > > > > -	int				size)
+> > > > > > +	struct xfs_inode		*ip)
+> > > > > >  {
+> > > > > > +	struct xfs_mount		*mp = ip->i_mount;
+> > > > > > +	struct xfs_dir2_sf_hdr		*sfp;
+> > > > > >  	struct xfs_dir2_sf_entry	*sfep;
+> > > > > >  	struct xfs_dir2_sf_entry	*next_sfep;
+> > > > > >  	char				*endp;
+> > > > > >  	const struct xfs_dir_ops	*dops;
+> > > > > > +	struct xfs_ifork		*ifp;
+> > > > > >  	xfs_ino_t			ino;
+> > > > > >  	int				i;
+> > > > > >  	int				i8count;
+> > > > > >  	int				offset;
+> > > > > > +	int				size;
+> > > > > > +	int				error;
+> > > > > >  	__uint8_t			filetype;
+> > > > > >  
+> > > > > > +	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
+> > > > > > +	/*
+> > > > > > +	 * xfs_iread calls us before xfs_setup_inode sets up ip->d_ops,
+> > > > > > +	 * so we can only trust the mountpoint to have the right pointer.
+> > > > > > +	 */
+> > > > > >  	dops = xfs_dir_get_ops(mp, NULL);
+> > > > > >  
+> > > > > > +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> > > > > > +	sfp = (struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data;
+> > > > > > +	size = ifp->if_bytes;
+> > > > > > +
+> > > > > >  	/*
+> > > > > >  	 * Give up if the directory is way too short.
+> > > > > >  	 */
+> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, size >
+> > > > > > -			offsetof(struct xfs_dir2_sf_hdr, parent));
+> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, size >=
+> > > > > > -			xfs_dir2_sf_hdr_size(sfp->i8count));
+> > > > > > +	if (size <= offsetof(struct xfs_dir2_sf_hdr, parent) ||
+> > > > > > +	    size < xfs_dir2_sf_hdr_size(sfp->i8count))
+> > > > > > +		return -EFSCORRUPTED;
+> > > > > >  
+> > > > > >  	endp = (char *)sfp + size;
+> > > > > >  
+> > > > > >  	/* Check .. entry */
+> > > > > >  	ino = dops->sf_get_parent_ino(sfp);
+> > > > > >  	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
+> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
+> > > > > > +	error = xfs_dir_ino_validate(mp, ino);
+> > > > > > +	if (error)
+> > > > > > +		return error;
+> > > > > >  	offset = dops->data_first_offset;
+> > > > > >  
+> > > > > >  	/* Check all reported entries */
+> > > > > > @@ -672,12 +685,12 @@ xfs_dir2_sf_verify(
+> > > > > >  		 * Check the fixed-offset parts of the structure are
+> > > > > >  		 * within the data buffer.
+> > > > > >  		 */
+> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp,
+> > > > > > -				((char *)sfep + sizeof(*sfep)) < endp);
+> > > > > > +		if (((char *)sfep + sizeof(*sfep)) >= endp)
+> > > > > > +			return -EFSCORRUPTED;
+> > > > > >  
+> > > > > >  		/* Don't allow names with known bad length. */
+> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen > 0);
+> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen < MAXNAMELEN);
+> > > > > > +		if (sfep->namelen == 0)
+> > > > > > +			return -EFSCORRUPTED;
+> > > > > >  
+> > > > > >  		/*
+> > > > > >  		 * Check that the variable-length part of the structure is
+> > > > > > @@ -685,33 +698,39 @@ xfs_dir2_sf_verify(
+> > > > > >  		 * name component, so nextentry is an acceptable test.
+> > > > > >  		 */
+> > > > > >  		next_sfep = dops->sf_nextentry(sfp, sfep);
+> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp, endp >= (char *)next_sfep);
+> > > > > > +		if (endp < (char *)next_sfep)
+> > > > > > +			return -EFSCORRUPTED;
+> > > > > >  
+> > > > > >  		/* Check that the offsets always increase. */
+> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp,
+> > > > > > -				xfs_dir2_sf_get_offset(sfep) >= offset);
+> > > > > > +		if (xfs_dir2_sf_get_offset(sfep) < offset)
+> > > > > > +			return -EFSCORRUPTED;
+> > > > > >  
+> > > > > >  		/* Check the inode number. */
+> > > > > >  		ino = dops->sf_get_ino(sfp, sfep);
+> > > > > >  		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
+> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
+> > > > > > +		error = xfs_dir_ino_validate(mp, ino);
+> > > > > > +		if (error)
+> > > > > > +			return error;
+> > > > > >  
+> > > > > >  		/* Check the file type. */
+> > > > > >  		filetype = dops->sf_get_ftype(sfep);
+> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp, filetype < XFS_DIR3_FT_MAX);
+> > > > > > +		if (filetype >= XFS_DIR3_FT_MAX)
+> > > > > > +			return -EFSCORRUPTED;
+> > > > > >  
+> > > > > >  		offset = xfs_dir2_sf_get_offset(sfep) +
+> > > > > >  				dops->data_entsize(sfep->namelen);
+> > > > > >  
+> > > > > >  		sfep = next_sfep;
+> > > > > >  	}
+> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, i8count == sfp->i8count);
+> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, (void *)sfep == (void *)endp);
+> > > > > > +	if (i8count != sfp->i8count)
+> > > > > > +		return -EFSCORRUPTED;
+> > > > > > +	if ((void *)sfep != (void *)endp)
+> > > > > > +		return -EFSCORRUPTED;
+> > > > > >  
+> > > > > >  	/* Make sure this whole thing ought to be in local format. */
+> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, offset +
+> > > > > > -	       (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
+> > > > > > -	       (uint)sizeof(xfs_dir2_block_tail_t) <= mp->m_dir_geo->blksize);
+> > > > > > +	if (offset + (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
+> > > > > > +	    (uint)sizeof(xfs_dir2_block_tail_t) > mp->m_dir_geo->blksize)
+> > > > > > +		return -EFSCORRUPTED;
+> > > > > >  
+> > > > > >  	return 0;
+> > > > > >  }
+> > > > > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> > > > > > index 9653e96..8a37efe 100644
+> > > > > > --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> > > > > > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> > > > > > @@ -212,6 +212,16 @@ xfs_iformat_fork(
+> > > > > >  	if (error)
+> > > > > >  		return error;
+> > > > > >  
+> > > > > > +	/* Check inline dir contents. */
+> > > > > > +	if (S_ISDIR(VFS_I(ip)->i_mode) &&
+> > > > > > +	    dip->di_format == XFS_DINODE_FMT_LOCAL) {
+> > > > > > +		error = xfs_dir2_sf_verify(ip);
+> > > > > > +		if (error) {
+> > > > > > +			xfs_idestroy_fork(ip, XFS_DATA_FORK);
+> > > > > > +			return error;
+> > > > > > +		}
+> > > > > > +	}
+> > > > > > +
+> > > > > >  	if (xfs_is_reflink_inode(ip)) {
+> > > > > >  		ASSERT(ip->i_cowfp == NULL);
+> > > > > >  		xfs_ifork_init_cow(ip);
+> > > > > > @@ -322,8 +332,6 @@ xfs_iformat_local(
+> > > > > >  	int		whichfork,
+> > > > > >  	int		size)
+> > > > > >  {
+> > > > > > -	int		error;
+> > > > > > -
+> > > > > >  	/*
+> > > > > >  	 * If the size is unreasonable, then something
+> > > > > >  	 * is wrong and we just bail out rather than crash in
+> > > > > > @@ -339,14 +347,6 @@ xfs_iformat_local(
+> > > > > >  		return -EFSCORRUPTED;
+> > > > > >  	}
+> > > > > >  
+> > > > > > -	if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
+> > > > > > -		error = xfs_dir2_sf_verify(ip->i_mount,
+> > > > > > -				(struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip),
+> > > > > > -				size);
+> > > > > > -		if (error)
+> > > > > > -			return error;
+> > > > > > -	}
+> > > > > > -
+> > > > > >  	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size);
+> > > > > >  	return 0;
+> > > > > >  }
+> > > > > > @@ -867,7 +867,7 @@ xfs_iextents_copy(
+> > > > > >   * In these cases, the format always takes precedence, because the
+> > > > > >   * format indicates the current state of the fork.
+> > > > > >   */
+> > > > > > -int
+> > > > > > +void
+> > > > > >  xfs_iflush_fork(
+> > > > > >  	xfs_inode_t		*ip,
+> > > > > >  	xfs_dinode_t		*dip,
+> > > > > > @@ -877,7 +877,6 @@ xfs_iflush_fork(
+> > > > > >  	char			*cp;
+> > > > > >  	xfs_ifork_t		*ifp;
+> > > > > >  	xfs_mount_t		*mp;
+> > > > > > -	int			error;
+> > > > > >  	static const short	brootflag[2] =
+> > > > > >  		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
+> > > > > >  	static const short	dataflag[2] =
+> > > > > > @@ -886,7 +885,7 @@ xfs_iflush_fork(
+> > > > > >  		{ XFS_ILOG_DEXT, XFS_ILOG_AEXT };
+> > > > > >  
+> > > > > >  	if (!iip)
+> > > > > > -		return 0;
+> > > > > > +		return;
+> > > > > >  	ifp = XFS_IFORK_PTR(ip, whichfork);
+> > > > > >  	/*
+> > > > > >  	 * This can happen if we gave up in iformat in an error path,
+> > > > > > @@ -894,19 +893,12 @@ xfs_iflush_fork(
+> > > > > >  	 */
+> > > > > >  	if (!ifp) {
+> > > > > >  		ASSERT(whichfork == XFS_ATTR_FORK);
+> > > > > > -		return 0;
+> > > > > > +		return;
+> > > > > >  	}
+> > > > > >  	cp = XFS_DFORK_PTR(dip, whichfork);
+> > > > > >  	mp = ip->i_mount;
+> > > > > >  	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
+> > > > > >  	case XFS_DINODE_FMT_LOCAL:
+> > > > > > -		if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
+> > > > > > -			error = xfs_dir2_sf_verify(mp,
+> > > > > > -					(struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data,
+> > > > > > -					ifp->if_bytes);
+> > > > > > -			if (error)
+> > > > > > -				return error;
+> > > > > > -		}
+> > > > > >  		if ((iip->ili_fields & dataflag[whichfork]) &&
+> > > > > >  		    (ifp->if_bytes > 0)) {
+> > > > > >  			ASSERT(ifp->if_u1.if_data != NULL);
+> > > > > > @@ -959,7 +951,6 @@ xfs_iflush_fork(
+> > > > > >  		ASSERT(0);
+> > > > > >  		break;
+> > > > > >  	}
+> > > > > > -	return 0;
+> > > > > >  }
+> > > > > >  
+> > > > > >  /*
+> > > > > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> > > > > > index 132dc59..7fb8365 100644
+> > > > > > --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> > > > > > +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> > > > > > @@ -140,7 +140,7 @@ typedef struct xfs_ifork {
+> > > > > >  struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
+> > > > > >  
+> > > > > >  int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
+> > > > > > -int		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+> > > > > > +void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+> > > > > >  				struct xfs_inode_log_item *, int);
+> > > > > >  void		xfs_idestroy_fork(struct xfs_inode *, int);
+> > > > > >  void		xfs_idata_realloc(struct xfs_inode *, int, int);
+> > > > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > > > > index c7fe2c2..7605d83 100644
+> > > > > > --- a/fs/xfs/xfs_inode.c
+> > > > > > +++ b/fs/xfs/xfs_inode.c
+> > > > > > @@ -50,6 +50,7 @@
+> > > > > >  #include "xfs_log.h"
+> > > > > >  #include "xfs_bmap_btree.h"
+> > > > > >  #include "xfs_reflink.h"
+> > > > > > +#include "xfs_dir2_priv.h"
+> > > > > >  
+> > > > > >  kmem_zone_t *xfs_inode_zone;
+> > > > > >  
+> > > > > > @@ -3475,7 +3476,6 @@ xfs_iflush_int(
+> > > > > >  	struct xfs_inode_log_item *iip = ip->i_itemp;
+> > > > > >  	struct xfs_dinode	*dip;
+> > > > > >  	struct xfs_mount	*mp = ip->i_mount;
+> > > > > > -	int			error;
+> > > > > >  
+> > > > > >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+> > > > > >  	ASSERT(xfs_isiflocked(ip));
+> > > > > > @@ -3547,6 +3547,12 @@ xfs_iflush_int(
+> > > > > >  	if (ip->i_d.di_version < 3)
+> > > > > >  		ip->i_d.di_flushiter++;
+> > > > > >  
+> > > > > > +	/* Check the inline directory data. */
+> > > > > > +	if (S_ISDIR(VFS_I(ip)->i_mode) &&
+> > > > > > +	    ip->i_d.di_format == XFS_DINODE_FMT_LOCAL &&
+> > > > > > +	    xfs_dir2_sf_verify(ip))
+> > > > > > +		goto corrupt_out;
+> > > > > > +
+> > > > > >  	/*
+> > > > > >  	 * Copy the dirty parts of the inode into the on-disk inode.  We always
+> > > > > >  	 * copy out the core of the inode, because if the inode is dirty at all
+> > > > > > @@ -3558,14 +3564,9 @@ xfs_iflush_int(
+> > > > > >  	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
+> > > > > >  		ip->i_d.di_flushiter = 0;
+> > > > > >  
+> > > > > > -	error = xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+> > > > > > -	if (error)
+> > > > > > -		return error;
+> > > > > > -	if (XFS_IFORK_Q(ip)) {
+> > > > > > -		error = xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
+> > > > > > -		if (error)
+> > > > > > -			return error;
+> > > > > > -	}
+> > > > > > +	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+> > > > > > +	if (XFS_IFORK_Q(ip))
+> > > > > > +		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
+> > > > > >  	xfs_inobp_check(mp, bp);
+> > > > > >  
+> > > > > >  	/*
+> > > > > > --
+> > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
