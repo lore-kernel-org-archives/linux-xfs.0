@@ -1,51 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f45.google.com ([209.85.213.45]:35762 "EHLO
-        mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753441AbdC2QeA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Mar 2017 12:34:00 -0400
-Received: by mail-vk0-f45.google.com with SMTP id r69so24289026vke.2
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Mar 2017 09:33:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACj3i71XTGsHM5U4Av=Ywn9Q7UY3QtU_ZCZrfwatfeUx0AHNNQ@mail.gmail.com>
-References: <20170315160017.27805-1-jtulak@redhat.com> <20170315160017.27805-12-jtulak@redhat.com>
- <40f76322-d4f1-5c48-3568-206a2564dad5@sandeen.net> <CACj3i71XTGsHM5U4Av=Ywn9Q7UY3QtU_ZCZrfwatfeUx0AHNNQ@mail.gmail.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Wed, 29 Mar 2017 18:33:38 +0200
-Message-ID: <CACj3i73ubkr6pGsxwkRvLwmnuCyPma+eF2L2HGMwaufHbazRNQ@mail.gmail.com>
-Subject: Re: [PATCH 11/22] mkfs: add test_default_value into conflict struct
-Content-Type: text/plain; charset=UTF-8
+Received: from ns.lynxeye.de ([87.118.118.114]:47629 "EHLO lynxeye.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932860AbdC2Usl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Mar 2017 16:48:41 -0400
+From: Lucas Stach <dev@lynxeye.de>
+Subject: [PATCH] xfs: largely extend aild sleep time if no work has to be done
+Date: Wed, 29 Mar 2017 22:42:24 +0200
+Message-Id: <20170329204224.6412-1-dev@lynxeye.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Mar 29, 2017 at 4:57 PM, Jan Tulak <jtulak@redhat.com> wrote:
->
-> And I'm adding a validating function to spot this kind of errors
-> before the program does anything else.
+If the AIL has been pushed up to the target LSN, there is no
+point in waking up every 50ms to check if there is more work
+to do. All functions that move the target LSN forward make sure
+to wake aild as appropriate.
 
-I made a first quick fire on this and even the half-baked version that
-can only find if a conflict is missing its counterpart has found two
-issues (L_AGNUM doesn't have an entry about L_NAME, but L_NAME points
-at L_AGNUM. Ditto for L_INTERNAL and L_NAME.)
+Keep the timeout wakeup as a watchdog in case we miss the
+wakeup from a target LSN update to guarantee forward progress,
+but extend the timeout to 10 seconds.
 
-Let's see what it finds out when it also compares if the values are
-set accordingly.
+This keeps the safety net, but also makes laptop users happy
+as it gets rid of almost all the wakeups caused by a lightly
+loaded FS.
 
-Also, I have published my git tree on github. It is in middle of
-changes according to things reported here in mailing list and you
-already have it locally, but if it is any help to you or Luis
-(CCed)... I will update it once I send updated patchset, and maybe few
-times before that (if I will find it helpful).
+Signed-off-by: Lucas Stach <dev@lynxeye.de>
+---
+ fs/xfs/xfs_trans_ail.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-https://github.com/jtulak/xfsprogs-dev
-
-(Ah, and ignore the name of the last commit, it is just a note for me
-what to pick on tomorrow - I'm ending for today.)
-
-Jan
-
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index d6c9c3e..1eb40dc 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -457,12 +457,21 @@ xfsaild_push(
+ 	if (xfs_buf_delwri_submit_nowait(&ailp->xa_buf_list))
+ 		ailp->xa_log_flush++;
+ 
+-	if (!count || XFS_LSN_CMP(lsn, target) >= 0) {
++	if (!count) {
+ out_done:
+ 		/*
+-		 * We reached the target or the AIL is empty, so wait a bit
+-		 * longer for I/O to complete and remove pushed items from the
+-		 * AIL before we start the next scan from the start of the AIL.
++		 * If there was nothing to be pushed we can go to sleep longer,
++		 * as this is purely a watchdog timeout. If the target gets
++		 * moved forward we will get scheduled in before hitting this
++		 * timeout.
++		 */
++		tout = 10000;
++		ailp->xa_last_pushed_lsn = 0;
++	} else if (XFS_LSN_CMP(lsn, target) >= 0) {
++		/*
++		 * We reached the target, so wait a bit longer for I/O to
++		 * complete and remove pushed items from the AIL before we
++		 * start the next scan from the start of the AIL.
+ 		 */
+ 		tout = 50;
+ 		ailp->xa_last_pushed_lsn = 0;
 -- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+2.9.3
+
