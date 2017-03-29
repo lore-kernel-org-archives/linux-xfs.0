@@ -1,316 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55930 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:46668 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752928AbdCPW7n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 16 Mar 2017 18:59:43 -0400
-Subject: Re: [PATCH 01/22] mkfs: remove intermediate getstr followed by getnum
-References: <20170315160017.27805-1-jtulak@redhat.com>
- <20170315160017.27805-2-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <96ddb2a7-d93e-3ba4-6845-eb60d9558f60@sandeen.net>
-Date: Thu, 16 Mar 2017 15:59:40 -0700
+        id S932470AbdC2Vwi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Mar 2017 17:52:38 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <29183.1490711359@warthog.procyon.org.uk>
+References: <29183.1490711359@warthog.procyon.org.uk>
+Subject: [PATCH] xfs_io: Allow -P and -L to be given to open for O_PATH and O_NOFOLLOW
 MIME-Version: 1.0
-In-Reply-To: <20170315160017.27805-2-jtulak@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <858.1490824354.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: 8BIT
+Date: Wed, 29 Mar 2017 22:52:34 +0100
+Message-ID: <859.1490824354@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: dhowells@redhat.com, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
 
-On 3/15/17 8:59 AM, Jan Tulak wrote:
-> Some options loaded a number as a string with getstr and converted it to
-> number with getnum later in the code, without any reason for this approach.
-> (They were probably forgotten in some past cleaning.)
-> 
-> This patch changes them to skip the string and use getnum directly in the main
-> option-parsing loop, as do all the other numerical options.
-> 
-> And as we now have two variables of the same type for the same value,
-> merge them together. (e.g. former string dsize and number dbytes).
+Allow "open -P" to specify O_PATH so that paths which would otherwise be
+unopenable might be opened for stat()'ing.  Such things include files that
+would incur an access error or device files for which no corresponding
+driver is available.
 
-The only downside I see to this is that we used to echo back the same
-form that was specified, i.e. -
+Allow "-L" to be given in conjunction with O_PATH to specify O_NOFOLLOW
+also.
 
-# mkfs.xfs -f -d size=4e fsfile
-size 4e specified for data subvolume is too large, maximum is 262144 blocks
-# mkfs.xfs -f -d size=4611686018427387904 fsfile
-size 4611686018427387904 specified for data subvolume is too large, maximum is 262144 blocks
-# mkfs.xfs -f -d size=1125899906842624b fsfile
-size 1125899906842624b specified for data subvolume is too large, maximum is 262144 blocks
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
+ io/io.h           |    2 ++
+ io/open.c         |   22 ++++++++++++++++++++--
+ man/man8/xfs_io.8 |   12 +++++++++++-
+ 3 files changed, 33 insertions(+), 3 deletions(-)
 
-now we always get back the raw byte value:
-
-# mkfs/mkfs.xfs -f -d size=4e fsfile
-size 4611686018427387904 specified for data subvolume is too large, maximum is 262144 blocks
-
-Anything that fails the getnum() checks echo back the original
-form on the cmdline; this case is different because getnum() passes,
-but by the time we do value checking all we have is the bytes.  Is
-that intentional/desirable?
-
-So it's a change, not necessarily incorrect or unacceptable, but
-I wanted to highlight it and check.  It wouldn't be too hard to
-convert it right away, but keep the string around for error printing
-purposes, I suppose.
-
--Eric
-
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> ---
->  mkfs/xfs_mkfs.c | 88 +++++++++++++++++++++++++--------------------------------
->  1 file changed, 38 insertions(+), 50 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index affa4052..b3bc218a 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -1417,7 +1417,7 @@ main(
->  	char			*dfile;
->  	int			dirblocklog;
->  	int			dirblocksize;
-> -	char			*dsize;
-> +	__uint64_t 		dbytes;
->  	int			dsu;
->  	int			dsw;
->  	int			dsunit;
-> @@ -1441,7 +1441,7 @@ main(
->  	xfs_rfsblock_t		logblocks;
->  	char			*logfile;
->  	int			loginternal;
-> -	char			*logsize;
-> +	__uint64_t 		logbytes;
->  	xfs_fsblock_t		logstart;
->  	int			lvflag;
->  	int			lsflag;
-> @@ -1470,11 +1470,11 @@ main(
->  	char			*protostring;
->  	int			qflag;
->  	xfs_rfsblock_t		rtblocks;
-> +	__uint64_t 		rtbytes;
->  	xfs_extlen_t		rtextblocks;
->  	xfs_rtblock_t		rtextents;
-> -	char			*rtextsize;
-> +	__uint64_t 		rtextbytes;
->  	char			*rtfile;
-> -	char			*rtsize;
->  	xfs_sb_t		*sbp;
->  	int			sectorlog;
->  	__uint64_t		sector_mask;
-> @@ -1522,7 +1522,8 @@ main(
->  	qflag = 0;
->  	imaxpct = inodelog = inopblock = isize = 0;
->  	dfile = logfile = rtfile = NULL;
-> -	dsize = logsize = rtsize = rtextsize = protofile = NULL;
-> +	protofile = NULL;
-> +	rtbytes = rtextbytes = logbytes = dbytes = 0;
->  	dsu = dsw = dsunit = dswidth = lalign = lsu = lsunit = 0;
->  	nodsflag = norsflag = 0;
->  	force_overwrite = 0;
-> @@ -1586,7 +1587,7 @@ main(
->  					xi.dname = getstr(value, &dopts, D_NAME);
->  					break;
->  				case D_SIZE:
-> -					dsize = getstr(value, &dopts, D_SIZE);
-> +					dbytes = getnum(value, &dopts, D_SIZE);
->  					break;
->  				case D_SUNIT:
->  					dsunit = getnum(value, &dopts, D_SUNIT);
-> @@ -1731,7 +1732,7 @@ main(
->  					lvflag = 1;
->  					break;
->  				case L_SIZE:
-> -					logsize = getstr(value, &lopts, L_SIZE);
-> +					logbytes = getnum(value, &lopts, L_SIZE);
->  					break;
->  				case L_SECTLOG:
->  					lsectorlog = getnum(value, &lopts,
-> @@ -1860,8 +1861,7 @@ main(
->  
->  				switch (getsubopt(&p, subopts, &value)) {
->  				case R_EXTSIZE:
-> -					rtextsize = getstr(value, &ropts,
-> -							   R_EXTSIZE);
-> +					rtextbytes = getnum(value, &ropts, R_EXTSIZE);
->  					break;
->  				case R_FILE:
->  					xi.risfile = getnum(value, &ropts,
-> @@ -1873,7 +1873,7 @@ main(
->  							   R_NAME);
->  					break;
->  				case R_SIZE:
-> -					rtsize = getstr(value, &ropts, R_SIZE);
-> +					rtbytes = getnum(value, &ropts, R_SIZE);
->  					break;
->  				case R_NOALIGN:
->  					norsflag = getnum(value, &ropts,
-> @@ -1976,14 +1976,14 @@ _("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
->  	 * sector size mismatches between the new filesystem and the underlying
->  	 * host filesystem.
->  	 */
-> -	check_device_type(dfile, &xi.disfile, !dsize, !dfile,
-> +	check_device_type(dfile, &xi.disfile, !dbytes, !dfile,
->  			  Nflag ? NULL : &xi.dcreat, force_overwrite, "d");
->  	if (!loginternal)
-> -		check_device_type(xi.logname, &xi.lisfile, !logsize, !xi.logname,
-> +		check_device_type(xi.logname, &xi.lisfile, !logbytes, !xi.logname,
->  				  Nflag ? NULL : &xi.lcreat,
->  				  force_overwrite, "l");
->  	if (xi.rtname)
-> -		check_device_type(xi.rtname, &xi.risfile, !rtsize, !xi.rtname,
-> +		check_device_type(xi.rtname, &xi.risfile, !rtbytes, !xi.rtname,
->  				  Nflag ? NULL : &xi.rcreat,
->  				  force_overwrite, "r");
->  	if (xi.disfile || xi.lisfile || xi.risfile)
-> @@ -2164,10 +2164,7 @@ _("rmapbt not supported with realtime devices\n"));
->  	}
->  
->  
-> -	if (dsize) {
-> -		__uint64_t dbytes;
-> -
-> -		dbytes = getnum(dsize, &dopts, D_SIZE);
-> +	if (dbytes) {
->  		if (dbytes % XFS_MIN_BLOCKSIZE) {
->  			fprintf(stderr,
->  			_("illegal data length %lld, not a multiple of %d\n"),
-> @@ -2196,10 +2193,7 @@ _("rmapbt not supported with realtime devices\n"));
->  		usage();
->  	}
->  
-> -	if (logsize) {
-> -		__uint64_t logbytes;
-> -
-> -		logbytes = getnum(logsize, &lopts, L_SIZE);
-> +	if (logbytes) {
->  		if (logbytes % XFS_MIN_BLOCKSIZE) {
->  			fprintf(stderr,
->  			_("illegal log length %lld, not a multiple of %d\n"),
-> @@ -2213,10 +2207,7 @@ _("rmapbt not supported with realtime devices\n"));
->  				(long long)logbytes, blocksize,
->  				(long long)(logblocks << blocklog));
->  	}
-> -	if (rtsize) {
-> -		__uint64_t rtbytes;
-> -
-> -		rtbytes = getnum(rtsize, &ropts, R_SIZE);
-> +	if (rtbytes) {
->  		if (rtbytes % XFS_MIN_BLOCKSIZE) {
->  			fprintf(stderr,
->  			_("illegal rt length %lld, not a multiple of %d\n"),
-> @@ -2233,10 +2224,7 @@ _("rmapbt not supported with realtime devices\n"));
->  	/*
->  	 * If specified, check rt extent size against its constraints.
->  	 */
-> -	if (rtextsize) {
-> -		__uint64_t rtextbytes;
-> -
-> -		rtextbytes = getnum(rtextsize, &ropts, R_EXTSIZE);
-> +	if (rtextbytes) {
->  		if (rtextbytes % blocksize) {
->  			fprintf(stderr,
->  		_("illegal rt extent size %lld, not a multiple of %d\n"),
-> @@ -2253,7 +2241,7 @@ _("rmapbt not supported with realtime devices\n"));
->  		__uint64_t	rswidth;
->  		__uint64_t	rtextbytes;
->  
-> -		if (!norsflag && !xi.risfile && !(!rtsize && xi.disfile))
-> +		if (!norsflag && !xi.risfile && !(!rtbytes && xi.disfile))
->  			rswidth = ft.rtswidth;
->  		else
->  			rswidth = 0;
-> @@ -2364,15 +2352,15 @@ _("rmapbt not supported with realtime devices\n"));
->  		rtfile = _("volume rt");
->  	else if (!xi.rtdev)
->  		rtfile = _("none");
-> -	if (dsize && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
-> +	if (dbytes && xi.dsize > 0 && dblocks > DTOBT(xi.dsize)) {
->  		fprintf(stderr,
-> -			_("size %s specified for data subvolume is too large, "
-> +			_("size %lld specified for data subvolume is too large, "
->  			"maximum is %lld blocks\n"),
-> -			dsize, (long long)DTOBT(xi.dsize));
-> +			(long long)dbytes, (long long)DTOBT(xi.dsize));
->  		usage();
-> -	} else if (!dsize && xi.dsize > 0)
-> +	} else if (!dbytes && xi.dsize > 0)
->  		dblocks = DTOBT(xi.dsize);
-> -	else if (!dsize) {
-> +	else if (!dbytes) {
->  		fprintf(stderr, _("can't get size of data subvolume\n"));
->  		usage();
->  	}
-> @@ -2405,22 +2393,22 @@ reported by the device (%u).\n"),
->  reported by the device (%u).\n"),
->  			lsectorsize, xi.lbsize);
->  	}
-> -	if (rtsize && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
-> +	if (rtbytes && xi.rtsize > 0 && xi.rtbsize > sectorsize) {
->  		fprintf(stderr, _(
->  "Warning: the realtime subvolume sector size %u is less than the sector size\n\
->  reported by the device (%u).\n"),
->  			sectorsize, xi.rtbsize);
->  	}
->  
-> -	if (rtsize && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
-> +	if (rtbytes && xi.rtsize > 0 && rtblocks > DTOBT(xi.rtsize)) {
->  		fprintf(stderr,
-> -			_("size %s specified for rt subvolume is too large, "
-> +			_("size %lld specified for rt subvolume is too large, "
->  			"maximum is %lld blocks\n"),
-> -			rtsize, (long long)DTOBT(xi.rtsize));
-> +			(long long)rtbytes, (long long)DTOBT(xi.rtsize));
->  		usage();
-> -	} else if (!rtsize && xi.rtsize > 0)
-> +	} else if (!rtbytes && xi.rtsize > 0)
->  		rtblocks = DTOBT(xi.rtsize);
-> -	else if (rtsize && !xi.rtdev) {
-> +	else if (rtbytes && !xi.rtdev) {
->  		fprintf(stderr,
->  			_("size specified for non-existent rt subvolume\n"));
->  		usage();
-> @@ -2625,26 +2613,26 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
->  				   sb_feat.rmapbt, sb_feat.reflink);
->  	ASSERT(min_logblocks);
->  	min_logblocks = MAX(XFS_MIN_LOG_BLOCKS, min_logblocks);
-> -	if (!logsize && dblocks >= (1024*1024*1024) >> blocklog)
-> +	if (!logbytes && dblocks >= (1024*1024*1024) >> blocklog)
->  		min_logblocks = MAX(min_logblocks, XFS_MIN_LOG_BYTES>>blocklog);
-> -	if (logsize && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
-> +	if (logbytes && xi.logBBsize > 0 && logblocks > DTOBT(xi.logBBsize)) {
->  		fprintf(stderr,
-> -_("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
-> -			logsize, (long long)DTOBT(xi.logBBsize));
-> +_("size %lld specified for log subvolume is too large, maximum is %lld blocks\n"),
-> +			(long long)logbytes, (long long)DTOBT(xi.logBBsize));
->  		usage();
-> -	} else if (!logsize && xi.logBBsize > 0) {
-> +	} else if (!logbytes && xi.logBBsize > 0) {
->  		logblocks = DTOBT(xi.logBBsize);
-> -	} else if (logsize && !xi.logdev && !loginternal) {
-> +	} else if (logbytes && !xi.logdev && !loginternal) {
->  		fprintf(stderr,
->  			_("size specified for non-existent log subvolume\n"));
->  		usage();
-> -	} else if (loginternal && logsize && logblocks >= dblocks) {
-> +	} else if (loginternal && logbytes && logblocks >= dblocks) {
->  		fprintf(stderr, _("size %lld too large for internal log\n"),
->  			(long long)logblocks);
->  		usage();
->  	} else if (!loginternal && !xi.logdev) {
->  		logblocks = 0;
-> -	} else if (loginternal && !logsize) {
-> +	} else if (loginternal && !logbytes) {
->  
->  		if (dblocks < GIGABYTES(1, blocklog)) {
->  			/* tiny filesystems get minimum sized logs. */
-> @@ -2708,7 +2696,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
->  		 * Readjust the log size to fit within an AG if it was sized
->  		 * automatically.
->  		 */
-> -		if (!logsize) {
-> +		if (!logbytes) {
->  			logblocks = MIN(logblocks,
->  					libxfs_alloc_ag_max_usable(mp));
->  
-> 
+diff --git a/io/io.h b/io/io.h
+index 952bdb8..4399419 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -38,6 +38,8 @@
+ #define IO_FOREIGN	(1<<7)
+ #define IO_NONBLOCK	(1<<8)
+ #define IO_TMPFILE	(1<<9)
++#define IO_PATH		(1<<10)
++#define IO_NOFOLLOW	(1<<11)
+ 
+ /*
+  * Regular file I/O control
+diff --git a/io/open.c b/io/open.c
+index 2ed55cf..f7f508a 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -72,6 +72,10 @@ openfile(
+ 		oflags |= O_NONBLOCK;
+ 	if (flags & IO_TMPFILE)
+ 		oflags |= O_TMPFILE;
++	if (flags & IO_PATH)
++		oflags |= O_PATH;
++	if (flags & IO_NOFOLLOW)
++		oflags |= O_NOFOLLOW;
+ 
+ 	fd = open(path, oflags, mode);
+ 	if (fd < 0) {
+@@ -179,6 +183,8 @@ open_help(void)
+ " -t -- open with O_TRUNC (truncate the file to zero length if it exists)\n"
+ " -R -- mark the file as a realtime XFS file immediately after opening it\n"
+ " -T -- open with O_TMPFILE (create a file not visible in the namespace)\n"
++" -P -- open with O_PATH (create an fd that is merely a location reference)\n"
++" -L -- open with O_NOFOLLOW (don't follow symlink)\n"
+ " Note1: usually read/write direct IO requests must be blocksize aligned;\n"
+ "        some kernels, however, allow sectorsize alignment for direct IO.\n"
+ " Note2: the bmap for non-regular files can be obtained provided the file\n"
+@@ -203,7 +209,7 @@ open_f(
+ 		return 0;
+ 	}
+ 
+-	while ((c = getopt(argc, argv, "FRTacdfm:nrstx")) != EOF) {
++	while ((c = getopt(argc, argv, "FLPRTacdfm:nrstx")) != EOF) {
+ 		switch (c) {
+ 		case 'F':
+ 			/* Ignored / deprecated now, handled automatically */
+@@ -244,6 +250,12 @@ open_f(
+ 		case 'T':
+ 			flags |= IO_TMPFILE;
+ 			break;
++		case 'P':
++			flags |= IO_PATH;
++			break;
++		case 'L':
++			flags |= IO_NOFOLLOW;
++			break;
+ 		default:
+ 			return command_usage(&open_cmd);
+ 		}
+@@ -257,6 +269,12 @@ open_f(
+ 		return -1;
+ 	}
+ 
++	if ((flags & (IO_PATH|IO_NOFOLLOW)) &&
++	    (flags & ~(IO_PATH|IO_NOFOLLOW))) {
++		fprintf(stderr, _("-P and -L are incompatible with the other options\n"));
++		return -1;
++	}
++
+ 	fd = openfile(argv[optind], &geometry, flags, mode);
+ 	if (fd < 0)
+ 		return 0;
+@@ -772,7 +790,7 @@ open_init(void)
+ 	open_cmd.argmax = -1;
+ 	open_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK |
+ 			 CMD_FOREIGN_OK | CMD_FLAG_ONESHOT;
+-	open_cmd.args = _("[-acdrstxT] [-m mode] [path]");
++	open_cmd.args = _("[-acdrstxRTPL] [-m mode] [path]");
+ 	open_cmd.oneline = _("open the file specified by path");
+ 	open_cmd.help = open_help;
+ 
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 022f0ea..e77be40 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -122,7 +122,7 @@ command for more details on any command.
+ Display a list of all open files and (optionally) switch to an alternate
+ current open file.
+ .TP
+-.BI "open [[ \-acdfrstRT ] " path " ]"
++.BI "open [[ \-acdfrstRTPL ] " path " ]"
+ Closes the current file, and opens the file specified by
+ .I path
+ instead. Without any arguments, displays statistics about the current
+@@ -164,6 +164,16 @@ option.
+ .B \-R
+ marks the file as a realtime XFS file after
+ opening it, if it is not already marked as such.
++.TP
++.B \-P
++opens the path as a referent only (O_PATH).  This is incompatible with other
++flags specifying other O_xxx flags apart from
++.BR \-L .
++.TP
++.B \-L
++doesn't follow symlinks (O_NOFOLLOW).  This is incompatible with other
++flags specifying other O_xxx flags apart from
++.BR \-P .
+ .PD
+ .RE
+ .TP
