@@ -1,62 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:33246 "EHLO
-        mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753541AbdC2LOp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Mar 2017 07:14:45 -0400
+Received: from mail.webx.cz ([109.123.222.201]:40515 "EHLO mail.webx.cz"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753959AbdC2NdD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Mar 2017 09:33:03 -0400
+From: Libor =?utf-8?B?S2xlcMOhxI0=?= <libor.klepac@bcom.cz>
+Subject: Re: [PATCH] xfs_repair: junk leaf attribute if count == 0
+Date: Wed, 29 Mar 2017 15:33:00 +0200
+Message-ID: <74555470.x0EUG58Vde@libor-nb>
+In-Reply-To: <b6492357-4bf3-c570-be33-90010e3b1967@sandeen.net>
+References: <725190d9-6db0-4f6c-628b-76f2dca3071f@redhat.com> <2727630.ZS8FFPfE3C@libor-nb> <b6492357-4bf3-c570-be33-90010e3b1967@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20170329110515.GA24681@bfoster.bfoster>
-References: <20170328122559.966310440@linuxfoundation.org> <20170328122601.905696872@linuxfoundation.org>
- <20170328124312.GE18241@dhcp22.suse.cz> <CAOi1vP-TeEwNM8n=Z5b6yx1epMDVJ4f7+S1poubA7zfT7L0hQQ@mail.gmail.com>
- <20170328133040.GJ18241@dhcp22.suse.cz> <CAOi1vP-doHSj8epQ1zLBnEi8QM4Eb7nFb5uo-XeUquZUkhacsg@mail.gmail.com>
- <20170329104126.GF27994@dhcp22.suse.cz> <20170329110515.GA24681@bfoster.bfoster>
-From: Ilya Dryomov <idryomov@gmail.com>
-Date: Wed, 29 Mar 2017 13:14:42 +0200
-Message-ID: <CAOi1vP-oxuiZZVGZX6Jm9u00nMcSqiMRiSeyaX+R=k4S0Yjutw@mail.gmail.com>
-Subject: Re: [PATCH 4.4 48/76] libceph: force GFP_NOIO for socket allocations
-Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, Sergey Jerusalimov <wintchester@gmail.com>, Jeff Layton <jlayton@redhat.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Mar 29, 2017 at 1:05 PM, Brian Foster <bfoster@redhat.com> wrote:
-> On Wed, Mar 29, 2017 at 12:41:26PM +0200, Michal Hocko wrote:
->> [CC xfs guys]
->>
->> On Wed 29-03-17 11:21:44, Ilya Dryomov wrote:
->> [...]
->> > This is a set of stack traces from http://tracker.ceph.com/issues/19309
->> > (linked in the changelog):
->> >
->> > Workqueue: ceph-msgr con_work [libceph]
->> > ffff8810871cb018 0000000000000046 0000000000000000 ffff881085d40000
->> > 0000000000012b00 ffff881025cad428 ffff8810871cbfd8 0000000000012b00
->> > ffff880102fc1000 ffff881085d40000 ffff8810871cb038 ffff8810871cb148
->> > Call Trace:
->> > [<ffffffff816dd629>] schedule+0x29/0x70
->> > [<ffffffff816e066d>] schedule_timeout+0x1bd/0x200
->> > [<ffffffff81093ffc>] ? ttwu_do_wakeup+0x2c/0x120
->> > [<ffffffff81094266>] ? ttwu_do_activate.constprop.135+0x66/0x70
->> > [<ffffffff816deb5f>] wait_for_completion+0xbf/0x180
->> > [<ffffffff81097cd0>] ? try_to_wake_up+0x390/0x390
->> > [<ffffffff81086335>] flush_work+0x165/0x250
->>
->> I suspect this is xlog_cil_push_now -> flush_work(&cil->xc_push_work)
->> right? I kind of got lost where this waits on an IO.
->>
->
-> Yep. That means a CIL push is already in progress. We wait on that to
-> complete here. After that, the resulting task queues execution of
-> xlog_cil_push_work()->xlog_cil_push() on m_cil_workqueue. That task may
-> submit I/O to the log.
->
-> I don't see any reference to xlog_cil_push() anywhere in the traces here
-> or in the bug referenced above, however..?
+Hello,
+so here is trace from today.
+Hope it helps you
 
-Well, it's prefaced with "Interesting is:"...  Sergey (the original
-reporter, CCed here) might still have the rest of them.
+Libor
 
-Thanks,
+Mar 29 15:05:12 vps2 kernel: [1154612.424431] XFS (dm-2): Metadata corruption detected at xfs_attr3_leaf_write_verify+0xe8/0x100 [xfs], xfs_attr3_leaf block 0x24dd5310
+Mar 29 15:05:12 vps2 kernel: [1154612.424882] XFS (dm-2): Unmount and run xfs_repair
+Mar 29 15:05:12 vps2 kernel: [1154612.425072] XFS (dm-2): First 64 bytes of corrupted metadata buffer:
+Mar 29 15:05:12 vps2 kernel: [1154612.425262] ffff979235612000: 00 00 00 00 00 00 00 00 fb ee 00 00 00 00 00 00  ................
+Mar 29 15:05:12 vps2 kernel: [1154612.425478] ffff979235612010: 10 00 00 00 00 20 0f e0 00 00 00 00 00 00 00 00  ..... ..........
+Mar 29 15:05:12 vps2 kernel: [1154612.425708] ffff979235612020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+Mar 29 15:05:12 vps2 kernel: [1154612.425960] ffff979235612030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+Mar 29 15:05:12 vps2 kernel: [1154612.426259] CPU: 2 PID: 453 Comm: xfsaild/dm-2 Tainted: G            E   4.9.0-0.bpo.2-amd64 #1 Debian 4.9.13-1~bpo8+1
+Mar 29 15:05:12 vps2 kernel: [1154612.426260] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 04/14/2014
+Mar 29 15:05:12 vps2 kernel: [1154612.426262]  0000000000000000 ffffffffb1b29cd5 ffff9794ac29c980 ffff9791295d83c0
+Mar 29 15:05:12 vps2 kernel: [1154612.426264]  ffffffffc064aa58 0000000000000000 0000000001d9a9ff 0000000000000000
+Mar 29 15:05:12 vps2 kernel: [1154612.426266]  ffffbd1ac1fb3d40 ffffffffc0695997 ffff9792b0dd60c0 ffffffffc0693cc4
+Mar 29 15:05:12 vps2 kernel: [1154612.426268] Call Trace:
+Mar 29 15:05:12 vps2 kernel: [1154612.426277]  [<ffffffffb1b29cd5>] ? dump_stack+0x5c/0x77
+Mar 29 15:05:12 vps2 kernel: [1154612.426339]  [<ffffffffc064aa58>] ? xfs_attr3_leaf_write_verify+0xe8/0x100 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.426361]  [<ffffffffc0695997>] ? xfs_buf_delwri_submit_buffers+0x137/0x260 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.426384]  [<ffffffffc0693cc4>] ? _xfs_buf_ioapply+0x84/0x450 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.426389]  [<ffffffffb18a2b30>] ? wake_up_q+0x60/0x60
+Mar 29 15:05:12 vps2 kernel: [1154612.426411]  [<ffffffffc0695997>] ? xfs_buf_delwri_submit_buffers+0x137/0x260 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.426446]  [<ffffffffc06956d7>] ? xfs_buf_submit+0x67/0x1f0 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.426473]  [<ffffffffc0695997>] ? xfs_buf_delwri_submit_buffers+0x137/0x260 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.426505]  [<ffffffffc06c777b>] ? xfsaild+0x2cb/0x7b0 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.426531]  [<ffffffffc06bf2f9>] ? xfs_inode_item_push+0x99/0x140 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.426558]  [<ffffffffc06c777b>] ? xfsaild+0x2cb/0x7b0 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.426585]  [<ffffffffc06c74b0>] ? xfs_trans_ail_cursor_first+0x80/0x80 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.426589]  [<ffffffffb18974c0>] ? kthread+0xe0/0x100
+Mar 29 15:05:12 vps2 kernel: [1154612.426592]  [<ffffffffb182476b>] ? __switch_to+0x2bb/0x700
+Mar 29 15:05:12 vps2 kernel: [1154612.426594]  [<ffffffffb18973e0>] ? kthread_park+0x60/0x60
+Mar 29 15:05:12 vps2 kernel: [1154612.426597]  [<ffffffffb1dfb675>] ? ret_from_fork+0x25/0x30
+Mar 29 15:05:12 vps2 kernel: [1154612.426602] XFS (dm-2): xfs_do_force_shutdown(0x8) called from line 1323 of file /home/zumbi/linux-4.9.13/fs/xfs/xfs_buf.c.  Return address = 0xffffffffc0694084
+Mar 29 15:05:12 vps2 kernel: [1154612.427033] XFS (dm-2): Corruption of in-memory data detected.  Shutting down filesystem
+Mar 29 15:05:12 vps2 kernel: [1154612.427323] CPU: 2 PID: 453 Comm: xfsaild/dm-2 Tainted: G            E   4.9.0-0.bpo.2-amd64 #1 Debian 4.9.13-1~bpo8+1
+Mar 29 15:05:12 vps2 kernel: [1154612.427323] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 04/14/2014
+Mar 29 15:05:12 vps2 kernel: [1154612.427324]  0000000000000000 ffffffffb1b29cd5 0000000000000008 ffff979528c42000
+Mar 29 15:05:12 vps2 kernel: [1154612.427326]  ffffffffc069c1fa ffffffffc0694084 0000000000000000 ffffbd1ac1fb3d40
+Mar 29 15:05:12 vps2 kernel: [1154612.427328]  ffffffffc0695997 ffff9792b0dd60c0 ffffffffc0694084 0000000000000000
+Mar 29 15:05:12 vps2 kernel: [1154612.427329] Call Trace:
+Mar 29 15:05:12 vps2 kernel: [1154612.427335]  [<ffffffffb1b29cd5>] ? dump_stack+0x5c/0x77
+Mar 29 15:05:12 vps2 kernel: [1154612.427380]  [<ffffffffc069c1fa>] ? xfs_do_force_shutdown+0x13a/0x140 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.427408]  [<ffffffffc0694084>] ? _xfs_buf_ioapply+0x444/0x450 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.427432]  [<ffffffffc0695997>] ? xfs_buf_delwri_submit_buffers+0x137/0x260 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.427458]  [<ffffffffc0694084>] ? _xfs_buf_ioapply+0x444/0x450 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.427462]  [<ffffffffb18a2b30>] ? wake_up_q+0x60/0x60
+Mar 29 15:05:12 vps2 kernel: [1154612.427485]  [<ffffffffc0695997>] ? xfs_buf_delwri_submit_buffers+0x137/0x260 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.427508]  [<ffffffffc06956d7>] ? xfs_buf_submit+0x67/0x1f0 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.427530]  [<ffffffffc0695997>] ? xfs_buf_delwri_submit_buffers+0x137/0x260 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.427562]  [<ffffffffc06c777b>] ? xfsaild+0x2cb/0x7b0 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.427596]  [<ffffffffc06bf2f9>] ? xfs_inode_item_push+0x99/0x140 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.427625]  [<ffffffffc06c777b>] ? xfsaild+0x2cb/0x7b0 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.427652]  [<ffffffffc06c74b0>] ? xfs_trans_ail_cursor_first+0x80/0x80 [xfs]
+Mar 29 15:05:12 vps2 kernel: [1154612.427654]  [<ffffffffb18974c0>] ? kthread+0xe0/0x100
+Mar 29 15:05:12 vps2 kernel: [1154612.427656]  [<ffffffffb182476b>] ? __switch_to+0x2bb/0x700
+Mar 29 15:05:12 vps2 kernel: [1154612.427657]  [<ffffffffb18973e0>] ? kthread_park+0x60/0x60
+Mar 29 15:05:12 vps2 kernel: [1154612.427659]  [<ffffffffb1dfb675>] ? ret_from_fork+0x25/0x30
+Mar 29 15:05:12 vps2 kernel: [1154612.427671] XFS (dm-2): Please umount the filesystem and rectify the problem(s)
 
-                Ilya
