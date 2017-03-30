@@ -1,47 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41492 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933041AbdC3AYP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Mar 2017 20:24:15 -0400
-Date: Wed, 29 Mar 2017 17:23:28 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: The XFS_IOC_FSGEOMETRY ioctl doesn't like fds that are opened
- O_PATH
-Message-ID: <20170330002328.GD4864@birch.djwong.org>
-References: <859.1490824354@warthog.procyon.org.uk>
- <29183.1490711359@warthog.procyon.org.uk>
- <5587.1490831828@warthog.procyon.org.uk>
+Received: from mx1.redhat.com ([209.132.183.28]:10898 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932864AbdC3ID6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Mar 2017 04:03:58 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20170330025620.GA789@zzz>
+References: <20170330025620.GA789@zzz> <859.1490824354@warthog.procyon.org.uk> <29183.1490711359@warthog.procyon.org.uk> <5587.1490831828@warthog.procyon.org.uk> <20170330002328.GD4864@birch.djwong.org>
+Subject: Re: The XFS_IOC_FSGEOMETRY ioctl doesn't like fds that are opened O_PATH
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5587.1490831828@warthog.procyon.org.uk>
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <8866.1490861034.1@warthog.procyon.org.uk>
+Date: Thu, 30 Mar 2017 09:03:54 +0100
+Message-ID: <8867.1490861034@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
+To: Eric Biggers <ebiggers3@gmail.com>
+Cc: dhowells@redhat.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
 
-On Thu, Mar 30, 2017 at 12:57:08AM +0100, David Howells wrote:
-> Should XFS_IOC_FSGEOMETRY work on fds that are opened O_PATH on an XFS
-> filesystem?  Or should xfs_io not call that ioctl on O_PATH fds?
+Eric Biggers <ebiggers3@gmail.com> wrote:
 
-Given that read/write don't work under O_PATH, I wouldn't expect ioctls
-to work either.
+> Also, ioctl() with an O_PATH file descriptor always fails with EBADF because
+> sys_ioctl() uses fdget() rather than fdget_raw().  The filesystem isn't
+> involved at all.  This is intentional, I believe.
 
-I tried to write a two line program to call FSGEOMETRY to see what
-actually happens but got so bogged down in trying to figure out what
-magic incantation of C headers one needs to pull in the appropriate
-structure typedefs for an ioctl I wasn't even trying to call that I gave
-up.
+Yeah.  Apparently so, though some ioctls might make sense if they're asking
+about the filesystem.
 
-Seriously, what the f*ck do you have to #include just to be able to use
-O_PATH?
+Anyway, I need to fix xfs_io for that now too if I'm going to use that.  I
+wonder what xfs_io needs the geometry for.
 
---D
+I'm getting the impression xfs_io isn't really the tool I should be using for
+this.
 
-> 
-> David
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dvid
