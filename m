@@ -1,42 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57248 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933159AbdCaQkE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 12:40:04 -0400
-Date: Fri, 31 Mar 2017 09:40:01 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs: move the inline directory verifiers
-Message-ID: <20170331164001.GA23577@infradead.org>
-References: <20170328125104.GA4100@bfoster.bfoster>
- <20170328150047.GB4874@birch.djwong.org>
- <20170328151105.GC4100@bfoster.bfoster>
- <20170328172444.GE4100@bfoster.bfoster>
- <20170329182156.GC4864@birch.djwong.org>
- <20170329224110.GL17542@dastard>
- <20170331160743.GB3255@infradead.org>
- <20170331162431.GF4864@birch.djwong.org>
- <20170331162817.GA8971@infradead.org>
- <20170331163836.GG4864@birch.djwong.org>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:36087 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754346AbdC3VLQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 17:11:16 -0400
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+References: <20170320214327.GA5098@fieldses.org>
+ <20170321134500.GA1318@infradead.org> <20170321163011.GA16666@fieldses.org>
+ <1490117004.2542.1.camel@redhat.com> <20170321183006.GD17872@fieldses.org>
+ <1490122013.2593.1.camel@redhat.com> <20170329111507.GA18467@quack2.suse.cz>
+ <1490810071.2678.6.camel@redhat.com> <20170330064724.GA21542@quack2.suse.cz>
+ <1490872308.2694.1.camel@redhat.com> <20170330161231.GA9824@fieldses.org>
+ <1490898932.2667.1.camel@redhat.com>
+From: Boaz Harrosh <openosd@gmail.com>
+Message-ID: <42bec37f-670c-3ea1-f2aa-7cecd619ad7e@gmail.com>
+Date: Fri, 31 Mar 2017 00:11:11 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170331163836.GG4864@birch.djwong.org>
+In-Reply-To: <1490898932.2667.1.camel@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: Jeff Layton <jlayton@redhat.com>, "J. Bruce Fields" <bfields@fieldses.org>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Mar 31, 2017 at 09:38:36AM -0700, Darrick J. Wong wrote:
-> On Fri, Mar 31, 2017 at 09:28:17AM -0700, Christoph Hellwig wrote:
-> > On Fri, Mar 31, 2017 at 09:24:31AM -0700, Darrick J. Wong wrote:
-> > > I think xfs/348 causes -rc4 to fall over if CONFIG_XFS_DEBUG=y due to
-> > > the XFS_WANT_CORRUPTED_RETURNs that shouldn't be there.
-> > 
-> > Yes, that's the one.  How are we going to fix that for -rc5?
+On 03/30/2017 09:35 PM, Jeff Layton wrote:
+<>
+> Yeah, I imagine we'd need a on-disk change for this unless there's
+> something already present that we could use in place of a crash counter.
 > 
-> This patch fixes all the thinkos in the original patch, so I was just
-> going to send it to Linus for rc5, but decided to poll the ML to see if
-> anyone had an objection to that.
 
-That's what I thought and was surprised by the reply from Dave..
+Perhaps we can use s_mtime and/or s_wtime in some way, I'm not sure
+what is a parallel for that in xfs.
+	s_mtime - time-of-last mount 
+	s_wtime - time-of-last mount, umount, freez, unfreez, remount, ...
+Of course you'll need a per FS vector to access that.
+
+But this will need some math foo to get the bits compacted correctly
+just a thought.
+
+Thanks
+Boaz
+
