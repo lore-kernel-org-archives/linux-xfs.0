@@ -1,42 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36530 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933334AbdCaQHq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 12:07:46 -0400
-Date: Fri, 31 Mar 2017 09:07:43 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs: move the inline directory verifiers
-Message-ID: <20170331160743.GB3255@infradead.org>
-References: <20170327230315.GB4864@birch.djwong.org>
- <20170328125104.GA4100@bfoster.bfoster>
- <20170328150047.GB4874@birch.djwong.org>
- <20170328151105.GC4100@bfoster.bfoster>
- <20170328172444.GE4100@bfoster.bfoster>
- <20170329182156.GC4864@birch.djwong.org>
- <20170329224110.GL17542@dastard>
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:34269 "EHLO
+        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932918AbdC3KCK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 06:02:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170329224110.GL17542@dastard>
+In-Reply-To: <20170330062500.GB1972@dhcp22.suse.cz>
+References: <20170328122601.905696872@linuxfoundation.org> <20170328124312.GE18241@dhcp22.suse.cz>
+ <CAOi1vP-TeEwNM8n=Z5b6yx1epMDVJ4f7+S1poubA7zfT7L0hQQ@mail.gmail.com>
+ <20170328133040.GJ18241@dhcp22.suse.cz> <CAOi1vP-doHSj8epQ1zLBnEi8QM4Eb7nFb5uo-XeUquZUkhacsg@mail.gmail.com>
+ <20170329104126.GF27994@dhcp22.suse.cz> <20170329105536.GH27994@dhcp22.suse.cz>
+ <CAOi1vP93+MAQsSKpEGcrK0h3WpUH2rFnaFR4nUhhAQAXk0mrNA@mail.gmail.com>
+ <20170329111650.GI27994@dhcp22.suse.cz> <CAOi1vP_6HvHAGo4Neu=q_LY_m_NRmSRkkGsW=95xYctLUdag6A@mail.gmail.com>
+ <20170330062500.GB1972@dhcp22.suse.cz>
+From: Ilya Dryomov <idryomov@gmail.com>
+Date: Thu, 30 Mar 2017 12:02:03 +0200
+Message-ID: <CAOi1vP8z4hngZecp6MoOOhKsLadZ5eJbQ92MvAGBbqdN03CfPw@mail.gmail.com>
+Subject: Re: [PATCH 4.4 48/76] libceph: force GFP_NOIO for socket allocations
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, Sergey Jerusalimov <wintchester@gmail.com>, Jeff Layton <jlayton@redhat.com>, linux-xfs@vger.kernel.org
 
-On Thu, Mar 30, 2017 at 09:41:10AM +1100, Dave Chinner wrote:
-> > > I lost track of the fact that the first patch went into -rc and thus
-> > > confused myself over where this should apply. This applies to 4.11.0-rc4
-> > > and looks fine to me:
-> > 
-> > Does anyone have a problem if I send this to Linus for 4.11-rc5?
-> > I'd rather atone for my sins sooner than later. :)
-> 
-> There's no urgency required here - it's just a cleanup patch. The
-> code in the tree works fine, so why risk adding regressions
-> at a late stage? Just add it to the for-next queue and let it soak
-> until the merge window.
+On Thu, Mar 30, 2017 at 8:25 AM, Michal Hocko <mhocko@kernel.org> wrote:
+> On Wed 29-03-17 16:25:18, Ilya Dryomov wrote:
+>> On Wed, Mar 29, 2017 at 1:16 PM, Michal Hocko <mhocko@kernel.org> wrote:
+>> > On Wed 29-03-17 13:10:01, Ilya Dryomov wrote:
+>> >> On Wed, Mar 29, 2017 at 12:55 PM, Michal Hocko <mhocko@kernel.org> wrote:
+>> >> > On Wed 29-03-17 12:41:26, Michal Hocko wrote:
+>> >> > [...]
+>> >> >> > ceph_con_workfn
+>> >> >> >   mutex_lock(&con->mutex)  # ceph_connection::mutex
+>> >> >> >   try_write
+>> >> >> >     ceph_tcp_connect
+>> >> >> >       sock_create_kern
+>> >> >> >         GFP_KERNEL allocation
+>> >> >> >           allocator recurses into XFS, more I/O is issued
+>> >> >
+>> >> > One more note. So what happens if this is a GFP_NOIO request which
+>> >> > cannot make any progress? Your IO thread is blocked on con->mutex
+>> >> > as you write below but the above thread cannot proceed as well. So I am
+>> >> > _really_ not sure this acutally helps.
+>> >>
+>> >> This is not the only I/O worker.  A ceph cluster typically consists of
+>> >> at least a few OSDs and can be as large as thousands of OSDs.  This is
+>> >> the reason we are calling sock_create_kern() on the writeback path in
+>> >> the first place: pre-opening thousands of sockets isn't feasible.
+>> >
+>> > Sorry for being dense here but what actually guarantees the forward
+>> > progress? My current understanding is that the deadlock is caused by
+>> > con->mutext being held while the allocation cannot make a forward
+>> > progress. I can imagine this would be possible if the other io flushers
+>> > depend on this lock. But then NOIO vs. KERNEL allocation doesn't make
+>> > much difference. What am I missing?
+>>
+>> con->mutex is per-ceph_connection, osdc->request_mutex is global and is
+>> the real problem here because we need both on the submit side, at least
+>> in 3.18.  You are correct that even with GFP_NOIO this code may lock up
+>> in theory, however I think it's very unlikely in practice.
+>
+> No, it would just make such a bug more obscure. The real problem seems
+> to be that you rely on locks which cannot guarantee a forward progress
+> in the IO path. And that is a bug IMHO.
 
-Is current Linus tree ok?  I'm pretty sure a recent Linus tree fell
-over when running the dir fuzzers for me.  Which commit would the
-latest actual fix be?
+Just to be clear: the "may lock up" comment above goes for 3.18, which
+is where these stack traces came from.  osdc->request_mutex which stood
+in the way of other ceph_connection workers is no more.
+
+>
+>> We got rid of osdc->request_mutex in 4.7, so these workers are almost
+>> independent in newer kernels and should be able to free up memory for
+>> those blocked on GFP_NOIO retries with their respective con->mutex
+>> held.  Using GFP_KERNEL and thus allowing the recursion is just asking
+>> for an AA deadlock on con->mutex OTOH, so it does make a difference.
+>
+> You keep saying this but so far I haven't heard how the AA deadlock is
+> possible. Both GFP_KERNEL and GFP_NOIO can stall for an unbounded amount
+> of time and that would cause you problems AFAIU.
+
+Suppose we have an I/O for OSD X, which means it's got to go through
+ceph_connection X:
+
+ceph_con_workfn
+  mutex_lock(&con->mutex)
+    try_write
+      ceph_tcp_connect
+        sock_create_kern
+          GFP_KERNEL allocation
+
+Suppose that generates another I/O for OSD X and blocks on it.  Well,
+it's got to go through the same ceph_connection:
+
+rbd_queue_workfn
+  ceph_osdc_start_request
+    ceph_con_send
+      mutex_lock(&con->mutex)  # deadlock, OSD X worker is knocked out
+
+Now if that was a GFP_NOIO allocation, we would simply block in the
+allocator.  The placement algorithm distributes objects across the OSDs
+in a pseudo-random fashion, so even if we had a whole bunch of I/Os for
+that OSD, some other I/Os for other OSDs would complete in the meantime
+and free up memory.  If we are under the kind of memory pressure that
+makes GFP_NOIO allocations block for an extended period of time, we are
+bound to have a lot of pre-open sockets, as we would have done at least
+some flushing by then.
+
+Thanks,
+
+                Ilya
