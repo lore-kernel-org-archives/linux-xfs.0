@@ -1,67 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35970 "EHLO mx2.suse.de"
+Received: from fieldses.org ([173.255.197.46]:59126 "EHLO fieldses.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933356AbdC3QMK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Mar 2017 12:12:10 -0400
-Date: Thu, 30 Mar 2017 18:12:06 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 4.4 48/76] libceph: force GFP_NOIO for socket allocations
-Message-ID: <20170330161204.GD4326@dhcp22.suse.cz>
-References: <20170329105536.GH27994@dhcp22.suse.cz>
- <CAOi1vP93+MAQsSKpEGcrK0h3WpUH2rFnaFR4nUhhAQAXk0mrNA@mail.gmail.com>
- <20170329111650.GI27994@dhcp22.suse.cz>
- <CAOi1vP_6HvHAGo4Neu=q_LY_m_NRmSRkkGsW=95xYctLUdag6A@mail.gmail.com>
- <20170330062500.GB1972@dhcp22.suse.cz>
- <CAOi1vP8z4hngZecp6MoOOhKsLadZ5eJbQ92MvAGBbqdN03CfPw@mail.gmail.com>
- <20170330112126.GE1972@dhcp22.suse.cz>
- <CAOi1vP9Mdk+meGj39+wccBa6HN07y-pDxMLJj_xmAYBsRSoy1g@mail.gmail.com>
- <20170330143652.GA4326@dhcp22.suse.cz>
- <CAOi1vP_6zY5vZgYwBGEajz1nrjda7cDbWSLOhnBJGE=JZK1vBg@mail.gmail.com>
+        id S933356AbdC3QMc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Mar 2017 12:12:32 -0400
+Date: Thu, 30 Mar 2017 12:12:31 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+Message-ID: <20170330161231.GA9824@fieldses.org>
+References: <20170320214327.GA5098@fieldses.org>
+ <20170321134500.GA1318@infradead.org>
+ <20170321163011.GA16666@fieldses.org>
+ <1490117004.2542.1.camel@redhat.com>
+ <20170321183006.GD17872@fieldses.org>
+ <1490122013.2593.1.camel@redhat.com>
+ <20170329111507.GA18467@quack2.suse.cz>
+ <1490810071.2678.6.camel@redhat.com>
+ <20170330064724.GA21542@quack2.suse.cz>
+ <1490872308.2694.1.camel@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOi1vP_6zY5vZgYwBGEajz1nrjda7cDbWSLOhnBJGE=JZK1vBg@mail.gmail.com>
+In-Reply-To: <1490872308.2694.1.camel@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ilya Dryomov <idryomov@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, Sergey Jerusalimov <wintchester@gmail.com>, Jeff Layton <jlayton@redhat.com>, linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu 30-03-17 17:06:51, Ilya Dryomov wrote:
-[...]
-> > But if the allocation is stuck then the holder of the lock cannot make
-> > a forward progress and it is effectivelly deadlocked because other IO
-> > depends on the lock it holds. Maybe I just ask bad questions but what
+On Thu, Mar 30, 2017 at 07:11:48AM -0400, Jeff Layton wrote:
+> On Thu, 2017-03-30 at 08:47 +0200, Jan Kara wrote:
+> > Hum, so are we fine if i_version just changes (increases) for all inodes
+> > after a server crash? If I understand its use right, it would mean
+> > invalidation of all client's caches but that is not such a big deal given
+> > how frequent server crashes should be, right?
+
+Even if it's rare, it may be really painful when all your clients are
+forced to throw out and repopulate their caches after a crash.  But,
+yes, maybe we can live with it.
+
+> > Because if above is acceptable we could make reported i_version to be a sum
+> > of "superblock crash counter" and "inode i_version". We increment
+> > "superblock crash counter" whenever we detect unclean filesystem shutdown.
+> > That way after a crash we are guaranteed each inode will report new
+> > i_version (the sum would probably have to look like "superblock crash
+> > counter" * 65536 + "inode i_version" so that we avoid reusing possible
+> > i_version numbers we gave away but did not write to disk but still...).
+> > Thoughts?
+
+How hard is this for filesystems to support?  Do they need an on-disk
+format change to keep track of the crash counter?  Maybe not, maybe the
+high bits of the i_version counters are all they need.
+
+> That does sound like a good idea. This is a 64 bit value, so we should
+> be able to carve out some upper bits for a crash counter without risking
+> wrapping.
 > 
-> Only I/O to the same OSD.  A typical ceph cluster has dozens of OSDs,
-> so there is plenty of room for other in-flight I/Os to finish and move
-> the allocator forward.  The lock in question is per-ceph_connection
-> (read: per-OSD).
-> 
-> > makes GFP_NOIO different from GFP_KERNEL here. We know that the later
-> > might need to wait for an IO to finish in the shrinker but it itself
-> > doesn't get the lock in question directly. The former depends on the
-> > allocator forward progress as well and that in turn wait for somebody
-> > else to proceed with the IO. So to me any blocking allocation while
-> > holding a lock which blocks further IO to complete is simply broken.
-> 
-> Right, with GFP_NOIO we simply wait -- there is nothing wrong with
-> a blocking allocation, at least in the general case.  With GFP_KERNEL
-> we deadlock, either in rbd/libceph (less likely) or in the filesystem
-> above (more likely, shown in the xfs_reclaim_inodes_ag() traces you
-> omitted in your quote).
+> The other constraint here is that we'd like any later version of the
+> counter to be larger than any earlier value that was handed out. I think
+> this idea would still satisfy that.
 
-I am not convinced. It seems you are relying on something that is not
-guaranteed fundamentally. AFAIU all the IO paths should _guarantee_
-and use mempools for that purpose if they need to allocate.
+I guess we just want to have some back-of-the-envelope estimates of
+maximum number of i_version increments possible between crashes and
+maximum number of crashes possible over lifetime of a filesystem, to
+decide how to split up the bits.
 
-But, hey, I will not argue as my understanding of ceph is close to
-zero. You are the maintainer so it is your call. I would just really
-appreciate if you could document this as much as possible (ideally
-at the place where you call memalloc_noio_save and describe the lock
-dependency there).
+I wonder if we could get away with using the new crash counter only for
+*new* values of the i_version?  After a crash, use the on disk i_version
+as is, and put off using the new crash counter until the next time the
+file's modified.
 
-Thanks!
--- 
-Michal Hocko
-SUSE Labs
+That would still eliminate the risk of accidental reuse of an old
+i_version value.  It still leaves some cases where the client could fail
+to notice an update indefinitely.  All these cases I think have to
+assume that a writer made some changes that it failed to ever sync, so
+as long as we care only about close-to-open semantics perhaps those
+cases don't matter.
+
+I wonder if repeated crashes can lead to any odd corner cases.
+
+--b.
