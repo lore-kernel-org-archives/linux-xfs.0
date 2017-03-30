@@ -1,76 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:2559 "EHLO
-        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752656AbdC2WlT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Mar 2017 18:41:19 -0400
-Date: Thu, 30 Mar 2017 09:41:10 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: move the inline directory verifiers
-Message-ID: <20170329224110.GL17542@dastard>
-References: <20170327230315.GB4864@birch.djwong.org>
- <20170328125104.GA4100@bfoster.bfoster>
- <20170328150047.GB4874@birch.djwong.org>
- <20170328151105.GC4100@bfoster.bfoster>
- <20170328172444.GE4100@bfoster.bfoster>
- <20170329182156.GC4864@birch.djwong.org>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:32805 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754551AbdC3C4Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Mar 2017 22:56:24 -0400
+Date: Wed, 29 Mar 2017 19:56:20 -0700
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: The XFS_IOC_FSGEOMETRY ioctl doesn't like fds that are opened
+ O_PATH
+Message-ID: <20170330025620.GA789@zzz>
+References: <859.1490824354@warthog.procyon.org.uk>
+ <29183.1490711359@warthog.procyon.org.uk>
+ <5587.1490831828@warthog.procyon.org.uk>
+ <20170330002328.GD4864@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170329182156.GC4864@birch.djwong.org>
+In-Reply-To: <20170330002328.GD4864@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+Cc: David Howells <dhowells@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
 
-On Wed, Mar 29, 2017 at 11:21:57AM -0700, Darrick J. Wong wrote:
-> On Tue, Mar 28, 2017 at 01:24:44PM -0400, Brian Foster wrote:
-> > On Tue, Mar 28, 2017 at 11:11:05AM -0400, Brian Foster wrote:
-> > > On Tue, Mar 28, 2017 at 08:00:47AM -0700, Darrick J. Wong wrote:
-> > > > On Tue, Mar 28, 2017 at 08:51:05AM -0400, Brian Foster wrote:
-> > > > > On Mon, Mar 27, 2017 at 04:03:15PM -0700, Darrick J. Wong wrote:
-> > > > > > The inline directory verifiers should be called on the inode fork data,
-> > > > > > which means after iformat_local on the read side, and prior to
-> > > > > > ifork_flush on the write side.  This makes the fork verifier more
-> > > > > > consistent with the way buffer verifiers work -- i.e. they will operate
-> > > > > > on the memory buffer that the code will be reading and writing directly.
-> > > > > > 
-> > > > > > Also revise the verifier function to return -EFSCORRUPTED so that we
-> > > > > > don't flood the logs with corruption messages and assert notices.
-> > > > > > 
-> > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > ---
-> > > > > > v2: get the inode d_ops the proper way
-> > > > > > ---
-> > > > > 
-> > > > > What does this apply against?
-> > > > 
-> > > > It ought to apply against the previous inline dir verifier patch.
-> > > > 
-> > > 
-> > > Hm, doesn't apply against [1] for me. Care to just repost these as a
-> > > series if the dependent code hasn't been merged yet?
-> > > 
-> > > Brian
-> > > 
-> > > [1] https://patchwork.kernel.org/patch/9626859/
-> > > 
-> > 
-> > I lost track of the fact that the first patch went into -rc and thus
-> > confused myself over where this should apply. This applies to 4.11.0-rc4
-> > and looks fine to me:
+On Wed, Mar 29, 2017 at 05:23:28PM -0700, Darrick J. Wong wrote:
+> On Thu, Mar 30, 2017 at 12:57:08AM +0100, David Howells wrote:
+> > Should XFS_IOC_FSGEOMETRY work on fds that are opened O_PATH on an XFS
+> > filesystem?  Or should xfs_io not call that ioctl on O_PATH fds?
 > 
-> Does anyone have a problem if I send this to Linus for 4.11-rc5?
-> I'd rather atone for my sins sooner than later. :)
+> Given that read/write don't work under O_PATH, I wouldn't expect ioctls
+> to work either.
+> 
+> I tried to write a two line program to call FSGEOMETRY to see what
+> actually happens but got so bogged down in trying to figure out what
+> magic incantation of C headers one needs to pull in the appropriate
+> structure typedefs for an ioctl I wasn't even trying to call that I gave
+> up.
+> 
+> Seriously, what the f*ck do you have to #include just to be able to use
+> O_PATH?
 
-There's no urgency required here - it's just a cleanup patch. The
-code in the tree works fine, so why risk adding regressions
-at a late stage? Just add it to the for-next queue and let it soak
-until the merge window.
+>From open(2):
 
-Cheers,
+      "The O_DIRECT, O_NOATIME, O_PATH, and  O_TMPFILE  flags  are
+      Linux-specific.  One must define _GNU_SOURCE to obtain their definitions."
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Also, ioctl() with an O_PATH file descriptor always fails with EBADF because
+sys_ioctl() uses fdget() rather than fdget_raw().  The filesystem isn't involved
+at all.  This is intentional, I believe.
+
+- Eric
