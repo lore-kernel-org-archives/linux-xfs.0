@@ -1,12 +1,15 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38795 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:39359 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933443AbdC3P6C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 11:58:02 -0400
-Subject: [PATCH v8 0/9] vfs/xfs/ext4: GETFSMAP support
+        with ESMTP id S934063AbdC3P6v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 11:58:51 -0400
+Subject: [PATCH 7/9] xfs: have getfsmap fall back to the freesp btrees when
+ rmap is not present
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 30 Mar 2017 08:57:55 -0700
-Message-ID: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
+Date: Thu, 30 Mar 2017 08:58:44 -0700
+Message-ID: <149088952483.25895.7030659170344887892.stgit@birch.djwong.org>
+In-Reply-To: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
+References: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -14,43 +17,140 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-api@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-ext4@vger.kernel.org, linux-api@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This is a patchset implementing the GETFSMAP ioctl that we discussed at
-LSFMM 2016[1] and 2017.  GETFSMAP takes two search keys, which are
-defined as a tuple of (device, physical block, owner, file offset), and
-returns all known space mapping information for the given filesystem.
+If the reverse-mapping btree isn't available, fall back to the
+free space btrees to provide partial reverse mapping information.
+The online scrub tool can make use of even partial information to
+speed up the data block scan.
 
-The XFS implementation is fully complete for filesystems having the new
-reverse-mapping feature introduced in 4.8.  For legacy XFS filesystems
-and ext4, there is no reverse-mapping data and the returned extent
-information is restricted to listing "free", "unknown", or "metadata"
-owners.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+v2: various refactorings, fix array pointer passing
+---
+ fs/xfs/xfs_fsmap.c |   72 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 69 insertions(+), 3 deletions(-)
 
-Space mapping information can be dumped via the xfs_io 'fsmap' command,
-and the upcoming xfs_spaceman/e2freefrag utilities analyze the free
-extent data to produce free space fragmentations reports.  Further in
-the future, the xfs_scrub utility will use GETFSMAP to assist in data
-block read verification, and dedupe programs can use it to further
-optimize deduplication factors.
 
-Kernel source can be found in the git repo [2] and userspace utilities
-in the git repo[3].  This patchset is all ready to go for 4.12 -- the
-XFS patches have already been reviewed by Brian Foster; and the ext4
-patch has been updated per some of Andreas Dilger's comments.  This
-posting will (I hope) be the last one before 4.12.  Test cases have
-already been integrated into xfstests, and the manpage will be the last
-patch.
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 24b3e53..edd75c6 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -40,6 +40,7 @@
+ #include "xfs_fsmap.h"
+ #include "xfs_refcount.h"
+ #include "xfs_refcount_btree.h"
++#include "xfs_alloc_btree.h"
+ 
+ /* Convert an xfs_fsmap to an fsmap. */
+ void
+@@ -158,6 +159,9 @@ xfs_fsmap_owner_from_rmap(
+ 	case XFS_RMAP_OWN_COW:
+ 		dest->fmr_owner = XFS_FMR_OWN_COW;
+ 		break;
++	case XFS_RMAP_OWN_NULL:	/* "free" */
++		dest->fmr_owner = XFS_FMR_OWN_FREE;
++		break;
+ 	default:
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -362,6 +366,30 @@ xfs_getfsmap_datadev_helper(
+ 	return xfs_getfsmap_helper(cur->bc_tp, info, rec, rec_daddr);
+ }
+ 
++/* Transform a bnobt irec into a fsmap */
++STATIC int
++xfs_getfsmap_datadev_bnobt_helper(
++	struct xfs_btree_cur		*cur,
++	struct xfs_alloc_rec_incore	*rec,
++	void				*priv)
++{
++	struct xfs_mount		*mp = cur->bc_mp;
++	struct xfs_getfsmap_info	*info = priv;
++	struct xfs_rmap_irec		irec;
++	xfs_daddr_t			rec_daddr;
++
++	rec_daddr = XFS_AGB_TO_DADDR(mp, cur->bc_private.a.agno,
++			rec->ar_startblock);
++
++	irec.rm_startblock = rec->ar_startblock;
++	irec.rm_blockcount = rec->ar_blockcount;
++	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
++	irec.rm_offset = 0;
++	irec.rm_flags = 0;
++
++	return xfs_getfsmap_helper(cur->bc_tp, info, &irec, rec_daddr);
++}
++
+ /* Set rmap flags based on the getfsmap flags */
+ static void
+ xfs_getfsmap_set_irec_flags(
+@@ -572,6 +600,43 @@ xfs_getfsmap_datadev_rmapbt(
+ 			xfs_getfsmap_datadev_rmapbt_query, NULL);
+ }
+ 
++/* Actually query the bno btree. */
++STATIC int
++xfs_getfsmap_datadev_bnobt_query(
++	struct xfs_trans		*tp,
++	struct xfs_getfsmap_info	*info,
++	struct xfs_btree_cur		**curpp,
++	void				*priv)
++{
++	struct xfs_alloc_rec_incore	*key = priv;
++
++	/* Report any gap at the end of the last AG. */
++	if (info->last)
++		return xfs_getfsmap_datadev_bnobt_helper(*curpp, &key[1], info);
++
++	/* Allocate cursor for this AG and query_range it. */
++	*curpp = xfs_allocbt_init_cursor(tp->t_mountp, tp, info->agf_bp,
++			info->agno, XFS_BTNUM_BNO);
++	key->ar_startblock = info->low.rm_startblock;
++	key[1].ar_startblock = info->high.rm_startblock;
++	return xfs_alloc_query_range(*curpp, key, &key[1],
++			xfs_getfsmap_datadev_bnobt_helper, info);
++}
++
++/* Execute a getfsmap query against the regular data device's bnobt. */
++STATIC int
++xfs_getfsmap_datadev_bnobt(
++	struct xfs_trans		*tp,
++	struct xfs_fsmap		*keys,
++	struct xfs_getfsmap_info	*info)
++{
++	struct xfs_alloc_rec_incore	akeys[2];
++
++	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
++	return __xfs_getfsmap_datadev(tp, keys, info,
++			xfs_getfsmap_datadev_bnobt_query, &akeys[0]);
++}
++
+ /* Do we recognize the device? */
+ STATIC bool
+ xfs_getfsmap_is_valid_device(
+@@ -652,8 +717,6 @@ xfs_getfsmap(
+ 	int				i;
+ 	int				error = 0;
+ 
+-	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+-		return -EOPNOTSUPP;
+ 	if (head->fmh_iflags & ~FMH_IF_VALID)
+ 		return -EINVAL;
+ 	if (!xfs_getfsmap_is_valid_device(mp, &head->fmh_keys[0]) ||
+@@ -665,7 +728,10 @@ xfs_getfsmap(
+ 	/* Set up our device handlers. */
+ 	memset(handlers, 0, sizeof(handlers));
+ 	handlers[0].dev = new_encode_dev(mp->m_ddev_targp->bt_dev);
+-	handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		handlers[0].fn = xfs_getfsmap_datadev_rmapbt;
++	else
++		handlers[0].fn = xfs_getfsmap_datadev_bnobt;
+ 	if (mp->m_logdev_targp != mp->m_ddev_targp) {
+ 		handlers[1].dev = new_encode_dev(mp->m_logdev_targp->bt_dev);
+ 		handlers[1].fn = xfs_getfsmap_logdev;
 
-I'm particularly looking for acks & reviews of the VFS header, the ext4
-patch, and the manpage.  Patches 1, 9, and 10.
-
-Questions?  Comments?
-
---D
-
-[1] https://lwn.net/Articles/685978/
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
