@@ -1,417 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32934 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751945AbdC2Sw3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Mar 2017 14:52:29 -0400
-Date: Wed, 29 Mar 2017 14:52:26 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: move the inline directory verifiers
-Message-ID: <20170329185225.GA30670@bfoster.bfoster>
-References: <20170327230315.GB4864@birch.djwong.org>
- <20170328125104.GA4100@bfoster.bfoster>
- <20170328150047.GB4874@birch.djwong.org>
- <20170328151105.GC4100@bfoster.bfoster>
- <20170328172444.GE4100@bfoster.bfoster>
- <20170329182156.GC4864@birch.djwong.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170329182156.GC4864@birch.djwong.org>
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:33324 "EHLO
+        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932986AbdC3LLy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 07:11:54 -0400
+Received: by mail-qk0-f174.google.com with SMTP id d201so6422587qkc.0
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Mar 2017 04:11:53 -0700 (PDT)
+Message-ID: <1490872308.2694.1.camel@redhat.com>
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and
+ optimization
+From: Jeff Layton <jlayton@redhat.com>
+Date: Thu, 30 Mar 2017 07:11:48 -0400
+In-Reply-To: <20170330064724.GA21542@quack2.suse.cz>
+References: <20161222084549.GA8833@infradead.org>
+         <1482417724.3924.39.camel@redhat.com> <20170320214327.GA5098@fieldses.org>
+         <20170321134500.GA1318@infradead.org> <20170321163011.GA16666@fieldses.org>
+         <1490117004.2542.1.camel@redhat.com> <20170321183006.GD17872@fieldses.org>
+         <1490122013.2593.1.camel@redhat.com>
+         <20170329111507.GA18467@quack2.suse.cz>
+         <1490810071.2678.6.camel@redhat.com>
+         <20170330064724.GA21542@quack2.suse.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Wed, Mar 29, 2017 at 11:21:57AM -0700, Darrick J. Wong wrote:
-> On Tue, Mar 28, 2017 at 01:24:44PM -0400, Brian Foster wrote:
-> > On Tue, Mar 28, 2017 at 11:11:05AM -0400, Brian Foster wrote:
-> > > On Tue, Mar 28, 2017 at 08:00:47AM -0700, Darrick J. Wong wrote:
-> > > > On Tue, Mar 28, 2017 at 08:51:05AM -0400, Brian Foster wrote:
-> > > > > On Mon, Mar 27, 2017 at 04:03:15PM -0700, Darrick J. Wong wrote:
-> > > > > > The inline directory verifiers should be called on the inode fork data,
-> > > > > > which means after iformat_local on the read side, and prior to
-> > > > > > ifork_flush on the write side.  This makes the fork verifier more
-> > > > > > consistent with the way buffer verifiers work -- i.e. they will operate
-> > > > > > on the memory buffer that the code will be reading and writing directly.
+On Thu, 2017-03-30 at 08:47 +0200, Jan Kara wrote:
+> On Wed 29-03-17 13:54:31, Jeff Layton wrote:
+> > On Wed, 2017-03-29 at 13:15 +0200, Jan Kara wrote:
+> > > On Tue 21-03-17 14:46:53, Jeff Layton wrote:
+> > > > On Tue, 2017-03-21 at 14:30 -0400, J. Bruce Fields wrote:
+> > > > > On Tue, Mar 21, 2017 at 01:23:24PM -0400, Jeff Layton wrote:
+> > > > > > On Tue, 2017-03-21 at 12:30 -0400, J. Bruce Fields wrote:
+> > > > > > > - It's durable; the above comparison still works if there were reboots
+> > > > > > >   between the two i_version checks.
+> > > > > > > 	- I don't know how realistic this is--we may need to figure out
+> > > > > > > 	  if there's a weaker guarantee that's still useful.  Do
+> > > > > > > 	  filesystems actually make ctime/mtime/i_version changes
+> > > > > > > 	  atomically with the changes that caused them?  What if a
+> > > > > > > 	  change attribute is exposed to an NFS client but doesn't make
+> > > > > > > 	  it to disk, and then that value is reused after reboot?
+> > > > > > > 
 > > > > > > 
-> > > > > > Also revise the verifier function to return -EFSCORRUPTED so that we
-> > > > > > don't flood the logs with corruption messages and assert notices.
-> > > > > > 
-> > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > ---
-> > > > > > v2: get the inode d_ops the proper way
-> > > > > > ---
+> > > > > > Yeah, there could be atomicity there. If we bump i_version, we'll mark
+> > > > > > the inode dirty and I think that will end up with the new i_version at
+> > > > > > least being journalled before __mark_inode_dirty returns.
 > > > > > 
-> > > > > What does this apply against?
+> > > > > So you think the filesystem can provide the atomicity?  In more detail:
+> > > > > 
 > > > > 
-> > > > It ought to apply against the previous inline dir verifier patch.
+> > > > Sorry, I hit send too quickly. That should have read:
 > > > > 
+> > > > "Yeah, there could be atomicity issues there."
+> > > > 
+> > > > I think providing that level of atomicity may be difficult, though
+> > > > maybe there's some way to make the querying of i_version block until
+> > > > the inode update has been journalled?
 > > > 
-> > > Hm, doesn't apply against [1] for me. Care to just repost these as a
-> > > series if the dependent code hasn't been merged yet?
+> > > Just to complement what Dave said from ext4 side - similarly as with XFS
+> > > ext4 doesn't guarantee atomicity unless fsync() has completed on the file.
+> > > Until that you can see arbitrary combination of data & i_version after the
+> > > crash. We do take care to keep data and metadata in sync only when there
+> > > are security implications to that (like exposing uninitialized disk blocks)
+> > > and if not, we are as lazy as we can to improve performance...
 > > > 
-> > > Brian
-> > > 
-> > > [1] https://patchwork.kernel.org/patch/9626859/
 > > > 
 > > 
-> > I lost track of the fact that the first patch went into -rc and thus
-> > confused myself over where this should apply. This applies to 4.11.0-rc4
-> > and looks fine to me:
+> > Yeah, I think what we'll have to do here is ensure that those
+> > filesystems do an fsync prior to reporting the i_version getattr
+> > codepath. It's not pretty, but I don't see a real alternative.
 > 
-> Does anyone have a problem if I send this to Linus for 4.11-rc5?
-> I'd rather atone for my sins sooner than later. :)
+> Hum, so are we fine if i_version just changes (increases) for all inodes
+> after a server crash? If I understand its use right, it would mean
+> invalidation of all client's caches but that is not such a big deal given
+> how frequent server crashes should be, right?
+> 
+> Because if above is acceptable we could make reported i_version to be a sum
+> of "superblock crash counter" and "inode i_version". We increment
+> "superblock crash counter" whenever we detect unclean filesystem shutdown.
+> That way after a crash we are guaranteed each inode will report new
+> i_version (the sum would probably have to look like "superblock crash
+> counter" * 65536 + "inode i_version" so that we avoid reusing possible
+> i_version numbers we gave away but did not write to disk but still...).
+> Thoughts?
 > 
 
-No issues from me. You might want to give Dave 24h or so to ack/nack
-though..
+That does sound like a good idea. This is a 64 bit value, so we should
+be able to carve out some upper bits for a crash counter without risking
+wrapping.
 
-Brian
-
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> Ok, thanks.
-> 
-> --D
-> 
-> > 
-> > > > --D
-> > > > 
-> > > > > 
-> > > > > Brian
-> > > > > 
-> > > > > >  fs/xfs/libxfs/xfs_dir2_priv.h  |    3 +-
-> > > > > >  fs/xfs/libxfs/xfs_dir2_sf.c    |   63 ++++++++++++++++++++++++++--------------
-> > > > > >  fs/xfs/libxfs/xfs_inode_fork.c |   35 ++++++++--------------
-> > > > > >  fs/xfs/libxfs/xfs_inode_fork.h |    2 +
-> > > > > >  fs/xfs/xfs_inode.c             |   19 ++++++------
-> > > > > >  5 files changed, 66 insertions(+), 56 deletions(-)
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-> > > > > > index eb00bc1..39f8604 100644
-> > > > > > --- a/fs/xfs/libxfs/xfs_dir2_priv.h
-> > > > > > +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-> > > > > > @@ -125,8 +125,7 @@ extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
-> > > > > >  extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
-> > > > > >  extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
-> > > > > >  extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
-> > > > > > -extern int xfs_dir2_sf_verify(struct xfs_mount *mp, struct xfs_dir2_sf_hdr *sfp,
-> > > > > > -		int size);
-> > > > > > +extern int xfs_dir2_sf_verify(struct xfs_inode *ip);
-> > > > > >  
-> > > > > >  /* xfs_dir2_readdir.c */
-> > > > > >  extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
-> > > > > > diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-> > > > > > index 96b45cd..e84af09 100644
-> > > > > > --- a/fs/xfs/libxfs/xfs_dir2_sf.c
-> > > > > > +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-> > > > > > @@ -632,36 +632,49 @@ xfs_dir2_sf_check(
-> > > > > >  /* Verify the consistency of an inline directory. */
-> > > > > >  int
-> > > > > >  xfs_dir2_sf_verify(
-> > > > > > -	struct xfs_mount		*mp,
-> > > > > > -	struct xfs_dir2_sf_hdr		*sfp,
-> > > > > > -	int				size)
-> > > > > > +	struct xfs_inode		*ip)
-> > > > > >  {
-> > > > > > +	struct xfs_mount		*mp = ip->i_mount;
-> > > > > > +	struct xfs_dir2_sf_hdr		*sfp;
-> > > > > >  	struct xfs_dir2_sf_entry	*sfep;
-> > > > > >  	struct xfs_dir2_sf_entry	*next_sfep;
-> > > > > >  	char				*endp;
-> > > > > >  	const struct xfs_dir_ops	*dops;
-> > > > > > +	struct xfs_ifork		*ifp;
-> > > > > >  	xfs_ino_t			ino;
-> > > > > >  	int				i;
-> > > > > >  	int				i8count;
-> > > > > >  	int				offset;
-> > > > > > +	int				size;
-> > > > > > +	int				error;
-> > > > > >  	__uint8_t			filetype;
-> > > > > >  
-> > > > > > +	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
-> > > > > > +	/*
-> > > > > > +	 * xfs_iread calls us before xfs_setup_inode sets up ip->d_ops,
-> > > > > > +	 * so we can only trust the mountpoint to have the right pointer.
-> > > > > > +	 */
-> > > > > >  	dops = xfs_dir_get_ops(mp, NULL);
-> > > > > >  
-> > > > > > +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> > > > > > +	sfp = (struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data;
-> > > > > > +	size = ifp->if_bytes;
-> > > > > > +
-> > > > > >  	/*
-> > > > > >  	 * Give up if the directory is way too short.
-> > > > > >  	 */
-> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, size >
-> > > > > > -			offsetof(struct xfs_dir2_sf_hdr, parent));
-> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, size >=
-> > > > > > -			xfs_dir2_sf_hdr_size(sfp->i8count));
-> > > > > > +	if (size <= offsetof(struct xfs_dir2_sf_hdr, parent) ||
-> > > > > > +	    size < xfs_dir2_sf_hdr_size(sfp->i8count))
-> > > > > > +		return -EFSCORRUPTED;
-> > > > > >  
-> > > > > >  	endp = (char *)sfp + size;
-> > > > > >  
-> > > > > >  	/* Check .. entry */
-> > > > > >  	ino = dops->sf_get_parent_ino(sfp);
-> > > > > >  	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
-> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
-> > > > > > +	error = xfs_dir_ino_validate(mp, ino);
-> > > > > > +	if (error)
-> > > > > > +		return error;
-> > > > > >  	offset = dops->data_first_offset;
-> > > > > >  
-> > > > > >  	/* Check all reported entries */
-> > > > > > @@ -672,12 +685,12 @@ xfs_dir2_sf_verify(
-> > > > > >  		 * Check the fixed-offset parts of the structure are
-> > > > > >  		 * within the data buffer.
-> > > > > >  		 */
-> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp,
-> > > > > > -				((char *)sfep + sizeof(*sfep)) < endp);
-> > > > > > +		if (((char *)sfep + sizeof(*sfep)) >= endp)
-> > > > > > +			return -EFSCORRUPTED;
-> > > > > >  
-> > > > > >  		/* Don't allow names with known bad length. */
-> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen > 0);
-> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen < MAXNAMELEN);
-> > > > > > +		if (sfep->namelen == 0)
-> > > > > > +			return -EFSCORRUPTED;
-> > > > > >  
-> > > > > >  		/*
-> > > > > >  		 * Check that the variable-length part of the structure is
-> > > > > > @@ -685,33 +698,39 @@ xfs_dir2_sf_verify(
-> > > > > >  		 * name component, so nextentry is an acceptable test.
-> > > > > >  		 */
-> > > > > >  		next_sfep = dops->sf_nextentry(sfp, sfep);
-> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp, endp >= (char *)next_sfep);
-> > > > > > +		if (endp < (char *)next_sfep)
-> > > > > > +			return -EFSCORRUPTED;
-> > > > > >  
-> > > > > >  		/* Check that the offsets always increase. */
-> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp,
-> > > > > > -				xfs_dir2_sf_get_offset(sfep) >= offset);
-> > > > > > +		if (xfs_dir2_sf_get_offset(sfep) < offset)
-> > > > > > +			return -EFSCORRUPTED;
-> > > > > >  
-> > > > > >  		/* Check the inode number. */
-> > > > > >  		ino = dops->sf_get_ino(sfp, sfep);
-> > > > > >  		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
-> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
-> > > > > > +		error = xfs_dir_ino_validate(mp, ino);
-> > > > > > +		if (error)
-> > > > > > +			return error;
-> > > > > >  
-> > > > > >  		/* Check the file type. */
-> > > > > >  		filetype = dops->sf_get_ftype(sfep);
-> > > > > > -		XFS_WANT_CORRUPTED_RETURN(mp, filetype < XFS_DIR3_FT_MAX);
-> > > > > > +		if (filetype >= XFS_DIR3_FT_MAX)
-> > > > > > +			return -EFSCORRUPTED;
-> > > > > >  
-> > > > > >  		offset = xfs_dir2_sf_get_offset(sfep) +
-> > > > > >  				dops->data_entsize(sfep->namelen);
-> > > > > >  
-> > > > > >  		sfep = next_sfep;
-> > > > > >  	}
-> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, i8count == sfp->i8count);
-> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, (void *)sfep == (void *)endp);
-> > > > > > +	if (i8count != sfp->i8count)
-> > > > > > +		return -EFSCORRUPTED;
-> > > > > > +	if ((void *)sfep != (void *)endp)
-> > > > > > +		return -EFSCORRUPTED;
-> > > > > >  
-> > > > > >  	/* Make sure this whole thing ought to be in local format. */
-> > > > > > -	XFS_WANT_CORRUPTED_RETURN(mp, offset +
-> > > > > > -	       (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
-> > > > > > -	       (uint)sizeof(xfs_dir2_block_tail_t) <= mp->m_dir_geo->blksize);
-> > > > > > +	if (offset + (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
-> > > > > > +	    (uint)sizeof(xfs_dir2_block_tail_t) > mp->m_dir_geo->blksize)
-> > > > > > +		return -EFSCORRUPTED;
-> > > > > >  
-> > > > > >  	return 0;
-> > > > > >  }
-> > > > > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> > > > > > index 9653e96..8a37efe 100644
-> > > > > > --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> > > > > > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> > > > > > @@ -212,6 +212,16 @@ xfs_iformat_fork(
-> > > > > >  	if (error)
-> > > > > >  		return error;
-> > > > > >  
-> > > > > > +	/* Check inline dir contents. */
-> > > > > > +	if (S_ISDIR(VFS_I(ip)->i_mode) &&
-> > > > > > +	    dip->di_format == XFS_DINODE_FMT_LOCAL) {
-> > > > > > +		error = xfs_dir2_sf_verify(ip);
-> > > > > > +		if (error) {
-> > > > > > +			xfs_idestroy_fork(ip, XFS_DATA_FORK);
-> > > > > > +			return error;
-> > > > > > +		}
-> > > > > > +	}
-> > > > > > +
-> > > > > >  	if (xfs_is_reflink_inode(ip)) {
-> > > > > >  		ASSERT(ip->i_cowfp == NULL);
-> > > > > >  		xfs_ifork_init_cow(ip);
-> > > > > > @@ -322,8 +332,6 @@ xfs_iformat_local(
-> > > > > >  	int		whichfork,
-> > > > > >  	int		size)
-> > > > > >  {
-> > > > > > -	int		error;
-> > > > > > -
-> > > > > >  	/*
-> > > > > >  	 * If the size is unreasonable, then something
-> > > > > >  	 * is wrong and we just bail out rather than crash in
-> > > > > > @@ -339,14 +347,6 @@ xfs_iformat_local(
-> > > > > >  		return -EFSCORRUPTED;
-> > > > > >  	}
-> > > > > >  
-> > > > > > -	if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
-> > > > > > -		error = xfs_dir2_sf_verify(ip->i_mount,
-> > > > > > -				(struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip),
-> > > > > > -				size);
-> > > > > > -		if (error)
-> > > > > > -			return error;
-> > > > > > -	}
-> > > > > > -
-> > > > > >  	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size);
-> > > > > >  	return 0;
-> > > > > >  }
-> > > > > > @@ -867,7 +867,7 @@ xfs_iextents_copy(
-> > > > > >   * In these cases, the format always takes precedence, because the
-> > > > > >   * format indicates the current state of the fork.
-> > > > > >   */
-> > > > > > -int
-> > > > > > +void
-> > > > > >  xfs_iflush_fork(
-> > > > > >  	xfs_inode_t		*ip,
-> > > > > >  	xfs_dinode_t		*dip,
-> > > > > > @@ -877,7 +877,6 @@ xfs_iflush_fork(
-> > > > > >  	char			*cp;
-> > > > > >  	xfs_ifork_t		*ifp;
-> > > > > >  	xfs_mount_t		*mp;
-> > > > > > -	int			error;
-> > > > > >  	static const short	brootflag[2] =
-> > > > > >  		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
-> > > > > >  	static const short	dataflag[2] =
-> > > > > > @@ -886,7 +885,7 @@ xfs_iflush_fork(
-> > > > > >  		{ XFS_ILOG_DEXT, XFS_ILOG_AEXT };
-> > > > > >  
-> > > > > >  	if (!iip)
-> > > > > > -		return 0;
-> > > > > > +		return;
-> > > > > >  	ifp = XFS_IFORK_PTR(ip, whichfork);
-> > > > > >  	/*
-> > > > > >  	 * This can happen if we gave up in iformat in an error path,
-> > > > > > @@ -894,19 +893,12 @@ xfs_iflush_fork(
-> > > > > >  	 */
-> > > > > >  	if (!ifp) {
-> > > > > >  		ASSERT(whichfork == XFS_ATTR_FORK);
-> > > > > > -		return 0;
-> > > > > > +		return;
-> > > > > >  	}
-> > > > > >  	cp = XFS_DFORK_PTR(dip, whichfork);
-> > > > > >  	mp = ip->i_mount;
-> > > > > >  	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
-> > > > > >  	case XFS_DINODE_FMT_LOCAL:
-> > > > > > -		if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
-> > > > > > -			error = xfs_dir2_sf_verify(mp,
-> > > > > > -					(struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data,
-> > > > > > -					ifp->if_bytes);
-> > > > > > -			if (error)
-> > > > > > -				return error;
-> > > > > > -		}
-> > > > > >  		if ((iip->ili_fields & dataflag[whichfork]) &&
-> > > > > >  		    (ifp->if_bytes > 0)) {
-> > > > > >  			ASSERT(ifp->if_u1.if_data != NULL);
-> > > > > > @@ -959,7 +951,6 @@ xfs_iflush_fork(
-> > > > > >  		ASSERT(0);
-> > > > > >  		break;
-> > > > > >  	}
-> > > > > > -	return 0;
-> > > > > >  }
-> > > > > >  
-> > > > > >  /*
-> > > > > > diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> > > > > > index 132dc59..7fb8365 100644
-> > > > > > --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> > > > > > +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> > > > > > @@ -140,7 +140,7 @@ typedef struct xfs_ifork {
-> > > > > >  struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
-> > > > > >  
-> > > > > >  int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
-> > > > > > -int		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
-> > > > > > +void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
-> > > > > >  				struct xfs_inode_log_item *, int);
-> > > > > >  void		xfs_idestroy_fork(struct xfs_inode *, int);
-> > > > > >  void		xfs_idata_realloc(struct xfs_inode *, int, int);
-> > > > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > > > > index c7fe2c2..7605d83 100644
-> > > > > > --- a/fs/xfs/xfs_inode.c
-> > > > > > +++ b/fs/xfs/xfs_inode.c
-> > > > > > @@ -50,6 +50,7 @@
-> > > > > >  #include "xfs_log.h"
-> > > > > >  #include "xfs_bmap_btree.h"
-> > > > > >  #include "xfs_reflink.h"
-> > > > > > +#include "xfs_dir2_priv.h"
-> > > > > >  
-> > > > > >  kmem_zone_t *xfs_inode_zone;
-> > > > > >  
-> > > > > > @@ -3475,7 +3476,6 @@ xfs_iflush_int(
-> > > > > >  	struct xfs_inode_log_item *iip = ip->i_itemp;
-> > > > > >  	struct xfs_dinode	*dip;
-> > > > > >  	struct xfs_mount	*mp = ip->i_mount;
-> > > > > > -	int			error;
-> > > > > >  
-> > > > > >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-> > > > > >  	ASSERT(xfs_isiflocked(ip));
-> > > > > > @@ -3547,6 +3547,12 @@ xfs_iflush_int(
-> > > > > >  	if (ip->i_d.di_version < 3)
-> > > > > >  		ip->i_d.di_flushiter++;
-> > > > > >  
-> > > > > > +	/* Check the inline directory data. */
-> > > > > > +	if (S_ISDIR(VFS_I(ip)->i_mode) &&
-> > > > > > +	    ip->i_d.di_format == XFS_DINODE_FMT_LOCAL &&
-> > > > > > +	    xfs_dir2_sf_verify(ip))
-> > > > > > +		goto corrupt_out;
-> > > > > > +
-> > > > > >  	/*
-> > > > > >  	 * Copy the dirty parts of the inode into the on-disk inode.  We always
-> > > > > >  	 * copy out the core of the inode, because if the inode is dirty at all
-> > > > > > @@ -3558,14 +3564,9 @@ xfs_iflush_int(
-> > > > > >  	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
-> > > > > >  		ip->i_d.di_flushiter = 0;
-> > > > > >  
-> > > > > > -	error = xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
-> > > > > > -	if (error)
-> > > > > > -		return error;
-> > > > > > -	if (XFS_IFORK_Q(ip)) {
-> > > > > > -		error = xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
-> > > > > > -		if (error)
-> > > > > > -			return error;
-> > > > > > -	}
-> > > > > > +	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
-> > > > > > +	if (XFS_IFORK_Q(ip))
-> > > > > > +		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
-> > > > > >  	xfs_inobp_check(mp, bp);
-> > > > > >  
-> > > > > >  	/*
-> > > > > > --
-> > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The other constraint here is that we'd like any later version of the
+counter to be larger than any earlier value that was handed out. I think
+this idea would still satisfy that.
+-- 
+Jeff Layton <jlayton@redhat.com>
