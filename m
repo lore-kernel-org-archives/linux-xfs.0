@@ -1,279 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36112 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754644AbdC1IrB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Mar 2017 04:47:01 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH v9 1/2] fsstress: add mwrite/mread into test operation list
-Date: Tue, 28 Mar 2017 16:46:34 +0800
-Message-Id: <1490690795-4527-1-git-send-email-zlang@redhat.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38795 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933443AbdC3P6C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 11:58:02 -0400
+Subject: [PATCH v8 0/9] vfs/xfs/ext4: GETFSMAP support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 30 Mar 2017 08:57:55 -0700
+Message-ID: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-api@vger.kernel.org
 
-mmap as a popular and basic operation, most of softwares use it to
-access files. More and more customers report bugs related with
-mmap/munmap and other stress conditions.
+Hi all,
 
-So add mmap read/write test into fsstress to increase mmap related
-stress to reproduce or find more bugs easily.
+This is a patchset implementing the GETFSMAP ioctl that we discussed at
+LSFMM 2016[1] and 2017.  GETFSMAP takes two search keys, which are
+defined as a tuple of (device, physical block, owner, file offset), and
+returns all known space mapping information for the given filesystem.
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
- configure.ac   |   1 +
- ltp/fsstress.c | 159 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- src/global.h   |   4 ++
- 3 files changed, 162 insertions(+), 2 deletions(-)
+The XFS implementation is fully complete for filesystems having the new
+reverse-mapping feature introduced in 4.8.  For legacy XFS filesystems
+and ext4, there is no reverse-mapping data and the returned extent
+information is restricted to listing "free", "unknown", or "metadata"
+owners.
 
-diff --git a/configure.ac b/configure.ac
-index fa48d2f..246f92e 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -32,6 +32,7 @@ AC_HEADER_STDC
- 			xfs/platform_defs.h	\
- 			btrfs/ioctl.h		\
- 			cifs/ioctl.h		\
-+			sys/mman.h		\
-     ])
- 
- AC_CHECK_HEADERS([xfs/xfs_log_format.h],,,[
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 7e7cf60..6d8f117 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -17,6 +17,7 @@
-  */
- 
- #include <linux/fs.h>
-+#include <setjmp.h>
- #include "global.h"
- 
- #ifdef HAVE_ATTR_XATTR_H
-@@ -69,6 +70,8 @@ typedef enum {
- 	OP_LINK,
- 	OP_MKDIR,
- 	OP_MKNOD,
-+	OP_MREAD,
-+	OP_MWRITE,
- 	OP_PUNCH,
- 	OP_ZERO,
- 	OP_COLLAPSE,
-@@ -168,6 +171,8 @@ void	getdents_f(int, long);
- void	link_f(int, long);
- void	mkdir_f(int, long);
- void	mknod_f(int, long);
-+void	mread_f(int, long);
-+void	mwrite_f(int, long);
- void	punch_f(int, long);
- void	zero_f(int, long);
- void	collapse_f(int, long);
-@@ -208,6 +213,8 @@ opdesc_t	ops[] = {
- 	{ OP_LINK, "link", link_f, 1, 1 },
- 	{ OP_MKDIR, "mkdir", mkdir_f, 2, 1 },
- 	{ OP_MKNOD, "mknod", mknod_f, 2, 1 },
-+	{ OP_MREAD, "mread", mread_f, 2, 0 },
-+	{ OP_MWRITE, "mwrite", mwrite_f, 2, 1 },
- 	{ OP_PUNCH, "punch", punch_f, 1, 1 },
- 	{ OP_ZERO, "zero", zero_f, 1, 1 },
- 	{ OP_COLLAPSE, "collapse", collapse_f, 1, 1 },
-@@ -262,6 +269,7 @@ int		cleanup = 0;
- int		verbose = 0;
- int		verifiable_log = 0;
- sig_atomic_t	should_stop = 0;
-+sigjmp_buf	*sigbus_jmp = NULL;
- char		*execute_cmd = NULL;
- int		execute_freq = 1;
- struct print_string	flag_str = {0};
-@@ -311,7 +319,26 @@ void	zero_freq(void);
- 
- void sg_handler(int signum)
- {
--	should_stop = 1;
-+	switch (signum) {
-+	case SIGTERM:
-+		should_stop = 1;
-+		break;
-+	case SIGBUS:
-+		/*
-+		 * Only handle SIGBUS when mmap write to a hole and no
-+		 * block can be allocated due to ENOSPC, abort otherwise.
-+		 */
-+		if (sigbus_jmp) {
-+			siglongjmp(*sigbus_jmp, -1);
-+		} else {
-+			printf("Unknown SIGBUS is caught, Abort!\n");
-+			abort();
-+		}
-+		/* should not reach here */
-+		break;
-+	default:
-+		break;
-+	}
- }
- 
- int main(int argc, char **argv)
-@@ -527,10 +554,13 @@ int main(int argc, char **argv)
- 
- 	for (i = 0; i < nproc; i++) {
- 		if (fork() == 0) {
--			action.sa_handler = SIG_DFL;
- 			sigemptyset(&action.sa_mask);
-+			action.sa_handler = SIG_DFL;
- 			if (sigaction(SIGTERM, &action, 0))
- 				return 1;
-+			action.sa_handler = sg_handler;
-+			if (sigaction(SIGBUS, &action, 0))
-+				return 1;
- #ifdef HAVE_SYS_PRCTL_H
- 			prctl(PR_SET_PDEATHSIG, SIGKILL);
- 			if (getppid() == 1) /* parent died already? */
-@@ -2655,6 +2685,131 @@ mknod_f(int opno, long r)
- 	free_pathname(&f);
- }
- 
-+#ifdef HAVE_SYS_MMAN_H
-+struct print_flags mmap_flags[] = {
-+	{ MAP_SHARED, "SHARED"},
-+	{ MAP_PRIVATE, "PRIVATE"},
-+	{ -1, NULL}
-+};
-+
-+#define translate_mmap_flags(flags)	  \
-+	({translate_flags(flags, "|", mmap_flags);})
-+#endif
-+
-+void
-+do_mmap(int opno, long r, int prot)
-+{
-+#ifdef HAVE_SYS_MMAN_H
-+	char		*addr;
-+	int		e;
-+	pathname_t	f;
-+	int		fd;
-+	size_t		len;
-+	__int64_t	lr;
-+	off64_t		off;
-+	int		flags;
-+	struct stat64	stb;
-+	int		v;
-+	char		st[1024];
-+	sigjmp_buf	sigbus_jmpbuf;
-+
-+	init_pathname(&f);
-+	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
-+		if (v)
-+			printf("%d/%d: do_mmap - no filename\n", procid, opno);
-+		free_pathname(&f);
-+		return;
-+	}
-+	fd = open_path(&f, O_RDWR);
-+	e = fd < 0 ? errno : 0;
-+	check_cwd();
-+	if (fd < 0) {
-+		if (v)
-+			printf("%d/%d: do_mmap - open %s failed %d\n",
-+			       procid, opno, f.path, e);
-+		free_pathname(&f);
-+		return;
-+	}
-+	if (fstat64(fd, &stb) < 0) {
-+		if (v)
-+			printf("%d/%d: do_mmap - fstat64 %s failed %d\n",
-+			       procid, opno, f.path, errno);
-+		free_pathname(&f);
-+		close(fd);
-+		return;
-+	}
-+	inode_info(st, sizeof(st), &stb, v);
-+	if (stb.st_size == 0) {
-+		if (v)
-+			printf("%d/%d: do_mmap - %s%s zero size\n", procid, opno,
-+			       f.path, st);
-+		free_pathname(&f);
-+		close(fd);
-+		return;
-+	}
-+
-+	lr = ((__int64_t)random() << 32) + random();
-+	off = (off64_t)(lr % stb.st_size);
-+	off &= (off64_t)(~(sysconf(_SC_PAGE_SIZE) - 1));
-+	len = (size_t)(random() % MIN(stb.st_size - off, FILELEN_MAX)) + 1;
-+
-+	flags = (random() % 2) ? MAP_SHARED : MAP_PRIVATE;
-+	addr = mmap(NULL, len, prot, flags, fd, off);
-+	e = (addr == MAP_FAILED) ? errno : 0;
-+	if (e) {
-+		if (v)
-+			printf("%d/%d: do_mmap - mmap failed %s%s [%lld,%d,%s] %d\n",
-+			       procid, opno, f.path, st, (long long)off,
-+			       (int)len, translate_mmap_flags(flags), e);
-+		free_pathname(&f);
-+		close(fd);
-+		return;
-+	}
-+
-+	if (prot & PROT_WRITE) {
-+		if ((e = sigsetjmp(sigbus_jmpbuf, 1)) == 0) {
-+			sigbus_jmp = &sigbus_jmpbuf;
-+			memset(addr, nameseq & 0xff, len);
-+		}
-+	} else {
-+		char *buf;
-+		if ((buf = malloc(len)) != NULL) {
-+			memcpy(buf, addr, len);
-+			free(buf);
-+		}
-+	}
-+	munmap(addr, len);
-+	/* set NULL to stop other functions from doing siglongjmp */
-+	sigbus_jmp = NULL;
-+
-+	if (v)
-+		printf("%d/%d: %s %s%s [%lld,%d,%s] %s\n",
-+		       procid, opno, (prot & PROT_WRITE) ? "mwrite" : "mread",
-+		       f.path, st, (long long)off, (int)len,
-+		       translate_mmap_flags(flags),
-+		       (e == 0) ? "0" : "Bus error");
-+
-+	free_pathname(&f);
-+	close(fd);
-+#endif
-+}
-+
-+void
-+mread_f(int opno, long r)
-+{
-+#ifdef HAVE_SYS_MMAN_H
-+	do_mmap(opno, r, PROT_READ);
-+#endif
-+}
-+
-+void
-+mwrite_f(int opno, long r)
-+{
-+#ifdef HAVE_SYS_MMAN_H
-+	do_mmap(opno, r, PROT_WRITE);
-+#endif
-+}
-+
- void
- punch_f(int opno, long r)
- {
-diff --git a/src/global.h b/src/global.h
-index f63246b..3920c0d 100644
---- a/src/global.h
-+++ b/src/global.h
-@@ -178,4 +178,8 @@
- 
- #endif /* HAVE_LINUX_FALLOC_H */
- 
-+#ifdef HAVE_SYS_MMAN_H
-+#include <sys/mman.h>
-+#endif
-+
- #endif /* GLOBAL_H */
--- 
-2.7.4
+Space mapping information can be dumped via the xfs_io 'fsmap' command,
+and the upcoming xfs_spaceman/e2freefrag utilities analyze the free
+extent data to produce free space fragmentations reports.  Further in
+the future, the xfs_scrub utility will use GETFSMAP to assist in data
+block read verification, and dedupe programs can use it to further
+optimize deduplication factors.
 
+Kernel source can be found in the git repo [2] and userspace utilities
+in the git repo[3].  This patchset is all ready to go for 4.12 -- the
+XFS patches have already been reviewed by Brian Foster; and the ext4
+patch has been updated per some of Andreas Dilger's comments.  This
+posting will (I hope) be the last one before 4.12.  Test cases have
+already been integrated into xfstests, and the manpage will be the last
+patch.
+
+I'm particularly looking for acks & reviews of the VFS header, the ext4
+patch, and the manpage.  Patches 1, 9, and 10.
+
+Questions?  Comments?
+
+--D
+
+[1] https://lwn.net/Articles/685978/
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
