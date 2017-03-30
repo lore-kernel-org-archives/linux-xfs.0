@@ -1,91 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45370 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755546AbdC3Grd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Mar 2017 02:47:33 -0400
-Date: Thu, 30 Mar 2017 08:47:24 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
-Message-ID: <20170330064724.GA21542@quack2.suse.cz>
-References: <20161222084549.GA8833@infradead.org>
- <1482417724.3924.39.camel@redhat.com>
- <20170320214327.GA5098@fieldses.org>
- <20170321134500.GA1318@infradead.org>
- <20170321163011.GA16666@fieldses.org>
- <1490117004.2542.1.camel@redhat.com>
- <20170321183006.GD17872@fieldses.org>
- <1490122013.2593.1.camel@redhat.com>
- <20170329111507.GA18467@quack2.suse.cz>
- <1490810071.2678.6.camel@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:32618 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933443AbdC3P6X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 11:58:23 -0400
+Subject: [PATCH 3/9] xfs: provide a query_range function for freespace btrees
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 30 Mar 2017 08:58:18 -0700
+Message-ID: <149088949857.25895.936552860313902403.stgit@birch.djwong.org>
+In-Reply-To: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
+References: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1490810071.2678.6.camel@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-ext4@vger.kernel.org, linux-api@vger.kernel.org
 
-On Wed 29-03-17 13:54:31, Jeff Layton wrote:
-> On Wed, 2017-03-29 at 13:15 +0200, Jan Kara wrote:
-> > On Tue 21-03-17 14:46:53, Jeff Layton wrote:
-> > > On Tue, 2017-03-21 at 14:30 -0400, J. Bruce Fields wrote:
-> > > > On Tue, Mar 21, 2017 at 01:23:24PM -0400, Jeff Layton wrote:
-> > > > > On Tue, 2017-03-21 at 12:30 -0400, J. Bruce Fields wrote:
-> > > > > > - It's durable; the above comparison still works if there were reboots
-> > > > > >   between the two i_version checks.
-> > > > > > 	- I don't know how realistic this is--we may need to figure out
-> > > > > > 	  if there's a weaker guarantee that's still useful.  Do
-> > > > > > 	  filesystems actually make ctime/mtime/i_version changes
-> > > > > > 	  atomically with the changes that caused them?  What if a
-> > > > > > 	  change attribute is exposed to an NFS client but doesn't make
-> > > > > > 	  it to disk, and then that value is reused after reboot?
-> > > > > > 
-> > > > > 
-> > > > > Yeah, there could be atomicity there. If we bump i_version, we'll mark
-> > > > > the inode dirty and I think that will end up with the new i_version at
-> > > > > least being journalled before __mark_inode_dirty returns.
-> > > > 
-> > > > So you think the filesystem can provide the atomicity?  In more detail:
-> > > > 
-> > > 
-> > > Sorry, I hit send too quickly. That should have read:
-> > > 
-> > > "Yeah, there could be atomicity issues there."
-> > > 
-> > > I think providing that level of atomicity may be difficult, though
-> > > maybe there's some way to make the querying of i_version block until
-> > > the inode update has been journalled?
-> > 
-> > Just to complement what Dave said from ext4 side - similarly as with XFS
-> > ext4 doesn't guarantee atomicity unless fsync() has completed on the file.
-> > Until that you can see arbitrary combination of data & i_version after the
-> > crash. We do take care to keep data and metadata in sync only when there
-> > are security implications to that (like exposing uninitialized disk blocks)
-> > and if not, we are as lazy as we can to improve performance...
-> > 
-> > 
-> 
-> Yeah, I think what we'll have to do here is ensure that those
-> filesystems do an fsync prior to reporting the i_version getattr
-> codepath. It's not pretty, but I don't see a real alternative.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hum, so are we fine if i_version just changes (increases) for all inodes
-after a server crash? If I understand its use right, it would mean
-invalidation of all client's caches but that is not such a big deal given
-how frequent server crashes should be, right?
+Implement a query_range function for the bnobt and cntbt.  This will
+be used for getfsmap fallback if there is no rmapbt and by the online
+scrub and repair code.
 
-Because if above is acceptable we could make reported i_version to be a sum
-of "superblock crash counter" and "inode i_version". We increment
-"superblock crash counter" whenever we detect unclean filesystem shutdown.
-That way after a crash we are guaranteed each inode will report new
-i_version (the sum would probably have to look like "superblock crash
-counter" * 65536 + "inode i_version" so that we avoid reusing possible
-i_version numbers we gave away but did not write to disk but still...).
-Thoughts?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c |   42 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_alloc.h |   10 ++++++++++
+ 2 files changed, 52 insertions(+)
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 369adcc..f65b8d4 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2868,3 +2868,45 @@ xfs_free_extent(
+ 	xfs_trans_brelse(tp, agbp);
+ 	return error;
+ }
++
++struct xfs_alloc_query_range_info {
++	xfs_alloc_query_range_fn	fn;
++	void				*priv;
++};
++
++/* Format btree record and pass to our callback. */
++STATIC int
++xfs_alloc_query_range_helper(
++	struct xfs_btree_cur		*cur,
++	union xfs_btree_rec		*rec,
++	void				*priv)
++{
++	struct xfs_alloc_query_range_info	*query = priv;
++	struct xfs_alloc_rec_incore		irec;
++
++	irec.ar_startblock = be32_to_cpu(rec->alloc.ar_startblock);
++	irec.ar_blockcount = be32_to_cpu(rec->alloc.ar_blockcount);
++	return query->fn(cur, &irec, query->priv);
++}
++
++/* Find all free space within a given range of blocks. */
++int
++xfs_alloc_query_range(
++	struct xfs_btree_cur			*cur,
++	struct xfs_alloc_rec_incore		*low_rec,
++	struct xfs_alloc_rec_incore		*high_rec,
++	xfs_alloc_query_range_fn		fn,
++	void					*priv)
++{
++	union xfs_btree_irec			low_brec;
++	union xfs_btree_irec			high_brec;
++	struct xfs_alloc_query_range_info	query;
++
++	ASSERT(cur->bc_btnum == XFS_BTNUM_BNO);
++	low_brec.a = *low_rec;
++	high_brec.a = *high_rec;
++	query.priv = priv;
++	query.fn = fn;
++	return xfs_btree_query_range(cur, &low_brec, &high_brec,
++			xfs_alloc_query_range_helper, &query);
++}
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 2a8d0fa..6c2643c 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -219,4 +219,14 @@ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+ 
+ xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
+ 
++typedef int (*xfs_alloc_query_range_fn)(
++	struct xfs_btree_cur		*cur,
++	struct xfs_alloc_rec_incore	*rec,
++	void				*priv);
++
++int xfs_alloc_query_range(struct xfs_btree_cur *cur,
++		struct xfs_alloc_rec_incore *low_rec,
++		struct xfs_alloc_rec_incore *high_rec,
++		xfs_alloc_query_range_fn fn, void *priv);
++
+ #endif	/* __XFS_ALLOC_H__ */
+
