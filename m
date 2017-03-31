@@ -1,85 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f45.google.com ([209.85.213.45]:36349 "EHLO
-        mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932238AbdCaHfo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 03:35:44 -0400
-Received: by mail-vk0-f45.google.com with SMTP id s68so81611950vke.3
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Mar 2017 00:35:43 -0700 (PDT)
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:37669 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750763AbdCaESV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 00:18:21 -0400
+Date: Thu, 30 Mar 2017 21:18:00 -0700
+From: Calvin Owens <calvinowens@fb.com>
+Subject: [PATCH v3] xfs: Honor FALLOC_FL_KEEP_SIZE when punching ends of files
+Message-ID: <20170331041800.ugi4wgmbqx44mbwa@Haydn>
+References: <22a11e65fd5037498a78de61f3ed4dae466ad854.1489791330.git.calvinowens@fb.com>
+ <19504ff40a16efff2e51d85388fce5be578edbc3.1489985397.git.calvinowens@fb.com>
+ <20170321113932.GA58653@bfoster.bfoster>
+ <ab15bba5-601a-3297-959c-ddb04b42d082@fb.com>
 MIME-Version: 1.0
-In-Reply-To: <20170331014013.GP28800@wotan.suse.de>
-References: <20170315160017.27805-1-jtulak@redhat.com> <20170315160017.27805-12-jtulak@redhat.com>
- <40f76322-d4f1-5c48-3568-206a2564dad5@sandeen.net> <CACj3i71XTGsHM5U4Av=Ywn9Q7UY3QtU_ZCZrfwatfeUx0AHNNQ@mail.gmail.com>
- <CACj3i73ubkr6pGsxwkRvLwmnuCyPma+eF2L2HGMwaufHbazRNQ@mail.gmail.com> <20170331014013.GP28800@wotan.suse.de>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 31 Mar 2017 09:35:21 +0200
-Message-ID: <CACj3i70UJYPTXuRj_Ycqyni5GVB5FwnB-pKjk=A8Pejhqrf-1Q@mail.gmail.com>
-Subject: Re: [PATCH 11/22] mkfs: add test_default_value into conflict struct
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <ab15bba5-601a-3297-959c-ddb04b42d082@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, kernel-team@fb.com, stable@vger.kernel.org
 
-On Fri, Mar 31, 2017 at 3:40 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> On Wed, Mar 29, 2017 at 06:33:38PM +0200, Jan Tulak wrote:
->> https://github.com/jtulak/xfsprogs-dev
->
-> FWIW
->
-> mcgrof@ergon ~/devel $ git clone https://github.com/jtulak/xfsprogs-dev.git jtulak-xfsprogs
-> Cloning into 'jtulak-xfsprogs'...
-> remote: Counting objects: 20082, done.
-> remote: Compressing objects: 100% (3760/3760), done.
-> remote: Total 20082 (delta 16302), reused 20082 (delta 16302), pack-reused 0
-> Receiving objects: 100% (20082/20082), 5.99 MiB | 9.80 MiB/s, done.
-> Resolving deltas: 100% (16302/16302), done.
-> warning: remote HEAD refers to nonexistent ref, unable to checkout.
->
-> mcgrof@ergon ~/devel $ git clone https://github.com/jtulak/xfsprogs-dev.git --reference xfsprogs-dev/.git jtulak-xfsprogs
-> Cloning into 'jtulak-xfsprogs'...
-> remote: Counting objects: 96, done.
-> remote: Compressing objects: 100% (29/29), done.
-> remote: Total 96 (delta 72), reused 91 (delta 67), pack-reused 0
-> Unpacking objects: 100% (96/96), done.
-> warning: remote HEAD refers to nonexistent ref, unable to checkout.
->
-> A branch does work:
->
-> mcgrof@ergon ~/devel/xfsprogs-dev (git::master)$ git remote add jtulak https://github.com/jtulak/xfsprogs-dev.git
-> mcgrof@ergon ~/devel/xfsprogs-dev (git::master)$ git fetch jtulak
-> remote: Counting objects: 96, done.
-> remote: Compressing objects: 100% (29/29), done.
-> remote: Total 96 (delta 72), reused 91 (delta 67), pack-reused 0
-> Unpacking objects: 100% (96/96), done.
-> From https://github.com/jtulak/xfsprogs-dev
->  * [new branch]                github     -> jtulak/github
->
-> So one can just do:
->
-> git clone https://github.com/jtulak/xfsprogs-dev -b github j-xfs --reference  /home/mcgrof/devel/xfsprogs-dev/.git
-> Cloning into 'j-xfs'...
->
->   Luis
+When punching past EOF on XFS, fallocate(mode=PUNCH_HOLE|KEEP_SIZE) will
+round the file size up to the nearest multiple of PAGE_SIZE:
 
-o_O This is something I didn't think that there could be any issue.
-Well, next time I know that I need to push all branches this specific
-one originates from. Anyway, fixed, I pushed master branch on github
-too. Mine branch should be the default one, but git now knows the
-ref...
+  calvinow@vm-disks/generic-xfs-1 ~$ dd if=/dev/urandom of=test bs=2048 count=1
+  calvinow@vm-disks/generic-xfs-1 ~$ stat test
+    Size: 2048            Blocks: 8          IO Block: 4096   regular file
+  calvinow@vm-disks/generic-xfs-1 ~$ fallocate -n -l 2048 -o 2048 -p test
+  calvinow@vm-disks/generic-xfs-1 ~$ stat test
+    Size: 4096            Blocks: 8          IO Block: 4096   regular file
 
-$ git clone https://github.com/jtulak/xfsprogs-dev.git jtulak-xfsprogs
-Cloning into 'jtulak-xfsprogs'...
-remote: Counting objects: 20082, done.
-remote: Compressing objects: 100% (3760/3760), done.
-remote: Total 20082 (delta 16302), reused 20082 (delta 16302), pack-reused 0
-Receiving objects: 100% (20082/20082), 5.99 MiB | 3.39 MiB/s, done.
-Resolving deltas: 100% (16302/16302), done.
-$
+Commit 3c2bdc912a1cc050 ("xfs: kill xfs_zero_remaining_bytes") replaced
+xfs_zero_remaining_bytes() with calls to iomap helpers. The new helpers
+don't enforce that [pos,offset) lies strictly on [0,i_size) when being
+called from xfs_free_file_space(), so by "leaking" these ranges into
+xfs_zero_range() we get this buggy behavior.
 
-Thanks,
-Jan
+Fix this by reintroducing the checks xfs_zero_remaining_bytes() did
+against i_size at the bottom of xfs_free_file_space().
 
+Reported-by: Aaron Gao <gzh@fb.com>
+Fixes: 3c2bdc912a1cc050 ("xfs: kill xfs_zero_remaining_bytes")
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Brian Foster <bfoster@redhat.com>
+Cc: <stable@vger.kernel.org> # 4.8+
+Signed-off-by: Calvin Owens <calvinowens@fb.com>
+---
+ fs/xfs/xfs_bmap_util.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 8b75dce..828532c 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1311,8 +1311,16 @@ xfs_free_file_space(
+ 	/*
+ 	 * Now that we've unmap all full blocks we'll have to zero out any
+ 	 * partial block at the beginning and/or end.  xfs_zero_range is
+-	 * smart enough to skip any holes, including those we just created.
++	 * smart enough to skip any holes, including those we just created,
++	 * but we must take care not to zero beyond EOF and enlarge i_size.
+ 	 */
++
++	if (offset >= XFS_ISIZE(ip))
++		return 0;
++
++	if (offset + len > XFS_ISIZE(ip))
++		len = XFS_ISIZE(ip) - offset;
++
+ 	return xfs_zero_range(ip, offset, len, NULL);
+ }
+ 
 -- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+2.9.3
+
