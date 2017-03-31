@@ -1,37 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55982 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:52390 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933128AbdCaPth (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 11:49:37 -0400
-Date: Fri, 31 Mar 2017 08:49:31 -0700
+        with ESMTP id S933149AbdCaP4z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 11:56:55 -0400
+Date: Fri, 31 Mar 2017 08:56:53 -0700
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: statx manpage
-Message-ID: <20170331154931.GA7235@infradead.org>
-References: <20170327154003.GA5716@birch.djwong.org>
- <20170307050140.GA12946@infradead.org>
+Message-ID: <20170331155653.GA27655@infradead.org>
+References: <20170307050140.GA12946@infradead.org>
  <20170307000609.GG5280@birch.djwong.org>
  <10435.1488907375@warthog.procyon.org.uk>
- <20170324205322.GA4986@gmail.com>
- <E6DB8461-22DE-496C-8A4A-B0A2F3702750@dilger.ca>
- <23715.1490631926@warthog.procyon.org.uk>
- <20170327164628.GA15147@infradead.org>
- <1490641451.9691.4.camel@poochiereds.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1490641451.9691.4.camel@poochiereds.net>
+In-Reply-To: <10435.1488907375@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@poochiereds.net>
-Cc: Christoph Hellwig <hch@infradead.org>, David Howells <dhowells@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Andreas Dilger <adilger@dilger.ca>, Eric Biggers <ebiggers3@gmail.com>, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: David Howells <dhowells@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, mtk.manpages@gmail.com, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-man@vger.kernel.org
 
-On Mon, Mar 27, 2017 at 03:04:11PM -0400, Jeff Layton wrote:
-> I think we just have to clearly document that that will not be the
-> case. If they really expect the field to be there, then they need to
-> set the bit in the "want" mask -- it's really as simple as that.
+On Tue, Mar 07, 2017 at 05:22:55PM +0000, David Howells wrote:
+> Christoph Hellwig <hch@infradead.org> wrote:
+> 
+> > This would be great to have in 4.11 together with the initial statx
+> > implementation.  But until I see documentation and testcases for statx
+> > I don't really feel comfortable reviewing anything related to it.
+> 
+> Well, since you asked for documentation, here's a manual page for you to
+> review:-)
+> 
+> Note that as it isn't in glibc yet, I've left out all the
+> set-this-and-that-#define-to-make-it-appear stuff except where it is pertinent
+> to particular constants.
 
-If the usual local file systems set it but say NFS doesn't I will
-very much expect that people don't set the flag and create buggy
-programs a lot.  An API that doesn't give you more than you ask
-for is a lot more obvious.
+I think we'll initially need to make this a section 2 page as libcs
+will take a while to pick things up.  But in the end Michael will have
+to decide.  Adding linux-man to the Cc list so that the right people
+are involved.
+
+Quoting the rendered page below:
+
+>   Invoking statx():
+ 
+ This is an odd header for a man page.  Usually this would start as
+
+DESCRIPTION
+
+(in bold).
+
+>       [*] By absolute path.
+
+Odd way to enumerate in a man page - I'll leave it to the linux-man regulars
+to point out the right way, because I don't know it off-hand.
+
+>       AT_EMPTY_PATH (since Linux 2.6.39)
+
+All these have been there since statx was added, so we can remove the annotation.
+
+>           STATX_BASIC_STATS   [The stuff in the normal stat struct]
+
+Please enumerate the actual fields.
+
+>           STATX_ALL           [All currently available stuff]
+
+How about "All currently available fields"
