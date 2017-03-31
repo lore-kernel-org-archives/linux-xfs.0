@@ -1,30 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:52874 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933200AbdCaPnT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 11:43:19 -0400
-Date: Fri, 31 Mar 2017 16:43:15 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH] statx: reject unknown flags when using NULL path
-Message-ID: <20170331154315.GB29622@ZenIV.linux.org.uk>
-References: <20170311065823.4415-1-ebiggers3@gmail.com>
- <20170320171142.GA26906@gmail.com>
- <20170320174422.GA9304@infradead.org>
- <20170331153952.GA32460@infradead.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:36160 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933106AbdCaQ1Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 12:27:25 -0400
+Date: Fri, 31 Mar 2017 09:27:23 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] xfstests: Add first statx test
+Message-ID: <20170331162723.GA1693@infradead.org>
+References: <149097291264.20089.7010494679305716312.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170331153952.GA32460@infradead.org>
+In-Reply-To: <149097291264.20089.7010494679305716312.stgit@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Biggers <ebiggers3@gmail.com>, linux-fsdevel@vger.kernel.org, David Howells <dhowells@redhat.com>, mtk.manpages@gmail.com, "Darrick J . Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
+To: David Howells <dhowells@redhat.com>
+Cc: linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Fri, Mar 31, 2017 at 08:39:52AM -0700, Christoph Hellwig wrote:
-> Al, Linus:
-> 
-> can we get this in please?  It would be sad to grow another syscall
-> with an unchecked flags argument..
+This only compiles with warnings for me:
 
-Applied, will be in tonight pull request...
+stat_test.c: In function 'main':
+stat_test.c:557:3: warning: 'sval' may be used uninitialized in this function [-Wmaybe-uninitialized]
+   check(sval == scheck,
+   ^
+stat_test.c:451:20: note: 'sval' was declared here
+  long long scheck, sval;
+                    ^
+stat_test.c:542:3: warning: 'uval' may be used uninitialized in this function [-Wmaybe-uninitialized]
+   check(uval == ucheck,
+   ^
+stat_test.c:450:29: note: 'uval' was declared here
+  unsigned long long ucheck, uval;
+                             ^
+
+And running it then fails for me on Debian stable:
+
+
+--- tests/generic/420.out	2017-03-31 16:24:11.643845876 +0000
++++ /root/xfstests/results//generic/420.out.bad	2017-03-31 16:26:23.820512545 +0000
+@@ -8,4 +8,10 @@
+ 20+0 records out
+ Test statx on a symlink
+ Test statx on an AF_UNIX socket
++nc: invalid option -- 'U'
++/bin/nc: invalid option -- 'U'
++nc -h for helpnc -h for help
++
++/mnt/test/420-sock: No such file or directory
+ Test a hard link to a file
++/mnt/test/420-sock: No such file or directory
