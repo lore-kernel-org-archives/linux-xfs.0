@@ -1,159 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60436 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38790 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932934AbdCaPIv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 31 Mar 2017 11:08:51 -0400
-Subject: [PATCH 2/2] xfstests: Partially expand the documentation
+        id S933217AbdCaRbh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 31 Mar 2017 13:31:37 -0400
+Subject: [PATCH 2/8] statx: reject unknown flags when using NULL path
 From: David Howells <dhowells@redhat.com>
-Date: Fri, 31 Mar 2017 16:08:42 +0100
-Message-ID: <149097292222.20089.18240501624778225939.stgit@warthog.procyon.org.uk>
-In-Reply-To: <149097291264.20089.7010494679305716312.stgit@warthog.procyon.org.uk>
-References: <149097291264.20089.7010494679305716312.stgit@warthog.procyon.org.uk>
+Date: Fri, 31 Mar 2017 18:31:32 +0100
+Message-ID: <149098149245.28108.11509992452676050796.stgit@warthog.procyon.org.uk>
+In-Reply-To: <149098148523.28108.1441135633380173665.stgit@warthog.procyon.org.uk>
+References: <149098148523.28108.1441135633380173665.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
+To: viro@zeniv.linux.org.uk
+Cc: dhowells@redhat.com, Eric Biggers <ebiggers@google.com>, linux-kernel@vger.kernel.org, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Partially expand the documentation available in xfstests to include
-requirements checking and auxiliary programs for testing.
+From: Eric Biggers <ebiggers@google.com>
 
+The statx() system call currently accepts unknown flags when called with
+a NULL path to operate on a file descriptor.  Left unchanged, this could
+make it hard to introduce new query flags in the future, since
+applications may not be able to tell whether a given flag is supported.
+
+Fix this by failing the system call with EINVAL if any flags other than
+KSTAT_QUERY_FLAGS are specified in combination with a NULL path.
+
+Arguably, we could still permit known lookup-related flags such as
+AT_SYMLINK_NOFOLLOW.  However, that would be inconsistent with how
+sys_utimensat() behaves when passed a NULL path, which seems to be the
+closest precedent.  And given that the NULL path case is (I believe)
+mainly intended to be used to implement a wrapper function like fstatx()
+that doesn't have a path argument, I think rejecting lookup-related
+flags too is probably the best choice.
+
+Signed-off-by: Eric Biggers <ebiggers@google.com>
 Signed-off-by: David Howells <dhowells@redhat.com>
 ---
 
- doc/auxiliary-programs.txt   |   45 +++++++++++++++++++++++++++
- doc/requirement-checking.txt |   69 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 114 insertions(+)
- create mode 100644 doc/auxiliary-programs.txt
- create mode 100644 doc/requirement-checking.txt
+ fs/stat.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/doc/auxiliary-programs.txt b/doc/auxiliary-programs.txt
-new file mode 100644
-index 0000000..d5cc1cc
---- /dev/null
-+++ b/doc/auxiliary-programs.txt
-@@ -0,0 +1,45 @@
-+			==============================
-+			AUXILIARY PROGRAMS FOR TESTING
-+			==============================
+diff --git a/fs/stat.c b/fs/stat.c
+index fa0be59340cc..df484a60846d 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -130,9 +130,13 @@ EXPORT_SYMBOL(vfs_getattr);
+ int vfs_statx_fd(unsigned int fd, struct kstat *stat,
+ 		 u32 request_mask, unsigned int query_flags)
+ {
+-	struct fd f = fdget_raw(fd);
++	struct fd f;
+ 	int error = -EBADF;
+ 
++	if (query_flags & ~KSTAT_QUERY_FLAGS)
++		return -EINVAL;
 +
-+Not everything a test script can do is easily done within a test script;
-+sometimes it makes a lot more sense to write auxiliary program in C and have
-+the test script call them.  Auxiliary commands can be found in the src/
-+directory and in other packages.
-+
-+Contents:
-+
-+ - stat_test	-- statx syscall exercise
-+ - xfs_io	-- General I/O operation exercise
-+
-+
-+==================
-+QUICK DESCRIPTIONS
-+==================
-+
-+stat_test
-+
-+	The stat_test program is primarily designed to exercise the statx()
-+	system call.  It can check statx() against fstatat() and it can
-+	compare and check various file attributes.
-+
-+	See also:
-+		_require_statx
-+
-+
-+xfs_io
-+
-+	The xfs_io program can be found in the xfsprogs package and can be used
-+	to perform sequences of I/O commands, though it is limited to what it
-+	can do on open files.
-+
-+	xfs_io is a debugging tool that is aimed at examining regular file I/O
-+	paths rather than a raw XFS volume itself.  These code paths include
-+	not only the obvious read/write/mmap interfaces for manipulating files,
-+	but also cover all of the XFS extensions (such as space preallocation,
-+	additional inode flags, etc).
-+
-+	Most of its commands can also be used with other filesystems.
-+
-+	See also:
-+		_require_xfs_io_command
-diff --git a/doc/requirement-checking.txt b/doc/requirement-checking.txt
-new file mode 100644
-index 0000000..29f0b74
---- /dev/null
-+++ b/doc/requirement-checking.txt
-@@ -0,0 +1,69 @@
-+		   ========================================
-+		   TESTING FOR REQUIREMENTS IN TEST SCRIPTS
-+		   ========================================
-+
-+Test scripts need to indicate to the infrastructure what sorts of requirements
-+they have.  This is done with _require_<xxx> macros, which may take parameters.
-+
-+ (1) General requirements.
-+
-+	_require_command
-+	_require_test
-+	_require_test_program
-+	_require_xfs_io_command
-+
-+ (2) System call requirements.
-+
-+	_require_statx
-+
-+
-+====================
-+GENERAL REQUIREMENTS
-+====================
-+
-+_require_command "$VAR" name
-+
-+     The test requires an external command, called 'name' be present on the
-+     system and that '$VAR' should be set with the path to that command.  $VAR
-+     should then be used to refer to the command when executing it.  For
-+     example:
-+
-+	_require_command "$NC_PROG" "nc"
-+
-+     to locate the netcat command and then:
-+
-+	$NC_PROG -U -l $TEST_DIR/$seq-sock
-+
-+     to make use of it.
-+
-+
-+_require_test
-+
-+     The test requires that the block device specified by $TEST_DEV be mounted
-+     on $TEST_DIR.
-+
-+
-+_require_test_program "name"
-+
-+     The test requires a program by the name of 'name' be present and built in
-+     the src/ directory.  For example:
-+
-+	_require_test_program "stat_test"
-+
-+     requires that src/stat_test be built.
-+
-+
-+_require_xfs_io_command "falloc"
-+
-+     The test requires that the xfs_io command be available and that it support
-+     the 'falloc' command.
-+
-+
-+========================
-+SYSTEM CALL REQUIREMENTS
-+========================
-+
-+_require_statx
-+
-+     The test requires the use of the statx() system call and will be skipped
-+     if it isn't available in the kernel.
++	f = fdget_raw(fd);
+ 	if (f.file) {
+ 		error = vfs_getattr(&f.file->f_path, stat,
+ 				    request_mask, query_flags);
 
