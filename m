@@ -1,40 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:41352 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933149AbdCaQC1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 12:02:27 -0400
-Date: Fri, 31 Mar 2017 09:02:24 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] statx: reject unknown flags when using NULL path
-Message-ID: <20170331160224.GA27791@infradead.org>
-References: <20170331154315.GB29622@ZenIV.linux.org.uk>
- <20170311065823.4415-1-ebiggers3@gmail.com>
- <20170320171142.GA26906@gmail.com>
- <20170320174422.GA9304@infradead.org>
- <20170331153952.GA32460@infradead.org>
- <21301.1490975484@warthog.procyon.org.uk>
+Received: from mx1.redhat.com ([209.132.183.28]:60436 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932934AbdCaPIv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 31 Mar 2017 11:08:51 -0400
+Subject: [PATCH 2/2] xfstests: Partially expand the documentation
+From: David Howells <dhowells@redhat.com>
+Date: Fri, 31 Mar 2017 16:08:42 +0100
+Message-ID: <149097292222.20089.18240501624778225939.stgit@warthog.procyon.org.uk>
+In-Reply-To: <149097291264.20089.7010494679305716312.stgit@warthog.procyon.org.uk>
+References: <149097291264.20089.7010494679305716312.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <21301.1490975484@warthog.procyon.org.uk>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>, Christoph Hellwig <hch@infradead.org>, Eric Biggers <ebiggers3@gmail.com>, linux-fsdevel@vger.kernel.org, mtk.manpages@gmail.com, "Darrick J . Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
+To: linux-xfs@vger.kernel.org
+Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
 
-On Fri, Mar 31, 2017 at 04:51:24PM +0100, David Howells wrote:
-> I'm not convinced that this is right.  I'm more inclined to let any flag be
-> passed that is available to statx() with a filename and just mask off the
-> bits before handing them on.
+Partially expand the documentation available in xfstests to include
+requirements checking and auxiliary programs for testing.
 
-And what would these flags actually do?  Currently we verify that
-the allowed flags are passed for the case where we have a filename.
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
 
-We need to do the same for the non-filename case, and we should
-also check that we don't pass flags that don't make sense for this case.
+ doc/auxiliary-programs.txt   |   45 +++++++++++++++++++++++++++
+ doc/requirement-checking.txt |   69 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 114 insertions(+)
+ create mode 100644 doc/auxiliary-programs.txt
+ create mode 100644 doc/requirement-checking.txt
 
-Eric's patch is doing exactly that.
+diff --git a/doc/auxiliary-programs.txt b/doc/auxiliary-programs.txt
+new file mode 100644
+index 0000000..d5cc1cc
+--- /dev/null
++++ b/doc/auxiliary-programs.txt
+@@ -0,0 +1,45 @@
++			==============================
++			AUXILIARY PROGRAMS FOR TESTING
++			==============================
++
++Not everything a test script can do is easily done within a test script;
++sometimes it makes a lot more sense to write auxiliary program in C and have
++the test script call them.  Auxiliary commands can be found in the src/
++directory and in other packages.
++
++Contents:
++
++ - stat_test	-- statx syscall exercise
++ - xfs_io	-- General I/O operation exercise
++
++
++==================
++QUICK DESCRIPTIONS
++==================
++
++stat_test
++
++	The stat_test program is primarily designed to exercise the statx()
++	system call.  It can check statx() against fstatat() and it can
++	compare and check various file attributes.
++
++	See also:
++		_require_statx
++
++
++xfs_io
++
++	The xfs_io program can be found in the xfsprogs package and can be used
++	to perform sequences of I/O commands, though it is limited to what it
++	can do on open files.
++
++	xfs_io is a debugging tool that is aimed at examining regular file I/O
++	paths rather than a raw XFS volume itself.  These code paths include
++	not only the obvious read/write/mmap interfaces for manipulating files,
++	but also cover all of the XFS extensions (such as space preallocation,
++	additional inode flags, etc).
++
++	Most of its commands can also be used with other filesystems.
++
++	See also:
++		_require_xfs_io_command
+diff --git a/doc/requirement-checking.txt b/doc/requirement-checking.txt
+new file mode 100644
+index 0000000..29f0b74
+--- /dev/null
++++ b/doc/requirement-checking.txt
+@@ -0,0 +1,69 @@
++		   ========================================
++		   TESTING FOR REQUIREMENTS IN TEST SCRIPTS
++		   ========================================
++
++Test scripts need to indicate to the infrastructure what sorts of requirements
++they have.  This is done with _require_<xxx> macros, which may take parameters.
++
++ (1) General requirements.
++
++	_require_command
++	_require_test
++	_require_test_program
++	_require_xfs_io_command
++
++ (2) System call requirements.
++
++	_require_statx
++
++
++====================
++GENERAL REQUIREMENTS
++====================
++
++_require_command "$VAR" name
++
++     The test requires an external command, called 'name' be present on the
++     system and that '$VAR' should be set with the path to that command.  $VAR
++     should then be used to refer to the command when executing it.  For
++     example:
++
++	_require_command "$NC_PROG" "nc"
++
++     to locate the netcat command and then:
++
++	$NC_PROG -U -l $TEST_DIR/$seq-sock
++
++     to make use of it.
++
++
++_require_test
++
++     The test requires that the block device specified by $TEST_DEV be mounted
++     on $TEST_DIR.
++
++
++_require_test_program "name"
++
++     The test requires a program by the name of 'name' be present and built in
++     the src/ directory.  For example:
++
++	_require_test_program "stat_test"
++
++     requires that src/stat_test be built.
++
++
++_require_xfs_io_command "falloc"
++
++     The test requires that the xfs_io command be available and that it support
++     the 'falloc' command.
++
++
++========================
++SYSTEM CALL REQUIREMENTS
++========================
++
++_require_statx
++
++     The test requires the use of the statx() system call and will be skipped
++     if it isn't available in the kernel.
 
-The only thing he could do even better is to add a testcase to xfstests
-to verify this :)
