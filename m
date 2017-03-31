@@ -1,65 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38790 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55808 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933217AbdCaRbh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 31 Mar 2017 13:31:37 -0400
-Subject: [PATCH 2/8] statx: reject unknown flags when using NULL path
+        id S933159AbdCaQ6H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 31 Mar 2017 12:58:07 -0400
 From: David Howells <dhowells@redhat.com>
-Date: Fri, 31 Mar 2017 18:31:32 +0100
-Message-ID: <149098149245.28108.11509992452676050796.stgit@warthog.procyon.org.uk>
-In-Reply-To: <149098148523.28108.1441135633380173665.stgit@warthog.procyon.org.uk>
-References: <149098148523.28108.1441135633380173665.stgit@warthog.procyon.org.uk>
+In-Reply-To: <20170331160224.GA27791@infradead.org>
+References: <20170331160224.GA27791@infradead.org> <20170331154315.GB29622@ZenIV.linux.org.uk> <20170311065823.4415-1-ebiggers3@gmail.com> <20170320171142.GA26906@gmail.com> <20170320174422.GA9304@infradead.org> <20170331153952.GA32460@infradead.org> <21301.1490975484@warthog.procyon.org.uk>
+Subject: Re: [PATCH] statx: reject unknown flags when using NULL path
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <5985.1490979482.1@warthog.procyon.org.uk>
+Date: Fri, 31 Mar 2017 17:58:02 +0100
+Message-ID: <5986.1490979482@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: viro@zeniv.linux.org.uk
-Cc: dhowells@redhat.com, Eric Biggers <ebiggers@google.com>, linux-kernel@vger.kernel.org, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: dhowells@redhat.com, Al Viro <viro@ZenIV.linux.org.uk>, Eric Biggers <ebiggers3@gmail.com>, linux-fsdevel@vger.kernel.org, mtk.manpages@gmail.com, "Darrick J . Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
 
-From: Eric Biggers <ebiggers@google.com>
+Christoph Hellwig <hch@infradead.org> wrote:
 
-The statx() system call currently accepts unknown flags when called with
-a NULL path to operate on a file descriptor.  Left unchanged, this could
-make it hard to introduce new query flags in the future, since
-applications may not be able to tell whether a given flag is supported.
+> The only thing he could do even better is to add a testcase to xfstests
+> to verify this :)
 
-Fix this by failing the system call with EINVAL if any flags other than
-KSTAT_QUERY_FLAGS are specified in combination with a NULL path.
+I will be pushing this sort of thing to LTP.
 
-Arguably, we could still permit known lookup-related flags such as
-AT_SYMLINK_NOFOLLOW.  However, that would be inconsistent with how
-sys_utimensat() behaves when passed a NULL path, which seems to be the
-closest precedent.  And given that the NULL path case is (I believe)
-mainly intended to be used to implement a wrapper function like fstatx()
-that doesn't have a path argument, I think rejecting lookup-related
-flags too is probably the best choice.
-
-Signed-off-by: Eric Biggers <ebiggers@google.com>
-Signed-off-by: David Howells <dhowells@redhat.com>
----
-
- fs/stat.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/fs/stat.c b/fs/stat.c
-index fa0be59340cc..df484a60846d 100644
---- a/fs/stat.c
-+++ b/fs/stat.c
-@@ -130,9 +130,13 @@ EXPORT_SYMBOL(vfs_getattr);
- int vfs_statx_fd(unsigned int fd, struct kstat *stat,
- 		 u32 request_mask, unsigned int query_flags)
- {
--	struct fd f = fdget_raw(fd);
-+	struct fd f;
- 	int error = -EBADF;
- 
-+	if (query_flags & ~KSTAT_QUERY_FLAGS)
-+		return -EINVAL;
-+
-+	f = fdget_raw(fd);
- 	if (f.file) {
- 		error = vfs_getattr(&f.file->f_path, stat,
- 				    request_mask, query_flags);
-
+David
