@@ -1,127 +1,176 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29030 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933024AbdC3Rh2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 13:37:28 -0400
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v2UHbQsj013331
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Mar 2017 17:37:26 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id v2UHbPhe020806
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Mar 2017 17:37:26 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id v2UHbP0f016050
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Mar 2017 17:37:25 GMT
-Date: Thu, 30 Mar 2017 10:37:24 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 0cbf8c9
-Message-ID: <20170330173724.GE4864@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37252 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933292AbdCaRb4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 31 Mar 2017 13:31:56 -0400
+Subject: [PATCH 4/8] statx: optimize copy of struct statx to userspace
+From: David Howells <dhowells@redhat.com>
+Date: Fri, 31 Mar 2017 18:31:48 +0100
+Message-ID: <149098150799.28108.2141923987221727061.stgit@warthog.procyon.org.uk>
+In-Reply-To: <149098148523.28108.1441135633380173665.stgit@warthog.procyon.org.uk>
+References: <149098148523.28108.1441135633380173665.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: viro@zeniv.linux.org.uk
+Cc: dhowells@redhat.com, Eric Biggers <ebiggers@google.com>, linux-kernel@vger.kernel.org, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Hi folks,
+From: Eric Biggers <ebiggers@google.com>
 
-The for-next branch of the xfs-linux repository at:
+I found that statx() was significantly slower than stat().  As a
+microbenchmark, I compared 10,000,000 invocations of fstat() on a tmpfs
+file to the same with statx() passed a NULL path:
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+	$ time ./stat_benchmark
 
-has just been updated.  I intend to try to put in Eric Sandeen's patches
-to perform unlinked inode cleanup during ro mount and my own GETFSMAP
-patches for 4.12, so I put them in along with the other fixes and
-cleanups to get further testing.
+	real	0m1.464s
+	user	0m0.275s
+	sys	0m1.187s
 
-If either of the two bigger changes break things I'm open to fixing or
-removing them before the merge window opens.  I did just post a v8
-GETFSMAP patchset; the only changes in that posting are in the ext4
-patch, which isn't going in via the XFS tree.  FWIW I've been beating on
-the patches in this branch since the end of Vault and haven't noticed
-any new breakage.  I based the patch stack off -rc4 because that's the
-first kernel I've gotten to boot reliably across my test farm.
+	$ time ./statx_benchmark
 
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
+	real	0m5.530s
+	user	0m0.281s
+	sys	0m5.247s
 
-The new head of the for-next branch is commit:
+statx is expected to be a little slower than stat because struct statx
+is larger than struct stat, but not by *that* much.  It turns out that
+most of the overhead was in copying struct statx to userspace, mostly in
+all the stac/clac instructions that got generated for each __put_user()
+call.  (This was on x86_64, but some other architectures, e.g. arm64,
+have something similar now too.)
 
-0cbf8c9 xfs: report realtime space information via the rtbitmap
+stat() instead initializes its struct on the stack and copies it to
+userspace with a single call to copy_to_user().  This turns out to be
+much faster, and changing statx to do this makes it almost as fast as
+stat:
 
-New Commits:
+	$ time ./statx_benchmark
 
-Brian Foster (1):
-      [607604d] xfs: use dedicated log worker wq to avoid deadlock with cil wq
+	real	0m1.624s
+	user	0m0.270s
+	sys	0m1.354s
 
-Christoph Hellwig (2):
-      [350baac] xfs: factor out a xfs_bmap_is_real_extent helper
-      [71892b3] xfs: remove the ISUNWRITTEN macro
+For zeroing the reserved fields, start by zeroing the full struct with
+memset.  This makes it clear that every byte copied to userspace is
+initialized, even implicit padding bytes (though there are none
+currently).  In the scenarios I tested, it also performed the same as a
+designated initializer.  Manually initializing each field was still
+slightly faster, but would have been more error-prone and less
+verifiable.
 
-Darrick J. Wong (9):
-      [3784d1c] xfs: move the inline directory verifiers
-      [273cc87] vfs: add common GETFSMAP ioctl definitions
-      [267a741] xfs: plumb in needed functions for range querying of the freespace btrees
-      [eaf588b] xfs: provide a query_range function for freespace btrees
-      [70601a4] xfs: create a function to query all records in a btree
-      [46eec30] xfs: add a couple of queries to iterate free extents in the rtbitmap
-      [5ff0447] xfs: implement the GETFSMAP ioctl
-      [7db07c5] xfs: have getfsmap fall back to the freesp btrees when rmap is not present
-      [0cbf8c9] xfs: report realtime space information via the rtbitmap
+Also rename statx_set_result() to cp_statx() for consistency with
+cp_old_stat() et al., and make it noinline so that struct statx doesn't
+add to the stack usage during the main portion of the syscall execution.
 
-Eric Sandeen (3):
-      [98c7eb0] xfs: write unmount record for ro mounts
-      [8acfb78] xfs: toggle readonly state around xfs_log_mount_finish
-      [405aa1f] xfs: fix up inode validation failure message
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
 
-Nikolay Borisov (1):
-      [4d1e0d8] xfs: Remove obsolete declaration of xfs_buf_get_empty
+ fs/stat.c |   74 ++++++++++++++++++++++++++-----------------------------------
+ 1 file changed, 32 insertions(+), 42 deletions(-)
 
+diff --git a/fs/stat.c b/fs/stat.c
+index b792dd201c31..ab27f2868588 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -510,46 +510,37 @@ SYSCALL_DEFINE4(fstatat64, int, dfd, const char __user *, filename,
+ }
+ #endif /* __ARCH_WANT_STAT64 || __ARCH_WANT_COMPAT_STAT64 */
+ 
+-static inline int __put_timestamp(struct timespec *kts,
+-				  struct statx_timestamp __user *uts)
++static noinline_for_stack int
++cp_statx(const struct kstat *stat, struct statx __user *buffer)
+ {
+-	return (__put_user(kts->tv_sec,		&uts->tv_sec		) ||
+-		__put_user(kts->tv_nsec,	&uts->tv_nsec		) ||
+-		__put_user(0,			&uts->__reserved	));
+-}
+-
+-/*
+- * Set the statx results.
+- */
+-static long statx_set_result(struct kstat *stat, struct statx __user *buffer)
+-{
+-	uid_t uid = from_kuid_munged(current_user_ns(), stat->uid);
+-	gid_t gid = from_kgid_munged(current_user_ns(), stat->gid);
+-
+-	if (__put_user(stat->result_mask,	&buffer->stx_mask	) ||
+-	    __put_user(stat->mode,		&buffer->stx_mode	) ||
+-	    __clear_user(&buffer->__spare0, sizeof(buffer->__spare0))	  ||
+-	    __put_user(stat->nlink,		&buffer->stx_nlink	) ||
+-	    __put_user(uid,			&buffer->stx_uid	) ||
+-	    __put_user(gid,			&buffer->stx_gid	) ||
+-	    __put_user(stat->attributes,	&buffer->stx_attributes	) ||
+-	    __put_user(stat->blksize,		&buffer->stx_blksize	) ||
+-	    __put_user(MAJOR(stat->rdev),	&buffer->stx_rdev_major	) ||
+-	    __put_user(MINOR(stat->rdev),	&buffer->stx_rdev_minor	) ||
+-	    __put_user(MAJOR(stat->dev),	&buffer->stx_dev_major	) ||
+-	    __put_user(MINOR(stat->dev),	&buffer->stx_dev_minor	) ||
+-	    __put_timestamp(&stat->atime,	&buffer->stx_atime	) ||
+-	    __put_timestamp(&stat->btime,	&buffer->stx_btime	) ||
+-	    __put_timestamp(&stat->ctime,	&buffer->stx_ctime	) ||
+-	    __put_timestamp(&stat->mtime,	&buffer->stx_mtime	) ||
+-	    __put_user(stat->ino,		&buffer->stx_ino	) ||
+-	    __put_user(stat->size,		&buffer->stx_size	) ||
+-	    __put_user(stat->blocks,		&buffer->stx_blocks	) ||
+-	    __clear_user(&buffer->__spare1, sizeof(buffer->__spare1))	  ||
+-	    __clear_user(&buffer->__spare2, sizeof(buffer->__spare2)))
+-		return -EFAULT;
+-
+-	return 0;
++	struct statx tmp;
++
++	memset(&tmp, 0, sizeof(tmp));
++
++	tmp.stx_mask = stat->result_mask;
++	tmp.stx_blksize = stat->blksize;
++	tmp.stx_attributes = stat->attributes;
++	tmp.stx_nlink = stat->nlink;
++	tmp.stx_uid = from_kuid_munged(current_user_ns(), stat->uid);
++	tmp.stx_gid = from_kgid_munged(current_user_ns(), stat->gid);
++	tmp.stx_mode = stat->mode;
++	tmp.stx_ino = stat->ino;
++	tmp.stx_size = stat->size;
++	tmp.stx_blocks = stat->blocks;
++	tmp.stx_atime.tv_sec = stat->atime.tv_sec;
++	tmp.stx_atime.tv_nsec = stat->atime.tv_nsec;
++	tmp.stx_btime.tv_sec = stat->btime.tv_sec;
++	tmp.stx_btime.tv_nsec = stat->btime.tv_nsec;
++	tmp.stx_ctime.tv_sec = stat->ctime.tv_sec;
++	tmp.stx_ctime.tv_nsec = stat->ctime.tv_nsec;
++	tmp.stx_mtime.tv_sec = stat->mtime.tv_sec;
++	tmp.stx_mtime.tv_nsec = stat->mtime.tv_nsec;
++	tmp.stx_rdev_major = MAJOR(stat->rdev);
++	tmp.stx_rdev_minor = MINOR(stat->rdev);
++	tmp.stx_dev_major = MAJOR(stat->dev);
++	tmp.stx_dev_minor = MINOR(stat->dev);
++
++	return copy_to_user(buffer, &tmp, sizeof(tmp)) ? -EFAULT : 0;
+ }
+ 
+ /**
+@@ -573,8 +564,6 @@ SYSCALL_DEFINE5(statx,
+ 
+ 	if ((flags & AT_STATX_SYNC_TYPE) == AT_STATX_SYNC_TYPE)
+ 		return -EINVAL;
+-	if (!access_ok(VERIFY_WRITE, buffer, sizeof(*buffer)))
+-		return -EFAULT;
+ 
+ 	if (filename)
+ 		error = vfs_statx(dfd, filename, flags, &stat, mask);
+@@ -582,7 +571,8 @@ SYSCALL_DEFINE5(statx,
+ 		error = vfs_statx_fd(dfd, &stat, mask, flags);
+ 	if (error)
+ 		return error;
+-	return statx_set_result(&stat, buffer);
++
++	return cp_statx(&stat, buffer);
+ }
+ 
+ /* Caller is here responsible for sufficient locking (ie. inode->i_lock) */
 
-Code Diffstat:
-
- fs/xfs/Makefile                 |   1 +
- fs/xfs/libxfs/xfs_alloc.c       |  57 +++
- fs/xfs/libxfs/xfs_alloc.h       |  12 +
- fs/xfs/libxfs/xfs_alloc_btree.c | 172 ++++++--
- fs/xfs/libxfs/xfs_bmap.h        |  12 +
- fs/xfs/libxfs/xfs_bmap_btree.h  |   1 -
- fs/xfs/libxfs/xfs_btree.c       |  15 +
- fs/xfs/libxfs/xfs_btree.h       |   2 +
- fs/xfs/libxfs/xfs_dir2_priv.h   |   3 +-
- fs/xfs/libxfs/xfs_dir2_sf.c     |  63 ++-
- fs/xfs/libxfs/xfs_fs.h          |  13 +
- fs/xfs/libxfs/xfs_inode_buf.c   |   2 +-
- fs/xfs/libxfs/xfs_inode_fork.c  |  35 +-
- fs/xfs/libxfs/xfs_inode_fork.h  |   2 +-
- fs/xfs/libxfs/xfs_rmap.c        |  56 ++-
- fs/xfs/libxfs/xfs_rmap.h        |   4 +
- fs/xfs/libxfs/xfs_rtbitmap.c    |  70 +++
- fs/xfs/xfs_aops.c               |   8 +-
- fs/xfs/xfs_bmap_util.c          |   7 +-
- fs/xfs/xfs_buf.h                |   1 -
- fs/xfs/xfs_fsmap.c              | 940 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_fsmap.h              |  53 +++
- fs/xfs/xfs_inode.c              |  19 +-
- fs/xfs/xfs_ioctl.c              |  84 ++++
- fs/xfs/xfs_ioctl32.c            |   2 +
- fs/xfs/xfs_iomap.c              |   4 +-
- fs/xfs/xfs_log.c                |  16 +-
- fs/xfs/xfs_mount.h              |   1 +
- fs/xfs/xfs_reflink.c            |  21 +-
- fs/xfs/xfs_rtalloc.h            |  22 +-
- fs/xfs/xfs_super.c              |   8 +
- fs/xfs/xfs_trace.c              |   1 +
- fs/xfs/xfs_trace.h              |  84 ++++
- fs/xfs/xfs_trans.c              |  22 +
- fs/xfs/xfs_trans.h              |   2 +
- include/uapi/linux/fsmap.h      | 112 +++++
- 36 files changed, 1785 insertions(+), 142 deletions(-)
- create mode 100644 fs/xfs/xfs_fsmap.c
- create mode 100644 fs/xfs/xfs_fsmap.h
- create mode 100644 include/uapi/linux/fsmap.h
