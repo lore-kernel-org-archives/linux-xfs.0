@@ -1,24 +1,23 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39393 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:47726 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933106AbdCaQ1i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 12:27:38 -0400
-Date: Fri, 31 Mar 2017 09:27:37 -0700
+        with ESMTP id S933153AbdCaRYT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 13:24:19 -0400
+Date: Fri, 31 Mar 2017 10:24:17 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfstests: Partially expand the documentation
-Message-ID: <20170331162737.GB1693@infradead.org>
-References: <149097291264.20089.7010494679305716312.stgit@warthog.procyon.org.uk>
- <149097292222.20089.18240501624778225939.stgit@warthog.procyon.org.uk>
+Subject: Re: [PATCH v2] xfs: move the inline directory verifiers
+Message-ID: <20170331172417.GA28619@infradead.org>
+References: <20170327230315.GB4864@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <149097292222.20089.18240501624778225939.stgit@warthog.procyon.org.uk>
+In-Reply-To: <20170327230315.GB4864@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
 
-Looks fine,
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
