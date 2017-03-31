@@ -1,29 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38738 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50776 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751313AbdCaN6M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 31 Mar 2017 09:58:12 -0400
+        id S933334AbdCaPv2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 31 Mar 2017 11:51:28 -0400
 From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20170331121342.GN22845@eguan.usersys.redhat.com>
-References: <20170331121342.GN22845@eguan.usersys.redhat.com> <20170331101941.GL22845@eguan.usersys.redhat.com> <15267.1490891560@warthog.procyon.org.uk> <14231.1490961943@warthog.procyon.org.uk>
-Subject: Re: [PATCH] xfstests: Add first statx test
+In-Reply-To: <20170331154315.GB29622@ZenIV.linux.org.uk>
+References: <20170331154315.GB29622@ZenIV.linux.org.uk> <20170311065823.4415-1-ebiggers3@gmail.com> <20170320171142.GA26906@gmail.com> <20170320174422.GA9304@infradead.org> <20170331153952.GA32460@infradead.org>
+Subject: Re: [PATCH] statx: reject unknown flags when using NULL path
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <17196.1490968688.1@warthog.procyon.org.uk>
-Date: Fri, 31 Mar 2017 14:58:08 +0100
-Message-ID: <17197.1490968688@warthog.procyon.org.uk>
+Content-ID: <21300.1490975484.1@warthog.procyon.org.uk>
+Date: Fri, 31 Mar 2017 16:51:24 +0100
+Message-ID: <21301.1490975484@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: dhowells@redhat.com, linux-xfs <linux-xfs@vger.kernel.org>, Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, fstests@vger.kernel.org
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: dhowells@redhat.com, Christoph Hellwig <hch@infradead.org>, Eric Biggers <ebiggers3@gmail.com>, linux-fsdevel@vger.kernel.org, mtk.manpages@gmail.com, "Darrick J . Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
 
-Eryu Guan <eguan@redhat.com> wrote:
+Al Viro <viro@ZenIV.linux.org.uk> wrote:
 
-> # create filesystem on SCRATCH_DEV and mount it at SCRATCH_MNT
-> _scratch_mkfs
-> _scratch_mount
+> > can we get this in please?  It would be sad to grow another syscall
+> > with an unchecked flags argument..
+> 
+> Applied, will be in tonight pull request...
 
-This doesn't seem to be necessary; it's doing it automatically for me.
+I'm not convinced that this is right.  I'm more inclined to let any flag be
+passed that is available to statx() with a filename and just mask off the
+bits before handing them on.
 
 David
