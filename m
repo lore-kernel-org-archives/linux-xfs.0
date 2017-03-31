@@ -1,32 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50776 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933334AbdCaPv2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 31 Mar 2017 11:51:28 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20170331154315.GB29622@ZenIV.linux.org.uk>
-References: <20170331154315.GB29622@ZenIV.linux.org.uk> <20170311065823.4415-1-ebiggers3@gmail.com> <20170320171142.GA26906@gmail.com> <20170320174422.GA9304@infradead.org> <20170331153952.GA32460@infradead.org>
-Subject: Re: [PATCH] statx: reject unknown flags when using NULL path
+Received: from bombadil.infradead.org ([65.50.211.133]:55982 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933128AbdCaPth (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2017 11:49:37 -0400
+Date: Fri, 31 Mar 2017 08:49:31 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: statx manpage
+Message-ID: <20170331154931.GA7235@infradead.org>
+References: <20170327154003.GA5716@birch.djwong.org>
+ <20170307050140.GA12946@infradead.org>
+ <20170307000609.GG5280@birch.djwong.org>
+ <10435.1488907375@warthog.procyon.org.uk>
+ <20170324205322.GA4986@gmail.com>
+ <E6DB8461-22DE-496C-8A4A-B0A2F3702750@dilger.ca>
+ <23715.1490631926@warthog.procyon.org.uk>
+ <20170327164628.GA15147@infradead.org>
+ <1490641451.9691.4.camel@poochiereds.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <21300.1490975484.1@warthog.procyon.org.uk>
-Date: Fri, 31 Mar 2017 16:51:24 +0100
-Message-ID: <21301.1490975484@warthog.procyon.org.uk>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1490641451.9691.4.camel@poochiereds.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: dhowells@redhat.com, Christoph Hellwig <hch@infradead.org>, Eric Biggers <ebiggers3@gmail.com>, linux-fsdevel@vger.kernel.org, mtk.manpages@gmail.com, "Darrick J . Wong" <darrick.wong@oracle.com>, Linux API <linux-api@vger.kernel.org>, linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
+To: Jeff Layton <jlayton@poochiereds.net>
+Cc: Christoph Hellwig <hch@infradead.org>, David Howells <dhowells@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Andreas Dilger <adilger@dilger.ca>, Eric Biggers <ebiggers3@gmail.com>, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-Al Viro <viro@ZenIV.linux.org.uk> wrote:
+On Mon, Mar 27, 2017 at 03:04:11PM -0400, Jeff Layton wrote:
+> I think we just have to clearly document that that will not be the
+> case. If they really expect the field to be there, then they need to
+> set the bit in the "want" mask -- it's really as simple as that.
 
-> > can we get this in please?  It would be sad to grow another syscall
-> > with an unchecked flags argument..
-> 
-> Applied, will be in tonight pull request...
-
-I'm not convinced that this is right.  I'm more inclined to let any flag be
-passed that is available to statx() with a filename and just mask off the
-bits before handing them on.
-
-David
+If the usual local file systems set it but say NFS doesn't I will
+very much expect that people don't set the flag and create buggy
+programs a lot.  An API that doesn't give you more than you ask
+for is a lot more obvious.
