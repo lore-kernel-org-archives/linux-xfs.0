@@ -1,159 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32762 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934311AbdC3P6h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2017 11:58:37 -0400
-Subject: [PATCH 5/9] xfs: add a couple of queries to iterate free extents in
- the rtbitmap
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 30 Mar 2017 08:58:31 -0700
-Message-ID: <149088951171.25895.11030407219047925897.stgit@birch.djwong.org>
-In-Reply-To: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
-References: <149088947516.25895.12489128187852930801.stgit@birch.djwong.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49480 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933217AbdCaRbF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 31 Mar 2017 13:31:05 -0400
+Subject: [PATCH 1/8] Documentation/filesystems: fix documentation for
+ ->getattr()
+From: David Howells <dhowells@redhat.com>
+Date: Fri, 31 Mar 2017 18:31:00 +0100
+Message-ID: <149098146063.28054.15676147735267371214.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-ext4@vger.kernel.org, linux-api@vger.kernel.org
+To: viro@zeniv.linux.org.uk
+Cc: dhowells@redhat.com, linux-fsdevel@redhat.com, Eric Biggers <ebiggers@google.com>, linux-kernel@vger.kernel.org, hch@infradead.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Eric Biggers <ebiggers@google.com>
 
-Add _query_range and _query_all functions to the realtime bitmap
-allocator.  These two functions are similar in usage to the btree
-functions with the same name and will be used for getfsmap and scrub.
+Following the recent merge of statx, correct the documented prototype
+for the ->getattr() inode operation, and add an entry to the porting
+file.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |   70 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_rtalloc.h         |   22 ++++++++++++-
- 2 files changed, 90 insertions(+), 2 deletions(-)
 
+ Documentation/filesystems/Locking |    3 +--
+ Documentation/filesystems/porting |    6 ++++++
+ Documentation/filesystems/vfs.txt |    3 +--
+ 3 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index ea45584..e47b99e 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -1016,3 +1016,73 @@ xfs_rtfree_extent(
- 	}
- 	return 0;
- }
-+
-+/* Find all the free records within a given range. */
-+int
-+xfs_rtalloc_query_range(
-+	struct xfs_trans		*tp,
-+	struct xfs_rtalloc_rec		*low_rec,
-+	struct xfs_rtalloc_rec		*high_rec,
-+	xfs_rtalloc_query_range_fn	fn,
-+	void				*priv)
-+{
-+	struct xfs_rtalloc_rec		rec;
-+	struct xfs_mount		*mp = tp->t_mountp;
-+	xfs_rtblock_t			rtstart;
-+	xfs_rtblock_t			rtend;
-+	xfs_rtblock_t			rem;
-+	int				is_free;
-+	int				error = 0;
-+
-+	if (low_rec->ar_startblock > high_rec->ar_startblock)
-+		return -EINVAL;
-+	else if (low_rec->ar_startblock == high_rec->ar_startblock)
-+		return 0;
-+
-+	/* Iterate the bitmap, looking for discrepancies. */
-+	rtstart = low_rec->ar_startblock;
-+	rem = high_rec->ar_startblock - rtstart;
-+	while (rem) {
-+		/* Is the first block free? */
-+		error = xfs_rtcheck_range(mp, tp, rtstart, 1, 1, &rtend,
-+				&is_free);
-+		if (error)
-+			break;
-+
-+		/* How long does the extent go for? */
-+		error = xfs_rtfind_forw(mp, tp, rtstart,
-+				high_rec->ar_startblock - 1, &rtend);
-+		if (error)
-+			break;
-+
-+		if (is_free) {
-+			rec.ar_startblock = rtstart;
-+			rec.ar_blockcount = rtend - rtstart + 1;
-+
-+			error = fn(tp, &rec, priv);
-+			if (error)
-+				break;
-+		}
-+
-+		rem -= rtend - rtstart + 1;
-+		rtstart = rtend + 1;
-+	}
-+
-+	return error;
-+}
-+
-+/* Find all the free records. */
-+int
-+xfs_rtalloc_query_all(
-+	struct xfs_trans		*tp,
-+	xfs_rtalloc_query_range_fn	fn,
-+	void				*priv)
-+{
-+	struct xfs_rtalloc_rec		keys[2];
-+
-+	keys[0].ar_startblock = 0;
-+	keys[1].ar_startblock = tp->t_mountp->m_sb.sb_rblocks;
-+	keys[0].ar_blockcount = keys[1].ar_blockcount = 0;
-+
-+	return xfs_rtalloc_query_range(tp, &keys[0], &keys[1], fn, priv);
-+}
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index 51dd3c7..f13133e 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -23,6 +23,16 @@
- struct xfs_mount;
- struct xfs_trans;
- 
-+struct xfs_rtalloc_rec {
-+	xfs_rtblock_t		ar_startblock;
-+	xfs_rtblock_t		ar_blockcount;
-+};
-+
-+typedef int (*xfs_rtalloc_query_range_fn)(
-+	struct xfs_trans	*tp,
-+	struct xfs_rtalloc_rec	*rec,
-+	void			*priv);
-+
- #ifdef CONFIG_XFS_RT
- /*
-  * Function prototypes for exported functions.
-@@ -118,13 +128,21 @@ int xfs_rtmodify_summary(struct xfs_mount *mp, struct xfs_trans *tp, int log,
- int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
- 		     xfs_rtblock_t start, xfs_extlen_t len,
- 		     struct xfs_buf **rbpp, xfs_fsblock_t *rsb);
--
--
-+int xfs_rtalloc_query_range(struct xfs_trans *tp,
-+			    struct xfs_rtalloc_rec *low_rec,
-+			    struct xfs_rtalloc_rec *high_rec,
-+			    xfs_rtalloc_query_range_fn fn,
-+			    void *priv);
-+int xfs_rtalloc_query_all(struct xfs_trans *tp,
-+			  xfs_rtalloc_query_range_fn fn,
-+			  void *priv);
- #else
- # define xfs_rtallocate_extent(t,b,min,max,l,f,p,rb)    (ENOSYS)
- # define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
- # define xfs_rtpick_extent(m,t,l,rb)                    (ENOSYS)
- # define xfs_growfs_rt(mp,in)                           (ENOSYS)
-+# define xfs_rtalloc_query_range(t,l,h,f,p)             (ENOSYS)
-+# define xfs_rtalloc_query_all(t,f,p)                   (ENOSYS)
- static inline int		/* error */
- xfs_rtmount_init(
- 	xfs_mount_t	*mp)	/* file system mount structure */
+diff --git a/Documentation/filesystems/Locking b/Documentation/filesystems/Locking
+index fdcfdd79682a..fe25787ff6d4 100644
+--- a/Documentation/filesystems/Locking
++++ b/Documentation/filesystems/Locking
+@@ -58,8 +58,7 @@ prototypes:
+ 	int (*permission) (struct inode *, int, unsigned int);
+ 	int (*get_acl)(struct inode *, int);
+ 	int (*setattr) (struct dentry *, struct iattr *);
+-	int (*getattr) (const struct path *, struct dentry *, struct kstat *,
+-			u32, unsigned int);
++	int (*getattr) (const struct path *, struct kstat *, u32, unsigned int);
+ 	ssize_t (*listxattr) (struct dentry *, char *, size_t);
+ 	int (*fiemap)(struct inode *, struct fiemap_extent_info *, u64 start, u64 len);
+ 	void (*update_time)(struct inode *, struct timespec *, int);
+diff --git a/Documentation/filesystems/porting b/Documentation/filesystems/porting
+index 95280079c0b3..5fb17f49f7a2 100644
+--- a/Documentation/filesystems/porting
++++ b/Documentation/filesystems/porting
+@@ -600,3 +600,9 @@ in your dentry operations instead.
+ [recommended]
+ 	->readlink is optional for symlinks.  Don't set, unless filesystem needs
+ 	to fake something for readlink(2).
++--
++[mandatory]
++	->getattr() is now passed a struct path rather than a vfsmount and
++	dentry separately, and it now has request_mask and query_flags arguments
++	to specify the fields and sync type requested by statx.  Filesystems not
++	supporting any statx-specific features may ignore the new arguments.
+diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
+index 569211703721..94dd27ef4a76 100644
+--- a/Documentation/filesystems/vfs.txt
++++ b/Documentation/filesystems/vfs.txt
+@@ -382,8 +382,7 @@ struct inode_operations {
+ 	int (*permission) (struct inode *, int);
+ 	int (*get_acl)(struct inode *, int);
+ 	int (*setattr) (struct dentry *, struct iattr *);
+-	int (*getattr) (const struct path *, struct dentry *, struct kstat *,
+-			u32, unsigned int);
++	int (*getattr) (const struct path *, struct kstat *, u32, unsigned int);
+ 	ssize_t (*listxattr) (struct dentry *, char *, size_t);
+ 	void (*update_time)(struct inode *, struct timespec *, int);
+ 	int (*atomic_open)(struct inode *, struct dentry *, struct file *,
 
