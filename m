@@ -1,142 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56342 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:43826 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751244AbdDAGll (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:41 -0400
+        with ESMTP id S1751559AbdDAGls (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:48 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/27] xfs: reject all unaligned direct writes to reflinked files
-Date: Sat,  1 Apr 2017 08:40:13 +0200
-Message-Id: <20170401064026.5783-15-hch@lst.de>
+Subject: [PATCH 17/27] xfs: handle indlen shortage on delalloc extent merge
+Date: Sat,  1 Apr 2017 08:40:16 +0200
+Message-Id: <20170401064026.5783-18-hch@lst.de>
 In-Reply-To: <20170401064026.5783-1-hch@lst.de>
 References: <20170401064026.5783-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit 54a4ef8af4e0dc5c983d17fcb9cf5fd25666d94e upstream.
-[slight changes in context due to the new direct I/O code in 4.10+]
+From: Brian Foster <bfoster@redhat.com>
 
-We currently fall back from direct to buffered writes if we detect a
-remaining shared extent in the iomap_begin callback.  But by the time
-iomap_begin is called for the potentially unaligned end block we might
-have already written most of the data to disk, which we'd now write
-again using buffered I/O.  To avoid this reject all writes to reflinked
-files before starting I/O so that we are guaranteed to only write the
-data once.
+commit 0e339ef8556d9e567aa7925f8892c263d79430d9 upstream.
 
-The alternative would be to unshare the unaligned start and/or end block
-before doing the I/O. I think that's doable, and will actually be
-required to support reflinks on DAX file system.  But it will take a
-little more time and I'd rather get rid of the double write ASAP.
+When a delalloc extent is created, it can be merged with pre-existing,
+contiguous, delalloc extents. When this occurs,
+xfs_bmap_add_extent_hole_delay() merges the extents along with the
+associated indirect block reservations. The expectation here is that the
+combined worst case indlen reservation is always less than or equal to
+the indlen reservation for the individual extents.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+This is not always the case, however, as existing extents can less than
+the expected indlen reservation if the extent was previously split due
+to a hole punch. If a new extent merges with such an extent, the total
+indlen requirement may be larger than the sum of the indlen reservations
+held by both extents.
+
+xfs_bmap_add_extent_hole_delay() assumes that the worst case indlen
+reservation is always available and assigns it to the merged extent
+without consideration for the indlen held by the pre-existing extent. As
+a result, the subsequent xfs_mod_fdblocks() call can attempt an
+unintentional allocation rather than a free (indicated by an ASSERT()
+failure). Further, if the allocation happens to fail in this context,
+the failure goes unhandled and creates a filesystem wide block
+accounting inconsistency.
+
+Fix xfs_bmap_add_extent_hole_delay() to function as designed. Cap the
+indlen reservation assigned to the merged extent to the sum of the
+indlen reservations held by each of the individual extents.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c  | 45 ---------------------------------------------
- fs/xfs/xfs_file.c  |  9 +++++++++
- fs/xfs/xfs_trace.h |  2 +-
- 3 files changed, 10 insertions(+), 46 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 6845ebfa3067..f5f51d40a2ec 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1263,44 +1263,6 @@ xfs_map_trim_size(
- 	bh_result->b_size = mapping_size;
- }
- 
--/* Bounce unaligned directio writes to the page cache. */
--static int
--xfs_bounce_unaligned_dio_write(
--	struct xfs_inode	*ip,
--	xfs_fileoff_t		offset_fsb,
--	struct xfs_bmbt_irec	*imap)
--{
--	struct xfs_bmbt_irec	irec;
--	xfs_fileoff_t		delta;
--	bool			shared;
--	bool			x;
--	int			error;
--
--	irec = *imap;
--	if (offset_fsb > irec.br_startoff) {
--		delta = offset_fsb - irec.br_startoff;
--		irec.br_blockcount -= delta;
--		irec.br_startblock += delta;
--		irec.br_startoff = offset_fsb;
--	}
--	error = xfs_reflink_trim_around_shared(ip, &irec, &shared, &x);
--	if (error)
--		return error;
--
--	/*
--	 * We're here because we're trying to do a directio write to a
--	 * region that isn't aligned to a filesystem block.  If any part
--	 * of the extent is shared, fall back to buffered mode to handle
--	 * the RMW.  This is done by returning -EREMCHG ("remote addr
--	 * changed"), which is caught further up the call stack.
--	 */
--	if (shared) {
--		trace_xfs_reflink_bounce_dio_write(ip, imap);
--		return -EREMCHG;
--	}
--	return 0;
--}
--
- STATIC int
- __xfs_get_blocks(
- 	struct inode		*inode,
-@@ -1438,13 +1400,6 @@ __xfs_get_blocks(
- 	if (imap.br_startblock != HOLESTARTBLOCK &&
- 	    imap.br_startblock != DELAYSTARTBLOCK &&
- 	    (create || !ISUNWRITTEN(&imap))) {
--		if (create && direct && !is_cow) {
--			error = xfs_bounce_unaligned_dio_write(ip, offset_fsb,
--					&imap);
--			if (error)
--				return error;
--		}
--
- 		xfs_map_buffer(inode, bh_result, &imap, offset);
- 		if (ISUNWRITTEN(&imap))
- 			set_buffer_unwritten(bh_result);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 780be7a7abe9..1209ad29e902 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -554,6 +554,15 @@ xfs_file_dio_aio_write(
- 	if ((iocb->ki_pos & mp->m_blockmask) ||
- 	    ((iocb->ki_pos + count) & mp->m_blockmask)) {
- 		unaligned_io = 1;
-+
-+		/*
-+		 * We can't properly handle unaligned direct I/O to reflink
-+		 * files yet, as we can't unshare a partial block.
-+		 */
-+		if (xfs_is_reflink_inode(ip)) {
-+			trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos, count);
-+			return -EREMCHG;
-+		}
- 		iolock = XFS_IOLOCK_EXCL;
- 	} else {
- 		iolock = XFS_IOLOCK_SHARED;
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index b62764064af6..828f383df121 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3353,7 +3353,7 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
- DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
- DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
- 
--DEFINE_INODE_IREC_EVENT(xfs_reflink_bounce_dio_write);
-+DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
- DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
- 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 9e3b069fc84b..7457937549bb 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2907,7 +2907,8 @@ xfs_bmap_add_extent_hole_delay(
+ 		oldlen = startblockval(left.br_startblock) +
+ 			startblockval(new->br_startblock) +
+ 			startblockval(right.br_startblock);
+-		newlen = xfs_bmap_worst_indlen(ip, temp);
++		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
++					 oldlen);
+ 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
+ 			nullstartblock((int)newlen));
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+@@ -2928,7 +2929,8 @@ xfs_bmap_add_extent_hole_delay(
+ 		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx), temp);
+ 		oldlen = startblockval(left.br_startblock) +
+ 			startblockval(new->br_startblock);
+-		newlen = xfs_bmap_worst_indlen(ip, temp);
++		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
++					 oldlen);
+ 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
+ 			nullstartblock((int)newlen));
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+@@ -2944,7 +2946,8 @@ xfs_bmap_add_extent_hole_delay(
+ 		temp = new->br_blockcount + right.br_blockcount;
+ 		oldlen = startblockval(new->br_startblock) +
+ 			startblockval(right.br_startblock);
+-		newlen = xfs_bmap_worst_indlen(ip, temp);
++		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
++					 oldlen);
+ 		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
+ 			new->br_startoff,
+ 			nullstartblock((int)newlen), temp, right.br_state);
 -- 
 2.11.0
 
