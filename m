@@ -1,21 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43904 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:54414 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750860AbdDAGkb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:40:31 -0400
+        with ESMTP id S1750904AbdDAGkg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:40:36 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: 4.9-stable updates for XFS
-Date: Sat,  1 Apr 2017 08:39:59 +0200
-Message-Id: <20170401064026.5783-1-hch@lst.de>
+Subject: [PATCH 01/27] xfs: only update mount/resv fields on success in __xfs_ag_resv_init
+Date: Sat,  1 Apr 2017 08:40:00 +0200
+Message-Id: <20170401064026.5783-2-hch@lst.de>
+In-Reply-To: <20170401064026.5783-1-hch@lst.de>
+References: <20170401064026.5783-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-Hi all,
+commit 4dfa2b84118fd6c95202ae87e62adf5000ccd4d0 upstream.
 
-below are backports up to 4.11-rc4 for XFS.  I've selected all clear
-bugfixes for reported bugs.  In addition to the patches in 4.10-stable
-there also are 2 patches that are in 4.10 but not in 4.9-stable yet
-at the beginning of the series.
+Try to reserve the blocks first and only then update the fields in
+or hanging off the mount structure.  This way we can call __xfs_ag_resv_init
+again after a previous failure.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ag_resv.c | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index d346d42c54d1..94234bff40dc 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -200,22 +200,27 @@ __xfs_ag_resv_init(
+ 	struct xfs_mount		*mp = pag->pag_mount;
+ 	struct xfs_ag_resv		*resv;
+ 	int				error;
++	xfs_extlen_t			reserved;
+ 
+-	resv = xfs_perag_resv(pag, type);
+ 	if (used > ask)
+ 		ask = used;
+-	resv->ar_asked = ask;
+-	resv->ar_reserved = resv->ar_orig_reserved = ask - used;
+-	mp->m_ag_max_usable -= ask;
++	reserved = ask - used;
+ 
+-	trace_xfs_ag_resv_init(pag, type, ask);
+-
+-	error = xfs_mod_fdblocks(mp, -(int64_t)resv->ar_reserved, true);
+-	if (error)
++	error = xfs_mod_fdblocks(mp, -(int64_t)reserved, true);
++	if (error) {
+ 		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
+ 				error, _RET_IP_);
++		return error;
++	}
+ 
+-	return error;
++	mp->m_ag_max_usable -= ask;
++
++	resv = xfs_perag_resv(pag, type);
++	resv->ar_asked = ask;
++	resv->ar_reserved = resv->ar_orig_reserved = reserved;
++
++	trace_xfs_ag_resv_init(pag, type, ask);
++	return 0;
+ }
+ 
+ /* Create a per-AG block reservation. */
+-- 
+2.11.0
+
