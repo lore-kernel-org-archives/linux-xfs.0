@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40104 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:35005 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751590AbdDAGl4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:56 -0400
+        with ESMTP id S1751609AbdDAGl5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:57 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 20/27] xfs: don't reserve blocks for right shift transactions
-Date: Sat,  1 Apr 2017 08:40:19 +0200
-Message-Id: <20170401064026.5783-21-hch@lst.de>
+Subject: [PATCH 18/27] xfs: split indlen reservations fairly when under reserved
+Date: Sat,  1 Apr 2017 08:40:17 +0200
+Message-Id: <20170401064026.5783-19-hch@lst.de>
 In-Reply-To: <20170401064026.5783-1-hch@lst.de>
 References: <20170401064026.5783-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,93 +17,117 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit 48af96ab92bc68fb645068b978ce36df2379e076 upstream.
+commit 75d65361cf3c0dae2af970c305e19c727b28a510 upstream.
 
-The block reservation for the transaction allocated in
-xfs_shift_file_space() is an artifact of the original collapse range
-support. It exists to handle the case where a collapse range occurs,
-the initial extent is left shifted into a location that forms a
-contiguous boundary with the previous extent and thus the extents
-are merged. This code was subsequently refactored and reused for
-insert range (right shift) support.
+Certain workoads that punch holes into speculative preallocation can
+cause delalloc indirect reservation splits when the delalloc extent is
+split in two. If further splits occur, an already short-handed extent
+can be split into two in a manner that leaves zero indirect blocks for
+one of the two new extents. This occurs because the shortage is large
+enough that the xfs_bmap_split_indlen() algorithm completely drains the
+requested indlen of one of the extents before it honors the existing
+reservation.
 
-If an insert range occurs under low free space conditions, the
-extent at the starting offset is split before the first shift
-transaction is allocated. If the block reservation fails, this
-leaves separate, but contiguous extents around in the inode. While
-not a fatal problem, this is unexpected and will flag a warning on
-subsequent insert range operations on the inode. This problem has
-been reproduce intermittently by generic/270 running against a
-ramdisk device.
+This ultimately results in a warning from xfs_bmap_del_extent(). This
+has been observed during file copies of large, sparse files using 'cp
+--sparse=always.'
 
-Since right shift does not create new extent boundaries in the
-inode, a block reservation for extent merge is unnecessary. Update
-xfs_shift_file_space() to conditionally reserve fs blocks for left
-shift transactions only. This avoids the warning reproduced by
-generic/270.
+To avoid this problem, update xfs_bmap_split_indlen() to explicitly
+apply the reservation shortage fairly between both extents. This smooths
+out the overall indlen shortage and defers the situation where we end up
+with a delalloc extent with zero indlen reservation to extreme
+circumstances.
 
-Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reported-by: Patrick Dung <mpatdung@gmail.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 61 ++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 43 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index fd459b69161e..5c395e485170 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1387,10 +1387,16 @@ xfs_shift_file_space(
- 	xfs_fileoff_t		stop_fsb;
- 	xfs_fileoff_t		next_fsb;
- 	xfs_fileoff_t		shift_fsb;
-+	uint			resblks;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 7457937549bb..70e732ce3dea 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4899,34 +4899,59 @@ xfs_bmap_split_indlen(
+ 	xfs_filblks_t			len2 = *indlen2;
+ 	xfs_filblks_t			nres = len1 + len2; /* new total res. */
+ 	xfs_filblks_t			stolen = 0;
++	xfs_filblks_t			resfactor;
  
- 	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
+ 	/*
+ 	 * Steal as many blocks as we can to try and satisfy the worst case
+ 	 * indlen for both new extents.
+ 	 */
+-	while (nres > ores && avail) {
+-		nres--;
+-		avail--;
+-		stolen++;
+-	}
++	if (ores < nres && avail)
++		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
++	ores += stolen;
++
++	 /* nothing else to do if we've satisfied the new reservation */
++	if (ores >= nres)
++		return stolen;
++
++	/*
++	 * We can't meet the total required reservation for the two extents.
++	 * Calculate the percent of the overall shortage between both extents
++	 * and apply this percentage to each of the requested indlen values.
++	 * This distributes the shortage fairly and reduces the chances that one
++	 * of the two extents is left with nothing when extents are repeatedly
++	 * split.
++	 */
++	resfactor = (ores * 100);
++	do_div(resfactor, nres);
++	len1 *= resfactor;
++	do_div(len1, 100);
++	len2 *= resfactor;
++	do_div(len2, 100);
++	ASSERT(len1 + len2 <= ores);
++	ASSERT(len1 < *indlen1 && len2 < *indlen2);
  
- 	if (direction == SHIFT_LEFT) {
-+		/*
-+		 * Reserve blocks to cover potential extent merges after left
-+		 * shift operations.
-+		 */
-+		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
- 		next_fsb = XFS_B_TO_FSB(mp, offset + len);
- 		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
- 	} else {
-@@ -1398,6 +1404,7 @@ xfs_shift_file_space(
- 		 * If right shift, delegate the work of initialization of
- 		 * next_fsb to xfs_bmap_shift_extent as it has ilock held.
- 		 */
-+		resblks = 0;
- 		next_fsb = NULLFSBLOCK;
- 		stop_fsb = XFS_B_TO_FSB(mp, offset);
- 	}
-@@ -1439,21 +1446,14 @@ xfs_shift_file_space(
- 	}
- 
- 	while (!error && !done) {
--		/*
--		 * We would need to reserve permanent block for transaction.
--		 * This will come into picture when after shifting extent into
--		 * hole we found that adjacent extents can be merged which
--		 * may lead to freeing of a block during record update.
--		 */
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
--				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
-+		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
-+					&tp);
- 		if (error)
+ 	/*
+-	 * The only blocks available are those reserved for the original
+-	 * extent and what we can steal from the extent being removed.
+-	 * If this still isn't enough to satisfy the combined
+-	 * requirements for the two new extents, skim blocks off of each
+-	 * of the new reservations until they match what is available.
++	 * Hand out the remainder to each extent. If one of the two reservations
++	 * is zero, we want to make sure that one gets a block first. The loop
++	 * below starts with len1, so hand len2 a block right off the bat if it
++	 * is zero.
+ 	 */
+-	while (nres > ores) {
+-		if (len1) {
+-			len1--;
+-			nres--;
++	ores -= (len1 + len2);
++	ASSERT((*indlen1 - len1) + (*indlen2 - len2) >= ores);
++	if (ores && !len2 && *indlen2) {
++		len2++;
++		ores--;
++	}
++	while (ores) {
++		if (len1 < *indlen1) {
++			len1++;
++			ores--;
+ 		}
+-		if (nres == ores)
++		if (!ores)
  			break;
+-		if (len2) {
+-			len2--;
+-			nres--;
++		if (len2 < *indlen2) {
++			len2++;
++			ores--;
+ 		}
+ 	}
  
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
--				ip->i_gdquot, ip->i_pdquot,
--				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
-+				ip->i_gdquot, ip->i_pdquot, resblks, 0,
- 				XFS_QMOPT_RES_REGBLKS);
- 		if (error)
- 			goto out_trans_cancel;
 -- 
 2.11.0
 
