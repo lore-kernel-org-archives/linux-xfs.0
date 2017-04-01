@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50116 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:34308 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751188AbdDAGlZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:25 -0400
+        with ESMTP id S1750879AbdDAGlQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:16 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/27] xfs: allow unwritten extents in the CoW fork
-Date: Sat,  1 Apr 2017 08:40:10 +0200
-Message-Id: <20170401064026.5783-12-hch@lst.de>
+Subject: [PATCH 10/27] xfs: verify free block header fields
+Date: Sat,  1 Apr 2017 08:40:09 +0200
+Message-Id: <20170401064026.5783-11-hch@lst.de>
 In-Reply-To: <20170401064026.5783-1-hch@lst.de>
 References: <20170401064026.5783-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,277 +17,92 @@ Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 05a630d76bd3f39baf0eecfa305bed2820796dee upstream.
+commit de14c5f541e78c59006bee56f6c5c2ef1ca07272 upstream.
 
-In the data fork, we only allow extents to perform the following state
-transitions:
+Perform basic sanity checking of the directory free block header
+fields so that we avoid hanging the system on invalid data.
 
-delay -> real <-> unwritten
-
-There's no way to move directly from a delalloc reservation to an
-/unwritten/ allocated extent.  However, for the CoW fork we want to be
-able to do the following to each extent:
-
-delalloc -> unwritten -> written -> remapped to data fork
-
-This will help us to avoid a race in the speculative CoW preallocation
-code between a first thread that is allocating a CoW extent and a second
-thread that is remapping part of a file after a write.  In order to do
-this, however, we need two things: first, we have to be able to
-transition from da to unwritten, and second the function that converts
-between real and unwritten has to be made aware of the cow fork.  Do
-both of those things.
+(Granted that just means that now we shutdown on directory write,
+but that seems better than hanging...)
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 80 ++++++++++++++++++++++++++++++------------------
- 1 file changed, 50 insertions(+), 30 deletions(-)
+ fs/xfs/libxfs/xfs_dir2_node.c | 51 +++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 49 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 02c466081991..9e3b069fc84b 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1952,6 +1952,7 @@ xfs_bmap_add_extent_delay_real(
- 		 */
- 		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
- 		xfs_bmbt_set_startblock(ep, new->br_startblock);
-+		xfs_bmbt_set_state(ep, new->br_state);
- 		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 75a557432d0f..bbd1238852b3 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -155,6 +155,42 @@ const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
+ 	.verify_write = xfs_dir3_free_write_verify,
+ };
  
- 		(*nextents)++;
-@@ -2290,6 +2291,7 @@ STATIC int				/* error */
- xfs_bmap_add_extent_unwritten_real(
- 	struct xfs_trans	*tp,
- 	xfs_inode_t		*ip,	/* incore inode pointer */
-+	int			whichfork,
- 	xfs_extnum_t		*idx,	/* extent number to update/insert */
- 	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
- 	xfs_bmbt_irec_t		*new,	/* new data to add to file extents */
-@@ -2309,12 +2311,14 @@ xfs_bmap_add_extent_unwritten_real(
- 					/* left is 0, right is 1, prev is 2 */
- 	int			rval=0;	/* return value (logging flags) */
- 	int			state = 0;/* state bits, accessed thru macros */
--	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_mount	*mp = ip->i_mount;
++/* Everything ok in the free block header? */
++static bool
++xfs_dir3_free_header_check(
++	struct xfs_inode	*dp,
++	xfs_dablk_t		fbno,
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = dp->i_mount;
++	unsigned int		firstdb;
++	int			maxbests;
++
++	maxbests = dp->d_ops->free_max_bests(mp->m_dir_geo);
++	firstdb = (xfs_dir2_da_to_db(mp->m_dir_geo, fbno) -
++		   xfs_dir2_byte_to_db(mp->m_dir_geo, XFS_DIR2_FREE_OFFSET)) *
++			maxbests;
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		struct xfs_dir3_free_hdr *hdr3 = bp->b_addr;
++
++		if (be32_to_cpu(hdr3->firstdb) != firstdb)
++			return false;
++		if (be32_to_cpu(hdr3->nvalid) > maxbests)
++			return false;
++		if (be32_to_cpu(hdr3->nvalid) < be32_to_cpu(hdr3->nused))
++			return false;
++	} else {
++		struct xfs_dir2_free_hdr *hdr = bp->b_addr;
++
++		if (be32_to_cpu(hdr->firstdb) != firstdb)
++			return false;
++		if (be32_to_cpu(hdr->nvalid) > maxbests)
++			return false;
++		if (be32_to_cpu(hdr->nvalid) < be32_to_cpu(hdr->nused))
++			return false;
++	}
++	return true;
++}
  
- 	*logflagsp = 0;
+ static int
+ __xfs_dir3_free_read(
+@@ -168,11 +204,22 @@ __xfs_dir3_free_read(
  
- 	cur = *curp;
--	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
-+	if (whichfork == XFS_COW_FORK)
-+		state |= BMAP_COWFORK;
+ 	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+ 				XFS_DATA_FORK, &xfs_dir3_free_buf_ops);
++	if (err || !*bpp)
++		return err;
++
++	/* Check things that we can't do in the verifier. */
++	if (!xfs_dir3_free_header_check(dp, fbno, *bpp)) {
++		xfs_buf_ioerror(*bpp, -EFSCORRUPTED);
++		xfs_verifier_error(*bpp);
++		xfs_trans_brelse(tp, *bpp);
++		return -EFSCORRUPTED;
++	}
  
- 	ASSERT(*idx >= 0);
- 	ASSERT(*idx <= xfs_iext_count(ifp));
-@@ -2373,7 +2377,7 @@ xfs_bmap_add_extent_unwritten_real(
- 	 * Don't set contiguous if the combined extent would be too large.
- 	 * Also check for all-three-contiguous being too large.
- 	 */
--	if (*idx < xfs_iext_count(&ip->i_df) - 1) {
-+	if (*idx < xfs_iext_count(ifp) - 1) {
- 		state |= BMAP_RIGHT_VALID;
- 		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx + 1), &RIGHT);
- 		if (isnullstartblock(RIGHT.br_startblock))
-@@ -2413,7 +2417,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 	/* try read returns without an error or *bpp if it lands in a hole */
+-	if (!err && tp && *bpp)
++	if (tp)
+ 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_FREE_BUF);
+-	return err;
++
++	return 0;
+ }
  
- 		xfs_iext_remove(ip, *idx + 1, 2, state);
--		ip->i_d.di_nextents -= 2;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) - 2);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2456,7 +2461,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		xfs_iext_remove(ip, *idx + 1, 1, state);
--		ip->i_d.di_nextents--;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2491,7 +2497,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		xfs_bmbt_set_state(ep, newext);
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 		xfs_iext_remove(ip, *idx + 1, 1, state);
--		ip->i_d.di_nextents--;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2603,7 +2610,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
- 		xfs_iext_insert(ip, *idx, 1, new, state);
--		ip->i_d.di_nextents++;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2681,7 +2689,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		++*idx;
- 		xfs_iext_insert(ip, *idx, 1, new, state);
- 
--		ip->i_d.di_nextents++;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2729,7 +2738,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		++*idx;
- 		xfs_iext_insert(ip, *idx, 2, &r[0], state);
- 
--		ip->i_d.di_nextents += 2;
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+				XFS_IFORK_NEXTENTS(ip, whichfork) + 2);
- 		if (cur == NULL)
- 			rval = XFS_ILOG_CORE | XFS_ILOG_DEXT;
- 		else {
-@@ -2783,17 +2793,17 @@ xfs_bmap_add_extent_unwritten_real(
- 	}
- 
- 	/* update reverse mappings */
--	error = xfs_rmap_convert_extent(mp, dfops, ip, XFS_DATA_FORK, new);
-+	error = xfs_rmap_convert_extent(mp, dfops, ip, whichfork, new);
- 	if (error)
- 		goto done;
- 
- 	/* convert to a btree if necessary */
--	if (xfs_bmap_needs_btree(ip, XFS_DATA_FORK)) {
-+	if (xfs_bmap_needs_btree(ip, whichfork)) {
- 		int	tmp_logflags;	/* partial log flag return val */
- 
- 		ASSERT(cur == NULL);
- 		error = xfs_bmap_extents_to_btree(tp, ip, first, dfops, &cur,
--				0, &tmp_logflags, XFS_DATA_FORK);
-+				0, &tmp_logflags, whichfork);
- 		*logflagsp |= tmp_logflags;
- 		if (error)
- 			goto done;
-@@ -2805,7 +2815,7 @@ xfs_bmap_add_extent_unwritten_real(
- 		*curp = cur;
- 	}
- 
--	xfs_bmap_check_leaf_extents(*curp, ip, XFS_DATA_FORK);
-+	xfs_bmap_check_leaf_extents(*curp, ip, whichfork);
- done:
- 	*logflagsp |= rval;
- 	return error;
-@@ -4458,10 +4468,16 @@ xfs_bmapi_allocate(
- 	bma->got.br_state = XFS_EXT_NORM;
- 
- 	/*
--	 * A wasdelay extent has been initialized, so shouldn't be flagged
--	 * as unwritten.
-+	 * In the data fork, a wasdelay extent has been initialized, so
-+	 * shouldn't be flagged as unwritten.
-+	 *
-+	 * For the cow fork, however, we convert delalloc reservations
-+	 * (extents allocated for speculative preallocation) to
-+	 * allocated unwritten extents, and only convert the unwritten
-+	 * extents to real extents when we're about to write the data.
- 	 */
--	if (!bma->wasdel && (bma->flags & XFS_BMAPI_PREALLOC) &&
-+	if ((!bma->wasdel || (bma->flags & XFS_BMAPI_COWFORK)) &&
-+	    (bma->flags & XFS_BMAPI_PREALLOC) &&
- 	    xfs_sb_version_hasextflgbit(&mp->m_sb))
- 		bma->got.br_state = XFS_EXT_UNWRITTEN;
- 
-@@ -4512,8 +4528,6 @@ xfs_bmapi_convert_unwritten(
- 			(XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT))
- 		return 0;
- 
--	ASSERT(whichfork != XFS_COW_FORK);
--
- 	/*
- 	 * Modify (by adding) the state flag, if writing.
- 	 */
-@@ -4538,8 +4552,8 @@ xfs_bmapi_convert_unwritten(
- 			return error;
- 	}
- 
--	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, &bma->idx,
--			&bma->cur, mval, bma->firstblock, bma->dfops,
-+	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, whichfork,
-+			&bma->idx, &bma->cur, mval, bma->firstblock, bma->dfops,
- 			&tmp_logflags);
- 	/*
- 	 * Log the inode core unconditionally in the unwritten extent conversion
-@@ -4548,8 +4562,12 @@ xfs_bmapi_convert_unwritten(
- 	 * in the transaction for the sake of fsync(), even if nothing has
- 	 * changed, because fsync() will not force the log for this transaction
- 	 * unless it sees the inode pinned.
-+	 *
-+	 * Note: If we're only converting cow fork extents, there aren't
-+	 * any on-disk updates to make, so we don't need to log anything.
- 	 */
--	bma->logflags |= tmp_logflags | XFS_ILOG_CORE;
-+	if (whichfork != XFS_COW_FORK)
-+		bma->logflags |= tmp_logflags | XFS_ILOG_CORE;
- 	if (error)
- 		return error;
- 
-@@ -4623,15 +4641,15 @@ xfs_bmapi_write(
- 	ASSERT(*nmap >= 1);
- 	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
- 	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
--	ASSERT(tp != NULL);
-+	ASSERT(tp != NULL ||
-+	       (flags & (XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK)) ==
-+			(XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK));
- 	ASSERT(len > 0);
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(!(flags & XFS_BMAPI_REMAP) || whichfork == XFS_DATA_FORK);
- 	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || !(flags & XFS_BMAPI_REMAP));
- 	ASSERT(!(flags & XFS_BMAPI_CONVERT) || !(flags & XFS_BMAPI_REMAP));
--	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || whichfork != XFS_COW_FORK);
--	ASSERT(!(flags & XFS_BMAPI_CONVERT) || whichfork != XFS_COW_FORK);
- 
- 	/* zeroing is for currently only for data extents, not metadata */
- 	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
-@@ -5653,8 +5671,8 @@ __xfs_bunmapi(
- 			}
- 			del.br_state = XFS_EXT_UNWRITTEN;
- 			error = xfs_bmap_add_extent_unwritten_real(tp, ip,
--					&lastx, &cur, &del, firstblock, dfops,
--					&logflags);
-+					whichfork, &lastx, &cur, &del,
-+					firstblock, dfops, &logflags);
- 			if (error)
- 				goto error0;
- 			goto nodelete;
-@@ -5711,8 +5729,9 @@ __xfs_bunmapi(
- 				prev.br_state = XFS_EXT_UNWRITTEN;
- 				lastx--;
- 				error = xfs_bmap_add_extent_unwritten_real(tp,
--						ip, &lastx, &cur, &prev,
--						firstblock, dfops, &logflags);
-+						ip, whichfork, &lastx, &cur,
-+						&prev, firstblock, dfops,
-+						&logflags);
- 				if (error)
- 					goto error0;
- 				goto nodelete;
-@@ -5720,8 +5739,9 @@ __xfs_bunmapi(
- 				ASSERT(del.br_state == XFS_EXT_NORM);
- 				del.br_state = XFS_EXT_UNWRITTEN;
- 				error = xfs_bmap_add_extent_unwritten_real(tp,
--						ip, &lastx, &cur, &del,
--						firstblock, dfops, &logflags);
-+						ip, whichfork, &lastx, &cur,
-+						&del, firstblock, dfops,
-+						&logflags);
- 				if (error)
- 					goto error0;
- 				goto nodelete;
+ int
 -- 
 2.11.0
 
