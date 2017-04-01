@@ -1,91 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43826 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:52649 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751559AbdDAGls (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:48 -0400
+        with ESMTP id S1751571AbdDAGlv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:51 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 17/27] xfs: handle indlen shortage on delalloc extent merge
-Date: Sat,  1 Apr 2017 08:40:16 +0200
-Message-Id: <20170401064026.5783-18-hch@lst.de>
+Subject: [PATCH 19/27] xfs: fix uninitialized variable in _reflink_convert_cow
+Date: Sat,  1 Apr 2017 08:40:18 +0200
+Message-Id: <20170401064026.5783-20-hch@lst.de>
 In-Reply-To: <20170401064026.5783-1-hch@lst.de>
 References: <20170401064026.5783-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 0e339ef8556d9e567aa7925f8892c263d79430d9 upstream.
+commit 93aaead52a9eebdc20dc8fa673c350e592a06949 upstream.
 
-When a delalloc extent is created, it can be merged with pre-existing,
-contiguous, delalloc extents. When this occurs,
-xfs_bmap_add_extent_hole_delay() merges the extents along with the
-associated indirect block reservations. The expectation here is that the
-combined worst case indlen reservation is always less than or equal to
-the indlen reservation for the individual extents.
+Fix an uninitialize variable.
 
-This is not always the case, however, as existing extents can less than
-the expected indlen reservation if the extent was previously split due
-to a hole punch. If a new extent merges with such an extent, the total
-indlen requirement may be larger than the sum of the indlen reservations
-held by both extents.
-
-xfs_bmap_add_extent_hole_delay() assumes that the worst case indlen
-reservation is always available and assigns it to the merged extent
-without consideration for the indlen held by the pre-existing extent. As
-a result, the subsequent xfs_mod_fdblocks() call can attempt an
-unintentional allocation rather than a free (indicated by an ASSERT()
-failure). Further, if the allocation happens to fail in this context,
-the failure goes unhandled and creates a filesystem wide block
-accounting inconsistency.
-
-Fix xfs_bmap_add_extent_hole_delay() to function as designed. Cap the
-indlen reservation assigned to the merged extent to the sum of the
-indlen reservations held by each of the individual extents.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_reflink.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 9e3b069fc84b..7457937549bb 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2907,7 +2907,8 @@ xfs_bmap_add_extent_hole_delay(
- 		oldlen = startblockval(left.br_startblock) +
- 			startblockval(new->br_startblock) +
- 			startblockval(right.br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
- 			nullstartblock((int)newlen));
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-@@ -2928,7 +2929,8 @@ xfs_bmap_add_extent_hole_delay(
- 		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx), temp);
- 		oldlen = startblockval(left.br_startblock) +
- 			startblockval(new->br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
- 			nullstartblock((int)newlen));
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-@@ -2944,7 +2946,8 @@ xfs_bmap_add_extent_hole_delay(
- 		temp = new->br_blockcount + right.br_blockcount;
- 		oldlen = startblockval(new->br_startblock) +
- 			startblockval(right.br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
- 			new->br_startoff,
- 			nullstartblock((int)newlen), temp, right.br_state);
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 36c07b12189e..eff070accf04 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -363,7 +363,7 @@ xfs_reflink_convert_cow(
+ 	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
+ 	xfs_extnum_t		idx;
+ 	bool			found;
+-	int			error;
++	int			error = 0;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 
 -- 
 2.11.0
 
