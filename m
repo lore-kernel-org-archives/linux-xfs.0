@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36123 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:42476 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750881AbdDAGgY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:36:24 -0400
+        with ESMTP id S1750881AbdDAGg2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:36:28 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/26] xfs: handle indlen shortage on delalloc extent merge
-Date: Sat,  1 Apr 2017 08:35:02 +0200
-Message-Id: <20170401063512.25313-17-hch@lst.de>
+Subject: [PATCH 17/26] xfs: split indlen reservations fairly when under reserved
+Date: Sat,  1 Apr 2017 08:35:03 +0200
+Message-Id: <20170401063512.25313-18-hch@lst.de>
 In-Reply-To: <20170401063512.25313-1-hch@lst.de>
 References: <20170401063512.25313-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,75 +17,117 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . W
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit 0e339ef8556d9e567aa7925f8892c263d79430d9 upstream.
+commit 75d65361cf3c0dae2af970c305e19c727b28a510 upstream.
 
-When a delalloc extent is created, it can be merged with pre-existing,
-contiguous, delalloc extents. When this occurs,
-xfs_bmap_add_extent_hole_delay() merges the extents along with the
-associated indirect block reservations. The expectation here is that the
-combined worst case indlen reservation is always less than or equal to
-the indlen reservation for the individual extents.
+Certain workoads that punch holes into speculative preallocation can
+cause delalloc indirect reservation splits when the delalloc extent is
+split in two. If further splits occur, an already short-handed extent
+can be split into two in a manner that leaves zero indirect blocks for
+one of the two new extents. This occurs because the shortage is large
+enough that the xfs_bmap_split_indlen() algorithm completely drains the
+requested indlen of one of the extents before it honors the existing
+reservation.
 
-This is not always the case, however, as existing extents can less than
-the expected indlen reservation if the extent was previously split due
-to a hole punch. If a new extent merges with such an extent, the total
-indlen requirement may be larger than the sum of the indlen reservations
-held by both extents.
+This ultimately results in a warning from xfs_bmap_del_extent(). This
+has been observed during file copies of large, sparse files using 'cp
+--sparse=always.'
 
-xfs_bmap_add_extent_hole_delay() assumes that the worst case indlen
-reservation is always available and assigns it to the merged extent
-without consideration for the indlen held by the pre-existing extent. As
-a result, the subsequent xfs_mod_fdblocks() call can attempt an
-unintentional allocation rather than a free (indicated by an ASSERT()
-failure). Further, if the allocation happens to fail in this context,
-the failure goes unhandled and creates a filesystem wide block
-accounting inconsistency.
+To avoid this problem, update xfs_bmap_split_indlen() to explicitly
+apply the reservation shortage fairly between both extents. This smooths
+out the overall indlen shortage and defers the situation where we end up
+with a delalloc extent with zero indlen reservation to extreme
+circumstances.
 
-Fix xfs_bmap_add_extent_hole_delay() to function as designed. Cap the
-indlen reservation assigned to the merged extent to the sum of the
-indlen reservations held by each of the individual extents.
-
+Reported-by: Patrick Dung <mpatdung@gmail.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 61 ++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 43 insertions(+), 18 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 5b626a4f1d13..6eb9ae8ed22d 100644
+index 6eb9ae8ed22d..0eece4c13500 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2816,7 +2816,8 @@ xfs_bmap_add_extent_hole_delay(
- 		oldlen = startblockval(left.br_startblock) +
- 			startblockval(new->br_startblock) +
- 			startblockval(right.br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
- 			nullstartblock((int)newlen));
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-@@ -2837,7 +2838,8 @@ xfs_bmap_add_extent_hole_delay(
- 		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx), temp);
- 		oldlen = startblockval(left.br_startblock) +
- 			startblockval(new->br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_startblock(xfs_iext_get_ext(ifp, *idx),
- 			nullstartblock((int)newlen));
- 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
-@@ -2853,7 +2855,8 @@ xfs_bmap_add_extent_hole_delay(
- 		temp = new->br_blockcount + right.br_blockcount;
- 		oldlen = startblockval(new->br_startblock) +
- 			startblockval(right.br_startblock);
--		newlen = xfs_bmap_worst_indlen(ip, temp);
-+		newlen = XFS_FILBLKS_MIN(xfs_bmap_worst_indlen(ip, temp),
-+					 oldlen);
- 		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
- 			new->br_startoff,
- 			nullstartblock((int)newlen), temp, right.br_state);
+@@ -4805,34 +4805,59 @@ xfs_bmap_split_indlen(
+ 	xfs_filblks_t			len2 = *indlen2;
+ 	xfs_filblks_t			nres = len1 + len2; /* new total res. */
+ 	xfs_filblks_t			stolen = 0;
++	xfs_filblks_t			resfactor;
+ 
+ 	/*
+ 	 * Steal as many blocks as we can to try and satisfy the worst case
+ 	 * indlen for both new extents.
+ 	 */
+-	while (nres > ores && avail) {
+-		nres--;
+-		avail--;
+-		stolen++;
+-	}
++	if (ores < nres && avail)
++		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
++	ores += stolen;
++
++	 /* nothing else to do if we've satisfied the new reservation */
++	if (ores >= nres)
++		return stolen;
++
++	/*
++	 * We can't meet the total required reservation for the two extents.
++	 * Calculate the percent of the overall shortage between both extents
++	 * and apply this percentage to each of the requested indlen values.
++	 * This distributes the shortage fairly and reduces the chances that one
++	 * of the two extents is left with nothing when extents are repeatedly
++	 * split.
++	 */
++	resfactor = (ores * 100);
++	do_div(resfactor, nres);
++	len1 *= resfactor;
++	do_div(len1, 100);
++	len2 *= resfactor;
++	do_div(len2, 100);
++	ASSERT(len1 + len2 <= ores);
++	ASSERT(len1 < *indlen1 && len2 < *indlen2);
+ 
+ 	/*
+-	 * The only blocks available are those reserved for the original
+-	 * extent and what we can steal from the extent being removed.
+-	 * If this still isn't enough to satisfy the combined
+-	 * requirements for the two new extents, skim blocks off of each
+-	 * of the new reservations until they match what is available.
++	 * Hand out the remainder to each extent. If one of the two reservations
++	 * is zero, we want to make sure that one gets a block first. The loop
++	 * below starts with len1, so hand len2 a block right off the bat if it
++	 * is zero.
+ 	 */
+-	while (nres > ores) {
+-		if (len1) {
+-			len1--;
+-			nres--;
++	ores -= (len1 + len2);
++	ASSERT((*indlen1 - len1) + (*indlen2 - len2) >= ores);
++	if (ores && !len2 && *indlen2) {
++		len2++;
++		ores--;
++	}
++	while (ores) {
++		if (len1 < *indlen1) {
++			len1++;
++			ores--;
+ 		}
+-		if (nres == ores)
++		if (!ores)
+ 			break;
+-		if (len2) {
+-			len2--;
+-			nres--;
++		if (len2 < *indlen2) {
++			len2++;
++			ores--;
+ 		}
+ 	}
+ 
 -- 
 2.11.0
 
