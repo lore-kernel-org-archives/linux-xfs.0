@@ -1,342 +1,267 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44982 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:58315 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750924AbdDAGkk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:40:40 -0400
+        with ESMTP id S1750992AbdDAGkp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:40:45 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/27] xfs: use per-AG reservations for the finobt
-Date: Sat,  1 Apr 2017 08:40:01 +0200
-Message-Id: <20170401064026.5783-3-hch@lst.de>
+Subject: [PATCH 03/27] xfs: pull up iolock from xfs_free_eofblocks()
+Date: Sat,  1 Apr 2017 08:40:02 +0200
+Message-Id: <20170401064026.5783-4-hch@lst.de>
 In-Reply-To: <20170401064026.5783-1-hch@lst.de>
 References: <20170401064026.5783-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit 76d771b4cbe33c581bd6ca2710c120be51172440 upstream.
+From: Brian Foster <bfoster@redhat.com>
 
-Currently we try to rely on the global reserved block pool for block
-allocations for the free inode btree, but I have customer reports
-(fairly complex workload, need to find an easier reproducer) where that
-is not enough as the AG where we free an inode that requires a new
-finobt block is entirely full.  This causes us to cancel a dirty
-transaction and thus a file system shutdown.
+commit a36b926180cda375ac2ec89e1748b47137cfc51c upstream.
 
-I think the right way to guard against this is to treat the finot the same
-way as the refcount btree and have a per-AG reservations for the possible
-worst case size of it, and the patch below implements that.
+xfs_free_eofblocks() requires the IOLOCK_EXCL lock, but is called from
+different contexts where the lock may or may not be held. The
+need_iolock parameter exists for this reason, to indicate whether
+xfs_free_eofblocks() must acquire the iolock itself before it can
+proceed.
 
-Note that this could increase mount times with large finobt trees.  In
-an ideal world we would have added a field for the number of finobt
-fields to the AGI, similar to what we did for the refcount blocks.
-We should do add it next time we rev the AGI or AGF format by adding
-new fields.
+This is ugly and confusing. Simplify the semantics of
+xfs_free_eofblocks() to require the caller to acquire the iolock
+appropriately and kill the need_iolock parameter. While here, the mp
+param can be removed as well as the xfs_mount is accessible from the
+xfs_inode structure. This patch does not change behavior.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_ag_resv.c      | 47 ++++++++++++++++++---
- fs/xfs/libxfs/xfs_ialloc_btree.c | 90 ++++++++++++++++++++++++++++++++++++++--
- fs/xfs/libxfs/xfs_ialloc_btree.h |  3 ++
- fs/xfs/xfs_inode.c               | 23 +++++-----
- fs/xfs/xfs_mount.h               |  1 +
- 5 files changed, 144 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 41 ++++++++++++++++------------------------
+ fs/xfs/xfs_bmap_util.h |  3 +--
+ fs/xfs/xfs_icache.c    | 24 +++++++++++++++---------
+ fs/xfs/xfs_inode.c     | 51 +++++++++++++++++++++++++++-----------------------
+ 4 files changed, 60 insertions(+), 59 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index 94234bff40dc..33db69be4832 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -39,6 +39,7 @@
- #include "xfs_rmap_btree.h"
- #include "xfs_btree.h"
- #include "xfs_refcount_btree.h"
-+#include "xfs_ialloc_btree.h"
- 
- /*
-  * Per-AG Block Reservations
-@@ -210,6 +211,9 @@ __xfs_ag_resv_init(
- 	if (error) {
- 		trace_xfs_ag_resv_init_error(pag->pag_mount, pag->pag_agno,
- 				error, _RET_IP_);
-+		xfs_warn(mp,
-+"Per-AG reservation for AG %u failed.  Filesystem may run out of space.",
-+				pag->pag_agno);
- 		return error;
- 	}
- 
-@@ -228,6 +232,8 @@ int
- xfs_ag_resv_init(
- 	struct xfs_perag		*pag)
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index efb8ccd6bbf2..d8ac76ca05a2 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -917,17 +917,18 @@ xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
+  */
+ int
+ xfs_free_eofblocks(
+-	xfs_mount_t	*mp,
+-	xfs_inode_t	*ip,
+-	bool		need_iolock)
++	struct xfs_inode	*ip)
  {
-+	struct xfs_mount		*mp = pag->pag_mount;
-+	xfs_agnumber_t			agno = pag->pag_agno;
- 	xfs_extlen_t			ask;
- 	xfs_extlen_t			used;
- 	int				error = 0;
-@@ -236,23 +242,45 @@ xfs_ag_resv_init(
- 	if (pag->pag_meta_resv.ar_asked == 0) {
- 		ask = used = 0;
- 
--		error = xfs_refcountbt_calc_reserves(pag->pag_mount,
--				pag->pag_agno, &ask, &used);
-+		error = xfs_refcountbt_calc_reserves(mp, agno, &ask, &used);
- 		if (error)
- 			goto out;
- 
--		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_METADATA,
--				ask, used);
-+		error = xfs_finobt_calc_reserves(mp, agno, &ask, &used);
- 		if (error)
- 			goto out;
-+
-+		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_METADATA,
-+				ask, used);
-+		if (error) {
-+			/*
-+			 * Because we didn't have per-AG reservations when the
-+			 * finobt feature was added we might not be able to
-+			 * reserve all needed blocks.  Warn and fall back to the
-+			 * old and potentially buggy code in that case, but
-+			 * ensure we do have the reservation for the refcountbt.
-+			 */
-+			ask = used = 0;
-+
-+			mp->m_inotbt_nores = true;
-+
-+			error = xfs_refcountbt_calc_reserves(mp, agno, &ask,
-+					&used);
-+			if (error)
-+				goto out;
-+
-+			error = __xfs_ag_resv_init(pag, XFS_AG_RESV_METADATA,
-+					ask, used);
-+			if (error)
-+				goto out;
-+		}
- 	}
- 
- 	/* Create the AGFL metadata reservation */
- 	if (pag->pag_agfl_resv.ar_asked == 0) {
- 		ask = used = 0;
- 
--		error = xfs_rmapbt_calc_reserves(pag->pag_mount, pag->pag_agno,
--				&ask, &used);
-+		error = xfs_rmapbt_calc_reserves(mp, agno, &ask, &used);
- 		if (error)
- 			goto out;
- 
-@@ -261,9 +289,16 @@ xfs_ag_resv_init(
- 			goto out;
- 	}
- 
-+#ifdef DEBUG
-+	/* need to read in the AGF for the ASSERT below to work */
-+	error = xfs_alloc_pagf_init(pag->pag_mount, NULL, pag->pag_agno, 0);
-+	if (error)
-+		return error;
-+
- 	ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
- 	       xfs_perag_resv(pag, XFS_AG_RESV_AGFL)->ar_reserved <=
- 	       pag->pagf_freeblks + pag->pagf_flcount);
-+#endif
- out:
- 	return error;
- }
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 6c6b95947e71..b9c351ff0422 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -82,11 +82,12 @@ xfs_finobt_set_root(
- }
- 
- STATIC int
--xfs_inobt_alloc_block(
-+__xfs_inobt_alloc_block(
- 	struct xfs_btree_cur	*cur,
- 	union xfs_btree_ptr	*start,
- 	union xfs_btree_ptr	*new,
--	int			*stat)
-+	int			*stat,
-+	enum xfs_ag_resv_type	resv)
- {
- 	xfs_alloc_arg_t		args;		/* block allocation args */
- 	int			error;		/* error return value */
-@@ -103,6 +104,7 @@ xfs_inobt_alloc_block(
- 	args.maxlen = 1;
- 	args.prod = 1;
- 	args.type = XFS_ALLOCTYPE_NEAR_BNO;
-+	args.resv = resv;
- 
- 	error = xfs_alloc_vextent(&args);
- 	if (error) {
-@@ -123,6 +125,27 @@ xfs_inobt_alloc_block(
- }
- 
- STATIC int
-+xfs_inobt_alloc_block(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*start,
-+	union xfs_btree_ptr	*new,
-+	int			*stat)
-+{
-+	return __xfs_inobt_alloc_block(cur, start, new, stat, XFS_AG_RESV_NONE);
-+}
-+
-+STATIC int
-+xfs_finobt_alloc_block(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*start,
-+	union xfs_btree_ptr	*new,
-+	int			*stat)
-+{
-+	return __xfs_inobt_alloc_block(cur, start, new, stat,
-+			XFS_AG_RESV_METADATA);
-+}
-+
-+STATIC int
- xfs_inobt_free_block(
- 	struct xfs_btree_cur	*cur,
- 	struct xfs_buf		*bp)
-@@ -328,7 +351,7 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
- 
- 	.dup_cursor		= xfs_inobt_dup_cursor,
- 	.set_root		= xfs_finobt_set_root,
--	.alloc_block		= xfs_inobt_alloc_block,
-+	.alloc_block		= xfs_finobt_alloc_block,
- 	.free_block		= xfs_inobt_free_block,
- 	.get_minrecs		= xfs_inobt_get_minrecs,
- 	.get_maxrecs		= xfs_inobt_get_maxrecs,
-@@ -478,3 +501,64 @@ xfs_inobt_rec_check_count(
- 	return 0;
- }
- #endif	/* DEBUG */
-+
-+static xfs_extlen_t
-+xfs_inobt_max_size(
-+	struct xfs_mount	*mp)
-+{
-+	/* Bail out if we're uninitialized, which can happen in mkfs. */
-+	if (mp->m_inobt_mxr[0] == 0)
-+		return 0;
-+
-+	return xfs_btree_calc_size(mp, mp->m_inobt_mnr,
-+		(uint64_t)mp->m_sb.sb_agblocks * mp->m_sb.sb_inopblock /
-+				XFS_INODES_PER_CHUNK);
-+}
-+
-+static int
-+xfs_inobt_count_blocks(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_btnum_t		btnum,
-+	xfs_extlen_t		*tree_blocks)
-+{
-+	struct xfs_buf		*agbp;
-+	struct xfs_btree_cur	*cur;
+-	xfs_trans_t	*tp;
+-	int		error;
+-	xfs_fileoff_t	end_fsb;
+-	xfs_fileoff_t	last_fsb;
+-	xfs_filblks_t	map_len;
+-	int		nimaps;
+-	xfs_bmbt_irec_t	imap;
++	struct xfs_trans	*tp;
 +	int			error;
++	xfs_fileoff_t		end_fsb;
++	xfs_fileoff_t		last_fsb;
++	xfs_filblks_t		map_len;
++	int			nimaps;
++	struct xfs_bmbt_irec	imap;
++	struct xfs_mount	*mp = ip->i_mount;
 +
-+	error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
-+	if (error)
-+		return error;
-+
-+	cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno, btnum);
-+	error = xfs_btree_count_blocks(cur, tree_blocks);
-+	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-+	xfs_buf_relse(agbp);
-+
-+	return error;
-+}
-+
-+/*
-+ * Figure out how many blocks to reserve and how many are used by this btree.
-+ */
-+int
-+xfs_finobt_calc_reserves(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_extlen_t		*ask,
-+	xfs_extlen_t		*used)
-+{
-+	xfs_extlen_t		tree_len = 0;
-+	int			error;
-+
-+	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
-+		return 0;
-+
-+	error = xfs_inobt_count_blocks(mp, agno, XFS_BTNUM_FINO, &tree_len);
-+	if (error)
-+		return error;
-+
-+	*ask += xfs_inobt_max_size(mp);
-+	*used += tree_len;
-+	return 0;
-+}
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
-index bd88453217ce..aa81e2e63f3f 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.h
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
-@@ -72,4 +72,7 @@ int xfs_inobt_rec_check_count(struct xfs_mount *,
- #define xfs_inobt_rec_check_count(mp, rec)	0
- #endif	/* DEBUG */
- 
-+int xfs_finobt_calc_reserves(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		xfs_extlen_t *ask, xfs_extlen_t *used);
-+
- #endif	/* __XFS_IALLOC_BTREE_H__ */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 512ff13ed66a..a1c7e138dbca 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1801,22 +1801,23 @@ xfs_inactive_ifree(
- 	int			error;
++	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
  
  	/*
--	 * The ifree transaction might need to allocate blocks for record
--	 * insertion to the finobt. We don't want to fail here at ENOSPC, so
--	 * allow ifree to dip into the reserved block pool if necessary.
--	 *
--	 * Freeing large sets of inodes generally means freeing inode chunks,
--	 * directory and file data blocks, so this should be relatively safe.
--	 * Only under severe circumstances should it be possible to free enough
--	 * inodes to exhaust the reserve block pool via finobt expansion while
--	 * at the same time not creating free space in the filesystem.
-+	 * We try to use a per-AG reservation for any block needed by the finobt
-+	 * tree, but as the finobt feature predates the per-AG reservation
-+	 * support a degraded file system might not have enough space for the
-+	 * reservation at mount time.  In that case try to dip into the reserved
-+	 * pool and pray.
- 	 *
- 	 * Send a warning if the reservation does happen to fail, as the inode
- 	 * now remains allocated and sits on the unlinked list until the fs is
- 	 * repaired.
+ 	 * Figure out if there are any blocks beyond the end
+@@ -944,6 +945,10 @@ xfs_free_eofblocks(
+ 	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 
++	/*
++	 * If there are blocks after the end of file, truncate the file to its
++	 * current size to free them up.
++	 */
+ 	if (!error && (nimaps != 0) &&
+ 	    (imap.br_startblock != HOLESTARTBLOCK ||
+ 	     ip->i_delayed_blks)) {
+@@ -954,22 +959,10 @@ xfs_free_eofblocks(
+ 		if (error)
+ 			return error;
+ 
+-		/*
+-		 * There are blocks after the end of file.
+-		 * Free them up now by truncating the file to
+-		 * its current size.
+-		 */
+-		if (need_iolock) {
+-			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL))
+-				return -EAGAIN;
+-		}
+-
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0,
+ 				&tp);
+ 		if (error) {
+ 			ASSERT(XFS_FORCED_SHUTDOWN(mp));
+-			if (need_iolock)
+-				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 			return error;
+ 		}
+ 
+@@ -997,8 +990,6 @@ xfs_free_eofblocks(
+ 		}
+ 
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		if (need_iolock)
+-			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 	}
+ 	return error;
+ }
+@@ -1415,7 +1406,7 @@ xfs_shift_file_space(
+ 	 * into the accessible region of the file.
  	 */
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ifree,
--			XFS_IFREE_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
-+	if (unlikely(mp->m_inotbt_nores)) {
-+		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ifree,
-+				XFS_IFREE_SPACE_RES(mp), 0, XFS_TRANS_RESERVE,
-+				&tp);
-+	} else {
-+		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ifree, 0, 0, 0, &tp);
+ 	if (xfs_can_free_eofblocks(ip, true)) {
+-		error = xfs_free_eofblocks(mp, ip, false);
++		error = xfs_free_eofblocks(ip);
+ 		if (error)
+ 			return error;
+ 	}
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 68a621a8e0c0..f1005393785c 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -63,8 +63,7 @@ int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
+ 
+ /* EOF block manipulation functions */
+ bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
+-int	xfs_free_eofblocks(struct xfs_mount *mp, struct xfs_inode *ip,
+-			   bool need_iolock);
++int	xfs_free_eofblocks(struct xfs_inode *ip);
+ 
+ int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
+ 			 struct xfs_swapext *sx);
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 29cc9886a3cb..e4b382aabf9f 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1324,7 +1324,7 @@ xfs_inode_free_eofblocks(
+ 	int			flags,
+ 	void			*args)
+ {
+-	int ret;
++	int ret = 0;
+ 	struct xfs_eofblocks *eofb = args;
+ 	bool need_iolock = true;
+ 	int match;
+@@ -1360,19 +1360,25 @@ xfs_inode_free_eofblocks(
+ 			return 0;
+ 
+ 		/*
+-		 * A scan owner implies we already hold the iolock. Skip it in
+-		 * xfs_free_eofblocks() to avoid deadlock. This also eliminates
+-		 * the possibility of EAGAIN being returned.
++		 * A scan owner implies we already hold the iolock. Skip it here
++		 * to avoid deadlock.
+ 		 */
+ 		if (eofb->eof_scan_owner == ip->i_ino)
+ 			need_iolock = false;
+ 	}
+ 
+-	ret = xfs_free_eofblocks(ip->i_mount, ip, need_iolock);
+-
+-	/* don't revisit the inode if we're not waiting */
+-	if (ret == -EAGAIN && !(flags & SYNC_WAIT))
+-		ret = 0;
++	/*
++	 * If the caller is waiting, return -EAGAIN to keep the background
++	 * scanner moving and revisit the inode in a subsequent pass.
++	 */
++	if (need_iolock && !xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
++		if (flags & SYNC_WAIT)
++			ret = -EAGAIN;
++		return ret;
 +	}
- 	if (error) {
- 		if (error == -ENOSPC) {
- 			xfs_warn_ratelimited(mp,
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 819b80b15bfb..1bf878b0492c 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -140,6 +140,7 @@ typedef struct xfs_mount {
- 	int			m_fixedfsid[2];	/* unchanged for life of FS */
- 	uint			m_dmevmask;	/* DMI events for this FS */
- 	__uint64_t		m_flags;	/* global mount flags */
-+	bool			m_inotbt_nores; /* no per-AG finobt resv. */
- 	int			m_ialloc_inos;	/* inodes in inode allocation */
- 	int			m_ialloc_blks;	/* blocks in inode allocation */
- 	int			m_ialloc_min_blks;/* min blocks in sparse inode
++	ret = xfs_free_eofblocks(ip);
++	if (need_iolock)
++		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 
+ 	return ret;
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index a1c7e138dbca..f9f44cb56fe8 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1701,32 +1701,34 @@ xfs_release(
+ 	if (xfs_can_free_eofblocks(ip, false)) {
+ 
+ 		/*
++		 * Check if the inode is being opened, written and closed
++		 * frequently and we have delayed allocation blocks outstanding
++		 * (e.g. streaming writes from the NFS server), truncating the
++		 * blocks past EOF will cause fragmentation to occur.
++		 *
++		 * In this case don't do the truncation, but we have to be
++		 * careful how we detect this case. Blocks beyond EOF show up as
++		 * i_delayed_blks even when the inode is clean, so we need to
++		 * truncate them away first before checking for a dirty release.
++		 * Hence on the first dirty close we will still remove the
++		 * speculative allocation, but after that we will leave it in
++		 * place.
++		 */
++		if (xfs_iflags_test(ip, XFS_IDIRTY_RELEASE))
++			return 0;
++		/*
+ 		 * If we can't get the iolock just skip truncating the blocks
+ 		 * past EOF because we could deadlock with the mmap_sem
+-		 * otherwise.  We'll get another chance to drop them once the
++		 * otherwise. We'll get another chance to drop them once the
+ 		 * last reference to the inode is dropped, so we'll never leak
+ 		 * blocks permanently.
+-		 *
+-		 * Further, check if the inode is being opened, written and
+-		 * closed frequently and we have delayed allocation blocks
+-		 * outstanding (e.g. streaming writes from the NFS server),
+-		 * truncating the blocks past EOF will cause fragmentation to
+-		 * occur.
+-		 *
+-		 * In this case don't do the truncation, either, but we have to
+-		 * be careful how we detect this case. Blocks beyond EOF show
+-		 * up as i_delayed_blks even when the inode is clean, so we
+-		 * need to truncate them away first before checking for a dirty
+-		 * release. Hence on the first dirty close we will still remove
+-		 * the speculative allocation, but after that we will leave it
+-		 * in place.
+ 		 */
+-		if (xfs_iflags_test(ip, XFS_IDIRTY_RELEASE))
+-			return 0;
+-
+-		error = xfs_free_eofblocks(mp, ip, true);
+-		if (error && error != -EAGAIN)
+-			return error;
++		if (xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
++			error = xfs_free_eofblocks(ip);
++			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++			if (error)
++				return error;
++		}
+ 
+ 		/* delalloc blocks after truncation means it really is dirty */
+ 		if (ip->i_delayed_blks)
+@@ -1913,8 +1915,11 @@ xfs_inactive(
+ 		 * cache. Post-eof blocks must be freed, lest we end up with
+ 		 * broken free space accounting.
+ 		 */
+-		if (xfs_can_free_eofblocks(ip, true))
+-			xfs_free_eofblocks(mp, ip, false);
++		if (xfs_can_free_eofblocks(ip, true)) {
++			xfs_ilock(ip, XFS_IOLOCK_EXCL);
++			xfs_free_eofblocks(ip);
++			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++		}
+ 
+ 		return;
+ 	}
 -- 
 2.11.0
 
