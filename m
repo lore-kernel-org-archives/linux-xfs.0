@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40336 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:51049 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751306AbdDAGfi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:35:38 -0400
+        with ESMTP id S1750918AbdDAGfm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:35:42 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/26] xfs: fail _dir_open when readahead fails
-Date: Sat,  1 Apr 2017 08:34:51 +0200
-Message-Id: <20170401063512.25313-6-hch@lst.de>
+Subject: [PATCH 06/26] xfs: filter out obviously bad btree pointers
+Date: Sat,  1 Apr 2017 08:34:52 +0200
+Message-Id: <20170401063512.25313-7-hch@lst.de>
 In-Reply-To: <20170401063512.25313-1-hch@lst.de>
 References: <20170401063512.25313-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,78 +17,69 @@ Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 7a652bbe366464267190c2792a32ce4fff5595ef upstream.
+commit d5a91baeb6033c3392121e4d5c011cdc08dfa9f7 upstream.
 
-When we open a directory, we try to readahead block 0 of the directory
-on the assumption that we're going to need it soon.  If the bmbt is
-corrupt, the directory will never be usable and the readahead fails
-immediately, so we might as well prevent the directory from being opened
-at all.  This prevents a subsequent read or modify operation from
-hitting it and taking the fs offline.
-
-NOTE: We're only checking for early failures in the block mapping, not
-the readahead directory block itself.
+Don't let anybody load an obviously bad btree pointer.  Since the values
+come from disk, we must return an error, not just ASSERT.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_da_btree.c | 6 ++----
- fs/xfs/libxfs/xfs_da_btree.h | 2 +-
- fs/xfs/xfs_file.c            | 4 ++--
- 3 files changed, 5 insertions(+), 7 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c  | 5 +----
+ fs/xfs/libxfs/xfs_btree.c | 3 ++-
+ fs/xfs/libxfs/xfs_btree.h | 2 +-
+ 3 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index f2dc1a950c85..1bdf2888295b 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -2633,7 +2633,7 @@ xfs_da_read_buf(
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index bfc00de5c6f1..d79c66d1215d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1278,7 +1278,6 @@ xfs_bmap_read_extents(
+ 	/* REFERENCED */
+ 	xfs_extnum_t		room;	/* number of entries there's room for */
+ 
+-	bno = NULLFSBLOCK;
+ 	mp = ip->i_mount;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	exntf = (whichfork != XFS_DATA_FORK) ? XFS_EXTFMT_NOSTATE :
+@@ -1291,9 +1290,7 @@ xfs_bmap_read_extents(
+ 	ASSERT(level > 0);
+ 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+ 	bno = be64_to_cpu(*pp);
+-	ASSERT(bno != NULLFSBLOCK);
+-	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
+-	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
++
+ 	/*
+ 	 * Go down the tree until leaf level is reached, following the first
+ 	 * pointer (leftmost) at each level.
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 21e6a6ab6b9a..2849d3fa3d0b 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -810,7 +810,8 @@ xfs_btree_read_bufl(
+ 	xfs_daddr_t		d;		/* real disk block address */
+ 	int			error;
+ 
+-	ASSERT(fsbno != NULLFSBLOCK);
++	if (!XFS_FSB_SANITY_CHECK(mp, fsbno))
++		return -EFSCORRUPTED;
+ 	d = XFS_FSB_TO_DADDR(mp, fsbno);
+ 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
+ 				   mp->m_bsize, lock, &bp, ops);
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index b69b947c4c1b..33a8f8694d30 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -456,7 +456,7 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+ #define	XFS_FILBLKS_MAX(a,b)	max_t(xfs_filblks_t, (a), (b))
+ 
+ #define	XFS_FSB_SANITY_CHECK(mp,fsb)	\
+-	(XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
++	(fsb && XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
+ 		XFS_FSB_TO_AGBNO(mp, fsb) < mp->m_sb.sb_agblocks)
+ 
  /*
-  * Readahead the dir/attr block.
-  */
--xfs_daddr_t
-+int
- xfs_da_reada_buf(
- 	struct xfs_inode	*dp,
- 	xfs_dablk_t		bno,
-@@ -2664,7 +2664,5 @@ xfs_da_reada_buf(
- 	if (mapp != &map)
- 		kmem_free(mapp);
- 
--	if (error)
--		return -1;
--	return mappedbno;
-+	return error;
- }
-diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index 98c75cbe6ac2..4e29cb6a3627 100644
---- a/fs/xfs/libxfs/xfs_da_btree.h
-+++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -201,7 +201,7 @@ int	xfs_da_read_buf(struct xfs_trans *trans, struct xfs_inode *dp,
- 			       xfs_dablk_t bno, xfs_daddr_t mappedbno,
- 			       struct xfs_buf **bpp, int whichfork,
- 			       const struct xfs_buf_ops *ops);
--xfs_daddr_t	xfs_da_reada_buf(struct xfs_inode *dp, xfs_dablk_t bno,
-+int	xfs_da_reada_buf(struct xfs_inode *dp, xfs_dablk_t bno,
- 				xfs_daddr_t mapped_bno, int whichfork,
- 				const struct xfs_buf_ops *ops);
- int	xfs_da_shrink_inode(xfs_da_args_t *args, xfs_dablk_t dead_blkno,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 0a29739f785e..032c8a74824a 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -913,9 +913,9 @@ xfs_dir_open(
- 	 */
- 	mode = xfs_ilock_data_map_shared(ip);
- 	if (ip->i_d.di_nextents > 0)
--		xfs_dir3_data_readahead(ip, 0, -1);
-+		error = xfs_dir3_data_readahead(ip, 0, -1);
- 	xfs_iunlock(ip, mode);
--	return 0;
-+	return error;
- }
- 
- STATIC int
 -- 
 2.11.0
 
