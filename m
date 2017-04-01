@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49236 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:40336 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750927AbdDAGfe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:35:34 -0400
+        with ESMTP id S1751306AbdDAGfi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:35:38 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/26] xfs: fix toctou race when locking an inode to access the data map
-Date: Sat,  1 Apr 2017 08:34:50 +0200
-Message-Id: <20170401063512.25313-5-hch@lst.de>
+Subject: [PATCH 05/26] xfs: fail _dir_open when readahead fails
+Date: Sat,  1 Apr 2017 08:34:51 +0200
+Message-Id: <20170401063512.25313-6-hch@lst.de>
 In-Reply-To: <20170401063512.25313-1-hch@lst.de>
 References: <20170401063512.25313-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,47 +17,78 @@ Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 4b5bd5bf3fb182dc504b1b64e0331300f156e756 upstream.
+commit 7a652bbe366464267190c2792a32ce4fff5595ef upstream.
 
-We use di_format and if_flags to decide whether we're grabbing the ilock
-in btree mode (btree extents not loaded) or shared mode (anything else),
-but the state of those fields can be changed by other threads that are
-also trying to load the btree extents -- IFEXTENTS gets set before the
-_bmap_read_extents call and cleared if it fails.
+When we open a directory, we try to readahead block 0 of the directory
+on the assumption that we're going to need it soon.  If the bmbt is
+corrupt, the directory will never be usable and the readahead fails
+immediately, so we might as well prevent the directory from being opened
+at all.  This prevents a subsequent read or modify operation from
+hitting it and taking the fs offline.
 
-We don't actually need to have IFEXTENTS set until after the bmbt
-records are successfully loaded and validated, which will fix the race
-between multiple threads trying to read the same directory.  The next
-patch strengthens directory bmbt validation by refusing to open the
-directory if reading the bmbt to start directory readahead fails.
+NOTE: We're only checking for early failures in the block mapping, not
+the readahead directory block itself.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_inode_fork.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_da_btree.c | 6 ++----
+ fs/xfs/libxfs/xfs_da_btree.h | 2 +-
+ fs/xfs/xfs_file.c            | 4 ++--
+ 3 files changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 222e103356c6..421341f93bea 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -497,15 +497,14 @@ xfs_iread_extents(
- 	 * We know that the size is valid (it's checked in iformat_btree)
- 	 */
- 	ifp->if_bytes = ifp->if_real_bytes = 0;
--	ifp->if_flags |= XFS_IFEXTENTS;
- 	xfs_iext_add(ifp, 0, nextents);
- 	error = xfs_bmap_read_extents(tp, ip, whichfork);
- 	if (error) {
- 		xfs_iext_destroy(ifp);
--		ifp->if_flags &= ~XFS_IFEXTENTS;
- 		return error;
- 	}
- 	xfs_validate_extents(ifp, nextents, XFS_EXTFMT_INODE(ip));
-+	ifp->if_flags |= XFS_IFEXTENTS;
- 	return 0;
- }
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index f2dc1a950c85..1bdf2888295b 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -2633,7 +2633,7 @@ xfs_da_read_buf(
  /*
+  * Readahead the dir/attr block.
+  */
+-xfs_daddr_t
++int
+ xfs_da_reada_buf(
+ 	struct xfs_inode	*dp,
+ 	xfs_dablk_t		bno,
+@@ -2664,7 +2664,5 @@ xfs_da_reada_buf(
+ 	if (mapp != &map)
+ 		kmem_free(mapp);
+ 
+-	if (error)
+-		return -1;
+-	return mappedbno;
++	return error;
+ }
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index 98c75cbe6ac2..4e29cb6a3627 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -201,7 +201,7 @@ int	xfs_da_read_buf(struct xfs_trans *trans, struct xfs_inode *dp,
+ 			       xfs_dablk_t bno, xfs_daddr_t mappedbno,
+ 			       struct xfs_buf **bpp, int whichfork,
+ 			       const struct xfs_buf_ops *ops);
+-xfs_daddr_t	xfs_da_reada_buf(struct xfs_inode *dp, xfs_dablk_t bno,
++int	xfs_da_reada_buf(struct xfs_inode *dp, xfs_dablk_t bno,
+ 				xfs_daddr_t mapped_bno, int whichfork,
+ 				const struct xfs_buf_ops *ops);
+ int	xfs_da_shrink_inode(xfs_da_args_t *args, xfs_dablk_t dead_blkno,
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 0a29739f785e..032c8a74824a 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -913,9 +913,9 @@ xfs_dir_open(
+ 	 */
+ 	mode = xfs_ilock_data_map_shared(ip);
+ 	if (ip->i_d.di_nextents > 0)
+-		xfs_dir3_data_readahead(ip, 0, -1);
++		error = xfs_dir3_data_readahead(ip, 0, -1);
+ 	xfs_iunlock(ip, mode);
+-	return 0;
++	return error;
+ }
+ 
+ STATIC int
 -- 
 2.11.0
 
