@@ -1,79 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:41755 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:37502 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750924AbdDAGgL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:36:11 -0400
+        with ESMTP id S1750841AbdDAGgQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:36:16 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/26] xfs: update ctime and mtime on clone destinatation inodes
-Date: Sat,  1 Apr 2017 08:34:59 +0200
-Message-Id: <20170401063512.25313-14-hch@lst.de>
+Subject: [PATCH 14/26] xfs: correct null checks and error processing in xfs_initialize_perag
+Date: Sat,  1 Apr 2017 08:35:00 +0200
+Message-Id: <20170401063512.25313-15-hch@lst.de>
 In-Reply-To: <20170401063512.25313-1-hch@lst.de>
 References: <20170401063512.25313-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Bill O'Donnell <billodo@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit c5ecb42342852892f978572ddc6dca703460f25a upstream.
+From: Bill O'Donnell <billodo@redhat.com>
 
-We're changing both metadata and data, so we need to update the
-timestamps for clone operations.  Dedupe on the other hand does
-not change file data, and only changes invisible metadata so the
-timestamps should not be updated.
+commit b20fe4730ea5c037c16631fb0df659c7b6d4b3b1 upstream.
 
-This follows existing btrfs behavior.
+If pag cannot be allocated, the current error exit path will trip
+a null pointer deference error when calling xfs_buf_hash_destroy
+with a null pag.  Fix this by adding a new error exit labels and
+jumping to those accordingly, avoiding the hash destroy and
+unnecessary kmem_free on pag.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Up to three things need to be properly unwound:
+
+1) pag memory allocation
+2) xfs_buf_hash_init
+3) radix_tree_insert
+
+For any given iteration through the loop, any of the above which
+succeed must be unwound for /this/ pag, and then all prior
+initialized pags must be unwound.
+
+Addresses-Coverity-Id: 1397628 ("Dereference after null check")
+
+Reported-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-[darrick: remove redundant is_dedupe test]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_reflink.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_mount.c | 24 +++++++++++++++---------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 8c8c4f4676da..d8c51248e207 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -955,13 +955,14 @@ STATIC int
- xfs_reflink_update_dest(
- 	struct xfs_inode	*dest,
- 	xfs_off_t		newlen,
--	xfs_extlen_t		cowextsize)
-+	xfs_extlen_t		cowextsize,
-+	bool			is_dedupe)
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 9b9540db17a6..1f1e4ae44150 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -187,7 +187,7 @@ xfs_initialize_perag(
+ 	xfs_agnumber_t	*maxagi)
  {
- 	struct xfs_mount	*mp = dest->i_mount;
- 	struct xfs_trans	*tp;
- 	int			error;
+ 	xfs_agnumber_t	index;
+-	xfs_agnumber_t	first_initialised = 0;
++	xfs_agnumber_t	first_initialised = NULLAGNUMBER;
+ 	xfs_perag_t	*pag;
+ 	int		error = -ENOMEM;
  
--	if (newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
-+	if (is_dedupe && newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
- 		return 0;
+@@ -202,22 +202,20 @@ xfs_initialize_perag(
+ 			xfs_perag_put(pag);
+ 			continue;
+ 		}
+-		if (!first_initialised)
+-			first_initialised = index;
  
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-@@ -982,6 +983,10 @@ xfs_reflink_update_dest(
- 		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+ 		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
+ 		if (!pag)
+-			goto out_unwind;
++			goto out_unwind_new_pags;
+ 		pag->pag_agno = index;
+ 		pag->pag_mount = mp;
+ 		spin_lock_init(&pag->pag_ici_lock);
+ 		mutex_init(&pag->pag_ici_reclaim_lock);
+ 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+ 		if (xfs_buf_hash_init(pag))
+-			goto out_unwind;
++			goto out_free_pag;
+ 
+ 		if (radix_tree_preload(GFP_NOFS))
+-			goto out_unwind;
++			goto out_hash_destroy;
+ 
+ 		spin_lock(&mp->m_perag_lock);
+ 		if (radix_tree_insert(&mp->m_perag_tree, index, pag)) {
+@@ -225,10 +223,13 @@ xfs_initialize_perag(
+ 			spin_unlock(&mp->m_perag_lock);
+ 			radix_tree_preload_end();
+ 			error = -EEXIST;
+-			goto out_unwind;
++			goto out_hash_destroy;
+ 		}
+ 		spin_unlock(&mp->m_perag_lock);
+ 		radix_tree_preload_end();
++		/* first new pag is fully initialized */
++		if (first_initialised == NULLAGNUMBER)
++			first_initialised = index;
  	}
  
-+	if (!is_dedupe) {
-+		xfs_trans_ichgtime(tp, dest,
-+				   XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	}
- 	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
+ 	index = xfs_set_inode_alloc(mp, agcount);
+@@ -239,11 +240,16 @@ xfs_initialize_perag(
+ 	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+ 	return 0;
  
- 	error = xfs_trans_commit(tp);
-@@ -1295,7 +1300,8 @@ xfs_reflink_remap_range(
- 	    !(dest->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
- 		cowextsize = src->i_d.di_cowextsize;
- 
--	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize);
-+	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize,
-+			is_dedupe);
- 
- out_unlock:
- 	xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
+-out_unwind:
++out_hash_destroy:
+ 	xfs_buf_hash_destroy(pag);
++out_free_pag:
+ 	kmem_free(pag);
+-	for (; index > first_initialised; index--) {
++out_unwind_new_pags:
++	/* unwind any prior newly initialized pags */
++	for (index = first_initialised; index < agcount; index++) {
+ 		pag = radix_tree_delete(&mp->m_perag_tree, index);
++		if (!pag)
++			break;
+ 		xfs_buf_hash_destroy(pag);
+ 		kmem_free(pag);
+ 	}
 -- 
 2.11.0
 
