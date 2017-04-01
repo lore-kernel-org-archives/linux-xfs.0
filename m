@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50878 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:52416 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751523AbdDAGlf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:35 -0400
+        with ESMTP id S1751541AbdDAGlj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:39 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/27] xfs: update ctime and mtime on clone destinatation inodes
-Date: Sat,  1 Apr 2017 08:40:14 +0200
-Message-Id: <20170401064026.5783-16-hch@lst.de>
+Subject: [PATCH 16/27] xfs: don't fail xfs_extent_busy allocation
+Date: Sat,  1 Apr 2017 08:40:15 +0200
+Message-Id: <20170401064026.5783-17-hch@lst.de>
 In-Reply-To: <20170401064026.5783-1-hch@lst.de>
 References: <20170401064026.5783-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,65 +15,44 @@ List-Id: xfs
 To: stable@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit c5ecb42342852892f978572ddc6dca703460f25a upstream.
+commit 5e30c23d13919a718b22d4921dc5c0accc59da27 upstream.
 
-We're changing both metadata and data, so we need to update the
-timestamps for clone operations.  Dedupe on the other hand does
-not change file data, and only changes invisible metadata so the
-timestamps should not be updated.
-
-This follows existing btrfs behavior.
+We don't just need the structure to track busy extents which can be
+avoided with a synchronous transaction, but also to keep track of
+pending discard.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-[darrick: remove redundant is_dedupe test]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_reflink.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_extent_busy.c | 13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 539a612a02e5..36c07b12189e 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -985,13 +985,14 @@ STATIC int
- xfs_reflink_update_dest(
- 	struct xfs_inode	*dest,
- 	xfs_off_t		newlen,
--	xfs_extlen_t		cowextsize)
-+	xfs_extlen_t		cowextsize,
-+	bool			is_dedupe)
- {
- 	struct xfs_mount	*mp = dest->i_mount;
- 	struct xfs_trans	*tp;
- 	int			error;
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index 162dc186cf04..29c2f997aedf 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -45,18 +45,7 @@ xfs_extent_busy_insert(
+ 	struct rb_node		**rbp;
+ 	struct rb_node		*parent = NULL;
  
--	if (newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
-+	if (is_dedupe && newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
- 		return 0;
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-@@ -1012,6 +1013,10 @@ xfs_reflink_update_dest(
- 		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 	}
- 
-+	if (!is_dedupe) {
-+		xfs_trans_ichgtime(tp, dest,
-+				   XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-+	}
- 	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
- 
- 	error = xfs_trans_commit(tp);
-@@ -1528,7 +1533,8 @@ xfs_reflink_remap_range(
- 	    !(dest->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
- 		cowextsize = src->i_d.di_cowextsize;
- 
--	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize);
-+	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize,
-+			is_dedupe);
- 
- out_unlock:
- 	xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
+-	new = kmem_zalloc(sizeof(struct xfs_extent_busy), KM_MAYFAIL);
+-	if (!new) {
+-		/*
+-		 * No Memory!  Since it is now not possible to track the free
+-		 * block, make this a synchronous transaction to insure that
+-		 * the block is not reused before this transaction commits.
+-		 */
+-		trace_xfs_extent_busy_enomem(tp->t_mountp, agno, bno, len);
+-		xfs_trans_set_sync(tp);
+-		return;
+-	}
+-
++	new = kmem_zalloc(sizeof(struct xfs_extent_busy), KM_SLEEP);
+ 	new->agno = agno;
+ 	new->bno = bno;
+ 	new->length = len;
 -- 
 2.11.0
 
