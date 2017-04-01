@@ -1,76 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43613 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:55853 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750879AbdDAGkz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:40:55 -0400
+        with ESMTP id S1751201AbdDAGlA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:00 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/27] xfs: fix eofblocks race with file extending async dio writes
-Date: Sat,  1 Apr 2017 08:40:04 +0200
-Message-Id: <20170401064026.5783-6-hch@lst.de>
+Subject: [PATCH 06/27] xfs: fix toctou race when locking an inode to access the data map
+Date: Sat,  1 Apr 2017 08:40:05 +0200
+Message-Id: <20170401064026.5783-7-hch@lst.de>
 In-Reply-To: <20170401064026.5783-1-hch@lst.de>
 References: <20170401064026.5783-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit e4229d6b0bc9280f29624faf170cf76a9f1ca60e upstream.
+commit 4b5bd5bf3fb182dc504b1b64e0331300f156e756 upstream.
 
-It's possible for post-eof blocks to end up being used for direct I/O
-writes. dio write performs an upfront unwritten extent allocation, sends
-the dio and then updates the inode size (if necessary) on write
-completion. If a file release occurs while a file extending dio write is
-in flight, it is possible to mistake the post-eof blocks for speculative
-preallocation and incorrectly truncate them from the inode. This means
-that the resulting dio write completion can discover a hole and allocate
-new blocks rather than perform unwritten extent conversion.
+We use di_format and if_flags to decide whether we're grabbing the ilock
+in btree mode (btree extents not loaded) or shared mode (anything else),
+but the state of those fields can be changed by other threads that are
+also trying to load the btree extents -- IFEXTENTS gets set before the
+_bmap_read_extents call and cleared if it fails.
 
-This requires a strange mix of I/O and is thus not likely to reproduce
-in real world workloads. It is intermittently reproduced by generic/299.
-The error manifests as an assert failure due to transaction overrun
-because the aforementioned write completion transaction has only
-reserved enough blocks for btree operations:
+We don't actually need to have IFEXTENTS set until after the bmbt
+records are successfully loaded and validated, which will fix the race
+between multiple threads trying to read the same directory.  The next
+patch strengthens directory bmbt validation by refusing to open the
+directory if reading the bmbt to start directory readahead fails.
 
-  XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, \
-   file: fs/xfs//xfs_trans.c, line: 309
-
-The root cause is that xfs_free_eofblocks() uses i_size to truncate
-post-eof blocks from the inode, but async, file extending direct writes
-do not update i_size until write completion, long after inode locks are
-dropped. Therefore, xfs_free_eofblocks() effectively truncates the inode
-to the incorrect size.
-
-Update xfs_free_eofblocks() to serialize against dio similar to how
-extending writes are serialized against i_size updates before post-eof
-block zeroing. Specifically, wait on dio while under the iolock. This
-ensures that dio write completions have updated i_size before post-eof
-blocks are processed.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_bmap_util.c | 3 +++
- 1 file changed, 3 insertions(+)
+ fs/xfs/libxfs/xfs_inode_fork.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index d8ac76ca05a2..fd459b69161e 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -959,6 +959,9 @@ xfs_free_eofblocks(
- 		if (error)
- 			return error;
- 
-+		/* wait on dio to ensure i_size has settled */
-+		inode_dio_wait(VFS_I(ip));
-+
- 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0,
- 				&tp);
- 		if (error) {
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 222e103356c6..421341f93bea 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -497,15 +497,14 @@ xfs_iread_extents(
+ 	 * We know that the size is valid (it's checked in iformat_btree)
+ 	 */
+ 	ifp->if_bytes = ifp->if_real_bytes = 0;
+-	ifp->if_flags |= XFS_IFEXTENTS;
+ 	xfs_iext_add(ifp, 0, nextents);
+ 	error = xfs_bmap_read_extents(tp, ip, whichfork);
+ 	if (error) {
+ 		xfs_iext_destroy(ifp);
+-		ifp->if_flags &= ~XFS_IFEXTENTS;
+ 		return error;
+ 	}
+ 	xfs_validate_extents(ifp, nextents, XFS_EXTFMT_INODE(ip));
++	ifp->if_flags |= XFS_IFEXTENTS;
+ 	return 0;
+ }
+ /*
 -- 
 2.11.0
 
