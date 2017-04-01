@@ -1,58 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52416 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:42691 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751541AbdDAGlj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:39 -0400
+        with ESMTP id S1750842AbdDAGlc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:32 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/27] xfs: don't fail xfs_extent_busy allocation
-Date: Sat,  1 Apr 2017 08:40:15 +0200
-Message-Id: <20170401064026.5783-17-hch@lst.de>
+Subject: [PATCH 13/27] xfs: reset b_first_retry_time when clear the retry status of xfs_buf_t
+Date: Sat,  1 Apr 2017 08:40:12 +0200
+Message-Id: <20170401064026.5783-14-hch@lst.de>
 In-Reply-To: <20170401064026.5783-1-hch@lst.de>
 References: <20170401064026.5783-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Hou Tao <houtao1@huawei.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-commit 5e30c23d13919a718b22d4921dc5c0accc59da27 upstream.
+From: Hou Tao <houtao1@huawei.com>
 
-We don't just need the structure to track busy extents which can be
-avoided with a synchronous transaction, but also to keep track of
-pending discard.
+commit 4dd2eb633598cb6a5a0be2fd9a2be0819f5eeb5f upstream.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+After successful IO or permanent error, b_first_retry_time also
+needs to be cleared, else the invalid first retry time will be
+used by the next retry check.
+
+Signed-off-by: Hou Tao <houtao1@huawei.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_extent_busy.c | 13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
+ fs/xfs/xfs_buf_item.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 162dc186cf04..29c2f997aedf 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -45,18 +45,7 @@ xfs_extent_busy_insert(
- 	struct rb_node		**rbp;
- 	struct rb_node		*parent = NULL;
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 2975cb2319f4..0306168af332 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1162,6 +1162,7 @@ xfs_buf_iodone_callbacks(
+ 	 */
+ 	bp->b_last_error = 0;
+ 	bp->b_retries = 0;
++	bp->b_first_retry_time = 0;
  
--	new = kmem_zalloc(sizeof(struct xfs_extent_busy), KM_MAYFAIL);
--	if (!new) {
--		/*
--		 * No Memory!  Since it is now not possible to track the free
--		 * block, make this a synchronous transaction to insure that
--		 * the block is not reused before this transaction commits.
--		 */
--		trace_xfs_extent_busy_enomem(tp->t_mountp, agno, bno, len);
--		xfs_trans_set_sync(tp);
--		return;
--	}
--
-+	new = kmem_zalloc(sizeof(struct xfs_extent_busy), KM_SLEEP);
- 	new->agno = agno;
- 	new->bno = bno;
- 	new->length = len;
+ 	xfs_buf_do_callbacks(bp);
+ 	bp->b_fspriv = NULL;
 -- 
 2.11.0
 
