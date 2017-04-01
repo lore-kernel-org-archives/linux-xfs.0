@@ -1,106 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45389 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:42109 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750879AbdDAGmC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:42:02 -0400
+        with ESMTP id S1751640AbdDAGmH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:42:07 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 21/27] xfs: Use xfs_icluster_size_fsb() to calculate inode chunk alignment
-Date: Sat,  1 Apr 2017 08:40:20 +0200
-Message-Id: <20170401064026.5783-22-hch@lst.de>
+Subject: [PATCH 22/27] xfs: tune down agno asserts in the bmap code
+Date: Sat,  1 Apr 2017 08:40:21 +0200
+Message-Id: <20170401064026.5783-23-hch@lst.de>
 In-Reply-To: <20170401064026.5783-1-hch@lst.de>
 References: <20170401064026.5783-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Chandan Rajendra <chandan@linux.vnet.ibm.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+commit 410d17f67e583559be3a922f8b6cc336331893f3 upstream.
 
-commit 8ee9fdbebc84b39f1d1c201c5e32277c61d034aa upstream.
+In various places we currently assert that xfs_bmap_btalloc allocates
+from the same as the firstblock value passed in, unless it's either
+NULLAGNO or the dop_low flag is set.  But the reflink code does not
+fully follow this convention as it passes in firstblock purely as
+a hint for the allocator without actually having previous allocations
+in the transaction, and without having a minleft check on the current
+AG, leading to the assert firing on a very full and heavily used
+file system.  As even the reflink code only allocates from equal or
+higher AGs for now we can simply the check to always allow for equal
+or higher AGs.
 
-On a ppc64 system, executing generic/256 test with 32k block size gives the following call trace,
+Note that we need to eventually split the two meanings of the firstblock
+value.  At that point we can also allow the reflink code to allocate
+from any AG instead of limiting it in any way.
 
-XFS: Assertion failed: args->maxlen > 0, file: /root/repos/linux/fs/xfs/libxfs/xfs_alloc.c, line: 2026
-
-kernel BUG at /root/repos/linux/fs/xfs/xfs_message.c:113!
-Oops: Exception in kernel mode, sig: 5 [#1]
-SMP NR_CPUS=2048
-DEBUG_PAGEALLOC
-NUMA
-pSeries
-Modules linked in:
-CPU: 2 PID: 19361 Comm: mkdir Not tainted 4.10.0-rc5 #58
-task: c000000102606d80 task.stack: c0000001026b8000
-NIP: c0000000004ef798 LR: c0000000004ef798 CTR: c00000000082b290
-REGS: c0000001026bb090 TRAP: 0700   Not tainted  (4.10.0-rc5)
-MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>
-CR: 28004428  XER: 00000000
-CFAR: c0000000004ef180 SOFTE: 1
-GPR00: c0000000004ef798 c0000001026bb310 c000000001157300 ffffffffffffffea
-GPR04: 000000000000000a c0000001026bb130 0000000000000000 ffffffffffffffc0
-GPR08: 00000000000000d1 0000000000000021 00000000ffffffd1 c000000000dd4990
-GPR12: 0000000022004444 c00000000fe00800 0000000020000000 0000000000000000
-GPR16: 0000000000000000 0000000043a606fc 0000000043a76c08 0000000043a1b3d0
-GPR20: 000001002a35cd60 c0000001026bbb80 0000000000000000 0000000000000001
-GPR24: 0000000000000240 0000000000000004 c00000062dc55000 0000000000000000
-GPR28: 0000000000000004 c00000062ecd9200 0000000000000000 c0000001026bb6c0
-NIP [c0000000004ef798] .assfail+0x28/0x30
-LR [c0000000004ef798] .assfail+0x28/0x30
-Call Trace:
-[c0000001026bb310] [c0000000004ef798] .assfail+0x28/0x30 (unreliable)
-[c0000001026bb380] [c000000000455d74] .xfs_alloc_space_available+0x194/0x1b0
-[c0000001026bb410] [c00000000045b914] .xfs_alloc_fix_freelist+0x144/0x480
-[c0000001026bb580] [c00000000045c368] .xfs_alloc_vextent+0x698/0xa90
-[c0000001026bb650] [c0000000004a6200] .xfs_ialloc_ag_alloc+0x170/0x820
-[c0000001026bb7c0] [c0000000004a9098] .xfs_dialloc+0x158/0x320
-[c0000001026bb8a0] [c0000000004e628c] .xfs_ialloc+0x7c/0x610
-[c0000001026bb990] [c0000000004e8138] .xfs_dir_ialloc+0xa8/0x2f0
-[c0000001026bbaa0] [c0000000004e8814] .xfs_create+0x494/0x790
-[c0000001026bbbf0] [c0000000004e5ebc] .xfs_generic_create+0x2bc/0x410
-[c0000001026bbce0] [c0000000002b4a34] .vfs_mkdir+0x154/0x230
-[c0000001026bbd70] [c0000000002bc444] .SyS_mkdirat+0x94/0x120
-[c0000001026bbe30] [c00000000000b760] system_call+0x38/0xfc
-Instruction dump:
-4e800020 60000000 7c0802a6 7c862378 3c82ffca 7ca72b78 38841c18 7c651b78
-38600000 f8010010 f821ff91 4bfff94d <0fe00000> 60000000 7c0802a6 7c892378
-
-When block size is larger than inode cluster size, the call to
-XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
-would have set xfs_sb->sb_inoalignmt to 0. This causes
-xfs_ialloc_cluster_alignment() to return 0.  Due to this
-args.minalignslop (in xfs_ialloc_ag_alloc()) gets the unsigned
-equivalent of -1 assigned to it. This later causes alloc_len in
-xfs_alloc_space_available() to have a value of 0. In such a scenario
-when args.total is also 0, the assert statement "ASSERT(args->maxlen >
-0);" fails.
-
-This commit fixes the bug by replacing the call to XFS_B_TO_FSBT() in
-xfs_ialloc_cluster_alignment() with a call to xfs_icluster_size_fsb().
-
-Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 22 ++++++----------------
+ 1 file changed, 6 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index d45c03779dae..a2818f6e8598 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -51,8 +51,7 @@ xfs_ialloc_cluster_alignment(
- 	struct xfs_mount	*mp)
- {
- 	if (xfs_sb_version_hasalign(&mp->m_sb) &&
--	    mp->m_sb.sb_inoalignmt >=
--			XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
-+	    mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
- 		return mp->m_sb.sb_inoalignmt;
- 	return 1;
- }
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 70e732ce3dea..a4322526ea5f 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -804,9 +804,7 @@ xfs_bmap_extents_to_btree(
+ 	 */
+ 	ASSERT(args.fsbno != NULLFSBLOCK);
+ 	ASSERT(*firstblock == NULLFSBLOCK ||
+-	       args.agno == XFS_FSB_TO_AGNO(mp, *firstblock) ||
+-	       (dfops->dop_low &&
+-		args.agno > XFS_FSB_TO_AGNO(mp, *firstblock)));
++	       args.agno >= XFS_FSB_TO_AGNO(mp, *firstblock));
+ 	*firstblock = cur->bc_private.b.firstblock = args.fsbno;
+ 	cur->bc_private.b.allocated++;
+ 	ip->i_d.di_nblocks++;
+@@ -3923,17 +3921,13 @@ xfs_bmap_btalloc(
+ 		 * the first block that was allocated.
+ 		 */
+ 		ASSERT(*ap->firstblock == NULLFSBLOCK ||
+-		       XFS_FSB_TO_AGNO(mp, *ap->firstblock) ==
+-		       XFS_FSB_TO_AGNO(mp, args.fsbno) ||
+-		       (ap->dfops->dop_low &&
+-			XFS_FSB_TO_AGNO(mp, *ap->firstblock) <
+-			XFS_FSB_TO_AGNO(mp, args.fsbno)));
++		       XFS_FSB_TO_AGNO(mp, *ap->firstblock) <=
++		       XFS_FSB_TO_AGNO(mp, args.fsbno));
+ 
+ 		ap->blkno = args.fsbno;
+ 		if (*ap->firstblock == NULLFSBLOCK)
+ 			*ap->firstblock = args.fsbno;
+-		ASSERT(nullfb || fb_agno == args.agno ||
+-		       (ap->dfops->dop_low && fb_agno < args.agno));
++		ASSERT(nullfb || fb_agno <= args.agno);
+ 		ap->length = args.len;
+ 		if (!(ap->flags & XFS_BMAPI_COWFORK))
+ 			ap->ip->i_d.di_nblocks += args.len;
+@@ -4858,13 +4852,9 @@ xfs_bmapi_write(
+ 	if (bma.cur) {
+ 		if (!error) {
+ 			ASSERT(*firstblock == NULLFSBLOCK ||
+-			       XFS_FSB_TO_AGNO(mp, *firstblock) ==
++			       XFS_FSB_TO_AGNO(mp, *firstblock) <=
+ 			       XFS_FSB_TO_AGNO(mp,
+-				       bma.cur->bc_private.b.firstblock) ||
+-			       (dfops->dop_low &&
+-				XFS_FSB_TO_AGNO(mp, *firstblock) <
+-				XFS_FSB_TO_AGNO(mp,
+-					bma.cur->bc_private.b.firstblock)));
++				       bma.cur->bc_private.b.firstblock));
+ 			*firstblock = bma.cur->bc_private.b.firstblock;
+ 		}
+ 		xfs_btree_del_cursor(bma.cur,
 -- 
 2.11.0
 
