@@ -1,133 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35005 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:45389 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751609AbdDAGl5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:41:57 -0400
+        with ESMTP id S1750879AbdDAGmC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:42:02 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/27] xfs: split indlen reservations fairly when under reserved
-Date: Sat,  1 Apr 2017 08:40:17 +0200
-Message-Id: <20170401064026.5783-19-hch@lst.de>
+Subject: [PATCH 21/27] xfs: Use xfs_icluster_size_fsb() to calculate inode chunk alignment
+Date: Sat,  1 Apr 2017 08:40:20 +0200
+Message-Id: <20170401064026.5783-22-hch@lst.de>
 In-Reply-To: <20170401064026.5783-1-hch@lst.de>
 References: <20170401064026.5783-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Chandan Rajendra <chandan@linux.vnet.ibm.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 
-commit 75d65361cf3c0dae2af970c305e19c727b28a510 upstream.
+commit 8ee9fdbebc84b39f1d1c201c5e32277c61d034aa upstream.
 
-Certain workoads that punch holes into speculative preallocation can
-cause delalloc indirect reservation splits when the delalloc extent is
-split in two. If further splits occur, an already short-handed extent
-can be split into two in a manner that leaves zero indirect blocks for
-one of the two new extents. This occurs because the shortage is large
-enough that the xfs_bmap_split_indlen() algorithm completely drains the
-requested indlen of one of the extents before it honors the existing
-reservation.
+On a ppc64 system, executing generic/256 test with 32k block size gives the following call trace,
 
-This ultimately results in a warning from xfs_bmap_del_extent(). This
-has been observed during file copies of large, sparse files using 'cp
---sparse=always.'
+XFS: Assertion failed: args->maxlen > 0, file: /root/repos/linux/fs/xfs/libxfs/xfs_alloc.c, line: 2026
 
-To avoid this problem, update xfs_bmap_split_indlen() to explicitly
-apply the reservation shortage fairly between both extents. This smooths
-out the overall indlen shortage and defers the situation where we end up
-with a delalloc extent with zero indlen reservation to extreme
-circumstances.
+kernel BUG at /root/repos/linux/fs/xfs/xfs_message.c:113!
+Oops: Exception in kernel mode, sig: 5 [#1]
+SMP NR_CPUS=2048
+DEBUG_PAGEALLOC
+NUMA
+pSeries
+Modules linked in:
+CPU: 2 PID: 19361 Comm: mkdir Not tainted 4.10.0-rc5 #58
+task: c000000102606d80 task.stack: c0000001026b8000
+NIP: c0000000004ef798 LR: c0000000004ef798 CTR: c00000000082b290
+REGS: c0000001026bb090 TRAP: 0700   Not tainted  (4.10.0-rc5)
+MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>
+CR: 28004428  XER: 00000000
+CFAR: c0000000004ef180 SOFTE: 1
+GPR00: c0000000004ef798 c0000001026bb310 c000000001157300 ffffffffffffffea
+GPR04: 000000000000000a c0000001026bb130 0000000000000000 ffffffffffffffc0
+GPR08: 00000000000000d1 0000000000000021 00000000ffffffd1 c000000000dd4990
+GPR12: 0000000022004444 c00000000fe00800 0000000020000000 0000000000000000
+GPR16: 0000000000000000 0000000043a606fc 0000000043a76c08 0000000043a1b3d0
+GPR20: 000001002a35cd60 c0000001026bbb80 0000000000000000 0000000000000001
+GPR24: 0000000000000240 0000000000000004 c00000062dc55000 0000000000000000
+GPR28: 0000000000000004 c00000062ecd9200 0000000000000000 c0000001026bb6c0
+NIP [c0000000004ef798] .assfail+0x28/0x30
+LR [c0000000004ef798] .assfail+0x28/0x30
+Call Trace:
+[c0000001026bb310] [c0000000004ef798] .assfail+0x28/0x30 (unreliable)
+[c0000001026bb380] [c000000000455d74] .xfs_alloc_space_available+0x194/0x1b0
+[c0000001026bb410] [c00000000045b914] .xfs_alloc_fix_freelist+0x144/0x480
+[c0000001026bb580] [c00000000045c368] .xfs_alloc_vextent+0x698/0xa90
+[c0000001026bb650] [c0000000004a6200] .xfs_ialloc_ag_alloc+0x170/0x820
+[c0000001026bb7c0] [c0000000004a9098] .xfs_dialloc+0x158/0x320
+[c0000001026bb8a0] [c0000000004e628c] .xfs_ialloc+0x7c/0x610
+[c0000001026bb990] [c0000000004e8138] .xfs_dir_ialloc+0xa8/0x2f0
+[c0000001026bbaa0] [c0000000004e8814] .xfs_create+0x494/0x790
+[c0000001026bbbf0] [c0000000004e5ebc] .xfs_generic_create+0x2bc/0x410
+[c0000001026bbce0] [c0000000002b4a34] .vfs_mkdir+0x154/0x230
+[c0000001026bbd70] [c0000000002bc444] .SyS_mkdirat+0x94/0x120
+[c0000001026bbe30] [c00000000000b760] system_call+0x38/0xfc
+Instruction dump:
+4e800020 60000000 7c0802a6 7c862378 3c82ffca 7ca72b78 38841c18 7c651b78
+38600000 f8010010 f821ff91 4bfff94d <0fe00000> 60000000 7c0802a6 7c892378
 
-Reported-by: Patrick Dung <mpatdung@gmail.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+When block size is larger than inode cluster size, the call to
+XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
+would have set xfs_sb->sb_inoalignmt to 0. This causes
+xfs_ialloc_cluster_alignment() to return 0.  Due to this
+args.minalignslop (in xfs_ialloc_ag_alloc()) gets the unsigned
+equivalent of -1 assigned to it. This later causes alloc_len in
+xfs_alloc_space_available() to have a value of 0. In such a scenario
+when args.total is also 0, the assert statement "ASSERT(args->maxlen >
+0);" fails.
+
+This commit fixes the bug by replacing the call to XFS_B_TO_FSBT() in
+xfs_ialloc_cluster_alignment() with a call to xfs_icluster_size_fsb().
+
+Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 61 ++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 43 insertions(+), 18 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 7457937549bb..70e732ce3dea 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4899,34 +4899,59 @@ xfs_bmap_split_indlen(
- 	xfs_filblks_t			len2 = *indlen2;
- 	xfs_filblks_t			nres = len1 + len2; /* new total res. */
- 	xfs_filblks_t			stolen = 0;
-+	xfs_filblks_t			resfactor;
- 
- 	/*
- 	 * Steal as many blocks as we can to try and satisfy the worst case
- 	 * indlen for both new extents.
- 	 */
--	while (nres > ores && avail) {
--		nres--;
--		avail--;
--		stolen++;
--	}
-+	if (ores < nres && avail)
-+		stolen = XFS_FILBLKS_MIN(nres - ores, avail);
-+	ores += stolen;
-+
-+	 /* nothing else to do if we've satisfied the new reservation */
-+	if (ores >= nres)
-+		return stolen;
-+
-+	/*
-+	 * We can't meet the total required reservation for the two extents.
-+	 * Calculate the percent of the overall shortage between both extents
-+	 * and apply this percentage to each of the requested indlen values.
-+	 * This distributes the shortage fairly and reduces the chances that one
-+	 * of the two extents is left with nothing when extents are repeatedly
-+	 * split.
-+	 */
-+	resfactor = (ores * 100);
-+	do_div(resfactor, nres);
-+	len1 *= resfactor;
-+	do_div(len1, 100);
-+	len2 *= resfactor;
-+	do_div(len2, 100);
-+	ASSERT(len1 + len2 <= ores);
-+	ASSERT(len1 < *indlen1 && len2 < *indlen2);
- 
- 	/*
--	 * The only blocks available are those reserved for the original
--	 * extent and what we can steal from the extent being removed.
--	 * If this still isn't enough to satisfy the combined
--	 * requirements for the two new extents, skim blocks off of each
--	 * of the new reservations until they match what is available.
-+	 * Hand out the remainder to each extent. If one of the two reservations
-+	 * is zero, we want to make sure that one gets a block first. The loop
-+	 * below starts with len1, so hand len2 a block right off the bat if it
-+	 * is zero.
- 	 */
--	while (nres > ores) {
--		if (len1) {
--			len1--;
--			nres--;
-+	ores -= (len1 + len2);
-+	ASSERT((*indlen1 - len1) + (*indlen2 - len2) >= ores);
-+	if (ores && !len2 && *indlen2) {
-+		len2++;
-+		ores--;
-+	}
-+	while (ores) {
-+		if (len1 < *indlen1) {
-+			len1++;
-+			ores--;
- 		}
--		if (nres == ores)
-+		if (!ores)
- 			break;
--		if (len2) {
--			len2--;
--			nres--;
-+		if (len2 < *indlen2) {
-+			len2++;
-+			ores--;
- 		}
- 	}
- 
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index d45c03779dae..a2818f6e8598 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -51,8 +51,7 @@ xfs_ialloc_cluster_alignment(
+ 	struct xfs_mount	*mp)
+ {
+ 	if (xfs_sb_version_hasalign(&mp->m_sb) &&
+-	    mp->m_sb.sb_inoalignmt >=
+-			XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
++	    mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
+ 		return mp->m_sb.sb_inoalignmt;
+ 	return 1;
+ }
 -- 
 2.11.0
 
