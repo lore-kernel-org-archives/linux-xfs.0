@@ -1,109 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59935 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:56482 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750904AbdDAGgg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:36:36 -0400
+        with ESMTP id S1751053AbdDAGgl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:36:41 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/26] xfs: don't reserve blocks for right shift transactions
-Date: Sat,  1 Apr 2017 08:35:05 +0200
-Message-Id: <20170401063512.25313-20-hch@lst.de>
+Subject: [PATCH 20/26] xfs: Use xfs_icluster_size_fsb() to calculate inode chunk alignment
+Date: Sat,  1 Apr 2017 08:35:06 +0200
+Message-Id: <20170401063512.25313-21-hch@lst.de>
 In-Reply-To: <20170401063512.25313-1-hch@lst.de>
 References: <20170401063512.25313-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Chandan Rajendra <chandan@linux.vnet.ibm.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 
-commit 48af96ab92bc68fb645068b978ce36df2379e076 upstream.
+commit 8ee9fdbebc84b39f1d1c201c5e32277c61d034aa upstream.
 
-The block reservation for the transaction allocated in
-xfs_shift_file_space() is an artifact of the original collapse range
-support. It exists to handle the case where a collapse range occurs,
-the initial extent is left shifted into a location that forms a
-contiguous boundary with the previous extent and thus the extents
-are merged. This code was subsequently refactored and reused for
-insert range (right shift) support.
+On a ppc64 system, executing generic/256 test with 32k block size gives the following call trace,
 
-If an insert range occurs under low free space conditions, the
-extent at the starting offset is split before the first shift
-transaction is allocated. If the block reservation fails, this
-leaves separate, but contiguous extents around in the inode. While
-not a fatal problem, this is unexpected and will flag a warning on
-subsequent insert range operations on the inode. This problem has
-been reproduce intermittently by generic/270 running against a
-ramdisk device.
+XFS: Assertion failed: args->maxlen > 0, file: /root/repos/linux/fs/xfs/libxfs/xfs_alloc.c, line: 2026
 
-Since right shift does not create new extent boundaries in the
-inode, a block reservation for extent merge is unnecessary. Update
-xfs_shift_file_space() to conditionally reserve fs blocks for left
-shift transactions only. This avoids the warning reproduced by
-generic/270.
+kernel BUG at /root/repos/linux/fs/xfs/xfs_message.c:113!
+Oops: Exception in kernel mode, sig: 5 [#1]
+SMP NR_CPUS=2048
+DEBUG_PAGEALLOC
+NUMA
+pSeries
+Modules linked in:
+CPU: 2 PID: 19361 Comm: mkdir Not tainted 4.10.0-rc5 #58
+task: c000000102606d80 task.stack: c0000001026b8000
+NIP: c0000000004ef798 LR: c0000000004ef798 CTR: c00000000082b290
+REGS: c0000001026bb090 TRAP: 0700   Not tainted  (4.10.0-rc5)
+MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>
+CR: 28004428  XER: 00000000
+CFAR: c0000000004ef180 SOFTE: 1
+GPR00: c0000000004ef798 c0000001026bb310 c000000001157300 ffffffffffffffea
+GPR04: 000000000000000a c0000001026bb130 0000000000000000 ffffffffffffffc0
+GPR08: 00000000000000d1 0000000000000021 00000000ffffffd1 c000000000dd4990
+GPR12: 0000000022004444 c00000000fe00800 0000000020000000 0000000000000000
+GPR16: 0000000000000000 0000000043a606fc 0000000043a76c08 0000000043a1b3d0
+GPR20: 000001002a35cd60 c0000001026bbb80 0000000000000000 0000000000000001
+GPR24: 0000000000000240 0000000000000004 c00000062dc55000 0000000000000000
+GPR28: 0000000000000004 c00000062ecd9200 0000000000000000 c0000001026bb6c0
+NIP [c0000000004ef798] .assfail+0x28/0x30
+LR [c0000000004ef798] .assfail+0x28/0x30
+Call Trace:
+[c0000001026bb310] [c0000000004ef798] .assfail+0x28/0x30 (unreliable)
+[c0000001026bb380] [c000000000455d74] .xfs_alloc_space_available+0x194/0x1b0
+[c0000001026bb410] [c00000000045b914] .xfs_alloc_fix_freelist+0x144/0x480
+[c0000001026bb580] [c00000000045c368] .xfs_alloc_vextent+0x698/0xa90
+[c0000001026bb650] [c0000000004a6200] .xfs_ialloc_ag_alloc+0x170/0x820
+[c0000001026bb7c0] [c0000000004a9098] .xfs_dialloc+0x158/0x320
+[c0000001026bb8a0] [c0000000004e628c] .xfs_ialloc+0x7c/0x610
+[c0000001026bb990] [c0000000004e8138] .xfs_dir_ialloc+0xa8/0x2f0
+[c0000001026bbaa0] [c0000000004e8814] .xfs_create+0x494/0x790
+[c0000001026bbbf0] [c0000000004e5ebc] .xfs_generic_create+0x2bc/0x410
+[c0000001026bbce0] [c0000000002b4a34] .vfs_mkdir+0x154/0x230
+[c0000001026bbd70] [c0000000002bc444] .SyS_mkdirat+0x94/0x120
+[c0000001026bbe30] [c00000000000b760] system_call+0x38/0xfc
+Instruction dump:
+4e800020 60000000 7c0802a6 7c862378 3c82ffca 7ca72b78 38841c18 7c651b78
+38600000 f8010010 f821ff91 4bfff94d <0fe00000> 60000000 7c0802a6 7c892378
 
-Reported-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+When block size is larger than inode cluster size, the call to
+XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size) returns 0. Also, mkfs.xfs
+would have set xfs_sb->sb_inoalignmt to 0. This causes
+xfs_ialloc_cluster_alignment() to return 0.  Due to this
+args.minalignslop (in xfs_ialloc_ag_alloc()) gets the unsigned
+equivalent of -1 assigned to it. This later causes alloc_len in
+xfs_alloc_space_available() to have a value of 0. In such a scenario
+when args.total is also 0, the assert statement "ASSERT(args->maxlen >
+0);" fails.
+
+This commit fixes the bug by replacing the call to XFS_B_TO_FSBT() in
+xfs_ialloc_cluster_alignment() with a call to xfs_icluster_size_fsb().
+
+Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index eb890ed1ed5c..c516d7158a21 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1387,10 +1387,16 @@ xfs_shift_file_space(
- 	xfs_fileoff_t		stop_fsb;
- 	xfs_fileoff_t		next_fsb;
- 	xfs_fileoff_t		shift_fsb;
-+	uint			resblks;
- 
- 	ASSERT(direction == SHIFT_LEFT || direction == SHIFT_RIGHT);
- 
- 	if (direction == SHIFT_LEFT) {
-+		/*
-+		 * Reserve blocks to cover potential extent merges after left
-+		 * shift operations.
-+		 */
-+		resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
- 		next_fsb = XFS_B_TO_FSB(mp, offset + len);
- 		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
- 	} else {
-@@ -1398,6 +1404,7 @@ xfs_shift_file_space(
- 		 * If right shift, delegate the work of initialization of
- 		 * next_fsb to xfs_bmap_shift_extent as it has ilock held.
- 		 */
-+		resblks = 0;
- 		next_fsb = NULLFSBLOCK;
- 		stop_fsb = XFS_B_TO_FSB(mp, offset);
- 	}
-@@ -1439,21 +1446,14 @@ xfs_shift_file_space(
- 	}
- 
- 	while (!error && !done) {
--		/*
--		 * We would need to reserve permanent block for transaction.
--		 * This will come into picture when after shifting extent into
--		 * hole we found that adjacent extents can be merged which
--		 * may lead to freeing of a block during record update.
--		 */
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
--				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0, 0, &tp);
-+		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0,
-+					&tp);
- 		if (error)
- 			break;
- 
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
--				ip->i_gdquot, ip->i_pdquot,
--				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
-+				ip->i_gdquot, ip->i_pdquot, resblks, 0,
- 				XFS_QMOPT_RES_REGBLKS);
- 		if (error)
- 			goto out_trans_cancel;
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index f272abff11e1..d41ade5d293e 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -51,8 +51,7 @@ xfs_ialloc_cluster_alignment(
+ 	struct xfs_mount	*mp)
+ {
+ 	if (xfs_sb_version_hasalign(&mp->m_sb) &&
+-	    mp->m_sb.sb_inoalignmt >=
+-			XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
++	    mp->m_sb.sb_inoalignmt >= xfs_icluster_size_fsb(mp))
+ 		return mp->m_sb.sb_inoalignmt;
+ 	return 1;
+ }
 -- 
 2.11.0
 
