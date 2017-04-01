@@ -1,25 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49724 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:57724 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752986AbdDCMSo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 08:18:44 -0400
-Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cv0wO-0005Va-Gm
-        for linux-xfs@vger.kernel.org; Mon, 03 Apr 2017 12:18:38 +0000
+        with ESMTP id S1751334AbdDAGfq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:35:46 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: split the reflink remap from the block allocation path
-Date: Mon,  3 Apr 2017 14:18:27 +0200
-Message-Id: <20170403121833.7825-1-hch@lst.de>
+Subject: [PATCH 07/26] xfs: check for obviously bad level values in the bmbt root
+Date: Sat,  1 Apr 2017 08:34:53 +0200
+Message-Id: <20170401063512.25313-8-hch@lst.de>
+In-Reply-To: <20170401063512.25313-1-hch@lst.de>
+References: <20170401063512.25313-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-We've run into various problems due to the fact that the reflink remap
-code reuses the xfs_bmapi_write codepath for setting up the extent list
-entries and abuses the firstblock field for that purpose.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-This series fixes this by creating an entirely separate xfs_bmapi_remap
-path that is much simpler than xfs_bmapi_write and does not need to
-overload the firstblock field.
+commit b3bf607d58520ea8c0666aeb4be60dbb724cd3a2 upstream.
+
+We can't handle a bmbt that's taller than BTREE_MAXLEVELS, and there's
+no such thing as a zero-level bmbt (for that we have extents format),
+so if we see this, send back an error code.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 421341f93bea..25c1e078aef6 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -26,6 +26,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_trans.h"
+ #include "xfs_inode_item.h"
++#include "xfs_btree.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_bmap.h"
+ #include "xfs_error.h"
+@@ -429,11 +430,13 @@ xfs_iformat_btree(
+ 	/* REFERENCED */
+ 	int			nrecs;
+ 	int			size;
++	int			level;
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	dfp = (xfs_bmdr_block_t *)XFS_DFORK_PTR(dip, whichfork);
+ 	size = XFS_BMAP_BROOT_SPACE(mp, dfp);
+ 	nrecs = be16_to_cpu(dfp->bb_numrecs);
++	level = be16_to_cpu(dfp->bb_level);
+ 
+ 	/*
+ 	 * blow out if -- fork has less extents than can fit in
+@@ -446,7 +449,8 @@ xfs_iformat_btree(
+ 					XFS_IFORK_MAXEXT(ip, whichfork) ||
+ 		     XFS_BMDR_SPACE_CALC(nrecs) >
+ 					XFS_DFORK_SIZE(dip, mp, whichfork) ||
+-		     XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks)) {
++		     XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks) ||
++		     level == 0 || level > XFS_BTREE_MAXLEVELS) {
+ 		xfs_warn(mp, "corrupt inode %Lu (btree).",
+ 					(unsigned long long) ip->i_ino);
+ 		XFS_CORRUPTION_ERROR("xfs_iformat_btree", XFS_ERRLEVEL_LOW,
+-- 
+2.11.0
+
