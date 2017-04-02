@@ -1,101 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45584 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750927AbdDAGgH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:36:07 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/26] xfs: reject all unaligned direct writes to reflinked files
-Date: Sat,  1 Apr 2017 08:34:58 +0200
-Message-Id: <20170401063512.25313-13-hch@lst.de>
-In-Reply-To: <20170401063512.25313-1-hch@lst.de>
-References: <20170401063512.25313-1-hch@lst.de>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:25000 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751974AbdDBACS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 20:02:18 -0400
+Date: Sun, 2 Apr 2017 10:02:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 0cbf8c9
+Message-ID: <20170402000214.GY23007@dastard>
+References: <20170330173724.GE4864@birch.djwong.org>
+ <20170331160438.GA3255@infradead.org>
+ <20170331170601.GH4874@birch.djwong.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170331170601.GH4874@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
 
-commit 54a4ef8af4e0dc5c983d17fcb9cf5fd25666d94e upstream.
+On Fri, Mar 31, 2017 at 10:06:01AM -0700, Darrick J. Wong wrote:
+> On Fri, Mar 31, 2017 at 09:04:38AM -0700, Christoph Hellwig wrote:
+> > On Thu, Mar 30, 2017 at 10:37:24AM -0700, Darrick J. Wong wrote:
+> > > has just been updated.  I intend to try to put in Eric Sandeen's patches
+> > > to perform unlinked inode cleanup during ro mount and my own GETFSMAP
+> > > patches for 4.12, so I put them in along with the other fixes and
+> > > cleanups to get further testing.
+> > 
+> > Any chance we could not use for-next for stuff that's just queued up
+> > for testing?
+> 
+> I've had a difficult time figuring out the timeline for Eric's patches.
+> 
+> I've been testing them internally since they were posted and haven't
+> seen any problems crop up.  There's already an xfstest to reproduce the
+> problem and exercise the fix. 
 
-We currently fall back from direct to buffered writes if we detect a
-remaining shared extent in the iomap_begin callback.  But by the time
-iomap_begin is called for the potentially unaligned end block we might
-have already written most of the data to disk, which we'd now write
-again using buffered I/O.  To avoid this reject all writes to reflinked
-files before starting I/O so that we are guaranteed to only write the
-data once.
+Sure, but that doesn't mean that we should use for-next for testing
+whether a change we are unsure about will have an adverse impact on
+users.  for-next is purely for integration testing of reviewed,
+committed patches ready for upstream merge. It feeds directly to
+linux-next users, so it is most definitely not the place to "try
+out" patches we aren't sure about.
 
-The alternative would be to unshare the unaligned start and/or end block
-before doing the I/O. I think that's doable, and will actually be
-required to support reflinks on DAX file system.  But it will take a
-little more time and I'd rather get rid of the double write ASAP.
+> Dave is concerned about the repercussions
+> of the fs suddenly reaping up to several years' worth of orphaned inodes
+> during a ro mount, since XFS never used to do that.  It's hard to know
+> just how many people across the entire userbase that have read-only
+> filesystems with inodes that have been sitting orphaned for years.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_file.c  |  9 +++++++++
- fs/xfs/xfs_iomap.c | 12 +-----------
- fs/xfs/xfs_trace.h |  2 +-
- 3 files changed, 11 insertions(+), 12 deletions(-)
+If we are unsure of the implications of a change, then it hasn't
+passed review, right?
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 032c8a74824a..2a695a8f4fe7 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -527,6 +527,15 @@ xfs_file_dio_aio_write(
- 	if ((iocb->ki_pos & mp->m_blockmask) ||
- 	    ((iocb->ki_pos + count) & mp->m_blockmask)) {
- 		unaligned_io = 1;
-+
-+		/*
-+		 * We can't properly handle unaligned direct I/O to reflink
-+		 * files yet, as we can't unshare a partial block.
-+		 */
-+		if (xfs_is_reflink_inode(ip)) {
-+			trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos, count);
-+			return -EREMCHG;
-+		}
- 		iolock = XFS_IOLOCK_EXCL;
- 	} else {
- 		iolock = XFS_IOLOCK_SHARED;
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 32b113c4e973..e8811bd1019b 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1026,17 +1026,7 @@ xfs_file_iomap_begin(
- 		if (error)
- 			goto out_unlock;
- 
--		/*
--		 * We're here because we're trying to do a directio write to a
--		 * region that isn't aligned to a filesystem block.  If the
--		 * extent is shared, fall back to buffered mode to handle the
--		 * RMW.
--		 */
--		if (!(flags & IOMAP_REPORT) && shared) {
--			trace_xfs_reflink_bounce_dio_write(ip, &imap);
--			error = -EREMCHG;
--			goto out_unlock;
--		}
-+		ASSERT((flags & IOMAP_REPORT) || !shared);
- 	}
- 
- 	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index d3d11905c55c..375c5e030e5b 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3250,7 +3250,7 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
- DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
- DEFINE_RW_EVENT(xfs_reflink_allocate_cow_range);
- 
--DEFINE_INODE_IREC_EVENT(xfs_reflink_bounce_dio_write);
-+DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
- DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
- 
+That is one of the reasons I sometimes took a month or two before I
+would move a patch from my local testing tree to for-next (i.e. after
+hundreds of local xfstests cycles plus all the other ad-hoc testing
+and stress I'd run in day-to-day dev work).  i.e.  sometimes it
+takes that long to really understand all the implications on the
+code and to run it through a gamet of testing to ensure nothing has
+been missed.
+
+Sometimes we can't be 100% certain everything is OK. In this sort of
+situation the situation whether to merge or not comes down to risk
+categorisation and mitigation, I'd be doing things like thinking
+back to the number of times I've run xfs_repair and had it clean up
+the unlinked inode list. How often did that happen without zeroing
+the log? How many times had I seen this in user bug reports? How
+many broken filesystem images have I done forensic examination on
+and found orphan indoes in them?
+
+This sort of categorisation gives a rough indication of how conerned
+we should be that behavioural changes will result on something
+different happening. The reason I raised this concern is that I've
+seen such evidence of orphaned inodes in the past, hence it's
+something we need to think carefully about. The next question to be
+answered is "what is the risk of cleaning up these inodes?"
+
+testing will give us some insight, but we have to weigh off other
+things such as inodes (and associated metadata) that have not been
+touched for years. That brings into question things like storage
+bitrot, and that's not something we can directly test for and is not
+somethign we can be 100% certain about. We can make an educated
+guess about how frequent such events are likely to be, however, and
+hence get some idea of the risk we are exposing users to.
+
+A simple risk mitigation strategy in this case would be to say
+"let's just enable it for v5 filesystems right now" because there
+are much fewer of those out there, and they are much less likey to
+have years of stale orphaned inodes on them or to be on storage old
+enough to be bit-rotting. And even if it is bitrotted, we'll get
+decent error reporting if there is a problem cleaning them up,
+too.
+
+This will tell us if there is a mechanism problem in adding the
+new behaviour, leaving the only unknown at that point the "untouched
+metadata" risk. There's a chance we'll never see this, so once we
+know the mechanism is fine on v5 filesystems (say 6 months after
+kernel release) we can enable it on v4 filesystems. Then if problems
+crop up, we have a fair idea of whether it is a mechanism or bitrot
+problem that is causing recovery failures....
+
+This is why I keep saying "there should be no rush to commit and
+push upstream". This stuff is complex, it takes time to test
+sufficiently and history tells us that the worst thing we can do is
+push stuff to users too quickly.  There is nothing wrong with saying
+"I'm not sure of this yet, lets slip it to the next cycle" and
+continue to test and evaluate it.
+
+Cheers,
+
+Dave.
 -- 
-2.11.0
-
+Dave Chinner
+david@fromorbit.com
