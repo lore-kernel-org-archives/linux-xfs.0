@@ -1,85 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51049 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:49724 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750918AbdDAGfm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:35:42 -0400
+        with ESMTP id S1752986AbdDCMSo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 08:18:44 -0400
+Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1cv0wO-0005Va-Gm
+        for linux-xfs@vger.kernel.org; Mon, 03 Apr 2017 12:18:38 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/26] xfs: filter out obviously bad btree pointers
-Date: Sat,  1 Apr 2017 08:34:52 +0200
-Message-Id: <20170401063512.25313-7-hch@lst.de>
-In-Reply-To: <20170401063512.25313-1-hch@lst.de>
-References: <20170401063512.25313-1-hch@lst.de>
+Subject: split the reflink remap from the block allocation path
+Date: Mon,  3 Apr 2017 14:18:27 +0200
+Message-Id: <20170403121833.7825-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+We've run into various problems due to the fact that the reflink remap
+code reuses the xfs_bmapi_write codepath for setting up the extent list
+entries and abuses the firstblock field for that purpose.
 
-commit d5a91baeb6033c3392121e4d5c011cdc08dfa9f7 upstream.
-
-Don't let anybody load an obviously bad btree pointer.  Since the values
-come from disk, we must return an error, not just ASSERT.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c  | 5 +----
- fs/xfs/libxfs/xfs_btree.c | 3 ++-
- fs/xfs/libxfs/xfs_btree.h | 2 +-
- 3 files changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index bfc00de5c6f1..d79c66d1215d 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1278,7 +1278,6 @@ xfs_bmap_read_extents(
- 	/* REFERENCED */
- 	xfs_extnum_t		room;	/* number of entries there's room for */
- 
--	bno = NULLFSBLOCK;
- 	mp = ip->i_mount;
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	exntf = (whichfork != XFS_DATA_FORK) ? XFS_EXTFMT_NOSTATE :
-@@ -1291,9 +1290,7 @@ xfs_bmap_read_extents(
- 	ASSERT(level > 0);
- 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
- 	bno = be64_to_cpu(*pp);
--	ASSERT(bno != NULLFSBLOCK);
--	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
--	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
-+
- 	/*
- 	 * Go down the tree until leaf level is reached, following the first
- 	 * pointer (leftmost) at each level.
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 21e6a6ab6b9a..2849d3fa3d0b 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -810,7 +810,8 @@ xfs_btree_read_bufl(
- 	xfs_daddr_t		d;		/* real disk block address */
- 	int			error;
- 
--	ASSERT(fsbno != NULLFSBLOCK);
-+	if (!XFS_FSB_SANITY_CHECK(mp, fsbno))
-+		return -EFSCORRUPTED;
- 	d = XFS_FSB_TO_DADDR(mp, fsbno);
- 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
- 				   mp->m_bsize, lock, &bp, ops);
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index b69b947c4c1b..33a8f8694d30 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -456,7 +456,7 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
- #define	XFS_FILBLKS_MAX(a,b)	max_t(xfs_filblks_t, (a), (b))
- 
- #define	XFS_FSB_SANITY_CHECK(mp,fsb)	\
--	(XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
-+	(fsb && XFS_FSB_TO_AGNO(mp, fsb) < mp->m_sb.sb_agcount && \
- 		XFS_FSB_TO_AGBNO(mp, fsb) < mp->m_sb.sb_agblocks)
- 
- /*
--- 
-2.11.0
-
+This series fixes this by creating an entirely separate xfs_bmapi_remap
+path that is much simpler than xfs_bmapi_write and does not need to
+overload the firstblock field.
