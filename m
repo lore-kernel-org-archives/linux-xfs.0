@@ -1,265 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60875 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753014AbdDCMTA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 08:19:00 -0400
-Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cv0wg-0005WQ-2D
-        for linux-xfs@vger.kernel.org; Mon, 03 Apr 2017 12:18:54 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/6] xfs: introduce xfs_bmapi_remap
-Date: Mon,  3 Apr 2017 14:18:31 +0200
-Message-Id: <20170403121833.7825-5-hch@lst.de>
-In-Reply-To: <20170403121833.7825-1-hch@lst.de>
-References: <20170403121833.7825-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:53408 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752369AbdDCJT2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Apr 2017 05:19:28 -0400
+Date: Mon, 3 Apr 2017 11:19:13 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: clear XBF_ASYNC if we attach an iodone callback
+Message-ID: <20170403091913.pmwc3taxypfgiqyw@eorzea.usersys.redhat.com>
+References: <1488552404-21379-1-git-send-email-jbacik@fb.com>
+ <20170303204902.GF21245@bfoster.bfoster>
+ <1488576856.9307.13.camel@fb.com>
+ <20170303222001.GA24497@bfoster.bfoster>
+ <A14C7E7E-2807-48E6-A5C1-ABD09A7B69D3@fb.com>
+ <20170304135849.GA27205@bfoster.bfoster>
+ <1488826813.9307.21.camel@fb.com>
+ <20170307012204.GP17542@dastard>
+ <1488902165.9307.26.camel@fb.com>
+ <20170307161246.GB8144@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20170307161246.GB8144@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: bfoster@redhat.com
+Cc: Josef Bacik <jbacik@fb.com>, Dave Chinner <david@fromorbit.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, Kernel Team <Kernel-team@fb.com>
 
-Add a new helper to be used for reflink extent list additions instead of
-funneling them through xfs_bmapi_write and overloading the firstblock
-member in struct xfs_bmalloca and struct xfs_alloc_args.
+Hi,
 
-With some small changes to xfs_bmap_remap_alloc this also means we do
-not need a xfs_bmalloca structure for this case at all.
+I really apologize for my late reply, March was a busy month and this thread got
+lost on my mailbox.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 152 +++++++++++++++++++++++++++++++++--------------
- 1 file changed, 107 insertions(+), 45 deletions(-)
+I'll try to come back to this fix as soon as possible,
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index d404dee7ede4..caadfe27af39 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3862,11 +3862,12 @@ xfs_bmap_btalloc(
-  */
- STATIC int
- xfs_bmap_remap_alloc(
--	struct xfs_bmalloca	*ap)
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	xfs_fsblock_t		startblock,
-+	xfs_extlen_t		length)
- {
--	struct xfs_trans	*tp = ap->tp;
- 	struct xfs_mount	*mp = tp->t_mountp;
--	xfs_fsblock_t		bno;
- 	struct xfs_alloc_arg	args;
- 	int			error;
- 
-@@ -3875,24 +3876,24 @@ xfs_bmap_remap_alloc(
- 	 * and handle a silent filesystem corruption rather than crashing.
- 	 */
- 	memset(&args, 0, sizeof(struct xfs_alloc_arg));
--	args.tp = ap->tp;
--	args.mp = ap->tp->t_mountp;
--	bno = *ap->firstblock;
--	args.agno = XFS_FSB_TO_AGNO(mp, bno);
--	args.agbno = XFS_FSB_TO_AGBNO(mp, bno);
-+	args.tp = tp;
-+	args.mp = mp;
-+	args.agno = XFS_FSB_TO_AGNO(mp, startblock);
-+	args.agbno = XFS_FSB_TO_AGBNO(mp, startblock);
-+
- 	if (args.agno >= mp->m_sb.sb_agcount ||
- 	    args.agbno >= mp->m_sb.sb_agblocks)
- 		return -EFSCORRUPTED;
- 
- 	/* "Allocate" the extent from the range we passed in. */
--	trace_xfs_bmap_remap_alloc(ap->ip, *ap->firstblock, ap->length);
--	ap->blkno = bno;
--	ap->ip->i_d.di_nblocks += ap->length;
--	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
-+	trace_xfs_bmap_remap_alloc(ip, startblock, length);
-+
-+	ip->i_d.di_nblocks += length;
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
- 	/* Fix the freelist, like a real allocator does. */
--	args.datatype = ap->datatype;
--	args.pag = xfs_perag_get(args.mp, args.agno);
-+	args.datatype = XFS_ALLOC_USERDATA | XFS_ALLOC_NOBUSY;
-+	args.pag = xfs_perag_get(mp, args.agno);
- 	ASSERT(args.pag);
- 
- 	/*
-@@ -3905,7 +3906,7 @@ xfs_bmap_remap_alloc(
- 	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
- 	xfs_perag_put(args.pag);
- 	if (error)
--		trace_xfs_bmap_remap_alloc_error(ap->ip, error, _RET_IP_);
-+		trace_xfs_bmap_remap_alloc_error(ip, error, _RET_IP_);
- 	return error;
- }
- 
-@@ -3917,8 +3918,6 @@ STATIC int
- xfs_bmap_alloc(
- 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
- {
--	if (ap->flags & XFS_BMAPI_REMAP)
--		return xfs_bmap_remap_alloc(ap);
- 	if (XFS_IS_REALTIME_INODE(ap->ip) &&
- 	    xfs_alloc_is_userdata(ap->datatype))
- 		return xfs_bmap_rtalloc(ap);
-@@ -4554,9 +4553,7 @@ xfs_bmapi_write(
- 	ASSERT(len > 0);
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--	ASSERT(!(flags & XFS_BMAPI_REMAP) || whichfork == XFS_DATA_FORK);
--	ASSERT(!(flags & XFS_BMAPI_PREALLOC) || !(flags & XFS_BMAPI_REMAP));
--	ASSERT(!(flags & XFS_BMAPI_CONVERT) || !(flags & XFS_BMAPI_REMAP));
-+	ASSERT(!(flags & XFS_BMAPI_REMAP));
- 
- 	/* zeroing is for currently only for data extents, not metadata */
- 	ASSERT((flags & (XFS_BMAPI_METADATA | XFS_BMAPI_ZERO)) !=
-@@ -4640,13 +4637,8 @@ xfs_bmapi_write(
- 			} else {
- 				need_alloc = true;
- 			}
--		} else {
--			/*
--			 * Make sure we only reflink into a hole.
--			 */
--			ASSERT(!(flags & XFS_BMAPI_REMAP));
--			if (isnullstartblock(bma.got.br_startblock))
--				wasdelay = true;
-+		} else if (isnullstartblock(bma.got.br_startblock)) {
-+			wasdelay = true;
- 		}
- 
- 		/*
-@@ -4775,6 +4767,89 @@ xfs_bmapi_write(
- 	return error;
- }
- 
-+static int
-+xfs_bmapi_remap(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	xfs_fileoff_t		bno,
-+	xfs_filblks_t		len,
-+	xfs_fsblock_t		startblock,
-+	struct xfs_defer_ops	*dfops)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	struct xfs_btree_cur	*cur = NULL;
-+	xfs_fsblock_t		firstblock = NULLFSBLOCK;
-+	struct xfs_bmbt_irec	got;
-+	xfs_extnum_t		idx;
-+	int			logflags = 0, error;
-+
-+	ASSERT(len > 0);
-+	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+	ASSERT(ifp->if_flags & XFS_IFEXTENTS);
-+
-+	if (unlikely(XFS_TEST_ERROR(
-+	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
-+	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
-+	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
-+		XFS_ERROR_REPORT("xfs_bmapi_remap", XFS_ERRLEVEL_LOW, mp);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return -EIO;
-+
-+	if (xfs_iext_lookup_extent(ip, ifp, bno, &idx, &got)) {
-+		/* make sure we only reflink into a hole. */
-+		ASSERT(got.br_startoff > bno);
-+		ASSERT(got.br_startoff - bno >= len);
-+	}
-+
-+	error = xfs_bmap_remap_alloc(tp, ip, startblock, len);
-+	if (error)
-+		goto error0;
-+
-+	if (ifp->if_flags & XFS_IFBROOT) {
-+		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
-+		cur->bc_private.b.firstblock = firstblock;
-+		cur->bc_private.b.dfops = dfops;
-+		cur->bc_private.b.flags = 0;
-+	}
-+
-+	got.br_startoff = bno;
-+	got.br_startblock = startblock;
-+	got.br_blockcount = len;
-+	got.br_state = XFS_EXT_NORM;
-+
-+	error = xfs_bmap_add_extent_hole_real(tp, ip, XFS_DATA_FORK, &idx, &cur,
-+			&got, &firstblock, dfops, &logflags);
-+	if (error)
-+		goto error0;
-+
-+	if (xfs_bmap_wants_extents(ip, XFS_DATA_FORK)) {
-+		int		tmp_logflags = 0;
-+
-+		error = xfs_bmap_btree_to_extents(tp, ip, cur,
-+			&tmp_logflags, XFS_DATA_FORK);
-+		logflags |= tmp_logflags;
-+	}
-+
-+error0:
-+	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS)
-+		logflags &= ~XFS_ILOG_DEXT;
-+	else if (ip->i_d.di_format != XFS_DINODE_FMT_BTREE)
-+		logflags &= ~XFS_ILOG_DBROOT;
-+
-+	if (logflags)
-+		xfs_trans_log_inode(tp, ip, logflags);
-+	if (cur) {
-+		xfs_btree_del_cursor(cur,
-+			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-+	}
-+	return error;
-+}
-+
- /*
-  * When a delalloc extent is split (e.g., due to a hole punch), the original
-  * indlen reservation must be shared across the two new extents that are left
-@@ -6493,16 +6568,7 @@ xfs_bmap_finish_one(
- 	xfs_filblks_t			blockcount,
- 	xfs_exntst_t			state)
- {
--	struct xfs_bmbt_irec		bmap;
--	int				nimaps = 1;
--	xfs_fsblock_t			firstfsb;
--	int				done;
--	int				error = 0;
--
--	bmap.br_startblock = startblock;
--	bmap.br_startoff = startoff;
--	bmap.br_blockcount = blockcount;
--	bmap.br_state = state;
-+	int				error = 0, done;
- 
- 	trace_xfs_bmap_deferred(tp->t_mountp,
- 			XFS_FSB_TO_AGNO(tp->t_mountp, startblock), type,
-@@ -6519,16 +6585,12 @@ xfs_bmap_finish_one(
- 
- 	switch (type) {
- 	case XFS_BMAP_MAP:
--		firstfsb = bmap.br_startblock;
--		error = xfs_bmapi_write(tp, ip, bmap.br_startoff,
--					bmap.br_blockcount, XFS_BMAPI_REMAP, &firstfsb,
--					bmap.br_blockcount, &bmap, &nimaps,
--					dfops);
-+		error = xfs_bmapi_remap(tp, ip, startoff, blockcount,
-+				startblock, dfops);
- 		break;
- 	case XFS_BMAP_UNMAP:
--		error = xfs_bunmapi(tp, ip, bmap.br_startoff,
--				bmap.br_blockcount, XFS_BMAPI_REMAP, 1, &firstfsb,
--				dfops, &done);
-+		error = xfs_bunmapi(tp, ip, startoff, blockcount,
-+				XFS_BMAPI_REMAP, 1, &startblock, dfops, &done);
- 		ASSERT(done);
- 		break;
- 	default:
+> > > > 
+> > > >                 return;
+> > > >         }
+> > > It's likely you'll end up with silent on disk corruption if you do
+> > > that because it's just tossing the error state away.
+> > 
+> > I think I'm getting a handle on this, but I wonder if we don't have
+> > this problem currently?  We get an error on a buffer, we retry it and
+> > it fails again.  If we don't have XFS_ERR_RETRY_FOREVER set then we
+> > error out and do the normal callbacks as if nothing ever happened, and
+> > we get the silent corruption without shutting down the file system.
+> >  How is the code as it stands without XFS_ERR_RETRY_FOREVER safe?
+> >  Thanks,
+> > 
+> 
+> We shouldn't get into a situation where we run the callbacks when the
+> I/O has failed and the fs isn't shut down. IOWs, we do run the callbacks
+> only when the I/O succeeds, or it fails and the fs is shutdown as a
+> result (never when the I/O fails but we haven't shut down, which is the
+> problematic case the patch above introduces).
+> 
+> That tunable error handling logic (XFS_ERR_RETRY_FOREVER) basically
+> determines when an I/O error is considered permanent, which means
+> retries are futile and we have no choice but to shutdown the fs. E.g.,
+> if an error is deemed permanent, we jump to permanent_error:
+> 
+>         /*
+>          * Permanent error - we need to trigger a shutdown if we haven't already
+>          * to indicate that inconsistency will result from this action.
+>          */
+> permanent_error:
+>         xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+> out_stale:
+>         xfs_buf_stale(bp);
+>         bp->b_flags |= XBF_DONE;
+>         trace_xfs_buf_error_relse(bp, _RET_IP_);
+>         return false;
+> }
+> 
+> ... which shuts down the filesystem before we go any farther.
+> 
+> Brian
+> 
+> > Josef
+
+Josef, did you have any success in avoiding this lockup problem with the
+fail/retry mechanism mentioned? Or do you keep seeing it?
+
+
 -- 
-2.11.0
-
+Carlos
