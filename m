@@ -1,29 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51224 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750855AbdDCS5D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 14:57:03 -0400
-Date: Mon, 3 Apr 2017 11:57:02 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix over-copying of getbmap parameters from
- userspace
-Message-ID: <20170403185702.GA28344@infradead.org>
-References: <20170403173430.GL4864@birch.djwong.org>
- <20170403173619.GM4864@birch.djwong.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:46461 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753011AbdDCRfB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 13:35:01 -0400
+Date: Mon, 3 Apr 2017 10:34:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] xfs: fix kernel memory exposure problems
+Message-ID: <20170403173430.GL4864@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170403173619.GM4864@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Christoph Hellwig <hch@infradead.org>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, Christoph Hellwig <hch@infradead.org>
 
-> +	 * so using a straight memory copy should work fine.
+Fix a memory exposure problems in inumbers where we allocate an array of
+structures with holes, fail to zero the holes, then blindly copy the
+kernel memory contents (junk and all) into userspace.
 
-I'd skip this half of the comment.
-
-Otherwise looks fine:
-
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+v2: split patches
+---
+ fs/xfs/xfs_itable.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 2a6d9b1..26d67ce 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -583,7 +583,7 @@ xfs_inumbers(
+ 		return error;
+ 
+ 	bcount = MIN(left, (int)(PAGE_SIZE / sizeof(*buffer)));
+-	buffer = kmem_alloc(bcount * sizeof(*buffer), KM_SLEEP);
++	buffer = kmem_zalloc(bcount * sizeof(*buffer), KM_SLEEP);
+ 	do {
+ 		struct xfs_inobt_rec_incore	r;
+ 		int				stat;
