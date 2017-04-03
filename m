@@ -1,166 +1,352 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18841 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753350AbdDCRhR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 13:37:17 -0400
-Date: Mon, 3 Apr 2017 10:37:12 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:49602 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751537AbdDCRkR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 13:40:17 -0400
+Date: Mon, 3 Apr 2017 10:39:43 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/6] xfs: remove xfs_bmap_remap_alloc
-Message-ID: <20170403173712.GN4864@birch.djwong.org>
-References: <20170403121833.7825-1-hch@lst.de>
- <20170403121833.7825-6-hch@lst.de>
+Subject: [PATCH v3] xfs: rework the inline directory verifiers
+Message-ID: <20170403173943.GO4864@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170403121833.7825-6-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@infradead.org>
 
-On Mon, Apr 03, 2017 at 02:18:32PM +0200, Christoph Hellwig wrote:
-> The main thing that xfs_bmap_remap_alloc does is fixing the AGFL, similar
-> to what we do in the space allocator.  But the reflink code doesn't touch
-> the allocation btree unlike the normal space allocator, so we couldn't
-> care less about the state of the AGFL.
-> 
-> So remove xfs_bmap_remap_alloc and just handle the di_nblocks update in
-> the caller.
+The inline directory verifiers should be called on the inode fork data,
+which means after iformat_local on the read side, and prior to
+ifork_flush on the write side.  This makes the fork verifier more
+consistent with the way buffer verifiers work -- i.e. they will operate
+on the memory buffer that the code will be reading and writing directly.
 
-Looking at my notes, _bmap_remap_alloc was modified to fix the freelist
-to avoid running out of AGFL blocks and crashing on a rmapbt split.
-Nowadays _rmap_finish_one should take care of that before any deferred
-rmap changes, so I think we're covered.
+Furthermore, revise the verifier function to return -EFSCORRUPTED so
+that we don't flood the logs with corruption messages and assert
+notices.  This has been a particular problem with xfs/348, which
+triggers the XFS_WANT_CORRUPTED_RETURN assertions, which halts the
+kernel when CONFIG_XFS_DEBUG=y.  Disk corruption isn't supposed to do
+that, at least not in a verifier.
 
-I /think/ this looks ok, but I'll reread the series after lunch.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: get the inode d_ops the proper way
+v3: describe the bug that this patch fixes; no code changes
+---
+ fs/xfs/libxfs/xfs_dir2_priv.h  |    3 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c    |   63 ++++++++++++++++++++++++++--------------
+ fs/xfs/libxfs/xfs_inode_fork.c |   35 ++++++++--------------
+ fs/xfs/libxfs/xfs_inode_fork.h |    2 +
+ fs/xfs/xfs_inode.c             |   19 ++++++------
+ 5 files changed, 66 insertions(+), 56 deletions(-)
 
---D
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 60 ++----------------------------------------------
->  fs/xfs/xfs_trace.h       | 25 --------------------
->  2 files changed, 2 insertions(+), 83 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index caadfe27af39..0035f96a6e5a 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3856,61 +3856,6 @@ xfs_bmap_btalloc(
->  }
->  
->  /*
-> - * For a remap operation, just "allocate" an extent at the address that the
-> - * caller passed in, and ensure that the AGFL is the right size.  The caller
-> - * will then map the "allocated" extent into the file somewhere.
-> - */
-> -STATIC int
-> -xfs_bmap_remap_alloc(
-> -	struct xfs_trans	*tp,
-> -	struct xfs_inode	*ip,
-> -	xfs_fsblock_t		startblock,
-> -	xfs_extlen_t		length)
-> -{
-> -	struct xfs_mount	*mp = tp->t_mountp;
-> -	struct xfs_alloc_arg	args;
-> -	int			error;
-> -
-> -	/*
-> -	 * validate that the block number is legal - the enables us to detect
-> -	 * and handle a silent filesystem corruption rather than crashing.
-> -	 */
-> -	memset(&args, 0, sizeof(struct xfs_alloc_arg));
-> -	args.tp = tp;
-> -	args.mp = mp;
-> -	args.agno = XFS_FSB_TO_AGNO(mp, startblock);
-> -	args.agbno = XFS_FSB_TO_AGBNO(mp, startblock);
-> -
-> -	if (args.agno >= mp->m_sb.sb_agcount ||
-> -	    args.agbno >= mp->m_sb.sb_agblocks)
-> -		return -EFSCORRUPTED;
-> -
-> -	/* "Allocate" the extent from the range we passed in. */
-> -	trace_xfs_bmap_remap_alloc(ip, startblock, length);
-> -
-> -	ip->i_d.di_nblocks += length;
-> -	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> -
-> -	/* Fix the freelist, like a real allocator does. */
-> -	args.datatype = XFS_ALLOC_USERDATA | XFS_ALLOC_NOBUSY;
-> -	args.pag = xfs_perag_get(mp, args.agno);
-> -	ASSERT(args.pag);
-> -
-> -	/*
-> -	 * The freelist fixing code will decline the allocation if
-> -	 * the size and shape of the free space doesn't allow for
-> -	 * allocating the extent and updating all the metadata that
-> -	 * happens during an allocation.  We're remapping, not
-> -	 * allocating, so skip that check by pretending to be freeing.
-> -	 */
-> -	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
-> -	xfs_perag_put(args.pag);
-> -	if (error)
-> -		trace_xfs_bmap_remap_alloc_error(ip, error, _RET_IP_);
-> -	return error;
-> -}
-> -
-> -/*
->   * xfs_bmap_alloc is called by xfs_bmapi to allocate an extent for a file.
->   * It figures out where to ask the underlying allocator to put the new extent.
->   */
-> @@ -4806,9 +4751,8 @@ xfs_bmapi_remap(
->  		ASSERT(got.br_startoff - bno >= len);
->  	}
->  
-> -	error = xfs_bmap_remap_alloc(tp, ip, startblock, len);
-> -	if (error)
-> -		goto error0;
-> +	ip->i_d.di_nblocks += len;
-> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  
->  	if (ifp->if_flags & XFS_IFBROOT) {
->  		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 4f96dc953fbe..cba10daf8391 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3003,31 +3003,6 @@ DEFINE_EVENT(xfs_inode_error_class, name, \
->  		 unsigned long caller_ip), \
->  	TP_ARGS(ip, error, caller_ip))
->  
-> -/* reflink allocator */
-> -TRACE_EVENT(xfs_bmap_remap_alloc,
-> -	TP_PROTO(struct xfs_inode *ip, xfs_fsblock_t fsbno,
-> -		 xfs_extlen_t len),
-> -	TP_ARGS(ip, fsbno, len),
-> -	TP_STRUCT__entry(
-> -		__field(dev_t, dev)
-> -		__field(xfs_ino_t, ino)
-> -		__field(xfs_fsblock_t, fsbno)
-> -		__field(xfs_extlen_t, len)
-> -	),
-> -	TP_fast_assign(
-> -		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-> -		__entry->ino = ip->i_ino;
-> -		__entry->fsbno = fsbno;
-> -		__entry->len = len;
-> -	),
-> -	TP_printk("dev %d:%d ino 0x%llx fsbno 0x%llx len %x",
-> -		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> -		  __entry->ino,
-> -		  __entry->fsbno,
-> -		  __entry->len)
-> -);
-> -DEFINE_INODE_ERROR_EVENT(xfs_bmap_remap_alloc_error);
-> -
->  /* reflink tracepoint classes */
->  
->  /* two-file io tracepoint class */
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index eb00bc1..39f8604 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -125,8 +125,7 @@ extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
+ extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
+ extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
+ extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
+-extern int xfs_dir2_sf_verify(struct xfs_mount *mp, struct xfs_dir2_sf_hdr *sfp,
+-		int size);
++extern int xfs_dir2_sf_verify(struct xfs_inode *ip);
+ 
+ /* xfs_dir2_readdir.c */
+ extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index 96b45cd..e84af09 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -632,36 +632,49 @@ xfs_dir2_sf_check(
+ /* Verify the consistency of an inline directory. */
+ int
+ xfs_dir2_sf_verify(
+-	struct xfs_mount		*mp,
+-	struct xfs_dir2_sf_hdr		*sfp,
+-	int				size)
++	struct xfs_inode		*ip)
+ {
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_dir2_sf_hdr		*sfp;
+ 	struct xfs_dir2_sf_entry	*sfep;
+ 	struct xfs_dir2_sf_entry	*next_sfep;
+ 	char				*endp;
+ 	const struct xfs_dir_ops	*dops;
++	struct xfs_ifork		*ifp;
+ 	xfs_ino_t			ino;
+ 	int				i;
+ 	int				i8count;
+ 	int				offset;
++	int				size;
++	int				error;
+ 	__uint8_t			filetype;
+ 
++	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
++	/*
++	 * xfs_iread calls us before xfs_setup_inode sets up ip->d_ops,
++	 * so we can only trust the mountpoint to have the right pointer.
++	 */
+ 	dops = xfs_dir_get_ops(mp, NULL);
+ 
++	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	sfp = (struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data;
++	size = ifp->if_bytes;
++
+ 	/*
+ 	 * Give up if the directory is way too short.
+ 	 */
+-	XFS_WANT_CORRUPTED_RETURN(mp, size >
+-			offsetof(struct xfs_dir2_sf_hdr, parent));
+-	XFS_WANT_CORRUPTED_RETURN(mp, size >=
+-			xfs_dir2_sf_hdr_size(sfp->i8count));
++	if (size <= offsetof(struct xfs_dir2_sf_hdr, parent) ||
++	    size < xfs_dir2_sf_hdr_size(sfp->i8count))
++		return -EFSCORRUPTED;
+ 
+ 	endp = (char *)sfp + size;
+ 
+ 	/* Check .. entry */
+ 	ino = dops->sf_get_parent_ino(sfp);
+ 	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
+-	XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
++	error = xfs_dir_ino_validate(mp, ino);
++	if (error)
++		return error;
+ 	offset = dops->data_first_offset;
+ 
+ 	/* Check all reported entries */
+@@ -672,12 +685,12 @@ xfs_dir2_sf_verify(
+ 		 * Check the fixed-offset parts of the structure are
+ 		 * within the data buffer.
+ 		 */
+-		XFS_WANT_CORRUPTED_RETURN(mp,
+-				((char *)sfep + sizeof(*sfep)) < endp);
++		if (((char *)sfep + sizeof(*sfep)) >= endp)
++			return -EFSCORRUPTED;
+ 
+ 		/* Don't allow names with known bad length. */
+-		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen > 0);
+-		XFS_WANT_CORRUPTED_RETURN(mp, sfep->namelen < MAXNAMELEN);
++		if (sfep->namelen == 0)
++			return -EFSCORRUPTED;
+ 
+ 		/*
+ 		 * Check that the variable-length part of the structure is
+@@ -685,33 +698,39 @@ xfs_dir2_sf_verify(
+ 		 * name component, so nextentry is an acceptable test.
+ 		 */
+ 		next_sfep = dops->sf_nextentry(sfp, sfep);
+-		XFS_WANT_CORRUPTED_RETURN(mp, endp >= (char *)next_sfep);
++		if (endp < (char *)next_sfep)
++			return -EFSCORRUPTED;
+ 
+ 		/* Check that the offsets always increase. */
+-		XFS_WANT_CORRUPTED_RETURN(mp,
+-				xfs_dir2_sf_get_offset(sfep) >= offset);
++		if (xfs_dir2_sf_get_offset(sfep) < offset)
++			return -EFSCORRUPTED;
+ 
+ 		/* Check the inode number. */
+ 		ino = dops->sf_get_ino(sfp, sfep);
+ 		i8count += ino > XFS_DIR2_MAX_SHORT_INUM;
+-		XFS_WANT_CORRUPTED_RETURN(mp, !xfs_dir_ino_validate(mp, ino));
++		error = xfs_dir_ino_validate(mp, ino);
++		if (error)
++			return error;
+ 
+ 		/* Check the file type. */
+ 		filetype = dops->sf_get_ftype(sfep);
+-		XFS_WANT_CORRUPTED_RETURN(mp, filetype < XFS_DIR3_FT_MAX);
++		if (filetype >= XFS_DIR3_FT_MAX)
++			return -EFSCORRUPTED;
+ 
+ 		offset = xfs_dir2_sf_get_offset(sfep) +
+ 				dops->data_entsize(sfep->namelen);
+ 
+ 		sfep = next_sfep;
+ 	}
+-	XFS_WANT_CORRUPTED_RETURN(mp, i8count == sfp->i8count);
+-	XFS_WANT_CORRUPTED_RETURN(mp, (void *)sfep == (void *)endp);
++	if (i8count != sfp->i8count)
++		return -EFSCORRUPTED;
++	if ((void *)sfep != (void *)endp)
++		return -EFSCORRUPTED;
+ 
+ 	/* Make sure this whole thing ought to be in local format. */
+-	XFS_WANT_CORRUPTED_RETURN(mp, offset +
+-	       (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
+-	       (uint)sizeof(xfs_dir2_block_tail_t) <= mp->m_dir_geo->blksize);
++	if (offset + (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
++	    (uint)sizeof(xfs_dir2_block_tail_t) > mp->m_dir_geo->blksize)
++		return -EFSCORRUPTED;
+ 
+ 	return 0;
+ }
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 9653e96..8a37efe 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -212,6 +212,16 @@ xfs_iformat_fork(
+ 	if (error)
+ 		return error;
+ 
++	/* Check inline dir contents. */
++	if (S_ISDIR(VFS_I(ip)->i_mode) &&
++	    dip->di_format == XFS_DINODE_FMT_LOCAL) {
++		error = xfs_dir2_sf_verify(ip);
++		if (error) {
++			xfs_idestroy_fork(ip, XFS_DATA_FORK);
++			return error;
++		}
++	}
++
+ 	if (xfs_is_reflink_inode(ip)) {
+ 		ASSERT(ip->i_cowfp == NULL);
+ 		xfs_ifork_init_cow(ip);
+@@ -322,8 +332,6 @@ xfs_iformat_local(
+ 	int		whichfork,
+ 	int		size)
+ {
+-	int		error;
+-
+ 	/*
+ 	 * If the size is unreasonable, then something
+ 	 * is wrong and we just bail out rather than crash in
+@@ -339,14 +347,6 @@ xfs_iformat_local(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+-	if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
+-		error = xfs_dir2_sf_verify(ip->i_mount,
+-				(struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip),
+-				size);
+-		if (error)
+-			return error;
+-	}
+-
+ 	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size);
+ 	return 0;
+ }
+@@ -867,7 +867,7 @@ xfs_iextents_copy(
+  * In these cases, the format always takes precedence, because the
+  * format indicates the current state of the fork.
+  */
+-int
++void
+ xfs_iflush_fork(
+ 	xfs_inode_t		*ip,
+ 	xfs_dinode_t		*dip,
+@@ -877,7 +877,6 @@ xfs_iflush_fork(
+ 	char			*cp;
+ 	xfs_ifork_t		*ifp;
+ 	xfs_mount_t		*mp;
+-	int			error;
+ 	static const short	brootflag[2] =
+ 		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
+ 	static const short	dataflag[2] =
+@@ -886,7 +885,7 @@ xfs_iflush_fork(
+ 		{ XFS_ILOG_DEXT, XFS_ILOG_AEXT };
+ 
+ 	if (!iip)
+-		return 0;
++		return;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	/*
+ 	 * This can happen if we gave up in iformat in an error path,
+@@ -894,19 +893,12 @@ xfs_iflush_fork(
+ 	 */
+ 	if (!ifp) {
+ 		ASSERT(whichfork == XFS_ATTR_FORK);
+-		return 0;
++		return;
+ 	}
+ 	cp = XFS_DFORK_PTR(dip, whichfork);
+ 	mp = ip->i_mount;
+ 	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
+ 	case XFS_DINODE_FMT_LOCAL:
+-		if (S_ISDIR(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
+-			error = xfs_dir2_sf_verify(mp,
+-					(struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data,
+-					ifp->if_bytes);
+-			if (error)
+-				return error;
+-		}
+ 		if ((iip->ili_fields & dataflag[whichfork]) &&
+ 		    (ifp->if_bytes > 0)) {
+ 			ASSERT(ifp->if_u1.if_data != NULL);
+@@ -959,7 +951,6 @@ xfs_iflush_fork(
+ 		ASSERT(0);
+ 		break;
+ 	}
+-	return 0;
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 132dc59..7fb8365 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -140,7 +140,7 @@ typedef struct xfs_ifork {
+ struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
+ 
+ int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
+-int		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
++void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+ 				struct xfs_inode_log_item *, int);
+ void		xfs_idestroy_fork(struct xfs_inode *, int);
+ void		xfs_idata_realloc(struct xfs_inode *, int, int);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index c7fe2c2..7605d83 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -50,6 +50,7 @@
+ #include "xfs_log.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_reflink.h"
++#include "xfs_dir2_priv.h"
+ 
+ kmem_zone_t *xfs_inode_zone;
+ 
+@@ -3475,7 +3476,6 @@ xfs_iflush_int(
+ 	struct xfs_inode_log_item *iip = ip->i_itemp;
+ 	struct xfs_dinode	*dip;
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	int			error;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+ 	ASSERT(xfs_isiflocked(ip));
+@@ -3547,6 +3547,12 @@ xfs_iflush_int(
+ 	if (ip->i_d.di_version < 3)
+ 		ip->i_d.di_flushiter++;
+ 
++	/* Check the inline directory data. */
++	if (S_ISDIR(VFS_I(ip)->i_mode) &&
++	    ip->i_d.di_format == XFS_DINODE_FMT_LOCAL &&
++	    xfs_dir2_sf_verify(ip))
++		goto corrupt_out;
++
+ 	/*
+ 	 * Copy the dirty parts of the inode into the on-disk inode.  We always
+ 	 * copy out the core of the inode, because if the inode is dirty at all
+@@ -3558,14 +3564,9 @@ xfs_iflush_int(
+ 	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
+ 		ip->i_d.di_flushiter = 0;
+ 
+-	error = xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+-	if (error)
+-		return error;
+-	if (XFS_IFORK_Q(ip)) {
+-		error = xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
+-		if (error)
+-			return error;
+-	}
++	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
++	if (XFS_IFORK_Q(ip))
++		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
+ 	xfs_inobp_check(mp, bp);
+ 
+ 	/*
