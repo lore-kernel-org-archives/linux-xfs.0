@@ -1,249 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39266 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752997AbdDDVgO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Apr 2017 17:36:14 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 2AE3E61BA6
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2017 21:36:14 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id F3D5A77ECB
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2017 21:36:13 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_repair: pass btnum not magic to phase5 functions
-Message-ID: <904ac9a2-83e4-f534-c9f5-e071844b6a5e@redhat.com>
-Date: Tue, 4 Apr 2017 16:36:13 -0500
+Received: from aserp1040.oracle.com ([141.146.126.69]:18841 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753350AbdDCRhR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 13:37:17 -0400
+Date: Mon, 3 Apr 2017 10:37:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/6] xfs: remove xfs_bmap_remap_alloc
+Message-ID: <20170403173712.GN4864@birch.djwong.org>
+References: <20170403121833.7825-1-hch@lst.de>
+ <20170403121833.7825-6-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170403121833.7825-6-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-When ed849ef xfs: remove boilerplate around xfs_btree_init_block
-was merged from kernelspace, I made only minimal changes at the
-libxfs boundary to accommodate the new libxfs_btree_init_block
-interface.
+On Mon, Apr 03, 2017 at 02:18:32PM +0200, Christoph Hellwig wrote:
+> The main thing that xfs_bmap_remap_alloc does is fixing the AGFL, similar
+> to what we do in the space allocator.  But the reflink code doesn't touch
+> the allocation btree unlike the normal space allocator, so we couldn't
+> care less about the state of the AGFL.
+> 
+> So remove xfs_bmap_remap_alloc and just handle the di_nblocks update in
+> the caller.
 
-We can chase that up a bit higher and remove more code by
-passing in btnum from the start; we can also remove the
-"finobt" argument from build_ino_tree() because that is
-known from type of tree passed in.
+Looking at my notes, _bmap_remap_alloc was modified to fix the freelist
+to avoid running out of AGFL blocks and crashing on a rmapbt split.
+Nowadays _rmap_finish_one should take care of that before any deferred
+rmap changes, so I think we're covered.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+I /think/ this looks ok, but I'll reread the series after lunch.
 
- phase5.c |   63 +++++++++++++++++++++++----------------------------------------
- 1 file changed, 23 insertions(+), 40 deletions(-)
+--D
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index d00b078..4574eae 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -630,19 +630,15 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- static void
- prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		bt_status_t *btree_curs, xfs_agblock_t startblock,
--		xfs_extlen_t blockcount, int level, __uint32_t magic)
-+		xfs_extlen_t blockcount, int level, xfs_btnum_t btnum)
- {
- 	struct xfs_btree_block	*bt_hdr;
- 	xfs_alloc_key_t		*bt_key;
- 	xfs_alloc_ptr_t		*bt_ptr;
- 	xfs_agblock_t		agbno;
- 	bt_stat_level_t		*lptr;
--	xfs_btnum_t		btnum;
- 
--	if (magic == XFS_ABTB_MAGIC)
--		btnum = XFS_BTNUM_BNO;
--	else
--		btnum = XFS_BTNUM_CNT;
-+	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
- 
- 	level++;
- 
-@@ -658,7 +654,7 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		 * left-hand side of the tree.
- 		 */
- 		prop_freespace_cursor(mp, agno, btree_curs, startblock,
--				blockcount, level, magic);
-+				blockcount, level, btnum);
- 	}
- 
- 	if (be16_to_cpu(bt_hdr->bb_numrecs) ==
-@@ -703,7 +699,7 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		 * propagate extent record for first extent in new block up
- 		 */
- 		prop_freespace_cursor(mp, agno, btree_curs, startblock,
--				blockcount, level, magic);
-+				blockcount, level, btnum);
- 	}
- 	/*
- 	 * add extent info to current block
-@@ -722,13 +718,13 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- }
- 
- /*
-- * rebuilds a freespace tree given a cursor and magic number of type
-+ * rebuilds a freespace tree given a cursor and type
-  * of tree to build (bno or bcnt).  returns the number of free blocks
-  * represented by the tree.
-  */
- static xfs_extlen_t
- build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
--		bt_status_t *btree_curs, __uint32_t magic)
-+		bt_status_t *btree_curs, xfs_btnum_t btnum)
- {
- 	xfs_agnumber_t		i;
- 	xfs_agblock_t		j;
-@@ -739,7 +735,8 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	extent_tree_node_t	*ext_ptr;
- 	bt_stat_level_t		*lptr;
- 	xfs_extlen_t		freeblks;
--	xfs_btnum_t		btnum;
-+
-+	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
- 
- #ifdef XR_BLD_FREE_TRACE
- 	fprintf(stderr, "in build_freespace_tree, agno = %d\n", agno);
-@@ -748,10 +745,6 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	freeblks = 0;
- 
- 	ASSERT(level > 0);
--	if (magic == XFS_ABTB_MAGIC)
--		btnum = XFS_BTNUM_BNO;
--	else
--		btnum = XFS_BTNUM_CNT;
- 
- 	/*
- 	 * initialize the first block on each btree level
-@@ -784,7 +777,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	 * pointers for the parent.  that can recurse up to the root
- 	 * if required.  set the sibling pointers for leaf level here.
- 	 */
--	if (magic == XFS_ABTB_MAGIC)
-+	if (btnum == XFS_BTNUM_BNO)
- 		ext_ptr = findfirst_bno_extent(agno);
- 	else
- 		ext_ptr = findfirst_bcnt_extent(agno);
-@@ -824,7 +817,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 			prop_freespace_cursor(mp, agno, btree_curs,
- 					ext_ptr->ex_startblock,
- 					ext_ptr->ex_blockcount,
--					0, magic);
-+					0, btnum);
- 
- 		bt_rec = (xfs_alloc_rec_t *)
- 			  ((char *)bt_hdr + XFS_ALLOC_BLOCK_LEN(mp));
-@@ -835,7 +828,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 			bt_rec[j].ar_blockcount = cpu_to_be32(
- 							ext_ptr->ex_blockcount);
- 			freeblks += ext_ptr->ex_blockcount;
--			if (magic == XFS_ABTB_MAGIC)
-+			if (btnum == XFS_BTNUM_BNO)
- 				ext_ptr = findnext_bno_extent(ext_ptr);
- 			else
- 				ext_ptr = findnext_bcnt_extent(agno, ext_ptr);
-@@ -1138,8 +1131,8 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
-  */
- static void
- build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
--		bt_status_t *btree_curs, __uint32_t magic,
--		struct agi_stat *agi_stat, int finobt)
-+		bt_status_t *btree_curs, xfs_btnum_t btnum,
-+		struct agi_stat *agi_stat)
- {
- 	xfs_agnumber_t		i;
- 	xfs_agblock_t		j;
-@@ -1158,14 +1151,8 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	int			spmask;
- 	uint64_t		sparse;
- 	uint16_t		holemask;
--	xfs_btnum_t		btnum;
- 
--	if (magic == XFS_IBT_CRC_MAGIC || magic == XFS_IBT_MAGIC)
--		btnum = XFS_BTNUM_INO;
--	else if (magic == XFS_FIBT_CRC_MAGIC || magic == XFS_FIBT_MAGIC)
--		btnum = XFS_BTNUM_FINO;
--	else 
--		ASSERT(0);
-+	ASSERT(btnum == XFS_BTNUM_INO || btnum == XFS_BTNUM_FINO);
- 
- 	for (i = 0; i < level; i++)  {
- 		lptr = &btree_curs->level[i];
-@@ -1197,7 +1184,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	 * pointers for the parent.  that can recurse up to the root
- 	 * if required.  set the sibling pointers for leaf level here.
- 	 */
--	if (finobt)
-+	if (btnum == XFS_BTNUM_FINO)
- 		ino_rec = findfirst_free_inode_rec(agno);
- 	else
- 		ino_rec = findfirst_inode_rec(agno);
-@@ -1280,7 +1267,7 @@ nextrec:
- 			freecount += finocnt;
- 			count += inocnt;
- 
--			if (finobt)
-+			if (btnum == XFS_BTNUM_FINO)
- 				ino_rec = next_free_ino_rec(ino_rec);
- 			else
- 				ino_rec = next_ino_rec(ino_rec);
-@@ -2223,7 +2210,6 @@ phase5_func(
- 	xfs_extlen_t	freeblks2;
- #endif
- 	xfs_agblock_t	num_extents;
--	__uint32_t	magic;
- 	struct agi_stat	agi_stat = {0,};
- 	int		error;
- 
-@@ -2350,7 +2336,7 @@ phase5_func(
- 		 * now rebuild the freespace trees
- 		 */
- 		freeblks1 = build_freespace_tree(mp, agno,
--					&bno_btree_curs, XFS_ABTB_MAGIC);
-+					&bno_btree_curs, XFS_BTNUM_BNO);
- #ifdef XR_BLD_FREE_TRACE
- 		fprintf(stderr, "# of free blocks == %d\n", freeblks1);
- #endif
-@@ -2358,10 +2344,10 @@ phase5_func(
- 
- #ifdef DEBUG
- 		freeblks2 = build_freespace_tree(mp, agno,
--					&bcnt_btree_curs, XFS_ABTC_MAGIC);
-+					&bcnt_btree_curs, XFS_BTNUM_CNT);
- #else
- 		(void) build_freespace_tree(mp, agno,
--					&bcnt_btree_curs, XFS_ABTC_MAGIC);
-+					&bcnt_btree_curs, XFS_BTNUM_CNT);
- #endif
- 		write_cursor(&bcnt_btree_curs);
- 
-@@ -2388,19 +2374,16 @@ phase5_func(
- 		/*
- 		 * build inode allocation tree.
- 		 */
--		magic = xfs_sb_version_hascrc(&mp->m_sb) ?
--				XFS_IBT_CRC_MAGIC : XFS_IBT_MAGIC;
--		build_ino_tree(mp, agno, &ino_btree_curs, magic, &agi_stat, 0);
-+		build_ino_tree(mp, agno, &ino_btree_curs, XFS_BTNUM_INO,
-+				&agi_stat);
- 		write_cursor(&ino_btree_curs);
- 
- 		/*
- 		 * build free inode tree
- 		 */
- 		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
--			magic = xfs_sb_version_hascrc(&mp->m_sb) ?
--					XFS_FIBT_CRC_MAGIC : XFS_FIBT_MAGIC;
--			build_ino_tree(mp, agno, &fino_btree_curs, magic,
--					NULL, 1);
-+			build_ino_tree(mp, agno, &fino_btree_curs,
-+					XFS_BTNUM_FINO, NULL);
- 			write_cursor(&fino_btree_curs);
- 		}
- 
-
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 60 ++----------------------------------------------
+>  fs/xfs/xfs_trace.h       | 25 --------------------
+>  2 files changed, 2 insertions(+), 83 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index caadfe27af39..0035f96a6e5a 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3856,61 +3856,6 @@ xfs_bmap_btalloc(
+>  }
+>  
+>  /*
+> - * For a remap operation, just "allocate" an extent at the address that the
+> - * caller passed in, and ensure that the AGFL is the right size.  The caller
+> - * will then map the "allocated" extent into the file somewhere.
+> - */
+> -STATIC int
+> -xfs_bmap_remap_alloc(
+> -	struct xfs_trans	*tp,
+> -	struct xfs_inode	*ip,
+> -	xfs_fsblock_t		startblock,
+> -	xfs_extlen_t		length)
+> -{
+> -	struct xfs_mount	*mp = tp->t_mountp;
+> -	struct xfs_alloc_arg	args;
+> -	int			error;
+> -
+> -	/*
+> -	 * validate that the block number is legal - the enables us to detect
+> -	 * and handle a silent filesystem corruption rather than crashing.
+> -	 */
+> -	memset(&args, 0, sizeof(struct xfs_alloc_arg));
+> -	args.tp = tp;
+> -	args.mp = mp;
+> -	args.agno = XFS_FSB_TO_AGNO(mp, startblock);
+> -	args.agbno = XFS_FSB_TO_AGBNO(mp, startblock);
+> -
+> -	if (args.agno >= mp->m_sb.sb_agcount ||
+> -	    args.agbno >= mp->m_sb.sb_agblocks)
+> -		return -EFSCORRUPTED;
+> -
+> -	/* "Allocate" the extent from the range we passed in. */
+> -	trace_xfs_bmap_remap_alloc(ip, startblock, length);
+> -
+> -	ip->i_d.di_nblocks += length;
+> -	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> -
+> -	/* Fix the freelist, like a real allocator does. */
+> -	args.datatype = XFS_ALLOC_USERDATA | XFS_ALLOC_NOBUSY;
+> -	args.pag = xfs_perag_get(mp, args.agno);
+> -	ASSERT(args.pag);
+> -
+> -	/*
+> -	 * The freelist fixing code will decline the allocation if
+> -	 * the size and shape of the free space doesn't allow for
+> -	 * allocating the extent and updating all the metadata that
+> -	 * happens during an allocation.  We're remapping, not
+> -	 * allocating, so skip that check by pretending to be freeing.
+> -	 */
+> -	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
+> -	xfs_perag_put(args.pag);
+> -	if (error)
+> -		trace_xfs_bmap_remap_alloc_error(ip, error, _RET_IP_);
+> -	return error;
+> -}
+> -
+> -/*
+>   * xfs_bmap_alloc is called by xfs_bmapi to allocate an extent for a file.
+>   * It figures out where to ask the underlying allocator to put the new extent.
+>   */
+> @@ -4806,9 +4751,8 @@ xfs_bmapi_remap(
+>  		ASSERT(got.br_startoff - bno >= len);
+>  	}
+>  
+> -	error = xfs_bmap_remap_alloc(tp, ip, startblock, len);
+> -	if (error)
+> -		goto error0;
+> +	ip->i_d.di_nblocks += len;
+> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  
+>  	if (ifp->if_flags & XFS_IFBROOT) {
+>  		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 4f96dc953fbe..cba10daf8391 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3003,31 +3003,6 @@ DEFINE_EVENT(xfs_inode_error_class, name, \
+>  		 unsigned long caller_ip), \
+>  	TP_ARGS(ip, error, caller_ip))
+>  
+> -/* reflink allocator */
+> -TRACE_EVENT(xfs_bmap_remap_alloc,
+> -	TP_PROTO(struct xfs_inode *ip, xfs_fsblock_t fsbno,
+> -		 xfs_extlen_t len),
+> -	TP_ARGS(ip, fsbno, len),
+> -	TP_STRUCT__entry(
+> -		__field(dev_t, dev)
+> -		__field(xfs_ino_t, ino)
+> -		__field(xfs_fsblock_t, fsbno)
+> -		__field(xfs_extlen_t, len)
+> -	),
+> -	TP_fast_assign(
+> -		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+> -		__entry->ino = ip->i_ino;
+> -		__entry->fsbno = fsbno;
+> -		__entry->len = len;
+> -	),
+> -	TP_printk("dev %d:%d ino 0x%llx fsbno 0x%llx len %x",
+> -		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> -		  __entry->ino,
+> -		  __entry->fsbno,
+> -		  __entry->len)
+> -);
+> -DEFINE_INODE_ERROR_EVENT(xfs_bmap_remap_alloc_error);
+> -
+>  /* reflink tracepoint classes */
+>  
+>  /* two-file io tracepoint class */
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
