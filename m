@@ -1,117 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43262 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752510AbdDEA5Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 20:57:25 -0400
-Date: Tue, 4 Apr 2017 17:57:18 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [ANNOUNCE] xfsprogs: for-next branch updated to 88a4a19
-Message-ID: <20170405005718.GU4864@birch.djwong.org>
-References: <93206337-c274-6415-a068-7e89067a6f8f@sandeen.net>
- <e72a5a22-47c5-88c5-8789-b02445195083@sandeen.net>
+Received: from verein.lst.de ([213.95.11.211]:48355 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752237AbdDCSyx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Apr 2017 14:54:53 -0400
+Date: Mon, 3 Apr 2017 20:54:41 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3] xfs: Honor FALLOC_FL_KEEP_SIZE when punching ends
+        of files
+Message-ID: <20170403185441.GA30537@lst.de>
+References: <22a11e65fd5037498a78de61f3ed4dae466ad854.1489791330.git.calvinowens@fb.com> <19504ff40a16efff2e51d85388fce5be578edbc3.1489985397.git.calvinowens@fb.com> <20170321113932.GA58653@bfoster.bfoster> <ab15bba5-601a-3297-959c-ddb04b42d082@fb.com> <20170331041800.ugi4wgmbqx44mbwa@Haydn> <20170403171531.GJ4864@birch.djwong.org> <20170403171812.GK4864@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e72a5a22-47c5-88c5-8789-b02445195083@sandeen.net>
+In-Reply-To: <20170403171812.GK4864@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Calvin Owens <calvinowens@fb.com>, Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, kernel-team@fb.com, stable@vger.kernel.org
 
-On Tue, Apr 04, 2017 at 02:37:57PM -0500, Eric Sandeen wrote:
-> On 3/29/17 11:28 AM, Eric Sandeen wrote:
-> > Hi folks,
-> > 
-> > The xfsprogs repository at:
-> > 
-> > 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-> > 
-> > has just been updated.
-> > 
-> > This was only a libxfs syncup; I will get to xfsprogs-proper
-> > patches soon.  Changes are on the for-next and libxfs-4.11-sync
-> > branches for now.
-> 
-> Realized that I neglected to add my SOB to any of these.  :/
-> 
-> Unsure if I should rebase these two branches to add them, or
-> let it go.
-> 
-> Thoughts/preferences?
+On Mon, Apr 03, 2017 at 10:18:12AM -0700, Darrick J. Wong wrote:
+> I'll pick this up for 4.12, unless anyone wants me to push this for -rc6?
 
-/me doesn't care; rebase away, stgit can handle it... :)
-
---D
-
-> 
-> Sorry about that,
-> -Eric
-> 
-> > The new head of the for-next branch is commit:
-> > 
-> > 88a4a19 xfs: verify inline directory data forks
-> > 
-> > New Commits:
-> > 
-> > Brian Foster (3):
-> >       [5894afd] xfs: handle indlen shortage on delalloc extent merge
-> >       [b226fa5] xfs: split indlen reservations fairly when under reserved
-> >       [a0b2bb7] xfs: use iomap new flag for newly allocated delalloc blocks
-> > 
-> > Chandan Rajendra (1):
-> >       [b4747e3] xfs: Use xfs_icluster_size_fsb() to calculate inode chunk alignment
-> > 
-> > Christoph Hellwig (5):
-> >       [09af6ff] xfs: go straight to real allocations for direct I/O COW writes
-> >       [bb47212] xfs: improve handling of busy extents in the low-level allocator
-> >       [622fea0] xfs: tune down agno asserts in the bmap code
-> >       [2527a6f] xfs: remove XFS_ALLOCTYPE_ANY_AG and XFS_ALLOCTYPE_START_AG
-> >       [e2594ba] xfs: try any AG when allocating the first btree block when reflinking
-> > 
-> > Darrick J. Wong (7):
-> >       [0ed1133] xfs: fix toctou race when locking an inode to access the data map
-> >       [ab021c7] xfs: fail _dir_open when readahead fails
-> >       [94b269a] xfs: filter out obviously bad btree pointers
-> >       [c89a743] xfs: check for obviously bad level values in the bmbt root
-> >       [ec5d083] xfs: verify free block header fields
-> >       [86107a2] xfs: allow unwritten extents in the CoW fork
-> >       [88a4a19] xfs: verify inline directory data forks
-> > 
-> > Eric Sandeen (4):
-> >       [d88798d] xfs: glean crc status from mp not flags in xfs_btree_init_block_int
-> >       [ee3a607] xfs: make xfs_btree_magic more generic
-> >       [ed849ef] xfs: remove boilerplate around xfs_btree_init_block
-> >       [7c1c908] xfs: remove unused struct declarations
-> > 
-> > 
-> > Code Diffstat:
-> > 
-> >  include/xfs_log_recover.h |   1 -
-> >  libxfs/libxfs_priv.h      |  16 ++--
-> >  libxfs/xfs_alloc.c        | 109 ++++++++++------------
-> >  libxfs/xfs_alloc.h        |   4 -
-> >  libxfs/xfs_bmap.c         | 233 ++++++++++++++++++++++++++--------------------
-> >  libxfs/xfs_bmap_btree.c   |  16 +---
-> >  libxfs/xfs_btree.c        |  48 +++++++---
-> >  libxfs/xfs_btree.h        |   8 +-
-> >  libxfs/xfs_da_btree.c     |   6 +-
-> >  libxfs/xfs_da_btree.h     |   2 +-
-> >  libxfs/xfs_dir2_node.c    |  51 +++++++++-
-> >  libxfs/xfs_dir2_priv.h    |   2 +
-> >  libxfs/xfs_dir2_sf.c      |  87 +++++++++++++++++
-> >  libxfs/xfs_ialloc.c       |   3 +-
-> >  libxfs/xfs_inode_fork.c   |  35 +++++--
-> >  libxfs/xfs_inode_fork.h   |   2 +-
-> >  mkfs/xfs_mkfs.c           |  35 ++-----
-> > 
-> >  18 files changed, 451 insertions(+), 304 deletions(-)
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes, please do.  This is a regression that corrupts user visible data.
