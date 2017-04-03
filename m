@@ -1,88 +1,296 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53408 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752369AbdDCJT2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Apr 2017 05:19:28 -0400
-Date: Mon, 3 Apr 2017 11:19:13 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs: clear XBF_ASYNC if we attach an iodone callback
-Message-ID: <20170403091913.pmwc3taxypfgiqyw@eorzea.usersys.redhat.com>
-References: <1488552404-21379-1-git-send-email-jbacik@fb.com>
- <20170303204902.GF21245@bfoster.bfoster>
- <1488576856.9307.13.camel@fb.com>
- <20170303222001.GA24497@bfoster.bfoster>
- <A14C7E7E-2807-48E6-A5C1-ABD09A7B69D3@fb.com>
- <20170304135849.GA27205@bfoster.bfoster>
- <1488826813.9307.21.camel@fb.com>
- <20170307012204.GP17542@dastard>
- <1488902165.9307.26.camel@fb.com>
- <20170307161246.GB8144@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20170307161246.GB8144@bfoster.bfoster>
+Received: from bombadil.infradead.org ([65.50.211.133]:43147 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753016AbdDCMTA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 08:19:00 -0400
+Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1cv0wb-0005WJ-O4
+        for linux-xfs@vger.kernel.org; Mon, 03 Apr 2017 12:18:50 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/6] xfs: pass individual arguments to xfs_bmap_add_extent_hole_real
+Date: Mon,  3 Apr 2017 14:18:30 +0200
+Message-Id: <20170403121833.7825-4-hch@lst.de>
+In-Reply-To: <20170403121833.7825-1-hch@lst.de>
+References: <20170403121833.7825-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: bfoster@redhat.com
-Cc: Josef Bacik <jbacik@fb.com>, Dave Chinner <david@fromorbit.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "darrick.wong@oracle.com" <darrick.wong@oracle.com>, Kernel Team <Kernel-team@fb.com>
+To: linux-xfs@vger.kernel.org
 
-Hi,
+For the reflink case we'd much rather pass the required arguments than
+faking up a struct xfs_bmalloca.
 
-I really apologize for my late reply, March was a busy month and this thread got
-lost on my mailbox.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 123 ++++++++++++++++++++++++-----------------------
+ 1 file changed, 64 insertions(+), 59 deletions(-)
 
-I'll try to come back to this fix as soon as possible,
-
-> > > > 
-> > > >                 return;
-> > > >         }
-> > > It's likely you'll end up with silent on disk corruption if you do
-> > > that because it's just tossing the error state away.
-> > 
-> > I think I'm getting a handle on this, but I wonder if we don't have
-> > this problem currently?  We get an error on a buffer, we retry it and
-> > it fails again.  If we don't have XFS_ERR_RETRY_FOREVER set then we
-> > error out and do the normal callbacks as if nothing ever happened, and
-> > we get the silent corruption without shutting down the file system.
-> >  How is the code as it stands without XFS_ERR_RETRY_FOREVER safe?
-> >  Thanks,
-> > 
-> 
-> We shouldn't get into a situation where we run the callbacks when the
-> I/O has failed and the fs isn't shut down. IOWs, we do run the callbacks
-> only when the I/O succeeds, or it fails and the fs is shutdown as a
-> result (never when the I/O fails but we haven't shut down, which is the
-> problematic case the patch above introduces).
-> 
-> That tunable error handling logic (XFS_ERR_RETRY_FOREVER) basically
-> determines when an I/O error is considered permanent, which means
-> retries are futile and we have no choice but to shutdown the fs. E.g.,
-> if an error is deemed permanent, we jump to permanent_error:
-> 
->         /*
->          * Permanent error - we need to trigger a shutdown if we haven't already
->          * to indicate that inconsistency will result from this action.
->          */
-> permanent_error:
->         xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-> out_stale:
->         xfs_buf_stale(bp);
->         bp->b_flags |= XBF_DONE;
->         trace_xfs_buf_error_relse(bp, _RET_IP_);
->         return false;
-> }
-> 
-> ... which shuts down the filesystem before we go any farther.
-> 
-> Brian
-> 
-> > Josef
-
-Josef, did you have any success in avoiding this lockup problem with the
-fail/retry mechanism mentioned? Or do you keep seeing it?
-
-
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 47b909c27bb3..d404dee7ede4 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2879,27 +2879,30 @@ xfs_bmap_add_extent_hole_delay(
+  */
+ STATIC int				/* error */
+ xfs_bmap_add_extent_hole_real(
+-	struct xfs_bmalloca	*bma,
+-	int			whichfork)
++	struct xfs_trans	*tp,
++	xfs_inode_t		*ip,	/* incore inode pointer */
++	int			whichfork,
++	xfs_extnum_t		*idx,	/* extent number to update/insert */
++	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
++	xfs_bmbt_irec_t		*new,	/* new data to add to file extents */
++	xfs_fsblock_t		*first,	/* pointer to firstblock variable */
++	struct xfs_defer_ops	*dfops,	/* list of extents to be freed */
++	int			*logflagsp) /* inode logging flags */
+ {
+-	struct xfs_bmbt_irec	*new = &bma->got;
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_btree_cur	*cur = *curp;
+ 	int			error;	/* error return value */
+ 	int			i;	/* temp state */
+-	xfs_ifork_t		*ifp;	/* inode fork pointer */
+ 	xfs_bmbt_irec_t		left;	/* left neighbor extent entry */
+ 	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
+ 	int			rval=0;	/* return value (logging flags) */
+ 	int			state;	/* state bits, accessed thru macros */
+-	struct xfs_mount	*mp;
+-
+-	mp = bma->ip->i_mount;
+-	ifp = XFS_IFORK_PTR(bma->ip, whichfork);
+ 
+-	ASSERT(bma->idx >= 0);
+-	ASSERT(bma->idx <= xfs_iext_count(ifp));
++	ASSERT(*idx >= 0);
++	ASSERT(*idx <= xfs_iext_count(ifp));
+ 	ASSERT(!isnullstartblock(new->br_startblock));
+-	ASSERT(!bma->cur ||
+-	       !(bma->cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
++	ASSERT(!cur || !(cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
+ 
+ 	XFS_STATS_INC(mp, xs_add_exlist);
+ 
+@@ -2912,9 +2915,9 @@ xfs_bmap_add_extent_hole_real(
+ 	/*
+ 	 * Check and set flags if this segment has a left neighbor.
+ 	 */
+-	if (bma->idx > 0) {
++	if (*idx > 0) {
+ 		state |= BMAP_LEFT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1), &left);
++		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &left);
+ 		if (isnullstartblock(left.br_startblock))
+ 			state |= BMAP_LEFT_DELAY;
+ 	}
+@@ -2923,9 +2926,9 @@ xfs_bmap_add_extent_hole_real(
+ 	 * Check and set flags if this segment has a current value.
+ 	 * Not true if we're inserting into the "hole" at eof.
+ 	 */
+-	if (bma->idx < xfs_iext_count(ifp)) {
++	if (*idx < xfs_iext_count(ifp)) {
+ 		state |= BMAP_RIGHT_VALID;
+-		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx), &right);
++		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
+ 		if (isnullstartblock(right.br_startblock))
+ 			state |= BMAP_RIGHT_DELAY;
+ 	}
+@@ -2962,36 +2965,36 @@ xfs_bmap_add_extent_hole_real(
+ 		 * left and on the right.
+ 		 * Merge all three into a single extent record.
+ 		 */
+-		--bma->idx;
+-		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
+-		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, bma->idx),
++		--*idx;
++		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
++		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
+ 			left.br_blockcount + new->br_blockcount +
+ 			right.br_blockcount);
+-		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
++		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 
+-		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
++		xfs_iext_remove(ip, *idx + 1, 1, state);
+ 
+-		XFS_IFORK_NEXT_SET(bma->ip, whichfork,
+-			XFS_IFORK_NEXTENTS(bma->ip, whichfork) - 1);
+-		if (bma->cur == NULL) {
++		XFS_IFORK_NEXT_SET(ip, whichfork,
++			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
++		if (cur == NULL) {
+ 			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
+ 		} else {
+ 			rval = XFS_ILOG_CORE;
+-			error = xfs_bmbt_lookup_eq(bma->cur, right.br_startoff,
++			error = xfs_bmbt_lookup_eq(cur, right.br_startoff,
+ 					right.br_startblock, right.br_blockcount,
+ 					&i);
+ 			if (error)
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+-			error = xfs_btree_delete(bma->cur, &i);
++			error = xfs_btree_delete(cur, &i);
+ 			if (error)
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+-			error = xfs_btree_decrement(bma->cur, 0, &i);
++			error = xfs_btree_decrement(cur, 0, &i);
+ 			if (error)
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+-			error = xfs_bmbt_update(bma->cur, left.br_startoff,
++			error = xfs_bmbt_update(cur, left.br_startoff,
+ 					left.br_startblock,
+ 					left.br_blockcount +
+ 						new->br_blockcount +
+@@ -3008,23 +3011,23 @@ xfs_bmap_add_extent_hole_real(
+ 		 * on the left.
+ 		 * Merge the new allocation with the left neighbor.
+ 		 */
+-		--bma->idx;
+-		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
+-		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, bma->idx),
++		--*idx;
++		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
++		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
+ 			left.br_blockcount + new->br_blockcount);
+-		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
++		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 
+-		if (bma->cur == NULL) {
++		if (cur == NULL) {
+ 			rval = xfs_ilog_fext(whichfork);
+ 		} else {
+ 			rval = 0;
+-			error = xfs_bmbt_lookup_eq(bma->cur, left.br_startoff,
++			error = xfs_bmbt_lookup_eq(cur, left.br_startoff,
+ 					left.br_startblock, left.br_blockcount,
+ 					&i);
+ 			if (error)
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+-			error = xfs_bmbt_update(bma->cur, left.br_startoff,
++			error = xfs_bmbt_update(cur, left.br_startoff,
+ 					left.br_startblock,
+ 					left.br_blockcount +
+ 						new->br_blockcount,
+@@ -3040,25 +3043,25 @@ xfs_bmap_add_extent_hole_real(
+ 		 * on the right.
+ 		 * Merge the new allocation with the right neighbor.
+ 		 */
+-		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
+-		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, bma->idx),
++		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
++		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
+ 			new->br_startoff, new->br_startblock,
+ 			new->br_blockcount + right.br_blockcount,
+ 			right.br_state);
+-		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
++		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 
+-		if (bma->cur == NULL) {
++		if (cur == NULL) {
+ 			rval = xfs_ilog_fext(whichfork);
+ 		} else {
+ 			rval = 0;
+-			error = xfs_bmbt_lookup_eq(bma->cur,
++			error = xfs_bmbt_lookup_eq(cur,
+ 					right.br_startoff,
+ 					right.br_startblock,
+ 					right.br_blockcount, &i);
+ 			if (error)
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+-			error = xfs_bmbt_update(bma->cur, new->br_startoff,
++			error = xfs_bmbt_update(cur, new->br_startoff,
+ 					new->br_startblock,
+ 					new->br_blockcount +
+ 						right.br_blockcount,
+@@ -3074,22 +3077,22 @@ xfs_bmap_add_extent_hole_real(
+ 		 * real allocation.
+ 		 * Insert a new entry.
+ 		 */
+-		xfs_iext_insert(bma->ip, bma->idx, 1, new, state);
+-		XFS_IFORK_NEXT_SET(bma->ip, whichfork,
+-			XFS_IFORK_NEXTENTS(bma->ip, whichfork) + 1);
+-		if (bma->cur == NULL) {
++		xfs_iext_insert(ip, *idx, 1, new, state);
++		XFS_IFORK_NEXT_SET(ip, whichfork,
++			XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
++		if (cur == NULL) {
+ 			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
+ 		} else {
+ 			rval = XFS_ILOG_CORE;
+-			error = xfs_bmbt_lookup_eq(bma->cur,
++			error = xfs_bmbt_lookup_eq(cur,
+ 					new->br_startoff,
+ 					new->br_startblock,
+ 					new->br_blockcount, &i);
+ 			if (error)
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
+-			bma->cur->bc_rec.b.br_state = new->br_state;
+-			error = xfs_btree_insert(bma->cur, &i);
++			cur->bc_rec.b.br_state = new->br_state;
++			error = xfs_btree_insert(cur, &i);
+ 			if (error)
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+@@ -3098,30 +3101,30 @@ xfs_bmap_add_extent_hole_real(
+ 	}
+ 
+ 	/* add reverse mapping */
+-	error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip, whichfork, new);
++	error = xfs_rmap_map_extent(mp, dfops, ip, whichfork, new);
+ 	if (error)
+ 		goto done;
+ 
+ 	/* convert to a btree if necessary */
+-	if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
++	if (xfs_bmap_needs_btree(ip, whichfork)) {
+ 		int	tmp_logflags;	/* partial log flag return val */
+ 
+-		ASSERT(bma->cur == NULL);
+-		error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+-				bma->firstblock, bma->dfops, &bma->cur,
++		ASSERT(cur == NULL);
++		error = xfs_bmap_extents_to_btree(tp, ip, first, dfops, curp,
+ 				0, &tmp_logflags, whichfork);
+-		bma->logflags |= tmp_logflags;
++		*logflagsp |= tmp_logflags;
++		cur = *curp;
+ 		if (error)
+ 			goto done;
+ 	}
+ 
+ 	/* clear out the allocated field, done with it now in any case. */
+-	if (bma->cur)
+-		bma->cur->bc_private.b.allocated = 0;
++	if (cur)
++		cur->bc_private.b.allocated = 0;
+ 
+-	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, whichfork);
++	xfs_bmap_check_leaf_extents(cur, ip, whichfork);
+ done:
+-	bma->logflags |= rval;
++	*logflagsp |= rval;
+ 	return error;
+ }
+ 
+@@ -4386,7 +4389,9 @@ xfs_bmapi_allocate(
+ 	if (bma->wasdel)
+ 		error = xfs_bmap_add_extent_delay_real(bma, whichfork);
+ 	else
+-		error = xfs_bmap_add_extent_hole_real(bma, whichfork);
++		error = xfs_bmap_add_extent_hole_real(bma->tp, bma->ip,
++				whichfork, &bma->idx, &bma->cur, &bma->got,
++				bma->firstblock, bma->dfops, &bma->logflags);
+ 
+ 	bma->logflags |= tmp_logflags;
+ 	if (error)
 -- 
-Carlos
+2.11.0
+
