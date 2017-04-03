@@ -1,56 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:35266 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751982AbdDCLc4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 07:32:56 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:44904 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751329AbdDCLuZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Apr 2017 07:50:25 -0400
+Subject: [PATCH 1/4] xfstests: Add an auxiliary program to create an AF_UNIX
+ socket [ver #2]
+From: David Howells <dhowells@redhat.com>
+Date: Mon, 03 Apr 2017 12:50:12 +0100
+Message-ID: <149122021217.24468.17499686793235286404.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <23054.1491218325@warthog.procyon.org.uk>
-References: <149121523070.22344.187602366514567082.stgit@warthog.procyon.org.uk>
- <149121524183.22344.1748203777026246762.stgit@warthog.procyon.org.uk>
- <CAOQ4uxhBgQ6q5GMe=G14Swvxto+y2_rZucZzK521Z4mCryOrZg@mail.gmail.com> <23054.1491218325@warthog.procyon.org.uk>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 3 Apr 2017 14:32:55 +0300
-Message-ID: <CAOQ4uxg73bQzakiUoQnvLxOztO4z-1ro+LZcDKsMCbOXA0g-3g@mail.gmail.com>
-Subject: Re: [PATCH 2/4] xfstests: Add first statx test
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Eryu Guan <eguan@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
 
-On Mon, Apr 3, 2017 at 2:18 PM, David Howells <dhowells@redhat.com> wrote:
-> Amir Goldstein <amir73il@gmail.com> wrote:
->
->> I know Eryu told you that you can change the default of status to success,
->> ... what's the benefit of doing that.
->
-> Simple: All the tests should be carried out, even if one or more fail.  The
-> script should not simply abort at that point, but should rather give the
-> cumulative error at the end.
->
-> This means the default should be success and this altered to failure on the
-> failure of any subtest (ie. we're OR'ing them).
->
-> There should needs to be a way to report any subtest that was skipped because
-> the kernel or the fs doesn't support it.
->
->> A simple way to deal with this is to do
->>
->> function check_stat () {
->>     $here/src/stat_test $* || exit
->> }
->
-> No.  This is the wrong thing to do (see above).  Better would be to either set
-> status=1 here (but we're inside a function, so I'm not sure that'll work) or
-> to replace the exit above with "|| echo stat_test failed" and let the output
-> comparator handle it.
->
+Add an auxiliary program to create an AF_UNIX socket at the specified
+location so that tests can do things with it.
 
-Fair enough. Both options will work. Bash variables are global by default.
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
 
-I am a bit concerned about setting status=0 to begin with because
-of 'exit' inside common helpers.
+ .gitignore    |    1 +
+ src/Makefile  |    2 +-
+ src/af_unix.c |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 68 insertions(+), 1 deletion(-)
+ create mode 100644 src/af_unix.c
 
-How about handling the errors with "|| echo stat_test failed"
-and sticking to standard wrt status?
+diff --git a/.gitignore b/.gitignore
+index 1ed2a92..8a7c052 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -35,6 +35,7 @@
+ /ltp/iogen
+ 
+ # src/ binaries
++/src/af_unix
+ /src/alloc
+ /src/append_reader
+ /src/append_writer
+diff --git a/src/Makefile b/src/Makefile
+index a7f27f0..716c178 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -12,7 +12,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
+ 	godown resvtest writemod makeextents itrash rename \
+ 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
+ 	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
+-	holetest t_truncate_self t_mmap_dio
++	holetest t_truncate_self t_mmap_dio af_unix
+ 
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+diff --git a/src/af_unix.c b/src/af_unix.c
+new file mode 100644
+index 0000000..dc2368e
+--- /dev/null
++++ b/src/af_unix.c
+@@ -0,0 +1,66 @@
++/* Create an AF_UNIX socket.
++ *
++ * Copyright (C) 2017 Red Hat, Inc. All Rights Reserved.
++ * Written by David Howells (dhowells@redhat.com)
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public Licence
++ * as published by the Free Software Foundation; either version
++ * 2 of the Licence, or (at your option) any later version.
++ */
++
++#include <stdarg.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <stdbool.h>
++#include <string.h>
++#include <unistd.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/socket.h>
++#include <sys/un.h>
++
++#define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
++
++int main(int argc, char *argv[])
++{
++	struct sockaddr_un sun;
++	struct stat st;
++	size_t len, max;
++	int fd;
++
++	if (argc != 2) {
++		fprintf(stderr, "Format: %s <socketpath>\n", argv[0]);
++		exit(2);
++	}
++
++	max = sizeof(sun.sun_path);
++	len = strlen(argv[1]);
++	if (len >= max) {
++		fprintf(stderr, "Filename too long (max %zu)\n", max);
++		exit(2);
++	}
++
++	fd = socket(AF_UNIX, SOCK_DGRAM, 0);
++	if (fd < 0) {
++		perror("socket");
++		exit(1);
++	}
++
++	memset(&sun, 0, sizeof(sun));
++	sun.sun_family = AF_UNIX;
++	strcpy(sun.sun_path, argv[1]);
++	if (bind(fd, (struct sockaddr *)&sun, sizeof(sun)) == -1) {
++		perror("bind");
++		exit(1);
++	}
++
++	if (stat(argv[1], &st)) {
++		fprintf(stderr, "Couldn't stat socket after creation: %m\n");
++		exit(1);
++	}
++
++	exit(0);
++}
+
