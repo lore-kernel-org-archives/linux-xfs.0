@@ -1,48 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57121 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751094AbdDDGwN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 02:52:13 -0400
-Date: Mon, 3 Apr 2017 23:52:11 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 7/8] nowait aio: xfs
-Message-ID: <20170404065211.GD21942@infradead.org>
+Received: from mx2.suse.de ([195.135.220.15]:45995 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752544AbdDCSx7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Apr 2017 14:53:59 -0400
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 7/8] nowait aio: xfs
+Date: Mon,  3 Apr 2017 13:53:06 -0500
+Message-Id: <20170403185307.6243-8-rgoldwyn@suse.de>
+In-Reply-To: <20170403185307.6243-1-rgoldwyn@suse.de>
 References: <20170403185307.6243-1-rgoldwyn@suse.de>
- <20170403185307.6243-8-rgoldwyn@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170403185307.6243-8-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-> +	if (unaligned_io) {
-> +		/* If we are going to wait for other DIO to finish, bail */
-> +		if ((iocb->ki_flags & IOCB_NOWAIT) &&
-> +		     atomic_read(&inode->i_dio_count))
-> +			return -EAGAIN;
->  		inode_dio_wait(inode);
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-This checks i_dio_count twice in the nowait case, I think it should be:
+If IOCB_NOWAIT is set, bail if the i_rwsem is not lockable
+immediately.
 
-	if (iocb->ki_flags & IOCB_NOWAIT) {
-		if (atomic_read(&inode->i_dio_count))
-			return -EAGAIN;
-	} else {
-		inode_dio_wait(inode);
-	}
+IF IOMAP_NOWAIT is set, return EAGAIN in xfs_file_iomap_begin
+if it needs allocation either due to file extension, writing to a hole,
+or COW or waiting for other DIOs to finish.
+---
+ fs/xfs/xfs_file.c  | 15 +++++++++++----
+ fs/xfs/xfs_iomap.c | 13 +++++++++++++
+ fs/xfs/xfs_super.c |  2 +-
+ 3 files changed, 25 insertions(+), 5 deletions(-)
 
->  	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
->  		if (flags & IOMAP_DIRECT) {
-> +			/* A reflinked inode will result in CoW alloc */
-> +			if (flags & IOMAP_NOWAIT) {
-> +				error = -EAGAIN;
-> +				goto out_unlock;
-> +			}
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 35703a8..08a5eef 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -541,8 +541,11 @@ xfs_file_dio_aio_write(
+ 		iolock = XFS_IOLOCK_SHARED;
+ 	}
+ 
+-	xfs_ilock(ip, iolock);
+-
++	if (!xfs_ilock_nowait(ip, iolock)) {
++		if (iocb->ki_flags & IOCB_NOWAIT)
++			return -EAGAIN;
++		xfs_ilock(ip, iolock);
++	}
+ 	ret = xfs_file_aio_write_checks(iocb, from, &iolock);
+ 	if (ret)
+ 		goto out;
+@@ -553,9 +556,13 @@ xfs_file_dio_aio_write(
+ 	 * otherwise demote the lock if we had to take the exclusive lock
+ 	 * for other reasons in xfs_file_aio_write_checks.
+ 	 */
+-	if (unaligned_io)
++	if (unaligned_io) {
++		/* If we are going to wait for other DIO to finish, bail */
++		if ((iocb->ki_flags & IOCB_NOWAIT) &&
++		     atomic_read(&inode->i_dio_count))
++			return -EAGAIN;
+ 		inode_dio_wait(inode);
+-	else if (iolock == XFS_IOLOCK_EXCL) {
++	} else if (iolock == XFS_IOLOCK_EXCL) {
+ 		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+ 		iolock = XFS_IOLOCK_SHARED;
+ 	}
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 288ee5b..6843725 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1015,6 +1015,11 @@ xfs_file_iomap_begin(
+ 
+ 	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
+ 		if (flags & IOMAP_DIRECT) {
++			/* A reflinked inode will result in CoW alloc */
++			if (flags & IOMAP_NOWAIT) {
++				error = -EAGAIN;
++				goto out_unlock;
++			}
+ 			/* may drop and re-acquire the ilock */
+ 			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
+ 					&lockmode);
+@@ -1032,6 +1037,14 @@ xfs_file_iomap_begin(
+ 
+ 	if ((flags & IOMAP_WRITE) && imap_needs_alloc(inode, &imap, nimaps)) {
+ 		/*
++		 * If nowait is set bail since we are going to make
++		 * allocations.
++		 */
++		if (flags & IOMAP_NOWAIT) {
++			error = -EAGAIN;
++			goto out_unlock;
++		}
++		/*
+ 		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
+ 		 * pages to keep the chunks of work done where somewhat symmetric
+ 		 * with the work writeback does. This is a completely arbitrary
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 685c042..070a30e 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1749,7 +1749,7 @@ static struct file_system_type xfs_fs_type = {
+ 	.name			= "xfs",
+ 	.mount			= xfs_fs_mount,
+ 	.kill_sb		= kill_block_super,
+-	.fs_flags		= FS_REQUIRES_DEV,
++	.fs_flags		= FS_REQUIRES_DEV | FS_NOWAIT,
+ };
+ MODULE_ALIAS_FS("xfs");
+ 
+-- 
+2.10.2
 
-This is a bit pessimistic - just because the inode has any shared
-extents we could still write into unshared ones.  For now I think this
-pessimistic check is fine, but the comment should be corrected.
