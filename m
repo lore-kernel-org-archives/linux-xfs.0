@@ -1,296 +1,306 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43147 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753016AbdDCMTA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 08:19:00 -0400
-Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cv0wb-0005WJ-O4
-        for linux-xfs@vger.kernel.org; Mon, 03 Apr 2017 12:18:50 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/6] xfs: pass individual arguments to xfs_bmap_add_extent_hole_real
-Date: Mon,  3 Apr 2017 14:18:30 +0200
-Message-Id: <20170403121833.7825-4-hch@lst.de>
-In-Reply-To: <20170403121833.7825-1-hch@lst.de>
-References: <20170403121833.7825-1-hch@lst.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18457 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751716AbdDCQjs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 12:39:48 -0400
+Date: Mon, 3 Apr 2017 09:39:10 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/4] xfstests: Check the stx_attributes settable by
+ chattr [ver #3]
+Message-ID: <20170403163910.GD10881@birch.djwong.org>
+References: <149122078093.24821.17192375733082382807.stgit@warthog.procyon.org.uk>
+ <149122081486.24821.15266397607503484126.stgit@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <149122081486.24821.15266397607503484126.stgit@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: David Howells <dhowells@redhat.com>
+Cc: linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-For the reflink case we'd much rather pass the required arguments than
-faking up a struct xfs_bmalloca.
+On Mon, Apr 03, 2017 at 01:00:14PM +0100, David Howells wrote:
+> Check the stx_attributes that can be set by calling chattr.
+> 
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> ---
+> 
+>  doc/requirement-checking.txt |   16 +++++++
+>  src/stat_test.c              |   71 +++++++++++++++++++++++++++++++
+>  tests/generic/421            |   95 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/421.out        |    1 
+>  tests/generic/group          |    1 
+>  5 files changed, 183 insertions(+), 1 deletion(-)
+>  create mode 100755 tests/generic/421
+>  create mode 100644 tests/generic/421.out
+> 
+> diff --git a/doc/requirement-checking.txt b/doc/requirement-checking.txt
+> index 29f0b74..523b27f 100644
+> --- a/doc/requirement-checking.txt
+> +++ b/doc/requirement-checking.txt
+> @@ -12,7 +12,11 @@ they have.  This is done with _require_<xxx> macros, which may take parameters.
+>  	_require_test_program
+>  	_require_xfs_io_command
+>  
+> - (2) System call requirements.
+> + (2) Filesystem capability requirements.
+> +
+> +	_require_chattr
+> +
+> + (3) System call requirements.
+>  
+>  	_require_statx
+>  
+> @@ -59,6 +63,16 @@ _require_xfs_io_command "falloc"
+>       the 'falloc' command.
+>  
+>  
+> +==================================
+> +FILESYSTEM CAPABILITY REQUIREMENTS
+> +==================================
+> +
+> +_require_chattr
+> +
+> +     The test requires that the chattr command be available and supported by
+> +     the $TEST_DEV filesystem.  No check is made of the scratch filesystem.
+> +
+> +
+>  ========================
+>  SYSTEM CALL REQUIREMENTS
+>  ========================
+> diff --git a/src/stat_test.c b/src/stat_test.c
+> index cb3d4f4..b1205ec 100644
+> --- a/src/stat_test.c
+> +++ b/src/stat_test.c
+> @@ -102,6 +102,30 @@ static int field_cmp(const void *_key, const void *_p)
+>  	return strcmp(key, p->name);
+>  }
+>  
+> +/*
+> + * Sorted list of attribute flags for bsearch().
+> + */
+> +struct attr_name {
+> +	const char	*name;
+> +	__u64		attr_flag;
+> +};
+> +
+> +static const struct attr_name attr_list[] = {
+> +	{ "append",	STATX_ATTR_APPEND },
+> +	{ "automount",	STATX_ATTR_AUTOMOUNT },
+> +	{ "compressed",	STATX_ATTR_COMPRESSED },
+> +	{ "encrypted",	STATX_ATTR_ENCRYPTED },
+> +	{ "immutable",	STATX_ATTR_IMMUTABLE },
+> +	{ "nodump",	STATX_ATTR_NODUMP },
+> +};
+> +
+> +static int attr_name_cmp(const void *_key, const void *_p)
+> +{
+> +	const char *key = _key;
+> +	const struct attr_name *p = _p;
+> +	return strcmp(key, p->name);
+> +}
+> +
+>  struct file_type {
+>  	const char *name;
+>  	mode_t mode;
+> @@ -128,6 +152,13 @@ void format(void)
+>  	fprintf(stderr, "usage: %s [-v] [-m<mask>] <testfile> [checks]\n", prog);
+>  	fprintf(stderr, "\t<mask> can be basic, all or a number; all is the default\n");
+>  	fprintf(stderr, "checks is a list of zero or more of:\n");
+> +	fprintf(stderr, "\tattr=[+-]<name> -- check an attribute in stx_attributes\n");
+> +	fprintf(stderr, "\t\tappend -- The file is marked as append only\n");
+> +	fprintf(stderr, "\t\tautomount -- The object is an automount point\n");
+> +	fprintf(stderr, "\t\tcompressed -- The file is marked as compressed\n");
+> +	fprintf(stderr, "\t\tencrypted -- The file is marked as encrypted\n");
+> +	fprintf(stderr, "\t\timmutable -- The file is marked as immutable\n");
+> +	fprintf(stderr, "\t\tnodump -- The file is marked as no-dump\n");
+>  	fprintf(stderr, "\tcmp_ref -- check that the reference file has identical stats\n");
+>  	fprintf(stderr, "\tref=<file> -- get reference stats from file\n");
+>  	fprintf(stderr, "\tstx_<field>=<val> -- statx field value check\n");
+> @@ -564,6 +595,40 @@ static void check_field(const struct statx *stx, char *arg)
+>  }
+>  
+>  /*
+> + * Check attributes in stx_attributes.  When stx_attributes_mask gets in
+> + * upstream, we will need to consider that also.
+> + */
+> +static void check_attribute(const struct statx *stx, char *arg)
+> +{
+> +	const struct attr_name *p;
+> +	__u64 attr;
+> +	bool set;
+> +
+> +	verbose("check attr %s\n", arg);
+> +	switch (arg[0]) {
+> +	case '+': set = true;	break;
+> +	case '-': set = false;	break;
+> +	default:
+> +		bad_arg("attr flag must be marked + (set) or - (unset)\n");
+> +	}
+> +	arg++;
+> +
+> +	p = bsearch(arg, attr_list, sizeof(attr_list) / sizeof(attr_list[0]),
+> +		    sizeof(attr_list[0]), attr_name_cmp);
+> +	if (!p)
+> +		bad_arg("Unrecognised attr name '%s'\n", arg);
+> +
+> +	attr = p->attr_flag;
+> +	if (set) {
+> +		check(stx->stx_attributes && attr,
+> +		      "Attribute %s should be set\n", arg);
+> +	} else {
+> +		check(~stx->stx_attributes && attr,
+> +		      "Attribute %s should be unset\n", arg);
+> +	}
+> +}
+> +
+> +/*
+>   * Do the testing.
+>   */
+>  int main(int argc, char **argv)
+> @@ -669,6 +734,12 @@ int main(int argc, char **argv)
+>  	for (; *argv; argv++) {
+>  		char *arg = *argv;
+>  
+> +		if (strncmp("attr=", arg, 5) == 0) {
+> +			/* attr=[+-]<attr> - check attribute flag */
+> +			check_attribute(&stx, arg + 5);
+> +			continue;
+> +		}
+> +
+>  		if (strcmp("cmp_ref", arg) == 0) {
+>  			/* cmp_ref - check ref file has same stats */
+>  			cmp_ref(&stx, mask);
+> diff --git a/tests/generic/421 b/tests/generic/421
+> new file mode 100755
+> index 0000000..33a5ec8
+> --- /dev/null
+> +++ b/tests/generic/421
+> @@ -0,0 +1,95 @@
+> +#! /bin/bash
+> +# FS QA Test 421
+> +#
+> +# Test the statx stx_attribute flags that can be set with chattr
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2017 YOUR NAME HERE.  All Rights Reserved.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c | 123 ++++++++++++++++++++++++-----------------------
- 1 file changed, 64 insertions(+), 59 deletions(-)
+YNH?
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 47b909c27bb3..d404dee7ede4 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -2879,27 +2879,30 @@ xfs_bmap_add_extent_hole_delay(
-  */
- STATIC int				/* error */
- xfs_bmap_add_extent_hole_real(
--	struct xfs_bmalloca	*bma,
--	int			whichfork)
-+	struct xfs_trans	*tp,
-+	xfs_inode_t		*ip,	/* incore inode pointer */
-+	int			whichfork,
-+	xfs_extnum_t		*idx,	/* extent number to update/insert */
-+	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
-+	xfs_bmbt_irec_t		*new,	/* new data to add to file extents */
-+	xfs_fsblock_t		*first,	/* pointer to firstblock variable */
-+	struct xfs_defer_ops	*dfops,	/* list of extents to be freed */
-+	int			*logflagsp) /* inode logging flags */
- {
--	struct xfs_bmbt_irec	*new = &bma->got;
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_btree_cur	*cur = *curp;
- 	int			error;	/* error return value */
- 	int			i;	/* temp state */
--	xfs_ifork_t		*ifp;	/* inode fork pointer */
- 	xfs_bmbt_irec_t		left;	/* left neighbor extent entry */
- 	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
- 	int			rval=0;	/* return value (logging flags) */
- 	int			state;	/* state bits, accessed thru macros */
--	struct xfs_mount	*mp;
--
--	mp = bma->ip->i_mount;
--	ifp = XFS_IFORK_PTR(bma->ip, whichfork);
- 
--	ASSERT(bma->idx >= 0);
--	ASSERT(bma->idx <= xfs_iext_count(ifp));
-+	ASSERT(*idx >= 0);
-+	ASSERT(*idx <= xfs_iext_count(ifp));
- 	ASSERT(!isnullstartblock(new->br_startblock));
--	ASSERT(!bma->cur ||
--	       !(bma->cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
-+	ASSERT(!cur || !(cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
- 
- 	XFS_STATS_INC(mp, xs_add_exlist);
- 
-@@ -2912,9 +2915,9 @@ xfs_bmap_add_extent_hole_real(
- 	/*
- 	 * Check and set flags if this segment has a left neighbor.
- 	 */
--	if (bma->idx > 0) {
-+	if (*idx > 0) {
- 		state |= BMAP_LEFT_VALID;
--		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1), &left);
-+		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &left);
- 		if (isnullstartblock(left.br_startblock))
- 			state |= BMAP_LEFT_DELAY;
- 	}
-@@ -2923,9 +2926,9 @@ xfs_bmap_add_extent_hole_real(
- 	 * Check and set flags if this segment has a current value.
- 	 * Not true if we're inserting into the "hole" at eof.
- 	 */
--	if (bma->idx < xfs_iext_count(ifp)) {
-+	if (*idx < xfs_iext_count(ifp)) {
- 		state |= BMAP_RIGHT_VALID;
--		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx), &right);
-+		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
- 		if (isnullstartblock(right.br_startblock))
- 			state |= BMAP_RIGHT_DELAY;
- 	}
-@@ -2962,36 +2965,36 @@ xfs_bmap_add_extent_hole_real(
- 		 * left and on the right.
- 		 * Merge all three into a single extent record.
- 		 */
--		--bma->idx;
--		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, bma->idx),
-+		--*idx;
-+		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-+		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
- 			left.br_blockcount + new->br_blockcount +
- 			right.br_blockcount);
--		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
-+		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
--		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
-+		xfs_iext_remove(ip, *idx + 1, 1, state);
- 
--		XFS_IFORK_NEXT_SET(bma->ip, whichfork,
--			XFS_IFORK_NEXTENTS(bma->ip, whichfork) - 1);
--		if (bma->cur == NULL) {
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-+		if (cur == NULL) {
- 			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
- 		} else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(bma->cur, right.br_startoff,
-+			error = xfs_bmbt_lookup_eq(cur, right.br_startoff,
- 					right.br_startblock, right.br_blockcount,
- 					&i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			error = xfs_btree_delete(bma->cur, &i);
-+			error = xfs_btree_delete(cur, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			error = xfs_btree_decrement(bma->cur, 0, &i);
-+			error = xfs_btree_decrement(cur, 0, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			error = xfs_bmbt_update(bma->cur, left.br_startoff,
-+			error = xfs_bmbt_update(cur, left.br_startoff,
- 					left.br_startblock,
- 					left.br_blockcount +
- 						new->br_blockcount +
-@@ -3008,23 +3011,23 @@ xfs_bmap_add_extent_hole_real(
- 		 * on the left.
- 		 * Merge the new allocation with the left neighbor.
- 		 */
--		--bma->idx;
--		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
--		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, bma->idx),
-+		--*idx;
-+		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-+		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
- 			left.br_blockcount + new->br_blockcount);
--		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
-+		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
--		if (bma->cur == NULL) {
-+		if (cur == NULL) {
- 			rval = xfs_ilog_fext(whichfork);
- 		} else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(bma->cur, left.br_startoff,
-+			error = xfs_bmbt_lookup_eq(cur, left.br_startoff,
- 					left.br_startblock, left.br_blockcount,
- 					&i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			error = xfs_bmbt_update(bma->cur, left.br_startoff,
-+			error = xfs_bmbt_update(cur, left.br_startoff,
- 					left.br_startblock,
- 					left.br_blockcount +
- 						new->br_blockcount,
-@@ -3040,25 +3043,25 @@ xfs_bmap_add_extent_hole_real(
- 		 * on the right.
- 		 * Merge the new allocation with the right neighbor.
- 		 */
--		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
--		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, bma->idx),
-+		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-+		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
- 			new->br_startoff, new->br_startblock,
- 			new->br_blockcount + right.br_blockcount,
- 			right.br_state);
--		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
-+		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
- 
--		if (bma->cur == NULL) {
-+		if (cur == NULL) {
- 			rval = xfs_ilog_fext(whichfork);
- 		} else {
- 			rval = 0;
--			error = xfs_bmbt_lookup_eq(bma->cur,
-+			error = xfs_bmbt_lookup_eq(cur,
- 					right.br_startoff,
- 					right.br_startblock,
- 					right.br_blockcount, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
--			error = xfs_bmbt_update(bma->cur, new->br_startoff,
-+			error = xfs_bmbt_update(cur, new->br_startoff,
- 					new->br_startblock,
- 					new->br_blockcount +
- 						right.br_blockcount,
-@@ -3074,22 +3077,22 @@ xfs_bmap_add_extent_hole_real(
- 		 * real allocation.
- 		 * Insert a new entry.
- 		 */
--		xfs_iext_insert(bma->ip, bma->idx, 1, new, state);
--		XFS_IFORK_NEXT_SET(bma->ip, whichfork,
--			XFS_IFORK_NEXTENTS(bma->ip, whichfork) + 1);
--		if (bma->cur == NULL) {
-+		xfs_iext_insert(ip, *idx, 1, new, state);
-+		XFS_IFORK_NEXT_SET(ip, whichfork,
-+			XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
-+		if (cur == NULL) {
- 			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
- 		} else {
- 			rval = XFS_ILOG_CORE;
--			error = xfs_bmbt_lookup_eq(bma->cur,
-+			error = xfs_bmbt_lookup_eq(cur,
- 					new->br_startoff,
- 					new->br_startblock,
- 					new->br_blockcount, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
--			bma->cur->bc_rec.b.br_state = new->br_state;
--			error = xfs_btree_insert(bma->cur, &i);
-+			cur->bc_rec.b.br_state = new->br_state;
-+			error = xfs_btree_insert(cur, &i);
- 			if (error)
- 				goto done;
- 			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-@@ -3098,30 +3101,30 @@ xfs_bmap_add_extent_hole_real(
- 	}
- 
- 	/* add reverse mapping */
--	error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip, whichfork, new);
-+	error = xfs_rmap_map_extent(mp, dfops, ip, whichfork, new);
- 	if (error)
- 		goto done;
- 
- 	/* convert to a btree if necessary */
--	if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
-+	if (xfs_bmap_needs_btree(ip, whichfork)) {
- 		int	tmp_logflags;	/* partial log flag return val */
- 
--		ASSERT(bma->cur == NULL);
--		error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
--				bma->firstblock, bma->dfops, &bma->cur,
-+		ASSERT(cur == NULL);
-+		error = xfs_bmap_extents_to_btree(tp, ip, first, dfops, curp,
- 				0, &tmp_logflags, whichfork);
--		bma->logflags |= tmp_logflags;
-+		*logflagsp |= tmp_logflags;
-+		cur = *curp;
- 		if (error)
- 			goto done;
- 	}
- 
- 	/* clear out the allocated field, done with it now in any case. */
--	if (bma->cur)
--		bma->cur->bc_private.b.allocated = 0;
-+	if (cur)
-+		cur->bc_private.b.allocated = 0;
- 
--	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, whichfork);
-+	xfs_bmap_check_leaf_extents(cur, ip, whichfork);
- done:
--	bma->logflags |= rval;
-+	*logflagsp |= rval;
- 	return error;
- }
- 
-@@ -4386,7 +4389,9 @@ xfs_bmapi_allocate(
- 	if (bma->wasdel)
- 		error = xfs_bmap_add_extent_delay_real(bma, whichfork);
- 	else
--		error = xfs_bmap_add_extent_hole_real(bma, whichfork);
-+		error = xfs_bmap_add_extent_hole_real(bma->tp, bma->ip,
-+				whichfork, &bma->idx, &bma->cur, &bma->got,
-+				bma->firstblock, bma->dfops, &bma->logflags);
- 
- 	bma->logflags |= tmp_logflags;
- 	if (error)
--- 
-2.11.0
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +	rm -f $seq-file
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_supported_os IRIX Linux
+> +_require_test
+> +_require_test_program "stat_test"
+> +_require_statx
+> +_require_chattr
+> +
+> +function check_stat () {
+> +    $here/src/stat_test $* || echo stat_test failed
+> +}
+> +
+> +touch $seq-file
+> +
+> +function try () {
+> +    chattr $* $seq-file
+> +    check_stat $seq-file \
+> +	       attr=${1/a/append} \
+> +	       attr=${2/c/compressed} \
+> +	       attr=${3/i/immutable} \
+> +	       attr=${4/d/nodump} \
+> +	       stx_type=file \
+> +	       stx_size=0 \
+> +	       stx_rdev_major=0 \
+> +	       stx_rdev_minor=0 \
+> +	       stx_nlink=1
+> +}
+> +
+> +# We can turn on and off append (a), compressed (c), immutable (i) and
+> +# no-dump (d)
+> +for a in +a -a
+> +do
+> +    for c in +c -c
 
+Does this test fail for any fs that doesn't support compressed files?
+
+If so, perhaps there should be separate tests for each of the 4 attrs.
+
+--D
+
+> +    do
+> +	for i in +i -i
+> +	do
+> +	    for d in +d -d
+> +	    do
+> +		try $a $c $i $d
+> +	    done
+> +	done
+> +    done
+> +done
+> +
+> +# Done.  We leave the success determination to the output comparator.
+> +status=0
+> +exit
+> diff --git a/tests/generic/421.out b/tests/generic/421.out
+> new file mode 100644
+> index 0000000..984fb43
+> --- /dev/null
+> +++ b/tests/generic/421.out
+> @@ -0,0 +1 @@
+> +QA output created by 421
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 5678101..f8b01fc 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -423,3 +423,4 @@
+>  418 auto rw
+>  419 auto quick encrypt
+>  420 auto quick
+> +421 auto quick
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
