@@ -1,112 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43736 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751486AbdDAGm3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Apr 2017 02:42:29 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 27/27] xfs: try any AG when allocating the first btree block when reflinking
-Date: Sat,  1 Apr 2017 08:40:26 +0200
-Message-Id: <20170401064026.5783-28-hch@lst.de>
-In-Reply-To: <20170401064026.5783-1-hch@lst.de>
-References: <20170401064026.5783-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:49982 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752270AbdDCK1W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Apr 2017 06:27:22 -0400
+Subject: [PATCH 1/4] xfstests: Add an auxiliary program to create an AF_UNIX
+ socket
+From: David Howells <dhowells@redhat.com>
+Date: Mon, 03 Apr 2017 11:27:10 +0100
+Message-ID: <149121523070.22344.187602366514567082.stgit@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: stable@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: linux-xfs@vger.kernel.org
+Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
 
-commit 2fcc319d2467a5f5b78f35f79fd6e22741a31b1e upstream.
+Add an auxiliary program to create an AF_UNIX socket at the specified
+location so that tests can do things with it.
 
-When a reflink operation causes the bmap code to allocate a btree block
-we're currently doing single-AG allocations due to having ->firstblock
-set and then try any higher AG due a little reflink quirk we've put in
-when adding the reflink code.  But given that we do not have a minleft
-reservation of any kind in this AG we can still not have any space in
-the same or higher AG even if the file system has enough free space.
-To fix this use a XFS_ALLOCTYPE_FIRST_AG allocation in this fall back
-path instead.
-
-[And yes, we need to redo this properly instead of piling hacks over
- hacks.  I'm working on that, but it's not going to be a small series.
- In the meantime this fixes the customer reported issue]
-
-Also add a warning for failing allocations to make it easier to debug.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c       | 10 +++++++---
- fs/xfs/libxfs/xfs_bmap_btree.c |  6 +++---
- 2 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index ec93395eccdc..5a508b011e27 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -769,8 +769,8 @@ xfs_bmap_extents_to_btree(
- 		args.type = XFS_ALLOCTYPE_START_BNO;
- 		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
- 	} else if (dfops->dop_low) {
--try_another_ag:
- 		args.type = XFS_ALLOCTYPE_START_BNO;
-+try_another_ag:
- 		args.fsbno = *firstblock;
- 	} else {
- 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
-@@ -796,13 +796,17 @@ xfs_bmap_extents_to_btree(
- 	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
- 	    args.fsbno == NULLFSBLOCK &&
- 	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
--		dfops->dop_low = true;
-+		args.type = XFS_ALLOCTYPE_FIRST_AG;
- 		goto try_another_ag;
- 	}
-+	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
-+		xfs_iroot_realloc(ip, -1, whichfork);
-+		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+		return -ENOSPC;
+ .gitignore    |    1 +
+ src/Makefile  |    2 +-
+ src/af_unix.c |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 68 insertions(+), 1 deletion(-)
+ create mode 100644 src/af_unix.c
+
+diff --git a/.gitignore b/.gitignore
+index 1ed2a92..8a7c052 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -35,6 +35,7 @@
+ /ltp/iogen
+ 
+ # src/ binaries
++/src/af_unix
+ /src/alloc
+ /src/append_reader
+ /src/append_writer
+diff --git a/src/Makefile b/src/Makefile
+index a7f27f0..716c178 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -12,7 +12,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
+ 	godown resvtest writemod makeextents itrash rename \
+ 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
+ 	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
+-	holetest t_truncate_self t_mmap_dio
++	holetest t_truncate_self t_mmap_dio af_unix
+ 
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+diff --git a/src/af_unix.c b/src/af_unix.c
+new file mode 100644
+index 0000000..dc2368e
+--- /dev/null
++++ b/src/af_unix.c
+@@ -0,0 +1,66 @@
++/* Create an AF_UNIX socket.
++ *
++ * Copyright (C) 2017 Red Hat, Inc. All Rights Reserved.
++ * Written by David Howells (dhowells@redhat.com)
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public Licence
++ * as published by the Free Software Foundation; either version
++ * 2 of the Licence, or (at your option) any later version.
++ */
++
++#include <stdarg.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <stdbool.h>
++#include <string.h>
++#include <unistd.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/socket.h>
++#include <sys/un.h>
++
++#define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
++
++int main(int argc, char *argv[])
++{
++	struct sockaddr_un sun;
++	struct stat st;
++	size_t len, max;
++	int fd;
++
++	if (argc != 2) {
++		fprintf(stderr, "Format: %s <socketpath>\n", argv[0]);
++		exit(2);
 +	}
- 	/*
- 	 * Allocation can't fail, the space was reserved.
- 	 */
--	ASSERT(args.fsbno != NULLFSBLOCK);
- 	ASSERT(*firstblock == NULLFSBLOCK ||
- 	       args.agno >= XFS_FSB_TO_AGNO(mp, *firstblock));
- 	*firstblock = cur->bc_private.b.firstblock = args.fsbno;
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index f76c1693ff01..5c3918678bb6 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -453,8 +453,8 @@ xfs_bmbt_alloc_block(
- 
- 	if (args.fsbno == NULLFSBLOCK) {
- 		args.fsbno = be64_to_cpu(start->l);
--try_another_ag:
- 		args.type = XFS_ALLOCTYPE_START_BNO;
-+try_another_ag:
- 		/*
- 		 * Make sure there is sufficient room left in the AG to
- 		 * complete a full tree split for an extent insert.  If
-@@ -494,8 +494,8 @@ xfs_bmbt_alloc_block(
- 	if (xfs_sb_version_hasreflink(&cur->bc_mp->m_sb) &&
- 	    args.fsbno == NULLFSBLOCK &&
- 	    args.type == XFS_ALLOCTYPE_NEAR_BNO) {
--		cur->bc_private.b.dfops->dop_low = true;
- 		args.fsbno = cur->bc_private.b.firstblock;
-+		args.type = XFS_ALLOCTYPE_FIRST_AG;
- 		goto try_another_ag;
- 	}
- 
-@@ -512,7 +512,7 @@ xfs_bmbt_alloc_block(
- 			goto error0;
- 		cur->bc_private.b.dfops->dop_low = true;
- 	}
--	if (args.fsbno == NULLFSBLOCK) {
-+	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
- 		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
- 		*stat = 0;
- 		return 0;
--- 
-2.11.0
++
++	max = sizeof(sun.sun_path);
++	len = strlen(argv[1]);
++	if (len >= max) {
++		fprintf(stderr, "Filename too long (max %zu)\n", max);
++		exit(2);
++	}
++
++	fd = socket(AF_UNIX, SOCK_DGRAM, 0);
++	if (fd < 0) {
++		perror("socket");
++		exit(1);
++	}
++
++	memset(&sun, 0, sizeof(sun));
++	sun.sun_family = AF_UNIX;
++	strcpy(sun.sun_path, argv[1]);
++	if (bind(fd, (struct sockaddr *)&sun, sizeof(sun)) == -1) {
++		perror("bind");
++		exit(1);
++	}
++
++	if (stat(argv[1], &st)) {
++		fprintf(stderr, "Couldn't stat socket after creation: %m\n");
++		exit(1);
++	}
++
++	exit(0);
++}
 
