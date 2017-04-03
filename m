@@ -1,170 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52320 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751649AbdDCMAW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Apr 2017 08:00:22 -0400
-Subject: [PATCH 3/4] xfstests: Partially expand the documentation [ver #3]
-From: David Howells <dhowells@redhat.com>
-Date: Mon, 03 Apr 2017 13:00:00 +0100
-Message-ID: <149122080073.24821.8271854380782270054.stgit@warthog.procyon.org.uk>
-In-Reply-To: <149122078093.24821.17192375733082382807.stgit@warthog.procyon.org.uk>
-References: <149122078093.24821.17192375733082382807.stgit@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([65.50.211.133]:33360 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752139AbdDCMKf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 08:10:35 -0400
+Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1cv0oZ-0001Qw-JH
+        for linux-xfs@vger.kernel.org; Mon, 03 Apr 2017 12:10:32 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/6] xfs: fix integer truncation in xfs_bmap_remap_alloc
+Date: Mon,  3 Apr 2017 14:10:19 +0200
+Message-Id: <20170403121024.7215-2-hch@lst.de>
+In-Reply-To: <20170403121024.7215-1-hch@lst.de>
+References: <20170403121024.7215-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
 
-Partially expand the documentation available in xfstests to include
-requirements checking and auxiliary programs for testing.
+bno should be a xfs_fsblock_t, which is 64-bit wides instead of a
+xfs_aglock_t, which truncates the value to 32 bits.
 
-Signed-off-by: David Howells <dhowells@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
+ fs/xfs/libxfs/xfs_bmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- doc/auxiliary-programs.txt   |   56 ++++++++++++++++++++++++++++++++++
- doc/requirement-checking.txt |   69 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 125 insertions(+)
- create mode 100644 doc/auxiliary-programs.txt
- create mode 100644 doc/requirement-checking.txt
-
-diff --git a/doc/auxiliary-programs.txt b/doc/auxiliary-programs.txt
-new file mode 100644
-index 0000000..17797b0
---- /dev/null
-+++ b/doc/auxiliary-programs.txt
-@@ -0,0 +1,56 @@
-+			==============================
-+			AUXILIARY PROGRAMS FOR TESTING
-+			==============================
-+
-+Not everything a test script can do is easily done within a test script;
-+sometimes it makes a lot more sense to write auxiliary program in C and have
-+the test script call them.  Auxiliary commands can be found in the src/
-+directory and in other packages.
-+
-+Tests wanting to use an auxiliary program found in the src/ directory should
-+note the dependency with:
-+
-+	_require_test_program "<program-name>"
-+
-+
-+Contents:
-+
-+ - af_unix	-- Create an AF_UNIX socket
-+ - stat_test	-- statx syscall exercise
-+ - xfs_io	-- General I/O operation exercise
-+
-+
-+==================
-+QUICK DESCRIPTIONS
-+==================
-+
-+af_unix
-+
-+	The af_unix program creates an AF_UNIX socket at the given location.
-+
-+stat_test
-+
-+	The stat_test program is primarily designed to exercise the statx()
-+	system call.  It can check statx() against fstatat() and it can
-+	compare and check various file attributes.
-+
-+	See also:
-+		_require_statx
-+
-+
-+xfs_io
-+
-+	The xfs_io program can be found in the xfsprogs package and can be used
-+	to perform sequences of I/O commands, though it is limited to what it
-+	can do on open files.
-+
-+	xfs_io is a debugging tool that is aimed at examining regular file I/O
-+	paths rather than a raw XFS volume itself.  These code paths include
-+	not only the obvious read/write/mmap interfaces for manipulating files,
-+	but also cover all of the XFS extensions (such as space preallocation,
-+	additional inode flags, etc).
-+
-+	Most of its commands can also be used with other filesystems.
-+
-+	See also:
-+		_require_xfs_io_command
-diff --git a/doc/requirement-checking.txt b/doc/requirement-checking.txt
-new file mode 100644
-index 0000000..29f0b74
---- /dev/null
-+++ b/doc/requirement-checking.txt
-@@ -0,0 +1,69 @@
-+		   ========================================
-+		   TESTING FOR REQUIREMENTS IN TEST SCRIPTS
-+		   ========================================
-+
-+Test scripts need to indicate to the infrastructure what sorts of requirements
-+they have.  This is done with _require_<xxx> macros, which may take parameters.
-+
-+ (1) General requirements.
-+
-+	_require_command
-+	_require_test
-+	_require_test_program
-+	_require_xfs_io_command
-+
-+ (2) System call requirements.
-+
-+	_require_statx
-+
-+
-+====================
-+GENERAL REQUIREMENTS
-+====================
-+
-+_require_command "$VAR" name
-+
-+     The test requires an external command, called 'name' be present on the
-+     system and that '$VAR' should be set with the path to that command.  $VAR
-+     should then be used to refer to the command when executing it.  For
-+     example:
-+
-+	_require_command "$NC_PROG" "nc"
-+
-+     to locate the netcat command and then:
-+
-+	$NC_PROG -U -l $TEST_DIR/$seq-sock
-+
-+     to make use of it.
-+
-+
-+_require_test
-+
-+     The test requires that the block device specified by $TEST_DEV be mounted
-+     on $TEST_DIR.
-+
-+
-+_require_test_program "name"
-+
-+     The test requires a program by the name of 'name' be present and built in
-+     the src/ directory.  For example:
-+
-+	_require_test_program "stat_test"
-+
-+     requires that src/stat_test be built.
-+
-+
-+_require_xfs_io_command "falloc"
-+
-+     The test requires that the xfs_io command be available and that it support
-+     the 'falloc' command.
-+
-+
-+========================
-+SYSTEM CALL REQUIREMENTS
-+========================
-+
-+_require_statx
-+
-+     The test requires the use of the statx() system call and will be skipped
-+     if it isn't available in the kernel.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 9bd104f32908..2a426d127e05 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3863,7 +3863,7 @@ xfs_bmap_remap_alloc(
+ {
+ 	struct xfs_trans	*tp = ap->tp;
+ 	struct xfs_mount	*mp = tp->t_mountp;
+-	xfs_agblock_t		bno;
++	xfs_fsblock_t		bno;
+ 	struct xfs_alloc_arg	args;
+ 	int			error;
+ 
+-- 
+2.11.0
 
