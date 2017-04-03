@@ -1,25 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33551 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:56774 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752072AbdDCMLe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 08:11:34 -0400
+        with ESMTP id S1752980AbdDCMSq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 08:18:46 -0400
 Received: from 80-109-146-114.cable.dynamic.surfer.at ([80.109.146.114] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1cv0pO-0001mN-VK
-        for linux-xfs@vger.kernel.org; Mon, 03 Apr 2017 12:11:23 +0000
+        id 1cv0wX-0005W8-R2
+        for linux-xfs@vger.kernel.org; Mon, 03 Apr 2017 12:18:46 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: split the reflink remap from the block allocation path
-Date: Mon,  3 Apr 2017 14:11:14 +0200
-Message-Id: <20170403121120.7265-1-hch@lst.de>
+Subject: [PATCH 2/6] xfs: remove attr fork handling in xfs_bmap_finish_one
+Date: Mon,  3 Apr 2017 14:18:29 +0200
+Message-Id: <20170403121833.7825-3-hch@lst.de>
+In-Reply-To: <20170403121833.7825-1-hch@lst.de>
+References: <20170403121833.7825-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-We've run into various problems due to the fact that the reflink remap
-code reuses the xfs_bmapi_write codepath for setting up the extent list
-entries and abuses the firstblock field for that purpose.
+We never do COW operations for the attr fork, so don't pretend we handle
+them.
 
-This series fixes this by creating an entirely separate xfs_bmapi_remap
-path that is much simpler than xfs_bmapi_write and does not need to
-overload the firstblock field.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 2a426d127e05..47b909c27bb3 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -6491,7 +6491,6 @@ xfs_bmap_finish_one(
+ 	struct xfs_bmbt_irec		bmap;
+ 	int				nimaps = 1;
+ 	xfs_fsblock_t			firstfsb;
+-	int				flags = XFS_BMAPI_REMAP;
+ 	int				done;
+ 	int				error = 0;
+ 
+@@ -6505,10 +6504,8 @@ xfs_bmap_finish_one(
+ 			XFS_FSB_TO_AGBNO(tp->t_mountp, startblock),
+ 			ip->i_ino, whichfork, startoff, blockcount, state);
+ 
+-	if (whichfork != XFS_DATA_FORK && whichfork != XFS_ATTR_FORK)
++	if (whichfork != XFS_DATA_FORK)
+ 		return -EFSCORRUPTED;
+-	if (whichfork == XFS_ATTR_FORK)
+-		flags |= XFS_BMAPI_ATTRFORK;
+ 
+ 	if (XFS_TEST_ERROR(false, tp->t_mountp,
+ 			XFS_ERRTAG_BMAP_FINISH_ONE,
+@@ -6519,13 +6516,13 @@ xfs_bmap_finish_one(
+ 	case XFS_BMAP_MAP:
+ 		firstfsb = bmap.br_startblock;
+ 		error = xfs_bmapi_write(tp, ip, bmap.br_startoff,
+-					bmap.br_blockcount, flags, &firstfsb,
++					bmap.br_blockcount, XFS_BMAPI_REMAP, &firstfsb,
+ 					bmap.br_blockcount, &bmap, &nimaps,
+ 					dfops);
+ 		break;
+ 	case XFS_BMAP_UNMAP:
+ 		error = xfs_bunmapi(tp, ip, bmap.br_startoff,
+-				bmap.br_blockcount, flags, 1, &firstfsb,
++				bmap.br_blockcount, XFS_BMAPI_REMAP, 1, &firstfsb,
+ 				dfops, &done);
+ 		ASSERT(done);
+ 		break;
+-- 
+2.11.0
+
