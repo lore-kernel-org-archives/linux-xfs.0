@@ -1,167 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35545 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751094AbdDDLe5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 07:34:57 -0400
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:15848 "EHLO
+        ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753176AbdDDMec (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 08:34:32 -0400
+Date: Tue, 4 Apr 2017 22:34:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+Message-ID: <20170404123414.GA23007@dastard>
+References: <1490117004.2542.1.camel@redhat.com>
+ <20170321183006.GD17872@fieldses.org>
+ <1490122013.2593.1.camel@redhat.com>
+ <20170329111507.GA18467@quack2.suse.cz>
+ <1490810071.2678.6.camel@redhat.com>
+ <20170330064724.GA21542@quack2.suse.cz>
+ <1490872308.2694.1.camel@redhat.com>
+ <20170330161231.GA9824@fieldses.org>
+ <20170401230526.GW23007@dastard>
+ <20170403140055.GF15168@quack2.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <149129917749.27400.15662735475670266227.stgit@warthog.procyon.org.uk>
-References: <149129915546.27400.6279610388611835844.stgit@warthog.procyon.org.uk>
- <149129917749.27400.15662735475670266227.stgit@warthog.procyon.org.uk>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 4 Apr 2017 14:34:55 +0300
-Message-ID: <CAOQ4uxjcVFzDudSPb3aB+kohJKb=nrOVJRrYbb_DzCZwtZA2-A@mail.gmail.com>
-Subject: Re: [PATCH 4/4] xfstests: Check the stx_attributes settable by chattr
- [ver #4]
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170403140055.GF15168@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Apr 4, 2017 at 12:46 PM, David Howells <dhowells@redhat.com> wrote:
-> Check the stx_attributes that can be set by calling chattr.
->
-> The script probes the filesystem with chattr to find out which of +a, +c,
-> +d and +i are supported before testing combinations of attrs.  Note that if
-> a filesystem supports chattr with these, but doesn't paste the flag values
-> into stx_attributes, the test will fail as there's no way to distinguish
-> cleared from unset.
->
-> Signed-off-by: David Howells <dhowells@redhat.com>
-> ---
+On Mon, Apr 03, 2017 at 04:00:55PM +0200, Jan Kara wrote:
+> On Sun 02-04-17 09:05:26, Dave Chinner wrote:
+> > On Thu, Mar 30, 2017 at 12:12:31PM -0400, J. Bruce Fields wrote:
+> > > On Thu, Mar 30, 2017 at 07:11:48AM -0400, Jeff Layton wrote:
+> > > > On Thu, 2017-03-30 at 08:47 +0200, Jan Kara wrote:
+> > > > > Because if above is acceptable we could make reported i_version to be a sum
+> > > > > of "superblock crash counter" and "inode i_version". We increment
+> > > > > "superblock crash counter" whenever we detect unclean filesystem shutdown.
+> > > > > That way after a crash we are guaranteed each inode will report new
+> > > > > i_version (the sum would probably have to look like "superblock crash
+> > > > > counter" * 65536 + "inode i_version" so that we avoid reusing possible
+> > > > > i_version numbers we gave away but did not write to disk but still...).
+> > > > > Thoughts?
+> > > 
+> > > How hard is this for filesystems to support?  Do they need an on-disk
+> > > format change to keep track of the crash counter?
+> > 
+> > Yes. We'll need version counter in the superblock, and we'll need to
+> > know what the increment semantics are. 
+> > 
+> > The big question is how do we know there was a crash? The only thing
+> > a journalling filesystem knows at mount time is whether it is clean
+> > or requires recovery. Filesystems can require recovery for many
+> > reasons that don't involve a crash (e.g. root fs is never unmounted
+> > cleanly, so always requires recovery). Further, some filesystems may
+> > not even know there was a crash at mount time because their
+> > architecture always leaves a consistent filesystem on disk (e.g. COW
+> > filesystems)....
+> 
+> What filesystems can or cannot easily do obviously differs. Ext4 has a
+> recovery flag set in superblock on RW mount/remount and cleared on
+> umount/RO remount.
 
-Looks good. minor comment below.
+Even this doesn't help. A recent bug that was reported to the XFS
+list - turns out that systemd can't remount-ro the root
+filesystem sucessfully on shutdown because there are open write fds
+on the root filesystem when it attempts the remount. So it just
+reboots without a remount-ro. This uncovered a bug in grub in
+that it (still!) thinks sync(1) is sufficient to get all the
+metadata that points to a kernel image onto disk in places it can
+read. XFS, like ext4, leaves it in the journal and so the system then fails to
+boot because systemd didn't remount-ro the root fs and hence the
+journal was never flushed before reboot and so grub can't find the
+kernel and so everything fails....
 
-> +
-> +touch $seq-file
-> +
-> +# Work out what chattrs are supported on the fs under test
-> +a_supported=""
-> +c_supported=""
-> +d_supported=""
-> +i_supported=""
-> +a_list="0"
-> +c_list="0"
-> +d_list="0"
-> +i_list="0"
-> +
-> +if chattr +a $seq-file >&/dev/null
-> +then
-> +    a_supported=1
-> +    a_list="+a -a"
-> +fi
-> +
-> +if chattr +c $seq-file >&/dev/null
-> +then
-> +    c_supported=1
-> +    c_list="+c -c"
-> +fi
-> +
-> +if chattr +d $seq-file >&/dev/null
-> +then
-> +    d_supported=1
-> +    d_list="+d -d"
-> +fi
-> +
-> +if chattr +i $seq-file >&/dev/null
-> +then
-> +    i_supported=1
-> +    i_list="+i -i"
-> +fi
-> +
-> +if [ "$a_supported$c_supported$d_supported$i_supported" = "" ]
-> +then
-> +    # We really want to say "skipped" here
+> This flag being set on mount would imply incrementing the crash
+> counter. It should be pretty easy for each filesystem to implement
+> such flag and the counter but I agree it requires an on-disk
+> format change.
 
-Easy. either:
+Yup, anything we want that is persistent and consistent across
+filesystems will need on-disk format changes. Hence we need a solid
+specification first, not to mention tests to validate correct
+behaviour across all filesystems in xfstests...
 
-_require_chattr acdi
+Cheers,
 
-OR:
-
- _notrun "file system doesn't support any of chattr +a/+c/+d/+i"
-
-> +    status=0
-> +    exit
-
-_notrun already sets status and exists
-
-> +fi
-> +
-> +chattr -a -c -d -i $seq-file
-> +
-> +###############################################################################
-> +#
-> +# Now do the actual test.  We can turn on and off append (a), compressed (c),
-> +# immutable (i) and no-dump (d) and theoretically see the output in the
-> +# attribute flags.
-> +#
-> +# Note, however, that if the filesystem doesn't paste this info into
-> +# stx_attributes, there's no way to tell the difference between cleared and
-> +# unset.
-> +#
-> +###############################################################################
-> +function try () {
-> +    chattr ${a_supported:+$1} \
-> +          ${c_supported:+$2} \
-> +          ${d_supported:+$3} \
-> +          ${i_supported:+$4} \
-> +          $seq-file
-> +    check_stat $seq-file \
-> +              ${a_supported:+attr=${1/a/append}} \
-> +              ${c_supported:+attr=${2/c/compressed}} \
-> +              ${d_supported:+attr=${3/d/nodump}} \
-> +              ${i_supported:+attr=${4/i/immutable}} \
-> +              stx_type=file \
-> +              stx_size=0 \
-> +              stx_rdev_major=0 \
-> +              stx_rdev_minor=0 \
-> +              stx_nlink=1
-> +}
-> +
-> +for a in $a_list
-> +do
-> +    for c in $c_list
-> +    do
-> +       for d in $d_list
-> +       do
-> +           for i in $i_list
-> +           do
-> +               try $a $c $d $i
-> +           done
-> +       done
-> +    done
-> +done
-> +
-> +# Done.  We leave the success determination to the output comparator.
-> +status=0
-> +exit
-> diff --git a/tests/generic/421.out b/tests/generic/421.out
-> new file mode 100644
-> index 0000000..984fb43
-> --- /dev/null
-> +++ b/tests/generic/421.out
-> @@ -0,0 +1 @@
-> +QA output created by 421
-
-
-So I see we have ~40 tests with the one liner output
-and ~150 tests with "Silence is golden" output.
-
-Eryu,
-
-Do you have a strong preference to either?
-Should we have tests with no output stick to one standard?
-I personally don't mind.
-
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 5678101..f8b01fc 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -423,3 +423,4 @@
->  418 auto rw
->  419 auto quick encrypt
->  420 auto quick
-> +421 auto quick
->
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
