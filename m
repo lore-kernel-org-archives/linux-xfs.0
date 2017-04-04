@@ -1,103 +1,163 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:39532 "EHLO fieldses.org"
+Received: from mx2.suse.de ([195.135.220.15]:45154 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753243AbdDDSbj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Apr 2017 14:31:39 -0400
-Date: Tue, 4 Apr 2017 14:31:38 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
-Message-ID: <20170404183138.GC14303@fieldses.org>
-References: <20170321163011.GA16666@fieldses.org>
- <1490117004.2542.1.camel@redhat.com>
- <20170321183006.GD17872@fieldses.org>
- <1490122013.2593.1.camel@redhat.com>
- <20170329111507.GA18467@quack2.suse.cz>
- <1490810071.2678.6.camel@redhat.com>
- <20170330064724.GA21542@quack2.suse.cz>
- <1490872308.2694.1.camel@redhat.com>
- <20170330161231.GA9824@fieldses.org>
- <1490898932.2667.1.camel@redhat.com>
+        id S1752477AbdDDTs1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Apr 2017 15:48:27 -0400
+Date: Tue, 4 Apr 2017 21:48:25 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [xfsprogs] Do we need so many data types for user input?
+Message-ID: <20170404194825.GX28800@wotan.suse.de>
+References: <CACj3i738tUsYyRvQmr3NfPQ=P2FNruh2xsr1TAuLMJ69AV0a0w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1490898932.2667.1.camel@redhat.com>
+In-Reply-To: <CACj3i738tUsYyRvQmr3NfPQ=P2FNruh2xsr1TAuLMJ69AV0a0w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Mar 30, 2017 at 02:35:32PM -0400, Jeff Layton wrote:
-> On Thu, 2017-03-30 at 12:12 -0400, J. Bruce Fields wrote:
-> > On Thu, Mar 30, 2017 at 07:11:48AM -0400, Jeff Layton wrote:
-> > > On Thu, 2017-03-30 at 08:47 +0200, Jan Kara wrote:
-> > > > Because if above is acceptable we could make reported i_version to be a sum
-> > > > of "superblock crash counter" and "inode i_version". We increment
-> > > > "superblock crash counter" whenever we detect unclean filesystem shutdown.
-> > > > That way after a crash we are guaranteed each inode will report new
-> > > > i_version (the sum would probably have to look like "superblock crash
-> > > > counter" * 65536 + "inode i_version" so that we avoid reusing possible
-> > > > i_version numbers we gave away but did not write to disk but still...).
-> > > > Thoughts?
-> > 
-> > How hard is this for filesystems to support?  Do they need an on-disk
-> > format change to keep track of the crash counter?  Maybe not, maybe the
-> > high bits of the i_version counters are all they need.
-> > 
+On Tue, Apr 04, 2017 at 10:54:09AM +0200, Jan Tulak wrote:
+> Simply stated, signed values seem to be useless here. And at the end
+> of the day, we are converting all numbers into unsigned in one part of
+> the parsing anyway, so I don't see how such a change could change any
+> behaviour.
 > 
-> Yeah, I imagine we'd need a on-disk change for this unless there's
-> something already present that we could use in place of a crash counter.
+> So what do you think, can I remove the other types in user-input part
+> of the code and save all numbers as uint64?
 
-We could consider using the current time instead.  So, put the current
-time (or time of last boot, or this inode's ctime, or something) in the
-high bits of the change attribute, and keep the low bits as a counter.
+This seems reasonable to me, I could not find any valid use for negative values,
+yet we have int all over. No bueno.
 
-Then as long as we trust our clock, we're no longer at risk of reusing
-an i_version value.
+That seems like a small pedantic correction we can make, but to be clear I think it
+something we can fix not by changing struct subopt_param but rather just the
+data types for the specific values, for instance:
 
-> > I guess we just want to have some back-of-the-envelope estimates of
-> > maximum number of i_version increments possible between crashes and
-> > maximum number of crashes possible over lifetime of a filesystem, to
-> > decide how to split up the bits.
-> > 
-> > I wonder if we could get away with using the new crash counter only for
-> > *new* values of the i_version?  After a crash, use the on disk i_version
-> > as is, and put off using the new crash counter until the next time the
-> > file's modified.
-> > 
-> 
-> That sounds difficult to get right. Suppose I have an inode that has not
-> been updated in a long time. Someone writes to it and then queries the
-> i_version. How do I know whether there were crashes since the last time
-> I updated it? Or am I misunderstanding what you're proposing here?
+        int                     inodelog;                                       
+        int                     isize;                                          
+        int                     ilflag;
 
-I believe Jan was suggesting that we keep the i_version as-is on disk
-but combine with with the crash counter when it's queried.
+My point about struct subopt_param is that the usage of long long is there from
+a practical point of view of the tradition to give us the ability to later
+convert any value to any data type in between. So while I agree that negative
+values are not used right now, and we should use a correct unsigned data type,
+I think keeping long long on struct subopt_param makes sense.
 
-I was suggesting instead that on write, when we bump the i_version, we
-replace the simple increment by something that increments *and* sticks
-the current crash counter (or maybe just a time) in the high bits.  And
-that combination will be what goes in i_version and is written to disk.
+>From what I can tell we only need generally for all input values 0 - UINT_MAX,
+and  if we were to use for instance uint64_t we would still generally cap to
+UINT_MAX on mkfs.xfs for now and if we want later we bump to ULLONG_MAX without
+much changes.
 
-That guarantees that we never reuse an old value when we increment.
+Perhaps the two exceptions worth reviewing in light of whether or not to generally
+max out to UINT_MAX or ULONG_MAX right now seem to be possibly be:
 
-It also avoids having to invalidate absolutely every cache, even of
-completely static files.
+        __uint64_t              agcount;                                        
+        __uint64_t              agsize; 
 
-Clients could still see the change attribute go backwards, though, if
-they query a file with dirty data and the server crashes before it
-writes out the new change attribute.
+agcount has a boundary limit though: XFS_MAX_AGNUMBER :
 
-Also, they could fail to detect data that reverted after boot if they
-cache data while the file's dirty on the server side, and the server
-crash preserves the i_version update but not the new data.
+mkfs/xfs_mkfs.c:                  .maxval = XFS_MAX_AGNUMBER,
+include/xfs_multidisk.h:#define XFS_MAX_AGNUMBER        ((xfs_agnumber_t)(NULLAGNUMBER - 1))
+libxfs/xfs_types.h:#define      NULLAGNUMBER    ((xfs_agnumber_t)-1)
+typedef __uint32_t      xfs_agnumber_t; /* allocation group number */           
 
-Presumably both are possible already for ctime (depending on the
-filesystem), and I'm not convinced they're a big problem.
+Sicne this is u32 UINT_MAX should suffice.
 
-In both cases the reading client is caching while somebody's still
-writing, and as long as the writer comes back and finishes its job,
-readers will thereafter see the right thing.  So I think it's adequate
-for close-to-open.
+And then agsize is capped artificially later via validate_ag_geometry():
 
---b.
+        if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
+		...
+	if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
+		...
+	if (agsize > dblocks) {
+		...
+	if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
+		...
+
+Its not clear if this is capped at UINT_MAX or if we need ULLONG_MAX here.
+
+If it is capped at UINT_MAX then at least from the parsed input values from
+user on mkfs.xfs then it would seem all would have a max cap at UINT_MAX and
+all would also have a general min at 0.
+
+As for actually making the code changes though:
+
+Although changing data types for all these input values is quite a bit of code
+churn I think picking something unsigned would be good practice for us (I noted
+why uint64_t would be good above). If we use these local variables however to
+call out to *other* code in other files, the code churn will probably be too
+much for now and perhaps we can leave this for later as an after step.
+Something like coccinelle can help us change all that crap later.
+
+If changing the types however would only have local impact I think its a worthy
+change to consider now.
+
+FWIW since I had made the mkfs.xfs.conf RFCs I determined what the local variables
+of impact would be, they are (I added struct mkfs_xfs_opts to stuff them all on one
+data structure):
+
+struct mkfs_xfs_opts {                                                          
+        int                     blocklog;                                       
+        int                     blflag;                                         
+        int                     bsflag;                                         
+                                                                                
+        struct fsxattr          fsx;                                            
+        libxfs_init_t           xi;                                             
+        __uint64_t              agcount;                                        
+        __uint64_t              agsize;                                         
+        int                     daflag;                                         
+        int                     ssflag;                                         
+        int                     dasize;                                         
+        char                    *dsize;                                         
+        int                     dsunit;                                         
+        int                     dswidth;                                        
+        int                     dsu;                                            
+        int                     dsw;                                            
+        int                     nodsflag;                                       
+        int                     sectorlog;                                      
+        int                     slflag;                                         
+                                                                                
+        struct sb_feat_args     sb_feat;                                        
+        int                     inodelog;                                       
+        int                     isize;                                          
+        int                     ilflag;                                         
+        int                     imaxpct;                                        
+        int                     imflag;                                         
+        int                     ipflag;                                         
+        int                     isflag;                                         
+        int                     inopblock;   
+
+        xfs_agnumber_t          logagno;                                        
+        int                     laflag;                                         
+        int                     liflag;                                         
+        int                     lsuflag;                                        
+        int                     lsu;                                            
+        int                     loginternal;                                    
+        char                    *logfile;                                       
+        char                    *logsize;                                       
+        int                     lsectorlog;                                     
+        int                     lsectorsize;                                    
+        int                     lsunit;                                         
+        int                     lsunitflag;                                     
+        int                     ldflag;                                         
+        int                     lvflag;                                         
+        int                     lslflag;                                        
+        int                     lssflag;                                        
+        uuid_t                  uuid;                                           
+                                                                                
+        int                     dirblocklog;                                    
+        int                     dirblocksize;                                   
+        int                     nlflag;                                         
+        int                     nvflag; /* unused */                            
+        int                     nsflag;                                         
+                                                                                
+        char                    *rtextsize;                                     
+        char                    *rtsize;                                        
+        int                     norsflag;                                       
+}; 
+
+Of course if we had other variables on main() which were set based on the above
+ones then those would also be impacted.
+
+  Luis
