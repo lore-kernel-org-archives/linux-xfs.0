@@ -1,56 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:18457 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751812AbdDCTnE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2017 15:43:04 -0400
-Date: Mon, 3 Apr 2017 12:42:33 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: fix kernel memory exposure problems
-Message-ID: <20170403194233.GR4864@birch.djwong.org>
-References: <20170403173430.GL4864@birch.djwong.org>
+Received: from sandeen.net ([63.231.237.45]:47364 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752968AbdDDTh6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Apr 2017 15:37:58 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 50647782D2E
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2017 14:37:20 -0500 (CDT)
+Subject: Re: [ANNOUNCE] xfsprogs: for-next branch updated to 88a4a19
+References: <93206337-c274-6415-a068-7e89067a6f8f@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e72a5a22-47c5-88c5-8789-b02445195083@sandeen.net>
+Date: Tue, 4 Apr 2017 14:37:57 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170403173430.GL4864@birch.djwong.org>
+In-Reply-To: <93206337-c274-6415-a068-7e89067a6f8f@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, Christoph Hellwig <hch@infradead.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Apr 03, 2017 at 10:34:30AM -0700, Darrick J. Wong wrote:
-> Fix a memory exposure problems in inumbers where we allocate an array of
-> structures with holes, fail to zero the holes, then blindly copy the
-> kernel memory contents (junk and all) into userspace.
+On 3/29/17 11:28 AM, Eric Sandeen wrote:
+> Hi folks,
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-BTW, I intend to send this patch (though not the getbmap patch) for 4.11
-since kernel memory exposure is usually treated as a security problem.
-
---D
-
-> ---
-> v2: split patches
-> ---
->  fs/xfs/xfs_itable.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> The xfsprogs repository at:
 > 
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index 2a6d9b1..26d67ce 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -583,7 +583,7 @@ xfs_inumbers(
->  		return error;
->  
->  	bcount = MIN(left, (int)(PAGE_SIZE / sizeof(*buffer)));
-> -	buffer = kmem_alloc(bcount * sizeof(*buffer), KM_SLEEP);
-> +	buffer = kmem_zalloc(bcount * sizeof(*buffer), KM_SLEEP);
->  	do {
->  		struct xfs_inobt_rec_incore	r;
->  		int				stat;
+> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> 
+> has just been updated.
+> 
+> This was only a libxfs syncup; I will get to xfsprogs-proper
+> patches soon.  Changes are on the for-next and libxfs-4.11-sync
+> branches for now.
+
+Realized that I neglected to add my SOB to any of these.  :/
+
+Unsure if I should rebase these two branches to add them, or
+let it go.
+
+Thoughts/preferences?
+
+Sorry about that,
+-Eric
+
+> The new head of the for-next branch is commit:
+> 
+> 88a4a19 xfs: verify inline directory data forks
+> 
+> New Commits:
+> 
+> Brian Foster (3):
+>       [5894afd] xfs: handle indlen shortage on delalloc extent merge
+>       [b226fa5] xfs: split indlen reservations fairly when under reserved
+>       [a0b2bb7] xfs: use iomap new flag for newly allocated delalloc blocks
+> 
+> Chandan Rajendra (1):
+>       [b4747e3] xfs: Use xfs_icluster_size_fsb() to calculate inode chunk alignment
+> 
+> Christoph Hellwig (5):
+>       [09af6ff] xfs: go straight to real allocations for direct I/O COW writes
+>       [bb47212] xfs: improve handling of busy extents in the low-level allocator
+>       [622fea0] xfs: tune down agno asserts in the bmap code
+>       [2527a6f] xfs: remove XFS_ALLOCTYPE_ANY_AG and XFS_ALLOCTYPE_START_AG
+>       [e2594ba] xfs: try any AG when allocating the first btree block when reflinking
+> 
+> Darrick J. Wong (7):
+>       [0ed1133] xfs: fix toctou race when locking an inode to access the data map
+>       [ab021c7] xfs: fail _dir_open when readahead fails
+>       [94b269a] xfs: filter out obviously bad btree pointers
+>       [c89a743] xfs: check for obviously bad level values in the bmbt root
+>       [ec5d083] xfs: verify free block header fields
+>       [86107a2] xfs: allow unwritten extents in the CoW fork
+>       [88a4a19] xfs: verify inline directory data forks
+> 
+> Eric Sandeen (4):
+>       [d88798d] xfs: glean crc status from mp not flags in xfs_btree_init_block_int
+>       [ee3a607] xfs: make xfs_btree_magic more generic
+>       [ed849ef] xfs: remove boilerplate around xfs_btree_init_block
+>       [7c1c908] xfs: remove unused struct declarations
+> 
+> 
+> Code Diffstat:
+> 
+>  include/xfs_log_recover.h |   1 -
+>  libxfs/libxfs_priv.h      |  16 ++--
+>  libxfs/xfs_alloc.c        | 109 ++++++++++------------
+>  libxfs/xfs_alloc.h        |   4 -
+>  libxfs/xfs_bmap.c         | 233 ++++++++++++++++++++++++++--------------------
+>  libxfs/xfs_bmap_btree.c   |  16 +---
+>  libxfs/xfs_btree.c        |  48 +++++++---
+>  libxfs/xfs_btree.h        |   8 +-
+>  libxfs/xfs_da_btree.c     |   6 +-
+>  libxfs/xfs_da_btree.h     |   2 +-
+>  libxfs/xfs_dir2_node.c    |  51 +++++++++-
+>  libxfs/xfs_dir2_priv.h    |   2 +
+>  libxfs/xfs_dir2_sf.c      |  87 +++++++++++++++++
+>  libxfs/xfs_ialloc.c       |   3 +-
+>  libxfs/xfs_inode_fork.c   |  35 +++++--
+>  libxfs/xfs_inode_fork.h   |   2 +-
+>  mkfs/xfs_mkfs.c           |  35 ++-----
+> 
+>  18 files changed, 451 insertions(+), 304 deletions(-)
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
