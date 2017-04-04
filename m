@@ -1,77 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:22818 "EHLO mail1.g1.pair.com"
+Received: from mx2.suse.de ([195.135.220.15]:38289 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754009AbdDDRnh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Apr 2017 13:43:37 -0400
-Date: Tue, 4 Apr 2017 19:43:40 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: "interesting" crash : 3.18.44, huge xfs, nfs
-Message-ID: <20170404194340.4733ccb7@harpe.intellique.com>
-In-Reply-To: <95e14081-0f1c-7458-cca2-1f33d6662037@sandeen.net>
-References: <20170404150202.6c7d032c@harpe.intellique.com>
-        <20170404192411.650fb403@harpe.intellique.com>
-        <95e14081-0f1c-7458-cca2-1f33d6662037@sandeen.net>
+        id S1753289AbdDDSlR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Apr 2017 14:41:17 -0400
+Subject: Re: [PATCH 6/8] nowait aio: ext4
+References: <20170403185307.6243-1-rgoldwyn@suse.de>
+ <20170403185307.6243-7-rgoldwyn@suse.de>
+ <20170404075853.GB28522@quack2.suse.cz>
+ <20170404084122.GA10252@infradead.org>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Message-ID: <d6dac6ec-c71c-0082-972f-61e7299ed418@suse.de>
+Date: Tue, 4 Apr 2017 13:41:09 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/KP8f3MCtwXfHfcdWMHLRBS1"; protocol="application/pgp-signature"
+In-Reply-To: <20170404084122.GA10252@infradead.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
-
---Sig_/KP8f3MCtwXfHfcdWMHLRBS1
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-Le Tue, 4 Apr 2017 12:36:57 -0500
-Eric Sandeen <sandeen@sandeen.net> =C3=A9crivait:
-
-> >> Context: this is a file server. There was a power failure
-> >> yesterday, so there's probably some corruption hidden somewhere
-> >> triggering the crash. =20
->=20
-> and using filestreams, apparently?
-
-I don't see why or where we'd use filestreams there... What's the use
-case actually?
-=20
-> >=20
-> > The machine goes on crashing on disk access... xfs_repair 4.9 is
-> > running now, and after that we'll reboot with a current kernel
-> > (4.4.59). Any advice? =20
->=20
-> Yep, go back in time & get an xfs_metadump before you repair it.  :(
-
-You know how it goes it crashes, users scream, administrator jumps on
-xfs_repair, and the rest is history.
-=20
-> Please do at least capture repair output.
->=20
-
-Well the only thing I know is "there was nothing special in xfs_repair
-output"... I'll tell the admin to catch the output next time if
-necessary...
+To: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
 
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
 
---Sig_/KP8f3MCtwXfHfcdWMHLRBS1
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
+On 04/04/2017 03:41 AM, Christoph Hellwig wrote:
+> On Tue, Apr 04, 2017 at 09:58:53AM +0200, Jan Kara wrote:
+>> FS_NOWAIT looks a bit too generic given these are filesystem feature flags.
+>> Can we call it FS_NOWAIT_IO?
+> 
+> It's way to generic as it's a feature of the particular file_operations
+> instance.  But once we switch to using RWF_* we can just the existing
+> per-op feature checks for thos and the per-fs flag should just go away.
+> 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+I am working on incorporating RWF_* flags. However, I am not sure how
+RWF_* flags would get rid of FS_NOWAIT/FS_NOWAIT_IO. Since most of
+"blocking" information is with the filesystem, it is a per-filesystem
+flag to block out (EOPNOTSUPP) the filesystems which do not support it.
 
-iEYEARECAAYFAljj20wACgkQX3jQXNUicVZ8GgCguCTKFVUCXuzhAA7Y5nyWVw2C
-XlcAn11yPfUL9ekt+uifJhAbjb0224ax
-=kda5
------END PGP SIGNATURE-----
-
---Sig_/KP8f3MCtwXfHfcdWMHLRBS1--
+-- 
+Goldwyn
