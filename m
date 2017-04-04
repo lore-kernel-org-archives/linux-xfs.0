@@ -1,39 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:39877 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:56586 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751175AbdDDGyU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 02:54:20 -0400
-Date: Mon, 3 Apr 2017 23:54:17 -0700
+        with ESMTP id S1751022AbdDDHM4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 03:12:56 -0400
+Date: Tue, 4 Apr 2017 00:12:52 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs: fix kernel memory exposure problems
-Message-ID: <20170404065417.GA3610@infradead.org>
-References: <20170403173430.GL4864@birch.djwong.org>
- <20170403194233.GR4864@birch.djwong.org>
- <da88c312-42ad-49a3-9349-3372d8d4b127@sandeen.net>
+Subject: Re: [PATCH 8/8] statx: Include a mask for stx_attributes in struct
+ statx
+Message-ID: <20170404071252.GA30966@infradead.org>
+References: <149098148523.28108.1441135633380173665.stgit@warthog.procyon.org.uk>
+ <149098153785.28108.1114055429564367803.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <da88c312-42ad-49a3-9349-3372d8d4b127@sandeen.net>
+In-Reply-To: <149098153785.28108.1114055429564367803.stgit@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Christoph Hellwig <hch@infradead.org>
+To: David Howells <dhowells@redhat.com>
+Cc: viro@zeniv.linux.org.uk, linux-kernel@vger.kernel.org, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Apr 03, 2017 at 03:06:42PM -0500, Eric Sandeen wrote:
-> On 4/3/17 2:42 PM, Darrick J. Wong wrote:
-> > On Mon, Apr 03, 2017 at 10:34:30AM -0700, Darrick J. Wong wrote:
-> >> Fix a memory exposure problems in inumbers where we allocate an array of
-> >> structures with holes, fail to zero the holes, then blindly copy the
-> >> kernel memory contents (junk and all) into userspace.
-> >>
-> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > BTW, I intend to send this patch (though not the getbmap patch) for 4.11
-> > since kernel memory exposure is usually treated as a security problem.
-> 
-> I agree with that plan; if this change isn't safe I don't know what
-> is ...
+On Fri, Mar 31, 2017 at 06:32:17PM +0100, David Howells wrote:
+> Include a mask in struct stat to indicate which bits of stx_attributes the
+> filesystem actually supports.
 
-Yes.  Please send this for 4.11-rc.
+What's the use case for this?
