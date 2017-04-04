@@ -1,46 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:34896 "EHLO
-        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750961AbdDDG2Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 02:28:25 -0400
+Received: from bombadil.infradead.org ([65.50.211.133]:43934 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752518AbdDDGs2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 02:48:28 -0400
+Date: Mon, 3 Apr 2017 23:48:27 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/8] nowait aio: Introduce IOCB_RW_FLAG_NOWAIT
+Message-ID: <20170404064827.GB21942@infradead.org>
+References: <20170403185307.6243-1-rgoldwyn@suse.de>
+ <20170403185307.6243-2-rgoldwyn@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <9783.1491254227@warthog.procyon.org.uk>
-References: <20170403163910.GD10881@birch.djwong.org> <149122078093.24821.17192375733082382807.stgit@warthog.procyon.org.uk>
- <149122081486.24821.15266397607503484126.stgit@warthog.procyon.org.uk>
- <9634.1491253516@warthog.procyon.org.uk> <9783.1491254227@warthog.procyon.org.uk>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 4 Apr 2017 09:28:23 +0300
-Message-ID: <CAOQ4uxg+-4Z4A-o=GktJqTqjrWzkMPBKoVvWCdG0yVdDqTPztg@mail.gmail.com>
-Subject: Re: [PATCH 4/4] xfstests: Check the stx_attributes settable by chattr
- [ver #3]
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170403185307.6243-2-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On Tue, Apr 4, 2017 at 12:17 AM, David Howells <dhowells@redhat.com> wrote:
-> David Howells <dhowells@redhat.com> wrote:
->
->> Darrick J. Wong <darrick.wong@oracle.com> wrote:
->>
->> ...
->> > If so, perhaps there should be separate tests for each of the 4 attrs.
->>
->> They should also be tested in combination.  Hmmm...
->
-> Hmmm...  It appears that that would require 16 separate test files, each with
-> the appropriate combination of "_require_chattr <letter>".
->
+On Mon, Apr 03, 2017 at 01:53:00PM -0500, Goldwyn Rodrigues wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> 
+> This flag informs kernel to bail out if an AIO request will block
+> for reasons such as file allocations, or a writeback triggered,
+> or would block while allocating requests while performing
+> direct I/O.
+> 
+> Unfortunately, aio_flags is not checked for validity, which would
+> break existing applications which have it set to anything besides zero
+> or IOCB_FLAG_RESFD. So, we are using aio_reserved1 and renaming it
+> to aio_rw_flags.
+> 
+> IOCB_RW_FLAG_NOWAIT is translated to IOCB_NOWAIT for
+> iocb->ki_flags.
 
-I don't think that is necessary.
-
-IMO, _require_chattr <letter> means test cannot run without this,
-so no use in running it.
-This is not true for this test.
-
-Since this test is expecting empty output its not even hard to change the test.
-
-First try silently all the 4 letters.
-Then iterate of combination of supported subset.
+Please make this a flag in the RWF_* namespace, and as a preparation
+support the existing RWF_* flags for aio.
