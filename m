@@ -1,98 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34610 "EHLO sandeen.net"
+Received: from fieldses.org ([173.255.197.46]:39448 "EHLO fieldses.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753641AbdDDRhL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Apr 2017 13:37:11 -0400
-Subject: Re: "interesting" crash : 3.18.44, huge xfs, nfs
-References: <20170404150202.6c7d032c@harpe.intellique.com>
- <20170404192411.650fb403@harpe.intellique.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <95e14081-0f1c-7458-cca2-1f33d6662037@sandeen.net>
-Date: Tue, 4 Apr 2017 12:36:57 -0500
+        id S932232AbdDDRxj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Apr 2017 13:53:39 -0400
+Date: Tue, 4 Apr 2017 13:53:38 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+Message-ID: <20170404175338.GB14303@fieldses.org>
+References: <20170321183006.GD17872@fieldses.org>
+ <1490122013.2593.1.camel@redhat.com>
+ <20170329111507.GA18467@quack2.suse.cz>
+ <1490810071.2678.6.camel@redhat.com>
+ <20170330064724.GA21542@quack2.suse.cz>
+ <1490872308.2694.1.camel@redhat.com>
+ <20170330161231.GA9824@fieldses.org>
+ <20170401230526.GW23007@dastard>
+ <20170403140055.GF15168@quack2.suse.cz>
+ <20170404123414.GA23007@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20170404192411.650fb403@harpe.intellique.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="7mCrpG2ERaftxghKqnC0k1K1hpOQqE5k4"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170404123414.GA23007@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Jeff Layton <jlayton@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---7mCrpG2ERaftxghKqnC0k1K1hpOQqE5k4
-Content-Type: multipart/mixed; boundary="O0osGPseKBrpv8cB2urOCjRXC1B5ENpoB";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: Emmanuel Florac <eflorac@intellique.com>, linux-xfs@vger.kernel.org
-Message-ID: <95e14081-0f1c-7458-cca2-1f33d6662037@sandeen.net>
-Subject: Re: "interesting" crash : 3.18.44, huge xfs, nfs
-References: <20170404150202.6c7d032c@harpe.intellique.com>
- <20170404192411.650fb403@harpe.intellique.com>
-In-Reply-To: <20170404192411.650fb403@harpe.intellique.com>
+On Tue, Apr 04, 2017 at 10:34:14PM +1000, Dave Chinner wrote:
+> On Mon, Apr 03, 2017 at 04:00:55PM +0200, Jan Kara wrote:
+> > What filesystems can or cannot easily do obviously differs. Ext4 has a
+> > recovery flag set in superblock on RW mount/remount and cleared on
+> > umount/RO remount.
+> 
+> Even this doesn't help. A recent bug that was reported to the XFS
+> list - turns out that systemd can't remount-ro the root
+> filesystem sucessfully on shutdown because there are open write fds
+> on the root filesystem when it attempts the remount. So it just
+> reboots without a remount-ro.
 
---O0osGPseKBrpv8cB2urOCjRXC1B5ENpoB
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+I'd certainly rather not invalidate caches on *every* boot.
 
-On 4/4/17 12:24 PM, Emmanuel Florac wrote:
-> Le Tue, 4 Apr 2017 15:02:02 +0200
-> Emmanuel Florac <eflorac@intellique.com> =C3=A9crivait:
->=20
->> Hi,=20
->> here is an interesting crash dump. I've never seen this function
->> called before : "Fixing recursive fault but reboot is needed!"
->>
->> The system is frozen and must be hard rebooted. The filesystem is
->> humongous: about 400 TB.
->> Running is plain vanilla 3.18.44 (should upgrade...). I wonder if the
->> bug is still present though?=20
->>
->> Context: this is a file server. There was a power failure yesterday,
->> so there's probably some corruption hidden somewhere triggering the
->> crash.
+On the other hand, if the only cases involve the root filesystem, then
+from the point of view of NFS, we probably don't care much.
 
-and using filestreams, apparently?
+> > This flag being set on mount would imply incrementing the crash
+> > counter. It should be pretty easy for each filesystem to implement
+> > such flag and the counter but I agree it requires an on-disk
+> > format change.
+> 
+> Yup, anything we want that is persistent and consistent across
+> filesystems will need on-disk format changes. Hence we need a solid
+> specification first, not to mention tests to validate correct
+> behaviour across all filesystems in xfstests...
 
->=20
-> The machine goes on crashing on disk access... xfs_repair 4.9 is
-> running now, and after that we'll reboot with a current kernel
-> (4.4.59). Any advice?
+For xfstests we'll need a way to get i_version (patch it into statx, I
+guess?).  Ideally we'd have a way to test behavior across crashes too,
+any advice there?
 
-Yep, go back in time & get an xfs_metadump before you repair it.  :(
-
-Please do at least capture repair output.
-
--Eric
-
-> The latest crash trace was still xfs related apparently:
-
-
-
---O0osGPseKBrpv8cB2urOCjRXC1B5ENpoB--
-
---7mCrpG2ERaftxghKqnC0k1K1hpOQqE5k4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJY49nGAAoJECCuFpLhPd7gozAP/1zYNm9w6EUpjf9JUh+7dt+K
-Zck+o+65+oR1MTn5LMQOEj38myZLeKlbjRfglghbzxI3ZmuhrhK8NdyG1oFJr/wd
-XhMYY6AfNwDWjGXY8JtefEb053EtFWMM/5BZKeQHfh6A6m5UczEEALJ0JpokVlMG
-mRr9daBWC1E7CmEBEj4dYcUMo/YFlmndaZ/KEGBk/RXUrHMbBYTQ/WyukkiM1oAL
-dr4h4uB1mRQirA3hKZ+BoRW9GAX4iEfetqIP4X0OUHJk/dhJaST6l2SH0KDtoHy4
-gY4gpohNcNYRsObkkSsYjgME7kgOOZcvvrAhSrkWB/WqqNO7mIwhB1R+Lq5qfu3e
-pK/JIyMMKCN3PloMpsZ7pjRIEmPigntnQ2K8MMHoofQHxIs78t4C9IbCicUlh8wW
-A710jE4sXemulQe3kwHMac1Pw/YIjbW9qUHPqHw13AQ3AnpzwPMUF9JySyb30Kz9
-OpypnoOCHWjbYBM+8PP2ToC6/QbMYe0qiqSt1RXmJaQNkWwKxPKh3UTMPr+V4pdA
-E+DxrVqDlAS/v5vzq1aDJBXVKe9yXMdOX9Qs24ngs2vo/VNPghe2/+74tcWr/1+N
-JLi2N3vqGkZyfvaiJFFaTv6CWVepq3VdveqmrWGAANUDfKY8e0lU9DMpvozBsy10
-GRG0n7r8MRqQ765ebxl1
-=MpIm
------END PGP SIGNATURE-----
-
---7mCrpG2ERaftxghKqnC0k1K1hpOQqE5k4--
+--b.
