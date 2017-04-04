@@ -1,1244 +1,1269 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49908 "EHLO mx1.redhat.com"
+Received: from mail1.g1.pair.com ([66.39.3.162]:41598 "EHLO mail1.g1.pair.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754408AbdDDPzV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Apr 2017 11:55:21 -0400
-Subject: [PATCH 2/4] xfstests: Add first statx test [ver #5]
-From: David Howells <dhowells@redhat.com>
-Date: Tue, 04 Apr 2017 16:55:17 +0100
-Message-ID: <149132131706.18980.7074156386090748482.stgit@warthog.procyon.org.uk>
-In-Reply-To: <149132130900.18980.537296385250153410.stgit@warthog.procyon.org.uk>
-References: <149132130900.18980.537296385250153410.stgit@warthog.procyon.org.uk>
+        id S1751156AbdDDNLu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Apr 2017 09:11:50 -0400
+Received: from mail1.g1.pair.com (localhost [127.0.0.1])
+        by mail1.g1.pair.com (Postfix) with ESMTP id C0208548259
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2017 09:02:00 -0400 (EDT)
+Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail1.g1.pair.com (Postfix) with ESMTPSA id F1B3F60AEB5
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2017 09:01:59 -0400 (EDT)
+Date: Tue, 4 Apr 2017 15:02:02 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: "interesting" crash : 3.18.44, huge xfs, nfs
+Message-ID: <20170404150202.6c7d032c@harpe.intellique.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/MSrwHJn_z3j.G7rivzrpzV7"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
 
-Add a statx test script that does the following:
+--Sig_/MSrwHJn_z3j.G7rivzrpzV7
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
- (1) Creates one each of the various types of file object and creates a
-     hard link to the regular file.
+Hi,=20
+here is an interesting crash dump. I've never seen this function
+called before : "Fixing recursive fault but reboot is needed!"
 
-     Note that the creation of an AF_UNIX socket is done with netcat in a
-     bash coprocessing thread.  This might be best done with another
-     in-house helper to avoid a dependency on nc.
+The system is frozen and must be hard rebooted. The filesystem is
+humongous: about 400 TB.
 
- (2) Invokes the C test program included in this patch after the creation
-     and hands it a list of things to check appropriate to each object.
+Running is plain vanilla 3.18.44 (should upgrade...). I wonder if the
+bug is still present though?=20
 
- (3) Asks the test program to check the creation time of each object
-     against that of the preceding object.
+Context: this is a file server. There was a power failure yesterday, so
+there's probably some corruption hidden somewhere triggering the crash.
 
- (4) Makes various tests on the timestamps of the hardlinked file.
+Cheers.
 
-The patch also creates a C[*] test program to do the actual stat checking.
-The test program then does the following:
+(xfs_repair is running).
 
- (1) Compares the output of statx() to that of fstatat().
+avril 04 10:11:42 Colorstock-01 kernel: BUG: unable to handle kernel NULL p=
+ointer dereference at 0000000000000240
+avril 04 10:11:42 Colorstock-01 kernel: IP: [<ffffffff811614d5>] iput+0x5/0=
+x190
+avril 04 10:11:42 Colorstock-01 kernel: PGD 0=20
+avril 04 10:11:42 Colorstock-01 kernel: Oops: 0000 [#1] SMP=20
+avril 04 10:11:42 Colorstock-01 kernel: Modules linked in: nfsv3 arc4 ecb m=
+d4 nfsv4 cifs fscache dm_mod cfg80211 rfkill nfsd auth_rpcgss oid_registry =
+nfs_acl nfs lockd grace sunrpc af_packet bonding joydev evdev x86_pkg_temp_=
+thermal coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul crc32c_intel a=
+esni_intel aes_x86_64 lrw gf128mul glue_helper ablk_helper cryptd microcode=
+ pcspkr myri10ge ast ttm drm_kms_helper drm i2c_algo_bit ixgbe ptp pps_core=
+ mdio dca ses enclosure i2c_i801 sg i2c_core lpc_ich mfd_core ipmi_si 8250_=
+fintek ipmi_msghandler rtc_cmos wmi processor thermal_sys acpi_power_meter =
+button md_mod usbhid xhci_pci xhci_hcd ohci_pci ehci_pci ohci_hcd uhci_hcd =
+ehci_hcd uas usb_storage usbcore usb_common fuse ipv6 autofs4 ext4 ext3 xfs=
+ reiserfs crc16 jbd2 jbd aacraid ahci libahci ata_generic libata
+avril 04 10:11:42 Colorstock-01 kernel: CPU: 12 PID: 2375 Comm: kworker/u64=
+:0 Not tainted 3.18.44-storiq64-i7 #1
+avril 04 10:11:42 Colorstock-01 kernel: Hardware name: Supermicro Super Ser=
+ver/X10DRD-iNT, BIOS 2.0 12/17/2015
+avril 04 10:11:42 Colorstock-01 kernel: Workqueue: writeback bdi_writeback_=
+workfn (flush-253:0)
+avril 04 10:11:42 Colorstock-01 kernel: task: ffff88085685a820 ti: ffff8800=
+747a0000 task.ti: ffff8800747a0000
+avril 04 10:11:42 Colorstock-01 kernel: RIP: 0010:[<ffffffff811614d5>]  [<f=
+fffffff811614d5>] iput+0x5/0x190
+avril 04 10:11:42 Colorstock-01 kernel: RSP: 0018:ffff8800747a3590  EFLAGS:=
+ 00010202
+avril 04 10:11:42 Colorstock-01 kernel: RAX: 0000000000000000 RBX: ffff8808=
+545b7000 RCX: 000ffffffffe0000
+avril 04 10:11:42 Colorstock-01 kernel: RDX: 0000000000000000 RSI: 00000000=
+000003f0 RDI: 00000000000001a8
+avril 04 10:11:42 Colorstock-01 kernel: RBP: 0000000000000000 R08: ffff8800=
+747a3684 R09: ffff8800747a3750
+avril 04 10:11:42 Colorstock-01 kernel: R10: 0000000000000001 R11: 00000000=
+00000000 R12: ffff880792569000
+avril 04 10:11:42 Colorstock-01 kernel: R13: 0000000000000000 R14: ffff8800=
+747a3801 R15: ffff8808545b7000
+avril 04 10:11:42 Colorstock-01 kernel: FS:  0000000000000000(0000) GS:ffff=
+88087f380000(0000) knlGS:0000000000000000
+avril 04 10:11:42 Colorstock-01 kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 00=
+00000080050033
+avril 04 10:11:42 Colorstock-01 kernel: CR2: 0000000000000240 CR3: 00000000=
+015e9000 CR4: 00000000003407e0
+avril 04 10:11:42 Colorstock-01 kernel: DR0: 0000000000000000 DR1: 00000000=
+00000000 DR2: 0000000000000000
+avril 04 10:11:42 Colorstock-01 kernel: DR3: 0000000000000000 DR6: 00000000=
+fffe0ff0 DR7: 0000000000000400
+avril 04 10:11:42 Colorstock-01 kernel: Stack:
+avril 04 10:11:42 Colorstock-01 kernel:  ffffffffa2c357b6 ffffffff81654f40 =
+ffffffff92569060 ffff880792569040
+avril 04 10:11:42 Colorstock-01 kernel:  ffff8800747a3730 ffff8800747a3730 =
+0000000000000010 0000000000000000
+avril 04 10:11:42 Colorstock-01 kernel:  ffffffffa2c0438d 0000000000000001 =
+ffff8800747a3770 ffff8800747a37b0
+avril 04 10:11:42 Colorstock-01 kernel: Call Trace:
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c357b6>] ? xfs_filestr=
+eam_lookup_ag+0x76/0x1b0 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c0438d>] ? xfs_bmap_bt=
+alloc+0x2dd/0x770 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2bfc192>] ? xfs_bmap_se=
+arch_multi_extents+0xa2/0x120 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c03a06>] ? xfs_bmap_la=
+st_extent+0x56/0x80 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c03a56>] ? xfs_bmap_is=
+aeof+0x26/0x90 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c05211>] ? xfs_bmapi_w=
+rite+0x4b1/0xaa0 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c3ca61>] ? xfs_iomap_w=
+rite_allocate+0x131/0x350 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c283d7>] ? xfs_map_blo=
+cks+0x1b7/0x240 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c291f6>] ? xfs_vm_writ=
+epage+0x186/0x5a0 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81106ead>] ? __writepage=
++0xd/0x40
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff811077af>] ? write_cache=
+_pages+0x1bf/0x430
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81106ea0>] ? global_dirt=
+yable_memory+0x50/0x50
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2d299c2>] ? ext4_writep=
+ages+0x3f2/0xd00 [ext4]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81107a58>] ? generic_wri=
+tepages+0x38/0x50
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff8116db61>] ? __writeback=
+_single_inode+0x41/0x2b0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff811700b8>] ? writeback_s=
+b_inodes+0x1b8/0x470
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff811703fe>] ? __writeback=
+_inodes_wb+0x8e/0xc0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81170683>] ? wb_writebac=
+k+0x253/0x350
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81170b8a>] ? bdi_writeba=
+ck_workfn+0x2ca/0x480
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:11:42 Colorstock-01 kernel: Code: 08 48 8d b8 00 04 00 00 e8 e9=
+ eb fb ff 84 c0 74 09 65 48 ff 04 25 18 f5 00 00 48 83 c4 08 c3 0f 1f 80 00=
+ 00 00 00 48 85 ff 74 3e <f6> 87 98 00 00 00 40 0f 85 fe 00 00 00 41 55 41 =
+54 55 48 8d af=20
+avril 04 10:11:42 Colorstock-01 kernel: RIP  [<ffffffff811614d5>] iput+0x5/=
+0x190
+avril 04 10:11:42 Colorstock-01 kernel:  RSP <ffff8800747a3590>
+avril 04 10:11:42 Colorstock-01 kernel: CR2: 0000000000000240
+avril 04 10:11:42 Colorstock-01 kernel: ---[ end trace 8ff2f50e12a8faab ]---
+avril 04 10:11:42 Colorstock-01 kernel: ------------[ cut here ]------------
+avril 04 10:11:42 Colorstock-01 kernel: WARNING: CPU: 12 PID: 2375 at kerne=
+l/exit.c:675 do_exit+0x48/0xb50()
+avril 04 10:11:42 Colorstock-01 kernel: Modules linked in: nfsv3 arc4 ecb m=
+d4 nfsv4 cifs fscache dm_mod cfg80211 rfkill nfsd auth_rpcgss oid_registry =
+nfs_acl nfs lockd grace sunrpc af_packet bonding joydev evdev x86_pkg_temp_=
+thermal coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul crc32c_intel a=
+esni_intel aes_x86_64 lrw gf128mul glue_helper ablk_helper cryptd microcode=
+ pcspkr myri10ge ast ttm drm_kms_helper drm i2c_algo_bit ixgbe ptp pps_core=
+ mdio dca ses enclosure i2c_i801 sg i2c_core lpc_ich mfd_core ipmi_si 8250_=
+fintek ipmi_msghandler rtc_cmos wmi processor thermal_sys acpi_power_meter =
+button md_mod usbhid xhci_pci xhci_hcd ohci_pci ehci_pci ohci_hcd uhci_hcd =
+ehci_hcd uas usb_storage usbcore usb_common fuse ipv6 autofs4 ext4 ext3 xfs=
+ reiserfs crc16 jbd2 jbd aacraid ahci libahci ata_generic libata
+avril 04 10:11:42 Colorstock-01 kernel: CPU: 12 PID: 2375 Comm: kworker/u64=
+:0 Tainted: G      D        3.18.44-storiq64-i7 #1
+avril 04 10:11:42 Colorstock-01 kernel: Hardware name: Supermicro Super Ser=
+ver/X10DRD-iNT, BIOS 2.0 12/17/2015
+avril 04 10:11:42 Colorstock-01 kernel: Workqueue: writeback bdi_writeback_=
+workfn (flush-253:0)
+avril 04 10:11:42 Colorstock-01 kernel:  0000000000000086 0000000000000000 =
+ffffffff8144a289 0000000000000007
+avril 04 10:11:42 Colorstock-01 kernel:  0000000000000000 0000000000000009 =
+ffffffff8105b952 0000000000000009
+avril 04 10:11:42 Colorstock-01 kernel:  0000000000000096 ffff8800747a34e8 =
+0000000000000240 0000000000000096
+avril 04 10:11:42 Colorstock-01 kernel: Call Trace:
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff8144a289>] ? dump_stack+=
+0x5e/0x7a
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff8105b952>] ? warn_slowpa=
+th_common+0x72/0x90
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff8105cc88>] ? do_exit+0x4=
+8/0xb50
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff8144953c>] ? printk+0x4f=
+/0x54
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81017282>] ? oops_end+0x=
+92/0xd0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff8104fee6>] ? no_context+=
+0x106/0x360
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff810505de>] ? __do_page_f=
+ault+0x9e/0x4b0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c0cb9d>] ? xfs_btree_u=
+pdate+0xbd/0xd0 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81452f38>] ? page_fault+=
+0x28/0x30
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff811614d5>] ? iput+0x5/0x=
+190
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c357b6>] ? xfs_filestr=
+eam_lookup_ag+0x76/0x1b0 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c0438d>] ? xfs_bmap_bt=
+alloc+0x2dd/0x770 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2bfc192>] ? xfs_bmap_se=
+arch_multi_extents+0xa2/0x120 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c03a06>] ? xfs_bmap_la=
+st_extent+0x56/0x80 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c03a56>] ? xfs_bmap_is=
+aeof+0x26/0x90 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c05211>] ? xfs_bmapi_w=
+rite+0x4b1/0xaa0 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c3ca61>] ? xfs_iomap_w=
+rite_allocate+0x131/0x350 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c283d7>] ? xfs_map_blo=
+cks+0x1b7/0x240 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c291f6>] ? xfs_vm_writ=
+epage+0x186/0x5a0 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81106ead>] ? __writepage=
++0xd/0x40
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff811077af>] ? write_cache=
+_pages+0x1bf/0x430
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81106ea0>] ? global_dirt=
+yable_memory+0x50/0x50
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2d299c2>] ? ext4_writep=
+ages+0x3f2/0xd00 [ext4]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81107a58>] ? generic_wri=
+tepages+0x38/0x50
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff8116db61>] ? __writeback=
+_single_inode+0x41/0x2b0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff811700b8>] ? writeback_s=
+b_inodes+0x1b8/0x470
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff811703fe>] ? __writeback=
+_inodes_wb+0x8e/0xc0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81170683>] ? wb_writebac=
+k+0x253/0x350
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81170b8a>] ? bdi_writeba=
+ck_workfn+0x2ca/0x480
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:11:42 Colorstock-01 kernel: ---[ end trace 8ff2f50e12a8faac ]---
+avril 04 10:11:42 Colorstock-01 kernel: BUG: unable to handle kernel paging=
+ request at ffffffffffffffd8
+avril 04 10:11:42 Colorstock-01 kernel: IP: [<ffffffff81076ff7>] kthread_da=
+ta+0x7/0x10
+avril 04 10:11:42 Colorstock-01 kernel: PGD 15ec067 PUD 15ee067 PMD 0=20
+avril 04 10:11:42 Colorstock-01 kernel: Oops: 0000 [#2] SMP=20
+avril 04 10:11:42 Colorstock-01 kernel: Modules linked in: nfsv3 arc4 ecb m=
+d4 nfsv4 cifs fscache dm_mod cfg80211 rfkill nfsd auth_rpcgss oid_registry =
+nfs_acl nfs lockd grace sunrpc af_packet bonding joydev evdev x86_pkg_temp_=
+thermal coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul crc32c_intel a=
+esni_intel aes_x86_64 lrw gf128mul glue_helper ablk_helper cryptd microcode=
+ pcspkr myri10ge ast ttm drm_kms_helper drm i2c_algo_bit ixgbe ptp pps_core=
+ mdio dca ses enclosure i2c_i801 sg i2c_core lpc_ich mfd_core ipmi_si 8250_=
+fintek ipmi_msghandler rtc_cmos wmi processor thermal_sys acpi_power_meter =
+button md_mod usbhid xhci_pci xhci_hcd ohci_pci ehci_pci ohci_hcd uhci_hcd =
+ehci_hcd uas usb_storage usbcore usb_common fuse ipv6 autofs4 ext4 ext3 xfs=
+ reiserfs crc16 jbd2 jbd aacraid ahci libahci ata_generic libata
+avril 04 10:11:42 Colorstock-01 kernel: CPU: 12 PID: 2375 Comm: kworker/u64=
+:0 Tainted: G      D W      3.18.44-storiq64-i7 #1
+avril 04 10:11:42 Colorstock-01 kernel: Hardware name: Supermicro Super Ser=
+ver/X10DRD-iNT, BIOS 2.0 12/17/2015
+avril 04 10:11:42 Colorstock-01 kernel: task: ffff88085685a820 ti: ffff8800=
+747a0000 task.ti: ffff8800747a0000
+avril 04 10:11:42 Colorstock-01 kernel: RIP: 0010:[<ffffffff81076ff7>]  [<f=
+fffffff81076ff7>] kthread_data+0x7/0x10
+avril 04 10:11:42 Colorstock-01 kernel: RSP: 0018:ffff8800747a3250  EFLAGS:=
+ 00010002
+avril 04 10:11:42 Colorstock-01 kernel: RAX: 0000000000000000 RBX: 00000000=
+0000000c RCX: 0000000000000000
+avril 04 10:11:42 Colorstock-01 kernel: RDX: 000000000000000f RSI: 00000000=
+0000000c RDI: ffff88085685a820
+avril 04 10:11:42 Colorstock-01 kernel: RBP: ffff88085685a820 R08: 00000000=
+00000000 R09: ffff8808569686c8
+avril 04 10:11:42 Colorstock-01 kernel: R10: ffffffff817c38ec R11: 00000000=
+0000001a R12: ffff88087f392c40
+avril 04 10:11:42 Colorstock-01 kernel: R13: ffff88085685ac68 R14: 00000000=
+0000000c R15: ffff88085685a820
+avril 04 10:11:42 Colorstock-01 kernel: FS:  0000000000000000(0000) GS:ffff=
+88087f380000(0000) knlGS:0000000000000000
+avril 04 10:11:42 Colorstock-01 kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 00=
+00000080050033
+avril 04 10:11:42 Colorstock-01 kernel: CR2: 0000000000000028 CR3: 00000000=
+015e9000 CR4: 00000000003407e0
+avril 04 10:11:42 Colorstock-01 kernel: DR0: 0000000000000000 DR1: 00000000=
+00000000 DR2: 0000000000000000
+avril 04 10:11:42 Colorstock-01 kernel: DR3: 0000000000000000 DR6: 00000000=
+fffe0ff0 DR7: 0000000000000400
+avril 04 10:11:42 Colorstock-01 kernel: Stack:
+avril 04 10:11:42 Colorstock-01 kernel:  ffffffff810729e8 0000000000000000 =
+ffffffff8144becb ffff8800747a3268
+avril 04 10:11:42 Colorstock-01 kernel:  ffff8800747a3268 0000000000012c40 =
+ffff8800747a3fd8 0000000000012c40
+avril 04 10:11:42 Colorstock-01 kernel:  ffff88085685a820 ffff88085685a810 =
+ffff8800747a2fb8 ffff88085685a810
+avril 04 10:11:42 Colorstock-01 kernel: Call Trace:
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff810729e8>] ? wq_worker_s=
+leeping+0x8/0x90
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff8144becb>] ? __schedule+=
+0x73b/0x8a0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff8105d4a7>] ? do_exit+0x8=
+67/0xb50
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81017282>] ? oops_end+0x=
+92/0xd0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff8104fee6>] ? no_context+=
+0x106/0x360
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff810505de>] ? __do_page_f=
+ault+0x9e/0x4b0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c0cb9d>] ? xfs_btree_u=
+pdate+0xbd/0xd0 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81452f38>] ? page_fault+=
+0x28/0x30
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff811614d5>] ? iput+0x5/0x=
+190
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c357b6>] ? xfs_filestr=
+eam_lookup_ag+0x76/0x1b0 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c0438d>] ? xfs_bmap_bt=
+alloc+0x2dd/0x770 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2bfc192>] ? xfs_bmap_se=
+arch_multi_extents+0xa2/0x120 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c03a06>] ? xfs_bmap_la=
+st_extent+0x56/0x80 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c03a56>] ? xfs_bmap_is=
+aeof+0x26/0x90 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c05211>] ? xfs_bmapi_w=
+rite+0x4b1/0xaa0 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c3ca61>] ? xfs_iomap_w=
+rite_allocate+0x131/0x350 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c283d7>] ? xfs_map_blo=
+cks+0x1b7/0x240 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2c291f6>] ? xfs_vm_writ=
+epage+0x186/0x5a0 [xfs]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81106ead>] ? __writepage=
++0xd/0x40
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff811077af>] ? write_cache=
+_pages+0x1bf/0x430
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81106ea0>] ? global_dirt=
+yable_memory+0x50/0x50
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffffa2d299c2>] ? ext4_writep=
+ages+0x3f2/0xd00 [ext4]
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81107a58>] ? generic_wri=
+tepages+0x38/0x50
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff8116db61>] ? __writeback=
+_single_inode+0x41/0x2b0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff811700b8>] ? writeback_s=
+b_inodes+0x1b8/0x470
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff811703fe>] ? __writeback=
+_inodes_wb+0x8e/0xc0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81170683>] ? wb_writebac=
+k+0x253/0x350
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81170b8a>] ? bdi_writeba=
+ck_workfn+0x2ca/0x480
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:11:42 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:11:42 Colorstock-01 kernel: Code: eb ae 66 90 65 48 8b 04 25 00=
+ b9 00 00 48 8b 80 f0 03 00 00 48 8b 40 c8 48 c1 e8 02 83 e0 01 c3 0f 1f 40=
+ 00 48 8b 87 f0 03 00 00 <48> 8b 40 d8 c3 0f 1f 40 00 48 83 ec 18 48 8b b7 =
+f0 03 00 00 ba=20
+avril 04 10:11:42 Colorstock-01 kernel: RIP  [<ffffffff81076ff7>] kthread_d=
+ata+0x7/0x10
+avril 04 10:11:42 Colorstock-01 kernel:  RSP <ffff8800747a3250>
+avril 04 10:11:42 Colorstock-01 kernel: CR2: ffffffffffffffd8
+avril 04 10:11:42 Colorstock-01 kernel: ---[ end trace 8ff2f50e12a8faad ]---
+avril 04 10:11:42 Colorstock-01 kernel: Fixing recursive fault but reboot i=
+s needed!
+avril 04 10:12:03 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 3, t=3D21002 jiffies, g=3D5299726, c=3D52997=
+25, q=3D34120)
+avril 04 10:12:03 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:12:03 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:12:03 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:12:03 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:12:03 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:12:03 Colorstock-01 kernel: Call Trace:
+avril 04 10:12:03 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:12:03 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:12:03 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:12:03 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:12:03 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:12:03 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:12:03 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:13:06 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 1, t=3D84007 jiffies, g=3D5299726, c=3D52997=
+25, q=3D197079)
+avril 04 10:13:06 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:13:06 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:13:06 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:13:06 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:13:06 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:13:06 Colorstock-01 kernel: Call Trace:
+avril 04 10:13:06 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:13:06 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:13:06 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:13:06 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:13:06 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:13:06 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:13:06 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:13:37 Colorstock-01 kernel: BUG: unable to handle kernel NULL p=
+ointer dereference at 0000000000000240
+avril 04 10:13:37 Colorstock-01 kernel: IP: [<ffffffff811614d5>] iput+0x5/0=
+x190
+avril 04 10:13:37 Colorstock-01 kernel: PGD 0=20
+avril 04 10:13:37 Colorstock-01 kernel: Oops: 0000 [#3] SMP=20
+avril 04 10:13:37 Colorstock-01 kernel: Modules linked in: nfsv3 arc4 ecb m=
+d4 nfsv4 cifs fscache dm_mod cfg80211 rfkill nfsd auth_rpcgss oid_registry =
+nfs_acl nfs lockd grace sunrpc af_packet bonding joydev evdev x86_pkg_temp_=
+thermal coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul crc32c_intel a=
+esni_intel aes_x86_64 lrw gf128mul glue_helper ablk_helper cryptd microcode=
+ pcspkr myri10ge ast ttm drm_kms_helper drm i2c_algo_bit ixgbe ptp pps_core=
+ mdio dca ses enclosure i2c_i801 sg i2c_core lpc_ich mfd_core ipmi_si 8250_=
+fintek ipmi_msghandler rtc_cmos wmi processor thermal_sys acpi_power_meter =
+button md_mod usbhid xhci_pci xhci_hcd ohci_pci ehci_pci ohci_hcd uhci_hcd =
+ehci_hcd uas usb_storage usbcore usb_common fuse ipv6 autofs4 ext4 ext3 xfs=
+ reiserfs crc16 jbd2 jbd aacraid ahci libahci ata_generic libata
+avril 04 10:13:37 Colorstock-01 kernel: CPU: 6 PID: 147 Comm: kswapd0 Taint=
+ed: G      D W      3.18.44-storiq64-i7 #1
+avril 04 10:13:37 Colorstock-01 kernel: Hardware name: Supermicro Super Ser=
+ver/X10DRD-iNT, BIOS 2.0 12/17/2015
+avril 04 10:13:37 Colorstock-01 kernel: task: ffff88085e23cf60 ti: ffff8808=
+5db94000 task.ti: ffff88085db94000
+avril 04 10:13:37 Colorstock-01 kernel: RIP: 0010:[<ffffffff811614d5>]  [<f=
+fffffff811614d5>] iput+0x5/0x190
+avril 04 10:13:37 Colorstock-01 kernel: RSP: 0018:ffff88085db975b0  EFLAGS:=
+ 00010202
+avril 04 10:13:37 Colorstock-01 kernel: RAX: 0000000000000000 RBX: ffff8808=
+545b7000 RCX: 000ffffffffe0000
+avril 04 10:13:37 Colorstock-01 kernel: RDX: 0000000000000000 RSI: 00000000=
+000003f0 RDI: 00000000000001a8
+avril 04 10:13:37 Colorstock-01 kernel: RBP: 0000000000000000 R08: ffff8808=
+5db976a4 R09: ffff88085db97770
+avril 04 10:13:37 Colorstock-01 kernel: R10: 0000000000000001 R11: 00000000=
+00000000 R12: ffff8801ef597800
+avril 04 10:13:37 Colorstock-01 kernel: R13: 0000000000000000 R14: ffff8808=
+5db97801 R15: ffff8808545b7000
+avril 04 10:13:37 Colorstock-01 kernel: FS:  0000000000000000(0000) GS:ffff=
+88087f2c0000(0000) knlGS:0000000000000000
+avril 04 10:13:37 Colorstock-01 kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 00=
+00000080050033
+avril 04 10:13:37 Colorstock-01 kernel: CR2: 0000000000000240 CR3: 00000000=
+015e9000 CR4: 00000000003407e0
+avril 04 10:13:37 Colorstock-01 kernel: DR0: 0000000000000000 DR1: 00000000=
+00000000 DR2: 0000000000000000
+avril 04 10:13:37 Colorstock-01 kernel: DR3: 0000000000000000 DR6: 00000000=
+fffe0ff0 DR7: 0000000000000400
+avril 04 10:13:37 Colorstock-01 kernel: Stack:
+avril 04 10:13:37 Colorstock-01 kernel:  ffffffffa2c357b6 0000000000000000 =
+ffffffffef597860 ffff8801ef597840
+avril 04 10:13:37 Colorstock-01 kernel:  ffff88085db97750 ffff88085db97750 =
+0000000000000010 0000000000000000
+avril 04 10:13:37 Colorstock-01 kernel:  ffffffffa2c0438d 0000000000000004 =
+ffff88085db97790 ffff88085db977d0
+avril 04 10:13:37 Colorstock-01 kernel: Call Trace:
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c357b6>] ? xfs_filestr=
+eam_lookup_ag+0x76/0x1b0 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c0438d>] ? xfs_bmap_bt=
+alloc+0x2dd/0x770 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2bfc192>] ? xfs_bmap_se=
+arch_multi_extents+0xa2/0x120 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c03a06>] ? xfs_bmap_la=
+st_extent+0x56/0x80 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c03a56>] ? xfs_bmap_is=
+aeof+0x26/0x90 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c05211>] ? xfs_bmapi_w=
+rite+0x4b1/0xaa0 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c3ca61>] ? xfs_iomap_w=
+rite_allocate+0x131/0x350 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c283d7>] ? xfs_map_blo=
+cks+0x1b7/0x240 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c291f6>] ? xfs_vm_writ=
+epage+0x186/0x5a0 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff8110f1e5>] ? shrink_page=
+_list+0x515/0xa20
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff8110fcf2>] ? shrink_inac=
+tive_list+0x262/0x4f0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff811107d1>] ? shrink_lruv=
+ec+0x521/0x650
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81120153>] ? list_lru_co=
+unt_node+0x13/0x50
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81110941>] ? shrink_zone=
++0x41/0x120
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81111317>] ? balance_pgd=
+at+0x3a7/0x5e0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff811116bc>] ? kswapd+0x16=
+c/0x490
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff810906e0>] ? wait_woken+=
+0x60/0x60
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81111550>] ? balance_pgd=
+at+0x5e0/0x5e0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:13:37 Colorstock-01 kernel: Code: 08 48 8d b8 00 04 00 00 e8 e9=
+ eb fb ff 84 c0 74 09 65 48 ff 04 25 18 f5 00 00 48 83 c4 08 c3 0f 1f 80 00=
+ 00 00 00 48 85 ff 74 3e <f6> 87 98 00 00 00 40 0f 85 fe 00 00 00 41 55 41 =
+54 55 48 8d af=20
+avril 04 10:13:37 Colorstock-01 kernel: RIP  [<ffffffff811614d5>] iput+0x5/=
+0x190
+avril 04 10:13:37 Colorstock-01 kernel:  RSP <ffff88085db975b0>
+avril 04 10:13:37 Colorstock-01 kernel: CR2: 0000000000000240
+avril 04 10:13:37 Colorstock-01 kernel: ---[ end trace 8ff2f50e12a8faae ]---
+avril 04 10:13:37 Colorstock-01 kernel: ------------[ cut here ]------------
+avril 04 10:13:37 Colorstock-01 kernel: WARNING: CPU: 6 PID: 147 at kernel/=
+exit.c:675 do_exit+0x48/0xb50()
+avril 04 10:13:37 Colorstock-01 kernel: Modules linked in: nfsv3 arc4 ecb m=
+d4 nfsv4 cifs fscache dm_mod cfg80211 rfkill nfsd auth_rpcgss oid_registry =
+nfs_acl nfs lockd grace sunrpc af_packet bonding joydev evdev x86_pkg_temp_=
+thermal coretemp kvm_intel kvm crct10dif_pclmul crc32_pclmul crc32c_intel a=
+esni_intel aes_x86_64 lrw gf128mul glue_helper ablk_helper cryptd microcode=
+ pcspkr myri10ge ast ttm drm_kms_helper drm i2c_algo_bit ixgbe ptp pps_core=
+ mdio dca ses enclosure i2c_i801 sg i2c_core lpc_ich mfd_core ipmi_si 8250_=
+fintek ipmi_msghandler rtc_cmos wmi processor thermal_sys acpi_power_meter =
+button md_mod usbhid xhci_pci xhci_hcd ohci_pci ehci_pci ohci_hcd uhci_hcd =
+ehci_hcd uas usb_storage usbcore usb_common fuse ipv6 autofs4 ext4 ext3 xfs=
+ reiserfs crc16 jbd2 jbd aacraid ahci libahci ata_generic libata
+avril 04 10:13:37 Colorstock-01 kernel: CPU: 6 PID: 147 Comm: kswapd0 Taint=
+ed: G      D W      3.18.44-storiq64-i7 #1
+avril 04 10:13:37 Colorstock-01 kernel: Hardware name: Supermicro Super Ser=
+ver/X10DRD-iNT, BIOS 2.0 12/17/2015
+avril 04 10:13:37 Colorstock-01 kernel:  0000000000000086 0000000000000000 =
+ffffffff8144a289 0000000000000007
+avril 04 10:13:37 Colorstock-01 kernel:  0000000000000000 0000000000000009 =
+ffffffff8105b952 0000000000000009
+avril 04 10:13:37 Colorstock-01 kernel:  0000000000000092 ffff88085db97508 =
+0000000000000240 0000000000000092
+avril 04 10:13:37 Colorstock-01 kernel: Call Trace:
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff8144a289>] ? dump_stack+=
+0x5e/0x7a
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff8105b952>] ? warn_slowpa=
+th_common+0x72/0x90
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff8105cc88>] ? do_exit+0x4=
+8/0xb50
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff8144953c>] ? printk+0x4f=
+/0x54
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81017282>] ? oops_end+0x=
+92/0xd0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff8104fee6>] ? no_context+=
+0x106/0x360
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff810505de>] ? __do_page_f=
+ault+0x9e/0x4b0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81385e52>] ? __domain_ma=
+pping+0x1e2/0x3c0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff8138825a>] ? intel_map_s=
+g+0x16a/0x240
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81201fa3>] ? __blk_bios_=
+map_sg+0x1b3/0x3c0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81452f38>] ? page_fault+=
+0x28/0x30
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff811614d5>] ? iput+0x5/0x=
+190
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c357b6>] ? xfs_filestr=
+eam_lookup_ag+0x76/0x1b0 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c0438d>] ? xfs_bmap_bt=
+alloc+0x2dd/0x770 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2bfc192>] ? xfs_bmap_se=
+arch_multi_extents+0xa2/0x120 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c03a06>] ? xfs_bmap_la=
+st_extent+0x56/0x80 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c03a56>] ? xfs_bmap_is=
+aeof+0x26/0x90 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c05211>] ? xfs_bmapi_w=
+rite+0x4b1/0xaa0 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c3ca61>] ? xfs_iomap_w=
+rite_allocate+0x131/0x350 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c283d7>] ? xfs_map_blo=
+cks+0x1b7/0x240 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffffa2c291f6>] ? xfs_vm_writ=
+epage+0x186/0x5a0 [xfs]
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff8110f1e5>] ? shrink_page=
+_list+0x515/0xa20
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff8110fcf2>] ? shrink_inac=
+tive_list+0x262/0x4f0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff811107d1>] ? shrink_lruv=
+ec+0x521/0x650
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81120153>] ? list_lru_co=
+unt_node+0x13/0x50
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81110941>] ? shrink_zone=
++0x41/0x120
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81111317>] ? balance_pgd=
+at+0x3a7/0x5e0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff811116bc>] ? kswapd+0x16=
+c/0x490
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff810906e0>] ? wait_woken+=
+0x60/0x60
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81111550>] ? balance_pgd=
+at+0x5e0/0x5e0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:13:37 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:13:37 Colorstock-01 kernel: ---[ end trace 8ff2f50e12a8faaf ]---
+avril 04 10:14:01 Colorstock-01 CRON[14140]: pam_unix(cron:session): sessio=
+n opened for user munin by (uid=3D0)
+avril 04 10:14:01 Colorstock-01 CRON[14147]: (munin) CMD (if [ -x /usr/shar=
+e/munin/munin-limits ]; then /usr/share/munin/munin-limits --force --contac=
+t nagios --contact old-nagios; fi)
+avril 04 10:14:01 Colorstock-01 CRON[14140]: pam_unix(cron:session): sessio=
+n closed for user munin
+avril 04 10:14:01 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 3 messages.
+avril 04 10:14:09 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 18, t=3D147012 jiffies, g=3D5299726, c=3D529=
+9725, q=3D404660)
+avril 04 10:14:09 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:14:09 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:14:09 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:14:09 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:14:09 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:14:09 Colorstock-01 kernel: Call Trace:
+avril 04 10:14:09 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:14:09 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:14:09 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:14:09 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:14:09 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:14:09 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:14:09 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:14:53 Colorstock-01 rpc.mountd[2170]: authenticated mount reque=
+st from 10.20.45.32:976 for /nas/Colorstock-01/_OUTPUT (/nas/Colorstock-01/=
+_OUTPUT)
+avril 04 10:14:53 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 1 messages.
+avril 04 10:14:53 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.32 for /nas/Colorstock-01 (/): not exported
+avril 04 10:14:53 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.32 for /nas/Colorstock-01 (/): not exported
+avril 04 10:14:53 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.32 for /nas/Colorstock-01 (/): not exported
+avril 04 10:14:53 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.32 for /nas/Colorstock-01 (/): not exported
+avril 04 10:14:53 Colorstock-01 rpc.mountd[2170]: authenticated mount reque=
+st from 10.20.45.32:973 for /nas/Colorstock-01/_INPUT (/nas/Colorstock-01/_=
+INPUT)
+avril 04 10:14:53 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.32 for /nas/Colorstock-01 (/): not exported
+avril 04 10:14:53 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.32 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:01 Colorstock-01 CRON[14156]: pam_unix(cron:session): sessio=
+n opened for user root by (uid=3D0)
+avril 04 10:15:01 Colorstock-01 CRON[14172]: (root) CMD (if [ -x /etc/munin=
+/plugins/apt_all ]; then /etc/munin/plugins/apt_all update 7200 12 >/dev/nu=
+ll; elif [ -x /etc/munin/plugins/apt ]; then /etc/munin/plugins/apt update =
+7200 12 >/dev/null; fi)
+avril 04 10:15:01 Colorstock-01 CRON[14156]: pam_unix(cron:session): sessio=
+n closed for user root
+avril 04 10:15:03 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.32 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:03 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.32 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:12 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 28, t=3D210017 jiffies, g=3D5299726, c=3D529=
+9725, q=3D596353)
+avril 04 10:15:12 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:15:12 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:15:12 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:15:12 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:15:12 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:15:12 Colorstock-01 kernel: Call Trace:
+avril 04 10:15:12 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:15:12 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:15:12 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:15:12 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:15:12 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:15:12 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:15:12 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:15:40 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 12 messages.
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: authenticated mount reque=
+st from 10.20.45.101:1023 for /nas/Colorstock-01/_OUTPUT (/nas/Colorstock-0=
+1/_OUTPUT)
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: authenticated mount reque=
+st from 10.20.45.101:1020 for /nas/Colorstock-01/_INPUT (/nas/Colorstock-01=
+/_INPUT)
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:47 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:59 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:59 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:59 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:15:59 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:16:15 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 0, t=3D273022 jiffies, g=3D5299726, c=3D5299=
+725, q=3D788855)
+avril 04 10:16:15 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 28 messages.
+avril 04 10:16:15 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:16:15 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:16:15 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:16:15 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:16:15 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:16:15 Colorstock-01 kernel: Call Trace:
+avril 04 10:16:15 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:16:15 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:16:15 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:16:15 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:16:15 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:16:15 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:16:15 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:16:48 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:16:48 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 1 messages.
+avril 04 10:16:48 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:16:48 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:16:48 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:17:01 Colorstock-01 CRON[14180]: pam_unix(cron:session): sessio=
+n opened for user root by (uid=3D0)
+avril 04 10:17:18 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 17, t=3D336027 jiffies, g=3D5299726, c=3D529=
+9725, q=3D1028813)
+avril 04 10:17:18 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 4 messages.
+avril 04 10:17:18 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:17:18 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:17:18 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:17:18 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:17:18 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:17:18 Colorstock-01 kernel: Call Trace:
+avril 04 10:17:18 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:17:18 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:17:18 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:17:18 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:17:18 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:17:18 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:17:18 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:18:21 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 23, t=3D399032 jiffies, g=3D5299726, c=3D529=
+9725, q=3D1093083)
+avril 04 10:18:21 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:18:21 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:18:21 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:18:21 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:18:21 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:18:21 Colorstock-01 kernel: Call Trace:
+avril 04 10:18:21 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:18:21 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:18:21 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:18:21 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:18:21 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:18:21 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:18:21 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:18:54 Colorstock-01 rpc.mountd[2170]: authenticated mount reque=
+st from 10.20.92.10:960 for /nas/Colorstock-01/_INPUT (/nas/Colorstock-01/_=
+INPUT)
+avril 04 10:18:54 Colorstock-01 rpc.mountd[2170]: authenticated mount reque=
+st from 10.20.92.10:679 for /nas/Colorstock-01/_OUTPUT (/nas/Colorstock-01/=
+_OUTPUT)
+avril 04 10:18:54 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 2 messages.
+avril 04 10:19:01 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:19:01 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:19:01 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:19:01 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:19:19 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.96.11 for /nas/Colorstock-01 (/): not exported
+avril 04 10:19:19 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.96.11 for /nas/Colorstock-01 (/): not exported
+avril 04 10:19:19 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.96.11 for /nas/Colorstock-01 (/): not exported
+avril 04 10:19:19 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.96.11 for /nas/Colorstock-01 (/): not exported
+avril 04 10:19:24 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 17, t=3D462037 jiffies, g=3D5299726, c=3D529=
+9725, q=3D1155263)
+avril 04 10:19:24 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 8 messages.
+avril 04 10:19:24 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:19:24 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:19:24 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:19:24 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:19:24 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:19:24 Colorstock-01 kernel: Call Trace:
+avril 04 10:19:24 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:19:24 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:19:24 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:19:24 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:19:24 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:19:24 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:19:24 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:19:27 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:19:27 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:19:27 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:19:27 Colorstock-01 rpc.mountd[2170]: refused mount request fro=
+m 10.20.45.101 for /nas/Colorstock-01 (/): not exported
+avril 04 10:20:00 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 4 messages.
+avril 04 10:20:01 Colorstock-01 CRON[14187]: pam_unix(cron:session): sessio=
+n opened for user munin by (uid=3D0)
+avril 04 10:20:01 Colorstock-01 CRON[14188]: pam_unix(cron:session): sessio=
+n opened for user root by (uid=3D0)
+avril 04 10:20:01 Colorstock-01 CRON[14201]: (munin) CMD (if [ -x /usr/bin/=
+munin-cron ]; then /usr/bin/munin-cron; fi)
+avril 04 10:20:27 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 22, t=3D525042 jiffies, g=3D5299726, c=3D529=
+9725, q=3D1160381)
+avril 04 10:20:27 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:20:27 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:20:27 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:20:27 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:20:27 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:20:27 Colorstock-01 kernel: Call Trace:
+avril 04 10:20:27 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:20:27 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:20:27 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:20:27 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:20:27 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:20:27 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:20:27 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:21:00 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 3 messages.
+avril 04 10:21:30 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 22, t=3D588047 jiffies, g=3D5299726, c=3D529=
+9725, q=3D1163160)
+avril 04 10:21:30 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:21:30 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:21:30 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:21:30 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:21:30 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:21:30 Colorstock-01 kernel: Call Trace:
+avril 04 10:21:30 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:21:30 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:21:30 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:21:30 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:21:30 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:21:30 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:21:30 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:22:33 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 17, t=3D651052 jiffies, g=3D5299726, c=3D529=
+9725, q=3D1199524)
+avril 04 10:22:33 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:22:33 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:22:33 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:22:33 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:22:33 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:22:33 Colorstock-01 kernel: Call Trace:
+avril 04 10:22:33 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:22:33 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:22:33 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:22:33 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:22:33 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:22:33 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:22:33 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:23:28 Colorstock-01 rpc.mountd[2170]: authenticated unmount req=
+uest from 10.20.96.11:953 for /nas/Colorstock-01/_OUTPUT (/nas/Colorstock-0=
+1/_OUTPUT)
+avril 04 10:23:28 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 1 messages.
+avril 04 10:23:28 Colorstock-01 rpc.mountd[2170]: authenticated unmount req=
+uest from 10.20.96.11:952 for /nas/Colorstock-01/_INPUT (/nas/Colorstock-01=
+/_INPUT)
+avril 04 10:23:36 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 1, t=3D714057 jiffies, g=3D5299726, c=3D5299=
+725, q=3D1204173)
+avril 04 10:23:36 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:23:36 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:23:36 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:23:36 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:23:36 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:23:36 Colorstock-01 kernel: Call Trace:
+avril 04 10:23:36 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:23:36 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:23:36 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:23:36 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:23:36 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:23:36 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:23:36 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:24:30 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 1 messages.
+avril 04 10:24:39 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 1, t=3D777062 jiffies, g=3D5299726, c=3D5299=
+725, q=3D1211887)
+avril 04 10:24:39 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:24:39 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:24:39 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:24:39 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:24:39 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:24:39 Colorstock-01 kernel: Call Trace:
+avril 04 10:24:39 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:24:39 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:24:39 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:24:39 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:24:39 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:24:39 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:24:39 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:25:42 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 17, t=3D840067 jiffies, g=3D5299726, c=3D529=
+9725, q=3D1226873)
+avril 04 10:25:42 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:25:42 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:25:42 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:25:42 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:25:42 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:25:42 Colorstock-01 kernel: Call Trace:
+avril 04 10:25:42 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:25:42 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:25:42 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:25:42 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:25:42 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:25:42 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:25:42 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:26:01 Colorstock-01 systemd[1]: systemd-logind.service watchdog=
+ timeout (limit 1min)!
+avril 04 10:26:01 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 1 messages.
+avril 04 10:26:45 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 1, t=3D903072 jiffies, g=3D5299726, c=3D5299=
+725, q=3D1292066)
+avril 04 10:26:45 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:26:45 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:26:45 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:26:45 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:26:45 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:26:45 Colorstock-01 kernel: Call Trace:
+avril 04 10:26:45 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:26:45 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:26:45 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:26:45 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:26:45 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:26:45 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:26:45 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:27:31 Colorstock-01 systemd[1]: systemd-logind.service stop-sig=
+term timed out. Killing.
+avril 04 10:27:31 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 1 messages.
+avril 04 10:27:48 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 17, t=3D966077 jiffies, g=3D5299726, c=3D529=
+9725, q=3D1299968)
+avril 04 10:27:48 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:27:48 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:27:48 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:27:48 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:27:48 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:27:48 Colorstock-01 kernel: Call Trace:
+avril 04 10:27:48 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:27:48 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:27:48 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:27:48 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:27:48 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:27:48 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:27:48 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:28:51 Colorstock-01 kernel: INFO: rcu_sched detected stalls on =
+CPUs/tasks: { 12} (detected by 7, t=3D1029082 jiffies, g=3D5299726, c=3D529=
+9725, q=3D1353586)
+avril 04 10:28:51 Colorstock-01 kernel: Task dump for CPU 12:
+avril 04 10:28:51 Colorstock-01 kernel: kworker/u64:0   D ffff880078271370 =
+    0  2375      2 0x00000008
+avril 04 10:28:51 Colorstock-01 kernel:  ffff88083c143f40 ffff88087be9ac00 =
+0000000000000000 ffff88087be9bb00
+avril 04 10:28:51 Colorstock-01 kernel:  0000000000000800 ffffffff81071b95 =
+0000000000012c40 000000005685a820
+avril 04 10:28:51 Colorstock-01 kernel:  ffff88087be9ac00 ffff88083c143f40 =
+ffff88083c143f70 ffff88087be9ac00
+avril 04 10:28:51 Colorstock-01 kernel: Call Trace:
+avril 04 10:28:51 Colorstock-01 kernel:  [<ffffffff81071b95>] ? process_one=
+_work+0x155/0x440
+avril 04 10:28:51 Colorstock-01 kernel:  [<ffffffff81072543>] ? worker_thre=
+ad+0x63/0x490
+avril 04 10:28:51 Colorstock-01 kernel:  [<ffffffff810724e0>] ? rescuer_thr=
+ead+0x290/0x290
+avril 04 10:28:51 Colorstock-01 kernel:  [<ffffffff810769ee>] ? kthread+0xc=
+e/0xf0
+avril 04 10:28:51 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:28:51 Colorstock-01 kernel:  [<ffffffff81450fd8>] ? ret_from_fo=
+rk+0x58/0x90
+avril 04 10:28:51 Colorstock-01 kernel:  [<ffffffff81076920>] ? kthread_cre=
+ate_on_node+0x180/0x180
+avril 04 10:29:01 Colorstock-01 systemd[1]: systemd-logind.service still ar=
+ound after SIGKILL. Ignoring.
+avril 04 10:29:01 Colorstock-01 systemd-journal[1218]: Forwarding to syslog=
+ missed 1 messages.
+-- Reboot --
 
- (2) Optionally compares the timestamps to see that they're sensibly
-     ordered with respect to each other.
 
- (3) Optionally compares the timestamps to those of a reference file.
 
- (4) Optionally compares the timestamps to a specified time.
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
- (5) Optionally compares selected stats to values specified on the command
-     line.
+--Sig_/MSrwHJn_z3j.G7rivzrpzV7
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
 
- (6) Optionally compares all the stats to those of a reference file,
-     requiring them to be the same (hard link checking).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-For example:
+iEYEARECAAYFAljjmUsACgkQX3jQXNUicVYwZACfeymP8Zd/MWRb8y/sj1DkAjkM
+iMAAoJcvUF7w4TvSypfkyYfH8tf413RT
+=cPQp
+-----END PGP SIGNATURE-----
 
-	./src/stat_test /dev/null \
-	       stx_type=char \
-	       stx_rdev_major=3 \
-	       stx_rdev_minor=8 \
-	       stx_nlink=1 \
-	       ref=/dev/zero \
-	       ts=B,b
-
-The test program can also be given a --check-statx parameter to give a
-quick exit code-based answer on whether statx() exists within the kernel.
-
-[*] Note that it proved much easier to do this in C than trying to do it in
-    shell script and trying parsing the output of xfs_io.  Using xfs_io has
-    other pitfalls also: it wants to *open* the file, even if the file is
-    not an appropriate type for this or does not grant permission to do so.
-    I can get around this by opening O_PATH, but then xfs_io fails to
-    handle XFS files because it wants to issue ioctls on every fd it opens.
-
-Signed-off-by: David Howells <dhowells@redhat.com>
----
-
- .gitignore            |    1 
- common/rc             |    6 
- src/Makefile          |    2 
- src/stat_test.c       |  718 +++++++++++++++++++++++++++++++++++++++++++++++++
- src/statx.h           |  166 +++++++++++
- tests/generic/420     |  181 ++++++++++++
- tests/generic/420.out |   11 +
- tests/generic/group   |    1 
- 8 files changed, 1085 insertions(+), 1 deletion(-)
- create mode 100644 src/stat_test.c
- create mode 100644 src/statx.h
- create mode 100755 tests/generic/420
- create mode 100644 tests/generic/420.out
-
-diff --git a/.gitignore b/.gitignore
-index 8a7c052..0336555 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -93,6 +93,7 @@
- /src/seek_copy_test
- /src/seek_sanity_test
- /src/stale_handle
-+/src/stat_test
- /src/t_access_root
- /src/t_dir_offset
- /src/t_dir_offset2
-diff --git a/common/rc b/common/rc
-index e1ab2c6..1b61f9d 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3414,6 +3414,12 @@ _require_fs_sysfs()
- 	fi
- }
- 
-+_require_statx()
-+{
-+	$here/src/stat_test --check-statx ||
-+	_notrun "This test requires the statx system call"
-+}
-+
- # Write "content" into /sys/fs/$FSTYP/$DEV/$ATTR
- #
- # All arguments are necessary, and in this order:
-diff --git a/src/Makefile b/src/Makefile
-index 716c178..e62d7a9 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -22,7 +22,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
- 	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
- 	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
--	dio-invalidate-cache
-+	dio-invalidate-cache stat_test
- 
- SUBDIRS =
- 
-diff --git a/src/stat_test.c b/src/stat_test.c
-new file mode 100644
-index 0000000..cb3d4f4
---- /dev/null
-+++ b/src/stat_test.c
-@@ -0,0 +1,718 @@
-+/* Perform various tests on stat and statx output
-+ *
-+ * Copyright (C) 2017 Red Hat, Inc. All Rights Reserved.
-+ * Written by David Howells (dhowells@redhat.com)
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public Licence
-+ * as published by the Free Software Foundation; either version
-+ * 2 of the Licence, or (at your option) any later version.
-+ */
-+
-+#include <stdarg.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <stdbool.h>
-+#include <string.h>
-+#include <unistd.h>
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include "statx.h"
-+
-+static bool failed = false;
-+static bool is_verbose = 0;
-+static const char *prog;
-+static const char *testfile;
-+
-+/* Reference data */
-+static struct statx ref;
-+static struct statx_timestamp origin;
-+static bool ref_set, origin_set;
-+
-+/*
-+ * Field IDs, sorted for bsearch() on field_list[].
-+ */
-+enum fields {
-+	stx_atime_tv_nsec,
-+	stx_atime_tv_sec,
-+	stx_attributes,
-+	stx_blksize,
-+	stx_blocks,
-+	stx_btime_tv_nsec,
-+	stx_btime_tv_sec,
-+	stx_ctime_tv_nsec,
-+	stx_ctime_tv_sec,
-+	stx_dev_major,
-+	stx_dev_minor,
-+	stx_gid,
-+	stx_ino,
-+	stx_mask,
-+	stx_mode,
-+	stx_mtime_tv_nsec,
-+	stx_mtime_tv_sec,
-+	stx_nlink,
-+	stx_rdev_major,
-+	stx_rdev_minor,
-+	stx_size,
-+	stx_type,
-+	stx_uid,
-+	nr__fields
-+};
-+
-+struct field {
-+	const char *name;		/* Name on command line */
-+	unsigned int mask_bit;
-+};
-+
-+/*
-+ * List of fields, sorted for bsearch().
-+ */
-+static const struct field field_list[nr__fields] = {
-+	[stx_atime_tv_nsec]	= { "stx_atime.tv_nsec",	STATX_ATIME },
-+	[stx_atime_tv_sec]	= { "stx_atime.tv_sec",		STATX_ATIME },
-+	[stx_attributes]	= { "stx_attributes",		0 },
-+	[stx_blksize]		= { "stx_blksize",		0 },
-+	[stx_blocks]		= { "stx_blocks",		STATX_BLOCKS },
-+	[stx_btime_tv_nsec]	= { "stx_btime.tv_nsec",	STATX_BTIME },
-+	[stx_btime_tv_sec]	= { "stx_btime.tv_sec",		STATX_BTIME },
-+	[stx_ctime_tv_nsec]	= { "stx_ctime.tv_nsec",	STATX_CTIME },
-+	[stx_ctime_tv_sec]	= { "stx_ctime.tv_sec",		STATX_CTIME },
-+	[stx_dev_major]		= { "stx_dev_major",		0 },
-+	[stx_dev_minor]		= { "stx_dev_minor",		0 },
-+	[stx_gid]		= { "stx_gid",			STATX_GID },
-+	[stx_ino]		= { "stx_ino",			STATX_INO },
-+	[stx_mask]		= { "stx_mask",			0 },
-+	[stx_mode]		= { "stx_mode",			STATX_MODE },
-+	[stx_mtime_tv_nsec]	= { "stx_mtime.tv_nsec",	STATX_MTIME },
-+	[stx_mtime_tv_sec]	= { "stx_mtime.tv_sec",		STATX_MTIME },
-+	[stx_nlink]		= { "stx_nlink",		STATX_NLINK },
-+	[stx_rdev_major]	= { "stx_rdev_major",		0 },
-+	[stx_rdev_minor]	= { "stx_rdev_minor",		0 },
-+	[stx_size]		= { "stx_size",			STATX_SIZE },
-+	[stx_type]		= { "stx_type",			STATX_TYPE },
-+	[stx_uid]		= { "stx_uid",			STATX_UID },
-+};
-+
-+static int field_cmp(const void *_key, const void *_p)
-+{
-+	const char *key = _key;
-+	const struct field *p = _p;
-+	return strcmp(key, p->name);
-+}
-+
-+struct file_type {
-+	const char *name;
-+	mode_t mode;
-+};
-+
-+/*
-+ * List of file types.
-+ */
-+static const struct file_type file_types[] = {
-+	{ "fifo",	S_IFIFO },
-+	{ "char",	S_IFCHR },
-+	{ "dir",	S_IFDIR },
-+	{ "block",	S_IFBLK },
-+	{ "file",	S_IFREG },
-+	{ "sym",	S_IFLNK },
-+	{ "sock",	S_IFSOCK },
-+	{ NULL }
-+};
-+
-+static __attribute__((noreturn))
-+void format(void)
-+{
-+	fprintf(stderr, "usage: %s --check-statx\n", prog);
-+	fprintf(stderr, "usage: %s [-v] [-m<mask>] <testfile> [checks]\n", prog);
-+	fprintf(stderr, "\t<mask> can be basic, all or a number; all is the default\n");
-+	fprintf(stderr, "checks is a list of zero or more of:\n");
-+	fprintf(stderr, "\tcmp_ref -- check that the reference file has identical stats\n");
-+	fprintf(stderr, "\tref=<file> -- get reference stats from file\n");
-+	fprintf(stderr, "\tstx_<field>=<val> -- statx field value check\n");
-+	fprintf(stderr, "\tts=<a>,<b> -- timestamp a <= b, where a and b can each be one of:\n");
-+	fprintf(stderr, "\t\t[abcm] -- the timestamps from testfile\n");
-+	fprintf(stderr, "\t\t[ABCM] -- the timestamps from the reference file\n");
-+	fprintf(stderr, "\t\t0 -- the origin timestamp\n");
-+	fprintf(stderr, "\tts_origin=<sec>.<nsec> -- set the origin timestamp\n");
-+	fprintf(stderr, "\tts_order -- check the timestamp order\n");
-+	fprintf(stderr, "\t\t(for stx_type, fifo char dir, block, file, sym, sock can be used)\n");
-+	exit(2);
-+}
-+
-+static __attribute__((noreturn, format(printf, 1, 2)))
-+void bad_arg(const char *fmt, ...)
-+{
-+	va_list va;
-+
-+	va_start(va, fmt);
-+	vfprintf(stderr, fmt, va);
-+	va_end(va);
-+	exit(2);
-+}
-+
-+static __attribute__((format(printf, 1, 2)))
-+void verbose(const char *fmt, ...)
-+{
-+	va_list va;
-+
-+	if (is_verbose) {
-+		va_start(va, fmt);
-+		fputs(" - ", stdout);
-+		vprintf(fmt, va);
-+		va_end(va);
-+	}
-+}
-+
-+static __attribute__((format(printf, 2, 3)))
-+void check(bool good, const char *fmt, ...)
-+{
-+	va_list va;
-+
-+	if (!good) {
-+		va_start(va, fmt);
-+		fputs("[!] ", stdout);
-+		vprintf(fmt, va);
-+		va_end(va);
-+		failed = true;
-+	}
-+}
-+
-+/*
-+ * Compare the contents of a statx struct with that of a stat struct and check
-+ * that they're the same.
-+ */
-+static void cmp_statx(const struct statx *stx, const struct stat *st)
-+{
-+#define cmp(fmt, x)						      \
-+	do {							      \
-+		check(stx->stx_##x == st->st_##x,		      \
-+		      "stat.%s differs, "fmt" != "fmt"\n",	      \
-+		      #x,					      \
-+		      (unsigned long long)stx->stx_##x,		      \
-+		      (unsigned long long)st->st_##x);		      \
-+	} while (0)
-+
-+	cmp("%llu", blksize);
-+	cmp("%llu", nlink);
-+	cmp("%llu", uid);
-+	cmp("%llu", gid);
-+	cmp("%llo", mode);
-+	cmp("%llu", ino);
-+	cmp("%llu", size);
-+	cmp("%llu", blocks);
-+
-+#define devcmp(x) \
-+	do {								\
-+		check(stx->stx_##x##_major == major(st->st_##x),	\
-+		      "stat.%s.major differs, %u != %u\n",		\
-+		      #x,						\
-+		      stx->stx_##x##_major,				\
-+		      major(st->st_##x));				\
-+		check(stx->stx_##x##_minor == minor(st->st_##x),	\
-+		      "stat.%s.minor differs, %u != %u\n",		\
-+		      #x,						\
-+		      stx->stx_##x##_minor,				\
-+		      minor(st->st_##x));				\
-+	} while (0)
-+
-+	devcmp(dev);
-+	devcmp(rdev);
-+
-+#define timecmp(x) \
-+	do {								\
-+		check(stx->stx_##x##time.tv_sec == st->st_##x##tim.tv_sec, \
-+		      "stat.%stime.tv_sec differs, %lld != %lld\n",	\
-+		      #x,						\
-+		      (long long)stx->stx_##x##time.tv_sec,		\
-+		      (long long)st->st_##x##tim.tv_sec);		\
-+		check(stx->stx_##x##time.tv_nsec == st->st_##x##tim.tv_nsec, \
-+		      "stat.%stime.tv_nsec differs, %lld != %lld\n",	\
-+		      #x,						\
-+		      (long long)stx->stx_##x##time.tv_nsec,		\
-+		      (long long)st->st_##x##tim.tv_nsec);		\
-+	} while (0)
-+
-+	timecmp(a);
-+	timecmp(c);
-+	timecmp(m);
-+}
-+
-+/*
-+ * Set origin timestamp from a "<sec>.<nsec>" string.
-+ */
-+static void set_origin_timestamp(const char *arg)
-+{
-+	long long sec;
-+	int nsec;
-+
-+	switch (sscanf(arg, "%lld.%d", &sec, &nsec)) {
-+	case 0:
-+		bad_arg("ts_origin= missing seconds value");
-+	case 1:
-+		bad_arg("ts_origin= missing nanoseconds value");
-+	default:
-+		origin.tv_sec = sec;
-+		origin.tv_nsec = nsec;
-+		origin_set = true;
-+		break;
-+	}
-+}
-+
-+/*
-+ * Get reference stats from a file.
-+ */
-+static void get_reference(const char *file)
-+{
-+	int ret;
-+
-+	if (!*file)
-+		bad_arg("ref= requires a filename\n");
-+
-+	memset(&ref, 0xfb, sizeof(ref));
-+	ret = xfstests_statx(AT_FDCWD, file, AT_SYMLINK_NOFOLLOW,
-+			     STATX_ATIME | STATX_BTIME | STATX_CTIME | STATX_MTIME,
-+			     &ref);
-+	switch (ret) {
-+	case 0:
-+		ref_set = true;
-+		break;
-+	case -1:
-+		perror(file);
-+		exit(1);
-+	default:
-+		fprintf(stderr, "Unexpected return %d from statx()\n", ret);
-+		exit(1);
-+	}
-+}
-+
-+/*
-+ * Check a pair of timestamps.
-+ */
-+static void check_earlier(const struct statx_timestamp *A,
-+			  const struct statx_timestamp *B,
-+			  const char *A_name,
-+			  const char *B_name)
-+{
-+
-+	check((B->tv_sec - A->tv_sec) >= 0,
-+	      "%s.sec is before %s.sec (%lld < %lld)\n",
-+	      B_name, A_name, B->tv_sec, A->tv_sec);
-+
-+	check((B->tv_nsec - A->tv_nsec) >= 0,
-+	      "%s.nsec is before %s.nsec (%d < %d)\n",
-+	      B_name, A_name, B->tv_nsec, A->tv_nsec);
-+}
-+
-+/*
-+ * Check that the timestamps are reasonably ordered.
-+ *
-+ * We require the following to hold true immediately after creation if the
-+ * relevant timestamps exist on the filesystem:
-+ *
-+ *	btime <= atime
-+ *	btime <= mtime <= ctime
-+ */
-+static void check_timestamp_order(const struct statx *stx)
-+{
-+	if ((stx->stx_mask & (STATX_BTIME | STATX_ATIME)) == (STATX_BTIME | STATX_ATIME))
-+		check_earlier(&stx->stx_btime, &stx->stx_atime, "btime", "atime");
-+	if ((stx->stx_mask & (STATX_BTIME | STATX_MTIME)) == (STATX_BTIME | STATX_MTIME))
-+		check_earlier(&stx->stx_btime, &stx->stx_mtime, "btime", "mtime");
-+	if ((stx->stx_mask & (STATX_BTIME | STATX_CTIME)) == (STATX_BTIME | STATX_CTIME))
-+		check_earlier(&stx->stx_btime, &stx->stx_ctime, "btime", "ctime");
-+	if ((stx->stx_mask & (STATX_MTIME | STATX_CTIME)) == (STATX_MTIME | STATX_CTIME))
-+		check_earlier(&stx->stx_mtime, &stx->stx_ctime, "mtime", "ctime");
-+}
-+
-+/*
-+ * Check that the second timestamp is the same as or after the first timestamp.
-+ */
-+static void check_timestamp(const struct statx *stx, char *arg)
-+{
-+	const struct statx_timestamp *a, *b;
-+	const char *an, *bn;
-+	unsigned int mask;
-+
-+	if (strlen(arg) != 3 || arg[1] != ',')
-+		bad_arg("ts= requires <a>,<b>\n");
-+
-+	switch (arg[0]) {
-+	case 'a': a = &stx->stx_atime;	an = "atime";	mask = STATX_ATIME; break;
-+	case 'b': a = &stx->stx_btime;	an = "btime";	mask = STATX_BTIME; break;
-+	case 'c': a = &stx->stx_ctime;	an = "ctime";	mask = STATX_CTIME; break;
-+	case 'm': a = &stx->stx_mtime;	an = "mtime";	mask = STATX_MTIME; break;
-+	case 'A': a = &ref.stx_atime;	an = "ref_a";	mask = STATX_ATIME; break;
-+	case 'B': a = &ref.stx_btime;	an = "ref_b";	mask = STATX_BTIME; break;
-+	case 'C': a = &ref.stx_ctime;	an = "ref_c";	mask = STATX_CTIME; break;
-+	case 'M': a = &ref.stx_mtime;	an = "ref_m";	mask = STATX_MTIME; break;
-+	case '0': a = &origin;		an = "origin";	mask = 0; break;
-+	default:
-+		bad_arg("ts= timestamp '%c' not supported\n", arg[0]);
-+	}
-+
-+	if (arg[0] == '0') {
-+		if (!origin_set)
-+			bad_arg("ts= timestamp '%c' requires origin= first\n", arg[0]);
-+	} else if (arg[0] <= 'Z') {
-+		if (!ref_set)
-+			bad_arg("ts= timestamp '%c' requires ref= first\n", arg[0]);
-+		if (!(ref.stx_mask & mask))
-+			return;
-+	} else {
-+		if (!(stx->stx_mask & mask))
-+			return;
-+	}
-+
-+	switch (arg[2]) {
-+	case 'a': b = &stx->stx_atime;	bn = "atime";	mask = STATX_ATIME; break;
-+	case 'b': b = &stx->stx_btime;	bn = "btime";	mask = STATX_BTIME; break;
-+	case 'c': b = &stx->stx_ctime;	bn = "ctime";	mask = STATX_CTIME; break;
-+	case 'm': b = &stx->stx_mtime;	bn = "mtime";	mask = STATX_MTIME; break;
-+	case 'A': b = &ref.stx_atime;	bn = "ref_a";	mask = STATX_ATIME; break;
-+	case 'B': b = &ref.stx_btime;	bn = "ref_b";	mask = STATX_BTIME; break;
-+	case 'C': b = &ref.stx_ctime;	bn = "ref_c";	mask = STATX_CTIME; break;
-+	case 'M': b = &ref.stx_mtime;	bn = "ref_m";	mask = STATX_MTIME; break;
-+	case '0': b = &origin;		bn = "origin";	mask = 0; break;
-+	default:
-+		bad_arg("ts= timestamp '%c' not supported\n", arg[2]);
-+	}
-+
-+	if (arg[2] == '0') {
-+		if (!origin_set)
-+			bad_arg("ts= timestamp '%c' requires origin= first\n", arg[0]);
-+	} else if (arg[2] <= 'Z') {
-+		if (!ref_set)
-+			bad_arg("ts= timestamp '%c' requires ref= first\n", arg[2]);
-+		if (!(ref.stx_mask & mask))
-+			return;
-+	} else {
-+		if (!(stx->stx_mask & mask))
-+			return;
-+	}
-+
-+	verbose("check %s <= %s\n", an, bn);
-+	check_earlier(a, b, an, bn);
-+}
-+
-+/*
-+ * Compare to reference file.
-+ */
-+static void cmp_ref(const struct statx *stx, unsigned int mask)
-+{
-+#undef cmp
-+#define cmp(fmt, x)							\
-+	do {								\
-+		check(stx->x == ref.x,					\
-+		      "attr '%s' differs from ref file, "fmt" != "fmt"\n", \
-+		      #x,						\
-+		      (unsigned long long)stx->x,			\
-+		      (unsigned long long)ref.x);			\
-+	} while (0)
-+
-+	cmp("%llx", stx_mask);
-+	cmp("%llx", stx_attributes);
-+	cmp("%llu", stx_blksize);
-+	cmp("%llu", stx_attributes);
-+	cmp("%llu", stx_nlink);
-+	cmp("%llu", stx_uid);
-+	cmp("%llu", stx_gid);
-+	cmp("%llo", stx_mode);
-+	cmp("%llu", stx_ino);
-+	cmp("%llu", stx_size);
-+	cmp("%llu", stx_blocks);
-+	cmp("%lld", stx_atime.tv_sec);
-+	cmp("%lld", stx_atime.tv_nsec);
-+	cmp("%lld", stx_btime.tv_sec);
-+	cmp("%lld", stx_btime.tv_nsec);
-+	cmp("%lld", stx_ctime.tv_sec);
-+	cmp("%lld", stx_ctime.tv_nsec);
-+	cmp("%lld", stx_mtime.tv_sec);
-+	cmp("%lld", stx_mtime.tv_nsec);
-+	cmp("%llu", stx_rdev_major);
-+	cmp("%llu", stx_rdev_minor);
-+	cmp("%llu", stx_dev_major);
-+	cmp("%llu", stx_dev_minor);
-+}
-+
-+/*
-+ * Check an field restriction.  Specified on the command line as a key=val pair
-+ * in the checks section.  For instance:
-+ *
-+ *	stx_type=char
-+ *	stx_mode=0644
-+ */
-+static void check_field(const struct statx *stx, char *arg)
-+{
-+	const struct file_type *type;
-+	const struct field *field;
-+	unsigned long long ucheck, uval = 0;
-+	long long scheck, sval = 0;
-+	char *key, *val, *p;
-+
-+	verbose("check %s\n", arg);
-+
-+	key = arg;
-+	val = strchr(key, '=');
-+	if (!val || !val[1])
-+		bad_arg("%s check requires value\n", key);
-+	*(val++) = 0;
-+
-+	field = bsearch(key, field_list, nr__fields, sizeof(*field), field_cmp);
-+	if (!field)
-+		bad_arg("Field '%s' not supported\n", key);
-+
-+	/* Read the stat information specified by the key. */
-+	switch ((enum fields)(field - field_list)) {
-+	case stx_mask:		uval = stx->stx_mask;		break;
-+	case stx_blksize:	uval = stx->stx_blksize;	break;
-+	case stx_attributes:	uval = stx->stx_attributes;	break;
-+	case stx_nlink:		uval = stx->stx_nlink;		break;
-+	case stx_uid:		uval = stx->stx_uid;		break;
-+	case stx_gid:		uval = stx->stx_gid;		break;
-+	case stx_type:		uval = stx->stx_mode & ~07777;	break;
-+	case stx_mode:		uval = stx->stx_mode & 07777;	break;
-+	case stx_ino:		uval = stx->stx_ino;		break;
-+	case stx_size:		uval = stx->stx_size;		break;
-+	case stx_blocks:	uval = stx->stx_blocks;		break;
-+	case stx_rdev_major:	uval = stx->stx_rdev_major;	break;
-+	case stx_rdev_minor:	uval = stx->stx_rdev_minor;	break;
-+	case stx_dev_major:	uval = stx->stx_dev_major;	break;
-+	case stx_dev_minor:	uval = stx->stx_dev_minor;	break;
-+
-+	case stx_atime_tv_sec:	sval = stx->stx_atime.tv_sec;	break;
-+	case stx_atime_tv_nsec:	sval = stx->stx_atime.tv_nsec;	break;
-+	case stx_btime_tv_sec:	sval = stx->stx_btime.tv_sec;	break;
-+	case stx_btime_tv_nsec:	sval = stx->stx_btime.tv_nsec;	break;
-+	case stx_ctime_tv_sec:	sval = stx->stx_ctime.tv_sec;	break;
-+	case stx_ctime_tv_nsec:	sval = stx->stx_ctime.tv_nsec;	break;
-+	case stx_mtime_tv_sec:	sval = stx->stx_mtime.tv_sec;	break;
-+	case stx_mtime_tv_nsec:	sval = stx->stx_mtime.tv_nsec;	break;
-+	default:
-+		break;
-+	}
-+
-+	/* Parse the specified value as signed or unsigned as
-+	 * appropriate and compare to the stat information.
-+	 */
-+	switch ((enum fields)(field - field_list)) {
-+	case stx_mask:
-+	case stx_attributes:
-+		ucheck = strtoull(val, &p, 0);
-+		if (*p)
-+			bad_arg("Field '%s' requires unsigned integer\n", key);
-+		check(uval == ucheck,
-+		      "%s differs, 0x%llx != 0x%llx\n", key, uval, ucheck);
-+		break;
-+
-+	case stx_type:
-+		for (type = file_types; type->name; type++) {
-+			if (strcmp(type->name, val) == 0) {
-+				ucheck = type->mode;
-+				goto octal_check;
-+			}
-+		}
-+
-+		/* fall through */
-+
-+	case stx_mode:
-+		ucheck = strtoull(val, &p, 0);
-+		if (*p)
-+			bad_arg("Field '%s' requires unsigned integer\n", key);
-+	octal_check:
-+		check(uval == ucheck,
-+		      "%s differs, 0%llo != 0%llo\n", key, uval, ucheck);
-+		break;
-+
-+	case stx_blksize:
-+	case stx_nlink:
-+	case stx_uid:
-+	case stx_gid:
-+	case stx_ino:
-+	case stx_size:
-+	case stx_blocks:
-+	case stx_rdev_major:
-+	case stx_rdev_minor:
-+	case stx_dev_major:
-+	case stx_dev_minor:
-+		ucheck = strtoull(val, &p, 0);
-+		if (*p)
-+			bad_arg("Field '%s' requires unsigned integer\n", key);
-+		check(uval == ucheck,
-+		      "%s differs, %llu != %llu\n", key, uval, ucheck);
-+		break;
-+
-+	case stx_atime_tv_sec:
-+	case stx_atime_tv_nsec:
-+	case stx_btime_tv_sec:
-+	case stx_btime_tv_nsec:
-+	case stx_ctime_tv_sec:
-+	case stx_ctime_tv_nsec:
-+	case stx_mtime_tv_sec:
-+	case stx_mtime_tv_nsec:
-+		scheck = strtoll(val, &p, 0);
-+		if (*p)
-+			bad_arg("Field '%s' requires integer\n", key);
-+		check(sval == scheck,
-+		      "%s differs, %lld != %lld\n", key, sval, scheck);
-+		break;
-+
-+	default:
-+		break;
-+	}
-+}
-+
-+/*
-+ * Do the testing.
-+ */
-+int main(int argc, char **argv)
-+{
-+	struct statx stx;
-+	struct stat st;
-+	unsigned int mask = STATX_ALL;
-+	unsigned int atflags = AT_STATX_SYNC_AS_STAT;
-+	char *p;
-+	int c, ret;
-+
-+	if (argc == 2 && strcmp(argv[1], "--check-statx") == 0) {
-+		errno = 0;
-+		return (xfstests_statx(AT_FDCWD, "/", 0, 0, &stx) == -1 &&
-+			errno == ENOSYS) ? 1 : 0;
-+	}
-+
-+	prog = argv[0];
-+	while (c = getopt(argc, argv, "+DFm:v"),
-+	       c != -1
-+	       ) {
-+		switch (c) {
-+		case 'F':
-+			atflags &= ~AT_STATX_SYNC_TYPE;
-+			atflags |= AT_STATX_FORCE_SYNC;
-+			break;
-+		case 'D':
-+			atflags &= ~AT_STATX_SYNC_TYPE;
-+			atflags |= AT_STATX_DONT_SYNC;
-+			break;
-+		case 'm':
-+			if (strcmp(optarg, "basic") == 0) {
-+				mask = STATX_BASIC_STATS;
-+			} else if (strcmp(optarg, "all") == 0) {
-+				mask = STATX_ALL;
-+			} else {
-+				mask = strtoul(optarg, &p, 0);
-+				if (*p)
-+					format();
-+			}
-+			break;
-+		case 'v':
-+			is_verbose = 1;
-+			break;
-+		default:
-+			format();
-+		}
-+	}
-+
-+	argc -= optind;
-+	argv += optind;
-+	if (argc < 1)
-+		format();
-+	testfile = argv[0];
-+	argv += 1;
-+
-+	/* Gather the stats.  We want both statx and stat so that we can
-+	 * compare what's in the buffers.
-+	 */
-+	verbose("call statx %s\n", testfile);
-+	memset(&stx, 0xfb, sizeof(stx));
-+	ret = xfstests_statx(AT_FDCWD, testfile, atflags | AT_SYMLINK_NOFOLLOW,
-+			     mask, &stx);
-+	switch (ret) {
-+	case 0:
-+		break;
-+	case -1:
-+		perror(testfile);
-+		exit(1);
-+	default:
-+		fprintf(stderr, "Unexpected return %d from statx()\n", ret);
-+		exit(1);
-+	}
-+
-+	verbose("call stat %s\n", testfile);
-+	ret = fstatat(AT_FDCWD, testfile, &st, AT_SYMLINK_NOFOLLOW);
-+	switch (ret) {
-+	case 0:
-+		break;
-+	case -1:
-+		perror(testfile);
-+		exit(1);
-+	default:
-+		fprintf(stderr, "Unexpected return %d from stat()\n", ret);
-+		exit(1);
-+	}
-+
-+	verbose("compare statx and stat\n");
-+	cmp_statx(&stx, &st);
-+
-+	/* Display the available timestamps */
-+	verbose("begin time %llu.%09u\n", origin.tv_sec, origin.tv_nsec);
-+	if (stx.stx_mask & STATX_BTIME)
-+		verbose("     btime %llu.%09u\n", stx.stx_btime.tv_sec, stx.stx_btime.tv_nsec);
-+	if (stx.stx_mask & STATX_ATIME)
-+		verbose("     atime %llu.%09u\n", stx.stx_atime.tv_sec, stx.stx_atime.tv_nsec);
-+	if (stx.stx_mask & STATX_MTIME)
-+		verbose("     mtime %llu.%09u\n", stx.stx_mtime.tv_sec, stx.stx_mtime.tv_nsec);
-+	if (stx.stx_mask & STATX_CTIME)
-+		verbose("     ctime %llu.%09u\n", stx.stx_ctime.tv_sec, stx.stx_ctime.tv_nsec);
-+
-+	/* Handle additional checks the user specified */
-+	for (; *argv; argv++) {
-+		char *arg = *argv;
-+
-+		if (strcmp("cmp_ref", arg) == 0) {
-+			/* cmp_ref - check ref file has same stats */
-+			cmp_ref(&stx, mask);
-+			continue;
-+		}
-+
-+		if (strncmp(arg, "stx_", 4) == 0) {
-+			/* stx_<field>=<n> - check field set to n */
-+			check_field(&stx, *argv);
-+			continue;
-+		}
-+
-+		if (strncmp("ref=", arg, 4) == 0) {
-+			/* ref=<file> - set reference stats from file */
-+			get_reference(arg + 4);
-+			continue;
-+		}
-+
-+		if (strcmp("ts_order", arg) == 0) {
-+			/* ts_order - check timestamp order */
-+			check_timestamp_order(&stx);
-+			continue;
-+		}
-+
-+		if (strncmp("ts_origin=", arg, 10) == 0) {
-+			/* ts_origin=<sec>.<nsec> - set origin timestamp */
-+			set_origin_timestamp(arg + 10);
-+			continue;
-+		}
-+
-+		if (strncmp("ts=", arg, 3) == 0) {
-+			/* ts=<a>,<b> - check timestamp b is same as a or after */
-+			check_timestamp(&stx, arg + 3);
-+			continue;
-+		}
-+
-+		bad_arg("check '%s' not supported\n", arg);
-+	}
-+
-+	if (failed) {
-+		printf("Failed\n");
-+		exit(1);
-+	}
-+
-+	verbose("Success\n");
-+	exit(0);
-+}
-diff --git a/src/statx.h b/src/statx.h
-new file mode 100644
-index 0000000..711d1ba
---- /dev/null
-+++ b/src/statx.h
-@@ -0,0 +1,166 @@
-+#ifndef STATX_H
-+#define STATX_H
-+
-+#include <unistd.h>
-+#include <linux/types.h>
-+
-+#ifndef AT_STATX_SYNC_TYPE
-+#define AT_STATX_SYNC_TYPE      0x6000  /* Type of synchronisation required from statx() */
-+#define AT_STATX_SYNC_AS_STAT   0x0000  /* - Do whatever stat() does */
-+#define AT_STATX_FORCE_SYNC     0x2000  /* - Force the attributes to be sync'd with the server */
-+#define AT_STATX_DONT_SYNC      0x4000  /* - Don't sync attributes with the server */
-+#endif
-+
-+#ifndef AT_NO_AUTOMOUNT
-+#define AT_NO_AUTOMOUNT		0x800	/* Suppress terminal automount traversal */
-+#endif
-+
-+#ifdef __i386__
-+#define __NR_statx 383
-+#elif defined (__ILP32__)
-+#define __NR_statx (__X32_SYSCALL_BIT + 332)
-+#else
-+#define __NR_statx 332
-+#endif
-+
-+#ifndef STATX_TYPE
-+
-+/*
-+ * Timestamp structure for the timestamps in struct statx.
-+ *
-+ * tv_sec holds the number of seconds before (negative) or after (positive)
-+ * 00:00:00 1st January 1970 UTC.
-+ *
-+ * tv_nsec holds a number of nanoseconds before (0..-999,999,999 if tv_sec is
-+ * negative) or after (0..999,999,999 if tv_sec is positive) the tv_sec time.
-+ *
-+ * Note that if both tv_sec and tv_nsec are non-zero, then the two values must
-+ * either be both positive or both negative.
-+ *
-+ * __reserved is held in case we need a yet finer resolution.
-+ */
-+struct statx_timestamp {
-+	__s64	tv_sec;
-+	__s32	tv_nsec;
-+	__s32	__reserved;
-+};
-+
-+/*
-+ * Structures for the extended file attribute retrieval system call
-+ * (statx()).
-+ *
-+ * The caller passes a mask of what they're specifically interested in as a
-+ * parameter to statx().  What statx() actually got will be indicated in
-+ * st_mask upon return.
-+ *
-+ * For each bit in the mask argument:
-+ *
-+ * - if the datum is not supported:
-+ *
-+ *   - the bit will be cleared, and
-+ *
-+ *   - the datum will be set to an appropriate fabricated value if one is
-+ *     available (eg. CIFS can take a default uid and gid), otherwise
-+ *
-+ *   - the field will be cleared;
-+ *
-+ * - otherwise, if explicitly requested:
-+ *
-+ *   - the datum will be synchronised to the server if AT_STATX_FORCE_SYNC is
-+ *     set or if the datum is considered out of date, and
-+ *
-+ *   - the field will be filled in and the bit will be set;
-+ *
-+ * - otherwise, if not requested, but available in approximate form without any
-+ *   effort, it will be filled in anyway, and the bit will be set upon return
-+ *   (it might not be up to date, however, and no attempt will be made to
-+ *   synchronise the internal state first);
-+ *
-+ * - otherwise the field and the bit will be cleared before returning.
-+ *
-+ * Items in STATX_BASIC_STATS may be marked unavailable on return, but they
-+ * will have values installed for compatibility purposes so that stat() and
-+ * co. can be emulated in userspace.
-+ */
-+struct statx {
-+	/* 0x00 */
-+	__u32	stx_mask;	/* What results were written [uncond] */
-+	__u32	stx_blksize;	/* Preferred general I/O size [uncond] */
-+	__u64	stx_attributes;	/* Flags conveying information about the file [uncond] */
-+	/* 0x10 */
-+	__u32	stx_nlink;	/* Number of hard links */
-+	__u32	stx_uid;	/* User ID of owner */
-+	__u32	stx_gid;	/* Group ID of owner */
-+	__u16	stx_mode;	/* File mode */
-+	__u16	__spare0[1];
-+	/* 0x20 */
-+	__u64	stx_ino;	/* Inode number */
-+	__u64	stx_size;	/* File size */
-+	__u64	stx_blocks;	/* Number of 512-byte blocks allocated */
-+	__u64	__spare1[1];
-+	/* 0x40 */
-+	struct statx_timestamp	stx_atime;	/* Last access time */
-+	struct statx_timestamp	stx_btime;	/* File creation time */
-+	struct statx_timestamp	stx_ctime;	/* Last attribute change time */
-+	struct statx_timestamp	stx_mtime;	/* Last data modification time */
-+	/* 0x80 */
-+	__u32	stx_rdev_major;	/* Device ID of special file [if bdev/cdev] */
-+	__u32	stx_rdev_minor;
-+	__u32	stx_dev_major;	/* ID of device containing file [uncond] */
-+	__u32	stx_dev_minor;
-+	/* 0x90 */
-+	__u64	__spare2[14];	/* Spare space for future expansion */
-+	/* 0x100 */
-+};
-+
-+/*
-+ * Flags to be stx_mask
-+ *
-+ * Query request/result mask for statx() and struct statx::stx_mask.
-+ *
-+ * These bits should be set in the mask argument of statx() to request
-+ * particular items when calling statx().
-+ */
-+#define STATX_TYPE		0x00000001U	/* Want/got stx_mode & S_IFMT */
-+#define STATX_MODE		0x00000002U	/* Want/got stx_mode & ~S_IFMT */
-+#define STATX_NLINK		0x00000004U	/* Want/got stx_nlink */
-+#define STATX_UID		0x00000008U	/* Want/got stx_uid */
-+#define STATX_GID		0x00000010U	/* Want/got stx_gid */
-+#define STATX_ATIME		0x00000020U	/* Want/got stx_atime */
-+#define STATX_MTIME		0x00000040U	/* Want/got stx_mtime */
-+#define STATX_CTIME		0x00000080U	/* Want/got stx_ctime */
-+#define STATX_INO		0x00000100U	/* Want/got stx_ino */
-+#define STATX_SIZE		0x00000200U	/* Want/got stx_size */
-+#define STATX_BLOCKS		0x00000400U	/* Want/got stx_blocks */
-+#define STATX_BASIC_STATS	0x000007ffU	/* The stuff in the normal stat struct */
-+#define STATX_BTIME		0x00000800U	/* Want/got stx_btime */
-+#define STATX_ALL		0x00000fffU	/* All currently supported flags */
-+
-+/*
-+ * Attributes to be found in stx_attributes
-+ *
-+ * These give information about the features or the state of a file that might
-+ * be of use to ordinary userspace programs such as GUIs or ls rather than
-+ * specialised tools.
-+ *
-+ * Note that the flags marked [I] correspond to generic FS_IOC_FLAGS
-+ * semantically.  Where possible, the numerical value is picked to correspond
-+ * also.
-+ */
-+#define STATX_ATTR_COMPRESSED		0x00000004 /* [I] File is compressed by the fs */
-+#define STATX_ATTR_IMMUTABLE		0x00000010 /* [I] File is marked immutable */
-+#define STATX_ATTR_APPEND		0x00000020 /* [I] File is append-only */
-+#define STATX_ATTR_NODUMP		0x00000040 /* [I] File is not to be dumped */
-+#define STATX_ATTR_ENCRYPTED		0x00000800 /* [I] File requires key to decrypt in fs */
-+
-+#define STATX_ATTR_AUTOMOUNT		0x00001000 /* Dir: Automount trigger */
-+
-+static inline
-+int xfstests_statx(int dfd, const char *filename, unsigned flags,
-+		   unsigned int mask, struct statx *buffer)
-+{
-+	return syscall(__NR_statx, dfd, filename, flags, mask, buffer);
-+}
-+
-+#endif /* STATX_TYPE */
-+#endif /* STATX_H */
-diff --git a/tests/generic/420 b/tests/generic/420
-new file mode 100755
-index 0000000..10ec08d
---- /dev/null
-+++ b/tests/generic/420
-@@ -0,0 +1,181 @@
-+#! /bin/bash
-+# FS QA Test 420
-+#
-+# Test the statx system call
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
-+# Written by David Howells (dhowells@redhat.com)
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	rm -rf $TEST_DIR/$seq-*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_test
-+_require_test_program "stat_test"
-+_require_test_program "af_unix"
-+_require_statx
-+
-+function check_stat () {
-+    $here/src/stat_test $* || echo stat_test failed
-+}
-+
-+function create_af_unix () {
-+    $here/src/af_unix $* || echo af_unix failed
-+}
-+
-+###############################################################################
-+#
-+# Check statx'ing of various types of object
-+#
-+# After each object is created, barring the first, we check that the creation
-+# time and the change time of the new object as same as or later than the
-+# corresponding timestamps on the previous object created.
-+#
-+###############################################################################
-+echo "Test statx on a fifo"
-+mkfifo -m 0600 $TEST_DIR/$seq-fifo
-+check_stat $TEST_DIR/$seq-fifo \
-+	   ts_order \
-+	   stx_type=fifo \
-+	   stx_mode=0600 \
-+	   stx_rdev_major=0 \
-+	   stx_rdev_minor=0 \
-+	   stx_nlink=1
-+
-+echo "Test statx on a chardev"
-+mknod -m 0600 $TEST_DIR/$seq-null c 1 3
-+check_stat $TEST_DIR/$seq-null \
-+	   ts_order \
-+	   ref=$TEST_DIR/$seq-fifo \
-+	   ts=B,b \
-+	   ts=M,m \
-+	   stx_type=char \
-+	   stx_mode=0600 \
-+	   stx_rdev_major=1 \
-+	   stx_rdev_minor=3 \
-+	   stx_nlink=1
-+
-+echo "Test statx on a directory"
-+mkdir $TEST_DIR/$seq-dir
-+check_stat $TEST_DIR/$seq-dir \
-+	   ts_order \
-+	   ref=$TEST_DIR/$seq-null \
-+	   ts=B,b \
-+	   ts=M,m \
-+	   stx_type=dir \
-+	   stx_mode=0755 \
-+	   stx_rdev_major=0 \
-+	   stx_rdev_minor=0 \
-+	   stx_nlink=2
-+
-+echo "Test statx on a blockdev"
-+mknod -m 0600 $TEST_DIR/$seq-loopy b 7 123
-+check_stat $TEST_DIR/$seq-loopy \
-+	   ts_order \
-+	   ref=$TEST_DIR/$seq-dir \
-+	   ts=B,b \
-+	   ts=M,m \
-+	   stx_type=block \
-+	   stx_mode=0600 \
-+	   stx_rdev_major=7 \
-+	   stx_rdev_minor=123 \
-+	   stx_nlink=1
-+
-+echo "Test statx on a file"
-+dd if=/dev/zero of=$TEST_DIR/$seq-file bs=1024 count=20
-+check_stat $TEST_DIR/$seq-file \
-+	   ts_order \
-+	   ref=$TEST_DIR/$seq-loopy \
-+	   ts=B,b \
-+	   ts=M,m \
-+	   stx_type=file \
-+	   stx_size=20480 \
-+	   stx_rdev_major=0 \
-+	   stx_rdev_minor=0 \
-+	   stx_nlink=1
-+
-+echo "Test statx on a symlink"
-+ln -s $TEST_DIR/$seq-nowhere $TEST_DIR/$seq-symlink
-+check_stat $TEST_DIR/$seq-symlink \
-+	   ts_order \
-+	   ref=$TEST_DIR/$seq-file \
-+	   ts=B,b \
-+	   ts=M,m \
-+	   stx_type=sym \
-+	   stx_rdev_major=0 \
-+	   stx_rdev_minor=0 \
-+	   stx_nlink=1
-+
-+echo "Test statx on an AF_UNIX socket"
-+create_af_unix $TEST_DIR/$seq-sock
-+check_stat $TEST_DIR/$seq-sock \
-+	   ts_order \
-+	   ref=$TEST_DIR/$seq-symlink \
-+	   ts=B,b \
-+	   ts=M,m \
-+	   stx_type=sock \
-+	   stx_rdev_major=0 \
-+	   stx_rdev_minor=0 \
-+	   stx_nlink=1
-+
-+#
-+# Test hard link creation.  Make sure that the file's ctime is now same as or
-+# later than the creation time of the socket, but that the file's creation time
-+# still lies somewhere between those of the directory and the socket.
-+#
-+echo "Test a hard link to a file"
-+ln $TEST_DIR/$seq-file $TEST_DIR/$seq-link
-+check_stat $TEST_DIR/$seq-link \
-+	   ref=$TEST_DIR/$seq-dir \
-+	   ts=B,b \
-+	   ref=$TEST_DIR/$seq-sock \
-+	   ts=b,B \
-+	   ts=B,c \
-+	   ts=C,c \
-+	   ref=$TEST_DIR/$seq-file \
-+	   cmp_ref \
-+	   stx_nlink=2
-+
-+# Done.  We leave the success determination to the output comparator.
-+status=0
-+exit
-diff --git a/tests/generic/420.out b/tests/generic/420.out
-new file mode 100644
-index 0000000..21d6ffc
---- /dev/null
-+++ b/tests/generic/420.out
-@@ -0,0 +1,11 @@
-+QA output created by 420
-+Test statx on a fifo
-+Test statx on a chardev
-+Test statx on a directory
-+Test statx on a blockdev
-+Test statx on a file
-+20+0 records in
-+20+0 records out
-+Test statx on a symlink
-+Test statx on an AF_UNIX socket
-+Test a hard link to a file
-diff --git a/tests/generic/group b/tests/generic/group
-index 0781f35..5678101 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -422,3 +422,4 @@
- 417 auto quick shutdown log
- 418 auto rw
- 419 auto quick encrypt
-+420 auto quick
-
+--Sig_/MSrwHJn_z3j.G7rivzrpzV7--
