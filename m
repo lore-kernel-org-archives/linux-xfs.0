@@ -1,58 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44808 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932105AbdDELKu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Apr 2017 07:10:50 -0400
-Date: Wed, 5 Apr 2017 19:10:48 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: Should xfstest generic/388 be using _require_command for
- fsstress?
-Message-ID: <20170405111048.GB22845@eguan.usersys.redhat.com>
-References: <20170405104205.GZ22845@eguan.usersys.redhat.com>
- <149132130900.18980.537296385250153410.stgit@warthog.procyon.org.uk>
- <149132132595.18980.156040870381065105.stgit@warthog.procyon.org.uk>
- <2718.1491389955@warthog.procyon.org.uk>
+Received: from bombadil.infradead.org ([65.50.211.133]:39877 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751175AbdDDGyU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 02:54:20 -0400
+Date: Mon, 3 Apr 2017 23:54:17 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs: fix kernel memory exposure problems
+Message-ID: <20170404065417.GA3610@infradead.org>
+References: <20170403173430.GL4864@birch.djwong.org>
+ <20170403194233.GR4864@birch.djwong.org>
+ <da88c312-42ad-49a3-9349-3372d8d4b127@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2718.1491389955@warthog.procyon.org.uk>
+In-Reply-To: <da88c312-42ad-49a3-9349-3372d8d4b127@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: bfoster@redhat.com, linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Christoph Hellwig <hch@infradead.org>
 
-On Wed, Apr 05, 2017 at 11:59:15AM +0100, David Howells wrote:
-> | 388:45:	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> | 388:58:_require_command "$KILLALL_PROG" "killall"
-> | 388:79:		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+On Mon, Apr 03, 2017 at 03:06:42PM -0500, Eric Sandeen wrote:
+> On 4/3/17 2:42 PM, Darrick J. Wong wrote:
+> > On Mon, Apr 03, 2017 at 10:34:30AM -0700, Darrick J. Wong wrote:
+> >> Fix a memory exposure problems in inumbers where we allocate an array of
+> >> structures with holes, fail to zero the holes, then blindly copy the
+> >> kernel memory contents (junk and all) into userspace.
+> >>
+> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > BTW, I intend to send this patch (though not the getbmap patch) for 4.11
+> > since kernel memory exposure is usually treated as a security problem.
 > 
-> Should this be using _require_command for fsstress and $FSSTRESS_PROG like the
-> other tests that use fsstress?
+> I agree with that plan; if this change isn't safe I don't know what
+> is ...
 
-fsstress is a bit special, it's mandatory for xfstests, it's checked in
-common/config
-
-[ ! -x $FSSTRESS_PROG ] && _fatal "fsstress not found or executable"
-
-(Perhaps we should treat fsstress just as other test binaries, but it's
-been this way since the beginning of xfstests.)
-
-And generic/388 does invoke fsstress by calling $FSSTRESS_PROG, but not
-necessary in this killall case.
-
-We define NAME_PROG variables mainly for doing tweeks easily in this
-variable, like adding an option globally. Take $XFS_IO_PROG as an
-example in init_rc.
-
-        # Figure out if we need to add -F ("foreign", deprecated) option to xfs_io                                                                                                             
-        $XFS_IO_PROG -c stat $TEST_DIR 2>&1 | grep -q "is not on an XFS filesystem" && \                                                                                                       
-                export XFS_IO_PROG="$XFS_IO_PROG -F"
-
-> 
-> Also, should 388 be printing "Silence is golden" at the end of the test?
-
-Yes, and it does print this message, but in the middle of test, not end.
-
-Thanks,
-Eryu
+Yes.  Please send this for 4.11-rc.
