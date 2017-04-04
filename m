@@ -1,30 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58892 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754952AbdDEK7T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Apr 2017 06:59:19 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20170405104205.GZ22845@eguan.usersys.redhat.com>
-References: <20170405104205.GZ22845@eguan.usersys.redhat.com> <149132130900.18980.537296385250153410.stgit@warthog.procyon.org.uk> <149132132595.18980.156040870381065105.stgit@warthog.procyon.org.uk>
-Subject: Should xfstest generic/388 be using _require_command for fsstress?
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:34896 "EHLO
+        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750961AbdDDG2Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 02:28:25 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <2717.1491389955.1@warthog.procyon.org.uk>
-Date: Wed, 05 Apr 2017 11:59:15 +0100
-Message-ID: <2718.1491389955@warthog.procyon.org.uk>
+In-Reply-To: <9783.1491254227@warthog.procyon.org.uk>
+References: <20170403163910.GD10881@birch.djwong.org> <149122078093.24821.17192375733082382807.stgit@warthog.procyon.org.uk>
+ <149122081486.24821.15266397607503484126.stgit@warthog.procyon.org.uk>
+ <9634.1491253516@warthog.procyon.org.uk> <9783.1491254227@warthog.procyon.org.uk>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 4 Apr 2017 09:28:23 +0300
+Message-ID: <CAOQ4uxg+-4Z4A-o=GktJqTqjrWzkMPBKoVvWCdG0yVdDqTPztg@mail.gmail.com>
+Subject: Re: [PATCH 4/4] xfstests: Check the stx_attributes settable by chattr
+ [ver #3]
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>, bfoster@redhat.com
-Cc: dhowells@redhat.com, linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: David Howells <dhowells@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-| 388:45:	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-| 388:58:_require_command "$KILLALL_PROG" "killall"
-| 388:79:		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+On Tue, Apr 4, 2017 at 12:17 AM, David Howells <dhowells@redhat.com> wrote:
+> David Howells <dhowells@redhat.com> wrote:
+>
+>> Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>>
+>> ...
+>> > If so, perhaps there should be separate tests for each of the 4 attrs.
+>>
+>> They should also be tested in combination.  Hmmm...
+>
+> Hmmm...  It appears that that would require 16 separate test files, each with
+> the appropriate combination of "_require_chattr <letter>".
+>
 
-Should this be using _require_command for fsstress and $FSSTRESS_PROG like the
-other tests that use fsstress?
+I don't think that is necessary.
 
-Also, should 388 be printing "Silence is golden" at the end of the test?
+IMO, _require_chattr <letter> means test cannot run without this,
+so no use in running it.
+This is not true for this test.
 
-David
+Since this test is expecting empty output its not even hard to change the test.
+
+First try silently all the 4 letters.
+Then iterate of combination of supported subset.
