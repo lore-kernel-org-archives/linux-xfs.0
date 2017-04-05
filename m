@@ -1,52 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f42.google.com ([209.85.213.42]:33617 "EHLO
-        mail-vk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752635AbdDDIya (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 04:54:30 -0400
-Received: by mail-vk0-f42.google.com with SMTP id d188so165927576vka.0
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2017 01:54:30 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:58892 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754952AbdDEK7T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Apr 2017 06:59:19 -0400
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <20170405104205.GZ22845@eguan.usersys.redhat.com>
+References: <20170405104205.GZ22845@eguan.usersys.redhat.com> <149132130900.18980.537296385250153410.stgit@warthog.procyon.org.uk> <149132132595.18980.156040870381065105.stgit@warthog.procyon.org.uk>
+Subject: Should xfstest generic/388 be using _require_command for fsstress?
 MIME-Version: 1.0
-From: Jan Tulak <jtulak@redhat.com>
-Date: Tue, 4 Apr 2017 10:54:09 +0200
-Message-ID: <CACj3i738tUsYyRvQmr3NfPQ=P2FNruh2xsr1TAuLMJ69AV0a0w@mail.gmail.com>
-Subject: [xfsprogs] Do we need so many data types for user input?
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <2717.1491389955.1@warthog.procyon.org.uk>
+Date: Wed, 05 Apr 2017 11:59:15 +0100
+Message-ID: <2718.1491389955@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <eguan@redhat.com>, bfoster@redhat.com
+Cc: dhowells@redhat.com, linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Hi guys,
+| 388:45:	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+| 388:58:_require_command "$KILLALL_PROG" "killall"
+| 388:79:		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
 
-as I'm still working on the mkfs changes, there is an opportunity to
-clean up data types a bit. Right now, we are saving user input into
-long long, bool, uint64, int, uint and string. Custom data types are
-not saved into directly but such values are usually a result of a
-computation.
+Should this be using _require_command for fsstress and $FSSTRESS_PROG like the
+other tests that use fsstress?
 
-I can't find any place (in the user-input section) where would we
-really need anything else except uint64 and string. Some examples:
+Also, should 388 be printing "Silence is golden" at the end of the test?
 
-* We load an option into an int and then raise an error if it is a
-negative number
-* Or we even allow for 0, 1 (and 2) only
-* It seems that the only place where we are not limiting the int
-values immediately are logarithmic options. But unless my math
-knowledge failed me, only complex logarithm is defined for negative
-numbers and I really doubt we want to have "3+4.5 i" as blocksize...
-;-)
-
-Simply stated, signed values seem to be useless here. And at the end
-of the day, we are converting all numbers into unsigned in one part of
-the parsing anyway, so I don't see how such a change could change any
-behaviour.
-
-So what do you think, can I remove the other types in user-input part
-of the code and save all numbers as uint64?
-
-Cheers,
-Jan
-
--- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+David
