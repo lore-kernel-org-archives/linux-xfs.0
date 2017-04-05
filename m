@@ -1,63 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f41.google.com ([209.85.213.41]:36695 "EHLO
-        mail-vk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933081AbdDENAt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2017 09:00:49 -0400
-Received: by mail-vk0-f41.google.com with SMTP id s68so6400709vke.3
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2017 06:00:48 -0700 (PDT)
+Received: from mail-ua0-f169.google.com ([209.85.217.169]:35940 "EHLO
+        mail-ua0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754219AbdDEI1Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2017 04:27:16 -0400
+Received: by mail-ua0-f169.google.com with SMTP id 100so3607071uaj.3
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2017 01:27:16 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <96ddb2a7-d93e-3ba4-6845-eb60d9558f60@sandeen.net>
-References: <20170315160017.27805-1-jtulak@redhat.com> <20170315160017.27805-2-jtulak@redhat.com>
- <96ddb2a7-d93e-3ba4-6845-eb60d9558f60@sandeen.net>
+In-Reply-To: <5784453e-dc91-1e26-451d-3afea138adbf@sandeen.net>
+References: <CACj3i738tUsYyRvQmr3NfPQ=P2FNruh2xsr1TAuLMJ69AV0a0w@mail.gmail.com>
+ <20170404194825.GX28800@wotan.suse.de> <5784453e-dc91-1e26-451d-3afea138adbf@sandeen.net>
 From: Jan Tulak <jtulak@redhat.com>
-Date: Wed, 5 Apr 2017 15:00:27 +0200
-Message-ID: <CACj3i720P-iC0UMFhx8QQEp7CPPXVe2SN298C7oWgxoxEVqFHg@mail.gmail.com>
-Subject: Re: [PATCH 01/22] mkfs: remove intermediate getstr followed by getnum
+Date: Wed, 5 Apr 2017 10:26:54 +0200
+Message-ID: <CACj3i73u11rNPK701aVm07qOPpT2r-1r_m--iW-D6SwLfb-pbw@mail.gmail.com>
+Subject: Re: [xfsprogs] Do we need so many data types for user input?
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
 
-On Thu, Mar 16, 2017 at 11:59 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> The only downside I see to this is that we used to echo back the same
-> form that was specified, i.e. -
+On Tue, Apr 4, 2017 at 10:17 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 4/4/17 2:48 PM, Luis R. Rodriguez wrote:
+>>
+>> And then agsize is capped artificially later via validate_ag_geometry():
+>>
+>>         if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
+>>               ...
+>>       if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
+>>               ...
+>>       if (agsize > dblocks) {
+>>               ...
+>>       if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
+>>               ...
+>>
+>> Its not clear if this is capped at UINT_MAX or if we need ULLONG_MAX here.
 >
-> # mkfs.xfs -f -d size=4e fsfile
-> size 4e specified for data subvolume is too large, maximum is 262144 blocks
-> # mkfs.xfs -f -d size=4611686018427387904 fsfile
-> size 4611686018427387904 specified for data subvolume is too large, maximum is 262144 blocks
-> # mkfs.xfs -f -d size=1125899906842624b fsfile
-> size 1125899906842624b specified for data subvolume is too large, maximum is 262144 blocks
+> .maxval = XFS_AG_MAX_BYTES,
 >
-> now we always get back the raw byte value:
+> #define XFS_AG_MAX_BYTES        ((XFS_AG_BYTES(31)))    /* 1 TB */
+> #define XFS_AG_BYTES(bblog)     ((long long)BBSIZE << (bblog))
 >
-> # mkfs/mkfs.xfs -f -d size=4e fsfile
-> size 4611686018427387904 specified for data subvolume is too large, maximum is 262144 blocks
+> so the maximum is (long long)(512) << 31
 >
-> Anything that fails the getnum() checks echo back the original
-> form on the cmdline; this case is different because getnum() passes,
-> but by the time we do value checking all we have is the bytes.  Is
-> that intentional/desirable?
->
-> So it's a change, not necessarily incorrect or unacceptable, but
-> I wanted to highlight it and check.  It wouldn't be too hard to
-> convert it right away, but keep the string around for error printing
-> purposes, I suppose.
+> so, no - agsize won't fit in a 32 bit var, if that's the question...
 >
 
-It goes back into the original reporting style later in the set. I
-tried to change the patch to avoid this temporary change, but the
-issue is, I loose the old raw strings before I have access to the
-necessary indexes for the option table to read the raw string from it,
-or before a code shuffling brings the reporting closer to where the
-raw string still exists.
+Yeah. I think that we can make it uint64 everywhere unless it is
+causing an issue in a specific case with a bit shift or something, and
+just limit the input value where appropriate explicitly.
 
-Given that it is only a temporary change of style and it seems to be
-too deeply depending on other changes, I'm keeping it as a TODO, but
-not a blocker. Maybe if the patch can be split and one of the parts
-moved after other commits...
+
+And...
+> And at the end of the day, we are converting all numbers into unsigned
+
+I take back this part, we are going through long long, not unsigned long long.
+Everything else is still valid.
 
 Jan
 
