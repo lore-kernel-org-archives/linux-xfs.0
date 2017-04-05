@@ -1,138 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44850 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:53009 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934184AbdDFNVC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Apr 2017 09:21:02 -0400
-Date: Thu, 6 Apr 2017 09:21:00 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS mount hangs during quotacheck
-Message-ID: <20170406132058.GB50328@bfoster.bfoster>
-References: <94fae78c-056b-3055-0714-c4df9239fffb@stepping-stone.ch>
- <20170406125120.GA50328@bfoster.bfoster>
- <c29ade94-ea74-07ac-db58-e203219f9426@stepping-stone.ch>
+        id S1752862AbdDEIF6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Apr 2017 04:05:58 -0400
+Date: Wed, 5 Apr 2017 10:05:51 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+Message-ID: <20170405080551.GC8899@quack2.suse.cz>
+References: <20170321183006.GD17872@fieldses.org>
+ <1490122013.2593.1.camel@redhat.com>
+ <20170329111507.GA18467@quack2.suse.cz>
+ <1490810071.2678.6.camel@redhat.com>
+ <20170330064724.GA21542@quack2.suse.cz>
+ <1490872308.2694.1.camel@redhat.com>
+ <20170330161231.GA9824@fieldses.org>
+ <1490898932.2667.1.camel@redhat.com>
+ <20170404183138.GC14303@fieldses.org>
+ <878tnfiq7v.fsf@notabene.neil.brown.name>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c29ade94-ea74-07ac-db58-e203219f9426@stepping-stone.ch>
+In-Reply-To: <878tnfiq7v.fsf@notabene.neil.brown.name>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christian Affolter <c.affolter@stepping-stone.ch>
-Cc: linux-xfs@vger.kernel.org
+To: NeilBrown <neil@brown.name>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@redhat.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Apr 06, 2017 at 03:10:41PM +0200, Christian Affolter wrote:
-> Hi Brian,
+On Wed 05-04-17 11:43:32, NeilBrown wrote:
+> On Tue, Apr 04 2017, J. Bruce Fields wrote:
 > 
-> thanks a lot for taking the time to help.
+> > On Thu, Mar 30, 2017 at 02:35:32PM -0400, Jeff Layton wrote:
+> >> On Thu, 2017-03-30 at 12:12 -0400, J. Bruce Fields wrote:
+> >> > On Thu, Mar 30, 2017 at 07:11:48AM -0400, Jeff Layton wrote:
+> >> > > On Thu, 2017-03-30 at 08:47 +0200, Jan Kara wrote:
+> >> > > > Because if above is acceptable we could make reported i_version to be a sum
+> >> > > > of "superblock crash counter" and "inode i_version". We increment
+> >> > > > "superblock crash counter" whenever we detect unclean filesystem shutdown.
+> >> > > > That way after a crash we are guaranteed each inode will report new
+> >> > > > i_version (the sum would probably have to look like "superblock crash
+> >> > > > counter" * 65536 + "inode i_version" so that we avoid reusing possible
+> >> > > > i_version numbers we gave away but did not write to disk but still...).
+> >> > > > Thoughts?
+> >> > 
+> >> > How hard is this for filesystems to support?  Do they need an on-disk
+> >> > format change to keep track of the crash counter?  Maybe not, maybe the
+> >> > high bits of the i_version counters are all they need.
+> >> > 
+> >> 
+> >> Yeah, I imagine we'd need a on-disk change for this unless there's
+> >> something already present that we could use in place of a crash counter.
+> >
+> > We could consider using the current time instead.  So, put the current
+> > time (or time of last boot, or this inode's ctime, or something) in the
+> > high bits of the change attribute, and keep the low bits as a counter.
 > 
-> On 06.04.2017 14:51, Brian Foster wrote:
-> > On Wed, Apr 05, 2017 at 03:08:03PM +0200, Christian Affolter wrote:
-> > > Hi everyone,
-> > > 
-> > > I'm having a system with a 15 TiB XFS volume with user and project quotas,
-> > > which recently crashed.
-> > > 
-> > > After a successful xfs_repair run, I'm trying to mount the file system
-> > > again. According to dmesg a quotacheck is needed (XFS (vdc): Quotacheck
-> > > needed: Please wait.), for about 20 minutes I see expected read-activity on
-> > > the device within iotop, then it suddenly stops but the mount command still
-> > > hangs in uninterruptable sleep state (D+) while the system remains
-> > > completely idle (I/O and CPU wise).
-> > > 
-> > > [...]
-> > 
-> > > Apr  5 10:33:48 sysresccd kernel: XFS (vdc): Mounting V5 Filesystem
-> > > Apr  5 10:33:48 sysresccd kernel: XFS (vdc): Ending clean mount
-> > > Apr  5 10:33:53 sysresccd kernel: XFS (vdc): Unmounting Filesystem
-> > > Apr  5 10:34:00 sysresccd kernel: Adding 4193276k swap on /dev/vda2.  Priority:-1 extents:1 across:4193276k FS
-> > > Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Mounting V5 Filesystem
-> > > Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Ending clean mount
-> > > Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Quotacheck needed: Please wait.
-> > > Apr  5 10:34:43 sysresccd su[2622]: Successful su for root by root
-> > > Apr  5 10:34:43 sysresccd su[2622]: + /dev/tty2 root:root
-> > > Apr  5 12:03:49 sysresccd kernel: sysrq: SysRq : Show Blocked State
-> > > Apr  5 12:03:49 sysresccd kernel:   task                        PC stack   pid father
-> > > Apr  5 12:03:49 sysresccd kernel: mount           D ffff880310653958     0  2611   2571 0x20020000
-> > > Apr  5 12:03:49 sysresccd kernel:  ffff880310653958 ffff880310653958 0000000500370b74 ffff880002789d40
-> > > Apr  5 12:03:49 sysresccd kernel:  ffff880310654000 ffff8803111da198 0000000000000002 ffffffff817fbb2a
-> > > Apr  5 12:03:49 sysresccd kernel:  ffff880002789d40 ffff880310653970 ffffffff817f9f58 7fffffffffffffff
-> > > Apr  5 12:03:49 sysresccd kernel: Call Trace:
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fbb2a>] ? usleep_range+0x3a/0x3a
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817f9f58>] schedule+0x70/0x7e
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fbb59>] schedule_timeout+0x2f/0x107
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81170dcd>] ? __kmalloc+0xeb/0x114
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81389780>] ? kmem_alloc+0x33/0x96
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810b58f0>] ? arch_local_irq_save+0x15/0x1b
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fc3f7>] ? _raw_spin_unlock_irqrestore+0xf/0x11
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa72d>] do_wait_for_common+0xe4/0x11a
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa72d>] ? do_wait_for_common+0xe4/0x11a
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810a315c>] ? wake_up_q+0x42/0x42
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa7d9>] wait_for_common+0x36/0x4f
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa80a>] wait_for_completion+0x18/0x1a
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a223>] xfs_qm_flush_one+0x42/0x7f
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a586>] xfs_qm_dquot_walk.isra.8+0xc1/0x106
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a1e1>] ? xfs_qm_dqattach_one+0xe3/0xe3
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139bd27>] xfs_qm_quotacheck+0x131/0x252
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139bedf>] xfs_qm_mount_quotas+0x97/0x143
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813840a1>] xfs_mountfs+0x587/0x6b1
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813868ea>] xfs_fs_fill_super+0x411/0x4b5
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811846d1>] mount_bdev+0x141/0x195
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813864d9>] ? xfs_parseargs+0x8e8/0x8e8
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81168bff>] ? alloc_pages_current+0x96/0x9f
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8138502b>] xfs_fs_mount+0x10/0x12
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811851f3>] mount_fs+0x62/0x12b
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81199646>] vfs_kern_mount+0x64/0xd0
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8119bccd>] do_mount+0x8d5/0x9e6
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811c07b1>] compat_SyS_mount+0x179/0x1a5
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810039bb>] do_syscall_32_irqs_off+0x52/0x61
-> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817feee6>] entry_INT80_compat+0x36/0x50
-> > 
-> > This looks like a known quotacheck vs. reclaim deadlock. Quotacheck is
-> > in the phase where it has completed all of the updates of in-core
-> > accounting and now needs to flush the in-core xfs_dquot structures to
-> > their associated backing buffers and submit them for I/O. The flush
-> > sequence is stuck waiting on an xfs_dquot flush lock, however.
-> > 
-> > The problem is that quotacheck holds the underlying buffers and then
-> > does a blocking xfs_dqflock(), which is effectively an inverse locking
-> > order from xfs_dquot memory reclaim. If reclaim runs during the previous
-> > quotacheck phase, it acquires the flush lock and fails to submit the
-> > underlying buffer for I/O (because quotacheck effectively holds/pins the
-> > buffer). When the quotacheck flush gets to the dquot, it thus waits
-> > indefinitely on a flush lock that will never unlock.
-> > 
-> > If you're comfortable building a kernel from source, you could try the
-> > following patch and see if it helps quotacheck to complete:
-> > 
-> >   http://www.spinics.net/lists/linux-xfs/msg04485.html
-> > 
-> > (Note that I've not been able to get this patch merged.)
-> 
-> Shall I only apply "[PATCH 2/3] xfs: push buffer of flush locked dquot to
-> avoid quotacheck deadlock" or are all patches of this series required?
-> 
-> Which kernel version would you recommend for applying the patch?
-> 
+> This is a very different proposal.
+> I don't think Jan was suggesting that the i_version be split into two
+> bit fields, one the change-counter and one the crash-counter.
+> Rather, the crash-counter was multiplied by a large-number and added to
+> the change-counter with the expectation that while not ever
+> change-counter landed on disk, at least 1 in every large-number would.
+> So after each crash we effectively add large-number to the
+> change-counter, and can be sure that number hasn't been used already.
 
-You could apply patches 1-2 of that series. Patch 3 was a
-hack/experiment. Definitely do not apply that one.
+Yes, that was my thinking.
 
-I think they should apply fine to any v4.10 or newer kernel. I'm not
-sure that quotacheck changes all that often so you could probably pull
-them into an older kernel as well, but you'd have to try to apply them
-to know for sure.
+> To store the crash-counter in each inode (which does appeal) you would
+> need to be able to remove it before adding the new crash counter, and
+> that requires bit-fields.  Maybe there are enough bits.
 
-Brian
+Furthermore you'd have a potential problem that you need to change
+i_version on disk just because you are reading after a crash and such
+changes tend to be problematic (think of read-only mounts and stuff like
+that).
+ 
+> If you want to ensure read-only files can remain cached over a crash,
+> then you would have to mark a file in some way on stable storage
+> *before* allowing any change.
+> e.g. you could use the lsb.  Odd i_versions might have been changed
+> recently and crash-count*large-number needs to be added.
+> Even i_versions have not been changed recently and nothing need be
+> added.
+> 
+> If you want to change a file with an even i_version, you subtract
+>   crash-count*large-number
+> to the i_version, then set lsb.  This is written to stable storage before
+> the change.
+> 
+> If a file has not been changed for a while, you can add
+>   crash-count*large-number
+> and clear lsb.
+> 
+> The lsb of the i_version would be for internal use only.  It would not
+> be visible outside the filesystem.
+> 
+> It feels a bit clunky, but I think it would work and is the best
+> combination of Jan's idea and your requirement.
+> The biggest cost would be switching to 'odd' before an changes, and the
+> unknown is when does it make sense to switch to 'even'.
 
-> 
-> > Otherwise, you'd probably have to go a ways back to a kernel before this
-> > regression was introduced. That looks like v3.4 according to the code
-> > (but it's also possible other changes may have prevented this state
-> > between then and with more recent kernels, particularly since it seems
-> > to have only turned up more recently).
-> > 
-> > Brian
-> 
-> Thanks again,
-> Chris
-> 
+Well, there is also a problem that you would need to somehow remember with
+which 'crash count' the i_version has been previously reported as that is
+not stored on disk with my scheme. So I don't think we can easily use your
+scheme.
+
+So the options we have are:
+
+1) Keep i_version as is, make clients also check for i_ctime.
+   Pro: No on-disk format changes.
+   Cons: After a crash, i_version can go backwards (but when file changes
+   i_version, i_ctime pair should be still different) or not, data can be
+   old or not.
+
+2) Fsync when reporting i_version.
+   Pro: No on-disk format changes, strong consistency of i_version and
+        data.
+   Cons: Difficult to implement for filesystems due to locking constrains.
+         High performance overhead or i_version reporting.
+
+3) Some variant of crash counter.
+   Pro: i_version cannot go backwards.
+   Cons: Requires on-disk format changes. After a crash data can be old
+         (however i_version increased).
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
