@@ -1,242 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45965 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:43653 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752474AbdDCSxz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Apr 2017 14:53:55 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 5/8] nowait aio: return on congested block device
-Date: Mon,  3 Apr 2017 13:53:04 -0500
-Message-Id: <20170403185307.6243-6-rgoldwyn@suse.de>
-In-Reply-To: <20170403185307.6243-1-rgoldwyn@suse.de>
-References: <20170403185307.6243-1-rgoldwyn@suse.de>
+        id S1753157AbdDEB1Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 4 Apr 2017 21:27:25 -0400
+From: NeilBrown <neil@brown.name>
+Date: Wed, 05 Apr 2017 11:26:40 +1000
+Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
+In-Reply-To: <20170404123414.GA23007@dastard>
+References: <1490117004.2542.1.camel@redhat.com> <20170321183006.GD17872@fieldses.org> <1490122013.2593.1.camel@redhat.com> <20170329111507.GA18467@quack2.suse.cz> <1490810071.2678.6.camel@redhat.com> <20170330064724.GA21542@quack2.suse.cz> <1490872308.2694.1.camel@redhat.com> <20170330161231.GA9824@fieldses.org> <20170401230526.GW23007@dastard> <20170403140055.GF15168@quack2.suse.cz> <20170404123414.GA23007@dastard>
+Message-ID: <87bmsbiqzz.fsf@notabene.neil.brown.name>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-A new flag BIO_NOWAIT is introduced to identify bio's
-orignating from iocb with IOCB_NOWAIT. This flag indicates
-to return immediately if a request cannot be made instead
-of retrying.
+On Tue, Apr 04 2017, Dave Chinner wrote:
 
-To facilitate this, QUEUE_FLAG_NOWAIT is set to devices
-which support this. While currently this is set to
-virtio and sd only. Support to more devices will be added soon.
+> On Mon, Apr 03, 2017 at 04:00:55PM +0200, Jan Kara wrote:
+>> On Sun 02-04-17 09:05:26, Dave Chinner wrote:
+>> > On Thu, Mar 30, 2017 at 12:12:31PM -0400, J. Bruce Fields wrote:
+>> > > On Thu, Mar 30, 2017 at 07:11:48AM -0400, Jeff Layton wrote:
+>> > > > On Thu, 2017-03-30 at 08:47 +0200, Jan Kara wrote:
+>> > > > > Because if above is acceptable we could make reported i_version =
+to be a sum
+>> > > > > of "superblock crash counter" and "inode i_version". We increment
+>> > > > > "superblock crash counter" whenever we detect unclean filesystem=
+ shutdown.
+>> > > > > That way after a crash we are guaranteed each inode will report =
+new
+>> > > > > i_version (the sum would probably have to look like "superblock =
+crash
+>> > > > > counter" * 65536 + "inode i_version" so that we avoid reusing po=
+ssible
+>> > > > > i_version numbers we gave away but did not write to disk but sti=
+ll...).
+>> > > > > Thoughts?
+>> > >=20
+>> > > How hard is this for filesystems to support?  Do they need an on-disk
+>> > > format change to keep track of the crash counter?
+>> >=20
+>> > Yes. We'll need version counter in the superblock, and we'll need to
+>> > know what the increment semantics are.=20
+>> >=20
+>> > The big question is how do we know there was a crash? The only thing
+>> > a journalling filesystem knows at mount time is whether it is clean
+>> > or requires recovery. Filesystems can require recovery for many
+>> > reasons that don't involve a crash (e.g. root fs is never unmounted
+>> > cleanly, so always requires recovery). Further, some filesystems may
+>> > not even know there was a crash at mount time because their
+>> > architecture always leaves a consistent filesystem on disk (e.g. COW
+>> > filesystems)....
+>>=20
+>> What filesystems can or cannot easily do obviously differs. Ext4 has a
+>> recovery flag set in superblock on RW mount/remount and cleared on
+>> umount/RO remount.
+>
+> Even this doesn't help. A recent bug that was reported to the XFS
+> list - turns out that systemd can't remount-ro the root
+> filesystem sucessfully on shutdown because there are open write fds
+> on the root filesystem when it attempts the remount. So it just
+> reboots without a remount-ro. This uncovered a bug in grub in
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- block/blk-core.c           | 24 ++++++++++++++++++++++--
- block/blk-mq-sched.c       |  3 +++
- block/blk-mq.c             |  4 ++++
- drivers/block/virtio_blk.c |  3 +++
- drivers/scsi/sd.c          |  3 +++
- fs/direct-io.c             | 11 +++++++++--
- include/linux/bio.h        |  6 ++++++
- include/linux/blk_types.h  |  1 +
- include/linux/blkdev.h     |  2 ++
- 9 files changed, 53 insertions(+), 4 deletions(-)
+Filesystems could use register_reboot_notifier() to get a notification
+that even systemd cannot stuff-up.  It could check for dirty data and, if
+there is none (which there shouldn't be if a sync happened), it does a
+single write to disk to update the superblock (or a single write to each
+disk... or something).
+md does this, because getting the root device to be marked read-only is
+even harder than getting the root filesystem to be remounted read-only.
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index d772c22..95a9b18 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1232,6 +1232,11 @@ static struct request *get_request(struct request_queue *q, unsigned int op,
- 	if (!IS_ERR(rq))
- 		return rq;
- 
-+	if (bio && bio_flagged(bio, BIO_NOWAIT)) {
-+		blk_put_rl(rl);
-+		return ERR_PTR(-EAGAIN);
-+	}
-+
- 	if (!gfpflags_allow_blocking(gfp_mask) || unlikely(blk_queue_dying(q))) {
- 		blk_put_rl(rl);
- 		return rq;
-@@ -1870,6 +1875,18 @@ generic_make_request_checks(struct bio *bio)
- 		goto end_io;
- 	}
- 
-+	if (bio_flagged(bio, BIO_NOWAIT)) {
-+		if (!blk_queue_nowait(q)) {
-+			err = -EOPNOTSUPP;
-+			goto end_io;
-+		}
-+		if (!(bio->bi_opf & (REQ_SYNC | REQ_IDLE))) {
-+			err = -EINVAL;
-+			goto end_io;
-+		}
-+	}
-+
-+
- 	part = bio->bi_bdev->bd_part;
- 	if (should_fail_request(part, bio->bi_iter.bi_size) ||
- 	    should_fail_request(&part_to_disk(part)->part0,
-@@ -2021,7 +2038,7 @@ blk_qc_t generic_make_request(struct bio *bio)
- 	do {
- 		struct request_queue *q = bdev_get_queue(bio->bi_bdev);
- 
--		if (likely(blk_queue_enter(q, false) == 0)) {
-+		if (likely(blk_queue_enter(q, bio_flagged(bio, BIO_NOWAIT)) == 0)) {
- 			struct bio_list lower, same;
- 
- 			/* Create a fresh bio_list for all subordinate requests */
-@@ -2046,7 +2063,10 @@ blk_qc_t generic_make_request(struct bio *bio)
- 			bio_list_merge(&bio_list_on_stack[0], &same);
- 			bio_list_merge(&bio_list_on_stack[0], &bio_list_on_stack[1]);
- 		} else {
--			bio_io_error(bio);
-+			if (unlikely(!blk_queue_dying(q) && bio_flagged(bio, BIO_NOWAIT)))
-+				bio_wouldblock_error(bio);
-+			else
-+				bio_io_error(bio);
- 		}
- 		bio = bio_list_pop(&bio_list_on_stack[0]);
- 	} while (bio);
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 09af8ff..40e78b5 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -119,6 +119,9 @@ struct request *blk_mq_sched_get_request(struct request_queue *q,
- 	if (likely(!data->hctx))
- 		data->hctx = blk_mq_map_queue(q, data->ctx->cpu);
- 
-+	if (likely(bio) && bio_flagged(bio, BIO_NOWAIT))
-+		data->flags |= BLK_MQ_REQ_NOWAIT;
-+
- 	if (e) {
- 		data->flags |= BLK_MQ_REQ_INTERNAL;
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 6b6e7bc..2d90b12 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1511,6 +1511,8 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
- 	rq = blk_mq_sched_get_request(q, bio, bio->bi_opf, &data);
- 	if (unlikely(!rq)) {
- 		__wbt_done(q->rq_wb, wb_acct);
-+		if (bio && bio_flagged(bio, BIO_NOWAIT))
-+			bio_wouldblock_error(bio);
- 		return BLK_QC_T_NONE;
- 	}
- 
-@@ -1635,6 +1637,8 @@ static blk_qc_t blk_sq_make_request(struct request_queue *q, struct bio *bio)
- 	rq = blk_mq_sched_get_request(q, bio, bio->bi_opf, &data);
- 	if (unlikely(!rq)) {
- 		__wbt_done(q->rq_wb, wb_acct);
-+		if (bio && bio_flagged(bio, BIO_NOWAIT))
-+			bio_wouldblock_error(bio);
- 		return BLK_QC_T_NONE;
- 	}
- 
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 1d4c9f8..7481124 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -731,6 +731,9 @@ static int virtblk_probe(struct virtio_device *vdev)
- 	/* No real sector limit. */
- 	blk_queue_max_hw_sectors(q, -1U);
- 
-+	/* Request queue supports BIO_NOWAIT */
-+	queue_flag_set_unlocked(QUEUE_FLAG_NOWAIT, q);
-+
- 	/* Host can optionally specify maximum segment size and number of
- 	 * segments. */
- 	err = virtio_cread_feature(vdev, VIRTIO_BLK_F_SIZE_MAX,
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fcfeddc..9df85ee 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3177,6 +3177,9 @@ static int sd_probe(struct device *dev)
- 					     SD_MOD_TIMEOUT);
- 	}
- 
-+	/* Support BIO_NOWAIT */
-+	queue_flag_set_unlocked(QUEUE_FLAG_NOWAIT, sdp->request_queue);
-+
- 	device_initialize(&sdkp->dev);
- 	sdkp->dev.parent = dev;
- 	sdkp->dev.class = &sd_disk_class;
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index a04ebea..f6835d3 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -386,6 +386,9 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
- 	else
- 		bio->bi_end_io = dio_bio_end_io;
- 
-+	if (dio->iocb->ki_flags & IOCB_NOWAIT)
-+		bio_set_flag(bio, BIO_NOWAIT);
-+
- 	sdio->bio = bio;
- 	sdio->logical_offset_in_bio = sdio->cur_page_fs_offset;
- }
-@@ -480,8 +483,12 @@ static int dio_bio_complete(struct dio *dio, struct bio *bio)
- 	unsigned i;
- 	int err;
- 
--	if (bio->bi_error)
--		dio->io_error = -EIO;
-+	if (bio->bi_error) {
-+		if (bio_flagged(bio, BIO_NOWAIT))
-+			dio->io_error = -EAGAIN;
-+		else
-+			dio->io_error = -EIO;
-+	}
- 
- 	if (dio->is_async && dio->op == REQ_OP_READ && dio->should_dirty) {
- 		err = bio->bi_error;
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 8e52119..1a92707 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -425,6 +425,12 @@ static inline void bio_io_error(struct bio *bio)
- 	bio_endio(bio);
- }
- 
-+static inline void bio_wouldblock_error(struct bio *bio)
-+{
-+	bio->bi_error = -EAGAIN;
-+	bio_endio(bio);
-+}
-+
- struct request_queue;
- extern int bio_phys_segments(struct request_queue *, struct bio *);
- 
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index d703acb..514c08e 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -102,6 +102,7 @@ struct bio {
- #define BIO_REFFED	8	/* bio has elevated ->bi_cnt */
- #define BIO_THROTTLED	9	/* This bio has already been subjected to
- 				 * throttling rules. Don't do it again. */
-+#define BIO_NOWAIT	10	/* don't block over blk device congestion */
- 
- /*
-  * Flags starting here get preserved by bio_reset() - this includes
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 5a7da60..ae38ab6 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -611,6 +611,7 @@ struct request_queue {
- #define QUEUE_FLAG_DAX         26	/* device supports DAX */
- #define QUEUE_FLAG_STATS       27	/* track rq completion times */
- #define QUEUE_FLAG_RESTART     28	/* queue needs restart at completion */
-+#define QUEUE_FLAG_NOWAIT      29	/* queue supports BIO_NOWAIT */
- 
- #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_STACKABLE)	|	\
-@@ -701,6 +702,7 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
- #define blk_queue_secure_erase(q) \
- 	(test_bit(QUEUE_FLAG_SECERASE, &(q)->queue_flags))
- #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
-+#define blk_queue_nowait(q)	test_bit(QUEUE_FLAG_NOWAIT, &(q)->queue_flags)
- 
- #define blk_noretry_request(rq) \
- 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
--- 
-2.10.2
+NeilBrown
 
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEG8Yp69OQ2HB7X0l6Oeye3VZigbkFAljkR9AACgkQOeye3VZi
+gbluYQ/+KPeRyvmTx/86TOTxdcoyUrCPKFv0pPTg1MBydiXed5+eGTqg6zCScXOH
+SxOJ8DmwH8l+RRRwhfnTXjsbIYYomlT2s4iFXqqsdzbGeKpNIqjPJ/xI0VuKUD9/
+8SU9OOWviq08QPAm725DARNyyfor9+OcO+0JtG7SDLS4apLy8UJwJYdWZXa6lFTo
+foOOIUVR2SQvuwWRhabuTr4JnfiBydg/x6+WPL/LEezPCG/jKRfg0OqB7+tXcIuT
+QloDM+hCQNV2KPm64LNW8dmLtnhKHuT36hQ71iup7uHVuGa8nbobU6gW5L0NVQcQ
+W6KqcAdBk4eWQS8+aI0r1jRrjvwA7vY8UyshE2eQ7lakS/u/xIpBr8jbr2+tXw6n
+6NaYqmEwXE1e9jgZwdI7HRJf562Tph3hiMYIJg5BZiAtJSWhL3VFGUh5FVBCnR7G
+J7Y9g39M8GYyGANuKz3U87VQvbpV7dzDN4+fG5wMN2OrWXDnx4+vM090n3oSGGq3
+GNfgv9m4dt+WLCII786yEPezkaP2Xy8dZ/DPSoFDEdVAVP/MiQTu7JJMxaiZt8R2
+CHK5MgUft0FFIfY6mT66bVq8XIAykZU6JiFd9ocoOTLTCY543yUkbEk0zbQ7WYfL
+NmQRvSjaaEFlZ9jaU0ztjfrAB5u+kuJ2kemssAGa/rRFit0h1Yg=
+=460V
+-----END PGP SIGNATURE-----
+--=-=-=--
