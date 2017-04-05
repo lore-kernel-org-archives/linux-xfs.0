@@ -1,24 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:55010 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752534AbdDDGtf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 02:49:35 -0400
-Date: Mon, 3 Apr 2017 23:49:34 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/8] nowait aio: return on congested block device
-Message-ID: <20170404064934.GC21942@infradead.org>
-References: <20170403185307.6243-1-rgoldwyn@suse.de>
- <20170403185307.6243-6-rgoldwyn@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:44808 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932105AbdDELKu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Apr 2017 07:10:50 -0400
+Date: Wed, 5 Apr 2017 19:10:48 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: Should xfstest generic/388 be using _require_command for
+ fsstress?
+Message-ID: <20170405111048.GB22845@eguan.usersys.redhat.com>
+References: <20170405104205.GZ22845@eguan.usersys.redhat.com>
+ <149132130900.18980.537296385250153410.stgit@warthog.procyon.org.uk>
+ <149132132595.18980.156040870381065105.stgit@warthog.procyon.org.uk>
+ <2718.1491389955@warthog.procyon.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170403185307.6243-6-rgoldwyn@suse.de>
+In-Reply-To: <2718.1491389955@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: David Howells <dhowells@redhat.com>
+Cc: bfoster@redhat.com, linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Please make this a REQ_* flag so that it can be passed in the bio,
-the request and as an argument to the get_request functions instead
-of testing for a bio.
+On Wed, Apr 05, 2017 at 11:59:15AM +0100, David Howells wrote:
+> | 388:45:	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> | 388:58:_require_command "$KILLALL_PROG" "killall"
+> | 388:79:		$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> 
+> Should this be using _require_command for fsstress and $FSSTRESS_PROG like the
+> other tests that use fsstress?
+
+fsstress is a bit special, it's mandatory for xfstests, it's checked in
+common/config
+
+[ ! -x $FSSTRESS_PROG ] && _fatal "fsstress not found or executable"
+
+(Perhaps we should treat fsstress just as other test binaries, but it's
+been this way since the beginning of xfstests.)
+
+And generic/388 does invoke fsstress by calling $FSSTRESS_PROG, but not
+necessary in this killall case.
+
+We define NAME_PROG variables mainly for doing tweeks easily in this
+variable, like adding an option globally. Take $XFS_IO_PROG as an
+example in init_rc.
+
+        # Figure out if we need to add -F ("foreign", deprecated) option to xfs_io                                                                                                             
+        $XFS_IO_PROG -c stat $TEST_DIR 2>&1 | grep -q "is not on an XFS filesystem" && \                                                                                                       
+                export XFS_IO_PROG="$XFS_IO_PROG -F"
+
+> 
+> Also, should 388 be printing "Silence is golden" at the end of the test?
+
+Yes, and it does print this message, but in the middle of test, not end.
+
+Thanks,
+Eryu
