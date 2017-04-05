@@ -1,125 +1,380 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.stepping-stone.ch ([194.176.109.206]:59143 "EHLO
-        mail.stepping-stone.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754902AbdDFNLA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2017 09:11:00 -0400
-Subject: Re: XFS mount hangs during quotacheck
-References: <94fae78c-056b-3055-0714-c4df9239fffb@stepping-stone.ch>
- <20170406125120.GA50328@bfoster.bfoster>
-From: Christian Affolter <c.affolter@stepping-stone.ch>
-Message-ID: <c29ade94-ea74-07ac-db58-e203219f9426@stepping-stone.ch>
-Date: Thu, 6 Apr 2017 15:10:41 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:59014 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754805AbdDEQco (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Apr 2017 12:32:44 -0400
+Subject: [PATCH 4/4] xfstests: Check the stx_attributes settable by chattr
+ [ver #7]
+From: David Howells <dhowells@redhat.com>
+Date: Wed, 05 Apr 2017 17:32:41 +0100
+Message-ID: <149140996132.27340.12936555593689822963.stgit@warthog.procyon.org.uk>
+In-Reply-To: <149140993804.27340.4198614944626347024.stgit@warthog.procyon.org.uk>
+References: <149140993804.27340.4198614944626347024.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <20170406125120.GA50328@bfoster.bfoster>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>
+Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
 
-Hi Brian,
+Check the stx_attributes that can be set by calling chattr.
 
-thanks a lot for taking the time to help.
+The script probes the filesystem with chattr to find out which of +a, +c,
++d and +i are supported before testing combinations of attrs.  Note that if
+a filesystem supports chattr with these, but doesn't paste the flag values
+into stx_attributes, the test will fail as there's no way to distinguish
+cleared from unset.
 
-On 06.04.2017 14:51, Brian Foster wrote:
-> On Wed, Apr 05, 2017 at 03:08:03PM +0200, Christian Affolter wrote:
->> Hi everyone,
->>
->> I'm having a system with a 15 TiB XFS volume with user and project quotas,
->> which recently crashed.
->>
->> After a successful xfs_repair run, I'm trying to mount the file system
->> again. According to dmesg a quotacheck is needed (XFS (vdc): Quotacheck
->> needed: Please wait.), for about 20 minutes I see expected read-activity on
->> the device within iotop, then it suddenly stops but the mount command still
->> hangs in uninterruptable sleep state (D+) while the system remains
->> completely idle (I/O and CPU wise).
->>
->> [...]
->
->> Apr  5 10:33:48 sysresccd kernel: XFS (vdc): Mounting V5 Filesystem
->> Apr  5 10:33:48 sysresccd kernel: XFS (vdc): Ending clean mount
->> Apr  5 10:33:53 sysresccd kernel: XFS (vdc): Unmounting Filesystem
->> Apr  5 10:34:00 sysresccd kernel: Adding 4193276k swap on /dev/vda2.  Priority:-1 extents:1 across:4193276k FS
->> Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Mounting V5 Filesystem
->> Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Ending clean mount
->> Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Quotacheck needed: Please wait.
->> Apr  5 10:34:43 sysresccd su[2622]: Successful su for root by root
->> Apr  5 10:34:43 sysresccd su[2622]: + /dev/tty2 root:root
->> Apr  5 12:03:49 sysresccd kernel: sysrq: SysRq : Show Blocked State
->> Apr  5 12:03:49 sysresccd kernel:   task                        PC stack   pid father
->> Apr  5 12:03:49 sysresccd kernel: mount           D ffff880310653958     0  2611   2571 0x20020000
->> Apr  5 12:03:49 sysresccd kernel:  ffff880310653958 ffff880310653958 0000000500370b74 ffff880002789d40
->> Apr  5 12:03:49 sysresccd kernel:  ffff880310654000 ffff8803111da198 0000000000000002 ffffffff817fbb2a
->> Apr  5 12:03:49 sysresccd kernel:  ffff880002789d40 ffff880310653970 ffffffff817f9f58 7fffffffffffffff
->> Apr  5 12:03:49 sysresccd kernel: Call Trace:
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fbb2a>] ? usleep_range+0x3a/0x3a
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817f9f58>] schedule+0x70/0x7e
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fbb59>] schedule_timeout+0x2f/0x107
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81170dcd>] ? __kmalloc+0xeb/0x114
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81389780>] ? kmem_alloc+0x33/0x96
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810b58f0>] ? arch_local_irq_save+0x15/0x1b
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fc3f7>] ? _raw_spin_unlock_irqrestore+0xf/0x11
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa72d>] do_wait_for_common+0xe4/0x11a
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa72d>] ? do_wait_for_common+0xe4/0x11a
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810a315c>] ? wake_up_q+0x42/0x42
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa7d9>] wait_for_common+0x36/0x4f
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa80a>] wait_for_completion+0x18/0x1a
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a223>] xfs_qm_flush_one+0x42/0x7f
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a586>] xfs_qm_dquot_walk.isra.8+0xc1/0x106
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a1e1>] ? xfs_qm_dqattach_one+0xe3/0xe3
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139bd27>] xfs_qm_quotacheck+0x131/0x252
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139bedf>] xfs_qm_mount_quotas+0x97/0x143
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813840a1>] xfs_mountfs+0x587/0x6b1
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813868ea>] xfs_fs_fill_super+0x411/0x4b5
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811846d1>] mount_bdev+0x141/0x195
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813864d9>] ? xfs_parseargs+0x8e8/0x8e8
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81168bff>] ? alloc_pages_current+0x96/0x9f
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8138502b>] xfs_fs_mount+0x10/0x12
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811851f3>] mount_fs+0x62/0x12b
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81199646>] vfs_kern_mount+0x64/0xd0
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8119bccd>] do_mount+0x8d5/0x9e6
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811c07b1>] compat_SyS_mount+0x179/0x1a5
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810039bb>] do_syscall_32_irqs_off+0x52/0x61
->> Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817feee6>] entry_INT80_compat+0x36/0x50
->
-> This looks like a known quotacheck vs. reclaim deadlock. Quotacheck is
-> in the phase where it has completed all of the updates of in-core
-> accounting and now needs to flush the in-core xfs_dquot structures to
-> their associated backing buffers and submit them for I/O. The flush
-> sequence is stuck waiting on an xfs_dquot flush lock, however.
->
-> The problem is that quotacheck holds the underlying buffers and then
-> does a blocking xfs_dqflock(), which is effectively an inverse locking
-> order from xfs_dquot memory reclaim. If reclaim runs during the previous
-> quotacheck phase, it acquires the flush lock and fails to submit the
-> underlying buffer for I/O (because quotacheck effectively holds/pins the
-> buffer). When the quotacheck flush gets to the dquot, it thus waits
-> indefinitely on a flush lock that will never unlock.
->
-> If you're comfortable building a kernel from source, you could try the
-> following patch and see if it helps quotacheck to complete:
->
->   http://www.spinics.net/lists/linux-xfs/msg04485.html
->
-> (Note that I've not been able to get this patch merged.)
+Certain chattr flags are reflected in specific stx_attributes flags:
 
-Shall I only apply "[PATCH 2/3] xfs: push buffer of flush locked dquot 
-to avoid quotacheck deadlock" or are all patches of this series required?
+	chattr flag	stx_attributes flag
+	+a		STATX_ATTR_APPEND
+	+c		STATX_ATTR_COMPRESSED
+	+d		STATX_ATTR_NODUMP
+	+i		STATX_ATTR_IMMUTABLE
 
-Which kernel version would you recommend for applying the patch?
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
 
+ doc/requirement-checking.txt |   22 +++++-
+ src/stat_test.c              |   71 ++++++++++++++++++
+ tests/generic/421            |  164 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/421.out        |    2 +
+ tests/generic/group          |    1 
+ 5 files changed, 259 insertions(+), 1 deletion(-)
+ create mode 100755 tests/generic/421
+ create mode 100644 tests/generic/421.out
 
-> Otherwise, you'd probably have to go a ways back to a kernel before this
-> regression was introduced. That looks like v3.4 according to the code
-> (but it's also possible other changes may have prevented this state
-> between then and with more recent kernels, particularly since it seems
-> to have only turned up more recently).
->
-> Brian
-
-Thanks again,
-Chris
+diff --git a/doc/requirement-checking.txt b/doc/requirement-checking.txt
+index f3fc9f4..730c7ac 100644
+--- a/doc/requirement-checking.txt
++++ b/doc/requirement-checking.txt
+@@ -12,7 +12,11 @@ they have.  This is done with _require_<xxx> macros, which may take parameters.
+ 	_require_test_program <name>
+ 	_require_xfs_io_command <name> [<switch>]
+ 
+- (2) System call requirements.
++ (2) Filesystem capability requirements.
++
++	_require_chattr <letters>
++
++ (3) System call requirements.
+ 
+ 	_require_statx
+ 
+@@ -67,6 +71,22 @@ _require_xfs_io_command <name> [<switch>]
+      the +x and -x arguments (DAX attribute).
+ 
+ 
++==================================
++FILESYSTEM CAPABILITY REQUIREMENTS
++==================================
++
++_require_chattr <letters>
++
++     The test requires that the filesystem attribute set by the chattr command
++     with +<letters> as an argument be available and supported by the $TEST_DEV
++     filesystem.  No check is made of the scratch filesystem.  For example:
++
++	_require_chattr ai
++
++     tests to see if setting the append-only and immutable attributes on a file
++     (chattr +a +i) is supported.
++
++
+ ========================
+ SYSTEM CALL REQUIREMENTS
+ ========================
+diff --git a/src/stat_test.c b/src/stat_test.c
+index cb3d4f4..b1205ec 100644
+--- a/src/stat_test.c
++++ b/src/stat_test.c
+@@ -102,6 +102,30 @@ static int field_cmp(const void *_key, const void *_p)
+ 	return strcmp(key, p->name);
+ }
+ 
++/*
++ * Sorted list of attribute flags for bsearch().
++ */
++struct attr_name {
++	const char	*name;
++	__u64		attr_flag;
++};
++
++static const struct attr_name attr_list[] = {
++	{ "append",	STATX_ATTR_APPEND },
++	{ "automount",	STATX_ATTR_AUTOMOUNT },
++	{ "compressed",	STATX_ATTR_COMPRESSED },
++	{ "encrypted",	STATX_ATTR_ENCRYPTED },
++	{ "immutable",	STATX_ATTR_IMMUTABLE },
++	{ "nodump",	STATX_ATTR_NODUMP },
++};
++
++static int attr_name_cmp(const void *_key, const void *_p)
++{
++	const char *key = _key;
++	const struct attr_name *p = _p;
++	return strcmp(key, p->name);
++}
++
+ struct file_type {
+ 	const char *name;
+ 	mode_t mode;
+@@ -128,6 +152,13 @@ void format(void)
+ 	fprintf(stderr, "usage: %s [-v] [-m<mask>] <testfile> [checks]\n", prog);
+ 	fprintf(stderr, "\t<mask> can be basic, all or a number; all is the default\n");
+ 	fprintf(stderr, "checks is a list of zero or more of:\n");
++	fprintf(stderr, "\tattr=[+-]<name> -- check an attribute in stx_attributes\n");
++	fprintf(stderr, "\t\tappend -- The file is marked as append only\n");
++	fprintf(stderr, "\t\tautomount -- The object is an automount point\n");
++	fprintf(stderr, "\t\tcompressed -- The file is marked as compressed\n");
++	fprintf(stderr, "\t\tencrypted -- The file is marked as encrypted\n");
++	fprintf(stderr, "\t\timmutable -- The file is marked as immutable\n");
++	fprintf(stderr, "\t\tnodump -- The file is marked as no-dump\n");
+ 	fprintf(stderr, "\tcmp_ref -- check that the reference file has identical stats\n");
+ 	fprintf(stderr, "\tref=<file> -- get reference stats from file\n");
+ 	fprintf(stderr, "\tstx_<field>=<val> -- statx field value check\n");
+@@ -564,6 +595,40 @@ static void check_field(const struct statx *stx, char *arg)
+ }
+ 
+ /*
++ * Check attributes in stx_attributes.  When stx_attributes_mask gets in
++ * upstream, we will need to consider that also.
++ */
++static void check_attribute(const struct statx *stx, char *arg)
++{
++	const struct attr_name *p;
++	__u64 attr;
++	bool set;
++
++	verbose("check attr %s\n", arg);
++	switch (arg[0]) {
++	case '+': set = true;	break;
++	case '-': set = false;	break;
++	default:
++		bad_arg("attr flag must be marked + (set) or - (unset)\n");
++	}
++	arg++;
++
++	p = bsearch(arg, attr_list, sizeof(attr_list) / sizeof(attr_list[0]),
++		    sizeof(attr_list[0]), attr_name_cmp);
++	if (!p)
++		bad_arg("Unrecognised attr name '%s'\n", arg);
++
++	attr = p->attr_flag;
++	if (set) {
++		check(stx->stx_attributes && attr,
++		      "Attribute %s should be set\n", arg);
++	} else {
++		check(~stx->stx_attributes && attr,
++		      "Attribute %s should be unset\n", arg);
++	}
++}
++
++/*
+  * Do the testing.
+  */
+ int main(int argc, char **argv)
+@@ -669,6 +734,12 @@ int main(int argc, char **argv)
+ 	for (; *argv; argv++) {
+ 		char *arg = *argv;
+ 
++		if (strncmp("attr=", arg, 5) == 0) {
++			/* attr=[+-]<attr> - check attribute flag */
++			check_attribute(&stx, arg + 5);
++			continue;
++		}
++
+ 		if (strcmp("cmp_ref", arg) == 0) {
+ 			/* cmp_ref - check ref file has same stats */
+ 			cmp_ref(&stx, mask);
+diff --git a/tests/generic/421 b/tests/generic/421
+new file mode 100755
+index 0000000..b31a3a9
+--- /dev/null
++++ b/tests/generic/421
+@@ -0,0 +1,164 @@
++#! /bin/bash
++# FS QA Test 421
++#
++# Test the statx stx_attribute flags that can be set with chattr
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
++# Written by David Howells (dhowells@redhat.com)
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	$CHATTR_PROG -a -i $testfile
++	rm -f $testfile
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os IRIX Linux
++_require_test
++_require_test_program stat_test
++_require_statx
++_require_command "$CHATTR_PROG" chattr
++
++function check_stat () {
++    $here/src/stat_test $* || echo stat_test failed
++}
++
++testfile=$TEST_DIR/$seq-file
++touch $testfile
++
++# Work out what $CHATTR_PROGs are supported on the fs under test
++a_supported=""
++c_supported=""
++d_supported=""
++i_supported=""
++a_list="0"
++c_list="0"
++d_list="0"
++i_list="0"
++
++if $CHATTR_PROG +a $testfile >&/dev/null
++then
++    a_supported=1
++    a_list="+a -a"
++fi
++
++if $CHATTR_PROG +c $testfile >&/dev/null
++then
++    c_supported=1
++    c_list="+c -c"
++fi
++
++if $CHATTR_PROG +d $testfile >&/dev/null
++then
++    d_supported=1
++    d_list="+d -d"
++fi
++
++if $CHATTR_PROG +i $testfile >&/dev/null
++then
++    i_supported=1
++    i_list="+i -i"
++fi
++
++echo "a=$a_supported d=$d_supported c=$c_supported i=$i_supported" >>$seqres.full
++
++if [ "$a_supported$c_supported$d_supported$i_supported" = "" ]
++then
++    _notrun "file system doesn't support any of $CHATTR_PROG +a/+c/+d/+i"
++fi
++
++$CHATTR_PROG -a -c -d -i $testfile
++
++###############################################################################
++#
++# Now do the actual test.  We can turn on and off append (a), compressed (c),
++# immutable (i) and no-dump (d) and theoretically see the output in the
++# attribute flags.  The following associations can be seen:
++#
++#	$CHATTR_PROG flag	stx_attributes flag
++#	+a		STATX_ATTR_APPEND
++#	+c		STATX_ATTR_COMPRESSED
++#	+d		STATX_ATTR_NODUMP
++#	+i		STATX_ATTR_IMMUTABLE
++#
++# Note, however, that if the filesystem doesn't paste this information into
++# stx_attributes, there's no way to tell the difference between cleared and
++# unset.
++#
++###############################################################################
++function try () {
++    echo Trying "$*" >>$seqres.full
++    $CHATTR_PROG ${a_supported:+$1} \
++	   ${c_supported:+$2} \
++	   ${d_supported:+$3} \
++	   ${i_supported:+$4} \
++	   $testfile
++    check_stat $testfile \
++	       ${a_supported:+attr=${1/a/append}} \
++	       ${c_supported:+attr=${2/c/compressed}} \
++	       ${d_supported:+attr=${3/d/nodump}} \
++	       ${i_supported:+attr=${4/i/immutable}} \
++	       stx_type=file \
++	       stx_size=0 \
++	       stx_rdev_major=0 \
++	       stx_rdev_minor=0 \
++	       stx_nlink=1
++}
++
++for a in $a_list
++do
++    for c in $c_list
++    do
++	for d in $d_list
++	do
++	    for i in $i_list
++	    do
++		try $a $c $d $i
++	    done
++	done
++    done
++done
++
++# For tradition's sake
++echo "Silence is golden"
++
++# Done.  We leave the success determination to the output comparator.
++status=0
++exit
+diff --git a/tests/generic/421.out b/tests/generic/421.out
+new file mode 100644
+index 0000000..6986277
+--- /dev/null
++++ b/tests/generic/421.out
+@@ -0,0 +1,2 @@
++QA output created by 421
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 5678101..f8b01fc 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -423,3 +423,4 @@
+ 418 auto rw
+ 419 auto quick encrypt
+ 420 auto quick
++421 auto quick
 
