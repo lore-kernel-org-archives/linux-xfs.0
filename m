@@ -1,110 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47364 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:50706 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752968AbdDDTh6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Apr 2017 15:37:58 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 50647782D2E
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2017 14:37:20 -0500 (CDT)
-Subject: Re: [ANNOUNCE] xfsprogs: for-next branch updated to 88a4a19
-References: <93206337-c274-6415-a068-7e89067a6f8f@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e72a5a22-47c5-88c5-8789-b02445195083@sandeen.net>
-Date: Tue, 4 Apr 2017 14:37:57 -0500
+        id S932958AbdDEKmH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Apr 2017 06:42:07 -0400
+Date: Wed, 5 Apr 2017 18:42:05 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 3/4] xfstests: Partially expand the documentation [ver #5]
+Message-ID: <20170405104205.GZ22845@eguan.usersys.redhat.com>
+References: <149132130900.18980.537296385250153410.stgit@warthog.procyon.org.uk>
+ <149132132595.18980.156040870381065105.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <93206337-c274-6415-a068-7e89067a6f8f@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <149132132595.18980.156040870381065105.stgit@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: David Howells <dhowells@redhat.com>
+Cc: linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On 3/29/17 11:28 AM, Eric Sandeen wrote:
-> Hi folks,
+On Tue, Apr 04, 2017 at 04:55:25PM +0100, David Howells wrote:
+> Partially expand the documentation available in xfstests to include
+> requirements checking and auxiliary programs for testing.
 > 
-> The xfsprogs repository at:
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 > 
-> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+>  doc/auxiliary-programs.txt   |   56 ++++++++++++++++++++++++++++++++++
+>  doc/requirement-checking.txt |   69 ++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 125 insertions(+)
+>  create mode 100644 doc/auxiliary-programs.txt
+>  create mode 100644 doc/requirement-checking.txt
 > 
-> has just been updated.
-> 
-> This was only a libxfs syncup; I will get to xfsprogs-proper
-> patches soon.  Changes are on the for-next and libxfs-4.11-sync
-> branches for now.
+> diff --git a/doc/auxiliary-programs.txt b/doc/auxiliary-programs.txt
+> new file mode 100644
+> index 0000000..17797b0
+> --- /dev/null
+> +++ b/doc/auxiliary-programs.txt
+> @@ -0,0 +1,56 @@
+> +			==============================
+> +			AUXILIARY PROGRAMS FOR TESTING
+> +			==============================
+> +
+> +Not everything a test script can do is easily done within a test script;
+> +sometimes it makes a lot more sense to write auxiliary program in C and have
+> +the test script call them.  Auxiliary commands can be found in the src/
+> +directory and in other packages.
+> +
+> +Tests wanting to use an auxiliary program found in the src/ directory should
+> +note the dependency with:
+> +
+> +	_require_test_program "<program-name>"
+> +
+> +
+> +Contents:
+> +
+> + - af_unix	-- Create an AF_UNIX socket
+> + - stat_test	-- statx syscall exercise
+> + - xfs_io	-- General I/O operation exercise
+> +
+> +
+> +==================
+> +QUICK DESCRIPTIONS
+> +==================
+> +
+> +af_unix
+> +
+> +	The af_unix program creates an AF_UNIX socket at the given location.
+> +
+> +stat_test
+> +
+> +	The stat_test program is primarily designed to exercise the statx()
+> +	system call.  It can check statx() against fstatat() and it can
+> +	compare and check various file attributes.
+> +
+> +	See also:
+> +		_require_statx
+> +
+> +
+> +xfs_io
+> +
+> +	The xfs_io program can be found in the xfsprogs package and can be used
+> +	to perform sequences of I/O commands, though it is limited to what it
+> +	can do on open files.
+> +
+> +	xfs_io is a debugging tool that is aimed at examining regular file I/O
+> +	paths rather than a raw XFS volume itself.  These code paths include
+> +	not only the obvious read/write/mmap interfaces for manipulating files,
+> +	but also cover all of the XFS extensions (such as space preallocation,
+> +	additional inode flags, etc).
+> +
+> +	Most of its commands can also be used with other filesystems.
+> +
+> +	See also:
+> +		_require_xfs_io_command
+> diff --git a/doc/requirement-checking.txt b/doc/requirement-checking.txt
+> new file mode 100644
+> index 0000000..29f0b74
+> --- /dev/null
+> +++ b/doc/requirement-checking.txt
+> @@ -0,0 +1,69 @@
+> +		   ========================================
+> +		   TESTING FOR REQUIREMENTS IN TEST SCRIPTS
+> +		   ========================================
+> +
+> +Test scripts need to indicate to the infrastructure what sorts of requirements
+> +they have.  This is done with _require_<xxx> macros, which may take parameters.
+> +
+> + (1) General requirements.
+> +
+> +	_require_command
+> +	_require_test
+> +	_require_test_program
+> +	_require_xfs_io_command
+> +
+> + (2) System call requirements.
+> +
+> +	_require_statx
+> +
+> +
+> +====================
+> +GENERAL REQUIREMENTS
+> +====================
+> +
+> +_require_command "$VAR" name
+> +
+> +     The test requires an external command, called 'name' be present on the
+> +     system and that '$VAR' should be set with the path to that command.  $VAR
+> +     should then be used to refer to the command when executing it.  For
+> +     example:
+> +
+> +	_require_command "$NC_PROG" "nc"
+> +
+> +     to locate the netcat command and then:
+> +
+> +	$NC_PROG -U -l $TEST_DIR/$seq-sock
 
-Realized that I neglected to add my SOB to any of these.  :/
+Hmm, NC_PROG is not defined/used anymore, perhaps it's not a good
+example for document purpose. How about $KILLALL_PROG? It's often
+forgotten and it could be a reminder in doc.
 
-Unsure if I should rebase these two branches to add them, or
-let it go.
-
-Thoughts/preferences?
-
-Sorry about that,
--Eric
-
-> The new head of the for-next branch is commit:
-> 
-> 88a4a19 xfs: verify inline directory data forks
-> 
-> New Commits:
-> 
-> Brian Foster (3):
->       [5894afd] xfs: handle indlen shortage on delalloc extent merge
->       [b226fa5] xfs: split indlen reservations fairly when under reserved
->       [a0b2bb7] xfs: use iomap new flag for newly allocated delalloc blocks
-> 
-> Chandan Rajendra (1):
->       [b4747e3] xfs: Use xfs_icluster_size_fsb() to calculate inode chunk alignment
-> 
-> Christoph Hellwig (5):
->       [09af6ff] xfs: go straight to real allocations for direct I/O COW writes
->       [bb47212] xfs: improve handling of busy extents in the low-level allocator
->       [622fea0] xfs: tune down agno asserts in the bmap code
->       [2527a6f] xfs: remove XFS_ALLOCTYPE_ANY_AG and XFS_ALLOCTYPE_START_AG
->       [e2594ba] xfs: try any AG when allocating the first btree block when reflinking
-> 
-> Darrick J. Wong (7):
->       [0ed1133] xfs: fix toctou race when locking an inode to access the data map
->       [ab021c7] xfs: fail _dir_open when readahead fails
->       [94b269a] xfs: filter out obviously bad btree pointers
->       [c89a743] xfs: check for obviously bad level values in the bmbt root
->       [ec5d083] xfs: verify free block header fields
->       [86107a2] xfs: allow unwritten extents in the CoW fork
->       [88a4a19] xfs: verify inline directory data forks
-> 
-> Eric Sandeen (4):
->       [d88798d] xfs: glean crc status from mp not flags in xfs_btree_init_block_int
->       [ee3a607] xfs: make xfs_btree_magic more generic
->       [ed849ef] xfs: remove boilerplate around xfs_btree_init_block
->       [7c1c908] xfs: remove unused struct declarations
-> 
-> 
-> Code Diffstat:
-> 
->  include/xfs_log_recover.h |   1 -
->  libxfs/libxfs_priv.h      |  16 ++--
->  libxfs/xfs_alloc.c        | 109 ++++++++++------------
->  libxfs/xfs_alloc.h        |   4 -
->  libxfs/xfs_bmap.c         | 233 ++++++++++++++++++++++++++--------------------
->  libxfs/xfs_bmap_btree.c   |  16 +---
->  libxfs/xfs_btree.c        |  48 +++++++---
->  libxfs/xfs_btree.h        |   8 +-
->  libxfs/xfs_da_btree.c     |   6 +-
->  libxfs/xfs_da_btree.h     |   2 +-
->  libxfs/xfs_dir2_node.c    |  51 +++++++++-
->  libxfs/xfs_dir2_priv.h    |   2 +
->  libxfs/xfs_dir2_sf.c      |  87 +++++++++++++++++
->  libxfs/xfs_ialloc.c       |   3 +-
->  libxfs/xfs_inode_fork.c   |  35 +++++--
->  libxfs/xfs_inode_fork.h   |   2 +-
->  mkfs/xfs_mkfs.c           |  35 ++-----
-> 
->  18 files changed, 451 insertions(+), 304 deletions(-)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Thanks,
+Eryu
