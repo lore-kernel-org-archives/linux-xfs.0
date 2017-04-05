@@ -1,69 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40620 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:53454 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754573AbdDFQ6r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Apr 2017 12:58:47 -0400
-Subject: Re: [PATCH] mkfs: rtinherit minval should be 0
-References: <20170406143426.19727-1-jtulak@redhat.com>
+        id S1751614AbdDEVs5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Apr 2017 17:48:57 -0400
+Subject: Re: [PATCH] xfs: fold __xfs_trans_roll into xfs_trans_roll
+References: <20170405185307.9846-1-hch@lst.de>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6c83318d-ef75-4dc2-e366-d50d74fb71e6@sandeen.net>
-Date: Thu, 6 Apr 2017 11:58:45 -0500
+Message-ID: <f7fdb4fc-3c99-2b64-66c4-0c6fa551266c@sandeen.net>
+Date: Wed, 5 Apr 2017 16:48:54 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170406143426.19727-1-jtulak@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20170405185307.9846-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On 4/6/17 9:34 AM, Jan Tulak wrote:
-> As with any other option, rtinherit=[0|1], but minval was incorrectly
-> set to 1, so it was not possible to disable this option.
-
-Long ago, when this option was added, it was simply a flag with
-no option parsing, i.e. "-d rtinherit"
-
-so I just want to double check ...
-
-1) was it intentional that this turned into a "=0/=1" type option,
-   i.e. an option which can be specified as disabled, essentially restating
-   the default?  Is it the intent that every flag option must now take a
-   value, and that it must take both "off" and "on" values?  Just checking
-   that I haven't lost the thread, here.
-
-IOWS: we used to have only "-d rtinherit"  But I think now we accept
--d rtinherit, -d rtinherit=0, and -d rtinherit=1.  Maybe it's water
-under the bridge, I don't see the use in adding value parsing to
-something that was just a simple flag before.  Can you enlighten
-me?
-
-2) really, this and projinherit and, um, extszinherit should
-   probably all go away.  They were written for testing, nothing
-   tests them, and they aren't documented.  Any volunteers for
-   that?  It actually finds its way outside of pure mkfs code,
-   so it's a little tricky to completely eradicate it, but it
-   could be done in 2 steps I think.
-
-thanks,
--Eric
-
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> ---
->  mkfs/xfs_mkfs.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On 4/5/17 1:53 PM, Christoph Hellwig wrote:
+> No one cares about the low-level helper anymore.
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 6fedc05c..5aac4d1b 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -290,7 +290,7 @@ struct opt_params dopts = {
->  		},
->  		{ .index = D_RTINHERIT,
->  		  .conflicts = { LAST_CONFLICT },
-> -		  .minval = 1,
-> +		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+"Nobody cares" sounds so cold-hearted.  ;)
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  fs/xfs/xfs_trans.c | 17 ++---------------
+>  fs/xfs/xfs_trans.h |  1 -
+>  2 files changed, 2 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index a280e126491f..be86e4ed23d5 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -1034,17 +1034,14 @@ xfs_trans_cancel(
+>   * chunk we've been working on and get a new transaction to continue.
+>   */
+>  int
+> -__xfs_trans_roll(
+> +xfs_trans_roll(
+>  	struct xfs_trans	**tpp,
+> -	struct xfs_inode	*dp,
+> -	int			*committed)
+> +	struct xfs_inode	*dp)
+>  {
+>  	struct xfs_trans	*trans;
+>  	struct xfs_trans_res	tres;
+>  	int			error;
+>  
+> -	*committed = 0;
+> -
+>  	/*
+>  	 * Ensure that the inode is always logged.
+>  	 */
+> @@ -1070,7 +1067,6 @@ __xfs_trans_roll(
+>  	if (error)
+>  		return error;
+>  
+> -	*committed = 1;
+>  	trans = *tpp;
+>  
+>  	/*
+> @@ -1093,12 +1089,3 @@ __xfs_trans_roll(
+>  		xfs_trans_ijoin(trans, dp, 0);
+>  	return 0;
+>  }
+> -
+> -int
+> -xfs_trans_roll(
+> -	struct xfs_trans	**tpp,
+> -	struct xfs_inode	*dp)
+> -{
+> -	int			committed;
+> -	return __xfs_trans_roll(tpp, dp, &committed);
+> -}
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index 2a9292df6640..a07acbf0bd8a 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -228,7 +228,6 @@ int		xfs_trans_free_extent(struct xfs_trans *,
+>  				      struct xfs_efd_log_item *, xfs_fsblock_t,
+>  				      xfs_extlen_t, struct xfs_owner_info *);
+>  int		xfs_trans_commit(struct xfs_trans *);
+> -int		__xfs_trans_roll(struct xfs_trans **, struct xfs_inode *, int *);
+>  int		xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
+>  void		xfs_trans_cancel(xfs_trans_t *);
+>  int		xfs_trans_ail_init(struct xfs_mount *);
 > 
