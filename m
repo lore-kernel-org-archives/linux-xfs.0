@@ -1,191 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50126 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:46372 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754408AbdDFSsv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Apr 2017 14:48:51 -0400
-Subject: [PATCH 2/3] xfs_io: refactor stat functions, add raw dump
-References: <4bb89f72-962d-a9a2-c224-daa828558444@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c93e8f2d-8164-c56c-e3a3-6f3b8fa43f99@sandeen.net>
-Date: Thu, 6 Apr 2017 13:48:50 -0500
+        id S1752653AbdDEUwN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Apr 2017 16:52:13 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 90F99C04BD28
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2017 20:52:12 +0000 (UTC)
+Received: from horse.redhat.com (unknown [10.18.25.132])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5F4A582EE4
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2017 20:52:12 +0000 (UTC)
+Date: Wed, 5 Apr 2017 16:52:11 -0400
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: lockdep warning on 4.11.0-rc5 kernel
+Message-ID: <20170405205211.GB4475@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <4bb89f72-962d-a9a2-c224-daa828558444@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>, fsdevel <linux-fsdevel@vger.kernel.org>, David Howells <dhowells@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-This adds a "-r" raw structure dump to stat options, and
-factors the code a bit; statx will also use print_file_info
-and print_xfs_info.
+Hi,
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+I am running 4.11.0-rc5 kernel and did a kernel build and noticed
+following lockdep warning on console. Have not analyzed it. Lots of
+xfs in backtrace, so sending it to xfs mailing list.
 
-diff --git a/io/stat.c b/io/stat.c
-index 3ae9903..770f3c7 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -59,16 +59,32 @@ filetype(mode_t mode)
- 	return NULL;
- }
- 
--int
--stat_f(
--	int		argc,
--	char		**argv)
-+static int
-+dump_raw_stat(struct stat *st)
- {
--	struct dioattr	dio;
--	struct fsxattr	fsx, fsxa;
--	struct stat	st;
--	int		verbose = (argc == 2 && !strcmp(argv[1], "-v"));
-+	printf("stat.blksize = %lu\n", st->st_blksize);
-+	printf("stat.nlink = %lu\n", st->st_nlink);
-+	printf("stat.uid = %u\n", st->st_uid);
-+	printf("stat.gid = %u\n", st->st_gid);
-+	printf("stat.mode: 0%o\n", st->st_mode);
-+	printf("stat.ino = %lu\n", st->st_ino);
-+	printf("stat.size = %lu\n", st->st_size);
-+	printf("stat.blocks = %lu\n", st->st_blocks);
-+	printf("stat.atime.tv_sec = %ld\n", st->st_atim.tv_sec);
-+	printf("stat.atime.tv_nsec = %ld\n", st->st_atim.tv_nsec);
-+	printf("stat.ctime.tv_sec = %ld\n", st->st_ctim.tv_sec);
-+	printf("stat.ctime.tv_nsec = %ld\n", st->st_ctim.tv_nsec);
-+	printf("stat.mtime.tv_sec = %ld\n", st->st_mtim.tv_sec);
-+	printf("stat.mtime.tv_nsec = %ld\n", st->st_mtim.tv_nsec);
-+	printf("stat.rdev_major = %u\n", major(st->st_rdev));
-+	printf("stat.rdev_minor = %u\n", minor(st->st_rdev));
-+	printf("stat.dev_major = %u\n", major(st->st_dev));
-+	printf("stat.dev_minor = %u\n", minor(st->st_dev));
-+	return 0;
-+}
- 
-+void print_file_info(void)
-+{
- 	printf(_("fd.path = \"%s\"\n"), file->name);
- 	printf(_("fd.flags = %s,%s,%s%s%s%s%s\n"),
- 		file->flags & IO_OSYNC ? _("sync") : _("non-sync"),
-@@ -78,21 +94,13 @@ stat_f(
- 		file->flags & IO_APPEND ? _(",append-only") : "",
- 		file->flags & IO_NONBLOCK ? _(",non-block") : "",
- 		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
--	if (fstat(file->fd, &st) < 0) {
--		perror("fstat");
--	} else {
--		printf(_("stat.ino = %lld\n"), (long long)st.st_ino);
--		printf(_("stat.type = %s\n"), filetype(st.st_mode));
--		printf(_("stat.size = %lld\n"), (long long)st.st_size);
--		printf(_("stat.blocks = %lld\n"), (long long)st.st_blocks);
--		if (verbose) {
--			printf(_("stat.atime = %s"), ctime(&st.st_atime));
--			printf(_("stat.mtime = %s"), ctime(&st.st_mtime));
--			printf(_("stat.ctime = %s"), ctime(&st.st_ctime));
--		}
--	}
--	if (file->flags & IO_FOREIGN)
--		return 0;
-+}
-+
-+void print_xfs_info(int verbose)
-+{
-+	struct dioattr	dio;
-+	struct fsxattr	fsx, fsxa;
-+
- 	if ((xfsctl(file->name, file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0 ||
- 	    (xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTRA, &fsxa)) < 0) {
- 		perror("FS_IOC_FSGETXATTR");
-@@ -112,6 +120,57 @@ stat_f(
- 		printf(_("dioattr.miniosz = %u\n"), dio.d_miniosz);
- 		printf(_("dioattr.maxiosz = %u\n"), dio.d_maxiosz);
- 	}
-+}
-+
-+int
-+stat_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	struct stat	st;
-+	int		c, verbose = 0, raw = 0;
-+
-+	while ((c = getopt(argc, argv, "rv")) != EOF) {
-+		switch (c) {
-+		case 'r':
-+			raw = 1;
-+			break;
-+		case 'v':
-+			verbose = 1;
-+			break;
-+		default:
-+			return command_usage(&stat_cmd);
-+		}
-+	}
-+
-+	if (raw && verbose)
-+		return command_usage(&stat_cmd);
-+
-+	if (fstat(file->fd, &st) < 0) {
-+		perror("fstat");
-+		return 0;
-+	}
-+
-+	if (raw)
-+		return dump_raw_stat(&st);
-+
-+	print_file_info();
-+
-+	printf(_("stat.ino = %lld\n"), (long long)st.st_ino);
-+	printf(_("stat.type = %s\n"), filetype(st.st_mode));
-+	printf(_("stat.size = %lld\n"), (long long)st.st_size);
-+	printf(_("stat.blocks = %lld\n"), (long long)st.st_blocks);
-+	if (verbose) {
-+		printf(_("stat.atime = %s"), ctime(&st.st_atime));
-+		printf(_("stat.mtime = %s"), ctime(&st.st_mtime));
-+		printf(_("stat.ctime = %s"), ctime(&st.st_ctime));
-+	}
-+
-+	if (file->flags & IO_FOREIGN)
-+		return 0;
-+
-+	print_xfs_info(verbose);
-+
- 	return 0;
- }
- 
-@@ -175,7 +234,7 @@ stat_init(void)
- 	stat_cmd.argmin = 0;
- 	stat_cmd.argmax = 1;
- 	stat_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
--	stat_cmd.args = _("[-v]");
-+	stat_cmd.args = _("[-v|-r]");
- 	stat_cmd.oneline = _("statistics on the currently open file");
- 
- 	statfs_cmd.name = "statfs";
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 19e1ae4..e384327 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -872,13 +872,15 @@ Only available in expert mode and requires privileges.
- Force the filesystem to shutdown (with or without flushing the log).
- Only available in expert mode and requires privileges.
- .TP
--.BR stat " [ " \-v " ]"
-+.BR stat " [ " \-v "|" \-r " ]"
- Selected statistics from
- .BR stat (2)
- and the XFS_IOC_GETXATTR system call on the current file. If the
- .B \-v
- option is specified, the atime (last access), mtime
--(last modify), and ctime (last change) timestamps are also displayed.
-+(last modify), and ctime (last change) timestamps are also displayed.  The
-+.B \-r
-+option dumps raw fields from the stat structure.
- .TP
- .B statfs
- Selected statistics from
+Thanks
+Vivek
 
+login: [ 4931.174758] 
+[ 4931.175065] =================================
+[ 4931.175731] [ INFO: inconsistent lock state ]
+[ 4931.176365] 4.11.0-rc5+ #87 Not tainted
+[ 4931.176920] ---------------------------------
+[ 4931.177537] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-W} usage.
+[ 4931.178463] kswapd0/128 [HC0[0]:SC0[0]:HE1:SE1] takes:
+[ 4931.179198]  (&sb->s_type->i_mutex_key#12){++++?+}, at: [<ffffffffa01fcb0a>] xfs_ilock+0x13a/0x210 [xfs]
+[ 4931.180584] {RECLAIM_FS-ON-W} state was registered at:
+[ 4931.181320]   mark_held_locks+0x6f/0xa0
+[ 4931.181878]   lockdep_trace_alloc+0x7d/0xe0
+[ 4931.182474]   kmem_cache_alloc+0x2f/0x2a0
+[ 4931.183083]   kmem_zone_alloc+0x81/0x120 [xfs]
+[ 4931.183739]   xfs_trans_alloc+0x6c/0x130 [xfs]
+[ 4931.184407]   xfs_setattr_nonsize+0x239/0x560 [xfs]
+[ 4931.185135]   xfs_vn_setattr_nonsize+0x59/0x150 [xfs]
+[ 4931.185890]   xfs_vn_setattr+0x22/0x70 [xfs]
+[ 4931.186503]   notify_change+0x2ee/0x440
+[ 4931.187058]   chmod_common+0xc5/0x150
+[ 4931.187582]   SyS_fchmod+0x53/0x90
+[ 4931.188077]   do_syscall_64+0x6c/0x1f0
+[ 4931.188616]   return_from_SYSCALL_64+0x0/0x7a
+[ 4931.189238] irq event stamp: 397343
+[ 4931.189739] hardirqs last  enabled at (397343): [<ffffffff81135cca>] __call_rcu+0x1fa/0x340
+[ 4931.190909] hardirqs last disabled at (397342): [<ffffffff81135b21>] __call_rcu+0x51/0x340
+[ 4931.192070] softirqs last  enabled at (397192): [<ffffffff818fb86d>] __do_softirq+0x38d/0x4c3
+[ 4931.193263] softirqs last disabled at (397185): [<ffffffff810bae27>] irq_exit+0xf7/0x100
+[ 4931.194397] 
+[ 4931.194397] other info that might help us debug this:
+[ 4931.195318]  Possible unsafe locking scenario:
+[ 4931.195318] 
+[ 4931.196155]        CPU0
+[ 4931.196511]        ----
+[ 4931.196874]   lock(&sb->s_type->i_mutex_key#12);
+[ 4931.197526]   <Interrupt>
+[ 4931.197912]     lock(&sb->s_type->i_mutex_key#12);
+[ 4931.198591] 
+[ 4931.198591]  *** DEADLOCK ***
+[ 4931.198591] 
+[ 4931.199429] 2 locks held by kswapd0/128:
+[ 4931.199990]  #0:  (shrinker_rwsem){++++..}, at: [<ffffffff8121a16e>] shrink_slab.part.46+0x5e/0x600
+[ 4931.201261]  #1:  (&type->s_umount_key#48){++++++}, at: [<ffffffff812aa54b>] trylock_super+0x1b/0x50
+[ 4931.202832] 
+[ 4931.202832] stack backtrace:
+[ 4931.203878] CPU: 2 PID: 128 Comm: kswapd0 Not tainted 4.11.0-rc5+ #87
+[ 4931.204998] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.8.2-20150714_191134- 04/01/2014
+[ 4931.206533] Call Trace:
+[ 4931.207114]  dump_stack+0x86/0xc3
+[ 4931.207807]  print_usage_bug+0x1d0/0x1e0
+[ 4931.208573]  mark_lock+0x559/0x5c0
+[ 4931.209274]  ? print_shortest_lock_dependencies+0x1a0/0x1a0
+[ 4931.210274]  __lock_acquire+0x6ce/0x13c0
+[ 4931.211049]  lock_acquire+0xe3/0x1d0
+[ 4931.211776]  ? lock_acquire+0xe3/0x1d0
+[ 4931.212556]  ? xfs_ilock+0x13a/0x210 [xfs]
+[ 4931.213373]  ? xfs_inactive+0xec/0x130 [xfs]
+[ 4931.214231]  down_write_nested+0x46/0x80
+[ 4931.215038]  ? xfs_ilock+0x13a/0x210 [xfs]
+[ 4931.215851]  xfs_ilock+0x13a/0x210 [xfs]
+[ 4931.216634]  xfs_inactive+0xec/0x130 [xfs]
+[ 4931.217699]  xfs_fs_destroy_inode+0xbb/0x2d0 [xfs]
+[ 4931.218594]  destroy_inode+0x3b/0x60
+[ 4931.219314]  evict+0x139/0x1c0
+[ 4931.220061]  dispose_list+0x56/0x80
+[ 4931.220765]  prune_icache_sb+0x5a/0x80
+[ 4931.221498]  super_cache_scan+0x14e/0x1a0
+[ 4931.222269]  shrink_slab.part.46+0x216/0x600
+[ 4931.223075]  shrink_slab+0x29/0x30
+[ 4931.223883]  shrink_node+0x108/0x320
+[ 4931.224588]  kswapd+0x391/0x990
+[ 4931.225246]  kthread+0x10c/0x140
+[ 4931.225902]  ? mem_cgroup_shrink_node+0x300/0x300
+[ 4931.226760]  ? kthread_create_on_node+0x70/0x70
+[ 4931.227579]  ret_from_fork+0x31/0x40
 
