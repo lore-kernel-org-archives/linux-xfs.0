@@ -1,130 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18045 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40114 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932371AbdDFHf7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Apr 2017 03:35:59 -0400
-Subject: [PATCH 1/4] xfstests: Add an auxiliary program to create an AF_UNIX
- socket [ver #9]
-From: David Howells <dhowells@redhat.com>
-Date: Thu, 06 Apr 2017 08:35:56 +0100
-Message-ID: <149146415678.12061.13562442148388464862.stgit@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        id S1755829AbdDEReR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Apr 2017 13:34:17 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0343764D8E
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2017 17:34:17 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-8-89.pek2.redhat.com [10.72.8.89])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 194B584FE3
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2017 17:34:15 +0000 (UTC)
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH v2] repair: handle reading superblock from image on larger sector size filesystem
+Date: Thu,  6 Apr 2017 01:33:58 +0800
+Message-Id: <1491413638-9590-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
 
-Add an auxiliary program to create an AF_UNIX socket at the specified
-location so that tests can do things with it.
+Due to xfs_repair uses direct IO, sometimes it can't read superblock
+from an image file has smaller sector size than host filesystem.
+Especially that superblock doesn't align with host filesystem's
+sector size.
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Fortunately, xfsprogs already has code to do "isa_file" check in
+xfs_repair.c, it turns off O_DIRECT after phase1 if the sector
+size is less than the host filesystem's geometry. So move it upward
+phase1 directly.
+
+Signed-off-by: Zorro Lang <zlang@redhat.com>
 ---
 
- .gitignore    |    1 +
- src/Makefile  |    2 +-
- src/af_unix.c |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 68 insertions(+), 1 deletion(-)
- create mode 100644 src/af_unix.c
+Hi,
 
-diff --git a/.gitignore b/.gitignore
-index 1ed2a92..8a7c052 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -35,6 +35,7 @@
- /ltp/iogen
+V2 did below changes:
+1) remove all changes in V1.
+2) move "isa_file" double check over than phase1.
+
+Thanks,
+Zorro
+
+ repair/xfs_repair.c | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index b07567b..0525c6d 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -657,24 +657,6 @@ main(int argc, char **argv)
+ 	timestamp(PHASE_START, 0, NULL);
+ 	timestamp(PHASE_END, 0, NULL);
  
- # src/ binaries
-+/src/af_unix
- /src/alloc
- /src/append_reader
- /src/append_writer
-diff --git a/src/Makefile b/src/Makefile
-index a7f27f0..716c178 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -12,7 +12,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 	godown resvtest writemod makeextents itrash rename \
- 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
- 	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
--	holetest t_truncate_self t_mmap_dio
-+	holetest t_truncate_self t_mmap_dio af_unix
+-	/* do phase1 to make sure we have a superblock */
+-	phase1(temp_mp);
+-	timestamp(PHASE_END, 1, NULL);
+-
+-	if (no_modify && primary_sb_modified)  {
+-		do_warn(_("Primary superblock would have been modified.\n"
+-			  "Cannot proceed further in no_modify mode.\n"
+-			  "Exiting now.\n"));
+-		exit(1);
+-	}
+-
+-	rval = get_sb(&psb, 0, XFS_MAX_SECTORSIZE, 0);
+-	if (rval != XR_OK) {
+-		do_warn(_("Primary superblock bad after phase 1!\n"
+-			  "Exiting now.\n"));
+-		exit(1);
+-	}
+-
+ 	/* -f forces this, but let's be nice and autodetect it, as well. */
+ 	if (!isa_file) {
+ 		int		fd = libxfs_device_to_fd(x.ddev);
+@@ -717,6 +699,24 @@ main(int argc, char **argv)
+ 		}
+ 	}
  
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-diff --git a/src/af_unix.c b/src/af_unix.c
-new file mode 100644
-index 0000000..dc2368e
---- /dev/null
-+++ b/src/af_unix.c
-@@ -0,0 +1,66 @@
-+/* Create an AF_UNIX socket.
-+ *
-+ * Copyright (C) 2017 Red Hat, Inc. All Rights Reserved.
-+ * Written by David Howells (dhowells@redhat.com)
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public Licence
-+ * as published by the Free Software Foundation; either version
-+ * 2 of the Licence, or (at your option) any later version.
-+ */
++	/* do phase1 to make sure we have a superblock */
++	phase1(temp_mp);
++	timestamp(PHASE_END, 1, NULL);
 +
-+#include <stdarg.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <stdbool.h>
-+#include <string.h>
-+#include <unistd.h>
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/socket.h>
-+#include <sys/un.h>
-+
-+#define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
-+
-+int main(int argc, char *argv[])
-+{
-+	struct sockaddr_un sun;
-+	struct stat st;
-+	size_t len, max;
-+	int fd;
-+
-+	if (argc != 2) {
-+		fprintf(stderr, "Format: %s <socketpath>\n", argv[0]);
-+		exit(2);
-+	}
-+
-+	max = sizeof(sun.sun_path);
-+	len = strlen(argv[1]);
-+	if (len >= max) {
-+		fprintf(stderr, "Filename too long (max %zu)\n", max);
-+		exit(2);
-+	}
-+
-+	fd = socket(AF_UNIX, SOCK_DGRAM, 0);
-+	if (fd < 0) {
-+		perror("socket");
++	if (no_modify && primary_sb_modified)  {
++		do_warn(_("Primary superblock would have been modified.\n"
++			  "Cannot proceed further in no_modify mode.\n"
++			  "Exiting now.\n"));
 +		exit(1);
 +	}
 +
-+	memset(&sun, 0, sizeof(sun));
-+	sun.sun_family = AF_UNIX;
-+	strcpy(sun.sun_path, argv[1]);
-+	if (bind(fd, (struct sockaddr *)&sun, sizeof(sun)) == -1) {
-+		perror("bind");
++	rval = get_sb(&psb, 0, XFS_MAX_SECTORSIZE, 0);
++	if (rval != XR_OK) {
++		do_warn(_("Primary superblock bad after phase 1!\n"
++			  "Exiting now.\n"));
 +		exit(1);
 +	}
 +
-+	if (stat(argv[1], &st)) {
-+		fprintf(stderr, "Couldn't stat socket after creation: %m\n");
-+		exit(1);
-+	}
-+
-+	exit(0);
-+}
+ 	/*
+ 	 * Prepare the mount structure. Point the log reference to our local
+ 	 * copy so it's available to the various phases. The log bits are
+-- 
+2.7.4
 
