@@ -1,106 +1,255 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46017 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752358AbdDCSx4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 3 Apr 2017 14:53:56 -0400
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: [PATCH 8/8] nowait aio: btrfs
-Date: Mon,  3 Apr 2017 13:53:07 -0500
-Message-Id: <20170403185307.6243-9-rgoldwyn@suse.de>
-In-Reply-To: <20170403185307.6243-1-rgoldwyn@suse.de>
-References: <20170403185307.6243-1-rgoldwyn@suse.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42776 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752482AbdDEAzP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2017 20:55:15 -0400
+Date: Tue, 4 Apr 2017 17:55:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_repair: pass btnum not magic to phase5 functions
+Message-ID: <20170405005509.GT4864@birch.djwong.org>
+References: <904ac9a2-83e4-f534-c9f5-e071844b6a5e@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <904ac9a2-83e4-f534-c9f5-e071844b6a5e@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: jack@suse.com, hch@infradead.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Tue, Apr 04, 2017 at 04:36:13PM -0500, Eric Sandeen wrote:
+> When ed849ef xfs: remove boilerplate around xfs_btree_init_block
+> was merged from kernelspace, I made only minimal changes at the
+> libxfs boundary to accommodate the new libxfs_btree_init_block
+> interface.
+> 
+> We can chase that up a bit higher and remove more code by
+> passing in btnum from the start; we can also remove the
+> "finobt" argument from build_ino_tree() because that is
+> known from type of tree passed in.
 
-Return EAGAIN if any of the following checks fail
- + i_rwsem is not lockable
- + NODATACOW or PREALLOC is not set
- + Cannot nocow at the desired location
- + Writing beyond end of file which is not allocated
----
- fs/btrfs/file.c  | 25 ++++++++++++++++++++-----
- fs/btrfs/inode.c |  3 +++
- fs/btrfs/super.c |  2 +-
- 3 files changed, 24 insertions(+), 6 deletions(-)
+Assuming you tested all this,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-index 520cb72..a870e5d 100644
---- a/fs/btrfs/file.c
-+++ b/fs/btrfs/file.c
-@@ -1823,12 +1823,29 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
- 	ssize_t num_written = 0;
- 	bool sync = (file->f_flags & O_DSYNC) || IS_SYNC(file->f_mapping->host);
- 	ssize_t err;
--	loff_t pos;
--	size_t count;
-+	loff_t pos = iocb->ki_pos;
-+	size_t count = iov_iter_count(from);
- 	loff_t oldsize;
- 	int clean_page = 0;
- 
--	inode_lock(inode);
-+	if ((iocb->ki_flags & IOCB_NOWAIT) &&
-+			(iocb->ki_flags & IOCB_DIRECT)) {
-+		/* Don't sleep on inode rwsem */
-+		if (!inode_trylock(inode))
-+			return -EAGAIN;
-+		/*
-+		 * We will allocate space in case nodatacow is not set,
-+		 * so bail
-+		 */
-+		if (!(BTRFS_I(inode)->flags & (BTRFS_INODE_NODATACOW |
-+					      BTRFS_INODE_PREALLOC)) ||
-+		    check_can_nocow(BTRFS_I(inode), pos, &count) <= 0) {
-+			inode_unlock(inode);
-+			return -EAGAIN;
-+		}
-+	} else
-+		inode_lock(inode);
-+
- 	err = generic_write_checks(iocb, from);
- 	if (err <= 0) {
- 		inode_unlock(inode);
-@@ -1862,8 +1879,6 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
- 	 */
- 	update_time_for_write(inode);
- 
--	pos = iocb->ki_pos;
--	count = iov_iter_count(from);
- 	start_pos = round_down(pos, fs_info->sectorsize);
- 	oldsize = i_size_read(inode);
- 	if (start_pos > oldsize) {
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index a18510b..d91b21a 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -8627,6 +8627,9 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 			dio_data.overwrite = 1;
- 			inode_unlock(inode);
- 			relock = true;
-+		} else if (iocb->ki_flags & IOCB_NOWAIT) {
-+			ret = -EAGAIN;
-+			goto out;
- 		}
- 		ret = btrfs_delalloc_reserve_space(inode, offset, count);
- 		if (ret)
-diff --git a/fs/btrfs/super.c b/fs/btrfs/super.c
-index da687dc..5e60659 100644
---- a/fs/btrfs/super.c
-+++ b/fs/btrfs/super.c
-@@ -2175,7 +2175,7 @@ static struct file_system_type btrfs_fs_type = {
- 	.name		= "btrfs",
- 	.mount		= btrfs_mount,
- 	.kill_sb	= btrfs_kill_super,
--	.fs_flags	= FS_REQUIRES_DEV | FS_BINARY_MOUNTDATA,
-+	.fs_flags	= FS_REQUIRES_DEV | FS_BINARY_MOUNTDATA | FS_NOWAIT,
- };
- MODULE_ALIAS_FS("btrfs");
- 
--- 
-2.10.2
+--D
 
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+>  phase5.c |   63 +++++++++++++++++++++++----------------------------------------
+>  1 file changed, 23 insertions(+), 40 deletions(-)
+> 
+> diff --git a/repair/phase5.c b/repair/phase5.c
+> index d00b078..4574eae 100644
+> --- a/repair/phase5.c
+> +++ b/repair/phase5.c
+> @@ -630,19 +630,15 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  static void
+>  prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  		bt_status_t *btree_curs, xfs_agblock_t startblock,
+> -		xfs_extlen_t blockcount, int level, __uint32_t magic)
+> +		xfs_extlen_t blockcount, int level, xfs_btnum_t btnum)
+>  {
+>  	struct xfs_btree_block	*bt_hdr;
+>  	xfs_alloc_key_t		*bt_key;
+>  	xfs_alloc_ptr_t		*bt_ptr;
+>  	xfs_agblock_t		agbno;
+>  	bt_stat_level_t		*lptr;
+> -	xfs_btnum_t		btnum;
+>  
+> -	if (magic == XFS_ABTB_MAGIC)
+> -		btnum = XFS_BTNUM_BNO;
+> -	else
+> -		btnum = XFS_BTNUM_CNT;
+> +	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
+>  
+>  	level++;
+>  
+> @@ -658,7 +654,7 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  		 * left-hand side of the tree.
+>  		 */
+>  		prop_freespace_cursor(mp, agno, btree_curs, startblock,
+> -				blockcount, level, magic);
+> +				blockcount, level, btnum);
+>  	}
+>  
+>  	if (be16_to_cpu(bt_hdr->bb_numrecs) ==
+> @@ -703,7 +699,7 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  		 * propagate extent record for first extent in new block up
+>  		 */
+>  		prop_freespace_cursor(mp, agno, btree_curs, startblock,
+> -				blockcount, level, magic);
+> +				blockcount, level, btnum);
+>  	}
+>  	/*
+>  	 * add extent info to current block
+> @@ -722,13 +718,13 @@ prop_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  }
+>  
+>  /*
+> - * rebuilds a freespace tree given a cursor and magic number of type
+> + * rebuilds a freespace tree given a cursor and type
+>   * of tree to build (bno or bcnt).  returns the number of free blocks
+>   * represented by the tree.
+>   */
+>  static xfs_extlen_t
+>  build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+> -		bt_status_t *btree_curs, __uint32_t magic)
+> +		bt_status_t *btree_curs, xfs_btnum_t btnum)
+>  {
+>  	xfs_agnumber_t		i;
+>  	xfs_agblock_t		j;
+> @@ -739,7 +735,8 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  	extent_tree_node_t	*ext_ptr;
+>  	bt_stat_level_t		*lptr;
+>  	xfs_extlen_t		freeblks;
+> -	xfs_btnum_t		btnum;
+> +
+> +	ASSERT(btnum == XFS_BTNUM_BNO || btnum == XFS_BTNUM_CNT);
+>  
+>  #ifdef XR_BLD_FREE_TRACE
+>  	fprintf(stderr, "in build_freespace_tree, agno = %d\n", agno);
+> @@ -748,10 +745,6 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  	freeblks = 0;
+>  
+>  	ASSERT(level > 0);
+> -	if (magic == XFS_ABTB_MAGIC)
+> -		btnum = XFS_BTNUM_BNO;
+> -	else
+> -		btnum = XFS_BTNUM_CNT;
+>  
+>  	/*
+>  	 * initialize the first block on each btree level
+> @@ -784,7 +777,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  	 * pointers for the parent.  that can recurse up to the root
+>  	 * if required.  set the sibling pointers for leaf level here.
+>  	 */
+> -	if (magic == XFS_ABTB_MAGIC)
+> +	if (btnum == XFS_BTNUM_BNO)
+>  		ext_ptr = findfirst_bno_extent(agno);
+>  	else
+>  		ext_ptr = findfirst_bcnt_extent(agno);
+> @@ -824,7 +817,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  			prop_freespace_cursor(mp, agno, btree_curs,
+>  					ext_ptr->ex_startblock,
+>  					ext_ptr->ex_blockcount,
+> -					0, magic);
+> +					0, btnum);
+>  
+>  		bt_rec = (xfs_alloc_rec_t *)
+>  			  ((char *)bt_hdr + XFS_ALLOC_BLOCK_LEN(mp));
+> @@ -835,7 +828,7 @@ build_freespace_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  			bt_rec[j].ar_blockcount = cpu_to_be32(
+>  							ext_ptr->ex_blockcount);
+>  			freeblks += ext_ptr->ex_blockcount;
+> -			if (magic == XFS_ABTB_MAGIC)
+> +			if (btnum == XFS_BTNUM_BNO)
+>  				ext_ptr = findnext_bno_extent(ext_ptr);
+>  			else
+>  				ext_ptr = findnext_bcnt_extent(agno, ext_ptr);
+> @@ -1138,8 +1131,8 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+>   */
+>  static void
+>  build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+> -		bt_status_t *btree_curs, __uint32_t magic,
+> -		struct agi_stat *agi_stat, int finobt)
+> +		bt_status_t *btree_curs, xfs_btnum_t btnum,
+> +		struct agi_stat *agi_stat)
+>  {
+>  	xfs_agnumber_t		i;
+>  	xfs_agblock_t		j;
+> @@ -1158,14 +1151,8 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  	int			spmask;
+>  	uint64_t		sparse;
+>  	uint16_t		holemask;
+> -	xfs_btnum_t		btnum;
+>  
+> -	if (magic == XFS_IBT_CRC_MAGIC || magic == XFS_IBT_MAGIC)
+> -		btnum = XFS_BTNUM_INO;
+> -	else if (magic == XFS_FIBT_CRC_MAGIC || magic == XFS_FIBT_MAGIC)
+> -		btnum = XFS_BTNUM_FINO;
+> -	else 
+> -		ASSERT(0);
+> +	ASSERT(btnum == XFS_BTNUM_INO || btnum == XFS_BTNUM_FINO);
+>  
+>  	for (i = 0; i < level; i++)  {
+>  		lptr = &btree_curs->level[i];
+> @@ -1197,7 +1184,7 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+>  	 * pointers for the parent.  that can recurse up to the root
+>  	 * if required.  set the sibling pointers for leaf level here.
+>  	 */
+> -	if (finobt)
+> +	if (btnum == XFS_BTNUM_FINO)
+>  		ino_rec = findfirst_free_inode_rec(agno);
+>  	else
+>  		ino_rec = findfirst_inode_rec(agno);
+> @@ -1280,7 +1267,7 @@ nextrec:
+>  			freecount += finocnt;
+>  			count += inocnt;
+>  
+> -			if (finobt)
+> +			if (btnum == XFS_BTNUM_FINO)
+>  				ino_rec = next_free_ino_rec(ino_rec);
+>  			else
+>  				ino_rec = next_ino_rec(ino_rec);
+> @@ -2223,7 +2210,6 @@ phase5_func(
+>  	xfs_extlen_t	freeblks2;
+>  #endif
+>  	xfs_agblock_t	num_extents;
+> -	__uint32_t	magic;
+>  	struct agi_stat	agi_stat = {0,};
+>  	int		error;
+>  
+> @@ -2350,7 +2336,7 @@ phase5_func(
+>  		 * now rebuild the freespace trees
+>  		 */
+>  		freeblks1 = build_freespace_tree(mp, agno,
+> -					&bno_btree_curs, XFS_ABTB_MAGIC);
+> +					&bno_btree_curs, XFS_BTNUM_BNO);
+>  #ifdef XR_BLD_FREE_TRACE
+>  		fprintf(stderr, "# of free blocks == %d\n", freeblks1);
+>  #endif
+> @@ -2358,10 +2344,10 @@ phase5_func(
+>  
+>  #ifdef DEBUG
+>  		freeblks2 = build_freespace_tree(mp, agno,
+> -					&bcnt_btree_curs, XFS_ABTC_MAGIC);
+> +					&bcnt_btree_curs, XFS_BTNUM_CNT);
+>  #else
+>  		(void) build_freespace_tree(mp, agno,
+> -					&bcnt_btree_curs, XFS_ABTC_MAGIC);
+> +					&bcnt_btree_curs, XFS_BTNUM_CNT);
+>  #endif
+>  		write_cursor(&bcnt_btree_curs);
+>  
+> @@ -2388,19 +2374,16 @@ phase5_func(
+>  		/*
+>  		 * build inode allocation tree.
+>  		 */
+> -		magic = xfs_sb_version_hascrc(&mp->m_sb) ?
+> -				XFS_IBT_CRC_MAGIC : XFS_IBT_MAGIC;
+> -		build_ino_tree(mp, agno, &ino_btree_curs, magic, &agi_stat, 0);
+> +		build_ino_tree(mp, agno, &ino_btree_curs, XFS_BTNUM_INO,
+> +				&agi_stat);
+>  		write_cursor(&ino_btree_curs);
+>  
+>  		/*
+>  		 * build free inode tree
+>  		 */
+>  		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> -			magic = xfs_sb_version_hascrc(&mp->m_sb) ?
+> -					XFS_FIBT_CRC_MAGIC : XFS_FIBT_MAGIC;
+> -			build_ino_tree(mp, agno, &fino_btree_curs, magic,
+> -					NULL, 1);
+> +			build_ino_tree(mp, agno, &fino_btree_curs,
+> +					XFS_BTNUM_FINO, NULL);
+>  			write_cursor(&fino_btree_curs);
+>  		}
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
