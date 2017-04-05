@@ -1,85 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59082 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:41022 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754498AbdDFIIG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Apr 2017 04:08:06 -0400
-Date: Thu, 6 Apr 2017 10:08:02 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Metadata corruption detected at xfs_inode_buf_verify
-Message-ID: <20170406080802.3g6ilun5k2fmxf2t@eorzea.usersys.redhat.com>
-References: <alpine.DEB.2.21.1.1704051729340.1086@trent.utfs.org>
+        id S1755494AbdDEOJR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Apr 2017 10:09:17 -0400
+Subject: Re: [xfsprogs] Do we need so many data types for user input?
+References: <CACj3i738tUsYyRvQmr3NfPQ=P2FNruh2xsr1TAuLMJ69AV0a0w@mail.gmail.com>
+ <20170404194825.GX28800@wotan.suse.de>
+ <5784453e-dc91-1e26-451d-3afea138adbf@sandeen.net>
+ <CACj3i73u11rNPK701aVm07qOPpT2r-1r_m--iW-D6SwLfb-pbw@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <83915e74-6198-4b0a-9aff-96cdedfad97a@sandeen.net>
+Date: Wed, 5 Apr 2017 09:08:27 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.1.1704051729340.1086@trent.utfs.org>
+In-Reply-To: <CACj3i73u11rNPK701aVm07qOPpT2r-1r_m--iW-D6SwLfb-pbw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
 
-On Wed, Apr 05, 2017 at 05:36:13PM -0700, Christian Kujau wrote:
-> Hi,
+
+On 4/5/17 3:26 AM, Jan Tulak wrote:
+> On Tue, Apr 4, 2017 at 10:17 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> On 4/4/17 2:48 PM, Luis R. Rodriguez wrote:
+>>>
+>>> And then agsize is capped artificially later via validate_ag_geometry():
+>>>
+>>>         if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
+>>>               ...
+>>>       if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
+>>>               ...
+>>>       if (agsize > dblocks) {
+>>>               ...
+>>>       if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
+>>>               ...
+>>>
+>>> Its not clear if this is capped at UINT_MAX or if we need ULLONG_MAX here.
+>>
+>> .maxval = XFS_AG_MAX_BYTES,
+>>
+>> #define XFS_AG_MAX_BYTES        ((XFS_AG_BYTES(31)))    /* 1 TB */
+>> #define XFS_AG_BYTES(bblog)     ((long long)BBSIZE << (bblog))
+>>
+>> so the maximum is (long long)(512) << 31
+>>
+>> so, no - agsize won't fit in a 32 bit var, if that's the question...
+>>
 > 
-> I have a raspberrypi and try to use that as a small file server. After
-> trying to delete a ~1TB direcory, it locked up and was then power cycled. 
-> Now I cannot mount the XFS partition any more:
-> 
-
-Rpi will usually power cycle when it overheat, and possibly when an NMI is
-triggered, since (I suspect) Rpi has no support for NMIs, so the CPU will just
-reset.
-If you got a soft lockup, your Rpi might have been power cycled due overhead, or
-due unsupported NMI if you have got a hardlockup.
-
-Removing 1TB directory, doesn't say much, you can have a 1TB file, which will be
-quite fast to delete, or you can have 1million 1MiB files, which will require
-extra processing (and maybe your Rpi couldn't handle that?)
-
-
-> ===============================================
-> $ mount -t xfs /dev/mapper/owc1 /mnt/disk
-> mount: mount /dev/mapper/owc1 on /mnt/disk failed: Structure needs cleaning
->
-You couldn't mount the FS, so, you couldn't replay whatever were in the XFS
-journal.
- 
->    [producing lots of messages in dmesg, see below]
+> Yeah. I think that we can make it uint64 everywhere unless it is
+> causing an issue in a specific case with a bit shift or something, and
+> just limit the input value where appropriate explicitly.
 > 
 > 
-> $ xfs_repair -v /dev/mapper/owc1
-> Phase 1 - find and verify superblock...
->         - reporting progress in intervals of 15 minutes
->         - block cache size set to 26024 entries
-> Phase 2 - using internal log
->         - zero log...
-> zero_log: head block 3455547 tail block 3450129
-> ERROR: The filesystem has valuable metadata changes in a log which needs 
-> [...]
-> ===============================================
->
- 
-> Mounting with -o ro,norecovery works, and the directory I wanted to remove 
-> is still there, in parts - only about 200 GB have been deleted.
+> And...
+>> And at the end of the day, we are converting all numbers into unsigned
 > 
-Some of the remaining changes might have been logged but since you couldn't
-replay it, you won't see the files being deleted.
+> I take back this part, we are going through long long, not unsigned long long.
+> Everything else is still valid.
 
-> Full script log and .config: http://nerdbynature.de/bits/4.11.0-rc5/xfs/
+Ok, for those who aren't immersed 24/7 in mkfs ;) can you help us understand
+where you're going with this?  What's the change you're proposing, and how
+does it help?
+
+Thanks,
+-Eric
+
+> Jan
 > 
-> Any ideas on how to solve this?
-> 
-You will need to xfs_repair the filesystem zeroing the logs, then you will be
-able to remount it RW and continue with your operations.
-
-See xfs_repair -L option.
-
-
-> Thanks,
-> Christian.
-> -- 
-> BOFH excuse #431:
-> 
-
--- 
-Carlos
