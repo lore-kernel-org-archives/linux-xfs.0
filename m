@@ -1,62 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from walrus.jabberwocky.com ([173.9.29.57]:36629 "EHLO
-        mail.jabberwocky.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751764AbdDHL0Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Apr 2017 07:26:16 -0400
-Content-Type: text/plain; charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: Processes stuck in D state when accessing XFSv5 filesystem
-From: David Shaw <dshaw@jabberwocky.com>
-In-Reply-To: <20170407173946.GD55851@bfoster.bfoster>
-Date: Sat, 8 Apr 2017 07:26:14 -0400
-Content-Transfer-Encoding: 8BIT
-Message-Id: <2F0091FC-EF20-4A63-B89E-C97094091953@jabberwocky.com>
-References: <C1597D74-938F-4236-91F0-4CA1D6907F50@jabberwocky.com>
- <20170407165616.2269260a@harpe.intellique.com>
- <CC0DA53B-D439-476E-AEEE-44951FE8B69C@jabberwocky.com>
- <20170407173946.GD55851@bfoster.bfoster>
+Received: from mail-ua0-f179.google.com ([209.85.217.179]:36803 "EHLO
+        mail-ua0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755329AbdDEOYk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2017 10:24:40 -0400
+Received: by mail-ua0-f179.google.com with SMTP id 100so8939102uaj.3
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2017 07:24:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <83915e74-6198-4b0a-9aff-96cdedfad97a@sandeen.net>
+References: <CACj3i738tUsYyRvQmr3NfPQ=P2FNruh2xsr1TAuLMJ69AV0a0w@mail.gmail.com>
+ <20170404194825.GX28800@wotan.suse.de> <5784453e-dc91-1e26-451d-3afea138adbf@sandeen.net>
+ <CACj3i73u11rNPK701aVm07qOPpT2r-1r_m--iW-D6SwLfb-pbw@mail.gmail.com> <83915e74-6198-4b0a-9aff-96cdedfad97a@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Wed, 5 Apr 2017 16:24:18 +0200
+Message-ID: <CACj3i71xWPTZRUE+mF5CNT4OsfJEKstvgJPEviEOC9d=U3noAA@mail.gmail.com>
+Subject: Re: [xfsprogs] Do we need so many data types for user input?
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Emmanuel Florac <eflorac@intellique.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
 
-On Apr 7, 2017, at 1:39 PM, Brian Foster <bfoster@redhat.com> wrote:
-> 
-> On Fri, Apr 07, 2017 at 12:56:48PM -0400, David Shaw wrote:
->> On Apr 7, 2017, at 10:56 AM, Emmanuel Florac <eflorac@intellique.com> wrote:
->>> 
->>> Le Thu, 6 Apr 2017 14:41:45 -0400
->>> David Shaw <dshaw@jabberwocky.com> écrivait:
->>> 
->>>> I'm having a problem with processes getting "stuck" when accessing an
->>>> XFS (v5) filesystem.  When it happens, I start getting the "blocked
->>>> for more than 120 seconds" error, and the process stays in that state
->>>> until I reboot.  The kernel is 3.10.0-514.2.2 and the xfsprogs is
->>>> 4.5.0-9 (both Centos 7.3).
->>>> 
->>> 
->>> Could it be that your system is under high IO load?
->> 
->> It's possible that the problem is instigated or made worse by high load, but once the processes enter D state, they stay there even when the system is idle.  They stay in D state until I reboot.
->> 
-> 
-> There isn't enough information provided to suggest the filesystem is
-> locked up as opposed to waiting for (very slow) I/O, as suggested by
-> Emmanuel.
+On Wed, Apr 5, 2017 at 4:08 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+> On 4/5/17 3:26 AM, Jan Tulak wrote:
+>> On Tue, Apr 4, 2017 at 10:17 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>> On 4/4/17 2:48 PM, Luis R. Rodriguez wrote:
+>>>>
+>>>> And then agsize is capped artificially later via validate_ag_geometry():
+>>>>
+>>>>         if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
+>>>>               ...
+>>>>       if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
+>>>>               ...
+>>>>       if (agsize > dblocks) {
+>>>>               ...
+>>>>       if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
+>>>>               ...
+>>>>
+>>>> Its not clear if this is capped at UINT_MAX or if we need ULLONG_MAX here.
+>>>
+>>> .maxval = XFS_AG_MAX_BYTES,
+>>>
+>>> #define XFS_AG_MAX_BYTES        ((XFS_AG_BYTES(31)))    /* 1 TB */
+>>> #define XFS_AG_BYTES(bblog)     ((long long)BBSIZE << (bblog))
+>>>
+>>> so the maximum is (long long)(512) << 31
+>>>
+>>> so, no - agsize won't fit in a 32 bit var, if that's the question...
+>>>
+>>
+>> Yeah. I think that we can make it uint64 everywhere unless it is
+>> causing an issue in a specific case with a bit shift or something, and
+>> just limit the input value where appropriate explicitly.
+>>
+>>
+>> And...
+>>> And at the end of the day, we are converting all numbers into unsigned
+>>
+>> I take back this part, we are going through long long, not unsigned long long.
+>> Everything else is still valid.
+>
+> Ok, for those who aren't immersed 24/7 in mkfs ;) can you help us understand
+> where you're going with this?  What's the change you're proposing, and how
+> does it help?
+>
 
-Ah, I didn't understand, thanks.
+If you ask only about the last sentence - I was just taking back my
+claim that we already convert all numbers into unsigned in getnum. We
+convert them to long long right now. (It was too late evening for me,
+apparently. :-) )
 
-> If the filesystem appears to be deadlocked, can you provide the complete
-> hung task output (echo w > /proc/sysrq-trigger) as well any activity
-> that might be shown by tracepoints if enabled when in this state
-> (trace-cmd start -e xfs:*; cat /sys/kernel/debug/tracing/trace_pipe)?
+If you ask more about summarising what I want to do, then:
 
-I have the hung task output from a recent time this happened (http://www.jabberwocky.com/xfs/blocked.txt).  In it, "servxfs" is the process that reads from the XFS filesystem.  It's the process feeding a fuse filesystem.  "mmon" and "smbd" are both trying to access the fuse filesystem.  I suspect that they're blocking because the servxfs threads are blocking and thus not fulfilling the fuse requests.
+I'm already moving these standalone variables into an options table,
+that holds all the information in one place. As I'm already touching
+them, I can as well clean the differences and changes accumulated over
+the years and change a lot of mkfs's internal variables from a mix of
+signed and unsigned, 32bit and 64bit, to a single type, unsigned
+64bits long.
 
-I will get the xfs traces the next time it happens.  It seems to be happening 2-3 times a week, but frustratingly, I can't make it happen on demand.  Is there something I should look for in particular in the trace output, or some amount of time to capture it for?
+That would simplify the code in some places and make it clear what
+type numerical values are - less things like foo((long long) bar);
 
-Thanks again for your help,
 
-David
+Cheers,
+Jan
 
+> Thanks,
+> -Eric
+
+
+
+-- 
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
