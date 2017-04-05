@@ -1,91 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:53454 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:40060 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751614AbdDEVs5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Apr 2017 17:48:57 -0400
-Subject: Re: [PATCH] xfs: fold __xfs_trans_roll into xfs_trans_roll
-References: <20170405185307.9846-1-hch@lst.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f7fdb4fc-3c99-2b64-66c4-0c6fa551266c@sandeen.net>
-Date: Wed, 5 Apr 2017 16:48:54 -0500
+        id S1753996AbdDEVDY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Apr 2017 17:03:24 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2E65B2E6050
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2017 21:03:19 +0000 (UTC)
+Received: from Liberator.local (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id DF1685C895
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2017 21:03:18 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: simplify xfs_calc_dquots_per_chunk
+Message-ID: <b99b73b5-9525-bf50-ecd4-ccb361545b12@redhat.com>
+Date: Wed, 5 Apr 2017 16:03:17 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170405185307.9846-1-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 4/5/17 1:53 PM, Christoph Hellwig wrote:
-> No one cares about the low-level helper anymore.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+ndquots is a 32-bit value, and we don't care
+about the remainder; there is no reason to use do_div
+here, it seems to be the result of a decade+ historical
+accident.
 
-"Nobody cares" sounds so cold-hearted.  ;)
+Worse, the do_div implementation in userspace breaks
+when fed a 32-bit dividend, so we commented it out there
+in any case.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Change to simple division, and then we can change
+userspace to match, and mandate a 64-bit dividend in
+the do_div() in userspace as well.
 
-> ---
->  fs/xfs/xfs_trans.c | 17 ++---------------
->  fs/xfs/xfs_trans.h |  1 -
->  2 files changed, 2 insertions(+), 16 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index a280e126491f..be86e4ed23d5 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -1034,17 +1034,14 @@ xfs_trans_cancel(
->   * chunk we've been working on and get a new transaction to continue.
->   */
->  int
-> -__xfs_trans_roll(
-> +xfs_trans_roll(
->  	struct xfs_trans	**tpp,
-> -	struct xfs_inode	*dp,
-> -	int			*committed)
-> +	struct xfs_inode	*dp)
->  {
->  	struct xfs_trans	*trans;
->  	struct xfs_trans_res	tres;
->  	int			error;
->  
-> -	*committed = 0;
-> -
->  	/*
->  	 * Ensure that the inode is always logged.
->  	 */
-> @@ -1070,7 +1067,6 @@ __xfs_trans_roll(
->  	if (error)
->  		return error;
->  
-> -	*committed = 1;
->  	trans = *tpp;
->  
->  	/*
-> @@ -1093,12 +1089,3 @@ __xfs_trans_roll(
->  		xfs_trans_ijoin(trans, dp, 0);
->  	return 0;
->  }
-> -
-> -int
-> -xfs_trans_roll(
-> -	struct xfs_trans	**tpp,
-> -	struct xfs_inode	*dp)
-> -{
-> -	int			committed;
-> -	return __xfs_trans_roll(tpp, dp, &committed);
-> -}
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 2a9292df6640..a07acbf0bd8a 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -228,7 +228,6 @@ int		xfs_trans_free_extent(struct xfs_trans *,
->  				      struct xfs_efd_log_item *, xfs_fsblock_t,
->  				      xfs_extlen_t, struct xfs_owner_info *);
->  int		xfs_trans_commit(struct xfs_trans *);
-> -int		__xfs_trans_roll(struct xfs_trans **, struct xfs_inode *, int *);
->  int		xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
->  void		xfs_trans_cancel(xfs_trans_t *);
->  int		xfs_trans_ail_init(struct xfs_mount *);
-> 
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+--- 
+
+tested w/ ./check -g quota
+
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index ac9a003..747085b 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -35,13 +35,8 @@
+ xfs_calc_dquots_per_chunk(
+ 	unsigned int		nbblks)	/* basic block units */
+ {
+-	unsigned int	ndquots;
+-
+ 	ASSERT(nbblks > 0);
+-	ndquots = BBTOB(nbblks);
+-	do_div(ndquots, sizeof(xfs_dqblk_t));
+-
+-	return ndquots;
++	return BBTOB(nbblks) / sizeof(xfs_dqblk_t);
+ }
+ 
+ /*
+
