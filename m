@@ -1,35 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49194 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753767AbdDFSim (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Apr 2017 14:38:42 -0400
-Subject: Re: [PATCH] xfs: actually report xattr extents via iomap
-References: <20170406160356.GY4864@birch.djwong.org>
- <ec62ec40-ce03-6e42-a28f-b0ed9716f0ad@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <27970b8d-5ad1-3ff1-1474-573a7352bfde@sandeen.net>
-Date: Thu, 6 Apr 2017 13:38:41 -0500
+Received: from mail-vk0-f47.google.com ([209.85.213.47]:33067 "EHLO
+        mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934707AbdDFPDL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2017 11:03:11 -0400
+Received: by mail-vk0-f47.google.com with SMTP id d188so43332433vka.0
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Apr 2017 08:03:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <ec62ec40-ce03-6e42-a28f-b0ed9716f0ad@sandeen.net>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20170406144139.20284-1-jtulak@redhat.com>
+References: <20170406144139.20284-1-jtulak@redhat.com>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 6 Apr 2017 17:02:49 +0200
+Message-ID: <CACj3i71p17no6p8=A9ys_8-w8G7mw-4jjSP4oMAfcOFUeTV7xw@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/2] mkfs: unify numeric types of main variables in main()
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Eryu Guan <eguan@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Jan Tulak <jtulak@redhat.com>
 
+On Thu, Apr 6, 2017 at 4:41 PM, Jan Tulak <jtulak@redhat.com> wrote:
+> Followup of my "[xfsprogs] Do we need so many data types for user input?" email.
+>
+> In the past, when mkfs was first written, it used atoi and
+> similar calls, so the variables were ints. However, the situation moved
+> since then and in course of the time, mkfs began to use other types too.
+>
+> Clean and unify it. We don't need negative values anywhere in the code and
+> some numbers has to be 64bit. Thus, uint64 is the best candidate as the target
+> type.
+>
+> This patch changes variables declared at the beginning of main() + block/sectorsize, making only minimal changes. The following patch cleans some now-unnecessary type casts.
+>
+> It would be nice to change types in some of the structures too, but
+> this might lead to changes outside of mkfs, so I'm skipping them for
+> this moment to keep it simple.
+>
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> ---
+>  mkfs/xfs_mkfs.c | 184 ++++++++++++++++++++++++++++----------------------------
+>  1 file changed, 92 insertions(+), 92 deletions(-)
+>
 
+Public git tree for these changes:
+https://github.com/jtulak/xfsprogs-dev/tree/github-uint
 
-On 4/6/17 1:37 PM, Eric Sandeen wrote:
-> On 4/6/17 11:03 AM, Darrick J. Wong wrote:
->> Apparently FIEMAP for xattrs has been broken since we switched to
->> the iomap backend because of an incorrect check for xattr presence.
->>
->> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> nothing tests this?  eek.  Who wants to fix that? :)
+(It includes the other two small patches I submitted today too).
 
-Oh, you fixed that.  thanks :)
+Jan
 
--Eric
+-- 
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
