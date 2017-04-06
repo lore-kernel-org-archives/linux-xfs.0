@@ -1,314 +1,178 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50380 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754796AbdDJRNV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2017 13:13:21 -0400
-Date: Mon, 10 Apr 2017 10:13:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/6] xfs: pass individual arguments to
- xfs_bmap_add_extent_hole_real
-Message-ID: <20170410171316.GV4864@birch.djwong.org>
-References: <20170403121833.7825-1-hch@lst.de>
- <20170403121833.7825-4-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170403121833.7825-4-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:56754 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752385AbdDFMF3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Apr 2017 08:05:29 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id AAFB07D0F9
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2017 12:05:28 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-8-81.pek2.redhat.com [10.72.8.81])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8CE9A7DB24
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2017 12:05:27 +0000 (UTC)
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH v3] repair: handle reading superblock from image on larger sector size filesystem
+Date: Thu,  6 Apr 2017 20:05:20 +0800
+Message-Id: <1491480320-6511-1-git-send-email-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Apr 03, 2017 at 02:18:30PM +0200, Christoph Hellwig wrote:
-> For the reflink case we'd much rather pass the required arguments than
-> faking up a struct xfs_bmalloca.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 123 ++++++++++++++++++++++++-----------------------
->  1 file changed, 64 insertions(+), 59 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 47b909c27bb3..d404dee7ede4 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -2879,27 +2879,30 @@ xfs_bmap_add_extent_hole_delay(
->   */
->  STATIC int				/* error */
->  xfs_bmap_add_extent_hole_real(
-> -	struct xfs_bmalloca	*bma,
-> -	int			whichfork)
-> +	struct xfs_trans	*tp,
-> +	xfs_inode_t		*ip,	/* incore inode pointer */
-> +	int			whichfork,
-> +	xfs_extnum_t		*idx,	/* extent number to update/insert */
-> +	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
-> +	xfs_bmbt_irec_t		*new,	/* new data to add to file extents */
+Due to xfs_repair uses direct IO, sometimes it can't read superblock
+from an image file has smaller sector size than host filesystem.
+Especially that superblock doesn't align with host filesystem's
+sector size.
 
-struct xfs_inode vs. xfs_inode_t ?
+Fortunately, xfsprogs already has code to do isa_file and geometry
+check in xfs_repair.c, it turns off O_DIRECT after phase1() if the
+sector size is less than the host filesystem's geometry. So move
+the isa_file auto detection over up the phase1(), and try to do
+once geometry check before phase1() if get_sb() return OK.
 
-I was under the impression that we don't add comments to the function
-arguments anymore, but TBH they don't bother me.
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
 
-> +	xfs_fsblock_t		*first,	/* pointer to firstblock variable */
-> +	struct xfs_defer_ops	*dfops,	/* list of extents to be freed */
-> +	int			*logflagsp) /* inode logging flags */
->  {
-> -	struct xfs_bmbt_irec	*new = &bma->got;
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_btree_cur	*cur = *curp;
->  	int			error;	/* error return value */
->  	int			i;	/* temp state */
-> -	xfs_ifork_t		*ifp;	/* inode fork pointer */
->  	xfs_bmbt_irec_t		left;	/* left neighbor extent entry */
->  	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
->  	int			rval=0;	/* return value (logging flags) */
->  	int			state;	/* state bits, accessed thru macros */
-> -	struct xfs_mount	*mp;
-> -
-> -	mp = bma->ip->i_mount;
-> -	ifp = XFS_IFORK_PTR(bma->ip, whichfork);
->  
-> -	ASSERT(bma->idx >= 0);
-> -	ASSERT(bma->idx <= xfs_iext_count(ifp));
-> +	ASSERT(*idx >= 0);
-> +	ASSERT(*idx <= xfs_iext_count(ifp));
->  	ASSERT(!isnullstartblock(new->br_startblock));
-> -	ASSERT(!bma->cur ||
-> -	       !(bma->cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
-> +	ASSERT(!cur || !(cur->bc_private.b.flags & XFS_BTCUR_BPRV_WASDEL));
->  
->  	XFS_STATS_INC(mp, xs_add_exlist);
->  
-> @@ -2912,9 +2915,9 @@ xfs_bmap_add_extent_hole_real(
->  	/*
->  	 * Check and set flags if this segment has a left neighbor.
->  	 */
-> -	if (bma->idx > 0) {
-> +	if (*idx > 0) {
->  		state |= BMAP_LEFT_VALID;
-> -		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx - 1), &left);
-> +		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx - 1), &left);
->  		if (isnullstartblock(left.br_startblock))
->  			state |= BMAP_LEFT_DELAY;
->  	}
-> @@ -2923,9 +2926,9 @@ xfs_bmap_add_extent_hole_real(
->  	 * Check and set flags if this segment has a current value.
->  	 * Not true if we're inserting into the "hole" at eof.
->  	 */
-> -	if (bma->idx < xfs_iext_count(ifp)) {
-> +	if (*idx < xfs_iext_count(ifp)) {
->  		state |= BMAP_RIGHT_VALID;
-> -		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, bma->idx), &right);
-> +		xfs_bmbt_get_all(xfs_iext_get_ext(ifp, *idx), &right);
->  		if (isnullstartblock(right.br_startblock))
->  			state |= BMAP_RIGHT_DELAY;
->  	}
-> @@ -2962,36 +2965,36 @@ xfs_bmap_add_extent_hole_real(
->  		 * left and on the right.
->  		 * Merge all three into a single extent record.
->  		 */
-> -		--bma->idx;
-> -		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
-> -		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, bma->idx),
-> +		--*idx;
+Hi,
 
-I'm pretty sure this is the same as --(*idx); but... ick.
+V2 did a stupid change, it tried to check superblock before get_sb(). So
+V3 fix this problem by below changes:
 
---D
+1) move the "if (!isa_file)" auto detection over up the phase1().
+2) try to get_sb() before phase1, and check the sector size. Turn
+   off the O_DIRECT if the sector size is smaller than the underlying
+   filesystem.
+3) The step#2 maybe fail, due to can't get a valid primary superblock.
+   So keep the similar steps after phase1(), I didn't remove it.
 
-> +		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-> +		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
->  			left.br_blockcount + new->br_blockcount +
->  			right.br_blockcount);
-> -		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
-> +		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
->  
-> -		xfs_iext_remove(bma->ip, bma->idx + 1, 1, state);
-> +		xfs_iext_remove(ip, *idx + 1, 1, state);
->  
-> -		XFS_IFORK_NEXT_SET(bma->ip, whichfork,
-> -			XFS_IFORK_NEXTENTS(bma->ip, whichfork) - 1);
-> -		if (bma->cur == NULL) {
-> +		XFS_IFORK_NEXT_SET(ip, whichfork,
-> +			XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-> +		if (cur == NULL) {
->  			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
->  		} else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(bma->cur, right.br_startoff,
-> +			error = xfs_bmbt_lookup_eq(cur, right.br_startoff,
->  					right.br_startblock, right.br_blockcount,
->  					&i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> -			error = xfs_btree_delete(bma->cur, &i);
-> +			error = xfs_btree_delete(cur, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> -			error = xfs_btree_decrement(bma->cur, 0, &i);
-> +			error = xfs_btree_decrement(cur, 0, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> -			error = xfs_bmbt_update(bma->cur, left.br_startoff,
-> +			error = xfs_bmbt_update(cur, left.br_startoff,
->  					left.br_startblock,
->  					left.br_blockcount +
->  						new->br_blockcount +
-> @@ -3008,23 +3011,23 @@ xfs_bmap_add_extent_hole_real(
->  		 * on the left.
->  		 * Merge the new allocation with the left neighbor.
->  		 */
-> -		--bma->idx;
-> -		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
-> -		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, bma->idx),
-> +		--*idx;
-> +		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-> +		xfs_bmbt_set_blockcount(xfs_iext_get_ext(ifp, *idx),
->  			left.br_blockcount + new->br_blockcount);
-> -		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
-> +		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
->  
-> -		if (bma->cur == NULL) {
-> +		if (cur == NULL) {
->  			rval = xfs_ilog_fext(whichfork);
->  		} else {
->  			rval = 0;
-> -			error = xfs_bmbt_lookup_eq(bma->cur, left.br_startoff,
-> +			error = xfs_bmbt_lookup_eq(cur, left.br_startoff,
->  					left.br_startblock, left.br_blockcount,
->  					&i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> -			error = xfs_bmbt_update(bma->cur, left.br_startoff,
-> +			error = xfs_bmbt_update(cur, left.br_startoff,
->  					left.br_startblock,
->  					left.br_blockcount +
->  						new->br_blockcount,
-> @@ -3040,25 +3043,25 @@ xfs_bmap_add_extent_hole_real(
->  		 * on the right.
->  		 * Merge the new allocation with the right neighbor.
->  		 */
-> -		trace_xfs_bmap_pre_update(bma->ip, bma->idx, state, _THIS_IP_);
-> -		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, bma->idx),
-> +		trace_xfs_bmap_pre_update(ip, *idx, state, _THIS_IP_);
-> +		xfs_bmbt_set_allf(xfs_iext_get_ext(ifp, *idx),
->  			new->br_startoff, new->br_startblock,
->  			new->br_blockcount + right.br_blockcount,
->  			right.br_state);
-> -		trace_xfs_bmap_post_update(bma->ip, bma->idx, state, _THIS_IP_);
-> +		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
->  
-> -		if (bma->cur == NULL) {
-> +		if (cur == NULL) {
->  			rval = xfs_ilog_fext(whichfork);
->  		} else {
->  			rval = 0;
-> -			error = xfs_bmbt_lookup_eq(bma->cur,
-> +			error = xfs_bmbt_lookup_eq(cur,
->  					right.br_startoff,
->  					right.br_startblock,
->  					right.br_blockcount, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> -			error = xfs_bmbt_update(bma->cur, new->br_startoff,
-> +			error = xfs_bmbt_update(cur, new->br_startoff,
->  					new->br_startblock,
->  					new->br_blockcount +
->  						right.br_blockcount,
-> @@ -3074,22 +3077,22 @@ xfs_bmap_add_extent_hole_real(
->  		 * real allocation.
->  		 * Insert a new entry.
->  		 */
-> -		xfs_iext_insert(bma->ip, bma->idx, 1, new, state);
-> -		XFS_IFORK_NEXT_SET(bma->ip, whichfork,
-> -			XFS_IFORK_NEXTENTS(bma->ip, whichfork) + 1);
-> -		if (bma->cur == NULL) {
-> +		xfs_iext_insert(ip, *idx, 1, new, state);
-> +		XFS_IFORK_NEXT_SET(ip, whichfork,
-> +			XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
-> +		if (cur == NULL) {
->  			rval = XFS_ILOG_CORE | xfs_ilog_fext(whichfork);
->  		} else {
->  			rval = XFS_ILOG_CORE;
-> -			error = xfs_bmbt_lookup_eq(bma->cur,
-> +			error = xfs_bmbt_lookup_eq(cur,
->  					new->br_startoff,
->  					new->br_startblock,
->  					new->br_blockcount, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
-> -			bma->cur->bc_rec.b.br_state = new->br_state;
-> -			error = xfs_btree_insert(bma->cur, &i);
-> +			cur->bc_rec.b.br_state = new->br_state;
-> +			error = xfs_btree_insert(cur, &i);
->  			if (error)
->  				goto done;
->  			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
-> @@ -3098,30 +3101,30 @@ xfs_bmap_add_extent_hole_real(
->  	}
->  
->  	/* add reverse mapping */
-> -	error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip, whichfork, new);
-> +	error = xfs_rmap_map_extent(mp, dfops, ip, whichfork, new);
->  	if (error)
->  		goto done;
->  
->  	/* convert to a btree if necessary */
-> -	if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
-> +	if (xfs_bmap_needs_btree(ip, whichfork)) {
->  		int	tmp_logflags;	/* partial log flag return val */
->  
-> -		ASSERT(bma->cur == NULL);
-> -		error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
-> -				bma->firstblock, bma->dfops, &bma->cur,
-> +		ASSERT(cur == NULL);
-> +		error = xfs_bmap_extents_to_btree(tp, ip, first, dfops, curp,
->  				0, &tmp_logflags, whichfork);
-> -		bma->logflags |= tmp_logflags;
-> +		*logflagsp |= tmp_logflags;
-> +		cur = *curp;
->  		if (error)
->  			goto done;
->  	}
->  
->  	/* clear out the allocated field, done with it now in any case. */
-> -	if (bma->cur)
-> -		bma->cur->bc_private.b.allocated = 0;
-> +	if (cur)
-> +		cur->bc_private.b.allocated = 0;
->  
-> -	xfs_bmap_check_leaf_extents(bma->cur, bma->ip, whichfork);
-> +	xfs_bmap_check_leaf_extents(cur, ip, whichfork);
->  done:
-> -	bma->logflags |= rval;
-> +	*logflagsp |= rval;
->  	return error;
->  }
->  
-> @@ -4386,7 +4389,9 @@ xfs_bmapi_allocate(
->  	if (bma->wasdel)
->  		error = xfs_bmap_add_extent_delay_real(bma, whichfork);
->  	else
-> -		error = xfs_bmap_add_extent_hole_real(bma, whichfork);
-> +		error = xfs_bmap_add_extent_hole_real(bma->tp, bma->ip,
-> +				whichfork, &bma->idx, &bma->cur, &bma->got,
-> +				bma->firstblock, bma->dfops, &bma->logflags);
->  
->  	bma->logflags |= tmp_logflags;
->  	if (error)
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Zorro
+
+ repair/xfs_repair.c | 96 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 54 insertions(+), 42 deletions(-)
+
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index b07567b..9df5719 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -627,6 +627,42 @@ is_multidisk_filesystem(
+ 	return true;
+ }
+ 
++/*
++ * if the sector size of the filesystem we are trying to repair is
++ * smaller than that of the underlying filesystem (i.e. we are repairing
++ * an image), the we have to turn off direct IO because we cannot do IO
++ * smaller than the host filesystem's sector size.
++ */
++static void
++check_geometry_sectsize(
++	struct xfs_sb	*sb)
++{
++	int	fd;
++	long	old_flags;
++	struct xfs_fsop_geom_v1 geom = { 0 };
++
++	if (isa_file) {
++		fd = libxfs_device_to_fd(x.ddev);
++
++		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
++			do_log(_("Cannot get host filesystem geometry.\n"
++		"Repair may fail if there is a sector size mismatch between\n"
++		"the image and the host filesystem.\n"));
++			geom.sectsize = BBSIZE;
++		}
++
++		if (sb->sb_sectsize < geom.sectsize) {
++			old_flags = fcntl(fd, F_GETFL, 0);
++			if (fcntl(fd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
++				do_warn(_(
++		"Sector size on host filesystem larger than image sector size.\n"
++		"Cannot turn off direct IO, so exiting.\n"));
++				exit(1);
++			}
++		}
++	}
++}
++
+ int
+ main(int argc, char **argv)
+ {
+@@ -657,6 +693,23 @@ main(int argc, char **argv)
+ 	timestamp(PHASE_START, 0, NULL);
+ 	timestamp(PHASE_END, 0, NULL);
+ 
++	/* -f forces this, but let's be nice and autodetect it, as well. */
++	if (!isa_file) {
++		int		fd = libxfs_device_to_fd(x.ddev);
++		struct stat	statbuf;
++
++		if (fstat(fd, &statbuf) < 0)
++			do_warn(_("%s: couldn't stat \"%s\"\n"),
++				progname, fs_name);
++		else if (S_ISREG(statbuf.st_mode))
++			isa_file = 1;
++	}
++
++	rval = get_sb(&psb, 0, XFS_MAX_SECTORSIZE, 0);
++	if (rval == XR_OK) {
++		check_geometry_sectsize(&psb);
++	}
++
+ 	/* do phase1 to make sure we have a superblock */
+ 	phase1(temp_mp);
+ 	timestamp(PHASE_END, 1, NULL);
+@@ -674,48 +727,7 @@ main(int argc, char **argv)
+ 			  "Exiting now.\n"));
+ 		exit(1);
+ 	}
+-
+-	/* -f forces this, but let's be nice and autodetect it, as well. */
+-	if (!isa_file) {
+-		int		fd = libxfs_device_to_fd(x.ddev);
+-		struct stat	statbuf;
+-
+-		if (fstat(fd, &statbuf) < 0)
+-			do_warn(_("%s: couldn't stat \"%s\"\n"),
+-				progname, fs_name);
+-		else if (S_ISREG(statbuf.st_mode))
+-			isa_file = 1;
+-	}
+-
+-	/*
+-	 * if the sector size of the filesystem we are trying to repair is
+-	 * smaller than that of the underlying filesystem (i.e. we are repairing
+-	 * an image), the we have to turn off direct IO because we cannot do IO
+-	 * smaller than the host filesystem's sector size.
+-	 */
+-	if (isa_file) {
+-		int     fd = libxfs_device_to_fd(x.ddev);
+-		struct xfs_fsop_geom_v1 geom = { 0 };
+-
+-		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
+-			do_log(_("Cannot get host filesystem geometry.\n"
+-		"Repair may fail if there is a sector size mismatch between\n"
+-		"the image and the host filesystem.\n"));
+-			geom.sectsize = BBSIZE;
+-		}
+-
+-		if (psb.sb_sectsize < geom.sectsize) {
+-			long	old_flags;
+-
+-			old_flags = fcntl(fd, F_GETFL, 0);
+-			if (fcntl(fd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
+-				do_warn(_(
+-		"Sector size on host filesystem larger than image sector size.\n"
+-		"Cannot turn off direct IO, so exiting.\n"));
+-				exit(1);
+-			}
+-		}
+-	}
++	check_geometry_sectsize(&psb);
+ 
+ 	/*
+ 	 * Prepare the mount structure. Point the log reference to our local
+-- 
+2.7.4
+
