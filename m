@@ -1,179 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39928 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55464 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756260AbdDFHGL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Apr 2017 03:06:11 -0400
-Subject: [PATCH 3/4] xfstests: Partially expand the documentation [ver #8]
-From: David Howells <dhowells@redhat.com>
-Date: Thu, 06 Apr 2017 08:06:09 +0100
-Message-ID: <149146236922.11655.9094158631877907393.stgit@warthog.procyon.org.uk>
-In-Reply-To: <149146235422.11655.14742408053140983607.stgit@warthog.procyon.org.uk>
-References: <149146235422.11655.14742408053140983607.stgit@warthog.procyon.org.uk>
+        id S933756AbdDFHL6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Apr 2017 03:11:58 -0400
+Date: Thu, 6 Apr 2017 15:11:56 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 2/4] xfstests: Add first statx test [ver #7]
+Message-ID: <20170406071156.GH22845@eguan.usersys.redhat.com>
+References: <149140993804.27340.4198614944626347024.stgit@warthog.procyon.org.uk>
+ <149140994519.27340.14163779092377117357.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <149140994519.27340.14163779092377117357.stgit@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
+To: David Howells <dhowells@redhat.com>
+Cc: linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Partially expand the documentation available in xfstests to include
-requirements checking and auxiliary programs for testing.
+On Wed, Apr 05, 2017 at 05:32:25PM +0100, David Howells wrote:
+> Add a statx test script that does the following:
+> 
+>  (1) Creates one each of the various types of file object and creates a
+>      hard link to the regular file.
+> 
+>      Note that the creation of an AF_UNIX socket is done with netcat in a
+>      bash coprocessing thread.  This might be best done with another
+>      in-house helper to avoid a dependency on nc.
+> 
+>  (2) Invokes the C test program included in this patch after the creation
+>      and hands it a list of things to check appropriate to each object.
+> 
+>  (3) Asks the test program to check the creation time of each object
+>      against that of the preceding object.
+> 
+>  (4) Makes various tests on the timestamps of the hardlinked file.
+> 
+> The patch also creates a C[*] test program to do the actual stat checking.
+> The test program then does the following:
+> 
+>  (1) Compares the output of statx() to that of fstatat().
+> 
+>  (2) Optionally compares the timestamps to see that they're sensibly
+>      ordered with respect to each other.
+> 
+>  (3) Optionally compares the timestamps to those of a reference file.
+> 
+>  (4) Optionally compares the timestamps to a specified time.
+> 
+>  (5) Optionally compares selected stats to values specified on the command
+>      line.
+> 
+>  (6) Optionally compares all the stats to those of a reference file,
+>      requiring them to be the same (hard link checking).
+> 
+> For example:
+> 
+> 	./src/stat_test /dev/null \
+> 	       stx_type=char \
+> 	       stx_rdev_major=3 \
+> 	       stx_rdev_minor=8 \
+> 	       stx_nlink=1 \
+> 	       ref=/dev/zero \
+> 	       ts=B,b
+> 
+> The test program can also be given a --check-statx parameter to give a
+> quick exit code-based answer on whether statx() exists within the kernel.
+> 
+> [*] Note that it proved much easier to do this in C than trying to do it in
+>     shell script and trying parsing the output of xfs_io.  Using xfs_io has
+>     other pitfalls also: it wants to *open* the file, even if the file is
+>     not an appropriate type for this or does not grant permission to do so.
+>     I can get around this by opening O_PATH, but then xfs_io fails to
+>     handle XFS files because it wants to issue ioctls on every fd it opens.
+> 
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> ---
+> 
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
+[snip]
 
- doc/auxiliary-programs.txt   |   56 +++++++++++++++++++++++++++++++
- doc/requirement-checking.txt |   77 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 133 insertions(+)
- create mode 100644 doc/auxiliary-programs.txt
- create mode 100644 doc/requirement-checking.txt
+> +
+> +/*
+> + * Check a pair of timestamps.
+> + */
+> +static void check_earlier(const struct statx_timestamp *A,
+> +			  const struct statx_timestamp *B,
+> +			  const char *A_name,
+> +			  const char *B_name)
+> +{
+> +
+> +	check((B->tv_sec - A->tv_sec) >= 0,
+> +	      "%s.sec is before %s.sec (%lld < %lld)\n",
+> +	      B_name, A_name, B->tv_sec, A->tv_sec);
+> +
+> +	check((B->tv_nsec - A->tv_nsec) >= 0,
+> +	      "%s.nsec is before %s.nsec (%d < %d)\n",
+> +	      B_name, A_name, B->tv_nsec, A->tv_nsec);
+> +}
 
-diff --git a/doc/auxiliary-programs.txt b/doc/auxiliary-programs.txt
-new file mode 100644
-index 0000000..17797b0
---- /dev/null
-+++ b/doc/auxiliary-programs.txt
-@@ -0,0 +1,56 @@
-+			==============================
-+			AUXILIARY PROGRAMS FOR TESTING
-+			==============================
-+
-+Not everything a test script can do is easily done within a test script;
-+sometimes it makes a lot more sense to write auxiliary program in C and have
-+the test script call them.  Auxiliary commands can be found in the src/
-+directory and in other packages.
-+
-+Tests wanting to use an auxiliary program found in the src/ directory should
-+note the dependency with:
-+
-+	_require_test_program "<program-name>"
-+
-+
-+Contents:
-+
-+ - af_unix	-- Create an AF_UNIX socket
-+ - stat_test	-- statx syscall exercise
-+ - xfs_io	-- General I/O operation exercise
-+
-+
-+==================
-+QUICK DESCRIPTIONS
-+==================
-+
-+af_unix
-+
-+	The af_unix program creates an AF_UNIX socket at the given location.
-+
-+stat_test
-+
-+	The stat_test program is primarily designed to exercise the statx()
-+	system call.  It can check statx() against fstatat() and it can
-+	compare and check various file attributes.
-+
-+	See also:
-+		_require_statx
-+
-+
-+xfs_io
-+
-+	The xfs_io program can be found in the xfsprogs package and can be used
-+	to perform sequences of I/O commands, though it is limited to what it
-+	can do on open files.
-+
-+	xfs_io is a debugging tool that is aimed at examining regular file I/O
-+	paths rather than a raw XFS volume itself.  These code paths include
-+	not only the obvious read/write/mmap interfaces for manipulating files,
-+	but also cover all of the XFS extensions (such as space preallocation,
-+	additional inode flags, etc).
-+
-+	Most of its commands can also be used with other filesystems.
-+
-+	See also:
-+		_require_xfs_io_command
-diff --git a/doc/requirement-checking.txt b/doc/requirement-checking.txt
-new file mode 100644
-index 0000000..f3fc9f4
---- /dev/null
-+++ b/doc/requirement-checking.txt
-@@ -0,0 +1,77 @@
-+		   ========================================
-+		   TESTING FOR REQUIREMENTS IN TEST SCRIPTS
-+		   ========================================
-+
-+Test scripts need to indicate to the infrastructure what sorts of requirements
-+they have.  This is done with _require_<xxx> macros, which may take parameters.
-+
-+ (1) General requirements.
-+
-+	_require_command "$<NAME_PROG>" <name>
-+	_require_test
-+	_require_test_program <name>
-+	_require_xfs_io_command <name> [<switch>]
-+
-+ (2) System call requirements.
-+
-+	_require_statx
-+
-+
-+====================
-+GENERAL REQUIREMENTS
-+====================
-+
-+_require_command "$NAME_PROG" name
-+
-+     The test requires an external command, called 'name' be present on the
-+     system and that '$VAR' should be set with the path to that command.  $VAR
-+     should then be used to refer to the command when executing it.  For
-+     example:
-+
-+	_require_command "KILLALL_PROG" killall
-+
-+     to locate the killall command and then:
-+
-+	$KILLALL_PROG -q $FSSTRESS_PROG
-+
-+     to make use of it.
-+
-+
-+_require_test
-+
-+     The test requires that the block device specified by $TEST_DEV be mounted
-+     on $TEST_DIR.
-+
-+
-+_require_test_program <name>
-+
-+     The test requires a program by the name of 'name' be present and built in
-+     the src/ directory.  For example:
-+
-+	_require_test_program "stat_test"
-+
-+     requires that src/stat_test be built.
-+
-+
-+_require_xfs_io_command <name> [<switch>]
-+
-+     The test requires that the xfs_io command be available, that it supports
-+     command <name> and, optionally, that that command supports the specified
-+     switch.  For example:
-+
-+	_require_xfs_io_command "falloc"
-+	_require_xfs_io_command "chattr" "+/-x"
-+
-+     The first requires that xfs_io support the falloc command and the second
-+     that it supports the chattr command and that the chattr command supports
-+     the +x and -x arguments (DAX attribute).
-+
-+
-+========================
-+SYSTEM CALL REQUIREMENTS
-+========================
-+
-+_require_statx
-+
-+     The test requires the use of the statx() system call and will be skipped
-+     if it isn't available in the kernel.
+I occasionally see failures like:
 
+     Test statx on a fifo
+     Test statx on a chardev
+    +[!] mtime.nsec is before ref_m.nsec (0 < 995000000)
+    +Failed
+    +stat_test failed
+     Test statx on a directory
+
+And the file in test can be any type (fifo, regular, char etc.), and all
+filesystems I tested (extN, xfs, btrfs, NFS) could hit this failure.
+
+After checking the actual timestamp and this check_earlier() function, I
+think it's a test flaw, because B->tv_nsec (test file) could be smaller
+than A->tv_nsec (ref file) when B->tv_sec > A->tv_sec.
+
+e.g. (after test failure with NFSv4.2, and I renumbered test to 422)
+
+[root@bootp-73-5-205 xfstests]# stat /mnt/nfsexport/422-fifo /mnt/nfsexport/422-null 
+  File: ‘/mnt/nfsexport/422-fifo’
+  Size: 0               Blocks: 0          IO Block: 4096   fifo
+Device: fd01h/64769d    Inode: 1060905     Links: 1
+Access: (0600/prw-------)  Uid: (    0/    root)   Gid: (    0/    root)
+Context: system_u:object_r:mnt_t:s0
+Access: 2017-04-06 14:53:36.995000000 +0800
+Modify: 2017-04-06 14:53:36.995000000 +0800	# fifo is ref file, tv_sec is 36
+Change: 2017-04-06 14:53:36.995000000 +0800	# tv_nsec is 995000000
+ Birth: -
+  File: ‘/mnt/nfsexport/422-null’
+  Size: 0               Blocks: 0          IO Block: 4096   character special file
+Device: fd01h/64769d    Inode: 1062934     Links: 1     Device type: 1,3
+Access: (0600/crw-------)  Uid: (    0/    root)   Gid: (    0/    root)
+Context: system_u:object_r:mnt_t:s0
+Access: 2017-04-06 14:53:37.000000000 +0800
+Modify: 2017-04-06 14:53:37.000000000 +0800	# null is test file, tv_sec is 37
+Change: 2017-04-06 14:53:37.000000000 +0800	# tv_nsec is 0, smaller than 995000000
+ Birth: -
+
+So I think check_earlier() needs a fix.
+
+Thanks,
+Eryu
