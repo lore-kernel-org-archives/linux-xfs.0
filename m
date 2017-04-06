@@ -1,179 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48244 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:47072 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752427AbdDHU6O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 8 Apr 2017 16:58:14 -0400
-Subject: [PATCH 3/4] xfstests: Partially expand the documentation [ver #11]
-From: David Howells <dhowells@redhat.com>
-Date: Sat, 08 Apr 2017 21:58:11 +0100
-Message-ID: <149168509161.8932.2664851483762586262.stgit@warthog.procyon.org.uk>
-In-Reply-To: <149168507699.8932.8909870911625408916.stgit@warthog.procyon.org.uk>
-References: <149168507699.8932.8909870911625408916.stgit@warthog.procyon.org.uk>
+        id S1751266AbdDFVZL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Apr 2017 17:25:11 -0400
+Date: Thu, 6 Apr 2017 14:25:05 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 4.11-rc6
+Message-ID: <20170406212505.GA4864@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <djwong@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-Partially expand the documentation available in xfstests to include
-requirements checking and auxiliary programs for testing.
+Hi Linus,
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
+Here are three more fixes for 4.11.  The first one reworks the inline
+directory verifier to check the working copy of the directory metadata
+and to avoid triggering a periodic crash in xfs/348.  The second patch
+fixes a regression in hole punching at EOF that corrupts files; and the
+third patch closes a kernel memory disclosure bug.
 
- doc/auxiliary-programs.txt   |   56 +++++++++++++++++++++++++++++++
- doc/requirement-checking.txt |   77 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 133 insertions(+)
- create mode 100644 doc/auxiliary-programs.txt
- create mode 100644 doc/requirement-checking.txt
+--Darrick
 
-diff --git a/doc/auxiliary-programs.txt b/doc/auxiliary-programs.txt
-new file mode 100644
-index 0000000..17797b0
---- /dev/null
-+++ b/doc/auxiliary-programs.txt
-@@ -0,0 +1,56 @@
-+			==============================
-+			AUXILIARY PROGRAMS FOR TESTING
-+			==============================
-+
-+Not everything a test script can do is easily done within a test script;
-+sometimes it makes a lot more sense to write auxiliary program in C and have
-+the test script call them.  Auxiliary commands can be found in the src/
-+directory and in other packages.
-+
-+Tests wanting to use an auxiliary program found in the src/ directory should
-+note the dependency with:
-+
-+	_require_test_program "<program-name>"
-+
-+
-+Contents:
-+
-+ - af_unix	-- Create an AF_UNIX socket
-+ - stat_test	-- statx syscall exercise
-+ - xfs_io	-- General I/O operation exercise
-+
-+
-+==================
-+QUICK DESCRIPTIONS
-+==================
-+
-+af_unix
-+
-+	The af_unix program creates an AF_UNIX socket at the given location.
-+
-+stat_test
-+
-+	The stat_test program is primarily designed to exercise the statx()
-+	system call.  It can check statx() against fstatat() and it can
-+	compare and check various file attributes.
-+
-+	See also:
-+		_require_statx
-+
-+
-+xfs_io
-+
-+	The xfs_io program can be found in the xfsprogs package and can be used
-+	to perform sequences of I/O commands, though it is limited to what it
-+	can do on open files.
-+
-+	xfs_io is a debugging tool that is aimed at examining regular file I/O
-+	paths rather than a raw XFS volume itself.  These code paths include
-+	not only the obvious read/write/mmap interfaces for manipulating files,
-+	but also cover all of the XFS extensions (such as space preallocation,
-+	additional inode flags, etc).
-+
-+	Most of its commands can also be used with other filesystems.
-+
-+	See also:
-+		_require_xfs_io_command
-diff --git a/doc/requirement-checking.txt b/doc/requirement-checking.txt
-new file mode 100644
-index 0000000..f3fc9f4
---- /dev/null
-+++ b/doc/requirement-checking.txt
-@@ -0,0 +1,77 @@
-+		   ========================================
-+		   TESTING FOR REQUIREMENTS IN TEST SCRIPTS
-+		   ========================================
-+
-+Test scripts need to indicate to the infrastructure what sorts of requirements
-+they have.  This is done with _require_<xxx> macros, which may take parameters.
-+
-+ (1) General requirements.
-+
-+	_require_command "$<NAME_PROG>" <name>
-+	_require_test
-+	_require_test_program <name>
-+	_require_xfs_io_command <name> [<switch>]
-+
-+ (2) System call requirements.
-+
-+	_require_statx
-+
-+
-+====================
-+GENERAL REQUIREMENTS
-+====================
-+
-+_require_command "$NAME_PROG" name
-+
-+     The test requires an external command, called 'name' be present on the
-+     system and that '$VAR' should be set with the path to that command.  $VAR
-+     should then be used to refer to the command when executing it.  For
-+     example:
-+
-+	_require_command "KILLALL_PROG" killall
-+
-+     to locate the killall command and then:
-+
-+	$KILLALL_PROG -q $FSSTRESS_PROG
-+
-+     to make use of it.
-+
-+
-+_require_test
-+
-+     The test requires that the block device specified by $TEST_DEV be mounted
-+     on $TEST_DIR.
-+
-+
-+_require_test_program <name>
-+
-+     The test requires a program by the name of 'name' be present and built in
-+     the src/ directory.  For example:
-+
-+	_require_test_program "stat_test"
-+
-+     requires that src/stat_test be built.
-+
-+
-+_require_xfs_io_command <name> [<switch>]
-+
-+     The test requires that the xfs_io command be available, that it supports
-+     command <name> and, optionally, that that command supports the specified
-+     switch.  For example:
-+
-+	_require_xfs_io_command "falloc"
-+	_require_xfs_io_command "chattr" "+/-x"
-+
-+     The first requires that xfs_io support the falloc command and the second
-+     that it supports the chattr command and that the chattr command supports
-+     the +x and -x arguments (DAX attribute).
-+
-+
-+========================
-+SYSTEM CALL REQUIREMENTS
-+========================
-+
-+_require_statx
-+
-+     The test requires the use of the statx() system call and will be skipped
-+     if it isn't available in the kernel.
+The following changes since commit 630a04e79dd41ff746b545d4fc052e0abb836120:
 
+  xfs: verify inline directory data forks (2017-03-15 00:24:25 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.11-fixes-3
+
+for you to fetch changes up to bf9216f922612d2db7666aae01e65064da2ffb3a:
+
+  xfs: fix kernel memory exposure problems (2017-04-03 12:22:39 -0700)
+
+----------------------------------------------------------------
+Changes since last update:
+- Rework the inline directory verifier to avoid crashes on disk corruption
+- Don't change file size when punching holes w/ KEEP_SIZE
+- Close a kernel memory exposure bug
+
+----------------------------------------------------------------
+Calvin Owens (1):
+      xfs: Honor FALLOC_FL_KEEP_SIZE when punching ends of files
+
+Darrick J. Wong (2):
+      xfs: rework the inline directory verifiers
+      xfs: fix kernel memory exposure problems
+
+ fs/xfs/libxfs/xfs_dir2_priv.h  |  3 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c    | 63 +++++++++++++++++++++++++++---------------
+ fs/xfs/libxfs/xfs_inode_fork.c | 35 +++++++++--------------
+ fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
+ fs/xfs/xfs_bmap_util.c         | 10 ++++++-
+ fs/xfs/xfs_inode.c             | 19 +++++++------
+ fs/xfs/xfs_itable.c            |  2 +-
+ 7 files changed, 76 insertions(+), 58 deletions(-)
