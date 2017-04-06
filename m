@@ -1,72 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56724 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752512AbdDHPIQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 8 Apr 2017 11:08:16 -0400
-Date: Sat, 8 Apr 2017 23:08:12 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 2/4] xfstests: Add first statx test [ver #10]
-Message-ID: <20170408150812.GX22845@eguan.usersys.redhat.com>
-References: <149146774821.12770.3592235770964461857.stgit@warthog.procyon.org.uk>
- <149146775556.12770.11943651470996193921.stgit@warthog.procyon.org.uk>
+Received: from aserp1040.oracle.com ([141.146.126.69]:24077 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752328AbdDFWj3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2017 18:39:29 -0400
+Date: Thu, 6 Apr 2017 15:39:21 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3] xfs: fix up quotacheck buffer list error handling
+Message-ID: <20170406223921.GB4864@birch.djwong.org>
+References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
+ <1487966001-63263-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <149146775556.12770.11943651470996193921.stgit@warthog.procyon.org.uk>
+In-Reply-To: <1487966001-63263-2-git-send-email-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Martin Svec <martin.svec@zoner.cz>
 
-On Thu, Apr 06, 2017 at 09:35:55AM +0100, David Howells wrote:
-...
-> diff --git a/src/statx.h b/src/statx.h
-> new file mode 100644
-> index 0000000..711d1ba
-> --- /dev/null
-> +++ b/src/statx.h
-> @@ -0,0 +1,166 @@
-> +#ifndef STATX_H
-> +#define STATX_H
+On Fri, Feb 24, 2017 at 02:53:19PM -0500, Brian Foster wrote:
+> The quotacheck error handling of the delwri buffer list assumes the
+> resident buffers are locked and doesn't clear the _XBF_DELWRI_Q flag
+> on the buffers that are dequeued. This can lead to assert failures
+> on buffer release and possibly other locking problems.
+> 
+> Update the error handling code to lock each buffer as it is removed
+> from the buffer list and clear the delwri queue flag.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.c | 2 ++
+>  fs/xfs/xfs_qm.c  | 2 ++
+>  2 files changed, 4 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index ac3b4db..e566510 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1078,6 +1078,8 @@ void
+>  xfs_buf_unlock(
+>  	struct xfs_buf		*bp)
+>  {
+> +	ASSERT(xfs_buf_islocked(bp));
 > +
-> +#include <unistd.h>
-> +#include <linux/types.h>
-> +
-> +#ifndef AT_STATX_SYNC_TYPE
-> +#define AT_STATX_SYNC_TYPE      0x6000  /* Type of synchronisation required from statx() */
-> +#define AT_STATX_SYNC_AS_STAT   0x0000  /* - Do whatever stat() does */
-> +#define AT_STATX_FORCE_SYNC     0x2000  /* - Force the attributes to be sync'd with the server */
-> +#define AT_STATX_DONT_SYNC      0x4000  /* - Don't sync attributes with the server */
-> +#endif
-> +
-> +#ifndef AT_NO_AUTOMOUNT
-> +#define AT_NO_AUTOMOUNT		0x800	/* Suppress terminal automount traversal */
-> +#endif
-> +
-> +#ifdef __i386__
-> +#define __NR_statx 383
-> +#elif defined (__ILP32__)
-> +#define __NR_statx (__X32_SYSCALL_BIT + 332)
-> +#else
-> +#define __NR_statx 332
-> +#endif
+>  	XB_CLEAR_OWNER(bp);
+>  	up(&bp->b_sema);
+>  
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index b669b12..4ff993c 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -1387,6 +1387,8 @@ xfs_qm_quotacheck(
+>  	while (!list_empty(&buffer_list)) {
+>  		struct xfs_buf *bp =
+>  			list_first_entry(&buffer_list, struct xfs_buf, b_list);
+> +		xfs_buf_lock(bp);
+> +		bp->b_flags &= ~_XBF_DELWRI_Q;
+>  		list_del_init(&bp->b_list);
+>  		xfs_buf_relse(bp);
 
-I gave it more tests today on ppc64 host, and test failed as
+Hmm, was this the only place we ever _buf_unlock'd an unlocked buffer?
 
- QA output created by 422
- Test statx on a fifo
-+/mnt/xfstests/mnt1/422-fifo: Bad file descriptor
-+stat_test failed
- Test statx on a chardev
-...
+--D
 
-and strace showed it was calling into getpeername(2) (AT_FDCWD == -100)
-
-getpeername(-100, 0x3fffd498f491, 0x100) = -1 EBADF (Bad file descriptor)
-
-Perhaps we should add a new autoconf rule in configure.ac and define
-HAVE_STATX if there's statx support, like what src/renameat2.c does?
-
-Thanks,
-Eryu
+>  	}
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
