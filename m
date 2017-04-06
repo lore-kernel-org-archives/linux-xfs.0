@@ -1,44 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50863 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:48418 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935207AbdDFOeZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Apr 2017 10:34:25 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0945861E74
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2017 14:34:25 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH] mkfs: rtinherit minval should be 0
-Date: Thu,  6 Apr 2017 16:34:26 +0200
-Message-Id: <20170406143426.19727-1-jtulak@redhat.com>
+        id S1753339AbdDFDRo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Apr 2017 23:17:44 -0400
+Date: Thu, 6 Apr 2017 11:17:42 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 4/4] xfstests: Check the stx_attributes settable by
+ chattr [ver #5]
+Message-ID: <20170406031742.GF22845@eguan.usersys.redhat.com>
+References: <20170405105226.GA22845@eguan.usersys.redhat.com>
+ <149132130900.18980.537296385250153410.stgit@warthog.procyon.org.uk>
+ <149132133562.18980.13032775360715592290.stgit@warthog.procyon.org.uk>
+ <5766.1491395157@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5766.1491395157@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: David Howells <dhowells@redhat.com>
+Cc: linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-As with any other option, rtinherit=[0|1], but minval was incorrectly
-set to 1, so it was not possible to disable this option.
+On Wed, Apr 05, 2017 at 01:25:57PM +0100, David Howells wrote:
+> Eryu Guan <eguan@redhat.com> wrote:
+> 
+> > And this test is expected to fail with 4.11-rc5 kernel on all
+> > filesystems, right?
+> 
+> Yes, and probably some thereafter.  Is there a way of requiring the kernel
+> version?
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- mkfs/xfs_mkfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+No need to require a specific kernel version to let test pass or
+_notrun, just let it fail so we know there's an unfixed bug :)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 6fedc05c..5aac4d1b 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -290,7 +290,7 @@ struct opt_params dopts = {
- 		},
- 		{ .index = D_RTINHERIT,
- 		  .conflicts = { LAST_CONFLICT },
--		  .minval = 1,
-+		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
--- 
-2.12.1
+I wanted to make sure the failure was expected and not a test case flaw.
 
+Thanks,
+Eryu
