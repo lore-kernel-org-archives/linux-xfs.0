@@ -1,104 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40114 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37440 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755829AbdDEReR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Apr 2017 13:34:17 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0343764D8E
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2017 17:34:17 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-8-89.pek2.redhat.com [10.72.8.89])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 194B584FE3
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2017 17:34:15 +0000 (UTC)
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH v2] repair: handle reading superblock from image on larger sector size filesystem
-Date: Thu,  6 Apr 2017 01:33:58 +0800
-Message-Id: <1491413638-9590-1-git-send-email-zlang@redhat.com>
+        id S932371AbdDFHgP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Apr 2017 03:36:15 -0400
+Subject: [PATCH 3/4] xfstests: Partially expand the documentation [ver #9]
+From: David Howells <dhowells@redhat.com>
+Date: Thu, 06 Apr 2017 08:36:11 +0100
+Message-ID: <149146417165.12061.10328121523066192332.stgit@warthog.procyon.org.uk>
+In-Reply-To: <149146415678.12061.13562442148388464862.stgit@warthog.procyon.org.uk>
+References: <149146415678.12061.13562442148388464862.stgit@warthog.procyon.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
 
-Due to xfs_repair uses direct IO, sometimes it can't read superblock
-from an image file has smaller sector size than host filesystem.
-Especially that superblock doesn't align with host filesystem's
-sector size.
+Partially expand the documentation available in xfstests to include
+requirements checking and auxiliary programs for testing.
 
-Fortunately, xfsprogs already has code to do "isa_file" check in
-xfs_repair.c, it turns off O_DIRECT after phase1 if the sector
-size is less than the host filesystem's geometry. So move it upward
-phase1 directly.
-
-Signed-off-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
 
-Hi,
+ doc/auxiliary-programs.txt   |   56 +++++++++++++++++++++++++++++++
+ doc/requirement-checking.txt |   77 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 133 insertions(+)
+ create mode 100644 doc/auxiliary-programs.txt
+ create mode 100644 doc/requirement-checking.txt
 
-V2 did below changes:
-1) remove all changes in V1.
-2) move "isa_file" double check over than phase1.
-
-Thanks,
-Zorro
-
- repair/xfs_repair.c | 36 ++++++++++++++++++------------------
- 1 file changed, 18 insertions(+), 18 deletions(-)
-
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index b07567b..0525c6d 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -657,24 +657,6 @@ main(int argc, char **argv)
- 	timestamp(PHASE_START, 0, NULL);
- 	timestamp(PHASE_END, 0, NULL);
- 
--	/* do phase1 to make sure we have a superblock */
--	phase1(temp_mp);
--	timestamp(PHASE_END, 1, NULL);
--
--	if (no_modify && primary_sb_modified)  {
--		do_warn(_("Primary superblock would have been modified.\n"
--			  "Cannot proceed further in no_modify mode.\n"
--			  "Exiting now.\n"));
--		exit(1);
--	}
--
--	rval = get_sb(&psb, 0, XFS_MAX_SECTORSIZE, 0);
--	if (rval != XR_OK) {
--		do_warn(_("Primary superblock bad after phase 1!\n"
--			  "Exiting now.\n"));
--		exit(1);
--	}
--
- 	/* -f forces this, but let's be nice and autodetect it, as well. */
- 	if (!isa_file) {
- 		int		fd = libxfs_device_to_fd(x.ddev);
-@@ -717,6 +699,24 @@ main(int argc, char **argv)
- 		}
- 	}
- 
-+	/* do phase1 to make sure we have a superblock */
-+	phase1(temp_mp);
-+	timestamp(PHASE_END, 1, NULL);
+diff --git a/doc/auxiliary-programs.txt b/doc/auxiliary-programs.txt
+new file mode 100644
+index 0000000..17797b0
+--- /dev/null
++++ b/doc/auxiliary-programs.txt
+@@ -0,0 +1,56 @@
++			==============================
++			AUXILIARY PROGRAMS FOR TESTING
++			==============================
 +
-+	if (no_modify && primary_sb_modified)  {
-+		do_warn(_("Primary superblock would have been modified.\n"
-+			  "Cannot proceed further in no_modify mode.\n"
-+			  "Exiting now.\n"));
-+		exit(1);
-+	}
++Not everything a test script can do is easily done within a test script;
++sometimes it makes a lot more sense to write auxiliary program in C and have
++the test script call them.  Auxiliary commands can be found in the src/
++directory and in other packages.
 +
-+	rval = get_sb(&psb, 0, XFS_MAX_SECTORSIZE, 0);
-+	if (rval != XR_OK) {
-+		do_warn(_("Primary superblock bad after phase 1!\n"
-+			  "Exiting now.\n"));
-+		exit(1);
-+	}
++Tests wanting to use an auxiliary program found in the src/ directory should
++note the dependency with:
 +
- 	/*
- 	 * Prepare the mount structure. Point the log reference to our local
- 	 * copy so it's available to the various phases. The log bits are
--- 
-2.7.4
++	_require_test_program "<program-name>"
++
++
++Contents:
++
++ - af_unix	-- Create an AF_UNIX socket
++ - stat_test	-- statx syscall exercise
++ - xfs_io	-- General I/O operation exercise
++
++
++==================
++QUICK DESCRIPTIONS
++==================
++
++af_unix
++
++	The af_unix program creates an AF_UNIX socket at the given location.
++
++stat_test
++
++	The stat_test program is primarily designed to exercise the statx()
++	system call.  It can check statx() against fstatat() and it can
++	compare and check various file attributes.
++
++	See also:
++		_require_statx
++
++
++xfs_io
++
++	The xfs_io program can be found in the xfsprogs package and can be used
++	to perform sequences of I/O commands, though it is limited to what it
++	can do on open files.
++
++	xfs_io is a debugging tool that is aimed at examining regular file I/O
++	paths rather than a raw XFS volume itself.  These code paths include
++	not only the obvious read/write/mmap interfaces for manipulating files,
++	but also cover all of the XFS extensions (such as space preallocation,
++	additional inode flags, etc).
++
++	Most of its commands can also be used with other filesystems.
++
++	See also:
++		_require_xfs_io_command
+diff --git a/doc/requirement-checking.txt b/doc/requirement-checking.txt
+new file mode 100644
+index 0000000..f3fc9f4
+--- /dev/null
++++ b/doc/requirement-checking.txt
+@@ -0,0 +1,77 @@
++		   ========================================
++		   TESTING FOR REQUIREMENTS IN TEST SCRIPTS
++		   ========================================
++
++Test scripts need to indicate to the infrastructure what sorts of requirements
++they have.  This is done with _require_<xxx> macros, which may take parameters.
++
++ (1) General requirements.
++
++	_require_command "$<NAME_PROG>" <name>
++	_require_test
++	_require_test_program <name>
++	_require_xfs_io_command <name> [<switch>]
++
++ (2) System call requirements.
++
++	_require_statx
++
++
++====================
++GENERAL REQUIREMENTS
++====================
++
++_require_command "$NAME_PROG" name
++
++     The test requires an external command, called 'name' be present on the
++     system and that '$VAR' should be set with the path to that command.  $VAR
++     should then be used to refer to the command when executing it.  For
++     example:
++
++	_require_command "KILLALL_PROG" killall
++
++     to locate the killall command and then:
++
++	$KILLALL_PROG -q $FSSTRESS_PROG
++
++     to make use of it.
++
++
++_require_test
++
++     The test requires that the block device specified by $TEST_DEV be mounted
++     on $TEST_DIR.
++
++
++_require_test_program <name>
++
++     The test requires a program by the name of 'name' be present and built in
++     the src/ directory.  For example:
++
++	_require_test_program "stat_test"
++
++     requires that src/stat_test be built.
++
++
++_require_xfs_io_command <name> [<switch>]
++
++     The test requires that the xfs_io command be available, that it supports
++     command <name> and, optionally, that that command supports the specified
++     switch.  For example:
++
++	_require_xfs_io_command "falloc"
++	_require_xfs_io_command "chattr" "+/-x"
++
++     The first requires that xfs_io support the falloc command and the second
++     that it supports the chattr command and that the chattr command supports
++     the +x and -x arguments (DAX attribute).
++
++
++========================
++SYSTEM CALL REQUIREMENTS
++========================
++
++_require_statx
++
++     The test requires the use of the statx() system call and will be skipped
++     if it isn't available in the kernel.
 
