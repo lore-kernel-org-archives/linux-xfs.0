@@ -1,469 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47603 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932944AbdDFJCs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2017 05:02:48 -0400
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v3692lqa006411
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Apr 2017 09:02:47 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v3692lVI004648
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Apr 2017 09:02:47 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v3692kKK016795
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Apr 2017 09:02:46 GMT
-Subject: Re: [RFC PATCH 1/1] xfsprogs/db: add a command for dumping the btree
- blocks
-References: <1491443083-18600-1-git-send-email-shan.hai@oracle.com>
- <1491443083-18600-2-git-send-email-shan.hai@oracle.com>
- <20170406065923.GV4864@birch.djwong.org>
-From: Shan Hai <shan.hai@oracle.com>
-Message-ID: <35833828-0505-b55c-30e3-493a5884b768@oracle.com>
-Date: Thu, 6 Apr 2017 17:02:44 +0800
+Received: from mx1.redhat.com ([209.132.183.28]:44850 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934184AbdDFNVC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Apr 2017 09:21:02 -0400
+Date: Thu, 6 Apr 2017 09:21:00 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: XFS mount hangs during quotacheck
+Message-ID: <20170406132058.GB50328@bfoster.bfoster>
+References: <94fae78c-056b-3055-0714-c4df9239fffb@stepping-stone.ch>
+ <20170406125120.GA50328@bfoster.bfoster>
+ <c29ade94-ea74-07ac-db58-e203219f9426@stepping-stone.ch>
 MIME-Version: 1.0
-In-Reply-To: <20170406065923.GV4864@birch.djwong.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c29ade94-ea74-07ac-db58-e203219f9426@stepping-stone.ch>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Christian Affolter <c.affolter@stepping-stone.ch>
 Cc: linux-xfs@vger.kernel.org
 
+On Thu, Apr 06, 2017 at 03:10:41PM +0200, Christian Affolter wrote:
+> Hi Brian,
+> 
+> thanks a lot for taking the time to help.
+> 
+> On 06.04.2017 14:51, Brian Foster wrote:
+> > On Wed, Apr 05, 2017 at 03:08:03PM +0200, Christian Affolter wrote:
+> > > Hi everyone,
+> > > 
+> > > I'm having a system with a 15 TiB XFS volume with user and project quotas,
+> > > which recently crashed.
+> > > 
+> > > After a successful xfs_repair run, I'm trying to mount the file system
+> > > again. According to dmesg a quotacheck is needed (XFS (vdc): Quotacheck
+> > > needed: Please wait.), for about 20 minutes I see expected read-activity on
+> > > the device within iotop, then it suddenly stops but the mount command still
+> > > hangs in uninterruptable sleep state (D+) while the system remains
+> > > completely idle (I/O and CPU wise).
+> > > 
+> > > [...]
+> > 
+> > > Apr  5 10:33:48 sysresccd kernel: XFS (vdc): Mounting V5 Filesystem
+> > > Apr  5 10:33:48 sysresccd kernel: XFS (vdc): Ending clean mount
+> > > Apr  5 10:33:53 sysresccd kernel: XFS (vdc): Unmounting Filesystem
+> > > Apr  5 10:34:00 sysresccd kernel: Adding 4193276k swap on /dev/vda2.  Priority:-1 extents:1 across:4193276k FS
+> > > Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Mounting V5 Filesystem
+> > > Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Ending clean mount
+> > > Apr  5 10:34:35 sysresccd kernel: XFS (vdc): Quotacheck needed: Please wait.
+> > > Apr  5 10:34:43 sysresccd su[2622]: Successful su for root by root
+> > > Apr  5 10:34:43 sysresccd su[2622]: + /dev/tty2 root:root
+> > > Apr  5 12:03:49 sysresccd kernel: sysrq: SysRq : Show Blocked State
+> > > Apr  5 12:03:49 sysresccd kernel:   task                        PC stack   pid father
+> > > Apr  5 12:03:49 sysresccd kernel: mount           D ffff880310653958     0  2611   2571 0x20020000
+> > > Apr  5 12:03:49 sysresccd kernel:  ffff880310653958 ffff880310653958 0000000500370b74 ffff880002789d40
+> > > Apr  5 12:03:49 sysresccd kernel:  ffff880310654000 ffff8803111da198 0000000000000002 ffffffff817fbb2a
+> > > Apr  5 12:03:49 sysresccd kernel:  ffff880002789d40 ffff880310653970 ffffffff817f9f58 7fffffffffffffff
+> > > Apr  5 12:03:49 sysresccd kernel: Call Trace:
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fbb2a>] ? usleep_range+0x3a/0x3a
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817f9f58>] schedule+0x70/0x7e
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fbb59>] schedule_timeout+0x2f/0x107
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81170dcd>] ? __kmalloc+0xeb/0x114
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81389780>] ? kmem_alloc+0x33/0x96
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810b58f0>] ? arch_local_irq_save+0x15/0x1b
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fc3f7>] ? _raw_spin_unlock_irqrestore+0xf/0x11
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa72d>] do_wait_for_common+0xe4/0x11a
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa72d>] ? do_wait_for_common+0xe4/0x11a
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810a315c>] ? wake_up_q+0x42/0x42
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa7d9>] wait_for_common+0x36/0x4f
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817fa80a>] wait_for_completion+0x18/0x1a
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a223>] xfs_qm_flush_one+0x42/0x7f
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a586>] xfs_qm_dquot_walk.isra.8+0xc1/0x106
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139a1e1>] ? xfs_qm_dqattach_one+0xe3/0xe3
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139bd27>] xfs_qm_quotacheck+0x131/0x252
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8139bedf>] xfs_qm_mount_quotas+0x97/0x143
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813840a1>] xfs_mountfs+0x587/0x6b1
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813868ea>] xfs_fs_fill_super+0x411/0x4b5
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811846d1>] mount_bdev+0x141/0x195
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff813864d9>] ? xfs_parseargs+0x8e8/0x8e8
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81168bff>] ? alloc_pages_current+0x96/0x9f
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8138502b>] xfs_fs_mount+0x10/0x12
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811851f3>] mount_fs+0x62/0x12b
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff81199646>] vfs_kern_mount+0x64/0xd0
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff8119bccd>] do_mount+0x8d5/0x9e6
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff811c07b1>] compat_SyS_mount+0x179/0x1a5
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff810039bb>] do_syscall_32_irqs_off+0x52/0x61
+> > > Apr  5 12:03:49 sysresccd kernel:  [<ffffffff817feee6>] entry_INT80_compat+0x36/0x50
+> > 
+> > This looks like a known quotacheck vs. reclaim deadlock. Quotacheck is
+> > in the phase where it has completed all of the updates of in-core
+> > accounting and now needs to flush the in-core xfs_dquot structures to
+> > their associated backing buffers and submit them for I/O. The flush
+> > sequence is stuck waiting on an xfs_dquot flush lock, however.
+> > 
+> > The problem is that quotacheck holds the underlying buffers and then
+> > does a blocking xfs_dqflock(), which is effectively an inverse locking
+> > order from xfs_dquot memory reclaim. If reclaim runs during the previous
+> > quotacheck phase, it acquires the flush lock and fails to submit the
+> > underlying buffer for I/O (because quotacheck effectively holds/pins the
+> > buffer). When the quotacheck flush gets to the dquot, it thus waits
+> > indefinitely on a flush lock that will never unlock.
+> > 
+> > If you're comfortable building a kernel from source, you could try the
+> > following patch and see if it helps quotacheck to complete:
+> > 
+> >   http://www.spinics.net/lists/linux-xfs/msg04485.html
+> > 
+> > (Note that I've not been able to get this patch merged.)
+> 
+> Shall I only apply "[PATCH 2/3] xfs: push buffer of flush locked dquot to
+> avoid quotacheck deadlock" or are all patches of this series required?
+> 
+> Which kernel version would you recommend for applying the patch?
+> 
 
+You could apply patches 1-2 of that series. Patch 3 was a
+hack/experiment. Definitely do not apply that one.
 
-On 2017年04月06日 14:59, Darrick J. Wong wrote:
-> On Thu, Apr 06, 2017 at 09:44:43AM +0800, Shan Hai wrote:
->> Currently there is no way to dump the whole blocks of btrees in the
->> xfs_db except manually step through the btree nodes, dumping the blocks
->> of the whole btree by a command is more convenient than interactive
->> walking of the tree in some circumstances.
->>
->> This patch adds a new command to the xfs_db utility called 'treedump',
->> which can dump the specific btree or dump all btrees of the xfs, below
->> is an example usage of the command:
->>
->> sudo xfs_db -r -c "agf 0" -c "treedump -b" /dev/sda1
->>
->> The blocks of the bnobt tree are dumped to the stdout.
->>
->> Signed-off-by: Shan Hai <shan.hai@oracle.com>
->> ---
->>   db/Makefile   |   4 +-
->>   db/command.c  |   1 +
->>   db/treedump.c | 306 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->>   db/treedump.h |  20 ++++
->>   4 files changed, 329 insertions(+), 2 deletions(-)
->>   create mode 100644 db/treedump.c
->>   create mode 100644 db/treedump.h
->>
->> diff --git a/db/Makefile b/db/Makefile
->> index cdc0b99..03a2283 100644
->> --- a/db/Makefile
->> +++ b/db/Makefile
->> @@ -8,8 +8,8 @@ include $(TOPDIR)/include/builddefs
->>   LTCOMMAND = xfs_db
->>   
->>   HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
->> -	btblock.h bmroot.h check.h command.h convert.h crc.h debug.h \
->> -	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
->> +	btblock.h bmroot.h treedump.h check.h command.h convert.h crc.h \
->> +	debug.h dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
->>   	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
->>   	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
->>   	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h
->> diff --git a/db/command.c b/db/command.c
->> index 3d7cfd7..060ebed 100644
->> --- a/db/command.c
->> +++ b/db/command.c
->> @@ -143,6 +143,7 @@ init_commands(void)
->>   	print_init();
->>   	quit_init();
->>   	sb_init();
->> +	treedump_init();
->>   	type_init();
->>   	write_init();
->>   	dquot_init();
->> diff --git a/db/treedump.c b/db/treedump.c
->> new file mode 100644
->> index 0000000..8d5a33e
->> --- /dev/null
->> +++ b/db/treedump.c
->> @@ -0,0 +1,306 @@
->> +/*
->> + * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
->> + * Copyright (c) 2017 Oracle.
->> + * All Rights Reserved.
->> + *
->> + * Author: Shan Hai <shan.hai@oracle.com>
->> + *
->> + * This program is free software; you can redistribute it and/or
->> + * modify it under the terms of the GNU General Public License as
->> + * published by the Free Software Foundation.
->> + *
->> + * This program is distributed in the hope that it would be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> + * GNU General Public License for more details.
->> + *
->> + * You should have received a copy of the GNU General Public License
->> + * along with this program; if not, write the Free Software Foundation,
->> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->> + */
->> +
->> +#include "libxfs.h"
->> +#include <math.h>
->> +#include <sys/time.h>
->> +#include "command.h"
->> +#include "io.h"
->> +#include "type.h"
->> +#include "fprint.h"
->> +#include "faddr.h"
->> +#include "field.h"
->> +#include "sb.h"
->> +#include "input.h"
->> +#include "output.h"
->> +#include "init.h"
->> +#include "malloc.h"
->> +
->> +#define TYP_MASK ( \
->> +	TYP_AGF | TYP_AGFL |  TYP_AGI | TYP_ATTR \
->> +	| TYP_BMAPBTA | TYP_BMAPBTD | TYP_BNOBT | TYP_CNTBT \
->> +	| TYP_RMAPBT | TYP_REFCBT | TYP_DATA | TYP_DIR2 \
->> +	| TYP_DQBLK | TYP_INOBT | TYP_INODATA | TYP_INODE \
->> +	| TYP_LOG | TYP_RTBITMAP | TYP_RTSUMMARY | TYP_SB \
->> +	| TYP_SYMLINK | TYP_TEXT | TYP_FINOBT | TYP_NONE)
->> +
->> +static struct btree_types {
->> +	xfs_btnum_t	btnum;
->> +	uint32_t	magic;
->> +	uint32_t	crc_magic;
->> +} const type_to_btree_table[TYP_NONE] = {
->> +	[0 ... TYP_NONE - 1]	= { XFS_BTNUM_MAX,  -1, -1 },
->> +
->> +	[TYP_BNOBT]		= { XFS_BTNUM_BNO,
->> +				    XFS_ABTB_MAGIC, XFS_ABTB_CRC_MAGIC },
->> +	[TYP_CNTBT]		= { XFS_BTNUM_CNT,
->> +				    XFS_ABTC_MAGIC, XFS_ABTC_CRC_MAGIC },
->> +	[TYP_RMAPBT]		= { XFS_BTNUM_RMAP,
->> +				    XFS_RMAP_CRC_MAGIC, XFS_RMAP_CRC_MAGIC },
->> +	[TYP_REFCBT]		= { XFS_BTNUM_REFC,
->> +				    XFS_REFC_CRC_MAGIC, XFS_REFC_CRC_MAGIC },
-> Uh.... what if I want to dump one of the other btrees?  There's at least
-> four more types. ;)
->
-> TBH I was wondering why not let the user navigate to the root node of
-> whichever tree they wish to dump, and then the command simply has to
-> travel down the left side of the tree to level 0 and then dump each leaf
-> and use rightsib to move on to the next leaf?
+I think they should apply fine to any v4.10 or newer kernel. I'm not
+sure that quotacheck changes all that often so you could probably pull
+them into an older kernel as well, but you'd have to try to apply them
+to know for sure.
 
-After giving it another thought reveals that the above mentioned method 
-can only
-dump the leaf nodes but not internal nodes, the purpose of the original 
-patch is
-dump the whole tree but not just leaves.
+Brian
 
-How about reserving the current recursive traversal and drop the tree 
-type selecting
-code and use the 'addr free_root' method?
-
-Thanks
-Shan Hai
-
-> i.e.
-> xfs_db> agi 3
-> xfs_db> addr free_root
-> xfs_db> treedump
-> 0: [...]
-> 1: [...]
-> xfs_db>
->
-> --D
->
->> +};
->> +
->> +static typnm_t	btype_map[TYP_NONE];
->> +
->> +#define TYP_MAP_SIZE (sizeof (btype_map) / sizeof (typnm_t))
->> +
->> +typedef void	(*scan_sbtree_f_t)(struct xfs_btree_block *block,
->> +				   int level, xfs_agf_t *agf,
->> +				   xfs_agblock_t bno, int isroot,
->> +				   typnm_t btype);
->> +static int	treedump_f(int argc, char **argv);
->> +static void	scan_ag(xfs_agnumber_t agno);
->> +static void	scan_sbtree(xfs_agf_t *agf, xfs_agblock_t root,
->> +			    int nlevels, int isroot,
->> +			    scan_sbtree_f_t func, typnm_t btype);
->> +static void	scanfunc_btree(struct xfs_btree_block *block, int level,
->> +			       xfs_agf_t *agf, xfs_agblock_t bno,
->> +			       int isroot, typnm_t btype);
->> +/*
->> + * [-b]: bnobt, [-c]: cntbt, [-f]: refcntbt, [-r]: rmapbt
->> + */
->> +static const cmdinfo_t	treedump_cmd =
->> +	{ "treedump", NULL, treedump_f, 0, 4, 0,
->> +	 N_("[-b] [-c] [-f] [-r]"),
->> +	 N_("dump the metadata of the btrees"), NULL };
->> +
->> +static void set_btree_type(
->> +	typnm_t	type)
->> +{
->> +	btype_map[type] = type;
->> +}
->> +
->> +/* ARGSUSED */
->> +static int
->> +treedump_f(
->> +	int	argc,
->> +	char	**argv)
->> +{	
->> +	int c;
->> +
->> +	if (cur_agno == NULLAGNUMBER)
->> +                cur_agno = 0;
->> +
->> +	/* Dump the BNOBT if none is specified */
->> +	set_btree_type(TYP_BNOBT);
->> +
->> +	while ((c = getopt(argc, argv, "bcfr")) != EOF) {
->> +                switch (c) {
->> +                case 'b':
->> +                        set_btree_type(TYP_BNOBT);
->> +                        break;
->> +                case 'c':
->> +                        set_btree_type(TYP_CNTBT);
->> +                        break;
->> +		case 'f':
->> +			set_btree_type(TYP_REFCBT);
->> +			break;
->> +		case 'r':
->> +			set_btree_type(TYP_RMAPBT);
->> +			break;
->> +		default:
->> +			set_btree_type(TYP_BNOBT);
->> +			break;
->> +		}
->> +	}
->> +
->> +	scan_ag(cur_agno);
->> +
->> +	return 0;
->> +}
->> +
->> +void
->> +treedump_init(void)
->> +{
->> +	add_command(&treedump_cmd);
->> +}
->> +
->> +static void
->> +scan_ag(
->> +	xfs_agnumber_t	agno)
->> +{
->> +	xfs_agf_t	*agf;
->> +	xfs_sb_t	tsb;
->> +	xfs_sb_t	*sb = &tsb;
->> +	typnm_t		btype;
->> +	xfs_btnum_t	btree;
->> +	int i, c;
->> +	char **argv;
->> +
->> +	push_cur();	/* 1 pushed */
->> +	set_cur(&typtab[TYP_SB],
->> +		XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
->> +		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
->> +
->> +	if (!iocur_top->data) {
->> +		dbprintf(_("can't read superblock for ag %u\n"), agno);
->> +		goto pop1_out;
->> +	}
->> +
->> +	libxfs_sb_from_disk(sb, iocur_top->data);
->> +
->> +	if (sb->sb_magicnum != XFS_SB_MAGIC) {
->> +		dbprintf(_("bad sb magic # %#x in ag %u\n"),
->> +			sb->sb_magicnum, agno);
->> +	}
->> +
->> +	if (!xfs_sb_good_version(sb)) {
->> +		dbprintf(_("bad sb version # %#x in ag %u\n"),
->> +			sb->sb_versionnum, agno);
->> +	}
->> +
->> +	if (agno == 0 && sb->sb_inprogress != 0) {
->> +		dbprintf(_("mkfs not completed successfully\n"));
->> +	}
->> +
->> +	push_cur();     /* 2 pushed */
->> +        set_cur(&typtab[TYP_AGF],
->> +                XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
->> +                XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
->> +
->> +	if ((agf = iocur_top->data) == NULL) {
->> +                dbprintf(_("can't read agf block for ag %u\n"), agno);
->> +                goto pop2_out;
->> +        }
->> +        if (be32_to_cpu(agf->agf_magicnum) != XFS_AGF_MAGIC) {
->> +		dbprintf(_("bad agf magic # %#x in ag %u\n"),
->> +		be32_to_cpu(agf->agf_magicnum), agno);
->> +        }
->> +        if (!XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum))) {
->> +		dbprintf(_("bad agf version # %#x in ag %u\n"),
->> +			be32_to_cpu(agf->agf_versionnum), agno);
->> +        }
->> +
->> +	dbprintf(_("\nAGF %d\n\n"), agno);
->> +	argv = breakline("print", &c);
->> +	command(c, argv);
->> +
->> +	for (i = 0; i < TYP_MAP_SIZE; i++) {
->> +		btype = btype_map[i];
->> +		if (btype & TYP_MASK) {
->> +			btree = type_to_btree_table[btype].btnum;
->> +			scan_sbtree(agf, be32_to_cpu(agf->agf_roots[btree]),
->> +					be32_to_cpu(agf->agf_levels[btree]),
->> +					1, scanfunc_btree, btype);
->> +		}
->> +	}
->> +
->> +pop2_out:
->> +	pop_cur();
->> +pop1_out:
->> +	pop_cur();
->> +}
->> +
->> +
->> +static void
->> +scan_sbtree(
->> +	xfs_agf_t	*agf,
->> +	xfs_agblock_t	root,
->> +	int		nlevels,
->> +	int		isroot,
->> +	scan_sbtree_f_t	func,
->> +	typnm_t		btype)
->> +{
->> +	xfs_agnumber_t	seqno = be32_to_cpu(agf->agf_seqno);
->> +	push_cur();
->> +
->> +	set_cur(&typtab[btype],
->> +		XFS_AGB_TO_DADDR(mp, seqno, root), blkbb, DB_RING_IGN, NULL);
->> +	if (iocur_top->data == NULL) {
->> +		dbprintf(_("can't read btree block %u/%u\n"), seqno, root);
->> +		pop_cur();
->> +		return;
->> +	}
->> +	(*func)(iocur_top->data, nlevels - 1, agf, root, isroot, btype);
->> +	pop_cur();
->> +}
->> +
->> +static int check_magic(
->> +	struct xfs_btree_block	*block,
->> +	xfs_agnumber_t		seqno,
->> +	xfs_agblock_t		bno,
->> +	typnm_t			btype)
->> +{
->> +	uint32_t magic = type_to_btree_table[btype].magic;
->> +	uint32_t crc_magic = type_to_btree_table[btype].crc_magic;
->> +	char *btree_name = typtab[btype].name;
->> +	
->> +	if (be32_to_cpu(block->bb_magic) != magic &&
->> +		be32_to_cpu(block->bb_magic) != crc_magic) {
->> +		dbprintf(_("bad magic # %#x in %s block %u/%u\n"),
->> +			be32_to_cpu(block->bb_magic), btree_name, seqno, bno);
->> +		return -1;
->> +	}
->> +
->> +	return 0;
->> +}
->> +
->> +static void
->> +scanfunc_btree(
->> +	struct xfs_btree_block	*block,
->> +	int			level,
->> +	xfs_agf_t		*agf,
->> +	xfs_agblock_t		bno,
->> +	int			isroot,
->> +	typnm_t			btype)
->> +{
->> +	int			i, c;
->> +	char			**argv;
->> +	xfs_alloc_ptr_t         *pp;
->> +	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
->> +
->> +	if (check_magic(block, seqno, bno, btype))
->> +		return;
->> +
->> +	dbprintf(_("\ncurrent blkno %d\n\n"), bno);
->> +	if (level == 0) {
->> +		if (be16_to_cpu(block->bb_numrecs) > mp->m_alloc_mxr[0] ||
->> +		    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_alloc_mnr[0])) {
->> +			dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in "
->> +				 "btbno block %u/%u\n"),
->> +				be16_to_cpu(block->bb_numrecs), mp->m_alloc_mnr[0],
->> +				mp->m_alloc_mxr[0], seqno, bno);
->> +			return;
->> +		}
->> +
->> +		argv = breakline("print", &c);
->> +		command(c, argv);
->> +
->> +		return;
->> +	} else {
->> +		argv = breakline("print", &c);
->> +		command(c, argv);
->> +	}
->> +
->> +	if (be16_to_cpu(block->bb_numrecs) > mp->m_alloc_mxr[1] ||
->> +	    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_alloc_mnr[1])) {
->> +		dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in btbno block "
->> +			 "%u/%u\n"),
->> +			be16_to_cpu(block->bb_numrecs), mp->m_alloc_mnr[1],
->> +			mp->m_alloc_mxr[1], seqno, bno);
->> +		return;
->> +	}
->> +
->> +	pp = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
->> +	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
->> +		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_btree, btype);
->> +}
->> diff --git a/db/treedump.h b/db/treedump.h
->> new file mode 100644
->> index 0000000..c9dbffc
->> --- /dev/null
->> +++ b/db/treedump.h
->> @@ -0,0 +1,20 @@
->> +/*
->> + * Copyright (c) 2017 Oracle.  All Rights Reserved.
->> + *
->> + * Author: Shan Hai <shan.hai@oracle.com>
->> + *
->> + * This program is free software; you can redistribute it and/or
->> + * modify it under the terms of the GNU General Public License as
->> + * published by the Free Software Foundation.
->> + *
->> + * This program is distributed in the hope that it would be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> + * GNU General Public License for more details.
->> + *
->> + * You should have received a copy of the GNU General Public License
->> + * along with this program; if not, write the Free Software Foundation,
->> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->> + */
->> +
->> +extern void	treedump_init(void);
->> -- 
->> 2.7.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> 
+> > Otherwise, you'd probably have to go a ways back to a kernel before this
+> > regression was introduced. That looks like v3.4 according to the code
+> > (but it's also possible other changes may have prevented this state
+> > between then and with more recent kernels, particularly since it seems
+> > to have only turned up more recently).
+> > 
+> > Brian
+> 
+> Thanks again,
+> Chris
+> 
