@@ -1,94 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f179.google.com ([209.85.217.179]:36803 "EHLO
-        mail-ua0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755329AbdDEOYk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2017 10:24:40 -0400
-Received: by mail-ua0-f179.google.com with SMTP id 100so8939102uaj.3
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2017 07:24:39 -0700 (PDT)
+Received: from mail-vk0-f43.google.com ([209.85.213.43]:33298 "EHLO
+        mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751301AbdDFUAJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2017 16:00:09 -0400
+Received: by mail-vk0-f43.google.com with SMTP id d188so52854426vka.0
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Apr 2017 13:00:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <83915e74-6198-4b0a-9aff-96cdedfad97a@sandeen.net>
-References: <CACj3i738tUsYyRvQmr3NfPQ=P2FNruh2xsr1TAuLMJ69AV0a0w@mail.gmail.com>
- <20170404194825.GX28800@wotan.suse.de> <5784453e-dc91-1e26-451d-3afea138adbf@sandeen.net>
- <CACj3i73u11rNPK701aVm07qOPpT2r-1r_m--iW-D6SwLfb-pbw@mail.gmail.com> <83915e74-6198-4b0a-9aff-96cdedfad97a@sandeen.net>
+In-Reply-To: <6c83318d-ef75-4dc2-e366-d50d74fb71e6@sandeen.net>
+References: <20170406143426.19727-1-jtulak@redhat.com> <6c83318d-ef75-4dc2-e366-d50d74fb71e6@sandeen.net>
 From: Jan Tulak <jtulak@redhat.com>
-Date: Wed, 5 Apr 2017 16:24:18 +0200
-Message-ID: <CACj3i71xWPTZRUE+mF5CNT4OsfJEKstvgJPEviEOC9d=U3noAA@mail.gmail.com>
-Subject: Re: [xfsprogs] Do we need so many data types for user input?
+Date: Thu, 6 Apr 2017 21:59:47 +0200
+Message-ID: <CACj3i73Mh1eW=M2xk0AKS12GCHcJkK6hRdMg_f2BLKMpWSryfA@mail.gmail.com>
+Subject: Re: [PATCH] mkfs: rtinherit minval should be 0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Apr 5, 2017 at 4:08 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+On Thu, Apr 6, 2017 at 6:58 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 4/6/17 9:34 AM, Jan Tulak wrote:
+>> As with any other option, rtinherit=[0|1], but minval was incorrectly
+>> set to 1, so it was not possible to disable this option.
 >
-> On 4/5/17 3:26 AM, Jan Tulak wrote:
->> On Tue, Apr 4, 2017 at 10:17 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->>> On 4/4/17 2:48 PM, Luis R. Rodriguez wrote:
->>>>
->>>> And then agsize is capped artificially later via validate_ag_geometry():
->>>>
->>>>         if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
->>>>               ...
->>>>       if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
->>>>               ...
->>>>       if (agsize > dblocks) {
->>>>               ...
->>>>       if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
->>>>               ...
->>>>
->>>> Its not clear if this is capped at UINT_MAX or if we need ULLONG_MAX here.
->>>
->>> .maxval = XFS_AG_MAX_BYTES,
->>>
->>> #define XFS_AG_MAX_BYTES        ((XFS_AG_BYTES(31)))    /* 1 TB */
->>> #define XFS_AG_BYTES(bblog)     ((long long)BBSIZE << (bblog))
->>>
->>> so the maximum is (long long)(512) << 31
->>>
->>> so, no - agsize won't fit in a 32 bit var, if that's the question...
->>>
->>
->> Yeah. I think that we can make it uint64 everywhere unless it is
->> causing an issue in a specific case with a bit shift or something, and
->> just limit the input value where appropriate explicitly.
->>
->>
->> And...
->>> And at the end of the day, we are converting all numbers into unsigned
->>
->> I take back this part, we are going through long long, not unsigned long long.
->> Everything else is still valid.
+> Long ago, when this option was added, it was simply a flag with
+> no option parsing, i.e. "-d rtinherit"
 >
-> Ok, for those who aren't immersed 24/7 in mkfs ;) can you help us understand
-> where you're going with this?  What's the change you're proposing, and how
-> does it help?
+> so I just want to double check ...
+>
+> 1) was it intentional that this turned into a "=0/=1" type option,
+>    i.e. an option which can be specified as disabled, essentially restating
+>    the default?  Is it the intent that every flag option must now take a
+>    value, and that it must take both "off" and "on" values?  Just checking
+>    that I haven't lost the thread, here.
+>
+> IOWS: we used to have only "-d rtinherit"  But I think now we accept
+> -d rtinherit, -d rtinherit=0, and -d rtinherit=1.  Maybe it's water
+> under the bridge, I don't see the use in adding value parsing to
+> something that was just a simple flag before.  Can you enlighten
+> me?
 >
 
-If you ask only about the last sentence - I was just taking back my
-claim that we already convert all numbers into unsigned in getnum. We
-convert them to long long right now. (It was too late evening for me,
-apparently. :-) )
+(Sending again, mailing list refuses emails with html part outright
+and it looks like gmail for ios can't sent plaintext only. Sorry if
+you got this twice, Eric.)
 
-If you ask more about summarising what I want to do, then:
+It is using the same framework as all other options, so it got the 0/1
+for free by simply being in the opts table (assuming the min/max
+values are set to 0/1 respectively). We need this behaviour for
+options like crc anyway, so why not standardize it, if all it costs
+you is to set minval to 0?
 
-I'm already moving these standalone variables into an options table,
-that holds all the information in one place. As I'm already touching
-them, I can as well clean the differences and changes accumulated over
-the years and change a lot of mkfs's internal variables from a mix of
-signed and unsigned, 32bit and 64bit, to a single type, unsigned
-64bits long.
+This behaviour was added in the previous part of my/Dave's cleaning work.
 
-That would simplify the code in some places and make it clear what
-type numerical values are - less things like foo((long long) bar);
-
-
-Cheers,
 Jan
 
-> Thanks,
+> 2) really, this and projinherit and, um, extszinherit should
+>    probably all go away.  They were written for testing, nothing
+>    tests them, and they aren't documented.  Any volunteers for
+>    that?  It actually finds its way outside of pure mkfs code,
+>    so it's a little tricky to completely eradicate it, but it
+>    could be done in 2 steps I think.
+>
+> thanks,
 > -Eric
+>
+>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+>> ---
+>>  mkfs/xfs_mkfs.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+>> index 6fedc05c..5aac4d1b 100644
+>> --- a/mkfs/xfs_mkfs.c
+>> +++ b/mkfs/xfs_mkfs.c
+>> @@ -290,7 +290,7 @@ struct opt_params dopts = {
+>>               },
+>>               { .index = D_RTINHERIT,
+>>                 .conflicts = { LAST_CONFLICT },
+>> -               .minval = 1,
+>> +               .minval = 0,
+>>                 .maxval = 1,
+>>                 .defaultval = 1,
+>>               },
+>>
 
 
 
