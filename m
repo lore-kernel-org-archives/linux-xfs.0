@@ -1,406 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11177 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:50126 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932371AbdDFHgW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Apr 2017 03:36:22 -0400
-Subject: [PATCH 4/4] xfstests: Check the stx_attributes settable by chattr
- [ver #9]
-From: David Howells <dhowells@redhat.com>
-Date: Thu, 06 Apr 2017 08:36:19 +0100
-Message-ID: <149146417986.12061.3606889926872722812.stgit@warthog.procyon.org.uk>
-In-Reply-To: <149146415678.12061.13562442148388464862.stgit@warthog.procyon.org.uk>
-References: <149146415678.12061.13562442148388464862.stgit@warthog.procyon.org.uk>
+        id S1754408AbdDFSsv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Apr 2017 14:48:51 -0400
+Subject: [PATCH 2/3] xfs_io: refactor stat functions, add raw dump
+References: <4bb89f72-962d-a9a2-c224-daa828558444@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c93e8f2d-8164-c56c-e3a3-6f3b8fa43f99@sandeen.net>
+Date: Thu, 6 Apr 2017 13:48:50 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <4bb89f72-962d-a9a2-c224-daa828558444@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>, fsdevel <linux-fsdevel@vger.kernel.org>, David Howells <dhowells@redhat.com>
 
-Check the stx_attributes that can be set by calling chattr.
+This adds a "-r" raw structure dump to stat options, and
+factors the code a bit; statx will also use print_file_info
+and print_xfs_info.
 
-The script probes the filesystem with chattr to find out which of +a, +c,
-+d and +i are supported before testing combinations of attrs.  Note that if
-a filesystem supports chattr with these, but doesn't paste the flag values
-into stx_attributes, the test will fail as there's no way to distinguish
-cleared from unset.
-
-Certain chattr flags are reflected in specific stx_attributes flags:
-
-	chattr flag	stx_attributes flag
-	+a		STATX_ATTR_APPEND
-	+c		STATX_ATTR_COMPRESSED
-	+d		STATX_ATTR_NODUMP
-	+i		STATX_ATTR_IMMUTABLE
-
-Signed-off-by: David Howells <dhowells@redhat.com>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
- doc/requirement-checking.txt |   22 +++++-
- src/stat_test.c              |   78 +++++++++++++++++++-
- tests/generic/422.out        |    2 -
- tests/generic/423            |  164 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/423.out        |    2 +
- tests/generic/group          |    1 
- 6 files changed, 264 insertions(+), 5 deletions(-)
- create mode 100755 tests/generic/423
- create mode 100644 tests/generic/423.out
-
-diff --git a/doc/requirement-checking.txt b/doc/requirement-checking.txt
-index f3fc9f4..730c7ac 100644
---- a/doc/requirement-checking.txt
-+++ b/doc/requirement-checking.txt
-@@ -12,7 +12,11 @@ they have.  This is done with _require_<xxx> macros, which may take parameters.
- 	_require_test_program <name>
- 	_require_xfs_io_command <name> [<switch>]
- 
-- (2) System call requirements.
-+ (2) Filesystem capability requirements.
-+
-+	_require_chattr <letters>
-+
-+ (3) System call requirements.
- 
- 	_require_statx
- 
-@@ -67,6 +71,22 @@ _require_xfs_io_command <name> [<switch>]
-      the +x and -x arguments (DAX attribute).
- 
- 
-+==================================
-+FILESYSTEM CAPABILITY REQUIREMENTS
-+==================================
-+
-+_require_chattr <letters>
-+
-+     The test requires that the filesystem attribute set by the chattr command
-+     with +<letters> as an argument be available and supported by the $TEST_DEV
-+     filesystem.  No check is made of the scratch filesystem.  For example:
-+
-+	_require_chattr ai
-+
-+     tests to see if setting the append-only and immutable attributes on a file
-+     (chattr +a +i) is supported.
-+
-+
- ========================
- SYSTEM CALL REQUIREMENTS
- ========================
-diff --git a/src/stat_test.c b/src/stat_test.c
-index cb3d4f4..3dc44bb 100644
---- a/src/stat_test.c
-+++ b/src/stat_test.c
-@@ -102,6 +102,30 @@ static int field_cmp(const void *_key, const void *_p)
- 	return strcmp(key, p->name);
+diff --git a/io/stat.c b/io/stat.c
+index 3ae9903..770f3c7 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -59,16 +59,32 @@ filetype(mode_t mode)
+ 	return NULL;
  }
  
-+/*
-+ * Sorted list of attribute flags for bsearch().
-+ */
-+struct attr_name {
-+	const char	*name;
-+	__u64		attr_flag;
-+};
-+
-+static const struct attr_name attr_list[] = {
-+	{ "append",	STATX_ATTR_APPEND },
-+	{ "automount",	STATX_ATTR_AUTOMOUNT },
-+	{ "compressed",	STATX_ATTR_COMPRESSED },
-+	{ "encrypted",	STATX_ATTR_ENCRYPTED },
-+	{ "immutable",	STATX_ATTR_IMMUTABLE },
-+	{ "nodump",	STATX_ATTR_NODUMP },
-+};
-+
-+static int attr_name_cmp(const void *_key, const void *_p)
+-int
+-stat_f(
+-	int		argc,
+-	char		**argv)
++static int
++dump_raw_stat(struct stat *st)
+ {
+-	struct dioattr	dio;
+-	struct fsxattr	fsx, fsxa;
+-	struct stat	st;
+-	int		verbose = (argc == 2 && !strcmp(argv[1], "-v"));
++	printf("stat.blksize = %lu\n", st->st_blksize);
++	printf("stat.nlink = %lu\n", st->st_nlink);
++	printf("stat.uid = %u\n", st->st_uid);
++	printf("stat.gid = %u\n", st->st_gid);
++	printf("stat.mode: 0%o\n", st->st_mode);
++	printf("stat.ino = %lu\n", st->st_ino);
++	printf("stat.size = %lu\n", st->st_size);
++	printf("stat.blocks = %lu\n", st->st_blocks);
++	printf("stat.atime.tv_sec = %ld\n", st->st_atim.tv_sec);
++	printf("stat.atime.tv_nsec = %ld\n", st->st_atim.tv_nsec);
++	printf("stat.ctime.tv_sec = %ld\n", st->st_ctim.tv_sec);
++	printf("stat.ctime.tv_nsec = %ld\n", st->st_ctim.tv_nsec);
++	printf("stat.mtime.tv_sec = %ld\n", st->st_mtim.tv_sec);
++	printf("stat.mtime.tv_nsec = %ld\n", st->st_mtim.tv_nsec);
++	printf("stat.rdev_major = %u\n", major(st->st_rdev));
++	printf("stat.rdev_minor = %u\n", minor(st->st_rdev));
++	printf("stat.dev_major = %u\n", major(st->st_dev));
++	printf("stat.dev_minor = %u\n", minor(st->st_dev));
++	return 0;
++}
+ 
++void print_file_info(void)
 +{
-+	const char *key = _key;
-+	const struct attr_name *p = _p;
-+	return strcmp(key, p->name);
+ 	printf(_("fd.path = \"%s\"\n"), file->name);
+ 	printf(_("fd.flags = %s,%s,%s%s%s%s%s\n"),
+ 		file->flags & IO_OSYNC ? _("sync") : _("non-sync"),
+@@ -78,21 +94,13 @@ stat_f(
+ 		file->flags & IO_APPEND ? _(",append-only") : "",
+ 		file->flags & IO_NONBLOCK ? _(",non-block") : "",
+ 		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
+-	if (fstat(file->fd, &st) < 0) {
+-		perror("fstat");
+-	} else {
+-		printf(_("stat.ino = %lld\n"), (long long)st.st_ino);
+-		printf(_("stat.type = %s\n"), filetype(st.st_mode));
+-		printf(_("stat.size = %lld\n"), (long long)st.st_size);
+-		printf(_("stat.blocks = %lld\n"), (long long)st.st_blocks);
+-		if (verbose) {
+-			printf(_("stat.atime = %s"), ctime(&st.st_atime));
+-			printf(_("stat.mtime = %s"), ctime(&st.st_mtime));
+-			printf(_("stat.ctime = %s"), ctime(&st.st_ctime));
+-		}
+-	}
+-	if (file->flags & IO_FOREIGN)
+-		return 0;
 +}
 +
- struct file_type {
- 	const char *name;
- 	mode_t mode;
-@@ -128,6 +152,13 @@ void format(void)
- 	fprintf(stderr, "usage: %s [-v] [-m<mask>] <testfile> [checks]\n", prog);
- 	fprintf(stderr, "\t<mask> can be basic, all or a number; all is the default\n");
- 	fprintf(stderr, "checks is a list of zero or more of:\n");
-+	fprintf(stderr, "\tattr=[+-]<name> -- check an attribute in stx_attributes\n");
-+	fprintf(stderr, "\t\tappend -- The file is marked as append only\n");
-+	fprintf(stderr, "\t\tautomount -- The object is an automount point\n");
-+	fprintf(stderr, "\t\tcompressed -- The file is marked as compressed\n");
-+	fprintf(stderr, "\t\tencrypted -- The file is marked as encrypted\n");
-+	fprintf(stderr, "\t\timmutable -- The file is marked as immutable\n");
-+	fprintf(stderr, "\t\tnodump -- The file is marked as no-dump\n");
- 	fprintf(stderr, "\tcmp_ref -- check that the reference file has identical stats\n");
- 	fprintf(stderr, "\tref=<file> -- get reference stats from file\n");
- 	fprintf(stderr, "\tstx_<field>=<val> -- statx field value check\n");
-@@ -300,9 +331,10 @@ static void check_earlier(const struct statx_timestamp *A,
- 	      "%s.sec is before %s.sec (%lld < %lld)\n",
- 	      B_name, A_name, B->tv_sec, A->tv_sec);
- 
--	check((B->tv_nsec - A->tv_nsec) >= 0,
--	      "%s.nsec is before %s.nsec (%d < %d)\n",
--	      B_name, A_name, B->tv_nsec, A->tv_nsec);
-+	if (B->tv_sec == A->tv_sec)
-+		check((B->tv_nsec - A->tv_nsec) >= 0,
-+		      "%s.nsec is before %s.nsec (%d < %d)\n",
-+		      B_name, A_name, B->tv_nsec, A->tv_nsec);
- }
- 
- /*
-@@ -564,6 +596,40 @@ static void check_field(const struct statx *stx, char *arg)
- }
- 
- /*
-+ * Check attributes in stx_attributes.  When stx_attributes_mask gets in
-+ * upstream, we will need to consider that also.
-+ */
-+static void check_attribute(const struct statx *stx, char *arg)
++void print_xfs_info(int verbose)
 +{
-+	const struct attr_name *p;
-+	__u64 attr;
-+	bool set;
++	struct dioattr	dio;
++	struct fsxattr	fsx, fsxa;
 +
-+	verbose("check attr %s\n", arg);
-+	switch (arg[0]) {
-+	case '+': set = true;	break;
-+	case '-': set = false;	break;
-+	default:
-+		bad_arg("attr flag must be marked + (set) or - (unset)\n");
-+	}
-+	arg++;
-+
-+	p = bsearch(arg, attr_list, sizeof(attr_list) / sizeof(attr_list[0]),
-+		    sizeof(attr_list[0]), attr_name_cmp);
-+	if (!p)
-+		bad_arg("Unrecognised attr name '%s'\n", arg);
-+
-+	attr = p->attr_flag;
-+	if (set) {
-+		check(stx->stx_attributes && attr,
-+		      "Attribute %s should be set\n", arg);
-+	} else {
-+		check(~stx->stx_attributes && attr,
-+		      "Attribute %s should be unset\n", arg);
-+	}
+ 	if ((xfsctl(file->name, file->fd, FS_IOC_FSGETXATTR, &fsx)) < 0 ||
+ 	    (xfsctl(file->name, file->fd, XFS_IOC_FSGETXATTRA, &fsxa)) < 0) {
+ 		perror("FS_IOC_FSGETXATTR");
+@@ -112,6 +120,57 @@ stat_f(
+ 		printf(_("dioattr.miniosz = %u\n"), dio.d_miniosz);
+ 		printf(_("dioattr.maxiosz = %u\n"), dio.d_maxiosz);
+ 	}
 +}
 +
-+/*
-  * Do the testing.
-  */
- int main(int argc, char **argv)
-@@ -669,6 +735,12 @@ int main(int argc, char **argv)
- 	for (; *argv; argv++) {
- 		char *arg = *argv;
- 
-+		if (strncmp("attr=", arg, 5) == 0) {
-+			/* attr=[+-]<attr> - check attribute flag */
-+			check_attribute(&stx, arg + 5);
-+			continue;
++int
++stat_f(
++	int		argc,
++	char		**argv)
++{
++	struct stat	st;
++	int		c, verbose = 0, raw = 0;
++
++	while ((c = getopt(argc, argv, "rv")) != EOF) {
++		switch (c) {
++		case 'r':
++			raw = 1;
++			break;
++		case 'v':
++			verbose = 1;
++			break;
++		default:
++			return command_usage(&stat_cmd);
 +		}
++	}
 +
- 		if (strcmp("cmp_ref", arg) == 0) {
- 			/* cmp_ref - check ref file has same stats */
- 			cmp_ref(&stx, mask);
-diff --git a/tests/generic/422.out b/tests/generic/422.out
-index 21d6ffc..70a4eb6 100644
---- a/tests/generic/422.out
-+++ b/tests/generic/422.out
-@@ -1,4 +1,4 @@
--QA output created by 420
-+QA output created by 422
- Test statx on a fifo
- Test statx on a chardev
- Test statx on a directory
-diff --git a/tests/generic/423 b/tests/generic/423
-new file mode 100755
-index 0000000..75581ab
---- /dev/null
-+++ b/tests/generic/423
-@@ -0,0 +1,164 @@
-+#! /bin/bash
-+# FS QA Test 423
-+#
-+# Test the statx stx_attribute flags that can be set with chattr
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2017 Red Hat, Inc.  All Rights Reserved.
-+# Written by David Howells (dhowells@redhat.com)
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
++	if (raw && verbose)
++		return command_usage(&stat_cmd);
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
++	if (fstat(file->fd, &st) < 0) {
++		perror("fstat");
++		return 0;
++	}
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1
-+trap "_cleanup; exit \$status" 0 1 2 3 15
++	if (raw)
++		return dump_raw_stat(&st);
 +
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	$CHATTR_PROG -a -i $testfile
-+	rm -f $testfile
-+}
++	print_file_info();
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
++	printf(_("stat.ino = %lld\n"), (long long)st.st_ino);
++	printf(_("stat.type = %s\n"), filetype(st.st_mode));
++	printf(_("stat.size = %lld\n"), (long long)st.st_size);
++	printf(_("stat.blocks = %lld\n"), (long long)st.st_blocks);
++	if (verbose) {
++		printf(_("stat.atime = %s"), ctime(&st.st_atime));
++		printf(_("stat.mtime = %s"), ctime(&st.st_mtime));
++		printf(_("stat.ctime = %s"), ctime(&st.st_ctime));
++	}
 +
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
++	if (file->flags & IO_FOREIGN)
++		return 0;
 +
-+# real QA test starts here
++	print_xfs_info(verbose);
 +
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os IRIX Linux
-+_require_test
-+_require_test_program stat_test
-+_require_statx
-+_require_command "$CHATTR_PROG" chattr
-+
-+function check_stat () {
-+    $here/src/stat_test $* || echo stat_test failed
-+}
-+
-+testfile=$TEST_DIR/$seq-file
-+touch $testfile
-+
-+# Work out what chattrs are supported on the fs under test
-+a_supported=""
-+c_supported=""
-+d_supported=""
-+i_supported=""
-+a_list="0"
-+c_list="0"
-+d_list="0"
-+i_list="0"
-+
-+if $CHATTR_PROG +a $testfile >&/dev/null
-+then
-+    a_supported=1
-+    a_list="+a -a"
-+fi
-+
-+if $CHATTR_PROG +c $testfile >&/dev/null
-+then
-+    c_supported=1
-+    c_list="+c -c"
-+fi
-+
-+if $CHATTR_PROG +d $testfile >&/dev/null
-+then
-+    d_supported=1
-+    d_list="+d -d"
-+fi
-+
-+if $CHATTR_PROG +i $testfile >&/dev/null
-+then
-+    i_supported=1
-+    i_list="+i -i"
-+fi
-+
-+echo "a=$a_supported d=$d_supported c=$c_supported i=$i_supported" >>$seqres.full
-+
-+if [ "$a_supported$c_supported$d_supported$i_supported" = "" ]
-+then
-+    _notrun "file system doesn't support any of $CHATTR_PROG +a/+c/+d/+i"
-+fi
-+
-+$CHATTR_PROG -a -c -d -i $testfile
-+
-+###############################################################################
-+#
-+# Now do the actual test.  We can turn on and off append (a), compressed (c),
-+# immutable (i) and no-dump (d) and theoretically see the output in the
-+# attribute flags.  The following associations can be seen:
-+#
-+#	$CHATTR_PROG flag	stx_attributes flag
-+#	+a		STATX_ATTR_APPEND
-+#	+c		STATX_ATTR_COMPRESSED
-+#	+d		STATX_ATTR_NODUMP
-+#	+i		STATX_ATTR_IMMUTABLE
-+#
-+# Note, however, that if the filesystem doesn't paste this information into
-+# stx_attributes, there's no way to tell the difference between cleared and
-+# unset.
-+#
-+###############################################################################
-+function try () {
-+    echo Trying "$*" >>$seqres.full
-+    $CHATTR_PROG ${a_supported:+$1} \
-+	   ${c_supported:+$2} \
-+	   ${d_supported:+$3} \
-+	   ${i_supported:+$4} \
-+	   $testfile
-+    check_stat $testfile \
-+	       ${a_supported:+attr=${1/a/append}} \
-+	       ${c_supported:+attr=${2/c/compressed}} \
-+	       ${d_supported:+attr=${3/d/nodump}} \
-+	       ${i_supported:+attr=${4/i/immutable}} \
-+	       stx_type=file \
-+	       stx_size=0 \
-+	       stx_rdev_major=0 \
-+	       stx_rdev_minor=0 \
-+	       stx_nlink=1
-+}
-+
-+for a in $a_list
-+do
-+    for c in $c_list
-+    do
-+	for d in $d_list
-+	do
-+	    for i in $i_list
-+	    do
-+		try $a $c $d $i
-+	    done
-+	done
-+    done
-+done
-+
-+# For tradition's sake
-+echo "Silence is golden"
-+
-+# Done.  We leave the success determination to the output comparator.
-+status=0
-+exit
-diff --git a/tests/generic/423.out b/tests/generic/423.out
-new file mode 100644
-index 0000000..22c4029
---- /dev/null
-+++ b/tests/generic/423.out
-@@ -0,0 +1,2 @@
-+QA output created by 423
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index d747385..52553fa 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -425,3 +425,4 @@
- 420 auto quick punch
- 421 auto quick encrypt dangerous
- 422 auto quick
-+423 auto quick
+ 	return 0;
+ }
+ 
+@@ -175,7 +234,7 @@ stat_init(void)
+ 	stat_cmd.argmin = 0;
+ 	stat_cmd.argmax = 1;
+ 	stat_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	stat_cmd.args = _("[-v]");
++	stat_cmd.args = _("[-v|-r]");
+ 	stat_cmd.oneline = _("statistics on the currently open file");
+ 
+ 	statfs_cmd.name = "statfs";
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 19e1ae4..e384327 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -872,13 +872,15 @@ Only available in expert mode and requires privileges.
+ Force the filesystem to shutdown (with or without flushing the log).
+ Only available in expert mode and requires privileges.
+ .TP
+-.BR stat " [ " \-v " ]"
++.BR stat " [ " \-v "|" \-r " ]"
+ Selected statistics from
+ .BR stat (2)
+ and the XFS_IOC_GETXATTR system call on the current file. If the
+ .B \-v
+ option is specified, the atime (last access), mtime
+-(last modify), and ctime (last change) timestamps are also displayed.
++(last modify), and ctime (last change) timestamps are also displayed.  The
++.B \-r
++option dumps raw fields from the stat structure.
+ .TP
+ .B statfs
+ Selected statistics from
+
 
