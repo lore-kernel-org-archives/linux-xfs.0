@@ -1,130 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37816 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:40620 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751049AbdDHU57 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 8 Apr 2017 16:57:59 -0400
-Subject: [PATCH 1/4] xfstests: Add an auxiliary program to create an AF_UNIX
- socket [ver #11]
-From: David Howells <dhowells@redhat.com>
-Date: Sat, 08 Apr 2017 21:57:57 +0100
-Message-ID: <149168507699.8932.8909870911625408916.stgit@warthog.procyon.org.uk>
+        id S1754573AbdDFQ6r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Apr 2017 12:58:47 -0400
+Subject: Re: [PATCH] mkfs: rtinherit minval should be 0
+References: <20170406143426.19727-1-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6c83318d-ef75-4dc2-e366-d50d74fb71e6@sandeen.net>
+Date: Thu, 6 Apr 2017 11:58:45 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20170406143426.19727-1-jtulak@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-Add an auxiliary program to create an AF_UNIX socket at the specified
-location so that tests can do things with it.
+On 4/6/17 9:34 AM, Jan Tulak wrote:
+> As with any other option, rtinherit=[0|1], but minval was incorrectly
+> set to 1, so it was not possible to disable this option.
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
+Long ago, when this option was added, it was simply a flag with
+no option parsing, i.e. "-d rtinherit"
 
- .gitignore    |    1 +
- src/Makefile  |    2 +-
- src/af_unix.c |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 68 insertions(+), 1 deletion(-)
- create mode 100644 src/af_unix.c
+so I just want to double check ...
 
-diff --git a/.gitignore b/.gitignore
-index 1ed2a92..8a7c052 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -35,6 +35,7 @@
- /ltp/iogen
- 
- # src/ binaries
-+/src/af_unix
- /src/alloc
- /src/append_reader
- /src/append_writer
-diff --git a/src/Makefile b/src/Makefile
-index a7f27f0..716c178 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -12,7 +12,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 	godown resvtest writemod makeextents itrash rename \
- 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
- 	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
--	holetest t_truncate_self t_mmap_dio
-+	holetest t_truncate_self t_mmap_dio af_unix
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-diff --git a/src/af_unix.c b/src/af_unix.c
-new file mode 100644
-index 0000000..dc2368e
---- /dev/null
-+++ b/src/af_unix.c
-@@ -0,0 +1,66 @@
-+/* Create an AF_UNIX socket.
-+ *
-+ * Copyright (C) 2017 Red Hat, Inc. All Rights Reserved.
-+ * Written by David Howells (dhowells@redhat.com)
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public Licence
-+ * as published by the Free Software Foundation; either version
-+ * 2 of the Licence, or (at your option) any later version.
-+ */
-+
-+#include <stdarg.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <stdbool.h>
-+#include <string.h>
-+#include <unistd.h>
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/socket.h>
-+#include <sys/un.h>
-+
-+#define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
-+
-+int main(int argc, char *argv[])
-+{
-+	struct sockaddr_un sun;
-+	struct stat st;
-+	size_t len, max;
-+	int fd;
-+
-+	if (argc != 2) {
-+		fprintf(stderr, "Format: %s <socketpath>\n", argv[0]);
-+		exit(2);
-+	}
-+
-+	max = sizeof(sun.sun_path);
-+	len = strlen(argv[1]);
-+	if (len >= max) {
-+		fprintf(stderr, "Filename too long (max %zu)\n", max);
-+		exit(2);
-+	}
-+
-+	fd = socket(AF_UNIX, SOCK_DGRAM, 0);
-+	if (fd < 0) {
-+		perror("socket");
-+		exit(1);
-+	}
-+
-+	memset(&sun, 0, sizeof(sun));
-+	sun.sun_family = AF_UNIX;
-+	strcpy(sun.sun_path, argv[1]);
-+	if (bind(fd, (struct sockaddr *)&sun, sizeof(sun)) == -1) {
-+		perror("bind");
-+		exit(1);
-+	}
-+
-+	if (stat(argv[1], &st)) {
-+		fprintf(stderr, "Couldn't stat socket after creation: %m\n");
-+		exit(1);
-+	}
-+
-+	exit(0);
-+}
+1) was it intentional that this turned into a "=0/=1" type option,
+   i.e. an option which can be specified as disabled, essentially restating
+   the default?  Is it the intent that every flag option must now take a
+   value, and that it must take both "off" and "on" values?  Just checking
+   that I haven't lost the thread, here.
 
+IOWS: we used to have only "-d rtinherit"  But I think now we accept
+-d rtinherit, -d rtinherit=0, and -d rtinherit=1.  Maybe it's water
+under the bridge, I don't see the use in adding value parsing to
+something that was just a simple flag before.  Can you enlighten
+me?
+
+2) really, this and projinherit and, um, extszinherit should
+   probably all go away.  They were written for testing, nothing
+   tests them, and they aren't documented.  Any volunteers for
+   that?  It actually finds its way outside of pure mkfs code,
+   so it's a little tricky to completely eradicate it, but it
+   could be done in 2 steps I think.
+
+thanks,
+-Eric
+
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> ---
+>  mkfs/xfs_mkfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 6fedc05c..5aac4d1b 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -290,7 +290,7 @@ struct opt_params dopts = {
+>  		},
+>  		{ .index = D_RTINHERIT,
+>  		  .conflicts = { LAST_CONFLICT },
+> -		  .minval = 1,
+> +		  .minval = 0,
+>  		  .maxval = 1,
+>  		  .defaultval = 1,
+>  		},
+> 
