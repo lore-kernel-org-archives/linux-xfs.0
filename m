@@ -1,145 +1,469 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55464 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933756AbdDFHL6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Apr 2017 03:11:58 -0400
-Date: Thu, 6 Apr 2017 15:11:56 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 2/4] xfstests: Add first statx test [ver #7]
-Message-ID: <20170406071156.GH22845@eguan.usersys.redhat.com>
-References: <149140993804.27340.4198614944626347024.stgit@warthog.procyon.org.uk>
- <149140994519.27340.14163779092377117357.stgit@warthog.procyon.org.uk>
+Received: from userp1040.oracle.com ([156.151.31.81]:47603 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932944AbdDFJCs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2017 05:02:48 -0400
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v3692lqa006411
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Apr 2017 09:02:47 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id v3692lVI004648
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Apr 2017 09:02:47 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id v3692kKK016795
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Apr 2017 09:02:46 GMT
+Subject: Re: [RFC PATCH 1/1] xfsprogs/db: add a command for dumping the btree
+ blocks
+References: <1491443083-18600-1-git-send-email-shan.hai@oracle.com>
+ <1491443083-18600-2-git-send-email-shan.hai@oracle.com>
+ <20170406065923.GV4864@birch.djwong.org>
+From: Shan Hai <shan.hai@oracle.com>
+Message-ID: <35833828-0505-b55c-30e3-493a5884b768@oracle.com>
+Date: Thu, 6 Apr 2017 17:02:44 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+In-Reply-To: <20170406065923.GV4864@birch.djwong.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <149140994519.27340.14163779092377117357.stgit@warthog.procyon.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Apr 05, 2017 at 05:32:25PM +0100, David Howells wrote:
-> Add a statx test script that does the following:
-> 
->  (1) Creates one each of the various types of file object and creates a
->      hard link to the regular file.
-> 
->      Note that the creation of an AF_UNIX socket is done with netcat in a
->      bash coprocessing thread.  This might be best done with another
->      in-house helper to avoid a dependency on nc.
-> 
->  (2) Invokes the C test program included in this patch after the creation
->      and hands it a list of things to check appropriate to each object.
-> 
->  (3) Asks the test program to check the creation time of each object
->      against that of the preceding object.
-> 
->  (4) Makes various tests on the timestamps of the hardlinked file.
-> 
-> The patch also creates a C[*] test program to do the actual stat checking.
-> The test program then does the following:
-> 
->  (1) Compares the output of statx() to that of fstatat().
-> 
->  (2) Optionally compares the timestamps to see that they're sensibly
->      ordered with respect to each other.
-> 
->  (3) Optionally compares the timestamps to those of a reference file.
-> 
->  (4) Optionally compares the timestamps to a specified time.
-> 
->  (5) Optionally compares selected stats to values specified on the command
->      line.
-> 
->  (6) Optionally compares all the stats to those of a reference file,
->      requiring them to be the same (hard link checking).
-> 
-> For example:
-> 
-> 	./src/stat_test /dev/null \
-> 	       stx_type=char \
-> 	       stx_rdev_major=3 \
-> 	       stx_rdev_minor=8 \
-> 	       stx_nlink=1 \
-> 	       ref=/dev/zero \
-> 	       ts=B,b
-> 
-> The test program can also be given a --check-statx parameter to give a
-> quick exit code-based answer on whether statx() exists within the kernel.
-> 
-> [*] Note that it proved much easier to do this in C than trying to do it in
->     shell script and trying parsing the output of xfs_io.  Using xfs_io has
->     other pitfalls also: it wants to *open* the file, even if the file is
->     not an appropriate type for this or does not grant permission to do so.
->     I can get around this by opening O_PATH, but then xfs_io fails to
->     handle XFS files because it wants to issue ioctls on every fd it opens.
-> 
-> Signed-off-by: David Howells <dhowells@redhat.com>
-> ---
-> 
 
-[snip]
 
-> +
-> +/*
-> + * Check a pair of timestamps.
-> + */
-> +static void check_earlier(const struct statx_timestamp *A,
-> +			  const struct statx_timestamp *B,
-> +			  const char *A_name,
-> +			  const char *B_name)
-> +{
-> +
-> +	check((B->tv_sec - A->tv_sec) >= 0,
-> +	      "%s.sec is before %s.sec (%lld < %lld)\n",
-> +	      B_name, A_name, B->tv_sec, A->tv_sec);
-> +
-> +	check((B->tv_nsec - A->tv_nsec) >= 0,
-> +	      "%s.nsec is before %s.nsec (%d < %d)\n",
-> +	      B_name, A_name, B->tv_nsec, A->tv_nsec);
-> +}
+On 2017年04月06日 14:59, Darrick J. Wong wrote:
+> On Thu, Apr 06, 2017 at 09:44:43AM +0800, Shan Hai wrote:
+>> Currently there is no way to dump the whole blocks of btrees in the
+>> xfs_db except manually step through the btree nodes, dumping the blocks
+>> of the whole btree by a command is more convenient than interactive
+>> walking of the tree in some circumstances.
+>>
+>> This patch adds a new command to the xfs_db utility called 'treedump',
+>> which can dump the specific btree or dump all btrees of the xfs, below
+>> is an example usage of the command:
+>>
+>> sudo xfs_db -r -c "agf 0" -c "treedump -b" /dev/sda1
+>>
+>> The blocks of the bnobt tree are dumped to the stdout.
+>>
+>> Signed-off-by: Shan Hai <shan.hai@oracle.com>
+>> ---
+>>   db/Makefile   |   4 +-
+>>   db/command.c  |   1 +
+>>   db/treedump.c | 306 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>   db/treedump.h |  20 ++++
+>>   4 files changed, 329 insertions(+), 2 deletions(-)
+>>   create mode 100644 db/treedump.c
+>>   create mode 100644 db/treedump.h
+>>
+>> diff --git a/db/Makefile b/db/Makefile
+>> index cdc0b99..03a2283 100644
+>> --- a/db/Makefile
+>> +++ b/db/Makefile
+>> @@ -8,8 +8,8 @@ include $(TOPDIR)/include/builddefs
+>>   LTCOMMAND = xfs_db
+>>   
+>>   HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+>> -	btblock.h bmroot.h check.h command.h convert.h crc.h debug.h \
+>> -	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
+>> +	btblock.h bmroot.h treedump.h check.h command.h convert.h crc.h \
+>> +	debug.h dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
+>>   	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
+>>   	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+>>   	 sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h
+>> diff --git a/db/command.c b/db/command.c
+>> index 3d7cfd7..060ebed 100644
+>> --- a/db/command.c
+>> +++ b/db/command.c
+>> @@ -143,6 +143,7 @@ init_commands(void)
+>>   	print_init();
+>>   	quit_init();
+>>   	sb_init();
+>> +	treedump_init();
+>>   	type_init();
+>>   	write_init();
+>>   	dquot_init();
+>> diff --git a/db/treedump.c b/db/treedump.c
+>> new file mode 100644
+>> index 0000000..8d5a33e
+>> --- /dev/null
+>> +++ b/db/treedump.c
+>> @@ -0,0 +1,306 @@
+>> +/*
+>> + * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
+>> + * Copyright (c) 2017 Oracle.
+>> + * All Rights Reserved.
+>> + *
+>> + * Author: Shan Hai <shan.hai@oracle.com>
+>> + *
+>> + * This program is free software; you can redistribute it and/or
+>> + * modify it under the terms of the GNU General Public License as
+>> + * published by the Free Software Foundation.
+>> + *
+>> + * This program is distributed in the hope that it would be useful,
+>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> + * GNU General Public License for more details.
+>> + *
+>> + * You should have received a copy of the GNU General Public License
+>> + * along with this program; if not, write the Free Software Foundation,
+>> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>> + */
+>> +
+>> +#include "libxfs.h"
+>> +#include <math.h>
+>> +#include <sys/time.h>
+>> +#include "command.h"
+>> +#include "io.h"
+>> +#include "type.h"
+>> +#include "fprint.h"
+>> +#include "faddr.h"
+>> +#include "field.h"
+>> +#include "sb.h"
+>> +#include "input.h"
+>> +#include "output.h"
+>> +#include "init.h"
+>> +#include "malloc.h"
+>> +
+>> +#define TYP_MASK ( \
+>> +	TYP_AGF | TYP_AGFL |  TYP_AGI | TYP_ATTR \
+>> +	| TYP_BMAPBTA | TYP_BMAPBTD | TYP_BNOBT | TYP_CNTBT \
+>> +	| TYP_RMAPBT | TYP_REFCBT | TYP_DATA | TYP_DIR2 \
+>> +	| TYP_DQBLK | TYP_INOBT | TYP_INODATA | TYP_INODE \
+>> +	| TYP_LOG | TYP_RTBITMAP | TYP_RTSUMMARY | TYP_SB \
+>> +	| TYP_SYMLINK | TYP_TEXT | TYP_FINOBT | TYP_NONE)
+>> +
+>> +static struct btree_types {
+>> +	xfs_btnum_t	btnum;
+>> +	uint32_t	magic;
+>> +	uint32_t	crc_magic;
+>> +} const type_to_btree_table[TYP_NONE] = {
+>> +	[0 ... TYP_NONE - 1]	= { XFS_BTNUM_MAX,  -1, -1 },
+>> +
+>> +	[TYP_BNOBT]		= { XFS_BTNUM_BNO,
+>> +				    XFS_ABTB_MAGIC, XFS_ABTB_CRC_MAGIC },
+>> +	[TYP_CNTBT]		= { XFS_BTNUM_CNT,
+>> +				    XFS_ABTC_MAGIC, XFS_ABTC_CRC_MAGIC },
+>> +	[TYP_RMAPBT]		= { XFS_BTNUM_RMAP,
+>> +				    XFS_RMAP_CRC_MAGIC, XFS_RMAP_CRC_MAGIC },
+>> +	[TYP_REFCBT]		= { XFS_BTNUM_REFC,
+>> +				    XFS_REFC_CRC_MAGIC, XFS_REFC_CRC_MAGIC },
+> Uh.... what if I want to dump one of the other btrees?  There's at least
+> four more types. ;)
+>
+> TBH I was wondering why not let the user navigate to the root node of
+> whichever tree they wish to dump, and then the command simply has to
+> travel down the left side of the tree to level 0 and then dump each leaf
+> and use rightsib to move on to the next leaf?
 
-I occasionally see failures like:
+After giving it another thought reveals that the above mentioned method 
+can only
+dump the leaf nodes but not internal nodes, the purpose of the original 
+patch is
+dump the whole tree but not just leaves.
 
-     Test statx on a fifo
-     Test statx on a chardev
-    +[!] mtime.nsec is before ref_m.nsec (0 < 995000000)
-    +Failed
-    +stat_test failed
-     Test statx on a directory
+How about reserving the current recursive traversal and drop the tree 
+type selecting
+code and use the 'addr free_root' method?
 
-And the file in test can be any type (fifo, regular, char etc.), and all
-filesystems I tested (extN, xfs, btrfs, NFS) could hit this failure.
+Thanks
+Shan Hai
 
-After checking the actual timestamp and this check_earlier() function, I
-think it's a test flaw, because B->tv_nsec (test file) could be smaller
-than A->tv_nsec (ref file) when B->tv_sec > A->tv_sec.
+> i.e.
+> xfs_db> agi 3
+> xfs_db> addr free_root
+> xfs_db> treedump
+> 0: [...]
+> 1: [...]
+> xfs_db>
+>
+> --D
+>
+>> +};
+>> +
+>> +static typnm_t	btype_map[TYP_NONE];
+>> +
+>> +#define TYP_MAP_SIZE (sizeof (btype_map) / sizeof (typnm_t))
+>> +
+>> +typedef void	(*scan_sbtree_f_t)(struct xfs_btree_block *block,
+>> +				   int level, xfs_agf_t *agf,
+>> +				   xfs_agblock_t bno, int isroot,
+>> +				   typnm_t btype);
+>> +static int	treedump_f(int argc, char **argv);
+>> +static void	scan_ag(xfs_agnumber_t agno);
+>> +static void	scan_sbtree(xfs_agf_t *agf, xfs_agblock_t root,
+>> +			    int nlevels, int isroot,
+>> +			    scan_sbtree_f_t func, typnm_t btype);
+>> +static void	scanfunc_btree(struct xfs_btree_block *block, int level,
+>> +			       xfs_agf_t *agf, xfs_agblock_t bno,
+>> +			       int isroot, typnm_t btype);
+>> +/*
+>> + * [-b]: bnobt, [-c]: cntbt, [-f]: refcntbt, [-r]: rmapbt
+>> + */
+>> +static const cmdinfo_t	treedump_cmd =
+>> +	{ "treedump", NULL, treedump_f, 0, 4, 0,
+>> +	 N_("[-b] [-c] [-f] [-r]"),
+>> +	 N_("dump the metadata of the btrees"), NULL };
+>> +
+>> +static void set_btree_type(
+>> +	typnm_t	type)
+>> +{
+>> +	btype_map[type] = type;
+>> +}
+>> +
+>> +/* ARGSUSED */
+>> +static int
+>> +treedump_f(
+>> +	int	argc,
+>> +	char	**argv)
+>> +{	
+>> +	int c;
+>> +
+>> +	if (cur_agno == NULLAGNUMBER)
+>> +                cur_agno = 0;
+>> +
+>> +	/* Dump the BNOBT if none is specified */
+>> +	set_btree_type(TYP_BNOBT);
+>> +
+>> +	while ((c = getopt(argc, argv, "bcfr")) != EOF) {
+>> +                switch (c) {
+>> +                case 'b':
+>> +                        set_btree_type(TYP_BNOBT);
+>> +                        break;
+>> +                case 'c':
+>> +                        set_btree_type(TYP_CNTBT);
+>> +                        break;
+>> +		case 'f':
+>> +			set_btree_type(TYP_REFCBT);
+>> +			break;
+>> +		case 'r':
+>> +			set_btree_type(TYP_RMAPBT);
+>> +			break;
+>> +		default:
+>> +			set_btree_type(TYP_BNOBT);
+>> +			break;
+>> +		}
+>> +	}
+>> +
+>> +	scan_ag(cur_agno);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +void
+>> +treedump_init(void)
+>> +{
+>> +	add_command(&treedump_cmd);
+>> +}
+>> +
+>> +static void
+>> +scan_ag(
+>> +	xfs_agnumber_t	agno)
+>> +{
+>> +	xfs_agf_t	*agf;
+>> +	xfs_sb_t	tsb;
+>> +	xfs_sb_t	*sb = &tsb;
+>> +	typnm_t		btype;
+>> +	xfs_btnum_t	btree;
+>> +	int i, c;
+>> +	char **argv;
+>> +
+>> +	push_cur();	/* 1 pushed */
+>> +	set_cur(&typtab[TYP_SB],
+>> +		XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+>> +		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
+>> +
+>> +	if (!iocur_top->data) {
+>> +		dbprintf(_("can't read superblock for ag %u\n"), agno);
+>> +		goto pop1_out;
+>> +	}
+>> +
+>> +	libxfs_sb_from_disk(sb, iocur_top->data);
+>> +
+>> +	if (sb->sb_magicnum != XFS_SB_MAGIC) {
+>> +		dbprintf(_("bad sb magic # %#x in ag %u\n"),
+>> +			sb->sb_magicnum, agno);
+>> +	}
+>> +
+>> +	if (!xfs_sb_good_version(sb)) {
+>> +		dbprintf(_("bad sb version # %#x in ag %u\n"),
+>> +			sb->sb_versionnum, agno);
+>> +	}
+>> +
+>> +	if (agno == 0 && sb->sb_inprogress != 0) {
+>> +		dbprintf(_("mkfs not completed successfully\n"));
+>> +	}
+>> +
+>> +	push_cur();     /* 2 pushed */
+>> +        set_cur(&typtab[TYP_AGF],
+>> +                XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+>> +                XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
+>> +
+>> +	if ((agf = iocur_top->data) == NULL) {
+>> +                dbprintf(_("can't read agf block for ag %u\n"), agno);
+>> +                goto pop2_out;
+>> +        }
+>> +        if (be32_to_cpu(agf->agf_magicnum) != XFS_AGF_MAGIC) {
+>> +		dbprintf(_("bad agf magic # %#x in ag %u\n"),
+>> +		be32_to_cpu(agf->agf_magicnum), agno);
+>> +        }
+>> +        if (!XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum))) {
+>> +		dbprintf(_("bad agf version # %#x in ag %u\n"),
+>> +			be32_to_cpu(agf->agf_versionnum), agno);
+>> +        }
+>> +
+>> +	dbprintf(_("\nAGF %d\n\n"), agno);
+>> +	argv = breakline("print", &c);
+>> +	command(c, argv);
+>> +
+>> +	for (i = 0; i < TYP_MAP_SIZE; i++) {
+>> +		btype = btype_map[i];
+>> +		if (btype & TYP_MASK) {
+>> +			btree = type_to_btree_table[btype].btnum;
+>> +			scan_sbtree(agf, be32_to_cpu(agf->agf_roots[btree]),
+>> +					be32_to_cpu(agf->agf_levels[btree]),
+>> +					1, scanfunc_btree, btype);
+>> +		}
+>> +	}
+>> +
+>> +pop2_out:
+>> +	pop_cur();
+>> +pop1_out:
+>> +	pop_cur();
+>> +}
+>> +
+>> +
+>> +static void
+>> +scan_sbtree(
+>> +	xfs_agf_t	*agf,
+>> +	xfs_agblock_t	root,
+>> +	int		nlevels,
+>> +	int		isroot,
+>> +	scan_sbtree_f_t	func,
+>> +	typnm_t		btype)
+>> +{
+>> +	xfs_agnumber_t	seqno = be32_to_cpu(agf->agf_seqno);
+>> +	push_cur();
+>> +
+>> +	set_cur(&typtab[btype],
+>> +		XFS_AGB_TO_DADDR(mp, seqno, root), blkbb, DB_RING_IGN, NULL);
+>> +	if (iocur_top->data == NULL) {
+>> +		dbprintf(_("can't read btree block %u/%u\n"), seqno, root);
+>> +		pop_cur();
+>> +		return;
+>> +	}
+>> +	(*func)(iocur_top->data, nlevels - 1, agf, root, isroot, btype);
+>> +	pop_cur();
+>> +}
+>> +
+>> +static int check_magic(
+>> +	struct xfs_btree_block	*block,
+>> +	xfs_agnumber_t		seqno,
+>> +	xfs_agblock_t		bno,
+>> +	typnm_t			btype)
+>> +{
+>> +	uint32_t magic = type_to_btree_table[btype].magic;
+>> +	uint32_t crc_magic = type_to_btree_table[btype].crc_magic;
+>> +	char *btree_name = typtab[btype].name;
+>> +	
+>> +	if (be32_to_cpu(block->bb_magic) != magic &&
+>> +		be32_to_cpu(block->bb_magic) != crc_magic) {
+>> +		dbprintf(_("bad magic # %#x in %s block %u/%u\n"),
+>> +			be32_to_cpu(block->bb_magic), btree_name, seqno, bno);
+>> +		return -1;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static void
+>> +scanfunc_btree(
+>> +	struct xfs_btree_block	*block,
+>> +	int			level,
+>> +	xfs_agf_t		*agf,
+>> +	xfs_agblock_t		bno,
+>> +	int			isroot,
+>> +	typnm_t			btype)
+>> +{
+>> +	int			i, c;
+>> +	char			**argv;
+>> +	xfs_alloc_ptr_t         *pp;
+>> +	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
+>> +
+>> +	if (check_magic(block, seqno, bno, btype))
+>> +		return;
+>> +
+>> +	dbprintf(_("\ncurrent blkno %d\n\n"), bno);
+>> +	if (level == 0) {
+>> +		if (be16_to_cpu(block->bb_numrecs) > mp->m_alloc_mxr[0] ||
+>> +		    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_alloc_mnr[0])) {
+>> +			dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in "
+>> +				 "btbno block %u/%u\n"),
+>> +				be16_to_cpu(block->bb_numrecs), mp->m_alloc_mnr[0],
+>> +				mp->m_alloc_mxr[0], seqno, bno);
+>> +			return;
+>> +		}
+>> +
+>> +		argv = breakline("print", &c);
+>> +		command(c, argv);
+>> +
+>> +		return;
+>> +	} else {
+>> +		argv = breakline("print", &c);
+>> +		command(c, argv);
+>> +	}
+>> +
+>> +	if (be16_to_cpu(block->bb_numrecs) > mp->m_alloc_mxr[1] ||
+>> +	    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_alloc_mnr[1])) {
+>> +		dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in btbno block "
+>> +			 "%u/%u\n"),
+>> +			be16_to_cpu(block->bb_numrecs), mp->m_alloc_mnr[1],
+>> +			mp->m_alloc_mxr[1], seqno, bno);
+>> +		return;
+>> +	}
+>> +
+>> +	pp = XFS_ALLOC_PTR_ADDR(mp, block, 1, mp->m_alloc_mxr[1]);
+>> +	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
+>> +		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_btree, btype);
+>> +}
+>> diff --git a/db/treedump.h b/db/treedump.h
+>> new file mode 100644
+>> index 0000000..c9dbffc
+>> --- /dev/null
+>> +++ b/db/treedump.h
+>> @@ -0,0 +1,20 @@
+>> +/*
+>> + * Copyright (c) 2017 Oracle.  All Rights Reserved.
+>> + *
+>> + * Author: Shan Hai <shan.hai@oracle.com>
+>> + *
+>> + * This program is free software; you can redistribute it and/or
+>> + * modify it under the terms of the GNU General Public License as
+>> + * published by the Free Software Foundation.
+>> + *
+>> + * This program is distributed in the hope that it would be useful,
+>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> + * GNU General Public License for more details.
+>> + *
+>> + * You should have received a copy of the GNU General Public License
+>> + * along with this program; if not, write the Free Software Foundation,
+>> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>> + */
+>> +
+>> +extern void	treedump_init(void);
+>> -- 
+>> 2.7.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-e.g. (after test failure with NFSv4.2, and I renumbered test to 422)
-
-[root@bootp-73-5-205 xfstests]# stat /mnt/nfsexport/422-fifo /mnt/nfsexport/422-null 
-  File: ‘/mnt/nfsexport/422-fifo’
-  Size: 0               Blocks: 0          IO Block: 4096   fifo
-Device: fd01h/64769d    Inode: 1060905     Links: 1
-Access: (0600/prw-------)  Uid: (    0/    root)   Gid: (    0/    root)
-Context: system_u:object_r:mnt_t:s0
-Access: 2017-04-06 14:53:36.995000000 +0800
-Modify: 2017-04-06 14:53:36.995000000 +0800	# fifo is ref file, tv_sec is 36
-Change: 2017-04-06 14:53:36.995000000 +0800	# tv_nsec is 995000000
- Birth: -
-  File: ‘/mnt/nfsexport/422-null’
-  Size: 0               Blocks: 0          IO Block: 4096   character special file
-Device: fd01h/64769d    Inode: 1062934     Links: 1     Device type: 1,3
-Access: (0600/crw-------)  Uid: (    0/    root)   Gid: (    0/    root)
-Context: system_u:object_r:mnt_t:s0
-Access: 2017-04-06 14:53:37.000000000 +0800
-Modify: 2017-04-06 14:53:37.000000000 +0800	# null is test file, tv_sec is 37
-Change: 2017-04-06 14:53:37.000000000 +0800	# tv_nsec is 0, smaller than 995000000
- Birth: -
-
-So I think check_earlier() needs a fix.
-
-Thanks,
-Eryu
