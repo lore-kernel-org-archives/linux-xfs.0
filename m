@@ -1,116 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39057 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753883AbdDGQCP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 12:02:15 -0400
-Date: Fri, 7 Apr 2017 09:01:33 -0700
+Received: from userp1040.oracle.com ([156.151.31.81]:44997 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932598AbdDGQZh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 12:25:37 -0400
+Date: Fri, 7 Apr 2017 09:25:28 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: actually report xattr extents via iomap
-Message-ID: <20170407160133.GE4864@birch.djwong.org>
-References: <20170406160356.GY4864@birch.djwong.org>
- <20170407072029.GR22845@eguan.usersys.redhat.com>
+Subject: Re: [PATCH] iomap_dio_rw: Prevent reading file data beyond
+ iomap_dio->i_size
+Message-ID: <20170407162528.GG4864@birch.djwong.org>
+References: <1491557563-3278-1-git-send-email-chandan@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170407072029.GR22845@eguan.usersys.redhat.com>
+In-Reply-To: <1491557563-3278-1-git-send-email-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Cc: hch@lst.de, linux-xfs@vger.kernel.org, sandeen@sandeen.net, linux-fsdevel@vger.kernel.org
 
-On Fri, Apr 07, 2017 at 03:20:29PM +0800, Eryu Guan wrote:
-> On Thu, Apr 06, 2017 at 09:03:56AM -0700, Darrick J. Wong wrote:
-> > Apparently FIEMAP for xattrs has been broken since we switched to
-> > the iomap backend because of an incorrect check for xattr presence.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_iomap.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index 288ee5b..4f118a1 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -1173,7 +1173,7 @@ xfs_xattr_iomap_begin(
-> >  	lockmode = xfs_ilock_data_map_shared(ip);
-> >  
-> >  	/* if there are no attribute fork or extents, return ENOENT */
-> > -	if (XFS_IFORK_Q(ip) || !ip->i_d.di_anextents) {
-> > +	if (!XFS_IFORK_Q(ip) || !ip->i_d.di_anextents) {
-> >  		error = -ENOENT;
-> >  		goto out_unlock;
-> >  	}
+On Fri, Apr 07, 2017 at 03:02:43PM +0530, Chandan Rajendra wrote:
+> On a ppc64 machine executing overlayfs/019 with xfs as the lower and
+> upper filesystem causes the following call trace,
 > 
-> Surprisingly, after applying this patch on top of 4.11-rc4 kernel, your
-> test case crashed debug built XFS when testing with 512b block fs, XFS
-> with other block sizes passed the test.
+> WARNING: CPU: 2 PID: 8034 at /root/repos/linux/fs/iomap.c:765 .iomap_dio_actor+0xcc/0x420
+> Modules linked in:
+> CPU: 2 PID: 8034 Comm: fsstress Tainted: G             L  4.11.0-rc5-next-20170405 #100
+> task: c000000631314880 task.stack: c0000003915d4000
+> NIP: c00000000035a72c LR: c00000000035a6f4 CTR: c00000000035a660
+> REGS: c0000003915d7570 TRAP: 0700   Tainted: G             L   (4.11.0-rc5-next-20170405)
+> MSR: 800000000282b032 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI>
+>   CR: 24004284  XER: 00000000
+> CFAR: c0000000006f7190 SOFTE: 1
+> GPR00: c00000000035a6f4 c0000003915d77f0 c0000000015a3f00 000000007c22f600
+> GPR04: 000000000022d000 0000000000002600 c0000003b2d56360 c0000003915d7960
+> GPR08: c0000003915d7cd0 0000000000000002 0000000000002600 c000000000521cc0
+> GPR12: 0000000024004284 c00000000fd80a00 000000004b04ae64 ffffffffffffffff
+> GPR16: 000000001000ca70 0000000000000000 c0000003b2d56380 c00000000153d2b8
+> GPR20: 0000000000000010 c0000003bc87bac8 0000000000223000 000000000022f5ff
+> GPR24: c0000003b2d56360 000000000000000c 0000000000002600 000000000022d000
+> GPR28: 0000000000000000 c0000003915d7960 c0000003b2d56360 00000000000001ff
+> NIP [c00000000035a72c] .iomap_dio_actor+0xcc/0x420
+> LR [c00000000035a6f4] .iomap_dio_actor+0x94/0x420
+> Call Trace:
+> [c0000003915d77f0] [c00000000035a6f4] .iomap_dio_actor+0x94/0x420 (unreliable)
+> [c0000003915d78f0] [c00000000035b9f4] .iomap_apply+0xf4/0x1f0
+> [c0000003915d79d0] [c00000000035c320] .iomap_dio_rw+0x230/0x420
+> [c0000003915d7ae0] [c000000000512a14] .xfs_file_dio_aio_read+0x84/0x160
+> [c0000003915d7b80] [c000000000512d24] .xfs_file_read_iter+0x104/0x130
+> [c0000003915d7c10] [c0000000002d6234] .__vfs_read+0x114/0x1a0
+> [c0000003915d7cf0] [c0000000002d7a8c] .vfs_read+0xac/0x1a0
+> [c0000003915d7d90] [c0000000002d96b8] .SyS_read+0x58/0x100
+> [c0000003915d7e30] [c00000000000b8e0] system_call+0x38/0xfc
+> Instruction dump:
+> 78630020 7f831b78 7ffc07b4 7c7ce039 40820360 a13d0018 2f890003 419e0288
+> 2f890004 419e00a0 2f890001 419e02a8 <0fe00000> 3b80fffb 38210100 7f83e378
+> 
+> The above problem can also be recreated on a regular xfs filesystem
+> using the command,
+> 
+> $ fsstress -d /mnt -l 1000 -n 1000 -p 1000
+> 
+> The reason for the call trace is,
+> 1. When 'reserving' blocks for delayed allocation , XFS reserves more
+>    blocks (i.e. past file's current EOF) than required. This is done
+>    because XFS assumes that userspace might write more data and hence
+>    'reserving' more blocks might lead to the file's new data being
+>    stored contiguously on disk.
+> 2. The in-memory 'struct xfs_bmbt_irec' mapping the file's last extent would
+>    then cover the prealloc-ed EOF blocks in addition to the regular blocks.
+> 3. When flushing the dirty blocks to disk, we only flush data till the
+>    file's EOF. But before writing out the dirty data, we allocate blocks
+>    on the disk for holding the file's new data. This allocation includes
+>    the blocks that are part of the 'prealloc EOF blocks'.
+> 4. Later, when the last reference to the inode is being closed, XFS frees the
+>    unused 'prealloc EOF blocks' in xfs_inactive().
+> 
+> In step 3 above, When allocating space on disk for the delayed allocation
+> range, the space allocator might sometimes allocate less blocks than
+> required. If such an allocation ends right at the current EOF of the
+> file, We will not be able to clear the "delayed allocation" flag for the
+> 'prealloc EOF blocks', since we won't have dirty buffer heads associated
+> with that range of the file.
+> 
+> In such a situation if a Direct I/O read operation is performed on file
+> range [X, Y] (where X < EOF and Y > EOF), we flush dirty data in the
+> range [X, Y] and invalidate page cache for that range (Refer to
+> iomap_dio_rw()). Later for performing the Direct I/O read, XFS obtains
+> the extent items (which are still cached in memory) for the file
+> range. When doing so we are not supposed to get an extent item with
+> IOMAP_DELALLOC flag set, since the previous "flush" operation should
+> have converted any delayed allocation data in the range [X, Y]. Hence we
+> end up hitting a WARN_ON_ONCE(1) statement in iomap_dio_actor().
+> 
+> This commit fixes the bug by preventing the read operation from going
+> beyond iomap_dio->i_size.
+> 
+> Reported-by: Santhosh G <santhog4@linux.vnet.ibm.com>
+> Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-The xfs_ilock_data_map_shared should be xfs_ilock_attr_map_shared.
-Will send updated patch, thank you for catching this.
+Looks ok to me, but I'll wait for the test before making further decisions.
 
-> The three new patches from tags/xfs-4.11-fixes-3 won't help either.
-
-Fortunately, without this patch we never bother looking for results,
-so we don't trip the assert.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
+> ---
+> Changelog:
+> RFC->V1: Made trivial changes to address Christoph's review comments.
 > 
-> Thanks,
-> Eryu
+> I will send a patch to add a corresponding test to xfstests soon.
 > 
-> [  188.954656] run fstests generic/425 at 2017-04-07 14:51:54
-> [  189.311170] XFS (sdc2): Unmounting Filesystem
-> [  189.488020] XFS (sdc2): Mounting V4 Filesystem
-> [  189.533595] XFS (sdc2): Ending clean mount
-> [  189.669876] XFS (sdc2): Unmounting Filesystem
-> [  189.689625] XFS (sdc2): Mounting V4 Filesystem
-> [  189.768990] XFS (sdc2): Ending clean mount
-> [  189.780954] XFS: Assertion failed: xfs_isilocked(ip, XFS_ILOCK_EXCL), file: fs/xfs/libxfs/xfs_inode_fork.c, line: 501
-> [  189.791575] ------------[ cut here ]------------
-> [  189.796191] kernel BUG at fs/xfs/xfs_message.c:113!
-> [  189.801067] invalid opcode: 0000 [#1] SMP
-> [  189.805074] Modules linked in: xfs(OE) binfmt_misc ip6t_rpfilter ipt_REJECT nf_reject_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6 nf_defrag_ipv6 xt_conntrack nf_conntrack libcrc32c ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_mangle ip6table_security ip6table_raw iptable_mangle iptable_security iptable_raw ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter btrfs intel_powerclamp coretemp kvm_intel xor kvm raid6_pq irqbypass crc32_pclmul ghash_clmulni_intel iTCO_wdt pcbc iTCO_vendor_support aesni_intel cdc_ether crypto_simd lpc_ich usbnet glue_helper cryptd mii pcspkr mfd_core i7core_edac i2c_i801 nfsd ipmi_si sg ipmi_devintf shpchp edac_core ioatdma ipmi_msghandler dca acpi_cpufreq auth_rpcgss nfs_acl lockd grace sunrpc
-> [  189.875423]  ip_tables ext4 jbd2 mbcache sr_mod cdrom sd_mod mgag200 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect ata_generic sysimgblt pata_acpi fb_sys_fops ttm drm ata_piix libata crc32c_intel megaraid_sas i2c_core bnx2 dm_mirror dm_region_hash dm_log dm_mod [last unloaded: xfs]
-> [  189.900855] CPU: 1 PID: 12226 Comm: xfs_io Tainted: G           OE   4.11.0-rc4 #82
-> [  189.908500] Hardware name: IBM System x3550 M3 -[7944OEJ]-/90Y4784     , BIOS -[D6E150CUS-1.11]- 02/08/2011
-> [  189.918226] task: ffff880279460000 task.stack: ffffc90002340000
-> [  189.924198] RIP: 0010:assfail+0x22/0x30 [xfs]
-> [  189.928553] RSP: 0018:ffffc90002343c00 EFLAGS: 00010282
-> [  189.933775] RAX: 00000000ffffffea RBX: ffff88016fe4ad00 RCX: 0000000000000021
-> [  189.940901] RDX: ffffc90002343b28 RSI: 000000000000000a RDI: ffffffffa0a73fb2
-> [  189.948028] RBP: ffffc90002343c00 R08: 0000000000000000 R09: 0000000000000000
-> [  189.955154] R10: 000000000000000a R11: f000000000000000 R12: 0000000000000005
-> [  189.962281] R13: 0000000000000001 R14: ffff8802767cc000 R15: 0000000000000000
-> [  189.969408] FS:  00007f1cbd156740(0000) GS:ffff88017ba40000(0000) knlGS:0000000000000000
-> [  189.977489] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  189.983228] CR2: 00007f1cbd162000 CR3: 0000000179ce1000 CR4: 00000000000006e0
-> [  189.990354] Call Trace:
-> [  189.992836]  xfs_iread_extents+0x164/0x170 [xfs]
-> [  189.997477]  xfs_bmapi_read+0x187/0x3b0 [xfs]
-> [  190.001867]  ? xfs_ilock+0xf1/0x1f0 [xfs]
-> [  190.005911]  xfs_xattr_iomap_begin+0xbe/0x170 [xfs]
-> [  190.010790]  ? __alloc_pages_nodemask+0x11d/0x250
-> [  190.015494]  iomap_apply+0x58/0x100
-> [  190.018983]  iomap_fiemap+0xa7/0xf0
-> [  190.022473]  ? iomap_write_actor+0x170/0x170
-> [  190.026776]  xfs_vn_fiemap+0x5c/0x80 [xfs]
-> [  190.030873]  do_vfs_ioctl+0x409/0x5b0
-> [  190.034534]  SyS_ioctl+0x79/0x90
-> [  190.037767]  do_syscall_64+0x67/0x180
-> [  190.041431]  entry_SYSCALL64_slow_path+0x25/0x25
-> [  190.046044] RIP: 0033:0x7f1cbca56507
-> [  190.049618] RSP: 002b:00007ffd2ef2a358 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-> [  190.057178] RAX: ffffffffffffffda RBX: 0000000000000005 RCX: 00007f1cbca56507
-> [  190.064308] RDX: 0000000002020600 RSI: 00000000c020660b RDI: 0000000000000003
-> [  190.071434] RBP: 0000000000000005 R08: 00007f1cbc9b0938 R09: 0000000000000017
-> [  190.078560] R10: 00007ffd2ef2a0e0 R11: 0000000000000246 R12: 0000000000000000
-> [  190.085685] R13: 000000000201f8b0 R14: cccccccccccccccd R15: 0000000002020600
-> [  190.092813] Code: 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 55 48 89 f1 41 89 d0 48 c7 c6 98 04 a8 a0 48 89 fa 31 c0 48 89 e5 31 ff e8 ce f9 ff ff <0f> 0b 66 90 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 55 48
-> [  190.111699] RIP: assfail+0x22/0x30 [xfs] RSP: ffffc90002343c00
-> [  190.117558] ---[ end trace e3b5a0987ffe392b ]---
+>  fs/iomap.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 0b457ff..1ff0c9c 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -904,6 +904,9 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  			break;
+>  		}
+>  		pos += ret;
+> +
+> +		if (iov_iter_rw(iter) == READ && pos >= dio->i_size)
+> +			break;
+>  	} while ((count = iov_iter_count(iter)) > 0);
+>  	blk_finish_plug(&plug);
+>  
+> -- 
+> 2.5.5
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
