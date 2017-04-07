@@ -1,73 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55024 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751705AbdDJIBa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Apr 2017 04:01:30 -0400
-Date: Mon, 10 Apr 2017 16:01:27 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 4/4] xfstests: Check the stx_attributes settable by
- chattr [ver #12]
-Message-ID: <20170410080127.GD22845@eguan.usersys.redhat.com>
-References: <149168615504.10019.12886002807349389794.stgit@warthog.procyon.org.uk>
- <149168617693.10019.12322515006388694205.stgit@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <149168617693.10019.12322515006388694205.stgit@warthog.procyon.org.uk>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34190 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752449AbdDGGMd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 02:12:33 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v3769jtd030698
+        for <linux-xfs@vger.kernel.org>; Fri, 7 Apr 2017 02:12:33 -0400
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 29p0syc4st-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Apr 2017 02:12:32 -0400
+Received: from localhost
+        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Fri, 7 Apr 2017 00:12:32 -0600
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [RFC PATCH] iomap_dio_rw: Prevent reading file data beyond iomap_dio->i_size
+Date: Fri,  7 Apr 2017 11:41:49 +0530
+Message-Id: <1491545509-27152-1-git-send-email-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: hch@lst.de
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, sandeen@sandeen.net, linux-fsdevel@vger.kernel.org
 
-On Sat, Apr 08, 2017 at 10:16:16PM +0100, David Howells wrote:
-> diff --git a/src/statx.h b/src/statx.h
-> index 711d1ba..f361a68 100644
-> --- a/src/statx.h
-> +++ b/src/statx.h
-> @@ -19,7 +19,7 @@
->  #define __NR_statx 383
->  #elif defined (__ILP32__)
->  #define __NR_statx (__X32_SYSCALL_BIT + 332)
-> -#else
-> +#elif defined(__x86_64__)
->  #define __NR_statx 332
->  #endif
+On a ppc64 machine executing overlayfs/019 with xfs as the lower and
+upper filesystem causes the following call trace,
 
-Seems like this only enables statx(2) test on specific arches, even if
-current arch has wired up statx syscall.
+WARNING: CPU: 2 PID: 8034 at /root/repos/linux/fs/iomap.c:765 .iomap_dio_actor+0xcc/0x420
+Modules linked in:
+CPU: 2 PID: 8034 Comm: fsstress Tainted: G             L  4.11.0-rc5-next-20170405 #100
+task: c000000631314880 task.stack: c0000003915d4000
+NIP: c00000000035a72c LR: c00000000035a6f4 CTR: c00000000035a660
+REGS: c0000003915d7570 TRAP: 0700   Tainted: G             L   (4.11.0-rc5-next-20170405)
+MSR: 800000000282b032 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI>
+  CR: 24004284  XER: 00000000
+CFAR: c0000000006f7190 SOFTE: 1
+GPR00: c00000000035a6f4 c0000003915d77f0 c0000000015a3f00 000000007c22f600
+GPR04: 000000000022d000 0000000000002600 c0000003b2d56360 c0000003915d7960
+GPR08: c0000003915d7cd0 0000000000000002 0000000000002600 c000000000521cc0
+GPR12: 0000000024004284 c00000000fd80a00 000000004b04ae64 ffffffffffffffff
+GPR16: 000000001000ca70 0000000000000000 c0000003b2d56380 c00000000153d2b8
+GPR20: 0000000000000010 c0000003bc87bac8 0000000000223000 000000000022f5ff
+GPR24: c0000003b2d56360 000000000000000c 0000000000002600 000000000022d000
+GPR28: 0000000000000000 c0000003915d7960 c0000003b2d56360 00000000000001ff
+NIP [c00000000035a72c] .iomap_dio_actor+0xcc/0x420
+LR [c00000000035a6f4] .iomap_dio_actor+0x94/0x420
+Call Trace:
+[c0000003915d77f0] [c00000000035a6f4] .iomap_dio_actor+0x94/0x420 (unreliable)
+[c0000003915d78f0] [c00000000035b9f4] .iomap_apply+0xf4/0x1f0
+[c0000003915d79d0] [c00000000035c320] .iomap_dio_rw+0x230/0x420
+[c0000003915d7ae0] [c000000000512a14] .xfs_file_dio_aio_read+0x84/0x160
+[c0000003915d7b80] [c000000000512d24] .xfs_file_read_iter+0x104/0x130
+[c0000003915d7c10] [c0000000002d6234] .__vfs_read+0x114/0x1a0
+[c0000003915d7cf0] [c0000000002d7a8c] .vfs_read+0xac/0x1a0
+[c0000003915d7d90] [c0000000002d96b8] .SyS_read+0x58/0x100
+[c0000003915d7e30] [c00000000000b8e0] system_call+0x38/0xfc
+Instruction dump:
+78630020 7f831b78 7ffc07b4 7c7ce039 40820360 a13d0018 2f890003 419e0288
+2f890004 419e00a0 2f890001 419e02a8 <0fe00000> 3b80fffb 38210100 7f83e378
 
-For example, I noticed as for 4.11-rc6 kernel, many platforms have
-enabled statx syscall:
+The above problem can also be recreated on a regular xfs filesystem
+using the command,
 
-eguan@eguan:~/workspace/src/kernel$ git lo | grep -i "wire up statx"
-1493aa6 xtensa: wire up statx system call
-fdfe4a3 generic syscalls: Wire up statx syscall
-e3b1ebd m68k: Wire up statx
-f717629 powerpc: Wire up statx() syscall
-63d32d1 parisc: Wire up statx system call
-a1016e9 ARM: wire up statx syscall
-8bd49ac s390: wire up statx system call
-9cb74b5 MIPS: Wire up statx system call
+$ fsstress -d /mnt -l 1000 -n 1000 -p 1000
 
-But many of them are not covered in this test. (Tested with ppc64 host
-and test _notrun there.)
+The reason for the call trace is,
+1. When 'reserving' blocks for delayed allocation , XFS reserves more
+   blocks (i.e. past file's current EOF) than required. This is done
+   because XFS assumes that userspace might write more data and hence
+   'reserving' more blocks might lead to the file's new data being
+   stored contiguously on disk.
+2. The in-memory 'struct xfs_bmbt_irec' mapping the file's last extent would
+   then cover the prealloc-ed EOF blocks in addition to the regular blocks.
+3. When flushing the dirty blocks to disk, we only flush data till the
+   file's EOF. But before writing out the dirty data, we allocate blocks
+   on the disk for holding the file's new data. This allocation includes
+   the blocks that are part of the 'prealloc EOF blocks'.
+4. Later, when the last reference to the inode is being closed, XFS frees the
+   unused 'prealloc EOF blocks' in xfs_inactive().
 
-How about including <sys/syscall.h> to get __NR_statx definition first
-and define our own syscall number only if it's not yet defined?
+In step 3 above, When allocating space on disk for the delayed allocation
+range, the space allocator might sometimes allocate less blocks than
+required. If such an allocation ends right at the current EOF of the
+file, We will not be able to clear the "delayed allocation" flag for the
+'prealloc EOF blocks', since we won't have dirty buffer heads associated
+with that range of the file.
 
-Thanks,
-Eryu
+In such a situation if a Direct I/O read operation is performed on file
+range [X, Y] (where X < EOF and Y > EOF), we flush dirty data in the
+range [X, Y] and invalidate page cache for that range (Refer to
+iomap_dio_rw()). Later for performing the Direct I/O read, XFS obtains
+the extent items (which are still cached in memory) for the file
+range. When doing so we are not supposed to get an extent item with
+IOMAP_DELALLOC flag set, since the previous "flush" operation should
+have converted any delayed allocation data in the range [X, Y]. Hence we
+end up hitting a WARN_ON_ONCE(1) statement in iomap_dio_actor().
 
->  
-> @@ -159,7 +159,12 @@ static inline
->  int xfstests_statx(int dfd, const char *filename, unsigned flags,
->  		   unsigned int mask, struct statx *buffer)
->  {
-> +#ifdef __NR_statx
->  	return syscall(__NR_statx, dfd, filename, flags, mask, buffer);
-> +#else
-> +	errno = ENOSYS;
-> +	return -1;
-> +#endif
->  }
+This commit fixes the bug by preventing the read operation from going
+beyond iomap_dio->i_size.
+
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ fs/iomap.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 0b457ff..b448deb 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -904,6 +904,9 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 			break;
+ 		}
+ 		pos += ret;
++
++		if ((iov_iter_rw(iter) == READ) && (pos >= dio->i_size))
++			break;
+ 	} while ((count = iov_iter_count(iter)) > 0);
+ 	blk_finish_plug(&plug);
+ 
+-- 
+2.5.5
+
