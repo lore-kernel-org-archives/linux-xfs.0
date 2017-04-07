@@ -1,50 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52176 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:60838 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755792AbdDGR3x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Apr 2017 13:29:53 -0400
-Date: Fri, 7 Apr 2017 13:29:44 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: actually report xattr extents via iomap
-Message-ID: <20170407172944.GC55851@bfoster.bfoster>
-References: <20170407172540.GK4864@birch.djwong.org>
+        id S933005AbdDGTbp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:31:45 -0400
+Subject: Re: [PATCH 1/1] xfsprogs/db: fix a segfault by bailing out the print
+ on a corrupted block
+References: <1491551344-5236-1-git-send-email-shan.hai@oracle.com>
+ <1491551344-5236-2-git-send-email-shan.hai@oracle.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <563080c2-e716-1685-98d2-857c0660ee25@sandeen.net>
+Date: Fri, 7 Apr 2017 14:31:44 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170407172540.GK4864@birch.djwong.org>
+In-Reply-To: <1491551344-5236-2-git-send-email-shan.hai@oracle.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eryu Guan <eguan@redhat.com>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>
+To: Shan Hai <shan.hai@oracle.com>, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com
 
-On Fri, Apr 07, 2017 at 10:25:41AM -0700, Darrick J. Wong wrote:
-> Apparently FIEMAP for xattrs has been broken since we switched to
-> the iomap backend because of an incorrect check for xattr presence.
-> Also fix the broken locking.
+On 4/7/17 2:49 AM, Shan Hai wrote:
+> The print command of the xfs_db would cause segfault on a corrupted
+> or CRC error block, fix it by bailing out the print when encountered
+> a corrupted or CRC error block, below is an example to reproduce the
+> segfault:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> mkfs.xfs -f /dev/sda1
+> xfs_db -r -c "agf 0" -c "addr rmaproot" -c "p" /dev/sda1
+> Metadata CRC error detected at xfs_rmapbt block 0x0/0x1000
+> Segmentation fault (core dumped)
+
+Simply refusing to print any structure with corruption would
+defeat the purpose of xfs_db, I think - it is difficult to
+analyze a corrupted structure if you cannot examine it.
+
+Today:
+
+# xfs_db -x fsfile2
+xfs_db> inode 128
+xfs_db> write -c core.magic 0x4949
+Allowing write of corrupted data and bad CRC
+core.magic = 0x4949
+xfs_db> quit
+
+# xfs_db -x fsfile2
+xfs_db> inode 128
+Metadata corruption detected at xfs_inode block 0x80/0x2000
+Metadata CRC error detected for ino 128
+xfs_db> p core.magic
+core.magic = 0x4949
+xfs_db> 
+
+i.e. we can read the structure and print the values even
+if it is corrupted.
+
+but with your change on the same damaged inode:
+
+xfs_db> p core.magic
+data corrupted or CRC error
+xfs_db> 
+
+That's not useful.
+
+I think you need to find the root cause of the segfault, and handle
+it if possible, instead of refusing to print any corrupted structures.
+
+-Eric
+
+> Signed-off-by: Shan Hai <shan.hai@oracle.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_iomap.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  db/print.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 009f824..b2f0901 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1170,10 +1170,10 @@ xfs_xattr_iomap_begin(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
+> diff --git a/db/print.c b/db/print.c
+> index e31372f..08bb39a 100644
+> --- a/db/print.c
+> +++ b/db/print.c
+> @@ -69,11 +69,19 @@ print_f(
+>  	char	**argv)
+>  {
+>  	pfunc_t	pf;
+> +	int err;
 >  
-> -	lockmode = xfs_ilock_data_map_shared(ip);
-> +	lockmode = xfs_ilock_attr_map_shared(ip);
->  
->  	/* if there are no attribute fork or extents, return ENOENT */
-> -	if (XFS_IFORK_Q(ip) || !ip->i_d.di_anextents) {
-> +	if (!XFS_IFORK_Q(ip) || !ip->i_d.di_anextents) {
->  		error = -ENOENT;
->  		goto out_unlock;
+>  	if (cur_typ == NULL) {
+>  		dbprintf(_("no current type\n"));
+>  		return 0;
 >  	}
+> +
+> +	err = iocur_top->bp->b_error;
+> +	if ((err == -EFSCORRUPTED) || (err == -EFSBADCRC)) {
+> +		dbprintf(_("data corrupted or CRC error\n"));
+> +		return 0;
+> +	}
+> +
+>  	pf = cur_typ->pfunc;
+>  	if (pf == NULL) {
+>  		dbprintf(_("no print function for type %s\n"), cur_typ->name);
+> 
