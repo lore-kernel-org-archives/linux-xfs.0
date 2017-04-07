@@ -1,110 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37070 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753758AbdDGSUy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 14:20:54 -0400
-Date: Fri, 7 Apr 2017 11:20:42 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] xfs: fix up quotacheck buffer list error handling
-Message-ID: <20170407182042.GM4864@birch.djwong.org>
-References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
- <1487966001-63263-2-git-send-email-bfoster@redhat.com>
- <20170406223921.GB4864@birch.djwong.org>
- <20170407120229.GA54992@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:60488 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753290AbdDGRjt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Apr 2017 13:39:49 -0400
+Date: Fri, 7 Apr 2017 13:39:46 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: Processes stuck in D state when accessing XFSv5 filesystem
+Message-ID: <20170407173946.GD55851@bfoster.bfoster>
+References: <C1597D74-938F-4236-91F0-4CA1D6907F50@jabberwocky.com>
+ <20170407165616.2269260a@harpe.intellique.com>
+ <CC0DA53B-D439-476E-AEEE-44951FE8B69C@jabberwocky.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20170407120229.GA54992@bfoster.bfoster>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CC0DA53B-D439-476E-AEEE-44951FE8B69C@jabberwocky.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Martin Svec <martin.svec@zoner.cz>
+To: David Shaw <dshaw@jabberwocky.com>
+Cc: Emmanuel Florac <eflorac@intellique.com>, linux-xfs@vger.kernel.org
 
-On Fri, Apr 07, 2017 at 08:02:30AM -0400, Brian Foster wrote:
-> On Thu, Apr 06, 2017 at 03:39:21PM -0700, Darrick J. Wong wrote:
-> > On Fri, Feb 24, 2017 at 02:53:19PM -0500, Brian Foster wrote:
-> > > The quotacheck error handling of the delwri buffer list assumes the
-> > > resident buffers are locked and doesn't clear the _XBF_DELWRI_Q flag
-> > > on the buffers that are dequeued. This can lead to assert failures
-> > > on buffer release and possibly other locking problems.
-> > > 
-> > > Update the error handling code to lock each buffer as it is removed
-> > > from the buffer list and clear the delwri queue flag.
-> > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_buf.c | 2 ++
-> > >  fs/xfs/xfs_qm.c  | 2 ++
-> > >  2 files changed, 4 insertions(+)
-> > > 
-> > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > index ac3b4db..e566510 100644
-> > > --- a/fs/xfs/xfs_buf.c
-> > > +++ b/fs/xfs/xfs_buf.c
-> > > @@ -1078,6 +1078,8 @@ void
-> > >  xfs_buf_unlock(
-> > >  	struct xfs_buf		*bp)
-> > >  {
-> > > +	ASSERT(xfs_buf_islocked(bp));
-> > > +
-> > >  	XB_CLEAR_OWNER(bp);
-> > >  	up(&bp->b_sema);
-> > >  
-> > > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> > > index b669b12..4ff993c 100644
-> > > --- a/fs/xfs/xfs_qm.c
-> > > +++ b/fs/xfs/xfs_qm.c
-> > > @@ -1387,6 +1387,8 @@ xfs_qm_quotacheck(
-> > >  	while (!list_empty(&buffer_list)) {
-> > >  		struct xfs_buf *bp =
-> > >  			list_first_entry(&buffer_list, struct xfs_buf, b_list);
-> > > +		xfs_buf_lock(bp);
-> > > +		bp->b_flags &= ~_XBF_DELWRI_Q;
-> > >  		list_del_init(&bp->b_list);
-> > >  		xfs_buf_relse(bp);
+On Fri, Apr 07, 2017 at 12:56:48PM -0400, David Shaw wrote:
+> On Apr 7, 2017, at 10:56 AM, Emmanuel Florac <eflorac@intellique.com> wrote:
 > > 
-> > Hmm, was this the only place we ever _buf_unlock'd an unlocked buffer?
+> > Le Thu, 6 Apr 2017 14:41:45 -0400
+> > David Shaw <dshaw@jabberwocky.com> écrivait:
 > > 
-> 
-> I'm not aware of any other places (otherwise I would try to fix them :).
-> Or perhaps I'm not following the question...
-> 
-> I do recall a similar problem with flush locks fixed in commit 98efe8a
-> ("xfs: fix unbalanced inode reclaim flush locking").
-
-So... the previous quotacheck code reads the buffer, fiddles with it,
-and _buf_relse's the buffer, which unlocks it.  When we end up in this
-error path, we've previously been unlocking an already unlocked buffer,
-right?  So have we just been screwing up the semaphore all this time and
-just never noticed because quotacheck probably doesn't fail all that
-often?  I think it's a good idea (in general) to check for unlocking
-buffers that are already unlocked, but I worry about the side effects.
-
-Granted, if there /are/ other places in the regular code path where we
-screw up the buffer locking I imagine we'd have noticed; and if there
-are bugs lurking, better to ASSERT them into the light.  I ran the
-auto group and didn't see anything, so perhaps we're ok enough?
-
---D
-
-> 
-> Brian
-> 
-> > --D
+> >> I'm having a problem with processes getting "stuck" when accessing an
+> >> XFS (v5) filesystem.  When it happens, I start getting the "blocked
+> >> for more than 120 seconds" error, and the process stays in that state
+> >> until I reboot.  The kernel is 3.10.0-514.2.2 and the xfsprogs is
+> >> 4.5.0-9 (both Centos 7.3).
+> >> 
 > > 
-> > >  	}
-> > > -- 
-> > > 2.7.4
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Could it be that your system is under high IO load?
+> 
+> It's possible that the problem is instigated or made worse by high load, but once the processes enter D state, they stay there even when the system is idle.  They stay in D state until I reboot.
+> 
+
+There isn't enough information provided to suggest the filesystem is
+locked up as opposed to waiting for (very slow) I/O, as suggested by
+Emmanuel.
+
+If the filesystem appears to be deadlocked, can you provide the complete
+hung task output (echo w > /proc/sysrq-trigger) as well any activity
+that might be shown by tracepoints if enabled when in this state
+(trace-cmd start -e xfs:*; cat /sys/kernel/debug/tracing/trace_pipe)?
+
+Brian
+
+> David
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
