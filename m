@@ -1,178 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56642 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934250AbdDGPKL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Apr 2017 11:10:11 -0400
-Date: Fri, 7 Apr 2017 11:10:09 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: lockdep warning on 4.11.0-rc5 kernel
-Message-ID: <20170407151009.GA55851@bfoster.bfoster>
-References: <20170405205211.GB4475@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170405205211.GB4475@redhat.com>
+Received: from walrus.jabberwocky.com ([173.9.29.57]:48625 "EHLO
+        mail.jabberwocky.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933435AbdDGQ4u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 12:56:50 -0400
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: Processes stuck in D state when accessing XFSv5 filesystem
+From: David Shaw <dshaw@jabberwocky.com>
+In-Reply-To: <20170407165616.2269260a@harpe.intellique.com>
+Date: Fri, 7 Apr 2017 12:56:48 -0400
+Content-Transfer-Encoding: 8BIT
+Message-Id: <CC0DA53B-D439-476E-AEEE-44951FE8B69C@jabberwocky.com>
+References: <C1597D74-938F-4236-91F0-4CA1D6907F50@jabberwocky.com>
+ <20170407165616.2269260a@harpe.intellique.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com, hch@infradead.org
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Apr 05, 2017 at 04:52:11PM -0400, Vivek Goyal wrote:
-> Hi,
+On Apr 7, 2017, at 10:56 AM, Emmanuel Florac <eflorac@intellique.com> wrote:
 > 
-> I am running 4.11.0-rc5 kernel and did a kernel build and noticed
-> following lockdep warning on console. Have not analyzed it. Lots of
-> xfs in backtrace, so sending it to xfs mailing list.
+> Le Thu, 6 Apr 2017 14:41:45 -0400
+> David Shaw <dshaw@jabberwocky.com> écrivait:
 > 
-
-Darrick pointed out on irc yesterday that this is likely due to the
-lock_inode() call in chmod_common(). I was confused as to where the
-iolock came into play here, but apparently we now reuse the core
-inode->i_rwsem for that.
-
-In any event, I was playing around with this and reproduce pretty easily
-by populating an fs with a bunch files with speculative preallocation
-and then generating some memory pressure. I reproduce with the following
-stack, however:
-
-[  434.220605] =================================
-[  434.222286] [ INFO: inconsistent lock state ]
-[  434.224092] 4.11.0-rc4+ #36 Tainted: G           OE  
-[  434.225839] ---------------------------------
-[  434.227587] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-W}
-usage.
-[  434.229995] kswapd0/59 [HC0[0]:SC0[0]:HE1:SE1] takes:
-[  434.231851]  (&sb->s_type->i_mutex_key#17){+.+.?.}, at:
-[<ffffffffc078e0aa>] xfs_ilock+0x20a/0x300 [xfs]
-[  434.235473] {RECLAIM_FS-ON-W} state was registered at:
-[  434.237427]   mark_held_locks+0x76/0xa0
-[  434.238840]   lockdep_trace_alloc+0x7d/0xe0
-[  434.240362]   kmem_cache_alloc+0x2f/0x2d0
-[  434.241871]   kmem_zone_alloc+0x81/0x120 [xfs]
-[  434.243559]   xfs_trans_alloc+0x6c/0x130 [xfs]
-[  434.245233]   xfs_vn_update_time+0x75/0x230 [xfs]
-[  434.247031]   file_update_time+0xbc/0x110
-[  434.248593]   xfs_file_aio_write_checks+0x19b/0x1c0 [xfs]
-[  434.250762]   xfs_file_buffered_aio_write+0x75/0x350 [xfs]
-[  434.252978]   xfs_file_write_iter+0x103/0x150 [xfs]
-[  434.254935]   __vfs_write+0xe8/0x160
-[  434.256325]   vfs_write+0xcb/0x1f0
-[  434.257625]   SyS_pwrite64+0x98/0xc0
-[  434.258963]   entry_SYSCALL_64_fastpath+0x1f/0xc2
-
-... so this isn't just a chmod thing. OTOH, I think we agree that this
-is not a real deadlock vector because the iolock is taken in the
-destroy_inode() path and so there should be no other reference to the
-inode.
-
-That aside, the IOLOCK_EXCL was added to xfs_inactive() in commit
-a36b926180 ("xfs: pull up iolock from xfs_free_eofblocks()") purely to
-honor the cleaner call semantics that patch defined for
-xfs_free_eofblocks(). We could probably either drop the iolock from here
-(though we would then have to kill the assert in xfs_free_eofblocks()),
-or use something like the diff below that quiets the lockdep splat for
-me. Thoughts?
-
-Brian
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 7605d83..eb80d31 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1908,7 +1908,11 @@ xfs_inactive(
- 		 * broken free space accounting.
- 		 */
- 		if (xfs_can_free_eofblocks(ip, true)) {
--			xfs_ilock(ip, XFS_IOLOCK_EXCL);
-+			/* trylock to quiet lockdep, iolock should be free */
-+			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
-+				ASSERT(0);
-+				xfs_ilock(ip, XFS_IOLOCK_EXCL);
-+			}
- 			xfs_free_eofblocks(ip);
- 			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 		}
-
-> Thanks
-> Vivek
+>> I'm having a problem with processes getting "stuck" when accessing an
+>> XFS (v5) filesystem.  When it happens, I start getting the "blocked
+>> for more than 120 seconds" error, and the process stays in that state
+>> until I reboot.  The kernel is 3.10.0-514.2.2 and the xfsprogs is
+>> 4.5.0-9 (both Centos 7.3).
+>> 
 > 
-> login: [ 4931.174758] 
-> [ 4931.175065] =================================
-> [ 4931.175731] [ INFO: inconsistent lock state ]
-> [ 4931.176365] 4.11.0-rc5+ #87 Not tainted
-> [ 4931.176920] ---------------------------------
-> [ 4931.177537] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-W} usage.
-> [ 4931.178463] kswapd0/128 [HC0[0]:SC0[0]:HE1:SE1] takes:
-> [ 4931.179198]  (&sb->s_type->i_mutex_key#12){++++?+}, at: [<ffffffffa01fcb0a>] xfs_ilock+0x13a/0x210 [xfs]
-> [ 4931.180584] {RECLAIM_FS-ON-W} state was registered at:
-> [ 4931.181320]   mark_held_locks+0x6f/0xa0
-> [ 4931.181878]   lockdep_trace_alloc+0x7d/0xe0
-> [ 4931.182474]   kmem_cache_alloc+0x2f/0x2a0
-> [ 4931.183083]   kmem_zone_alloc+0x81/0x120 [xfs]
-> [ 4931.183739]   xfs_trans_alloc+0x6c/0x130 [xfs]
-> [ 4931.184407]   xfs_setattr_nonsize+0x239/0x560 [xfs]
-> [ 4931.185135]   xfs_vn_setattr_nonsize+0x59/0x150 [xfs]
-> [ 4931.185890]   xfs_vn_setattr+0x22/0x70 [xfs]
-> [ 4931.186503]   notify_change+0x2ee/0x440
-> [ 4931.187058]   chmod_common+0xc5/0x150
-> [ 4931.187582]   SyS_fchmod+0x53/0x90
-> [ 4931.188077]   do_syscall_64+0x6c/0x1f0
-> [ 4931.188616]   return_from_SYSCALL_64+0x0/0x7a
-> [ 4931.189238] irq event stamp: 397343
-> [ 4931.189739] hardirqs last  enabled at (397343): [<ffffffff81135cca>] __call_rcu+0x1fa/0x340
-> [ 4931.190909] hardirqs last disabled at (397342): [<ffffffff81135b21>] __call_rcu+0x51/0x340
-> [ 4931.192070] softirqs last  enabled at (397192): [<ffffffff818fb86d>] __do_softirq+0x38d/0x4c3
-> [ 4931.193263] softirqs last disabled at (397185): [<ffffffff810bae27>] irq_exit+0xf7/0x100
-> [ 4931.194397] 
-> [ 4931.194397] other info that might help us debug this:
-> [ 4931.195318]  Possible unsafe locking scenario:
-> [ 4931.195318] 
-> [ 4931.196155]        CPU0
-> [ 4931.196511]        ----
-> [ 4931.196874]   lock(&sb->s_type->i_mutex_key#12);
-> [ 4931.197526]   <Interrupt>
-> [ 4931.197912]     lock(&sb->s_type->i_mutex_key#12);
-> [ 4931.198591] 
-> [ 4931.198591]  *** DEADLOCK ***
-> [ 4931.198591] 
-> [ 4931.199429] 2 locks held by kswapd0/128:
-> [ 4931.199990]  #0:  (shrinker_rwsem){++++..}, at: [<ffffffff8121a16e>] shrink_slab.part.46+0x5e/0x600
-> [ 4931.201261]  #1:  (&type->s_umount_key#48){++++++}, at: [<ffffffff812aa54b>] trylock_super+0x1b/0x50
-> [ 4931.202832] 
-> [ 4931.202832] stack backtrace:
-> [ 4931.203878] CPU: 2 PID: 128 Comm: kswapd0 Not tainted 4.11.0-rc5+ #87
-> [ 4931.204998] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.8.2-20150714_191134- 04/01/2014
-> [ 4931.206533] Call Trace:
-> [ 4931.207114]  dump_stack+0x86/0xc3
-> [ 4931.207807]  print_usage_bug+0x1d0/0x1e0
-> [ 4931.208573]  mark_lock+0x559/0x5c0
-> [ 4931.209274]  ? print_shortest_lock_dependencies+0x1a0/0x1a0
-> [ 4931.210274]  __lock_acquire+0x6ce/0x13c0
-> [ 4931.211049]  lock_acquire+0xe3/0x1d0
-> [ 4931.211776]  ? lock_acquire+0xe3/0x1d0
-> [ 4931.212556]  ? xfs_ilock+0x13a/0x210 [xfs]
-> [ 4931.213373]  ? xfs_inactive+0xec/0x130 [xfs]
-> [ 4931.214231]  down_write_nested+0x46/0x80
-> [ 4931.215038]  ? xfs_ilock+0x13a/0x210 [xfs]
-> [ 4931.215851]  xfs_ilock+0x13a/0x210 [xfs]
-> [ 4931.216634]  xfs_inactive+0xec/0x130 [xfs]
-> [ 4931.217699]  xfs_fs_destroy_inode+0xbb/0x2d0 [xfs]
-> [ 4931.218594]  destroy_inode+0x3b/0x60
-> [ 4931.219314]  evict+0x139/0x1c0
-> [ 4931.220061]  dispose_list+0x56/0x80
-> [ 4931.220765]  prune_icache_sb+0x5a/0x80
-> [ 4931.221498]  super_cache_scan+0x14e/0x1a0
-> [ 4931.222269]  shrink_slab.part.46+0x216/0x600
-> [ 4931.223075]  shrink_slab+0x29/0x30
-> [ 4931.223883]  shrink_node+0x108/0x320
-> [ 4931.224588]  kswapd+0x391/0x990
-> [ 4931.225246]  kthread+0x10c/0x140
-> [ 4931.225902]  ? mem_cgroup_shrink_node+0x300/0x300
-> [ 4931.226760]  ? kthread_create_on_node+0x70/0x70
-> [ 4931.227579]  ret_from_fork+0x31/0x40
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Could it be that your system is under high IO load?
+
+It's possible that the problem is instigated or made worse by high load, but once the processes enter D state, they stay there even when the system is idle.  They stay in D state until I reboot.
+
+David
+
