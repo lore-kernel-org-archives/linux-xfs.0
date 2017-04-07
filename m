@@ -1,38 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55532 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752288AbdDHVFj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 8 Apr 2017 17:05:39 -0400
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20170408150812.GX22845@eguan.usersys.redhat.com>
-References: <20170408150812.GX22845@eguan.usersys.redhat.com> <149146774821.12770.3592235770964461857.stgit@warthog.procyon.org.uk> <149146775556.12770.11943651470996193921.stgit@warthog.procyon.org.uk>
-Subject: Re: [PATCH 2/4] xfstests: Add first statx test [ver #10]
+Received: from userp1040.oracle.com ([156.151.31.81]:43102 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934507AbdDGR0P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 13:26:15 -0400
+Date: Fri, 7 Apr 2017 10:25:41 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] xfs: actually report xattr extents via iomap
+Message-ID: <20170407172540.GK4864@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <9255.1491685531.1@warthog.procyon.org.uk>
-Date: Sat, 08 Apr 2017 22:05:31 +0100
-Message-ID: <9256.1491685531@warthog.procyon.org.uk>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: dhowells@redhat.com, linux-xfs@vger.kernel.org, hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Eryu Guan <eguan@redhat.com>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, Brian Foster <bfoster@redhat.com>
 
-Eryu Guan <eguan@redhat.com> wrote:
+Apparently FIEMAP for xattrs has been broken since we switched to
+the iomap backend because of an incorrect check for xattr presence.
+Also fix the broken locking.
 
-> Perhaps we should add a new autoconf rule in configure.ac and define
-> HAVE_STATX if there's statx support, like what src/renameat2.c does?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_iomap.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-src/renameat2.c has in it:
-
-	#if !defined(SYS_renameat2) && defined(__i386__)
-	#define SYS_renameat2 353
-	#endif
-
-	#if !defined(SYS_renameat2) && defined(__i386__)
-	#define SYS_renameat2 353
-	#endif
-
-This looks like a copy & paste error.
-
-David
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 009f824..b2f0901 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1170,10 +1170,10 @@ xfs_xattr_iomap_begin(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	lockmode = xfs_ilock_data_map_shared(ip);
++	lockmode = xfs_ilock_attr_map_shared(ip);
+ 
+ 	/* if there are no attribute fork or extents, return ENOENT */
+-	if (XFS_IFORK_Q(ip) || !ip->i_d.di_anextents) {
++	if (!XFS_IFORK_Q(ip) || !ip->i_d.di_anextents) {
+ 		error = -ENOENT;
+ 		goto out_unlock;
+ 	}
