@@ -1,72 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31004 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754883AbdDFXXd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2017 19:23:33 -0400
-Date: Thu, 6 Apr 2017 16:23:27 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: simplify xfs_calc_dquots_per_chunk
-Message-ID: <20170406232327.GD4864@birch.djwong.org>
-References: <b99b73b5-9525-bf50-ecd4-ccb361545b12@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52176 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755792AbdDGR3x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Apr 2017 13:29:53 -0400
+Date: Fri, 7 Apr 2017 13:29:44 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: actually report xattr extents via iomap
+Message-ID: <20170407172944.GC55851@bfoster.bfoster>
+References: <20170407172540.GK4864@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b99b73b5-9525-bf50-ecd4-ccb361545b12@redhat.com>
+In-Reply-To: <20170407172540.GK4864@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Eryu Guan <eguan@redhat.com>, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>
 
-On Wed, Apr 05, 2017 at 04:03:17PM -0500, Eric Sandeen wrote:
-> ndquots is a 32-bit value, and we don't care
-> about the remainder; there is no reason to use do_div
-> here, it seems to be the result of a decade+ historical
-> accident.
+On Fri, Apr 07, 2017 at 10:25:41AM -0700, Darrick J. Wong wrote:
+> Apparently FIEMAP for xattrs has been broken since we switched to
+> the iomap backend because of an incorrect check for xattr presence.
+> Also fix the broken locking.
 > 
-> Worse, the do_div implementation in userspace breaks
-> when fed a 32-bit dividend, so we commented it out there
-> in any case.
-> 
-> Change to simple division, and then we can change
-> userspace to match, and mandate a 64-bit dividend in
-> the do_div() in userspace as well.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-This looks fine since nbblks is (unsigned int) and BBTOB doesn't cast to
-a 64-bit quantity, therefore 64-bit division isn't ncessary.  This
-passes compilation on i386 and armhf, so I guess I'll go test it.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+>  fs/xfs/xfs_iomap.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> --- 
-> 
-> tested w/ ./check -g quota
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-> index ac9a003..747085b 100644
-> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
-> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-> @@ -35,13 +35,8 @@
->  xfs_calc_dquots_per_chunk(
->  	unsigned int		nbblks)	/* basic block units */
->  {
-> -	unsigned int	ndquots;
-> -
->  	ASSERT(nbblks > 0);
-> -	ndquots = BBTOB(nbblks);
-> -	do_div(ndquots, sizeof(xfs_dqblk_t));
-> -
-> -	return ndquots;
-> +	return BBTOB(nbblks) / sizeof(xfs_dqblk_t);
->  }
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 009f824..b2f0901 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -1170,10 +1170,10 @@ xfs_xattr_iomap_begin(
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
 >  
->  /*
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -	lockmode = xfs_ilock_data_map_shared(ip);
+> +	lockmode = xfs_ilock_attr_map_shared(ip);
+>  
+>  	/* if there are no attribute fork or extents, return ENOENT */
+> -	if (XFS_IFORK_Q(ip) || !ip->i_d.di_anextents) {
+> +	if (!XFS_IFORK_Q(ip) || !ip->i_d.di_anextents) {
+>  		error = -ENOENT;
+>  		goto out_unlock;
+>  	}
