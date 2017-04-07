@@ -1,92 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38855 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752338AbdDHQIB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Apr 2017 12:08:01 -0400
-Date: Sat, 8 Apr 2017 09:07:53 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] libxfs: fix xfs_extent_busy_flush macro definition
-Message-ID: <20170408160753.GQ4864@birch.djwong.org>
-References: <20170408025255.GP4864@birch.djwong.org>
- <585a3bce-22f8-e162-87a7-bfa6e57ffad5@sandeen.net>
- <8860c7c7-4972-521c-44ec-c710136e2b49@sandeen.net>
- <20170408160533.GN4874@birch.djwong.org>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:40772 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752615AbdDGBW5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2017 21:22:57 -0400
+Date: Fri, 7 Apr 2017 11:22:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] mkfs: rtinherit minval should be 0
+Message-ID: <20170407012215.GS17542@dastard>
+References: <20170406143426.19727-1-jtulak@redhat.com>
+ <6c83318d-ef75-4dc2-e366-d50d74fb71e6@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170408160533.GN4874@birch.djwong.org>
+In-Reply-To: <6c83318d-ef75-4dc2-e366-d50d74fb71e6@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-On Sat, Apr 08, 2017 at 09:05:33AM -0700, Darrick J. Wong wrote:
-> On Sat, Apr 08, 2017 at 09:41:54AM -0500, Eric Sandeen wrote:
-> > On 4/8/17 9:26 AM, Eric Sandeen wrote:
-> > > On 4/7/17 9:52 PM, Darrick J. Wong wrote:
-> > >> xfs_extent_busy_flush is a void function, so don't reduce it to zero.
-> > >> This shuts up gcc warnings about do-nothing statements.
-> > >>
-> > >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Whoops, thanks.  Need to test w/ newer gcc I guess, sorry!
-> > > 
-> > > Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> > 
-> > Oh, actually it seems that we use ((void) 0) pretty consistently
-> > for these, i.e. -
-> > 
-> > #define xfs_extent_busy_reuse(mp,ag,bno,len,user)       ((void) 0)
-> > 
-> > and many others.  Probably best to be consistent; I may "fix" it to
-> > that on commit, ok?
+On Thu, Apr 06, 2017 at 11:58:45AM -0500, Eric Sandeen wrote:
+> On 4/6/17 9:34 AM, Jan Tulak wrote:
+> > As with any other option, rtinherit=[0|1], but minval was incorrectly
+> > set to 1, so it was not possible to disable this option.
 > 
-> That works too.
+> Long ago, when this option was added, it was simply a flag with
+> no option parsing, i.e. "-d rtinherit"
 > 
-> You might consider fixing xfs_icsb_reinit_counters while you're at it,
-> because that's where I picked up that idio[mt].
+> so I just want to double check ...
 > 
-> Oh, nobody calls xfs_icsb_reinit_counters.  Get rid of it then.
+> 1) was it intentional that this turned into a "=0/=1" type option,
+>    i.e. an option which can be specified as disabled, essentially restating
+>    the default?  Is it the intent that every flag option must now take a
+>    value, and that it must take both "off" and "on" values?  Just checking
+>    that I haven't lost the thread, here.
+> 
+> IOWS: we used to have only "-d rtinherit"  But I think now we accept
+> -d rtinherit, -d rtinherit=0, and -d rtinherit=1.  Maybe it's water
+> under the bridge, I don't see the use in adding value parsing to
+> something that was just a simple flag before.  Can you enlighten
+> me?
 
-Oh, you already did.  Ho hum.
+That's pretty much my original thinking in setting this option up
+this way. i.e. it'a an option that can only be turned on as nothing
+will turn it on automatically and so there is no reason to have a
+mechanism to turn it off. Hence minval = maxval to give only a
+single valid value for the option....
 
---D
+> 2) really, this and projinherit and, um, extszinherit should
+>    probably all go away.  They were written for testing, nothing
+>    tests them, and they aren't documented.  Any volunteers for
+>    that?  It actually finds its way outside of pure mkfs code,
+>    so it's a little tricky to completely eradicate it, but it
+>    could be done in 2 steps I think.
 
-> 
-> --D
-> 
-> > 
-> > -Eric
-> > 
-> > >> ---
-> > >>  libxfs/libxfs_priv.h |    2 +-
-> > >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >>
-> > >> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> > >> index c2d4494..167786e 100644
-> > >> --- a/libxfs/libxfs_priv.h
-> > >> +++ b/libxfs/libxfs_priv.h
-> > >> @@ -419,7 +419,7 @@ roundup_64(__uint64_t x, __uint32_t y)
-> > >>  	*(busy_gen) = __foo;					\
-> > >>  	false;							\
-> > >>  })
-> > >> -#define xfs_extent_busy_flush(mp,pag,busy_gen)		(0)
-> > >> +#define xfs_extent_busy_flush(mp,pag,busy_gen)		do { } while(0)
-> > >>  
-> > >>  /* avoid unused variable warning */
-> > >>  #define xfs_alloc_busy_insert(tp,ag,b,len)	({	\
-> > >> --
-> > >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > >> the body of a message to majordomo@vger.kernel.org
-> > >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > >>
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Actually, I've been wanting them to be enabled and documented as
+first class mkfs options, along with all the other inheritable inode
+options, such as DAX. This is so mkfs can be told that a filesystem
+will, say, always use DAX to access files with an extent size hint
+sized to trigger the huge page fault paths as the default
+behaviour for the filesystem and so it sets the appropriate
+attributes on the root inode when it is created...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
