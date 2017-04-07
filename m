@@ -1,73 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49323 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:46774 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932643AbdDGLel (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Apr 2017 07:34:41 -0400
-Subject: Re: [PATCH 7/8] nowait aio: xfs
-References: <20170403185307.6243-1-rgoldwyn@suse.de>
- <20170403185307.6243-8-rgoldwyn@suse.de>
- <20170404065211.GD21942@infradead.org>
- <20170406225415.GC4864@birch.djwong.org>
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Message-ID: <6cc69b0c-7af4-879e-1012-aae8ba5358bd@suse.de>
-Date: Fri, 7 Apr 2017 06:34:28 -0500
+        id S932939AbdDGMCc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Apr 2017 08:02:32 -0400
+Date: Fri, 7 Apr 2017 08:02:30 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/3] xfs: fix up quotacheck buffer list error handling
+Message-ID: <20170407120229.GA54992@bfoster.bfoster>
+References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
+ <1487966001-63263-2-git-send-email-bfoster@redhat.com>
+ <20170406223921.GB4864@birch.djwong.org>
 MIME-Version: 1.0
-In-Reply-To: <20170406225415.GC4864@birch.djwong.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20170406223921.GB4864@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Martin Svec <martin.svec@zoner.cz>
 
-
-
-On 04/06/2017 05:54 PM, Darrick J. Wong wrote:
-> On Mon, Apr 03, 2017 at 11:52:11PM -0700, Christoph Hellwig wrote:
->>> +	if (unaligned_io) {
->>> +		/* If we are going to wait for other DIO to finish, bail */
->>> +		if ((iocb->ki_flags & IOCB_NOWAIT) &&
->>> +		     atomic_read(&inode->i_dio_count))
->>> +			return -EAGAIN;
->>>  		inode_dio_wait(inode);
->>
->> This checks i_dio_count twice in the nowait case, I think it should be:
->>
->> 	if (iocb->ki_flags & IOCB_NOWAIT) {
->> 		if (atomic_read(&inode->i_dio_count))
->> 			return -EAGAIN;
->> 	} else {
->> 		inode_dio_wait(inode);
->> 	}
->>
->>>  	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
->>>  		if (flags & IOMAP_DIRECT) {
->>> +			/* A reflinked inode will result in CoW alloc */
->>> +			if (flags & IOMAP_NOWAIT) {
->>> +				error = -EAGAIN;
->>> +				goto out_unlock;
->>> +			}
->>
->> This is a bit pessimistic - just because the inode has any shared
->> extents we could still write into unshared ones.  For now I think this
->> pessimistic check is fine, but the comment should be corrected.
+On Thu, Apr 06, 2017 at 03:39:21PM -0700, Darrick J. Wong wrote:
+> On Fri, Feb 24, 2017 at 02:53:19PM -0500, Brian Foster wrote:
+> > The quotacheck error handling of the delwri buffer list assumes the
+> > resident buffers are locked and doesn't clear the _XBF_DELWRI_Q flag
+> > on the buffers that are dequeued. This can lead to assert failures
+> > on buffer release and possibly other locking problems.
+> > 
+> > Update the error handling code to lock each buffer as it is removed
+> > from the buffer list and clear the delwri queue flag.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/xfs_buf.c | 2 ++
+> >  fs/xfs/xfs_qm.c  | 2 ++
+> >  2 files changed, 4 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index ac3b4db..e566510 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -1078,6 +1078,8 @@ void
+> >  xfs_buf_unlock(
+> >  	struct xfs_buf		*bp)
+> >  {
+> > +	ASSERT(xfs_buf_islocked(bp));
+> > +
+> >  	XB_CLEAR_OWNER(bp);
+> >  	up(&bp->b_sema);
+> >  
+> > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> > index b669b12..4ff993c 100644
+> > --- a/fs/xfs/xfs_qm.c
+> > +++ b/fs/xfs/xfs_qm.c
+> > @@ -1387,6 +1387,8 @@ xfs_qm_quotacheck(
+> >  	while (!list_empty(&buffer_list)) {
+> >  		struct xfs_buf *bp =
+> >  			list_first_entry(&buffer_list, struct xfs_buf, b_list);
+> > +		xfs_buf_lock(bp);
+> > +		bp->b_flags &= ~_XBF_DELWRI_Q;
+> >  		list_del_init(&bp->b_list);
+> >  		xfs_buf_relse(bp);
 > 
-> Consider what happens in both _reflink_{allocate,reserve}_cow.  If there
-> is already an existing reservation in the CoW fork then we'll have to
-> CoW and therefore can't satisfy the NOWAIT flag.  If there isn't already
-> anything in the CoW fork, then we have to see if there are shared blocks
-> by calling _reflink_trim_around_shared.  That performs a refcountbt
-> lookup, which involves locking the AGF, so we also can't satisfy NOWAIT.
-> 
-> IOWs, I think this hunk has to move outside the IOMAP_DIRECT check to
-> cover both write-to-reflinked-file cases.
+> Hmm, was this the only place we ever _buf_unlock'd an unlocked buffer?
 > 
 
-IOMAP_NOWAIT is set only with IOMAP_DIRECT since the nowait feature is
-for direct-IO only. This is checked early on, when we are checking for
-user-passed flags, and if not, -EINVAL is returned.
+I'm not aware of any other places (otherwise I would try to fix them :).
+Or perhaps I'm not following the question...
 
+I do recall a similar problem with flush locks fixed in commit 98efe8a
+("xfs: fix unbalanced inode reclaim flush locking").
 
--- 
-Goldwyn
+Brian
+
+> --D
+> 
+> >  	}
+> > -- 
+> > 2.7.4
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
