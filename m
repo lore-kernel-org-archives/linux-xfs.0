@@ -1,93 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f43.google.com ([209.85.213.43]:33298 "EHLO
-        mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751301AbdDFUAJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2017 16:00:09 -0400
-Received: by mail-vk0-f43.google.com with SMTP id d188so52854426vka.0
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Apr 2017 13:00:09 -0700 (PDT)
+Received: from sandeen.net ([63.231.237.45]:57172 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932105AbdDGSvs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Apr 2017 14:51:48 -0400
+Subject: Re: [PATCH] xfsprogs: ensure growfs rejects non-existent mount point
+References: <20170407175809.8540-1-billodo@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <58aeca70-8e10-b5c6-b446-cef0bbf2cd48@sandeen.net>
+Date: Fri, 7 Apr 2017 13:51:47 -0500
 MIME-Version: 1.0
-In-Reply-To: <6c83318d-ef75-4dc2-e366-d50d74fb71e6@sandeen.net>
-References: <20170406143426.19727-1-jtulak@redhat.com> <6c83318d-ef75-4dc2-e366-d50d74fb71e6@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Thu, 6 Apr 2017 21:59:47 +0200
-Message-ID: <CACj3i73Mh1eW=M2xk0AKS12GCHcJkK6hRdMg_f2BLKMpWSryfA@mail.gmail.com>
-Subject: Re: [PATCH] mkfs: rtinherit minval should be 0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20170407175809.8540-1-billodo@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
 
-On Thu, Apr 6, 2017 at 6:58 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> On 4/6/17 9:34 AM, Jan Tulak wrote:
->> As with any other option, rtinherit=[0|1], but minval was incorrectly
->> set to 1, so it was not possible to disable this option.
->
-> Long ago, when this option was added, it was simply a flag with
-> no option parsing, i.e. "-d rtinherit"
->
-> so I just want to double check ...
->
-> 1) was it intentional that this turned into a "=0/=1" type option,
->    i.e. an option which can be specified as disabled, essentially restating
->    the default?  Is it the intent that every flag option must now take a
->    value, and that it must take both "off" and "on" values?  Just checking
->    that I haven't lost the thread, here.
->
-> IOWS: we used to have only "-d rtinherit"  But I think now we accept
-> -d rtinherit, -d rtinherit=0, and -d rtinherit=1.  Maybe it's water
-> under the bridge, I don't see the use in adding value parsing to
-> something that was just a simple flag before.  Can you enlighten
-> me?
->
+On 4/7/17 12:58 PM, Bill O'Donnell wrote:
+> xfs_growfs manpage clearly states that the filesystem must
+> be mounted to be grown. Current behavior allows xfs_growfs
+> to proceed if the filesystem /containing/ the path
+> of the desired target is mounted. This is not the specified
+> behavior. Instead, also check the targeted fs argument against
+> the entry found in the fstable lookup. Unless the targeted
+> fs is actually mounted, reject the command.
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+>  growfs/xfs_growfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+> index a294e14..05630b8 100644
+> --- a/growfs/xfs_growfs.c
+> +++ b/growfs/xfs_growfs.c
+> @@ -203,7 +203,7 @@ main(int argc, char **argv)
+>  
+>  	fs_table_initialise(0, NULL, 0, NULL);
+>  	fs = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
+> -	if (!fs) {
+> +	if (!fs || (strcmp(argv[optind], fs->fs_dir) != 0)) {
+>  		fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),
+>  			progname, argv[optind]);
+>  		return 1;
+> 
 
-(Sending again, mailing list refuses emails with html part outright
-and it looks like gmail for ios can't sent plaintext only. Sorry if
-you got this twice, Eric.)
+Looks like the right start, but I see a few problems with this.
 
-It is using the same framework as all other options, so it got the 0/1
-for free by simply being in the opts table (assuming the min/max
-values are set to 0/1 respectively). We need this behaviour for
-options like crc anyway, so why not standardize it, if all it costs
-you is to set minval to 0?
+First, fs_dir contains a full path, so if we point at a relative path, this
+will fail now (with a little extra error annotation):
 
-This behaviour was added in the previous part of my/Dave's cleaning work.
+# growfs/xfs_growfs -n mnt
+xfs_growfs: mnt is not a mounted XFS filesystem (failed compare to /mnt/test/mnt)
 
-Jan
+but will work if given a full path:
+# growfs/xfs_growfs -n `pwd`/mnt
+meta-data=/dev/loop0             isize=512    agcount=4, agsize=65536 blks
+...
 
-> 2) really, this and projinherit and, um, extszinherit should
->    probably all go away.  They were written for testing, nothing
->    tests them, and they aren't documented.  Any volunteers for
->    that?  It actually finds its way outside of pure mkfs code,
->    so it's a little tricky to completely eradicate it, but it
->    could be done in 2 steps I think.
->
-> thanks,
-> -Eric
->
->> Signed-off-by: Jan Tulak <jtulak@redhat.com>
->> ---
->>  mkfs/xfs_mkfs.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->> index 6fedc05c..5aac4d1b 100644
->> --- a/mkfs/xfs_mkfs.c
->> +++ b/mkfs/xfs_mkfs.c
->> @@ -290,7 +290,7 @@ struct opt_params dopts = {
->>               },
->>               { .index = D_RTINHERIT,
->>                 .conflicts = { LAST_CONFLICT },
->> -               .minval = 1,
->> +               .minval = 0,
->>                 .maxval = 1,
->>                 .defaultval = 1,
->>               },
->>
+The path stuff in libxcmd tries to boil everything down to a realpath() - see:
+ 
+050a7f1 xfsprogs: handle symlinks etc in fs_table_initialise_mounts()
+and
+ed350fc libxcmd: make all comparisons using realpath'd paths
 
+so if you want to compare paths to what's in the fstable, you'll need
+to realpath() them first to get the the same canonical pathname 
+that it has stored.
 
+Also, if we have the same filesystem mounted
+in multiple ways, say: via loop, via a secondary mount, and via a
+bind mount (and maybe via a symlinked mount point?):
 
--- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+/mnt/test/fsfile on /mnt/test/mnt type xfs (rw,loop=/dev/loop0)
+/dev/loop0 on /mnt/test/mnt2 type xfs (rw)
+/mnt/test/mnt2 on /mnt/test/mnt3 type none (rw,bind)
+
+it will fail on all but the first one it finds in the internal table:
+
+# growfs/xfs_growfs -n `pwd`/mnt2
+xfs_growfs: /mnt/test/mnt2 is not a mounted XFS filesystem (failed compare to /mnt/test/mnt)
+# growfs/xfs_growfs -n `pwd`/mnt3
+xfs_growfs: /mnt/test/mnt3 is not a mounted XFS filesystem (failed compare to /mnt/test/mnt)
+
+because it the lookup stats the path, and picks the /first/ fstable entry
+which has a matching device, ignoring the mountpoint found in the fstable entry.
+
+So I think all that indicates an xfstest is needed to validate the change,
+and a slightly different approach to finding a match.
+
+Thanks,
+-Eric
