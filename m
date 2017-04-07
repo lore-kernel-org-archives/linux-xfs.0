@@ -1,62 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47072 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751266AbdDFVZL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Apr 2017 17:25:11 -0400
-Date: Thu, 6 Apr 2017 14:25:05 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: fixes for 4.11-rc6
-Message-ID: <20170406212505.GA4864@birch.djwong.org>
+Received: from ipmail05.adl6.internode.on.net ([150.101.137.143]:22447 "EHLO
+        ipmail05.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753591AbdDGBuE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2017 21:50:04 -0400
+Date: Fri, 7 Apr 2017 11:50:00 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 1/2] mkfs: unify numeric types of main variables in
+ main()
+Message-ID: <20170407014959.GT17542@dastard>
+References: <20170406144139.20284-1-jtulak@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20170406144139.20284-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <djwong@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org, mcgrof@kernel.org, sandeen@sandeen.net
 
-Hi Linus,
+On Thu, Apr 06, 2017 at 04:41:38PM +0200, Jan Tulak wrote:
+> Followup of my "[xfsprogs] Do we need so many data types for user input?" email.
+> 
+> In the past, when mkfs was first written, it used atoi and
+> similar calls, so the variables were ints. However, the situation moved
+> since then and in course of the time, mkfs began to use other types too.
+> 
+> Clean and unify it. We don't need negative values anywhere in the code and
+> some numbers has to be 64bit. Thus, uint64 is the best candidate as the target
+> type.
 
-Here are three more fixes for 4.11.  The first one reworks the inline
-directory verifier to check the working copy of the directory metadata
-and to avoid triggering a periodic crash in xfs/348.  The second patch
-fixes a regression in hole punching at EOF that corrupts files; and the
-third patch closes a kernel memory disclosure bug.
+I'm with Darrick and Eric on this - it's not the right conversion to
+make for all the reasons they've pointed out. Further, I think it's
+the wrong direction to be working in.
 
---Darrick
+What I originally intended the config option table to be used for
+was to /replace all these config variables/ with config option table
+lookups. We don't need tens of variables to say we certain options
+set - once option parsing is complete we can just lookup the config
+table and use the option value directly. i.e.  we need to work
+towards removing all the variables, not try to make them pretty....
 
-The following changes since commit 630a04e79dd41ff746b545d4fc052e0abb836120:
+Cheers,
 
-  xfs: verify inline directory data forks (2017-03-15 00:24:25 -0700)
+Dave.
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.11-fixes-3
-
-for you to fetch changes up to bf9216f922612d2db7666aae01e65064da2ffb3a:
-
-  xfs: fix kernel memory exposure problems (2017-04-03 12:22:39 -0700)
-
-----------------------------------------------------------------
-Changes since last update:
-- Rework the inline directory verifier to avoid crashes on disk corruption
-- Don't change file size when punching holes w/ KEEP_SIZE
-- Close a kernel memory exposure bug
-
-----------------------------------------------------------------
-Calvin Owens (1):
-      xfs: Honor FALLOC_FL_KEEP_SIZE when punching ends of files
-
-Darrick J. Wong (2):
-      xfs: rework the inline directory verifiers
-      xfs: fix kernel memory exposure problems
-
- fs/xfs/libxfs/xfs_dir2_priv.h  |  3 +-
- fs/xfs/libxfs/xfs_dir2_sf.c    | 63 +++++++++++++++++++++++++++---------------
- fs/xfs/libxfs/xfs_inode_fork.c | 35 +++++++++--------------
- fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
- fs/xfs/xfs_bmap_util.c         | 10 ++++++-
- fs/xfs/xfs_inode.c             | 19 +++++++------
- fs/xfs/xfs_itable.c            |  2 +-
- 7 files changed, 76 insertions(+), 58 deletions(-)
+-- 
+Dave Chinner
+david@fromorbit.com
