@@ -1,131 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:57788 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751759AbdDGJdG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 05:33:06 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v379O0BL112124
-        for <linux-xfs@vger.kernel.org>; Fri, 7 Apr 2017 05:33:05 -0400
-Received: from e15.ny.us.ibm.com (e15.ny.us.ibm.com [129.33.205.205])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29p2h60d3d-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Fri, 07 Apr 2017 05:33:05 -0400
-Received: from localhost
-        by e15.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Fri, 7 Apr 2017 05:33:04 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH] iomap_dio_rw: Prevent reading file data beyond iomap_dio->i_size
-Date: Fri,  7 Apr 2017 15:02:43 +0530
-Message-Id: <1491557563-3278-1-git-send-email-chandan@linux.vnet.ibm.com>
+Received: from mx2.suse.de ([195.135.220.15]:49323 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932643AbdDGLel (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Apr 2017 07:34:41 -0400
+Subject: Re: [PATCH 7/8] nowait aio: xfs
+References: <20170403185307.6243-1-rgoldwyn@suse.de>
+ <20170403185307.6243-8-rgoldwyn@suse.de>
+ <20170404065211.GD21942@infradead.org>
+ <20170406225415.GC4864@birch.djwong.org>
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Message-ID: <6cc69b0c-7af4-879e-1012-aae8ba5358bd@suse.de>
+Date: Fri, 7 Apr 2017 06:34:28 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170406225415.GC4864@birch.djwong.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@lst.de
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, sandeen@sandeen.net, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-On a ppc64 machine executing overlayfs/019 with xfs as the lower and
-upper filesystem causes the following call trace,
 
-WARNING: CPU: 2 PID: 8034 at /root/repos/linux/fs/iomap.c:765 .iomap_dio_actor+0xcc/0x420
-Modules linked in:
-CPU: 2 PID: 8034 Comm: fsstress Tainted: G             L  4.11.0-rc5-next-20170405 #100
-task: c000000631314880 task.stack: c0000003915d4000
-NIP: c00000000035a72c LR: c00000000035a6f4 CTR: c00000000035a660
-REGS: c0000003915d7570 TRAP: 0700   Tainted: G             L   (4.11.0-rc5-next-20170405)
-MSR: 800000000282b032 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI>
-  CR: 24004284  XER: 00000000
-CFAR: c0000000006f7190 SOFTE: 1
-GPR00: c00000000035a6f4 c0000003915d77f0 c0000000015a3f00 000000007c22f600
-GPR04: 000000000022d000 0000000000002600 c0000003b2d56360 c0000003915d7960
-GPR08: c0000003915d7cd0 0000000000000002 0000000000002600 c000000000521cc0
-GPR12: 0000000024004284 c00000000fd80a00 000000004b04ae64 ffffffffffffffff
-GPR16: 000000001000ca70 0000000000000000 c0000003b2d56380 c00000000153d2b8
-GPR20: 0000000000000010 c0000003bc87bac8 0000000000223000 000000000022f5ff
-GPR24: c0000003b2d56360 000000000000000c 0000000000002600 000000000022d000
-GPR28: 0000000000000000 c0000003915d7960 c0000003b2d56360 00000000000001ff
-NIP [c00000000035a72c] .iomap_dio_actor+0xcc/0x420
-LR [c00000000035a6f4] .iomap_dio_actor+0x94/0x420
-Call Trace:
-[c0000003915d77f0] [c00000000035a6f4] .iomap_dio_actor+0x94/0x420 (unreliable)
-[c0000003915d78f0] [c00000000035b9f4] .iomap_apply+0xf4/0x1f0
-[c0000003915d79d0] [c00000000035c320] .iomap_dio_rw+0x230/0x420
-[c0000003915d7ae0] [c000000000512a14] .xfs_file_dio_aio_read+0x84/0x160
-[c0000003915d7b80] [c000000000512d24] .xfs_file_read_iter+0x104/0x130
-[c0000003915d7c10] [c0000000002d6234] .__vfs_read+0x114/0x1a0
-[c0000003915d7cf0] [c0000000002d7a8c] .vfs_read+0xac/0x1a0
-[c0000003915d7d90] [c0000000002d96b8] .SyS_read+0x58/0x100
-[c0000003915d7e30] [c00000000000b8e0] system_call+0x38/0xfc
-Instruction dump:
-78630020 7f831b78 7ffc07b4 7c7ce039 40820360 a13d0018 2f890003 419e0288
-2f890004 419e00a0 2f890001 419e02a8 <0fe00000> 3b80fffb 38210100 7f83e378
 
-The above problem can also be recreated on a regular xfs filesystem
-using the command,
+On 04/06/2017 05:54 PM, Darrick J. Wong wrote:
+> On Mon, Apr 03, 2017 at 11:52:11PM -0700, Christoph Hellwig wrote:
+>>> +	if (unaligned_io) {
+>>> +		/* If we are going to wait for other DIO to finish, bail */
+>>> +		if ((iocb->ki_flags & IOCB_NOWAIT) &&
+>>> +		     atomic_read(&inode->i_dio_count))
+>>> +			return -EAGAIN;
+>>>  		inode_dio_wait(inode);
+>>
+>> This checks i_dio_count twice in the nowait case, I think it should be:
+>>
+>> 	if (iocb->ki_flags & IOCB_NOWAIT) {
+>> 		if (atomic_read(&inode->i_dio_count))
+>> 			return -EAGAIN;
+>> 	} else {
+>> 		inode_dio_wait(inode);
+>> 	}
+>>
+>>>  	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
+>>>  		if (flags & IOMAP_DIRECT) {
+>>> +			/* A reflinked inode will result in CoW alloc */
+>>> +			if (flags & IOMAP_NOWAIT) {
+>>> +				error = -EAGAIN;
+>>> +				goto out_unlock;
+>>> +			}
+>>
+>> This is a bit pessimistic - just because the inode has any shared
+>> extents we could still write into unshared ones.  For now I think this
+>> pessimistic check is fine, but the comment should be corrected.
+> 
+> Consider what happens in both _reflink_{allocate,reserve}_cow.  If there
+> is already an existing reservation in the CoW fork then we'll have to
+> CoW and therefore can't satisfy the NOWAIT flag.  If there isn't already
+> anything in the CoW fork, then we have to see if there are shared blocks
+> by calling _reflink_trim_around_shared.  That performs a refcountbt
+> lookup, which involves locking the AGF, so we also can't satisfy NOWAIT.
+> 
+> IOWs, I think this hunk has to move outside the IOMAP_DIRECT check to
+> cover both write-to-reflinked-file cases.
+> 
 
-$ fsstress -d /mnt -l 1000 -n 1000 -p 1000
+IOMAP_NOWAIT is set only with IOMAP_DIRECT since the nowait feature is
+for direct-IO only. This is checked early on, when we are checking for
+user-passed flags, and if not, -EINVAL is returned.
 
-The reason for the call trace is,
-1. When 'reserving' blocks for delayed allocation , XFS reserves more
-   blocks (i.e. past file's current EOF) than required. This is done
-   because XFS assumes that userspace might write more data and hence
-   'reserving' more blocks might lead to the file's new data being
-   stored contiguously on disk.
-2. The in-memory 'struct xfs_bmbt_irec' mapping the file's last extent would
-   then cover the prealloc-ed EOF blocks in addition to the regular blocks.
-3. When flushing the dirty blocks to disk, we only flush data till the
-   file's EOF. But before writing out the dirty data, we allocate blocks
-   on the disk for holding the file's new data. This allocation includes
-   the blocks that are part of the 'prealloc EOF blocks'.
-4. Later, when the last reference to the inode is being closed, XFS frees the
-   unused 'prealloc EOF blocks' in xfs_inactive().
 
-In step 3 above, When allocating space on disk for the delayed allocation
-range, the space allocator might sometimes allocate less blocks than
-required. If such an allocation ends right at the current EOF of the
-file, We will not be able to clear the "delayed allocation" flag for the
-'prealloc EOF blocks', since we won't have dirty buffer heads associated
-with that range of the file.
-
-In such a situation if a Direct I/O read operation is performed on file
-range [X, Y] (where X < EOF and Y > EOF), we flush dirty data in the
-range [X, Y] and invalidate page cache for that range (Refer to
-iomap_dio_rw()). Later for performing the Direct I/O read, XFS obtains
-the extent items (which are still cached in memory) for the file
-range. When doing so we are not supposed to get an extent item with
-IOMAP_DELALLOC flag set, since the previous "flush" operation should
-have converted any delayed allocation data in the range [X, Y]. Hence we
-end up hitting a WARN_ON_ONCE(1) statement in iomap_dio_actor().
-
-This commit fixes the bug by preventing the read operation from going
-beyond iomap_dio->i_size.
-
-Reported-by: Santhosh G <santhog4@linux.vnet.ibm.com>
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
-Changelog:
-RFC->V1: Made trivial changes to address Christoph's review comments.
-
-I will send a patch to add a corresponding test to xfstests soon.
-
- fs/iomap.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 0b457ff..1ff0c9c 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -904,6 +904,9 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 			break;
- 		}
- 		pos += ret;
-+
-+		if (iov_iter_rw(iter) == READ && pos >= dio->i_size)
-+			break;
- 	} while ((count = iov_iter_count(iter)) > 0);
- 	blk_finish_plug(&plug);
- 
 -- 
-2.5.5
-
+Goldwyn
