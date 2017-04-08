@@ -1,67 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:28527 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753351AbdDFWzE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2017 18:55:04 -0400
-Date: Thu, 6 Apr 2017 15:54:15 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/8] nowait aio: xfs
-Message-ID: <20170406225415.GC4864@birch.djwong.org>
-References: <20170403185307.6243-1-rgoldwyn@suse.de>
- <20170403185307.6243-8-rgoldwyn@suse.de>
- <20170404065211.GD21942@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:45810 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751247AbdDHPno (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 8 Apr 2017 11:43:44 -0400
+Date: Sat, 8 Apr 2017 23:43:40 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: Does btrfs get nlink on directories wrong? -- was Re: [PATCH
+ 2/4] xfstests: Add first statx test [ver #5]
+Message-ID: <20170408154339.GZ22845@eguan.usersys.redhat.com>
+References: <20170405103809.GY22845@eguan.usersys.redhat.com>
+ <149132130900.18980.537296385250153410.stgit@warthog.procyon.org.uk>
+ <149132131706.18980.7074156386090748482.stgit@warthog.procyon.org.uk>
+ <2600.1491389621@warthog.procyon.org.uk>
+ <20170405123008.GB4781@twin.jikos.cz>
+ <CAOQ4uxik1EbovazuEnMErR433Eh=Ls8h3LhQPEU2nJhigcR+Cw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170404065211.GD21942@infradead.org>
+In-Reply-To: <CAOQ4uxik1EbovazuEnMErR433Eh=Ls8h3LhQPEU2nJhigcR+Cw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-fsdevel@vger.kernel.org, jack@suse.com, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, sagi@grimberg.me, avi@scylladb.com, axboe@kernel.dk, linux-api@vger.kernel.org, willy@infradead.org, tom.leiming@gmail.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: David Howells <dhowells@redhat.com>, dsterba@suse.cz
+Cc: Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, fstests <fstests@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Amir Goldstein <amir73il@gmail.com>
 
-On Mon, Apr 03, 2017 at 11:52:11PM -0700, Christoph Hellwig wrote:
-> > +	if (unaligned_io) {
-> > +		/* If we are going to wait for other DIO to finish, bail */
-> > +		if ((iocb->ki_flags & IOCB_NOWAIT) &&
-> > +		     atomic_read(&inode->i_dio_count))
-> > +			return -EAGAIN;
-> >  		inode_dio_wait(inode);
+On Wed, Apr 05, 2017 at 03:32:30PM +0300, Amir Goldstein wrote:
+> On Wed, Apr 5, 2017 at 3:30 PM, David Sterba <dsterba@suse.cz> wrote:
+> > On Wed, Apr 05, 2017 at 11:53:41AM +0100, David Howells wrote:
+> >> I've added a test to xfstests that exercises the new statx syscall.  However,
+> >> it fails on btrfs:
+> >>
+> >>      Test statx on a directory
+> >>     +[!] stx_nlink differs, 1 != 2
+> >>     +Failed
+> >>     +stat_test failed
+> >>
+> >> because a new directory it creates has an nlink of 1, not 2.  Is this a case
+> >> of my making an incorrect assumption or is it an fs bug?
+> >
+> > Afaik nlink == 1 means that there's no accounting of subdirectories, and
+> > it's a valid value. The 'find' utility can use nlink to optimize
+> > directory traversal but otherwise I'm not aware of other usage.
+> >
+> > All directories in btrfs have nlink == 1.
 > 
-> This checks i_dio_count twice in the nowait case, I think it should be:
+> FYI,
 > 
-> 	if (iocb->ki_flags & IOCB_NOWAIT) {
-> 		if (atomic_read(&inode->i_dio_count))
-> 			return -EAGAIN;
-> 	} else {
-> 		inode_dio_wait(inode);
-> 	}
+> Overlayfs uses nlink = 1 for merge dirs to silence 'find' et al.
+> Ext4 uses nlink = 1 for directories with more than 32K subdirs
+> (EXT4_FEATURE_RO_COMPAT_DIR_NLINK).
 > 
-> >  	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
-> >  		if (flags & IOMAP_DIRECT) {
-> > +			/* A reflinked inode will result in CoW alloc */
-> > +			if (flags & IOMAP_NOWAIT) {
-> > +				error = -EAGAIN;
-> > +				goto out_unlock;
-> > +			}
-> 
-> This is a bit pessimistic - just because the inode has any shared
-> extents we could still write into unshared ones.  For now I think this
-> pessimistic check is fine, but the comment should be corrected.
+> But in both those fs newly created directories will have nlink = 2.
 
-Consider what happens in both _reflink_{allocate,reserve}_cow.  If there
-is already an existing reservation in the CoW fork then we'll have to
-CoW and therefore can't satisfy the NOWAIT flag.  If there isn't already
-anything in the CoW fork, then we have to see if there are shared blocks
-by calling _reflink_trim_around_shared.  That performs a refcountbt
-lookup, which involves locking the AGF, so we also can't satisfy NOWAIT.
+Is there a conclusion on this? Seems the test should be updated
+accordingly?
 
-IOWs, I think this hunk has to move outside the IOMAP_DIRECT check to
-cover both write-to-reflinked-file cases.
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Eryu
