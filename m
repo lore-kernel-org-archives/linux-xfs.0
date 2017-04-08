@@ -1,148 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39996 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752540AbdDHQPt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Apr 2017 12:15:49 -0400
-Date: Sat, 8 Apr 2017 09:15:39 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfsprogs: remove unused libxfs compat defines
-Message-ID: <20170408161539.GR4864@birch.djwong.org>
-References: <a36bedc0-9590-2f61-81fc-5a919a05ca9f@sandeen.net>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:2420 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751480AbdDHXT4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Apr 2017 19:19:56 -0400
+Date: Sun, 9 Apr 2017 09:19:53 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/4] xfs_db: use iocursor type to guess btree geometry if
+ bad magic
+Message-ID: <20170408231953.GF23007@dastard>
+References: <149162062276.22901.7801103937404880951.stgit@birch.djwong.org>
+ <149162063502.22901.11947139521251833946.stgit@birch.djwong.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a36bedc0-9590-2f61-81fc-5a919a05ca9f@sandeen.net>
+In-Reply-To: <149162063502.22901.11947139521251833946.stgit@birch.djwong.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Sat, Apr 08, 2017 at 09:47:11AM -0500, Eric Sandeen wrote:
-> We define dummy macros in libxfs for building it in userspace,
-> but many of these are no longer used in the code, so remove them.
+On Fri, Apr 07, 2017 at 08:03:55PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> (I left a few unused macros in place for symmetry and future use,
-> if they are still present in kernel code)
+> The function block_to_bt plays an integral role in determining the btree
+> geometry of a block that we want to manipulate with the debugger.
+> Normally we use the block magic to find the geometry profile, but if the
+> magic is bad we'll never find it and return NULL.  The callers of this
+> function do not check for NULL and crash.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> Therefore, if we can't find a geometry profile matching the magic
+> number, use the iocursor type to guess the profile and scowl about that
+> to stdout.  This makes it so that even with a corrupt magic we can try
+> to print the fields instead of crashing the debugger.
 
-Looks ok, didn't break anything on my giant patch stack...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+....
 
---D
+> +#define M(a,b) (!xfs_sb_version_hascrc(&mp->m_sb) ? (a) : (b))
+> +	switch (iocur_top->typ->typnm) {
+> +	case TYP_BMAPBTA:
+> +	case TYP_BMAPBTD:
+> +		magic = M(XFS_BMAP_MAGIC, XFS_BMAP_CRC_MAGIC);
+> +		break;
 
-> ---
-> 
->  libxfs_priv.h |   33 ---------------------------------
->  1 file changed, 33 deletions(-)
-> 
-> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> index c2d4494..b091d4d 100644
-> --- a/libxfs/libxfs_priv.h
-> +++ b/libxfs/libxfs_priv.h
-> @@ -103,8 +103,6 @@ extern char    *progname;
->  #define ATTR_KERNOTIME			0
->  #define ATTR_KERNOVAL			0
->  
-> -#define IHOLD(ip)			((void) 0)
-> -
->  #define XFS_IGET_CREATE			0x1
->  #define XFS_IGET_UNTRUSTED		0x2
->  
-> @@ -128,16 +126,12 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
->  	cmn_err(CE_ALERT, "%s: XFS_ERROR_REPORT", (e));  \
->  } while (0)
->  
-> -#define XFS_QM_DQATTACH(mp,ip,flags)	0
->  #define XFS_ERRLEVEL_LOW		1
->  #define XFS_FORCED_SHUTDOWN(mp)		0
->  #define XFS_ILOCK_EXCL			0
->  #define XFS_STATS_INC(mp, count)	do { (mp) = (mp); } while (0)
->  #define XFS_STATS_DEC(mp, count, x)	do { (mp) = (mp); } while (0)
->  #define XFS_STATS_ADD(mp, count, x)	do { (mp) = (mp); } while (0)
-> -#define XFS_TRANS_MOD_DQUOT_BYINO(mp,tp,ip,field,delta)	do { } while (0)
-> -#define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
-> -#define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
->  #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
->  #define XFS_WANT_CORRUPTED_GOTO(mp, expr, l)				\
->  {									\
-> @@ -313,18 +307,11 @@ roundup_64(__uint64_t x, __uint32_t y)
->  /* buffer management */
->  #define XFS_BUF_LOCK			0
->  #define XFS_BUF_TRYLOCK			0
-> -#define XBF_LOCK			XFS_BUF_LOCK
->  #define XBF_TRYLOCK			XFS_BUF_TRYLOCK
-> -#define XBF_DONT_BLOCK			0
->  #define XBF_UNMAPPED			0
->  #define XBF_DONE			0
-> -#define XFS_BUF_GETERROR(bp)		0
-> -#define XFS_BUF_DONE(bp)		((bp)->b_flags |= LIBXFS_B_UPTODATE)
-> -#define XFS_BUF_ISDONE(bp)		((bp)->b_flags & LIBXFS_B_UPTODATE)
->  #define xfs_buf_stale(bp)		((bp)->b_flags |= LIBXFS_B_STALE)
->  #define XFS_BUF_UNDELAYWRITE(bp)	((bp)->b_flags &= ~LIBXFS_B_DIRTY)
-> -#define XFS_BUF_SET_VTYPE(a,b)		((void) 0)
-> -#define XFS_BUF_SET_VTYPE_REF(a,b,c)	((void) 0)
->  #define XFS_BUF_SET_BDSTRAT_FUNC(a,b)	((void) 0)
->  
->  /* avoid gcc warning */
-> @@ -356,7 +343,6 @@ roundup_64(__uint64_t x, __uint32_t y)
->  #define XFS_MOUNT_RDONLY		0	/* ignored in userspace */
->  
->  
-> -#define xfs_trans_get_block_res(tp)	1
->  #define xfs_trans_set_sync(tp)		((void) 0)
->  #define xfs_trans_ordered_buf(tp, bp)	((void) 0)
->  #define	xfs_trans_agblocks_delta(tp, d)
-> @@ -376,25 +362,13 @@ roundup_64(__uint64_t x, __uint32_t y)
->  	__d = __d; /* no set-but-unused warning */	\
->  })
->  #define xfs_buf_readahead_map(a,b,c,ops)	((void) 0)	/* no readahead */
-> -#define xfs_buftrace(x,y)			((void) 0)	/* debug only */
->  
-> -#define xfs_cmn_err(tag,level,mp,fmt,args...)	cmn_err(level,fmt, ## args)
->  #define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
->  #define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
->  #define xfs_alert_tag(mp,tag,fmt,args...)	cmn_err(CE_ALERT,fmt, ## args)
->  
-> -#define xfs_dir2_trace_args(where, args)		((void) 0)
-> -#define xfs_dir2_trace_args_b(where, args, bp)		((void) 0)
-> -#define xfs_dir2_trace_args_bb(where, args, lbp, dbp)	((void) 0)
-> -#define xfs_dir2_trace_args_bibii(where, args, bs, ss, bd, sd, c) ((void) 0)
-> -#define xfs_dir2_trace_args_db(where, args, db, bp)	((void) 0)
-> -#define xfs_dir2_trace_args_i(where, args, i)		((void) 0)
-> -#define xfs_dir2_trace_args_s(where, args, s)		((void) 0)
-> -#define xfs_dir2_trace_args_sb(where, args, s, bp)	((void) 0)
->  #define xfs_sort					qsort
->  
-> -#define xfs_icsb_reinit_counters(mp)			do { } while (0)
-> -#define xfs_initialize_perag_icache(pag)		((void) 0)
->  
->  #define xfs_ilock(ip,mode)				((void) 0)
->  #define xfs_ilock_nowait(ip,mode)			((void) 0)
-> @@ -405,7 +379,6 @@ roundup_64(__uint64_t x, __uint32_t y)
->  	typeof(mode) __mode = mode;				\
->  	__mode = __mode; /* no set-but-unused warning */	\
->  })
-> -#define __xfs_flock(ip)					((void) 0)
->  
->  /* space allocation */
->  #define xfs_extent_busy_reuse(mp,ag,bno,len,user)	((void) 0)
-> @@ -421,12 +394,6 @@ roundup_64(__uint64_t x, __uint32_t y)
->  })
->  #define xfs_extent_busy_flush(mp,pag,busy_gen)		(0)
->  
-> -/* avoid unused variable warning */
-> -#define xfs_alloc_busy_insert(tp,ag,b,len)	({	\
-> -	xfs_agnumber_t __foo = ag;			\
-> -	__foo = 0;					\
-> -})
-> -
->  #define xfs_rotorstep				1
->  #define xfs_bmap_rtalloc(a)			(-ENOSYS)
->  #define xfs_get_extsz_hint(ip)			(0)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+That's really quite special, Darrick. :P
+
+This:
+
+	(!xfs_sb_version_hascrc(&mp->m_sb) ? (a) : (b))
+
+Could written more simply as:
+
+	(xfs_sb_version_hascrc(&mp->m_sb) ? (b) : (a))
+
+or you could swap the macro args so you only need to drop the
+negation.
+
+Even better, though, would be to use a local variable to only
+evaluate the CRC status once and kill the macro altogether:
+
+	has_crc = xfs_sb_version_hascrc(&mp->m_sb);
+	switch (iocur_top->typ->typnm) {
+	case TYP_BMAPBTA:
+	case TYP_BMAPBTD:
+		magic = has_crc ? XFS_ABTB_CRC_MAGIC : XFS_ABTB_MAGIC;
+		break;
+.....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
