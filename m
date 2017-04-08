@@ -1,84 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:41440 "EHLO fieldses.org"
+Received: from mx1.redhat.com ([209.132.183.28]:37816 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932598AbdDESOK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Apr 2017 14:14:10 -0400
-Date: Wed, 5 Apr 2017 14:14:09 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [RFC PATCH v1 00/30] fs: inode->i_version rework and optimization
-Message-ID: <20170405181409.GC28681@fieldses.org>
-References: <1490122013.2593.1.camel@redhat.com>
- <20170329111507.GA18467@quack2.suse.cz>
- <1490810071.2678.6.camel@redhat.com>
- <20170330064724.GA21542@quack2.suse.cz>
- <1490872308.2694.1.camel@redhat.com>
- <20170330161231.GA9824@fieldses.org>
- <1490898932.2667.1.camel@redhat.com>
- <20170404183138.GC14303@fieldses.org>
- <878tnfiq7v.fsf@notabene.neil.brown.name>
- <20170405080551.GC8899@quack2.suse.cz>
+        id S1751049AbdDHU57 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 8 Apr 2017 16:57:59 -0400
+Subject: [PATCH 1/4] xfstests: Add an auxiliary program to create an AF_UNIX
+ socket [ver #11]
+From: David Howells <dhowells@redhat.com>
+Date: Sat, 08 Apr 2017 21:57:57 +0100
+Message-ID: <149168507699.8932.8909870911625408916.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170405080551.GC8899@quack2.suse.cz>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: NeilBrown <neil@brown.name>, Jeff Layton <jlayton@redhat.com>, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: hch@infradead.org, amir73il@gmail.com, david@fromorbit.com, fstests@vger.kernel.org, dhowells@redhat.com, linux-fsdevel@vger.kernel.org
 
-On Wed, Apr 05, 2017 at 10:05:51AM +0200, Jan Kara wrote:
-> 1) Keep i_version as is, make clients also check for i_ctime.
+Add an auxiliary program to create an AF_UNIX socket at the specified
+location so that tests can do things with it.
 
-That would be a protocol revision, which we'd definitely rather avoid.
+Signed-off-by: David Howells <dhowells@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
 
-But can't we accomplish the same by using something like
+ .gitignore    |    1 +
+ src/Makefile  |    2 +-
+ src/af_unix.c |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 68 insertions(+), 1 deletion(-)
+ create mode 100644 src/af_unix.c
 
-	ctime * (some constant) + i_version
+diff --git a/.gitignore b/.gitignore
+index 1ed2a92..8a7c052 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -35,6 +35,7 @@
+ /ltp/iogen
+ 
+ # src/ binaries
++/src/af_unix
+ /src/alloc
+ /src/append_reader
+ /src/append_writer
+diff --git a/src/Makefile b/src/Makefile
+index a7f27f0..716c178 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -12,7 +12,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
+ 	godown resvtest writemod makeextents itrash rename \
+ 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
+ 	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
+-	holetest t_truncate_self t_mmap_dio
++	holetest t_truncate_self t_mmap_dio af_unix
+ 
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+diff --git a/src/af_unix.c b/src/af_unix.c
+new file mode 100644
+index 0000000..dc2368e
+--- /dev/null
++++ b/src/af_unix.c
+@@ -0,0 +1,66 @@
++/* Create an AF_UNIX socket.
++ *
++ * Copyright (C) 2017 Red Hat, Inc. All Rights Reserved.
++ * Written by David Howells (dhowells@redhat.com)
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public Licence
++ * as published by the Free Software Foundation; either version
++ * 2 of the Licence, or (at your option) any later version.
++ */
++
++#include <stdarg.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <stdbool.h>
++#include <string.h>
++#include <unistd.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/socket.h>
++#include <sys/un.h>
++
++#define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
++
++int main(int argc, char *argv[])
++{
++	struct sockaddr_un sun;
++	struct stat st;
++	size_t len, max;
++	int fd;
++
++	if (argc != 2) {
++		fprintf(stderr, "Format: %s <socketpath>\n", argv[0]);
++		exit(2);
++	}
++
++	max = sizeof(sun.sun_path);
++	len = strlen(argv[1]);
++	if (len >= max) {
++		fprintf(stderr, "Filename too long (max %zu)\n", max);
++		exit(2);
++	}
++
++	fd = socket(AF_UNIX, SOCK_DGRAM, 0);
++	if (fd < 0) {
++		perror("socket");
++		exit(1);
++	}
++
++	memset(&sun, 0, sizeof(sun));
++	sun.sun_family = AF_UNIX;
++	strcpy(sun.sun_path, argv[1]);
++	if (bind(fd, (struct sockaddr *)&sun, sizeof(sun)) == -1) {
++		perror("bind");
++		exit(1);
++	}
++
++	if (stat(argv[1], &st)) {
++		fprintf(stderr, "Couldn't stat socket after creation: %m\n");
++		exit(1);
++	}
++
++	exit(0);
++}
 
-?
-
->    Pro: No on-disk format changes.
->    Cons: After a crash, i_version can go backwards (but when file changes
->    i_version, i_ctime pair should be still different) or not, data can be
->    old or not.
-
-This is probably good enough for NFS purposes: typically on an NFS
-filesystem, results of a read in the face of a concurrent write open are
-undefined.  And writers sync before close.
-
-So after a crash with a dirty inode, we're in a situation where an NFS
-client still needs to resend some writes, sync, and close.  I'm OK with
-things being inconsistent during this window.
-
-I do expect things to return to normal once that client's has resent its
-writes--hence the worry about actually resuing old values after boot
-(such as if i_version regresses on boot and then increments back to the
-same value after further writes).  Factoring in ctime fixes that.
-
-> 2) Fsync when reporting i_version.
->    Pro: No on-disk format changes, strong consistency of i_version and
->         data.
->    Cons: Difficult to implement for filesystems due to locking constrains.
->          High performance overhead or i_version reporting.
-
-Sounds painful.
-
-> 3) Some variant of crash counter.
->    Pro: i_version cannot go backwards.
->    Cons: Requires on-disk format changes. After a crash data can be old
->          (however i_version increased).
-
-Also, some unnecessary invalidations.  Which maybe can be mostly avoided
-by some variation of Neil's scheme.
-
-It looks to me like option (1) is doable now and introduces no
-regressions compared to the current situation.  (2) and (3) are more
-copmlicated and involve some tradeoffs.
-
-Also, we can implement (1) and switch to (2) or (3) later.  We'd want to
-do it without reported i_versions decreasing on kernel upgrade, but
-there are multiple ways of handling that.  (Worst case, just restrict
-the change to newly created filesystems.)
-
---b.
