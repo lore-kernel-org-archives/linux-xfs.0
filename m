@@ -1,165 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47590 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934122AbdDGQ3V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 12:29:21 -0400
-Date: Fri, 7 Apr 2017 09:29:17 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:39996 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752540AbdDHQPt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Apr 2017 12:15:49 -0400
+Date: Sat, 8 Apr 2017 09:15:39 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Question about large file fragmentation.
-Message-ID: <20170407162917.GH4864@birch.djwong.org>
-References: <CALRRBv8169Y7r9BCX8Hsye9YAZVQGFHX2yoiYw5-=XLBKMN9nA@mail.gmail.com>
+Subject: Re: [PATCH] xfsprogs: remove unused libxfs compat defines
+Message-ID: <20170408161539.GR4864@birch.djwong.org>
+References: <a36bedc0-9590-2f61-81fc-5a919a05ca9f@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CALRRBv8169Y7r9BCX8Hsye9YAZVQGFHX2yoiYw5-=XLBKMN9nA@mail.gmail.com>
+In-Reply-To: <a36bedc0-9590-2f61-81fc-5a919a05ca9f@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arkadiusz <arek2407066@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Apr 07, 2017 at 02:52:01PM +0200, Arkadiusz wrote:
-> Dear maintainers,
-> I have a question about large file fragmentation.
+On Sat, Apr 08, 2017 at 09:47:11AM -0500, Eric Sandeen wrote:
+> We define dummy macros in libxfs for building it in userspace,
+> but many of these are no longer used in the code, so remove them.
 > 
-> When I create large file (20G) on XFS by filling it with zeros. For example:
-> dd if=/dev/zero of=lun bs=512 count=41873408
+> (I left a few unused macros in place for symmetry and future use,
+> if they are still present in kernel code)
 > 
-> The bitmap looks as follows:
-> 
-> xfs_bmap -vp lun
-> lun:
->  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
->   TOTAL FLAGS
->    0: [0..8388479]:         112..8388591        0 (112..8388591)
-> 8388480 00000
->    1: [8388480..16777087]:  10485824..18874431  1 (64..8388671)
-> 8388608 00000
->    2: [16777088..25165695]: 20992064..29380671  2 (20544..8409151)
-> 8388608 00000
->    3: [25165696..35651383]: 31457344..41943031  3 (64..10485751)
-> 10485688 00000
->    4: [35651384..37748551]: 8388592..10485759   0 (8388592..10485759)
-> 2097168 00000
->    5: [37748552..39845631]: 18874432..20971511  1 (8388672..10485751)
-> 2097080 00000
->    6: [39845632..41873407]: 29380672..31408447  2 (8409152..10436927)
-> 2027776 00000
-> 
-> When I use this file for iSCSI file I/O and then I fill whole volume
-> from the initiator side with random data. The bitmap doesn't change.
-> 
-> However, when I create file of the same size using fallocate:
-> fallocate -l 21439184896 lun
-> the bitmap at the beginning looks as follows:
-> xfs_bmap -vp lun
-> lun:
->  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
-> TOTAL FLAGS
->    0: [0..10485647]:        112..10485759       0 (112..10485759)
-> 10485648 10000
->    1: [10485648..10485655]: 104..111            0 (104..111)
->     8 10000
->    2: [10485656..20971351]: 10485824..20971519  1 (64..10485759)
-> 10485696 10000
->    3: [20971352..31436559]: 20992064..31457271  2 (20544..10485751)
-> 10465208 10000
->    4: [31436560..41873407]: 31457344..41894191  3 (64..10436911)
-> 10436848 10000
-> 
-> but when I write some data from the initiator side the extents count grows:
-> xfs_bmap -vp lun
-> lun:
->  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET
->    TOTAL FLAGS
->    0: [0..7]:               112..119            0 (112..119)
->        8 00000
->    1: [8..2047]:            120..2159           0 (120..2159)
->     2040 10000
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Have a look at "xfs_bmap -vvp lun" for the flags output. ;)
+Looks ok, didn't break anything on my giant patch stack...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
->    2: [2048..365807]:       2160..365919        0 (2160..365919)
->   363760 00000
->    3: [365808..406727]:     365920..406839      0 (365920..406839)
->    40920 10000
->    4: [406728..506487]:     406840..506599      0 (406840..506599)
->    99760 00000
->    5: [506488..514071]:     506600..514183      0 (506600..514183)
->     7584 10000
->    6: [514072..514079]:     514184..514191      0 (514184..514191)
->        8 00000
->    7: [514080..524495]:     514192..524607      0 (514192..524607)
->    10416 10000
->    8: [524496..524503]:     524608..524615      0 (524608..524615)
->        8 00000
->    9: [524504..524543]:     524616..524655      0 (524616..524655)
->       40 10000
->   10: [524544..524551]:     524656..524663      0 (524656..524663)
->        8 00000
->   11: [524552..529559]:     524664..529671      0 (524664..529671)
->     5008 10000
->   12: [529560..529567]:     529672..529679      0 (529672..529679)
->        8 00000
->   13: [529568..550255]:     529680..550367      0 (529680..550367)
->    20688 10000
->   14: [550256..550263]:     550368..550375      0 (550368..550375)
->        8 00000
->   15: [550264..552295]:     550376..552407      0 (550376..552407)
->     2032 10000
->   16: [552296..552303]:     552408..552415      0 (552408..552415)
->        8 00000
->   17: [552304..554279]:     552416..554391      0 (552416..554391)
->     1976 10000
->   18: [554280..554287]:     554392..554399      0 (554392..554399)
->        8 00000
->   19: [554288..570623]:     554400..570735      0 (554400..570735)
->    16336 10000
->   20: [570624..570631]:     570736..570743      0 (570736..570743)
->        8 00000
->   21: [570632..1330943]:    570744..1331055     0 (570744..1331055)
->   760312 10000
->   22: [1330944..1330951]:   1331056..1331063    0 (1331056..1331063)
->        8 00000
->   23: [1330952..6173167]:   1331064..6173279    0 (1331064..6173279)
->  4842216 10000
->   24: [6173168..6232727]:   6173280..6232839    0 (6173280..6232839)
->    59560 00000
->   25: [6232728..6249039]:   6232840..6249151    0 (6232840..6249151)
->    16312 10000
->   26: [6249040..6249111]:   6249152..6249223    0 (6249152..6249223)
->       72 00000
->   27: [6249112..6251087]:   6249224..6251199    0 (6249224..6251199)
->     1976 10000
->   28: [6251088..6251127]:   6251200..6251239    0 (6251200..6251239)
->       40 00000
->   29: [6251128..6251631]:   6251240..6251743    0 (6251240..6251743)
->      504 10000
->   30: [6251632..6296063]:   6251744..6296175    0 (6251744..6296175)
->    44432 00000
->   31: [6296064..10485647]:  6296176..10485759   0 (6296176..10485759)
->  4189584 10000
->   32: [10485648..10485655]: 104..111            0 (104..111)
->        8 10000
->   33: [10485656..20971351]: 10485824..20971519  1 (64..10485759)
-> 10485696 10000
->   34: [20971352..31436559]: 20992064..31457271  2 (20544..10485751)
-> 10465208 10000
->   35: [31436560..41869303]: 31457344..41890087  3 (64..10432807)
-> 10432744 10000
->   36: [41869304..41869311]: 41890088..41890095  3 (10432808..10432815)
->        8 00000
->   37: [41869312..41873407]: 41890096..41894191  3 (10432816..10436911)
->     4096 10000
+> ---
 > 
-> I thought that fallocate allocates extents and fragmentation shouldn't increase.
+>  libxfs_priv.h |   33 ---------------------------------
+>  1 file changed, 33 deletions(-)
 > 
-> Is there any way to create large files resistant to fragmentation that
-> doesn't need to fill whole file with zeros?
+> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+> index c2d4494..b091d4d 100644
+> --- a/libxfs/libxfs_priv.h
+> +++ b/libxfs/libxfs_priv.h
+> @@ -103,8 +103,6 @@ extern char    *progname;
+>  #define ATTR_KERNOTIME			0
+>  #define ATTR_KERNOVAL			0
+>  
+> -#define IHOLD(ip)			((void) 0)
+> -
+>  #define XFS_IGET_CREATE			0x1
+>  #define XFS_IGET_UNTRUSTED		0x2
+>  
+> @@ -128,16 +126,12 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+>  	cmn_err(CE_ALERT, "%s: XFS_ERROR_REPORT", (e));  \
+>  } while (0)
+>  
+> -#define XFS_QM_DQATTACH(mp,ip,flags)	0
+>  #define XFS_ERRLEVEL_LOW		1
+>  #define XFS_FORCED_SHUTDOWN(mp)		0
+>  #define XFS_ILOCK_EXCL			0
+>  #define XFS_STATS_INC(mp, count)	do { (mp) = (mp); } while (0)
+>  #define XFS_STATS_DEC(mp, count, x)	do { (mp) = (mp); } while (0)
+>  #define XFS_STATS_ADD(mp, count, x)	do { (mp) = (mp); } while (0)
+> -#define XFS_TRANS_MOD_DQUOT_BYINO(mp,tp,ip,field,delta)	do { } while (0)
+> -#define XFS_TRANS_RESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
+> -#define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
+>  #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
+>  #define XFS_WANT_CORRUPTED_GOTO(mp, expr, l)				\
+>  {									\
+> @@ -313,18 +307,11 @@ roundup_64(__uint64_t x, __uint32_t y)
+>  /* buffer management */
+>  #define XFS_BUF_LOCK			0
+>  #define XFS_BUF_TRYLOCK			0
+> -#define XBF_LOCK			XFS_BUF_LOCK
+>  #define XBF_TRYLOCK			XFS_BUF_TRYLOCK
+> -#define XBF_DONT_BLOCK			0
+>  #define XBF_UNMAPPED			0
+>  #define XBF_DONE			0
+> -#define XFS_BUF_GETERROR(bp)		0
+> -#define XFS_BUF_DONE(bp)		((bp)->b_flags |= LIBXFS_B_UPTODATE)
+> -#define XFS_BUF_ISDONE(bp)		((bp)->b_flags & LIBXFS_B_UPTODATE)
+>  #define xfs_buf_stale(bp)		((bp)->b_flags |= LIBXFS_B_STALE)
+>  #define XFS_BUF_UNDELAYWRITE(bp)	((bp)->b_flags &= ~LIBXFS_B_DIRTY)
+> -#define XFS_BUF_SET_VTYPE(a,b)		((void) 0)
+> -#define XFS_BUF_SET_VTYPE_REF(a,b,c)	((void) 0)
+>  #define XFS_BUF_SET_BDSTRAT_FUNC(a,b)	((void) 0)
+>  
+>  /* avoid gcc warning */
+> @@ -356,7 +343,6 @@ roundup_64(__uint64_t x, __uint32_t y)
+>  #define XFS_MOUNT_RDONLY		0	/* ignored in userspace */
+>  
+>  
+> -#define xfs_trans_get_block_res(tp)	1
+>  #define xfs_trans_set_sync(tp)		((void) 0)
+>  #define xfs_trans_ordered_buf(tp, bp)	((void) 0)
+>  #define	xfs_trans_agblocks_delta(tp, d)
+> @@ -376,25 +362,13 @@ roundup_64(__uint64_t x, __uint32_t y)
+>  	__d = __d; /* no set-but-unused warning */	\
+>  })
+>  #define xfs_buf_readahead_map(a,b,c,ops)	((void) 0)	/* no readahead */
+> -#define xfs_buftrace(x,y)			((void) 0)	/* debug only */
+>  
+> -#define xfs_cmn_err(tag,level,mp,fmt,args...)	cmn_err(level,fmt, ## args)
+>  #define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
+>  #define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
+>  #define xfs_alert_tag(mp,tag,fmt,args...)	cmn_err(CE_ALERT,fmt, ## args)
+>  
+> -#define xfs_dir2_trace_args(where, args)		((void) 0)
+> -#define xfs_dir2_trace_args_b(where, args, bp)		((void) 0)
+> -#define xfs_dir2_trace_args_bb(where, args, lbp, dbp)	((void) 0)
+> -#define xfs_dir2_trace_args_bibii(where, args, bs, ss, bd, sd, c) ((void) 0)
+> -#define xfs_dir2_trace_args_db(where, args, db, bp)	((void) 0)
+> -#define xfs_dir2_trace_args_i(where, args, i)		((void) 0)
+> -#define xfs_dir2_trace_args_s(where, args, s)		((void) 0)
+> -#define xfs_dir2_trace_args_sb(where, args, s, bp)	((void) 0)
+>  #define xfs_sort					qsort
+>  
+> -#define xfs_icsb_reinit_counters(mp)			do { } while (0)
+> -#define xfs_initialize_perag_icache(pag)		((void) 0)
+>  
+>  #define xfs_ilock(ip,mode)				((void) 0)
+>  #define xfs_ilock_nowait(ip,mode)			((void) 0)
+> @@ -405,7 +379,6 @@ roundup_64(__uint64_t x, __uint32_t y)
+>  	typeof(mode) __mode = mode;				\
+>  	__mode = __mode; /* no set-but-unused warning */	\
+>  })
+> -#define __xfs_flock(ip)					((void) 0)
+>  
+>  /* space allocation */
+>  #define xfs_extent_busy_reuse(mp,ag,bno,len,user)	((void) 0)
+> @@ -421,12 +394,6 @@ roundup_64(__uint64_t x, __uint32_t y)
+>  })
+>  #define xfs_extent_busy_flush(mp,pag,busy_gen)		(0)
+>  
+> -/* avoid unused variable warning */
+> -#define xfs_alloc_busy_insert(tp,ag,b,len)	({	\
+> -	xfs_agnumber_t __foo = ag;			\
+> -	__foo = 0;					\
+> -})
+> -
+>  #define xfs_rotorstep				1
+>  #define xfs_bmap_rtalloc(a)			(-ENOSYS)
+>  #define xfs_get_extsz_hint(ip)			(0)
 > 
-> Thanks.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
