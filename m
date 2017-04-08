@@ -1,40 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21254 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753466AbdDGHtU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 03:49:20 -0400
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v377nJHW016198
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 7 Apr 2017 07:49:19 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.13.8/8.14.4) with ESMTP id v377nJmq023145
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 7 Apr 2017 07:49:19 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id v377nHg8026546
-        for <linux-xfs@vger.kernel.org>; Fri, 7 Apr 2017 07:49:18 GMT
-From: Shan Hai <shan.hai@oracle.com>
-Subject: [PATCH 0/1] xfsprogs/db: fix a segfault in the print command
-Date: Fri,  7 Apr 2017 15:49:03 +0800
-Message-Id: <1491551344-5236-1-git-send-email-shan.hai@oracle.com>
+Received: from sandeen.net ([63.231.237.45]:45108 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751934AbdDHOl4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 8 Apr 2017 10:41:56 -0400
+Subject: Re: [PATCH] libxfs: fix xfs_extent_busy_flush macro definition
+References: <20170408025255.GP4864@birch.djwong.org>
+ <585a3bce-22f8-e162-87a7-bfa6e57ffad5@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8860c7c7-4972-521c-44ec-c710136e2b49@sandeen.net>
+Date: Sat, 8 Apr 2017 09:41:54 -0500
+MIME-Version: 1.0
+In-Reply-To: <585a3bce-22f8-e162-87a7-bfa6e57ffad5@sandeen.net>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
+On 4/8/17 9:26 AM, Eric Sandeen wrote:
+> On 4/7/17 9:52 PM, Darrick J. Wong wrote:
+>> xfs_extent_busy_flush is a void function, so don't reduce it to zero.
+>> This shuts up gcc warnings about do-nothing statements.
+>>
+>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Whoops, thanks.  Need to test w/ newer gcc I guess, sorry!
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-There is a segfault in the xfs_db as below:
+Oh, actually it seems that we use ((void) 0) pretty consistently
+for these, i.e. -
 
-mkfs.xfs -f /dev/sda1
-xfs_db -r -c "agf 0" -c "addr rmaproot" -c "p" /dev/sda1
-Metadata CRC error detected at xfs_rmapbt block 0x0/0x1000
-Segmentation fault (core dumped)
+#define xfs_extent_busy_reuse(mp,ag,bno,len,user)       ((void) 0)
 
----
- db/print.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+and many others.  Probably best to be consistent; I may "fix" it to
+that on commit, ok?
 
-Thanks
-Shan Hai
+-Eric
+
+>> ---
+>>  libxfs/libxfs_priv.h |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+>> index c2d4494..167786e 100644
+>> --- a/libxfs/libxfs_priv.h
+>> +++ b/libxfs/libxfs_priv.h
+>> @@ -419,7 +419,7 @@ roundup_64(__uint64_t x, __uint32_t y)
+>>  	*(busy_gen) = __foo;					\
+>>  	false;							\
+>>  })
+>> -#define xfs_extent_busy_flush(mp,pag,busy_gen)		(0)
+>> +#define xfs_extent_busy_flush(mp,pag,busy_gen)		do { } while(0)
+>>  
+>>  /* avoid unused variable warning */
+>>  #define xfs_alloc_busy_insert(tp,ag,b,len)	({	\
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
