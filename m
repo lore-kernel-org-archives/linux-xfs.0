@@ -1,94 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57172 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:43902 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932105AbdDGSvs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Apr 2017 14:51:48 -0400
-Subject: Re: [PATCH] xfsprogs: ensure growfs rejects non-existent mount point
-References: <20170407175809.8540-1-billodo@redhat.com>
+        id S1751841AbdDHO0n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 8 Apr 2017 10:26:43 -0400
+Subject: Re: [PATCH] libxfs: fix xfs_extent_busy_flush macro definition
+References: <20170408025255.GP4864@birch.djwong.org>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <58aeca70-8e10-b5c6-b446-cef0bbf2cd48@sandeen.net>
-Date: Fri, 7 Apr 2017 13:51:47 -0500
+Message-ID: <585a3bce-22f8-e162-87a7-bfa6e57ffad5@sandeen.net>
+Date: Sat, 8 Apr 2017 09:26:42 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170407175809.8540-1-billodo@redhat.com>
+In-Reply-To: <20170408025255.GP4864@birch.djwong.org>
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On 4/7/17 12:58 PM, Bill O'Donnell wrote:
-> xfs_growfs manpage clearly states that the filesystem must
-> be mounted to be grown. Current behavior allows xfs_growfs
-> to proceed if the filesystem /containing/ the path
-> of the desired target is mounted. This is not the specified
-> behavior. Instead, also check the targeted fs argument against
-> the entry found in the fstable lookup. Unless the targeted
-> fs is actually mounted, reject the command.
+On 4/7/17 9:52 PM, Darrick J. Wong wrote:
+> xfs_extent_busy_flush is a void function, so don't reduce it to zero.
+> This shuts up gcc warnings about do-nothing statements.
 > 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Whoops, thanks.  Need to test w/ newer gcc I guess, sorry!
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
->  growfs/xfs_growfs.c | 2 +-
+>  libxfs/libxfs_priv.h |    2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-> index a294e14..05630b8 100644
-> --- a/growfs/xfs_growfs.c
-> +++ b/growfs/xfs_growfs.c
-> @@ -203,7 +203,7 @@ main(int argc, char **argv)
+> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+> index c2d4494..167786e 100644
+> --- a/libxfs/libxfs_priv.h
+> +++ b/libxfs/libxfs_priv.h
+> @@ -419,7 +419,7 @@ roundup_64(__uint64_t x, __uint32_t y)
+>  	*(busy_gen) = __foo;					\
+>  	false;							\
+>  })
+> -#define xfs_extent_busy_flush(mp,pag,busy_gen)		(0)
+> +#define xfs_extent_busy_flush(mp,pag,busy_gen)		do { } while(0)
 >  
->  	fs_table_initialise(0, NULL, 0, NULL);
->  	fs = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
-> -	if (!fs) {
-> +	if (!fs || (strcmp(argv[optind], fs->fs_dir) != 0)) {
->  		fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),
->  			progname, argv[optind]);
->  		return 1;
+>  /* avoid unused variable warning */
+>  #define xfs_alloc_busy_insert(tp,ag,b,len)	({	\
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-
-Looks like the right start, but I see a few problems with this.
-
-First, fs_dir contains a full path, so if we point at a relative path, this
-will fail now (with a little extra error annotation):
-
-# growfs/xfs_growfs -n mnt
-xfs_growfs: mnt is not a mounted XFS filesystem (failed compare to /mnt/test/mnt)
-
-but will work if given a full path:
-# growfs/xfs_growfs -n `pwd`/mnt
-meta-data=/dev/loop0             isize=512    agcount=4, agsize=65536 blks
-...
-
-The path stuff in libxcmd tries to boil everything down to a realpath() - see:
- 
-050a7f1 xfsprogs: handle symlinks etc in fs_table_initialise_mounts()
-and
-ed350fc libxcmd: make all comparisons using realpath'd paths
-
-so if you want to compare paths to what's in the fstable, you'll need
-to realpath() them first to get the the same canonical pathname 
-that it has stored.
-
-Also, if we have the same filesystem mounted
-in multiple ways, say: via loop, via a secondary mount, and via a
-bind mount (and maybe via a symlinked mount point?):
-
-/mnt/test/fsfile on /mnt/test/mnt type xfs (rw,loop=/dev/loop0)
-/dev/loop0 on /mnt/test/mnt2 type xfs (rw)
-/mnt/test/mnt2 on /mnt/test/mnt3 type none (rw,bind)
-
-it will fail on all but the first one it finds in the internal table:
-
-# growfs/xfs_growfs -n `pwd`/mnt2
-xfs_growfs: /mnt/test/mnt2 is not a mounted XFS filesystem (failed compare to /mnt/test/mnt)
-# growfs/xfs_growfs -n `pwd`/mnt3
-xfs_growfs: /mnt/test/mnt3 is not a mounted XFS filesystem (failed compare to /mnt/test/mnt)
-
-because it the lookup stats the path, and picks the /first/ fstable entry
-which has a matching device, ignoring the mountpoint found in the fstable entry.
-
-So I think all that indicates an xfstest is needed to validate the change,
-and a slightly different approach to finding a match.
-
-Thanks,
--Eric
