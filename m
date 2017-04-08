@@ -1,133 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26120 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750943AbdDHDD7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 23:03:59 -0400
-Subject: [PATCH 2/4] xfs_db: use iocursor type to guess btree geometry if
- bad magic
+Received: from userp1040.oracle.com ([156.151.31.81]:32007 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751428AbdDHQFl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Apr 2017 12:05:41 -0400
+Date: Sat, 8 Apr 2017 09:05:33 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 07 Apr 2017 20:03:55 -0700
-Message-ID: <149162063502.22901.11947139521251833946.stgit@birch.djwong.org>
-In-Reply-To: <149162062276.22901.7801103937404880951.stgit@birch.djwong.org>
-References: <149162062276.22901.7801103937404880951.stgit@birch.djwong.org>
+Subject: Re: [PATCH] libxfs: fix xfs_extent_busy_flush macro definition
+Message-ID: <20170408160533.GN4874@birch.djwong.org>
+References: <20170408025255.GP4864@birch.djwong.org>
+ <585a3bce-22f8-e162-87a7-bfa6e57ffad5@sandeen.net>
+ <8860c7c7-4972-521c-44ec-c710136e2b49@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8860c7c7-4972-521c-44ec-c710136e2b49@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Apr 08, 2017 at 09:41:54AM -0500, Eric Sandeen wrote:
+> On 4/8/17 9:26 AM, Eric Sandeen wrote:
+> > On 4/7/17 9:52 PM, Darrick J. Wong wrote:
+> >> xfs_extent_busy_flush is a void function, so don't reduce it to zero.
+> >> This shuts up gcc warnings about do-nothing statements.
+> >>
+> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Whoops, thanks.  Need to test w/ newer gcc I guess, sorry!
+> > 
+> > Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> Oh, actually it seems that we use ((void) 0) pretty consistently
+> for these, i.e. -
+> 
+> #define xfs_extent_busy_reuse(mp,ag,bno,len,user)       ((void) 0)
+> 
+> and many others.  Probably best to be consistent; I may "fix" it to
+> that on commit, ok?
 
-The function block_to_bt plays an integral role in determining the btree
-geometry of a block that we want to manipulate with the debugger.
-Normally we use the block magic to find the geometry profile, but if the
-magic is bad we'll never find it and return NULL.  The callers of this
-function do not check for NULL and crash.
+That works too.
 
-Therefore, if we can't find a geometry profile matching the magic
-number, use the iocursor type to guess the profile and scowl about that
-to stdout.  This makes it so that even with a corrupt magic we can try
-to print the fields instead of crashing the debugger.
+You might consider fixing xfs_icsb_reinit_counters while you're at it,
+because that's where I picked up that idio[mt].
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- db/btblock.c |   51 +++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 43 insertions(+), 8 deletions(-)
+Oh, nobody calls xfs_icsb_reinit_counters.  Get rid of it then.
 
+--D
 
-diff --git a/db/btblock.c b/db/btblock.c
-index 835a5f0..ba81645 100644
---- a/db/btblock.c
-+++ b/db/btblock.c
-@@ -25,6 +25,8 @@
- #include "print.h"
- #include "bit.h"
- #include "init.h"
-+#include "io.h"
-+#include "output.h"
- 
- /*
-  * Definition of the possible btree block layouts.
-@@ -122,13 +124,49 @@ static struct xfs_db_btree *
- block_to_bt(
- 	struct xfs_btree_block	*bb)
- {
--	struct xfs_db_btree *btp = &btrees[0];
-+	struct xfs_db_btree	*btp;
-+	uint32_t		magic;
-+
-+	magic = be32_to_cpu((bb)->bb_magic);
-+	for (btp = &btrees[0]; btp->magic != 0; btp++)
-+		if (magic == btp->magic)
-+			return btp;
- 
--	do {
--		if (be32_to_cpu((bb)->bb_magic) == btp->magic)
-+#define M(a,b) (!xfs_sb_version_hascrc(&mp->m_sb) ? (a) : (b))
-+	switch (iocur_top->typ->typnm) {
-+	case TYP_BMAPBTA:
-+	case TYP_BMAPBTD:
-+		magic = M(XFS_BMAP_MAGIC, XFS_BMAP_CRC_MAGIC);
-+		break;
-+	case TYP_BNOBT:
-+		magic = M(XFS_ABTB_MAGIC, XFS_ABTB_CRC_MAGIC);
-+		break;
-+	case TYP_CNTBT:
-+		magic = M(XFS_ABTC_MAGIC, XFS_ABTC_CRC_MAGIC);
-+		break;
-+	case TYP_INOBT:
-+		magic = M(XFS_IBT_MAGIC, XFS_IBT_CRC_MAGIC);
-+		break;
-+	case TYP_FINOBT:
-+		magic = M(XFS_FIBT_MAGIC, XFS_FIBT_CRC_MAGIC);
-+		break;
-+	case TYP_RMAPBT:
-+		magic = M(0, XFS_RMAP_CRC_MAGIC);
-+		break;
-+	case TYP_REFCBT:
-+		magic = M(0, XFS_REFC_CRC_MAGIC);
-+		break;
-+	default:
-+		ASSERT(0);
-+	}
-+#undef M
-+	dbprintf(_("Bad btree magic 0x%x; coercing to %s.\n"),
-+		be32_to_cpu((bb)->bb_magic),
-+		iocur_top->typ->name);
-+
-+	for (btp = &btrees[0]; btp->magic != 0; btp++)
-+		if (magic == btp->magic)
- 			return btp;
--		btp++;
--	} while (btp->magic != 0);
- 
- 	return NULL;
- }
-@@ -193,7 +231,6 @@ btblock_key_offset(
- 	int			offset;
- 
- 	ASSERT(startoff == 0);
--	ASSERT(block->bb_level != 0);
- 
- 	offset = bt->block_len + (idx - 1) * bt->key_len;
- 	return bitize(offset);
-@@ -214,7 +251,6 @@ btblock_ptr_offset(
- 	int			maxrecs;
- 
- 	ASSERT(startoff == 0);
--	ASSERT(block->bb_level != 0);
- 
- 	maxrecs = btblock_maxrecs(bt, mp->m_sb.sb_blocksize);
- 	offset = bt->block_len +
-@@ -238,7 +274,6 @@ btblock_rec_offset(
- 	int			offset;
- 
- 	ASSERT(startoff == 0);
--	ASSERT(block->bb_level == 0);
- 
- 	offset = bt->block_len + (idx - 1) * bt->rec_len;
- 	return bitize(offset);
-
+> 
+> -Eric
+> 
+> >> ---
+> >>  libxfs/libxfs_priv.h |    2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+> >> index c2d4494..167786e 100644
+> >> --- a/libxfs/libxfs_priv.h
+> >> +++ b/libxfs/libxfs_priv.h
+> >> @@ -419,7 +419,7 @@ roundup_64(__uint64_t x, __uint32_t y)
+> >>  	*(busy_gen) = __foo;					\
+> >>  	false;							\
+> >>  })
+> >> -#define xfs_extent_busy_flush(mp,pag,busy_gen)		(0)
+> >> +#define xfs_extent_busy_flush(mp,pag,busy_gen)		do { } while(0)
+> >>  
+> >>  /* avoid unused variable warning */
+> >>  #define xfs_alloc_busy_insert(tp,ag,b,len)	({	\
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
