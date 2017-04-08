@@ -1,276 +1,376 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51200 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933430AbdDGMGd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Apr 2017 08:06:33 -0400
-Date: Fri, 7 Apr 2017 08:06:31 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: push buffer of flush locked dquot to avoid
- quotacheck deadlock
-Message-ID: <20170407120631.GB54992@bfoster.bfoster>
-References: <1487966001-63263-1-git-send-email-bfoster@redhat.com>
- <1487966001-63263-3-git-send-email-bfoster@redhat.com>
- <20170406223417.GJ4874@birch.djwong.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:20543 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751017AbdDHDEM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2017 23:04:12 -0400
+Subject: [PATCH 4/4] xfs_db: dump metadata btrees via 'btdump'
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 07 Apr 2017 20:04:07 -0700
+Message-ID: <149162064738.22901.15729138454951627321.stgit@birch.djwong.org>
+In-Reply-To: <149162062276.22901.7801103937404880951.stgit@birch.djwong.org>
+References: <149162062276.22901.7801103937404880951.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20170406223417.GJ4874@birch.djwong.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Martin Svec <martin.svec@zoner.cz>, Christian Affolter <c.affolter@stepping-stone.ch>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 06, 2017 at 03:34:17PM -0700, Darrick J. Wong wrote:
-> On Fri, Feb 24, 2017 at 02:53:20PM -0500, Brian Foster wrote:
-> > Reclaim during quotacheck can lead to deadlocks on the dquot flush
-> > lock:
-> > 
-> >  - Quotacheck populates a local delwri queue with the physical dquot
-> >    buffers.
-> >  - Quotacheck performs the xfs_qm_dqusage_adjust() bulkstat and
-> >    dirties all of the dquots.
-> >  - Reclaim kicks in and attempts to flush a dquot whose buffer is
-> >    already queud on the quotacheck queue. The flush succeeds but
-> >    queueing to the reclaim delwri queue fails as the backing buffer is
-> >    already queued. The flush unlock is now deferred to I/O completion
-> >    of the buffer from the quotacheck queue.
-> 
-> <typing aloud here, trying to follow along...>
-> 
-> If I'm reading this correctly, this is the _buf_delwri_queue call
-> towards the end of the _DQ_IS_DIRTY clause in _qm_dquot_isolate?  Once
-> the dquot is flushed we fail to add it to isol->buffers because it's
-> already on quotacheck's buffer_list, which means that the
-> _buf_delwri_submit call in _qm_shrink_scan never sees our dirty dquot.
-> 
-> Therefore, the dquot doesn't get written and the flush lock stays
-> locked...
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes, exactly.
+Introduce a new 'btdump' command that can print the contents of all
+blocks of any metadata subtree in the filesystem.  This enables
+developers and forensic analyst to view a metadata structure without
+having to navigate the btree manually.
 
-> >  - The dqadjust bulkstat continues and dirties the recently flushed
-> >    dquot once again.
-> >  - Quotacheck proceeds to the xfs_qm_flush_one() walk which requires
-> >    the flush lock to update the backing buffers with the in-core
-> >    recalculated values. It deadlocks on the redirtied dquot as the
-> >    flush lock was already acquired by reclaim, but the buffer resides
-> >    on the local delwri queue which isn't submitted until the end of
-> >    quotacheck.
-> 
-> ...until quotacheck tries to relock it and deadlocks, like you said.
-> Ok, I think I understand the deadlock...
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/Makefile  |    2 
+ db/btdump.c  |  272 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/btdump.h  |   20 ++++
+ db/command.c |    2 
+ 4 files changed, 295 insertions(+), 1 deletion(-)
+ create mode 100644 db/btdump.c
+ create mode 100644 db/btdump.h
 
-Yep.
 
-> > This is reproduced by running quotacheck on a filesystem with a
-> > couple million inodes in low memory (512MB-1GB) situations. This is
-> > a regression as of commit 43ff2122e6 ("xfs: on-stack delayed write
-> > buffer lists"), which removed a trylock and buffer I/O submission
-> > from the quotacheck dquot flush sequence.
-> > 
-> > Quotacheck first resets and collects the physical dquot buffers in a
-> > delwri queue. Then, it traverses the filesystem inodes via bulkstat,
-> > updates the in-core dquots, flushes the corrected dquots to the
-> > backing buffers and finally submits the delwri queue for I/O. Since
-> > the backing buffers are queued across the entire quotacheck
-> > operation, dquot reclaim cannot possibly complete a dquot flush
-> > before quotacheck completes.
-> > 
-> > Therefore, quotacheck must submit the buffer for I/O in order to
-> > cycle the flush lock and flush the dirty in-core dquot to the
-> > buffer. Add a delwri queue buffer push mechanism to submit an
-> > individual buffer for I/O without losing the delwri queue status and
-> > use it from quotacheck to avoid the deadlock. This restores
-> > quotacheck behavior to as before the regression was introduced.
-> 
-> ...and therefore why this patch changes quotacheck to check if the
-> dquot's flush lock is already held and if so, to call
-> _buf_delwri_submit_buffers so that the io completion will unlock the
-> flush lock and try again.
-> 
+diff --git a/db/Makefile b/db/Makefile
+index cdc0b99..97dd898 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_db
+ 
+ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+-	btblock.h bmroot.h check.h command.h convert.h crc.h debug.h \
++	btblock.h btdump.h bmroot.h check.h command.h convert.h crc.h debug.h \
+ 	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
+ 	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
+ 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+diff --git a/db/btdump.c b/db/btdump.c
+new file mode 100644
+index 0000000..7824c33
+--- /dev/null
++++ b/db/btdump.c
+@@ -0,0 +1,272 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "libxfs.h"
++#include "command.h"
++#include "output.h"
++#include "init.h"
++#include "io.h"
++#include "type.h"
++#include "btdump.h"
++#include "input.h"
++
++static void
++btdump_help(void)
++{
++	dbprintf(_(
++"\n"
++" 'btdump' dumps the btree rooted at the current io cursor location.\n"
++" In the case of an inode, the data fork bmbt is displayed.\n"
++" Options:\n"
++"   -a -- Display the extended attribute bmbt.\n"
++"   -i -- Print internal btree nodes.\n"
++"\n"
++));
++
++}
++
++static int
++eval(
++	const char	*fmt, ...)
++{
++	va_list		ap;
++	char		buf[PATH_MAX];
++	char		**v;
++	int		c;
++	int		ret;
++
++	va_start(ap, fmt);
++	vsnprintf(buf, sizeof(buf), fmt, ap);
++	va_end(ap);
++
++	v = breakline(buf, &c);
++	ret = command(c, v);
++	free(v);
++	return ret;
++}
++
++static bool
++btblock_has_rightsib(
++	struct xfs_btree_block	*block,
++	bool			long_format)
++{
++	if (long_format)
++		return block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK);
++	return block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK);
++}
++
++static int
++dump_btlevel(
++	int			level,
++	bool			long_format)
++{
++	xfs_daddr_t		orig_daddr = iocur_top->bb;
++	xfs_daddr_t		last_daddr;
++	unsigned int		nr;
++	int			ret;
++
++	ret = eval("push");
++	if (ret)
++		return ret;
++
++	nr = 1;
++	do {
++		last_daddr = iocur_top->bb;
++		dbprintf(_("%s level %u block %u daddr %llu\n"),
++			 iocur_top->typ->name, level, nr, last_daddr);
++		if (level > 0) {
++			ret = eval("print keys");
++			if (ret)
++				goto err;
++			ret = eval("print ptrs");
++		} else {
++			ret = eval("print recs");
++		}
++		if (ret)
++			goto err;
++		if (btblock_has_rightsib(iocur_top->data, long_format)) {
++			ret = eval("addr rightsib");
++			if (ret)
++				goto err;
++		}
++		nr++;
++	} while (iocur_top->bb != orig_daddr && iocur_top->bb != last_daddr);
++
++	ret = eval("pop");
++	return ret;
++err:
++	eval("pop");
++	return ret;
++}
++
++static int
++dump_btree(
++	bool		dump_node_blocks,
++	bool		long_format)
++{
++	xfs_daddr_t	orig_daddr = iocur_top->bb;
++	xfs_daddr_t	last_daddr;
++	int		level;
++	int		ret;
++
++	ret = eval("push");
++	if (ret)
++		return ret;
++
++	cur_agno = XFS_FSB_TO_AGNO(mp, XFS_DADDR_TO_FSB(mp, iocur_top->bb));
++	level = xfs_btree_get_level(iocur_top->data);
++	do {
++		last_daddr = iocur_top->bb;
++		if (level > 0) {
++			if (dump_node_blocks) {
++				ret = dump_btlevel(level, long_format);
++				if (ret)
++					goto err;
++			}
++			ret = eval("addr ptrs[1]");
++		} else {
++			ret = dump_btlevel(level, long_format);
++		}
++		if (ret)
++			goto err;
++		level--;
++	} while (level >= 0 &&
++		 iocur_top->bb != orig_daddr &&
++		 iocur_top->bb != last_daddr);
++
++	ret = eval("pop");
++	return ret;
++err:
++	eval("pop");
++	return ret;
++}
++
++static int
++dump_inode(
++	bool			dump_node_blocks,
++	bool			attrfork)
++{
++	char			*prefix;
++	struct xfs_dinode	*dip;
++	int			ret;
++
++	if (attrfork)
++		prefix = "a.bmbt";
++	else if (xfs_sb_version_hascrc(&mp->m_sb))
++		prefix = "u3.bmbt";
++	else
++		prefix = "u.bmbt";
++
++	dip = iocur_top->data;
++	if (attrfork) {
++		if (!dip->di_anextents ||
++		    dip->di_aformat != XFS_DINODE_FMT_BTREE)
++			return 0;
++	} else {
++		if (!dip->di_nextents ||
++		    dip->di_format != XFS_DINODE_FMT_BTREE)
++			return 0;
++	}
++
++	ret = eval("push");
++	if (ret)
++		return ret;
++
++	if (dump_node_blocks) {
++		ret = eval("print %s.keys", prefix);
++		if (ret)
++			goto err;
++		ret = eval("print %s.ptrs", prefix);
++		if (ret)
++			goto err;
++	}
++
++	ret = eval("addr %s.ptrs[1]", prefix);
++	if (ret)
++		goto err;
++
++	ret = dump_btree(dump_node_blocks, true);
++	if (ret)
++		goto err;
++
++	ret = eval("pop");
++	return ret;
++err:
++	eval("pop");
++	return ret;
++}
++
++static int
++btdump_f(
++	int		argc,
++	char		**argv)
++{
++	bool		aflag = false;
++	bool		iflag = false;
++	int		c;
++
++	if (cur_typ == NULL) {
++		dbprintf(_("no current type\n"));
++		return 0;
++	}
++	while ((c = getopt(argc, argv, "ai")) != EOF) {
++		switch (c) {
++		case 'a':
++			aflag = true;
++			break;
++		case 'i':
++			iflag = true;
++			break;
++		default:
++			dbprintf(_("bad option for btdump command\n"));
++			return 0;
++		}
++	}
++	if (aflag && cur_typ->typnm != TYP_INODE) {
++		dbprintf(_("attrfork flag doesn't apply here\n"));
++		return 0;
++	}
++	switch (cur_typ->typnm) {
++	case TYP_BNOBT:
++	case TYP_CNTBT:
++	case TYP_INOBT:
++	case TYP_FINOBT:
++	case TYP_RMAPBT:
++	case TYP_REFCBT:
++		return dump_btree(iflag, false);
++	case TYP_BMAPBTA:
++	case TYP_BMAPBTD:
++		return dump_btree(iflag, true);
++	case TYP_INODE:
++		return dump_inode(iflag, aflag);
++	default:
++		dbprintf(_("Not a btree.\n"));
++		return 0;
++	}
++}
++
++static const cmdinfo_t btdump_cmd =
++	{ "btdump", "b", btdump_f, 0, 1, 0, "",
++	  N_("dump btree"), btdump_help };
++
++void
++btdump_init(void)
++{
++	add_command(&btdump_cmd);
++}
+diff --git a/db/btdump.h b/db/btdump.h
+new file mode 100644
+index 0000000..45a65aa
+--- /dev/null
++++ b/db/btdump.h
+@@ -0,0 +1,20 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++extern void	btdump_init(void);
+diff --git a/db/command.c b/db/command.c
+index 3d7cfd7..c2ed7b4 100644
+--- a/db/command.c
++++ b/db/command.c
+@@ -51,6 +51,7 @@
+ #include "dquot.h"
+ #include "fsmap.h"
+ #include "crc.h"
++#include "btdump.h"
+ 
+ cmdinfo_t	*cmdtab;
+ int		ncmds;
+@@ -124,6 +125,7 @@ init_commands(void)
+ 	attrset_init();
+ 	block_init();
+ 	bmap_init();
++	btdump_init();
+ 	check_init();
+ 	convert_init();
+ 	crc_init();
 
-Yes, though only for the specific buffer.
-
-> When we return to _qm_flush_one, the dquot is no longer dirty and we're
-> done.  I /think/ this looks ok, though I also think I want to hear if
-> either Christian Affolter or Martin Svec have had any problems with
-> these two patches applied.  My current feeling is that this is a bit
-> late for 4.12, but I'd certainly put it in -washme for wider testing.
-> If anyone thinks this needs to happen sooner, please speak up.
-> 
-
-The dquot is still dirty and needs to be flushed on the second go around
-(otherwise we wouldn't have needed the flush lock here on the first
-try). The issue is basically that the dquot was adjusted (dirtied) at
-some point during the bulkstat scan, reclaimed and flushed, and then
-subsequently dirtied again such that another flush is required via
-qm_flush_one(). The buffer push frees up the held flush lock so that
-final flush can proceed.
-
-BTW, what's the reasoning for being late to 4.12? I actually don't have
-much of an opinion which release this goes into, so I guess my question
-is more logistical due to the fact that up until recently I haven't paid
-much attention to the upstream release cycles. ;P The 4.12 merge window
-hasn't opened as we are still on 4.11-rc5, right? Is the concern then
-that the merge window is close enough that this has missed 4.12
-linux-next soak time?
-
-Also, can you clarify the semantics of the -washme thing? ;) That
-doesn't necessarily mean the patch has been "merged." Rather, it might
-be suitable for the next for-next (4.13) provided nothing explodes by
-then, correct? I'm also a little curious on what extra testing that
-entails, if any, though perhaps this topic is better suited by an
-independent thread..
-
-> Sorry this one took me a while to get to. :/
-> 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-
-No problem. Thanks for review...
-
-Brian
-
-> --D
-> 
-> > Reported-by: Martin Svec <martin.svec@zoner.cz>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_buf.c   | 37 +++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_buf.h   |  1 +
-> >  fs/xfs/xfs_qm.c    | 28 +++++++++++++++++++++++++++-
-> >  fs/xfs/xfs_trace.h |  1 +
-> >  4 files changed, 66 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index e566510..e97cf56 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -2011,6 +2011,43 @@ xfs_buf_delwri_submit(
-> >  	return error;
-> >  }
-> >  
-> > +int
-> > +xfs_buf_delwri_pushbuf(
-> > +	struct xfs_buf		*bp,
-> > +	struct list_head	*buffer_list)
-> > +{
-> > +	LIST_HEAD		(submit_list);
-> > +	int			error;
-> > +
-> > +	ASSERT(xfs_buf_islocked(bp));
-> > +	ASSERT(bp->b_flags & _XBF_DELWRI_Q);
-> > +
-> > +	trace_xfs_buf_delwri_pushbuf(bp, _RET_IP_);
-> > +
-> > +	/*
-> > +	 * Move the buffer to an empty list and submit. Pass the original list
-> > +	 * as the wait list so delwri submission moves the buf back to it before
-> > +	 * it is submitted (and thus before it is unlocked). This means the
-> > +	 * buffer cannot be placed on another list while we wait for it.
-> > +	 */
-> > +	list_move(&bp->b_list, &submit_list);
-> > +	xfs_buf_unlock(bp);
-> > +
-> > +	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
-> > +
-> > +	/*
-> > +	 * Lock the buffer to wait for I/O completion. It's already held on the
-> > +	 * original list, so all we have to do is reset the delwri queue flag
-> > +	 * that was cleared by delwri submission.
-> > +	 */
-> > +	xfs_buf_lock(bp);
-> > +	error = bp->b_error;
-> > +	bp->b_flags |= _XBF_DELWRI_Q;
-> > +	xfs_buf_unlock(bp);
-> > +
-> > +	return error;
-> > +}
-> > +
-> >  int __init
-> >  xfs_buf_init(void)
-> >  {
-> > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> > index 8a9d3a9..cd74216 100644
-> > --- a/fs/xfs/xfs_buf.h
-> > +++ b/fs/xfs/xfs_buf.h
-> > @@ -334,6 +334,7 @@ extern void xfs_buf_stale(struct xfs_buf *bp);
-> >  extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
-> >  extern int xfs_buf_delwri_submit(struct list_head *);
-> >  extern int xfs_buf_delwri_submit_nowait(struct list_head *);
-> > +extern int xfs_buf_delwri_pushbuf(struct xfs_buf *, struct list_head *);
-> >  
-> >  /* Buffer Daemon Setup Routines */
-> >  extern int xfs_buf_init(void);
-> > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> > index 4ff993c..3815ed3 100644
-> > --- a/fs/xfs/xfs_qm.c
-> > +++ b/fs/xfs/xfs_qm.c
-> > @@ -1247,6 +1247,7 @@ xfs_qm_flush_one(
-> >  	struct xfs_dquot	*dqp,
-> >  	void			*data)
-> >  {
-> > +	struct xfs_mount	*mp = dqp->q_mount;
-> >  	struct list_head	*buffer_list = data;
-> >  	struct xfs_buf		*bp = NULL;
-> >  	int			error = 0;
-> > @@ -1257,7 +1258,32 @@ xfs_qm_flush_one(
-> >  	if (!XFS_DQ_IS_DIRTY(dqp))
-> >  		goto out_unlock;
-> >  
-> > -	xfs_dqflock(dqp);
-> > +	/*
-> > +	 * The only way the dquot is already flush locked by the time quotacheck
-> > +	 * gets here is if reclaim flushed it before the dqadjust walk dirtied
-> > +	 * it for the final time. Quotacheck collects all dquot bufs in the
-> > +	 * local delwri queue before dquots are dirtied, so reclaim can't have
-> > +	 * possibly queued it for I/O. The only way out is to push the buffer to
-> > +	 * cycle the flush lock.
-> > +	 */
-> > +	if (!xfs_dqflock_nowait(dqp)) {
-> > +		/* buf is pinned in-core by delwri list */
-> > +		DEFINE_SINGLE_BUF_MAP(map, dqp->q_blkno,
-> > +				      mp->m_quotainfo->qi_dqchunklen);
-> > +		bp = _xfs_buf_find(mp->m_ddev_targp, &map, 1, 0, NULL);
-> > +		if (!bp) {
-> > +			error = -EINVAL;
-> > +			goto out_unlock;
-> > +		}
-> > +
-> > +		/* delwri_pushbuf drops the buf lock */
-> > +		xfs_buf_delwri_pushbuf(bp, buffer_list);
-> > +		xfs_buf_rele(bp);
-> > +
-> > +		error = -EAGAIN;
-> > +		goto out_unlock;
-> > +	}
-> > +
-> >  	error = xfs_qm_dqflush(dqp, &bp);
-> >  	if (error)
-> >  		goto out_unlock;
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index fb7555e..c8d28a9 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -365,6 +365,7 @@ DEFINE_BUF_EVENT(xfs_buf_iowait_done);
-> >  DEFINE_BUF_EVENT(xfs_buf_delwri_queue);
-> >  DEFINE_BUF_EVENT(xfs_buf_delwri_queued);
-> >  DEFINE_BUF_EVENT(xfs_buf_delwri_split);
-> > +DEFINE_BUF_EVENT(xfs_buf_delwri_pushbuf);
-> >  DEFINE_BUF_EVENT(xfs_buf_get_uncached);
-> >  DEFINE_BUF_EVENT(xfs_buf_item_relse);
-> >  DEFINE_BUF_EVENT(xfs_buf_item_iodone_async);
-> > -- 
-> > 2.7.4
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
